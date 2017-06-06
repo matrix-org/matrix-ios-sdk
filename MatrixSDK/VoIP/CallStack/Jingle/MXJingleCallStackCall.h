@@ -16,13 +16,14 @@
 
 #import <Foundation/Foundation.h>
 
-#import "MXJingleCallStack.h"
+#import "MXSDKOptions.h"
 
 #ifdef MX_CALL_STACK_JINGLE
 
 #import "MXCallStackCall.h"
+#import <WebRTC/RTCPeerConnection.h>
 
-#import <WebRTC/WebRTC.h>
+NS_ASSUME_NONNULL_BEGIN
 
 @class RTCPeerConnectionFactory;
 
@@ -32,10 +33,15 @@
 
  @see https://developers.google.com/talk/libjingle/developer_guide
  */
-@interface MXJingleCallStackCall : NSObject <MXCallStackCall, RTCPeerConnectionDelegate>
+@interface MXJingleCallStackCall : NSObject <MXCallStackCall>
 
-- (instancetype)initWithFactory:(RTCPeerConnectionFactory*)factory;
+- (instancetype)initWithFactory:(RTCPeerConnectionFactory *)factory NS_DESIGNATED_INITIALIZER;
+
++ (instancetype)new NS_UNAVAILABLE;
+- (instancetype)init NS_UNAVAILABLE;
 
 @end
+
+NS_ASSUME_NONNULL_END
 
 #endif  // MX_CALL_STACK_JINGLE

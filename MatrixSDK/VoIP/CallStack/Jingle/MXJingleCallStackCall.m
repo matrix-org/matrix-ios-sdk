@@ -18,13 +18,13 @@
 
 #ifdef MX_CALL_STACK_JINGLE
 
+#import <AVFoundation/AVFoundation.h>
 #import <UIKit/UIKit.h>
-#import <AVFoundation/AVCaptureDevice.h>
-#import <AVFoundation/AVMediaFormat.h>
 
 #import "MXJingleVideoView.h"
+#import <WebRTC/WebRTC.h>
 
-@interface MXJingleCallStackCall ()
+@interface MXJingleCallStackCall () <RTCPeerConnectionDelegate>
 {
     /**
      The libjingle all purpose factory.
@@ -81,7 +81,7 @@
     isVideoCall = video;
 
     // Video requires views to render to before calling startGetCaptureSourcesForAudio
-    if (NO == video || (selfVideoView && remoteVideoView))
+    if (!video || (selfVideoView && remoteVideoView))
     {
         [self createLocalMediaStream];
     }
@@ -100,7 +100,7 @@
     self.remoteVideoView = nil;
 }
 
-- (void)addTURNServerUris:(NSArray *)uris withUsername:(NSString *)username password:(NSString *)password
+- (void)addTURNServerUris:(NSArray<NSString *> *)uris withUsername:(nullable NSString *)username password:(nullable NSString *)password
 {
     RTCIceServer *ICEServer = [[RTCIceServer alloc] initWithURLStrings:uris
                                                               username:username
@@ -134,9 +134,11 @@
     }
 }
 
-- (void)handleRemoteCandidate:(NSDictionary *)candidate
+- (void)handleRemoteCandidate:(NSDictionary<NSString *, NSObject *> *)candidate
 {
-    RTCIceCandidate *iceCandidate = [[RTCIceCandidate alloc] initWithSdp:candidate[@"candidate"] sdpMLineIndex:[(NSNumber*)candidate[@"sdpMLineIndex"] intValue] sdpMid:candidate[@"sdpMid"]];
+    RTCIceCandidate *iceCandidate = [[RTCIceCandidate alloc] initWithSdp:(NSString *)candidate[@"candidate"]
+                                                           sdpMLineIndex:[(NSNumber *)candidate[@"sdpMLineIndex"] intValue]
+                                                                  sdpMid:(NSString *)candidate[@"sdpMid"]];
     [peerConnection addIceCandidate:iceCandidate];
 }
 
@@ -250,23 +252,6 @@
     }];
 }
 
-
-#pragma mark - Properties
-- (void)setSelfVideoView:(UIView *)selfVideoView2
-{
-    selfVideoView = selfVideoView2;
-
-    [self checkStartGetCaptureSourcesForVideo];
-}
-
-- (void)setRemoteVideoView:(UIView *)remoteVideoView2
-{
-    remoteVideoView = remoteVideoView2;
- 
-    [self checkStartGetCaptureSourcesForVideo];
-}
-
-
 #pragma mark - RTCPeerConnectionDelegate delegate
 
 // Triggered when the SignalingState changed.
@@ -371,6 +356,21 @@ didRemoveIceCandidates:(NSArray<RTCIceCandidate *> *)candidates;
 
 
 #pragma mark - Properties
+
+- (void)setSelfVideoView:(nullable UIView *)selfVideoView2
+{
+    selfVideoView = selfVideoView2;
+    
+    [self checkStartGetCaptureSourcesForVideo];
+}
+
+- (void)setRemoteVideoView:(nullable UIView *)remoteVideoView2
+{
+    remoteVideoView = remoteVideoView2;
+    
+    [self checkStartGetCaptureSourcesForVideo];
+}
+
 - (UIDeviceOrientation)selfOrientation
 {
     // @TODO: Hmm
@@ -436,7 +436,7 @@ didRemoveIceCandidates:(NSArray<RTCIceCandidate *> *)candidates;
 
 
 #pragma mark - Private methods
-- (RTCMediaConstraints*)mediaConstraints
+- (RTCMediaConstraints *)mediaConstraints
 {
     return [[RTCMediaConstraints alloc] initWithMandatoryConstraints:@{
                                                                        @"OfferToReceiveAudio": @"true",
@@ -447,7 +447,7 @@ didRemoveIceCandidates:(NSArray<RTCIceCandidate *> *)candidates;
 
 - (void)createLocalMediaStream
 {
-    RTCMediaStream* localStream = [peerConnectionFactory mediaStreamWithStreamId:@"ARDAMS"];
+    RTCMediaStream *localStream = [peerConnectionFactory mediaStreamWithStreamId:@"ARDAMS"];
 
     // Set up audio
     localAudioTrack = [peerConnectionFactory audioTrackWithTrackId:@"ARDAMSa0"];

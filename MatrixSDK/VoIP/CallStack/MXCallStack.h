@@ -16,7 +16,7 @@
 
 #import <Foundation/Foundation.h>
 
-#import "MXCallStackCall.h"
+@protocol MXCallStackCall;
 
 /**
  The `MXCallStack` is an abstract interface to integrate a VoIP call stack.
@@ -36,6 +36,6 @@
  
  @return an object that implements the `MXCallStackCall` protocol.
  */
-- (id<MXCallStackCall>)createCall;
+- (nullable id<MXCallStackCall>)createCall;
 
 @end

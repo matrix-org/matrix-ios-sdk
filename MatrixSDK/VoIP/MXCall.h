@@ -22,27 +22,26 @@
 #import <Cocoa/Cocoa.h>
 #endif
 
-#import "MXEvent.h"
 #import "MXCallStackCall.h"
 
-@class MXCallManager;
-@class MXRoom;
+NS_ASSUME_NONNULL_BEGIN
 
+@class MXCallManager;
+@class MXEvent;
+@class MXRoom;
 
 /**
  Call states.
  */
-typedef enum : NSUInteger
+typedef NS_ENUM(NSUInteger, MXCallState)
 {
     MXCallStateFledgling,
     MXCallStateWaitLocalMedia,
 
-    // MXCallStateWaitLocalMedia
     MXCallStateCreateOffer,
     MXCallStateInviteSent,
 
     MXCallStateRinging,
-    // MXCallStateWaitLocalMedia
     MXCallStateCreateAnswer,
     MXCallStateConnecting,
 
@@ -51,7 +50,7 @@ typedef enum : NSUInteger
 
     MXCallStateInviteExpired,
     MXCallStateAnsweredElseWhere
-} MXCallState;
+};
 
 /**
  Posted when a `MXCall` object has changed its state.
@@ -66,6 +65,8 @@ extern NSString *const kMXCallStateDidChange;
  */
 @interface MXCall : NSObject <MXCallStackCallDelegate>
 
+- (instancetype)init NS_UNAVAILABLE;
+
 /**
  Create a `MXCall` instance in order to place a call.
 
@@ -73,7 +74,7 @@ extern NSString *const kMXCallStateDidChange;
  @param callManager the manager of all MXCall objects.
  @return the newly created MXCall instance.
  */
-- (instancetype)initWithRoomId:(NSString*)roomId andCallManager:(MXCallManager*)callManager;
+- (instancetype)initWithRoomId:(NSString *)roomId andCallManager:(MXCallManager *)callManager;
 
 /**
  Create a `MXCall` instance in order to place a call using a conference server.
@@ -83,14 +84,14 @@ extern NSString *const kMXCallStateDidChange;
  @param callManager the manager of all MXCall objects.
  @return the newly created MXCall instance.
  */
-- (instancetype)initWithRoomId:(NSString*)roomId callSignalingRoomId:(NSString*)callSignalingRoomId andCallManager:(MXCallManager*)callManager;
+- (instancetype)initWithRoomId:(NSString *)roomId callSignalingRoomId:(NSString *)callSignalingRoomId andCallManager:(MXCallManager *)callManager NS_DESIGNATED_INITIALIZER;
 
 /**
  Handle call event.
 
  @param event the call event coming from the event stream.
  */
-- (void)handleCallEvent:(MXEvent*)event;
+- (void)handleCallEvent:(MXEvent *)event;
 
 
 #pragma mark - Controls
@@ -157,18 +158,18 @@ extern NSString *const kMXCallStateDidChange;
  The UIView that receives frames from the user's camera.
  */
 #if TARGET_OS_IPHONE
-@property (nonatomic) UIView *selfVideoView;
+@property (nonatomic, nullable) UIView *selfVideoView;
 #elif TARGET_OS_OSX
-@property (nonatomic) NSView *selfVideoView;
+@property (nonatomic, nullable) NSView *selfVideoView;
 #endif
 
 /**
  The UIView that receives frames from the remote camera.
  */
 #if TARGET_OS_IPHONE
-@property (nonatomic) UIView *remoteVideoView;
+@property (nonatomic, nullable) UIView *remoteVideoView;
 #elif TARGET_OS_OSX
-@property (nonatomic) NSView *remoteVideoView;
+@property (nonatomic, nullable) NSView *remoteVideoView;
 #endif
 
 /**
@@ -209,7 +210,7 @@ extern NSString *const kMXCallStateDidChange;
 /**
  The delegate.
  */
-@property (nonatomic) id<MXCallDelegate> delegate;
+@property (nonatomic, weak) id<MXCallDelegate> delegate;
 
 @end
 
@@ -228,7 +229,7 @@ extern NSString *const kMXCallStateDidChange;
               The `event` paramater is this event.
               If it is our user, `event` is nil.
  */
-- (void)call:(MXCall *)call stateDidChange:(MXCallState)state reason:(MXEvent*)event;
+- (void)call:(MXCall *)call stateDidChange:(MXCallState)state reason:(nullable MXEvent *)event;
 
 @optional
 
@@ -239,6 +240,8 @@ extern NSString *const kMXCallStateDidChange;
  @param call the instance that changes.
  @param error the error.
  */
-- (void)call:(MXCall *)call didEncounterError:(NSError*)error;
+- (void)call:(MXCall *)call didEncounterError:(NSError *)error;
 
 @end
+
+NS_ASSUME_NONNULL_END

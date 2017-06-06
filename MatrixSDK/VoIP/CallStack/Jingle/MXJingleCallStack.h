@@ -20,8 +20,6 @@
 
 #ifdef MX_CALL_STACK_JINGLE
 
-#import <WebRTC/WebRTC.h>
-
 #import "MXCallStack.h"
 
 /**
