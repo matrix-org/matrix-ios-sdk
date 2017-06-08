@@ -424,7 +424,7 @@ that your session is logged in to. This will send HTTP notifications to a URL
 you supply as the 'url' key in the 'data' argument to setPusherWithPushkey.
 
 You can read more about these parameters in the Client / Server specification
-(https://github.com/matrix-org/matrix-doc/blob/master/specification/43_push_cs_api.rst). A
+(http://matrix.org/docs/api/client-server/#!/Push32notifications/post_matrix_client_r0_pushers_set). A
 little more information about some of these parameters is included below:
 
 appId
@@ -441,7 +441,7 @@ appId
 profileTag
   This identifies which set of push rules this device should obey. For more
   information about push rules, see the Client / Server push specification:
-  https://github.com/matrix-org/matrix-doc/blob/master/specification/43_push_cs_api.rst
+  http://matrix.org/docs/api/client-server/#!/Push32notifications/post_matrix_client_r0_pushers_set
   This is an identifier for the set of device-specific push rules that this
   device will obey. The recommendation is to auto-generate a 16 character
   alphanumeric string and use this string for the lifetime of the application
