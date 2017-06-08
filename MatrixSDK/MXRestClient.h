@@ -1600,6 +1600,12 @@ typedef enum : NSUInteger
                     success:(void (^)(NSDictionary *thirdPartySigned))success
                     failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
+/**
+ Set the certificates used to evaluate server trust according to the SSL pinning mode.
+ @param Pinned certificates
+ */
+-(void)setPinnedCertificates:(NSSet <NSData *> *)pinnedCertificates;
+
 #pragma mark - VoIP API
 /**
  Get the TURN server configuration advised by the homeserver.

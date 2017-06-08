@@ -96,18 +96,9 @@ NSString * const MXHTTPClientErrorResponseDataKey = @"com.matrixsdk.httpclient.e
         accessToken = access_token;
 
         httpManager = [[AFHTTPSessionManager alloc] initWithBaseURL:[NSURL URLWithString:baseURL]];
-        
-        // If some certificates are included in app bundle, we enable the AFNetworking pinning mode based on certificate 'AFSSLPinningModeCertificate'.
-        // These certificates will be handled as pinned certificates, the app allows them without prompting the user.
-        // This is an additional option for the developer to handle certificates.
-        AFSecurityPolicy *securityPolicy = [AFSecurityPolicy policyWithPinningMode:AFSSLPinningModeCertificate];
-        if (securityPolicy.pinnedCertificates.count)
-        {
-            securityPolicy.allowInvalidCertificates = YES;
-            securityPolicy.validatesDomainName = YES; // Enable the domain validation on pinned certificates retrieved from app bundle.
-            httpManager.securityPolicy = securityPolicy;
-        }
-        
+
+        [self setDefaultSecurityPolicy];
+
         onUnrecognizedCertificateBlock = onUnrecognizedCertBlock;
 #if TARGET_OS_IPHONE
         backgroundTaskIdentifier = UIBackgroundTaskInvalid;
@@ -558,6 +549,18 @@ NSString * const MXHTTPClientErrorResponseDataKey = @"com.matrixsdk.httpclient.e
 #endif
 }
 
+- (void)setPinnedCertificates:(NSSet<NSData *> *)pinnedCertificates {
+    _pinnedCertificates = pinnedCertificates;
+    if (!pinnedCertificates.count)
+    {
+        [self setDefaultSecurityPolicy];
+        return;
+    }
+    AFSecurityPolicy *securityPolicy = [AFSecurityPolicy policyWithPinningMode:AFSSLPinningModeCertificate];
+    securityPolicy.pinnedCertificates = pinnedCertificates;
+    httpManager.securityPolicy = securityPolicy;
+}
+
 
 #pragma mark - Private methods
 - (void)cancel
@@ -684,6 +687,19 @@ NSString * const MXHTTPClientErrorResponseDataKey = @"com.matrixsdk.httpclient.e
 
         return NSURLSessionAuthChallengePerformDefaultHandling;
     }];
+}
+
+- (void)setDefaultSecurityPolicy
+{
+    // If some certificates are included in app bundle, we enable the AFNetworking pinning mode based on certificate 'AFSSLPinningModeCertificate'.
+    // These certificates will be handled as pinned certificates, the app allows them without prompting the user.
+    // This is an additional option for the developer to handle certificates.
+    AFSecurityPolicy *securityPolicy = [AFSecurityPolicy policyWithPinningMode:AFSSLPinningModeCertificate];
+    if (securityPolicy.pinnedCertificates.count)
+    {
+        securityPolicy.allowInvalidCertificates = YES;
+        httpManager.securityPolicy = securityPolicy;
+    }
 }
 
 @end

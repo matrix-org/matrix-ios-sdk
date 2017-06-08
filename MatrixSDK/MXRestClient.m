@@ -4406,6 +4406,9 @@ MXAuthAction;
                                          }];
 }
 
+-(void)setPinnedCertificates:(NSSet <NSData *> *)pinnedCertificates {
+    httpClient.pinnedCertificates = pinnedCertificates;
+}
 
 #pragma mark - VoIP API
 - (MXHTTPOperation *)turnServer:(void (^)(MXTurnServerResponse *))success
