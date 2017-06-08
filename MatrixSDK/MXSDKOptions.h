@@ -16,6 +16,7 @@
  */
 
 #import <Foundation/Foundation.h>
+#import "MXAnalyticsDelegate.h"
 
 
 #pragma mark - Build time options
@@ -90,6 +91,17 @@
  NO by default.
  */
 @property (nonatomic) BOOL enableGoogleAnalytics;
+
+/**
+ The delegate object to receive analytics events
+ 
+ By default, this is set to an instance of MXGoogleAnalytics, if it's available.
+ 
+ MXGoogleAnalytics is not available to the 'SwiftMatrixSDK' pod because it cannot
+ be compiled as a framework. It will also be unavailable if your project does not
+ include the 'GoogleAnalytics' pod.
+ */
+@property (nonatomic) id<MXAnalyticsDelegate> analyticsDelegate;
 
 /**
  The version of the media cache at the application level.

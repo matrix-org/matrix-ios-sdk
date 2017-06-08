@@ -30,11 +30,21 @@ static MXSDKOptions *sharedOnceInstance = nil;
 
 #pragma mark - Initializations -
 
-- (id)init
+- (instancetype)init
 {
     self = [super init];
     if (self)
     {
+        Class mxGoogleAnalyticsClass = NSClassFromString(@"MXGoogleAnalytics");
+        if (mxGoogleAnalyticsClass != nil)
+        {
+            self.analyticsDelegate = [[mxGoogleAnalyticsClass alloc] init];
+        }
+        else
+        {
+            self.analyticsDelegate = nil;
+        }
+
         _disableIdenticonUseForUserAvatar = NO;
         _enableCryptoWhenStartingMXSession = NO;
         _enableGoogleAnalytics = NO;

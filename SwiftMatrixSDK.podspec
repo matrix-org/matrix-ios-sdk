@@ -22,6 +22,7 @@ Pod::Spec.new do |s|
 
   s.source       = { :git => "https://github.com/matrix-org/matrix-ios-sdk.git", :tag => "v0.7.9" }
   s.source_files = "MatrixSDK", "MatrixSDK/**/*.{h,m,swift}"
+  s.exclude_files   = "MatrixSDK/**/MXGoogleAnalytics.{h,m}"
   s.resources    = "MatrixSDK/Data/Store/MXCoreDataStore/*.xcdatamodeld"
 
   s.frameworks   = "CoreData"
