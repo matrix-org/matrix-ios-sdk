@@ -878,9 +878,9 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidFlushDataNotification;
 /**
  This will indicate to the homeserver that the user has read up to this event.
  
- @param event the last read event.
+ @param eventId the last read event identifier.
  */
-- (void)moveReadMarkerToEvent:(MXEvent*)event;
+- (void)moveReadMarkerToEventId:(NSString*)eventId;
 
 /**
  Update the read-up-to marker to match the read receipt.

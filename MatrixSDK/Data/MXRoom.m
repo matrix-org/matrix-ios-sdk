@@ -1872,12 +1872,12 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
 
 #pragma mark - Read marker handling
 
-- (void)moveReadMarkerToEvent:(MXEvent*)event
+- (void)moveReadMarkerToEventId:(NSString*)eventId
 {
     // Sanity check on event id: Do not send read marker on event without id
-    if (event.eventId && ![event.eventId hasPrefix:kMXEventLocalEventIdPrefix] && ![event.eventId hasPrefix:kMXRoomInviteStateEventIdPrefix])
+    if (eventId && ![eventId hasPrefix:kMXEventLocalEventIdPrefix] && ![eventId hasPrefix:kMXRoomInviteStateEventIdPrefix])
     {
-        [self setReadMarker:event.eventId withReadReceipt:nil];
+        [self setReadMarker:eventId withReadReceipt:nil];
     }
 }
 
