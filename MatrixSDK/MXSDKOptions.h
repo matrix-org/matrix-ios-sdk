@@ -1,5 +1,6 @@
 /*
  Copyright 2015 OpenMarket Ltd
+ Copyright 2017 Vector Creations Ltd
  
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -61,10 +62,10 @@
 #endif
 
 
-#pragma mark - Runtime options
+#pragma mark - Launch time options
 
 /**
- SDK options that can be set at runtime.
+ SDK options that can be set at the launch time.
  */
 @interface MXSDKOptions : NSObject
 
@@ -101,5 +102,13 @@
  include the 'GoogleAnalytics' pod.
  */
 @property (nonatomic) id<MXAnalyticsDelegate> analyticsDelegate;
+
+/**
+ The version of the media cache at the application level.
+ By updating this value the application is able to clear the existing media cache.
+ 
+ The default version value is 0.
+ */
+@property (nonatomic) NSUInteger mediaCacheAppVersion;
 
 @end

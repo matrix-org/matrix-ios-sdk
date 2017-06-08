@@ -1,5 +1,6 @@
 /*
  Copyright 2016 OpenMarket Ltd
+ Copyright 2017 Vector Creations Ltd
  
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -236,6 +237,13 @@ extern NSString *const kMXMediaManagerDefaultCacheFolder;
  Return cache root path
  */
 + (NSString*)getCachePath;
+
+/**
+ Return the current media cache version.
+ This value depends on the version defined at the application level (see [MXSDKOptions mediaCacheAppVersion]),
+ and the one defined at SDK level.
+ */
++ (NSString*)getCacheVersionString;
 
 /**
  Cache size management (values are in bytes)

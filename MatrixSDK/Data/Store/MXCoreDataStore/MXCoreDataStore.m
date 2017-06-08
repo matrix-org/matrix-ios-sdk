@@ -1,5 +1,6 @@
 /*
  Copyright 2015 OpenMarket Ltd
+ Copyright 2017 Vector Creations Ltd
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -288,28 +289,6 @@ NSString *const kMXCoreDataStoreFolder = @"MXCoreDataStore";
     return room.paginationToken;
 }
 
-- (void)storeNotificationCountOfRoom:(NSString*)roomId count:(NSUInteger)notificationCount
-{
-    // TODO
-}
-
-- (NSUInteger)notificationCountOfRoom:(NSString*)roomId
-{
-    // TODO
-    return 0;
-}
-
-- (void)storeHighlightCountOfRoom:(NSString*)roomId count:(NSUInteger)highlightCount
-{
-    // TODO
-}
-
-- (NSUInteger)highlightCountOfRoom:(NSString*)roomId
-{
-    // TODO
-    return 0;
-}
-
 - (void)storeHasReachedHomeServerPaginationEndForRoom:(NSString *)roomId andValue:(BOOL)value
 {
     [bgManagedObjectContext performBlock:^{
@@ -330,7 +309,7 @@ NSString *const kMXCoreDataStoreFolder = @"MXCoreDataStore";
     return nil;
 }
 
-- (id<MXStoreEventsEnumerator>)messagesEnumeratorForRoom:(NSString*)roomId withTypeIn:(NSArray*)types ignoreMemberProfileChanges:(BOOL)ignoreProfileChanges
+- (id<MXStoreEventsEnumerator>)messagesEnumeratorForRoom:(NSString*)roomId withTypeIn:(NSArray*)types
 {
     // TODO
     return nil;

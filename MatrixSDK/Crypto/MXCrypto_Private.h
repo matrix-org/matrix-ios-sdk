@@ -76,20 +76,6 @@
  */
 @property (nonatomic, readonly) dispatch_queue_t decryptionQueue;
 
-/**
- Upload the device keys to the homeserver and ensure that the
- homeserver has enough one-time keys.
-
- @param maxKeys The maximum number of keys to generate.
- 
- @param success A block object called when the operation succeeds.
- @param failure A block object called when the operation fails.
-
- @return a MXHTTPOperation instance.
- */
-- (MXHTTPOperation*)uploadKeys:(NSUInteger)maxKeys
-                       success:(void (^)())success
-                       failure:(void (^)(NSError *))failure;
 
 /**
  Get the device which sent an event.
@@ -104,9 +90,10 @@
 
  @param roomId the room id to enable encryption in.
  @param algorithm the encryption config for the room.
+ @param inhibitDeviceQuery YES to suppress device list query for users in the room (for now)
  @return YES if the operation succeeds.
  */
-- (BOOL)setEncryptionInRoom:(NSString*)roomId withAlgorithm:(NSString*)algorithm;
+- (BOOL)setEncryptionInRoom:(NSString*)roomId withAlgorithm:(NSString*)algorithm inhibitDeviceQuery:(BOOL)inhibitDeviceQuery;
 
 /**
  Try to make sure we have established olm sessions for the given users.

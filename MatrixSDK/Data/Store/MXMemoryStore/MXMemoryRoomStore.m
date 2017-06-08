@@ -1,5 +1,6 @@
 /*
  Copyright 2014 OpenMarket Ltd
+ Copyright 2017 Vector Creations Ltd
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -89,9 +90,9 @@
     return [[MXEventsEnumeratorOnArray alloc] initWithMessages:messages];
 }
 
-- (id<MXEventsEnumerator>)enumeratorForMessagesWithTypeIn:(NSArray*)types ignoreMemberProfileChanges:(BOOL)ignoreProfileChanges
+- (id<MXEventsEnumerator>)enumeratorForMessagesWithTypeIn:(NSArray*)types
 {
-    return [[MXEventsByTypesEnumeratorOnArray alloc] initWithMessages:messages andTypesIn:types ignoreMemberProfileChanges:ignoreProfileChanges];
+    return [[MXEventsByTypesEnumeratorOnArray alloc] initWithMessages:messages andTypesIn:types];
 }
 
 - (NSArray*)eventsAfter:(NSString *)eventId except:(NSString*)userId withTypeIn:(NSSet*)types

@@ -1,5 +1,6 @@
 /*
  Copyright 2014 OpenMarket Ltd
+ Copyright 2017 Vector Creations Ltd
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -79,8 +80,6 @@
     MXMemoryRoomStore *roomStore = [self getOrCreateRoomStore:roomId];
     [roomStore removeAllMessages];
     roomStore.paginationToken = nil;
-    roomStore.notificationCount = 0;
-    roomStore.highlightCount = 0;
     roomStore.hasReachedHomeServerPaginationEnd = NO;
 }
 
@@ -114,30 +113,6 @@
     return roomStore.paginationToken;
 }
 
-- (void)storeNotificationCountOfRoom:(NSString*)roomId count:(NSUInteger)notificationCount
-{
-    MXMemoryRoomStore *roomStore = [self getOrCreateRoomStore:roomId];
-    roomStore.notificationCount = notificationCount;
-}
-
-- (NSUInteger)notificationCountOfRoom:(NSString*)roomId
-{
-    MXMemoryRoomStore *roomStore = [self getOrCreateRoomStore:roomId];
-    return roomStore.notificationCount;
-}
-
-- (void)storeHighlightCountOfRoom:(NSString*)roomId count:(NSUInteger)highlightCount
-{
-    MXMemoryRoomStore *roomStore = [self getOrCreateRoomStore:roomId];
-    roomStore.highlightCount = highlightCount;
-}
-
-- (NSUInteger)highlightCountOfRoom:(NSString*)roomId
-{
-    MXMemoryRoomStore *roomStore = [self getOrCreateRoomStore:roomId];
-    return roomStore.highlightCount;
-}
-
 - (void)storeHasReachedHomeServerPaginationEndForRoom:(NSString*)roomId andValue:(BOOL)value
 {
     MXMemoryRoomStore *roomStore = [self getOrCreateRoomStore:roomId];
@@ -157,10 +132,10 @@
     return roomStore.messagesEnumerator;
 }
 
-- (id<MXEventsEnumerator>)messagesEnumeratorForRoom:(NSString *)roomId withTypeIn:(NSArray *)types ignoreMemberProfileChanges:(BOOL)ignoreProfileChanges
+- (id<MXEventsEnumerator>)messagesEnumeratorForRoom:(NSString *)roomId withTypeIn:(NSArray *)types
 {
     MXMemoryRoomStore *roomStore = [self getOrCreateRoomStore:roomId];
-    return [roomStore enumeratorForMessagesWithTypeIn:types ignoreMemberProfileChanges:ignoreProfileChanges];
+    return [roomStore enumeratorForMessagesWithTypeIn:types];
 }
 
 - (void)storePartialTextMessageForRoom:(NSString *)roomId partialTextMessage:(NSString *)partialTextMessage
@@ -254,6 +229,7 @@
 
 - (NSUInteger)localUnreadEventCount:(NSString*)roomId withTypeIn:(NSArray*)types
 {
+    // @TODO: This method is only logic which could be moved to MXRoom
     MXMemoryRoomStore* store = [roomStores valueForKey:roomId];
     NSMutableDictionary* receipsByUserId = [receiptsByRoomId objectForKey:roomId];
     NSUInteger count = 0;

@@ -1,5 +1,6 @@
 /*
  Copyright 2016 OpenMarket Ltd
+ Copyright 2017 Vector Creations Ltd
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -27,22 +28,18 @@
 
     // The event types to filter in
     NSArray *types;
-
-    // Tell whether the profile changes should be ignored
-    BOOL ignoreMemberProfileChanges;
 }
 
 @end
 
 @implementation MXEventsByTypesEnumeratorOnArray
 
-- (instancetype)initWithMessages:(NSArray<MXEvent *> *)messages andTypesIn:(NSArray *)theTypes ignoreMemberProfileChanges:(BOOL)ignoreProfileChanges
+- (instancetype)initWithMessages:(NSArray<MXEvent *> *)messages andTypesIn:(NSArray *)theTypes
 {
     self = [super init];
     if (self)
     {
         types = theTypes;
-        ignoreMemberProfileChanges = ignoreProfileChanges;
         allMessagesEnumerator = [[MXEventsEnumeratorOnArray alloc] initWithMessages:messages];
     }
 
@@ -78,11 +75,8 @@
     {
         if (event.eventId && (!types || (NSNotFound != [types indexOfObject:event.type])))
         {
-            if (!ignoreMemberProfileChanges || !event.isUserProfileChange)
-            {
-                nextEvent = event;
-                break;
-            }
+            nextEvent = event;
+            break;
         }
     }
 

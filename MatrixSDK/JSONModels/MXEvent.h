@@ -55,6 +55,7 @@ typedef enum : NSUInteger
     MXEventTypeCallAnswer,
     MXEventTypeCallHangup,
     MXEventTypeReceipt,
+    MXEventTypeReadMarker,
 
     // The event is a custom event. Refer to its `MXEventTypeString` version
     MXEventTypeCustom = 1000
@@ -88,6 +89,7 @@ FOUNDATION_EXPORT NSString *const kMXEventTypeStringPresence;
 FOUNDATION_EXPORT NSString *const kMXEventTypeStringTypingNotification;
 FOUNDATION_EXPORT NSString *const kMXEventTypeStringReceipt;
 FOUNDATION_EXPORT NSString *const kMXEventTypeStringRead;
+FOUNDATION_EXPORT NSString *const kMXEventTypeStringReadMarker;
 FOUNDATION_EXPORT NSString *const kMXEventTypeStringNewDevice;
 FOUNDATION_EXPORT NSString *const kMXEventTypeStringCallInvite;
 FOUNDATION_EXPORT NSString *const kMXEventTypeStringCallCandidates;

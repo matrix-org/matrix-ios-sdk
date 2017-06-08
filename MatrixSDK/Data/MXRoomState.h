@@ -1,6 +1,7 @@
 /*
  Copyright 2014 OpenMarket Ltd
- 
+ Copyright 2017 Vector Creations Ltd
+
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
  You may obtain a copy of the License at
@@ -44,7 +45,7 @@
  Indicate if this instance is used to store the live state of the room or
  the state of the room in the history.
  */
-@property (nonatomic, readonly) BOOL isLive;
+@property (nonatomic) BOOL isLive;
 
 /**
  A copy of the list of state events (actually MXEvent instances).

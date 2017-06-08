@@ -100,7 +100,7 @@ public extension MXSession {
         - completion: A block called when the SDK has completed a catchup, or times out.
         - response: Indicates whether the sync was successful.
      */
-    @nonobjc @discardableResult func enableCrypto(_ isEnabled: Bool, completion: @escaping (_ response: MXResponse<Void>) -> Void) {
+    @nonobjc func enableCrypto(_ isEnabled: Bool, completion: @escaping (_ response: MXResponse<Void>) -> Void) {
         __enableCrypto(isEnabled, success: currySuccess(completion), failure: curryFailure(completion))
     }
     

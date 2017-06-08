@@ -76,7 +76,8 @@ static NSRegularExpression *isMatrixEventIdentifierRegex;
                           kMXEventTypeStringCallCandidates: @(MXEventTypeCallCandidates),
                           kMXEventTypeStringCallAnswer: @(MXEventTypeCallAnswer),
                           kMXEventTypeStringCallHangup: @(MXEventTypeCallHangup),
-                          kMXEventTypeStringReceipt: @(MXEventTypeReceipt)
+                          kMXEventTypeStringReceipt: @(MXEventTypeReceipt),
+                          kMXEventTypeStringReadMarker: @(MXEventTypeReadMarker)
                           };
 
         isEmailAddressRegex =  [NSRegularExpression regularExpressionWithPattern:[NSString stringWithFormat:@"^%@$", kMXToolsRegexStringForEmailAddress]
@@ -196,27 +197,47 @@ static NSRegularExpression *isMatrixEventIdentifierRegex;
 
 + (BOOL)isEmailAddress:(NSString *)inputString
 {
-    return (nil != [isEmailAddressRegex firstMatchInString:inputString options:0 range:NSMakeRange(0, inputString.length)]);
+    if (inputString)
+    {
+        return (nil != [isEmailAddressRegex firstMatchInString:inputString options:0 range:NSMakeRange(0, inputString.length)]);
+    }
+    return NO;
 }
 
 + (BOOL)isMatrixUserIdentifier:(NSString *)inputString
 {
-    return (nil != [isMatrixUserIdentifierRegex firstMatchInString:inputString options:0 range:NSMakeRange(0, inputString.length)]);
+    if (inputString)
+    {
+        return (nil != [isMatrixUserIdentifierRegex firstMatchInString:inputString options:0 range:NSMakeRange(0, inputString.length)]);
+    }
+    return NO;
 }
 
 + (BOOL)isMatrixRoomAlias:(NSString *)inputString
 {
-    return (nil != [isMatrixRoomAliasRegex firstMatchInString:inputString options:0 range:NSMakeRange(0, inputString.length)]);
+    if (inputString)
+    {
+        return (nil != [isMatrixRoomAliasRegex firstMatchInString:inputString options:0 range:NSMakeRange(0, inputString.length)]);
+    }
+    return NO;
 }
 
 + (BOOL)isMatrixRoomIdentifier:(NSString *)inputString
 {
-    return (nil != [isMatrixRoomIdentifierRegex firstMatchInString:inputString options:0 range:NSMakeRange(0, inputString.length)]);
+    if (inputString)
+    {
+        return (nil != [isMatrixRoomIdentifierRegex firstMatchInString:inputString options:0 range:NSMakeRange(0, inputString.length)]);
+    }
+    return NO;
 }
 
 + (BOOL)isMatrixEventIdentifier:(NSString *)inputString
 {
-    return (nil != [isMatrixEventIdentifierRegex firstMatchInString:inputString options:0 range:NSMakeRange(0, inputString.length)]);
+    if (inputString)
+    {
+        return (nil != [isMatrixEventIdentifierRegex firstMatchInString:inputString options:0 range:NSMakeRange(0, inputString.length)]);
+    }
+    return NO;
 }
 
 

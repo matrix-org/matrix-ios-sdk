@@ -17,8 +17,9 @@
 
 #import "MXCall.h"
 
+#import "MXCallStack.h"
+#import "MXEvent.h"
 #import "MXSession.h"
-#import "MXCallStackCall.h"
 
 #pragma mark - Constants definitions
 NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
@@ -58,7 +59,7 @@ NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
     /**
      A queue of gathered local ICE candidates waiting to be sent to the other peer.
      */
-    NSMutableArray<NSDictionary*> *localICECandidates;
+    NSMutableArray<NSDictionary *> *localICECandidates;
 
     /**
      Timer for sending local ICE candidates.
@@ -76,7 +77,7 @@ NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
     return [self initWithRoomId:roomId callSignalingRoomId:roomId andCallManager:theCallManager];
 }
 
-- (instancetype)initWithRoomId:(NSString*)roomId callSignalingRoomId:(NSString*)callSignalingRoomId andCallManager:(MXCallManager*)theCallManager;
+- (instancetype)initWithRoomId:(NSString *)roomId callSignalingRoomId:(NSString *)callSignalingRoomId andCallManager:(MXCallManager *)theCallManager;
 {
     self = [super init];
     if (self)
@@ -105,6 +106,7 @@ NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
         if (nil == callStackCall)
         {
             NSLog(@"[MXCall] Error: Cannot create call. [MXCallStack createCall] returned nil.");
+            [callManager.mxSession releasePreventPause];
             return nil;
         }
 
@@ -114,8 +116,8 @@ NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
         if (callManager.turnServers)
         {
             [callStackCall addTURNServerUris:callManager.turnServers.uris
-                                        withUsername:callManager.turnServers.username
-                                            password:callManager.turnServers.password];
+                                withUsername:callManager.turnServers.username
+                                    password:callManager.turnServers.password];
         }
         else
         {
@@ -134,7 +136,7 @@ NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
         {
             callInviteEventContent = [MXCallInviteEventContent modelFromJSON:event.content];
 
-            if (NO == [event.sender isEqualToString:_callSignalingRoom.mxSession.myUser.userId])
+            if (![event.sender isEqualToString:_callSignalingRoom.mxSession.myUser.userId])
             {
                 // Incoming call
 
@@ -163,11 +165,11 @@ NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
 
             // Start expiration timer
             inviteExpirationTimer = [[NSTimer alloc] initWithFireDate:[NSDate dateWithTimeIntervalSinceNow:callInviteEventContent.lifetime / 1000]
-                                                              interval:0
-                                                                target:self
-                                                              selector:@selector(expireCallInvite)
-                                                              userInfo:nil
-                                                               repeats:NO];
+                                                             interval:0
+                                                               target:self
+                                                             selector:@selector(expireCallInvite)
+                                                             userInfo:nil
+                                                              repeats:NO];
             [[NSRunLoop mainRunLoop] addTimer:inviteExpirationTimer forMode:NSDefaultRunLoopMode];
 
             break;
@@ -176,7 +178,7 @@ NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
         case MXEventTypeCallAnswer:
         {
             // Listen to answer event only for call we are making, not receiving
-            if (NO == _isIncoming)
+            if (!_isIncoming)
             {
                 // MXCall receives this event only when it placed a call
                 MXCallAnswerEventContent *content = [MXCallAnswerEventContent modelFromJSON:event.content];
@@ -295,49 +297,71 @@ NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
 
     if (self.state == MXCallStateRinging)
     {
-        // The incoming call is accepted
-        if (inviteExpirationTimer)
-        {
-            [inviteExpirationTimer invalidate];
-            inviteExpirationTimer = nil;
-        }
+        void(^answer)() = ^() {
 
-        [self setState:MXCallStateWaitLocalMedia reason:nil];
-        
-        
-        // Create a sdp answer from the offer we got
-        [self setState:MXCallStateCreateAnswer reason:nil];
-        [self setState:MXCallStateConnecting reason:nil];
+            NSLog(@"[MXCall] answer: answering...");
 
-        [callStackCall createAnswer:^(NSString *sdpAnswer) {
+            // The incoming call is accepted
+            if (inviteExpirationTimer)
+            {
+                [inviteExpirationTimer invalidate];
+                inviteExpirationTimer = nil;
+            }
 
-            NSLog(@"[MXCall] answer - Created SDP:\n%@", sdpAnswer);
-            
-            // The call invite can sent to the HS
-            NSDictionary *content = @{
-                                      @"call_id": _callId,
-                                      @"answer": @{
-                                              @"type": @"answer",
-                                              @"sdp": sdpAnswer
-                                              },
-                                      @"version": @(0),
-                                      };
-            [_callSignalingRoom sendEventOfType:kMXEventTypeStringCallAnswer content:content localEcho:nil success:^(NSString *eventId) {
+            [self setState:MXCallStateWaitLocalMedia reason:nil];
 
-                // @TODO: This is false
-                [self setState:MXCallStateConnected reason:nil];
-                
+
+            // Create a sdp answer from the offer we got
+            [self setState:MXCallStateCreateAnswer reason:nil];
+            [self setState:MXCallStateConnecting reason:nil];
+
+            [callStackCall createAnswer:^(NSString *sdpAnswer) {
+
+                NSLog(@"[MXCall] answer - Created SDP:\n%@", sdpAnswer);
+
+                // The call invite can sent to the HS
+                NSDictionary *content = @{
+                                          @"call_id": _callId,
+                                          @"answer": @{
+                                                  @"type": @"answer",
+                                                  @"sdp": sdpAnswer
+                                                  },
+                                          @"version": @(0),
+                                          };
+                [_callSignalingRoom sendEventOfType:kMXEventTypeStringCallAnswer content:content localEcho:nil success:^(NSString *eventId) {
+
+                    // @TODO: This is false
+                    [self setState:MXCallStateConnected reason:nil];
+
+                } failure:^(NSError *error) {
+                    NSLog(@"[MXCall] answer: ERROR: Cannot send m.call.answer event.");
+                    [self didEncounterError:error];
+                }];
+
             } failure:^(NSError *error) {
-                NSLog(@"[MXCall] answer: ERROR: Cannot send m.call.answer event.");
+                NSLog(@"[MXCall] answer: ERROR: Cannot create offer. Error: %@", error);
                 [self didEncounterError:error];
             }];
             
-        } failure:^(NSError *error) {
-            NSLog(@"[MXCall] answer: ERROR: Cannot create offer. Error: %@", error);
-            [self didEncounterError:error];
-        }];
-        
-        callInviteEventContent = nil;
+            callInviteEventContent = nil;
+        };
+
+        // If the room is encrypted, we need to check that encryption is set up
+        // in the room before actually answering.
+        // That will allow MXCall to send ICE candidates events without encryption errors like
+        // MXEncryptingErrorUnknownDeviceReason.
+        if (_callSignalingRoom.state.isEncrypted)
+        {
+            NSLog(@"[MXCall] answer: ensuring encryption is ready to use ...");
+            [callManager.mxSession.crypto ensureEncryptionInRoom:_callSignalingRoom.roomId success:answer failure:^(NSError *error) {
+                NSLog(@"[MXCall] answer: ERROR: [MXCrypto ensureEncryptionInRoom] failed. Error: %@", error);
+                [self didEncounterError:error];
+            }];
+        }
+        else
+        {
+            answer();
+        }
     }
 }
 
@@ -363,7 +387,7 @@ NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
 
 
 #pragma marl - Properties
-- (void)setState:(MXCallState)state reason:(MXEvent*)event
+- (void)setState:(MXCallState)state reason:(MXEvent *)event
 {
     // Manage call duration
     if (MXCallStateConnected == state)
@@ -403,9 +427,9 @@ NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
 }
 
 #if TARGET_OS_IPHONE
-- (void)setSelfVideoView:(UIView *)selfVideoView
+- (void)setSelfVideoView:(nullable UIView *)selfVideoView
 #elif TARGET_OS_OSX
-- (void)setSelfVideoView:(NSView *)selfVideoView
+- (void)setSelfVideoView:(nullable NSView *)selfVideoView
 #endif
 {
     if (selfVideoView != _selfVideoView)
@@ -416,9 +440,9 @@ NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
 }
 
 #if TARGET_OS_IPHONE
-- (void)setRemoteVideoView:(UIView *)remoteVideoView
+- (void)setRemoteVideoView:(nullable UIView *)remoteVideoView
 #elif TARGET_OS_OSX
-- (void)setRemoteVideoView:(NSView *)remoteVideoView
+- (void)setRemoteVideoView:(nullable NSView *)remoteVideoView
 #endif
 {
     if (remoteVideoView != _remoteVideoView)
@@ -553,7 +577,7 @@ NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
 
 
 #pragma mark - Private methods
-- (void)terminateWithReason:(MXEvent*)event
+- (void)terminateWithReason:(MXEvent *)event
 {
     if (inviteExpirationTimer)
     {
@@ -571,7 +595,7 @@ NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
     [self setState:MXCallStateEnded reason:event];
 }
 
-- (void)didEncounterError:(NSError*)error
+- (void)didEncounterError:(NSError *)error
 {
     if ([_delegate respondsToSelector:@selector(call:didEncounterError:)])
     {
@@ -615,4 +639,3 @@ NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
 }
 
 @end
-

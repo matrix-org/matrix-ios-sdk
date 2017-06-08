@@ -1,5 +1,6 @@
 /*
  Copyright 2016 OpenMarket Ltd
+ Copyright 2017 Vector Creations Ltd
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -28,10 +29,9 @@
 
  @param messages the list of messages to enumerate on.
  @param types an array of event types strings to use as a filter filter.
- @param ignoreProfileChanges tell whether the profile changes should be ignored.
 
  @return the newly created instance.
  */
-- (instancetype)initWithMessages:(NSArray<MXEvent*> *)messages andTypesIn:(NSArray*)types ignoreMemberProfileChanges:(BOOL)ignoreProfileChanges;
+- (instancetype)initWithMessages:(NSArray<MXEvent*> *)messages andTypesIn:(NSArray*)types;
 
 @end

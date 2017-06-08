@@ -93,7 +93,7 @@
  @param eventContent the content of the event.
  @param eventType the type of the event.
  @param room the room the event will be sent.
- *
+
  @param success A block object called when the operation succeeds.
  @param failure A block object called when the operation fails.
 
@@ -116,6 +116,24 @@
  @return YES if the decryption was successful.
  */
 - (BOOL)decryptEvent:(MXEvent*)event inTimeline:(NSString*)timeline;
+
+/**
+ Ensure that the outbound session is ready to encrypt events.
+ 
+ Thus, the next [MXCrypto encryptEvent] should be encrypted without any HTTP requests.
+ 
+ Note: There is no guarantee about this because a new device can still appear before
+ the call of [MXCrypto encryptEvent]. Use this method with caution.
+ 
+ @param roomId the id of the room.
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance. May be nil if all required materials is already in place.
+ */
+- (MXHTTPOperation*)ensureEncryptionInRoom:(NSString*)roomId
+                                   success:(void (^)())success
+                                   failure:(void (^)(NSError *error))failure;
 
 /**
  Handle list of changed users provided in the /sync response.
@@ -190,6 +208,16 @@
 - (void)resetReplayAttackCheckInTimeline:(NSString*)timeline;
 
 /**
+ Reset stored devices keys.
+ 
+ This method, to take effect, must be called before [MXSession start] when MXSession 
+ is going to do an initial /sync, ie when the app cleared its cache.
+
+ It helps the end user to fix UISIs that other people get from his messages.
+ */
+- (void)resetDeviceKeys;
+
+/**
  Delete the crypto store for the passed credentials.
 
  @param credentials the credentials of the account.
@@ -253,6 +281,41 @@
  Default is YES.
  */
 @property (nonatomic) BOOL warnOnUnknowDevices;
+
+/**
+ The global override for whether the client should ever send encrypted
+ messages to unverified devices.
+ 
+ This settings is stored in the crypto store.
+
+ If NO, it can still be overridden per-room.
+ If YES, it overrides the per-room settings.
+
+ Default is NO.
+ */
+@property (nonatomic) BOOL globalBlacklistUnverifiedDevices;
+
+/**
+ Tells whether the client should encrypt messages only for the verified devices
+ in this room.
+ 
+ Will be ignored if globalBlacklistUnverifiedDevices is YES.
+ This settings is stored in the crypto store.
+
+ The default value is NO.
+
+ @param roomId the room id.
+ @return YES if the client should encrypt messages only for the verified devices.
+ */
+- (BOOL)isBlacklistUnverifiedDevicesInRoom:(NSString *)roomId;
+
+/**
+ Set the blacklist of unverified devices in a room.
+ 
+ @param roomId the room id.
+ @param blacklist YES to encrypt messsages for only verified devices.
+ */
+- (void)setBlacklistUnverifiedDevicesInRoom:(NSString *)roomId blacklist:(BOOL)blacklist;
 
 @end
 

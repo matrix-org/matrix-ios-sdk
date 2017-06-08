@@ -91,6 +91,106 @@ FOUNDATION_EXPORT NSString *const kMX3PIDMediumMSISDN;
 
 
 /**
+  `MXPublicRoomsResponse` represents the response of a publicRoom request.
+ */
+@interface MXPublicRoomsResponse : MXJSONModel
+
+/**
+ A batch of MXPublicRoom instances.
+ */
+@property (nonatomic) NSArray<MXPublicRoom*> *chunk;
+
+/**
+ Token that can be used to get the next batch of results.
+ */
+@property (nonatomic) NSString *nextBatch;
+
+/**
+ An estimated count of public rooms matching the request.
+ */
+@property (nonatomic) NSUInteger totalRoomCountEstimate;
+
+@end
+
+
+/**
+ This class describes a third party protocol instance.
+ */
+@interface MXThirdPartyProtocolInstance : MXJSONModel
+
+    /**
+     The network identifier.
+     */
+    @property (nonatomic) NSString *networkId;
+
+    /**
+     The fields (domain...).
+     */
+    @property (nonatomic) NSDictionary<NSString*, NSObject*> *fields;
+
+    /**
+     The instance id.
+     */
+    @property (nonatomic) NSString *instanceId;
+
+    /**
+     The description.
+     */
+    @property (nonatomic) NSString *desc;
+
+    /**
+     The dedicated bot.
+     */
+    @property (nonatomic) NSString *botUserId;
+
+    /**
+     The icon URL.
+     */
+    @property (nonatomic) NSString *icon;
+
+@end
+
+/**
+ This class describes a third party server protocol.
+ */
+@interface MXThirdPartyProtocol : MXJSONModel
+
+    /**
+     The user fields (domain, nick, username...).
+     */
+    @property (nonatomic) NSArray<NSString*> *userFields;
+
+    /**
+     The location fields (domain, channels, room...).
+     */
+    @property (nonatomic) NSArray<NSString*> *locationFields;
+
+    /**
+     The field types.
+     */
+    @property (nonatomic) NSDictionary<NSString*, NSDictionary<NSString*, NSString*>* > *fieldTypes;
+
+    /**
+     The instances.
+     */
+    @property (nonatomic) NSArray<MXThirdPartyProtocolInstance*> *instances;
+@end
+
+/**
+ `MXThirdpartyProtocolsResponse` represents the response of a thirdpartyProtocols request.
+ */
+@interface MXThirdpartyProtocolsResponse : MXJSONModel
+
+    /**
+     Available protocols. 
+     The key is the protocol name; the value, the protocol description.
+     */
+    @property (nonatomic) NSDictionary<NSString*, MXThirdPartyProtocol*> *protocols;
+
+@end
+
+
+/**
  Login flow types
  */
 typedef NSString* MXLoginFlowType NS_REFINED_FOR_SWIFT;
@@ -103,6 +203,14 @@ FOUNDATION_EXPORT NSString *const kMXLoginFlowTypeDummy;
 FOUNDATION_EXPORT NSString *const kMXLoginFlowTypeMSISDN;
 
 FOUNDATION_EXPORT NSString *const kMXLoginFlowTypeEmailCode; // Deprecated
+
+/**
+ Identifier types
+ */
+typedef NSString* MXLoginIdentifierType;
+FOUNDATION_EXPORT NSString *const kMXLoginIdentifierTypeUser;
+FOUNDATION_EXPORT NSString *const kMXLoginIdentifierTypeThirdParty;
+FOUNDATION_EXPORT NSString *const kMXLoginIdentifierTypePhone;
 
 /**
  `MXLoginFlow` represents a login or a register flow supported by the home server.
@@ -158,9 +266,14 @@ FOUNDATION_EXPORT NSString *const kMXLoginFlowTypeEmailCode; // Deprecated
 @interface MXCredentials : MXJSONModel
 
     /**
-     The home server name.
+     The home server url (ex: "https://matrix.org").
      */
     @property (nonatomic) NSString *homeServer;
+
+    /**
+     The home server name (ex: "matrix.org").
+     */
+    @property (nonatomic, readonly) NSString *homeServerName;
 
     /**
      The obtained user id.

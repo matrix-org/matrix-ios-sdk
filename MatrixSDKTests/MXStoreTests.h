@@ -1,5 +1,6 @@
 /*
  Copyright 2015 OpenMarket Ltd
+ Copyright 2017 Vector Creations Ltd
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -48,6 +49,7 @@
 - (void)checkLastMessageAfterPaginate:(MXRoom*)room;
 - (void)checkPaginateWhenJoiningAgainAfterLeft:(MXRoom*)room;
 - (void)checkLastMessageProfileChange:(MXRoom*)room;
+- (void)checkLastMessageIgnoreProfileChange:(MXRoom*)room;
 - (void)checkPaginateWhenReachingTheExactBeginningOfTheRoom:(MXRoom*)room;  // Test for https://matrix.org/jira/browse/SYN-162
 - (void)checkRedactEvent:(MXRoom*)room;
 
@@ -60,6 +62,7 @@
 - (void)checkMXRoomPaginationToken:(Class)mxStoreClass;
 - (void)checkMultiAccount:(Class)mxStoreClass;
 - (void)checkRoomAccountDataTags:(Class)mxStoreClass;
+- (void)checkRoomSummary:(Class)mxStoreClass;
 
 @end
 

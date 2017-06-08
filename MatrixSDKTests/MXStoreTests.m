@@ -1,5 +1,6 @@
 /*
  Copyright 2014 OpenMarket Ltd
+ Copyright 2017 Vector Creations Ltd
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -21,6 +22,8 @@
 
 #import "MXMemoryStore.h"
 #import "MXFileStore.h"
+
+#import "MXRoomSummaryUpdater.h"
 
 // Do not bother with retain cycles warnings in tests
 #pragma clang diagnostic push
@@ -596,16 +599,16 @@
 
 - (void)checkLastMessageAfterPaginate:(MXRoom*)room
 {
-    MXEvent *lastMessage = [room lastMessageWithTypeIn:nil];
+    MXEvent *lastMessage = room.summary.lastMessageEvent;
     XCTAssertEqual(lastMessage.eventType, MXEventTypeRoomMessage);
 
     [room.liveTimeline resetPagination];
-    MXEvent *lastMessage2 = [room lastMessageWithTypeIn:nil];
+    MXEvent *lastMessage2 = room.summary.lastMessageEvent;
     XCTAssertEqualObjects(lastMessage2.eventId, lastMessage.eventId,  @"The last message should stay the same");
 
     [room.liveTimeline paginate:100 direction:MXTimelineDirectionBackwards onlyFromStore:NO complete:^() {
 
-        MXEvent *lastMessage3 = [room lastMessageWithTypeIn:nil];
+        MXEvent *lastMessage3 = room.summary.lastMessageEvent;
         XCTAssertEqualObjects(lastMessage3.eventId, lastMessage.eventId,  @"The last message should stay the same");
 
         [expectation fulfill];
@@ -618,20 +621,56 @@
 
 - (void)checkLastMessageProfileChange:(MXRoom*)room
 {
-    MXEvent *lastMessage = [room lastMessageWithTypeIn:nil];
+    MXEvent *lastMessage = room.summary.lastMessageEvent;
     XCTAssertEqual(lastMessage.eventType, MXEventTypeRoomMessage);
 
     [room.liveTimeline listenToEvents:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
 
-        MXEvent *lastMessage2 = [room lastMessageWithTypeIn:nil];
-        XCTAssertEqual(lastMessage2.eventType, MXEventTypeRoomMember);
+        // The room summary is handled afterwards
+        id observer;
+        observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXRoomSummaryDidChangeNotification object:room.summary queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
 
-        room.mxSession.ignoreProfileChangesDuringLastMessageProcessing = YES;
-        MXEvent *lastMessage3 = [room lastMessageWithTypeIn:nil];
-        XCTAssertEqualObjects(lastMessage3.eventId, lastMessage.eventId);
+            [[NSNotificationCenter defaultCenter] removeObserver:observer];
+
+            MXEvent *lastMessage2 = room.summary.lastMessageEvent;
+            XCTAssertNotNil(lastMessage2);
+            XCTAssertEqual(lastMessage2.eventType, MXEventTypeRoomMember);
+            XCTAssertNotEqualObjects(lastMessage2.eventId, lastMessage.eventId);
+
+            [expectation fulfill];
+        }];
+    }];
+
+    [room.mxSession.myUser setDisplayName:@"Toto" success:nil failure:^(NSError *error) {
+        XCTFail(@"The request should not fail - NSError: %@", error);
+        [expectation fulfill];
+    }];
+}
+
+- (void)checkLastMessageIgnoreProfileChange:(MXRoom*)room
+{
+    MXEvent *lastMessage = room.summary.lastMessageEvent;
+    XCTAssertEqual(lastMessage.eventType, MXEventTypeRoomMessage);
+
+    // Ignore profile change
+    MXRoomSummaryUpdater *updater = [MXRoomSummaryUpdater roomSummaryUpdaterForSession:room.mxSession];
+    updater.ignoreMemberProfileChanges = YES;
+
+    [room.liveTimeline listenToEvents:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
+
+        MXEvent *lastMessage2 = room.summary.lastMessageEvent;
+        XCTAssertNotNil(lastMessage2);
+        XCTAssertEqual(lastMessage2.eventType, MXEventTypeRoomMessage);
+        XCTAssertEqualObjects(lastMessage2.eventId, lastMessage.eventId);
+
+        // The room.summary.lastMessageEvent must no be updated in this case
+        [[NSNotificationCenter defaultCenter] addObserverForName:kMXRoomSummaryDidChangeNotification object:room.summary queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
+
+            XCTFail(@"The room.summary.lastMessageEvent must no be updated in this case");
+            
+        }];
 
         [expectation fulfill];
-
     }];
 
     [room.mxSession.myUser setDisplayName:@"Toto" success:nil failure:^(NSError *error) {
@@ -1183,7 +1222,7 @@
 
                 MXRoom *room = [mxSession roomWithRoomId:roomId];
 
-                MXEvent *event = [room lastMessageWithTypeIn:nil];
+                MXEvent *event = room.summary.lastMessageEvent;
 
                 NSUInteger age = event.age;
                 uint64_t ageLocalTs = event.ageLocalTs;
@@ -1440,6 +1479,74 @@
                     }];
                 } failure:^(NSError *error) {
                     XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                    [expectation fulfill];
+                }];
+            } failure:^(NSError *error) {
+                XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                [expectation fulfill];
+            }];
+        } failure:^(NSError *error) {
+            XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+            [expectation fulfill];
+        }];
+    }];
+}
+
+- (void)checkRoomSummary:(Class)mxStoreClass
+{
+    [matrixSDKTestsData doMXRestClientTestWithBob:self readyToTest:^(MXRestClient *bobRestClient, XCTestExpectation *expectation2) {
+
+        expectation = expectation2;
+
+        // Create a random room
+        [bobRestClient createRoom:@"A name" visibility:kMXRoomDirectoryVisibilityPrivate roomAlias:nil topic:@"A topic" success:^(MXCreateRoomResponse *response) {
+
+            // Do the test
+            id<MXStore> store = [[mxStoreClass alloc] init];
+            [store openWithCredentials:matrixSDKTestsData.bobCredentials onComplete:^{
+
+                // Make sure to start from an empty store
+                [store deleteAllData];
+
+                if ([store respondsToSelector:@selector(close)])
+                {
+                    [store close];
+                }
+
+                // Do a 1st [mxSession start] to fill the store
+                mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
+                [mxSession setStore:store success:^{
+                    [mxSession start:^{
+
+                        [mxSession close];
+                        mxSession = nil;
+
+                        // Reopen a session and check roomSummary
+                        id<MXStore> store2 = [[mxStoreClass alloc] init];
+
+                        [store2 openWithCredentials:bobRestClient.credentials onComplete:^{
+
+                            MXRoomSummary *summary = [store2 summaryOfRoom:response.roomId];
+
+                            XCTAssert(summary);
+
+                            XCTAssertEqualObjects(summary.displayname, @"A name");
+                            XCTAssertEqualObjects(summary.topic, @"A topic");
+
+                            [expectation fulfill];
+
+                        } failure:^(NSError *error) {
+                            XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                            [expectation fulfill];
+                        }];
+
+                    } failure:^(NSError *error) {
+                        XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                        [expectation fulfill];
+                    }];
+
+                } failure:^(NSError *error) {
+                    XCTFail(@"The request should not fail - NSError: %@", error);
                     [expectation fulfill];
                 }];
             } failure:^(NSError *error) {

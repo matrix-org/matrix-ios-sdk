@@ -27,6 +27,21 @@
 
 @class MXCrypto;
 
+// Constants for DeviceList.deviceTrackingStatus
+typedef enum : NSUInteger
+{
+    MXDeviceTrackingStatusNotTracked = 0,
+    MXDeviceTrackingStatusPendingDownload,
+    MXDeviceTrackingStatusDownloadInProgress,
+    MXDeviceTrackingStatusUnreachableServer,
+    MXDeviceTrackingStatusUpToDate
+
+} MXDeviceTrackingStatus;
+
+// Helper to transform a NSNumber stored in a NSDictionary to MXDeviceTrackingStatus
+#define MXDeviceTrackingStatusFromNSNumber(aNSNumberObject) ((MXDeviceTrackingStatus)[aNSNumberObject integerValue])
+
+
 /**
  `MXDeviceList` manages the list of other users' devices.
  */
@@ -79,7 +94,21 @@
 - (MXDeviceInfo*)deviceWithIdentityKey:(NSString*)senderKey forUser:(NSString*)userId andAlgorithm:(NSString*)algorithm;
 
 /**
+ Flag the given user for device-list tracking, if they are not already.
+ 
+ This will mean that a subsequent call to refreshOutdatedDeviceLists
+ will download the device list for the user, and that subsequent calls to
+ invalidateUserDeviceList will trigger more updates.
+ 
+ @param userId.
+ */
+- (void)startTrackingDeviceList:(NSString*)userId;
+
+/**
  Mark the cached device list for the given user outdated.
+ 
+ If we are not tracking this user's devices, we'll do nothing. Otherwise
+ we flag the user as needing an update.
 
  This doesn't set off an update, so that several users can be batched
  together. Call refreshOutdatedDeviceLists for that.
@@ -89,8 +118,15 @@
 - (void)invalidateUserDeviceList:(NSString*)userId;
 
 /**
- If there is not already a device list query in progress, and we have
- users who have outdated device lists, start a query now.
+ Mark all tracked device lists as outdated.
+ 
+ This will flag each user whose devices we are tracking as in need of an
+ update.
+ */
+- (void)invalidateAllDeviceLists;
+
+/**
+ If we have users who have outdated device lists, start key downloads for them.
  */
 - (void)refreshOutdatedDeviceLists;
 

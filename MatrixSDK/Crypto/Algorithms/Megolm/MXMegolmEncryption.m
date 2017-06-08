@@ -134,28 +134,42 @@
     queuedEncryption.failure = failure;
     [pendingEncryptions addObject:queuedEncryption];
 
+    return [self ensureSessionForUsers:users success:^(NSObject *sessionInfo) {
+
+        MXOutboundSessionInfo *session = (MXOutboundSessionInfo*)sessionInfo;
+        [self processPendingEncryptionsInSession:session withError:nil];
+
+    } failure:^(NSError *error) {
+        [self processPendingEncryptionsInSession:nil withError:error];
+    }];
+}
+
+- (MXHTTPOperation*)ensureSessionForUsers:(NSArray<NSString*>*)users
+                                  success:(void (^)(NSObject *sessionInfo))success
+                                  failure:(void (^)(NSError *error))failure
+{
     NSDate *startDate = [NSDate date];
 
-    MXHTTPOperation *operation = [self getDevicesInRoom:users success:^(MXUsersDevicesMap<MXDeviceInfo *> *devicesInRoom) {
+    MXHTTPOperation *operation;
+    operation = [self getDevicesInRoom:users success:^(MXUsersDevicesMap<MXDeviceInfo *> *devicesInRoom) {
 
         MXHTTPOperation *operation2 = [self ensureOutboundSession:devicesInRoom success:^(MXOutboundSessionInfo *session) {
 
-            NSLog(@"[MXMegolmEncryption] ensureOutboundSessionInRoom took %.0fms", [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
+            NSLog(@"[MXMegolmEncryption] ensureSessionForUsers took %.0fms", [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
 
-            [self processPendingEncryptionsInSession:session withError:nil];
+            if (success)
+            {
+                success(session);
+            }
 
-        } failure:^(NSError *error) {
-            [self processPendingEncryptionsInSession:nil withError:error];
-        }];
+        } failure:failure];
 
         if (operation2)
         {
             [operation mutateTo:operation2];
         }
 
-    } failure:^(NSError *error) {
-        [self processPendingEncryptionsInSession:nil withError:error];
-    }];
+    } failure:failure];
 
     return operation;
 }
@@ -181,6 +195,8 @@
     // an m.new_device.
     return [crypto.deviceList downloadKeys:users forceDownload:NO success:^(MXUsersDevicesMap<MXDeviceInfo *> *devices) {
 
+        BOOL encryptToVerifiedDevicesOnly = crypto.globalBlacklistUnverifiedDevices || [crypto isBlacklistUnverifiedDevicesInRoom:roomId];
+
         MXUsersDevicesMap<MXDeviceInfo*> *devicesInRoom = [[MXUsersDevicesMap alloc] init];
         MXUsersDevicesMap<MXDeviceInfo*> *unknownDevices = [[MXUsersDevicesMap alloc] init];
 
@@ -197,7 +213,8 @@
                     continue;
                 }
 
-                if (deviceInfo.verified == MXDeviceBlocked)
+                if (deviceInfo.verified == MXDeviceBlocked
+                    || (deviceInfo.verified != MXDeviceVerified && encryptToVerifiedDevicesOnly))
                 {
                     // Remove any blocked devices
                     continue;

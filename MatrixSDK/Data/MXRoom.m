@@ -1,5 +1,6 @@
 /*
  Copyright 2014 OpenMarket Ltd
+ Copyright 2017 Vector Creations Ltd
  
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -29,7 +30,6 @@
 
 NSString *const kMXRoomDidFlushDataNotification = @"kMXRoomDidFlushDataNotification";
 NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotification";
-NSString *const kMXRoomDidUpdateUnreadNotification = @"kMXRoomDidUpdateUnreadNotification";
 
 @interface MXRoom ()
 {
@@ -53,6 +53,8 @@ NSString *const kMXRoomDidUpdateUnreadNotification = @"kMXRoomDidUpdateUnreadNot
         _typingUsers = [NSArray array];
         
         shouldCheckDirectStatusOnJoin = NO;
+        
+        _directUserId = nil;
     }
     
     return self;
@@ -113,6 +115,12 @@ NSString *const kMXRoomDidUpdateUnreadNotification = @"kMXRoomDidUpdateUnreadNot
 }
 
 #pragma mark - Properties implementation
+- (MXRoomSummary *)summary
+{
+    // That makes self.summary a really weak reference
+    return [mxSession roomSummaryWithRoomId:_roomId];
+}
+
 - (MXRoomState *)state
 {
     return _liveTimeline.state;
@@ -160,15 +168,6 @@ NSString *const kMXRoomDidUpdateUnreadNotification = @"kMXRoomDidUpdateUnreadNot
             [self handleReceiptEvent:event direction:MXTimelineDirectionForwards];
         }
     }
-    
-    // Store notification counts from unreadNotifications field in /sync response
-    [mxSession.store storeNotificationCountOfRoom:self.roomId count:roomSync.unreadNotifications.notificationCount];
-    [mxSession.store storeHighlightCountOfRoom:self.roomId count:roomSync.unreadNotifications.highlightCount];
-    
-    // Notify that unread counts have been sync'ed
-    [[NSNotificationCenter defaultCenter] postNotificationName:kMXRoomDidUpdateUnreadNotification
-                                                        object:self
-                                                      userInfo:nil];
 
     // Handle account data events (if any)
     [self handleAccounDataEvents:roomSync.accountData.events direction:MXTimelineDirectionForwards];
@@ -253,28 +252,9 @@ NSString *const kMXRoomDidUpdateUnreadNotification = @"kMXRoomDidUpdateUnreadNot
     return [mxSession.store messagesEnumeratorForRoom:self.roomId];
 }
 
-- (id<MXEventsEnumerator>)enumeratorForStoredMessagesWithTypeIn:(NSArray<MXEventTypeString> *)types ignoreMemberProfileChanges:(BOOL)ignoreProfileChanges
+- (id<MXEventsEnumerator>)enumeratorForStoredMessagesWithTypeIn:(NSArray<MXEventTypeString> *)types
 {
-    return [mxSession.store messagesEnumeratorForRoom:self.roomId withTypeIn:types ignoreMemberProfileChanges:mxSession.ignoreProfileChangesDuringLastMessageProcessing];
-}
-
-- (MXEvent *)lastMessageWithTypeIn:(NSArray<MXEventTypeString> *)types
-{
-    MXEvent *lastMessage;
-
-    @autoreleasepool
-    {
-        id<MXEventsEnumerator> messagesEnumerator = [mxSession.store messagesEnumeratorForRoom:self.roomId withTypeIn:types ignoreMemberProfileChanges:mxSession.ignoreProfileChangesDuringLastMessageProcessing];
-        lastMessage = messagesEnumerator.nextEvent;
-
-        if (!lastMessage)
-        {
-            // If no messages match the filter contraints, return the last whatever is its type
-            lastMessage = self.enumeratorForStoredMessages.nextEvent;
-        }
-    }
-
-    return lastMessage;
+    return [mxSession.store messagesEnumeratorForRoom:self.roomId withTypeIn:types];
 }
 
 - (NSUInteger)storedMessagesCount
@@ -1353,6 +1333,13 @@ NSString *const kMXRoomDidUpdateUnreadNotification = @"kMXRoomDidUpdateUnreadNot
         [mxSession.store removeAllOutgoingMessagesFromRoom:self.roomId];
         [mxSession.store commit];
     }
+
+    // If required, update the last message
+    MXEvent *lastMessageEvent = self.summary.lastMessageEvent;
+    if (lastMessageEvent.sentState != MXEventSentStateSent)
+    {
+        [self.summary resetLastMessage:nil failure:nil commit:YES];
+    }
 }
 
 - (void)removeOutgoingMessage:(NSString*)outgoingMessageEventId
@@ -1363,14 +1350,31 @@ NSString *const kMXRoomDidUpdateUnreadNotification = @"kMXRoomDidUpdateUnreadNot
         [mxSession.store removeOutgoingMessageFromRoom:self.roomId outgoingMessage:outgoingMessageEventId];
         [mxSession.store commit];
     }
+
+    // If required, update the last message
+    if ([self.summary.lastMessageEvent.eventId isEqualToString:outgoingMessageEventId])
+    {
+        [self.summary resetLastMessage:nil failure:nil commit:YES];
+    }
 }
 
 - (void)updateOutgoingMessage:(NSString *)outgoingMessageEventId withOutgoingMessage:(MXEvent *)outgoingMessage
 {
     // Do the update by removing the existing one and create a new one
     // Thus, `outgoingMessage` will go at the end of the outgoing messages list
-    [self removeOutgoingMessage:outgoingMessageEventId];
-    [self storeOutgoingMessage:outgoingMessage];
+    if ([mxSession.store respondsToSelector:@selector(removeOutgoingMessageFromRoom:outgoingMessage:)])
+    {
+        [mxSession.store removeOutgoingMessageFromRoom:self.roomId outgoingMessage:outgoingMessageEventId];
+    }
+    if ([mxSession.store respondsToSelector:@selector(storeOutgoingMessageForRoom:outgoingMessage:)])
+    {
+        [mxSession.store storeOutgoingMessageForRoom:self.roomId outgoingMessage:outgoingMessage];
+    }
+
+    if ([mxSession.store respondsToSelector:@selector(commit)])
+    {
+        [mxSession.store commit];
+    }
 }
 
 - (NSArray<MXEvent*>*)outgoingMessages
@@ -1442,10 +1446,13 @@ NSString *const kMXRoomDidUpdateUnreadNotification = @"kMXRoomDidUpdateUnreadNot
     // Create a room message event.
     MXEvent *localEcho = [self fakeRoomMessageEventWithEventId:nil andContent:msgContent];
     localEcho.sentState = eventState;
-    
+
     // Register the echo as pending for its future deletion
     [self storeOutgoingMessage:localEcho];
-    
+
+    // Update the room summary
+    [self.summary handleEvent:localEcho];
+
     return localEcho;
 }
 
@@ -1639,68 +1646,78 @@ NSString *const kMXRoomDidUpdateUnreadNotification = @"kMXRoomDidUpdateUnreadNot
     return managedEvents;
 }
 
-- (BOOL)acknowledgeEvent:(MXEvent*)event
+- (void)acknowledgeEvent:(MXEvent*)event andUpdateReadMarker:(BOOL)updateReadMarker
 {
     // Sanity check
     if (!event.eventId)
     {
-        return NO;
+        return;
     }
     
-    // Retrieve the current position
-    NSString *currentEventId;
+    MXEvent *updatedReadReceiptEvent = nil;
+    NSString *readMarkerEventId = nil;
+    
+    // Prepare read receipt update.
+    // Retrieve the current read receipt event id
+    NSString *currentReadReceiptEventId;
     NSString *myUserId = mxSession.myUser.userId;
     MXReceiptData* currentData = [mxSession.store getReceiptInRoom:self.roomId forUserId:myUserId];
     if (currentData)
     {
-        currentEventId = currentData.eventId;
+        currentReadReceiptEventId = currentData.eventId;
     }
     
     // Check whether the provided event is acknowledgeable
-    BOOL isAcknowledgeable = ([mxSession.acknowledgableEventTypes indexOfObject:event.type] != NSNotFound);
+    BOOL isAcknowledgeable = (![event.eventId hasPrefix:kMXEventLocalEventIdPrefix] && [mxSession.acknowledgableEventTypes indexOfObject:event.type] != NSNotFound);
     
     // Check whether the event is posterior to the current position (if any).
     // Look for an acknowledgeable event if the event type is not acknowledgeable.
-    if (currentEventId || !isAcknowledgeable)
+    if (currentReadReceiptEventId || !isAcknowledgeable)
     {
         @autoreleasepool
         {
             // Enumerate all the acknowledgeable events of the room
-            id<MXEventsEnumerator> messagesEnumerator = [mxSession.store messagesEnumeratorForRoom:self.roomId withTypeIn:mxSession.acknowledgableEventTypes ignoreMemberProfileChanges:NO];
+            id<MXEventsEnumerator> messagesEnumerator = [mxSession.store messagesEnumeratorForRoom:self.roomId withTypeIn:mxSession.acknowledgableEventTypes];
 
             MXEvent *nextEvent;
             while ((nextEvent = messagesEnumerator.nextEvent))
             {
+                // Check whether the current acknowledged event is posterior to the provided event.
+                if (currentReadReceiptEventId && [nextEvent.eventId isEqualToString:currentReadReceiptEventId])
+                {
+                    // No change is required
+                    break;
+                }
+                
                 // Look for the first acknowledgeable event prior the event timestamp
                 if (nextEvent.originServerTs <= event.originServerTs && nextEvent.eventId)
                 {
-                    if ([nextEvent.eventId isEqualToString:event.eventId] == NO)
-                    {
-                        event = nextEvent;
-                    }
+                    updatedReadReceiptEvent = nextEvent;
 
                     // Here we find the right event to acknowledge, and it is posterior to the current position (if any).
                     break;
-                }
-
-                // Check whether the current acknowledged event is posterior to the provided event.
-                if (currentEventId && [nextEvent.eventId isEqualToString:currentEventId])
-                {
-                    // No change is required
-                    return NO;
-                }
+                }                
             }
         }
     }
+    else
+    {
+        updatedReadReceiptEvent = event;
+    }
     
     // Sanity check: Do not send read receipt on a fake event id
-    if ([event.eventId hasPrefix:kMXRoomInviteStateEventIdPrefix] == NO)
+    if ([updatedReadReceiptEvent.eventId hasPrefix:kMXRoomInviteStateEventIdPrefix])
+    {
+        updatedReadReceiptEvent = nil;
+    }
+    
+    if (updatedReadReceiptEvent)
     {
         // Update the oneself receipts
         MXReceiptData *data = [[MXReceiptData alloc] init];
         
         data.userId = myUserId;
-        data.eventId = event.eventId;
+        data.eventId = updatedReadReceiptEvent.eventId;
         data.ts = (uint64_t) ([[NSDate date] timeIntervalSince1970] * 1000);
         
         if ([mxSession.store storeReceipt:data inRoom:self.roomId])
@@ -1709,261 +1726,116 @@ NSString *const kMXRoomDidUpdateUnreadNotification = @"kMXRoomDidUpdateUnreadNot
             {
                 [mxSession.store commit];
             }
-            
-            [mxSession.matrixRestClient sendReadReceipts:self.roomId eventId:event.eventId success:^(NSString *eventId) {
-                
-            } failure:^(NSError *error) {
-                
-            }];
-            
-            return YES;
         }
     }
     
-    return NO;
-}
+    // Prepare read marker update
+    if (updateReadMarker)
+    {
+        MXEvent *updatedReadMarkerEvent = nil;
+        
+        // Sanity check: Do not send read marker on a fake event id
+        if (![event.eventId hasPrefix:kMXEventLocalEventIdPrefix] && ![event.eventId hasPrefix:kMXRoomInviteStateEventIdPrefix])
+        {
+            updatedReadMarkerEvent = event;
+        }
+        else
+        {
+            // Use by default the read receipt event.
+            updatedReadMarkerEvent = updatedReadReceiptEvent;
+        }
+        
+        
+        if (![_accountData.readMarkerEventId isEqualToString:updatedReadMarkerEvent.eventId])
+        {
+            MXEvent *currentReadMarkerEvent = [mxSession.store eventWithEventId:_accountData.readMarkerEventId inRoom:self.roomId];
+            
+            if (!currentReadMarkerEvent || (currentReadMarkerEvent.originServerTs <= updatedReadMarkerEvent.originServerTs))
+            {
+                readMarkerEventId = updatedReadMarkerEvent.eventId;
+            }
+        }
+    }
+    
+    if (readMarkerEventId)
+    {
+        [self setReadMarker:readMarkerEventId withReadReceipt:updatedReadReceiptEvent.eventId];
+    }
+    else if (updatedReadReceiptEvent)
+    {
+        [mxSession.matrixRestClient sendReadReceipt:self.roomId
+                                            eventId:updatedReadReceiptEvent.eventId
+                                            success:nil
+                                            failure:nil];
+    }}
 
-- (BOOL)acknowledgeLatestEvent:(BOOL)sendReceipt;
+- (void)markAllAsRead
 {
+    NSString *readMarkerEventId = nil;
+    MXReceiptData *updatedReceiptData = nil;
+    
+    NSString *lastMessageEventId = self.summary.lastMessageEvent.eventId;
+    
+    // Sanity check: Do not send read marker on event without id.
+    if (!lastMessageEventId || [lastMessageEventId hasPrefix:kMXRoomInviteStateEventIdPrefix])
+    {
+        return;
+    }
+    
+    // Prepare updated read marker
+    if (![_accountData.readMarkerEventId isEqualToString:lastMessageEventId])
+    {
+        readMarkerEventId = lastMessageEventId;
+    }
+    
+    // Prepare updated read receipt
     @autoreleasepool
     {
-        id<MXEventsEnumerator> messagesEnumerator = [mxSession.store messagesEnumeratorForRoom:self.roomId withTypeIn:mxSession.acknowledgableEventTypes ignoreMemberProfileChanges:NO];
+        id<MXEventsEnumerator> messagesEnumerator = [mxSession.store messagesEnumeratorForRoom:self.roomId withTypeIn:mxSession.acknowledgableEventTypes];
 
         // Acknowledge the lastest valid event
         MXEvent *event;
+        NSString* myUserId = mxSession.myUser.userId;
+        MXReceiptData *currentReceiptData = [mxSession.store getReceiptInRoom:self.roomId forUserId:myUserId];
+        
         while ((event = messagesEnumerator.nextEvent))
         {
             // Sanity check on event id: Do not send read receipt on event without id
             if (event.eventId && ([event.eventId hasPrefix:kMXRoomInviteStateEventIdPrefix] == NO))
             {
-                // Check whether this is the current position of the user
-                NSString* myUserId = mxSession.myUser.userId;
-                MXReceiptData* currentData = [mxSession.store getReceiptInRoom:self.roomId forUserId:myUserId];
-
-                if (currentData && [currentData.eventId isEqualToString:event.eventId])
+                // Check whether this is not the current position of the user
+                if (!currentReceiptData || ![currentReceiptData.eventId isEqualToString:event.eventId])
                 {
-                    // No change is required
-                    return NO;
-                }
-
-                // Update the oneself receipts
-                MXReceiptData *data = [[MXReceiptData alloc] init];
-
-                data.userId = myUserId;
-                data.eventId = event.eventId;
-                data.ts = (uint64_t) ([[NSDate date] timeIntervalSince1970] * 1000);
-
-                if ([mxSession.store storeReceipt:data inRoom:self.roomId])
-                {
-                    if ([mxSession.store respondsToSelector:@selector(commit)])
-                    {
-                        [mxSession.store commit];
-                    }
-
-                    if (sendReceipt)
-                    {
-                        [mxSession.matrixRestClient sendReadReceipts:self.roomId eventId:event.eventId success:^(NSString *eventId) {
-                            
-                        } failure:^(NSError *error) {
-                            
-                        }];
-                    }
+                    // Update the oneself receipts
+                    updatedReceiptData = [[MXReceiptData alloc] init];
                     
-                    return YES;
-                }
-            }
-        }
-    }
-
-    return NO;
-}
-
-- (NSUInteger)localUnreadEventCount
-{
-    // Check for unread events in store
-    return [mxSession.store localUnreadEventCount:self.roomId withTypeIn:mxSession.unreadEventTypes];
-}
-
-- (NSUInteger)notificationCount
-{
-    return [mxSession.store notificationCountOfRoom:self.roomId];
-}
-
-- (NSUInteger)highlightCount
-{
-    return [mxSession.store highlightCountOfRoom:self.roomId];
-}
-
-- (BOOL)isDirect
-{
-    // Check whether this room is tagged as direct for one of the room members.
-    return ([self getDirectUserId] != nil);
-}
-
-- (BOOL)looksLikeDirect
-{
-    BOOL kicked = NO;
-    if (self.state.membership == MXMembershipLeave)
-    {
-        MXRoomMember *member = [self.state memberWithUserId:mxSession.myUser.userId];
-        kicked = ![member.originalEvent.sender isEqualToString:mxSession.myUser.userId];
-    }
-    
-    if (self.state.membership == MXMembershipJoin || self.state.membership == MXMembershipBan || kicked)
-    {
-        // Consider as direct chats the 1:1 chats.
-        // Contrary to the web client we allow the tagged rooms (favorite/low priority...) to become direct.
-        if (self.state.members.count == 2)
-        {
-            return YES;
-        }
-    }
-    return NO;
-}
-
-- (MXHTTPOperation*)setIsDirect:(BOOL)isDirect
-                     withUserId:(NSString*)userId
-                        success:(void (^)())success
-                        failure:(void (^)(NSError *error))failure
-{
-    NSString *currentDirectUserId = [self getDirectUserId];
-    
-    if (isDirect == NO)
-    {
-        if (currentDirectUserId)
-        {
-            NSMutableArray *roomLists = [NSMutableArray arrayWithArray:mxSession.directRooms[currentDirectUserId]];
-            
-            [roomLists removeObject:self.roomId];
-            
-            if (roomLists.count)
-            {
-                [mxSession.directRooms setObject:roomLists forKey:currentDirectUserId];
-            }
-            else
-            {
-                [mxSession.directRooms removeObjectForKey:currentDirectUserId];
-            }
-            
-            // Note: mxSession will post the 'kMXSessionDirectRoomsDidChangeNotification' notification on account data update.
-            return [mxSession uploadDirectRooms:success failure:failure];
-        }
-    }
-    else if (!currentDirectUserId || (userId && ![userId isEqualToString:currentDirectUserId]))
-    {
-        // Here the room is not direct yet, or it is direct with the wrong user
-        NSString *directUserId = userId;
-        
-        if (!directUserId)
-        {
-            // By default mark as direct this room for the oldest joined member.
-            NSArray<MXRoomMember *> *members = self.state.joinedMembers;
-            MXRoomMember *oldestJoinedMember;
-            
-            for (MXRoomMember *member in members)
-            {
-                if (![member.userId isEqualToString:mxSession.myUser.userId])
-                {
-                    if (!oldestJoinedMember)
+                    updatedReceiptData.userId = myUserId;
+                    updatedReceiptData.eventId = event.eventId;
+                    updatedReceiptData.ts = (uint64_t) ([[NSDate date] timeIntervalSince1970] * 1000);
+                    
+                    if ([mxSession.store storeReceipt:updatedReceiptData inRoom:self.roomId])
                     {
-                        oldestJoinedMember = member;
-                    }
-                    else if (member.originalEvent.originServerTs < oldestJoinedMember.originalEvent.originServerTs)
-                    {
-                        oldestJoinedMember = member;
-                    }
-                }
-            }
-            
-            directUserId = oldestJoinedMember.userId;
-            if (!directUserId)
-            {
-                // Consider the first invited member if none has joined
-                members = [self.state membersWithMembership:MXMembershipInvite];
-                
-                MXRoomMember *oldestInvitedMember;
-                for (MXRoomMember *member in members)
-                {
-                    if (![member.userId isEqualToString:mxSession.myUser.userId])
-                    {
-                        if (!oldestInvitedMember)
+                        if ([mxSession.store respondsToSelector:@selector(commit)])
                         {
-                            oldestInvitedMember = member;
-                        }
-                        else if (member.originalEvent.originServerTs < oldestInvitedMember.originalEvent.originServerTs)
-                        {
-                            oldestInvitedMember = member;
+                            [mxSession.store commit];
                         }
                     }
                 }
-                
-                directUserId = oldestInvitedMember.userId;
-            }
-            
-            if (!directUserId)
-            {
-                // Use the current user by default
-                directUserId = mxSession.myUser.userId;
             }
         }
-        
-        // Add the room id in the direct chats list for this user
-        NSMutableArray *roomLists = (mxSession.directRooms[directUserId] ? [NSMutableArray arrayWithArray:mxSession.directRooms[directUserId]] : [NSMutableArray array]);
-        [roomLists addObject:self.roomId];
-        [mxSession.directRooms setObject:roomLists forKey:directUserId];
-        
-        // Remove the room id for the current direct user if any
-        if (currentDirectUserId)
-        {
-            roomLists = [NSMutableArray arrayWithArray:mxSession.directRooms[currentDirectUserId]];
-            [roomLists removeObject:self.roomId];
-            if (roomLists.count)
-            {
-                [mxSession.directRooms setObject:roomLists forKey:currentDirectUserId];
-            }
-            else
-            {
-                [mxSession.directRooms removeObjectForKey:currentDirectUserId];
-            }
-        }
-        
-        // Note: mxSession will post the 'kMXSessionDirectRoomsDidChangeNotification' notification on account data update.
-        return [mxSession uploadDirectRooms:success failure:failure];
     }
     
-    // Here the room has already the right value for the direct tag
-    if (success)
+    if (readMarkerEventId)
     {
-        success();
+        [self setReadMarker:readMarkerEventId withReadReceipt:updatedReceiptData.eventId];
     }
-    
-    return nil;
-}
-
-- (NSString*)getDirectUserId
-{
-    // Return the user identifier for who this room is tagged as direct if any.
-    NSString *directUserId;
-    
-    // Enumerate all the user identifiers for which a direct chat is defined.
-    NSArray<NSString *> *userIdWithDirectRoom = mxSession.directRooms.allKeys;
-    
-    for (NSString *userId in userIdWithDirectRoom)
+    else if (updatedReceiptData)
     {
-        // Check whether this user is a member of this room.
-        if ([self.state memberWithUserId:userId])
-        {
-            // Check whether this room is tagged as direct for this user
-            if ([mxSession.directRooms[userId] indexOfObject:self.roomId] != NSNotFound)
-            {
-                // Matched!
-                directUserId = userId;
-                break;
-            }
-        }
+        [mxSession.matrixRestClient sendReadReceipt:self.roomId
+                                            eventId:updatedReceiptData.eventId
+                                            success:nil
+                                            failure:nil];
     }
-    
-    return directUserId;
 }
 
 - (NSArray*)getEventReceipts:(NSString*)eventId sorted:(BOOL)sort
@@ -1998,6 +1870,192 @@ NSString *const kMXRoomDidUpdateUnreadNotification = @"kMXRoomDidUpdateUnreadNot
     return receipts;
 }
 
+#pragma mark - Read marker handling
+
+- (void)moveReadMarkerToEventId:(NSString*)eventId
+{
+    // Sanity check on event id: Do not send read marker on event without id
+    if (eventId && ![eventId hasPrefix:kMXEventLocalEventIdPrefix] && ![eventId hasPrefix:kMXRoomInviteStateEventIdPrefix])
+    {
+        [self setReadMarker:eventId withReadReceipt:nil];
+    }
+}
+
+- (void)forgetReadMarker
+{
+    // Retrieve the current position
+    NSString *myUserId = mxSession.myUser.userId;
+    MXReceiptData* currentData = [mxSession.store getReceiptInRoom:self.roomId forUserId:myUserId];
+    if (currentData)
+    {
+        [self setReadMarker:currentData.eventId withReadReceipt:nil];
+    }
+}
+
+- (void)setReadMarker:(NSString*)eventId withReadReceipt:(NSString*)receiptEventId
+{
+    _accountData.readMarkerEventId = eventId;
+    
+    // Update the store
+    if ([mxSession.store respondsToSelector:@selector(storeAccountDataForRoom:userData:)])
+    {
+        [mxSession.store storeAccountDataForRoom:self.roomId userData:_accountData];
+        
+        if ([mxSession.store respondsToSelector:@selector(commit)])
+        {
+            [mxSession.store commit];
+        }
+    }
+    
+    // Update data on the homeserver side
+    [mxSession.matrixRestClient sendReadMarker:self.roomId readMarkerEventId:eventId readReceiptEventId:receiptEventId success:nil failure:nil];
+}
+
+#pragma mark - Direct chats handling
+
+- (BOOL)isDirect
+{
+    // Check whether this room is tagged as direct for one of the room members.
+    return (_directUserId != nil);
+}
+
+- (BOOL)looksLikeDirect
+{
+    BOOL kicked = NO;
+    if (self.state.membership == MXMembershipLeave)
+    {
+        MXRoomMember *member = [self.state memberWithUserId:mxSession.myUser.userId];
+        kicked = ![member.originalEvent.sender isEqualToString:mxSession.myUser.userId];
+    }
+    
+    if (self.state.membership == MXMembershipJoin || self.state.membership == MXMembershipBan || kicked)
+    {
+        // Consider as direct chats the 1:1 chats.
+        // Contrary to the web client we allow the tagged rooms (favorite/low priority...) to become direct.
+        if (self.state.members.count == 2)
+        {
+            return YES;
+        }
+    }
+    return NO;
+}
+
+- (MXHTTPOperation*)setIsDirect:(BOOL)isDirect
+                     withUserId:(NSString*)userId
+                        success:(void (^)())success
+                        failure:(void (^)(NSError *error))failure
+{
+    if (isDirect == NO)
+    {
+        if (_directUserId)
+        {
+            NSMutableArray *roomLists = [NSMutableArray arrayWithArray:mxSession.directRooms[_directUserId]];
+            
+            [roomLists removeObject:self.roomId];
+            
+            if (roomLists.count)
+            {
+                [mxSession.directRooms setObject:roomLists forKey:_directUserId];
+            }
+            else
+            {
+                [mxSession.directRooms removeObjectForKey:_directUserId];
+            }
+            
+            // Note: mxSession will post the 'kMXSessionDirectRoomsDidChangeNotification' notification on account data update.
+            return [mxSession uploadDirectRooms:success failure:failure];
+        }
+    }
+    else if (!_directUserId || (userId && ![userId isEqualToString:_directUserId]))
+    {
+        // Here the room is not direct yet, or it is direct with the wrong user
+        NSString *newDirectUserId = userId;
+        
+        if (!newDirectUserId)
+        {
+            // By default mark as direct this room for the oldest joined member.
+            NSArray<MXRoomMember *> *members = self.state.joinedMembers;
+            MXRoomMember *oldestJoinedMember;
+            
+            for (MXRoomMember *member in members)
+            {
+                if (![member.userId isEqualToString:mxSession.myUser.userId])
+                {
+                    if (!oldestJoinedMember)
+                    {
+                        oldestJoinedMember = member;
+                    }
+                    else if (member.originalEvent.originServerTs < oldestJoinedMember.originalEvent.originServerTs)
+                    {
+                        oldestJoinedMember = member;
+                    }
+                }
+            }
+            
+            newDirectUserId = oldestJoinedMember.userId;
+            if (!newDirectUserId)
+            {
+                // Consider the first invited member if none has joined
+                members = [self.state membersWithMembership:MXMembershipInvite];
+                
+                MXRoomMember *oldestInvitedMember;
+                for (MXRoomMember *member in members)
+                {
+                    if (![member.userId isEqualToString:mxSession.myUser.userId])
+                    {
+                        if (!oldestInvitedMember)
+                        {
+                            oldestInvitedMember = member;
+                        }
+                        else if (member.originalEvent.originServerTs < oldestInvitedMember.originalEvent.originServerTs)
+                        {
+                            oldestInvitedMember = member;
+                        }
+                    }
+                }
+                
+                newDirectUserId = oldestInvitedMember.userId;
+            }
+            
+            if (!newDirectUserId)
+            {
+                // Use the current user by default
+                newDirectUserId = mxSession.myUser.userId;
+            }
+        }
+        
+        // Add the room id in the direct chats list for this user
+        NSMutableArray *roomLists = (mxSession.directRooms[newDirectUserId] ? [NSMutableArray arrayWithArray:mxSession.directRooms[newDirectUserId]] : [NSMutableArray array]);
+        [roomLists addObject:self.roomId];
+        [mxSession.directRooms setObject:roomLists forKey:newDirectUserId];
+        
+        // Remove the room id for the current direct user if any
+        if (_directUserId)
+        {
+            roomLists = [NSMutableArray arrayWithArray:mxSession.directRooms[_directUserId]];
+            [roomLists removeObject:self.roomId];
+            if (roomLists.count)
+            {
+                [mxSession.directRooms setObject:roomLists forKey:_directUserId];
+            }
+            else
+            {
+                [mxSession.directRooms removeObjectForKey:_directUserId];
+            }
+        }
+        
+        // Note: mxSession will post the 'kMXSessionDirectRoomsDidChangeNotification' notification on account data update.
+        return [mxSession uploadDirectRooms:success failure:failure];
+    }
+    
+    // Here the room has already the right value for the direct tag
+    if (success)
+    {
+        success();
+    }
+    
+    return nil;
+}
 
 #pragma mark - Crypto
 
@@ -2040,15 +2098,17 @@ NSString *const kMXRoomDidUpdateUnreadNotification = @"kMXRoomDidUpdateUnreadNot
     return operation;
 }
 
+
 #pragma mark - Utils
-- (NSComparisonResult)compareOriginServerTs:(MXRoom *)otherRoom
-{
-    return [[otherRoom lastMessageWithTypeIn:nil] compareOriginServerTs:[self lastMessageWithTypeIn:nil]];
-}
 
 - (NSString *)description
 {
     return [NSString stringWithFormat:@"<MXRoom: %p> %@: %@ - %@", self, self.roomId, self.state.name, self.state.topic];
+}
+
+- (NSComparisonResult)compareLastMessageEventOriginServerTs:(MXRoom *)otherRoom
+{
+    return [self.summary.lastMessageEvent compareOriginServerTs:otherRoom.summary.lastMessageEvent];
 }
 
 @end

@@ -1,5 +1,6 @@
 /*
  Copyright 2016 OpenMarket Ltd
+ Copyright 2017 Vector Creations Ltd
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -154,6 +155,20 @@
 - (NSDictionary<NSString*, MXDeviceInfo*>*)devicesForUser:(NSString*)userId;
 
 /**
+ The device tracking status.
+
+ @return A map from user id to MXDeviceTrackingStatus.
+ */
+- (NSDictionary<NSString*, NSNumber*>*)deviceTrackingStatus;
+
+/**
+ Store the device tracking status.
+
+ @param statusMap A map from user id to MXDeviceTrackingStatus.
+ */
+- (void)storeDeviceTrackingStatus:(NSDictionary<NSString*, NSNumber*>*)statusMap;
+
+/**
  Store the crypto algorithm for a room.
 
  @param roomId the id of the room.
@@ -208,6 +223,44 @@
  @return the list of all inbound group sessions.
  */
 - (NSArray<MXOlmInboundGroupSession*> *)inboundGroupSessions;
+
+
+#pragma mark - Crypto settings
+
+/**
+ The global override for whether the client should ever send encrypted
+ messages to unverified devices.
+
+ This settings is stored in the crypto store.
+
+ If NO, it can still be overridden per-room.
+ If YES, it overrides the per-room settings.
+
+ Default is NO.
+ */
+@property (nonatomic) BOOL globalBlacklistUnverifiedDevices;
+
+/**
+ Tells whether the client should encrypt messages only for the verified devices
+ in this room.
+
+ Will be ignored if globalBlacklistUnverifiedDevices is YES.
+ This settings is stored in the crypto store.
+
+ The default value is NO.
+
+ @param roomId the room id.
+ @return YES if the client should encrypt messages only for the verified devices.
+ */
+- (BOOL)blacklistUnverifiedDevicesInRoom:(NSString *)roomId;
+
+/**
+ Set the blacklist of unverified devices in a room.
+
+ @param roomId the room id.
+ @param blacklist YES to encrypt messsages for only verified devices.
+ */
+- (void)storeBlacklistUnverifiedDevicesInRoom:(NSString *)roomId blacklist:(BOOL)blacklist;
 
 
 #pragma mark - Methods for unitary tests purpose

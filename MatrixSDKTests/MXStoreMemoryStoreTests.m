@@ -1,5 +1,6 @@
 /*
  Copyright 2014 OpenMarket Ltd
+ Copyright 2017 Vector Creations Ltd
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -139,6 +140,13 @@
 {
     [self doTestWithMXMemoryStore:^(MXRoom *room) {
         [self checkLastMessageProfileChange:room];
+    }];
+}
+
+- (void)testMXMemoryStoreLastMessageIgnoreProfileChange
+{
+    [self doTestWithMXMemoryStore:^(MXRoom *room) {
+        [self checkLastMessageIgnoreProfileChange:room];
     }];
 }
 
@@ -356,33 +364,6 @@
         paginateBackMessagesCallCount++;
 
     }];
-}
-
-- (void)testMXMemoryStoreLastMessage
-{
-    [self doTestWithMXMemoryStore:^(MXRoom *room) {
-
-        [room.liveTimeline resetPagination];
-        [room.liveTimeline paginate:8 direction:MXTimelineDirectionBackwards onlyFromStore:NO complete:^() {
-
-            MXEvent *lastMessage = [room lastMessageWithTypeIn:nil];
-            XCTAssertEqual(lastMessage.eventType, MXEventTypeRoomMessage);
-
-            lastMessage = [room lastMessageWithTypeIn:@[kMXEventTypeStringRoomMessage]];
-            XCTAssertEqual(lastMessage.eventType, MXEventTypeRoomMessage);
-
-            lastMessage = [room lastMessageWithTypeIn:@[kMXEventTypeStringRoomMember]];
-            XCTAssertEqual(lastMessage.eventType, MXEventTypeRoomMember);
-
-            [expectation fulfill];
-
-        } failure:^(NSError *error) {
-            XCTFail(@"The request should not fail - NSError: %@", error);
-            [expectation fulfill];
-        }];
-
-    }];
-
 }
 
 @end

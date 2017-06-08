@@ -1633,6 +1633,26 @@
     }];
 }
 
+- (void)testThirdpartyProtocols
+{
+    [matrixSDKTestsData doMXRestClientTestWithBob:self readyToTest:^(MXRestClient *bobRestClient, XCTestExpectation *expectation) {
+
+        [bobRestClient thirdpartyProtocols:^(MXThirdpartyProtocolsResponse *thirdpartyProtocolsResponse) {
+
+            XCTAssert(thirdpartyProtocolsResponse);
+            XCTAssert(thirdpartyProtocolsResponse.protocols);
+            XCTAssertEqual(thirdpartyProtocolsResponse.protocols.count, 0, @"There is no bridge on the test HS");
+
+            [expectation fulfill];
+
+        } failure:^(NSError *error) {
+            XCTFail(@"The request should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+
+    }];
+}
+
 @end
 
 #pragma clang diagnostic pop

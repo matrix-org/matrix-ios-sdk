@@ -1,5 +1,6 @@
 /*
  Copyright 2014 OpenMarket Ltd
+ Copyright 2017 Vector Creations Ltd
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -27,9 +28,6 @@
         messages = [aDecoder decodeObjectForKey:@"messages"];
 
         self.paginationToken = [aDecoder decodeObjectForKey:@"paginationToken"];
-        
-        self.notificationCount = [((NSNumber*)[aDecoder decodeObjectForKey:@"notificationCount"]) unsignedIntegerValue];
-        self.highlightCount = [((NSNumber*)[aDecoder decodeObjectForKey:@"highlightCount"]) unsignedIntegerValue];
 
         self.hasReachedHomeServerPaginationEnd = [aDecoder decodeBoolForKey:@"hasReachedHomeServerPaginationEnd"];
 
@@ -63,15 +61,6 @@
     if (self.paginationToken)
     {
         [aCoder encodeObject:self.paginationToken forKey:@"paginationToken"];
-    }
-    
-    if (self.notificationCount)
-    {
-        [aCoder encodeObject:@(self.notificationCount) forKey:@"notificationCount"];
-    }
-    if (self.highlightCount)
-    {
-        [aCoder encodeObject:@(self.highlightCount) forKey:@"highlightCount"];
     }
     
     [aCoder encodeBool:self.hasReachedHomeServerPaginationEnd forKey:@"hasReachedHomeServerPaginationEnd"];

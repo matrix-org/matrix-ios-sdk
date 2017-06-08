@@ -58,11 +58,11 @@ def symbolicate(crashLogData):
                   jenkinsJob = "MatrixConsoleiOSDevelop"
              else:
                   jenkinsJob = "MatrixConsoleiOS"
-        elif app == "Vector":
+        elif app == "Riot":
              if "develop" in buildVersion:
-                  jenkinsJob = "VectoriOSDevelop"
+                  jenkinsJob = "RiotiOSDevelop"
              else:
-                  jenkinsJob = "VectoriOS"
+                  jenkinsJob = "RiotiOS"
                         
         jenkinsBuild = re.findall(r"#(.*)", buildVersion)
         if len(jenkinsBuild):

@@ -240,10 +240,14 @@ MXAuthAction;
 {
     // For registration, use POST with no params to get the login mechanism to use
     // The request will fail with Unauthorized status code, but the login mechanism will be available in response data.
+    NSDictionary* parameters = nil;
+    
+    // Patch: Add the temporary `x_show_msisdn` flag to not filter the msisdn login type in the supported authentication flows.
+    parameters = @{@"x_show_msisdn":@(YES)};
     
     return [httpClient requestWithMethod:@"POST"
                                     path:[self authActionPath:MXAuthActionRegister]
-                              parameters:@{}
+                              parameters:parameters
                                  success:^(NSDictionary *JSONResponse) {
                                      
                                      // sanity check
@@ -429,6 +433,63 @@ MXAuthAction;
     return [[NSURL URLWithString:@"_matrix/static/client/register/" relativeToURL:[NSURL URLWithString:homeserver]] absoluteString];
 }
 
+- (MXHTTPOperation *)forgetPasswordForEmail:(NSString *)email
+                               clientSecret:(NSString *)clientSecret
+                                sendAttempt:(NSUInteger)sendAttempt
+                                    success:(void (^)(NSString *sid))success
+                                    failure:(void (^)(NSError *error))failure
+{
+    NSString *identityServer = _identityServer;
+    if ([identityServer hasPrefix:@"http://"] || [identityServer hasPrefix:@"https://"])
+    {
+        identityServer = [identityServer substringFromIndex:[identityServer rangeOfString:@"://"].location + 3];
+    }
+    
+    NSDictionary *parameters = @{
+                                 @"email" : email,
+                                 @"client_secret" : clientSecret,
+                                 @"send_attempt" : @(sendAttempt),
+                                 @"id_server" : identityServer
+                                 };
+    
+    return [httpClient requestWithMethod:@"POST"
+                                    path:[NSString stringWithFormat:@"%@/account/password/email/requestToken", apiPathPrefix]
+                              parameters:parameters
+                                 success:^(NSDictionary *JSONResponse) {
+                                     if (success && processingQueue)
+                                     {
+                                         dispatch_async(processingQueue, ^{
+                                             
+                                             NSString *sid;
+                                             MXJSONModelSetString(sid, JSONResponse[@"sid"]);
+                                             
+                                             if (completionQueue)
+                                             {
+                                                 dispatch_async(completionQueue, ^{
+                                                     success(sid);
+                                                 });
+                                             }
+                                             
+                                         });
+                                     }
+                                 }
+                                 failure:^(NSError *error) {
+                                     if (failure && processingQueue)
+                                     {
+                                         dispatch_async(processingQueue, ^{
+                                             
+                                             if (completionQueue)
+                                             {
+                                                 dispatch_async(completionQueue, ^{
+                                                     failure(error);
+                                                 });
+                                             }
+                                             
+                                         });
+                                     }
+                                 }];
+}
+
 #pragma mark - Login operations
 - (MXHTTPOperation*)getLoginSession:(void (^)(MXAuthenticationSession *authSession))success
                             failure:(void (^)(NSError *error))failure
@@ -506,8 +567,15 @@ MXAuthAction;
 
     NSDictionary *parameters = @{
                                  @"type": loginType,
-                                 @"user": username,
-                                 @"password": password
+                                 @"identifier": @{
+                                         @"type": kMXLoginIdentifierTypeUser,
+                                         @"user": username
+                                         },
+                                 @"password": password,
+
+                                 // Patch: add the old login api parameters to make dummy login
+                                 // still working
+                                 @"user": username
                                  };
 
     return [self login:parameters
@@ -737,6 +805,13 @@ MXAuthAction;
         NSString *deviceName = [NSHost currentHost].localizedName;
 #endif
         newParameters[@"initial_device_display_name"] = deviceName;
+        
+        if (MXAuthActionRegister == authAction)
+        {
+            // Patch: Add the temporary `x_show_msisdn` flag to not filter the msisdn login type in the supported authentication flows.
+            newParameters[@"x_show_msisdn"] = @(YES);
+        }
+        
         parameters = newParameters;
     }
 
@@ -3568,11 +3643,11 @@ MXAuthAction;
 }
 
 
-#pragma mark - read receipts
-- (MXHTTPOperation*)sendReadReceipts:(NSString*)roomId
-                             eventId:(NSString*)eventId
-                             success:(void (^)(NSString *eventId))success
-                             failure:(void (^)(NSError *error))failure
+#pragma mark - read receipt
+- (MXHTTPOperation*)sendReadReceipt:(NSString*)roomId
+                            eventId:(NSString*)eventId
+                            success:(void (^)())success
+                            failure:(void (^)(NSError *error))failure
 {
     return [httpClient requestWithMethod:@"POST"
                                     path: [NSString stringWithFormat:@"%@/rooms/%@/receipt/m.read/%@", apiPathPrefix, roomId, eventId]
@@ -3586,7 +3661,7 @@ MXAuthAction;
                                              if (completionQueue)
                                              {
                                                  dispatch_async(completionQueue, ^{
-                                                     success(eventId);
+                                                     success();
                                                  });
                                              }
                                              
@@ -3611,13 +3686,110 @@ MXAuthAction;
     
 }
 
-#pragma mark - Directory operations
-- (MXHTTPOperation*)publicRooms:(void (^)(NSArray *rooms))success
-                        failure:(void (^)(NSError *error))failure
+#pragma mark - read marker
+- (MXHTTPOperation*)sendReadMarker:(NSString*)roomId
+                 readMarkerEventId:(NSString*)readMarkerEventId
+                readReceiptEventId:(NSString*)readReceiptEventId
+                           success:(void (^)())success
+                           failure:(void (^)(NSError *error))failure
 {
-    return [httpClient requestWithMethod:@"GET"
-                                    path:[NSString stringWithFormat:@"%@/publicRooms", apiPathPrefix]
-                              parameters:nil
+    NSMutableDictionary *parameters = [NSMutableDictionary dictionary];
+    if (readMarkerEventId)
+    {
+        parameters[@"m.fully_read"] = readMarkerEventId;
+    }
+    if (readReceiptEventId)
+    {
+        parameters[@"m.read"] = readReceiptEventId;
+    }
+    
+    return [httpClient requestWithMethod:@"POST"
+                                    path:[NSString stringWithFormat:@"%@/rooms/%@/read_markers", apiPathPrefix, roomId]
+                              parameters:parameters
+                                 success:^(NSDictionary *JSONResponse) {
+                                     if (success && processingQueue)
+                                     {
+                                         // Use here the processing queue in order to keep the server response order
+                                         dispatch_async(processingQueue, ^{
+                                             
+                                             if (completionQueue)
+                                             {
+                                                 dispatch_async(completionQueue, ^{
+                                                     success();
+                                                 });
+                                             }
+                                             
+                                         });
+                                     }
+                                 }
+                                 failure:^(NSError *error) {
+                                     if (failure && processingQueue)
+                                     {
+                                         dispatch_async(processingQueue, ^{
+                                             
+                                             if (completionQueue)
+                                             {
+                                                 dispatch_async(completionQueue, ^{
+                                                     failure(error);
+                                                 });
+                                             }
+                                             
+                                         });
+                                     }
+                                 }];
+}
+
+#pragma mark - Directory operations
+- (MXHTTPOperation *)publicRoomsOnServer:(NSString *)server
+                                   limit:(NSUInteger)limit
+                                   since:(NSString *)since
+                                  filter:(NSString *)filter
+                    thirdPartyInstanceId:(NSString *)thirdPartyInstanceId
+                      includeAllNetworks:(BOOL)includeAllNetworks
+                                 success:(void (^)(MXPublicRoomsResponse *))success
+                                 failure:(void (^)(NSError *))failure
+{
+    NSString* path = [NSString stringWithFormat:@"%@/publicRooms", apiPathPrefix];
+    if (server)
+    {
+        path = [NSString stringWithFormat:@"%@?server=%@", path, server];
+    }
+
+    NSMutableDictionary *parameters = [NSMutableDictionary dictionary];
+    if (-1 != limit)
+    {
+        parameters[@"limit"] = @(limit);
+    }
+    if (since)
+    {
+        parameters[@"since"] = since;
+    }
+    if (filter)
+    {
+        parameters[@"filter"] = @{
+                                  @"generic_search_term": filter
+                                  };
+    }
+    if (thirdPartyInstanceId)
+    {
+        parameters[@"third_party_instance_id"] = thirdPartyInstanceId;
+    }
+    if (includeAllNetworks)
+    {
+        parameters[@"include_all_networks"] = @(YES);
+    }
+
+    NSString *method = @"POST";
+    if (parameters.count == 0)
+    {
+        // If there is no parameter, use the legacy API. It does not required an access token.
+        method = @"GET";
+        parameters = nil;
+    }
+
+    return [httpClient requestWithMethod:method
+                                    path:path
+                              parameters:parameters
                                  success:^(NSDictionary *JSONResponse) {
                                      if (success && processingQueue)
                                      {
@@ -3626,13 +3798,13 @@ MXAuthAction;
                                              // Create public rooms array from JSON on processing queue
                                              dispatch_async(processingQueue, ^{
 
-                                                 NSArray *publicRooms;
-                                                 MXJSONModelSetMXJSONModelArray(publicRooms, MXPublicRoom, JSONResponse[@"chunk"]);
+                                                 MXPublicRoomsResponse *publicRoomsResponse;
+                                                 MXJSONModelSetMXJSONModel(publicRoomsResponse, MXPublicRoomsResponse, JSONResponse);
 
                                                  if (completionQueue)
                                                  {
                                                      dispatch_async(completionQueue, ^{
-                                                         success(publicRooms);
+                                                         success(publicRoomsResponse);
                                                      });
                                                  }
 
@@ -3698,6 +3870,52 @@ MXAuthAction;
                                                  });
                                              }
                                              
+                                         });
+                                     }
+                                 }];
+}
+
+
+#pragma mark - Third party Lookup API
+- (MXHTTPOperation*)thirdpartyProtocols:(void (^)(MXThirdpartyProtocolsResponse *thirdpartyProtocolsResponse))success
+                                failure:(void (^)(NSError *error))failure;
+{
+    return [httpClient requestWithMethod:@"GET"
+                                    path:[NSString stringWithFormat:@"%@/thirdparty/protocols", kMXAPIPrefixPathUnstable]
+                              parameters:nil
+                                 success:^(NSDictionary *JSONResponse) {
+                                     if (success && processingQueue)
+                                     {
+                                         @autoreleasepool
+                                         {
+                                             dispatch_async(processingQueue, ^{
+
+                                                 MXThirdpartyProtocolsResponse *thirdpartyProtocolsResponse;
+                                                 MXJSONModelSetMXJSONModel(thirdpartyProtocolsResponse, MXThirdpartyProtocolsResponse, JSONResponse);
+
+                                                 if (completionQueue)
+                                                 {
+                                                     dispatch_async(completionQueue, ^{
+                                                         success(thirdpartyProtocolsResponse);
+                                                     });
+                                                 }
+
+                                             });
+                                         }
+                                     }
+                                 }
+                                 failure:^(NSError *error) {
+                                     if (failure && processingQueue)
+                                     {
+                                         dispatch_async(processingQueue, ^{
+
+                                             if (completionQueue)
+                                             {
+                                                 dispatch_async(completionQueue, ^{
+                                                     failure(error);
+                                                 });
+                                             }
+
                                          });
                                      }
                                  }];
@@ -4092,7 +4310,9 @@ MXAuthAction;
                                                    }
                                          success:^(NSDictionary *JSONResponse) {
                                              
-                                             if (!JSONResponse[@"errcode"])
+                                             BOOL successValue = NO;
+                                             MXJSONModelSetBoolean(successValue, JSONResponse[@"success"]);
+                                             if (successValue)
                                              {
                                                  if (success && processingQueue)
                                                  {
@@ -4110,15 +4330,15 @@ MXAuthAction;
                                              }
                                              else
                                              {
-                                                 // Build the error from the JSON data
-                                                 if (failure && JSONResponse[@"errcode"] && JSONResponse[@"error"] && processingQueue)
+                                                 // Suppose here the token is invalid
+                                                 if (failure && processingQueue)
                                                  {
                                                      dispatch_async(processingQueue, ^{
                                                          
                                                          if (completionQueue)
                                                          {
                                                              dispatch_async(completionQueue, ^{
-                                                                 MXError *error = [[MXError alloc] initWithErrorCode:JSONResponse[@"errcode"] error:JSONResponse[@"error"]];
+                                                                 MXError *error = [[MXError alloc] initWithErrorCode:kMXErrCodeStringUnknownToken error:kMXErrorStringInvalidToken];
                                                                  failure([error createNSError]);
                                                              });
                                                          }
@@ -4186,6 +4406,9 @@ MXAuthAction;
                                          }];
 }
 
+-(void)setPinnedCertificates:(NSSet <NSData *> *)pinnedCertificates {
+    httpClient.pinnedCertificates = pinnedCertificates;
+}
 
 #pragma mark - VoIP API
 - (MXHTTPOperation *)turnServer:(void (^)(MXTurnServerResponse *))success

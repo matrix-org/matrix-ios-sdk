@@ -41,6 +41,9 @@
 
 #ifdef MX_CRYPTO
 
+// Frequency with which to check & upload one-time keys
+NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
+
 @interface MXCrypto ()
 {
     // The Matrix session.
@@ -63,13 +66,16 @@
     // @TODO: could be removed
     NSDictionary *lastPublishedOneTimeKeys;
 
-    // Timer to periodically upload keys
-    NSTimer *uploadKeysTimer;
+    // Last time we check available one-time keys on the homeserver
+    NSDate *lastOneTimeKeyCheck;
+
+    // The current one-time key operation, if any
+    MXHTTPOperation *uploadOneTimeKeysOperation;
 
     // The operation used for crypto starting requests
     MXHTTPOperation *startOperation;
 
-    BOOL initialDeviceListInvalidationDone;
+    BOOL initialDeviceListInvalidationPending;
 }
 @end
 
@@ -198,7 +204,7 @@
     NSMutableDictionary *roomsByUser = [self usersToMakeAnnouncement];
 
     // Start uploading user device keys
-    startOperation = [self uploadKeys:5 success:^{
+    startOperation = [self uploadDeviceKeys:^(MXKeysUploadResponse *keysUploadResponse) {
 
         if (!startOperation)
         {
@@ -206,7 +212,7 @@
         }
 
         NSLog(@"[MXCrypto] start ###########################################################");
-        NSLog(@" uploadKeys done for %@: ", mxSession.myUser.userId);
+        NSLog(@" uploadDeviceKeys done for %@: ", mxSession.myUser.userId);
 
         NSLog(@"   - device id  : %@", _store.deviceId);
         NSLog(@"   - ed25519    : %@", _olmDevice.deviceEd25519Key);
@@ -216,37 +222,54 @@
         NSLog(@"Store: %@", _store);
         NSLog(@"");
 
-        // Once keys are uploaded, make sure we announce ourselves
-        MXHTTPOperation *operation2 = [self makeAnnoucement:roomsByUser success:^{
+        // Anounce ourselves if not already done
+        if (roomsByUser)
+        {
+            // But upload our one-time keys before.
+            // Thus, other devices can download them once they receive our to-device annoucement event
+            [self maybeUploadOneTimeKeys:^{
 
-            // Start periodic timer for uploading keys
-            uploadKeysTimer = [[NSTimer alloc] initWithFireDate:[NSDate dateWithTimeIntervalSinceNow:10 * 60]
-                                                       interval:10 * 60   // 10 min
-                                                         target:self
-                                                       selector:@selector(uploadKeys)
-                                                       userInfo:nil
-                                                        repeats:YES];
-            [[NSRunLoop mainRunLoop] addTimer:uploadKeysTimer forMode:NSDefaultRunLoopMode];
+                // Once keys are uploaded, announce ourselves
+                MXHTTPOperation *operation2 = [self makeAnnoucement:roomsByUser success:^{
 
+                    // Make sure we are refreshing devices lists right instead
+                    // of waiting for the next /sync that may occur in 30s.
+                    [_deviceList refreshOutdatedDeviceLists];
+
+                    dispatch_async(dispatch_get_main_queue(), ^{
+                        startOperation = nil;
+                        success();
+                    });
+
+                } failure:^(NSError *error) {
+                    dispatch_async(dispatch_get_main_queue(), ^{
+                        startOperation = nil;
+                        failure(error);
+                    });
+                }];
+
+                if (operation2)
+                {
+                    [startOperation mutateTo:operation2];
+                }
+            } failure:^(NSError *error) {
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    startOperation = nil;
+                    failure(error);
+                });
+            }];
+        }
+        else
+        {
+            // No annoucement require
             dispatch_async(dispatch_get_main_queue(), ^{
                 startOperation = nil;
                 success();
             });
-
-        } failure:^(NSError *error) {
-            dispatch_async(dispatch_get_main_queue(), ^{
-                startOperation = nil;
-                failure(error);
-            });
-        }];
-
-        if (operation2)
-        {
-            [startOperation mutateTo:operation2];
         }
 
     } failure:^(NSError *error) {
-        NSLog(@"[MXCrypto] start. Error in uploadKeys");
+        NSLog(@"[MXCrypto] start. Error in uploadDeviceKeys");
         dispatch_async(dispatch_get_main_queue(), ^{
             startOperation = nil;
             failure(error);
@@ -267,22 +290,23 @@
     [startOperation cancel];
     startOperation = nil;
 
-    dispatch_async(_cryptoQueue, ^{
+    dispatch_sync(_cryptoQueue, ^{
 
-        // Stop timer
-        [uploadKeysTimer invalidate];
-        uploadKeysTimer = nil;
+        // Cancel pending one-time keys upload
+        [uploadOneTimeKeysOperation cancel];
+        uploadOneTimeKeysOperation = nil;
 
         _olmDevice = nil;
         _cryptoQueue = nil;
         _store = nil;
+        _deviceList = nil;
 
         [roomEncryptors removeAllObjects];
         roomEncryptors = nil;
 
         [roomDecryptors removeAllObjects];
         roomDecryptors = nil;
-        
+
         myDevice = nil;
 
         NSLog(@"[MXCrypto] close: done");
@@ -324,7 +348,7 @@
             algorithm = room.state.encryptionAlgorithm;
             if (algorithm)
             {
-                [self setEncryptionInRoom:room.roomId withAlgorithm:algorithm];
+                [self setEncryptionInRoom:room.roomId withAlgorithm:algorithm inhibitDeviceQuery:NO];
                 alg = roomEncryptors[room.roomId];
             }
         }
@@ -387,7 +411,9 @@
 
     __block BOOL result = NO;
 
-    // @TODO: dispatch_async
+    // TODO: dispatch_async (https://github.com/matrix-org/matrix-ios-sdk/issues/205)
+    // At the moment, we lock the main thread while decrypting events.
+    // Fortunately, decrypting is far quicker that encrypting.
     dispatch_sync(_decryptionQueue, ^{
         id<MXDecrypting> alg = [self getRoomDecryptor:event.roomId algorithm:event.content[@"algorithm"]];
         if (!alg)
@@ -418,12 +444,102 @@
 #endif
 }
 
+- (MXHTTPOperation*)ensureEncryptionInRoom:(NSString*)roomId
+                                   success:(void (^)())success
+                                   failure:(void (^)(NSError *error))failure
+{
+
+    // Create an empty operation that will be mutated later
+    MXHTTPOperation *operation = [[MXHTTPOperation alloc] init];
+
+#ifdef MX_CRYPTO
+    MXRoom *room = [mxSession roomWithRoomId:roomId];
+    if (room.state.isEncrypted)
+    {
+        // Get user ids in this room
+        NSMutableArray *userIds = [NSMutableArray array];
+        for (MXRoomMember *member in room.state.joinedMembers)
+        {
+            [userIds addObject:member.userId];
+        }
+
+        dispatch_async(_cryptoQueue, ^{
+
+            NSString *algorithm;
+            id<MXEncrypting> alg = roomEncryptors[room.roomId];
+
+            if (!alg)
+            {
+                // The algorithm has not been initialised yet. So, do it now from room state information
+                algorithm = room.state.encryptionAlgorithm;
+                if (algorithm)
+                {
+                    [self setEncryptionInRoom:room.roomId withAlgorithm:algorithm inhibitDeviceQuery:NO];
+                    alg = roomEncryptors[room.roomId];
+                }
+            }
+
+            if (alg)
+            {
+                // Check we have everything to encrypt events
+                MXHTTPOperation *operation2 = [alg ensureSessionForUsers:userIds success:^(NSObject *sessionInfo) {
+
+                    if (success)
+                    {
+                        dispatch_async(dispatch_get_main_queue(), ^{
+                            success();
+                        });
+                    }
+
+                } failure:^(NSError *error) {
+                    if (failure)
+                    {
+                        dispatch_async(dispatch_get_main_queue(), ^{
+                            failure(error);
+                        });
+                    }
+                }];
+
+                if (operation2)
+                {
+                    [operation mutateTo:operation2];
+                }
+            }
+            else if (failure)
+            {
+                NSError *error = [NSError errorWithDomain:MXDecryptingErrorDomain
+                                                     code:MXDecryptingErrorUnableToEncryptCode
+                                                 userInfo:@{
+                                                            NSLocalizedDescriptionKey: MXDecryptingErrorUnableToEncrypt,
+                                                            NSLocalizedFailureReasonErrorKey: [NSString stringWithFormat:MXDecryptingErrorUnableToEncryptReason, algorithm]
+                                                            }];
+
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    failure(error);
+                });
+            }
+        });
+    }
+    else
+#endif
+    {
+        if (success)
+        {
+            success();
+        }
+    }
+
+    return operation;
+}
+
 // This method is equivalent to the Crypto.prototype._onSyncCompleted in matrix-js-sdk
 - (void)handleDeviceListsChanged:(NSArray<NSString *>*)userIds oldSyncToken:(NSString *)oldSyncToken nextSyncToken:(NSString *)nextSyncToken
 {
 #ifdef MX_CRYPTO
 
     NSLog(@"[MXCrypto] handleDeviceListsChanged: %@", userIds);
+
+    BOOL isCatchingUp = mxSession.catchingUp;
 
     dispatch_async(_cryptoQueue, ^{
 
@@ -447,9 +563,12 @@
             NSString *oldDeviceSyncToken = _store.deviceSyncToken;
             if (oldDeviceSyncToken)
             {
+                NSLog(@"[MXCrypto] handleDeviceListsChanged: Completed initialsync; invalidating device list from deviceSyncToken: %@", oldDeviceSyncToken);
+
+                initialDeviceListInvalidationPending = YES;
+
                 [self invalidateDeviceListsSince:oldDeviceSyncToken to:nextSyncToken success:^(NSArray<NSString *> *changed) {
 
-                    initialDeviceListInvalidationDone = YES;
                     _deviceList.lastKnownSyncToken = nextSyncToken;
                     [_deviceList refreshOutdatedDeviceLists];
 
@@ -457,39 +576,42 @@
 
                     // If that failed, we fall back to invalidating everyone.
                     NSLog(@"[MXCrypto] handleDeviceListsChanged: Error fetching changed device list. Error: %@", error);
-                    [self invalidateDeviceListForAllActiveUsers];
-                    [_deviceList refreshOutdatedDeviceLists];
+                    [_deviceList invalidateAllDeviceLists];
                 }];
             }
             else
             {
                 // Otherwise, we have to invalidate all devices for all users we
-                // share a room with.
+                // are tracking.
                 NSLog(@"[MXCrypto] handleDeviceListsChanged: Completed first initialsync; invalidating all device list caches");
-                [self invalidateDeviceListForAllActiveUsers];
-                initialDeviceListInvalidationDone = YES;
+                [_deviceList invalidateAllDeviceLists];
             }
         }
 
-        if (initialDeviceListInvalidationDone)
+        if (!initialDeviceListInvalidationPending)
         {
-            // If we've got an up-to-date list of users with outdated device lists,
-            // tell the device list about the new sync token (but not otherwise, because
-            // otherwise we'll start thinking we're more in sync than we are.)
-            _deviceList.lastKnownSyncToken = nextSyncToken;
-
-            // Catch up on any new devices we got told about during the sync.
-            [_deviceList refreshOutdatedDeviceLists];
+            // we can now store our sync token so that we can get an update on
+            // restart rather than having to invalidate everyone.
+            //
+            // (we don't really need to do this on every sync - we could just
+            // do it periodically)
+            [_store storeDeviceSyncToken:nextSyncToken];
         }
 
-        // @TODO
-        // we don't start uploading one-time keys until we've caught up with
+        // catch up on any new devices we got told about during the sync.
+        _deviceList.lastKnownSyncToken = nextSyncToken;
+        [_deviceList refreshOutdatedDeviceLists];
+
+        // We don't start uploading one-time keys until we've caught up with
         // to-device messages, to help us avoid throwing away one-time-keys that we
         // are about to receive messages for
         // (https://github.com/vector-im/riot-web/issues/2782).
-//        if (!syncData.catchingUp) {
-//            _maybeUploadOneTimeKeys(this);
-//        }
+        // Also, do not upload them if we have not announced our device yet.
+        // They will be uploaded just before the announcement in [self start].
+        if (!isCatchingUp && _store.deviceAnnounced)
+        {
+            [self maybeUploadOneTimeKeys:nil failure:nil];
+        }
     });
 
 #endif
@@ -675,6 +797,21 @@
 #ifdef MX_CRYPTO
     dispatch_async(_decryptionQueue, ^{
         [_olmDevice resetReplayAttackCheckInTimeline:timeline];
+    });
+#endif
+}
+
+- (void)resetDeviceKeys
+{
+#ifdef MX_CRYPTO
+    dispatch_sync(_decryptionQueue, ^{
+
+        // Reset tracking status
+        [_store storeDeviceTrackingStatus:nil];
+
+        // Reset the sync token
+        // [self handleDeviceListsChanged] will download all keys at the coming initial /sync
+        [_store storeDeviceSyncToken:nil];
     });
 #endif
 }
@@ -888,6 +1025,41 @@
 #endif
 }
 
+
+#pragma mark - Crypto settings
+- (BOOL)globalBlacklistUnverifiedDevices
+{
+#ifdef MX_CRYPTO
+    return _store.globalBlacklistUnverifiedDevices;
+#else
+    return NO;
+#endif
+}
+
+- (void)setGlobalBlacklistUnverifiedDevices:(BOOL)globalBlacklistUnverifiedDevices
+{
+#ifdef MX_CRYPTO
+    _store.globalBlacklistUnverifiedDevices = globalBlacklistUnverifiedDevices;
+#endif
+}
+
+- (BOOL)isBlacklistUnverifiedDevicesInRoom:(NSString *)roomId
+{
+#ifdef MX_CRYPTO
+    return [_store blacklistUnverifiedDevicesInRoom:roomId];
+#else
+    return NO;
+#endif
+}
+
+- (void)setBlacklistUnverifiedDevicesInRoom:(NSString *)roomId blacklist:(BOOL)blacklist
+{
+#ifdef MX_CRYPTO
+    [_store storeBlacklistUnverifiedDevicesInRoom:roomId blacklist:blacklist];
+#endif
+}
+
+
 #pragma mark - Private API
 
 #ifdef MX_CRYPTO
@@ -918,7 +1090,7 @@
         roomEncryptors = [NSMutableDictionary dictionary];
         roomDecryptors = [NSMutableDictionary dictionary];
 
-        initialDeviceListInvalidationDone = NO;
+        initialDeviceListInvalidationPending = NO;
 
         // Build our device keys: they will later be uploaded
         NSString *deviceId = _store.deviceId;
@@ -952,86 +1124,6 @@
         
     }
     return self;
-}
-
-- (MXHTTPOperation *)uploadKeys:(NSUInteger)maxKeys
-                        success:(void (^)())success
-                        failure:(void (^)(NSError *))failure
-{
-    MXHTTPOperation *operation;
-    operation = [self uploadDeviceKeys:^(MXKeysUploadResponse *keysUploadResponse) {
-
-        // We need to keep a pool of one time public keys on the server so that
-        // other devices can start conversations with us. But we can only store
-        // a finite number of private keys in the olm Account object.
-        // To complicate things further then can be a delay between a device
-        // claiming a public one time key from the server and it sending us a
-        // message. We need to keep the corresponding private key locally until
-        // we receive the message.
-        // But that message might never arrive leaving us stuck with duff
-        // private keys clogging up our local storage.
-        // So we need some kind of enginering compromise to balance all of
-        // these factors.
-
-        // We first find how many keys the server has for us.
-        NSUInteger keyCount = [keysUploadResponse oneTimeKeyCountsForAlgorithm:@"signed_curve25519"];
-
-        // We then check how many keys we can store in the Account object.
-        CGFloat maxOneTimeKeys = _olmDevice.maxNumberOfOneTimeKeys;
-
-        // Try to keep at most half that number on the server. This leaves the
-        // rest of the slots free to hold keys that have been claimed from the
-        // server but we haven't recevied a message for.
-        // If we run out of slots when generating new keys then olm will
-        // discard the oldest private keys first. This will eventually clean
-        // out stale private keys that won't receive a message.
-        NSUInteger keyLimit = floor(maxOneTimeKeys / 2);
-
-        // We work out how many new keys we need to create to top up the server
-        // If there are too many keys on the server then we don't need to
-        // create any more keys.
-        NSUInteger numberToGenerate = MAX(keyLimit - keyCount, 0);
-
-        if (maxKeys)
-        {
-            // Creating keys can be an expensive operation so we limit the
-            // number we generate in one go to avoid blocking the application
-            // for too long.
-            numberToGenerate = MIN(numberToGenerate, maxKeys);
-
-            // Ask olm to generate new one time keys, then upload them to synapse.
-            [_olmDevice generateOneTimeKeys:numberToGenerate];
-            MXHTTPOperation *operation2 = [self uploadOneTimeKeys:success failure:failure];
-
-            // Mutate MXHTTPOperation so that the user can cancel this new operation
-            [operation mutateTo:operation2];
-        }
-        else
-        {
-            // If we don't need to generate any keys then we are done.
-            success();
-        }
-
-        if (numberToGenerate <= 0) {
-            return;
-        }
-
-    } failure:^(NSError *error) {
-        NSLog(@"[MXCrypto] uploadDeviceKeys fails.");
-        failure(error);
-    }];
-
-    return operation;
-}
-
-- (void)uploadKeys
-{
-    NSLog(@"[MXCrypto] Periodic uploadKeys");
-
-    [self uploadKeys:5 success:^{
-    } failure:^(NSError *error) {
-        NSLog(@"[MXCrypto] Periodic uploadKeys failed.");
-    }];
 }
 
 - (MXDeviceInfo *)eventSenderDeviceOfEvent:(MXEvent *)event
@@ -1077,7 +1169,7 @@
     return device;
 }
 
--(BOOL)setEncryptionInRoom:(NSString*)roomId withAlgorithm:(NSString*)algorithm
+- (BOOL)setEncryptionInRoom:(NSString*)roomId withAlgorithm:(NSString*)algorithm inhibitDeviceQuery:(BOOL)inhibitDeviceQuery
 {
     // If we already have encryption in this room, we should ignore this event
     // (for now at least. Maybe we should alert the user somehow?)
@@ -1104,23 +1196,18 @@
 
     roomEncryptors[roomId] = alg;
 
-    // if encryption was not previously enabled in this room, we will have been
-    // ignoring new device events for these users so far. We may well have
-    // up-to-date lists for some users, for instance if we were sharing other
-    // e2e rooms with them, so there is room for optimisation here, but for now
-    // we just invalidate everyone in the room.
-    if (!existingAlgorithm)
+    // make sure we are tracking the device lists for all users in this room.
+    NSLog(@"[MXCrypto] setEncryptionInRoom: Enabling encryption in %@; starting to track device lists for all users therein", roomId);
+
+    MXRoom *room = [mxSession roomWithRoomId:roomId];
+    for (MXRoomMember *member in room.state.joinedMembers)
     {
-        NSLog(@"[MXCrypto] setEncryptionInRoom: Enabling encryption in %@ for the first time; invalidating device lists for all users therein", roomId);
+        [_deviceList startTrackingDeviceList:member.userId];
+    }
 
-        MXRoom *room = [mxSession roomWithRoomId:roomId];
-        for (MXRoomMember *member in room.state.joinedMembers)
-        {
-            [_deviceList invalidateUserDeviceList:member.userId];
-        }
-
-        // the actual refresh happens once we've finished processing the sync,
-        // in _onSyncCompleted.
+    if (!inhibitDeviceQuery)
+    {
+        [_deviceList refreshOutdatedDeviceLists];
     }
 
     return YES;
@@ -1397,34 +1484,16 @@
 {
     [_matrixRestClient keyChangesFrom:oldSyncToken to:lastKnownSyncToken success:^(NSArray<NSString *> *changed) {
 
-        if (changed.count)
+        NSLog(@"[MXCrypto] invalidateDeviceListsSince: got key changes since %@: %@", oldSyncToken, changed);
+
+        for (NSString *userId in changed)
         {
-            // Only invalidate users we share an e2e room with - we don't
-            // care about users in non-e2e rooms.
-            NSArray<NSString*> *filteredUserIds = self.e2eRoomMembers.allKeys;
-            for (NSString *changedUser in changed)
-            {
-                if ([filteredUserIds containsObject:changedUser])
-                {
-                    [_deviceList invalidateUserDeviceList:changedUser];
-                }
-            }
+            [_deviceList invalidateUserDeviceList:userId];
         }
 
         success(changed);
 
     } failure:failure];
-}
-
-/**
- Invalidate any stored device list for any users we share an e2e room with
- */
-- (void)invalidateDeviceListForAllActiveUsers
-{
-    for (NSString *userId in self.e2eRoomMembers.allKeys)
-    {
-        [_deviceList invalidateUserDeviceList:userId];
-    }
 }
 
 /**
@@ -1495,13 +1564,17 @@
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(onToDeviceEvent:) name:kMXSessionOnToDeviceEventNotification object:mxSession];
 
         // Observe membership changes
-        roomMembershipEventsListener = [mxSession listenToEventsOfTypes:@[kMXEventTypeStringRoomEncryption] onEvent:^(MXEvent *event, MXTimelineDirection direction, id customObject) {
+        roomMembershipEventsListener = [mxSession listenToEventsOfTypes:@[kMXEventTypeStringRoomEncryption, kMXEventTypeStringRoomMember] onEvent:^(MXEvent *event, MXTimelineDirection direction, id customObject) {
 
             if (direction == MXTimelineDirectionForwards)
             {
                 if (event.eventType == MXEventTypeRoomEncryption)
                 {
                     [self onCryptoEvent:event];
+                }
+                else if (event.eventType == MXEventTypeRoomMember)
+                {
+                    [self onRoomMembership:event];
                 }
             }
         }];
@@ -1709,10 +1782,42 @@
     if (_cryptoQueue)
     {
         dispatch_async(_cryptoQueue, ^{
-            [self setEncryptionInRoom:event.roomId withAlgorithm:event.content[@"algorithm"]];
+            [self setEncryptionInRoom:event.roomId withAlgorithm:event.content[@"algorithm"] inhibitDeviceQuery:YES];
         });
     }
-};
+}
+
+/**
+ Handle a change in the membership state of a member of a room.
+
+ @param event the membership event causing the change
+ */
+- (void)onRoomMembership:(MXEvent*)event
+{
+    id<MXEncrypting> alg = roomEncryptors[event.roomId];
+    if (!alg)
+    {
+        // No encrypting in this room
+        return;
+    }
+
+    NSString *userId = event.stateKey;
+    MXRoomMember *member = [[mxSession roomWithRoomId:event.roomId].state memberWithUserId:userId];
+
+    if (member && member.membership == MXMembershipJoin)
+    {
+        NSLog(@"[MXCrypto] onRoomMembership: Join event for %@ in %@", member.userId, event.roomId);
+
+        if (_cryptoQueue)
+        {
+            dispatch_async(_cryptoQueue, ^{
+
+                // make sure we are tracking the deviceList for this user
+                [_deviceList startTrackingDeviceList:member.userId ];
+            });
+        }
+    }
+}
 
 /**
  Upload my user's device keys.
@@ -1739,6 +1844,106 @@
     // For now, we set the device id explicitly, as we may not be using the
     // same one as used in login.
     return [_matrixRestClient uploadKeys:myDevice.JSONDictionary oneTimeKeys:nil forDevice:myDevice.deviceId success:success failure:failure];
+}
+
+/**
+ Check if it's time to upload one-time keys, and do so if so.
+ */
+- (void)maybeUploadOneTimeKeys:(void (^)())success failure:(void (^)(NSError *))failure
+{
+    if (uploadOneTimeKeysOperation)
+    {
+        return;
+    }
+
+    NSDate *now = [NSDate date];
+    if (lastOneTimeKeyCheck && [now timeIntervalSinceDate:lastOneTimeKeyCheck] < kMXCryptoUploadOneTimeKeysPeriod)
+    {
+        // We've done a key upload recently.
+        return;
+    }
+
+    lastOneTimeKeyCheck = now;
+
+    NSLog(@"[MXCrypto] maybeUploadOneTimeKeys: Checking available one-time keys on the homeserver");
+
+    uploadOneTimeKeysOperation = [_matrixRestClient uploadKeys:myDevice.JSONDictionary oneTimeKeys:nil forDevice:myDevice.deviceId success:^(MXKeysUploadResponse *keysUploadResponse) {
+
+        if (!uploadOneTimeKeysOperation)
+        {
+            return;
+        }
+
+        // We need to keep a pool of one time public keys on the server so that
+        // other devices can start conversations with us. But we can only store
+        // a finite number of private keys in the olm Account object.
+        // To complicate things further then can be a delay between a device
+        // claiming a public one time key from the server and it sending us a
+        // message. We need to keep the corresponding private key locally until
+        // we receive the message.
+        // But that message might never arrive leaving us stuck with duff
+        // private keys clogging up our local storage.
+        // So we need some kind of enginering compromise to balance all of
+        // these factors.
+
+        // We first find how many keys the server has for us.
+        NSInteger keyCount = [keysUploadResponse oneTimeKeyCountsForAlgorithm:@"signed_curve25519"];
+
+        NSLog(@"[MXCrypto] maybeUploadOneTimeKeys: one-time keys on the homeserver: %tu", keyCount);
+
+        // We then check how many keys we can store in the Account object.
+        NSInteger maxOneTimeKeys = _olmDevice.maxNumberOfOneTimeKeys;
+
+        // Try to keep at most half that number on the server. This leaves the
+        // rest of the slots free to hold keys that have been claimed from the
+        // server but we haven't recevied a message for.
+        // If we run out of slots when generating new keys then olm will
+        // discard the oldest private keys first. This will eventually clean
+        // out stale private keys that won't receive a message.
+        NSInteger keyLimit = maxOneTimeKeys / 2;
+
+        // We work out how many new keys we need to create to top up the server
+        // If there are too many keys on the server then we don't need to
+        // create any more keys.
+        NSUInteger numberToGenerate = MAX(keyLimit - keyCount, 0);
+        if (numberToGenerate)
+        {
+            // Ask olm to generate new one time keys, then upload them to synapse.
+            [_olmDevice generateOneTimeKeys:numberToGenerate];
+            MXHTTPOperation *operation2 = [self uploadOneTimeKeys:^(MXKeysUploadResponse *keysUploadResponse) {
+
+                if (success)
+                {
+                    success();
+                }
+                else
+                {
+                    uploadOneTimeKeysOperation = nil;
+                }
+
+            } failure:^(NSError *error) {
+                NSLog(@"[MXCrypto] maybeUploadOneTimeKeys: Failed to publish one-time keys. Error: %@", error);
+                uploadOneTimeKeysOperation = nil;
+
+                if (failure)
+                {
+                    failure(error);
+                }
+            }];
+
+            // Mutate MXHTTPOperation so that the user can cancel this new operation
+            [uploadOneTimeKeysOperation mutateTo:operation2];
+        }
+        else
+        {
+            // If we don't need to generate any keys then we are done.
+            uploadOneTimeKeysOperation = nil;
+        }
+
+    } failure:^(NSError *error) {
+        NSLog(@"[MXCrypto] maybeUploadOneTimeKeys: Get published one-time keys count failed. Error: %@", error);
+        uploadOneTimeKeysOperation = nil;
+    }];
 }
 
 /**

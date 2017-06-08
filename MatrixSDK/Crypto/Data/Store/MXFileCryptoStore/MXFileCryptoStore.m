@@ -1,5 +1,6 @@
 /*
  Copyright 2016 OpenMarket Ltd
+ Copyright 2017 Vector Creations Ltd
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -275,11 +276,12 @@ NSString *const kMXFileCryptoStoreInboundGroupSessionsFile = @"inboundGroupSessi
 
 - (void)storeDeviceSyncToken:(NSString *)deviceSyncToken
 {
-
+    // MXFileCryptoStore is still available for backward compatibility but it is no more supported
 }
 
 - (NSString *)deviceSyncToken
 {
+    // MXFileCryptoStore is still available for backward compatibility but it is no more supported
     return nil;
 }
 
@@ -311,6 +313,16 @@ NSString *const kMXFileCryptoStoreInboundGroupSessionsFile = @"inboundGroupSessi
 - (NSDictionary<NSString *,MXDeviceInfo *> *)devicesForUser:(NSString *)userId
 {
     return usersDevicesInfoMap.map[userId];
+}
+
+- (NSDictionary<NSString*, NSNumber*>*)deviceTrackingStatus
+{
+    return nil;
+}
+
+- (void)storeDeviceTrackingStatus:(NSDictionary<NSString*, NSNumber*>*)statusMap
+{
+
 }
 
 - (void)storeAlgorithmForRoom:(NSString *)roomId algorithm:(NSString *)algorithm
@@ -612,6 +624,22 @@ NSString *const kMXFileCryptoStoreInboundGroupSessionsFile = @"inboundGroupSessi
     description = [NSString stringWithFormat:@"%@\ninboundGroupSessions: %@", description, inboundGroupSessions];
 
     return description;
+}
+
+#pragma mark - Crypto settings
+
+// MXFileCryptoStore is still available for backward compatibility but it is no more supported
+@synthesize globalBlacklistUnverifiedDevices;
+
+- (BOOL)blacklistUnverifiedDevicesInRoom:(NSString *)roomId
+{
+    // MXFileCryptoStore is still available for backward compatibility but it is no more supported
+    return NO;
+}
+
+- (void)storeBlacklistUnverifiedDevicesInRoom:(NSString *)roomId blacklist:(BOOL)blacklist
+{
+    // MXFileCryptoStore is still available for backward compatibility but it is no more supported
 }
 
 @end

@@ -1,5 +1,6 @@
 /*
  Copyright 2015 OpenMarket Ltd
+ Copyright 2017 Vector Creations Ltd
  
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -27,6 +28,8 @@ static MXSDKOptions *sharedOnceInstance = nil;
     return sharedOnceInstance;
 }
 
+#pragma mark - Initializations -
+
 - (instancetype)init
 {
     self = [super init];
@@ -41,7 +44,13 @@ static MXSDKOptions *sharedOnceInstance = nil;
         {
             self.analyticsDelegate = nil;
         }
+
+        _disableIdenticonUseForUserAvatar = NO;
+        _enableCryptoWhenStartingMXSession = NO;
+        _enableGoogleAnalytics = NO;
+        _mediaCacheAppVersion = 0;
     }
+    
     return self;
 }
 

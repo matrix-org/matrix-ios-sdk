@@ -16,12 +16,15 @@
 
 #import <Foundation/Foundation.h>
 
-#import "MXCall.h"
-#import "MXCallStack.h"
-#import "MXJSONModels.h"
+NS_ASSUME_NONNULL_BEGIN
 
-@class MXSession;
+@class MXCall;
+@class MXRoom;
 @class MXRoomMember;
+@class MXSession;
+@class MXTurnServerResponse;
+
+@protocol MXCallStack;
 
 /**
  Posted when a new `MXCall` instance has been created. It happens on an incoming
@@ -55,7 +58,10 @@ extern NSString *const kMXCallManagerConferenceFinished;
  @param mxSession the mxSession to the home server.
  @return the newly created MXCallManager instance.
  */
-- (instancetype)initWithMatrixSession:(MXSession*)mxSession andCallStack:(id<MXCallStack>)callstack;
+- (instancetype)initWithMatrixSession:(MXSession *)mxSession andCallStack:(id<MXCallStack>)callstack NS_DESIGNATED_INITIALIZER;
+
++ (instancetype)new NS_UNAVAILABLE;
+- (instancetype)init NS_UNAVAILABLE;
 
 /**
  Stop the call manager.
@@ -69,7 +75,7 @@ extern NSString *const kMXCallManagerConferenceFinished;
  @param callId the id of the call to retrieve.
  @result the `MXCall` object. Nil if not found.
  */
-- (MXCall*)callWithCallId:(NSString*)callId;
+- (nullable MXCall *)callWithCallId:(NSString *)callId;
 
 /**
  Retrieve the `MXCall` instance that is in progress in a given room.
@@ -77,7 +83,7 @@ extern NSString *const kMXCallManagerConferenceFinished;
  @param roomId the id of the room to look up.
  @result the `MXCall` object. Nil if there is no call in progress in the room.
  */
-- (MXCall*)callInRoom:(NSString*)roomId;
+- (nullable MXCall *)callInRoom:(NSString *)roomId;
 
 /**
  Place a voice or a video call into a room.
@@ -87,16 +93,16 @@ extern NSString *const kMXCallManagerConferenceFinished;
  @param success A block object called when the operation succeeds. It provides the created MXCall instance.
  @param failure A block object called when the operation fails.
  */
-- (void)placeCallInRoom:(NSString*)roomId withVideo:(BOOL)video
+- (void)placeCallInRoom:(NSString *)roomId withVideo:(BOOL)video
                 success:(void (^)(MXCall *call))success
-                failure:(void (^)(NSError *error))failure;
+                failure:(void (^)(NSError * _Nullable error))failure;
 
 /**
  Make the call manager forget a call.
  
  @param call the `MXCall` instance reference to forget.
  */
-- (void)removeCall:(MXCall*)call;
+- (void)removeCall:(MXCall *)call;
 
 /**
  The related matrix session.
@@ -118,7 +124,7 @@ extern NSString *const kMXCallManagerConferenceFinished;
  The list of TURN/STUN servers advertised by the user's homeserver.
  Can be nil. In this case, use `fallbackSTUNServer`.
  */
-@property (nonatomic, readonly) MXTurnServerResponse *turnServers;
+@property (nonatomic, nullable, readonly) MXTurnServerResponse *turnServers;
 
 /**
  STUN server used if the homeserver does not provide TURN/STUN servers.
@@ -134,7 +140,7 @@ extern NSString *const kMXCallManagerConferenceFinished;
  @param conferenceUserMember the member object of the conference user.
  @param roomId the room where there is conference call.
  */
-- (void)handleConferenceUserUpdate:(MXRoomMember*)conferenceUserMember inRoom:(NSString *)roomId;
+- (void)handleConferenceUserUpdate:(MXRoomMember *)conferenceUserMember inRoom:(NSString *)roomId;
 
 /**
  Return the id of the conference user dedicated for the passed room.
@@ -142,7 +148,7 @@ extern NSString *const kMXCallManagerConferenceFinished;
  @param roomId the room id.
  @return the conference user id.
  */
-+ (NSString*)conferenceUserIdForRoom:(NSString*)roomId;
++ (NSString *)conferenceUserIdForRoom:(NSString *)roomId;
 
 /**
  Check if the passed user id corresponds to the a conference user.
@@ -150,7 +156,7 @@ extern NSString *const kMXCallManagerConferenceFinished;
  @param userId the user id to check.
  @return YES if the id is reserved to a conference user.
  */
-+ (BOOL)isConferenceUser:(NSString*)userId;
++ (BOOL)isConferenceUser:(NSString *)userId;
 
 /**
  Check if the user can place a conference call in a given room.
@@ -161,6 +167,8 @@ extern NSString *const kMXCallManagerConferenceFinished;
  @param room the room to check.
  @return YES if the user can.
  */
-+ (BOOL)canPlaceConferenceCallInRoom:(MXRoom*)room;
++ (BOOL)canPlaceConferenceCallInRoom:(MXRoom *)room;
 
 @end
+
+NS_ASSUME_NONNULL_END

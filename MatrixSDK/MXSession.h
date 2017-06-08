@@ -240,6 +240,16 @@ FOUNDATION_EXPORT NSString *const kMXSessionNoRoomTag;
 @property (nonatomic, readonly) MXSessionState state;
 
 /**
+ The flag indicating that we are trying to establish the event streams (/sync)
+ as quick as possible, even if there are no events queued. This is required in
+ some situations:
+    - When the connection dies, we want to know asap when it comes back (We don't
+      want to have to wait for an event or a timeout).
+    - We want to know if the server has any to-device messages queued up for us.
+ */
+@property (nonatomic, readonly) BOOL catchingUp;
+
+/**
  The profile of the current user.
  It is available only after the `onStoreDataReady` callback of `start` is called.
  */
@@ -425,20 +435,9 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
 
 /**
  The list of event types considered for counting unread messages returned by MXRoom.localUnreadEventCount.
- By default [m.room.name, m.room.topic, m.room.message, m.call.invite].
+ By default [m.room.name, m.room.topic, m.room.message, m.call.invite, m.room.encrypted].
  */
 @property (nonatomic) NSArray<MXEventTypeString> *unreadEventTypes;
-
-/**
- Tell whether the profiles changes of the room members should be ignored in the last message processing.
- NO by default.
- 
- @discussion An event (with MXEventTypeRoomMember type) is added in room history each time a room member changes his profile.
- This event replaces the last message of all the rooms to which the member belongs.
- This impacts the rooms ordering based on their last message.
- Ignoring the profile changes in last message handling prevents an irrelevant reordering of the room list.
- */
-@property (nonatomic) BOOL ignoreProfileChangesDuringLastMessageProcessing;
 
 /**
  Enable VoIP by setting the external VoIP stack to use.
@@ -628,6 +627,70 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
 - (MXHTTPOperation*)uploadDirectRooms:(void (^)())success
                               failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
+
+#pragma mark - Rooms summaries
+/**
+ Get the MXRoomSummary instance of a room.
+
+ @param roomId The room id to the room.
+
+ @return the MXRoomSummary instance.
+ */
+- (MXRoomSummary *)roomSummaryWithRoomId:(NSString*)roomId;
+
+/**
+ Get the list of all rooms summaries.
+
+ @return an array of MXRoomSummary.
+ */
+- (NSArray<MXRoomSummary*>*)roomsSummaries;
+
+/**
+ Recompute all room summaries last message.
+
+ This may lead to pagination requests to the homeserver. Updated room summaries will be
+ notified by `kMXRoomSummaryDidChangeNotification`.
+ */
+- (void)resetRoomsSummariesLastMessage;
+
+/**
+ Make sure that all room summaries have a last message.
+ 
+ This may lead to pagination requests to the homeserver. Updated room summaries will be 
+ notified by `kMXRoomSummaryDidChangeNotification`.
+ */
+- (void)fixRoomsSummariesLastMessage;
+
+/**
+ Delegate for updating room summaries.
+ By default, it is the one returned by [MXRoomSummaryUpdater roomSummaryUpdaterForSession:].
+ */
+@property id<MXRoomSummaryUpdating> roomSummaryUpdateDelegate;
+
+#pragma mark - Missed notifications
+
+/**
+ The total number of the missed notifications in this session.
+ */
+- (NSUInteger)missedNotificationsCount;
+
+/**
+ The current number of the rooms with some missed notifications.
+ Note: the invites are not taken into account in the returned count.
+ */
+- (NSUInteger)missedDiscussionsCount;
+
+/**
+ The current number of the rooms with some unread highlighted messages.
+ */
+- (NSUInteger)missedHighlightDiscussionsCount;
+
+/**
+ Mark all messages as read.
+ */
+- (void)markAllMessagesAsRead;
+
+
 #pragma mark - Room peeking
 /**
  Start peeking a room.
@@ -718,29 +781,6 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
                         failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 
-#pragma mark - User's recents
-/**
- Get the list of all last messages of all rooms.
- The returned array is time ordered: the first item is the more recent message.
- 
- The SDK will find the last event which type is among the requested event types. If
- no event matches `types`, the true last event, whatever its type, will be returned.
-
- @param types an array of event types strings (MXEventTypeString) the app is interested in.
- @return an array of MXEvents.
- */
-- (NSArray<MXEvent*>*)recentsWithTypeIn:(NSArray<MXEventTypeString>*)types;
-
-/**
- Sort a list of rooms according to their last messages time stamp.
- 
- @param rooms the rooms to sort.
- @param types an array of event types strings (MXEventTypeString) the app is interested in.
- @return an array where rooms are ordered.
- */
-- (NSArray<MXRoom*>*)sortRooms:(NSArray<MXRoom*>*)rooms byLastMessageWithTypeIn:(NSArray<MXEventTypeString>*)types;
-
-
 #pragma mark - User's special rooms
 /**
  Get the list of rooms where the user has a pending invitation.
@@ -772,6 +812,13 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
          room tagged with this tag. The array order is the same as [MXSession roomsWithTag:]
  */
 - (NSDictionary<NSString*, NSArray<MXRoom*>*>*)roomsByTags;
+
+/**
+ Comparator used to sort the list of rooms with the same tag name, according to their tag order.
+ 
+ @param tag the tag for which the tag order must be compared for these 2 rooms.
+ */
+- (NSComparisonResult)compareRoomsByTag:(NSString*)tag room1:(MXRoom*)room1 room2:(MXRoom*)room2;
 
 /**
  Compute the tag order to use for a room tag so that the room will appear in the expected position
