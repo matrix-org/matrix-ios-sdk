@@ -4195,7 +4195,11 @@ MXAuthAction;
                                                  dispatch_async(processingQueue, ^{
 
                                                      NSString *sid;
-                                                     MXJSONModelSetString(sid, JSONResponse[@"sid"]);
+                                                     NSNumber * numberSID;
+                                                     MXJSONModelSetNumber(numberSID, JSONResponse[@"sid"]);
+                                                     if (numberSID) {
+                                                         sid = numberSID.stringValue;
+                                                     }
 
                                                      if (completionQueue)
                                                      {
