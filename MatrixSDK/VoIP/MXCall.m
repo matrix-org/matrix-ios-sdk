@@ -88,6 +88,7 @@ NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
         _callSignalingRoom = [callManager.mxSession roomWithRoomId:callSignalingRoomId];
 
         _callId = [[NSUUID UUID] UUIDString];
+        _callUUID = [NSUUID UUID];
         _callerId = callManager.mxSession.myUser.userId;
 
         _state = MXCallStateFledgling;

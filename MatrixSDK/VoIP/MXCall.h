@@ -143,6 +143,11 @@ extern NSString *const kMXCallStateDidChange;
 @property (readonly, nonatomic) NSString *callId;
 
 /**
+ The UUID of the call.
+ */
+@property (readonly, nonatomic) NSUUID *callUUID;
+
+/**
  Flag indicating this is a conference call;
  */
 @property (readonly, nonatomic) BOOL isConferenceCall;
