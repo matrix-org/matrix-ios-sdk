@@ -751,8 +751,8 @@ typedef void (^MXOnResumeDone)();
         // By default, the next sync will be a long polling (with the default server timeout value)
         NSUInteger nextServerTimeout = SERVER_TIMEOUT_MS;
 
-        NSTimeInterval durationMs = [[NSDate date] timeIntervalSinceDate:startDate] * 1000;
-        NSLog(@"[MXSession] Received %tu joined rooms, %tu invited rooms, %tu left rooms in %.0fms", syncResponse.rooms.join.count, syncResponse.rooms.invite.count, syncResponse.rooms.leave.count, durationMs);
+        NSTimeInterval duration = [[NSDate date] timeIntervalSinceDate:startDate];
+        NSLog(@"[MXSession] Received %tu joined rooms, %tu invited rooms, %tu left rooms in %.0fms", syncResponse.rooms.join.count, syncResponse.rooms.invite.count, syncResponse.rooms.leave.count, duration * 1000);
 
         // Check whether this is the initial sync
         BOOL isInitialSync = !_store.eventStreamToken;
