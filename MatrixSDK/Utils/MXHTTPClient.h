@@ -153,6 +153,6 @@ typedef BOOL (^MXHTTPClientOnUnrecognizedCertificate)(NSData *certificate);
 /**
  The certificates used to evaluate server trust according to the SSL pinning mode.
  */
-@property (nonatomic, strong, nullable) NSSet <NSData *> *pinnedCertificates;
+@property (nonatomic, strong) NSSet <NSData *> *pinnedCertificates;
 
 @end
