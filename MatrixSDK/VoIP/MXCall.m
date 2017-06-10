@@ -395,6 +395,9 @@ NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
     {
         // Set the start point
         callConnectedDate = [NSDate date];
+        
+        // Mark call as established
+        _established = YES;
     }
     else if (MXCallStateEnded == state)
     {

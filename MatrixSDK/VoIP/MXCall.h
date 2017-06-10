@@ -158,6 +158,11 @@ extern NSString *const kMXCallStateDidChange;
 @property (readonly, nonatomic) BOOL isVideoCall;
 
 /**
+ Indicates whether the call was successfully established by the time this property is accessed.
+ */
+@property (readonly, nonatomic, getter=isEstablished) BOOL established;
+
+/**
  The call state.
  */
 @property (readonly, nonatomic) MXCallState state;
