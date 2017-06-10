@@ -592,6 +592,19 @@ NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
 
     // Terminate the call at the stack level
     [callStackCall end];
+    
+    // Determine call end reason
+    if (event)
+    {
+        if ([event.sender isEqualToString:callManager.mxSession.myUser.userId])
+            _endReason = MXCallEndReasonHangupElsewhere;
+        else
+            _endReason = MXCallEndReasonHangupRemote;
+    }
+    else
+    {
+        _endReason = MXCallEndReasonHangup;
+    }
 
     [self setState:MXCallStateEnded reason:event];
 }
@@ -618,6 +631,9 @@ NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
 
         // Send the notif that the call expired to the app
         [self setState:MXCallStateInviteExpired reason:nil];
+        
+        // Set appropriate call end reason
+        _endReason = MXCallEndReasonTimeout;
 
         // And set the final state: MXCallStateEnded
         [self setState:MXCallStateEnded reason:nil];

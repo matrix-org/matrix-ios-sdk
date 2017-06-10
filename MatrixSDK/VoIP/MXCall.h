@@ -53,6 +53,19 @@ typedef NS_ENUM(NSUInteger, MXCallState)
 };
 
 /**
+ Call end reasons.
+ */
+typedef NS_ENUM(NSInteger, MXCallEndReason)
+{
+    MXCallEndReasonUnknown,
+    MXCallEndReasonHangup, // The call was ended by the local side
+    MXCallEndReasonHangupElsewhere, // The call was ended on another device
+    MXCallEndReasonHangupRemote, // The call was ended by the remote side
+    MXCallEndReasonMissed, // The call was declined by the remote side before it was being established
+    MXCallEndReasonTimeout // The call was ended because of timeout
+};
+
+/**
  Posted when a `MXCall` object has changed its state.
  The notification object is the `MXKCall` object representing the call.
  */
@@ -148,6 +161,11 @@ extern NSString *const kMXCallStateDidChange;
  The call state.
  */
 @property (readonly, nonatomic) MXCallState state;
+
+/**
+ The call end reason.
+ */
+@property (readonly, nonatomic) MXCallEndReason endReason;
 
 /**
  The user id of the caller.
