@@ -602,7 +602,7 @@ NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
         if ([event.sender isEqualToString:callManager.mxSession.myUser.userId])
             _endReason = MXCallEndReasonHangupElsewhere;
         else
-            _endReason = MXCallEndReasonHangupRemote;
+            _endReason = MXCallEndReasonRemoteHangup;
     }
     else
     {
