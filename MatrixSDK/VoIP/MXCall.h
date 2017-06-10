@@ -60,7 +60,7 @@ typedef NS_ENUM(NSInteger, MXCallEndReason)
     MXCallEndReasonUnknown,
     MXCallEndReasonHangup, // The call was ended by the local side
     MXCallEndReasonHangupElsewhere, // The call was ended on another device
-    MXCallEndReasonHangupRemote, // The call was ended by the remote side
+    MXCallEndReasonRemoteHangup, // The call was ended by the remote side
     MXCallEndReasonMissed, // The call was declined by the remote side before it was being established
     MXCallEndReasonTimeout // The call was ended because of timeout
 };
@@ -176,6 +176,11 @@ extern NSString *const kMXCallStateDidChange;
  The user id of the caller.
  */
 @property (readonly, nonatomic) NSString *callerId;
+
+/**
+ The user id of the callee.
+ */
+@property (readonly, nullable, nonatomic) NSString *calleeId;
 
 /**
  The UIView that receives frames from the user's camera.
