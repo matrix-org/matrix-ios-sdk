@@ -44,6 +44,12 @@
     return self;
 }
 
+- (void)dealloc
+{
+    // CXProvider instance must be invalidated otherwise it will be leaked
+    [_provider invalidate];
+}
+
 + (CXProviderConfiguration *)configuration
 {
     NSString *appDisplayName = [[[NSBundle mainBundle] infoDictionary] objectForKey:@"CFBundleDisplayName"];
