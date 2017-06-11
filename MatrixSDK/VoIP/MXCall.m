@@ -597,16 +597,24 @@ NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
     [callStackCall end];
     
     // Determine call end reason
-    if (event)
+    if ((!self.isIncoming && event && !self.isEstablished) ||
+        (self.isIncoming && !event && !self.isEstablished))
     {
-        if ([event.sender isEqualToString:callManager.mxSession.myUser.userId])
-            _endReason = MXCallEndReasonHangupElsewhere;
-        else
-            _endReason = MXCallEndReasonRemoteHangup;
+        _endReason = MXCallEndReasonBusy;
     }
     else
     {
-        _endReason = MXCallEndReasonHangup;
+        if (event)
+        {
+            if ([event.sender isEqualToString:callManager.mxSession.myUser.userId])
+                _endReason = MXCallEndReasonHangupElsewhere;
+            else
+                _endReason = MXCallEndReasonRemoteHangup;
+        }
+        else
+        {
+            _endReason = MXCallEndReasonHangup;
+        }
     }
 
     [self setState:MXCallStateEnded reason:event];
@@ -636,7 +644,7 @@ NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
         [self setState:MXCallStateInviteExpired reason:nil];
         
         // Set appropriate call end reason
-        _endReason = MXCallEndReasonTimeout;
+        _endReason = MXCallEndReasonMissed;
 
         // And set the final state: MXCallStateEnded
         [self setState:MXCallStateEnded reason:nil];
