@@ -70,8 +70,11 @@ static const int kRTCAudioSessionPreferredNumberOfChannels = 1;
                   withOptions:AVAudioSessionCategoryOptionAllowBluetooth
                         error:nil];
     
-    // TODO: Consider video call
-    [audioSession setMode:AVAudioSessionModeVoiceChat error:nil];
+    // AVAudioSessionModeVideoChat is optimized for video calls on modern devices. Instead of using the speaker from the bottom
+    // of the phone as it is for AVAudioSessionModeVoiceChat, it uses the speaker located near with buil-in receiver.
+    // This really increases audio quality
+    AVAudioSessionMode mode = isVideoCall ? AVAudioSessionModeVideoChat : AVAudioSessionModeVoiceChat;
+    [audioSession setMode:mode error:nil];
     
     // Sometimes category options don't stick after setting mode.
     if (audioSession.categoryOptions != AVAudioSessionCategoryOptionAllowBluetooth)
