@@ -53,6 +53,19 @@ typedef NS_ENUM(NSUInteger, MXCallState)
 };
 
 /**
+ Call end reasons.
+ */
+typedef NS_ENUM(NSInteger, MXCallEndReason)
+{
+    MXCallEndReasonUnknown,
+    MXCallEndReasonHangup, // The call was ended by the local side
+    MXCallEndReasonHangupElsewhere, // The call was ended on another device
+    MXCallEndReasonRemoteHangup, // The call was ended by the remote side
+    MXCallEndReasonBusy, // The call was declined by the remote side before it was being established. Only for outgoing calls
+    MXCallEndReasonMissed, // The call wasn't established in a given period of time
+};
+
+/**
  Posted when a `MXCall` object has changed its state.
  The notification object is the `MXKCall` object representing the call.
  */
@@ -145,14 +158,29 @@ extern NSString *const kMXCallStateDidChange;
 @property (readonly, nonatomic) BOOL isVideoCall;
 
 /**
+ Indicates whether the call was successfully established by the time this property is accessed.
+ */
+@property (readonly, nonatomic, getter=isEstablished) BOOL established;
+
+/**
  The call state.
  */
 @property (readonly, nonatomic) MXCallState state;
 
 /**
+ The call end reason.
+ */
+@property (readonly, nonatomic) MXCallEndReason endReason;
+
+/**
  The user id of the caller.
  */
 @property (readonly, nonatomic) NSString *callerId;
+
+/**
+ The user id of the callee.
+ */
+@property (readonly, nullable, nonatomic) NSString *calleeId;
 
 /**
  The UIView that receives frames from the user's camera.

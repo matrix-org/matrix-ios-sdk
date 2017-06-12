@@ -91,6 +91,7 @@ NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
         _callerId = callManager.mxSession.myUser.userId;
 
         _state = MXCallStateFledgling;
+        _endReason = MXCallEndReasonUnknown;
 
         // Consider we are using a conference call when there are more than 2 users
         _isConferenceCall = (2 < _room.state.joinedMembers.count);
@@ -394,6 +395,9 @@ NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
     {
         // Set the start point
         callConnectedDate = [NSDate date];
+        
+        // Mark call as established
+        _established = YES;
     }
     else if (MXCallStateEnded == state)
     {
@@ -591,6 +595,21 @@ NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
 
     // Terminate the call at the stack level
     [callStackCall end];
+    
+    // Determine call end reason
+    if (event)
+    {
+        if ([event.sender isEqualToString:callManager.mxSession.myUser.userId])
+            _endReason = MXCallEndReasonHangupElsewhere;
+        else if (!self.isEstablished && !self.isIncoming)
+            _endReason = MXCallEndReasonBusy;
+        else
+            _endReason = MXCallEndReasonRemoteHangup;
+    }
+    else
+    {
+        _endReason = MXCallEndReasonHangup;
+    }
 
     [self setState:MXCallStateEnded reason:event];
 }
@@ -617,6 +636,9 @@ NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
 
         // Send the notif that the call expired to the app
         [self setState:MXCallStateInviteExpired reason:nil];
+        
+        // Set appropriate call end reason
+        _endReason = MXCallEndReasonMissed;
 
         // And set the final state: MXCallStateEnded
         [self setState:MXCallStateEnded reason:nil];
