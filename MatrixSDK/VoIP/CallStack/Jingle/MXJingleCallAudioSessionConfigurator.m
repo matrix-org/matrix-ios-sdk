@@ -20,8 +20,9 @@
 
 @import AVFoundation;
 
-#import <objc/runtime.h>
 #import <objc/message.h>
+#import <objc/runtime.h>
+#import <sys/utsname.h>
 
 // Preferred hardware sample rate (unit is in Hertz). The client sample rate
 // will be set to this value as well to avoid resampling the the audio unit's
@@ -92,9 +93,16 @@ static const int kRTCAudioSessionPreferredNumberOfChannels = 1;
     // to ensure that the I/O unit does not have to do sample rate conversion.
     // Set the preferred audio I/O buffer duration, in seconds.
     NSUInteger processorCount = [NSProcessInfo processInfo].processorCount;
+    
+    struct utsname systemInfo;
+    uname(&systemInfo);
+    NSString *machineName = [NSString stringWithCString:systemInfo.machine
+                                               encoding:NSUTF8StringEncoding];
+    BOOL isIphone4S = [machineName isEqualToString:@"iPhone4,1"];
+    
     // Use best sample rate and buffer duration if the CPU has more than one
     // core.
-    if (processorCount > 1)
+    if (processorCount > 1 && !isIphone4S)
     {
         sampleRate = kRTCAudioSessionHighPerformanceSampleRate;
         ioBufferDuration = kRTCAudioSessionHighPerformanceIOBufferDuration;
