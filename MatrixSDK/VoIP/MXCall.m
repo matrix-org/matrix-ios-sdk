@@ -152,6 +152,8 @@ NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
                 // Set up the default audio route
                 callStackCall.audioToSpeaker = NO;
                 
+                [self setState:MXCallStateWaitLocalMedia reason:nil];
+                
                 [callStackCall startCapturingMediaWithVideo:self.isVideoCall success:^{
                     [callStackCall handleOffer:callInviteEventContent.offer.sdp];
                     [self setState:MXCallStateRinging reason:event];
@@ -309,9 +311,6 @@ NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
                 [inviteExpirationTimer invalidate];
                 inviteExpirationTimer = nil;
             }
-
-            [self setState:MXCallStateWaitLocalMedia reason:nil];
-
 
             // Create a sdp answer from the offer we got
             [self setState:MXCallStateCreateAnswer reason:nil];
