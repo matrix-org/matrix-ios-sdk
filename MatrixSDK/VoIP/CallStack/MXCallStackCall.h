@@ -79,8 +79,12 @@ NS_ASSUME_NONNULL_BEGIN
  This offer came within a m.call.invite event sent by the peer.
 
  @param sdpOffer the description of the peer media.
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
  */
-- (void)handleOffer:(NSString *)sdpOffer;
+- (void)handleOffer:(NSString *)sdpOffer
+            success:(void (^)())success
+            failure:(void (^)(NSError *error))failure;
 
 /**
  Generate an answer to send to the peer.

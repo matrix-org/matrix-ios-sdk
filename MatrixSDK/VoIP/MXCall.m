@@ -155,8 +155,14 @@ NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
                 [self setState:MXCallStateWaitLocalMedia reason:nil];
                 
                 [callStackCall startCapturingMediaWithVideo:self.isVideoCall success:^{
-                    [callStackCall handleOffer:callInviteEventContent.offer.sdp];
-                    [self setState:MXCallStateRinging reason:event];
+                    [callStackCall handleOffer:callInviteEventContent.offer.sdp
+                                       success:^{
+                                           [self setState:MXCallStateRinging reason:event];
+                                       }
+                                       failure:^(NSError * _Nonnull error) {
+                                           NSLog(@"[MXCall] handleOffer: ERROR: Couldn't handle offer. Error: %@", error);
+                                           [self didEncounterError:error];
+                                       }];
                 } failure:^(NSError *error) {
                     NSLog(@"[MXCall] startCapturingMediaWithVideo: ERROR: Couldn't start capturing. Error: %@", error);
                     [self didEncounterError:error];

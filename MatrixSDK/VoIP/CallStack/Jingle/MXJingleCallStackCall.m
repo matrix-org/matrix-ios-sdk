@@ -144,13 +144,25 @@
 
 
 #pragma mark - Incoming call
-- (void)handleOffer:(NSString *)sdpOffer
+- (void)handleOffer:(NSString *)sdpOffer success:(void (^)())success failure:(void (^)(NSError *error))failure
 {
     RTCSessionDescription *sessionDescription = [[RTCSessionDescription alloc] initWithType:RTCSdpTypeOffer sdp:sdpOffer];
-
     [peerConnection setRemoteDescription:sessionDescription completionHandler:^(NSError * _Nullable error) {
-
         NSLog(@"[MXJingleCallStackCall] setRemoteDescription: error: %@", error);
+        
+        // Return on main thread
+        dispatch_async(dispatch_get_main_queue(), ^{
+            
+            if (!error)
+            {
+                success();
+            }
+            else
+            {
+                failure(error);
+            }
+            
+        });
     }];
 }
 
