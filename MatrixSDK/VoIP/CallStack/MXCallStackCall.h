@@ -189,7 +189,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 #pragma mark - MXCallStackCallDelegate
 /**
- Delegate for `MXCallStackCal` object
+ Delegate for `MXCallStackCall` object
 */
 @protocol MXCallStackCallDelegate <NSObject>
 
@@ -210,6 +210,13 @@ NS_ASSUME_NONNULL_BEGIN
  @param error the error.
  */
 - (void)callStackCall:(id<MXCallStackCall>)callStackCall onError:(nullable NSError *)error;
+
+/**
+ Tells the delegate that connection was successfully established
+ 
+ @param callStackCall the corresponding instance.
+ */
+- (void)callStackCallDidConnect:(id<MXCallStackCall>)callStackCall;
 
 @end
 

@@ -201,15 +201,12 @@ NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
                 }
 
                 // Let's the stack finalise the connection
-                [callStackCall handleAnswer:content.answer.sdp success:^{
-
-                    // Call is up
-                    [self setState:MXCallStateConnected reason:event];
-
-                } failure:^(NSError *error) {
-                    NSLog(@"[MXCall] handleCallEvent: ERROR: Cannot send handle answer. Error: %@\nEvent: %@", error, event);
-                    [self didEncounterError:error];
-                }];
+                [callStackCall handleAnswer:content.answer.sdp
+                                    success:^{}
+                                    failure:^(NSError *error) {
+                                        NSLog(@"[MXCall] handleCallEvent: ERROR: Cannot send handle answer. Error: %@\nEvent: %@", error, event);
+                                        [self didEncounterError:error];
+                                    }];
             }
             else if (_state == MXCallStateRinging)
             {
@@ -336,10 +333,6 @@ NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
                                           @"version": @(0),
                                           };
                 [_callSignalingRoom sendEventOfType:kMXEventTypeStringCallAnswer content:content localEcho:nil success:^(NSString *eventId) {
-
-                    // @TODO: This is false
-                    [self setState:MXCallStateConnected reason:nil];
-
                 } failure:^(NSError *error) {
                     NSLog(@"[MXCall] answer: ERROR: Cannot send m.call.answer event.");
                     [self didEncounterError:error];
@@ -583,6 +576,11 @@ NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
 {
     NSLog(@"[MXCall] callStackCall didEncounterError: %@", error);
     [self didEncounterError:error];
+}
+
+- (void)callStackCallDidConnect:(id<MXCallStackCall>)callStackCall
+{
+    [self setState:MXCallStateConnected reason:nil];
 }
 
 
