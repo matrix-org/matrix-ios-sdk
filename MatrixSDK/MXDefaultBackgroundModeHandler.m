@@ -1,5 +1,4 @@
 /*
- Copyright 2015 OpenMarket Ltd
  Copyright 2017 Vector Creations Ltd
 
  Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,6 +15,10 @@
  */
 
 #import "MXDefaultBackgroundModeHandler.h"
+
+#if TARGET_OS_IPHONE
+
+#import <UIKit/UIKit.h>
 
 @implementation MXDefaultBackgroundModeHandler
 
@@ -44,4 +47,7 @@
 {
     [[UIApplication sharedApplication] endBackgroundTask:identifier];
 }
+
 @end
+
+#endif

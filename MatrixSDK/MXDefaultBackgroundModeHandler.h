@@ -1,5 +1,4 @@
 /*
- Copyright 2015 OpenMarket Ltd
  Copyright 2017 Vector Creations Ltd
 
  Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,8 +15,13 @@
  */
 
 #import <Foundation/Foundation.h>
+
 #import "MXBackgroundModeHandler.h"
+
+#if TARGET_OS_IPHONE
 
 @interface MXDefaultBackgroundModeHandler : NSObject <MXBackgroundModeHandler>
 
 @end
+
+#endif
