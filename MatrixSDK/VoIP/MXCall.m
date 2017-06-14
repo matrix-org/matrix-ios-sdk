@@ -202,7 +202,9 @@ NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
 
                 // Let's the stack finalise the connection
                 [callStackCall handleAnswer:content.answer.sdp
-                                    success:^{}
+                                    success:^{
+                                        [self setState:MXCallStateConnecting reason:event];
+                                    }
                                     failure:^(NSError *error) {
                                         NSLog(@"[MXCall] handleCallEvent: ERROR: Cannot send handle answer. Error: %@\nEvent: %@", error, event);
                                         [self didEncounterError:error];
@@ -304,7 +306,7 @@ NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
 
     if (self.state == MXCallStateRinging)
     {
-        void(^answer)() = ^() {
+        void(^answer)() = ^{
 
             NSLog(@"[MXCall] answer: answering...");
 
@@ -332,8 +334,7 @@ NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
                                                   },
                                           @"version": @(0),
                                           };
-                [_callSignalingRoom sendEventOfType:kMXEventTypeStringCallAnswer content:content localEcho:nil success:^(NSString *eventId) {
-                } failure:^(NSError *error) {
+                [_callSignalingRoom sendEventOfType:kMXEventTypeStringCallAnswer content:content localEcho:nil success:nil failure:^(NSError *error) {
                     NSLog(@"[MXCall] answer: ERROR: Cannot send m.call.answer event.");
                     [self didEncounterError:error];
                 }];
