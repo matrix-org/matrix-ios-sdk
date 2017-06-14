@@ -626,6 +626,10 @@ NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
     {
         [_delegate call:self didEncounterError:error];
     }
+    else
+    {
+        [self hangup];
+    }
 }
 
 - (void)expireCallInvite
