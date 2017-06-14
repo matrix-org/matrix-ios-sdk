@@ -96,6 +96,19 @@ NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
 
         // Consider we are using a conference call when there are more than 2 users
         _isConferenceCall = (2 < _room.state.joinedMembers.count);
+        
+        // Set caleeId only for regular calls
+        if (!_isConferenceCall)
+        {
+            for (MXRoomMember *roomMember in _room.state.joinedMembers)
+            {
+                if (![roomMember.userId isEqualToString:_callerId])
+                {
+                    _calleeId = roomMember.userId;
+                    break;
+                }
+            }
+        }
 
         localICECandidates = [NSMutableArray array];
 
@@ -144,6 +157,7 @@ NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
 
                 _callId = callInviteEventContent.callId;
                 _callerId = event.sender;
+                _calleeId = callManager.mxSession.myUser.userId;
                 _isIncoming = YES;
 
                 // Store if it is voice or video call

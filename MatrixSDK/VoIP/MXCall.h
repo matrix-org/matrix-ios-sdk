@@ -183,7 +183,7 @@ extern NSString *const kMXCallStateDidChange;
 @property (readonly, nonatomic) NSString *callerId;
 
 /**
- The user id of the callee.
+ The user id of the callee. Nil for conference calls
  */
 @property (readonly, nullable, nonatomic) NSString *calleeId;
 
