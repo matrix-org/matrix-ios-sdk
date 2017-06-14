@@ -847,9 +847,13 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidFlushDataNotification;
  This will indicate to the homeserver that the user has read this event.
  Set YES the boolean updateReadMarker to let know the homeserver the user has read up to this event.
  
+ @warning Because the event related to the current read marker may not be in the local storage, no check
+ is performed before updating the read marker. The caller should check whether the provided event
+ is posterior to the current read marker position.
+ 
  @discussion If the type of the provided event is not defined in MXSession.acknowledgableEventTypes,
  this method acknowlegdes the first prior event of type defined in MXSession.acknowledgableEventTypes.
- The updated read marker (if any) will refer to the provided event.
+ The read marker (if its update is requested) will refer to the provided event.
  
  @param event the event to acknowlegde.
  @param updateReadMarker tell whether the read marker should be moved to this event.
