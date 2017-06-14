@@ -76,12 +76,27 @@
 - (void)startCall:(MXCall *)call
 {
     MXSession *mxSession = call.room.mxSession;
-    MXUser *callee = [mxSession userWithUserId:call.calleeId];
+    MXUser *caller = [mxSession userWithUserId:call.callerId];
     NSUUID *callUUID = call.callUUID;
     
-    CXHandle *handle = [[CXHandle alloc] initWithType:CXHandleTypeGeneric value:callee.userId];
+    NSString *handleValue;
+    NSString *contactIdentifier;
+    if (call.isConferenceCall)
+    {
+        handleValue = call.room.roomId;
+        contactIdentifier = call.room.state.displayname;
+    }
+    else
+    {
+        MXUser *callee = [mxSession userWithUserId:call.calleeId];
+        
+        handleValue = callee.userId;
+        contactIdentifier = callee.displayname;
+    }
+    
+    CXHandle *handle = [[CXHandle alloc] initWithType:CXHandleTypeGeneric value:handleValue];
     CXStartCallAction *action = [[CXStartCallAction alloc] initWithCallUUID:callUUID handle:handle];
-    action.contactIdentifier = callee.displayname;
+    action.contactIdentifier = contactIdentifier;
     
     CXTransaction *transaction = [[CXTransaction alloc] initWithAction:action];
     [self.callController requestTransaction:transaction completion:^(NSError * _Nullable error) {
@@ -90,7 +105,7 @@
 
         CXCallUpdate *update = [[CXCallUpdate alloc] init];
         update.remoteHandle = handle;
-        update.localizedCallerName = callee.displayname;
+        update.localizedCallerName = caller.displayname;
         update.hasVideo = call.isVideoCall;
         update.supportsHolding = NO;
         update.supportsGrouping = NO;
@@ -141,7 +156,8 @@
     MXUser *caller = [mxSession userWithUserId:call.callerId];
     NSUUID *callUUID = call.callUUID;
     
-    CXHandle *handle = [[CXHandle alloc] initWithType:CXHandleTypeGeneric value:call.callerId];
+    NSString *handleValue = call.isConferenceCall ? call.room.roomId : call.callerId;
+    CXHandle *handle = [[CXHandle alloc] initWithType:CXHandleTypeGeneric value:handleValue];
     
     CXCallUpdate *update = [[CXCallUpdate alloc] init];
     update.remoteHandle = handle;
