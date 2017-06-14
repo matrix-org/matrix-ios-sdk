@@ -14,13 +14,24 @@
  limitations under the License.
  */
 
-
 @import Foundation;
+
+NS_ASSUME_NONNULL_BEGIN
 
 @class MXCall;
 
 @interface MXCallKitAdapter : NSObject
 
+- (void)startCall:(MXCall *)call;
+- (void)endCall:(MXCall *)call;
+
 - (void)reportIncomingCall:(MXCall *)call;
 
+- (void)reportCall:(MXCall *)call startedConnectingAtDate:(nullable NSDate *)date;
+- (void)reportCall:(MXCall *)call connectedAtDate:(nullable NSDate *)date;
+
++ (BOOL)callKitAvailable;
+
 @end
+
+NS_ASSUME_NONNULL_END

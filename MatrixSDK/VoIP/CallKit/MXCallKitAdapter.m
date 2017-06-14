@@ -16,17 +16,21 @@
 
 #import "MXCallKitAdapter.h"
 
+@import AVFoundation;
 @import CallKit;
 @import UIKit;
 
 #import "MXCall.h"
+#import "MXJingleCallAudioSessionConfigurator.h"
 #import "MXUser.h"
-#import "MatrixSDK/MXSession.h"
+#import "MXSession.h"
 
 @interface MXCallKitAdapter () <CXProviderDelegate>
 
 @property (nonatomic) CXProvider *provider;
 @property (nonatomic) CXCallController *callController;
+
+@property (nonatomic) NSMutableDictionary<NSUUID *, MXCall *> *calls;
 
 @end
 
@@ -34,12 +38,15 @@
 
 - (instancetype)init
 {
-    if (!(self = [super init])) return nil;
-    
-    self.provider = [[CXProvider alloc] initWithConfiguration:[MXCallKitAdapter configuration]];
-    [self.provider setDelegate:self queue:nil];
-    
-    self.callController = [[CXCallController alloc] initWithQueue:dispatch_get_main_queue()];
+    if (self = [super init])
+    {
+        _provider = [[CXProvider alloc] initWithConfiguration:[MXCallKitAdapter configuration]];
+        [_provider setDelegate:self queue:nil];
+        
+        _callController = [[CXCallController alloc] initWithQueue:dispatch_get_main_queue()];
+        
+        _calls = [NSMutableDictionary dictionary];
+    }
     
     return self;
 }
@@ -57,110 +64,126 @@
     CXProviderConfiguration *configuration = [[CXProviderConfiguration alloc] initWithLocalizedName:appDisplayName];
     configuration.maximumCallGroups = 1;
     configuration.maximumCallsPerCallGroup = 1;
-    configuration.supportsVideo = false;
+    configuration.supportsVideo = YES;
     configuration.supportedHandleTypes = [NSSet setWithObject:@(CXHandleTypeGeneric)];
-    configuration.iconTemplateImageData = UIImagePNGRepresentation([UIImage imageNamed:@"RiotCallKitLogo"]);
+//    configuration.iconTemplateImageData = UIImagePNGRepresentation([UIImage imageNamed:@"RiotCallKitLogo"]);
     
     return configuration;
 }
 
-// Pass user id or smth like this to determine user id
+#pragma mark - Public
 
-// Outgoing calll
-- (void)startCallWithUUID:(NSUUID *)uuid
+- (void)startCall:(MXCall *)call
 {
-    CXHandle *handle = [[CXHandle alloc] initWithType:CXHandleTypeGeneric value:@"User name"];
-    CXStartCallAction *action = [[CXStartCallAction alloc] initWithCallUUID:uuid handle:handle];
-    action.contactIdentifier = @"User display name";
+    MXSession *mxSession = call.room.mxSession;
+    MXUser *callee = [mxSession userWithUserId:call.calleeId];
+    NSUUID *callUUID = call.callUUID;
+    
+    CXHandle *handle = [[CXHandle alloc] initWithType:CXHandleTypeGeneric value:callee.userId];
+    CXStartCallAction *action = [[CXStartCallAction alloc] initWithCallUUID:callUUID handle:handle];
+    action.contactIdentifier = callee.displayname;
     
     CXTransaction *transaction = [[CXTransaction alloc] initWithAction:action];
-    
     [self.callController requestTransaction:transaction completion:^(NSError * _Nullable error) {
-        if (error != nil) return;
-        
+        if (error)
+            return;
+
         CXCallUpdate *update = [[CXCallUpdate alloc] init];
         update.remoteHandle = handle;
-        update.localizedCallerName = @"User display name";
-        update.supportsHolding = YES;
-        update.hasVideo = NO;
+        update.localizedCallerName = callee.displayname;
+        update.hasVideo = call.isVideoCall;
+        update.supportsHolding = NO;
         update.supportsGrouping = NO;
         update.supportsUngrouping = NO;
         update.supportsDTMF = NO;
         
-        [self.provider reportNewIncomingCallWithUUID:uuid update:update completion:^(NSError * _Nullable error) {
-            if (error != nil) return;
-            
-            // add call to our list
-        }];
+        [self.provider reportCallWithUUID:callUUID updated:update];
+        
+        [self.calls setObject:call forKey:callUUID];
     }];
 }
 
-- (void)reportIncomingCall:(MXCall *)call {
-    // Create CXHandle instance describing a caller
-    CXHandle *handle = [[CXHandle alloc] initWithType:CXHandleTypeGeneric value:call.callerId];
+- (void)endCall:(MXCall *)call;
+{
+    MXCallEndReason endReason = call.endReason;
     
+    if (endReason == MXCallEndReasonHangup)
+    {
+        CXEndCallAction *action = [[CXEndCallAction alloc] initWithCallUUID:call.callUUID];
+        CXTransaction *transaction = [[CXTransaction alloc] initWithAction:action];
+        [self.callController requestTransaction:transaction completion:^(NSError *_Nullable error){}];
+    }
+    else
+    {
+        CXCallEndedReason reason = CXCallEndedReasonFailed;
+        switch (endReason)
+        {
+            case MXCallEndReasonRemoteHangup:
+                reason = CXCallEndedReasonRemoteEnded;
+                break;
+            case MXCallEndReasonHangupElsewhere:
+                reason = CXCallEndedReasonDeclinedElsewhere;
+                break;
+            case MXCallEndReasonBusy:
+            case MXCallEndReasonMissed:
+                reason = CXCallEndedReasonUnanswered;
+                break;
+            default:
+                break;
+        }
+        
+        [self.provider reportCallWithUUID:call.callUUID endedAtDate:nil reason:reason];
+    }
+}
+
+- (void)reportIncomingCall:(MXCall *)call {
     MXSession *mxSession = call.room.mxSession;
     MXUser *caller = [mxSession userWithUserId:call.callerId];
+    NSUUID *callUUID = call.callUUID;
+    
+    CXHandle *handle = [[CXHandle alloc] initWithType:CXHandleTypeGeneric value:call.callerId];
     
     CXCallUpdate *update = [[CXCallUpdate alloc] init];
     update.remoteHandle = handle;
-    update.localizedCallerName = [caller displayname];
-    update.hasVideo = NO;
+    update.localizedCallerName = caller.displayname;
+    update.hasVideo = call.isVideoCall;
     update.supportsHolding = NO;
     update.supportsGrouping = NO;
     update.supportsUngrouping = NO;
     update.supportsDTMF = NO;
     
-    NSUUID *callUUID = [NSUUID UUID];//[[NSUUID alloc] initWithUUIDString:call.callId];
-    
-    // Inform system about incoming call
     [self.provider reportNewIncomingCallWithUUID:callUUID update:update completion:^(NSError * _Nullable error) {
-        /*
-         Only add incoming call to the app's list of calls if the call was allowed (i.e. there was no error)
-         since calls may be "denied" for various legitimate reasons. See CXErrorCodeIncomingCallError.
-         */
         if (error)
         {
-            if ([error.domain isEqualToString:CXErrorDomainIncomingCall] && error.code == CXErrorCodeIncomingCallErrorFilteredByDoNotDisturb)
-                // show alert or do smth to inform user
-//                completion(NO, YES);
-                NSLog(@"Do not disturb!");
-            else
-//                completion(YES, NO);
-            
+            [call hangup];
             return;
         }
         
-        // Success
-//        completion(NO, NO);
+        self.calls[callUUID] = call;
+        
+#ifdef MX_CALL_STACK_JINGLE
+        // Workaround from https://forums.developer.apple.com/message/169511 suggests configuring audio in the
+        // completion block of the `reportNewIncomingCallWithUUID:update:completion:` method instead of in
+        // `provider:performAnswerCallAction:` per the WWDC examples.
+        [MXJingleCallAudioSessionConfigurator configureAudioSessionForVideoCall:call.isVideoCall];
+#endif
     }];
     
 }
 
-- (void)reportCall:(MXCall *)mxCall startedConnectingAtDate:(NSDate *)date
+- (void)reportCall:(MXCall *)call startedConnectingAtDate:(nullable NSDate *)date
 {
-    NSUUID *callUUID = [[NSUUID alloc] initWithUUIDString:mxCall.callId];
-    [_provider reportOutgoingCallWithUUID:callUUID startedConnectingAtDate:date];
+    [self.provider reportOutgoingCallWithUUID:call.callUUID startedConnectingAtDate:date];
 }
 
-- (void)reportCall:(MXCall *)mxCall connectedAtDate:(NSDate *)date
+- (void)reportCall:(MXCall *)call connectedAtDate:(nullable NSDate *)date
 {
-    NSUUID *callUUID = [[NSUUID alloc] initWithUUIDString:mxCall.callId];
-    [_provider reportOutgoingCallWithUUID:callUUID connectedAtDate:date];
+    [self.provider reportOutgoingCallWithUUID:call.callUUID connectedAtDate:date];
 }
 
-- (BOOL)callKitAvailable
++ (BOOL)callKitAvailable
 {
-    // TODO: Check iOS version and return apppropriate result based on the system version
-    
-    return YES;
-}
-
-#pragma mark - CXProviderDelegate
-
-- (void)provider:(CXProvider *)__unused provider performStartCallAction:(CXStartCallAction *)action
-{
-    [action fulfill];
+    return [NSProcessInfo.processInfo isOperatingSystemAtLeastVersion:(NSOperatingSystemVersion){10,0,0}];
 }
 
 #pragma mark - CXProviderDelegate
@@ -170,18 +193,77 @@
     NSLog(@"Provider did reset");
 }
 
+- (void)provider:(CXProvider *)provider didActivateAudioSession:(AVAudioSession *)audioSession
+{
+#ifdef MX_CALL_STACK_JINGLE
+    [MXJingleCallAudioSessionConfigurator audioSessionDidActivated:audioSession];
+#endif
+}
+
+- (void)provider:(CXProvider *)provider didDeactivateAudioSession:(AVAudioSession *)audioSession
+{
+#ifdef MX_CALL_STACK_JINGLE
+    [MXJingleCallAudioSessionConfigurator audioSessionDidDeactivated:audioSession];
+#endif
+}
+
+- (void)provider:(CXProvider *)provider performStartCallAction:(CXStartCallAction *)action
+{
+    MXCall *call = self.calls[action.callUUID];
+    if (!call)
+    {
+        [action fail];
+        return;
+    }
+    
+#ifdef MX_CALL_STACK_JINGLE
+    [MXJingleCallAudioSessionConfigurator configureAudioSessionForVideoCall:call.isVideoCall];
+#endif
+    
+    [action fulfill];
+}
+
 - (void)provider:(CXProvider *)provider performAnswerCallAction:(CXAnswerCallAction *)action
 {
-    // Call on success
-    [action fulfill];
+    MXCall *call = self.calls[action.callUUID];
+    if (!call)
+    {
+        [action fail];
+        return;
+    }
     
-    // Call on fail
-    [action fail];
+    [call answer];
+    
+    [action fulfill];
 }
 
 - (void)provider:(CXProvider *)provider performEndCallAction:(CXEndCallAction *)action
 {
+    MXCall *call = self.calls[action.callUUID];
+    if (!call)
+    {
+        [action fail];
+        return;
+    }
     
+    [call hangup];
+    self.calls[action.UUID] = nil;
+    
+    [action fulfill];
+}
+
+- (void)provider:(CXProvider *)provider performSetMutedCallAction:(CXSetMutedCallAction *)action
+{
+    MXCall *call = self.calls[action.callUUID];
+    if (!call)
+    {
+        [action fail];
+        return;
+    }
+    
+    [call setAudioMuted:action.isMuted];
+    
+    [action fulfill];
 }
 
 @end
