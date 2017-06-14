@@ -317,10 +317,12 @@ didChangeIceConnectionState:(RTCIceConnectionState)newState
     switch (newState)
     {
         case RTCIceConnectionStateConnected:
+        {
             dispatch_async(dispatch_get_main_queue(), ^{
                 [delegate callStackCallDidConnect:self];
             });
             break;
+        }
         case RTCIceConnectionStateFailed:
         {
             // ICE discovery has failed or the connection has dropped
