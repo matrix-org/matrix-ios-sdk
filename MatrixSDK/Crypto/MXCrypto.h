@@ -76,7 +76,7 @@
  and, then, if this is the first time, this new device will be announced to all other users
  devices.
  
- @param success A block object called when the operation succeeds.
+ @param onComplete A block object called when the operation succeeds.
  @param failure A block object called when the operation fails.
  */
 - (void)start:(void (^)())onComplete
@@ -203,7 +203,7 @@
 /**
  Reset replay attack data for the given timeline.
 
- @param the id of the timeline.
+ @param timeline the id of the timeline.
  */
 - (void)resetReplayAttackCheckInTimeline:(NSString*)timeline;
 

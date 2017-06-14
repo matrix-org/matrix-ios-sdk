@@ -37,7 +37,7 @@
 /**
  Initialise the underneath olm inbound group session.
  
- @param the session key.
+ @param sessionKey the session key.
  */
 - (instancetype)initWithSessionKey:(NSString*)sessionKey;
 

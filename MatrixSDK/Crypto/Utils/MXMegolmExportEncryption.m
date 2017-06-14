@@ -356,16 +356,13 @@ NSString *const MXMegolmExportEncryptionTrailerLine = @"-----END MEGOLM SESSION 
 
  base64s the content, and adds header and trailer lines.
 
- @param {Uint8Array} data  raw data
- @return {ArrayBuffer} formatted file
+ @param data raw data.
+ @return formatted data.
  */
-+ (NSData *)packMegolmKeyFile:(NSData*)data
++ (NSData*)packMegolmKeyFile:(NSData*)data
 {
-    //NSString *dataString = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
-
     NSMutableArray<NSString*> *lines = [NSMutableArray array];
     [lines addObject:MXMegolmExportEncryptionHeaderLine];
-
 
     // We split into lines before base64ing, because encodeBase64 doesn't deal
     // terribly well with large arrays.

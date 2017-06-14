@@ -210,7 +210,7 @@
  Retrieve an inbound group session.
 
  @param sessionId the session identifier.
- @param the base64-encoded curve25519 key of the sender.
+ @param senderKey the base64-encoded curve25519 key of the sender.
  @return an inbound group session.
  */
 - (MXOlmInboundGroupSession*)inboundGroupSessionWithId:(NSString*)sessionId andSenderKey:(NSString*)senderKey;
@@ -268,7 +268,7 @@
  Remove an inbound group session.
 
  @param sessionId the session identifier.
- @param the base64-encoded curve25519 key of the sender.
+ @param senderKey the base64-encoded curve25519 key of the sender.
  */
 - (void)removeInboundGroupSessionWithId:(NSString*)sessionId andSenderKey:(NSString*)senderKey;
 

@@ -181,7 +181,7 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidFlushDataNotification;
 /**
  Update the invited room state according to the provided data.
  
- @param invitedRoom information to update the room state.
+ @param invitedRoomSync information to update the room state.
  */
 - (void)handleInvitedRoomSync:(MXInvitedRoomSync *)invitedRoomSync;
 
@@ -198,7 +198,6 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidFlushDataNotification;
  An optional array of event types may be provided to filter room events. When this array is not nil,
  the type of the returned last event should match with one of the provided types.
 
- @param roomId the id of the room.
  @param types an array of event types strings (MXEventTypeString).
  @return the events enumerator.
  */
@@ -214,7 +213,7 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidFlushDataNotification;
 /**
  Send a generic non state event to a room.
 
- @param eventType the type of the event. @see MXEventType.
+ @param eventTypeString the type of the event. @see MXEventType.
  @param content the content that will be sent to the server as a JSON object.
  @param localEcho a pointer to a MXEvent object.
                   When the event type is `kMXEventTypeStringRoomMessage`, this pointer
@@ -240,7 +239,7 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidFlushDataNotification;
 /**
  Send a generic state event to a room.
 
- @param eventType the type of the event. @see MXEventType.
+ @param eventTypeString the type of the event. @see MXEventType.
  @param content the content that will be sent to the server as a JSON object.
  @param success A block object called when the operation succeeds. It returns
  the event id of the event generated on the home server

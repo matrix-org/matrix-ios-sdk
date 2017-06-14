@@ -330,7 +330,7 @@
  Store into the store an outgoing message event being sent in a room.
  
  @param roomId the id of the room.
- @param event the MXEvent object of the message.
+ @param outgoingMessage the MXEvent object of the message.
  */
 - (void)storeOutgoingMessageForRoom:(NSString*)roomId outgoingMessage:(MXEvent*)outgoingMessage;
 

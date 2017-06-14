@@ -94,7 +94,7 @@
 /**
  Generate some new one-time keys
  
- @param {number} numKeys number of keys to generate
+ @param numKeys the number of keys to generate
  */
 - (void)generateOneTimeKeys:(NSUInteger)numKeys;
 
@@ -115,7 +115,7 @@
  @param theirDeviceIdentityKey the remote user's Curve25519 identity key.
  @param messageType the message_type field from the received message (must be 0).
  @param ciphertext base64-encoded body from the received message.
- @param the decoded payload.
+ @param payload the decoded payload.
 
  @return the session id. Nil if the received message was not valid (for instance, it
          didn't use a valid one-time key).
@@ -240,7 +240,7 @@ Determine if an incoming messages is a prekey message matching an existing sessi
                  to prevent replay attack.
  @param sessionId the session identifier.
  @param senderKey the base64-encoded curve25519 key of the sender.
- @param the result error if there is a problem decrypting the event.
+ @param error the result error if there is a problem decrypting the event.
 
  @return the decrypting result. Nil if the sessionId is unknown.
  */
@@ -252,7 +252,7 @@ Determine if an incoming messages is a prekey message matching an existing sessi
 /**
  Reset replay attack data for the given timeline.
 
- @param the id of the timeline.
+ @param timeline the id of the timeline.
  */
 - (void)resetReplayAttackCheckInTimeline:(NSString*)timeline;
 
@@ -264,7 +264,7 @@ Determine if an incoming messages is a prekey message matching an existing sessi
  @param key the ed25519 key.
  @param message the message which was signed.
  @param signature the base64-encoded signature to be checked.
- @param the result error if there is a problem with the verification.
+ @param error the result error if there is a problem with the verification.
         If the key was too small then the message will be "OLM.INVALID_BASE64".
         If the signature was invalid then the message will be "OLM.BAD_MESSAGE_MAC".
 
@@ -278,9 +278,9 @@ Determine if an incoming messages is a prekey message matching an existing sessi
  @param key the ed25519 key.
  @param JSONDictinary the JSON object which was signed.
  @param signature the base64-encoded signature to be checked.
- @param the result error if there is a problem with the verification.
- If the key was too small then the message will be "OLM.INVALID_BASE64".
- If the signature was invalid then the message will be "OLM.BAD_MESSAGE_MAC".
+ @param error the result error if there is a problem with the verification.
+        If the key was too small then the message will be "OLM.INVALID_BASE64".
+        If the signature was invalid then the message will be "OLM.BAD_MESSAGE_MAC".
 
  @return YES if valid.
  */

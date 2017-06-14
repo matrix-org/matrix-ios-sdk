@@ -1469,14 +1469,13 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
 }
 
 /**
- * Ask the server which users have new devices since a given token,
- * and invalidate them
- *
- * @param {String} oldSyncToken
- * @param {String} lastKnownSyncToken
- *
- * @returns {Promise} resolves once the query is complete. Rejects if the
- *   keyChange query fails.
+ Ask the server which users have new devices since a given token,
+ and invalidate them.
+
+ @param oldSyncToken the old token.
+ @param lastKnownSyncToken the new token.
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
  */
 - (void)invalidateDeviceListsSince:(NSString*)oldSyncToken to:(NSString*)lastKnownSyncToken
                            success:(void (^)(NSArray<NSString*> *changed))success
@@ -1989,15 +1988,9 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
  If we already have a decryptor for the given room and algorithm, return
  it. Otherwise try to instantiate it.
  
- @param {string?} roomId   room id for decryptor. If undefined, a temporary
- decryptor is instantiated.
- 
- @param {string} algorithm  crypto algorithm
- 
- @return {module:crypto.algorithms.base.DecryptionAlgorithm}
- 
- @raises {module:crypto.algorithms.DecryptionError} if the algorithm is
- unknown
+ @param roomId room id for decryptor. If undefined, a temporary decryptor is instantiated.
+ @param algorithm the crypto algorithm.
+ @return the decryptor.
  */
 - (id<MXDecrypting>)getRoomDecryptor:(NSString*)roomId algorithm:(NSString*)algorithm
 {

@@ -100,7 +100,7 @@ typedef enum : NSUInteger
  will download the device list for the user, and that subsequent calls to
  invalidateUserDeviceList will trigger more updates.
  
- @param userId.
+ @param userId the user to start to track devices.
  */
 - (void)startTrackingDeviceList:(NSString*)userId;
 
@@ -113,7 +113,7 @@ typedef enum : NSUInteger
  This doesn't set off an update, so that several users can be batched
  together. Call refreshOutdatedDeviceLists for that.
 
- @param userId.
+ @param userId the user whose devices must be invalidated.
  */
 - (void)invalidateUserDeviceList:(NSString*)userId;
 

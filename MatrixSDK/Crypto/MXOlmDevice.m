@@ -432,7 +432,7 @@
  @param roomId the room where the sesion is used.
  @param sessionId the session identifier.
  @param senderKey the base64-encoded curve25519 key of the sender.
- @param the result error if there is an issue.
+ @param error the result error if there is an issue.
  @return the inbound group session.
  */
 - (MXOlmInboundGroupSession *)inboundGroupSessionWithId:(NSString *)sessionId senderKey:(NSString *)senderKey

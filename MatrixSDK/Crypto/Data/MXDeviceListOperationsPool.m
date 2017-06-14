@@ -197,9 +197,9 @@
 /**
  Validate device keys.
 
- @param the device keys to validate.
- @param the id of the user of the device.
- @param the id of the device.
+ @param deviceKeys the device keys to validate.
+ @param userId the id of the user of the device.
+ @param deviceId the id of the device.
  @param previouslyStoredDeviceKeys the device keys we received before for this device
  @return YES if valid.
  */

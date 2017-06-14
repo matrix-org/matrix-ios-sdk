@@ -873,7 +873,7 @@ typedef enum : NSUInteger
  Invite a user to a room based on a third-party identifier.
 
  @param medium the medium to invite the user e.g. "email".
- @param medium address the address for the specified medium.
+ @param address the address for the specified medium.
  @param roomId the id of the room.
  @param success A block object called when the operation succeeds.
  @param failure A block object called when the operation fails.
@@ -1003,7 +1003,7 @@ typedef enum : NSUInteger
  @param from the token to start getting results from.
  @param direction `MXTimelineDirectionForwards` or `MXTimelineDirectionBackwards`
  @param limit (optional, use -1 to not defined this value) the maximum number of messages to return.
- @param filter to filter returned events with.
+ @param roomEventFilter to filter returned events with.
 
  @param success A block object called when the operation succeeds. It provides a `MXPaginationResponse` object.
  @param failure A block object called when the operation fails.
@@ -1430,7 +1430,7 @@ typedef enum : NSUInteger
 
  @param data the content to upload.
  @param filename optional filename
- @param mimetype the content type (image/jpeg, audio/aac...)
+ @param mimeType the content type (image/jpeg, audio/aac...)
  @param timeoutInSeconds the maximum time in ms the SDK must wait for the server response.
 
  @param success A block object called when the operation succeeds. It provides the uploaded content url.
@@ -1602,7 +1602,8 @@ typedef enum : NSUInteger
 
 /**
  Set the certificates used to evaluate server trust according to the SSL pinning mode.
- @param Pinned certificates
+
+ @param pinnedCertificates the pinned certificates.
  */
 -(void)setPinnedCertificates:(NSSet <NSData *> *)pinnedCertificates;
 

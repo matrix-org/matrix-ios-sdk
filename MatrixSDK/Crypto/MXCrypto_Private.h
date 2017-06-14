@@ -125,7 +125,7 @@
  Encrypt an event payload for a list of devices.
 
  @param payloadFields fields to include in the encrypted payload.
- @param deviceInfos the list of the recipient devices.
+ @param devices the list of the recipient devices.
 
  @return the content for an m.room.encrypted event.
  */

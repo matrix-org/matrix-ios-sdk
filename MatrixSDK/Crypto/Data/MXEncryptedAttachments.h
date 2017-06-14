@@ -59,9 +59,6 @@ extern NSString *const MXEncryptedAttachmentsErrorDomain;
 
  @param uploader A valid, ready to use media loader
  @param mimeType The mime type of the file
- @param dataLength The length of the data in bytes.
-                   The dataCallback block must return exactly
-                   this number of bytes in total across all calls.
  @param dataCallback a block called when more data is required.
                      This will be called repeatedly until it returns nil.
                      It is more efficient if this block returns the same

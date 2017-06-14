@@ -463,7 +463,8 @@ NSString *const kMXCallManagerConferenceUserDomain  = @"matrix.org";
  It is mandatory before starting the conference call.
 
  @param room the room.
- @return the conference user id.
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
  */
 - (void)inviteConferenceUserToRoom:(MXRoom *)room
                            success:(void (^)())success
@@ -486,7 +487,9 @@ NSString *const kMXCallManagerConferenceUserDomain  = @"matrix.org";
  Get the room with the conference user dedicated for the passed room.
 
  @param roomId the room id.
- @return the private room with conference user.
+ @param success A block object called when the operation succeeds. 
+                It returns the private room with conference user.
+ @param failure A block object called when the operation fails.
  */
 - (void)conferenceUserRoomForRoom:(NSString*)roomId
                           success:(void (^)(MXRoom *conferenceUserRoom))success

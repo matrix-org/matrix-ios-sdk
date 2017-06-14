@@ -166,7 +166,7 @@ NSString *const kMXRoomSummaryDidChangeNotification = @"kMXRoomSummaryDidChangeN
 /**
  Find the event to be used as last message.
 
- @param success A block object called when the operation completes.
+ @param complete A block object called when the operation completes.
  @param failure A block object called when the operation fails.
  @param lastEventIdChecked the id of the last candidate event checked to be the last message.
         Nil means we will start checking from the last event in the store.

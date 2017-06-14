@@ -343,6 +343,9 @@ FOUNDATION_EXPORT NSString *const kMXSessionNoRoomTag;
  */
 - (void)resume:(void (^)())resumeDone;
 
+typedef void (^MXOnBackgroundSyncDone)();
+typedef void (^MXOnBackgroundSyncFail)(NSError *error);
+
 /**
  Perform an events stream catchup in background (by keeping user offline).
  
@@ -350,9 +353,6 @@ FOUNDATION_EXPORT NSString *const kMXSessionNoRoomTag;
  @param backgroundSyncDone A block called when the SDK has been successfully performed a catchup
  @param backgroundSyncfails A block called when the catchup fails.
  */
-typedef void (^MXOnBackgroundSyncDone)();
-typedef void (^MXOnBackgroundSyncFail)(NSError *error);
-
 - (void)backgroundSync:(unsigned int)timeout
                success:(MXOnBackgroundSyncDone)backgroundSyncDone
                failure:(MXOnBackgroundSyncFail)backgroundSyncfails NS_REFINED_FOR_SWIFT;
@@ -588,7 +588,7 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
 /**
  Get the MXRoom instance of the room that owns the passed room alias.
 
- @param roomId The room alias to look for.
+ @param alias The room alias to look for.
 
  @return the MXRoom instance.
  */
@@ -846,7 +846,7 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
 /**
  Reset replay attack data for the given timeline.
 
- @param the id of the timeline.
+ @param timeline the id of the timeline.
  */
 - (void)resetReplayAttackCheckInTimeline:(NSString*)timeline;
 
@@ -857,7 +857,7 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
  
  The listener will receive all events including all events of all rooms.
  
- @param listenerBlock the block that will called once a new event has been handled.
+ @param onEvent the block that will called once a new event has been handled.
  @return a reference to use to unregister the listener
  */
 - (id)listenToEvents:(MXOnSessionEvent)onEvent;
@@ -866,7 +866,7 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
  Register a global listener for some types of events.
  
  @param types an array of event types strings (MXEventTypeString) to listen to.
- @param listenerBlock the block that will called once a new event has been handled.
+ @param onEvent the block that will called once a new event has been handled.
  @return a reference to use to unregister the listener
  */
 - (id)listenToEventsOfTypes:(NSArray*)types onEvent:(MXOnSessionEvent)onEvent;

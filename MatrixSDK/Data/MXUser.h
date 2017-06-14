@@ -94,7 +94,7 @@
 /**
  Update the MXUser data with a m.presence event.
  
- @param roomMemberEvent The event.
+ @param presenceEvent the presence event.
  @param mxSession the mxSession to the home server.
  */
 - (void)updateWithPresenceEvent:(MXEvent*)presenceEvent inMatrixSession:(MXSession*)mxSession;
@@ -120,7 +120,7 @@ typedef void (^MXOnUserUpdate)(MXEvent *event);
 /**
  Register a listener to be notified on change of this user data.
  
- @param onEvent the block that will called once a new event has been handled.
+ @param onUserUpdate the block that will called once a new event has been handled.
  @return a reference to use to unregister the listener
  */
 - (id)listenToUserUpdate:(MXOnUserUpdate)onUserUpdate;

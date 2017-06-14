@@ -447,7 +447,7 @@ FOUNDATION_EXPORT NSString *const kMXRoomTagLowPriority;
 /**
  Extract a list of tags from a room tag event.
  
- @param a room tag event (which can contains several tags)
+ @param event a room tag event (which can contains several tags)
  @return a dictionary containing the tags the user defined for one room.
          The key is the tag name. The value, the associated MXRoomTag object.
  */
@@ -773,7 +773,7 @@ FOUNDATION_EXPORT NSString *const kMXPushRuleConditionStringRoomMemberCount;
     /**
      Override [MXJSONModel modelFromJSON] by adding scope all decoded `MXPushRule` objects.
 
-     @param JSONDictionaries the JSON data array.
+     @param JSONDictionary the JSON data array.
      @param scope the rule scope (global, device).
      @return the newly created instances.
      */

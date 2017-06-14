@@ -44,10 +44,10 @@ extern NSString *const kMXMediaManagerDefaultCacheFolder;
 #pragma mark - File handling
 
 /**
- Write data into the provided file path
+ Write data into the provided file path.
  
- @param mediaData
- @param filePath
+ @param mediaData the data to write.
+ @param filePath the file to write data to.
  @return YES on sucess.
  */
 + (BOOL)writeMediaData:(NSData *)mediaData toFilePath:(NSString*)filePath;
@@ -132,7 +132,7 @@ extern NSString *const kMXMediaManagerDefaultCacheFolder;
 /**
  Download data from the provided URL.
  
- @param url remote media url.
+ @param mediaURL the remote media url.
  @param filePath output file in which downloaded media must be saved (may be nil).
  @param success block called on success
  @param failure block called on failure
@@ -146,7 +146,7 @@ extern NSString *const kMXMediaManagerDefaultCacheFolder;
 /**
  Download data from the provided URL.
  
- @param url remote media url.
+ @param mediaURL the remote media url.
  @param filePath output file in which downloaded media must be saved (may be nil).
  @return a media loader in order to let the user cancel this action.
  */
@@ -193,7 +193,7 @@ extern NSString *const kMXMediaManagerDefaultCacheFolder;
 /**
  Check whether an upload is already running with this id.
  
- @param uploadId
+ @param uploadId the id of the upload to fectch.
  @return mediaLoader (if any).
  */
 + (MXMediaLoader*)existingUploaderWithId:(NSString*)uploadId;

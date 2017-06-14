@@ -48,6 +48,8 @@ FOUNDATION_EXPORT NSString *MatrixSDKVersion;
 
 #import "MXLRUCache.h"
 
+#import "MXCallStack.h"
+
 #import "MXCrypto.h"
 #import "MXMegolmExportEncryption.h"
 

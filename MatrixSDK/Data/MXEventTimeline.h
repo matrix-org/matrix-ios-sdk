@@ -199,7 +199,7 @@ typedef void (^MXOnRoomEvent)(MXEvent *event, MXTimelineDirection direction, MXR
 /**
  For live timeline, update invited room state according to the received /sync response.
 
- @param invitedRoom information to update the room state.
+ @param invitedRoomSync information to update the room state.
  */
 - (void)handleInvitedRoomSync:(MXInvitedRoomSync *)invitedRoomSync;
 
@@ -238,7 +238,7 @@ typedef void (^MXOnRoomEvent)(MXEvent *event, MXTimelineDirection direction, MXR
  Notifiy all listeners of the timeline about the given event.
  
  @param event the event to notify.
- @param the event direction.
+ @param direction the event direction.
  */
 - (void)notifyListeners:(MXEvent*)event direction:(MXTimelineDirection)direction;
 

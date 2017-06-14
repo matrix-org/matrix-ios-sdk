@@ -154,7 +154,7 @@ extern NSString *const kMXNotificationCenterAllOtherRoomMessagesRuleID;
 /**
  Get a push rule by using its id.
  
- @param push rule id
+ @param pushRuleId the push rule id
  @return the push rule that matches the id. Nil if no match.
  */
 - (MXPushRule*)ruleById:(NSString*)pushRuleId;
@@ -166,7 +166,7 @@ extern NSString *const kMXNotificationCenterAllOtherRoomMessagesRuleID;
 
  The listener will be called when a push rule matches a live event.
 
- @param listenerBlock the block that will be called once a live event matches a push rule.
+ @param onNotification the block that will be called once a live event matches a push rule.
  @return a reference to use to unregister the listener
  */
 - (id)listenToNotifications:(MXOnNotification)onNotification;

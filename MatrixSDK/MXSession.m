@@ -2297,7 +2297,8 @@ typedef void (^MXOnResumeDone)();
 /**
  If any, start the crypto module.
 
- @param complete a block called in any case when the operation completes.
+ @param success a block called in any case when the operation completes.
+ @param failure a block object called when the operation fails.
  */
 - (void)startCrypto:(void (^)())success
             failure:(void (^)(NSError *error))failure

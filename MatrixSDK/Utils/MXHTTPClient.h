@@ -100,7 +100,7 @@ typedef BOOL (^MXHTTPClientOnUnrecognizedCertificate)(NSData *certificate);
  @param httpMethod the HTTP method (GET, PUT, ...)
  @param path the relative path of the server API to call.
  @param parameters the parameters to be set as a query string for `GET` requests, or the request HTTP body.
- @param timeout the timeout allocated for the request.
+ @param timeoutInSeconds the timeout allocated for the request.
 
  @param success A block object called when the operation succeeds. It provides the JSON response object from the the server.
  @param failure A block object called when the operation fails.
@@ -121,7 +121,7 @@ typedef BOOL (^MXHTTPClientOnUnrecognizedCertificate)(NSData *certificate);
  @param parameters (optional) the parameters to be set as a query string for `GET` requests, or the request HTTP body.
  @param data (optional) the data to post.
  @param headers (optional) the HTTP headers to set.
- @param timeout (optional) the timeout allocated for the request.
+ @param timeoutInSeconds (optional) the timeout allocated for the request.
  
  @param uploadProgress (optional) A block object called when the upload progresses.
 

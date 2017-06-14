@@ -49,7 +49,6 @@ typedef enum : NSUInteger
  Create an instance based on an endpoint url.
 
  @param bugReportEndpoint the endpoint URL.
- @param matrixSession the matrix session.
  @return a MXBugReportRestClient instance.
  */
 - (instancetype)initWithBugReportEndpoint:(NSString *)bugReportEndpoint;

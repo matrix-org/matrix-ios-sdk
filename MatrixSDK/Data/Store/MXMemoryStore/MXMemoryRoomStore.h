@@ -85,7 +85,6 @@
  An optional array of event types may be provided to filter room events. When this array is not nil,
  the type of the returned last event should match with one of the provided types.
 
- @param roomId the id of the room.
  @param types an array of event types strings (MXEventTypeString).
  @return the events enumerator.
  */
@@ -108,7 +107,7 @@
 /**
  Store into the store an outgoing message event being sent in the room.
 
- @param event the MXEvent object of the message.
+ @param outgoingMessage the MXEvent object of the message.
  */
 - (void)storeOutgoingMessage:(MXEvent*)outgoingMessage;
 

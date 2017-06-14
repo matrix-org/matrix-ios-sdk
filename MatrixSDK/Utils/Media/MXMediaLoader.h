@@ -155,8 +155,8 @@ extern NSString *const kMXMediaUploadIdPrefix;
  2 - upload the media -> initialRange = 0.1, range = 0.9 : the media upload is 90% of the global upload
  
  @param mxSession the matrix session used to upload media.
- @param initialRange the global upload progress already did done before this current upload.
- @param range the range value of this upload in the global scope.
+ @param anInitialRange the global upload progress already did done before this current upload.
+ @param aRange the range value of this upload in the global scope.
  @return the newly created instance.
  */
 - (id)initForUploadWithMatrixSession:(MXSession*)mxSession initialRange:(CGFloat)anInitialRange andRange:(CGFloat)aRange;
