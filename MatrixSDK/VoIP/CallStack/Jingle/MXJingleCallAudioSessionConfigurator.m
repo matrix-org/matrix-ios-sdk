@@ -117,7 +117,7 @@ static const int kRTCAudioSessionPreferredNumberOfChannels = 1;
     [audioSession setPreferredIOBufferDuration:ioBufferDuration error:nil];
 }
 
-+ (void)audioSessionDidActivated:(AVAudioSession *)audioSession
++ (void)audioSessionDidActivate:(AVAudioSession *)audioSession
 {
     // Finish audio session configuration. These properties can be set only after activation
     [audioSession setPreferredInputNumberOfChannels:kRTCAudioSessionPreferredNumberOfChannels error:nil];
@@ -155,7 +155,7 @@ static const int kRTCAudioSessionPreferredNumberOfChannels = 1;
     }
 }
 
-+ (void)audioSessionDidDeactivated:(AVAudioSession *)audioSession
++ (void)audioSessionDidDeactivate:(AVAudioSession *)audioSession
 {
     Class cls = objc_getClass("RTCAudioSession");
     Class metaCls = objc_getMetaClass("RTCAudioSession");

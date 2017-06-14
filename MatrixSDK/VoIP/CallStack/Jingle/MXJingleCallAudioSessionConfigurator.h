@@ -39,14 +39,14 @@
  
  @param audioSession: Instance of activated audio session
  */
-+ (void)audioSessionDidActivated:(AVAudioSession *)audioSession;
++ (void)audioSessionDidActivate:(AVAudioSession *)audioSession;
 
 /**
  Performs necessary for WebRTC actions after audio session was deactivated
  
  @param audioSession: Instance of deactivated audio session
  */
-+ (void)audioSessionDidDeactivated:(AVAudioSession *)audioSession;
++ (void)audioSessionDidDeactivate:(AVAudioSession *)audioSession;
 
 @end
 

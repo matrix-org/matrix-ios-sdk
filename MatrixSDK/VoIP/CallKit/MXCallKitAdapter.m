@@ -212,14 +212,14 @@
 - (void)provider:(CXProvider *)provider didActivateAudioSession:(AVAudioSession *)audioSession
 {
 #ifdef MX_CALL_STACK_JINGLE
-    [MXJingleCallAudioSessionConfigurator audioSessionDidActivated:audioSession];
+    [MXJingleCallAudioSessionConfigurator audioSessionDidActivate:audioSession];
 #endif
 }
 
 - (void)provider:(CXProvider *)provider didDeactivateAudioSession:(AVAudioSession *)audioSession
 {
 #ifdef MX_CALL_STACK_JINGLE
-    [MXJingleCallAudioSessionConfigurator audioSessionDidDeactivated:audioSession];
+    [MXJingleCallAudioSessionConfigurator audioSessionDidDeactivate:audioSession];
 #endif
 }
 
