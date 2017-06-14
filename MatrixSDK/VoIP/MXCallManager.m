@@ -99,9 +99,20 @@ static NSString *const kMXCallManagerFallbackSTUNServer = @"stun:stun.l.google.c
             }
         }];
 
+        // Listen to call state changes
+        [[NSNotificationCenter defaultCenter] addObserver:self
+                                                 selector:@selector(handleCallStateDidChangeNotification:)
+                                                     name:kMXCallStateDidChange
+                                                   object:nil];
+        
         [self refreshTURNServer];
     }
     return self;
+}
+
+- (void)dealloc
+{
+    [[NSNotificationCenter defaultCenter] removeObserver:self name:kMXCallStateDidChange object:nil];
 }
 
 - (void)close
@@ -120,6 +131,9 @@ static NSString *const kMXCallManagerFallbackSTUNServer = @"stun:stun.l.google.c
     // Do not refresh TURN servers config anymore
     [refreshTURNServerTimer invalidate];
     refreshTURNServerTimer = nil;
+    
+    // Do not handle any call state change notifications
+    [[NSNotificationCenter defaultCenter] removeObserver:self name:kMXCallStateDidChange object:nil];
 }
 
 - (MXCall *)callWithCallId:(NSString *)callId
@@ -370,6 +384,31 @@ static NSString *const kMXCallManagerFallbackSTUNServer = @"stun:stun.l.google.c
     if (call)
     {
         [call handleCallEvent:event];
+    }
+}
+
+- (void)handleCallStateDidChangeNotification:(NSNotification *)notification
+{
+    MXCall *call = notification.object;
+    
+    switch (call.state) {
+        case MXCallStateCreateOffer:
+            [_callKitAdapter startCall:call];
+            break;
+        case MXCallStateRinging:
+            [_callKitAdapter reportIncomingCall:call];
+            break;
+        case MXCallStateConnecting:
+            [_callKitAdapter reportCall:call startedConnectingAtDate:nil];
+            break;
+        case MXCallStateConnected:
+            [_callKitAdapter reportCall:call connectedAtDate:nil];
+            break;
+        case MXCallStateEnded:
+            [_callKitAdapter endCall:call];
+            break;
+        default:
+            break;
     }
 }
 
