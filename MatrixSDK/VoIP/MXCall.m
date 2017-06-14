@@ -567,6 +567,7 @@ NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
 
         [_callSignalingRoom sendEventOfType:kMXEventTypeStringCallCandidates content:content localEcho:nil success:nil failure:^(NSError *error) {
             NSLog(@"[MXCall] onICECandidate: Warning: Cannot send m.call.candidates event.");
+            [self didEncounterError:error];
         }];
 
         [localICECandidates removeAllObjects];
