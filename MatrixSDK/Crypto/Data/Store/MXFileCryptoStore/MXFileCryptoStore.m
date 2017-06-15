@@ -221,7 +221,7 @@ NSString *const kMXFileCryptoStoreInboundGroupSessionsFile = @"inboundGroupSessi
         dispatch_async(dispatch_get_main_queue(), ^{
 
             id<MXBackgroundModeHandler> handler = [MXSDKOptions sharedInstance].backgroundModeHandler;
-            if (handler && backgroundTaskIdentifier == [handler invalidIdentifier])
+            if (handler && backgroundTaskIdentifier != [handler invalidIdentifier])
             {
                 [handler endBackgrounTaskWithIdentifier:backgroundTaskIdentifier];
                 backgroundTaskIdentifier = [handler invalidIdentifier];
