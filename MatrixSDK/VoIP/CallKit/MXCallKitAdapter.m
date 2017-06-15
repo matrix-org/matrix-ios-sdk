@@ -255,7 +255,7 @@
     }
     
     [call hangup];
-    self.calls[action.UUID] = nil;
+    [self.calls removeObjectForKey:action.UUID];
     
     [action fulfill];
 }
