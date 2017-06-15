@@ -18,7 +18,7 @@
 
 #import "MXSDKOptions.h"
 
-#ifdef MX_CALL_STACK_JINGLE
+#if defined MX_CALL_STACK_JINGLE && TARGET_OS_IPHONE
 
 #import "MXCallAudioSessionConfigurator.h"
 
@@ -29,4 +29,4 @@
 
 @end
 
-#endif // MX_CALL_STACK_JINGLE
+#endif // MX_CALL_STACK_JINGLE && TARGET_OS_IPHONE
