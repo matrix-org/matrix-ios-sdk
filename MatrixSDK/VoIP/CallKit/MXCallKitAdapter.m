@@ -14,6 +14,8 @@
  limitations under the License.
  */
 
+#if TARGET_OS_IPHONE
+
 #import "MXCallKitAdapter.h"
 
 @import AVFoundation;
@@ -271,3 +273,5 @@
 }
 
 @end
+
+#endif
