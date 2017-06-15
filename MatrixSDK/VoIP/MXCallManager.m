@@ -17,7 +17,6 @@
 #import "MXCallManager.h"
 
 #import "MXCall.h"
-#import "MXCallKitAdapter.h"
 #import "MXCallStack.h"
 #import "MXJSONModels.h"
 #import "MXRoom.h"
@@ -48,11 +47,6 @@ static NSString *const kMXCallManagerFallbackSTUNServer = @"stun:stun.l.google.c
      Timer to periodically refresh the TURN server config.
      */
     NSTimer *refreshTURNServerTimer;
-    
-    /**
-     CallKit adapter. 
-     */
-    MXCallKitAdapter *_callKitAdapter;
 }
 @end
 
@@ -70,11 +64,6 @@ static NSString *const kMXCallManagerFallbackSTUNServer = @"stun:stun.l.google.c
         _inviteLifetime = 30000;
 
         _callStack = callstack;
-        
-        if ([MXCallKitAdapter callKitAvailable])
-        {
-            _callKitAdapter = [[MXCallKitAdapter alloc] init];
-        }
         
         // Listen to call events
         callEventsListener = [mxSession listenToEventsOfTypes:@[
