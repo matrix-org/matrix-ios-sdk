@@ -596,9 +596,6 @@ NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
 
 - (void)callStackCallDidConnect:(id<MXCallStackCall>)callStackCall
 {
-    // WebRTC has the given sequence of state changes for outgoing calls
-    // RTCIceConnectionStateConnected -> RTCIceConnectionStateCompleted -> RTCIceConnectionStateConnected
-    // So we need to avoid setting connected state twice
     if (self.state == MXCallStateConnecting)
         [self setState:MXCallStateConnected reason:nil];
 }

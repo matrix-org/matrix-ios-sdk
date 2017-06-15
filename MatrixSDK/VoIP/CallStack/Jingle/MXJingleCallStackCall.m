@@ -318,6 +318,10 @@ didChangeIceConnectionState:(RTCIceConnectionState)newState
     {
         case RTCIceConnectionStateConnected:
         {
+            // WebRTC has the given sequence of state changes for outgoing calls
+            // RTCIceConnectionStateConnected -> RTCIceConnectionStateCompleted -> RTCIceConnectionStateConnected
+            // Make sure you handle this situation right. For example check if the call is in the connecting state
+            // before starting react on this message
             dispatch_async(dispatch_get_main_queue(), ^{
                 [delegate callStackCallDidConnect:self];
             });
