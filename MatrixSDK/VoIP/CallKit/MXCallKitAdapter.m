@@ -39,6 +39,11 @@
 
 @implementation MXCallKitAdapter
 
+- (instancetype)init
+{
+    return [self initWithConfiguration:[[MXCallKitConfiguration alloc] init]];
+}
+
 - (instancetype)initWithConfiguration:(MXCallKitConfiguration *)configuration
 {
     if (self = [super init])

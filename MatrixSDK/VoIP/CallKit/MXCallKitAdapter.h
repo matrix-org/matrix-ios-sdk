@@ -33,9 +33,6 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (instancetype)initWithConfiguration:(MXCallKitConfiguration *)configuration NS_DESIGNATED_INITIALIZER;
 
-- (instancetype)init NS_UNAVAILABLE;
-+ (instancetype)new NS_UNAVAILABLE;
-
 - (void)startCall:(MXCall *)call;
 - (void)endCall:(MXCall *)call;
 
