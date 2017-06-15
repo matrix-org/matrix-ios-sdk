@@ -17,19 +17,15 @@
 
 #import "MXFileCryptoStore.h"
 
-#import "TargetConditionals.h"
-#if TARGET_OS_IPHONE
-#import <UIKit/UIKit.h>
-#elif TARGET_OS_OSX
-#import <Cocoa/Cocoa.h>
-#endif
-
 #ifdef MX_CRYPTO
 
 #import "MXFileCryptoStoreMetaData.h"
 #import "MXUsersDevicesMap.h"
 
 #import "MXRealmCryptoStore.h"
+
+#import "MXSDKOptions.h"
+#import "MXBackgroundModeHandler.h"
 
 NSUInteger const kMXFileCryptoStoreVersion = 1;
 
@@ -164,14 +160,13 @@ NSString *const kMXFileCryptoStoreInboundGroupSessionsFile = @"inboundGroupSessi
     metaData = nil;
 
     // Load the data even if the app goes in background
-#if TARGET_OS_IPHONE
-    __block UIBackgroundTaskIdentifier backgroundTaskIdentifier = [[UIApplication sharedApplication] beginBackgroundTaskWithName:@"openWithCredentials" expirationHandler:^{
+    id<MXBackgroundModeHandler> handler = [MXSDKOptions sharedInstance].backgroundModeHandler;
+    __block NSUInteger backgroundTaskIdentifier = [handler startBackgroundTaskWithName:@"openWithCredentials" completion:^{
 
         NSLog(@"[MXFileCryptoStore] Background task is going to expire in openWithCredentials");
-        [[UIApplication sharedApplication] endBackgroundTask:backgroundTaskIdentifier];
-        backgroundTaskIdentifier = UIBackgroundTaskInvalid;
+        [handler endBackgrounTaskWithIdentifier:backgroundTaskIdentifier];
+        backgroundTaskIdentifier = [handler invalidIdentifier];
     }];
-#endif
 
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
 
@@ -225,10 +220,12 @@ NSString *const kMXFileCryptoStoreInboundGroupSessionsFile = @"inboundGroupSessi
 
         dispatch_async(dispatch_get_main_queue(), ^{
 
-#if TARGET_OS_IPHONE
-            [[UIApplication sharedApplication] endBackgroundTask:backgroundTaskIdentifier];
-            backgroundTaskIdentifier = UIBackgroundTaskInvalid;
-#endif
+            id<MXBackgroundModeHandler> handler = [MXSDKOptions sharedInstance].backgroundModeHandler;
+            if (handler && backgroundTaskIdentifier == [handler invalidIdentifier])
+            {
+                [handler endBackgrounTaskWithIdentifier:backgroundTaskIdentifier];
+                backgroundTaskIdentifier = [handler invalidIdentifier];
+            }
 
             NSLog(@"[MXFileCryptoStore] loaded store: %@", self);
 

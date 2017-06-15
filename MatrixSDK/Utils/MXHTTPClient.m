@@ -66,12 +66,10 @@ NSString * const MXHTTPClientErrorResponseDataKey = @"com.matrixsdk.httpclient.e
      */
     MXHTTPClientOnUnrecognizedCertificate onUnrecognizedCertificateBlock;
 
-#if TARGET_OS_IPHONE
     /**
      The current background task id if any.
      */
-    UIBackgroundTaskIdentifier backgroundTaskIdentifier;
-#endif
+    NSUInteger backgroundTaskIdentifier;
 
     /**
      Flag to indicate that the underlying NSURLSession has been invalidated.
@@ -102,9 +100,12 @@ NSString * const MXHTTPClientErrorResponseDataKey = @"com.matrixsdk.httpclient.e
         [self setDefaultSecurityPolicy];
 
         onUnrecognizedCertificateBlock = onUnrecognizedCertBlock;
-#if TARGET_OS_IPHONE
-        backgroundTaskIdentifier = UIBackgroundTaskInvalid;
-#endif
+
+        id<MXBackgroundModeHandler> handler = [MXSDKOptions sharedInstance].backgroundModeHandler;
+        if (handler)
+        {
+            backgroundTaskIdentifier = [handler invalidIdentifier];
+        }
 
         // No need for caching. The sdk caches the data it needs
         [httpManager.requestSerializer setCachePolicy:NSURLRequestReloadIgnoringLocalCacheData];
@@ -129,12 +130,11 @@ NSString * const MXHTTPClientErrorResponseDataKey = @"com.matrixsdk.httpclient.e
 {
     [self cancel];
 
-#if TARGET_OS_IPHONE
-    if (backgroundTaskIdentifier != UIBackgroundTaskInvalid)
+    id<MXBackgroundModeHandler> handler = [MXSDKOptions sharedInstance].backgroundModeHandler;
+    if (handler && backgroundTaskIdentifier != [handler invalidIdentifier])
     {
         [self cleanupBackgroundTask];
     }
-#endif
 
     httpManager = nil;
 }
@@ -509,7 +509,8 @@ NSString * const MXHTTPClientErrorResponseDataKey = @"com.matrixsdk.httpclient.e
 - (void)startBackgroundTask
 {
     id<MXBackgroundModeHandler> handler = [MXSDKOptions sharedInstance].backgroundModeHandler;
-    if (handler && backgroundTaskIdentifier == [handler invalidIdentifier]) {
+    if (handler && backgroundTaskIdentifier == [handler invalidIdentifier])
+    {
         __weak __typeof(self)weakSelf = self;
         backgroundTaskIdentifier = [handler startBackgroundTaskWithName:nil completion:^{
             __strong __typeof(weakSelf)strongSelf = weakSelf;
@@ -537,7 +538,8 @@ NSString * const MXHTTPClientErrorResponseDataKey = @"com.matrixsdk.httpclient.e
 - (void)cleanupBackgroundTask
 {
     id<MXBackgroundModeHandler> handler = [MXSDKOptions sharedInstance].backgroundModeHandler;
-    if (handler && backgroundTaskIdentifier != [handler invalidIdentifier] && httpManager.tasks.count == 0) {
+    if (handler && backgroundTaskIdentifier != [handler invalidIdentifier] && httpManager.tasks.count == 0)
+    {
         [handler endBackgrounTaskWithIdentifier:backgroundTaskIdentifier];
         backgroundTaskIdentifier = [handler invalidIdentifier];
     }
