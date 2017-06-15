@@ -1746,14 +1746,9 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
         }
         
         
-        if (![_accountData.readMarkerEventId isEqualToString:updatedReadMarkerEvent.eventId])
+        if (updatedReadMarkerEvent && ![_accountData.readMarkerEventId isEqualToString:updatedReadMarkerEvent.eventId])
         {
-            MXEvent *currentReadMarkerEvent = [mxSession.store eventWithEventId:_accountData.readMarkerEventId inRoom:self.roomId];
-            
-            if (!currentReadMarkerEvent || (currentReadMarkerEvent.originServerTs <= updatedReadMarkerEvent.originServerTs))
-            {
-                readMarkerEventId = updatedReadMarkerEvent.eventId;
-            }
+            readMarkerEventId = updatedReadMarkerEvent.eventId;
         }
     }
     
@@ -1767,7 +1762,8 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
                                             eventId:updatedReadReceiptEvent.eventId
                                             success:nil
                                             failure:nil];
-    }}
+    }
+}
 
 - (void)markAllAsRead
 {
