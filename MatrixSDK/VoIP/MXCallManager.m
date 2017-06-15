@@ -17,6 +17,7 @@
 #import "MXCallManager.h"
 
 #import "MXCall.h"
+#import "MXCallKitAdapter.h"
 #import "MXCallStack.h"
 #import "MXJSONModels.h"
 #import "MXRoom.h"
@@ -389,27 +390,29 @@ static NSString *const kMXCallManagerFallbackSTUNServer = @"stun:stun.l.google.c
 
 - (void)handleCallStateDidChangeNotification:(NSNotification *)notification
 {
+#if TARGET_OS_IPHONE
     MXCall *call = notification.object;
     
     switch (call.state) {
         case MXCallStateCreateOffer:
-            [_callKitAdapter startCall:call];
+            [self.callKitAdapter startCall:call];
             break;
         case MXCallStateRinging:
-            [_callKitAdapter reportIncomingCall:call];
+            [self.callKitAdapter reportIncomingCall:call];
             break;
         case MXCallStateConnecting:
-            [_callKitAdapter reportCall:call startedConnectingAtDate:nil];
+            [self.callKitAdapter reportCall:call startedConnectingAtDate:nil];
             break;
         case MXCallStateConnected:
-            [_callKitAdapter reportCall:call connectedAtDate:nil];
+            [self.callKitAdapter reportCall:call connectedAtDate:nil];
             break;
         case MXCallStateEnded:
-            [_callKitAdapter endCall:call];
+            [self.callKitAdapter endCall:call];
             break;
         default:
             break;
     }
+#endif
 }
 
 #pragma mark - Conference call
