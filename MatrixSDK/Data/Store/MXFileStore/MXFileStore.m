@@ -15,13 +15,6 @@
  limitations under the License.
  */
 
-#import "TargetConditionals.h"
-#if TARGET_OS_IPHONE
-#import <UIKit/UIKit.h>
-#elif TARGET_OS_OSX
-#import <Cocoa/Cocoa.h>
-#endif
-
 #import "MXFileStore.h"
 
 #import "MXFileRoomStore.h"
@@ -218,7 +211,8 @@ NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
         
         dispatch_async(dispatch_get_main_queue(), ^{
             id<MXBackgroundModeHandler> handler = [MXSDKOptions sharedInstance].backgroundModeHandler;
-            if (handler && backgroundTaskIdentifier == [handler invalidIdentifier]) {
+            if (handler && backgroundTaskIdentifier != [handler invalidIdentifier])
+            {
                 [handler endBackgrounTaskWithIdentifier:backgroundTaskIdentifier];
                 backgroundTaskIdentifier = [handler invalidIdentifier];
             }
