@@ -100,9 +100,6 @@
     
     CXTransaction *transaction = [[CXTransaction alloc] initWithAction:action];
     [self.callController requestTransaction:transaction completion:^(NSError * _Nullable error) {
-        if (error)
-            return;
-
         CXCallUpdate *update = [[CXCallUpdate alloc] init];
         update.remoteHandle = handle;
         update.localizedCallerName = caller.displayname;
