@@ -19,6 +19,7 @@
 NS_ASSUME_NONNULL_BEGIN
 
 @class MXCall;
+@class MXCallKitConfiguration;
 @protocol MXCallAudioSessionConfigurator;
 
 @interface MXCallKitAdapter : NSObject
@@ -28,6 +29,11 @@ NS_ASSUME_NONNULL_BEGIN
  */
 @property (nonatomic, nullable, strong) id<MXCallAudioSessionConfigurator> audioSessionConfigurator;
 
+- (instancetype)initWithConfiguration:(MXCallKitConfiguration *)configuration NS_DESIGNATED_INITIALIZER;
+
+- (instancetype)init NS_UNAVAILABLE;
++ (instancetype)new NS_UNAVAILABLE;
+
 - (void)startCall:(MXCall *)call;
 - (void)endCall:(MXCall *)call;
 
@@ -36,6 +42,11 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)reportCall:(MXCall *)call startedConnectingAtDate:(nullable NSDate *)date;
 - (void)reportCall:(MXCall *)call connectedAtDate:(nullable NSDate *)date;
 
+/**
+ Tells if CallKit is supported by the OS
+ 
+ @returns true iff iOS version >= 10.0
+ */
 + (BOOL)callKitAvailable;
 
 @end

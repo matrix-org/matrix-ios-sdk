@@ -215,6 +215,9 @@
 		32FE41371D0AB7070060835E /* MXEnumConstants.m in Sources */ = {isa = PBXBuildFile; fileRef = 32FE41351D0AB7070060835E /* MXEnumConstants.m */; };
 		71DE22E01BC7C51200284153 /* MXReceiptData.m in Sources */ = {isa = PBXBuildFile; fileRef = 71DE22DC1BC7C51200284153 /* MXReceiptData.m */; };
 		71DE22E11BC7C51200284153 /* MXReceiptData.h in Headers */ = {isa = PBXBuildFile; fileRef = 71DE22DD1BC7C51200284153 /* MXReceiptData.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		92634B7F1EF2A37A00DB9F60 /* MXCallAudioSessionConfigurator.h in Headers */ = {isa = PBXBuildFile; fileRef = 92634B7E1EF2A37A00DB9F60 /* MXCallAudioSessionConfigurator.h */; };
+		92634B821EF2E3C400DB9F60 /* MXCallKitConfiguration.h in Headers */ = {isa = PBXBuildFile; fileRef = 92634B801EF2E3C400DB9F60 /* MXCallKitConfiguration.h */; };
+		92634B831EF2E3C400DB9F60 /* MXCallKitConfiguration.m in Sources */ = {isa = PBXBuildFile; fileRef = 92634B811EF2E3C400DB9F60 /* MXCallKitConfiguration.m */; };
 		926F40191EEF0F6E0062630D /* MXJingleCallAudioSessionConfigurator.h in Headers */ = {isa = PBXBuildFile; fileRef = 926F40171EEF0F6E0062630D /* MXJingleCallAudioSessionConfigurator.h */; };
 		926F401A1EEF0F6E0062630D /* MXJingleCallAudioSessionConfigurator.m in Sources */ = {isa = PBXBuildFile; fileRef = 926F40181EEF0F6E0062630D /* MXJingleCallAudioSessionConfigurator.m */; };
 		9274AFE81EE580240009BEB6 /* MXCallKitAdapter.h in Headers */ = {isa = PBXBuildFile; fileRef = 9274AFE61EE580240009BEB6 /* MXCallKitAdapter.h */; };
@@ -495,6 +498,9 @@
 		3ABDD5D65684E6B7F52FB94E /* libPods-MatrixSDKTests.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-MatrixSDKTests.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		71DE22DC1BC7C51200284153 /* MXReceiptData.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXReceiptData.m; sourceTree = "<group>"; };
 		71DE22DD1BC7C51200284153 /* MXReceiptData.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXReceiptData.h; sourceTree = "<group>"; };
+		92634B7E1EF2A37A00DB9F60 /* MXCallAudioSessionConfigurator.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXCallAudioSessionConfigurator.h; sourceTree = "<group>"; };
+		92634B801EF2E3C400DB9F60 /* MXCallKitConfiguration.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXCallKitConfiguration.h; sourceTree = "<group>"; };
+		92634B811EF2E3C400DB9F60 /* MXCallKitConfiguration.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXCallKitConfiguration.m; sourceTree = "<group>"; };
 		926F40171EEF0F6E0062630D /* MXJingleCallAudioSessionConfigurator.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXJingleCallAudioSessionConfigurator.h; sourceTree = "<group>"; };
 		926F40181EEF0F6E0062630D /* MXJingleCallAudioSessionConfigurator.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXJingleCallAudioSessionConfigurator.m; sourceTree = "<group>"; };
 		9274AFE61EE580240009BEB6 /* MXCallKitAdapter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXCallKitAdapter.h; sourceTree = "<group>"; };
@@ -737,6 +743,7 @@
 		3240951D1AFA432F00D81C97 /* CallStack */ = {
 			isa = PBXGroup;
 			children = (
+				92634B7E1EF2A37A00DB9F60 /* MXCallAudioSessionConfigurator.h */,
 				32BED28E1B00A23F00E668FE /* MXCallStack.h */,
 				3240951E1AFA432F00D81C97 /* MXCallStackCall.h */,
 				329B2ABA1D3FB01D002D546F /* Jingle */,
@@ -1055,6 +1062,8 @@
 			children = (
 				9274AFE61EE580240009BEB6 /* MXCallKitAdapter.h */,
 				9274AFE71EE580240009BEB6 /* MXCallKitAdapter.m */,
+				92634B801EF2E3C400DB9F60 /* MXCallKitConfiguration.h */,
+				92634B811EF2E3C400DB9F60 /* MXCallKitConfiguration.m */,
 			);
 			path = CallKit;
 			sourceTree = "<group>";
@@ -1154,11 +1163,13 @@
 				32A1514A1DAF7C0C00400192 /* MXUsersDevicesMap.h in Headers */,
 				323E0C5B1A306D7A00A31D73 /* MXEvent.h in Headers */,
 				327F8DB21C6112BA00581CA3 /* MXRoomThirdPartyInvite.h in Headers */,
+				92634B821EF2E3C400DB9F60 /* MXCallKitConfiguration.h in Headers */,
 				322360521A8E610500A3CA81 /* MXPushRuleDisplayNameCondtionChecker.h in Headers */,
 				F03EF5001DF014D9009DF592 /* MXMediaManager.h in Headers */,
 				3245A7521AF7B2930001D8A7 /* MXCallManager.h in Headers */,
 				C6FE1EF01E65C4F7008587E4 /* MXAnalyticsDelegate.h in Headers */,
 				3264E2A21BDF8D1500F89A86 /* MXCoreDataRoomState.h in Headers */,
+				92634B7F1EF2A37A00DB9F60 /* MXCallAudioSessionConfigurator.h in Headers */,
 				3291D4D41A68FFEB00C3BA41 /* MXFileRoomStore.h in Headers */,
 				320BBF431D6C81550079890E /* MXEventsEnumeratorOnArray.h in Headers */,
 				32C6F93319DD814400EA4E9C /* MatrixSDK.h in Headers */,
@@ -1452,6 +1463,7 @@
 				326056861C76FDF2009D44AD /* MXEventTimeline.m in Sources */,
 				32A1513A1DAD292400400192 /* MXMegolmEncryption.m in Sources */,
 				323B2B011BCE9B6700B11F34 /* MXCoreDataEvent.m in Sources */,
+				92634B831EF2E3C400DB9F60 /* MXCallKitConfiguration.m in Sources */,
 				3265CB391A14C43E00E24B2F /* MXRoomState.m in Sources */,
 				323B2AD01BCD3EF000B11F34 /* MXCoreDataStore.m in Sources */,
 				3281E8B819E42DFE00976E1A /* MXJSONModel.m in Sources */,

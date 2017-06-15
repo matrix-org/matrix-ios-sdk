@@ -22,6 +22,7 @@
 
 #import "MXCall.h"
 #import "MXCallAudioSessionConfigurator.h"
+#import "MXCallKitConfiguration.h"
 #import "MXUser.h"
 #import "MXSession.h"
 
@@ -36,11 +37,23 @@
 
 @implementation MXCallKitAdapter
 
-- (instancetype)init
+- (instancetype)initWithConfiguration:(MXCallKitConfiguration *)configuration
 {
     if (self = [super init])
     {
-        _provider = [[CXProvider alloc] initWithConfiguration:[MXCallKitAdapter configuration]];
+        CXProviderConfiguration *providerConfiguration = [[CXProviderConfiguration alloc] initWithLocalizedName:configuration.name];
+        providerConfiguration.ringtoneSound = configuration.ringtoneName;
+        providerConfiguration.maximumCallGroups = 1;
+        providerConfiguration.maximumCallsPerCallGroup = 1;
+        providerConfiguration.supportedHandleTypes = [NSSet setWithObject:@(CXHandleTypeGeneric)];
+        providerConfiguration.supportsVideo = configuration.supportsVideo;
+        
+        if (configuration.iconName)
+        {
+            providerConfiguration.iconTemplateImageData = UIImagePNGRepresentation([UIImage imageNamed:configuration.iconName]);
+        }
+        
+        _provider = [[CXProvider alloc] initWithConfiguration:providerConfiguration];
         [_provider setDelegate:self queue:nil];
         
         _callController = [[CXCallController alloc] initWithQueue:dispatch_get_main_queue()];
@@ -55,20 +68,6 @@
 {
     // CXProvider instance must be invalidated otherwise it will be leaked
     [_provider invalidate];
-}
-
-+ (CXProviderConfiguration *)configuration
-{
-    NSString *appDisplayName = [[[NSBundle mainBundle] infoDictionary] objectForKey:@"CFBundleDisplayName"];
-    
-    CXProviderConfiguration *configuration = [[CXProviderConfiguration alloc] initWithLocalizedName:appDisplayName];
-    configuration.maximumCallGroups = 1;
-    configuration.maximumCallsPerCallGroup = 1;
-    configuration.supportsVideo = YES;
-    configuration.supportedHandleTypes = [NSSet setWithObject:@(CXHandleTypeGeneric)];
-//    configuration.iconTemplateImageData = UIImagePNGRepresentation([UIImage imageNamed:@"RiotCallKitLogo"]);
-    
-    return configuration;
 }
 
 #pragma mark - Public
