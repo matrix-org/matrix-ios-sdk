@@ -64,7 +64,7 @@ static NSString *const kMXCallManagerFallbackSTUNServer = @"stun:stun.l.google.c
         _inviteLifetime = 30000;
 
         _callStack = callstack;
-
+        
         // Listen to call events
         callEventsListener = [mxSession listenToEventsOfTypes:@[
                                                                 kMXEventTypeStringCallInvite,

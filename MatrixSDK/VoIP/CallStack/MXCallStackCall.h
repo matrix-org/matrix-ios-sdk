@@ -79,8 +79,12 @@ NS_ASSUME_NONNULL_BEGIN
  This offer came within a m.call.invite event sent by the peer.
 
  @param sdpOffer the description of the peer media.
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
  */
-- (void)handleOffer:(NSString *)sdpOffer;
+- (void)handleOffer:(NSString *)sdpOffer
+            success:(void (^)())success
+            failure:(void (^)(NSError *error))failure;
 
 /**
  Generate an answer to send to the peer.
@@ -185,7 +189,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 #pragma mark - MXCallStackCallDelegate
 /**
- Delegate for `MXCallStackCal` object
+ Delegate for `MXCallStackCall` object
 */
 @protocol MXCallStackCallDelegate <NSObject>
 
@@ -206,6 +210,13 @@ NS_ASSUME_NONNULL_BEGIN
  @param error the error.
  */
 - (void)callStackCall:(id<MXCallStackCall>)callStackCall onError:(nullable NSError *)error;
+
+/**
+ Tells the delegate that connection was successfully established
+ 
+ @param callStackCall the corresponding instance.
+ */
+- (void)callStackCallDidConnect:(id<MXCallStackCall>)callStackCall;
 
 @end
 

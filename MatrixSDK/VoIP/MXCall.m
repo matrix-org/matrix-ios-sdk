@@ -88,6 +88,7 @@ NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
         _callSignalingRoom = [callManager.mxSession roomWithRoomId:callSignalingRoomId];
 
         _callId = [[NSUUID UUID] UUIDString];
+        _callUUID = [NSUUID UUID];
         _callerId = callManager.mxSession.myUser.userId;
 
         _state = MXCallStateFledgling;
@@ -95,6 +96,19 @@ NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
 
         // Consider we are using a conference call when there are more than 2 users
         _isConferenceCall = (2 < _room.state.joinedMembers.count);
+        
+        // Set caleeId only for regular calls
+        if (!_isConferenceCall)
+        {
+            for (MXRoomMember *roomMember in _room.state.joinedMembers)
+            {
+                if (![roomMember.userId isEqualToString:_callerId])
+                {
+                    _calleeId = roomMember.userId;
+                    break;
+                }
+            }
+        }
 
         localICECandidates = [NSMutableArray array];
 
@@ -143,6 +157,7 @@ NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
 
                 _callId = callInviteEventContent.callId;
                 _callerId = event.sender;
+                _calleeId = callManager.mxSession.myUser.userId;
                 _isIncoming = YES;
 
                 // Store if it is voice or video call
@@ -151,9 +166,17 @@ NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
                 // Set up the default audio route
                 callStackCall.audioToSpeaker = NO;
                 
+                [self setState:MXCallStateWaitLocalMedia reason:nil];
+                
                 [callStackCall startCapturingMediaWithVideo:self.isVideoCall success:^{
-                    [callStackCall handleOffer:callInviteEventContent.offer.sdp];
-                    [self setState:MXCallStateRinging reason:event];
+                    [callStackCall handleOffer:callInviteEventContent.offer.sdp
+                                       success:^{
+                                           [self setState:MXCallStateRinging reason:event];
+                                       }
+                                       failure:^(NSError * _Nonnull error) {
+                                           NSLog(@"[MXCall] handleOffer: ERROR: Couldn't handle offer. Error: %@", error);
+                                           [self didEncounterError:error];
+                                       }];
                 } failure:^(NSError *error) {
                     NSLog(@"[MXCall] startCapturingMediaWithVideo: ERROR: Couldn't start capturing. Error: %@", error);
                     [self didEncounterError:error];
@@ -192,15 +215,14 @@ NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
                 }
 
                 // Let's the stack finalise the connection
-                [callStackCall handleAnswer:content.answer.sdp success:^{
-
-                    // Call is up
-                    [self setState:MXCallStateConnected reason:event];
-
-                } failure:^(NSError *error) {
-                    NSLog(@"[MXCall] handleCallEvent: ERROR: Cannot send handle answer. Error: %@\nEvent: %@", error, event);
-                    [self didEncounterError:error];
-                }];
+                [callStackCall handleAnswer:content.answer.sdp
+                                    success:^{
+                                        [self setState:MXCallStateConnecting reason:event];
+                                    }
+                                    failure:^(NSError *error) {
+                                        NSLog(@"[MXCall] handleCallEvent: ERROR: Cannot send handle answer. Error: %@\nEvent: %@", error, event);
+                                        [self didEncounterError:error];
+                                    }];
             }
             else if (_state == MXCallStateRinging)
             {
@@ -298,7 +320,7 @@ NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
 
     if (self.state == MXCallStateRinging)
     {
-        void(^answer)() = ^() {
+        void(^answer)() = ^{
 
             NSLog(@"[MXCall] answer: answering...");
 
@@ -308,9 +330,6 @@ NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
                 [inviteExpirationTimer invalidate];
                 inviteExpirationTimer = nil;
             }
-
-            [self setState:MXCallStateWaitLocalMedia reason:nil];
-
 
             // Create a sdp answer from the offer we got
             [self setState:MXCallStateCreateAnswer reason:nil];
@@ -329,12 +348,7 @@ NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
                                                   },
                                           @"version": @(0),
                                           };
-                [_callSignalingRoom sendEventOfType:kMXEventTypeStringCallAnswer content:content localEcho:nil success:^(NSString *eventId) {
-
-                    // @TODO: This is false
-                    [self setState:MXCallStateConnected reason:nil];
-
-                } failure:^(NSError *error) {
+                [_callSignalingRoom sendEventOfType:kMXEventTypeStringCallAnswer content:content localEcho:nil success:nil failure:^(NSError *error) {
                     NSLog(@"[MXCall] answer: ERROR: Cannot send m.call.answer event.");
                     [self didEncounterError:error];
                 }];
@@ -567,6 +581,7 @@ NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
 
         [_callSignalingRoom sendEventOfType:kMXEventTypeStringCallCandidates content:content localEcho:nil success:nil failure:^(NSError *error) {
             NSLog(@"[MXCall] onICECandidate: Warning: Cannot send m.call.candidates event.");
+            [self didEncounterError:error];
         }];
 
         [localICECandidates removeAllObjects];
@@ -577,6 +592,12 @@ NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
 {
     NSLog(@"[MXCall] callStackCall didEncounterError: %@", error);
     [self didEncounterError:error];
+}
+
+- (void)callStackCallDidConnect:(id<MXCallStackCall>)callStackCall
+{
+    if (self.state == MXCallStateConnecting)
+        [self setState:MXCallStateConnected reason:nil];
 }
 
 
@@ -619,6 +640,10 @@ NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
     if ([_delegate respondsToSelector:@selector(call:didEncounterError:)])
     {
         [_delegate call:self didEncounterError:error];
+    }
+    else
+    {
+        [self hangup];
     }
 }
 

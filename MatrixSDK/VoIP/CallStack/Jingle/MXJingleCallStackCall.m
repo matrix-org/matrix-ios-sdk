@@ -144,13 +144,25 @@
 
 
 #pragma mark - Incoming call
-- (void)handleOffer:(NSString *)sdpOffer
+- (void)handleOffer:(NSString *)sdpOffer success:(void (^)())success failure:(void (^)(NSError *error))failure
 {
     RTCSessionDescription *sessionDescription = [[RTCSessionDescription alloc] initWithType:RTCSdpTypeOffer sdp:sdpOffer];
-
     [peerConnection setRemoteDescription:sessionDescription completionHandler:^(NSError * _Nullable error) {
-
         NSLog(@"[MXJingleCallStackCall] setRemoteDescription: error: %@", error);
+        
+        // Return on main thread
+        dispatch_async(dispatch_get_main_queue(), ^{
+            
+            if (!error)
+            {
+                success();
+            }
+            else
+            {
+                failure(error);
+            }
+            
+        });
     }];
 }
 
@@ -304,6 +316,17 @@ didChangeIceConnectionState:(RTCIceConnectionState)newState
 
     switch (newState)
     {
+        case RTCIceConnectionStateConnected:
+        {
+            // WebRTC has the given sequence of state changes for outgoing calls
+            // RTCIceConnectionStateConnected -> RTCIceConnectionStateCompleted -> RTCIceConnectionStateConnected
+            // Make sure you handle this situation right. For example check if the call is in the connecting state
+            // before starting react on this message
+            dispatch_async(dispatch_get_main_queue(), ^{
+                [delegate callStackCallDidConnect:self];
+            });
+            break;
+        }
         case RTCIceConnectionStateFailed:
         {
             // ICE discovery has failed or the connection has dropped
