@@ -63,7 +63,7 @@ static const int kRTCAudioSessionPreferredNumberOfChannels = 1;
 
 @implementation MXJingleCallAudioSessionConfigurator
 
-+ (void)configureAudioSessionForVideoCall:(BOOL)isVideoCall
+- (void)configureAudioSessionForVideoCall:(BOOL)isVideoCall
 {
     AVAudioSession *audioSession = [AVAudioSession sharedInstance];
     
@@ -117,7 +117,7 @@ static const int kRTCAudioSessionPreferredNumberOfChannels = 1;
     [audioSession setPreferredIOBufferDuration:ioBufferDuration error:nil];
 }
 
-+ (void)audioSessionDidActivate:(AVAudioSession *)audioSession
+- (void)audioSessionDidActivate:(AVAudioSession *)audioSession
 {
     // Finish audio session configuration. These properties can be set only after activation
     [audioSession setPreferredInputNumberOfChannels:kRTCAudioSessionPreferredNumberOfChannels error:nil];
@@ -155,7 +155,7 @@ static const int kRTCAudioSessionPreferredNumberOfChannels = 1;
     }
 }
 
-+ (void)audioSessionDidDeactivate:(AVAudioSession *)audioSession
+- (void)audioSessionDidDeactivate:(AVAudioSession *)audioSession
 {
     Class cls = objc_getClass("RTCAudioSession");
     Class metaCls = objc_getMetaClass("RTCAudioSession");

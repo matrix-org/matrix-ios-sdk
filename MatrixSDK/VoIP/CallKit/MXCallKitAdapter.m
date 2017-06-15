@@ -21,7 +21,7 @@
 @import UIKit;
 
 #import "MXCall.h"
-#import "MXJingleCallAudioSessionConfigurator.h"
+#import "MXCallAudioSessionConfigurator.h"
 #import "MXUser.h"
 #import "MXSession.h"
 
@@ -177,12 +177,10 @@
         
         self.calls[callUUID] = call;
         
-#ifdef MX_CALL_STACK_JINGLE
         // Workaround from https://forums.developer.apple.com/message/169511 suggests configuring audio in the
         // completion block of the `reportNewIncomingCallWithUUID:update:completion:` method instead of in
         // `provider:performAnswerCallAction:` per the WWDC examples.
-        [MXJingleCallAudioSessionConfigurator configureAudioSessionForVideoCall:call.isVideoCall];
-#endif
+        [self.audioSessionConfigurator configureAudioSessionForVideoCall:call.isVideoCall];
     }];
     
 }
@@ -211,16 +209,12 @@
 
 - (void)provider:(CXProvider *)provider didActivateAudioSession:(AVAudioSession *)audioSession
 {
-#ifdef MX_CALL_STACK_JINGLE
-    [MXJingleCallAudioSessionConfigurator audioSessionDidActivate:audioSession];
-#endif
+    [self.audioSessionConfigurator audioSessionDidActivate:audioSession];
 }
 
 - (void)provider:(CXProvider *)provider didDeactivateAudioSession:(AVAudioSession *)audioSession
 {
-#ifdef MX_CALL_STACK_JINGLE
-    [MXJingleCallAudioSessionConfigurator audioSessionDidDeactivate:audioSession];
-#endif
+    [self.audioSessionConfigurator audioSessionDidDeactivate:audioSession];
 }
 
 - (void)provider:(CXProvider *)provider performStartCallAction:(CXStartCallAction *)action
@@ -232,9 +226,7 @@
         return;
     }
     
-#ifdef MX_CALL_STACK_JINGLE
-    [MXJingleCallAudioSessionConfigurator configureAudioSessionForVideoCall:call.isVideoCall];
-#endif
+    [self.audioSessionConfigurator configureAudioSessionForVideoCall:call.isVideoCall];
     
     [action fulfill];
 }

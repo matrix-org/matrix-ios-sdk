@@ -20,33 +20,12 @@
 
 #ifdef MX_CALL_STACK_JINGLE
 
-@class AVAudioSession;
+#import "MXCallAudioSessionConfigurator.h"
 
 /**
- This class helps to provide better integration level with CallKit for WebRTC
+ The `MXJingleCallAudioSessionConfigurator` is the implementation of the `MXCallAudioSessionConfigurator` protocol for using with WebRTC.
  */
-@interface MXJingleCallAudioSessionConfigurator : NSObject
-
-/**
- Applies appropriate settings to AVAudioSession
- 
- @param isVideoCall: true if need configuration for video call, false if for voice call
- */
-+ (void)configureAudioSessionForVideoCall:(BOOL)isVideoCall;
-
-/**
- Performs necessary for WebRTC actions after audio session was activated
- 
- @param audioSession: Instance of activated audio session
- */
-+ (void)audioSessionDidActivate:(AVAudioSession *)audioSession;
-
-/**
- Performs necessary for WebRTC actions after audio session was deactivated
- 
- @param audioSession: Instance of deactivated audio session
- */
-+ (void)audioSessionDidDeactivate:(AVAudioSession *)audioSession;
+@interface MXJingleCallAudioSessionConfigurator : NSObject <MXCallAudioSessionConfigurator>
 
 @end
 

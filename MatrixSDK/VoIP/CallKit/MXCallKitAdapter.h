@@ -19,8 +19,14 @@
 NS_ASSUME_NONNULL_BEGIN
 
 @class MXCall;
+@protocol MXCallAudioSessionConfigurator;
 
 @interface MXCallKitAdapter : NSObject
+
+/**
+ The AVAudioSession configurator.
+ */
+@property (nonatomic, nullable, strong) id<MXCallAudioSessionConfigurator> audioSessionConfigurator;
 
 - (void)startCall:(MXCall *)call;
 - (void)endCall:(MXCall *)call;
