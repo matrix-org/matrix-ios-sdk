@@ -182,9 +182,9 @@
 		32A1515B1DB525DA00400192 /* NSObject+sortedKeys.h in Headers */ = {isa = PBXBuildFile; fileRef = 32A151591DB525DA00400192 /* NSObject+sortedKeys.h */; };
 		32A1515C1DB525DA00400192 /* NSObject+sortedKeys.m in Sources */ = {isa = PBXBuildFile; fileRef = 32A1515A1DB525DA00400192 /* NSObject+sortedKeys.m */; };
 		32A27D1F19EC335300BAFADE /* MXRoomTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 32A27D1E19EC335300BAFADE /* MXRoomTests.m */; };
-		32A9E81E1EF18C2D0081358A /* MXBackgroundModeHandler.h in Headers */ = {isa = PBXBuildFile; fileRef = 32A9E81B1EF18C2D0081358A /* MXBackgroundModeHandler.h */; };
-		32A9E81F1EF18C2D0081358A /* MXDefaultBackgroundModeHandler.h in Headers */ = {isa = PBXBuildFile; fileRef = 32A9E81C1EF18C2D0081358A /* MXDefaultBackgroundModeHandler.h */; };
-		32A9E8201EF18C2D0081358A /* MXDefaultBackgroundModeHandler.m in Sources */ = {isa = PBXBuildFile; fileRef = 32A9E81D1EF18C2D0081358A /* MXDefaultBackgroundModeHandler.m */; };
+		32A9E8241EF4026E0081358A /* MXBackgroundModeHandler.h in Headers */ = {isa = PBXBuildFile; fileRef = 32A9E8211EF4026E0081358A /* MXBackgroundModeHandler.h */; };
+		32A9E8251EF4026E0081358A /* MXUIKitBackgroundModeHandler.h in Headers */ = {isa = PBXBuildFile; fileRef = 32A9E8221EF4026E0081358A /* MXUIKitBackgroundModeHandler.h */; };
+		32A9E8261EF4026E0081358A /* MXUIKitBackgroundModeHandler.m in Sources */ = {isa = PBXBuildFile; fileRef = 32A9E8231EF4026E0081358A /* MXUIKitBackgroundModeHandler.m */; };
 		32BD34BE1E84134A006EDC0D /* MatrixSDKTestsE2EData.m in Sources */ = {isa = PBXBuildFile; fileRef = 32BD34BD1E84134A006EDC0D /* MatrixSDKTestsE2EData.m */; };
 		32BED28F1B00A23F00E668FE /* MXCallStack.h in Headers */ = {isa = PBXBuildFile; fileRef = 32BED28E1B00A23F00E668FE /* MXCallStack.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		32C6F93319DD814400EA4E9C /* MatrixSDK.h in Headers */ = {isa = PBXBuildFile; fileRef = 32C6F93219DD814400EA4E9C /* MatrixSDK.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -451,9 +451,9 @@
 		32A151591DB525DA00400192 /* NSObject+sortedKeys.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "NSObject+sortedKeys.h"; path = "Lib/NSObject+sortedKeys.h"; sourceTree = "<group>"; };
 		32A1515A1DB525DA00400192 /* NSObject+sortedKeys.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = "NSObject+sortedKeys.m"; path = "Lib/NSObject+sortedKeys.m"; sourceTree = "<group>"; };
 		32A27D1E19EC335300BAFADE /* MXRoomTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; lineEnding = 0; path = MXRoomTests.m; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objc; };
-		32A9E81B1EF18C2D0081358A /* MXBackgroundModeHandler.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXBackgroundModeHandler.h; sourceTree = "<group>"; };
-		32A9E81C1EF18C2D0081358A /* MXDefaultBackgroundModeHandler.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXDefaultBackgroundModeHandler.h; sourceTree = "<group>"; };
-		32A9E81D1EF18C2D0081358A /* MXDefaultBackgroundModeHandler.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXDefaultBackgroundModeHandler.m; sourceTree = "<group>"; };
+		32A9E8211EF4026E0081358A /* MXBackgroundModeHandler.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXBackgroundModeHandler.h; sourceTree = "<group>"; };
+		32A9E8221EF4026E0081358A /* MXUIKitBackgroundModeHandler.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXUIKitBackgroundModeHandler.h; sourceTree = "<group>"; };
+		32A9E8231EF4026E0081358A /* MXUIKitBackgroundModeHandler.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXUIKitBackgroundModeHandler.m; sourceTree = "<group>"; };
 		32BD34BC1E84134A006EDC0D /* MatrixSDKTestsE2EData.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MatrixSDKTestsE2EData.h; sourceTree = "<group>"; };
 		32BD34BD1E84134A006EDC0D /* MatrixSDKTestsE2EData.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MatrixSDKTestsE2EData.m; sourceTree = "<group>"; };
 		32BED28E1B00A23F00E668FE /* MXCallStack.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXCallStack.h; sourceTree = "<group>"; };
@@ -632,6 +632,9 @@
 				C6FE1EF21E65E3F2008587E4 /* MXGoogleAnalytics.m */,
 				3283F7761EAF30F700C1688C /* MXBugReportRestClient.h */,
 				3283F7771EAF30F700C1688C /* MXBugReportRestClient.m */,
+				32A9E8211EF4026E0081358A /* MXBackgroundModeHandler.h */,
+				32A9E8221EF4026E0081358A /* MXUIKitBackgroundModeHandler.h */,
+				32A9E8231EF4026E0081358A /* MXUIKitBackgroundModeHandler.m */,
 			);
 			path = Utils;
 			sourceTree = "<group>";
@@ -932,9 +935,6 @@
 				32FE41351D0AB7070060835E /* MXEnumConstants.m */,
 				F0C34CB91C18C80000C36F09 /* MXSDKOptions.h */,
 				F0C34CBA1C18C93700C36F09 /* MXSDKOptions.m */,
-				32A9E81B1EF18C2D0081358A /* MXBackgroundModeHandler.h */,
-				32A9E81C1EF18C2D0081358A /* MXDefaultBackgroundModeHandler.h */,
-				32A9E81D1EF18C2D0081358A /* MXDefaultBackgroundModeHandler.m */,
 				32C6F93019DD814400EA4E9C /* Supporting Files */,
 			);
 			path = MatrixSDK;
@@ -1165,6 +1165,7 @@
 				3284A5AE1DB7CFA800A09972 /* MXFileCryptoStoreMetaData.h in Headers */,
 				C60165381E3AA57900B92CFA /* MXSDKOptions.h in Headers */,
 				3281E8B919E42DFE00976E1A /* MXJSONModels.h in Headers */,
+				32A9E8251EF4026E0081358A /* MXUIKitBackgroundModeHandler.h in Headers */,
 				325D1C261DFECE0D0070B8BF /* MXCrypto_Private.h in Headers */,
 				32A151521DAF8A7200400192 /* MXQueuedEncryption.h in Headers */,
 				323B2AFE1BCE9B6700B11F34 /* MXCoreDataEvent+CoreDataProperties.h in Headers */,
@@ -1173,7 +1174,6 @@
 				320BBF421D6C81550079890E /* MXEventsByTypesEnumeratorOnArray.h in Headers */,
 				3271877B1DA7CAA60071C818 /* MXEncrypting.h in Headers */,
 				32A151481DAF7C0C00400192 /* MXKey.h in Headers */,
-				32A9E81F1EF18C2D0081358A /* MXDefaultBackgroundModeHandler.h in Headers */,
 				323B2ADF1BCD4CB600B11F34 /* MXCoreDataAccount+CoreDataProperties.h in Headers */,
 				32A151461DAF7C0C00400192 /* MXDeviceInfo.h in Headers */,
 				32CAB1071A91EA34008C5BB9 /* MXPushRuleRoomMemberCountConditionChecker.h in Headers */,
@@ -1188,7 +1188,7 @@
 				323B2AE11BCD4CB600B11F34 /* MXCoreDataAccount.h in Headers */,
 				32A151261DABB0CB00400192 /* MXMegolmDecryption.h in Headers */,
 				3220094519EFBF30008DE41D /* MXSessionEventListener.h in Headers */,
-				32A9E81E1EF18C2D0081358A /* MXBackgroundModeHandler.h in Headers */,
+				32A9E8241EF4026E0081358A /* MXBackgroundModeHandler.h in Headers */,
 				32BED28F1B00A23F00E668FE /* MXCallStack.h in Headers */,
 				F03EF4FE1DF014D9009DF592 /* MXMediaLoader.h in Headers */,
 				3264DB911CEC528D00B99881 /* MXAccountData.h in Headers */,
@@ -1422,7 +1422,6 @@
 				3264E2A51BDF8D1500F89A86 /* MXCoreDataRoomState+CoreDataProperties.m in Sources */,
 				329FB1761A0A3A1600A5E88E /* MXRoomMember.m in Sources */,
 				323360701A403A0D0071A488 /* MXFileStore.m in Sources */,
-				32A9E8201EF18C2D0081358A /* MXDefaultBackgroundModeHandler.m in Sources */,
 				32D7767E1A27860600FC4AA2 /* MXMemoryStore.m in Sources */,
 				32A151531DAF8A7200400192 /* MXQueuedEncryption.m in Sources */,
 				C6D5D60A1E4FA74000706C0F /* MXEnumConstants.swift in Sources */,
@@ -1492,6 +1491,7 @@
 				32DC15D11A8CF7AE006F9AD3 /* MXNotificationCenter.m in Sources */,
 				3284A5AD1DB7CFA800A09972 /* MXFileCryptoStore.m in Sources */,
 				32637ED51E5B00400011E20D /* MXDeviceList.m in Sources */,
+				32A9E8261EF4026E0081358A /* MXUIKitBackgroundModeHandler.m in Sources */,
 				322A51C81D9BBD3C00C8536D /* MXOlmDevice.m in Sources */,
 				329FB17A1A0A74B100A5E88E /* MXTools.m in Sources */,
 				323B2AE01BCD4CB600B11F34 /* MXCoreDataAccount+CoreDataProperties.m in Sources */,

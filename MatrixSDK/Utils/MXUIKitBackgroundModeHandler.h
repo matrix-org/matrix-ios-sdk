@@ -20,7 +20,7 @@
 
 #if TARGET_OS_IPHONE
 
-@interface MXDefaultBackgroundModeHandler : NSObject <MXBackgroundModeHandler>
+@interface MXUIKitBackgroundModeHandler : NSObject <MXBackgroundModeHandler>
 
 @end
 

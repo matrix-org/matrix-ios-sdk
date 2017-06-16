@@ -14,13 +14,13 @@
  limitations under the License.
  */
 
-#import "MXDefaultBackgroundModeHandler.h"
+#import "MXUIKitBackgroundModeHandler.h"
 
 #if TARGET_OS_IPHONE
 
 #import <UIKit/UIKit.h>
 
-@implementation MXDefaultBackgroundModeHandler
+@implementation MXUIKitBackgroundModeHandler
 
 #pragma mark - MXBackgroundModeHandler
 
