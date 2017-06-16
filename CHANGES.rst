@@ -1,3 +1,35 @@
+Changes in Matrix iOS SDK in 0.7.12 (2017-06-)
+===============================================
+
+Improvements:
+ * The minimal iOS version is now 8.0, 10.10 for macOS.
+ * Add read markers synchronisation across matrix clients.
+ * Add MXRoomSummary, an object where room data (display name, last message, etc) is cached. It avoids to recompute it from the room state.
+ * Bug report: add MXBugReportRestClient to talk to the bug report API.
+ * VoIP: several improvements, thanks to @morozkin (PR #301, PR #304, PR #307).
+ * Remove direct dependency to Google Analytics, thanks to @aapierce0 (PR #256).
+ * Extract background mode handling outside of Matrix SDK, thanks to Samuel Gallet (PR #296).
+ * MXHTTPOperation: add isCancelled property, thanks to @SteadyCoder (PR #274).
+ * MXMediaManager: Consider a cache version based on the version defined by the application and the one defined at the SDK level.
+ * MXRestClient: add forgetPasswordForEmail for password reseting, thanks to @morozkin (PR #277).
+ * MXRestClient: add setPinnedCertificates to allow app to use custom certificate, thanks to Samuel Gallet (PR #302).
+ * MXRestClient: Fix publicRoomsOnServer for the search parameter.
+ * MXRestClient: Make publicRooms still use the old "GET" API if there is no params.
+ * MXRestClient: Add thirdpartyProtocols to get the third party protocols that can be reached using this HS.
+ * MXRoom: Expose the user identifier for whom this room is tagged as direct (if any).
+ * MXSession: Handle the missed notifications count at session level.
+ * MXCredentials: add homeServerName property.
+ * Crypto: Rework device list tracking logic in to order to fix UISI (https://github.com/matrix-org/matrix-js-sdk/pull/425 & https://github.com/matrix-org/matrix-js-sdk/pull/431).
+ 
+Bug fixes:
+ * App crashes if there are more than one invited room.
+ * MXSession: Take into account encrypted messages in unread counter.
+ * [MXSession resetRoomsSummariesLastMessage] freezes the app (#292).
+ * README: update dead links in "Push Notifications" section.
+ 
+API breaks:
+ * MXRestClient: Update publicRooms to support pagination and 3rd party networks
+
 Changes in Matrix iOS SDK in 0.7.11 (2017-03-23)
 ===============================================
 
