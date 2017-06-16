@@ -1,4 +1,4 @@
-Changes in Matrix iOS SDK in 0.7.12 (2017-06-)
+Changes in Matrix iOS SDK in 0.8.0 (2017-06-16)
 ===============================================
 
 Improvements:
