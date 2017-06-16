@@ -161,7 +161,7 @@ static const int kRTCAudioSessionPreferredNumberOfChannels = 1;
     Class metaCls = objc_getMetaClass("RTCAudioSession");
     
     SEL selSharedInstance = NSSelectorFromString(@"sharedInstance");
-    SEL selIncrementActivationCount = NSSelectorFromString(@"decrementActivationCount");
+    SEL selDecrementActivationCount = NSSelectorFromString(@"decrementActivationCount");
     SEL selSetIsActive = NSSelectorFromString(@"setIsActive:");
     
     if (cls &&
@@ -172,7 +172,7 @@ static const int kRTCAudioSessionPreferredNumberOfChannels = 1;
     {
         id rtcAudioSession = ((id (*)(id, SEL))objc_msgSend)(cls, selSharedInstance);
         ((void (*)(id, SEL, BOOL))objc_msgSend)(rtcAudioSession, selSetIsActive, NO);
-        ((void (*)(id, SEL))objc_msgSend)(rtcAudioSession, selIncrementActivationCount);
+        ((void (*)(id, SEL))objc_msgSend)(rtcAudioSession, selDecrementActivationCount);
     }
 }
 
