@@ -42,9 +42,9 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)reportCall:(MXCall *)call connectedAtDate:(nullable NSDate *)date;
 
 /**
- Tells if CallKit is supported by the OS
+ Tell about support of CallKit by the OS
  
- @returns true iff iOS version >= 10.0
+ @return true if iOS version >= 10.0 otherwise false
  */
 + (BOOL)callKitAvailable;
 

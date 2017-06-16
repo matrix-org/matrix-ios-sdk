@@ -116,7 +116,8 @@ extern NSString *const kMXCallManagerConferenceFinished;
 @property (nonatomic) id<MXCallStack> callStack;
 
 /**
- 
+ The CallKit adapter.
+ Provide it if you want to add CallKit support.
  */
 #if TARGET_OS_IPHONE
 @property (nonatomic, nullable) MXCallKitAdapter *callKitAdapter;
