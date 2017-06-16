@@ -171,7 +171,7 @@ static const int kRTCAudioSessionPreferredNumberOfChannels = 1;
     if (cls &&
         metaCls &&
         class_respondsToSelector(metaCls, selSharedInstance) &&
-        class_respondsToSelector(cls, selIncrementActivationCount) &&
+        class_respondsToSelector(cls, selDecrementActivationCount) &&
         class_respondsToSelector(cls, selSetIsActive))
     {
         id rtcAudioSession = ((id (*)(id, SEL))objc_msgSend)(cls, selSharedInstance);
