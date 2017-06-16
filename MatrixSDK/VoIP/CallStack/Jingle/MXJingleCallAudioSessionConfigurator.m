@@ -12,6 +12,10 @@
  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  See the License for the specific language governing permissions and
  limitations under the License.
+ 
+ Some parts of the code were taken from WebRTC iOS SDK because there is no public API
+ to configure AVAudioSession for calls. We need these functionality because of CallKit support.
+ See: https://chromium.googlesource.com/external/webrtc/+/master/webrtc/sdk/objc/Framework/Classes/Audio/RTCAudioSessionConfiguration.m
  */
 
 #import "MXJingleCallAudioSessionConfigurator.h"
