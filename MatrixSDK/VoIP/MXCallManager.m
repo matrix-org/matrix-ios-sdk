@@ -17,6 +17,7 @@
 #import "MXCallManager.h"
 
 #import "MXCall.h"
+#import "MXCallKitAdapter.h"
 #import "MXCallStack.h"
 #import "MXJSONModels.h"
 #import "MXRoom.h"
@@ -99,9 +100,20 @@ static NSString *const kMXCallManagerFallbackSTUNServer = @"stun:stun.l.google.c
             }
         }];
 
+        // Listen to call state changes
+        [[NSNotificationCenter defaultCenter] addObserver:self
+                                                 selector:@selector(handleCallStateDidChangeNotification:)
+                                                     name:kMXCallStateDidChange
+                                                   object:nil];
+        
         [self refreshTURNServer];
     }
     return self;
+}
+
+- (void)dealloc
+{
+    [[NSNotificationCenter defaultCenter] removeObserver:self name:kMXCallStateDidChange object:nil];
 }
 
 - (void)close
@@ -120,6 +132,9 @@ static NSString *const kMXCallManagerFallbackSTUNServer = @"stun:stun.l.google.c
     // Do not refresh TURN servers config anymore
     [refreshTURNServerTimer invalidate];
     refreshTURNServerTimer = nil;
+    
+    // Do not handle any call state change notifications
+    [[NSNotificationCenter defaultCenter] removeObserver:self name:kMXCallStateDidChange object:nil];
 }
 
 - (MXCall *)callWithCallId:(NSString *)callId
@@ -371,6 +386,33 @@ static NSString *const kMXCallManagerFallbackSTUNServer = @"stun:stun.l.google.c
     {
         [call handleCallEvent:event];
     }
+}
+
+- (void)handleCallStateDidChangeNotification:(NSNotification *)notification
+{
+#if TARGET_OS_IPHONE
+    MXCall *call = notification.object;
+    
+    switch (call.state) {
+        case MXCallStateCreateOffer:
+            [self.callKitAdapter startCall:call];
+            break;
+        case MXCallStateRinging:
+            [self.callKitAdapter reportIncomingCall:call];
+            break;
+        case MXCallStateConnecting:
+            [self.callKitAdapter reportCall:call startedConnectingAtDate:nil];
+            break;
+        case MXCallStateConnected:
+            [self.callKitAdapter reportCall:call connectedAtDate:nil];
+            break;
+        case MXCallStateEnded:
+            [self.callKitAdapter endCall:call];
+            break;
+        default:
+            break;
+    }
+#endif
 }
 
 #pragma mark - Conference call
