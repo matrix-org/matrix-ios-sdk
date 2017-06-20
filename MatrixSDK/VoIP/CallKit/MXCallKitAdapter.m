@@ -82,7 +82,6 @@
 - (void)startCall:(MXCall *)call
 {
     MXSession *mxSession = call.room.mxSession;
-    MXUser *caller = [mxSession userWithUserId:call.callerId];
     NSUUID *callUUID = call.callUUID;
     
     NSString *handleValue;
@@ -108,7 +107,7 @@
     [self.callController requestTransaction:transaction completion:^(NSError * _Nullable error) {
         CXCallUpdate *update = [[CXCallUpdate alloc] init];
         update.remoteHandle = handle;
-        update.localizedCallerName = caller.displayname;
+        update.localizedCallerName = contactIdentifier;
         update.hasVideo = call.isVideoCall;
         update.supportsHolding = NO;
         update.supportsGrouping = NO;
