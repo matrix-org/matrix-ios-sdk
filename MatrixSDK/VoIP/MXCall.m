@@ -215,10 +215,9 @@ NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
                 }
 
                 // Let's the stack finalise the connection
+                [self setState:MXCallStateConnecting reason:event];
                 [callStackCall handleAnswer:content.answer.sdp
-                                    success:^{
-                                        [self setState:MXCallStateConnecting reason:event];
-                                    }
+                                    success:^{}
                                     failure:^(NSError *error) {
                                         NSLog(@"[MXCall] handleCallEvent: ERROR: Cannot send handle answer. Error: %@\nEvent: %@", error, event);
                                         [self didEncounterError:error];
@@ -404,6 +403,8 @@ NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
 #pragma marl - Properties
 - (void)setState:(MXCallState)state reason:(MXEvent *)event
 {
+    NSLog(@"[MXCall] setState. old: %@. New: %@", @(_state), @(state));
+
     // Manage call duration
     if (MXCallStateConnected == state)
     {
