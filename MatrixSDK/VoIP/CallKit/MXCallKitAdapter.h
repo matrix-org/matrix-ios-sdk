@@ -24,6 +24,11 @@ NS_ASSUME_NONNULL_BEGIN
 @class MXCallKitConfiguration;
 @protocol MXCallAudioSessionConfigurator;
 
+/**
+ Posted when then system has activated AVAudioSession.
+ */
+extern NSString * const kMXCallKitAdapterAudioSessionDidActive;
+
 @interface MXCallKitAdapter : NSObject
 
 /**
