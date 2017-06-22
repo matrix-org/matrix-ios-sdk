@@ -454,12 +454,12 @@ NSString *const kMXRoomSummaryDidChangeNotification = @"kMXRoomSummaryDidChangeN
         _topic = [aDecoder decodeObjectForKey:@"topic"];
 
         _others = [aDecoder decodeObjectForKey:@"others"];
-        _isEncrypted = [((NSNumber*)[aDecoder decodeObjectForKey:@"isEncrypted"]) boolValue];
-        _notificationCount = [((NSNumber*)[aDecoder decodeObjectForKey:@"notificationCount"]) unsignedIntegerValue];
-        _highlightCount = [((NSNumber*)[aDecoder decodeObjectForKey:@"highlightCount"]) unsignedIntegerValue];
+        _isEncrypted = [aDecoder decodeBoolForKey:@"isEncrypted"];
+        _notificationCount = (NSUInteger)[aDecoder decodeIntegerForKey:@"notificationCount"];
+        _highlightCount = (NSUInteger)[aDecoder decodeIntegerForKey:@"highlightCount"];
 
         _lastMessageEventId = [aDecoder decodeObjectForKey:@"lastMessageEventId"];
-        _isLastMessageEncrypted = [((NSNumber*)[aDecoder decodeObjectForKey:@"isLastMessageEncrypted"]) boolValue];
+        _isLastMessageEncrypted = [aDecoder decodeBoolForKey:@"isLastMessageEncrypted"];
 
         NSDictionary *lastMessageData;
         if (_isLastMessageEncrypted)
@@ -488,13 +488,13 @@ NSString *const kMXRoomSummaryDidChangeNotification = @"kMXRoomSummaryDidChangeN
     [aCoder encodeObject:_topic forKey:@"topic"];
 
     [aCoder encodeObject:_others forKey:@"others"];
-    [aCoder encodeObject:@(_isEncrypted) forKey:@"isEncrypted"];
-    [aCoder encodeObject:@(_notificationCount) forKey:@"notificationCount"];
-    [aCoder encodeObject:@(_highlightCount) forKey:@"highlightCount"];
+    [aCoder encodeBool:_isEncrypted forKey:@"isEncrypted"];
+    [aCoder encodeInteger:(NSInteger)_notificationCount forKey:@"notificationCount"];
+    [aCoder encodeInteger:(NSInteger)_highlightCount forKey:@"highlightCount"];
 
     // Store last message metadata
     [aCoder encodeObject:_lastMessageEventId forKey:@"lastMessageEventId"];
-    [aCoder encodeObject:@(_isLastMessageEncrypted) forKey:@"isLastMessageEncrypted"];
+    [aCoder encodeBool:_isLastMessageEncrypted forKey:@"isLastMessageEncrypted"];
 
     // Build last message sensitive data
     NSMutableDictionary *lastMessageData = [NSMutableDictionary dictionary];
