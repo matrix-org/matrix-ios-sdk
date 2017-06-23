@@ -28,6 +28,8 @@
 #import "MXUser.h"
 #import "MXSession.h"
 
+NSString * const kMXCallKitAdapterAudioSessionDidActive = @"kMXCallKitAdapterAudioSessionDidActive";
+
 @interface MXCallKitAdapter () <CXProviderDelegate>
 
 @property (nonatomic) CXProvider *provider;
@@ -212,6 +214,8 @@
 - (void)provider:(CXProvider *)provider didActivateAudioSession:(AVAudioSession *)audioSession
 {
     [self.audioSessionConfigurator audioSessionDidActivate:audioSession];
+    
+    [[NSNotificationCenter defaultCenter] postNotificationName:kMXCallKitAdapterAudioSessionDidActive object:nil];
 }
 
 - (void)provider:(CXProvider *)provider didDeactivateAudioSession:(AVAudioSession *)audioSession
