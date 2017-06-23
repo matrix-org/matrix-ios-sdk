@@ -25,9 +25,7 @@
     {
         _eventId = [aDecoder decodeObjectForKey:@"eventId"];
         _userId = [aDecoder decodeObjectForKey:@"userId"];
-
-        NSNumber *tsAsNumber = [aDecoder decodeObjectForKey:@"ts"];
-        _ts = [tsAsNumber unsignedLongLongValue];
+        _ts = (uint64_t)[aDecoder decodeInt64ForKey:@"ts"];
     }
     return self;
 }
@@ -37,7 +35,7 @@
     // All properties are mandatory except eventStreamToken
     [aCoder encodeObject:_eventId forKey:@"eventId"];
     [aCoder encodeObject:_userId forKey:@"userId"];
-    [aCoder encodeObject:@(_ts) forKey:@"ts"];
+    [aCoder encodeInt64:(int64_t)_ts forKey:@"ts"];
     
     // TODO need some new fields
 }
