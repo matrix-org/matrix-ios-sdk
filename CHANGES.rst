@@ -1,3 +1,12 @@
+Changes in Matrix iOS SDK in 0.8.1 (2017-06-23)
+===============================================
+
+Improvements:
+ * MXFileStore: Improve performance by ~10% (PR #316).
+ 
+Bug fixes:
+ * VoIP: Fix outgoing call stays in "Call connecting..." whereas it is established (https://github.com/vector-im/riot-ios#1326).
+
 Changes in Matrix iOS SDK in 0.8.0 (2017-06-16)
 ===============================================
 
