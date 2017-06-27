@@ -223,6 +223,12 @@ NSString *const kMXEventIdentifierKey = @"kMXEventIdentifierKey";
     _wireEventType = [MXTools eventType:_wireType];
 }
 
+- (void)setWireEventType:(MXEventType)wireEventType
+{
+    _wireEventType = wireEventType;
+    _wireType = [MXTools eventTypeString:_wireEventType];
+}
+
 - (void)setAge:(NSUInteger)age
 {
     // If the age has not been stored yet in local time stamp, do it now
@@ -599,7 +605,6 @@ NSString *const kMXEventIdentifierKey = @"kMXEventIdentifierKey";
     if (self)
     {
         _eventId = [aDecoder decodeObjectForKey:@"eventId"];
-        self.wireType = [aDecoder decodeObjectForKey:@"type"];
         _roomId = [aDecoder decodeObjectForKey:@"roomId"];
         _sender = [aDecoder decodeObjectForKey:@"userId"];
         _sentState = (MXEventSentState)[aDecoder decodeIntegerForKey:@"sentState"];
@@ -613,6 +618,18 @@ NSString *const kMXEventIdentifierKey = @"kMXEventIdentifierKey";
         _redactedBecause = [aDecoder decodeObjectForKey:@"redactedBecause"];
         _inviteRoomState = [aDecoder decodeObjectForKey:@"inviteRoomState"];
         _sentError = [aDecoder decodeObjectForKey:@"sentError"];
+
+        _wireEventType = (MXEventType)[aDecoder decodeIntegerForKey:@"eventType"];
+        if (_wireEventType == MXEventTypeCustom)
+        {
+            self.wireType = [aDecoder decodeObjectForKey:@"type"];
+        }
+        else
+        {
+            // Retrieve the type string from the enum
+            self.wireEventType = _wireEventType;
+        }
+
     }
     return self;
 }
@@ -623,7 +640,6 @@ NSString *const kMXEventIdentifierKey = @"kMXEventIdentifierKey";
     [aCoder encodeObject:_roomId forKey:@"roomId"];
     [aCoder encodeObject:_sender forKey:@"userId"];
     [aCoder encodeInteger:(NSInteger)_sentState forKey:@"sentState"];
-    [aCoder encodeObject:_wireType forKey:@"type"];
     [aCoder encodeObject:_wireContent forKey:@"content"];
     [aCoder encodeObject:_prevContent forKey:@"prevContent"];
     [aCoder encodeObject:_stateKey forKey:@"stateKey"];
@@ -634,6 +650,13 @@ NSString *const kMXEventIdentifierKey = @"kMXEventIdentifierKey";
     [aCoder encodeObject:_redactedBecause forKey:@"redactedBecause"];
     [aCoder encodeObject:_inviteRoomState forKey:@"inviteRoomState"];
     [aCoder encodeObject:_sentError forKey:@"sentError"];
+
+    [aCoder encodeInteger:(NSInteger)_wireEventType forKey:@"eventType"];
+    if (_wireEventType == MXEventTypeCustom)
+    {
+        // Store the type string only if it does not have an enum
+        [aCoder encodeObject:_wireType forKey:@"type"];
+    }
 }
 
 @end

@@ -27,7 +27,7 @@
 
 #import "MXSDKOptions.h"
 
-NSUInteger const kMXFileVersion = 40;
+NSUInteger const kMXFileVersion = 41;
 
 NSString *const kMXFileStoreFolder = @"MXFileStore";
 NSString *const kMXFileStoreMedaDataFile = @"MXFileStore";
