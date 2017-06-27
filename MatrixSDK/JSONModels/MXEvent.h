@@ -28,7 +28,7 @@
  */
 typedef enum : NSUInteger
 {
-    MXEventTypeRoomName,
+    MXEventTypeRoomName = 0,
     MXEventTypeRoomTopic,
     MXEventTypeRoomAvatar,
     MXEventTypeRoomMember,

@@ -33,7 +33,8 @@ NSString *const kMXToolsRegexStringForMatrixEventIdentifier = @"\\$[A-Z0-9]+:[A-
 
 #pragma mark - MXTools static private members
 // Mapping from MXEventTypeString to MXEventType
-static NSDictionary*eventTypesMap;
+static NSDictionary<MXEventTypeString, NSNumber*> *eventTypesMap;
+static NSArray<MXEventTypeString> *revertEventTypesMap;
 
 static NSRegularExpression *isEmailAddressRegex;
 static NSRegularExpression *isMatrixUserIdentifierRegex;
@@ -80,6 +81,8 @@ static NSRegularExpression *isMatrixEventIdentifierRegex;
                           kMXEventTypeStringReadMarker: @(MXEventTypeReadMarker)
                           };
 
+        revertEventTypesMap = eventTypesMap.allKeys;
+
         isEmailAddressRegex =  [NSRegularExpression regularExpressionWithPattern:[NSString stringWithFormat:@"^%@$", kMXToolsRegexStringForEmailAddress]
                                                                          options:NSRegularExpressionCaseInsensitive error:nil];
         isMatrixUserIdentifierRegex = [NSRegularExpression regularExpressionWithPattern:[NSString stringWithFormat:@"^%@$", kMXToolsRegexStringForMatrixUserIdentifier]
@@ -95,8 +98,11 @@ static NSRegularExpression *isMatrixEventIdentifierRegex;
 
 + (MXEventTypeString)eventTypeString:(MXEventType)eventType
 {
-    NSArray *matches = [eventTypesMap allKeysForObject:@(eventType)];
-    return [matches lastObject];
+    if (eventType < revertEventTypesMap.count)
+    {
+        return revertEventTypesMap[eventType];
+    }
+    return nil;
 }
 
 + (MXEventType)eventType:(MXEventTypeString)eventTypeString
