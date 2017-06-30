@@ -1,3 +1,9 @@
+Changes in Matrix iOS SDK in 0.8.2 (2017-06-30)
+===============================================
+
+Improvements:
+ * MXFileStore: Improve performance by ~5% (PR #318).
+
 Changes in Matrix iOS SDK in 0.8.1 (2017-06-23)
 ===============================================
 
