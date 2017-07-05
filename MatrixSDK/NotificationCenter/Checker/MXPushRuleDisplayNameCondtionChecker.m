@@ -59,7 +59,7 @@
             {
                 if (!userNameRegex)
                 {
-                    userNameRegex = [NSRegularExpression regularExpressionWithPattern:[NSString stringWithFormat:@"\\b%@\\b", mxSession.myUser.displayname] options:NSRegularExpressionCaseInsensitive error:nil];
+                    userNameRegex = [NSRegularExpression regularExpressionWithPattern:[NSString stringWithFormat:@"\\b\\Q%@\\E\\b", mxSession.myUser.displayname] options:NSRegularExpressionCaseInsensitive error:nil];
                 }
 
                 NSRange range = [userNameRegex rangeOfFirstMatchInString:body options:0 range:NSMakeRange(0, body.length)];
