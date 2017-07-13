@@ -1459,69 +1459,73 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
 - (MXEvent*)pendingLocalEchoRelatedToEvent:(MXEvent*)event
 {
     // Note: event is supposed here to be an outgoing event received from the server sync.
-    
-    NSString *msgtype = event.content[@"msgtype"];
-    
-    // We look first for a pending event with the same event id (This happens when server response is received before server sync).
     MXEvent *localEcho = nil;
-    NSArray<MXEvent*>* pendingLocalEchoes = self.outgoingMessages;
-    for (NSInteger index = 0; index < pendingLocalEchoes.count; index++)
+
+    NSString *msgtype;
+    MXJSONModelSetString(msgtype, event.content[@"msgtype"]);
+
+    if (msgtype)
     {
-        localEcho = [pendingLocalEchoes objectAtIndex:index];
-        if ([localEcho.eventId isEqualToString:event.eventId])
-        {
-            break;
-        }
-        localEcho = nil;
-    }
-    
-    // If none, we return the pending event (if any) whose content matches with received event content.
-    if (!localEcho)
-    {
+        // We look first for a pending event with the same event id (This happens when server response is received before server sync).
+        NSArray<MXEvent*>* pendingLocalEchoes = self.outgoingMessages;
         for (NSInteger index = 0; index < pendingLocalEchoes.count; index++)
         {
             localEcho = [pendingLocalEchoes objectAtIndex:index];
-            NSString *pendingEventType = localEcho.content[@"msgtype"];
-            
-            if ([msgtype isEqualToString:pendingEventType])
+            if ([localEcho.eventId isEqualToString:event.eventId])
             {
-                if ([msgtype isEqualToString:kMXMessageTypeText] || [msgtype isEqualToString:kMXMessageTypeEmote])
+                break;
+            }
+            localEcho = nil;
+        }
+
+        // If none, we return the pending event (if any) whose content matches with received event content.
+        if (!localEcho)
+        {
+            for (NSInteger index = 0; index < pendingLocalEchoes.count; index++)
+            {
+                localEcho = [pendingLocalEchoes objectAtIndex:index];
+                NSString *pendingEventType = localEcho.content[@"msgtype"];
+
+                if ([msgtype isEqualToString:pendingEventType])
                 {
-                    // Compare content body
-                    if ([event.content[@"body"] isEqualToString:localEcho.content[@"body"]])
+                    if ([msgtype isEqualToString:kMXMessageTypeText] || [msgtype isEqualToString:kMXMessageTypeEmote])
                     {
-                        break;
-                    }
-                }
-                else if ([msgtype isEqualToString:kMXMessageTypeLocation])
-                {
-                    // Compare geo uri
-                    if ([event.content[@"geo_uri"] isEqualToString:localEcho.content[@"geo_uri"]])
-                    {
-                        break;
-                    }
-                }
-                else
-                {
-                    // Here the type is kMXMessageTypeImage, kMXMessageTypeAudio, kMXMessageTypeVideo or kMXMessageTypeFile
-                    if (event.content[@"file"])
-                    {
-                        // This is an encrypted attachment
-                        if (localEcho.content[@"file"] && [event.content[@"file"][@"url"] isEqualToString:localEcho.content[@"file"][@"url"]])
+                        // Compare content body
+                        if ([event.content[@"body"] isEqualToString:localEcho.content[@"body"]])
                         {
                             break;
                         }
                     }
-                    else if ([event.content[@"url"] isEqualToString:localEcho.content[@"url"]])
+                    else if ([msgtype isEqualToString:kMXMessageTypeLocation])
                     {
-                        break;
+                        // Compare geo uri
+                        if ([event.content[@"geo_uri"] isEqualToString:localEcho.content[@"geo_uri"]])
+                        {
+                            break;
+                        }
+                    }
+                    else
+                    {
+                        // Here the type is kMXMessageTypeImage, kMXMessageTypeAudio, kMXMessageTypeVideo or kMXMessageTypeFile
+                        if (event.content[@"file"])
+                        {
+                            // This is an encrypted attachment
+                            if (localEcho.content[@"file"] && [event.content[@"file"][@"url"] isEqualToString:localEcho.content[@"file"][@"url"]])
+                            {
+                                break;
+                            }
+                        }
+                        else if ([event.content[@"url"] isEqualToString:localEcho.content[@"url"]])
+                        {
+                            break;
+                        }
                     }
                 }
+                localEcho = nil;
             }
-            localEcho = nil;
         }
     }
-    
+
     return localEcho;
 }
 

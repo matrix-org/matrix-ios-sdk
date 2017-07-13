@@ -49,7 +49,8 @@
     // If it exists, search for the current display name in the content body with case insensitive
     if (mxSession.myUser.displayname && event.content)
     {
-        NSObject* bodyAsVoid = event.content[@"body"];
+        NSObject* bodyAsVoid;
+        MXJSONModelSet(bodyAsVoid, NSObject.class, event.content[@"body"]);
         
         if (bodyAsVoid && [bodyAsVoid isKindOfClass:[NSString class]])
         {
