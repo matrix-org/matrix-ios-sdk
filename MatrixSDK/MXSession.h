@@ -397,6 +397,9 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
 
  Note that the events stream continues on a UIBackgroundTask which can be terminated
  by the system at anytime.
+ 
+ @warning This request is ignored if no background mode handler has been set in the
+ MXSDKOptions sharedInstance (see `backgroundModeHandler`).
  */
 - (void)retainPreventPause;
 
