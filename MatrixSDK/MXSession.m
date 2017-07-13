@@ -460,7 +460,7 @@ typedef void (^MXOnResumeDone)();
 {
     NSLog(@"[MXSession] pause the event stream in state %tu", _state);
 
-    // Check that noone required the session to keep running even if the app goes in
+    // Check that none required the session to keep running even if the app goes in
     // background
     if (_preventPauseCount)
     {
@@ -673,7 +673,11 @@ typedef void (^MXOnResumeDone)();
 #pragma mark - MXSession pause prevention
 - (void)retainPreventPause
 {
-    self.preventPauseCount++;
+    // Check whether a background mode handler has been set.
+    if ([MXSDKOptions sharedInstance].backgroundModeHandler)
+    {
+        self.preventPauseCount++;
+    }
 }
 
 - (void)releasePreventPause
