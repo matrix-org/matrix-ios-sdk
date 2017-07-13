@@ -61,9 +61,11 @@
 
 - (BOOL)decryptEvent:(MXEvent *)event inTimeline:(NSString*)timeline
 {
-    NSString *senderKey = event.content[@"sender_key"];
-    NSString *ciphertext = event.content[@"ciphertext"];
-    NSString *sessionId = event.content[@"session_id"];
+    NSString *senderKey, *ciphertext, *sessionId;
+
+    MXJSONModelSetString(senderKey, event.content[@"sender_key"]);
+    MXJSONModelSetString(ciphertext, event.content[@"ciphertext"]);
+    MXJSONModelSetString(sessionId, event.content[@"session_id"]);
 
     // TODO: Remove this requirement after fixing https://github.com/matrix-org/matrix-ios-sdk/issues/205
     NSParameterAssert([NSThread currentThread].isMainThread);
@@ -149,9 +151,11 @@
 {
     NSLog(@"[MXMegolmDecryption] onRoomKeyEvent: Adding key from %@", event.JSONDictionary);
 
-    NSString *roomId = event.content[@"room_id"];
-    NSString *sessionId = event.content[@"session_id"];
-    NSString *sessionKey = event.content[@"session_key"];
+    NSString *roomId, *sessionId, *sessionKey;
+
+    MXJSONModelSetString(roomId, event.content[@"room_id"]);
+    MXJSONModelSetString(sessionId, event.content[@"session_id"]);
+    MXJSONModelSetString(sessionKey, event.content[@"session_key"]);
 
     if (!roomId || !sessionId || !sessionKey)
     {

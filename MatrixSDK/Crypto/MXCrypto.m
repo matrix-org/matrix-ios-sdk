@@ -1744,8 +1744,12 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
 - (void)onNewDeviceEvent:(MXEvent*)event
 {
     NSString *userId = event.sender;
-    NSString *deviceId = event.content[@"device_id"];
-    NSArray<NSString*> *rooms = event.content[@"rooms"];
+
+    NSString *deviceId;
+    NSArray<NSString*> *rooms;
+
+    MXJSONModelSetString(deviceId, event.content[@"device_id"]);
+    MXJSONModelSetArray(rooms, event.content[@"rooms"]);
 
     if (!rooms || !deviceId)
     {
