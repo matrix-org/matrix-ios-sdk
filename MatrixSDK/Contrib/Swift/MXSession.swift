@@ -275,4 +275,28 @@ public extension MXSession {
         return __unIgnoreUsers(userIds, success: currySuccess(completion), failure: curryFailure(completion))
     }
     
+    
+    /**
+     Register a global listener to events related to the current session.
+     
+     The listener will receive all events including all events of all rooms.
+     
+     - parameters:
+        - types: an array of event types to listen to
+        - block: the block that will be called once a new event has been handled.
+        - returns: a reference to use to unregister the listener
+     */
+    @nonobjc func listenToEvents(_ types: [MXEventType]? = nil, _ block: @escaping MXOnSessionEvent) -> Any {
+        let legacyBlock: __MXOnSessionEvent = { (event, direction, customObject) in
+            guard let event = event else { return }
+            block(event, MXTimelineDirection(identifer: direction), customObject)
+        }
+        
+        if let types = types {
+            let typeStrings = types.map({ return $0.identifier })
+            return __listen(toEventsOfTypes: typeStrings, onEvent: legacyBlock)
+        } else {
+            return __listen(toEvents: legacyBlock)
+        }
+    }
 }
