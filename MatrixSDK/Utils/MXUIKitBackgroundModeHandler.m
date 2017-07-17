@@ -43,11 +43,11 @@
     {
         if (name)
         {
-            token = [[UIApplication sharedApplication] beginBackgroundTaskWithName:name expirationHandler:completion];
+            token = [sharedApplication beginBackgroundTaskWithName:name expirationHandler:completion];
         }
         else
         {
-            token = [[UIApplication sharedApplication] beginBackgroundTaskWithExpirationHandler:nil];
+            token = [sharedApplication beginBackgroundTaskWithExpirationHandler:nil];
         }
     }
     
