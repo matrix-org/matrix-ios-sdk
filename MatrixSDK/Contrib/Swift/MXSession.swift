@@ -284,7 +284,8 @@ public extension MXSession {
      - parameters:
         - types: an array of event types to listen to
         - block: the block that will be called once a new event has been handled.
-        - returns: a reference to use to unregister the listener
+    
+     - returns: a reference to use to unregister the listener
      */
     @nonobjc func listenToEvents(_ types: [MXEventType]? = nil, _ block: @escaping MXOnSessionEvent) -> Any {
         let legacyBlock: __MXOnSessionEvent = { (event, direction, customObject) in
