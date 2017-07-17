@@ -36,16 +36,31 @@
 
 - (NSUInteger)startBackgroundTaskWithName:(NSString *)name completion:(void(^)())completion
 {
-    if (name)
+    NSUInteger token = UIBackgroundTaskInvalid;
+    
+    UIApplication *sharedApplication = [UIApplication performSelector:@selector(sharedApplication)];
+    if (sharedApplication)
     {
-        return [[UIApplication sharedApplication] beginBackgroundTaskWithName:name expirationHandler:completion];
+        if (name)
+        {
+            token = [sharedApplication beginBackgroundTaskWithName:name expirationHandler:completion];
+        }
+        else
+        {
+            token = [sharedApplication beginBackgroundTaskWithExpirationHandler:nil];
+        }
     }
-    return [[UIApplication sharedApplication] beginBackgroundTaskWithExpirationHandler:nil];
+    
+    return token;
 }
 
 - (void)endBackgrounTaskWithIdentifier:(NSUInteger)identifier
 {
-    [[UIApplication sharedApplication] endBackgroundTask:identifier];
+    UIApplication *sharedApplication = [UIApplication performSelector:@selector(sharedApplication)];
+    if (sharedApplication)
+    {
+        [sharedApplication endBackgroundTask:identifier];
+    }
 }
 
 @end
