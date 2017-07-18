@@ -28,7 +28,7 @@ public enum MXLoginFlowType {
     case emailCode
     case other(String)
     
-    var identifier: String {
+    public var identifier: String {
         switch self {
         case .password: return kMXLoginFlowTypePassword
         case .recaptcha: return kMXLoginFlowTypeRecaptcha
@@ -49,7 +49,7 @@ public enum MXLoginFlowType {
 public enum MXPusherKind {
     case http, none, custom(String)
     
-    var objectValue: NSObject {
+    public var objectValue: NSObject {
         switch self {
         case .http: return "http" as NSString
         case .none: return NSNull()
@@ -69,7 +69,7 @@ public enum MXPusherKind {
 public enum MXPushRuleKind {
     case override, content, room, sender, underride
     
-    var identifier: __MXPushRuleKind {
+    public var identifier: __MXPushRuleKind {
         switch self  {
         case .override: return __MXPushRuleKindOverride
         case .content: return __MXPushRuleKindContent
@@ -89,7 +89,7 @@ public enum MXPushRuleKind {
 public enum MXPushRuleScope {
     case global, device(profileTag: String)
     
-    var identifier: String {
+    public var identifier: String {
         switch self {
         case .global: return "global"
         case .device(let profileTag): return "device/\(profileTag)"
