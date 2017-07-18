@@ -863,7 +863,7 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
  @param onEvent the block that will called once a new event has been handled.
  @return a reference to use to unregister the listener
  */
-- (id)listenToEvents:(MXOnSessionEvent)onEvent;
+- (id)listenToEvents:(MXOnSessionEvent)onEvent NS_REFINED_FOR_SWIFT;
 
 /**
  Register a global listener for some types of events.
@@ -872,7 +872,7 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
  @param onEvent the block that will called once a new event has been handled.
  @return a reference to use to unregister the listener
  */
-- (id)listenToEventsOfTypes:(NSArray*)types onEvent:(MXOnSessionEvent)onEvent;
+- (id)listenToEventsOfTypes:(NSArray*)types onEvent:(MXOnSessionEvent)onEvent NS_REFINED_FOR_SWIFT;
 
 /**
  Unregister a listener.
