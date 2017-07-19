@@ -25,7 +25,7 @@
 /**
  The `MXAllowedCertificates` singleton.
  */
-+ (id)sharedInstance;
++ (instancetype)sharedInstance;
 
 /**
  Add a certificate in the allowed list.
@@ -46,5 +46,10 @@
  Forget all allowed certificates.
  */
 - (void)reset;
+
+/**
+ The current list of allowed certificates.
+ */
+@property (readonly) NSSet<NSData*> *certificates;
 
 @end

@@ -233,16 +233,25 @@ NSString *const kMXMediaUploadIdPrefix = @"upload-";
     NSURLProtectionSpace *protectionSpace = [challenge protectionSpace];
     if ([protectionSpace.authenticationMethod isEqualToString:NSURLAuthenticationMethodServerTrust])
     {
+        // List all the allowed certificates to pin against.
+        NSMutableArray *pinnedCertificates = [NSMutableArray array];
+        
         NSSet <NSData *> *certificates = [AFSecurityPolicy certificatesInBundle:[NSBundle mainBundle]];
-        if (certificates && certificates.count > 0)
+        for (NSData *certificateData in certificates)
         {
-            NSMutableArray *pinnedCertificates = [NSMutableArray array];
-            for (NSData *certificateData in certificates)
-            {
-                [pinnedCertificates addObject:(__bridge_transfer id)SecCertificateCreateWithData(NULL, (__bridge CFDataRef)certificateData)];
-            }
+            [pinnedCertificates addObject:(__bridge_transfer id)SecCertificateCreateWithData(NULL, (__bridge CFDataRef)certificateData)];
+        }
+        certificates = [MXAllowedCertificates sharedInstance].certificates;
+        for (NSData *certificateData in certificates)
+        {
+            [pinnedCertificates addObject:(__bridge_transfer id)SecCertificateCreateWithData(NULL, (__bridge CFDataRef)certificateData)];
+        }
+        
+        if (pinnedCertificates.count > 0)
+        {
             SecTrustSetAnchorCertificates(protectionSpace.serverTrust, (__bridge CFArrayRef)pinnedCertificates);
         }
+        
         SecTrustRef trust = [protectionSpace serverTrust];
 
         // Re-evaluate the trust policy
