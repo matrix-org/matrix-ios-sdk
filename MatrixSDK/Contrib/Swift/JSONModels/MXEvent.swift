@@ -58,7 +58,7 @@ public enum MXEventType {
     
     case custom(String)
     
-    var identifier: String {
+    public var identifier: String {
         switch self {
         case .roomName: return kMXEventTypeStringRoomName
         case .roomTopic: return kMXEventTypeStringRoomTopic

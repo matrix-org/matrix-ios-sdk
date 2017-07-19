@@ -20,7 +20,7 @@ import Foundation
 public enum MXRoomHistoryVisibility {
     case worldReadable, shared, invited, joined
     
-    var identifier: String {
+    public var identifier: String {
         switch self {
         case .worldReadable: return kMXRoomHistoryVisibilityWorldReadable
         case .shared: return kMXRoomHistoryVisibilityShared
@@ -29,7 +29,7 @@ public enum MXRoomHistoryVisibility {
         }
     }
     
-    init?(identifier: String?) {
+    public init?(identifier: String?) {
         let historyVisibilities: [MXRoomHistoryVisibility] = [.worldReadable, .shared, .invited, .joined]
         guard let value = historyVisibilities.first(where: {$0.identifier == identifier}) else { return nil }
         self = value
@@ -54,7 +54,7 @@ public enum MXRoomJoinRule {
     /// Reserved keyword which is not implemented by homeservers.
     case `private`, knock
     
-    var identifier: String {
+    public var identifier: String {
         switch self {
         case .public: return kMXRoomJoinRulePublic
         case .invite: return kMXRoomJoinRuleInvite
@@ -63,7 +63,7 @@ public enum MXRoomJoinRule {
         }
     }
     
-    init?(identifier: String?) {
+    public init?(identifier: String?) {
         let joinRules: [MXRoomJoinRule] = [.public, .invite, .private, .knock]
         guard let value = joinRules.first(where: { $0.identifier == identifier}) else { return nil }
         self = value
@@ -82,14 +82,14 @@ public enum MXRoomGuestAccess {
     case forbidden
     
     /// String identifier
-    var identifier: String {
+    public var identifier: String {
         switch self {
         case .canJoin: return kMXRoomGuestAccessCanJoin
         case .forbidden: return kMXRoomGuestAccessForbidden
         }
     }
     
-    init?(identifier: String?) {
+    public init?(identifier: String?) {
         let accessRules: [MXRoomGuestAccess] = [.canJoin, .forbidden]
         guard let value = accessRules.first(where: { $0.identifier == identifier}) else { return nil }
         self = value
@@ -110,14 +110,14 @@ public enum MXRoomDirectoryVisibility {
     /// The room is listed in the homeserver directory
     case `public`
     
-    var identifier: String {
+    public var identifier: String {
         switch self {
         case .private: return kMXRoomDirectoryVisibilityPrivate
         case .public: return kMXRoomDirectoryVisibilityPublic
         }
     }
     
-    init?(identifier: String?) {
+    public init?(identifier: String?) {
         let visibility: [MXRoomDirectoryVisibility] = [.public, .private]
         guard let value = visibility.first(where: { $0.identifier == identifier}) else { return nil }
         self = value
@@ -141,12 +141,18 @@ public enum MXRoomPreset {
     case publicChat
     
     
-    var identifier: String {
+    public var identifier: String {
         switch self {
         case .privateChat: return kMXRoomPresetPrivateChat
         case .trustedPrivateChat: return kMXRoomPresetTrustedPrivateChat
         case .publicChat: return kMXRoomPresetPublicChat
         }
+    }
+    
+    public init?(identifier: String?) {
+        let presets: [MXRoomPreset] = [.privateChat, .trustedPrivateChat, .publicChat]
+        guard let value = presets.first(where: {$0.identifier == identifier }) else { return nil }
+        self = value
     }
 }
 
@@ -165,14 +171,14 @@ public enum MXTimelineDirection {
     /// These events come from a back pagination.
     case backwards
     
-    var identifier: __MXTimelineDirection {
+    public var identifier: __MXTimelineDirection {
         switch self {
         case .forwards: return __MXTimelineDirectionForwards
         case .backwards: return __MXTimelineDirectionBackwards
         }
     }
     
-    init(identifer _identifier: __MXTimelineDirection) {
+    public init(identifer _identifier: __MXTimelineDirection) {
         self = (_identifier == __MXTimelineDirectionForwards ? .forwards : .backwards)
     }
 }

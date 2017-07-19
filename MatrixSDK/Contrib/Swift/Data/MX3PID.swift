@@ -20,15 +20,13 @@ import Foundation
 /// Represents a third-party identifier
 public struct MX3PID {
     
-
-
     /// Types of third-party identifiers.
-    enum Medium {
+    public enum Medium {
         case email
         case msisdn
         case other(String)
         
-        var identifier: String {
+        public var identifier: String {
             switch self {
             case .email: return kMX3PIDMediumEmail
             case .msisdn: return kMX3PIDMediumMSISDN
@@ -36,7 +34,7 @@ public struct MX3PID {
             }
         }
         
-        init(identifier: String) {
+        public init(identifier: String) {
             let possibleOptions: [Medium] = [.email, .msisdn]
             if let selectedOption = possibleOptions.first(where: { $0.identifier == identifier }) {
                 self = selectedOption
@@ -46,8 +44,8 @@ public struct MX3PID {
         }
     }
     
-    var medium: Medium
-    var address: String
+    public var medium: Medium
+    public var address: String
 }
 
 extension MX3PID : Hashable {
