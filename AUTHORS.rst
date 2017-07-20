@@ -24,3 +24,7 @@ Tkachenko Ivan <iv.tkachenko17 at gmail.com>
  
 Denis Morozov <dmorozkn at gmail.com>
  * PR #277 Add new server method for password reseting
+
+Javier Quevedo <jquevedo at gmail.com>
+ * PR #332 Fixed an issue that would prevent attachments from being downloaded via SSL connections when using a custom CA ceritficate that was included in the bundle
+ 
