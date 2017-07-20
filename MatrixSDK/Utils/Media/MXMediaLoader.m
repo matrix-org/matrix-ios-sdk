@@ -250,6 +250,8 @@ NSString *const kMXMediaUploadIdPrefix = @"upload-";
         if (pinnedCertificates.count > 0)
         {
             SecTrustSetAnchorCertificates(protectionSpace.serverTrust, (__bridge CFArrayRef)pinnedCertificates);
+            // Reenable trusting anchor certificates in addition to those passed in via the SecTrustSetAnchorCertificates API.
+            SecTrustSetAnchorCertificatesOnly(protectionSpace.serverTrust, false);
         }
         
         SecTrustRef trust = [protectionSpace serverTrust];
