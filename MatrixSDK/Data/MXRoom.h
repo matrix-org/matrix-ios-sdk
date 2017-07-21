@@ -419,7 +419,7 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidFlushDataNotification;
  */
 - (MXHTTPOperation*)setTopic:(NSString*)topic
                      success:(void (^)())success
-                     failure:(void (^)(NSError *error))failure;
+                     failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 /**
  Set the avatar of the room.
@@ -432,7 +432,7 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidFlushDataNotification;
  */
 - (MXHTTPOperation*)setAvatar:(NSString*)avatar
                       success:(void (^)())success
-                      failure:(void (^)(NSError *error))failure;
+                      failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 /**
  Set the name of the room.
@@ -445,7 +445,7 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidFlushDataNotification;
  */
 - (MXHTTPOperation*)setName:(NSString*)name
                     success:(void (^)())success
-                    failure:(void (^)(NSError *error))failure;
+                    failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 /**
  Set the history visibility of the room.
@@ -458,7 +458,7 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidFlushDataNotification;
  */
 - (MXHTTPOperation*)setHistoryVisibility:(MXRoomHistoryVisibility)historyVisibility
                                  success:(void (^)())success
-                                 failure:(void (^)(NSError *error))failure;
+                                 failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 /**
  Set the join rule of the room.
@@ -471,7 +471,7 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidFlushDataNotification;
  */
 - (MXHTTPOperation*)setJoinRule:(MXRoomJoinRule)joinRule
                         success:(void (^)())success
-                        failure:(void (^)(NSError *error))failure;
+                        failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 /**
  Set the guest access of the room.
@@ -484,7 +484,7 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidFlushDataNotification;
  */
 - (MXHTTPOperation*)setGuestAccess:(MXRoomGuestAccess)guestAccess
                            success:(void (^)())success
-                           failure:(void (^)(NSError *error))failure;
+                           failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 /**
  Set the visbility of the room in the current HS's room directory.
@@ -497,7 +497,7 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidFlushDataNotification;
  */
 - (MXHTTPOperation*)setDirectoryVisibility:(MXRoomDirectoryVisibility)directoryVisibility
                                    success:(void (^)())success
-                                   failure:(void (^)(NSError *error))failure;
+                                   failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 /**
  Add a room alias
@@ -510,7 +510,7 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidFlushDataNotification;
  */
 - (MXHTTPOperation*)addAlias:(NSString *)roomAlias
                      success:(void (^)())success
-                     failure:(void (^)(NSError *error))failure;
+                     failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 /**
  Remove a room alias
@@ -523,7 +523,7 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidFlushDataNotification;
  */
 - (MXHTTPOperation*)removeAlias:(NSString *)roomAlias
                         success:(void (^)())success
-                        failure:(void (^)(NSError *error))failure;
+                        failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 /**
  Set the canonical alias of the room.
@@ -536,7 +536,7 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidFlushDataNotification;
  */
 - (MXHTTPOperation*)setCanonicalAlias:(NSString *)canonicalAlias
                               success:(void (^)())success
-                              failure:(void (^)(NSError *error))failure;
+                              failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 /**
  Get the visibility of the room in the current HS's room directory.
@@ -552,7 +552,7 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidFlushDataNotification;
  @return a MXHTTPOperation instance.
  */
 - (MXHTTPOperation*)directoryVisibility:(void (^)(MXRoomDirectoryVisibility directoryVisibility))success
-                                failure:(void (^)(NSError *error))failure;
+                                failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 /**
  Join this room where the user has been invited.

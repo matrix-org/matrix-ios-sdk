@@ -244,5 +244,179 @@ public extension MXRoom {
     @nonobjc @discardableResult func sendFile(localURL: URL, mimeType: String, localEcho: inout MXEvent?, completion: @escaping (_ resposne: MXResponse<String?>) -> Void) -> MXHTTPOperation {
         return __sendFile(localURL, mimeType: mimeType, localEcho: &localEcho, success: currySuccess(completion), failure: curryFailure(completion))
     }
+    
+    
+    
+    /**
+     Set the topic of the room.
+     
+     - parameters:
+        - topic: the topic to set.
+        - completion: A block object called when the operation completes.
+        - response: Indicates whether the operation was a success or failure.
+     
+     - returns: a `MXHTTPOperation` instance.
+     */
+    @nonobjc @discardableResult func setTopic(_ topic: String, completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation {
+        return __setTopic(topic, success: currySuccess(completion), failure: curryFailure(completion))
+    }
+    
+    
+    
+    /**
+     Set the avatar of the room.
+     
+     - parameters:
+         - url: the url of the avatar to set.
+         - completion: A block object called when the operation completes.
+         - response: Indicates whether the operation was a success or failure.
+     
+     - returns: a `MXHTTPOperation` instance.
+     */
+    @nonobjc @discardableResult func setAvatar(url: URL, completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation {
+        return __setAvatar(url.absoluteString, success: currySuccess(completion), failure: curryFailure(completion))
+    }
+    
+    
+    
+    /**
+     Set the name of the room.
+     
+     - parameters:
+         - name: the name to set.
+         - completion: A block object called when the operation completes.
+         - response: Indicates whether the operation was a success or failure.
+     
+     - returns: a `MXHTTPOperation` instance.
+     */
+    @nonobjc @discardableResult func setName(_ name: String, completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation {
+        return __setName(name, success: currySuccess(completion), failure: curryFailure(completion))
+    }
+    
+    
+    /**
+     Set the history visibility of the room.
+     
+     - parameters:
+         - historyVisibility: the history visibility to set.
+         - completion: A block object called when the operation completes.
+         - response: Indicates whether the operation was a success or failure.
+     
+     - returns: a `MXHTTPOperation` instance.
+     */
+    @nonobjc @discardableResult func setHistoryVisibility(_ historyVisibility: MXRoomHistoryVisibility, completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation {
+        return __setHistoryVisibility(historyVisibility.identifier, success: currySuccess(completion), failure: curryFailure(completion))
+    }
+    
+    
+    /**
+     Set the join rule of the room.
+     
+     - parameters:
+         - joinRule: the join rule to set.
+         - completion: A block object called when the operation completes.
+         - response: Indicates whether the operation was a success or failure.
+     
+     - returns: a `MXHTTPOperation` instance.
+     */
+    @nonobjc @discardableResult func setJoinRule(_ joinRule: MXRoomJoinRule, completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation {
+        return __setJoinRule(joinRule.identifier, success: currySuccess(completion), failure: curryFailure(completion))
+    }
+    
+    
+    /**
+     Set the guest access of the room.
+     
+     - parameters:
+         - guestAccess: the guest access to set.
+         - completion: A block object called when the operation completes.
+         - response: Indicates whether the operation was a success or failure.
+     
+     - returns: a `MXHTTPOperation` instance.
+     */
+    @nonobjc @discardableResult func setGuestAccess(_ guestAccess: MXRoomGuestAccess, completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation {
+        return __setGuestAccess(guestAccess.identifier, success: currySuccess(completion), failure: curryFailure(completion))
+    }
+    
+    
+    
+    /**
+     Set the directory visibility of the room.
+     
+     - parameters:
+         - directoryVisibility: the directory visibility to set.
+         - completion: A block object called when the operation completes.
+         - response: Indicates whether the operation was a success or failure.
+     
+     - returns: a `MXHTTPOperation` instance.
+     */
+    @nonobjc @discardableResult func setDirectoryVisibility(_ directoryVisibility: MXRoomDirectoryVisibility, completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation {
+        return __setDirectoryVisibility(directoryVisibility.identifier, success: currySuccess(completion), failure: curryFailure(completion))
+    }
+    
+    
+    /**
+     Add an alias to the room.
+     
+     - parameters:
+         - roomAlias: the alias to add.
+         - completion: A block object called when the operation completes.
+         - response: Indicates whether the operation was a success or failure.
+     
+     - returns: a `MXHTTPOperation` instance.
+     */
+    @nonobjc @discardableResult func addAlias(_ roomAlias: String, completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation {
+        return __addAlias(roomAlias, success: currySuccess(completion), failure: curryFailure(completion))
+    }
+    
+    
+    /**
+     Remove an alias from the room.
+     
+     - parameters:
+         - roomAlias: the alias to remove.
+         - completion: A block object called when the operation completes.
+         - response: Indicates whether the operation was a success or failure.
+     
+     - returns: a `MXHTTPOperation` instance.
+     */
+    @nonobjc @discardableResult func removeAlias(_ roomAlias: String, completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation {
+        return __removeAlias(roomAlias, success: currySuccess(completion), failure: curryFailure(completion))
+    }
+    
+    
+    /**
+     Set the canonical alias of the room
+     
+     - parameters:
+         - canonicalAlias: the canonical alias to set.
+         - completion: A block object called when the operation completes.
+         - response: Indicates whether the operation was a success or failure.
+     
+     - returns: a `MXHTTPOperation` instance.
+     */
+    @nonobjc @discardableResult func setCanonicalAlias(_ canonicalAlias: String, completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation {
+        return __setCanonicalAlias(canonicalAlias, success: currySuccess(completion), failure: curryFailure(completion))
+    }
+    
+    
+    
+    /**
+     Get the visibility of the room in the current HS's room directory.
+     
+     Note: This information is not part of the room state because it is related
+     to the current homeserver.
+     There is currently no way to be updated on directory visibility change. That's why a
+     request must be issued everytime.
+     
+     - parameters:
+        - completion: A block object called when the operation completes.
+        - response: Provides the room direcotyr visibility on success.
+     
+     - returns: a `MXHTTPOperation` instance.
+     */
+    @nonobjc @discardableResult func getDirectoryVisibility(completion: @escaping (_ response: MXResponse<MXRoomDirectoryVisibility>) -> Void) -> MXHTTPOperation {
+        return __directoryVisibility(currySuccess(transform: MXRoomDirectoryVisibility.init, completion), failure: curryFailure(completion))
+    }
 }
 
