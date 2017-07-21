@@ -234,7 +234,7 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidFlushDataNotification;
                             content:(NSDictionary<NSString*, id>*)content
                           localEcho:(MXEvent**)localEcho
                             success:(void (^)(NSString *eventId))success
-                            failure:(void (^)(NSError *error))failure;
+                            failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 /**
  Send a generic state event to a room.
@@ -250,7 +250,7 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidFlushDataNotification;
 - (MXHTTPOperation*)sendStateEventOfType:(MXEventTypeString)eventTypeString
                                  content:(NSDictionary<NSString*, id>*)content
                                  success:(void (^)(NSString *eventId))success
-                                 failure:(void (^)(NSError *error))failure;
+                                 failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 /**
  Send a room message to a room.
@@ -271,7 +271,7 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidFlushDataNotification;
 - (MXHTTPOperation*)sendMessageWithContent:(NSDictionary<NSString*, id>*)content
                                  localEcho:(MXEvent**)localEcho
                                    success:(void (^)(NSString *eventId))success
-                                   failure:(void (^)(NSError *error))failure;
+                                   failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 /**
  Send a text message to the room.
@@ -289,7 +289,7 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidFlushDataNotification;
                       formattedText:(NSString*)formattedText
                           localEcho:(MXEvent**)localEcho
                             success:(void (^)(NSString *eventId))success
-                            failure:(void (^)(NSError *error))failure;
+                            failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 /**
  Send a text message to the room.
@@ -303,7 +303,7 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidFlushDataNotification;
  */
 - (MXHTTPOperation*)sendTextMessage:(NSString*)text
                             success:(void (^)(NSString *eventId))success
-                            failure:(void (^)(NSError *error))failure;
+                            failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 /**
  Send an emote message to the room.
@@ -321,7 +321,7 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidFlushDataNotification;
                 formattedText:(NSString*)formattedBody
                     localEcho:(MXEvent**)localEcho
                       success:(void (^)(NSString *eventId))success
-                      failure:(void (^)(NSError *error))failure;
+                      failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 /**
  Send an image to the room.
@@ -347,7 +347,7 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidFlushDataNotification;
 #endif
                     localEcho:(MXEvent**)localEcho
                       success:(void (^)(NSString *eventId))success
-                      failure:(void (^)(NSError *error))failure;
+                      failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 /**
  Send an video to the room.
@@ -369,7 +369,7 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidFlushDataNotification;
 #endif
                     localEcho:(MXEvent**)localEcho
                       success:(void (^)(NSString *eventId))success
-                      failure:(void (^)(NSError *error))failure;
+                      failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 /**
  Send a file to the room.
@@ -387,7 +387,7 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidFlushDataNotification;
                     mimeType:(NSString*)mimeType
                    localEcho:(MXEvent**)localEcho
                      success:(void (^)(NSString *eventId))success
-                     failure:(void (^)(NSError *error))failure;
+                     failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 /**
  Determine if an event has a local echo.
