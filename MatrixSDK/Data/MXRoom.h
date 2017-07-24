@@ -563,7 +563,7 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidFlushDataNotification;
  @return a MXHTTPOperation instance.
  */
 - (MXHTTPOperation*)join:(void (^)())success
-                 failure:(void (^)(NSError *error))failure;
+                 failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 /**
  Leave this room.
@@ -574,7 +574,7 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidFlushDataNotification;
  @return a MXHTTPOperation instance.
  */
 - (MXHTTPOperation*)leave:(void (^)())success
-                  failure:(void (^)(NSError *error))failure;
+                  failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 /**
  Invite a user to this room.
@@ -587,7 +587,7 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidFlushDataNotification;
  */
 - (MXHTTPOperation*)inviteUser:(NSString*)userId
                        success:(void (^)())success
-                       failure:(void (^)(NSError *error))failure;
+                       failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 /**
  Invite a user to a room based on their email address to this room.
@@ -600,7 +600,7 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidFlushDataNotification;
  */
 - (MXHTTPOperation*)inviteUserByEmail:(NSString*)email
                               success:(void (^)())success
-                              failure:(void (^)(NSError *error))failure;
+                              failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 /**
  Kick a user from this room.
@@ -614,7 +614,7 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidFlushDataNotification;
 - (MXHTTPOperation*)kickUser:(NSString*)userId
                       reason:(NSString*)reason
                      success:(void (^)())success
-                     failure:(void (^)(NSError *error))failure;
+                     failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 /**
  Ban a user in this room.
@@ -628,7 +628,7 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidFlushDataNotification;
 - (MXHTTPOperation*)banUser:(NSString*)userId
                      reason:(NSString*)reason
                     success:(void (^)())success
-                    failure:(void (^)(NSError *error))failure;
+                    failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 /**
  Unban a user in this room.
@@ -641,7 +641,7 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidFlushDataNotification;
  */
 - (MXHTTPOperation*)unbanUser:(NSString*)userId
                       success:(void (^)())success
-                      failure:(void (^)(NSError *error))failure;
+                      failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 /**
  Set the power level of a member of the room.
@@ -656,7 +656,7 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidFlushDataNotification;
  */
 - (MXHTTPOperation*)setPowerLevelOfUserWithUserID:(NSString*)userId powerLevel:(NSInteger)powerLevel
                                           success:(void (^)())success
-                                          failure:(void (^)(NSError *error))failure;
+                                          failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 /**
  Inform the home server that the user is typing (or not) in this room.
@@ -673,7 +673,7 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidFlushDataNotification;
 - (MXHTTPOperation*)sendTypingNotification:(BOOL)typing
                                    timeout:(NSUInteger)timeout
                                    success:(void (^)())success
-                                   failure:(void (^)(NSError *error))failure;
+                                   failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 /**
  Redact an event in this room.
@@ -689,7 +689,7 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidFlushDataNotification;
 - (MXHTTPOperation*)redactEvent:(NSString*)eventId
                          reason:(NSString*)reason
                         success:(void (^)())success
-                        failure:(void (^)(NSError *error))failure;
+                        failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 /**
  Report an event in this room.
@@ -708,7 +708,7 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidFlushDataNotification;
                           score:(NSInteger)score
                          reason:(NSString*)reason
                         success:(void (^)())success
-                        failure:(void (^)(NSError *error))failure;
+                        failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 
 #pragma mark - Events timeline
@@ -785,7 +785,7 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidFlushDataNotification;
 - (MXHTTPOperation*)addTag:(NSString*)tag
                  withOrder:(NSString*)order
                    success:(void (^)())success
-                   failure:(void (^)(NSError *error))failure;
+                   failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 /**
  Remove a tag from a room.
 
@@ -798,7 +798,7 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidFlushDataNotification;
  */
 - (MXHTTPOperation*)removeTag:(NSString*)tag
                       success:(void (^)())success
-                      failure:(void (^)(NSError *error))failure;
+                      failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 /**
  Remove a tag and add another one.
@@ -816,7 +816,7 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidFlushDataNotification;
                          byTag:(NSString*)newTag
                      withOrder:(NSString*)newTagOrder
                        success:(void (^)())success
-                       failure:(void (^)(NSError *error))failure;
+                       failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 
 #pragma mark - Voice over IP
@@ -830,7 +830,7 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidFlushDataNotification;
  */
 - (void)placeCallWithVideo:(BOOL)video
                    success:(void (^)(MXCall *call))success
-                   failure:(void (^)(NSError *error))failure;
+                   failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 #pragma mark - Read receipts management
 
@@ -906,7 +906,7 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidFlushDataNotification;
 */
 - (MXHTTPOperation*)enableEncryptionWithAlgorithm:(NSString*)algorithm
                                           success:(void (^)())success
-                                          failure:(void (^)(NSError *error))failure;
+                                          failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 /**
  Comparator to use to order array of rooms by their last message event.

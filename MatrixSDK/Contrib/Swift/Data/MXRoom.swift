@@ -19,6 +19,8 @@ import Foundation
 
 public extension MXRoom {
     
+    // MARK: - Room Operations
+    
     /**
      Send a generic non state event to a room.
      
@@ -130,9 +132,9 @@ public extension MXRoom {
      Send an emote message to the room.
      
      - parameters:
-        - emoteBody: the emote body to send.
-        - formattedBody: the optional HTML formatted string of the emote.
-        - localEcho a pointer to a MXEvent object.
+        - emote: the emote body to send.
+        - formattedText: the optional HTML formatted string of the emote.
+        - localEcho: a pointer to a MXEvent object.
      
              This pointer is set to an actual MXEvent object
              containing the local created event which should be used to echo the message in
@@ -161,8 +163,8 @@ public extension MXRoom {
 
      - parameters:
         - imageData: the data of the image to send.
-        - imageSize: the original size of the image.
-        - mimetype:  the image mimetype.
+        - size: the original size of the image.
+        - mimeType:  the image mimetype.
         - thumbnail: optional thumbnail image (may be nil).
         - localEcho: a pointer to a MXEvent object.
      
@@ -193,8 +195,8 @@ public extension MXRoom {
      Send a video to the room.
      
      - parameters:
-        - videoLocalURL: the local filesystem path of the video to send.
-        - videoThumbnail: the UIImage hosting a video thumbnail.
+        - localURL: the local filesystem path of the video to send.
+        - thumbnail: the UIImage hosting a video thumbnail.
         - localEcho: a pointer to a MXEvent object.
      
              This pointer is set to an actual MXEvent object
@@ -221,7 +223,7 @@ public extension MXRoom {
      Send a file to the room.
  
      - parameters:
-        - fileLocalURL: the local filesystem path of the file to send.
+        - localURL: the local filesystem path of the file to send.
         - mimeType: the mime type of the file.
         - localEcho: a pointer to a MXEvent object.
      
@@ -241,7 +243,7 @@ public extension MXRoom {
      - returns: a `MXHTTPOperation` instance.
      */
     
-    @nonobjc @discardableResult func sendFile(localURL: URL, mimeType: String, localEcho: inout MXEvent?, completion: @escaping (_ resposne: MXResponse<String?>) -> Void) -> MXHTTPOperation {
+    @nonobjc @discardableResult func sendFile(localURL: URL, mimeType: String, localEcho: inout MXEvent?, completion: @escaping (_ response: MXResponse<String?>) -> Void) -> MXHTTPOperation {
         return __sendFile(localURL, mimeType: mimeType, localEcho: &localEcho, success: currySuccess(completion), failure: curryFailure(completion))
     }
     
@@ -404,7 +406,7 @@ public extension MXRoom {
     /**
      Get the visibility of the room in the current HS's room directory.
      
-     Note: This information is not part of the room state because it is related
+     **Note:** This information is not part of the room state because it is related
      to the current homeserver.
      There is currently no way to be updated on directory visibility change. That's why a
      request must be issued everytime.
@@ -417,6 +419,274 @@ public extension MXRoom {
      */
     @nonobjc @discardableResult func getDirectoryVisibility(completion: @escaping (_ response: MXResponse<MXRoomDirectoryVisibility>) -> Void) -> MXHTTPOperation {
         return __directoryVisibility(currySuccess(transform: MXRoomDirectoryVisibility.init, completion), failure: curryFailure(completion))
+    }
+    
+    
+    /**
+     Join this room where the user has been invited.
+     
+     - parameters:
+         - completion: A block object called when the operation completes.
+         - response: Indicates whether the operation was a success or failure.
+     
+     - returns: a `MXHTTPOperation` instance.
+     */
+    @nonobjc @discardableResult func join(completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation {
+        return __join(currySuccess(completion), failure: curryFailure(completion))
+    }
+    
+    /**
+     Leave this room.
+     
+     - parameters:
+         - completion: A block object called when the operation completes.
+         - response: Indicates whether the operation was a success or failure.
+     
+     - returns: a `MXHTTPOperation` instance.
+     */
+    @nonobjc @discardableResult func leave(completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation {
+        return __leave(currySuccess(completion), failure: curryFailure(completion))
+    }
+    
+    
+    /**
+     Invite a user to this room.
+     
+     A user can be invited one of three ways:
+     1. By their user ID
+     2. By their email address
+     3. By a third party
+     
+     The `invitation` parameter specifies how this user should be reached.
+     
+     - parameters:
+         - invitation: the way to reach the user.
+         - completion: A block object called when the operation completes.
+         - response: Indicates whether the operation was successful.
+     
+     - returns: a `MXHTTPOperation` instance.
+     */
+    @nonobjc @discardableResult func invite(_ invitation: MXRoomInvitee, completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation {
+        switch invitation {
+        case .userId(let userId):
+            return __inviteUser(userId, success: currySuccess(completion), failure: curryFailure(completion))
+            
+        case .email(let emailAddress):
+            return __inviteUser(byEmail: emailAddress, success: currySuccess(completion), failure: curryFailure(completion))
+            
+        case .thirdPartyId:
+            // MXRoom doesn't have an obj-c convenience method for third party IDs,
+            // so we drop to the matrixRestClient.
+            return mxSession.matrixRestClient.invite(invitation, toRoom: roomId, completion: completion)
+        }
+    }
+    
+    
+    /**
+     Kick a user from this room.
+     
+     - parameters:
+         - userId: the user id.
+         - reason: the reason for being kicked.
+         - completion: A block object called when the operation completes.
+         - response: Indicates whether the operation was successful.
+     
+     - returns: a `MXHTTPOperation` instance.
+     */
+    @nonobjc @discardableResult func kickUser(_ userId: String, reason: String, completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation {
+        return __kickUser(userId, reason: reason, success: currySuccess(completion), failure: curryFailure(completion))
+    }
+    
+    
+    /**
+     Ban a user in this room.
+     
+     - parameters:
+         - userId: the user id.
+         - reason: the reason for being banned
+         - completion: A block object called when the operation completes.
+         - response: Indicates whether the operation was successful.
+     
+     - returns: a `MXHTTPOperation` instance.
+     */
+    @nonobjc @discardableResult func banUser(_ userId: String, reason: String, completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation {
+        return __banUser(userId, reason: reason, success: currySuccess(completion), failure: curryFailure(completion))
+    }
+    
+    
+    /**
+     Unban a user in this room.
+     
+     - parameters:
+         - userId: the user id.
+         - completion: A block object called when the operation completes.
+         - response: Indicates whether the operation was successful.
+     
+     - returns: a `MXHTTPOperation` instance.
+     */
+    @nonobjc @discardableResult func unbanUser(_ userId: String, completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation {
+        return __unbanUser(userId, success: currySuccess(completion), failure: curryFailure(completion))
+    }
+    
+
+    /**
+     Set the power level of a member of the room.
+     
+     - parameters:
+         - userId: the id of the user.
+         - powerLevel: the value to set.
+         - completion: A block object called when the operation completes.
+         - response: Indicates whether the operation was successful.
+     
+     - returns: a `MXHTTPOperation` instance.
+     */
+    @nonobjc @discardableResult func setPowerLevel(ofUser userId: String, powerLevel: Int, completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation {
+        return __setPowerLevelOfUserWithUserID(userId, powerLevel: powerLevel, success: currySuccess(completion), failure: curryFailure(completion))
+    }
+    
+    
+    
+    /**
+     Inform the home server that the user is typing (or not) in this room.
+     
+     - parameters:
+         - typing: Use `true` if the user is currently typing.
+         - timeout: the length of time until the user should be treated as no longer typing. Can be set to `nil` if they are no longer typing.
+         - completion: A block object called when the operation completes.
+         - response: Indicates whether the operation was successful.
+     
+     - returns: a `MXHTTPOperation` instance.
+     */
+    @nonobjc @discardableResult func sendTypingNotification(typing: Bool, timeout: TimeInterval?, completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation {
+        
+        // The `timeout` variable should be set to -1 if it's not provided.
+        let _timeout: Int
+        if let timeout = timeout {
+            // The `TimeInterval` type is a double value specified in seconds. Multiply by 1000 to get milliseconds.
+            _timeout = Int(timeout * 1000 /* milliseconds */)
+        } else {
+            _timeout = -1;
+        }
+        
+        return __sendTypingNotification(typing, timeout: UInt(_timeout), success: currySuccess(completion), failure: curryFailure(completion))
+    }
+    
+    
+    /**
+     Redact an event in this room.
+     
+     - parameters:
+         - eventId: the id of the redacted event.
+         - reason: the redaction reason.
+         - completion: A block object called when the operation completes.
+         - response: Indicates whether the operation was successful.
+     
+     - returns: a `MXHTTPOperation` instance.
+     */
+    @nonobjc @discardableResult func redactEvent(_ eventId: String, reason: String?, completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation {
+        return __redactEvent(eventId, reason: reason, success: currySuccess(completion), failure: curryFailure(completion))
+    }
+    
+    /**
+     Report an event.
+     
+     - parameters:
+         - eventId: the id of the event event.
+         - score: the metric to let the user rate the severity of the abuse. It ranges from -100 “most offensive” to 0 “inoffensive”.
+         - reason: the redaction reason.
+         - completion: A block object called when the operation completes.
+         - response: Indicates whether the operation was successful.
+     
+     - returns: a `MXHTTPOperation` instance.
+     */
+    @nonobjc @discardableResult func reportEvent(_ eventId: String, score: Int, reason: String?, completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation {
+        return __reportEvent(eventId, score: score, reason: reason, success: currySuccess(completion), failure: curryFailure(completion))
+    }
+    
+    
+    // MARK: - Room Tags Operations
+    
+    /**
+     Add a tag to a room.
+     
+     Use this method to update the order of an existing tag.
+     
+     - parameters:
+         - tag: the new tag to add to the room.
+         - order: the order. See MXRoomTag.order.
+         - completion: A block object called when the operation completes.
+         - response: Indicates whether the operation was successful.
+     
+     - returns: a `MXHTTPOperation` instance.
+     */
+    @nonobjc @discardableResult func addTag(_ tag: String, withOrder order: String, completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation {
+        return __addTag(tag, withOrder: order, success: currySuccess(completion), failure: curryFailure(completion))
+    }
+    
+    
+    /**
+     Remove a tag from a room.
+     
+     - parameters:
+         - tag: the tag to remove.
+         - completion: A block object called when the operation completes.
+         - response: Indicates whether the operation was successful.
+     
+     - returns: a `MXHTTPOperation` instance.
+     */
+    @nonobjc @discardableResult func removeTag(_ tag: String, completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation {
+        return __removeTag(tag, success: currySuccess(completion), failure: curryFailure(completion))
+    }
+    
+    
+    /**
+     Remove a tag and add another one.
+     
+     - parameters:
+         - oldTag: the tag to remove.
+         - newTag: the new tag to add. If this is nil, no new tag will be added.
+         - newTagOrder: the order. See MXRoomTag.order.
+         - completion: A block object called when the operation completes.
+         - response: Indicates whether the operation was successful.
+     
+     - returns: a `MXHTTPOperation` instance.
+     */
+    @nonobjc @discardableResult func replaceTag(_ oldTag: String, with newTag: String?, withOrder newTagOrder: String, completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation {
+        return __addTag(oldTag, withOrder: newTagOrder, success: currySuccess(completion), failure: curryFailure(completion))
+    }
+    
+    
+    // MARK: - Voice Over IP
+    
+    /**
+     Place a voice or a video call into the room.
+     
+     - parameters:
+         - video: true to make a video call.
+         - completion: A block object called when the operation completes.
+         - response: Provides the created `MXCall` instance on success.
+     */
+    @nonobjc func placeCall(withVideo hasVideo: Bool, completion: @escaping (_ response: MXResponse<MXCall>) -> Void) {
+        __placeCall(withVideo: hasVideo, success: currySuccess(completion), failure: curryFailure(completion))
+    }
+    
+    
+    // MARK: - Crypto
+    
+    /**
+     Enable encryption in this room.
+     
+     You can check if a room is encrypted via its state (MXRoomState.isEncrypted)
+     
+     - parameters:
+         - algoritm: the crypto algorithm to use.
+         - completion: A block object called when the operation completes.
+         - response: Indicates whether the operation was successful.
+     
+     - returns: a `MXHTTPOperation` instance.
+     */
+    @nonobjc @discardableResult func enableEncryption(withAlgorithm algorithm: String, completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation {
+        return __enableEncryption(withAlgorithm: algorithm, success: currySuccess(completion), failure: curryFailure(completion))
     }
 }
 
