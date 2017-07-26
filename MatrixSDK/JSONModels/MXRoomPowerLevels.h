@@ -96,7 +96,7 @@
  @param eventTypeString the type of event.
  @return the required minimum power level.
  */
-- (NSInteger)minimumPowerLevelForSendingEventAsMessage:(MXEventTypeString)eventTypeString;
+- (NSInteger)minimumPowerLevelForSendingEventAsMessage:(MXEventTypeString)eventTypeString NS_REFINED_FOR_SWIFT;
 
 /**
  Helper to get the minimum power level the user must have to send an event of the given type
@@ -105,6 +105,6 @@
  @param eventTypeString the type of event.
  @return the required minimum power level.
  */
-- (NSInteger)minimumPowerLevelForSendingEventAsStateEvent:(MXEventTypeString)eventTypeString;
+- (NSInteger)minimumPowerLevelForSendingEventAsStateEvent:(MXEventTypeString)eventTypeString NS_REFINED_FOR_SWIFT;
 
 @end
