@@ -698,4 +698,8 @@ NSString * const MXHTTPClientErrorResponseDataKey = @"com.matrixsdk.httpclient.e
     }
 }
 
+- (void) setAccessToken:(NSString *) newAccessToken
+{
+    accessToken = newAccessToken;
+}
 @end

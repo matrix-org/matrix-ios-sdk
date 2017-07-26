@@ -103,6 +103,30 @@ typedef enum : NSUInteger
     - the specified Matrix identity server
  */
 @interface MXRestClient : NSObject
+    {
+        /**
+         HTTP client to the home server.
+         */
+        MXHTTPClient *httpClient;
+        
+        /**
+         HTTP client to the identity server.
+         */
+        MXHTTPClient *identityHttpClient;
+        
+        /**
+         The queue to process server response.
+         This queue is used to create models from JSON dictionary without blocking the main thread.
+         */
+        dispatch_queue_t processingQueue;
+        
+        /**
+         The queue on which asynchronous response blocks are called.
+         Default is dispatch_get_main_queue().
+         */
+        dispatch_queue_t completionQueue;
+    }
+
 
 /**
  The homeserver.
@@ -112,7 +136,7 @@ typedef enum : NSUInteger
 /**
  The user credentials on this home server.
  */
-@property (nonatomic, readonly) MXCredentials *credentials;
+@property (nonatomic) MXCredentials *credentials;
 
 /**
  The homeserver suffix (for example ":matrix.org"). Available only when credentials have been set.
@@ -149,6 +173,21 @@ typedef enum : NSUInteger
  */
 @property (nonatomic, strong) dispatch_queue_t completionQueue;
 
+/**
+ HTTP client to the home server.
+ */
+@property (nonatomic) MXHTTPClient *httpClient;
+
+/**
+ HTTP client to the identity server.
+ */
+@property (nonatomic) MXHTTPClient *identityHttpClient;
+
+/**
+ The queue to process server response.
+ This queue is used to create models from JSON dictionary without blocking the main thread.
+ */
+@property (nonatomic) dispatch_queue_t processingQueue;
 
 /**
  Create an instance based on homeserver url.

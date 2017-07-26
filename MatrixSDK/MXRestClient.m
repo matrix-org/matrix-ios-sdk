@@ -77,29 +77,10 @@ MXAuthAction;
 
 
 #pragma mark - MXRestClient
-@interface MXRestClient ()
-{
-    /**
-     HTTP client to the home server.
-     */
-    MXHTTPClient *httpClient;
-    
-    /**
-     HTTP client to the identity server.
-     */
-    MXHTTPClient *identityHttpClient;
-    
-    /**
-     The queue to process server response.
-     This queue is used to create models from JSON dictionary without blocking the main thread.
-     */
-    dispatch_queue_t processingQueue;
-}
-@end
+
 
 @implementation MXRestClient
-@synthesize homeserver, homeserverSuffix, credentials, apiPathPrefix, contentPathPrefix, completionQueue;
-
+@synthesize homeserver, homeserverSuffix, credentials, apiPathPrefix, contentPathPrefix, completionQueue, httpClient, identityHttpClient, processingQueue;
 -(id)initWithHomeServer:(NSString *)inHomeserver andOnUnrecognizedCertificateBlock:(MXHTTPClientOnUnrecognizedCertificate)onUnrecognizedCertBlock
 {
     self = [super init];
