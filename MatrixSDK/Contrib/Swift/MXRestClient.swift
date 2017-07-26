@@ -485,7 +485,7 @@ public extension MXRestClient {
      
      - paramters:
         - roomId: the id of the room.
-        - eventType: the type of the event. @see MXEventType.
+        - eventType: the type of the event.
         - content: the content that will be sent to the server as a JSON object.
         - completion: A block object called when the operation completes.
         - response: Provides the event id of the event generated on the home server on success.
