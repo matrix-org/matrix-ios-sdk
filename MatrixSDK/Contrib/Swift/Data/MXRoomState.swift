@@ -19,17 +19,17 @@ import Foundation
 extension MXRoomState {
     
     /// The history visibility of the room
-    var historyVisibility: MXRoomHistoryVisibility! {
+    public var historyVisibility: MXRoomHistoryVisibility! {
         return MXRoomHistoryVisibility(identifier: self.__historyVisibility)
     }
     
     /// The join rule of the room
-    var joinRule: MXRoomJoinRule! {
+    public var joinRule: MXRoomJoinRule! {
         return MXRoomJoinRule(identifier: self.__joinRule)
     }
     
     /// The guest access of the room
-    var guestAccess: MXRoomGuestAccess! {
+    public var guestAccess: MXRoomGuestAccess! {
         return MXRoomGuestAccess(identifier: self.__guestAccess)
     }
     
@@ -40,7 +40,7 @@ extension MXRoomState {
      - parameter type: The type of the event
      - returns: The state of the event
      */
-    func stateEvent(with type: MXEventType) -> MXEvent? {
+    public func stateEvent(with type: MXEventType) -> MXEvent? {
         return __stateEvent(withType: type.identifier)
     }
 }
