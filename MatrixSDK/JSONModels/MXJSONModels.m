@@ -18,6 +18,7 @@
 #import "MXJSONModels.h"
 
 #import "MXEvent.h"
+#import "MXUser.h"
 #import "MXTools.h"
 #import "MXUsersDevicesMap.h"
 #import "MXDeviceInfo.h"
@@ -931,6 +932,22 @@ NSString *const kMXPushRuleScopeStringDevice = @"device";
     }
 
     return searchResponse;
+}
+
+@end
+
+@implementation MXUserSearchResponse
+
++ (id)modelFromJSON:(NSDictionary *)JSONDictionary
+{
+    MXUserSearchResponse *userSearchResponse = [[MXUserSearchResponse alloc] init];
+    if (userSearchResponse)
+    {
+        MXJSONModelSetBoolean(userSearchResponse.limited, JSONDictionary[@"limited"]);
+        MXJSONModelSetMXJSONModelArray(userSearchResponse.results, MXUser, JSONDictionary[@"results"]);
+    }
+
+    return userSearchResponse;
 }
 
 @end

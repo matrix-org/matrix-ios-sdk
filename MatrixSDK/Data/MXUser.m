@@ -20,7 +20,6 @@
 
 #import "MXSession.h"
 #import "MXEvent.h"
-#import "MXJSONModels.h"
 
 @interface MXUser ()
 {
@@ -236,6 +235,21 @@
     user->lastActiveLocalTS = lastActiveLocalTS;
     user->_currentlyActive = _currentlyActive;
     user->_statusMsg = [_statusMsg copyWithZone:zone];
+
+    return user;
+}
+
+
+#pragma mark - MXJSONModel
++ (id)modelFromJSON:(NSDictionary *)JSONDictionary
+{
+    MXUser *user = [[MXUser alloc] init];
+    if (user)
+    {
+        MXJSONModelSetString(user->_userId, JSONDictionary[@"user_id"]);
+        MXJSONModelSetString(user->_displayname, JSONDictionary[@"display_name"]);
+        MXJSONModelSetString(user->_avatarUrl, JSONDictionary[@"avatar_url"]);
+    }
 
     return user;
 }

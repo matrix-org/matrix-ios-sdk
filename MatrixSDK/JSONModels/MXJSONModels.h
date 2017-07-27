@@ -20,7 +20,7 @@
 #import "MXJSONModel.h"
 #import "MXUsersDevicesMap.h"
 
-@class MXEvent, MXDeviceInfo, MXKey;
+@class MXEvent, MXDeviceInfo, MXKey, MXUser;
 
 /**
  This file contains definitions of basic JSON responses or objects received
@@ -1013,6 +1013,24 @@ FOUNDATION_EXPORT NSString *const kMXPushRuleScopeStringDevice;
      Categories to search in and their criteria..
      */
     @property (nonatomic) MXSearchCategories *searchCategories;
+
+@end
+
+
+/**
+ `MXUserSearchResponse` represents the response to the /user_directory/search request.
+ */
+@interface MXUserSearchResponse : MXJSONModel
+
+    /**
+     YES if the response does not contains all results.
+     */
+    @property (nonatomic) BOOL limited;
+
+    /**
+     List of users matching the pattern.
+     */
+    @property (nonatomic) NSArray<MXUser*> *results;
 
 @end
 
