@@ -129,7 +129,7 @@ A copy of the list of third party invites (actually MXRoomThirdPartyInvite insta
  If the membership is `invite`, the room state contains few information.
  Join the room with [MXRoom join] to get full information about the room.
  */
-@property (nonatomic, readonly) MXMembership membership;
+@property (nonatomic, readonly) MXMembership membership NS_REFINED_FOR_SWIFT;
 
 /**
  Indicate whether encryption is enabled for this room.

@@ -123,19 +123,18 @@ public enum MXMessageType {
 public enum MXMembership {
     case unknown, invite, join, leave, ban
     
-    var rawValue: UInt {
+    var identifier: __MXMembership {
         switch self {
-        case .unknown: return __MXMembershipUnknown.rawValue
-        case .invite: return __MXMembershipInvite.rawValue
-        case .join: return __MXMembershipJoin.rawValue
-        case .leave: return __MXMembershipLeave.rawValue
-        case .ban: return __MXMembershipBan.rawValue
+        case .unknown: return __MXMembershipUnknown
+        case .invite: return __MXMembershipInvite
+        case .join: return __MXMembershipJoin
+        case .leave: return __MXMembershipLeave
+        case .ban: return __MXMembershipBan
         }
     }
     
-    init?(rawValue: UInt) {
+    init(identifier: __MXMembership) {
         let possibilities: [MXMembership] = [.unknown, .invite, .join, .leave, .ban]
-        guard let value = possibilities.first(where: { $0.rawValue == rawValue }) else { return nil }
-        self = value
+        self = possibilities.first(where: { $0.identifier == identifier }) ?? .unknown
     }
 }
