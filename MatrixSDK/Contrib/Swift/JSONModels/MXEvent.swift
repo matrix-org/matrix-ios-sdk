@@ -117,3 +117,25 @@ public enum MXMessageType {
         }
     }
 }
+
+
+/// Membership definitions
+public enum MXMembership {
+    case unknown, invite, join, leave, ban
+    
+    var rawValue: UInt {
+        switch self {
+        case .unknown: return __MXMembershipUnknown.rawValue
+        case .invite: return __MXMembershipInvite.rawValue
+        case .join: return __MXMembershipJoin.rawValue
+        case .leave: return __MXMembershipLeave.rawValue
+        case .ban: return __MXMembershipBan.rawValue
+        }
+    }
+    
+    init?(rawValue: UInt) {
+        let possibilities: [MXMembership] = [.unknown, .invite, .join, .leave, .ban]
+        guard let value = possibilities.first(where: { $0.rawValue == rawValue }) else { return nil }
+        self = value
+    }
+}
