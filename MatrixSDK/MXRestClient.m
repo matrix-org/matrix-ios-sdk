@@ -2403,7 +2403,9 @@ MXAuthAction;
                      success:(void (^)())success
                      failure:(void (^)(NSError *error))failure
 {
-    NSString *path = [NSString stringWithFormat:@"%@/rooms/%@/state/m.room.member/%@", apiPathPrefix, roomId, userId];
+    NSString *path = [NSString stringWithFormat:@"%@/rooms/%@/state/m.room.member/%@", apiPathPrefix,
+                      roomId,
+                      [userId stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding]];
     
     NSMutableDictionary *parameters = [NSMutableDictionary dictionary];
     parameters[@"membership"] = @"leave";
@@ -2789,7 +2791,9 @@ MXAuthAction;
                                          success:(void (^)())success
                                          failure:(void (^)(NSError *error))failure
 {
-    NSString *path = [NSString stringWithFormat:@"%@/rooms/%@/typing/%@", apiPathPrefix, roomId, self.credentials.userId];
+    NSString *path = [NSString stringWithFormat:@"%@/rooms/%@/typing/%@", apiPathPrefix,
+                      roomId,
+                      [self.credentials.userId stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding]];
     
     // Fill the request parameters on demand
     NSMutableDictionary *parameters = [NSMutableDictionary dictionary];
@@ -3247,7 +3251,9 @@ MXAuthAction;
         userId = credentials.userId;
     }
     
-    NSString *path = [NSString stringWithFormat:@"%@/profile/%@/displayname", apiPathPrefix, userId];
+    NSString *path = [NSString stringWithFormat:@"%@/profile/%@/displayname", apiPathPrefix,
+                      [userId stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding]];
+
     return [httpClient requestWithMethod:@"GET"
                                     path:path
                               parameters:nil
@@ -3342,7 +3348,9 @@ MXAuthAction;
         userId = credentials.userId;
     }
     
-    NSString *path = [NSString stringWithFormat:@"%@/profile/%@/avatar_url", apiPathPrefix, userId];
+    NSString *path = [NSString stringWithFormat:@"%@/profile/%@/avatar_url", apiPathPrefix,
+                      [userId stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding]];
+
     return [httpClient requestWithMethod:@"GET"
                                     path:path
                               parameters:nil
@@ -3587,7 +3595,9 @@ MXAuthAction;
         userId = credentials.userId;
     }
     
-    NSString *path = [NSString stringWithFormat:@"%@/presence/%@/status", apiPathPrefix, userId];
+    NSString *path = [NSString stringWithFormat:@"%@/presence/%@/status", apiPathPrefix,
+                      [userId stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding]];
+
     return [httpClient requestWithMethod:@"GET"
                                     path:path
                               parameters:nil
