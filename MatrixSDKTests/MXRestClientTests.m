@@ -1397,6 +1397,27 @@
 }
 
 
+#pragma mark - Users search
+- (void)testUsersSearch
+{
+    [matrixSDKTestsData doMXRestClientTestWithBobAndAliceInARoom:self readyToTest:^(MXRestClient *bobRestClient, MXRestClient *aliceRestClient, NSString *roomId, XCTestExpectation *expectation) {
+
+        // Do a search with no expected results
+        [bobRestClient searchUsers:@"random" limit:1 success:^(MXUserSearchResponse *userSearchResponse) {
+
+            XCTAssertFalse(userSearchResponse.limited);
+            XCTAssertEqual(userSearchResponse.results.count, 0);
+
+            [expectation fulfill];
+
+        } failure:^(NSError *error) {
+            XCTFail(@"The request should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+    }];
+}
+
+
 #pragma mark - Crypto
 #ifdef MX_CRYPTO
 - (void)testDeviceKeys

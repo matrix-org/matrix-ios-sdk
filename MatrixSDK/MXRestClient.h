@@ -1761,6 +1761,23 @@ typedef enum : NSUInteger
                    failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 
+/**
+ Search users on homeserver user directory.
+
+ @param pattern the search pattern.
+ @param limit the number of users to return.
+
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+*/
+- (MXHTTPOperation*)searchUsers:(NSString*)pattern
+                          limit:(NSUInteger)limit
+                        success:(void (^)(MXUserSearchResponse *userSearchResponse))success
+                        failure:(void (^)(NSError *error))failure;
+
+
 #pragma mark - Crypto
 /**
  Upload device and/or one-time keys.

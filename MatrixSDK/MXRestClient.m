@@ -4696,6 +4696,53 @@ MXAuthAction;
     return [self search:parameters nextBatch:nextBatch success:success failure:failure];
 }
 
+- (MXHTTPOperation*)searchUsers:(NSString*)pattern
+                          limit:(NSUInteger)limit
+                        success:(void (^)(MXUserSearchResponse *userSearchResponse))success
+                        failure:(void (^)(NSError *error))failure
+{
+    NSDictionary *parameters = @{
+                                 @"search_term": pattern,
+                                 @"limit": @(limit)
+                                 };
+
+    return [httpClient requestWithMethod:@"POST"
+                                    path:[NSString stringWithFormat:@"%@/user_directory/search", apiPathPrefix]
+                              parameters:parameters
+                                 success:^(NSDictionary *JSONResponse) {
+                                     if (success && processingQueue)
+                                     {
+                                         dispatch_async(processingQueue, ^{
+
+                                             MXUserSearchResponse *userSearchResponse = [MXUserSearchResponse modelFromJSON:JSONResponse];
+
+                                             if (completionQueue)
+                                             {
+                                                 dispatch_async(completionQueue, ^{
+                                                     success(userSearchResponse);
+                                                 });
+                                             }
+
+                                         });
+                                     }
+                                 }
+                                 failure:^(NSError *error) {
+                                     if (failure && processingQueue)
+                                     {
+                                         dispatch_async(processingQueue, ^{
+
+                                             if (completionQueue)
+                                             {
+                                                 dispatch_async(completionQueue, ^{
+                                                     failure(error);
+                                                 });
+                                             }
+
+                                         });
+                                     }
+                                 }];
+}
+
 
 #pragma mark - Crypto
 - (MXHTTPOperation*)uploadKeys:(NSDictionary*)deviceKeys oneTimeKeys:(NSDictionary*)oneTimeKeys
