@@ -1023,7 +1023,7 @@ FOUNDATION_EXPORT NSString *const kMXPushRuleScopeStringDevice;
 @interface MXUserSearchResponse : MXJSONModel
 
     /**
-     YES if the response does not contains all results.
+     YES if the response does not contain all results.
      */
     @property (nonatomic) BOOL limited;
 
