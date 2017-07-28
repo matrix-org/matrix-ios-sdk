@@ -117,3 +117,24 @@ public enum MXMessageType {
         }
     }
 }
+
+
+/// Membership definitions
+public enum MXMembership {
+    case unknown, invite, join, leave, ban
+    
+    var identifier: __MXMembership {
+        switch self {
+        case .unknown: return __MXMembershipUnknown
+        case .invite: return __MXMembershipInvite
+        case .join: return __MXMembershipJoin
+        case .leave: return __MXMembershipLeave
+        case .ban: return __MXMembershipBan
+        }
+    }
+    
+    init(identifier: __MXMembership) {
+        let possibilities: [MXMembership] = [.unknown, .invite, .join, .leave, .ban]
+        self = possibilities.first(where: { $0.identifier == identifier }) ?? .unknown
+    }
+}

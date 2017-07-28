@@ -223,6 +223,7 @@
 		C61A4CC41E5F38CB00442158 /* SwiftMatrixSDK.h in Headers */ = {isa = PBXBuildFile; fileRef = C61A4CC31E5F38CB00442158 /* SwiftMatrixSDK.h */; };
 		C63E78B01F26588000AC692F /* MXRoomPowerLevels.swift in Sources */ = {isa = PBXBuildFile; fileRef = C63E78AF1F26588000AC692F /* MXRoomPowerLevels.swift */; };
 		C6481AF21F1678A9000DB8A0 /* MXSessionEventListener.swift in Sources */ = {isa = PBXBuildFile; fileRef = C6481AF11F1678A9000DB8A0 /* MXSessionEventListener.swift */; };
+		C6B40F521F2A35BE00C42C72 /* MXRoomState.swift in Sources */ = {isa = PBXBuildFile; fileRef = C6B40F511F2A35BE00C42C72 /* MXRoomState.swift */; };
 		C6D5D60A1E4FA74000706C0F /* MXEnumConstants.swift in Sources */ = {isa = PBXBuildFile; fileRef = C6D5D6091E4FA74000706C0F /* MXEnumConstants.swift */; };
 		C6D5D60E1E4FBD2900706C0F /* MXSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = C6D5D60D1E4FBD2900706C0F /* MXSession.swift */; };
 		C6F9357C1E5B39CA00FC34BF /* MXRestClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = C6F9357B1E5B39CA00FC34BF /* MXRestClient.swift */; };
@@ -502,6 +503,7 @@
 		C61A4CC31E5F38CB00442158 /* SwiftMatrixSDK.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SwiftMatrixSDK.h; sourceTree = "<group>"; };
 		C63E78AF1F26588000AC692F /* MXRoomPowerLevels.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MXRoomPowerLevels.swift; sourceTree = "<group>"; };
 		C6481AF11F1678A9000DB8A0 /* MXSessionEventListener.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MXSessionEventListener.swift; sourceTree = "<group>"; };
+		C6B40F511F2A35BE00C42C72 /* MXRoomState.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MXRoomState.swift; sourceTree = "<group>"; };
 		C6CC43261E5CB0FD00DB9C34 /* MatrixSDKTests-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "MatrixSDKTests-Bridging-Header.h"; sourceTree = "<group>"; };
 		C6D5D6091E4FA74000706C0F /* MXEnumConstants.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MXEnumConstants.swift; sourceTree = "<group>"; };
 		C6D5D60D1E4FBD2900706C0F /* MXSession.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MXSession.swift; sourceTree = "<group>"; };
@@ -1083,6 +1085,7 @@
 			isa = PBXGroup;
 			children = (
 				C602B58B1F2268F700B67D87 /* MXRoom.swift */,
+				C6B40F511F2A35BE00C42C72 /* MXRoomState.swift */,
 				C6F935831E5B3BE600FC34BF /* MX3PID.swift */,
 				C6F935841E5B3BE600FC34BF /* MXEventTimeline.swift */,
 				C6481AF11F1678A9000DB8A0 /* MXSessionEventListener.swift */,
@@ -1445,6 +1448,7 @@
 				323B2AD01BCD3EF000B11F34 /* MXCoreDataStore.m in Sources */,
 				3281E8B819E42DFE00976E1A /* MXJSONModel.m in Sources */,
 				32A1514B1DAF7C0C00400192 /* MXUsersDevicesMap.m in Sources */,
+				C6B40F521F2A35BE00C42C72 /* MXRoomState.swift in Sources */,
 				3264E2A31BDF8D1500F89A86 /* MXCoreDataRoomState.m in Sources */,
 				32D776821A27877300FC4AA2 /* MXMemoryRoomStore.m in Sources */,
 				C602B58C1F2268F700B67D87 /* MXRoom.swift in Sources */,
