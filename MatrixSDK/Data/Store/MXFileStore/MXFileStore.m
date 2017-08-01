@@ -120,6 +120,17 @@ static NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
     return self;
 }
 
+- (instancetype)initWithCredentials:(MXCredentials *)someCredentials
+{
+    self = [self init];
+    if (self)
+    {
+        credentials = someCredentials;
+        [self setUpStoragePaths];
+    }
+    return self;
+}
+
 - (void)openWithCredentials:(MXCredentials*)someCredentials onComplete:(void (^)())onComplete failure:(void (^)(NSError *))failure
 {
     credentials = someCredentials;

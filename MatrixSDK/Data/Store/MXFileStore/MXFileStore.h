@@ -73,6 +73,13 @@ NS_ASSUME_NONNULL_BEGIN
 @interface MXFileStore : MXMemoryStore
 
 /**
+ Creates an instance of MXFileStore that is ready to work with async API.
+ 
+ @param someCredentials the credentials of the account.
+*/
+- (instancetype)initWithCredentials:(MXCredentials *)someCredentials;
+
+/**
  The disk space in bytes used by the store.
 
  The operation is asynchronous because the value can take time to compute.
