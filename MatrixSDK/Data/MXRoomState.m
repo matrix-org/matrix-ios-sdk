@@ -632,7 +632,7 @@
         }
 
         // Cache the computed name
-        membersNamesCache[userId] = displayName;
+        membersNamesCache[userId] = [displayName copy];
     }
 
     return displayName;
@@ -817,7 +817,7 @@
     
     stateCopy->membership = membership;
 
-    stateCopy->membersNamesCache = [[NSMutableDictionary allocWithZone:zone] initWithDictionary:membersNamesCache copyItems:YES];
+    stateCopy->membersNamesCache = [[NSMutableDictionary allocWithZone:zone] initWithDictionary:membersNamesCache];
     
     stateCopy->powerLevels = [powerLevels copy];
     stateCopy->maxPowerLevel = maxPowerLevel;
