@@ -17,14 +17,10 @@
 
 #import "MXFileStore.h"
 
-#import "MXFileRoomStore.h"
-
-#import "MXFileStoreMetaData.h"
-
-#import "MXEnumConstants.h"
-#import "MXSDKOptions.h"
 #import "MXBackgroundModeHandler.h"
-
+#import "MXEnumConstants.h"
+#import "MXFileRoomStore.h"
+#import "MXFileStoreMetaData.h"
 #import "MXSDKOptions.h"
 
 static NSUInteger const kMXFileVersion = 41;
