@@ -1059,6 +1059,10 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
 #endif
 }
 
+- (void) setAccessToken:(NSString *) newAccessToken
+{
+    [_matrixRestClient.httpClient setAccessToken:newAccessToken];
+}
 
 #pragma mark - Private API
 

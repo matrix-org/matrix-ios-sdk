@@ -574,6 +574,12 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
                       success:(void (^)())success
                       failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
+/**
+ Update acces token if needed
+ 
+ @param New access token to use
+ */
+- (void) setAccessToken:(NSString *) newAccessToken;
 
 #pragma mark - The user's rooms
 /**

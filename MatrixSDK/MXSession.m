@@ -1580,6 +1580,12 @@ typedef void (^MXOnResumeDone)();
     } failure:failure];
 }
 
+- (void) setAccessToken:(NSString *) newAccessToken
+{
+  // We also need to update access token specific to crypto
+  [matrixRestClient.httpClient setAccessToken:newAccessToken];
+  [_crypto setAccessToken:newAccessToken];
+}
 
 #pragma mark - The user's rooms
 - (MXRoom *)roomWithRoomId:(NSString *)roomId
