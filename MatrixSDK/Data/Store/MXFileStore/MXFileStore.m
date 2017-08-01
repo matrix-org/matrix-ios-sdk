@@ -729,11 +729,11 @@ static NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
 // Load the data store in files
 - (void)loadRoomsMessages
 {
-    NSArray *roomIDArray = [[NSFileManager defaultManager] contentsOfDirectoryAtPath:storeRoomsPath error:nil];
+    NSArray<NSString *> *roomIDs = [[NSFileManager defaultManager] contentsOfDirectoryAtPath:storeRoomsPath error:nil];
 
     NSDate *startDate = [NSDate date];
 
-    for (NSString *roomId in roomIDArray)  {
+    for (NSString *roomId in roomIDs)  {
 
         NSString *roomFile = [self messagesFileForRoom:roomId forBackup:NO];
 
@@ -817,9 +817,11 @@ static NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
  */
 - (void)preloadRoomsStates
 {
+    NSArray<NSString *> *roomIDs = [[NSFileManager defaultManager] contentsOfDirectoryAtPath:storeRoomsPath error:nil];
+    
     NSDate *startDate = [NSDate date];
 
-    for (NSString *roomId in roomStores)
+    for (NSString *roomId in roomIDs)
     {
         preloadedRoomsStates[roomId] = [self stateOfRoom:roomId];
     }
@@ -875,9 +877,11 @@ static NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
  */
 - (void)preloadRoomsSummaries
 {
+    NSArray<NSString *> *roomIDs = [[NSFileManager defaultManager] contentsOfDirectoryAtPath:storeRoomsPath error:nil];
+    
     NSDate *startDate = [NSDate date];
 
-    for (NSString *roomId in roomStores)
+    for (NSString *roomId in roomIDs)
     {
         preloadedRoomSummary[roomId] = [self summaryOfRoom:roomId];
     }
@@ -933,9 +937,11 @@ static NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
  */
 - (void)preloadRoomsAccountData
 {
+    NSArray<NSString *> *roomIDs = [[NSFileManager defaultManager] contentsOfDirectoryAtPath:storeRoomsPath error:nil];
+    
     NSDate *startDate = [NSDate date];
 
-    for (NSString *roomId in roomStores)
+    for (NSString *roomId in roomIDs)
     {
         preloadedRoomAccountData[roomId] = [self accountDataOfRoom:roomId];
     }
@@ -1268,9 +1274,11 @@ static NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
 // Load the data store in files
 - (void)loadReceipts
 {
+    NSArray<NSString *> *roomIDs = [[NSFileManager defaultManager] contentsOfDirectoryAtPath:storeRoomsPath error:nil];
+    
     NSDate *startDate = [NSDate date];
-
-    for (NSString *roomId in roomStores)
+    
+    for (NSString *roomId in roomIDs)
     {
         NSString *roomFile = [self readReceiptsFileForRoom:roomId forBackup:NO];
 
