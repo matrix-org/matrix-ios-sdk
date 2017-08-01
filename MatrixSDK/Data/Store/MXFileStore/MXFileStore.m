@@ -27,21 +27,21 @@
 
 #import "MXSDKOptions.h"
 
-NSUInteger const kMXFileVersion = 41;
+static NSUInteger const kMXFileVersion = 41;
 
-NSString *const kMXFileStoreFolder = @"MXFileStore";
-NSString *const kMXFileStoreMedaDataFile = @"MXFileStore";
-NSString *const kMXFileStoreUsersFolder = @"users";
-NSString *const kMXFileStoreBackupFolder = @"backup";
+static NSString *const kMXFileStoreFolder = @"MXFileStore";
+static NSString *const kMXFileStoreMedaDataFile = @"MXFileStore";
+static NSString *const kMXFileStoreUsersFolder = @"users";
+static NSString *const kMXFileStoreBackupFolder = @"backup";
 
-NSString *const kMXFileStoreSavingMarker = @"savingMarker";
+static NSString *const kMXFileStoreSavingMarker = @"savingMarker";
 
-NSString *const kMXFileStoreRoomsFolder = @"rooms";
-NSString *const kMXFileStoreRoomMessagesFile = @"messages";
-NSString *const kMXFileStoreRoomStateFile = @"state";
-NSString *const kMXFileStoreRoomSummaryFile = @"summary";
-NSString *const kMXFileStoreRoomAccountDataFile = @"accountData";
-NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
+static NSString *const kMXFileStoreRoomsFolder = @"rooms";
+static NSString *const kMXFileStoreRoomMessagesFile = @"messages";
+static NSString *const kMXFileStoreRoomStateFile = @"state";
+static NSString *const kMXFileStoreRoomSummaryFile = @"summary";
+static NSString *const kMXFileStoreRoomAccountDataFile = @"accountData";
+static NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
 
 @interface MXFileStore ()
 {
