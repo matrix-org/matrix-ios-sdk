@@ -1,3 +1,29 @@
+Changes in Matrix iOS SDK in 0.9.0 (2017-08-01)
+===============================================
+
+Improvements:
+ * Be more robust against JSON data sent by the homeserver.
+ * MXRestClient: Add searchUsers method to search user from the homeserver user directory.
+ * MXRestClient: Change API used to add email in order to check if the email (or msisdn) is already used (https://github.com/vector-im/riot-meta#85).
+ * App Extension support: wrap access to UIApplication shared instance
+ * MXSession: Pause could not be delayed if no background mode handler has been set in the MXSDKOptions.
+ * MXRoomState: do copy of membersNamesCache content in memberName rather than in copyWithZone.
+ 
+ * SwiftMatrixSDK
+ * Add swift refinements to MXSession event listeners, thanks to @aapierce0 (PR #327).
+ * Update the access control for the identifier property on some swift enums, thanks to @aapierce0 (PR #330).
+ * Add Swift refinements to MXRoom class, thanks to @aapierce0 (PR #335).
+ * Add Swift refinements to MXRoomPowerLevels, thanks to @aapierce0 (PR #336).
+ * Add swift refinements to MXRoomState, thanks to @aapierce0 (PR #338).
+ 
+Bug fixes:
+ * Getting notifications for unrelated messages (https://github.com/vector-im/riot-android/issues/1407).
+ * Crypto: Fix crash when encountering a badly formatted olm message (https://github.commatrix-org/riot-ios-rageshakes#107).
+ * MXSession: Missing a call to failure callback on unknown token, thanks to @aapierce0 (PR #331). 
+ * Fixed an issue that would prevent attachments from being downloaded via SSL connections when using a custom CA ceritficate that was included in the bundle, thanks to @javierquevedo (PR #332).
+ * Avatars do not display with account on a self-signed server (https://github.com/vector-im/riot-ios/issues/816).
+ * MXRestClient: Escape userId in CS API requests,
+
 Changes in Matrix iOS SDK in 0.8.2 (2017-06-30)
 ===============================================
 
