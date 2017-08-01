@@ -64,6 +64,8 @@
 
 #pragma mark - Launch time options
 
+NS_ASSUME_NONNULL_BEGIN
+
 @protocol MXBackgroundModeHandler;
 
 /**
@@ -103,7 +105,7 @@
  be compiled as a framework. It will also be unavailable if your project does not
  include the 'GoogleAnalytics' pod.
  */
-@property (nonatomic) id<MXAnalyticsDelegate> analyticsDelegate;
+@property (nonatomic, nullable) id<MXAnalyticsDelegate> analyticsDelegate;
 
 /**
  The version of the media cache at the application level.
@@ -118,4 +120,14 @@
  */
 @property (nonatomic) id<MXBackgroundModeHandler> backgroundModeHandler;
 
+/**
+ The App Group identifier.
+ Specify this value if you want to share data with app extensions.
+ 
+ nil by default.
+*/
+@property (nonatomic, nullable) NSString *applicationGroupIdentifier;
+
 @end
+
+NS_ASSUME_NONNULL_END

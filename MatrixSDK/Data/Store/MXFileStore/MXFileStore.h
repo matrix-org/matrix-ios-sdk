@@ -17,6 +17,8 @@
 
 #import "MXMemoryStore.h"
 
+NS_ASSUME_NONNULL_BEGIN
+
 /**
  `MXFileStore` extends MXMemoryStore by adding permanent storage.
 
@@ -71,6 +73,13 @@
 @interface MXFileStore : MXMemoryStore
 
 /**
+ Creates an instance of MXFileStore that is ready to work with async API.
+ 
+ @param someCredentials the credentials of the account.
+*/
+- (instancetype)initWithCredentials:(MXCredentials *)someCredentials;
+
+/**
  The disk space in bytes used by the store.
 
  The operation is asynchronous because the value can take time to compute.
@@ -79,4 +88,26 @@
  */
 - (void)diskUsageWithBlock:(void(^)(NSUInteger diskUsage))block;
 
+#pragma mark - Async API
+
+/**
+ Get the list of all stored matrix users.
+ 
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+ */
+- (void)asyncUsers:(void (^)(NSArray<MXUser *> *users))success
+           failure:(nullable void (^)(NSError *error))failure;
+
+/**
+ Get the list of all stored rooms summaries.
+ 
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+ */
+- (void)asyncRoomsSummaries:(void (^)(NSArray<MXRoomSummary *> *roomsSummaries))success
+                    failure:(nullable void (^)(NSError *error))failure;
+
 @end
+
+NS_ASSUME_NONNULL_END
