@@ -1362,6 +1362,23 @@ static NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
     }
 }
 
+#pragma mark - Async API
+
+- (void)asyncUsers:(void (^)(NSArray<MXUser *> * _Nonnull))success failure:(nullable void (^)(NSError * _Nonnull))failure
+{
+    dispatch_async(dispatchQueue, ^{
+        [self loadUsers];
+        success(users.allValues);
+    });
+}
+
+- (void)asyncRoomsSummaries:(void (^)(NSArray<MXRoomSummary *> * _Nonnull))success failure:(nullable void (^)(NSError * _Nonnull))failure
+{
+    dispatch_async(dispatchQueue, ^{
+        [self preloadRoomsSummaries];
+        success(preloadedRoomSummary.allValues);
+    });
+}
 
 #pragma mark - Tools
 /**
