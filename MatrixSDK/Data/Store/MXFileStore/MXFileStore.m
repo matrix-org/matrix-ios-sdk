@@ -122,16 +122,10 @@ static NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
 
 - (void)openWithCredentials:(MXCredentials*)someCredentials onComplete:(void (^)())onComplete failure:(void (^)(NSError *))failure
 {
-    // Create the file path where data will be stored for the user id passed in credentials
-    NSArray *cacheDirList = NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES);
-    NSString *cachePath  = [cacheDirList objectAtIndex:0];
-
     credentials = someCredentials;
-    storePath = [[cachePath stringByAppendingPathComponent:kMXFileStoreFolder] stringByAppendingPathComponent:credentials.userId];
-    storeRoomsPath = [storePath stringByAppendingPathComponent:kMXFileStoreRoomsFolder];
-    storeUsersPath = [storePath stringByAppendingPathComponent:kMXFileStoreUsersFolder];
-
-    storeBackupPath = [storePath stringByAppendingPathComponent:kMXFileStoreBackupFolder];
+    
+    // Create the file path where data will be stored for the user id passed in credentials
+    [self setUpStoragePaths];
 
     id<MXBackgroundModeHandler> handler = [MXSDKOptions sharedInstance].backgroundModeHandler;
     __block NSUInteger backgroundTaskIdentifier = [handler startBackgroundTaskWithName:@"openWithCredentials" completion:^{
@@ -543,6 +537,32 @@ static NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
 
 
 #pragma mark - File paths
+- (void)setUpStoragePaths
+{
+    // credentials must be set before this method starts execution
+    NSParameterAssert(credentials);
+    
+    NSString *cachePath = nil;
+    
+    NSString *applicationGroupIdentifier = [MXSDKOptions sharedInstance].applicationGroupIdentifier;
+    if (applicationGroupIdentifier)
+    {
+        NSURL *sharedContainerURL = [[NSFileManager defaultManager] containerURLForSecurityApplicationGroupIdentifier:applicationGroupIdentifier];
+        cachePath = [sharedContainerURL path];
+    }
+    else
+    {
+        NSArray *cacheDirList = NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES);
+        cachePath  = [cacheDirList objectAtIndex:0];
+    }
+    
+    storePath = [[cachePath stringByAppendingPathComponent:kMXFileStoreFolder] stringByAppendingPathComponent:credentials.userId];
+    storeRoomsPath = [storePath stringByAppendingPathComponent:kMXFileStoreRoomsFolder];
+    storeUsersPath = [storePath stringByAppendingPathComponent:kMXFileStoreUsersFolder];
+    
+    storeBackupPath = [storePath stringByAppendingPathComponent:kMXFileStoreBackupFolder];
+}
+
 - (NSString*)folderForRoom:(NSString*)roomId forBackup:(BOOL)backup
 {
     if (!backup)
