@@ -857,7 +857,7 @@ static NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
         preloadedRoomsStates[roomId] = [self stateOfRoom:roomId];
     }
 
-    NSLog(@"[MXFileStore] Loaded room states of %tu rooms in %.0fms", roomStores.allKeys.count, [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
+    NSLog(@"[MXFileStore] Loaded room states of %tu rooms in %.0fms", roomIDs.count, [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
 }
 
 - (void)saveRoomsState
@@ -917,7 +917,7 @@ static NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
         preloadedRoomSummary[roomId] = [self summaryOfRoom:roomId];
     }
 
-    NSLog(@"[MXFileStore] Loaded rooms summaries data of %tu rooms in %.0fms", roomStores.allKeys.count, [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
+    NSLog(@"[MXFileStore] Loaded rooms summaries data of %tu rooms in %.0fms", roomIDs.count, [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
 }
 
 - (void)saveRoomsSummaries
@@ -977,7 +977,7 @@ static NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
         preloadedRoomAccountData[roomId] = [self accountDataOfRoom:roomId];
     }
 
-    NSLog(@"[MXFileStore] Loaded rooms account data of %tu rooms in %.0fms", roomStores.allKeys.count, [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
+    NSLog(@"[MXFileStore] Loaded rooms account data of %tu rooms in %.0fms", roomIDs.count, [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
 }
 
 - (void)saveRoomsAccountData
