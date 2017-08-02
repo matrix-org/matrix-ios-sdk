@@ -317,6 +317,13 @@
  */
 - (void)setBlacklistUnverifiedDevicesInRoom:(NSString *)roomId blacklist:(BOOL)blacklist;
 
+/**
+ Update acces token if needed
+ 
+ @param New access token to use
+ */
+- (void) setAccessToken:(NSString *) newAccessToken;
+
 @end
 
 

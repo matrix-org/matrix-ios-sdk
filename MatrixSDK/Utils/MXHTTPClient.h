@@ -155,4 +155,9 @@ typedef BOOL (^MXHTTPClientOnUnrecognizedCertificate)(NSData *certificate);
  */
 @property (nonatomic, strong) NSSet <NSData *> *pinnedCertificates;
 
+/**
+ Need a setter yo update access token on the fly 
+ */
+- (void) setAccessToken:(NSString *) newAccessToken;
+
 @end
