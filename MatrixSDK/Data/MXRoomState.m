@@ -1,5 +1,6 @@
 /*
  Copyright 2014 OpenMarket Ltd
+ Copyright 2017 Vector Creations Ltd
  
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -25,8 +26,15 @@
 @interface MXRoomState ()
 {
     MXSession *mxSession;
-    
-    NSMutableDictionary<NSString*, MXEvent*> *stateEvents;
+
+    /**
+     State events ordered by type.
+     */
+    NSMutableDictionary<NSString*, NSMutableArray<MXEvent*>*> *stateEvents;
+
+    /**
+     Members ordered by userId.
+     */
     NSMutableDictionary<NSString*, MXRoomMember*> *members;
     
     /**
@@ -125,9 +133,12 @@
         // as the current current room state.
         // So, use the same state events content.
         // @TODO: Find another way than modifying the event content.
-        for (MXEvent *event in stateEvents.allValues)
+        for (NSArray<MXEvent*> *events in stateEvents.allValues)
         {
-            event.prevContent = event.content;
+            for (MXEvent *event in events)
+            {
+                event.prevContent = event.content;
+            }
         }
     }
     return self;
@@ -154,7 +165,11 @@
 
 - (NSArray<MXEvent *> *)stateEvents
 {
-    NSMutableArray<MXEvent *> *state = [NSMutableArray arrayWithArray:[stateEvents allValues]];
+    NSMutableArray<MXEvent *> *state;
+    for (NSArray<MXEvent*> *events in stateEvents.allValues)
+    {
+        [state addObjectsFromArray:events];
+    }
 
     // Members are also state events
     for (MXRoomMember *roomMember in self.members)
@@ -216,7 +231,7 @@
     NSString *canonicalAlias;
     
     // Check it from the state events
-    MXEvent *event = [stateEvents objectForKey:kMXEventTypeStringRoomCanonicalAlias];
+    MXEvent *event = [stateEvents objectForKey:kMXEventTypeStringRoomCanonicalAlias].firstObject;
     if (event && [self contentOfEvent:event])
     {
         MXJSONModelSetString(canonicalAlias, [self contentOfEvent:event][@"alias"]);
@@ -230,7 +245,7 @@
     NSString *name;
     
     // Check it from the state events
-    MXEvent *event = [stateEvents objectForKey:kMXEventTypeStringRoomName];
+    MXEvent *event = [stateEvents objectForKey:kMXEventTypeStringRoomName].firstObject;
     if (event && [self contentOfEvent:event])
     {
         MXJSONModelSetString(name, [self contentOfEvent:event][@"name"]);
@@ -244,7 +259,7 @@
     NSString *topic;
     
     // Check it from the state events
-    MXEvent *event = [stateEvents objectForKey:kMXEventTypeStringRoomTopic];
+    MXEvent *event = [stateEvents objectForKey:kMXEventTypeStringRoomTopic].firstObject;
     if (event && [self contentOfEvent:event])
     {
         MXJSONModelSetString(topic, [self contentOfEvent:event][@"topic"]);
@@ -258,7 +273,7 @@
     NSString *avatar;
 
     // Check it from the state events
-    MXEvent *event = [stateEvents objectForKey:kMXEventTypeStringRoomAvatar];
+    MXEvent *event = [stateEvents objectForKey:kMXEventTypeStringRoomAvatar].firstObject;
     if (event && [self contentOfEvent:event])
     {
         MXJSONModelSetString(avatar, [self contentOfEvent:event][@"url"]);
@@ -272,7 +287,7 @@
     MXRoomHistoryVisibility historyVisibility = kMXRoomHistoryVisibilityShared;
 
     // Check it from the state events
-    MXEvent *event = [stateEvents objectForKey:kMXEventTypeStringRoomHistoryVisibility];
+    MXEvent *event = [stateEvents objectForKey:kMXEventTypeStringRoomHistoryVisibility].firstObject;
     if (event && [self contentOfEvent:event])
     {
         MXJSONModelSetString(historyVisibility, [self contentOfEvent:event][@"history_visibility"]);
@@ -286,7 +301,7 @@
     MXRoomJoinRule joinRule = kMXRoomJoinRuleInvite;
 
     // Check it from the state events
-    MXEvent *event = [stateEvents objectForKey:kMXEventTypeStringRoomJoinRules];
+    MXEvent *event = [stateEvents objectForKey:kMXEventTypeStringRoomJoinRules].firstObject;
     if (event && [self contentOfEvent:event])
     {
         MXJSONModelSetString(joinRule, [self contentOfEvent:event][@"join_rule"]);
@@ -305,7 +320,7 @@
     MXRoomGuestAccess guestAccess = kMXRoomGuestAccessForbidden;
 
     // Check it from the state events
-    MXEvent *event = [stateEvents objectForKey:kMXEventTypeStringRoomGuestAccess];
+    MXEvent *event = [stateEvents objectForKey:kMXEventTypeStringRoomGuestAccess].firstObject;
     if (event && [self contentOfEvent:event])
     {
         MXJSONModelSetString(guestAccess, [self contentOfEvent:event][@"guest_access"]);
@@ -460,7 +475,7 @@
 
 - (NSString *)encryptionAlgorithm
 {
-    return stateEvents[kMXEventTypeStringRoomEncryption].content[@"algorithm"];
+    return stateEvents[kMXEventTypeStringRoomEncryption].firstObject.content[@"algorithm"];
 }
 
 
@@ -565,12 +580,16 @@
         default:
             // Store other states into the stateEvents dictionary.
             // The latest value overwrite the previous one.
-            stateEvents[event.type] = event;
+            if (!stateEvents[event.type])
+            {
+                stateEvents[event.type] = [NSMutableArray array];
+            }
+            [stateEvents[event.type] addObject:event];
             break;
     }
 }
 
-- (MXEvent *)stateEventWithType:(MXEventTypeString)eventType
+- (NSArray<MXEvent*> *)stateEventsWithType:(MXEventTypeString)eventType
 {
     return stateEvents[eventType];
 }

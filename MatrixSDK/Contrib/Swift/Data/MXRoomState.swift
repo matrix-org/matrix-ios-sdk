@@ -1,5 +1,6 @@
 /*
  Copyright 2017 Avery Pierce
+ Copyright 2017 Vector Creations Ltd
  
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -43,12 +44,12 @@ extension MXRoomState {
     }
     
     /**
-     Return the state event with the given type.
+     Return the state events with the given type.
      
      - parameter type: The type of the event
-     - returns: The state of the event
+     - returns: The state events
      */
-    public func stateEvent(with type: MXEventType) -> MXEvent? {
-        return __stateEvent(withType: type.identifier)
+    public func stateEvents(with type: MXEventType) -> [MXEvent]? {
+        return __stateEvents(withType: type.identifier)
     }
 }
