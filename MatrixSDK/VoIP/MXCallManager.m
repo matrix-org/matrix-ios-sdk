@@ -174,7 +174,7 @@ static NSString *const kMXCallManagerFallbackSTUNServer = @"stun:stun.l.google.c
                 success:(void (^)(MXCall *call))success
                 failure:(void (^)(NSError * _Nullable error))failure
 {
-    // If consumers of our API decide to use SiriKit or CallKit, they will faced with application:continueUserActivity:restorationHandler:
+    // If consumers of our API decide to use SiriKit or CallKit, they will face with application:continueUserActivity:restorationHandler:
     // and since the state of MXSession can be different from MXSessionStateRunning for the moment when this method will be executing
     // we must track session's state to become MXSessionStateRunning for performing outgoing call
     if (_mxSession.state != MXSessionStateRunning)
