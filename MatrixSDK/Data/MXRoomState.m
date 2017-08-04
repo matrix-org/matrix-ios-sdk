@@ -165,7 +165,7 @@
 
 - (NSArray<MXEvent *> *)stateEvents
 {
-    NSMutableArray<MXEvent *> *state;
+    NSMutableArray<MXEvent *> *state = [NSMutableArray array];
     for (NSArray<MXEvent*> *events in stateEvents.allValues)
     {
         [state addObjectsFromArray:events];
