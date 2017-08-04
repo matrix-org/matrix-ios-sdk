@@ -22,7 +22,7 @@ Bug fixes:
  * MXSession: Missing a call to failure callback on unknown token, thanks to @aapierce0 (PR #331). 
  * Fixed an issue that would prevent attachments from being downloaded via SSL connections when using a custom CA ceritficate that was included in the bundle, thanks to @javierquevedo (PR #332).
  * Avatars do not display with account on a self-signed server (https://github.com/vector-im/riot-ios/issues/816).
- * MXRestClient: Escape userId in CS API requests,
+ * MXRestClient: Escape userId in CS API requests.
 
 Changes in Matrix iOS SDK in 0.8.2 (2017-06-30)
 ===============================================
