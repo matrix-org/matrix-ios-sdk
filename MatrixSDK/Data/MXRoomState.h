@@ -190,12 +190,12 @@ A copy of the list of third party invites (actually MXRoomThirdPartyInvite insta
 - (void)handleStateEvent:(MXEvent*)event;
 
 /**
- Return the state event with the given type.
+ Return the state events with the given type.
  
  @param eventType the type of event.
- @return the state event. Can be nil.
+ @return the state events. Can be nil.
  */
-- (MXEvent*)stateEventWithType:(MXEventTypeString)eventType NS_REFINED_FOR_SWIFT;
+- (NSArray<MXEvent*> *)stateEventsWithType:(MXEventTypeString)eventType NS_REFINED_FOR_SWIFT;
 
 /**
  Return the member with the given user id.
