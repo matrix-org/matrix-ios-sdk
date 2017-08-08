@@ -1,3 +1,18 @@
+Changes in Matrix iOS SDK in 0.9.1 (2017-08-08)
+===============================================
+
+Improvements:
+ * MXRoomState: Improve algorithm to manage room members displaynames disambiguation.
+ * MXRoomSummary: Add isDirect and directUserId properties, thanks to @morozkin (#342).
+ * MXFileStore: New section with asynchronous API. asyncUsers and asyncRoomsSummaries methods are available, thanks to @morozkin (#342).
+ 
+Bug fixes:
+ * Mentions do not work for names that start or end with a non-word character like '[', ']', '@'...).
+ * App crashed I don't know why, suspect memory issues / Crash in [MXRoomState copyWithZone:] (https://github.com/matrix-org/riot-ios-rageshakes#132).
+
+API breaks:
+ * Replace [MXRoomState stateEventWithType:] by [MXRoomState stateEventsWithType:].
+
 Changes in Matrix iOS SDK in 0.9.0 (2017-08-01)
 ===============================================
 
