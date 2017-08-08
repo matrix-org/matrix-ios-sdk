@@ -322,7 +322,7 @@ NSString *const kMXRoomSummaryDidChangeNotification = @"kMXRoomSummaryDidChangeN
 
 - (BOOL)isDirect
 {
-    return _directUserId;
+    return (_directUserId != nil);
 }
 
 - (void)markAllAsRead
