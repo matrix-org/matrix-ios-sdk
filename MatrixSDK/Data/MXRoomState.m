@@ -58,11 +58,11 @@
     NSInteger maxPowerLevel;
 
     /**
-     Disambiguate members names in big rooms takes time. So, cache computed data.
-     The key is the user id. The value, the member name to display.
-     This cache is resetted when there is new room member event.
+     Track the usage of members displaynames in order to disambiguate them if necessary,
+     ie if the same displayname is used by several users, we have to update their displaynames.
+     displayname -> count (= how many members of the room uses this displayname)
      */
-    NSMutableDictionary<NSString*, NSString*> *membersNamesCache;
+    NSMutableDictionary<NSString*, NSNumber*> *membersNamesInUse;
 
     /**
      Cache for [self memberWithThirdPartyInviteToken].
@@ -96,7 +96,7 @@
         members = [NSMutableDictionary dictionary];
         roomAliases = [NSMutableDictionary dictionary];
         thirdPartyInvites = [NSMutableDictionary dictionary];
-        membersNamesCache = [NSMutableDictionary dictionary];
+        membersNamesInUse = [NSMutableDictionary dictionary];
         membersWithThirdPartyInviteTokenCache = [NSMutableDictionary dictionary];
     }
     return self;
@@ -486,9 +486,50 @@
     {
         case MXEventTypeRoomMember:
         {
+            // Remove the previous MXRoomMember of this user from membersNamesInUse
+            NSString *userId = event.stateKey;
+            MXRoomMember *oldRoomMember = members[userId];
+            if (oldRoomMember && oldRoomMember.displayname)
+            {
+                NSNumber *memberNameCount = membersNamesInUse[oldRoomMember.displayname];
+                if (memberNameCount)
+                {
+                    NSUInteger count = [memberNameCount unsignedIntegerValue];
+                    if (count)
+                    {
+                        count--;
+                    }
+
+                    if (count)
+                    {
+                        membersNamesInUse[oldRoomMember.displayname] = @(count);
+                    }
+                    else
+                    {
+                        [membersNamesInUse removeObjectForKey:oldRoomMember.displayname];
+                    }
+                }
+            }
+
             MXRoomMember *roomMember = [[MXRoomMember alloc] initWithMXEvent:event andEventContent:[self contentOfEvent:event]];
             if (roomMember)
             {
+                /// Update membersNamesInUse
+                if (roomMember.displayname)
+                {
+                    NSUInteger count = 1;
+
+                    NSNumber *memberNameCount = membersNamesInUse[roomMember.displayname];
+                    if (memberNameCount)
+                    {
+                        // We have several users using the same displayname
+                        count = [memberNameCount unsignedIntegerValue];
+                        count++;
+                    }
+
+                    membersNamesInUse[roomMember.displayname] = @(count);
+                }
+
                 members[roomMember.userId] = roomMember;
 
                 // Handle here the case where the member has no defined avatar.
@@ -510,9 +551,6 @@
                 // This case happens during back pagination: we remove here users when they are not in the room yet.
                 [members removeObjectForKey:event.stateKey];
             }
-
-            // Reset members names because the computation data basis has changed
-            [membersNamesCache removeAllObjects];
 
             // In case of invite, process the provided but incomplete room state
             if (self.membership == MXMembershipInvite && event.inviteRoomState)
@@ -614,44 +652,35 @@
 - (NSString*)memberName:(NSString*)userId
 {
     // Sanity check (ignore the request if the room state is not initialized yet)
-    if (!userId.length || !membersNamesCache)
+    if (!userId.length || !membersNamesInUse)
     {
         return nil;
     }
     
     // First, lookup in the cache
-    NSString *displayName = membersNamesCache[userId];
+    NSString *displayName;
 
-    if (!displayName)
+    // Get the user display name from the member list of the room
+    MXRoomMember *member = [self memberWithUserId:userId];
+    if (member && member.displayname.length)
     {
-        // Get the user display name from the member list of the room
-        MXRoomMember *member = [self memberWithUserId:userId];
-        if (member && member.displayname.length)
-        {
-            displayName = member.displayname;
-        }
-        
-        // Do not consider null displayname
-        if (displayName)
-        {
-            // Disambiguate users who have the same displayname in the room
-            for (MXRoomMember* member in members.allValues)
-            {
-                if ([member.displayname isEqualToString:displayName] && ![member.userId isEqualToString:userId])
-                {
-                    displayName = [NSString stringWithFormat:@"%@ (%@)", displayName, userId];
-                    break;
-                }
-            }
-        }
-        else
-        {
-            // By default, use the user ID
-            displayName = userId;
-        }
+        displayName = member.displayname;
+    }
 
-        // Cache the computed name
-        membersNamesCache[userId] = [displayName copy];
+    if (displayName)
+    {
+        // Do we need to disambiguate it?
+        NSNumber *memberNameCount = membersNamesInUse[displayName];
+        if (memberNameCount && [memberNameCount unsignedIntegerValue] > 1)
+        {
+            // There are more than one member that uses the same displayname, so, yes, disambiguate it
+            displayName = [NSString stringWithFormat:@"%@ (%@)", displayName, userId];
+        }
+    }
+    else
+    {
+        // By default, use the user ID
+        displayName = userId;
     }
 
     return displayName;
@@ -836,7 +865,7 @@
     
     stateCopy->membership = membership;
 
-    stateCopy->membersNamesCache = [[NSMutableDictionary allocWithZone:zone] initWithDictionary:membersNamesCache];
+    stateCopy->membersNamesInUse = [[NSMutableDictionary allocWithZone:zone] initWithDictionary:membersNamesInUse];
     
     stateCopy->powerLevels = [powerLevels copy];
     stateCopy->maxPowerLevel = maxPowerLevel;
