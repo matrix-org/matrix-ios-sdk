@@ -486,6 +486,18 @@
     {
         case MXEventTypeRoomMember:
         {
+            // Filter events in timeline events older than events in room state
+            // to be robust if some events miss in timeline events
+            // However, not sure there is not an impact on back pagination management
+            MXRoomMember* memberCurrentState = members[event.stateKey];
+            if (nil != memberCurrentState)
+            {
+                if(memberCurrentState.originalEvent.originServerTs > event.originServerTs){
+                    NSLog(@"[MxRoomState] The room member event is obsolet -> ignore it: event %@, state key %@ and sender %@", event, event.stateKey, event.sender);
+                    break;
+                }
+            }
+
             MXRoomMember *roomMember = [[MXRoomMember alloc] initWithMXEvent:event andEventContent:[self contentOfEvent:event]];
             if (roomMember)
             {
@@ -505,9 +517,11 @@
                 }
             }
             else
-            {
+            {   
                 // The user is no more part of the room. Remove him.
                 // This case happens during back pagination: we remove here users when they are not in the room yet.
+                NSLog(@"[MxRoomState] The user is no more part of the room : event %@, state key %@ and sender %@", event, event.stateKey, event.sender);
+
                 [members removeObjectForKey:event.stateKey];
             }
 
