@@ -656,8 +656,7 @@
     {
         return nil;
     }
-    
-    // First, lookup in the cache
+
     NSString *displayName;
 
     // Get the user display name from the member list of the room
