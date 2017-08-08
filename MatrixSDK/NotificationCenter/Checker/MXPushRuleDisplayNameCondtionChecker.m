@@ -1,5 +1,6 @@
 /*
  Copyright 2015 OpenMarket Ltd
+ Copyright 2017 Vector Creations Ltd
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -26,6 +27,11 @@
      Regex for finding the user's display name in events content.
      */
     NSRegularExpression *userNameRegex;
+    
+    /**
+     The user display name used to build the regex.
+     */
+    NSString *currentUserName;
 }
 
 @end
@@ -38,6 +44,7 @@
     if (self)
     {
         mxSession = mxSession2;
+        currentUserName = nil;
     }
     return self;
 }
@@ -58,9 +65,10 @@
             
             if (body)
             {
-                if (!userNameRegex)
+                if (!userNameRegex || ![currentUserName isEqualToString:mxSession.myUser.displayname])
                 {
-                    userNameRegex = [NSRegularExpression regularExpressionWithPattern:[NSString stringWithFormat:@"\\b\\Q%@\\E\\b", mxSession.myUser.displayname] options:NSRegularExpressionCaseInsensitive error:nil];
+                    userNameRegex = [NSRegularExpression regularExpressionWithPattern:[NSString stringWithFormat:@"(^|\\W)\\Q%@\\E($|\\W)", mxSession.myUser.displayname] options:NSRegularExpressionCaseInsensitive error:nil];
+                    currentUserName = mxSession.myUser.displayname;
                 }
 
                 NSRange range = [userNameRegex rangeOfFirstMatchInString:body options:0 range:NSMakeRange(0, body.length)];
