@@ -129,13 +129,9 @@ NSString * const MXHTTPClientErrorResponseDataKey = @"com.matrixsdk.httpclient.e
 - (void)dealloc
 {
     [self cancel];
-
-    id<MXBackgroundModeHandler> handler = [MXSDKOptions sharedInstance].backgroundModeHandler;
-    if (handler && backgroundTaskIdentifier != [handler invalidIdentifier])
-    {
-        [self cleanupBackgroundTask];
-    }
-
+    
+    [self cleanupBackgroundTask];
+    
     httpManager = nil;
 }
 
