@@ -563,12 +563,12 @@ NSString * const MXHTTPClientErrorResponseDataKey = @"com.matrixsdk.httpclient.e
 
 - (void)setUpNetworkReachibility
 {
+    AFNetworkReachabilityManager *networkReachabilityManager = [AFNetworkReachabilityManager sharedManager];
+    
     // Start monitoring reachibility to get its status and change notifications
-    [[AFNetworkReachabilityManager sharedManager] startMonitoring];
+    [networkReachabilityManager startMonitoring];
 
     reachabilityObservers = [NSMutableArray array];
-
-    AFNetworkReachabilityManager *networkReachabilityManager = [AFNetworkReachabilityManager sharedManager];
 
     reachabilityObserver = [[NSNotificationCenter defaultCenter] addObserverForName:AFNetworkingReachabilityDidChangeNotification object:nil queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
 
