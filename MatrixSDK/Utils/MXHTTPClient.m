@@ -139,6 +139,25 @@ NSString * const MXHTTPClientErrorResponseDataKey = @"com.matrixsdk.httpclient.e
 }
 
 - (MXHTTPOperation*)requestWithMethod:(NSString *)httpMethod
+                                 path:(NSString *)path
+                           parameters:(NSDictionary*)parameters
+                              success:(void (^)(NSDictionary *JSONResponse))success
+                              failure:(void (^)(NSError *error))failure
+{
+    return [self requestWithMethod:httpMethod path:path parameters:parameters timeout:-1 success:success failure:failure];
+}
+
+- (MXHTTPOperation*)requestWithMethod:(NSString *)httpMethod
+                                 path:(NSString *)path
+                           parameters:(NSDictionary*)parameters
+                              timeout:(NSTimeInterval)timeoutInSeconds
+                              success:(void (^)(NSDictionary *JSONResponse))success
+                              failure:(void (^)(NSError *error))failure
+{
+    return [self requestWithMethod:httpMethod path:path parameters:parameters data:nil headers:nil timeout:timeoutInSeconds uploadProgress:nil success:success failure:failure ];
+}
+
+- (MXHTTPOperation*)requestWithMethod:(NSString *)httpMethod
                    path:(NSString *)path
              parameters:(NSDictionary*)parameters
                    data:(NSData *)data
