@@ -241,6 +241,7 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidFlushDataNotification;
 
  @param eventTypeString the type of the event. @see MXEventType.
  @param content the content that will be sent to the server as a JSON object.
+ @param stateKey the optional state key.
  @param success A block object called when the operation succeeds. It returns
  the event id of the event generated on the home server
  @param failure A block object called when the operation fails.
@@ -249,6 +250,7 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidFlushDataNotification;
  */
 - (MXHTTPOperation*)sendStateEventOfType:(MXEventTypeString)eventTypeString
                                  content:(NSDictionary<NSString*, id>*)content
+                                stateKey:(NSString*)stateKey
                                  success:(void (^)(NSString *eventId))success
                                  failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
