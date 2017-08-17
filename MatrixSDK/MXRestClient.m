@@ -1526,10 +1526,20 @@ MXAuthAction;
 - (MXHTTPOperation*)sendStateEventToRoom:(NSString*)roomId
                                eventType:(MXEventTypeString)eventTypeString
                                  content:(NSDictionary*)content
+                                stateKey:(NSString*)stateKey
                                  success:(void (^)(NSString *eventId))success
                                  failure:(void (^)(NSError *error))failure
 {
-    NSString *path = [NSString stringWithFormat:@"%@/rooms/%@/state/%@", apiPathPrefix, roomId, eventTypeString];
+    NSString *path;
+    if (stateKey)
+    {
+        path = [NSString stringWithFormat:@"%@/rooms/%@/state/%@/%@", apiPathPrefix, roomId, eventTypeString, [stateKey stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding]];
+    }
+    else
+    {
+        path = [NSString stringWithFormat:@"%@/rooms/%@/state/%@", apiPathPrefix, roomId, eventTypeString];
+    }
+
     return [httpClient requestWithMethod:@"PUT"
                                     path:path
                               parameters:content

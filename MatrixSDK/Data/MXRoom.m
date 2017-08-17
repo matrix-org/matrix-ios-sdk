@@ -452,10 +452,11 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
 
 - (MXHTTPOperation*)sendStateEventOfType:(MXEventTypeString)eventTypeString
                                  content:(NSDictionary*)content
+                                stateKey:(NSString *)stateKey
                                  success:(void (^)(NSString *eventId))success
                                  failure:(void (^)(NSError *error))failure
 {
-    return [mxSession.matrixRestClient sendStateEventToRoom:self.roomId eventType:eventTypeString content:content success:success failure:failure];
+    return [mxSession.matrixRestClient sendStateEventToRoom:self.roomId eventType:eventTypeString content:content stateKey:stateKey success:success failure:failure];
 }
 
 - (MXHTTPOperation*)sendMessageWithContent:(NSDictionary*)content
@@ -1256,7 +1257,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
     newPowerLevelsEventContent[@"users"] = newPowerLevelsEventContentUsers;
 
     // Make the request to the HS
-    return [self sendStateEventOfType:kMXEventTypeStringRoomPowerLevels content:newPowerLevelsEventContent success:^(NSString *eventId) {
+    return [self sendStateEventOfType:kMXEventTypeStringRoomPowerLevels content:newPowerLevelsEventContent stateKey:nil success:^(NSString *eventId) {
         success();
     } failure:failure];
 }
@@ -2068,11 +2069,12 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
     {
         // Send the information to the homeserver
         operation = [self sendStateEventOfType:kMXEventTypeStringRoomEncryption
-                                  content:@{
-                                            @"algorithm": algorithm
-                                            }
-                                  success:nil
-                                  failure:failure];
+                                       content:@{
+                                                 @"algorithm": algorithm
+                                                 }
+                                      stateKey:nil
+                                       success:nil
+                                       failure:failure];
 
         // Wait for the event coming back from the hs
         id eventBackListener;
