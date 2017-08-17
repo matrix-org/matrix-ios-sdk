@@ -617,7 +617,6 @@
         }
         default:
             // Store other states into the stateEvents dictionary.
-            // The latest value overwrite the previous one.
             if (!stateEvents[event.type])
             {
                 stateEvents[event.type] = [NSMutableArray array];
