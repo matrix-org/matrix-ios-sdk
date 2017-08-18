@@ -41,7 +41,7 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
     MXRoomState *previousState;
 
     // The associated room.
-    MXRoom *room;
+    __weak MXRoom *room;
 
     // The store to store events,
     id<MXStore> store;
