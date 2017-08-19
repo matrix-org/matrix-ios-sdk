@@ -971,6 +971,16 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
                      success:(void (^)(NSString *eventId))success
                      failure:(void (^)(NSError *error))failure
 {
+    return [self sendFile:fileLocalURL mimeType:mimeType localEcho:localEcho success:success failure:failure keepActualFilename:NO];
+}
+
+- (MXHTTPOperation*)sendFile:(NSURL*)fileLocalURL
+                    mimeType:(NSString*)mimeType
+                   localEcho:(MXEvent**)localEcho
+                     success:(void (^)(NSString *eventId))success
+                     failure:(void (^)(NSError *error))failure
+          keepActualFilename:(BOOL)keepActualName
+{
     // Create a fake operation by default
     MXHTTPOperation *operation = [[MXHTTPOperation alloc] init];
     
@@ -994,7 +1004,16 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
         dataHash = [dataHash substringToIndex:7];
     }
     NSString *extension = [MXTools fileExtensionFromContentType:mimeType];
-    NSString *filename = [NSString stringWithFormat:@"file_%@%@", dataHash, extension];
+    
+    NSString *filename;
+    if (keepActualName)
+    {
+        filename = [fileLocalURL lastPathComponent];
+    }
+    else
+    {
+        filename = [NSString stringWithFormat:@"file_%@%@", dataHash, extension];
+    }
     
     // Prepare the message content for building an echo message
     NSMutableDictionary *msgContent = [@{
