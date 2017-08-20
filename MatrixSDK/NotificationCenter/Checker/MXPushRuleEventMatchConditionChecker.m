@@ -77,6 +77,10 @@
     NSString *res = [glob stringByReplacingOccurrencesOfString:@"*" withString:@".*"];
     res = [res stringByReplacingOccurrencesOfString:@"?" withString:@"."];
 
+    // To correctly handle roomIDs and userIDs which start with ! and @ characters
+    if ([res hasPrefix:@"@"] || [res hasPrefix:@"!"])
+        res = [res substringFromIndex:1];
+    
     // In all cases, enable world delimiters
     res = [NSString stringWithFormat:@"\\b%@\\b", res];
 
