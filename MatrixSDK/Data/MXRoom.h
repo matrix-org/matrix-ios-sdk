@@ -382,8 +382,19 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidFlushDataNotification;
  @param success A block object called when the operation succeeds. It returns
                 the event id of the event generated on the home server
  @param failure A block object called when the operation fails.
+ @param keepActualName if YES, the filename in the local storage will be kept while sending.
  
  @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)sendFile:(NSURL*)fileLocalURL
+                    mimeType:(NSString*)mimeType
+                   localEcho:(MXEvent**)localEcho
+                     success:(void (^)(NSString *eventId))success
+                     failure:(void (^)(NSError *error))failure
+          keepActualFilename:(BOOL)keepActualName NS_REFINED_FOR_SWIFT;
+
+/**
+ Send a file to a room (see above) without keeping the local storage filename
  */
 - (MXHTTPOperation*)sendFile:(NSURL*)fileLocalURL
                     mimeType:(NSString*)mimeType
