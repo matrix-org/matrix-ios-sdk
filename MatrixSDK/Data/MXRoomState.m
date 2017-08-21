@@ -231,7 +231,7 @@
     NSString *canonicalAlias;
     
     // Check it from the state events
-    MXEvent *event = [stateEvents objectForKey:kMXEventTypeStringRoomCanonicalAlias].firstObject;
+    MXEvent *event = [stateEvents objectForKey:kMXEventTypeStringRoomCanonicalAlias].lastObject;
     if (event && [self contentOfEvent:event])
     {
         MXJSONModelSetString(canonicalAlias, [self contentOfEvent:event][@"alias"]);
@@ -245,7 +245,7 @@
     NSString *name;
     
     // Check it from the state events
-    MXEvent *event = [stateEvents objectForKey:kMXEventTypeStringRoomName].firstObject;
+    MXEvent *event = [stateEvents objectForKey:kMXEventTypeStringRoomName].lastObject;
     if (event && [self contentOfEvent:event])
     {
         MXJSONModelSetString(name, [self contentOfEvent:event][@"name"]);
@@ -259,7 +259,7 @@
     NSString *topic;
     
     // Check it from the state events
-    MXEvent *event = [stateEvents objectForKey:kMXEventTypeStringRoomTopic].firstObject;
+    MXEvent *event = [stateEvents objectForKey:kMXEventTypeStringRoomTopic].lastObject;
     if (event && [self contentOfEvent:event])
     {
         MXJSONModelSetString(topic, [self contentOfEvent:event][@"topic"]);
@@ -273,7 +273,7 @@
     NSString *avatar;
 
     // Check it from the state events
-    MXEvent *event = [stateEvents objectForKey:kMXEventTypeStringRoomAvatar].firstObject;
+    MXEvent *event = [stateEvents objectForKey:kMXEventTypeStringRoomAvatar].lastObject;
     if (event && [self contentOfEvent:event])
     {
         MXJSONModelSetString(avatar, [self contentOfEvent:event][@"url"]);
@@ -287,7 +287,7 @@
     MXRoomHistoryVisibility historyVisibility = kMXRoomHistoryVisibilityShared;
 
     // Check it from the state events
-    MXEvent *event = [stateEvents objectForKey:kMXEventTypeStringRoomHistoryVisibility].firstObject;
+    MXEvent *event = [stateEvents objectForKey:kMXEventTypeStringRoomHistoryVisibility].lastObject;
     if (event && [self contentOfEvent:event])
     {
         MXJSONModelSetString(historyVisibility, [self contentOfEvent:event][@"history_visibility"]);
@@ -301,7 +301,7 @@
     MXRoomJoinRule joinRule = kMXRoomJoinRuleInvite;
 
     // Check it from the state events
-    MXEvent *event = [stateEvents objectForKey:kMXEventTypeStringRoomJoinRules].firstObject;
+    MXEvent *event = [stateEvents objectForKey:kMXEventTypeStringRoomJoinRules].lastObject;
     if (event && [self contentOfEvent:event])
     {
         MXJSONModelSetString(joinRule, [self contentOfEvent:event][@"join_rule"]);
@@ -320,7 +320,7 @@
     MXRoomGuestAccess guestAccess = kMXRoomGuestAccessForbidden;
 
     // Check it from the state events
-    MXEvent *event = [stateEvents objectForKey:kMXEventTypeStringRoomGuestAccess].firstObject;
+    MXEvent *event = [stateEvents objectForKey:kMXEventTypeStringRoomGuestAccess].lastObject;
     if (event && [self contentOfEvent:event])
     {
         MXJSONModelSetString(guestAccess, [self contentOfEvent:event][@"guest_access"]);
@@ -475,7 +475,7 @@
 
 - (NSString *)encryptionAlgorithm
 {
-    return stateEvents[kMXEventTypeStringRoomEncryption].firstObject.content[@"algorithm"];
+    return stateEvents[kMXEventTypeStringRoomEncryption].lastObject.content[@"algorithm"];
 }
 
 
