@@ -86,22 +86,18 @@ NSString * const kMXCallKitAdapterAudioSessionDidActive = @"kMXCallKitAdapterAud
     MXSession *mxSession = call.room.mxSession;
     NSUUID *callUUID = call.callUUID;
     
-    NSString *handleValue;
     NSString *contactIdentifier;
     if (call.isConferenceCall)
     {
-        handleValue = call.room.roomId;
         contactIdentifier = call.room.state.displayname;
     }
     else
     {
         MXUser *callee = [mxSession userWithUserId:call.calleeId];
-        
-        handleValue = callee.userId;
         contactIdentifier = callee.displayname;
     }
     
-    CXHandle *handle = [[CXHandle alloc] initWithType:CXHandleTypeGeneric value:handleValue];
+    CXHandle *handle = [[CXHandle alloc] initWithType:CXHandleTypeGeneric value:call.room.roomId];
     CXStartCallAction *action = [[CXStartCallAction alloc] initWithCallUUID:callUUID handle:handle];
     action.contactIdentifier = contactIdentifier;
     
@@ -160,8 +156,7 @@ NSString * const kMXCallKitAdapterAudioSessionDidActive = @"kMXCallKitAdapterAud
     MXUser *caller = [mxSession userWithUserId:call.callerId];
     NSUUID *callUUID = call.callUUID;
     
-    NSString *handleValue = call.isConferenceCall ? call.room.roomId : call.callerId;
-    CXHandle *handle = [[CXHandle alloc] initWithType:CXHandleTypeGeneric value:handleValue];
+    CXHandle *handle = [[CXHandle alloc] initWithType:CXHandleTypeGeneric value:call.room.roomId];
     
     CXCallUpdate *update = [[CXCallUpdate alloc] init];
     update.remoteHandle = handle;
