@@ -1,3 +1,17 @@
+Changes in Matrix iOS SDK in 0.9.2 (2017-08-24)
+===============================================
+
+Improvements:
+ * MXRoom: Added an option to send a file and keep it's filename, thanks to @aramsargsyan (#354).
+ 
+Bug fixes:
+ * MXHTTPClient: retain cycles, thanks to @morozkin (#350).
+ * MXPushRuleEventMatchConditionChecker: inaccurate regex, thanks to @morozkin (#353).
+ * MXRoomState: returning old data for some properties, thanks to @morozkin (#355).
+
+API breaks:
+ * Add a "stateKey" optional param to [MXRoom sendStateEventOfType:] and to [MXRestClient sendStateEventToRoom:].
+
 Changes in Matrix iOS SDK in 0.9.1 (2017-08-08)
 ===============================================
 
