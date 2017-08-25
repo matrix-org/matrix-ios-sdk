@@ -20,7 +20,6 @@
 
 #import "MXSession.h"
 #import "MXEvent.h"
-#import "MXJSONModels.h"
 
 @interface MXUser ()
 {
@@ -204,9 +203,9 @@
         _userId = [aDecoder decodeObjectForKey:@"userId"];
         _displayname = [aDecoder decodeObjectForKey:@"displayname"];
         _avatarUrl = [aDecoder decodeObjectForKey:@"avatarUrl"];
-        _presence = [(NSNumber*)[aDecoder decodeObjectForKey:@"presence"] unsignedIntegerValue];
-        lastActiveLocalTS = [(NSNumber*)[aDecoder decodeObjectForKey:@"lastActiveLocalTS"] unsignedLongLongValue];
-        _currentlyActive = [(NSNumber*)[aDecoder decodeObjectForKey:@"currentlyActive"] boolValue];
+        _presence = (MXPresence)[aDecoder decodeIntegerForKey:@"presence"];
+        lastActiveLocalTS = (uint64_t)[aDecoder decodeInt64ForKey:@"lastActiveLocalTS"];
+        _currentlyActive = [aDecoder decodeBoolForKey:@"currentlyActive"];
         _statusMsg = [aDecoder decodeObjectForKey:@"statusMsg"];
     }
     return self;
@@ -217,9 +216,9 @@
     [aCoder encodeObject:_userId forKey:@"userId"];
     [aCoder encodeObject:_displayname forKey:@"displayname"];
     [aCoder encodeObject:_avatarUrl forKey:@"avatarUrl"];
-    [aCoder encodeObject:@(_presence) forKey:@"presence"];
-    [aCoder encodeObject:@(lastActiveLocalTS) forKey:@"lastActiveLocalTS"];
-    [aCoder encodeObject:@(_currentlyActive) forKey:@"currentlyActive"];
+    [aCoder encodeInteger:(NSInteger)_presence forKey:@"presence"];
+    [aCoder encodeInt64:(int64_t)lastActiveLocalTS forKey:@"lastActiveLocalTS"];
+    [aCoder encodeBool:_currentlyActive forKey:@"currentlyActive"];
     [aCoder encodeObject:_statusMsg forKey:@"statusMsg"];
 }
 
@@ -236,6 +235,21 @@
     user->lastActiveLocalTS = lastActiveLocalTS;
     user->_currentlyActive = _currentlyActive;
     user->_statusMsg = [_statusMsg copyWithZone:zone];
+
+    return user;
+}
+
+
+#pragma mark - MXJSONModel
++ (id)modelFromJSON:(NSDictionary *)JSONDictionary
+{
+    MXUser *user = [[MXUser alloc] init];
+    if (user)
+    {
+        MXJSONModelSetString(user->_userId, JSONDictionary[@"user_id"]);
+        MXJSONModelSetString(user->_displayname, JSONDictionary[@"display_name"]);
+        MXJSONModelSetString(user->_avatarUrl, JSONDictionary[@"avatar_url"]);
+    }
 
     return user;
 }

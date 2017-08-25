@@ -1,3 +1,73 @@
+Changes in Matrix iOS SDK in 0.9.2 (2017-08-25)
+===============================================
+
+Improvements:
+ * MXRoom: Added an option to send a file and keep it's filename, thanks to @aramsargsyan (#354).
+ 
+Bug fixes:
+ * MXHTTPClient: retain cycles, thanks to @morozkin (#350).
+ * MXPushRuleEventMatchConditionChecker: inaccurate regex, thanks to @morozkin (#353).
+ * MXRoomState: returning old data for some properties, thanks to @morozkin (#355).
+
+API breaks:
+ * Add a "stateKey" optional param to [MXRoom sendStateEventOfType:] and to [MXRestClient sendStateEventToRoom:].
+
+Changes in Matrix iOS SDK in 0.9.1 (2017-08-08)
+===============================================
+
+Improvements:
+ * MXRoomState: Improve algorithm to manage room members displaynames disambiguation.
+ * MXRoomSummary: Add isDirect and directUserId properties, thanks to @morozkin (#342).
+ * MXFileStore: New section with asynchronous API. asyncUsers and asyncRoomsSummaries methods are available, thanks to @morozkin (#342).
+ 
+Bug fixes:
+ * Mentions do not work for names that start or end with a non-word character like '[', ']', '@'...).
+ * App crashed I don't know why, suspect memory issues / Crash in [MXRoomState copyWithZone:] (https://github.com/matrix-org/riot-ios-rageshakes#132).
+
+API breaks:
+ * Replace [MXRoomState stateEventWithType:] by [MXRoomState stateEventsWithType:].
+
+Changes in Matrix iOS SDK in 0.9.0 (2017-08-01)
+===============================================
+
+Improvements:
+ * Be more robust against JSON data sent by the homeserver.
+ * MXRestClient: Add searchUsers method to search user from the homeserver user directory.
+ * MXRestClient: Change API used to add email in order to check if the email (or msisdn) is already used (https://github.com/vector-im/riot-meta#85).
+ * App Extension support: wrap access to UIApplication shared instance
+ * MXSession: Pause could not be delayed if no background mode handler has been set in the MXSDKOptions.
+ * MXRoomState: do copy of membersNamesCache content in memberName rather than in copyWithZone.
+ 
+ * SwiftMatrixSDK
+ * Add swift refinements to MXSession event listeners, thanks to @aapierce0 (PR #327).
+ * Update the access control for the identifier property on some swift enums, thanks to @aapierce0 (PR #330).
+ * Add Swift refinements to MXRoom class, thanks to @aapierce0 (PR #335).
+ * Add Swift refinements to MXRoomPowerLevels, thanks to @aapierce0 (PR #336).
+ * Add swift refinements to MXRoomState, thanks to @aapierce0 (PR #338).
+ 
+Bug fixes:
+ * Getting notifications for unrelated messages (https://github.com/vector-im/riot-android/issues/1407).
+ * Crypto: Fix crash when encountering a badly formatted olm message (https://github.commatrix-org/riot-ios-rageshakes#107).
+ * MXSession: Missing a call to failure callback on unknown token, thanks to @aapierce0 (PR #331). 
+ * Fixed an issue that would prevent attachments from being downloaded via SSL connections when using a custom CA ceritficate that was included in the bundle, thanks to @javierquevedo (PR #332).
+ * Avatars do not display with account on a self-signed server (https://github.com/vector-im/riot-ios/issues/816).
+ * MXRestClient: Escape userId in CS API requests.
+
+Changes in Matrix iOS SDK in 0.8.2 (2017-06-30)
+===============================================
+
+Improvements:
+ * MXFileStore: Improve performance by ~5% (PR #318).
+
+Changes in Matrix iOS SDK in 0.8.1 (2017-06-23)
+===============================================
+
+Improvements:
+ * MXFileStore: Improve performance by ~10% (PR #316).
+ 
+Bug fixes:
+ * VoIP: Fix outgoing call stays in "Call connecting..." whereas it is established (https://github.com/vector-im/riot-ios#1326).
+
 Changes in Matrix iOS SDK in 0.8.0 (2017-06-16)
 ===============================================
 

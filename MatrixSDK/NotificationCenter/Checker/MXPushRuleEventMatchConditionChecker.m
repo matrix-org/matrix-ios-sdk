@@ -76,9 +76,9 @@
 {
     NSString *res = [glob stringByReplacingOccurrencesOfString:@"*" withString:@".*"];
     res = [res stringByReplacingOccurrencesOfString:@"?" withString:@"."];
-
+    
     // In all cases, enable world delimiters
-    res = [NSString stringWithFormat:@"\\b%@\\b", res];
+    res = [NSString stringWithFormat:@"(^|\\W)%@($|\\W)", res];
 
     return res;
 }

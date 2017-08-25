@@ -29,7 +29,7 @@
             break;
             
         case MXEventTypeReadMarker:
-            _readMarkerEventId = event.content[@"event_id"];
+            MXJSONModelSetString(_readMarkerEventId, event.content[@"event_id"]);
             break;
 
         default:

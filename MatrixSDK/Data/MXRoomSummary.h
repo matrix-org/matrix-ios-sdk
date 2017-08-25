@@ -224,6 +224,17 @@ FOUNDATION_EXPORT NSString *const kMXRoomSummaryDidChangeNotification;
 @property (nonatomic, readonly) NSUInteger highlightCount;
 
 /**
+ Indicate if the room is tagged as a direct chat.
+ */
+@property (nonatomic, readonly) BOOL isDirect;
+
+/**
+ The user identifier for whom this room is tagged as direct (if any).
+ nil if the room is not a direct chat.
+ */
+@property (nonatomic, readonly) NSString *directUserId;
+
+/**
  Placeholder to store more information in the room summary.
  */
 @property (nonatomic) NSMutableDictionary<NSString*, id<NSCoding>> *others;

@@ -17,31 +17,27 @@
 
 #import "MXFileStore.h"
 
-#import "MXFileRoomStore.h"
-
-#import "MXFileStoreMetaData.h"
-
-#import "MXEnumConstants.h"
-#import "MXSDKOptions.h"
 #import "MXBackgroundModeHandler.h"
-
+#import "MXEnumConstants.h"
+#import "MXFileRoomStore.h"
+#import "MXFileStoreMetaData.h"
 #import "MXSDKOptions.h"
 
-NSUInteger const kMXFileVersion = 39;
+static NSUInteger const kMXFileVersion = 42;
 
-NSString *const kMXFileStoreFolder = @"MXFileStore";
-NSString *const kMXFileStoreMedaDataFile = @"MXFileStore";
-NSString *const kMXFileStoreUsersFolder = @"users";
-NSString *const kMXFileStoreBackupFolder = @"backup";
+static NSString *const kMXFileStoreFolder = @"MXFileStore";
+static NSString *const kMXFileStoreMedaDataFile = @"MXFileStore";
+static NSString *const kMXFileStoreUsersFolder = @"users";
+static NSString *const kMXFileStoreBackupFolder = @"backup";
 
-NSString *const kMXFileStoreSavingMarker = @"savingMarker";
+static NSString *const kMXFileStoreSavingMarker = @"savingMarker";
 
-NSString *const kMXFileStoreRoomsFolder = @"rooms";
-NSString *const kMXFileStoreRoomMessagesFile = @"messages";
-NSString *const kMXFileStoreRoomStateFile = @"state";
-NSString *const kMXFileStoreRoomSummaryFile = @"summary";
-NSString *const kMXFileStoreRoomAccountDataFile = @"accountData";
-NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
+static NSString *const kMXFileStoreRoomsFolder = @"rooms";
+static NSString *const kMXFileStoreRoomMessagesFile = @"messages";
+static NSString *const kMXFileStoreRoomStateFile = @"state";
+static NSString *const kMXFileStoreRoomSummaryFile = @"summary";
+static NSString *const kMXFileStoreRoomAccountDataFile = @"accountData";
+static NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
 
 @interface MXFileStore ()
 {
@@ -124,18 +120,23 @@ NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
     return self;
 }
 
+- (instancetype)initWithCredentials:(MXCredentials *)someCredentials
+{
+    self = [self init];
+    if (self)
+    {
+        credentials = someCredentials;
+        [self setUpStoragePaths];
+    }
+    return self;
+}
+
 - (void)openWithCredentials:(MXCredentials*)someCredentials onComplete:(void (^)())onComplete failure:(void (^)(NSError *))failure
 {
-    // Create the file path where data will be stored for the user id passed in credentials
-    NSArray *cacheDirList = NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES);
-    NSString *cachePath  = [cacheDirList objectAtIndex:0];
-
     credentials = someCredentials;
-    storePath = [[cachePath stringByAppendingPathComponent:kMXFileStoreFolder] stringByAppendingPathComponent:credentials.userId];
-    storeRoomsPath = [storePath stringByAppendingPathComponent:kMXFileStoreRoomsFolder];
-    storeUsersPath = [storePath stringByAppendingPathComponent:kMXFileStoreUsersFolder];
-
-    storeBackupPath = [storePath stringByAppendingPathComponent:kMXFileStoreBackupFolder];
+    
+    // Create the file path where data will be stored for the user id passed in credentials
+    [self setUpStoragePaths];
 
     id<MXBackgroundModeHandler> handler = [MXSDKOptions sharedInstance].backgroundModeHandler;
     __block NSUInteger backgroundTaskIdentifier = [handler startBackgroundTaskWithName:@"openWithCredentials" completion:^{
@@ -547,6 +548,32 @@ NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
 
 
 #pragma mark - File paths
+- (void)setUpStoragePaths
+{
+    // credentials must be set before this method starts execution
+    NSParameterAssert(credentials);
+    
+    NSString *cachePath = nil;
+    
+    NSString *applicationGroupIdentifier = [MXSDKOptions sharedInstance].applicationGroupIdentifier;
+    if (applicationGroupIdentifier)
+    {
+        NSURL *sharedContainerURL = [[NSFileManager defaultManager] containerURLForSecurityApplicationGroupIdentifier:applicationGroupIdentifier];
+        cachePath = [sharedContainerURL path];
+    }
+    else
+    {
+        NSArray *cacheDirList = NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES);
+        cachePath  = [cacheDirList objectAtIndex:0];
+    }
+    
+    storePath = [[cachePath stringByAppendingPathComponent:kMXFileStoreFolder] stringByAppendingPathComponent:credentials.userId];
+    storeRoomsPath = [storePath stringByAppendingPathComponent:kMXFileStoreRoomsFolder];
+    storeUsersPath = [storePath stringByAppendingPathComponent:kMXFileStoreUsersFolder];
+    
+    storeBackupPath = [storePath stringByAppendingPathComponent:kMXFileStoreBackupFolder];
+}
+
 - (NSString*)folderForRoom:(NSString*)roomId forBackup:(BOOL)backup
 {
     if (!backup)
@@ -733,11 +760,11 @@ NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
 // Load the data store in files
 - (void)loadRoomsMessages
 {
-    NSArray *roomIDArray = [[NSFileManager defaultManager] contentsOfDirectoryAtPath:storeRoomsPath error:nil];
+    NSArray<NSString *> *roomIDs = [[NSFileManager defaultManager] contentsOfDirectoryAtPath:storeRoomsPath error:nil];
 
     NSDate *startDate = [NSDate date];
 
-    for (NSString *roomId in roomIDArray)  {
+    for (NSString *roomId in roomIDs)  {
 
         NSString *roomFile = [self messagesFileForRoom:roomId forBackup:NO];
 
@@ -821,14 +848,16 @@ NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
  */
 - (void)preloadRoomsStates
 {
+    NSArray<NSString *> *roomIDs = [[NSFileManager defaultManager] contentsOfDirectoryAtPath:storeRoomsPath error:nil];
+    
     NSDate *startDate = [NSDate date];
 
-    for (NSString *roomId in roomStores)
+    for (NSString *roomId in roomIDs)
     {
         preloadedRoomsStates[roomId] = [self stateOfRoom:roomId];
     }
 
-    NSLog(@"[MXFileStore] Loaded room states of %tu rooms in %.0fms", roomStores.allKeys.count, [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
+    NSLog(@"[MXFileStore] Loaded room states of %tu rooms in %.0fms", roomIDs.count, [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
 }
 
 - (void)saveRoomsState
@@ -879,14 +908,16 @@ NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
  */
 - (void)preloadRoomsSummaries
 {
+    NSArray<NSString *> *roomIDs = [[NSFileManager defaultManager] contentsOfDirectoryAtPath:storeRoomsPath error:nil];
+    
     NSDate *startDate = [NSDate date];
 
-    for (NSString *roomId in roomStores)
+    for (NSString *roomId in roomIDs)
     {
         preloadedRoomSummary[roomId] = [self summaryOfRoom:roomId];
     }
 
-    NSLog(@"[MXFileStore] Loaded rooms summaries data of %tu rooms in %.0fms", roomStores.allKeys.count, [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
+    NSLog(@"[MXFileStore] Loaded rooms summaries data of %tu rooms in %.0fms", roomIDs.count, [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
 }
 
 - (void)saveRoomsSummaries
@@ -937,14 +968,16 @@ NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
  */
 - (void)preloadRoomsAccountData
 {
+    NSArray<NSString *> *roomIDs = [[NSFileManager defaultManager] contentsOfDirectoryAtPath:storeRoomsPath error:nil];
+    
     NSDate *startDate = [NSDate date];
 
-    for (NSString *roomId in roomStores)
+    for (NSString *roomId in roomIDs)
     {
         preloadedRoomAccountData[roomId] = [self accountDataOfRoom:roomId];
     }
 
-    NSLog(@"[MXFileStore] Loaded rooms account data of %tu rooms in %.0fms", roomStores.allKeys.count, [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
+    NSLog(@"[MXFileStore] Loaded rooms account data of %tu rooms in %.0fms", roomIDs.count, [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
 }
 
 - (void)saveRoomsAccountData
@@ -1272,9 +1305,11 @@ NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
 // Load the data store in files
 - (void)loadReceipts
 {
+    NSArray<NSString *> *roomIDs = [[NSFileManager defaultManager] contentsOfDirectoryAtPath:storeRoomsPath error:nil];
+    
     NSDate *startDate = [NSDate date];
-
-    for (NSString *roomId in roomStores)
+    
+    for (NSString *roomId in roomIDs)
     {
         NSString *roomFile = [self readReceiptsFileForRoom:roomId forBackup:NO];
 
@@ -1358,6 +1393,23 @@ NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
     }
 }
 
+#pragma mark - Async API
+
+- (void)asyncUsers:(void (^)(NSArray<MXUser *> * _Nonnull))success failure:(nullable void (^)(NSError * _Nonnull))failure
+{
+    dispatch_async(dispatchQueue, ^{
+        [self loadUsers];
+        success(users.allValues);
+    });
+}
+
+- (void)asyncRoomsSummaries:(void (^)(NSArray<MXRoomSummary *> * _Nonnull))success failure:(nullable void (^)(NSError * _Nonnull))failure
+{
+    dispatch_async(dispatchQueue, ^{
+        [self preloadRoomsSummaries];
+        success(preloadedRoomSummary.allValues);
+    });
+}
 
 #pragma mark - Tools
 /**

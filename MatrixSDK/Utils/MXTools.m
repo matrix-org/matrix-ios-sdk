@@ -32,8 +32,9 @@ NSString *const kMXToolsRegexStringForMatrixEventIdentifier = @"\\$[A-Z0-9]+:[A-
 
 
 #pragma mark - MXTools static private members
-// Mapping from MXEventTypeString to MXEventType
-static NSDictionary*eventTypesMap;
+// Mapping from MXEventTypeString to MXEventType and vice versa
+static NSDictionary<MXEventTypeString, NSNumber*> *eventTypeMapStringToEnum;
+static NSArray<MXEventTypeString> *eventTypeMapEnumToString;
 
 static NSRegularExpression *isEmailAddressRegex;
 static NSRegularExpression *isMatrixUserIdentifierRegex;
@@ -49,36 +50,44 @@ static NSRegularExpression *isMatrixEventIdentifierRegex;
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
 
-        eventTypesMap = @{
-                          kMXEventTypeStringRoomName: @(MXEventTypeRoomName),
-                          kMXEventTypeStringRoomTopic: @(MXEventTypeRoomTopic),
-                          kMXEventTypeStringRoomAvatar: @(MXEventTypeRoomAvatar),
-                          kMXEventTypeStringRoomMember: @(MXEventTypeRoomMember),
-                          kMXEventTypeStringRoomCreate: @(MXEventTypeRoomCreate),
-                          kMXEventTypeStringRoomJoinRules: @(MXEventTypeRoomJoinRules),
-                          kMXEventTypeStringRoomPowerLevels: @(MXEventTypeRoomPowerLevels),
-                          kMXEventTypeStringRoomAliases: @(MXEventTypeRoomAliases),
-                          kMXEventTypeStringRoomCanonicalAlias: @(MXEventTypeRoomCanonicalAlias),
-                          kMXEventTypeStringRoomEncrypted: @(MXEventTypeRoomEncrypted),
-                          kMXEventTypeStringRoomEncryption: @(MXEventTypeRoomEncryption),
-                          kMXEventTypeStringRoomHistoryVisibility: @(MXEventTypeRoomHistoryVisibility),
-                          kMXEventTypeStringRoomGuestAccess: @(MXEventTypeRoomGuestAccess),
-                          kMXEventTypeStringRoomKey: @(MXEventTypeRoomKey),
-                          kMXEventTypeStringRoomMessage: @(MXEventTypeRoomMessage),
-                          kMXEventTypeStringRoomMessageFeedback: @(MXEventTypeRoomMessageFeedback),
-                          kMXEventTypeStringRoomRedaction: @(MXEventTypeRoomRedaction),
-                          kMXEventTypeStringRoomThirdPartyInvite: @(MXEventTypeRoomThirdPartyInvite),
-                          kMXEventTypeStringRoomTag: @(MXEventTypeRoomTag),
-                          kMXEventTypeStringPresence: @(MXEventTypePresence),
-                          kMXEventTypeStringTypingNotification: @(MXEventTypeTypingNotification),
-                          kMXEventTypeStringNewDevice: @(MXEventTypeNewDevice),
-                          kMXEventTypeStringCallInvite: @(MXEventTypeCallInvite),
-                          kMXEventTypeStringCallCandidates: @(MXEventTypeCallCandidates),
-                          kMXEventTypeStringCallAnswer: @(MXEventTypeCallAnswer),
-                          kMXEventTypeStringCallHangup: @(MXEventTypeCallHangup),
-                          kMXEventTypeStringReceipt: @(MXEventTypeReceipt),
-                          kMXEventTypeStringReadMarker: @(MXEventTypeReadMarker)
-                          };
+        eventTypeMapEnumToString = @[
+                                kMXEventTypeStringRoomName,
+                                kMXEventTypeStringRoomTopic,
+                                kMXEventTypeStringRoomAvatar,
+                                kMXEventTypeStringRoomMember,
+                                kMXEventTypeStringRoomCreate,
+                                kMXEventTypeStringRoomJoinRules,
+                                kMXEventTypeStringRoomPowerLevels,
+                                kMXEventTypeStringRoomAliases,
+                                kMXEventTypeStringRoomCanonicalAlias,
+                                kMXEventTypeStringRoomEncrypted,
+                                kMXEventTypeStringRoomEncryption,
+                                kMXEventTypeStringRoomHistoryVisibility,
+                                kMXEventTypeStringRoomGuestAccess,
+                                kMXEventTypeStringRoomKey,
+                                kMXEventTypeStringRoomMessage,
+                                kMXEventTypeStringRoomMessageFeedback,
+                                kMXEventTypeStringRoomRedaction,
+                                kMXEventTypeStringRoomThirdPartyInvite,
+                                kMXEventTypeStringRoomTag,
+                                kMXEventTypeStringPresence,
+                                kMXEventTypeStringTypingNotification,
+                                kMXEventTypeStringNewDevice,
+                                kMXEventTypeStringCallInvite,
+                                kMXEventTypeStringCallCandidates,
+                                kMXEventTypeStringCallAnswer,
+                                kMXEventTypeStringCallHangup,
+                                kMXEventTypeStringReceipt,
+                                kMXEventTypeStringReadMarker
+                                ];
+
+        NSMutableDictionary *map = [NSMutableDictionary dictionaryWithCapacity:eventTypeMapEnumToString.count];
+        for (NSUInteger i = 0; i <eventTypeMapEnumToString.count; i++)
+        {
+            MXEventTypeString type = eventTypeMapEnumToString[i];
+            map[type] = @(i);
+        }
+        eventTypeMapStringToEnum = map;
 
         isEmailAddressRegex =  [NSRegularExpression regularExpressionWithPattern:[NSString stringWithFormat:@"^%@$", kMXToolsRegexStringForEmailAddress]
                                                                          options:NSRegularExpressionCaseInsensitive error:nil];
@@ -95,15 +104,18 @@ static NSRegularExpression *isMatrixEventIdentifierRegex;
 
 + (MXEventTypeString)eventTypeString:(MXEventType)eventType
 {
-    NSArray *matches = [eventTypesMap allKeysForObject:@(eventType)];
-    return [matches lastObject];
+    if (eventType < eventTypeMapEnumToString.count)
+    {
+        return eventTypeMapEnumToString[eventType];
+    }
+    return nil;
 }
 
 + (MXEventType)eventType:(MXEventTypeString)eventTypeString
 {
     MXEventType eventType = MXEventTypeCustom;
 
-    NSNumber *number = [eventTypesMap objectForKey:eventTypeString];
+    NSNumber *number = [eventTypeMapStringToEnum objectForKey:eventTypeString];
     if (number)
     {
         eventType = [number unsignedIntegerValue];

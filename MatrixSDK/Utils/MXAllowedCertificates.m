@@ -24,6 +24,7 @@
 @end
 
 @implementation MXAllowedCertificates
+@synthesize certificates;
 
 + (MXAllowedCertificates *)sharedInstance
 {

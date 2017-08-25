@@ -1,5 +1,6 @@
 /*
  Copyright 2014 OpenMarket Ltd
+ Copyright 2017 Vector Creations Ltd
  
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -25,8 +26,15 @@
 @interface MXRoomState ()
 {
     MXSession *mxSession;
-    
-    NSMutableDictionary<NSString*, MXEvent*> *stateEvents;
+
+    /**
+     State events ordered by type.
+     */
+    NSMutableDictionary<NSString*, NSMutableArray<MXEvent*>*> *stateEvents;
+
+    /**
+     Members ordered by userId.
+     */
     NSMutableDictionary<NSString*, MXRoomMember*> *members;
     
     /**
@@ -50,11 +58,11 @@
     NSInteger maxPowerLevel;
 
     /**
-     Disambiguate members names in big rooms takes time. So, cache computed data.
-     The key is the user id. The value, the member name to display.
-     This cache is resetted when there is new room member event.
+     Track the usage of members displaynames in order to disambiguate them if necessary,
+     ie if the same displayname is used by several users, we have to update their displaynames.
+     displayname -> count (= how many members of the room uses this displayname)
      */
-    NSMutableDictionary<NSString*, NSString*> *membersNamesCache;
+    NSMutableDictionary<NSString*, NSNumber*> *membersNamesInUse;
 
     /**
      Cache for [self memberWithThirdPartyInviteToken].
@@ -88,7 +96,7 @@
         members = [NSMutableDictionary dictionary];
         roomAliases = [NSMutableDictionary dictionary];
         thirdPartyInvites = [NSMutableDictionary dictionary];
-        membersNamesCache = [NSMutableDictionary dictionary];
+        membersNamesInUse = [NSMutableDictionary dictionary];
         membersWithThirdPartyInviteTokenCache = [NSMutableDictionary dictionary];
     }
     return self;
@@ -125,9 +133,12 @@
         // as the current current room state.
         // So, use the same state events content.
         // @TODO: Find another way than modifying the event content.
-        for (MXEvent *event in stateEvents.allValues)
+        for (NSArray<MXEvent*> *events in stateEvents.allValues)
         {
-            event.prevContent = event.content;
+            for (MXEvent *event in events)
+            {
+                event.prevContent = event.content;
+            }
         }
     }
     return self;
@@ -154,7 +165,11 @@
 
 - (NSArray<MXEvent *> *)stateEvents
 {
-    NSMutableArray<MXEvent *> *state = [NSMutableArray arrayWithArray:[stateEvents allValues]];
+    NSMutableArray<MXEvent *> *state = [NSMutableArray array];
+    for (NSArray<MXEvent*> *events in stateEvents.allValues)
+    {
+        [state addObjectsFromArray:events];
+    }
 
     // Members are also state events
     for (MXRoomMember *roomMember in self.members)
@@ -216,7 +231,7 @@
     NSString *canonicalAlias;
     
     // Check it from the state events
-    MXEvent *event = [stateEvents objectForKey:kMXEventTypeStringRoomCanonicalAlias];
+    MXEvent *event = [stateEvents objectForKey:kMXEventTypeStringRoomCanonicalAlias].lastObject;
     if (event && [self contentOfEvent:event])
     {
         MXJSONModelSetString(canonicalAlias, [self contentOfEvent:event][@"alias"]);
@@ -230,7 +245,7 @@
     NSString *name;
     
     // Check it from the state events
-    MXEvent *event = [stateEvents objectForKey:kMXEventTypeStringRoomName];
+    MXEvent *event = [stateEvents objectForKey:kMXEventTypeStringRoomName].lastObject;
     if (event && [self contentOfEvent:event])
     {
         MXJSONModelSetString(name, [self contentOfEvent:event][@"name"]);
@@ -244,7 +259,7 @@
     NSString *topic;
     
     // Check it from the state events
-    MXEvent *event = [stateEvents objectForKey:kMXEventTypeStringRoomTopic];
+    MXEvent *event = [stateEvents objectForKey:kMXEventTypeStringRoomTopic].lastObject;
     if (event && [self contentOfEvent:event])
     {
         MXJSONModelSetString(topic, [self contentOfEvent:event][@"topic"]);
@@ -258,7 +273,7 @@
     NSString *avatar;
 
     // Check it from the state events
-    MXEvent *event = [stateEvents objectForKey:kMXEventTypeStringRoomAvatar];
+    MXEvent *event = [stateEvents objectForKey:kMXEventTypeStringRoomAvatar].lastObject;
     if (event && [self contentOfEvent:event])
     {
         MXJSONModelSetString(avatar, [self contentOfEvent:event][@"url"]);
@@ -272,7 +287,7 @@
     MXRoomHistoryVisibility historyVisibility = kMXRoomHistoryVisibilityShared;
 
     // Check it from the state events
-    MXEvent *event = [stateEvents objectForKey:kMXEventTypeStringRoomHistoryVisibility];
+    MXEvent *event = [stateEvents objectForKey:kMXEventTypeStringRoomHistoryVisibility].lastObject;
     if (event && [self contentOfEvent:event])
     {
         MXJSONModelSetString(historyVisibility, [self contentOfEvent:event][@"history_visibility"]);
@@ -286,7 +301,7 @@
     MXRoomJoinRule joinRule = kMXRoomJoinRuleInvite;
 
     // Check it from the state events
-    MXEvent *event = [stateEvents objectForKey:kMXEventTypeStringRoomJoinRules];
+    MXEvent *event = [stateEvents objectForKey:kMXEventTypeStringRoomJoinRules].lastObject;
     if (event && [self contentOfEvent:event])
     {
         MXJSONModelSetString(joinRule, [self contentOfEvent:event][@"join_rule"]);
@@ -305,7 +320,7 @@
     MXRoomGuestAccess guestAccess = kMXRoomGuestAccessForbidden;
 
     // Check it from the state events
-    MXEvent *event = [stateEvents objectForKey:kMXEventTypeStringRoomGuestAccess];
+    MXEvent *event = [stateEvents objectForKey:kMXEventTypeStringRoomGuestAccess].lastObject;
     if (event && [self contentOfEvent:event])
     {
         MXJSONModelSetString(guestAccess, [self contentOfEvent:event][@"guest_access"]);
@@ -460,7 +475,7 @@
 
 - (NSString *)encryptionAlgorithm
 {
-    return stateEvents[kMXEventTypeStringRoomEncryption].content[@"algorithm"];
+    return stateEvents[kMXEventTypeStringRoomEncryption].lastObject.content[@"algorithm"];
 }
 
 
@@ -471,9 +486,50 @@
     {
         case MXEventTypeRoomMember:
         {
+            // Remove the previous MXRoomMember of this user from membersNamesInUse
+            NSString *userId = event.stateKey;
+            MXRoomMember *oldRoomMember = members[userId];
+            if (oldRoomMember && oldRoomMember.displayname)
+            {
+                NSNumber *memberNameCount = membersNamesInUse[oldRoomMember.displayname];
+                if (memberNameCount)
+                {
+                    NSUInteger count = [memberNameCount unsignedIntegerValue];
+                    if (count)
+                    {
+                        count--;
+                    }
+
+                    if (count)
+                    {
+                        membersNamesInUse[oldRoomMember.displayname] = @(count);
+                    }
+                    else
+                    {
+                        [membersNamesInUse removeObjectForKey:oldRoomMember.displayname];
+                    }
+                }
+            }
+
             MXRoomMember *roomMember = [[MXRoomMember alloc] initWithMXEvent:event andEventContent:[self contentOfEvent:event]];
             if (roomMember)
             {
+                /// Update membersNamesInUse
+                if (roomMember.displayname)
+                {
+                    NSUInteger count = 1;
+
+                    NSNumber *memberNameCount = membersNamesInUse[roomMember.displayname];
+                    if (memberNameCount)
+                    {
+                        // We have several users using the same displayname
+                        count = [memberNameCount unsignedIntegerValue];
+                        count++;
+                    }
+
+                    membersNamesInUse[roomMember.displayname] = @(count);
+                }
+
                 members[roomMember.userId] = roomMember;
 
                 // Handle here the case where the member has no defined avatar.
@@ -495,9 +551,6 @@
                 // This case happens during back pagination: we remove here users when they are not in the room yet.
                 [members removeObjectForKey:event.stateKey];
             }
-
-            // Reset members names because the computation data basis has changed
-            [membersNamesCache removeAllObjects];
 
             // In case of invite, process the provided but incomplete room state
             if (self.membership == MXMembershipInvite && event.inviteRoomState)
@@ -564,13 +617,16 @@
         }
         default:
             // Store other states into the stateEvents dictionary.
-            // The latest value overwrite the previous one.
-            stateEvents[event.type] = event;
+            if (!stateEvents[event.type])
+            {
+                stateEvents[event.type] = [NSMutableArray array];
+            }
+            [stateEvents[event.type] addObject:event];
             break;
     }
 }
 
-- (MXEvent *)stateEventWithType:(MXEventTypeString)eventType
+- (NSArray<MXEvent*> *)stateEventsWithType:(MXEventTypeString)eventType
 {
     return stateEvents[eventType];
 }
@@ -595,44 +651,34 @@
 - (NSString*)memberName:(NSString*)userId
 {
     // Sanity check (ignore the request if the room state is not initialized yet)
-    if (!userId.length || !membersNamesCache)
+    if (!userId.length || !membersNamesInUse)
     {
         return nil;
     }
-    
-    // First, lookup in the cache
-    NSString *displayName = membersNamesCache[userId];
 
-    if (!displayName)
+    NSString *displayName;
+
+    // Get the user display name from the member list of the room
+    MXRoomMember *member = [self memberWithUserId:userId];
+    if (member && member.displayname.length)
     {
-        // Get the user display name from the member list of the room
-        MXRoomMember *member = [self memberWithUserId:userId];
-        if (member && member.displayname.length)
-        {
-            displayName = member.displayname;
-        }
-        
-        // Do not consider null displayname
-        if (displayName)
-        {
-            // Disambiguate users who have the same displayname in the room
-            for (MXRoomMember* member in members.allValues)
-            {
-                if ([member.displayname isEqualToString:displayName] && ![member.userId isEqualToString:userId])
-                {
-                    displayName = [NSString stringWithFormat:@"%@ (%@)", displayName, userId];
-                    break;
-                }
-            }
-        }
-        else
-        {
-            // By default, use the user ID
-            displayName = userId;
-        }
+        displayName = member.displayname;
+    }
 
-        // Cache the computed name
-        membersNamesCache[userId] = displayName;
+    if (displayName)
+    {
+        // Do we need to disambiguate it?
+        NSNumber *memberNameCount = membersNamesInUse[displayName];
+        if (memberNameCount && [memberNameCount unsignedIntegerValue] > 1)
+        {
+            // There are more than one member that uses the same displayname, so, yes, disambiguate it
+            displayName = [NSString stringWithFormat:@"%@ (%@)", displayName, userId];
+        }
+    }
+    else
+    {
+        // By default, use the user ID
+        displayName = userId;
     }
 
     return displayName;
@@ -817,7 +863,7 @@
     
     stateCopy->membership = membership;
 
-    stateCopy->membersNamesCache = [[NSMutableDictionary allocWithZone:zone] initWithDictionary:membersNamesCache copyItems:YES];
+    stateCopy->membersNamesInUse = [[NSMutableDictionary allocWithZone:zone] initWithDictionary:membersNamesInUse];
     
     stateCopy->powerLevels = [powerLevels copy];
     stateCopy->maxPowerLevel = maxPowerLevel;

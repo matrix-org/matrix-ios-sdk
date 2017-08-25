@@ -49,6 +49,7 @@ static MXSDKOptions *sharedOnceInstance = nil;
         _enableCryptoWhenStartingMXSession = NO;
         _enableGoogleAnalytics = NO;
         _mediaCacheAppVersion = 0;
+        _applicationGroupIdentifier = nil;
     }
     
     return self;

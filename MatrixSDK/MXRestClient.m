@@ -944,6 +944,159 @@ MXAuthAction;
                                  }];
 }
 
+#pragma mark - 3pid token request
+
+- (MXHTTPOperation*)requestTokenForEmail:(NSString*)email
+                    isDuringRegistration:(BOOL)isDuringRegistration
+                            clientSecret:(NSString*)clientSecret
+                             sendAttempt:(NSUInteger)sendAttempt
+                                nextLink:(NSString*)nextLink
+                                 success:(void (^)(NSString *sid))success
+                                 failure:(void (^)(NSError *error))failure
+{
+    NSString *identityServer = _identityServer;
+    if ([identityServer hasPrefix:@"http://"] || [identityServer hasPrefix:@"https://"])
+    {
+        identityServer = [identityServer substringFromIndex:[identityServer rangeOfString:@"://"].location + 3];
+    }
+    
+    NSMutableDictionary *parameters = [NSMutableDictionary dictionaryWithDictionary:@{
+                                                                                      @"email": email,
+                                                                                      @"client_secret": clientSecret,
+                                                                                      @"send_attempt" : @(sendAttempt),
+                                                                                      @"id_server" : identityServer
+                                                                                      }];
+    
+    if (nextLink)
+    {
+        parameters[@"next_link"] = nextLink;
+    }
+    
+    NSString *path;
+    if (isDuringRegistration)
+    {
+        path = [NSString stringWithFormat:@"%@/register/email/requestToken", apiPathPrefix];
+    }
+    else
+    {
+        path = [NSString stringWithFormat:@"%@/account/3pid/email/requestToken", apiPathPrefix];
+    }
+    
+    return [httpClient requestWithMethod:@"POST"
+                                    path:path
+                              parameters:parameters
+                                 success:^(NSDictionary *JSONResponse) {
+                                     if (success && processingQueue)
+                                     {
+                                         dispatch_async(processingQueue, ^{
+                                             
+                                             NSString *sid;
+                                             MXJSONModelSetString(sid, JSONResponse[@"sid"]);
+                                             
+                                             if (completionQueue)
+                                             {
+                                                 dispatch_async(completionQueue, ^{
+                                                     success(sid);
+                                                 });
+                                             }
+                                             
+                                         });
+                                         
+                                     }
+                                 }
+                                 failure:^(NSError *error) {
+                                     if (failure && processingQueue)
+                                     {
+                                         dispatch_async(processingQueue, ^{
+                                             
+                                             if (completionQueue)
+                                             {
+                                                 dispatch_async(completionQueue, ^{
+                                                     failure(error);
+                                                 });
+                                             }
+                                             
+                                         });
+                                     }
+                                 }];
+}
+
+- (MXHTTPOperation*)requestTokenForPhoneNumber:(NSString*)phoneNumber
+                          isDuringRegistration:(BOOL)isDuringRegistration
+                                   countryCode:(NSString*)countryCode
+                                  clientSecret:(NSString*)clientSecret
+                                   sendAttempt:(NSUInteger)sendAttempt
+                                      nextLink:(NSString *)nextLink
+                                       success:(void (^)(NSString *sid, NSString *msisdn))success
+                                       failure:(void (^)(NSError *error))failure
+{
+    NSString *identityServer = _identityServer;
+    if ([identityServer hasPrefix:@"http://"] || [identityServer hasPrefix:@"https://"])
+    {
+        identityServer = [identityServer substringFromIndex:[identityServer rangeOfString:@"://"].location + 3];
+    }
+    
+    NSMutableDictionary *parameters = [NSMutableDictionary dictionaryWithDictionary:@{
+                                                                                      @"phone_number": phoneNumber,
+                                                                                      @"country": (countryCode ? countryCode : @""),
+                                                                                      @"client_secret": clientSecret,
+                                                                                      @"send_attempt" : @(sendAttempt),
+                                                                                      @"id_server" : identityServer
+                                                                                      }];
+    if (nextLink)
+    {
+        parameters[@"next_link"] = nextLink;
+    }
+    
+    NSString *path;
+    if (isDuringRegistration)
+    {
+        path = [NSString stringWithFormat:@"%@/register/msisdn/requestToken", apiPathPrefix];
+    }
+    else
+    {
+        path = [NSString stringWithFormat:@"%@/account/3pid/msisdn/requestToken", apiPathPrefix];
+    }
+    
+    return [httpClient requestWithMethod:@"POST"
+                                    path:path
+                              parameters:parameters
+                                 success:^(NSDictionary *JSONResponse) {
+                                     if (success && processingQueue)
+                                     {
+                                         dispatch_async(processingQueue, ^{
+                                             
+                                             NSString *sid, *msisdn;
+                                             MXJSONModelSetString(sid, JSONResponse[@"sid"]);
+                                             MXJSONModelSetString(msisdn, JSONResponse[@"msisdn"]);
+                                             
+                                             if (completionQueue)
+                                             {
+                                                 dispatch_async(completionQueue, ^{
+                                                     success(sid, msisdn);
+                                                 });
+                                             }
+                                             
+                                         });
+                                         
+                                     }
+                                 }
+                                 failure:^(NSError *error) {
+                                     if (failure && processingQueue)
+                                     {
+                                         dispatch_async(processingQueue, ^{
+                                             
+                                             if (completionQueue)
+                                             {
+                                                 dispatch_async(completionQueue, ^{
+                                                     failure(error);
+                                                 });
+                                             }
+                                             
+                                         });
+                                     }
+                                 }];
+}
 
 #pragma mark - Push Notifications
 - (MXHTTPOperation*)setPusherWithPushkey:(NSString *)pushkey
@@ -1373,10 +1526,20 @@ MXAuthAction;
 - (MXHTTPOperation*)sendStateEventToRoom:(NSString*)roomId
                                eventType:(MXEventTypeString)eventTypeString
                                  content:(NSDictionary*)content
+                                stateKey:(NSString*)stateKey
                                  success:(void (^)(NSString *eventId))success
                                  failure:(void (^)(NSError *error))failure
 {
-    NSString *path = [NSString stringWithFormat:@"%@/rooms/%@/state/%@", apiPathPrefix, roomId, eventTypeString];
+    NSString *path;
+    if (stateKey)
+    {
+        path = [NSString stringWithFormat:@"%@/rooms/%@/state/%@/%@", apiPathPrefix, roomId, eventTypeString, [stateKey stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding]];
+    }
+    else
+    {
+        path = [NSString stringWithFormat:@"%@/rooms/%@/state/%@", apiPathPrefix, roomId, eventTypeString];
+    }
+
     return [httpClient requestWithMethod:@"PUT"
                                     path:path
                               parameters:content
@@ -2250,7 +2413,9 @@ MXAuthAction;
                      success:(void (^)())success
                      failure:(void (^)(NSError *error))failure
 {
-    NSString *path = [NSString stringWithFormat:@"%@/rooms/%@/state/m.room.member/%@", apiPathPrefix, roomId, userId];
+    NSString *path = [NSString stringWithFormat:@"%@/rooms/%@/state/m.room.member/%@", apiPathPrefix,
+                      roomId,
+                      [userId stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding]];
     
     NSMutableDictionary *parameters = [NSMutableDictionary dictionary];
     parameters[@"membership"] = @"leave";
@@ -2636,7 +2801,9 @@ MXAuthAction;
                                          success:(void (^)())success
                                          failure:(void (^)(NSError *error))failure
 {
-    NSString *path = [NSString stringWithFormat:@"%@/rooms/%@/typing/%@", apiPathPrefix, roomId, self.credentials.userId];
+    NSString *path = [NSString stringWithFormat:@"%@/rooms/%@/typing/%@", apiPathPrefix,
+                      roomId,
+                      [self.credentials.userId stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding]];
     
     // Fill the request parameters on demand
     NSMutableDictionary *parameters = [NSMutableDictionary dictionary];
@@ -3094,7 +3261,9 @@ MXAuthAction;
         userId = credentials.userId;
     }
     
-    NSString *path = [NSString stringWithFormat:@"%@/profile/%@/displayname", apiPathPrefix, userId];
+    NSString *path = [NSString stringWithFormat:@"%@/profile/%@/displayname", apiPathPrefix,
+                      [userId stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding]];
+
     return [httpClient requestWithMethod:@"GET"
                                     path:path
                               parameters:nil
@@ -3189,7 +3358,9 @@ MXAuthAction;
         userId = credentials.userId;
     }
     
-    NSString *path = [NSString stringWithFormat:@"%@/profile/%@/avatar_url", apiPathPrefix, userId];
+    NSString *path = [NSString stringWithFormat:@"%@/profile/%@/avatar_url", apiPathPrefix,
+                      [userId stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding]];
+
     return [httpClient requestWithMethod:@"GET"
                                     path:path
                               parameters:nil
@@ -3434,7 +3605,9 @@ MXAuthAction;
         userId = credentials.userId;
     }
     
-    NSString *path = [NSString stringWithFormat:@"%@/presence/%@/status", apiPathPrefix, userId];
+    NSString *path = [NSString stringWithFormat:@"%@/presence/%@/status", apiPathPrefix,
+                      [userId stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding]];
+
     return [httpClient requestWithMethod:@"GET"
                                     path:path
                               parameters:nil
@@ -4541,6 +4714,53 @@ MXAuthAction;
                                  };
 
     return [self search:parameters nextBatch:nextBatch success:success failure:failure];
+}
+
+- (MXHTTPOperation*)searchUsers:(NSString*)pattern
+                          limit:(NSUInteger)limit
+                        success:(void (^)(MXUserSearchResponse *userSearchResponse))success
+                        failure:(void (^)(NSError *error))failure
+{
+    NSDictionary *parameters = @{
+                                 @"search_term": pattern,
+                                 @"limit": @(limit)
+                                 };
+
+    return [httpClient requestWithMethod:@"POST"
+                                    path:[NSString stringWithFormat:@"%@/user_directory/search", apiPathPrefix]
+                              parameters:parameters
+                                 success:^(NSDictionary *JSONResponse) {
+                                     if (success && processingQueue)
+                                     {
+                                         dispatch_async(processingQueue, ^{
+
+                                             MXUserSearchResponse *userSearchResponse = [MXUserSearchResponse modelFromJSON:JSONResponse];
+
+                                             if (completionQueue)
+                                             {
+                                                 dispatch_async(completionQueue, ^{
+                                                     success(userSearchResponse);
+                                                 });
+                                             }
+
+                                         });
+                                     }
+                                 }
+                                 failure:^(NSError *error) {
+                                     if (failure && processingQueue)
+                                     {
+                                         dispatch_async(processingQueue, ^{
+
+                                             if (completionQueue)
+                                             {
+                                                 dispatch_async(completionQueue, ^{
+                                                     failure(error);
+                                                 });
+                                             }
+
+                                         });
+                                     }
+                                 }];
 }
 
 

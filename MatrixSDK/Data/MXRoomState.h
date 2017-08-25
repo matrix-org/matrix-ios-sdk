@@ -100,12 +100,12 @@ A copy of the list of third party invites (actually MXRoomThirdPartyInvite insta
 /**
  The history visibility of the room.
  */
-@property (nonatomic, readonly) MXRoomHistoryVisibility historyVisibility;
+@property (nonatomic, readonly) MXRoomHistoryVisibility historyVisibility NS_REFINED_FOR_SWIFT;
 
 /**
  The join rule of the room.
  */
-@property (nonatomic, readonly) MXRoomJoinRule joinRule;
+@property (nonatomic, readonly) MXRoomJoinRule joinRule NS_REFINED_FOR_SWIFT;
 
 /**
  Shortcut to check if the self.joinRule is public.
@@ -115,7 +115,7 @@ A copy of the list of third party invites (actually MXRoomThirdPartyInvite insta
 /**
  The guest access of the room.
  */
-@property (nonatomic, readonly) MXRoomGuestAccess guestAccess;
+@property (nonatomic, readonly) MXRoomGuestAccess guestAccess NS_REFINED_FOR_SWIFT;
 
 /**
  The display name of the room.
@@ -129,7 +129,7 @@ A copy of the list of third party invites (actually MXRoomThirdPartyInvite insta
  If the membership is `invite`, the room state contains few information.
  Join the room with [MXRoom join] to get full information about the room.
  */
-@property (nonatomic, readonly) MXMembership membership;
+@property (nonatomic, readonly) MXMembership membership NS_REFINED_FOR_SWIFT;
 
 /**
  Indicate whether encryption is enabled for this room.
@@ -190,12 +190,12 @@ A copy of the list of third party invites (actually MXRoomThirdPartyInvite insta
 - (void)handleStateEvent:(MXEvent*)event;
 
 /**
- Return the state event with the given type.
+ Return the state events with the given type.
  
  @param eventType the type of event.
- @return the state event. Can be nil.
+ @return the state events. Can be nil.
  */
-- (MXEvent*)stateEventWithType:(MXEventTypeString)eventType;
+- (NSArray<MXEvent*> *)stateEventsWithType:(MXEventTypeString)eventType NS_REFINED_FOR_SWIFT;
 
 /**
  Return the member with the given user id.

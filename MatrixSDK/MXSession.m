@@ -39,7 +39,7 @@
 
 #pragma mark - Constants definitions
 
-const NSString *MatrixSDKVersion = @"0.8.0";
+const NSString *MatrixSDKVersion = @"0.9.2";
 NSString *const kMXSessionStateDidChangeNotification = @"kMXSessionStateDidChangeNotification";
 NSString *const kMXSessionNewRoomNotification = @"kMXSessionNewRoomNotification";
 NSString *const kMXSessionWillLeaveRoomNotification = @"kMXSessionWillLeaveRoomNotification";
@@ -460,7 +460,7 @@ typedef void (^MXOnResumeDone)();
 {
     NSLog(@"[MXSession] pause the event stream in state %tu", _state);
 
-    // Check that noone required the session to keep running even if the app goes in
+    // Check that none required the session to keep running even if the app goes in
     // background
     if (_preventPauseCount)
     {
@@ -673,7 +673,11 @@ typedef void (^MXOnResumeDone)();
 #pragma mark - MXSession pause prevention
 - (void)retainPreventPause
 {
-    self.preventPauseCount++;
+    // Check whether a background mode handler has been set.
+    if ([MXSDKOptions sharedInstance].backgroundModeHandler)
+    {
+        self.preventPauseCount++;
+    }
 }
 
 - (void)releasePreventPause
@@ -1004,6 +1008,12 @@ typedef void (^MXOnResumeDone)();
             {
                 NSLog(@"[MXSession] The access token is no more valid. Go to MXSessionStateUnknownToken state.");
                 [self setState:MXSessionStateUnknownToken];
+                
+                // Inform the caller that an error has occurred
+                if (failure)
+                {
+                    failure(error);
+                }
 
                 // Do nothing more because without a valid access_token, the session is useless
                 return;

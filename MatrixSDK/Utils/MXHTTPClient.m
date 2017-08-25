@@ -117,10 +117,14 @@ NSString * const MXHTTPClientErrorResponseDataKey = @"com.matrixsdk.httpclient.e
         [self setUpSSLCertificatesHandler];
 
         // Track potential expected session invalidation (seen on iOS10 beta)
+        __weak typeof(self) weakSelf = self;
         [httpManager setSessionDidBecomeInvalidBlock:^(NSURLSession * _Nonnull session, NSError * _Nonnull error) {
-
-            NSLog(@"[MXHTTPClient] SessionDidBecomeInvalid: %@: %@", session, error);
-            invalidatedSession = YES;
+            __strong typeof(weakSelf) strongSelf = weakSelf;
+            if (strongSelf)
+            {
+                NSLog(@"[MXHTTPClient] SessionDidBecomeInvalid: %@: %@", session, error);
+                strongSelf->invalidatedSession = YES;
+            }
         }];
     }
     return self;
@@ -129,31 +133,26 @@ NSString * const MXHTTPClientErrorResponseDataKey = @"com.matrixsdk.httpclient.e
 - (void)dealloc
 {
     [self cancel];
-
-    id<MXBackgroundModeHandler> handler = [MXSDKOptions sharedInstance].backgroundModeHandler;
-    if (handler && backgroundTaskIdentifier != [handler invalidIdentifier])
-    {
-        [self cleanupBackgroundTask];
-    }
-
-    httpManager = nil;
+    [self cleanupBackgroundTask];
+    
+    [[NSNotificationCenter defaultCenter] removeObserver:reachabilityObserver];
 }
 
 - (MXHTTPOperation*)requestWithMethod:(NSString *)httpMethod
-                   path:(NSString *)path
-             parameters:(NSDictionary*)parameters
-                success:(void (^)(NSDictionary *JSONResponse))success
-                failure:(void (^)(NSError *error))failure
+                                 path:(NSString *)path
+                           parameters:(NSDictionary*)parameters
+                              success:(void (^)(NSDictionary *JSONResponse))success
+                              failure:(void (^)(NSError *error))failure
 {
     return [self requestWithMethod:httpMethod path:path parameters:parameters timeout:-1 success:success failure:failure];
 }
 
 - (MXHTTPOperation*)requestWithMethod:(NSString *)httpMethod
-                   path:(NSString *)path
-             parameters:(NSDictionary*)parameters
-                timeout:(NSTimeInterval)timeoutInSeconds
-                success:(void (^)(NSDictionary *JSONResponse))success
-                failure:(void (^)(NSError *error))failure
+                                 path:(NSString *)path
+                           parameters:(NSDictionary*)parameters
+                              timeout:(NSTimeInterval)timeoutInSeconds
+                              success:(void (^)(NSDictionary *JSONResponse))success
+                              failure:(void (^)(NSError *error))failure
 {
     return [self requestWithMethod:httpMethod path:path parameters:parameters data:nil headers:nil timeout:timeoutInSeconds uploadProgress:nil success:success failure:failure ];
 }
@@ -567,20 +566,24 @@ NSString * const MXHTTPClientErrorResponseDataKey = @"com.matrixsdk.httpclient.e
 
 - (void)setUpNetworkReachibility
 {
+    AFNetworkReachabilityManager *networkReachabilityManager = [AFNetworkReachabilityManager sharedManager];
+    
     // Start monitoring reachibility to get its status and change notifications
-    [[AFNetworkReachabilityManager sharedManager] startMonitoring];
+    [networkReachabilityManager startMonitoring];
 
     reachabilityObservers = [NSMutableArray array];
-
-    AFNetworkReachabilityManager *networkReachabilityManager = [AFNetworkReachabilityManager sharedManager];
-
+    
+    __weak typeof(self) weakSelf = nil;
     reachabilityObserver = [[NSNotificationCenter defaultCenter] addObserverForName:AFNetworkingReachabilityDidChangeNotification object:nil queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
-
-        if (networkReachabilityManager.isReachable && reachabilityObservers.count)
+        __strong typeof(weakSelf) strongSelf = weakSelf;
+        if (!strongSelf)
+            return;
+        
+        if (networkReachabilityManager.isReachable && strongSelf->reachabilityObservers.count)
         {
             // Start retrying request one by one to keep messages order
-            NSLog(@"[MXHTTPClient] Network is back. Wake up %tu observers.", reachabilityObservers.count);
-            [self wakeUpNextReachabilityServer];
+            NSLog(@"[MXHTTPClient] Network is back. Wake up %tu observers.", strongSelf->reachabilityObservers.count);
+            [strongSelf wakeUpNextReachabilityServer];
         }
     }];
 }
@@ -649,9 +652,9 @@ NSString * const MXHTTPClientErrorResponseDataKey = @"com.matrixsdk.httpclient.e
                             if (strongSelf->onUnrecognizedCertificateBlock(certifData))
                             {
                                 NSLog(@"[MXHTTPClient] Yes, the user trusts its certificate");
-
-                                _allowedCertificate = certifData;
-
+                                
+                                strongSelf->_allowedCertificate = certifData;
+                                
                                 // Update http manager security policy with this trusted certificate.
                                 AFSecurityPolicy *securityPolicy = [AFSecurityPolicy policyWithPinningMode:AFSSLPinningModeCertificate];
                                 securityPolicy.pinnedCertificates = [NSSet setWithObjects:certifData, nil];

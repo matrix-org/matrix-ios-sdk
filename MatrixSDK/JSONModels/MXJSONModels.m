@@ -18,6 +18,7 @@
 #import "MXJSONModels.h"
 
 #import "MXEvent.h"
+#import "MXUser.h"
 #import "MXTools.h"
 #import "MXUsersDevicesMap.h"
 #import "MXDeviceInfo.h"
@@ -366,46 +367,56 @@ NSString *const kMXRoomTagLowPriority = @"m.lowpriority";
 + (NSDictionary<NSString *,MXRoomTag *> *)roomTagsWithTagEvent:(MXEvent *)event
 {
     NSMutableDictionary *tags = [NSMutableDictionary dictionary];
-    for (NSString *tagName in event.content[@"tags"])
+
+    NSDictionary *tagsContent;
+    MXJSONModelSetDictionary(tagsContent, event.content[@"tags"]);
+
+    for (NSString *tagName in tagsContent)
     {
-        NSString *order = event.content[@"tags"][tagName][@"order"];
+        NSDictionary *tagDict;
+        MXJSONModelSetDictionary(tagDict, tagsContent[tagName]);
 
-        // Be robust if the server sends an integer tag order
-        // Do some cleaning if the order is a number (and do nothing if the order is a string)
-        if ([order isKindOfClass:NSNumber.class])
+        if (tagDict)
         {
-            NSLog(@"[MXRoomTag] Warning: the room tag order is an number value not a string in this event: %@", event);
+            NSString *order = tagDict[@"order"];
 
-            NSNumberFormatter *formatter = [[NSNumberFormatter alloc] init];
-            [formatter setMaximumFractionDigits:16];
-            [formatter setMinimumFractionDigits:0];
-            [formatter setDecimalSeparator:@"."];
-            [formatter setGroupingSeparator:@""];
-
-            order = [formatter stringFromNumber:event.content[@"tags"][tagName][@"order"]];
-
-            if (order)
+            // Be robust if the server sends an integer tag order
+            // Do some cleaning if the order is a number (and do nothing if the order is a string)
+            if ([order isKindOfClass:NSNumber.class])
             {
-                NSNumber *value = [formatter numberFromString:order];
-                if (!value)
-                {
-                    // Manage numbers with ',' decimal separator
-                    [formatter setDecimalSeparator:@","];
-                    value = [formatter numberFromString:order];
-                    [formatter setDecimalSeparator:@"."];
-                }
+                NSLog(@"[MXRoomTag] Warning: the room tag order is an number value not a string in this event: %@", event);
 
-                if (value)
+                NSNumberFormatter *formatter = [[NSNumberFormatter alloc] init];
+                [formatter setMaximumFractionDigits:16];
+                [formatter setMinimumFractionDigits:0];
+                [formatter setDecimalSeparator:@"."];
+                [formatter setGroupingSeparator:@""];
+
+                order = [formatter stringFromNumber:tagDict[@"order"]];
+
+                if (order)
                 {
-                    // remove trailing 0
-                    // in some cases, the order is 0.00000 ("%f" formatter");
-                    // with this method, it becomes "0".
-                    order = [formatter stringFromNumber:value];
+                    NSNumber *value = [formatter numberFromString:order];
+                    if (!value)
+                    {
+                        // Manage numbers with ',' decimal separator
+                        [formatter setDecimalSeparator:@","];
+                        value = [formatter numberFromString:order];
+                        [formatter setDecimalSeparator:@"."];
+                    }
+
+                    if (value)
+                    {
+                        // remove trailing 0
+                        // in some cases, the order is 0.00000 ("%f" formatter");
+                        // with this method, it becomes "0".
+                        order = [formatter stringFromNumber:value];
+                    }
                 }
             }
+            
+            tags[tagName] = [[MXRoomTag alloc] initWithName:tagName andOrder:order];
         }
-
-        tags[tagName] = [[MXRoomTag alloc] initWithName:tagName andOrder:order];
     }
     return tags;
 }
@@ -921,6 +932,22 @@ NSString *const kMXPushRuleScopeStringDevice = @"device";
     }
 
     return searchResponse;
+}
+
+@end
+
+@implementation MXUserSearchResponse
+
++ (id)modelFromJSON:(NSDictionary *)JSONDictionary
+{
+    MXUserSearchResponse *userSearchResponse = [[MXUserSearchResponse alloc] init];
+    if (userSearchResponse)
+    {
+        MXJSONModelSetBoolean(userSearchResponse.limited, JSONDictionary[@"limited"]);
+        MXJSONModelSetMXJSONModelArray(userSearchResponse.results, MXUser, JSONDictionary[@"results"]);
+    }
+
+    return userSearchResponse;
 }
 
 @end

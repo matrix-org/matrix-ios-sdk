@@ -223,6 +223,12 @@ NSString *const kMXEventIdentifierKey = @"kMXEventIdentifierKey";
     _wireEventType = [MXTools eventType:_wireType];
 }
 
+- (void)setWireEventType:(MXEventType)wireEventType
+{
+    _wireEventType = wireEventType;
+    _wireType = [MXTools eventTypeString:_wireEventType];
+}
+
 - (void)setAge:(NSUInteger)age
 {
     // If the age has not been stored yet in local time stamp, do it now
@@ -599,23 +605,31 @@ NSString *const kMXEventIdentifierKey = @"kMXEventIdentifierKey";
     if (self)
     {
         _eventId = [aDecoder decodeObjectForKey:@"eventId"];
-        self.wireType = [aDecoder decodeObjectForKey:@"type"];
         _roomId = [aDecoder decodeObjectForKey:@"roomId"];
         _sender = [aDecoder decodeObjectForKey:@"userId"];
-        NSNumber *sentState = [aDecoder decodeObjectForKey:@"sentState"];
-        _sentState = [sentState unsignedIntegerValue];
+        _sentState = (MXEventSentState)[aDecoder decodeIntegerForKey:@"sentState"];
         _wireContent = [aDecoder decodeObjectForKey:@"content"];
         _prevContent = [aDecoder decodeObjectForKey:@"prevContent"];
         _stateKey = [aDecoder decodeObjectForKey:@"stateKey"];
-        NSNumber *originServerTs = [aDecoder decodeObjectForKey:@"originServerTs"];
-        _originServerTs = [originServerTs unsignedLongLongValue];
-        NSNumber *ageLocalTs = [aDecoder decodeObjectForKey:@"ageLocalTs"];
-        _ageLocalTs = [ageLocalTs unsignedLongLongValue];
+        _originServerTs = (uint64_t)[aDecoder decodeInt64ForKey:@"originServerTs"];
+        _ageLocalTs = (uint64_t)[aDecoder decodeInt64ForKey:@"ageLocalTs"];
         _unsignedData = [aDecoder decodeObjectForKey:@"unsigned"];
         _redacts = [aDecoder decodeObjectForKey:@"redacts"];
         _redactedBecause = [aDecoder decodeObjectForKey:@"redactedBecause"];
         _inviteRoomState = [aDecoder decodeObjectForKey:@"inviteRoomState"];
         _sentError = [aDecoder decodeObjectForKey:@"sentError"];
+
+        _wireEventType = (MXEventType)[aDecoder decodeIntegerForKey:@"eventType"];
+        if (_wireEventType == MXEventTypeCustom)
+        {
+            self.wireType = [aDecoder decodeObjectForKey:@"type"];
+        }
+        else
+        {
+            // Retrieve the type string from the enum
+            self.wireEventType = _wireEventType;
+        }
+
     }
     return self;
 }
@@ -625,18 +639,24 @@ NSString *const kMXEventIdentifierKey = @"kMXEventIdentifierKey";
     [aCoder encodeObject:_eventId forKey:@"eventId"];
     [aCoder encodeObject:_roomId forKey:@"roomId"];
     [aCoder encodeObject:_sender forKey:@"userId"];
-    [aCoder encodeObject:@(_sentState) forKey:@"sentState"];
-    [aCoder encodeObject:_wireType forKey:@"type"];
+    [aCoder encodeInteger:(NSInteger)_sentState forKey:@"sentState"];
     [aCoder encodeObject:_wireContent forKey:@"content"];
     [aCoder encodeObject:_prevContent forKey:@"prevContent"];
     [aCoder encodeObject:_stateKey forKey:@"stateKey"];
-    [aCoder encodeObject:@(_originServerTs) forKey:@"originServerTs"];
-    [aCoder encodeObject:@(_ageLocalTs) forKey:@"ageLocalTs"];
+    [aCoder encodeInt64:(int64_t)_originServerTs forKey:@"originServerTs"];
+    [aCoder encodeInt64:(int64_t)_ageLocalTs forKey:@"ageLocalTs"];
     [aCoder encodeObject:_unsignedData forKey:@"unsigned"];
     [aCoder encodeObject:_redacts forKey:@"redacts"];
     [aCoder encodeObject:_redactedBecause forKey:@"redactedBecause"];
     [aCoder encodeObject:_inviteRoomState forKey:@"inviteRoomState"];
     [aCoder encodeObject:_sentError forKey:@"sentError"];
+
+    [aCoder encodeInteger:(NSInteger)_wireEventType forKey:@"eventType"];
+    if (_wireEventType == MXEventTypeCustom)
+    {
+        // Store the type string only if it does not have an enum
+        [aCoder encodeObject:_wireType forKey:@"type"];
+    }
 }
 
 @end

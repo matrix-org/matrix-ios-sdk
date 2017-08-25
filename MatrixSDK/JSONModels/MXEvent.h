@@ -28,7 +28,7 @@
  */
 typedef enum : NSUInteger
 {
-    MXEventTypeRoomName,
+    MXEventTypeRoomName = 0,
     MXEventTypeRoomTopic,
     MXEventTypeRoomAvatar,
     MXEventTypeRoomMember,
@@ -124,7 +124,7 @@ typedef enum : NSUInteger
     MXMembershipJoin,
     MXMembershipLeave,
     MXMembershipBan
-} MXMembership;
+} MXMembership NS_REFINED_FOR_SWIFT;
 
 /**
  The internal event state used to handle the different steps of the event sending.

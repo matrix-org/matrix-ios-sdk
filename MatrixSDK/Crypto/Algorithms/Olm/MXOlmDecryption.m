@@ -55,8 +55,11 @@
 
 - (BOOL)decryptEvent:(MXEvent *)event inTimeline:(NSString*)timeline
 {
-    NSString *deviceKey = event.content[@"sender_key"];
-    NSDictionary *ciphertext = event.content[@"ciphertext"];
+    NSString *deviceKey;
+    NSDictionary *ciphertext;
+
+    MXJSONModelSetString(deviceKey, event.content[@"sender_key"]);
+    MXJSONModelSetDictionary(ciphertext, event.content[@"ciphertext"]);
 
     if (!ciphertext)
     {

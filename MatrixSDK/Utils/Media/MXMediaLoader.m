@@ -20,6 +20,7 @@
 #import "MXHTTPOperation.h"
 
 #import "MXAllowedCertificates.h"
+#import <AFNetworking/AFSecurityPolicy.h>
 
 NSString *const kMXMediaDownloadProgressNotification = @"kMXMediaDownloadProgressNotification";
 NSString *const kMXMediaDownloadDidFinishNotification = @"kMXMediaDownloadDidFinishNotification";
@@ -232,6 +233,27 @@ NSString *const kMXMediaUploadIdPrefix = @"upload-";
     NSURLProtectionSpace *protectionSpace = [challenge protectionSpace];
     if ([protectionSpace.authenticationMethod isEqualToString:NSURLAuthenticationMethodServerTrust])
     {
+        // List all the allowed certificates to pin against.
+        NSMutableArray *pinnedCertificates = [NSMutableArray array];
+        
+        NSSet <NSData *> *certificates = [AFSecurityPolicy certificatesInBundle:[NSBundle mainBundle]];
+        for (NSData *certificateData in certificates)
+        {
+            [pinnedCertificates addObject:(__bridge_transfer id)SecCertificateCreateWithData(NULL, (__bridge CFDataRef)certificateData)];
+        }
+        certificates = [MXAllowedCertificates sharedInstance].certificates;
+        for (NSData *certificateData in certificates)
+        {
+            [pinnedCertificates addObject:(__bridge_transfer id)SecCertificateCreateWithData(NULL, (__bridge CFDataRef)certificateData)];
+        }
+        
+        if (pinnedCertificates.count > 0)
+        {
+            SecTrustSetAnchorCertificates(protectionSpace.serverTrust, (__bridge CFArrayRef)pinnedCertificates);
+            // Reenable trusting anchor certificates in addition to those passed in via the SecTrustSetAnchorCertificates API.
+            SecTrustSetAnchorCertificatesOnly(protectionSpace.serverTrust, false);
+        }
+        
         SecTrustRef trust = [protectionSpace serverTrust];
 
         // Re-evaluate the trust policy
