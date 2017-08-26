@@ -1201,6 +1201,54 @@ static NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
     NSLog(@"[MXFileStore] Loaded %tu MXUsers in %.0fms", users.count, [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
 }
 
+- (NSArray<MXUser *> *)loadUsersWithUserIds:(NSArray<NSString *> *)userIds
+{
+    // Determine which groups to load based on userIds
+    NSMutableDictionary<NSString *, NSMutableArray<NSString *> *> *groups = [NSMutableDictionary dictionary];
+    for (NSString *userId in userIds)
+    {
+        NSString *groupId = [NSString stringWithFormat:@"%tu", userId.hash % 100];
+        
+        NSMutableArray *groupUserdIds = groups[groupId];
+        if (groupUserdIds)
+            [groupUserdIds addObject:userId];
+        else
+            groups[groupId] = [NSMutableArray arrayWithObject:userId];
+    }
+    
+    NSString *usersFolder = [storePath stringByAppendingPathComponent:kMXFileStoreUsersFolder];
+    
+    NSMutableArray<MXUser *> *loadedUsers = [NSMutableArray array];
+    for (NSString *group in groups.allKeys)
+    {
+        @autoreleasepool
+        {
+            NSString *groupFile = [usersFolder stringByAppendingPathComponent:group];
+            
+            // Load stored users in this group
+            @try
+            {
+                NSMutableDictionary <NSString *, MXUser *> *groupUsers = [NSKeyedUnarchiver unarchiveObjectWithFile:groupFile];
+                if (groupUsers)
+                {
+                    NSSet *usersToLoad = [NSSet setWithArray:groups[group]];
+                    for (MXUser *user in groupUsers.allValues)
+                    {
+                        if ([usersToLoad containsObject:user.userId])
+                            [loadedUsers addObject:user];
+                    }
+                }
+            }
+            @catch (NSException *exception)
+            {
+                NSLog(@"[MXFileStore] Warning: MXFileRoomStore file for users group %@ has been corrupted", group);
+            }
+        }
+    }
+    
+    return [loadedUsers copy];
+}
+
 - (void)saveUsers
 {
     // Save only in case of change
@@ -1400,6 +1448,13 @@ static NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
     dispatch_async(dispatchQueue, ^{
         [self loadUsers];
         success(users.allValues);
+    });
+}
+
+- (void)asyncUsersWithUserIds:(NSArray<NSString *> *)userIds success:(void (^)(NSArray<MXUser *> *users))success failure:(nullable void (^)(NSError * _Nonnull))failure
+{
+    dispatch_async(dispatchQueue, ^{
+        success([self loadUsersWithUserIds:userIds]);
     });
 }
 
