@@ -164,7 +164,7 @@ NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
                 _isVideoCall = callInviteEventContent.isVideoCall;
 
                 // Set up the default audio route
-                callStackCall.audioToSpeaker = NO;
+                callStackCall.audioToSpeaker = _isVideoCall;
                 
                 [self setState:MXCallStateWaitLocalMedia reason:nil];
                 
@@ -271,10 +271,10 @@ NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
 
     _isVideoCall = video;
 
-    [self setState:MXCallStateWaitLocalMedia reason:nil];
-
     // Set up the default audio route
-    callStackCall.audioToSpeaker = NO;
+    callStackCall.audioToSpeaker = _isVideoCall;
+    
+    [self setState:MXCallStateWaitLocalMedia reason:nil];
 
     [callStackCall startCapturingMediaWithVideo:video success:^() {
 
