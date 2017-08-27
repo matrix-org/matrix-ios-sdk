@@ -71,6 +71,11 @@
     {
         peerConnectionFactory = factory;
         cameraPosition = AVCaptureDevicePositionFront;
+        
+        [[NSNotificationCenter defaultCenter] addObserver:self
+                                                 selector:@selector(handleRouteChangeNotification:)
+                                                     name:AVAudioSessionRouteChangeNotification
+                                                   object:nil];
     }
     return self;
 }
@@ -98,6 +103,8 @@
 
     self.selfVideoView = nil;
     self.remoteVideoView = nil;
+    
+    [[NSNotificationCenter defaultCenter] removeObserver:self];
 }
 
 - (void)addTURNServerUris:(NSArray<NSString *> *)uris withUsername:(nullable NSString *)username password:(nullable NSString *)password
@@ -542,6 +549,27 @@ didRemoveIceCandidates:(NSArray<RTCIceCandidate *> *)candidates;
     else
     {
         selfVideoView.transform = CGAffineTransformIdentity;
+    }
+}
+
+- (void)handleRouteChangeNotification:(NSNotification *)notification
+{
+    AVAudioSessionRouteChangeReason changeReason = [notification.userInfo[AVAudioSessionRouteChangeReasonKey] unsignedIntegerValue];
+    if (changeReason == AVAudioSessionRouteChangeReasonCategoryChange)
+    {
+        // WebRTC sets AVAudioSession's category right before call starts, this can lead to changing output route
+        // which user selected when the call was in connecting state.
+        // So we need to perform additional checks and override ouput port if needed
+        AVAudioSessionRouteDescription *currentRoute = [[AVAudioSession sharedInstance] currentRoute];
+        BOOL isOutputSpeaker = currentRoute.outputs.firstObject.portType == AVAudioSessionPortBuiltInSpeaker;
+        if (audioToSpeaker && !isOutputSpeaker)
+        {
+            [[AVAudioSession sharedInstance] overrideOutputAudioPort:AVAudioSessionPortOverrideSpeaker error:nil];
+        }
+        else if (!audioToSpeaker && isOutputSpeaker)
+        {
+            [[AVAudioSession sharedInstance] overrideOutputAudioPort:AVAudioSessionPortOverrideNone error:nil];
+        }
     }
 }
 
