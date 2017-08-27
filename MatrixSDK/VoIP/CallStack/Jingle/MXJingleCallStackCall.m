@@ -561,7 +561,7 @@ didRemoveIceCandidates:(NSArray<RTCIceCandidate *> *)candidates;
         // which user selected when the call was in connecting state.
         // So we need to perform additional checks and override ouput port if needed
         AVAudioSessionRouteDescription *currentRoute = [[AVAudioSession sharedInstance] currentRoute];
-        BOOL isOutputSpeaker = currentRoute.outputs.firstObject.portType == AVAudioSessionPortBuiltInSpeaker;
+        BOOL isOutputSpeaker = [currentRoute.outputs.firstObject.portType isEqualToString:AVAudioSessionPortBuiltInSpeaker];
         if (audioToSpeaker && !isOutputSpeaker)
         {
             [[AVAudioSession sharedInstance] overrideOutputAudioPort:AVAudioSessionPortOverrideSpeaker error:nil];
