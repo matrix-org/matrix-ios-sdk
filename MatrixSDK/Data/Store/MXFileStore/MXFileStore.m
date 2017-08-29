@@ -1447,14 +1447,19 @@ static NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
 {
     dispatch_async(dispatchQueue, ^{
         [self loadUsers];
-        success(users.allValues);
+
+        dispatch_async(dispatch_get_main_queue(), ^{
+            success(users.allValues);
+        });
     });
 }
 
 - (void)asyncUsersWithUserIds:(NSArray<NSString *> *)userIds success:(void (^)(NSArray<MXUser *> *users))success failure:(nullable void (^)(NSError * _Nonnull))failure
 {
     dispatch_async(dispatchQueue, ^{
-        success([self loadUsersWithUserIds:userIds]);
+        dispatch_async(dispatch_get_main_queue(), ^{
+            success([self loadUsersWithUserIds:userIds]);
+        });
     });
 }
 
@@ -1462,7 +1467,10 @@ static NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
 {
     dispatch_async(dispatchQueue, ^{
         [self preloadRoomsSummaries];
-        success(preloadedRoomSummary.allValues);
+        
+        dispatch_async(dispatch_get_main_queue(), ^{
+            success(preloadedRoomSummary.allValues);
+        });
     });
 }
 
