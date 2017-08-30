@@ -919,6 +919,7 @@ typedef void (^MXOnResumeDone)();
         if (nextServerTimeout == 0)
         {
             [self serverSyncWithServerTimeout:nextServerTimeout success:success failure:failure clientTimeout:CLIENT_TIMEOUT_MS setPresence:nil];
+            return;
         }
         
         // there is a pending backgroundSync
