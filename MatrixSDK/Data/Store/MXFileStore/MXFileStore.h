@@ -100,6 +100,17 @@ NS_ASSUME_NONNULL_BEGIN
            failure:(nullable void (^)(NSError *error))failure;
 
 /**
+ Get the list of users for specified users identifiers.
+ 
+ @param userIds An array of users identifiers
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+ */
+- (void)asyncUsersWithUserIds:(NSArray<NSString *> *)userIds
+                      success:(void (^)(NSArray<MXUser *> *users))success
+                      failure:(nullable void (^)(NSError *error))failure;
+
+/**
  Get the list of all stored rooms summaries.
  
  @param success A block object called when the operation succeeds.
