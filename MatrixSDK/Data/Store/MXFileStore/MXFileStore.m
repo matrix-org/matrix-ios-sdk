@@ -1474,6 +1474,22 @@ static NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
     });
 }
 
+- (void)asyncStateEventsOfRoom:(NSString *)roomId success:(void (^)(NSArray<MXEvent *> * _Nonnull))success failure:(nullable void (^)(NSError * _Nonnull))failure
+{
+    dispatch_async(dispatchQueue, ^{
+        [self preloadRoomsStates];
+        success(preloadedRoomsStates[roomId]);
+    });
+}
+
+- (void)asyncAccountDataOfRoom:(NSString *)roomId success:(void (^)(MXRoomAccountData * _Nonnull))success failure:(nullable void (^)(NSError * _Nonnull))failure
+{
+    dispatch_async(dispatchQueue, ^{
+        [self preloadRoomsAccountData];
+        success(preloadedRoomAccountData[roomId]);
+    });
+}
+
 #pragma mark - Tools
 /**
  List recursevely files in a folder
