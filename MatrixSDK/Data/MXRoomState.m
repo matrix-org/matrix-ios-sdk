@@ -847,8 +847,13 @@
 
     stateCopy->_isLive = _isLive;
 
-    // Copy the list of state events pointers. A deep copy is not necessary as MXEvent objects are immutable
-    stateCopy->stateEvents = [[NSMutableDictionary allocWithZone:zone] initWithDictionary:stateEvents];
+    // Copy the state events. A deep copy of each events array is necessary.
+    stateCopy->stateEvents = [[NSMutableDictionary allocWithZone:zone] initWithCapacity:stateEvents.count];
+    for (NSString *key in stateEvents)
+    {
+        // Copy the list of state events pointers. A deep copy is not necessary as MXEvent objects are immutable
+        stateCopy->stateEvents[key] = [[NSMutableArray allocWithZone:zone] initWithArray:stateEvents[key]];
+    }
 
     // Same thing here. MXRoomMembers are also immutable. A new instance of it is created each time
     // the sdk receives room member event, even if it is an update of an existing member like a
