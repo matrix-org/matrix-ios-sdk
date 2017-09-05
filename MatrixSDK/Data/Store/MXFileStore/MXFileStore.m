@@ -1483,7 +1483,7 @@ static NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
 
         NSArray<MXEvent *> *stateEvents = [self stateOfRoom:roomId];
 
-        dispatch_async(dispatchQueue, ^{
+        dispatch_async(dispatch_get_main_queue(), ^{
             success(stateEvents);
         });
     });
@@ -1495,7 +1495,7 @@ static NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
 
         MXRoomAccountData *accountData = [self accountDataOfRoom:roomId];
 
-        dispatch_async(dispatchQueue, ^{
+        dispatch_async(dispatch_get_main_queue(), ^{
             success(accountData);
         });
     });
