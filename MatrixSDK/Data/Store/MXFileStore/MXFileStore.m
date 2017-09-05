@@ -1489,7 +1489,7 @@ static NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
     });
 }
 
-- (void)asyncAccountDataOfRoom:(NSString *)roomId success:(void (^)(MXRoomAccountData * _Nonnull ))success failure:(nullable void (^)(NSError * _Nonnull))failure
+- (void)asyncAccountDataOfRoom:(NSString *)roomId success:(void (^)(MXRoomAccountData * _Nonnull))success failure:(nullable void (^)(NSError * _Nonnull))failure
 {
     dispatch_async(dispatchQueue, ^{
 
