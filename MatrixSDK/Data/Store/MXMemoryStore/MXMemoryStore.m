@@ -154,15 +154,13 @@
 {
     NSMutableArray* receipts = [[NSMutableArray alloc] init];
     
-    NSMutableDictionary* receiptsByUserId = [receiptsByRoomId objectForKey:roomId];
+    NSMutableDictionary* receiptsByUserId = receiptsByRoomId[roomId];
     
     if (receiptsByUserId)
     {
-        NSArray* userIds = [[receiptsByUserId allKeys] copy];
-        
-        for(NSString* userId in userIds)
+        for (NSString* userId in receiptsByUserId)
         {
-            MXReceiptData* receipt = [receiptsByUserId objectForKey:userId];
+            MXReceiptData* receipt = receiptsByUserId[userId];
             
             if (receipt && [receipt.eventId isEqualToString:eventId])
             {
