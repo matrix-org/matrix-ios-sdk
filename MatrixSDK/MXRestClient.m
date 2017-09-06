@@ -944,6 +944,54 @@ MXAuthAction;
                                  }];
 }
 
+- (MXHTTPOperation *)openIdToken:(void (^)(MXOpenIdToken *))success failure:(void (^)(NSError *))failure
+{
+    NSString *path = [NSString stringWithFormat:@"%@/user/%@/openid/request_token", kMXAPIPrefixPathUnstable, credentials.userId];
+
+    return [httpClient requestWithMethod:@"POST"
+                                    path:path
+                              parameters:@{}
+                                 success:^(NSDictionary *JSONResponse) {
+
+                                     if (success && processingQueue)
+                                     {
+                                         // Use here the processing queue in order to keep the server response order
+                                         dispatch_async(processingQueue, ^{
+
+                                             MXOpenIdToken *openIdToken = [MXOpenIdToken modelFromJSON:JSONResponse];
+
+                                             if (completionQueue)
+                                             {
+                                                 dispatch_async(completionQueue, ^{
+
+                                                     success(openIdToken);
+
+                                                 });
+                                             }
+
+                                         });
+                                     }
+
+                                 }
+                                 failure:^(NSError *error) {
+
+                                     if (failure && processingQueue)
+                                     {
+                                         dispatch_async(processingQueue, ^{
+
+                                             if (completionQueue)
+                                             {
+                                                 dispatch_async(completionQueue, ^{
+                                                     failure(error);
+                                                 });
+                                             }
+
+                                         });
+                                     }
+                                 }];
+}
+
+
 #pragma mark - 3pid token request
 
 - (MXHTTPOperation*)requestTokenForEmail:(NSString*)email
