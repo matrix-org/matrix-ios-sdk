@@ -1457,8 +1457,11 @@ static NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
 - (void)asyncUsersWithUserIds:(NSArray<NSString *> *)userIds success:(void (^)(NSArray<MXUser *> *users))success failure:(nullable void (^)(NSError * _Nonnull))failure
 {
     dispatch_async(dispatchQueue, ^{
+
+        NSArray<MXUser *> *usersWithUserIds = [self loadUsersWithUserIds:userIds];
+
         dispatch_async(dispatch_get_main_queue(), ^{
-            success([self loadUsersWithUserIds:userIds]);
+            success(usersWithUserIds);
         });
     });
 }
@@ -1477,16 +1480,24 @@ static NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
 - (void)asyncStateEventsOfRoom:(NSString *)roomId success:(void (^)(NSArray<MXEvent *> * _Nonnull))success failure:(nullable void (^)(NSError * _Nonnull))failure
 {
     dispatch_async(dispatchQueue, ^{
-        [self preloadRoomsStates];
-        success(preloadedRoomsStates[roomId]);
+
+        NSArray<MXEvent *> *stateEvents = [self stateOfRoom:roomId];
+
+        dispatch_async(dispatch_get_main_queue(), ^{
+            success(stateEvents);
+        });
     });
 }
 
 - (void)asyncAccountDataOfRoom:(NSString *)roomId success:(void (^)(MXRoomAccountData * _Nonnull))success failure:(nullable void (^)(NSError * _Nonnull))failure
 {
     dispatch_async(dispatchQueue, ^{
-        [self preloadRoomsAccountData];
-        success(preloadedRoomAccountData[roomId]);
+
+        MXRoomAccountData *accountData = [self accountDataOfRoom:roomId];
+
+        dispatch_async(dispatch_get_main_queue(), ^{
+            success(accountData);
+        });
     });
 }
 

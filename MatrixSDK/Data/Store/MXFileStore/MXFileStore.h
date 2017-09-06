@@ -126,8 +126,8 @@ NS_ASSUME_NONNULL_BEGIN
  @param failure A block object called when the operation fails.
  */
 - (void)asyncStateEventsOfRoom:(NSString *)roomId
-                       success:(void (^)(NSArray<MXEvent *> * _Nonnull))success
-                       failure:(nullable void (^)(NSError * _Nonnull))failure;
+                       success:(void (^)(NSArray<MXEvent *> * _Nonnull stateEvents))success
+                       failure:(nullable void (^)(NSError * _Nonnull error))failure;
 
 /**
  Get the stored account data for a specific room.
@@ -137,8 +137,8 @@ NS_ASSUME_NONNULL_BEGIN
  @param failure A block object called when the operation fails.
  */
 - (void)asyncAccountDataOfRoom:(NSString *)roomId
-                       success:(void (^)(MXRoomAccountData * _Nonnull))success
-                       failure:(nullable void (^)(NSError * _Nonnull))failure;
+                       success:(void (^)(MXRoomAccountData * _Nonnull roomAccountData))success
+                       failure:(nullable void (^)(NSError * _Nonnull error))failure;
 
 
 
