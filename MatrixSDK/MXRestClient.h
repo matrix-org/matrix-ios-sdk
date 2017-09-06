@@ -377,6 +377,19 @@ typedef enum : NSUInteger
                            success:(void (^)())success
                            failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
+/**
+ Gets a bearer token from the homeserver that the user can
+ present to a third party in order to prove their ownership
+ of the Matrix account they are logged into.
+
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)openIdToken:(void (^)(MXOpenIdToken *tokenObject))success
+                        failure:(void (^)(NSError *error))failure;
+
 #pragma mark - 3pid token request
 /**
  Request the validation of an email address (like `requestEmailValidation` in identity server API),
@@ -1933,4 +1946,5 @@ typedef enum : NSUInteger
                                 authParams:(NSDictionary*)authParameters
                                    success:(void (^)())success
                                    failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
+
 @end

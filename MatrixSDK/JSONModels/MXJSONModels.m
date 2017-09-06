@@ -520,6 +520,39 @@ NSString *const kMXPresenceOffline = @"offline";
 @end
 
 
+@interface MXOpenIdToken ()
+
+// Shorcut to retrieve the original JSON as `MXOpenIdToken` data is often directly injected in
+// another request
+@property (nonatomic) NSDictionary *json;
+
+@end
+
+@implementation MXOpenIdToken
+
++ (id)modelFromJSON:(NSDictionary *)JSONDictionary
+{
+    MXOpenIdToken *openIdToken = [[MXOpenIdToken alloc] init];
+    if (openIdToken)
+    {
+        MXJSONModelSetString(openIdToken.tokenType, JSONDictionary[@"token_type"]);
+        MXJSONModelSetString(openIdToken.matrixServerName, JSONDictionary[@"matrix_server_name"]);
+        MXJSONModelSetString(openIdToken.accessToken, JSONDictionary[@"access_token"]);
+        MXJSONModelSetUInt64(openIdToken.expiresIn, JSONDictionary[@"expires_in"]);
+
+        MXJSONModelSetDictionary(openIdToken.json, JSONDictionary);
+    }
+    return openIdToken;
+}
+
+- (NSDictionary *)JSONDictionary
+{
+    return _json;
+}
+
+@end
+
+
 NSString *const kMXPushRuleActionStringNotify       = @"notify";
 NSString *const kMXPushRuleActionStringDontNotify   = @"dont_notify";
 NSString *const kMXPushRuleActionStringCoalesce     = @"coalesce";
