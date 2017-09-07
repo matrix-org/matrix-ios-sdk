@@ -85,14 +85,14 @@
     onStartCapturingMediaWithVideoSuccess = success;
     isVideoCall = video;
 
-    // Video requires views to render to before calling startGetCaptureSourcesForAudio
+    // Video requires views to render to before calling createLocalMediaStream
     if (!video || (selfVideoView && remoteVideoView))
     {
         [self createLocalMediaStream];
     }
     else
     {
-        NSLog(@"[MXJingleCallStackCall] Wait for the setting of selfVideoView and remoteVideoView before calling startGetCaptureSourcesForAudio");
+        NSLog(@"[MXJingleCallStackCall] Wait for the setting of selfVideoView and remoteVideoView before calling createLocalMediaStream");
     }
 }
 
@@ -532,7 +532,7 @@ didRemoveIceCandidates:(NSArray<RTCIceCandidate *> *)candidates;
 {
     if (onStartCapturingMediaWithVideoSuccess && selfVideoView && remoteVideoView)
     {
-        NSLog(@"[MXJingleCallStackCall] selfVideoView and remoteVideoView are set. Call startGetCaptureSourcesForAudio");
+        NSLog(@"[MXJingleCallStackCall] selfVideoView and remoteVideoView are set. Call createLocalMediaStream");
 
         [self createLocalMediaStream];
     }
