@@ -2466,7 +2466,7 @@ MXAuthAction;
                       [userId stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding]];
     
     NSMutableDictionary *parameters = [NSMutableDictionary dictionary];
-    parameters[@"membership"] = @"leave";
+    parameters[@"membership"] = @"kick";
     
     if (reason)
     {
@@ -2536,8 +2536,14 @@ MXAuthAction;
                       success:(void (^)())success
                       failure:(void (^)(NSError *error))failure
 {
-    // Do an unban by resetting the user membership to "leave"
-    return [self kickUser:userId fromRoom:roomId reason:nil success:success failure:failure];
+    NSMutableDictionary *parameters = [NSMutableDictionary dictionary];
+    parameters[@"user_id"] = userId;
+
+    return [self doMembershipRequest:roomId
+                          membership:@"unban"
+                          parameters:parameters
+                             success:success
+                             failure:failure];
 }
 
 - (MXHTTPOperation*)createRoom:(NSString*)name
