@@ -100,6 +100,11 @@
 {
     [peerConnection close];
     peerConnection = nil;
+    
+    // Reset RTC tracks, a latency was observed on avFoundationVideoSourceWithConstraints call when localVideoTrack was not reseted.
+    localAudioTrack = nil;
+    localVideoTrack = nil;
+    remoteVideoTrack = nil;
 
     self.selfVideoView = nil;
     self.remoteVideoView = nil;
