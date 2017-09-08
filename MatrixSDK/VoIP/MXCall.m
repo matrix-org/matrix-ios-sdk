@@ -171,7 +171,11 @@ NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
                 [callStackCall startCapturingMediaWithVideo:self.isVideoCall success:^{
                     [callStackCall handleOffer:callInviteEventContent.offer.sdp
                                        success:^{
-                                           [self setState:MXCallStateRinging reason:event];
+                                           // Check whether the call has not been ended.
+                                           if (_state != MXCallStateEnded)
+                                           {
+                                               [self setState:MXCallStateRinging reason:event];
+                                           }
                                        }
                                        failure:^(NSError * _Nonnull error) {
                                            NSLog(@"[MXCall] handleOffer: ERROR: Couldn't handle offer. Error: %@", error);
