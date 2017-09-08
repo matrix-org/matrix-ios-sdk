@@ -552,6 +552,33 @@ FOUNDATION_EXPORT NSString *const kMXPresenceOffline;
 
 @end
 
+/**
+ `MXOpenIdToken` represents the response to the `openIdToken` request.
+ */
+@interface MXOpenIdToken : MXJSONModel
+
+/**
+ The token type.
+ */
+@property (nonatomic) NSString *tokenType;
+
+/**
+ The homeserver name.
+ */
+@property (nonatomic) NSString *matrixServerName;
+
+/**
+ The generated access token.
+ */
+@property (nonatomic) NSString *accessToken;
+
+/**
+ The valid period in seconds of this token.
+ */
+@property (nonatomic) uint64_t expiresIn;
+
+@end
+
 
 @class MXPushRuleCondition;
 
