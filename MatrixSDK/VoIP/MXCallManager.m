@@ -365,7 +365,7 @@ static NSString *const kMXCallManagerFallbackSTUNServer = @"stun:stun.l.google.c
     {
         // If the app is resuming, wait for the complete end of the session resume in order
         // to check if the invite is still valid
-        if (_mxSession.state != MXSessionStateRunning)
+        if (_mxSession.state == MXSessionStateSyncInProgress || _mxSession.state == MXSessionStateBackgroundSyncInProgress)
         {
             // The dispatch  on the main thread should be enough.
             // It means that the sync response that contained the invite (and possibly its end
