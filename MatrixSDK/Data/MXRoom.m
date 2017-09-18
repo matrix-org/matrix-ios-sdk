@@ -961,7 +961,11 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
                 }
             } failure:onFailure];
         }
-    } failure:onFailure];
+    } failure:^{
+        
+        onFailure(nil);
+        
+    }];
     
     return operation;
 }
