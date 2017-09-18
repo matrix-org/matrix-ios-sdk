@@ -31,6 +31,7 @@ typedef enum : NSUInteger
     MXEventTypeRoomName = 0,
     MXEventTypeRoomTopic,
     MXEventTypeRoomAvatar,
+    MXEventTypeRoomBotOptions,
     MXEventTypeRoomMember,
     MXEventTypeRoomCreate,
     MXEventTypeRoomJoinRules,
@@ -44,18 +45,20 @@ typedef enum : NSUInteger
     MXEventTypeRoomKey,
     MXEventTypeRoomMessage,
     MXEventTypeRoomMessageFeedback,
+    MXEventTypeRoomPlumbing,
     MXEventTypeRoomRedaction,
     MXEventTypeRoomThirdPartyInvite,
     MXEventTypeRoomTag,
     MXEventTypePresence,
     MXEventTypeTypingNotification,
+    MXEventTypeReceipt,
+    MXEventTypeRead,
+    MXEventTypeReadMarker,
     MXEventTypeNewDevice,
     MXEventTypeCallInvite,
     MXEventTypeCallCandidates,
     MXEventTypeCallAnswer,
     MXEventTypeCallHangup,
-    MXEventTypeReceipt,
-    MXEventTypeReadMarker,
 
     // The event is a custom event. Refer to its `MXEventTypeString` version
     MXEventTypeCustom = 1000
@@ -69,6 +72,7 @@ typedef NSString* MXEventTypeString;
 FOUNDATION_EXPORT NSString *const kMXEventTypeStringRoomName;
 FOUNDATION_EXPORT NSString *const kMXEventTypeStringRoomTopic;
 FOUNDATION_EXPORT NSString *const kMXEventTypeStringRoomAvatar;
+FOUNDATION_EXPORT NSString *const kMXEventTypeStringRoomBotOptions;
 FOUNDATION_EXPORT NSString *const kMXEventTypeStringRoomMember;
 FOUNDATION_EXPORT NSString *const kMXEventTypeStringRoomCreate;
 FOUNDATION_EXPORT NSString *const kMXEventTypeStringRoomJoinRules;
@@ -78,10 +82,11 @@ FOUNDATION_EXPORT NSString *const kMXEventTypeStringRoomCanonicalAlias;
 FOUNDATION_EXPORT NSString *const kMXEventTypeStringRoomEncrypted;
 FOUNDATION_EXPORT NSString *const kMXEventTypeStringRoomEncryption;
 FOUNDATION_EXPORT NSString *const kMXEventTypeStringRoomGuestAccess;
-FOUNDATION_EXPORT NSString *const kMXEventTypeStringRoomKey;
 FOUNDATION_EXPORT NSString *const kMXEventTypeStringRoomHistoryVisibility;
+FOUNDATION_EXPORT NSString *const kMXEventTypeStringRoomKey;
 FOUNDATION_EXPORT NSString *const kMXEventTypeStringRoomMessage;
 FOUNDATION_EXPORT NSString *const kMXEventTypeStringRoomMessageFeedback;
+FOUNDATION_EXPORT NSString *const kMXEventTypeStringRoomPlumbing;
 FOUNDATION_EXPORT NSString *const kMXEventTypeStringRoomRedaction;
 FOUNDATION_EXPORT NSString *const kMXEventTypeStringRoomThirdPartyInvite;
 FOUNDATION_EXPORT NSString *const kMXEventTypeStringRoomTag;
