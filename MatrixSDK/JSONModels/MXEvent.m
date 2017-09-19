@@ -23,6 +23,7 @@
 NSString *const kMXEventTypeStringRoomName              = @"m.room.name";
 NSString *const kMXEventTypeStringRoomTopic             = @"m.room.topic";
 NSString *const kMXEventTypeStringRoomAvatar            = @"m.room.avatar";
+NSString *const kMXEventTypeStringRoomBotOptions        = @"m.room.bot.options";
 NSString *const kMXEventTypeStringRoomMember            = @"m.room.member";
 NSString *const kMXEventTypeStringRoomCreate            = @"m.room.create";
 NSString *const kMXEventTypeStringRoomJoinRules         = @"m.room.join_rules";
@@ -36,6 +37,7 @@ NSString *const kMXEventTypeStringRoomHistoryVisibility = @"m.room.history_visib
 NSString *const kMXEventTypeStringRoomKey               = @"m.room_key";
 NSString *const kMXEventTypeStringRoomMessage           = @"m.room.message";
 NSString *const kMXEventTypeStringRoomMessageFeedback   = @"m.room.message.feedback";
+NSString *const kMXEventTypeStringRoomPlumbing          = @"m.room.plumbing";
 NSString *const kMXEventTypeStringRoomRedaction         = @"m.room.redaction";
 NSString *const kMXEventTypeStringRoomThirdPartyInvite  = @"m.room.third_party_invite";
 NSString *const kMXEventTypeStringRoomTag               = @"m.tag";
@@ -45,11 +47,10 @@ NSString *const kMXEventTypeStringReceipt               = @"m.receipt";
 NSString *const kMXEventTypeStringRead                  = @"m.read";
 NSString *const kMXEventTypeStringReadMarker            = @"m.fully_read";
 NSString *const kMXEventTypeStringNewDevice             = @"m.new_device";
-
-NSString *const kMXEventTypeStringCallInvite          = @"m.call.invite";
-NSString *const kMXEventTypeStringCallCandidates      = @"m.call.candidates";
-NSString *const kMXEventTypeStringCallAnswer          = @"m.call.answer";
-NSString *const kMXEventTypeStringCallHangup          = @"m.call.hangup";
+NSString *const kMXEventTypeStringCallInvite            = @"m.call.invite";
+NSString *const kMXEventTypeStringCallCandidates        = @"m.call.candidates";
+NSString *const kMXEventTypeStringCallAnswer            = @"m.call.answer";
+NSString *const kMXEventTypeStringCallHangup            = @"m.call.hangup";
 
 NSString *const kMXMessageTypeText      = @"m.text";
 NSString *const kMXMessageTypeEmote     = @"m.emote";

@@ -961,7 +961,11 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
                 }
             } failure:onFailure];
         }
-    } failure:onFailure];
+    } failure:^{
+        
+        onFailure(nil);
+        
+    }];
     
     return operation;
 }
@@ -1982,6 +1986,9 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
                 [mxSession.directRooms removeObjectForKey:_directUserId];
             }
             
+            // Update
+            _directUserId = nil;
+            
             // Note: mxSession will post the 'kMXSessionDirectRoomsDidChangeNotification' notification on account data update.
             return [mxSession uploadDirectRooms:success failure:failure];
         }
@@ -2063,6 +2070,9 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
                 [mxSession.directRooms removeObjectForKey:_directUserId];
             }
         }
+        
+        // Update
+        _directUserId = newDirectUserId;
         
         // Note: mxSession will post the 'kMXSessionDirectRoomsDidChangeNotification' notification on account data update.
         return [mxSession uploadDirectRooms:success failure:failure];
