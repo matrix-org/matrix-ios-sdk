@@ -4987,7 +4987,7 @@ MXAuthAction;
 }
 
 - (MXHTTPOperation *)keyChangesFrom:(NSString *)fromToken to:(NSString *)toToken
-                            success:(void (^)(NSArray<NSString*> *changed))success
+                            success:(void (^)(MXDeviceListResponse *deviceLists))success
                             failure:(void (^)(NSError *))failure
 {
     return [httpClient requestWithMethod:@"GET"
@@ -5003,13 +5003,13 @@ MXAuthAction;
                                          // Create devices array from JSON on processing queue
                                          dispatch_async(processingQueue, ^{
 
-                                             NSArray<NSString*> *changed;
-                                             MXJSONModelSetArray(changed, JSONResponse [@"changed" ]);
+                                             MXDeviceListResponse *deviceLists;
+                                             MXJSONModelSetMXJSONModel(deviceLists, MXDeviceListResponse, JSONResponse);
 
                                              if (completionQueue)
                                              {
                                                  dispatch_async(completionQueue, ^{
-                                                     success(changed);
+                                                     success(deviceLists);
                                                  });
                                              }
 

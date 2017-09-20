@@ -248,6 +248,20 @@
     // refreshOutdatedDeviceLists.
 }
 
+- (void)stopTrackingDeviceList:(NSString *)userId
+{
+    MXDeviceTrackingStatus trackingStatus = MXDeviceTrackingStatusFromNSNumber(deviceTrackingStatus[userId]);
+
+    if (trackingStatus)
+    {
+        NSLog(@"[MXDeviceList] No longer tracking device list for %@", userId);
+        deviceTrackingStatus[userId] = @(MXDeviceTrackingStatusNotTracked);
+    }
+    // we don't yet persist the tracking status, since there may be a lot
+    // of calls; instead we wait for the forthcoming
+    // refreshOutdatedDeviceLists.
+}
+
 - (void)invalidateUserDeviceList:(NSString *)userId
 {
     MXDeviceTrackingStatus trackingStatus = MXDeviceTrackingStatusFromNSNumber(deviceTrackingStatus[userId]);
