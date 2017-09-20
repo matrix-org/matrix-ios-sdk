@@ -1314,6 +1314,11 @@ FOUNDATION_EXPORT NSString *const kMXPushRuleScopeStringDevice;
      */
     @property (nonatomic) NSArray<NSString*> *changed;
 
+    /**
+     List of user ids who are no more tracked.
+     */
+    @property (nonatomic) NSArray<NSString*> *left;
+
 @end
 
 /**

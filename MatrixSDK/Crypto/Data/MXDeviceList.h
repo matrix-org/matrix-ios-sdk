@@ -27,6 +27,29 @@
 
 @class MXCrypto;
 
+
+/**
+ State transition diagram for DeviceList.deviceTrackingStatus
+
+                              |
+   stopTrackingDeviceList     V
+ +---------------------> NOT_TRACKED
+ |                            |
+ +<--------------------+      | startTrackingDeviceList
+ |                     |      V
+ |   +-------------> PENDING_DOWNLOAD <--------------------+-+
+ |   |                      ^ |                            | |
+ |   | restart     download | |  start download            | | invalidateUserDeviceList
+ |   | client        failed | |                            | |
+ |   |                      | V                            | |
+ |   +------------ DOWNLOAD_IN_PROGRESS -------------------+ |
+ |                    |       |                              |
+ +<-------------------+       |  download successful         |
+ ^                            V                              |
+ +----------------------- UP_TO_DATE ------------------------+
+ 
+ */
+
 // Constants for DeviceList.deviceTrackingStatus
 typedef enum : NSUInteger
 {
@@ -103,6 +126,17 @@ typedef enum : NSUInteger
  @param userId the user to start to track devices.
  */
 - (void)startTrackingDeviceList:(NSString*)userId;
+
+/**
+ Mark the given user as no longer being tracked for device-list updates.
+ 
+ This won't affect any in-progress downloads, which will still go on to
+ complete; it will just mean that we don't think that we have an up-to-date
+ list for future calls to downloadKeys.
+ 
+ @param userId the user to stop to track devices.
+ */
+- (void)stopTrackingDeviceList:(NSString*)userId;
 
 /**
  Mark the cached device list for the given user outdated.

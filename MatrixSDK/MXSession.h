@@ -622,6 +622,8 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
 /**
  Update the direct rooms list on homeserver side with the current value of the `directRooms` property.
  
+ The `kMXSessionDirectRoomsDidChangeNotification` notification is posted on success.
+ 
  @param success A block object called when the operation succeeds.
  @param failure A block object called when the operation fails.
  

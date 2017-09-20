@@ -1168,6 +1168,7 @@ NSString *const kMXPushRuleScopeStringDevice = @"device";
     if (deviceListResponse)
     {
         MXJSONModelSetArray(deviceListResponse.changed, JSONDictionary[@"changed"]);
+        MXJSONModelSetArray(deviceListResponse.left, JSONDictionary[@"left"]);
     }
     return deviceListResponse;
 }

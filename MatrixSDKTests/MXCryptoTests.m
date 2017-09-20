@@ -1673,6 +1673,93 @@
     }];
 }
 
+// Test for https://github.com/vector-im/riot-web/issues/4983
+// - Alice and Bob share an e2e room; Bob tracks Alice's devices
+// - Bob leaves the room, so stops getting updates
+// - Alice adds a new device
+// - Alice and Bob start sharing a room again
+// - Bob has an out of date list of Alice's devices
+- (void)testLeftBobAndAliceWithNewDevice
+{
+    // - Alice and Bob share an e2e room; Bob tracks Alice's devices
+    [matrixSDKTestsE2EData doE2ETestWithAliceAndBobInARoomWithCryptedMessages:self cryptedBob:YES readyToTest:^(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
+
+        // - Bob leaves the room, so stops getting updates
+        [bobSession leaveRoom:roomId success:^{
+
+            // - Alice adds a new device
+            [MXSDKOptions sharedInstance].enableCryptoWhenStartingMXSession = YES;
+            [matrixSDKTestsData relogUserSession:aliceSession withPassword:MXTESTS_ALICE_PWD onComplete:^(MXSession *aliceSession2) {
+                [MXSDKOptions sharedInstance].enableCryptoWhenStartingMXSession = NO;
+
+                aliceSessionToClose = aliceSession2;
+                bobSessionToClose = bobSession;
+
+                aliceSession2.crypto.warnOnUnknowDevices = NO;
+
+                // - Alice and Bob start sharing a room again
+                [aliceSession2 createRoom:nil visibility:kMXRoomDirectoryVisibilityPublic roomAlias:nil topic:nil success:^(MXRoom *roomFromAlice2POV) {
+
+                    NSString *newRoomId = roomFromAlice2POV.roomId;
+
+                    [roomFromAlice2POV enableEncryptionWithAlgorithm:kMXCryptoMegolmAlgorithm success:^{
+
+                        __block __weak id observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXSessionNewRoomNotification object:bobSession queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
+
+                            [[NSNotificationCenter defaultCenter] removeObserver:observer];
+
+                            [bobSession joinRoom:note.userInfo[kMXSessionNotificationRoomIdKey] success:^(MXRoom *room) {
+
+                                // - Bob has an out of date list of Alice's devices
+                                MXRoom *roomFromBobPOV = [bobSession roomWithRoomId:newRoomId];
+
+                                NSString *messageFromBob = @"Hello Alice with new device!";
+
+                                [roomFromAlice2POV.liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage, kMXEventTypeStringRoomEncrypted] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
+
+                                    XCTAssertEqual(0, [self checkEncryptedEvent:event roomId:newRoomId clearMessage:messageFromBob senderSession:bobSession]);
+
+                                    [expectation fulfill];
+
+                                }];
+
+                                [roomFromBobPOV sendTextMessage:messageFromBob success:nil failure:^(NSError *error) {
+                                    XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                                    [expectation fulfill];
+                                }];
+                                
+                            } failure:^(NSError *error) {
+                                XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                                [expectation fulfill];
+                            }];
+
+                        }];
+                        
+                        [roomFromAlice2POV inviteUser:bobSession.myUser.userId success:nil failure:^(NSError *error) {
+                            XCTFail(@"Cannot invite Bob (%@) - error: %@", bobSession.myUser.userId, error);
+                            [expectation fulfill];
+                        }];
+                        
+                    } failure:^(NSError *error) {
+                        XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                        [expectation fulfill];
+                    }];
+                    
+                }  failure:^(NSError *error) {
+                    XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                    [expectation fulfill];
+                }];
+
+            }];
+            
+        } failure:^(NSError *error) {
+            XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+            [expectation fulfill];
+        }];
+        
+    }];
+}
+
 // Test for https://github.com/matrix-org/matrix-js-sdk/pull/359
 // - Alice sends a message to Bob to a non encrypted room
 // - Bob logs in with a new device

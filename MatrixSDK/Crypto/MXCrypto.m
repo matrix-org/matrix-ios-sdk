@@ -74,8 +74,6 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
 
     // The operation used for crypto starting requests
     MXHTTPOperation *startOperation;
-
-    BOOL initialDeviceListInvalidationPending;
 }
 @end
 
@@ -533,21 +531,27 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
 }
 
 // This method is equivalent to the Crypto.prototype._onSyncCompleted in matrix-js-sdk
-- (void)handleDeviceListsChanged:(NSArray<NSString *>*)userIds oldSyncToken:(NSString *)oldSyncToken nextSyncToken:(NSString *)nextSyncToken
+- (void)handleDeviceListsChanges:(MXDeviceListResponse*)deviceLists oldSyncToken:(NSString*)oldSyncToken nextSyncToken:(NSString*)nextSyncToken
 {
 #ifdef MX_CRYPTO
 
-    NSLog(@"[MXCrypto] handleDeviceListsChanged: %@", userIds);
+    NSLog(@"[MXCrypto] handleDeviceListsChanges:\nchanges: %@\nleft: %@", deviceLists.changed, deviceLists.left);
 
     BOOL isCatchingUp = mxSession.catchingUp;
 
     dispatch_async(_cryptoQueue, ^{
 
         // Flag users to refresh
-        for (NSString *userId in userIds)
+        for (NSString *userId in deviceLists.changed)
         {
             // TODO: Should we filter to users who have e2e rooms with us?
             [_deviceList invalidateUserDeviceList:userId];
+        }
+
+        for (NSString *userId in deviceLists.left)
+        {
+            // TODO: Should we filter to users who have e2e rooms with us?
+            [_deviceList stopTrackingDeviceList:userId];
         }
 
         if (!oldSyncToken)
@@ -563,11 +567,9 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
             NSString *oldDeviceSyncToken = _store.deviceSyncToken;
             if (oldDeviceSyncToken)
             {
-                NSLog(@"[MXCrypto] handleDeviceListsChanged: Completed initialsync; invalidating device list from deviceSyncToken: %@", oldDeviceSyncToken);
+                NSLog(@"[MXCrypto] handleDeviceListsChanges: Completed initialsync; invalidating device list from deviceSyncToken: %@", oldDeviceSyncToken);
 
-                initialDeviceListInvalidationPending = YES;
-
-                [self invalidateDeviceListsSince:oldDeviceSyncToken to:nextSyncToken success:^(NSArray<NSString *> *changed) {
+                [self invalidateDeviceListsSince:oldDeviceSyncToken to:nextSyncToken success:^() {
 
                     _deviceList.lastKnownSyncToken = nextSyncToken;
                     [_deviceList refreshOutdatedDeviceLists];
@@ -575,7 +577,7 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
                 } failure:^(NSError *error) {
 
                     // If that failed, we fall back to invalidating everyone.
-                    NSLog(@"[MXCrypto] handleDeviceListsChanged: Error fetching changed device list. Error: %@", error);
+                    NSLog(@"[MXCrypto] handleDeviceListsChanges: Error fetching changed device list. Error: %@", error);
                     [_deviceList invalidateAllDeviceLists];
                 }];
             }
@@ -583,20 +585,17 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
             {
                 // Otherwise, we have to invalidate all devices for all users we
                 // are tracking.
-                NSLog(@"[MXCrypto] handleDeviceListsChanged: Completed first initialsync; invalidating all device list caches");
+                NSLog(@"[MXCrypto] handleDeviceListsChanges: Completed first initialsync; invalidating all device list caches");
                 [_deviceList invalidateAllDeviceLists];
             }
         }
 
-        if (!initialDeviceListInvalidationPending)
-        {
-            // we can now store our sync token so that we can get an update on
-            // restart rather than having to invalidate everyone.
-            //
-            // (we don't really need to do this on every sync - we could just
-            // do it periodically)
-            [_store storeDeviceSyncToken:nextSyncToken];
-        }
+        // we can now store our sync token so that we can get an update on
+        // restart rather than having to invalidate everyone.
+        //
+        // (we don't really need to do this on every sync - we could just
+        // do it periodically)
+        [_store storeDeviceSyncToken:nextSyncToken];
 
         // catch up on any new devices we got told about during the sync.
         _deviceList.lastKnownSyncToken = nextSyncToken;
@@ -810,7 +809,7 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
         [_store storeDeviceTrackingStatus:nil];
 
         // Reset the sync token
-        // [self handleDeviceListsChanged] will download all keys at the coming initial /sync
+        // [self handleDeviceListsChanges] will download all keys at the coming initial /sync
         [_store storeDeviceSyncToken:nil];
     });
 #endif
@@ -1089,8 +1088,6 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
 
         roomEncryptors = [NSMutableDictionary dictionary];
         roomDecryptors = [NSMutableDictionary dictionary];
-
-        initialDeviceListInvalidationPending = NO;
 
         // Build our device keys: they will later be uploaded
         NSString *deviceId = _store.deviceId;
@@ -1478,19 +1475,16 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
  @param failure A block object called when the operation fails.
  */
 - (void)invalidateDeviceListsSince:(NSString*)oldSyncToken to:(NSString*)lastKnownSyncToken
-                           success:(void (^)(NSArray<NSString*> *changed))success
+                           success:(void (^)())success
                            failure:(void (^)(NSError *error))failure
 {
-    [_matrixRestClient keyChangesFrom:oldSyncToken to:lastKnownSyncToken success:^(NSArray<NSString *> *changed) {
+    [_matrixRestClient keyChangesFrom:oldSyncToken to:lastKnownSyncToken success:^(MXDeviceListResponse *deviceLists) {
 
-        NSLog(@"[MXCrypto] invalidateDeviceListsSince: got key changes since %@: %@", oldSyncToken, changed);
+        NSLog(@"[MXCrypto] invalidateDeviceListsSince: got key changes since %@: changed: %@\nleft: %@", oldSyncToken, deviceLists.changed, deviceLists.left);
 
-        for (NSString *userId in changed)
-        {
-            [_deviceList invalidateUserDeviceList:userId];
-        }
+        [self handleDeviceListsChanges:deviceLists oldSyncToken:oldSyncToken nextSyncToken:lastKnownSyncToken];
 
-        success(changed);
+        success();
 
     } failure:failure];
 }
