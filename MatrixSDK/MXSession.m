@@ -1654,6 +1654,11 @@ typedef void (^MXOnResumeDone)();
 - (MXHTTPOperation*)uploadDirectRooms:(void (^)())success
                               failure:(void (^)(NSError *error))failure
 {
+    // We consider here that the direct rooms directory has been updated locally, we post a notification by default.
+    [[NSNotificationCenter defaultCenter] postNotificationName:kMXSessionDirectRoomsDidChangeNotification
+                                                        object:self
+                                                      userInfo:nil];
+    
     // Push the current direct rooms dictionary to the homeserver.
     return [matrixRestClient setAccountData:_directRooms forType:kMXAccountDataTypeDirect success:success failure:failure];
 }

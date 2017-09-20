@@ -1989,7 +1989,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
             // Update
             _directUserId = nil;
             
-            // Note: mxSession will post the 'kMXSessionDirectRoomsDidChangeNotification' notification on account data update.
+            // Upload the updated direct rooms directory (mxSession will post the 'kMXSessionDirectRoomsDidChangeNotification' notification).
             return [mxSession uploadDirectRooms:success failure:failure];
         }
     }
@@ -2074,7 +2074,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
         // Update
         _directUserId = newDirectUserId;
         
-        // Note: mxSession will post the 'kMXSessionDirectRoomsDidChangeNotification' notification on account data update.
+        // Upload the updated direct rooms directory (mxSession will post the 'kMXSessionDirectRoomsDidChangeNotification' notification).
         return [mxSession uploadDirectRooms:success failure:failure];
     }
     
