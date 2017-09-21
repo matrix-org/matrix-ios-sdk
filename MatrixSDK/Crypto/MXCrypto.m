@@ -535,6 +535,12 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
 {
 #ifdef MX_CRYPTO
 
+    if (deviceLists.changed.count == 0 && deviceLists.left.count == 0)
+    {
+        // Don't go further if there is nothing to process
+        return;
+    }
+
     NSLog(@"[MXCrypto] handleDeviceListsChanges:\nchanges: %@\nleft: %@", deviceLists.changed, deviceLists.left);
 
     BOOL isCatchingUp = mxSession.catchingUp;
