@@ -512,6 +512,10 @@ NSString * const MXHTTPClientErrorResponseDataKey = @"com.matrixsdk.httpclient.e
     {
         __weak __typeof(self)weakSelf = self;
         backgroundTaskIdentifier = [handler startBackgroundTaskWithName:nil completion:^{
+
+            NSLog(@"[MXHTTPClient] Background task #%tu is going to expire - Try to end it",
+                  backgroundTaskIdentifier);
+
             __strong __typeof(weakSelf)strongSelf = weakSelf;
             if (strongSelf)
             {
@@ -525,6 +529,8 @@ NSString * const MXHTTPClientErrorResponseDataKey = @"com.matrixsdk.httpclient.e
                 [strongSelf cleanupBackgroundTask];
             }
         }];
+
+        NSLog(@"[MXHTTPClient] Background task #%tu started", backgroundTaskIdentifier);
     }
 }
 
@@ -536,9 +542,14 @@ NSString * const MXHTTPClientErrorResponseDataKey = @"com.matrixsdk.httpclient.e
  */
 - (void)cleanupBackgroundTask
 {
+    NSLog(@"[MXHTTPClient] cleanupBackgroundTask");
+
     id<MXBackgroundModeHandler> handler = [MXSDKOptions sharedInstance].backgroundModeHandler;
     if (handler && backgroundTaskIdentifier != [handler invalidIdentifier] && httpManager.tasks.count == 0)
     {
+        NSLog(@"[MXHTTPClient] Background task #%tu is complete",
+              backgroundTaskIdentifier);
+
         [handler endBackgrounTaskWithIdentifier:backgroundTaskIdentifier];
         backgroundTaskIdentifier = [handler invalidIdentifier];
     }
