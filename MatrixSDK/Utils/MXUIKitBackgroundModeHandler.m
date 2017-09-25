@@ -47,7 +47,7 @@
         }
         else
         {
-            token = [sharedApplication beginBackgroundTaskWithExpirationHandler:nil];
+            token = [sharedApplication beginBackgroundTaskWithExpirationHandler:completion];
         }
     }
     
