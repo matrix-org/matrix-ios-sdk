@@ -591,17 +591,19 @@ NSString * const MXHTTPClientErrorResponseDataKey = @"com.matrixsdk.httpclient.e
 
     reachabilityObservers = [NSMutableArray array];
     
-    __weak typeof(self) weakSelf = nil;
+    __weak typeof(self) weakSelf = self;
     reachabilityObserver = [[NSNotificationCenter defaultCenter] addObserverForName:AFNetworkingReachabilityDidChangeNotification object:nil queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
-        __strong typeof(weakSelf) strongSelf = weakSelf;
-        if (!strongSelf)
-            return;
-        
-        if (networkReachabilityManager.isReachable && strongSelf->reachabilityObservers.count)
+
+        if (weakSelf)
         {
-            // Start retrying request one by one to keep messages order
-            NSLog(@"[MXHTTPClient] Network is back. Wake up %tu observers.", strongSelf->reachabilityObservers.count);
-            [strongSelf wakeUpNextReachabilityServer];
+            __strong typeof(weakSelf) self = weakSelf;
+
+            if (networkReachabilityManager.isReachable && self->reachabilityObservers.count)
+            {
+                // Start retrying request one by one to keep messages order
+                NSLog(@"[MXHTTPClient] Network is back. Wake up %tu observers.", self->reachabilityObservers.count);
+                [self wakeUpNextReachabilityServer];
+            }
         }
     }];
 }
