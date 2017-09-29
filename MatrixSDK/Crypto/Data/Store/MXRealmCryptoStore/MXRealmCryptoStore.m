@@ -24,6 +24,8 @@
 
 NSUInteger const kMXRealmCryptoStoreVersion = 5;
 
+static NSString *const kMXRealmCryptoStoreFolder = @"MXRealmCryptoStore";
+
 
 #pragma mark - Realm objects that encapsulate existing ones
 
@@ -673,11 +675,59 @@ RLM_ARRAY_TYPE(MXRealmOlmInboundGroupSession)
     // will be called twice for the same room id which breaks the uniqueness of the
     // primary key (roomId) for this table.
     RLMRealmConfiguration *config = [RLMRealmConfiguration defaultConfiguration];
-
-    // Use the default directory, but replace the filename with the userId
-    config.fileURL = [[[config.fileURL URLByDeletingLastPathComponent]
-                       URLByAppendingPathComponent:userId]
-                      URLByAppendingPathExtension:@"realm"];
+    
+    // Default db file URL: use the default directory, but replace the filename with the userId.
+    NSURL *defaultRealmFileURL = [[[config.fileURL URLByDeletingLastPathComponent]
+                               URLByAppendingPathComponent:userId]
+                              URLByAppendingPathExtension:@"realm"];
+    
+    // Check for a potential application group id.
+    NSString *applicationGroupIdentifier = [MXSDKOptions sharedInstance].applicationGroupIdentifier;
+    if (applicationGroupIdentifier)
+    {
+        // Use the shared db file URL.
+        NSURL *sharedContainerURL = [[NSFileManager defaultManager] containerURLForSecurityApplicationGroupIdentifier:applicationGroupIdentifier];
+        NSURL *realmFileFolderURL = [sharedContainerURL URLByAppendingPathComponent:kMXRealmCryptoStoreFolder];
+        NSURL *realmFileURL = [[realmFileFolderURL URLByAppendingPathComponent:userId] URLByAppendingPathExtension:@"realm"];
+        
+        config.fileURL = realmFileURL;
+        
+        // Check whether an existing db file has to be be moved from the default folder to the shared container.
+        if ([NSFileManager.defaultManager fileExistsAtPath:[defaultRealmFileURL path]])
+        {
+            if (![NSFileManager.defaultManager fileExistsAtPath:[realmFileURL path]])
+            {
+                // Move this db file in the container directory associated with the application group identifier.
+                NSLog(@"[MXRealmCryptoStore] Move the db file to the application group container");
+                
+                if (![NSFileManager.defaultManager fileExistsAtPath:realmFileFolderURL.path])
+                {
+                    [[NSFileManager defaultManager] createDirectoryAtPath:realmFileFolderURL.path withIntermediateDirectories:YES attributes:nil error:nil];
+                }
+                
+                NSError *fileManagerError = nil;
+                
+                [NSFileManager.defaultManager moveItemAtURL:defaultRealmFileURL toURL:realmFileURL error:&fileManagerError];
+                
+                if (fileManagerError)
+                {
+                    NSLog(@"[MXRealmCryptoStore] Move db file failed (%@)", fileManagerError);
+                    // Keep using the old file
+                    config.fileURL = defaultRealmFileURL;
+                }
+            }
+            else
+            {
+                // Remove the residual db file.
+                [NSFileManager.defaultManager removeItemAtURL:defaultRealmFileURL error:nil];
+            }
+        }
+    }
+    else
+    {
+        // Use the default URL
+        config.fileURL = defaultRealmFileURL;
+    }
 
     config.schemaVersion = kMXRealmCryptoStoreVersion;
 
