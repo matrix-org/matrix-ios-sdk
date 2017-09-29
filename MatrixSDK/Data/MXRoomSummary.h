@@ -152,6 +152,11 @@ FOUNDATION_EXPORT NSString *const kMXRoomSummaryDidChangeNotification;
 @property (nonatomic, readonly) NSString *lastMessageEventId;
 
 /**
+ The last message server timestamp.
+ */
+@property (nonatomic, readonly) uint64_t lastMessageOriginServerTs;
+
+/**
  Indicates if the last message is encrypted.
  
  @discussion
