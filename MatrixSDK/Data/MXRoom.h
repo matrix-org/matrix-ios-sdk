@@ -403,6 +403,17 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidFlushDataNotification;
                      failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 /**
+ Cancel a sending operation.
+
+ Note that the local echo event will be not removed from the outgoing message queue.
+ The user must call
+
+ @param localEchoEventId the id of the local echo event created by the sending
+        operation to cancel.
+ */
+- (void)cancelSendingOperation:(NSString*)localEchoEventId;
+
+/**
  Determine if an event has a local echo.
  
  @param event the concerned event.

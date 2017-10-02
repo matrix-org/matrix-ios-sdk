@@ -33,12 +33,41 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
 
 @interface MXRoomOperation : NSObject
 
+@property (nonatomic) MXEvent *localEvent;
 @property (nonatomic) MXHTTPOperation *operation;
 @property (nonatomic) void (^block)(void);
 
+/**
+ Cancel status.
+ */
+@property (nonatomic, readonly, getter=isCancelled) BOOL canceled;
+
+/**
+ Cancel the HTTP request.
+ */
+- (void)cancel;
+
+@end
+
+@interface MXRoomOperation ()
+{
+    BOOL canceled;
+}
 @end
 
 @implementation MXRoomOperation
+
+- (BOOL)isCancelled
+{
+    return canceled || _operation.isCancelled;
+}
+
+- (void)cancel
+{
+    [_operation cancel];
+    canceled = YES;
+}
+
 @end
 
 @interface MXRoom ()
@@ -366,7 +395,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
                 [self updateOutgoingMessage:event.eventId withOutgoingMessage:event];
             }
 
-            roomOperation = [self preserveOperationOrder:^{
+            roomOperation = [self preserveOperationOrder:event block:^{
                 MXHTTPOperation *operation = [self _sendEventOfType:eventTypeString content:content success:onSuccess failure:onFailure];
                 [roomOperation.operation mutateTo:operation];
             }];
@@ -397,7 +426,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
                 }
             }
 
-            roomOperation = [self preserveOperationOrder:^{
+            roomOperation = [self preserveOperationOrder:event block:^{
 
                 MXHTTPOperation *operation = [mxSession.crypto encryptEventContent:content withType:eventTypeString inRoom:self success:^(NSDictionary *encryptedContent, NSString *encryptedEventType) {
 
@@ -464,7 +493,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
             }
         }
 
-        roomOperation = [self preserveOperationOrder:^{
+        roomOperation = [self preserveOperationOrder:event block:^{
             MXHTTPOperation *operation = [self _sendEventOfType:eventTypeString content:content success:onSuccess failure:onFailure];
             [roomOperation.operation mutateTo:operation];
         }];
@@ -677,7 +706,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
         *localEcho = event;
     }
 
-    roomOperation = [self preserveOperationOrder:^{
+    roomOperation = [self preserveOperationOrder:event block:^{
 
         // Check whether the content must be encrypted before sending
         if (mxSession.crypto && self.state.isEncrypted)
@@ -878,7 +907,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
         *localEcho = event;
     }
 
-    roomOperation = [self preserveOperationOrder:^{
+    roomOperation = [self preserveOperationOrder:event block:^{
 
         // Before sending data to the server, convert the video to MP4
         [MXTools convertVideoToMP4:videoLocalURL success:^(NSURL *convertedLocalURL, NSString *mimetype, CGSize size, double durationInMs) {
@@ -1140,7 +1169,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
         *localEcho = event;
     }
 
-    roomOperation = [self preserveOperationOrder:^{
+    roomOperation = [self preserveOperationOrder:event block:^{
 
         if (self.mxSession.crypto && self.state.isEncrypted)
         {
@@ -1205,6 +1234,16 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
     }];
     
     return roomOperation.operation;
+}
+
+- (void)cancelSendingOperation:(NSString *)localEchoEventId
+{
+    MXRoomOperation *roomOperation = [self roomOperationWithLocalEventId:localEchoEventId];
+    if (roomOperation)
+    {
+        [roomOperation cancel];
+        [self handleNextOperationAfter:roomOperation];
+    }
 }
 
 - (MXHTTPOperation*)setTopic:(NSString*)topic
@@ -1384,13 +1423,15 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
 /**
  Make sure that `block` will be called in the order expected by the end user.
 
+ @param localEvent the local echo event corresping to the event being sent.
  @param block the code block to schedule.
  @return a `MXRoomOperation` object.
  */
-- (MXRoomOperation *)preserveOperationOrder:(void (^)())block
+- (MXRoomOperation *)preserveOperationOrder:(MXEvent*)localEvent block:(void (^)())block
 {
     // Queue the operation requests
     MXRoomOperation *roomOperation = [[MXRoomOperation alloc] init];
+    roomOperation.localEvent = localEvent;
     roomOperation.operation = [[MXHTTPOperation alloc] init];
     roomOperation.block = block;
 
@@ -1422,7 +1463,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
         MXRoomOperation *nextRoomOperation = orderedOperations[0];
 
         // Launch it if it was not cancelled
-        if (!nextRoomOperation.operation.isCancelled)
+        if (!nextRoomOperation.isCancelled)
         {
             nextRoomOperation.block();
         }
@@ -1446,6 +1487,28 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
     for (MXRoomOperation *roomOperation in orderedOperations)
     {
         if (roomOperation.operation == operation)
+        {
+            theRoomOperation = roomOperation;
+            break;
+        }
+    }
+
+    return theRoomOperation;
+}
+
+/**
+ Find the `MXRoomOperation` instance that corresponds to the id of a local echo event.
+
+ @param localEventId the id of the local echo event to retrieve.
+ @return the corresponding `MXRoomOperation` object.
+ */
+- (MXRoomOperation *)roomOperationWithLocalEventId:(NSString*)localEventId
+{
+    MXRoomOperation *theRoomOperation;
+
+    for (MXRoomOperation *roomOperation in orderedOperations)
+    {
+        if ([roomOperation.localEvent.eventId isEqualToString:localEventId])
         {
             theRoomOperation = roomOperation;
             break;
