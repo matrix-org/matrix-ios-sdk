@@ -25,50 +25,12 @@
 #import "MXEncryptedAttachments.h"
 
 #import "MXMediaManager.h"
+#import "MXRoomOperation.h"
 
 #import "MXError.h"
 
 NSString *const kMXRoomDidFlushDataNotification = @"kMXRoomDidFlushDataNotification";
 NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotification";
-
-@interface MXRoomOperation : NSObject
-
-@property (nonatomic) MXEvent *localEvent;
-@property (nonatomic) MXHTTPOperation *operation;
-@property (nonatomic) void (^block)(void);
-
-/**
- Cancel status.
- */
-@property (nonatomic, readonly, getter=isCancelled) BOOL canceled;
-
-/**
- Cancel the HTTP request.
- */
-- (void)cancel;
-
-@end
-
-@interface MXRoomOperation ()
-{
-    BOOL canceled;
-}
-@end
-
-@implementation MXRoomOperation
-
-- (BOOL)isCancelled
-{
-    return canceled || _operation.isCancelled;
-}
-
-- (void)cancel
-{
-    [_operation cancel];
-    canceled = YES;
-}
-
-@end
 
 @interface MXRoom ()
 {
@@ -80,6 +42,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
     /**
      The list of room operations (sending of text, images...) that must be sent
      in the same order as the user typed them.
+     These operations are stored in a FIFO and executed one after the other.
      */
     NSMutableArray<MXRoomOperation*> *orderedOperations;
 }
