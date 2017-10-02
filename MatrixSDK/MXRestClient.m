@@ -796,23 +796,36 @@ MXAuthAction;
 {
     // If the caller does not provide it, fill the device display name field with the device name
     // Do it only if parameters contains the password field, do make homeserver happy.
-    if (parameters[@"password"] && !parameters[@"initial_device_display_name"])
+    if (parameters[@"password"])
     {
-        NSMutableDictionary *newParameters = [NSMutableDictionary dictionaryWithDictionary:parameters];
+        NSMutableDictionary *newParameters;
+        
+        if (!parameters[@"initial_device_display_name"])
+        {
+            newParameters = [NSMutableDictionary dictionaryWithDictionary:parameters];
+            
 #if TARGET_OS_IPHONE
-        NSString *deviceName = [UIDevice currentDevice].name;
+            NSString *deviceName = [UIDevice currentDevice].name;
 #elif TARGET_OS_OSX
-        NSString *deviceName = [NSHost currentHost].localizedName;
+            NSString *deviceName = [NSHost currentHost].localizedName;
 #endif
-        newParameters[@"initial_device_display_name"] = deviceName;
+            newParameters[@"initial_device_display_name"] = deviceName;
+        }
         
         if (MXAuthActionRegister == authAction)
         {
             // Patch: Add the temporary `x_show_msisdn` flag to not filter the msisdn login type in the supported authentication flows.
+            if (!newParameters)
+            {
+                newParameters = [NSMutableDictionary dictionaryWithDictionary:parameters];
+            }
             newParameters[@"x_show_msisdn"] = @(YES);
         }
         
-        parameters = newParameters;
+        if (newParameters)
+        {
+            parameters = newParameters;
+        }
     }
 
     return [httpClient requestWithMethod:@"POST"
