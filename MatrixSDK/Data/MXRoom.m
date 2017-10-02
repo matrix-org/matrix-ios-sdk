@@ -49,8 +49,8 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
     BOOL shouldCheckDirectStatusOnJoin;
 
     /**
-     The list of room operations (sending of text, images...) that must be sent in the same order
-     as the user typed them.
+     The list of room operations (sending of text, images...) that must be sent
+     in the same order as the user typed them.
      */
     NSMutableArray<MXRoomOperation*> *orderedOperations;
 }
@@ -713,6 +713,8 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
                     // Send this content (the sent state of the local echo will be updated, its local storage too).
                     MXHTTPOperation *operation2 = [self sendMessageWithContent:msgContent localEcho:&event success:onSuccess failure:onFailure];
 
+                    // Retrieve the MXRoomOperation just created for operation2
+                    // And use it as the current operation
                     MXRoomOperation *roomOperation2 = [self roomOperationWithHTTPOperation:operation2];
                     [self mutateRoomOperation:roomOperation to:roomOperation2];
                 };
@@ -764,6 +766,8 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
                 // Make the final request that posts the image event (the sent state of the local echo will be updated, its local storage too).
                 MXHTTPOperation *operation2 = [self sendMessageWithContent:msgContent localEcho:&event success:onSuccess failure:onFailure];
 
+                // Retrieve the MXRoomOperation just created for operation2
+                // And use it as the current operation
                 MXRoomOperation *roomOperation2 = [self roomOperationWithHTTPOperation:operation2];
                 [self mutateRoomOperation:roomOperation to:roomOperation2];
 
@@ -938,6 +942,8 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
                         // Send this content (the sent state of the local echo will be updated, its local storage too).
                         MXHTTPOperation *operation2 = [self sendMessageWithContent:msgContent localEcho:&event success:onSuccess failure:onFailure];
 
+                        // Retrieve the MXRoomOperation just created for operation2
+                        // And use it as the current operation
                         MXRoomOperation *roomOperation2 = [self roomOperationWithHTTPOperation:operation2];
                         [self mutateRoomOperation:roomOperation to:roomOperation2];
 
@@ -996,6 +1002,8 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
                             // And send the Matrix room message video event to the homeserver (the sent state of the local echo will be updated, its local storage too).
                             MXHTTPOperation *operation2 = [self sendMessageWithContent:msgContent localEcho:&event success:onSuccess failure:onFailure];
 
+                            // Retrieve the MXRoomOperation just created for operation2
+                            // And use it as the current operation
                             MXRoomOperation *roomOperation2 = [self roomOperationWithHTTPOperation:operation2];
                             [self mutateRoomOperation:roomOperation to:roomOperation2];
 
@@ -1163,6 +1171,8 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
 
                 MXHTTPOperation *operation2 = [self sendMessageWithContent:msgContent localEcho:&event success:onSuccess failure:onFailure];
 
+                // Retrieve the MXRoomOperation just created for operation2
+                // And use it as the current operation
                 MXRoomOperation *roomOperation2 = [self roomOperationWithHTTPOperation:operation2];
                 [self mutateRoomOperation:roomOperation to:roomOperation2];
 
@@ -1185,6 +1195,8 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
                 // Make the final request that posts the image event
                 MXHTTPOperation *operation2 = [self sendMessageWithContent:msgContent localEcho:&event success:onSuccess failure:onFailure];
 
+                // Retrieve the MXRoomOperation just created for operation2
+                // And use it as the current operation
                 MXRoomOperation *roomOperation2 = [self roomOperationWithHTTPOperation:operation2];
                 [self mutateRoomOperation:roomOperation to:roomOperation2];
 
@@ -1370,7 +1382,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
 
 #pragma mark - Message order preserving
 /**
- Make sure that `block` will be called is the order expected by the end user.
+ Make sure that `block` will be called in the order expected by the end user.
 
  @param block the code block to schedule.
  @return a `MXRoomOperation` object.
@@ -1400,12 +1412,12 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
  */
 - (void)handleNextOperationAfter:(MXRoomOperation*)roomOperation
 {
-    BOOL topRoomOperation = (orderedOperations.count && roomOperation == orderedOperations[0]);
+    BOOL isRunningRoomOperation = (orderedOperations.count && roomOperation == orderedOperations[0]);
 
     [orderedOperations removeObject:roomOperation];
 
     // Launch the next operation if this is the current one that completes
-    if (topRoomOperation && orderedOperations.count)
+    if (isRunningRoomOperation && orderedOperations.count)
     {
         MXRoomOperation *nextRoomOperation = orderedOperations[0];
 
@@ -1444,7 +1456,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
 }
 
 /**
- Mutate the MXRoomOperation instance into another operation.
+ Mutate the `MXRoomOperation` instance into another operation.
 
  @param roomOperation the operation to mutate.
  @param newRomOperation the other operation to copy data from.
@@ -1457,7 +1469,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
         roomOperation.block = newRomOperation.block;
 
         // newRoomOperation is now incarned into roomOperation
-        // Avoid to operation twice
+        // Avoid to execute the same operation twice
         [orderedOperations removeObject:newRomOperation];
 
         // If roomOperation was running, run newRoomOperation
