@@ -406,7 +406,7 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidFlushDataNotification;
  Cancel a sending operation.
 
  Note that the local echo event will be not removed from the outgoing message queue.
- The user must call
+ `removeOutgoingMessage` must be called for that.
 
  @param localEchoEventId the id of the local echo event created by the sending
         operation to cancel.
