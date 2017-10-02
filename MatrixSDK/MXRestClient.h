@@ -203,6 +203,10 @@ typedef enum : NSUInteger
 
  At the end of the registration process, the SDK user should be able to construct a MXCredentials object
  from the response of the last registration action request.
+ 
+ @note The caller may provide the device display name by adding @"initial_device_display_name" key
+ in the `parameters` dictionary. If the caller does not provide it, the device display name field
+ is filled with the device name.
 
  @param parameters the parameters required for the current registration stage
  @param success A block object called when the operation succeeds. It provides the raw JSON response
@@ -284,7 +288,11 @@ typedef enum : NSUInteger
 
  @see the register method for explanation of flows that require to make several request to the
  home server.
-
+ 
+ @note The caller may provide the device display name by adding @"initial_device_display_name" key
+ in the `parameters` dictionary. If the caller does not provide it, the device display name field
+ is filled with the device name.
+ 
  @param parameters the parameters required for the current login stage
  @param success A block object called when the operation succeeds. It provides the raw JSON response
  from the server.
@@ -300,6 +308,8 @@ typedef enum : NSUInteger
  Log a user in.
 
  This method manages the full flow for simple login types and returns the credentials of the logged matrix user.
+ 
+ @note The device display name field is filled with the device name by default.
 
  @param loginType the login type. Only kMXLoginFlowTypePassword (m.login.password) is supported.
  @param username the user id (ex: "@bob:matrix.org") or the user id localpart (ex: "bob") of the user to register.
