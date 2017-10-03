@@ -3,7 +3,7 @@ Changes in Matrix iOS SDK in 0.9.3 (2017-10-03)
 
 Improvements:
  * MXSession: Fix parallel /sync requests streams (PR #360).
- * Add new async method for loading users with particular userIds, thanks to @aramsargsyan (PR #357).
+ * Add new async method for loading users with particular userIds, thanks to @morozkin (PR #357).
  * MXFileStore: Add necessary async API for room state events and accountdata, (PR #361, PR #363).
  * MXMemoryStore: improve getEventReceipts implementation (PR #364).
  * MXRestClient: Add the openIdToken method (PR #365).
@@ -13,8 +13,8 @@ Improvements:
  
 Bug fixes:
  * [e2e issue] Decrypt error related to new device creation (#340).
- * Fix inbound video calls don't have speakerphone turned on by default (vector-im/riot-ios#933), thanks to @aramsargsyan (PR #359).
- * Override audio output handling by WebRTC, thanks to @aramsargsyan (PR #358).
+ * Fix inbound video calls don't have speakerphone turned on by default (vector-im/riot-ios#933), thanks to @morozkin (PR #359).
+ * Override audio output handling by WebRTC, thanks to @morozkin (PR #358).
  * Room settings: the displayed room access settings is wrong (vector-im/riot-ios#1494)
  * Fix retain cycle between room and eventTimeLine, thanks to @samuel-gallet (PR #352).
  * Fix API for unbanning and kicking, thanks to @ThibaultFarnier (PR #367).
