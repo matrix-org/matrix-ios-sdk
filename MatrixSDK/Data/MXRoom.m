@@ -1386,7 +1386,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
 /**
  Make sure that `block` will be called in the order expected by the end user.
 
- @param localEvent the local echo event corresping to the event being sent.
+ @param localEvent the local echo event corresponding to the event being sent.
  @param block the code block to schedule.
  @return a `MXRoomOperation` object.
  */
