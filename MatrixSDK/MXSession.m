@@ -39,7 +39,7 @@
 
 #pragma mark - Constants definitions
 
-const NSString *MatrixSDKVersion = @"0.9.2";
+const NSString *MatrixSDKVersion = @"0.9.3";
 NSString *const kMXSessionStateDidChangeNotification = @"kMXSessionStateDidChangeNotification";
 NSString *const kMXSessionNewRoomNotification = @"kMXSessionNewRoomNotification";
 NSString *const kMXSessionWillLeaveRoomNotification = @"kMXSessionWillLeaveRoomNotification";
@@ -899,7 +899,7 @@ typedef void (^MXOnResumeDone)();
         }
 
         // Handle crypto sync data
-        if (_crypto && syncResponse.deviceLists.changed)
+        if (_crypto && syncResponse.deviceLists)
         {
             [_crypto handleDeviceListsChanges:syncResponse.deviceLists
                                  oldSyncToken:_store.eventStreamToken

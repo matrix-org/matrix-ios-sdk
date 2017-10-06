@@ -149,6 +149,7 @@ NSString *const kMXRoomSummaryDidChangeNotification = @"kMXRoomSummaryDidChangeN
 {
     lastMessageEvent = event;
     _lastMessageEventId = lastMessageEvent.eventId;
+    _lastMessageOriginServerTs = lastMessageEvent.originServerTs;
     _isLastMessageEncrypted = event.isEncrypted;
 }
 
@@ -156,6 +157,7 @@ NSString *const kMXRoomSummaryDidChangeNotification = @"kMXRoomSummaryDidChangeN
 {
     lastMessageEvent = nil;
     _lastMessageEventId = nil;
+    _lastMessageOriginServerTs = -1;
     _lastMessageString = nil;
     _lastMessageAttributedString = nil;
     [_lastMessageOthers removeAllObjects];
@@ -465,6 +467,7 @@ NSString *const kMXRoomSummaryDidChangeNotification = @"kMXRoomSummaryDidChangeN
         _directUserId = [aDecoder decodeObjectForKey:@"directUserId"];
 
         _lastMessageEventId = [aDecoder decodeObjectForKey:@"lastMessageEventId"];
+        _lastMessageOriginServerTs = [aDecoder decodeInt64ForKey:@"lastMessageOriginServerTs"];
         _isLastMessageEncrypted = [aDecoder decodeBoolForKey:@"isLastMessageEncrypted"];
 
         NSDictionary *lastMessageData;
@@ -501,6 +504,7 @@ NSString *const kMXRoomSummaryDidChangeNotification = @"kMXRoomSummaryDidChangeN
 
     // Store last message metadata
     [aCoder encodeObject:_lastMessageEventId forKey:@"lastMessageEventId"];
+    [aCoder encodeInt64:_lastMessageOriginServerTs forKey:@"lastMessageOriginServerTs"];
     [aCoder encodeBool:_isLastMessageEncrypted forKey:@"isLastMessageEncrypted"];
 
     // Build last message sensitive data

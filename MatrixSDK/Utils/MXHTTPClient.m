@@ -507,24 +507,33 @@ NSString * const MXHTTPClientErrorResponseDataKey = @"com.matrixsdk.httpclient.e
  */
 - (void)startBackgroundTask
 {
-    id<MXBackgroundModeHandler> handler = [MXSDKOptions sharedInstance].backgroundModeHandler;
-    if (handler && backgroundTaskIdentifier == [handler invalidIdentifier])
+    @synchronized(self)
     {
-        __weak __typeof(self)weakSelf = self;
-        backgroundTaskIdentifier = [handler startBackgroundTaskWithName:nil completion:^{
-            __strong __typeof(weakSelf)strongSelf = weakSelf;
-            if (strongSelf)
-            {
-                // Cancel all the tasks currently run by the managed session
-                NSArray *tasks = httpManager.tasks;
-                for (NSURLSessionTask *sessionTask in tasks)
-                {
-                    [sessionTask cancel];
-                }
+        id<MXBackgroundModeHandler> handler = [MXSDKOptions sharedInstance].backgroundModeHandler;
+        if (handler && backgroundTaskIdentifier == [handler invalidIdentifier])
+        {
+            __weak __typeof(self)weakSelf = self;
+            backgroundTaskIdentifier = [handler startBackgroundTaskWithName:nil completion:^{
 
-                [strongSelf cleanupBackgroundTask];
-            }
-        }];
+                NSLog(@"[MXHTTPClient] Background task #%tu is going to expire - Try to end it",
+                      backgroundTaskIdentifier);
+
+                __strong __typeof(weakSelf)strongSelf = weakSelf;
+                if (strongSelf)
+                {
+                    // Cancel all the tasks currently run by the managed session
+                    NSArray *tasks = httpManager.tasks;
+                    for (NSURLSessionTask *sessionTask in tasks)
+                    {
+                        [sessionTask cancel];
+                    }
+
+                    [strongSelf cleanupBackgroundTask];
+                }
+            }];
+
+            NSLog(@"[MXHTTPClient] Background task #%tu started", backgroundTaskIdentifier);
+        }
     }
 }
 
@@ -536,15 +545,24 @@ NSString * const MXHTTPClientErrorResponseDataKey = @"com.matrixsdk.httpclient.e
  */
 - (void)cleanupBackgroundTask
 {
-    id<MXBackgroundModeHandler> handler = [MXSDKOptions sharedInstance].backgroundModeHandler;
-    if (handler && backgroundTaskIdentifier != [handler invalidIdentifier] && httpManager.tasks.count == 0)
+    NSLog(@"[MXHTTPClient] cleanupBackgroundTask");
+
+    @synchronized(self)
     {
-        [handler endBackgrounTaskWithIdentifier:backgroundTaskIdentifier];
-        backgroundTaskIdentifier = [handler invalidIdentifier];
+        id<MXBackgroundModeHandler> handler = [MXSDKOptions sharedInstance].backgroundModeHandler;
+        if (handler && backgroundTaskIdentifier != [handler invalidIdentifier] && httpManager.tasks.count == 0)
+        {
+            NSLog(@"[MXHTTPClient] Background task #%tu is complete",
+                  backgroundTaskIdentifier);
+
+            [handler endBackgrounTaskWithIdentifier:backgroundTaskIdentifier];
+            backgroundTaskIdentifier = [handler invalidIdentifier];
+        }
     }
 }
 
-- (void)setPinnedCertificates:(NSSet<NSData *> *)pinnedCertificates {
+- (void)setPinnedCertificates:(NSSet<NSData *> *)pinnedCertificates
+{
     _pinnedCertificates = pinnedCertificates;
     if (!pinnedCertificates.count)
     {
@@ -573,17 +591,19 @@ NSString * const MXHTTPClientErrorResponseDataKey = @"com.matrixsdk.httpclient.e
 
     reachabilityObservers = [NSMutableArray array];
     
-    __weak typeof(self) weakSelf = nil;
+    __weak typeof(self) weakSelf = self;
     reachabilityObserver = [[NSNotificationCenter defaultCenter] addObserverForName:AFNetworkingReachabilityDidChangeNotification object:nil queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
-        __strong typeof(weakSelf) strongSelf = weakSelf;
-        if (!strongSelf)
-            return;
-        
-        if (networkReachabilityManager.isReachable && strongSelf->reachabilityObservers.count)
+
+        if (weakSelf)
         {
-            // Start retrying request one by one to keep messages order
-            NSLog(@"[MXHTTPClient] Network is back. Wake up %tu observers.", strongSelf->reachabilityObservers.count);
-            [strongSelf wakeUpNextReachabilityServer];
+            __strong typeof(weakSelf) self = weakSelf;
+
+            if (networkReachabilityManager.isReachable && self->reachabilityObservers.count)
+            {
+                // Start retrying request one by one to keep messages order
+                NSLog(@"[MXHTTPClient] Network is back. Wake up %tu observers.", self->reachabilityObservers.count);
+                [self wakeUpNextReachabilityServer];
+            }
         }
     }];
 }

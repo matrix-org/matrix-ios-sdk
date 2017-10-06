@@ -23,7 +23,7 @@
 #import "MXFileStoreMetaData.h"
 #import "MXSDKOptions.h"
 
-static NSUInteger const kMXFileVersion = 46;
+static NSUInteger const kMXFileVersion = 47;
 
 static NSString *const kMXFileStoreFolder = @"MXFileStore";
 static NSString *const kMXFileStoreMedaDataFile = @"MXFileStore";

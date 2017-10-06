@@ -33,3 +33,6 @@ Javier Quevedo <jquevedo at gmail.com>
 Aram Sargsyan <aram.sargsyan.1997 at gmail.com>
  * PR #354 Send a file by keeping it's filename
  
+Thibault Farnier <thibault.farnier at applidium.com>
+ * PR #367 Fix API for unbanning and kicking
+ 
