@@ -1,3 +1,29 @@
+Changes in Matrix iOS SDK in 0.9.3 (2017-10-03)
+===============================================
+
+Improvements:
+ * MXSession: Fix parallel /sync requests streams (PR #360).
+ * Add new async method for loading users with particular userIds, thanks to @morozkin (PR #357).
+ * MXFileStore: Add necessary async API for room state events and accountdata, (PR #361, PR #363).
+ * MXMemoryStore: improve getEventReceipts implementation (PR #364).
+ * MXRestClient: Add the openIdToken method (PR #365).
+ * MXEvent: Add MXEventTypeRoomBotOptions & MXEventTypeRoomPlumbing. (PR #370).
+ * Crypto: handleDeviceListsChanges: Do not switch to the processing thread if there is nothing to do.
+ * MXRoomSummary: Add the server timestamp (PR #376).
+ 
+Bug fixes:
+ * [e2e issue] Decrypt error related to new device creation (#340).
+ * Fix inbound video calls don't have speakerphone turned on by default (vector-im/riot-ios#933), thanks to @morozkin (PR #359).
+ * Override audio output handling by WebRTC, thanks to @morozkin (PR #358).
+ * Room settings: the displayed room access settings is wrong (vector-im/riot-ios#1494)
+ * Fix retain cycle between room and eventTimeLine, thanks to @samuel-gallet (PR #352).
+ * Fix API for unbanning and kicking, thanks to @ThibaultFarnier (PR #367).
+ * When receiving an invite tagged as DM it's filed in rooms (vector-im/riot-ios#1308).
+ * Altering DMness of rooms is broken (vector-im/riot-ios#1370).
+ * Video attachment: App crashes when video compression fails (PR #369).
+ * Background task release race condition (PR #374).
+ * MXHTTPClient: Fix a regression that prevented the app from reconnecting when the network comes back (PR #375).
+
 Changes in Matrix iOS SDK in 0.9.2 (2017-08-25)
 ===============================================
 
