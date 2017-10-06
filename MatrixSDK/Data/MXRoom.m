@@ -1394,7 +1394,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
 {
     // Queue the operation requests
     MXRoomOperation *roomOperation = [[MXRoomOperation alloc] init];
-    roomOperation.localEvent = localEvent;
+    roomOperation.localEventId = localEvent.eventId;
     roomOperation.operation = [[MXHTTPOperation alloc] init];
     roomOperation.block = block;
 
@@ -1471,7 +1471,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
 
     for (MXRoomOperation *roomOperation in orderedOperations)
     {
-        if ([roomOperation.localEvent.eventId isEqualToString:localEventId])
+        if ([roomOperation.localEventId isEqualToString:localEventId])
         {
             theRoomOperation = roomOperation;
             break;

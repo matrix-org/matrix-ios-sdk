@@ -16,7 +16,6 @@
 
 #import <Foundation/Foundation.h>
 
-#import "MXEvent.h"
 #import "MXHTTPOperation.h"
 
 /**
@@ -42,8 +41,9 @@
 
 /**
  Room message (text, image, ...) sending operations create local echo event.
+ This is the id of this event.
  */
-@property (nonatomic) MXEvent *localEvent;
+@property (nonatomic) NSString *localEventId;
 
 /**
  Cancel status.
