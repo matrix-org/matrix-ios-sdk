@@ -19,6 +19,7 @@
 NS_ASSUME_NONNULL_BEGIN
 
 @class MXCall;
+@class MXCallKitAdapter;
 @class MXRoom;
 @class MXRoomMember;
 @class MXSession;
@@ -113,6 +114,14 @@ extern NSString *const kMXCallManagerConferenceFinished;
  The call stack layer.
  */
 @property (nonatomic) id<MXCallStack> callStack;
+
+/**
+ The CallKit adapter.
+ Provide it if you want to add CallKit support.
+ */
+#if TARGET_OS_IPHONE
+@property (nonatomic, nullable) MXCallKitAdapter *callKitAdapter;
+#endif
 
 /**
  The time in milliseconds that an incoming or outgoing call invite is valid for.

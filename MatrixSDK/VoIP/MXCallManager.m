@@ -17,6 +17,7 @@
 #import "MXCallManager.h"
 
 #import "MXCall.h"
+#import "MXCallKitAdapter.h"
 #import "MXCallStack.h"
 #import "MXJSONModels.h"
 #import "MXRoom.h"
@@ -47,6 +48,11 @@ static NSString *const kMXCallManagerFallbackSTUNServer = @"stun:stun.l.google.c
      Timer to periodically refresh the TURN server config.
      */
     NSTimer *refreshTURNServerTimer;
+    
+    /**
+     Observer for changes of MXSession's state
+     */
+    id sessionStateObserver;
 }
 @end
 
@@ -99,9 +105,20 @@ static NSString *const kMXCallManagerFallbackSTUNServer = @"stun:stun.l.google.c
             }
         }];
 
+        // Listen to call state changes
+        [[NSNotificationCenter defaultCenter] addObserver:self
+                                                 selector:@selector(handleCallStateDidChangeNotification:)
+                                                     name:kMXCallStateDidChange
+                                                   object:nil];
+        
         [self refreshTURNServer];
     }
     return self;
+}
+
+- (void)dealloc
+{
+    [self unregisterFromNotifications];
 }
 
 - (void)close
@@ -120,6 +137,9 @@ static NSString *const kMXCallManagerFallbackSTUNServer = @"stun:stun.l.google.c
     // Do not refresh TURN servers config anymore
     [refreshTURNServerTimer invalidate];
     refreshTURNServerTimer = nil;
+    
+    // Unregister from any possible notifications
+    [self unregisterFromNotifications];
 }
 
 - (MXCall *)callWithCallId:(NSString *)callId
@@ -154,6 +174,35 @@ static NSString *const kMXCallManagerFallbackSTUNServer = @"stun:stun.l.google.c
                 success:(void (^)(MXCall *call))success
                 failure:(void (^)(NSError * _Nullable error))failure
 {
+    // If consumers of our API decide to use SiriKit or CallKit, they will face with application:continueUserActivity:restorationHandler:
+    // and since the state of MXSession can be different from MXSessionStateRunning for the moment when this method will be executing
+    // we must track session's state to become MXSessionStateRunning for performing outgoing call
+    if (_mxSession.state != MXSessionStateRunning)
+    {
+        __weak typeof(self) weakSelf = self;
+        __weak NSNotificationCenter *center = [NSNotificationCenter defaultCenter];
+        sessionStateObserver = [center addObserverForName:kMXSessionStateDidChangeNotification
+                                                   object:_mxSession
+                                                    queue:[NSOperationQueue mainQueue]
+                                               usingBlock:^(NSNotification * _Nonnull note) {
+                                                   __strong typeof(weakSelf) strongSelf = weakSelf;
+                                                   if (!strongSelf)
+                                                       return;
+                                                   
+                                                   if (strongSelf.mxSession.state == MXSessionStateRunning)
+                                                   {
+                                                       [strongSelf placeCallInRoom:roomId
+                                                                         withVideo:video
+                                                                           success:success
+                                                                           failure:failure];
+                                                       
+                                                       [center removeObserver:strongSelf->sessionStateObserver];
+                                                       strongSelf->sessionStateObserver = nil;
+                                                   }
+                                               }];
+        return;
+    }
+    
     MXRoom *room = [_mxSession roomWithRoomId:roomId];
 
     if (room && 1 < room.state.joinedMembers.count)
@@ -316,7 +365,7 @@ static NSString *const kMXCallManagerFallbackSTUNServer = @"stun:stun.l.google.c
     {
         // If the app is resuming, wait for the complete end of the session resume in order
         // to check if the invite is still valid
-        if (_mxSession.state != MXSessionStateRunning)
+        if (_mxSession.state == MXSessionStateSyncInProgress || _mxSession.state == MXSessionStateBackgroundSyncInProgress)
         {
             // The dispatch  on the main thread should be enough.
             // It means that the sync response that contained the invite (and possibly its end
@@ -370,6 +419,48 @@ static NSString *const kMXCallManagerFallbackSTUNServer = @"stun:stun.l.google.c
     if (call)
     {
         [call handleCallEvent:event];
+    }
+}
+
+- (void)handleCallStateDidChangeNotification:(NSNotification *)notification
+{
+#if TARGET_OS_IPHONE
+    MXCall *call = notification.object;
+    
+    switch (call.state) {
+        case MXCallStateCreateOffer:
+            [self.callKitAdapter startCall:call];
+            break;
+        case MXCallStateRinging:
+            [self.callKitAdapter reportIncomingCall:call];
+            break;
+        case MXCallStateConnecting:
+            [self.callKitAdapter reportCall:call startedConnectingAtDate:nil];
+            break;
+        case MXCallStateConnected:
+            [self.callKitAdapter reportCall:call connectedAtDate:nil];
+            break;
+        case MXCallStateEnded:
+            [self.callKitAdapter endCall:call];
+            break;
+        default:
+            break;
+    }
+#endif
+}
+
+- (void)unregisterFromNotifications
+{
+    NSNotificationCenter *notificationCenter = [NSNotificationCenter defaultCenter];
+    
+    // Do not handle any call state change notifications
+    [notificationCenter removeObserver:self name:kMXCallStateDidChange object:nil];
+    
+    // Don't track MXSession's state
+    if (sessionStateObserver)
+    {
+        [notificationCenter removeObserver:sessionStateObserver name:kMXSessionStateDidChangeNotification object:_mxSession];
+        sessionStateObserver = nil;
     }
 }
 
