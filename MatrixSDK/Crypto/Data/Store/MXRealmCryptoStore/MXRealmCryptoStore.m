@@ -722,6 +722,14 @@ RLM_ARRAY_TYPE(MXRealmOlmInboundGroupSession)
                 [NSFileManager.defaultManager removeItemAtURL:defaultRealmFileURL error:nil];
             }
         }
+        else
+        {
+            // Make sure the full exists before giving it to Realm 
+            if (![NSFileManager.defaultManager fileExistsAtPath:realmFileFolderURL.path])
+            {
+                [[NSFileManager defaultManager] createDirectoryAtPath:realmFileFolderURL.path withIntermediateDirectories:YES attributes:nil error:nil];
+            }
+        }
     }
     else
     {
