@@ -25,23 +25,23 @@
 @protocol MXCallAudioSessionConfigurator <NSObject>
 
 /**
- Applies appropriate settings to AVAudioSession
+ Applies appropriate settings to AVAudioSession.
  
- @param isVideoCall: true if need configuration for video call, false if for voice call
+ @param isVideoCall true if need configuration for video call, false if for voice call.
  */
 - (void)configureAudioSessionForVideoCall:(BOOL)isVideoCall;
 
 /**
- Performs necessary for call stack actions after audio session was activated
+ Performs necessary for call stack actions after audio session was activated.
  
- @param audioSession: Instance of activated audio session
+ @param audioSession the instance of activated audio session.
  */
 - (void)audioSessionDidActivate:(AVAudioSession *)audioSession;
 
 /**
- Performs necessary for call stack actions after audio session was deactivated
+ Performs necessary for call stack actions after audio session was deactivated.
  
- @param audioSession: Instance of deactivated audio session
+ @param audioSession the instance of deactivated audio session.
  */
 - (void)audioSessionDidDeactivate:(AVAudioSession *)audioSession;
 
