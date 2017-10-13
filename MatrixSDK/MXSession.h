@@ -240,6 +240,11 @@ FOUNDATION_EXPORT NSString *const kMXSessionNoRoomTag;
 @property (nonatomic, readonly) MXSessionState state;
 
 /**
+ The flag indicating whether the initial sync has been done.
+ */
+@property (nonatomic, readonly) BOOL isEventStreamInitialised;
+
+/**
  The flag indicating that we are trying to establish the event streams (/sync)
  as quick as possible, even if there are no events queued. This is required in
  some situations:
