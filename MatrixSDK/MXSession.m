@@ -271,7 +271,7 @@ typedef void (^MXOnResumeDone)();
             }
 
             // Can we start on data from the MXStore?
-            if (_store.isPermanent && _store.eventStreamToken && 0 < _store.rooms.count)
+            if (_store.isPermanent && self.isEventStreamInitialised && 0 < _store.rooms.count)
             {
                 // Mount data from the permanent store
                 NSLog(@"[MXSession] Loading room state events to build MXRoom objects...");
@@ -391,7 +391,7 @@ typedef void (^MXOnResumeDone)();
     syncMessagesLimit = messagesLimit;
 
     // Can we resume from data available in the cache
-    if (_store.isPermanent && _store.eventStreamToken && 0 < _store.rooms.count)
+    if (_store.isPermanent && self.isEventStreamInitialised && 0 < _store.rooms.count)
     {
         // Resume the stream (presence will be retrieved during server sync)
         NSLog(@"[MXSession] Resuming the events stream from %@...", _store.eventStreamToken);
@@ -669,6 +669,10 @@ typedef void (^MXOnResumeDone)();
     return [self.matrixRestClient logout:success failure:failure];
 }
 
+- (BOOL)isEventStreamInitialised
+{
+    return (_store.eventStreamToken != nil);
+}
 
 #pragma mark - MXSession pause prevention
 - (void)retainPreventPause
@@ -752,7 +756,7 @@ typedef void (^MXOnResumeDone)();
         NSLog(@"[MXSession] Received %tu joined rooms, %tu invited rooms, %tu left rooms in %.0fms", syncResponse.rooms.join.count, syncResponse.rooms.invite.count, syncResponse.rooms.leave.count, duration * 1000);
 
         // Check whether this is the initial sync
-        BOOL isInitialSync = !_store.eventStreamToken;
+        BOOL isInitialSync = !self.isEventStreamInitialised;
 
         if (!firstSyncDone)
         {
@@ -1142,7 +1146,7 @@ typedef void (^MXOnResumeDone)();
 {
     if (accountDataUpdate && accountDataUpdate[@"events"] && ((NSArray*)accountDataUpdate[@"events"]).count)
     {
-        BOOL isInitialSync = !_store.eventStreamToken || _state == MXSessionStateInitialised;
+        BOOL isInitialSync = !self.isEventStreamInitialised || _state == MXSessionStateInitialised;
         
         // Turn on by default the direct chats synthesizing at the initial sync
         shouldSynthesizeDirectChats = isInitialSync;
