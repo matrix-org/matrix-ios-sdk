@@ -111,7 +111,31 @@ MXAuthAction;
         
         httpClient = [[MXHTTPClient alloc] initWithBaseURL:homeserver
                                                accessToken:nil
-                         andOnUnrecognizedCertificateBlock:onUnrecognizedCertBlock];
+                         andOnUnrecognizedCertificateBlock:^BOOL(NSData *certificate) {
+
+                             if ([[MXAllowedCertificates sharedInstance] isCertificateAllowed:certificate])
+                             {
+                                 return YES;
+                             }
+
+                             // Let the app ask the end user to verify it
+                             if (onUnrecognizedCertBlock)
+                             {
+                                 BOOL allowed = onUnrecognizedCertBlock(certificate);
+
+                                 if (allowed)
+                                 {
+                                     // Store the allowed certificate for further requests
+                                     [[MXAllowedCertificates sharedInstance] addCertificate:certificate];
+                                 }
+
+                                 return allowed;
+                             }
+                             else
+                             {
+                                 return NO;
+                             }
+                         }];
         
         // By default, use the same address for the identity server
         self.identityServer = homeserver;
@@ -138,6 +162,12 @@ MXAuthAction;
                                                accessToken:credentials.accessToken
                          andOnUnrecognizedCertificateBlock:^BOOL(NSData *certificate) {
 
+                             // Check whether the provided certificate has been already trusted
+                             if ([[MXAllowedCertificates sharedInstance] isCertificateAllowed:certificate])
+                             {
+                                 return YES;
+                             }
+
                              // Check whether the provided certificate is the already trusted by the user.
                              if (inCredentials.allowedCertificate && [inCredentials.allowedCertificate isEqualToData:certificate])
                              {
@@ -159,7 +189,7 @@ MXAuthAction;
 
                                  if (allowed)
                                  {
-                                     // Store the allowed certificate for further requests (from MXMediaManager)
+                                     // Store the allowed certificate for further requests
                                      [[MXAllowedCertificates sharedInstance] addCertificate:certificate];
                                  }
 
