@@ -366,6 +366,8 @@ didChangeIceGatheringState:(RTCIceGatheringState)newState
 - (void)peerConnection:(RTCPeerConnection *)peerConnection
 didGenerateIceCandidate:(RTCIceCandidate *)candidate
 {
+    NSLog(@"[MXJingleCallStackCall] didGenerateIceCandidate: %@", candidate);
+
     // Forward found ICE candidates
     dispatch_async(dispatch_get_main_queue(), ^{
         
@@ -379,7 +381,6 @@ didGenerateIceCandidate:(RTCIceCandidate *)candidate
 didRemoveIceCandidates:(NSArray<RTCIceCandidate *> *)candidates;
 {
     NSLog(@"[MXJingleCallStackCall] didRemoveIceCandidates");
-
 }
 
 // New data channel has been opened.
