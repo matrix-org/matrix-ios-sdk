@@ -10,7 +10,7 @@ pod 'GZIP', '~> 1.1.1'
 pod 'OLMKit', :inhibit_warnings => true
 #pod 'OLMKit', :path => '../olm/OLMKit.podspec'
 
-pod 'Realm', '~> 2.10.2'
+pod 'Realm', '~> 3.0.0'
 
 end
 
