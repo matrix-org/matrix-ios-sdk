@@ -297,6 +297,12 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
         event = *localEcho;
     }
 
+    // Protect the SDK against changes in `content`
+    // It is useful in case of:
+    //    - e2e encryption where several asynchronous requests may be required before actually sending the event
+    //    - message order mechanism where events may be queued
+    NSDictionary *contentCopy = [[NSDictionary alloc] initWithDictionary:content copyItems:YES];
+
     void(^onSuccess)(NSString *) = ^(NSString *eventId) {
 
         if (event)
@@ -359,7 +365,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
             }
 
             roomOperation = [self preserveOperationOrder:event block:^{
-                MXHTTPOperation *operation = [self _sendEventOfType:eventTypeString content:content success:onSuccess failure:onFailure];
+                MXHTTPOperation *operation = [self _sendEventOfType:eventTypeString content:contentCopy success:onSuccess failure:onFailure];
                 [roomOperation.operation mutateTo:operation];
             }];
         }
@@ -371,7 +377,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
                 if (!event)
                 {
                     // Add a local echo for this message during the sending process.
-                    event = [self addLocalEchoForMessageContent:content withState:MXEventSentStateEncrypting];
+                    event = [self addLocalEchoForMessageContent:contentCopy withState:MXEventSentStateEncrypting];
 
                     if (localEcho)
                     {
@@ -391,7 +397,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
 
             roomOperation = [self preserveOperationOrder:event block:^{
 
-                MXHTTPOperation *operation = [mxSession.crypto encryptEventContent:content withType:eventTypeString inRoom:self success:^(NSDictionary *encryptedContent, NSString *encryptedEventType) {
+                MXHTTPOperation *operation = [mxSession.crypto encryptEventContent:contentCopy withType:eventTypeString inRoom:self success:^(NSDictionary *encryptedContent, NSString *encryptedEventType) {
 
                     if (event)
                     {
@@ -438,7 +444,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
             if (!event)
             {
                 // Add a local echo for this message during the sending process.
-                event = [self addLocalEchoForMessageContent:content withState:MXEventSentStateSending];
+                event = [self addLocalEchoForMessageContent:contentCopy withState:MXEventSentStateSending];
 
                 if (localEcho)
                 {
@@ -457,7 +463,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
         }
 
         roomOperation = [self preserveOperationOrder:event block:^{
-            MXHTTPOperation *operation = [self _sendEventOfType:eventTypeString content:content success:onSuccess failure:onFailure];
+            MXHTTPOperation *operation = [self _sendEventOfType:eventTypeString content:contentCopy success:onSuccess failure:onFailure];
             [roomOperation.operation mutateTo:operation];
         }];
     }
