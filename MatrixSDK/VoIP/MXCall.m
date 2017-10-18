@@ -321,8 +321,13 @@ NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
 {
     NSLog(@"[MXCall] answer");
 
-    if (self.state == MXCallStateRinging)
+    // Sanity check on the call state
+    // Note that e2e rooms requires several attempts of [MXCall answer] in case of unknown devices 
+    if (self.state == MXCallStateRinging
+        || (_callSignalingRoom.state.isEncrypted && self.state == MXCallStateCreateAnswer))
     {
+        [self setState:MXCallStateCreateAnswer reason:nil];
+
         void(^answer)() = ^{
 
             NSLog(@"[MXCall] answer: answering...");
@@ -335,7 +340,6 @@ NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
             }
 
             // Create a sdp answer from the offer we got
-            [self setState:MXCallStateCreateAnswer reason:nil];
             [self setState:MXCallStateConnecting reason:nil];
 
             [callStackCall createAnswer:^(NSString *sdpAnswer) {
@@ -607,6 +611,11 @@ NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
 
 
 #pragma mark - Private methods
+- (NSString *)description
+{
+    return [NSString stringWithFormat:@"<MXCall: %p> id: %@ - isVideoCall: %@ - isIncoming: %@ - state: %@", self, _callId, @(_isVideoCall), @(_isIncoming), @(_state)];
+}
+
 - (void)terminateWithReason:(MXEvent *)event
 {
     if (inviteExpirationTimer)
