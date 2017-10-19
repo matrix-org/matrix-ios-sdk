@@ -32,10 +32,12 @@ static NSString *buildVersion;
 {
     if (redirectNSLogToFiles)
     {
+        NSMutableString *log = [NSMutableString string];
+
         // Set log location
         NSFileManager *fileManager = [NSFileManager defaultManager];
-        NSArray *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
-        NSString *documentsDirectory = [paths objectAtIndex:0];
+        NSArray<NSURL *> *paths = [fileManager URLsForDirectory:NSDocumentDirectory inDomains:NSUserDomainMask];
+        NSString *documentsDirectory = [paths objectAtIndex:0].path;
 
         // Do a circular buffer based on 3 files
         for (NSInteger index = 1; index >= 0; index--)
@@ -57,13 +59,27 @@ static NSString *buildVersion;
             nsLogPathOlder = [documentsDirectory stringByAppendingPathComponent:nsLogPathOlder];
             nsLogPathCurrent = [documentsDirectory stringByAppendingPathComponent:nsLogPathCurrent];
 
-            if([fileManager fileExistsAtPath:nsLogPathCurrent])
+            if ([fileManager fileExistsAtPath:nsLogPathCurrent])
             {
-                if([fileManager fileExistsAtPath:nsLogPathOlder])
+                if ([fileManager fileExistsAtPath:nsLogPathOlder])
                 {
-                    [fileManager removeItemAtPath:nsLogPathOlder error:nil];
+                    NSError *error;
+                    [fileManager removeItemAtPath:nsLogPathOlder error:&error];
+                    if (error)
+                    {
+                        [log appendFormat:@"[NSLog] ERROR: removeItemAtPath: %@. Error: %@\n", nsLogPathOlder, error];
+                    }
                 }
-                [fileManager copyItemAtPath:nsLogPathCurrent toPath:nsLogPathOlder error:nil];
+
+                // Temp log
+                [log appendFormat:@"[NSLog] redirectNSLogToFiles: moveItemAtPath: %@ toPath: %@\n", nsLogPathCurrent, nsLogPathOlder];
+
+                NSError *error;
+                [fileManager moveItemAtPath:nsLogPathCurrent toPath:nsLogPathOlder error:&error];
+                if (error)
+                {
+                    [log appendFormat:@"[NSLog] ERROR: moveItemAtPath: %@ toPath: %@. Error: %@\n", nsLogPathCurrent, nsLogPathOlder, error];
+                }
             }
         }
 
@@ -72,6 +88,13 @@ static NSString *buildVersion;
 
         NSString *nsLogPath = [documentsDirectory stringByAppendingPathComponent:@"console.log"];
         freopen([nsLogPath fileSystemRepresentation], "w+", stderr);
+
+        NSLog(@"[NSLog] redirectNSLogToFiles: YES");
+        if (log.length)
+        {
+            // We can now log into files
+            NSLog(@"%@", log);
+        }
     }
     else if (stderrSave)
     {
@@ -97,10 +120,10 @@ static NSString *buildVersion;
 {
     NSMutableArray *logFiles = [NSMutableArray array];
 
-    NSArray *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
-    NSString *documentsDirectory = [paths objectAtIndex:0];
-
     NSFileManager *fileManager = [NSFileManager defaultManager];
+    NSArray<NSURL *> *paths = [fileManager URLsForDirectory:NSDocumentDirectory inDomains:NSUserDomainMask];
+    NSString *documentsDirectory = [paths objectAtIndex:0].path;
+
     NSDirectoryEnumerator *dirEnum = [fileManager enumeratorAtPath:documentsDirectory];
 
     // Find all *.log files
@@ -113,6 +136,9 @@ static NSString *buildVersion;
             [logFiles addObject:logPath];
         }
     }
+
+    NSLog(@"[NSLog] logFiles: %@", logFiles);
+
     return logFiles;
 }
 
@@ -214,8 +240,9 @@ static void handleSignal(int signalValue)
 // Return the path of the crash log file
 static NSString* crashLogPath(void)
 {
-    NSArray *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
-    NSString *documentsDirectory = [paths objectAtIndex:0];
+    NSFileManager *fileManager = [NSFileManager defaultManager];
+    NSArray<NSURL *> *paths = [fileManager URLsForDirectory:NSDocumentDirectory inDomains:NSUserDomainMask];
+    NSString *documentsDirectory = [paths objectAtIndex:0].path;
 
     return [documentsDirectory stringByAppendingPathComponent:MXLOGGER_CRASH_LOG];
 }
