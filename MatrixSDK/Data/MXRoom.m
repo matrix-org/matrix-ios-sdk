@@ -2001,7 +2001,9 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
     NSString *readMarkerEventId = nil;
     MXReceiptData *updatedReceiptData = nil;
     
-    NSString *lastMessageEventId = self.summary.lastMessageEvent.eventId;
+    // Retrieve the most recent event of the room.
+    MXEvent *lastEvent = [mxSession.store messagesEnumeratorForRoom:self.roomId].nextEvent;
+    NSString *lastMessageEventId = lastEvent.eventId;
     
     // Sanity check: Do not send read marker on event without id.
     if (!lastMessageEventId || [lastMessageEventId hasPrefix:kMXRoomInviteStateEventIdPrefix])
@@ -2048,6 +2050,9 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
                         }
                     }
                 }
+                
+                // Break the loop
+                break;
             }
         }
     }

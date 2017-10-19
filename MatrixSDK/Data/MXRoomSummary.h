@@ -122,7 +122,7 @@ FOUNDATION_EXPORT NSString *const kMXRoomSummaryDidChangeNotification;
 #pragma mark - Data related to room state
 
 /**
- The avatar url of the room.
+ The Matrix content URI of the room avatar.
  */
 @property (nonatomic) NSString *avatar;
 
