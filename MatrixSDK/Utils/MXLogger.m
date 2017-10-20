@@ -39,7 +39,7 @@ static NSString *buildVersion;
         NSString *logsFolderPath = [MXLogger logsFolderPath];
 
         // Do a circular buffer based on 10 files
-        for (NSInteger index = 9; index >= 0; index--)
+        for (NSInteger index = 8; index >= 0; index--)
         {
             NSString *nsLogPathOlder;
             NSString *nsLogPathCurrent;
