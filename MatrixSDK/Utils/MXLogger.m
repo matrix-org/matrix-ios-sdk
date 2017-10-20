@@ -36,11 +36,10 @@ static NSString *buildVersion;
 
         // Set log location
         NSFileManager *fileManager = [NSFileManager defaultManager];
-        NSArray<NSURL *> *paths = [fileManager URLsForDirectory:NSDocumentDirectory inDomains:NSUserDomainMask];
-        NSString *documentsDirectory = [paths objectAtIndex:0].path;
+        NSString *logsFolderPath = [MXLogger logsFolderPath];
 
-        // Do a circular buffer based on 3 files
-        for (NSInteger index = 1; index >= 0; index--)
+        // Do a circular buffer based on 10 files
+        for (NSInteger index = 9; index >= 0; index--)
         {
             NSString *nsLogPathOlder;
             NSString *nsLogPathCurrent;
@@ -56,13 +55,16 @@ static NSString *buildVersion;
                 nsLogPathCurrent = [NSString stringWithFormat:@"console.%tu.log", index];
             }
 
-            nsLogPathOlder = [documentsDirectory stringByAppendingPathComponent:nsLogPathOlder];
-            nsLogPathCurrent = [documentsDirectory stringByAppendingPathComponent:nsLogPathCurrent];
+            nsLogPathOlder = [logsFolderPath stringByAppendingPathComponent:nsLogPathOlder];
+            nsLogPathCurrent = [logsFolderPath stringByAppendingPathComponent:nsLogPathCurrent];
 
             if ([fileManager fileExistsAtPath:nsLogPathCurrent])
             {
                 if ([fileManager fileExistsAtPath:nsLogPathOlder])
                 {
+                    // Temp log
+                    [log appendFormat:@"[NSLog] redirectNSLogToFiles: removeItemAtPath: %@\n", nsLogPathOlder];
+
                     NSError *error;
                     [fileManager removeItemAtPath:nsLogPathOlder error:&error];
                     if (error)
@@ -86,7 +88,7 @@ static NSString *buildVersion;
         // Save stderr so it can be restored.
         stderrSave = dup(STDERR_FILENO);
 
-        NSString *nsLogPath = [documentsDirectory stringByAppendingPathComponent:@"console.log"];
+        NSString *nsLogPath = [logsFolderPath stringByAppendingPathComponent:@"console.log"];
         freopen([nsLogPath fileSystemRepresentation], "w+", stderr);
 
         NSLog(@"[NSLog] redirectNSLogToFiles: YES");
@@ -121,10 +123,9 @@ static NSString *buildVersion;
     NSMutableArray *logFiles = [NSMutableArray array];
 
     NSFileManager *fileManager = [NSFileManager defaultManager];
-    NSArray<NSURL *> *paths = [fileManager URLsForDirectory:NSDocumentDirectory inDomains:NSUserDomainMask];
-    NSString *documentsDirectory = [paths objectAtIndex:0].path;
+    NSString *logsFolderPath = [MXLogger logsFolderPath];
 
-    NSDirectoryEnumerator *dirEnum = [fileManager enumeratorAtPath:documentsDirectory];
+    NSDirectoryEnumerator *dirEnum = [fileManager enumeratorAtPath:logsFolderPath];
 
     // Find all *.log files
     NSString *file = nil;
@@ -132,7 +133,7 @@ static NSString *buildVersion;
     {
         if ([[file lastPathComponent] hasPrefix:@"console."])
         {
-            NSString *logPath = [documentsDirectory stringByAppendingPathComponent:file];
+            NSString *logPath = [logsFolderPath stringByAppendingPathComponent:file];
             [logFiles addObject:logPath];
         }
     }
@@ -240,11 +241,7 @@ static void handleSignal(int signalValue)
 // Return the path of the crash log file
 static NSString* crashLogPath(void)
 {
-    NSFileManager *fileManager = [NSFileManager defaultManager];
-    NSArray<NSURL *> *paths = [fileManager URLsForDirectory:NSDocumentDirectory inDomains:NSUserDomainMask];
-    NSString *documentsDirectory = [paths objectAtIndex:0].path;
-
-    return [documentsDirectory stringByAppendingPathComponent:MXLOGGER_CRASH_LOG];
+    return [[MXLogger logsFolderPath] stringByAppendingPathComponent:MXLOGGER_CRASH_LOG];
 }
 
 + (NSString*)crashLog
@@ -268,6 +265,26 @@ static NSString* crashLogPath(void)
     {
         [fileManager removeItemAtPath:crashLog error:nil];
     }
+}
+
+// The folder where logs are stored
++ (NSString*)logsFolderPath
+{
+    NSString *logsFolderPath = nil;
+
+    NSString *applicationGroupIdentifier = [MXSDKOptions sharedInstance].applicationGroupIdentifier;
+    if (applicationGroupIdentifier)
+    {
+        NSURL *sharedContainerURL = [[NSFileManager defaultManager] containerURLForSecurityApplicationGroupIdentifier:applicationGroupIdentifier];
+        logsFolderPath = [sharedContainerURL path];
+    }
+    else
+    {
+        NSArray<NSURL *> *paths = [[NSFileManager defaultManager] URLsForDirectory:NSDocumentDirectory inDomains:NSUserDomainMask];
+        logsFolderPath = paths[0].path;
+    }
+
+    return logsFolderPath;
 }
 
 @end
