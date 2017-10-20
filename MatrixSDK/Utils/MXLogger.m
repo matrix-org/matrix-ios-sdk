@@ -22,6 +22,7 @@
 int stderrSave = 0;
 
 static NSString *buildVersion;
+static NSString *subLogName;
 
 #define MXLOGGER_CRASH_LOG @"crash.log"
 
@@ -33,6 +34,12 @@ static NSString *buildVersion;
     if (redirectNSLogToFiles)
     {
         NSMutableString *log = [NSMutableString string];
+
+        // Default subname
+        if (!subLogName)
+        {
+            subLogName = @"";
+        }
 
         // Set log location
         NSFileManager *fileManager = [NSFileManager defaultManager];
@@ -46,13 +53,13 @@ static NSString *buildVersion;
 
             if (index == 0)
             {
-                nsLogPathOlder   = @"console.1.log";
-                nsLogPathCurrent = @"console.log";
+                nsLogPathOlder   = [NSString stringWithFormat:@"console%@.1.log", subLogName];
+                nsLogPathCurrent = [NSString stringWithFormat:@"console%@.log", subLogName];
             }
             else
             {
-                nsLogPathOlder   = [NSString stringWithFormat:@"console.%tu.log", index + 1];
-                nsLogPathCurrent = [NSString stringWithFormat:@"console.%tu.log", index];
+                nsLogPathOlder   = [NSString stringWithFormat:@"console%@.%tu.log", subLogName, index + 1];
+                nsLogPathCurrent = [NSString stringWithFormat:@"console%@.%tu.log", subLogName, index];
             }
 
             nsLogPathOlder = [logsFolderPath stringByAppendingPathComponent:nsLogPathOlder];
@@ -88,7 +95,7 @@ static NSString *buildVersion;
         // Save stderr so it can be restored.
         stderrSave = dup(STDERR_FILENO);
 
-        NSString *nsLogPath = [logsFolderPath stringByAppendingPathComponent:@"console.log"];
+        NSString *nsLogPath = [logsFolderPath stringByAppendingPathComponent:[NSString stringWithFormat:@"console%@.log", subLogName]];
         freopen([nsLogPath fileSystemRepresentation], "w+", stderr);
 
         NSLog(@"[NSLog] redirectNSLogToFiles: YES");
@@ -131,7 +138,7 @@ static NSString *buildVersion;
     NSString *file = nil;
     while ((file = [dirEnum nextObject]))
     {
-        if ([[file lastPathComponent] hasPrefix:@"console."])
+        if ([[file lastPathComponent] hasPrefix:@"console"])
         {
             NSString *logPath = [logsFolderPath stringByAppendingPathComponent:file];
             [logFiles addObject:logPath];
@@ -233,9 +240,14 @@ static void handleSignal(int signalValue)
     }
 }
 
-+ (void)setBuildVersion:(NSString *)buildVersion2
++ (void)setBuildVersion:(NSString *)theBuildVersion
 {
-    buildVersion = buildVersion2;
+    buildVersion = theBuildVersion;
+}
+
++ (void)setSubLogName:(NSString *)theSubLogName
+{
+    subLogName = [NSString stringWithFormat:@"-%@", theSubLogName];
 }
 
 // Return the path of the crash log file

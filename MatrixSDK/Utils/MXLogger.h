@@ -64,6 +64,18 @@
 + (void)setBuildVersion:(NSString*)buildVersion;
 
 /**
+ Set a sub name for namespacing log files.
+
+ A sub name must be set when running from an app extension because extensions can
+ run in parallel to the app.
+ It must be called before `redirectNSLogToFiles`.
+
+ @param subLogName the subname for log files. Files will be named as 'console-[subLogName].log'
+        Default is nil.
+ */
++ (void)setSubLogName:(NSString*)subLogName;
+
+/**
  If any, get the file containing the last application crash log.
  
  Only one crash log is stored at a time. The best moment for the app to handle it is the 
