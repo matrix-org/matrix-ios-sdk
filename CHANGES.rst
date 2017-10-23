@@ -1,3 +1,25 @@
+Changes in Matrix iOS SDK in 0.10.0 (2017-10-23)
+===============================================
+
+Improvements:
+ * Call: Add CallKit support, thanks to @morozkin.
+ * MXRoom: Preserve message sending order.
+ * MXRealmCryptoStore: Move the existing db file from the default folder to the shared container.
+ * MXSession: Add `isEventStreamInitialised` flag.
+ * MXRestClient: Store certificates allowed by the end user in the initWithHomeServer method too.
+ * MXRestClient: Improve registration parameters handling (vector-im/riot-ios#910).
+ * MXCall: Go into MXCallStateCreateAnswer state on [MXCall answer] even if there are unknown devices in e2e rooms.
+ * MXLogger: Make it compatible with MXSDKOptions.applicationGroupIdentifier to write app extensions logs to file.
+ * MXLogger: Add setSubLogName method to log extensions into different files
+ * MXLogger: Log up to 10 life cycles.
+ 
+Bug fixes:
+ * Call: Fix freeze when making a 2nd call.
+ * MXEventTimeline: Fix crash when the user changes the language in the app.
+ * Store is reset by mistake on app launch when the user has left a room (vector-im/riot-ios#1574).
+ * MXRoom: sendEventOfType: Copy the event content to send to keep it consistent in multi-thread conditions (like in e2e) (vector-im/riot-ios#1581).
+ * Mark all messages as read does not work well (vector-im/riot-ios#1425).
+
 Changes in Matrix iOS SDK in 0.9.3 (2017-10-03)
 ===============================================
 
