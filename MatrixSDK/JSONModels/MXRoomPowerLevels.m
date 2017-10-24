@@ -30,6 +30,7 @@
         MXJSONModelSetInteger(roomPowerLevels.kick, JSONDictionary[@"kick"]);
         MXJSONModelSetInteger(roomPowerLevels.redact, JSONDictionary[@"redact"]);
         MXJSONModelSetInteger(roomPowerLevels.invite, JSONDictionary[@"invite"]);
+        MXJSONModelSetDictionary(roomPowerLevels.notifications, JSONDictionary[@"notifications"]);
         MXJSONModelSetDictionary(roomPowerLevels.events, JSONDictionary[@"events"]);
         
         // Read here default value by supporting the legacy CamelCase keys
@@ -148,6 +149,22 @@
     return minimumPowerLevel;
 }
 
+- (NSInteger)minimumPowerLevelForNotifications:(NSString *)key defaultPower:(NSInteger)defaultPower
+{
+    NSInteger minimumPowerLevel = defaultPower;
+    if (_notifications)
+    {
+        NSNumber *powerLevel;
+        MXJSONModelSetNumber(powerLevel, _notifications[key]);
+        if (powerLevel)
+        {
+            minimumPowerLevel = [powerLevel integerValue];
+        }
+    }
+
+    return minimumPowerLevel;
+}
+
 - (NSDictionary *)JSONDictionary
 {
     NSMutableDictionary *JSONDictionary = [NSMutableDictionary dictionary];
@@ -158,6 +175,7 @@
     JSONDictionary[@"kick"] = @(_kick);
     JSONDictionary[@"redact"] = @(_redact);
     JSONDictionary[@"invite"] = @(_invite);
+    JSONDictionary[@"notifications"] = _notifications;
     JSONDictionary[@"events"] = _events;
     JSONDictionary[@"events_default"] = @(_eventsDefault);
     JSONDictionary[@"state_default"] = @(_stateDefault);
@@ -176,6 +194,7 @@
     roomPowerLevelsCopy.kick = _kick;
     roomPowerLevelsCopy.redact = _redact;
     roomPowerLevelsCopy.invite = _invite;
+    roomPowerLevelsCopy.notifications = [_notifications copyWithZone:zone];
     roomPowerLevelsCopy.events = [_events copyWithZone:zone];
     roomPowerLevelsCopy.eventsDefault = _eventsDefault;
     roomPowerLevelsCopy.stateDefault = _stateDefault;
