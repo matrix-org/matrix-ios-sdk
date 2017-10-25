@@ -79,6 +79,8 @@
 		323E0C5C1A306D7A00A31D73 /* MXEvent.m in Sources */ = {isa = PBXBuildFile; fileRef = 323E0C5A1A306D7A00A31D73 /* MXEvent.m */; };
 		323EF7471C7CB4C7000DC98C /* MXEventTimelineTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 323EF7461C7CB4C7000DC98C /* MXEventTimelineTests.m */; };
 		324095221AFA432F00D81C97 /* MXCallStackCall.h in Headers */ = {isa = PBXBuildFile; fileRef = 3240951E1AFA432F00D81C97 /* MXCallStackCall.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		3240969D1F9F751600DBA607 /* MXPushRuleSenderNotificationPermissionConditionChecker.h in Headers */ = {isa = PBXBuildFile; fileRef = 3240969B1F9F751600DBA607 /* MXPushRuleSenderNotificationPermissionConditionChecker.h */; };
+		3240969E1F9F751600DBA607 /* MXPushRuleSenderNotificationPermissionConditionChecker.m in Sources */ = {isa = PBXBuildFile; fileRef = 3240969C1F9F751600DBA607 /* MXPushRuleSenderNotificationPermissionConditionChecker.m */; };
 		3245A7501AF7B2930001D8A7 /* MXCall.h in Headers */ = {isa = PBXBuildFile; fileRef = 3245A74C1AF7B2930001D8A7 /* MXCall.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		3245A7511AF7B2930001D8A7 /* MXCall.m in Sources */ = {isa = PBXBuildFile; fileRef = 3245A74D1AF7B2930001D8A7 /* MXCall.m */; };
 		3245A7521AF7B2930001D8A7 /* MXCallManager.h in Headers */ = {isa = PBXBuildFile; fileRef = 3245A74E1AF7B2930001D8A7 /* MXCallManager.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -358,6 +360,8 @@
 		323E0C5A1A306D7A00A31D73 /* MXEvent.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXEvent.m; sourceTree = "<group>"; };
 		323EF7461C7CB4C7000DC98C /* MXEventTimelineTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXEventTimelineTests.m; sourceTree = "<group>"; };
 		3240951E1AFA432F00D81C97 /* MXCallStackCall.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXCallStackCall.h; sourceTree = "<group>"; };
+		3240969B1F9F751600DBA607 /* MXPushRuleSenderNotificationPermissionConditionChecker.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MXPushRuleSenderNotificationPermissionConditionChecker.h; sourceTree = "<group>"; };
+		3240969C1F9F751600DBA607 /* MXPushRuleSenderNotificationPermissionConditionChecker.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MXPushRuleSenderNotificationPermissionConditionChecker.m; sourceTree = "<group>"; };
 		3245A74C1AF7B2930001D8A7 /* MXCall.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXCall.h; sourceTree = "<group>"; };
 		3245A74D1AF7B2930001D8A7 /* MXCall.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXCall.m; sourceTree = "<group>"; };
 		3245A74E1AF7B2930001D8A7 /* MXCallManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXCallManager.h; sourceTree = "<group>"; };
@@ -1069,6 +1073,8 @@
 				322360511A8E610500A3CA81 /* MXPushRuleDisplayNameCondtionChecker.m */,
 				32CAB1051A91EA34008C5BB9 /* MXPushRuleRoomMemberCountConditionChecker.h */,
 				32CAB1061A91EA34008C5BB9 /* MXPushRuleRoomMemberCountConditionChecker.m */,
+				3240969B1F9F751600DBA607 /* MXPushRuleSenderNotificationPermissionConditionChecker.h */,
+				3240969C1F9F751600DBA607 /* MXPushRuleSenderNotificationPermissionConditionChecker.m */,
 			);
 			path = Checker;
 			sourceTree = "<group>";
@@ -1233,6 +1239,7 @@
 				C61A4CC41E5F38CB00442158 /* SwiftMatrixSDK.h in Headers */,
 				324BE4681E3FADB1008D99D4 /* MXMegolmExportEncryption.h in Headers */,
 				32CAB10B1A925B41008C5BB9 /* MXHTTPOperation.h in Headers */,
+				3240969D1F9F751600DBA607 /* MXPushRuleSenderNotificationPermissionConditionChecker.h in Headers */,
 				322A51C71D9BBD3C00C8536D /* MXOlmDevice.h in Headers */,
 				320DFDE419DD99B60068622A /* MXRestClient.h in Headers */,
 				3265CB381A14C43E00E24B2F /* MXRoomState.h in Headers */,
@@ -1532,6 +1539,7 @@
 				F03EF5091DF071D5009DF592 /* MXEncryptedAttachments.m in Sources */,
 				32322A4C1E575F65005DD155 /* MXAllowedCertificates.m in Sources */,
 				F03EF5051DF01596009DF592 /* MXLRUCache.m in Sources */,
+				3240969E1F9F751600DBA607 /* MXPushRuleSenderNotificationPermissionConditionChecker.m in Sources */,
 				71DE22E01BC7C51200284153 /* MXReceiptData.m in Sources */,
 				926F401A1EEF0F6E0062630D /* MXJingleCallAudioSessionConfigurator.m in Sources */,
 				327E37B71A974F75007F026F /* MXLogger.m in Sources */,
