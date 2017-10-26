@@ -38,10 +38,10 @@
 
 - (BOOL)isCondition:(MXPushRuleCondition*)condition satisfiedBy:(MXEvent*)event withJsonDict:(NSDictionary*)contentAsJsonDict
 {
-    if ((event.eventType == MXEventTypeTypingNotification) || (event.eventType == MXEventTypeReceipt))
+    if (!event.eventId)
     {
-        // Do not take into account typing notifications in sender_notification_permission conditions
-        // as it may fire a lot of times
+        // Do not take into account the events without identifier (typing notifications, read receipts...)
+        // in sender_notification_permission conditions, as they may be triggered a lot of times.
         return NO;
     }
 
