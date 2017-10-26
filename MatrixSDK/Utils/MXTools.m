@@ -42,6 +42,8 @@ static NSRegularExpression *isMatrixRoomAliasRegex;
 static NSRegularExpression *isMatrixRoomIdentifierRegex;
 static NSRegularExpression *isMatrixEventIdentifierRegex;
 
+static NSUInteger transactionIdCount;
+
 
 @implementation MXTools
 
@@ -102,6 +104,8 @@ static NSRegularExpression *isMatrixEventIdentifierRegex;
                                                                                 options:NSRegularExpressionCaseInsensitive error:nil];
         isMatrixEventIdentifierRegex = [NSRegularExpression regularExpressionWithPattern:[NSString stringWithFormat:@"^%@$", kMXToolsRegexStringForMatrixEventIdentifier]
                                                                                  options:NSRegularExpressionCaseInsensitive error:nil];
+
+        transactionIdCount = 0;
     });
 }
 
@@ -200,6 +204,11 @@ static NSRegularExpression *isMatrixEventIdentifierRegex;
 + (NSString *)generateSecret
 {
     return [[NSProcessInfo processInfo] globallyUniqueString];
+}
+
++ (NSString *)generateTransactionId
+{
+    return [NSString stringWithFormat:@"m%tu.%tu", arc4random_uniform(INT32_MAX), transactionIdCount++];
 }
 
 + (NSString*)stripNewlineCharacters:(NSString *)inputString
