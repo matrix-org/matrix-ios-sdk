@@ -27,7 +27,6 @@
 #import "MXDeviceInfo.h"
 #import "MXKey.h"
 
-#import "MXFileCryptoStore.h"
 #import "MXRealmCryptoStore.h"
 
 #import "MXMegolmSessionData.h"
@@ -108,18 +107,6 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
 
     dispatch_queue_t cryptoQueue = [MXCrypto dispatchQueueForUser:mxSession.matrixRestClient.credentials.userId];
     dispatch_async(cryptoQueue, ^{
-
-        if ([MXFileCryptoStore hasDataForCredentials:mxSession.matrixRestClient.credentials])
-        {
-            NSLog(@"[MXCrypto] checkCryptoWithMatrixSession: Migration required for %@", mxSession.matrixRestClient.credentials);
-            if (![MXFileCryptoStore migrateToMXRealmCryptoStore:mxSession.matrixRestClient.credentials])
-            {
-                NSLog(@"[MXCrypto] Migration failed. We cannot do nothing except asking user for logging out and in");
-                [[NSNotificationCenter defaultCenter] postNotificationName:kMXSessionCryptoDidCorruptDataNotification
-                                                                    object:mxSession.matrixRestClient.credentials.userId
-                                                                  userInfo:nil];
-            }
-        }
 
         if ([MXCryptoStoreClass hasDataForCredentials:mxSession.matrixRestClient.credentials])
         {
