@@ -42,6 +42,13 @@
 + (NSString*)generateSecret;
 
 /**
+ Generate a random transaction id.
+
+ @return the transaction id.
+ */
++ (NSString*)generateTransactionId;
+
+/**
  Removing new line characters from NSString.
  The new line characters are replaced with a space character.
  Only one space is used to replace successive new line characters spaced or not.

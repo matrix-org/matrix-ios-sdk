@@ -1572,7 +1572,7 @@ MXAuthAction;
                             failure:(void (^)(NSError *error))failure
 {
     // Prepare the path by adding a random transaction id (This id is used to prevent duplicated event).
-    NSString *path = [NSString stringWithFormat:@"%@/rooms/%@/send/%@/%tu", apiPathPrefix, roomId, eventTypeString, arc4random_uniform(INT32_MAX)];
+    NSString *path = [NSString stringWithFormat:@"%@/rooms/%@/send/%@/%@", apiPathPrefix, roomId, eventTypeString, [MXTools generateTransactionId]];
     
     return [httpClient requestWithMethod:@"PUT"
                                     path:path
@@ -5084,7 +5084,7 @@ MXAuthAction;
                           success:(void (^)())success failure:(void (^)(NSError *))failure
 {
     // Prepare the path by adding a random transaction id (This id is used to prevent duplicated event).
-    NSString *path = [NSString stringWithFormat:@"%@/sendToDevice/%@/%tu", kMXAPIPrefixPathUnstable, eventType, arc4random_uniform(INT32_MAX)];
+    NSString *path = [NSString stringWithFormat:@"%@/sendToDevice/%@/%@", kMXAPIPrefixPathUnstable, eventType, [MXTools generateTransactionId]];
 
     NSDictionary *content = @{
                               @"messages": contentMap.map
