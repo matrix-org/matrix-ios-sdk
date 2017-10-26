@@ -2276,60 +2276,70 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
             }
         }
         
-        // Add the room id in the direct chats list for this user
+        // Add the room id in the direct chats listed for this user.
+        // Check whether the room id is not already present (in this case `_directUserId` was not updated yet),
+        // this may happen during invite handling.
         NSArray<NSString*> *savedNewDirectUserIdRoomLists = mxSession.directRooms[newDirectUserId];
-        NSArray<NSString*> *savedDirectUserIdRoomLists = nil;
-        NSString *savedDirectUserId = _directUserId;
-        
-        NSMutableArray *roomLists = (savedNewDirectUserIdRoomLists ? [NSMutableArray arrayWithArray:savedNewDirectUserIdRoomLists] : [NSMutableArray array]);
-        [roomLists addObject:self.roomId];
-        [mxSession.directRooms setObject:roomLists forKey:newDirectUserId];
-        
-        // Remove the room id for the current direct user if any
-        if (_directUserId)
+        if ([savedNewDirectUserIdRoomLists indexOfObject:self.roomId] == NSNotFound)
         {
-            savedDirectUserIdRoomLists = mxSession.directRooms[_directUserId];
-            roomLists = [NSMutableArray arrayWithArray:savedDirectUserIdRoomLists];
-            [roomLists removeObject:self.roomId];
-            if (roomLists.count)
+            NSArray<NSString*> *savedDirectUserIdRoomLists = nil;
+            NSString *savedDirectUserId = _directUserId;
+            
+            NSMutableArray *roomLists = (savedNewDirectUserIdRoomLists ? [NSMutableArray arrayWithArray:savedNewDirectUserIdRoomLists] : [NSMutableArray array]);
+            [roomLists addObject:self.roomId];
+            [mxSession.directRooms setObject:roomLists forKey:newDirectUserId];
+            
+            // Remove the room id for the current direct user if any
+            if (_directUserId)
             {
-                [mxSession.directRooms setObject:roomLists forKey:_directUserId];
+                savedDirectUserIdRoomLists = mxSession.directRooms[_directUserId];
+                roomLists = [NSMutableArray arrayWithArray:savedDirectUserIdRoomLists];
+                [roomLists removeObject:self.roomId];
+                if (roomLists.count)
+                {
+                    [mxSession.directRooms setObject:roomLists forKey:_directUserId];
+                }
+                else
+                {
+                    [mxSession.directRooms removeObjectForKey:_directUserId];
+                }
             }
-            else
-            {
-                [mxSession.directRooms removeObjectForKey:_directUserId];
-            }
+            
+            // Update
+            _directUserId = newDirectUserId;
+            
+            // Upload the updated direct rooms directory.
+            // mxSession will post the 'kMXSessionDirectRoomsDidChangeNotification' notification on success.
+            return [mxSession uploadDirectRooms:success failure:^(NSError *error) {
+                
+                // Restore the previous configuration
+                _directUserId = savedDirectUserId;
+                if (savedDirectUserIdRoomLists)
+                {
+                    [mxSession.directRooms setObject:savedDirectUserIdRoomLists forKey:_directUserId];
+                }
+                
+                if (savedNewDirectUserIdRoomLists)
+                {
+                    [mxSession.directRooms setObject:savedNewDirectUserIdRoomLists forKey:newDirectUserId];
+                }
+                else
+                {
+                    [mxSession.directRooms removeObjectForKey:newDirectUserId];
+                }
+                
+                if (failure)
+                {
+                    failure(error);
+                }
+                
+            }];
         }
-        
-        // Update
-        _directUserId = newDirectUserId;
-        
-        // Upload the updated direct rooms directory.
-        // mxSession will post the 'kMXSessionDirectRoomsDidChangeNotification' notification on success.
-        return [mxSession uploadDirectRooms:success failure:^(NSError *error) {
-            
-            // Restore the previous configuration
-            _directUserId = savedDirectUserId;
-            if (savedDirectUserIdRoomLists)
-            {
-                [mxSession.directRooms setObject:savedDirectUserIdRoomLists forKey:_directUserId];
-            }
-            
-            if (savedNewDirectUserIdRoomLists)
-            {
-                [mxSession.directRooms setObject:savedNewDirectUserIdRoomLists forKey:newDirectUserId];
-            }
-            else
-            {
-                [mxSession.directRooms removeObjectForKey:newDirectUserId];
-            }
-            
-            if (failure)
-            {
-                failure(error);
-            }
-            
-        }];
+        else
+        {
+            // Update directUserId field.
+            _directUserId = newDirectUserId;
+        }
     }
     
     // Here the room has already the right value for the direct tag
