@@ -459,32 +459,32 @@ typedef void (^MXOnResumeDone)();
 - (void)pause
 {
     NSLog(@"[MXSession] pause the event stream in state %tu", _state);
-
-    // Check that none required the session to keep running even if the app goes in
-    // background
-    if (_preventPauseCount)
-    {
-        NSLog(@"[MXSession pause] Prevent the session from being paused. preventPauseCount: %tu", _preventPauseCount);
-
-        id<MXBackgroundModeHandler> handler = [MXSDKOptions sharedInstance].backgroundModeHandler;
-        if (handler && backgroundTaskIdentifier == [handler invalidIdentifier])
-        {
-            backgroundTaskIdentifier = [handler startBackgroundTaskWithName:@"MXSessionBackgroundTask" completion:^{
-                NSLog(@"[MXSession pause] Background task #%tu is going to expire - ending it", backgroundTaskIdentifier);
-
-                // We cannot continue to run in background. Pause the session for real
-                self.preventPauseCount = 0;
-            }];
-            NSLog(@"[MXSession pause] Created background task #%tu", backgroundTaskIdentifier);
-        }
-
-        [self setState:MXSessionStatePauseRequested];
-
-        return;
-    }
     
     if ((_state == MXSessionStateRunning) || (_state == MXSessionStateBackgroundSyncInProgress))
     {
+        // Check that none required the session to keep running even if the app goes in
+        // background
+        if (_preventPauseCount)
+        {
+            NSLog(@"[MXSession pause] Prevent the session from being paused. preventPauseCount: %tu", _preventPauseCount);
+            
+            id<MXBackgroundModeHandler> handler = [MXSDKOptions sharedInstance].backgroundModeHandler;
+            if (handler && backgroundTaskIdentifier == [handler invalidIdentifier])
+            {
+                backgroundTaskIdentifier = [handler startBackgroundTaskWithName:@"MXSessionBackgroundTask" completion:^{
+                    NSLog(@"[MXSession pause] Background task #%tu is going to expire - ending it", backgroundTaskIdentifier);
+                    
+                    // We cannot continue to run in background. Pause the session for real
+                    self.preventPauseCount = 0;
+                }];
+                NSLog(@"[MXSession pause] Created background task #%tu", backgroundTaskIdentifier);
+            }
+            
+            [self setState:MXSessionStatePauseRequested];
+            
+            return;
+        }
+        
         // reset the callback
         onResumeDone = nil;
         onBackgroundSyncDone = nil;
@@ -940,10 +940,19 @@ typedef void (^MXOnResumeDone)();
             // check that the application was not resumed while catching up in background
             if (_state == MXSessionStateBackgroundSyncInProgress)
             {
-                NSLog(@"[MXSession] go to paused ");
-                eventStreamRequest = nil;
-                [self setState:MXSessionStatePaused];
-                return;
+                // Check that none required the session to keep running
+                if (_preventPauseCount)
+                {
+                    // Delay the pause by calling the reliable `pause` method.
+                    [self pause];
+                }
+                else
+                {
+                    NSLog(@"[MXSession] go to paused ");
+                    eventStreamRequest = nil;
+                    [self setState:MXSessionStatePaused];
+                    return;
+                }
             }
             else
             {
@@ -1039,10 +1048,19 @@ typedef void (^MXOnResumeDone)();
             // check that the application was not resumed while catching up in background
             if (_state == MXSessionStateBackgroundSyncInProgress)
             {
-                NSLog(@"[MXSession] go to paused ");
-                eventStreamRequest = nil;
-                [self setState:MXSessionStatePaused];
-                return;
+                // Check that none required the session to keep running
+                if (_preventPauseCount)
+                {
+                    // Delay the pause by calling the reliable `pause` method.
+                    [self pause];
+                }
+                else
+                {
+                    NSLog(@"[MXSession] go to paused ");
+                    eventStreamRequest = nil;
+                    [self setState:MXSessionStatePaused];
+                    return;
+                }
             }
             else
             {
