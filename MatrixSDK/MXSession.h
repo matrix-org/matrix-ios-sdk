@@ -331,7 +331,10 @@ FOUNDATION_EXPORT NSString *const kMXSessionNoRoomTag;
 
 /**
  Pause the session events stream.
- Caution: this action is ignored if the session state is not MXSessionStateRunning.
+ This action may be delayed by using `retainPreventPause`.
+ 
+ Caution: this action is ignored if the session state is not MXSessionStateRunning
+ or MXSessionStateBackgroundSyncInProgress.
  
  No more live events will be received by the listeners.
  */
