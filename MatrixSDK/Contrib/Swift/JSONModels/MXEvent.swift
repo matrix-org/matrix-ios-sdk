@@ -42,6 +42,7 @@ public enum MXEventType {
     case roomGuestAccess
     case roomHistoryVisibility
     case roomKey
+    case roomKeyRequest
     case roomMessage
     case roomMessageFeedback
     case roomRedaction
@@ -74,6 +75,7 @@ public enum MXEventType {
         case .roomGuestAccess: return kMXEventTypeStringRoomGuestAccess
         case .roomHistoryVisibility: return kMXEventTypeStringRoomHistoryVisibility
         case .roomKey: return kMXEventTypeStringRoomKey
+        case .roomKeyRequest: return kMXEventTypeStringRoomKeyRequest;
         case .roomMessage: return kMXEventTypeStringRoomMessage
         case .roomMessageFeedback: return kMXEventTypeStringRoomMessageFeedback
         case .roomRedaction: return kMXEventTypeStringRoomRedaction
