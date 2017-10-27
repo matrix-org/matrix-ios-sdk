@@ -1,3 +1,17 @@
+Changes in Matrix iOS SDK in 0.10.1 (2017-10-27)
+===============================================
+
+Improvements:
+ * Notifications: implement @room notifications (vector-im/riot-meta#119).
+ * MXTools: Add a reusable generateTransactionId method.
+ * MXRoom: Prevent multiple occurrences of the room id in the direct chats dictionary of the account data. 
+ 
+Bug fixes:
+ * CallKit - When I reject or answer a call on one device, it should stop ringing on all other iOS devices (vector-im/riot-ios#1618).
+
+API breaks:
+ * Crypto: Remove MXFileCryptoStore (We stopped to maintain it one year ago).
+
 Changes in Matrix iOS SDK in 0.10.0 (2017-10-23)
 ===============================================
 
