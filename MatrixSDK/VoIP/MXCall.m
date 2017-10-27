@@ -691,6 +691,9 @@ NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
 {
     // Send the notif that the call has been answered from another device to the app
     [self setState:MXCallStateAnsweredElseWhere reason:nil];
+    
+    // Set appropriate call end reason
+    _endReason = MXCallEndReasonAnsweredElseWhere;
 
     // And set the final state: MXCallStateEnded
     [self setState:MXCallStateEnded reason:nil];
