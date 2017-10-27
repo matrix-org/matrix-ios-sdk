@@ -26,6 +26,7 @@
 #import <OLMKit/OLMKit.h>
 #import "MXOlmInboundGroupSession.h"
 #import "MXDeviceInfo.h"
+#import "MXOutgoingRoomKeyRequest.h"
 
 /**
  The `MXCryptoStore` protocol defines an interface that must be implemented in order to store
@@ -218,11 +219,49 @@
 /**
  Retrieve all inbound group sessions.
  
- @TODO: maybe too heavy.
- 
  @return the list of all inbound group sessions.
  */
 - (NSArray<MXOlmInboundGroupSession*> *)inboundGroupSessions;
+
+
+#pragma mark - Key sharing
+
+/**
+ Look for existing room key request, and returns the result synchronously.
+
+ @param requestBody the existing request to look for.
+ @return a MXOutgoingRoomKeyRequest matching the request, or nil if not found.
+ */
+- (MXOutgoingRoomKeyRequest*)outgoingRoomKeyRequestWithRequestBody:(NSDictionary *)requestBody;
+
+/**
+ Look for the first room key request that matches the state.
+
+ @param the request state to look for.
+ @return a MXOutgoingRoomKeyRequest matching the request, or nil if not found.
+ */
+- (MXOutgoingRoomKeyRequest*)outgoingRoomKeyRequestWithState:(MXRoomKeyRequestState)state;
+
+/**
+ Store a room key request.
+
+ @param request the room key request to store.
+ */
+- (void)storeOutgoingRoomKeyRequest:(MXOutgoingRoomKeyRequest*)request;
+
+/**
+ Update a room key request.
+
+ @request the room key request to update in the store.
+ */
+- (void)updateOutgoingRoomKeyRequest:(MXOutgoingRoomKeyRequest*)request;
+
+/**
+ Delete a room key request.
+
+ @param requestId the id of the request to delete.
+ */
+- (void)deleteOutgoingRoomKeyRequestWithRequestId:(NSString*)requestId;
 
 
 #pragma mark - Crypto settings

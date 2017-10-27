@@ -32,6 +32,8 @@
 #import "MXMegolmSessionData.h"
 #import "MXMegolmExportEncryption.h"
 
+#import "MXOutgoingRoomKeyRequestManager.h"
+
 /**
  The store to use for crypto.
  */
@@ -73,6 +75,9 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
 
     // The operation used for crypto starting requests
     MXHTTPOperation *startOperation;
+
+    // The manager for sending room key requests
+    MXOutgoingRoomKeyRequestManager *outgoingRoomKeyRequestManager;
 }
 @end
 
@@ -221,6 +226,8 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
                     // of waiting for the next /sync that may occur in 30s.
                     [_deviceList refreshOutdatedDeviceLists];
 
+                    [outgoingRoomKeyRequestManager start];
+
                     dispatch_async(dispatch_get_main_queue(), ^{
                         startOperation = nil;
                         success();
@@ -247,6 +254,8 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
         else
         {
             // No annoucement require
+            [outgoingRoomKeyRequestManager start];
+
             dispatch_async(dispatch_get_main_queue(), ^{
                 startOperation = nil;
                 success();
@@ -280,6 +289,9 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
         // Cancel pending one-time keys upload
         [uploadOneTimeKeysOperation cancel];
         uploadOneTimeKeysOperation = nil;
+
+        [outgoingRoomKeyRequestManager close];
+        outgoingRoomKeyRequestManager = nil;
 
         _olmDevice = nil;
         _cryptoQueue = nil;
@@ -1018,6 +1030,18 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
 }
 
 
+#pragma mark - Key sharing
+
+- (void)requestRoomKey:(NSDictionary*)requestBody recipients:(NSArray<NSDictionary<NSString*, NSString*>*>*)recipients
+{
+    [outgoingRoomKeyRequestManager sendRoomKeyRequest:requestBody recipients:recipients];
+}
+
+- (void)cancelRoomKeyRequest:(NSDictionary*)requestBody
+{
+    [outgoingRoomKeyRequestManager cancelRoomKeyRequest:requestBody];
+}
+
 #pragma mark - Crypto settings
 - (BOOL)globalBlacklistUnverifiedDevices
 {
@@ -1109,6 +1133,8 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
         NSMutableDictionary *myDevices = [NSMutableDictionary dictionaryWithDictionary:[_store devicesForUser:userId]];
         myDevices[myDevice.deviceId] = myDevice;
         [_store storeDevicesForUser:userId devices:myDevices];
+
+        outgoingRoomKeyRequestManager = [[MXOutgoingRoomKeyRequestManager alloc] initWithMatrixRestClient:_matrixRestClient deviceID:myDevice.deviceId cryptoStore:_store];
         
         [self registerEventHandlers];
         
@@ -1640,7 +1666,7 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
 
     if (contentMap.userIds.count)
     {
-        return [_matrixRestClient sendToDevice:kMXEventTypeStringNewDevice contentMap:contentMap success:^{
+        return [_matrixRestClient sendToDevice:kMXEventTypeStringNewDevice contentMap:contentMap txnId:nil success:^{
 
             NSLog(@"[MXCrypto] checkDeviceAnnounced: Annoucements done");
 
