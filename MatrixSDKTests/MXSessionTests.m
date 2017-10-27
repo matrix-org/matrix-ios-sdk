@@ -1246,7 +1246,7 @@
                                          }
                                  } forUser:mxSession.myUser.userId];
 
-        [aliceRestClient sendToDevice:kMXEventTypeStringNewDevice contentMap:contentMap success:^{
+        [aliceRestClient sendToDevice:kMXEventTypeStringNewDevice contentMap:contentMap txnId:nil success:^{
 
         } failure:^(NSError *error) {
             XCTFail(@"Cannot set up intial test conditions - error: %@", error);
