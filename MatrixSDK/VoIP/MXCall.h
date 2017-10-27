@@ -63,6 +63,7 @@ typedef NS_ENUM(NSInteger, MXCallEndReason)
     MXCallEndReasonRemoteHangup, // The call was ended by the remote side
     MXCallEndReasonBusy, // The call was declined by the remote side before it was being established. Only for outgoing calls
     MXCallEndReasonMissed, // The call wasn't established in a given period of time
+    MXCallEndReasonAnsweredElseWhere // The call was answered on another device
 };
 
 /**

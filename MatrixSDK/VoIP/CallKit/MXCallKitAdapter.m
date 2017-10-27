@@ -143,6 +143,9 @@ NSString * const kMXCallKitAdapterAudioSessionDidActive = @"kMXCallKitAdapterAud
             case MXCallEndReasonMissed:
                 reason = CXCallEndedReasonUnanswered;
                 break;
+            case MXCallEndReasonAnsweredElseWhere:
+                reason = CXCallEndedReasonAnsweredElsewhere;
+                break;
             default:
                 break;
         }
