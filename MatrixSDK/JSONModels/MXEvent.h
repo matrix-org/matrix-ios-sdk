@@ -43,6 +43,7 @@ typedef enum : NSUInteger
     MXEventTypeRoomGuestAccess,
     MXEventTypeRoomHistoryVisibility,
     MXEventTypeRoomKey,
+    MXEventTypeRoomKeyRequest,
     MXEventTypeRoomMessage,
     MXEventTypeRoomMessageFeedback,
     MXEventTypeRoomPlumbing,
