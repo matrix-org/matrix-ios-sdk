@@ -68,6 +68,7 @@ static NSUInteger transactionIdCount;
                                 kMXEventTypeStringRoomGuestAccess,
                                 kMXEventTypeStringRoomHistoryVisibility,
                                 kMXEventTypeStringRoomKey,
+                                kMXEventTypeStringRoomForwardedKey,
                                 kMXEventTypeStringRoomKeyRequest,
                                 kMXEventTypeStringRoomMessage,
                                 kMXEventTypeStringRoomMessageFeedback,

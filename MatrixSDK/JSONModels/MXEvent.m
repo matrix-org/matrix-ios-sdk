@@ -35,6 +35,7 @@ NSString *const kMXEventTypeStringRoomEncryption        = @"m.room.encryption";
 NSString *const kMXEventTypeStringRoomGuestAccess       = @"m.room.guest_access";
 NSString *const kMXEventTypeStringRoomHistoryVisibility = @"m.room.history_visibility";
 NSString *const kMXEventTypeStringRoomKey               = @"m.room_key";
+NSString *const kMXEventTypeStringRoomForwardedKey      = @"m.forwarded_room_key";
 NSString *const kMXEventTypeStringRoomKeyRequest        = @"m.room_key_request";
 NSString *const kMXEventTypeStringRoomMessage           = @"m.room.message";
 NSString *const kMXEventTypeStringRoomMessageFeedback   = @"m.room.message.feedback";
