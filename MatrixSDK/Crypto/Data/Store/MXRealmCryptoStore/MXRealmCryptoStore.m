@@ -179,12 +179,12 @@ RLM_ARRAY_TYPE(MXRealmOlmInboundGroupSession)
 {
     MXOutgoingRoomKeyRequest *outgoingRoomKeyRequest = [[MXOutgoingRoomKeyRequest alloc] init];
 
-    outgoingRoomKeyRequest.requestId = _requestId;
-    outgoingRoomKeyRequest.cancellationTxnId = _cancellationTxnId;
-    outgoingRoomKeyRequest.state = (MXRoomKeyRequestState)[_state unsignedIntegerValue];
-    outgoingRoomKeyRequest.recipients = [NSKeyedUnarchiver unarchiveObjectWithData:_recipientsData];
+    outgoingRoomKeyRequest.requestId = self.requestId;
+    outgoingRoomKeyRequest.cancellationTxnId = self.cancellationTxnId;
+    outgoingRoomKeyRequest.state = (MXRoomKeyRequestState)[self.state unsignedIntegerValue];
+    outgoingRoomKeyRequest.recipients = [NSKeyedUnarchiver unarchiveObjectWithData:self.recipientsData];
 
-    NSData *requestBodyData = [NSJSONSerialization dataWithJSONObject:_requestBodyString options:0 error:nil];
+    NSData *requestBodyData = [NSJSONSerialization dataWithJSONObject:self.requestBodyString options:0 error:nil];
     outgoingRoomKeyRequest.requestBody = [NSKeyedUnarchiver unarchiveObjectWithData:requestBodyData];
 
     return outgoingRoomKeyRequest;
@@ -688,25 +688,31 @@ RLM_ARRAY_TYPE(MXRealmOlmInboundGroupSession)
 
 - (MXOutgoingRoomKeyRequest*)outgoingRoomKeyRequestWithRequestBody:(NSDictionary *)requestBody
 {
+    MXOutgoingRoomKeyRequest *request;
+
     NSData *requestBodyData = [NSJSONSerialization dataWithJSONObject:requestBody options:0 error:nil];
     NSString *requestBodyString = [[NSString alloc] initWithData:requestBodyData encoding:NSUTF8StringEncoding];
 
-    MXRealmOutgoingRoomKeyRequest *realmOutgoingRoomKeyRequest = [MXRealmOutgoingRoomKeyRequest objectsInRealm:self.realm where:@"requestBodyString = %@", requestBodyString].firstObject;
-
-    return realmOutgoingRoomKeyRequest.outgoingRoomKeyRequest;
-}
-
-- (NSArray<MXOutgoingRoomKeyRequest*>*)outgoingRoomKeyRequestWithState:(MXRoomKeyRequestState)state
-{
-    RLMResults<MXRealmOutgoingRoomKeyRequest *> *realmOutgoingRoomKeyRequests = [MXRealmOutgoingRoomKeyRequest objectsInRealm:self.realm where:@"state = %@", state];
-
-    NSMutableArray<MXOutgoingRoomKeyRequest*> *array = [NSMutableArray arrayWithCapacity:realmOutgoingRoomKeyRequests.count];
-    for (MXRealmOutgoingRoomKeyRequest *realmOutgoingRoomKeyRequest in realmOutgoingRoomKeyRequests)
+    RLMResults<MXRealmOutgoingRoomKeyRequest *> *realmOutgoingRoomKeyRequests =  [MXRealmOutgoingRoomKeyRequest objectsInRealm:self.realm where:@"requestBodyString = %@", requestBodyString];
+    if (request)
     {
-        [array addObject:realmOutgoingRoomKeyRequest.outgoingRoomKeyRequest];
+        request = realmOutgoingRoomKeyRequests[0].outgoingRoomKeyRequest;
     }
 
-    return array;
+    return request;
+}
+
+- (MXOutgoingRoomKeyRequest*)outgoingRoomKeyRequestWithState:(MXRoomKeyRequestState)state
+{
+    MXOutgoingRoomKeyRequest *request;
+
+    RLMResults<MXRealmOutgoingRoomKeyRequest *> *realmOutgoingRoomKeyRequests = [MXRealmOutgoingRoomKeyRequest objectsInRealm:self.realm where:@"state = %@", @(state)];
+    if (realmOutgoingRoomKeyRequests.count)
+    {
+        request = realmOutgoingRoomKeyRequests[0].outgoingRoomKeyRequest;
+    }
+
+    return request;
 }
 
 - (void)storeOutgoingRoomKeyRequest:(MXOutgoingRoomKeyRequest*)request
