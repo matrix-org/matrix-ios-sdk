@@ -32,10 +32,16 @@
  This instance will use the passed MXRestClient to make requests to the home server.
 
  @param mxRestClient The MXRestClient to the home server.
+ @param deviceId The user device id.
+ @param cryptoQueue The crypto thread.
+ @param cryptoStore The crypto store.
 
  @return The newly-initialized MXSession.
  */
-- (id)initWithMatrixRestClient:(MXRestClient*)mxRestClient deviceID:(NSString*)deviceId cryptoStore:(id<MXCryptoStore>)cryptoStore;
+- (id)initWithMatrixRestClient:(MXRestClient*)mxRestClient
+                      deviceId:(NSString*)deviceId
+                   cryptoQueue:(dispatch_queue_t)cryptoQueue
+                   cryptoStore:(id<MXCryptoStore>)cryptoStore;
 
 /**
  Called when the client is started. Sets background processes running.

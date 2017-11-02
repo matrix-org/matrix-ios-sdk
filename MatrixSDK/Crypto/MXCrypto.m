@@ -1134,7 +1134,11 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
         myDevices[myDevice.deviceId] = myDevice;
         [_store storeDevicesForUser:userId devices:myDevices];
 
-        outgoingRoomKeyRequestManager = [[MXOutgoingRoomKeyRequestManager alloc] initWithMatrixRestClient:_matrixRestClient deviceID:myDevice.deviceId cryptoStore:_store];
+        outgoingRoomKeyRequestManager = [[MXOutgoingRoomKeyRequestManager alloc]
+                                         initWithMatrixRestClient:_matrixRestClient
+                                         deviceId:myDevice.deviceId
+                                         cryptoQueue:[MXCrypto dispatchQueueForUser:myDevice.userId]
+                                         cryptoStore:_store];
         
         [self registerEventHandlers];
         
