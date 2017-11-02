@@ -21,6 +21,7 @@
 
 #import <Realm/Realm.h>
 #import "MXSession.h"
+#import "MXTools.h"
 
 NSUInteger const kMXRealmCryptoStoreVersion = 5;
 
@@ -183,9 +184,7 @@ RLM_ARRAY_TYPE(MXRealmOlmInboundGroupSession)
     outgoingRoomKeyRequest.cancellationTxnId = self.cancellationTxnId;
     outgoingRoomKeyRequest.state = (MXRoomKeyRequestState)[self.state unsignedIntegerValue];
     outgoingRoomKeyRequest.recipients = [NSKeyedUnarchiver unarchiveObjectWithData:self.recipientsData];
-
-    NSData *requestBodyData = [NSJSONSerialization dataWithJSONObject:self.requestBodyString options:0 error:nil];
-    outgoingRoomKeyRequest.requestBody = [NSKeyedUnarchiver unarchiveObjectWithData:requestBodyData];
+    outgoingRoomKeyRequest.requestBody = [MXTools deserialiseJSONString:self.requestBodyString];
 
     return outgoingRoomKeyRequest;
 }
@@ -690,8 +689,7 @@ RLM_ARRAY_TYPE(MXRealmOlmInboundGroupSession)
 {
     MXOutgoingRoomKeyRequest *request;
 
-    NSData *requestBodyData = [NSJSONSerialization dataWithJSONObject:requestBody options:0 error:nil];
-    NSString *requestBodyString = [[NSString alloc] initWithData:requestBodyData encoding:NSUTF8StringEncoding];
+    NSString *requestBodyString = [MXTools serialiseJSONObject:request.requestBody];
 
     RLMResults<MXRealmOutgoingRoomKeyRequest *> *realmOutgoingRoomKeyRequests =  [MXRealmOutgoingRoomKeyRequest objectsInRealm:self.realm where:@"requestBodyString = %@", requestBodyString];
     if (request)
@@ -719,8 +717,7 @@ RLM_ARRAY_TYPE(MXRealmOlmInboundGroupSession)
 {
     RLMRealm *realm = self.realm;
 
-    NSData *requestBodyData = [NSJSONSerialization dataWithJSONObject:request.requestBody options:0 error:nil];
-    NSString *requestBodyString = [[NSString alloc] initWithData:requestBodyData encoding:NSUTF8StringEncoding];
+    NSString *requestBodyString = [MXTools serialiseJSONObject:request.requestBody];
 
     MXRealmOutgoingRoomKeyRequest *realmOutgoingRoomKeyRequest = [[MXRealmOutgoingRoomKeyRequest alloc] initWithValue:@{
                                                                           @"requestId": request.requestId,
@@ -742,10 +739,10 @@ RLM_ARRAY_TYPE(MXRealmOlmInboundGroupSession)
 
     MXRealmOutgoingRoomKeyRequest *realmOutgoingRoomKeyRequests = [MXRealmOutgoingRoomKeyRequest objectsInRealm:self.realm where:@"requestId = %@", request.requestId].firstObject;
 
-    // Well, only the state changes
-    realmOutgoingRoomKeyRequests.state = @(request.state);
-
     [realm transactionWithBlock:^{
+        // Well, only the state changes
+        realmOutgoingRoomKeyRequests.state = @(request.state);
+        
         [realm addOrUpdateObject:realmOutgoingRoomKeyRequests];
     }];
 }
