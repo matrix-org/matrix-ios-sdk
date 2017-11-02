@@ -23,18 +23,18 @@
 
  |
  V         (cancellation requested)
- UNSENT  -----------------------------+
- |                                  |
- | (send successful)                |
- V                                  |
- SENT                                |
- |                                  |
- | (cancellation requested)         |
- V                                  |
+ UNSENT  -------------------------------+
+ |                                      |
+ | (send successful)                    |
+ V                                      |
+ SENT                                   |
+ |                                      |
+ | (cancellation requested)             |
+ V                                      |
  CANCELLATION_PENDING                   |
- |                                  |
- | (cancellation sent)              |
- V                                  |
+ |                                      |
+ | (cancellation sent)                  |
+ V                                      |
  (deleted)  <---------------------------+
  */
 typedef enum : NSUInteger

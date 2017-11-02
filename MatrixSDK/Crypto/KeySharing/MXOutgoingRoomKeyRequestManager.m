@@ -301,14 +301,12 @@ NSUInteger const SEND_KEY_REQUESTS_DELAY_MS = 500;
 }
 
 /**
- * Look for an existing outgoing room key request, and if none is found,
- * add a new one
- *
- * @param {module:crypto/store/base~OutgoingRoomKeyRequest} request
- *
- * @returns {Promise} resolves to
- *    {@link module:crypto/store/base~OutgoingRoomKeyRequest}: either the
- *    same instance as passed in, or the existing one.
+ Look for an existing outgoing room key request, and if none is found,
+ add a new one
+
+ @param requestBody the body of the request.
+ @param recipients the recipients.
+ @returns the existing outgoing room key request or a new one.
  */
 - (MXOutgoingRoomKeyRequest*)getOrAddOutgoingRoomKeyRequest:(NSDictionary *)requestBody
                                                  recipients:(NSArray<NSDictionary<NSString *,NSString *> *> *)recipients
