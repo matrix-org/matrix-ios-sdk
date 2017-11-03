@@ -42,6 +42,11 @@
 
 #ifdef MX_CRYPTO
 
+NSString *const kMXCryptoRoomKeyRequestNotification = @"kMXCryptoRoomKeyRequestNotification";
+NSString *const kMXCryptoRoomKeyRequestNotificationRequestKey = @"kMXCryptoRoomKeyRequestNotificationRequestKey";
+NSString *const kMXCryptoRoomKeyRequestCancellationNotification = @"kMXCryptoRoomKeyRequestCancellationNotification";
+NSString *const kMXCryptoRoomKeyRequestCancellationNotificationRequestKey = @"kMXCryptoRoomKeyRequestCancellationNotificationRequestKey";
+
 // Frequency with which to check & upload one-time keys
 NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
 
@@ -78,6 +83,11 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
 
     // The manager for sending room key requests
     MXOutgoingRoomKeyRequestManager *outgoingRoomKeyRequestManager;
+
+    // The list of MXIncomingRoomKeyRequests/MXIncomingRoomKeyRequestCancellations
+    // we received in the current sync.
+    NSMutableArray<MXIncomingRoomKeyRequest*> *receivedRoomKeyRequests;
+    NSMutableArray<MXIncomingRoomKeyRequestCancellation*> *receivedRoomKeyRequestCancellations;
 }
 @end
 
@@ -615,6 +625,7 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
         if (!isCatchingUp && _store.deviceAnnounced)
         {
             [self maybeUploadOneTimeKeys:nil failure:nil];
+            [self processReceivedRoomKeyRequests];
         }
     });
 
@@ -1139,6 +1150,11 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
                                          deviceId:myDevice.deviceId
                                          cryptoQueue:[MXCrypto dispatchQueueForUser:myDevice.userId]
                                          cryptoStore:_store];
+
+        // The list of MXIncomingRoomKeyRequests/MXIncomingRoomKeyRequestCancellations
+        // we received in the current sync.
+        receivedRoomKeyRequests = [NSMutableArray array];
+        receivedRoomKeyRequestCancellations = [NSMutableArray array];
         
         [self registerEventHandlers];
         
@@ -1724,6 +1740,14 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
                 break;
             }
 
+            case MXEventTypeRoomKeyRequest:
+            {
+                dispatch_async(_cryptoQueue, ^{
+                    [self onRoomKeyRequestEvent:event];
+                });
+                break;
+            }
+
             default:
                 break;
         }
@@ -1837,6 +1861,172 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
             });
         }
     }
+}
+
+/**
+ Called when we get an m.room_key_request event.
+
+ @param event the key request event.
+ */
+- (void)onRoomKeyRequestEvent:(MXEvent*)event
+{
+    NSString *action;
+    MXJSONModelSetString(action, event.content[@"action"]);
+
+    if ([action isEqualToString:@"request"])
+    {
+        // Queue it up for now, because they tend to arrive before the room state
+        // events at initial sync, and we want to see if we know anything about the
+        // room before passing them on to the app.
+        MXIncomingRoomKeyRequest *req = [[MXIncomingRoomKeyRequest alloc] initWithMXEvent:event];
+        [receivedRoomKeyRequests addObject:req];
+    }
+    else if ([action isEqualToString:@"request_cancellation"])
+    {
+        MXIncomingRoomKeyRequestCancellation *req = [[MXIncomingRoomKeyRequestCancellation alloc] initWithMXEvent:event];
+        [receivedRoomKeyRequestCancellations addObject:req];
+    }
+}
+
+/**
+ Process any m.room_key_request events which were queued up during the
+ current sync.
+ */
+- (void)processReceivedRoomKeyRequests
+{
+    // we need to grab and clear the queues in the synchronous bit of this method,
+    // so that we don't end up racing with the next /sync.
+    NSArray<MXIncomingRoomKeyRequest*> *requests = [receivedRoomKeyRequests copy];
+    [receivedRoomKeyRequests removeAllObjects];
+    NSArray<MXIncomingRoomKeyRequestCancellation*> *cancellations = [receivedRoomKeyRequestCancellations copy];
+    [receivedRoomKeyRequestCancellations removeAllObjects];
+
+    // Process all of the requests, *then* all of the cancellations.
+    //
+    // This makes sure that if we get a request and its cancellation in the
+    // same /sync result, then we process the request before the
+    // cancellation (and end up with a cancelled request), rather than the
+    // cancellation before the request (and end up with an outstanding
+    // request which should have been cancelled.)
+    for (MXIncomingRoomKeyRequest *req in requests)
+    {
+        [self processReceivedRoomKeyRequest:req];
+    }
+    for (MXIncomingRoomKeyRequestCancellation *cancellation in cancellations)
+    {
+        [self processReceivedRoomKeyRequestCancellation:cancellation];
+    }
+}
+
+/**
+ Helper for processReceivedRoomKeyRequests.
+
+ @param req the request.
+ */
+- (void)processReceivedRoomKeyRequest:(MXIncomingRoomKeyRequest*)req
+{
+    NSString *userId = req.userId;
+    NSString *deviceId = req.deviceId;
+
+    NSDictionary *body = req.requestBody;
+    NSString *roomId, *alg;
+
+    MXJSONModelSetString(roomId, body[@"room_id"]);
+    MXJSONModelSetString(alg, body[@"algorithm"]);
+
+    NSLog(@"[MXCrypto] processReceivedRoomKeyRequest: m.room_key_request from %@:%@ for %@ / %@ (id %@)", userId, deviceId, roomId, body[@"session_id"], req.requestId);
+
+    if ([userId isEqualToString:_matrixRestClient.credentials.userId])
+    {
+        // TODO: determine if we sent this device the keys already: in
+        // which case we can do so again.
+        NSLog(@"[MXCrypto] Ignoring room key request from other user for now");
+        return;
+    }
+
+    // todo: should we queue up requests we don't yet have keys for,
+    // in case they turn up later?
+
+    // if we don't have a decryptor for this room/alg, we don't have
+    // the keys for the requested events, and can drop the requests.
+    id<MXDecrypting> decryptor = [self getRoomDecryptor:roomId algorithm:alg];
+    if (!decryptor)
+    {
+        NSLog(@"[MXCrypto] room key request for unknown alg %@ in room %@", alg, roomId);
+        return;
+    }
+
+    if (![decryptor hasKeysForKeyRequest:req])
+    {
+        NSLog(@"[MXCrypto] room key request for unknown session %@ / %@", roomId, body[@"session_id"]);
+        return;
+    }
+
+    __weak typeof(self) weakSelf = self;
+    __weak typeof(req) weakReq = req;
+
+    // Set up the code to execute when the user accepts to share keys
+    [req setShareCallbackBlock:^{
+        if (weakSelf && weakReq)
+        {
+            typeof(self) self = weakSelf;
+            typeof(req) strongReq = weakReq;
+
+            // Go back to the crypto thread
+            dispatch_async(self.cryptoQueue, ^{
+                [decryptor shareKeysWithDevice:strongReq];
+            });
+        }
+    }];
+
+    // if the device is is verified already, share the keys
+    MXDeviceInfo *device = [_store deviceWithDeviceId:deviceId forUser:userId];
+    if (device && device.verified)
+    {
+        NSLog(@"[MXCrypto] device is already verified: sharing keys");
+        [req share];
+        return;
+    }
+
+    // Broadcast the room key request
+    dispatch_async(dispatch_get_main_queue(), ^{
+        if (weakSelf)
+        {
+            typeof(self) self = weakSelf;
+            [[NSNotificationCenter defaultCenter] postNotificationName:kMXCryptoRoomKeyRequestNotification
+                                                                object:self
+                                                              userInfo:@{
+                                                                         kMXCryptoRoomKeyRequestNotificationRequestKey: req
+                                                                     }];
+        }
+    });
+}
+
+/**
+ Helper for processReceivedRoomKeyRequests.
+
+ @param cancellation the request cancellation.
+ */
+- (void)processReceivedRoomKeyRequestCancellation:(MXIncomingRoomKeyRequestCancellation*)cancellation
+{
+    NSLog(@"m.room_key_request cancellation for %@:%@ (id %@)", cancellation.userId, cancellation.deviceId, cancellation.requestId);
+
+    // Broadcast the room key request cancelation
+    __weak typeof(self) weakSelf = self;
+    dispatch_async(dispatch_get_main_queue(), ^{
+        if (weakSelf)
+        {
+            // we should probably only notify the app of cancellations we told it
+            // about, but we don't currently have a record of that, so we just pass
+            // everything through.
+            typeof(self) self = weakSelf;
+            [[NSNotificationCenter defaultCenter] postNotificationName:kMXCryptoRoomKeyRequestCancellationNotification
+                                                                object:self
+                                                              userInfo:@{
+                                                                         kMXCryptoRoomKeyRequestCancellationNotificationRequestKey: cancellation
+                                                                         }];
+        }
+    });
 }
 
 /**
