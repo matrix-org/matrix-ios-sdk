@@ -21,6 +21,7 @@
 
 #import <Realm/Realm.h>
 #import "MXSession.h"
+#import "MXTools.h"
 
 NSUInteger const kMXRealmCryptoStoreVersion = 5;
 
@@ -156,6 +157,38 @@ RLM_ARRAY_TYPE(MXRealmOlmInboundGroupSession)
 {
     return @"userId";
 }
+@end
+
+@interface MXRealmOutgoingRoomKeyRequest : RLMObject
+@property (nonatomic) NSString *requestId;
+@property (nonatomic) NSString *cancellationTxnId;
+@property (nonatomic) NSData *recipientsData;
+@property (nonatomic) NSString *requestBodyString;
+@property (nonatomic) NSNumber<RLMInt> *state;
+
+- (MXOutgoingRoomKeyRequest *)outgoingRoomKeyRequest;
+
+@end
+
+@implementation MXRealmOutgoingRoomKeyRequest
++ (NSString *)primaryKey
+{
+    return @"requestId";
+}
+
+- (MXOutgoingRoomKeyRequest *)outgoingRoomKeyRequest
+{
+    MXOutgoingRoomKeyRequest *outgoingRoomKeyRequest = [[MXOutgoingRoomKeyRequest alloc] init];
+
+    outgoingRoomKeyRequest.requestId = self.requestId;
+    outgoingRoomKeyRequest.cancellationTxnId = self.cancellationTxnId;
+    outgoingRoomKeyRequest.state = (MXRoomKeyRequestState)[self.state unsignedIntegerValue];
+    outgoingRoomKeyRequest.recipients = [NSKeyedUnarchiver unarchiveObjectWithData:self.recipientsData];
+    outgoingRoomKeyRequest.requestBody = [MXTools deserialiseJSONString:self.requestBodyString];
+
+    return outgoingRoomKeyRequest;
+}
+
 @end
 
 
@@ -647,6 +680,81 @@ RLM_ARRAY_TYPE(MXRealmOlmInboundGroupSession)
 
     [realm transactionWithBlock:^{
         [realm deleteObjects:realmSessions];
+    }];
+}
+
+#pragma mark - Key sharing
+
+- (MXOutgoingRoomKeyRequest*)outgoingRoomKeyRequestWithRequestBody:(NSDictionary *)requestBody
+{
+    MXOutgoingRoomKeyRequest *request;
+
+    NSString *requestBodyString = [MXTools serialiseJSONObject:request.requestBody];
+
+    RLMResults<MXRealmOutgoingRoomKeyRequest *> *realmOutgoingRoomKeyRequests =  [MXRealmOutgoingRoomKeyRequest objectsInRealm:self.realm where:@"requestBodyString = %@", requestBodyString];
+    if (request)
+    {
+        request = realmOutgoingRoomKeyRequests[0].outgoingRoomKeyRequest;
+    }
+
+    return request;
+}
+
+- (MXOutgoingRoomKeyRequest*)outgoingRoomKeyRequestWithState:(MXRoomKeyRequestState)state
+{
+    MXOutgoingRoomKeyRequest *request;
+
+    RLMResults<MXRealmOutgoingRoomKeyRequest *> *realmOutgoingRoomKeyRequests = [MXRealmOutgoingRoomKeyRequest objectsInRealm:self.realm where:@"state = %@", @(state)];
+    if (realmOutgoingRoomKeyRequests.count)
+    {
+        request = realmOutgoingRoomKeyRequests[0].outgoingRoomKeyRequest;
+    }
+
+    return request;
+}
+
+- (void)storeOutgoingRoomKeyRequest:(MXOutgoingRoomKeyRequest*)request
+{
+    RLMRealm *realm = self.realm;
+
+    NSString *requestBodyString = [MXTools serialiseJSONObject:request.requestBody];
+
+    MXRealmOutgoingRoomKeyRequest *realmOutgoingRoomKeyRequest = [[MXRealmOutgoingRoomKeyRequest alloc] initWithValue:@{
+                                                                          @"requestId": request.requestId,
+                                                                          @"recipientsData": [NSKeyedArchiver archivedDataWithRootObject:request.recipients],
+                                                                          @"requestBodyString": requestBodyString,
+                                                                          @"state": @(request.state)
+                                                                          }];
+
+    realmOutgoingRoomKeyRequest.cancellationTxnId = request.cancellationTxnId;
+
+    [realm transactionWithBlock:^{
+        [realm addObject:realmOutgoingRoomKeyRequest];
+    }];
+}
+
+- (void)updateOutgoingRoomKeyRequest:(MXOutgoingRoomKeyRequest*)request
+{
+    RLMRealm *realm = self.realm;
+
+    MXRealmOutgoingRoomKeyRequest *realmOutgoingRoomKeyRequests = [MXRealmOutgoingRoomKeyRequest objectsInRealm:self.realm where:@"requestId = %@", request.requestId].firstObject;
+
+    [realm transactionWithBlock:^{
+        // Well, only the state changes
+        realmOutgoingRoomKeyRequests.state = @(request.state);
+        
+        [realm addOrUpdateObject:realmOutgoingRoomKeyRequests];
+    }];
+}
+
+- (void)deleteOutgoingRoomKeyRequestWithRequestId:(NSString*)requestId
+{
+    RLMRealm *realm = self.realm;
+
+    RLMResults<MXRealmOutgoingRoomKeyRequest *> *realmOutgoingRoomKeyRequests = [MXRealmOutgoingRoomKeyRequest objectsInRealm:self.realm where:@"requestId = %@", requestId];
+
+    [realm transactionWithBlock:^{
+        [realm deleteObjects:realmOutgoingRoomKeyRequests];
     }];
 }
 

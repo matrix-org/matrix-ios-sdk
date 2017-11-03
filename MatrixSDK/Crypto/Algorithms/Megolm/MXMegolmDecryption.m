@@ -145,6 +145,8 @@
 
     NSLog(@"[MXMegolmDecryption] addEventToPendingList: %@", event);
     pendingEvents[k][timelineId][event.eventId] = event;
+
+    [self requestKeysForEvent:event];
 }
 
 - (void)onRoomKeyEvent:(MXEvent *)event
@@ -164,6 +166,14 @@
     }
 
     [olmDevice addInboundGroupSession:sessionId sessionKey:sessionKey roomId:roomId senderKey:event.senderKey keysClaimed:event.keysClaimed];
+
+    // cancel any outstanding room key requests for this session
+    [crypto cancelRoomKeyRequest:@{
+                                   @"algorithm": event.content[@"algorithm"],
+                                   @"room_id": event.content[@"room_id"],
+                                   @"session_id": event.content[@"session_id"],
+                                   @"sender_key": event.senderKey
+                                   }];
 
     [self retryDecryption:event.senderKey sessionId:event.content[@"session_id"]];
 }
@@ -223,6 +233,39 @@
             }
         });
     });
+}
+
+- (void)requestKeysForEvent:(MXEvent*)event
+{
+    NSString *sender = event.sender;
+    NSDictionary *wireContent = event.wireContent;
+
+    NSString *myUserId = crypto.matrixRestClient.credentials.userId;
+
+    // send the request to all of our own devices, and the
+    // original sending device if it wasn't us.
+    NSMutableArray<NSDictionary<NSString*, NSString*> *> *recipients = [NSMutableArray array];
+    [recipients addObject:@{
+                            @"userId": myUserId,
+                            @"deviceId": @"*"
+                            }];
+
+    if (![sender isEqualToString:myUserId])
+    {
+        [recipients addObject:@{
+                                @"userId": sender,
+                                @"deviceId": wireContent[@"device_id"]
+                                }];
+
+    }
+
+    [crypto requestRoomKey:@{
+                             @"room_id": event.roomId,
+                             @"algorithm": wireContent[@"algorithm"],
+                             @"sender_key": wireContent[@"sender_key"],
+                             @"session_id": wireContent[@"session_id"],
+                             }
+                recipients:recipients];;
 }
 
 @end

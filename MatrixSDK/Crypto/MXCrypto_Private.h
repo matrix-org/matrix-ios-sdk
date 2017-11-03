@@ -131,6 +131,24 @@
  */
 - (NSDictionary*)encryptMessage:(NSDictionary*)payloadFields forDevices:(NSArray<MXDeviceInfo*>*)devices;
 
+
+#pragma mark - Key sharing
+
+/**
+ Send a request for some room keys, if we have not already done so.
+
+ @param requestBody the requestBody.
+ @param recipients a {Array<{userId: string, deviceId: string}>}.
+ */
+- (void)requestRoomKey:(NSDictionary*)requestBody recipients:(NSArray<NSDictionary<NSString*, NSString*>*>*)recipients;
+
+/**
+ Cancel any earlier room key request.
+
+ @param requestBody parameters to match for cancellation
+ */
+- (void)cancelRoomKeyRequest:(NSDictionary*)requestBody;
+
 @end
 
 #endif
