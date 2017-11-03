@@ -227,6 +227,16 @@
     // No impact for olm
 }
 
+- (BOOL)hasKeysForKeyRequest:(MXIncomingRoomKeyRequest*)keyRequest
+{
+    // No need for olm
+    return NO;
+}
+
+- (void)shareKeysWithDevice:(MXIncomingRoomKeyRequest*)keyRequest
+{
+    // No need for olm
+}
 
 #pragma mark - Private methods
 /**

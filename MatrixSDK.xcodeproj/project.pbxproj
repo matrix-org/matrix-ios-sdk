@@ -208,6 +208,10 @@
 		32E226A61D06AC9F00E6CA54 /* MXPeekingRoom.h in Headers */ = {isa = PBXBuildFile; fileRef = 32E226A41D06AC9F00E6CA54 /* MXPeekingRoom.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		32E226A71D06AC9F00E6CA54 /* MXPeekingRoom.m in Sources */ = {isa = PBXBuildFile; fileRef = 32E226A51D06AC9F00E6CA54 /* MXPeekingRoom.m */; };
 		32E226A91D081CE200E6CA54 /* MXPeekingRoomTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 32E226A81D081CE200E6CA54 /* MXPeekingRoomTests.m */; };
+		32F945F51FAB83D900622468 /* MXIncomingRoomKeyRequestCancellation.m in Sources */ = {isa = PBXBuildFile; fileRef = 32F945F11FAB83D800622468 /* MXIncomingRoomKeyRequestCancellation.m */; };
+		32F945F61FAB83D900622468 /* MXIncomingRoomKeyRequest.h in Headers */ = {isa = PBXBuildFile; fileRef = 32F945F21FAB83D900622468 /* MXIncomingRoomKeyRequest.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		32F945F71FAB83D900622468 /* MXIncomingRoomKeyRequest.m in Sources */ = {isa = PBXBuildFile; fileRef = 32F945F31FAB83D900622468 /* MXIncomingRoomKeyRequest.m */; };
+		32F945F81FAB83D900622468 /* MXIncomingRoomKeyRequestCancellation.h in Headers */ = {isa = PBXBuildFile; fileRef = 32F945F41FAB83D900622468 /* MXIncomingRoomKeyRequestCancellation.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		32F9FA7D1DBA0CF0009D98A6 /* MXDecryptionResult.h in Headers */ = {isa = PBXBuildFile; fileRef = 32F9FA7B1DBA0CF0009D98A6 /* MXDecryptionResult.h */; };
 		32F9FA7E1DBA0CF0009D98A6 /* MXDecryptionResult.m in Sources */ = {isa = PBXBuildFile; fileRef = 32F9FA7C1DBA0CF0009D98A6 /* MXDecryptionResult.m */; };
 		32FA10C11FA1C9EE00E54233 /* MXOutgoingRoomKeyRequestManager.h in Headers */ = {isa = PBXBuildFile; fileRef = 32FA10BF1FA1C9EE00E54233 /* MXOutgoingRoomKeyRequestManager.h */; };
@@ -499,6 +503,10 @@
 		32E226A51D06AC9F00E6CA54 /* MXPeekingRoom.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXPeekingRoom.m; sourceTree = "<group>"; };
 		32E226A81D081CE200E6CA54 /* MXPeekingRoomTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXPeekingRoomTests.m; sourceTree = "<group>"; };
 		32F1FE9AF82A426C2EAED587 /* Pods-MatrixSDK.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-MatrixSDK.release.xcconfig"; path = "Pods/Target Support Files/Pods-MatrixSDK/Pods-MatrixSDK.release.xcconfig"; sourceTree = "<group>"; };
+		32F945F11FAB83D800622468 /* MXIncomingRoomKeyRequestCancellation.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXIncomingRoomKeyRequestCancellation.m; sourceTree = "<group>"; };
+		32F945F21FAB83D900622468 /* MXIncomingRoomKeyRequest.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXIncomingRoomKeyRequest.h; sourceTree = "<group>"; };
+		32F945F31FAB83D900622468 /* MXIncomingRoomKeyRequest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXIncomingRoomKeyRequest.m; sourceTree = "<group>"; };
+		32F945F41FAB83D900622468 /* MXIncomingRoomKeyRequestCancellation.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXIncomingRoomKeyRequestCancellation.h; sourceTree = "<group>"; };
 		32F9FA7B1DBA0CF0009D98A6 /* MXDecryptionResult.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXDecryptionResult.h; sourceTree = "<group>"; };
 		32F9FA7C1DBA0CF0009D98A6 /* MXDecryptionResult.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXDecryptionResult.m; sourceTree = "<group>"; };
 		32FA10BF1FA1C9EE00E54233 /* MXOutgoingRoomKeyRequestManager.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MXOutgoingRoomKeyRequestManager.h; sourceTree = "<group>"; };
@@ -1081,6 +1089,10 @@
 		32FA10C31FA1C9F700E54233 /* Data */ = {
 			isa = PBXGroup;
 			children = (
+				32F945F21FAB83D900622468 /* MXIncomingRoomKeyRequest.h */,
+				32F945F31FAB83D900622468 /* MXIncomingRoomKeyRequest.m */,
+				32F945F41FAB83D900622468 /* MXIncomingRoomKeyRequestCancellation.h */,
+				32F945F11FAB83D800622468 /* MXIncomingRoomKeyRequestCancellation.m */,
 				32FA10C81FA1C9F700E54233 /* MXOutgoingRoomKeyRequest.h */,
 				32FA10C91FA1C9F700E54233 /* MXOutgoingRoomKeyRequest.m */,
 			);
@@ -1246,6 +1258,7 @@
 				C61A4CC41E5F38CB00442158 /* SwiftMatrixSDK.h in Headers */,
 				324BE4681E3FADB1008D99D4 /* MXMegolmExportEncryption.h in Headers */,
 				32CAB10B1A925B41008C5BB9 /* MXHTTPOperation.h in Headers */,
+				32F945F81FAB83D900622468 /* MXIncomingRoomKeyRequestCancellation.h in Headers */,
 				3240969D1F9F751600DBA607 /* MXPushRuleSenderNotificationPermissionConditionChecker.h in Headers */,
 				322A51C71D9BBD3C00C8536D /* MXOlmDevice.h in Headers */,
 				320DFDE419DD99B60068622A /* MXRestClient.h in Headers */,
@@ -1274,6 +1287,7 @@
 				326056851C76FDF2009D44AD /* MXEventTimeline.h in Headers */,
 				322A51C31D9AC8FE00C8536D /* MXCryptoAlgorithms.h in Headers */,
 				329B2AC11D3FB01D002D546F /* MXJingleCallStackCall.h in Headers */,
+				32F945F61FAB83D900622468 /* MXIncomingRoomKeyRequest.h in Headers */,
 				327137271A24D50A00DB6757 /* MXMyUser.h in Headers */,
 				3220093819EFA4C9008DE41D /* MXEventListener.h in Headers */,
 				32C235721F827F3800E38FC5 /* MXRoomOperation.h in Headers */,
@@ -1505,6 +1519,7 @@
 				3256E3821DCB91EB003C9718 /* MXCryptoConstants.m in Sources */,
 				326056861C76FDF2009D44AD /* MXEventTimeline.m in Sources */,
 				32A1513A1DAD292400400192 /* MXMegolmEncryption.m in Sources */,
+				32F945F71FAB83D900622468 /* MXIncomingRoomKeyRequest.m in Sources */,
 				323B2B011BCE9B6700B11F34 /* MXCoreDataEvent.m in Sources */,
 				92634B831EF2E3C400DB9F60 /* MXCallKitConfiguration.m in Sources */,
 				3265CB391A14C43E00E24B2F /* MXRoomState.m in Sources */,
@@ -1513,6 +1528,7 @@
 				32A1514B1DAF7C0C00400192 /* MXUsersDevicesMap.m in Sources */,
 				C6B40F521F2A35BE00C42C72 /* MXRoomState.swift in Sources */,
 				3264E2A31BDF8D1500F89A86 /* MXCoreDataRoomState.m in Sources */,
+				32F945F51FAB83D900622468 /* MXIncomingRoomKeyRequestCancellation.m in Sources */,
 				32D776821A27877300FC4AA2 /* MXMemoryRoomStore.m in Sources */,
 				C602B58C1F2268F700B67D87 /* MXRoom.swift in Sources */,
 				32A151271DABB0CB00400192 /* MXMegolmDecryption.m in Sources */,

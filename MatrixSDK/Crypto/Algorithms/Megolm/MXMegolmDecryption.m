@@ -186,6 +186,16 @@
     [self retryDecryption:session.senderKey sessionId:session.sessionId];
 }
 
+- (BOOL)hasKeysForKeyRequest:(MXIncomingRoomKeyRequest*)keyRequest
+{
+    // @TODO
+    return NO;
+}
+
+- (void)shareKeysWithDevice:(MXIncomingRoomKeyRequest*)keyRequest
+{
+    // TODO
+}
 
 #pragma mark - Private methods
 

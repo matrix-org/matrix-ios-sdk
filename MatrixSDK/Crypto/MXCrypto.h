@@ -18,13 +18,34 @@
 #import <Foundation/Foundation.h>
 
 
-
 #import "MXDeviceInfo.h"
 #import "MXCryptoConstants.h"
 
 #import "MXRestClient.h"
 
+#import "MXIncomingRoomKeyRequest.h"
+#import "MXIncomingRoomKeyRequestCancellation.h"
+
 @class MXSession;
+
+/**
+ Fires when we receive a room key request.
+
+ The passed userInfo dictionary contains:
+ - `kMXCryptoRoomKeyRequestNotificationRequestKey` the `MXIncomingRoomKeyRequest` object.
+ */
+FOUNDATION_EXPORT NSString *const kMXCryptoRoomKeyRequestNotification;
+FOUNDATION_EXPORT NSString *const kMXCryptoRoomKeyRequestNotificationRequestKey;
+
+/**
+ Fires when we receive a room key request cancellation.
+
+ The passed userInfo dictionary contains:
+ - `kMXCryptoRoomKeyRequestCancellationNotificationRequestKey` the `MXIncomingRoomKeyRequestCancellation` object.
+ */
+FOUNDATION_EXPORT NSString *const kMXCryptoRoomKeyRequestCancellationNotification;
+FOUNDATION_EXPORT NSString *const kMXCryptoRoomKeyRequestCancellationNotificationRequestKey;
+
 
 /**
  A `MXCrypto` class instance manages the end-to-end crypto for a MXSession instance.
