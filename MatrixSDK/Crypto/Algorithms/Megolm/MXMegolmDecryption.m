@@ -198,8 +198,7 @@
         }
 
         NSString *ed25519Key;
-        MXJSONModelSetString(senderKey, content[@"sender_claimed_ed25519_key"]);
-
+        MXJSONModelSetString(ed25519Key, content[@"sender_claimed_ed25519_key"]);
         if (!ed25519Key)
         {
             NSLog(@"[MXMegolmDecryption] onRoomKeyEvent: ERROR: forwarded_room_key_event is missing sender_claimed_ed25519_key field");
