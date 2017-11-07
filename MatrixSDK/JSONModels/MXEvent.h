@@ -434,8 +434,11 @@ extern NSString *const kMXEventIdentifierKey;
         See `senderKey` property.
  @param claimedEd25519Key claimed ed25519 key to record for the sender if this event.
         See `claimedEd25519Key` property.
+ @param forwardingCurve25519KeyChain list of curve25519 keys involved in telling us
+        about the senderCurve25519Key and claimedEd25519Key.
+        See `property` property.
  */
-- (void)setClearData:(MXEvent*)clearEvent senderCurve25519Key:(NSString*)senderCurve25519Key claimedEd25519Key:(NSString*)claimedEd25519Key;
+- (void)setClearData:(MXEvent*)clearEvent senderCurve25519Key:(NSString*)senderCurve25519Key claimedEd25519Key:(NSString*)claimedEd25519Key forwardingCurve25519KeyChain:(NSArray<NSString*>*)forwardingCurve25519KeyChain;
 
 /**
  For encrypted events, the plaintext payload for the event.
@@ -478,6 +481,22 @@ extern NSString *const kMXEventIdentifierKey;
  instead use [MXCrypto eventDeviceInfo:].
  */
 @property (nonatomic, readonly) NSString *claimedEd25519Key;
+
+/**
+ Get the curve25519 keys of the devices which were involved in telling us
+ about the claimedEd25519Key and sender curve25519 key.
+
+ Normally this will be empty, but in the case of a forwarded megolm
+ session, the sender keys are sent to us by another device (the forwarding
+ device), which we need to trust to do this. In that case, the result will
+ be a list consisting of one entry.
+
+ If the device that sent us the key (A) got it from another device which
+ it wasn't prepared to vouch for (B), the result will be [A, B]. And so on.
+
+ @return base64-encoded curve25519 keys, from oldest to newest.
+ */
+@property (nonatomic, readonly) NSArray<NSString *> *forwardingCurve25519KeyChain;
 
 /**
  If any, the error that occured during decryption.

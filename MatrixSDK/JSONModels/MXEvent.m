@@ -94,6 +94,13 @@ NSString *const kMXEventIdentifierKey = @"kMXEventIdentifierKey";
      See `claimedEd25519Key` property.
      */
     NSString *claimedEd25519Key;
+
+    /**
+     Curve25519 keys of devices involved in telling us about the senderCurve25519Key
+     and claimedEd25519Key.
+     See `forwardingCurve25519KeyChain` property.
+     */
+    NSArray<NSString *> *forwardingCurve25519KeyChain;
 }
 @end
 
@@ -517,13 +524,14 @@ NSString *const kMXEventIdentifierKey = @"kMXEventIdentifierKey";
     return (self.wireEventType == MXEventTypeRoomEncrypted);
 }
 
-- (void)setClearData:(MXEvent*)clearEvent senderCurve25519Key:(NSString*)senderCurve25519Key claimedEd25519Key:(NSString*)claimedEd25519Key
+- (void)setClearData:(MXEvent*)clearEvent senderCurve25519Key:(NSString*)senderCurve25519Key claimedEd25519Key:(NSString*)claimedEd25519Key forwardingCurve25519KeyChain:(NSArray<NSString*>*)forwardingCurve25519KeyChain
 {
     _clearEvent = clearEvent;
     if (_clearEvent)
     {
         _clearEvent->senderCurve25519Key = senderCurve25519Key;
         _clearEvent->claimedEd25519Key = claimedEd25519Key;
+        _clearEvent->forwardingCurve25519KeyChain = forwardingCurve25519KeyChain ? forwardingCurve25519KeyChain : @[];
     }
 
     // Notify only for events that are lately decrypted
@@ -574,6 +582,19 @@ NSString *const kMXEventIdentifierKey = @"kMXEventIdentifierKey";
         return claimedEd25519Key;
     }
 }
+
+- (NSArray<NSString *> *)forwardingCurve25519KeyChain
+{
+    if (_clearEvent)
+    {
+        return _clearEvent->forwardingCurve25519KeyChain;
+    }
+    else
+    {
+        return forwardingCurve25519KeyChain;
+    }
+}
+
 
 
 #pragma mark - private

@@ -1380,7 +1380,7 @@
         [roomFromBobPOV.liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
 
             // Try to decrypt the event again
-            [event setClearData:nil senderCurve25519Key:nil claimedEd25519Key:nil];
+            [event setClearData:nil senderCurve25519Key:nil claimedEd25519Key:nil forwardingCurve25519KeyChain:nil];
             BOOL b = [bobSession decryptEvent:event inTimeline:roomFromBobPOV.liveTimeline.timelineId];
 
             // It must fail
@@ -1448,7 +1448,7 @@
             // We still must be able to decrypt the event
             // ie, the implementation must have ignored the new room key with the advanced outbound group
             // session key
-            [event setClearData:nil senderCurve25519Key:nil claimedEd25519Key:nil];
+            [event setClearData:nil senderCurve25519Key:nil claimedEd25519Key:nil forwardingCurve25519KeyChain:nil];
             BOOL b = [bobSession decryptEvent:event inTimeline:nil];
 
             XCTAssert(b);
@@ -1499,7 +1499,7 @@
             [bobCryptoStore removeInboundGroupSessionWithId:sessionId andSenderKey:toDeviceEvent.senderKey];
 
             // So that we cannot decrypt it anymore right now
-            [event setClearData:nil senderCurve25519Key:nil claimedEd25519Key:nil];
+            [event setClearData:nil senderCurve25519Key:nil claimedEd25519Key:nil forwardingCurve25519KeyChain:nil];
             BOOL b = [bobSession decryptEvent:event inTimeline:nil];
 
             XCTAssertFalse(b);

@@ -201,14 +201,16 @@
     {
         [event setClearData:clearedEvent
         senderCurve25519Key:deviceKey
-          claimedEd25519Key:claimedKeys[@"ed25519"]];
+          claimedEd25519Key:claimedKeys[@"ed25519"]
+forwardingCurve25519KeyChain:nil];
     }
     else
     {
         dispatch_async(dispatch_get_main_queue(), ^{
             [event setClearData:clearedEvent
             senderCurve25519Key:deviceKey
-              claimedEd25519Key:claimedKeys[@"ed25519"]];
+              claimedEd25519Key:claimedKeys[@"ed25519"]
+   forwardingCurve25519KeyChain:nil];
         });
     }
 

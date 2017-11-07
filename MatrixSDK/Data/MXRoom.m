@@ -408,7 +408,8 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
                         event.wireContent = encryptedContent;
                         [event setClearData:clearEvent
                         senderCurve25519Key:mxSession.crypto.deviceCurve25519Key
-                          claimedEd25519Key:mxSession.crypto.deviceEd25519Key];
+                          claimedEd25519Key:mxSession.crypto.deviceEd25519Key
+               forwardingCurve25519KeyChain:nil];
 
                         // Update the local echo state (This will trigger kMXEventDidChangeSentStateNotification notification).
                         event.sentState = MXEventSentStateSending;
