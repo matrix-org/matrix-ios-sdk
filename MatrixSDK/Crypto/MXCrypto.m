@@ -1732,6 +1732,7 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
         switch (event.eventType)
         {
             case MXEventTypeRoomKey:
+            case MXEventTypeRoomForwardedKey:
             {
                 // Room key is used for decryption. Switch to the associated queue
                 dispatch_async(_decryptionQueue, ^{

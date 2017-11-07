@@ -57,6 +57,11 @@
 @property (nonatomic) NSString *senderKey;
 
 /**
+ Devices which forwarded this session to us.
+ */
+@property NSArray<NSString *> *forwardingCurve25519KeyChain;
+
+/**
  Other keys the sender claims.
  */
 @property (nonatomic) NSDictionary<NSString*, NSString*> *keysClaimed;
@@ -79,7 +84,8 @@
  */
 - (MXMegolmSessionData *)exportSessionData;
 
-- (instancetype)initWithSessionData:(MXMegolmSessionData*)data;
+- (instancetype)initWithImportedSessionData:(MXMegolmSessionData*)data;
+- (instancetype)initWithImportedSessionKey:(NSString*)sessionKey;
 
 @end
 

@@ -79,4 +79,9 @@ FOUNDATION_EXPORT NSString* const MXDecryptingErrorMissingPropertyReason;
  */
 @property (nonatomic) NSString *senderKey;
 
+/**
+ Devices which forwarded this session to us (normally empty).
+ */
+@property NSArray<NSString *> *forwardingCurve25519KeyChain;
+
 @end

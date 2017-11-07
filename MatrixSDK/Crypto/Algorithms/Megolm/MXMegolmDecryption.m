@@ -86,7 +86,7 @@
     if (result)
     {
         MXEvent *clearedEvent = [MXEvent modelFromJSON:result.payload];
-        [event setClearData:clearedEvent senderCurve25519Key:result.senderKey claimedEd25519Key:result.keysClaimed[@"ed25519"] forwardingCurve25519KeyChain:nil];
+        [event setClearData:clearedEvent senderCurve25519Key:result.senderKey claimedEd25519Key:result.keysClaimed[@"ed25519"] forwardingCurve25519KeyChain:result.forwardingCurve25519KeyChain];
     }
     else
     {
@@ -151,13 +151,12 @@
 
 - (void)onRoomKeyEvent:(MXEvent *)event
 {
-    NSLog(@"[MXMegolmDecryption] onRoomKeyEvent: Adding key from %@", event.JSONDictionary);
-
+    NSDictionary *content = event.content;
     NSString *roomId, *sessionId, *sessionKey;
 
-    MXJSONModelSetString(roomId, event.content[@"room_id"]);
-    MXJSONModelSetString(sessionId, event.content[@"session_id"]);
-    MXJSONModelSetString(sessionKey, event.content[@"session_key"]);
+    MXJSONModelSetString(roomId, content[@"room_id"]);
+    MXJSONModelSetString(sessionId, content[@"session_id"]);
+    MXJSONModelSetString(sessionKey, content[@"session_key"]);
 
     if (!roomId || !sessionId || !sessionKey)
     {
@@ -172,17 +171,63 @@
         return;
     }
 
-    [olmDevice addInboundGroupSession:sessionId sessionKey:sessionKey roomId:roomId senderKey:senderKey keysClaimed:event.keysClaimed];
+    NSArray<NSString*> *forwardingKeyChain;
+    BOOL exportFormat = NO;
+    NSDictionary *keysClaimed;
+
+    if (event.eventType == MXEventTypeRoomForwardedKey)
+    {
+        exportFormat = YES;
+
+        MXJSONModelSetArray(forwardingKeyChain, content[@"forwarding_curve25519_key_chain"]);
+        if (!forwardingKeyChain)
+        {
+            forwardingKeyChain = @[];
+        }
+
+        // copy content before we modify it
+        NSMutableArray *forwardingKeyChain2 = [NSMutableArray arrayWithArray:forwardingKeyChain];
+        [forwardingKeyChain2 addObject:senderKey];
+        forwardingKeyChain = forwardingKeyChain2;
+
+        MXJSONModelSetString(senderKey, content[@"sender_key"]);
+        if (!senderKey)
+        {
+            NSLog(@"[MXMegolmDecryption] onRoomKeyEvent: ERROR: forwarded_room_key event is missing sender_key field");
+            return;
+        }
+
+        NSString *ed25519Key;
+        MXJSONModelSetString(senderKey, content[@"sender_claimed_ed25519_key"]);
+
+        if (!ed25519Key)
+        {
+            NSLog(@"[MXMegolmDecryption] onRoomKeyEvent: ERROR: forwarded_room_key_event is missing sender_claimed_ed25519_key field");
+            return;
+        }
+
+        keysClaimed = @{
+                        @"ed25519": ed25519Key
+                        };
+    }
+    else
+    {
+        keysClaimed = event.keysClaimed;
+    }
+
+    NSLog(@"[MXMegolmDecryption] onRoomKeyEvent: Adding key from %@", event.JSONDictionary);
+
+    [olmDevice addInboundGroupSession:sessionId sessionKey:sessionKey roomId:roomId senderKey:senderKey forwardingCurve25519KeyChain:forwardingKeyChain keysClaimed:keysClaimed exportFormat:exportFormat];
 
     // cancel any outstanding room key requests for this session
     [crypto cancelRoomKeyRequest:@{
-                                   @"algorithm": event.content[@"algorithm"],
-                                   @"room_id": event.content[@"room_id"],
-                                   @"session_id": event.content[@"session_id"],
+                                   @"algorithm": content[@"algorithm"],
+                                   @"room_id": content[@"room_id"],
+                                   @"session_id": content[@"session_id"],
                                    @"sender_key": event.senderKey
                                    }];
 
-    [self retryDecryption:event.senderKey sessionId:event.content[@"session_id"]];
+    [self retryDecryption:event.senderKey sessionId:content[@"session_id"]];
 }
 
 - (void)importRoomKey:(MXMegolmSessionData *)session

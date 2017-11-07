@@ -216,13 +216,18 @@ Determine if an incoming messages is a prekey message matching an existing sessi
  @param sessionKey base64-encoded secret key.
  @param roomId the id of the room in which this session will be used.
  @param senderKey the base64-encoded curve25519 key of the sender.
+ @param forwardingCurve25519KeyChain devices which forwarded this session to us (normally empty)
  @param keysClaimed Other keys the sender claims.
+ @param exportFormat YES if the megolm keys are in export format (ie, they lack an ed25519 signature).
  
  @return YES if the operation succeeds.
  */
 - (BOOL)addInboundGroupSession:(NSString*)sessionId sessionKey:(NSString*)sessionKey
                         roomId:(NSString*)roomId
-                     senderKey:(NSString*)senderKey keysClaimed:(NSDictionary<NSString*, NSString*>*)keysClaimed;
+                     senderKey:(NSString*)senderKey
+  forwardingCurve25519KeyChain:(NSArray<NSString *> *)forwardingCurve25519KeyChain
+                   keysClaimed:(NSDictionary<NSString*, NSString*>*)keysClaimed
+                  exportFormat:(BOOL)exportFormat;
 
 /**
  Add a previously-exported inbound group session to the session store.
