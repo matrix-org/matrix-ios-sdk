@@ -308,7 +308,12 @@
 
 
 #pragma mark - Inbound group session
-- (BOOL)addInboundGroupSession:(NSString *)sessionId sessionKey:(NSString *)sessionKey roomId:(NSString *)roomId senderKey:(NSString *)senderKey keysClaimed:(NSDictionary<NSString *,NSString *> *)keysClaimed
+- (BOOL)addInboundGroupSession:(NSString*)sessionId sessionKey:(NSString*)sessionKey
+                        roomId:(NSString*)roomId
+                     senderKey:(NSString*)senderKey
+  forwardingCurve25519KeyChain:(NSArray<NSString *> *)forwardingCurve25519KeyChain
+                   keysClaimed:(NSDictionary<NSString*, NSString*>*)keysClaimed
+                  exportFormat:(BOOL)exportFormat
 {
     NSError *error;
     if ([self inboundGroupSessionWithId:sessionId senderKey:senderKey roomId:roomId error:&error])
@@ -320,7 +325,15 @@
         return NO;
     }
 
-    MXOlmInboundGroupSession *session = [[MXOlmInboundGroupSession alloc] initWithSessionKey:sessionKey];
+    MXOlmInboundGroupSession *session;
+    if (exportFormat)
+    {
+        session = [[MXOlmInboundGroupSession alloc] initWithImportedSessionKey:sessionKey];
+    }
+    else
+    {
+        session = [[MXOlmInboundGroupSession alloc] initWithSessionKey:sessionKey];
+    }
 
     if (![session.session.sessionIdentifier isEqualToString:sessionId])
     {
@@ -331,6 +344,7 @@
     session.senderKey = senderKey;
     session.roomId = roomId;
     session.keysClaimed = keysClaimed;
+    session.forwardingCurve25519KeyChain = forwardingCurve25519KeyChain;
 
     [store storeInboundGroupSession:session];
 
@@ -351,7 +365,7 @@
         return;
     }
 
-    session = [[MXOlmInboundGroupSession alloc] initWithSessionData:data];
+    session = [[MXOlmInboundGroupSession alloc] initWithImportedSessionData:data];
 
     [store storeInboundGroupSession:session];
 }
@@ -404,12 +418,8 @@
             result = [[MXDecryptionResult alloc] init];
             result.payload = [NSJSONSerialization JSONObjectWithData:[payloadString dataUsingEncoding:NSUTF8StringEncoding] options:0 error:nil];
             result.keysClaimed = session.keysClaimed;
-
-            // The sender must have had the senderKey to persuade us to save the
-            // session.
-            result.keysProved = @{
-                                  @"curve25519": senderKey
-                                  };
+            result.senderKey = senderKey;
+            result.forwardingCurve25519KeyChain = session.forwardingCurve25519KeyChain;
         }
     }
 
@@ -509,10 +519,7 @@
         NSString *senderEd25519Key = claimedKeys[@"ed25519"];
 
         MXMegolmSessionData *sessionData = [session exportSessionDataAtMessageIndex:messageIndex];
-
-        NSArray<NSString*> *forwardingCurve25519KeyChain;
-        // @TODO
-        //forwardingCurve25519KeyChain = sessionData.forwardingCurve25519KeyChain;
+        NSArray<NSString*> *forwardingCurve25519KeyChain = sessionData.forwardingCurve25519KeyChain;
 
         inboundGroupSessionKey = @{
                                    @"chain_index": @(messageIndex),

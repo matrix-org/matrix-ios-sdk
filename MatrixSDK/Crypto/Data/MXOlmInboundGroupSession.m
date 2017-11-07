@@ -50,6 +50,7 @@
         sessionData = [[MXMegolmSessionData alloc] init];
 
         sessionData.senderKey = _senderKey;
+        sessionData.forwardingCurve25519KeyChain = _forwardingCurve25519KeyChain;
         sessionData.senderClaimedKeys = _keysClaimed;
         sessionData.roomId = _roomId;
         sessionData.sessionId = _session.sessionIdentifier;
@@ -69,22 +70,32 @@
     return [self exportSessionDataAtMessageIndex:_session.firstKnownIndex];
 }
 
-- (instancetype)initWithSessionData:(MXMegolmSessionData *)data
+- (instancetype)initWithImportedSessionKey:(NSString *)sessionKey
 {
     self = [self init];
     if (self)
     {
         NSError *error;
-        _session  = [[OLMInboundGroupSession alloc] initInboundGroupSessionWithImportedSession:data.sessionKey error:&error];
+        _session  = [[OLMInboundGroupSession alloc] initInboundGroupSessionWithImportedSession:sessionKey error:&error];
         if (!_session)
         {
-            NSLog(@"[MXOlmInboundGroupSession] initWithSessionData failed. Error: %@", error);
+            NSLog(@"[MXOlmInboundGroupSession] initWithImportedSessionKey failed. Error: %@", error);
             return nil;
         }
+    }
 
+    return self;
+}
+
+- (instancetype)initWithImportedSessionData:(MXMegolmSessionData *)data
+{
+    self = [self initWithImportedSessionKey:data.sessionKey];
+    if (self)
+    {
         _senderKey = data.senderKey;
+        _forwardingCurve25519KeyChain = data.forwardingCurve25519KeyChain;
         _keysClaimed = data.senderClaimedKeys;
-        _roomId= data.roomId;
+        _roomId = data.roomId;
     }
     return self;
 }
@@ -99,6 +110,7 @@
         _session = [aDecoder decodeObjectForKey:@"session"];
         _roomId = [aDecoder decodeObjectForKey:@"roomId"];
         _senderKey = [aDecoder decodeObjectForKey:@"senderKey"];
+        _forwardingCurve25519KeyChain = [aDecoder decodeObjectForKey:@"forwardingCurve25519KeyChain"];
         _keysClaimed = [aDecoder decodeObjectForKey:@"keysClaimed"];
     }
     return self;
@@ -110,6 +122,7 @@
     [aCoder encodeObject:_roomId forKey:@"roomId"];
     [aCoder encodeObject:_senderKey forKey:@"senderKey"];
     [aCoder encodeObject:_keysClaimed forKey:@"keysClaimed"];
+    [aCoder encodeObject:_forwardingCurve25519KeyChain forKey:@"forwardingCurve25519KeyChain"];
 }
 
 @end

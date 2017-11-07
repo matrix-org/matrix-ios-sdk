@@ -332,9 +332,12 @@
                                   sessionKey:[crypto.olmDevice sessionKeyForOutboundGroupSession:sessionId]
                                       roomId:roomId
                                    senderKey:crypto.olmDevice.deviceCurve25519Key
+                forwardingCurve25519KeyChain:@[]
                                  keysClaimed:@{
                                                @"ed25519": crypto.olmDevice.deviceEd25519Key
-                                               }];
+                                               }
+                                exportFormat:NO
+     ];
 
     return [[MXOutboundSessionInfo alloc] initWithSessionID:sessionId];
 }

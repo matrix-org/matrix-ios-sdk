@@ -30,6 +30,11 @@
 @property NSString *senderKey;
 
 /**
+ Devices which forwarded this session to us (normally empty).
+ */
+@property NSArray<NSString *> *forwardingCurve25519KeyChain;
+
+/**
  Other keys the sender claims.
  */
 @property NSDictionary<NSString*, NSString*> *senderClaimedKeys;
