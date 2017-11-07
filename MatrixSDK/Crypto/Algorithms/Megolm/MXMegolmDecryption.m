@@ -188,13 +188,73 @@
 
 - (BOOL)hasKeysForKeyRequest:(MXIncomingRoomKeyRequest*)keyRequest
 {
-    // @TODO
+    NSDictionary *body = keyRequest.requestBody;
+
+    NSString *roomId, *senderKey, *sessionId;
+    MXJSONModelSetString(roomId, body[@"room_id"]);
+    MXJSONModelSetString(senderKey, body[@"sender_key"]);
+    MXJSONModelSetString(sessionId, body[@"session_id"]);
+
+    if (roomId && senderKey && sessionId)
+    {
+        return [olmDevice hasInboundSessionKeys:roomId senderKey:senderKey sessionId:sessionId];
+    }
+
     return NO;
 }
 
-- (void)shareKeysWithDevice:(MXIncomingRoomKeyRequest*)keyRequest
+- (MXHTTPOperation*)shareKeysWithDevice:(MXIncomingRoomKeyRequest*)keyRequest
+                                success:(void (^)())success
+                                failure:(void (^)(NSError *error))failure
 {
-    // TODO
+    NSString *userId = keyRequest.userId;
+    NSString *deviceId = keyRequest.deviceId;
+    MXDeviceInfo *deviceInfo = [crypto.deviceList storedDevice:userId deviceId:deviceId];
+    NSDictionary *body = keyRequest.requestBody;
+
+    MXHTTPOperation *operation;
+    operation = [crypto ensureOlmSessionsForDevices:@{
+                                          userId: @[deviceInfo]
+                                          }
+                                success:^(MXUsersDevicesMap<MXOlmSessionResult *> *results)
+     {
+
+         MXOlmSessionResult *olmSessionResult = [results objectForDevice:deviceId forUser:deviceId];
+         if (!olmSessionResult.sessionId)
+         {
+             // no session with this device, probably because there
+             // were no one-time keys.
+             //
+             // ensureOlmSessionsForUsers has already done the logging,
+             // so just skip it.
+             if (success)
+             {
+                 success();
+             }
+             return;
+         }
+
+         NSString *roomId, *senderKey, *sessionId;
+         MXJSONModelSetString(roomId, body[@"room_id"]);
+         MXJSONModelSetString(senderKey, body[@"sender_key"]);
+         MXJSONModelSetString(sessionId, body[@"session_id"]);
+
+         NSLog(@"[MXMegolmDecryption] shareKeysWithDevice: sharing keys for session %@|%@ with device %@:%@", senderKey, sessionId, userId, deviceId);
+
+         NSDictionary *payload = [self buildKeyForwardingMessage:roomId senderKey:senderKey sessionId:sessionId];
+
+         MXDeviceInfo *deviceInfo = olmSessionResult.device;
+
+         MXUsersDevicesMap<NSDictionary*> *contentMap = [[MXUsersDevicesMap alloc] init];
+         [contentMap setObject:[crypto encryptMessage:payload forDevices:@[deviceInfo]]
+                       forUser:userId andDevice:deviceId];
+
+         MXHTTPOperation *operation2 = [crypto.matrixRestClient sendToDevice:kMXEventTypeStringRoomEncrypted contentMap:contentMap txnId:nil success:success failure:failure];
+         [operation mutateTo:operation2];
+
+     } failure:failure];
+
+    return operation;
 }
 
 #pragma mark - Private methods
@@ -276,6 +336,29 @@
                              @"session_id": wireContent[@"session_id"],
                              }
                 recipients:recipients];;
+}
+
+- (NSDictionary*)buildKeyForwardingMessage:(NSString*)roomId senderKey:(NSString*)senderKey sessionId:(NSString*)sessionId
+{
+    NSDictionary *key = [olmDevice getInboundGroupSessionKey:roomId senderKey:senderKey sessionId:sessionId];
+    if (key)
+    {
+        return @{
+                 @"type": kMXEventTypeStringRoomForwardedKey,
+                 @"content": @{
+                         @"algorithm": kMXCryptoMegolmAlgorithm,
+                         @"room_id": roomId,
+                         @"sender_key": senderKey,
+                         @"sender_claimed_ed25519_key": key[@"sender_claimed_ed25519_key"],
+                         @"session_id": sessionId,
+                         @"session_key": key[@"key"],
+                         @"chain_index": key[@"chain_index"],
+                         @"forwarding_curve25519_key_chain": key[@"forwarding_curve25519_key_chain"]
+                         }
+                 };
+    }
+
+    return nil;
 }
 
 @end

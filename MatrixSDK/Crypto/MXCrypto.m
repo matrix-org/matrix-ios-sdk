@@ -1974,7 +1974,8 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
 
             // Go back to the crypto thread
             dispatch_async(self.cryptoQueue, ^{
-                [decryptor shareKeysWithDevice:strongReq];
+                // @TODO: add success and failure blocks to [MXIncomingRoomKeyRequest share]
+                [decryptor shareKeysWithDevice:strongReq success:nil failure:nil];
             });
         }
     }];

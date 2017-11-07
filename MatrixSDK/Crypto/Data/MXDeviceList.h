@@ -107,6 +107,16 @@ typedef enum : NSUInteger
 - (NSArray<MXDeviceInfo*>*)storedDevicesForUser:(NSString*)userId;
 
 /**
+ Get the stored keys for a single device.
+
+ @param userId the user.
+ @param deviceId the device.
+
+ @return the device, or nil if we don't know about this device
+ */
+- (MXDeviceInfo*)storedDevice:(NSString*)userId deviceId:(NSString*)deviceId;
+
+/**
  Find a device by curve25519 identity key
 
  @param userId the owner of the device.
