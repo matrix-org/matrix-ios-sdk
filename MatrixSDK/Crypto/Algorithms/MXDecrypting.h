@@ -16,6 +16,7 @@
 
 #import <Foundation/Foundation.h>
 
+#import "MXHTTPOperation.h"
 #import "MXEvent.h"
 #import "MXDecryptionResult.h"
 #import "MXIncomingRoomKeyRequest.h"
@@ -69,10 +70,16 @@
 - (BOOL)hasKeysForKeyRequest:(MXIncomingRoomKeyRequest*)keyRequest;
 
 /**
- Send the response to a room key request,
+ Send the response to a room key request.
 
  @param keyRequest the key request.
- */
-- (void)shareKeysWithDevice:(MXIncomingRoomKeyRequest*)keyRequest;
 
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)shareKeysWithDevice:(MXIncomingRoomKeyRequest*)keyRequest
+                                success:(void (^)())success
+                                failure:(void (^)(NSError *error))failure;
 @end

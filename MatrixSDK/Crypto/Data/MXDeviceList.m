@@ -206,6 +206,11 @@
     return [crypto.store devicesForUser:userId].allValues;
 }
 
+- (MXDeviceInfo*)storedDevice:(NSString*)userId deviceId:(NSString*)deviceId
+{
+    return [crypto.store devicesForUser:userId][deviceId];
+}
+
 - (MXDeviceInfo *)deviceWithIdentityKey:(NSString *)senderKey forUser:(NSString *)userId andAlgorithm:(NSString *)algorithm
 {
     if (![algorithm isEqualToString:kMXCryptoOlmAlgorithm]

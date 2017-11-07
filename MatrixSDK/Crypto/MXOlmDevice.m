@@ -477,6 +477,54 @@
     return session;
 }
 
+- (BOOL)hasInboundSessionKeys:(NSString*)roomId senderKey:(NSString*)senderKey sessionId:(NSString*)sessionId
+{
+    MXOlmInboundGroupSession *session = [store inboundGroupSessionWithId:sessionId andSenderKey:senderKey];
+
+    if (!session)
+    {
+        return NO;
+    }
+
+    if (![session.roomId isEqualToString:roomId])
+    {
+        NSLog(@"[MXOlmDevice] hasInboundSessionKeys: requested keys for inbound group session %@|%@`, with incorrect room_id (expected %@, was %@)", senderKey, sessionId, session.roomId, roomId);
+
+        return NO;
+    }
+
+    return YES;
+}
+
+- (NSDictionary*)getInboundGroupSessionKey:(NSString*)roomId senderKey:(NSString*)senderKey sessionId:(NSString*)sessionId
+{
+    NSDictionary *inboundGroupSessionKey;
+
+    MXOlmInboundGroupSession *session = [self inboundGroupSessionWithId:sessionId senderKey:senderKey roomId:roomId error:nil];
+    if (session)
+    {
+        NSUInteger messageIndex = session.session.firstKnownIndex;
+
+        NSDictionary *claimedKeys = session.keysClaimed;
+        NSString *senderEd25519Key = claimedKeys[@"ed25519"];
+
+        MXMegolmSessionData *sessionData = [session exportSessionDataAtMessageIndex:messageIndex];
+
+        NSArray<NSString*> *forwardingCurve25519KeyChain;
+        // @TODO
+        //forwardingCurve25519KeyChain = sessionData.forwardingCurve25519KeyChain;
+
+        inboundGroupSessionKey = @{
+                                   @"chain_index": @(messageIndex),
+                                   @"key": sessionData.JSONDictionary,
+                                   @"forwarding_curve25519_key_chain": forwardingCurve25519KeyChain ? forwardingCurve25519KeyChain : @[],
+                                   @"sender_claimed_ed25519_key": senderEd25519Key ? senderEd25519Key : [NSNull null]
+                                   };
+    }
+
+    return inboundGroupSessionKey;
+}
+
 
 #pragma mark - Utilities
 - (BOOL)verifySignature:(NSString *)key message:(NSString *)message signature:(NSString *)signature error:(NSError *__autoreleasing *)error

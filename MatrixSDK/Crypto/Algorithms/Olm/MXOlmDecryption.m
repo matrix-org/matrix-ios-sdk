@@ -233,9 +233,12 @@
     return NO;
 }
 
-- (void)shareKeysWithDevice:(MXIncomingRoomKeyRequest*)keyRequest
+- (MXHTTPOperation*)shareKeysWithDevice:(MXIncomingRoomKeyRequest*)keyRequest
+                                success:(void (^)())success
+                                failure:(void (^)(NSError *error))failure
 {
     // No need for olm
+    return nil;
 }
 
 #pragma mark - Private methods
