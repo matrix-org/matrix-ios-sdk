@@ -404,12 +404,7 @@
             result = [[MXDecryptionResult alloc] init];
             result.payload = [NSJSONSerialization JSONObjectWithData:[payloadString dataUsingEncoding:NSUTF8StringEncoding] options:0 error:nil];
             result.keysClaimed = session.keysClaimed;
-
-            // The sender must have had the senderKey to persuade us to save the
-            // session.
-            result.keysProved = @{
-                                  @"curve25519": senderKey
-                                  };
+            result.senderKey = senderKey;
         }
     }
 

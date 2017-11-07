@@ -86,7 +86,7 @@
     if (result)
     {
         MXEvent *clearedEvent = [MXEvent modelFromJSON:result.payload];
-        [event setClearData:clearedEvent keysProved:result.keysProved keysClaimed:result.keysClaimed];
+        [event setClearData:clearedEvent senderCurve25519Key:result.senderKey claimedEd25519Key:result.keysClaimed[@"ed25519"]];
     }
     else
     {
@@ -165,7 +165,14 @@
         return;
     }
 
-    [olmDevice addInboundGroupSession:sessionId sessionKey:sessionKey roomId:roomId senderKey:event.senderKey keysClaimed:event.keysClaimed];
+    NSString *senderKey = event.senderKey;
+    if (!senderKey)
+    {
+        NSLog(@"[MXMegolmDecryption] onRoomKeyEvent: ERROR: Key event has no sender key (not encrypted?)");
+        return;
+    }
+
+    [olmDevice addInboundGroupSession:sessionId sessionKey:sessionKey roomId:roomId senderKey:senderKey keysClaimed:event.keysClaimed];
 
     // cancel any outstanding room key requests for this session
     [crypto cancelRoomKeyRequest:@{

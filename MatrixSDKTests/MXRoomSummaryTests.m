@@ -1171,7 +1171,7 @@ NSString *uisiString = @"The sender's device has not sent us the keys for this m
             [bobCryptoStore removeInboundGroupSessionWithId:sessionId andSenderKey:toDeviceEvent.senderKey];
 
             // So that we cannot decrypt it anymore right now
-            [event setClearData:nil keysProved:nil keysClaimed:nil];
+            [event setClearData:nil senderCurve25519Key:nil claimedEd25519Key:nil];
             BOOL b = [bobSession decryptEvent:event inTimeline:nil];
 
             XCTAssertFalse(b, @"Failed to set up test condition");
