@@ -68,6 +68,9 @@
     MXJSONModelSetString(sessionId, event.content[@"session_id"]);
 
     // TODO: Remove this requirement after fixing https://github.com/matrix-org/matrix-ios-sdk/issues/205
+    // Currently, we need to decrypt synchronously (see [MXCrypto decryptEvent:])
+    // on the main thread to provide the clear event content as soon as the UI
+    // (or the main thread) reads the event.
     NSParameterAssert([NSThread currentThread].isMainThread);
 
     if (!senderKey || !sessionId || !ciphertext)
@@ -318,42 +321,93 @@
  */
 - (void)retryDecryption:(NSString*)senderKey sessionId:(NSString*)sessionId
 {
-    // Do the retry is the same threads conditions as [MXCrypto decryptEvent]
-    // ie, lock the main thread while decrypting events
-    // TODO: Remove this after fixing https://github.com/matrix-org/matrix-ios-sdk/issues/205
-    dispatch_async(dispatch_get_main_queue(), ^{
+    NSString *k = [NSString stringWithFormat:@"%@|%@", senderKey, sessionId];
+    NSDictionary<NSString*, NSDictionary<NSString*,MXEvent*>*> *pending = pendingEvents[k];
+    if (pending)
+    {
+        // Have another go at decrypting events sent with this session.
+        [pendingEvents removeObjectForKey:k];
 
-        dispatch_sync(crypto.decryptionQueue, ^{
-
-            NSString *k = [NSString stringWithFormat:@"%@|%@", senderKey, sessionId];
-            NSDictionary<NSString*, NSDictionary<NSString*,MXEvent*>*> *pending = pendingEvents[k];
-            if (pending)
+        for (NSString *timelineId in pending)
+        {
+            for (MXEvent *event in pending[timelineId].allValues)
             {
-                // Have another go at decrypting events sent with this session.
-                [pendingEvents removeObjectForKey:k];
-
-                for (NSString *timelineId in pending)
+                if (event.clearEvent)
                 {
-                    for (MXEvent *event in pending[timelineId].allValues)
-                    {
-                        if (event.clearEvent)
-                        {
-                            // This can happen when the event is in several timelines
-                            NSLog(@"[MXMegolmDecryption] retryDecryption: %@ already decrypted", event.eventId);
-                        }
-                        else if ([self decryptEvent:event inTimeline:(timelineId.length ? timelineId : nil)])
-                        {
-                            NSLog(@"[MXMegolmDecryption] retryDecryption: successful re-decryption of %@", event.eventId);
-                        }
-                        else
-                        {
-                            NSLog(@"[MXMegolmDecryption] retryDecryption: Still can't decrypt %@. Error: %@", event.eventId, event.decryptionError);
-                        }
-                    }
+                    // This can happen when the event is in several timelines
+                    NSLog(@"[MXMegolmDecryption] retryDecryption: %@ already decrypted", event.eventId);
+                }
+                else if ([self decryptEventFromCryptoThread:event inTimeline:(timelineId.length ? timelineId : nil)])
+                {
+                    NSLog(@"[MXMegolmDecryption] retryDecryption: successful re-decryption of %@", event.eventId);
+                }
+                else
+                {
+                    NSLog(@"[MXMegolmDecryption] retryDecryption: Still can't decrypt %@. Error: %@", event.eventId, event.decryptionError);
                 }
             }
-        });
+        }
+    }
+}
+
+// Same operation as [self decryptEvent:inTimeline] but it does not block the main thread.
+// Use this method when the decryption can be asynchronous as opposed to the issue
+// described at https://github.com/matrix-org/matrix-ios-sdk/issues/205.
+- (BOOL)decryptEventFromCryptoThread:(MXEvent *)event inTimeline:(NSString*)timeline
+{
+    NSString *senderKey, *ciphertext, *sessionId;
+
+    MXJSONModelSetString(senderKey, event.content[@"sender_key"]);
+    MXJSONModelSetString(ciphertext, event.content[@"ciphertext"]);
+    MXJSONModelSetString(sessionId, event.content[@"session_id"]);
+
+    NSError *error;
+    MXDecryptionResult *result = [olmDevice decryptGroupMessage:ciphertext roomId:event.roomId inTimeline:timeline sessionId:sessionId senderKey:senderKey error:&error];
+
+    MXEvent *clearedEvent;
+    if (result)
+    {
+        clearedEvent = [MXEvent modelFromJSON:result.payload];
+    }
+    else
+    {
+        if ([error.domain isEqualToString:OLMErrorDomain])
+        {
+            // Manage OLMKit error
+            if ([error.localizedDescription isEqualToString:@"UNKNOWN_MESSAGE_INDEX"])
+            {
+                [self addEventToPendingList:event inTimeline:timeline];
+            }
+
+            // Package olm error into MXDecryptingErrorDomain
+            error = [NSError errorWithDomain:MXDecryptingErrorDomain
+                                        code:MXDecryptingErrorOlmCode
+                                    userInfo:@{
+                                               NSLocalizedDescriptionKey: [NSString stringWithFormat:MXDecryptingErrorOlm, error.localizedDescription],
+                                               NSLocalizedFailureReasonErrorKey: [NSString stringWithFormat:MXDecryptingErrorOlmReason, ciphertext, error]
+                                               }];
+        }
+        else if ([error.domain isEqualToString:MXDecryptingErrorDomain] && error.code == MXDecryptingErrorUnknownInboundSessionIdCode)
+        {
+            [self addEventToPendingList:event inTimeline:timeline];
+        }
+    }
+
+    // Go back to the main thread for updating MXEvent
+    dispatch_async(dispatch_get_main_queue(), ^{
+
+        if (clearedEvent)
+        {
+            [event setClearData:clearedEvent senderCurve25519Key:result.senderKey claimedEd25519Key:result.keysClaimed[@"ed25519"] forwardingCurve25519KeyChain:result.forwardingCurve25519KeyChain];
+        }
+        else
+        {
+            event.decryptionError = error;
+        }
+
     });
+
+    return (clearedEvent != nil);
 }
 
 - (void)requestKeysForEvent:(MXEvent*)event
