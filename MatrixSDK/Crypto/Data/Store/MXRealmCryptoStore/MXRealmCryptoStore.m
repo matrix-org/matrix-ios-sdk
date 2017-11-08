@@ -696,10 +696,10 @@ RLM_ARRAY_TYPE(MXRealmOlmInboundGroupSession)
 {
     MXOutgoingRoomKeyRequest *request;
 
-    NSString *requestBodyString = [MXTools serialiseJSONObject:request.requestBody];
+    NSString *requestBodyString = [MXTools serialiseJSONObject:requestBody];
 
     RLMResults<MXRealmOutgoingRoomKeyRequest *> *realmOutgoingRoomKeyRequests =  [MXRealmOutgoingRoomKeyRequest objectsInRealm:self.realm where:@"requestBodyString = %@", requestBodyString];
-    if (request)
+    if (realmOutgoingRoomKeyRequests.count)
     {
         request = realmOutgoingRoomKeyRequests[0].outgoingRoomKeyRequest;
     }
