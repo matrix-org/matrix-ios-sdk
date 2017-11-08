@@ -229,7 +229,7 @@
                                    @"sender_key": event.senderKey
                                    }];
 
-    [self retryDecryption:event.senderKey sessionId:content[@"session_id"]];
+    [self retryDecryption:senderKey sessionId:content[@"session_id"]];
 }
 
 - (void)importRoomKey:(MXMegolmSessionData *)session
