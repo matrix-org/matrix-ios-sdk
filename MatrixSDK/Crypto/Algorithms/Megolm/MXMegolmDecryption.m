@@ -146,7 +146,7 @@
         pendingEvents[k][timelineId] = [NSMutableDictionary dictionary];
     }
 
-    NSLog(@"[MXMegolmDecryption] addEventToPendingList: %@", event);
+    NSLog(@"[MXMegolmDecryption] addEventToPendingList: %@", event.JSONDictionary);
     pendingEvents[k][timelineId][event.eventId] = event;
 
     [self requestKeysForEvent:event];
@@ -217,7 +217,7 @@
         keysClaimed = event.keysClaimed;
     }
 
-    NSLog(@"[MXMegolmDecryption] onRoomKeyEvent: Adding key from %@", event.JSONDictionary);
+    NSLog(@"[MXMegolmDecryption] onRoomKeyEvent: Adding key for megolm session %@|%@ from %@ event", senderKey, sessionId, event.type);
 
     [olmDevice addInboundGroupSession:sessionId sessionKey:sessionKey roomId:roomId senderKey:senderKey forwardingCurve25519KeyChain:forwardingKeyChain keysClaimed:keysClaimed exportFormat:exportFormat];
 

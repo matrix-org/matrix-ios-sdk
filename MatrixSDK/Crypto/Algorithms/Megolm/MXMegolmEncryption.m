@@ -410,7 +410,8 @@
 
         if (haveTargets)
         {
-            NSLog(@"[MXMegolEncryption] shareKey. Actually share with %tu users and %tu devices: %@", contentMap.userIds.count, contentMap.count, contentMap);
+            //NSLog(@"[MXMegolEncryption] shareKey. Actually share with %tu users and %tu devices: %@", contentMap.userIds.count, contentMap.count, contentMap);
+            NSLog(@"[MXMegolEncryption] shareKey. Actually share with %tu users and %tu devices", contentMap.userIds.count, contentMap.count);
 
             MXHTTPOperation *operation2 = [crypto.matrixRestClient sendToDevice:kMXEventTypeStringRoomEncrypted contentMap:contentMap txnId:nil success:^{
 
