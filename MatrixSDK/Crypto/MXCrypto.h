@@ -293,6 +293,17 @@ FOUNDATION_EXPORT NSString *const kMXCryptoRoomKeyRequestCancellationNotificatio
                failure:(void (^)(NSError *error))failure;
 
 
+#pragma mark - Key sharing
+
+/**
+ Send responses to the key requests made by a user's device.
+
+ @param userId the id of the user.
+ @param deviceId the id of the user's device.
+ */
+- (void)acceptPendingKeyRequestsFromUser:(NSString*)userId andDevice:(NSString*)deviceId;
+
+
 #pragma mark - Crypto settings
 
 /**

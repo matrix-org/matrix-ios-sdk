@@ -1038,6 +1038,46 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
 #endif
 }
 
+#pragma mark - Key sharing
+
+- (void)acceptPendingKeyRequestsFromUser:(NSString *)userId andDevice:(NSString *)deviceId
+{
+#ifdef MX_CRYPTO
+    dispatch_async(_decryptionQueue, ^{
+
+        NSArray<MXIncomingRoomKeyRequest *> *requests = [incomingRoomKeyRequestManager.pendingKeyRequests objectForDevice:deviceId forUser:userId];
+
+        NSLog(@"[MXCrypto] acceptPendingKeyRequests from %@:%@. %@ pending requests", userId, deviceId, @(requests.count));
+
+        for (MXIncomingRoomKeyRequest *request in requests)
+        {
+            NSString *userId = request.userId;
+            NSString *deviceId = request.deviceId;
+            NSString *requestId = request.requestId;
+
+            NSDictionary *body = request.requestBody;
+            NSString *roomId, *alg;
+
+            MXJSONModelSetString(roomId, body[@"room_id"]);
+            MXJSONModelSetString(alg, body[@"algorithm"]);
+
+            id<MXDecrypting> decryptor = [self getRoomDecryptor:roomId algorithm:alg];
+            if (decryptor)
+            {
+                [decryptor shareKeysWithDevice:request success:nil failure:nil];
+            }
+            else
+            {
+                NSLog(@"[MXCrypto] acceptPendingKeyRequests: ERROR: unknown alg %@ in room %@", alg, roomId);
+            }
+
+            // The request is no more pending
+            [incomingRoomKeyRequestManager removePendingKeyRequest:requestId fromUser:userId andDevice:deviceId];
+        }
+    });
+#endif
+}
+
 
 #pragma mark - Crypto settings
 - (BOOL)globalBlacklistUnverifiedDevices

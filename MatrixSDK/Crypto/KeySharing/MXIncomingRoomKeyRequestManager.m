@@ -172,37 +172,16 @@
         return;
     }
 
-    __weak typeof(self) weakSelf = self;
-    __weak typeof(req) weakReq = req;
-
-    // Set up the code to execute when the user accepts to share keys
-    [req setShareCallbackBlock:^{
-        if (weakSelf && weakReq)
-        {
-            typeof(self) self = weakSelf;
-            if (self)
-            {
-                typeof(req) strongReq = weakReq;
-
-                // Go back to the crypto thread
-                dispatch_async(self->crypto.cryptoQueue, ^{
-                    // @TODO: add success and failure blocks to [MXIncomingRoomKeyRequest share]
-                    [decryptor shareKeysWithDevice:strongReq success:nil failure:nil];
-                });
-            }
-        }
-    }];
-
     // Add it to pending key requests
     [self addPendingKeyRequest:req];
 
     // Broadcast the room key request
+        __weak typeof(self) weakSelf = self;
     dispatch_async(dispatch_get_main_queue(), ^{
         if (weakSelf)
         {
-            typeof(self) self = weakSelf;
             [[NSNotificationCenter defaultCenter] postNotificationName:kMXCryptoRoomKeyRequestNotification
-                                                                object:self
+                                                                object:crypto
                                                               userInfo:@{
                                                                          kMXCryptoRoomKeyRequestNotificationRequestKey: req
                                                                          }];
@@ -238,9 +217,8 @@
     dispatch_async(dispatch_get_main_queue(), ^{
         if (weakSelf)
         {
-            typeof(self) self = weakSelf;
             [[NSNotificationCenter defaultCenter] postNotificationName:kMXCryptoRoomKeyRequestCancellationNotification
-                                                                object:self
+                                                                object:crypto
                                                               userInfo:@{
                                                                          kMXCryptoRoomKeyRequestCancellationNotificationRequestKey: cancellation
                                                                          }];
@@ -262,9 +240,6 @@
     [requests addObject:keyRequest];
 }
 
-/**
- Remove the pending key request matching given ids.
- */
 - (void)removePendingKeyRequest:(NSString*)requestId fromUser:(NSString*)userId andDevice:(NSString*)deviceId
 {
     MXIncomingRoomKeyRequest *keyRequest = [self pendingKeyRequest:requestId fromUser:userId andDevice:deviceId];

@@ -52,17 +52,4 @@
  */
 - (instancetype)initWithMXEvent:(MXEvent*)event;
 
-/**
- Set the callback to use on call of the `share` method.
-
- @param shareBlock the block to execute.
- */
-- (void)setShareCallbackBlock:(void(^)(void))shareBlock;
-
-/**
- The callback which, when called, will ask the relevant crypto algorithm
- implementation to share the keys for this request.
- */
-- (void)share;
-
 @end

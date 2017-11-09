@@ -39,17 +39,4 @@
     return self;
 }
 
-- (void)setShareCallbackBlock:(void(^)(void))theShareBlock
-{
-    shareBock = [theShareBlock copy];
-}
-
-- (void)share
-{
-    if (shareBock)
-    {
-        shareBock();
-    }
-}
-
 @end

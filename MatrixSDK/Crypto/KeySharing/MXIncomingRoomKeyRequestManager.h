@@ -58,6 +58,11 @@
 - (void)processReceivedRoomKeyRequests;
 
 /**
+ Remove the pending key request matching given ids.
+ */
+- (void)removePendingKeyRequest:(NSString*)requestId fromUser:(NSString*)userId andDevice:(NSString*)deviceId;
+
+/**
  Pending key requests at the last sync computing completion.
  userId -> deviceId -> [keyRequest]
  */
