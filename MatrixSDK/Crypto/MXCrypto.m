@@ -1045,12 +1045,16 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
 
 - (void)requestRoomKey:(NSDictionary*)requestBody recipients:(NSArray<NSDictionary<NSString*, NSString*>*>*)recipients
 {
+#ifdef MX_CRYPTO
     [outgoingRoomKeyRequestManager sendRoomKeyRequest:requestBody recipients:recipients];
+#endif
 }
 
 - (void)cancelRoomKeyRequest:(NSDictionary*)requestBody
 {
+#ifdef MX_CRYPTO
     [outgoingRoomKeyRequestManager cancelRoomKeyRequest:requestBody];
+#endif
 }
 
 #pragma mark - Crypto settings

@@ -19,6 +19,7 @@
 #import "MXTools.h"
 #import "MXOutgoingRoomKeyRequest.h"
 
+#ifdef MX_CRYPTO
 
 // delay between deciding we want some keys, and sending out the request, to
 // allow for (a) it turning up anyway, (b) grouping requests together
@@ -336,3 +337,5 @@ NSUInteger const SEND_KEY_REQUESTS_DELAY_MS = 500;
 }
 
 @end
+
+#endif

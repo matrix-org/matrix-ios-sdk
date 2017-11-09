@@ -19,6 +19,8 @@
 #import "MXRestClient.h"
 #import "MXCryptoStore.h"
 
+#ifdef MX_CRYPTO
+
 /**
  Management of outgoing room key requests.
 
@@ -74,3 +76,5 @@
 - (void)cancelRoomKeyRequest:(NSDictionary*)requestBody;
 
 @end
+
+#endif
