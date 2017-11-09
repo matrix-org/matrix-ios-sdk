@@ -37,15 +37,14 @@
 /**
  The store to use for crypto.
  */
-//#define MXCryptoStoreClass MXFileCryptoStore
 #define MXCryptoStoreClass MXRealmCryptoStore
-
-#ifdef MX_CRYPTO
 
 NSString *const kMXCryptoRoomKeyRequestNotification = @"kMXCryptoRoomKeyRequestNotification";
 NSString *const kMXCryptoRoomKeyRequestNotificationRequestKey = @"kMXCryptoRoomKeyRequestNotificationRequestKey";
 NSString *const kMXCryptoRoomKeyRequestCancellationNotification = @"kMXCryptoRoomKeyRequestCancellationNotification";
 NSString *const kMXCryptoRoomKeyRequestCancellationNotificationRequestKey = @"kMXCryptoRoomKeyRequestCancellationNotificationRequestKey";
+
+#ifdef MX_CRYPTO
 
 // Frequency with which to check & upload one-time keys
 NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
@@ -1041,22 +1040,6 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
 }
 
 
-#pragma mark - Key sharing
-
-- (void)requestRoomKey:(NSDictionary*)requestBody recipients:(NSArray<NSDictionary<NSString*, NSString*>*>*)recipients
-{
-#ifdef MX_CRYPTO
-    [outgoingRoomKeyRequestManager sendRoomKeyRequest:requestBody recipients:recipients];
-#endif
-}
-
-- (void)cancelRoomKeyRequest:(NSDictionary*)requestBody
-{
-#ifdef MX_CRYPTO
-    [outgoingRoomKeyRequestManager cancelRoomKeyRequest:requestBody];
-#endif
-}
-
 #pragma mark - Crypto settings
 - (BOOL)globalBlacklistUnverifiedDevices
 {
@@ -1478,7 +1461,19 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
              @"sender_key": _olmDevice.deviceCurve25519Key,
              @"ciphertext": ciphertext
              };
-};
+}
+
+
+#pragma mark - Key sharing
+- (void)requestRoomKey:(NSDictionary*)requestBody recipients:(NSArray<NSDictionary<NSString*, NSString*>*>*)recipients
+{
+    [outgoingRoomKeyRequestManager sendRoomKeyRequest:requestBody recipients:recipients];
+}
+
+- (void)cancelRoomKeyRequest:(NSDictionary*)requestBody
+{
+    [outgoingRoomKeyRequestManager cancelRoomKeyRequest:requestBody];
+}
 
 
 #pragma mark - Private methods
