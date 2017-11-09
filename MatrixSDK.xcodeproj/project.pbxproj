@@ -180,6 +180,8 @@
 		32A1515B1DB525DA00400192 /* NSObject+sortedKeys.h in Headers */ = {isa = PBXBuildFile; fileRef = 32A151591DB525DA00400192 /* NSObject+sortedKeys.h */; };
 		32A1515C1DB525DA00400192 /* NSObject+sortedKeys.m in Sources */ = {isa = PBXBuildFile; fileRef = 32A1515A1DB525DA00400192 /* NSObject+sortedKeys.m */; };
 		32A27D1F19EC335300BAFADE /* MXRoomTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 32A27D1E19EC335300BAFADE /* MXRoomTests.m */; };
+		32A30B181FB4813400C8309E /* MXIncomingRoomKeyRequestManager.h in Headers */ = {isa = PBXBuildFile; fileRef = 32A30B161FB4813400C8309E /* MXIncomingRoomKeyRequestManager.h */; };
+		32A30B191FB4813400C8309E /* MXIncomingRoomKeyRequestManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 32A30B171FB4813400C8309E /* MXIncomingRoomKeyRequestManager.m */; };
 		32A9E8241EF4026E0081358A /* MXBackgroundModeHandler.h in Headers */ = {isa = PBXBuildFile; fileRef = 32A9E8211EF4026E0081358A /* MXBackgroundModeHandler.h */; };
 		32A9E8251EF4026E0081358A /* MXUIKitBackgroundModeHandler.h in Headers */ = {isa = PBXBuildFile; fileRef = 32A9E8221EF4026E0081358A /* MXUIKitBackgroundModeHandler.h */; };
 		32A9E8261EF4026E0081358A /* MXUIKitBackgroundModeHandler.m in Sources */ = {isa = PBXBuildFile; fileRef = 32A9E8231EF4026E0081358A /* MXUIKitBackgroundModeHandler.m */; };
@@ -469,6 +471,8 @@
 		32A151591DB525DA00400192 /* NSObject+sortedKeys.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "NSObject+sortedKeys.h"; path = "Lib/NSObject+sortedKeys.h"; sourceTree = "<group>"; };
 		32A1515A1DB525DA00400192 /* NSObject+sortedKeys.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = "NSObject+sortedKeys.m"; path = "Lib/NSObject+sortedKeys.m"; sourceTree = "<group>"; };
 		32A27D1E19EC335300BAFADE /* MXRoomTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; lineEnding = 0; path = MXRoomTests.m; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objc; };
+		32A30B161FB4813400C8309E /* MXIncomingRoomKeyRequestManager.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MXIncomingRoomKeyRequestManager.h; sourceTree = "<group>"; };
+		32A30B171FB4813400C8309E /* MXIncomingRoomKeyRequestManager.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MXIncomingRoomKeyRequestManager.m; sourceTree = "<group>"; };
 		32A9E8211EF4026E0081358A /* MXBackgroundModeHandler.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXBackgroundModeHandler.h; sourceTree = "<group>"; };
 		32A9E8221EF4026E0081358A /* MXUIKitBackgroundModeHandler.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXUIKitBackgroundModeHandler.h; sourceTree = "<group>"; };
 		32A9E8231EF4026E0081358A /* MXUIKitBackgroundModeHandler.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXUIKitBackgroundModeHandler.m; sourceTree = "<group>"; };
@@ -1082,6 +1086,8 @@
 				32FA10C31FA1C9F700E54233 /* Data */,
 				32FA10BF1FA1C9EE00E54233 /* MXOutgoingRoomKeyRequestManager.h */,
 				32FA10C01FA1C9EE00E54233 /* MXOutgoingRoomKeyRequestManager.m */,
+				32A30B161FB4813400C8309E /* MXIncomingRoomKeyRequestManager.h */,
+				32A30B171FB4813400C8309E /* MXIncomingRoomKeyRequestManager.m */,
 			);
 			path = KeySharing;
 			sourceTree = "<group>";
@@ -1247,6 +1253,7 @@
 				32A9E8251EF4026E0081358A /* MXUIKitBackgroundModeHandler.h in Headers */,
 				325D1C261DFECE0D0070B8BF /* MXCrypto_Private.h in Headers */,
 				32A151521DAF8A7200400192 /* MXQueuedEncryption.h in Headers */,
+				32A30B181FB4813400C8309E /* MXIncomingRoomKeyRequestManager.h in Headers */,
 				323B2AFE1BCE9B6700B11F34 /* MXCoreDataEvent+CoreDataProperties.h in Headers */,
 				F03EF5081DF071D5009DF592 /* MXEncryptedAttachments.h in Headers */,
 				320BBF421D6C81550079890E /* MXEventsByTypesEnumeratorOnArray.h in Headers */,
@@ -1563,6 +1570,7 @@
 				32FA10CF1FA1C9F700E54233 /* MXOutgoingRoomKeyRequest.m in Sources */,
 				32322A4C1E575F65005DD155 /* MXAllowedCertificates.m in Sources */,
 				F03EF5051DF01596009DF592 /* MXLRUCache.m in Sources */,
+				32A30B191FB4813400C8309E /* MXIncomingRoomKeyRequestManager.m in Sources */,
 				3240969E1F9F751600DBA607 /* MXPushRuleSenderNotificationPermissionConditionChecker.m in Sources */,
 				71DE22E01BC7C51200284153 /* MXReceiptData.m in Sources */,
 				926F401A1EEF0F6E0062630D /* MXJingleCallAudioSessionConfigurator.m in Sources */,
