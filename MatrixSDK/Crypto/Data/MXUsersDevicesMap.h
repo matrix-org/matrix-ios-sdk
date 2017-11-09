@@ -52,6 +52,7 @@
 - (void)addEntriesFromMap:(MXUsersDevicesMap*)map;
 - (void)removeAllObjects;
 - (void)removeObjectsForUser:(NSString*)userId;
+- (void)removeObjectForUser:(NSString*)userId andDevice:(NSString*)deviceId;
 
 @end
 

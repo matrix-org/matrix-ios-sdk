@@ -106,6 +106,16 @@
     _map = mutableMap;
 }
 
+- (void)removeObjectForUser:(NSString *)userId andDevice:(NSString *)deviceId
+{
+    NSMutableDictionary *mutableMap = [NSMutableDictionary dictionaryWithDictionary:self.map];
+
+    mutableMap[userId] = [NSMutableDictionary dictionaryWithDictionary:mutableMap[userId]];
+    [mutableMap[userId] removeObject:deviceId];
+
+    _map = mutableMap;
+}
+
 - (NSString *)description
 {
     return _map.description;
