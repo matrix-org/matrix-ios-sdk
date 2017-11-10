@@ -154,7 +154,7 @@
 
 - (NSString *)description
 {
-    return [NSString stringWithFormat:@"%@:%@ - curve25519: %@", _userId, _deviceId, self.identityKey];
+    return [NSString stringWithFormat:@"%@:%@ - curve25519: %@ (verified: %@)", _userId, _deviceId, self.identityKey, @(_verified)];
 }
 
 @end

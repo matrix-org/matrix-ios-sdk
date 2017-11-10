@@ -39,4 +39,9 @@
     return self;
 }
 
+- (NSString *)description
+{
+    return [NSString stringWithFormat:@"<MXIncomingRoomKeyRequest: %p> requestId %@: from %@:%@", self, _requestId, _userId, _deviceId];
+}
+
 @end

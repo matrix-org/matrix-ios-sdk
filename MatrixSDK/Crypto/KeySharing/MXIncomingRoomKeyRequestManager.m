@@ -130,7 +130,7 @@
 
     NSLog(@"[MXIncomingRoomKeyRequestManager] processReceivedRoomKeyRequest: m.room_key_request from %@:%@ for %@ / %@ (id %@)", userId, deviceId, roomId, body[@"session_id"], req.requestId);
 
-    if ([userId isEqualToString:crypto.matrixRestClient.credentials.userId])
+    if (![userId isEqualToString:crypto.matrixRestClient.credentials.userId])
     {
         // TODO: determine if we sent this device the keys already: in
         // which case we can do so again.
@@ -158,7 +158,7 @@
 
     // if the device is verified already, share the keys
     MXDeviceInfo *device = [crypto.store deviceWithDeviceId:deviceId forUser:userId];
-    if (device && device.verified)
+    if (device && device.verified == MXDeviceVerified)
     {
         NSLog(@"[MXIncomingRoomKeyRequestManager] device is already verified: sharing keys");
         [decryptor shareKeysWithDevice:req success:nil failure:nil];
