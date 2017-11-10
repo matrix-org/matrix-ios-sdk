@@ -2280,7 +2280,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
         // Check whether the room id is not already present (in this case `_directUserId` was not updated yet),
         // this may happen during invite handling.
         NSArray<NSString*> *savedNewDirectUserIdRoomLists = mxSession.directRooms[newDirectUserId];
-        if ([savedNewDirectUserIdRoomLists indexOfObject:self.roomId] == NSNotFound)
+        if (!savedNewDirectUserIdRoomLists || [savedNewDirectUserIdRoomLists indexOfObject:self.roomId] == NSNotFound)
         {
             NSArray<NSString*> *savedDirectUserIdRoomLists = nil;
             NSString *savedDirectUserId = _directUserId;
