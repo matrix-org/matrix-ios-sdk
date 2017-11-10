@@ -106,7 +106,7 @@ FOUNDATION_EXPORT NSString *const kMXCryptoRoomKeyRequestCancellationNotificatio
 /**
  Stop and release crypto objects.
  */
-- (void)close;
+- (void)close:(BOOL)deleteStore;
 
 /**
  Encrypt an event content according to the configuration of the room.
@@ -239,11 +239,11 @@ FOUNDATION_EXPORT NSString *const kMXCryptoRoomKeyRequestCancellationNotificatio
 - (void)resetDeviceKeys;
 
 /**
- Delete the crypto store for the passed credentials.
+ Delete the crypto store.
 
- @param credentials the credentials of the account.
+ @param onComplete the callback called once operation is done.
  */
-+ (void)deleteStoreWithCredentials:(MXCredentials*)credentials;
+- (void)deleteStore:(void (^)())onComplete;
 
 
 #pragma mark - import/export

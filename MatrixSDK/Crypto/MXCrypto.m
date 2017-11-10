@@ -176,10 +176,20 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
 #endif
 }
 
-+ (void)deleteStoreWithCredentials:(MXCredentials *)credentials
+- (void)deleteStore:(void (^)())onComplete;
 {
 #ifdef MX_CRYPTO
-    [MXCryptoStoreClass deleteStoreWithCredentials:credentials];
+    dispatch_async(_cryptoQueue, ^{
+    
+        [MXCryptoStoreClass deleteStoreWithCredentials:mxSession.matrixRestClient.credentials];
+
+        if (onComplete)
+        {
+            dispatch_async(dispatch_get_main_queue(), ^{
+                onComplete();
+            });
+        }
+    });
 #endif
 }
 
@@ -281,7 +291,7 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
 #endif
 }
 
-- (void)close
+- (void)close:(BOOL)deleteStore
 {
 #ifdef MX_CRYPTO
 
@@ -301,9 +311,16 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
         [outgoingRoomKeyRequestManager close];
         outgoingRoomKeyRequestManager = nil;
 
+        if (deleteStore)
+        {
+            [MXCryptoStoreClass deleteStoreWithCredentials:mxSession.matrixRestClient.credentials];
+        }
+
         _olmDevice = nil;
         _cryptoQueue = nil;
         _store = nil;
+
+        [_deviceList close];
         _deviceList = nil;
 
         [roomEncryptors removeAllObjects];

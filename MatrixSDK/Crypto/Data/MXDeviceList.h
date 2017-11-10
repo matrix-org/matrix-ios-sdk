@@ -84,6 +84,11 @@ typedef enum : NSUInteger
 - (id)initWithCrypto:(MXCrypto*)crypto;
 
 /**
+ Called when the client is stopped.
+ */
+- (void)close;
+
+/**
  Download the device keys for a list of users and stores the keys in the MXStore.
 
  @param userIds The users to fetch.

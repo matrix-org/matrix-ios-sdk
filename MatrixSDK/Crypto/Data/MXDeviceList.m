@@ -81,6 +81,11 @@
     return self;
 }
 
+- (void)close
+{
+    crypto = nil;
+}
+
 - (MXHTTPOperation*)downloadKeys:(NSArray<NSString*>*)userIds forceDownload:(BOOL)forceDownload
                          success:(void (^)(MXUsersDevicesMap<MXDeviceInfo*> *usersDevicesInfoMap))success
                          failure:(void (^)(NSError *error))failure

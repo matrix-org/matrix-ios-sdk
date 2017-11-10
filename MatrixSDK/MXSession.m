@@ -640,7 +640,7 @@ typedef void (^MXOnResumeDone)();
     // Stop crypto
     if (_crypto)
     {
-        [_crypto close];
+        [_crypto close:NO];
         _crypto = nil;
     }
 
@@ -661,12 +661,26 @@ typedef void (^MXOnResumeDone)();
 - (MXHTTPOperation*)logout:(void (^)())success
                    failure:(void (^)(NSError *error))failure
 {
+    // Create an empty operation that will be mutated later
+    MXHTTPOperation *operation = [[MXHTTPOperation alloc] init];
+
     // Clear crypto data
     // For security and because it will be no more useful as we will get a new device id
     // on the next log in
-    [self enableCrypto:NO success:nil failure:nil];
+    __weak typeof(self) weakSelf = self;
+    [self enableCrypto:NO success:^{
 
-    return [self.matrixRestClient logout:success failure:failure];
+        if (weakSelf && !operation.isCancelled)
+        {
+            __strong __typeof(weakSelf) self = weakSelf;
+
+            MXHTTPOperation *operation2 = [self.matrixRestClient logout:success failure:failure];
+            [operation mutateTo:operation2];
+        }
+
+    } failure:nil];
+
+    return operation;
 }
 
 - (BOOL)isEventStreamInitialised
@@ -1321,11 +1335,10 @@ typedef void (^MXOnResumeDone)();
     }
     else if (!enableCrypto && _crypto)
     {
-        [_crypto close];
+        // Erase all crypto data of this user
+        [_crypto close:YES];
         _crypto = nil;
 
-        // Erase all crypto data of this user
-        [MXCrypto deleteStoreWithCredentials:matrixRestClient.credentials];
         if (success)
         {
             success();
