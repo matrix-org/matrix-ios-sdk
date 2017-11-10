@@ -2202,6 +2202,9 @@
  6 - Make alice1MatrixRestClient make a fake room key request for the message sent at step #4
  7 - aliceSession2 must receive kMXCryptoRoomKeyRequestNotification
  8 - Do checks
+ 9 - Check [MXSession.crypto pendingKeyRequests:] result
+ 10 - Check [MXSession.crypto acceptAllPendingKeyRequestsFromUser:] with a wrong userId:deviceId pair
+ 11 - Check [MXSession.crypto acceptAllPendingKeyRequestsFromUser:] with a valid userId:deviceId pair
  */
 - (void)testIncomingRoomKeyRequest
 {
@@ -2276,12 +2279,39 @@
                                 XCTAssertEqualObjects(incomingKeyRequest.deviceId, alice1Credentials.deviceId);
                                 XCTAssert(incomingKeyRequest.requestBody);
 
-                                [expectation fulfill];
+                                //9 - Check [MXSession.crypto pendingKeyRequests:] result
+                                [aliceSession2.crypto pendingKeyRequests:^(MXUsersDevicesMap<NSArray<MXIncomingRoomKeyRequest *> *> *pendingKeyRequests) {
+
+                                    XCTAssertEqual(pendingKeyRequests.count, 1);
+
+                                    MXIncomingRoomKeyRequest *keyRequest = [pendingKeyRequests objectForDevice:alice1Credentials.deviceId forUser:alice1Credentials.userId][0];
+
+                                    // Should be the same ref. No need to do fine checks
+                                    XCTAssertEqual(keyRequest, incomingKeyRequest);
+
+                                    // 10 - Check [MXSession.crypto acceptAllPendingKeyRequestsFromUser:] with a wrong userId:deviceId pair
+                                    [aliceSession2.crypto acceptAllPendingKeyRequestsFromUser:alice1Credentials.userId andDevice:@"DEADBEEF" onComplete:^{
+
+                                        [aliceSession2.crypto pendingKeyRequests:^(MXUsersDevicesMap<NSArray<MXIncomingRoomKeyRequest *> *> *pendingKeyRequests2) {
+
+                                            XCTAssertEqual(pendingKeyRequests2.count, 1, @"The pending request should be still here");
+
+                                            // 11 - Check [MXSession.crypto acceptAllPendingKeyRequestsFromUser:] with a valid userId:deviceId pair
+                                            [aliceSession2.crypto acceptAllPendingKeyRequestsFromUser:alice1Credentials.userId andDevice:alice1Credentials.deviceId onComplete:^{
+
+                                                [aliceSession2.crypto pendingKeyRequests:^(MXUsersDevicesMap<NSArray<MXIncomingRoomKeyRequest *> *> *pendingKeyRequests3) {
+
+                                                    XCTAssertEqual(pendingKeyRequests3.count, 0, @"There should be no more pending request");
+
+                                                    [expectation fulfill];
+                                                }];
+                                            }];
+                                        }];
+                                    }];
+                                }];
                             }];
             }];
-
         }];
-
     }];
 }
 

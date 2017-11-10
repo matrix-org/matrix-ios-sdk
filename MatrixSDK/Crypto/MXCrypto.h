@@ -296,12 +296,31 @@ FOUNDATION_EXPORT NSString *const kMXCryptoRoomKeyRequestCancellationNotificatio
 #pragma mark - Key sharing
 
 /**
+ Get all pending key requests sorted by userId/deviceId pairs.
+
+ @param onComplete A block object called with the list of pending key requests.
+ */
+- (void)pendingKeyRequests:(void (^)(MXUsersDevicesMap<NSArray<MXIncomingRoomKeyRequest *> *> *pendingKeyRequests))onComplete;
+
+/**
+ Send response to a key request.
+
+ @param keyRequest the accepted key request.
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+ */
+- (void)acceptKeyRequest:(MXIncomingRoomKeyRequest *)keyRequest
+                 success:(void (^)())success
+                 failure:(void (^)(NSError *error))failure;
+
+/**
  Send responses to the key requests made by a user's device.
 
  @param userId the id of the user.
  @param deviceId the id of the user's device.
+ @param onComplete A block object called when the operation completes.
  */
-- (void)acceptPendingKeyRequestsFromUser:(NSString*)userId andDevice:(NSString*)deviceId;
+- (void)acceptAllPendingKeyRequestsFromUser:(NSString*)userId andDevice:(NSString*)deviceId onComplete:(void (^)())onComplete;
 
 
 #pragma mark - Crypto settings

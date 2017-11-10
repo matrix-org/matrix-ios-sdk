@@ -21,6 +21,9 @@
 @interface MXIncomingRoomKeyRequestManager ()
 {
     MXCrypto *crypto;
+
+    // See `MXIncomingRoomKeyRequestManager.pendingKeyRequests` property
+    MXUsersDevicesMap<NSMutableArray<MXIncomingRoomKeyRequest *> *> *pendingKeyRequests;
     
     // The list of MXIncomingRoomKeyRequests/MXIncomingRoomKeyRequestCancellations
     // we received in the current sync.
@@ -39,7 +42,7 @@
     {
         crypto = theCrypto;
 
-        _pendingKeyRequests = [[MXUsersDevicesMap alloc] init];
+        pendingKeyRequests = [[MXUsersDevicesMap alloc] init];
 
         // The list of MXIncomingRoomKeyRequests/MXIncomingRoomKeyRequestCancellations
         // we received in the current sync.
@@ -51,8 +54,8 @@
 
 - (void)close
 {
-    [_pendingKeyRequests removeAllObjects];
-    _pendingKeyRequests = nil;
+    [pendingKeyRequests removeAllObjects];
+    pendingKeyRequests = nil;
 
     [receivedRoomKeyRequests removeAllObjects];
     receivedRoomKeyRequests = nil;
@@ -231,11 +234,11 @@
  */
 - (void)addPendingKeyRequest:(MXIncomingRoomKeyRequest*)keyRequest
 {
-    NSMutableArray<MXIncomingRoomKeyRequest *> *requests = [_pendingKeyRequests objectForDevice:keyRequest.deviceId forUser:keyRequest.userId];
+    NSMutableArray<MXIncomingRoomKeyRequest *> *requests = [pendingKeyRequests objectForDevice:keyRequest.deviceId forUser:keyRequest.userId];
     if (!requests)
     {
         requests = [NSMutableArray array];
-        [_pendingKeyRequests setObject:requests forUser:keyRequest.userId andDevice:keyRequest.deviceId];
+        [pendingKeyRequests setObject:requests forUser:keyRequest.userId andDevice:keyRequest.deviceId];
     }
     [requests addObject:keyRequest];
 }
@@ -245,12 +248,12 @@
     MXIncomingRoomKeyRequest *keyRequest = [self pendingKeyRequest:requestId fromUser:userId andDevice:deviceId];
     if (keyRequest)
     {
-        NSMutableArray<MXIncomingRoomKeyRequest *> *requests = [_pendingKeyRequests objectForDevice:deviceId forUser:userId];
+        NSMutableArray<MXIncomingRoomKeyRequest *> *requests = [pendingKeyRequests objectForDevice:deviceId forUser:userId];
         [requests removeObject:keyRequest];
 
         if (requests.count == 0)
         {
-            [_pendingKeyRequests removeObjectForUser:userId andDevice:deviceId];
+            [pendingKeyRequests removeObjectForUser:userId andDevice:deviceId];
         }
     }
 }
@@ -262,7 +265,7 @@
 {
     MXIncomingRoomKeyRequest *keyRequest;
 
-    NSMutableArray<MXIncomingRoomKeyRequest *> *requests = [_pendingKeyRequests objectForDevice:deviceId forUser:userId];
+    NSMutableArray<MXIncomingRoomKeyRequest *> *requests = [pendingKeyRequests objectForDevice:deviceId forUser:userId];
     for (MXIncomingRoomKeyRequest *request in requests)
     {
         if ([request.requestId isEqualToString:requestId])
@@ -274,4 +277,12 @@
 
     return keyRequest;
 }
+
+- (MXUsersDevicesMap<NSArray<MXIncomingRoomKeyRequest *> *> *)pendingKeyRequests
+{
+    // Return a copy of the working object for thread-safe.
+    // We just need to copy the NSArray. MXIncomingRoomKeyRequest objects are immutable
+    return [pendingKeyRequests copy];
+}
+
 @end

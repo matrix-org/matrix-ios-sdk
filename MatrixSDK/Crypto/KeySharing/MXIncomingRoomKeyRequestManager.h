@@ -66,6 +66,6 @@
  Pending key requests at the last sync computing completion.
  userId -> deviceId -> [keyRequest]
  */
-@property (nonatomic) MXUsersDevicesMap<NSMutableArray<MXIncomingRoomKeyRequest *> *> *pendingKeyRequests;
+@property (nonatomic, readonly) MXUsersDevicesMap<NSArray<MXIncomingRoomKeyRequest *> *> *pendingKeyRequests;
 
 @end

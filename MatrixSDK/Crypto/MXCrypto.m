@@ -1057,42 +1057,89 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
 
 #pragma mark - Key sharing
 
-- (void)acceptPendingKeyRequestsFromUser:(NSString *)userId andDevice:(NSString *)deviceId
+- (void)pendingKeyRequests:(void (^)(MXUsersDevicesMap<NSArray<MXIncomingRoomKeyRequest *> *> *pendingKeyRequests))onComplete
+{
+    NSParameterAssert(onComplete);
+
+#ifdef MX_CRYPTO
+    dispatch_async(_decryptionQueue, ^{
+
+        MXUsersDevicesMap<NSArray<MXIncomingRoomKeyRequest *> *> *pendingKeyRequests = incomingRoomKeyRequestManager.pendingKeyRequests;
+
+        dispatch_async(dispatch_get_main_queue(), ^{
+            onComplete(pendingKeyRequests);
+        });
+    });
+#endif
+}
+
+- (void)acceptKeyRequest:(MXIncomingRoomKeyRequest *)keyRequest
+                 success:(void (^)())success
+                 failure:(void (^)(NSError *error))failure
+{
+#ifdef MX_CRYPTO
+    dispatch_async(_decryptionQueue, ^{
+
+        NSLog(@"[MXCrypto] acceptKeyRequest: %@", keyRequest);
+        [self acceptKeyRequestFromCryptoThread:keyRequest success:success failure:failure];
+    });
+#endif
+}
+
+- (void)acceptAllPendingKeyRequestsFromUser:(NSString *)userId andDevice:(NSString *)deviceId onComplete:(void (^)())onComplete
 {
 #ifdef MX_CRYPTO
     dispatch_async(_decryptionQueue, ^{
 
         NSArray<MXIncomingRoomKeyRequest *> *requests = [incomingRoomKeyRequestManager.pendingKeyRequests objectForDevice:deviceId forUser:userId];
 
-        NSLog(@"[MXCrypto] acceptPendingKeyRequests from %@:%@. %@ pending requests", userId, deviceId, @(requests.count));
+        NSLog(@"[MXCrypto] acceptAllPendingKeyRequestsFromUser from %@:%@. %@ pending requests", userId, deviceId, @(requests.count));
 
         for (MXIncomingRoomKeyRequest *request in requests)
         {
-            NSString *userId = request.userId;
-            NSString *deviceId = request.deviceId;
-            NSString *requestId = request.requestId;
+            // TODO: Add success and failure blocks to acceptAllPendingKeyRequestsFromUser
+            [self acceptKeyRequestFromCryptoThread:request success:nil failure:nil];
+        }
 
-            NSDictionary *body = request.requestBody;
-            NSString *roomId, *alg;
-
-            MXJSONModelSetString(roomId, body[@"room_id"]);
-            MXJSONModelSetString(alg, body[@"algorithm"]);
-
-            id<MXDecrypting> decryptor = [self getRoomDecryptor:roomId algorithm:alg];
-            if (decryptor)
-            {
-                [decryptor shareKeysWithDevice:request success:nil failure:nil];
-            }
-            else
-            {
-                NSLog(@"[MXCrypto] acceptPendingKeyRequests: ERROR: unknown alg %@ in room %@", alg, roomId);
-            }
-
-            // The request is no more pending
-            [incomingRoomKeyRequestManager removePendingKeyRequest:requestId fromUser:userId andDevice:deviceId];
+        if (onComplete)
+        {
+            onComplete();
         }
     });
 #endif
+}
+
+- (void)acceptKeyRequestFromCryptoThread:(MXIncomingRoomKeyRequest *)keyRequest
+                                 success:(void (^)())success
+                                 failure:(void (^)(NSError *error))failure
+{
+    NSString *userId = keyRequest.userId;
+    NSString *deviceId = keyRequest.deviceId;
+    NSString *requestId = keyRequest.requestId;
+
+    NSDictionary *body = keyRequest.requestBody;
+    NSString *roomId, *alg;
+
+    MXJSONModelSetString(roomId, body[@"room_id"]);
+    MXJSONModelSetString(alg, body[@"algorithm"]);
+
+    // The request is no more pending
+    [incomingRoomKeyRequestManager removePendingKeyRequest:requestId fromUser:userId andDevice:deviceId];
+
+    id<MXDecrypting> decryptor = [self getRoomDecryptor:roomId algorithm:alg];
+    if (decryptor)
+    {
+        [decryptor shareKeysWithDevice:keyRequest success:success failure:failure];
+    }
+    else
+    {
+        NSLog(@"[MXCrypto] acceptPendingKeyRequests: ERROR: unknown alg %@ in room %@", alg, roomId);
+
+        if (failure)
+        {
+            failure(nil);
+        }
+    }
 }
 
 

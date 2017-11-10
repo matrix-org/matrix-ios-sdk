@@ -111,7 +111,7 @@
     NSMutableDictionary *mutableMap = [NSMutableDictionary dictionaryWithDictionary:self.map];
 
     mutableMap[userId] = [NSMutableDictionary dictionaryWithDictionary:mutableMap[userId]];
-    [mutableMap[userId] removeObject:deviceId];
+    [mutableMap[userId] removeObjectForKey:deviceId];
 
     _map = mutableMap;
 }
@@ -136,6 +136,23 @@
 - (void)encodeWithCoder:(NSCoder *)aCoder
 {
     [aCoder encodeObject:_map forKey:@"map"];
+}
+
+#pragma mark - NSCopying
+- (id)copyWithZone:(NSZone *)zone
+{
+    MXUsersDevicesMap *usersDevicesMapCopy = [[MXUsersDevicesMap allocWithZone:zone] init];
+
+    for (NSString *userId in _map)
+    {
+        for (NSString *deviceId in _map[userId])
+        {
+            id objectCopy = [_map[userId][deviceId] copy];
+            [usersDevicesMapCopy setObject:objectCopy forUser:userId andDevice:deviceId];
+        }
+    }
+
+    return usersDevicesMapCopy;
 }
 
 @end
