@@ -33,6 +33,7 @@
 #import "MXMegolmExportEncryption.h"
 
 #import "MXOutgoingRoomKeyRequestManager.h"
+#import "MXIncomingRoomKeyRequestManager.h"
 
 /**
  The store to use for crypto.
@@ -83,10 +84,8 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
     // The manager for sending room key requests
     MXOutgoingRoomKeyRequestManager *outgoingRoomKeyRequestManager;
 
-    // The list of MXIncomingRoomKeyRequests/MXIncomingRoomKeyRequestCancellations
-    // we received in the current sync.
-    NSMutableArray<MXIncomingRoomKeyRequest*> *receivedRoomKeyRequests;
-    NSMutableArray<MXIncomingRoomKeyRequestCancellation*> *receivedRoomKeyRequestCancellations;
+    // The manager for incoming room key requests
+    MXIncomingRoomKeyRequestManager *incomingRoomKeyRequestManager;
 }
 @end
 
@@ -177,10 +176,20 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
 #endif
 }
 
-+ (void)deleteStoreWithCredentials:(MXCredentials *)credentials
+- (void)deleteStore:(void (^)())onComplete;
 {
 #ifdef MX_CRYPTO
-    [MXCryptoStoreClass deleteStoreWithCredentials:credentials];
+    dispatch_async(_cryptoQueue, ^{
+    
+        [MXCryptoStoreClass deleteStoreWithCredentials:mxSession.matrixRestClient.credentials];
+
+        if (onComplete)
+        {
+            dispatch_async(dispatch_get_main_queue(), ^{
+                onComplete();
+            });
+        }
+    });
 #endif
 }
 
@@ -282,7 +291,7 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
 #endif
 }
 
-- (void)close
+- (void)close:(BOOL)deleteStore
 {
 #ifdef MX_CRYPTO
 
@@ -302,9 +311,16 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
         [outgoingRoomKeyRequestManager close];
         outgoingRoomKeyRequestManager = nil;
 
+        if (deleteStore)
+        {
+            [MXCryptoStoreClass deleteStoreWithCredentials:mxSession.matrixRestClient.credentials];
+        }
+
         _olmDevice = nil;
         _cryptoQueue = nil;
         _store = nil;
+
+        [_deviceList close];
         _deviceList = nil;
 
         [roomEncryptors removeAllObjects];
@@ -624,7 +640,7 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
         if (!isCatchingUp && _store.deviceAnnounced)
         {
             [self maybeUploadOneTimeKeys:nil failure:nil];
-            [self processReceivedRoomKeyRequests];
+            [incomingRoomKeyRequestManager processReceivedRoomKeyRequests];
         }
     });
 
@@ -1039,6 +1055,93 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
 #endif
 }
 
+#pragma mark - Key sharing
+
+- (void)pendingKeyRequests:(void (^)(MXUsersDevicesMap<NSArray<MXIncomingRoomKeyRequest *> *> *pendingKeyRequests))onComplete
+{
+    NSParameterAssert(onComplete);
+
+#ifdef MX_CRYPTO
+    dispatch_async(_decryptionQueue, ^{
+
+        MXUsersDevicesMap<NSArray<MXIncomingRoomKeyRequest *> *> *pendingKeyRequests = incomingRoomKeyRequestManager.pendingKeyRequests;
+
+        dispatch_async(dispatch_get_main_queue(), ^{
+            onComplete(pendingKeyRequests);
+        });
+    });
+#endif
+}
+
+- (void)acceptKeyRequest:(MXIncomingRoomKeyRequest *)keyRequest
+                 success:(void (^)())success
+                 failure:(void (^)(NSError *error))failure
+{
+#ifdef MX_CRYPTO
+    dispatch_async(_decryptionQueue, ^{
+
+        NSLog(@"[MXCrypto] acceptKeyRequest: %@", keyRequest);
+        [self acceptKeyRequestFromCryptoThread:keyRequest success:success failure:failure];
+    });
+#endif
+}
+
+- (void)acceptAllPendingKeyRequestsFromUser:(NSString *)userId andDevice:(NSString *)deviceId onComplete:(void (^)())onComplete
+{
+#ifdef MX_CRYPTO
+    dispatch_async(_decryptionQueue, ^{
+
+        NSArray<MXIncomingRoomKeyRequest *> *requests = [incomingRoomKeyRequestManager.pendingKeyRequests objectForDevice:deviceId forUser:userId];
+
+        NSLog(@"[MXCrypto] acceptAllPendingKeyRequestsFromUser from %@:%@. %@ pending requests", userId, deviceId, @(requests.count));
+
+        for (MXIncomingRoomKeyRequest *request in requests)
+        {
+            // TODO: Add success and failure blocks to acceptAllPendingKeyRequestsFromUser
+            [self acceptKeyRequestFromCryptoThread:request success:nil failure:nil];
+        }
+
+        if (onComplete)
+        {
+            onComplete();
+        }
+    });
+#endif
+}
+
+- (void)acceptKeyRequestFromCryptoThread:(MXIncomingRoomKeyRequest *)keyRequest
+                                 success:(void (^)())success
+                                 failure:(void (^)(NSError *error))failure
+{
+    NSString *userId = keyRequest.userId;
+    NSString *deviceId = keyRequest.deviceId;
+    NSString *requestId = keyRequest.requestId;
+
+    NSDictionary *body = keyRequest.requestBody;
+    NSString *roomId, *alg;
+
+    MXJSONModelSetString(roomId, body[@"room_id"]);
+    MXJSONModelSetString(alg, body[@"algorithm"]);
+
+    // The request is no more pending
+    [incomingRoomKeyRequestManager removePendingKeyRequest:requestId fromUser:userId andDevice:deviceId];
+
+    id<MXDecrypting> decryptor = [self getRoomDecryptor:roomId algorithm:alg];
+    if (decryptor)
+    {
+        [decryptor shareKeysWithDevice:keyRequest success:success failure:failure];
+    }
+    else
+    {
+        NSLog(@"[MXCrypto] acceptPendingKeyRequests: ERROR: unknown alg %@ in room %@", alg, roomId);
+
+        if (failure)
+        {
+            failure(nil);
+        }
+    }
+}
+
 
 #pragma mark - Crypto settings
 - (BOOL)globalBlacklistUnverifiedDevices
@@ -1138,10 +1241,7 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
                                          cryptoQueue:[MXCrypto dispatchQueueForUser:myDevice.userId]
                                          cryptoStore:_store];
 
-        // The list of MXIncomingRoomKeyRequests/MXIncomingRoomKeyRequestCancellations
-        // we received in the current sync.
-        receivedRoomKeyRequests = [NSMutableArray array];
-        receivedRoomKeyRequestCancellations = [NSMutableArray array];
+        incomingRoomKeyRequestManager = [[MXIncomingRoomKeyRequestManager alloc] initWithCrypto:self];
         
         [self registerEventHandlers];
         
@@ -1463,6 +1563,37 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
              };
 }
 
+- (id<MXDecrypting>)getRoomDecryptor:(NSString*)roomId algorithm:(NSString*)algorithm
+{
+    id<MXDecrypting> alg;
+
+    if (roomId)
+    {
+        if (!roomDecryptors[roomId])
+        {
+            roomDecryptors[roomId] = [NSMutableDictionary dictionary];
+        }
+
+        alg = roomDecryptors[roomId][algorithm];
+        if (alg)
+        {
+            return alg;
+        }
+    }
+
+    Class algClass = [[MXCryptoAlgorithms sharedAlgorithms] decryptorClassForAlgorithm:algorithm];
+    if (algClass)
+    {
+        alg = [[algClass alloc] initWithCrypto:self];
+
+        if (roomId)
+        {
+            roomDecryptors[roomId][algorithm] = alg;
+        }
+    }
+
+    return alg;
+}
 
 #pragma mark - Key sharing
 - (void)requestRoomKey:(NSDictionary*)requestBody recipients:(NSArray<NSDictionary<NSString*, NSString*>*>*)recipients
@@ -1728,6 +1859,7 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
 
     if (_cryptoQueue)
     {
+        __weak typeof(self) weakSelf = self;
         switch (event.eventType)
         {
             case MXEventTypeRoomKey:
@@ -1735,7 +1867,7 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
             {
                 // Room key is used for decryption. Switch to the associated queue
                 dispatch_async(_decryptionQueue, ^{
-                    [self onRoomKeyEvent:event];
+                    [weakSelf onRoomKeyEvent:event];
                 });
                 break;
             }
@@ -1743,7 +1875,7 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
             case MXEventTypeNewDevice:
             {
                 dispatch_async(_cryptoQueue, ^{
-                    [self onNewDeviceEvent:event];
+                    [weakSelf onNewDeviceEvent:event];
                 });
                 break;
             }
@@ -1751,7 +1883,11 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
             case MXEventTypeRoomKeyRequest:
             {
                 dispatch_async(_cryptoQueue, ^{
-                    [self onRoomKeyRequestEvent:event];
+                    if (weakSelf)
+                    {
+                        typeof(self) self = weakSelf;
+                        [self->incomingRoomKeyRequestManager onRoomKeyRequestEvent:event];
+                    }
                 });
                 break;
             }
@@ -1869,175 +2005,6 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
             });
         }
     }
-}
-
-/**
- Called when we get an m.room_key_request event.
-
- @param event the key request event.
- */
-- (void)onRoomKeyRequestEvent:(MXEvent*)event
-{
-    NSString *action;
-    MXJSONModelSetString(action, event.content[@"action"]);
-
-    NSLog(@"[MXCrypto] onRoomKeyRequestEvent: action: %@", action);
-
-    if ([action isEqualToString:@"request"])
-    {
-        // Queue it up for now, because they tend to arrive before the room state
-        // events at initial sync, and we want to see if we know anything about the
-        // room before passing them on to the app.
-        MXIncomingRoomKeyRequest *req = [[MXIncomingRoomKeyRequest alloc] initWithMXEvent:event];
-        [receivedRoomKeyRequests addObject:req];
-    }
-    else if ([action isEqualToString:@"request_cancellation"])
-    {
-        MXIncomingRoomKeyRequestCancellation *req = [[MXIncomingRoomKeyRequestCancellation alloc] initWithMXEvent:event];
-        [receivedRoomKeyRequestCancellations addObject:req];
-    }
-}
-
-/**
- Process any m.room_key_request events which were queued up during the
- current sync.
- */
-- (void)processReceivedRoomKeyRequests
-{
-    // we need to grab and clear the queues in the synchronous bit of this method,
-    // so that we don't end up racing with the next /sync.
-    NSArray<MXIncomingRoomKeyRequest*> *requests = [receivedRoomKeyRequests copy];
-    [receivedRoomKeyRequests removeAllObjects];
-    NSArray<MXIncomingRoomKeyRequestCancellation*> *cancellations = [receivedRoomKeyRequestCancellations copy];
-    [receivedRoomKeyRequestCancellations removeAllObjects];
-
-    // Process all of the requests, *then* all of the cancellations.
-    //
-    // This makes sure that if we get a request and its cancellation in the
-    // same /sync result, then we process the request before the
-    // cancellation (and end up with a cancelled request), rather than the
-    // cancellation before the request (and end up with an outstanding
-    // request which should have been cancelled.)
-    for (MXIncomingRoomKeyRequest *req in requests)
-    {
-        [self processReceivedRoomKeyRequest:req];
-    }
-    for (MXIncomingRoomKeyRequestCancellation *cancellation in cancellations)
-    {
-        [self processReceivedRoomKeyRequestCancellation:cancellation];
-    }
-}
-
-/**
- Helper for processReceivedRoomKeyRequests.
-
- @param req the request.
- */
-- (void)processReceivedRoomKeyRequest:(MXIncomingRoomKeyRequest*)req
-{
-    NSString *userId = req.userId;
-    NSString *deviceId = req.deviceId;
-
-    NSDictionary *body = req.requestBody;
-    NSString *roomId, *alg;
-
-    MXJSONModelSetString(roomId, body[@"room_id"]);
-    MXJSONModelSetString(alg, body[@"algorithm"]);
-
-    NSLog(@"[MXCrypto] processReceivedRoomKeyRequest: m.room_key_request from %@:%@ for %@ / %@ (id %@)", userId, deviceId, roomId, body[@"session_id"], req.requestId);
-
-    if ([userId isEqualToString:_matrixRestClient.credentials.userId])
-    {
-        // TODO: determine if we sent this device the keys already: in
-        // which case we can do so again.
-        NSLog(@"[MXCrypto] Ignoring room key request from other user for now");
-        return;
-    }
-
-    // todo: should we queue up requests we don't yet have keys for,
-    // in case they turn up later?
-
-    // if we don't have a decryptor for this room/alg, we don't have
-    // the keys for the requested events, and can drop the requests.
-    id<MXDecrypting> decryptor = [self getRoomDecryptor:roomId algorithm:alg];
-    if (!decryptor)
-    {
-        NSLog(@"[MXCrypto] room key request for unknown alg %@ in room %@", alg, roomId);
-        return;
-    }
-
-    if (![decryptor hasKeysForKeyRequest:req])
-    {
-        NSLog(@"[MXCrypto] room key request for unknown session %@ / %@", roomId, body[@"session_id"]);
-        return;
-    }
-
-    __weak typeof(self) weakSelf = self;
-    __weak typeof(req) weakReq = req;
-
-    // Set up the code to execute when the user accepts to share keys
-    [req setShareCallbackBlock:^{
-        if (weakSelf && weakReq)
-        {
-            typeof(self) self = weakSelf;
-            typeof(req) strongReq = weakReq;
-
-            // Go back to the crypto thread
-            dispatch_async(self.cryptoQueue, ^{
-                // @TODO: add success and failure blocks to [MXIncomingRoomKeyRequest share]
-                [decryptor shareKeysWithDevice:strongReq success:nil failure:nil];
-            });
-        }
-    }];
-
-    // if the device is is verified already, share the keys
-    MXDeviceInfo *device = [_store deviceWithDeviceId:deviceId forUser:userId];
-    if (device && device.verified)
-    {
-        NSLog(@"[MXCrypto] device is already verified: sharing keys");
-        [req share];
-        return;
-    }
-
-    // Broadcast the room key request
-    dispatch_async(dispatch_get_main_queue(), ^{
-        if (weakSelf)
-        {
-            typeof(self) self = weakSelf;
-            [[NSNotificationCenter defaultCenter] postNotificationName:kMXCryptoRoomKeyRequestNotification
-                                                                object:self
-                                                              userInfo:@{
-                                                                         kMXCryptoRoomKeyRequestNotificationRequestKey: req
-                                                                     }];
-        }
-    });
-}
-
-/**
- Helper for processReceivedRoomKeyRequests.
-
- @param cancellation the request cancellation.
- */
-- (void)processReceivedRoomKeyRequestCancellation:(MXIncomingRoomKeyRequestCancellation*)cancellation
-{
-    NSLog(@"m.room_key_request cancellation for %@:%@ (id %@)", cancellation.userId, cancellation.deviceId, cancellation.requestId);
-
-    // Broadcast the room key request cancelation
-    __weak typeof(self) weakSelf = self;
-    dispatch_async(dispatch_get_main_queue(), ^{
-        if (weakSelf)
-        {
-            // we should probably only notify the app of cancellations we told it
-            // about, but we don't currently have a record of that, so we just pass
-            // everything through.
-            typeof(self) self = weakSelf;
-            [[NSNotificationCenter defaultCenter] postNotificationName:kMXCryptoRoomKeyRequestCancellationNotification
-                                                                object:self
-                                                              userInfo:@{
-                                                                         kMXCryptoRoomKeyRequestCancellationNotificationRequestKey: cancellation
-                                                                         }];
-        }
-    });
 }
 
 /**
@@ -2203,48 +2170,6 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
         failure(error);
     }];
 }
-
-/**
- Get a decryptor for a given room and algorithm.
- 
- If we already have a decryptor for the given room and algorithm, return
- it. Otherwise try to instantiate it.
- 
- @param roomId room id for decryptor. If undefined, a temporary decryptor is instantiated.
- @param algorithm the crypto algorithm.
- @return the decryptor.
- */
-- (id<MXDecrypting>)getRoomDecryptor:(NSString*)roomId algorithm:(NSString*)algorithm
-{
-    id<MXDecrypting> alg;
-
-    if (roomId)
-    {
-        if (!roomDecryptors[roomId])
-        {
-            roomDecryptors[roomId] = [NSMutableDictionary dictionary];
-        }
-
-        alg = roomDecryptors[roomId][algorithm];
-        if (alg)
-        {
-            return alg;
-        }
-    }
-
-    Class algClass = [[MXCryptoAlgorithms sharedAlgorithms] decryptorClassForAlgorithm:algorithm];
-    if (algClass)
-    {
-        alg = [[algClass alloc] initWithCrypto:self];
-
-        if (roomId)
-        {
-            roomDecryptors[roomId][algorithm] = alg;
-        }
-    }
-
-    return alg;
-};
 
 #endif
 

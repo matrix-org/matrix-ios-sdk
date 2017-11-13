@@ -39,17 +39,9 @@
     return self;
 }
 
-- (void)setShareCallbackBlock:(void(^)(void))theShareBlock
+- (NSString *)description
 {
-    shareBock = [theShareBlock copy];
-}
-
-- (void)share
-{
-    if (shareBock)
-    {
-        shareBock();
-    }
+    return [NSString stringWithFormat:@"<MXIncomingRoomKeyRequest: %p> requestId %@: from %@:%@", self, _requestId, _userId, _deviceId];
 }
 
 @end

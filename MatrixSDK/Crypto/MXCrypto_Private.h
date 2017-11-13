@@ -131,6 +131,18 @@
  */
 - (NSDictionary*)encryptMessage:(NSDictionary*)payloadFields forDevices:(NSArray<MXDeviceInfo*>*)devices;
 
+/**
+ Get a decryptor for a given room and algorithm.
+
+ If we already have a decryptor for the given room and algorithm, return
+ it. Otherwise try to instantiate it.
+
+ @param roomId room id for decryptor. If undefined, a temporary decryptor is instantiated.
+ @param algorithm the crypto algorithm.
+ @return the decryptor.
+ */
+- (id<MXDecrypting>)getRoomDecryptor:(NSString*)roomId algorithm:(NSString*)algorithm;
+
 
 #pragma mark - Key sharing
 

@@ -106,7 +106,7 @@ FOUNDATION_EXPORT NSString *const kMXCryptoRoomKeyRequestCancellationNotificatio
 /**
  Stop and release crypto objects.
  */
-- (void)close;
+- (void)close:(BOOL)deleteStore;
 
 /**
  Encrypt an event content according to the configuration of the room.
@@ -239,11 +239,11 @@ FOUNDATION_EXPORT NSString *const kMXCryptoRoomKeyRequestCancellationNotificatio
 - (void)resetDeviceKeys;
 
 /**
- Delete the crypto store for the passed credentials.
+ Delete the crypto store.
 
- @param credentials the credentials of the account.
+ @param onComplete the callback called once operation is done.
  */
-+ (void)deleteStoreWithCredentials:(MXCredentials*)credentials;
+- (void)deleteStore:(void (^)())onComplete;
 
 
 #pragma mark - import/export
@@ -291,6 +291,36 @@ FOUNDATION_EXPORT NSString *const kMXCryptoRoomKeyRequestCancellationNotificatio
 - (void)importRoomKeys:(NSData *)keyFile withPassword:(NSString*)password
                success:(void (^)())success
                failure:(void (^)(NSError *error))failure;
+
+
+#pragma mark - Key sharing
+
+/**
+ Get all pending key requests sorted by userId/deviceId pairs.
+
+ @param onComplete A block object called with the list of pending key requests.
+ */
+- (void)pendingKeyRequests:(void (^)(MXUsersDevicesMap<NSArray<MXIncomingRoomKeyRequest *> *> *pendingKeyRequests))onComplete;
+
+/**
+ Send response to a key request.
+
+ @param keyRequest the accepted key request.
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+ */
+- (void)acceptKeyRequest:(MXIncomingRoomKeyRequest *)keyRequest
+                 success:(void (^)())success
+                 failure:(void (^)(NSError *error))failure;
+
+/**
+ Send responses to the key requests made by a user's device.
+
+ @param userId the id of the user.
+ @param deviceId the id of the user's device.
+ @param onComplete A block object called when the operation completes.
+ */
+- (void)acceptAllPendingKeyRequestsFromUser:(NSString*)userId andDevice:(NSString*)deviceId onComplete:(void (^)())onComplete;
 
 
 #pragma mark - Crypto settings
