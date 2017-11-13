@@ -179,9 +179,8 @@
     [self addPendingKeyRequest:req];
 
     // Broadcast the room key request
-        __weak typeof(self) weakSelf = self;
     dispatch_async(dispatch_get_main_queue(), ^{
-        if (weakSelf)
+        if (crypto)
         {
             [[NSNotificationCenter defaultCenter] postNotificationName:kMXCryptoRoomKeyRequestNotification
                                                                 object:crypto
