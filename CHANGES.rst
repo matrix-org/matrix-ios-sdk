@@ -1,3 +1,9 @@
+Changes in Matrix iOS SDK in 0.10.2 (2017-11-13)
+=============================================== 
+ 
+Bug fixes:
+ * A 1:1 invite is not displayed as a direct chat after clearing the cache.
+
 Changes in Matrix iOS SDK in 0.10.1 (2017-10-27)
 ===============================================
 
