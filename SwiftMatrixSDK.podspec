@@ -1,7 +1,7 @@
 Pod::Spec.new do |s|
 
   s.name         = "SwiftMatrixSDK"
-  s.version      = "0.10.1"
+  s.version      = "0.10.3"
   s.summary      = "The iOS SDK to build apps compatible with Matrix (https://www.matrix.org)"
 
   s.description  = <<-DESC
@@ -20,7 +20,7 @@ Pod::Spec.new do |s|
   s.ios.deployment_target = "8.0"
   s.osx.deployment_target = "10.10"
 
-  s.source       = { :git => "https://github.com/matrix-org/matrix-ios-sdk.git", :tag => "v0.10.1" }
+  s.source       = { :git => "https://github.com/matrix-org/matrix-ios-sdk.git", :tag => "v0.10.3" }
   s.source_files = "MatrixSDK", "MatrixSDK/**/*.{h,m,swift}"
   s.exclude_files   = "MatrixSDK/**/MXGoogleAnalytics.{h,m}"
   s.resources    = "MatrixSDK/Data/Store/MXCoreDataStore/*.xcdatamodeld"
