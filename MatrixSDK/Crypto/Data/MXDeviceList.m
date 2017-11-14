@@ -379,7 +379,7 @@
 
 - (void)startCurrentPoolQuery
 {
-    NSLog(@"startCurrentPoolQuery: %@: %@", currentQueryPool, currentQueryPool.userIds);
+    NSLog(@"[MXDeviceList] startCurrentPoolQuery: %@: %@", currentQueryPool, currentQueryPool.userIds);
 
     if (currentQueryPool.userIds)
     {
@@ -388,7 +388,7 @@
         // Add token
         [currentQueryPool downloadKeys:token complete:^(NSDictionary<NSString *,NSDictionary *> *failedUserIds) {
 
-            NSLog(@"startCurrentPoolQuery -> DONE. failedUserIds: %@", failedUserIds);
+            NSLog(@"[MXDeviceList] startCurrentPoolQuery -> DONE. failedUserIds: %@", failedUserIds);
 
             if (token)
             {

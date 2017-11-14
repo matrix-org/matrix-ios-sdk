@@ -393,21 +393,25 @@ typedef void (^MXOnResumeDone)();
     // Can we resume from data available in the cache
     if (_store.isPermanent && self.isEventStreamInitialised && 0 < _store.rooms.count)
     {
-        // Resume the stream (presence will be retrieved during server sync)
-        NSLog(@"[MXSession] Resuming the events stream from %@...", _store.eventStreamToken);
-        NSDate *startDate2 = [NSDate date];
-        [self resume:^{
-            NSLog(@"[MXSession] Events stream resumed in %.0fms", [[NSDate date] timeIntervalSinceDate:startDate2] * 1000);
+        // Start crypto if enabled
+        [self startCrypto:^{
 
-            // Start crypto if enabled
-            [self startCrypto:onServerSyncDone failure:^(NSError *error) {
+            // Resume the stream (presence will be retrieved during server sync)
+            NSLog(@"[MXSession] Resuming the events stream from %@...", _store.eventStreamToken);
+            NSDate *startDate2 = [NSDate date];
+            [self resume:^{
+                NSLog(@"[MXSession] Events stream resumed in %.0fms", [[NSDate date] timeIntervalSinceDate:startDate2] * 1000);
 
-                NSLog(@"[MXSession] Crypto failed to start. Error: %@", error);
-
-                [self setState:MXSessionStateInitialSyncFailed];
-                failure(error);
-
+                onServerSyncDone();
             }];
+
+        }  failure:^(NSError *error) {
+
+            NSLog(@"[MXSession] Crypto failed to start. Error: %@", error);
+
+            [self setState:MXSessionStateInitialSyncFailed];
+            failure(error);
+
         }];
     }
     else
@@ -425,27 +429,27 @@ typedef void (^MXOnResumeDone)();
             // And store him as a common MXUser
             [_store storeUser:_myUser];
 
-            NSLog(@"[MXSession] Do an initial /sync");
+            // Start crypto if enabled
+            [self startCrypto:^{
 
-            // Initial server sync
-            [self serverSyncWithServerTimeout:0 success:^{
+                NSLog(@"[MXSession] Do an initial /sync");
 
-                // Start crypto if enabled
-                [self startCrypto:onServerSyncDone failure:^(NSError *error) {
-
-                    NSLog(@"[MXSession] Crypto failed to start. Error: %@", error);
+                // Initial server sync
+                [self serverSyncWithServerTimeout:0 success:onServerSyncDone failure:^(NSError *error) {
 
                     [self setState:MXSessionStateInitialSyncFailed];
                     failure(error);
 
-                }];
+                } clientTimeout:CLIENT_TIMEOUT_MS setPresence:nil];
 
             } failure:^(NSError *error) {
+
+                NSLog(@"[MXSession] Crypto failed to start. Error: %@", error);
 
                 [self setState:MXSessionStateInitialSyncFailed];
                 failure(error);
 
-            } clientTimeout:CLIENT_TIMEOUT_MS setPresence:nil];
+            }];
 
         } failure:^(NSError *error) {
             
@@ -767,7 +771,7 @@ typedef void (^MXOnResumeDone)();
         NSUInteger nextServerTimeout = SERVER_TIMEOUT_MS;
 
         NSTimeInterval duration = [[NSDate date] timeIntervalSinceDate:startDate];
-        NSLog(@"[MXSession] Received %tu joined rooms, %tu invited rooms, %tu left rooms in %.0fms", syncResponse.rooms.join.count, syncResponse.rooms.invite.count, syncResponse.rooms.leave.count, duration * 1000);
+        NSLog(@"[MXSession] Received %tu joined rooms, %tu invited rooms, %tu left rooms, %tu toDevice events in %.0fms", syncResponse.rooms.join.count, syncResponse.rooms.invite.count, syncResponse.rooms.leave.count, syncResponse.toDevice.events.count, duration * 1000);
 
         // Check whether this is the initial sync
         BOOL isInitialSync = !self.isEventStreamInitialised;
@@ -916,12 +920,18 @@ typedef void (^MXOnResumeDone)();
                                                               userInfo:nil];
         }
 
-        // Handle crypto sync data
+        // Handle device list updates
         if (_crypto && syncResponse.deviceLists)
         {
-            [_crypto handleDeviceListsChanges:syncResponse.deviceLists
-                                 oldSyncToken:_store.eventStreamToken
-                                nextSyncToken:syncResponse.nextBatch];
+            [_crypto handleDeviceListsChanges:syncResponse.deviceLists];
+        }
+
+        // Tell the crypto module to do its processing
+        if (_crypto)
+        {
+            [_crypto onSyncCompleted:_store.eventStreamToken
+                       nextSyncToken:syncResponse.nextBatch
+                          catchingUp:_catchingUp];
         }
 
         // Update live event stream token
