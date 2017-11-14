@@ -160,12 +160,22 @@ FOUNDATION_EXPORT NSString *const kMXCryptoRoomKeyRequestCancellationNotificatio
  Handle list of changed users provided in the /sync response.
 
  @param deviceLists the list of users who have a change in their devices.
- @param oldSyncToken  The 'since' token passed to /sync. nil for the first successful
-                      sync since this client was started.
+ */
+- (void)handleDeviceListsChanges:(MXDeviceListResponse*)deviceLists;
+
+/**
+ Handle the completion of a /sync.
+
+ This is called after the processing of each successful /sync response.
+ It is an opportunity to do a batch process on the information received.
+
+ @param oldSyncToken The 'since' token passed to /sync. nil for the first successful
+                     sync since this client was started.
  @param nextSyncToken The 'next_batch' result from /sync, which will become the 'since'
                       token for the next call to /sync.
+ @param catchingUp YES if we are working our way through a backlog of events after connecting.
  */
-- (void)handleDeviceListsChanges:(MXDeviceListResponse*)deviceLists oldSyncToken:(NSString*)oldSyncToken nextSyncToken:(NSString*)nextSyncToken;
+- (void)onSyncCompleted:(NSString*)oldSyncToken nextSyncToken:(NSString*)nextSyncToken catchingUp:(BOOL)catchingUp;
 
 /**
  Return the device information for an encrypted event.

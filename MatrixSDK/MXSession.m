@@ -767,7 +767,7 @@ typedef void (^MXOnResumeDone)();
         NSUInteger nextServerTimeout = SERVER_TIMEOUT_MS;
 
         NSTimeInterval duration = [[NSDate date] timeIntervalSinceDate:startDate];
-        NSLog(@"[MXSession] Received %tu joined rooms, %tu invited rooms, %tu left rooms in %.0fms", syncResponse.rooms.join.count, syncResponse.rooms.invite.count, syncResponse.rooms.leave.count, duration * 1000);
+        NSLog(@"[MXSession] Received %tu joined rooms, %tu invited rooms, %tu left rooms, %tu toDevice events in %.0fms", syncResponse.rooms.join.count, syncResponse.rooms.invite.count, syncResponse.rooms.leave.count, syncResponse.toDevice.events.count, duration * 1000);
 
         // Check whether this is the initial sync
         BOOL isInitialSync = !self.isEventStreamInitialised;
@@ -916,12 +916,18 @@ typedef void (^MXOnResumeDone)();
                                                               userInfo:nil];
         }
 
-        // Handle crypto sync data
+        // Handle device list updates
         if (_crypto && syncResponse.deviceLists)
         {
-            [_crypto handleDeviceListsChanges:syncResponse.deviceLists
-                                 oldSyncToken:_store.eventStreamToken
-                                nextSyncToken:syncResponse.nextBatch];
+            [_crypto handleDeviceListsChanges:syncResponse.deviceLists];
+        }
+
+        // Tell the crypto module to do its processing
+        if (_crypto)
+        {
+            [_crypto onSyncCompleted:_store.eventStreamToken
+                       nextSyncToken:syncResponse.nextBatch
+                          catchingUp:_catchingUp];
         }
 
         // Update live event stream token

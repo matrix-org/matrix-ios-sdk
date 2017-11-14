@@ -554,8 +554,7 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
     return operation;
 }
 
-// This method is equivalent to the Crypto.prototype._onSyncCompleted in matrix-js-sdk
-- (void)handleDeviceListsChanges:(MXDeviceListResponse*)deviceLists oldSyncToken:(NSString*)oldSyncToken nextSyncToken:(NSString*)nextSyncToken
+- (void)handleDeviceListsChanges:(MXDeviceListResponse*)deviceLists
 {
 #ifdef MX_CRYPTO
 
@@ -567,37 +566,42 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
 
     NSLog(@"[MXCrypto] handleDeviceListsChanges:\nchanges: %@\nleft: %@", deviceLists.changed, deviceLists.left);
 
-    BOOL isCatchingUp = mxSession.catchingUp;
-
     dispatch_async(_cryptoQueue, ^{
 
         // Flag users to refresh
         for (NSString *userId in deviceLists.changed)
         {
-            // TODO: Should we filter to users who have e2e rooms with us?
             [_deviceList invalidateUserDeviceList:userId];
         }
 
         for (NSString *userId in deviceLists.left)
         {
-            // TODO: Should we filter to users who have e2e rooms with us?
             [_deviceList stopTrackingDeviceList:userId];
         }
 
+        // don't flush the outdated device list yet - we do it once we finish
+        // processing the sync.
+    });
+
+#endif
+}
+
+- (void)onSyncCompleted:(NSString *)oldSyncToken nextSyncToken:(NSString *)nextSyncToken catchingUp:(BOOL)catchingUp
+{
+#ifdef MX_CRYPTO
+
+    dispatch_async(_cryptoQueue, ^{
+
         if (!oldSyncToken)
         {
-            // an initialsync
-            // matrix-js-sdk make the device annoucement here.
-            // matrix-ios-sdk does it within the enableCrypto method call flow.
-            // TODO: do like matrix-js-sdk if it worths
-            //[self sendNewDeviceEvents];
+            NSLog(@"[MXCrypto] onSyncCompleted: Completed initial sync");
 
             // If we have a deviceSyncToken, we can tell the deviceList to
             // invalidate devices which have changed since then.
             NSString *oldDeviceSyncToken = _store.deviceSyncToken;
             if (oldDeviceSyncToken)
             {
-                NSLog(@"[MXCrypto] handleDeviceListsChanges: Completed initialsync; invalidating device list from deviceSyncToken: %@", oldDeviceSyncToken);
+                NSLog(@"[MXCrypto] onSyncCompleted: invalidating device list from deviceSyncToken: %@", oldDeviceSyncToken);
 
                 [self invalidateDeviceListsSince:oldDeviceSyncToken to:nextSyncToken success:^() {
 
@@ -607,7 +611,7 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
                 } failure:^(NSError *error) {
 
                     // If that failed, we fall back to invalidating everyone.
-                    NSLog(@"[MXCrypto] handleDeviceListsChanges: Error fetching changed device list. Error: %@", error);
+                    NSLog(@"[MXCrypto] onSyncCompleted: Error fetching changed device list. Error: %@", error);
                     [_deviceList invalidateAllDeviceLists];
                 }];
             }
@@ -637,7 +641,7 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
         // (https://github.com/vector-im/riot-web/issues/2782).
         // Also, do not upload them if we have not announced our device yet.
         // They will be uploaded just before the announcement in [self start].
-        if (!isCatchingUp && _store.deviceAnnounced)
+        if (!catchingUp && _store.deviceAnnounced)
         {
             [self maybeUploadOneTimeKeys:nil failure:nil];
             [incomingRoomKeyRequestManager processReceivedRoomKeyRequests];
@@ -1659,7 +1663,7 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
 
         NSLog(@"[MXCrypto] invalidateDeviceListsSince: got key changes since %@: changed: %@\nleft: %@", oldSyncToken, deviceLists.changed, deviceLists.left);
 
-        [self handleDeviceListsChanges:deviceLists oldSyncToken:oldSyncToken nextSyncToken:lastKnownSyncToken];
+        [self handleDeviceListsChanges:deviceLists];
 
         success();
 
