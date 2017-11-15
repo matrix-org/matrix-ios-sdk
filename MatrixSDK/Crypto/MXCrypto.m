@@ -675,6 +675,23 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
     return device;
 }
 
+- (void)deviceWithDeviceId:(NSString *)deviceId ofUser:(NSString *)userId complete:(void (^)(MXDeviceInfo *))complete
+{
+#ifdef MX_CRYPTO
+    dispatch_async(_cryptoQueue, ^{
+
+        MXDeviceInfo *device = [self.deviceList storedDevice:userId deviceId:deviceId];
+
+        dispatch_async(dispatch_get_main_queue(), ^{
+            complete(device);
+        });
+
+    });
+#else
+    complete(nil);
+#endif
+}
+
 - (void)devicesForUser:(NSString*)userId complete:(void (^)(NSArray<MXDeviceInfo*> *devices))complete
 {
 #ifdef MX_CRYPTO
