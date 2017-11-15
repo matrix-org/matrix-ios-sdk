@@ -1132,6 +1132,7 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
 #endif
 }
 
+#ifdef MX_CRYPTO
 - (void)acceptKeyRequestFromCryptoThread:(MXIncomingRoomKeyRequest *)keyRequest
                                  success:(void (^)())success
                                  failure:(void (^)(NSError *error))failure
@@ -1166,6 +1167,7 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
         });
     }
 }
+#endif
 
 - (void)ignoreKeyRequest:(MXIncomingRoomKeyRequest *)keyRequest onComplete:(void (^)())onComplete
 {
@@ -1209,6 +1211,7 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
 #endif
 }
 
+#ifdef MX_CRYPTO
 - (void)ignoreKeyRequestFromCryptoThread:(MXIncomingRoomKeyRequest *)keyRequest
 {
     NSString *userId = keyRequest.userId;
@@ -1218,6 +1221,7 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
     // Make request no more pending
     [incomingRoomKeyRequestManager removePendingKeyRequest:requestId fromUser:userId andDevice:deviceId];
 }
+#endif
 
 
 #pragma mark - Crypto settings

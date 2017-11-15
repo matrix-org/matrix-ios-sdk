@@ -20,6 +20,10 @@
 #import "MXIncomingRoomKeyRequest.h"
 #import "MXIncomingRoomKeyRequestCancellation.h"
 
+#import "MXSDKOptions.h"
+
+#ifdef MX_CRYPTO
+
 @class MXCrypto;
 
 /**
@@ -69,3 +73,6 @@
 @property (nonatomic, readonly) MXUsersDevicesMap<NSArray<MXIncomingRoomKeyRequest *> *> *pendingKeyRequests;
 
 @end
+
+#endif
+

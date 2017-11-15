@@ -18,6 +18,8 @@
 
 #import "MXCrypto_Private.h"
 
+#ifdef MX_CRYPTO
+
 @interface MXIncomingRoomKeyRequestManager ()
 {
     MXCrypto *crypto;
@@ -285,3 +287,5 @@
 }
 
 @end
+
+#endif

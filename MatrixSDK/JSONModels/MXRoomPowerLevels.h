@@ -117,7 +117,7 @@
  Helper to get the minimum power level the user must have to send conditional notifications (like "@room").
 
  @param key the notification key (like "room").
- @param the default value to return if the information is not available.
+ @param defaultPower the default value to return if the information is not available.
  @return the required minimum power level.
  */
 - (NSInteger)minimumPowerLevelForNotifications:(NSString*)key defaultPower:(NSInteger)defaultPower;
