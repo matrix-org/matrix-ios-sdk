@@ -1167,6 +1167,58 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
     }
 }
 
+- (void)ignoreKeyRequest:(MXIncomingRoomKeyRequest *)keyRequest onComplete:(void (^)())onComplete
+{
+#ifdef MX_CRYPTO
+    dispatch_async(_decryptionQueue, ^{
+
+        NSLog(@"[MXCrypto] ignoreKeyRequest: %@", keyRequest);
+        [self ignoreKeyRequestFromCryptoThread:keyRequest];
+
+        dispatch_async(dispatch_get_main_queue(), ^{
+            if (onComplete)
+            {
+                onComplete();
+            }
+        });
+    });
+#endif
+}
+
+- (void)ignoreAllPendingKeyRequestsFromUser:(NSString *)userId andDevice:(NSString *)deviceId onComplete:(void (^)())onComplete
+{
+#ifdef MX_CRYPTO
+    dispatch_async(_decryptionQueue, ^{
+
+        NSArray<MXIncomingRoomKeyRequest *> *requests = [incomingRoomKeyRequestManager.pendingKeyRequests objectForDevice:deviceId forUser:userId];
+
+        NSLog(@"[MXCrypto] ignoreAllPendingKeyRequestsFromUser from %@:%@. %@ pending requests", userId, deviceId, @(requests.count));
+
+        for (MXIncomingRoomKeyRequest *request in requests)
+        {
+            [self ignoreKeyRequestFromCryptoThread:request];
+        }
+
+        dispatch_async(dispatch_get_main_queue(), ^{
+            if (onComplete)
+            {
+                onComplete();
+            }
+        });
+    });
+#endif
+}
+
+- (void)ignoreKeyRequestFromCryptoThread:(MXIncomingRoomKeyRequest *)keyRequest
+{
+    NSString *userId = keyRequest.userId;
+    NSString *deviceId = keyRequest.deviceId;
+    NSString *requestId = keyRequest.requestId;
+
+    // Make request no more pending
+    [incomingRoomKeyRequestManager removePendingKeyRequest:requestId fromUser:userId andDevice:deviceId];
+}
+
 
 #pragma mark - Crypto settings
 - (BOOL)globalBlacklistUnverifiedDevices
