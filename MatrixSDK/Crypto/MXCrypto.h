@@ -341,6 +341,22 @@ FOUNDATION_EXPORT NSString *const kMXCryptoRoomKeyRequestCancellationNotificatio
  */
 - (void)acceptAllPendingKeyRequestsFromUser:(NSString*)userId andDevice:(NSString*)deviceId onComplete:(void (^)())onComplete;
 
+/**
+ Ignore a key request.
+
+ @param keyRequest the key request to ignore
+ @param onComplete A block object called when the operation completes.
+ */
+- (void)ignoreKeyRequest:(MXIncomingRoomKeyRequest *)keyRequest onComplete:(void (^)())onComplete;
+
+/**
+ Ignore all pending key requests made by a user's device.
+
+ @param userId the id of the user.
+ @param deviceId the id of the user's device.
+ @param onComplete A block object called when the operation completes.
+ */
+- (void)ignoreAllPendingKeyRequestsFromUser:(NSString*)userId andDevice:(NSString*)deviceId onComplete:(void (^)())onComplete;
 
 #pragma mark - Crypto settings
 
