@@ -26,24 +26,24 @@
 /**
  The user requesting the key.
  */
-@property (nonatomic, readonly) NSString *userId;
+@property (nonatomic) NSString *userId;
 
 /**
  The device requesting the key.
  */
-@property (nonatomic, readonly) NSString *deviceId;
+@property (nonatomic) NSString *deviceId;
 
 /**
  The requestId unique id for the request.
  */
-@property (nonatomic, readonly) NSString *requestId;
+@property (nonatomic) NSString *requestId;
 
 /**
  The parameters of a room key request. The details of the request may
  vary with the crypto algorithm, but the management and storage layers for
  outgoing requests expect it to have 'room_id' and 'session_id' properties
  */
-@property (nonatomic, readonly) NSDictionary *requestBody;
+@property (nonatomic) NSDictionary *requestBody;
 
 /**
  Create the `MXIncomingRoomKeyRequest` object from a Matrix m.room_key_request event.

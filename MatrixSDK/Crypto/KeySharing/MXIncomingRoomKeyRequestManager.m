@@ -24,9 +24,6 @@
 {
     MXCrypto *crypto;
 
-    // See `MXIncomingRoomKeyRequestManager.pendingKeyRequests` property
-    MXUsersDevicesMap<NSMutableArray<MXIncomingRoomKeyRequest *> *> *pendingKeyRequests;
-    
     // The list of MXIncomingRoomKeyRequests/MXIncomingRoomKeyRequestCancellations
     // we received in the current sync.
     NSMutableArray<MXIncomingRoomKeyRequest*> *receivedRoomKeyRequests;
@@ -44,8 +41,6 @@
     {
         crypto = theCrypto;
 
-        pendingKeyRequests = [[MXUsersDevicesMap alloc] init];
-
         // The list of MXIncomingRoomKeyRequests/MXIncomingRoomKeyRequestCancellations
         // we received in the current sync.
         receivedRoomKeyRequests = [NSMutableArray array];
@@ -56,9 +51,6 @@
 
 - (void)close
 {
-    [pendingKeyRequests removeAllObjects];
-    pendingKeyRequests = nil;
-
     [receivedRoomKeyRequests removeAllObjects];
     receivedRoomKeyRequests = nil;
 
@@ -171,14 +163,14 @@
     }
 
     // check if we already have this request
-    if ([self pendingKeyRequest:requestId fromUser:userId andDevice:deviceId])
+    if ([crypto.store incomingRoomKeyRequestWithRequestId:requestId fromUser:userId andDevice:deviceId])
     {
         NSLog(@"[MXIncomingRoomKeyRequestManager] Already have this key request, ignoring");
         return;
     }
 
     // Add it to pending key requests
-    [self addPendingKeyRequest:req];
+    [crypto.store storeIncomingRoomKeyRequest:req];
 
     // Broadcast the room key request
     dispatch_async(dispatch_get_main_queue(), ^{
@@ -206,7 +198,7 @@
 
     NSLog(@"[MXIncomingRoomKeyRequestManager] processReceivedRoomKeyRequestCancellation: m.room_key_request cancellation for %@:%@ (id %@)", userId, deviceId, requestId);
 
-    if (![self pendingKeyRequest:requestId fromUser:userId andDevice:deviceId])
+    if (![crypto.store incomingRoomKeyRequestWithRequestId:requestId fromUser:userId andDevice:deviceId])
     {
         // Do not notify cancellations already notified
         NSLog(@"[MXIncomingRoomKeyRequestManager] handleKeyRequest: Already cancelled this key request, ignoring");
@@ -230,60 +222,14 @@
     });
 }
 
-/**
- Add a key request to the pending queue.
- */
-- (void)addPendingKeyRequest:(MXIncomingRoomKeyRequest*)keyRequest
-{
-    NSMutableArray<MXIncomingRoomKeyRequest *> *requests = [pendingKeyRequests objectForDevice:keyRequest.deviceId forUser:keyRequest.userId];
-    if (!requests)
-    {
-        requests = [NSMutableArray array];
-        [pendingKeyRequests setObject:requests forUser:keyRequest.userId andDevice:keyRequest.deviceId];
-    }
-    [requests addObject:keyRequest];
-}
-
 - (void)removePendingKeyRequest:(NSString*)requestId fromUser:(NSString*)userId andDevice:(NSString*)deviceId
 {
-    MXIncomingRoomKeyRequest *keyRequest = [self pendingKeyRequest:requestId fromUser:userId andDevice:deviceId];
-    if (keyRequest)
-    {
-        NSMutableArray<MXIncomingRoomKeyRequest *> *requests = [pendingKeyRequests objectForDevice:deviceId forUser:userId];
-        [requests removeObject:keyRequest];
-
-        if (requests.count == 0)
-        {
-            [pendingKeyRequests removeObjectForUser:userId andDevice:deviceId];
-        }
-    }
-}
-
-/**
- Get the pending key request matching given ids.
- */
-- (MXIncomingRoomKeyRequest*)pendingKeyRequest:(NSString*)requestId fromUser:(NSString*)userId andDevice:(NSString*)deviceId
-{
-    MXIncomingRoomKeyRequest *keyRequest;
-
-    NSMutableArray<MXIncomingRoomKeyRequest *> *requests = [pendingKeyRequests objectForDevice:deviceId forUser:userId];
-    for (MXIncomingRoomKeyRequest *request in requests)
-    {
-        if ([request.requestId isEqualToString:requestId])
-        {
-            keyRequest = request;
-            break;
-        }
-    }
-
-    return keyRequest;
+    [crypto.store deleteIncomingRoomKeyRequest:requestId fromUser:userId andDevice:deviceId];
 }
 
 - (MXUsersDevicesMap<NSArray<MXIncomingRoomKeyRequest *> *> *)pendingKeyRequests
 {
-    // Return a copy of the working object for thread-safe.
-    // We just need to copy the NSArray. MXIncomingRoomKeyRequest objects are immutable
-    return [pendingKeyRequests copy];
+    return [crypto.store incomingRoomKeyRequests];
 }
 
 @end
