@@ -524,7 +524,7 @@
 
         inboundGroupSessionKey = @{
                                    @"chain_index": @(messageIndex),
-                                   @"key": sessionData.JSONDictionary,
+                                   @"key": sessionData.sessionKey,
                                    @"forwarding_curve25519_key_chain": forwardingCurve25519KeyChain ? forwardingCurve25519KeyChain : @[],
                                    @"sender_claimed_ed25519_key": senderEd25519Key ? senderEd25519Key : [NSNull null]
                                    };
