@@ -186,6 +186,15 @@ FOUNDATION_EXPORT NSString *const kMXCryptoRoomKeyRequestCancellationNotificatio
 - (MXDeviceInfo *)eventDeviceInfo:(MXEvent*)event;
 
 /**
+ Get the stored device keys for a user's device.
+
+ @param deviceId the id of the user's device.
+ @param userId the user id.
+ @param complete a block called with the device keys. nil if not found.
+ */
+- (void)deviceWithDeviceId:(NSString*)deviceId ofUser:(NSString*)userId complete:(void (^)(MXDeviceInfo *device))complete;
+
+/**
  Get the stored device keys for a user.
 
  @param userId the user to list keys for.

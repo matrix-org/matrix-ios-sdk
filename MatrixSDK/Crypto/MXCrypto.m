@@ -675,6 +675,23 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
     return device;
 }
 
+- (void)deviceWithDeviceId:(NSString *)deviceId ofUser:(NSString *)userId complete:(void (^)(MXDeviceInfo *))complete
+{
+#ifdef MX_CRYPTO
+    dispatch_async(_cryptoQueue, ^{
+
+        MXDeviceInfo *device = [self.deviceList storedDevice:userId deviceId:deviceId];
+
+        dispatch_async(dispatch_get_main_queue(), ^{
+            complete(device);
+        });
+
+    });
+#else
+    complete(nil);
+#endif
+}
+
 - (void)devicesForUser:(NSString*)userId complete:(void (^)(NSArray<MXDeviceInfo*> *devices))complete
 {
 #ifdef MX_CRYPTO
@@ -1105,10 +1122,12 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
             [self acceptKeyRequestFromCryptoThread:request success:nil failure:nil];
         }
 
-        if (onComplete)
-        {
-            onComplete();
-        }
+        dispatch_async(dispatch_get_main_queue(), ^{
+            if (onComplete)
+            {
+                onComplete();
+            }
+        });
     });
 #endif
 }
@@ -1137,12 +1156,14 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
     }
     else
     {
-        NSLog(@"[MXCrypto] acceptPendingKeyRequests: ERROR: unknown alg %@ in room %@", alg, roomId);
+        dispatch_async(dispatch_get_main_queue(), ^{
 
-        if (failure)
-        {
-            failure(nil);
-        }
+            NSLog(@"[MXCrypto] acceptPendingKeyRequests: ERROR: unknown alg %@ in room %@", alg, roomId);
+            if (failure)
+            {
+                failure(nil);
+            }
+        });
     }
 }
 

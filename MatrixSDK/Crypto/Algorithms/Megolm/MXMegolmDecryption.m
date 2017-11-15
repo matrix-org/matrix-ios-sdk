@@ -273,7 +273,7 @@
                                 success:^(MXUsersDevicesMap<MXOlmSessionResult *> *results)
      {
 
-         MXOlmSessionResult *olmSessionResult = [results objectForDevice:deviceId forUser:deviceId];
+         MXOlmSessionResult *olmSessionResult = [results objectForDevice:deviceId forUser:userId];
          if (!olmSessionResult.sessionId)
          {
              // no session with this device, probably because there
