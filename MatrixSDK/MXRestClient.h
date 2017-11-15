@@ -1877,6 +1877,7 @@ typedef enum : NSUInteger
 
  @param eventType the type of event to send
  @param contentMap content to send. Map from user_id to device_id to content dictionary.
+ @param txnId the transaction id to use. If nil, one will be generated.
 
  @param success A block object called when the operation succeeds.
  @param failure A block object called when the operation fails.
@@ -1884,6 +1885,7 @@ typedef enum : NSUInteger
  @return a MXHTTPOperation instance.
  */
 - (MXHTTPOperation*)sendToDevice:(NSString*)eventType contentMap:(MXUsersDevicesMap<NSDictionary*>*)contentMap
+                           txnId:(NSString*)txnId
                          success:(void (^)())success
                          failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 

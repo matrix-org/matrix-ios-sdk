@@ -1380,7 +1380,7 @@
         [roomFromBobPOV.liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
 
             // Try to decrypt the event again
-            [event setClearData:nil keysProved:nil keysClaimed:nil];
+            [event setClearData:nil senderCurve25519Key:nil claimedEd25519Key:nil forwardingCurve25519KeyChain:nil];
             BOOL b = [bobSession decryptEvent:event inTimeline:roomFromBobPOV.liveTimeline.timelineId];
 
             // It must fail
@@ -1448,7 +1448,7 @@
             // We still must be able to decrypt the event
             // ie, the implementation must have ignored the new room key with the advanced outbound group
             // session key
-            [event setClearData:nil keysProved:nil keysClaimed:nil];
+            [event setClearData:nil senderCurve25519Key:nil claimedEd25519Key:nil forwardingCurve25519KeyChain:nil];
             BOOL b = [bobSession decryptEvent:event inTimeline:nil];
 
             XCTAssert(b);
@@ -1499,7 +1499,7 @@
             [bobCryptoStore removeInboundGroupSessionWithId:sessionId andSenderKey:toDeviceEvent.senderKey];
 
             // So that we cannot decrypt it anymore right now
-            [event setClearData:nil keysProved:nil keysClaimed:nil];
+            [event setClearData:nil senderCurve25519Key:nil claimedEd25519Key:nil forwardingCurve25519KeyChain:nil];
             BOOL b = [bobSession decryptEvent:event inTimeline:nil];
 
             XCTAssertFalse(b);
@@ -2189,6 +2189,132 @@
         
     }];
 }
+
+/*
+ Check kMXCryptoRoomKeyRequestNotification and data at that moment.
+
+ 1 - Create a first MXSession for Alice with a device
+ 2 - Close it by keeping her credentials
+ 3 - Recreate a second MXSession, aliceSession2, for Alice with a new device
+ 4 - Send a message to a room with aliceSession2
+ 5 - Instantiante a MXRestclient, alice1MatrixRestClient, with the credentials of
+     the 1st device (kept at step #2)
+ 6 - Make alice1MatrixRestClient make a fake room key request for the message sent at step #4
+ 7 - aliceSession2 must receive kMXCryptoRoomKeyRequestNotification
+ 8 - Do checks
+ 9 - Check [MXSession.crypto pendingKeyRequests:] result
+ 10 - Check [MXSession.crypto acceptAllPendingKeyRequestsFromUser:] with a wrong userId:deviceId pair
+ 11 - Check [MXSession.crypto acceptAllPendingKeyRequestsFromUser:] with a valid userId:deviceId pair
+ */
+- (void)testIncomingRoomKeyRequest
+{
+    // 1 - Create a first MXSession for Alice with a device
+    [matrixSDKTestsE2EData doE2ETestWithAliceInARoom:self readyToTest:^(MXSession *aliceSession, NSString *roomId, XCTestExpectation *expectation) {
+
+        // 2 - Close it by keeping her credentials
+        MXCredentials *alice1Credentials = aliceSession.matrixRestClient.credentials;
+
+        // 3 - Recreate a second MXSession, aliceSession2, for Alice with a new device
+        // Relog alice to simulate a new device
+        [MXSDKOptions sharedInstance].enableCryptoWhenStartingMXSession = YES;
+        [matrixSDKTestsData relogUserSessionWithNewDevice:aliceSession withPassword:MXTESTS_ALICE_PWD onComplete:^(MXSession *aliceSession2) {
+            [MXSDKOptions sharedInstance].enableCryptoWhenStartingMXSession = NO;
+
+            aliceSessionToClose = aliceSession2;
+            aliceSession2.crypto.warnOnUnknowDevices = NO;
+
+            MXRoom *roomFromAlice2POV = [aliceSession2 roomWithRoomId:roomId];
+
+            // 4 - Send a message to a room with aliceSession2
+            NSString *messageFromAlice = @"Hello I'm still Alice!";
+            [roomFromAlice2POV sendTextMessage:messageFromAlice success:nil failure:^(NSError *error) {
+                XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                [expectation fulfill];
+            }];
+
+            [roomFromAlice2POV.liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage, kMXEventTypeStringRoomEncrypted] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
+
+                XCTAssertEqual(0, [self checkEncryptedEvent:event roomId:roomId clearMessage:messageFromAlice senderSession:aliceSession2]);
+
+                // 5 - Instantiante a MXRestclient, alice1MatrixRestClient
+                MXRestClient *alice1MatrixRestClient = [[MXRestClient alloc] initWithCredentials:alice1Credentials andOnUnrecognizedCertificateBlock:nil];
+
+                // 6 - Make alice1MatrixRestClient make a fake room key request for the message sent at step #4
+                NSDictionary *requestMessage = @{
+                                                 @"action": @"request",
+                                                 @"body": @{
+                                                         @"algorithm": event.wireContent[@"algorithm"],
+                                                         @"room_id": roomId,
+                                                         @"sender_key": event.wireContent[@"sender_key"],
+                                                         @"session_id": event.wireContent[@"session_id"]
+                                                         },
+                                                 @"request_id": @"my_request_id",
+                                                 @"requesting_device_id": alice1Credentials.deviceId
+                                                 };
+
+                MXUsersDevicesMap<NSDictionary*> *contentMap = [[MXUsersDevicesMap alloc] init];
+                [contentMap setObject:requestMessage forUser:alice1Credentials.userId andDevice:@"*"];
+
+                [alice1MatrixRestClient sendToDevice:kMXEventTypeStringRoomKeyRequest contentMap:contentMap txnId:requestMessage[@"request_id"] success:nil failure:^(NSError *error) {
+                    XCTFail(@"The operation should not fail - NSError: %@", error);
+                    [expectation fulfill];
+                }];
+
+                // 7 - aliceSession2 must receive kMXCryptoRoomKeyRequestNotification
+                id observer;
+                observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXCryptoRoomKeyRequestNotification
+                                                                             object:aliceSession2.crypto
+                                                                              queue:[NSOperationQueue mainQueue]
+                                                                         usingBlock:^(NSNotification *notif)
+                            {
+                                [[NSNotificationCenter defaultCenter] removeObserver:observer];
+
+                                // 8 - Do checks
+                                MXIncomingRoomKeyRequest *incomingKeyRequest = notif.userInfo[kMXCryptoRoomKeyRequestNotificationRequestKey];
+                                XCTAssert(incomingKeyRequest);
+                                XCTAssert([incomingKeyRequest isKindOfClass:MXIncomingRoomKeyRequest.class], @"Notified object must be indeed a MXIncomingRoomKeyRequest object. Not %@", incomingKeyRequest);
+
+                                XCTAssertEqualObjects(incomingKeyRequest.requestId, requestMessage[@"request_id"]);
+                                XCTAssertEqualObjects(incomingKeyRequest.userId, alice1Credentials.userId);
+                                XCTAssertEqualObjects(incomingKeyRequest.deviceId, alice1Credentials.deviceId);
+                                XCTAssert(incomingKeyRequest.requestBody);
+
+                                //9 - Check [MXSession.crypto pendingKeyRequests:] result
+                                [aliceSession2.crypto pendingKeyRequests:^(MXUsersDevicesMap<NSArray<MXIncomingRoomKeyRequest *> *> *pendingKeyRequests) {
+
+                                    XCTAssertEqual(pendingKeyRequests.count, 1);
+
+                                    MXIncomingRoomKeyRequest *keyRequest = [pendingKeyRequests objectForDevice:alice1Credentials.deviceId forUser:alice1Credentials.userId][0];
+
+                                    // Should be the same ref. No need to do fine checks
+                                    XCTAssertEqual(keyRequest, incomingKeyRequest);
+
+                                    // 10 - Check [MXSession.crypto acceptAllPendingKeyRequestsFromUser:] with a wrong userId:deviceId pair
+                                    [aliceSession2.crypto acceptAllPendingKeyRequestsFromUser:alice1Credentials.userId andDevice:@"DEADBEEF" onComplete:^{
+
+                                        [aliceSession2.crypto pendingKeyRequests:^(MXUsersDevicesMap<NSArray<MXIncomingRoomKeyRequest *> *> *pendingKeyRequests2) {
+
+                                            XCTAssertEqual(pendingKeyRequests2.count, 1, @"The pending request should be still here");
+
+                                            // 11 - Check [MXSession.crypto acceptAllPendingKeyRequestsFromUser:] with a valid userId:deviceId pair
+                                            [aliceSession2.crypto acceptAllPendingKeyRequestsFromUser:alice1Credentials.userId andDevice:alice1Credentials.deviceId onComplete:^{
+
+                                                [aliceSession2.crypto pendingKeyRequests:^(MXUsersDevicesMap<NSArray<MXIncomingRoomKeyRequest *> *> *pendingKeyRequests3) {
+
+                                                    XCTAssertEqual(pendingKeyRequests3.count, 0, @"There should be no more pending request");
+
+                                                    [expectation fulfill];
+                                                }];
+                                            }];
+                                        }];
+                                    }];
+                                }];
+                            }];
+            }];
+        }];
+    }];
+}
+
 
 @end
 

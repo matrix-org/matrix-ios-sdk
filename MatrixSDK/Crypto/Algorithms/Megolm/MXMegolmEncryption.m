@@ -332,9 +332,12 @@
                                   sessionKey:[crypto.olmDevice sessionKeyForOutboundGroupSession:sessionId]
                                       roomId:roomId
                                    senderKey:crypto.olmDevice.deviceCurve25519Key
+                forwardingCurve25519KeyChain:@[]
                                  keysClaimed:@{
                                                @"ed25519": crypto.olmDevice.deviceEd25519Key
-                                               }];
+                                               }
+                                exportFormat:NO
+     ];
 
     return [[MXOutboundSessionInfo alloc] initWithSessionID:sessionId];
 }
@@ -407,9 +410,10 @@
 
         if (haveTargets)
         {
-            NSLog(@"[MXMegolEncryption] shareKey. Actually share with %tu users and %tu devices: %@", contentMap.userIds.count, contentMap.count, contentMap);
+            //NSLog(@"[MXMegolEncryption] shareKey. Actually share with %tu users and %tu devices: %@", contentMap.userIds.count, contentMap.count, contentMap);
+            NSLog(@"[MXMegolEncryption] shareKey. Actually share with %tu users and %tu devices", contentMap.userIds.count, contentMap.count);
 
-            MXHTTPOperation *operation2 = [crypto.matrixRestClient sendToDevice:kMXEventTypeStringRoomEncrypted contentMap:contentMap success:^{
+            MXHTTPOperation *operation2 = [crypto.matrixRestClient sendToDevice:kMXEventTypeStringRoomEncrypted contentMap:contentMap txnId:nil success:^{
 
                 // Add the devices we have shared with to session.sharedWithDevices.
                 //

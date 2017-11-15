@@ -81,6 +81,11 @@
     return self;
 }
 
+- (void)close
+{
+    crypto = nil;
+}
+
 - (MXHTTPOperation*)downloadKeys:(NSArray<NSString*>*)userIds forceDownload:(BOOL)forceDownload
                          success:(void (^)(MXUsersDevicesMap<MXDeviceInfo*> *usersDevicesInfoMap))success
                          failure:(void (^)(NSError *error))failure
@@ -204,6 +209,11 @@
 - (NSArray<MXDeviceInfo *> *)storedDevicesForUser:(NSString *)userId
 {
     return [crypto.store devicesForUser:userId].allValues;
+}
+
+- (MXDeviceInfo*)storedDevice:(NSString*)userId deviceId:(NSString*)deviceId
+{
+    return [crypto.store devicesForUser:userId][deviceId];
 }
 
 - (MXDeviceInfo *)deviceWithIdentityKey:(NSString *)senderKey forUser:(NSString *)userId andAlgorithm:(NSString *)algorithm
@@ -369,7 +379,7 @@
 
 - (void)startCurrentPoolQuery
 {
-    NSLog(@"startCurrentPoolQuery: %@: %@", currentQueryPool, currentQueryPool.userIds);
+    NSLog(@"[MXDeviceList] startCurrentPoolQuery: %@: %@", currentQueryPool, currentQueryPool.userIds);
 
     if (currentQueryPool.userIds)
     {
@@ -378,7 +388,7 @@
         // Add token
         [currentQueryPool downloadKeys:token complete:^(NSDictionary<NSString *,NSDictionary *> *failedUserIds) {
 
-            NSLog(@"startCurrentPoolQuery -> DONE. failedUserIds: %@", failedUserIds);
+            NSLog(@"[MXDeviceList] startCurrentPoolQuery -> DONE. failedUserIds: %@", failedUserIds);
 
             if (token)
             {

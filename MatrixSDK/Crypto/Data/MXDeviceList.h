@@ -84,6 +84,11 @@ typedef enum : NSUInteger
 - (id)initWithCrypto:(MXCrypto*)crypto;
 
 /**
+ Called when the client is stopped.
+ */
+- (void)close;
+
+/**
  Download the device keys for a list of users and stores the keys in the MXStore.
 
  @param userIds The users to fetch.
@@ -105,6 +110,16 @@ typedef enum : NSUInteger
  @return the list of devices.
  */
 - (NSArray<MXDeviceInfo*>*)storedDevicesForUser:(NSString*)userId;
+
+/**
+ Get the stored keys for a single device.
+
+ @param userId the user.
+ @param deviceId the device.
+
+ @return the device, or nil if we don't know about this device
+ */
+- (MXDeviceInfo*)storedDevice:(NSString*)userId deviceId:(NSString*)deviceId;
 
 /**
  Find a device by curve25519 identity key

@@ -5080,11 +5080,18 @@ MXAuthAction;
 
 
 #pragma mark - Direct-to-device messaging
-- (MXHTTPOperation *)sendToDevice:(NSString *)eventType contentMap:(MXUsersDevicesMap<NSDictionary *> *)contentMap
-                          success:(void (^)())success failure:(void (^)(NSError *))failure
+- (MXHTTPOperation*)sendToDevice:(NSString*)eventType contentMap:(MXUsersDevicesMap<NSDictionary*>*)contentMap
+                           txnId:(NSString*)txnId
+                         success:(void (^)())success
+                         failure:(void (^)(NSError *error))failure
 {
+    if (!txnId)
+    {
+        txnId = [MXTools generateTransactionId];
+    }
+    
     // Prepare the path by adding a random transaction id (This id is used to prevent duplicated event).
-    NSString *path = [NSString stringWithFormat:@"%@/sendToDevice/%@/%@", kMXAPIPrefixPathUnstable, eventType, [MXTools generateTransactionId]];
+    NSString *path = [NSString stringWithFormat:@"%@/sendToDevice/%@/%@", kMXAPIPrefixPathUnstable, eventType, txnId];
 
     NSDictionary *content = @{
                               @"messages": contentMap.map

@@ -216,13 +216,18 @@ Determine if an incoming messages is a prekey message matching an existing sessi
  @param sessionKey base64-encoded secret key.
  @param roomId the id of the room in which this session will be used.
  @param senderKey the base64-encoded curve25519 key of the sender.
+ @param forwardingCurve25519KeyChain devices which forwarded this session to us (normally empty)
  @param keysClaimed Other keys the sender claims.
+ @param exportFormat YES if the megolm keys are in export format (ie, they lack an ed25519 signature).
  
  @return YES if the operation succeeds.
  */
 - (BOOL)addInboundGroupSession:(NSString*)sessionId sessionKey:(NSString*)sessionKey
                         roomId:(NSString*)roomId
-                     senderKey:(NSString*)senderKey keysClaimed:(NSDictionary<NSString*, NSString*>*)keysClaimed;
+                     senderKey:(NSString*)senderKey
+  forwardingCurve25519KeyChain:(NSArray<NSString *> *)forwardingCurve25519KeyChain
+                   keysClaimed:(NSDictionary<NSString*, NSString*>*)keysClaimed
+                  exportFormat:(BOOL)exportFormat;
 
 /**
  Add a previously-exported inbound group session to the session store.
@@ -255,6 +260,32 @@ Determine if an incoming messages is a prekey message matching an existing sessi
  @param timeline the id of the timeline.
  */
 - (void)resetReplayAttackCheckInTimeline:(NSString*)timeline;
+
+/**
+ Determine if we have the keys for a given megolm session.
+
+ @param roomId the room in which the message was received.
+ @param senderKey the base64-encoded curve25519 key of the sender.
+ @param sessionId the session identifier.
+ @return YES if we have the keys to this session.
+ */
+- (BOOL)hasInboundSessionKeys:(NSString*)roomId senderKey:(NSString*)senderKey sessionId:(NSString*)sessionId;
+
+/**
+ Extract the keys to a given megolm session, for sharing.
+
+ @param roomId the room in which the message was received.
+ @param senderKey the base64-encoded curve25519 key of the sender.
+ @param sessionId the session identifier.
+
+ @return a dictinary {
+     chain_index: number,
+     key: string,
+     forwarding_curve25519_key_chain: Array<string>,
+     sender_claimed_ed25519_key: string
+ } details of the session key. The key is a base64-encoded megolm key in export format.
+ */
+- (NSDictionary*)getInboundGroupSessionKey:(NSString*)roomId senderKey:(NSString*)senderKey sessionId:(NSString*)sessionId;
 
 
 #pragma mark - Utilities

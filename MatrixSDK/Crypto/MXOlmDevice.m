@@ -140,11 +140,11 @@
 {
     NSError *error;
 
-    NSLog(@">>>> createOutboundSession: theirIdentityKey: %@ theirOneTimeKey: %@", theirIdentityKey, theirOneTimeKey);
+//    NSLog(@">>>> createOutboundSession: theirIdentityKey: %@ theirOneTimeKey: %@", theirIdentityKey, theirOneTimeKey);
 
     OLMSession *olmSession = [[OLMSession alloc] initOutboundSessionWithAccount:olmAccount theirIdentityKey:theirIdentityKey theirOneTimeKey:theirOneTimeKey error:&error];
 
-    NSLog(@">>>> olmSession.sessionIdentifier: %@", olmSession.sessionIdentifier);
+//    NSLog(@">>>> olmSession.sessionIdentifier: %@", olmSession.sessionIdentifier);
 
     if (olmSession)
     {
@@ -163,19 +163,19 @@
 {
     NSError *error;
 
-    NSLog(@"<<< createInboundSession: theirIdentityKey: %@", theirDeviceIdentityKey);
+//    NSLog(@"<<< createInboundSession: theirIdentityKey: %@", theirDeviceIdentityKey);
 
     OLMSession *olmSession = [[OLMSession alloc] initInboundSessionWithAccount:olmAccount theirIdentityKey:theirDeviceIdentityKey oneTimeKeyMessage:ciphertext error:&error];
 
-    NSLog(@"<<< olmSession.sessionIdentifier: %@", olmSession.sessionIdentifier);
+//    NSLog(@"<<< olmSession.sessionIdentifier: %@", olmSession.sessionIdentifier);
 
     if (olmSession)
     {
         [olmAccount removeOneTimeKeysForSession:olmSession];
         [store storeAccount:olmAccount];
 
-        NSLog(@"<<< ciphertext: %@", ciphertext);
-        NSLog(@"<<< ciphertext: SHA256: %@", [olmUtility sha256:[ciphertext dataUsingEncoding:NSUTF8StringEncoding]]);
+//        NSLog(@"<<< ciphertext: %@", ciphertext);
+//        NSLog(@"<<< ciphertext: SHA256: %@", [olmUtility sha256:[ciphertext dataUsingEncoding:NSUTF8StringEncoding]]);
 
         *payload = [olmSession decryptMessage:[[OLMMessage alloc] initWithCiphertext:ciphertext type:messageType] error:&error];
 
@@ -225,8 +225,8 @@
 
     OLMSession *olmSession = [self sessionForDevice:theirDeviceIdentityKey andSessionId:sessionId];
 
-    NSLog(@">>>> encryptMessage: olmSession.sessionIdentifier: %@", olmSession.sessionIdentifier);
-    //NSLog(@">>>> payloadString: %@", payloadString);
+//    NSLog(@">>>> encryptMessage: olmSession.sessionIdentifier: %@", olmSession.sessionIdentifier);
+//    NSLog(@">>>> payloadString: %@", payloadString);
 
     if (olmSession)
     {
@@ -308,7 +308,12 @@
 
 
 #pragma mark - Inbound group session
-- (BOOL)addInboundGroupSession:(NSString *)sessionId sessionKey:(NSString *)sessionKey roomId:(NSString *)roomId senderKey:(NSString *)senderKey keysClaimed:(NSDictionary<NSString *,NSString *> *)keysClaimed
+- (BOOL)addInboundGroupSession:(NSString*)sessionId sessionKey:(NSString*)sessionKey
+                        roomId:(NSString*)roomId
+                     senderKey:(NSString*)senderKey
+  forwardingCurve25519KeyChain:(NSArray<NSString *> *)forwardingCurve25519KeyChain
+                   keysClaimed:(NSDictionary<NSString*, NSString*>*)keysClaimed
+                  exportFormat:(BOOL)exportFormat
 {
     NSError *error;
     if ([self inboundGroupSessionWithId:sessionId senderKey:senderKey roomId:roomId error:&error])
@@ -320,7 +325,17 @@
         return NO;
     }
 
-    MXOlmInboundGroupSession *session = [[MXOlmInboundGroupSession alloc] initWithSessionKey:sessionKey];
+    MXOlmInboundGroupSession *session;
+    if (exportFormat)
+    {
+        session = [[MXOlmInboundGroupSession alloc] initWithImportedSessionKey:sessionKey];
+    }
+    else
+    {
+        session = [[MXOlmInboundGroupSession alloc] initWithSessionKey:sessionKey];
+    }
+
+    NSLog(@"[MXOlmDevice] addInboundGroupSession: Add megolm session %@/%@ (import: %@)", senderKey, sessionId, exportFormat ? @"YES" : @"NO");
 
     if (![session.session.sessionIdentifier isEqualToString:sessionId])
     {
@@ -331,6 +346,7 @@
     session.senderKey = senderKey;
     session.roomId = roomId;
     session.keysClaimed = keysClaimed;
+    session.forwardingCurve25519KeyChain = forwardingCurve25519KeyChain;
 
     [store storeInboundGroupSession:session];
 
@@ -351,7 +367,7 @@
         return;
     }
 
-    session = [[MXOlmInboundGroupSession alloc] initWithSessionData:data];
+    session = [[MXOlmInboundGroupSession alloc] initWithImportedSessionData:data];
 
     [store storeInboundGroupSession:session];
 }
@@ -404,18 +420,14 @@
             result = [[MXDecryptionResult alloc] init];
             result.payload = [NSJSONSerialization JSONObjectWithData:[payloadString dataUsingEncoding:NSUTF8StringEncoding] options:0 error:nil];
             result.keysClaimed = session.keysClaimed;
-
-            // The sender must have had the senderKey to persuade us to save the
-            // session.
-            result.keysProved = @{
-                                  @"curve25519": senderKey
-                                  };
+            result.senderKey = senderKey;
+            result.forwardingCurve25519KeyChain = session.forwardingCurve25519KeyChain;
         }
     }
 
     if (*error)
     {
-        NSLog(@"[MXOlmDevice] decryptGroupMessage: Error: %@", *error);
+        NSLog(@"[MXOlmDevice] decryptGroupMessage: Cannot decrypt in room %@ with session %@|%@. Error: %@", roomId, senderKey, sessionId, *error);
     }
 
     return result;
@@ -463,8 +475,6 @@
     }
     else
     {
-        NSLog(@"[MXOlmDevice] inboundGroupSessionWithId: Cannot retrieve inbound group session %@", sessionId);
-
         if (error)
         {
             *error = [NSError errorWithDomain:MXDecryptingErrorDomain
@@ -475,6 +485,57 @@
         }
     }
     return session;
+}
+
+- (BOOL)hasInboundSessionKeys:(NSString*)roomId senderKey:(NSString*)senderKey sessionId:(NSString*)sessionId
+{
+    MXOlmInboundGroupSession *session = [store inboundGroupSessionWithId:sessionId andSenderKey:senderKey];
+
+    if (!session)
+    {
+        return NO;
+    }
+
+    if (![session.roomId isEqualToString:roomId])
+    {
+        NSLog(@"[MXOlmDevice] hasInboundSessionKeys: requested keys for inbound group session %@|%@`, with incorrect room_id (expected %@, was %@)", senderKey, sessionId, session.roomId, roomId);
+
+        return NO;
+    }
+
+    return YES;
+}
+
+- (NSDictionary*)getInboundGroupSessionKey:(NSString*)roomId senderKey:(NSString*)senderKey sessionId:(NSString*)sessionId
+{
+    NSDictionary *inboundGroupSessionKey;
+
+    NSError *error;
+    MXOlmInboundGroupSession *session = [self inboundGroupSessionWithId:sessionId senderKey:senderKey roomId:roomId error:&error];
+    if (session)
+    {
+        NSUInteger messageIndex = session.session.firstKnownIndex;
+
+        NSDictionary *claimedKeys = session.keysClaimed;
+        NSString *senderEd25519Key = claimedKeys[@"ed25519"];
+
+        MXMegolmSessionData *sessionData = [session exportSessionDataAtMessageIndex:messageIndex];
+        NSArray<NSString*> *forwardingCurve25519KeyChain = sessionData.forwardingCurve25519KeyChain;
+
+        inboundGroupSessionKey = @{
+                                   @"chain_index": @(messageIndex),
+                                   @"key": sessionData.sessionKey,
+                                   @"forwarding_curve25519_key_chain": forwardingCurve25519KeyChain ? forwardingCurve25519KeyChain : @[],
+                                   @"sender_claimed_ed25519_key": senderEd25519Key ? senderEd25519Key : [NSNull null]
+                                   };
+    }
+
+    if (error)
+    {
+        NSLog(@"[MXOlmDevice] getInboundGroupSessionKey in room %@ with session %@|%@. Error: %@", roomId, senderKey, sessionId, error);
+    }
+
+    return inboundGroupSessionKey;
 }
 
 
