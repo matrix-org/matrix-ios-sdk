@@ -340,6 +340,8 @@ static MXLRUCache* imagesCacheLruCache = nil;
                                                            }
                                                            else
                                                            {
+                                                               NSLog(@"[MXMediaManager] Failed to retrieve editing input from asset");
+                                                               
                                                                // Return on main thread
                                                                dispatch_async(dispatch_get_main_queue(), ^{
                                                                    success (nil);
