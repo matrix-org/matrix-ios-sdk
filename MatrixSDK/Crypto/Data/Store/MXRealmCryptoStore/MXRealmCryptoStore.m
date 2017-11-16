@@ -191,6 +191,31 @@ RLM_ARRAY_TYPE(MXRealmOlmInboundGroupSession)
 
 @end
 
+@interface MXRealmIncomingRoomKeyRequest : RLMObject
+@property (nonatomic) NSString *requestId;
+@property (nonatomic) NSString *userId;
+@property (nonatomic) NSString *deviceId;
+@property (nonatomic) NSData *requestBodyData;
+
+- (MXIncomingRoomKeyRequest *)incomingRoomKeyRequest;
+
+@end
+
+@implementation MXRealmIncomingRoomKeyRequest
+
+- (MXIncomingRoomKeyRequest *)incomingRoomKeyRequest
+{
+    MXIncomingRoomKeyRequest *incomingRoomKeyRequest = [[MXIncomingRoomKeyRequest alloc] init];
+
+    incomingRoomKeyRequest.requestId = self.requestId;
+    incomingRoomKeyRequest.userId = self.userId;
+    incomingRoomKeyRequest.deviceId = self.deviceId;
+    incomingRoomKeyRequest.requestBody = [NSKeyedUnarchiver unarchiveObjectWithData:self.requestBodyData];
+
+    return incomingRoomKeyRequest;
+}
+
+@end
 
 #pragma mark - MXRealmCryptoStore
 
@@ -690,7 +715,7 @@ RLM_ARRAY_TYPE(MXRealmOlmInboundGroupSession)
     }];
 }
 
-#pragma mark - Key sharing
+#pragma mark - Key sharing - Outgoing key requests
 
 - (MXOutgoingRoomKeyRequest*)outgoingRoomKeyRequestWithRequestBody:(NSDictionary *)requestBody
 {
@@ -744,7 +769,7 @@ RLM_ARRAY_TYPE(MXRealmOlmInboundGroupSession)
 {
     RLMRealm *realm = self.realm;
 
-    MXRealmOutgoingRoomKeyRequest *realmOutgoingRoomKeyRequests = [MXRealmOutgoingRoomKeyRequest objectsInRealm:self.realm where:@"requestId = %@", request.requestId].firstObject;
+    MXRealmOutgoingRoomKeyRequest *realmOutgoingRoomKeyRequests = [MXRealmOutgoingRoomKeyRequest objectsInRealm:realm where:@"requestId = %@", request.requestId].firstObject;
 
     [realm transactionWithBlock:^{
         // Well, only the state changes
@@ -758,11 +783,75 @@ RLM_ARRAY_TYPE(MXRealmOlmInboundGroupSession)
 {
     RLMRealm *realm = self.realm;
 
-    RLMResults<MXRealmOutgoingRoomKeyRequest *> *realmOutgoingRoomKeyRequests = [MXRealmOutgoingRoomKeyRequest objectsInRealm:self.realm where:@"requestId = %@", requestId];
+    RLMResults<MXRealmOutgoingRoomKeyRequest *> *realmOutgoingRoomKeyRequests = [MXRealmOutgoingRoomKeyRequest objectsInRealm:realm where:@"requestId = %@", requestId];
 
     [realm transactionWithBlock:^{
         [realm deleteObjects:realmOutgoingRoomKeyRequests];
     }];
+}
+
+
+#pragma mark - Key sharing - Incoming key requests
+
+- (void)storeIncomingRoomKeyRequest:(MXIncomingRoomKeyRequest*)request
+{
+    RLMRealm *realm = self.realm;
+
+    MXRealmIncomingRoomKeyRequest *realmIncomingRoomKeyRequest =
+    [[MXRealmIncomingRoomKeyRequest alloc] initWithValue:@{
+                                                           @"requestId": request.requestId,
+                                                           @"userId": request.userId,
+                                                           @"deviceId": request.deviceId,
+                                                           @"requestBodyData": [NSKeyedArchiver archivedDataWithRootObject:request.requestBody]
+                                                           }];
+
+    [realm transactionWithBlock:^{
+        [realm addObject:realmIncomingRoomKeyRequest];
+    }];
+}
+
+- (void)deleteIncomingRoomKeyRequest:(NSString*)requestId fromUser:(NSString*)userId andDevice:(NSString*)deviceId
+{
+    RLMRealm *realm = self.realm;
+
+    RLMResults<MXRealmIncomingRoomKeyRequest *> *realmIncomingRoomKeyRequests = [MXRealmIncomingRoomKeyRequest objectsInRealm:realm where:@"requestId = %@ AND userId = %@ AND deviceId = %@", requestId, userId, deviceId];
+
+    [realm transactionWithBlock:^{
+        [realm deleteObjects:realmIncomingRoomKeyRequests];
+    }];
+}
+
+- (MXIncomingRoomKeyRequest*)incomingRoomKeyRequestWithRequestId:(NSString*)requestId fromUser:(NSString*)userId andDevice:(NSString*)deviceId
+{
+    RLMRealm *realm = self.realm;
+
+    RLMResults<MXRealmIncomingRoomKeyRequest *> *realmIncomingRoomKeyRequests = [MXRealmIncomingRoomKeyRequest objectsInRealm:realm where:@"requestId = %@ AND userId = %@ AND deviceId = %@", requestId, userId, deviceId];
+
+    return realmIncomingRoomKeyRequests.firstObject.incomingRoomKeyRequest;
+}
+
+- (MXUsersDevicesMap<NSArray<MXIncomingRoomKeyRequest *> *> *)incomingRoomKeyRequests
+{
+    MXUsersDevicesMap<NSMutableArray<MXIncomingRoomKeyRequest *> *> *incomingRoomKeyRequests = [[MXUsersDevicesMap alloc] init];
+
+    RLMRealm *realm = self.realm;
+
+    RLMResults<MXRealmIncomingRoomKeyRequest *> *realmIncomingRoomKeyRequests = [MXRealmIncomingRoomKeyRequest allObjectsInRealm:realm];
+    for (MXRealmIncomingRoomKeyRequest *realmRequest in realmIncomingRoomKeyRequests)
+    {
+        MXIncomingRoomKeyRequest *request = realmRequest.incomingRoomKeyRequest;
+
+        NSMutableArray<MXIncomingRoomKeyRequest *> *requests = [incomingRoomKeyRequests objectForDevice:request.deviceId forUser:request.userId];
+        if (!requests)
+        {
+            requests = [[NSMutableArray alloc] init];
+            [incomingRoomKeyRequests setObject:requests forUser:request.userId andDevice:request.deviceId];
+        }
+
+        [requests addObject:request];
+    }
+
+    return incomingRoomKeyRequests;
 }
 
 #pragma mark - Crypto settings

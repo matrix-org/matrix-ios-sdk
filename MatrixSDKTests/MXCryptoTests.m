@@ -2286,8 +2286,11 @@
 
                                     MXIncomingRoomKeyRequest *keyRequest = [pendingKeyRequests objectForDevice:alice1Credentials.deviceId forUser:alice1Credentials.userId][0];
 
-                                    // Should be the same ref. No need to do fine checks
-                                    XCTAssertEqual(keyRequest, incomingKeyRequest);
+                                    // Should be the same request
+                                    XCTAssertEqualObjects(keyRequest.requestId, incomingKeyRequest.requestId);
+                                    XCTAssertEqualObjects(keyRequest.userId, incomingKeyRequest.userId);
+                                    XCTAssertEqualObjects(keyRequest.deviceId, incomingKeyRequest.deviceId);
+                                    XCTAssertEqualObjects(keyRequest.requestBody, incomingKeyRequest.requestBody);
 
                                     // 10 - Check [MXSession.crypto acceptAllPendingKeyRequestsFromUser:] with a wrong userId:deviceId pair
                                     [aliceSession2.crypto acceptAllPendingKeyRequestsFromUser:alice1Credentials.userId andDevice:@"DEADBEEF" onComplete:^{
