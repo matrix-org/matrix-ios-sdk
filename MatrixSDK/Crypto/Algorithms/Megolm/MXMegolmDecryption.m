@@ -427,20 +427,41 @@
 
     if (![sender isEqualToString:myUserId])
     {
-        [recipients addObject:@{
-                                @"userId": sender,
-                                @"deviceId": wireContent[@"device_id"]
-                                }];
+        NSString *deviceId;
+        MXJSONModelSetString(deviceId, wireContent[@"device_id"]);
 
+        if (sender && deviceId)
+        {
+            [recipients addObject:@{
+                                    @"userId": sender,
+                                    @"deviceId": deviceId
+                                    }];
+        }
+        else
+        {
+            NSLog(@"[MXMegolmDecryption] requestKeysForEvent: ERROR: missing fields for recipients in event %@", event);
+        }
     }
 
-    [crypto requestRoomKey:@{
-                             @"room_id": event.roomId,
-                             @"algorithm": wireContent[@"algorithm"],
-                             @"sender_key": wireContent[@"sender_key"],
-                             @"session_id": wireContent[@"session_id"],
-                             }
-                recipients:recipients];;
+    NSString *algorithm, *senderKey, *sessionId;
+    MXJSONModelSetString(algorithm, wireContent[@"algorithm"]);
+    MXJSONModelSetString(senderKey, wireContent[@"sender_key"]);
+    MXJSONModelSetString(sessionId, wireContent[@"session_id"]);
+
+    if (algorithm && senderKey && sessionId)
+    {
+        [crypto requestRoomKey:@{
+                                 @"room_id": event.roomId,
+                                 @"algorithm": algorithm,
+                                 @"sender_key": senderKey,
+                                 @"session_id": sessionId
+                                 }
+                    recipients:recipients];
+    }
+    else
+    {
+        NSLog(@"[MXMegolmDecryption] requestKeysForEvent: ERROR: missing fields in event %@", event);
+    }
 }
 
 - (NSDictionary*)buildKeyForwardingMessage:(NSString*)roomId senderKey:(NSString*)senderKey sessionId:(NSString*)sessionId
