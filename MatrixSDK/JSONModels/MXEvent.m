@@ -48,7 +48,6 @@ NSString *const kMXEventTypeStringTypingNotification    = @"m.typing";
 NSString *const kMXEventTypeStringReceipt               = @"m.receipt";
 NSString *const kMXEventTypeStringRead                  = @"m.read";
 NSString *const kMXEventTypeStringReadMarker            = @"m.fully_read";
-NSString *const kMXEventTypeStringNewDevice             = @"m.new_device";
 NSString *const kMXEventTypeStringCallInvite            = @"m.call.invite";
 NSString *const kMXEventTypeStringCallCandidates        = @"m.call.candidates";
 NSString *const kMXEventTypeStringCallAnswer            = @"m.call.answer";

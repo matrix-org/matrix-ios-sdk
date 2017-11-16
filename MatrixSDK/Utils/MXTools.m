@@ -81,7 +81,6 @@ static NSUInteger transactionIdCount;
                                 kMXEventTypeStringReceipt,
                                 kMXEventTypeStringRead,
                                 kMXEventTypeStringReadMarker,
-                                kMXEventTypeStringNewDevice,
                                 kMXEventTypeStringCallInvite,
                                 kMXEventTypeStringCallCandidates,
                                 kMXEventTypeStringCallAnswer,

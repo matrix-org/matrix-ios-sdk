@@ -1231,7 +1231,7 @@
             XCTAssert(toDeviceEvent);
 
             XCTAssertEqualObjects(toDeviceEvent.sender, aliceRestClient.credentials.userId);
-            XCTAssertEqual(toDeviceEvent.eventType, MXEventTypeNewDevice);
+            XCTAssertEqual(toDeviceEvent.eventType, MXEventTypeRoomKeyRequest);
 
             [[NSNotificationCenter defaultCenter] removeObserver:observer];
 
@@ -1246,7 +1246,7 @@
                                          }
                                  } forUser:mxSession.myUser.userId];
 
-        [aliceRestClient sendToDevice:kMXEventTypeStringNewDevice contentMap:contentMap txnId:nil success:^{
+        [aliceRestClient sendToDevice:kMXEventTypeStringRoomKeyRequest contentMap:contentMap txnId:nil success:^{
 
         } failure:^(NSError *error) {
             XCTFail(@"Cannot set up intial test conditions - error: %@", error);

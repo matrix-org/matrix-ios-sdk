@@ -56,7 +56,6 @@ typedef enum : NSUInteger
     MXEventTypeReceipt,
     MXEventTypeRead,
     MXEventTypeReadMarker,
-    MXEventTypeNewDevice,
     MXEventTypeCallInvite,
     MXEventTypeCallCandidates,
     MXEventTypeCallAnswer,
@@ -99,7 +98,6 @@ FOUNDATION_EXPORT NSString *const kMXEventTypeStringTypingNotification;
 FOUNDATION_EXPORT NSString *const kMXEventTypeStringReceipt;
 FOUNDATION_EXPORT NSString *const kMXEventTypeStringRead;
 FOUNDATION_EXPORT NSString *const kMXEventTypeStringReadMarker;
-FOUNDATION_EXPORT NSString *const kMXEventTypeStringNewDevice;
 FOUNDATION_EXPORT NSString *const kMXEventTypeStringCallInvite;
 FOUNDATION_EXPORT NSString *const kMXEventTypeStringCallCandidates;
 FOUNDATION_EXPORT NSString *const kMXEventTypeStringCallAnswer;

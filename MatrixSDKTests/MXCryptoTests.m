@@ -110,8 +110,6 @@
             XCTAssert(mxSession.crypto);
             XCTAssert([mxSession.crypto.store.class hasDataForCredentials:mxSession.matrixRestClient.credentials]);
 
-            XCTAssert(mxSession.crypto.store.deviceAnnounced, @"The device must have been announced when enableCrypto completes");
-
             [mxSession enableCrypto:NO success:^{
 
                 XCTAssertNil(mxSession.crypto);
@@ -144,8 +142,6 @@
 
         XCTAssert(mxSession.crypto);
         XCTAssert([mxSession.crypto.store.class hasDataForCredentials:mxSession.matrixRestClient.credentials]);
-
-        XCTAssert(mxSession.crypto.store.deviceAnnounced, @"The device must have been announced when [MXSession start] completes");
 
         [mxSession enableCrypto:NO success:^{
 
