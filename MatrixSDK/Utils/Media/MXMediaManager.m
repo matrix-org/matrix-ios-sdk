@@ -338,7 +338,7 @@ static MXLRUCache* imagesCacheLruCache = nil;
 
 + (MXMediaLoader*)downloadMediaFromURL:(NSString *)mediaURL
                       andSaveAtFilePath:(NSString *)filePath
-                                success:(void (^)())success
+                                success:(void (^)(void))success
                                 failure:(void (^)(NSError *error))failure
 {
     // Check provided file path

@@ -26,7 +26,7 @@
 @protocol MXBackgroundModeHandler <NSObject>
 - (NSUInteger)invalidIdentifier;
 - (NSUInteger)startBackgroundTask;
-- (NSUInteger)startBackgroundTaskWithName:(NSString *)name completion:(void(^)())completion;
+- (NSUInteger)startBackgroundTaskWithName:(NSString *)name completion:(void(^)(void))completion;
 - (void)endBackgrounTaskWithIdentifier:(NSUInteger)identifier;
 @end
 

@@ -80,7 +80,7 @@
     return self;
 }
 
-- (void)startCapturingMediaWithVideo:(BOOL)video success:(void (^)())success failure:(void (^)(NSError *))failure
+- (void)startCapturingMediaWithVideo:(BOOL)video success:(void (^)(void))success failure:(void (^)(NSError *))failure
 {
     onStartCapturingMediaWithVideoSuccess = success;
     isVideoCall = video;
@@ -156,7 +156,7 @@
 
 
 #pragma mark - Incoming call
-- (void)handleOffer:(NSString *)sdpOffer success:(void (^)())success failure:(void (^)(NSError *error))failure
+- (void)handleOffer:(NSString *)sdpOffer success:(void (^)(void))success failure:(void (^)(NSError *error))failure
 {
     RTCSessionDescription *sessionDescription = [[RTCSessionDescription alloc] initWithType:RTCSdpTypeOffer sdp:sdpOffer];
     [peerConnection setRemoteDescription:sessionDescription completionHandler:^(NSError * _Nullable error) {
@@ -254,7 +254,7 @@
     }];
 }
 
-- (void)handleAnswer:(NSString *)sdp success:(void (^)())success failure:(void (^)(NSError *))failure
+- (void)handleAnswer:(NSString *)sdp success:(void (^)(void))success failure:(void (^)(NSError *))failure
 {
     RTCSessionDescription *sessionDescription = [[RTCSessionDescription alloc] initWithType:RTCSdpTypeAnswer sdp:sdp];
     [peerConnection setRemoteDescription:sessionDescription completionHandler:^(NSError * _Nullable error) {

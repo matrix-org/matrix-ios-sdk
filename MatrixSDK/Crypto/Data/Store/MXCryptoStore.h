@@ -73,7 +73,7 @@
  @param onComplete the callback called once the data has been loaded.
  @param failure the callback called in case of error.
  */
-- (void)open:(void (^)())onComplete failure:(void (^)(NSError *error))failure;
+- (void)open:(void (^)(void))onComplete failure:(void (^)(NSError *error))failure;
 
 /**
  Store the device id.
