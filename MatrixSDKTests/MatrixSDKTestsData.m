@@ -752,6 +752,39 @@ NSMutableArray *roomsToClean;
     }];
 }
 
+- (void)relogUserSessionWithNewDevice:(MXSession*)session withPassword:(NSString*)password onComplete:(void (^)(MXSession *newSession))onComplete
+{
+    NSString *userId = session.matrixRestClient.credentials.userId;
+
+    [session enableCrypto:NO success:^{
+
+        [session close];
+
+        MXRestClient *mxRestClient = [[MXRestClient alloc] initWithHomeServer:kMXTestsHomeServerURL
+                                            andOnUnrecognizedCertificateBlock:nil];
+
+        [mxRestClient loginWithLoginType:kMXLoginFlowTypePassword username:userId password:password success:^(MXCredentials *credentials) {
+
+            MXRestClient *mxRestClient2 = [[MXRestClient alloc] initWithCredentials:credentials andOnUnrecognizedCertificateBlock:nil];
+            MXSession *newSession = [[MXSession alloc] initWithMatrixRestClient:mxRestClient2];
+
+            [newSession start:^{
+
+                onComplete(newSession);
+
+            } failure:^(NSError *error) {
+                NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+            }];
+
+        } failure:^(NSError *error) {
+            NSAssert(NO, @"Cannot relog %@. Error: %@", userId, error);
+        }];
+    } failure:^(NSError *error) {
+        NSAssert(NO, @"Cannot logout %@. Error: %@", userId, error);
+    }];
+}
+
+
 
 - (void)closeMXSession:(MXSession*)mxSession
 {

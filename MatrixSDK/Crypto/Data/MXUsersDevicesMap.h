@@ -20,7 +20,7 @@
  `MXUsersDevicesInfoMap` is an abstract class to extract data from a map of maps
   where the 1st map keys are userIds and 2nd map keys are deviceId.
  */
-@interface MXUsersDevicesMap<__covariant ObjectType> : NSObject <NSCoding>
+@interface MXUsersDevicesMap<__covariant ObjectType> : NSObject <NSCoding, NSCopying>
 
 /**
  Constructor from an exisiting map.
@@ -52,6 +52,7 @@
 - (void)addEntriesFromMap:(MXUsersDevicesMap*)map;
 - (void)removeAllObjects;
 - (void)removeObjectsForUser:(NSString*)userId;
+- (void)removeObjectForUser:(NSString*)userId andDevice:(NSString*)deviceId;
 
 @end
 

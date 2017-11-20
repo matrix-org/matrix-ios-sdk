@@ -68,6 +68,8 @@ static NSUInteger transactionIdCount;
                                 kMXEventTypeStringRoomGuestAccess,
                                 kMXEventTypeStringRoomHistoryVisibility,
                                 kMXEventTypeStringRoomKey,
+                                kMXEventTypeStringRoomForwardedKey,
+                                kMXEventTypeStringRoomKeyRequest,
                                 kMXEventTypeStringRoomMessage,
                                 kMXEventTypeStringRoomMessageFeedback,
                                 kMXEventTypeStringRoomPlumbing,
@@ -595,6 +597,26 @@ static NSMutableDictionary *fileExtensionByContentType = nil;
         });
         
     }];
+}
+
+#pragma mark - JSON Serialisation
+
++ (NSString*)serialiseJSONObject:(id)jsonObject
+{
+    NSString *jsonString;
+
+    if ([NSJSONSerialization isValidJSONObject:jsonObject])
+    {
+        NSData *jsonData = [NSJSONSerialization dataWithJSONObject:jsonObject options:0 error:nil];
+        jsonString = [[NSString alloc] initWithData:jsonData encoding:NSUTF8StringEncoding];
+    }
+    return jsonString;
+}
+
++ (id)deserialiseJSONString:(NSString*)jsonString
+{
+    NSData *jsonData = [jsonString dataUsingEncoding:NSUTF8StringEncoding];
+    return [NSJSONSerialization JSONObjectWithData:jsonData options:0 error:nil];
 }
 
 @end

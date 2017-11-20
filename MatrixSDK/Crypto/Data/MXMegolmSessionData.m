@@ -29,6 +29,7 @@
         MXJSONModelSetString(sessionData.sessionId, JSONDictionary[@"session_id"]);
         MXJSONModelSetString(sessionData.sessionKey, JSONDictionary[@"session_key"]);
         MXJSONModelSetString(sessionData.algorithm, JSONDictionary[@"algorithm"]);
+        MXJSONModelSetArray(sessionData.forwardingCurve25519KeyChain, JSONDictionary[@"forwarding_curve25519_key_chain"])
     }
 
     return sessionData;
@@ -42,7 +43,8 @@
       @"room_id": _roomId,
       @"session_id": _sessionId,
       @"session_key":_sessionKey,
-      @"algorithm": _algorithm
+      @"algorithm": _algorithm,
+      @"forwarding_curve25519_key_chain": _forwardingCurve25519KeyChain ? _forwardingCurve25519KeyChain : @[]
       };
 }
 

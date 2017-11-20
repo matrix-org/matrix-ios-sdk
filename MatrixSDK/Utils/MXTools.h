@@ -181,4 +181,22 @@ FOUNDATION_EXPORT NSString *const kMXToolsRegexStringForMatrixEventIdentifier;
                   success:(void(^)(NSURL *videoLocalURL, NSString *mimetype, CGSize size, double durationInMs))success
                   failure:(void(^)())failure;
 
+#pragma mark - JSON Serialisation
+
+/**
+ Convert a JSON object (NSArray, NSDictionary) into a JSON string.
+
+ @param jsonObject the object to convert.
+ @return the string corresponding to the JSON object.
+ */
++ (NSString*)serialiseJSONObject:(id)jsonObject;
+
+/**
+ Convert back a string into a JSON object.
+
+ @param jsonString the string corresponding to the JSON object.
+ @return a JSON object.
+ */
++ (id)deserialiseJSONString:(NSString*)jsonString;
+
 @end
