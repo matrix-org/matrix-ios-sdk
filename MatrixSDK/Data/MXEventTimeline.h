@@ -153,7 +153,7 @@ typedef void (^MXOnRoomEvent)(MXEvent *event, MXTimelineDirection direction, MXR
  @return a MXHTTPOperation instance.
  */
 - (MXHTTPOperation*)resetPaginationAroundInitialEventWithLimit:(NSUInteger)limit
-                                                       success:(void(^)())success
+                                                       success:(void(^)(void))success
                                                        failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 /**
@@ -176,7 +176,7 @@ typedef void (^MXOnRoomEvent)(MXEvent *event, MXTimelineDirection direction, MXR
 - (MXHTTPOperation*)paginate:(NSUInteger)numItems
                    direction:(MXTimelineDirection)direction
                onlyFromStore:(BOOL)onlyFromStore
-                    complete:(void (^)())complete
+                    complete:(void (^)(void))complete
                      failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 /**

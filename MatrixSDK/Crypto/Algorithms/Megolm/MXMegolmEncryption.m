@@ -344,7 +344,7 @@
 
 - (MXHTTPOperation*)shareKey:(MXOutboundSessionInfo*)session
                  withDevices:(NSDictionary<NSString* /* userId */, NSArray<MXDeviceInfo*>*>*)devicesByUser
-                        success:(void (^)())success
+                        success:(void (^)(void))success
                         failure:(void (^)(NSError *))failure
 
 {

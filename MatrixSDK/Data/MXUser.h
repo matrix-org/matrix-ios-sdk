@@ -106,7 +106,7 @@
  @param success a block when the operation succeeds.
  @param failure a block when the operation fails.
  */
-- (void)updateFromHomeserverOfMatrixSession:(MXSession*)mxSession success:(void (^)())success failure:(void (^)(NSError *error))failure;
+- (void)updateFromHomeserverOfMatrixSession:(MXSession*)mxSession success:(void (^)(void))success failure:(void (^)(NSError *error))failure;
 
 
 #pragma mark - Events listeners

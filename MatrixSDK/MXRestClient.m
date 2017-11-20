@@ -668,7 +668,7 @@ MXAuthAction;
 #pragma mark - password update operation
 
 - (MXHTTPOperation*)resetPasswordWithParameters:(NSDictionary*)parameters
-                           success:(void (^)())success
+                           success:(void (^)(void))success
                            failure:(void (^)(NSError *error))failure
 {
     // sanity check
@@ -730,7 +730,7 @@ MXAuthAction;
 }
 
 - (MXHTTPOperation*)changePassword:(NSString*)oldPassword with:(NSString*)newPassword
-                           success:(void (^)())success
+                           success:(void (^)(void))success
                            failure:(void (^)(NSError *error))failure
 {
     // sanity check
@@ -897,7 +897,7 @@ MXAuthAction;
                                  }];
 }
 
-- (MXHTTPOperation*)logout:(void (^)())success
+- (MXHTTPOperation*)logout:(void (^)(void))success
                    failure:(void (^)(NSError *error))failure
 {
     return [httpClient requestWithMethod:@"POST"
@@ -941,7 +941,7 @@ MXAuthAction;
 #pragma mark - Account data
 - (MXHTTPOperation*)setAccountData:(NSDictionary*)data
                            forType:(NSString*)type
-                           success:(void (^)())success
+                           success:(void (^)(void))success
                            failure:(void (^)(NSError *error))failure
 {
     NSString *path = [NSString stringWithFormat:@"%@/user/%@/account_data/%@", apiPathPrefix, credentials.userId, type];
@@ -1199,7 +1199,7 @@ MXAuthAction;
                                     lang:(NSString *)lang
                                     data:(NSDictionary *)data
                                   append:(BOOL)append
-                                 success:(void (^)())success
+                                 success:(void (^)(void))success
                                  failure:(void (^)(NSError *))failure
 {
     // sanity check
@@ -1320,7 +1320,7 @@ MXAuthAction;
                               scope:(NSString*)scope
                                kind:(MXPushRuleKind)kind
                              enable:(BOOL)enable
-                            success:(void (^)())success
+                            success:(void (^)(void))success
                             failure:(void (^)(NSError *error))failure
 {
     NSString *kindString;
@@ -1389,7 +1389,7 @@ MXAuthAction;
 - (MXHTTPOperation *)removePushRule:(NSString*)ruleId
                               scope:(NSString*)scope
                                kind:(MXPushRuleKind)kind
-                            success:(void (^)())success
+                            success:(void (^)(void))success
                             failure:(void (^)(NSError *error))failure
 {
     NSString *kindString;
@@ -1453,7 +1453,7 @@ MXAuthAction;
                          actions:(NSArray*)actions
                          pattern:(NSString*)pattern
                       conditions:(NSArray<NSDictionary *> *)conditions
-                         success:(void (^)())success
+                         success:(void (^)(void))success
                          failure:(void (^)(NSError *error))failure
 {
     NSString *kindString;
@@ -1699,7 +1699,7 @@ MXAuthAction;
 - (MXHTTPOperation*)doMembershipRequest:(NSString*)roomId
                              membership:(NSString*)membership
                              parameters:(NSDictionary*)parameters
-                                success:(void (^)())success
+                                success:(void (^)(void))success
                                 failure:(void (^)(NSError *error))failure
 {
     NSString *path = [NSString stringWithFormat:@"%@/rooms/%@/%@", apiPathPrefix, roomId, membership];
@@ -1762,7 +1762,7 @@ MXAuthAction;
 - (MXHTTPOperation*)updateStateEvent:(MXEventTypeString)eventType
                         withValue:(NSDictionary*)value
                            inRoom:(NSString*)roomId
-                          success:(void (^)())success
+                          success:(void (^)(void))success
                           failure:(void (^)(NSError *error))failure
 {
     NSString *path = [NSString stringWithFormat:@"%@/rooms/%@/state/%@", apiPathPrefix, roomId, eventType];
@@ -1861,7 +1861,7 @@ MXAuthAction;
 
 - (MXHTTPOperation*)setRoomTopic:(NSString*)roomId
                            topic:(NSString*)topic
-                         success:(void (^)())success
+                         success:(void (^)(void))success
                          failure:(void (^)(NSError *error))failure
 {
     return [self updateStateEvent:kMXEventTypeStringRoomTopic
@@ -1901,7 +1901,7 @@ MXAuthAction;
 
 - (MXHTTPOperation *)setRoomAvatar:(NSString *)roomId
                             avatar:(NSString *)avatar
-                           success:(void (^)())success
+                           success:(void (^)(void))success
                            failure:(void (^)(NSError *))failure
 {
     return [self updateStateEvent:kMXEventTypeStringRoomAvatar
@@ -1941,7 +1941,7 @@ MXAuthAction;
 
 - (MXHTTPOperation*)setRoomName:(NSString*)roomId
                            name:(NSString*)name
-                        success:(void (^)())success
+                        success:(void (^)(void))success
                         failure:(void (^)(NSError *error))failure
 {
     return [self updateStateEvent:kMXEventTypeStringRoomName
@@ -1981,7 +1981,7 @@ MXAuthAction;
 
 - (MXHTTPOperation *)setRoomHistoryVisibility:(NSString *)roomId
                             historyVisibility:(MXRoomHistoryVisibility)historyVisibility
-                                      success:(void (^)())success
+                                      success:(void (^)(void))success
                                       failure:(void (^)(NSError *))failure
 {
     return [self updateStateEvent:kMXEventTypeStringRoomHistoryVisibility
@@ -2021,7 +2021,7 @@ MXAuthAction;
 
 - (MXHTTPOperation*)setRoomJoinRule:(NSString*)roomId
                            joinRule:(MXRoomJoinRule)joinRule
-                            success:(void (^)())success
+                            success:(void (^)(void))success
                             failure:(void (^)(NSError *error))failure
 {
     return [self updateStateEvent:kMXEventTypeStringRoomJoinRules
@@ -2061,7 +2061,7 @@ MXAuthAction;
 
 - (MXHTTPOperation*)setRoomGuestAccess:(NSString*)roomId
                            guestAccess:(MXRoomGuestAccess)guestAccess
-                               success:(void (^)())success
+                               success:(void (^)(void))success
                                failure:(void (^)(NSError *error))failure
 {
     return [self updateStateEvent:kMXEventTypeStringRoomGuestAccess
@@ -2101,7 +2101,7 @@ MXAuthAction;
 
 - (MXHTTPOperation*)setRoomDirectoryVisibility:(NSString*)roomId
                            directoryVisibility:(MXRoomDirectoryVisibility)directoryVisibility
-                                       success:(void (^)())success
+                                       success:(void (^)(void))success
                                        failure:(void (^)(NSError *error))failure
 {
     
@@ -2192,7 +2192,7 @@ MXAuthAction;
 
 - (MXHTTPOperation*)addRoomAlias:(NSString*)roomId
                            alias:(NSString*)roomAlias
-                         success:(void (^)())success
+                         success:(void (^)(void))success
                          failure:(void (^)(NSError *error))failure
 {
     // Note: characters in a room alias need to be escaped in the URL
@@ -2237,7 +2237,7 @@ MXAuthAction;
 }
 
 - (MXHTTPOperation*)removeRoomAlias:(NSString*)roomAlias
-                            success:(void (^)())success
+                            success:(void (^)(void))success
                             failure:(void (^)(NSError *error))failure
 {
     // Note: characters in a room alias need to be escaped in the URL
@@ -2281,7 +2281,7 @@ MXAuthAction;
 
 - (MXHTTPOperation*)setRoomCanonicalAlias:(NSString*)roomId
                            canonicalAlias:(NSString *)canonicalAlias
-                                  success:(void (^)())success
+                                  success:(void (^)(void))success
                                   failure:(void (^)(NSError *error))failure
 {
     return [self updateStateEvent:kMXEventTypeStringRoomCanonicalAlias
@@ -2386,7 +2386,7 @@ MXAuthAction;
 }
 
 - (MXHTTPOperation*)leaveRoom:(NSString*)roomId
-                      success:(void (^)())success
+                      success:(void (^)(void))success
                       failure:(void (^)(NSError *error))failure
 {
     return [self doMembershipRequest:roomId
@@ -2397,7 +2397,7 @@ MXAuthAction;
 
 - (MXHTTPOperation*)inviteUser:(NSString*)userId
                         toRoom:(NSString*)roomId
-                       success:(void (^)())success
+                       success:(void (^)(void))success
                        failure:(void (^)(NSError *error))failure
 {
     return [self doMembershipRequest:roomId
@@ -2410,7 +2410,7 @@ MXAuthAction;
 
 - (MXHTTPOperation*)inviteUserByEmail:(NSString*)email
                                toRoom:(NSString*)roomId
-                              success:(void (^)())success
+                              success:(void (^)(NSDictionary *JSONResponse))success
                               failure:(void (^)(NSError *error))failure
 {
     return [self inviteByThreePid:kMX3PIDMediumEmail
@@ -2422,7 +2422,7 @@ MXAuthAction;
 - (MXHTTPOperation*)inviteByThreePid:(NSString*)medium
                              address:(NSString*)address
                               toRoom:(NSString*)roomId
-                             success:(void (^)())success
+                             success:(void (^)(NSDictionary *JSONResponse))success
                              failure:(void (^)(NSError *error))failure
 {
     // The identity server must be defined
@@ -2501,7 +2501,7 @@ MXAuthAction;
 - (MXHTTPOperation*)kickUser:(NSString*)userId
                     fromRoom:(NSString*)roomId
                       reason:(NSString*)reason
-                     success:(void (^)())success
+                     success:(void (^)(void))success
                      failure:(void (^)(NSError *error))failure
 {
     NSString *path = [NSString stringWithFormat:@"%@/rooms/%@/state/m.room.member/%@", apiPathPrefix,
@@ -2557,7 +2557,7 @@ MXAuthAction;
 - (MXHTTPOperation*)banUser:(NSString*)userId
                      inRoom:(NSString*)roomId
                      reason:(NSString*)reason
-                    success:(void (^)())success
+                    success:(void (^)(void))success
                     failure:(void (^)(NSError *error))failure
 {
     NSMutableDictionary *parameters = [NSMutableDictionary dictionary];
@@ -2576,7 +2576,7 @@ MXAuthAction;
 
 - (MXHTTPOperation*)unbanUser:(NSString*)userId
                        inRoom:(NSString*)roomId
-                      success:(void (^)())success
+                      success:(void (^)(void))success
                       failure:(void (^)(NSError *error))failure
 {
     NSMutableDictionary *parameters = [NSMutableDictionary dictionary];
@@ -2895,7 +2895,7 @@ MXAuthAction;
 - (MXHTTPOperation*)sendTypingNotificationInRoom:(NSString*)roomId
                                           typing:(BOOL)typing
                                          timeout:(NSUInteger)timeout
-                                         success:(void (^)())success
+                                         success:(void (^)(void))success
                                          failure:(void (^)(NSError *error))failure
 {
     NSString *path = [NSString stringWithFormat:@"%@/rooms/%@/typing/%@", apiPathPrefix,
@@ -2954,7 +2954,7 @@ MXAuthAction;
 - (MXHTTPOperation*)redactEvent:(NSString*)eventId
                          inRoom:(NSString*)roomId
                          reason:(NSString*)reason
-                        success:(void (^)())success
+                        success:(void (^)(void))success
                         failure:(void (^)(NSError *error))failure
 {
     NSString *path = [NSString stringWithFormat:@"%@/rooms/%@/redact/%@", apiPathPrefix, roomId, eventId];
@@ -3008,7 +3008,7 @@ MXAuthAction;
                          inRoom:(NSString *)roomId
                           score:(NSInteger)score
                          reason:(NSString *)reason
-                        success:(void (^)())success
+                        success:(void (^)(void))success
                         failure:(void (^)(NSError *))failure
 {
     NSString *path = [NSString stringWithFormat:@"%@/rooms/%@/report/%@", apiPathPrefix, roomId, eventId];
@@ -3215,7 +3215,7 @@ MXAuthAction;
 - (MXHTTPOperation*)addTag:(NSString*)tag
                  withOrder:(NSString*)order
                     toRoom:(NSString*)roomId
-                   success:(void (^)())success
+                   success:(void (^)(void))success
                    failure:(void (^)(NSError *error))failure
 {
    NSMutableDictionary *parameters = [NSMutableDictionary dictionary];
@@ -3265,7 +3265,7 @@ MXAuthAction;
 
 - (MXHTTPOperation*)removeTag:(NSString*)tag
                      fromRoom:(NSString*)roomId
-                      success:(void (^)())success
+                      success:(void (^)(void))success
                       failure:(void (^)(NSError *error))failure
 {
     NSString *path = [NSString stringWithFormat:@"%@/user/%@/rooms/%@/tags/%@", apiPathPrefix, credentials.userId, roomId, tag];
@@ -3307,7 +3307,7 @@ MXAuthAction;
 
 #pragma mark - Profile operations
 - (MXHTTPOperation*)setDisplayName:(NSString*)displayname
-                           success:(void (^)())success
+                           success:(void (^)(void))success
                            failure:(void (^)(NSError *error))failure
 {
     NSString *path = [NSString stringWithFormat:@"%@/profile/%@/displayname", apiPathPrefix, credentials.userId];
@@ -3404,7 +3404,7 @@ MXAuthAction;
 }
 
 - (MXHTTPOperation*)setAvatarUrl:(NSString*)avatarUrl
-                         success:(void (^)())success
+                         success:(void (^)(void))success
                          failure:(void (^)(NSError *error))failure
 {
     NSString *path = [NSString stringWithFormat:@"%@/profile/%@/avatar_url", apiPathPrefix, credentials.userId];
@@ -3501,7 +3501,7 @@ MXAuthAction;
 - (MXHTTPOperation*)add3PID:(NSString*)sid
                clientSecret:(NSString*)clientSecret
                        bind:(BOOL)bind
-                    success:(void (^)())success
+                    success:(void (^)(void))success
                     failure:(void (^)(NSError *error))failure
 {
     NSURL *identityServerURL = [NSURL URLWithString:_identityServer];
@@ -3552,7 +3552,7 @@ MXAuthAction;
 
 - (MXHTTPOperation*)remove3PID:(NSString*)address
                         medium:(NSString*)medium
-                       success:(void (^)())success
+                       success:(void (^)(void))success
                        failure:(void (^)(NSError *error))failure
 {
     NSString *path = [NSString stringWithFormat:@"%@/account/3pid/delete", kMXAPIPrefixPathUnstable];
@@ -3645,7 +3645,7 @@ MXAuthAction;
 
 #pragma mark - Presence operations
 - (MXHTTPOperation*)setPresence:(MXPresence)presence andStatusMessage:(NSString*)statusMessage
-                        success:(void (^)())success
+                        success:(void (^)(void))success
                         failure:(void (^)(NSError *error))failure
 {
     NSString *path = [NSString stringWithFormat:@"%@/presence/%@/status", apiPathPrefix, credentials.userId];
@@ -3786,7 +3786,7 @@ MXAuthAction;
 }
 
 - (MXHTTPOperation*)presenceListAddUsers:(NSArray*)users
-                                 success:(void (^)())success
+                                 success:(void (^)(void))success
                                  failure:(void (^)(NSError *error))failure
 {
     NSString *path = [NSString stringWithFormat:@"%@/presence/list/%@", apiPathPrefix, credentials.userId];
@@ -3916,7 +3916,7 @@ MXAuthAction;
 #pragma mark - read receipt
 - (MXHTTPOperation*)sendReadReceipt:(NSString*)roomId
                             eventId:(NSString*)eventId
-                            success:(void (^)())success
+                            success:(void (^)(void))success
                             failure:(void (^)(NSError *error))failure
 {
     return [httpClient requestWithMethod:@"POST"
@@ -3960,7 +3960,7 @@ MXAuthAction;
 - (MXHTTPOperation*)sendReadMarker:(NSString*)roomId
                  readMarkerEventId:(NSString*)readMarkerEventId
                 readReceiptEventId:(NSString*)readReceiptEventId
-                           success:(void (^)())success
+                           success:(void (^)(void))success
                            failure:(void (^)(NSError *error))failure
 {
     NSMutableDictionary *parameters = [NSMutableDictionary dictionary];
@@ -4560,7 +4560,7 @@ MXAuthAction;
                                         medium:(NSString *)medium
                                   clientSecret:(NSString *)clientSecret
                                            sid:(NSString *)sid
-                                       success:(void (^)())success
+                                       success:(void (^)(void))success
                                        failure:(void (^)(NSError *))failure
 {
     // Sanity check
@@ -5082,7 +5082,7 @@ MXAuthAction;
 #pragma mark - Direct-to-device messaging
 - (MXHTTPOperation*)sendToDevice:(NSString*)eventType contentMap:(MXUsersDevicesMap<NSDictionary*>*)contentMap
                            txnId:(NSString*)txnId
-                         success:(void (^)())success
+                         success:(void (^)(void))success
                          failure:(void (^)(NSError *error))failure
 {
     if (!txnId)
@@ -5229,7 +5229,7 @@ MXAuthAction;
 
 - (MXHTTPOperation*)setDeviceName:(NSString *)deviceName
                       forDeviceId:(NSString *)deviceId
-                          success:(void (^)())success
+                          success:(void (^)(void))success
                           failure:(void (^)(NSError *error))failure
 {
     NSDictionary *parameters;
@@ -5343,7 +5343,7 @@ MXAuthAction;
 
 - (MXHTTPOperation*)deleteDeviceByDeviceId:(NSString *)deviceId
                                 authParams:(NSDictionary*)authParameters
-                                   success:(void (^)())success
+                                   success:(void (^)(void))success
                                    failure:(void (^)(NSError *error))failure
 {
     NSData *payloadData = nil;

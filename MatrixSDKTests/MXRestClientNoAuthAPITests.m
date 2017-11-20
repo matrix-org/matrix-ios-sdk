@@ -54,7 +54,7 @@
 }
 
 // Make sure MXTESTS_USER exists on the HS
-- (void)createTestAccount:(void (^)())onReady
+- (void)createTestAccount:(void (^)(void))onReady
 {
     // Register the user
     [mxRestClient registerWithLoginType:kMXLoginFlowTypeDummy username:MXTESTS_USER password:MXTESTS_PWD success:^(MXCredentials *credentials) {

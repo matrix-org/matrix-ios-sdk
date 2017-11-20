@@ -45,7 +45,7 @@ FOUNDATION_EXPORT NSString * const kMXTestsAliceAvatarURL;
 
 // Get credentials asynchronously
 // The user will be created if needed
-- (void)getBobCredentials:(void (^)())success;
+- (void)getBobCredentials:(void (^)(void))success;
 
 // Prepare a test with a MXRestClient for mxBob so that we can make test on it
 - (void)doMXRestClientTestWithBob:(XCTestCase*)testCase
@@ -114,8 +114,8 @@ FOUNDATION_EXPORT NSString * const kMXTestsAliceAvatarURL;
 
 
 #pragma mark - HTTPS mxBob
-- (void)getHttpsBobCredentials:(void (^)())success;
-- (void)getHttpsBobCredentials:(void (^)())success onUnrecognizedCertificateBlock:(MXHTTPClientOnUnrecognizedCertificate)onUnrecognizedCertBlock;
+- (void)getHttpsBobCredentials:(void (^)(void))success;
+- (void)getHttpsBobCredentials:(void (^)(void))success onUnrecognizedCertificateBlock:(MXHTTPClientOnUnrecognizedCertificate)onUnrecognizedCertBlock;
 
 - (void)doHttpsMXRestClientTestWithBob:(XCTestCase*)testCase
                            readyToTest:(void (^)(MXRestClient *bobRestClient, XCTestExpectation *expectation))readyToTest;
@@ -130,7 +130,7 @@ FOUNDATION_EXPORT NSString * const kMXTestsAliceAvatarURL;
 // Close the current session by erasing the crypto to store  and log the user in with a new device
 - (void)relogUserSessionWithNewDevice:(MXSession*)session withPassword:(NSString*)password onComplete:(void (^)(MXSession *newSession))onComplete;
 
-- (void)for:(MXRestClient *)mxRestClient2 andRoom:(NSString*)roomId sendMessages:(NSUInteger)messagesCount success:(void (^)())success;
+- (void)for:(MXRestClient *)mxRestClient2 andRoom:(NSString*)roomId sendMessages:(NSUInteger)messagesCount success:(void (^)(void))success;
 
 // Close the session
 // Before closing, it checks if the session must be cleaning.
