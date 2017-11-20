@@ -238,7 +238,7 @@
 /**
  Look for the first outgoing key request that matches the state.
 
- @param the request state to look for.
+ @param state to look for.
  @return a MXOutgoingRoomKeyRequest matching the request, or nil if not found.
  */
 - (MXOutgoingRoomKeyRequest*)outgoingRoomKeyRequestWithState:(MXRoomKeyRequestState)state;
