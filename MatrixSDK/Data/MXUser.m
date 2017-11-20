@@ -121,7 +121,7 @@
     [self notifyListeners:presenceEvent];
 }
 
-- (void)updateFromHomeserverOfMatrixSession:(MXSession *)mxSession success:(void (^)())success failure:(void (^)(NSError *))failure
+- (void)updateFromHomeserverOfMatrixSession:(MXSession *)mxSession success:(void (^)(void))success failure:(void (^)(NSError *))failure
 {
     [mxSession.matrixRestClient displayNameForUser:_userId success:^(NSString *displayname) {
 

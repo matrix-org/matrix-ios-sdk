@@ -319,7 +319,7 @@ RLM_ARRAY_TYPE(MXRealmOlmInboundGroupSession)
     return [MXRealmOlmAccount objectsInRealm:self.realm where:@"userId = %@", userId].firstObject;
 }
 
-- (void)open:(void (^)())onComplete failure:(void (^)(NSError *error))failure
+- (void)open:(void (^)(void))onComplete failure:(void (^)(NSError *error))failure
 {
     onComplete();
 }

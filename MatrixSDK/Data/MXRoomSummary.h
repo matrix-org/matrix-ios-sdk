@@ -194,7 +194,7 @@ FOUNDATION_EXPORT NSString *const kMXRoomSummaryDidChangeNotification;
 
  @return a MXHTTPOperation instance.
  */
-- (MXHTTPOperation*)resetLastMessage:(void (^)())complete failure:(void (^)(NSError *))failure commit:(BOOL)commit;
+- (MXHTTPOperation*)resetLastMessage:(void (^)(void))complete failure:(void (^)(NSError *))failure commit:(BOOL)commit;
 
 
 #pragma mark - Data related to business logic

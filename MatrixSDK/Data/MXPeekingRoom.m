@@ -41,7 +41,7 @@
     return [self initWithRoomId:roomId matrixSession:mxSession andStore:memoryStore];
 }
 
-- (void)start:(void (^)())onServerSyncDone failure:(void (^)(NSError *error))failure
+- (void)start:(void (^)(void))onServerSyncDone failure:(void (^)(NSError *error))failure
 {
     // Make an /initialSync request to get data
     // Use a 0 messages limit for now because:

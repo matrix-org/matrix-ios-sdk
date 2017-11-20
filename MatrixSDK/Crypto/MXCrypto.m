@@ -193,7 +193,7 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
 #endif
 }
 
-- (void)start:(void (^)())success
+- (void)start:(void (^)(void))success
       failure:(void (^)(NSError *error))failure
 {
 
@@ -467,7 +467,7 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
 }
 
 - (MXHTTPOperation*)ensureEncryptionInRoom:(NSString*)roomId
-                                   success:(void (^)())success
+                                   success:(void (^)(void))success
                                    failure:(void (^)(NSError *error))failure
 {
 
@@ -710,7 +710,7 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
 }
 
 - (void)setDeviceVerification:(MXDeviceVerification)verificationStatus forDevice:(NSString*)deviceId ofUser:(NSString*)userId
-                      success:(void (^)())success
+                      success:(void (^)(void))success
                       failure:(void (^)(NSError *error))failure
 {
 #ifdef MX_CRYPTO
@@ -766,7 +766,7 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
 #endif
 }
 
-- (void)setDevicesKnown:(MXUsersDevicesMap<MXDeviceInfo *> *)devices complete:(void (^)())complete
+- (void)setDevicesKnown:(MXUsersDevicesMap<MXDeviceInfo *> *)devices complete:(void (^)(void))complete
 {
 #ifdef MX_CRYPTO
     dispatch_async(_cryptoQueue, ^{
@@ -990,7 +990,7 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
 #endif
 }
 
-- (void)importRoomKeys:(NSArray<NSDictionary *> *)keys success:(void (^)())success failure:(void (^)(NSError *))failure
+- (void)importRoomKeys:(NSArray<NSDictionary *> *)keys success:(void (^)(void))success failure:(void (^)(NSError *))failure
 {
 #ifdef MX_CRYPTO
     dispatch_async(_decryptionQueue, ^{
@@ -1031,7 +1031,7 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
 #endif
 }
 
-- (void)importRoomKeys:(NSData *)keyFile withPassword:(NSString *)password success:(void (^)())success failure:(void (^)(NSError *))failure
+- (void)importRoomKeys:(NSData *)keyFile withPassword:(NSString *)password success:(void (^)(void))success failure:(void (^)(NSError *))failure
 {
 #ifdef MX_CRYPTO
     dispatch_async(_decryptionQueue, ^{
@@ -1733,7 +1733,7 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
  @param failure A block object called when the operation fails.
  */
 - (void)invalidateDeviceListsSince:(NSString*)oldSyncToken to:(NSString*)lastKnownSyncToken
-                           success:(void (^)())success
+                           success:(void (^)(void))success
                            failure:(void (^)(NSError *error))failure
 {
     [_matrixRestClient keyChangesFrom:oldSyncToken to:lastKnownSyncToken success:^(MXDeviceListResponse *deviceLists) {
@@ -1869,7 +1869,7 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
  @param failure A block object called when the operation fails.
  */
 - (MXHTTPOperation*)makeAnnoucement:(NSMutableDictionary<NSString*, NSMutableArray*> *)roomsByUser
-                            success:(void (^)())success
+                            success:(void (^)(void))success
                             failure:(void (^)(NSError *error))failure
 {
     // This method is called when the initialSync was done or the session was resumed
@@ -2118,7 +2118,7 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
 /**
  Check if it's time to upload one-time keys, and do so if so.
  */
-- (void)maybeUploadOneTimeKeys:(void (^)())success failure:(void (^)(NSError *))failure
+- (void)maybeUploadOneTimeKeys:(void (^)(void))success failure:(void (^)(NSError *))failure
 {
     if (uploadOneTimeKeysOperation)
     {

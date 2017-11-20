@@ -292,7 +292,7 @@
 
 
 #pragma mark - Private methods
-- (void)zipFiles:(BOOL)logs crashLog:(BOOL)crashLog progress:(void (^)(MXBugReportState, NSProgress *))progress complete:(void (^)())complete
+- (void)zipFiles:(BOOL)logs crashLog:(BOOL)crashLog progress:(void (^)(MXBugReportState, NSProgress *))progress complete:(void (^)(void))complete
 {
     // Put all files to send in the same array
     NSMutableArray *logFiles = [NSMutableArray array];

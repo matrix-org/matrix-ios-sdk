@@ -43,7 +43,7 @@
  @param onComplete the callback called once the data has been loaded
  @param failure the callback called in case of error.
  */
-- (void)openWithCredentials:(MXCredentials*)credentials onComplete:(void (^)())onComplete failure:(void (^)(NSError *error))failure;
+- (void)openWithCredentials:(MXCredentials*)credentials onComplete:(void (^)(void))onComplete failure:(void (^)(NSError *error))failure;
 
 /**
  Store a room event received from the home server.

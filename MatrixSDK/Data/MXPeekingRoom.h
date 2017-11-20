@@ -42,7 +42,7 @@
                          is up-to-date with the homeserver.
  @param failure A block object called when the operation fails.
  */
-- (void)start:(void (^)())onServerSyncDone
+- (void)start:(void (^)(void))onServerSyncDone
       failure:(void (^)(NSError *error))failure;
 
 /**
