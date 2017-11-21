@@ -93,9 +93,7 @@ FOUNDATION_EXPORT NSString *const kMXCryptoRoomKeyRequestCancellationNotificatio
 /**
  Start the crypto module.
  
- Device keys will be uploaded, then one time keys if there are not enough on the homeserver
- and, then, if this is the first time, this new device will be announced to all other users
- devices.
+ Device keys will be uploaded, then one time keys if there are not enough on the homeserver.
  
  @param onComplete A block object called when the operation succeeds.
  @param failure A block object called when the operation fails.

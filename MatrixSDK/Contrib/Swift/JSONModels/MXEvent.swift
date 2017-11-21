@@ -51,7 +51,6 @@ public enum MXEventType {
     case roomTag
     case presence
     case typing
-    case newDevice
     case callInvite
     case callCandidates
     case callAnswer
@@ -84,7 +83,6 @@ public enum MXEventType {
         case .roomThirdPartyInvite: return kMXEventTypeStringRoomThirdPartyInvite
         case .roomTag: return kMXEventTypeStringRoomTag
         case .presence: return kMXEventTypeStringPresence
-        case .newDevice: return kMXEventTypeStringNewDevice
         case .callInvite: return kMXEventTypeStringCallInvite
         case .callCandidates: return kMXEventTypeStringCallCandidates
         case .callAnswer: return kMXEventTypeStringCallAnswer

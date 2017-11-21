@@ -208,9 +208,6 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
         return;
     }
 
-    // Check if announcement must be done and to who
-    NSMutableDictionary *roomsByUser = [self usersToMakeAnnouncement];
-
     // Start uploading user device keys
     startOperation = [self uploadDeviceKeys:^(MXKeysUploadResponse *keysUploadResponse) {
 
@@ -219,66 +216,41 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
             return;
         }
 
-        NSLog(@"[MXCrypto] start ###########################################################");
-        NSLog(@" uploadDeviceKeys done for %@: ", mxSession.myUser.userId);
+        // Upload our one-time keys
+        // TODO: matrix-js-sdk does not do it anymore and waits for the completion
+        // of /sync (see comments of the other usage of maybeUploadOneTimeKeys in
+        // this file)
+        // On iOS, for test purpose, we still need to know when the OTKs are sent
+        // so that we can start sending message to a device.
+        // Keep maybeUploadOneTimeKeys for the moment.
+        [self maybeUploadOneTimeKeys:^{
 
-        NSLog(@"   - device id  : %@", _store.deviceId);
-        NSLog(@"   - ed25519    : %@", _olmDevice.deviceEd25519Key);
-        NSLog(@"   - curve25519 : %@", _olmDevice.deviceCurve25519Key);
-        NSLog(@"   - oneTimeKeys: %@", lastPublishedOneTimeKeys);     // They are
-        NSLog(@"");
-        NSLog(@"Store: %@", _store);
-        NSLog(@"");
+            NSLog(@"[MXCrypto] start ###########################################################");
+            NSLog(@" uploadDeviceKeys done for %@: ", mxSession.myUser.userId);
 
-        // Anounce ourselves if not already done
-        if (roomsByUser)
-        {
-            // But upload our one-time keys before.
-            // Thus, other devices can download them once they receive our to-device annoucement event
-            [self maybeUploadOneTimeKeys:^{
+            NSLog(@"   - device id  : %@", _store.deviceId);
+            NSLog(@"   - ed25519    : %@", _olmDevice.deviceEd25519Key);
+            NSLog(@"   - curve25519 : %@", _olmDevice.deviceCurve25519Key);
+            //NSLog(@"   - oneTimeKeys: %@", lastPublishedOneTimeKeys);
+            NSLog(@"");
+            NSLog(@"Store: %@", _store);
+            NSLog(@"");
 
-                // Once keys are uploaded, announce ourselves
-                MXHTTPOperation *operation2 = [self makeAnnoucement:roomsByUser success:^{
-
-                    // Make sure we are refreshing devices lists right instead
-                    // of waiting for the next /sync that may occur in 30s.
-                    [_deviceList refreshOutdatedDeviceLists];
-
-                    [outgoingRoomKeyRequestManager start];
-
-                    dispatch_async(dispatch_get_main_queue(), ^{
-                        startOperation = nil;
-                        success();
-                    });
-
-                } failure:^(NSError *error) {
-                    dispatch_async(dispatch_get_main_queue(), ^{
-                        startOperation = nil;
-                        failure(error);
-                    });
-                }];
-
-                if (operation2)
-                {
-                    [startOperation mutateTo:operation2];
-                }
-            } failure:^(NSError *error) {
-                dispatch_async(dispatch_get_main_queue(), ^{
-                    startOperation = nil;
-                    failure(error);
-                });
-            }];
-        }
-        else
-        {
-            // No annoucement require
             [outgoingRoomKeyRequestManager start];
 
             dispatch_async(dispatch_get_main_queue(), ^{
                 startOperation = nil;
                 success();
             });
-        }
+
+
+        } failure:^(NSError *error) {
+            NSLog(@"[MXCrypto] start. Error in maybeUploadOneTimeKeys");
+            dispatch_async(dispatch_get_main_queue(), ^{
+                startOperation = nil;
+                failure(error);
+            });
+        }];
 
     } failure:^(NSError *error) {
         NSLog(@"[MXCrypto] start. Error in uploadDeviceKeys");
@@ -639,9 +611,7 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
         // to-device messages, to help us avoid throwing away one-time-keys that we
         // are about to receive messages for
         // (https://github.com/vector-im/riot-web/issues/2782).
-        // Also, do not upload them if we have not announced our device yet.
-        // They will be uploaded just before the announcement in [self start].
-        if (!catchingUp && _store.deviceAnnounced)
+        if (!catchingUp)
         {
             [self maybeUploadOneTimeKeys:nil failure:nil];
             [incomingRoomKeyRequestManager processReceivedRoomKeyRequests];
@@ -1490,7 +1460,7 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
         }
     }
 
-    NSLog(@"[MXCrypto] ensureOlmSessionsForDevices (users count: %tu - devices: %tu)", devicesByUser.count, count);
+    NSLog(@"[MXCrypto] ensureOlmSessionsForDevices (users count: %tu - devices: %tu): %@", devicesByUser.count, count, devicesByUser);
 
     if (devicesWithoutSession.count == 0)
     {
@@ -1834,100 +1804,6 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
 }
 
 /**
- Get the list of users and rooms where to announce a new device.
- 
- @return the list of rooms ids ordered by user id. nil if annoucement is not required.
- */
-- (NSMutableDictionary<NSString*, NSMutableArray*> *)usersToMakeAnnouncement
-{
-    // Following operations must be called from the main thread
-    NSParameterAssert([NSThread currentThread].isMainThread);
-
-    if (_store.deviceAnnounced)
-    {
-        NSLog(@"[MXCrypto] usersToMakeAnnouncement: Device announcement already done");
-        return nil;
-    }
-
-    // We need to tell all the devices in all the rooms we are members of that
-    // we have arrived.
-    // Build a list of rooms for each user.
-    return self.e2eRoomMembers;
-}
-
-/**
- Make device annoucement if required.
-
- Send m.new_device messages to any devices we share a room with.
-
- (TODO: we can get rid of this once a suitable number of homeservers and
- clients support the more reliable device list update stream mechanism)
- 
- @param roomsByUser the rooms and users to announce the device to.
- 
- @param success A block object called when the operation succeeds.
- @param failure A block object called when the operation fails.
- */
-- (MXHTTPOperation*)makeAnnoucement:(NSMutableDictionary<NSString*, NSMutableArray*> *)roomsByUser
-                            success:(void (^)(void))success
-                            failure:(void (^)(NSError *error))failure
-{
-    // This method is called when the initialSync was done or the session was resumed
-
-    if (!roomsByUser)
-    {
-        // Catch up on any m.new_device events which arrived during the initial sync.
-        [_deviceList refreshOutdatedDeviceLists];
-
-        NSLog(@"[MXCrypto] makeAnnoucementTo: Already done");
-        success();
-        return nil;
-    }
-
-    // Catch up on any m.new_device events which arrived during the initial sync.
-    // And force download all devices keys the user already has.
-    [_deviceList invalidateUserDeviceList:myDevice.userId];
-    [_deviceList refreshOutdatedDeviceLists];
-
-    // Build a per-device message for each user
-    MXUsersDevicesMap<NSDictionary*> *contentMap = [[MXUsersDevicesMap alloc] init];
-    for (NSString *userId in roomsByUser)
-    {
-        [contentMap setObjects:@{
-                                 @"*": @{
-                                         @"device_id": myDevice.deviceId,
-                                         @"rooms": roomsByUser[userId],
-                                         }
-                                 } forUser:userId];
-    }
-
-    NSLog(@"[MXCrypto] checkDeviceAnnounced: Make annoucements to %tu users and %tu devices: %@", contentMap.userIds.count, contentMap.count, contentMap);
-
-    if (contentMap.userIds.count)
-    {
-        return [_matrixRestClient sendToDevice:kMXEventTypeStringNewDevice contentMap:contentMap txnId:nil success:^{
-
-            NSLog(@"[MXCrypto] checkDeviceAnnounced: Annoucements done");
-
-            [_store storeDeviceAnnounced];
-            success();
-
-        } failure:^(NSError *error) {
-            NSLog(@"[MXCrypto] checkDeviceAnnounced: Annoucements failed.");
-            failure(error);
-        }];
-    }
-    else
-    {
-        NSLog(@"[MXCrypto] checkDeviceAnnounced: Annoucements done 2");
-        [_store storeDeviceAnnounced];
-    }
-    
-    success();
-    return nil;
-}
-
-/**
  Handle a to-device event.
 
  @param notification the notification containing the to-device event.
@@ -1949,14 +1825,6 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
                 // Room key is used for decryption. Switch to the associated queue
                 dispatch_async(_decryptionQueue, ^{
                     [weakSelf onRoomKeyEvent:event];
-                });
-                break;
-            }
-
-            case MXEventTypeNewDevice:
-            {
-                dispatch_async(_cryptoQueue, ^{
-                    [weakSelf onNewDeviceEvent:event];
                 });
                 break;
             }
@@ -2000,45 +1868,6 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
     }
 
     [alg onRoomKeyEvent:event];
-}
-
-/**
- Called when a new device announces itself.
-
- @param event the announcement event.
- */
-- (void)onNewDeviceEvent:(MXEvent*)event
-{
-    NSString *userId = event.sender;
-
-    NSString *deviceId;
-    NSArray<NSString*> *rooms;
-
-    MXJSONModelSetString(deviceId, event.content[@"device_id"]);
-    MXJSONModelSetArray(rooms, event.content[@"rooms"]);
-
-    if (!rooms || !deviceId)
-    {
-        NSLog(@"[MXCrypto] onNewDeviceEvent: new_device event missing keys");
-        return;
-    }
-
-    NSLog(@"[MXCrypto] onNewDeviceEvent: m.new_device event from %@:%@ for rooms %@", userId, deviceId, rooms);
-
-    if ([_store deviceWithDeviceId:deviceId forUser:userId])
-    {
-        NSLog(@"[MXCrypto] onNewDeviceEvent: known device; ignoring");
-        return;
-    }
-
-    [_deviceList invalidateUserDeviceList:userId];
-
-    // We delay handling these until the intialsync has completed, so that we
-    // can do all of them together.
-    if (mxSession.state == MXSessionStateRunning)
-    {
-        [_deviceList refreshOutdatedDeviceLists];
-    }
 }
 
 /**
@@ -2129,6 +1958,10 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
     if (lastOneTimeKeyCheck && [now timeIntervalSinceDate:lastOneTimeKeyCheck] < kMXCryptoUploadOneTimeKeysPeriod)
     {
         // We've done a key upload recently.
+        if (success)
+        {
+            success();
+        }
         return;
     }
 
@@ -2140,6 +1973,10 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
 
         if (!uploadOneTimeKeysOperation)
         {
+            if (success)
+            {
+                success();
+            }
             return;
         }
 
@@ -2175,6 +2012,9 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
         // If there are too many keys on the server then we don't need to
         // create any more keys.
         NSUInteger numberToGenerate = MAX(keyLimit - keyCount, 0);
+
+        NSLog(@"[MXCrypto] maybeUploadOneTimeKeys: Generate and upload %tu keys", numberToGenerate);
+
         if (numberToGenerate)
         {
             // Ask olm to generate new one time keys, then upload them to synapse.
@@ -2207,11 +2047,21 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
         {
             // If we don't need to generate any keys then we are done.
             uploadOneTimeKeysOperation = nil;
+
+            if (success)
+            {
+                success();
+            }
         }
 
     } failure:^(NSError *error) {
         NSLog(@"[MXCrypto] maybeUploadOneTimeKeys: Get published one-time keys count failed. Error: %@", error);
         uploadOneTimeKeysOperation = nil;
+
+        if (failure)
+        {
+            failure(error);
+        }
     }];
 }
 

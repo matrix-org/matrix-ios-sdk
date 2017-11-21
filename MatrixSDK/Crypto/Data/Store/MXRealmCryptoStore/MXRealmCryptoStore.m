@@ -120,11 +120,6 @@ RLM_ARRAY_TYPE(MXRealmOlmInboundGroupSession)
 @property NSData *olmAccountData;
 
 /**
- Has this device been annonced to others?
- */
-@property (nonatomic) BOOL deviceAnnounced;
-
-/**
  The sync token corresponding to the device list.
  */
 @property (nonatomic) NSString *deviceSyncToken;
@@ -361,20 +356,6 @@ RLM_ARRAY_TYPE(MXRealmOlmInboundGroupSession)
         return [NSKeyedUnarchiver unarchiveObjectWithData:account.olmAccountData];
     }
     return nil;
-}
-
-- (void)storeDeviceAnnounced
-{
-    MXRealmOlmAccount *account = self.accountInCurrentThread;
-    [account.realm transactionWithBlock:^{
-        account.deviceAnnounced = YES;
-    }];
-}
-
-- (BOOL)deviceAnnounced
-{
-    MXRealmOlmAccount *account = self.accountInCurrentThread;
-    return account.deviceAnnounced;
 }
 
 - (void)storeDeviceSyncToken:(NSString*)deviceSyncToken

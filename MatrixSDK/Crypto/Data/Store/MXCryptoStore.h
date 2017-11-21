@@ -96,16 +96,6 @@
 - (OLMAccount*)account;
 
 /**
- Store a flag indicating that we have announced the new device.
- */
-- (void)storeDeviceAnnounced;
-
-/**
- Check if the "device announced" flag is set.
- */
-- (BOOL)deviceAnnounced;
-
-/**
  Store the sync token corresponding to the device list.
 
  This is used when starting the client, to get a list of the users who
