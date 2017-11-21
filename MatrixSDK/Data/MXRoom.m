@@ -1315,7 +1315,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
 }
 
 - (MXHTTPOperation*)inviteUserByEmail:(NSString*)email
-                              success:(void (^)(NSDictionary *JSONResponse))success
+                              success:(void (^)(void))success
                               failure:(void (^)(NSError *error))failure
 {
     return [mxSession.matrixRestClient inviteUserByEmail:email toRoom:self.roomId success:success failure:failure];

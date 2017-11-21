@@ -956,7 +956,7 @@ typedef enum : NSUInteger
  */
 - (MXHTTPOperation*)inviteUserByEmail:(NSString*)email
                                toRoom:(NSString*)roomId
-                              success:(void (^)(NSDictionary *JSONResponse))success
+                              success:(void (^)(void))success
                               failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 /**
@@ -973,7 +973,7 @@ typedef enum : NSUInteger
 - (MXHTTPOperation*)inviteByThreePid:(NSString*)medium
                              address:(NSString*)address
                               toRoom:(NSString*)roomId
-                             success:(void (^)(NSDictionary *JSONResponse))success
+                             success:(void (^)(void))success
                              failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 /**
