@@ -103,7 +103,7 @@ NSString *const kMXNotificationCenterAllOtherRoomMessagesRuleID = @".m.rule.mess
     return self;
 }
 
-- (MXHTTPOperation *)refreshRules:(void (^)())success failure:(void (^)(NSError *))failure
+- (MXHTTPOperation *)refreshRules:(void (^)(void))success failure:(void (^)(NSError *))failure
 {
     return [mxSession.matrixRestClient pushRules:^(MXPushRulesResponse *pushRules) {
 

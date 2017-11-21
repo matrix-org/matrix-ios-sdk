@@ -73,7 +73,7 @@
  @param onComplete the callback called once the data has been loaded.
  @param failure the callback called in case of error.
  */
-- (void)open:(void (^)())onComplete failure:(void (^)(NSError *error))failure;
+- (void)open:(void (^)(void))onComplete failure:(void (^)(NSError *error))failure;
 
 /**
  Store the device id.
@@ -228,7 +228,7 @@
 /**
  Look for the first outgoing key request that matches the state.
 
- @param the request state to look for.
+ @param state to look for.
  @return a MXOutgoingRoomKeyRequest matching the request, or nil if not found.
  */
 - (MXOutgoingRoomKeyRequest*)outgoingRoomKeyRequestWithState:(MXRoomKeyRequestState)state;

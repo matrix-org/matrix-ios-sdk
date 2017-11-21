@@ -34,7 +34,7 @@
     return self;
 }
 
-- (void)setDisplayName:(NSString *)displayname success:(void (^)())success failure:(void (^)(NSError *))failure
+- (void)setDisplayName:(NSString *)displayname success:(void (^)(void))success failure:(void (^)(NSError *))failure
 {
     [_mxSession.matrixRestClient setDisplayName:displayname success:^{
 
@@ -60,7 +60,7 @@
     }];
 }
 
-- (void)setAvatarUrl:(NSString *)avatarUrl success:(void (^)())success failure:(void (^)(NSError *))failure
+- (void)setAvatarUrl:(NSString *)avatarUrl success:(void (^)(void))success failure:(void (^)(NSError *))failure
 {
     [_mxSession.matrixRestClient setAvatarUrl:avatarUrl success:^{
 
@@ -86,7 +86,7 @@
     }];
 }
 
-- (void)setPresence:(MXPresence)presence andStatusMessage:(NSString *)statusMessage success:(void (^)())success failure:(void (^)(NSError *))failure
+- (void)setPresence:(MXPresence)presence andStatusMessage:(NSString *)statusMessage success:(void (^)(void))success failure:(void (^)(NSError *))failure
 {
     [_mxSession.matrixRestClient setPresence:presence andStatusMessage:statusMessage success:^{
 

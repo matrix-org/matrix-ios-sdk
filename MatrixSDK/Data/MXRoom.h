@@ -136,7 +136,7 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidFlushDataNotification;
  */
 - (MXHTTPOperation*)setIsDirect:(BOOL)isDirect
                      withUserId:(NSString*)userId
-                        success:(void (^)())success
+                        success:(void (^)(void))success
                         failure:(void (^)(NSError *error))failure;
 
 /**
@@ -442,7 +442,7 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidFlushDataNotification;
  @return a MXHTTPOperation instance.
  */
 - (MXHTTPOperation*)setTopic:(NSString*)topic
-                     success:(void (^)())success
+                     success:(void (^)(void))success
                      failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 /**
@@ -455,7 +455,7 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidFlushDataNotification;
  @return a MXHTTPOperation instance.
  */
 - (MXHTTPOperation*)setAvatar:(NSString*)avatar
-                      success:(void (^)())success
+                      success:(void (^)(void))success
                       failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 /**
@@ -468,7 +468,7 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidFlushDataNotification;
  @return a MXHTTPOperation instance.
  */
 - (MXHTTPOperation*)setName:(NSString*)name
-                    success:(void (^)())success
+                    success:(void (^)(void))success
                     failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 /**
@@ -481,7 +481,7 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidFlushDataNotification;
  @return a MXHTTPOperation instance.
  */
 - (MXHTTPOperation*)setHistoryVisibility:(MXRoomHistoryVisibility)historyVisibility
-                                 success:(void (^)())success
+                                 success:(void (^)(void))success
                                  failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 /**
@@ -494,7 +494,7 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidFlushDataNotification;
  @return a MXHTTPOperation instance.
  */
 - (MXHTTPOperation*)setJoinRule:(MXRoomJoinRule)joinRule
-                        success:(void (^)())success
+                        success:(void (^)(void))success
                         failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 /**
@@ -507,7 +507,7 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidFlushDataNotification;
  @return a MXHTTPOperation instance.
  */
 - (MXHTTPOperation*)setGuestAccess:(MXRoomGuestAccess)guestAccess
-                           success:(void (^)())success
+                           success:(void (^)(void))success
                            failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 /**
@@ -520,7 +520,7 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidFlushDataNotification;
  @return a MXHTTPOperation instance.
  */
 - (MXHTTPOperation*)setDirectoryVisibility:(MXRoomDirectoryVisibility)directoryVisibility
-                                   success:(void (^)())success
+                                   success:(void (^)(void))success
                                    failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 /**
@@ -533,7 +533,7 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidFlushDataNotification;
  @return a MXHTTPOperation instance.
  */
 - (MXHTTPOperation*)addAlias:(NSString *)roomAlias
-                     success:(void (^)())success
+                     success:(void (^)(void))success
                      failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 /**
@@ -546,7 +546,7 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidFlushDataNotification;
  @return a MXHTTPOperation instance.
  */
 - (MXHTTPOperation*)removeAlias:(NSString *)roomAlias
-                        success:(void (^)())success
+                        success:(void (^)(void))success
                         failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 /**
@@ -559,7 +559,7 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidFlushDataNotification;
  @return a MXHTTPOperation instance.
  */
 - (MXHTTPOperation*)setCanonicalAlias:(NSString *)canonicalAlias
-                              success:(void (^)())success
+                              success:(void (^)(void))success
                               failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 /**
@@ -586,7 +586,7 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidFlushDataNotification;
 
  @return a MXHTTPOperation instance.
  */
-- (MXHTTPOperation*)join:(void (^)())success
+- (MXHTTPOperation*)join:(void (^)(void))success
                  failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 /**
@@ -597,7 +597,7 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidFlushDataNotification;
 
  @return a MXHTTPOperation instance.
  */
-- (MXHTTPOperation*)leave:(void (^)())success
+- (MXHTTPOperation*)leave:(void (^)(void))success
                   failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 /**
@@ -610,7 +610,7 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidFlushDataNotification;
  @return a MXHTTPOperation instance.
  */
 - (MXHTTPOperation*)inviteUser:(NSString*)userId
-                       success:(void (^)())success
+                       success:(void (^)(void))success
                        failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 /**
@@ -623,7 +623,7 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidFlushDataNotification;
  @return a MXHTTPOperation instance.
  */
 - (MXHTTPOperation*)inviteUserByEmail:(NSString*)email
-                              success:(void (^)())success
+                              success:(void (^)(NSDictionary *JSONResponse))success
                               failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 /**
@@ -637,7 +637,7 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidFlushDataNotification;
  */
 - (MXHTTPOperation*)kickUser:(NSString*)userId
                       reason:(NSString*)reason
-                     success:(void (^)())success
+                     success:(void (^)(void))success
                      failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 /**
@@ -651,7 +651,7 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidFlushDataNotification;
  */
 - (MXHTTPOperation*)banUser:(NSString*)userId
                      reason:(NSString*)reason
-                    success:(void (^)())success
+                    success:(void (^)(void))success
                     failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 /**
@@ -664,7 +664,7 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidFlushDataNotification;
  @return a MXHTTPOperation instance.
  */
 - (MXHTTPOperation*)unbanUser:(NSString*)userId
-                      success:(void (^)())success
+                      success:(void (^)(void))success
                       failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 /**
@@ -679,7 +679,7 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidFlushDataNotification;
  @return a MXHTTPOperation instance.
  */
 - (MXHTTPOperation*)setPowerLevelOfUserWithUserID:(NSString*)userId powerLevel:(NSInteger)powerLevel
-                                          success:(void (^)())success
+                                          success:(void (^)(void))success
                                           failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 /**
@@ -696,7 +696,7 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidFlushDataNotification;
  */
 - (MXHTTPOperation*)sendTypingNotification:(BOOL)typing
                                    timeout:(NSUInteger)timeout
-                                   success:(void (^)())success
+                                   success:(void (^)(void))success
                                    failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 /**
@@ -712,7 +712,7 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidFlushDataNotification;
  */
 - (MXHTTPOperation*)redactEvent:(NSString*)eventId
                          reason:(NSString*)reason
-                        success:(void (^)())success
+                        success:(void (^)(void))success
                         failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 /**
@@ -731,7 +731,7 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidFlushDataNotification;
 - (MXHTTPOperation*)reportEvent:(NSString*)eventId
                           score:(NSInteger)score
                          reason:(NSString*)reason
-                        success:(void (^)())success
+                        success:(void (^)(void))success
                         failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 
@@ -808,7 +808,7 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidFlushDataNotification;
  */
 - (MXHTTPOperation*)addTag:(NSString*)tag
                  withOrder:(NSString*)order
-                   success:(void (^)())success
+                   success:(void (^)(void))success
                    failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 /**
  Remove a tag from a room.
@@ -821,7 +821,7 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidFlushDataNotification;
  @return a MXHTTPOperation instance.
  */
 - (MXHTTPOperation*)removeTag:(NSString*)tag
-                      success:(void (^)())success
+                      success:(void (^)(void))success
                       failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 /**
@@ -839,7 +839,7 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidFlushDataNotification;
 - (MXHTTPOperation*)replaceTag:(NSString*)oldTag
                          byTag:(NSString*)newTag
                      withOrder:(NSString*)newTagOrder
-                       success:(void (^)())success
+                       success:(void (^)(void))success
                        failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 
@@ -929,7 +929,7 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidFlushDataNotification;
  @return a MXHTTPOperation instance.
 */
 - (MXHTTPOperation*)enableEncryptionWithAlgorithm:(NSString*)algorithm
-                                          success:(void (^)())success
+                                          success:(void (^)(void))success
                                           failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 /**

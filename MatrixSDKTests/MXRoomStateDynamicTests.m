@@ -60,7 +60,7 @@
  5 - Bob changes the room topic to "Topic #2"
  6 - Bob: "Bonjour"
  */
--(void)createScenario1:(MXRestClient*)bobRestClient inRoom:(NSString*)roomId expectation:(XCTestExpectation*)expectation onComplete:(void(^)())onComplete
+-(void)createScenario1:(MXRestClient*)bobRestClient inRoom:(NSString*)roomId expectation:(XCTestExpectation*)expectation onComplete:(void(^)(void))onComplete
 {
     __block MXRestClient *bobRestClient2 = bobRestClient;
     

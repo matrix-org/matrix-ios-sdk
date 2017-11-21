@@ -312,7 +312,7 @@ FOUNDATION_EXPORT NSString *const kMXSessionNoRoomTag;
  @param failure A block object called when the operation fails. In case of failure during the
  initial sync the session state is MXSessionStateInitialSyncFailed.
  */
-- (void)start:(void (^)())onServerSyncDone
+- (void)start:(void (^)(void))onServerSyncDone
       failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 /**
@@ -326,7 +326,7 @@ FOUNDATION_EXPORT NSString *const kMXSessionNoRoomTag;
  @param failure A block object called when the operation fails.
  */
 - (void)startWithMessagesLimit:(NSUInteger)messagesLimit
-              onServerSyncDone:(void (^)())onServerSyncDone
+              onServerSyncDone:(void (^)(void))onServerSyncDone
                        failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 /**
@@ -349,7 +349,7 @@ FOUNDATION_EXPORT NSString *const kMXSessionNoRoomTag;
                    CAUTION The session state is updated (to MXSessionStateRunning) after
                    calling this block. It SHOULD not be modified by this block.
  */
-- (void)resume:(void (^)())resumeDone;
+- (void)resume:(void (^)(void))resumeDone;
 
 typedef void (^MXOnBackgroundSyncDone)();
 typedef void (^MXOnBackgroundSyncFail)(NSError *error);
@@ -387,7 +387,7 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
  
  @return a MXHTTPOperation instance.
  */
-- (MXHTTPOperation*)logout:(void (^)())success
+- (MXHTTPOperation*)logout:(void (^)(void))success
                    failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 
@@ -435,7 +435,7 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
  the home server.
  @param failure A block object called when the operation fails.
  */
-- (void)setStore:(id<MXStore>)store success:(void (^)())onStoreDataReady
+- (void)setStore:(id<MXStore>)store success:(void (^)(void))onStoreDataReady
          failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 /**
@@ -468,7 +468,7 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
  @param success A block object called when the operation succeeds.
  @param failure A block object called when the operation fails.
  */
-- (void)enableCrypto:(BOOL)enableCrypto success:(void (^)())success failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
+- (void)enableCrypto:(BOOL)enableCrypto success:(void (^)(void))success failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 
 #pragma mark - Rooms operations
@@ -582,7 +582,7 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
  @return a MXHTTPOperation instance.
  */
 - (MXHTTPOperation*)leaveRoom:(NSString*)roomId
-                      success:(void (^)())success
+                      success:(void (^)(void))success
                       failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 
@@ -637,7 +637,7 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
  
  @return a MXHTTPOperation instance.
  */
-- (MXHTTPOperation*)uploadDirectRooms:(void (^)())success
+- (MXHTTPOperation*)uploadDirectRooms:(void (^)(void))success
                               failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 
@@ -777,7 +777,7 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
  @return a MXHTTPOperation instance.
  */
 - (MXHTTPOperation*)ignoreUsers:(NSArray<NSString*>*)userIds
-                        success:(void (^)())success
+                        success:(void (^)(void))success
                         failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 /**
@@ -790,7 +790,7 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
  @return a MXHTTPOperation instance.
  */
 - (MXHTTPOperation*)unIgnoreUsers:(NSArray<NSString*>*)userIds
-                        success:(void (^)())success
+                        success:(void (^)(void))success
                         failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 

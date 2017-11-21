@@ -1217,14 +1217,14 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
 }
 
 - (MXHTTPOperation*)setTopic:(NSString*)topic
-                     success:(void (^)())success
+                     success:(void (^)(void))success
                      failure:(void (^)(NSError *error))failure
 {
     return [mxSession.matrixRestClient setRoomTopic:self.roomId topic:topic success:success failure:failure];
 }
 
 - (MXHTTPOperation*)setAvatar:(NSString*)avatar
-                     success:(void (^)())success
+                     success:(void (^)(void))success
                      failure:(void (^)(NSError *error))failure
 {
     return [mxSession.matrixRestClient setRoomAvatar:self.roomId avatar:avatar success:success failure:failure];
@@ -1232,56 +1232,56 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
 
 
 - (MXHTTPOperation*)setName:(NSString*)name
-                    success:(void (^)())success
+                    success:(void (^)(void))success
                     failure:(void (^)(NSError *error))failure
 {
     return [mxSession.matrixRestClient setRoomName:self.roomId name:name success:success failure:failure];
 }
 
 - (MXHTTPOperation *)setHistoryVisibility:(MXRoomHistoryVisibility)historyVisibility
-                                  success:(void (^)())success
+                                  success:(void (^)(void))success
                                   failure:(void (^)(NSError *))failure
 {
     return [mxSession.matrixRestClient setRoomHistoryVisibility:self.roomId historyVisibility:historyVisibility success:success failure:failure];
 }
 
 - (MXHTTPOperation*)setJoinRule:(MXRoomJoinRule)joinRule
-                        success:(void (^)())success
+                        success:(void (^)(void))success
                         failure:(void (^)(NSError *error))failure
 {
     return [mxSession.matrixRestClient setRoomJoinRule:self.roomId joinRule:joinRule success:success failure:failure];
 }
 
 - (MXHTTPOperation*)setGuestAccess:(MXRoomGuestAccess)guestAccess
-                           success:(void (^)())success
+                           success:(void (^)(void))success
                            failure:(void (^)(NSError *error))failure
 {
     return [mxSession.matrixRestClient setRoomGuestAccess:self.roomId guestAccess:guestAccess success:success failure:failure];
 }
 
 - (MXHTTPOperation*)setDirectoryVisibility:(MXRoomDirectoryVisibility)directoryVisibility
-                                   success:(void (^)())success
+                                   success:(void (^)(void))success
                                    failure:(void (^)(NSError *error))failure
 {
     return [mxSession.matrixRestClient setRoomDirectoryVisibility:self.roomId directoryVisibility:directoryVisibility success:success failure:failure];
 }
 
 - (MXHTTPOperation*)addAlias:(NSString *)roomAlias
-                     success:(void (^)())success
+                     success:(void (^)(void))success
                      failure:(void (^)(NSError *error))failure
 {
     return [mxSession.matrixRestClient addRoomAlias:self.roomId alias:roomAlias success:success failure:failure];
 }
 
 - (MXHTTPOperation*)removeAlias:(NSString *)roomAlias
-                     success:(void (^)())success
+                     success:(void (^)(void))success
                      failure:(void (^)(NSError *error))failure
 {
     return [mxSession.matrixRestClient removeRoomAlias:roomAlias success:success failure:failure];
 }
 
 - (MXHTTPOperation*)setCanonicalAlias:(NSString *)canonicalAlias
-                              success:(void (^)())success
+                              success:(void (^)(void))success
                               failure:(void (^)(NSError *error))failure
 {
     return [mxSession.matrixRestClient setRoomCanonicalAlias:self.roomId canonicalAlias:canonicalAlias success:success failure:failure];
@@ -1293,7 +1293,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
     return [mxSession.matrixRestClient directoryVisibilityOfRoom:self.roomId success:success failure:failure];
 }
 
-- (MXHTTPOperation*)join:(void (^)())success
+- (MXHTTPOperation*)join:(void (^)(void))success
                  failure:(void (^)(NSError *error))failure
 {
     return [mxSession joinRoom:self.roomId success:^(MXRoom *room) {
@@ -1301,21 +1301,21 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
     } failure:failure];
 }
 
-- (MXHTTPOperation*)leave:(void (^)())success
+- (MXHTTPOperation*)leave:(void (^)(void))success
                   failure:(void (^)(NSError *error))failure
 {
     return [mxSession leaveRoom:self.roomId success:success failure:failure];
 }
 
 - (MXHTTPOperation*)inviteUser:(NSString*)userId
-                       success:(void (^)())success
+                       success:(void (^)(void))success
                        failure:(void (^)(NSError *error))failure
 {
     return [mxSession.matrixRestClient inviteUser:userId toRoom:self.roomId success:success failure:failure];
 }
 
 - (MXHTTPOperation*)inviteUserByEmail:(NSString*)email
-                              success:(void (^)())success
+                              success:(void (^)(NSDictionary *JSONResponse))success
                               failure:(void (^)(NSError *error))failure
 {
     return [mxSession.matrixRestClient inviteUserByEmail:email toRoom:self.roomId success:success failure:failure];
@@ -1323,7 +1323,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
 
 - (MXHTTPOperation*)kickUser:(NSString*)userId
                       reason:(NSString*)reason
-                     success:(void (^)())success
+                     success:(void (^)(void))success
                      failure:(void (^)(NSError *error))failure
 {
     return [mxSession.matrixRestClient kickUser:userId fromRoom:self.roomId reason:reason success:success failure:failure];
@@ -1331,21 +1331,21 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
 
 - (MXHTTPOperation*)banUser:(NSString*)userId
                      reason:(NSString*)reason
-                    success:(void (^)())success
+                    success:(void (^)(void))success
                     failure:(void (^)(NSError *error))failure
 {
     return [mxSession.matrixRestClient banUser:userId inRoom:self.roomId reason:reason success:success failure:failure];
 }
 
 - (MXHTTPOperation*)unbanUser:(NSString*)userId
-                      success:(void (^)())success
+                      success:(void (^)(void))success
                       failure:(void (^)(NSError *error))failure
 {
     return [mxSession.matrixRestClient unbanUser:userId inRoom:self.roomId success:success failure:failure];
 }
 
 - (MXHTTPOperation*)setPowerLevelOfUserWithUserID:(NSString *)userId powerLevel:(NSInteger)powerLevel
-                                          success:(void (^)())success
+                                          success:(void (^)(void))success
                                           failure:(void (^)(NSError *))failure
 {
     // To set this new value, we have to take the current powerLevels content,
@@ -1365,7 +1365,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
 
 - (MXHTTPOperation*)sendTypingNotification:(BOOL)typing
                                    timeout:(NSUInteger)timeout
-                                   success:(void (^)())success
+                                   success:(void (^)(void))success
                                    failure:(void (^)(NSError *error))failure
 {
     return [mxSession.matrixRestClient sendTypingNotificationInRoom:self.roomId typing:typing timeout:timeout success:success failure:failure];
@@ -1373,7 +1373,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
 
 - (MXHTTPOperation*)redactEvent:(NSString*)eventId
                          reason:(NSString*)reason
-                        success:(void (^)())success
+                        success:(void (^)(void))success
                         failure:(void (^)(NSError *error))failure
 {
     return [mxSession.matrixRestClient redactEvent:eventId inRoom:self.roomId reason:reason success:success failure:failure];
@@ -1382,7 +1382,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
 - (MXHTTPOperation *)reportEvent:(NSString *)eventId
                            score:(NSInteger)score
                           reason:(NSString *)reason
-                         success:(void (^)())success
+                         success:(void (^)(void))success
                          failure:(void (^)(NSError *))failure
 {
     return [mxSession.matrixRestClient reportEvent:eventId inRoom:self.roomId score:score reason:reason success:success failure:failure];
@@ -1397,7 +1397,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
  @param block the code block to schedule.
  @return a `MXRoomOperation` object.
  */
-- (MXRoomOperation *)preserveOperationOrder:(MXEvent*)localEvent block:(void (^)())block
+- (MXRoomOperation *)preserveOperationOrder:(MXEvent*)localEvent block:(void (^)(void))block
 {
     // Queue the operation requests
     MXRoomOperation *roomOperation = [[MXRoomOperation alloc] init];
@@ -1766,7 +1766,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
 #pragma mark - Room tags operations
 - (MXHTTPOperation*)addTag:(NSString*)tag
                  withOrder:(NSString*)order
-                   success:(void (^)())success
+                   success:(void (^)(void))success
                    failure:(void (^)(NSError *error))failure
 {
     // _accountData.tags will be updated by the live streams
@@ -1774,7 +1774,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
 }
 
 - (MXHTTPOperation*)removeTag:(NSString*)tag
-                      success:(void (^)())success
+                      success:(void (^)(void))success
                       failure:(void (^)(NSError *error))failure
 {
     // _accountData.tags will be updated by the live streams
@@ -1784,7 +1784,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
 - (MXHTTPOperation*)replaceTag:(NSString*)oldTag
                          byTag:(NSString*)newTag
                      withOrder:(NSString*)newTagOrder
-                       success:(void (^)())success
+                       success:(void (^)(void))success
                        failure:(void (^)(NSError *error))failure
 {
     MXHTTPOperation *operation;
@@ -2175,7 +2175,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
 
 - (MXHTTPOperation*)setIsDirect:(BOOL)isDirect
                      withUserId:(NSString*)userId
-                        success:(void (^)())success
+                        success:(void (^)(void))success
                         failure:(void (^)(NSError *error))failure
 {
     if (isDirect == NO)
@@ -2355,7 +2355,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
 #pragma mark - Crypto
 
 - (MXHTTPOperation *)enableEncryptionWithAlgorithm:(NSString *)algorithm
-                                           success:(void (^)())success failure:(void (^)(NSError *))failure
+                                           success:(void (^)(void))success failure:(void (^)(NSError *))failure
 {
     MXHTTPOperation *operation;
 

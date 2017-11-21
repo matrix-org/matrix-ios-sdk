@@ -173,7 +173,7 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
     storeMessagesEnumerator = [store messagesEnumeratorForRoom:_state.roomId];
 }
 
-- (MXHTTPOperation *)resetPaginationAroundInitialEventWithLimit:(NSUInteger)limit success:(void (^)())success failure:(void (^)(NSError *))failure
+- (MXHTTPOperation *)resetPaginationAroundInitialEventWithLimit:(NSUInteger)limit success:(void (^)(void))success failure:(void (^)(NSError *))failure
 {
     NSParameterAssert(success);
     NSAssert(_initialEventId, @"[MXEventTimeline] resetPaginationAroundInitialEventWithLimit cannot be called on live timeline");
@@ -221,7 +221,7 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
 }
 
 
-- (MXHTTPOperation *)paginate:(NSUInteger)numItems direction:(MXTimelineDirection)direction onlyFromStore:(BOOL)onlyFromStore complete:(void (^)())complete failure:(void (^)(NSError *))failure
+- (MXHTTPOperation *)paginate:(NSUInteger)numItems direction:(MXTimelineDirection)direction onlyFromStore:(BOOL)onlyFromStore complete:(void (^)(void))complete failure:(void (^)(NSError *))failure
 {
     MXHTTPOperation *operation;
 

@@ -98,7 +98,7 @@ FOUNDATION_EXPORT NSString *const kMXCryptoRoomKeyRequestCancellationNotificatio
  @param onComplete A block object called when the operation succeeds.
  @param failure A block object called when the operation fails.
  */
-- (void)start:(void (^)())onComplete
+- (void)start:(void (^)(void))onComplete
       failure:(void (^)(NSError *error))failure;
 
 /**
@@ -151,7 +151,7 @@ FOUNDATION_EXPORT NSString *const kMXCryptoRoomKeyRequestCancellationNotificatio
  @return a MXHTTPOperation instance. May be nil if all required materials is already in place.
  */
 - (MXHTTPOperation*)ensureEncryptionInRoom:(NSString*)roomId
-                                   success:(void (^)())success
+                                   success:(void (^)(void))success
                                    failure:(void (^)(NSError *error))failure;
 
 /**
@@ -211,7 +211,7 @@ FOUNDATION_EXPORT NSString *const kMXCryptoRoomKeyRequestCancellationNotificatio
  @param failure A block object called when the operation fails.
  */
 - (void)setDeviceVerification:(MXDeviceVerification)verificationStatus forDevice:(NSString*)deviceId ofUser:(NSString*)userId
-                      success:(void (^)())success
+                      success:(void (^)(void))success
                       failure:(void (^)(NSError *error))failure;
 
 /**
@@ -222,7 +222,7 @@ FOUNDATION_EXPORT NSString *const kMXCryptoRoomKeyRequestCancellationNotificatio
  @param complete A block object called when the operation completes.
  */
 - (void)setDevicesKnown:(MXUsersDevicesMap<MXDeviceInfo*>*)devices
-               complete:(void (^)())complete;
+               complete:(void (^)(void))complete;
 
 /**
  Download the device keys for a list of users and stores them into the crypto store.
@@ -294,7 +294,7 @@ FOUNDATION_EXPORT NSString *const kMXCryptoRoomKeyRequestCancellationNotificatio
  @param failure A block object called when the operation fails.
  */
 - (void)importRoomKeys:(NSArray<NSDictionary*>*)keys
-               success:(void (^)())success
+               success:(void (^)(void))success
                failure:(void (^)(NSError *error))failure;
 
 /**
@@ -306,7 +306,7 @@ FOUNDATION_EXPORT NSString *const kMXCryptoRoomKeyRequestCancellationNotificatio
  @param failure A block object called when the operation fails.
  */
 - (void)importRoomKeys:(NSData *)keyFile withPassword:(NSString*)password
-               success:(void (^)())success
+               success:(void (^)(void))success
                failure:(void (^)(NSError *error))failure;
 
 

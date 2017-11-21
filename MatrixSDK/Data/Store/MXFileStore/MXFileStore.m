@@ -131,7 +131,7 @@ static NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
     return self;
 }
 
-- (void)openWithCredentials:(MXCredentials*)someCredentials onComplete:(void (^)())onComplete failure:(void (^)(NSError *))failure
+- (void)openWithCredentials:(MXCredentials*)someCredentials onComplete:(void (^)(void))onComplete failure:(void (^)(NSError *))failure
 {
     credentials = someCredentials;
     
