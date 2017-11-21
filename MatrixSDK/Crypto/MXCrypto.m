@@ -216,23 +216,41 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
             return;
         }
 
-        NSLog(@"[MXCrypto] start ###########################################################");
-        NSLog(@" uploadDeviceKeys done for %@: ", mxSession.myUser.userId);
+        // Upload our one-time keys
+        // TODO: matrix-js-sdk does not do it anymore and waits for the completion
+        // of /sync (see comments of the other usage of maybeUploadOneTimeKeys in
+        // this file)
+        // On iOS, for test purpose, we still need to know when the OTKs are sent
+        // so that we can start sending message to a device.
+        // Keep maybeUploadOneTimeKeys for the moment.
+        [self maybeUploadOneTimeKeys:^{
 
-        NSLog(@"   - device id  : %@", _store.deviceId);
-        NSLog(@"   - ed25519    : %@", _olmDevice.deviceEd25519Key);
-        NSLog(@"   - curve25519 : %@", _olmDevice.deviceCurve25519Key);
-        NSLog(@"   - oneTimeKeys: %@", lastPublishedOneTimeKeys);     // They are
-        NSLog(@"");
-        NSLog(@"Store: %@", _store);
-        NSLog(@"");
+            NSLog(@"[MXCrypto] start ###########################################################");
+            NSLog(@" uploadDeviceKeys done for %@: ", mxSession.myUser.userId);
 
-        [outgoingRoomKeyRequestManager start];
+            NSLog(@"   - device id  : %@", _store.deviceId);
+            NSLog(@"   - ed25519    : %@", _olmDevice.deviceEd25519Key);
+            NSLog(@"   - curve25519 : %@", _olmDevice.deviceCurve25519Key);
+            //NSLog(@"   - oneTimeKeys: %@", lastPublishedOneTimeKeys);
+            NSLog(@"");
+            NSLog(@"Store: %@", _store);
+            NSLog(@"");
 
-        dispatch_async(dispatch_get_main_queue(), ^{
-            startOperation = nil;
-            success();
-        });
+            [outgoingRoomKeyRequestManager start];
+
+            dispatch_async(dispatch_get_main_queue(), ^{
+                startOperation = nil;
+                success();
+            });
+
+
+        } failure:^(NSError *error) {
+            NSLog(@"[MXCrypto] start. Error in maybeUploadOneTimeKeys");
+            dispatch_async(dispatch_get_main_queue(), ^{
+                startOperation = nil;
+                failure(error);
+            });
+        }];
 
     } failure:^(NSError *error) {
         NSLog(@"[MXCrypto] start. Error in uploadDeviceKeys");
@@ -1442,7 +1460,7 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
         }
     }
 
-    NSLog(@"[MXCrypto] ensureOlmSessionsForDevices (users count: %tu - devices: %tu)", devicesByUser.count, count);
+    NSLog(@"[MXCrypto] ensureOlmSessionsForDevices (users count: %tu - devices: %tu): %@", devicesByUser.count, count, devicesByUser);
 
     if (devicesWithoutSession.count == 0)
     {
@@ -1940,6 +1958,10 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
     if (lastOneTimeKeyCheck && [now timeIntervalSinceDate:lastOneTimeKeyCheck] < kMXCryptoUploadOneTimeKeysPeriod)
     {
         // We've done a key upload recently.
+        if (success)
+        {
+            success();
+        }
         return;
     }
 
@@ -1951,6 +1973,10 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
 
         if (!uploadOneTimeKeysOperation)
         {
+            if (success)
+            {
+                success();
+            }
             return;
         }
 
@@ -1986,6 +2012,9 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
         // If there are too many keys on the server then we don't need to
         // create any more keys.
         NSUInteger numberToGenerate = MAX(keyLimit - keyCount, 0);
+
+        NSLog(@"[MXCrypto] maybeUploadOneTimeKeys: Generate and upload %tu keys", numberToGenerate);
+
         if (numberToGenerate)
         {
             // Ask olm to generate new one time keys, then upload them to synapse.
@@ -2018,11 +2047,21 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
         {
             // If we don't need to generate any keys then we are done.
             uploadOneTimeKeysOperation = nil;
+
+            if (success)
+            {
+                success();
+            }
         }
 
     } failure:^(NSError *error) {
         NSLog(@"[MXCrypto] maybeUploadOneTimeKeys: Get published one-time keys count failed. Error: %@", error);
         uploadOneTimeKeysOperation = nil;
+
+        if (failure)
+        {
+            failure(error);
+        }
     }];
 }
 
