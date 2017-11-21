@@ -143,6 +143,10 @@ FOUNDATION_EXPORT NSString *const kMXSessionDidLeaveRoomNotification;
 
 /**
  Posted when MXSession has performed a server sync.
+
+ The passed userInfo dictionary contains:
+ - `kMXSessionNotificationSyncResponseKey` the server response, a `MXSyncResponse` object.
+ - `kMXSessionNotificationErrorKey` the error if any.
  */
 FOUNDATION_EXPORT NSString *const kMXSessionDidSyncNotification;
 
@@ -165,18 +169,6 @@ FOUNDATION_EXPORT NSString *const kMXSessionInvitedRoomsDidChangeNotification;
  - `kMXSessionNotificationEventKey` the to-device MXEvent.
  */
 FOUNDATION_EXPORT NSString *const kMXSessionOnToDeviceEventNotification;
-
-
-#pragma mark - Notifications keys
-/**
- The key in notification userInfo dictionary representating the roomId.
- */
-FOUNDATION_EXPORT NSString *const kMXSessionNotificationRoomIdKey;
-
-/**
- The key in notification userInfo dictionary representating the event.
- */
-FOUNDATION_EXPORT NSString *const kMXSessionNotificationEventKey;
 
 /**
  Posted when MXSession has detected a change in the `ignoredUsers` property.
@@ -207,6 +199,29 @@ FOUNDATION_EXPORT NSString *const kMXSessionDidCorruptDataNotification;
  The notification object is the id of the concerned user.
  */
 FOUNDATION_EXPORT NSString *const kMXSessionCryptoDidCorruptDataNotification;
+
+
+#pragma mark - Notifications keys
+/**
+ The key in notification userInfo dictionary representating the roomId.
+ */
+FOUNDATION_EXPORT NSString *const kMXSessionNotificationRoomIdKey;
+
+/**
+ The key in notification userInfo dictionary representating the event.
+ */
+FOUNDATION_EXPORT NSString *const kMXSessionNotificationEventKey;
+
+/**
+ The key in notification userInfo dictionary representating the matrix homeserver
+ response (MXSyncResponse instance) to /sync.
+ */
+FOUNDATION_EXPORT NSString *const kMXSessionNotificationSyncResponseKey;
+
+/**
+ The key in notification userInfo dictionary representating the error.
+ */
+FOUNDATION_EXPORT NSString *const kMXSessionNotificationErrorKey;
 
 
 #pragma mark - Other constants

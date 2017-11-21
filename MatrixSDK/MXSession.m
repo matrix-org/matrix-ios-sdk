@@ -47,12 +47,16 @@ NSString *const kMXSessionDidLeaveRoomNotification = @"kMXSessionDidLeaveRoomNot
 NSString *const kMXSessionDidSyncNotification = @"kMXSessionDidSyncNotification";
 NSString *const kMXSessionInvitedRoomsDidChangeNotification = @"kMXSessionInvitedRoomsDidChangeNotification";
 NSString *const kMXSessionOnToDeviceEventNotification = @"kMXSessionOnToDeviceEventNotification";
-NSString *const kMXSessionNotificationRoomIdKey = @"roomId";
-NSString *const kMXSessionNotificationEventKey = @"event";
 NSString *const kMXSessionIgnoredUsersDidChangeNotification = @"kMXSessionIgnoredUsersDidChangeNotification";
 NSString *const kMXSessionDirectRoomsDidChangeNotification = @"kMXSessionDirectRoomsDidChangeNotification";
 NSString *const kMXSessionDidCorruptDataNotification = @"kMXSessionDidCorruptDataNotification";
 NSString *const kMXSessionCryptoDidCorruptDataNotification = @"kMXSessionCryptoDidCorruptDataNotification";
+
+NSString *const kMXSessionNotificationRoomIdKey = @"roomId";
+NSString *const kMXSessionNotificationEventKey = @"event";
+NSString *const kMXSessionNotificationSyncResponseKey = @"syncResponse";
+NSString *const kMXSessionNotificationErrorKey = @"error";
+
 NSString *const kMXSessionNoRoomTag = @"m.recent";  // Use the same value as matrix-react-sdk
 
 /**
@@ -1022,7 +1026,9 @@ typedef void (^MXOnResumeDone)();
         // Broadcast that a server sync has been processed.
         [[NSNotificationCenter defaultCenter] postNotificationName:kMXSessionDidSyncNotification
                                                             object:self
-                                                          userInfo:nil];
+                                                          userInfo:@{
+                                                                     kMXSessionNotificationSyncResponseKey: syncResponse
+                                                                     }];
         
         if (success)
         {
@@ -1117,7 +1123,9 @@ typedef void (^MXOnResumeDone)();
                 // Notify the reconnection attempt has been done.
                 [[NSNotificationCenter defaultCenter] postNotificationName:kMXSessionDidSyncNotification
                                                                     object:self
-                                                                  userInfo:nil];
+                                                                  userInfo:@{
+                                                                             kMXSessionNotificationErrorKey: error
+                                                                             }];
                 
                 // Switch back to the long poll management
                 [self serverSyncWithServerTimeout:SERVER_TIMEOUT_MS success:nil failure:nil clientTimeout:CLIENT_TIMEOUT_MS setPresence:nil];
