@@ -46,7 +46,7 @@
  @param failure A block object called when the operation fails.
  */
 - (void)setDisplayName:(NSString*)displayname
-               success:(void (^)())success
+               success:(void (^)(void))success
                failure:(void (^)(NSError *error))failure;
 
 
@@ -59,7 +59,7 @@
  @param failure A block object called when the operation fails.
  */
 - (void)setAvatarUrl:(NSString*)avatarUrl
-             success:(void (^)())success
+             success:(void (^)(void))success
              failure:(void (^)(NSError *error))failure;
 
 /**
@@ -72,7 +72,7 @@
  @param failure A block object called when the operation fails.
  */
 - (void)setPresence:(MXPresence)presence andStatusMessage:(NSString*)statusMessage
-            success:(void (^)())success
+            success:(void (^)(void))success
             failure:(void (^)(NSError *error))failure;
 
 @end

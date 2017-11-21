@@ -558,7 +558,7 @@ NSString *const kMXCallManagerConferenceUserDomain  = @"matrix.org";
  @param failure A block object called when the operation fails.
  */
 - (void)inviteConferenceUserToRoom:(MXRoom *)room
-                           success:(void (^)())success
+                           success:(void (^)(void))success
                            failure:(void (^)(NSError *error))failure
 {
     NSString *conferenceUserId = [MXCallManager conferenceUserIdForRoom:room.roomId];

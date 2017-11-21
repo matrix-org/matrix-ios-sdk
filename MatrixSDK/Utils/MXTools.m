@@ -506,7 +506,7 @@ static NSMutableDictionary *fileExtensionByContentType = nil;
 
 + (void)convertVideoToMP4:(NSURL*)videoLocalURL
                   success:(void(^)(NSURL *videoLocalURL, NSString *mimetype, CGSize size, double durationInMs))success
-                  failure:(void(^)())failure
+                  failure:(void(^)(void))failure
 {
     NSParameterAssert(success);
     NSParameterAssert(failure);

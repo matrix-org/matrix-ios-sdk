@@ -34,7 +34,7 @@
     return [self startBackgroundTaskWithName:nil completion:nil];
 }
 
-- (NSUInteger)startBackgroundTaskWithName:(NSString *)name completion:(void(^)())completion
+- (NSUInteger)startBackgroundTaskWithName:(NSString *)name completion:(void(^)(void))completion
 {
     NSUInteger token = UIBackgroundTaskInvalid;
     

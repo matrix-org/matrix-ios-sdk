@@ -153,7 +153,7 @@ NSString *const kMXRoomSummaryDidChangeNotification = @"kMXRoomSummaryDidChangeN
     _isLastMessageEncrypted = event.isEncrypted;
 }
 
-- (MXHTTPOperation *)resetLastMessage:(void (^)())complete failure:(void (^)(NSError *))failure commit:(BOOL)commit
+- (MXHTTPOperation *)resetLastMessage:(void (^)(void))complete failure:(void (^)(NSError *))failure commit:(BOOL)commit
 {
     lastMessageEvent = nil;
     _lastMessageEventId = nil;
@@ -179,7 +179,7 @@ NSString *const kMXRoomSummaryDidChangeNotification = @"kMXRoomSummaryDidChangeN
  global [MXStore commit] will happen. This optimises IO.
  @return a MXHTTPOperation
  */
-- (MXHTTPOperation *)fetchLastMessage:(void (^)())complete failure:(void (^)(NSError *))failure lastEventIdChecked:(NSString*)lastEventIdChecked operation:(MXHTTPOperation *)operation commit:(BOOL)commit
+- (MXHTTPOperation *)fetchLastMessage:(void (^)(void))complete failure:(void (^)(NSError *))failure lastEventIdChecked:(NSString*)lastEventIdChecked operation:(MXHTTPOperation *)operation commit:(BOOL)commit
 {
     MXRoom *room = self.room;
     if (!room)

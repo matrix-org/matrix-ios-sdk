@@ -140,7 +140,7 @@ extern NSString *const kMXMediaManagerDefaultCacheFolder;
  */
 + (MXMediaLoader*)downloadMediaFromURL:(NSString *)mediaURL
                       andSaveAtFilePath:(NSString *)filePath
-                                success:(void (^)())success
+                                success:(void (^)(void))success
                                 failure:(void (^)(NSError *error))failure;
 
 /**

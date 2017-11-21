@@ -43,7 +43,7 @@ NS_ASSUME_NONNULL_BEGIN
  @param failure A block object called when the operation fails.
  */
 - (void)startCapturingMediaWithVideo:(BOOL)video
-                             success:(void (^)())success
+                             success:(void (^)(void))success
                              failure:(void (^)(NSError *error))failure;
 
 /**
@@ -83,7 +83,7 @@ NS_ASSUME_NONNULL_BEGIN
  @param failure A block object called when the operation fails.
  */
 - (void)handleOffer:(NSString *)sdpOffer
-            success:(void (^)())success
+            success:(void (^)(void))success
             failure:(void (^)(NSError *error))failure;
 
 /**
@@ -125,7 +125,7 @@ NS_ASSUME_NONNULL_BEGIN
  @param failure A block object called when the operation fails.
  */
 - (void)handleAnswer:(NSString *)sdp
-             success:(void (^)())success
+             success:(void (^)(void))success
              failure:(void (^)(NSError *error))failure;
 
 

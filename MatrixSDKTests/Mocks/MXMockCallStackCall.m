@@ -34,7 +34,7 @@
     return self;
 }
 
-- (void)startCapturingMediaWithVideo:(BOOL)video success:(void (^)())success failure:(void (^)(NSError *))failure
+- (void)startCapturingMediaWithVideo:(BOOL)video success:(void (^)(void))success failure:(void (^)(NSError *))failure
 {
     dispatch_async(dispatch_get_main_queue(), ^{
         success();
@@ -76,7 +76,7 @@
     });
 }
 
-- (void)handleAnswer:(NSString *)sdp success:(void (^)())success failure:(void (^)(NSError *))failure
+- (void)handleAnswer:(NSString *)sdp success:(void (^)(void))success failure:(void (^)(NSError *))failure
 {
     dispatch_async(dispatch_get_main_queue(), ^{
         success();

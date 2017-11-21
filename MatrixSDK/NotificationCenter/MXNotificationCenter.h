@@ -122,7 +122,7 @@ extern NSString *const kMXNotificationCenterAllOtherRoomMessagesRuleID;
 
  @return a MXHTTPOperation instance.
  */
-- (MXHTTPOperation *)refreshRules:(void (^)())success
+- (MXHTTPOperation *)refreshRules:(void (^)(void))success
              failure:(void (^)(NSError *error))failure;
 
 

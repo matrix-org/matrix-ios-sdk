@@ -232,7 +232,7 @@ typedef void (^MXOnResumeDone)();
     }
 }
 
--(void)setStore:(id<MXStore>)store success:(void (^)())onStoreDataReady failure:(void (^)(NSError *))failure
+-(void)setStore:(id<MXStore>)store success:(void (^)(void))onStoreDataReady failure:(void (^)(NSError *))failure
 {
     NSAssert(MXSessionStateInitialised == _state, @"Store can be set only just after initialisation");
     NSParameterAssert(store);
@@ -351,14 +351,14 @@ typedef void (^MXOnResumeDone)();
     }];
 }
 
-- (void)start:(void (^)())onServerSyncDone
+- (void)start:(void (^)(void))onServerSyncDone
       failure:(void (^)(NSError *error))failure
 {
     [self startWithMessagesLimit:-1 onServerSyncDone:onServerSyncDone failure:failure];
 }
 
 - (void)startWithMessagesLimit:(NSUInteger)messagesLimit
-              onServerSyncDone:(void (^)())onServerSyncDone
+              onServerSyncDone:(void (^)(void))onServerSyncDone
                        failure:(void (^)(NSError *error))failure
 {
     if (nil == _store)
@@ -507,7 +507,7 @@ typedef void (^MXOnResumeDone)();
     }
 }
 
-- (void)resume:(void (^)())resumeDone
+- (void)resume:(void (^)(void))resumeDone
 {
     NSLog(@"[MXSession] resume the event stream from state %tu", _state);
 
@@ -662,7 +662,7 @@ typedef void (^MXOnResumeDone)();
     [self setState:MXSessionStateClosed];
 }
 
-- (MXHTTPOperation*)logout:(void (^)())success
+- (MXHTTPOperation*)logout:(void (^)(void))success
                    failure:(void (^)(NSError *error))failure
 {
     // Create an empty operation that will be mutated later
@@ -740,7 +740,7 @@ typedef void (^MXOnResumeDone)();
 #pragma mark - Server sync
 
 - (void)serverSyncWithServerTimeout:(NSUInteger)serverTimeout
-                            success:(void (^)())success
+                            success:(void (^)(void))success
                             failure:(void (^)(NSError *error))failure
                       clientTimeout:(NSUInteger)clientTimeout
                         setPresence:(NSString*)setPresence
@@ -1321,7 +1321,7 @@ typedef void (^MXOnResumeDone)();
     _callManager = [[MXCallManager alloc] initWithMatrixSession:self andCallStack:callStack];
 }
 
-- (void)enableCrypto:(BOOL)enableCrypto success:(void (^)())success failure:(void (^)(NSError *))failure
+- (void)enableCrypto:(BOOL)enableCrypto success:(void (^)(void))success failure:(void (^)(NSError *))failure
 {
     NSLog(@"[MXSesion] enableCrypto: %@", @(enableCrypto));
 
@@ -1603,7 +1603,7 @@ typedef void (^MXOnResumeDone)();
 }
 
 - (MXHTTPOperation*)leaveRoom:(NSString*)roomId
-                      success:(void (^)())success
+                      success:(void (^)(void))success
                       failure:(void (^)(NSError *error))failure
 {
     return [matrixRestClient leaveRoom:roomId success:^{
@@ -1696,7 +1696,7 @@ typedef void (^MXOnResumeDone)();
     return nil;
 }
 
-- (MXHTTPOperation*)uploadDirectRooms:(void (^)())success
+- (MXHTTPOperation*)uploadDirectRooms:(void (^)(void))success
                               failure:(void (^)(NSError *error))failure
 {
     __weak typeof(self) weakSelf = self;
@@ -1979,7 +1979,7 @@ typedef void (^MXOnResumeDone)();
 }
 
 - (MXHTTPOperation*)ignoreUsers:(NSArray<NSString*>*)userIds
-                       success:(void (^)())success
+                       success:(void (^)(void))success
                        failure:(void (^)(NSError *error))failure
 {
     // Create the new account data subset for m.ignored_user_list
@@ -2023,7 +2023,7 @@ typedef void (^MXOnResumeDone)();
     } failure:failure];
 }
 
-- (MXHTTPOperation *)unIgnoreUsers:(NSArray<NSString *> *)userIds success:(void (^)())success failure:(void (^)(NSError *))failure
+- (MXHTTPOperation *)unIgnoreUsers:(NSArray<NSString *> *)userIds success:(void (^)(void))success failure:(void (^)(NSError *))failure
 {
     // Create the new account data subset for m.ignored_user_list
     // by substracting userIds
@@ -2362,7 +2362,7 @@ typedef void (^MXOnResumeDone)();
  @param success a block called in any case when the operation completes.
  @param failure a block object called when the operation fails.
  */
-- (void)startCrypto:(void (^)())success
+- (void)startCrypto:(void (^)(void))success
             failure:(void (^)(NSError *error))failure
 {
     NSLog(@"[MXSession] Start crypto");
