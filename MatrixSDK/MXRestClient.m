@@ -2410,7 +2410,7 @@ MXAuthAction;
 
 - (MXHTTPOperation*)inviteUserByEmail:(NSString*)email
                                toRoom:(NSString*)roomId
-                              success:(void (^)(NSDictionary *JSONResponse))success
+                              success:(void (^)(void))success
                               failure:(void (^)(NSError *error))failure
 {
     return [self inviteByThreePid:kMX3PIDMediumEmail
@@ -2422,7 +2422,7 @@ MXAuthAction;
 - (MXHTTPOperation*)inviteByThreePid:(NSString*)medium
                              address:(NSString*)address
                               toRoom:(NSString*)roomId
-                             success:(void (^)(NSDictionary *JSONResponse))success
+                             success:(void (^)(void))success
                              failure:(void (^)(NSError *error))failure
 {
     // The identity server must be defined
@@ -2473,7 +2473,7 @@ MXAuthAction;
                                              {
                                                  dispatch_async(completionQueue, ^{
                                                      
-                                                     success(JSONResponse);
+                                                     success();
                                                      
                                                  });
                                              }
