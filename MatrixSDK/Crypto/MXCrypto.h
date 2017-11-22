@@ -162,6 +162,13 @@ FOUNDATION_EXPORT NSString *const kMXCryptoRoomKeyRequestCancellationNotificatio
 - (void)handleDeviceListsChanges:(MXDeviceListResponse*)deviceLists;
 
 /**
+ Handle one-time keys count returned in the /sync response.
+
+ @param deviceOneTimeKeysCount the number of one-time keys the server has for our device.
+ */
+- (void)handleDeviceOneTimeKeysCount:(NSDictionary<NSString *, NSNumber*>*)deviceOneTimeKeysCount;
+
+/**
  Handle the completion of a /sync.
 
  This is called after the processing of each successful /sync response.

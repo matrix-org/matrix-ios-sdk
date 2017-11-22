@@ -930,6 +930,12 @@ typedef void (^MXOnResumeDone)();
             [_crypto handleDeviceListsChanges:syncResponse.deviceLists];
         }
 
+        // Handle one_time_keys_count
+        if (_crypto && syncResponse.deviceOneTimeKeysCount)
+        {
+            [_crypto handleDeviceOneTimeKeysCount:syncResponse.deviceOneTimeKeysCount];
+        }
+
         // Tell the crypto module to do its processing
         if (_crypto)
         {
