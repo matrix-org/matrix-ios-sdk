@@ -23,7 +23,7 @@
 #import "MXSession.h"
 #import "MXTools.h"
 
-NSUInteger const kMXRealmCryptoStoreVersion = 5;
+NSUInteger const kMXRealmCryptoStoreVersion = 6;
 
 static NSString *const kMXRealmCryptoStoreFolder = @"MXRealmCryptoStore";
 
@@ -1016,6 +1016,11 @@ RLM_ARRAY_TYPE(MXRealmOlmInboundGroupSession)
                 case 4:
                 {
                     NSLog(@"[MXRealmCryptoStore] Migration from schema #4 -> #5: Nothing to do (add deviceTrackingStatusData)");
+                }
+
+                case 5:
+                {
+                    NSLog(@"[MXRealmCryptoStore] Migration from schema #5 -> #6: Nothing to do (remove MXRealmOlmAccount.deviceAnnounced)");
                 }
             }
         }
