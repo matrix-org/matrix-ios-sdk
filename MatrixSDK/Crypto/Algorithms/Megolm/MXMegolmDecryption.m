@@ -59,65 +59,70 @@
     return self;
 }
 
-- (BOOL)decryptEvent:(MXEvent *)event inTimeline:(NSString*)timeline
+- (MXEventDecryptionResult *)decryptEvent:(MXEvent*)event inTimeline:(NSString*)timeline error:(NSError** )error;
 {
+    MXEventDecryptionResult *result;
     NSString *senderKey, *ciphertext, *sessionId;
 
     MXJSONModelSetString(senderKey, event.content[@"sender_key"]);
     MXJSONModelSetString(ciphertext, event.content[@"ciphertext"]);
     MXJSONModelSetString(sessionId, event.content[@"session_id"]);
 
-    // TODO: Remove this requirement after fixing https://github.com/matrix-org/matrix-ios-sdk/issues/205
-    // Currently, we need to decrypt synchronously (see [MXCrypto decryptEvent:])
-    // on the main thread to provide the clear event content as soon as the UI
-    // (or the main thread) reads the event.
-    NSParameterAssert([NSThread currentThread].isMainThread);
-
     if (!senderKey || !sessionId || !ciphertext)
     {
-        event.decryptionError = [NSError errorWithDomain:MXDecryptingErrorDomain
-                                                    code:MXDecryptingErrorMissingFieldsCode
-                                                userInfo:@{
-                                                           NSLocalizedDescriptionKey: MXDecryptingErrorMissingFieldsReason
-                                                           }];
-        return NO;
+        if (error)
+        {
+            *error = [NSError errorWithDomain:MXDecryptingErrorDomain
+                                         code:MXDecryptingErrorMissingFieldsCode
+                                     userInfo:@{
+                                                NSLocalizedDescriptionKey: MXDecryptingErrorMissingFieldsReason
+                                                }];
+        }
+        return nil;
     }
 
-    NSError *error;
-    MXDecryptionResult *result = [olmDevice decryptGroupMessage:ciphertext roomId:event.roomId inTimeline:timeline sessionId:sessionId senderKey:senderKey error:&error];
+    NSError *olmError;
+    MXDecryptionResult *olmResult = [olmDevice decryptGroupMessage:ciphertext roomId:event.roomId inTimeline:timeline sessionId:sessionId senderKey:senderKey error:&olmError];
 
-    if (result)
+    if (olmResult)
     {
-        MXEvent *clearedEvent = [MXEvent modelFromJSON:result.payload];
-        [event setClearData:clearedEvent senderCurve25519Key:result.senderKey claimedEd25519Key:result.keysClaimed[@"ed25519"] forwardingCurve25519KeyChain:result.forwardingCurve25519KeyChain];
+        result = [[MXEventDecryptionResult alloc] init];
+
+        result.clearEvent = olmResult.payload;
+        result.senderCurve25519Key = olmResult.senderKey;
+        result.claimedEd25519Key = olmResult.keysClaimed[@"ed25519"];
+        result.forwardingCurve25519KeyChain = olmResult.forwardingCurve25519KeyChain;
     }
     else
     {
-        if ([error.domain isEqualToString:OLMErrorDomain])
+        if ([olmError.domain isEqualToString:OLMErrorDomain])
         {
             // Manage OLMKit error
-            if ([error.localizedDescription isEqualToString:@"UNKNOWN_MESSAGE_INDEX"])
+            if ([olmError.localizedDescription isEqualToString:@"UNKNOWN_MESSAGE_INDEX"])
             {
                 [self addEventToPendingList:event inTimeline:timeline];
             }
 
             // Package olm error into MXDecryptingErrorDomain
-            error = [NSError errorWithDomain:MXDecryptingErrorDomain
-                                         code:MXDecryptingErrorOlmCode
-                                     userInfo:@{
-                                                NSLocalizedDescriptionKey: [NSString stringWithFormat:MXDecryptingErrorOlm, error.localizedDescription],
-                                                NSLocalizedFailureReasonErrorKey: [NSString stringWithFormat:MXDecryptingErrorOlmReason, ciphertext, error]
-                                                }];
+            olmError = [NSError errorWithDomain:MXDecryptingErrorDomain
+                                           code:MXDecryptingErrorOlmCode
+                                       userInfo:@{
+                                                  NSLocalizedDescriptionKey: [NSString stringWithFormat:MXDecryptingErrorOlm, olmError.localizedDescription],
+                                                  NSLocalizedFailureReasonErrorKey: [NSString stringWithFormat:MXDecryptingErrorOlmReason, ciphertext, olmError]
+                                                  }];
         }
-        else if ([error.domain isEqualToString:MXDecryptingErrorDomain] && error.code == MXDecryptingErrorUnknownInboundSessionIdCode)
+        else if ([olmError.domain isEqualToString:MXDecryptingErrorDomain] && olmError.code == MXDecryptingErrorUnknownInboundSessionIdCode)
         {
             [self addEventToPendingList:event inTimeline:timeline];
         }
 
-        event.decryptionError = error;
+        if (error)
+        {
+            *error = olmError;
+        }
     }
 
-    return (event.clearEvent != nil);
+    return result;
 }
 
 /**
@@ -337,77 +342,31 @@
                     // This can happen when the event is in several timelines
                     NSLog(@"[MXMegolmDecryption] retryDecryption: %@ already decrypted", event.eventId);
                 }
-                else if ([self decryptEventFromCryptoThread:event inTimeline:(timelineId.length ? timelineId : nil)])
-                {
-                    NSLog(@"[MXMegolmDecryption] retryDecryption: successful re-decryption of %@", event.eventId);
-                }
                 else
                 {
-                    NSLog(@"[MXMegolmDecryption] retryDecryption: Still can't decrypt %@. Error: %@", event.eventId, event.decryptionError);
+                    // Go back to the main thread to retry to decrypt from the beginning of the chain.
+                    // MXSession will then update MXEvent with clear content if successful
+                    __weak typeof(self) weakSelf = self;
+                    dispatch_async(dispatch_get_main_queue(), ^{
+
+                        if (weakSelf)
+                        {
+                            typeof(self) self = weakSelf;
+
+                            if ([self->crypto.mxSession decryptEvent:event inTimeline:(timelineId.length ? timelineId : nil)])
+                            {
+                                NSLog(@"[MXMegolmDecryption] retryDecryption: successful re-decryption of %@", event.eventId);
+                            }
+                            else
+                            {
+                                NSLog(@"[MXMegolmDecryption] retryDecryption: Still can't decrypt %@. Error: %@", event.eventId, event.decryptionError);
+                            }
+                        }
+                    });
                 }
             }
         }
     }
-}
-
-// Same operation as [self decryptEvent:inTimeline] but it does not block the main thread.
-// Use this method when the decryption can be asynchronous as opposed to the issue
-// described at https://github.com/matrix-org/matrix-ios-sdk/issues/205.
-- (BOOL)decryptEventFromCryptoThread:(MXEvent *)event inTimeline:(NSString*)timeline
-{
-    NSString *senderKey, *ciphertext, *sessionId;
-
-    MXJSONModelSetString(senderKey, event.content[@"sender_key"]);
-    MXJSONModelSetString(ciphertext, event.content[@"ciphertext"]);
-    MXJSONModelSetString(sessionId, event.content[@"session_id"]);
-
-    NSError *error;
-    MXDecryptionResult *result = [olmDevice decryptGroupMessage:ciphertext roomId:event.roomId inTimeline:timeline sessionId:sessionId senderKey:senderKey error:&error];
-
-    MXEvent *clearedEvent;
-    if (result)
-    {
-        clearedEvent = [MXEvent modelFromJSON:result.payload];
-    }
-    else
-    {
-        if ([error.domain isEqualToString:OLMErrorDomain])
-        {
-            // Manage OLMKit error
-            if ([error.localizedDescription isEqualToString:@"UNKNOWN_MESSAGE_INDEX"])
-            {
-                [self addEventToPendingList:event inTimeline:timeline];
-            }
-
-            // Package olm error into MXDecryptingErrorDomain
-            error = [NSError errorWithDomain:MXDecryptingErrorDomain
-                                        code:MXDecryptingErrorOlmCode
-                                    userInfo:@{
-                                               NSLocalizedDescriptionKey: [NSString stringWithFormat:MXDecryptingErrorOlm, error.localizedDescription],
-                                               NSLocalizedFailureReasonErrorKey: [NSString stringWithFormat:MXDecryptingErrorOlmReason, ciphertext, error]
-                                               }];
-        }
-        else if ([error.domain isEqualToString:MXDecryptingErrorDomain] && error.code == MXDecryptingErrorUnknownInboundSessionIdCode)
-        {
-            [self addEventToPendingList:event inTimeline:timeline];
-        }
-    }
-
-    // Go back to the main thread for updating MXEvent
-    dispatch_async(dispatch_get_main_queue(), ^{
-
-        if (clearedEvent)
-        {
-            [event setClearData:clearedEvent senderCurve25519Key:result.senderKey claimedEd25519Key:result.keysClaimed[@"ed25519"] forwardingCurve25519KeyChain:result.forwardingCurve25519KeyChain];
-        }
-        else
-        {
-            event.decryptionError = error;
-        }
-
-    });
-
-    return (clearedEvent != nil);
 }
 
 - (void)requestKeysForEvent:(MXEvent*)event

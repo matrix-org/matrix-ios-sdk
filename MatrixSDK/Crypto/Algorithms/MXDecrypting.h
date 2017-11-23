@@ -19,6 +19,7 @@
 #import "MXHTTPOperation.h"
 #import "MXEvent.h"
 #import "MXDecryptionResult.h"
+#import "MXEventDecryptionResult.h"
 #import "MXIncomingRoomKeyRequest.h"
 
 @class MXCrypto, MXMegolmSessionData;
@@ -42,10 +43,11 @@
  @param event the raw event.
  @param timeline the id of the timeline where the event is decrypted. It is used
                  to prevent replay attack.
+ @param error the result error if there is a problem decrypting the event.
 
- @return YES if the decryption was successful.
+ @return The decryption result. Nil if it failed.
  */
-- (BOOL)decryptEvent:(MXEvent*)event inTimeline:(NSString*)timeline;
+- (MXEventDecryptionResult *)decryptEvent:(MXEvent*)event inTimeline:(NSString*)timeline error:(NSError** )error;
 
 /**
  * Handle a key event.

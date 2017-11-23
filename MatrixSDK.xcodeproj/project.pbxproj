@@ -210,6 +210,8 @@
 		32E226A61D06AC9F00E6CA54 /* MXPeekingRoom.h in Headers */ = {isa = PBXBuildFile; fileRef = 32E226A41D06AC9F00E6CA54 /* MXPeekingRoom.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		32E226A71D06AC9F00E6CA54 /* MXPeekingRoom.m in Sources */ = {isa = PBXBuildFile; fileRef = 32E226A51D06AC9F00E6CA54 /* MXPeekingRoom.m */; };
 		32E226A91D081CE200E6CA54 /* MXPeekingRoomTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 32E226A81D081CE200E6CA54 /* MXPeekingRoomTests.m */; };
+		32F634AB1FC5E3480054EF49 /* MXEventDecryptionResult.h in Headers */ = {isa = PBXBuildFile; fileRef = 32F634A91FC5E3470054EF49 /* MXEventDecryptionResult.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		32F634AC1FC5E3480054EF49 /* MXEventDecryptionResult.m in Sources */ = {isa = PBXBuildFile; fileRef = 32F634AA1FC5E3470054EF49 /* MXEventDecryptionResult.m */; };
 		32F945F51FAB83D900622468 /* MXIncomingRoomKeyRequestCancellation.m in Sources */ = {isa = PBXBuildFile; fileRef = 32F945F11FAB83D800622468 /* MXIncomingRoomKeyRequestCancellation.m */; };
 		32F945F61FAB83D900622468 /* MXIncomingRoomKeyRequest.h in Headers */ = {isa = PBXBuildFile; fileRef = 32F945F21FAB83D900622468 /* MXIncomingRoomKeyRequest.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		32F945F71FAB83D900622468 /* MXIncomingRoomKeyRequest.m in Sources */ = {isa = PBXBuildFile; fileRef = 32F945F31FAB83D900622468 /* MXIncomingRoomKeyRequest.m */; };
@@ -507,6 +509,8 @@
 		32E226A51D06AC9F00E6CA54 /* MXPeekingRoom.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXPeekingRoom.m; sourceTree = "<group>"; };
 		32E226A81D081CE200E6CA54 /* MXPeekingRoomTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXPeekingRoomTests.m; sourceTree = "<group>"; };
 		32F1FE9AF82A426C2EAED587 /* Pods-MatrixSDK.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-MatrixSDK.release.xcconfig"; path = "Pods/Target Support Files/Pods-MatrixSDK/Pods-MatrixSDK.release.xcconfig"; sourceTree = "<group>"; };
+		32F634A91FC5E3470054EF49 /* MXEventDecryptionResult.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MXEventDecryptionResult.h; sourceTree = "<group>"; };
+		32F634AA1FC5E3470054EF49 /* MXEventDecryptionResult.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MXEventDecryptionResult.m; sourceTree = "<group>"; };
 		32F945F11FAB83D800622468 /* MXIncomingRoomKeyRequestCancellation.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXIncomingRoomKeyRequestCancellation.m; sourceTree = "<group>"; };
 		32F945F21FAB83D900622468 /* MXIncomingRoomKeyRequest.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXIncomingRoomKeyRequest.h; sourceTree = "<group>"; };
 		32F945F31FAB83D900622468 /* MXIncomingRoomKeyRequest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXIncomingRoomKeyRequest.m; sourceTree = "<group>"; };
@@ -733,6 +737,8 @@
 				3271877A1DA7CAA60071C818 /* MXEncrypting.h */,
 				32F9FA7B1DBA0CF0009D98A6 /* MXDecryptionResult.h */,
 				32F9FA7C1DBA0CF0009D98A6 /* MXDecryptionResult.m */,
+				32F634A91FC5E3470054EF49 /* MXEventDecryptionResult.h */,
+				32F634AA1FC5E3470054EF49 /* MXEventDecryptionResult.m */,
 			);
 			path = Algorithms;
 			sourceTree = "<group>";
@@ -1267,6 +1273,7 @@
 				32CAB10B1A925B41008C5BB9 /* MXHTTPOperation.h in Headers */,
 				32F945F81FAB83D900622468 /* MXIncomingRoomKeyRequestCancellation.h in Headers */,
 				3240969D1F9F751600DBA607 /* MXPushRuleSenderNotificationPermissionConditionChecker.h in Headers */,
+				32F634AB1FC5E3480054EF49 /* MXEventDecryptionResult.h in Headers */,
 				322A51C71D9BBD3C00C8536D /* MXOlmDevice.h in Headers */,
 				320DFDE419DD99B60068622A /* MXRestClient.h in Headers */,
 				3265CB381A14C43E00E24B2F /* MXRoomState.h in Headers */,
@@ -1542,6 +1549,7 @@
 				329B2AC01D3FB01D002D546F /* MXJingleCallStack.m in Sources */,
 				C6D5D60E1E4FBD2900706C0F /* MXSession.swift in Sources */,
 				320DFDE319DD99B60068622A /* MXError.m in Sources */,
+				32F634AC1FC5E3480054EF49 /* MXEventDecryptionResult.m in Sources */,
 				327137281A24D50A00DB6757 /* MXMyUser.m in Sources */,
 				C6F935881E5B3BE600FC34BF /* MX3PID.swift in Sources */,
 				C6F9358A1E5B3BE600FC34BF /* MXEvent.swift in Sources */,

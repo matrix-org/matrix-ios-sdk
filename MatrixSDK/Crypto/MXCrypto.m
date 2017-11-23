@@ -52,9 +52,6 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
 
 @interface MXCrypto ()
 {
-    // The Matrix session.
-    MXSession *mxSession;
-
     // MXEncrypting instance for each room.
     NSMutableDictionary<NSString*, id<MXEncrypting>> *roomEncryptors;
 
@@ -97,6 +94,7 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
 
 
 @implementation MXCrypto
+@synthesize mxSession;
 
 + (MXCrypto *)createCryptoWithMatrixSession:(MXSession *)mxSession
 {
@@ -403,11 +401,11 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
 #endif
 }
 
-- (BOOL)decryptEvent:(MXEvent *)event inTimeline:(NSString*)timeline
+- (MXEventDecryptionResult *)decryptEvent:(MXEvent *)event inTimeline:(NSString*)timeline error:(NSError** )error
 {
 #ifdef MX_CRYPTO
 
-    __block BOOL result = NO;
+    __block MXEventDecryptionResult *result;
 
     // TODO: dispatch_async (https://github.com/matrix-org/matrix-ios-sdk/issues/205)
     // At the moment, we lock the main thread while decrypting events.
@@ -418,27 +416,30 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
         {
             NSLog(@"[MXCrypto] decryptEvent: Unable to decrypt %@", event.content[@"algorithm"]);
 
-            event.decryptionError = [NSError errorWithDomain:MXDecryptingErrorDomain
-                                                        code:MXDecryptingErrorUnableToDecryptCode
-                                                    userInfo:@{
-                                                               NSLocalizedDescriptionKey: MXDecryptingErrorUnableToDecrypt,
-                                                               NSLocalizedFailureReasonErrorKey: [NSString stringWithFormat:MXDecryptingErrorUnableToDecryptReason, event, event.content[@"algorithm"]]
-                                                               }];
-            return;
+            if (error)
+            {
+                *error = [NSError errorWithDomain:MXDecryptingErrorDomain
+                                             code:MXDecryptingErrorUnableToDecryptCode
+                                         userInfo:@{
+                                                    NSLocalizedDescriptionKey: MXDecryptingErrorUnableToDecrypt,
+                                                    NSLocalizedFailureReasonErrorKey: [NSString stringWithFormat:MXDecryptingErrorUnableToDecryptReason, event, event.content[@"algorithm"]]
+                                                    }];
+            }
         }
-
-        // @TODO: event should not be modified on the crypto thread
-        result = [alg decryptEvent:event inTimeline:timeline];
-        if (!result)
+        else
         {
-            NSLog(@"[MXCrypto] decryptEvent: Error: %@", event.decryptionError);
+            result = [alg decryptEvent:event inTimeline:timeline error:error];
+            if (error && *error)
+            {
+                NSLog(@"[MXCrypto] decryptEvent: Error: %@", *error);
+            }
         }
     });
 
     return result;
 
 #else
-    return NO;
+    return nil;
 #endif
 }
 
