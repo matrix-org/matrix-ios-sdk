@@ -1354,6 +1354,12 @@ FOUNDATION_EXPORT NSString *const kMXPushRuleScopeStringDevice;
     @property (nonatomic) MXDeviceListResponse *deviceLists;
 
     /**
+     The number of one time keys the server has for our device.
+     algorithm -> number of keys for that algorithm.
+     */
+    @property (nonatomic) NSDictionary<NSString *, NSNumber*> *deviceOneTimeKeysCount;
+
+    /**
      List of rooms.
      */
     @property (nonatomic) MXRoomsSyncResponse *rooms;

@@ -1234,6 +1234,7 @@ NSString *const kMXPushRuleScopeStringDevice = @"device";
         MXJSONModelSetMXJSONModel(syncResponse.presence, MXPresenceSyncResponse, JSONDictionary[@"presence"]);
         MXJSONModelSetMXJSONModel(syncResponse.toDevice, MXToDeviceSyncResponse, JSONDictionary[@"to_device"]);
         MXJSONModelSetMXJSONModel(syncResponse.deviceLists, MXDeviceListResponse, JSONDictionary[@"device_lists"]);
+        MXJSONModelSetDictionary(syncResponse.deviceOneTimeKeysCount, JSONDictionary[@"device_one_time_keys_count"])
         MXJSONModelSetMXJSONModel(syncResponse.rooms, MXRoomsSyncResponse, JSONDictionary[@"rooms"]);
     }
 
