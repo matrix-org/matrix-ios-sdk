@@ -20,9 +20,9 @@ PODS:
     - OLMKit/olmcpp (= 2.2.2)
   - OLMKit/olmc (2.2.2)
   - OLMKit/olmcpp (2.2.2)
-  - Realm (3.0.0):
-    - Realm/Headers (= 3.0.0)
-  - Realm/Headers (3.0.0)
+  - Realm (3.0.2):
+    - Realm/Headers (= 3.0.2)
+  - Realm/Headers (3.0.2)
 
 DEPENDENCIES:
   - AFNetworking (~> 3.1.0)
@@ -34,7 +34,7 @@ SPEC CHECKSUMS:
   AFNetworking: 5e0e199f73d8626b11e79750991f5d173d1f8b67
   GZIP: 7ee835f989fb3c6ea79005fc90b8fa6af710a70d
   OLMKit: b9d8c0ffee9ea8c45bc0aaa9afb47f93fba7efbd
-  Realm: dec0de73be8c57506e39db72694d513c189493b3
+  Realm: 6f23fd1f178a09342eac21bfa7c2bf4312a7a180
 
 PODFILE CHECKSUM: 886903ddb1bda8ca93618894949ade9f688329ae
 
