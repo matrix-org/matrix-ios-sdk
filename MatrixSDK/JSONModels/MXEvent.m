@@ -17,6 +17,7 @@
 #import "MXEvent.h"
 
 #import "MXTools.h"
+#import "MXEventDecryptionResult.h"
 
 #pragma mark - Constants definitions
 
@@ -523,14 +524,19 @@ NSString *const kMXEventIdentifierKey = @"kMXEventIdentifierKey";
     return (self.wireEventType == MXEventTypeRoomEncrypted);
 }
 
-- (void)setClearData:(MXEvent*)clearEvent senderCurve25519Key:(NSString*)senderCurve25519Key claimedEd25519Key:(NSString*)claimedEd25519Key forwardingCurve25519KeyChain:(NSArray<NSString*>*)forwardingCurve25519KeyChain
+- (void)setClearData:(MXEventDecryptionResult *)decryptionResult
 {
-    _clearEvent = clearEvent;
+    _clearEvent = nil;
+    if (decryptionResult.clearEvent)
+    {
+        _clearEvent = [MXEvent modelFromJSON:decryptionResult.clearEvent];
+    }
+
     if (_clearEvent)
     {
-        _clearEvent->senderCurve25519Key = senderCurve25519Key;
-        _clearEvent->claimedEd25519Key = claimedEd25519Key;
-        _clearEvent->forwardingCurve25519KeyChain = forwardingCurve25519KeyChain ? forwardingCurve25519KeyChain : @[];
+        _clearEvent->senderCurve25519Key = decryptionResult.senderCurve25519Key;
+        _clearEvent->claimedEd25519Key = decryptionResult.claimedEd25519Key;
+        _clearEvent->forwardingCurve25519KeyChain = decryptionResult.forwardingCurve25519KeyChain ? decryptionResult.forwardingCurve25519KeyChain : @[];
     }
 
     // Notify only for events that are lately decrypted

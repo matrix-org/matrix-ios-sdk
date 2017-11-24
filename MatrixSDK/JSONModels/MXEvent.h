@@ -16,6 +16,8 @@
 
 #import "MXJSONModel.h"
 
+@class MXEventDecryptionResult;
+
 /**
  Types of Matrix events
  
@@ -427,16 +429,9 @@ extern NSString *const kMXEventIdentifierKey;
  This is used after decrypting an event; it should not be used by applications.
  It fires kMXEventDidDecryptNotification.
 
- @param clearEvent the plaintext payload for the event.
- @param senderCurve25519Key curve25519 key to record for the sender of this event.
-        See `senderKey` property.
- @param claimedEd25519Key claimed ed25519 key to record for the sender if this event.
-        See `claimedEd25519Key` property.
- @param forwardingCurve25519KeyChain list of curve25519 keys involved in telling us
-        about the senderCurve25519Key and claimedEd25519Key.
-        See `property` property.
+ @param decryptionResult the decryption result, including the plaintext and some key info.
  */
-- (void)setClearData:(MXEvent*)clearEvent senderCurve25519Key:(NSString*)senderCurve25519Key claimedEd25519Key:(NSString*)claimedEd25519Key forwardingCurve25519KeyChain:(NSArray<NSString*>*)forwardingCurve25519KeyChain;
+- (void)setClearData:(MXEventDecryptionResult *)decryptionResult;
 
 /**
  For encrypted events, the plaintext payload for the event.

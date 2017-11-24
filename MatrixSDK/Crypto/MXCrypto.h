@@ -20,6 +20,7 @@
 
 #import "MXDeviceInfo.h"
 #import "MXCryptoConstants.h"
+#import "MXEventDecryptionResult.h"
 
 #import "MXRestClient.h"
 
@@ -132,9 +133,11 @@ FOUNDATION_EXPORT NSString *const kMXCryptoRoomKeyRequestCancellationNotificatio
  @param timeline the id of the timeline where the event is decrypted. It is used
                  to prevent replay attack.
  
- @return YES if the decryption was successful.
+ @param error the result error if there is a problem decrypting the event.
+
+ @return The decryption result. Nil if it failed.
  */
-- (BOOL)decryptEvent:(MXEvent*)event inTimeline:(NSString*)timeline;
+- (MXEventDecryptionResult *)decryptEvent:(MXEvent*)event inTimeline:(NSString*)timeline error:(NSError** )error;
 
 /**
  Ensure that the outbound session is ready to encrypt events.

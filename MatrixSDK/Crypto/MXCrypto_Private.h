@@ -21,6 +21,7 @@
 #ifdef MX_CRYPTO
 
 #import "MXCryptoStore.h"
+#import "MXSession.h"
 #import "MXRestClient.h"
 #import "MXOlmDevice.h"
 #import "MXDeviceList.h"
@@ -46,6 +47,11 @@
   The libolm wrapper.
  */
 @property (nonatomic, readonly) MXOlmDevice *olmDevice;
+
+/**
+ The Matrix session.
+ */
+@property (nonatomic, readonly) MXSession *mxSession;
 
 /**
   The instance used to make requests to the homeserver.

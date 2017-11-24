@@ -52,9 +52,6 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
 
 @interface MXCrypto ()
 {
-    // The Matrix session.
-    MXSession *mxSession;
-
     // MXEncrypting instance for each room.
     NSMutableDictionary<NSString*, id<MXEncrypting>> *roomEncryptors;
 
@@ -185,7 +182,7 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
 #ifdef MX_CRYPTO
     dispatch_async(_cryptoQueue, ^{
     
-        [MXCryptoStoreClass deleteStoreWithCredentials:mxSession.matrixRestClient.credentials];
+        [MXCryptoStoreClass deleteStoreWithCredentials:_mxSession.matrixRestClient.credentials];
 
         if (onComplete)
         {
@@ -205,7 +202,7 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
     NSLog(@"[MXCrypto] start");
 
     // The session must be initialised enough before starting this module
-    if (!mxSession.myUser.userId)
+    if (!_mxSession.myUser.userId)
     {
         NSLog(@"[MXCrypto] start. ERROR: mxSession.myUser.userId cannot be nil");
         failure(nil);
@@ -230,7 +227,7 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
         [self maybeUploadOneTimeKeys:^{
 
             NSLog(@"[MXCrypto] start ###########################################################");
-            NSLog(@" uploadDeviceKeys done for %@: ", mxSession.myUser.userId);
+            NSLog(@" uploadDeviceKeys done for %@: ", _mxSession.myUser.userId);
 
             NSLog(@"   - device id  : %@", _store.deviceId);
             NSLog(@"   - ed25519    : %@", _olmDevice.deviceEd25519Key);
@@ -273,7 +270,7 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
 
     NSLog(@"[MXCrypto] close. store: %@", _store);
 
-    [mxSession removeListener:roomMembershipEventsListener];
+    [_mxSession removeListener:roomMembershipEventsListener];
 
     [startOperation cancel];
     startOperation = nil;
@@ -289,7 +286,7 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
 
         if (deleteStore)
         {
-            [MXCryptoStoreClass deleteStoreWithCredentials:mxSession.matrixRestClient.credentials];
+            [MXCryptoStoreClass deleteStoreWithCredentials:_mxSession.matrixRestClient.credentials];
         }
 
         _olmDevice = nil;
@@ -403,11 +400,11 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
 #endif
 }
 
-- (BOOL)decryptEvent:(MXEvent *)event inTimeline:(NSString*)timeline
+- (MXEventDecryptionResult *)decryptEvent:(MXEvent *)event inTimeline:(NSString*)timeline error:(NSError** )error
 {
 #ifdef MX_CRYPTO
 
-    __block BOOL result = NO;
+    __block MXEventDecryptionResult *result;
 
     // TODO: dispatch_async (https://github.com/matrix-org/matrix-ios-sdk/issues/205)
     // At the moment, we lock the main thread while decrypting events.
@@ -418,27 +415,30 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
         {
             NSLog(@"[MXCrypto] decryptEvent: Unable to decrypt %@", event.content[@"algorithm"]);
 
-            event.decryptionError = [NSError errorWithDomain:MXDecryptingErrorDomain
-                                                        code:MXDecryptingErrorUnableToDecryptCode
-                                                    userInfo:@{
-                                                               NSLocalizedDescriptionKey: MXDecryptingErrorUnableToDecrypt,
-                                                               NSLocalizedFailureReasonErrorKey: [NSString stringWithFormat:MXDecryptingErrorUnableToDecryptReason, event, event.content[@"algorithm"]]
-                                                               }];
-            return;
+            if (error)
+            {
+                *error = [NSError errorWithDomain:MXDecryptingErrorDomain
+                                             code:MXDecryptingErrorUnableToDecryptCode
+                                         userInfo:@{
+                                                    NSLocalizedDescriptionKey: MXDecryptingErrorUnableToDecrypt,
+                                                    NSLocalizedFailureReasonErrorKey: [NSString stringWithFormat:MXDecryptingErrorUnableToDecryptReason, event, event.content[@"algorithm"]]
+                                                    }];
+            }
         }
-
-        // @TODO: event should not be modified on the crypto thread
-        result = [alg decryptEvent:event inTimeline:timeline];
-        if (!result)
+        else
         {
-            NSLog(@"[MXCrypto] decryptEvent: Error: %@", event.decryptionError);
+            result = [alg decryptEvent:event inTimeline:timeline error:error];
+            if (error && *error)
+            {
+                NSLog(@"[MXCrypto] decryptEvent: Error: %@", *error);
+            }
         }
     });
 
     return result;
 
 #else
-    return NO;
+    return nil;
 #endif
 }
 
@@ -451,7 +451,7 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
     MXHTTPOperation *operation = [[MXHTTPOperation alloc] init];
 
 #ifdef MX_CRYPTO
-    MXRoom *room = [mxSession roomWithRoomId:roomId];
+    MXRoom *room = [_mxSession roomWithRoomId:roomId];
     if (room.state.isEncrypted)
     {
         // Get user ids in this room
@@ -717,7 +717,7 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
 
     // Get all rooms with this user
     NSMutableArray<NSString*> *userRooms = [NSMutableArray array];
-    for (MXRoom *room in mxSession.rooms)
+    for (MXRoom *room in _mxSession.rooms)
     {
         if (room.state.isEncrypted)
         {
@@ -1268,21 +1268,21 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
     self = [super init];
     if (self)
     {
-        mxSession = matrixSession;
+        _mxSession = matrixSession;
         _cryptoQueue = theCryptoQueue;
         _store = store;
 
         // Default configuration
         _warnOnUnknowDevices = YES;
 
-        _decryptionQueue = [MXCrypto dispatchQueueForUser:mxSession.matrixRestClient.credentials.userId];
+        _decryptionQueue = [MXCrypto dispatchQueueForUser:_mxSession.matrixRestClient.credentials.userId];
 
         _olmDevice = [[MXOlmDevice alloc] initWithStore:_store];
 
         _deviceList = [[MXDeviceList alloc] initWithCrypto:self];
 
         // Use our own REST client that answers on the crypto thread
-        _matrixRestClient = [[MXRestClient alloc] initWithCredentials:mxSession.matrixRestClient.credentials andOnUnrecognizedCertificateBlock:nil];
+        _matrixRestClient = [[MXRestClient alloc] initWithCredentials:_mxSession.matrixRestClient.credentials andOnUnrecognizedCertificateBlock:nil];
         _matrixRestClient.completionQueue = _cryptoQueue;
 
         roomEncryptors = [NSMutableDictionary dictionary];
@@ -1413,7 +1413,7 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
     // make sure we are tracking the device lists for all users in this room.
     NSLog(@"[MXCrypto] setEncryptionInRoom: Enabling encryption in %@; starting to track device lists for all users therein", roomId);
 
-    MXRoom *room = [mxSession roomWithRoomId:roomId];
+    MXRoom *room = [_mxSession roomWithRoomId:roomId];
     for (MXRoomMember *member in room.state.joinedMembers)
     {
         [_deviceList startTrackingDeviceList:member.userId];
@@ -1759,7 +1759,7 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
     NSMutableArray<MXRoom*> *e2eRooms = [NSMutableArray array];
     
     // TODO: mxSession.rooms should be accessed from the main thread
-    NSArray *rooms = mxSession.rooms;
+    NSArray *rooms = _mxSession.rooms;
     for (MXRoom *room in rooms)
     {
         // Check for rooms with encryption enabled
@@ -1814,10 +1814,10 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
     dispatch_async(dispatch_get_main_queue(), ^{
 
         // Observe incoming to-device events
-        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(onToDeviceEvent:) name:kMXSessionOnToDeviceEventNotification object:mxSession];
+        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(onToDeviceEvent:) name:kMXSessionOnToDeviceEventNotification object:_mxSession];
 
         // Observe membership changes
-        roomMembershipEventsListener = [mxSession listenToEventsOfTypes:@[kMXEventTypeStringRoomEncryption, kMXEventTypeStringRoomMember] onEvent:^(MXEvent *event, MXTimelineDirection direction, id customObject) {
+        roomMembershipEventsListener = [_mxSession listenToEventsOfTypes:@[kMXEventTypeStringRoomEncryption, kMXEventTypeStringRoomMember] onEvent:^(MXEvent *event, MXTimelineDirection direction, id customObject) {
 
             if (direction == MXTimelineDirectionForwards)
             {
@@ -1932,7 +1932,7 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
     }
 
     NSString *userId = event.stateKey;
-    MXRoomMember *member = [[mxSession roomWithRoomId:event.roomId].state memberWithUserId:userId];
+    MXRoomMember *member = [[_mxSession roomWithRoomId:event.roomId].state memberWithUserId:userId];
 
     if (member && member.membership == MXMembershipJoin)
     {
