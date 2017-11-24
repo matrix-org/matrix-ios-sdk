@@ -20,8 +20,6 @@
 
 #import "MXJingleCallAudioSessionConfigurator.h"
 
-#if defined MX_CALL_STACK_JINGLE && TARGET_OS_IPHONE
-
 @import AVFoundation;
 
 #import <objc/message.h>
@@ -181,5 +179,3 @@ static const int kRTCAudioSessionPreferredNumberOfChannels = 1;
 }
 
 @end
-
-#endif // MX_CALL_STACK_JINGLE && TARGET_OS_IPHONE

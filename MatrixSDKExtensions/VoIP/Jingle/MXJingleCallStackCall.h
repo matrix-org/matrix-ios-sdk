@@ -16,10 +16,6 @@
 
 #import <Foundation/Foundation.h>
 
-#import "MXSDKOptions.h"
-
-#ifdef MX_CALL_STACK_JINGLE
-
 #import "MXCallStackCall.h"
 #import <WebRTC/RTCPeerConnection.h>
 
@@ -43,5 +39,3 @@ NS_ASSUME_NONNULL_BEGIN
 @end
 
 NS_ASSUME_NONNULL_END
-
-#endif  // MX_CALL_STACK_JINGLE

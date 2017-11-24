@@ -15,10 +15,6 @@
  */
 #import <Foundation/Foundation.h>
 
-#import "MXSDKOptions.h"
-
-#ifdef MX_CALL_STACK_JINGLE
-
 #import <WebRTC/RTCEAGLVideoView.h>
 
 NS_ASSUME_NONNULL_BEGIN
@@ -39,5 +35,3 @@ NS_ASSUME_NONNULL_BEGIN
 @end
 
 NS_ASSUME_NONNULL_END
-
-#endif  //MX_CALL_STACK_JINGLE

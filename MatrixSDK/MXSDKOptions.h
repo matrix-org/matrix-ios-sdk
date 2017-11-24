@@ -28,18 +28,6 @@
  */
 
 /**
- VoIP with libjingle.
-
- Application can use the libjingle build pod provided at
- https://github.com/Anakros/WebRTC.git :
-
-     pod 'WebRTC'
- */
-#if __has_include(<WebRTC/RTCPeerConnection.h>)
-#define MX_CALL_STACK_JINGLE
-#endif
-
-/**
  Crypto.
 
  The crypto module depends on libolm (https://matrix.org/git/olm/ ), which the iOS wrapper

@@ -16,11 +16,9 @@
 
 #import <Foundation/Foundation.h>
 
-#import "MXSDKOptions.h"
-
-#ifdef MX_CALL_STACK_JINGLE
-
 #import "MXCallStack.h"
+
+#import "MXJingleCallAudioSessionConfigurator.h"
 
 /**
  `MXJingleCallStack` is the implementation of the `MXCallStack` protocol using
@@ -31,5 +29,3 @@
 @interface MXJingleCallStack : NSObject <MXCallStack>
 
 @end
-
-#endif // MX_CALL_STACK_JINGLE

@@ -16,10 +16,6 @@
 
 #import <Foundation/Foundation.h>
 
-#import "MXSDKOptions.h"
-
-#if defined MX_CALL_STACK_JINGLE && TARGET_OS_IPHONE
-
 #import "MXCallAudioSessionConfigurator.h"
 
 /**
@@ -28,5 +24,3 @@
 @interface MXJingleCallAudioSessionConfigurator : NSObject <MXCallAudioSessionConfigurator>
 
 @end
-
-#endif // MX_CALL_STACK_JINGLE && TARGET_OS_IPHONE
