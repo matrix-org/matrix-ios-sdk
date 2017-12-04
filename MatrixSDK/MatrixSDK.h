@@ -53,3 +53,6 @@ FOUNDATION_EXPORT NSString *MatrixSDKVersion;
 #import "MXMegolmExportEncryption.h"
 
 #import "MXBugReportRestClient.h"
+
+#import "MXCallKitAdapter.h"
+#import "MXCallKitConfiguration.h"

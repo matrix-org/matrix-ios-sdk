@@ -1,6 +1,28 @@
+Changes in Matrix iOS SDK in 0.10.4 (2017-11-30)
+=============================================== 
+
+Improvements:
+ * Crypto: Support the room key sharing (vector-im/riot-meta#113).
+ * Crypto: Store permanently incoming room key requests (vector-im/riot-meta#121).
+ * Crypto: use device_one_time_keys_count transmitted by /sync.
+ * MXCrypto: Add a proper onSyncCompleted method (PR #410).
+ * MXCrypto: Start it before syncing with the HS.
+ * MXCrypto: Add deviceWithDeviceId.
+ * MXCrypto: add ignoreKeyRequest & ignoreAllPendingKeyRequestsFromUser methods.
+ * Remove the support of the new_device event (PR #421).
+ * Remove AssetsLibrary framework use (deprecated since iOS 9).
+ * MXSession: kMXSessionDidSyncNotification now comes with MXSyncResponse object result returned by the homeserver.
+
+Bug fixes:
+ * Fix many warnings regarding strict prototypes, thanks to @beatrupp.
+
+API breaks:
+ * Remove CoreData implementation of MXStore (It was not used).
+ * MXCrypto: Make `decryptEvent` return decryption results (PR #426).
+
 Changes in Matrix iOS SDK in 0.10.3 (2017-11-13)
 =============================================== 
- 
+
 Bug fixes:
  * A 1:1 invite is not displayed as a direct chat after clearing the cache.
 
