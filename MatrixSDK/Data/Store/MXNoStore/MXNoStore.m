@@ -43,6 +43,10 @@
     // All matrix users known by the user
     // The keys are user ids.
     NSMutableDictionary <NSString*, MXUser*> *users;
+    
+    // All matrix groups known by the user
+    // The keys are groups ids.
+    NSMutableDictionary <NSString*, MXGroup*> *groups;
 }
 @end
 
@@ -62,6 +66,7 @@
         lastMessages = [NSMutableDictionary dictionary];
         partialTextMessages = [NSMutableDictionary dictionary];
         users = [NSMutableDictionary dictionary];
+        groups = [NSMutableDictionary dictionary];
     }
     return self;
 }
@@ -219,6 +224,36 @@
     return users[userId];
 }
 
+#pragma mark - Matrix groups
+- (void)storeGroup:(MXGroup *)group
+{
+    if (group.groupId.length)
+    {
+        groups[group.groupId] = group;
+    }
+}
+
+- (NSArray<MXGroup *> *)groups
+{
+    return groups.allValues;
+}
+
+- (MXGroup *)groupWithGroupId:(NSString *)groupId
+{
+    if (groupId.length)
+    {
+        return groups[groupId];
+    }
+    return nil;
+}
+
+- (void)deleteGroup:(NSString *)groupId
+{
+    if (groupId.length)
+    {
+        [groups removeObjectForKey:groupId];
+    }
+}
 
 - (void)storePartialTextMessageForRoom:(NSString *)roomId partialTextMessage:(NSString *)partialTextMessage
 {
@@ -271,6 +306,7 @@
     [lastMessages removeAllObjects];
     [partialTextMessages removeAllObjects];
     [users removeAllObjects];
+    [groups removeAllObjects];
 }
 
 

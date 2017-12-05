@@ -23,6 +23,7 @@
 
 #import "MXEvent.h"
 #import "MXJSONModels.h"
+#import "MXEnumConstants.h"
 
 @interface MXTools : NSObject
 
@@ -30,6 +31,7 @@
 + (MXEventType)eventType:(MXEventTypeString)eventTypeString;
 
 + (MXMembership)membership:(MXMembershipString)membershipString;
++ (MXMembershipString)membershipString:(MXMembership)membership;
 
 + (MXPresence)presence:(MXPresenceString)presenceString;
 + (MXPresenceString)presenceString:(MXPresence)presence;

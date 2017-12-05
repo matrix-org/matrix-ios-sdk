@@ -38,6 +38,7 @@
         roomStores = [NSMutableDictionary dictionary];
         receiptsByRoomId = [NSMutableDictionary dictionary];
         users = [NSMutableDictionary dictionary];
+        groups = [NSMutableDictionary dictionary];
     }
     return self;
 }
@@ -282,6 +283,36 @@
     return users[userId];
 }
 
+#pragma mark - Matrix groups
+- (void)storeGroup:(MXGroup *)group
+{
+    if (group.groupId.length)
+    {
+        groups[group.groupId] = group;
+    }
+}
+
+- (NSArray<MXGroup *> *)groups
+{
+    return groups.allValues;
+}
+
+- (MXGroup *)groupWithGroupId:(NSString *)groupId
+{
+    if (groupId.length)
+    {
+        return groups[groupId];
+    }
+    return nil;
+}
+
+- (void)deleteGroup:(NSString *)groupId
+{
+    if (groupId.length)
+    {
+        [groups removeObjectForKey:groupId];
+    }
+}
 
 #pragma mark - Outgoing events
 - (void)storeOutgoingMessageForRoom:(NSString*)roomId outgoingMessage:(MXEvent*)outgoingMessage

@@ -26,6 +26,7 @@
 #import "MXNotificationCenter.h"
 #import "MXCallManager.h"
 #import "MXCrypto.h"
+#import "MXGroup.h"
 
 /**
  `MXSessionState` represents the states in the life cycle of a MXSession instance.
@@ -200,12 +201,40 @@ FOUNDATION_EXPORT NSString *const kMXSessionDidCorruptDataNotification;
  */
 FOUNDATION_EXPORT NSString *const kMXSessionCryptoDidCorruptDataNotification;
 
+/**
+ Posted when MXSession has detected a new invite to a group from the event stream.
+ 
+ The passed userInfo dictionary contains:
+ - `kMXSessionNotificationGroupIdKey` the groupId of the group.
+ */
+FOUNDATION_EXPORT NSString *const kMXSessionNewGroupInviteNotification;
+
+/**
+ Posted when MXSession has detected a new joined group from the event stream.
+ 
+ The passed userInfo dictionary contains:
+ - `kMXSessionNotificationGroupIdKey` the groupId of the group.
+ */
+FOUNDATION_EXPORT NSString *const kMXSessionDidJoinGroupNotification;
+
+/**
+ Posted when MXSession has detected a group has been left.
+ 
+ The passed userInfo dictionary contains:
+ - `kMXSessionNotificationGroupIdKey` the groupId of the group is passed in the userInfo dictionary.
+ */
+FOUNDATION_EXPORT NSString *const kMXSessionDidLeaveGroupNotification;
 
 #pragma mark - Notifications keys
 /**
  The key in notification userInfo dictionary representating the roomId.
  */
 FOUNDATION_EXPORT NSString *const kMXSessionNotificationRoomIdKey;
+
+/**
+ The key in notification userInfo dictionary representating the groupId.
+ */
+FOUNDATION_EXPORT NSString *const kMXSessionNotificationGroupIdKey;
 
 /**
  The key in notification userInfo dictionary representating the event.
@@ -694,6 +723,23 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
  By default, it is the one returned by [MXRoomSummaryUpdater roomSummaryUpdaterForSession:].
  */
 @property id<MXRoomSummaryUpdating> roomSummaryUpdateDelegate;
+
+#pragma mark - The user's groups
+/**
+ Get the MXGroup instance of a group.
+ 
+ @param groupId The identifier to the group.
+ 
+ @return the MXGroup instance.
+ */
+- (MXGroup *)groupWithGroupId:(NSString*)groupId;
+
+/**
+ Get the list of all groups.
+ 
+ @return an array of MXGroup.
+ */
+- (NSArray<MXGroup*>*)groups;
 
 #pragma mark - Missed notifications
 

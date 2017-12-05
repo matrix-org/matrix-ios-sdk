@@ -1260,6 +1260,40 @@ FOUNDATION_EXPORT NSString *const kMXPushRuleScopeStringDevice;
 @end
 
 /**
+ `MXGroupSyncProfile` represents the profile of a group.
+ */
+@interface MXGroupSyncProfile : MXJSONModel
+
+    /**
+     The name of the group, if any. May be nil.
+     */
+    @property (nonatomic) NSString *name;
+
+    /**
+     The URL for the group's avatar. May be nil.
+     */
+    @property (nonatomic) NSString *avatarUrl;
+
+@end
+
+/**
+ `MXInvitedGroupSync` represents a group invitation during server sync.
+ */
+@interface MXInvitedGroupSync : MXJSONModel
+
+    /**
+     The identifier of the inviter.
+     */
+    @property (nonatomic) NSString *inviter;
+
+    /**
+     The group profile.
+     */
+    @property (nonatomic) MXGroupSyncProfile *profile;
+
+@end
+
+/**
  `MXRoomsSyncResponse` represents the rooms list in server sync response.
  */
 @interface MXRoomsSyncResponse : MXJSONModel
@@ -1278,6 +1312,28 @@ FOUNDATION_EXPORT NSString *const kMXPushRuleScopeStringDevice;
      Left rooms. The rooms that the user has left or been banned from: keys are rooms ids.
      */
     @property (nonatomic) NSDictionary<NSString*, MXRoomSync*> *leave;
+
+@end
+
+/**
+ `MXGroupsSyncResponse` represents the groups list in server sync response.
+ */
+@interface MXGroupsSyncResponse : MXJSONModel
+
+    /**
+     Joined groups: An array of groups ids.
+     */
+    @property (nonatomic) NSArray<NSString*> *join;
+
+    /**
+     Invitations. The groups that the user has been invited to: keys are groups ids.
+     */
+    @property (nonatomic) NSDictionary<NSString*, MXInvitedGroupSync*> *invite;
+
+    /**
+     Left groups. An array of groups ids: the groups that the user has left or been banned from.
+     */
+    @property (nonatomic) NSArray<NSString*> *leave;
 
 @end
 
@@ -1363,6 +1419,11 @@ FOUNDATION_EXPORT NSString *const kMXPushRuleScopeStringDevice;
      List of rooms.
      */
     @property (nonatomic) MXRoomsSyncResponse *rooms;
+
+    /**
+     List of groups.
+     */
+    @property (nonatomic) MXGroupsSyncResponse *groups;
 
 @end
 
@@ -1626,5 +1687,213 @@ FOUNDATION_EXPORT NSString *const kMXPushRuleScopeStringDevice;
      The timestamp (in milliseconds since the unix epoch) when this devices was last seen. (May be a few minutes out of date, for efficiency reasons).
      */
     @property (nonatomic) uint64_t lastSeenTs;
+
+@end
+
+#pragma mark - Groups (Communities)
+
+/**
+ `MXGroupProfile` represents a community profile in the server responses.
+ */
+@interface MXGroupProfile : MXJSONModel
+
+    @property (nonatomic) NSString *shortDescription;
+
+    /**
+     Tell whether the group is public.
+     */
+    @property (nonatomic) BOOL isPublic;
+
+    /**
+     The URL for the group's avatar. May be nil.
+     */
+    @property (nonatomic) NSString *avatarUrl;
+
+    /**
+     The group's name.
+     */
+    @property (nonatomic) NSString *name;
+
+    /**
+     The optional HTML formatted string used to described the group.
+     */
+    @property (nonatomic) NSString *longDescription;
+
+@end
+
+/**
+ `MXGroupSummaryUsersSection` represents the community members in a group summary response.
+ */
+@interface MXGroupSummaryUsersSection : MXJSONModel
+
+    @property (nonatomic) NSUInteger totalUserCountEstimate;
+
+    @property (nonatomic) NSArray<NSString*> *users;
+
+    @property (nonatomic) NSDictionary *roles;
+
+@end
+
+/**
+ `MXGroupSummaryUser` represents the current user status in a group summary response.
+ */
+@interface MXGroupSummaryUser : MXJSONModel
+
+    /**
+     The current user membership in this community.
+     */
+    @property (nonatomic) NSString *membership;
+
+    /**
+     Tell whether the user published this community on his profile.
+     */
+    @property (nonatomic) BOOL isPublicised;
+
+@end
+
+/**
+ `MXGroupSummaryRoomsSection` represents the community rooms in a group summary response.
+ */
+@interface MXGroupSummaryRoomsSection : MXJSONModel
+
+    @property (nonatomic) NSUInteger totalRoomCountEstimate;
+
+    @property (nonatomic) NSArray<NSString*> *rooms;
+
+    @property (nonatomic) NSDictionary *categories;
+
+@end
+
+/**
+ `MXGroupSummary` represents the summary of a community in the server response.
+ */
+@interface MXGroupSummary : MXJSONModel
+
+    /**
+     The group profile.
+     */
+    @property (nonatomic) MXGroupProfile *profile;
+
+    /**
+     The group users.
+     */
+    @property (nonatomic) MXGroupSummaryUsersSection *usersSection;
+
+    /**
+     The current user status.
+     */
+    @property (nonatomic) MXGroupSummaryUser *user;
+
+    /**
+     The rooms linked to the community.
+     */
+    @property (nonatomic) MXGroupSummaryRoomsSection *roomsSection;
+
+@end
+
+/**
+ `MXGroupRoom` represents a room linked to a community
+ */
+@interface MXGroupRoom : MXJSONModel
+
+    /**
+     The main address of the room.
+     */
+    @property (nonatomic) NSString *canonicalAlias;
+
+    /**
+     The ID of the room.
+     */
+    @property (nonatomic) NSString *roomId;
+
+    /**
+     The name of the room, if any. May be nil.
+     */
+    @property (nonatomic) NSString *name;
+
+    /**
+     The topic of the room, if any. May be nil.
+     */
+    @property (nonatomic) NSString *topic;
+
+    /**
+     The number of members joined to the room.
+     */
+    @property (nonatomic) NSUInteger numJoinedMembers;
+
+    /**
+     Whether the room may be viewed by guest users without joining.
+     */
+    @property (nonatomic) BOOL worldReadable;
+
+    /**
+     Whether guest users may join the room and participate in it.
+     If they can, they will be subject to ordinary power level rules like any other user.
+     */
+    @property (nonatomic) BOOL guestCanJoin;
+
+    /**
+     The URL for the room's avatar. May be nil.
+     */
+    @property (nonatomic) NSString *avatarUrl;
+
+    /**
+     Tell whether the room is public.
+     */
+    @property (nonatomic) BOOL isPublic;
+
+@end
+
+/**
+ `MXGroupRooms` represents the group rooms in the server response.
+ */
+@interface MXGroupRooms : MXJSONModel
+
+    @property (nonatomic) NSUInteger totalRoomCountEstimate;
+
+    @property (nonatomic) NSArray<MXGroupRoom*> *chunk;
+
+@end
+
+/**
+ `MXGroupUser` represents a community member
+ */
+@interface MXGroupUser : MXJSONModel
+
+    /**
+     The user display name.
+     */
+    @property (nonatomic) NSString *displayname;
+
+    /**
+     The ID of the user.
+     */
+    @property (nonatomic) NSString *userId;
+
+    /**
+     Tell whether the user has a role in the community.
+     */
+    @property (nonatomic) BOOL isPrivileged;
+
+    /**
+     The URL for the user's avatar. May be nil.
+     */
+    @property (nonatomic) NSString *avatarUrl;
+
+    /**
+     Tell whether the user's membership is public.
+     */
+    @property (nonatomic) BOOL isPublic;
+
+@end
+
+/**
+ `MXGroupUsers` represents the group users in the server response.
+ */
+@interface MXGroupUsers : MXJSONModel
+
+    @property (nonatomic) NSUInteger totalUserCountEstimate;
+
+    @property (nonatomic) NSArray<MXGroupUser*> *chunk;
 
 @end

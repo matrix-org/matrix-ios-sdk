@@ -23,11 +23,12 @@
 #import "MXFileStoreMetaData.h"
 #import "MXSDKOptions.h"
 
-static NSUInteger const kMXFileVersion = 49;
+static NSUInteger const kMXFileVersion = 50;
 
 static NSString *const kMXFileStoreFolder = @"MXFileStore";
 static NSString *const kMXFileStoreMedaDataFile = @"MXFileStore";
 static NSString *const kMXFileStoreUsersFolder = @"users";
+static NSString *const kMXFileStoreGroupsFolder = @"groups";
 static NSString *const kMXFileStoreBackupFolder = @"backup";
 
 static NSString *const kMXFileStoreSavingMarker = @"savingMarker";
@@ -59,6 +60,9 @@ static NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
     NSMutableArray *roomsToCommitForDeletion;
 
     NSMutableDictionary *usersToCommit;
+    
+    NSMutableDictionary *groupsToCommit;
+    NSMutableArray *groupsToCommitForDeletion;
 
     // The path of the MXFileStore folder
     NSString *storePath;
@@ -71,6 +75,9 @@ static NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
 
     // The path of the rooms folder
     NSString *storeUsersPath;
+    
+    // The path of the groups folder
+    NSString *storeGroupsPath;
 
     // Flag to indicate metaData needs to be stored
     BOOL metaDataHasChanged;
@@ -109,6 +116,8 @@ static NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
         roomsToCommitForReceipts = [NSMutableArray array];
         roomsToCommitForDeletion = [NSMutableArray array];
         usersToCommit = [NSMutableDictionary dictionary];
+        groupsToCommit = [NSMutableDictionary dictionary];
+        groupsToCommitForDeletion = [NSMutableArray array];
         preloadedRoomsStates = [NSMutableDictionary dictionary];
         preloadedRoomSummary = [NSMutableDictionary dictionary];
         preloadedRoomAccountData = [NSMutableDictionary dictionary];
@@ -191,6 +200,7 @@ static NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
                 [self preloadRoomsAccountData];
                 [self loadReceipts];
                 [self loadUsers];
+                [self loadGroups];
 
                 NSTimeInterval duration = [[NSDate date] timeIntervalSinceDate:startDate];
                 NSLog(@"[MXFileStore] Data loaded from files in %.0fms", duration * 1000);
@@ -311,6 +321,7 @@ static NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
     [[NSFileManager defaultManager] createDirectoryAtPath:storePath withIntermediateDirectories:YES attributes:nil error:nil];
     [[NSFileManager defaultManager] createDirectoryAtPath:storeRoomsPath withIntermediateDirectories:YES attributes:nil error:nil];
     [[NSFileManager defaultManager] createDirectoryAtPath:storeUsersPath withIntermediateDirectories:YES attributes:nil error:nil];
+    [[NSFileManager defaultManager] createDirectoryAtPath:storeGroupsPath withIntermediateDirectories:YES attributes:nil error:nil];
 
     // Reset data
     metaData = nil;
@@ -458,8 +469,6 @@ static NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
     return roomUserdData;
 }
 
-
-#pragma mark - Matrix users
 - (void)storeUser:(MXUser *)user
 {
     [super storeUser:user];
@@ -467,6 +476,25 @@ static NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
     usersToCommit[user.userId] = user;
 }
 
+- (void)storeGroup:(MXGroup *)group
+{
+    [super storeGroup:group];
+    
+    groupsToCommit[group.groupId] = group;
+}
+
+- (void)deleteGroup:(NSString *)groupId
+{
+    [super deleteGroup:groupId];
+    
+    if (NSNotFound == [groupsToCommitForDeletion indexOfObject:groupId])
+    {
+        [groupsToCommitForDeletion addObject:groupId];
+    }
+    
+    // Remove this group from `groupsToCommit`.
+    [groupsToCommit removeObjectForKey:groupId];
+}
 
 - (void)setUserAccountData:(NSDictionary *)userAccountData
 {
@@ -504,6 +532,8 @@ static NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
         [self saveRoomsAccountData];
         [self saveReceipts];
         [self saveUsers];
+        [self saveGroupsDeletion];
+        [self saveGroups];
         [self saveMetaData];
         
         // The data saving is completed: remove the backuped data.
@@ -571,6 +601,7 @@ static NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
     storePath = [[cachePath stringByAppendingPathComponent:kMXFileStoreFolder] stringByAppendingPathComponent:credentials.userId];
     storeRoomsPath = [storePath stringByAppendingPathComponent:kMXFileStoreRoomsFolder];
     storeUsersPath = [storePath stringByAppendingPathComponent:kMXFileStoreUsersFolder];
+    storeGroupsPath = [storePath stringByAppendingPathComponent:kMXFileStoreGroupsFolder];
     
     storeBackupPath = [storePath stringByAppendingPathComponent:kMXFileStoreBackupFolder];
 }
@@ -676,6 +707,24 @@ static NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
     }
 }
 
+- (NSString*)groupFileForGroup:(NSString*)groupId forBackup:(BOOL)backup
+{
+    if (!backup)
+    {
+        return [storeGroupsPath stringByAppendingPathComponent:groupId];
+    }
+    else
+    {
+        if (backupEventStreamToken)
+        {
+            return [[[storeBackupPath stringByAppendingPathComponent:backupEventStreamToken] stringByAppendingPathComponent:kMXFileStoreGroupsFolder] stringByAppendingPathComponent:groupId];
+        }
+        else
+        {
+            return nil;
+        }
+    }
+}
 
 #pragma mark - Storage validity
 - (BOOL)checkStorageValidity
@@ -1330,6 +1379,112 @@ static NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
     }
 }
 
+#pragma mark - Matrix groups
+/**
+ Preload all groups.
+ 
+ This operation must be called on the `dispatchQueue` thread to avoid blocking the main thread.
+ */
+- (void)loadGroups
+{
+    NSDate *startDate = [NSDate date];
+    
+    // Load all groups files
+    NSArray *groupIds = [[NSFileManager defaultManager] contentsOfDirectoryAtPath:storeGroupsPath error:nil];
+    
+    for (NSString *groupId in groupIds)
+    {
+        NSString *groupFile = [storeGroupsPath stringByAppendingPathComponent:groupId];
+        
+        // Load stored group
+        @try
+        {
+            MXGroup *group = [NSKeyedUnarchiver unarchiveObjectWithFile:groupFile];
+            if (group)
+            {
+                [groups setObject:group forKey:groupId];
+            }
+        }
+        @catch (NSException *exception)
+        {
+            NSLog(@"[MXFileStore] Warning: File for group %@ has been corrupted", groupId);
+        }
+    }
+    
+    NSLog(@"[MXFileStore] Loaded %tu MXGroups in %.0fms", groups.count, [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
+}
+
+- (void)saveGroupsDeletion
+{
+    if (groupsToCommitForDeletion.count)
+    {
+        NSArray *groupsToCommit = [[NSArray alloc] initWithArray:groupsToCommitForDeletion copyItems:YES];
+        [groupsToCommitForDeletion removeAllObjects];
+#if DEBUG
+        NSLog(@"[MXFileStore commit] queuing saveGroupsDeletion for %tu rooms", groupsToCommit.count);
+#endif
+        dispatch_async(dispatchQueue, ^(void){
+            
+#if DEBUG
+            NSDate *startDate = [NSDate date];
+#endif
+            // Delete group files from the file system
+            for (NSString *groupId in groupsToCommit)
+            {
+                NSString *file = [self groupFileForGroup:groupId forBackup:NO];
+                NSString *backupFile = [self groupFileForGroup:groupId forBackup:YES];
+                if (backupFile && [[NSFileManager defaultManager] fileExistsAtPath:file])
+                {
+                    // Remove the group file by trashing it into the backup
+                    [[NSFileManager defaultManager] moveItemAtPath:file toPath:backupFile error:nil];
+                }
+            }
+#if DEBUG
+            NSLog(@"[MXFileStore commit] lasted %.0fms for %tu groups deletion", [[NSDate date] timeIntervalSinceDate:startDate] * 1000, groupsToCommit.count);
+#endif
+        });
+    }
+}
+
+- (void)saveGroups
+{
+    // Save only in case of change
+    if (groupsToCommit.count)
+    {
+        // Take a snapshot of groups to store them on the other thread
+        NSMutableDictionary *theGroupsToCommit = [[NSMutableDictionary alloc] initWithDictionary:groupsToCommit copyItems:YES];
+        [groupsToCommit removeAllObjects];
+#if DEBUG
+        NSLog(@"[MXFileStore commit] queuing saveGroups");
+#endif
+        dispatch_async(dispatchQueue, ^(void){
+            
+#if DEBUG
+            NSDate *startDate = [NSDate date];
+#endif
+            for (NSString *groupId in theGroupsToCommit)
+            {
+                MXGroup *group = theGroupsToCommit[groupId];
+                
+                NSString *file = [self groupFileForGroup:groupId forBackup:NO];
+                
+                // Backup the file for this group
+                NSString *backupFile = [self groupFileForGroup:groupId forBackup:YES];
+                if (backupFile && [[NSFileManager defaultManager] fileExistsAtPath:file])
+                {
+                    [[NSFileManager defaultManager] moveItemAtPath:file toPath:backupFile error:nil];
+                }
+                
+                // And store the users group
+                [NSKeyedArchiver archiveRootObject:group toFile:file];
+            }
+#if DEBUG
+            NSLog(@"[MXFileStore] saveGroups in %.0fms", [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
+#endif
+        });
+    }
+}
+
 #pragma mark - Room receipts
 
 /**
@@ -1464,6 +1619,17 @@ static NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
 
         dispatch_async(dispatch_get_main_queue(), ^{
             success(usersWithUserIds);
+        });
+    });
+}
+
+- (void)asyncGroups:(void (^)(NSArray<MXGroup *> *groups))success failure:(nullable void (^)(NSError *error))failure
+{
+    dispatch_async(dispatchQueue, ^{
+        [self loadGroups];
+        
+        dispatch_async(dispatch_get_main_queue(), ^{
+            success(groups.allValues);
         });
     });
 }

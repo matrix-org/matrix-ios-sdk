@@ -18,6 +18,15 @@
 
 #import "MXSDKOptions.h"
 
+
+/**
+ Membership definitions - String version
+ */
+NSString *const kMXMembershipStringInvite = @"invite";
+NSString *const kMXMembershipStringJoin   = @"join";
+NSString *const kMXMembershipStringLeave  = @"leave";
+NSString *const kMXMembershipStringBan    = @"ban";
+
 /**
  Room visibility in the homeserver directory.
  */

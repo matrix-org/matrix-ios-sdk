@@ -22,6 +22,7 @@
 #import "MXUser.h"
 #import "MXRoomSummary.h"
 #import "MXRoomAccountData.h"
+#import "MXGroup.h"
 
 #import "MXEventsEnumerator.h"
 
@@ -148,7 +149,7 @@
 /**
  Get the list of all stored matrix users.
 
- @return an array of MXUsers.
+ @return an array of MXUser.
  */
 - (NSArray<MXUser*>*)users;
 
@@ -160,7 +161,35 @@
  */
 - (MXUser*)userWithUserId:(NSString*)userId;
 
+#pragma mark - groups
+/**
+ Store a matrix group.
+ */
+- (void)storeGroup:(MXGroup*)group;
 
+/**
+ Get the list of all stored matrix groups.
+ 
+ @return an array of MXGroup.
+ */
+- (NSArray<MXGroup*>*)groups;
+
+/**
+ Get a matrix group.
+ 
+ @param groupId The id to the group.
+ @return the MXGroup instance or nil if not found.
+ */
+- (MXGroup*)groupWithGroupId:(NSString*)groupId;
+
+/**
+ Erase a group and all related data.
+ 
+ @param groupId the id of the group.
+ */
+- (void)deleteGroup:(NSString*)groupId;
+
+#pragma mark -
 /**
  Store the text message partially typed by the user but not yet sent.
  

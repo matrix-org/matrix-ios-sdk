@@ -51,8 +51,12 @@ NSString *const kMXSessionIgnoredUsersDidChangeNotification = @"kMXSessionIgnore
 NSString *const kMXSessionDirectRoomsDidChangeNotification = @"kMXSessionDirectRoomsDidChangeNotification";
 NSString *const kMXSessionDidCorruptDataNotification = @"kMXSessionDidCorruptDataNotification";
 NSString *const kMXSessionCryptoDidCorruptDataNotification = @"kMXSessionCryptoDidCorruptDataNotification";
+NSString *const kMXSessionNewGroupInviteNotification = @"kMXSessionNewGroupInviteNotification";
+NSString *const kMXSessionDidJoinGroupNotification = @"kMXSessionDidJoinGroupNotification";
+NSString *const kMXSessionDidLeaveGroupNotification = @"kMXSessionDidLeaveGroupNotification";
 
 NSString *const kMXSessionNotificationRoomIdKey = @"roomId";
+NSString *const kMXSessionNotificationGroupIdKey = @"groupId";
 NSString *const kMXSessionNotificationEventKey = @"event";
 NSString *const kMXSessionNotificationSyncResponseKey = @"syncResponse";
 NSString *const kMXSessionNotificationErrorKey = @"error";
@@ -889,6 +893,28 @@ typedef void (^MXOnResumeDone)();
                     [self removeRoom:room.state.roomId];
                 }
             }
+        }
+        
+        // Handle invited groups
+        for (NSString *groupId in syncResponse.groups.invite)
+        {
+            // Create a new group for each invite
+            MXInvitedGroupSync *invitedGroupSync = syncResponse.groups.invite[groupId];
+            [self createGroupInviteWithId:groupId profile:invitedGroupSync.profile andInviter:invitedGroupSync.inviter notify:!isInitialSync];
+        }
+        
+        // Handle joined groups
+        for (NSString *groupId in syncResponse.groups.join)
+        {
+            // Join an existing group or create a new one
+            [self joinGroupWithId:groupId notify:!isInitialSync];
+        }
+        
+        // Handle left groups
+        for (NSString *groupId in syncResponse.groups.leave)
+        {
+            // Remove the group from the group list
+            [self removeGroup:groupId];
         }
         
         // Handle presence of other users
@@ -1872,6 +1898,88 @@ typedef void (^MXOnResumeDone)();
     {
         [_store commit];
     }
+}
+
+#pragma mark - The user's groups
+
+- (MXGroup *)groupWithGroupId:(NSString*)groupId
+{
+    return [_store groupWithGroupId:groupId];
+}
+
+- (NSArray<MXGroup*>*)groups
+{
+    return _store.groups;
+}
+
+- (MXGroup *)joinGroupWithId:(NSString *)groupId notify:(BOOL)notify
+{
+    MXGroup *group = [self groupWithGroupId:groupId];
+    if (nil == group)
+    {
+        group = [[MXGroup alloc] initWithGroupId:groupId];
+    }
+    
+    // Set/update the user membership.
+    group.membership = MXMembershipJoin;
+    
+    [_store storeGroup:group];
+    
+    if (notify)
+    {
+        // Broadcast the new joined group.
+        [[NSNotificationCenter defaultCenter] postNotificationName:kMXSessionDidJoinGroupNotification
+                                                            object:self
+                                                          userInfo:@{
+                                                                     kMXSessionNotificationGroupIdKey: groupId
+                                                                     }];
+    }
+    
+    return group;
+}
+
+- (MXGroup *)createGroupInviteWithId:(NSString *)groupId profile:(MXGroupSyncProfile*)profile andInviter:(NSString*)inviter notify:(BOOL)notify
+{
+    MXGroup *group = [[MXGroup alloc] initWithGroupId:groupId];
+    
+    MXGroupSummary *summary = [[MXGroupSummary alloc] init];
+    MXGroupProfile *groupProfile = [[MXGroupProfile alloc] init];
+    groupProfile.name = profile.name;
+    groupProfile.avatarUrl = profile.avatarUrl;
+    summary.profile = groupProfile;
+    
+    group.summary = summary;
+    group.inviter = inviter;
+    
+    // Set user membership
+    group.membership = MXMembershipInvite;
+    
+    [_store storeGroup:group];
+    
+    if (notify)
+    {
+        // Broadcast the new group
+        [[NSNotificationCenter defaultCenter] postNotificationName:kMXSessionNewGroupInviteNotification
+                                                            object:self
+                                                          userInfo:@{
+                                                                     kMXSessionNotificationGroupIdKey: groupId
+                                                                     }];
+    }
+    
+    return group;
+}
+
+- (void)removeGroup:(NSString *)groupId
+{
+    // Clean the store
+    [_store deleteGroup:groupId];
+    
+    // Broadcast the left group
+    [[NSNotificationCenter defaultCenter] postNotificationName:kMXSessionDidLeaveGroupNotification
+                                                        object:self
+                                                      userInfo:@{
+                                                                 kMXSessionNotificationGroupIdKey: groupId
+                                                                 }];
 }
 
 #pragma  mark - Missed notifications

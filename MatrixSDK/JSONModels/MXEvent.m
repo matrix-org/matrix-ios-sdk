@@ -65,12 +65,6 @@ NSString *const kMXMessageTypeFile      = @"m.file";
 
 NSString *const kMXEventLocalEventIdPrefix = @"kMXEventLocalId_";
 
-NSString *const kMXMembershipStringInvite = @"invite";
-NSString *const kMXMembershipStringJoin   = @"join";
-NSString *const kMXMembershipStringLeave  = @"leave";
-NSString *const kMXMembershipStringBan    = @"ban";
-
-
 uint64_t const kMXUndefinedTimestamp = (uint64_t)-1;
 
 NSString *const kMXEventDidChangeSentStateNotification = @"kMXEventDidChangeSentStateNotification";

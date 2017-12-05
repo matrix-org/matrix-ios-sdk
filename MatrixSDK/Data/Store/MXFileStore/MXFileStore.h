@@ -111,6 +111,15 @@ NS_ASSUME_NONNULL_BEGIN
                       failure:(nullable void (^)(NSError *error))failure;
 
 /**
+ Get the list of all stored groups (communities).
+ 
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+ */
+- (void)asyncGroups:(void (^)(NSArray<MXGroup *> *groups))success
+           failure:(nullable void (^)(NSError *error))failure;
+
+/**
  Get the list of all stored rooms summaries.
  
  @param success A block object called when the operation succeeds.
