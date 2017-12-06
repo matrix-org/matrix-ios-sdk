@@ -316,7 +316,6 @@ NSString *const kMXLoginIdentifierTypePhone = @"m.id.phone";
 
 @implementation MXRoomMemberEventContent
 
-// Override the default Mantle modelFromJSON method
 // Decoding room member events is sensible when loading state events from cache as the SDK
 // needs to decode plenty of them.
 // A direct JSON decoding improves speed by 4x.
@@ -1221,7 +1220,6 @@ NSString *const kMXPushRuleScopeStringDevice = @"device";
 
 @implementation MXRoomsSyncResponse
 
-// Override the default Mantle modelFromJSON method to convert room lists.
 // Indeed the values in received dictionaries are JSON dictionaries. We convert them in
 // MXRoomSync or MXInvitedRoomSync objects.
 + (id)modelFromJSON:(NSDictionary *)JSONDictionary
@@ -1258,7 +1256,6 @@ NSString *const kMXPushRuleScopeStringDevice = @"device";
 
 @implementation MXGroupsSyncResponse
 
-// Override the default Mantle modelFromJSON method to convert groups lists.
 + (id)modelFromJSON:(NSDictionary *)JSONDictionary
 {
     MXGroupsSyncResponse *groupsSync = [[MXGroupsSyncResponse alloc] init];
@@ -1592,12 +1589,10 @@ NSString *const kMXPushRuleScopeStringDevice = @"device";
     MXDevice *device = [[MXDevice alloc] init];
     if (device)
     {
-        NSDictionary *dict = [MXJSONModel removeNullValuesInJSON:JSONDictionary];
-        
-        MXJSONModelSetString(device.deviceId, dict[@"device_id"]);
-        MXJSONModelSetString(device.displayName, dict[@"display_name"]);
-        MXJSONModelSetString(device.lastSeenIp, dict[@"last_seen_ip"]);
-        MXJSONModelSetUInt64(device.lastSeenTs, dict[@"last_seen_ts"]);
+        MXJSONModelSetString(device.deviceId, JSONDictionary[@"device_id"]);
+        MXJSONModelSetString(device.displayName, JSONDictionary[@"display_name"]);
+        MXJSONModelSetString(device.lastSeenIp, JSONDictionary[@"last_seen_ip"]);
+        MXJSONModelSetUInt64(device.lastSeenTs, JSONDictionary[@"last_seen_ts"]);
     }
     
     return device;
@@ -1638,13 +1633,11 @@ NSString *const kMXPushRuleScopeStringDevice = @"device";
     MXGroupProfile *profile = [[MXGroupProfile alloc] init];
     if (profile)
     {
-        NSDictionary *dict = [MXJSONModel removeNullValuesInJSON:JSONDictionary];
-        
-        MXJSONModelSetString(profile.shortDescription, dict[@"short_description"]);
-        MXJSONModelSetBoolean(profile.isPublic, dict[@"is_public"]);
-        MXJSONModelSetString(profile.avatarUrl, dict[@"avatar_url"]);
-        MXJSONModelSetString(profile.name, dict[@"name"]);
-        MXJSONModelSetString(profile.longDescription, dict[@"long_description"]);
+        MXJSONModelSetString(profile.shortDescription, JSONDictionary[@"short_description"]);
+        MXJSONModelSetBoolean(profile.isPublic, JSONDictionary[@"is_public"]);
+        MXJSONModelSetString(profile.avatarUrl, JSONDictionary[@"avatar_url"]);
+        MXJSONModelSetString(profile.name, JSONDictionary[@"name"]);
+        MXJSONModelSetString(profile.longDescription, JSONDictionary[@"long_description"]);
     }
     
     return profile;
@@ -1707,9 +1700,7 @@ NSString *const kMXPushRuleScopeStringDevice = @"device";
     MXGroupSummaryUsersSection *usersSection = [[MXGroupSummaryUsersSection alloc] init];
     if (usersSection)
     {
-        NSDictionary *dict = [MXJSONModel removeNullValuesInJSON:JSONDictionary];
-        
-        MXJSONModelSetUInteger(usersSection.totalUserCountEstimate, dict[@"total_user_count_estimate"]);
+        MXJSONModelSetUInteger(usersSection.totalUserCountEstimate, JSONDictionary[@"total_user_count_estimate"]);
         MXJSONModelSetArray(usersSection.users, JSONDictionary[@"users"]);
         MXJSONModelSetDictionary(usersSection.roles, JSONDictionary[@"roles"]);
     }
@@ -1762,9 +1753,7 @@ NSString *const kMXPushRuleScopeStringDevice = @"device";
     MXGroupSummaryUser *user = [[MXGroupSummaryUser alloc] init];
     if (user)
     {
-        NSDictionary *dict = [MXJSONModel removeNullValuesInJSON:JSONDictionary];
-        
-        MXJSONModelSetString(user.membership, dict[@"membership"]);
+        MXJSONModelSetString(user.membership, JSONDictionary[@"membership"]);
         MXJSONModelSetBoolean(user.isPublicised, JSONDictionary[@"is_publicised"]);
     }
     
@@ -1810,9 +1799,7 @@ NSString *const kMXPushRuleScopeStringDevice = @"device";
     MXGroupSummaryRoomsSection *roomsSection = [[MXGroupSummaryRoomsSection alloc] init];
     if (roomsSection)
     {
-        NSDictionary *dict = [MXJSONModel removeNullValuesInJSON:JSONDictionary];
-        
-        MXJSONModelSetUInteger(roomsSection.totalRoomCountEstimate, dict[@"total_room_count_estimate"]);
+        MXJSONModelSetUInteger(roomsSection.totalRoomCountEstimate, JSONDictionary[@"total_room_count_estimate"]);
         MXJSONModelSetArray(roomsSection.rooms, JSONDictionary[@"rooms"]);
         MXJSONModelSetDictionary(roomsSection.categories, JSONDictionary[@"categories"]);
     }
@@ -1928,17 +1915,15 @@ NSString *const kMXPushRuleScopeStringDevice = @"device";
     MXGroupRoom *room = [[MXGroupRoom alloc] init];
     if (room)
     {
-        NSDictionary *dict = [MXJSONModel removeNullValuesInJSON:JSONDictionary];
-        
-        MXJSONModelSetString(room.canonicalAlias, dict[@"canonical_alias"]);
-        MXJSONModelSetString(room.roomId, dict[@"room_id"]);
-        MXJSONModelSetString(room.name, dict[@"name"]);
-        MXJSONModelSetString(room.topic, dict[@"topic"]);
-        MXJSONModelSetUInteger(room.numJoinedMembers, dict[@"num_joined_members"]);
-        MXJSONModelSetBoolean(room.worldReadable, dict[@"world_readable"]);
-        MXJSONModelSetBoolean(room.guestCanJoin, dict[@"guest_can_join"]);
-        MXJSONModelSetString(room.avatarUrl, dict[@"avatar_url"]);
-        MXJSONModelSetBoolean(room.isPublic, dict[@"is_public"]);
+        MXJSONModelSetString(room.canonicalAlias, JSONDictionary[@"canonical_alias"]);
+        MXJSONModelSetString(room.roomId, JSONDictionary[@"room_id"]);
+        MXJSONModelSetString(room.name, JSONDictionary[@"name"]);
+        MXJSONModelSetString(room.topic, JSONDictionary[@"topic"]);
+        MXJSONModelSetUInteger(room.numJoinedMembers, JSONDictionary[@"num_joined_members"]);
+        MXJSONModelSetBoolean(room.worldReadable, JSONDictionary[@"world_readable"]);
+        MXJSONModelSetBoolean(room.guestCanJoin, JSONDictionary[@"guest_can_join"]);
+        MXJSONModelSetString(room.avatarUrl, JSONDictionary[@"avatar_url"]);
+        MXJSONModelSetBoolean(room.isPublic, JSONDictionary[@"is_public"]);
     }
     
     return room;
@@ -2013,9 +1998,7 @@ NSString *const kMXPushRuleScopeStringDevice = @"device";
     MXGroupRooms *rooms = [[MXGroupRooms alloc] init];
     if (rooms)
     {
-        NSDictionary *dict = [MXJSONModel removeNullValuesInJSON:JSONDictionary];
-        
-        MXJSONModelSetUInteger(rooms.totalRoomCountEstimate, dict[@"total_room_count_estimate"]);
+        MXJSONModelSetUInteger(rooms.totalRoomCountEstimate, JSONDictionary[@"total_room_count_estimate"]);
         MXJSONModelSetMXJSONModelArray(rooms.chunk, MXGroupRoom, JSONDictionary[@"chunk"]);
     }
     
@@ -2061,13 +2044,11 @@ NSString *const kMXPushRuleScopeStringDevice = @"device";
     MXGroupUser *user = [[MXGroupUser alloc] init];
     if (user)
     {
-        NSDictionary *dict = [MXJSONModel removeNullValuesInJSON:JSONDictionary];
-        
-        MXJSONModelSetString(user.displayname, dict[@"displayname"]);
-        MXJSONModelSetString(user.userId, dict[@"user_id"]);
-        MXJSONModelSetBoolean(user.isPrivileged, dict[@"is_privileged"]);
-        MXJSONModelSetString(user.avatarUrl, dict[@"avatar_url"]);
-        MXJSONModelSetBoolean(user.isPublic, dict[@"is_public"]);
+        MXJSONModelSetString(user.displayname, JSONDictionary[@"displayname"]);
+        MXJSONModelSetString(user.userId, JSONDictionary[@"user_id"]);
+        MXJSONModelSetBoolean(user.isPrivileged, JSONDictionary[@"is_privileged"]);
+        MXJSONModelSetString(user.avatarUrl, JSONDictionary[@"avatar_url"]);
+        MXJSONModelSetBoolean(user.isPublic, JSONDictionary[@"is_public"]);
     }
     
     return user;
@@ -2124,9 +2105,7 @@ NSString *const kMXPushRuleScopeStringDevice = @"device";
     MXGroupUsers *users = [[MXGroupUsers alloc] init];
     if (users)
     {
-        NSDictionary *dict = [MXJSONModel removeNullValuesInJSON:JSONDictionary];
-        
-        MXJSONModelSetUInteger(users.totalUserCountEstimate, dict[@"total_user_count_estimate"]);
+        MXJSONModelSetUInteger(users.totalUserCountEstimate, JSONDictionary[@"total_user_count_estimate"]);
         MXJSONModelSetMXJSONModelArray(users.chunk, MXGroupUser, JSONDictionary[@"chunk"]);
     }
     

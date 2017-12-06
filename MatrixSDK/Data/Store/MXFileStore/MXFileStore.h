@@ -47,12 +47,10 @@ NS_ASSUME_NONNULL_BEGIN
                 L usersGroup #1
                 L usersGroup #2
                 L ...
-            + crypto: crypto data
-                L account: the user's olm account
-                L devices: users devices keys
-                L roomsAlgorithms: the algos used in rooms
-                L sessions: the olm sessions with other users devices
-                L inboundGroupSessions: the inbound group session
+            + groups:
+                L groupA
+                L groupB
+                L ...
             L MXFileStore : Information about the stored data
             + backup : This folder contains backup of files that are modified during
                   the commit process. It is flushed when the commit completes.
@@ -66,7 +64,7 @@ NS_ASSUME_NONNULL_BEGIN
                     + users
                         L usersGroup #1
                         L ...
-                    + crypto
+                    + groups
                         L ...
                     L MXFileStore
  */

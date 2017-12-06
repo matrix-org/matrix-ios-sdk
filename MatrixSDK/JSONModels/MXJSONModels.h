@@ -1730,6 +1730,7 @@ FOUNDATION_EXPORT NSString *const kMXPushRuleScopeStringDevice;
 
     @property (nonatomic) NSArray<NSString*> *users;
 
+    // @TODO: Check the meaning and the usage of these roles. This dictionary is empty FTM.
     @property (nonatomic) NSDictionary *roles;
 
 @end
@@ -1760,6 +1761,7 @@ FOUNDATION_EXPORT NSString *const kMXPushRuleScopeStringDevice;
 
     @property (nonatomic) NSArray<NSString*> *rooms;
 
+    // @TODO: Check the meaning and the usage of these categories. This dictionary is empty FTM.
     @property (nonatomic) NSDictionary *categories;
 
 @end
