@@ -253,7 +253,9 @@
             // best off sticking with the original keys.
             //
             // Should we warn the user about it somehow?
-            NSLog(@"[MXDeviceListOperationsPool] validateDeviceKeys: WARNING:Ed25519 key for device %@:%@ has changed", userId, deviceKeys.deviceId);
+            NSLog(@"[MXDeviceListOperationsPool] validateDeviceKeys: WARNING:Ed25519 key for device %@:%@ has changed: %@ -> %@", userId, deviceKeys.deviceId, previouslyStoredDeviceKeys.fingerprint, signKey);
+            NSLog(@"[MXDeviceListOperationsPool] validateDeviceKeys: %@ -> %@", previouslyStoredDeviceKeys, previouslyStoredDeviceKeys);
+            NSLog(@"[MXDeviceListOperationsPool] validateDeviceKeys: %@ -> %@", previouslyStoredDeviceKeys.keys, previouslyStoredDeviceKeys.keys);
             return NO;
         }
     }

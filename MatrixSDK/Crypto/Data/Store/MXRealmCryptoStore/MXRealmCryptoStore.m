@@ -440,7 +440,7 @@ RLM_ARRAY_TYPE(MXRealmOlmInboundGroupSession)
         }
         else
         {
-            // Reset all previously stored devices for this device
+            // Reset all previously stored devices for this user
             [realmUser.devices removeAllObjects];
         }
 

@@ -621,7 +621,7 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
             {
                 // Otherwise, we have to invalidate all devices for all users we
                 // are tracking.
-                NSLog(@"[MXCrypto] handleDeviceListsChanges: Completed first initialsync; invalidating all device list caches");
+                NSLog(@"[MXCrypto] onSyncCompleted: Completed first initialsync; invalidating all device list caches");
                 [_deviceList invalidateAllDeviceLists];
             }
         }
