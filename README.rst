@@ -40,9 +40,9 @@ If you want to use the develop version of the SDK, use instead:
 
 Options
 =======
-If you want to enable VoIP, add the following pod to you app Podfile::
+If you want to enable VoIP using the http://webrtc.org VoIP stack, add the following pod to you app Podfile::
 
-    pod 'WebRTC'
+    pod 'MatrixSDK/JingleCallStack'
 
 If you want to enable end-to-end encryption, add::
 
