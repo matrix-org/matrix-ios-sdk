@@ -39,16 +39,6 @@
 #define MX_CRYPTO
 #endif
 
-/**
- Google Analytics.
-
- The Matrix SDK will send some stats to Google Analytics if the application imports
- the GoogleAnalytics library (like pod 'GoogleAnalytics') and if 'enableGoogleAnalytics' is YES.
- */
-#if __has_include(<GoogleAnalytics/GAI.h>)
-#define MX_GA
-#endif
-
 
 #pragma mark - Launch time options
 
@@ -87,11 +77,7 @@ NS_ASSUME_NONNULL_BEGIN
 /**
  The delegate object to receive analytics events
  
- By default, this is set to an instance of MXGoogleAnalytics, if it's available.
- 
- MXGoogleAnalytics is not available to the 'SwiftMatrixSDK' pod because it cannot
- be compiled as a framework. It will also be unavailable if your project does not
- include the 'GoogleAnalytics' pod.
+ By default, nil.
  */
 @property (nonatomic, nullable) id<MXAnalyticsDelegate> analyticsDelegate;
 

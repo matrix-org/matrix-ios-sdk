@@ -18,14 +18,10 @@
 #import "MXSDKOptions.h"
 #import "MXEnumConstants.h"
 
-#ifdef MX_GA
 #import <GoogleAnalytics/GAI.h>
 #import <GoogleAnalytics/GAIDictionaryBuilder.h>
-#endif
 
 @implementation MXGoogleAnalytics
-
-#ifdef MX_GA
 
 // The Google Analytics Library is available, so we can call it.
 
@@ -80,26 +76,5 @@
                                                                value:@(roomCount)] build]];
     }
 }
-
-
-#else
-
-// The Google Analytics Library is unavailable, so these methods are stubs.
-
-- (void)trackStartupStorePreloadDuration: (NSTimeInterval)duration
-{}
-
-- (void)trackStartupMountDataDuration: (NSTimeInterval)duration
-{}
-
-- (void)trackStartupSyncDuration: (NSTimeInterval)duration isInitial: (BOOL)isInitial
-{}
-
-- (void)trackRoomCount: (NSUInteger)roomCount
-{}
-
-#endif
-
-
 
 @end

@@ -45,5 +45,15 @@ Pod::Spec.new do |s|
     # The Google WebRTC stack
     ss.ios.dependency 'WebRTC', '61.5.19063'
   end
+  
+  s.subspec 'GoogleAnalytics' do |ss|
+    ss.ios.deployment_target = "8.0"
+    
+    ss.source_files  = "MatrixSDKExtensions/MXAnalyticsDelegate/GoogleAnalytics/**/*.{h,m}"
+    
+    ss.dependency 'MatrixSDK/Core'
+    
+    ss.ios.dependency 'GoogleAnalytics' 
+  end
 
 end
