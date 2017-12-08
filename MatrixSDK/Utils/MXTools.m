@@ -21,8 +21,6 @@
 #import <MobileCoreServices/MobileCoreServices.h>
 #endif
 
-#import "MXEnumConstants.h"
-
 #pragma mark - Constant definition
 NSString *const kMXToolsRegexStringForEmailAddress          = @"[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,}";
 NSString *const kMXToolsRegexStringForMatrixUserIdentifier  = @"@[A-Z0-9._=-]+:[A-Z0-9.-]+\\.[A-Z]{2,}";
@@ -155,6 +153,35 @@ static NSUInteger transactionIdCount;
     return membership;
 }
 
+
++ (MXMembershipString)membershipString:(MXMembership)membership
+{
+    MXMembershipString membershipString;
+    
+    switch (membership)
+    {
+        case MXMembershipInvite:
+            membershipString = kMXMembershipStringInvite;
+            break;
+            
+        case MXMembershipJoin:
+            membershipString = kMXMembershipStringJoin;
+            break;
+            
+        case MXMembershipLeave:
+            membershipString = kMXMembershipStringLeave;
+            break;
+            
+        case MXMembershipBan:
+            membershipString = kMXMembershipStringBan;
+            break;
+            
+        default:
+            break;
+    }
+    
+    return membershipString;
+}
 
 + (MXPresence)presence:(MXPresenceString)presenceString
 {

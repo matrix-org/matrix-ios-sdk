@@ -29,6 +29,10 @@
     // All matrix users known by the user
     // The keys are user ids.
     NSMutableDictionary <NSString*, MXUser*> *users;
+    
+    // All matrix groups known by the user
+    // The keys are groups ids.
+    NSMutableDictionary <NSString*, MXGroup*> *groups;
 
     // Dict of dict of MXReceiptData indexed by userId
     NSMutableDictionary *receiptsByRoomId;

@@ -316,7 +316,6 @@ NSString *const kMXLoginIdentifierTypePhone = @"m.id.phone";
 
 @implementation MXRoomMemberEventContent
 
-// Override the default Mantle modelFromJSON method
 // Decoding room member events is sensible when loading state events from cache as the SDK
 // needs to decode plenty of them.
 // A direct JSON decoding improves speed by 4x.
@@ -1142,6 +1141,40 @@ NSString *const kMXPushRuleScopeStringDevice = @"device";
 
 @end
 
+#pragma mark - Group
+#pragma mark -
+
+@implementation MXGroupSyncProfile
+
++ (id)modelFromJSON:(NSDictionary *)JSONDictionary
+{
+    MXGroupSyncProfile *groupProfile = [[MXGroupSyncProfile alloc] init];
+    if (groupProfile)
+    {
+        MXJSONModelSetString(groupProfile.name, JSONDictionary[@"name"]);
+        MXJSONModelSetString(groupProfile.avatarUrl, JSONDictionary[@"avatar_url"]);
+    }
+    
+    return groupProfile;
+}
+
+@end
+
+@implementation MXInvitedGroupSync
+
++ (id)modelFromJSON:(NSDictionary *)JSONDictionary
+{
+    MXInvitedGroupSync *invitedGroupSync = [[MXInvitedGroupSync alloc] init];
+    if (invitedGroupSync)
+    {
+        MXJSONModelSetString(invitedGroupSync.inviter, JSONDictionary[@"inviter"]);
+        MXJSONModelSetMXJSONModel(invitedGroupSync.profile, MXGroupSyncProfile, JSONDictionary[@"profile"]);
+    }
+    return invitedGroupSync;
+}
+
+@end
+
 @implementation MXPresenceSyncResponse
 
 + (id)modelFromJSON:(NSDictionary *)JSONDictionary
@@ -1187,7 +1220,6 @@ NSString *const kMXPushRuleScopeStringDevice = @"device";
 
 @implementation MXRoomsSyncResponse
 
-// Override the default Mantle modelFromJSON method to convert room lists.
 // Indeed the values in received dictionaries are JSON dictionaries. We convert them in
 // MXRoomSync or MXInvitedRoomSync objects.
 + (id)modelFromJSON:(NSDictionary *)JSONDictionary
@@ -1222,6 +1254,38 @@ NSString *const kMXPushRuleScopeStringDevice = @"device";
 
 @end
 
+@implementation MXGroupsSyncResponse
+
++ (id)modelFromJSON:(NSDictionary *)JSONDictionary
+{
+    MXGroupsSyncResponse *groupsSync = [[MXGroupsSyncResponse alloc] init];
+    if (groupsSync)
+    {
+        NSObject *joinedGroups = JSONDictionary[@"join"];
+        if ([joinedGroups isKindOfClass:[NSDictionary class]])
+        {
+            groupsSync.join = [NSArray arrayWithArray:((NSDictionary*)joinedGroups).allKeys];
+        }
+        
+        NSMutableDictionary *mxInvite = [NSMutableDictionary dictionary];
+        for (NSString *groupId in JSONDictionary[@"invite"])
+        {
+            MXJSONModelSetMXJSONModel(mxInvite[groupId], MXInvitedGroupSync, JSONDictionary[@"invite"][groupId]);
+        }
+        groupsSync.invite = mxInvite;
+        
+        NSObject *leftGroups = JSONDictionary[@"leave"];
+        if ([leftGroups isKindOfClass:[NSDictionary class]])
+        {
+            groupsSync.leave = [NSArray arrayWithArray:((NSDictionary*)leftGroups).allKeys];
+        }
+    }
+    
+    return groupsSync;
+}
+
+@end
+
 @implementation MXSyncResponse
 
 + (id)modelFromJSON:(NSDictionary *)JSONDictionary
@@ -1236,6 +1300,7 @@ NSString *const kMXPushRuleScopeStringDevice = @"device";
         MXJSONModelSetMXJSONModel(syncResponse.deviceLists, MXDeviceListResponse, JSONDictionary[@"device_lists"]);
         MXJSONModelSetDictionary(syncResponse.deviceOneTimeKeysCount, JSONDictionary[@"device_one_time_keys_count"])
         MXJSONModelSetMXJSONModel(syncResponse.rooms, MXRoomsSyncResponse, JSONDictionary[@"rooms"]);
+        MXJSONModelSetMXJSONModel(syncResponse.groups, MXGroupsSyncResponse, JSONDictionary[@"groups"]);
     }
 
     return syncResponse;
@@ -1524,12 +1589,10 @@ NSString *const kMXPushRuleScopeStringDevice = @"device";
     MXDevice *device = [[MXDevice alloc] init];
     if (device)
     {
-        NSDictionary *dict = [MXJSONModel removeNullValuesInJSON:JSONDictionary];
-        
-        MXJSONModelSetString(device.deviceId, dict[@"device_id"]);
-        MXJSONModelSetString(device.displayName, dict[@"display_name"]);
-        MXJSONModelSetString(device.lastSeenIp, dict[@"last_seen_ip"]);
-        MXJSONModelSetUInt64(device.lastSeenTs, dict[@"last_seen_ts"]);
+        MXJSONModelSetString(device.deviceId, JSONDictionary[@"device_id"]);
+        MXJSONModelSetString(device.displayName, JSONDictionary[@"display_name"]);
+        MXJSONModelSetString(device.lastSeenIp, JSONDictionary[@"last_seen_ip"]);
+        MXJSONModelSetUInt64(device.lastSeenTs, JSONDictionary[@"last_seen_ts"]);
     }
     
     return device;
@@ -1557,6 +1620,526 @@ NSString *const kMXPushRuleScopeStringDevice = @"device";
     }
     [aCoder encodeObject:_lastSeenIp forKey:@"last_seen_ip"];
     [aCoder encodeObject:@(_lastSeenTs) forKey:@"last_seen_ts"];
+}
+
+@end
+
+#pragma mark - Groups (Communities)
+
+@implementation MXGroupProfile
+
++ (id)modelFromJSON:(NSDictionary *)JSONDictionary
+{
+    MXGroupProfile *profile = [[MXGroupProfile alloc] init];
+    if (profile)
+    {
+        MXJSONModelSetString(profile.shortDescription, JSONDictionary[@"short_description"]);
+        MXJSONModelSetBoolean(profile.isPublic, JSONDictionary[@"is_public"]);
+        MXJSONModelSetString(profile.avatarUrl, JSONDictionary[@"avatar_url"]);
+        MXJSONModelSetString(profile.name, JSONDictionary[@"name"]);
+        MXJSONModelSetString(profile.longDescription, JSONDictionary[@"long_description"]);
+    }
+    
+    return profile;
+}
+
+- (instancetype)initWithCoder:(NSCoder *)aDecoder
+{
+    self = [super init];
+    if (self)
+    {
+        _shortDescription = [aDecoder decodeObjectForKey:@"short_description"];
+        _isPublic = [aDecoder decodeBoolForKey:@"is_public"];
+        _avatarUrl = [aDecoder decodeObjectForKey:@"avatar_url"];
+        _name = [aDecoder decodeObjectForKey:@"name"];
+        _longDescription = [aDecoder decodeObjectForKey:@"long_description"];
+    }
+    return self;
+}
+
+- (void)encodeWithCoder:(NSCoder *)aCoder
+{
+    if (_shortDescription)
+    {
+        [aCoder encodeObject:_shortDescription forKey:@"short_description"];
+    }
+    [aCoder encodeBool:_isPublic forKey:@"is_public"];
+    if (_avatarUrl)
+    {
+        [aCoder encodeObject:_avatarUrl forKey:@"avatar_url"];
+    }
+    if (_name)
+    {
+        [aCoder encodeObject:_name forKey:@"name"];
+    }
+    if (_longDescription)
+    {
+        [aCoder encodeObject:_longDescription forKey:@"long_description"];
+    }
+}
+
+- (id)copyWithZone:(NSZone *)zone
+{
+    MXGroupProfile *profile = [[[self class] allocWithZone:zone] init];
+    
+    profile.shortDescription = [_shortDescription copyWithZone:zone];
+    profile.isPublic = _isPublic;
+    profile.avatarUrl = [_avatarUrl copyWithZone:zone];
+    profile.name = [_name copyWithZone:zone];
+    profile.longDescription = [_longDescription copyWithZone:zone];
+    
+    return profile;
+}
+
+@end
+
+@implementation MXGroupSummaryUsersSection
+
++ (id)modelFromJSON:(NSDictionary *)JSONDictionary
+{
+    MXGroupSummaryUsersSection *usersSection = [[MXGroupSummaryUsersSection alloc] init];
+    if (usersSection)
+    {
+        MXJSONModelSetUInteger(usersSection.totalUserCountEstimate, JSONDictionary[@"total_user_count_estimate"]);
+        MXJSONModelSetArray(usersSection.users, JSONDictionary[@"users"]);
+        MXJSONModelSetDictionary(usersSection.roles, JSONDictionary[@"roles"]);
+    }
+    
+    return usersSection;
+}
+
+- (instancetype)initWithCoder:(NSCoder *)aDecoder
+{
+    self = [super init];
+    if (self)
+    {
+        _totalUserCountEstimate = [(NSNumber*)[aDecoder decodeObjectForKey:@"total_user_count_estimate"] unsignedIntegerValue];
+        _users = [aDecoder decodeObjectForKey:@"users"];
+        _roles = [aDecoder decodeObjectForKey:@"roles"];
+    }
+    return self;
+}
+
+- (void)encodeWithCoder:(NSCoder *)aCoder
+{
+    [aCoder encodeObject:@(_totalUserCountEstimate) forKey:@"total_user_count_estimate"];
+    if (_users)
+    {
+        [aCoder encodeObject:_users forKey:@"users"];
+    }
+    if (_roles)
+    {
+        [aCoder encodeObject:_roles forKey:@"roles"];
+    }
+}
+
+- (id)copyWithZone:(NSZone *)zone
+{
+    MXGroupSummaryUsersSection *usersSection = [[[self class] allocWithZone:zone] init];
+    
+    usersSection.totalUserCountEstimate = _totalUserCountEstimate;
+    usersSection.users = [[NSArray allocWithZone:zone] initWithArray:_users copyItems:YES];
+    usersSection.roles = [[NSMutableDictionary allocWithZone:zone] initWithDictionary:_roles copyItems:YES];
+    
+    return usersSection;
+}
+
+@end
+
+@implementation MXGroupSummaryUser
+
++ (id)modelFromJSON:(NSDictionary *)JSONDictionary
+{
+    MXGroupSummaryUser *user = [[MXGroupSummaryUser alloc] init];
+    if (user)
+    {
+        MXJSONModelSetString(user.membership, JSONDictionary[@"membership"]);
+        MXJSONModelSetBoolean(user.isPublicised, JSONDictionary[@"is_publicised"]);
+    }
+    
+    return user;
+}
+
+- (instancetype)initWithCoder:(NSCoder *)aDecoder
+{
+    self = [super init];
+    if (self)
+    {
+        _membership = [aDecoder decodeObjectForKey:@"membership"];
+        _isPublicised = [aDecoder decodeBoolForKey:@"is_publicised"];
+    }
+    return self;
+}
+
+- (void)encodeWithCoder:(NSCoder *)aCoder
+{
+    if (_membership)
+    {
+        [aCoder encodeObject:_membership forKey:@"membership"];
+    }
+    [aCoder encodeBool:_isPublicised forKey:@"is_publicised"];
+}
+
+- (id)copyWithZone:(NSZone *)zone
+{
+    MXGroupSummaryUser *user = [[[self class] allocWithZone:zone] init];
+    
+    user.isPublicised = _isPublicised;
+    user.membership = [_membership copyWithZone:zone];
+    
+    return user;
+}
+
+@end
+
+@implementation MXGroupSummaryRoomsSection
+
++ (id)modelFromJSON:(NSDictionary *)JSONDictionary
+{
+    MXGroupSummaryRoomsSection *roomsSection = [[MXGroupSummaryRoomsSection alloc] init];
+    if (roomsSection)
+    {
+        MXJSONModelSetUInteger(roomsSection.totalRoomCountEstimate, JSONDictionary[@"total_room_count_estimate"]);
+        MXJSONModelSetArray(roomsSection.rooms, JSONDictionary[@"rooms"]);
+        MXJSONModelSetDictionary(roomsSection.categories, JSONDictionary[@"categories"]);
+    }
+    
+    return roomsSection;
+}
+
+- (instancetype)initWithCoder:(NSCoder *)aDecoder
+{
+    self = [super init];
+    if (self)
+    {
+        _totalRoomCountEstimate = [(NSNumber*)[aDecoder decodeObjectForKey:@"total_room_count_estimate"] unsignedIntegerValue];
+        _rooms = [aDecoder decodeObjectForKey:@"rooms"];
+        _categories = [aDecoder decodeObjectForKey:@"categories"];
+    }
+    return self;
+}
+
+- (void)encodeWithCoder:(NSCoder *)aCoder
+{
+    [aCoder encodeObject:@(_totalRoomCountEstimate) forKey:@"total_room_count_estimate"];
+    if (_rooms)
+    {
+        [aCoder encodeObject:_rooms forKey:@"rooms"];
+    }
+    if (_categories)
+    {
+        [aCoder encodeObject:_categories forKey:@"categories"];
+    }
+}
+
+- (id)copyWithZone:(NSZone *)zone
+{
+    MXGroupSummaryRoomsSection *roomsSection = [[[self class] allocWithZone:zone] init];
+    
+    roomsSection.totalRoomCountEstimate = _totalRoomCountEstimate;
+    roomsSection.rooms = [[NSArray allocWithZone:zone] initWithArray:_rooms copyItems:YES];
+    roomsSection.categories = [[NSMutableDictionary allocWithZone:zone] initWithDictionary:_categories copyItems:YES];
+    
+    return roomsSection;
+}
+
+@end
+
+@implementation MXGroupSummary
+
++ (id)modelFromJSON:(NSDictionary *)JSONDictionary
+{
+    MXGroupSummary *summary = [[MXGroupSummary alloc] init];
+    if (summary)
+    {
+        MXJSONModelSetMXJSONModel(summary.profile, MXGroupProfile, JSONDictionary[@"profile"]);
+        MXJSONModelSetMXJSONModel(summary.usersSection, MXGroupSummaryUsersSection, JSONDictionary[@"users_section"]);
+        MXJSONModelSetMXJSONModel(summary.user, MXGroupSummaryUser, JSONDictionary[@"user"]);
+        MXJSONModelSetMXJSONModel(summary.roomsSection, MXGroupSummaryRoomsSection, JSONDictionary[@"rooms_section"]);
+    }
+    
+    return summary;
+}
+
+- (instancetype)initWithCoder:(NSCoder *)aDecoder
+{
+    self = [super init];
+    if (self)
+    {
+        _profile = [aDecoder decodeObjectForKey:@"profile"];
+        _usersSection = [aDecoder decodeObjectForKey:@"users_section"];
+        _user = [aDecoder decodeObjectForKey:@"user"];
+        _roomsSection = [aDecoder decodeObjectForKey:@"rooms_section"];
+    }
+    return self;
+}
+
+- (void)encodeWithCoder:(NSCoder *)aCoder
+{
+    if (_profile)
+    {
+        [aCoder encodeObject:_profile forKey:@"profile"];
+    }
+    if (_usersSection)
+    {
+        [aCoder encodeObject:_usersSection forKey:@"users_section"];
+    }
+    if (_user)
+    {
+        [aCoder encodeObject:_user forKey:@"user"];
+    }
+    if (_roomsSection)
+    {
+        [aCoder encodeObject:_roomsSection forKey:@"rooms_section"];
+    }
+}
+
+- (id)copyWithZone:(NSZone *)zone
+{
+    MXGroupSummary *summary = [[[self class] allocWithZone:zone] init];
+    
+    summary.profile = [_profile copyWithZone:zone];
+    summary.usersSection = [_usersSection copyWithZone:zone];
+    summary.user = [_user copyWithZone:zone];
+    summary.roomsSection = [_roomsSection copyWithZone:zone];
+    
+    return summary;
+}
+
+@end
+
+@implementation MXGroupRoom
+
++ (id)modelFromJSON:(NSDictionary *)JSONDictionary
+{
+    MXGroupRoom *room = [[MXGroupRoom alloc] init];
+    if (room)
+    {
+        MXJSONModelSetString(room.canonicalAlias, JSONDictionary[@"canonical_alias"]);
+        MXJSONModelSetString(room.roomId, JSONDictionary[@"room_id"]);
+        MXJSONModelSetString(room.name, JSONDictionary[@"name"]);
+        MXJSONModelSetString(room.topic, JSONDictionary[@"topic"]);
+        MXJSONModelSetUInteger(room.numJoinedMembers, JSONDictionary[@"num_joined_members"]);
+        MXJSONModelSetBoolean(room.worldReadable, JSONDictionary[@"world_readable"]);
+        MXJSONModelSetBoolean(room.guestCanJoin, JSONDictionary[@"guest_can_join"]);
+        MXJSONModelSetString(room.avatarUrl, JSONDictionary[@"avatar_url"]);
+        MXJSONModelSetBoolean(room.isPublic, JSONDictionary[@"is_public"]);
+    }
+    
+    return room;
+}
+
+- (instancetype)initWithCoder:(NSCoder *)aDecoder
+{
+    self = [super init];
+    if (self)
+    {
+        _canonicalAlias = [aDecoder decodeObjectForKey:@"canonical_alias"];
+        _roomId = [aDecoder decodeObjectForKey:@"room_id"];
+        _name = [aDecoder decodeObjectForKey:@"name"];
+        _topic = [aDecoder decodeObjectForKey:@"topic"];
+        _numJoinedMembers = [(NSNumber*)[aDecoder decodeObjectForKey:@"num_joined_members"] unsignedIntegerValue];
+        _worldReadable = [aDecoder decodeBoolForKey:@"world_readable"];
+        _guestCanJoin = [aDecoder decodeBoolForKey:@"guest_can_join"];
+        _avatarUrl = [aDecoder decodeObjectForKey:@"avatar_url"];
+        _isPublic = [aDecoder decodeBoolForKey:@"is_public"];
+    }
+    return self;
+}
+
+- (void)encodeWithCoder:(NSCoder *)aCoder
+{
+    if (_canonicalAlias)
+    {
+        [aCoder encodeObject:_canonicalAlias forKey:@"canonical_alias"];
+    }
+    [aCoder encodeObject:_roomId forKey:@"room_id"];
+    if (_name)
+    {
+        [aCoder encodeObject:_name forKey:@"name"];
+    }
+    if (_topic)
+    {
+        [aCoder encodeObject:_topic forKey:@"topic"];
+    }
+    [aCoder encodeObject:@(_numJoinedMembers) forKey:@"num_joined_members"];
+    [aCoder encodeBool:_worldReadable forKey:@"world_readable"];
+    [aCoder encodeBool:_guestCanJoin forKey:@"guest_can_join"];
+    if (_avatarUrl)
+    {
+        [aCoder encodeObject:_avatarUrl forKey:@"avatar_url"];
+    }
+    [aCoder encodeBool:_isPublic forKey:@"is_public"];
+}
+
+- (id)copyWithZone:(NSZone *)zone
+{
+    MXGroupRoom *room = [[[self class] allocWithZone:zone] init];
+    
+    room.canonicalAlias = [_canonicalAlias copyWithZone:zone];
+    room.roomId = [_roomId copyWithZone:zone];
+    room.name = [_name copyWithZone:zone];
+    room.topic = [_topic copyWithZone:zone];
+    room.avatarUrl = [_avatarUrl copyWithZone:zone];
+    room.numJoinedMembers = _numJoinedMembers;
+    room.worldReadable = _worldReadable;
+    room.guestCanJoin = _guestCanJoin;
+    room.isPublic = _isPublic;
+    
+    return room;
+}
+
+@end
+
+@implementation MXGroupRooms
+
++ (id)modelFromJSON:(NSDictionary *)JSONDictionary
+{
+    MXGroupRooms *rooms = [[MXGroupRooms alloc] init];
+    if (rooms)
+    {
+        MXJSONModelSetUInteger(rooms.totalRoomCountEstimate, JSONDictionary[@"total_room_count_estimate"]);
+        MXJSONModelSetMXJSONModelArray(rooms.chunk, MXGroupRoom, JSONDictionary[@"chunk"]);
+    }
+    
+    return rooms;
+}
+
+- (instancetype)initWithCoder:(NSCoder *)aDecoder
+{
+    self = [super init];
+    if (self)
+    {
+        _totalRoomCountEstimate = [(NSNumber*)[aDecoder decodeObjectForKey:@"total_room_count_estimate"] unsignedIntegerValue];
+        _chunk = [aDecoder decodeObjectForKey:@"chunk"];
+    }
+    return self;
+}
+
+- (void)encodeWithCoder:(NSCoder *)aCoder
+{
+    [aCoder encodeObject:@(_totalRoomCountEstimate) forKey:@"total_room_count_estimate"];
+    if (_chunk)
+    {
+        [aCoder encodeObject:_chunk forKey:@"chunk"];
+    }
+}
+
+- (id)copyWithZone:(NSZone *)zone
+{
+    MXGroupRooms *rooms = [[[self class] allocWithZone:zone] init];
+    
+    rooms.totalRoomCountEstimate = _totalRoomCountEstimate;
+    rooms.chunk = [[NSArray allocWithZone:zone] initWithArray:_chunk copyItems:YES];
+    
+    return rooms;
+}
+
+@end
+
+@implementation MXGroupUser
+
++ (id)modelFromJSON:(NSDictionary *)JSONDictionary
+{
+    MXGroupUser *user = [[MXGroupUser alloc] init];
+    if (user)
+    {
+        MXJSONModelSetString(user.displayname, JSONDictionary[@"displayname"]);
+        MXJSONModelSetString(user.userId, JSONDictionary[@"user_id"]);
+        MXJSONModelSetBoolean(user.isPrivileged, JSONDictionary[@"is_privileged"]);
+        MXJSONModelSetString(user.avatarUrl, JSONDictionary[@"avatar_url"]);
+        MXJSONModelSetBoolean(user.isPublic, JSONDictionary[@"is_public"]);
+    }
+    
+    return user;
+}
+
+- (instancetype)initWithCoder:(NSCoder *)aDecoder
+{
+    self = [super init];
+    if (self)
+    {
+        _displayname = [aDecoder decodeObjectForKey:@"displayname"];
+        _userId = [aDecoder decodeObjectForKey:@"user_id"];
+        _isPrivileged = [aDecoder decodeBoolForKey:@"is_privileged"];
+        _avatarUrl = [aDecoder decodeObjectForKey:@"avatar_url"];
+        _isPublic = [aDecoder decodeBoolForKey:@"is_public"];
+    }
+    return self;
+}
+
+- (void)encodeWithCoder:(NSCoder *)aCoder
+{
+    if (_displayname)
+    {
+        [aCoder encodeObject:_displayname forKey:@"displayname"];
+    }
+    [aCoder encodeObject:_userId forKey:@"user_id"];
+    [aCoder encodeBool:_isPrivileged forKey:@"is_privileged"];
+    if (_avatarUrl)
+    {
+        [aCoder encodeObject:_avatarUrl forKey:@"avatar_url"];
+    }
+    [aCoder encodeBool:_isPublic forKey:@"is_public"];
+}
+
+- (id)copyWithZone:(NSZone *)zone
+{
+    MXGroupUser *user = [[[self class] allocWithZone:zone] init];
+    
+    user.displayname = [_displayname copyWithZone:zone];
+    user.userId = [_userId copyWithZone:zone];
+    user.avatarUrl = [_avatarUrl copyWithZone:zone];
+    user.isPrivileged = _isPrivileged;
+    user.isPublic = _isPublic;
+    
+    return user;
+}
+
+@end
+
+@implementation MXGroupUsers
+
++ (id)modelFromJSON:(NSDictionary *)JSONDictionary
+{
+    MXGroupUsers *users = [[MXGroupUsers alloc] init];
+    if (users)
+    {
+        MXJSONModelSetUInteger(users.totalUserCountEstimate, JSONDictionary[@"total_user_count_estimate"]);
+        MXJSONModelSetMXJSONModelArray(users.chunk, MXGroupUser, JSONDictionary[@"chunk"]);
+    }
+    
+    return users;
+}
+
+- (instancetype)initWithCoder:(NSCoder *)aDecoder
+{
+    self = [super init];
+    if (self)
+    {
+        _totalUserCountEstimate = [(NSNumber*)[aDecoder decodeObjectForKey:@"total_user_count_estimate"] unsignedIntegerValue];
+        _chunk = [aDecoder decodeObjectForKey:@"chunk"];
+    }
+    return self;
+}
+
+- (void)encodeWithCoder:(NSCoder *)aCoder
+{
+    [aCoder encodeObject:@(_totalUserCountEstimate) forKey:@"total_user_count_estimate"];
+    if (_chunk)
+    {
+        [aCoder encodeObject:_chunk forKey:@"chunk"];
+    }
+}
+
+- (id)copyWithZone:(NSZone *)zone
+{
+    MXGroupUsers *users = [[[self class] allocWithZone:zone] init];
+    
+    users.totalUserCountEstimate = _totalUserCountEstimate;
+    users.chunk = [[NSArray allocWithZone:zone] initWithArray:_chunk copyItems:YES];
+    
+    return users;
 }
 
 @end

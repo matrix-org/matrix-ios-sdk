@@ -124,18 +124,6 @@ FOUNDATION_EXPORT NSString *const kMXMessageTypeFile;
 FOUNDATION_EXPORT NSString *const kMXEventLocalEventIdPrefix;
 
 /**
- Membership definitions
- */
-typedef enum : NSUInteger
-{
-    MXMembershipUnknown,    // The home server did not provide the information
-    MXMembershipInvite,
-    MXMembershipJoin,
-    MXMembershipLeave,
-    MXMembershipBan
-} MXMembership NS_REFINED_FOR_SWIFT;
-
-/**
  The internal event state used to handle the different steps of the event sending.
  */
 typedef enum : NSUInteger
@@ -168,16 +156,6 @@ typedef enum : NSUInteger
     MXEventSentStateFailed
 
 } MXEventSentState;
-
-/**
- Membership definitions - String version
- */
-typedef NSString* MXMembershipString;
-FOUNDATION_EXPORT NSString *const kMXMembershipStringInvite;
-FOUNDATION_EXPORT NSString *const kMXMembershipStringJoin;
-FOUNDATION_EXPORT NSString *const kMXMembershipStringLeave;
-FOUNDATION_EXPORT NSString *const kMXMembershipStringBan;
-
 
 // Timestamp value when the information is not available or not provided by the home server
 FOUNDATION_EXPORT uint64_t const kMXUndefinedTimestamp;

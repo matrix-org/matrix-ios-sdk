@@ -17,6 +17,7 @@
 #import <Foundation/Foundation.h>
 
 #import "MXEvent.h"
+#import "MXEnumConstants.h"
 
 /**
  `MXRoomMember` is the information about a user in a room.

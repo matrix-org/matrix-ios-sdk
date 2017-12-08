@@ -47,12 +47,10 @@ NS_ASSUME_NONNULL_BEGIN
                 L usersGroup #1
                 L usersGroup #2
                 L ...
-            + crypto: crypto data
-                L account: the user's olm account
-                L devices: users devices keys
-                L roomsAlgorithms: the algos used in rooms
-                L sessions: the olm sessions with other users devices
-                L inboundGroupSessions: the inbound group session
+            + groups:
+                L groupA
+                L groupB
+                L ...
             L MXFileStore : Information about the stored data
             + backup : This folder contains backup of files that are modified during
                   the commit process. It is flushed when the commit completes.
@@ -66,7 +64,7 @@ NS_ASSUME_NONNULL_BEGIN
                     + users
                         L usersGroup #1
                         L ...
-                    + crypto
+                    + groups
                         L ...
                     L MXFileStore
  */
@@ -109,6 +107,15 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)asyncUsersWithUserIds:(NSArray<NSString *> *)userIds
                       success:(void (^)(NSArray<MXUser *> *users))success
                       failure:(nullable void (^)(NSError *error))failure;
+
+/**
+ Get the list of all stored groups (communities).
+ 
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+ */
+- (void)asyncGroups:(void (^)(NSArray<MXGroup *> *groups))success
+           failure:(nullable void (^)(NSError *error))failure;
 
 /**
  Get the list of all stored rooms summaries.

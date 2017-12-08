@@ -25,6 +25,27 @@
  */
 
 /**
+ Membership definitions
+ */
+typedef enum : NSUInteger
+{
+    MXMembershipUnknown,    // The home server did not provide the information
+    MXMembershipInvite,
+    MXMembershipJoin,
+    MXMembershipLeave,
+    MXMembershipBan
+} MXMembership NS_REFINED_FOR_SWIFT;
+
+/**
+ Membership definitions - String version
+ */
+typedef NSString* MXMembershipString;
+FOUNDATION_EXPORT NSString *const kMXMembershipStringInvite;
+FOUNDATION_EXPORT NSString *const kMXMembershipStringJoin;
+FOUNDATION_EXPORT NSString *const kMXMembershipStringLeave;
+FOUNDATION_EXPORT NSString *const kMXMembershipStringBan;
+
+/**
  Room visibility in the current homeserver directory.
  The default homeserver value is private.
  */
