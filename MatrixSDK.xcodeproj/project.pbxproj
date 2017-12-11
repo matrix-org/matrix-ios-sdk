@@ -234,7 +234,7 @@
 		C6FE1EF31E65E3F2008587E4 /* MXGoogleAnalytics.h in Headers */ = {isa = PBXBuildFile; fileRef = C6FE1EF11E65E3F2008587E4 /* MXGoogleAnalytics.h */; };
 		C6FE1EF41E65E3F2008587E4 /* MXGoogleAnalytics.m in Sources */ = {isa = PBXBuildFile; fileRef = C6FE1EF21E65E3F2008587E4 /* MXGoogleAnalytics.m */; };
 		D123DC2791F0EAF08F70C207 /* libPods-MatrixSDKTests.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 3ABDD5D65684E6B7F52FB94E /* libPods-MatrixSDKTests.a */; };
-		F0173EAC1FCF0E8900B5F6A3 /* MXGroup.h in Headers */ = {isa = PBXBuildFile; fileRef = F0173EAA1FCF0E8800B5F6A3 /* MXGroup.h */; };
+		F0173EAC1FCF0E8900B5F6A3 /* MXGroup.h in Headers */ = {isa = PBXBuildFile; fileRef = F0173EAA1FCF0E8800B5F6A3 /* MXGroup.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		F0173EAD1FCF0E8900B5F6A3 /* MXGroup.m in Sources */ = {isa = PBXBuildFile; fileRef = F0173EAB1FCF0E8900B5F6A3 /* MXGroup.m */; };
 		F03EF4FE1DF014D9009DF592 /* MXMediaLoader.h in Headers */ = {isa = PBXBuildFile; fileRef = F03EF4FA1DF014D9009DF592 /* MXMediaLoader.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		F03EF4FF1DF014D9009DF592 /* MXMediaLoader.m in Sources */ = {isa = PBXBuildFile; fileRef = F03EF4FB1DF014D9009DF592 /* MXMediaLoader.m */; };
