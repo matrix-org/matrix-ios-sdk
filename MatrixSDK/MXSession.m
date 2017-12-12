@@ -56,6 +56,7 @@ NSString *const kMXSessionDidJoinGroupNotification = @"kMXSessionDidJoinGroupNot
 NSString *const kMXSessionDidLeaveGroupNotification = @"kMXSessionDidLeaveGroupNotification";
 
 NSString *const kMXSessionNotificationRoomIdKey = @"roomId";
+NSString *const kMXSessionNotificationGroupKey = @"group";
 NSString *const kMXSessionNotificationGroupIdKey = @"groupId";
 NSString *const kMXSessionNotificationEventKey = @"event";
 NSString *const kMXSessionNotificationSyncResponseKey = @"syncResponse";
@@ -907,7 +908,7 @@ typedef void (^MXOnResumeDone)();
         for (NSString *groupId in syncResponse.groups.join)
         {
             // Join an existing group or create a new one
-            [self joinGroupWithId:groupId notify:!isInitialSync];
+            [self didJoinGroupWithId:groupId notify:!isInitialSync];
         }
         
         // Handle left groups
@@ -1912,7 +1913,19 @@ typedef void (^MXOnResumeDone)();
     return _store.groups;
 }
 
-- (MXGroup *)joinGroupWithId:(NSString *)groupId notify:(BOOL)notify
+- (MXHTTPOperation*)leaveGroup:(NSString*)groupId
+                       success:(void (^)(void))success
+                       failure:(void (^)(NSError *error))failure
+{
+    // Not supported yet
+    if (failure)
+    {
+        failure ([NSError errorWithDomain:@"" code:0 userInfo:@{NSLocalizedDescriptionKey:@"not_supported_yet"}]);
+    }
+    return nil;
+}
+
+- (MXGroup *)didJoinGroupWithId:(NSString *)groupId notify:(BOOL)notify
 {
     MXGroup *group = [self groupWithGroupId:groupId];
     if (nil == group)
@@ -1931,7 +1944,7 @@ typedef void (^MXOnResumeDone)();
         [[NSNotificationCenter defaultCenter] postNotificationName:kMXSessionDidJoinGroupNotification
                                                             object:self
                                                           userInfo:@{
-                                                                     kMXSessionNotificationGroupIdKey: groupId
+                                                                     kMXSessionNotificationGroupKey: group
                                                                      }];
     }
     
@@ -1962,7 +1975,7 @@ typedef void (^MXOnResumeDone)();
         [[NSNotificationCenter defaultCenter] postNotificationName:kMXSessionNewGroupInviteNotification
                                                             object:self
                                                           userInfo:@{
-                                                                     kMXSessionNotificationGroupIdKey: groupId
+                                                                     kMXSessionNotificationGroupKey: group
                                                                      }];
     }
     

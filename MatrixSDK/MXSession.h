@@ -205,7 +205,7 @@ FOUNDATION_EXPORT NSString *const kMXSessionCryptoDidCorruptDataNotification;
  Posted when MXSession has detected a new invite to a group from the event stream.
  
  The passed userInfo dictionary contains:
- - `kMXSessionNotificationGroupIdKey` the groupId of the group.
+ - `kMXSessionNotificationGroupKey` the new group instance.
  */
 FOUNDATION_EXPORT NSString *const kMXSessionNewGroupInviteNotification;
 
@@ -213,7 +213,7 @@ FOUNDATION_EXPORT NSString *const kMXSessionNewGroupInviteNotification;
  Posted when MXSession has detected a new joined group from the event stream.
  
  The passed userInfo dictionary contains:
- - `kMXSessionNotificationGroupIdKey` the groupId of the group.
+ - `kMXSessionNotificationGroupKey` the new joined group.
  */
 FOUNDATION_EXPORT NSString *const kMXSessionDidJoinGroupNotification;
 
@@ -221,7 +221,7 @@ FOUNDATION_EXPORT NSString *const kMXSessionDidJoinGroupNotification;
  Posted when MXSession has detected a group has been left.
  
  The passed userInfo dictionary contains:
- - `kMXSessionNotificationGroupIdKey` the groupId of the group is passed in the userInfo dictionary.
+ - `kMXSessionNotificationGroupIdKey` the groupId of the left group.
  */
 FOUNDATION_EXPORT NSString *const kMXSessionDidLeaveGroupNotification;
 
@@ -230,6 +230,11 @@ FOUNDATION_EXPORT NSString *const kMXSessionDidLeaveGroupNotification;
  The key in notification userInfo dictionary representating the roomId.
  */
 FOUNDATION_EXPORT NSString *const kMXSessionNotificationRoomIdKey;
+
+/**
+ The key in notification userInfo dictionary representating the group.
+ */
+FOUNDATION_EXPORT NSString *const kMXSessionNotificationGroupKey;
 
 /**
  The key in notification userInfo dictionary representating the groupId.
@@ -395,7 +400,7 @@ FOUNDATION_EXPORT NSString *const kMXSessionNoRoomTag;
  */
 - (void)resume:(void (^)(void))resumeDone;
 
-typedef void (^MXOnBackgroundSyncDone)();
+typedef void (^MXOnBackgroundSyncDone)(void);
 typedef void (^MXOnBackgroundSyncFail)(NSError *error);
 
 /**
@@ -740,6 +745,20 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
  @return an array of MXGroup.
  */
 - (NSArray<MXGroup*>*)groups;
+
+/**
+ Leave a group.
+ 
+ @param groupId the group id
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+ 
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)leaveGroup:(NSString*)groupId
+                        success:(void (^)(void))success
+                        failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
+
 
 #pragma mark - Missed notifications
 
