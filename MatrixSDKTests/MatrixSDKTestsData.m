@@ -623,6 +623,34 @@ NSMutableArray *roomsToClean;
     }];
 }
 
+- (void)doMXSessionTestWithBobAndAliceInARoom:(XCTestCase*)testCase
+                                     andStore:(id<MXStore>)bobStore
+                                  readyToTest:(void (^)(MXSession *bobSession,  MXRestClient *aliceRestClient, NSString* roomId, XCTestExpectation *expectation))readyToTest
+{
+    [self doMXSessionTestWithBobAndARoom:testCase andStore:bobStore readyToTest:^(MXSession *bobSession, MXRoom *room, XCTestExpectation *expectation) {
+
+        [self doMXRestClientTestWithAlice:nil readyToTest:^(MXRestClient *aliceRestClient, XCTestExpectation *expectation2) {
+
+            MXRestClient *bobRestClient = bobSession.matrixRestClient;
+            NSString *roomId = room.roomId;
+
+            [bobRestClient inviteUser:self.aliceCredentials.userId toRoom:roomId success:^{
+
+                [aliceRestClient joinRoom:roomId success:^(NSString *theRoomId) {
+
+                    readyToTest(bobSession, aliceRestClient, roomId, expectation);
+
+                } failure:^(NSError *error) {
+                    NSAssert(NO, @"mxAlice cannot join room");
+                }];
+
+            } failure:^(NSError *error) {
+                NSAssert(NO, @"Cannot invite mxAlice");
+            }];
+        }];
+    }];
+}
+
 
 #pragma mark - HTTPS mxBob
 - (void)getHttpsBobCredentials:(void (^)(void))success

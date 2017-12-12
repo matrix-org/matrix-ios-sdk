@@ -119,7 +119,8 @@ NSString *uisiString = @"The sender's device has not sent us the keys for this m
         updated = [updater session:session updateRoomSummary:summary withLastEvent:event eventState:eventState roomState:roomState];
     }
     else if ([self.description containsString:@"testDoNotStoreDecryptedData"]
-             || [self.description containsString:@"testEncryptedLastMessageEvent"])
+             || [self.description containsString:@"testEncryptedLastMessageEvent"]
+             || [self.description containsString:@"testNotificationCountUpdate"])
     {
         // Do a classic update
         MXRoomSummaryUpdater *updater = [MXRoomSummaryUpdater roomSummaryUpdaterForSession:session];
@@ -1227,6 +1228,45 @@ NSString *uisiString = @"The sender's device has not sent us the keys for this m
         [roomFromAlicePOV sendTextMessage:messageFromAlice success:^(NSString *eventId) {
             lastMessageEventId = eventId;
         } failure:^(NSError *error) {
+            XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+            [expectation fulfill];
+        }];
+    }];
+}
+
+// https://github.com/matrix-org/matrix-ios-sdk/issues/409
+// 1 - Bob creates a room and invite Alice
+// 2 - Alice sends a message
+// 3 -> From Bob's POV, the room notification count must increase
+- (void)testNotificationCountUpdate
+{
+    // 1 - Bob creates a room and invite Alice
+    [matrixSDKTestsData doMXSessionTestWithBobAndAliceInARoom:self andStore:[[MXFileStore alloc] init] readyToTest:^(MXSession *bobSession, MXRestClient *aliceRestClient, NSString *roomId, XCTestExpectation *expectation) {
+
+        bobSession.roomSummaryUpdateDelegate = self;
+
+        MXRoom *room = [bobSession roomWithRoomId:roomId];
+        MXRoomSummary *summary = room.summary;
+
+        NSUInteger notificationCount = room.summary.notificationCount;
+
+        id observer;
+        observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXRoomSummaryDidChangeNotification object:summary queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
+
+            if (room.summary.lastMessageString)
+            {
+                [[NSNotificationCenter defaultCenter] removeObserver:observer];
+
+                // 3 -> From Bob's POV, the room notification count must increase
+                XCTAssertEqual(room.summary.notificationCount, notificationCount + 1);
+
+                [expectation fulfill];
+            }
+        }];
+
+        // 2 - Alice sends a message
+        NSString *message = [NSString stringWithFormat:@"%@: Hello", bobSession.myUser.userId];
+        [aliceRestClient sendTextMessageToRoom:roomId text:message success:nil failure:^(NSError *error) {
             XCTFail(@"Cannot set up intial test conditions - error: %@", error);
             [expectation fulfill];
         }];
