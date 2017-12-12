@@ -2020,17 +2020,17 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
     {
         readMarkerEventId = lastMessageEventId;
     }
-    
+
+    MXEvent *event;
+    NSString* myUserId = mxSession.myUser.userId;
+    MXReceiptData *currentReceiptData = [mxSession.store getReceiptInRoom:self.roomId forUserId:myUserId];
+
     // Prepare updated read receipt
     @autoreleasepool
     {
         id<MXEventsEnumerator> messagesEnumerator = [mxSession.store messagesEnumeratorForRoom:self.roomId withTypeIn:mxSession.acknowledgableEventTypes];
 
         // Acknowledge the lastest valid event
-        MXEvent *event;
-        NSString* myUserId = mxSession.myUser.userId;
-        MXReceiptData *currentReceiptData = [mxSession.store getReceiptInRoom:self.roomId forUserId:myUserId];
-        
         while ((event = messagesEnumerator.nextEvent))
         {
             // Sanity check on event id: Do not send read receipt on event without id
@@ -2063,7 +2063,15 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
     
     if (readMarkerEventId)
     {
-        [self setReadMarker:readMarkerEventId withReadReceipt:updatedReceiptData.eventId];
+        NSString *readReceiptEventId = updatedReceiptData.eventId;
+        if (!readReceiptEventId)
+        {
+            // A non nil read receipt must be passed in order to not break notifications counters
+            // homeserver side
+            readReceiptEventId = currentReceiptData.eventId;
+        }
+
+        [self setReadMarker:readMarkerEventId withReadReceipt:readReceiptEventId];
     }
     else if (updatedReceiptData)
     {
