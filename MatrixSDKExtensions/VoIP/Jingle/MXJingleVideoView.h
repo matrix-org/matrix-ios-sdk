@@ -15,6 +15,7 @@
  */
 #import <Foundation/Foundation.h>
 
+#if __has_include(<WebRTC/WebRTC.h>)
 #import <WebRTC/RTCEAGLVideoView.h>
 
 NS_ASSUME_NONNULL_BEGIN
@@ -35,3 +36,5 @@ NS_ASSUME_NONNULL_BEGIN
 @end
 
 NS_ASSUME_NONNULL_END
+
+#endif
