@@ -757,7 +757,7 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
  */
 - (MXHTTPOperation*)acceptGroupInvite:(NSString*)groupId
                               success:(void (^)(void))success
-                              failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
+                              failure:(void (^)(NSError *error))failure;
 
 /**
  Leave a group.
@@ -770,7 +770,7 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
  */
 - (MXHTTPOperation*)leaveGroup:(NSString*)groupId
                         success:(void (^)(void))success
-                        failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
+                        failure:(void (^)(NSError *error))failure;
 
 
 #pragma mark - Missed notifications

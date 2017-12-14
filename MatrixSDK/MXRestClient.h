@@ -1972,7 +1972,7 @@ typedef enum : NSUInteger
  */
 - (MXHTTPOperation*)acceptGroupInvite:(NSString*)groupId
                               success:(void (^)(void))success
-                              failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
+                              failure:(void (^)(NSError *error))failure;
 /**
  Leave a group.
  
@@ -1984,6 +1984,6 @@ typedef enum : NSUInteger
  */
 - (MXHTTPOperation*)leaveGroup:(NSString*)groupId
                        success:(void (^)(void))success
-                       failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
+                       failure:(void (^)(NSError *error))failure;
 
 @end
