@@ -1415,6 +1415,9 @@ typedef void (^MXOnResumeDone)();
         MXRoom *room = [self roomWithRoomId:response.roomId];
         if (room)
         {
+            // Initialise notification counters homeserver side
+            [room markAllAsRead];
+
             // The first /sync response for this room may have happened before the
             // homeserver answer to the createRoom request.
             success(room);
@@ -1429,6 +1432,9 @@ typedef void (^MXOnResumeDone)();
                 
                 if ([room.state.roomId isEqualToString:response.roomId])
                 {
+                    // Initialise notification counters homeserver side
+                    [room markAllAsRead];
+                    
                     success(room);
                     [[NSNotificationCenter defaultCenter] removeObserver:initialSyncObserver];
                 }
@@ -1444,6 +1450,9 @@ typedef void (^MXOnResumeDone)();
     MXRoom *room = [self roomWithRoomId:response.roomId];
     if (room)
     {
+        // Initialise notification counters homeserver side
+        [room markAllAsRead];
+
         // The first /sync response for this room may have happened before the
         // homeserver answer to the createRoom request.
         
@@ -1470,6 +1479,9 @@ typedef void (^MXOnResumeDone)();
             
             if ([room.state.roomId isEqualToString:response.roomId])
             {
+                // Initialise notification counters homeserver side
+                [room markAllAsRead];
+                
                 // Tag the room as direct
                 [room setIsDirect:YES withUserId:userId success:nil failure:^(NSError *error) {
                     

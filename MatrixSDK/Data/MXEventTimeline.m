@@ -447,6 +447,9 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
     // Finalize initial sync
     if (isRoomInitialSync)
     {
+        // Initialise notification counters homeserver side
+        [room markAllAsRead];
+
         // Notify that room has been sync'ed
         // Delay it so that MXRoom.summary is computed before sending it
         dispatch_async(dispatch_get_main_queue(), ^{

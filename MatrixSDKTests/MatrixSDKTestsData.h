@@ -112,6 +112,10 @@ FOUNDATION_EXPORT NSString * const kMXTestsAliceAvatarURL;
 - (void)doMXSessionTestWithBobAndAliceInARoom:(XCTestCase*)testCase
                                   readyToTest:(void (^)(MXSession *bobSession,  MXRestClient *aliceRestClient, NSString* roomId, XCTestExpectation *expectation))readyToTest;
 
+- (void)doMXSessionTestWithBobAndAliceInARoom:(XCTestCase*)testCase
+                                     andStore:(id<MXStore>)bobStore
+                                  readyToTest:(void (^)(MXSession *bobSession,  MXRestClient *aliceRestClient, NSString* roomId, XCTestExpectation *expectation))readyToTest;
+
 
 #pragma mark - HTTPS mxBob
 - (void)getHttpsBobCredentials:(void (^)(void))success;

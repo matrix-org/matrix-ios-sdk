@@ -65,7 +65,7 @@
     NSString *action;
     MXJSONModelSetString(action, event.content[@"action"]);
 
-    NSLog(@"[MXCrypto] onRoomKeyRequestEvent: action: %@", action);
+    NSLog(@"[MXIncomingRoomKeyRequestManager] onRoomKeyRequestEvent: action: %@ (id %@)", action, event.content[@"request_id"]);
 
     if ([action isEqualToString:@"request"])
     {
