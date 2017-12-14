@@ -1959,4 +1959,31 @@ typedef enum : NSUInteger
                                    success:(void (^)(void))success
                                    failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
+#pragma mark - Groups
+    
+/**
+ Accept the invitation to join a group.
+ 
+ @param groupId the id of the group to join.
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+ 
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)acceptGroupInvite:(NSString*)groupId
+                              success:(void (^)(void))success
+                              failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
+/**
+ Leave a group.
+ 
+ @param groupId the id of the group to leave.
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+ 
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)leaveGroup:(NSString*)groupId
+                       success:(void (^)(void))success
+                       failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
+
 @end

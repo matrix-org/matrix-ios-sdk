@@ -747,6 +747,19 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
 - (NSArray<MXGroup*>*)groups;
 
 /**
+ Accept the invitation to join a group.
+ 
+ @param groupId the group id
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+ 
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)acceptGroupInvite:(NSString*)groupId
+                              success:(void (^)(void))success
+                              failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
+
+/**
  Leave a group.
  
  @param groupId the group id

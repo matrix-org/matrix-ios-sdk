@@ -1913,16 +1913,53 @@ typedef void (^MXOnResumeDone)();
     return _store.groups;
 }
 
+- (MXHTTPOperation*)acceptGroupInvite:(NSString*)groupId
+                              success:(void (^)(void))success
+                              failure:(void (^)(NSError *error))failure
+{
+    return [matrixRestClient acceptGroupInvite:groupId success:^{
+        
+        [self didJoinGroupWithId:groupId notify:YES];
+        if (success)
+        {
+            success();
+        }
+        
+    } failure:failure];
+}
+
 - (MXHTTPOperation*)leaveGroup:(NSString*)groupId
                        success:(void (^)(void))success
                        failure:(void (^)(NSError *error))failure
 {
-    // Not supported yet
-    if (failure)
-    {
-        failure ([NSError errorWithDomain:@"" code:0 userInfo:@{NSLocalizedDescriptionKey:@"not_supported_yet"}]);
-    }
-    return nil;
+    return [matrixRestClient leaveGroup:groupId success:^{
+        
+        // Check the group has been removed before calling the success callback
+        // This is automatically done when the homeserver sends the information.
+        if ([self groupWithGroupId:groupId])
+        {
+            // The group is still here, wait for the server sync
+            __block __weak id observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXSessionDidLeaveGroupNotification object:nil queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
+                
+                if ([groupId isEqualToString:note.userInfo[kMXSessionNotificationGroupIdKey]])
+                {
+                    [[NSNotificationCenter defaultCenter] removeObserver:observer];
+                    if (success)
+                    {
+                        success();
+                    }
+                }
+            }];
+        }
+        else
+        {
+            if (success)
+            {
+                success();
+            }
+        }
+        
+    } failure:failure];
 }
 
 - (MXGroup *)didJoinGroupWithId:(NSString *)groupId notify:(BOOL)notify
