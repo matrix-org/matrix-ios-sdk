@@ -17,15 +17,43 @@ Pod::Spec.new do |s|
   s.author             = { "matrix.org" => "support@matrix.org" }
   s.social_media_url   = "http://twitter.com/matrixdotorg"
 
+  s.source       = { :git => "https://github.com/matrix-org/matrix-ios-sdk.git", :tag => "v0.10.4" }
+  
+  s.requires_arc  = true
+  
   s.ios.deployment_target = "8.0"
   s.osx.deployment_target = "10.10"
+  
+  s.default_subspec = 'Core'
+  s.subspec 'Core' do |ss|
+      ss.ios.deployment_target = "8.0"
+      ss.osx.deployment_target = "10.10"
+      
+      ss.source_files = "MatrixSDK", "MatrixSDK/**/*.{h,m}"
+      
+      ss.dependency 'AFNetworking', '~> 3.1.0'
+      ss.dependency 'GZIP', '~> 1.2.1'
+  end
 
-  s.source       = { :git => "https://github.com/matrix-org/matrix-ios-sdk.git", :tag => "v0.10.4" }
-  s.source_files = "MatrixSDK", "MatrixSDK/**/*.{h,m}"
-
-  s.requires_arc  = true
-
-  s.dependency 'AFNetworking', '~> 3.1.0'
-  s.dependency 'GZIP', '~> 1.2.1'
+  s.subspec 'JingleCallStack' do |ss|
+    ss.ios.deployment_target = "8.0"
+    
+    ss.source_files  = "MatrixSDKExtensions/VoIP/Jingle/**/*.{h,m}"
+    
+    ss.dependency 'MatrixSDK/Core'
+    
+    # The Google WebRTC stack
+    ss.ios.dependency 'WebRTC', '61.5.19063'
+  end
+  
+  s.subspec 'GoogleAnalytics' do |ss|
+    ss.ios.deployment_target = "8.0"
+    
+    ss.source_files  = "MatrixSDKExtensions/MXAnalyticsDelegate/GoogleAnalytics/**/*.{h,m}"
+    
+    ss.dependency 'MatrixSDK/Core'
+    
+    ss.ios.dependency 'GoogleAnalytics' 
+  end
 
 end

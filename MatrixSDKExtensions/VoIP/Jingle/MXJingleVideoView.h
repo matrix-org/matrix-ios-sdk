@@ -13,23 +13,28 @@
  See the License for the specific language governing permissions and
  limitations under the License.
  */
-
 #import <Foundation/Foundation.h>
 
-#import "MXSDKOptions.h"
+#if __has_include(<WebRTC/WebRTC.h>)
+#import <WebRTC/RTCEAGLVideoView.h>
 
-#ifdef MX_CALL_STACK_JINGLE
-
-#import "MXCallStack.h"
+NS_ASSUME_NONNULL_BEGIN
 
 /**
- `MXJingleCallStack` is the implementation of the `MXCallStack` protocol using
-  libjingle.
+ `MXJingleVideoView` is responsible for rendering RTCEAGLVideoView into
+ a UIView container by keeping the aspect ratio of the video.
 
  @see https://developers.google.com/talk/libjingle/developer_guide
  */
-@interface MXJingleCallStack : NSObject <MXCallStack>
+@interface MXJingleVideoView : RTCEAGLVideoView <RTCEAGLVideoViewDelegate>
+
+- (instancetype)initWithContainerView:(UIView *)containerView NS_DESIGNATED_INITIALIZER;
+
++ (instancetype)new NS_UNAVAILABLE;
+- (instancetype)init NS_UNAVAILABLE;
 
 @end
 
-#endif // MX_CALL_STACK_JINGLE
+NS_ASSUME_NONNULL_END
+
+#endif

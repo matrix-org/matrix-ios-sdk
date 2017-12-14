@@ -16,8 +16,6 @@
 
 #import "MXJingleCallStackCall.h"
 
-#ifdef MX_CALL_STACK_JINGLE
-
 #import <AVFoundation/AVFoundation.h>
 #import <UIKit/UIKit.h>
 
@@ -580,5 +578,3 @@ didRemoveIceCandidates:(NSArray<RTCIceCandidate *> *)candidates;
 }
 
 @end
-
-#endif  // MX_CALL_STACK_JINGLE
