@@ -5393,5 +5393,79 @@ MXAuthAction;
                                      
                                  }];
 }
+    
+#pragma mark - Groups
+- (MXHTTPOperation*)acceptGroupInvite:(NSString*)groupId
+                              success:(void (^)(void))success
+                              failure:(void (^)(NSError *error))failure
+{
+    return [self doGroupMembershipRequest:groupId
+                               membership:@"accept_invite"
+                               parameters:nil
+                                  success:success failure:failure];
+}
+    
+- (MXHTTPOperation*)leaveGroup:(NSString*)groupId
+                      success:(void (^)(void))success
+                      failure:(void (^)(NSError *error))failure
+{
+    return [self doGroupMembershipRequest:groupId
+                          membership:@"leave"
+                          parameters:nil
+                             success:success failure:failure];
+}
+    
+// Generic methods to change group membership
+- (MXHTTPOperation*)doGroupMembershipRequest:(NSString*)grouId
+                                  membership:(NSString*)membership
+                                  parameters:(NSDictionary*)parameters
+                                     success:(void (^)(void))success
+                                     failure:(void (^)(NSError *error))failure
+{
+    NSString *path = [NSString stringWithFormat:@"%@/groups/%@/self/%@", apiPathPrefix, [grouId stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding], membership];
+    
+    // A body is required even if empty
+    if (nil == parameters)
+    {
+        parameters = @{};
+    }
+    
+    return [httpClient requestWithMethod:@"PUT"
+                                    path:path
+                              parameters:parameters
+                                 success:^(NSDictionary *JSONResponse) {
+                                     if (success && processingQueue)
+                                     {
+                                         // Use here the processing queue in order to keep the server response order
+                                         dispatch_async(processingQueue, ^{
+                                             
+                                             if (completionQueue)
+                                             {
+                                                 dispatch_async(completionQueue, ^{
+                                                     
+                                                     success();
+                                                     
+                                                 });
+                                             }
+                                             
+                                         });
+                                     }
+                                 }
+                                 failure:^(NSError *error) {
+                                     if (failure && processingQueue)
+                                     {
+                                         dispatch_async(processingQueue, ^{
+                                             
+                                             if (completionQueue)
+                                             {
+                                                 dispatch_async(completionQueue, ^{
+                                                     failure(error);
+                                                 });
+                                             }
+                                             
+                                         });
+                                     }
+                                 }];
+}
 
 @end

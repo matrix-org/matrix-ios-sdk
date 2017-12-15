@@ -22,7 +22,7 @@
 /**
  `MXGroup` represents a community in Matrix.
  */
-@interface MXGroup : NSObject <NSCoding, NSCoding>
+@interface MXGroup : NSObject <NSCoding, NSCopying>
 
 /**
  The group id.

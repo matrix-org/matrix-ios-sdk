@@ -717,7 +717,13 @@ static NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
     {
         if (backupEventStreamToken)
         {
-            return [[[storeBackupPath stringByAppendingPathComponent:backupEventStreamToken] stringByAppendingPathComponent:kMXFileStoreGroupsFolder] stringByAppendingPathComponent:groupId];
+            NSString *groupBackupFolder = [[storeBackupPath stringByAppendingPathComponent:backupEventStreamToken] stringByAppendingPathComponent:kMXFileStoreGroupsFolder];
+            if (![NSFileManager.defaultManager fileExistsAtPath:groupBackupFolder])
+            {
+                [[NSFileManager defaultManager] createDirectoryAtPath:groupBackupFolder withIntermediateDirectories:YES attributes:nil error:nil];
+            }
+            
+            return [groupBackupFolder stringByAppendingPathComponent:groupId];
         }
         else
         {
