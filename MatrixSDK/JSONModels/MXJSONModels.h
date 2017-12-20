@@ -1750,6 +1750,16 @@ FOUNDATION_EXPORT NSString *const kMXPushRuleScopeStringDevice;
      */
     @property (nonatomic) BOOL isPublicised;
 
+    /**
+     Tell whether the user is publicly visible to anyone who knows the group ID.
+     */
+    @property (nonatomic) BOOL isPublic;
+
+    /**
+     Tell whether the user has a role in the community.
+     */
+    @property (nonatomic) BOOL isPrivileged;
+
 @end
 
 /**

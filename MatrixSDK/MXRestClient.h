@@ -1986,4 +1986,69 @@ typedef enum : NSUInteger
                        success:(void (^)(void))success
                        failure:(void (^)(NSError *error))failure;
 
+/**
+ Get the group profile.
+ 
+ @param groupId the id of the group.
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+ 
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)getGroupProfile:(NSString*)groupId
+                            success:(void (^)(MXGroupProfile *groupProfile))success
+                            failure:(void (^)(NSError *error))failure;
+
+/**
+ Get the group summary.
+ 
+ @param groupId the id of the group.
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+ 
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)getGroupSummary:(NSString*)groupId
+                            success:(void (^)(MXGroupSummary *groupSummary))success
+                            failure:(void (^)(NSError *error))failure;
+
+/**
+ Get the group users.
+ 
+ @param groupId the id of the group.
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+ 
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)getGroupUsers:(NSString*)groupId
+                          success:(void (^)(MXGroupUsers *groupUsers))success
+                          failure:(void (^)(NSError *error))failure;
+
+/**
+ Get the invited users in a group.
+ 
+ @param groupId the id of the group.
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+ 
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)getGroupInvitedUsers:(NSString*)groupId
+                                 success:(void (^)(MXGroupUsers *invitedUsers))success
+                                 failure:(void (^)(NSError *error))failure;
+
+/**
+ Get the group rooms.
+ 
+ @param groupId the id of the group.
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+ 
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)getGroupRooms:(NSString*)groupId
+                          success:(void (^)(MXGroupRooms *groupRooms))success
+                          failure:(void (^)(NSError *error))failure;
+
 @end
