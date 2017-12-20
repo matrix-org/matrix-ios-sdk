@@ -97,6 +97,13 @@ static NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
     // must be stored after messages and state events because of the event stream token it stores.
     dispatch_queue_t dispatchQueue;
 
+    // The number of commits being done
+    NSUInteger pendingCommits;
+
+    // The current background task id if any
+    NSUInteger backgroundTaskIdentifier;
+    NSDate *backgroundTaskStartDate;
+
     // The evenst stream token that corresponds to the data being backed up.
     NSString *backupEventStreamToken;
 }
@@ -125,6 +132,11 @@ static NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
         metaDataHasChanged = NO;
 
         dispatchQueue = dispatch_queue_create("MXFileStoreDispatchQueue", DISPATCH_QUEUE_SERIAL);
+
+        pendingCommits = 0;
+
+        id<MXBackgroundModeHandler> handler = [MXSDKOptions sharedInstance].backgroundModeHandler;
+        backgroundTaskIdentifier = [handler invalidIdentifier];
     }
     return self;
 }
@@ -148,10 +160,10 @@ static NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
     [self setUpStoragePaths];
 
     id<MXBackgroundModeHandler> handler = [MXSDKOptions sharedInstance].backgroundModeHandler;
-    __block NSUInteger backgroundTaskIdentifier = [handler startBackgroundTaskWithName:@"openWithCredentials" completion:^{
+    __block NSUInteger bgTaskId = [handler startBackgroundTaskWithName:@"openWithCredentials" completion:^{
         NSLog(@"[MXFileStore] Background task is going to expire in openWithCredentials");
-        [handler endBackgrounTaskWithIdentifier:backgroundTaskIdentifier];
-        backgroundTaskIdentifier = [handler invalidIdentifier];
+        [handler endBackgrounTaskWithIdentifier:bgTaskId];
+        bgTaskId = [handler invalidIdentifier];
     }];
 
     /*
@@ -222,14 +234,13 @@ static NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
         
         dispatch_async(dispatch_get_main_queue(), ^{
             id<MXBackgroundModeHandler> handler = [MXSDKOptions sharedInstance].backgroundModeHandler;
-            if (handler && backgroundTaskIdentifier != [handler invalidIdentifier])
+            if (handler && bgTaskId != [handler invalidIdentifier])
             {
-                [handler endBackgrounTaskWithIdentifier:backgroundTaskIdentifier];
-                backgroundTaskIdentifier = [handler invalidIdentifier];
+                [handler endBackgrounTaskWithIdentifier:bgTaskId];
+                bgTaskId = [handler invalidIdentifier];
             }
             onComplete();
         });
-        
 
     });
 }
@@ -515,15 +526,41 @@ static NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
     // Save data only if metaData exists
     if (metaData)
     {
+        // If there are already 2 pending commits, if the data is not stored during the 1st commit operation,
+        // we are sure that it will be done on the second pass.
+        if (pendingCommits >= 2)
+        {
+            NSLog(@"[MXFileStore commit] Ignore it. There are already pending commits");
+            return;
+        }
+
+        pendingCommits++;
+
         NSDate *startDate = [NSDate date];
+
         id<MXBackgroundModeHandler> handler = [MXSDKOptions sharedInstance].backgroundModeHandler;
-        __block NSUInteger backgroundTaskIdentifier = [handler startBackgroundTaskWithName:@"commit" completion:^{
-            NSLog(@"[MXFileStore commit] Background task #%tu is going to expire after %.0fms - ending it",
-                  backgroundTaskIdentifier, [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
-            [handler endBackgrounTaskWithIdentifier:backgroundTaskIdentifier];
-            backgroundTaskIdentifier = [handler invalidIdentifier];
-        }];
-        NSLog(@"[MXFileStore commit] Background task #%tu started", backgroundTaskIdentifier);
+        if (handler)
+        {
+            // Create a bg task if none is available
+            if (backgroundTaskIdentifier == [handler invalidIdentifier])
+            {
+                backgroundTaskStartDate = startDate;
+
+                backgroundTaskIdentifier = [handler startBackgroundTaskWithName:@"commit" completion:^{
+                    NSLog(@"[MXFileStore commit] Background task #%tu is going to expire after %.0fms - ending it. pendingCommits: %tu",
+                          backgroundTaskIdentifier, [[NSDate date] timeIntervalSinceDate:backgroundTaskStartDate] * 1000, pendingCommits);
+
+                    [handler endBackgrounTaskWithIdentifier:backgroundTaskIdentifier];
+                    backgroundTaskIdentifier = [handler invalidIdentifier];
+                }];
+                
+                NSLog(@"[MXFileStore commit] Background task #%tu started", backgroundTaskIdentifier);
+            }
+            else
+            {
+                NSLog(@"[MXFileStore commit] Background task #%tu reused", backgroundTaskIdentifier);
+            }
+        }
 
         [self saveRoomsDeletion];
         [self saveRoomsMessages];
@@ -541,16 +578,28 @@ static NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
         dispatch_async(dispatchQueue, ^(void){
             [[NSFileManager defaultManager] removeItemAtPath:storeBackupPath error:nil];
             
-#if TARGET_OS_IPHONE
-            // Release the background task
-            dispatch_async(dispatch_get_main_queue(), ^(void){
-                NSLog(@"[MXFileStore commit] Background task #%tu is complete - lasted %.0fms",
-                      backgroundTaskIdentifier, [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
-                id<MXBackgroundModeHandler> handler = [MXSDKOptions sharedInstance].backgroundModeHandler;
-                [handler endBackgrounTaskWithIdentifier:backgroundTaskIdentifier];
-                backgroundTaskIdentifier = [handler invalidIdentifier];
-            });
-#endif
+            if (handler)
+            {
+                // Release the background task if there is no more pending commits
+                dispatch_async(dispatch_get_main_queue(), ^(void){
+
+                    NSLog(@"[MXFileStore commit] lasted %.0fms", [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
+
+                    if (--pendingCommits == 0)
+                    {
+                        NSLog(@"[MXFileStore commit] Background task #%tu is complete - lasted %.0fms",
+                              backgroundTaskIdentifier, [[NSDate date] timeIntervalSinceDate:backgroundTaskStartDate] * 1000);
+
+                        [handler endBackgrounTaskWithIdentifier:backgroundTaskIdentifier];
+                        backgroundTaskIdentifier = [handler invalidIdentifier];
+                    }
+                    else
+                    {
+                        NSLog(@"[MXFileStore commit] Background task #%tu is kept - running since %.0fms",
+                              backgroundTaskIdentifier, [[NSDate date] timeIntervalSinceDate:backgroundTaskStartDate] * 1000);
+                    }
+                });
+            }
         });
     }
 }
