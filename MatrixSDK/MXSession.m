@@ -1988,6 +1988,10 @@ typedef void (^MXOnResumeDone)();
 {
     if (!group.groupId.length)
     {
+        if (failure)
+        {
+            failure ([NSError errorWithDomain:kMXNSErrorDomain code:0 userInfo:nil]);
+        }
         return nil;
     }
     
@@ -2011,7 +2015,7 @@ typedef void (^MXOnResumeDone)();
             if (storedGroup && [storedGroup updateProfile:groupProfile])
             {
                 [_store storeGroup:storedGroup];
-                // Commit store changes done in [room handleMessages]
+                // Commit store changes done
                 if ([_store respondsToSelector:@selector(commit)])
                 {
                     [_store commit];
@@ -2040,6 +2044,10 @@ typedef void (^MXOnResumeDone)();
 {
     if (!group.groupId.length)
     {
+        if (failure)
+        {
+            failure ([NSError errorWithDomain:kMXNSErrorDomain code:0 userInfo:nil]);
+        }
         return nil;
     }
     
@@ -2063,7 +2071,7 @@ typedef void (^MXOnResumeDone)();
             if (storedGroup && [storedGroup updateSummary:groupSummary])
             {
                 [_store storeGroup:storedGroup];
-                // Commit store changes done in [room handleMessages]
+                // Commit store changes done
                 if ([_store respondsToSelector:@selector(commit)])
                 {
                     [_store commit];
@@ -2092,6 +2100,10 @@ typedef void (^MXOnResumeDone)();
 {
     if (!group.groupId.length)
     {
+        if (failure)
+        {
+            failure ([NSError errorWithDomain:kMXNSErrorDomain code:0 userInfo:nil]);
+        }
         return nil;
     }
     
@@ -2114,7 +2126,7 @@ typedef void (^MXOnResumeDone)();
             if (storedGroup && [storedGroup updateUsers:groupUsers])
             {
                 [_store storeGroup:storedGroup];
-                // Commit store changes done in [room handleMessages]
+                // Commit store changes done
                 if ([_store respondsToSelector:@selector(commit)])
                 {
                     [_store commit];
@@ -2143,6 +2155,10 @@ typedef void (^MXOnResumeDone)();
 {
     if (!group.groupId.length)
     {
+        if (failure)
+        {
+            failure ([NSError errorWithDomain:kMXNSErrorDomain code:0 userInfo:nil]);
+        }
         return nil;
     }
     
@@ -2165,7 +2181,7 @@ typedef void (^MXOnResumeDone)();
             if (storedGroup && [storedGroup updateInvitedUsers:invitedUsers])
             {
                 [_store storeGroup:storedGroup];
-                // Commit store changes done in [room handleMessages]
+                // Commit store changes done
                 if ([_store respondsToSelector:@selector(commit)])
                 {
                     [_store commit];
@@ -2194,6 +2210,10 @@ typedef void (^MXOnResumeDone)();
 {
     if (!group.groupId.length)
     {
+        if (failure)
+        {
+            failure ([NSError errorWithDomain:kMXNSErrorDomain code:0 userInfo:nil]);
+        }
         return nil;
     }
     
@@ -2216,7 +2236,7 @@ typedef void (^MXOnResumeDone)();
             if (storedGroup && [storedGroup updateRooms:groupRooms])
             {
                 [_store storeGroup:storedGroup];
-                // Commit store changes done in [room handleMessages]
+                // Commit store changes done
                 if ([_store respondsToSelector:@selector(commit)])
                 {
                     [_store commit];
