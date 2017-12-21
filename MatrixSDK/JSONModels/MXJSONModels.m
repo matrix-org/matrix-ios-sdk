@@ -1643,6 +1643,44 @@ NSString *const kMXPushRuleScopeStringDevice = @"device";
     return profile;
 }
 
+- (BOOL)isEqual:(id)object
+{
+    if (object == self)
+        return YES;
+    
+    if (![object isKindOfClass:MXGroupProfile.class])
+        return NO;
+    
+    MXGroupProfile *profile = (MXGroupProfile *)object;
+    
+    if (profile.isPublic != _isPublic)
+    {
+        return NO;
+    }
+    
+    if ((profile.shortDescription || _shortDescription) && ![profile.shortDescription isEqualToString:_shortDescription])
+    {
+        return NO;
+    }
+    
+    if ((profile.longDescription || _longDescription) && ![profile.longDescription isEqualToString:_longDescription])
+    {
+        return NO;
+    }
+    
+    if ((profile.avatarUrl || _avatarUrl) && ![profile.avatarUrl isEqualToString:_avatarUrl])
+    {
+        return NO;
+    }
+    
+    if ((profile.name || _name) && ![profile.name isEqualToString:_name])
+    {
+        return NO;
+    }
+    
+    return YES;
+}
+
 - (instancetype)initWithCoder:(NSCoder *)aDecoder
 {
     self = [super init];
@@ -1708,6 +1746,34 @@ NSString *const kMXPushRuleScopeStringDevice = @"device";
     return usersSection;
 }
 
+- (BOOL)isEqual:(id)object
+{
+    if (object == self)
+        return YES;
+    
+    if (![object isKindOfClass:MXGroupSummaryUsersSection.class])
+        return NO;
+    
+    MXGroupSummaryUsersSection *users = (MXGroupSummaryUsersSection *)object;
+    
+    if (users.totalUserCountEstimate != _totalUserCountEstimate)
+    {
+        return NO;
+    }
+    
+    if ((users.users || _users) && ![users.users isEqualToArray:_users])
+    {
+        return NO;
+    }
+    
+    if ((users.roles || _roles) && ![users.roles isEqualToDictionary:_roles])
+    {
+        return NO;
+    }
+    
+    return YES;
+}
+
 - (instancetype)initWithCoder:(NSCoder *)aDecoder
 {
     self = [super init];
@@ -1755,9 +1821,44 @@ NSString *const kMXPushRuleScopeStringDevice = @"device";
     {
         MXJSONModelSetString(user.membership, JSONDictionary[@"membership"]);
         MXJSONModelSetBoolean(user.isPublicised, JSONDictionary[@"is_publicised"]);
+        MXJSONModelSetBoolean(user.isPublic, JSONDictionary[@"is_public"]);
+        MXJSONModelSetBoolean(user.isPrivileged, JSONDictionary[@"is_privileged"]);
     }
     
     return user;
+}
+
+- (BOOL)isEqual:(id)object
+{
+    if (object == self)
+        return YES;
+    
+    if (![object isKindOfClass:MXGroupSummaryUser.class])
+        return NO;
+    
+    MXGroupSummaryUser *user = (MXGroupSummaryUser *)object;
+    
+    if (user.isPublic != _isPublic)
+    {
+        return NO;
+    }
+    
+    if ((user.membership || _membership) && ![user.membership isEqualToString:_membership])
+    {
+        return NO;
+    }
+    
+    if (user.isPublicised != _isPublicised)
+    {
+        return NO;
+    }
+    
+    if (user.isPrivileged != _isPrivileged)
+    {
+        return NO;
+    }
+    
+    return YES;
 }
 
 - (instancetype)initWithCoder:(NSCoder *)aDecoder
@@ -1767,6 +1868,8 @@ NSString *const kMXPushRuleScopeStringDevice = @"device";
     {
         _membership = [aDecoder decodeObjectForKey:@"membership"];
         _isPublicised = [aDecoder decodeBoolForKey:@"is_publicised"];
+        _isPublic = [aDecoder decodeBoolForKey:@"is_public"];
+        _isPrivileged = [aDecoder decodeBoolForKey:@"is_privileged"];
     }
     return self;
 }
@@ -1778,6 +1881,8 @@ NSString *const kMXPushRuleScopeStringDevice = @"device";
         [aCoder encodeObject:_membership forKey:@"membership"];
     }
     [aCoder encodeBool:_isPublicised forKey:@"is_publicised"];
+    [aCoder encodeBool:_isPublic forKey:@"is_public"];
+    [aCoder encodeBool:_isPrivileged forKey:@"is_privileged"];
 }
 
 - (id)copyWithZone:(NSZone *)zone
@@ -1805,6 +1910,34 @@ NSString *const kMXPushRuleScopeStringDevice = @"device";
     }
     
     return roomsSection;
+}
+
+- (BOOL)isEqual:(id)object
+{
+    if (object == self)
+        return YES;
+    
+    if (![object isKindOfClass:MXGroupSummaryRoomsSection.class])
+        return NO;
+    
+    MXGroupSummaryRoomsSection *rooms = (MXGroupSummaryRoomsSection *)object;
+    
+    if (rooms.totalRoomCountEstimate != _totalRoomCountEstimate)
+    {
+        return NO;
+    }
+    
+    if ((rooms.rooms || _rooms) && ![rooms.rooms isEqualToArray:_rooms])
+    {
+        return NO;
+    }
+    
+    if ((rooms.categories || _categories) && ![rooms.categories isEqualToDictionary:_categories])
+    {
+        return NO;
+    }
+    
+    return YES;
 }
 
 - (instancetype)initWithCoder:(NSCoder *)aDecoder
@@ -1859,6 +1992,39 @@ NSString *const kMXPushRuleScopeStringDevice = @"device";
     }
     
     return summary;
+}
+
+- (BOOL)isEqual:(id)object
+{
+    if (object == self)
+        return YES;
+    
+    if (![object isKindOfClass:MXGroupSummary.class])
+        return NO;
+    
+    MXGroupSummary *summary = (MXGroupSummary *)object;
+    
+    if (![summary.profile isEqual:_profile])
+    {
+        return NO;
+    }
+    
+    if (![summary.user isEqual:_user])
+    {
+        return NO;
+    }
+    
+    if (![summary.usersSection isEqual:_usersSection])
+    {
+        return NO;
+    }
+    
+    if (![summary.roomsSection isEqual:_roomsSection])
+    {
+        return NO;
+    }
+    
+    return YES;
 }
 
 - (instancetype)initWithCoder:(NSCoder *)aDecoder
@@ -1927,6 +2093,56 @@ NSString *const kMXPushRuleScopeStringDevice = @"device";
     }
     
     return room;
+}
+
+- (BOOL)isEqual:(id)object
+{
+    if (object == self)
+        return YES;
+    
+    if (![object isKindOfClass:MXGroupRoom.class])
+        return NO;
+    
+    MXGroupRoom *room = (MXGroupRoom *)object;
+    
+    if (room.isPublic != _isPublic)
+    {
+        return NO;
+    }
+    if (room.numJoinedMembers != _numJoinedMembers)
+    {
+        return NO;
+    }
+    if (room.worldReadable != _worldReadable)
+    {
+        return NO;
+    }
+    if (room.guestCanJoin != _guestCanJoin)
+    {
+        return NO;
+    }
+    if ((room.canonicalAlias || _canonicalAlias) && ![room.canonicalAlias isEqualToString:_canonicalAlias])
+    {
+        return NO;
+    }
+    if ((room.roomId || _roomId) && ![room.roomId isEqualToString:_roomId])
+    {
+        return NO;
+    }
+    if ((room.name || _name) && ![room.name isEqualToString:_name])
+    {
+        return NO;
+    }
+    if ((room.topic || _topic) && ![room.topic isEqualToString:_topic])
+    {
+        return NO;
+    }
+    if ((room.avatarUrl || _avatarUrl) && ![room.avatarUrl isEqualToString:_avatarUrl])
+    {
+        return NO;
+    }
+    
+    return YES;
 }
 
 - (instancetype)initWithCoder:(NSCoder *)aDecoder
@@ -2005,6 +2221,28 @@ NSString *const kMXPushRuleScopeStringDevice = @"device";
     return rooms;
 }
 
+- (BOOL)isEqual:(id)object
+{
+    if (object == self)
+        return YES;
+    
+    if (![object isKindOfClass:MXGroupRooms.class])
+        return NO;
+    
+    MXGroupRooms *rooms = (MXGroupRooms *)object;
+    
+    if (rooms.totalRoomCountEstimate != _totalRoomCountEstimate)
+    {
+        return NO;
+    }
+    if ((rooms.chunk || _chunk) && ![rooms.chunk isEqualToArray:_chunk])
+    {
+        return NO;
+    }
+    
+    return YES;
+}
+
 - (instancetype)initWithCoder:(NSCoder *)aDecoder
 {
     self = [super init];
@@ -2052,6 +2290,40 @@ NSString *const kMXPushRuleScopeStringDevice = @"device";
     }
     
     return user;
+}
+
+- (BOOL)isEqual:(id)object
+{
+    if (object == self)
+        return YES;
+    
+    if (![object isKindOfClass:MXGroupUser.class])
+        return NO;
+    
+    MXGroupUser *user = (MXGroupUser *)object;
+    
+    if (user.isPublic != _isPublic)
+    {
+        return NO;
+    }
+    if (user.isPrivileged != _isPrivileged)
+    {
+        return NO;
+    }
+    if ((user.userId || _userId) && ![user.userId isEqualToString:_userId])
+    {
+        return NO;
+    }
+    if ((user.displayname || _displayname) && ![user.displayname isEqualToString:_displayname])
+    {
+        return NO;
+    }
+    if ((user.avatarUrl || _avatarUrl) && ![user.avatarUrl isEqualToString:_avatarUrl])
+    {
+        return NO;
+    }
+    
+    return YES;
 }
 
 - (instancetype)initWithCoder:(NSCoder *)aDecoder
@@ -2110,6 +2382,29 @@ NSString *const kMXPushRuleScopeStringDevice = @"device";
     }
     
     return users;
+}
+
+- (BOOL)isEqual:(id)object
+{
+    if (object == self)
+        return YES;
+    
+    if (![object isKindOfClass:MXGroupUsers.class])
+        return NO;
+    
+    MXGroupUsers *users = (MXGroupUsers *)object;
+    
+    if (users.totalUserCountEstimate != _totalUserCountEstimate)
+    {
+        return NO;
+    }
+    
+    if ((users.chunk || _chunk) && ![users.chunk isEqualToArray:_chunk])
+    {
+        return NO;
+    }
+    
+    return YES;
 }
 
 - (instancetype)initWithCoder:(NSCoder *)aDecoder

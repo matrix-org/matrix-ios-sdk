@@ -54,6 +54,10 @@ NSString *const kMXSessionCryptoDidCorruptDataNotification = @"kMXSessionCryptoD
 NSString *const kMXSessionNewGroupInviteNotification = @"kMXSessionNewGroupInviteNotification";
 NSString *const kMXSessionDidJoinGroupNotification = @"kMXSessionDidJoinGroupNotification";
 NSString *const kMXSessionDidLeaveGroupNotification = @"kMXSessionDidLeaveGroupNotification";
+NSString *const kMXSessionDidUpdateGroupSummaryNotification = @"kMXSessionDidUpdateGroupSummaryNotification";
+NSString *const kMXSessionDidUpdateGroupRoomsNotification = @"kMXSessionDidUpdateGroupRoomsNotification";
+NSString *const kMXSessionDidUpdateGroupUsersNotification = @"kMXSessionDidUpdateGroupUsersNotification";
+
 
 NSString *const kMXSessionNotificationRoomIdKey = @"roomId";
 NSString *const kMXSessionNotificationGroupKey = @"group";
@@ -1929,6 +1933,8 @@ typedef void (^MXOnResumeDone)();
                               success:(void (^)(void))success
                               failure:(void (^)(NSError *error))failure
 {
+    NSLog(@"[MXSession] acceptGroupInvite %@", groupId);
+    
     return [matrixRestClient acceptGroupInvite:groupId success:^{
         
         [self didJoinGroupWithId:groupId notify:YES];
@@ -1944,6 +1950,8 @@ typedef void (^MXOnResumeDone)();
                        success:(void (^)(void))success
                        failure:(void (^)(NSError *error))failure
 {
+    NSLog(@"[MXSession] leaveGroup %@", groupId);
+    
     return [matrixRestClient leaveGroup:groupId success:^{
         
         // Check the group has been removed before calling the success callback
@@ -1974,8 +1982,289 @@ typedef void (^MXOnResumeDone)();
     } failure:failure];
 }
 
+- (MXHTTPOperation*)updateGroupProfile:(MXGroup*)group
+                            success:(void (^)(void))success
+                            failure:(void (^)(NSError *error))failure
+{
+    if (!group.groupId.length)
+    {
+        if (failure)
+        {
+            failure ([NSError errorWithDomain:kMXNSErrorDomain code:0 userInfo:nil]);
+        }
+        return nil;
+    }
+    
+    NSLog(@"[MXSession] updateGroupProfile %@", group.groupId);
+    
+    __weak __typeof(self)weakSelf = self;
+    
+    return [matrixRestClient getGroupProfile:group.groupId success:^(MXGroupProfile *groupProfile) {
+        
+        if (weakSelf)
+        {
+            typeof(self) self = weakSelf;
+            MXGroup *storedGroup = [self groupWithGroupId:group.groupId];
+            
+            if (storedGroup != group)
+            {
+                // Update the provided group instance
+                group.profile = groupProfile;
+            }
+            
+            if (storedGroup && [storedGroup updateProfile:groupProfile])
+            {
+                [_store storeGroup:storedGroup];
+                // Commit store changes done
+                if ([_store respondsToSelector:@selector(commit)])
+                {
+                    [_store commit];
+                }
+                
+                // Broadcast the new joined group.
+                [[NSNotificationCenter defaultCenter] postNotificationName:kMXSessionDidUpdateGroupSummaryNotification
+                                                                    object:self
+                                                                  userInfo:@{
+                                                                             kMXSessionNotificationGroupKey: storedGroup
+                                                                             }];
+            }
+            
+            if (success)
+            {
+                success();
+            }
+        }
+        
+    } failure:failure];
+}
+
+- (MXHTTPOperation*)updateGroupSummary:(MXGroup*)group
+                            success:(void (^)(void))success
+                            failure:(void (^)(NSError *error))failure
+{
+    if (!group.groupId.length)
+    {
+        if (failure)
+        {
+            failure ([NSError errorWithDomain:kMXNSErrorDomain code:0 userInfo:nil]);
+        }
+        return nil;
+    }
+    
+    NSLog(@"[MXSession] updateGroupSummary %@", group.groupId);
+    
+    __weak __typeof(self)weakSelf = self;
+    
+    return [matrixRestClient getGroupSummary:group.groupId success:^(MXGroupSummary *groupSummary) {
+        
+        if (weakSelf)
+        {
+            typeof(self) self = weakSelf;
+            MXGroup *storedGroup = [self groupWithGroupId:group.groupId];
+            
+            if (storedGroup != group)
+            {
+                // Update the provided group instance
+                group.summary = groupSummary;
+            }
+            
+            if (storedGroup && [storedGroup updateSummary:groupSummary])
+            {
+                [_store storeGroup:storedGroup];
+                // Commit store changes done
+                if ([_store respondsToSelector:@selector(commit)])
+                {
+                    [_store commit];
+                }
+                
+                // Broadcast the new joined group.
+                [[NSNotificationCenter defaultCenter] postNotificationName:kMXSessionDidUpdateGroupSummaryNotification
+                                                                    object:self
+                                                                  userInfo:@{
+                                                                             kMXSessionNotificationGroupKey: storedGroup
+                                                                             }];
+            }
+            
+            if (success)
+            {
+                success();
+            }
+        }
+        
+    } failure:failure];
+}
+
+- (MXHTTPOperation*)updateGroupUsers:(MXGroup*)group
+                          success:(void (^)(void))success
+                          failure:(void (^)(NSError *error))failure
+{
+    if (!group.groupId.length)
+    {
+        if (failure)
+        {
+            failure ([NSError errorWithDomain:kMXNSErrorDomain code:0 userInfo:nil]);
+        }
+        return nil;
+    }
+    
+    NSLog(@"[MXSession] updateGroupUsers %@", group.groupId);
+    __weak __typeof(self)weakSelf = self;
+    
+    return [matrixRestClient getGroupUsers:group.groupId success:^(MXGroupUsers *groupUsers) {
+        
+        if (weakSelf)
+        {
+            typeof(self) self = weakSelf;
+            MXGroup *storedGroup = [self groupWithGroupId:group.groupId];
+            
+            if (storedGroup != group)
+            {
+                // Update the provided group instance
+                group.users = groupUsers;
+            }
+            
+            if (storedGroup && [storedGroup updateUsers:groupUsers])
+            {
+                [_store storeGroup:storedGroup];
+                // Commit store changes done
+                if ([_store respondsToSelector:@selector(commit)])
+                {
+                    [_store commit];
+                }
+                
+                // Broadcast the new joined group.
+                [[NSNotificationCenter defaultCenter] postNotificationName:kMXSessionDidUpdateGroupUsersNotification
+                                                                    object:self
+                                                                  userInfo:@{
+                                                                             kMXSessionNotificationGroupKey: storedGroup
+                                                                             }];
+            }
+            
+            if (success)
+            {
+                success();
+            }
+        }
+        
+    } failure:failure];
+}
+
+- (MXHTTPOperation*)updateGroupInvitedUsers:(MXGroup*)group
+                                    success:(void (^)(void))success
+                                    failure:(void (^)(NSError *error))failure
+{
+    if (!group.groupId.length)
+    {
+        if (failure)
+        {
+            failure ([NSError errorWithDomain:kMXNSErrorDomain code:0 userInfo:nil]);
+        }
+        return nil;
+    }
+    
+    NSLog(@"[MXSession] updateGroupInvitedUsers %@", group.groupId);
+    __weak __typeof(self)weakSelf = self;
+    
+    return [matrixRestClient getGroupInvitedUsers:group.groupId success:^(MXGroupUsers *invitedUsers) {
+        
+        if (weakSelf)
+        {
+            typeof(self) self = weakSelf;
+            MXGroup *storedGroup = [self groupWithGroupId:group.groupId];
+            
+            if (storedGroup != group)
+            {
+                // Update the provided group instance
+                group.invitedUsers = invitedUsers;
+            }
+            
+            if (storedGroup && [storedGroup updateInvitedUsers:invitedUsers])
+            {
+                [_store storeGroup:storedGroup];
+                // Commit store changes done
+                if ([_store respondsToSelector:@selector(commit)])
+                {
+                    [_store commit];
+                }
+                
+                // Broadcast the new joined group.
+                [[NSNotificationCenter defaultCenter] postNotificationName:kMXSessionDidUpdateGroupUsersNotification
+                                                                    object:self
+                                                                  userInfo:@{
+                                                                             kMXSessionNotificationGroupKey: storedGroup
+                                                                             }];
+            }
+            
+            if (success)
+            {
+                success();
+            }
+        }
+        
+    } failure:failure];
+}
+
+- (MXHTTPOperation*)updateGroupRooms:(MXGroup*)group
+                          success:(void (^)(void))success
+                          failure:(void (^)(NSError *error))failure
+{
+    if (!group.groupId.length)
+    {
+        if (failure)
+        {
+            failure ([NSError errorWithDomain:kMXNSErrorDomain code:0 userInfo:nil]);
+        }
+        return nil;
+    }
+    
+    NSLog(@"[MXSession] updateGroupRooms %@", group.groupId);
+    __weak __typeof(self)weakSelf = self;
+    
+    return [matrixRestClient getGroupRooms:group.groupId success:^(MXGroupRooms *groupRooms) {
+        
+        if (weakSelf)
+        {
+            typeof(self) self = weakSelf;
+            MXGroup *storedGroup = [self groupWithGroupId:group.groupId];
+            
+            if (storedGroup != group)
+            {
+                // Update the provided group instance
+                group.rooms = groupRooms;
+            }
+            
+            if (storedGroup && [storedGroup updateRooms:groupRooms])
+            {
+                [_store storeGroup:storedGroup];
+                // Commit store changes done
+                if ([_store respondsToSelector:@selector(commit)])
+                {
+                    [_store commit];
+                }
+                
+                // Broadcast the new joined group.
+                [[NSNotificationCenter defaultCenter] postNotificationName:kMXSessionDidUpdateGroupRoomsNotification
+                                                                    object:self
+                                                                  userInfo:@{
+                                                                             kMXSessionNotificationGroupKey: storedGroup
+                                                                             }];
+            }
+            
+            if (success)
+            {
+                success();
+            }
+        }
+        
+    } failure:failure];
+}
+
+#pragma mark -
+
 - (MXGroup *)didJoinGroupWithId:(NSString *)groupId notify:(BOOL)notify
 {
+    NSLog(@"[MXSession] didJoinGroupWithId %@", groupId);
+    
     MXGroup *group = [self groupWithGroupId:groupId];
     if (nil == group)
     {
@@ -1986,6 +2275,11 @@ typedef void (^MXOnResumeDone)();
     group.membership = MXMembershipJoin;
     
     [_store storeGroup:group];
+    
+    // Update the group summary from server.
+    [self updateGroupSummary:group success:nil failure:^(NSError *error) {
+        NSLog(@"[MXKSession] didJoinGroupWithId: group summary update failed %@", groupId);
+    }];
     
     if (notify)
     {
@@ -2002,6 +2296,7 @@ typedef void (^MXOnResumeDone)();
 
 - (MXGroup *)createGroupInviteWithId:(NSString *)groupId profile:(MXGroupSyncProfile*)profile andInviter:(NSString*)inviter notify:(BOOL)notify
 {
+    NSLog(@"[MXSession] createGroupInviteWithId %@", groupId);
     MXGroup *group = [[MXGroup alloc] initWithGroupId:groupId];
     
     MXGroupSummary *summary = [[MXGroupSummary alloc] init];
@@ -2018,6 +2313,11 @@ typedef void (^MXOnResumeDone)();
     
     [_store storeGroup:group];
     
+    // Retrieve the group summary from server.
+    [self updateGroupSummary:group success:nil failure:^(NSError *error) {
+        NSLog(@"[MXKSession] createGroupInviteWithId: group summary update failed %@", group.groupId);
+    }];
+    
     if (notify)
     {
         // Broadcast the new group
@@ -2033,6 +2333,7 @@ typedef void (^MXOnResumeDone)();
 
 - (void)removeGroup:(NSString *)groupId
 {
+    NSLog(@"[MXSession] removeGroup %@", groupId);
     // Clean the store
     [_store deleteGroup:groupId];
     

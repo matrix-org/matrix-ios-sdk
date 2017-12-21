@@ -19,6 +19,8 @@
 #import "MXJSONModels.h"
 #import "MXEnumConstants.h"
 
+@class MXSession;
+
 /**
  `MXGroup` represents a community in Matrix.
  */
@@ -35,6 +37,11 @@
 @property (nonatomic) MXGroupSummary *summary;
 
 /**
+ The community profile.
+ */
+@property (nonatomic) MXGroupProfile *profile;
+
+/**
  The rooms of the community.
  */
 @property (nonatomic) MXGroupRooms *rooms;
@@ -43,6 +50,11 @@
  The community members.
  */
 @property (nonatomic) MXGroupUsers *users;
+
+/**
+ The invited members.
+ */
+@property (nonatomic) MXGroupUsers *invitedUsers;
 
 /**
  The user membership.
@@ -62,5 +74,45 @@
  @return the MXGroup instance.
  */
 - (instancetype)initWithGroupId:(NSString*)groupId;
+
+/**
+ Update the group profile.
+ 
+ @param profile the group profile.
+ @return YES if the group profile has actually changed.
+ */
+- (BOOL)updateProfile:(MXGroupProfile*)profile;
+
+/**
+ Update the group summary.
+ 
+ @param summary the group summary.
+ @return YES if the group summary has actually changed.
+ */
+- (BOOL)updateSummary:(MXGroupSummary*)summary;
+
+/**
+ Update the group rooms.
+ 
+ @param rooms the group rooms.
+ @return YES if the group rooms has actually changed.
+ */
+- (BOOL)updateRooms:(MXGroupRooms*)rooms;
+
+/**
+ Update the group users.
+ 
+ @param users the group users.
+ @return YES if the group users has actually changed.
+ */
+- (BOOL)updateUsers:(MXGroupUsers*)users;
+
+/**
+ Update the group invited users.
+ 
+ @param invitedUsers the group users.
+ @return YES if the group users has actually changed.
+ */
+- (BOOL)updateInvitedUsers:(MXGroupUsers*)invitedUsers;
 
 @end

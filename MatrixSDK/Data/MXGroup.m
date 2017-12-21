@@ -15,6 +15,8 @@
  */
 
 #import "MXGroup.h"
+
+#import "MXSession.h"
 #import "MXTools.h"
 
 @implementation MXGroup
@@ -33,6 +35,68 @@
 - (NSString *)description
 {
     return [NSString stringWithFormat:@"%@: %@ %@ (inviter: %@)", _groupId, _summary.profile.name, _summary.profile.shortDescription, _inviter];
+}
+
+- (BOOL)updateProfile:(MXGroupProfile*)profile
+{
+    if (![_summary.profile isEqual:profile])
+    {
+        _summary.profile = profile;
+        return YES;
+    }
+    
+    return NO;
+}
+
+- (BOOL)updateSummary:(MXGroupSummary*)summary
+{
+    if (![_summary isEqual:summary])
+    {
+        _summary = summary;
+        return YES;
+    }
+    
+    return NO;
+}
+
+- (BOOL)updateRooms:(MXGroupRooms*)rooms
+{
+    if (![_rooms isEqual:rooms])
+    {
+        _rooms = rooms;
+        return YES;
+    }
+    
+    return NO;
+}
+
+- (BOOL)updateUsers:(MXGroupUsers*)users
+{
+    if (![_users isEqual:users])
+    {
+        _users = users;
+        return YES;
+    }
+    
+    return NO;
+}
+
+- (BOOL)updateInvitedUsers:(MXGroupUsers*)invitedUsers
+{
+    if (![_invitedUsers isEqual:invitedUsers])
+    {
+        _invitedUsers = invitedUsers;
+        return YES;
+    }
+    
+    return NO;
+}
+
+#pragma mark -
+
+- (MXGroupProfile*)profile
+{
+    return _summary.profile;
 }
 
 - (void)setMembership:(MXMembership)membership
@@ -67,6 +131,7 @@
         _summary = [aDecoder decodeObjectForKey:@"summary"];
         _rooms = [aDecoder decodeObjectForKey:@"rooms"];
         _users = [aDecoder decodeObjectForKey:@"users"];
+        _invitedUsers = [aDecoder decodeObjectForKey:@"invitedUsers"];
         _membership = [(NSNumber*)[aDecoder decodeObjectForKey:@"membership"] unsignedIntegerValue];
         _inviter = [aDecoder decodeObjectForKey:@"inviter"];
     }
@@ -93,6 +158,10 @@
         {
             [aCoder encodeObject:_users forKey:@"users"];;
         }
+        if (_invitedUsers)
+        {
+            [aCoder encodeObject:_invitedUsers forKey:@"invitedUsers"];;
+        }
     }
 }
 
@@ -106,6 +175,7 @@
     group.summary = [_summary copyWithZone:zone];
     group.rooms = [_rooms copyWithZone:zone];
     group.users = [_users copyWithZone:zone];
+    group.invitedUsers = [_invitedUsers copyWithZone:zone];
     group.inviter = [_inviter copyWithZone:zone];
     
     return group;

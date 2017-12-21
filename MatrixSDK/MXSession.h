@@ -203,6 +203,8 @@ FOUNDATION_EXPORT NSString *const kMXSessionCryptoDidCorruptDataNotification;
 
 /**
  Posted when MXSession has detected a new invite to a group from the event stream.
+ A request is triggered to refresh the summary of this group before posting this notification.
+ Listen to kMXSessionDidUpdateGroupSummaryNotification to be notified in case of summary change.
  
  The passed userInfo dictionary contains:
  - `kMXSessionNotificationGroupKey` the new group instance.
@@ -211,6 +213,8 @@ FOUNDATION_EXPORT NSString *const kMXSessionNewGroupInviteNotification;
 
 /**
  Posted when MXSession has detected a new joined group from the event stream.
+ A request is triggered to refresh the summary of this group before posting this notification.
+ Listen to kMXSessionDidUpdateGroupSummaryNotification to be notified in case of summary change.
  
  The passed userInfo dictionary contains:
  - `kMXSessionNotificationGroupKey` the new joined group.
@@ -224,6 +228,30 @@ FOUNDATION_EXPORT NSString *const kMXSessionDidJoinGroupNotification;
  - `kMXSessionNotificationGroupIdKey` the groupId of the left group.
  */
 FOUNDATION_EXPORT NSString *const kMXSessionDidLeaveGroupNotification;
+
+/**
+ Posted when MXSession has updated the summary (or only the profile) of a group.
+ 
+ The passed userInfo dictionary contains:
+ - `kMXSessionNotificationGroupKey` the updated group.
+ */
+FOUNDATION_EXPORT NSString *const kMXSessionDidUpdateGroupSummaryNotification;
+
+/**
+ Posted when MXSession has updated the rooms list of a group.
+ 
+ The passed userInfo dictionary contains:
+ - `kMXSessionNotificationGroupKey` the updated group.
+ */
+FOUNDATION_EXPORT NSString *const kMXSessionDidUpdateGroupRoomsNotification;
+
+/**
+ Posted when MXSession has updated the members list of a group.
+ 
+ The passed userInfo dictionary contains:
+ - `kMXSessionNotificationGroupKey` the updated group.
+ */
+FOUNDATION_EXPORT NSString *const kMXSessionDidUpdateGroupUsersNotification;
 
 #pragma mark - Notifications keys
 /**
@@ -771,6 +799,76 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
 - (MXHTTPOperation*)leaveGroup:(NSString*)groupId
                         success:(void (^)(void))success
                         failure:(void (^)(NSError *error))failure;
+
+/**
+ Update the profile of the provided group.
+ Apply this update to the corresponding group stored in this session (if any).
+ 
+ @param group the group.
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+ 
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)updateGroupProfile:(MXGroup*)group
+                               success:(void (^)(void))success
+                               failure:(void (^)(NSError *error))failure;
+
+/**
+ Update the summary of the provided group.
+ Apply this update to the corresponding group stored in this session (if any).
+ 
+ @param group the group.
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+ 
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)updateGroupSummary:(MXGroup*)group
+                               success:(void (^)(void))success
+                               failure:(void (^)(NSError *error))failure;
+
+/**
+ Update the users of the provided group.
+ Apply this update to the corresponding group stored in this session (if any).
+ 
+ @param group the group.
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+ 
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)updateGroupUsers:(MXGroup*)group
+                             success:(void (^)(void))success
+                             failure:(void (^)(NSError *error))failure;
+
+/**
+ Update the invited users of the provided group.
+ Apply this update to the corresponding group stored in this session (if any).
+ 
+ @param group the group.
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+ 
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)updateGroupInvitedUsers:(MXGroup*)group
+                                    success:(void (^)(void))success
+                                    failure:(void (^)(NSError *error))failure;
+
+/**
+ Update the rooms of the provided group.
+ Apply this update to the corresponding group stored in this session (if any).
+ 
+ @param group the group.
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+ 
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)updateGroupRooms:(MXGroup*)group
+                             success:(void (^)(void))success
+                             failure:(void (^)(NSError *error))failure;
 
 
 #pragma mark - Missed notifications
