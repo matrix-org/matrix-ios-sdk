@@ -1935,12 +1935,19 @@ typedef void (^MXOnResumeDone)();
 {
     NSLog(@"[MXSession] acceptGroupInvite %@", groupId);
     
+    __weak __typeof(self)weakSelf = self;
+    
     return [matrixRestClient acceptGroupInvite:groupId success:^{
         
-        [self didJoinGroupWithId:groupId notify:YES];
-        if (success)
+        if (weakSelf)
         {
-            success();
+            typeof(self) self = weakSelf;
+            
+            [self didJoinGroupWithId:groupId notify:YES];
+            if (success)
+            {
+                success();
+            }
         }
         
     } failure:failure];
@@ -1952,33 +1959,26 @@ typedef void (^MXOnResumeDone)();
 {
     NSLog(@"[MXSession] leaveGroup %@", groupId);
     
+    __weak __typeof(self)weakSelf = self;
+    
     return [matrixRestClient leaveGroup:groupId success:^{
         
-        // Check the group has been removed before calling the success callback
-        // This is automatically done when the homeserver sends the information.
-        if ([self groupWithGroupId:groupId])
+        if (weakSelf)
         {
-            // The group is still here, wait for the server sync
-            __block __weak id observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXSessionDidLeaveGroupNotification object:nil queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
-                
-                if ([groupId isEqualToString:note.userInfo[kMXSessionNotificationGroupIdKey]])
-                {
-                    [[NSNotificationCenter defaultCenter] removeObserver:observer];
-                    if (success)
-                    {
-                        success();
-                    }
-                }
-            }];
-        }
-        else
-        {
+            typeof(self) self = weakSelf;
+            
+            // Check the group has been removed before calling the success callback
+            // This may be already done during a server sync.
+            if ([self groupWithGroupId:groupId])
+            {
+                [self removeGroup:groupId];
+            }
+            
             if (success)
             {
                 success();
             }
         }
-        
     } failure:failure];
 }
 
