@@ -70,6 +70,7 @@ FOUNDATION_EXPORT NSString *const kMXToolsRegexStringForMatrixUserIdentifier;
 FOUNDATION_EXPORT NSString *const kMXToolsRegexStringForMatrixRoomAlias;
 FOUNDATION_EXPORT NSString *const kMXToolsRegexStringForMatrixRoomIdentifier;
 FOUNDATION_EXPORT NSString *const kMXToolsRegexStringForMatrixEventIdentifier;
+FOUNDATION_EXPORT NSString *const kMXToolsRegexStringForMatrixGroupIdentifier;
 
 /**
  Check whether a string is formatted as an email address.
@@ -105,6 +106,13 @@ FOUNDATION_EXPORT NSString *const kMXToolsRegexStringForMatrixEventIdentifier;
  @return YES if the provided string is formatted as a matrix event identifier.
  */
 + (BOOL)isMatrixEventIdentifier:(NSString *)inputString;
+
+/**
+ Check whether a string is formatted as a matrix group identifier.
+ 
+ @return YES if the provided string is formatted as a matrix group identifier.
+ */
++ (BOOL)isMatrixGroupIdentifier:(NSString *)inputString;
 
 
 #pragma mark - Permalink

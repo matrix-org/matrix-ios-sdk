@@ -27,6 +27,7 @@ NSString *const kMXToolsRegexStringForMatrixUserIdentifier  = @"@[A-Z0-9._=-]+:[
 NSString *const kMXToolsRegexStringForMatrixRoomAlias       = @"#[A-Z0-9._%#+-]+:[A-Z0-9.-]+\\.[A-Z]{2,}";
 NSString *const kMXToolsRegexStringForMatrixRoomIdentifier  = @"![A-Z0-9]+:[A-Z0-9.-]+\\.[A-Z]{2,}";
 NSString *const kMXToolsRegexStringForMatrixEventIdentifier = @"\\$[A-Z0-9]+:[A-Z0-9.-]+\\.[A-Z]{2,}";
+NSString *const kMXToolsRegexStringForMatrixGroupIdentifier = @"\\+[A-Z0-9=_\\-./]+:[A-Z0-9.-]+\\.[A-Z]{2,}";
 
 
 #pragma mark - MXTools static private members
@@ -39,6 +40,7 @@ static NSRegularExpression *isMatrixUserIdentifierRegex;
 static NSRegularExpression *isMatrixRoomAliasRegex;
 static NSRegularExpression *isMatrixRoomIdentifierRegex;
 static NSRegularExpression *isMatrixEventIdentifierRegex;
+static NSRegularExpression *isMatrixGroupIdentifierRegex;
 
 static NSUInteger transactionIdCount;
 
@@ -103,6 +105,8 @@ static NSUInteger transactionIdCount;
                                                                                 options:NSRegularExpressionCaseInsensitive error:nil];
         isMatrixEventIdentifierRegex = [NSRegularExpression regularExpressionWithPattern:[NSString stringWithFormat:@"^%@$", kMXToolsRegexStringForMatrixEventIdentifier]
                                                                                  options:NSRegularExpressionCaseInsensitive error:nil];
+        isMatrixGroupIdentifierRegex = [NSRegularExpression regularExpressionWithPattern:[NSString stringWithFormat:@"^%@$", kMXToolsRegexStringForMatrixGroupIdentifier]
+                                                                                options:NSRegularExpressionCaseInsensitive error:nil];
 
         transactionIdCount = 0;
     });
@@ -288,6 +292,15 @@ static NSUInteger transactionIdCount;
     if (inputString)
     {
         return (nil != [isMatrixEventIdentifierRegex firstMatchInString:inputString options:0 range:NSMakeRange(0, inputString.length)]);
+    }
+    return NO;
+}
+
++ (BOOL)isMatrixGroupIdentifier:(NSString *)inputString
+{
+    if (inputString)
+    {
+        return (nil != [isMatrixGroupIdentifierRegex firstMatchInString:inputString options:0 range:NSMakeRange(0, inputString.length)]);
     }
     return NO;
 }
