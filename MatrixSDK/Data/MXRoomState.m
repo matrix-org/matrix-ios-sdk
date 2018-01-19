@@ -207,6 +207,20 @@
     return [thirdPartyInvites allValues];
 }
 
+- (NSArray<NSString *> *)relatedGroups
+{
+    NSArray<NSString *> *relatedGroups;
+    
+    // Retrieve them from the state events
+    MXEvent *event = [stateEvents objectForKey:kMXEventTypeStringRoomRelatedGroups].lastObject;
+    if (event && [self contentOfEvent:event])
+    {
+        MXJSONModelSetArray(relatedGroups, [self contentOfEvent:event][@"groups"]);
+        relatedGroups = [relatedGroups copy];
+    }
+    return relatedGroups;
+}
+
 - (NSArray<NSString *> *)aliases
 {
     NSMutableArray<NSString *> *aliases = [NSMutableArray array];

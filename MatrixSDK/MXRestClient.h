@@ -1237,6 +1237,33 @@ typedef enum : NSUInteger
                            success:(void (^)(MXEventContext *eventContext))success
                            failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
+/**
+ Set the related groups of a room.
+ 
+ @param roomId the id of the room.
+ @param relatedGroups the list of the related group identifiers.
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+ 
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)setRoomRelatedGroups:(NSString*)roomId
+                           relatedGroups:(NSArray<NSString *>*)relatedGroups
+                                 success:(void (^)(void))success
+                                 failure:(void (^)(NSError *error))failure;
+
+/**
+ Get the related groups of a room.
+ 
+ @param roomId the id of the room.
+ @param success A block object called when the operation succeeds. It provides the list of the group ids.
+ @param failure A block object called when the operation fails.
+ 
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)relatedGroupsOfRoom:(NSString*)roomId
+                                success:(void (^)(NSArray<NSString *>* relatedGroups))success
+                                failure:(void (^)(NSError *error))failure;
 
 #pragma mark - Room tags operations
 /**

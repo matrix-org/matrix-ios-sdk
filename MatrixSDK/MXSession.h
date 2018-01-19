@@ -230,7 +230,7 @@ FOUNDATION_EXPORT NSString *const kMXSessionDidJoinGroupNotification;
 FOUNDATION_EXPORT NSString *const kMXSessionDidLeaveGroupNotification;
 
 /**
- Posted when MXSession has updated the summary (or only the profile) of a group.
+ Posted when MXSession has updated the summary (or only the profile) of a stored group.
  
  The passed userInfo dictionary contains:
  - `kMXSessionNotificationGroupKey` the updated group.
@@ -238,7 +238,7 @@ FOUNDATION_EXPORT NSString *const kMXSessionDidLeaveGroupNotification;
 FOUNDATION_EXPORT NSString *const kMXSessionDidUpdateGroupSummaryNotification;
 
 /**
- Posted when MXSession has updated the rooms list of a group.
+ Posted when MXSession has updated the rooms list of a stored group.
  
  The passed userInfo dictionary contains:
  - `kMXSessionNotificationGroupKey` the updated group.
@@ -246,7 +246,7 @@ FOUNDATION_EXPORT NSString *const kMXSessionDidUpdateGroupSummaryNotification;
 FOUNDATION_EXPORT NSString *const kMXSessionDidUpdateGroupRoomsNotification;
 
 /**
- Posted when MXSession has updated the members list of a group.
+ Posted when MXSession has updated the members list of a stored group.
  
  The passed userInfo dictionary contains:
  - `kMXSessionNotificationGroupKey` the updated group.
