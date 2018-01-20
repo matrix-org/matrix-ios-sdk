@@ -1987,6 +1987,19 @@ typedef enum : NSUInteger
                        failure:(void (^)(NSError *error))failure;
 
 /**
+ Update the group publicity for the current user.
+ 
+ @param groupId the id of the group.
+ @param isPublicised tell whether the user published this community on his profile
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+ */
+- (MXHTTPOperation*)updateGroupPublicity:(NSString*)groupId
+                            isPublicised:(BOOL)isPublicised
+                                 success:(void (^)(void))success
+                                 failure:(void (^)(NSError *error))failure;
+
+/**
  Get the group profile.
  
  @param groupId the id of the group.

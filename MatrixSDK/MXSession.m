@@ -1982,6 +1982,64 @@ typedef void (^MXOnResumeDone)();
     } failure:failure];
 }
 
+- (MXHTTPOperation*)updateGroupPublicity:(MXGroup*)group
+                            isPublicised:(BOOL)isPublicised
+                                 success:(void (^)(void))success
+                                 failure:(void (^)(NSError *error))failure
+{
+    if (!group.groupId.length)
+    {
+        if (failure)
+        {
+            failure ([NSError errorWithDomain:kMXNSErrorDomain code:0 userInfo:nil]);
+        }
+        return nil;
+    }
+    
+    NSLog(@"[MXSession] updateGroupPublicity %@", group.groupId);
+    
+    __weak __typeof(self)weakSelf = self;
+    
+    return [matrixRestClient updateGroupPublicity:group.groupId isPublicised:isPublicised success:^(void) {
+        
+        if (weakSelf)
+        {
+            typeof(self) self = weakSelf;
+            MXGroup *storedGroup = [self groupWithGroupId:group.groupId];
+            
+            if (storedGroup != group)
+            {
+                // Update the provided group instance
+                group.summary.user.isPublicised = isPublicised;
+            }
+            
+            if (storedGroup && storedGroup.summary.user.isPublicised != isPublicised)
+            {
+                storedGroup.summary.user.isPublicised = isPublicised;
+                [_store storeGroup:storedGroup];
+                // Commit store changes done
+                if ([_store respondsToSelector:@selector(commit)])
+                {
+                    [_store commit];
+                }
+                
+                // Broadcast the new joined group.
+                [[NSNotificationCenter defaultCenter] postNotificationName:kMXSessionDidUpdateGroupSummaryNotification
+                                                                    object:self
+                                                                  userInfo:@{
+                                                                             kMXSessionNotificationGroupKey: storedGroup
+                                                                             }];
+            }
+            
+            if (success)
+            {
+                success();
+            }
+        }
+        
+    } failure:failure];
+}
+
 - (MXHTTPOperation*)updateGroupProfile:(MXGroup*)group
                             success:(void (^)(void))success
                             failure:(void (^)(NSError *error))failure

@@ -5415,6 +5415,52 @@ MXAuthAction;
                                   success:success failure:failure];
 }
 
+- (MXHTTPOperation*)updateGroupPublicity:(NSString*)groupId
+                            isPublicised:(BOOL)isPublicised
+                                 success:(void (^)(void))success
+                                 failure:(void (^)(NSError *error))failure
+{
+    NSString *path = [NSString stringWithFormat:@"%@/groups/%@/self/update_publicity", apiPathPrefix, [groupId stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding]];
+    
+    return [httpClient requestWithMethod:@"PUT"
+                                    path:path
+                              parameters:@{@"publicise": [NSNumber numberWithBool:isPublicised]}
+                                 success:^(NSDictionary *JSONResponse) {
+                                     
+                                     if (success && processingQueue)
+                                     {
+                                         // Use here the processing queue in order to keep the server response order
+                                         dispatch_async(processingQueue, ^{
+                                             
+                                             if (completionQueue)
+                                             {
+                                                 dispatch_async(completionQueue, ^{
+                                                     
+                                                     success();
+                                                     
+                                                 });
+                                             }
+                                             
+                                         });
+                                     }
+                                 }
+                                 failure:^(NSError *error) {
+                                     if (failure && processingQueue)
+                                     {
+                                         dispatch_async(processingQueue, ^{
+                                             
+                                             if (completionQueue)
+                                             {
+                                                 dispatch_async(completionQueue, ^{
+                                                     failure(error);
+                                                 });
+                                             }
+                                             
+                                         });
+                                     }
+                                 }];
+}
+
 - (MXHTTPOperation*)getGroupProfile:(NSString*)groupId
                             success:(void (^)(MXGroupProfile *groupProfile))success
                             failure:(void (^)(NSError *error))failure
