@@ -801,6 +801,19 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
                         failure:(void (^)(NSError *error))failure;
 
 /**
+ Update the group publicity for the current user.
+ 
+ @param group the group.
+ @param isPublicised tell whether the user published this community on his profile
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+ */
+- (MXHTTPOperation*)updateGroupPublicity:(MXGroup*)group
+                            isPublicised:(BOOL)isPublicised
+                                 success:(void (^)(void))success
+                                 failure:(void (^)(NSError *error))failure;
+
+/**
  Update the profile of the provided group.
  Apply this update to the corresponding group stored in this session (if any).
  
