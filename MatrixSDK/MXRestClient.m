@@ -5424,7 +5424,7 @@ MXAuthAction;
     
     return [httpClient requestWithMethod:@"PUT"
                                     path:path
-                              parameters:@{@"publicise": [NSNumber numberWithBool:isPublicised]}
+                              parameters:@{@"publicise": @(isPublicised)}
                                  success:^(NSDictionary *JSONResponse) {
                                      
                                      if (success && processingQueue)
