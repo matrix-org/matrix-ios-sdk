@@ -68,6 +68,11 @@ A copy of the list of third party invites (actually MXRoomThirdPartyInvite insta
 @property (nonatomic, readonly) NSArray<MXRoomThirdPartyInvite*> *thirdPartyInvites;
 
 /**
+ The list of the groups associated to the room.
+ */
+@property (nonatomic, readonly) NSArray<NSString *> *relatedGroups;
+
+/**
  The power level of room members
  */
 @property (nonatomic, readonly) MXRoomPowerLevels *powerLevels;

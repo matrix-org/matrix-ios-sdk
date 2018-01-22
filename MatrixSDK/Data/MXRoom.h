@@ -734,6 +734,19 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidFlushDataNotification;
                         success:(void (^)(void))success
                         failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
+/**
+ Set the related groups of the room.
+ 
+ @param relatedGroups the list of the identifiers of the related groups to set.
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+ 
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)setRelatedGroups:(NSArray<NSString *>*)relatedGroups
+                             success:(void (^)(void))success
+                             failure:(void (^)(NSError *error))failure;
+
 
 #pragma mark - Events timeline
 /**

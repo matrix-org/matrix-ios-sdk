@@ -76,7 +76,7 @@ NSString *const kMXSessionNoRoomTag = @"m.recent";  // Use the same value as mat
 
 
 // Block called when MSSession resume is complete
-typedef void (^MXOnResumeDone)();
+typedef void (^MXOnResumeDone)(void);
 
 @interface MXSession ()
 {
@@ -212,6 +212,7 @@ typedef void (^MXOnResumeDone)();
                                       kMXEventTypeStringRoomMessageFeedback,
                                       kMXEventTypeStringRoomRedaction,
                                       kMXEventTypeStringRoomThirdPartyInvite,
+                                      kMXEventTypeStringRoomRelatedGroups,
                                       kMXEventTypeStringCallInvite,
                                       kMXEventTypeStringCallCandidates,
                                       kMXEventTypeStringCallAnswer,

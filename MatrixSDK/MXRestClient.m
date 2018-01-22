@@ -3159,6 +3159,45 @@ MXAuthAction;
                                  }];
 }
 
+- (MXHTTPOperation*)setRoomRelatedGroups:(NSString *)roomId
+                           relatedGroups:(NSArray<NSString *> *)relatedGroups
+                                 success:(void (^)(void))success
+                                 failure:(void (^)(NSError *))failure
+{
+    return [self updateStateEvent:kMXEventTypeStringRoomRelatedGroups
+                        withValue:@{
+                                    @"groups": relatedGroups
+                                    }
+                           inRoom:roomId
+                          success:success failure:failure];
+}
+
+- (MXHTTPOperation*)relatedGroupsOfRoom:(NSString *)roomId
+                                success:(void (^)(NSArray<NSString *> *))success
+                                failure:(void (^)(NSError *))failure
+{
+    return [self valueOfStateEvent:kMXEventTypeStringRoomRelatedGroups
+                            inRoom:roomId
+                           success:^(NSDictionary *JSONResponse) {
+                               if (success && processingQueue)
+                               {
+                                   dispatch_async(processingQueue, ^{
+                                       
+                                       NSArray<NSString *> *relatedGroups;
+                                       MXJSONModelSetArray(relatedGroups, JSONResponse[@"groups"]);
+                                       
+                                       if (completionQueue)
+                                       {
+                                           dispatch_async(completionQueue, ^{
+                                               success(relatedGroups);
+                                           });
+                                       }
+                                       
+                                   });
+                               }
+                               
+                           } failure:failure];
+}
 
 #pragma mark - Room tags operations
 - (MXHTTPOperation*)tagsOfRoom:(NSString*)roomId

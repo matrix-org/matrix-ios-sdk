@@ -1391,6 +1391,13 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
     return [mxSession.matrixRestClient reportEvent:eventId inRoom:self.roomId score:score reason:reason success:success failure:failure];
 }
 
+- (MXHTTPOperation*)setRelatedGroups:(NSArray<NSString *>*)relatedGroups
+                        success:(void (^)(void))success
+                        failure:(void (^)(NSError *error))failure
+{
+    return [mxSession.matrixRestClient setRoomRelatedGroups:self.roomId relatedGroups:relatedGroups success:success failure:failure];
+}
+
 
 #pragma mark - Message order preserving
 /**
