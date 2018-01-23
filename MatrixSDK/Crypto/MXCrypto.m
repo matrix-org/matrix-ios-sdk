@@ -2051,7 +2051,7 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
             }
 
             // We first find how many keys the server has for us.
-            NSInteger keyCount = [keysUploadResponse oneTimeKeyCountsForAlgorithm:@"signed_curve25519"];
+            NSUInteger keyCount = [keysUploadResponse oneTimeKeyCountsForAlgorithm:@"signed_curve25519"];
 
             NSLog(@"[MXCrypto] maybeUploadOneTimeKeys: %tu one-time keys on the homeserver", oneTimeKeyCount);
 
@@ -2125,7 +2125,7 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
     NSLog(@"[MXCrypto] generateOneTimeKeys: %tu one-time keys on the homeserver", keyCount);
 
     // First check how many keys we can store in the Account object.
-    NSInteger maxOneTimeKeys = _olmDevice.maxNumberOfOneTimeKeys;
+    NSUInteger maxOneTimeKeys = _olmDevice.maxNumberOfOneTimeKeys;
 
     // Try to keep at most half that number on the server. This leaves the
     // rest of the slots free to hold keys that have been claimed from the
@@ -2133,12 +2133,17 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
     // If we run out of slots when generating new keys then olm will
     // discard the oldest private keys first. This will eventually clean
     // out stale private keys that won't receive a message.
-    NSInteger keyLimit = maxOneTimeKeys / 2;
+    NSUInteger keyLimit = maxOneTimeKeys / 2;
 
     // We work out how many new keys we need to create to top up the server
     // If there are too many keys on the server then we don't need to
     // create any more keys.
-    NSUInteger numberToGenerate = MAX(keyLimit - keyCount, 0);
+    NSUInteger numberToGenerate = 0;
+    if (keyLimit > keyCount)
+    {
+        numberToGenerate = keyLimit - keyCount;
+    }
+
 
     NSLog(@"[MXCrypto] generateOneTimeKeys: Generate %tu keys", numberToGenerate);
 
