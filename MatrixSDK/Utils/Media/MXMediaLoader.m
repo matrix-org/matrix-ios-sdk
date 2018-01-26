@@ -306,6 +306,14 @@ NSString *const kMXMediaUploadIdPrefix = @"upload-";
             }
         }
     }
+    else if ([protectionSpace.authenticationMethod isEqualToString:NSURLAuthenticationMethodClientCertificate])
+    {
+        [challenge.sender performDefaultHandlingForAuthenticationChallenge:challenge];
+    }
+    else
+    {
+        [challenge.sender cancelAuthenticationChallenge:challenge];
+    }
 }
 
 #pragma mark - Upload
