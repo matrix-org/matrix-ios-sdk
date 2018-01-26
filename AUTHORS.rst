@@ -36,3 +36,9 @@ Aram Sargsyan <aram.sargsyan.1997 at gmail.com>
 Thibault Farnier <thibault.farnier at applidium.com>
  * PR #367 Fix API for unbanning and kicking
  
+Nick Rakochy <nick.rakochy at gmail.com>
+ * PR #442 Bumped SwiftMatrixSDK.podspec dependency to GZIP 1.2.1
+ 
+Pierre Dubois <pierre.dubois8989 at gmail.com>
+  * PR #447 MXMediaLoader: handles client certificate case
+ 
