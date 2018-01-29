@@ -68,13 +68,6 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic) BOOL enableCryptoWhenStartingMXSession;
 
 /**
- Send stats to Google Analytics.
-
- NO by default.
- */
-@property (nonatomic) BOOL enableGoogleAnalytics;
-
-/**
  The delegate object to receive analytics events
  
  By default, nil.
