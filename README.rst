@@ -44,11 +44,6 @@ If you want to enable VoIP using the http://webrtc.org VoIP stack, add the follo
 
     pod 'MatrixSDK/JingleCallStack'
 
-If you want to enable end-to-end encryption, add::
-
-    pod 'OLMKit'
-    pod 'Realm'
-
 
 Overview
 ========
