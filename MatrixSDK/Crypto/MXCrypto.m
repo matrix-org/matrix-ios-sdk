@@ -177,7 +177,7 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
 #endif
 }
 
-- (void)deleteStore:(void (^)())onComplete;
+- (void)deleteStore:(void (^)(void))onComplete;
 {
 #ifdef MX_CRYPTO
     dispatch_async(_cryptoQueue, ^{
@@ -1095,7 +1095,7 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
 }
 
 - (void)acceptKeyRequest:(MXIncomingRoomKeyRequest *)keyRequest
-                 success:(void (^)())success
+                 success:(void (^)(void))success
                  failure:(void (^)(NSError *error))failure
 {
 #ifdef MX_CRYPTO
@@ -1107,7 +1107,7 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
 #endif
 }
 
-- (void)acceptAllPendingKeyRequestsFromUser:(NSString *)userId andDevice:(NSString *)deviceId onComplete:(void (^)())onComplete
+- (void)acceptAllPendingKeyRequestsFromUser:(NSString *)userId andDevice:(NSString *)deviceId onComplete:(void (^)(void))onComplete
 {
 #ifdef MX_CRYPTO
     dispatch_async(_decryptionQueue, ^{
@@ -1134,7 +1134,7 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
 
 #ifdef MX_CRYPTO
 - (void)acceptKeyRequestFromCryptoThread:(MXIncomingRoomKeyRequest *)keyRequest
-                                 success:(void (^)())success
+                                 success:(void (^)(void))success
                                  failure:(void (^)(NSError *error))failure
 {
     NSString *userId = keyRequest.userId;
@@ -1169,7 +1169,7 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
 }
 #endif
 
-- (void)ignoreKeyRequest:(MXIncomingRoomKeyRequest *)keyRequest onComplete:(void (^)())onComplete
+- (void)ignoreKeyRequest:(MXIncomingRoomKeyRequest *)keyRequest onComplete:(void (^)(void))onComplete
 {
 #ifdef MX_CRYPTO
     dispatch_async(_decryptionQueue, ^{
@@ -1187,7 +1187,7 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
 #endif
 }
 
-- (void)ignoreAllPendingKeyRequestsFromUser:(NSString *)userId andDevice:(NSString *)deviceId onComplete:(void (^)())onComplete
+- (void)ignoreAllPendingKeyRequestsFromUser:(NSString *)userId andDevice:(NSString *)deviceId onComplete:(void (^)(void))onComplete
 {
 #ifdef MX_CRYPTO
     dispatch_async(_decryptionQueue, ^{

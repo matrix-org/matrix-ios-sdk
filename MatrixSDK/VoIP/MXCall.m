@@ -328,7 +328,7 @@ NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
     {
         [self setState:MXCallStateCreateAnswer reason:nil];
 
-        void(^answer)() = ^{
+        void(^answer)(void) = ^{
 
             NSLog(@"[MXCall] answer: answering...");
 

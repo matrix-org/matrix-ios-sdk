@@ -68,7 +68,7 @@ extern NSString *const MXEncryptedAttachmentsErrorDomain;
  */
 + (void)encryptAttachment:(MXMediaLoader *)uploader
                  mimeType:(NSString *)mimeType
-             dataCallback:(NSData *(^)())dataCallback
+             dataCallback:(NSData *(^)(void))dataCallback
                   success:(void(^)(NSDictionary *result))success
                   failure:(void(^)(NSError *error))failure;
 

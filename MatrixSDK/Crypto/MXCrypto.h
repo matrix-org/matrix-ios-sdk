@@ -270,7 +270,7 @@ FOUNDATION_EXPORT NSString *const kMXCryptoRoomKeyRequestCancellationNotificatio
 
  @param onComplete the callback called once operation is done.
  */
-- (void)deleteStore:(void (^)())onComplete;
+- (void)deleteStore:(void (^)(void))onComplete;
 
 
 #pragma mark - import/export
@@ -337,7 +337,7 @@ FOUNDATION_EXPORT NSString *const kMXCryptoRoomKeyRequestCancellationNotificatio
  @param failure A block object called when the operation fails.
  */
 - (void)acceptKeyRequest:(MXIncomingRoomKeyRequest *)keyRequest
-                 success:(void (^)())success
+                 success:(void (^)(void))success
                  failure:(void (^)(NSError *error))failure;
 
 /**
@@ -347,7 +347,7 @@ FOUNDATION_EXPORT NSString *const kMXCryptoRoomKeyRequestCancellationNotificatio
  @param deviceId the id of the user's device.
  @param onComplete A block object called when the operation completes.
  */
-- (void)acceptAllPendingKeyRequestsFromUser:(NSString*)userId andDevice:(NSString*)deviceId onComplete:(void (^)())onComplete;
+- (void)acceptAllPendingKeyRequestsFromUser:(NSString*)userId andDevice:(NSString*)deviceId onComplete:(void (^)(void))onComplete;
 
 /**
  Ignore a key request.
@@ -355,7 +355,7 @@ FOUNDATION_EXPORT NSString *const kMXCryptoRoomKeyRequestCancellationNotificatio
  @param keyRequest the key request to ignore
  @param onComplete A block object called when the operation completes.
  */
-- (void)ignoreKeyRequest:(MXIncomingRoomKeyRequest *)keyRequest onComplete:(void (^)())onComplete;
+- (void)ignoreKeyRequest:(MXIncomingRoomKeyRequest *)keyRequest onComplete:(void (^)(void))onComplete;
 
 /**
  Ignore all pending key requests made by a user's device.
@@ -364,7 +364,7 @@ FOUNDATION_EXPORT NSString *const kMXCryptoRoomKeyRequestCancellationNotificatio
  @param deviceId the id of the user's device.
  @param onComplete A block object called when the operation completes.
  */
-- (void)ignoreAllPendingKeyRequestsFromUser:(NSString*)userId andDevice:(NSString*)deviceId onComplete:(void (^)())onComplete;
+- (void)ignoreAllPendingKeyRequestsFromUser:(NSString*)userId andDevice:(NSString*)deviceId onComplete:(void (^)(void))onComplete;
 
 #pragma mark - Crypto settings
 

@@ -204,7 +204,7 @@ NSUInteger const SEND_KEY_REQUESTS_DELAY_MS = 500;
             return;
         }
 
-        void(^onSuccess)() = ^(NSString *eventId) {
+        void(^onSuccess)(void) = ^(void) {
             if (weakSelf)
             {
                 typeof(self) self = weakSelf;
@@ -238,7 +238,7 @@ NSUInteger const SEND_KEY_REQUESTS_DELAY_MS = 500;
 
 // given a RoomKeyRequest, send it and update the request record
 - (void)sendOutgoingRoomKeyRequest:(MXOutgoingRoomKeyRequest*)request
-                           success:(void (^)())success
+                           success:(void (^)(void))success
                            failure:(void (^)(NSError *error))failure
 {
     NSLog(@"[MXOutgoingRoomKeyRequestManager] Requesting keys for %@ from %@ (id %@)", request.requestBody, request.recipients, request.requestId);
@@ -264,7 +264,7 @@ NSUInteger const SEND_KEY_REQUESTS_DELAY_MS = 500;
 
 // given a RoomKeyRequest, cancel it and delete the request record
 - (void)sendOutgoingRoomKeyRequestCancellation:(MXOutgoingRoomKeyRequest*)request
-                                       success:(void (^)())success
+                                       success:(void (^)(void))success
                                        failure:(void (^)(NSError *error))failure
 {
     NSLog(@"[MXOutgoingRoomKeyRequestManager] Sending cancellation for key request for %@ from %@ (cancellation id %@)", request.requestBody, request.recipients, request.cancellationTxnId);
@@ -289,7 +289,7 @@ NSUInteger const SEND_KEY_REQUESTS_DELAY_MS = 500;
 - (void)sendMessageToDevices:(NSDictionary*)message
                   recipients:(NSArray<NSDictionary<NSString *,NSString *> *> *)recipients
                        txnId:(NSString*)txnId
-                     success:(void (^)())success
+                     success:(void (^)(void))success
                      failure:(void (^)(NSError *error))failure
 {
     MXUsersDevicesMap<NSDictionary*> *contentMap = [[MXUsersDevicesMap alloc] init];

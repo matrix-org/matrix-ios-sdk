@@ -54,7 +54,7 @@
     /**
      Success block for the async `startCapturingMediaWithVideo` method.
      */
-    void (^onStartCapturingMediaWithVideoSuccess)();
+    void (^onStartCapturingMediaWithVideoSuccess)(void);
 }
 
 @end

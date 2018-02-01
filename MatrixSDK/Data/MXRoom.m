@@ -710,7 +710,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
                 [msgContent removeObjectForKey:@"url"];
                 msgContent[@"file"] = result;
 
-                void(^onDidUpload)() = ^{
+                void(^onDidUpload)(void) = ^{
 
                     // Send this content (the sent state of the local echo will be updated, its local storage too).
                     MXHTTPOperation *operation2 = [self sendMessageWithContent:msgContent localEcho:&event success:onSuccess failure:onFailure];

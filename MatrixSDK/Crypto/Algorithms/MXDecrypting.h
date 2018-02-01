@@ -82,6 +82,6 @@
  @return a MXHTTPOperation instance.
  */
 - (MXHTTPOperation*)shareKeysWithDevice:(MXIncomingRoomKeyRequest*)keyRequest
-                                success:(void (^)())success
+                                success:(void (^)(void))success
                                 failure:(void (^)(NSError *error))failure;
 @end
