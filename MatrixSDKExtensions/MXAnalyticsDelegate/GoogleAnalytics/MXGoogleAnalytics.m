@@ -27,54 +27,41 @@
 
 - (void)trackStartupStorePreloadDuration: (NSTimeInterval)duration
 {
-    if ([MXSDKOptions sharedInstance].enableGoogleAnalytics)
-    {
-        int milliseconds = (duration * 1000);
-        id<GAITracker> tracker = [[GAI sharedInstance] defaultTracker];
-        [tracker send:[[GAIDictionaryBuilder createTimingWithCategory:kMXGoogleAnalyticsStartupCategory
-                                                             interval:@(milliseconds)
-                                                                 name:kMXGoogleAnalyticsStartupStorePreload
-                                                                label:nil] build]];
-    }
-    
+    int milliseconds = (duration * 1000);
+    id<GAITracker> tracker = [[GAI sharedInstance] defaultTracker];
+    [tracker send:[[GAIDictionaryBuilder createTimingWithCategory:kMXGoogleAnalyticsStartupCategory
+                                                         interval:@(milliseconds)
+                                                             name:kMXGoogleAnalyticsStartupStorePreload
+                                                            label:nil] build]];
 }
 
 - (void)trackStartupMountDataDuration: (NSTimeInterval)duration
 {
-    if ([MXSDKOptions sharedInstance].enableGoogleAnalytics)
-    {
-        int milliseconds = (duration * 1000);
-        id<GAITracker> tracker = [[GAI sharedInstance] defaultTracker];
-        [tracker send:[[GAIDictionaryBuilder createTimingWithCategory:kMXGoogleAnalyticsStartupCategory
-                                                             interval:@(milliseconds)
-                                                                 name:kMXGoogleAnalyticsStartupMountData
-                                                                label:nil] build]];
-    }
+    int milliseconds = (duration * 1000);
+    id<GAITracker> tracker = [[GAI sharedInstance] defaultTracker];
+    [tracker send:[[GAIDictionaryBuilder createTimingWithCategory:kMXGoogleAnalyticsStartupCategory
+                                                         interval:@(milliseconds)
+                                                             name:kMXGoogleAnalyticsStartupMountData
+                                                            label:nil] build]];
 }
 
 - (void)trackStartupSyncDuration: (NSTimeInterval)duration isInitial: (BOOL)isInitial
 {
-    if ([MXSDKOptions sharedInstance].enableGoogleAnalytics)
-    {
-        int milliseconds = (duration * 1000);
-        id<GAITracker> tracker = [[GAI sharedInstance] defaultTracker];
-        [tracker send:[[GAIDictionaryBuilder createTimingWithCategory:kMXGoogleAnalyticsStartupCategory
-                                                             interval:@(milliseconds)
-                                                                 name:(isInitial ? kMXGoogleAnalyticsStartupInititialSync : kMXGoogleAnalyticsStartupIncrementalSync)
-                                                                label:nil] build]];
-    }
+    int milliseconds = (duration * 1000);
+    id<GAITracker> tracker = [[GAI sharedInstance] defaultTracker];
+    [tracker send:[[GAIDictionaryBuilder createTimingWithCategory:kMXGoogleAnalyticsStartupCategory
+                                                         interval:@(milliseconds)
+                                                             name:(isInitial ? kMXGoogleAnalyticsStartupInititialSync : kMXGoogleAnalyticsStartupIncrementalSync)
+                                                            label:nil] build]];
 }
 
 - (void)trackRoomCount: (NSUInteger)roomCount
 {
-    if ([MXSDKOptions sharedInstance].enableGoogleAnalytics)
-    {
-        id<GAITracker> tracker = [[GAI sharedInstance] defaultTracker];
-        [tracker send:[[GAIDictionaryBuilder createEventWithCategory:kMXGoogleAnalyticsStatsCategory
-                                                              action:kMXGoogleAnalyticsStatsRooms
-                                                               label:nil
-                                                               value:@(roomCount)] build]];
-    }
+    id<GAITracker> tracker = [[GAI sharedInstance] defaultTracker];
+    [tracker send:[[GAIDictionaryBuilder createEventWithCategory:kMXGoogleAnalyticsStatsCategory
+                                                          action:kMXGoogleAnalyticsStatsRooms
+                                                           label:nil
+                                                           value:@(roomCount)] build]];
 }
 
 @end
