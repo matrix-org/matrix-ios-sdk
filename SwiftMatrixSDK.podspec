@@ -22,14 +22,10 @@ Pod::Spec.new do |s|
 
   s.source       = { :git => "https://github.com/matrix-org/matrix-ios-sdk.git", :tag => "v0.10.4" }
   s.source_files = "MatrixSDK", "MatrixSDK/**/*.{h,m,swift}"
-  s.exclude_files   = "MatrixSDK/**/MXGoogleAnalytics.{h,m}"
-  s.resources    = "MatrixSDK/Data/Store/MXCoreDataStore/*.xcdatamodeld"
-
-  s.frameworks   = "CoreData"
 
   s.requires_arc  = true
 
-  s.dependency 'AFNetworking', '~> 3.1.0'
+  s.dependency 'AFNetworking', '~> 3.2.0'
   s.dependency 'GZIP', '~> 1.2.1'
   
   # Requirements for e2e encryption

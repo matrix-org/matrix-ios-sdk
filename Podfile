@@ -4,13 +4,13 @@ platform :ios, "8.0"
 source 'https://github.com/CocoaPods/Specs.git'
 
 target "MatrixSDK" do
-pod 'AFNetworking', '~> 3.1.0'
+pod 'AFNetworking', '~> 3.2.0'
 pod 'GZIP', '~> 1.2.1'
 
 pod 'OLMKit', :inhibit_warnings => true
 #pod 'OLMKit', :path => '../olm/OLMKit.podspec'
 
-pod 'Realm', '~> 3.0.0'
+pod 'Realm', '~> 3.1.0'
 
 end
 
