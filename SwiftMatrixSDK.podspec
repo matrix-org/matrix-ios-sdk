@@ -29,7 +29,7 @@ Pod::Spec.new do |s|
   s.dependency 'GZIP', '~> 1.2.1'
   
   # Requirements for e2e encryption
-  ss.dependency 'OLMKit', '~> 2.2.2'
-  ss.dependency 'Realm', '~> 3.1.0'
+  s.dependency 'OLMKit', '~> 2.2.2'
+  s.dependency 'Realm', '~> 3.1.0'
 
 end
