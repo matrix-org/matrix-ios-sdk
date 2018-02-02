@@ -33,6 +33,10 @@ Pod::Spec.new do |s|
       
       ss.dependency 'AFNetworking', '~> 3.1.0'
       ss.dependency 'GZIP', '~> 1.2.1'
+
+      # Requirements for e2e encryption
+      ss.dependency 'OLMKit', '~> 2.2.2'
+      ss.dependency 'Realm', '~> 3.1.0'
   end
 
   s.subspec 'JingleCallStack' do |ss|

@@ -21,23 +21,12 @@
 
 #pragma mark - Build time options
 
-#pragma mark Automatic enabling
-/**
- These flags are automatically enabled if the application Xcode workspace contains
- their associated Cocoa pods.
- */
-
 /**
  Crypto.
 
- The crypto module depends on libolm (https://matrix.org/git/olm/ ), which the iOS wrapper
- is OLMKit:
-
-     pod 'OLMKit'
+ Enable it by default.
  */
-#if __has_include(<OLMKit/OLMKit.h>)
 #define MX_CRYPTO
-#endif
 
 
 #pragma mark - Launch time options
