@@ -11,5 +11,6 @@ xcodebuild -workspace MatrixSDK.xcworkspace/ -scheme MatrixSDK -sdk iphonesimula
 echo "3.0" > .swift-version
 
 # Run CocoaPod lint in order to check pod submission
-# Note: --allow-warnings should be moved once AFNetworking is fixed (https://github.com/AFNetworking/AFNetworking/issues/3968)
-pod lib lint --allow-warnings
+# Note: --allow-warnings should be removed once we fix our warnings with CallKit stuff only available from iOS10
+pod lib lint MatrixSDK.podspec --use-libraries --allow-warnings
+pod lib lint SwiftMatrixSDK.podspec --allow-warnings
