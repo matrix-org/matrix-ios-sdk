@@ -2091,4 +2091,18 @@ typedef enum : NSUInteger
                           success:(void (^)(MXGroupRooms *groupRooms))success
                           failure:(void (^)(NSError *error))failure;
 
+/**
+ Get the publicised groups for a list of users.
+ We got a list of group identifiers for each listed user id.
+ 
+ @param userIds the list of the user identifiers.
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+ 
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)getPublicisedGroupsForUsers:(NSArray<NSString*>*)userIds
+                                        success:(void (^)(NSDictionary<NSString*, NSArray<NSString*>*> *publicisedGroupsByUserId))success
+                                        failure:(void (^)(NSError *error))failure;
+
 @end

@@ -5788,4 +5788,75 @@ MXAuthAction;
                                  }];
 }
 
+- (MXHTTPOperation*)getPublicisedGroupsForUsers:(NSArray<NSString*>*)userIds
+                                        success:(void (^)(NSDictionary<NSString*, NSArray<NSString*>*> *publicisedGroupsByUserId))success
+                                        failure:(void (^)(NSError *error))failure
+{
+    
+    // sanity check
+    if (!userIds || !userIds.count)
+    {
+        NSError* error = [NSError errorWithDomain:@"Invalid params" code:500 userInfo:nil];
+        
+        if (failure && processingQueue)
+        {
+            dispatch_async(processingQueue, ^{
+                
+                if (completionQueue)
+                {
+                    dispatch_async(completionQueue, ^{
+                        failure(error);
+                    });
+                }
+                
+            });
+        }
+        
+        return nil;
+    }
+    
+    NSString *path = [NSString stringWithFormat:@"%@/publicised_groups", apiPathPrefix];
+    
+    return [httpClient requestWithMethod:@"POST"
+                                    path:path
+                              parameters:@{@"user_ids": userIds}
+                                 success:^(NSDictionary *JSONResponse) {
+                                     
+                                     if (success && processingQueue)
+                                     {
+                                         // Use here the processing queue in order to keep the server response order
+                                         dispatch_async(processingQueue, ^{
+                                             
+                                             NSDictionary *publicisedGroupsByUserId;
+                                             MXJSONModelSetDictionary(publicisedGroupsByUserId, JSONResponse[@"users"]);
+                                             
+                                             if (completionQueue)
+                                             {
+                                                 dispatch_async(completionQueue, ^{
+                                                     
+                                                     success(publicisedGroupsByUserId);
+                                                     
+                                                 });
+                                             }
+                                             
+                                         });
+                                     }
+                                 }
+                                 failure:^(NSError *error) {
+                                     if (failure && processingQueue)
+                                     {
+                                         dispatch_async(processingQueue, ^{
+                                             
+                                             if (completionQueue)
+                                             {
+                                                 dispatch_async(completionQueue, ^{
+                                                     failure(error);
+                                                 });
+                                             }
+                                             
+                                         });
+                                     }
+                                 }];
+}
+
 @end
