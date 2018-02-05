@@ -57,7 +57,7 @@ NSString *const kMXSessionDidLeaveGroupNotification = @"kMXSessionDidLeaveGroupN
 NSString *const kMXSessionDidUpdateGroupSummaryNotification = @"kMXSessionDidUpdateGroupSummaryNotification";
 NSString *const kMXSessionDidUpdateGroupRoomsNotification = @"kMXSessionDidUpdateGroupRoomsNotification";
 NSString *const kMXSessionDidUpdateGroupUsersNotification = @"kMXSessionDidUpdateGroupUsersNotification";
-
+NSString *const kMXSessionDidUpdatePublicisedGroupsForUsersNotification = @"kMXSessionDidUpdatePublicisedGroupsForUsersNotification";
 
 NSString *const kMXSessionNotificationRoomIdKey = @"roomId";
 NSString *const kMXSessionNotificationGroupKey = @"group";
@@ -65,6 +65,7 @@ NSString *const kMXSessionNotificationGroupIdKey = @"groupId";
 NSString *const kMXSessionNotificationEventKey = @"event";
 NSString *const kMXSessionNotificationSyncResponseKey = @"syncResponse";
 NSString *const kMXSessionNotificationErrorKey = @"error";
+NSString *const kMXSessionNotificationUserIdsArrayKey = @"userIds";
 
 NSString *const kMXSessionNoRoomTag = @"m.recent";  // Use the same value as matrix-react-sdk
 
@@ -158,6 +159,17 @@ typedef void (^MXOnResumeDone)(void);
      Tell whether the direct rooms list has been updated during last account data parsing.
      */
     BOOL didDirectRoomsChange;
+    
+    /**
+     The current publicised groups list by userId dictionary.
+     The key is the user id; the value, the list of the group ids that the user enabled in his profile.
+     */
+    NSMutableDictionary <NSString*, NSArray<NSString*>*> *publicisedGroupsByUserId;
+    
+    /**
+     The list of users for who a publicised groups list is available but outdated.
+     */
+    NSMutableArray <NSString*> *userIdsWithOutdatedPublicisedGroups;
 }
 
 /**
@@ -186,6 +198,7 @@ typedef void (^MXOnResumeDone)(void);
         accountData = [[MXAccountData alloc] init];
         peekingRooms = [NSMutableArray array];
         _preventPauseCount = 0;
+        publicisedGroupsByUserId = [[NSMutableDictionary alloc] init];
         
         firstSyncDone = NO;
         didDirectRoomsChange = NO;
@@ -661,6 +674,9 @@ typedef void (^MXOnResumeDone)(void);
         [_crypto close:NO];
         _crypto = nil;
     }
+    
+    publicisedGroupsByUserId = nil;
+    userIdsWithOutdatedPublicisedGroups = nil;
 
     // Stop background task
     id<MXBackgroundModeHandler> handler = [MXSDKOptions sharedInstance].backgroundModeHandler;
@@ -3036,6 +3052,79 @@ typedef void (^MXOnResumeDone)(void);
             [listener notify:event direction:direction andCustomObject:nil];
         }
     }
+}
+
+#pragma mark - Publicised groups
+
+- (void)markOutdatedPublicisedGroupsByUserData
+{
+    // Retrieve the current list of users for who a publicised groups list is available.
+    // A server request will be triggered only when the publicised groups will be requested again for these users.
+    userIdsWithOutdatedPublicisedGroups = [NSMutableArray arrayWithArray:[publicisedGroupsByUserId allKeys]];
+}
+
+- (NSArray<NSString *> *)publicisedGroupsForUser:(NSString*)userId
+{
+    NSArray *publicisedGroups;
+    if (userId)
+    {
+        publicisedGroups = publicisedGroupsByUserId[userId];
+        
+        BOOL shouldRefresh = NO;
+        
+        if (!publicisedGroups)
+        {
+            shouldRefresh = YES;
+            
+            // In order to prevent multiple request on the same user id, we put a temporary empty array when no value is available yet.
+            // This temporary array will be replaced by the value received from the server.
+            publicisedGroups = publicisedGroupsByUserId[userId] = @[];
+        }
+        else if (userIdsWithOutdatedPublicisedGroups.count)
+        {
+            NSUInteger index = [userIdsWithOutdatedPublicisedGroups indexOfObject:userId];
+            if (index != NSNotFound)
+            {
+                shouldRefresh = YES;
+                
+                // Remove this user id from the pending list
+                [userIdsWithOutdatedPublicisedGroups removeObjectAtIndex:index];
+            }
+        }
+        
+        if (shouldRefresh)
+        {
+            [self.matrixRestClient getPublicisedGroupsForUsers:@[userId] success:^(NSDictionary<NSString *,NSArray<NSString *> *> *updatedPublicisedGroupsByUserId) {
+                
+                // Check whether the publicised groups have been actually modified.
+                if ((publicisedGroupsByUserId[userId] || updatedPublicisedGroupsByUserId[userId]) && ![publicisedGroupsByUserId[userId] isEqualToArray:updatedPublicisedGroupsByUserId[userId]])
+                {
+                    // refresh the internal dict
+                    publicisedGroupsByUserId[userId] = updatedPublicisedGroupsByUserId[userId];
+                    
+                    // Notify the publicised groups for these users have been updated.
+                    [[NSNotificationCenter defaultCenter] postNotificationName:kMXSessionDidUpdatePublicisedGroupsForUsersNotification
+                                                                        object:self
+                                                                      userInfo:@{
+                                                                                 kMXSessionNotificationUserIdsArrayKey: @[userId]
+                                                                                 }];
+                }
+                
+                
+            } failure:^(NSError *error) {
+                
+                // We should trigger a new request for this user if his publicised groups are requested again.
+                if (!userIdsWithOutdatedPublicisedGroups)
+                {
+                    userIdsWithOutdatedPublicisedGroups = [NSMutableArray array];
+                }
+                [userIdsWithOutdatedPublicisedGroups addObject:userId];
+                
+            }];
+        }
+    }
+    
+    return publicisedGroups;
 }
 
 @end

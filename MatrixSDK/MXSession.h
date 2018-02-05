@@ -253,6 +253,14 @@ FOUNDATION_EXPORT NSString *const kMXSessionDidUpdateGroupRoomsNotification;
  */
 FOUNDATION_EXPORT NSString *const kMXSessionDidUpdateGroupUsersNotification;
 
+/**
+ Posted when MXSession has updated the publicised groups of some matrix users.
+ 
+ The passed userInfo dictionary contains:
+ - `kMXSessionNotificationUserIdsArrayKey` the list of the user ids who's the publicised groups are updated.
+ */
+FOUNDATION_EXPORT NSString *const kMXSessionDidUpdatePublicisedGroupsForUsersNotification;
+
 #pragma mark - Notifications keys
 /**
  The key in notification userInfo dictionary representating the roomId.
@@ -284,6 +292,11 @@ FOUNDATION_EXPORT NSString *const kMXSessionNotificationSyncResponseKey;
  The key in notification userInfo dictionary representating the error.
  */
 FOUNDATION_EXPORT NSString *const kMXSessionNotificationErrorKey;
+
+/**
+ The key in notification userInfo dictionary representating a list of user ids.
+ */
+FOUNDATION_EXPORT NSString *const kMXSessionNotificationUserIdsArrayKey;
 
 
 #pragma mark - Other constants
@@ -1099,5 +1112,25 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
  Unregister all listeners.
  */
 - (void)removeAllListeners;
+
+#pragma mark - Publicised groups
+
+/**
+ Force the matrix session to refresh the cached data related to the publicised groups of the users.
+ */
+- (void)markOutdatedPublicisedGroupsByUserData;
+
+/**
+ Get the current publicised groups for a matrix user.
+ If this information is not available or marked as outdated, this method returns the current
+ value and triggers a server request to retrieve the actual publicised groups of this user.
+ Listen to `kMXSessionDidUpdatePublicisedGroupsForUsersNotification` to be notified in case of update.
+ 
+ There is no new request if there is already one in progress for the provided userId.
+ 
+ @param userId the user identifiers.
+ @return the current publicised groups for the provided user.
+ */
+- (NSArray<NSString *> *)publicisedGroupsForUser:(NSString*)userId;
 
 @end
