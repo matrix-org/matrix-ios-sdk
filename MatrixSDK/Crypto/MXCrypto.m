@@ -1496,7 +1496,10 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
 
     if (devicesWithoutSession.count == 0)
     {
-        success(results);
+        if (success)
+        {
+            success(results);
+        }
         return nil;
     }
 
@@ -1557,12 +1560,19 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
             }
         }
 
-        success(results);
+        if (success)
+        {
+            success(results);
+        }
 
     } failure:^(NSError *error) {
 
         NSLog(@"[MXCrypto] ensureOlmSessionsForUsers: claimOneTimeKeysForUsersDevices request failed.");
-        failure(error);
+
+        if (failure)
+        {
+            failure(error);
+        }
     }];
 }
 
