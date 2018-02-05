@@ -1126,6 +1126,8 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
  value and triggers a server request to retrieve the actual publicised groups of this user.
  Listen to `kMXSessionDidUpdatePublicisedGroupsForUsersNotification` to be notified in case of update.
  
+ There is no new request if there is already one in progress for the provided userId.
+ 
  @param userId the user identifiers.
  @return the current publicised groups for the provided user.
  */

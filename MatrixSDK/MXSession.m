@@ -3111,7 +3111,16 @@ typedef void (^MXOnResumeDone)(void);
                 }
                 
                 
-            } failure:nil];
+            } failure:^(NSError *error) {
+                
+                // We should trigger a new request for this user if his publicised groups are requested again.
+                if (!userIdsWithOutdatedPublicisedGroups)
+                {
+                    userIdsWithOutdatedPublicisedGroups = [NSMutableArray array];
+                }
+                [userIdsWithOutdatedPublicisedGroups addObject:userId];
+                
+            }];
         }
     }
     
