@@ -47,7 +47,7 @@ Pod::Spec.new do |s|
     ss.dependency 'MatrixSDK/Core'
     
     # The Google WebRTC stack
-    ss.ios.dependency 'WebRTC', '61.5.19063'
+    ss.ios.dependency 'WebRTC', '63.11.20455'
   end
   
   s.subspec 'GoogleAnalytics' do |ss|
