@@ -2048,6 +2048,14 @@ typedef void (^MXOnResumeDone)(void);
                                                                              }];
             }
             
+            // Refresh the cached publicised groups for the current user.
+            if (!userIdsWithOutdatedPublicisedGroups)
+            {
+                userIdsWithOutdatedPublicisedGroups = [NSMutableArray array];
+            }
+            [userIdsWithOutdatedPublicisedGroups addObject:matrixRestClient.credentials.userId];
+            [self publicisedGroupsForUser:matrixRestClient.credentials.userId];
+            
             if (success)
             {
                 success();
@@ -2084,7 +2092,7 @@ typedef void (^MXOnResumeDone)(void);
             if (storedGroup != group)
             {
                 // Update the provided group instance
-                group.profile = groupProfile;
+                [group updateProfile:groupProfile];
             }
             
             if (storedGroup && [storedGroup updateProfile:groupProfile])

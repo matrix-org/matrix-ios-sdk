@@ -39,7 +39,7 @@
 /**
  The community profile.
  */
-@property (nonatomic) MXGroupProfile *profile;
+@property (nonatomic, readonly) MXGroupProfile *profile;
 
 /**
  The rooms of the community.
