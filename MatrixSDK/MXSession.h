@@ -772,16 +772,16 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
 
 #pragma mark - The user's groups
 /**
- Get the MXGroup instance of a group.
+ Get the MXGroup instance of a user's group.
  
  @param groupId The identifier to the group.
  
- @return the MXGroup instance.
+ @return the MXGroup instance. Nil if the current user does not belong to this group.
  */
 - (MXGroup *)groupWithGroupId:(NSString*)groupId;
 
 /**
- Get the list of all groups.
+ Get the list of all the user's groups.
  
  @return an array of MXGroup.
  */

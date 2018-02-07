@@ -39,6 +39,11 @@
 
 - (BOOL)updateProfile:(MXGroupProfile*)profile
 {
+    if (!_summary)
+    {
+        _summary = [[MXGroupSummary alloc] init];
+    }
+    
     if (![_summary.profile isEqual:profile])
     {
         _summary.profile = profile;
