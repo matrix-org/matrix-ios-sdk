@@ -1,3 +1,25 @@
+Changes in Matrix iOS SDK in 0.10.5 (2018-02-08)
+=============================================== 
+
+Improvements:
+ * Groups: Handle the user's groups and their data (vector-im/riot-meta#114).
+ * Groups: Add methods to accept group invite and leave it (vector-im/riot-meta#114).
+ * MXSession - Groups Flair: Handle the publicised groups for the matrix users (vector-im/riot-meta#118).
+ * MXRoomState - Groups Flair: Support the new state event type `m.room.related_groups`(vector-im/riot-meta#118).
+ * Create SDK extensions: JingleCallStack and Google Analytics are now separated from the core sdk code (PR #432).
+ * MXFileStore: Run only one background task for [MXFileStore commit] (PR #436).
+ * MXTools - Groups: add `isMatrixGroupIdentifier` method.
+ * Bumped SwiftMatrixSDK.podspec dependency to GZIP 1.2.1, thanks to @nrakochy.
+ * MXSDKOptions: Remove enableGoogleAnalytics. It is no more used (PR #448).
+ * Crypto: The crypto is now built by default in matrix-ios-sdk (PR #449).
+ * Podspec: Use the Google official pod for WebRTC, which requires iOS >= 9
+
+Bug fixes:
+ * Room Summary Notification Count is not computed correctly until entering a room with at least one message (#409).
+ * Crypto: Fix crash when we try to generate a negative number of one time keys (PR #445).
+ * Medias not loading with an optional client certificate (#446), thanks to @r2d2leboss.
+ * Crypto: Fix crash when sharing keys on broken network (PR #451).
+
 Changes in Matrix iOS SDK in 0.10.4 (2017-11-30)
 =============================================== 
 
