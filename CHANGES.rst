@@ -1,4 +1,4 @@
-Changes in Matrix iOS SDK in 0.10.5 (2018-02-08)
+Changes in Matrix iOS SDK in 0.10.5 (2018-02-09)
 =============================================== 
 
 Improvements:
@@ -12,7 +12,6 @@ Improvements:
  * Bumped SwiftMatrixSDK.podspec dependency to GZIP 1.2.1, thanks to @nrakochy.
  * MXSDKOptions: Remove enableGoogleAnalytics. It is no more used (PR #448).
  * Crypto: The crypto is now built by default in matrix-ios-sdk (PR #449).
- * Podspec: Use the Google official pod for WebRTC, which requires iOS >= 9
 
 Bug fixes:
  * Room Summary Notification Count is not computed correctly until entering a room with at least one message (#409).
