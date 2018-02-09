@@ -40,14 +40,19 @@ Pod::Spec.new do |s|
   end
 
   s.subspec 'JingleCallStack' do |ss|
-    ss.ios.deployment_target = "9.0"
+    ss.ios.deployment_target = "8.0"
     
     ss.source_files  = "MatrixSDKExtensions/VoIP/Jingle/**/*.{h,m}"
     
     ss.dependency 'MatrixSDK/Core'
     
     # The Google WebRTC stack
-    ss.ios.dependency 'GoogleWebRTC', '~>1.1.21820'
+    # Note: it is disabled because its framework does not embed x86 build which
+    # prevents us from submitting the MatrixSDK pod
+    #ss.ios.dependency 'GoogleWebRTC', '~>1.1.21820'
+    
+    # Use WebRTC build at https://github.com/Anakros/WebRTC instead
+    ss.ios.dependency 'WebRTC', '63.11.20455'
   end
   
   s.subspec 'GoogleAnalytics' do |ss|
