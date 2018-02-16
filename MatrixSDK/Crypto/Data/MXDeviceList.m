@@ -21,6 +21,7 @@
 #import "MXCrypto_Private.h"
 
 #import "MXDeviceListOperationsPool.h"
+#import "MXTools.h"
 
 @interface MXDeviceList ()
 {
@@ -97,6 +98,12 @@
 
     for (NSString *userId in userIds)
     {
+        if (![MXTools isMatrixUserIdentifier:userId])
+        {
+            NSLog(@"[MXDeviceList] downloadKeys: ERROR: Ignore malformed user id: %@", userId);
+            continue;
+        }
+
         MXDeviceTrackingStatus trackingStatus = MXDeviceTrackingStatusFromNSNumber(deviceTrackingStatus[userId]);
 
         if (trackingStatus == MXDeviceTrackingStatusDownloadInProgress)
@@ -246,6 +253,12 @@
 
 - (void)startTrackingDeviceList:(NSString*)userId
 {
+    if (![MXTools isMatrixUserIdentifier:userId])
+    {
+        NSLog(@"[MXDeviceList] startTrackingDeviceList: ERROR: Ignore malformed user id: %@", userId);
+        return;
+    }
+
     MXDeviceTrackingStatus trackingStatus = MXDeviceTrackingStatusFromNSNumber(deviceTrackingStatus[userId]);
 
     if (!trackingStatus)
