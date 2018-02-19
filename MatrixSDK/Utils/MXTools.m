@@ -23,7 +23,7 @@
 
 #pragma mark - Constant definition
 NSString *const kMXToolsRegexStringForEmailAddress          = @"[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,}";
-NSString *const kMXToolsRegexStringForMatrixUserIdentifier  = @"@[A-Z0-9._=-]+:[A-Z0-9.-]+\\.[A-Z]{2,}";
+NSString *const kMXToolsRegexStringForMatrixUserIdentifier  = @"@[\\x21-\\x39\\x3B-\\x7F]+:[A-Z0-9.-]+\\.[A-Z]{2,}";
 NSString *const kMXToolsRegexStringForMatrixRoomAlias       = @"#[A-Z0-9._%#+-]+:[A-Z0-9.-]+\\.[A-Z]{2,}";
 NSString *const kMXToolsRegexStringForMatrixRoomIdentifier  = @"![A-Z0-9]+:[A-Z0-9.-]+\\.[A-Z]{2,}";
 NSString *const kMXToolsRegexStringForMatrixEventIdentifier = @"\\$[A-Z0-9]+:[A-Z0-9.-]+\\.[A-Z]{2,}";
