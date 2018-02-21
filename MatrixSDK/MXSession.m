@@ -490,8 +490,8 @@ typedef void (^MXOnResumeDone)(void);
 - (void)pause
 {
     NSLog(@"[MXSession] pause the event stream in state %tu", _state);
-    
-    if ((_state == MXSessionStateRunning) || (_state == MXSessionStateBackgroundSyncInProgress))
+
+    if (_state == MXSessionStateRunning || _state == MXSessionStateBackgroundSyncInProgress || _state == MXSessionStatePauseRequested)
     {
         // Check that none required the session to keep running even if the app goes in
         // background
@@ -531,6 +531,10 @@ typedef void (^MXOnResumeDone)(void);
         }
 
         [self setState:MXSessionStatePaused];
+    }
+    else
+    {
+        NSLog(@"[MXSession] pause skipped because of wrong state of MXSession");
     }
 }
 
