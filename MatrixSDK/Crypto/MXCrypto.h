@@ -194,23 +194,6 @@ FOUNDATION_EXPORT NSString *const kMXCryptoRoomKeyRequestCancellationNotificatio
 - (MXDeviceInfo *)eventDeviceInfo:(MXEvent*)event;
 
 /**
- Get the stored device keys for a user's device.
-
- @param deviceId the id of the user's device.
- @param userId the user id.
- @param complete a block called with the device keys. nil if not found.
- */
-- (void)deviceWithDeviceId:(NSString*)deviceId ofUser:(NSString*)userId complete:(void (^)(MXDeviceInfo *device))complete;
-
-/**
- Get the stored device keys for a user.
-
- @param userId the user to list keys for.
- @param complete a block called with the list of devices.
- */
-- (void)devicesForUser:(NSString*)userId complete:(void (^)(NSArray<MXDeviceInfo*> *devices))complete;
-
-/**
  Update the blocked/verified state of the given device
 
  @param verificationStatus the new verification status.
@@ -235,9 +218,14 @@ FOUNDATION_EXPORT NSString *const kMXCryptoRoomKeyRequestCancellationNotificatio
                complete:(void (^)(void))complete;
 
 /**
- Download the device keys for a list of users and stores them into the crypto store.
+ Get the device keys for a list of users.
+
+ Keys will be downloaded from the matrix homeserver and stored into the crypto store
+ if the information in the store is not up-to-date.
+ 
 
  @param userIds The users to fetch.
+ @param forceDownload to force the download.
 
  @param success A block object called when the operation succeeds.
  @param failure A block object called when the operation fails.
@@ -245,8 +233,9 @@ FOUNDATION_EXPORT NSString *const kMXCryptoRoomKeyRequestCancellationNotificatio
  @return a MXHTTPOperation instance. May be nil if the data is already in the store.
  */
 - (MXHTTPOperation*)downloadKeys:(NSArray<NSString*>*)userIds
-                        success:(void (^)(MXUsersDevicesMap<MXDeviceInfo*> *usersDevicesInfoMap))success
-                        failure:(void (^)(NSError *error))failure;
+                   forceDownload:(BOOL)forceDownload
+                         success:(void (^)(MXUsersDevicesMap<MXDeviceInfo*> *usersDevicesInfoMap))success
+                         failure:(void (^)(NSError *error))failure;
 
 /**
  Reset replay attack data for the given timeline.
