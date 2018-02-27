@@ -469,14 +469,15 @@ public extension MXRestClient {
         - roomId: the id of the room.
         - eventType: the type of the event.
         - content: the content that will be sent to the server as a JSON object.
+        - txnId: the transaction id to use. If nil, one will be generated
         - completion: A block object called when the operation completes.
         - response: Provides the event id of the event generated on the home server on success.
      
      - returns: a `MXHTTPOperation` instance.
      
      */
-    @nonobjc @discardableResult func sendEvent(toRoom roomId: String, eventType: MXEventType, content: [String: Any], completion: @escaping (_ response: MXResponse<String>) -> Void) -> MXHTTPOperation {
-        return __sendEvent(toRoom: roomId, eventType: eventType.identifier, content: content, success: currySuccess(completion), failure: curryFailure(completion))
+    @nonobjc @discardableResult func sendEvent(toRoom roomId: String, eventType: MXEventType, content: [String: Any], txnId: String?, completion: @escaping (_ response: MXResponse<String>) -> Void) -> MXHTTPOperation {
+        return __sendEvent(toRoom: roomId, eventType: eventType.identifier, content: content, txnId: txnId, success: currySuccess(completion), failure: curryFailure(completion))
     }
     
     
