@@ -1565,14 +1565,21 @@ MXAuthAction;
 }
 
 #pragma mark - Room operations
-- (MXHTTPOperation*)sendEventToRoom:(NSString*)roomId
-                          eventType:(MXEventTypeString)eventTypeString
-                            content:(NSDictionary*)content
-                            success:(void (^)(NSString *eventId))success
-                            failure:(void (^)(NSError *error))failure
+- (MXHTTPOperation *)sendEventToRoom:(NSString *)roomId
+                           eventType:(MXEventTypeString)eventTypeString
+                             content:(NSDictionary *)content
+                               txnId:(NSString *)txnId
+                             success:(void (^)(NSString *))success
+                             failure:(void (^)(NSError *))failure
 {
-    // Prepare the path by adding a random transaction id (This id is used to prevent duplicated event).
-    NSString *path = [NSString stringWithFormat:@"%@/rooms/%@/send/%@/%@", apiPathPrefix, roomId, eventTypeString, [MXTools generateTransactionId]];
+    if (!txnId.length)
+    {
+        // Create a random transaction id to prevent duplicated events
+        txnId = [MXTools generateTransactionId];
+    }
+
+    // Prepare the path
+    NSString *path = [NSString stringWithFormat:@"%@/rooms/%@/send/%@/%@", apiPathPrefix, roomId, eventTypeString, [txnId stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding]];
     
     return [httpClient requestWithMethod:@"PUT"
                                     path:path
@@ -1679,7 +1686,7 @@ MXAuthAction;
     NSMutableDictionary *eventContent = [NSMutableDictionary dictionaryWithDictionary:content];
     eventContent[@"msgtype"] = msgType;
     
-    return [self sendEventToRoom:roomId eventType:kMXEventTypeStringRoomMessage content:eventContent success:success failure:failure];
+    return [self sendEventToRoom:roomId eventType:kMXEventTypeStringRoomMessage content:eventContent txnId:nil success:success failure:failure];
 }
 
 - (MXHTTPOperation*)sendTextMessageToRoom:(NSString*)roomId

@@ -365,7 +365,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
             }
 
             roomOperation = [self preserveOperationOrder:event block:^{
-                MXHTTPOperation *operation = [self _sendEventOfType:eventTypeString content:contentCopy success:onSuccess failure:onFailure];
+                MXHTTPOperation *operation = [self _sendEventOfType:eventTypeString content:contentCopy txnId:event.eventId success:onSuccess failure:onFailure];
                 [roomOperation.operation mutateTo:operation];
             }];
         }
@@ -422,7 +422,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
                     }
 
                     // Send the encrypted content
-                    MXHTTPOperation *operation2 = [self _sendEventOfType:encryptedEventType content:encryptedContent success:onSuccess failure:onFailure];
+                    MXHTTPOperation *operation2 = [self _sendEventOfType:encryptedEventType content:encryptedContent txnId:event.eventId success:onSuccess failure:onFailure];
                     if (operation2)
                     {
                         // Mutate MXHTTPOperation so that the user can cancel this new operation
@@ -467,7 +467,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
         }
 
         roomOperation = [self preserveOperationOrder:event block:^{
-            MXHTTPOperation *operation = [self _sendEventOfType:eventTypeString content:contentCopy success:onSuccess failure:onFailure];
+            MXHTTPOperation *operation = [self _sendEventOfType:eventTypeString content:contentCopy txnId:event.eventId success:onSuccess failure:onFailure];
             [roomOperation.operation mutateTo:operation];
         }];
     }
@@ -477,10 +477,11 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
 
 - (MXHTTPOperation*)_sendEventOfType:(MXEventTypeString)eventTypeString
                             content:(NSDictionary*)content
+                            txnId:(NSString*)txnId
                             success:(void (^)(NSString *eventId))success
                             failure:(void (^)(NSError *error))failure
 {
-    return [mxSession.matrixRestClient sendEventToRoom:self.roomId eventType:eventTypeString content:content success:success failure:failure];
+    return [mxSession.matrixRestClient sendEventToRoom:self.roomId eventType:eventTypeString content:content txnId:txnId success:success failure:failure];
 }
 
 - (MXHTTPOperation*)sendStateEventOfType:(MXEventTypeString)eventTypeString
