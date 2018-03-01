@@ -33,6 +33,8 @@
     MatrixSDKTestsData *matrixSDKTestsData;
 
     MXSession *mxSession;
+
+    id observer;
 }
 @end
 
@@ -52,6 +54,13 @@
         [matrixSDKTestsData closeMXSession:mxSession];
         mxSession = nil;
     }
+
+    if (observer)
+    {
+        [[NSNotificationCenter defaultCenter] removeObserver:observer];
+        observer = nil;
+    }
+
     [super tearDown];
 }
 
@@ -584,7 +593,6 @@
 
         mxSession = mxSession2;
 
-        id observer;
         observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXSessionDidSyncNotification object:mxSession queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *notif) {
 
             MXSyncResponse *syncResponse = (MXSyncResponse*)notif.userInfo[kMXSessionNotificationSyncResponseKey];
@@ -592,7 +600,6 @@
             XCTAssert([syncResponse isKindOfClass:MXSyncResponse.class]);
             XCTAssert(syncResponse.rooms.join[room.roomId], @"We should receive back the 'Hello' sent in this room");
 
-            [[NSNotificationCenter defaultCenter] removeObserver:observer];
             [expectation fulfill];
         }];
 
@@ -762,11 +769,10 @@
             [mxSession start:^{
 
                 // Listen to Alice's MXSessionNewRoomNotification event
-                __block __weak id observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXSessionNewRoomNotification object:nil queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
+                observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXSessionNewRoomNotification object:nil queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
 
                     XCTAssertEqual(mxSession, note.object, @"The MXSessionNewRoomNotification sender must be the current MXSession");
 
-                    [[NSNotificationCenter defaultCenter] removeObserver:observer];
                     [expectation fulfill];
                 }];
 
@@ -788,14 +794,13 @@
         mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
         [mxSession start:^{
 
-            __block __weak id observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXSessionNewRoomNotification object:nil queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
+            observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXSessionNewRoomNotification object:nil queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
 
                 XCTAssertEqual(mxSession, note.object, @"The MXSessionNewRoomNotification sender must be the current MXSession");
 
                 MXRoom *publicRoom = [mxSession roomWithRoomId:note.userInfo[kMXSessionNotificationRoomIdKey]];
                 XCTAssertNotNil(publicRoom);
 
-                [[NSNotificationCenter defaultCenter] removeObserver:observer];
                 [expectation fulfill];
             }];
 
@@ -825,14 +830,13 @@
             [mxSession start:^{
 
                 // Listen to Alice's MXSessionNewRoomNotification event
-                __block __weak id observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXSessionNewRoomNotification object:nil queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
+                observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXSessionNewRoomNotification object:nil queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
 
                     XCTAssertEqual(mxSession, note.object, @"The MXSessionNewRoomNotification sender must be the current MXSession");
 
                     MXRoom *publicRoom = [mxSession roomWithRoomId:note.userInfo[kMXSessionNotificationRoomIdKey]];
                     XCTAssertNotNil(publicRoom);
 
-                    [[NSNotificationCenter defaultCenter] removeObserver:observer];
                     [expectation fulfill];
                 }];
 
@@ -862,7 +866,7 @@
             [mxSession start:^{
 
                 // Listen to Alice's kMXRoomInitialSyncNotification event
-                __block __weak id observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXRoomInitialSyncNotification object:nil queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
+                observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXRoomInitialSyncNotification object:nil queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
 
                     MXRoom *publicRoom = (MXRoom*)note.object;
                     XCTAssertNotNil(publicRoom);
@@ -872,7 +876,6 @@
 
                     XCTAssertEqual(mxSession, publicRoom.mxSession, @"The session of the sent MXRoom must be the right one");
 
-                    [[NSNotificationCenter defaultCenter] removeObserver:observer];
                     [expectation fulfill];
                 }];
 
@@ -1248,7 +1251,6 @@
 
         mxSession = bobSession;
 
-        id observer;
         observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXSessionOnToDeviceEventNotification object:nil queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *notif) {
 
             XCTAssertEqual(notif.object, mxSession);
@@ -1258,8 +1260,6 @@
 
             XCTAssertEqualObjects(toDeviceEvent.sender, aliceRestClient.credentials.userId);
             XCTAssertEqual(toDeviceEvent.eventType, MXEventTypeRoomKeyRequest);
-
-            [[NSNotificationCenter defaultCenter] removeObserver:observer];
 
             [expectation fulfill];
         }];

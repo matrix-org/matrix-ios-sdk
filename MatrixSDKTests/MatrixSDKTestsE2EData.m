@@ -150,6 +150,7 @@
             }];
 
             [room inviteUser:bobSession.myUser.userId success:nil failure:^(NSError *error) {
+                [[NSNotificationCenter defaultCenter] removeObserver:observer];
                 NSAssert(NO, @"Cannot invite Bob (%@) - error: %@", bobSession.myUser.userId, error);
             }];
 
@@ -238,6 +239,7 @@
             }];
 
             [room inviteUser:samSession.myUser.userId success:nil failure:^(NSError *error) {
+                [[NSNotificationCenter defaultCenter] removeObserver:observer];
                 NSAssert(NO, @"Cannot invite Alice - error: %@", error);
             }];
 
