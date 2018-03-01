@@ -612,9 +612,6 @@ static NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
     // Once done, we are sure pending operations blocks are complete
     dispatch_sync(dispatchQueue, ^(void){
     });
-
-
-    NSLog(@"### %@", @(pendingCommits));
 }
 
 
