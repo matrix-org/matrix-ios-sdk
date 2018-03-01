@@ -77,7 +77,13 @@
     _numberOfTries = operation.numberOfTries;
     _maxNumberOfTries = operation.maxRetriesTime;
     _maxRetriesTime = operation.maxRetriesTime;
-    _canceled = operation.canceled;
+
+    // If the current operation was canceled, cancel the new one to avoid
+    // that the chained operations ends up with a successful operation
+    if (_canceled)
+    {
+        [operation cancel];
+    }
 }
 
 @end
