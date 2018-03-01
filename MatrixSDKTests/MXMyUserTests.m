@@ -185,7 +185,7 @@
         MXUser *myUser = [mxSession userWithUserId:mxSession.matrixRestClient.credentials.userId];
 
         NSString *identiconURL = [mxSession.matrixRestClient urlOfIdenticon:myUser.userId];
-        XCTAssert([identiconURL hasPrefix:@"http://localhost:8080/_matrix/media/v1/identicon/%40mxBob"]);
+        XCTAssert([identiconURL hasPrefix:@"http://localhost:8080/_matrix/media/v1/identicon/%40mxbob"]);
 
         [expectation fulfill];
     }];
