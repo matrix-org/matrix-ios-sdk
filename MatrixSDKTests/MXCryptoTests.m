@@ -1794,9 +1794,8 @@
 
                             MXRoom *roomFromNewBobPOV = [newBobSession roomWithRoomId:roomFromAlicePOV.roomId];
 
-                            // Test disabled because [MXCrypto handleDeviceListsChanged] even invalidates devices of users we do not have 2e2 rooms with 
-                            //NSDictionary<NSString*, MXDeviceInfo*> *bobDevices = [aliceSession.crypto.store devicesForUser:newBobSession.myUser.userId];
-                            //XCTAssertEqual(bobDevices.count, 0, @"Alice should not have needed Bob's keys at this time");
+                            NSDictionary<NSString*, MXDeviceInfo*> *bobDevices = [aliceSession.crypto.store devicesForUser:newBobSession.myUser.userId];
+                            XCTAssertEqual(bobDevices.count, 0, @"Alice should not have needed Bob's keys at this time");
 
                             // Turn the crypto ON in the room
                             [roomFromAlicePOV enableEncryptionWithAlgorithm:kMXCryptoMegolmAlgorithm success:^{
@@ -1808,7 +1807,7 @@
                                     XCTAssertEqual(0, [self checkEncryptedEvent:event roomId:roomFromNewBobPOV.roomId clearMessage:encryptedMessageFromAlice senderSession:aliceSession]);
 
                                     NSDictionary<NSString*, MXDeviceInfo*> *bobDevices = [aliceSession.crypto.store devicesForUser:newBobSession.myUser.userId];
-                                    XCTAssertEqual(bobDevices.count, 2, @"Alice must now know Bob's device keys");  // TODO: Should be 1. The HS should have removed the 1st Bob's device on logout but this is not yet the case
+                                    XCTAssertEqual(bobDevices.count, 1, @"Alice must now know Bob's device keys");
 
                                     [expectation fulfill];
 
