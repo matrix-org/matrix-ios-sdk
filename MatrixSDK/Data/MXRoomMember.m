@@ -90,4 +90,9 @@
     return self;
 }
 
+- (NSString *)description
+{
+    return [NSString stringWithFormat:@"<MXRoomMember: %p> userId: %@ - membership: %@", self, _userId, [MXTools membershipString:self.membership]];
+}
+
 @end
