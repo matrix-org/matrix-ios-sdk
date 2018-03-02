@@ -1044,22 +1044,24 @@
     }];
 }
 
-- (void)testUserNilDisplayName
-{
-    [matrixSDKTestsData doMXRestClientTestWithBob:self readyToTest:^(MXRestClient *bobRestClient, XCTestExpectation *expectation) {
-
-        [bobRestClient displayNameForUser:nil success:^(NSString *displayname) {
-
-            XCTAssertNil(displayname, @"mxBob has no displayname defined");
-            [expectation fulfill];
-
-        } failure:^(NSError *error) {
-            XCTFail(@"The request should not fail - NSError: %@", error);
-            [expectation fulfill];
-        }];
-        
-    }];
-}
+// Disabled as it seems that the registration method we use in tests now uses the
+// local part of the user id as the default displayname
+//- (void)testUserNilDisplayName
+//{
+//    [matrixSDKTestsData doMXRestClientTestWithBob:self readyToTest:^(MXRestClient *bobRestClient, XCTestExpectation *expectation) {
+//
+//        [bobRestClient displayNameForUser:nil success:^(NSString *displayname) {
+//
+//            XCTAssertNil(displayname, @"mxBob has no displayname defined");
+//            [expectation fulfill];
+//
+//        } failure:^(NSError *error) {
+//            XCTFail(@"The request should not fail - NSError: %@", error);
+//            [expectation fulfill];
+//        }];
+//
+//    }];
+//}
 
 
 - (void)testUserAvatarUrl
