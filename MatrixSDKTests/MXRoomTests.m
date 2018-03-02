@@ -209,7 +209,7 @@
                     MXRoom *room = [mxSession roomWithRoomId:roomId];
 
                     XCTAssertEqual(room.state.membership, MXMembershipInvite);
-                    XCTAssertEqual(room.state.members.count, 1, @"The room state information is limited while the room is joined");
+                    XCTAssertEqual(room.state.members.count, 2, @"The room state information is limited while the room is joined");
 
                     [room join:^{
 
