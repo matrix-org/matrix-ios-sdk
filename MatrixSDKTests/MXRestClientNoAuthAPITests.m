@@ -294,7 +294,6 @@
             
             XCTAssertGreaterThan(publicRoomsResponse.chunk.count, 0);
             XCTAssertGreaterThan(publicRoomsResponse.totalRoomCountEstimate, 0);
-            XCTAssertNil(publicRoomsResponse.nextBatch, @"We requested all rooms. There must not be a pagination token");
             
             MXPublicRoom *theMXPublicRoom;
             for (MXPublicRoom *room in publicRoomsResponse.chunk)
@@ -310,9 +309,24 @@
             XCTAssertEqualObjects(theMXPublicRoom.name, @"MX Public Room test");
             XCTAssertEqualObjects(theMXPublicRoom.topic, @"The public room used by SDK tests");
             XCTAssertGreaterThan(theMXPublicRoom.numJoinedMembers, 0, @"The is at least mxBob at #matrix:matrix.org");
-            
-            [expectation fulfill];
-            
+
+            if (publicRoomsResponse.nextBatch)
+            {
+                // Synapse HS (now) returns a non nil nextBatch even if it sent all room
+                // in its response.
+                // Make sure nextBatch is nil if we paginate again
+                [bobRestClient publicRoomsOnServer:nil limit:-1 since:publicRoomsResponse.nextBatch filter:nil thirdPartyInstanceId:nil includeAllNetworks:NO success:^(MXPublicRoomsResponse *publicRoomsResponse2) {
+
+                    XCTAssertNil(publicRoomsResponse2.nextBatch, @"We requested all rooms. There must not be a pagination token");
+                    [expectation fulfill];
+
+                } failure:nil];
+            }
+            else
+            {
+                [expectation fulfill];
+            }
+
         } failure:^(NSError *error) {
             XCTFail(@"The request should not fail - NSError: %@", error);
             [expectation fulfill];
@@ -331,7 +345,6 @@
 
             XCTAssertGreaterThan(publicRoomsResponse.chunk.count, 0);
             XCTAssertGreaterThan(publicRoomsResponse.totalRoomCountEstimate, 0);
-            XCTAssertNil(publicRoomsResponse.nextBatch, @"We requested all rooms. There must not be a pagination token");
 
             MXPublicRoom *theMXPublicRoom;
             for (MXPublicRoom *room in publicRoomsResponse.chunk)
@@ -348,7 +361,22 @@
             XCTAssertEqualObjects(theMXPublicRoom.topic, @"The public room used by SDK tests");
             XCTAssertGreaterThan(theMXPublicRoom.numJoinedMembers, 0, @"The is at least mxBob at #matrix:matrix.org");
 
-            [expectation fulfill];
+            if (publicRoomsResponse.nextBatch)
+            {
+                // Synapse HS (now) returns a non nil nextBatch even if it sent all room
+                // in its response.
+                // Make sure nextBatch is nil if we paginate again
+                [bobRestClient publicRoomsOnServer:nil limit:-1 since:publicRoomsResponse.nextBatch filter:nil thirdPartyInstanceId:nil includeAllNetworks:NO success:^(MXPublicRoomsResponse *publicRoomsResponse2) {
+
+                    XCTAssertNil(publicRoomsResponse2.nextBatch, @"We requested all rooms. There must not be a pagination token");
+                    [expectation fulfill];
+
+                } failure:nil];
+            }
+            else
+            {
+                [expectation fulfill];
+            }
 
         } failure:^(NSError *error) {
             XCTFail(@"The request should not fail - NSError: %@", error);
