@@ -166,7 +166,7 @@ internal func currySuccess<T, U>(transform: @escaping (_ input: T) -> U? = { ret
     return { completion(.fromOptional(value: transform($0))) }
 }
 
-/// Special case of currySuccess for Objective-C functions whose competion handlers that take no arguments
+/// Special case of currySuccess for Objective-C functions whose competion handlers take no arguments
 internal func currySuccess(_ completion: @escaping (_ response: MXResponse<Void>) -> Void) -> () -> Void {
     return { completion(MXResponse.success(Void())) }
 }
