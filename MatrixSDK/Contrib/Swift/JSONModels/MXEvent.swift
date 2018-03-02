@@ -96,6 +96,11 @@ public enum MXEventType {
         case .custom(let string): return string
         }
     }
+
+    public init(identifier: String) {
+        let events: [MXEventType] = [.roomName, .roomTopic, .roomAvatar, .roomMember, .roomCreate, .roomJoinRules, .roomPowerLevels, .roomAliases, .roomCanonicalAlias, .roomEncrypted, .roomEncryption, .roomGuestAccess, .roomHistoryVisibility, .roomKey, .roomForwardedKey, .roomKeyRequest, .roomMessage, .roomMessageFeedback, .roomRedaction, .roomThirdPartyInvite, .roomTag, .presence, .typing, .callInvite, .callCandidates, .callAnswer, .callHangup, .receipt]
+        self = events.first(where: { $0.identifier == identifier }) ?? .custom(identifier)
+    }
 }
 
 
@@ -117,6 +122,11 @@ public enum MXMessageType {
         case .file: return kMXMessageTypeFile
         case .custom(let value): return value
         }
+    }
+
+    public init(identifier: String) {
+        let messages: [MXMessageType] = [.text, .emote, .notice, .image, .audio, .video, .location, .file]
+        self = messages.first(where: { $0.identifier == identifier }) ?? .custom(identifier)
     }
 }
 

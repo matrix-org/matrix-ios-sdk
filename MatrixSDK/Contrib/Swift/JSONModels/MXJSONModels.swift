@@ -40,6 +40,11 @@ public enum MXLoginFlowType {
         case .other(let value): return value
         }
     }
+
+    public init(identifier: String) {
+        let flowTypess: [MXLoginFlowType] = [.password, .recaptcha, .OAuth2, .emailIdentity, .token, .dummy, .emailCode]
+        self = flowTypess.first(where: { $0.identifier == identifier }) ?? .other(identifier)
+    }
 }
 
 
@@ -78,6 +83,12 @@ public enum MXPushRuleKind {
         case .underride: return __MXPushRuleKindUnderride
         }
     }
+
+    public init?(identifier: __MXPushRuleKind?) {
+        let pushRules: [MXPushRuleKind] = [.override, .content, .room, .sender, .underride]
+        guard let pushRule = pushRules.first(where: { $0.identifier == identifier }) else { return nil }
+        self = pushRule
+    }
 }
 
 
@@ -94,5 +105,10 @@ public enum MXPushRuleScope {
         case .global: return "global"
         case .device(let profileTag): return "device/\(profileTag)"
         }
+    }
+
+    public init(identifier: String) {
+        let scopes: [MXPushRuleScope] = [.global]
+        self = scopes.first(where: { $0.identifier == identifier }) ?? .device(profileTag: identifier)
     }
 }
