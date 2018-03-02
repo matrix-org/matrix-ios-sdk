@@ -105,7 +105,7 @@ public enum MXMessageType {
     case text, emote, notice, image, audio, video, location, file
     case custom(String)
     
-    var identifier: String {
+    public var identifier: String {
         switch self {
         case .text: return kMXMessageTypeText
         case .emote: return kMXMessageTypeEmote
@@ -125,7 +125,7 @@ public enum MXMessageType {
 public enum MXMembership {
     case unknown, invite, join, leave, ban
     
-    var identifier: __MXMembership {
+    public var identifier: __MXMembership {
         switch self {
         case .unknown: return __MXMembershipUnknown
         case .invite: return __MXMembershipInvite
@@ -135,7 +135,7 @@ public enum MXMembership {
         }
     }
     
-    init(identifier: __MXMembership) {
+    public init(identifier: __MXMembership) {
         let possibilities: [MXMembership] = [.unknown, .invite, .join, .leave, .ban]
         self = possibilities.first(where: { $0.identifier == identifier }) ?? .unknown
     }
