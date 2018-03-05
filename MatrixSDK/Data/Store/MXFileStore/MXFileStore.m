@@ -577,15 +577,17 @@ static NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
         // Do it on the same GCD queue
         dispatch_async(dispatchQueue, ^(void){
             [[NSFileManager defaultManager] removeItemAtPath:storeBackupPath error:nil];
-            
-            if (handler)
-            {
-                // Release the background task if there is no more pending commits
-                dispatch_async(dispatch_get_main_queue(), ^(void){
 
-                    NSLog(@"[MXFileStore commit] lasted %.0fms", [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
+            // Release the background task if there is no more pending commits
+            dispatch_async(dispatch_get_main_queue(), ^(void){
 
-                    if (--pendingCommits == 0)
+                NSLog(@"[MXFileStore commit] lasted %.0fms", [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
+
+                pendingCommits--;
+
+                if (handler)
+                {
+                    if (pendingCommits == 0)
                     {
                         NSLog(@"[MXFileStore commit] Background task #%tu is complete - lasted %.0fms",
                               backgroundTaskIdentifier, [[NSDate date] timeIntervalSinceDate:backgroundTaskStartDate] * 1000);
@@ -598,8 +600,8 @@ static NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
                         NSLog(@"[MXFileStore commit] Background task #%tu is kept - running since %.0fms",
                               backgroundTaskIdentifier, [[NSDate date] timeIntervalSinceDate:backgroundTaskStartDate] * 1000);
                     }
-                });
-            }
+                }
+            });
         });
     }
 }
