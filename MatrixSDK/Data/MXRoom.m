@@ -1421,7 +1421,11 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
     // Launch the operation if there is none pending or executing.
     if (orderedOperations.count == 1)
     {
-        roomOperation.block();
+        // Dispatch so that we can return the new`roomOperation` to the caller
+        // before calling its block
+        dispatch_async(dispatch_get_main_queue(), ^{
+            roomOperation.block();
+        });
     }
 
     return roomOperation;
