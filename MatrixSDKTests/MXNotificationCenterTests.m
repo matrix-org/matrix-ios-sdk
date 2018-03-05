@@ -175,7 +175,7 @@
         }];
 
         // Make sure there 3 are peoples in the room to avoid to fire the default "room_member_count == 2" rule
-        NSString *carolId = [aliceRestClient.credentials.userId stringByReplacingOccurrencesOfString:@"mxAlice" withString:@"@mxCarol"];
+        NSString *carolId = [aliceRestClient.credentials.userId stringByReplacingOccurrencesOfString:@"mxalice" withString:@"@mxcarol"];
         [room inviteUser:carolId success:^{
 
         } failure:^(NSError *error) {
@@ -201,7 +201,7 @@
                 // We must be alerted by the default content HS rule on "mxBob"
                 XCTAssertEqual(rule.kind, MXPushRuleKindContent);
                 XCTAssert(rule.isDefault, @"The rule must be the server default rule. Rule: %@", rule);
-                XCTAssert([rule.pattern hasPrefix:@"mxBob"], @"As content rule, the pattern must be define. Rule: %@", rule);
+                XCTAssert([rule.pattern hasPrefix:@"mxbob"], @"As content rule, the pattern must be define. Rule: %@", rule);
 
                 // Check the right event has been notified
                 XCTAssertEqualObjects(event.content[@"body"], messageFromAlice, @"The wrong messsage has been caught. event: %@", event);
@@ -219,7 +219,7 @@
         }];
 
         // Make sure there 3 are peoples in the room to avoid to fire the default "room_member_count == 2" rule
-        NSString *carolId = [aliceRestClient.credentials.userId stringByReplacingOccurrencesOfString:@"mxAlice" withString:@"@mxCarol"];
+        NSString *carolId = [aliceRestClient.credentials.userId stringByReplacingOccurrencesOfString:@"mxalice" withString:@"@mxcarol"];
         [room inviteUser:carolId success:^{
 
         } failure:^(NSError *error) {

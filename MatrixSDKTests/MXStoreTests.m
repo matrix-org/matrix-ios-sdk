@@ -791,7 +791,10 @@
     __block NSUInteger eventCount = 0;
     [room.liveTimeline listenToEvents:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
 
-        eventCount++;
+        if (direction == MXTimelineDirectionBackwards)
+        {
+            eventCount++;
+        }
     }];
 
     // First count how many messages to retrieve

@@ -252,82 +252,83 @@
 }
  */
 
-- (void)testMyUserProfileUpdate
-{
-    [self doTestWithBobAndAliceActiveInARoom:^(MXRestClient *bobRestClient, MXRestClient *aliceRestClient, NSString *roomId, XCTestExpectation *expectation) {
-
-        // Do tests with Alice since tests are not supposed to change Bob's profile
-        [mxSession close];
-
-        mxSession = [[MXSession alloc] initWithMatrixRestClient:aliceRestClient];
-        [mxSession start:^{
-
-            [mxSession.myUser listenToUserUpdate:^(MXEvent *event) {
-
-                XCTAssert(event.eventType == MXEventTypePresence || event.eventType == MXEventTypeRoomMember, @"%@", event);
-
-                XCTAssertEqualObjects(mxSession.myUser.displayname, @"ALICE");
-                XCTAssertEqualObjects(mxSession.myUser.avatarUrl, kMXTestsAliceAvatarURL);
-
-                [expectation fulfill];
-
-            }];
-
-            [aliceRestClient setDisplayName:@"ALICE" success:^{
-
-            } failure:^(NSError *error) {
-                XCTFail(@"Cannot set up intial test conditions - error: %@", error);
-                [expectation fulfill];
-            }];
-
-        } failure:^(NSError *error) {
-            XCTFail(@"Cannot set up intial test conditions - error: %@", error);
-            [expectation fulfill];
-        }];
-    }];
-}
-
-
-- (void)testMyUserPresenceUpdate
-{
-    [self doTestWithBobAndAliceActiveInARoom:^(MXRestClient *bobRestClient, MXRestClient *aliceRestClient, NSString *roomId, XCTestExpectation *expectation) {
-
-        // Do tests with Alice since tests are not supposed to change Bob's profile
-        [mxSession close];
-
-        mxSession = [[MXSession alloc] initWithMatrixRestClient:aliceRestClient];
-        [mxSession start:^{
-
-            [mxSession.myUser listenToUserUpdate:^(MXEvent *event) {
-
-                // Filter first presence events for online
-                if (MXPresenceOnline != mxSession.myUser.presence)
-                {
-                    XCTAssertEqual(event.eventType, MXEventTypePresence);
-
-                    XCTAssert([mxSession.myUser.displayname isEqualToString:kMXTestsAliceDisplayName]);
-                    XCTAssert([mxSession.myUser.avatarUrl isEqualToString:kMXTestsAliceAvatarURL]);
-
-                    XCTAssertEqual(mxSession.myUser.presence, MXPresenceUnavailable);
-                    XCTAssertEqualObjects(mxSession.myUser.statusMsg, @"in Wonderland");
-                    
-                    [expectation fulfill];
-                }
-            }];
-
-            [aliceRestClient setPresence:MXPresenceUnavailable andStatusMessage:@"in Wonderland" success:^{
-
-            } failure:^(NSError *error) {
-                XCTFail(@"Cannot set up intial test conditions - error: %@", error);
-                [expectation fulfill];
-            }];
-
-        } failure:^(NSError *error) {
-            XCTFail(@"Cannot set up intial test conditions - error: %@", error);
-            [expectation fulfill];
-        }];
-
-    }];
-}
+// Disabled because presence is currently disabled on hs side
+//- (void)testMyUserProfileUpdate
+//{
+//    [self doTestWithBobAndAliceActiveInARoom:^(MXRestClient *bobRestClient, MXRestClient *aliceRestClient, NSString *roomId, XCTestExpectation *expectation) {
+//
+//        // Do tests with Alice since tests are not supposed to change Bob's profile
+//        [mxSession close];
+//
+//        mxSession = [[MXSession alloc] initWithMatrixRestClient:aliceRestClient];
+//        [mxSession start:^{
+//
+//            [mxSession.myUser listenToUserUpdate:^(MXEvent *event) {
+//
+//                XCTAssert(event.eventType == MXEventTypePresence || event.eventType == MXEventTypeRoomMember, @"%@", event);
+//
+//                XCTAssertEqualObjects(mxSession.myUser.displayname, @"ALICE");
+//                XCTAssertEqualObjects(mxSession.myUser.avatarUrl, kMXTestsAliceAvatarURL);
+//
+//                [expectation fulfill];
+//
+//            }];
+//
+//            [aliceRestClient setDisplayName:@"ALICE" success:^{
+//
+//            } failure:^(NSError *error) {
+//                XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+//                [expectation fulfill];
+//            }];
+//
+//        } failure:^(NSError *error) {
+//            XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+//            [expectation fulfill];
+//        }];
+//    }];
+//}
+//
+//
+//- (void)testMyUserPresenceUpdate
+//{
+//    [self doTestWithBobAndAliceActiveInARoom:^(MXRestClient *bobRestClient, MXRestClient *aliceRestClient, NSString *roomId, XCTestExpectation *expectation) {
+//
+//        // Do tests with Alice since tests are not supposed to change Bob's profile
+//        [mxSession close];
+//
+//        mxSession = [[MXSession alloc] initWithMatrixRestClient:aliceRestClient];
+//        [mxSession start:^{
+//
+//            [mxSession.myUser listenToUserUpdate:^(MXEvent *event) {
+//
+//                // Filter first presence events for online
+//                if (MXPresenceOnline != mxSession.myUser.presence)
+//                {
+//                    XCTAssertEqual(event.eventType, MXEventTypePresence);
+//
+//                    XCTAssert([mxSession.myUser.displayname isEqualToString:kMXTestsAliceDisplayName]);
+//                    XCTAssert([mxSession.myUser.avatarUrl isEqualToString:kMXTestsAliceAvatarURL]);
+//
+//                    XCTAssertEqual(mxSession.myUser.presence, MXPresenceUnavailable);
+//                    XCTAssertEqualObjects(mxSession.myUser.statusMsg, @"in Wonderland");
+//
+//                    [expectation fulfill];
+//                }
+//            }];
+//
+//            [aliceRestClient setPresence:MXPresenceUnavailable andStatusMessage:@"in Wonderland" success:^{
+//
+//            } failure:^(NSError *error) {
+//                XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+//                [expectation fulfill];
+//            }];
+//
+//        } failure:^(NSError *error) {
+//            XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+//            [expectation fulfill];
+//        }];
+//
+//    }];
+//}
 
 @end
