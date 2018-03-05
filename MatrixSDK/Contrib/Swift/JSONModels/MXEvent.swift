@@ -96,6 +96,11 @@ public enum MXEventType {
         case .custom(let string): return string
         }
     }
+
+    public init(identifier: String) {
+        let events: [MXEventType] = [.roomName, .roomTopic, .roomAvatar, .roomMember, .roomCreate, .roomJoinRules, .roomPowerLevels, .roomAliases, .roomCanonicalAlias, .roomEncrypted, .roomEncryption, .roomGuestAccess, .roomHistoryVisibility, .roomKey, .roomForwardedKey, .roomKeyRequest, .roomMessage, .roomMessageFeedback, .roomRedaction, .roomThirdPartyInvite, .roomTag, .presence, .typing, .callInvite, .callCandidates, .callAnswer, .callHangup, .receipt]
+        self = events.first(where: { $0.identifier == identifier }) ?? .custom(identifier)
+    }
 }
 
 
@@ -105,7 +110,7 @@ public enum MXMessageType {
     case text, emote, notice, image, audio, video, location, file
     case custom(String)
     
-    var identifier: String {
+    public var identifier: String {
         switch self {
         case .text: return kMXMessageTypeText
         case .emote: return kMXMessageTypeEmote
@@ -118,6 +123,11 @@ public enum MXMessageType {
         case .custom(let value): return value
         }
     }
+
+    public init(identifier: String) {
+        let messages: [MXMessageType] = [.text, .emote, .notice, .image, .audio, .video, .location, .file]
+        self = messages.first(where: { $0.identifier == identifier }) ?? .custom(identifier)
+    }
 }
 
 
@@ -125,7 +135,7 @@ public enum MXMessageType {
 public enum MXMembership {
     case unknown, invite, join, leave, ban
     
-    var identifier: __MXMembership {
+    public var identifier: __MXMembership {
         switch self {
         case .unknown: return __MXMembershipUnknown
         case .invite: return __MXMembershipInvite
@@ -135,7 +145,7 @@ public enum MXMembership {
         }
     }
     
-    init(identifier: __MXMembership) {
+    public init(identifier: __MXMembership) {
         let possibilities: [MXMembership] = [.unknown, .invite, .join, .leave, .ban]
         self = possibilities.first(where: { $0.identifier == identifier }) ?? .unknown
     }
