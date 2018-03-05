@@ -42,6 +42,8 @@
 
     MXSession *aliceSessionToClose;
     MXSession *bobSessionToClose;
+
+    id observer;
 }
 @end
 
@@ -57,13 +59,19 @@
 
 - (void)tearDown
 {
-    [super tearDown];
+    if (observer)
+    {
+        [[NSNotificationCenter defaultCenter] removeObserver:observer];
+        observer = nil;
+    }
 
     [aliceSessionToClose close];
     aliceSessionToClose = nil;
 
     [bobSessionToClose close];
     bobSessionToClose = nil;
+
+    [super tearDown];
 }
 
 - (NSUInteger)checkEncryptedEvent:(MXEvent*)event roomId:(NSString*)roomId clearMessage:(NSString*)clearMessage senderSession:(MXSession*)senderSession
@@ -954,15 +962,12 @@
 
             // Wait a bit before sending the 2nd message to Bob with his 2 devices.
             // We wait until Alice receives the new device information event. This cannot be more accurate.
-            id observer;
             observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXSessionOnToDeviceEventNotification object:aliceSession queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *notif) {
 
                 [roomFromAlicePOV sendTextMessage:messageFromAlice success:nil failure:^(NSError *error) {
                     XCTFail(@"Cannot set up intial test conditions - error: %@", error);
                     [expectation fulfill];
                 }];
-
-                [[NSNotificationCenter defaultCenter] removeObserver:observer];
             }];
 
         }];
@@ -1414,12 +1419,9 @@
 
         __block MXEvent *toDeviceEvent;
 
-        id observer;
         observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXSessionOnToDeviceEventNotification object:bobSession queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *notif) {
 
             toDeviceEvent = notif.userInfo[kMXSessionNotificationEventKey];
-
-            [[NSNotificationCenter defaultCenter] removeObserver:observer];
         }];
 
 
@@ -1476,12 +1478,9 @@
 
         __block MXEvent *toDeviceEvent;
 
-        id observer;
-        observer  = [[NSNotificationCenter defaultCenter] addObserverForName:kMXSessionOnToDeviceEventNotification object:bobSession queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *notif) {
+        observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXSessionOnToDeviceEventNotification object:bobSession queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *notif) {
 
             toDeviceEvent = notif.userInfo[kMXSessionNotificationEventKey];
-
-            [[NSNotificationCenter defaultCenter] removeObserver:observer];
         }];
 
         [roomFromBobPOV.liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
@@ -1503,11 +1502,11 @@
             XCTAssertEqual(event.decryptionError.code, MXDecryptingErrorUnknownInboundSessionIdCode);
 
             // The event must be decrypted once we reinject the m.room_key event
-            __block __weak id observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXEventDidDecryptNotification object:event queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
+            __block __weak id observer2 = [[NSNotificationCenter defaultCenter] addObserverForName:kMXEventDidDecryptNotification object:event queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
 
                 XCTAssert([NSThread currentThread].isMainThread);
 
-                [[NSNotificationCenter defaultCenter] removeObserver:observer];
+                [[NSNotificationCenter defaultCenter] removeObserver:observer2];
 
                 XCTAssertEqual(0, [self checkEncryptedEvent:event roomId:roomId clearMessage:messageFromAlice senderSession:aliceSession]);
                 [expectation fulfill];
@@ -1701,9 +1700,7 @@
 
                     [roomFromAlice2POV enableEncryptionWithAlgorithm:kMXCryptoMegolmAlgorithm success:^{
 
-                        __block __weak id observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXSessionNewRoomNotification object:bobSession queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
-
-                            [[NSNotificationCenter defaultCenter] removeObserver:observer];
+                        observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXSessionNewRoomNotification object:bobSession queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
 
                             [bobSession joinRoom:note.userInfo[kMXSessionNotificationRoomIdKey] success:^(MXRoom *room) {
 
@@ -2026,7 +2023,7 @@
 
 
                         // All these events must be decrypted once we import the keys
-                        __block __weak id observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXEventDidDecryptNotification object:nil queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
+                        observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXEventDidDecryptNotification object:nil queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
 
                             [encryptedEvents removeObject:note.object];
                         }];
@@ -2034,15 +2031,11 @@
                         // Import the exported keys
                         [bobSession.crypto importRoomKeys:keys success:^{
 
-                            [[NSNotificationCenter defaultCenter] removeObserver:observer];
-
                             XCTAssertEqual(encryptedEvents.count, 0, @"All events should have been decrypted after the keys import");
 
                             [expectation fulfill];
 
                         } failure:^(NSError *error) {
-
-                            [[NSNotificationCenter defaultCenter] removeObserver:observer];
 
                             XCTFail(@"The operation should not fail - NSError: %@", error);
                             [expectation fulfill];
@@ -2109,7 +2102,7 @@
 
 
                         // All these events must be decrypted once we import the keys
-                        __block __weak id observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXEventDidDecryptNotification object:nil queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
+                        observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXEventDidDecryptNotification object:nil queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
 
                             [encryptedEvents removeObject:note.object];
                         }];
@@ -2117,15 +2110,11 @@
                         // Import the exported keys
                         [bobSession.crypto importRoomKeys:keyFile withPassword:password success:^{
 
-                            [[NSNotificationCenter defaultCenter] removeObserver:observer];
-
                             XCTAssertEqual(encryptedEvents.count, 0, @"All events should have been decrypted after the keys import");
 
                             [expectation fulfill];
 
                         } failure:^(NSError *error) {
-
-                            [[NSNotificationCenter defaultCenter] removeObserver:observer];
 
                             XCTFail(@"The operation should not fail - NSError: %@", error);
                             [expectation fulfill];
@@ -2257,14 +2246,11 @@
                 }];
 
                 // 7 - aliceSession2 must receive kMXCryptoRoomKeyRequestNotification
-                id observer;
                 observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXCryptoRoomKeyRequestNotification
                                                                              object:aliceSession2.crypto
                                                                               queue:[NSOperationQueue mainQueue]
                                                                          usingBlock:^(NSNotification *notif)
                             {
-                                [[NSNotificationCenter defaultCenter] removeObserver:observer];
-
                                 // 8 - Do checks
                                 MXIncomingRoomKeyRequest *incomingKeyRequest = notif.userInfo[kMXCryptoRoomKeyRequestNotificationRequestKey];
                                 XCTAssert(incomingKeyRequest);

@@ -32,6 +32,8 @@
 @interface MXStoreTests ()
 {
     MatrixSDKTestsData *matrixSDKTestsData;
+
+    id observer;
 }
 
 @end
@@ -52,6 +54,13 @@
         [matrixSDKTestsData closeMXSession:mxSession];
         mxSession = nil;
     }
+
+    if (observer)
+    {
+        [[NSNotificationCenter defaultCenter] removeObserver:observer];
+        observer = nil;
+    }
+
     [super tearDown];
 }
 
@@ -627,18 +636,18 @@
     [room.liveTimeline listenToEvents:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
 
         // The room summary is handled afterwards
-        id observer;
-        observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXRoomSummaryDidChangeNotification object:room.summary queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
+        if (!observer)
+        {
+            observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXRoomSummaryDidChangeNotification object:room.summary queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
 
-            [[NSNotificationCenter defaultCenter] removeObserver:observer];
+                MXEvent *lastMessage2 = room.summary.lastMessageEvent;
+                XCTAssertNotNil(lastMessage2);
+                XCTAssertEqual(lastMessage2.eventType, MXEventTypeRoomMember);
+                XCTAssertNotEqualObjects(lastMessage2.eventId, lastMessage.eventId);
 
-            MXEvent *lastMessage2 = room.summary.lastMessageEvent;
-            XCTAssertNotNil(lastMessage2);
-            XCTAssertEqual(lastMessage2.eventType, MXEventTypeRoomMember);
-            XCTAssertNotEqualObjects(lastMessage2.eventId, lastMessage.eventId);
-
-            [expectation fulfill];
-        }];
+                [expectation fulfill];
+            }];
+        }
     }];
 
     [room.mxSession.myUser setDisplayName:@"Toto" success:nil failure:^(NSError *error) {
