@@ -562,16 +562,7 @@ static NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
             }
         }
 
-        [self saveRoomsDeletion];
-        [self saveRoomsMessages];
-        [self saveRoomsState];
-        [self saveRoomsSummaries];
-        [self saveRoomsAccountData];
-        [self saveReceipts];
-        [self saveUsers];
-        [self saveGroupsDeletion];
-        [self saveGroups];
-        [self saveMetaData];
+        [self saveDataToFiles];
         
         // The data saving is completed: remove the backuped data.
         // Do it on the same GCD queue
@@ -606,8 +597,35 @@ static NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
     }
 }
 
+- (void)saveDataToFiles
+{
+    // Save each components one by one
+    [self saveRoomsDeletion];
+    [self saveRoomsMessages];
+    [self saveRoomsState];
+    [self saveRoomsSummaries];
+    [self saveRoomsAccountData];
+    [self saveReceipts];
+    [self saveUsers];
+    [self saveGroupsDeletion];
+    [self saveGroups];
+    [self saveMetaData];
+}
+
 - (void)close
 {
+    NSLog(@"[MXFileStore] close: %tu pendingCommits", pendingCommits);
+
+    // Flush pending commits
+    if (pendingCommits)
+    {
+        [self saveDataToFiles];
+
+        dispatch_sync(dispatchQueue, ^(void){
+            [[NSFileManager defaultManager] removeItemAtPath:storeBackupPath error:nil];
+        });
+    }
+
     // Do a dummy sync dispatch on the queue
     // Once done, we are sure pending operations blocks are complete
     dispatch_sync(dispatchQueue, ^(void){
