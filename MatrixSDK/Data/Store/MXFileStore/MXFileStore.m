@@ -1252,9 +1252,6 @@ static NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
     {
         metaDataHasChanged = NO;
 
-        // Take a snapshot of metadata to store it on the other thread
-        MXFileStoreMetaData *metaData2 = [metaData copy];
-
 #if DEBUG
         NSLog(@"[MXFileStore commit] queuing saveMetaData");
 #endif
@@ -1279,11 +1276,12 @@ static NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
                 [[NSFileManager defaultManager] moveItemAtPath:file toPath:backupFile error:nil];
             }
 
-            // Store new data
-            [NSKeyedArchiver archiveRootObject:metaData2 toFile:file];
-            
             // Make sure the data will be backed up with the right events stream token from here.
-            backupEventStreamToken = metaData2.eventStreamToken;
+            backupEventStreamToken = metaData.eventStreamToken;
+
+            // Store new data
+            [NSKeyedArchiver archiveRootObject:metaData toFile:file];
+
 #if DEBUG
             NSLog(@"[MXFileStore commit] lasted %.0fms for metadata", [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
 #endif
