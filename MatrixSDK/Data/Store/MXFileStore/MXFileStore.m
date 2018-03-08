@@ -599,7 +599,7 @@ static NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
 
 - (void)saveDataToFiles
 {
-    // Save each components one by one
+    // Save each component one by one
     [self saveRoomsDeletion];
     [self saveRoomsMessages];
     [self saveRoomsState];
