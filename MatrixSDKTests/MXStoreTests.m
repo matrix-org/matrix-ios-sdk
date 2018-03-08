@@ -1449,12 +1449,18 @@
 
                                                 NSArray<MXRoom*> *roomsWithTagTag1 = [mxSession roomsWithTag:tag1];
                                                 XCTAssertEqual(roomsWithTagTag1.count, 2);
-                                                XCTAssertEqualObjects(roomsWithTagTag1[0].accountData.tags[tag1].order, @"0.1");
-                                                XCTAssertEqualObjects(roomsWithTagTag1[1].accountData.tags[tag1].order, @"0.2");
+                                                if (roomsWithTagTag1.count >= 2)
+                                                {
+                                                    XCTAssertEqualObjects(roomsWithTagTag1[0].accountData.tags[tag1].order, @"0.1");
+                                                    XCTAssertEqualObjects(roomsWithTagTag1[1].accountData.tags[tag1].order, @"0.2");
+                                                }
 
                                                 NSArray<MXRoom*> *roomsWithTagTag2 = [mxSession roomsWithTag:tag2];
                                                 XCTAssertEqual(roomsWithTagTag2.count, 1);
-                                                XCTAssertEqualObjects(roomsWithTagTag2[0].accountData.tags[tag2].order, @"0.1");
+                                                if (roomsWithTagTag2.count >= 1)
+                                                {
+                                                    XCTAssertEqualObjects(roomsWithTagTag2[0].accountData.tags[tag2].order, @"0.1");
+                                                }
 
                                                 [expectation fulfill];
 
