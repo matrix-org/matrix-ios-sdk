@@ -1147,8 +1147,35 @@ public extension MXRestClient {
     @nonobjc @discardableResult func intialSync(ofRoom roomId: String, limit: UInt, completion: @escaping (_ response: MXResponse<MXRoomInitialSync>) -> Void) -> MXHTTPOperation {
         return __initialSync(ofRoom: roomId, withLimit: Int(limit), success: currySuccess(completion), failure: curryFailure(completion))
     }
-    
-    
+
+
+    /**
+     Retrieve an event from its event id.
+
+     - parameters:
+        - eventId: the id of the event to get context around.
+        - completion: A block object called when the operation completes.
+        - response: Provides the model created from the homeserver JSON response on success.
+     */
+    @nonobjc @discardableResult func event(withEventId eventId: String, completion: @escaping (_ response: MXResponse<MXEvent>) -> Void) -> MXHTTPOperation {
+        return __event(withEventId: eventId, success: currySuccess(completion), failure: curryFailure(completion))
+    }
+
+
+    /**
+     Retrieve an event from its room id and event id.
+
+     - parameters:
+        - eventId: the id of the event to get context around.
+        - roomId: the id of the room to get events from.
+        - completion: A block object called when the operation completes.
+        - response: Provides the model created from the homeserver JSON response on success.
+     */
+    @nonobjc @discardableResult func event(withEventId eventId: String, inRoom roomId: String, completion: @escaping (_ response: MXResponse<MXEvent>) -> Void) -> MXHTTPOperation {
+        return __event(withEventId: eventId, inRoom: roomId, success: currySuccess(completion), failure: curryFailure(completion))
+    }
+
+
     /**
      Get the context surrounding an event.
      

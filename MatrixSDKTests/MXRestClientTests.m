@@ -867,6 +867,70 @@
     }];
 }
 
+- (void)testEventWithEventId
+{
+    [matrixSDKTestsData doMXRestClientTestWithBobAndARoom:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
+
+        NSString *message = @"This is text message";
+
+        [bobRestClient sendTextMessageToRoom:roomId text:message success:^(NSString *eventId) {
+
+            XCTAssertNotNil(eventId);
+
+            [bobRestClient eventWithEventId:eventId success:^(MXEvent *event) {
+
+                XCTAssertNotNil(event);
+
+                XCTAssertEqualObjects(event.eventId, eventId);
+                XCTAssertEqualObjects(event.type, kMXEventTypeStringRoomMessage);
+                XCTAssertEqualObjects(event.content[@"body"], message);
+
+                [expectation fulfill];
+
+            } failure:^(NSError *error) {
+                XCTFail(@"The request should not fail - NSError: %@", error);
+                [expectation fulfill];
+            }];
+
+        } failure:^(NSError *error) {
+            XCTFail(@"The request should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+    }];
+}
+
+- (void)testEventWithEventIdInRoomId
+{
+    [matrixSDKTestsData doMXRestClientTestWithBobAndARoom:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
+
+        NSString *message = @"This is text message";
+
+        [bobRestClient sendTextMessageToRoom:roomId text:message success:^(NSString *eventId) {
+
+            XCTAssertNotNil(eventId);
+
+            [bobRestClient eventWithEventId:eventId inRoom:roomId success:^(MXEvent *event) {
+
+                XCTAssertNotNil(event);
+
+                XCTAssertEqualObjects(event.eventId, eventId);
+                XCTAssertEqualObjects(event.type, kMXEventTypeStringRoomMessage);
+                XCTAssertEqualObjects(event.content[@"body"], message);
+
+                [expectation fulfill];
+
+            } failure:^(NSError *error) {
+                XCTFail(@"The request should not fail - NSError: %@", error);
+                [expectation fulfill];
+            }];
+
+        } failure:^(NSError *error) {
+            XCTFail(@"The request should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+    }];
+}
+
 - (void)testContextOfEvent
 {
     [matrixSDKTestsData doMXRestClientTestWithBobAndARoomWithMessages:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {

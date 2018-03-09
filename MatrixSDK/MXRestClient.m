@@ -3103,17 +3103,128 @@ MXAuthAction;
                                      if (failure && processingQueue)
                                      {
                                          dispatch_async(processingQueue, ^{
-                                             
+
                                              if (completionQueue)
                                              {
                                                  dispatch_async(completionQueue, ^{
                                                      failure(error);
                                                  });
                                              }
-                                             
+
                                          });
                                      }
                                  }];
+}
+
+- (MXHTTPOperation*)eventWithEventId:(NSString*)eventId
+                             success:(void (^)(MXEvent *event))success
+                             failure:(void (^)(NSError *error))failure
+{
+    NSString *path = [NSString stringWithFormat:@"%@/events/%@", apiPathPrefix, eventId];
+
+    MXHTTPOperation *operation;
+    operation = [httpClient requestWithMethod:@"GET"
+                                         path:path
+                                   parameters:nil
+                                      success:^(NSDictionary *JSONResponse) {
+                                          if (success && processingQueue)
+                                          {
+                                              // Create model from JSON dictionary on the processing queue
+                                              dispatch_async(processingQueue, ^{
+
+                                                  MXEvent *event = [MXEvent modelFromJSON:JSONResponse];
+
+                                                  if (completionQueue)
+                                                  {
+                                                      dispatch_async(completionQueue, ^{
+                                                          success(event);
+                                                      });
+                                                  }
+                                              });
+                                          }
+                                      }
+                                      failure:^(NSError *error) {
+
+                                          if (failure && processingQueue)
+                                          {
+                                              dispatch_async(processingQueue, ^{
+
+                                                  if (completionQueue)
+                                                  {
+                                                      dispatch_async(completionQueue, ^{
+                                                          failure(error);
+                                                      });
+                                                  }
+                                              });
+                                          }
+                                      }];
+    return operation;
+}
+
+- (MXHTTPOperation*)eventWithEventId:(NSString*)eventId
+                              inRoom:(NSString*)roomId
+                             success:(void (^)(MXEvent *event))success
+                             failure:(void (^)(NSError *error))failure
+{
+    NSString *path = [NSString stringWithFormat:@"%@/rooms/%@/event/%@", apiPathPrefix, roomId, eventId];
+
+    MXHTTPOperation *operation;
+    operation = [httpClient requestWithMethod:@"GET"
+                                         path:path
+                                   parameters:nil
+                                      success:^(NSDictionary *JSONResponse) {
+                                          if (success && processingQueue)
+                                          {
+                                              // Create model from JSON dictionary on the processing queue
+                                              dispatch_async(processingQueue, ^{
+
+                                                  MXEvent *event = [MXEvent modelFromJSON:JSONResponse];
+
+                                                  if (completionQueue)
+                                                  {
+                                                      dispatch_async(completionQueue, ^{
+                                                          success(event);
+                                                      });
+                                                  }
+                                              });
+                                          }
+                                      }
+                                      failure:^(NSError *error) {
+
+                                          // The HS may not support the `/rooms/{roomId}/event/{eventId}` API yet.
+                                          // Try to use the older `/context` API as fallback
+                                          MXError *mxError = [[MXError alloc] initWithNSError:error];
+                                          if (mxError && [mxError.errcode isEqualToString:kMXErrCodeStringUnrecognized])
+                                          {
+                                              NSLog(@"[MXRestClient] eventWithEventId: The homeserver does not support `/rooms/{roomId}/event/{eventId}` API. Try with `/context`");
+
+                                              MXHTTPOperation *operation2 = [self contextOfEvent:eventId inRoom:roomId limit:1 success:^(MXEventContext *eventContext) {
+
+                                                  if (success)
+                                                  {
+                                                      success(eventContext.event);
+                                                  }
+
+                                              } failure:failure];
+
+                                              [operation mutateTo:operation2];
+                                              return;
+                                          }
+
+                                          if (failure && processingQueue)
+                                          {
+                                              dispatch_async(processingQueue, ^{
+
+                                                  if (completionQueue)
+                                                  {
+                                                      dispatch_async(completionQueue, ^{
+                                                          failure(error);
+                                                      });
+                                                  }
+                                              });
+                                          }
+                                      }];
+    return operation;
 }
 
 - (MXHTTPOperation*)contextOfEvent:(NSString*)eventId
