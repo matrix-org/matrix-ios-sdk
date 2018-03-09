@@ -663,7 +663,7 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
     {
         // Use a /context request to check whether the redacted event is a state event or not.
         __weak typeof(self) weakSelf = self;
-        httpOperation = [room.mxSession.matrixRestClient eventWithEventId:redactionEvent.redacts  inRoom:room.roomId success:^(MXEvent *event) {
+        httpOperation = [room.mxSession.matrixRestClient eventWithEventId:redactionEvent.redacts inRoom:room.roomId success:^(MXEvent *event) {
 
             if (!weakSelf || !httpOperation)
             {
