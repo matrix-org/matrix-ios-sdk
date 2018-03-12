@@ -42,3 +42,7 @@ Nick Rakochy <nick.rakochy at gmail.com>
 Pierre Dubois <pierre.dubois8989 at gmail.com>
   * PR #447 MXMediaLoader: handles client certificate case
  
+John Flanagan <john.flanagan at spok.com>
+  * PR #463 Fix compatibility with Swift 4.0 (issue #393)
+  * PR #465 SwiftMatrixSDK: Enum cleanup
+ 
