@@ -1217,6 +1217,27 @@ typedef enum : NSUInteger
                               success:(void (^)(MXRoomInitialSync *roomInitialSync))success
                               failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
+/**
+ Retrieve an event from its event id.
+
+ @param eventId the id of the event to retrieve.
+ @param callback the asynchronous callback called with the response
+ */
+- (MXHTTPOperation*)eventWithEventId:(NSString*)eventId
+                             success:(void (^)(MXEvent *event))success
+                             failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
+
+/**
+ Retrieve an event from its room id and event id.
+
+ @param eventId the id of the event to retrieve.
+ @param roomId the id of the room where the event is.
+ @param callback the asynchronous callback called with the response
+ */
+- (MXHTTPOperation*)eventWithEventId:(NSString*)eventId
+                              inRoom:(NSString*)roomId
+                             success:(void (^)(MXEvent *event))success
+                             failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 /**
  Get the context surrounding an event.
