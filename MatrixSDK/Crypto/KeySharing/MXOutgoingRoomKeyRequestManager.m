@@ -281,7 +281,10 @@ NSUInteger const SEND_KEY_REQUESTS_DELAY_MS = 500;
         {
             [self->cryptoStore deleteOutgoingRoomKeyRequestWithRequestId:request.requestId];
 
-            success();
+            if (success)
+            {
+                success();
+            }
         }
     } failure:failure];
 }
