@@ -76,7 +76,9 @@ NSString * const kMXCallKitAdapterAudioSessionDidActive = @"kMXCallKitAdapterAud
 - (void)dealloc
 {
     // CXProvider instance must be invalidated otherwise it will be leaked
+    [_provider setDelegate:nil queue:nil];
     [_provider invalidate];
+    _provider = nil;
 }
 
 #pragma mark - Public
