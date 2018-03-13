@@ -4,6 +4,7 @@ Changes in Matrix iOS SDK in 0.10.6 (2018-03-12)
 Improvements:
  * SwiftMatrixSDK is now compatible with Swift 4, thanks to @johnflanagan-spok (PR #463).
  * Crypto: Make sure we request keys for only valid matrix user ids.
+ * MXRoom: We should retry messages with same txn id when hitting 'resend' (vector-im/riot-ios#1731).
  * MXTools: Make isMatrixUserIdentifier support historical user ids (vector-im/riot-ios#1743).
  * MXRestClient: Add [MXRestClient eventWithEventId:] and [MXRestClient eventWithEventId:inRoom:].
  * Improve server load on event redaction (vector-im/riot-ios#1730).
@@ -11,14 +12,13 @@ Improvements:
  
 Bug fixes:
  * Push: Missing push notifications after answering a call (vector-im/riot-ios#1757).
- * MXTools: Fix the regex part for the HS domain part in all isMatrixXxxxIdentifier methods.
- * MXRoom: We should retry messages with same txn id when hitting 'resend' (vector-im/riot-ios#1731).
  * MXRoom: Canceled message can be sent if there is only one in the message sending queue.
+ * MXTools: Fix the regex part for the HS domain part in all isMatrixXxxxIdentifier methods.
  * MXFileStore: commits can stay pending after [MXFileStore close].
  * MXFileStore: Make sure data is flushed to files on [MXFileStore close].
  * MXFileStore: The  metadata (containing eventStremToken) can be not stored in files.
- * MXMXOutgoingRoomKeyRequestManager: Fix crash reported by app store.
- * MXCallKitAdapter: Clean better when releasing an instance
+ * MXOutgoingRoomKeyRequestManager: Fix crash reported by app store.
+ * MXCallKitAdapter: Clean better when releasing an instance.
 
 API breaks:
  * MXCrypto: Remove deviceWithDeviceId and devicesForUser methods because they return local values that may be out of sync. Use downloadKeys instead (vector-im/riot-ios#1782).
