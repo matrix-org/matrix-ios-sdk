@@ -35,11 +35,6 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
 @interface MXRoom ()
 {
     /**
-     Tell whether the heuristic method used to detect direct room should be applied on this room when the user joins it.
-     */
-    BOOL shouldCheckDirectStatusOnJoin;
-
-    /**
      The list of room operations (sending of text, images...) that must be sent
      in the same order as the user typed them.
      These operations are stored in a FIFO and executed one after the other.
@@ -60,7 +55,6 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
 
         _typingUsers = [NSArray array];
         
-        shouldCheckDirectStatusOnJoin = NO;
         orderedOperations = [NSMutableArray array];
         
         _directUserId = nil;
@@ -180,19 +174,6 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
 
     // Handle account data events (if any)
     [self handleAccounDataEvents:roomSync.accountData.events direction:MXTimelineDirectionForwards];
-    
-    // Check whether the room was pending on an invitation without 'is_direct' flag.
-    if (shouldCheckDirectStatusOnJoin)
-    {
-        shouldCheckDirectStatusOnJoin = NO;
-        
-        if (self.looksLikeDirect)
-        {
-            [self setIsDirect:YES withUserId:nil success:nil failure:^(NSError *error) {
-                NSLog(@"[MXSession] Failed to tag an joined room as a direct chat");
-            }];
-        }
-    }
 }
 
 - (void)handleInvitedRoomSync:(MXInvitedRoomSync *)invitedRoomSync
@@ -213,12 +194,6 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
     if (myUser.originalEvent.content[@"is_direct"])
     {
         isDirect = [((NSNumber*)myUser.originalEvent.content[@"is_direct"]) boolValue];
-    }
-    else
-    {
-        // If there is no 'is_direct' tag, we'll have to apply heuristics to decide whether to consider it a DM
-        // (given it may have come from a client that doesn't know about m.direct).
-        shouldCheckDirectStatusOnJoin = YES;
     }
     
     if (isDirect)
