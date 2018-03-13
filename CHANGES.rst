@@ -12,6 +12,7 @@ Improvements:
  
 Bug fixes:
  * Push: Missing push notifications after answering a call (vector-im/riot-ios#1757).
+ * Direct Chat: a room was marked as direct by mistake when I joined it.
  * MXRoom: Canceled message can be sent if there is only one in the message sending queue.
  * MXTools: Fix the regex part for the HS domain part in all isMatrixXxxxIdentifier methods.
  * MXFileStore: commits can stay pending after [MXFileStore close].
