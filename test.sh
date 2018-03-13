@@ -3,7 +3,7 @@
 set -e
 set -x
 
-pod update
+pod install
 #xcodebuild -workspace MatrixSDK.xcworkspace/ -scheme MatrixSDK -sdk iphonesimulator analyze
 
 git -C synapse pull || git clone https://github.com/matrix-org/synapse
