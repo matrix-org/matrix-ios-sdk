@@ -42,14 +42,10 @@ NSString *const kMXRoomSummaryDidChangeNotification = @"kMXRoomSummaryDidChangeN
     if (self)
     {
         _roomId = theRoomId;
-        _mxSession = matrixSession;
         _lastMessageOthers = [NSMutableDictionary dictionary];
         _others = [NSMutableDictionary dictionary];
 
-        // Listen to the event sent state changes
-        // This is used to follow evolution of local echo events
-        // (ex: when a sentState change from sending to sentFailed)
-        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(eventDidChangeSentState:) name:kMXEventDidChangeSentStateNotification object:nil];
+        [self setMatrixSession:matrixSession];
     }
 
     return self;
@@ -60,12 +56,26 @@ NSString *const kMXRoomSummaryDidChangeNotification = @"kMXRoomSummaryDidChangeN
     NSLog(@"[MXKRoomSummary] Destroy %p - room id: %@", self, _roomId);
 
     [[NSNotificationCenter defaultCenter] removeObserver:self name:kMXEventDidChangeSentStateNotification object:nil];
+    [[NSNotificationCenter defaultCenter] removeObserver:self name:kMXRoomDidFlushDataNotification object:nil];
 }
 
 - (void)setMatrixSession:(MXSession *)mxSession
 {
-    _mxSession = mxSession;
-}
+    if (!_mxSession)
+    {
+        _mxSession = mxSession;
+
+        // Listen to the event sent state changes
+        // This is used to follow evolution of local echo events
+        // (ex: when a sentState change from sending to sentFailed)
+        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(eventDidChangeSentState:) name:kMXEventDidChangeSentStateNotification object:nil];
+
+        // Listen to data being flush in a room
+        // This is used to update the room summary in case of a state event redaction
+        // We may need to update the room displayname when it happens
+        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(roomDidFlushData:) name:kMXRoomDidFlushDataNotification object:nil];
+    }
+ }
 
 - (void)save:(BOOL)commit
 {
@@ -314,6 +324,16 @@ NSString *const kMXRoomSummaryDidChangeNotification = @"kMXRoomSummaryDidChangeN
     }
 }
 
+- (void)roomDidFlushData:(NSNotification *)notif
+{
+    MXRoom *room = notif.object;
+    if (_mxSession == room.mxSession && [_roomId isEqualToString:room.state.roomId])
+    {
+        NSLog(@"[MXRoomSummary] roomDidFlushData: %@", _roomId);
+
+        [self resetRoomStateData];
+    }
+}
 
 #pragma mark - Others
 - (NSUInteger)localUnreadEventCount
