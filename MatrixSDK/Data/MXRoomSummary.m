@@ -331,10 +331,7 @@ NSString *const kMXRoomSummaryDidChangeNotification = @"kMXRoomSummaryDidChangeN
     {
         NSLog(@"[MXRoomSummary] roomDidFlushData: %@", _roomId);
 
-        if ([_mxSession.roomSummaryUpdateDelegate session:_mxSession updateRoomSummary:self withStateEvents:room.state.stateEvents])
-        {
-            [self save:YES];
-        }
+        [self resetRoomStateData];
     }
 }
 
