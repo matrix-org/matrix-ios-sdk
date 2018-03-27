@@ -670,8 +670,34 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
     }
     else if (!redactedEvent)
     {
-        // TODO: Retrieve the event from the HS to check whether the redacted event is a state event or not
-        NSLog(@"[MXEventTimeline] handleRedaction: the redacted event is unknown. TODO: Fetch it from the homeserver");
+        NSLog(@"[MXEventTimeline] handleRedaction: the redacted event is unknown. Fetch it from the homeserver");
+
+        // Retrieve the event from the HS to check whether the redacted event is a state event or not
+        __weak typeof(self) weakSelf = self;
+        httpOperation = [room.mxSession.matrixRestClient eventWithEventId:redactionEvent.redacts inRoom:room.roomId success:^(MXEvent *event) {
+
+            NSLog(@"[MXEventTimeline] handleRedaction: the redacted event is a state event in the past. TODO: prune prev_content of the new state event");
+
+            if (!weakSelf || !httpOperation)
+            {
+                return;
+            }
+
+            typeof(self) self = weakSelf;
+            self->httpOperation = nil;
+
+        } failure:^(NSError *error) {
+
+            if (!weakSelf || !httpOperation)
+            {
+                return;
+            }
+
+            typeof(self) self = weakSelf;
+            self->httpOperation = nil;
+
+            NSLog(@"[MXEventTimeline] handleRedaction: failed to retrieved the redacted event");
+        }];
     }
 }
 
