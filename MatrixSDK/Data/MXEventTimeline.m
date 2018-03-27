@@ -602,7 +602,7 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
 #pragma mark - Specific events Handling
 - (void)handleRedaction:(MXEvent*)redactionEvent
 {
-    NSLog(@"[MXEventTimeline] handle an event redaction");
+    NSLog(@"[MXEventTimeline] handleRedaction: handle an event redaction");
     
     // Check whether the redacted event is stored in room messages
     MXEvent *redactedEvent = [store eventWithEventId:redactionEvent.redacts inRoom:_state.roomId];
@@ -627,7 +627,7 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
             
             if ([stateEvent.eventId isEqualToString:redactionEvent.redacts])
             {
-                NSLog(@"[MXEventTimeline] the current room state has been modified by the event redaction.");
+                NSLog(@"[MXEventTimeline] handleRedaction: the current room state has been modified by the event redaction.");
                 
                 // Redact the stored event
                 redactedEvent = [stateEvent prune];
@@ -656,15 +656,28 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
             }
         }
     }
-    
-    // Re-sync the room in case of redacted state event from the past.
+
+    // We need to figure out if this redacted event is a room state in the past.
+    // If yes, we must prune the `prev_content` of the state event that replaced it.
     // Indeed, redacted information shouldn't spontaneously appear when you backpaginate...
-    if (!redactedEvent)
+    // TODO: This is no more implemented (see https://github.com/vector-im/riot-ios/issues/443).
+    // The previous implementation based on a room initial sync was too heavy server side
+    // and has been removed.
+    if (redactedEvent.isState)
     {
-        // Retrieve the event from the HS to check whether the redacted event is a state event or not.
+        // TODO
+        NSLog(@"[MXEventTimeline] handleRedaction: the redacted event is a former state event. TODO: prune prev_content of the new state event");
+    }
+    else if (!redactedEvent)
+    {
+        NSLog(@"[MXEventTimeline] handleRedaction: the redacted event is unknown. Fetch it from the homeserver");
+
+        // Retrieve the event from the HS to check whether the redacted event is a state event or not
         __weak typeof(self) weakSelf = self;
         httpOperation = [room.mxSession.matrixRestClient eventWithEventId:redactionEvent.redacts inRoom:room.roomId success:^(MXEvent *event) {
 
+            NSLog(@"[MXEventTimeline] handleRedaction: the redacted event is a state event in the past. TODO: prune prev_content of the new state event");
+
             if (!weakSelf || !httpOperation)
             {
                 return;
@@ -672,15 +685,9 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
 
             typeof(self) self = weakSelf;
             self->httpOperation = nil;
-            
-            if (event.isState)
-            {
-                NSLog(@"[MXEventTimeline] the redacted event is a state event from the past");
-                [self forceRoomServerSync];
-            }
-            
+
         } failure:^(NSError *error) {
-            
+
             if (!weakSelf || !httpOperation)
             {
                 return;
@@ -688,70 +695,10 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
 
             typeof(self) self = weakSelf;
             self->httpOperation = nil;
-            
+
             NSLog(@"[MXEventTimeline] handleRedaction: failed to retrieved the redacted event");
-            [self forceRoomServerSync];
         }];
     }
-    else if (redactedEvent.isState)
-    {
-        NSLog(@"[MXEventTimeline] the redacted event is a former state event");
-        [self forceRoomServerSync];
-    }
-}
-
-- (void)forceRoomServerSync
-{
-    // Reset the storage of this room. Re-sync it from the server
-    NSLog(@"[MXEventTimeline] re-sync room (%@) from the server.", room.roomId);
-    [store deleteRoom:room.roomId];
-    
-    // Make an /initialSync request to get data
-    // Use a 0 messages limit for now because:
-    //    - /initialSync is marked as obsolete in the spec
-    //    - MXEventTimeline does not have methods to handle /initialSync responses
-    // So, avoid to write temparary code and let the user uses [MXEventTimeline paginate]
-    // to get room messages.
-    __weak typeof(self) weakSelf = self;
-    httpOperation = [room.mxSession.matrixRestClient initialSyncOfRoom:room.roomId withLimit:0 success:^(MXRoomInitialSync *roomInitialSync) {
-        
-        if (!weakSelf || !httpOperation)
-        {
-            return;
-        }
-
-        typeof(self) self = weakSelf;
-        self->httpOperation = nil;
-        
-        self->_state = [[MXRoomState alloc] initWithRoomId:self->room.roomId andMatrixSession:self->room.mxSession andDirection:YES];
-        [self initialiseState:roomInitialSync.state];
-        
-        // Update store with new room state when all state event have been processed
-        if ([self->store respondsToSelector:@selector(storeStateForRoom:stateEvents:)])
-        {
-            [self->store storeStateForRoom:self->_state.roomId stateEvents:self->_state.stateEvents];
-        }
-        
-        [self resetPagination];
-        
-        // Notify that room history has been flushed
-        [[NSNotificationCenter defaultCenter] postNotificationName:kMXRoomDidFlushDataNotification
-                                                            object:self->room
-                                                          userInfo:nil];
-        
-    } failure:^(NSError *error) {
-
-        if (weakSelf)
-        {
-            typeof(self) self = weakSelf;
-            NSLog(@"[MXEventTimeline] forceRoomServerSync failed.");
-
-            // Reload entirely the app
-            [[NSNotificationCenter defaultCenter] postNotificationName:kMXSessionDidCorruptDataNotification
-                                                                object:self->room.mxSession
-                                                              userInfo:nil];
-        }
-    }];
 }
 
 #pragma mark - State events handling
