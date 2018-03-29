@@ -90,6 +90,7 @@ static NSUInteger transactionIdCount;
                                 kMXEventTypeStringCallCandidates,
                                 kMXEventTypeStringCallAnswer,
                                 kMXEventTypeStringCallHangup,
+                                kMXEventTypeStringSticker
                                 ];
 
         NSMutableDictionary *map = [NSMutableDictionary dictionaryWithCapacity:eventTypeMapEnumToString.count];

@@ -229,14 +229,16 @@ typedef void (^MXOnResumeDone)(void);
                                       kMXEventTypeStringCallInvite,
                                       kMXEventTypeStringCallCandidates,
                                       kMXEventTypeStringCallAnswer,
-                                      kMXEventTypeStringCallHangup
+                                      kMXEventTypeStringCallHangup,
+                                      kMXEventTypeStringSticker
                                       ];
 
         _unreadEventTypes = @[kMXEventTypeStringRoomName,
                               kMXEventTypeStringRoomTopic,
                               kMXEventTypeStringRoomMessage,
                               kMXEventTypeStringCallInvite,
-                              kMXEventTypeStringRoomEncrypted
+                              kMXEventTypeStringRoomEncrypted,
+                              kMXEventTypeStringSticker
                               ];
 
         _catchingUp = NO;

@@ -54,6 +54,7 @@ NSString *const kMXEventTypeStringCallInvite            = @"m.call.invite";
 NSString *const kMXEventTypeStringCallCandidates        = @"m.call.candidates";
 NSString *const kMXEventTypeStringCallAnswer            = @"m.call.answer";
 NSString *const kMXEventTypeStringCallHangup            = @"m.call.hangup";
+NSString *const kMXEventTypeStringSticker               = @"m.sticker";
 
 NSString *const kMXMessageTypeText      = @"m.text";
 NSString *const kMXMessageTypeEmote     = @"m.emote";
@@ -349,6 +350,10 @@ NSString *const kMXEventIdentifierKey = @"kMXEventIdentifierKey";
         {
             return YES;
         }
+    }
+    else if (self.eventType == MXEventTypeSticker)
+    {
+        return YES;
     }
     return NO;
 }
