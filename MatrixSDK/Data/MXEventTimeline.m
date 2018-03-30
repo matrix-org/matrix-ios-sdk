@@ -666,7 +666,7 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
     if (redactedEvent.isState)
     {
         // TODO
-        NSLog(@"[MXEventTimeline] handleRedaction: the redacted event is a former state event. TODO: prune prev_content of the new state event");
+        NSLog(@"[MXEventTimeline] handleRedaction: the redacted event is a former state event. TODO: prune prev_content of the current state event");
     }
     else if (!redactedEvent)
     {
@@ -676,7 +676,15 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
         __weak typeof(self) weakSelf = self;
         httpOperation = [room.mxSession.matrixRestClient eventWithEventId:redactionEvent.redacts inRoom:room.roomId success:^(MXEvent *event) {
 
-            NSLog(@"[MXEventTimeline] handleRedaction: the redacted event is a state event in the past. TODO: prune prev_content of the new state event");
+            if (event.isState)
+            {
+                // TODO
+                NSLog(@"[MXEventTimeline] handleRedaction: the redacted event is a state event in the past. TODO: prune prev_content of the current state event");
+            }
+            else
+            {
+                NSLog(@"[MXEventTimeline] handleRedaction: the redacted event is a not state event -> job is done");
+            }
 
             if (!weakSelf || !httpOperation)
             {
