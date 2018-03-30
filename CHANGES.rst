@@ -1,3 +1,12 @@
+Changes in Matrix iOS SDK in 0.10.7 (2018-03-30)
+=============================================== 
+
+Improvements:
+ * Make state event redaction handling gentler with homeserver (vector-im/riot-ios#1823).
+
+Bug fixes:
+ * Room summary is not updated after redaction of the room display name (vector-im/riot-ios#1822).
+
 Changes in Matrix iOS SDK in 0.10.6 (2018-03-12)
 =============================================== 
 
