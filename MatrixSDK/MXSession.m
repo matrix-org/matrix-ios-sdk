@@ -1,6 +1,7 @@
 /*
  Copyright 2014 OpenMarket Ltd
  Copyright 2017 Vector Creations Ltd
+ Copyright 2018 New Vector Ltd
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -229,14 +230,16 @@ typedef void (^MXOnResumeDone)(void);
                                       kMXEventTypeStringCallInvite,
                                       kMXEventTypeStringCallCandidates,
                                       kMXEventTypeStringCallAnswer,
-                                      kMXEventTypeStringCallHangup
+                                      kMXEventTypeStringCallHangup,
+                                      kMXEventTypeStringSticker
                                       ];
 
         _unreadEventTypes = @[kMXEventTypeStringRoomName,
                               kMXEventTypeStringRoomTopic,
                               kMXEventTypeStringRoomMessage,
                               kMXEventTypeStringCallInvite,
-                              kMXEventTypeStringRoomEncrypted
+                              kMXEventTypeStringRoomEncrypted,
+                              kMXEventTypeStringSticker
                               ];
 
         _catchingUp = NO;
