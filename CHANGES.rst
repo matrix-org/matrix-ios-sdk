@@ -1,3 +1,16 @@
+Changes in Matrix iOS SDK in 0.10.8 (2018-04-20)
+=============================================== 
+
+Improvements:.
+ * Pod: Update realm version (#483)
+ * Render stickers in the timeline (vector-im/riot-ios#1819).
+
+Bug fixes:
+ * MatrixSDK/JingleCallStack: Upgrade the minimal iOS version to 9.0 because the WebRTC framework requires it (vector-im/riot-ios#1821).
+
+vector-im/riot-ios#1821
+ * App fails to logout on unknown token (vector-im/riot-ios#1839).
+
 Changes in Matrix iOS SDK in 0.10.7 (2018-03-30)
 =============================================== 
 
