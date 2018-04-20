@@ -1,6 +1,7 @@
 /*
  Copyright 2014 OpenMarket Ltd
  Copyright 2017 Vector Creations Ltd
+ Copyright 2018 New Vector Ltd
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -39,7 +40,7 @@
 
 #pragma mark - Constants definitions
 
-const NSString *MatrixSDKVersion = @"0.10.7";
+const NSString *MatrixSDKVersion = @"0.10.8";
 NSString *const kMXSessionStateDidChangeNotification = @"kMXSessionStateDidChangeNotification";
 NSString *const kMXSessionNewRoomNotification = @"kMXSessionNewRoomNotification";
 NSString *const kMXSessionWillLeaveRoomNotification = @"kMXSessionWillLeaveRoomNotification";
@@ -229,14 +230,16 @@ typedef void (^MXOnResumeDone)(void);
                                       kMXEventTypeStringCallInvite,
                                       kMXEventTypeStringCallCandidates,
                                       kMXEventTypeStringCallAnswer,
-                                      kMXEventTypeStringCallHangup
+                                      kMXEventTypeStringCallHangup,
+                                      kMXEventTypeStringSticker
                                       ];
 
         _unreadEventTypes = @[kMXEventTypeStringRoomName,
                               kMXEventTypeStringRoomTopic,
                               kMXEventTypeStringRoomMessage,
                               kMXEventTypeStringCallInvite,
-                              kMXEventTypeStringRoomEncrypted
+                              kMXEventTypeStringRoomEncrypted,
+                              kMXEventTypeStringSticker
                               ];
 
         _catchingUp = NO;
@@ -435,8 +438,17 @@ typedef void (^MXOnResumeDone)(void);
         }  failure:^(NSError *error) {
 
             NSLog(@"[MXSession] Crypto failed to start. Error: %@", error);
-
+            
+            // Check whether the token is valid
+            if ([self isUnknownTokenError:error])
+            {
+                // Do nothing more because without a valid access_token, the session is useless
+                return;
+            }
+            
+            // Else consider the sync has failed
             [self setState:MXSessionStateInitialSyncFailed];
+            // Inform the caller that an error has occurred
             failure(error);
 
         }];
@@ -472,6 +484,13 @@ typedef void (^MXOnResumeDone)(void);
             } failure:^(NSError *error) {
 
                 NSLog(@"[MXSession] Crypto failed to start. Error: %@", error);
+                
+                // Check whether the token is valid
+                if ([self isUnknownTokenError:error])
+                {
+                    // Do nothing more because without a valid access_token, the session is useless
+                    return;
+                }
 
                 [self setState:MXSessionStateInitialSyncFailed];
                 failure(error);
@@ -480,6 +499,14 @@ typedef void (^MXOnResumeDone)(void);
 
         } failure:^(NSError *error) {
             
+            NSLog(@"[MXSession] Get the user's profile information failed");
+            
+            // Check whether the token is valid
+            if ([self isUnknownTokenError:error])
+            {
+                // Do nothing more because without a valid access_token, the session is useless
+                return;
+            }
             [self setState:MXSessionStateInitialSyncFailed];
             failure(error);
             
@@ -724,6 +751,25 @@ typedef void (^MXOnResumeDone)(void);
 - (BOOL)isEventStreamInitialised
 {
     return (_store.eventStreamToken != nil);
+}
+
+#pragma mark - Invalid Token handling
+
+- (BOOL)isUnknownTokenError:(NSError *)error
+{
+    // Detect invalidated access token
+    // This can happen when the user made a forget password request for example
+    if ([MXError isMXError:error])
+    {
+        MXError *mxError = [[MXError alloc] initWithNSError:error];
+        if ([mxError.errcode isEqualToString:kMXErrCodeStringUnknownToken])
+        {
+            NSLog(@"[MXSession] The access token is no more valid. Go to MXSessionStateUnknownToken state.");
+            [self setState:MXSessionStateUnknownToken];
+            return YES;
+        }
+    }
+    return NO;
 }
 
 #pragma mark - MXSession pause prevention
@@ -1100,26 +1146,12 @@ typedef void (^MXOnResumeDone)(void);
         {
             return;
         }
-
-        if ([MXError isMXError:error])
+        
+        // Check whether the token is valid
+        if ([self isUnknownTokenError:error])
         {
-            // Detect invalidated access token
-            // This can happen when the user made a forget password request for example
-            MXError *mxError = [[MXError alloc] initWithNSError:error];
-            if ([mxError.errcode isEqualToString:kMXErrCodeStringUnknownToken])
-            {
-                NSLog(@"[MXSession] The access token is no more valid. Go to MXSessionStateUnknownToken state.");
-                [self setState:MXSessionStateUnknownToken];
-                
-                // Inform the caller that an error has occurred
-                if (failure)
-                {
-                    failure(error);
-                }
-
-                // Do nothing more because without a valid access_token, the session is useless
-                return;
-            }
+            // Do nothing more because without a valid access_token, the session is useless
+            return;
         }
         
         // Handle failure during catch up first

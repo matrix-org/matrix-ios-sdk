@@ -1,5 +1,6 @@
 /*
  Copyright 2014 OpenMarket Ltd
+ Copyright 2018 New Vector Ltd
  
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -63,6 +64,7 @@ typedef enum : NSUInteger
     MXEventTypeCallCandidates,
     MXEventTypeCallAnswer,
     MXEventTypeCallHangup,
+    MXEventTypeSticker,
 
     // The event is a custom event. Refer to its `MXEventTypeString` version
     MXEventTypeCustom = 1000
@@ -106,6 +108,7 @@ FOUNDATION_EXPORT NSString *const kMXEventTypeStringCallInvite;
 FOUNDATION_EXPORT NSString *const kMXEventTypeStringCallCandidates;
 FOUNDATION_EXPORT NSString *const kMXEventTypeStringCallAnswer;
 FOUNDATION_EXPORT NSString *const kMXEventTypeStringCallHangup;
+FOUNDATION_EXPORT NSString *const kMXEventTypeStringSticker;
 
 /**
  Types of room messages
@@ -359,7 +362,7 @@ extern NSString *const kMXEventIdentifierKey;
 - (BOOL)isUserProfileChange;
 
 /**
- Return YES if the event contains a media: image, audio, video or file.
+ Return YES if the event contains a media: image, audio, video, file or sticker.
  */
 - (BOOL)isMediaAttachment;
 
