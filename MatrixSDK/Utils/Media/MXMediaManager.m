@@ -26,7 +26,7 @@
 #import "MXLRUCache.h"
 #import "MXTools.h"
 
-NSUInteger const kMXMediaCacheSDKVersion = 1;
+NSUInteger const kMXMediaCacheSDKVersion = 2;
 
 NSString *const kMXMediaManagerAvatarThumbnailFolder = @"kMXMediaManagerAvatarThumbnailFolder";
 NSString *const kMXMediaManagerDefaultCacheFolder = @"kMXMediaManagerDefaultCacheFolder";
@@ -591,7 +591,24 @@ static NSMutableDictionary* fileBaseFromMimeType = nil;
         }
     }
     
-    return [[MXMediaManager cacheFolderPath:folder] stringByAppendingPathComponent:[NSString stringWithFormat:@"%@%lu%@", fileBase, (unsigned long)url.hash, extension]];
+    // We observed an issue about the url.hash use: the returned integer was equal for different urls.
+    // This was observed when the urls start with the same characters on about 75 characters, and have the same suffix on about 32 char.
+    // This issue involves several rooms with the same avatar. It happens mainly for the users of the homeservers with a long name.
+    // Patch: we split the url in two components, and invert them in order to have the mediaId at the beginning of the string.
+    NSUInteger urlLength = url.length;
+    NSMutableString *reversedURL;
+    if (urlLength > 2)
+    {
+        NSUInteger index = urlLength / 2;
+        reversedURL = [NSMutableString stringWithString:[url substringFromIndex:index]]; ;
+        [reversedURL appendString:[url substringToIndex:index]];
+    }
+    else
+    {
+        reversedURL = [NSMutableString stringWithString:url];
+    }
+    
+    return [[MXMediaManager cacheFolderPath:folder] stringByAppendingPathComponent:[NSString stringWithFormat:@"%@%lu%@", fileBase, (unsigned long)reversedURL.hash, extension]];
 }
 
 + (void)reduceCacheSizeToInsert:(NSUInteger)sizeInBytes
