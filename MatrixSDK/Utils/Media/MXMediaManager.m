@@ -596,14 +596,14 @@ static NSMutableDictionary* fileBaseFromMimeType = nil;
     // This issue involves several rooms with the same avatar. It happens mainly for the users of the homeservers with a long name.
     // Patch: we split the url in two components, and invert them in order to have the mediaId at the beginning of the string.
     NSUInteger urlLength = url.length;
-    NSMutableString *reversedURL;
+    NSMutableString *reversedURL = nil;
     if (urlLength > 2)
     {
         NSUInteger index = urlLength / 2;
         reversedURL = [NSMutableString stringWithString:[url substringFromIndex:index]]; ;
         [reversedURL appendString:[url substringToIndex:index]];
     }
-    else
+    else if (url)
     {
         reversedURL = [NSMutableString stringWithString:url];
     }
