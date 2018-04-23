@@ -1,3 +1,9 @@
+Changes in Matrix iOS SDK in 0.10.9 (2018-04-23)
+=============================================== 
+
+Bug fixes:
+ * Regression: Sending a photo from the photo library causes a crash.
+
 Changes in Matrix iOS SDK in 0.10.8 (2018-04-20)
 =============================================== 
 
