@@ -47,6 +47,9 @@ static NSRegularExpression *isMatrixRoomIdentifierRegex;
 static NSRegularExpression *isMatrixEventIdentifierRegex;
 static NSRegularExpression *isMatrixGroupIdentifierRegex;
 
+// A regex to find new lines
+static NSRegularExpression *newlineCharactersRegex;
+
 static NSUInteger transactionIdCount;
 
 
@@ -114,6 +117,9 @@ static NSUInteger transactionIdCount;
                                                                                  options:NSRegularExpressionCaseInsensitive error:nil];
         isMatrixGroupIdentifierRegex = [NSRegularExpression regularExpressionWithPattern:[NSString stringWithFormat:@"^%@$", kMXToolsRegexStringForMatrixGroupIdentifier]
                                                                                 options:NSRegularExpressionCaseInsensitive error:nil];
+
+        newlineCharactersRegex = [NSRegularExpression regularExpressionWithPattern:@" *[\n\r]+[\n\r ]*"
+                                                                           options:0 error:nil];
 
         transactionIdCount = 0;
     });
@@ -252,7 +258,15 @@ static NSUInteger transactionIdCount;
 
 + (NSString*)stripNewlineCharacters:(NSString *)inputString
 {
-    return [inputString stringByReplacingOccurrencesOfString:@" *[\n\r]+[\n\r ]*" withString:@" " options:NSRegularExpressionSearch range:NSMakeRange(0, [inputString length])];
+    NSString *string;
+    if (inputString)
+    {
+        string = [newlineCharactersRegex stringByReplacingMatchesInString:inputString
+                                                                  options:0
+                                                                    range:NSMakeRange(0, inputString.length)
+                                                             withTemplate:@" "];
+    }
+    return string;
 }
 
 
