@@ -42,6 +42,11 @@
     accountDataDict[event[@"type"]] = event[@"content"];
 }
 
+- (NSDictionary *)accountDataForEventType:(NSString*)eventType
+{
+    return accountDataDict[eventType];
+}
+
 - (NSDictionary<NSString *, id> *)accountData
 {
     // Rebuild the dictionary as sent by the homeserver
