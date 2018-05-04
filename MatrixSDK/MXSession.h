@@ -22,6 +22,7 @@
 #import "MXRoom.h"
 #import "MXPeekingRoom.h"
 #import "MXMyUser.h"
+#import "MXAccountData.h"
 #import "MXSessionEventListener.h"
 #import "MXStore.h"
 #import "MXNotificationCenter.h"
@@ -350,6 +351,11 @@ FOUNDATION_EXPORT NSString *const kMXSessionNoRoomTag;
  It is available only after the `onStoreDataReady` callback of `start` is called.
  */
 @property (nonatomic, readonly) MXMyUser *myUser;
+
+/**
+ The user's matrix account data.
+ */
+@property (nonatomic, readonly) MXAccountData *accountData;
 
 /**
  The store used to store user's Matrix data.

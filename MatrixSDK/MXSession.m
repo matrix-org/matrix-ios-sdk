@@ -131,11 +131,6 @@ typedef void (^MXOnResumeDone)(void);
     NSMutableArray<MXRoom *> *invitedRooms;
 
     /**
-     The account data.
-     */
-    MXAccountData *accountData;
-
-    /**
      The rooms being peeked.
      */
     NSMutableArray<MXPeekingRoom *> *peekingRooms;
@@ -196,7 +191,7 @@ typedef void (^MXOnResumeDone)(void);
         globalEventListeners = [NSMutableArray array];
         syncMessagesLimit = -1;
         _notificationCenter = [[MXNotificationCenter alloc] initWithMatrixSession:self];
-        accountData = [[MXAccountData alloc] init];
+        _accountData = [[MXAccountData alloc] init];
         peekingRooms = [NSMutableArray array];
         _preventPauseCount = 0;
         publicisedGroupsByUserId = [[NSMutableDictionary alloc] init];
@@ -1354,10 +1349,10 @@ typedef void (^MXOnResumeDone)(void);
             }
 
             // Update the corresponding part of account data
-            [accountData updateWithEvent:event];
+            [_accountData updateWithEvent:event];
         }
 
-        _store.userAccountData = accountData.accountData;
+        _store.userAccountData = _accountData.accountData;
     }
 }
 
