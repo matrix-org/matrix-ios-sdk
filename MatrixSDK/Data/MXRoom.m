@@ -378,7 +378,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
                     if (event)
                     {
                         // Encapsulate the resulting event in a fake encrypted event
-                        MXEvent *clearEvent = [self fakeRoomMessageEventWithEventId:event.eventId eventType:eventTypeString andContent:event.content];
+                        MXEvent *clearEvent = [self fakeEventWithEventId:event.eventId eventType:eventTypeString andContent:event.content];
 
                         event.wireType = encryptedEventType;
                         event.wireContent = encryptedContent;
@@ -1515,7 +1515,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
 
 
 #pragma mark - Fake event objects creation
-- (MXEvent*)fakeRoomMessageEventWithEventId:(NSString*)eventId eventType:(NSString*)eventType andContent:(NSDictionary*)content
+- (MXEvent*)fakeEventWithEventId:(NSString*)eventId eventType:(NSString*)eventType andContent:(NSDictionary*)content
 {
     if (!eventId)
     {
@@ -1533,6 +1533,10 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
     return event;
 }
 
+- (MXEvent*)fakeRoomMessageEventWithEventId:(NSString*)eventId andContent:(NSDictionary<NSString*, id>*)content
+{
+    return [self fakeEventWithEventId:eventId eventType:kMXEventTypeStringRoomMessage andContent:content];
+}
 
 #pragma mark - Outgoing events management
 - (void)storeOutgoingMessage:(MXEvent*)outgoingMessage
@@ -1664,7 +1668,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
 - (MXEvent*)addLocalEchoForMessageContent:(NSDictionary*)msgContent eventType:(MXEventTypeString)eventType withState:(MXEventSentState)eventState
 {
     // Create a room message event.
-    MXEvent *localEcho = [self fakeRoomMessageEventWithEventId:nil eventType:eventType andContent:msgContent];
+    MXEvent *localEcho = [self fakeEventWithEventId:nil eventType:eventType andContent:msgContent];
     localEcho.sentState = eventState;
 
     // Register the echo as pending for its future deletion

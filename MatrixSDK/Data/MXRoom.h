@@ -759,15 +759,23 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidFlushDataNotification;
 
 #pragma mark - Fake event objects creation
 /**
- Create a temporary message event for the room.
- 
+ Create a temporary event for the room.
+
  @param eventId the event id. A globally unique string with kMXEventLocalEventIdPrefix prefix is defined when this param is nil.
- @param eventTypeString the type of the event. @see MXEventType. 
+ @param eventType the type of the event. @see MXEventType.
  @param content the event content.
  @return the created event.
  */
-- (MXEvent*)fakeRoomMessageEventWithEventId:(NSString*)eventId eventType:(MXEventTypeString)eventType andContent:(NSDictionary<NSString*, id>*)content;
+- (MXEvent*)fakeEventWithEventId:(NSString*)eventId eventType:(MXEventTypeString)eventType andContent:(NSDictionary<NSString*, id>*)content;
 
+/**
+ Create a temporary message event for the room.
+
+ @param eventId the event id. A globally unique string with kMXEventLocalEventIdPrefix prefix is defined when this param is nil.
+ @param content the event content.
+ @return the created event.
+ */
+- (MXEvent*)fakeRoomMessageEventWithEventId:(NSString*)eventId andContent:(NSDictionary<NSString*, id>*)content;
 
 #pragma mark - Outgoing events management
 /**
