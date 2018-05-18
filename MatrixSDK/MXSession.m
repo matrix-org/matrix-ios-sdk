@@ -3136,7 +3136,7 @@ typedef void (^MXOnResumeDone)(void);
             [self.matrixRestClient getPublicisedGroupsForUsers:@[userId] success:^(NSDictionary<NSString *,NSArray<NSString *> *> *updatedPublicisedGroupsByUserId) {
                 
                 // Check whether the publicised groups have been actually modified.
-                if ((publicisedGroupsByUserId[userId] || updatedPublicisedGroupsByUserId[userId]) && ![publicisedGroupsByUserId[userId] isEqualToArray:updatedPublicisedGroupsByUserId[userId]])
+                if (updatedPublicisedGroupsByUserId[userId] && ![publicisedGroupsByUserId[userId] isEqualToArray:updatedPublicisedGroupsByUserId[userId]])
                 {
                     // refresh the internal dict
                     publicisedGroupsByUserId[userId] = updatedPublicisedGroupsByUserId[userId];
