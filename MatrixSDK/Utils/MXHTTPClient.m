@@ -39,6 +39,12 @@
  */
 NSString * const MXHTTPClientErrorResponseDataKey = @"com.matrixsdk.httpclient.error.response.data";
 
+/**
+ Matrix error API JSON Keys
+ */
+static NSString* const kMXErrorCodeJSONKey = @"errcode";
+static NSString* const kMXErrorMessageJSONKey = @"error";
+
 @interface MXHTTPClient ()
 {
     /**
@@ -285,11 +291,10 @@ NSString * const MXHTTPClientErrorResponseDataKey = @"com.matrixsdk.httpclient.e
                     {
                         NSLog(@"[MXHTTPClient] Error JSONResponse: %@", JSONResponse);
 
-                        if (JSONResponse[@"errcode"] || JSONResponse[@"error"])
+                        if (JSONResponse[kMXErrorCodeJSONKey] || JSONResponse[kMXErrorMessageJSONKey])
                         {
                             // Extract values from the home server JSON response
-                            MXError *mxError = [[MXError alloc] initWithErrorCode:JSONResponse[@"errcode"]
-                                                                            error:JSONResponse[@"error"]];
+                            MXError *mxError = [self mxErrorFromJSON:JSONResponse];
 
                             if ([mxError.errcode isEqualToString:kMXErrCodeStringLimitExceeded])
                             {
@@ -719,6 +724,24 @@ NSString * const MXHTTPClientErrorResponseDataKey = @"com.matrixsdk.httpclient.e
         securityPolicy.allowInvalidCertificates = YES;
         httpManager.securityPolicy = securityPolicy;
     }
+}
+
+- (MXError*)mxErrorFromJSON:(NSDictionary*)json
+{
+    // Add key/values other than error code and error message in user info
+    NSMutableDictionary *userInfo = [json mutableCopy];
+    [userInfo removeObjectForKey:kMXErrorCodeJSONKey];
+    [userInfo removeObjectForKey:kMXErrorMessageJSONKey];
+    
+    NSDictionary *mxErrorUserInfo = nil;
+    
+    if (userInfo.allKeys.count > 0) {
+        mxErrorUserInfo = [NSDictionary dictionaryWithDictionary:userInfo];
+    }
+    
+    return [[MXError alloc] initWithErrorCode:json[kMXErrorCodeJSONKey]
+                                        error:json[kMXErrorMessageJSONKey]
+                                     userInfo:mxErrorUserInfo];
 }
 
 @end
