@@ -40,10 +40,22 @@
 NSString * const MXHTTPClientErrorResponseDataKey = @"com.matrixsdk.httpclient.error.response.data";
 
 /**
+ Posted when the user did not consent to GDPR.
+ */
+NSString* const kMXHTTPClientUserConsentNotGivenErrorNotification = @"kMXHTTPClientUserConsentNotGivenErrorNotification";
+/**
+ kMXHTTPClientUserConsentNotGivenErrorNotification userInfo key for consent URI
+ */
+NSString* const kMXHTTPClientUserConsentNotGivenErrorNotificationConsentURIKey = @"kMXHTTPClientUserConsentNotGivenErrorNotificationConsentURIKey";
+
+/**
  Matrix error API JSON Keys
  */
 static NSString* const kMXErrorCodeJSONKey = @"errcode";
 static NSString* const kMXErrorMessageJSONKey = @"error";
+
+static NSString* const kMXErrorConsentNotGivenConsentURIJSONKey = @"consent_uri";
+
 
 @interface MXHTTPClient ()
 {
@@ -328,6 +340,24 @@ static NSString* const kMXErrorMessageJSONKey = @"error";
                                 else
                                 {
                                     NSLog(@"[MXHTTPClient] Giving up rate limited request %p: spent too long retrying.", mxHTTPOperation);
+                                }
+                            }
+                            if ([mxError.errcode isEqualToString:kMXErrCodeStringConsentNotGiven])
+                            {
+                                NSString* consentURI = mxError.userInfo[kMXErrorConsentNotGivenConsentURIJSONKey];
+                                
+                                if (consentURI.length > 0)
+                                {
+                                    NSLog(@"[MXHTTPClient] User did not consent to GDPR");
+                                    
+                                    // Send a notification if user did not consent to GDPR
+                                    [[NSNotificationCenter defaultCenter] postNotificationName:kMXHTTPClientUserConsentNotGivenErrorNotification
+                                                                                        object:self
+                                                                                      userInfo:@{ kMXHTTPClientUserConsentNotGivenErrorNotificationConsentURIKey: consentURI }];
+                                }
+                                else
+                                {
+                                    NSLog(@"[MXHTTPClient] User did not consent to GDPR but fail to retrieve consent uri");
                                 }
                             }
                             else
