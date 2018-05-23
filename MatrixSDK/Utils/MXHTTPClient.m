@@ -33,11 +33,18 @@
  */
 #define MXHTTPCLIENT_RETRY_JITTER_MS 3000
 
-/**
- `MXHTTPClientErrorResponseDataKey`
- The corresponding value is an `NSDictionary` containing the response data of the operation associated with an error.
- */
 NSString * const MXHTTPClientErrorResponseDataKey = @"com.matrixsdk.httpclient.error.response.data";
+NSString* const kMXHTTPClientUserConsentNotGivenErrorNotification = @"kMXHTTPClientUserConsentNotGivenErrorNotification";
+NSString* const kMXHTTPClientUserConsentNotGivenErrorNotificationConsentURIKey = @"kMXHTTPClientUserConsentNotGivenErrorNotificationConsentURIKey";
+
+/**
+ Matrix error API JSON Keys
+ */
+static NSString* const kMXErrorCodeJSONKey = @"errcode";
+static NSString* const kMXErrorMessageJSONKey = @"error";
+
+static NSString* const kMXErrorConsentNotGivenConsentURIJSONKey = @"consent_uri";
+
 
 @interface MXHTTPClient ()
 {
@@ -285,11 +292,10 @@ NSString * const MXHTTPClientErrorResponseDataKey = @"com.matrixsdk.httpclient.e
                     {
                         NSLog(@"[MXHTTPClient] Error JSONResponse: %@", JSONResponse);
 
-                        if (JSONResponse[@"errcode"] || JSONResponse[@"error"])
+                        if (JSONResponse[kMXErrorCodeJSONKey] || JSONResponse[kMXErrorMessageJSONKey])
                         {
                             // Extract values from the home server JSON response
-                            MXError *mxError = [[MXError alloc] initWithErrorCode:JSONResponse[@"errcode"]
-                                                                            error:JSONResponse[@"error"]];
+                            MXError *mxError = [self mxErrorFromJSON:JSONResponse];
 
                             if ([mxError.errcode isEqualToString:kMXErrCodeStringLimitExceeded])
                             {
@@ -323,6 +329,24 @@ NSString * const MXHTTPClientErrorResponseDataKey = @"com.matrixsdk.httpclient.e
                                 else
                                 {
                                     NSLog(@"[MXHTTPClient] Giving up rate limited request %p: spent too long retrying.", mxHTTPOperation);
+                                }
+                            }
+                            if ([mxError.errcode isEqualToString:kMXErrCodeStringConsentNotGiven])
+                            {
+                                NSString* consentURI = mxError.userInfo[kMXErrorConsentNotGivenConsentURIJSONKey];
+                                
+                                if (consentURI.length > 0)
+                                {
+                                    NSLog(@"[MXHTTPClient] User did not consent to GDPR");
+                                    
+                                    // Send a notification if user did not consent to GDPR
+                                    [[NSNotificationCenter defaultCenter] postNotificationName:kMXHTTPClientUserConsentNotGivenErrorNotification
+                                                                                        object:self
+                                                                                      userInfo:@{ kMXHTTPClientUserConsentNotGivenErrorNotificationConsentURIKey: consentURI }];
+                                }
+                                else
+                                {
+                                    NSLog(@"[MXHTTPClient] User did not consent to GDPR but fail to retrieve consent uri");
                                 }
                             }
                             else
@@ -719,6 +743,24 @@ NSString * const MXHTTPClientErrorResponseDataKey = @"com.matrixsdk.httpclient.e
         securityPolicy.allowInvalidCertificates = YES;
         httpManager.securityPolicy = securityPolicy;
     }
+}
+
+- (MXError*)mxErrorFromJSON:(NSDictionary*)json
+{
+    // Add key/values other than error code and error message in user info
+    NSMutableDictionary *userInfo = [json mutableCopy];
+    [userInfo removeObjectForKey:kMXErrorCodeJSONKey];
+    [userInfo removeObjectForKey:kMXErrorMessageJSONKey];
+    
+    NSDictionary *mxErrorUserInfo = nil;
+    
+    if (userInfo.allKeys.count > 0) {
+        mxErrorUserInfo = [NSDictionary dictionaryWithDictionary:userInfo];
+    }
+    
+    return [[MXError alloc] initWithErrorCode:json[kMXErrorCodeJSONKey]
+                                        error:json[kMXErrorMessageJSONKey]
+                                     userInfo:mxErrorUserInfo];
 }
 
 @end

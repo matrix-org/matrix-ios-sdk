@@ -34,6 +34,14 @@
 - (void)updateWithEvent:(NSDictionary*)event;
 
 /**
+ Get account data event by event type.
+
+ @param eventType The event type being queried.
+ @return the user account_data event of given type, if any.
+ */
+- (NSDictionary *)accountDataForEventType:(NSString*)eventType;
+
+/**
  The account data as sent by the homeserver /sync response.
  */
 @property (nonatomic, readonly) NSDictionary<NSString *, id> *accountData;

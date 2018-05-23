@@ -40,7 +40,7 @@
 
 #pragma mark - Constants definitions
 
-const NSString *MatrixSDKVersion = @"0.10.9";
+const NSString *MatrixSDKVersion = @"0.10.10";
 NSString *const kMXSessionStateDidChangeNotification = @"kMXSessionStateDidChangeNotification";
 NSString *const kMXSessionNewRoomNotification = @"kMXSessionNewRoomNotification";
 NSString *const kMXSessionWillLeaveRoomNotification = @"kMXSessionWillLeaveRoomNotification";
@@ -131,11 +131,6 @@ typedef void (^MXOnResumeDone)(void);
     NSMutableArray<MXRoom *> *invitedRooms;
 
     /**
-     The account data.
-     */
-    MXAccountData *accountData;
-
-    /**
      The rooms being peeked.
      */
     NSMutableArray<MXPeekingRoom *> *peekingRooms;
@@ -196,7 +191,7 @@ typedef void (^MXOnResumeDone)(void);
         globalEventListeners = [NSMutableArray array];
         syncMessagesLimit = -1;
         _notificationCenter = [[MXNotificationCenter alloc] initWithMatrixSession:self];
-        accountData = [[MXAccountData alloc] init];
+        _accountData = [[MXAccountData alloc] init];
         peekingRooms = [NSMutableArray array];
         _preventPauseCount = 0;
         publicisedGroupsByUserId = [[NSMutableDictionary alloc] init];
@@ -1354,10 +1349,10 @@ typedef void (^MXOnResumeDone)(void);
             }
 
             // Update the corresponding part of account data
-            [accountData updateWithEvent:event];
+            [_accountData updateWithEvent:event];
         }
 
-        _store.userAccountData = accountData.accountData;
+        _store.userAccountData = _accountData.accountData;
     }
 }
 
@@ -3141,7 +3136,7 @@ typedef void (^MXOnResumeDone)(void);
             [self.matrixRestClient getPublicisedGroupsForUsers:@[userId] success:^(NSDictionary<NSString *,NSArray<NSString *> *> *updatedPublicisedGroupsByUserId) {
                 
                 // Check whether the publicised groups have been actually modified.
-                if ((publicisedGroupsByUserId[userId] || updatedPublicisedGroupsByUserId[userId]) && ![publicisedGroupsByUserId[userId] isEqualToArray:updatedPublicisedGroupsByUserId[userId]])
+                if (updatedPublicisedGroupsByUserId[userId] && ![publicisedGroupsByUserId[userId] isEqualToArray:updatedPublicisedGroupsByUserId[userId]])
                 {
                     // refresh the internal dict
                     publicisedGroupsByUserId[userId] = updatedPublicisedGroupsByUserId[userId];

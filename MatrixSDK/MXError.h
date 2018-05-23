@@ -42,6 +42,7 @@ FOUNDATION_EXPORT NSString *const kMXErrCodeStringThreePIDInUse;
 FOUNDATION_EXPORT NSString *const kMXErrCodeStringThreePIDNotFound;
 FOUNDATION_EXPORT NSString *const kMXErrCodeStringServerNotTrusted;
 FOUNDATION_EXPORT NSString *const kMXErrCodeStringGuestAccessForbidden;
+FOUNDATION_EXPORT NSString *const kMXErrCodeStringConsentNotGiven;
 
 FOUNDATION_EXPORT NSString *const kMXErrorStringInvalidToken;
 
@@ -66,7 +67,14 @@ FOUNDATION_EXPORT NSString *const kMXSDKErrCodeStringMissingParameters;
  */
 @property (nonatomic, readonly) NSString *error;
 
+/**
+ Additional error info
+ */
+@property (nonatomic, readonly, copy) NSDictionary *userInfo;
+
 - (id)initWithErrorCode:(NSString*)errcode error:(NSString*)error;
+
+- (id)initWithErrorCode:(NSString*)errcode error:(NSString*)error userInfo:(NSDictionary*)userInfo;
 
 /**
  Create a MXError from a NSError.

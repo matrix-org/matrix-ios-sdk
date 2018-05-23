@@ -39,6 +39,7 @@ NSString *const kMXErrCodeStringThreePIDInUse       = @"M_THREEPID_IN_USE";
 NSString *const kMXErrCodeStringThreePIDNotFound    = @"M_THREEPID_NOT_FOUND";
 NSString *const kMXErrCodeStringServerNotTrusted    = @"M_SERVER_NOT_TRUSTED";
 NSString *const kMXErrCodeStringGuestAccessForbidden= @"M_GUEST_ACCESS_FORBIDDEN";
+NSString *const kMXErrCodeStringConsentNotGiven     = @"M_CONSENT_NOT_GIVEN";
 
 NSString *const kMXErrorStringInvalidToken      = @"Invalid token";
 
@@ -58,6 +59,18 @@ NSInteger const kMXNSErrorCode = 6;
     {
         _errcode = errcode;
         _error = error;
+    }
+    return self;
+}
+
+- (id)initWithErrorCode:(NSString*)errcode error:(NSString*)error userInfo:(NSDictionary*)userInfo
+{
+    self = [super init];
+    if (self)
+    {
+        _errcode = errcode;
+        _error = error;
+        _userInfo = userInfo;
     }
     return self;
 }

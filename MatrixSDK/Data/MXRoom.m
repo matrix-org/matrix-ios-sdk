@@ -347,12 +347,13 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
         else
         {
             // Check whether a local echo is required
-            if ([eventTypeString isEqualToString:kMXEventTypeStringRoomMessage])
+            if ([eventTypeString isEqualToString:kMXEventTypeStringRoomMessage]
+                || [eventTypeString isEqualToString:kMXEventTypeStringSticker])
             {
                 if (!event)
                 {
                     // Add a local echo for this message during the sending process.
-                    event = [self addLocalEchoForMessageContent:contentCopy withState:MXEventSentStateEncrypting];
+                    event = [self addLocalEchoForMessageContent:contentCopy eventType:eventTypeString withState:MXEventSentStateEncrypting];
 
                     if (localEcho)
                     {
@@ -377,7 +378,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
                     if (event)
                     {
                         // Encapsulate the resulting event in a fake encrypted event
-                        MXEvent *clearEvent = [self fakeRoomMessageEventWithEventId:event.eventId andContent:event.content];
+                        MXEvent *clearEvent = [self fakeEventWithEventId:event.eventId eventType:eventTypeString andContent:event.content];
 
                         event.wireType = encryptedEventType;
                         event.wireContent = encryptedContent;
@@ -418,12 +419,13 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
     else
     {
         // Check whether a local echo is required
-        if ([eventTypeString isEqualToString:kMXEventTypeStringRoomMessage])
+        if ([eventTypeString isEqualToString:kMXEventTypeStringRoomMessage]
+            || [eventTypeString isEqualToString:kMXEventTypeStringSticker])
         {
             if (!event)
             {
                 // Add a local echo for this message during the sending process.
-                event = [self addLocalEchoForMessageContent:contentCopy withState:MXEventSentStateSending];
+                event = [self addLocalEchoForMessageContent:contentCopy eventType:eventTypeString withState:MXEventSentStateSending];
 
                 if (localEcho)
                 {
@@ -647,7 +649,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
     
     // Add a local echo for this message during the sending process.
     MXEventSentState initialSentState = (mxSession.crypto && self.state.isEncrypted) ? MXEventSentStateEncrypting : MXEventSentStateUploading;
-    event = [self addLocalEchoForMessageContent:msgContent withState:initialSentState];
+    event = [self addLocalEchoForMessageContent:msgContent eventType:kMXEventTypeStringRoomMessage withState:initialSentState];
     
     if (localEcho)
     {
@@ -848,7 +850,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
     };
     
     // Add a local echo for this message during the sending process.
-    event = [self addLocalEchoForMessageContent:msgContent withState:MXEventSentStatePreparing];
+    event = [self addLocalEchoForMessageContent:msgContent eventType:kMXEventTypeStringRoomMessage withState:MXEventSentStatePreparing];
     
     if (localEcho)
     {
@@ -1110,7 +1112,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
     
     // Add a local echo for this message during the sending process.
     MXEventSentState initialSentState = (mxSession.crypto && self.state.isEncrypted) ? MXEventSentStateEncrypting : MXEventSentStateUploading;
-    event = [self addLocalEchoForMessageContent:msgContent withState:initialSentState];
+    event = [self addLocalEchoForMessageContent:msgContent eventType:kMXEventTypeStringRoomMessage withState:initialSentState];
     
     if (localEcho)
     {
@@ -1513,7 +1515,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
 
 
 #pragma mark - Fake event objects creation
-- (MXEvent*)fakeRoomMessageEventWithEventId:(NSString*)eventId andContent:(NSDictionary*)content
+- (MXEvent*)fakeEventWithEventId:(NSString*)eventId eventType:(NSString*)eventType andContent:(NSDictionary*)content
 {
     if (!eventId)
     {
@@ -1523,7 +1525,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
     MXEvent *event = [[MXEvent alloc] init];
     event.roomId = _roomId;
     event.eventId = eventId;
-    event.wireType = kMXEventTypeStringRoomMessage;
+    event.wireType = eventType;
     event.originServerTs = (uint64_t) ([[NSDate date] timeIntervalSince1970] * 1000);
     event.sender = mxSession.myUser.userId;
     event.wireContent = content;
@@ -1531,6 +1533,10 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
     return event;
 }
 
+- (MXEvent*)fakeRoomMessageEventWithEventId:(NSString*)eventId andContent:(NSDictionary<NSString*, id>*)content
+{
+    return [self fakeEventWithEventId:eventId eventType:kMXEventTypeStringRoomMessage andContent:content];
+}
 
 #pragma mark - Outgoing events management
 - (void)storeOutgoingMessage:(MXEvent*)outgoingMessage
@@ -1659,10 +1665,10 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
 
 #pragma mark - Local echo handling
 
-- (MXEvent*)addLocalEchoForMessageContent:(NSDictionary*)msgContent withState:(MXEventSentState)eventState
+- (MXEvent*)addLocalEchoForMessageContent:(NSDictionary*)msgContent eventType:(MXEventTypeString)eventType withState:(MXEventSentState)eventState
 {
     // Create a room message event.
-    MXEvent *localEcho = [self fakeRoomMessageEventWithEventId:nil andContent:msgContent];
+    MXEvent *localEcho = [self fakeEventWithEventId:nil eventType:eventType andContent:msgContent];
     localEcho.sentState = eventState;
 
     // Register the echo as pending for its future deletion

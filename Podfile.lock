@@ -30,6 +30,13 @@ DEPENDENCIES:
   - OLMKit
   - Realm (~> 3.3.2)
 
+SPEC REPOS:
+  https://github.com/CocoaPods/Specs.git:
+    - AFNetworking
+    - GZIP
+    - OLMKit
+    - Realm
+
 SPEC CHECKSUMS:
   AFNetworking: 8ac6017b94ea105479f7776e5288e48ae9c59bb4
   GZIP: 7ee835f989fb3c6ea79005fc90b8fa6af710a70d
@@ -38,4 +45,4 @@ SPEC CHECKSUMS:
 
 PODFILE CHECKSUM: 55ff667f189922ce659ced1a61618428dbc519d5
 
-COCOAPODS: 1.4.0
+COCOAPODS: 1.5.0
