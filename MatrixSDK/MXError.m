@@ -63,7 +63,8 @@ NSInteger const kMXNSErrorCode = 6;
     return self;
 }
 
-- (id)initWithErrorCode:(NSString*)errcode error:(NSString*)error userInfo:(NSDictionary*)userInfo {
+- (id)initWithErrorCode:(NSString*)errcode error:(NSString*)error userInfo:(NSDictionary*)userInfo
+{
     self = [super init];
     if (self)
     {
