@@ -26,6 +26,15 @@
 extern NSString * const MXHTTPClientErrorResponseDataKey;
 
 /**
+ Posted when the user did not consent to GDPR.
+ */
+FOUNDATION_EXPORT NSString* const kMXHTTPClientUserConsentNotGivenErrorNotification;
+/**
+ Consent URI userInfo key for notification kMXHTTPClientUserConsentNotGivenErrorNotification
+ */
+FOUNDATION_EXPORT NSString* const kMXHTTPClientUserConsentNotGivenErrorNotificationConsentURIKey;
+
+/**
  Block called when an authentication challenge from a server failed whereas a certificate is present in certificate chain.
  
  @param certificate the server certificate to evaluate.
