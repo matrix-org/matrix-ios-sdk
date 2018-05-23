@@ -1,3 +1,15 @@
+Changes in Matrix iOS SDK in 0.10.10 (2018-05-23)
+=============================================== 
+
+Improvements:
+ * MXTools: Regex optimisation: Cache regex of [MXTools stripNewlineCharacters:].
+ * MXSession: Make MXAccountData member public.
+ * Send Stickers: Manage local echo for sticker (vector-im/riot-ios#1860).
+ * GDPR: Handle M_CONSENT_NOT_GIVEN error (vector-im/riot-ios#1871).
+
+Bug fixes:
+ * Groups: Avoid flair to make requests in loop in case the HS returns an empty response for `/publicised_groups` (vector-im/riot-ios#1869).
+
 Changes in Matrix iOS SDK in 0.10.9 (2018-04-23)
 =============================================== 
 
