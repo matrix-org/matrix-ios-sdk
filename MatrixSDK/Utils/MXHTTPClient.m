@@ -33,19 +33,8 @@
  */
 #define MXHTTPCLIENT_RETRY_JITTER_MS 3000
 
-/**
- `MXHTTPClientErrorResponseDataKey`
- The corresponding value is an `NSDictionary` containing the response data of the operation associated with an error.
- */
 NSString * const MXHTTPClientErrorResponseDataKey = @"com.matrixsdk.httpclient.error.response.data";
-
-/**
- Posted when the user did not consent to GDPR.
- */
 NSString* const kMXHTTPClientUserConsentNotGivenErrorNotification = @"kMXHTTPClientUserConsentNotGivenErrorNotification";
-/**
- kMXHTTPClientUserConsentNotGivenErrorNotification userInfo key for consent URI
- */
 NSString* const kMXHTTPClientUserConsentNotGivenErrorNotificationConsentURIKey = @"kMXHTTPClientUserConsentNotGivenErrorNotificationConsentURIKey";
 
 /**
