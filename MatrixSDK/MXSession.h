@@ -1069,6 +1069,24 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
 - (NSString*)tagOrderToBeAtIndex:(NSUInteger)index from:(NSUInteger)originIndex withTag:(NSString *)tag;
 
 
+#pragma mark - User's account data
+/**
+ Set some account data for the user.
+
+ @param data the new data to set for this event type.
+ @param type The event type of the account_data to set (@see kMXAccountDataType* strings)
+             Custom types should be namespaced to avoid clashes.
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)setAccountData:(NSDictionary*)data
+                           forType:(NSString*)type
+                           success:(void (^)(void))success
+                           failure:(void (^)(NSError *error))failure;
+
+
 #pragma mark - Crypto
 /**
  Decrypt an event and update its data.

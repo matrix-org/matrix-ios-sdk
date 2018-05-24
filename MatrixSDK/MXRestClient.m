@@ -47,6 +47,7 @@ NSString *const kMXContentPrefixPath = @"_matrix/media/v1";
 NSString *const kMXAccountDataTypeIgnoredUserList = @"m.ignored_user_list";
 NSString *const kMXAccountDataTypePushRules = @"m.push_rules";
 NSString *const kMXAccountDataTypeDirect = @"m.direct";
+NSString *const kMXAccountDataTypeUserWidgets = @"m.widgets";
 
 /**
  Account data keys
