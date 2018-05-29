@@ -371,6 +371,28 @@ typedef enum : NSUInteger
 - (MXHTTPOperation*)logout:(void (^)(void))success
                    failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
+
+/**
+ Deactivate the user's account, removing all ability for the user to login again.
+ 
+ @discussion This API endpoint uses the User-Interactive Authentication API.
+ 
+ @note An access token should be submitted to this endpoint if the client has an active session.
+ The homeserver may change the flows available depending on whether a valid access token is provided.
+ 
+ @param authParameters The additional authentication information for the user-interactive authentication API.
+ @param eraseAccount Indicating whether the account should be erased.
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+ 
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)deactivateAccountWithAuthParameters:(NSDictionary*)authParameters
+                                           eraseAccount:(BOOL)eraseAccount
+                                                success:(void (^)(void))success
+                                                failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
+
+
 #pragma mark - Account data
 /**
  Set some account_data for the client.

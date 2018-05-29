@@ -939,6 +939,84 @@ MXAuthAction;
                                  }];
 }
 
+- (MXHTTPOperation*)deactivateAccountWithAuthParameters:(NSDictionary*)authParameters
+                                           eraseAccount:(BOOL)eraseAccount
+                                                success:(void (^)(void))success
+                                                failure:(void (^)(NSError *error))failure
+
+{
+    // authParameters are required
+    if (!authParameters)
+    {
+        NSError* error = [NSError errorWithDomain:@"Invalid params" code:500 userInfo:nil];
+        
+        if (failure && processingQueue)
+        {
+            dispatch_async(processingQueue, ^{
+                
+                if (completionQueue)
+                {
+                    dispatch_async(completionQueue, ^{
+                        failure(error);
+                    });
+                }
+                
+            });
+        }
+        
+        return nil;
+    }
+    
+    NSDictionary *jsonBodyParameters = @{
+                                         @"auth": authParameters,
+                                         @"erase": @(eraseAccount)                                         
+                                         };
+    
+    NSData *payloadData = [NSJSONSerialization dataWithJSONObject:jsonBodyParameters options:0 error:nil];
+    
+    return [httpClient requestWithMethod:@"POST"
+                                    path:[NSString stringWithFormat:@"%@/account/deactivate", apiPathPrefix]
+                              parameters:nil
+                                    data:payloadData
+                                 headers:@{@"Content-Type": @"application/json"}
+                                 timeout:-1
+                          uploadProgress:nil
+                                 success:^(NSDictionary *JSONResponse) {
+                                     
+                                     if (success && processingQueue)
+                                     {
+                                         dispatch_async(processingQueue, ^{
+                                             
+                                             if (completionQueue)
+                                             {
+                                                 dispatch_async(completionQueue, ^{
+                                                     
+                                                     success();
+                                                     
+                                                 });
+                                             }
+                                             
+                                         });
+                                     }
+                                 }
+                                 failure:^(NSError *error) {
+                                     
+                                     if (failure && processingQueue)
+                                     {
+                                         dispatch_async(processingQueue, ^{
+                                             
+                                             if (completionQueue)
+                                             {
+                                                 dispatch_async(completionQueue, ^{
+                                                     failure(error);
+                                                 });
+                                             }
+                                             
+                                         });
+                                     }
+                                 }];
+}
+
 #pragma mark - Account data
 - (MXHTTPOperation*)setAccountData:(NSDictionary*)data
                            forType:(NSString*)type
