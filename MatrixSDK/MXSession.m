@@ -743,6 +743,17 @@ typedef void (^MXOnResumeDone)(void);
     return operation;
 }
 
+- (MXHTTPOperation*)deactivateAccountWithAuthParameters:(NSDictionary*)authParameters
+                                           eraseAccount:(BOOL)eraseAccount
+                                                success:(void (^)(void))success
+                                                failure:(void (^)(NSError *error))failure
+{
+    return [self.matrixRestClient deactivateAccountWithAuthParameters:authParameters
+                                                         eraseAccount:eraseAccount
+                                                              success:success
+                                                              failure:failure];
+}
+
 - (BOOL)isEventStreamInitialised
 {
     return (_store.eventStreamToken != nil);
