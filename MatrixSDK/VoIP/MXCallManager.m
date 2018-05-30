@@ -240,7 +240,9 @@ static NSString *const kMXCallManagerFallbackSTUNServer = @"stun:stun.l.google.c
             //    - invite the conference user (the bot) into the room
             //    - set up a separated private room with the conference user to manage
             //      the conf call in 'room'
+            MXWeakify(self);
             [self inviteConferenceUserToRoom:room success:^{
+                MXStrongifyAndReturnIfNil(self);
 
                 [self conferenceUserRoomForRoom:roomId success:^(MXRoom *conferenceUserRoom) {
 
@@ -248,7 +250,7 @@ static NSString *const kMXCallManagerFallbackSTUNServer = @"stun:stun.l.google.c
                     MXCall *call = [[MXCall alloc] initWithRoomId:roomId callSignalingRoomId:conferenceUserRoom.roomId andCallManager:self];
                     if (call)
                     {
-                        [calls addObject:call];
+                        [self->calls addObject:call];
 
                         [call callWithVideo:video];
 

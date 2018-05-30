@@ -144,28 +144,30 @@
 
     // Populate multipart form data
     NSError *error;
+    MXWeakify(self);
     NSMutableURLRequest *request = [[AFHTTPRequestSerializer serializer] multipartFormRequestWithMethod:@"POST" URLString:apiPath parameters:nil constructingBodyWithBlock:^(id<AFMultipartFormData> formData) {
+        MXStrongifyAndReturnIfNil(self);
 
         // Fill params defined in https://github.com/matrix-org/rageshake#post-apisubmit
         if (text)
         {
             [formData appendPartWithFormData:[text dataUsingEncoding:NSUTF8StringEncoding] name:@"text"];
         }
-        if (_userAgent)
+        if (self.userAgent)
         {
-            [formData appendPartWithFormData:[_userAgent dataUsingEncoding:NSUTF8StringEncoding] name:@"user_agent"];
+            [formData appendPartWithFormData:[self.userAgent dataUsingEncoding:NSUTF8StringEncoding] name:@"user_agent"];
         }
-        if (_appName)
+        if (self.appName)
         {
-            [formData appendPartWithFormData:[_appName dataUsingEncoding:NSUTF8StringEncoding] name:@"app"];
+            [formData appendPartWithFormData:[self.appName dataUsingEncoding:NSUTF8StringEncoding] name:@"app"];
         }
-        if (_version)
+        if (self.version)
         {
-            [formData appendPartWithFormData:[_version dataUsingEncoding:NSUTF8StringEncoding] name:@"version"];
+            [formData appendPartWithFormData:[self.version dataUsingEncoding:NSUTF8StringEncoding] name:@"version"];
         }
 
         // Add each zipped log file
-        for (NSURL *logZipFile in logZipFiles)
+        for (NSURL *logZipFile in self->logZipFiles)
         {
             [formData appendPartWithFileURL:logZipFile
                                        name:@"compressed-log"
@@ -191,9 +193,9 @@
         }
 
         // Add iOS specific params
-        if (_build)
+        if (self.build)
         {
-            [formData appendPartWithFormData:[_build dataUsingEncoding:NSUTF8StringEncoding] name:@"build"];
+            [formData appendPartWithFormData:[self.build dataUsingEncoding:NSUTF8StringEncoding] name:@"build"];
         }
 
 #if __has_include(<MatrixKit/MatrixKit.h>)
@@ -206,19 +208,19 @@
         [formData appendPartWithFormData:[[OLMKit versionString] dataUsingEncoding:NSUTF8StringEncoding] name:@"olm_kit_version"];
 #endif
 
-        if (_deviceModel)
+        if (self.deviceModel)
         {
-            [formData appendPartWithFormData:[_deviceModel dataUsingEncoding:NSUTF8StringEncoding] name:@"device"];
+            [formData appendPartWithFormData:[self.deviceModel dataUsingEncoding:NSUTF8StringEncoding] name:@"device"];
         }
-        if (_deviceOS)
+        if (self.deviceOS)
         {
-            [formData appendPartWithFormData:[_deviceOS dataUsingEncoding:NSUTF8StringEncoding] name:@"os"];
+            [formData appendPartWithFormData:[self.deviceOS dataUsingEncoding:NSUTF8StringEncoding] name:@"os"];
         }
 
         // Additional custom data
-        for (NSString *key in _others)
+        for (NSString *key in self.others)
         {
-            [formData appendPartWithFormData:[_others[key] dataUsingEncoding:NSUTF8StringEncoding] name:key];
+            [formData appendPartWithFormData:[self.others[key] dataUsingEncoding:NSUTF8StringEncoding] name:key];
         }
 
     } error:&error];
@@ -240,6 +242,7 @@
     NSURLSessionUploadTask *uploadTask = [manager
                                           uploadTaskWithStreamedRequest:request
                                           progress:^(NSProgress * _Nonnull uploadProgress) {
+                                              MXStrongifyAndReturnIfNil(self);
 
                                               NSLog(@"[MXBugReport] sendBugReport: uploadProgress: %@", @(uploadProgress.fractionCompleted));
 
@@ -248,15 +251,16 @@
                                                   // Move to the main queue
                                                   dispatch_async(dispatch_get_main_queue(), ^{
 
-                                                      progress(_state, uploadProgress);
+                                                      progress(self.state, uploadProgress);
                                                   });
                                               }
                                           }
                                           completionHandler:^(NSURLResponse * _Nonnull response, id  _Nullable responseObject, NSError * _Nullable error) {
+                                              MXStrongifyAndReturnIfNil(self);
 
                                               [self deleteZipZiles];
 
-                                              _state = MXBugReportStateReady;
+                                              self->_state = MXBugReportStateReady;
 
                                               if (error)
                                               {
@@ -380,13 +384,16 @@
 
 - (void)deleteZipZiles
 {
+    MXWeakify(self);
     dispatch_async(dispatchQueue, ^{
-        for (NSURL *logZipFile in logZipFiles)
+        MXStrongifyAndReturnIfNil(self);
+
+        for (NSURL *logZipFile in self->logZipFiles)
         {
             [[NSFileManager defaultManager] removeItemAtURL:logZipFile error:nil];
         }
 
-        [logZipFiles removeAllObjects];
+        [self->logZipFiles removeAllObjects];
     });
 }
 
