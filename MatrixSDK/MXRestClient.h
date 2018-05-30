@@ -1222,7 +1222,11 @@ typedef enum : NSUInteger
  Retrieve an event from its event id.
 
  @param eventId the id of the event to retrieve.
- @param callback the asynchronous callback called with the response
+
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
  */
 - (MXHTTPOperation*)eventWithEventId:(NSString*)eventId
                              success:(void (^)(MXEvent *event))success
@@ -1233,7 +1237,11 @@ typedef enum : NSUInteger
 
  @param eventId the id of the event to retrieve.
  @param roomId the id of the room where the event is.
- @param callback the asynchronous callback called with the response
+ 
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
  */
 - (MXHTTPOperation*)eventWithEventId:(NSString*)eventId
                               inRoom:(NSString*)roomId
