@@ -176,7 +176,7 @@ NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
                     [self->callStackCall handleOffer:self->callInviteEventContent.offer.sdp
                                        success:^{
                                            // Check whether the call has not been ended.
-                                           if (self->_state != MXCallStateEnded)
+                                           if (self.state != MXCallStateEnded)
                                            {
                                                [self setState:MXCallStateRinging reason:event];
                                            }
@@ -296,7 +296,7 @@ NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
 
             // The call invite can sent to the HS
             NSDictionary *content = @{
-                                      @"call_id": self->_callId,
+                                      @"call_id": self.callId,
                                       @"offer": @{
                                               @"type": @"offer",
                                               @"sdp": sdp
@@ -304,7 +304,7 @@ NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
                                       @"version": @(0),
                                       @"lifetime": @(self->callManager.inviteLifetime)
                                       };
-            [self->_callSignalingRoom sendEventOfType:kMXEventTypeStringCallInvite content:content localEcho:nil success:^(NSString *eventId) {
+            [self.callSignalingRoom sendEventOfType:kMXEventTypeStringCallInvite content:content localEcho:nil success:^(NSString *eventId) {
 
                 [self setState:MXCallStateInviteSent reason:nil];
 
@@ -356,14 +356,14 @@ NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
 
                 // The call invite can sent to the HS
                 NSDictionary *content = @{
-                                          @"call_id": self->_callId,
+                                          @"call_id": self.callId,
                                           @"answer": @{
                                                   @"type": @"answer",
                                                   @"sdp": sdpAnswer
                                                   },
                                           @"version": @(0),
                                           };
-                [self->_callSignalingRoom sendEventOfType:kMXEventTypeStringCallAnswer content:content localEcho:nil success:nil failure:^(NSError *error) {
+                [self.callSignalingRoom sendEventOfType:kMXEventTypeStringCallAnswer content:content localEcho:nil success:nil failure:^(NSError *error) {
                     NSLog(@"[MXCall] answer: ERROR: Cannot send m.call.answer event.");
                     [self didEncounterError:error];
                 }];
