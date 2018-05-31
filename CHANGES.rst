@@ -1,3 +1,11 @@
+Changes in Matrix iOS SDK in 0.10.11 (2018-05-31)
+=============================================== 
+
+Improvements:
+ * MXSession: Add setAccountData.
+ * MXSession: Add account deactivation
+ * MKTools: Create MXWeakify & MXStrongifyAndReturnIfNil
+
 Changes in Matrix iOS SDK in 0.10.10 (2018-05-23)
 =============================================== 
 
