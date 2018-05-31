@@ -331,7 +331,7 @@ static NSString* const kMXErrorConsentNotGivenConsentURIJSONKey = @"consent_uri"
                                     NSLog(@"[MXHTTPClient] Giving up rate limited request %p: spent too long retrying.", mxHTTPOperation);
                                 }
                             }
-                            if ([mxError.errcode isEqualToString:kMXErrCodeStringConsentNotGiven])
+                            else if ([mxError.errcode isEqualToString:kMXErrCodeStringConsentNotGiven])
                             {
                                 NSString* consentURI = mxError.userInfo[kMXErrorConsentNotGivenConsentURIJSONKey];
                                 
@@ -348,6 +348,8 @@ static NSString* const kMXErrorConsentNotGivenConsentURIJSONKey = @"consent_uri"
                                 {
                                     NSLog(@"[MXHTTPClient] User did not consent to GDPR but fail to retrieve consent uri");
                                 }
+                                
+                                error = [mxError createNSError];
                             }
                             else
                             {
