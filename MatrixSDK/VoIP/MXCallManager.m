@@ -244,7 +244,9 @@ static NSString *const kMXCallManagerFallbackSTUNServer = @"stun:stun.l.google.c
             [self inviteConferenceUserToRoom:room success:^{
                 MXStrongifyAndReturnIfNil(self);
 
+                MXWeakify(self);
                 [self conferenceUserRoomForRoom:roomId success:^(MXRoom *conferenceUserRoom) {
+                    MXStrongifyAndReturnIfNil(self);
 
                     // The call can now be created
                     MXCall *call = [[MXCall alloc] initWithRoomId:roomId callSignalingRoomId:conferenceUserRoom.roomId andCallManager:self];
