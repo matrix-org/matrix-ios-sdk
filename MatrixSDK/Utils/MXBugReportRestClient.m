@@ -249,7 +249,9 @@
                                               if (progress)
                                               {
                                                   // Move to the main queue
+                                                  MXWeakify(self);
                                                   dispatch_async(dispatch_get_main_queue(), ^{
+                                                      MXStrongifyAndReturnIfNil(self);
 
                                                       progress(self.state, uploadProgress);
                                                   });

@@ -173,8 +173,11 @@ NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
                 [callStackCall startCapturingMediaWithVideo:self.isVideoCall success:^{
                     MXStrongifyAndReturnIfNil(self);
 
+                    MXWeakify(self);
                     [self->callStackCall handleOffer:self->callInviteEventContent.offer.sdp
                                        success:^{
+                                           MXStrongifyAndReturnIfNil(self);
+
                                            // Check whether the call has not been ended.
                                            if (self.state != MXCallStateEnded)
                                            {
@@ -287,8 +290,10 @@ NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
     MXWeakify(self);
     [callStackCall startCapturingMediaWithVideo:video success:^() {
         MXStrongifyAndReturnIfNil(self);
-        
+
+        MXWeakify(self);
         [self->callStackCall createOffer:^(NSString *sdp) {
+            MXStrongifyAndReturnIfNil(self);
 
             [self setState:MXCallStateCreateOffer reason:nil];
 
@@ -350,7 +355,9 @@ NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
             // Create a sdp answer from the offer we got
             [self setState:MXCallStateConnecting reason:nil];
 
+            MXWeakify(self);
             [self->callStackCall createAnswer:^(NSString *sdpAnswer) {
+                MXStrongifyAndReturnIfNil(self);
 
                 NSLog(@"[MXCall] answer - Created SDP:\n%@", sdpAnswer);
 

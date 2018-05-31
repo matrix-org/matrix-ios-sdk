@@ -1728,7 +1728,9 @@ static NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
 
         [self loadGroups];
 
+        MXWeakify(self);
         dispatch_async(dispatch_get_main_queue(), ^{
+            MXStrongifyAndReturnIfNil(self);
             success(self->groups.allValues);
         });
     });
@@ -1742,7 +1744,9 @@ static NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
 
         [self preloadRoomsSummaries];
 
+        MXWeakify(self);
         dispatch_async(dispatch_get_main_queue(), ^{
+            MXStrongifyAndReturnIfNil(self);
             success(self->preloadedRoomSummary.allValues);
         });
     });
