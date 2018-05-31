@@ -20,6 +20,7 @@
 #import "MXCallStack.h"
 #import "MXEvent.h"
 #import "MXSession.h"
+#import "MXTools.h"
 
 #pragma mark - Constants definitions
 NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
@@ -167,12 +168,18 @@ NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
                 callStackCall.audioToSpeaker = _isVideoCall;
                 
                 [self setState:MXCallStateWaitLocalMedia reason:nil];
-                
+
+                MXWeakify(self);
                 [callStackCall startCapturingMediaWithVideo:self.isVideoCall success:^{
-                    [callStackCall handleOffer:callInviteEventContent.offer.sdp
+                    MXStrongifyAndReturnIfNil(self);
+
+                    MXWeakify(self);
+                    [self->callStackCall handleOffer:self->callInviteEventContent.offer.sdp
                                        success:^{
+                                           MXStrongifyAndReturnIfNil(self);
+
                                            // Check whether the call has not been ended.
-                                           if (_state != MXCallStateEnded)
+                                           if (self.state != MXCallStateEnded)
                                            {
                                                [self setState:MXCallStateRinging reason:event];
                                            }
@@ -280,9 +287,13 @@ NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
     
     [self setState:MXCallStateWaitLocalMedia reason:nil];
 
+    MXWeakify(self);
     [callStackCall startCapturingMediaWithVideo:video success:^() {
+        MXStrongifyAndReturnIfNil(self);
 
-        [callStackCall createOffer:^(NSString *sdp) {
+        MXWeakify(self);
+        [self->callStackCall createOffer:^(NSString *sdp) {
+            MXStrongifyAndReturnIfNil(self);
 
             [self setState:MXCallStateCreateOffer reason:nil];
 
@@ -290,15 +301,15 @@ NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
 
             // The call invite can sent to the HS
             NSDictionary *content = @{
-                                      @"call_id": _callId,
+                                      @"call_id": self.callId,
                                       @"offer": @{
                                               @"type": @"offer",
                                               @"sdp": sdp
                                               },
                                       @"version": @(0),
-                                      @"lifetime": @(callManager.inviteLifetime)
+                                      @"lifetime": @(self->callManager.inviteLifetime)
                                       };
-            [_callSignalingRoom sendEventOfType:kMXEventTypeStringCallInvite content:content localEcho:nil success:^(NSString *eventId) {
+            [self.callSignalingRoom sendEventOfType:kMXEventTypeStringCallInvite content:content localEcho:nil success:^(NSString *eventId) {
 
                 [self setState:MXCallStateInviteSent reason:nil];
 
@@ -328,34 +339,38 @@ NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
     {
         [self setState:MXCallStateCreateAnswer reason:nil];
 
+        MXWeakify(self);
         void(^answer)(void) = ^{
+            MXStrongifyAndReturnIfNil(self);
 
             NSLog(@"[MXCall] answer: answering...");
 
             // The incoming call is accepted
-            if (inviteExpirationTimer)
+            if (self->inviteExpirationTimer)
             {
-                [inviteExpirationTimer invalidate];
-                inviteExpirationTimer = nil;
+                [self->inviteExpirationTimer invalidate];
+                self->inviteExpirationTimer = nil;
             }
 
             // Create a sdp answer from the offer we got
             [self setState:MXCallStateConnecting reason:nil];
 
-            [callStackCall createAnswer:^(NSString *sdpAnswer) {
+            MXWeakify(self);
+            [self->callStackCall createAnswer:^(NSString *sdpAnswer) {
+                MXStrongifyAndReturnIfNil(self);
 
                 NSLog(@"[MXCall] answer - Created SDP:\n%@", sdpAnswer);
 
                 // The call invite can sent to the HS
                 NSDictionary *content = @{
-                                          @"call_id": _callId,
+                                          @"call_id": self.callId,
                                           @"answer": @{
                                                   @"type": @"answer",
                                                   @"sdp": sdpAnswer
                                                   },
                                           @"version": @(0),
                                           };
-                [_callSignalingRoom sendEventOfType:kMXEventTypeStringCallAnswer content:content localEcho:nil success:nil failure:^(NSError *error) {
+                [self.callSignalingRoom sendEventOfType:kMXEventTypeStringCallAnswer content:content localEcho:nil success:nil failure:^(NSError *error) {
                     NSLog(@"[MXCall] answer: ERROR: Cannot send m.call.answer event.");
                     [self didEncounterError:error];
                 }];
@@ -365,7 +380,7 @@ NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
                 [self didEncounterError:error];
             }];
             
-            callInviteEventContent = nil;
+            self->callInviteEventContent = nil;
         };
 
         // If the room is encrypted, we need to check that encryption is set up

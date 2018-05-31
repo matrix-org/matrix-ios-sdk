@@ -209,4 +209,29 @@ FOUNDATION_EXPORT NSString *const kMXToolsRegexStringForMatrixGroupIdentifier;
  */
 + (id)deserialiseJSONString:(NSString*)jsonString;
 
+#pragma mark - weak/strong self dance 
+
+/**
+ Create a weak reference on a variable.
+
+ @param var the variable to weakify.
+ */
+#define MXWeakify(var) \
+    __weak typeof(var) weak##var = var
+
+/**
+ Retrieved a strong reference on a variable weakified with `MXWeakify`.
+
+ Make a return if the variable has been released.
+
+ @param var the variable to set the value to.
+ */
+#define MXStrongifyAndReturnIfNil(var) \
+    if (!weak##var) \
+    { \
+        NSLog(@"[MXStrongifyAndReturnIfNil] Released reference at %@:%d", @(__FILE__).lastPathComponent, __LINE__); \
+        return; \
+    } \
+    typeof(var) var = weak##var
+
 @end
