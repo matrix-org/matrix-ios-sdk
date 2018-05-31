@@ -487,6 +487,26 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
 - (MXHTTPOperation*)logout:(void (^)(void))success
                    failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
+/**
+ Deactivate the user's account, removing all ability for the user to login again.
+ 
+ @discussion This API endpoint uses the User-Interactive Authentication API.
+ 
+ @note An access token should be submitted to this endpoint if the client has an active session.
+ The homeserver may change the flows available depending on whether a valid access token is provided.
+ 
+ @param authParameters The additional authentication information for the user-interactive authentication API.
+ @param eraseAccount Indicating whether the account should be erased.
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+ 
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)deactivateAccountWithAuthParameters:(NSDictionary*)authParameters
+                                           eraseAccount:(BOOL)eraseAccount
+                                                success:(void (^)(void))success
+                                                failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
+
 
 #pragma mark - MXSession pause prevention
 /**
@@ -1067,6 +1087,24 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
  @return the tag order to apply to get the expected position.
  */
 - (NSString*)tagOrderToBeAtIndex:(NSUInteger)index from:(NSUInteger)originIndex withTag:(NSString *)tag;
+
+
+#pragma mark - User's account data
+/**
+ Set some account data for the user.
+
+ @param data the new data to set for this event type.
+ @param type The event type of the account_data to set (@see kMXAccountDataType* strings)
+             Custom types should be namespaced to avoid clashes.
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)setAccountData:(NSDictionary*)data
+                           forType:(NSString*)type
+                           success:(void (^)(void))success
+                           failure:(void (^)(NSError *error))failure;
 
 
 #pragma mark - Crypto

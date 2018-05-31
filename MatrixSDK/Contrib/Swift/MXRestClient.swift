@@ -295,6 +295,29 @@ public extension MXRestClient {
         return __logout(currySuccess(completion), failure: curryFailure(completion))
     }
     
+
+    /**
+     Deactivate the user's account, removing all ability for the user to login again.
+     
+     This API endpoint uses the User-Interactive Authentication API.
+     
+     An access token should be submitted to this endpoint if the client has an active session.
+     The homeserver may change the flows available depending on whether a valid access token is provided.
+
+     - parameters:
+        - authParameters The additional authentication information for the user-interactive authentication API.
+        - eraseAccount Indicating whether the account should be erased.
+        - completion: A block object called when the operation completes.
+        - response: indicates whether the request succeeded or not.
+     
+     - returns: a `MXHTTPOperation` instance.
+     */
+    @nonobjc @discardableResult func deactivateAccount(withAuthParameters authParameters: [String: Any], eraseAccount: Bool,  completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation {
+        return __deactivateAccount(withAuthParameters: authParameters, eraseAccount: eraseAccount, success: currySuccess(completion), failure: curryFailure(completion))
+    }
+    
+    
+    
     
     
     

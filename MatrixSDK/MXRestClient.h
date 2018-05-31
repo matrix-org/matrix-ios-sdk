@@ -62,6 +62,7 @@ FOUNDATION_EXPORT NSString *const kMXContentPrefixPath;
 FOUNDATION_EXPORT NSString *const kMXAccountDataTypeDirect;
 FOUNDATION_EXPORT NSString *const kMXAccountDataTypePushRules;
 FOUNDATION_EXPORT NSString *const kMXAccountDataTypeIgnoredUserList;
+FOUNDATION_EXPORT NSString *const kMXAccountDataTypeUserWidgets;
 
 /**
  Account data keys
@@ -369,6 +370,28 @@ typedef enum : NSUInteger
  */
 - (MXHTTPOperation*)logout:(void (^)(void))success
                    failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
+
+
+/**
+ Deactivate the user's account, removing all ability for the user to login again.
+ 
+ @discussion This API endpoint uses the User-Interactive Authentication API.
+ 
+ @note An access token should be submitted to this endpoint if the client has an active session.
+ The homeserver may change the flows available depending on whether a valid access token is provided.
+ 
+ @param authParameters The additional authentication information for the user-interactive authentication API.
+ @param eraseAccount Indicating whether the account should be erased.
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+ 
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)deactivateAccountWithAuthParameters:(NSDictionary*)authParameters
+                                           eraseAccount:(BOOL)eraseAccount
+                                                success:(void (^)(void))success
+                                                failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
+
 
 #pragma mark - Account data
 /**
@@ -1221,7 +1244,11 @@ typedef enum : NSUInteger
  Retrieve an event from its event id.
 
  @param eventId the id of the event to retrieve.
- @param callback the asynchronous callback called with the response
+
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
  */
 - (MXHTTPOperation*)eventWithEventId:(NSString*)eventId
                              success:(void (^)(MXEvent *event))success
@@ -1232,7 +1259,11 @@ typedef enum : NSUInteger
 
  @param eventId the id of the event to retrieve.
  @param roomId the id of the room where the event is.
- @param callback the asynchronous callback called with the response
+ 
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
  */
 - (MXHTTPOperation*)eventWithEventId:(NSString*)eventId
                               inRoom:(NSString*)roomId

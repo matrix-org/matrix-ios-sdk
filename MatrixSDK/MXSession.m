@@ -40,7 +40,7 @@
 
 #pragma mark - Constants definitions
 
-const NSString *MatrixSDKVersion = @"0.10.10";
+const NSString *MatrixSDKVersion = @"0.10.11";
 NSString *const kMXSessionStateDidChangeNotification = @"kMXSessionStateDidChangeNotification";
 NSString *const kMXSessionNewRoomNotification = @"kMXSessionNewRoomNotification";
 NSString *const kMXSessionWillLeaveRoomNotification = @"kMXSessionWillLeaveRoomNotification";
@@ -741,6 +741,17 @@ typedef void (^MXOnResumeDone)(void);
     } failure:nil];
 
     return operation;
+}
+
+- (MXHTTPOperation*)deactivateAccountWithAuthParameters:(NSDictionary*)authParameters
+                                           eraseAccount:(BOOL)eraseAccount
+                                                success:(void (^)(void))success
+                                                failure:(void (^)(NSError *error))failure
+{
+    return [self.matrixRestClient deactivateAccountWithAuthParameters:authParameters
+                                                         eraseAccount:eraseAccount
+                                                              success:success
+                                                              failure:failure];
 }
 
 - (BOOL)isEventStreamInitialised
@@ -1807,7 +1818,7 @@ typedef void (^MXOnResumeDone)(void);
     __weak typeof(self) weakSelf = self;
     
     // Push the current direct rooms dictionary to the homeserver.
-    return [matrixRestClient setAccountData:_directRooms forType:kMXAccountDataTypeDirect success:^{
+    return [self setAccountData:_directRooms forType:kMXAccountDataTypeDirect success:^{
         
         // Notify a change in direct rooms directory
         [[NSNotificationCenter defaultCenter] postNotificationName:kMXSessionDirectRoomsDidChangeNotification
@@ -2598,7 +2609,7 @@ typedef void (^MXOnResumeDone)(void);
                            kMXAccountDataKeyIgnoredUser: ignoredUsersDict
                            };
 //    __weak __typeof(self)weakSelf = self;
-    return [matrixRestClient setAccountData:data forType:kMXAccountDataTypeIgnoredUserList success:^{
+    return [self setAccountData:data forType:kMXAccountDataTypeIgnoredUserList success:^{
 
 //        __strong __typeof(weakSelf)strongSelf = weakSelf;
 
@@ -2641,7 +2652,7 @@ typedef void (^MXOnResumeDone)(void);
                            kMXAccountDataKeyIgnoredUser: ignoredUsersDict
                            };
 //    __weak __typeof(self)weakSelf = self;
-    return [matrixRestClient setAccountData:data forType:kMXAccountDataTypeIgnoredUserList success:^{
+    return [self setAccountData:data forType:kMXAccountDataTypeIgnoredUserList success:^{
 
 //        __strong __typeof(weakSelf)strongSelf = weakSelf;
 
@@ -2952,6 +2963,15 @@ typedef void (^MXOnResumeDone)(void);
     return [formatter stringFromNumber:[NSNumber numberWithDouble:order]];
 }
 
+
+#pragma mark - User's account data
+- (MXHTTPOperation*)setAccountData:(NSDictionary*)data
+                           forType:(NSString*)type
+                           success:(void (^)(void))success
+                           failure:(void (^)(NSError *error))failure
+{
+    return [matrixRestClient setAccountData:data forType:type success:success failure:failure];
+}
 
 #pragma mark - Crypto
 

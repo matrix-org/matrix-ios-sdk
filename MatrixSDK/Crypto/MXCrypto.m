@@ -180,9 +180,11 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
 - (void)deleteStore:(void (^)(void))onComplete;
 {
 #ifdef MX_CRYPTO
+    MXWeakify(self);
     dispatch_async(_cryptoQueue, ^{
-    
-        [MXCryptoStoreClass deleteStoreWithCredentials:_mxSession.matrixRestClient.credentials];
+        MXStrongifyAndReturnIfNil(self);
+
+        [MXCryptoStoreClass deleteStoreWithCredentials:self.mxSession.matrixRestClient.credentials];
 
         if (onComplete)
         {
