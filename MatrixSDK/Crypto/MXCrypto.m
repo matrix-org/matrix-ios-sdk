@@ -1192,6 +1192,32 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
 }
 #endif
 
+- (void)reRequestRoomKeyForEvent:(MXEvent *)event
+{
+#ifdef MX_CRYPTO
+    dispatch_async(_decryptionQueue, ^{
+
+        NSLog(@"[MXCrypto] reRequestRoomKeyForEvent: %@", event.eventId);
+
+        NSDictionary *wireContent = event.wireContent;
+        NSString *algorithm, *senderKey, *sessionId;
+        MXJSONModelSetString(algorithm, wireContent[@"algorithm"]);
+        MXJSONModelSetString(senderKey, wireContent[@"sender_key"]);
+        MXJSONModelSetString(sessionId, wireContent[@"session_id"]);
+
+        if (algorithm && senderKey && sessionId)
+        {
+            [outgoingRoomKeyRequestManager resendRoomKeyRequest:@{
+                                     @"room_id": event.roomId,
+                                     @"algorithm": algorithm,
+                                     @"sender_key": senderKey,
+                                     @"session_id": sessionId
+                                     }];
+        }
+    });
+#endif
+}
+
 
 #pragma mark - Crypto settings
 - (BOOL)globalBlacklistUnverifiedDevices
