@@ -420,40 +420,14 @@ MXAuthAction;
             }
 
         } failure:^(NSError *error) {
-            
-            if (failure && processingQueue)
-            {
-                dispatch_async(processingQueue, ^{
-                    
-                    if (completionQueue)
-                    {
-                        dispatch_async(completionQueue, ^{
-                            failure(error);
-                        });
-                    }
-                    
-                });
-            }
+            [self dispatchFailure:error inBlock:failure];
         }];
 
         // Mutate MXHTTPOperation so that the user can cancel this new operation
         [operation mutateTo:operation2];
 
     } failure:^(NSError *error) {
-        
-        if (failure && processingQueue)
-        {
-            dispatch_async(processingQueue, ^{
-                
-                if (completionQueue)
-                {
-                    dispatch_async(completionQueue, ^{
-                        failure(error);
-                    });
-                }
-                
-            });
-        }
+        [self dispatchFailure:error inBlock:failure];
     }];
 
     return operation;
@@ -505,19 +479,7 @@ MXAuthAction;
                                      }
                                  }
                                  failure:^(NSError *error) {
-                                     if (failure && processingQueue)
-                                     {
-                                         dispatch_async(processingQueue, ^{
-                                             
-                                             if (completionQueue)
-                                             {
-                                                 dispatch_async(completionQueue, ^{
-                                                     failure(error);
-                                                 });
-                                             }
-                                             
-                                         });
-                                     }
+                                     [self dispatchFailure:error inBlock:failure];
                                  }];
 }
 
@@ -549,21 +511,7 @@ MXAuthAction;
                                      
                                  }
                                  failure:^(NSError *error) {
-                                     
-                                     if (failure && processingQueue)
-                                     {
-                                         dispatch_async(processingQueue, ^{
-                                             
-                                             if (completionQueue)
-                                             {
-                                                 dispatch_async(completionQueue, ^{
-                                                     failure(error);
-                                                 });
-                                             }
-                                             
-                                         });
-                                     }
-                                     
+                                     [self dispatchFailure:error inBlock:failure];
                                  }];
 }
 
@@ -580,19 +528,7 @@ MXAuthAction;
 {
     if (![loginType isEqualToString:kMXLoginFlowTypePassword])
     {
-        if (failure && processingQueue)
-        {
-            dispatch_async(processingQueue, ^{
-                
-                if (completionQueue)
-                {
-                    dispatch_async(completionQueue, ^{
-                        failure(nil);
-                    });
-                }
-                
-            });
-        }
+        [self dispatchFailure:nil inBlock:failure];
         return nil;
     }
 
@@ -643,20 +579,7 @@ MXAuthAction;
                    }
                    
                } failure:^(NSError *error) {
-                   
-                   if (failure && processingQueue)
-                   {
-                       dispatch_async(processingQueue, ^{
-                           
-                           if (completionQueue)
-                           {
-                               dispatch_async(completionQueue, ^{
-                                   failure(error);
-                               });
-                           }
-                       });
-                   }
-                   
+                   [self dispatchFailure:error inBlock:failure];
                }];
 }
 
@@ -677,20 +600,7 @@ MXAuthAction;
     {
         NSError* error = [NSError errorWithDomain:@"Invalid params" code:500 userInfo:nil];
 
-        if (failure && processingQueue)
-        {
-            dispatch_async(processingQueue, ^{
-                
-                if (completionQueue)
-                {
-                    dispatch_async(completionQueue, ^{
-                        failure(error);
-                    });
-                }
-                
-            });
-        }
-
+        [self dispatchFailure:error inBlock:failure];
         return nil;
     }
 
@@ -714,19 +624,7 @@ MXAuthAction;
                                      }
                                  }
                                  failure:^(NSError *error) {
-                                     
-                                     if (failure && processingQueue)
-                                     {
-                                         dispatch_async(processingQueue, ^{
-                                             
-                                             if (completionQueue)
-                                             {
-                                                 dispatch_async(completionQueue, ^{
-                                                     failure(error);
-                                                 });
-                                             }
-                                         });
-                                     }
+                                     [self dispatchFailure:error inBlock:failure];
                                  }];
 }
 
@@ -739,20 +637,7 @@ MXAuthAction;
     {
         NSError* error = [NSError errorWithDomain:@"Invalid params" code:500 userInfo:nil];
 
-        if (failure && processingQueue)
-        {
-            dispatch_async(processingQueue, ^{
-                
-                if (completionQueue)
-                {
-                    dispatch_async(completionQueue, ^{
-                        failure(error);
-                    });
-                }
-                
-            });
-        }
-
+        [self dispatchFailure:error inBlock:failure];
         return nil;
     }
 
@@ -785,20 +670,7 @@ MXAuthAction;
                                      }
                                  }
                                  failure:^(NSError *error) {
-                                     
-                                     if (failure && processingQueue)
-                                     {
-                                         dispatch_async(processingQueue, ^{
-                                             
-                                             if (completionQueue)
-                                             {
-                                                 dispatch_async(completionQueue, ^{
-                                                     failure(error);
-                                                 });
-                                             }
-                                             
-                                         });
-                                     }
+                                     [self dispatchFailure:error inBlock:failure];
                                  }];
 }
 
@@ -880,21 +752,7 @@ MXAuthAction;
                                      
                                  }
                                  failure:^(NSError *error) {
-                                     
-                                     if (failure && processingQueue)
-                                     {
-                                         dispatch_async(processingQueue, ^{
-                                             
-                                             if (completionQueue)
-                                             {
-                                                 dispatch_async(completionQueue, ^{
-                                                     failure(error);
-                                                 });
-                                             }
-                                             
-                                         });
-                                     }
-                                     
+                                     [self dispatchFailure:error inBlock:failure];
                                  }];
 }
 
@@ -921,21 +779,7 @@ MXAuthAction;
                                      }
                                  }
                                  failure:^(NSError *error) {
-                                     
-                                     if (failure && processingQueue)
-                                     {
-                                         dispatch_async(processingQueue, ^{
-                                             
-                                             if (completionQueue)
-                                             {
-                                                 dispatch_async(completionQueue, ^{
-                                                     failure(error);
-                                                 });
-                                             }
-                                             
-                                         });
-                                     }
-                                     
+                                     [self dispatchFailure:error inBlock:failure];
                                  }];
 }
 
@@ -950,20 +794,7 @@ MXAuthAction;
     {
         NSError* error = [NSError errorWithDomain:@"Invalid params" code:500 userInfo:nil];
         
-        if (failure && processingQueue)
-        {
-            dispatch_async(processingQueue, ^{
-                
-                if (completionQueue)
-                {
-                    dispatch_async(completionQueue, ^{
-                        failure(error);
-                    });
-                }
-                
-            });
-        }
-        
+        [self dispatchFailure:error inBlock:failure];
         return nil;
     }
     
@@ -1000,20 +831,7 @@ MXAuthAction;
                                      }
                                  }
                                  failure:^(NSError *error) {
-                                     
-                                     if (failure && processingQueue)
-                                     {
-                                         dispatch_async(processingQueue, ^{
-                                             
-                                             if (completionQueue)
-                                             {
-                                                 dispatch_async(completionQueue, ^{
-                                                     failure(error);
-                                                 });
-                                             }
-                                             
-                                         });
-                                     }
+                                     [self dispatchFailure:error inBlock:failure];
                                  }];
 }
 
@@ -1049,20 +867,7 @@ MXAuthAction;
 
                                  }
                                  failure:^(NSError *error) {
-                                     
-                                     if (failure && processingQueue)
-                                     {
-                                         dispatch_async(processingQueue, ^{
-                                             
-                                             if (completionQueue)
-                                             {
-                                                 dispatch_async(completionQueue, ^{
-                                                     failure(error);
-                                                 });
-                                             }
-                                             
-                                         });
-                                     }
+                                     [self dispatchFailure:error inBlock:failure];
                                  }];
 }
 
@@ -1096,20 +901,7 @@ MXAuthAction;
 
                                  }
                                  failure:^(NSError *error) {
-
-                                     if (failure && processingQueue)
-                                     {
-                                         dispatch_async(processingQueue, ^{
-
-                                             if (completionQueue)
-                                             {
-                                                 dispatch_async(completionQueue, ^{
-                                                     failure(error);
-                                                 });
-                                             }
-
-                                         });
-                                     }
+                                     [self dispatchFailure:error inBlock:failure];
                                  }];
 }
 
@@ -1175,19 +967,7 @@ MXAuthAction;
                                      }
                                  }
                                  failure:^(NSError *error) {
-                                     if (failure && processingQueue)
-                                     {
-                                         dispatch_async(processingQueue, ^{
-                                             
-                                             if (completionQueue)
-                                             {
-                                                 dispatch_async(completionQueue, ^{
-                                                     failure(error);
-                                                 });
-                                             }
-                                             
-                                         });
-                                     }
+                                     [self dispatchFailure:error inBlock:failure];
                                  }];
 }
 
@@ -1252,19 +1032,7 @@ MXAuthAction;
                                      }
                                  }
                                  failure:^(NSError *error) {
-                                     if (failure && processingQueue)
-                                     {
-                                         dispatch_async(processingQueue, ^{
-                                             
-                                             if (completionQueue)
-                                             {
-                                                 dispatch_async(completionQueue, ^{
-                                                     failure(error);
-                                                 });
-                                             }
-                                             
-                                         });
-                                     }
+                                     [self dispatchFailure:error inBlock:failure];
                                  }];
 }
 
@@ -1286,20 +1054,7 @@ MXAuthAction;
     {
         NSError* error = [NSError errorWithDomain:@"Invalid params" code:500 userInfo:nil];
 
-        if (failure && processingQueue)
-        {
-            dispatch_async(processingQueue, ^{
-                
-                if (completionQueue)
-                {
-                    dispatch_async(completionQueue, ^{
-                        failure(error);
-                    });
-                }
-                
-            });
-        }
-
+        [self dispatchFailure:error inBlock:failure];
         return nil;
     }
 
@@ -1379,19 +1134,7 @@ MXAuthAction;
                                      }
                                  }
                                  failure:^(NSError *error) {
-                                     if (failure && processingQueue)
-                                     {
-                                         dispatch_async(processingQueue, ^{
-                                             
-                                             if (completionQueue)
-                                             {
-                                                 dispatch_async(completionQueue, ^{
-                                                     failure(error);
-                                                 });
-                                             }
-                                             
-                                         });
-                                     }
+                                     [self dispatchFailure:error inBlock:failure];
                                  }];
 }
 
@@ -1449,19 +1192,7 @@ MXAuthAction;
                                      }
                                  }
                                  failure:^(NSError *error) {
-                                     if (failure && processingQueue)
-                                     {
-                                         dispatch_async(processingQueue, ^{
-                                             
-                                             if (completionQueue)
-                                             {
-                                                 dispatch_async(completionQueue, ^{
-                                                     failure(error);
-                                                 });
-                                             }
-                                             
-                                         });
-                                     }
+                                     [self dispatchFailure:error inBlock:failure];
                                  }];
 }
 
@@ -1510,19 +1241,7 @@ MXAuthAction;
                                      }
                                  }
                                  failure:^(NSError *error) {
-                                     if (failure && processingQueue)
-                                     {
-                                         dispatch_async(processingQueue, ^{
-                                             
-                                             if (completionQueue)
-                                             {
-                                                 dispatch_async(completionQueue, ^{
-                                                     failure(error);
-                                                 });
-                                             }
-                                             
-                                         });
-                                     }
+                                     [self dispatchFailure:error inBlock:failure];
                                  }];
 }
 
@@ -1609,36 +1328,12 @@ MXAuthAction;
                                          }
                                      }
                                      failure:^(NSError *error) {
-                                         if (failure && processingQueue)
-                                         {
-                                             dispatch_async(processingQueue, ^{
-                                                 
-                                                 if (completionQueue)
-                                                 {
-                                                     dispatch_async(completionQueue, ^{
-                                                         failure(error);
-                                                     });
-                                                 }
-                                                 
-                                             });
-                                         }
+                                         [self dispatchFailure:error inBlock:failure];
                                      }];
     }
     else
     {
-        if (failure && processingQueue)
-        {
-            dispatch_async(processingQueue, ^{
-                
-                if (completionQueue)
-                {
-                    dispatch_async(completionQueue, ^{
-                        failure([NSError errorWithDomain:kMXRestClientErrorDomain code:0 userInfo:@{@"error": @"Invalid argument"}]);
-                    });
-                }
-                
-            });
-        }
+        [self dispatchFailure:[NSError errorWithDomain:kMXRestClientErrorDomain code:0 userInfo:@{@"error": @"Invalid argument"}] inBlock:failure];
         return nil;
     }
 }
@@ -1684,19 +1379,7 @@ MXAuthAction;
                                      
                                  }
                                  failure:^(NSError *error) {
-                                     if (failure && processingQueue)
-                                     {
-                                         dispatch_async(processingQueue, ^{
-                                             
-                                             if (completionQueue)
-                                             {
-                                                 dispatch_async(completionQueue, ^{
-                                                     failure(error);
-                                                 });
-                                             }
-                                             
-                                         });
-                                     }
+                                     [self dispatchFailure:error inBlock:failure];
                                  }];
 }
 
@@ -1739,19 +1422,7 @@ MXAuthAction;
                                      }
                                  }
                                  failure:^(NSError *error) {
-                                     if (failure && processingQueue)
-                                     {
-                                         dispatch_async(processingQueue, ^{
-                                             
-                                             if (completionQueue)
-                                             {
-                                                 dispatch_async(completionQueue, ^{
-                                                     failure(error);
-                                                 });
-                                             }
-                                             
-                                         });
-                                     }
+                                     [self dispatchFailure:error inBlock:failure];
                                  }];
 }
 
@@ -1818,19 +1489,7 @@ MXAuthAction;
                                      }
                                  }
                                  failure:^(NSError *error) {
-                                     if (failure && processingQueue)
-                                     {
-                                         dispatch_async(processingQueue, ^{
-                                             
-                                             if (completionQueue)
-                                             {
-                                                 dispatch_async(completionQueue, ^{
-                                                     failure(error);
-                                                 });
-                                             }
-                                             
-                                         });
-                                     }
+                                     [self dispatchFailure:error inBlock:failure];
                                  }];
 }
 
@@ -1875,19 +1534,7 @@ MXAuthAction;
                                      }
                                  }
                                  failure:^(NSError *error) {
-                                     if (failure && processingQueue)
-                                     {
-                                         dispatch_async(processingQueue, ^{
-                                             
-                                             if (completionQueue)
-                                             {
-                                                 dispatch_async(completionQueue, ^{
-                                                     failure(error);
-                                                 });
-                                             }
-                                             
-                                         });
-                                     }
+                                     [self dispatchFailure:error inBlock:failure];
                                  }];
 }
 
@@ -1929,19 +1576,7 @@ MXAuthAction;
                                      }
                                  }
                                  failure:^(NSError *error) {
-                                     if (failure && processingQueue)
-                                     {
-                                         dispatch_async(processingQueue, ^{
-                                             
-                                             if (completionQueue)
-                                             {
-                                                 dispatch_async(completionQueue, ^{
-                                                     failure(error);
-                                                 });
-                                             }
-                                             
-                                         });
-                                     }
+                                     [self dispatchFailure:error inBlock:failure];
                                  }];
 }
 
@@ -2217,19 +1852,7 @@ MXAuthAction;
                                      }
                                  }
                                  failure:^(NSError *error) {
-                                     if (failure && processingQueue)
-                                     {
-                                         dispatch_async(processingQueue, ^{
-                                             
-                                             if (completionQueue)
-                                             {
-                                                 dispatch_async(completionQueue, ^{
-                                                     failure(error);
-                                                 });
-                                             }
-                                             
-                                         });
-                                     }
+                                     [self dispatchFailure:error inBlock:failure];
                                  }];
 }
 
@@ -2260,19 +1883,7 @@ MXAuthAction;
                                      }
                                  }
                                  failure:^(NSError *error) {
-                                     if (failure && processingQueue)
-                                     {
-                                         dispatch_async(processingQueue, ^{
-                                             
-                                             if (completionQueue)
-                                             {
-                                                 dispatch_async(completionQueue, ^{
-                                                     failure(error);
-                                                 });
-                                             }
-                                             
-                                         });
-                                     }
+                                     [self dispatchFailure:error inBlock:failure];
                                  }];
 }
 
@@ -2306,19 +1917,7 @@ MXAuthAction;
                                      }
                                  }
                                  failure:^(NSError *error) {
-                                     if (failure && processingQueue)
-                                     {
-                                         dispatch_async(processingQueue, ^{
-                                             
-                                             if (completionQueue)
-                                             {
-                                                 dispatch_async(completionQueue, ^{
-                                                     failure(error);
-                                                 });
-                                             }
-                                             
-                                         });
-                                     }
+                                     [self dispatchFailure:error inBlock:failure];
                                  }];
 }
 
@@ -2349,19 +1948,7 @@ MXAuthAction;
                                      }
                                  }
                                  failure:^(NSError *error) {
-                                     if (failure && processingQueue)
-                                     {
-                                         dispatch_async(processingQueue, ^{
-                                             
-                                             if (completionQueue)
-                                             {
-                                                 dispatch_async(completionQueue, ^{
-                                                     failure(error);
-                                                 });
-                                             }
-                                             
-                                         });
-                                     }
+                                     [self dispatchFailure:error inBlock:failure];
                                  }];
 }
 
@@ -2455,19 +2042,7 @@ MXAuthAction;
                                      }
                                  }
                                  failure:^(NSError *error) {
-                                     if (failure && processingQueue)
-                                     {
-                                         dispatch_async(processingQueue, ^{
-                                             
-                                             if (completionQueue)
-                                             {
-                                                 dispatch_async(completionQueue, ^{
-                                                     failure(error);
-                                                 });
-                                             }
-                                             
-                                         });
-                                     }
+                                     [self dispatchFailure:error inBlock:failure];
                                  }];
 }
 
@@ -2568,19 +2143,7 @@ MXAuthAction;
                                      }
                                  }
                                  failure:^(NSError *error) {
-                                     if (failure && processingQueue)
-                                     {
-                                         dispatch_async(processingQueue, ^{
-                                             
-                                             if (completionQueue)
-                                             {
-                                                 dispatch_async(completionQueue, ^{
-                                                     failure(error);
-                                                 });
-                                             }
-                                             
-                                         });
-                                     }
+                                     [self dispatchFailure:error inBlock:failure];
                                  }];
 }
 
@@ -2624,19 +2187,7 @@ MXAuthAction;
                                      }
                                  }
                                  failure:^(NSError *error) {
-                                     if (failure && processingQueue)
-                                     {
-                                         dispatch_async(processingQueue, ^{
-                                             
-                                             if (completionQueue)
-                                             {
-                                                 dispatch_async(completionQueue, ^{
-                                                     failure(error);
-                                                 });
-                                             }
-                                             
-                                         });
-                                     }
+                                     [self dispatchFailure:error inBlock:failure];
                                  }];
 }
 
@@ -2793,19 +2344,7 @@ MXAuthAction;
                                      }
                                  }
                                  failure:^(NSError *error) {
-                                     if (failure && processingQueue)
-                                     {
-                                         dispatch_async(processingQueue, ^{
-                                             
-                                             if (completionQueue)
-                                             {
-                                                 dispatch_async(completionQueue, ^{
-                                                     failure(error);
-                                                 });
-                                             }
-                                             
-                                         });
-                                     }
+                                     [self dispatchFailure:error inBlock:failure];
                                  }];
 }
 
@@ -2866,19 +2405,7 @@ MXAuthAction;
                                      }
                                  }
                                  failure:^(NSError *error) {
-                                     if (failure && processingQueue)
-                                     {
-                                         dispatch_async(processingQueue, ^{
-                                             
-                                             if (completionQueue)
-                                             {
-                                                 dispatch_async(completionQueue, ^{
-                                                     failure(error);
-                                                 });
-                                             }
-                                             
-                                         });
-                                     }
+                                     [self dispatchFailure:error inBlock:failure];
                                  }];
 }
 
@@ -2918,19 +2445,7 @@ MXAuthAction;
                                      }
                                  }
                                  failure:^(NSError *error) {
-                                     if (failure && processingQueue)
-                                     {
-                                         dispatch_async(processingQueue, ^{
-                                             
-                                             if (completionQueue)
-                                             {
-                                                 dispatch_async(completionQueue, ^{
-                                                     failure(error);
-                                                 });
-                                             }
-                                             
-                                         });
-                                     }
+                                     [self dispatchFailure:error inBlock:failure];
                                  }];
 }
 
@@ -2962,19 +2477,7 @@ MXAuthAction;
                                      }
                                  }
                                  failure:^(NSError *error) {
-                                     if (failure && processingQueue)
-                                     {
-                                         dispatch_async(processingQueue, ^{
-                                             
-                                             if (completionQueue)
-                                             {
-                                                 dispatch_async(completionQueue, ^{
-                                                     failure(error);
-                                                 });
-                                             }
-                                             
-                                         });
-                                     }
+                                     [self dispatchFailure:error inBlock:failure];
                                  }];
 }
 
@@ -3016,19 +2519,7 @@ MXAuthAction;
                                                            }
                                                        }
                                                        failure:^(NSError *error) {
-                                                           if (failure && processingQueue)
-                                                           {
-                                                               dispatch_async(processingQueue, ^{
-                                                                   
-                                                                   if (completionQueue)
-                                                                   {
-                                                                       dispatch_async(completionQueue, ^{
-                                                                           failure(error);
-                                                                       });
-                                                                   }
-                                                                   
-                                                               });
-                                                           }
+                                                           [self dispatchFailure:error inBlock:failure];
                                                        }];
     
     // Disable retry for typing notification as it is a very ephemeral piece of information
@@ -3074,19 +2565,7 @@ MXAuthAction;
                                      }
                                  }
                                  failure:^(NSError *error) {
-                                     if (failure && processingQueue)
-                                     {
-                                         dispatch_async(processingQueue, ^{
-                                             
-                                             if (completionQueue)
-                                             {
-                                                 dispatch_async(completionQueue, ^{
-                                                     failure(error);
-                                                 });
-                                             }
-                                             
-                                         });
-                                     }
+                                     [self dispatchFailure:error inBlock:failure];
                                  }];
 }
 
@@ -3130,19 +2609,7 @@ MXAuthAction;
                                      }
                                  }
                                  failure:^(NSError *error) {
-                                     if (failure && processingQueue)
-                                     {
-                                         dispatch_async(processingQueue, ^{
-                                             
-                                             if (completionQueue)
-                                             {
-                                                 dispatch_async(completionQueue, ^{
-                                                     failure(error);
-                                                 });
-                                             }
-                                             
-                                         });
-                                     }
+                                     [self dispatchFailure:error inBlock:failure];
                                  }];
 }
 
@@ -3179,19 +2646,7 @@ MXAuthAction;
                                      }
                                  }
                                  failure:^(NSError *error) {
-                                     if (failure && processingQueue)
-                                     {
-                                         dispatch_async(processingQueue, ^{
-
-                                             if (completionQueue)
-                                             {
-                                                 dispatch_async(completionQueue, ^{
-                                                     failure(error);
-                                                 });
-                                             }
-
-                                         });
-                                     }
+                                     [self dispatchFailure:error inBlock:failure];
                                  }];
 }
 
@@ -3223,19 +2678,7 @@ MXAuthAction;
                                           }
                                       }
                                       failure:^(NSError *error) {
-
-                                          if (failure && processingQueue)
-                                          {
-                                              dispatch_async(processingQueue, ^{
-
-                                                  if (completionQueue)
-                                                  {
-                                                      dispatch_async(completionQueue, ^{
-                                                          failure(error);
-                                                      });
-                                                  }
-                                              });
-                                          }
+                                          [self dispatchFailure:error inBlock:failure];
                                       }];
     return operation;
 }
@@ -3290,18 +2733,7 @@ MXAuthAction;
                                               return;
                                           }
 
-                                          if (failure && processingQueue)
-                                          {
-                                              dispatch_async(processingQueue, ^{
-
-                                                  if (completionQueue)
-                                                  {
-                                                      dispatch_async(completionQueue, ^{
-                                                          failure(error);
-                                                      });
-                                                  }
-                                              });
-                                          }
+                                          [self dispatchFailure:error inBlock:failure];
                                       }];
     return operation;
 }
@@ -3340,19 +2772,7 @@ MXAuthAction;
                                      }
                                  }
                                  failure:^(NSError *error) {
-                                     if (failure && processingQueue)
-                                     {
-                                         dispatch_async(processingQueue, ^{
-                                             
-                                             if (completionQueue)
-                                             {
-                                                 dispatch_async(completionQueue, ^{
-                                                     failure(error);
-                                                 });
-                                             }
-                                             
-                                         });
-                                     }
+                                     [self dispatchFailure:error inBlock:failure];
                                  }];
 }
 
@@ -3432,19 +2852,7 @@ MXAuthAction;
                                      }
                                  }
                                  failure:^(NSError *error) {
-                                     if (failure && processingQueue)
-                                     {
-                                         dispatch_async(processingQueue, ^{
-                                             
-                                             if (completionQueue)
-                                             {
-                                                 dispatch_async(completionQueue, ^{
-                                                     failure(error);
-                                                 });
-                                             }
-                                             
-                                         });
-                                     }
+                                     [self dispatchFailure:error inBlock:failure];
                                  }];
 }
 
@@ -3483,19 +2891,7 @@ MXAuthAction;
                                      }
                                  }
                                  failure:^(NSError *error) {
-                                     if (failure && processingQueue)
-                                     {
-                                         dispatch_async(processingQueue, ^{
-                                             
-                                             if (completionQueue)
-                                             {
-                                                 dispatch_async(completionQueue, ^{
-                                                     failure(error);
-                                                 });
-                                             }
-                                             
-                                         });
-                                     }
+                                     [self dispatchFailure:error inBlock:failure];
                                  }];
 }
 
@@ -3524,19 +2920,7 @@ MXAuthAction;
                                      }
                                  }
                                  failure:^(NSError *error) {
-                                     if (failure && processingQueue)
-                                     {
-                                         dispatch_async(processingQueue, ^{
-                                             
-                                             if (completionQueue)
-                                             {
-                                                 dispatch_async(completionQueue, ^{
-                                                     failure(error);
-                                                 });
-                                             }
-                                             
-                                         });
-                                     }
+                                     [self dispatchFailure:error inBlock:failure];
                                  }];
 }
 
@@ -3569,19 +2953,7 @@ MXAuthAction;
                                      }
                                  }
                                  failure:^(NSError *error) {
-                                     if (failure && processingQueue)
-                                     {
-                                         dispatch_async(processingQueue, ^{
-                                             
-                                             if (completionQueue)
-                                             {
-                                                 dispatch_async(completionQueue, ^{
-                                                     failure(error);
-                                                 });
-                                             }
-                                             
-                                         });
-                                     }
+                                     [self dispatchFailure:error inBlock:failure];
                                  }];
 }
 
@@ -3623,19 +2995,7 @@ MXAuthAction;
                                      }
                                  }
                                  failure:^(NSError *error) {
-                                     if (failure && processingQueue)
-                                     {
-                                         dispatch_async(processingQueue, ^{
-                                             
-                                             if (completionQueue)
-                                             {
-                                                 dispatch_async(completionQueue, ^{
-                                                     failure(error);
-                                                 });
-                                             }
-                                             
-                                         });
-                                     }
+                                     [self dispatchFailure:error inBlock:failure];
                                  }];
 }
 
@@ -3666,19 +3026,7 @@ MXAuthAction;
                                      }
                                  }
                                  failure:^(NSError *error) {
-                                     if (failure && processingQueue)
-                                     {
-                                         dispatch_async(processingQueue, ^{
-                                             
-                                             if (completionQueue)
-                                             {
-                                                 dispatch_async(completionQueue, ^{
-                                                     failure(error);
-                                                 });
-                                             }
-                                             
-                                         });
-                                     }
+                                     [self dispatchFailure:error inBlock:failure];
                                  }];
 }
 
@@ -3718,19 +3066,7 @@ MXAuthAction;
                                      }
                                  }
                                  failure:^(NSError *error) {
-                                     if (failure && processingQueue)
-                                     {
-                                         dispatch_async(processingQueue, ^{
-                                             
-                                             if (completionQueue)
-                                             {
-                                                 dispatch_async(completionQueue, ^{
-                                                     failure(error);
-                                                 });
-                                             }
-                                             
-                                         });
-                                     }
+                                     [self dispatchFailure:error inBlock:failure];
                                  }];
 }
 
@@ -3770,19 +3106,7 @@ MXAuthAction;
                                      }
                                  }
                                  failure:^(NSError *error) {
-                                     if (failure && processingQueue)
-                                     {
-                                         dispatch_async(processingQueue, ^{
-                                             
-                                             if (completionQueue)
-                                             {
-                                                 dispatch_async(completionQueue, ^{
-                                                     failure(error);
-                                                 });
-                                             }
-                                             
-                                         });
-                                     }
+                                     [self dispatchFailure:error inBlock:failure];
                                  }];
 }
 
@@ -3816,21 +3140,7 @@ MXAuthAction;
                                      
                                  }
                                  failure:^(NSError *error) {
-                                     
-                                     if (failure && processingQueue)
-                                     {
-                                         dispatch_async(processingQueue, ^{
-                                             
-                                             if (completionQueue)
-                                             {
-                                                 dispatch_async(completionQueue, ^{
-                                                     failure(error);
-                                                 });
-                                             }
-                                             
-                                         });
-                                     }
-                                     
+                                     [self dispatchFailure:error inBlock:failure];
                                  }];
 }
 
@@ -3862,19 +3172,7 @@ MXAuthAction;
                                      }
                                  }
                                  failure:^(NSError *error) {
-                                     if (failure && processingQueue)
-                                     {
-                                         dispatch_async(processingQueue, ^{
-                                             
-                                             if (completionQueue)
-                                             {
-                                                 dispatch_async(completionQueue, ^{
-                                                     failure(error);
-                                                 });
-                                             }
-                                             
-                                         });
-                                     }
+                                     [self dispatchFailure:error inBlock:failure];
                                  }];
 }
 
@@ -3913,19 +3211,7 @@ MXAuthAction;
                                      }
                                  }
                                  failure:^(NSError *error) {
-                                     if (failure && processingQueue)
-                                     {
-                                         dispatch_async(processingQueue, ^{
-                                             
-                                             if (completionQueue)
-                                             {
-                                                 dispatch_async(completionQueue, ^{
-                                                     failure(error);
-                                                 });
-                                             }
-                                             
-                                         });
-                                     }
+                                     [self dispatchFailure:error inBlock:failure];
                                  }];
 }
 
@@ -3963,19 +3249,7 @@ MXAuthAction;
                                      }
                                  }
                                  failure:^(NSError *error) {
-                                     if (failure && processingQueue)
-                                     {
-                                         dispatch_async(processingQueue, ^{
-                                             
-                                             if (completionQueue)
-                                             {
-                                                 dispatch_async(completionQueue, ^{
-                                                     failure(error);
-                                                 });
-                                             }
-                                             
-                                         });
-                                     }
+                                     [self dispatchFailure:error inBlock:failure];
                                  }];
 }
 
@@ -4005,19 +3279,7 @@ MXAuthAction;
                                      }
                                  }
                                  failure:^(NSError *error) {
-                                     if (failure && processingQueue)
-                                     {
-                                         dispatch_async(processingQueue, ^{
-                                             
-                                             if (completionQueue)
-                                             {
-                                                 dispatch_async(completionQueue, ^{
-                                                     failure(error);
-                                                 });
-                                             }
-                                             
-                                         });
-                                     }
+                                     [self dispatchFailure:error inBlock:failure];
                                  }];
 }
 
@@ -4050,19 +3312,7 @@ MXAuthAction;
                                      }
                                  }
                                  failure:^(NSError *error) {
-                                     if (failure && processingQueue)
-                                     {
-                                         dispatch_async(processingQueue, ^{
-                                             
-                                             if (completionQueue)
-                                             {
-                                                 dispatch_async(completionQueue, ^{
-                                                     failure(error);
-                                                 });
-                                             }
-                                             
-                                         });
-                                     }
+                                     [self dispatchFailure:error inBlock:failure];
                                  }];
 }
 
@@ -4175,19 +3425,7 @@ MXAuthAction;
                                      }
                                  }
                                  failure:^(NSError *error) {
-                                     if (failure && processingQueue)
-                                     {
-                                         dispatch_async(processingQueue, ^{
-                                             
-                                             if (completionQueue)
-                                             {
-                                                 dispatch_async(completionQueue, ^{
-                                                     failure(error);
-                                                 });
-                                             }
-                                             
-                                         });
-                                     }
+                                     [self dispatchFailure:error inBlock:failure];
                                  }];
     
 }
@@ -4229,19 +3467,7 @@ MXAuthAction;
                                      }
                                  }
                                  failure:^(NSError *error) {
-                                     if (failure && processingQueue)
-                                     {
-                                         dispatch_async(processingQueue, ^{
-                                             
-                                             if (completionQueue)
-                                             {
-                                                 dispatch_async(completionQueue, ^{
-                                                     failure(error);
-                                                 });
-                                             }
-                                             
-                                         });
-                                     }
+                                     [self dispatchFailure:error inBlock:failure];
                                  }];
 }
 
@@ -4319,19 +3545,7 @@ MXAuthAction;
                                      }
                                  }
                                  failure:^(NSError *error) {
-                                     if (failure && processingQueue)
-                                     {
-                                         dispatch_async(processingQueue, ^{
-                                             
-                                             if (completionQueue)
-                                             {
-                                                 dispatch_async(completionQueue, ^{
-                                                     failure(error);
-                                                 });
-                                             }
-                                             
-                                         });
-                                     }
+                                     [self dispatchFailure:error inBlock:failure];
                                  }];
 }
 
@@ -4365,19 +3579,7 @@ MXAuthAction;
                                      }
                                  }
                                  failure:^(NSError *error) {
-                                     if (failure && processingQueue)
-                                     {
-                                         dispatch_async(processingQueue, ^{
-                                             
-                                             if (completionQueue)
-                                             {
-                                                 dispatch_async(completionQueue, ^{
-                                                     failure(error);
-                                                 });
-                                             }
-                                             
-                                         });
-                                     }
+                                     [self dispatchFailure:error inBlock:failure];
                                  }];
 }
 
@@ -4411,19 +3613,7 @@ MXAuthAction;
                                      }
                                  }
                                  failure:^(NSError *error) {
-                                     if (failure && processingQueue)
-                                     {
-                                         dispatch_async(processingQueue, ^{
-
-                                             if (completionQueue)
-                                             {
-                                                 dispatch_async(completionQueue, ^{
-                                                     failure(error);
-                                                 });
-                                             }
-
-                                         });
-                                     }
+                                     [self dispatchFailure:error inBlock:failure];
                                  }];
 }
 
@@ -4474,19 +3664,7 @@ MXAuthAction;
                                      }
                                  }
                                  failure:^(NSError *error) {
-                                     if (failure && processingQueue)
-                                     {
-                                         dispatch_async(processingQueue, ^{
-                                             
-                                             if (completionQueue)
-                                             {
-                                                 dispatch_async(completionQueue, ^{
-                                                     failure(error);
-                                                 });
-                                             }
-                                             
-                                         });
-                                     }
+                                     [self dispatchFailure:error inBlock:failure];
                                  }];
 }
 
@@ -4602,19 +3780,7 @@ MXAuthAction;
                                              }
                                          }
                                          failure:^(NSError *error) {
-                                             if (failure && processingQueue)
-                                             {
-                                                 dispatch_async(processingQueue, ^{
-                                                     
-                                                     if (completionQueue)
-                                                     {
-                                                         dispatch_async(completionQueue, ^{
-                                                             failure(error);
-                                                         });
-                                                     }
-                                                     
-                                                 });
-                                             }
+                                             [self dispatchFailure:error inBlock:failure];
                                          }];
 }
 
@@ -4657,19 +3823,7 @@ MXAuthAction;
                                              }
                                          }
                                          failure:^(NSError *error) {
-                                             if (failure && processingQueue)
-                                             {
-                                                 dispatch_async(processingQueue, ^{
-                                                     
-                                                     if (completionQueue)
-                                                     {
-                                                         dispatch_async(completionQueue, ^{
-                                                             failure(error);
-                                                         });
-                                                     }
-                                                     
-                                                 });
-                                             }
+                                             [self dispatchFailure:error inBlock:failure];
                                          }];
 
 }
@@ -4715,19 +3869,7 @@ MXAuthAction;
                                              }
                                          }
                                          failure:^(NSError *error) {
-                                             if (failure && processingQueue)
-                                             {
-                                                 dispatch_async(processingQueue, ^{
-                                                     
-                                                     if (completionQueue)
-                                                     {
-                                                         dispatch_async(completionQueue, ^{
-                                                             failure(error);
-                                                         });
-                                                     }
-                                                     
-                                                 });
-                                             }
+                                             [self dispatchFailure:error inBlock:failure];
                                          }];
 }
 
@@ -4774,19 +3916,7 @@ MXAuthAction;
                                              }
                                          }
                                          failure:^(NSError *error) {
-                                             if (failure && processingQueue)
-                                             {
-                                                 dispatch_async(processingQueue, ^{
-                                                     
-                                                     if (completionQueue)
-                                                     {
-                                                         dispatch_async(completionQueue, ^{
-                                                             failure(error);
-                                                         });
-                                                     }
-                                                     
-                                                 });
-                                             }
+                                             [self dispatchFailure:error inBlock:failure];
                                          }];
 }
 
@@ -4854,19 +3984,7 @@ MXAuthAction;
                                              }
                                          }
                                          failure:^(NSError *error) {
-                                             if (failure && processingQueue)
-                                             {
-                                                 dispatch_async(processingQueue, ^{
-                                                     
-                                                     if (completionQueue)
-                                                     {
-                                                         dispatch_async(completionQueue, ^{
-                                                             failure(error);
-                                                         });
-                                                     }
-                                                     
-                                                 });
-                                             }
+                                             [self dispatchFailure:error inBlock:failure];
                                          }];
 }
 
@@ -4896,19 +4014,7 @@ MXAuthAction;
                                                  });
                                              }                                         }
                                          failure:^(NSError *error) {
-                                             if (failure && processingQueue)
-                                             {
-                                                 dispatch_async(processingQueue, ^{
-                                                     
-                                                     if (completionQueue)
-                                                     {
-                                                         dispatch_async(completionQueue, ^{
-                                                             failure(error);
-                                                         });
-                                                     }
-                                                     
-                                                 });
-                                             }
+                                             [self dispatchFailure:error inBlock:failure];
                                          }];
 }
 
@@ -4941,19 +4047,7 @@ MXAuthAction;
                                      }
                                  }
                                  failure:^(NSError *error) {
-                                     if (failure && processingQueue)
-                                     {
-                                         dispatch_async(processingQueue, ^{
-                                             
-                                             if (completionQueue)
-                                             {
-                                                 dispatch_async(completionQueue, ^{
-                                                     failure(error);
-                                                 });
-                                             }
-                                             
-                                         });
-                                     }
+                                     [self dispatchFailure:error inBlock:failure];
                                  }];
 }
 
@@ -5018,19 +4112,7 @@ MXAuthAction;
                                      }
                                  }
                                  failure:^(NSError *error) {
-                                     if (failure && processingQueue)
-                                     {
-                                         dispatch_async(processingQueue, ^{
-                                             
-                                             if (completionQueue)
-                                             {
-                                                 dispatch_async(completionQueue, ^{
-                                                     failure(error);
-                                                 });
-                                             }
-                                             
-                                         });
-                                     }
+                                     [self dispatchFailure:error inBlock:failure];
                                  }];
 }
 
@@ -5080,19 +4162,7 @@ MXAuthAction;
                                      }
                                  }
                                  failure:^(NSError *error) {
-                                     if (failure && processingQueue)
-                                     {
-                                         dispatch_async(processingQueue, ^{
-
-                                             if (completionQueue)
-                                             {
-                                                 dispatch_async(completionQueue, ^{
-                                                     failure(error);
-                                                 });
-                                             }
-
-                                         });
-                                     }
+                                     [self dispatchFailure:error inBlock:failure];
                                  }];
 }
 
@@ -5143,19 +4213,7 @@ MXAuthAction;
                                      
                                  }
                                  failure:^(NSError *error) {
-                                     if (failure && processingQueue)
-                                     {
-                                         dispatch_async(processingQueue, ^{
-                                             
-                                             if (completionQueue)
-                                             {
-                                                 dispatch_async(completionQueue, ^{
-                                                     failure(error);
-                                                 });
-                                             }
-                                             
-                                         });
-                                     }
+                                     [self dispatchFailure:error inBlock:failure];
                                  }];
 }
 
@@ -5202,19 +4260,7 @@ MXAuthAction;
                                      }
                                  }
                                  failure:^(NSError *error) {
-                                     if (failure && processingQueue)
-                                     {
-                                         dispatch_async(processingQueue, ^{
-                                             
-                                             if (completionQueue)
-                                             {
-                                                 dispatch_async(completionQueue, ^{
-                                                     failure(error);
-                                                 });
-                                             }
-                                             
-                                         });
-                                     }
+                                     [self dispatchFailure:error inBlock:failure];
                                  }];
 }
 
@@ -5249,19 +4295,7 @@ MXAuthAction;
                                      }
                                  }
                                  failure:^(NSError *error) {
-                                     if (failure && processingQueue)
-                                     {
-                                         dispatch_async(processingQueue, ^{
-                                             
-                                             if (completionQueue)
-                                             {
-                                                 dispatch_async(completionQueue, ^{
-                                                     failure(error);
-                                                 });
-                                             }
-                                             
-                                         });
-                                     }
+                                     [self dispatchFailure:error inBlock:failure];
                                  }];
 }
 
@@ -5296,21 +4330,7 @@ MXAuthAction;
                                      }
 
                                  } failure:^(NSError *error) {
-
-                                     if (failure && processingQueue)
-                                     {
-                                         dispatch_async(processingQueue, ^{
-
-                                             if (completionQueue)
-                                             {
-                                                 dispatch_async(completionQueue, ^{
-                                                     failure(error);
-                                                 });
-                                             }
-
-                                         });
-                                     }
-
+                                     [self dispatchFailure:error inBlock:failure];
                                  }];
 }
 
@@ -5354,20 +4374,7 @@ MXAuthAction;
                                      }
                                  }
                                  failure:^(NSError *error) {
-                                     
-                                     if (failure && processingQueue)
-                                     {
-                                         dispatch_async(processingQueue, ^{
-                                             
-                                             if (completionQueue)
-                                             {
-                                                 dispatch_async(completionQueue, ^{
-                                                     failure(error);
-                                                 });
-                                             }
-                                             
-                                         });
-                                     }
+                                     [self dispatchFailure:error inBlock:failure];
                                  }];
 }
 
@@ -5399,21 +4406,7 @@ MXAuthAction;
                                      }
                                      
                                  } failure:^(NSError *error) {
-                                     
-                                     if (failure && processingQueue)
-                                     {
-                                         dispatch_async(processingQueue, ^{
-                                             
-                                             if (completionQueue)
-                                             {
-                                                 dispatch_async(completionQueue, ^{
-                                                     failure(error);
-                                                 });
-                                             }
-                                             
-                                         });
-                                     }
-                                     
+                                     [self dispatchFailure:error inBlock:failure];
                                  }];
 }
 
@@ -5445,21 +4438,7 @@ MXAuthAction;
                                      }
                                      
                                  } failure:^(NSError *error) {
-                                     
-                                     if (failure && processingQueue)
-                                     {
-                                         dispatch_async(processingQueue, ^{
-                                             
-                                             if (completionQueue)
-                                             {
-                                                 dispatch_async(completionQueue, ^{
-                                                     failure(error);
-                                                 });
-                                             }
-                                             
-                                         });
-                                     }
-                                     
+                                     [self dispatchFailure:error inBlock:failure];
                                  }];
 }
 
@@ -5495,19 +4474,7 @@ MXAuthAction;
                                      }
                                      
                                  } failure:^(NSError *error) {
-                                     if (failure && processingQueue)
-                                     {
-                                         dispatch_async(processingQueue, ^{
-                                             
-                                             if (completionQueue)
-                                             {
-                                                 dispatch_async(completionQueue, ^{
-                                                     failure(error);
-                                                 });
-                                             }
-                                             
-                                         });
-                                     }
+                                     [self dispatchFailure:error inBlock:failure];
                                  }];
 }
 
@@ -5612,21 +4579,7 @@ MXAuthAction;
                                      }
                                      
                                  } failure:^(NSError *error) {
-                                     
-                                     if (failure && processingQueue)
-                                     {
-                                         dispatch_async(processingQueue, ^{
-                                             
-                                             if (completionQueue)
-                                             {
-                                                 dispatch_async(completionQueue, ^{
-                                                     failure(error);
-                                                 });
-                                             }
-                                             
-                                         });
-                                     }
-                                     
+                                     [self dispatchFailure:error inBlock:failure];
                                  }];
 }
     
@@ -5681,19 +4634,7 @@ MXAuthAction;
                                      }
                                  }
                                  failure:^(NSError *error) {
-                                     if (failure && processingQueue)
-                                     {
-                                         dispatch_async(processingQueue, ^{
-                                             
-                                             if (completionQueue)
-                                             {
-                                                 dispatch_async(completionQueue, ^{
-                                                     failure(error);
-                                                 });
-                                             }
-                                             
-                                         });
-                                     }
+                                     [self dispatchFailure:error inBlock:failure];
                                  }];
 }
 
@@ -5728,19 +4669,7 @@ MXAuthAction;
                                      }
                                  }
                                  failure:^(NSError *error) {
-                                     if (failure && processingQueue)
-                                     {
-                                         dispatch_async(processingQueue, ^{
-                                             
-                                             if (completionQueue)
-                                             {
-                                                 dispatch_async(completionQueue, ^{
-                                                     failure(error);
-                                                 });
-                                             }
-                                             
-                                         });
-                                     }
+                                     [self dispatchFailure:error inBlock:failure];
                                  }];
 }
 
@@ -5775,19 +4704,7 @@ MXAuthAction;
                                      }
                                  }
                                  failure:^(NSError *error) {
-                                     if (failure && processingQueue)
-                                     {
-                                         dispatch_async(processingQueue, ^{
-                                             
-                                             if (completionQueue)
-                                             {
-                                                 dispatch_async(completionQueue, ^{
-                                                     failure(error);
-                                                 });
-                                             }
-                                             
-                                         });
-                                     }
+                                     [self dispatchFailure:error inBlock:failure];
                                  }];
 }
 
@@ -5822,19 +4739,7 @@ MXAuthAction;
                                      }
                                  }
                                  failure:^(NSError *error) {
-                                     if (failure && processingQueue)
-                                     {
-                                         dispatch_async(processingQueue, ^{
-                                             
-                                             if (completionQueue)
-                                             {
-                                                 dispatch_async(completionQueue, ^{
-                                                     failure(error);
-                                                 });
-                                             }
-                                             
-                                         });
-                                     }
+                                     [self dispatchFailure:error inBlock:failure];
                                  }];
 }
 
@@ -5869,19 +4774,7 @@ MXAuthAction;
                                      }
                                  }
                                  failure:^(NSError *error) {
-                                     if (failure && processingQueue)
-                                     {
-                                         dispatch_async(processingQueue, ^{
-                                             
-                                             if (completionQueue)
-                                             {
-                                                 dispatch_async(completionQueue, ^{
-                                                     failure(error);
-                                                 });
-                                             }
-                                             
-                                         });
-                                     }
+                                     [self dispatchFailure:error inBlock:failure];
                                  }];
 }
 
@@ -5916,19 +4809,7 @@ MXAuthAction;
                                      }
                                  }
                                  failure:^(NSError *error) {
-                                     if (failure && processingQueue)
-                                     {
-                                         dispatch_async(processingQueue, ^{
-                                             
-                                             if (completionQueue)
-                                             {
-                                                 dispatch_async(completionQueue, ^{
-                                                     failure(error);
-                                                 });
-                                             }
-                                             
-                                         });
-                                     }
+                                     [self dispatchFailure:error inBlock:failure];
                                  }];
 }
     
@@ -5969,19 +4850,7 @@ MXAuthAction;
                                      }
                                  }
                                  failure:^(NSError *error) {
-                                     if (failure && processingQueue)
-                                     {
-                                         dispatch_async(processingQueue, ^{
-                                             
-                                             if (completionQueue)
-                                             {
-                                                 dispatch_async(completionQueue, ^{
-                                                     failure(error);
-                                                 });
-                                             }
-                                             
-                                         });
-                                     }
+                                     [self dispatchFailure:error inBlock:failure];
                                  }];
 }
 
@@ -6040,20 +4909,29 @@ MXAuthAction;
                                      }
                                  }
                                  failure:^(NSError *error) {
-                                     if (failure && processingQueue)
-                                     {
-                                         dispatch_async(processingQueue, ^{
-                                             
-                                             if (completionQueue)
-                                             {
-                                                 dispatch_async(completionQueue, ^{
-                                                     failure(error);
-                                                 });
-                                             }
-                                             
-                                         });
-                                     }
+                                     [self dispatchFailure:error inBlock:failure];
                                  }];
+}
+
+
+#pragma mark - Private methods
+
+- (void)dispatchFailure:(NSError*)error inBlock:(void (^)(NSError *error))failure
+{
+    if (failure && processingQueue)
+    {
+        MXWeakify(self);
+        dispatch_async(processingQueue, ^{
+            MXStrongifyAndReturnIfNil(self);
+
+            if (completionQueue)
+            {
+                dispatch_async(completionQueue, ^{
+                    failure(error);
+                });
+            }
+        });
+    }
 }
 
 @end
