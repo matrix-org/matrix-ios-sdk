@@ -266,8 +266,8 @@ NSUInteger const SEND_KEY_REQUESTS_DELAY_MS = 500;
     } failure:failure];
 }
 
-// Given a RoomKeyRequest, cancel it and delete the request record unless
-// andResend is set, in which case transition to UNSENT.
+// Given a RoomKeyRequest, cancel it and delete the request record.
+// If resend is set, send a new request.
 - (void)sendOutgoingRoomKeyRequestCancellation:(MXOutgoingRoomKeyRequest*)request
                                      andResend:(BOOL)resend
                                        success:(void (^)(void))success
@@ -289,8 +289,7 @@ NSUInteger const SEND_KEY_REQUESTS_DELAY_MS = 500;
 
         if (resend)
         {
-            // We want to resend, so transition to UNSENT
-            // Implement this by creating a request (with new requestId)
+            // Resend by creating a request (with new requestId)
             [self sendRoomKeyRequest:request.requestBody recipients:request.recipients];
         }
 

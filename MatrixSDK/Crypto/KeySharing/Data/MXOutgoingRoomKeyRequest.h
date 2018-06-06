@@ -49,8 +49,7 @@ typedef enum : NSUInteger
     MXRoomKeyRequestStateSent,
     // reply received, cancellation not yet sent
     MXRoomKeyRequestStateCancellationPending,
-    // Cancellation not yet sent and will transition to UNSENT instead of
-    // being deleted once the cancellation has been sent
+    // Cancellation not yet sent and will send a new request
     MXRoomKeyRequestStateCancellationPendingAndWillResend
 
 } MXRoomKeyRequestState;
