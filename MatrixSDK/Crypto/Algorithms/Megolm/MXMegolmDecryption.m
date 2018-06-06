@@ -231,7 +231,7 @@
                                    @"algorithm": content[@"algorithm"],
                                    @"room_id": content[@"room_id"],
                                    @"session_id": content[@"session_id"],
-                                   @"sender_key": event.senderKey
+                                   @"sender_key": senderKey
                                    }];
 
     [self retryDecryption:senderKey sessionId:content[@"session_id"]];
