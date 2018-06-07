@@ -298,7 +298,7 @@ MXAuthAction;
                                              NSDictionary *JSONResponse = error.userInfo[MXHTTPClientErrorResponseDataKey];
                                              if (JSONResponse)
                                              {
-                                                 authSession = [MXAuthenticationSession modelFromJSON:JSONResponse];
+                                                 MXJSONModelSetMXJSONModel(authSession, MXAuthenticationSession, JSONResponse);
                                              }
                                          }
                                      } andCompletion:^{
@@ -1935,13 +1935,9 @@ MXAuthAction;
                                  success:^(NSDictionary *JSONResponse) {
                                      if (success)
                                      {
-                                         NSMutableArray *roomMemberEvents = [NSMutableArray array];
+                                         __block NSArray *roomMemberEvents;
                                          [self dispatchProcessing:^{
-                                             for (NSDictionary *event in JSONResponse[@"chunk"])
-                                             {
-                                                 MXEvent *roomMemberEvent = [MXEvent modelFromJSON:event];
-                                                 [roomMemberEvents addObject:roomMemberEvent];
-                                             }
+                                             MXJSONModelSetMXJSONModelArray(roomMemberEvents, MXEvent, JSONResponse[@"chunk"]);
                                          } andCompletion:^{
                                              success(roomMemberEvents);
                                          }];
@@ -3521,7 +3517,7 @@ MXAuthAction;
                                              NSDictionary *JSONResponse = error.userInfo[MXHTTPClientErrorResponseDataKey];
                                              if (JSONResponse)
                                              {
-                                                 authSession = [MXAuthenticationSession modelFromJSON:JSONResponse];
+                                                 MXJSONModelSetMXJSONModel(authSession, MXAuthenticationSession, JSONResponse);
                                              }
                                          }
                                      } andCompletion:^{
@@ -3618,7 +3614,7 @@ MXAuthAction;
                                      {
                                          __block MXGroupProfile *groupProfile;
                                          [self dispatchProcessing:^{
-                                             groupProfile = [MXGroupProfile modelFromJSON:JSONResponse];
+                                             MXJSONModelSetMXJSONModel(groupProfile, MXGroupProfile, JSONResponse);
                                          } andCompletion:^{
                                              success(groupProfile);
                                          }];
@@ -3643,7 +3639,7 @@ MXAuthAction;
                                      {
                                          __block MXGroupSummary *groupSummary;
                                          [self dispatchProcessing:^{
-                                             groupSummary = [MXGroupSummary modelFromJSON:JSONResponse];
+                                             MXJSONModelSetMXJSONModel(groupSummary, MXGroupSummary, JSONResponse);
                                          } andCompletion:^{
                                              success(groupSummary);
                                          }];
@@ -3668,7 +3664,7 @@ MXAuthAction;
                                      {
                                          __block MXGroupUsers *groupUsers;
                                          [self dispatchProcessing:^{
-                                             groupUsers = [MXGroupUsers modelFromJSON:JSONResponse];
+                                             MXJSONModelSetMXJSONModel(groupUsers, MXGroupUsers, JSONResponse);
                                          } andCompletion:^{
                                              success(groupUsers);
                                          }];
@@ -3693,7 +3689,7 @@ MXAuthAction;
                                      {
                                          __block MXGroupUsers *groupUsers;
                                          [self dispatchProcessing:^{
-                                             groupUsers = [MXGroupUsers modelFromJSON:JSONResponse];
+                                             MXJSONModelSetMXJSONModel(groupUsers, MXGroupUsers, JSONResponse);
                                          } andCompletion:^{
                                              success(groupUsers);
                                          }];
@@ -3718,7 +3714,7 @@ MXAuthAction;
                                      {
                                          __block MXGroupRooms *groupRooms;
                                          [self dispatchProcessing:^{
-                                              groupRooms= [MXGroupRooms modelFromJSON:JSONResponse];
+                                             MXJSONModelSetMXJSONModel(groupRooms, MXGroupRooms, JSONResponse);
                                          } andCompletion:^{
                                              success(groupRooms);
                                          }];
