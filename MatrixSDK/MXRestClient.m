@@ -3793,6 +3793,12 @@ MXAuthAction;
 
 #pragma mark - Private methods
 
+/**
+ Dispatch code blocks to respective GCD queue.
+
+ @param processingBlock code block to run on the processing queue.
+ @param completionBlock code block to run on the completion queue.
+ */
 - (void)dispatchProcessing:(dispatch_block_t)processingBlock andCompletion:(dispatch_block_t)completionBlock
 {
     if (processingQueue)
@@ -3815,16 +3821,31 @@ MXAuthAction;
         });
     }
 }
+
+/**
+ Dispatch the execution of the success block on the completion queue.
+
+ with a go through the processing queue in order to keep the server
+ response order.
+
+ @param completionBlock code block to run on the completion queue.
+ */
 - (void)dispatchSuccess:(dispatch_block_t)successBlock
 {
     if (successBlock)
     {
-        // Always go through the the processing queue in order to keep the server
-        // response order
         [self dispatchProcessing:nil andCompletion:successBlock];
     }
 }
 
+/**
+ Dispatch the execution of the failure block on the completion queue.
+
+ with a go through the processing queue in order to keep the server
+ response order.
+
+ @param failureBlock code block to run on the completion queue.
+ */
 - (void)dispatchFailure:(NSError*)error inBlock:(void (^)(NSError *error))failureBlock
 {
     if (failureBlock && processingQueue)
