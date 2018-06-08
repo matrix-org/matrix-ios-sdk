@@ -5,6 +5,7 @@ Improvements:
  * MXCrypto: Add reRequestRoomKeyForEvent to re-request encryption keys to decrypt an event (vector-im/riot-ios/issues/1879).
  
 Bug fix:
+ * MXRoomSummary: Fix a memory leak
 
 API break:
 
