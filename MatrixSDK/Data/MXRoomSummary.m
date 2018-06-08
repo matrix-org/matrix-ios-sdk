@@ -618,6 +618,11 @@ NSString *const kMXRoomSummaryDidChangeNotification = @"kMXRoomSummaryDidChangeN
     {
         NSLog(@"[MXRoomSummary] encryptionKey: Keychain failed. OSStatus: %i", (int)status);
     }
+    
+    if (foundKey)
+    {
+        CFRelease(foundKey);
+    }
 
     return encryptionKey;
 }
