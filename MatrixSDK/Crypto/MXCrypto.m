@@ -1827,7 +1827,7 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
 
     if (_cryptoQueue)
     {
-        __weak typeof(self) weakSelf = self;
+        MXWeakify(self);
         switch (event.eventType)
         {
             case MXEventTypeRoomKey:
@@ -1835,7 +1835,9 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
             {
                 // Room key is used for decryption. Switch to the associated queue
                 dispatch_async(_decryptionQueue, ^{
-                    [weakSelf onRoomKeyEvent:event];
+                    MXStrongifyAndReturnIfNil(self);
+
+                    [self onRoomKeyEvent:event];
                 });
                 break;
             }
@@ -1843,11 +1845,9 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
             case MXEventTypeRoomKeyRequest:
             {
                 dispatch_async(_cryptoQueue, ^{
-                    if (weakSelf)
-                    {
-                        typeof(self) self = weakSelf;
-                        [self->incomingRoomKeyRequestManager onRoomKeyRequestEvent:event];
-                    }
+                    MXStrongifyAndReturnIfNil(self);
+
+                    [self->incomingRoomKeyRequestManager onRoomKeyRequestEvent:event];
                 });
                 break;
             }
@@ -1962,6 +1962,11 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
 {
     if (uploadOneTimeKeysOperation)
     {
+        NSLog(@"[MXCrypto] maybeUploadOneTimeKeys: already in progress");
+        if (success)
+        {
+            success();
+        }
         return;
     }
 
