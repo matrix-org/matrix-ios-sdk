@@ -21,6 +21,7 @@
 
 #import "MXCryptoAlgorithms.h"
 #import "MXCrypto_Private.h"
+#import "MXTools.h"
 
 @interface MXMegolmDecryption ()
 {
@@ -346,21 +347,17 @@
                 {
                     // Go back to the main thread to retry to decrypt from the beginning of the chain.
                     // MXSession will then update MXEvent with clear content if successful
-                    __weak typeof(self) weakSelf = self;
+                    MXWeakify(self);
                     dispatch_async(dispatch_get_main_queue(), ^{
+                        MXStrongifyAndReturnIfNil(self);
 
-                        if (weakSelf)
+                        if ([self->crypto.mxSession decryptEvent:event inTimeline:(timelineId.length ? timelineId : nil)])
                         {
-                            typeof(self) self = weakSelf;
-
-                            if ([self->crypto.mxSession decryptEvent:event inTimeline:(timelineId.length ? timelineId : nil)])
-                            {
-                                NSLog(@"[MXMegolmDecryption] retryDecryption: successful re-decryption of %@", event.eventId);
-                            }
-                            else
-                            {
-                                NSLog(@"[MXMegolmDecryption] retryDecryption: Still can't decrypt %@. Error: %@", event.eventId, event.decryptionError);
-                            }
+                            NSLog(@"[MXMegolmDecryption] retryDecryption: successful re-decryption of %@", event.eventId);
+                        }
+                        else
+                        {
+                            NSLog(@"[MXMegolmDecryption] retryDecryption: Still can't decrypt %@. Error: %@", event.eventId, event.decryptionError);
                         }
                     });
                 }

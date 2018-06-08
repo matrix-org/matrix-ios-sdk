@@ -392,18 +392,17 @@ typedef void (^MXOnResumeDone)(void);
         MXNoStore *store = [[MXNoStore alloc] init];
 
         // Set the store before going further
-        __weak typeof(self) weakSelf = self;
-
+        MXWeakify(self);
         [self setStore:store success:^{
+            MXStrongifyAndReturnIfNil(self);
 
             // Then, start again
-            __strong __typeof(weakSelf)strongSelf = weakSelf;
-            [strongSelf startWithMessagesLimit:messagesLimit onServerSyncDone:onServerSyncDone failure:failure];
+            [self startWithMessagesLimit:messagesLimit onServerSyncDone:onServerSyncDone failure:failure];
 
         } failure:^(NSError *error) {
-            
-            __strong __typeof(weakSelf)strongSelf = weakSelf;
-            [strongSelf setState:MXSessionStateInitialSyncFailed];
+            MXStrongifyAndReturnIfNil(self);
+
+            [self setState:MXSessionStateInitialSyncFailed];
             failure(error);
             
         }];
@@ -727,13 +726,12 @@ typedef void (^MXOnResumeDone)(void);
     // Clear crypto data
     // For security and because it will be no more useful as we will get a new device id
     // on the next log in
-    __weak typeof(self) weakSelf = self;
+    MXWeakify(self);
     [self enableCrypto:NO success:^{
+        MXStrongifyAndReturnIfNil(self);
 
-        if (weakSelf && !operation.isCancelled)
+        if (!operation.isCancelled)
         {
-            __strong __typeof(weakSelf) self = weakSelf;
-
             MXHTTPOperation *operation2 = [self.matrixRestClient logout:success failure:failure];
             [operation mutateTo:operation2];
         }
@@ -1815,14 +1813,15 @@ typedef void (^MXOnResumeDone)(void);
 - (MXHTTPOperation*)uploadDirectRooms:(void (^)(void))success
                               failure:(void (^)(NSError *error))failure
 {
-    __weak typeof(self) weakSelf = self;
+    MXWeakify(self);
     
     // Push the current direct rooms dictionary to the homeserver.
     return [self setAccountData:_directRooms forType:kMXAccountDataTypeDirect success:^{
+        MXStrongifyAndReturnIfNil(self);
         
         // Notify a change in direct rooms directory
         [[NSNotificationCenter defaultCenter] postNotificationName:kMXSessionDirectRoomsDidChangeNotification
-                                                            object:weakSelf
+                                                            object:self
                                                           userInfo:nil];
         if (success)
         {

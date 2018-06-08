@@ -17,6 +17,7 @@
 #import "MXIncomingRoomKeyRequestManager.h"
 
 #import "MXCrypto_Private.h"
+#import "MXTools.h"
 
 #ifdef MX_CRYPTO
 
@@ -209,16 +210,15 @@
     [self removePendingKeyRequest:requestId fromUser:userId andDevice:deviceId];
 
     // Broadcast the room key request cancelation
-    __weak typeof(self) weakSelf = self;
+    MXWeakify(self);
     dispatch_async(dispatch_get_main_queue(), ^{
-        if (weakSelf)
-        {
-            [[NSNotificationCenter defaultCenter] postNotificationName:kMXCryptoRoomKeyRequestCancellationNotification
-                                                                object:crypto
-                                                              userInfo:@{
-                                                                         kMXCryptoRoomKeyRequestCancellationNotificationRequestKey: cancellation
-                                                                         }];
-        }
+        MXStrongifyAndReturnIfNil(self);
+
+        [[NSNotificationCenter defaultCenter] postNotificationName:kMXCryptoRoomKeyRequestCancellationNotification
+                                                            object:self->crypto
+                                                          userInfo:@{
+                                                                     kMXCryptoRoomKeyRequestCancellationNotificationRequestKey: cancellation
+                                                                     }];
     });
 }
 

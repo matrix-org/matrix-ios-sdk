@@ -127,17 +127,13 @@ NSUInteger const SEND_KEY_REQUESTS_DELAY_MS = 500;
             // (We also don't want to wait for the response from the server
             // here, as it will slow down processing of received keys if we
             // do.)
-            __weak typeof(self) weakSelf = self;
+            MXWeakify(self);
             [self sendOutgoingRoomKeyRequestCancellation:request success:nil failure:^(NSError *error) {
+                MXStrongifyAndReturnIfNil(self);
 
-                if (weakSelf)
-                {
-                    typeof(self) self = weakSelf;
+                NSLog(@"[MXOutgoingRoomKeyRequestManager] cancelRoomKeyRequest: Error sending room key request cancellation; will retry later.");
 
-                    NSLog(@"[MXOutgoingRoomKeyRequestManager] cancelRoomKeyRequest: Error sending room key request cancellation; will retry later.");
-
-                    [self startTimer];
-                }
+                [self startTimer];
             }];
     }
 
@@ -147,30 +143,26 @@ NSUInteger const SEND_KEY_REQUESTS_DELAY_MS = 500;
 
 - (void)startTimer
 {
-    __weak typeof(self) weakSelf = self;
+    MXWeakify(self);
 
     // Must be called on the crypto thread
     // So, move on the main thread to create NSTimer
     dispatch_async(dispatch_get_main_queue(), ^{
+        MXStrongifyAndReturnIfNil(self);
 
-        if (weakSelf)
+        if (self->sendOutgoingRoomKeyRequestsTimer)
         {
-            typeof(self) self = weakSelf;
-
-            if (self->sendOutgoingRoomKeyRequestsTimer)
-            {
-                return;
-            }
-
-            // Start expiration timer
-            self->sendOutgoingRoomKeyRequestsTimer = [[NSTimer alloc] initWithFireDate:[NSDate dateWithTimeIntervalSinceNow:SEND_KEY_REQUESTS_DELAY_MS / 1000.0]
-                                                                              interval:0
-                                                                                target:self
-                                                                              selector:@selector(sendOutgoingRoomKeyRequests)
-                                                                              userInfo:nil
-                                                                               repeats:NO];
-            [[NSRunLoop mainRunLoop] addTimer:self->sendOutgoingRoomKeyRequestsTimer forMode:NSDefaultRunLoopMode];
+            return;
         }
+
+        // Start expiration timer
+        self->sendOutgoingRoomKeyRequestsTimer = [[NSTimer alloc] initWithFireDate:[NSDate dateWithTimeIntervalSinceNow:SEND_KEY_REQUESTS_DELAY_MS / 1000.0]
+                                                                          interval:0
+                                                                            target:self
+                                                                          selector:@selector(sendOutgoingRoomKeyRequests)
+                                                                          userInfo:nil
+                                                                           repeats:NO];
+        [[NSRunLoop mainRunLoop] addTimer:self->sendOutgoingRoomKeyRequestsTimer forMode:NSDefaultRunLoopMode];
     });
 }
 
@@ -180,17 +172,11 @@ NSUInteger const SEND_KEY_REQUESTS_DELAY_MS = 500;
 
     sendOutgoingRoomKeyRequestsTimer = nil;
 
-    __weak typeof(self) weakSelf = self;
+    MXWeakify(self);
 
     // This method is called on the [NSRunLoop mainRunLoop]. Go to the crypto thread
     dispatch_async(cryptoQueue, ^{
-
-        if (!weakSelf)
-        {
-            return;
-        }
-
-        typeof(self) self = weakSelf;
+        MXStrongifyAndReturnIfNil(self);
 
         MXOutgoingRoomKeyRequest* request = [self->cryptoStore outgoingRoomKeyRequestWithState:MXRoomKeyRequestStateCancellationPending];
         if (!request)
@@ -204,24 +190,19 @@ NSUInteger const SEND_KEY_REQUESTS_DELAY_MS = 500;
             return;
         }
 
+        MXWeakify(self);
         void(^onSuccess)(void) = ^(void) {
-            if (weakSelf)
-            {
-                typeof(self) self = weakSelf;
+            MXStrongifyAndReturnIfNil(self);
 
-                // go around the loop again
-                [self sendOutgoingRoomKeyRequests];
-            }
+            // go around the loop again
+            [self sendOutgoingRoomKeyRequests];
         };
 
         void(^onFailure)(NSError *) = ^(NSError *error) {
-            if (weakSelf)
-            {
-                typeof(self) self = weakSelf;
-                NSLog(@"[MXOutgoingRoomKeyRequestManager] startSendingOutgoingRoomKeyRequests: Error sending room key request; will retry later");
+            MXStrongifyAndReturnIfNil(self);
+            NSLog(@"[MXOutgoingRoomKeyRequestManager] startSendingOutgoingRoomKeyRequests: Error sending room key request; will retry later");
 
-                [self startTimer];
-            }
+            [self startTimer];
         };
 
         if (request.state == MXRoomKeyRequestStateUnsent)
@@ -250,15 +231,15 @@ NSUInteger const SEND_KEY_REQUESTS_DELAY_MS = 500;
                                      @"body": request.requestBody
                                      };
 
-     __weak typeof(self) weakSelf = self;
+     MXWeakify(self);
     [self sendMessageToDevices:requestMessage recipients:request.recipients txnId:request.requestId success:^{
-        if (weakSelf)
-        {
-            request.state = MXRoomKeyRequestStateSent;
-            [self->cryptoStore updateOutgoingRoomKeyRequest:request];
+        MXStrongifyAndReturnIfNil(self);
 
-            success();
-        }
+        request.state = MXRoomKeyRequestStateSent;
+        [self->cryptoStore updateOutgoingRoomKeyRequest:request];
+
+        success();
+
     } failure:failure];
 }
 
@@ -275,16 +256,15 @@ NSUInteger const SEND_KEY_REQUESTS_DELAY_MS = 500;
                                      @"request_id": request.requestId
                                      };
 
-    __weak typeof(self) weakSelf = self;
+    MXWeakify(self);
     [self sendMessageToDevices:requestMessage recipients:request.recipients txnId:request.cancellationTxnId success:^{
-        if (weakSelf)
-        {
-            [self->cryptoStore deleteOutgoingRoomKeyRequestWithRequestId:request.requestId];
+        MXStrongifyAndReturnIfNil(self);
 
-            if (success)
-            {
-                success();
-            }
+        [self->cryptoStore deleteOutgoingRoomKeyRequestWithRequestId:request.requestId];
+
+        if (success)
+        {
+            success();
         }
     } failure:failure];
 }
