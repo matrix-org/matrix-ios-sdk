@@ -21,21 +21,25 @@
 
  The state machine looks like:
 
- |
- V         (cancellation requested)
- UNSENT  -------------------------------+
- |                                      |
- | (send successful)                    |
- V                                      |
- SENT                                   |
- |                                      |
- | (cancellation requested)             |
- V                                      |
- CANCELLATION_PENDING                   |
- |                                      |
- | (cancellation sent)                  |
- V                                      |
- (deleted)  <---------------------------+
+     |
+     V       (cancellation requested)
+   UNSENT  -----------------------------+
+     |                                  |
+     | (send successful)                |
+     V                                  |
+    SENT                                |
+     |--------------------------------  |  --------------+
+     |                                  |                |
+     |                                  | (cancellation requested with intent
+     |                                  | to resend a new request)
+     | (cancellation requested)         |                |
+     V                                  |                V
+ CANCELLATION_PENDING                   | CANCELLATION_PENDING_AND_WILL_RESEND
+     |                                  |                |
+     | (cancellation sent)              | (cancellation sent. Create new request
+     |                                  |  in the UNSENT state)
+     V                                  |                |
+ (deleted)  <---------------------------+----------------+
  */
 typedef enum : NSUInteger
 {
@@ -44,7 +48,9 @@ typedef enum : NSUInteger
     // request sent, awaiting reply
     MXRoomKeyRequestStateSent,
     // reply received, cancellation not yet sent
-    MXRoomKeyRequestStateCancellationPending
+    MXRoomKeyRequestStateCancellationPending,
+    // Cancellation not yet sent and will send a new request
+    MXRoomKeyRequestStateCancellationPendingAndWillResend
 
 } MXRoomKeyRequestState;
 

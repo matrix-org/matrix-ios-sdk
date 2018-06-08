@@ -1,3 +1,13 @@
+Changes in Matrix iOS SDK in 0.10.12 ()
+=============================================== 
+
+Improvements:
+ * MXCrypto: Add reRequestRoomKeyForEvent to re-request encryption keys to decrypt an event (vector-im/riot-ios/issues/1879).
+ 
+Bug fix:
+
+API break:
+
 Changes in Matrix iOS SDK in 0.10.11 (2018-05-31)
 =============================================== 
 
