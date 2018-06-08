@@ -75,6 +75,13 @@
  */
 - (void)cancelRoomKeyRequest:(NSDictionary*)requestBody;
 
+/**
+ Resend a room key request, if any match the given details.
+
+ @param requestBody parameters to match for resend.
+ */
+- (void)resendRoomKeyRequest:(NSDictionary*)requestBody;
+
 @end
 
 #endif
