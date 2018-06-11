@@ -6,6 +6,7 @@ Improvements:
  
 Bug fix:
  * MXRoomSummary: Fix a memory leak
+ * MXRoom: A message (or a media) can be sent whereas the user cancelled it. This can make the app crash.
 
 API break:
 
