@@ -307,7 +307,7 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
     operation = [room.mxSession.matrixRestClient messagesForRoom:_state.roomId from:paginationToken direction:direction limit:numItems filter:_roomEventFilter success:^(MXPaginationResponse *paginatedResponse) {
         MXStrongifyAndReturnIfNil(self);
 
-        NSLog(@"[MXEventTimeline] paginate : get %tu messages from the server", paginatedResponse.chunk.count);
+        NSLog(@"[MXEventTimeline] paginate : got %tu messages from the server", paginatedResponse.chunk.count);
 
         [self handlePaginationResponse:paginatedResponse direction:direction];
 
