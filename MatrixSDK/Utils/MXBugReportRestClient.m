@@ -320,62 +320,59 @@
         NSProgress *zipProgress = [NSProgress progressWithTotalUnitCount:logFiles.count];
         progress(_state, zipProgress);
 
-        __weak typeof(self) weakSelf = self;
+        MXWeakify(self);
         dispatch_async(dispatchQueue, ^{
+            MXStrongifyAndReturnIfNil(self);
 
-            typeof(self) self = weakSelf;
-            if (self)
+            NSDate *startDate = [NSDate date];
+            NSUInteger size = 0, zipSize = 0;
+
+            for (NSString *logFile in logFiles)
             {
-                NSDate *startDate = [NSDate date];
-                NSUInteger size = 0, zipSize = 0;
+                // Use a temporary file for the export
+                NSURL *logZipFile = [NSURL fileURLWithPath:[NSTemporaryDirectory() stringByAppendingPathComponent:logFile.lastPathComponent]];
 
-                for (NSString *logFile in logFiles)
+                [[NSFileManager defaultManager] removeItemAtURL:logZipFile error:nil];
+
+                NSData *logData = [NSData dataWithContentsOfFile:logFile];
+                NSData *logZipData = [logData gzippedData];
+
+                size += logData.length;
+                zipSize += logZipData.length;
+
+                if ([logZipData writeToURL:logZipFile atomically:YES])
                 {
-                    // Use a temporary file for the export
-                    NSURL *logZipFile = [NSURL fileURLWithPath:[NSTemporaryDirectory() stringByAppendingPathComponent:logFile.lastPathComponent]];
+                    [self->logZipFiles addObject:logZipFile];
 
-                    [[NSFileManager defaultManager] removeItemAtURL:logZipFile error:nil];
-
-                    NSData *logData = [NSData dataWithContentsOfFile:logFile];
-                    NSData *logZipData = [logData gzippedData];
-
-                    size += logData.length;
-                    zipSize += logZipData.length;
-
-                    if ([logZipData writeToURL:logZipFile atomically:YES])
+                    if ([logFile isEqualToString:crashLogFile])
                     {
-                        [self->logZipFiles addObject:logZipFile];
-
-                        if ([logFile isEqualToString:crashLogFile])
-                        {
-                            // Tag the crash log. It
-                            self->crashLogZipFile = logZipFile;
-                        }
-                    }
-                    else
-                    {
-                        NSLog(@"[MXBugReport] zipLogFiles: Failed to zip %@", logFile);
-                    }
-
-                    if (progress)
-                    {
-                        dispatch_async(dispatch_get_main_queue(), ^{
-
-                            zipProgress.completedUnitCount++;
-                            progress(self.state, zipProgress);
-                        });
+                        // Tag the crash log. It
+                        self->crashLogZipFile = logZipFile;
                     }
                 }
+                else
+                {
+                    NSLog(@"[MXBugReport] zipLogFiles: Failed to zip %@", logFile);
+                }
 
-                NSLog(@"[MXBugReport] zipLogFiles: Zipped %tu logs (%@ to %@) in %.3fms", logFiles.count,
-                      [NSByteCountFormatter stringFromByteCount:size countStyle:NSByteCountFormatterCountStyleFile],
-                      [NSByteCountFormatter stringFromByteCount:zipSize countStyle:NSByteCountFormatterCountStyleFile],
-                      [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
-                
-                dispatch_async(dispatch_get_main_queue(), ^{
-                    complete();
-                });
+                if (progress)
+                {
+                    dispatch_async(dispatch_get_main_queue(), ^{
+
+                        zipProgress.completedUnitCount++;
+                        progress(self.state, zipProgress);
+                    });
+                }
             }
+
+            NSLog(@"[MXBugReport] zipLogFiles: Zipped %tu logs (%@ to %@) in %.3fms", logFiles.count,
+                  [NSByteCountFormatter stringFromByteCount:size countStyle:NSByteCountFormatterCountStyleFile],
+                  [NSByteCountFormatter stringFromByteCount:zipSize countStyle:NSByteCountFormatterCountStyleFile],
+                  [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
+
+            dispatch_async(dispatch_get_main_queue(), ^{
+                complete();
+            });
         });
     }
     else

@@ -274,11 +274,14 @@ MXAuthAction;
     
     // Patch: Add the temporary `x_show_msisdn` flag to not filter the msisdn login type in the supported authentication flows.
     parameters = @{@"x_show_msisdn":@(YES)};
-    
+
+    MXWeakify(self);
     return [httpClient requestWithMethod:@"POST"
                                     path:[self authActionPath:MXAuthActionRegister]
                               parameters:parameters
                                  success:^(NSDictionary *JSONResponse) {
+                                     MXStrongifyAndReturnIfNil(self);
+
                                      if (success)
                                      {
                                          __block MXAuthenticationSession *authSession;
@@ -290,6 +293,8 @@ MXAuthAction;
                                      }
                                  }
                                  failure:^(NSError *error) {
+                                     MXStrongifyAndReturnIfNil(self);
+
                                      __block MXAuthenticationSession *authSession;
                                      [self dispatchProcessing:^{
                                          if (error.userInfo[MXHTTPClientErrorResponseDataKey])
@@ -335,7 +340,9 @@ MXAuthAction;
     }
 
     MXHTTPOperation *operation;
+    MXWeakify(self);
     operation = [self getRegisterSession:^(MXAuthenticationSession *authSession) {
+        MXStrongifyAndReturnIfNil(self);
 
         NSMutableDictionary *parameters = [NSMutableDictionary dictionaryWithDictionary:
                                            @{
@@ -350,7 +357,10 @@ MXAuthAction;
             parameters[@"username"] = username;
         }
 
+        MXWeakify(self);
         MXHTTPOperation *operation2 = [self registerWithParameters: parameters success:^(NSDictionary *JSONResponse) {
+            MXStrongifyAndReturnIfNil(self);
+
             [self dispatchProcessing:nil andCompletion:^{
 
                 // Update our credentials
@@ -369,6 +379,7 @@ MXAuthAction;
                 }
             }];
         } failure:^(NSError *error) {
+            MXStrongifyAndReturnIfNil(self);
             [self dispatchFailure:error inBlock:failure];
         }];
 
@@ -376,6 +387,7 @@ MXAuthAction;
         [operation mutateTo:operation2];
 
     } failure:^(NSError *error) {
+        MXStrongifyAndReturnIfNil(self);
         [self dispatchFailure:error inBlock:failure];
     }];
 
@@ -405,11 +417,14 @@ MXAuthAction;
                                  @"send_attempt" : @(sendAttempt),
                                  @"id_server" : identityServer
                                  };
-    
+
+    MXWeakify(self);
     return [httpClient requestWithMethod:@"POST"
                                     path:[NSString stringWithFormat:@"%@/account/password/email/requestToken", apiPathPrefix]
                               parameters:parameters
                                  success:^(NSDictionary *JSONResponse) {
+                                     MXStrongifyAndReturnIfNil(self);
+
                                      if (success)
                                      {
                                          __block NSString *sid;
@@ -421,6 +436,7 @@ MXAuthAction;
                                      }
                                  }
                                  failure:^(NSError *error) {
+                                     MXStrongifyAndReturnIfNil(self);
                                      [self dispatchFailure:error inBlock:failure];
                                  }];
 }
@@ -429,10 +445,13 @@ MXAuthAction;
 - (MXHTTPOperation*)getLoginSession:(void (^)(MXAuthenticationSession *authSession))success
                             failure:(void (^)(NSError *error))failure
 {
+    MXWeakify(self);
     return [httpClient requestWithMethod:@"GET"
                                     path:[self authActionPath:MXAuthActionLogin]
                               parameters:nil
                                  success:^(NSDictionary *JSONResponse) {
+                                     MXStrongifyAndReturnIfNil(self);
+
                                      if (success)
                                      {
                                          __block MXAuthenticationSession *authSession;
@@ -478,9 +497,11 @@ MXAuthAction;
                                  @"user": username
                                  };
 
+    MXWeakify(self);
     return [self login:parameters
                success:^(NSDictionary *JSONResponse) {
                    [self dispatchProcessing:nil andCompletion:^{
+                       MXStrongifyAndReturnIfNil(self);
 
                        // Update our credentials
                        self.credentials = [MXCredentials modelFromJSON:JSONResponse];
@@ -523,14 +544,16 @@ MXAuthAction;
         return nil;
     }
 
+    MXWeakify(self);
     return [httpClient requestWithMethod:@"POST"
                                     path:[NSString stringWithFormat:@"%@/account/password", apiPathPrefix]
                               parameters:parameters
                                  success:^(NSDictionary *JSONResponse) {
-                                     
-[self dispatchSuccess:success];
+                                     MXStrongifyAndReturnIfNil(self);
+                                     [self dispatchSuccess:success];
                                  }
                                  failure:^(NSError *error) {
+                                     MXStrongifyAndReturnIfNil(self);
                                      [self dispatchFailure:error inBlock:failure];
                                  }];
 }
@@ -556,14 +579,17 @@ MXAuthAction;
                                            },
                                  @"new_password": newPassword
                                  };
-    
+
+    MXWeakify(self);
     return [httpClient requestWithMethod:@"POST"
                                     path:[NSString stringWithFormat:@"%@/account/password", apiPathPrefix]
                               parameters:parameters
                                  success:^(NSDictionary *JSONResponse) {
+                                     MXStrongifyAndReturnIfNil(self);
                                      [self dispatchSuccess:success];
                                  }
                                  failure:^(NSError *error) {
+                                     MXStrongifyAndReturnIfNil(self);
                                      [self dispatchFailure:error inBlock:failure];
                                  }];
 }
@@ -625,10 +651,13 @@ MXAuthAction;
         }
     }
 
+    MXWeakify(self);
     return [httpClient requestWithMethod:@"POST"
                                     path:[self authActionPath:authAction]
                               parameters:parameters
                                  success:^(NSDictionary *JSONResponse) {
+                                     MXStrongifyAndReturnIfNil(self);
+
                                      if (success)
                                      {
                                          [self dispatchProcessing:nil andCompletion:^{
@@ -637,6 +666,7 @@ MXAuthAction;
                                      }
                                  }
                                  failure:^(NSError *error) {
+                                     MXStrongifyAndReturnIfNil(self);
                                      [self dispatchFailure:error inBlock:failure];
                                  }];
 }
@@ -644,13 +674,16 @@ MXAuthAction;
 - (MXHTTPOperation*)logout:(void (^)(void))success
                    failure:(void (^)(NSError *error))failure
 {
+    MXWeakify(self);
     return [httpClient requestWithMethod:@"POST"
                                     path:[NSString stringWithFormat:@"%@/logout", apiPathPrefix]
                               parameters:nil
                                  success:^(NSDictionary *JSONResponse) {
+                                     MXStrongifyAndReturnIfNil(self);
                                      [self dispatchSuccess:success];
                                  }
                                  failure:^(NSError *error) {
+                                     MXStrongifyAndReturnIfNil(self);
                                      [self dispatchFailure:error inBlock:failure];
                                  }];
 }
@@ -676,7 +709,8 @@ MXAuthAction;
                                          };
     
     NSData *payloadData = [NSJSONSerialization dataWithJSONObject:jsonBodyParameters options:0 error:nil];
-    
+
+    MXWeakify(self);
     return [httpClient requestWithMethod:@"POST"
                                     path:[NSString stringWithFormat:@"%@/account/deactivate", apiPathPrefix]
                               parameters:nil
@@ -685,9 +719,11 @@ MXAuthAction;
                                  timeout:-1
                           uploadProgress:nil
                                  success:^(NSDictionary *JSONResponse) {
+                                     MXStrongifyAndReturnIfNil(self);
                                      [self dispatchSuccess:success];
                                  }
                                  failure:^(NSError *error) {
+                                     MXStrongifyAndReturnIfNil(self);
                                      [self dispatchFailure:error inBlock:failure];
                                  }];
 }
@@ -700,13 +736,16 @@ MXAuthAction;
 {
     NSString *path = [NSString stringWithFormat:@"%@/user/%@/account_data/%@", apiPathPrefix, credentials.userId, type];
 
+    MXWeakify(self);
     return [httpClient requestWithMethod:@"PUT"
                                     path:path
                               parameters:data
                                  success:^(NSDictionary *JSONResponse) {
+                                     MXStrongifyAndReturnIfNil(self);
                                      [self dispatchSuccess:success];
                                  }
                                  failure:^(NSError *error) {
+                                     MXStrongifyAndReturnIfNil(self);
                                      [self dispatchFailure:error inBlock:failure];
                                  }];
 }
@@ -715,10 +754,13 @@ MXAuthAction;
 {
     NSString *path = [NSString stringWithFormat:@"%@/user/%@/openid/request_token", kMXAPIPrefixPathUnstable, credentials.userId];
 
+    MXWeakify(self);
     return [httpClient requestWithMethod:@"POST"
                                     path:path
                               parameters:@{}
                                  success:^(NSDictionary *JSONResponse) {
+                                     MXStrongifyAndReturnIfNil(self);
+
                                      if (success)
                                      {
                                          __block MXOpenIdToken *openIdToken;
@@ -730,6 +772,7 @@ MXAuthAction;
                                      }
                                  }
                                  failure:^(NSError *error) {
+                                     MXStrongifyAndReturnIfNil(self);
                                      [self dispatchFailure:error inBlock:failure];
                                  }];
 }
@@ -772,11 +815,14 @@ MXAuthAction;
     {
         path = [NSString stringWithFormat:@"%@/account/3pid/email/requestToken", apiPathPrefix];
     }
-    
+
+    MXWeakify(self);
     return [httpClient requestWithMethod:@"POST"
                                     path:path
                               parameters:parameters
                                  success:^(NSDictionary *JSONResponse) {
+                                     MXStrongifyAndReturnIfNil(self);
+
                                      if (success)
                                      {
                                          __block NSString *sid;
@@ -788,6 +834,7 @@ MXAuthAction;
                                      }
                                  }
                                  failure:^(NSError *error) {
+                                     MXStrongifyAndReturnIfNil(self);
                                      [self dispatchFailure:error inBlock:failure];
                                  }];
 }
@@ -828,11 +875,14 @@ MXAuthAction;
     {
         path = [NSString stringWithFormat:@"%@/account/3pid/msisdn/requestToken", apiPathPrefix];
     }
-    
+
+    MXWeakify(self);
     return [httpClient requestWithMethod:@"POST"
                                     path:path
                               parameters:parameters
                                  success:^(NSDictionary *JSONResponse) {
+                                     MXStrongifyAndReturnIfNil(self);
+
                                      if (success)
                                      {
                                          __block NSString *sid, *msisdn;
@@ -845,6 +895,7 @@ MXAuthAction;
                                      }
                                  }
                                  failure:^(NSError *error) {
+                                     MXStrongifyAndReturnIfNil(self);
                                      [self dispatchFailure:error inBlock:failure];
                                  }];
 }
@@ -884,24 +935,30 @@ MXAuthAction;
                                  @"data": data,
                                  @"append":[NSNumber numberWithBool:append]
                                  };
-    
+
+    MXWeakify(self);
     return [httpClient requestWithMethod:@"POST"
                                     path:[NSString stringWithFormat:@"%@/pushers/set", apiPathPrefix]
                               parameters:parameters
                                  success:^(NSDictionary *JSONResponse) {
+                                     MXStrongifyAndReturnIfNil(self);
                                      [self dispatchSuccess:success];
                                  }
                                  failure:^(NSError *error) {
+                                     MXStrongifyAndReturnIfNil(self);
                                      [self dispatchFailure:error inBlock:failure];
                                  }];
 }
 
 - (MXHTTPOperation *)pushRules:(void (^)(MXPushRulesResponse *pushRules))success failure:(void (^)(NSError *))failure
 {
+    MXWeakify(self);
     return [httpClient requestWithMethod:@"GET"
                                     path:[NSString stringWithFormat:@"%@/pushrules/", apiPathPrefix]
                               parameters:nil
                                  success:^(NSDictionary *JSONResponse) {
+                                     MXStrongifyAndReturnIfNil(self);
+
                                      if (success)
                                      {
                                          __block MXPushRulesResponse *pushRules;
@@ -913,6 +970,7 @@ MXAuthAction;
                                      }
                                  }
                                  failure:^(NSError *error) {
+                                     MXStrongifyAndReturnIfNil(self);
                                      [self dispatchFailure:error inBlock:failure];
                                  }];
 }
@@ -947,7 +1005,8 @@ MXAuthAction;
     NSDictionary *headers = @{@"Content-Type": @"application/json"};
     
     NSString *enabled = enable ? @"true": @"false";
-    
+
+    MXWeakify(self);
     return [httpClient requestWithMethod:@"PUT"
                                     path:[NSString stringWithFormat:@"%@/pushrules/%@/%@/%@/enabled", apiPathPrefix, scope, kindString, ruleId]
                               parameters:nil
@@ -956,9 +1015,11 @@ MXAuthAction;
                                  timeout:-1
                           uploadProgress:nil
                                  success:^(NSDictionary *JSONResponse) {
+                                     MXStrongifyAndReturnIfNil(self);
                                      [self dispatchSuccess:success];
                                  }
                                  failure:^(NSError *error) {
+                                     MXStrongifyAndReturnIfNil(self);
                                      [self dispatchFailure:error inBlock:failure];
                                  }];
 }
@@ -988,14 +1049,17 @@ MXAuthAction;
             kindString = @"underride";
             break;
     }
-    
+
+    MXWeakify(self);
     return [httpClient requestWithMethod:@"DELETE"
                                     path:[NSString stringWithFormat:@"%@/pushrules/%@/%@/%@", apiPathPrefix, scope, kindString, ruleId]
                               parameters:nil
                                  success:^(NSDictionary *JSONResponse) {
+                                     MXStrongifyAndReturnIfNil(self);
                                      [self dispatchSuccess:success];
                                  }
                                  failure:^(NSError *error) {
+                                     MXStrongifyAndReturnIfNil(self);
                                      [self dispatchFailure:error inBlock:failure];
                                  }];
 }
@@ -1064,13 +1128,16 @@ MXAuthAction;
     // Sanity check
     if (content)
     {
+        MXWeakify(self);
         return [httpClient requestWithMethod:@"PUT"
                                         path:[NSString stringWithFormat:@"%@/pushrules/%@/%@/%@", apiPathPrefix, scope, kindString, ruleId]
                                   parameters:content
                                      success:^(NSDictionary *JSONResponse) {
+                                         MXStrongifyAndReturnIfNil(self);
                                          [self dispatchSuccess:success];
                                      }
                                      failure:^(NSError *error) {
+                                         MXStrongifyAndReturnIfNil(self);
                                          [self dispatchFailure:error inBlock:failure];
                                      }];
     }
@@ -1097,11 +1164,14 @@ MXAuthAction;
 
     // Prepare the path
     NSString *path = [NSString stringWithFormat:@"%@/rooms/%@/send/%@/%@", apiPathPrefix, roomId, eventTypeString, [txnId stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding]];
-    
+
+    MXWeakify(self);
     return [httpClient requestWithMethod:@"PUT"
                                     path:path
                               parameters:content
                                  success:^(NSDictionary *JSONResponse) {
+                                     MXStrongifyAndReturnIfNil(self);
+
                                      if (success)
                                      {
                                          __block NSString *eventId;
@@ -1113,6 +1183,7 @@ MXAuthAction;
                                      }
                                  }
                                  failure:^(NSError *error) {
+                                     MXStrongifyAndReturnIfNil(self);
                                      [self dispatchFailure:error inBlock:failure];
                                  }];
 }
@@ -1134,10 +1205,13 @@ MXAuthAction;
         path = [NSString stringWithFormat:@"%@/rooms/%@/state/%@", apiPathPrefix, roomId, eventTypeString];
     }
 
+    MXWeakify(self);
     return [httpClient requestWithMethod:@"PUT"
                                     path:path
                               parameters:content
                                  success:^(NSDictionary *JSONResponse) {
+                                     MXStrongifyAndReturnIfNil(self);
+
                                      if (success)
                                      {
                                          __block NSString *eventId;
@@ -1149,6 +1223,7 @@ MXAuthAction;
                                      }
                                  }
                                  failure:^(NSError *error) {
+                                     MXStrongifyAndReturnIfNil(self);
                                      [self dispatchFailure:error inBlock:failure];
                                  }];
 }
@@ -1193,14 +1268,17 @@ MXAuthAction;
     {
         parameters = @{};
     }
-    
+
+    MXWeakify(self);
     return [httpClient requestWithMethod:@"POST"
                                     path:path
                               parameters:parameters
                                  success:^(NSDictionary *JSONResponse) {
+                                     MXStrongifyAndReturnIfNil(self);
                                      [self dispatchSuccess:success];
                                  }
                                  failure:^(NSError *error) {
+                                     MXStrongifyAndReturnIfNil(self);
                                      [self dispatchFailure:error inBlock:failure];
                                  }];
 }
@@ -1223,13 +1301,17 @@ MXAuthAction;
                           failure:(void (^)(NSError *error))failure
 {
     NSString *path = [NSString stringWithFormat:@"%@/rooms/%@/state/%@", apiPathPrefix, roomId, eventType];
+
+    MXWeakify(self);
     return [httpClient requestWithMethod:@"PUT"
                                     path:path
                               parameters:value
                                  success:^(NSDictionary *JSONResponse) {
+                                     MXStrongifyAndReturnIfNil(self);
                                      [self dispatchSuccess:success];
                                  }
                                  failure:^(NSError *error) {
+                                     MXStrongifyAndReturnIfNil(self);
                                      [self dispatchFailure:error inBlock:failure];
                                  }];
 }
@@ -1250,10 +1332,14 @@ MXAuthAction;
                              failure:(void (^)(NSError *error))failure
 {
     NSString *path = [NSString stringWithFormat:@"%@/rooms/%@/state/%@", apiPathPrefix, roomId, eventType];
+
+    MXWeakify(self);
     return [httpClient requestWithMethod:@"GET"
                                     path:path
                               parameters:nil
                                  success:^(NSDictionary *JSONResponse) {
+                                     MXStrongifyAndReturnIfNil(self);
+
                                      if (success)
                                      {
                                          [self dispatchProcessing:nil andCompletion:^{
@@ -1262,6 +1348,7 @@ MXAuthAction;
                                      }
                                  }
                                  failure:^(NSError *error) {
+                                     MXStrongifyAndReturnIfNil(self);
                                      [self dispatchFailure:error inBlock:failure];
                                  }];
 }
@@ -1466,15 +1553,19 @@ MXAuthAction;
 {
     
     NSString *path = [NSString stringWithFormat:@"%@/directory/list/room/%@", apiPathPrefix, roomId];
+
+    MXWeakify(self);
     return [httpClient requestWithMethod:@"PUT"
                                     path:path
                               parameters:@{
                                            @"visibility": directoryVisibility
                                            }
                                  success:^(NSDictionary *JSONResponse) {
+                                     MXStrongifyAndReturnIfNil(self);
                                      [self dispatchSuccess:success];
                                  }
                                  failure:^(NSError *error) {
+                                     MXStrongifyAndReturnIfNil(self);
                                      [self dispatchFailure:error inBlock:failure];
                                  }];
 }
@@ -1484,10 +1575,14 @@ MXAuthAction;
                                       failure:(void (^)(NSError *error))failure
 {
     NSString *path = [NSString stringWithFormat:@"%@/directory/list/room/%@", apiPathPrefix, roomId];
+
+    MXWeakify(self);
     return [httpClient requestWithMethod:@"GET"
                                     path:path
                               parameters:nil
                                  success:^(NSDictionary *JSONResponse) {
+                                     MXStrongifyAndReturnIfNil(self);
+
                                      if (success)
                                      {
                                          __block MXRoomDirectoryVisibility directoryVisibility;
@@ -1510,16 +1605,19 @@ MXAuthAction;
 {
     // Note: characters in a room alias need to be escaped in the URL
     NSString *path = [NSString stringWithFormat:@"%@/directory/room/%@", apiPathPrefix, [roomAlias stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding]];
-    
+
+    MXWeakify(self);
     return [httpClient requestWithMethod:@"PUT"
                                     path:path
                               parameters:@{
                                            @"room_id": roomId
                                            }
                                  success:^(NSDictionary *JSONResponse) {
+                                     MXStrongifyAndReturnIfNil(self);
                                      [self dispatchSuccess:success];
                                  }
                                  failure:^(NSError *error) {
+                                     MXStrongifyAndReturnIfNil(self);
                                      [self dispatchFailure:error inBlock:failure];
                                  }];
 }
@@ -1530,14 +1628,17 @@ MXAuthAction;
 {
     // Note: characters in a room alias need to be escaped in the URL
     NSString *path = [NSString stringWithFormat:@"%@/directory/room/%@", apiPathPrefix, [roomAlias stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding]];
-    
+
+    MXWeakify(self);
     return [httpClient requestWithMethod:@"DELETE"
                                     path:path
                               parameters:nil
                                  success:^(NSDictionary *JSONResponse) {
+                                     MXStrongifyAndReturnIfNil(self);
                                      [self dispatchSuccess:success];
                                  }
                                  failure:^(NSError *error) {
+                                     MXStrongifyAndReturnIfNil(self);
                                      [self dispatchFailure:error inBlock:failure];
                                  }];
 }
@@ -1597,10 +1698,14 @@ MXAuthAction;
 
     // Characters in a room alias need to be escaped in the URL
     NSString *path = [NSString stringWithFormat:@"%@/join/%@", apiPathPrefix, [roomIdOrAlias stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding]];
+
+    MXWeakify(self);
     return [httpClient requestWithMethod:@"POST"
                                     path:path
                               parameters:parameters
                                  success:^(NSDictionary *JSONResponse) {
+                                     MXStrongifyAndReturnIfNil(self);
+
                                      if (success)
                                      {
                                          __block NSString *roomId;
@@ -1616,6 +1721,7 @@ MXAuthAction;
                                      }
                                  }
                                  failure:^(NSError *error) {
+                                     MXStrongifyAndReturnIfNil(self);
                                      [self dispatchFailure:error inBlock:failure];
                                  }];
 }
@@ -1683,13 +1789,16 @@ MXAuthAction;
                                  @"address": address
                                  };
 
+    MXWeakify(self);
     return [httpClient requestWithMethod:@"POST"
                                     path:path
                               parameters:parameters
                                  success:^(NSDictionary *JSONResponse) {
+                                     MXStrongifyAndReturnIfNil(self);
                                      [self dispatchSuccess:success];
                                  }
                                  failure:^(NSError *error) {
+                                     MXStrongifyAndReturnIfNil(self);
                                      [self dispatchFailure:error inBlock:failure];
                                  }];
 }
@@ -1711,14 +1820,17 @@ MXAuthAction;
     {
         parameters[@"reason"] = reason;
     }
-    
+
+    MXWeakify(self);
     return [httpClient requestWithMethod:@"PUT"
                                     path:path
                               parameters:parameters
                                  success:^(NSDictionary *JSONResponse) {
+                                     MXStrongifyAndReturnIfNil(self);
                                      [self dispatchSuccess:success];
                                  }
                                  failure:^(NSError *error) {
+                                     MXStrongifyAndReturnIfNil(self);
                                      [self dispatchFailure:error inBlock:failure];
                                  }];
 }
@@ -1852,10 +1964,13 @@ MXAuthAction;
                        success:(void (^)(MXCreateRoomResponse *response))success
                        failure:(void (^)(NSError *error))failure;
 {
+    MXWeakify(self);
     return [httpClient requestWithMethod:@"POST"
                                     path:[NSString stringWithFormat:@"%@/createRoom", apiPathPrefix]
                               parameters:parameters
                                  success:^(NSDictionary *JSONResponse) {
+                                     MXStrongifyAndReturnIfNil(self);
+
                                      if (success)
                                      {
                                          __block MXCreateRoomResponse *response;
@@ -1867,6 +1982,7 @@ MXAuthAction;
                                      }
                                  }
                                  failure:^(NSError *error) {
+                                     MXStrongifyAndReturnIfNil(self);
                                      [self dispatchFailure:error inBlock:failure];
                                  }];
 }
@@ -1903,11 +2019,14 @@ MXAuthAction;
     {
         parameters[@"filter"] = roomEventFilter.dictionary;
     }
-    
+
+    MXWeakify(self);
     return [httpClient requestWithMethod:@"GET"
                                     path:path
                               parameters:parameters
                                  success:^(NSDictionary *JSONResponse) {
+                                     MXStrongifyAndReturnIfNil(self);
+
                                      if (success)
                                      {
                                          __block MXPaginationResponse *paginatedResponse;
@@ -1919,6 +2038,7 @@ MXAuthAction;
                                      }
                                  }
                                  failure:^(NSError *error) {
+                                     MXStrongifyAndReturnIfNil(self);
                                      [self dispatchFailure:error inBlock:failure];
                                  }];
 }
@@ -1928,11 +2048,14 @@ MXAuthAction;
                           failure:(void (^)(NSError *error))failure
 {
     NSString *path = [NSString stringWithFormat:@"%@/rooms/%@/members", apiPathPrefix, roomId];
-    
+
+    MXWeakify(self);
     return [httpClient requestWithMethod:@"GET"
                                     path:path
                               parameters:nil
                                  success:^(NSDictionary *JSONResponse) {
+                                     MXStrongifyAndReturnIfNil(self);
+
                                      if (success)
                                      {
                                          __block NSArray *roomMemberEvents;
@@ -1944,6 +2067,7 @@ MXAuthAction;
                                      }
                                  }
                                  failure:^(NSError *error) {
+                                     MXStrongifyAndReturnIfNil(self);
                                      [self dispatchFailure:error inBlock:failure];
                                  }];
 }
@@ -1953,11 +2077,14 @@ MXAuthAction;
                         failure:(void (^)(NSError *error))failure
 {
     NSString *path = [NSString stringWithFormat:@"%@/rooms/%@/state", apiPathPrefix, roomId];
-    
+
+    MXWeakify(self);
     return [httpClient requestWithMethod:@"GET"
                                     path:path
                               parameters:nil
                                  success:^(NSDictionary *JSONResponse) {
+                                     MXStrongifyAndReturnIfNil(self);
+
                                      if (success)
                                      {
                                          [self dispatchProcessing:nil andCompletion:^{
@@ -1966,6 +2093,7 @@ MXAuthAction;
                                      }
                                  }
                                  failure:^(NSError *error) {
+                                     MXStrongifyAndReturnIfNil(self);
                                      [self dispatchFailure:error inBlock:failure];
                                  }];
 }
@@ -1988,14 +2116,17 @@ MXAuthAction;
     {
         parameters[@"timeout"] = [NSNumber numberWithUnsignedInteger:timeout];
     }
-    
+
+    MXWeakify(self);
     MXHTTPOperation *operation = [httpClient requestWithMethod:@"PUT"
                                                           path:path
                                                     parameters:parameters
                                                        success:^(NSDictionary *JSONResponse) {
+                                                           MXStrongifyAndReturnIfNil(self);
                                                            [self dispatchSuccess:success];
                                                        }
                                                        failure:^(NSError *error) {
+                                                           MXStrongifyAndReturnIfNil(self);
                                                            [self dispatchFailure:error inBlock:failure];
                                                        }];
     
@@ -2019,14 +2150,17 @@ MXAuthAction;
     {
         parameters[@"reason"] = reason;
     }
-    
+
+    MXWeakify(self);
     return [httpClient requestWithMethod:@"POST"
                                     path:path
                               parameters:parameters
                                  success:^(NSDictionary *JSONResponse) {
+                                     MXStrongifyAndReturnIfNil(self);
                                      [self dispatchSuccess:success];
                                  }
                                  failure:^(NSError *error) {
+                                     MXStrongifyAndReturnIfNil(self);
                                      [self dispatchFailure:error inBlock:failure];
                                  }];
 }
@@ -2049,13 +2183,16 @@ MXAuthAction;
         parameters[@"reason"] = reason;
     }
 
+    MXWeakify(self);
     return [httpClient requestWithMethod:@"POST"
                                     path:path
                               parameters:parameters
                                  success:^(NSDictionary *JSONResponse) {
+                                     MXStrongifyAndReturnIfNil(self);
                                      [self dispatchSuccess:success];
                                  }
                                  failure:^(NSError *error) {
+                                     MXStrongifyAndReturnIfNil(self);
                                      [self dispatchFailure:error inBlock:failure];
                                  }];
 }
@@ -2066,13 +2203,16 @@ MXAuthAction;
                               failure:(void (^)(NSError *error))failure
 {
     NSString *path = [NSString stringWithFormat:@"%@/rooms/%@/initialSync", apiPathPrefix, roomId];
-    
+
+    MXWeakify(self);
     return [httpClient requestWithMethod:@"GET"
                                     path:path
                               parameters:@{
                                            @"limit": [NSNumber numberWithInteger:limit]
                                            }
                                  success:^(NSDictionary *JSONResponse) {
+                                     MXStrongifyAndReturnIfNil(self);
+
                                      if (success)
                                      {
                                          __block MXRoomInitialSync *roomInitialSync;
@@ -2084,6 +2224,7 @@ MXAuthAction;
                                      }
                                  }
                                  failure:^(NSError *error) {
+                                     MXStrongifyAndReturnIfNil(self);
                                      [self dispatchFailure:error inBlock:failure];
                                  }];
 }
@@ -2095,10 +2236,13 @@ MXAuthAction;
     NSString *path = [NSString stringWithFormat:@"%@/events/%@", apiPathPrefix, eventId];
 
     MXHTTPOperation *operation;
+    MXWeakify(self);
     operation = [httpClient requestWithMethod:@"GET"
                                          path:path
                                    parameters:nil
                                       success:^(NSDictionary *JSONResponse) {
+                                          MXStrongifyAndReturnIfNil(self);
+
                                           if (success)
                                           {
                                               __block MXEvent *event;
@@ -2110,6 +2254,7 @@ MXAuthAction;
                                           }
                                       }
                                       failure:^(NSError *error) {
+                                          MXStrongifyAndReturnIfNil(self);
                                           [self dispatchFailure:error inBlock:failure];
                                       }];
     return operation;
@@ -2123,10 +2268,13 @@ MXAuthAction;
     NSString *path = [NSString stringWithFormat:@"%@/rooms/%@/event/%@", apiPathPrefix, roomId, eventId];
 
     MXHTTPOperation *operation;
+    MXWeakify(self);
     operation = [httpClient requestWithMethod:@"GET"
                                          path:path
                                    parameters:nil
                                       success:^(NSDictionary *JSONResponse) {
+                                          MXStrongifyAndReturnIfNil(self);
+
                                           if (success)
                                           {
                                               __block MXEvent *event;
@@ -2138,6 +2286,7 @@ MXAuthAction;
                                           }
                                       }
                                       failure:^(NSError *error) {
+                                          MXStrongifyAndReturnIfNil(self);
 
                                           // The HS may not support the `/rooms/{roomId}/event/{eventId}` API yet.
                                           // Try to use the older `/context` API as fallback
@@ -2172,12 +2321,15 @@ MXAuthAction;
 {
     NSString *path = [NSString stringWithFormat:@"%@/rooms/%@/context/%@", apiPathPrefix, roomId, eventId];
 
+    MXWeakify(self);
     return [httpClient requestWithMethod:@"GET"
                                     path:path
                               parameters:@{
                                            @"limit": [NSNumber numberWithInteger:limit]
                                            }
                                  success:^(NSDictionary *JSONResponse) {
+                                     MXStrongifyAndReturnIfNil(self);
+
                                      if (success)
                                      {
                                          __block MXEventContext *eventContext;
@@ -2189,6 +2341,7 @@ MXAuthAction;
                                      }
                                  }
                                  failure:^(NSError *error) {
+                                     MXStrongifyAndReturnIfNil(self);
                                      [self dispatchFailure:error inBlock:failure];
                                  }];
 }
@@ -2231,10 +2384,14 @@ MXAuthAction;
                        failure:(void (^)(NSError *error))failure
 {
     NSString *path = [NSString stringWithFormat:@"%@/user/%@/rooms/%@/tags", apiPathPrefix, credentials.userId, roomId];
+
+    MXWeakify(self);
     return [httpClient requestWithMethod:@"GET"
                                     path:path
                               parameters:nil
                                  success:^(NSDictionary *JSONResponse) {
+                                     MXStrongifyAndReturnIfNil(self);
+
                                      NSMutableArray *tags = [NSMutableArray array];
                                      [self dispatchProcessing:^{
                                          // Sort the response into an array of MXRoomTags
@@ -2248,6 +2405,7 @@ MXAuthAction;
                                      }];
                                  }
                                  failure:^(NSError *error) {
+                                     MXStrongifyAndReturnIfNil(self);
                                      [self dispatchFailure:error inBlock:failure];
                                  }];
 }
@@ -2265,13 +2423,17 @@ MXAuthAction;
     }
 
     NSString *path = [NSString stringWithFormat:@"%@/user/%@/rooms/%@/tags/%@", apiPathPrefix, credentials.userId, roomId, tag];
+
+    MXWeakify(self);
     return [httpClient requestWithMethod:@"PUT"
                                     path:path
                               parameters:parameters
                                  success:^(NSDictionary *JSONResponse) {
+                                     MXStrongifyAndReturnIfNil(self);
                                      [self dispatchSuccess:success];
                                  }
                                  failure:^(NSError *error) {
+                                     MXStrongifyAndReturnIfNil(self);
                                      [self dispatchFailure:error inBlock:failure];
                                  }];
 }
@@ -2282,13 +2444,17 @@ MXAuthAction;
                       failure:(void (^)(NSError *error))failure
 {
     NSString *path = [NSString stringWithFormat:@"%@/user/%@/rooms/%@/tags/%@", apiPathPrefix, credentials.userId, roomId, tag];
+
+    MXWeakify(self);
     return [httpClient requestWithMethod:@"DELETE"
                                     path:path
                               parameters:nil
                                  success:^(NSDictionary *JSONResponse) {
+                                     MXStrongifyAndReturnIfNil(self);
                                      [self dispatchSuccess:success];
                                  }
                                  failure:^(NSError *error) {
+                                     MXStrongifyAndReturnIfNil(self);
                                      [self dispatchFailure:error inBlock:failure];
                                  }];
 }
@@ -2300,15 +2466,19 @@ MXAuthAction;
                            failure:(void (^)(NSError *error))failure
 {
     NSString *path = [NSString stringWithFormat:@"%@/profile/%@/displayname", apiPathPrefix, credentials.userId];
+
+    MXWeakify(self);
     return [httpClient requestWithMethod:@"PUT"
                                     path:path
                               parameters:@{
                                            @"displayname": displayname
                                            }
                                  success:^(NSDictionary *JSONResponse) {
+                                     MXStrongifyAndReturnIfNil(self);
                                      [self dispatchSuccess:success];
                                  }
                                  failure:^(NSError *error) {
+                                     MXStrongifyAndReturnIfNil(self);
                                      [self dispatchFailure:error inBlock:failure];
                                  }];
 }
@@ -2325,10 +2495,13 @@ MXAuthAction;
     NSString *path = [NSString stringWithFormat:@"%@/profile/%@/displayname", apiPathPrefix,
                       [userId stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding]];
 
+    MXWeakify(self);
     return [httpClient requestWithMethod:@"GET"
                                     path:path
                               parameters:nil
                                  success:^(NSDictionary *JSONResponse) {
+                                     MXStrongifyAndReturnIfNil(self);
+
                                      if (success)
                                      {
                                          __block NSString *displayname;
@@ -2341,6 +2514,7 @@ MXAuthAction;
                                      }
                                  }
                                  failure:^(NSError *error) {
+                                     MXStrongifyAndReturnIfNil(self);
                                      [self dispatchFailure:error inBlock:failure];
                                  }];
 }
@@ -2350,15 +2524,19 @@ MXAuthAction;
                          failure:(void (^)(NSError *error))failure
 {
     NSString *path = [NSString stringWithFormat:@"%@/profile/%@/avatar_url", apiPathPrefix, credentials.userId];
+
+    MXWeakify(self);
     return [httpClient requestWithMethod:@"PUT"
                                     path:path
                               parameters:@{
                                            @"avatar_url": avatarUrl
                                            }
                                  success:^(NSDictionary *JSONResponse) {
+                                     MXStrongifyAndReturnIfNil(self);
                                      [self dispatchSuccess:success];
                                  }
                                  failure:^(NSError *error) {
+                                     MXStrongifyAndReturnIfNil(self);
                                      [self dispatchFailure:error inBlock:failure];
                                  }];
 }
@@ -2375,10 +2553,13 @@ MXAuthAction;
     NSString *path = [NSString stringWithFormat:@"%@/profile/%@/avatar_url", apiPathPrefix,
                       [userId stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding]];
 
+    MXWeakify(self);
     return [httpClient requestWithMethod:@"GET"
                                     path:path
                               parameters:nil
                                  success:^(NSDictionary *JSONResponse) {
+                                     MXStrongifyAndReturnIfNil(self);
+
                                      if (success)
                                      {
                                          __block NSString *avatarUrl;
@@ -2392,6 +2573,7 @@ MXAuthAction;
                                      }
                                  }
                                  failure:^(NSError *error) {
+                                     MXStrongifyAndReturnIfNil(self);
                                      [self dispatchFailure:error inBlock:failure];
                                  }];
 }
@@ -2413,13 +2595,17 @@ MXAuthAction;
                                  };
 
     NSString *path = [NSString stringWithFormat:@"%@/account/3pid", apiPathPrefix];
+
+    MXWeakify(self);
     return [httpClient requestWithMethod:@"POST"
                                     path:path
                               parameters:parameters
                                  success:^(NSDictionary *JSONResponse) {
+                                     MXStrongifyAndReturnIfNil(self);
                                      [self dispatchSuccess:success];
                                  }
                                  failure:^(NSError *error) {
+                                     MXStrongifyAndReturnIfNil(self);
                                      [self dispatchFailure:error inBlock:failure];
                                  }];
 }
@@ -2430,6 +2616,8 @@ MXAuthAction;
                        failure:(void (^)(NSError *error))failure
 {
     NSString *path = [NSString stringWithFormat:@"%@/account/3pid/delete", kMXAPIPrefixPathUnstable];
+
+    MXWeakify(self);
     return [httpClient requestWithMethod:@"POST"
                                     path:path
                               parameters:@{
@@ -2437,9 +2625,11 @@ MXAuthAction;
                                            @"address": address
                                            }
                                  success:^(NSDictionary *JSONResponse) {
+                                     MXStrongifyAndReturnIfNil(self);
                                      [self dispatchSuccess:success];
                                  }
                                  failure:^(NSError *error) {
+                                     MXStrongifyAndReturnIfNil(self);
                                      [self dispatchFailure:error inBlock:failure];
                                  }];
 }
@@ -2448,10 +2638,14 @@ MXAuthAction;
                       failure:(void (^)(NSError *error))failure
 {
     NSString *path = [NSString stringWithFormat:@"%@/account/3pid", apiPathPrefix];
+
+    MXWeakify(self);
     return [httpClient requestWithMethod:@"GET"
                                     path:path
                               parameters:nil
                                  success:^(NSDictionary *JSONResponse) {
+                                     MXStrongifyAndReturnIfNil(self);
+
                                      if (success)
                                      {
                                          __block NSArray<MXThirdPartyIdentifier*> *threePIDs;
@@ -2463,6 +2657,7 @@ MXAuthAction;
                                      }
                                  }
                                  failure:^(NSError *error) {
+                                     MXStrongifyAndReturnIfNil(self);
                                      [self dispatchFailure:error inBlock:failure];
                                  }];
 }
@@ -2481,14 +2676,17 @@ MXAuthAction;
     {
         parameters[@"status_msg"] = statusMessage;
     }
-    
+
+    MXWeakify(self);
     return [httpClient requestWithMethod:@"PUT"
                                     path:path
                               parameters:parameters
                                  success:^(NSDictionary *JSONResponse) {
+                                     MXStrongifyAndReturnIfNil(self);
                                      [self dispatchSuccess:success];
                                  }
                                  failure:^(NSError *error) {
+                                     MXStrongifyAndReturnIfNil(self);
                                      [self dispatchFailure:error inBlock:failure];
                                  }];
 }
@@ -2505,10 +2703,13 @@ MXAuthAction;
     NSString *path = [NSString stringWithFormat:@"%@/presence/%@/status", apiPathPrefix,
                       [userId stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding]];
 
+    MXWeakify(self);
     return [httpClient requestWithMethod:@"GET"
                                     path:path
                               parameters:nil
                                  success:^(NSDictionary *JSONResponse) {
+                                     MXStrongifyAndReturnIfNil(self);
+
                                      if (success)
                                      {
                                          __block MXPresenceResponse *presence;
@@ -2520,6 +2721,7 @@ MXAuthAction;
                                      }
                                  }
                                  failure:^(NSError *error) {
+                                     MXStrongifyAndReturnIfNil(self);
                                      [self dispatchFailure:error inBlock:failure];
                                  }];
 }
@@ -2528,10 +2730,14 @@ MXAuthAction;
                          failure:(void (^)(NSError *error))failure
 {
     NSString *path = [NSString stringWithFormat:@"%@/presence/list/%@", apiPathPrefix, credentials.userId];
+
+    MXWeakify(self);
     return [httpClient requestWithMethod:@"GET"
                                     path:path
                               parameters:nil
                                  success:^(NSDictionary *JSONResponse) {
+                                     MXStrongifyAndReturnIfNil(self);
+
                                      if (success)
                                      {
                                          __block MXPresenceResponse *presence;
@@ -2543,6 +2749,7 @@ MXAuthAction;
                                      }
                                  }
                                  failure:^(NSError *error) {
+                                     MXStrongifyAndReturnIfNil(self);
                                      [self dispatchFailure:error inBlock:failure];
                                  }];
 }
@@ -2555,14 +2762,17 @@ MXAuthAction;
     
     NSMutableDictionary *parameters = [NSMutableDictionary dictionary];
     parameters[@"invite"] = users;
-    
+
+    MXWeakify(self);
     return [httpClient requestWithMethod:@"POST"
                                     path:path
                               parameters:parameters
                                  success:^(NSDictionary *JSONResponse) {
+                                     MXStrongifyAndReturnIfNil(self);
                                      [self dispatchSuccess:success];
                                  }
                                  failure:^(NSError *error) {
+                                     MXStrongifyAndReturnIfNil(self);
                                      [self dispatchFailure:error inBlock:failure];
                                  }];
 }
@@ -2604,11 +2814,14 @@ MXAuthAction;
         // cancel the current request and notify the client so that it can retry with a new request.
         clientTimeoutInSeconds = clientTimeoutInSeconds / 1000;
     }
-    
+
+    MXWeakify(self);
     MXHTTPOperation *operation = [httpClient requestWithMethod:@"GET"
                                                           path:[NSString stringWithFormat:@"%@/sync", apiPathPrefix]
                                                     parameters:parameters timeout:clientTimeoutInSeconds
                                                        success:^(NSDictionary *JSONResponse) {
+                                                           MXStrongifyAndReturnIfNil(self);
+
                                                            if (success)
                                                            {
                                                                __block MXSyncResponse *syncResponse;
@@ -2620,6 +2833,7 @@ MXAuthAction;
                                                            }
                                                        }
                                                        failure:^(NSError *error) {
+                                                           MXStrongifyAndReturnIfNil(self);
                                                            [self dispatchFailure:error inBlock:failure];
                                                        }];
     
@@ -2637,13 +2851,16 @@ MXAuthAction;
                             success:(void (^)(void))success
                             failure:(void (^)(NSError *error))failure
 {
+    MXWeakify(self);
     return [httpClient requestWithMethod:@"POST"
                                     path: [NSString stringWithFormat:@"%@/rooms/%@/receipt/m.read/%@", apiPathPrefix, roomId, eventId]
                               parameters:[[NSDictionary alloc] init]
                                  success:^(NSDictionary *JSONResponse) {
+                                     MXStrongifyAndReturnIfNil(self);
                                      [self dispatchSuccess:success];
                                  }
                                  failure:^(NSError *error) {
+                                     MXStrongifyAndReturnIfNil(self);
                                      [self dispatchFailure:error inBlock:failure];
                                  }];
     
@@ -2665,14 +2882,17 @@ MXAuthAction;
     {
         parameters[@"m.read"] = readReceiptEventId;
     }
-    
+
+    MXWeakify(self);
     return [httpClient requestWithMethod:@"POST"
                                     path:[NSString stringWithFormat:@"%@/rooms/%@/read_markers", apiPathPrefix, roomId]
                               parameters:parameters
                                  success:^(NSDictionary *JSONResponse) {
+                                     MXStrongifyAndReturnIfNil(self);
                                      [self dispatchSuccess:success];
                                  }
                                  failure:^(NSError *error) {
+                                     MXStrongifyAndReturnIfNil(self);
                                      [self dispatchFailure:error inBlock:failure];
                                  }];
 }
@@ -2725,10 +2945,13 @@ MXAuthAction;
         parameters = nil;
     }
 
+    MXWeakify(self);
     return [httpClient requestWithMethod:method
                                     path:path
                               parameters:parameters
                                  success:^(NSDictionary *JSONResponse) {
+                                     MXStrongifyAndReturnIfNil(self);
+
                                      if (success)
                                      {
                                          __block MXPublicRoomsResponse *publicRoomsResponse;
@@ -2740,6 +2963,7 @@ MXAuthAction;
                                      }
                                  }
                                  failure:^(NSError *error) {
+                                     MXStrongifyAndReturnIfNil(self);
                                      [self dispatchFailure:error inBlock:failure];
                                  }];
 }
@@ -2750,11 +2974,14 @@ MXAuthAction;
 {
     // Note: characters in a room alias need to be escaped in the URL
     NSString *path = [NSString stringWithFormat:@"%@/directory/room/%@", apiPathPrefix, [roomAlias stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding]];
-    
+
+    MXWeakify(self);
     return [httpClient requestWithMethod:@"GET"
                                     path:path
                               parameters:nil
                                  success:^(NSDictionary *JSONResponse) {
+                                     MXStrongifyAndReturnIfNil(self);
+
                                      if (success)
                                      {
                                          __block NSString *roomId;
@@ -2766,6 +2993,7 @@ MXAuthAction;
                                      }
                                  }
                                  failure:^(NSError *error) {
+                                     MXStrongifyAndReturnIfNil(self);
                                      [self dispatchFailure:error inBlock:failure];
                                  }];
 }
@@ -2775,10 +3003,13 @@ MXAuthAction;
 - (MXHTTPOperation*)thirdpartyProtocols:(void (^)(MXThirdpartyProtocolsResponse *thirdpartyProtocolsResponse))success
                                 failure:(void (^)(NSError *error))failure;
 {
+    MXWeakify(self);
     return [httpClient requestWithMethod:@"GET"
                                     path:[NSString stringWithFormat:@"%@/thirdparty/protocols", kMXAPIPrefixPathUnstable]
                               parameters:nil
                                  success:^(NSDictionary *JSONResponse) {
+                                     MXStrongifyAndReturnIfNil(self);
+
                                      if (success)
                                      {
                                          __block MXThirdpartyProtocolsResponse *thirdpartyProtocolsResponse;
@@ -2790,6 +3021,7 @@ MXAuthAction;
                                      }
                                  }
                                  failure:^(NSError *error) {
+                                     MXStrongifyAndReturnIfNil(self);
                                      [self dispatchFailure:error inBlock:failure];
                                  }];
 }
@@ -2812,7 +3044,8 @@ MXAuthAction;
     {
         path = [path stringByAppendingString:[NSString stringWithFormat:@"?filename=%@", filename]];
     }
-    
+
+    MXWeakify(self);
     return [httpClient requestWithMethod:@"POST"
                                     path:path
                               parameters:nil
@@ -2821,6 +3054,8 @@ MXAuthAction;
                                  timeout:timeoutInSeconds
                           uploadProgress:uploadProgress
                                  success:^(NSDictionary *JSONResponse) {
+                                     MXStrongifyAndReturnIfNil(self);
+
                                      if (success)
                                      {
                                          __block NSString *contentURL;
@@ -2832,6 +3067,7 @@ MXAuthAction;
                                      }
                                  }
                                  failure:^(NSError *error) {
+                                     MXStrongifyAndReturnIfNil(self);
                                      [self dispatchFailure:error inBlock:failure];
                                  }];
 }
@@ -3135,10 +3371,13 @@ MXAuthAction;
 - (MXHTTPOperation *)turnServer:(void (^)(MXTurnServerResponse *))success
                         failure:(void (^)(NSError *))failure
 {
+    MXWeakify(self);
     return [httpClient requestWithMethod:@"GET"
                                     path:[NSString stringWithFormat:@"%@/voip/turnServer", apiPathPrefix]
                               parameters:nil
                                  success:^(NSDictionary *JSONResponse) {
+                                     MXStrongifyAndReturnIfNil(self);
+
                                      if (success)
                                      {
                                          __block MXTurnServerResponse *turnServerResponse;
@@ -3150,6 +3389,7 @@ MXAuthAction;
                                      }
                                  }
                                  failure:^(NSError *error) {
+                                     MXStrongifyAndReturnIfNil(self);
                                      [self dispatchFailure:error inBlock:failure];
                                  }];
 }
@@ -3193,10 +3433,13 @@ MXAuthAction;
         path = [NSString stringWithFormat:@"%@?next_batch=%@", path, nextBatch];
     }
 
+    MXWeakify(self);
     return [httpClient requestWithMethod:@"POST"
                                     path: path
                               parameters:parameters
                                  success:^(NSDictionary *JSONResponse) {
+                                     MXStrongifyAndReturnIfNil(self);
+
                                      if (success)
                                      {
                                          __block MXSearchResponse *searchResponse;
@@ -3208,6 +3451,7 @@ MXAuthAction;
                                      }
                                  }
                                  failure:^(NSError *error) {
+                                     MXStrongifyAndReturnIfNil(self);
                                      [self dispatchFailure:error inBlock:failure];
                                  }];
 }
@@ -3237,10 +3481,13 @@ MXAuthAction;
                                  @"limit": @(limit)
                                  };
 
+    MXWeakify(self);
     return [httpClient requestWithMethod:@"POST"
                                     path:[NSString stringWithFormat:@"%@/user_directory/search", apiPathPrefix]
                               parameters:parameters
                                  success:^(NSDictionary *JSONResponse) {
+                                     MXStrongifyAndReturnIfNil(self);
+
                                      if (success)
                                      {
                                          __block MXUserSearchResponse *userSearchResponse;
@@ -3252,6 +3499,7 @@ MXAuthAction;
                                      }
                                  }
                                  failure:^(NSError *error) {
+                                     MXStrongifyAndReturnIfNil(self);
                                      [self dispatchFailure:error inBlock:failure];
                                  }];
 }
@@ -3279,10 +3527,13 @@ MXAuthAction;
         parameters[@"one_time_keys"] = oneTimeKeys;
     }
 
+    MXWeakify(self);
     return [httpClient requestWithMethod:@"POST"
                                     path: path
                               parameters:parameters
                                  success:^(NSDictionary *JSONResponse) {
+                                     MXStrongifyAndReturnIfNil(self);
+
                                      if (success)
                                      {
                                          __block MXKeysUploadResponse *keysUploadResponse;
@@ -3294,6 +3545,7 @@ MXAuthAction;
                                      }
                                  }
                                  failure:^(NSError *error) {
+                                     MXStrongifyAndReturnIfNil(self);
                                      [self dispatchFailure:error inBlock:failure];
                                  }];
 }
@@ -3320,10 +3572,13 @@ MXAuthAction;
         parameters[@"token"] = token;
     }
 
+    MXWeakify(self);
     return [httpClient requestWithMethod:@"POST"
                                     path: path
                               parameters:parameters
                                  success:^(NSDictionary *JSONResponse) {
+                                     MXStrongifyAndReturnIfNil(self);
+
                                      if (success)
                                      {
                                          __block MXKeysQueryResponse *keysQueryResponse;
@@ -3335,6 +3590,7 @@ MXAuthAction;
                                      }
                                  }
                                  failure:^(NSError *error) {
+                                     MXStrongifyAndReturnIfNil(self);
                                      [self dispatchFailure:error inBlock:failure];
                                  }];
 }
@@ -3348,10 +3604,13 @@ MXAuthAction;
                                  };
 
 
+    MXWeakify(self);
     return [httpClient requestWithMethod:@"POST"
                                     path: path
                               parameters:parameters
                                  success:^(NSDictionary *JSONResponse) {
+                                     MXStrongifyAndReturnIfNil(self);
+
                                      if (success)
                                      {
                                          __block MXKeysClaimResponse *keysClaimResponse;
@@ -3363,6 +3622,7 @@ MXAuthAction;
                                      }
                                  }
                                  failure:^(NSError *error) {
+                                     MXStrongifyAndReturnIfNil(self);
                                      [self dispatchFailure:error inBlock:failure];
                                  }];
 }
@@ -3371,6 +3631,7 @@ MXAuthAction;
                             success:(void (^)(MXDeviceListResponse *deviceLists))success
                             failure:(void (^)(NSError *))failure
 {
+    MXWeakify(self);
     return [httpClient requestWithMethod:@"GET"
                                     path:[NSString stringWithFormat:@"%@/keys/changes", kMXAPIPrefixPathUnstable]
                               parameters:@{
@@ -3378,6 +3639,8 @@ MXAuthAction;
                                            @"to": toToken
                                            }
                                  success:^(NSDictionary *JSONResponse) {
+                                     MXStrongifyAndReturnIfNil(self);
+
                                      if (success)
                                      {
                                          __block MXDeviceListResponse *deviceLists;
@@ -3388,6 +3651,7 @@ MXAuthAction;
                                          }];
                                      }
                                  } failure:^(NSError *error) {
+                                     MXStrongifyAndReturnIfNil(self);
                                      [self dispatchFailure:error inBlock:failure];
                                  }];
 }
@@ -3411,13 +3675,16 @@ MXAuthAction;
                               @"messages": contentMap.map
                               };
 
+    MXWeakify(self);
     return [httpClient requestWithMethod:@"PUT"
                                     path:path
                               parameters:content
                                  success:^(NSDictionary *JSONResponse) {
+                                     MXStrongifyAndReturnIfNil(self);
                                      [self dispatchSuccess:success];
                                  }
                                  failure:^(NSError *error) {
+                                     MXStrongifyAndReturnIfNil(self);
                                      [self dispatchFailure:error inBlock:failure];
                                  }];
 }
@@ -3426,10 +3693,13 @@ MXAuthAction;
 - (MXHTTPOperation*)devices:(void (^)(NSArray<MXDevice *> *))success
                     failure:(void (^)(NSError *error))failure
 {
+    MXWeakify(self);
     return [httpClient requestWithMethod:@"GET"
                                     path:[NSString stringWithFormat:@"%@/devices", kMXAPIPrefixPathUnstable]
                               parameters:nil
                                  success:^(NSDictionary *JSONResponse) {
+                                     MXStrongifyAndReturnIfNil(self);
+
                                      if (success)
                                      {
                                          __block NSArray<MXDevice *> *devices;
@@ -3440,6 +3710,7 @@ MXAuthAction;
                                          }];
                                      }
                                  } failure:^(NSError *error) {
+                                     MXStrongifyAndReturnIfNil(self);
                                      [self dispatchFailure:error inBlock:failure];
                                  }];
 }
@@ -3448,10 +3719,13 @@ MXAuthAction;
                              success:(void (^)(MXDevice *))success
                              failure:(void (^)(NSError *error))failure
 {
+    MXWeakify(self);
     return [httpClient requestWithMethod:@"GET"
                                     path:[NSString stringWithFormat:@"%@/devices/%@", kMXAPIPrefixPathUnstable, deviceId]
                               parameters:nil
                                  success:^(NSDictionary *JSONResponse) {
+                                     MXStrongifyAndReturnIfNil(self);
+
                                      if (success)
                                      {
                                          __block MXDevice *device;
@@ -3462,6 +3736,7 @@ MXAuthAction;
                                          }];
                                      }
                                  } failure:^(NSError *error) {
+                                     MXStrongifyAndReturnIfNil(self);
                                      [self dispatchFailure:error inBlock:failure];
                                  }];
 }
@@ -3476,13 +3751,16 @@ MXAuthAction;
     {
         parameters = @{@"display_name": deviceName};
     }
-    
+
+    MXWeakify(self);
     return [httpClient requestWithMethod:@"PUT"
                                     path:[NSString stringWithFormat:@"%@/devices/%@", kMXAPIPrefixPathUnstable, deviceId]
                               parameters:parameters
                                  success:^(NSDictionary *JSONResponse) {
+                                     MXStrongifyAndReturnIfNil(self);
                                      [self dispatchSuccess:success];
                                  } failure:^(NSError *error) {
+                                     MXStrongifyAndReturnIfNil(self);
                                      [self dispatchFailure:error inBlock:failure];
                                  }];
 }
@@ -3493,11 +3771,12 @@ MXAuthAction;
 {
     // Use DELETE with no params to get the supported authentication flows to delete device.
     // The request will fail with Unauthorized status code, but the auth session will be available in response data.
-    
+    MXWeakify(self);
     return [httpClient requestWithMethod:@"DELETE"
                                     path:[NSString stringWithFormat:@"%@/devices/%@", kMXAPIPrefixPathUnstable, [deviceId stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding]]
                               parameters:nil
                                  success:^(NSDictionary *JSONResponse) {
+                                     MXStrongifyAndReturnIfNil(self);
                                      
                                      NSLog(@"[MXRestClient] Warning: get an authentication session to delete a device failed");
                                      if (success)
@@ -3509,6 +3788,8 @@ MXAuthAction;
                                      }
                                  }
                                  failure:^(NSError *error) {
+                                     MXStrongifyAndReturnIfNil(self);
+
                                      __block MXAuthenticationSession *authSession;
                                      [self dispatchProcessing:^{
                                          if (error.userInfo[MXHTTPClientErrorResponseDataKey])
@@ -3546,7 +3827,8 @@ MXAuthAction;
     {
         payloadData = [NSJSONSerialization dataWithJSONObject:@{@"auth": authParameters} options:0 error:nil];
     }
-    
+
+    MXWeakify(self);
     return [httpClient requestWithMethod:@"DELETE"
                                     path:[NSString stringWithFormat:@"%@/devices/%@", kMXAPIPrefixPathUnstable, [deviceId stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding]]
                               parameters:nil
@@ -3555,8 +3837,10 @@ MXAuthAction;
                                  timeout:-1
                           uploadProgress:nil
                                  success:^(NSDictionary *JSONResponse) {
+                                     MXStrongifyAndReturnIfNil(self);
                                      [self dispatchSuccess:success];
                                  } failure:^(NSError *error) {
+                                     MXStrongifyAndReturnIfNil(self);
                                      [self dispatchFailure:error inBlock:failure];
                                  }];
 }
@@ -3588,14 +3872,17 @@ MXAuthAction;
                                  failure:(void (^)(NSError *error))failure
 {
     NSString *path = [NSString stringWithFormat:@"%@/groups/%@/self/update_publicity", apiPathPrefix, [groupId stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding]];
-    
+
+    MXWeakify(self);
     return [httpClient requestWithMethod:@"PUT"
                                     path:path
                               parameters:@{@"publicise": @(isPublicised)}
                                  success:^(NSDictionary *JSONResponse) {
+                                     MXStrongifyAndReturnIfNil(self);
                                      [self dispatchSuccess:success];
                                  }
                                  failure:^(NSError *error) {
+                                     MXStrongifyAndReturnIfNil(self);
                                      [self dispatchFailure:error inBlock:failure];
                                  }];
 }
@@ -3605,11 +3892,14 @@ MXAuthAction;
                             failure:(void (^)(NSError *error))failure
 {
     NSString *path = [NSString stringWithFormat:@"%@/groups/%@/profile", apiPathPrefix, [groupId stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding]];
-    
+
+    MXWeakify(self);
     return [httpClient requestWithMethod:@"GET"
                                     path:path
                               parameters:nil
                                  success:^(NSDictionary *JSONResponse) {
+                                     MXStrongifyAndReturnIfNil(self);
+
                                      if (success)
                                      {
                                          __block MXGroupProfile *groupProfile;
@@ -3621,6 +3911,7 @@ MXAuthAction;
                                      }
                                  }
                                  failure:^(NSError *error) {
+                                     MXStrongifyAndReturnIfNil(self);
                                      [self dispatchFailure:error inBlock:failure];
                                  }];
 }
@@ -3630,11 +3921,14 @@ MXAuthAction;
                             failure:(void (^)(NSError *error))failure
 {
     NSString *path = [NSString stringWithFormat:@"%@/groups/%@/summary", apiPathPrefix, [groupId stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding]];
-    
+
+    MXWeakify(self);
     return [httpClient requestWithMethod:@"GET"
                                     path:path
                               parameters:nil
                                  success:^(NSDictionary *JSONResponse) {
+                                     MXStrongifyAndReturnIfNil(self);
+
                                      if (success)
                                      {
                                          __block MXGroupSummary *groupSummary;
@@ -3646,6 +3940,7 @@ MXAuthAction;
                                      }
                                  }
                                  failure:^(NSError *error) {
+                                     MXStrongifyAndReturnIfNil(self);
                                      [self dispatchFailure:error inBlock:failure];
                                  }];
 }
@@ -3655,11 +3950,14 @@ MXAuthAction;
                           failure:(void (^)(NSError *error))failure
 {
     NSString *path = [NSString stringWithFormat:@"%@/groups/%@/users", apiPathPrefix, [groupId stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding]];
-    
+
+    MXWeakify(self);
     return [httpClient requestWithMethod:@"GET"
                                     path:path
                               parameters:nil
                                  success:^(NSDictionary *JSONResponse) {
+                                     MXStrongifyAndReturnIfNil(self);
+
                                      if (success)
                                      {
                                          __block MXGroupUsers *groupUsers;
@@ -3671,6 +3969,7 @@ MXAuthAction;
                                      }
                                  }
                                  failure:^(NSError *error) {
+                                     MXStrongifyAndReturnIfNil(self);
                                      [self dispatchFailure:error inBlock:failure];
                                  }];
 }
@@ -3680,11 +3979,14 @@ MXAuthAction;
                                  failure:(void (^)(NSError *error))failure
 {
     NSString *path = [NSString stringWithFormat:@"%@/groups/%@/invited_users", apiPathPrefix, [groupId stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding]];
-    
+
+    MXWeakify(self);
     return [httpClient requestWithMethod:@"GET"
                                     path:path
                               parameters:nil
                                  success:^(NSDictionary *JSONResponse) {
+                                     MXStrongifyAndReturnIfNil(self);
+
                                      if (success)
                                      {
                                          __block MXGroupUsers *groupUsers;
@@ -3696,6 +3998,7 @@ MXAuthAction;
                                      }
                                  }
                                  failure:^(NSError *error) {
+                                     MXStrongifyAndReturnIfNil(self);
                                      [self dispatchFailure:error inBlock:failure];
                                  }];
 }
@@ -3705,11 +4008,14 @@ MXAuthAction;
                           failure:(void (^)(NSError *error))failure
 {
     NSString *path = [NSString stringWithFormat:@"%@/groups/%@/rooms", apiPathPrefix, [groupId stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding]];
-    
+
+    MXWeakify(self);
     return [httpClient requestWithMethod:@"GET"
                                     path:path
                               parameters:nil
                                  success:^(NSDictionary *JSONResponse) {
+                                     MXStrongifyAndReturnIfNil(self);
+
                                      if (success)
                                      {
                                          __block MXGroupRooms *groupRooms;
@@ -3721,6 +4027,7 @@ MXAuthAction;
                                      }
                                  }
                                  failure:^(NSError *error) {
+                                     MXStrongifyAndReturnIfNil(self);
                                      [self dispatchFailure:error inBlock:failure];
                                  }];
 }
@@ -3739,14 +4046,17 @@ MXAuthAction;
     {
         parameters = @{};
     }
-    
+
+    MXWeakify(self);
     return [httpClient requestWithMethod:@"PUT"
                                     path:path
                               parameters:parameters
                                  success:^(NSDictionary *JSONResponse) {
+                                     MXStrongifyAndReturnIfNil(self);
                                      [self dispatchSuccess:success];
                                  }
                                  failure:^(NSError *error) {
+                                     MXStrongifyAndReturnIfNil(self);
                                      [self dispatchFailure:error inBlock:failure];
                                  }];
 }
@@ -3766,11 +4076,14 @@ MXAuthAction;
     }
     
     NSString *path = [NSString stringWithFormat:@"%@/publicised_groups", apiPathPrefix];
-    
+
+    MXWeakify(self);
     return [httpClient requestWithMethod:@"POST"
                                     path:path
                               parameters:@{@"user_ids": userIds}
                                  success:^(NSDictionary *JSONResponse) {
+                                     MXStrongifyAndReturnIfNil(self);
+
                                      if (success)
                                      {
                                          __block NSDictionary *publicisedGroupsByUserId;
@@ -3782,6 +4095,7 @@ MXAuthAction;
                                      }
                                  }
                                  failure:^(NSError *error) {
+                                     MXStrongifyAndReturnIfNil(self);
                                      [self dispatchFailure:error inBlock:failure];
                                  }];
 }

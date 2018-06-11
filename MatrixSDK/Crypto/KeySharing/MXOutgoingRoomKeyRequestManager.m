@@ -213,8 +213,6 @@ NSUInteger const SEND_KEY_REQUESTS_DELAY_MS = 500;
         void(^onFailure)(NSError *) = ^(NSError *error) {
             MXStrongifyAndReturnIfNil(self);
 
-            NSLog(@"[MXOutgoingRoomKeyRequestManager] startSendingOutgoingRoomKeyRequests: Error sending room key request; will retry later");
-
             [self startTimer];
         };
 
