@@ -51,7 +51,7 @@
 {
     if (mxSession)
     {
-        [matrixSDKTestsData closeMXSession:mxSession];
+        [mxSession close];
         mxSession = nil;
     }
 
@@ -1359,7 +1359,7 @@
 
                     id<MXStore> aliceStore = [[mxStoreClass alloc] init];
                     [matrixSDKTestsData retain:aliceStore];
-                    
+
                     [aliceStore openWithCredentials:matrixSDKTestsData.aliceCredentials onComplete:^{
 
                         id<MXStore> bobStore3 = [[mxStoreClass alloc] init];

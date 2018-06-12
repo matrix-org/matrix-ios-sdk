@@ -43,7 +43,7 @@ NSString *theInitialEventMessage = @"The initial timelime event";
 {
     if (mxSession)
     {
-        [matrixSDKTestsData closeMXSession:mxSession];
+        [mxSession close];
         mxSession = nil;
     }
 

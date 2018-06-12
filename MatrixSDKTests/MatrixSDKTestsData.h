@@ -136,12 +136,6 @@ FOUNDATION_EXPORT NSString * const kMXTestsAliceAvatarURL;
 
 - (void)for:(MXRestClient *)mxRestClient2 andRoom:(NSString*)roomId sendMessages:(NSUInteger)messagesCount success:(void (^)(void))success;
 
-// Close the session
-// Before closing, it checks if the session must be cleaning.
-// Cleaning means making the user leave all private rooms so that requests to the
-// home server db require (much) less time
-- (void)closeMXSession:(MXSession*)mxSession;
-
 
 #pragma mark Reference keeping
 // Retain an object for the life of this MatrixSDKTestsData instance

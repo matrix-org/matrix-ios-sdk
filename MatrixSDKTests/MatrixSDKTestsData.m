@@ -826,12 +826,7 @@ NSString * const kMXTestsAliceAvatarURL = @"mxc://matrix.org/kciiXusgZFKuNLIfLqm
 }
 
 
-
-- (void)closeMXSession:(MXSession*)mxSession
-{
-    [mxSession close];
-}
-
+#pragma mark Reference keeping
 - (void)retain:(NSObject*)object
 {
     [retainedObjects addObject:object];

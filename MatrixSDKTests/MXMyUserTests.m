@@ -44,8 +44,7 @@
 {
     if (mxSession)
     {
-        [matrixSDKTestsData closeMXSession:mxSession];
-        matrixSDKTestsData = nil;
+        [mxSession close];
         mxSession = nil;
     }
 
