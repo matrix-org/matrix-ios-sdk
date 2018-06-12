@@ -97,6 +97,8 @@
             return NO;
         }];
 
+        [matrixSDKTestsData retain:mxRestClient];
+
         // Check the instance is usable
         XCTAssert(mxRestClient);
         [mxRestClient createRoom:nil visibility:0 roomAlias:nil topic:nil success:^(MXCreateRoomResponse *response) {
