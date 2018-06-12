@@ -142,4 +142,9 @@ FOUNDATION_EXPORT NSString * const kMXTestsAliceAvatarURL;
 // home server db require (much) less time
 - (void)closeMXSession:(MXSession*)mxSession;
 
+
+#pragma mark Reference keeping
+// Retain an object for the life of this MatrixSDKTestsData instance
+- (void)retain:(NSObject*)object;
+
 @end
