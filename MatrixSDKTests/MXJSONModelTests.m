@@ -75,6 +75,7 @@
 - (void)tearDown
 {
     httpClient = nil;
+    matrixSDKTestsData = nil;
     
     [super tearDown];
 }

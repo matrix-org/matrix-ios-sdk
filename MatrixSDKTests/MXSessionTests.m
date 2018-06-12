@@ -60,6 +60,8 @@
         [[NSNotificationCenter defaultCenter] removeObserver:observer];
         observer = nil;
     }
+    
+    matrixSDKTestsData = nil;
 
     [super tearDown];
 }

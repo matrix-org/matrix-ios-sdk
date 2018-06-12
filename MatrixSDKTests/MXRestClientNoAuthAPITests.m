@@ -47,8 +47,10 @@
                           andOnUnrecognizedCertificateBlock:nil];
 }
 
-- (void)tearDown {
+- (void)tearDown
+{
     mxRestClient = nil;
+    matrixSDKTestsData = nil;
 
     [super tearDown];
 }

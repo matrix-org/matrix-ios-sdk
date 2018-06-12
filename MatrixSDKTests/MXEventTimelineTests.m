@@ -45,8 +45,10 @@ NSString *theInitialEventMessage = @"The initial timelime event";
     {
         [matrixSDKTestsData closeMXSession:mxSession];
         mxSession = nil;
-        matrixSDKTestsData = nil;
     }
+
+    matrixSDKTestsData = nil;
+
     [super tearDown];
 }
 
@@ -222,10 +224,7 @@ NSString *theInitialEventMessage = @"The initial timelime event";
             // Get some messages in the past
             [eventTimeline paginate:10 direction:MXTimelineDirectionBackwards onlyFromStore:NO complete:^{
 
-                // @TODO: The result should be 21 but it fails because of https://matrix.org/jira/browse/SYN-641
-                // @TODO: Come back to 21 once Synapse is fixed
-                //XCTAssertEqual(events.count, 21, @"10 + 5 + 1 + 5 = 21");
-                XCTAssertEqual(events.count, 17, @"If the result 21, this means that https://matrix.org/jira/browse/SYN-641 is fixed ");
+                XCTAssertEqual(events.count, 21, @"10 + 5 + 1 + 5 = 21");
 
                 // Check events order
                 uint64_t prev_ts = 0;

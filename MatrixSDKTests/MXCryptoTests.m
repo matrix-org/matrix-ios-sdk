@@ -71,6 +71,9 @@
     [bobSessionToClose close];
     bobSessionToClose = nil;
 
+    matrixSDKTestsData = nil;
+    matrixSDKTestsE2EData = nil;
+
     [super tearDown];
 }
 
@@ -2223,6 +2226,7 @@
 
                 // 5 - Instantiante a MXRestclient, alice1MatrixRestClient
                 MXRestClient *alice1MatrixRestClient = [[MXRestClient alloc] initWithCredentials:alice1Credentials andOnUnrecognizedCertificateBlock:nil];
+                [matrixSDKTestsData retain:alice1MatrixRestClient];
 
                 // 6 - Make alice1MatrixRestClient make a fake room key request for the message sent at step #4
                 NSDictionary *requestMessage = @{

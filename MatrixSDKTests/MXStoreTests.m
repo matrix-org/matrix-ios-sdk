@@ -61,6 +61,8 @@
         observer = nil;
     }
 
+    matrixSDKTestsData = nil;
+
     [super tearDown];
 }
 

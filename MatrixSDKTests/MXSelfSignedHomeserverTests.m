@@ -42,6 +42,8 @@
 
 - (void)tearDown
 {
+    matrixSDKTestsData = nil;
+
     [super tearDown];
 }
 

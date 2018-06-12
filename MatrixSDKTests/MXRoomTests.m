@@ -50,6 +50,9 @@
         [matrixSDKTestsData closeMXSession:mxSession];
         mxSession = nil;
     }
+
+    matrixSDKTestsData = nil;
+    
     [super tearDown];
 }
 

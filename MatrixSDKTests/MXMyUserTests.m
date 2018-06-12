@@ -48,6 +48,9 @@
         matrixSDKTestsData = nil;
         mxSession = nil;
     }
+
+    matrixSDKTestsData = nil;
+    
     [super tearDown];
 }
 
