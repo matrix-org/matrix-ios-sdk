@@ -127,9 +127,9 @@ static NSString* const kMXErrorConsentNotGivenConsentURIJSONKey = @"consent_uri"
         // Track potential expected session invalidation (seen on iOS10 beta)
         MXWeakify(self);
         [httpManager setSessionDidBecomeInvalidBlock:^(NSURLSession * _Nonnull session, NSError * _Nonnull error) {
-            MXStrongifyAndReturnIfNil(self);
-
             NSLog(@"[MXHTTPClient] SessionDidBecomeInvalid: %@: %@", session, error);
+
+            MXStrongifyAndReturnIfNil(self);
             self->invalidatedSession = YES;
         }];
     }
@@ -241,6 +241,13 @@ static NSString* const kMXErrorConsentNotGivenConsentURIJSONKey = @"consent_uri"
         }
         
     } downloadProgress:nil completionHandler:^(NSURLResponse * _Nonnull theResponse, NSDictionary *JSONResponse, NSError * _Nullable error) {
+        NSHTTPURLResponse *response = (NSHTTPURLResponse*)theResponse;
+
+        if (!weakself)
+        {
+            // Log which request failed because of a potentiel unexpected object release
+            [MXHTTPClient logRequestFailure:mxHTTPOperation path:path statusCode:response.statusCode accessToken:accessToken error:error];
+        }
         MXStrongifyAndReturnIfNil(self);
 
         mxHTTPOperation.operation = nil;
@@ -251,33 +258,7 @@ static NSString* const kMXErrorConsentNotGivenConsentURIJSONKey = @"consent_uri"
         }
         else
         {
-            NSHTTPURLResponse *response = (NSHTTPURLResponse*)theResponse;
-
-#if DEBUG
-            NSLog(@"[MXHTTPClient] Request %p failed for path: %@ - HTTP code: %@", mxHTTPOperation, path, response ? @(response.statusCode) : @"none");
-            NSLog(@"[MXHTTPClient] error: %@", error);
-#else
-            // Hide access token in printed path
-            NSMutableString *printedPath = [NSMutableString stringWithString:path];
-            if (accessToken)
-            {
-                NSRange range = [path rangeOfString:accessToken];
-                if (range.location != NSNotFound)
-                {
-                    [printedPath replaceCharactersInRange:range withString:@"..."];
-                }
-            }
-            NSLog(@"[MXHTTPClient] Request %p failed for path: %@ - HTTP code: %@", mxHTTPOperation, printedPath, @(response.statusCode));
-
-            if (error.userInfo[NSLocalizedDescriptionKey])
-            {
-                NSLog(@"[MXHTTPClient] error domain: %@, code:%zd, description: %@", error.domain, error.code, error.userInfo[NSLocalizedDescriptionKey]);
-            }
-            else
-            {
-                NSLog(@"[MXHTTPClient] error domain: %@, code:%zd", error.domain, error.code);
-            }
-#endif
+            [MXHTTPClient logRequestFailure:mxHTTPOperation path:path statusCode:response.statusCode accessToken:accessToken error:error];
 
             if (response)
             {
@@ -754,6 +735,39 @@ static NSString* const kMXErrorConsentNotGivenConsentURIJSONKey = @"consent_uri"
     return [[MXError alloc] initWithErrorCode:json[kMXErrorCodeJSONKey]
                                         error:json[kMXErrorMessageJSONKey]
                                      userInfo:mxErrorUserInfo];
+}
+
++ (void)logRequestFailure:(MXHTTPOperation*)mxHTTPOperation
+                     path:(NSString*)path
+               statusCode:(NSUInteger)statusCode
+              accessToken:(NSString*)accessToken
+                    error:(NSError*)error
+{
+#if DEBUG
+    NSLog(@"[MXHTTPClient] Request %p failed for path: %@ - HTTP code: %@", mxHTTPOperation, path, @(statusCode));
+    NSLog(@"[MXHTTPClient] error: %@", error);
+#else
+    // Hide access token in printed path
+    NSMutableString *printedPath = [NSMutableString stringWithString:path];
+    if (accessToken)
+    {
+        NSRange range = [path rangeOfString:accessToken];
+        if (range.location != NSNotFound)
+        {
+            [printedPath replaceCharactersInRange:range withString:@"<redacted>"];
+        }
+    }
+    NSLog(@"[MXHTTPClient] Request %p failed for path: %@ - HTTP code: %@", mxHTTPOperation, printedPath, @(statusCode));
+
+    if (error.userInfo[NSLocalizedDescriptionKey])
+    {
+        NSLog(@"[MXHTTPClient] error domain: %@, code:%zd, description: %@", error.domain, error.code, error.userInfo[NSLocalizedDescriptionKey]);
+    }
+    else
+    {
+        NSLog(@"[MXHTTPClient] error domain: %@, code:%zd", error.domain, error.code);
+    }
+#endif
 }
 
 @end
