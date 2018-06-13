@@ -577,7 +577,7 @@ NSString *const kMXRoomSummaryDidChangeNotification = @"kMXRoomSummaryDidChangeN
                                  };
 
     // Make the search
-    CFDataRef foundKey;
+    CFDataRef foundKey = nil;
     OSStatus status = SecItemCopyMatching((__bridge CFDictionaryRef)searchDict, (CFTypeRef*)&foundKey);
 
     if (status == errSecSuccess)
