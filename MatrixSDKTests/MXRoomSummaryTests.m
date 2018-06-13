@@ -71,6 +71,8 @@ NSString *uisiString = @"The sender's device has not sent us the keys for this m
         observer = nil;
     }
 
+    matrixSDKTestsData = nil;
+
     [super tearDown];
 }
 

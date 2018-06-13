@@ -51,7 +51,7 @@
 {
     if (mxSession)
     {
-        [matrixSDKTestsData closeMXSession:mxSession];
+        [mxSession close];
         mxSession = nil;
     }
 
@@ -60,6 +60,8 @@
         [[NSNotificationCenter defaultCenter] removeObserver:observer];
         observer = nil;
     }
+
+    matrixSDKTestsData = nil;
 
     [super tearDown];
 }
@@ -1356,6 +1358,8 @@
                 [bobStore2 openWithCredentials:matrixSDKTestsData.bobCredentials onComplete:^{
 
                     id<MXStore> aliceStore = [[mxStoreClass alloc] init];
+                    [matrixSDKTestsData retain:aliceStore];
+
                     [aliceStore openWithCredentials:matrixSDKTestsData.aliceCredentials onComplete:^{
 
                         id<MXStore> bobStore3 = [[mxStoreClass alloc] init];

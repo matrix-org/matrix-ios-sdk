@@ -42,12 +42,16 @@
     matrixSDKTestsData = [[MatrixSDKTestsData alloc] init];
 }
 
-- (void)tearDown {
+- (void)tearDown
+{
     if (mxSession)
     {
-        [matrixSDKTestsData closeMXSession:mxSession];
+        [mxSession close];
         mxSession = nil;
     }
+
+    matrixSDKTestsData = nil;
+    
     [super tearDown];
 }
 

@@ -42,9 +42,12 @@
 {
     if (mxSession)
     {
-        [matrixSDKTestsData closeMXSession:mxSession];
+        [mxSession close];
         mxSession = nil;
     }
+
+    matrixSDKTestsData = nil;
+    
     [super tearDown];
 }
 
@@ -218,8 +221,8 @@
 
             XCTAssertNotNil(mxSession.myUser);
 
-            XCTAssert([mxSession.myUser.displayname isEqualToString:kMXTestsAliceDisplayName]);
-            XCTAssert([mxSession.myUser.avatarUrl isEqualToString:kMXTestsAliceAvatarURL]);
+            XCTAssertEqualObjects(mxSession.myUser.displayname, kMXTestsAliceDisplayName);
+            XCTAssertEqualObjects(mxSession.myUser.avatarUrl, kMXTestsAliceAvatarURL);
 
             [expectation fulfill];
 
