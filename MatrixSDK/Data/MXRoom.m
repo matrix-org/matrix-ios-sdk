@@ -690,6 +690,13 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
 
                 void(^onDidUpload)(void) = ^{
 
+                    // Do not go further if the orignal request has been cancelled
+                    if (roomOperation.isCancelled)
+                    {
+                        [self handleNextOperationAfter:roomOperation];
+                        return;
+                    }
+
                     // Send this content (the sent state of the local echo will be updated, its local storage too).
                     MXHTTPOperation *operation2 = [self sendMessageWithContent:msgContent localEcho:&event success:onSuccess failure:onFailure];
 
@@ -733,6 +740,13 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
         {
             // Launch the upload to the Matrix Content repository
             [uploader uploadData:imageData filename:filename mimeType:mimetype success:^(NSString *url) {
+
+                // Do not go further if the orignal request has been cancelled
+                if (roomOperation.isCancelled)
+                {
+                    [self handleNextOperationAfter:roomOperation];
+                    return;
+                }
 
                 // Copy the cached image to the actual cacheFile path
                 NSString *absoluteURL = [self.mxSession.matrixRestClient urlOfContent:url];
@@ -916,6 +930,13 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
 
                     [MXEncryptedAttachments encryptAttachment:videoUploader mimeType:mimetype localUrl:convertedLocalURL success:^(NSDictionary *result) {
 
+                        // Do not go further if the orignal request has been cancelled
+                        if (roomOperation.isCancelled)
+                        {
+                            [self handleNextOperationAfter:roomOperation];
+                            return;
+                        }
+
                         [msgContent removeObjectForKey:@"url"];
                         msgContent[@"file"] = result;
 
@@ -970,6 +991,13 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
                         [self updateOutgoingMessage:event.eventId withOutgoingMessage:event];
 
                         [videoUploader uploadData:videoData filename:filename mimeType:mimetype success:^(NSString *videoUrl) {
+
+                            // Do not go further if the orignal request has been cancelled
+                            if (roomOperation.isCancelled)
+                            {
+                                [self handleNextOperationAfter:roomOperation];
+                                return;
+                            }
 
                             // Write the video to the actual cacheFile path
                             NSString *absoluteURL = [self.mxSession.matrixRestClient urlOfContent:videoUrl];
@@ -1146,6 +1174,13 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
 
             [MXEncryptedAttachments encryptAttachment:uploader mimeType:mimeType localUrl:fileLocalURL success:^(NSDictionary *result) {
 
+                // Do not go further if the orignal request has been cancelled
+                if (roomOperation.isCancelled)
+                {
+                    [self handleNextOperationAfter:roomOperation];
+                    return;
+                }
+
                 [msgContent removeObjectForKey:@"url"];
                 msgContent[@"file"] = result;
 
@@ -1162,6 +1197,13 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
         {
             // Launch the upload to the Matrix Content repository
             [uploader uploadData:fileData filename:filename mimeType:mimeType success:^(NSString *url) {
+
+                // Do not go further if the orignal request has been cancelled
+                if (roomOperation.isCancelled)
+                {
+                    [self handleNextOperationAfter:roomOperation];
+                    return;
+                }
 
                 // Copy the cached file to the actual cacheFile path
                 NSString *absoluteURL = [self.mxSession.matrixRestClient urlOfContent:url];
@@ -1499,7 +1541,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
 
         // If roomOperation was running, run newRoomOperation
         // This happens when an ordered operation cascades another one
-        if (orderedOperations[0] == roomOperation)
+        if (orderedOperations.count && orderedOperations[0] == roomOperation)
         {
             roomOperation.block();
         }
