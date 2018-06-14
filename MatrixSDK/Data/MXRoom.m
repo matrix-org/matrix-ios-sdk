@@ -200,7 +200,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
     {
         // Mark as direct this room with the invite sender.
         [self setIsDirect:YES withUserId:myUser.originalEvent.sender success:nil failure:^(NSError *error) {
-            NSLog(@"[MXSession] Failed to tag an invite as a direct chat");
+            NSLog(@"[MXRoom] Failed to tag an invite as a direct chat");
         }];
     }
 }
@@ -1878,27 +1878,27 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
 {
     BOOL managedEvents = false;
     
-    NSArray<NSString*>* eventIds = [event.content allKeys];
-    
-    for(NSString* eventId in eventIds)
+    for (NSString* eventId in event.content)
     {
-        NSDictionary* eventDict = [event.content objectForKey:eventId];
-        NSDictionary* readDict = [eventDict objectForKey:kMXEventTypeStringRead];
-        
+        NSDictionary *eventDict, *readDict;
+        MXJSONModelSetDictionary(eventDict, event.content[eventId]);
+        MXJSONModelSetDictionary(readDict, eventDict[kMXEventTypeStringRead]);
+
         if (readDict)
         {
-            NSArray<NSString*>* userIds = [readDict allKeys];
-            
-            for(NSString* userId in userIds)
+            for (NSString* userId in readDict)
             {
-                NSDictionary<NSString*, id>* params = [readDict objectForKey:userId];
-                
-                if ([params valueForKey:@"ts"])
+                NSDictionary<NSString*, id>* params;
+                MXJSONModelSetDictionary(params, readDict[userId]);
+
+                NSNumber *ts;
+                MXJSONModelSetNumber(ts, params[@"ts"]);
+                if (ts)
                 {
-                    MXReceiptData* data = [[MXReceiptData alloc] init];
+                    MXReceiptData *data = [[MXReceiptData alloc] init];
                     data.userId = userId;
                     data.eventId = eventId;
-                    data.ts = ((NSNumber*)[params objectForKey:@"ts"]).longLongValue;
+                    data.ts = ts.longLongValue;
                     
                     managedEvents |= [mxSession.store storeReceipt:data inRoom:self.roomId];
                 }
