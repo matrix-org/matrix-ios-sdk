@@ -17,8 +17,9 @@
 #import <Foundation/Foundation.h>
 
 /**
- `MXFilterObject` is the base class for represtating filters which may be used during
+ `MXFilterObject` is the base class for representating filters which may be used during
  Matrix requests.
+ The specification of these filters can be found at https://matrix.org/docs/spec/client_server/r0.3.0.html#filtering.
  */
 @interface MXFilterObject : NSObject
 {
