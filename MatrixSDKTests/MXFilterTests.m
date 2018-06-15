@@ -18,6 +18,7 @@
 
 #import "MXFilter.h"
 #import "MXRoomEventFilter.h"
+#import "MXRoomFilter.h"
 
 @interface MXFilterTests : XCTestCase
 
@@ -45,7 +46,7 @@
                                             @"senders": @[@"@hello:example.com"],
                                             @"not_senders": @[@"@spam:example.com"],
 
-                                            // Not yet specified filter fiedld in matrix spec
+                                            // Not yet specified filter field in matrix spec
                                             @"new_field": @"welcome"
                                             }];
 
@@ -91,7 +92,7 @@
                                             @"not_senders": @[@"@spam:example.com"],
                                             @"contains_url": @(YES),
 
-                                            // Not yet specified filter fiedld in matrix spec
+                                            // Not yet specified filter field in matrix spec
                                              @"new_field": @"welcome"
                                             }];
 
@@ -127,6 +128,87 @@
                                  @"senders": @[@"@hello:example.com"],
                                  @"not_senders": @[@"@spam:example.com"],
                                  @"contains_url": @(YES)
+                                 };
+
+    XCTAssertTrue([filter.dictionary isEqualToDictionary:dictionary], @"%@/%@", filter.dictionary, dictionary);
+}
+
+
+- (void)testRoomFilterInitWithDictionary
+{
+    NSMutableArray<NSDictionary*> *roomEventFiltersDict = [NSMutableArray array];
+    for (NSUInteger i = 0; i < 4; i++)
+    {
+        [roomEventFiltersDict addObject:@{
+                                          @"limit": @(i),
+                                          @"types": @[@"m.room.message"],
+                                          @"not_types": @[@"m.room.not.message"],
+                                          @"rooms": @[@"!726s6s6q:example.com"],
+                                          @"not_rooms": @[@"!not726s6s6q:example.com"],
+                                          @"senders": @[@"@hello:example.com"],
+                                          @"not_senders": @[@"@spam:example.com"],
+                                          @"contains_url": @(YES)
+                                          }];
+    }
+
+    MXRoomFilter *filter = [[MXRoomFilter alloc] initWithDictionary:
+                                 @{
+                                   @"rooms": @[@"!726s6s6q:example.com"],
+                                   @"not_rooms": @[@"!not726s6s6q:example.com"],
+                                   @"ephemeral": roomEventFiltersDict[0],
+                                   @"include_leave": @(YES),
+                                   @"state": roomEventFiltersDict[1],
+                                   @"timeline": roomEventFiltersDict[2],
+                                   @"account_data": roomEventFiltersDict[3],
+
+                                   // Not yet specified filter field in matrix spec
+                                   @"new_field": @"welcome"
+                                   }];
+
+    XCTAssertEqualObjects(filter.rooms[0], @"!726s6s6q:example.com");
+    XCTAssertEqualObjects(filter.notRooms[0], @"!not726s6s6q:example.com");
+    XCTAssertTrue([filter.ephemeral.dictionary isEqualToDictionary:roomEventFiltersDict[0]]);
+    XCTAssertTrue(filter.includeLeave);
+    XCTAssertTrue([filter.state.dictionary isEqualToDictionary:roomEventFiltersDict[1]]);
+    XCTAssertTrue([filter.timeline.dictionary isEqualToDictionary:roomEventFiltersDict[2]]);
+    XCTAssertTrue([filter.accountData.dictionary isEqualToDictionary:roomEventFiltersDict[3]]);
+    XCTAssertEqualObjects(filter.dictionary[@"new_field"], @"welcome");
+}
+
+- (void)testEventFilterInit
+{
+    NSMutableArray<MXRoomEventFilter*> *roomEventFilters = [NSMutableArray array];
+    for (NSUInteger i = 0; i < 4; i++)
+    {
+        [roomEventFilters addObject:[[MXRoomEventFilter alloc] initWithDictionary:@{
+                                                                                    @"limit": @(i),
+                                                                                    @"types": @[@"m.room.message"],
+                                                                                    @"not_types": @[@"m.room.not.message"],
+                                                                                    @"rooms": @[@"!726s6s6q:example.com"],
+                                                                                    @"not_rooms": @[@"!not726s6s6q:example.com"],
+                                                                                    @"senders": @[@"@hello:example.com"],
+                                                                                    @"not_senders": @[@"@spam:example.com"],
+                                                                                    @"contains_url": @(YES)
+                                                                                    }]];
+    }
+
+    MXRoomFilter *filter = [[MXRoomFilter alloc] init];
+    filter.rooms = @[@"!726s6s6q:example.com"];
+    filter.notRooms = @[@"!not726s6s6q:example.com"];
+    filter.ephemeral = roomEventFilters[0];
+    filter.includeLeave = YES;
+    filter.state = roomEventFilters[1];
+    filter.timeline = roomEventFilters[2];
+    filter.accountData = roomEventFilters[3];
+
+    NSDictionary *dictionary = @{
+                                 @"rooms": @[@"!726s6s6q:example.com"],
+                                 @"not_rooms": @[@"!not726s6s6q:example.com"],
+                                 @"ephemeral": roomEventFilters[0].dictionary,
+                                 @"include_leave": @(YES),
+                                 @"state": roomEventFilters[1].dictionary,
+                                 @"timeline": roomEventFilters[2].dictionary,
+                                 @"account_data": roomEventFilters[3].dictionary
                                  };
 
     XCTAssertTrue([filter.dictionary isEqualToDictionary:dictionary], @"%@/%@", filter.dictionary, dictionary);

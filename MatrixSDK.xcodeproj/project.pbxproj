@@ -162,6 +162,8 @@
 		32A31BC120D3F4C4005916C7 /* MXFilterTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 32A31BC020D3F4C4005916C7 /* MXFilterTests.m */; };
 		32A31BC420D3FFB0005916C7 /* MXFilter.h in Headers */ = {isa = PBXBuildFile; fileRef = 32A31BC220D3FFB0005916C7 /* MXFilter.h */; };
 		32A31BC520D3FFB0005916C7 /* MXFilter.m in Sources */ = {isa = PBXBuildFile; fileRef = 32A31BC320D3FFB0005916C7 /* MXFilter.m */; };
+		32A31BC820D401FC005916C7 /* MXRoomFilter.h in Headers */ = {isa = PBXBuildFile; fileRef = 32A31BC620D401FC005916C7 /* MXRoomFilter.h */; };
+		32A31BC920D401FC005916C7 /* MXRoomFilter.m in Sources */ = {isa = PBXBuildFile; fileRef = 32A31BC720D401FC005916C7 /* MXRoomFilter.m */; };
 		32A9E8241EF4026E0081358A /* MXBackgroundModeHandler.h in Headers */ = {isa = PBXBuildFile; fileRef = 32A9E8211EF4026E0081358A /* MXBackgroundModeHandler.h */; };
 		32A9E8251EF4026E0081358A /* MXUIKitBackgroundModeHandler.h in Headers */ = {isa = PBXBuildFile; fileRef = 32A9E8221EF4026E0081358A /* MXUIKitBackgroundModeHandler.h */; };
 		32A9E8261EF4026E0081358A /* MXUIKitBackgroundModeHandler.m in Sources */ = {isa = PBXBuildFile; fileRef = 32A9E8231EF4026E0081358A /* MXUIKitBackgroundModeHandler.m */; };
@@ -431,6 +433,8 @@
 		32A31BC020D3F4C4005916C7 /* MXFilterTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MXFilterTests.m; sourceTree = "<group>"; };
 		32A31BC220D3FFB0005916C7 /* MXFilter.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MXFilter.h; sourceTree = "<group>"; };
 		32A31BC320D3FFB0005916C7 /* MXFilter.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MXFilter.m; sourceTree = "<group>"; };
+		32A31BC620D401FC005916C7 /* MXRoomFilter.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MXRoomFilter.h; sourceTree = "<group>"; };
+		32A31BC720D401FC005916C7 /* MXRoomFilter.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MXRoomFilter.m; sourceTree = "<group>"; };
 		32A9E8211EF4026E0081358A /* MXBackgroundModeHandler.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXBackgroundModeHandler.h; sourceTree = "<group>"; };
 		32A9E8221EF4026E0081358A /* MXUIKitBackgroundModeHandler.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXUIKitBackgroundModeHandler.h; sourceTree = "<group>"; };
 		32A9E8231EF4026E0081358A /* MXUIKitBackgroundModeHandler.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXUIKitBackgroundModeHandler.m; sourceTree = "<group>"; };
@@ -713,6 +717,8 @@
 				32A31BBD20D3F2EC005916C7 /* MXFilterObject.m */,
 				32A31BC220D3FFB0005916C7 /* MXFilter.h */,
 				32A31BC320D3FFB0005916C7 /* MXFilter.m */,
+				32A31BC620D401FC005916C7 /* MXRoomFilter.h */,
+				32A31BC720D401FC005916C7 /* MXRoomFilter.m */,
 				323F3F9220D3F0C700D26D6A /* MXRoomEventFilter.h */,
 				323F3F9120D3F0C700D26D6A /* MXRoomEventFilter.m */,
 			);
@@ -1135,6 +1141,7 @@
 				327187851DA7D0220071C818 /* MXOlmDecryption.h in Headers */,
 				32D7767D1A27860600FC4AA2 /* MXMemoryStore.h in Headers */,
 				32CE6FB81A409B1F00317F1E /* MXFileStoreMetaData.h in Headers */,
+				32A31BC820D401FC005916C7 /* MXRoomFilter.h in Headers */,
 				322691361E5EFF8700966A6E /* MXDeviceListOperationsPool.h in Headers */,
 				3281E8B719E42DFE00976E1A /* MXJSONModel.h in Headers */,
 				3284A5A01DB7C00600A09972 /* MXCryptoStore.h in Headers */,
@@ -1424,6 +1431,7 @@
 				3245A7531AF7B2930001D8A7 /* MXCallManager.m in Sources */,
 				32E226A71D06AC9F00E6CA54 /* MXPeekingRoom.m in Sources */,
 				3220094619EFBF30008DE41D /* MXSessionEventListener.m in Sources */,
+				32A31BC920D401FC005916C7 /* MXRoomFilter.m in Sources */,
 				32A151471DAF7C0C00400192 /* MXDeviceInfo.m in Sources */,
 				32A1515C1DB525DA00400192 /* NSObject+sortedKeys.m in Sources */,
 				F03EF5091DF071D5009DF592 /* MXEncryptedAttachments.m in Sources */,
