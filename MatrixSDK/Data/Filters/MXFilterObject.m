@@ -16,6 +16,8 @@
 
 #import "MXFilterObject.h"
 
+#import "MXTools.h"
+
 @implementation MXFilterObject
 
 - (instancetype)init
@@ -41,6 +43,11 @@
 - (NSDictionary<NSString *, id>*)dictionary
 {
     return dictionary;
+}
+
+- (NSString *)jsonString
+{
+    return [MXTools serialiseJSONObject:dictionary];
 }
 
 - (NSString *)description

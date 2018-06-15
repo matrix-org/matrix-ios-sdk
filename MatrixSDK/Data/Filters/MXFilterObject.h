@@ -27,9 +27,14 @@
 }
 
 /**
- The JSON dictionary representating the filter.
+ The JSON object representating the filter.
  */
 @property (nonatomic, readonly) NSDictionary<NSString *, id> *dictionary;
+
+/**
+ The JSON object representating the filter.
+ */
+@property (nonatomic, readonly) NSString *jsonString;
 
 /**
  Create a filter from a dictionary.

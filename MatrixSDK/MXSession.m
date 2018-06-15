@@ -38,6 +38,8 @@
 
 #import "MXRoomSummaryUpdater.h"
 
+#import "MXRoomFilter.h"
+
 #pragma mark - Constants definitions
 
 const NSString *MatrixSDKVersion = @"0.10.11";
@@ -836,11 +838,21 @@ typedef void (^MXOnResumeDone)(void);
 
     NSLog(@"[MXSession] Do a server sync%@", _catchingUp ? @" (catching up)" : @"");
 
-    NSString *inlineFilter;
+    // If required, define a filter
+    MXRoomFilter *roomFilter = [[MXRoomFilter alloc] init];
     if (-1 != syncMessagesLimit)
     {
-        // If requested by the app, use a limit for /sync.
-        inlineFilter = [NSString stringWithFormat:@"{\"room\":{\"timeline\":{\"limit\":%tu}}}", syncMessagesLimit];
+        // If requested by the app, use a limit for the timeline in /sync
+        MXRoomEventFilter *timelineFilter = [[MXRoomEventFilter alloc] init];
+        timelineFilter.limit = syncMessagesLimit;
+        roomFilter.timeline = timelineFilter;
+    }
+
+    NSString *inlineFilter;
+    if (roomFilter.dictionary.count)
+    {
+        // Serialise the filter to pass it inline in the request
+        inlineFilter = [NSString stringWithFormat:@"{\"room\":%@}", roomFilter.jsonString];
     }
 
     eventStreamRequest = [matrixRestClient syncFromToken:_store.eventStreamToken serverTimeout:serverTimeout clientTimeout:clientTimeout setPresence:setPresence filter:inlineFilter success:^(MXSyncResponse *syncResponse) {
