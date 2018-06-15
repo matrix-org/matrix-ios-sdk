@@ -1,6 +1,7 @@
 /*
  Copyright 2016 OpenMarket Ltd
- 
+ Copyright 2018 New Vector Ltd
+
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
  You may obtain a copy of the License at
@@ -16,11 +17,13 @@
 
 #import <Foundation/Foundation.h>
 
+#import "MXFilterObject.h"
+
 /**
  `MXRoomEventFilter` defines a room event filter which may be used during Matrix requests
  (see the property 'dictionary' for the resulting dictionary).
  */
-@interface MXRoomEventFilter : NSObject
+@interface MXRoomEventFilter : MXFilterObject;
 
 /**
  If YES, includes only events with a url key in their content. If NO, excludes those events.
@@ -66,10 +69,5 @@
  The maximum number of events to return.
  */
 @property (nonatomic) NSUInteger limit;
-
-/**
- The resulting dictionary.
- */
-@property (nonatomic, readonly) NSDictionary<NSString *, id> *dictionary;
 
 @end
