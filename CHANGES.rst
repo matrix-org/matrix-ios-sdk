@@ -5,6 +5,7 @@ Improvements:
  * MXCrypto: Add reRequestRoomKeyForEvent to re-request encryption keys to decrypt an event (vector-im/riot-ios/issues/1879).
  * MXRestClient: Factorise processing and completion blocks handling.
  * Replace all current `__weak typeof(self) weakSelf = self;...` dances by MXWeakify / MXStrongifyAndReturnIfNil.
+ * Doc: Update instructions to install Synapse used in SDK integration tests
  
 Bug fix:
  * MXRoomSummary: Fix a memory leak
