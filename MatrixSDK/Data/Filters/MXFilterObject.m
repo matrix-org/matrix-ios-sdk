@@ -43,5 +43,9 @@
     return dictionary;
 }
 
+- (NSString *)description
+{
+    return dictionary.description;
+}
 
 @end
