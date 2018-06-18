@@ -1,6 +1,7 @@
 /*
  Copyright 2014 OpenMarket Ltd
  Copyright 2017 Vector Creations Ltd
+ Copyright 2018 New Vector Ltd
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -4138,7 +4139,7 @@ MXAuthAction;
  with a go through the processing queue in order to keep the server
  response order.
 
- @param completionBlock code block to run on the completion queue.
+ @param successBlock code block to run on the completion queue.
  */
 - (void)dispatchSuccess:(dispatch_block_t)successBlock
 {
