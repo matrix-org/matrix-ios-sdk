@@ -1,5 +1,6 @@
 /*
  Copyright 2016 OpenMarket Ltd
+ Copyright 2018 New Vector Ltd
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -18,6 +19,8 @@
 
 #import <AVFoundation/AVFoundation.h>
 #import <UIKit/UIKit.h>
+
+#import "MXTools.h"
 
 #import "MXJingleVideoView.h"
 #import <WebRTC/WebRTC.h>
@@ -179,12 +182,14 @@
 
 - (void)createAnswer:(void (^)(NSString *))success failure:(void (^)(NSError *))failure
 {
+    MXWeakify(self);
     [peerConnection answerForConstraints:self.mediaConstraints completionHandler:^(RTCSessionDescription * _Nullable sdp, NSError * _Nullable error) {
+        MXStrongifyAndReturnIfNil(self);
 
         if (!error)
         {
             // Report this sdp back to libjingle
-            [peerConnection setLocalDescription:sdp completionHandler:^(NSError * _Nullable error) {
+            [self->peerConnection setLocalDescription:sdp completionHandler:^(NSError * _Nullable error) {
 
                 // Return on main thread
                 dispatch_async(dispatch_get_main_queue(), ^{
@@ -218,12 +223,14 @@
 #pragma mark - Outgoing call
 - (void)createOffer:(void (^)(NSString *sdp))success failure:(void (^)(NSError *))failure
 {
+    MXWeakify(self);
     [peerConnection offerForConstraints:self.mediaConstraints completionHandler:^(RTCSessionDescription * _Nullable sdp, NSError * _Nullable error) {
+        MXStrongifyAndReturnIfNil(self);
 
         if (!error)
         {
             // Report this sdp back to libjingle
-            [peerConnection setLocalDescription:sdp completionHandler:^(NSError * _Nullable error) {
+            [self->peerConnection setLocalDescription:sdp completionHandler:^(NSError * _Nullable error) {
 
                 // Return on main thread
                 dispatch_async(dispatch_get_main_queue(), ^{
@@ -296,11 +303,13 @@
 
     if (remoteVideoTrack)
     {
+        MXWeakify(self);
         dispatch_async(dispatch_get_main_queue(), ^{
+            MXStrongifyAndReturnIfNil(self);
 
             // Use self.remoteVideoView as a container of a RTCEAGLVideoView
-            remoteJingleVideoView = [[MXJingleVideoView alloc] initWithContainerView:self.remoteVideoView];
-            [remoteVideoTrack addRenderer:remoteJingleVideoView];
+            self->remoteJingleVideoView = [[MXJingleVideoView alloc] initWithContainerView:self.remoteVideoView];
+            [self->remoteVideoTrack addRenderer:self->remoteJingleVideoView];
         });
     }
 }
@@ -333,7 +342,7 @@ didChangeIceConnectionState:(RTCIceConnectionState)newState
             // Make sure you handle this situation right. For example check if the call is in the connecting state
             // before starting react on this message
             dispatch_async(dispatch_get_main_queue(), ^{
-                [delegate callStackCallDidConnect:self];
+                [self.delegate callStackCallDidConnect:self];
             });
             break;
         }
@@ -342,7 +351,7 @@ didChangeIceConnectionState:(RTCIceConnectionState)newState
             // ICE discovery has failed or the connection has dropped
             dispatch_async(dispatch_get_main_queue(), ^{
 
-                [delegate callStackCall:self onError:nil];
+                [self.delegate callStackCall:self onError:nil];
                 
             });
             break;
@@ -369,7 +378,7 @@ didGenerateIceCandidate:(RTCIceCandidate *)candidate
     // Forward found ICE candidates
     dispatch_async(dispatch_get_main_queue(), ^{
         
-        [delegate callStackCall:self onICECandidateWithSdpMid:candidate.sdpMid sdpMLineIndex:candidate.sdpMLineIndex candidate:candidate.sdp];
+        [self.delegate callStackCall:self onICECandidateWithSdpMid:candidate.sdpMid sdpMLineIndex:candidate.sdpMLineIndex candidate:candidate.sdp];
         
     });
 }

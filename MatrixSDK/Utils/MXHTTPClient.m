@@ -1,6 +1,7 @@
 /*
  Copyright 2014 OpenMarket Ltd
  Copyright 2017 Vector Creations Ltd
+ Copyright 2018 New Vector Ltd
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -246,7 +247,7 @@ static NSString* const kMXErrorConsentNotGivenConsentURIJSONKey = @"consent_uri"
         if (!weakself)
         {
             // Log which request failed because of a potentiel unexpected object release
-            [MXHTTPClient logRequestFailure:mxHTTPOperation path:path statusCode:response.statusCode accessToken:accessToken error:error];
+            [MXHTTPClient logRequestFailure:mxHTTPOperation path:path statusCode:response.statusCode accessToken:self->accessToken error:error];
         }
         MXStrongifyAndReturnIfNil(self);
 
@@ -258,7 +259,7 @@ static NSString* const kMXErrorConsentNotGivenConsentURIJSONKey = @"consent_uri"
         }
         else
         {
-            [MXHTTPClient logRequestFailure:mxHTTPOperation path:path statusCode:response.statusCode accessToken:accessToken error:error];
+            [MXHTTPClient logRequestFailure:mxHTTPOperation path:path statusCode:response.statusCode accessToken:self->accessToken error:error];
 
             if (response)
             {
@@ -514,24 +515,22 @@ static NSString* const kMXErrorConsentNotGivenConsentURIJSONKey = @"consent_uri"
         id<MXBackgroundModeHandler> handler = [MXSDKOptions sharedInstance].backgroundModeHandler;
         if (handler && backgroundTaskIdentifier == [handler invalidIdentifier])
         {
-            __weak __typeof(self)weakSelf = self;
+            MXWeakify(self);
             backgroundTaskIdentifier = [handler startBackgroundTaskWithName:nil completion:^{
 
                 NSLog(@"[MXHTTPClient] Background task #%tu is going to expire - Try to end it",
-                      backgroundTaskIdentifier);
+                      self->backgroundTaskIdentifier);
 
-                __strong __typeof(weakSelf)strongSelf = weakSelf;
-                if (strongSelf)
+                MXStrongifyAndReturnIfNil(self);
+
+                // Cancel all the tasks currently run by the managed session
+                NSArray *tasks = self->httpManager.tasks;
+                for (NSURLSessionTask *sessionTask in tasks)
                 {
-                    // Cancel all the tasks currently run by the managed session
-                    NSArray *tasks = httpManager.tasks;
-                    for (NSURLSessionTask *sessionTask in tasks)
-                    {
-                        [sessionTask cancel];
-                    }
-
-                    [strongSelf cleanupBackgroundTask];
+                    [sessionTask cancel];
                 }
+
+                [self cleanupBackgroundTask];
             }];
 
             NSLog(@"[MXHTTPClient] Background task #%tu started", backgroundTaskIdentifier);
@@ -635,70 +634,66 @@ static NSString* const kMXErrorConsentNotGivenConsentURIJSONKey = @"consent_uri"
 
 - (void)setUpSSLCertificatesHandler
 {
-    __weak __typeof(self)weakSelf = self;
-
     // Handle SSL certificates
+    MXWeakify(self);
     [httpManager setSessionDidReceiveAuthenticationChallengeBlock:^NSURLSessionAuthChallengeDisposition(NSURLSession * _Nonnull session, NSURLAuthenticationChallenge * _Nonnull challenge, NSURLCredential *__autoreleasing  _Nullable * _Nullable credential) {
 
-        __strong __typeof(weakSelf)strongSelf = weakSelf;
+        MXStrongifyAndReturnValueIfNil(self, NSURLSessionAuthChallengePerformDefaultHandling);
 
-        if (strongSelf)
+        NSURLProtectionSpace *protectionSpace = [challenge protectionSpace];
+
+        if ([protectionSpace.authenticationMethod isEqualToString:NSURLAuthenticationMethodServerTrust])
         {
-            NSURLProtectionSpace *protectionSpace = [challenge protectionSpace];
-
-            if ([protectionSpace.authenticationMethod isEqualToString:NSURLAuthenticationMethodServerTrust])
+            if ([self->httpManager.securityPolicy evaluateServerTrust:protectionSpace.serverTrust forDomain:protectionSpace.host])
             {
-                if ([strongSelf->httpManager.securityPolicy evaluateServerTrust:protectionSpace.serverTrust forDomain:protectionSpace.host])
-                {
-                    *credential = [NSURLCredential credentialForTrust:protectionSpace.serverTrust];
-                    return NSURLSessionAuthChallengeUseCredential;
-                }
-                else
-                {
-                    NSLog(@"[MXHTTPClient] Shall we trust %@?", protectionSpace.host);
+                *credential = [NSURLCredential credentialForTrust:protectionSpace.serverTrust];
+                return NSURLSessionAuthChallengeUseCredential;
+            }
+            else
+            {
+                NSLog(@"[MXHTTPClient] Shall we trust %@?", protectionSpace.host);
 
-                    if (strongSelf->onUnrecognizedCertificateBlock)
+                if (self->onUnrecognizedCertificateBlock)
+                {
+                    SecTrustRef trust = [protectionSpace serverTrust];
+
+                    if (SecTrustGetCertificateCount(trust) > 0)
                     {
-                        SecTrustRef trust = [protectionSpace serverTrust];
+                        // Consider here the leaf certificate (the one at index 0).
+                        SecCertificateRef certif = SecTrustGetCertificateAtIndex(trust, 0);
 
-                        if (SecTrustGetCertificateCount(trust) > 0)
+                        NSData *certifData = (__bridge NSData*)SecCertificateCopyData(certif);
+                        if (self->onUnrecognizedCertificateBlock(certifData))
                         {
-                            // Consider here the leaf certificate (the one at index 0).
-                            SecCertificateRef certif = SecTrustGetCertificateAtIndex(trust, 0);
+                            NSLog(@"[MXHTTPClient] Yes, the user trusts its certificate");
 
-                            NSData *certifData = (__bridge NSData*)SecCertificateCopyData(certif);
-                            if (strongSelf->onUnrecognizedCertificateBlock(certifData))
+                            self->_allowedCertificate = certifData;
+
+                            // Update http manager security policy with this trusted certificate.
+                            AFSecurityPolicy *securityPolicy = [AFSecurityPolicy policyWithPinningMode:AFSSLPinningModeCertificate];
+                            securityPolicy.pinnedCertificates = [NSSet setWithObjects:certifData, nil];
+                            securityPolicy.allowInvalidCertificates = YES;
+                            // Disable the domain validation for this certificate trusted by the user.
+                            securityPolicy.validatesDomainName = NO;
+                            self->httpManager.securityPolicy = securityPolicy;
+
+                            // Evaluate again server security
+                            if ([self->httpManager.securityPolicy evaluateServerTrust:protectionSpace.serverTrust forDomain:protectionSpace.host])
                             {
-                                NSLog(@"[MXHTTPClient] Yes, the user trusts its certificate");
-                                
-                                strongSelf->_allowedCertificate = certifData;
-                                
-                                // Update http manager security policy with this trusted certificate.
-                                AFSecurityPolicy *securityPolicy = [AFSecurityPolicy policyWithPinningMode:AFSSLPinningModeCertificate];
-                                securityPolicy.pinnedCertificates = [NSSet setWithObjects:certifData, nil];
-                                securityPolicy.allowInvalidCertificates = YES;
-                                // Disable the domain validation for this certificate trusted by the user.
-                                securityPolicy.validatesDomainName = NO;
-                                strongSelf->httpManager.securityPolicy = securityPolicy;
-
-                                // Evaluate again server security
-                                if ([strongSelf->httpManager.securityPolicy evaluateServerTrust:protectionSpace.serverTrust forDomain:protectionSpace.host])
-                                {
-                                    *credential = [NSURLCredential credentialForTrust:protectionSpace.serverTrust];
-                                    return NSURLSessionAuthChallengeUseCredential;
-                                }
-
-                                // Here pin certificate failed
-                                NSLog(@"[MXHTTPClient] Failed to pin certificate for %@", protectionSpace.host);
-                                return NSURLSessionAuthChallengePerformDefaultHandling;
+                                *credential = [NSURLCredential credentialForTrust:protectionSpace.serverTrust];
+                                return NSURLSessionAuthChallengeUseCredential;
                             }
+
+                            // Here pin certificate failed
+                            NSLog(@"[MXHTTPClient] Failed to pin certificate for %@", protectionSpace.host);
+                            return NSURLSessionAuthChallengePerformDefaultHandling;
                         }
                     }
-                    
-                    // Here we don't trust the certificate
-                    NSLog(@"[MXHTTPClient] No, the user doesn't trust it");
-                    return NSURLSessionAuthChallengeCancelAuthenticationChallenge;
                 }
+
+                // Here we don't trust the certificate
+                NSLog(@"[MXHTTPClient] No, the user doesn't trust it");
+                return NSURLSessionAuthChallengeCancelAuthenticationChallenge;
             }
         }
 

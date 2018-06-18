@@ -278,68 +278,72 @@ typedef void (^MXOnResumeDone)(void);
 
     NSDate *startDate = [NSDate date];
 
+    MXWeakify(self);
     [_store openWithCredentials:matrixRestClient.credentials onComplete:^{
+        MXStrongifyAndReturnIfNil(self);
         
         // Sanity check: The session may be closed before the end of store opening.
-        if (!matrixRestClient)
+        if (!self->matrixRestClient)
         {
             return;
         }
 
         // Check if the user has enabled crypto
+        MXWeakify(self);
         [MXCrypto checkCryptoWithMatrixSession:self complete:^(MXCrypto *crypto) {
+            MXStrongifyAndReturnIfNil(self);
             
-            _crypto = crypto;
+            self->_crypto = crypto;
 
             // Sanity check: The session may be closed before the end of this operation.
-            if (!matrixRestClient)
+            if (!self->matrixRestClient)
             {
                 return;
             }
 
             // Can we start on data from the MXStore?
-            if (_store.isPermanent && self.isEventStreamInitialised && 0 < _store.rooms.count)
+            if (self.store.isPermanent && self.isEventStreamInitialised && 0 < self.store.rooms.count)
             {
                 // Mount data from the permanent store
                 NSLog(@"[MXSession] Loading room state events to build MXRoom objects...");
 
                 // Create myUser from the store
-                MXUser *myUser = [_store userWithUserId:matrixRestClient.credentials.userId];
+                MXUser *myUser = [self.store userWithUserId:self->matrixRestClient.credentials.userId];
 
                 // My user is a MXMyUser object
-                _myUser = (MXMyUser*)myUser;
-                _myUser.mxSession = self;
+                self->_myUser = (MXMyUser*)myUser;
+                self->_myUser.mxSession = self;
 
                 // Load user account data
-                [self handleAccountData:_store.userAccountData];
+                [self handleAccountData:self.store.userAccountData];
 
                 // Load MXRoomSummaries from the store
                 NSDate *startDate2 = [NSDate date];
-                for (NSString *roomId in _store.rooms)
+                for (NSString *roomId in self.store.rooms)
                 {
                     @autoreleasepool
                     {
-                        MXRoomSummary *summary = [_store summaryOfRoom:roomId];
+                        MXRoomSummary *summary = [self.store summaryOfRoom:roomId];
                         [summary setMatrixSession:self];
-                        roomsSummaries[roomId] = summary;
+                        self->roomsSummaries[roomId] = summary;
                     }
                 }
 
-                NSLog(@"[MXSession] Built %lu MXRoomSummaries in %.0fms", (unsigned long)roomsSummaries.allKeys.count, [[NSDate date] timeIntervalSinceDate:startDate2] * 1000);
+                NSLog(@"[MXSession] Built %lu MXRoomSummaries in %.0fms", (unsigned long)self->roomsSummaries.allKeys.count, [[NSDate date] timeIntervalSinceDate:startDate2] * 1000);
 
                 // Create MXRooms from their states stored in the store
                 NSDate *startDate3 = [NSDate date];
-                for (NSString *roomId in _store.rooms)
+                for (NSString *roomId in self.store.rooms)
                 {
                     @autoreleasepool
                     {
-                        NSArray *stateEvents = [_store stateOfRoom:roomId];
-                        MXRoomAccountData *roomAccountData = [_store accountDataOfRoom:roomId];
+                        NSArray *stateEvents = [self.store stateOfRoom:roomId];
+                        MXRoomAccountData *roomAccountData = [self.store accountDataOfRoom:roomId];
                         [self createRoom:roomId withStateEvents:stateEvents andAccountData:roomAccountData notify:NO];
                     }
                 }
 
-                NSLog(@"[MXSession] Built %lu MXRooms in %.0fms", (unsigned long)rooms.allKeys.count, [[NSDate date] timeIntervalSinceDate:startDate3] * 1000);
+                NSLog(@"[MXSession] Built %lu MXRooms in %.0fms", (unsigned long)self->rooms.allKeys.count, [[NSDate date] timeIntervalSinceDate:startDate3] * 1000);
 
                 NSTimeInterval duration = [[NSDate date] timeIntervalSinceDate:startDate];
                 NSLog(@"[MXSession] Total time to mount SDK data from MXStore: %.0fms", duration * 1000);
@@ -356,8 +360,8 @@ typedef void (^MXOnResumeDone)(void);
             else
             {
                 // Create self.myUser instance to expose the user id as soon as possible
-                _myUser = [[MXMyUser alloc] initWithUserId:matrixRestClient.credentials.userId];
-                _myUser.mxSession = self;
+                self->_myUser = [[MXMyUser alloc] initWithUserId:self->matrixRestClient.credentials.userId];
+                self->_myUser.mxSession = self;
                 
                 NSLog(@"[MXSession] Total time to mount SDK data from MXStore: %.0fms", [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
                 
@@ -420,10 +424,12 @@ typedef void (^MXOnResumeDone)(void);
     if (_store.isPermanent && self.isEventStreamInitialised && 0 < _store.rooms.count)
     {
         // Start crypto if enabled
+        MXWeakify(self);
         [self startCrypto:^{
+            MXStrongifyAndReturnIfNil(self);
 
             // Resume the stream (presence will be retrieved during server sync)
-            NSLog(@"[MXSession] Resuming the events stream from %@...", _store.eventStreamToken);
+            NSLog(@"[MXSession] Resuming the events stream from %@...", self.store.eventStreamToken);
             NSDate *startDate2 = [NSDate date];
             [self resume:^{
                 NSLog(@"[MXSession] Events stream resumed in %.0fms", [[NSDate date] timeIntervalSinceDate:startDate2] * 1000);
@@ -453,16 +459,18 @@ typedef void (^MXOnResumeDone)(void);
     {
         // Get data from the home server
         // First of all, retrieve the user's profile information
+        MXWeakify(self);
         [_myUser updateFromHomeserverOfMatrixSession:self success:^{
+            MXStrongifyAndReturnIfNil(self);
             
             // Stop here if [MXSession close] has been triggered.
-            if (nil == _myUser)
+            if (nil == self.myUser)
             {
                 return;
             }
 
             // And store him as a common MXUser
-            [_store storeUser:_myUser];
+            [self.store storeUser:self.myUser];
 
             // Start crypto if enabled
             [self startCrypto:^{
@@ -525,8 +533,11 @@ typedef void (^MXOnResumeDone)(void);
             id<MXBackgroundModeHandler> handler = [MXSDKOptions sharedInstance].backgroundModeHandler;
             if (handler && backgroundTaskIdentifier == [handler invalidIdentifier])
             {
+                MXWeakify(self);
                 backgroundTaskIdentifier = [handler startBackgroundTaskWithName:@"MXSessionBackgroundTask" completion:^{
-                    NSLog(@"[MXSession pause] Background task #%tu is going to expire - ending it", backgroundTaskIdentifier);
+                    MXStrongifyAndReturnIfNil(self);
+
+                    NSLog(@"[MXSession pause] Background task #%tu is going to expire - ending it", self->backgroundTaskIdentifier);
                     
                     // We cannot continue to run in background. Pause the session for real
                     self.preventPauseCount = 0;
@@ -855,10 +866,12 @@ typedef void (^MXOnResumeDone)(void);
         inlineFilter = [NSString stringWithFormat:@"{\"room\":%@}", roomFilter.jsonString];
     }
 
+    MXWeakify(self);
     eventStreamRequest = [matrixRestClient syncFromToken:_store.eventStreamToken serverTimeout:serverTimeout clientTimeout:clientTimeout setPresence:setPresence filter:inlineFilter success:^(MXSyncResponse *syncResponse) {
+        MXStrongifyAndReturnIfNil(self);
         
         // Make sure [MXSession close] or [MXSession pause] has not been called before the server response
-        if (!eventStreamRequest)
+        if (!self->eventStreamRequest)
         {
             return;
         }
@@ -872,14 +885,14 @@ typedef void (^MXOnResumeDone)(void);
         // Check whether this is the initial sync
         BOOL isInitialSync = !self.isEventStreamInitialised;
 
-        if (!firstSyncDone)
+        if (!self->firstSyncDone)
         {
-            firstSyncDone = YES;
+            self->firstSyncDone = YES;
             [[MXSDKOptions sharedInstance].analyticsDelegate trackStartupSyncDuration:duration isInitial:isInitialSync];
         }
 
         // Handle top-level account data
-        didDirectRoomsChange = NO;
+        self->didDirectRoomsChange = NO;
         if (syncResponse.accountData)
         {
             [self handleAccountData:syncResponse.accountData];
@@ -892,11 +905,11 @@ typedef void (^MXOnResumeDone)(void);
             [self handleToDeviceEvent:toDeviceEvent];
         }
 
-        if (_catchingUp && syncResponse.toDevice.events.count)
+        if (self.catchingUp && syncResponse.toDevice.events.count)
         {
             // We may have not received all to-device events in a single /sync response
             // Pursue /sync with short timeout
-            NSLog(@"[MXSession] Continue /sync with short timeout to get all to-device events (%@)", _myUser.userId);
+            NSLog(@"[MXSession] Continue /sync with short timeout to get all to-device events (%@)", self.myUser.userId);
             nextServerTimeout = 0;
         }
         
@@ -1012,7 +1025,7 @@ typedef void (^MXOnResumeDone)(void);
         }
         
         // Check whether no direct chats has been defined yet.
-        if (shouldSynthesizeDirectChats)
+        if (self->shouldSynthesizeDirectChats)
         {
             NSLog(@"[MXSession] Synthesize direct chats from the current heuristics of what counts as a 1:1 room");
             
@@ -1027,44 +1040,45 @@ typedef void (^MXOnResumeDone)(void);
                 }
             }
         }
-        else if (didDirectRoomsChange)
+        else if (self->didDirectRoomsChange)
         {
             [self updateDirectRoomsData];
             
-            didDirectRoomsChange = NO;
+            self->didDirectRoomsChange = NO;
             
             [[NSNotificationCenter defaultCenter] postNotificationName:kMXSessionDirectRoomsDidChangeNotification
                                                                 object:self
                                                               userInfo:nil];
         }
 
-        // Handle device list updates
-        if (_crypto && syncResponse.deviceLists)
+        if (self.crypto)
         {
-            [_crypto handleDeviceListsChanges:syncResponse.deviceLists];
+            // Handle device list updates
+            if (syncResponse.deviceLists)
+            {
+                [self.crypto handleDeviceListsChanges:syncResponse.deviceLists];
+            }
+
+            // Handle one_time_keys_count
+            if (syncResponse.deviceOneTimeKeysCount)
+            {
+                [self.crypto handleDeviceOneTimeKeysCount:syncResponse.deviceOneTimeKeysCount];
+            }
+
+            // Tell the crypto module to do its processing
+            [self.crypto onSyncCompleted:self.store.eventStreamToken
+                           nextSyncToken:syncResponse.nextBatch
+                              catchingUp:self.catchingUp];
         }
 
-        // Handle one_time_keys_count
-        if (_crypto && syncResponse.deviceOneTimeKeysCount)
-        {
-            [_crypto handleDeviceOneTimeKeysCount:syncResponse.deviceOneTimeKeysCount];
-        }
-
-        // Tell the crypto module to do its processing
-        if (_crypto)
-        {
-            [_crypto onSyncCompleted:_store.eventStreamToken
-                       nextSyncToken:syncResponse.nextBatch
-                          catchingUp:_catchingUp];
-        }
 
         // Update live event stream token
-        _store.eventStreamToken = syncResponse.nextBatch;
+        self.store.eventStreamToken = syncResponse.nextBatch;
         
         // Commit store changes done in [room handleMessages]
-        if ([_store respondsToSelector:@selector(commit)])
+        if ([self.store respondsToSelector:@selector(commit)])
         {
-            [_store commit];
+            [self.store commit];
         }
 
         // Do a loop of /syncs until catching up is done
@@ -1075,21 +1089,21 @@ typedef void (^MXOnResumeDone)(void);
         }
         
         // there is a pending backgroundSync
-        if (onBackgroundSyncDone)
+        if (self->onBackgroundSyncDone)
         {
             NSLog(@"[MXSession] Events stream background Sync succeeded");
             
             // Operations on session may occur during this block. For example, [MXSession close] may be triggered.
             // We run a copy of the block to prevent app from crashing if the block is released by one of these operations.
-            MXOnBackgroundSyncDone onBackgroundSyncDoneCpy = [onBackgroundSyncDone copy];
+            MXOnBackgroundSyncDone onBackgroundSyncDoneCpy = [self->onBackgroundSyncDone copy];
             onBackgroundSyncDoneCpy();
-            onBackgroundSyncDone = nil;
+            self->onBackgroundSyncDone = nil;
             
             // check that the application was not resumed while catching up in background
-            if (_state == MXSessionStateBackgroundSyncInProgress)
+            if (self.state == MXSessionStateBackgroundSyncInProgress)
             {
                 // Check that none required the session to keep running
-                if (_preventPauseCount)
+                if (self.preventPauseCount)
                 {
                     // Delay the pause by calling the reliable `pause` method.
                     [self pause];
@@ -1097,7 +1111,7 @@ typedef void (^MXOnResumeDone)(void);
                 else
                 {
                     NSLog(@"[MXSession] go to paused ");
-                    eventStreamRequest = nil;
+                    self->eventStreamRequest = nil;
                     [self setState:MXSessionStatePaused];
                     return;
                 }
@@ -1109,31 +1123,31 @@ typedef void (^MXOnResumeDone)(void);
         }
         
         // If we are resuming inform the app that it received the last uptodate data
-        if (onResumeDone)
+        if (self->onResumeDone)
         {
             NSLog(@"[MXSession] Events stream resumed");
             
             // Operations on session may occur during this block. For example, [MXSession close] or [MXSession pause] may be triggered.
             // We run a copy of the block to prevent app from crashing if the block is released by one of these operations.
-            MXOnResumeDone onResumeDoneCpy = [onResumeDone copy];
+            MXOnResumeDone onResumeDoneCpy = [self->onResumeDone copy];
             onResumeDoneCpy();
-            onResumeDone = nil;
+            self->onResumeDone = nil;
             
             // Stop here if [MXSession close] or [MXSession pause] has been triggered during onResumeDone block.
-            if (nil == _myUser || _state == MXSessionStatePaused)
+            if (nil == self.myUser || self.state == MXSessionStatePaused)
             {
                 return;
             }
         }
         
-        if (_state != MXSessionStatePauseRequested)
+        if (self.state != MXSessionStatePauseRequested)
         {
             // The event stream is running by now
             [self setState:MXSessionStateRunning];
         }
 
         // Check SDK user did not called [MXSession close] or [MXSession pause] during the session state change notification handling.
-        if (nil == _myUser || _state == MXSessionStatePaused)
+        if (nil == self.myUser || self.state == MXSessionStatePaused)
         {
             return;
         }
@@ -1141,7 +1155,7 @@ typedef void (^MXOnResumeDone)(void);
         // Pursue live events listening
         [self serverSyncWithServerTimeout:nextServerTimeout success:nil failure:nil clientTimeout:CLIENT_TIMEOUT_MS setPresence:nil];
 
-        [[MXSDKOptions sharedInstance].analyticsDelegate trackRoomCount:rooms.count];
+        [[MXSDKOptions sharedInstance].analyticsDelegate trackRoomCount:self->rooms.count];
 
         // Broadcast that a server sync has been processed.
         [[NSNotificationCenter defaultCenter] postNotificationName:kMXSessionDidSyncNotification
@@ -1156,9 +1170,10 @@ typedef void (^MXOnResumeDone)(void);
         }
         
     } failure:^(NSError *error) {
+        MXStrongifyAndReturnIfNil(self);
         
         // Make sure [MXSession close] or [MXSession pause] has not been called before the server response
-        if (!eventStreamRequest)
+        if (!self->eventStreamRequest)
         {
             return;
         }
@@ -1171,21 +1186,21 @@ typedef void (^MXOnResumeDone)(void);
         }
         
         // Handle failure during catch up first
-        if (onBackgroundSyncFail)
+        if (self->onBackgroundSyncFail)
         {
             NSLog(@"[MXSession] background Sync fails %@", error);
             
             // Operations on session may occur during this block. For example, [MXSession close] may be triggered.
             // We run a copy of the block to prevent app from crashing if the block is released by one of these operations.
-            MXOnBackgroundSyncFail onBackgroundSyncFailCpy = [onBackgroundSyncFail copy];
+            MXOnBackgroundSyncFail onBackgroundSyncFailCpy = [self->onBackgroundSyncFail copy];
             onBackgroundSyncFailCpy(error);
-            onBackgroundSyncFail = nil;
+            self->onBackgroundSyncFail = nil;
             
             // check that the application was not resumed while catching up in background
-            if (_state == MXSessionStateBackgroundSyncInProgress)
+            if (self.state == MXSessionStateBackgroundSyncInProgress)
             {
                 // Check that none required the session to keep running
-                if (_preventPauseCount)
+                if (self.preventPauseCount)
                 {
                     // Delay the pause by calling the reliable `pause` method.
                     [self pause];
@@ -1193,7 +1208,7 @@ typedef void (^MXOnResumeDone)(void);
                 else
                 {
                     NSLog(@"[MXSession] go to paused ");
-                    eventStreamRequest = nil;
+                    self->eventStreamRequest = nil;
                     [self setState:MXSessionStatePaused];
                     return;
                 }
@@ -1223,8 +1238,8 @@ typedef void (^MXOnResumeDone)(void);
             {
                 NSLog(@"[MXSession] The connection has been timeout.");
                 // The reconnection attempt failed on timeout: there is no data to retrieve from server
-                [eventStreamRequest cancel];
-                eventStreamRequest = nil;
+                [self->eventStreamRequest cancel];
+                self->eventStreamRequest = nil;
                 
                 // Notify the reconnection attempt has been done.
                 [[NSNotificationCenter defaultCenter] postNotificationName:kMXSessionDidSyncNotification
@@ -1251,10 +1266,10 @@ typedef void (^MXOnResumeDone)(void);
                     // Relaunch the request in a random near futur.
                     // Random time it used to avoid all Matrix clients to retry all in the same time
                     // if there is server side issue like server restart
-                    dispatch_time_t delayTime = dispatch_time(DISPATCH_TIME_NOW, [MXHTTPClient timeForRetry:eventStreamRequest] * NSEC_PER_MSEC);
+                    dispatch_time_t delayTime = dispatch_time(DISPATCH_TIME_NOW, [MXHTTPClient timeForRetry:self->eventStreamRequest] * NSEC_PER_MSEC);
                     dispatch_after(delayTime, dispatch_get_main_queue(), ^(void) {
                         
-                        if (eventStreamRequest)
+                        if (self->eventStreamRequest)
                         {
                             NSLog(@"[MXSession] Retry resuming events stream");
                             [self setState:MXSessionStateSyncInProgress];
@@ -1268,7 +1283,7 @@ typedef void (^MXOnResumeDone)(void);
                     __block __weak id reachabilityObserver =
                     [[NSNotificationCenter defaultCenter] addObserverForName:AFNetworkingReachabilityDidChangeNotification object:nil queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
                         
-                        if (networkReachabilityManager.isReachable && eventStreamRequest)
+                        if (networkReachabilityManager.isReachable && self->eventStreamRequest)
                         {
                             [[NSNotificationCenter defaultCenter] removeObserver:reachabilityObserver];
                             
@@ -1708,9 +1723,12 @@ typedef void (^MXOnResumeDone)(void);
                      failure:(void (^)(NSError *error))failure
 {
     MXHTTPOperation *httpOperation;
-    httpOperation = [matrixRestClient signUrl:signUrl success:^(NSDictionary *thirdPartySigned) {
 
-        MXHTTPOperation *httpOperation2 = [matrixRestClient joinRoom:roomIdOrAlias withThirdPartySigned:thirdPartySigned success:^(NSString *theRoomId) {
+    MXWeakify(self);
+    httpOperation = [matrixRestClient signUrl:signUrl success:^(NSDictionary *thirdPartySigned) {
+        MXStrongifyAndReturnIfNil(self);
+
+        MXHTTPOperation *httpOperation2 = [self->matrixRestClient joinRoom:roomIdOrAlias withThirdPartySigned:thirdPartySigned success:^(NSString *theRoomId) {
 
             [self onJoinedRoom:theRoomId success:success];
 
@@ -2005,21 +2023,16 @@ typedef void (^MXOnResumeDone)(void);
 {
     NSLog(@"[MXSession] acceptGroupInvite %@", groupId);
     
-    __weak __typeof(self)weakSelf = self;
-    
+    MXWeakify(self);
     return [matrixRestClient acceptGroupInvite:groupId success:^{
-        
-        if (weakSelf)
+        MXStrongifyAndReturnIfNil(self);
+
+        [self didJoinGroupWithId:groupId notify:YES];
+        if (success)
         {
-            typeof(self) self = weakSelf;
-            
-            [self didJoinGroupWithId:groupId notify:YES];
-            if (success)
-            {
-                success();
-            }
+            success();
         }
-        
+
     } failure:failure];
 }
 
@@ -2029,26 +2042,22 @@ typedef void (^MXOnResumeDone)(void);
 {
     NSLog(@"[MXSession] leaveGroup %@", groupId);
     
-    __weak __typeof(self)weakSelf = self;
-    
+    MXWeakify(self);
     return [matrixRestClient leaveGroup:groupId success:^{
-        
-        if (weakSelf)
+        MXStrongifyAndReturnIfNil(self);
+
+        // Check the group has been removed before calling the success callback
+        // This may be already done during a server sync.
+        if ([self groupWithGroupId:groupId])
         {
-            typeof(self) self = weakSelf;
-            
-            // Check the group has been removed before calling the success callback
-            // This may be already done during a server sync.
-            if ([self groupWithGroupId:groupId])
-            {
-                [self removeGroup:groupId];
-            }
-            
-            if (success)
-            {
-                success();
-            }
+            [self removeGroup:groupId];
         }
+
+        if (success)
+        {
+            success();
+        }
+
     } failure:failure];
 }
 
@@ -2068,51 +2077,47 @@ typedef void (^MXOnResumeDone)(void);
     
     NSLog(@"[MXSession] updateGroupPublicity %@", group.groupId);
     
-    __weak __typeof(self)weakSelf = self;
-    
+    MXWeakify(self);
     return [matrixRestClient updateGroupPublicity:group.groupId isPublicised:isPublicised success:^(void) {
-        
-        if (weakSelf)
+        MXStrongifyAndReturnIfNil(self);
+
+        MXGroup *storedGroup = [self groupWithGroupId:group.groupId];
+
+        if (storedGroup != group)
         {
-            typeof(self) self = weakSelf;
-            MXGroup *storedGroup = [self groupWithGroupId:group.groupId];
-            
-            if (storedGroup != group)
+            // Update the provided group instance
+            group.summary.user.isPublicised = isPublicised;
+        }
+
+        if (storedGroup && storedGroup.summary.user.isPublicised != isPublicised)
+        {
+            storedGroup.summary.user.isPublicised = isPublicised;
+            [self.store storeGroup:storedGroup];
+            // Commit store changes done
+            if ([self.store respondsToSelector:@selector(commit)])
             {
-                // Update the provided group instance
-                group.summary.user.isPublicised = isPublicised;
+                [self.store commit];
             }
-            
-            if (storedGroup && storedGroup.summary.user.isPublicised != isPublicised)
-            {
-                storedGroup.summary.user.isPublicised = isPublicised;
-                [_store storeGroup:storedGroup];
-                // Commit store changes done
-                if ([_store respondsToSelector:@selector(commit)])
-                {
-                    [_store commit];
-                }
-                
-                // Broadcast the new joined group.
-                [[NSNotificationCenter defaultCenter] postNotificationName:kMXSessionDidUpdateGroupSummaryNotification
-                                                                    object:self
-                                                                  userInfo:@{
-                                                                             kMXSessionNotificationGroupKey: storedGroup
-                                                                             }];
-            }
-            
-            // Refresh the cached publicised groups for the current user.
-            if (!userIdsWithOutdatedPublicisedGroups)
-            {
-                userIdsWithOutdatedPublicisedGroups = [NSMutableArray array];
-            }
-            [userIdsWithOutdatedPublicisedGroups addObject:matrixRestClient.credentials.userId];
-            [self publicisedGroupsForUser:matrixRestClient.credentials.userId];
-            
-            if (success)
-            {
-                success();
-            }
+
+            // Broadcast the new joined group.
+            [[NSNotificationCenter defaultCenter] postNotificationName:kMXSessionDidUpdateGroupSummaryNotification
+                                                                object:self
+                                                              userInfo:@{
+                                                                         kMXSessionNotificationGroupKey: storedGroup
+                                                                         }];
+        }
+
+        // Refresh the cached publicised groups for the current user.
+        if (!self->userIdsWithOutdatedPublicisedGroups)
+        {
+            self->userIdsWithOutdatedPublicisedGroups = [NSMutableArray array];
+        }
+        [self->userIdsWithOutdatedPublicisedGroups addObject:self->matrixRestClient.credentials.userId];
+        [self publicisedGroupsForUser:self->matrixRestClient.credentials.userId];
+
+        if (success)
+        {
+            success();
         }
         
     } failure:failure];
@@ -2132,43 +2137,39 @@ typedef void (^MXOnResumeDone)(void);
     }
     
     NSLog(@"[MXSession] updateGroupProfile %@", group.groupId);
-    
-    __weak __typeof(self)weakSelf = self;
-    
+
+    MXWeakify(self);
     return [matrixRestClient getGroupProfile:group.groupId success:^(MXGroupProfile *groupProfile) {
-        
-        if (weakSelf)
+        MXStrongifyAndReturnIfNil(self);
+
+        MXGroup *storedGroup = [self groupWithGroupId:group.groupId];
+
+        if (storedGroup != group)
         {
-            typeof(self) self = weakSelf;
-            MXGroup *storedGroup = [self groupWithGroupId:group.groupId];
-            
-            if (storedGroup != group)
+            // Update the provided group instance
+            [group updateProfile:groupProfile];
+        }
+
+        if (storedGroup && [storedGroup updateProfile:groupProfile])
+        {
+            [self.store storeGroup:storedGroup];
+            // Commit store changes done
+            if ([self.store respondsToSelector:@selector(commit)])
             {
-                // Update the provided group instance
-                [group updateProfile:groupProfile];
+                [self.store commit];
             }
-            
-            if (storedGroup && [storedGroup updateProfile:groupProfile])
-            {
-                [_store storeGroup:storedGroup];
-                // Commit store changes done
-                if ([_store respondsToSelector:@selector(commit)])
-                {
-                    [_store commit];
-                }
-                
-                // Broadcast the new joined group.
-                [[NSNotificationCenter defaultCenter] postNotificationName:kMXSessionDidUpdateGroupSummaryNotification
-                                                                    object:self
-                                                                  userInfo:@{
-                                                                             kMXSessionNotificationGroupKey: storedGroup
-                                                                             }];
-            }
-            
-            if (success)
-            {
-                success();
-            }
+
+            // Broadcast the new joined group.
+            [[NSNotificationCenter defaultCenter] postNotificationName:kMXSessionDidUpdateGroupSummaryNotification
+                                                                object:self
+                                                              userInfo:@{
+                                                                         kMXSessionNotificationGroupKey: storedGroup
+                                                                         }];
+        }
+
+        if (success)
+        {
+            success();
         }
         
     } failure:failure];
@@ -2188,43 +2189,39 @@ typedef void (^MXOnResumeDone)(void);
     }
     
     NSLog(@"[MXSession] updateGroupSummary %@", group.groupId);
-    
-    __weak __typeof(self)weakSelf = self;
-    
+
+    MXWeakify(self);
     return [matrixRestClient getGroupSummary:group.groupId success:^(MXGroupSummary *groupSummary) {
-        
-        if (weakSelf)
+        MXStrongifyAndReturnIfNil(self);
+
+        MXGroup *storedGroup = [self groupWithGroupId:group.groupId];
+
+        if (storedGroup != group)
         {
-            typeof(self) self = weakSelf;
-            MXGroup *storedGroup = [self groupWithGroupId:group.groupId];
-            
-            if (storedGroup != group)
+            // Update the provided group instance
+            group.summary = groupSummary;
+        }
+
+        if (storedGroup && [storedGroup updateSummary:groupSummary])
+        {
+            [self.store storeGroup:storedGroup];
+            // Commit store changes done
+            if ([self.store respondsToSelector:@selector(commit)])
             {
-                // Update the provided group instance
-                group.summary = groupSummary;
+                [self.store commit];
             }
-            
-            if (storedGroup && [storedGroup updateSummary:groupSummary])
-            {
-                [_store storeGroup:storedGroup];
-                // Commit store changes done
-                if ([_store respondsToSelector:@selector(commit)])
-                {
-                    [_store commit];
-                }
-                
-                // Broadcast the new joined group.
-                [[NSNotificationCenter defaultCenter] postNotificationName:kMXSessionDidUpdateGroupSummaryNotification
-                                                                    object:self
-                                                                  userInfo:@{
-                                                                             kMXSessionNotificationGroupKey: storedGroup
-                                                                             }];
-            }
-            
-            if (success)
-            {
-                success();
-            }
+
+            // Broadcast the new joined group.
+            [[NSNotificationCenter defaultCenter] postNotificationName:kMXSessionDidUpdateGroupSummaryNotification
+                                                                object:self
+                                                              userInfo:@{
+                                                                         kMXSessionNotificationGroupKey: storedGroup
+                                                                         }];
+        }
+
+        if (success)
+        {
+            success();
         }
         
     } failure:failure];
@@ -2244,42 +2241,39 @@ typedef void (^MXOnResumeDone)(void);
     }
     
     NSLog(@"[MXSession] updateGroupUsers %@", group.groupId);
-    __weak __typeof(self)weakSelf = self;
-    
+
+    MXWeakify(self);
     return [matrixRestClient getGroupUsers:group.groupId success:^(MXGroupUsers *groupUsers) {
-        
-        if (weakSelf)
+        MXStrongifyAndReturnIfNil(self);
+
+        MXGroup *storedGroup = [self groupWithGroupId:group.groupId];
+
+        if (storedGroup != group)
         {
-            typeof(self) self = weakSelf;
-            MXGroup *storedGroup = [self groupWithGroupId:group.groupId];
-            
-            if (storedGroup != group)
+            // Update the provided group instance
+            group.users = groupUsers;
+        }
+
+        if (storedGroup && [storedGroup updateUsers:groupUsers])
+        {
+            [self.store storeGroup:storedGroup];
+            // Commit store changes done
+            if ([self.store respondsToSelector:@selector(commit)])
             {
-                // Update the provided group instance
-                group.users = groupUsers;
+                [self.store commit];
             }
-            
-            if (storedGroup && [storedGroup updateUsers:groupUsers])
-            {
-                [_store storeGroup:storedGroup];
-                // Commit store changes done
-                if ([_store respondsToSelector:@selector(commit)])
-                {
-                    [_store commit];
-                }
-                
-                // Broadcast the new joined group.
-                [[NSNotificationCenter defaultCenter] postNotificationName:kMXSessionDidUpdateGroupUsersNotification
-                                                                    object:self
-                                                                  userInfo:@{
-                                                                             kMXSessionNotificationGroupKey: storedGroup
-                                                                             }];
-            }
-            
-            if (success)
-            {
-                success();
-            }
+
+            // Broadcast the new joined group.
+            [[NSNotificationCenter defaultCenter] postNotificationName:kMXSessionDidUpdateGroupUsersNotification
+                                                                object:self
+                                                              userInfo:@{
+                                                                         kMXSessionNotificationGroupKey: storedGroup
+                                                                         }];
+        }
+
+        if (success)
+        {
+            success();
         }
         
     } failure:failure];
@@ -2299,42 +2293,39 @@ typedef void (^MXOnResumeDone)(void);
     }
     
     NSLog(@"[MXSession] updateGroupInvitedUsers %@", group.groupId);
-    __weak __typeof(self)weakSelf = self;
-    
+
+    MXWeakify(self);
     return [matrixRestClient getGroupInvitedUsers:group.groupId success:^(MXGroupUsers *invitedUsers) {
-        
-        if (weakSelf)
+        MXStrongifyAndReturnIfNil(self);
+
+        MXGroup *storedGroup = [self groupWithGroupId:group.groupId];
+
+        if (storedGroup != group)
         {
-            typeof(self) self = weakSelf;
-            MXGroup *storedGroup = [self groupWithGroupId:group.groupId];
-            
-            if (storedGroup != group)
+            // Update the provided group instance
+            group.invitedUsers = invitedUsers;
+        }
+
+        if (storedGroup && [storedGroup updateInvitedUsers:invitedUsers])
+        {
+            [self.store storeGroup:storedGroup];
+            // Commit store changes done
+            if ([self.store respondsToSelector:@selector(commit)])
             {
-                // Update the provided group instance
-                group.invitedUsers = invitedUsers;
+                [self.store commit];
             }
-            
-            if (storedGroup && [storedGroup updateInvitedUsers:invitedUsers])
-            {
-                [_store storeGroup:storedGroup];
-                // Commit store changes done
-                if ([_store respondsToSelector:@selector(commit)])
-                {
-                    [_store commit];
-                }
-                
-                // Broadcast the new joined group.
-                [[NSNotificationCenter defaultCenter] postNotificationName:kMXSessionDidUpdateGroupUsersNotification
-                                                                    object:self
-                                                                  userInfo:@{
-                                                                             kMXSessionNotificationGroupKey: storedGroup
-                                                                             }];
-            }
-            
-            if (success)
-            {
-                success();
-            }
+
+            // Broadcast the new joined group.
+            [[NSNotificationCenter defaultCenter] postNotificationName:kMXSessionDidUpdateGroupUsersNotification
+                                                                object:self
+                                                              userInfo:@{
+                                                                         kMXSessionNotificationGroupKey: storedGroup
+                                                                         }];
+        }
+
+        if (success)
+        {
+            success();
         }
         
     } failure:failure];
@@ -2354,44 +2345,41 @@ typedef void (^MXOnResumeDone)(void);
     }
     
     NSLog(@"[MXSession] updateGroupRooms %@", group.groupId);
-    __weak __typeof(self)weakSelf = self;
-    
+
+    MXWeakify(self);
     return [matrixRestClient getGroupRooms:group.groupId success:^(MXGroupRooms *groupRooms) {
-        
-        if (weakSelf)
+        MXStrongifyAndReturnIfNil(self);
+
+        MXGroup *storedGroup = [self groupWithGroupId:group.groupId];
+
+        if (storedGroup != group)
         {
-            typeof(self) self = weakSelf;
-            MXGroup *storedGroup = [self groupWithGroupId:group.groupId];
-            
-            if (storedGroup != group)
-            {
-                // Update the provided group instance
-                group.rooms = groupRooms;
-            }
-            
-            if (storedGroup && [storedGroup updateRooms:groupRooms])
-            {
-                [_store storeGroup:storedGroup];
-                // Commit store changes done
-                if ([_store respondsToSelector:@selector(commit)])
-                {
-                    [_store commit];
-                }
-                
-                // Broadcast the new joined group.
-                [[NSNotificationCenter defaultCenter] postNotificationName:kMXSessionDidUpdateGroupRoomsNotification
-                                                                    object:self
-                                                                  userInfo:@{
-                                                                             kMXSessionNotificationGroupKey: storedGroup
-                                                                             }];
-            }
-            
-            if (success)
-            {
-                success();
-            }
+            // Update the provided group instance
+            group.rooms = groupRooms;
         }
-        
+
+        if (storedGroup && [storedGroup updateRooms:groupRooms])
+        {
+            [self.store storeGroup:storedGroup];
+            // Commit store changes done
+            if ([self.store respondsToSelector:@selector(commit)])
+            {
+                [self.store commit];
+            }
+
+            // Broadcast the new joined group.
+            [[NSNotificationCenter defaultCenter] postNotificationName:kMXSessionDidUpdateGroupRoomsNotification
+                                                                object:self
+                                                              userInfo:@{
+                                                                         kMXSessionNotificationGroupKey: storedGroup
+                                                                         }];
+        }
+
+        if (success)
+        {
+            success();
+        }
+
     } failure:failure];
 }
 
@@ -2548,20 +2536,27 @@ typedef void (^MXOnResumeDone)(void);
     MXPeekingRoom *peekingRoom = [[MXPeekingRoom alloc] initWithRoomId:roomId andMatrixSession:self];
     [peekingRooms addObject:peekingRoom];
 
+    MXWeakify(self);
     [peekingRoom start:^{
 
-        success(peekingRoom);
+        if (success)
+        {
+            success(peekingRoom);
+        }
 
     } failure:^(NSError *error) {
+        MXStrongifyAndReturnIfNil(self);
 
         // The room is not peekable, release the object
-        [peekingRooms removeObject:peekingRoom];
+        [self->peekingRooms removeObject:peekingRoom];
         [peekingRoom close];
         
         NSLog(@"[MXSession] The room is not peekable");
 
-        failure(error);
-
+        if (failure)
+        {
+            failure(error);
+        }
     }];
 }
 
@@ -2741,7 +2736,9 @@ typedef void (^MXOnResumeDone)(void);
         [invitedRooms sortUsingSelector:@selector(compareLastMessageEventOriginServerTs:)];
 
         // Add a listener in order to update the app about invitation list change
+        MXWeakify(self);
         [self listenToEventsOfTypes:@[kMXEventTypeStringRoomMember] onEvent:^(MXEvent *event, MXTimelineDirection direction, id customObject) {
+            MXStrongifyAndReturnIfNil(self);
 
             // in some race conditions the oneself join event is received during the sync instead of MXTimelineDirectionSync
             //
@@ -2765,10 +2762,10 @@ typedef void (^MXOnResumeDone)(void);
                 {
                     // check if the room is not yet in the list
                     // must be done in forward and sync direction
-                    if ([invitedRooms indexOfObject:room] == NSNotFound)
+                    if ([self->invitedRooms indexOfObject:room] == NSNotFound)
                     {
                         // This is an invite event. Add the room to the invitation list
-                        [invitedRooms addObject:room];
+                        [self->invitedRooms addObject:room];
                         notify = YES;
                     }
                 }
@@ -3164,13 +3161,15 @@ typedef void (^MXOnResumeDone)(void);
         
         if (shouldRefresh)
         {
+            MXWeakify(self);
             [self.matrixRestClient getPublicisedGroupsForUsers:@[userId] success:^(NSDictionary<NSString *,NSArray<NSString *> *> *updatedPublicisedGroupsByUserId) {
+                MXStrongifyAndReturnIfNil(self);
                 
                 // Check whether the publicised groups have been actually modified.
-                if (updatedPublicisedGroupsByUserId[userId] && ![publicisedGroupsByUserId[userId] isEqualToArray:updatedPublicisedGroupsByUserId[userId]])
+                if (updatedPublicisedGroupsByUserId[userId] && ![self->publicisedGroupsByUserId[userId] isEqualToArray:updatedPublicisedGroupsByUserId[userId]])
                 {
                     // refresh the internal dict
-                    publicisedGroupsByUserId[userId] = updatedPublicisedGroupsByUserId[userId];
+                    self->publicisedGroupsByUserId[userId] = updatedPublicisedGroupsByUserId[userId];
                     
                     // Notify the publicised groups for these users have been updated.
                     [[NSNotificationCenter defaultCenter] postNotificationName:kMXSessionDidUpdatePublicisedGroupsForUsersNotification
@@ -3182,13 +3181,14 @@ typedef void (^MXOnResumeDone)(void);
                 
                 
             } failure:^(NSError *error) {
+                MXStrongifyAndReturnIfNil(self);
                 
                 // We should trigger a new request for this user if his publicised groups are requested again.
-                if (!userIdsWithOutdatedPublicisedGroups)
+                if (!self->userIdsWithOutdatedPublicisedGroups)
                 {
-                    userIdsWithOutdatedPublicisedGroups = [NSMutableArray array];
+                    self->userIdsWithOutdatedPublicisedGroups = [NSMutableArray array];
                 }
-                [userIdsWithOutdatedPublicisedGroups addObject:userId];
+                [self->userIdsWithOutdatedPublicisedGroups addObject:userId];
                 
             }];
         }

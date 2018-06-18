@@ -1,6 +1,7 @@
 /*
  Copyright 2016 OpenMarket Ltd
- 
+ Copyright 2018 New Vector Ltd
+
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
  You may obtain a copy of the License at
@@ -18,6 +19,7 @@
 
 #import "MXSession.h"
 #import "MXHTTPOperation.h"
+#import "MXTools.h"
 
 #import "MXAllowedCertificates.h"
 #import <AFNetworking/AFSecurityPolicy.h>
@@ -336,26 +338,31 @@ NSString *const kMXMediaUploadIdPrefix = @"upload-";
 {
     statsStartTime = CFAbsoluteTimeGetCurrent();
     lastTotalBytesWritten = 0;
-    
+
+    MXWeakify(self);
     operation = [mxSession.matrixRestClient uploadContent:data
                                                  filename:filename
                                                  mimeType:mimeType
                                                   timeout:30
                                                   success:^(NSString *url) {
+                                                      MXStrongifyAndReturnIfNil(self);
+
                                                       if (success)
                                                       {
                                                           success(url);
                                                       }
                                                       [[NSNotificationCenter defaultCenter] postNotificationName:kMXMediaUploadDidFinishNotification
-                                                                                                          object:_uploadId
+                                                                                                          object:self.uploadId
                                                                                                         userInfo:nil];
                                                   } failure:^(NSError *error) {
+                                                      MXStrongifyAndReturnIfNil(self);
+
                                                       if (failure)
                                                       {
                                                           failure (error);
                                                       }
                                                       [[NSNotificationCenter defaultCenter] postNotificationName:kMXMediaUploadDidFailNotification
-                                                                                                          object:_uploadId
+                                                                                                          object:self.uploadId
                                                                                                         userInfo:@{kMXMediaLoaderErrorKey:error}];
                                                   } uploadProgress:^(NSProgress *uploadProgress) {
                                                       [self updateUploadProgress:uploadProgress];

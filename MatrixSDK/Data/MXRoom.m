@@ -1,7 +1,8 @@
 /*
  Copyright 2014 OpenMarket Ltd
  Copyright 2017 Vector Creations Ltd
- 
+ Copyright 2018 New Vector Ltd
+
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
  You may obtain a copy of the License at
@@ -371,9 +372,13 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
                 }
             }
 
+            MXWeakify(self);
             roomOperation = [self preserveOperationOrder:event block:^{
+                MXStrongifyAndReturnIfNil(self);
 
-                MXHTTPOperation *operation = [mxSession.crypto encryptEventContent:contentCopy withType:eventTypeString inRoom:self success:^(NSDictionary *encryptedContent, NSString *encryptedEventType) {
+                MXWeakify(self);
+                MXHTTPOperation *operation = [self->mxSession.crypto encryptEventContent:contentCopy withType:eventTypeString inRoom:self success:^(NSDictionary *encryptedContent, NSString *encryptedEventType) {
+                    MXStrongifyAndReturnIfNil(self);
 
                     if (event)
                     {
@@ -385,8 +390,8 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
 
                         MXEventDecryptionResult *decryptionResult = [[MXEventDecryptionResult alloc] init];
                         decryptionResult.clearEvent = clearEvent.JSONDictionary;
-                        decryptionResult.senderCurve25519Key = mxSession.crypto.deviceCurve25519Key;
-                        decryptionResult.claimedEd25519Key = mxSession.crypto.deviceEd25519Key;
+                        decryptionResult.senderCurve25519Key = self.mxSession.crypto.deviceCurve25519Key;
+                        decryptionResult.claimedEd25519Key = self.mxSession.crypto.deviceEd25519Key;
 
                         [event setClearData:decryptionResult];
 
@@ -657,10 +662,12 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
         *localEcho = event;
     }
 
+    MXWeakify(self);
     roomOperation = [self preserveOperationOrder:event block:^{
+        MXStrongifyAndReturnIfNil(self);
 
         // Check whether the content must be encrypted before sending
-        if (mxSession.crypto && self.state.isEncrypted)
+        if (self.mxSession.crypto && self.state.isEncrypted)
         {
             // Register uploader observer
             uploaderObserver = [[NSNotificationCenter defaultCenter] addObserverForName:kMXMediaUploadProgressNotification object:uploader queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *notif) {
@@ -2248,13 +2255,15 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
             
             // Upload the updated direct rooms directory.
             // mxSession will post the 'kMXSessionDirectRoomsDidChangeNotification' notification on success.
+            MXWeakify(self);
             return [mxSession uploadDirectRooms:success failure:^(NSError *error) {
+                MXStrongifyAndReturnIfNil(self);
                 
                 // Restore the previous configuration
                 if (savedRoomLists)
                 {
-                    _directUserId = savedDirectUserId;
-                    [mxSession.directRooms setObject:savedRoomLists forKey:_directUserId];
+                    self.directUserId = savedDirectUserId;
+                    [self.mxSession.directRooms setObject:savedRoomLists forKey:self.directUserId];
                 }
                 
                 if (failure)
@@ -2357,22 +2366,24 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
             
             // Upload the updated direct rooms directory.
             // mxSession will post the 'kMXSessionDirectRoomsDidChangeNotification' notification on success.
+            MXWeakify(self);
             return [mxSession uploadDirectRooms:success failure:^(NSError *error) {
+                MXStrongifyAndReturnIfNil(self);
                 
                 // Restore the previous configuration
-                _directUserId = savedDirectUserId;
+                self.directUserId = savedDirectUserId;
                 if (savedDirectUserIdRoomLists)
                 {
-                    [mxSession.directRooms setObject:savedDirectUserIdRoomLists forKey:_directUserId];
+                    [self.mxSession.directRooms setObject:savedDirectUserIdRoomLists forKey:self.directUserId];
                 }
                 
                 if (savedNewDirectUserIdRoomLists)
                 {
-                    [mxSession.directRooms setObject:savedNewDirectUserIdRoomLists forKey:newDirectUserId];
+                    [self.mxSession.directRooms setObject:savedNewDirectUserIdRoomLists forKey:newDirectUserId];
                 }
                 else
                 {
-                    [mxSession.directRooms removeObjectForKey:newDirectUserId];
+                    [self.mxSession.directRooms removeObjectForKey:newDirectUserId];
                 }
                 
                 if (failure)
@@ -2408,6 +2419,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
     if (mxSession.crypto)
     {
         // Send the information to the homeserver
+        MXWeakify(self);
         operation = [self sendStateEventOfType:kMXEventTypeStringRoomEncryption
                                        content:@{
                                                  @"algorithm": algorithm
@@ -2419,8 +2431,9 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
         // Wait for the event coming back from the hs
         id eventBackListener;
         eventBackListener = [_liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomEncryption] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
+            MXStrongifyAndReturnIfNil(self);
 
-            [_liveTimeline removeListener:eventBackListener];
+            [self.liveTimeline removeListener:eventBackListener];
 
             // Dispatch to let time to MXCrypto to digest the m.room.encryption event
             dispatch_async(dispatch_get_main_queue(), ^{
