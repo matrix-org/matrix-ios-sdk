@@ -1,5 +1,6 @@
 /*
  Copyright 2017 Vector Creations Ltd
+ Copyright 2018 New Vector Ltd
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -134,7 +135,9 @@
         // Persist the tracking status before launching download
         [self persistDeviceTrackingStatus];
 
+        MXWeakify(self);
         operation = [[MXDeviceListOperation alloc] initWithUserIds:usersToDownload success:^(NSArray<NSString *> *succeededUserIds, NSArray<NSString *> *failedUserIds) {
+            MXStrongifyAndReturnIfNil(self);
 
             NSLog(@"[MXDeviceList] downloadKeys -> DONE");
 
@@ -143,19 +146,19 @@
                 // we may have queued up another download request for this user
                 // since we started this request. If that happens, we should
                 // ignore the completion of the first one.
-                if (keyDownloadsInProgressByUser[userId] != operation)
+                if (self->keyDownloadsInProgressByUser[userId] != operation)
                 {
                     NSLog(@"[MXDeviceList] downloadKeys: Another update in the queue for %@ - not marking up-to-date", userId);
                     continue;
                 }
-                [keyDownloadsInProgressByUser removeObjectForKey:userId];
+                [self->keyDownloadsInProgressByUser removeObjectForKey:userId];
 
-                MXDeviceTrackingStatus trackingStatus = MXDeviceTrackingStatusFromNSNumber(deviceTrackingStatus[userId]);
+                MXDeviceTrackingStatus trackingStatus = MXDeviceTrackingStatusFromNSNumber(self->deviceTrackingStatus[userId]);
                 if (trackingStatus == MXDeviceTrackingStatusDownloadInProgress)
                 {
                     // we didn't get any new invalidations since this download started:
                     // this user's device list is now up to date.
-                    deviceTrackingStatus[userId] = @(MXDeviceTrackingStatusUpToDate);
+                    self->deviceTrackingStatus[userId] = @(MXDeviceTrackingStatusUpToDate);
                 }
             }
 
@@ -165,10 +168,10 @@
 
                 for (NSString *userId in failedUserIds)
                 {
-                    MXDeviceTrackingStatus trackingStatus = MXDeviceTrackingStatusFromNSNumber(deviceTrackingStatus[userId]);
+                    MXDeviceTrackingStatus trackingStatus = MXDeviceTrackingStatusFromNSNumber(self->deviceTrackingStatus[userId]);
                     if (trackingStatus == MXDeviceTrackingStatusDownloadInProgress)
                     {
-                        deviceTrackingStatus[userId] = @(MXDeviceTrackingStatusUnreachableServer);
+                        self->deviceTrackingStatus[userId] = @(MXDeviceTrackingStatusUnreachableServer);
                     }
                 }
             }
@@ -399,20 +402,22 @@
         NSString *token = _lastKnownSyncToken;
 
         // Add token
+        MXWeakify(self);
         [currentQueryPool downloadKeys:token complete:^(NSDictionary<NSString *,NSDictionary *> *failedUserIds) {
+            MXStrongifyAndReturnIfNil(self);
 
             NSLog(@"[MXDeviceList] startCurrentPoolQuery -> DONE. failedUserIds: %@", failedUserIds);
 
             if (token)
             {
-                [crypto.store storeDeviceSyncToken:token];
+                [self->crypto.store storeDeviceSyncToken:token];
             }
 
-            currentQueryPool = nil;
-            if (nextQueryPool)
+            self->currentQueryPool = nil;
+            if (self->nextQueryPool)
             {
-                currentQueryPool = nextQueryPool;
-                nextQueryPool = nil;
+                self->currentQueryPool = self->nextQueryPool;
+                self->nextQueryPool = nil;
                 [self startCurrentPoolQuery];
             }
         }];

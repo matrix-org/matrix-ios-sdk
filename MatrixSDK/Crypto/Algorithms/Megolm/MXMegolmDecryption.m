@@ -273,11 +273,13 @@
     NSDictionary *body = keyRequest.requestBody;
 
     MXHTTPOperation *operation;
+    MXWeakify(self);
     operation = [crypto ensureOlmSessionsForDevices:@{
                                           userId: @[deviceInfo]
                                           }
                                 success:^(MXUsersDevicesMap<MXOlmSessionResult *> *results)
      {
+         MXStrongifyAndReturnIfNil(self);
 
          MXOlmSessionResult *olmSessionResult = [results objectForDevice:deviceId forUser:userId];
          if (!olmSessionResult.sessionId)
@@ -306,10 +308,10 @@
          MXDeviceInfo *deviceInfo = olmSessionResult.device;
 
          MXUsersDevicesMap<NSDictionary*> *contentMap = [[MXUsersDevicesMap alloc] init];
-         [contentMap setObject:[crypto encryptMessage:payload forDevices:@[deviceInfo]]
+         [contentMap setObject:[self->crypto encryptMessage:payload forDevices:@[deviceInfo]]
                        forUser:userId andDevice:deviceId];
 
-         MXHTTPOperation *operation2 = [crypto.matrixRestClient sendToDevice:kMXEventTypeStringRoomEncrypted contentMap:contentMap txnId:nil success:success failure:failure];
+         MXHTTPOperation *operation2 = [self->crypto.matrixRestClient sendToDevice:kMXEventTypeStringRoomEncrypted contentMap:contentMap txnId:nil success:success failure:failure];
          [operation mutateTo:operation2];
 
      } failure:failure];
