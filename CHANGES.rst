@@ -3,6 +3,7 @@ Changes in Matrix iOS SDK in 0.10.12 ()
 
 Improvements:
  * MXCrypto: Add reRequestRoomKeyForEvent to re-request encryption keys to decrypt an event (vector-im/riot-ios/issues/1879).
+ * Matrix filters: Create or update models for them: MXFilter, MXRoomFilter & MXRoomEventFilter.
  * MXRestClient: Factorise processing and completion blocks handling.
  * Replace all current `__weak typeof(self) weakSelf = self;...` dances by MXWeakify / MXStrongifyAndReturnIfNil.
  
