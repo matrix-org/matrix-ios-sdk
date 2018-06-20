@@ -1,6 +1,7 @@
 /*
  Copyright 2016 OpenMarket Ltd
  Copyright 2017 Vector Creations Ltd
+ Copyright 2018 New Vector Ltd
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -24,6 +25,7 @@
 #import "MXCryptoAlgorithms.h"
 #import "MXCrypto_Private.h"
 #import "MXQueuedEncryption.h"
+#import "MXTools.h"
 
 @interface MXOutboundSessionInfo : NSObject
 {
@@ -193,9 +195,12 @@
     // have a list of the user's devices, then we already share an e2e room
     // with them, which means that they will have announced any new devices via
     // an m.new_device.
+    MXWeakify(self);
     return [crypto.deviceList downloadKeys:users forceDownload:NO success:^(MXUsersDevicesMap<MXDeviceInfo *> *devices) {
+        MXStrongifyAndReturnIfNil(self);
 
-        BOOL encryptToVerifiedDevicesOnly = crypto.globalBlacklistUnverifiedDevices || [crypto isBlacklistUnverifiedDevicesInRoom:roomId];
+        BOOL encryptToVerifiedDevicesOnly = self->crypto.globalBlacklistUnverifiedDevices
+        || [self->crypto isBlacklistUnverifiedDevicesInRoom:self->roomId];
 
         MXUsersDevicesMap<MXDeviceInfo*> *devicesInRoom = [[MXUsersDevicesMap alloc] init];
         MXUsersDevicesMap<MXDeviceInfo*> *unknownDevices = [[MXUsersDevicesMap alloc] init];
@@ -206,7 +211,7 @@
             {
                 MXDeviceInfo *deviceInfo = [devices objectForDevice:deviceID forUser:userId];
 
-                if (crypto.warnOnUnknowDevices && deviceInfo.verified == MXDeviceUnknown)
+                if (self->crypto.warnOnUnknowDevices && deviceInfo.verified == MXDeviceUnknown)
                 {
                     // The device is not yet known by the user
                     [unknownDevices setObject:deviceInfo forUser:userId andDevice:deviceID];
@@ -220,7 +225,7 @@
                     continue;
                 }
 
-                if ([deviceInfo.identityKey isEqualToString:crypto.olmDevice.deviceCurve25519Key])
+                if ([deviceInfo.identityKey isEqualToString:self->crypto.olmDevice.deviceCurve25519Key])
                 {
                     // Don't bother sending to ourself
                     continue;
@@ -365,7 +370,9 @@
     NSLog(@"[MXMegolEncryption] shareKey with %@", devicesByUser);
 
     MXHTTPOperation *operation;
+    MXWeakify(self);
     operation = [crypto ensureOlmSessionsForDevices:devicesByUser success:^(MXUsersDevicesMap<MXOlmSessionResult *> *results) {
+        MXStrongifyAndReturnIfNil(self);
 
         NSLog(@"[MXMegolEncryption] shareKey. ensureOlmSessionsForDevices result: %@", results);
 
@@ -401,7 +408,7 @@
 
                 MXDeviceInfo *deviceInfo = sessionResult.device;
 
-                [contentMap setObject:[crypto encryptMessage:payload forDevices:@[deviceInfo]]
+                [contentMap setObject:[self->crypto encryptMessage:payload forDevices:@[deviceInfo]]
                               forUser:userId andDevice:deviceID];
 
                 haveTargets = YES;
@@ -413,7 +420,7 @@
             //NSLog(@"[MXMegolEncryption] shareKey. Actually share with %tu users and %tu devices: %@", contentMap.userIds.count, contentMap.count, contentMap);
             NSLog(@"[MXMegolEncryption] shareKey. Actually share with %tu users and %tu devices", contentMap.userIds.count, contentMap.count);
 
-            MXHTTPOperation *operation2 = [crypto.matrixRestClient sendToDevice:kMXEventTypeStringRoomEncrypted contentMap:contentMap txnId:nil success:^{
+            MXHTTPOperation *operation2 = [self->crypto.matrixRestClient sendToDevice:kMXEventTypeStringRoomEncrypted contentMap:contentMap txnId:nil success:^{
 
                 // Add the devices we have shared with to session.sharedWithDevices.
                 //

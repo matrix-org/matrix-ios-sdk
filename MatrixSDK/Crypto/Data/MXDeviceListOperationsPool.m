@@ -19,6 +19,7 @@
 #ifdef MX_CRYPTO
 
 #import "MXCrypto_Private.h"
+#import "MXTools.h"
 
 @interface MXDeviceListOperationsPool ()
 {
@@ -83,11 +84,13 @@
     NSLog(@"[MXDeviceListOperationsPool] doKeyDownloadForUsers: %@", users);
 
     // Download
+    MXWeakify(self);
     _httpOperation = [crypto.matrixRestClient downloadKeysForUsers:users token:token success:^(MXKeysQueryResponse *keysQueryResponse) {
+        MXStrongifyAndReturnIfNil(self);
 
         NSLog(@"[MXDeviceListOperationsPool] doKeyDownloadForUsers -> DONE");
 
-        _httpOperation = nil;
+        self->_httpOperation = nil;
 
         for (NSString *userId in users)
         {
@@ -102,7 +105,7 @@
                 for (NSString *deviceId in mutabledevices.allKeys)
                 {
                     // Get the potential previously store device keys for this device
-                    MXDeviceInfo *previouslyStoredDeviceKeys = [crypto.store deviceWithDeviceId:deviceId forUser:userId];
+                    MXDeviceInfo *previouslyStoredDeviceKeys = [self->crypto.store deviceWithDeviceId:deviceId forUser:userId];
 
                     // Validate received keys
                     if (![self validateDeviceKeys:mutabledevices[deviceId] forUser:userId andDevice:deviceId previouslyStoredDeviceKeys:previouslyStoredDeviceKeys])
@@ -127,14 +130,14 @@
 
                 // Update the store
                 // Note that devices which aren't in the response will be removed from the store
-                [crypto.store storeDevicesForUser:userId devices:mutabledevices];
+                [self->crypto.store storeDevicesForUser:userId devices:mutabledevices];
             }
         }
 
         // Delay
-        dispatch_async(crypto.matrixRestClient.completionQueue, ^{
+        dispatch_async(self->crypto.matrixRestClient.completionQueue, ^{
 
-            for (MXDeviceListOperation *operation in _operations)
+            for (MXDeviceListOperation *operation in self.operations)
             {
                 // Report the success to children
                 if (operation.success)
@@ -171,13 +174,14 @@
         }
 
     } failure:^(NSError *error) {
+        MXStrongifyAndReturnIfNil(self);
 
-        _httpOperation = nil;
+        self->_httpOperation = nil;
 
         NSLog(@"[MXDeviceListOperationsPool] doKeyDownloadForUsers -> FAILED. Error: %@", error);
 
-        dispatch_async(crypto.matrixRestClient.completionQueue, ^{
-            for (MXDeviceListOperation *operation in _operations)
+        dispatch_async(self->crypto.matrixRestClient.completionQueue, ^{
+            for (MXDeviceListOperation *operation in self.operations)
             {
                 if (operation.failure)
                 {

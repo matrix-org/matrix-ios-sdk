@@ -1,5 +1,6 @@
 /*
  Copyright 2017 OpenMarket Ltd
+ Copyright 2018 New Vector Ltd
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -175,10 +176,10 @@
 
     // Broadcast the room key request
     dispatch_async(dispatch_get_main_queue(), ^{
-        if (crypto)
+        if (self->crypto)
         {
             [[NSNotificationCenter defaultCenter] postNotificationName:kMXCryptoRoomKeyRequestNotification
-                                                                object:crypto
+                                                                object:self->crypto
                                                               userInfo:@{
                                                                          kMXCryptoRoomKeyRequestNotificationRequestKey: req
                                                                          }];

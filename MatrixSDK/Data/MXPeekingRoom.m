@@ -1,5 +1,6 @@
 /*
  Copyright 2016 OpenMarket Ltd
+ Copyright 2018 New Vector Ltd
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -18,6 +19,7 @@
 
 #import "MXMemoryStore.h"
 #import "MXSession.h"
+#import "MXTools.h"
 
 @interface MXPeekingRoom ()
 {
@@ -49,13 +51,15 @@
     //    - MXEventTimeline does not have methods to handle /initialSync responses
     // So, avoid to write temparary code and let the user uses [MXEventTimeline paginate]
     // to get room messages.
+    MXWeakify(self);
     httpOperation = [self.mxSession.matrixRestClient initialSyncOfRoom:self.roomId withLimit:0 success:^(MXRoomInitialSync *roomInitialSync) {
+        MXStrongifyAndReturnIfNil(self);
         
-        if (!httpOperation)
+        if (!self->httpOperation)
         {
             return;
         }
-        httpOperation = nil;
+        self->httpOperation = nil;
 
         [self.liveTimeline initialiseState:roomInitialSync.state];
 

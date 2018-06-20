@@ -1,6 +1,7 @@
 /*
  Copyright 2016 OpenMarket Ltd
  Copyright 2017 Vector Creations Ltd
+ Copyright 2018 New Vector Ltd
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -210,7 +211,7 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
             [self addEvent:event direction:MXTimelineDirectionForwards fromStore:NO isRoomInitialSync:NO];
         }
 
-        [self->store storePaginationTokenOfRoom:room.roomId andToken:eventContext.start];
+        [self->store storePaginationTokenOfRoom:self->room.roomId andToken:eventContext.start];
         self->forwardsPaginationToken = eventContext.end;
 
         success();
@@ -444,7 +445,7 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
         dispatch_async(dispatch_get_main_queue(), ^{
 
             [[NSNotificationCenter defaultCenter] postNotificationName:kMXRoomInitialSyncNotification
-                                                            object:room
+                                                            object:self->room
                                                           userInfo:nil];
         });
     }
@@ -676,7 +677,7 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
                 NSLog(@"[MXEventTimeline] handleRedaction: the redacted event is a not state event -> job is done");
             }
 
-            if (!httpOperation)
+            if (!self->httpOperation)
             {
                 return;
             }
@@ -686,7 +687,7 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
         } failure:^(NSError *error) {
             MXStrongifyAndReturnIfNil(self);
 
-            if (!httpOperation)
+            if (!self->httpOperation)
             {
                 return;
             }

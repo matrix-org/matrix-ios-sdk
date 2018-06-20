@@ -1,6 +1,7 @@
 /*
  Copyright 2014 OpenMarket Ltd
- 
+ Copyright 2018 New Vector Ltd
+
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
  You may obtain a copy of the License at
@@ -231,6 +232,22 @@ FOUNDATION_EXPORT NSString *const kMXToolsRegexStringForMatrixGroupIdentifier;
     { \
         NSLog(@"[MXStrongifyAndReturnIfNil] Released reference at %@:%d", @(__FILE__).lastPathComponent, __LINE__); \
         return; \
+    } \
+    typeof(var) var = weak##var
+
+/**
+ Retrieved a strong reference on a variable weakified with `MXWeakify`.
+
+ Make a return if the variable has been released.
+
+ @param var the variable to set the value to.
+ @param value the value to return in the return call.
+ */
+#define MXStrongifyAndReturnValueIfNil(var, value) \
+    if (!weak##var) \
+    { \
+        NSLog(@"[MXStrongifyAndReturnIfNil] Released reference at %@:%d", @(__FILE__).lastPathComponent, __LINE__); \
+        return value; \
     } \
     typeof(var) var = weak##var
 

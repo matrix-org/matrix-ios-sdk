@@ -1,5 +1,6 @@
 /*
  Copyright 2016 OpenMarket Ltd
+ Copyright 2018 New Vector Ltd
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -20,6 +21,8 @@
 #import "MXCrypto_Private.h"
 
 #ifdef MX_CRYPTO
+
+#import "MXTools.h"
 
 @interface MXOlmEncryption ()
 {
@@ -58,16 +61,18 @@
                                 success:(void (^)(NSDictionary *encryptedContent))success
                                 failure:(void (^)(NSError *error))failure
 {
+    MXWeakify(self);
     return [self ensureSessionForUsers:users success:^(NSObject *sessionInfo) {
+        MXStrongifyAndReturnIfNil(self);
 
         NSMutableArray *participantDevices = [NSMutableArray array];
 
         for (NSString *userId in users)
         {
-            NSArray<MXDeviceInfo *> *devices = [crypto.deviceList storedDevicesForUser:userId];
+            NSArray<MXDeviceInfo *> *devices = [self->crypto.deviceList storedDevicesForUser:userId];
             for (MXDeviceInfo *device in devices)
             {
-                if ([device.identityKey isEqualToString:crypto.olmDevice.deviceCurve25519Key])
+                if ([device.identityKey isEqualToString:self->crypto.olmDevice.deviceCurve25519Key])
                 {
                     // Don't bother setting up session to ourself
                     continue;
@@ -83,12 +88,12 @@
             }
         }
 
-        NSDictionary *encryptedMessage = [crypto encryptMessage:@{
-                                                                  @"room_id": roomId,
-                                                                  @"type": eventType,
-                                                                  @"content": eventContent
-                                                                  }
-                                                     forDevices:participantDevices];
+        NSDictionary *encryptedMessage = [self->crypto encryptMessage:@{
+                                                                        @"room_id": self->roomId,
+                                                                        @"type": eventType,
+                                                                        @"content": eventContent
+                                                                        }
+                                                           forDevices:participantDevices];
         success(encryptedMessage);
 
     } failure:failure];
@@ -100,10 +105,12 @@
 {
     // TODO: Avoid to do this request for every message. Instead, manage a queue of messages waiting for encryption
     // XXX: This class is not used so fix it later
+    MXWeakify(self);
     MXHTTPOperation *operation;
     operation = [crypto.deviceList downloadKeys:users forceDownload:NO success:^(MXUsersDevicesMap<MXDeviceInfo *> *usersDevicesInfoMap) {
+        MXStrongifyAndReturnIfNil(self);
 
-        MXHTTPOperation *operation2 = [crypto ensureOlmSessionsForUsers:users success:^(MXUsersDevicesMap<MXOlmSessionResult *> *results) {
+        MXHTTPOperation *operation2 = [self->crypto ensureOlmSessionsForUsers:users success:^(MXUsersDevicesMap<MXOlmSessionResult *> *results) {
             success(nil);
         } failure:failure];
 
