@@ -6,6 +6,7 @@ Improvements:
  * Matrix filters: Create or update models for them: MXFilter, MXRoomFilter & MXRoomEventFilter.
  * MXRestClient: Factorise processing and completion blocks handling.
  * Replace all current `__weak typeof(self) weakSelf = self;...` dances by MXWeakify / MXStrongifyAndReturnIfNil.
+ * Doc: Update instructions to install Synapse used in SDK integration tests
  
 Bug fix:
  * MXRoomSummary: Fix a memory leak
