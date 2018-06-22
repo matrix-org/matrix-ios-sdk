@@ -215,6 +215,15 @@
 		9274AFE81EE580240009BEB6 /* MXCallKitAdapter.h in Headers */ = {isa = PBXBuildFile; fileRef = 9274AFE61EE580240009BEB6 /* MXCallKitAdapter.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		9274AFE91EE580240009BEB6 /* MXCallKitAdapter.m in Sources */ = {isa = PBXBuildFile; fileRef = 9274AFE71EE580240009BEB6 /* MXCallKitAdapter.m */; };
 		A23A8594855481FEFA0E9A22 /* libPods-MatrixSDK.a in Frameworks */ = {isa = PBXBuildFile; fileRef = E1674C6FF8BBF074E7F76059 /* libPods-MatrixSDK.a */; };
+		B125CCB720D3C49C007F7309 /* MXRealmStore.h in Headers */ = {isa = PBXBuildFile; fileRef = B125CCB520D3C49C007F7309 /* MXRealmStore.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		B125CCB820D3C49C007F7309 /* MXRealmStore.m in Sources */ = {isa = PBXBuildFile; fileRef = B125CCB620D3C49C007F7309 /* MXRealmStore.m */; };
+		B125CCBB20D3C5EB007F7309 /* MXRealmReceipt.h in Headers */ = {isa = PBXBuildFile; fileRef = B125CCB920D3C5EB007F7309 /* MXRealmReceipt.h */; };
+		B125CCBC20D3C5EB007F7309 /* MXRealmReceipt.m in Sources */ = {isa = PBXBuildFile; fileRef = B125CCBA20D3C5EB007F7309 /* MXRealmReceipt.m */; };
+		B125CCBF20DAA572007F7309 /* MXRealmFileProvider.h in Headers */ = {isa = PBXBuildFile; fileRef = B125CCBD20DAA56F007F7309 /* MXRealmFileProvider.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		B125CCC020DAA572007F7309 /* MXRealmFileProvider.m in Sources */ = {isa = PBXBuildFile; fileRef = B125CCBE20DAA56F007F7309 /* MXRealmFileProvider.m */; };
+		B125CCC420DAA6AC007F7309 /* MXRealmInMemoryProvider.h in Headers */ = {isa = PBXBuildFile; fileRef = B125CCC220DAA6AC007F7309 /* MXRealmInMemoryProvider.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		B125CCC520DAA6AC007F7309 /* MXRealmInMemoryProvider.m in Sources */ = {isa = PBXBuildFile; fileRef = B125CCC320DAA6AC007F7309 /* MXRealmInMemoryProvider.m */; };
+		B125CCC620DD3D6A007F7309 /* MXRealmProvider.h in Headers */ = {isa = PBXBuildFile; fileRef = B125CCC120DAA599007F7309 /* MXRealmProvider.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		C60165381E3AA57900B92CFA /* MXSDKOptions.h in Headers */ = {isa = PBXBuildFile; fileRef = F0C34CB91C18C80000C36F09 /* MXSDKOptions.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		C602B58C1F2268F700B67D87 /* MXRoom.swift in Sources */ = {isa = PBXBuildFile; fileRef = C602B58B1F2268F700B67D87 /* MXRoom.swift */; };
 		C602B58E1F22A8D700B67D87 /* MXImage.swift in Sources */ = {isa = PBXBuildFile; fileRef = C602B58D1F22A8D700B67D87 /* MXImage.swift */; };
@@ -492,6 +501,15 @@
 		92634B811EF2E3C400DB9F60 /* MXCallKitConfiguration.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXCallKitConfiguration.m; sourceTree = "<group>"; };
 		9274AFE61EE580240009BEB6 /* MXCallKitAdapter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXCallKitAdapter.h; sourceTree = "<group>"; };
 		9274AFE71EE580240009BEB6 /* MXCallKitAdapter.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXCallKitAdapter.m; sourceTree = "<group>"; };
+		B125CCB520D3C49C007F7309 /* MXRealmStore.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MXRealmStore.h; sourceTree = "<group>"; };
+		B125CCB620D3C49C007F7309 /* MXRealmStore.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MXRealmStore.m; sourceTree = "<group>"; };
+		B125CCB920D3C5EB007F7309 /* MXRealmReceipt.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MXRealmReceipt.h; sourceTree = "<group>"; };
+		B125CCBA20D3C5EB007F7309 /* MXRealmReceipt.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MXRealmReceipt.m; sourceTree = "<group>"; };
+		B125CCBD20DAA56F007F7309 /* MXRealmFileProvider.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXRealmFileProvider.h; sourceTree = "<group>"; };
+		B125CCBE20DAA56F007F7309 /* MXRealmFileProvider.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXRealmFileProvider.m; sourceTree = "<group>"; };
+		B125CCC120DAA599007F7309 /* MXRealmProvider.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MXRealmProvider.h; sourceTree = "<group>"; };
+		B125CCC220DAA6AC007F7309 /* MXRealmInMemoryProvider.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MXRealmInMemoryProvider.h; sourceTree = "<group>"; };
+		B125CCC320DAA6AC007F7309 /* MXRealmInMemoryProvider.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MXRealmInMemoryProvider.m; sourceTree = "<group>"; };
 		B1F1AE550CF4C15B653DDE6E /* Pods-MatrixSDKTests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-MatrixSDKTests.debug.xcconfig"; path = "Pods/Target Support Files/Pods-MatrixSDKTests/Pods-MatrixSDKTests.debug.xcconfig"; sourceTree = "<group>"; };
 		C602B58B1F2268F700B67D87 /* MXRoom.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MXRoom.swift; sourceTree = "<group>"; };
 		C602B58D1F22A8D700B67D87 /* MXImage.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MXImage.swift; sourceTree = "<group>"; };
@@ -651,6 +669,7 @@
 				32114A861A262E5200FF2EC4 /* MXNoStore */,
 				32D7767A1A2785CE00FC4AA2 /* MXMemoryStore */,
 				3233606C1A403A0D0071A488 /* MXFileStore */,
+				B125CCB020D3C322007F7309 /* MXRealmStore */,
 			);
 			path = Store;
 			sourceTree = "<group>";
@@ -1058,6 +1077,22 @@
 			name = Frameworks;
 			sourceTree = "<group>";
 		};
+		B125CCB020D3C322007F7309 /* MXRealmStore */ = {
+			isa = PBXGroup;
+			children = (
+				B125CCC120DAA599007F7309 /* MXRealmProvider.h */,
+				B125CCBD20DAA56F007F7309 /* MXRealmFileProvider.h */,
+				B125CCBE20DAA56F007F7309 /* MXRealmFileProvider.m */,
+				B125CCC220DAA6AC007F7309 /* MXRealmInMemoryProvider.h */,
+				B125CCC320DAA6AC007F7309 /* MXRealmInMemoryProvider.m */,
+				B125CCB520D3C49C007F7309 /* MXRealmStore.h */,
+				B125CCB620D3C49C007F7309 /* MXRealmStore.m */,
+				B125CCB920D3C5EB007F7309 /* MXRealmReceipt.h */,
+				B125CCBA20D3C5EB007F7309 /* MXRealmReceipt.m */,
+			);
+			path = MXRealmStore;
+			sourceTree = "<group>";
+		};
 		C6F935791E5B390D00FC34BF /* Contrib */ = {
 			isa = PBXGroup;
 			children = (
@@ -1137,6 +1172,7 @@
 				32A1515B1DB525DA00400192 /* NSObject+sortedKeys.h in Headers */,
 				329D3E621E251027002E2F1E /* MXRoomSummaryUpdater.h in Headers */,
 				321B413F1E09937E009EEEC7 /* MXRoomSummary.h in Headers */,
+				B125CCB720D3C49C007F7309 /* MXRealmStore.h in Headers */,
 				32DC15CF1A8CF7AE006F9AD3 /* MXPushRuleConditionChecker.h in Headers */,
 				327187851DA7D0220071C818 /* MXOlmDecryption.h in Headers */,
 				32D7767D1A27860600FC4AA2 /* MXMemoryStore.h in Headers */,
@@ -1150,7 +1186,9 @@
 				323E0C5B1A306D7A00A31D73 /* MXEvent.h in Headers */,
 				327F8DB21C6112BA00581CA3 /* MXRoomThirdPartyInvite.h in Headers */,
 				92634B821EF2E3C400DB9F60 /* MXCallKitConfiguration.h in Headers */,
+				B125CCC620DD3D6A007F7309 /* MXRealmProvider.h in Headers */,
 				322360521A8E610500A3CA81 /* MXPushRuleDisplayNameCondtionChecker.h in Headers */,
+				B125CCBF20DAA572007F7309 /* MXRealmFileProvider.h in Headers */,
 				F03EF5001DF014D9009DF592 /* MXMediaManager.h in Headers */,
 				3245A7521AF7B2930001D8A7 /* MXCallManager.h in Headers */,
 				C6FE1EF01E65C4F7008587E4 /* MXAnalyticsDelegate.h in Headers */,
@@ -1161,6 +1199,7 @@
 				324BE46C1E422766008D99D4 /* MXMegolmSessionData.h in Headers */,
 				327187891DA7DCE50071C818 /* MXOlmEncryption.h in Headers */,
 				32A1514E1DAF897600400192 /* MXOlmSessionResult.h in Headers */,
+				B125CCBB20D3C5EB007F7309 /* MXRealmReceipt.h in Headers */,
 				320BBF3C1D6C7D9D0079890E /* MXEventsEnumerator.h in Headers */,
 				32637ED41E5B00400011E20D /* MXDeviceList.h in Headers */,
 				32F9FA7D1DBA0CF0009D98A6 /* MXDecryptionResult.h in Headers */,
@@ -1183,6 +1222,7 @@
 				32A30B181FB4813400C8309E /* MXIncomingRoomKeyRequestManager.h in Headers */,
 				F03EF5081DF071D5009DF592 /* MXEncryptedAttachments.h in Headers */,
 				320BBF421D6C81550079890E /* MXEventsByTypesEnumeratorOnArray.h in Headers */,
+				B125CCC420DAA6AC007F7309 /* MXRealmInMemoryProvider.h in Headers */,
 				3271877B1DA7CAA60071C818 /* MXEncrypting.h in Headers */,
 				32A31BC420D3FFB0005916C7 /* MXFilter.h in Headers */,
 				32A151481DAF7C0C00400192 /* MXKey.h in Headers */,
@@ -1407,6 +1447,7 @@
 				C6B40F521F2A35BE00C42C72 /* MXRoomState.swift in Sources */,
 				32F945F51FAB83D900622468 /* MXIncomingRoomKeyRequestCancellation.m in Sources */,
 				32D776821A27877300FC4AA2 /* MXMemoryRoomStore.m in Sources */,
+				B125CCBC20D3C5EB007F7309 /* MXRealmReceipt.m in Sources */,
 				C602B58C1F2268F700B67D87 /* MXRoom.swift in Sources */,
 				32A151271DABB0CB00400192 /* MXMegolmDecryption.m in Sources */,
 				C6D5D60E1E4FBD2900706C0F /* MXSession.swift in Sources */,
@@ -1437,6 +1478,7 @@
 				F03EF5091DF071D5009DF592 /* MXEncryptedAttachments.m in Sources */,
 				32FA10CF1FA1C9F700E54233 /* MXOutgoingRoomKeyRequest.m in Sources */,
 				32322A4C1E575F65005DD155 /* MXAllowedCertificates.m in Sources */,
+				B125CCC020DAA572007F7309 /* MXRealmFileProvider.m in Sources */,
 				F03EF5051DF01596009DF592 /* MXLRUCache.m in Sources */,
 				32A30B191FB4813400C8309E /* MXIncomingRoomKeyRequestManager.m in Sources */,
 				323F3F9320D3F0C700D26D6A /* MXRoomEventFilter.m in Sources */,
@@ -1464,6 +1506,7 @@
 				32A1514F1DAF897600400192 /* MXOlmSessionResult.m in Sources */,
 				C6F9357C1E5B39CA00FC34BF /* MXRestClient.swift in Sources */,
 				322A51B71D9AB15900C8536D /* MXCrypto.m in Sources */,
+				B125CCB820D3C49C007F7309 /* MXRealmStore.m in Sources */,
 				32DC15D11A8CF7AE006F9AD3 /* MXNotificationCenter.m in Sources */,
 				32637ED51E5B00400011E20D /* MXDeviceList.m in Sources */,
 				32A9E8261EF4026E0081358A /* MXUIKitBackgroundModeHandler.m in Sources */,
@@ -1475,6 +1518,7 @@
 				C6F9358B1E5B3BE600FC34BF /* MXJSONModels.swift in Sources */,
 				32FA10C21FA1C9EE00E54233 /* MXOutgoingRoomKeyRequestManager.m in Sources */,
 				320DFDE519DD99B60068622A /* MXRestClient.m in Sources */,
+				B125CCC520DAA6AC007F7309 /* MXRealmInMemoryProvider.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

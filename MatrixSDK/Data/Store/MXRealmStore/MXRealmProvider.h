@@ -15,7 +15,8 @@
  */
 
 #import <Foundation/Foundation.h>
-#import <Realm/Realm.h>
+
+@class RLMRealm;
 
 /**
  `MXRealmProvider` describe a provider used to manage Realm database per user. Get Realm instance or delete all Realm data for a given user.
