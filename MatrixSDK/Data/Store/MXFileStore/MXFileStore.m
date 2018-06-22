@@ -1598,6 +1598,17 @@ static NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
     return NO;
 }
 
+- (BOOL)storeReceipts:(NSArray<MXReceiptData*>*)receipts inRoom:(NSString*)roomId
+{
+    BOOL success = YES;
+    
+    for (MXReceiptData *receiptData in receipts)
+    {
+        success = success && [self storeReceipt:receiptData inRoom:roomId];
+    }
+    
+    return success;
+}
 
 // Load the data store in files
 - (void)loadReceipts
@@ -1643,7 +1654,7 @@ static NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
     NSLog(@"[MXFileStore] Loaded read receipts of %tu rooms in %.0fms", receiptsByRoomId.count, [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
 }
 
-- (void)saveReceipts
+- (void)saveReceiptsWithCompletion:(void (^)(void))completion
 {
     if (roomsToCommitForReceipts.count)
     {
@@ -1685,11 +1696,20 @@ static NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
                 }
             }
             
+            if (completion)
+            {
+                completion();
+            }
 #if DEBUG
             NSLog(@"[MXFileStore commit] lasted %.0fms for receipts in %tu rooms", [[NSDate date] timeIntervalSinceDate:startDate] * 1000, roomsToCommit.count);
 #endif
         });
     }
+}
+
+- (void)saveReceipts
+{
+    [self saveReceiptsWithCompletion:nil];
 }
 
 #pragma mark - Async API
