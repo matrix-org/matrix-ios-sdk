@@ -159,13 +159,16 @@
     
     if (receiptsByUserId)
     {
-        for (NSString* userId in receiptsByUserId)
+        @synchronized (receiptsByUserId)
         {
-            MXReceiptData* receipt = receiptsByUserId[userId];
-            
-            if (receipt && [receipt.eventId isEqualToString:eventId])
+            for (NSString* userId in receiptsByUserId)
             {
-                [receipts addObject:receipt];
+                MXReceiptData* receipt = receiptsByUserId[userId];
+
+                if (receipt && [receipt.eventId isEqualToString:eventId])
+                {
+                    [receipts addObject:receipt];
+                }
             }
         }
     }
@@ -186,22 +189,22 @@
 
 - (BOOL)storeReceipt:(MXReceiptData*)receipt inRoom:(NSString*)roomId
 {
-    NSMutableDictionary* receiptsByUserId = [receiptsByRoomId objectForKey:roomId];
+    NSMutableDictionary* receiptsByUserId = receiptsByRoomId[roomId];
     
     if (!receiptsByUserId)
     {
         receiptsByUserId = [[NSMutableDictionary alloc] init];
-        [receiptsByRoomId setObject:receiptsByUserId forKey:roomId];
+        receiptsByRoomId[roomId] = receiptsByUserId;
     }
     
-    MXReceiptData* curReceipt = [receiptsByUserId objectForKey:receipt.userId];
+    MXReceiptData* curReceipt = receiptsByUserId[receipt.userId];
     
     // not yet defined or a new event
     if (!curReceipt || (![receipt.eventId isEqualToString:curReceipt.eventId] && (receipt.ts > curReceipt.ts)))
     {
         @synchronized (receiptsByUserId)
         {
-            [receiptsByUserId setObject:receipt forKey:receipt.userId];
+            receiptsByUserId[receipt.userId] = receipt;
         }
         return true;
     }
@@ -211,12 +214,11 @@
 
 - (MXReceiptData *)getReceiptInRoom:(NSString*)roomId forUserId:(NSString*)userId
 {
-    MXMemoryRoomStore* store = [roomStores valueForKey:roomId];
-    NSMutableDictionary* receipsByUserId = [receiptsByRoomId objectForKey:roomId];
-    
-    if (store && receipsByUserId)
+    NSMutableDictionary* receipsByUserId = receiptsByRoomId[roomId];
+
+    if (receipsByUserId)
     {
-        MXReceiptData* data = [receipsByUserId objectForKey:userId];
+        MXReceiptData* data = receipsByUserId[userId];
         if (data)
         {
             return [data copy];
