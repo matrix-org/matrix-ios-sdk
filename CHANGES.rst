@@ -13,6 +13,7 @@ Bug fix:
  * MXRoom: A message (or a media) can be sent whereas the user cancelled it. This can make the app crash.
  * MXCrypto: Fix code that went into a dead-end.
  * MXMegolmDecryption: Fix unused overridden var.
+ * Analytics: Do not report rooms count on every sync.
 
 API break:
  * Analytics: Rename all kMXGoogleAnalyticsXxx constant values to kMXAnalyticsXxx.

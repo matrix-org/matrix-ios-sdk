@@ -885,8 +885,10 @@ typedef void (^MXOnResumeDone)(void);
         // Check whether this is the initial sync
         BOOL isInitialSync = !self.isEventStreamInitialised;
 
+        BOOL wasfirstSync = NO;
         if (!self->firstSyncDone)
         {
+            wasfirstSync = YES;
             self->firstSyncDone = YES;
             [[MXSDKOptions sharedInstance].analyticsDelegate trackStartupSyncDuration:duration isInitial:isInitialSync];
         }
@@ -1155,7 +1157,10 @@ typedef void (^MXOnResumeDone)(void);
         // Pursue live events listening
         [self serverSyncWithServerTimeout:nextServerTimeout success:nil failure:nil clientTimeout:CLIENT_TIMEOUT_MS setPresence:nil];
 
-        [[MXSDKOptions sharedInstance].analyticsDelegate trackRoomCount:self->rooms.count];
+        if (wasfirstSync)
+        {
+            [[MXSDKOptions sharedInstance].analyticsDelegate trackRoomCount:self->rooms.count];
+        }
 
         // Broadcast that a server sync has been processed.
         [[NSNotificationCenter defaultCenter] postNotificationName:kMXSessionDidSyncNotification
