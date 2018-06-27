@@ -185,33 +185,33 @@ typedef enum : NSUInteger
 FOUNDATION_EXPORT NSString *const kMXMatrixDotToUrl;
 
 
-#pragma mark - Google Analytics
+#pragma mark - Analytics
 
 /**
  Timing stats relative to app startup.
  */
-FOUNDATION_EXPORT NSString *const kMXGoogleAnalyticsStartupCategory;
+FOUNDATION_EXPORT NSString *const kMXAnalyticsStartupCategory;
 
 // Duration of the initial /sync request
-FOUNDATION_EXPORT NSString *const kMXGoogleAnalyticsStartupInititialSync;
+FOUNDATION_EXPORT NSString *const kMXAnalyticsStartupInititialSync;
 
 // Duration of the first /sync when resuming the app
-FOUNDATION_EXPORT NSString *const kMXGoogleAnalyticsStartupIncrementalSync;
+FOUNDATION_EXPORT NSString *const kMXAnalyticsStartupIncrementalSync;
 
 // Time to preload data in the MXStore
-FOUNDATION_EXPORT NSString *const kMXGoogleAnalyticsStartupStorePreload;
+FOUNDATION_EXPORT NSString *const kMXAnalyticsStartupStorePreload;
 
-// Time to mount all objects from the store (it includes kMXGoogleAnalyticsStartupStorePreload time)
-FOUNDATION_EXPORT NSString *const kMXGoogleAnalyticsStartupMountData;
+// Time to mount all objects from the store (it includes kMXAnalyticsStartupStorePreload time)
+FOUNDATION_EXPORT NSString *const kMXAnalyticsStartupMountData;
 
 // Duration of the the display of the app launch screen
-FOUNDATION_EXPORT NSString *const kMXGoogleAnalyticsStartupLaunchScreen;
+FOUNDATION_EXPORT NSString *const kMXAnalyticsStartupLaunchScreen;
 
 /**
  Overall stats category.
  */
-FOUNDATION_EXPORT NSString *const kMXGoogleAnalyticsStatsCategory;
+FOUNDATION_EXPORT NSString *const kMXAnalyticsStatsCategory;
 
 // The number of room the user is in
-FOUNDATION_EXPORT NSString *const kMXGoogleAnalyticsStatsRooms;
+FOUNDATION_EXPORT NSString *const kMXAnalyticsStatsRooms;
 

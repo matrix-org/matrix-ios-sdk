@@ -26,15 +26,9 @@
  MyAnalyticsDelegate *delegate = [[MyAnalyticsDelegate alloc] init];
  [MXSDKOptions shared].analyticsDelegate = delegate;
  @endcode
- 
- By default, the MatrixSDK uses the MXGoogleAnalytics implementation
- which sends timing events in milliseconds to Google Analytics. If you
- do not have the Google Analytics framework/library included in your client
- project, the MXGoogleAnalytics class does nothing.
- 
- If you are using the Swift-enabled variation of MatrixSDK (named
- "SwiftMatrixSDK"), the MXGoogleAnalytics class will be unavailable and the
- default analyticsDelegate will be nil.
+
+ You can use the sub-pod `MatrixSDK/GoogleAnalytics` to use a default implementation
+ based on Google Analytics. It will send timing events in milliseconds.
  */
 @protocol MXAnalyticsDelegate <NSObject>
 
