@@ -15,6 +15,7 @@ Bug fix:
  * MXMegolmDecryption: Fix unused overridden var.
 
 API break:
+ * Analytics: Rename all kMXGoogleAnalyticsXxx constant values to kMXAnalyticsXxx.
 
 Changes in Matrix iOS SDK in 0.10.11 (2018-05-31)
 =============================================== 
