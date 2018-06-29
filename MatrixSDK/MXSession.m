@@ -142,11 +142,6 @@ typedef void (^MXOnResumeDone)(void);
      the app goes in background.
      */
     NSUInteger backgroundTaskIdentifier;
-    
-    /**
-     Tell whether the client should synthesize the direct chats from the current heuristics of what counts as a 1:1 room.
-     */
-    BOOL shouldSynthesizeDirectChats;
 
     /**
      For debug, indicate if the first sync after the MXSession startup is done.
@@ -1026,23 +1021,7 @@ typedef void (^MXOnResumeDone)(void);
             [self handlePresenceEvent:presenceEvent direction:MXTimelineDirectionForwards];
         }
         
-        // Check whether no direct chats has been defined yet.
-        if (self->shouldSynthesizeDirectChats)
-        {
-            NSLog(@"[MXSession] Synthesize direct chats from the current heuristics of what counts as a 1:1 room");
-            
-            for (MXRoom *room in self.rooms)
-            {
-                if (room.looksLikeDirect)
-                {
-                    // Mark this room has direct
-                    [room setIsDirect:YES withUserId:nil success:nil failure:^(NSError *error) {
-                        NSLog(@"[MXSession] Failed to tag a direct chat");
-                    }];
-                }
-            }
-        }
-        else if (self->didDirectRoomsChange)
+        if (self->didDirectRoomsChange)
         {
             [self updateDirectRoomsData];
             
@@ -1323,9 +1302,6 @@ typedef void (^MXOnResumeDone)(void);
     if (accountDataUpdate && accountDataUpdate[@"events"] && ((NSArray*)accountDataUpdate[@"events"]).count)
     {
         BOOL isInitialSync = !self.isEventStreamInitialised || _state == MXSessionStateInitialised;
-        
-        // Turn on by default the direct chats synthesizing at the initial sync
-        shouldSynthesizeDirectChats = isInitialSync;
 
         for (NSDictionary *event in accountDataUpdate[@"events"])
         {
@@ -1373,9 +1349,6 @@ typedef void (^MXOnResumeDone)(void);
             }
             else if ([event[@"type"] isEqualToString:kMXAccountDataTypeDirect])
             {
-                // The direct chats are defined, turn off the automatic synthesizing.
-                shouldSynthesizeDirectChats = NO;
-                
                 if ([event[@"content"] isKindOfClass:NSDictionary.class])
                 {
                     _directRooms = [NSMutableDictionary dictionaryWithDictionary:event[@"content"]];
