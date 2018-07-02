@@ -2205,27 +2205,6 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
     return (_directUserId != nil);
 }
 
-- (BOOL)looksLikeDirect
-{
-    BOOL kicked = NO;
-    if (self.state.membership == MXMembershipLeave)
-    {
-        MXRoomMember *member = [self.state memberWithUserId:mxSession.myUser.userId];
-        kicked = ![member.originalEvent.sender isEqualToString:mxSession.myUser.userId];
-    }
-    
-    if (self.state.membership == MXMembershipJoin || self.state.membership == MXMembershipBan || kicked)
-    {
-        // Consider as direct chats the 1:1 chats.
-        // Contrary to the web client we allow the tagged rooms (favorite/low priority...) to become direct.
-        if (self.state.members.count == 2)
-        {
-            return YES;
-        }
-    }
-    return NO;
-}
-
 - (MXHTTPOperation*)setIsDirect:(BOOL)isDirect
                      withUserId:(NSString*)userId
                         success:(void (^)(void))success
