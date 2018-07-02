@@ -571,12 +571,7 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
         }
 
         // Consider that a message sent by a user has been read by him
-        MXReceiptData* data = [[MXReceiptData alloc] init];
-        data.userId = event.sender;
-        data.eventId = event.eventId;
-        data.ts = event.originServerTs;
-
-        [store storeReceipt:data inRoom:_state.roomId];
+        [room storeLocalReceipt:kMXEventTypeStringRead eventId:event.eventId userId:event.sender ts:event.originServerTs];
     }
 
     // Store the event

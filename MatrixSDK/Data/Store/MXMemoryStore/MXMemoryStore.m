@@ -151,7 +151,7 @@
     return roomStore.partialTextMessage;
 }
 
-- (NSArray*)getEventReceipts:(NSString*)roomId eventId:(NSString*)eventId sorted:(BOOL)sort
+- (NSArray<MXReceiptData*> *)getEventReceipts:(NSString*)roomId eventId:(NSString*)eventId sorted:(BOOL)sort
 {
     NSMutableArray* receipts = [[NSMutableArray alloc] init];
     

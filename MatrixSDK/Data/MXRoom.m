@@ -1991,19 +1991,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
     if (updatedReadReceiptEvent)
     {
         // Update the oneself receipts
-        MXReceiptData *data = [[MXReceiptData alloc] init];
-        
-        data.userId = myUserId;
-        data.eventId = updatedReadReceiptEvent.eventId;
-        data.ts = (uint64_t) ([[NSDate date] timeIntervalSince1970] * 1000);
-        
-        if ([mxSession.store storeReceipt:data inRoom:self.roomId])
-        {
-            if ([mxSession.store respondsToSelector:@selector(commit)])
-            {
-                [mxSession.store commit];
-            }
-        }
+        [self storeLocalReceipt:kMXEventTypeStringRead eventId:updatedReadReceiptEvent.eventId userId:myUserId ts:(uint64_t) ([[NSDate date] timeIntervalSince1970] * 1000)];
     }
     
     // Prepare read marker update
@@ -2124,7 +2112,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
     }
 }
 
-- (NSArray*)getEventReceipts:(NSString*)eventId sorted:(BOOL)sort
+- (NSArray<MXReceiptData*> *)getEventReceipts:(NSString*)eventId sorted:(BOOL)sort
 {
     NSArray *receipts = [mxSession.store getEventReceipts:self.roomId eventId:eventId sorted:sort];
     
@@ -2154,6 +2142,47 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
     }
     
     return receipts;
+}
+
+- (BOOL)storeLocalReceipt:(NSString *)receiptType eventId:(NSString *)eventId userId:(NSString *)userId ts:(uint64_t)ts
+{
+    BOOL result = NO;
+
+    MXReceiptData* receiptData = [[MXReceiptData alloc] init];
+    receiptData.userId = userId;
+    receiptData.eventId = eventId;
+    receiptData.ts = ts;
+
+    if ([mxSession.store storeReceipt:receiptData inRoom:_roomId])
+    {
+        result = YES;
+
+        if ([mxSession.store respondsToSelector:@selector(commit)])
+        {
+            [mxSession.store commit];
+        }
+
+        // Notify SDK client about it with a local read receipt
+        MXEvent *receiptEvent = [MXEvent modelFromJSON:
+                                 @{
+                                   @"type": kMXEventTypeStringReceipt,
+                                   @"room_id": _roomId,
+                                   @"content" : @{
+                                           receiptData.eventId : @{
+                                                   kMXEventTypeStringRead: @{
+                                                           receiptData.userId: @{
+                                                                   @"ts": @(receiptData.ts)
+                                                                   }
+                                                           }
+
+                                                   }
+                                           }
+                                   }];
+
+        [_liveTimeline notifyListeners:receiptEvent direction:MXTimelineDirectionForwards];
+    }
+
+    return YES;
 }
 
 #pragma mark - Read marker handling
