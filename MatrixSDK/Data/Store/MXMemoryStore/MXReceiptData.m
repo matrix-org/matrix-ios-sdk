@@ -51,4 +51,9 @@
     return metaData;
 }
 
+- (NSString *)description
+{
+    return [NSString stringWithFormat:@"<MXReceiptData: %p> userId: %@ - eventId: %@ - ts: %@", self, _userId, _eventId, @(_ts)];
+}
+
 @end

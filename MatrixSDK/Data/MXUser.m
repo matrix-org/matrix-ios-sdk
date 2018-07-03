@@ -1,6 +1,7 @@
 /*
  Copyright 2014 OpenMarket Ltd
- 
+ Copyright 2018 New Vector Ltd
+
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
  You may obtain a copy of the License at
@@ -20,6 +21,7 @@
 
 #import "MXSession.h"
 #import "MXEvent.h"
+#import "MXTools.h"
 
 @interface MXUser ()
 {
@@ -123,9 +125,13 @@
 
 - (void)updateFromHomeserverOfMatrixSession:(MXSession *)mxSession success:(void (^)(void))success failure:(void (^)(NSError *))failure
 {
+    MXWeakify(self);
     [mxSession.matrixRestClient displayNameForUser:_userId success:^(NSString *displayname) {
+        MXStrongifyAndReturnIfNil(self);
 
-        [mxSession.matrixRestClient avatarUrlForUser:_userId success:^(NSString *avatarUrl) {
+        MXWeakify(self);
+        [mxSession.matrixRestClient avatarUrlForUser:self.userId success:^(NSString *avatarUrl) {
+            MXStrongifyAndReturnIfNil(self);
 
             self.displayname = displayname;
             self.avatarUrl = avatarUrl;

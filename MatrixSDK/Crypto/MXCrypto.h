@@ -355,6 +355,13 @@ FOUNDATION_EXPORT NSString *const kMXCryptoRoomKeyRequestCancellationNotificatio
  */
 - (void)ignoreAllPendingKeyRequestsFromUser:(NSString*)userId andDevice:(NSString*)deviceId onComplete:(void (^)(void))onComplete;
 
+/**
+ Rerequest the encryption keys required to decrypt an event.
+
+ @param event the event to decrypt again.
+ */
+- (void)reRequestRoomKeyForEvent:(MXEvent*)event;
+
 #pragma mark - Crypto settings
 
 /**

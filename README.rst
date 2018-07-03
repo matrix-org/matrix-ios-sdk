@@ -475,14 +475,31 @@ The tests in the SDK Xcode project are both unit and integration tests.
 
 Out of the box, the tests use one of the homeservers (located at
 http://localhost:8080) of the "Demo Federation of Homeservers"
-(https://github.com/matrix-org/synapse#running-a-demo-federation-of-homeservers)
-. You have to start them from your local Synapse folder::
+(https://github.com/matrix-org/synapse#running-a-demo-federation-of-synapses). 
 
-      $ virtualenv env
+You first need to follow instructions to set up Synapse in development mode at https://github.com/matrix-org/synapse#synapse-development.
+If you have already installed all dependencies, the steps are::
+
+      $ git clone https://github.com/matrix-org/synapse.git
+      $ cd synapse
+      $ virtualenv -p python2.7 env
       $ source env/bin/activate
-      $ demo/start.sh --no-rate-limit
+      (env) $ python synapse/python_dependencies.py | xargs pip install
+      (env) $ pip install lxml mock
+     
+Then, you need to set Synapse up for running demo scripts (https://github.com/matrix-org/synapse/blob/master/demo/README)::
 
-Then, you can run the tests from the Xcode Test navigator tab or select the
+      (env) $ python setup.py develop
+
+Installation is done.
+
+Every time you want to launch these test homeservers, type::
+
+      $ virtualenv -p python2.7 env
+      $ source env/bin/activate
+      (env) $ demo/start.sh --no-rate-limit
+
+You can now run tests from the Xcode Test navigator tab or select the
 MatrixSDKTests scheme and click on the "Test" action.
 
 Known issues

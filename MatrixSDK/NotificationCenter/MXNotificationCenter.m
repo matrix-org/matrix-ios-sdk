@@ -1,5 +1,6 @@
 /*
  Copyright 2015 OpenMarket Ltd
+ Copyright 2018 New Vector Ltd
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -17,6 +18,7 @@
 #import "MXNotificationCenter.h"
 
 #import "MXSession.h"
+#import "MXTools.h"
 #import "MXPushRuleEventMatchConditionChecker.h"
 #import "MXPushRuleDisplayNameCondtionChecker.h"
 #import "MXPushRuleRoomMemberCountConditionChecker.h"
@@ -91,10 +93,12 @@ NSString *const kMXNotificationCenterAllOtherRoomMessagesRuleID = @".m.rule.mess
         [self setChecker:notificationPermissionConditionChecker forConditionKind:kMXPushRuleConditionStringSenderNotificationPermission];
 
         // Catch all live events sent from other users to check if we need to notify them
+        MXWeakify(self);
         [mxSession listenToEvents:^(MXEvent *event, MXTimelineDirection direction, id customObject) {
+            MXStrongifyAndReturnIfNil(self);
 
             if (MXTimelineDirectionForwards == direction
-                && NO == [event.sender isEqualToString:mxSession.matrixRestClient.credentials.userId])
+                && NO == [event.sender isEqualToString:self->mxSession.matrixRestClient.credentials.userId])
             {
                 [self shouldNotify:event roomState:customObject];
             }
@@ -320,58 +324,60 @@ NSString *const kMXNotificationCenterAllOtherRoomMessagesRuleID = @".m.rule.mess
     if (pushRule)
     {
         [[NSNotificationCenter defaultCenter] postNotificationName:kMXNotificationCenterWillUpdateRules object:self userInfo:nil];
-        
+
+        MXWeakify(self);
         [mxSession.matrixRestClient removePushRule:pushRule.ruleId scope:pushRule.scope kind:pushRule.kind success:^{
+            MXStrongifyAndReturnIfNil(self);
             
             @synchronized(self)
             {
                 // Remove locally the rule
                 
                 // Caution: only global rules are handled presenly
-                for (NSUInteger index = 0; index < flatRules.count; index++)
+                for (NSUInteger index = 0; index < self->flatRules.count; index++)
                 {
-                    MXPushRule *rule = flatRules[index];
+                    MXPushRule *rule = self->flatRules[index];
                     
                     if ([rule.ruleId isEqualToString:pushRule.ruleId])
                     {
-                        [flatRules removeObjectAtIndex:index];
+                        [self->flatRules removeObjectAtIndex:index];
                         
                         NSMutableArray *updatedArray;
                         switch (rule.kind)
                         {
                             case MXPushRuleKindOverride:
                             {
-                                updatedArray = [NSMutableArray arrayWithArray:_rules.global.override];
+                                updatedArray = [NSMutableArray arrayWithArray:self.rules.global.override];
                                 [updatedArray removeObject:rule];
-                                _rules.global.override = updatedArray;
+                                self.rules.global.override = updatedArray;
                                 break;
                             }
                             case MXPushRuleKindContent:
                             {
-                                updatedArray = [NSMutableArray arrayWithArray:_rules.global.content];
+                                updatedArray = [NSMutableArray arrayWithArray:self.rules.global.content];
                                 [updatedArray removeObject:rule];
-                                _rules.global.content = updatedArray;
+                                self.rules.global.content = updatedArray;
                                 break;
                             }
                             case MXPushRuleKindRoom:
                             {
-                                updatedArray = [NSMutableArray arrayWithArray:_rules.global.room];
+                                updatedArray = [NSMutableArray arrayWithArray:self.rules.global.room];
                                 [updatedArray removeObject:rule];
-                                _rules.global.room = updatedArray;
+                                self.rules.global.room = updatedArray;
                                 break;
                             }
                             case MXPushRuleKindSender:
                             {
-                                updatedArray = [NSMutableArray arrayWithArray:_rules.global.sender];
+                                updatedArray = [NSMutableArray arrayWithArray:self.rules.global.sender];
                                 [updatedArray removeObject:rule];
-                                _rules.global.sender = updatedArray;
+                                self.rules.global.sender = updatedArray;
                                 break;
                             }
                             case MXPushRuleKindUnderride:
                             {
-                                updatedArray = [NSMutableArray arrayWithArray:_rules.global.underride];
+                                updatedArray = [NSMutableArray arrayWithArray:self.rules.global.underride];
                                 [updatedArray removeObject:rule];
-                                _rules.global.underride = updatedArray;
+                                self.rules.global.underride = updatedArray;
                                 break;
                             }
                         }
@@ -396,17 +402,19 @@ NSString *const kMXNotificationCenterAllOtherRoomMessagesRuleID = @".m.rule.mess
     if (pushRule)
     {
         [[NSNotificationCenter defaultCenter] postNotificationName:kMXNotificationCenterWillUpdateRules object:self userInfo:nil];
-        
+
+        MXWeakify(self);
         [mxSession.matrixRestClient enablePushRule:pushRule.ruleId scope:pushRule.scope kind:pushRule.kind enable:enable success:^{
+            MXStrongifyAndReturnIfNil(self);
             
             @synchronized(self)
             {
                 // Update locally the rules
                 
                 // Caution: only global rules are handled presenly
-                for (NSUInteger index = 0; index < flatRules.count; index++)
+                for (NSUInteger index = 0; index < self->flatRules.count; index++)
                 {
-                    MXPushRule *rule = flatRules[index];
+                    MXPushRule *rule = self->flatRules[index];
                     
                     if ([rule.ruleId isEqualToString:pushRule.ruleId])
                     {

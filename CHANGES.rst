@@ -1,3 +1,24 @@
+Changes in Matrix iOS SDK in 0.10.12 (2018-05-31)
+=============================================== 
+
+Improvements:
+ * MXCrypto: Add reRequestRoomKeyForEvent to re-request encryption keys to decrypt an event (vector-im/riot-ios/issues/1879).
+ * Matrix filters: Create or update models for them: MXFilter, MXRoomFilter & MXRoomEventFilter.
+ * MXRestClient: Factorise processing and completion blocks handling.
+ * Read Receipts: Notify the app for implicit read receipts.
+ * Replace all current `__weak typeof(self) weakSelf = self;...` dances by MXWeakify / MXStrongifyAndReturnIfNil.
+ * Doc: Update instructions to install Synapse used in SDK integration tests
+ 
+Bug fix:
+ * MXRoomSummary: Fix a memory leak
+ * MXRoom: A message (or a media) can be sent whereas the user cancelled it. This can make the app crash.
+ * MXCrypto: Fix code that went into a dead-end.
+ * MXMegolmDecryption: Fix unused overridden var.
+ * Analytics: Do not report rooms count on every sync.
+
+API break:
+ * Analytics: Rename all kMXGoogleAnalyticsXxx constant values to kMXAnalyticsXxx.
+
 Changes in Matrix iOS SDK in 0.10.11 (2018-05-31)
 =============================================== 
 

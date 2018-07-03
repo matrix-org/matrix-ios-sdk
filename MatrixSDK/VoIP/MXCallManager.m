@@ -179,25 +179,23 @@ static NSString *const kMXCallManagerFallbackSTUNServer = @"stun:stun.l.google.c
     // we must track session's state to become MXSessionStateRunning for performing outgoing call
     if (_mxSession.state != MXSessionStateRunning)
     {
-        __weak typeof(self) weakSelf = self;
+        MXWeakify(self);
         __weak NSNotificationCenter *center = [NSNotificationCenter defaultCenter];
         sessionStateObserver = [center addObserverForName:kMXSessionStateDidChangeNotification
                                                    object:_mxSession
                                                     queue:[NSOperationQueue mainQueue]
                                                usingBlock:^(NSNotification * _Nonnull note) {
-                                                   __strong typeof(weakSelf) strongSelf = weakSelf;
-                                                   if (!strongSelf)
-                                                       return;
+                                                   MXStrongifyAndReturnIfNil(self);
                                                    
-                                                   if (strongSelf.mxSession.state == MXSessionStateRunning)
+                                                   if (self.mxSession.state == MXSessionStateRunning)
                                                    {
-                                                       [strongSelf placeCallInRoom:roomId
+                                                       [self placeCallInRoom:roomId
                                                                          withVideo:video
                                                                            success:success
                                                                            failure:failure];
                                                        
-                                                       [center removeObserver:strongSelf->sessionStateObserver];
-                                                       strongSelf->sessionStateObserver = nil;
+                                                       [center removeObserver:self->sessionStateObserver];
+                                                       self->sessionStateObserver = nil;
                                                    }
                                                }];
         return;
@@ -290,42 +288,38 @@ static NSString *const kMXCallManagerFallbackSTUNServer = @"stun:stun.l.google.c
 #pragma mark - Private methods
 - (void)refreshTURNServer
 {
-    __weak typeof(self) weakSelf = self;
+    MXWeakify(self);
     [_mxSession.matrixRestClient turnServer:^(MXTurnServerResponse *turnServerResponse) {
-        __strong typeof(weakSelf) strongSelf = weakSelf;
-        if (strongSelf)
+        MXStrongifyAndReturnIfNil(self);
+
+        NSLog(@"[MXCallManager] refreshTURNServer: TTL:%tu URIs: %@", turnServerResponse.ttl, turnServerResponse.uris);
+
+        if (turnServerResponse.uris)
         {
-            NSLog(@"[MXCallManager] refreshTURNServer: TTL:%tu URIs: %@", turnServerResponse.ttl, turnServerResponse.uris);
+            self->_turnServers = turnServerResponse;
 
-            if (turnServerResponse.uris)
-            {
-                strongSelf->_turnServers = turnServerResponse;
-
-                // Re-new when we're about to reach the TTL
-                strongSelf->refreshTURNServerTimer = [[NSTimer alloc] initWithFireDate:[NSDate dateWithTimeIntervalSinceNow:turnServerResponse.ttl * 0.9]
-                                                                              interval:0
-                                                                                target:strongSelf
-                                                                              selector:@selector(refreshTURNServer)
-                                                                              userInfo:nil
-                                                                               repeats:NO];
-                [[NSRunLoop mainRunLoop] addTimer:strongSelf->refreshTURNServerTimer forMode:NSDefaultRunLoopMode];
-            }
-            else
-            {
-                NSLog(@"No TURN server: using fallback STUN server: %@", strongSelf->_fallbackSTUNServer);
-                strongSelf->_turnServers = nil;
-            }
+            // Re-new when we're about to reach the TTL
+            self->refreshTURNServerTimer = [[NSTimer alloc] initWithFireDate:[NSDate dateWithTimeIntervalSinceNow:turnServerResponse.ttl * 0.9]
+                                                                    interval:0
+                                                                      target:self
+                                                                    selector:@selector(refreshTURNServer)
+                                                                    userInfo:nil
+                                                                     repeats:NO];
+            [[NSRunLoop mainRunLoop] addTimer:self->refreshTURNServerTimer forMode:NSDefaultRunLoopMode];
+        }
+        else
+        {
+            NSLog(@"No TURN server: using fallback STUN server: %@", self->_fallbackSTUNServer);
+            self->_turnServers = nil;
         }
 
     } failure:^(NSError *error) {
+        MXStrongifyAndReturnIfNil(self);
+
         NSLog(@"[MXCallManager] refreshTURNServer: Failed to get TURN URIs.\n");
-        __strong typeof(weakSelf) strongSelf = weakSelf;
-        if (strongSelf)
-        {
-            NSLog(@"Retry in 60s");
-            strongSelf->refreshTURNServerTimer = [NSTimer timerWithTimeInterval:60 target:strongSelf selector:@selector(refreshTURNServer) userInfo:nil repeats:NO];
-            [[NSRunLoop mainRunLoop] addTimer:strongSelf->refreshTURNServerTimer forMode:NSDefaultRunLoopMode];
-        }
+        NSLog(@"Retry in 60s");
+        self->refreshTURNServerTimer = [NSTimer timerWithTimeInterval:60 target:self selector:@selector(refreshTURNServer) userInfo:nil repeats:NO];
+        [[NSRunLoop mainRunLoop] addTimer:self->refreshTURNServerTimer forMode:NSDefaultRunLoopMode];
     }];
 }
 
@@ -374,10 +368,10 @@ static NSString *const kMXCallManagerFallbackSTUNServer = @"stun:stun.l.google.c
             // The dispatch  on the main thread should be enough.
             // It means that the sync response that contained the invite (and possibly its end
             // of validity) has been fully parsed.
-            __weak typeof(self) weakSelf = self;
+            MXWeakify(self);
             dispatch_async(dispatch_get_main_queue(), ^{
-                __strong __typeof(weakSelf) strongSelf = weakSelf;
-                [strongSelf notifyCallInvite:callId];
+                MXStrongifyAndReturnIfNil(self);
+                [self notifyCallInvite:callId];
             });
         }
         else if (call.state < MXCallStateConnected)

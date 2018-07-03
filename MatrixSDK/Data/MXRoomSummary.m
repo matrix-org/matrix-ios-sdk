@@ -577,7 +577,7 @@ NSString *const kMXRoomSummaryDidChangeNotification = @"kMXRoomSummaryDidChangeN
                                  };
 
     // Make the search
-    CFDataRef foundKey;
+    CFDataRef foundKey = nil;
     OSStatus status = SecItemCopyMatching((__bridge CFDictionaryRef)searchDict, (CFTypeRef*)&foundKey);
 
     if (status == errSecSuccess)
@@ -617,6 +617,11 @@ NSString *const kMXRoomSummaryDidChangeNotification = @"kMXRoomSummaryDidChangeN
     else
     {
         NSLog(@"[MXRoomSummary] encryptionKey: Keychain failed. OSStatus: %i", (int)status);
+    }
+    
+    if (foundKey)
+    {
+        CFRelease(foundKey);
     }
 
     return encryptionKey;

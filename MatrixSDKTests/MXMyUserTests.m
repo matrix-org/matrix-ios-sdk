@@ -44,10 +44,12 @@
 {
     if (mxSession)
     {
-        [matrixSDKTestsData closeMXSession:mxSession];
-        matrixSDKTestsData = nil;
+        [mxSession close];
         mxSession = nil;
     }
+
+    matrixSDKTestsData = nil;
+    
     [super tearDown];
 }
 

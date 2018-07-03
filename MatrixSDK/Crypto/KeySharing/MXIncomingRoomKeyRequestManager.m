@@ -1,5 +1,6 @@
 /*
  Copyright 2017 OpenMarket Ltd
+ Copyright 2018 New Vector Ltd
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -17,6 +18,7 @@
 #import "MXIncomingRoomKeyRequestManager.h"
 
 #import "MXCrypto_Private.h"
+#import "MXTools.h"
 
 #ifdef MX_CRYPTO
 
@@ -174,10 +176,10 @@
 
     // Broadcast the room key request
     dispatch_async(dispatch_get_main_queue(), ^{
-        if (crypto)
+        if (self->crypto)
         {
             [[NSNotificationCenter defaultCenter] postNotificationName:kMXCryptoRoomKeyRequestNotification
-                                                                object:crypto
+                                                                object:self->crypto
                                                               userInfo:@{
                                                                          kMXCryptoRoomKeyRequestNotificationRequestKey: req
                                                                          }];
@@ -209,16 +211,15 @@
     [self removePendingKeyRequest:requestId fromUser:userId andDevice:deviceId];
 
     // Broadcast the room key request cancelation
-    __weak typeof(self) weakSelf = self;
+    MXWeakify(self);
     dispatch_async(dispatch_get_main_queue(), ^{
-        if (weakSelf)
-        {
-            [[NSNotificationCenter defaultCenter] postNotificationName:kMXCryptoRoomKeyRequestCancellationNotification
-                                                                object:crypto
-                                                              userInfo:@{
-                                                                         kMXCryptoRoomKeyRequestCancellationNotificationRequestKey: cancellation
-                                                                         }];
-        }
+        MXStrongifyAndReturnIfNil(self);
+
+        [[NSNotificationCenter defaultCenter] postNotificationName:kMXCryptoRoomKeyRequestCancellationNotification
+                                                            object:self->crypto
+                                                          userInfo:@{
+                                                                     kMXCryptoRoomKeyRequestCancellationNotificationRequestKey: cancellation
+                                                                     }];
     });
 }
 

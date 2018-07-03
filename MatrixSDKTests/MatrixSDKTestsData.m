@@ -42,11 +42,10 @@ NSString * const kMXTestsAliceAvatarURL = @"mxc://matrix.org/kciiXusgZFKuNLIfLqm
 @interface MatrixSDKTestsData ()
 {
     NSDate *startDate;
+
+    NSMutableArray <NSObject*> *retainedObjects;
 }
 @end
-
-MXRestClient *accountToClean;
-NSMutableArray *roomsToClean;
 
 @implementation MatrixSDKTestsData
 
@@ -56,8 +55,14 @@ NSMutableArray *roomsToClean;
     if (self)
     {
         startDate = [NSDate date];
+        retainedObjects = [NSMutableArray array];
     }
     return self;
+}
+
+- (void)dealloc
+{
+    retainedObjects = [NSMutableArray array];
 }
 
 - (void)getBobCredentials:(void (^)(void))success
@@ -74,6 +79,7 @@ NSMutableArray *roomsToClean;
 
         MXRestClient *mxRestClient = [[MXRestClient alloc] initWithHomeServer:kMXTestsHomeServerURL
                                             andOnUnrecognizedCertificateBlock:nil];
+        [self retain:mxRestClient];
 
         // First, try register the user
         [mxRestClient registerWithLoginType:kMXLoginFlowTypeDummy username:bobUniqueUser password:MXTESTS_BOB_PWD success:^(MXCredentials *credentials) {
@@ -108,10 +114,11 @@ NSMutableArray *roomsToClean;
 {
     [self getBobCredentials:^{
         
-        MXRestClient *restClient = [[MXRestClient alloc] initWithCredentials:self.bobCredentials
+        MXRestClient *mxRestClient = [[MXRestClient alloc] initWithCredentials:self.bobCredentials
                                            andOnUnrecognizedCertificateBlock:nil];
+        [self retain:mxRestClient];
         
-        success(restClient);
+        success(mxRestClient);
     }];
 }
 
@@ -127,28 +134,11 @@ NSMutableArray *roomsToClean;
 
     [self getBobCredentials:^{
         
-        MXRestClient *restClient = [[MXRestClient alloc] initWithCredentials:self.bobCredentials
+        MXRestClient *mxRestClient = [[MXRestClient alloc] initWithCredentials:self.bobCredentials
                                            andOnUnrecognizedCertificateBlock:nil];
+        [self retain:mxRestClient];
 
-        if (accountToClean)
-        {
-            NSLog(@"Start cleaning user data (%tu rooms) from %@ ...", roomsToClean.count, testCase.name);
-
-            // Before giving the hand to the test, clean the rooms of the user.
-            // It is done now rather than at the end of each test because
-            // once [expectation fulfill] is called, the system allows no more HTTP requests.
-            [self leaveAllRoomsAsync:roomsToClean onComplete:^{
-                accountToClean = nil;
-
-                NSLog(@"End of cleaning user data");
-
-                readyToTest(restClient, expectation);
-            }];
-        }
-        else
-        {
-            readyToTest(restClient, expectation);
-        }
+        readyToTest(mxRestClient, expectation);
     }];
     
     if (testCase)
@@ -354,6 +344,7 @@ NSMutableArray *roomsToClean;
 {
     [self doMXRestClientTestWithBob:testCase readyToTest:^(MXRestClient *bobRestClient, XCTestExpectation *expectation) {
         MXSession *mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
+        [self retain:mxSession];
 
         [mxSession start:^{
 
@@ -372,6 +363,7 @@ NSMutableArray *roomsToClean;
     [self doMXRestClientTestWithBobAndARoomWithMessages:testCase readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
         
         MXSession *mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
+        [self retain:mxSession];
         
         [mxSession start:^{
             MXRoom *room = [mxSession roomWithRoomId:roomId];
@@ -390,6 +382,7 @@ NSMutableArray *roomsToClean;
     [self doMXRestClientTestWithBobAndThePublicRoom:testCase readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
         
         MXSession *mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
+        [self retain:mxSession];
         
         [mxSession start:^{
             MXRoom *room = [mxSession roomWithRoomId:roomId];
@@ -406,6 +399,7 @@ NSMutableArray *roomsToClean;
 {
     [self doMXRestClientTestWithBob:testCase readyToTest:^(MXRestClient *bobRestClient, XCTestExpectation *expectation) {
         MXSession *mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
+        [self retain:mxSession];
 
         [mxSession setStore:store success:^{
 
@@ -427,6 +421,7 @@ NSMutableArray *roomsToClean;
 {
     [self doMXRestClientTestWithBob:testCase readyToTest:^(MXRestClient *bobRestClient, XCTestExpectation *expectation) {
         MXSession *mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
+        [self retain:mxSession];
 
         [bobRestClient createRoom:@"A room" visibility:nil roomAlias:nil topic:nil success:^(MXCreateRoomResponse *response) {
 
@@ -466,6 +461,7 @@ NSMutableArray *roomsToClean;
 
         MXRestClient *mxRestClient = [[MXRestClient alloc] initWithHomeServer:kMXTestsHomeServerURL
                                             andOnUnrecognizedCertificateBlock:nil];
+        [self retain:mxRestClient];
 
         // First, try register the user
         [mxRestClient registerWithLoginType:kMXLoginFlowTypeDummy username:aliceUniqueUser password:MXTESTS_ALICE_PWD success:^(MXCredentials *credentials) {
@@ -502,6 +498,8 @@ NSMutableArray *roomsToClean;
         
         MXRestClient *aliceRestClient = [[MXRestClient alloc] initWithCredentials:self.aliceCredentials
                                                 andOnUnrecognizedCertificateBlock:nil];
+        [self retain:aliceRestClient];
+
         __block MXRestClient *aliceRestClient2 = aliceRestClient;
         
         // Set Alice displayname and avator
@@ -549,6 +547,7 @@ NSMutableArray *roomsToClean;
     [self doMXRestClientTestWithAlice:testCase readyToTest:^(MXRestClient *aliceRestClient, XCTestExpectation *expectation) {
 
         MXSession *aliceSession = [[MXSession alloc] initWithMatrixRestClient:aliceRestClient];
+        [self retain:aliceSession];
 
         [aliceSession start:^{
 
@@ -564,6 +563,7 @@ NSMutableArray *roomsToClean;
 {
     [self doMXRestClientTestWithAlice:testCase readyToTest:^(MXRestClient *aliceRestClient, XCTestExpectation *expectation) {
         MXSession *mxSession = [[MXSession alloc] initWithMatrixRestClient:aliceRestClient];
+        [self retain:mxSession];
 
         [mxSession setStore:store success:^{
 
@@ -612,6 +612,8 @@ NSMutableArray *roomsToClean;
     [self doMXRestClientTestWithBobAndAliceInARoom:testCase readyToTest:^(MXRestClient *bobRestClient, MXRestClient *aliceRestClient, NSString *roomId, XCTestExpectation *expectation) {
 
         MXSession *bobSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
+        [self retain:bobSession];
+
         [bobSession start:^{
 
             readyToTest(bobSession, aliceRestClient, roomId, expectation);
@@ -674,6 +676,7 @@ NSMutableArray *roomsToClean;
 
         MXRestClient *mxRestClient = [[MXRestClient alloc] initWithHomeServer:kMXTestsHomeServerHttpsURL
                                             andOnUnrecognizedCertificateBlock:onUnrecognizedCertBlock];
+        [self retain:mxRestClient];
 
         // First, try register the user
         [mxRestClient registerWithLoginType:kMXLoginFlowTypeDummy username:bobUniqueUser password:MXTESTS_BOB_PWD success:^(MXCredentials *credentials) {
@@ -719,6 +722,7 @@ NSMutableArray *roomsToClean;
                                            andOnUnrecognizedCertificateBlock:^BOOL(NSData *certificate) {
                                                return YES;
                                            }];
+        [self retain:restClient];
 
         readyToTest(restClient, expectation);
     }];
@@ -734,6 +738,7 @@ NSMutableArray *roomsToClean;
 {
     [self doHttpsMXRestClientTestWithBob:testCase readyToTest:^(MXRestClient *bobRestClient, XCTestExpectation *expectation) {
         MXSession *mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
+        [self retain:mxSession];
 
         [mxSession start:^{
 
@@ -758,11 +763,15 @@ NSMutableArray *roomsToClean;
 
         MXRestClient *mxRestClient = [[MXRestClient alloc] initWithHomeServer:kMXTestsHomeServerURL
                                             andOnUnrecognizedCertificateBlock:nil];
+        [self retain:mxRestClient];
 
         [mxRestClient loginWithLoginType:kMXLoginFlowTypePassword username:userId password:password success:^(MXCredentials *credentials) {
 
             MXRestClient *mxRestClient2 = [[MXRestClient alloc] initWithCredentials:credentials andOnUnrecognizedCertificateBlock:nil];
+            [self retain:mxRestClient2];
+
             MXSession *newSession = [[MXSession alloc] initWithMatrixRestClient:mxRestClient2];
+            [self retain:newSession];
 
             [newSession start:^{
 
@@ -790,11 +799,15 @@ NSMutableArray *roomsToClean;
 
         MXRestClient *mxRestClient = [[MXRestClient alloc] initWithHomeServer:kMXTestsHomeServerURL
                                             andOnUnrecognizedCertificateBlock:nil];
+        [self retain:mxRestClient];
 
         [mxRestClient loginWithLoginType:kMXLoginFlowTypePassword username:userId password:password success:^(MXCredentials *credentials) {
 
             MXRestClient *mxRestClient2 = [[MXRestClient alloc] initWithCredentials:credentials andOnUnrecognizedCertificateBlock:nil];
+            [self retain:mxRestClient2];
+
             MXSession *newSession = [[MXSession alloc] initWithMatrixRestClient:mxRestClient2];
+            [self retain:newSession];
 
             [newSession start:^{
 
@@ -813,59 +826,10 @@ NSMutableArray *roomsToClean;
 }
 
 
-
-- (void)closeMXSession:(MXSession*)mxSession
+#pragma mark Reference keeping
+- (void)retain:(NSObject*)object
 {
-    // If the user has more than 5 rooms, it worths to leave all of them.
-    // While the db is not optimised (see SYN-164), an initialSync request
-    // on an account with 100 rooms takes 35s. With less than 5 rooms, it takes less than 0.5s.
-    
-    // Ideally, to correctly reset the initial conditions, we should erase the home server db
-    // between each test but, as a client, it is not possible.
-    if (nil == accountToClean && mxSession.rooms.count >= 5)
-    {
-        roomsToClean = [NSMutableArray array];
-        for (MXRoom *room in mxSession.rooms)
-        {
-            if (NO == room.state.isJoinRulePublic && MXMembershipJoin == room.state.membership)
-            {
-                [roomsToClean addObject:room.state.roomId];
-            }
-        }
-
-        if (roomsToClean.count)
-        {
-            // Mark the account to clean
-            accountToClean = mxSession.matrixRestClient;
-        }
-    }
-
-    [mxSession close];
-}
-
-- (void)leaveAllRoomsAsync:(NSMutableArray*)rooms onComplete:(void (^)(void))onComplete
-{
-    if (rooms.count)
-    {
-        // Leave room one by one
-        NSString *roomId = [rooms lastObject];
-        [rooms removeLastObject];
-
-        NSLog(@"Leaving %@...", roomId);
-
-        [accountToClean leaveRoom:roomId success:^{
-
-            [self leaveAllRoomsAsync:rooms onComplete:onComplete];
-
-        } failure:^(NSError *error) {
-            NSLog(@"Warning: Cannot leave room: %@. Error: %@", roomId, error);
-            [self leaveAllRoomsAsync:rooms onComplete:onComplete];
-        }];
-    }
-    else
-    {
-        onComplete();
-    }
+    [retainedObjects addObject:object];
 }
 
 @end

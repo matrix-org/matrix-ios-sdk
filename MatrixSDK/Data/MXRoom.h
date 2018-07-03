@@ -27,6 +27,7 @@
 #import "MXJSONModels.h"
 #import "MXRoomSummary.h"
 #import "MXRoomMember.h"
+#import "MXReceiptData.h"
 #import "MXEventListener.h"
 #import "MXRoomState.h"
 #import "MXRoomAccountData.h"
@@ -116,11 +117,6 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidFlushDataNotification;
  nil if the room is not a direct chat.
  */
 @property (nonatomic) NSString *directUserId;
-
-/**
- Indicate whether the room looks like a direct room ("heuristic method").
- */
-@property (nonatomic, readonly) BOOL looksLikeDirect;
 
 /**
  Tag this room as a direct one, or remove the direct tag.
@@ -920,7 +916,21 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidFlushDataNotification;
  @param sort YES to sort them from the latest to the oldest.
  @return the receipts for an event in a dedicated room.
  */
-- (NSArray*)getEventReceipts:(NSString*)eventId sorted:(BOOL)sort;
+- (NSArray<MXReceiptData*> *)getEventReceipts:(NSString*)eventId sorted:(BOOL)sort;
+
+/**
+ Store a receipt.
+
+ Use this method to store implicit receipt data that does not come from the events stream.
+
+ @param receiptType the receipt type (like kMXEventTypeStringRead).
+ @param eventId the id of the event.
+ @param userId the user who generates the receipt.
+ @param ts the receipt timestamp in ms since Epoch.
+ @return YES if the receipt data is valid and has been stored.
+ */
+- (BOOL)storeLocalReceipt:(NSString*)receiptType eventId:(NSString*)eventId userId:(NSString*)userId ts:(uint64_t)ts;
+
 
 #pragma mark - Read marker handling
 

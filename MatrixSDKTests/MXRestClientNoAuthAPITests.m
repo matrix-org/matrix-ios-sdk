@@ -47,8 +47,10 @@
                           andOnUnrecognizedCertificateBlock:nil];
 }
 
-- (void)tearDown {
+- (void)tearDown
+{
     mxRestClient = nil;
+    matrixSDKTestsData = nil;
 
     [super tearDown];
 }
@@ -341,7 +343,7 @@
 
         // Search for "mxPublic"
         // Room created by doMXRestClientTestWithBobAndThePublicRoom is mxPublic-something
-        [bobRestClient publicRoomsOnServer:nil limit:10 since:nil filter:@"mxPublic" thirdPartyInstanceId:nil includeAllNetworks:NO success:^(MXPublicRoomsResponse *publicRoomsResponse) {
+        [bobRestClient publicRoomsOnServer:nil limit:100 since:nil filter:@"mxPublic" thirdPartyInstanceId:nil includeAllNetworks:NO success:^(MXPublicRoomsResponse *publicRoomsResponse) {
 
             XCTAssertGreaterThan(publicRoomsResponse.chunk.count, 0);
             XCTAssertGreaterThan(publicRoomsResponse.totalRoomCountEstimate, 0);

@@ -1,5 +1,6 @@
 /*
  Copyright 2014 OpenMarket Ltd
+ Copyright 2018 New Vector Ltd
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -17,6 +18,7 @@
 #import "MXMyUser.h"
 
 #import "MXSession.h"
+#import "MXTools.h"
 
 @interface MXMyUser ()
 @end
@@ -36,15 +38,17 @@
 
 - (void)setDisplayName:(NSString *)displayname success:(void (^)(void))success failure:(void (^)(NSError *))failure
 {
-    [_mxSession.matrixRestClient setDisplayName:displayname success:^{
+    MXWeakify(self);
+    [self.mxSession.matrixRestClient setDisplayName:displayname success:^{
+        MXStrongifyAndReturnIfNil(self);
 
         // Update the information right now
-        _displayname = [displayname copy];
+        self->_displayname = [displayname copy];
 
-        [_mxSession.store storeUser:self];
-        if ([_mxSession.store respondsToSelector:@selector(commit)])
+        [self.mxSession.store storeUser:self];
+        if ([self.mxSession.store respondsToSelector:@selector(commit)])
         {
-            [_mxSession.store commit];
+            [self.mxSession.store commit];
         }
 
         if (success)
@@ -62,15 +66,17 @@
 
 - (void)setAvatarUrl:(NSString *)avatarUrl success:(void (^)(void))success failure:(void (^)(NSError *))failure
 {
+    MXWeakify(self);
     [_mxSession.matrixRestClient setAvatarUrl:avatarUrl success:^{
+        MXStrongifyAndReturnIfNil(self);
 
         // Update the information right now
-        _avatarUrl = [avatarUrl copy];
+        self->_avatarUrl = [avatarUrl copy];
 
-        [_mxSession.store storeUser:self];
-        if ([_mxSession.store respondsToSelector:@selector(commit)])
+        [self.mxSession.store storeUser:self];
+        if ([self.mxSession.store respondsToSelector:@selector(commit)])
         {
-            [_mxSession.store commit];
+            [self.mxSession.store commit];
         }
 
         if (success)
@@ -88,16 +94,18 @@
 
 - (void)setPresence:(MXPresence)presence andStatusMessage:(NSString *)statusMessage success:(void (^)(void))success failure:(void (^)(NSError *))failure
 {
+    MXWeakify(self);
     [_mxSession.matrixRestClient setPresence:presence andStatusMessage:statusMessage success:^{
+        MXStrongifyAndReturnIfNil(self);
 
         // Update the information right now
-        _presence = presence;
-        _statusMsg = [statusMessage copy];
+        self->_presence = presence;
+        self->_statusMsg = [statusMessage copy];
 
-        [_mxSession.store storeUser:self];
-        if ([_mxSession.store respondsToSelector:@selector(commit)])
+        [self.mxSession.store storeUser:self];
+        if ([self.mxSession.store respondsToSelector:@selector(commit)])
         {
-            [_mxSession.store commit];
+            [self.mxSession.store commit];
         }
 
         if (success)

@@ -77,14 +77,14 @@
 
 - (void)enumerateKeysAndObjectsUsingBlock:(void (^)(id key, id obj, BOOL *stop))block {
     [_keys enumerateObjectsUsingBlock:^(id key, NSUInteger idx, BOOL *stop) {
-        id obj = [CbxSortedKeyWrapper sortedKeyWrapperForObject:_representedObject[key]];
+        id obj = [CbxSortedKeyWrapper sortedKeyWrapperForObject:self->_representedObject[key]];
         block(key, obj, stop);
     }];
 }
 
 - (void)enumerateKeysAndObjectsWithOptions:(NSEnumerationOptions)opts usingBlock:(void (^)(id key, id obj, BOOL *stop))block {
     [_keys enumerateObjectsWithOptions:opts usingBlock:^(id key, NSUInteger idx, BOOL *stop) {
-        id obj = [CbxSortedKeyWrapper sortedKeyWrapperForObject:_representedObject[key]];
+        id obj = [CbxSortedKeyWrapper sortedKeyWrapperForObject:self->_representedObject[key]];
         block(key, obj, stop);
     }];
 }

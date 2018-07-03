@@ -1,7 +1,8 @@
 /*
  Copyright 2014 OpenMarket Ltd
  Copyright 2017 Vector Creations Ltd
- 
+ Copyright 2018 New Vector Ltd
+
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
  You may obtain a copy of the License at
@@ -200,7 +201,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
     {
         // Mark as direct this room with the invite sender.
         [self setIsDirect:YES withUserId:myUser.originalEvent.sender success:nil failure:^(NSError *error) {
-            NSLog(@"[MXSession] Failed to tag an invite as a direct chat");
+            NSLog(@"[MXRoom] Failed to tag an invite as a direct chat");
         }];
     }
 }
@@ -371,9 +372,13 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
                 }
             }
 
+            MXWeakify(self);
             roomOperation = [self preserveOperationOrder:event block:^{
+                MXStrongifyAndReturnIfNil(self);
 
-                MXHTTPOperation *operation = [mxSession.crypto encryptEventContent:contentCopy withType:eventTypeString inRoom:self success:^(NSDictionary *encryptedContent, NSString *encryptedEventType) {
+                MXWeakify(self);
+                MXHTTPOperation *operation = [self->mxSession.crypto encryptEventContent:contentCopy withType:eventTypeString inRoom:self success:^(NSDictionary *encryptedContent, NSString *encryptedEventType) {
+                    MXStrongifyAndReturnIfNil(self);
 
                     if (event)
                     {
@@ -385,8 +390,8 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
 
                         MXEventDecryptionResult *decryptionResult = [[MXEventDecryptionResult alloc] init];
                         decryptionResult.clearEvent = clearEvent.JSONDictionary;
-                        decryptionResult.senderCurve25519Key = mxSession.crypto.deviceCurve25519Key;
-                        decryptionResult.claimedEd25519Key = mxSession.crypto.deviceEd25519Key;
+                        decryptionResult.senderCurve25519Key = self.mxSession.crypto.deviceCurve25519Key;
+                        decryptionResult.claimedEd25519Key = self.mxSession.crypto.deviceEd25519Key;
 
                         [event setClearData:decryptionResult];
 
@@ -657,10 +662,12 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
         *localEcho = event;
     }
 
+    MXWeakify(self);
     roomOperation = [self preserveOperationOrder:event block:^{
+        MXStrongifyAndReturnIfNil(self);
 
         // Check whether the content must be encrypted before sending
-        if (mxSession.crypto && self.state.isEncrypted)
+        if (self.mxSession.crypto && self.state.isEncrypted)
         {
             // Register uploader observer
             uploaderObserver = [[NSNotificationCenter defaultCenter] addObserverForName:kMXMediaUploadProgressNotification object:uploader queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *notif) {
@@ -689,6 +696,13 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
                 msgContent[@"file"] = result;
 
                 void(^onDidUpload)(void) = ^{
+
+                    // Do not go further if the orignal request has been cancelled
+                    if (roomOperation.isCancelled)
+                    {
+                        [self handleNextOperationAfter:roomOperation];
+                        return;
+                    }
 
                     // Send this content (the sent state of the local echo will be updated, its local storage too).
                     MXHTTPOperation *operation2 = [self sendMessageWithContent:msgContent localEcho:&event success:onSuccess failure:onFailure];
@@ -733,6 +747,13 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
         {
             // Launch the upload to the Matrix Content repository
             [uploader uploadData:imageData filename:filename mimeType:mimetype success:^(NSString *url) {
+
+                // Do not go further if the orignal request has been cancelled
+                if (roomOperation.isCancelled)
+                {
+                    [self handleNextOperationAfter:roomOperation];
+                    return;
+                }
 
                 // Copy the cached image to the actual cacheFile path
                 NSString *absoluteURL = [self.mxSession.matrixRestClient urlOfContent:url];
@@ -916,6 +937,13 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
 
                     [MXEncryptedAttachments encryptAttachment:videoUploader mimeType:mimetype localUrl:convertedLocalURL success:^(NSDictionary *result) {
 
+                        // Do not go further if the orignal request has been cancelled
+                        if (roomOperation.isCancelled)
+                        {
+                            [self handleNextOperationAfter:roomOperation];
+                            return;
+                        }
+
                         [msgContent removeObjectForKey:@"url"];
                         msgContent[@"file"] = result;
 
@@ -970,6 +998,13 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
                         [self updateOutgoingMessage:event.eventId withOutgoingMessage:event];
 
                         [videoUploader uploadData:videoData filename:filename mimeType:mimetype success:^(NSString *videoUrl) {
+
+                            // Do not go further if the orignal request has been cancelled
+                            if (roomOperation.isCancelled)
+                            {
+                                [self handleNextOperationAfter:roomOperation];
+                                return;
+                            }
 
                             // Write the video to the actual cacheFile path
                             NSString *absoluteURL = [self.mxSession.matrixRestClient urlOfContent:videoUrl];
@@ -1146,6 +1181,13 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
 
             [MXEncryptedAttachments encryptAttachment:uploader mimeType:mimeType localUrl:fileLocalURL success:^(NSDictionary *result) {
 
+                // Do not go further if the orignal request has been cancelled
+                if (roomOperation.isCancelled)
+                {
+                    [self handleNextOperationAfter:roomOperation];
+                    return;
+                }
+
                 [msgContent removeObjectForKey:@"url"];
                 msgContent[@"file"] = result;
 
@@ -1162,6 +1204,13 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
         {
             // Launch the upload to the Matrix Content repository
             [uploader uploadData:fileData filename:filename mimeType:mimeType success:^(NSString *url) {
+
+                // Do not go further if the orignal request has been cancelled
+                if (roomOperation.isCancelled)
+                {
+                    [self handleNextOperationAfter:roomOperation];
+                    return;
+                }
 
                 // Copy the cached file to the actual cacheFile path
                 NSString *absoluteURL = [self.mxSession.matrixRestClient urlOfContent:url];
@@ -1499,7 +1548,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
 
         // If roomOperation was running, run newRoomOperation
         // This happens when an ordered operation cascades another one
-        if (orderedOperations[0] == roomOperation)
+        if (orderedOperations.count && orderedOperations[0] == roomOperation)
         {
             roomOperation.block();
         }
@@ -1836,27 +1885,27 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
 {
     BOOL managedEvents = false;
     
-    NSArray<NSString*>* eventIds = [event.content allKeys];
-    
-    for(NSString* eventId in eventIds)
+    for (NSString* eventId in event.content)
     {
-        NSDictionary* eventDict = [event.content objectForKey:eventId];
-        NSDictionary* readDict = [eventDict objectForKey:kMXEventTypeStringRead];
-        
+        NSDictionary *eventDict, *readDict;
+        MXJSONModelSetDictionary(eventDict, event.content[eventId]);
+        MXJSONModelSetDictionary(readDict, eventDict[kMXEventTypeStringRead]);
+
         if (readDict)
         {
-            NSArray<NSString*>* userIds = [readDict allKeys];
-            
-            for(NSString* userId in userIds)
+            for (NSString* userId in readDict)
             {
-                NSDictionary<NSString*, id>* params = [readDict objectForKey:userId];
-                
-                if ([params valueForKey:@"ts"])
+                NSDictionary<NSString*, id>* params;
+                MXJSONModelSetDictionary(params, readDict[userId]);
+
+                NSNumber *ts;
+                MXJSONModelSetNumber(ts, params[@"ts"]);
+                if (ts)
                 {
-                    MXReceiptData* data = [[MXReceiptData alloc] init];
+                    MXReceiptData *data = [[MXReceiptData alloc] init];
                     data.userId = userId;
                     data.eventId = eventId;
-                    data.ts = ((NSNumber*)[params objectForKey:@"ts"]).longLongValue;
+                    data.ts = ts.longLongValue;
                     
                     managedEvents |= [mxSession.store storeReceipt:data inRoom:self.roomId];
                 }
@@ -1942,19 +1991,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
     if (updatedReadReceiptEvent)
     {
         // Update the oneself receipts
-        MXReceiptData *data = [[MXReceiptData alloc] init];
-        
-        data.userId = myUserId;
-        data.eventId = updatedReadReceiptEvent.eventId;
-        data.ts = (uint64_t) ([[NSDate date] timeIntervalSince1970] * 1000);
-        
-        if ([mxSession.store storeReceipt:data inRoom:self.roomId])
-        {
-            if ([mxSession.store respondsToSelector:@selector(commit)])
-            {
-                [mxSession.store commit];
-            }
-        }
+        [self storeLocalReceipt:kMXEventTypeStringRead eventId:updatedReadReceiptEvent.eventId userId:myUserId ts:(uint64_t) ([[NSDate date] timeIntervalSince1970] * 1000)];
     }
     
     // Prepare read marker update
@@ -2075,7 +2112,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
     }
 }
 
-- (NSArray*)getEventReceipts:(NSString*)eventId sorted:(BOOL)sort
+- (NSArray<MXReceiptData*> *)getEventReceipts:(NSString*)eventId sorted:(BOOL)sort
 {
     NSArray *receipts = [mxSession.store getEventReceipts:self.roomId eventId:eventId sorted:sort];
     
@@ -2105,6 +2142,47 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
     }
     
     return receipts;
+}
+
+- (BOOL)storeLocalReceipt:(NSString *)receiptType eventId:(NSString *)eventId userId:(NSString *)userId ts:(uint64_t)ts
+{
+    BOOL result = NO;
+
+    MXReceiptData* receiptData = [[MXReceiptData alloc] init];
+    receiptData.userId = userId;
+    receiptData.eventId = eventId;
+    receiptData.ts = ts;
+
+    if ([mxSession.store storeReceipt:receiptData inRoom:_roomId])
+    {
+        result = YES;
+
+        if ([mxSession.store respondsToSelector:@selector(commit)])
+        {
+            [mxSession.store commit];
+        }
+
+        // Notify SDK client about it with a local read receipt
+        MXEvent *receiptEvent = [MXEvent modelFromJSON:
+                                 @{
+                                   @"type": kMXEventTypeStringReceipt,
+                                   @"room_id": _roomId,
+                                   @"content" : @{
+                                           receiptData.eventId : @{
+                                                   kMXEventTypeStringRead: @{
+                                                           receiptData.userId: @{
+                                                                   @"ts": @(receiptData.ts)
+                                                                   }
+                                                           }
+
+                                                   }
+                                           }
+                                   }];
+
+        [_liveTimeline notifyListeners:receiptEvent direction:MXTimelineDirectionForwards];
+    }
+
+    return YES;
 }
 
 #pragma mark - Read marker handling
@@ -2156,27 +2234,6 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
     return (_directUserId != nil);
 }
 
-- (BOOL)looksLikeDirect
-{
-    BOOL kicked = NO;
-    if (self.state.membership == MXMembershipLeave)
-    {
-        MXRoomMember *member = [self.state memberWithUserId:mxSession.myUser.userId];
-        kicked = ![member.originalEvent.sender isEqualToString:mxSession.myUser.userId];
-    }
-    
-    if (self.state.membership == MXMembershipJoin || self.state.membership == MXMembershipBan || kicked)
-    {
-        // Consider as direct chats the 1:1 chats.
-        // Contrary to the web client we allow the tagged rooms (favorite/low priority...) to become direct.
-        if (self.state.members.count == 2)
-        {
-            return YES;
-        }
-    }
-    return NO;
-}
-
 - (MXHTTPOperation*)setIsDirect:(BOOL)isDirect
                      withUserId:(NSString*)userId
                         success:(void (^)(void))success
@@ -2206,13 +2263,15 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
             
             // Upload the updated direct rooms directory.
             // mxSession will post the 'kMXSessionDirectRoomsDidChangeNotification' notification on success.
+            MXWeakify(self);
             return [mxSession uploadDirectRooms:success failure:^(NSError *error) {
+                MXStrongifyAndReturnIfNil(self);
                 
                 // Restore the previous configuration
                 if (savedRoomLists)
                 {
-                    _directUserId = savedDirectUserId;
-                    [mxSession.directRooms setObject:savedRoomLists forKey:_directUserId];
+                    self.directUserId = savedDirectUserId;
+                    [self.mxSession.directRooms setObject:savedRoomLists forKey:self.directUserId];
                 }
                 
                 if (failure)
@@ -2315,22 +2374,24 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
             
             // Upload the updated direct rooms directory.
             // mxSession will post the 'kMXSessionDirectRoomsDidChangeNotification' notification on success.
+            MXWeakify(self);
             return [mxSession uploadDirectRooms:success failure:^(NSError *error) {
+                MXStrongifyAndReturnIfNil(self);
                 
                 // Restore the previous configuration
-                _directUserId = savedDirectUserId;
+                self.directUserId = savedDirectUserId;
                 if (savedDirectUserIdRoomLists)
                 {
-                    [mxSession.directRooms setObject:savedDirectUserIdRoomLists forKey:_directUserId];
+                    [self.mxSession.directRooms setObject:savedDirectUserIdRoomLists forKey:self.directUserId];
                 }
                 
                 if (savedNewDirectUserIdRoomLists)
                 {
-                    [mxSession.directRooms setObject:savedNewDirectUserIdRoomLists forKey:newDirectUserId];
+                    [self.mxSession.directRooms setObject:savedNewDirectUserIdRoomLists forKey:newDirectUserId];
                 }
                 else
                 {
-                    [mxSession.directRooms removeObjectForKey:newDirectUserId];
+                    [self.mxSession.directRooms removeObjectForKey:newDirectUserId];
                 }
                 
                 if (failure)
@@ -2366,6 +2427,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
     if (mxSession.crypto)
     {
         // Send the information to the homeserver
+        MXWeakify(self);
         operation = [self sendStateEventOfType:kMXEventTypeStringRoomEncryption
                                        content:@{
                                                  @"algorithm": algorithm
@@ -2377,8 +2439,9 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
         // Wait for the event coming back from the hs
         id eventBackListener;
         eventBackListener = [_liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomEncryption] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
+            MXStrongifyAndReturnIfNil(self);
 
-            [_liveTimeline removeListener:eventBackListener];
+            [self.liveTimeline removeListener:eventBackListener];
 
             // Dispatch to let time to MXCrypto to digest the m.room.encryption event
             dispatch_async(dispatch_get_main_queue(), ^{

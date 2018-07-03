@@ -67,15 +67,15 @@ NSString *const kMXRoomMessageFormatHTML = @"org.matrix.custom.html";
 NSString *const kMXMatrixDotToUrl = @"https://matrix.to";
 
 
-#pragma mark - Google Analytics
+#pragma mark - Analytics
 
-NSString *const kMXGoogleAnalyticsStartupCategory = @"startup";
+NSString *const kMXAnalyticsStartupCategory = @"startup";
 
-NSString *const kMXGoogleAnalyticsStartupInititialSync = @"initialSync";
-NSString *const kMXGoogleAnalyticsStartupIncrementalSync = @"incrementalSync";
-NSString *const kMXGoogleAnalyticsStartupStorePreload = @"storePreload";
-NSString *const kMXGoogleAnalyticsStartupMountData = @"mountData";
-NSString *const kMXGoogleAnalyticsStartupLaunchScreen = @"launchScreen";
+NSString *const kMXAnalyticsStartupInititialSync = @"initialSync";
+NSString *const kMXAnalyticsStartupIncrementalSync = @"incrementalSync";
+NSString *const kMXAnalyticsStartupStorePreload = @"storePreload";
+NSString *const kMXAnalyticsStartupMountData = @"mountData";
+NSString *const kMXAnalyticsStartupLaunchScreen = @"launchScreen";
 
-NSString *const kMXGoogleAnalyticsStatsCategory = @"stats";
-NSString *const kMXGoogleAnalyticsStatsRooms = @"rooms";
+NSString *const kMXAnalyticsStatsCategory = @"stats";
+NSString *const kMXAnalyticsStatsRooms = @"rooms";

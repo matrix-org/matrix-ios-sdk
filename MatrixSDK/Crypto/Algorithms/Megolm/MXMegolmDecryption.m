@@ -21,6 +21,7 @@
 
 #import "MXCryptoAlgorithms.h"
 #import "MXCrypto_Private.h"
+#import "MXTools.h"
 
 @interface MXMegolmDecryption ()
 {
@@ -231,7 +232,7 @@
                                    @"algorithm": content[@"algorithm"],
                                    @"room_id": content[@"room_id"],
                                    @"session_id": content[@"session_id"],
-                                   @"sender_key": event.senderKey
+                                   @"sender_key": senderKey
                                    }];
 
     [self retryDecryption:senderKey sessionId:content[@"session_id"]];
@@ -272,11 +273,13 @@
     NSDictionary *body = keyRequest.requestBody;
 
     MXHTTPOperation *operation;
+    MXWeakify(self);
     operation = [crypto ensureOlmSessionsForDevices:@{
                                           userId: @[deviceInfo]
                                           }
                                 success:^(MXUsersDevicesMap<MXOlmSessionResult *> *results)
      {
+         MXStrongifyAndReturnIfNil(self);
 
          MXOlmSessionResult *olmSessionResult = [results objectForDevice:deviceId forUser:userId];
          if (!olmSessionResult.sessionId)
@@ -305,10 +308,10 @@
          MXDeviceInfo *deviceInfo = olmSessionResult.device;
 
          MXUsersDevicesMap<NSDictionary*> *contentMap = [[MXUsersDevicesMap alloc] init];
-         [contentMap setObject:[crypto encryptMessage:payload forDevices:@[deviceInfo]]
+         [contentMap setObject:[self->crypto encryptMessage:payload forDevices:@[deviceInfo]]
                        forUser:userId andDevice:deviceId];
 
-         MXHTTPOperation *operation2 = [crypto.matrixRestClient sendToDevice:kMXEventTypeStringRoomEncrypted contentMap:contentMap txnId:nil success:success failure:failure];
+         MXHTTPOperation *operation2 = [self->crypto.matrixRestClient sendToDevice:kMXEventTypeStringRoomEncrypted contentMap:contentMap txnId:nil success:success failure:failure];
          [operation mutateTo:operation2];
 
      } failure:failure];
@@ -346,21 +349,17 @@
                 {
                     // Go back to the main thread to retry to decrypt from the beginning of the chain.
                     // MXSession will then update MXEvent with clear content if successful
-                    __weak typeof(self) weakSelf = self;
+                    MXWeakify(self);
                     dispatch_async(dispatch_get_main_queue(), ^{
+                        MXStrongifyAndReturnIfNil(self);
 
-                        if (weakSelf)
+                        if ([self->crypto.mxSession decryptEvent:event inTimeline:(timelineId.length ? timelineId : nil)])
                         {
-                            typeof(self) self = weakSelf;
-
-                            if ([self->crypto.mxSession decryptEvent:event inTimeline:(timelineId.length ? timelineId : nil)])
-                            {
-                                NSLog(@"[MXMegolmDecryption] retryDecryption: successful re-decryption of %@", event.eventId);
-                            }
-                            else
-                            {
-                                NSLog(@"[MXMegolmDecryption] retryDecryption: Still can't decrypt %@. Error: %@", event.eventId, event.decryptionError);
-                            }
+                            NSLog(@"[MXMegolmDecryption] retryDecryption: successful re-decryption of %@", event.eventId);
+                        }
+                        else
+                        {
+                            NSLog(@"[MXMegolmDecryption] retryDecryption: Still can't decrypt %@. Error: %@", event.eventId, event.decryptionError);
                         }
                     });
                 }

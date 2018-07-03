@@ -46,8 +46,9 @@
 
 - (void)tearDown
 {
-    // Put teardown code here. This method is called after the invocation of each test method in the class.
     [super tearDown];
+
+    matrixSDKTestsData = nil;
 }
 
 - (void)testInit
@@ -118,11 +119,10 @@
 - (void)testRoomTopic
 {
     [matrixSDKTestsData doMXRestClientTestWithBobAndARoom:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
-        
-        __block MXRestClient *bobRestClient2 = bobRestClient;
+
         [bobRestClient setRoomTopic:roomId topic:@"Topic setter and getter functions are tested here" success:^{
             
-            [bobRestClient2 topicOfRoom:roomId success:^(NSString *topic) {
+            [bobRestClient topicOfRoom:roomId success:^(NSString *topic) {
                 
                 XCTAssertNotNil(topic);
                 XCTAssertNotEqual(topic.length, 0);
@@ -1131,17 +1131,15 @@
 - (void)testUserAvatarUrl
 {
     [matrixSDKTestsData doMXRestClientTestWithAlice:self readyToTest:^(MXRestClient *aliceRestClient, XCTestExpectation *expectation) {
-        
-        __block MXRestClient *aliceRestClient2 = aliceRestClient;
-        
+
         // Set the avatar url
         __block NSString *newAvatarUrl = @"http://matrix.org/matrix2.png";
         [aliceRestClient setAvatarUrl:newAvatarUrl success:^{
               
             // Then retrieve it
-            [aliceRestClient2 avatarUrlForUser:nil success:^(NSString *avatarUrl) {
-                
-                XCTAssertTrue([avatarUrl isEqualToString:newAvatarUrl], @"Must retrieved the set string: %@ - %@", avatarUrl, newAvatarUrl);
+            [aliceRestClient avatarUrlForUser:nil success:^(NSString *avatarUrl) {
+
+                XCTAssertEqual(avatarUrl, newAvatarUrl);
                 [expectation fulfill];
                 
             } failure:^(NSError *error) {
@@ -1168,8 +1166,8 @@
                 
                 // Then retrieve it from a Bob restClient
                 [bobRestClient avatarUrlForUser:matrixSDKTestsData.aliceCredentials.userId success:^(NSString *avatarUrl) {
-                    
-                    XCTAssertTrue([avatarUrl isEqualToString:newAvatarUrl], @"Must retrieved the set string: %@ - %@", avatarUrl, newAvatarUrl);
+
+                    XCTAssertEqual(avatarUrl, newAvatarUrl);
                     [expectation fulfill];
                     
                 } failure:^(NSError *error) {

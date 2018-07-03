@@ -42,6 +42,8 @@
 
 - (void)tearDown
 {
+    matrixSDKTestsData = nil;
+
     [super tearDown];
 }
 
@@ -94,6 +96,8 @@
             XCTFail(@"We have already accepted the certificate. We should not be asked again");
             return NO;
         }];
+
+        [matrixSDKTestsData retain:mxRestClient];
 
         // Check the instance is usable
         XCTAssert(mxRestClient);
