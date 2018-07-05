@@ -61,29 +61,57 @@
 
 #pragma mark - MXFilterObject override
 
+- (instancetype)initWithDictionary:(NSDictionary *)dictionary
+{
+    NSMutableDictionary *flatDictionary = [dictionary mutableCopy];
+    [flatDictionary removeObjectsForKeys:@[@"ephemeral", @"state", @"timeline", @"account_data"]];
+
+    self = [super initWithDictionary:flatDictionary];
+    if (self)
+    {
+        if (dictionary[@"ephemeral"])
+        {
+            _ephemeral = [[MXRoomEventFilter alloc] initWithDictionary:dictionary[@"ephemeral"]];
+        }
+        if (dictionary[@"state"])
+        {
+            _state = [[MXRoomEventFilter alloc] initWithDictionary:dictionary[@"state"]];
+        }
+        if (dictionary[@"timeline"])
+        {
+            _timeline = [[MXRoomEventFilter alloc] initWithDictionary:dictionary[@"timeline"]];
+        }
+        if (dictionary[@"account_data"])
+        {
+            _accountData = [[MXRoomEventFilter alloc] initWithDictionary:dictionary[@"account_data"]];
+        }
+    }
+    return self;
+}
+
 - (NSDictionary<NSString *,id> *)dictionary
 {
-    NSMutableDictionary *fullDictionary = [super.dictionary mutableCopy];
+    NSMutableDictionary *flatDictionary = [super.dictionary mutableCopy];
 
     // And JSONify exposed models
     if (_ephemeral)
     {
-        fullDictionary[@"ephemeral"] = _ephemeral.dictionary;
+        flatDictionary[@"ephemeral"] = _ephemeral.dictionary;
     }
     if (_state)
     {
-        fullDictionary[@"state"] = _state.dictionary;
+        flatDictionary[@"state"] = _state.dictionary;
     }
     if (_timeline)
     {
-        fullDictionary[@"timeline"] = _timeline.dictionary;
+        flatDictionary[@"timeline"] = _timeline.dictionary;
     }
     if (_accountData)
     {
-        fullDictionary[@"account_data"] = _accountData.dictionary;
+        flatDictionary[@"account_data"] = _accountData.dictionary;
     }
 
-    return fullDictionary;
+    return flatDictionary;
 }
 
 @end
