@@ -1,6 +1,7 @@
 /*
  Copyright 2014 OpenMarket Ltd
  Copyright 2017 Vector Creations Ltd
+ Copyright 2018 New Vector Ltd
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -1007,7 +1008,7 @@
 }
 
 
-#pragma mark - #pragma mark - Room tags operations
+#pragma mark - Room tags operations
 - (void)testAddAndRemoveTag
 {
     [matrixSDKTestsData doMXRestClientTestWithBobAndARoom:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
@@ -1049,6 +1050,67 @@
     }];
 }
 
+
+#pragma mark - Filter operations
+- (void)testFilter
+{
+    [matrixSDKTestsData doMXRestClientTestWithAlice:self readyToTest:^(MXRestClient *aliceRestClient, XCTestExpectation *expectation) {
+
+        MXFilterJSONModel *filter = [[MXFilterJSONModel alloc] init];
+
+        filter.eventFields = @[@"content.body"];
+        filter.eventFormat = @"federation";
+
+        filter.room = [[MXRoomFilter alloc] init];
+        filter.room.rooms = @[@"!aroom:matrix:org"];
+        filter.room.notRooms = @[@"!notaroom:matrix:org"];
+
+        filter.room.ephemeral = [[MXRoomEventFilter alloc] init];
+        filter.room.ephemeral.containsURL = NO;
+        filter.room.ephemeral.types = @[@"atype"];
+        filter.room.ephemeral.notTypes = @[@"notatype"];
+        filter.room.ephemeral.rooms = @[@"!aroom_ephemeral:matrix:org"];
+        filter.room.ephemeral.notRooms = @[@"!notaroom_ephemeral:matrix:org"];
+        filter.room.ephemeral.senders = @[@"@asender:matrix.org"];
+        filter.room.ephemeral.notSenders = @[@"@notasender:matrix.org"];
+
+        // This is the basic filter we use
+        filter.room.timeline = [[MXRoomEventFilter alloc] init];
+        filter.room.timeline.limit = 10;
+
+        filter.room.includeLeave = YES;
+        filter.room.state = filter.room.ephemeral;
+        filter.room.accountData = filter.room.timeline;
+
+        filter.presence = [[MXFilter alloc] init];
+        filter.presence.types = @[@"atype"];
+        filter.presence.notTypes = @[@"notatype"];
+        filter.presence.senders = @[@"@asender:matrix.org"];
+        filter.presence.notSenders = @[@"@notasender:matrix.org"];
+        filter.presence.limit = 11;
+
+        [aliceRestClient setFilter:filter success:^(NSString *filterId) {
+
+            XCTAssertNotNil(filterId);
+            XCTAssert([filterId isKindOfClass:NSString.class]);
+
+            [aliceRestClient getFilterWithFilterId:filterId success:^(MXFilterJSONModel *receivedFilter) {
+
+                XCTAssert([receivedFilter.JSONDictionary isEqualToDictionary:filter.JSONDictionary],
+                          @"Filters are different: receivedFilter: %@\nfilter:%@", receivedFilter, filter);
+                [expectation fulfill];
+
+            } failure:^(NSError *error) {
+                XCTFail(@"The request should not fail - NSError: %@", error);
+                [expectation fulfill];
+            }];
+
+        } failure:^(NSError *error) {
+            XCTFail(@"The request should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+    }];
+}
 
 #pragma mark - Profile operations
 - (void)testUserDisplayName
