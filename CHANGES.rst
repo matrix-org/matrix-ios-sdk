@@ -1,3 +1,13 @@
+Changes in Matrix iOS SDK in 0.10.13 ()
+===============================================
+
+Improvements:
+* MXRestClient: Add Matrix filter API
+
+Bug fix:
+
+API break:
+
 Changes in Matrix iOS SDK in 0.10.12 (2018-05-31)
 =============================================== 
 

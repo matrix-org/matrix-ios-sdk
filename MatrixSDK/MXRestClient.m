@@ -751,6 +751,67 @@ MXAuthAction;
                                  }];
 }
 
+
+#pragma mark - Filtering
+
+- (MXHTTPOperation*)setFilter:(MXFilterJSONModel*)filter
+                      success:(void (^)(NSString *filterId))success
+                      failure:(void (^)(NSError *error))failure
+{
+    NSString *path = [NSString stringWithFormat:@"%@/user/%@/filter", apiPathPrefix, credentials.userId];
+
+    MXWeakify(self);
+    return [httpClient requestWithMethod:@"POST"
+                                    path:path
+                              parameters:filter.JSONDictionary
+                                 success:^(NSDictionary *JSONResponse) {
+                                     MXStrongifyAndReturnIfNil(self);
+
+                                     if (success)
+                                     {
+                                         __block NSString *filterId;
+                                         [self dispatchProcessing:^{
+                                             MXJSONModelSetString(filterId, JSONResponse[@"filter_id"]);
+                                         }  andCompletion:^{
+                                             success(filterId);
+                                         }];
+                                     }
+                                 }
+                                 failure:^(NSError *error) {
+                                     MXStrongifyAndReturnIfNil(self);
+                                     [self dispatchFailure:error inBlock:failure];
+                                 }];
+}
+
+- (MXHTTPOperation*)getFilterWithFilterId:(NSString*)filterId
+                                  success:(void (^)(MXFilterJSONModel *filter))success
+                                  failure:(void (^)(NSError *error))failure
+{
+    NSString *path = [NSString stringWithFormat:@"%@/user/%@/filter/%@", apiPathPrefix, credentials.userId, filterId];
+
+    MXWeakify(self);
+    return [httpClient requestWithMethod:@"GET"
+                                    path:path
+                              parameters:nil
+                                 success:^(NSDictionary *JSONResponse) {
+                                     MXStrongifyAndReturnIfNil(self);
+
+                                     if (success)
+                                     {
+                                         __block MXFilterJSONModel *filter;
+                                         [self dispatchProcessing:^{
+                                             MXJSONModelSetMXJSONModel(filter, MXFilterJSONModel, JSONResponse);
+                                         }  andCompletion:^{
+                                             success(filter);
+                                         }];
+                                     }
+                                 }
+                                 failure:^(NSError *error) {
+                                     MXStrongifyAndReturnIfNil(self);
+                                     [self dispatchFailure:error inBlock:failure];
+                                 }];
+}
+
 - (MXHTTPOperation *)openIdToken:(void (^)(MXOpenIdToken *))success failure:(void (^)(NSError *))failure
 {
     NSString *path = [NSString stringWithFormat:@"%@/user/%@/openid/request_token", kMXAPIPrefixPathUnstable, credentials.userId];

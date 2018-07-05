@@ -1,6 +1,7 @@
 /*
  Copyright 2014 OpenMarket Ltd
  Copyright 2017 Vector Creations Ltd
+ Copyright 2018 New Vector Ltd
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -29,6 +30,7 @@
 #import "MXInvite3PID.h"
 #import "MXEventTimeline.h"
 #import "MXJSONModels.h"
+#import "MXFilterJSONModel.h"
 
 
 #pragma mark - Constants definitions
@@ -410,6 +412,39 @@ typedef enum : NSUInteger
                            success:(void (^)(void))success
                            failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
+
+#pragma mark - Filtering
+/**
+ Uploads a new filter definition to the homeserver.
+
+ @param filter the filter to set.
+
+ @param success A block object called when the operation succeeds. It provides the
+                id of the created filter.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)setFilter:(MXFilterJSONModel*)filter
+                      success:(void (^)(NSString *filterId))success
+                      failure:(void (^)(NSError *error))failure;
+
+/**
+ Download a filter.
+
+ @param filterId The filter id to download.
+
+ @param success A block object called when the operation succeeds. It provides the
+                filter object.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)getFilterWithFilterId:(NSString*)filterId
+                                  success:(void (^)(MXFilterJSONModel *filter))success
+                                  failure:(void (^)(NSError *error))failure;
+
+
 /**
  Gets a bearer token from the homeserver that the user can
  present to a third party in order to prove their ownership
@@ -422,6 +457,7 @@ typedef enum : NSUInteger
  */
 - (MXHTTPOperation*)openIdToken:(void (^)(MXOpenIdToken *tokenObject))success
                         failure:(void (^)(NSError *error))failure;
+
 
 #pragma mark - 3pid token request
 /**

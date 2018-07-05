@@ -46,17 +46,6 @@
 }
 
 
-- (void)setEphemeral:(MXRoomEventFilter *)ephemeral
-{
-    dictionary[@"ephemeral"] = ephemeral.dictionary;
-}
-
-- (MXRoomEventFilter *)ephemeral
-{
-    return [self roomEventFilterFor:@"ephemeral"];
-}
-
-
 - (void)setIncludeLeave:(BOOL)includeLeave
 {
     dictionary[@"include_leave"] = @(includeLeave);
@@ -70,53 +59,59 @@
 }
 
 
-- (void)setState:(MXRoomEventFilter *)state
+#pragma mark - MXFilterObject override
+
+- (instancetype)initWithDictionary:(NSDictionary *)dictionary
 {
-    dictionary[@"state"] = state.dictionary;
-}
+    NSMutableDictionary *flatDictionary = [dictionary mutableCopy];
+    [flatDictionary removeObjectsForKeys:@[@"ephemeral", @"state", @"timeline", @"account_data"]];
 
-- (MXRoomEventFilter *)state
-{
-    return [self roomEventFilterFor:@"state"];
-}
-
-
-- (void)setTimeline:(MXRoomEventFilter *)timeline
-{
-    dictionary[@"timeline"] = timeline.dictionary;
-}
-
-- (MXRoomEventFilter *)timeline
-{
-    return [self roomEventFilterFor:@"timeline"];
-}
-
-
-- (void)setAccountData:(MXRoomEventFilter *)accountData
-{
-    dictionary[@"account_data"] = accountData.dictionary;
-}
-
-- (MXRoomEventFilter *)accountData
-{
-    return [self roomEventFilterFor:@"account_data"];
-}
-
-
-#pragma mark - Private methods
-
-- (MXRoomEventFilter *)roomEventFilterFor:(NSString *)key
-{
-    MXRoomEventFilter *roomEventFilter;
-
-    NSDictionary *roomEventFilterDict;
-    MXJSONModelSetDictionary(roomEventFilterDict, dictionary[key]);
-    if (roomEventFilterDict)
+    self = [super initWithDictionary:flatDictionary];
+    if (self)
     {
-        roomEventFilter = [[MXRoomEventFilter alloc] initWithDictionary:roomEventFilterDict];
+        if (dictionary[@"ephemeral"])
+        {
+            _ephemeral = [[MXRoomEventFilter alloc] initWithDictionary:dictionary[@"ephemeral"]];
+        }
+        if (dictionary[@"state"])
+        {
+            _state = [[MXRoomEventFilter alloc] initWithDictionary:dictionary[@"state"]];
+        }
+        if (dictionary[@"timeline"])
+        {
+            _timeline = [[MXRoomEventFilter alloc] initWithDictionary:dictionary[@"timeline"]];
+        }
+        if (dictionary[@"account_data"])
+        {
+            _accountData = [[MXRoomEventFilter alloc] initWithDictionary:dictionary[@"account_data"]];
+        }
+    }
+    return self;
+}
+
+- (NSDictionary<NSString *,id> *)dictionary
+{
+    NSMutableDictionary *flatDictionary = [super.dictionary mutableCopy];
+
+    // And JSONify exposed models
+    if (_ephemeral)
+    {
+        flatDictionary[@"ephemeral"] = _ephemeral.dictionary;
+    }
+    if (_state)
+    {
+        flatDictionary[@"state"] = _state.dictionary;
+    }
+    if (_timeline)
+    {
+        flatDictionary[@"timeline"] = _timeline.dictionary;
+    }
+    if (_accountData)
+    {
+        flatDictionary[@"account_data"] = _accountData.dictionary;
     }
 
-    return roomEventFilter;
+    return flatDictionary;
 }
 
 @end

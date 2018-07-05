@@ -47,7 +47,7 @@
 
 - (NSString *)jsonString
 {
-    return [MXTools serialiseJSONObject:dictionary];
+    return [MXTools serialiseJSONObject:self.dictionary];
 }
 
 - (NSString *)description
