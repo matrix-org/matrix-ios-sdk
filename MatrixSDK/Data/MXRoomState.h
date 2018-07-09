@@ -89,6 +89,8 @@ A copy of the list of third party invites (actually MXRoomThirdPartyInvite insta
 
 /**
  The name of the room as provided by the home server.
+
+Use MXRoomSummary.displayname to get a computed room display name.
  */
 @property (nonatomic, readonly) NSString *name;
 
@@ -121,12 +123,6 @@ A copy of the list of third party invites (actually MXRoomThirdPartyInvite insta
  The guest access of the room.
  */
 @property (nonatomic, readonly) MXRoomGuestAccess guestAccess NS_REFINED_FOR_SWIFT;
-
-/**
- The display name of the room.
- It is computed from information retrieved so far.
- */
-@property (nonatomic, readonly) NSString *displayname;
 
 /**
  The membership state of the logged in user for this room

@@ -708,14 +708,15 @@
 }
 
 // Test the room display name formatting: "roomName (roomAlias)"
+// KO before
 - (void)testDisplayName1
 {
     [matrixSDKTestsData doMXSessionTestWithBobAndThePublicRoom:self readyToTest:^(MXSession *mxSession2, MXRoom *room, XCTestExpectation *expectation) {
         
         mxSession = mxSession2;
 
-        XCTAssertNotNil(room.state.displayname);
-        XCTAssertTrue([room.state.displayname hasPrefix:@"MX Public Room test (#mxPublic"], @"We must retrieve the #mxPublic room settings");
+        XCTAssertNotNil(room.state.name);
+        XCTAssertTrue([room.state.name hasPrefix:@"MX Public Room test (#mxPublic"], @"We must retrieve the #mxPublic room settings");
         
         [expectation fulfill];
     }];

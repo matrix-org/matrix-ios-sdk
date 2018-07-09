@@ -96,7 +96,7 @@
         switch (event.eventType)
         {
             case MXEventTypeRoomName:
-                summary.displayname = room.state.displayname;
+                summary.displayname = room.state.name;
                 updated = YES;
                 break;
 

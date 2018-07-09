@@ -1,4 +1,4 @@
-Changes in Matrix iOS SDK in 0.10.13 ()
+Changes in Matrix iOS SDK in 0.11.0 ()
 ===============================================
 
 Improvements:
@@ -7,6 +7,7 @@ Improvements:
 Bug fix:
 
 API break:
+* MXRoomState: Remove displayName property. Use MXRoomSummary.displayName instead 
 
 Changes in Matrix iOS SDK in 0.10.12 (2018-05-31)
 =============================================== 
