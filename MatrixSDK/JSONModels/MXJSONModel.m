@@ -16,6 +16,8 @@
 
 #import "MXJSONModel.h"
 
+#import "MXTools.h"
+
 @implementation MXJSONModel
 
 
@@ -138,6 +140,11 @@
 {
     NSAssert(NO, @"%@ does not implement others", self.class);
     return nil;
+}
+
+- (NSString *)jsonString
+{
+    return [MXTools serialiseJSONObject:self.JSONDictionary];
 }
 
 

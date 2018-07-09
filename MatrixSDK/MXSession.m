@@ -845,20 +845,20 @@ typedef void (^MXOnResumeDone)(void);
     NSLog(@"[MXSession] Do a server sync%@", _catchingUp ? @" (catching up)" : @"");
 
     // If required, define a filter
-    MXRoomFilter *roomFilter = [[MXRoomFilter alloc] init];
+    MXFilterJSONModel *filter = [[MXFilterJSONModel alloc] init];
     if (-1 != syncMessagesLimit)
     {
         // If requested by the app, use a limit for the timeline in /sync
-        MXRoomEventFilter *timelineFilter = [[MXRoomEventFilter alloc] init];
-        timelineFilter.limit = syncMessagesLimit;
-        roomFilter.timeline = timelineFilter;
+        filter.room = [[MXRoomFilter alloc] init];
+        filter.room.timeline = [[MXRoomEventFilter alloc] init];
+        filter.room.timeline.limit = syncMessagesLimit;
     }
 
     NSString *inlineFilter;
-    if (roomFilter.dictionary.count)
+    if (filter.JSONDictionary.count)
     {
         // Serialise the filter to pass it inline in the request
-        inlineFilter = [NSString stringWithFormat:@"{\"room\":%@}", roomFilter.jsonString];
+        inlineFilter = filter.jsonString;
     }
 
     MXWeakify(self);
