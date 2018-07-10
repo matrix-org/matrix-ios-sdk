@@ -35,8 +35,8 @@ Pod::Spec.new do |s|
       ss.dependency 'GZIP', '~> 1.2.1'
 
       # Requirements for e2e encryption
-      ss.dependency 'OLMKit', '~> 2.2.2'
-      ss.dependency 'Realm', '~> 3.6.0'
+      ss.dependency 'OLMKit', '~> 2.3.0'
+      ss.dependency 'Realm', '~> 3.7.4'
   end
 
   s.subspec 'JingleCallStack' do |ss|

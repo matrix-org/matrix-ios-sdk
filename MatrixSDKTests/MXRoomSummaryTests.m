@@ -122,7 +122,7 @@ NSString *uisiString = @"The sender's device has not sent us the keys for this m
     }
     else if ([self.description containsString:@"testStatePassedToMXRoomSummaryUpdating"])
     {
-        XCTAssertNotEqualObjects(eventState.displayname, @"A room", @"The passed state must be the state of room when the event occured, not the current room state");
+        XCTAssertNotEqualObjects(eventState.name, @"A room", @"The passed state must be the state of room when the event occured, not the current room state");
 
         // Do a classic update
         MXRoomSummaryUpdater *updater = [MXRoomSummaryUpdater roomSummaryUpdaterForSession:session];
@@ -899,7 +899,7 @@ NSString *uisiString = @"The sender's device has not sent us the keys for this m
 
         observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXRoomSummaryDidChangeNotification object:summary queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
 
-            XCTAssertEqualObjects(room.state.displayname, displayName);
+            XCTAssertEqualObjects(room.state.name, displayName);
             XCTAssertEqualObjects(summary.displayname, displayName, @"Room summary must be updated");
 
             [expectation fulfill];
