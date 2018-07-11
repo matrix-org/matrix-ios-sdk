@@ -393,8 +393,8 @@
 
                     NSLog(@"eventCount: %tu - %@", eventCount, event);
                     
-                    MXRoomMember *beforeEventAliceMember = [roomState memberWithUserId:aliceRestClient.credentials.userId];
-                    MXRoomMember *aliceMember = [room.state memberWithUserId:aliceRestClient.credentials.userId];
+                    MXRoomMember *beforeEventAliceMember = [roomstate.members memberWithUserId:aliceRestClient.credentials.userId];
+                    MXRoomMember *aliceMember = [room.state.members memberWithUserId:aliceRestClient.credentials.userId];
                     
                     // Check each expected event and their roomState contect
                     // Events are received in the reverse order
@@ -569,8 +569,8 @@
             __block NSUInteger eventCount = 0;
             [room listenToEventsOfTypes:nil onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
                 
-                MXRoomMember *beforeEventAliceMember = [roomState memberWithUserId:matrixSDKTestsData.aliceCredentials.userId];
-                MXRoomMember *aliceMember = [room.state memberWithUserId:matrixSDKTestsData.aliceCredentials.userId];
+                MXRoomMember *beforeEventAliceMember = [roomstate.members memberWithUserId:matrixSDKTestsData.aliceCredentials.userId];
+                MXRoomMember *aliceMember = [room.state.members memberWithUserId:matrixSDKTestsData.aliceCredentials.userId];
                 
                 // Check each expected event and their roomState contect
                 // Events are live. Then comes in order

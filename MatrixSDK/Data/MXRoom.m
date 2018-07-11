@@ -189,7 +189,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
 - (void)handleInviteDirectFlag
 {
     // Handle here invite data to decide if it is direct or not
-    MXRoomMember *myUser = [self.state memberWithUserId:mxSession.myUser.userId];
+    MXRoomMember *myUser = [self.state.members memberWithUserId:mxSession.myUser.userId];
     BOOL isDirect = NO;
     
     if (myUser.originalEvent.content[@"is_direct"])
@@ -2290,7 +2290,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
         if (!newDirectUserId)
         {
             // By default mark as direct this room for the oldest joined member.
-            NSArray<MXRoomMember *> *members = self.state.joinedMembers;
+            NSArray<MXRoomMember *> *members = self.state.members.joinedMembers;
             MXRoomMember *oldestJoinedMember;
             
             for (MXRoomMember *member in members)
@@ -2312,7 +2312,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
             if (!newDirectUserId)
             {
                 // Consider the first invited member if none has joined
-                members = [self.state membersWithMembership:MXMembershipInvite];
+                members = [self.state.members membersWithMembership:MXMembershipInvite];
                 
                 MXRoomMember *oldestInvitedMember;
                 for (MXRoomMember *member in members)

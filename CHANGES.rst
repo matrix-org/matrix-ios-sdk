@@ -7,7 +7,8 @@ Improvements:
 Bug fix:
 
 API break:
-* MXRoomState: Remove displayName property. Use MXRoomSummary.displayName instead 
+* MXRoomState: Remove displayName property. Use MXRoomSummary.displayName instead.
+* MXRoomState: Create a MXRoomMembers property. All members getter methods has been to the new class.
 
 Changes in Matrix iOS SDK in 0.10.12 (2018-05-31)
 =============================================== 

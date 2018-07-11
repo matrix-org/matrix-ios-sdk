@@ -86,6 +86,8 @@
 		326056861C76FDF2009D44AD /* MXEventTimeline.m in Sources */ = {isa = PBXBuildFile; fileRef = 326056841C76FDF1009D44AD /* MXEventTimeline.m */; };
 		32618E7120ED2DF500E1D2EA /* MXFilterJSONModel.h in Headers */ = {isa = PBXBuildFile; fileRef = 32618E6F20ED2DF500E1D2EA /* MXFilterJSONModel.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		32618E7220ED2DF500E1D2EA /* MXFilterJSONModel.m in Sources */ = {isa = PBXBuildFile; fileRef = 32618E7020ED2DF500E1D2EA /* MXFilterJSONModel.m */; };
+		32618E7B20EFA45B00E1D2EA /* MXRoomMembers.h in Headers */ = {isa = PBXBuildFile; fileRef = 32618E7920EFA45B00E1D2EA /* MXRoomMembers.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		32618E7C20EFA45B00E1D2EA /* MXRoomMembers.m in Sources */ = {isa = PBXBuildFile; fileRef = 32618E7A20EFA45B00E1D2EA /* MXRoomMembers.m */; };
 		32637ED41E5B00400011E20D /* MXDeviceList.h in Headers */ = {isa = PBXBuildFile; fileRef = 32637ED21E5B00400011E20D /* MXDeviceList.h */; };
 		32637ED51E5B00400011E20D /* MXDeviceList.m in Sources */ = {isa = PBXBuildFile; fileRef = 32637ED31E5B00400011E20D /* MXDeviceList.m */; };
 		3264DB911CEC528D00B99881 /* MXAccountData.h in Headers */ = {isa = PBXBuildFile; fileRef = 3264DB8F1CEC528D00B99881 /* MXAccountData.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -355,6 +357,8 @@
 		326056841C76FDF1009D44AD /* MXEventTimeline.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXEventTimeline.m; sourceTree = "<group>"; };
 		32618E6F20ED2DF500E1D2EA /* MXFilterJSONModel.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MXFilterJSONModel.h; sourceTree = "<group>"; };
 		32618E7020ED2DF500E1D2EA /* MXFilterJSONModel.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MXFilterJSONModel.m; sourceTree = "<group>"; };
+		32618E7920EFA45B00E1D2EA /* MXRoomMembers.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MXRoomMembers.h; sourceTree = "<group>"; };
+		32618E7A20EFA45B00E1D2EA /* MXRoomMembers.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MXRoomMembers.m; sourceTree = "<group>"; };
 		32637ED21E5B00400011E20D /* MXDeviceList.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXDeviceList.h; sourceTree = "<group>"; };
 		32637ED31E5B00400011E20D /* MXDeviceList.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXDeviceList.m; sourceTree = "<group>"; };
 		3264DB8F1CEC528D00B99881 /* MXAccountData.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXAccountData.h; sourceTree = "<group>"; };
@@ -597,6 +601,8 @@
 				32E226A51D06AC9F00E6CA54 /* MXPeekingRoom.m */,
 				3265CB361A14C43E00E24B2F /* MXRoomState.h */,
 				3265CB371A14C43E00E24B2F /* MXRoomState.m */,
+				32618E7920EFA45B00E1D2EA /* MXRoomMembers.h */,
+				32618E7A20EFA45B00E1D2EA /* MXRoomMembers.m */,
 				32481A821C03572900782AD3 /* MXRoomAccountData.h */,
 				32481A831C03572900782AD3 /* MXRoomAccountData.m */,
 				3220093619EFA4C9008DE41D /* MXEventListener.h */,
@@ -1199,6 +1205,7 @@
 				324BE4681E3FADB1008D99D4 /* MXMegolmExportEncryption.h in Headers */,
 				32CAB10B1A925B41008C5BB9 /* MXHTTPOperation.h in Headers */,
 				32F945F81FAB83D900622468 /* MXIncomingRoomKeyRequestCancellation.h in Headers */,
+				32618E7B20EFA45B00E1D2EA /* MXRoomMembers.h in Headers */,
 				3240969D1F9F751600DBA607 /* MXPushRuleSenderNotificationPermissionConditionChecker.h in Headers */,
 				32F634AB1FC5E3480054EF49 /* MXEventDecryptionResult.h in Headers */,
 				322A51C71D9BBD3C00C8536D /* MXOlmDevice.h in Headers */,
@@ -1441,6 +1448,7 @@
 				32A31BC920D401FC005916C7 /* MXRoomFilter.m in Sources */,
 				32A151471DAF7C0C00400192 /* MXDeviceInfo.m in Sources */,
 				32A1515C1DB525DA00400192 /* NSObject+sortedKeys.m in Sources */,
+				32618E7C20EFA45B00E1D2EA /* MXRoomMembers.m in Sources */,
 				F03EF5091DF071D5009DF592 /* MXEncryptedAttachments.m in Sources */,
 				32FA10CF1FA1C9F700E54233 /* MXOutgoingRoomKeyRequest.m in Sources */,
 				32322A4C1E575F65005DD155 /* MXAllowedCertificates.m in Sources */,
@@ -1708,6 +1716,7 @@
 			baseConfigurationReference = B1F1AE550CF4C15B653DDE6E /* Pods-MatrixSDKTests.debug.xcconfig */;
 			buildSettings = {
 				CLANG_ENABLE_MODULES = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = NO;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(SDKROOT)/Developer/Library/Frameworks",
 					"$(inherited)",
@@ -1737,6 +1746,7 @@
 			baseConfigurationReference = 0BCFBADF157F3C8C43112BD6 /* Pods-MatrixSDKTests.release.xcconfig */;
 			buildSettings = {
 				CLANG_ENABLE_MODULES = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = NO;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(SDKROOT)/Developer/Library/Frameworks",
 					"$(inherited)",

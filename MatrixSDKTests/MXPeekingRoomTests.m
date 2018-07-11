@@ -73,7 +73,7 @@
                     XCTAssertEqual(mxSession.rooms.count, 0, @"MXPeekingRoom must not be listed by mxSession.rooms");
                     XCTAssertEqual(peekingRoom.roomId, room.roomId);
 
-                    XCTAssertEqual(peekingRoom.state.members.count, 1, @"The MXPeekingRoom state must be known now");
+                    XCTAssertEqual(peekingRoom.state.members.members.count, 1, @"The MXPeekingRoom state must be known now");
 
                     [mxSession stopPeeking:peekingRoom];
 
@@ -127,14 +127,14 @@
         mxSession = mxSession2;
 
         XCTAssertEqual(mxSession.rooms.count, 1);
-        XCTAssertEqual(room.state.members.count, 1);
+        XCTAssertEqual(room.state.members.members.count, 1);
 
         [mxSession peekInRoomWithRoomId:room.roomId success:^(MXPeekingRoom *peekingRoom) {
 
             XCTAssertEqual(mxSession.rooms.count, 1, @"MXPeekingRoom must not be listed by mxSession.rooms");
             XCTAssertEqual(peekingRoom.roomId, room.roomId);
 
-            XCTAssertEqual(peekingRoom.state.members.count, 1, @"The MXPeekingRoom state must be known now");
+            XCTAssertEqual(peekingRoom.state.members.members.count, 1, @"The MXPeekingRoom state must be known now");
 
             [mxSession stopPeeking:peekingRoom];
 

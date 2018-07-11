@@ -729,7 +729,7 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
         {
             MXUser *user = [room.mxSession getOrCreateUser:event.sender];
 
-            MXRoomMember *roomMember = [_state memberWithUserId:event.sender];
+            MXRoomMember *roomMember = [_state.members memberWithUserId:event.sender];
             if (roomMember && MXMembershipJoin == roomMember.membership)
             {
                 [user updateWithRoomMemberEvent:event roomMember:roomMember inMatrixSession:room.mxSession];
