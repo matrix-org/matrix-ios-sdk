@@ -638,17 +638,17 @@
             MXRoom *room = [mxSession roomWithRoomId:roomId];
             XCTAssertNotNil(room);
             
-            NSArray *members = room.state.members;
+            NSArray *members = room.state.members.members;
             XCTAssertEqual(members.count, 1, "There must be only one member: mxBob, the creator");
             
-            for (MXRoomMember *member in room.state.members)
+            for (MXRoomMember *member in room.state.members.members)
             {
                 XCTAssertTrue([member.userId isEqualToString:bobRestClient.credentials.userId], "This must be mxBob");
             }
             
-            XCTAssertNotNil([room.state memberWithUserId:bobRestClient.credentials.userId], @"Bob must be retrieved");
+            XCTAssertNotNil([room.state.members memberWithUserId:bobRestClient.credentials.userId], @"Bob must be retrieved");
             
-            XCTAssertNil([room.state memberWithUserId:@"NonExistingUserId"], @"getMember must return nil if the user does not exist");
+            XCTAssertNil([room.state.members memberWithUserId:@"NonExistingUserId"], @"getMember must return nil if the user does not exist");
             
             [expectation fulfill];
             
@@ -666,12 +666,12 @@
         mxSession = mxSession2;
 
         NSString *bobUserId = matrixSDKTestsData.bobCredentials.userId;
-        NSString *bobMemberName = [room.state  memberName:bobUserId];
+        NSString *bobMemberName = [room.state.members memberName:bobUserId];
         
         XCTAssertNotNil(bobMemberName);
         XCTAssertFalse([bobMemberName isEqualToString:@""], @"bobMemberName must not be an empty string");
         
-        XCTAssert([[room.state memberName:@"NonExistingUserId"] isEqualToString:@"NonExistingUserId"], @"memberName must return his id if the user does not exist");
+        XCTAssert([[room.state.members memberName:@"NonExistingUserId"] isEqualToString:@"NonExistingUserId"], @"memberName must return his id if the user does not exist");
         
         [expectation fulfill];
     }];
@@ -708,7 +708,7 @@
 }
 
 // Test the room display name formatting: "roomName (roomAlias)"
-// KO before
+// KO before <- To remove
 - (void)testDisplayName1
 {
     [matrixSDKTestsData doMXSessionTestWithBobAndThePublicRoom:self readyToTest:^(MXSession *mxSession2, MXRoom *room, XCTestExpectation *expectation) {
@@ -823,9 +823,9 @@
                     XCTAssertEqual(newRoom.state.membership, MXMembershipInvite);
                     
                     // The room has 2 members (Alice & Bob)
-                    XCTAssertEqual(newRoom.state.members.count, 2);
+                    XCTAssertEqual(newRoom.state.membersCount.members, 2);
 
-                    MXRoomMember *alice = [newRoom.state memberWithUserId:aliceRestClient.credentials.userId];
+                    MXRoomMember *alice = [newRoom.state.members memberWithUserId:aliceRestClient.credentials.userId];
                     XCTAssertNotNil(alice);
                     XCTAssertEqual(alice.membership, MXMembershipInvite);
                     XCTAssert([alice.originUserId isEqualToString:bobRestClient.credentials.userId], @"Wrong inviter: %@", alice.originUserId);
@@ -873,9 +873,9 @@
                             XCTAssertEqual(newRoom.state.membership, MXMembershipInvite);
 
                             // The room has 2 members (Alice & Bob)
-                            XCTAssertEqual(newRoom.state.members.count, 2);
+                            XCTAssertEqual(newRoom.state.membersCount.members, 2);
 
-                            MXRoomMember *alice = [newRoom.state memberWithUserId:aliceRestClient.credentials.userId];
+                            MXRoomMember *alice = [newRoom.state.members memberWithUserId:aliceRestClient.credentials.userId];
                             XCTAssertNotNil(alice);
                             XCTAssertEqual(alice.membership, MXMembershipInvite);
                             XCTAssert([alice.originUserId isEqualToString:bobRestClient.credentials.userId], @"Wrong inviter: %@", alice.originUserId);
@@ -953,7 +953,7 @@
                         
                         // Now, we must have more information about the room
                         // Check its new state
-                        XCTAssertEqual(newRoom.state.members.count, 2);
+                        XCTAssertEqual(newRoom.state.membersCount.members, 2);
                         XCTAssert([newRoom.state.topic isEqualToString:@"We test room invitation here"], @"Wrong topic. Found: %@", newRoom.state.topic);
                         
                         XCTAssertEqual(newRoom.state.membership, MXMembershipJoin);
@@ -1008,7 +1008,7 @@
                         // Now, we must have more information about the room
                         // Check its new state
                         XCTAssertEqual(newRoom.state.isJoinRulePublic, YES);
-                        XCTAssertEqual(newRoom.state.members.count, 2);
+                        XCTAssertEqual(newRoom.state.membersCount.members, 2);
                         XCTAssert([newRoom.state.topic isEqualToString:@"We test room invitation here"], @"Wrong topic. Found: %@", newRoom.state.topic);
                         
                         XCTAssertEqual(newRoom.state.membership, MXMembershipJoin);
@@ -1116,7 +1116,7 @@
                     MXRoom *room = [mxSession roomWithRoomId:event.roomId];
 
                     XCTAssert(room);
-                    XCTAssertEqual(room.state.members.count, 2, @"If this count is wrong, the room state is invalid");
+                    XCTAssertEqual(room.state.membersCount.members, 2, @"If this count is wrong, the room state is invalid");
 
                     [expectation fulfill];
                 }

@@ -203,9 +203,9 @@ static NSString *const kMXCallManagerFallbackSTUNServer = @"stun:stun.l.google.c
     
     MXRoom *room = [_mxSession roomWithRoomId:roomId];
 
-    if (room && 1 < room.state.joinedMembers.count)
+    if (room && 1 < room.state.membersCount.joined)
     {
-        if (2 == room.state.joinedMembers.count)
+        if (2 == room.state.membersCount.joined)
         {
             // Do a peer to peer, one to one call
             MXCall *call = [[MXCall alloc] initWithRoomId:roomId andCallManager:self];
@@ -269,7 +269,7 @@ static NSString *const kMXCallManagerFallbackSTUNServer = @"stun:stun.l.google.c
     }
     else
     {
-        NSLog(@"[MXCallManager] placeCallInRoom: ERROR: Cannot place call in %@. Members count: %tu", roomId, room.state.joinedMembers.count);
+        NSLog(@"[MXCallManager] placeCallInRoom: ERROR: Cannot place call in %@. Members count: %tu", roomId, room.state.membersCount.joined);
 
         if (failure)
         {
@@ -561,7 +561,7 @@ NSString *const kMXCallManagerConferenceUserDomain  = @"matrix.org";
 {
     NSString *conferenceUserId = [MXCallManager conferenceUserIdForRoom:room.roomId];
 
-    MXRoomMember *conferenceUserMember = [room.state memberWithUserId:conferenceUserId];
+    MXRoomMember *conferenceUserMember = [room.state.members memberWithUserId:conferenceUserId];
     if (conferenceUserMember && conferenceUserMember.membership == MXMembershipJoin)
     {
         success();
@@ -590,7 +590,7 @@ NSString *const kMXCallManagerConferenceUserDomain  = @"matrix.org";
     MXRoom *conferenceUserRoom;
     for (MXRoom *room in _mxSession.rooms)
     {
-        if (room.state.members.count == 2 && [room.state memberWithUserId:conferenceUserId])
+        if (room.state.membersCount.members == 2 && [room.state.members memberWithUserId:conferenceUserId])
         {
             conferenceUserRoom = room;
         }

@@ -19,10 +19,21 @@
 
 #import "MXEvent.h"
 #import "MXJSONModels.h"
-#import "MXRoomMember.h"
+#import "MXRoomMembers.h"
 #import "MXRoomThirdPartyInvite.h"
 #import "MXRoomPowerLevels.h"
 #import "MXEnumConstants.h"
+
+/**
+ Room members counts.
+ */
+typedef struct
+{
+    NSUInteger members;
+    NSUInteger joined;
+    NSUInteger invited;
+} MXRoomStateMembersCount;
+
 
 @class MXSession;
 
@@ -37,7 +48,7 @@
 @interface MXRoomState : NSObject <NSCopying>
 
 /**
- The room ID
+ The room id.
  */
 @property (nonatomic, readonly) NSString *roomId;
 
@@ -53,14 +64,14 @@
 @property (nonatomic, readonly) NSArray<MXEvent *> *stateEvents;
 
 /**
- A copy of the list of room members.
+ Room members of the room.
  */
-@property (nonatomic, readonly) NSArray<MXRoomMember*> *members;
+@property (nonatomic, readonly) MXRoomMembers *members;
 
 /**
- A copy of the list of joined room members.
+ Room members counts.
  */
-@property (nonatomic, readonly) NSArray<MXRoomMember*> *joinedMembers;
+@property (nonatomic, readonly) MXRoomStateMembersCount membersCount;
 
 /**
 A copy of the list of third party invites (actually MXRoomThirdPartyInvite instances).
@@ -199,12 +210,14 @@ Use MXRoomSummary.displayname to get a computed room display name.
 - (NSArray<MXEvent*> *)stateEventsWithType:(MXEventTypeString)eventType NS_REFINED_FOR_SWIFT;
 
 /**
- Return the member with the given user id.
- 
- @param userId the id of the member to retrieve.
- @return the room member.
+ According to the direction of the instance, we are interested either by
+ the content of the event or its prev_content.
+
+ @param event the event to get the content from.
+
+ @return content or prev_content dictionary.
  */
-- (MXRoomMember*)memberWithUserId:(NSString*)userId;
+- (NSDictionary<NSString *, id> *)contentOfEvent:(MXEvent*)event;
 
 /**
  Return the member who was invited by a 3pid medium with the given token.
@@ -228,32 +241,12 @@ Use MXRoomSummary.displayname to get a computed room display name.
 - (MXRoomThirdPartyInvite*)thirdPartyInviteWithToken:(NSString*)thirdPartyInviteToken;
 
 /**
- Return a display name for a member.
- It is his displayname member or, if nil, his userId.
- Disambiguate members who have the same displayname in the room by adding his userId.
- */
-- (NSString*)memberName:(NSString*)userId;
-
-/**
- Return a display name for a member suitable to compare and sort members list
- */
-- (NSString*)memberSortedName:(NSString*)userId;
-
-/**
  Normalize (between 0 and 1) the power level of a member compared to other members.
  
  @param userId the id of the member to consider.
  @return power level in [0, 1] interval.
  */
 - (float)memberNormalizedPowerLevel:(NSString*)userId;
-
-/**
- Return the list of members with a given membership.
- 
- @param membership the membership to look for.
- @return an array of MXRoomMember objects.
- */
-- (NSArray<MXRoomMember*>*)membersWithMembership:(MXMembership)membership;
 
 
 # pragma mark - Conference call
@@ -273,17 +266,4 @@ Use MXRoomSummary.displayname to get a computed room display name.
  */
 @property (nonatomic, readonly) NSString *conferenceUserId;
 
-/**
- A copy of the list of room members excluding the conference user.
- */
-- (NSArray<MXRoomMember*>*)membersWithoutConferenceUser;
-
-/**
- Return the list of members with a given membership with or without the conference user.
-
- @param membership the membership to look for.
- @param includeConferenceUser NO to filter the conference user.
- @return an array of MXRoomMember objects.
- */
-- (NSArray<MXRoomMember*>*)membersWithMembership:(MXMembership)membership includeConferenceUser:(BOOL)includeConferenceUser;
 @end

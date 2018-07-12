@@ -339,7 +339,7 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
 
     // XXX what about rooms where invitees can see the content?
     NSMutableArray *roomMembers = [NSMutableArray array];
-    for (MXRoomMember *roomMember in room.state.joinedMembers)
+    for (MXRoomMember *roomMember in room.state.members.joinedMembers)
     {
         [roomMembers addObject:roomMember.userId];
     }
@@ -471,7 +471,7 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
     {
         // Get user ids in this room
         NSMutableArray *userIds = [NSMutableArray array];
-        for (MXRoomMember *member in room.state.joinedMembers)
+        for (MXRoomMember *member in room.state.members.joinedMembers)
         {
             [userIds addObject:member.userId];
         }
@@ -712,7 +712,7 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
     {
         if (room.state.isEncrypted)
         {
-            MXRoomMember *member = [room.state memberWithUserId:userId];
+            MXRoomMember *member = [room.state.members memberWithUserId:userId];
             if (member && member.membership == MXMembershipJoin)
             {
                 [userRooms addObject:room.roomId];
@@ -1450,7 +1450,7 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
     NSLog(@"[MXCrypto] setEncryptionInRoom: Enabling encryption in %@; starting to track device lists for all users therein", roomId);
 
     MXRoom *room = [_mxSession roomWithRoomId:roomId];
-    for (MXRoomMember *member in room.state.joinedMembers)
+    for (MXRoomMember *member in room.state.members.joinedMembers)
     {
         [_deviceList startTrackingDeviceList:member.userId];
     }
@@ -1921,7 +1921,7 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
     }
 
     NSString *userId = event.stateKey;
-    MXRoomMember *member = [[_mxSession roomWithRoomId:event.roomId].state memberWithUserId:userId];
+    MXRoomMember *member = [[_mxSession roomWithRoomId:event.roomId].state.members memberWithUserId:userId];
 
     if (member && member.membership == MXMembershipJoin)
     {
