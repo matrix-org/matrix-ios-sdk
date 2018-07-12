@@ -285,9 +285,9 @@
     // MXRoomMember objects in members are immutable. A new instance of it is created each time
     // the sdk receives room member event, even if it is an update of an existing member like a
     // membership change (ex: "invited" -> "joined")
-    membersCopy->members = [members copyWithZone:zone];
+    membersCopy->members = [members mutableCopyWithZone:zone];
 
-    membersCopy->membersNamesInUse = [membersNamesInUse copyWithZone:zone];
+    membersCopy->membersNamesInUse = [membersNamesInUse mutableCopyWithZone:zone];
 
     return membersCopy;
 }
