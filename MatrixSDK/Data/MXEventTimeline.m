@@ -722,21 +722,6 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
     {
         // Forwards events update the current state of the room
         [_state handleStateEvent:event];
-
-        // Special handling for presence: update MXUser data in case of membership event.
-        // CAUTION: ignore here redacted state event, the redaction concerns only the context of the event room.
-        if (_isLiveTimeline && MXEventTypeRoomMember == event.eventType && !event.isRedactedEvent)
-        {
-            MXUser *user = [room.mxSession getOrCreateUser:event.sender];
-
-            MXRoomMember *roomMember = [_state.members memberWithUserId:event.sender];
-            if (roomMember && MXMembershipJoin == roomMember.membership)
-            {
-                [user updateWithRoomMemberEvent:event roomMember:roomMember inMatrixSession:room.mxSession];
-
-                [room.mxSession.store storeUser:user];
-            }
-        }
     }
 }
 

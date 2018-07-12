@@ -266,6 +266,16 @@
                 [members removeObjectForKey:event.stateKey];
             }
 
+            // Special handling for presence: update MXUser data in case of membership event.
+            // CAUTION: ignore here redacted state event, the redaction concerns only the context of the event room.
+            if (state.isLive && !event.isRedactedEvent && roomMember.membership == MXMembershipJoin)
+            {
+                MXUser *user = [mxSession getOrCreateUser:event.sender];
+                [user updateWithRoomMemberEvent:event roomMember:roomMember inMatrixSession:mxSession];
+
+                [mxSession.store storeUser:user];
+            }
+
             break;
         }
 
