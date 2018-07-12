@@ -539,9 +539,6 @@
         stateCopy->stateEvents[key] = [[NSMutableArray allocWithZone:zone] initWithArray:stateEvents[key]];
     }
 
-    // Same thing here. MXRoomMember objects in members are also immutable. A new instance of it is created each time
-    // the sdk receives room member event, even if it is an update of an existing member like a
-    // membership change (ex: "invited" -> "joined")
     stateCopy->_members = [_members copyWithZone:zone];
 
     stateCopy->_membersCount = _membersCount;

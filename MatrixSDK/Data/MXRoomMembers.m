@@ -282,12 +282,12 @@
     membersCopy->mxSession = mxSession;
     membersCopy->state = state;
 
-    // Same thing here. MXRoomMember objects in members are also immutable. A new instance of it is created each time
+    // MXRoomMember objects in members are immutable. A new instance of it is created each time
     // the sdk receives room member event, even if it is an update of an existing member like a
     // membership change (ex: "invited" -> "joined")
-    membersCopy->members = [[NSMutableDictionary allocWithZone:zone] initWithDictionary:members];
+    membersCopy->members = [members copyWithZone:zone];
 
-    membersCopy->membersNamesInUse = [[NSMutableDictionary allocWithZone:zone] initWithDictionary:membersNamesInUse];
+    membersCopy->membersNamesInUse = [membersNamesInUse copyWithZone:zone];
 
     return membersCopy;
 }
