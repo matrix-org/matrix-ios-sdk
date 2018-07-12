@@ -24,6 +24,17 @@
 #import "MXRoomPowerLevels.h"
 #import "MXEnumConstants.h"
 
+/**
+ Room members counts.
+ */
+typedef struct
+{
+    NSUInteger members;
+    NSUInteger joined;
+    NSUInteger invited;
+} MXRoomStateMembersCount;
+
+
 @class MXSession;
 
 /**
@@ -37,7 +48,7 @@
 @interface MXRoomState : NSObject <NSCopying>
 
 /**
- The room ID
+ The room id.
  */
 @property (nonatomic, readonly) NSString *roomId;
 
@@ -56,6 +67,11 @@
  Room members of the room.
  */
 @property (nonatomic, readonly) MXRoomMembers *members;
+
+/**
+ Room members counts.
+ */
+@property (nonatomic, readonly) MXRoomStateMembersCount membersCount;
 
 /**
 A copy of the list of third party invites (actually MXRoomThirdPartyInvite instances).

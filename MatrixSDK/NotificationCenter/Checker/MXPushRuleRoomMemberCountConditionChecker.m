@@ -88,23 +88,23 @@
             {
                 if (nil == op || [op isEqualToString:@"=="])
                 {
-                    isSatisfied = (value == room.state.members.members.count);
+                    isSatisfied = (value == room.state.membersCount.members);
                 }
                 else if ([op isEqualToString:@"<"])
                 {
-                    isSatisfied = (value < room.state.members.members.count);
+                    isSatisfied = (value < room.state.membersCount.members);
                 }
                 else if ([op isEqualToString:@">"])
                 {
-                    isSatisfied = (value > room.state.members.members.count);
+                    isSatisfied = (value > room.state.membersCount.members);
                 }
                 else if ([op isEqualToString:@">="])
                 {
-                    isSatisfied = (value >= room.state.members.members.count);
+                    isSatisfied = (value >= room.state.membersCount.members);
                 }
                 else if ([op isEqualToString:@"<="])
                 {
-                    isSatisfied = (value <= room.state.members.members.count);
+                    isSatisfied = (value <= room.state.membersCount.members);
                 }
             }
         }

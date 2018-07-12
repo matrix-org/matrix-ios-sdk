@@ -578,7 +578,7 @@
             BOOL isSync = (room.state.membership != MXMembershipInvite && room.state.membership != MXMembershipUnknown);
             XCTAssertTrue(isSync, @"The callback must be called once the room has been initialSynced");
 
-            XCTAssertEqual(1, room.state.members.members.count, @"Bob must be the only one. members: %@", room.state.members);
+            XCTAssertEqual(1, room.state.membersCount.members, @"Bob must be the only one. members: %@", room.state.members);
 
             [expectation fulfill];
 

@@ -359,6 +359,13 @@
     {
         case MXEventTypeRoomMember:
         {
+            // Update counters from self.members
+            // @TODO(lazy-loading): these values will be provided by the coming
+            // room summary in the matrix spec (https://github.com/matrix-org/matrix-doc/issues/688).
+            _membersCount.members = _members.members.count;
+            _membersCount.joined = _members.joinedMembers.count;
+            _membersCount.invited =  [_members membersWithMembership:MXMembershipInvite].count;
+
             NSDictionary *content = [self contentOfEvent:event];
             if (content[@"third_party_invite"][@"signed"][@"token"])
             {
@@ -536,6 +543,8 @@
     // the sdk receives room member event, even if it is an update of an existing member like a
     // membership change (ex: "invited" -> "joined")
     stateCopy->_members = [_members copyWithZone:zone];
+
+    stateCopy->_membersCount = _membersCount;
     
     stateCopy->roomAliases = [[NSMutableDictionary allocWithZone:zone] initWithDictionary:roomAliases];
 
