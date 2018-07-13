@@ -84,7 +84,7 @@
             MXRoom *room = [mxSession roomWithRoomId:event.roomId];
             
             // sanity checks
-            if (room && room.state && room.state.members)
+            if (room && room.state)
             {
                 if (nil == op || [op isEqualToString:@"=="])
                 {

@@ -23,6 +23,7 @@
 #import "MXRoomThirdPartyInvite.h"
 #import "MXRoomPowerLevels.h"
 #import "MXEnumConstants.h"
+#import "MXStore.h"
 
 /**
  Room members counts.
@@ -186,6 +187,18 @@ Use MXRoomSummary.displayname to get a computed room display name.
         andDirection:(BOOL)isLive;
 
 /**
+ Load a `MXRoomState` instance from the store.
+
+ @param store the store to mount data from and to store live data to.
+ @param roomId the id of the room.
+ @param mxSession the session to use.
+ @return the new instance.
+ */
++ (id)loadRoomStateFromStore:(id<MXStore>)store
+                  withRoomId:(NSString *)roomId
+               matrixSession:(MXSession *)matrixSession;
+
+/**
  Create a `MXRoomState` instance used as a back state of a room.
  Such instance holds the state of a room at a given time in the room history.
  
@@ -195,11 +208,11 @@ Use MXRoomSummary.displayname to get a computed room display name.
 - (id)initBackStateWith:(MXRoomState*)state;
 
 /**
- Process a state event in order to update the room state.
+ Process state events in order to update the room state.
  
- @param event the state event.
+ @param stateEvents an array of state events.
  */
-- (void)handleStateEvent:(MXEvent*)event;
+- (void)handleStateEvents:(NSArray<MXEvent *> *)stateEvents;
 
 /**
  Return the state events with the given type.

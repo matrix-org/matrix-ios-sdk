@@ -200,78 +200,100 @@
 }
 
 #pragma mark - State events handling
-- (void)handleStateEvent:(MXEvent*)event
+- (BOOL)handleStateEvents:(NSArray<MXEvent *> *)stateEvents;
 {
-    switch (event.eventType)
+    BOOL hasRoomMemberEvent = NO;
+
+    @autoreleasepool
     {
-        case MXEventTypeRoomMember:
+        for (MXEvent *event in stateEvents)
         {
-            // Remove the previous MXRoomMember of this user from membersNamesInUse
-            NSString *userId = event.stateKey;
-            MXRoomMember *oldRoomMember = members[userId];
-            if (oldRoomMember && oldRoomMember.displayname)
+            switch (event.eventType)
             {
-                NSNumber *memberNameCount = membersNamesInUse[oldRoomMember.displayname];
-                if (memberNameCount)
+                case MXEventTypeRoomMember:
                 {
-                    NSUInteger count = [memberNameCount unsignedIntegerValue];
-                    if (count)
+                    hasRoomMemberEvent = YES;
+
+                    // Remove the previous MXRoomMember of this user from membersNamesInUse
+                    NSString *userId = event.stateKey;
+                    MXRoomMember *oldRoomMember = members[userId];
+                    if (oldRoomMember && oldRoomMember.displayname)
                     {
-                        count--;
+                        NSNumber *memberNameCount = membersNamesInUse[oldRoomMember.displayname];
+                        if (memberNameCount)
+                        {
+                            NSUInteger count = [memberNameCount unsignedIntegerValue];
+                            if (count)
+                            {
+                                count--;
+                            }
+
+                            if (count)
+                            {
+                                membersNamesInUse[oldRoomMember.displayname] = @(count);
+                            }
+                            else
+                            {
+                                [membersNamesInUse removeObjectForKey:oldRoomMember.displayname];
+                            }
+                        }
                     }
 
-                    if (count)
+                    MXRoomMember *roomMember = [[MXRoomMember alloc] initWithMXEvent:event andEventContent:[state contentOfEvent:event]];
+                    if (roomMember)
                     {
-                        membersNamesInUse[oldRoomMember.displayname] = @(count);
+                        /// Update membersNamesInUse
+                        if (roomMember.displayname)
+                        {
+                            NSUInteger count = 1;
+
+                            NSNumber *memberNameCount = membersNamesInUse[roomMember.displayname];
+                            if (memberNameCount)
+                            {
+                                // We have several users using the same displayname
+                                count = [memberNameCount unsignedIntegerValue];
+                                count++;
+                            }
+
+                            membersNamesInUse[roomMember.displayname] = @(count);
+                        }
+
+                        members[roomMember.userId] = roomMember;
+
+                        // Handle here the case where the member has no defined avatar.
+                        if (nil == roomMember.avatarUrl && ![MXSDKOptions sharedInstance].disableIdenticonUseForUserAvatar)
+                        {
+                            // Force to use an identicon url
+                            roomMember.avatarUrl = [mxSession.matrixRestClient urlOfIdenticon:roomMember.userId];
+                        }
                     }
                     else
                     {
-                        [membersNamesInUse removeObjectForKey:oldRoomMember.displayname];
+                        // The user is no more part of the room. Remove him.
+                        // This case happens during back pagination: we remove here users when they are not in the room yet.
+                        [members removeObjectForKey:event.stateKey];
                     }
-                }
-            }
 
-            MXRoomMember *roomMember = [[MXRoomMember alloc] initWithMXEvent:event andEventContent:[state contentOfEvent:event]];
-            if (roomMember)
-            {
-                /// Update membersNamesInUse
-                if (roomMember.displayname)
-                {
-                    NSUInteger count = 1;
-
-                    NSNumber *memberNameCount = membersNamesInUse[roomMember.displayname];
-                    if (memberNameCount)
+                    // Special handling for presence: update MXUser data in case of membership event.
+                    // CAUTION: ignore here redacted state event, the redaction concerns only the context of the event room.
+                    if (state.isLive && !event.isRedactedEvent && roomMember.membership == MXMembershipJoin)
                     {
-                        // We have several users using the same displayname
-                        count = [memberNameCount unsignedIntegerValue];
-                        count++;
+                        MXUser *user = [mxSession getOrCreateUser:event.sender];
+                        [user updateWithRoomMemberEvent:event roomMember:roomMember inMatrixSession:mxSession];
+
+                        [mxSession.store storeUser:user];
                     }
 
-                    membersNamesInUse[roomMember.displayname] = @(count);
+                    break;
                 }
 
-                members[roomMember.userId] = roomMember;
-
-                // Handle here the case where the member has no defined avatar.
-                if (nil == roomMember.avatarUrl && ![MXSDKOptions sharedInstance].disableIdenticonUseForUserAvatar)
-                {
-                    // Force to use an identicon url
-                    roomMember.avatarUrl = [mxSession.matrixRestClient urlOfIdenticon:roomMember.userId];
-                }
+                default:
+                    break;
             }
-            else
-            {
-                // The user is no more part of the room. Remove him.
-                // This case happens during back pagination: we remove here users when they are not in the room yet.
-                [members removeObjectForKey:event.stateKey];
-            }
-
-            break;
         }
-
-        default:
-            break;
     }
+    
+    return hasRoomMemberEvent;
 }
 
 #pragma mark - NSCopying

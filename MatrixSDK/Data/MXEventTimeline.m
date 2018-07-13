@@ -110,10 +110,12 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
 
 - (void)initialiseState:(NSArray<MXEvent *> *)stateEvents
 {
-    for (MXEvent *event in stateEvents)
-    {
-        [self handleStateEvent:event direction:MXTimelineDirectionForwards];
-    }
+    [self handleStateEvents:stateEvents direction:MXTimelineDirectionForwards];
+}
+
+- (void)setState:(MXRoomState *)roomState
+{
+    _state = roomState;
 }
 
 - (void)destroy
@@ -381,15 +383,9 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
     {
         // Report the room id in the event as it is skipped in /sync response
         event.roomId = _state.roomId;
-
-        [self handleStateEvent:event direction:MXTimelineDirectionForwards];
     }
 
-    // Update store with new room state when all state event have been processed
-    if ([store respondsToSelector:@selector(storeStateForRoom:stateEvents:)])
-    {
-        [store storeStateForRoom:_state.roomId stateEvents:_state.stateEvents];
-    }
+    [self handleStateEvents:roomSync.state.events direction:MXTimelineDirectionForwards];
 
     // Handle now timeline.events, the room state is updated during this step too (Note: timeline events are in chronological order)
     if (isRoomInitialSync)
@@ -540,13 +536,7 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
     {
         [self cloneState:direction];
 
-        [self handleStateEvent:event direction:direction];
-
-        // The store keeps only the most recent state of the room
-        if (direction == MXTimelineDirectionForwards && [store respondsToSelector:@selector(storeStateForRoom:stateEvents:)])
-        {
-            [store storeStateForRoom:_state.roomId stateEvents:_state.stateEvents];
-        }
+        [self handleStateEvents:@[event] direction:direction];
     }
 
     // Decrypt event if necessary
@@ -623,12 +613,6 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
                 // Reset the room state.
                 _state = [[MXRoomState alloc] initWithRoomId:room.roomId andMatrixSession:room.mxSession andDirection:YES];
                 [self initialiseState:stateEvents];
-                
-                // Update store with new room state when all state event have been processed
-                if ([store respondsToSelector:@selector(storeStateForRoom:stateEvents:)])
-                {
-                    [store storeStateForRoom:_state.roomId stateEvents:_state.stateEvents];
-                }
                 
                 // Reset the current pagination
                 [self resetPagination];
@@ -711,32 +695,17 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
     }
 }
 
-- (void)handleStateEvent:(MXEvent*)event direction:(MXTimelineDirection)direction
+- (void)handleStateEvents:(NSArray<MXEvent *> *)stateEvents direction:(MXTimelineDirection)direction
 {
     // Update the room state
     if (MXTimelineDirectionBackwards == direction)
     {
-        [backState handleStateEvent:event];
+        [backState handleStateEvents:stateEvents];
     }
     else
     {
         // Forwards events update the current state of the room
-        [_state handleStateEvent:event];
-
-        // Special handling for presence: update MXUser data in case of membership event.
-        // CAUTION: ignore here redacted state event, the redaction concerns only the context of the event room.
-        if (_isLiveTimeline && MXEventTypeRoomMember == event.eventType && !event.isRedactedEvent)
-        {
-            MXUser *user = [room.mxSession getOrCreateUser:event.sender];
-
-            MXRoomMember *roomMember = [_state.members memberWithUserId:event.sender];
-            if (roomMember && MXMembershipJoin == roomMember.membership)
-            {
-                [user updateWithRoomMemberEvent:event roomMember:roomMember inMatrixSession:room.mxSession];
-
-                [room.mxSession.store storeUser:user];
-            }
-        }
+        [_state handleStateEvents:stateEvents];
     }
 }
 

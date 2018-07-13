@@ -358,7 +358,7 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
             algorithm = room.state.encryptionAlgorithm;
             if (algorithm)
             {
-                [self setEncryptionInRoom:room.roomId withAlgorithm:algorithm inhibitDeviceQuery:NO];
+                [self setEncryptionInRoom:room.roomId withMembers:roomMembers algorithm:algorithm inhibitDeviceQuery:NO];
                 alg = self->roomEncryptors[room.roomId];
             }
         }
@@ -489,7 +489,7 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
                 algorithm = room.state.encryptionAlgorithm;
                 if (algorithm)
                 {
-                    [self setEncryptionInRoom:room.roomId withAlgorithm:algorithm inhibitDeviceQuery:NO];
+                    [self setEncryptionInRoom:room.roomId withMembers:userIds algorithm:algorithm inhibitDeviceQuery:NO];
                     alg = self->roomEncryptors[room.roomId];
                 }
             }
@@ -705,21 +705,7 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
                       failure:(void (^)(NSError *error))failure
 {
 #ifdef MX_CRYPTO
-
-    // Get all rooms with this user
-    NSMutableArray<NSString*> *userRooms = [NSMutableArray array];
-    for (MXRoom *room in _mxSession.rooms)
-    {
-        if (room.state.isEncrypted)
-        {
-            MXRoomMember *member = [room.state.members memberWithUserId:userId];
-            if (member && member.membership == MXMembershipJoin)
-            {
-                [userRooms addObject:room.roomId];
-            }
-        }
-    }
-
+    
     // Note: failure is not currently used but it would make sense the day device
     // verification will be sync'ed with the hs.
     MXWeakify(self);
@@ -1419,7 +1405,7 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
     return device;
 }
 
-- (BOOL)setEncryptionInRoom:(NSString*)roomId withAlgorithm:(NSString*)algorithm inhibitDeviceQuery:(BOOL)inhibitDeviceQuery
+- (BOOL)setEncryptionInRoom:(NSString*)roomId withMembers:(NSArray<NSString*>*)members algorithm:(NSString*)algorithm inhibitDeviceQuery:(BOOL)inhibitDeviceQuery
 {
     // If we already have encryption in this room, we should ignore this event
     // (for now at least. Maybe we should alert the user somehow?)
@@ -1449,10 +1435,9 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
     // make sure we are tracking the device lists for all users in this room.
     NSLog(@"[MXCrypto] setEncryptionInRoom: Enabling encryption in %@; starting to track device lists for all users therein", roomId);
 
-    MXRoom *room = [_mxSession roomWithRoomId:roomId];
-    for (MXRoomMember *member in room.state.members.joinedMembers)
+    for (NSString *userId in members)
     {
-        [_deviceList startTrackingDeviceList:member.userId];
+        [_deviceList startTrackingDeviceList:userId];
     }
 
     if (!inhibitDeviceQuery)
@@ -1898,10 +1883,18 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
  */
 - (void)onCryptoEvent:(MXEvent*)event
 {
+    MXRoom *room = [_mxSession roomWithRoomId:event.roomId];
+
+    NSMutableArray *members = [NSMutableArray array];
+    for (MXRoomMember *roomMember in room.state.members.joinedMembers)
+    {
+        [members addObject:roomMember.userId];
+    }
+
     if (_cryptoQueue)
     {
         dispatch_async(_cryptoQueue, ^{
-            [self setEncryptionInRoom:event.roomId withAlgorithm:event.content[@"algorithm"] inhibitDeviceQuery:YES];
+            [self setEncryptionInRoom:event.roomId withMembers:members algorithm:event.content[@"algorithm"] inhibitDeviceQuery:YES];
         });
     }
 }
