@@ -387,13 +387,6 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
 
     [self handleStateEvents:roomSync.state.events direction:MXTimelineDirectionForwards];
 
-    // @TODO: to move
-    // Update store with new room state when all state event have been processed
-    if ([store respondsToSelector:@selector(storeStateForRoom:stateEvents:)])
-    {
-        [store storeStateForRoom:_state.roomId stateEvents:_state.stateEvents];
-    }
-
     // Handle now timeline.events, the room state is updated during this step too (Note: timeline events are in chronological order)
     if (isRoomInitialSync)
     {
@@ -544,13 +537,6 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
         [self cloneState:direction];
 
         [self handleStateEvents:@[event] direction:direction];
-
-        // The store keeps only the most recent state of the room
-        // @TODO: To move
-        if (direction == MXTimelineDirectionForwards && [store respondsToSelector:@selector(storeStateForRoom:stateEvents:)])
-        {
-            [store storeStateForRoom:_state.roomId stateEvents:_state.stateEvents];
-        }
     }
 
     // Decrypt event if necessary
@@ -627,13 +613,6 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
                 // Reset the room state.
                 _state = [[MXRoomState alloc] initWithRoomId:room.roomId andMatrixSession:room.mxSession andDirection:YES];
                 [self initialiseState:stateEvents];
-                
-                // Update store with new room state when all state event have been processed
-                // @TODO: to move
-                if ([store respondsToSelector:@selector(storeStateForRoom:stateEvents:)])
-                {
-                    [store storeStateForRoom:_state.roomId stateEvents:_state.stateEvents];
-                }
                 
                 // Reset the current pagination
                 [self resetPagination];

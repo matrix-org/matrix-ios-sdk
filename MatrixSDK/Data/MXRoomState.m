@@ -454,6 +454,12 @@
             }
         }
     }
+
+    // Update store with new room state when all state event have been processed
+    if (_isLive && [mxSession.store respondsToSelector:@selector(storeStateForRoom:stateEvents:)])
+    {
+        [mxSession.store storeStateForRoom:_roomId stateEvents:self.stateEvents];
+    }
 }
 
 - (NSArray<MXEvent*> *)stateEventsWithType:(MXEventTypeString)eventType
