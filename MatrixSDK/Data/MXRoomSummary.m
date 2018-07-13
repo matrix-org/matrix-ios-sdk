@@ -249,7 +249,7 @@ NSString *const kMXRoomSummaryDidChangeNotification = @"kMXRoomSummaryDidChangeN
                 state.isLive = NO;
             }
 
-            [state handleStateEvent:event];
+            [state handleStateEvents:@[event]];
         }
 
         lastEventIdChecked = event.eventId;
@@ -395,7 +395,7 @@ NSString *const kMXRoomSummaryDidChangeNotification = @"kMXRoomSummaryDidChangeN
                 state.isLive = NO;
             }
 
-            [state handleStateEvent:event];
+            [state handleStateEvents:@[event]];
         }
 
         lastMessageUpdated = [_mxSession.roomSummaryUpdateDelegate session:_mxSession updateRoomSummary:self withLastEvent:event eventState:state roomState:self.room.state];

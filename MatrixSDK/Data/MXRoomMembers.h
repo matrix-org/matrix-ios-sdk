@@ -97,6 +97,11 @@
 
 #pragma mark - State events handling
 
-- (void)handleStateEvent:(MXEvent*)event;
+/**
+ Process state events in order to update room members.
+
+ @param stateEvents an array of state events.
+ */
+- (void)handleStateEvents:(NSArray<MXEvent *> *)stateEvents;
 
 @end

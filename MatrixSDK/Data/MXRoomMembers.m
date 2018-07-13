@@ -200,87 +200,90 @@
 }
 
 #pragma mark - State events handling
-- (void)handleStateEvent:(MXEvent*)event
+- (void)handleStateEvents:(NSArray<MXEvent *> *)stateEvents;
 {
-    switch (event.eventType)
+    for (MXEvent *event in stateEvents)
     {
-        case MXEventTypeRoomMember:
+        switch (event.eventType)
         {
-            // Remove the previous MXRoomMember of this user from membersNamesInUse
-            NSString *userId = event.stateKey;
-            MXRoomMember *oldRoomMember = members[userId];
-            if (oldRoomMember && oldRoomMember.displayname)
+            case MXEventTypeRoomMember:
             {
-                NSNumber *memberNameCount = membersNamesInUse[oldRoomMember.displayname];
-                if (memberNameCount)
+                // Remove the previous MXRoomMember of this user from membersNamesInUse
+                NSString *userId = event.stateKey;
+                MXRoomMember *oldRoomMember = members[userId];
+                if (oldRoomMember && oldRoomMember.displayname)
                 {
-                    NSUInteger count = [memberNameCount unsignedIntegerValue];
-                    if (count)
-                    {
-                        count--;
-                    }
-
-                    if (count)
-                    {
-                        membersNamesInUse[oldRoomMember.displayname] = @(count);
-                    }
-                    else
-                    {
-                        [membersNamesInUse removeObjectForKey:oldRoomMember.displayname];
-                    }
-                }
-            }
-
-            MXRoomMember *roomMember = [[MXRoomMember alloc] initWithMXEvent:event andEventContent:[state contentOfEvent:event]];
-            if (roomMember)
-            {
-                /// Update membersNamesInUse
-                if (roomMember.displayname)
-                {
-                    NSUInteger count = 1;
-
-                    NSNumber *memberNameCount = membersNamesInUse[roomMember.displayname];
+                    NSNumber *memberNameCount = membersNamesInUse[oldRoomMember.displayname];
                     if (memberNameCount)
                     {
-                        // We have several users using the same displayname
-                        count = [memberNameCount unsignedIntegerValue];
-                        count++;
+                        NSUInteger count = [memberNameCount unsignedIntegerValue];
+                        if (count)
+                        {
+                            count--;
+                        }
+
+                        if (count)
+                        {
+                            membersNamesInUse[oldRoomMember.displayname] = @(count);
+                        }
+                        else
+                        {
+                            [membersNamesInUse removeObjectForKey:oldRoomMember.displayname];
+                        }
+                    }
+                }
+
+                MXRoomMember *roomMember = [[MXRoomMember alloc] initWithMXEvent:event andEventContent:[state contentOfEvent:event]];
+                if (roomMember)
+                {
+                    /// Update membersNamesInUse
+                    if (roomMember.displayname)
+                    {
+                        NSUInteger count = 1;
+
+                        NSNumber *memberNameCount = membersNamesInUse[roomMember.displayname];
+                        if (memberNameCount)
+                        {
+                            // We have several users using the same displayname
+                            count = [memberNameCount unsignedIntegerValue];
+                            count++;
+                        }
+
+                        membersNamesInUse[roomMember.displayname] = @(count);
                     }
 
-                    membersNamesInUse[roomMember.displayname] = @(count);
+                    members[roomMember.userId] = roomMember;
+
+                    // Handle here the case where the member has no defined avatar.
+                    if (nil == roomMember.avatarUrl && ![MXSDKOptions sharedInstance].disableIdenticonUseForUserAvatar)
+                    {
+                        // Force to use an identicon url
+                        roomMember.avatarUrl = [mxSession.matrixRestClient urlOfIdenticon:roomMember.userId];
+                    }
                 }
-
-                members[roomMember.userId] = roomMember;
-
-                // Handle here the case where the member has no defined avatar.
-                if (nil == roomMember.avatarUrl && ![MXSDKOptions sharedInstance].disableIdenticonUseForUserAvatar)
+                else
                 {
-                    // Force to use an identicon url
-                    roomMember.avatarUrl = [mxSession.matrixRestClient urlOfIdenticon:roomMember.userId];
+                    // The user is no more part of the room. Remove him.
+                    // This case happens during back pagination: we remove here users when they are not in the room yet.
+                    [members removeObjectForKey:event.stateKey];
                 }
-            }
-            else
-            {
-                // The user is no more part of the room. Remove him.
-                // This case happens during back pagination: we remove here users when they are not in the room yet.
-                [members removeObjectForKey:event.stateKey];
-            }
 
-            // Special handling for presence: update MXUser data in case of membership event.
-            // CAUTION: ignore here redacted state event, the redaction concerns only the context of the event room.
-            if (state.isLive && !event.isRedactedEvent && roomMember.membership == MXMembershipJoin)
-            {
-                MXUser *user = [mxSession getOrCreateUser:event.sender];
-                [user updateWithRoomMemberEvent:event roomMember:roomMember inMatrixSession:mxSession];
+                // Special handling for presence: update MXUser data in case of membership event.
+                // CAUTION: ignore here redacted state event, the redaction concerns only the context of the event room.
+                if (state.isLive && !event.isRedactedEvent && roomMember.membership == MXMembershipJoin)
+                {
+                    MXUser *user = [mxSession getOrCreateUser:event.sender];
+                    [user updateWithRoomMemberEvent:event roomMember:roomMember inMatrixSession:mxSession];
 
-                [mxSession.store storeUser:user];
+                    [mxSession.store storeUser:user];
+                }
+
+                break;
             }
 
-            break;
+            default:
+                break;
         }
-
-        default:
-            break;
     }
 }
 

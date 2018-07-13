@@ -208,11 +208,11 @@ Use MXRoomSummary.displayname to get a computed room display name.
 - (id)initBackStateWith:(MXRoomState*)state;
 
 /**
- Process a state event in order to update the room state.
+ Process state events in order to update the room state.
  
- @param event the state event.
+ @param stateEvents an array of state events.
  */
-- (void)handleStateEvent:(MXEvent*)event;
+- (void)handleStateEvents:(NSArray<MXEvent *> *)stateEvents;
 
 /**
  Return the state events with the given type.
