@@ -705,21 +705,7 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
                       failure:(void (^)(NSError *error))failure
 {
 #ifdef MX_CRYPTO
-
-    // Get all rooms with this user
-    NSMutableArray<NSString*> *userRooms = [NSMutableArray array];
-    for (MXRoom *room in _mxSession.rooms)
-    {
-        if (room.state.isEncrypted)
-        {
-            MXRoomMember *member = [room.state.members memberWithUserId:userId];
-            if (member && member.membership == MXMembershipJoin)
-            {
-                [userRooms addObject:room.roomId];
-            }
-        }
-    }
-
+    
     // Note: failure is not currently used but it would make sense the day device
     // verification will be sync'ed with the hs.
     MXWeakify(self);
