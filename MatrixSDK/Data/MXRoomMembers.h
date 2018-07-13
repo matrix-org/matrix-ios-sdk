@@ -101,7 +101,8 @@
  Process state events in order to update room members.
 
  @param stateEvents an array of state events.
+ @return YES if there was a change in MXRoomMembers.
  */
-- (void)handleStateEvents:(NSArray<MXEvent *> *)stateEvents;
+- (BOOL)handleStateEvents:(NSArray<MXEvent *> *)stateEvents;
 
 @end
