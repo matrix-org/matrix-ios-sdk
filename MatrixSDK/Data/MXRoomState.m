@@ -43,11 +43,6 @@
     NSMutableDictionary<NSString*, MXRoomThirdPartyInvite*> *thirdPartyInvites;
     
     /**
-     Additional and optional metadata got from initialSync
-     */
-    MXMembership membership;
-    
-    /**
      Maximum power level observed in power level list
      */
     NSInteger maxPowerLevel;
@@ -102,7 +97,7 @@
         {
             if (initialSync.membership)
             {
-                membership = [MXTools membership:initialSync.membership];
+                _membership = [MXTools membership:initialSync.membership];
             }
         }
     }
@@ -320,24 +315,6 @@
     return guestAccess;
 }
 
-- (MXMembership)membership
-{
-    MXMembership result;
-    
-    // Find the current value in room state events
-    MXRoomMember *user = [self.members memberWithUserId:mxSession.matrixRestClient.credentials.userId];
-    if (user)
-    {
-        result = user.membership;
-    }
-    else
-    {
-        result = membership;
-    }
-    
-    return result;
-}
-
 - (BOOL)isEncrypted
 {
     return (0 != self.encryptionAlgorithm.length);
@@ -359,6 +336,18 @@
     {
         case MXEventTypeRoomMember:
         {
+            // User in this membership event
+            NSString *userId = event.stateKey ? event.stateKey : event.sender;
+
+            NSDictionary *content = [self contentOfEvent:event];
+
+            // Compute my user membership indepently from MXRoomMembers
+            if ([userId isEqualToString:mxSession.myUser.userId])
+            {
+                MXRoomMember *roomMember = [[MXRoomMember alloc] initWithMXEvent:event andEventContent:content];
+                _membership = roomMember.membership;
+            }
+
             // Update counters from self.members
             // @TODO(lazy-loading): these values will be provided by the coming
             // room summary in the matrix spec (https://github.com/matrix-org/matrix-doc/issues/688).
@@ -366,7 +355,6 @@
             _membersCount.joined = _members.joinedMembers.count;
             _membersCount.invited =  [_members membersWithMembership:MXMembershipInvite].count;
 
-            NSDictionary *content = [self contentOfEvent:event];
             if (content[@"third_party_invite"][@"signed"][@"token"])
             {
                 // Cache room member event that is successor of a third party invite event
@@ -384,10 +372,10 @@
             }
             else if (_isLive && self.membership == MXMembershipJoin && _members.members.count > 2)
             {
-                MXRoomMember *roomMember = [[MXRoomMember alloc] initWithMXEvent:event andEventContent:content];
-                if ([roomMember.userId isEqualToString:self.conferenceUserId])
+                if ([userId isEqualToString:self.conferenceUserId])
                 {
                     // Forward the change of the conference user membership to the call manager
+                    MXRoomMember *roomMember = [[MXRoomMember alloc] initWithMXEvent:event andEventContent:content];
                     [mxSession.callManager handleConferenceUserUpdate:roomMember inRoom:_roomId];
                 }
             }
@@ -549,7 +537,7 @@
 
     stateCopy->membersWithThirdPartyInviteTokenCache= [[NSMutableDictionary allocWithZone:zone] initWithDictionary:membersWithThirdPartyInviteTokenCache];
     
-    stateCopy->membership = membership;
+    stateCopy->_membership = _membership;
 
     stateCopy->powerLevels = [powerLevels copy];
     stateCopy->maxPowerLevel = maxPowerLevel;
