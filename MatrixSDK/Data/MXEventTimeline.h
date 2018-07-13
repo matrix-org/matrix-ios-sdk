@@ -114,6 +114,13 @@ typedef void (^MXOnRoomEvent)(MXEvent *event, MXTimelineDirection direction, MXR
 - (void)initialiseState:(NSArray<MXEvent*> *)stateEvents;
 
 /**
+ Reset the room evenTimeline state.
+
+ @param roomState the new state to use.
+ */
+- (void)setState:(MXRoomState *)roomState;
+
+/**
  Release RAM memory used by the timeline.
  */
 - (void)destroy;

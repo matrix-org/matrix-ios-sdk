@@ -70,6 +70,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
     return [self initWithRoomId:roomId matrixSession:mxSession2 andStore:nil];
 }
 
+// @TODO(lazy-loading): Remove this method. loadRoomFromStore should be enough
 - (id)initWithRoomId:(NSString *)roomId andMatrixSession:(MXSession *)mxSession2 andStateEvents:(NSArray<MXEvent *> *)stateEvents andAccountData:(MXRoomAccountData*)accountData
 {
     self = [self initWithRoomId:roomId andMatrixSession:mxSession2];
@@ -116,6 +117,30 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
         [self refreshOutgoingMessages];
     }
     return self;
+}
+
++ (id)loadRoomFromStore:(id<MXStore>)store withRoomId:(NSString *)roomId matrixSession:(MXSession *)matrixSession
+{
+    MXRoom *room = [[MXRoom alloc] initWithRoomId:roomId andMatrixSession:matrixSession];
+    if (room)
+    {
+        MXRoomAccountData *accountData = [store accountDataOfRoom:roomId];
+
+        MXRoomState *roomState = [MXRoomState loadRoomStateFromStore:store withRoomId:roomId matrixSession:matrixSession];
+        [room->_liveTimeline setState:roomState];
+
+        // Report the provided accountData.
+        // Allocate a new instance if none, in order to handle room tag events for this room.
+        room->_accountData = accountData ? accountData : [[MXRoomAccountData alloc] init];
+
+        // Check whether the room is pending on an invitation.
+        if (room.state.membership == MXMembershipInvite)
+        {
+            // Handle direct flag to decide if it is direct or not
+            [room handleInviteDirectFlag];
+        }
+    }
+    return room;
 }
 
 #pragma mark - Properties implementation

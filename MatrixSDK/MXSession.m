@@ -330,12 +330,7 @@ typedef void (^MXOnResumeDone)(void);
                 NSDate *startDate3 = [NSDate date];
                 for (NSString *roomId in self.store.rooms)
                 {
-                    @autoreleasepool
-                    {
-                        NSArray *stateEvents = [self.store stateOfRoom:roomId];
-                        MXRoomAccountData *roomAccountData = [self.store accountDataOfRoom:roomId];
-                        [self createRoom:roomId withStateEvents:stateEvents andAccountData:roomAccountData notify:NO];
-                    }
+                    [self loadRoom:roomId];
                 }
 
                 NSLog(@"[MXSession] Built %lu MXRooms in %.0fms", (unsigned long)self->rooms.allKeys.count, [[NSDate date] timeIntervalSinceDate:startDate3] * 1000);
@@ -1857,11 +1852,14 @@ typedef void (^MXOnResumeDone)(void);
     return room;
 }
 
-- (MXRoom *)createRoom:(NSString *)roomId withStateEvents:(NSArray*)stateEvents andAccountData:(MXRoomAccountData*)theAccountData notify:(BOOL)notify
+- (MXRoom *)loadRoom:(NSString *)roomId
 {
-    MXRoom *room = [[MXRoom alloc] initWithRoomId:roomId andMatrixSession:self andStateEvents:stateEvents andAccountData:theAccountData];
+    MXRoom *room = [MXRoom loadRoomFromStore:_store withRoomId:roomId matrixSession:self];
 
-    [self addRoom:room notify:notify];
+    if (room)
+    {
+        [self addRoom:room notify:NO];
+    }
     return room;
 }
 

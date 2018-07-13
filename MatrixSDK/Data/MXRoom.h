@@ -153,6 +153,7 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidFlushDataNotification;
  @param accountData the account data for the room.
  @return the new instance.
  */
+ // @TODO(lazy-loading): Remove this method. loadRoomFromStore should be enough
 - (id)initWithRoomId:(NSString*)roomId andMatrixSession:(MXSession*)mxSession andStateEvents:(NSArray<MXEvent *> *)stateEvents andAccountData:(MXRoomAccountData*)accountData;
 
 /**
@@ -164,6 +165,16 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidFlushDataNotification;
  @return the new instance.
  */
 - (id)initWithRoomId:(NSString *)roomId matrixSession:(MXSession *)mxSession andStore:(id<MXStore>)store;
+
+/**
+ Load a `MXRoom` instance from the store.
+
+ @param store the store to mount data from and to store live data to.
+ @param roomId the id of the room.
+ @param mxSession the session to use.
+ @return the new instance.
+ */
++ (id)loadRoomFromStore:(id<MXStore>)store withRoomId:(NSString *)roomId matrixSession:(MXSession *)matrixSession;
 
 #pragma mark - Server sync
 

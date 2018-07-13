@@ -116,6 +116,11 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
     }
 }
 
+- (void)setState:(MXRoomState *)roomState
+{
+    _state = roomState;
+}
+
 - (void)destroy
 {
     [room.mxSession resetReplayAttackCheckInTimeline:_timelineId];

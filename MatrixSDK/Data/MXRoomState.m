@@ -104,6 +104,24 @@
     return self;
 }
 
++ (id)loadRoomStateFromStore:(id<MXStore>)store withRoomId:(NSString *)roomId matrixSession:(MXSession *)matrixSession
+{
+    MXRoomState *state = [[MXRoomState alloc] initWithRoomId:roomId andMatrixSession:matrixSession andDirection:YES];
+    if (state)
+    {
+        @autoreleasepool
+        {
+            NSArray *stateEvents = [store stateOfRoom:roomId];
+            for (MXEvent *event in stateEvents)
+            {
+                [state handleStateEvent:event];
+            }
+        }
+    }
+
+    return state;
+}
+
 - (id)initBackStateWith:(MXRoomState*)state
 {
     self = [state copy];
