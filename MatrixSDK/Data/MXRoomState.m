@@ -384,7 +384,7 @@
                     {
                         [self handleStateEvents:event.inviteRoomState];
                     }
-                    else if (_isLive && self.membership == MXMembershipJoin && _members.members.count > 2)
+                    else if (_isLive && self.membership == MXMembershipJoin && _membersCount.members > 2)
                     {
                         if ([userId isEqualToString:self.conferenceUserId])
                         {
@@ -508,7 +508,7 @@
     BOOL isConferenceUserRoom = NO;
 
     // A conference user room is a 1:1 room with a conference user
-    if (self.members.members.count == 2 && [self.members memberWithUserId:self.conferenceUserId])
+    if (_membersCount.members == 2 && [self.members memberWithUserId:self.conferenceUserId])
     {
         isConferenceUserRoom = YES;
     }
