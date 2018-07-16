@@ -161,7 +161,7 @@ static NSString *const kMXCallManagerFallbackSTUNServer = @"stun:stun.l.google.c
     MXCall *theCall;
     for (MXCall *call in calls)
     {
-        if ([call.room.state.roomId isEqualToString:roomId])
+        if ([call.room.roomId isEqualToString:roomId])
         {
             theCall = call;
             break;

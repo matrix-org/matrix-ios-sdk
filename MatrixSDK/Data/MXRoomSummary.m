@@ -327,7 +327,7 @@ NSString *const kMXRoomSummaryDidChangeNotification = @"kMXRoomSummaryDidChangeN
 - (void)roomDidFlushData:(NSNotification *)notif
 {
     MXRoom *room = notif.object;
-    if (_mxSession == room.mxSession && [_roomId isEqualToString:room.state.roomId])
+    if (_mxSession == room.mxSession && [_roomId isEqualToString:room.roomId])
     {
         NSLog(@"[MXRoomSummary] roomDidFlushData: %@", _roomId);
 

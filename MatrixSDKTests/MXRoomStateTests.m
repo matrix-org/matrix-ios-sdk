@@ -1000,7 +1000,7 @@
                     
                     [mxSession joinRoom:roomId success:^(MXRoom *room) {
                         
-                        XCTAssert([room.state.roomId isEqualToString:roomId]);
+                        XCTAssert([room.roomId isEqualToString:roomId]);
                         
                         MXRoom *newRoom = [mxSession roomWithRoomId:roomId];
                         XCTAssert(newRoom, @"The room must be known now by the user");
@@ -1178,7 +1178,7 @@
 
                 MXRoom *room = note.object;
 
-                XCTAssertEqualObjects(newRoomId, room.state.roomId);
+                XCTAssertEqualObjects(newRoomId, room.roomId);
                 
                 BOOL isSync = (room.state.membership != MXMembershipInvite && room.state.membership != MXMembershipUnknown);
                 XCTAssert(isSync, @"The room must be sync'ed now");

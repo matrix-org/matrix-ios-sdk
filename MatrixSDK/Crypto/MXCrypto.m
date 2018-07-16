@@ -467,7 +467,7 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
 
 #ifdef MX_CRYPTO
     MXRoom *room = [_mxSession roomWithRoomId:roomId];
-    if (room.state.isEncrypted)
+    if (room.summary.isEncrypted)
     {
         // Get user ids in this room
         NSMutableArray *userIds = [NSMutableArray array];

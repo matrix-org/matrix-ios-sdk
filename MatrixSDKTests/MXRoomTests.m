@@ -172,7 +172,7 @@
         
         mxSession = mxSession2;
         
-        NSString *roomId = room.state.roomId;
+        NSString *roomId = room.roomId;
 
         __block MXMembership lastKnownMembership = MXMembershipUnknown;
         [room.liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMember] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {

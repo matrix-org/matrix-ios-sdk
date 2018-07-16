@@ -350,7 +350,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
     };
 
     // Check whether the content must be encrypted before sending
-    if (mxSession.crypto && self.state.isEncrypted)
+    if (mxSession.crypto && self.summary.isEncrypted)
     {
         // Check whether the provided content is already encrypted
         if ([eventTypeString isEqualToString:kMXEventTypeStringRoomEncrypted])
@@ -598,7 +598,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
     double endRange = 1.0;
     
     // Check whether the content must be encrypted before sending
-    if (mxSession.crypto && self.state.isEncrypted) endRange = 0.9;
+    if (mxSession.crypto && self.summary.isEncrypted) endRange = 0.9;
     
     // Use the uploader id as fake URL for this image data
     // The URL does not need to be valid as the MediaManager will get the data
@@ -678,7 +678,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
     };
     
     // Add a local echo for this message during the sending process.
-    MXEventSentState initialSentState = (mxSession.crypto && self.state.isEncrypted) ? MXEventSentStateEncrypting : MXEventSentStateUploading;
+    MXEventSentState initialSentState = (mxSession.crypto && self.summary.isEncrypted) ? MXEventSentStateEncrypting : MXEventSentStateUploading;
     event = [self addLocalEchoForMessageContent:msgContent eventType:kMXEventTypeStringRoomMessage withState:initialSentState];
     
     if (localEcho)
@@ -692,7 +692,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
         MXStrongifyAndReturnIfNil(self);
 
         // Check whether the content must be encrypted before sending
-        if (self.mxSession.crypto && self.state.isEncrypted)
+        if (self.mxSession.crypto && self.summary.isEncrypted)
         {
             // Register uploader observer
             uploaderObserver = [[NSNotificationCenter defaultCenter] addObserverForName:kMXMediaUploadProgressNotification object:uploader queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *notif) {
@@ -921,7 +921,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
             msgContent[@"info"][@"h"] = @(size.height);
             msgContent[@"info"][@"duration"] = @(durationInMs);
 
-            if (self.mxSession.crypto && self.state.isEncrypted)
+            if (self.mxSession.crypto && self.summary.isEncrypted)
             {
                 [MXEncryptedAttachments encryptAttachment:thumbUploader mimeType:@"image/jpeg" data:videoThumbnailData success:^(NSDictionary *result) {
 
@@ -1171,7 +1171,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
     };
     
     // Add a local echo for this message during the sending process.
-    MXEventSentState initialSentState = (mxSession.crypto && self.state.isEncrypted) ? MXEventSentStateEncrypting : MXEventSentStateUploading;
+    MXEventSentState initialSentState = (mxSession.crypto && self.summary.isEncrypted) ? MXEventSentStateEncrypting : MXEventSentStateUploading;
     event = [self addLocalEchoForMessageContent:msgContent eventType:kMXEventTypeStringRoomMessage withState:initialSentState];
     
     if (localEcho)
@@ -1182,7 +1182,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
 
     roomOperation = [self preserveOperationOrder:event block:^{
 
-        if (self.mxSession.crypto && self.state.isEncrypted)
+        if (self.mxSession.crypto && self.summary.isEncrypted)
         {
             // Register uploader observer
             uploaderObserver = [[NSNotificationCenter defaultCenter] addObserverForName:kMXMediaUploadProgressNotification object:uploader queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *notif) {
@@ -2491,7 +2491,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
 
 - (NSString *)description
 {
-    return [NSString stringWithFormat:@"<MXRoom: %p> %@: %@ - %@", self, self.roomId, self.state.name, self.state.topic];
+    return [NSString stringWithFormat:@"<MXRoom: %p> %@: %@ - %@", self, self.roomId, self.state.name, self.summary.topic];
 }
 
 - (NSComparisonResult)compareLastMessageEventOriginServerTs:(MXRoom *)otherRoom
