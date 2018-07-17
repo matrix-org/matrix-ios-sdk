@@ -820,7 +820,7 @@
                     
                     XCTAssertNotNil(newRoom);
                     
-                    XCTAssertEqual(newRoom.state.membership, MXMembershipInvite);
+                    XCTAssertEqual(newRoom.summary.membership, MXMembershipInvite);
                     
                     // The room has 2 members (Alice & Bob)
                     XCTAssertEqual(newRoom.summary.membersCount.members, 2);
@@ -868,9 +868,9 @@
                         
                         XCTAssertNotNil(newRoom);
 
-                        if (newRoom.state.membership != MXMembershipUnknown)
+                        if (newRoom.summary.membership != MXMembershipUnknown)
                         {
-                            XCTAssertEqual(newRoom.state.membership, MXMembershipInvite);
+                            XCTAssertEqual(newRoom.summary.membership, MXMembershipInvite);
 
                             // The room has 2 members (Alice & Bob)
                             XCTAssertEqual(newRoom.summary.membersCount.members, 2);
@@ -956,7 +956,7 @@
                         XCTAssertEqual(newRoom.summary.membersCount.members, 2);
                         XCTAssert([newRoom.state.topic isEqualToString:@"We test room invitation here"], @"Wrong topic. Found: %@", newRoom.state.topic);
                         
-                        XCTAssertEqual(newRoom.state.membership, MXMembershipJoin);
+                        XCTAssertEqual(newRoom.summary.membership, MXMembershipJoin);
 
                         XCTAssertNotNil(newRoom.summary.lastMessageEventId);
                         XCTAssertNotNil(newRoom.summary.lastMessageEvent);
@@ -1011,7 +1011,7 @@
                         XCTAssertEqual(newRoom.summary.membersCount.members, 2);
                         XCTAssert([newRoom.state.topic isEqualToString:@"We test room invitation here"], @"Wrong topic. Found: %@", newRoom.state.topic);
                         
-                        XCTAssertEqual(newRoom.state.membership, MXMembershipJoin);
+                        XCTAssertEqual(newRoom.summary.membership, MXMembershipJoin);
                         XCTAssertNotNil(newRoom.summary.lastMessageEvent);
                         XCTAssertEqual(newRoom.summary.lastMessageEvent.eventType, MXEventTypeRoomMember, @"The last should be a m.room.member event indicating Alice joining the room");
                         
@@ -1165,7 +1165,7 @@
                 MXRoom *room = [mxSession roomWithRoomId:newRoomId];
                 XCTAssertNotNil(room);
                 
-                BOOL isSync = (room.state.membership != MXMembershipInvite && room.state.membership != MXMembershipUnknown);
+                BOOL isSync = (room.summary.membership != MXMembershipInvite && room.summary.membership != MXMembershipUnknown);
                 XCTAssertFalse(isSync, @"The room is not yet sync'ed");
 
                 [[NSNotificationCenter defaultCenter] removeObserver:newRoomObserver];
@@ -1180,7 +1180,7 @@
 
                 XCTAssertEqualObjects(newRoomId, room.roomId);
                 
-                BOOL isSync = (room.state.membership != MXMembershipInvite && room.state.membership != MXMembershipUnknown);
+                BOOL isSync = (room.summary.membership != MXMembershipInvite && room.summary.membership != MXMembershipUnknown);
                 XCTAssert(isSync, @"The room must be sync'ed now");
 
                 [[NSNotificationCenter defaultCenter] removeObserver:initialSyncObserver];

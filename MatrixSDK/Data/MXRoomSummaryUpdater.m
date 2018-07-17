@@ -133,6 +133,12 @@
             summary.membersCount = [room.state.membersCount copy];
             updated = YES;
         }
+
+        if (summary.membership != room.state.membership)
+        {
+            summary.membership = room.state.membership;
+            updated = YES;
+        }
     }
 
     return updated;

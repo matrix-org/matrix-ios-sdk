@@ -177,7 +177,7 @@
         __block MXMembership lastKnownMembership = MXMembershipUnknown;
         [room.liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMember] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
 
-            lastKnownMembership = room.state.membership;
+            lastKnownMembership = room.summary.membership;
         }];
         
         // This implicitly tests MXSession leaveRoom
@@ -211,12 +211,12 @@
 
                     MXRoom *room = [mxSession roomWithRoomId:roomId];
 
-                    XCTAssertEqual(room.state.membership, MXMembershipInvite);
+                    XCTAssertEqual(room.summary.membership, MXMembershipInvite);
                     XCTAssertEqual(room.summary.membersCount.members, 2, @"The room state information is limited while the room is joined");
 
                     [room join:^{
 
-                        XCTAssertEqual(room.state.membership, MXMembershipJoin);
+                        XCTAssertEqual(room.summary.membership, MXMembershipJoin);
                         XCTAssertEqual(room.summary.membersCount.members, 2, @"The room state must be fully known (after an initialSync on the room");
 
                         [expectation fulfill];

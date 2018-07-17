@@ -486,6 +486,7 @@ NSString *const kMXRoomSummaryDidChangeNotification = @"kMXRoomSummaryDidChangeN
         _avatar = [aDecoder decodeObjectForKey:@"avatar"];
         _displayname = [aDecoder decodeObjectForKey:@"displayname"];
         _topic = [aDecoder decodeObjectForKey:@"topic"];
+        _membership = (MXMembership)[aDecoder decodeIntegerForKey:@"membership"];
         _membersCount = [aDecoder decodeObjectForKey:@"membersCount"];
 
         _others = [aDecoder decodeObjectForKey:@"others"];
@@ -523,6 +524,7 @@ NSString *const kMXRoomSummaryDidChangeNotification = @"kMXRoomSummaryDidChangeN
     [aCoder encodeObject:_avatar forKey:@"avatar"];
     [aCoder encodeObject:_displayname forKey:@"displayname"];
     [aCoder encodeObject:_topic forKey:@"topic"];
+    [aCoder encodeInteger:(NSInteger)_membership forKey:@"membership"];
     [aCoder encodeObject:_membersCount forKey:@"membersCount"];
 
     [aCoder encodeObject:_others forKey:@"others"];

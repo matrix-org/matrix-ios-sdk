@@ -85,7 +85,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
             _accountData = accountData ? accountData : [[MXRoomAccountData alloc] init];
             
             // Check whether the room is pending on an invitation.
-            if (self.state.membership == MXMembershipInvite)
+            if (self.summary.membership == MXMembershipInvite)
             {
                 // Handle direct flag to decide if it is direct or not
                 [self handleInviteDirectFlag];
@@ -134,7 +134,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
         room->_accountData = accountData ? accountData : [[MXRoomAccountData alloc] init];
 
         // Check whether the room is pending on an invitation.
-        if (room.state.membership == MXMembershipInvite)
+        if (room.summary.membership == MXMembershipInvite)
         {
             // Handle direct flag to decide if it is direct or not
             [room handleInviteDirectFlag];

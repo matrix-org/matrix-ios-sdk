@@ -575,7 +575,7 @@
 
             XCTAssertNotNil(room);
             
-            BOOL isSync = (room.state.membership != MXMembershipInvite && room.state.membership != MXMembershipUnknown);
+            BOOL isSync = (room.summary.membership != MXMembershipInvite && room.summary.membership != MXMembershipUnknown);
             XCTAssertTrue(isSync, @"The callback must be called once the room has been initialSynced");
 
             XCTAssertEqual(1, room.summary.membersCount.members, @"Bob must be the only one. members: %@", room.state.members);
@@ -626,7 +626,7 @@
                 
                 XCTAssertNotNil(room);
                 
-                BOOL isSync = (room.state.membership != MXMembershipInvite && room.state.membership != MXMembershipUnknown);
+                BOOL isSync = (room.summary.membership != MXMembershipInvite && room.summary.membership != MXMembershipUnknown);
                 XCTAssertTrue(isSync, @"The callback must be called once the room has been initialSynced");
                 
                 [mxSession.matrixRestClient membersOfRoom:room.roomId success:^(NSArray *roomMemberEvents) {
@@ -678,7 +678,7 @@
                 
                 XCTAssertNotNil(room);
                 
-                BOOL isSync = (room.state.membership != MXMembershipInvite && room.state.membership != MXMembershipUnknown);
+                BOOL isSync = (room.summary.membership != MXMembershipInvite && room.summary.membership != MXMembershipUnknown);
                 XCTAssertTrue(isSync, @"The callback must be called once the room has been initialSynced");
                 
                 [mxSession.matrixRestClient membersOfRoom:room.roomId success:^(NSArray *roomMemberEvents) {
@@ -873,7 +873,7 @@
                     MXRoom *publicRoom = (MXRoom*)note.object;
                     XCTAssertNotNil(publicRoom);
 
-                    BOOL isSync = (publicRoom.state.membership != MXMembershipInvite && publicRoom.state.membership != MXMembershipUnknown);
+                    BOOL isSync = (publicRoom.summary.membership != MXMembershipInvite && publicRoom.summary.membership != MXMembershipUnknown);
                     XCTAssert(isSync, @"kMXRoomInitialSyncNotification must inform when the room state is fully known");
 
                     XCTAssertEqual(mxSession, publicRoom.mxSession, @"The session of the sent MXRoom must be the right one");

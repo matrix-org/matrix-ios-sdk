@@ -711,7 +711,7 @@
 
                 XCTAssertNotNil(room2);
 
-                if (direction == MXTimelineDirectionForwards && MXMembershipInvite == room2.state.membership && !joinedRequestMade)
+                if (direction == MXTimelineDirectionForwards && MXMembershipInvite == room2.summary.membership && !joinedRequestMade)
                 {
                     // Join the room on the invitation and check we can paginate all expected text messages
                     // By default the last Alice's message (sent while Bob is not in the room) must be visible.

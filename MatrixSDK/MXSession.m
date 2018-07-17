@@ -1654,7 +1654,7 @@ typedef void (^MXOnResumeDone)(void);
     // Wait to receive data from /sync about this room before returning
     if (success)
     {
-        if (room.state.membership == MXMembershipJoin)
+        if (room.summary.membership == MXMembershipJoin)
         {
             // The /sync corresponding to this join may have happened before the
             // homeserver answer to the joinRoom request.
@@ -1803,7 +1803,7 @@ typedef void (^MXOnResumeDone)(void);
         if (directRoom)
         {
             // Check whether the user membership is joined
-            if (directRoom.state.membership == MXMembershipJoin)
+            if (directRoom.summary.membership == MXMembershipJoin)
             {
                 return directRoom;
             }
@@ -2702,7 +2702,7 @@ typedef void (^MXOnResumeDone)(void);
         // Compute the current invitation list
         for (MXRoom *room in rooms.allValues)
         {
-            if (room.state.membership == MXMembershipInvite)
+            if (room.summary.membership == MXMembershipInvite)
             {
                 [invitedRooms addObject:room];
             }
@@ -2734,7 +2734,7 @@ typedef void (^MXOnResumeDone)(void);
                 MXRoomState *roomPrevState = (MXRoomState *)customObject;
                 MXRoom *room = [self roomWithRoomId:event.roomId];
 
-                if (room.state.membership == MXMembershipInvite)
+                if (room.summary.membership == MXMembershipInvite)
                 {
                     // check if the room is not yet in the list
                     // must be done in forward and sync direction
