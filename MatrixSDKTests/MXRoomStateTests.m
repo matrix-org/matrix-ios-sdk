@@ -823,7 +823,7 @@
                     XCTAssertEqual(newRoom.state.membership, MXMembershipInvite);
                     
                     // The room has 2 members (Alice & Bob)
-                    XCTAssertEqual(newRoom.state.membersCount.members, 2);
+                    XCTAssertEqual(newRoom.summary.membersCount.members, 2);
 
                     MXRoomMember *alice = [newRoom.state.members memberWithUserId:aliceRestClient.credentials.userId];
                     XCTAssertNotNil(alice);
@@ -873,7 +873,7 @@
                             XCTAssertEqual(newRoom.state.membership, MXMembershipInvite);
 
                             // The room has 2 members (Alice & Bob)
-                            XCTAssertEqual(newRoom.state.membersCount.members, 2);
+                            XCTAssertEqual(newRoom.summary.membersCount.members, 2);
 
                             MXRoomMember *alice = [newRoom.state.members memberWithUserId:aliceRestClient.credentials.userId];
                             XCTAssertNotNil(alice);
@@ -953,7 +953,7 @@
                         
                         // Now, we must have more information about the room
                         // Check its new state
-                        XCTAssertEqual(newRoom.state.membersCount.members, 2);
+                        XCTAssertEqual(newRoom.summary.membersCount.members, 2);
                         XCTAssert([newRoom.state.topic isEqualToString:@"We test room invitation here"], @"Wrong topic. Found: %@", newRoom.state.topic);
                         
                         XCTAssertEqual(newRoom.state.membership, MXMembershipJoin);
@@ -1008,7 +1008,7 @@
                         // Now, we must have more information about the room
                         // Check its new state
                         XCTAssertEqual(newRoom.state.isJoinRulePublic, YES);
-                        XCTAssertEqual(newRoom.state.membersCount.members, 2);
+                        XCTAssertEqual(newRoom.summary.membersCount.members, 2);
                         XCTAssert([newRoom.state.topic isEqualToString:@"We test room invitation here"], @"Wrong topic. Found: %@", newRoom.state.topic);
                         
                         XCTAssertEqual(newRoom.state.membership, MXMembershipJoin);
@@ -1116,7 +1116,7 @@
                     MXRoom *room = [mxSession roomWithRoomId:event.roomId];
 
                     XCTAssert(room);
-                    XCTAssertEqual(room.state.membersCount.members, 2, @"If this count is wrong, the room state is invalid");
+                    XCTAssertEqual(room.summary.membersCount.members, 2, @"If this count is wrong, the room state is invalid");
 
                     [expectation fulfill];
                 }

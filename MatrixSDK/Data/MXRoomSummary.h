@@ -19,6 +19,7 @@
 
 #import "MXJSONModels.h"
 #import "MXHTTPOperation.h"
+#import "MXRoomMembersCount.h"
 
 @class MXSession, MXRoom, MXRoomState, MXEvent;
 
@@ -135,6 +136,11 @@ FOUNDATION_EXPORT NSString *const kMXRoomSummaryDidChangeNotification;
  The topic of the room.
  */
 @property (nonatomic) NSString *topic;
+
+/**
+ Room members counts.
+ */
+@property (nonatomic) MXRoomMembersCount *membersCount;
 
 /**
  Reset data related to room state.

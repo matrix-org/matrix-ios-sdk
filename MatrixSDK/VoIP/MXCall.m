@@ -96,7 +96,7 @@ NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
         _endReason = MXCallEndReasonUnknown;
 
         // Consider we are using a conference call when there are more than 2 users
-        _isConferenceCall = (2 < _room.state.membersCount.joined);
+        _isConferenceCall = (2 < _room.summary.membersCount.joined);
         
         // Set caleeId only for regular calls
         if (!_isConferenceCall)

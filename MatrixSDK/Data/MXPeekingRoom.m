@@ -70,6 +70,12 @@
     } failure:failure];
 }
 
+- (MXRoomSummary *)summary
+{
+    NSAssert(NO, @"MXPeekingRoom has no summary");
+    return nil;
+}
+
 - (void)close
 {
     // Cancel the current server request (if any)
