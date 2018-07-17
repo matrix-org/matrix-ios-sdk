@@ -441,6 +441,66 @@ NSString *uisiString = @"The sender's device has not sent us the keys for this m
     }];
 }
 
+// Check membership when:
+//  - the user is in the room
+//  - he has left it
+- (void)testMembership
+{
+    [matrixSDKTestsData doMXSessionTestWithBobAndARoom:self andStore:[[MXFileStore alloc] init] readyToTest:^(MXSession *mxSession, MXRoom *room, XCTestExpectation *expectation) {
+
+        XCTAssertEqual(room.summary.membership, MXMembershipJoin);
+
+        [room.liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMember] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
+
+            if (direction == MXTimelineDirectionForwards)
+            {
+                XCTAssertEqual(room.summary.membership, MXMembershipLeave);
+
+                [expectation fulfill];
+            }
+        }];
+
+        [room leave:nil failure:^(NSError *error) {
+            XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+            [expectation fulfill];
+        }];
+    }];
+}
+
+// Check members count when:
+//  - Bob is the only one in a room
+//  - Bob has invited Alice
+- (void)testMembersCount
+{
+    [matrixSDKTestsData doMXSessionTestWithBobAndARoom:self andStore:[[MXFileStore alloc] init] readyToTest:^(MXSession *mxSession, MXRoom *room, XCTestExpectation *expectation) {
+
+        XCTAssertEqual(room.summary.membersCount.members, 1);
+        XCTAssertEqual(room.summary.membersCount.joined, 1);
+        XCTAssertEqual(room.summary.membersCount.invited, 0);
+
+        [matrixSDKTestsData doMXSessionTestWithAlice:nil readyToTest:^(MXSession *aliceSession, XCTestExpectation *expectation2) {
+
+            [room.liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMember] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
+
+                if (direction == MXTimelineDirectionForwards)
+                {
+                    XCTAssertEqual(room.summary.membersCount.members, 2);
+                    XCTAssertEqual(room.summary.membersCount.joined, 1);
+                    XCTAssertEqual(room.summary.membersCount.invited, 1);
+
+                    [expectation fulfill];
+                }
+            }];
+
+            [room inviteUser:aliceSession.myUser.userId success:nil failure:^(NSError *error) {
+                XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                [expectation fulfill];
+            }];
+        }];
+
+    }];
+}
+
 // @TODO(summary): It breaks the tests suite :/
 //- (void)testResetRoomStateData
 //{
