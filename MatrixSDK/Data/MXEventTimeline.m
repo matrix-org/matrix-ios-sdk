@@ -706,6 +706,9 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
     {
         // Forwards events update the current state of the room
         [_state handleStateEvents:stateEvents];
+
+        // Update summary with this state events update
+        [room.summary handleStateEvents:stateEvents];
     }
 }
 

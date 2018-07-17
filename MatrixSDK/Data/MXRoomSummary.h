@@ -258,7 +258,16 @@ FOUNDATION_EXPORT NSString *const kMXRoomSummaryDidChangeNotification;
 #pragma mark - Server sync
 
 /**
+ Process state events in order to update the room state.
+ 
+ @param stateEvents an array of state events.
+ */
+- (void)handleStateEvents:(NSArray<MXEvent *> *)stateEvents;
+
+/**
  Update room summary data according to the provided sync response.
+
+ Note: state events have been previously sent to `handleStateEvents`.
 
  @param roomSync information to sync the room with the home server data.
  */
@@ -266,6 +275,8 @@ FOUNDATION_EXPORT NSString *const kMXRoomSummaryDidChangeNotification;
 
 /**
  Update the invited room state according to the provided data.
+
+ Note: state events have been previously sent to `handleStateEvents`.
 
  @param invitedRoomSync information to update the room state.
  */

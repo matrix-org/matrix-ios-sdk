@@ -72,7 +72,7 @@
 
 - (MXRoomSummary *)summary
 {
-    NSAssert(NO, @"MXPeekingRoom has no summary");
+    NSLog(@"[MXPeekingRoom] Warning: MXPeekingRoom has no summary");
     return nil;
 }
 
