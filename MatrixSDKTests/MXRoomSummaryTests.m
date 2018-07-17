@@ -450,14 +450,16 @@ NSString *uisiString = @"The sender's device has not sent us the keys for this m
 
         XCTAssertEqual(room.summary.membership, MXMembershipJoin);
 
-        [room.liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMember] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
+        [room liveTimeline:^(MXEventTimeline *liveTimeline) {
+            [liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMember] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
 
-            if (direction == MXTimelineDirectionForwards)
-            {
-                XCTAssertEqual(room.summary.membership, MXMembershipLeave);
+                if (direction == MXTimelineDirectionForwards)
+                {
+                    XCTAssertEqual(room.summary.membership, MXMembershipLeave);
 
-                [expectation fulfill];
-            }
+                    [expectation fulfill];
+                }
+            }];
         }];
 
         [room leave:nil failure:^(NSError *error) {
@@ -480,16 +482,18 @@ NSString *uisiString = @"The sender's device has not sent us the keys for this m
 
         [matrixSDKTestsData doMXSessionTestWithAlice:nil readyToTest:^(MXSession *aliceSession, XCTestExpectation *expectation2) {
 
-            [room.liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMember] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
+            [room liveTimeline:^(MXEventTimeline *liveTimeline) {
+                [liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMember] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
 
-                if (direction == MXTimelineDirectionForwards)
-                {
-                    XCTAssertEqual(room.summary.membersCount.members, 2);
-                    XCTAssertEqual(room.summary.membersCount.joined, 1);
-                    XCTAssertEqual(room.summary.membersCount.invited, 1);
+                    if (direction == MXTimelineDirectionForwards)
+                    {
+                        XCTAssertEqual(room.summary.membersCount.members, 2);
+                        XCTAssertEqual(room.summary.membersCount.joined, 1);
+                        XCTAssertEqual(room.summary.membersCount.invited, 1);
 
-                    [expectation fulfill];
-                }
+                        [expectation fulfill];
+                    }
+                }];
             }];
 
             [room inviteUser:aliceSession.myUser.userId success:nil failure:^(NSError *error) {
@@ -1162,8 +1166,8 @@ NSString *uisiString = @"The sender's device has not sent us the keys for this m
                                        warnOnUnknowDevices:NO
                                                 aliceStore:[[MXMemoryStore alloc] init]
                                                   bobStore:[[MXMemoryStore alloc] init]
-                                               readyToTest:^(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
-
+                                               readyToTest:^(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation)
+    {
         bobSession.roomSummaryUpdateDelegate = self;
 
         NSString *messageFromAlice = @"Hello I'm Alice!";
@@ -1179,23 +1183,25 @@ NSString *uisiString = @"The sender's device has not sent us the keys for this m
             toDeviceEvent = notif.userInfo[kMXSessionNotificationEventKey];
         }];
 
-        [roomFromBobPOV.liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
+        [roomFromBobPOV liveTimeline:^(MXEventTimeline *liveTimeline) {
+            
+            [liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
 
-            // Make crypto forget the inbound group session now
-            // MXRoomSummary will not be able to decrypt it
-            XCTAssert(toDeviceEvent);
-            NSString *sessionId = toDeviceEvent.content[@"session_id"];
+                // Make crypto forget the inbound group session now
+                // MXRoomSummary will not be able to decrypt it
+                XCTAssert(toDeviceEvent);
+                NSString *sessionId = toDeviceEvent.content[@"session_id"];
 
-            id<MXCryptoStore> bobCryptoStore = (id<MXCryptoStore>)[bobSession.crypto.olmDevice valueForKey:@"store"];
-            [bobCryptoStore removeInboundGroupSessionWithId:sessionId andSenderKey:toDeviceEvent.senderKey];
+                id<MXCryptoStore> bobCryptoStore = (id<MXCryptoStore>)[bobSession.crypto.olmDevice valueForKey:@"store"];
+                [bobCryptoStore removeInboundGroupSessionWithId:sessionId andSenderKey:toDeviceEvent.senderKey];
 
-            // So that we cannot decrypt it anymore right now
-            [event setClearData:nil];
-            BOOL b = [bobSession decryptEvent:event inTimeline:nil];
+                // So that we cannot decrypt it anymore right now
+                [event setClearData:nil];
+                BOOL b = [bobSession decryptEvent:event inTimeline:nil];
 
-            XCTAssertFalse(b, @"Failed to set up test condition");
+                XCTAssertFalse(b, @"Failed to set up test condition");
+            }];
         }];
-
 
         MXRoomSummary *roomSummaryFromBobPOV = roomFromBobPOV.summary;
 

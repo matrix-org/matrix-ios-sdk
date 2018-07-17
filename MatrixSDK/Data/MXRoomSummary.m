@@ -20,6 +20,7 @@
 #import "MXRoom.h"
 #import "MXRoomState.h"
 #import "MXSession.h"
+#import "MXTools.h"
 
 #import <Security/Security.h>
 #import <CommonCrypto/CommonCryptor.h>
@@ -214,7 +215,7 @@ NSString *const kMXRoomSummaryDidChangeNotification = @"kMXRoomSummaryDidChangeN
         return nil;
     }
 
-    MXHTTPOperation *newOperation;
+    __block MXHTTPOperation *newOperation;
 
     // Start by checking events we have in the store
     MXRoomState *state = self.room.state;
@@ -280,46 +281,51 @@ NSString *const kMXRoomSummaryDidChangeNotification = @"kMXRoomSummaryDidChangeN
     }
 
     // 2.1 If lastMessageEventId is still nil, fetch events from the homeserver
-    if (!_lastMessageEventId && [room.liveTimeline canPaginate:MXTimelineDirectionBackwards])
-    {
-        NSUInteger messagesToPaginate = 30;
+    MXWeakify(self);
+    [room liveTimeline:^(MXEventTimeline *liveTimeline) {
+        MXStrongifyAndReturnIfNil(self);
 
-        // Reset pagination the first time
-        if (firstIteration)
+        if (!self->_lastMessageEventId && [liveTimeline canPaginate:MXTimelineDirectionBackwards])
         {
-            [room.liveTimeline resetPagination];
+            NSUInteger messagesToPaginate = 30;
 
-            // Make sure we paginate more than the events we have already in the store
-            messagesToPaginate += messagesInStore;
+            // Reset pagination the first time
+            if (firstIteration)
+            {
+                [liveTimeline resetPagination];
+
+                // Make sure we paginate more than the events we have already in the store
+                messagesToPaginate += messagesInStore;
+            }
+
+            // Paginate events from the homeserver
+            // XXX: Pagination on the timeline may conflict with request from the app
+            newOperation = [liveTimeline paginate:messagesToPaginate direction:MXTimelineDirectionBackwards onlyFromStore:NO complete:^{
+
+                // Received messages have been stored in the store. We can make a new loop
+                [self fetchLastMessage:complete failure:failure
+                    lastEventIdChecked:lastEventIdChecked
+                             operation:(operation ? operation : newOperation)
+                                commit:commit];
+
+            } failure:failure];
+
+            // Update the current HTTP operation
+            if (operation)
+            {
+                [operation mutateTo:newOperation];
+            }
         }
-
-        // Paginate events from the homeserver
-        // XXX: Pagination on the timeline may conflict with request from the app
-        newOperation = [room.liveTimeline paginate:messagesToPaginate direction:MXTimelineDirectionBackwards onlyFromStore:NO complete:^{
-
-            // Received messages have been stored in the store. We can make a new loop
-            [self fetchLastMessage:complete failure:failure
-                lastEventIdChecked:lastEventIdChecked
-                         operation:(operation ? operation : newOperation)
-                            commit:commit];
-
-        } failure:failure];
-
-        // Update the current HTTP operation
-        if (operation)
+        else
         {
-            [operation mutateTo:newOperation];
-        }
-    }
-    else
-    {
-        if (complete)
-        {
-            complete();
-        }
+            if (complete)
+            {
+                complete();
+            }
 
-        [self save:commit];
-    }
+            [self save:commit];
+        }
+    }];
 
     return operation ? operation : newOperation;
 }

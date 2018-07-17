@@ -61,11 +61,13 @@
         }
         self->httpOperation = nil;
 
-        [self.liveTimeline initialiseState:roomInitialSync.state];
+        [self liveTimeline:^(MXEventTimeline *liveTimeline) {
+            [liveTimeline initialiseState:roomInitialSync.state];
 
-        // @TODO: start the events stream
+            // @TODO: start the events stream
 
-        onServerSyncDone();
+            onServerSyncDone();
+        }];
 
     } failure:failure];
 }
@@ -78,12 +80,11 @@
 
 - (void)close
 {
+    [super close];
+
     // Cancel the current server request (if any)
     [httpOperation cancel];
     httpOperation = nil;
-
-    // Clean MXRoom
-    [self.liveTimeline removeAllListeners];
 }
 
 - (void)pause

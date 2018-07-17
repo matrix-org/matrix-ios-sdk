@@ -127,15 +127,18 @@
             XCTAssertNil(room.state.topic, @"There must be no room topic yet. Found: %@", room.state.topic);
             
             // Listen to live event. We should receive only one: a m.room.topic event
-            [room.liveTimeline listenToEventsOfTypes:nil onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
-                
-                XCTAssertEqual(event.eventType, MXEventTypeRoomTopic);
-                
-                XCTAssertNotNil(room.state.topic);
-                XCTAssert([room.state.topic isEqualToString:@"My topic"], @"The room topic shoud be \"My topic\". Found: %@", room.state.topic);
-                
-                [expectation fulfill];
-                
+            [room liveTimeline:^(MXEventTimeline *liveTimeline) {
+
+                [liveTimeline listenToEventsOfTypes:nil onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
+
+                    XCTAssertEqual(event.eventType, MXEventTypeRoomTopic);
+
+                    XCTAssertNotNil(room.state.topic);
+                    XCTAssert([room.state.topic isEqualToString:@"My topic"], @"The room topic shoud be \"My topic\". Found: %@", room.state.topic);
+
+                    [expectation fulfill];
+
+                }];
             }];
         
             // Change the topic
@@ -200,15 +203,17 @@
             XCTAssertNil(room.state.avatar, @"There must be no room avatar yet. Found: %@", room.state.avatar);
 
             // Listen to live event. We should receive only one: a m.room.avatar event
-            [room.liveTimeline listenToEventsOfTypes:nil onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
+            [room liveTimeline:^(MXEventTimeline *liveTimeline) {
+                [liveTimeline listenToEventsOfTypes:nil onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
 
-                XCTAssertEqual(event.eventType, MXEventTypeRoomAvatar);
+                    XCTAssertEqual(event.eventType, MXEventTypeRoomAvatar);
 
-                XCTAssertNotNil(room.state.avatar);
-                XCTAssertEqualObjects(room.state.avatar, @"http://matrix.org/matrix.png");
+                    XCTAssertNotNil(room.state.avatar);
+                    XCTAssertEqualObjects(room.state.avatar, @"http://matrix.org/matrix.png");
 
-                [expectation fulfill];
+                    [expectation fulfill];
 
+                }];
             }];
 
             // Change the avatar
@@ -272,17 +277,19 @@
             XCTAssertNil(room.state.name, @"There must be no room name yet. Found: %@", room.state.name);
             
             // Listen to live event. We should receive only one: a m.room.name event
-            [room.liveTimeline listenToEventsOfTypes:nil onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
-                
-                XCTAssertEqual(event.eventType, MXEventTypeRoomName);
-                
-                XCTAssertNotNil(room.state.name);
-                XCTAssert([room.state.name isEqualToString:@"My room name"], @"The room topic shoud be \"My room name\". Found: %@", room.state.name);
-                
-                [expectation fulfill];
-                
+            [room liveTimeline:^(MXEventTimeline *liveTimeline) {
+                [liveTimeline listenToEventsOfTypes:nil onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
+
+                    XCTAssertEqual(event.eventType, MXEventTypeRoomName);
+
+                    XCTAssertNotNil(room.state.name);
+                    XCTAssert([room.state.name isEqualToString:@"My room name"], @"The room topic shoud be \"My room name\". Found: %@", room.state.name);
+
+                    [expectation fulfill];
+
+                }];
             }];
-            
+
             // Change the topic
             [bobRestClient2 setRoomName:roomId name:@"My room name" success:^{
                 
@@ -344,16 +351,18 @@
             XCTAssertEqualObjects(room.state.historyVisibility, kMXRoomHistoryVisibilityShared, @"The default room history visibility should be shared");
 
             // Listen to live event. We should receive only one: a m.room.name event
-            [room.liveTimeline listenToEventsOfTypes:nil onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
+            [room liveTimeline:^(MXEventTimeline *liveTimeline) {
+                [liveTimeline listenToEventsOfTypes:nil onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
 
-                XCTAssertEqual(event.eventType, MXEventTypeRoomHistoryVisibility);
+                    XCTAssertEqual(event.eventType, MXEventTypeRoomHistoryVisibility);
 
-                XCTAssertNotNil(room.state.historyVisibility);
-                XCTAssertEqualObjects(room.state.historyVisibility, kMXRoomHistoryVisibilityInvited, @"The room history visibility is wrong");
-;
+                    XCTAssertNotNil(room.state.historyVisibility);
+                    XCTAssertEqualObjects(room.state.historyVisibility, kMXRoomHistoryVisibilityInvited, @"The room history visibility is wrong");
+                    ;
 
-                [expectation fulfill];
+                    [expectation fulfill];
 
+                }];
             }];
 
             // Change the history visibility
@@ -417,15 +426,17 @@
             XCTAssertEqualObjects(room.state.joinRule, kMXRoomJoinRuleInvite, @"The default room join rule should be invite");
 
             // Listen to live event. We should receive only one: a m.room.name event
-            [room.liveTimeline listenToEventsOfTypes:nil onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
+            [room liveTimeline:^(MXEventTimeline *liveTimeline) {
+                [liveTimeline listenToEventsOfTypes:nil onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
 
-                XCTAssertEqual(event.eventType, MXEventTypeRoomJoinRules);
+                    XCTAssertEqual(event.eventType, MXEventTypeRoomJoinRules);
 
-                XCTAssertNotNil(room.state.joinRule);
-                XCTAssertEqualObjects(room.state.joinRule, kMXRoomJoinRulePublic, @"The room join rule is wrong");
+                    XCTAssertNotNil(room.state.joinRule);
+                    XCTAssertEqualObjects(room.state.joinRule, kMXRoomJoinRulePublic, @"The room join rule is wrong");
 
-                [expectation fulfill];
+                    [expectation fulfill];
 
+                }];
             }];
 
             // Change the join rule
@@ -489,15 +500,17 @@
             XCTAssertEqualObjects(room.state.guestAccess, kMXRoomGuestAccessCanJoin, @"The default room guest access should be forbidden");
 
             // Listen to live event. We should receive only one: a m.room.name event
-            [room.liveTimeline listenToEventsOfTypes:nil onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
+            [room liveTimeline:^(MXEventTimeline *liveTimeline) {
+                [liveTimeline listenToEventsOfTypes:nil onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
 
-                XCTAssertEqual(event.eventType, MXEventTypeRoomGuestAccess);
+                    XCTAssertEqual(event.eventType, MXEventTypeRoomGuestAccess);
 
-                XCTAssertNotNil(room.state.guestAccess);
-                XCTAssertEqualObjects(room.state.guestAccess, kMXRoomGuestAccessForbidden, @"The room guest access is wrong");
+                    XCTAssertNotNil(room.state.guestAccess);
+                    XCTAssertEqualObjects(room.state.guestAccess, kMXRoomGuestAccessForbidden, @"The room guest access is wrong");
 
-                [expectation fulfill];
+                    [expectation fulfill];
 
+                }];
             }];
 
             // Change the guest access
@@ -582,29 +595,31 @@
             XCTAssertNil(room.state.canonicalAlias);
             
             // Listen to live event. We should receive only: a m.room.aliases and m.room.canonical_alias events
-            [room.liveTimeline listenToEventsOfTypes:nil onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
-                
-                if(event.eventType == MXEventTypeRoomAliases)
-                {
-                    XCTAssertNotNil(room.state.aliases);
-                    XCTAssertEqual(room.state.aliases.count, 1);
-                    XCTAssertEqualObjects(room.state.aliases.firstObject, roomAlias, @"The room alias is wrong");
-                }
-                else if (event.eventType == MXEventTypeRoomCanonicalAlias)
-                {
-                    XCTAssertNotNil(room.state.canonicalAlias);
-                    XCTAssertNotEqual(room.state.canonicalAlias.length, 0);
-                    XCTAssertEqualObjects(room.state.canonicalAlias, roomAlias, @"The room canonical alias is wrong");
-                    
-                    [expectation fulfill];
-                }
-                else
-                {
-                    XCTFail(@"The event type is unexpected - type: %@", event.type);
-                }
-                
+            [room liveTimeline:^(MXEventTimeline *liveTimeline) {
+                [liveTimeline listenToEventsOfTypes:nil onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
+
+                    if(event.eventType == MXEventTypeRoomAliases)
+                    {
+                        XCTAssertNotNil(room.state.aliases);
+                        XCTAssertEqual(room.state.aliases.count, 1);
+                        XCTAssertEqualObjects(room.state.aliases.firstObject, roomAlias, @"The room alias is wrong");
+                    }
+                    else if (event.eventType == MXEventTypeRoomCanonicalAlias)
+                    {
+                        XCTAssertNotNil(room.state.canonicalAlias);
+                        XCTAssertNotEqual(room.state.canonicalAlias.length, 0);
+                        XCTAssertEqualObjects(room.state.canonicalAlias, roomAlias, @"The room canonical alias is wrong");
+
+                        [expectation fulfill];
+                    }
+                    else
+                    {
+                        XCTFail(@"The event type is unexpected - type: %@", event.type);
+                    }
+
+                }];
             }];
-            
+
             // Set room alias
             [room addAlias:roomAlias success:^{
                 
@@ -926,16 +941,18 @@
                 [mxSession start:^{
                     
                     MXRoom *newRoom = [mxSession roomWithRoomId:roomId];
-                    
-                    [newRoom.liveTimeline listenToEvents:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
-                        if (MXTimelineDirectionForwards == event)
-                        {
-                            // We should receive only join events in live
-                            XCTAssertEqual(event.eventType, MXEventTypeRoomMember);
 
-                            MXRoomMemberEventContent *roomMemberEventContent = [MXRoomMemberEventContent modelFromJSON:event.content];
-                            XCTAssert([roomMemberEventContent.membership isEqualToString:kMXMembershipStringJoin]);
-                        }
+                    [newRoom liveTimeline:^(MXEventTimeline *liveTimeline) {
+                        [liveTimeline listenToEvents:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
+                            if (MXTimelineDirectionForwards == event)
+                            {
+                                // We should receive only join events in live
+                                XCTAssertEqual(event.eventType, MXEventTypeRoomMember);
+
+                                MXRoomMemberEventContent *roomMemberEventContent = [MXRoomMemberEventContent modelFromJSON:event.content];
+                                XCTAssert([roomMemberEventContent.membership isEqualToString:kMXMembershipStringJoin]);
+                            }
+                        }];
                     }];
                     
                     [mxSession listenToEvents:^(MXEvent *event, MXTimelineDirection direction, id customObject) {

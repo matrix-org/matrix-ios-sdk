@@ -289,9 +289,11 @@
 
             MXRoom *room = [mxSession roomWithRoomId:roomId];
             XCTAssert(room);
-            [room.liveTimeline listenToEvents:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
-                XCTFail(@"We should not receive events after closing the session. Received: %@", event);
-                [expectation fulfill];
+            [room liveTimeline:^(MXEventTimeline *liveTimeline) {
+                [liveTimeline listenToEvents:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
+                    XCTFail(@"We should not receive events after closing the session. Received: %@", event);
+                    [expectation fulfill];
+                }];
             }];
 
             MXUser *bob = [mxSession userWithUserId:bobRestClient.credentials.userId];
@@ -397,9 +399,11 @@
                 }];
 
                 MXRoom *room = [mxSession roomWithRoomId:roomId];
-                [room.liveTimeline listenToEvents:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
-                    eventCount++;
-                    XCTAssertFalse(paused, @"We should not receive events when paused. Received: %@", event);
+                [room liveTimeline:^(MXEventTimeline *liveTimeline) {
+                    [liveTimeline listenToEvents:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
+                        eventCount++;
+                        XCTAssertFalse(paused, @"We should not receive events when paused. Received: %@", event);
+                    }];
                 }];
 
                 MXUser *bob = [mxSession userWithUserId:bobRestClient.credentials.userId];
@@ -466,9 +470,11 @@
                 }];
 
                 MXRoom *room = [mxSession roomWithRoomId:roomId];
-                [room.liveTimeline listenToEvents:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
-                    eventCount++;
-                    XCTAssertFalse(paused, @"We should not receive events when paused. Received: %@", event);
+                [room liveTimeline:^(MXEventTimeline *liveTimeline) {
+                    [liveTimeline listenToEvents:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
+                        eventCount++;
+                        XCTAssertFalse(paused, @"We should not receive events when paused. Received: %@", event);
+                    }];
                 }];
 
                 MXUser *bob = [mxSession userWithUserId:bobRestClient.credentials.userId];

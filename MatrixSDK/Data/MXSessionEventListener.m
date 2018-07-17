@@ -18,6 +18,7 @@
 
 #import "MXSession.h"
 #import "MXRoom.h"
+#import "MXTools.h"
 
 @interface MXSessionEventListener()
 {
@@ -44,19 +45,30 @@
 {
     if (![roomEventListeners objectForKey:room.roomId])
     {
-        roomEventListeners[room.roomId] =
-        [room.liveTimeline listenToEventsOfTypes:self.eventTypes onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
-            self.listenerBlock(event, direction, roomState);
+        MXWeakify(self);
+        [room liveTimeline:^(MXEventTimeline *liveTimeline) {
+            MXStrongifyAndReturnIfNil(self);
+
+            self->roomEventListeners[room.roomId] =
+            [liveTimeline listenToEventsOfTypes:self.eventTypes onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
+                self.listenerBlock(event, direction, roomState);
+            }];
+
         }];
     }
-
 }
 
 - (void)removeSpiedRoom:(MXRoom*)room
 {
     if ([roomEventListeners objectForKey:room.roomId])
     {
-        [room.liveTimeline removeListener:roomEventListeners[room.roomId]];
+        MXWeakify(self);
+        [room liveTimeline:^(MXEventTimeline *liveTimeline) {
+            MXStrongifyAndReturnIfNil(self);
+
+            [liveTimeline removeListener:self->roomEventListeners[room.roomId]];
+        }];
+
         [roomEventListeners removeObjectForKey:room.roomId];
     }
 }
@@ -69,7 +81,13 @@
     for (NSString *roomId in roomEventListeners)
     {
         MXRoom *room = [mxSession roomWithRoomId:roomId];
-        [room.liveTimeline removeListener:roomEventListeners[room.roomId]];
+
+        MXWeakify(self);
+        [room liveTimeline:^(MXEventTimeline *liveTimeline) {
+            MXStrongifyAndReturnIfNil(self);
+
+            [liveTimeline removeListener:self->roomEventListeners[room.roomId]];
+        }];
     }
     [roomEventListeners removeAllObjects];
 }

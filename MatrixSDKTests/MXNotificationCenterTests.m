@@ -158,24 +158,27 @@
         mxSession = bobSession;
 
         MXRoom *room = [mxSession roomWithRoomId:roomId];
-        [room.liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMember] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
+        [room liveTimeline:^(MXEventTimeline *liveTimeline) {
 
-            [bobSession.notificationCenter listenToNotifications:^(MXEvent *event, MXRoomState *roomState, MXPushRule *rule) {
+            [liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMember] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
 
-                // We must be alerted by the default content HS rule on any message
-                XCTAssertEqual(rule.kind, MXPushRuleKindUnderride);
-                XCTAssert(rule.isDefault, @"The rule must be the server default rule. Rule: %@", rule);
+                [bobSession.notificationCenter listenToNotifications:^(MXEvent *event, MXRoomState *roomState, MXPushRule *rule) {
 
-                [expectation fulfill];
+                    // We must be alerted by the default content HS rule on any message
+                    XCTAssertEqual(rule.kind, MXPushRuleKindUnderride);
+                    XCTAssert(rule.isDefault, @"The rule must be the server default rule. Rule: %@", rule);
+
+                    [expectation fulfill];
+                }];
+
+                [aliceRestClient sendTextMessageToRoom:roomId text:@"a message" success:^(NSString *eventId) {
+
+                } failure:^(NSError *error) {
+                    XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                    [expectation fulfill];
+                }];
+
             }];
-
-            [aliceRestClient sendTextMessageToRoom:roomId text:@"a message" success:^(NSString *eventId) {
-
-            } failure:^(NSError *error) {
-                XCTFail(@"Cannot set up intial test conditions - error: %@", error);
-                [expectation fulfill];
-            }];
-
         }];
 
         // Make sure there 3 are peoples in the room to avoid to fire the default "room_member_count == 2" rule

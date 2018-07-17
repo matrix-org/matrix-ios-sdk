@@ -667,7 +667,7 @@ typedef void (^MXOnResumeDone)(void);
     // Clean MXRooms
     for (MXRoom *room in rooms.allValues)
     {
-        [room.liveTimeline removeAllListeners];
+        [room close];
     }
     [rooms removeAllObjects];
 

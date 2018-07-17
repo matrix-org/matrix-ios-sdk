@@ -81,11 +81,12 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidFlushDataNotification;
 /**
  The live events timeline.
  */
-@property (nonatomic, readonly) MXEventTimeline *liveTimeline;
+- (void)liveTimeline:(void (^)(MXEventTimeline *liveTimeline))onComplete;
 
 /**
  The up-to-date state of the room.
  */
+// @TODO: Make it async too
 @property (nonatomic, readonly) MXRoomState *state;
 
 /**
@@ -175,6 +176,8 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidFlushDataNotification;
  @return the new instance.
  */
 + (id)loadRoomFromStore:(id<MXStore>)store withRoomId:(NSString *)roomId matrixSession:(MXSession *)matrixSession;
+
+- (void)close;
 
 #pragma mark - Server sync
 
