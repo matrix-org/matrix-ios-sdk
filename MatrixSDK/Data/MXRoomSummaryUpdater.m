@@ -127,7 +127,7 @@
 
     if (hasRoomMembersChange)
     {
-        // Check if there was a change in members counts
+        // Check if there was a change on room state cached data
         if (![summary.membersCount isEqual:room.state.membersCount])
         {
             summary.membersCount = [room.state.membersCount copy];

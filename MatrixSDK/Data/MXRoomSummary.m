@@ -382,7 +382,7 @@ NSString *const kMXRoomSummaryDidChangeNotification = @"kMXRoomSummaryDidChangeN
 
 - (void)handleJoinedRoomSync:(MXRoomSync*)roomSync
 {
-    // Handle first changes due to state events
+    // Changes due to state events have been processed previously
     BOOL updated = updatedWithStateEvents;
     updatedWithStateEvents = NO;
 
