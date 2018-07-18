@@ -42,8 +42,24 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
      */
     NSMutableArray<MXRoomOperation*> *orderedOperations;
 
+    /**
+     The liveTimeline instance.
+     Its data is loaded only when [self liveTimeline:] is called.
+     */
     MXEventTimeline *_liveTimeline;
+
+    /**
+     Flag to indicate that the data for `_liveTimeline` must be loaded before use.
+     */
     BOOL needToLoadLiveTimeline;
+
+    /**
+     FIFO queue of objects waiting for [self liveTimeline:]. 
+     */
+    NSMutableArray<void (^)(MXEventTimeline *)> *pendingLiveTimelineRequesters;
+
+    // @TODO(async-state): For dev
+    BOOL __forceAsyncLoad;
 }
 @end
 
@@ -64,6 +80,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
         _directUserId = nil;
 
         needToLoadLiveTimeline = NO;
+        __forceAsyncLoad = YES;
     }
     
     return self;
@@ -162,19 +179,48 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
 
 - (void)liveTimeline:(void (^)(MXEventTimeline *))onComplete
 {
-    MXWeakify(self);
-    // @TODO(async-state): dispatch_async is just for testing
-    dispatch_async(dispatch_get_main_queue(), ^{
-        MXStrongifyAndReturnIfNil(self);
+    // Is timelime ready?
+    if (needToLoadLiveTimeline || pendingLiveTimelineRequesters || __forceAsyncLoad)
+    {
+        __forceAsyncLoad = NO;
+        BOOL __needToLoadLiveTimeline = needToLoadLiveTimeline;
 
-        if (self->needToLoadLiveTimeline)
+        // Queue the requester
+        if (!pendingLiveTimelineRequesters)
         {
-            MXRoomState *roomState = [MXRoomState loadRoomStateFromStore:self.mxSession.store withRoomId:self.roomId matrixSession:self.mxSession];
-            [self->_liveTimeline setState:roomState];
-            self->needToLoadLiveTimeline = NO;
+            pendingLiveTimelineRequesters = [NSMutableArray array];
+
+            MXWeakify(self);
+            // @TODO(async-state): dispatch_async is just for testing
+            dispatch_async(dispatch_get_main_queue(), ^{
+                MXStrongifyAndReturnIfNil(self);
+
+                if (__needToLoadLiveTimeline)
+                {
+                    MXRoomState *roomState = [MXRoomState loadRoomStateFromStore:self.mxSession.store withRoomId:self.roomId matrixSession:self.mxSession];
+                    [self->_liveTimeline setState:roomState];
+                }
+
+                // Provide the timelime to pending requesters
+                NSArray<void (^)(MXEventTimeline *)> *liveTimelineRequesters = [self->pendingLiveTimelineRequesters copy];
+                self->pendingLiveTimelineRequesters = nil;
+
+                for (void (^onRequesterComplete)(MXEventTimeline *) in liveTimelineRequesters)
+                {
+                    onRequesterComplete(self->_liveTimeline);
+                }
+                NSLog(@"[MXRoom] liveTimeline loaded. Pending requesters: %@", @(liveTimelineRequesters.count));
+            });
         }
-        onComplete(self->_liveTimeline);
-    });
+
+        [pendingLiveTimelineRequesters addObject:onComplete];
+
+        self->needToLoadLiveTimeline = NO;
+    }
+    else
+    {
+        onComplete(_liveTimeline);
+    }
 }
 
 - (void)state:(void (^)(MXRoomState *))onComplete
