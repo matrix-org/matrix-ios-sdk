@@ -77,6 +77,7 @@
         
         stateEvents = [NSMutableDictionary dictionary];
         _members = [[MXRoomMembers alloc] initWithRoomState:self andMatrixSession:mxSession];
+        _membersCount = [MXRoomMembersCount new];
         roomAliases = [NSMutableDictionary dictionary];
         thirdPartyInvites = [NSMutableDictionary dictionary];
         membersWithThirdPartyInviteTokenCache = [NSMutableDictionary dictionary];

@@ -96,7 +96,7 @@ NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
         _endReason = MXCallEndReasonUnknown;
 
         // Consider we are using a conference call when there are more than 2 users
-        _isConferenceCall = (2 < _room.state.membersCount.joined);
+        _isConferenceCall = (2 < _room.summary.membersCount.joined);
         
         // Set caleeId only for regular calls
         if (!_isConferenceCall)
@@ -335,7 +335,7 @@ NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
     // Sanity check on the call state
     // Note that e2e rooms requires several attempts of [MXCall answer] in case of unknown devices 
     if (self.state == MXCallStateRinging
-        || (_callSignalingRoom.state.isEncrypted && self.state == MXCallStateCreateAnswer))
+        || (_callSignalingRoom.summary.isEncrypted && self.state == MXCallStateCreateAnswer))
     {
         [self setState:MXCallStateCreateAnswer reason:nil];
 
@@ -387,7 +387,7 @@ NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
         // in the room before actually answering.
         // That will allow MXCall to send ICE candidates events without encryption errors like
         // MXEncryptingErrorUnknownDeviceReason.
-        if (_callSignalingRoom.state.isEncrypted)
+        if (_callSignalingRoom.summary.isEncrypted)
         {
             NSLog(@"[MXCall] answer: ensuring encryption is ready to use ...");
             [callManager.mxSession.crypto ensureEncryptionInRoom:_callSignalingRoom.roomId success:answer failure:^(NSError *error) {

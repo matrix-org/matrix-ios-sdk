@@ -367,10 +367,10 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
 - (void)handleJoinedRoomSync:(MXRoomSync *)roomSync
 {
     // Is it an initial sync for this room?
-    BOOL isRoomInitialSync = (self.state.membership == MXMembershipUnknown || self.state.membership == MXMembershipInvite);
+    BOOL isRoomInitialSync = (room.summary.membership == MXMembershipUnknown || room.summary.membership == MXMembershipInvite);
 
     // Check whether the room was pending on an invitation.
-    if (self.state.membership == MXMembershipInvite)
+    if (room.summary.membership == MXMembershipInvite)
     {
         // Reset the storage of this room. An initial sync of the room will be done with the provided 'roomSync'.
         NSLog(@"[MXEventTimeline] handleJoinedRoomSync: clean invited room from the store (%@).", self.state.roomId);
@@ -706,6 +706,9 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
     {
         // Forwards events update the current state of the room
         [_state handleStateEvents:stateEvents];
+
+        // Update summary with this state events update
+        [room.summary handleStateEvents:stateEvents];
     }
 }
 

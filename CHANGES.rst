@@ -2,8 +2,11 @@ Changes in Matrix iOS SDK in 0.11.0 ()
 ===============================================
 
 Improvements:
-* MXRestClient: Add Matrix filter API
-* MXRoomState: Add a membersCount struct to store members stats independently from MXRoomMember objects.
+* MXRestClient: Add Matrix filter API.
+* MXRoomState: Add a membersCount property to store members stats independently from MXRoomMember objects.
+* MXRoomSummary: Add a membersCount property to cache MXRoomState one
+* MXRoomSummary: Add a membership property to cache MXRoomState one
+* MXStore: Add Obj-C annotations.
 
 Bug fix:
 

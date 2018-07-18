@@ -19,6 +19,8 @@
 
 #import "MXJSONModels.h"
 #import "MXHTTPOperation.h"
+#import "MXRoomMembersCount.h"
+#import "MXEnumConstants.h"
 
 @class MXSession, MXRoom, MXRoomState, MXEvent;
 
@@ -137,6 +139,16 @@ FOUNDATION_EXPORT NSString *const kMXRoomSummaryDidChangeNotification;
 @property (nonatomic) NSString *topic;
 
 /**
+ The membership state of the logged in user for this room.
+ */
+@property (nonatomic) MXMembership membership;
+
+/**
+ Room members counts.
+ */
+@property (nonatomic) MXRoomMembersCount *membersCount;
+
+/**
  Reset data related to room state.
  
  It recomputes every data related to the room state from the current room state.
@@ -252,7 +264,16 @@ FOUNDATION_EXPORT NSString *const kMXRoomSummaryDidChangeNotification;
 #pragma mark - Server sync
 
 /**
+ Process state events in order to update the room state.
+ 
+ @param stateEvents an array of state events.
+ */
+- (void)handleStateEvents:(NSArray<MXEvent *> *)stateEvents;
+
+/**
  Update room summary data according to the provided sync response.
+
+ Note: state events have been previously sent to `handleStateEvents`.
 
  @param roomSync information to sync the room with the home server data.
  */
@@ -260,6 +281,8 @@ FOUNDATION_EXPORT NSString *const kMXRoomSummaryDidChangeNotification;
 
 /**
  Update the invited room state according to the provided data.
+
+ Note: state events have been previously sent to `handleStateEvents`.
 
  @param invitedRoomSync information to update the room state.
  */

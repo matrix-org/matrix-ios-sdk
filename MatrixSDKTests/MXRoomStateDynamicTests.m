@@ -405,7 +405,7 @@
                             XCTAssertEqual(event.eventType, MXEventTypeRoomMessage);
                             
                             XCTAssertEqual(roomState.members.count, 2);
-                            XCTAssertEqual(room.state.membersCount.members, 2);
+                            XCTAssertEqual(room.summary.membersCount.members, 2);
                             
                             XCTAssertEqual(beforeEventAliceMember.membership, MXMembershipLeave);
                             XCTAssertEqual(aliceMember.membership, MXMembershipLeave);
@@ -420,7 +420,7 @@
                             XCTAssertEqual(event.eventType, MXEventTypeRoomMember);
                             
                             XCTAssertEqual(roomState.members.count, 2);
-                            XCTAssertEqual(room.state.membersCount.members, 2);
+                            XCTAssertEqual(room.summary.membersCount.members, 2);
                             
                             XCTAssertEqual(beforeEventAliceMember.membership, MXMembershipJoin);
                             XCTAssertEqual(aliceMember.membership, MXMembershipLeave);
@@ -434,7 +434,7 @@
                             XCTAssertEqual(event.eventType, MXEventTypeRoomMessage);
                             
                             XCTAssertEqual(roomState.members.count, 2);
-                            XCTAssertEqual(room.state.membersCount.members, 2);
+                            XCTAssertEqual(room.summary.membersCount.members, 2);
                             
                             XCTAssertEqual(beforeEventAliceMember.membership, MXMembershipJoin);
                             XCTAssertEqual(aliceMember.membership, MXMembershipLeave);
@@ -448,7 +448,7 @@
                             XCTAssertEqual(event.eventType, MXEventTypeRoomMember);
                             
                             XCTAssertEqual(roomState.members.count, 2);
-                            XCTAssertEqual(room.state.membersCount.members, 2);
+                            XCTAssertEqual(room.summary.membersCount.members, 2);
                             
                             XCTAssertEqual(beforeEventAliceMember.membership, MXMembershipJoin);
                             XCTAssertEqual(aliceMember.membership, MXMembershipLeave);
@@ -462,7 +462,7 @@
                             XCTAssertEqual(event.eventType, MXEventTypeRoomMessage);
                             
                             XCTAssertEqual(roomState.members.count, 2);
-                            XCTAssertEqual(room.state.membersCount.members, 2);
+                            XCTAssertEqual(room.summary.membersCount.members, 2);
                             
                             XCTAssertEqual(beforeEventAliceMember.membership, MXMembershipJoin);
                             XCTAssertEqual(aliceMember.membership, MXMembershipLeave);
@@ -476,7 +476,7 @@
                             XCTAssertEqual(event.eventType, MXEventTypeRoomMember);
                             
                             XCTAssertEqual(roomState.members.count, 2);
-                            XCTAssertEqual(room.state.membersCount.members, 2);
+                            XCTAssertEqual(room.summary.membersCount.members, 2);
                             
                             XCTAssertEqual(beforeEventAliceMember.membership, MXMembershipInvite);
                             XCTAssertEqual(aliceMember.membership, MXMembershipLeave);
@@ -491,7 +491,7 @@
                             XCTAssertEqual(event.eventType, MXEventTypeRoomMessage);
                             
                             XCTAssertEqual(roomState.members.count, 2);
-                            XCTAssertEqual(room.state.membersCount.members, 2);
+                            XCTAssertEqual(room.summary.membersCount.members, 2);
                             
                             XCTAssertEqual(beforeEventAliceMember.membership, MXMembershipInvite);
                             XCTAssertEqual(aliceMember.membership, MXMembershipLeave);
@@ -505,7 +505,7 @@
                             XCTAssertEqual(event.eventType, MXEventTypeRoomMember);
                             
                             XCTAssertEqual(roomState.members.count, 1);
-                            XCTAssertEqual(room.state.membersCount.members, 2);
+                            XCTAssertEqual(room.summary.membersCount.members, 2);
                             
                             XCTAssertEqual(aliceMember.membership, MXMembershipLeave);
                             XCTAssertNil(aliceMember.displayname);
@@ -519,7 +519,7 @@
                             XCTAssertEqual(event.eventType, MXEventTypeRoomMessage);
                             
                             XCTAssertEqual(roomState.members.count, 1);
-                            XCTAssertEqual(room.state.membersCount.members, 2);
+                            XCTAssertEqual(room.summary.membersCount.members, 2);
                             
                             XCTAssertEqual(aliceMember.membership, MXMembershipLeave);
                             XCTAssertNil(aliceMember.displayname);
@@ -581,7 +581,7 @@
                         XCTAssertEqual(event.eventType, MXEventTypeRoomMessage);
                         
                         XCTAssertEqual(roomState.members.count, 1);
-                        XCTAssertEqual(room.state.membersCount.members, 1);
+                        XCTAssertEqual(room.summary.membersCount.members, 1);
                         
                         // Alice member doest not exist at that time
                         XCTAssertNil(beforeEventAliceMember);
@@ -593,7 +593,7 @@
                         XCTAssertEqual(event.eventType, MXEventTypeRoomMember);
                         
                         XCTAssertEqual(roomState.members.count, 1);
-                        XCTAssertEqual(room.state.membersCount.members, 2);
+                        XCTAssertEqual(room.summary.membersCount.members, 2);
                         
                         XCTAssertEqual(aliceMember.membership, MXMembershipInvite);
                         XCTAssertNil(aliceMember.displayname);
@@ -607,7 +607,7 @@
                         XCTAssertEqual(event.eventType, MXEventTypeRoomMessage);
                         
                         XCTAssertEqual(roomState.members.count, 2);
-                        XCTAssertEqual(room.state.membersCount.members, 2);
+                        XCTAssertEqual(room.summary.membersCount.members, 2);
                         
                         XCTAssertEqual(beforeEventAliceMember.membership, MXMembershipInvite);
                         XCTAssertEqual(aliceMember.membership, MXMembershipInvite);
@@ -621,7 +621,7 @@
                         XCTAssertEqual(event.eventType, MXEventTypeRoomMember);
                         
                         XCTAssertEqual(roomState.members.count, 2);
-                        XCTAssertEqual(room.state.membersCount.members, 2);
+                        XCTAssertEqual(room.summary.membersCount.members, 2);
                         
                         XCTAssertEqual(beforeEventAliceMember.membership, MXMembershipInvite);
                         XCTAssertEqual(aliceMember.membership, MXMembershipJoin);
@@ -636,7 +636,7 @@
                         XCTAssertEqual(event.eventType, MXEventTypeRoomMessage);
                         
                         XCTAssertEqual(roomState.members.count, 2);
-                        XCTAssertEqual(room.state.membersCount.members, 2);
+                        XCTAssertEqual(room.summary.membersCount.members, 2);
                         
                         XCTAssertEqual(beforeEventAliceMember.membership, MXMembershipJoin);
                         XCTAssertEqual(aliceMember.membership, MXMembershipJoin);
@@ -650,7 +650,7 @@
                         XCTAssertEqual(event.eventType, MXEventTypeRoomMember);
                         
                         XCTAssertEqual(roomState.members.count, 2);
-                        XCTAssertEqual(room.state.membersCount.members, 2);
+                        XCTAssertEqual(room.summary.membersCount.members, 2);
                         
                         XCTAssertEqual(beforeEventAliceMember.membership, MXMembershipJoin);
                         XCTAssertEqual(aliceMember.membership, MXMembershipJoin);
@@ -664,7 +664,7 @@
                         XCTAssertEqual(event.eventType, MXEventTypeRoomMessage);
                         
                         XCTAssertEqual(roomState.members.count, 2);
-                        XCTAssertEqual(room.state.membersCount.members, 2);
+                        XCTAssertEqual(room.summary.membersCount.members, 2);
                         
                         XCTAssertEqual(beforeEventAliceMember.membership, MXMembershipJoin);
                         XCTAssertEqual(aliceMember.membership, MXMembershipJoin);
@@ -678,7 +678,7 @@
                         XCTAssertEqual(event.eventType, MXEventTypeRoomMember);
                         
                         XCTAssertEqual(roomState.members.count, 2);
-                        XCTAssertEqual(room.state.membersCount.members, 2);
+                        XCTAssertEqual(room.summary.membersCount.members, 2);
                         
                         XCTAssertEqual(beforeEventAliceMember.membership, MXMembershipJoin);
                         XCTAssertEqual(aliceMember.membership, MXMembershipLeave);
@@ -692,7 +692,7 @@
                         XCTAssertEqual(event.eventType, MXEventTypeRoomMessage);
                         
                         XCTAssertEqual(roomState.members.count, 2);
-                        XCTAssertEqual(room.state.membersCount.members, 2);
+                        XCTAssertEqual(room.summary.membersCount.members, 2);
                         
                         XCTAssertEqual(beforeEventAliceMember.membership, MXMembershipLeave);
                         XCTAssertEqual(aliceMember.membership, MXMembershipLeave);

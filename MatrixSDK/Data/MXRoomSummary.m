@@ -30,15 +30,28 @@ NSString *const kMXRoomSummaryDidChangeNotification = @"kMXRoomSummaryDidChangeN
 {
     // Cache for the last event to avoid to read it from the store everytime
     MXEvent *lastMessageEvent;
+
+    // Flag to avoid to notify several updates
+    BOOL updatedWithStateEvents;
 }
 
 @end
 
 @implementation MXRoomSummary
 
-- (instancetype)initWithRoomId:(NSString *)theRoomId andMatrixSession:(MXSession *)matrixSession
+- (instancetype)init
 {
     self = [super init];
+    if (self)
+    {
+        updatedWithStateEvents = NO;
+    }
+    return self;
+}
+
+- (instancetype)initWithRoomId:(NSString *)theRoomId andMatrixSession:(MXSession *)matrixSession
+{
+    self = [self init];
     if (self)
     {
         _roomId = theRoomId;
@@ -327,7 +340,7 @@ NSString *const kMXRoomSummaryDidChangeNotification = @"kMXRoomSummaryDidChangeN
 - (void)roomDidFlushData:(NSNotification *)notif
 {
     MXRoom *room = notif.object;
-    if (_mxSession == room.mxSession && [_roomId isEqualToString:room.state.roomId])
+    if (_mxSession == room.mxSession && [_roomId isEqualToString:room.roomId])
     {
         NSLog(@"[MXRoomSummary] roomDidFlushData: %@", _roomId);
 
@@ -359,26 +372,19 @@ NSString *const kMXRoomSummaryDidChangeNotification = @"kMXRoomSummaryDidChangeN
 }
 
 #pragma mark - Server sync
-- (void)handleJoinedRoomSync:(MXRoomSync*)roomSync
+- (void)handleStateEvents:(NSArray<MXEvent *> *)stateEvents
 {
-    // Handle first changes due to state events
-    BOOL updated = NO;
-
-    NSMutableArray<MXEvent*> *stateEvents = [NSMutableArray arrayWithArray:roomSync.state.events];
-
-    // There may be state events in the timeline too
-    for (MXEvent *event in roomSync.timeline.events)
-    {
-        if (event.isState)
-        {
-            [stateEvents addObject:event];
-        }
-    }
-
     if (stateEvents.count)
     {
-        updated = [_mxSession.roomSummaryUpdateDelegate session:_mxSession updateRoomSummary:self withStateEvents:stateEvents];
+        updatedWithStateEvents |= [_mxSession.roomSummaryUpdateDelegate session:_mxSession updateRoomSummary:self withStateEvents:stateEvents];
     }
+}
+
+- (void)handleJoinedRoomSync:(MXRoomSync*)roomSync
+{
+    // Changes due to state events have been processed previously
+    BOOL updated = updatedWithStateEvents;
+    updatedWithStateEvents = NO;
 
     // Handle the last message starting by the most recent event.
     // Then, if the delegate refuses it as last message, pass the previous event.
@@ -437,7 +443,8 @@ NSString *const kMXRoomSummaryDidChangeNotification = @"kMXRoomSummaryDidChangeN
 
 - (void)handleInvitedRoomSync:(MXInvitedRoomSync*)invitedRoomSync
 {
-    BOOL updated = [_mxSession.roomSummaryUpdateDelegate session:_mxSession updateRoomSummary:self withStateEvents:invitedRoomSync.inviteState.events];
+    BOOL updated = updatedWithStateEvents;
+    updatedWithStateEvents = NO;
 
     MXRoom *room = self.room;
 
@@ -479,6 +486,8 @@ NSString *const kMXRoomSummaryDidChangeNotification = @"kMXRoomSummaryDidChangeN
         _avatar = [aDecoder decodeObjectForKey:@"avatar"];
         _displayname = [aDecoder decodeObjectForKey:@"displayname"];
         _topic = [aDecoder decodeObjectForKey:@"topic"];
+        _membership = (MXMembership)[aDecoder decodeIntegerForKey:@"membership"];
+        _membersCount = [aDecoder decodeObjectForKey:@"membersCount"];
 
         _others = [aDecoder decodeObjectForKey:@"others"];
         _isEncrypted = [aDecoder decodeBoolForKey:@"isEncrypted"];
@@ -515,6 +524,8 @@ NSString *const kMXRoomSummaryDidChangeNotification = @"kMXRoomSummaryDidChangeN
     [aCoder encodeObject:_avatar forKey:@"avatar"];
     [aCoder encodeObject:_displayname forKey:@"displayname"];
     [aCoder encodeObject:_topic forKey:@"topic"];
+    [aCoder encodeInteger:(NSInteger)_membership forKey:@"membership"];
+    [aCoder encodeObject:_membersCount forKey:@"membersCount"];
 
     [aCoder encodeObject:_others forKey:@"others"];
     [aCoder encodeBool:_isEncrypted forKey:@"isEncrypted"];

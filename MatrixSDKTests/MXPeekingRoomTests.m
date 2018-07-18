@@ -126,11 +126,8 @@
 
         mxSession = mxSession2;
 
-        NSLog(@"___ %@", @(room.state.membersCount.members));
-        NSLog(@"___ %@", @(room.state.members.members.count));
-
         XCTAssertEqual(mxSession.rooms.count, 1);
-        XCTAssertEqual(room.state.membersCount.members, 1);
+        XCTAssertEqual(room.summary.membersCount.members, 1);
 
         [mxSession peekInRoomWithRoomId:room.roomId success:^(MXPeekingRoom *peekingRoom) {
 

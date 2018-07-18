@@ -89,6 +89,7 @@
         return NO;
     }
 
+    BOOL hasRoomMembersChange = NO;
     BOOL updated = NO;
 
     for (MXEvent *event in stateEvents)
@@ -110,6 +111,10 @@
                 updated = YES;
                 break;
 
+            case MXEventTypeRoomMember:
+                hasRoomMembersChange = YES;
+                break;
+
             case MXEventTypeRoomEncryption:
                 summary.isEncrypted = room.state.isEncrypted;
                 updated = YES;
@@ -117,6 +122,22 @@
 
             default:
                 break;
+        }
+    }
+
+    if (hasRoomMembersChange)
+    {
+        // Check if there was a change on room state cached data
+        if (![summary.membersCount isEqual:room.state.membersCount])
+        {
+            summary.membersCount = [room.state.membersCount copy];
+            updated = YES;
+        }
+
+        if (summary.membership != room.state.membership)
+        {
+            summary.membership = room.state.membership;
+            updated = YES;
         }
     }
 

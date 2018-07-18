@@ -70,6 +70,12 @@
     } failure:failure];
 }
 
+- (MXRoomSummary *)summary
+{
+    NSLog(@"[MXPeekingRoom] Warning: MXPeekingRoom has no summary");
+    return nil;
+}
+
 - (void)close
 {
     // Cancel the current server request (if any)

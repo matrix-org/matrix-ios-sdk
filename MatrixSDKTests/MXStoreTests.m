@@ -393,7 +393,7 @@
     [room.liveTimeline paginate:100 direction:MXTimelineDirectionBackwards onlyFromStore:NO complete:^() {
 
         // Use another MXRoom instance to do pagination in several times
-        MXRoom *room2 = [[MXRoom alloc] initWithRoomId:room.state.roomId andMatrixSession:mxSession];
+        MXRoom *room2 = [[MXRoom alloc] initWithRoomId:room.roomId andMatrixSession:mxSession];
 
         __block NSMutableArray *room2Events = [NSMutableArray array];
         [room2.liveTimeline listenToEventsOfTypes:nil onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
@@ -463,7 +463,7 @@
     __block NSMutableArray *roomEvents = [NSMutableArray array];
 
     // Use another MXRoom instance to paginate while receiving live events
-    MXRoom *room2 = [[MXRoom alloc] initWithRoomId:room.state.roomId andMatrixSession:mxSession];
+    MXRoom *room2 = [[MXRoom alloc] initWithRoomId:room.roomId andMatrixSession:mxSession];
 
     __block NSMutableArray *room2Events = [NSMutableArray array];
     [room2.liveTimeline listenToEventsOfTypes:nil onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
@@ -694,9 +694,9 @@
 {
     [matrixSDKTestsData doMXRestClientTestWithAlice:nil readyToTest:^(MXRestClient *aliceRestClient, XCTestExpectation *expectation2) {
 
-        [mxSession.matrixRestClient inviteUser:aliceRestClient.credentials.userId toRoom:room.state.roomId success:^{
+        [mxSession.matrixRestClient inviteUser:aliceRestClient.credentials.userId toRoom:room.roomId success:^{
 
-            NSString *roomId = room.state.roomId;
+            NSString *roomId = room.roomId;
 
             __block NSString *aliceTextEventId;
 
@@ -711,7 +711,7 @@
 
                 XCTAssertNotNil(room2);
 
-                if (direction == MXTimelineDirectionForwards && MXMembershipInvite == room2.state.membership && !joinedRequestMade)
+                if (direction == MXTimelineDirectionForwards && MXMembershipInvite == room2.summary.membership && !joinedRequestMade)
                 {
                     // Join the room on the invitation and check we can paginate all expected text messages
                     // By default the last Alice's message (sent while Bob is not in the room) must be visible.
@@ -815,7 +815,7 @@
         // Paginate for the exact number of events in the room
         NSUInteger pagEnd = eventCount;
         eventCount = 0;
-        [mxSession.store deleteRoom:room.state.roomId];
+        [mxSession.store deleteRoom:room.roomId];
         [room.liveTimeline resetPagination];
 
         [room.liveTimeline paginate:pagEnd direction:MXTimelineDirectionBackwards onlyFromStore:NO complete:^{
@@ -864,7 +864,7 @@
                 messageEventId = event.eventId;
             }
 
-            MXEvent *notYetRedactedEvent = [mxSession.store eventWithEventId:messageEventId inRoom:room.state.roomId];
+            MXEvent *notYetRedactedEvent = [mxSession.store eventWithEventId:messageEventId inRoom:room.roomId];
 
             XCTAssertGreaterThan(notYetRedactedEvent.content.count, 0);
             XCTAssertNil(notYetRedactedEvent.redacts);
@@ -880,7 +880,7 @@
         }
         else if (MXEventTypeRoomRedaction == event.eventType)
         {
-            MXEvent *redactedEvent = [mxSession.store eventWithEventId:messageEventId inRoom:room.state.roomId];
+            MXEvent *redactedEvent = [mxSession.store eventWithEventId:messageEventId inRoom:room.roomId];
 
             XCTAssertEqual(redactedEvent.content.count, 0, @"Redacted event content must be now empty");
             XCTAssertEqualObjects(event.eventId, redactedEvent.redactedBecause[@"event_id"], @"It must contain the event that redacted it");

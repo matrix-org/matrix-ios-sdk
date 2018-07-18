@@ -974,7 +974,7 @@ typedef void (^MXOnResumeDone)(void);
                     }                    
                     
                     // Notify the room is going to disappear
-                    NSMutableDictionary *userInfo = [NSMutableDictionary dictionaryWithObject:room.state.roomId forKey:kMXSessionNotificationRoomIdKey];
+                    NSMutableDictionary *userInfo = [NSMutableDictionary dictionaryWithObject:room.roomId forKey:kMXSessionNotificationRoomIdKey];
                     if (roomMemberEvent)
                     {
                         userInfo[kMXSessionNotificationEventKey] = roomMemberEvent;
@@ -983,7 +983,7 @@ typedef void (^MXOnResumeDone)(void);
                                                                         object:self
                                                                       userInfo:userInfo];
                     // Remove the room from the rooms list
-                    [self removeRoom:room.state.roomId];
+                    [self removeRoom:room.roomId];
                 }
             }
         }
@@ -1491,7 +1491,7 @@ typedef void (^MXOnResumeDone)(void);
                 
                 MXRoom *room = note.object;
                 
-                if ([room.state.roomId isEqualToString:response.roomId])
+                if ([room.roomId isEqualToString:response.roomId])
                 {
                     // Initialise notification counters homeserver side
                     [room markAllAsRead];
@@ -1538,7 +1538,7 @@ typedef void (^MXOnResumeDone)(void);
             
             MXRoom *room = note.object;
             
-            if ([room.state.roomId isEqualToString:response.roomId])
+            if ([room.roomId isEqualToString:response.roomId])
             {
                 // Initialise notification counters homeserver side
                 [room markAllAsRead];
@@ -1647,14 +1647,14 @@ typedef void (^MXOnResumeDone)(void);
         [[NSNotificationCenter defaultCenter] postNotificationName:kMXSessionInvitedRoomsDidChangeNotification
                                                             object:self
                                                           userInfo:@{
-                                                                     kMXSessionNotificationRoomIdKey: room.state.roomId,
+                                                                     kMXSessionNotificationRoomIdKey: room.roomId,
                                                                      }];
     }
 
     // Wait to receive data from /sync about this room before returning
     if (success)
     {
-        if (room.state.membership == MXMembershipJoin)
+        if (room.summary.membership == MXMembershipJoin)
         {
             // The /sync corresponding to this join may have happened before the
             // homeserver answer to the joinRoom request.
@@ -1803,7 +1803,7 @@ typedef void (^MXOnResumeDone)(void);
         if (directRoom)
         {
             // Check whether the user membership is joined
-            if (directRoom.state.membership == MXMembershipJoin)
+            if (directRoom.summary.membership == MXMembershipJoin)
             {
                 return directRoom;
             }
@@ -1871,7 +1871,7 @@ typedef void (^MXOnResumeDone)(void);
         [listener addRoomToSpy:room];
     }
 
-    [rooms setObject:room forKey:room.state.roomId];
+    [rooms setObject:room forKey:room.roomId];
 
     // Create the room summary if does not exist yet
     MXRoomSummary *summary = roomsSummaries[room.roomId];
@@ -1887,7 +1887,7 @@ typedef void (^MXOnResumeDone)(void);
         [[NSNotificationCenter defaultCenter] postNotificationName:kMXSessionNewRoomNotification
                                                             object:self
                                                           userInfo:@{
-                                                                     kMXSessionNotificationRoomIdKey: room.state.roomId
+                                                                     kMXSessionNotificationRoomIdKey: room.roomId
                                                                      }];
     }
 }
@@ -2674,7 +2674,7 @@ typedef void (^MXOnResumeDone)(void);
         {
             for(MXRoom* room in invitedRooms)
             {
-                if ([room.state.roomId isEqualToString:roomToRemove.state.roomId])
+                if ([room.roomId isEqualToString:roomToRemove.roomId])
                 {
                     roomToRemove = room;
                     hasBeenFound = YES;
@@ -2702,7 +2702,7 @@ typedef void (^MXOnResumeDone)(void);
         // Compute the current invitation list
         for (MXRoom *room in rooms.allValues)
         {
-            if (room.state.membership == MXMembershipInvite)
+            if (room.summary.membership == MXMembershipInvite)
             {
                 [invitedRooms addObject:room];
             }
@@ -2734,7 +2734,7 @@ typedef void (^MXOnResumeDone)(void);
                 MXRoomState *roomPrevState = (MXRoomState *)customObject;
                 MXRoom *room = [self roomWithRoomId:event.roomId];
 
-                if (room.state.membership == MXMembershipInvite)
+                if (room.summary.membership == MXMembershipInvite)
                 {
                     // check if the room is not yet in the list
                     // must be done in forward and sync direction
