@@ -163,6 +163,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
 - (void)liveTimeline:(void (^)(MXEventTimeline *))onComplete
 {
     MXWeakify(self);
+    // @TODO(async-state): dispatch_async is just for testing
     dispatch_async(dispatch_get_main_queue(), ^{
         MXStrongifyAndReturnIfNil(self);
 
@@ -176,10 +177,11 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
     });
 }
 
-- (MXRoomState *)state
+- (void)state:(void (^)(MXRoomState *))onComplete
 {
-    // @TODO
-    return _liveTimeline.state;
+    [self liveTimeline:^(MXEventTimeline *liveTimeline) {
+        onComplete(liveTimeline.state);
+    }];
 }
 
 - (void)setPartialTextMessage:(NSString *)partialTextMessage
@@ -249,21 +251,26 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
 - (void)handleInviteDirectFlag
 {
     // Handle here invite data to decide if it is direct or not
-    MXRoomMember *myUser = [self.state.members memberWithUserId:mxSession.myUser.userId];
-    BOOL isDirect = NO;
-    
-    if (myUser.originalEvent.content[@"is_direct"])
-    {
-        isDirect = [((NSNumber*)myUser.originalEvent.content[@"is_direct"]) boolValue];
-    }
-    
-    if (isDirect)
-    {
-        // Mark as direct this room with the invite sender.
-        [self setIsDirect:YES withUserId:myUser.originalEvent.sender success:nil failure:^(NSError *error) {
-            NSLog(@"[MXRoom] Failed to tag an invite as a direct chat");
-        }];
-    }
+    MXWeakify(self);
+    [self state:^(MXRoomState *roomState) {
+        MXStrongifyAndReturnIfNil(self);
+
+        MXRoomMember *myUser = [roomState.members memberWithUserId:self.mxSession.myUser.userId];
+        BOOL isDirect = NO;
+
+        if (myUser.originalEvent.content[@"is_direct"])
+        {
+            isDirect = [((NSNumber*)myUser.originalEvent.content[@"is_direct"]) boolValue];
+        }
+
+        if (isDirect)
+        {
+            // Mark as direct this room with the invite sender.
+            [self setIsDirect:YES withUserId:myUser.originalEvent.sender success:nil failure:^(NSError *error) {
+                NSLog(@"[MXRoom] Failed to tag an invite as a direct chat");
+            }];
+        }
+    }];
 }
 
 #pragma mark - Room private account data handling
@@ -1438,19 +1445,34 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
                                           success:(void (^)(void))success
                                           failure:(void (^)(NSError *))failure
 {
-    // To set this new value, we have to take the current powerLevels content,
-    // Update it with expected values and send it to the home server.
-    NSMutableDictionary *newPowerLevelsEventContent = [NSMutableDictionary dictionaryWithDictionary:self.state.powerLevels.JSONDictionary];
+    // Create an empty operation that will be mutated later
+    MXHTTPOperation *operation = [[MXHTTPOperation alloc] init];
 
-    NSMutableDictionary *newPowerLevelsEventContentUsers = [NSMutableDictionary dictionaryWithDictionary:newPowerLevelsEventContent[@"users"]];
-    newPowerLevelsEventContentUsers[userId] = [NSNumber numberWithInteger:powerLevel];
+    MXWeakify(self);
+    [self state:^(MXRoomState *roomState) {
+        MXStrongifyAndReturnIfNil(self);
 
-    newPowerLevelsEventContent[@"users"] = newPowerLevelsEventContentUsers;
+        // To set this new value, we have to take the current powerLevels content,
+        // Update it with expected values and send it to the home server.
+        NSMutableDictionary *newPowerLevelsEventContent = [NSMutableDictionary dictionaryWithDictionary:roomState.powerLevels.JSONDictionary];
 
-    // Make the request to the HS
-    return [self sendStateEventOfType:kMXEventTypeStringRoomPowerLevels content:newPowerLevelsEventContent stateKey:nil success:^(NSString *eventId) {
-        success();
-    } failure:failure];
+        NSMutableDictionary *newPowerLevelsEventContentUsers = [NSMutableDictionary dictionaryWithDictionary:newPowerLevelsEventContent[@"users"]];
+        newPowerLevelsEventContentUsers[userId] = [NSNumber numberWithInteger:powerLevel];
+
+        newPowerLevelsEventContent[@"users"] = newPowerLevelsEventContentUsers;
+
+        // Make the request to the HS
+        MXHTTPOperation *operation2 = [self sendStateEventOfType:kMXEventTypeStringRoomPowerLevels content:newPowerLevelsEventContent stateKey:nil success:^(NSString *eventId) {
+            success();
+        } failure:failure];
+
+        if (operation2)
+        {
+            [operation mutateTo:operation2];
+        }
+    }];
+
+    return operation;
 }
 
 - (MXHTTPOperation*)sendTypingNotification:(BOOL)typing
@@ -2303,182 +2325,202 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
                         success:(void (^)(void))success
                         failure:(void (^)(NSError *error))failure
 {
-    if (isDirect == NO)
-    {
-        if (_directUserId)
+    // Create an empty operation that will be mutated later
+    MXHTTPOperation *operation = [[MXHTTPOperation alloc] init];
+
+    MXWeakify(self);
+    [self state:^(MXRoomState *roomState) {
+        MXStrongifyAndReturnIfNil(self);
+
+        NSString *myUserId = self.mxSession.myUser.userId;
+        NSMutableDictionary<NSString*, NSArray<NSString*>*> *directRooms = self.mxSession.directRooms;
+
+        if (isDirect == NO)
         {
-            NSArray<NSString*> *savedRoomLists = mxSession.directRooms[_directUserId];
-            NSString *savedDirectUserId = _directUserId;
-            NSMutableArray<NSString*> *roomLists = [NSMutableArray arrayWithArray:savedRoomLists];
-            
-            [roomLists removeObject:self.roomId];
-            
-            if (roomLists.count)
+            if (self.directUserId)
             {
-                [mxSession.directRooms setObject:roomLists forKey:_directUserId];
+                NSArray<NSString*> *savedRoomLists = directRooms[self.directUserId];
+                NSString *savedDirectUserId = self.directUserId;
+                NSMutableArray<NSString*> *roomLists = [NSMutableArray arrayWithArray:savedRoomLists];
+
+                [roomLists removeObject:self.roomId];
+
+                if (roomLists.count)
+                {
+                    [directRooms setObject:roomLists forKey:self.directUserId];
+                }
+                else
+                {
+                    [directRooms removeObjectForKey:self.directUserId];
+                }
+
+                // Update
+                self.directUserId = nil;
+
+                // Upload the updated direct rooms directory.
+                // mxSession will post the 'kMXSessionDirectRoomsDidChangeNotification' notification on success.
+                MXWeakify(self);
+                MXHTTPOperation *operation2 = [self.mxSession uploadDirectRooms:success failure:^(NSError *error) {
+                    MXStrongifyAndReturnIfNil(self);
+
+                    // Restore the previous configuration
+                    if (savedRoomLists)
+                    {
+                        self.directUserId = savedDirectUserId;
+                        [directRooms setObject:savedRoomLists forKey:self.directUserId];
+                    }
+
+                    if (failure)
+                    {
+                        failure(error);
+                    }
+
+                }];
+
+                if (operation2)
+                {
+                    [operation mutateTo:operation2];
+                }
+            }
+        }
+        else if (!self.directUserId || (userId && ![userId isEqualToString:self.directUserId]))
+        {
+            // Here the room is not direct yet, or it is direct with the wrong user
+            NSString *newDirectUserId = userId;
+
+            if (!newDirectUserId)
+            {
+                // By default mark as direct this room for the oldest joined member.
+                NSArray<MXRoomMember *> *members = roomState.members.joinedMembers;
+                MXRoomMember *oldestJoinedMember;
+
+                for (MXRoomMember *member in members)
+                {
+                    if (![member.userId isEqualToString:myUserId])
+                    {
+                        if (!oldestJoinedMember)
+                        {
+                            oldestJoinedMember = member;
+                        }
+                        else if (member.originalEvent.originServerTs < oldestJoinedMember.originalEvent.originServerTs)
+                        {
+                            oldestJoinedMember = member;
+                        }
+                    }
+                }
+
+                newDirectUserId = oldestJoinedMember.userId;
+                if (!newDirectUserId)
+                {
+                    // Consider the first invited member if none has joined
+                    members = [roomState.members membersWithMembership:MXMembershipInvite];
+
+                    MXRoomMember *oldestInvitedMember;
+                    for (MXRoomMember *member in members)
+                    {
+                        if (![member.userId isEqualToString:myUserId])
+                        {
+                            if (!oldestInvitedMember)
+                            {
+                                oldestInvitedMember = member;
+                            }
+                            else if (member.originalEvent.originServerTs < oldestInvitedMember.originalEvent.originServerTs)
+                            {
+                                oldestInvitedMember = member;
+                            }
+                        }
+                    }
+
+                    newDirectUserId = oldestInvitedMember.userId;
+                }
+
+                if (!newDirectUserId)
+                {
+                    // Use the current user by default
+                    newDirectUserId = myUserId;
+                }
+            }
+
+            // Add the room id in the direct chats listed for this user.
+            // Check whether the room id is not already present (in this case `_directUserId` was not updated yet),
+            // this may happen during invite handling.
+            NSArray<NSString*> *savedNewDirectUserIdRoomLists = directRooms[newDirectUserId];
+            if (!savedNewDirectUserIdRoomLists || [savedNewDirectUserIdRoomLists indexOfObject:self.roomId] == NSNotFound)
+            {
+                NSArray<NSString*> *savedDirectUserIdRoomLists = nil;
+                NSString *savedDirectUserId = self.directUserId;
+
+                NSMutableArray *roomLists = (savedNewDirectUserIdRoomLists ? [NSMutableArray arrayWithArray:savedNewDirectUserIdRoomLists] : [NSMutableArray array]);
+                [roomLists addObject:self.roomId];
+                [directRooms setObject:roomLists forKey:newDirectUserId];
+
+                // Remove the room id for the current direct user if any
+                if (self.directUserId)
+                {
+                    savedDirectUserIdRoomLists = directRooms[self.directUserId];
+                    roomLists = [NSMutableArray arrayWithArray:savedDirectUserIdRoomLists];
+                    [roomLists removeObject:self.roomId];
+                    if (roomLists.count)
+                    {
+                        [directRooms setObject:roomLists forKey:self.directUserId];
+                    }
+                    else
+                    {
+                        [directRooms removeObjectForKey:self.directUserId];
+                    }
+                }
+
+                // Update
+                self.directUserId = newDirectUserId;
+
+                // Upload the updated direct rooms directory.
+                // mxSession will post the 'kMXSessionDirectRoomsDidChangeNotification' notification on success.
+                MXWeakify(self);
+                MXHTTPOperation *operation2 = [self.mxSession uploadDirectRooms:success failure:^(NSError *error) {
+                    MXStrongifyAndReturnIfNil(self);
+
+                    // Restore the previous configuration
+                    self.directUserId = savedDirectUserId;
+                    if (savedDirectUserIdRoomLists)
+                    {
+                        [directRooms setObject:savedDirectUserIdRoomLists forKey:self.directUserId];
+                    }
+
+                    if (savedNewDirectUserIdRoomLists)
+                    {
+                        [directRooms setObject:savedNewDirectUserIdRoomLists forKey:newDirectUserId];
+                    }
+                    else
+                    {
+                        [directRooms removeObjectForKey:newDirectUserId];
+                    }
+
+                    if (failure)
+                    {
+                        failure(error);
+                    }
+                }];
+
+                if (operation2)
+                {
+                    [operation mutateTo:operation2];
+                }
             }
             else
             {
-                [mxSession.directRooms removeObjectForKey:_directUserId];
+                // Update directUserId field.
+                self.directUserId = newDirectUserId;
             }
-            
-            // Update
-            _directUserId = nil;
-            
-            // Upload the updated direct rooms directory.
-            // mxSession will post the 'kMXSessionDirectRoomsDidChangeNotification' notification on success.
-            MXWeakify(self);
-            return [mxSession uploadDirectRooms:success failure:^(NSError *error) {
-                MXStrongifyAndReturnIfNil(self);
-                
-                // Restore the previous configuration
-                if (savedRoomLists)
-                {
-                    self.directUserId = savedDirectUserId;
-                    [self.mxSession.directRooms setObject:savedRoomLists forKey:self.directUserId];
-                }
-                
-                if (failure)
-                {
-                    failure(error);
-                }
-                
-            }];
         }
-    }
-    else if (!_directUserId || (userId && ![userId isEqualToString:_directUserId]))
-    {
-        // Here the room is not direct yet, or it is direct with the wrong user
-        NSString *newDirectUserId = userId;
-        
-        if (!newDirectUserId)
+
+        // Here the room has already the right value for the direct tag
+        if (success)
         {
-            // By default mark as direct this room for the oldest joined member.
-            NSArray<MXRoomMember *> *members = self.state.members.joinedMembers;
-            MXRoomMember *oldestJoinedMember;
-            
-            for (MXRoomMember *member in members)
-            {
-                if (![member.userId isEqualToString:mxSession.myUser.userId])
-                {
-                    if (!oldestJoinedMember)
-                    {
-                        oldestJoinedMember = member;
-                    }
-                    else if (member.originalEvent.originServerTs < oldestJoinedMember.originalEvent.originServerTs)
-                    {
-                        oldestJoinedMember = member;
-                    }
-                }
-            }
-            
-            newDirectUserId = oldestJoinedMember.userId;
-            if (!newDirectUserId)
-            {
-                // Consider the first invited member if none has joined
-                members = [self.state.members membersWithMembership:MXMembershipInvite];
-                
-                MXRoomMember *oldestInvitedMember;
-                for (MXRoomMember *member in members)
-                {
-                    if (![member.userId isEqualToString:mxSession.myUser.userId])
-                    {
-                        if (!oldestInvitedMember)
-                        {
-                            oldestInvitedMember = member;
-                        }
-                        else if (member.originalEvent.originServerTs < oldestInvitedMember.originalEvent.originServerTs)
-                        {
-                            oldestInvitedMember = member;
-                        }
-                    }
-                }
-                
-                newDirectUserId = oldestInvitedMember.userId;
-            }
-            
-            if (!newDirectUserId)
-            {
-                // Use the current user by default
-                newDirectUserId = mxSession.myUser.userId;
-            }
+            success();
         }
-        
-        // Add the room id in the direct chats listed for this user.
-        // Check whether the room id is not already present (in this case `_directUserId` was not updated yet),
-        // this may happen during invite handling.
-        NSArray<NSString*> *savedNewDirectUserIdRoomLists = mxSession.directRooms[newDirectUserId];
-        if (!savedNewDirectUserIdRoomLists || [savedNewDirectUserIdRoomLists indexOfObject:self.roomId] == NSNotFound)
-        {
-            NSArray<NSString*> *savedDirectUserIdRoomLists = nil;
-            NSString *savedDirectUserId = _directUserId;
-            
-            NSMutableArray *roomLists = (savedNewDirectUserIdRoomLists ? [NSMutableArray arrayWithArray:savedNewDirectUserIdRoomLists] : [NSMutableArray array]);
-            [roomLists addObject:self.roomId];
-            [mxSession.directRooms setObject:roomLists forKey:newDirectUserId];
-            
-            // Remove the room id for the current direct user if any
-            if (_directUserId)
-            {
-                savedDirectUserIdRoomLists = mxSession.directRooms[_directUserId];
-                roomLists = [NSMutableArray arrayWithArray:savedDirectUserIdRoomLists];
-                [roomLists removeObject:self.roomId];
-                if (roomLists.count)
-                {
-                    [mxSession.directRooms setObject:roomLists forKey:_directUserId];
-                }
-                else
-                {
-                    [mxSession.directRooms removeObjectForKey:_directUserId];
-                }
-            }
-            
-            // Update
-            _directUserId = newDirectUserId;
-            
-            // Upload the updated direct rooms directory.
-            // mxSession will post the 'kMXSessionDirectRoomsDidChangeNotification' notification on success.
-            MXWeakify(self);
-            return [mxSession uploadDirectRooms:success failure:^(NSError *error) {
-                MXStrongifyAndReturnIfNil(self);
-                
-                // Restore the previous configuration
-                self.directUserId = savedDirectUserId;
-                if (savedDirectUserIdRoomLists)
-                {
-                    [self.mxSession.directRooms setObject:savedDirectUserIdRoomLists forKey:self.directUserId];
-                }
-                
-                if (savedNewDirectUserIdRoomLists)
-                {
-                    [self.mxSession.directRooms setObject:savedNewDirectUserIdRoomLists forKey:newDirectUserId];
-                }
-                else
-                {
-                    [self.mxSession.directRooms removeObjectForKey:newDirectUserId];
-                }
-                
-                if (failure)
-                {
-                    failure(error);
-                }
-                
-            }];
-        }
-        else
-        {
-            // Update directUserId field.
-            _directUserId = newDirectUserId;
-        }
-    }
-    
-    // Here the room has already the right value for the direct tag
-    if (success)
-    {
-        success();
-    }
-    
-    return nil;
+    }];
+
+    return operation;
 }
 
 #pragma mark - Crypto
@@ -2531,7 +2573,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
 
 - (NSString *)description
 {
-    return [NSString stringWithFormat:@"<MXRoom: %p> %@: %@ - %@", self, self.roomId, self.state.name, self.summary.topic];
+    return [NSString stringWithFormat:@"<MXRoom: %p> %@: %@ - %@", self, self.roomId, self.summary.displayname, self.summary.topic];
 }
 
 - (NSComparisonResult)compareLastMessageEventOriginServerTs:(MXRoom *)otherRoom

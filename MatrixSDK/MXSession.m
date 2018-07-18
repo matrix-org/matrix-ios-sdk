@@ -918,7 +918,6 @@ typedef void (^MXOnResumeDone)(void);
                 // Sync room
                 [room handleJoinedRoomSync:roomSync];
                 [room.summary handleJoinedRoomSync:roomSync];
-
             }
         }
         
@@ -1774,14 +1773,15 @@ typedef void (^MXOnResumeDone)(void);
 
     if (alias)
     {
-        for (MXRoom *room in rooms.allValues)
-        {
-            if (room.state.aliases && NSNotFound != [room.state.aliases indexOfObject:alias])
-            {
-                theRoom = room;
-                break;
-            }
-        }
+        // @TODO(async-state): Move aliases in summary?
+//        for (MXRoom *room in rooms.allValues)
+//        {
+//            if (room.state.aliases && NSNotFound != [room.state.aliases indexOfObject:alias])
+//            {
+//                theRoom = room;
+//                break;
+//            }
+//        }
     }
     return theRoom;
 }

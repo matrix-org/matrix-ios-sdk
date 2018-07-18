@@ -129,24 +129,24 @@
                                 // 6 - Bob: "Bonjour"
                                 XCTAssertEqual(event.eventType, MXEventTypeRoomMessage);
 
-                                XCTAssert([roomState.topic isEqualToString:@"Topic #2"], @"roomState.topic is wrong. Found: %@", roomState.topic);
-                                XCTAssert([room.state.topic isEqualToString:@"Topic #2"]);
+                                XCTAssertEqualObjects(roomState.topic, @"Topic #2");
+                                XCTAssertEqualObjects(room.summary.topic, @"Topic #2");
                                 break;
 
                             case 1:
                                 //  5 - Bob changes the room topic to "Topic #2"
                                 XCTAssertEqual(event.eventType, MXEventTypeRoomTopic);
 
-                                XCTAssert([roomState.topic isEqualToString:@"Topic #1"], @"roomState.topic is wrong. Found: %@", roomState.topic);
-                                XCTAssert([room.state.topic isEqualToString:@"Topic #2"]);
+                                XCTAssertEqualObjects(roomState.topic, @"Topic #1");
+                                XCTAssertEqualObjects(room.summary.topic, @"Topic #2");
                                 break;
 
                             case 2:
                                 //  4 - Bob: "Hola"
                                 XCTAssertEqual(event.eventType, MXEventTypeRoomMessage);
 
-                                XCTAssert([roomState.topic isEqualToString:@"Topic #1"], @"roomState.topic is wrong. Found: %@", roomState.topic);
-                                XCTAssert([room.state.topic isEqualToString:@"Topic #2"]);
+                                XCTAssertEqualObjects(roomState.topic, @"Topic #1");
+                                XCTAssertEqualObjects(room.summary.topic, @"Topic #2");
                                 break;
 
                             case 3:
@@ -154,7 +154,7 @@
                                 XCTAssertEqual(event.eventType, MXEventTypeRoomTopic);
 
                                 XCTAssertNil(roomState.topic, @"The room topic was undefined before getting this event. Found: %@", roomState.topic);
-                                XCTAssert([room.state.topic isEqualToString:@"Topic #2"]);
+                                XCTAssertEqualObjects(room.summary.topic, @"Topic #2");
                                 break;
 
                             case 4:
@@ -162,7 +162,7 @@
                                 XCTAssertEqual(event.eventType, MXEventTypeRoomMessage);
 
                                 XCTAssertNil(roomState.topic, @"The room topic was undefined before getting this event. Found: %@", roomState.topic);
-                                XCTAssert([room.state.topic isEqualToString:@"Topic #2"]);
+                                XCTAssertEqualObjects(room.summary.topic, @"Topic #2");
                                 break;
 
                             default:
@@ -219,7 +219,7 @@
                             XCTAssertNotNil(roomState);
 
                             XCTAssertNil(roomState.topic, @"The room topic is not yet defined. Found: %@", roomState.topic);
-                            XCTAssertNil(room.state.topic, @"The room topic is not yet defined. Found: %@", roomState.topic);
+                            XCTAssertNil(room.summary.topic, @"The room topic is not yet defined. Found: %@", roomState.topic);
                             break;
 
                         case 1:
@@ -229,7 +229,7 @@
                             XCTAssertNotNil(roomState);
 
                             XCTAssertNil(roomState.topic, @"The room topic was not yet defined before this event. Found: %@", roomState.topic);
-                            XCTAssert([room.state.topic isEqualToString:@"Topic #1"]);
+                            XCTAssertEqualObjects(room.summary.topic, @"Topic #1");
                             break;
 
                         case 2:
@@ -238,8 +238,8 @@
 
                             XCTAssertNotNil(roomState);
 
-                            XCTAssert([roomState.topic isEqualToString:@"Topic #1"], @"roomState.topic is wrong. Found: %@", roomState.topic);
-                            XCTAssert([room.state.topic isEqualToString:@"Topic #1"]);
+                            XCTAssertEqualObjects(roomState.topic, @"Topic #1");
+                            XCTAssertEqualObjects(room.summary.topic, @"Topic #1");
                             break;
 
                         case 3:
@@ -248,8 +248,8 @@
 
                             XCTAssertNotNil(roomState);
 
-                            XCTAssertEqualObjects(roomState.topic, @"Topic #1", @"roomState.topic is wrong. Found: %@", roomState.topic);
-                            XCTAssert([room.state.topic isEqualToString:@"Topic #2"]);
+                            XCTAssertEqualObjects(roomState.topic, @"Topic #1");
+                            XCTAssertEqualObjects(room.summary.topic, @"Topic #2");
                             break;
 
                         case 4:
@@ -258,8 +258,8 @@
 
                             XCTAssertNotNil(roomState);
 
-                            XCTAssert([roomState.topic isEqualToString:@"Topic #2"], @"roomState.topic is wrong. Found: %@", roomState.topic);
-                            XCTAssert([room.state.topic isEqualToString:@"Topic #2"]);
+                            XCTAssertEqualObjects(roomState.topic, @"Topic #2");
+                            XCTAssertEqualObjects(room.summary.topic, @"Topic #2");
 
                             // No more events. This is the end of the test
                             [expectation fulfill];

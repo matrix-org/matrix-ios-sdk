@@ -1,5 +1,6 @@
 /*
  Copyright 2015 OpenMarket Ltd
+ Copyright 2018 New Vector Ltd
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -522,18 +523,18 @@ NSString *const kMXCallManagerConferenceUserDomain  = @"matrix.org";
     return isConferenceUser;
 }
 
-+ (BOOL)canPlaceConferenceCallInRoom:(MXRoom *)room
++ (BOOL)canPlaceConferenceCallInRoom:(MXRoom *)room roomState:(MXRoomState *)roomState
 {
     BOOL canPlaceConferenceCallInRoom = NO;
 
-    if (room.state.isOngoingConferenceCall)
+    if (roomState.isOngoingConferenceCall)
     {
         // All room members can join an existing conference call
         canPlaceConferenceCallInRoom = YES;
     }
     else
     {
-        MXRoomPowerLevels *powerLevels = room.state.powerLevels;
+        MXRoomPowerLevels *powerLevels = roomState.powerLevels;
         NSInteger oneSelfPowerLevel = [powerLevels powerLevelOfUserWithUserID:room.mxSession.myUser.userId];
 
         // Only member with invite power level can create a conference call
@@ -561,15 +562,17 @@ NSString *const kMXCallManagerConferenceUserDomain  = @"matrix.org";
 {
     NSString *conferenceUserId = [MXCallManager conferenceUserIdForRoom:room.roomId];
 
-    MXRoomMember *conferenceUserMember = [room.state.members memberWithUserId:conferenceUserId];
-    if (conferenceUserMember && conferenceUserMember.membership == MXMembershipJoin)
-    {
-        success();
-    }
-    else
-    {
-        [room inviteUser:conferenceUserId success:success failure:failure];
-    }
+    [room state:^(MXRoomState *roomState) {
+        MXRoomMember *conferenceUserMember = [roomState.members memberWithUserId:conferenceUserId];
+        if (conferenceUserMember && conferenceUserMember.membership == MXMembershipJoin)
+        {
+            success();
+        }
+        else
+        {
+            [room inviteUser:conferenceUserId success:success failure:failure];
+        }
+    }];
 }
 
 /**
@@ -588,13 +591,15 @@ NSString *const kMXCallManagerConferenceUserDomain  = @"matrix.org";
 
     // Use an existing 1:1 with the conference user; else make one
     MXRoom *conferenceUserRoom;
-    for (MXRoom *room in _mxSession.rooms)
-    {
-        if (room.summary.membersCount.members == 2 && [room.state.members memberWithUserId:conferenceUserId])
-        {
-            conferenceUserRoom = room;
-        }
-    }
+
+    // @TODO: Create a dedicated MXStore API
+//    for (MXRoom *room in _mxSession.rooms)
+//    {
+//        if (room.summary.membersCount.members == 2 && [room.state.members memberWithUserId:conferenceUserId])
+//        {
+//            conferenceUserRoom = room;
+//        }
+//    }
 
     if (conferenceUserRoom)
     {

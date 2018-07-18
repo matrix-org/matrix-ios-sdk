@@ -1,6 +1,7 @@
 /*
  Copyright 2017 OpenMarket Ltd
  Copyright 2017 Vector Creations Ltd
+ Copyright 2018 New Vector Ltd
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -325,8 +326,9 @@ FOUNDATION_EXPORT NSString *const kMXRoomSummaryDidChangeNotification;
  @param session the session the room belongs to.
  @param summary the room summary.
  @param stateEvents state events that may change the room summary.
+ @param roomState the current state of the room.
  @return YES if the room summary has changed.
  */
-- (BOOL)session:(MXSession*)session updateRoomSummary:(MXRoomSummary*)summary withStateEvents:(NSArray<MXEvent*>*)stateEvents;
+- (BOOL)session:(MXSession*)session updateRoomSummary:(MXRoomSummary*)summary withStateEvents:(NSArray<MXEvent*>*)stateEvents roomState:(MXRoomState*)roomState;
 
 @end

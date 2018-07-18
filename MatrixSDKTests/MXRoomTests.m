@@ -123,7 +123,7 @@
         __block NSString *sentMessageEventID;
         __block NSString *receivedMessageEventID;
         
-        void (^checkEventIDs)() = ^ void ()
+        void (^checkEventIDs)(void) = ^ void (void)
         {
             if (sentMessageEventID && receivedMessageEventID)
             {
@@ -183,7 +183,7 @@
         [room liveTimeline:^(MXEventTimeline *liveTimeline) {
             [liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMember] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
 
-                lastKnownMembership = room.state.membership;
+                lastKnownMembership = liveTimeline.state.membership;
             }];
         }];
         
@@ -259,7 +259,7 @@
             [room liveTimeline:^(MXEventTimeline *liveTimeline) {
                 [liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomPowerLevels] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
 
-                    XCTAssertEqual([room.state.powerLevels powerLevelOfUserWithUserID:aliceRestClient.credentials.userId], 36);
+                    XCTAssertEqual([liveTimeline.state.powerLevels powerLevelOfUserWithUserID:aliceRestClient.credentials.userId], 36);
 
                     [expectation fulfill];
                 }];

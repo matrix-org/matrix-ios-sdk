@@ -251,7 +251,7 @@
     [matrixSDKTestsE2EData doE2ETestWithBobAndAlice:self readyToTest:^(MXSession *bobSession, MXSession *aliceSession, XCTestExpectation *expectation) {
 
         __block NSUInteger count = 0;
-        void(^onSuccess)() = ^() {
+        void(^onSuccess)(void) = ^(void) {
 
             if (++count == 2)
             {
@@ -381,11 +381,11 @@
 
         [mxSession createRoom:@{} success:^(MXRoom *room) {
 
-            XCTAssertFalse(room.state.isEncrypted);
+            XCTAssertFalse(room.summary.isEncrypted);
 
             [room enableEncryptionWithAlgorithm:kMXCryptoMegolmAlgorithm success:^{
 
-                XCTAssert(room.state.isEncrypted);
+                XCTAssert(room.summary.isEncrypted);
 
                 // mxSession.crypto.store is a private member
                 // and should be used only from the cryptoQueue. Particularly for this test
@@ -416,7 +416,7 @@
 
         MXRoom *roomFromAlicePOV = [aliceSession roomWithRoomId:roomId];
 
-        XCTAssert(roomFromAlicePOV.state.isEncrypted);
+        XCTAssert(roomFromAlicePOV.summary.isEncrypted);
 
         // Check the echo from hs of a post message is correct
         [roomFromAlicePOV liveTimeline:^(MXEventTimeline *liveTimeline) {
@@ -459,10 +459,12 @@
 
                 MXRoom *roomFromAlicePOV = [aliceSession2 roomWithRoomId:roomId];
 
-                XCTAssert(roomFromAlicePOV.state.isEncrypted);
+                XCTAssert(roomFromAlicePOV.summary.isEncrypted);
 
                 // Check the echo from hs of a post message is correct
                 [roomFromAlicePOV liveTimeline:^(MXEventTimeline *liveTimeline) {
+
+                    XCTAssert(liveTimeline.state.isEncrypted);
 
                     [liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
 
@@ -502,8 +504,8 @@
         MXRoom *roomFromBobPOV = [bobSession roomWithRoomId:roomId];
         MXRoom *roomFromAlicePOV = [aliceSession roomWithRoomId:roomId];
 
-        XCTAssert(roomFromBobPOV.state.isEncrypted);
-        XCTAssert(roomFromAlicePOV.state.isEncrypted);
+        XCTAssert(roomFromBobPOV.summary.isEncrypted);
+        XCTAssert(roomFromAlicePOV.summary.isEncrypted);
 
         [roomFromBobPOV liveTimeline:^(MXEventTimeline *liveTimeline) {
 
@@ -536,8 +538,8 @@
         MXRoom *roomFromBobPOV = [bobSession roomWithRoomId:roomId];
         MXRoom *roomFromAlicePOV = [aliceSession roomWithRoomId:roomId];
 
-        XCTAssert(roomFromBobPOV.state.isEncrypted);
-        XCTAssert(roomFromAlicePOV.state.isEncrypted);
+        XCTAssert(roomFromBobPOV.summary.isEncrypted);
+        XCTAssert(roomFromAlicePOV.summary.isEncrypted);
 
         [roomFromBobPOV liveTimeline:^(MXEventTimeline *liveTimeline) {
             [liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
@@ -822,8 +824,8 @@
         MXRoom *roomFromBobPOV = [bobSession roomWithRoomId:roomId];
         MXRoom *roomFromAlicePOV = [aliceSession roomWithRoomId:roomId];
 
-        XCTAssert(roomFromBobPOV.state.isEncrypted, "Even if his crypto is disabled, Bob should know that a room is encrypted");
-        XCTAssert(roomFromAlicePOV.state.isEncrypted);
+        XCTAssert(roomFromBobPOV.summary.isEncrypted, "Even if his crypto is disabled, Bob should know that a room is encrypted");
+        XCTAssert(roomFromAlicePOV.summary.isEncrypted);
 
         __block NSUInteger messageCount = 0;
 
@@ -895,7 +897,7 @@
 
                 MXRoom *roomFromAlicePOV2 = [aliceSession2 roomWithRoomId:roomId];
 
-                XCTAssert(roomFromAlicePOV2.state.isEncrypted, @"The room must still appear as encrypted");
+                XCTAssert(roomFromAlicePOV2.summary.isEncrypted, @"The room must still appear as encrypted");
 
                 MXEvent *event = roomFromAlicePOV2.summary.lastMessageEvent;
 
@@ -1034,7 +1036,7 @@
                 MXRoom *roomFromBob2POV = [bobSession2 roomWithRoomId:roomId];
                 MXRoom *roomFromAlice2POV = [aliceSession2 roomWithRoomId:roomId];
 
-                XCTAssert(roomFromBob2POV.state.isEncrypted, @"The room must still appear as encrypted");
+                XCTAssert(roomFromBob2POV.summary.isEncrypted, @"The room must still appear as encrypted");
 
                 MXEvent *event = roomFromBob2POV.summary.lastMessageEvent;
 
@@ -1417,8 +1419,8 @@
         MXRoom *roomFromBobPOV = [bobSession roomWithRoomId:roomId];
         MXRoom *roomFromAlicePOV = [aliceSession roomWithRoomId:roomId];
 
-        XCTAssert(roomFromBobPOV.state.isEncrypted);
-        XCTAssert(roomFromAlicePOV.state.isEncrypted);
+        XCTAssert(roomFromBobPOV.summary.isEncrypted);
+        XCTAssert(roomFromAlicePOV.summary.isEncrypted);
 
         [roomFromBobPOV liveTimeline:^(MXEventTimeline *liveTimeline) {
             [liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {

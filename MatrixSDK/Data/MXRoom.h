@@ -1,6 +1,7 @@
 /*
  Copyright 2014 OpenMarket Ltd
  Copyright 2017 Vector Creations Ltd
+ Copyright 2018 New Vector Ltd
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -85,9 +86,10 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidFlushDataNotification;
 
 /**
  The up-to-date state of the room.
+
+ This getter method is a shortcut to `liveTimeline.state`.
  */
-// @TODO: Make it async too
-@property (nonatomic, readonly) MXRoomState *state;
+- (void)state:(void (^)(MXRoomState *roomState))onComplete;
 
 /**
  The private user data for this room.

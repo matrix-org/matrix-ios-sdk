@@ -64,9 +64,12 @@
 
         mxSession = mxSession2;
 
-        XCTAssertTrue(room.state.isJoinRulePublic, @"The room join rule must be public");
-        
-        [expectation fulfill];
+        [room state:^(MXRoomState *roomState) {
+
+            XCTAssertTrue(roomState.isJoinRulePublic, @"The room join rule must be public");
+
+            [expectation fulfill];
+        }];
     }];
 }
 
@@ -76,9 +79,11 @@
         
         mxSession = mxSession2;
 
-        XCTAssertFalse(room.state.isJoinRulePublic, @"This room join rule must be private");
-        
-        [expectation fulfill];
+        [room state:^(MXRoomState *roomState) {
+            XCTAssertFalse(roomState.isJoinRulePublic, @"This room join rule must be private");
+
+            [expectation fulfill];
+        }];
     }];
 }
 
@@ -94,11 +99,13 @@
             [mxSession start:^{
                 
                 MXRoom *room = [mxSession roomWithRoomId:roomId];
-                
-                XCTAssertNotNil(room.state.topic);
-                XCTAssert([room.state.topic isEqualToString:@"My topic"], @"The room topic shoud be \"My topic\". Found: %@", room.state.topic);
-                
-                [expectation fulfill];
+
+                [room state:^(MXRoomState *roomState) {
+                    XCTAssertNotNil(roomState.topic);
+                    XCTAssertEqualObjects(roomState.topic, @"My topic");
+
+                    [expectation fulfill];
+                }];
                 
             } failure:^(NSError *error) {
                 XCTFail(@"The request should not fail - NSError: %@", error);
@@ -123,30 +130,31 @@
         [mxSession start:^{
             
             MXRoom *room = [mxSession roomWithRoomId:roomId];
-            
-            XCTAssertNil(room.state.topic, @"There must be no room topic yet. Found: %@", room.state.topic);
-            
+
             // Listen to live event. We should receive only one: a m.room.topic event
             [room liveTimeline:^(MXEventTimeline *liveTimeline) {
+
+                XCTAssertNil(liveTimeline.state.topic, @"There must be no room topic yet. Found: %@", liveTimeline.state.topic);
+
 
                 [liveTimeline listenToEventsOfTypes:nil onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
 
                     XCTAssertEqual(event.eventType, MXEventTypeRoomTopic);
 
-                    XCTAssertNotNil(room.state.topic);
-                    XCTAssert([room.state.topic isEqualToString:@"My topic"], @"The room topic shoud be \"My topic\". Found: %@", room.state.topic);
+                    XCTAssertNotNil(liveTimeline.state.topic);
+                    XCTAssertEqualObjects(liveTimeline.state.topic, @"My topic");
 
                     [expectation fulfill];
 
                 }];
-            }];
-        
-            // Change the topic
-            [bobRestClient2 setRoomTopic:roomId topic:@"My topic" success:^{
-                
-            } failure:^(NSError *error) {
-                XCTFail(@"The request should not fail - NSError: %@", error);
-                [expectation fulfill];
+
+                // Change the topic
+                [bobRestClient2 setRoomTopic:roomId topic:@"My topic" success:^{
+
+                } failure:^(NSError *error) {
+                    XCTFail(@"The request should not fail - NSError: %@", error);
+                    [expectation fulfill];
+                }];
             }];
             
         } failure:^(NSError *error) {
@@ -171,10 +179,12 @@
 
                 MXRoom *room = [mxSession roomWithRoomId:roomId];
 
-                XCTAssertNotNil(room.state.avatar);
-                XCTAssertEqualObjects(room.state.avatar, @"http://matrix.org/matrix.png");
+                [room state:^(MXRoomState *roomState) {
+                    XCTAssertNotNil(roomState.avatar);
+                    XCTAssertEqualObjects(roomState.avatar, @"http://matrix.org/matrix.png");
 
-                [expectation fulfill];
+                    [expectation fulfill];
+                }];
 
             } failure:^(NSError *error) {
                 XCTFail(@"The request should not fail - NSError: %@", error);
@@ -200,28 +210,29 @@
 
             MXRoom *room = [mxSession roomWithRoomId:roomId];
 
-            XCTAssertNil(room.state.avatar, @"There must be no room avatar yet. Found: %@", room.state.avatar);
-
             // Listen to live event. We should receive only one: a m.room.avatar event
             [room liveTimeline:^(MXEventTimeline *liveTimeline) {
+
+                XCTAssertNil(liveTimeline.state.avatar, @"There must be no room avatar yet. Found: %@", liveTimeline.state.avatar);
+
                 [liveTimeline listenToEventsOfTypes:nil onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
 
                     XCTAssertEqual(event.eventType, MXEventTypeRoomAvatar);
 
-                    XCTAssertNotNil(room.state.avatar);
-                    XCTAssertEqualObjects(room.state.avatar, @"http://matrix.org/matrix.png");
+                    XCTAssertNotNil(liveTimeline.state.avatar);
+                    XCTAssertEqualObjects(liveTimeline.state.avatar, @"http://matrix.org/matrix.png");
 
                     [expectation fulfill];
 
                 }];
-            }];
 
-            // Change the avatar
-            [bobRestClient2 setRoomAvatar:roomId avatar:@"http://matrix.org/matrix.png" success:^{
+                // Change the avatar
+                [bobRestClient2 setRoomAvatar:roomId avatar:@"http://matrix.org/matrix.png" success:^{
 
-            } failure:^(NSError *error) {
-                XCTFail(@"The request should not fail - NSError: %@", error);
-                [expectation fulfill];
+                } failure:^(NSError *error) {
+                    XCTFail(@"The request should not fail - NSError: %@", error);
+                    [expectation fulfill];
+                }];
             }];
 
         } failure:^(NSError *error) {
@@ -244,11 +255,14 @@
             [mxSession start:^{
                 
                 MXRoom *room = [mxSession roomWithRoomId:roomId];
-                
-                XCTAssertNotNil(room.state.name);
-                XCTAssert([room.state.name isEqualToString:@"My room name"], @"The room name shoud be \"My room name\". Found: %@", room.state.name);
-                
-                [expectation fulfill];
+
+                [room state:^(MXRoomState *roomState) {
+
+                    XCTAssertNotNil(roomState.name);
+                    XCTAssertEqualObjects(roomState.name, @"My room name");
+
+                    [expectation fulfill];
+                }];
                 
             } failure:^(NSError *error) {
                 XCTFail(@"The request should not fail - NSError: %@", error);
@@ -273,29 +287,30 @@
         [mxSession start:^{
             
             MXRoom *room = [mxSession roomWithRoomId:roomId];
-            
-            XCTAssertNil(room.state.name, @"There must be no room name yet. Found: %@", room.state.name);
-            
+
             // Listen to live event. We should receive only one: a m.room.name event
             [room liveTimeline:^(MXEventTimeline *liveTimeline) {
+
+                XCTAssertNil(liveTimeline.state.name, @"There must be no room name yet. Found: %@", liveTimeline.state.name);
+
                 [liveTimeline listenToEventsOfTypes:nil onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
 
                     XCTAssertEqual(event.eventType, MXEventTypeRoomName);
 
-                    XCTAssertNotNil(room.state.name);
-                    XCTAssert([room.state.name isEqualToString:@"My room name"], @"The room topic shoud be \"My room name\". Found: %@", room.state.name);
+                    XCTAssertNotNil(liveTimeline.state.name);
+                    XCTAssertEqualObjects(liveTimeline.state.name, @"My room name");
 
                     [expectation fulfill];
 
                 }];
-            }];
 
-            // Change the topic
-            [bobRestClient2 setRoomName:roomId name:@"My room name" success:^{
-                
-            } failure:^(NSError *error) {
-                XCTFail(@"The request should not fail - NSError: %@", error);
-                [expectation fulfill];
+                // Change the topic
+                [bobRestClient2 setRoomName:roomId name:@"My room name" success:^{
+
+                } failure:^(NSError *error) {
+                    XCTFail(@"The request should not fail - NSError: %@", error);
+                    [expectation fulfill];
+                }];
             }];
             
         } failure:^(NSError *error) {
@@ -319,10 +334,13 @@
 
                 MXRoom *room = [mxSession roomWithRoomId:roomId];
 
-                XCTAssertNotNil(room.state.historyVisibility);
-                XCTAssertEqualObjects(room.state.historyVisibility, kMXRoomHistoryVisibilityWorldReadable, @"The room history visibility is wrong");
+                [room state:^(MXRoomState *roomState) {
 
-                [expectation fulfill];
+                    XCTAssertNotNil(roomState.historyVisibility);
+                    XCTAssertEqualObjects(roomState.historyVisibility, kMXRoomHistoryVisibilityWorldReadable, @"The room history visibility is wrong");
+
+                    [expectation fulfill];
+                }];
 
             } failure:^(NSError *error) {
                 XCTFail(@"The request should not fail - NSError: %@", error);
@@ -348,29 +366,30 @@
 
             MXRoom *room = [mxSession roomWithRoomId:roomId];
 
-            XCTAssertEqualObjects(room.state.historyVisibility, kMXRoomHistoryVisibilityShared, @"The default room history visibility should be shared");
-
             // Listen to live event. We should receive only one: a m.room.name event
             [room liveTimeline:^(MXEventTimeline *liveTimeline) {
+
+                XCTAssertEqualObjects(liveTimeline.state.historyVisibility, kMXRoomHistoryVisibilityShared, @"The default room history visibility should be shared");
+
                 [liveTimeline listenToEventsOfTypes:nil onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
 
                     XCTAssertEqual(event.eventType, MXEventTypeRoomHistoryVisibility);
 
-                    XCTAssertNotNil(room.state.historyVisibility);
-                    XCTAssertEqualObjects(room.state.historyVisibility, kMXRoomHistoryVisibilityInvited, @"The room history visibility is wrong");
+                    XCTAssertNotNil(liveTimeline.state.historyVisibility);
+                    XCTAssertEqualObjects(liveTimeline.state.historyVisibility, kMXRoomHistoryVisibilityInvited, @"The room history visibility is wrong");
                     ;
 
                     [expectation fulfill];
 
                 }];
-            }];
 
-            // Change the history visibility
-            [room setHistoryVisibility:kMXRoomHistoryVisibilityInvited success:^{
+                // Change the history visibility
+                [room setHistoryVisibility:kMXRoomHistoryVisibilityInvited success:^{
 
-            } failure:^(NSError *error) {
-                XCTFail(@"The request should not fail - NSError: %@", error);
-                [expectation fulfill];
+                } failure:^(NSError *error) {
+                    XCTFail(@"The request should not fail - NSError: %@", error);
+                    [expectation fulfill];
+                }];
             }];
 
         } failure:^(NSError *error) {
@@ -394,10 +413,12 @@
 
                 MXRoom *room = [mxSession roomWithRoomId:roomId];
 
-                XCTAssertNotNil(room.state.joinRule);
-                XCTAssertEqualObjects(room.state.joinRule, kMXRoomJoinRulePublic, @"The room join rule is wrong");
+                [room state:^(MXRoomState *roomState) {
+                    XCTAssertNotNil(roomState.joinRule);
+                    XCTAssertEqualObjects(roomState.joinRule, kMXRoomJoinRulePublic, @"The room join rule is wrong");
 
-                [expectation fulfill];
+                    [expectation fulfill];
+                }];
 
             } failure:^(NSError *error) {
                 XCTFail(@"The request should not fail - NSError: %@", error);
@@ -423,30 +444,32 @@
 
             MXRoom *room = [mxSession roomWithRoomId:roomId];
 
-            XCTAssertEqualObjects(room.state.joinRule, kMXRoomJoinRuleInvite, @"The default room join rule should be invite");
-
             // Listen to live event. We should receive only one: a m.room.name event
             [room liveTimeline:^(MXEventTimeline *liveTimeline) {
+
+                XCTAssertEqualObjects(liveTimeline.state.joinRule, kMXRoomJoinRuleInvite, @"The default room join rule should be invite");
+
                 [liveTimeline listenToEventsOfTypes:nil onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
 
                     XCTAssertEqual(event.eventType, MXEventTypeRoomJoinRules);
 
-                    XCTAssertNotNil(room.state.joinRule);
-                    XCTAssertEqualObjects(room.state.joinRule, kMXRoomJoinRulePublic, @"The room join rule is wrong");
+                    XCTAssertNotNil(liveTimeline.state.joinRule);
+                    XCTAssertEqualObjects(liveTimeline.state.joinRule, kMXRoomJoinRulePublic, @"The room join rule is wrong");
 
                     [expectation fulfill];
 
                 }];
+
+                // Change the join rule
+                [room setJoinRule:kMXRoomJoinRulePublic success:^{
+
+                } failure:^(NSError *error) {
+                    XCTFail(@"The request should not fail - NSError: %@", error);
+                    [expectation fulfill];
+                }];
+
             }];
 
-            // Change the join rule
-            [room setJoinRule:kMXRoomJoinRulePublic success:^{
-
-            } failure:^(NSError *error) {
-                XCTFail(@"The request should not fail - NSError: %@", error);
-                [expectation fulfill];
-            }];
-            
         } failure:^(NSError *error) {
             XCTFail(@"The request should not fail - NSError: %@", error);
             [expectation fulfill];
@@ -468,10 +491,12 @@
 
                 MXRoom *room = [mxSession roomWithRoomId:roomId];
 
-                XCTAssertNotNil(room.state.joinRule);
-                XCTAssertEqualObjects(room.state.guestAccess, kMXRoomGuestAccessCanJoin, @"The room guest access is wrong");
+                [room state:^(MXRoomState *roomState) {
+                    XCTAssertNotNil(roomState.joinRule);
+                    XCTAssertEqualObjects(roomState.guestAccess, kMXRoomGuestAccessCanJoin, @"The room guest access is wrong");
 
-                [expectation fulfill];
+                    [expectation fulfill];
+                }];
 
             } failure:^(NSError *error) {
                 XCTFail(@"The request should not fail - NSError: %@", error);
@@ -497,28 +522,28 @@
 
             MXRoom *room = [mxSession roomWithRoomId:roomId];
 
-            XCTAssertEqualObjects(room.state.guestAccess, kMXRoomGuestAccessCanJoin, @"The default room guest access should be forbidden");
-
             // Listen to live event. We should receive only one: a m.room.name event
             [room liveTimeline:^(MXEventTimeline *liveTimeline) {
+
+                XCTAssertEqualObjects(liveTimeline.state.guestAccess, kMXRoomGuestAccessCanJoin, @"The default room guest access should be forbidden");
+
                 [liveTimeline listenToEventsOfTypes:nil onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
 
                     XCTAssertEqual(event.eventType, MXEventTypeRoomGuestAccess);
 
-                    XCTAssertNotNil(room.state.guestAccess);
-                    XCTAssertEqualObjects(room.state.guestAccess, kMXRoomGuestAccessForbidden, @"The room guest access is wrong");
+                    XCTAssertNotNil(liveTimeline.state.guestAccess);
+                    XCTAssertEqualObjects(liveTimeline.state.guestAccess, kMXRoomGuestAccessForbidden, @"The room guest access is wrong");
 
                     [expectation fulfill];
-
                 }];
-            }];
 
-            // Change the guest access
-            [room setGuestAccess:kMXRoomGuestAccessForbidden success:^{
+                // Change the guest access
+                [room setGuestAccess:kMXRoomGuestAccessForbidden success:^{
 
-            } failure:^(NSError *error) {
-                XCTFail(@"The request should not fail - NSError: %@", error);
-                [expectation fulfill];
+                } failure:^(NSError *error) {
+                    XCTFail(@"The request should not fail - NSError: %@", error);
+                    [expectation fulfill];
+                }];
             }];
             
         } failure:^(NSError *error) {
@@ -548,16 +573,19 @@
                 [mxSession start:^{
                     
                     MXRoom *room = [mxSession roomWithRoomId:roomId];
-                    
-                    XCTAssertNotNil(room.state.aliases);
-                    XCTAssertEqual(room.state.aliases.count, 1);
-                    XCTAssertEqualObjects(room.state.aliases.firstObject, roomAlias, @"The room alias is wrong");
-                    
-                    XCTAssertNotNil(room.state.canonicalAlias);
-                    XCTAssertNotEqual(room.state.canonicalAlias.length, 0);
-                    XCTAssertEqualObjects(room.state.canonicalAlias, roomAlias, @"The room canonical alias is wrong");
-                    
-                    [expectation fulfill];
+
+                    [room state:^(MXRoomState *roomState) {
+
+                        XCTAssertNotNil(roomState.aliases);
+                        XCTAssertEqual(roomState.aliases.count, 1);
+                        XCTAssertEqualObjects(roomState.aliases.firstObject, roomAlias, @"The room alias is wrong");
+
+                        XCTAssertNotNil(roomState.canonicalAlias);
+                        XCTAssertNotEqual(roomState.canonicalAlias.length, 0);
+                        XCTAssertEqualObjects(roomState.canonicalAlias, roomAlias, @"The room canonical alias is wrong");
+
+                        [expectation fulfill];
+                    }];
                     
                 } failure:^(NSError *error) {
                     XCTFail(@"The request should not fail - NSError: %@", error);
@@ -591,24 +619,25 @@
             NSString *globallyUniqueString = [[NSProcessInfo processInfo] globallyUniqueString];
             NSString *roomAlias = [NSString stringWithFormat:@"#%@%@", globallyUniqueString, bobRestClient.homeserverSuffix];
             
-            XCTAssertNil(room.state.aliases);
-            XCTAssertNil(room.state.canonicalAlias);
-            
             // Listen to live event. We should receive only: a m.room.aliases and m.room.canonical_alias events
             [room liveTimeline:^(MXEventTimeline *liveTimeline) {
+
+                XCTAssertNil(liveTimeline.state.aliases);
+                XCTAssertNil(liveTimeline.state.canonicalAlias);
+
                 [liveTimeline listenToEventsOfTypes:nil onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
 
                     if(event.eventType == MXEventTypeRoomAliases)
                     {
-                        XCTAssertNotNil(room.state.aliases);
-                        XCTAssertEqual(room.state.aliases.count, 1);
-                        XCTAssertEqualObjects(room.state.aliases.firstObject, roomAlias, @"The room alias is wrong");
+                        XCTAssertNotNil(liveTimeline.state.aliases);
+                        XCTAssertEqual(liveTimeline.state.aliases.count, 1);
+                        XCTAssertEqualObjects(liveTimeline.state.aliases.firstObject, roomAlias, @"The room alias is wrong");
                     }
                     else if (event.eventType == MXEventTypeRoomCanonicalAlias)
                     {
-                        XCTAssertNotNil(room.state.canonicalAlias);
-                        XCTAssertNotEqual(room.state.canonicalAlias.length, 0);
-                        XCTAssertEqualObjects(room.state.canonicalAlias, roomAlias, @"The room canonical alias is wrong");
+                        XCTAssertNotNil(liveTimeline.state.canonicalAlias);
+                        XCTAssertNotEqual(liveTimeline.state.canonicalAlias.length, 0);
+                        XCTAssertEqualObjects(liveTimeline.state.canonicalAlias, roomAlias, @"The room canonical alias is wrong");
 
                         [expectation fulfill];
                     }
@@ -618,21 +647,21 @@
                     }
 
                 }];
-            }];
 
-            // Set room alias
-            [room addAlias:roomAlias success:^{
-                
-                [room setCanonicalAlias:roomAlias success:^{
-                    
+                // Set room alias
+                [room addAlias:roomAlias success:^{
+
+                    [room setCanonicalAlias:roomAlias success:^{
+
+                    } failure:^(NSError *error) {
+                        XCTFail(@"The request should not fail - NSError: %@", error);
+                        [expectation fulfill];
+                    }];
+
                 } failure:^(NSError *error) {
                     XCTFail(@"The request should not fail - NSError: %@", error);
                     [expectation fulfill];
                 }];
-                
-            } failure:^(NSError *error) {
-                XCTFail(@"The request should not fail - NSError: %@", error);
-                [expectation fulfill];
             }];
             
         } failure:^(NSError *error) {
@@ -652,20 +681,24 @@
             
             MXRoom *room = [mxSession roomWithRoomId:roomId];
             XCTAssertNotNil(room);
-            
-            NSArray *members = room.state.members.members;
-            XCTAssertEqual(members.count, 1, "There must be only one member: mxBob, the creator");
-            
-            for (MXRoomMember *member in room.state.members.members)
-            {
-                XCTAssertTrue([member.userId isEqualToString:bobRestClient.credentials.userId], "This must be mxBob");
-            }
-            
-            XCTAssertNotNil([room.state.members memberWithUserId:bobRestClient.credentials.userId], @"Bob must be retrieved");
-            
-            XCTAssertNil([room.state.members memberWithUserId:@"NonExistingUserId"], @"getMember must return nil if the user does not exist");
-            
-            [expectation fulfill];
+
+            [room state:^(MXRoomState *roomState) {
+
+                NSArray *members = roomState.members.members;
+                XCTAssertEqual(members.count, 1, "There must be only one member: mxBob, the creator");
+
+                for (MXRoomMember *member in roomState.members.members)
+                {
+                    XCTAssertTrue([member.userId isEqualToString:bobRestClient.credentials.userId], "This must be mxBob");
+                }
+
+                XCTAssertNotNil([roomState.members memberWithUserId:bobRestClient.credentials.userId], @"Bob must be retrieved");
+
+                XCTAssertNil([roomState.members memberWithUserId:@"NonExistingUserId"], @"getMember must return nil if the user does not exist");
+
+                [expectation fulfill];
+
+            }];
             
         } failure:^(NSError *error) {
             XCTFail(@"The request should not fail - NSError: %@", error);
@@ -681,14 +714,17 @@
         mxSession = mxSession2;
 
         NSString *bobUserId = matrixSDKTestsData.bobCredentials.userId;
-        NSString *bobMemberName = [room.state.members memberName:bobUserId];
-        
-        XCTAssertNotNil(bobMemberName);
-        XCTAssertFalse([bobMemberName isEqualToString:@""], @"bobMemberName must not be an empty string");
-        
-        XCTAssert([[room.state.members memberName:@"NonExistingUserId"] isEqualToString:@"NonExistingUserId"], @"memberName must return his id if the user does not exist");
-        
-        [expectation fulfill];
+
+        [room state:^(MXRoomState *roomState) {
+            NSString *bobMemberName = [roomState.members memberName:bobUserId];
+
+            XCTAssertNotNil(bobMemberName);
+            XCTAssertFalse([bobMemberName isEqualToString:@""], @"bobMemberName must not be an empty string");
+
+            XCTAssert([[roomState.members memberName:@"NonExistingUserId"] isEqualToString:@"NonExistingUserId"], @"memberName must return his id if the user does not exist");
+
+            [expectation fulfill];
+        }];
     }];
 }
 
@@ -698,10 +734,12 @@
         
         mxSession = mxSession2;
 
-        XCTAssertNotNil(room.state.stateEvents);
-        XCTAssertGreaterThan(room.state.stateEvents.count, 0);
-        
-        [expectation fulfill];
+        [room state:^(MXRoomState *roomState) {
+            XCTAssertNotNil(roomState.stateEvents);
+            XCTAssertGreaterThan(roomState.stateEvents.count, 0);
+
+            [expectation fulfill];
+        }];
     }];
 }
 
@@ -711,14 +749,16 @@
         
         mxSession = mxSession2;
 
-        XCTAssertNotNil(room.state.aliases);
-        XCTAssertGreaterThanOrEqual(room.state.aliases.count, 1);
-        
-        NSString *alias = room.state.aliases[0];
-        
-        XCTAssertTrue([alias hasPrefix:@"#mxPublic"]);
-        
-        [expectation fulfill];
+        [room state:^(MXRoomState *roomState) {
+            XCTAssertNotNil(roomState.aliases);
+            XCTAssertGreaterThanOrEqual(roomState.aliases.count, 1);
+
+            NSString *alias = roomState.aliases[0];
+
+            XCTAssertTrue([alias hasPrefix:@"#mxPublic"]);
+
+            [expectation fulfill];
+        }];
     }];
 }
 
@@ -730,9 +770,11 @@
         
         mxSession = mxSession2;
 
-        XCTAssertNotNil(room.state.name);
-        XCTAssertTrue([room.state.name hasPrefix:@"MX Public Room test (#mxPublic"], @"We must retrieve the #mxPublic room settings");
-        
+        [room state:^(MXRoomState *roomState) {
+            XCTAssertNotNil(roomState.name);
+            XCTAssertTrue([roomState.name hasPrefix:@"MX Public Room test (#mxPublic"], @"We must retrieve the #mxPublic room settings");
+        }];
+
         [expectation fulfill];
     }];
 }
@@ -840,17 +882,20 @@
                     // The room has 2 members (Alice & Bob)
                     XCTAssertEqual(newRoom.summary.membersCount.members, 2);
 
-                    MXRoomMember *alice = [newRoom.state.members memberWithUserId:aliceRestClient.credentials.userId];
-                    XCTAssertNotNil(alice);
-                    XCTAssertEqual(alice.membership, MXMembershipInvite);
-                    XCTAssert([alice.originUserId isEqualToString:bobRestClient.credentials.userId], @"Wrong inviter: %@", alice.originUserId);
-                    
-                    // The last message should be an invite m.room.member
-                    MXEvent *lastMessage = newRoom.summary.lastMessageEvent;
-                    XCTAssertEqual(lastMessage.eventType, MXEventTypeRoomMember, @"The last message should be an invite m.room.member");
-                    XCTAssertLessThan([[NSDate date] timeIntervalSince1970] * 1000 - lastMessage.originServerTs, 3000);
-                    
-                    [expectation fulfill];
+                    [newRoom state:^(MXRoomState *roomState) {
+
+                        MXRoomMember *alice = [roomState.members memberWithUserId:aliceRestClient.credentials.userId];
+                        XCTAssertNotNil(alice);
+                        XCTAssertEqual(alice.membership, MXMembershipInvite);
+                        XCTAssert([alice.originUserId isEqualToString:bobRestClient.credentials.userId], @"Wrong inviter: %@", alice.originUserId);
+
+                        // The last message should be an invite m.room.member
+                        MXEvent *lastMessage = newRoom.summary.lastMessageEvent;
+                        XCTAssertEqual(lastMessage.eventType, MXEventTypeRoomMember, @"The last message should be an invite m.room.member");
+                        XCTAssertLessThan([[NSDate date] timeIntervalSince1970] * 1000 - lastMessage.originServerTs, 3000);
+
+                        [expectation fulfill];
+                    }];
                     
                 } failure:^(NSError *error) {
                     XCTFail(@"The request should not fail - NSError: %@", error);
@@ -890,20 +935,23 @@
                             // The room has 2 members (Alice & Bob)
                             XCTAssertEqual(newRoom.summary.membersCount.members, 2);
 
-                            MXRoomMember *alice = [newRoom.state.members memberWithUserId:aliceRestClient.credentials.userId];
-                            XCTAssertNotNil(alice);
-                            XCTAssertEqual(alice.membership, MXMembershipInvite);
-                            XCTAssert([alice.originUserId isEqualToString:bobRestClient.credentials.userId], @"Wrong inviter: %@", alice.originUserId);
+                            [newRoom state:^(MXRoomState *roomState) {
 
-                            // The last message should be an invite m.room.member
-                            dispatch_async(dispatch_get_main_queue(), ^{    // We could also wait for kMXRoomSummaryDidChangeNotification
+                                MXRoomMember *alice = [roomState.members memberWithUserId:aliceRestClient.credentials.userId];
+                                XCTAssertNotNil(alice);
+                                XCTAssertEqual(alice.membership, MXMembershipInvite);
+                                XCTAssert([alice.originUserId isEqualToString:bobRestClient.credentials.userId], @"Wrong inviter: %@", alice.originUserId);
 
-                                MXEvent *lastMessage = newRoom.summary.lastMessageEvent;
-                                XCTAssertNotNil(lastMessage);
-                                XCTAssertEqual(lastMessage.eventType, MXEventTypeRoomMember, @"The last message should be an invite m.room.member");
-                                XCTAssertLessThan([[NSDate date] timeIntervalSince1970] * 1000 - lastMessage.originServerTs, 3000);
+                                // The last message should be an invite m.room.member
+                                dispatch_async(dispatch_get_main_queue(), ^{    // We could also wait for kMXRoomSummaryDidChangeNotification
 
-                            });
+                                    MXEvent *lastMessage = newRoom.summary.lastMessageEvent;
+                                    XCTAssertNotNil(lastMessage);
+                                    XCTAssertEqual(lastMessage.eventType, MXEventTypeRoomMember, @"The last message should be an invite m.room.member");
+                                    XCTAssertLessThan([[NSDate date] timeIntervalSince1970] * 1000 - lastMessage.originServerTs, 3000);
+
+                                });
+                            }];
                         }
                     }
                     
@@ -971,7 +1019,7 @@
                         // Now, we must have more information about the room
                         // Check its new state
                         XCTAssertEqual(newRoom.summary.membersCount.members, 2);
-                        XCTAssert([newRoom.state.topic isEqualToString:@"We test room invitation here"], @"Wrong topic. Found: %@", newRoom.state.topic);
+                        XCTAssertEqualObjects(newRoom.summary.topic, @"We test room invitation here");
                         
                         XCTAssertEqual(newRoom.summary.membership, MXMembershipJoin);
 
@@ -1021,18 +1069,21 @@
                         
                         MXRoom *newRoom = [mxSession roomWithRoomId:roomId];
                         XCTAssert(newRoom, @"The room must be known now by the user");
-                        
-                        // Now, we must have more information about the room
-                        // Check its new state
-                        XCTAssertEqual(newRoom.state.isJoinRulePublic, YES);
-                        XCTAssertEqual(newRoom.summary.membersCount.members, 2);
-                        XCTAssert([newRoom.state.topic isEqualToString:@"We test room invitation here"], @"Wrong topic. Found: %@", newRoom.state.topic);
-                        
-                        XCTAssertEqual(newRoom.summary.membership, MXMembershipJoin);
-                        XCTAssertNotNil(newRoom.summary.lastMessageEvent);
-                        XCTAssertEqual(newRoom.summary.lastMessageEvent.eventType, MXEventTypeRoomMember, @"The last should be a m.room.member event indicating Alice joining the room");
-                        
-                        [expectation fulfill];
+
+                        [newRoom state:^(MXRoomState *roomState) {
+
+                            // Now, we must have more information about the room
+                            // Check its new state
+                            XCTAssertEqual(roomState.isJoinRulePublic, YES);
+                            XCTAssertEqual(newRoom.summary.membersCount.members, 2);
+                            XCTAssertEqualObjects(roomState.topic, @"We test room invitation here");
+
+                            XCTAssertEqual(newRoom.summary.membership, MXMembershipJoin);
+                            XCTAssertNotNil(newRoom.summary.lastMessageEvent);
+                            XCTAssertEqual(newRoom.summary.lastMessageEvent.eventType, MXEventTypeRoomMember, @"The last should be a m.room.member event indicating Alice joining the room");
+
+                            [expectation fulfill];
+                        }];
                         
                     } failure:^(NSError *error) {
                         XCTFail(@"The request should not fail - NSError: %@", error);
@@ -1060,47 +1111,50 @@
 
             MXRoom *room = [mxSession roomWithRoomId:roomId];
 
-            MXRoomPowerLevels *roomPowerLevels = room.state.powerLevels;
+            [room state:^(MXRoomState *roomState) {
 
-            XCTAssertNotNil(roomPowerLevels);
+                MXRoomPowerLevels *roomPowerLevels = roomState.powerLevels;
 
-            // Check the user power level
-            XCTAssertNotNil(roomPowerLevels.users);
-            XCTAssertEqual(roomPowerLevels.users.count, 1);
-            XCTAssertEqualObjects(roomPowerLevels.users[bobRestClient.credentials.userId], [NSNumber numberWithUnsignedInteger: 100], @"By default power level of room creator is 100");
+                XCTAssertNotNil(roomPowerLevels);
 
-            NSUInteger powerlLevel = [roomPowerLevels powerLevelOfUserWithUserID:bobRestClient.credentials.userId];
-            XCTAssertEqual(powerlLevel, 100, @"By default power level of room creator is 100");
+                // Check the user power level
+                XCTAssertNotNil(roomPowerLevels.users);
+                XCTAssertEqual(roomPowerLevels.users.count, 1);
+                XCTAssertEqualObjects(roomPowerLevels.users[bobRestClient.credentials.userId], [NSNumber numberWithUnsignedInteger: 100], @"By default power level of room creator is 100");
 
-            powerlLevel = [roomPowerLevels powerLevelOfUserWithUserID:@"randomUserId"];
-            XCTAssertEqual(powerlLevel, roomPowerLevels.usersDefault, @"Power level of user with no attributed power level must default to usersDefault");
+                NSUInteger powerlLevel = [roomPowerLevels powerLevelOfUserWithUserID:bobRestClient.credentials.userId];
+                XCTAssertEqual(powerlLevel, 100, @"By default power level of room creator is 100");
 
-            // Check minimum power level for actions
-            // Hope the HS will not change these values
-            XCTAssertEqual(roomPowerLevels.ban, 50);
-            XCTAssertEqual(roomPowerLevels.kick, 50);
-            XCTAssertEqual(roomPowerLevels.redact, 50);
+                powerlLevel = [roomPowerLevels powerLevelOfUserWithUserID:@"randomUserId"];
+                XCTAssertEqual(powerlLevel, roomPowerLevels.usersDefault, @"Power level of user with no attributed power level must default to usersDefault");
 
-            // Check power level to send events
-            XCTAssertNotNil(roomPowerLevels.events);
-            XCTAssertGreaterThan(roomPowerLevels.events.allKeys.count, 0);
+                // Check minimum power level for actions
+                // Hope the HS will not change these values
+                XCTAssertEqual(roomPowerLevels.ban, 50);
+                XCTAssertEqual(roomPowerLevels.kick, 50);
+                XCTAssertEqual(roomPowerLevels.redact, 50);
 
-            NSUInteger minimumPowerLevelForEvent;
-            for (MXEventTypeString eventTypeString in roomPowerLevels.events.allKeys)
-            {
-                minimumPowerLevelForEvent = [roomPowerLevels minimumPowerLevelForSendingEventAsStateEvent:eventTypeString];
+                // Check power level to send events
+                XCTAssertNotNil(roomPowerLevels.events);
+                XCTAssertGreaterThan(roomPowerLevels.events.allKeys.count, 0);
 
-                XCTAssertEqualObjects(roomPowerLevels.events[eventTypeString], [NSNumber numberWithUnsignedInteger:minimumPowerLevelForEvent]);
-            }
+                NSUInteger minimumPowerLevelForEvent;
+                for (MXEventTypeString eventTypeString in roomPowerLevels.events.allKeys)
+                {
+                    minimumPowerLevelForEvent = [roomPowerLevels minimumPowerLevelForSendingEventAsStateEvent:eventTypeString];
 
-            minimumPowerLevelForEvent = [roomPowerLevels minimumPowerLevelForSendingEventAsMessage:kMXEventTypeStringRoomMessage];
-            XCTAssertEqual(minimumPowerLevelForEvent, roomPowerLevels.eventsDefault);
+                    XCTAssertEqualObjects(roomPowerLevels.events[eventTypeString], [NSNumber numberWithUnsignedInteger:minimumPowerLevelForEvent]);
+                }
+
+                minimumPowerLevelForEvent = [roomPowerLevels minimumPowerLevelForSendingEventAsMessage:kMXEventTypeStringRoomMessage];
+                XCTAssertEqual(minimumPowerLevelForEvent, roomPowerLevels.eventsDefault);
 
 
-            minimumPowerLevelForEvent = [roomPowerLevels minimumPowerLevelForSendingEventAsStateEvent:kMXEventTypeStringRoomTopic];
-            XCTAssertEqual(minimumPowerLevelForEvent, roomPowerLevels.stateDefault);
+                minimumPowerLevelForEvent = [roomPowerLevels minimumPowerLevelForSendingEventAsStateEvent:kMXEventTypeStringRoomTopic];
+                XCTAssertEqual(minimumPowerLevelForEvent, roomPowerLevels.stateDefault);
 
-            [expectation fulfill];
+                [expectation fulfill];
+            }];
 
         } failure:^(NSError *error) {
             XCTFail(@"The request should not fail - NSError: %@", error);

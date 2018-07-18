@@ -1,5 +1,6 @@
 /*
  Copyright 2015 OpenMarket Ltd
+ Copyright 2018 New Vector Ltd
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -84,7 +85,7 @@
             MXRoom *room = [mxSession roomWithRoomId:event.roomId];
             
             // sanity checks
-            if (room && room.state)
+            if (room && room.summary)
             {
                 if (nil == op || [op isEqualToString:@"=="])
                 {

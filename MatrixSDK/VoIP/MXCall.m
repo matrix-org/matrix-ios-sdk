@@ -1,5 +1,6 @@
 /*
  Copyright 2015 OpenMarket Ltd
+ Copyright 2018 New Vector Ltd
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -101,14 +102,15 @@ NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
         // Set caleeId only for regular calls
         if (!_isConferenceCall)
         {
-            for (MXRoomMember *roomMember in _room.state.members.joinedMembers)
-            {
-                if (![roomMember.userId isEqualToString:_callerId])
-                {
-                    _calleeId = roomMember.userId;
-                    break;
-                }
-            }
+            // @TODO(async-state)
+//            for (MXRoomMember *roomMember in _room.state.members.joinedMembers)
+//            {
+//                if (![roomMember.userId isEqualToString:_callerId])
+//                {
+//                    _calleeId = roomMember.userId;
+//                    break;
+//                }
+//            }
         }
 
         localICECandidates = [NSMutableArray array];

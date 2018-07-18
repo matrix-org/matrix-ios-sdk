@@ -161,11 +161,11 @@ NSString *uisiString = @"The sender's device has not sent us the keys for this m
     return updated;
 }
 
-- (BOOL)session:(MXSession *)session updateRoomSummary:(MXRoomSummary *)summary withStateEvents:(NSArray<MXEvent *> *)stateEvents
+- (BOOL)session:(MXSession *)session updateRoomSummary:(MXRoomSummary *)summary withStateEvents:(NSArray<MXEvent *> *)stateEvents roomState:(MXRoomState *)roomState
 {
     // Do a classic update
     MXRoomSummaryUpdater *updater = [MXRoomSummaryUpdater roomSummaryUpdaterForSession:session];
-    return [updater session:session updateRoomSummary:summary withStateEvents:stateEvents];
+    return [updater session:session updateRoomSummary:summary withStateEvents:stateEvents roomState:roomState];
 }
 
 - (void)test
@@ -963,10 +963,13 @@ NSString *uisiString = @"The sender's device has not sent us the keys for this m
 
         observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXRoomSummaryDidChangeNotification object:summary queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
 
-            XCTAssertEqualObjects(room.state.name, displayName);
-            XCTAssertEqualObjects(summary.displayname, displayName, @"Room summary must be updated");
+            [room state:^(MXRoomState *roomState) {
 
-            [expectation fulfill];
+                XCTAssertEqualObjects(roomState.name, displayName);
+                XCTAssertEqualObjects(summary.displayname, displayName, @"Room summary must be updated");
+
+                [expectation fulfill];
+            }];
         }];
 
         [room setName:displayName success:nil failure:^(NSError *error) {
