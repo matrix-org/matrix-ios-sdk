@@ -35,10 +35,11 @@
     return isEqual;
 }
 
+
 #pragma mark - NSCopying
 - (id)copyWithZone:(NSZone *)zone
 {
-    MXRoomMembersCount *roomMembersCount = [MXRoomMembersCount new];
+    MXRoomMembersCount *roomMembersCount = [[MXRoomMembersCount allocWithZone:zone] init];
 
     roomMembersCount.members = self.members;
     roomMembersCount.joined = self.joined;
