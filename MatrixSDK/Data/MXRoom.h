@@ -37,6 +37,7 @@
 #import "MXEventTimeline.h"
 #import "MXEventsEnumerator.h"
 #import "MXCryptoConstants.h"
+#import "MXSendReplyEventStringsLocalizable.h"
 
 @class MXRoom;
 @class MXSession;
@@ -764,6 +765,32 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidFlushDataNotification;
                              success:(void (^)(void))success
                              failure:(void (^)(NSError *error))failure;
 
+/**
+ Send a reply to an event with text message to the room.
+ 
+ It's only supported to reply to event with 'm.room.message' event type and following message types: 'm.text', 'm.text', 'm.emote', 'm.notice', 'm.image', 'm.file', 'm.video', 'm.audio'.
+ 
+ @param eventToReply The event to reply.
+ @param textMessage the text to send.
+ @param formattedTextMessage the optional HTML formatted string of the text to send.
+ @param stringLocalizations string localizations used when building reply message.
+ @param success A block object called when the operation succeeds. It returns
+ the event id of the event generated on the home server
+ @param localEcho a pointer to a MXEvent object (@see sendMessageWithContent: for details).
+ @param success A block object called when the operation succeeds. It returns
+ the event id of the event generated on the home server
+ @param failure A block object called when the operation fails.
+ 
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)sendReplyToEvent:(MXEvent*)eventToReply
+                     withTextMessage:(NSString*)textMessage
+                formattedTextMessage:(NSString*)formattedTextMessage
+                 stringLocalizations:(id<MXSendReplyEventStringsLocalizable>)stringLocalizations
+                           localEcho:(MXEvent**)localEcho
+                             success:(void (^)(NSString *eventId))success
+                             failure:(void (^)(NSError *error))failure;
+
 
 #pragma mark - Events listeners on the live timeline
 /**
@@ -794,7 +821,6 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidFlushDataNotification;
  Unregister all listeners from the room live timeline.
  */
 - (void)removeAllListeners;
-
 
 #pragma mark - Events timeline
 /**
