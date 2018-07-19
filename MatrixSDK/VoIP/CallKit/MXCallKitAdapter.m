@@ -86,25 +86,28 @@ NSString * const kMXCallKitAdapterAudioSessionDidActive = @"kMXCallKitAdapterAud
 - (void)startCall:(MXCall *)call
 {
     NSUUID *callUUID = call.callUUID;
-    
-    CXHandle *handle = [[CXHandle alloc] initWithType:CXHandleTypeGeneric value:call.room.roomId];
-    CXStartCallAction *action = [[CXStartCallAction alloc] initWithCallUUID:callUUID handle:handle];
-    action.contactIdentifier = contactIdentifier;
-    
-    CXTransaction *transaction = [[CXTransaction alloc] initWithAction:action];
-    [self.callController requestTransaction:transaction completion:^(NSError * _Nullable error) {
-        CXCallUpdate *update = [[CXCallUpdate alloc] init];
-        update.remoteHandle = handle;
-        update.localizedCallerName = contactIdentifier;
-        update.hasVideo = call.isVideoCall;
-        update.supportsHolding = NO;
-        update.supportsGrouping = NO;
-        update.supportsUngrouping = NO;
-        update.supportsDTMF = NO;
-        
-        [self.provider reportCallWithUUID:callUUID updated:update];
-        
-        [self.calls setObject:call forKey:callUUID];
+
+    [self contactIdentifierForCall:call onComplete:^(NSString *contactIdentifier) {
+
+        CXHandle *handle = [[CXHandle alloc] initWithType:CXHandleTypeGeneric value:call.room.roomId];
+        CXStartCallAction *action = [[CXStartCallAction alloc] initWithCallUUID:callUUID handle:handle];
+        action.contactIdentifier = contactIdentifier;
+
+        CXTransaction *transaction = [[CXTransaction alloc] initWithAction:action];
+        [self.callController requestTransaction:transaction completion:^(NSError * _Nullable error) {
+            CXCallUpdate *update = [[CXCallUpdate alloc] init];
+            update.remoteHandle = handle;
+            update.localizedCallerName = contactIdentifier;
+            update.hasVideo = call.isVideoCall;
+            update.supportsHolding = NO;
+            update.supportsGrouping = NO;
+            update.supportsUngrouping = NO;
+            update.supportsDTMF = NO;
+
+            [self.provider reportCallWithUUID:callUUID updated:update];
+
+            [self.calls setObject:call forKey:callUUID];
+        }];
     }];
 }
 
