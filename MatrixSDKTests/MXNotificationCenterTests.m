@@ -374,20 +374,23 @@
 
                     if (MXTimelineDirectionForwards == direction)
                     {
-                        MXPushRule *rule = [aliceSession.notificationCenter ruleMatchingEvent:event];
+                        [[aliceSession roomWithRoomId:event.roomId] state:^(MXRoomState *roomState) {
+                            
+                            MXPushRule *rule = [aliceSession.notificationCenter ruleMatchingEvent:event roomState:roomState];
 
-                        XCTAssert(rule, @"A push rule must be found for this event: %@", event);
+                            XCTAssert(rule, @"A push rule must be found for this event: %@", event);
 
-                        // Do the same test as in testDefaultDisplayNameCondition
-                        XCTAssertEqual(rule.kind, MXPushRuleKindOverride);
+                            // Do the same test as in testDefaultDisplayNameCondition
+                            XCTAssertEqual(rule.kind, MXPushRuleKindOverride);
 
-                        MXPushRuleCondition *condition = rule.conditions[0];
+                            MXPushRuleCondition *condition = rule.conditions[0];
 
-                        XCTAssertEqualObjects(condition.kind, kMXPushRuleConditionStringContainsDisplayName, @"The default content rule with contains_display_name condition must fire first");
-                        XCTAssertEqual(condition.kindType, MXPushRuleConditionTypeContainsDisplayName);
-                        
-                        [aliceSession close];
-                        [expectation fulfill];
+                            XCTAssertEqualObjects(condition.kind, kMXPushRuleConditionStringContainsDisplayName, @"The default content rule with contains_display_name condition must fire first");
+                            XCTAssertEqual(condition.kindType, MXPushRuleConditionTypeContainsDisplayName);
+
+                            [aliceSession close];
+                            [expectation fulfill];
+                        }];
                     }
                 }];
 

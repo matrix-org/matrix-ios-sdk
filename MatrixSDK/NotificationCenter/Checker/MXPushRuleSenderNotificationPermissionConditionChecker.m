@@ -37,7 +37,7 @@
     return self;
 }
 
-- (BOOL)isCondition:(MXPushRuleCondition*)condition satisfiedBy:(MXEvent*)event withJsonDict:(NSDictionary*)contentAsJsonDict
+- (BOOL)isCondition:(MXPushRuleCondition*)condition satisfiedBy:(MXEvent*)event  roomState:(MXRoomState*)roomState withJsonDict:(NSDictionary*)contentAsJsonDict
 {
     if (!event.eventId)
     {
@@ -54,7 +54,7 @@
         MXRoom *room = [mxSession roomWithRoomId:event.roomId];
         if (room)
         {
-            MXRoomPowerLevels *roomPowerLevels; // @TODO(async-state) = room.state.powerLevels;
+            MXRoomPowerLevels *roomPowerLevels = roomState.powerLevels;
             NSInteger notifLevel = [roomPowerLevels minimumPowerLevelForNotifications:notifLevelKey defaultPower:50];
             NSInteger senderPowerLevel = [roomPowerLevels powerLevelOfUserWithUserID:event.sender];
 
