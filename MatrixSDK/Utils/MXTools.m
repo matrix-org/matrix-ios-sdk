@@ -339,6 +339,11 @@ static NSUInteger transactionIdCount;
 
 }
 
++ (NSString*)permalinkToUserWithUserId:(NSString*)userId
+{
+    return [NSString stringWithFormat:@"%@/#/%@", kMXMatrixDotToUrl, userId];
+}
+
 #pragma mark - File
 
 // return an array of files attributes
