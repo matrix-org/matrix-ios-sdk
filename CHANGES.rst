@@ -11,6 +11,8 @@ Improvements:
 Bug fix:
 
 API break:
+* MXRoom: liveTimeline and state accesses are now asynchronous.
+* MXCall: callee access is now asynchronous.
 * MXRoomState: Remove displayName property. Use MXRoomSummary.displayName instead.
 * MXRoomState: Create a MXRoomMembers property. All members getter methods has been to the new class.
 

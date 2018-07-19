@@ -186,7 +186,7 @@ extern NSString *const kMXCallStateDidChange;
 /**
  The user id of the callee. Nil for conference calls
  */
-@property (readonly, nullable, nonatomic) NSString *calleeId;
+- (void)calleeId:(void (^)(NSString *calleeId))onComplete;
 
 /**
  The UIView that receives frames from the user's camera.

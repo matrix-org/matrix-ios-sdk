@@ -85,19 +85,7 @@ NSString * const kMXCallKitAdapterAudioSessionDidActive = @"kMXCallKitAdapterAud
 
 - (void)startCall:(MXCall *)call
 {
-    MXSession *mxSession = call.room.mxSession;
     NSUUID *callUUID = call.callUUID;
-    
-    NSString *contactIdentifier;
-    if (call.isConferenceCall)
-    {
-        contactIdentifier = call.room.summary.displayname;
-    }
-    else
-    {
-        MXUser *callee = [mxSession userWithUserId:call.calleeId];
-        contactIdentifier = callee.displayname;
-    }
     
     CXHandle *handle = [[CXHandle alloc] initWithType:CXHandleTypeGeneric value:call.room.roomId];
     CXStartCallAction *action = [[CXStartCallAction alloc] initWithCallUUID:callUUID handle:handle];
@@ -278,6 +266,24 @@ NSString * const kMXCallKitAdapterAudioSessionDidActive = @"kMXCallKitAdapterAud
     [call setAudioMuted:action.isMuted];
     
     [action fulfill];
+}
+
+
+#pragma mark - Private methods
+
+- (void)contactIdentifierForCall:(MXCall *)call onComplete:(void (^)(NSString *contactIdentifier))onComplete
+{
+    if (call.isConferenceCall)
+    {
+        onComplete(call.room.summary.displayname);
+    }
+    else
+    {
+        [call calleeId:^(NSString *calleeId) {
+            MXUser *callee = [call.room.mxSession userWithUserId:calleeId];
+            onComplete(callee.displayname);
+        }];
+    }
 }
 
 @end

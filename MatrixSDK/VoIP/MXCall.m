@@ -67,6 +67,11 @@ NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
      Timer for sending local ICE candidates.
      */
     NSTimer *localIceGatheringTimer;
+
+    /**
+     Cache for self.calleeId.
+     */
+    NSString *calleeId;
 }
 
 @end
@@ -98,20 +103,6 @@ NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
 
         // Consider we are using a conference call when there are more than 2 users
         _isConferenceCall = (2 < _room.summary.membersCount.joined);
-        
-        // Set caleeId only for regular calls
-        if (!_isConferenceCall)
-        {
-            // @TODO(async-state)
-//            for (MXRoomMember *roomMember in _room.state.members.joinedMembers)
-//            {
-//                if (![roomMember.userId isEqualToString:_callerId])
-//                {
-//                    _calleeId = roomMember.userId;
-//                    break;
-//                }
-//            }
-        }
 
         localICECandidates = [NSMutableArray array];
 
@@ -146,6 +137,36 @@ NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
     return self;
 }
 
+- (void)calleeId:(void (^)(NSString * _Nonnull))onComplete
+{
+    if (calleeId)
+    {
+        onComplete(calleeId);
+    }
+    else
+    {
+        // Set caleeId only for regular calls
+        if (!_isConferenceCall)
+        {
+            MXWeakify(self);
+            [_room state:^(MXRoomState *roomState) {
+                MXStrongifyAndReturnIfNil(self);
+
+                for (MXRoomMember *roomMember in roomState.members.joinedMembers)
+                {
+                    if (![roomMember.userId isEqualToString:self.callerId])
+                    {
+                        self->calleeId = roomMember.userId;
+                        break;
+                    }
+                }
+
+                onComplete(self->calleeId);
+            }];
+        }
+    }
+}
+
 - (void)handleCallEvent:(MXEvent *)event
 {
     switch (event.eventType)
@@ -160,7 +181,7 @@ NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
 
                 _callId = callInviteEventContent.callId;
                 _callerId = event.sender;
-                _calleeId = callManager.mxSession.myUser.userId;
+                calleeId = callManager.mxSession.myUser.userId;
                 _isIncoming = YES;
 
                 // Store if it is voice or video call
