@@ -132,6 +132,12 @@
             summary.membership = roomState.membership;
             updated = YES;
         }
+
+        if (summary.isConferenceUserRoom != roomState.isConferenceUserRoom)
+        {
+            summary.isConferenceUserRoom = roomState.isConferenceUserRoom;
+            updated = YES;
+        }
     }
 
     return updated;

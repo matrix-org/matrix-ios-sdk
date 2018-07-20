@@ -150,6 +150,12 @@ FOUNDATION_EXPORT NSString *const kMXRoomSummaryDidChangeNotification;
 @property (nonatomic) MXRoomMembersCount *membersCount;
 
 /**
+ Flag indicating if the room is a 1:1 room with a call conference user.
+ In this case, the room is used as a call signaling room and does not need to be
+ */
+@property (nonatomic) BOOL isConferenceUserRoom;
+
+/**
  Reset data related to room state.
  
  It recomputes every data related to the room state from the current room state.

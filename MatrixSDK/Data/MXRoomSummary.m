@@ -528,6 +528,7 @@ NSString *const kMXRoomSummaryDidChangeNotification = @"kMXRoomSummaryDidChangeN
         _topic = [aDecoder decodeObjectForKey:@"topic"];
         _membership = (MXMembership)[aDecoder decodeIntegerForKey:@"membership"];
         _membersCount = [aDecoder decodeObjectForKey:@"membersCount"];
+        _isConferenceUserRoom = [(NSNumber*)[aDecoder decodeObjectForKey:@"isConferenceUserRoom"] boolValue];
 
         _others = [aDecoder decodeObjectForKey:@"others"];
         _isEncrypted = [aDecoder decodeBoolForKey:@"isEncrypted"];
@@ -566,6 +567,7 @@ NSString *const kMXRoomSummaryDidChangeNotification = @"kMXRoomSummaryDidChangeN
     [aCoder encodeObject:_topic forKey:@"topic"];
     [aCoder encodeInteger:(NSInteger)_membership forKey:@"membership"];
     [aCoder encodeObject:_membersCount forKey:@"membersCount"];
+    [aCoder encodeObject:@(_isConferenceUserRoom) forKey:@"isConferenceUserRoom"];
 
     [aCoder encodeObject:_others forKey:@"others"];
     [aCoder encodeBool:_isEncrypted forKey:@"isEncrypted"];
