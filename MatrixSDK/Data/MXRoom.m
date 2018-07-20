@@ -373,6 +373,17 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
         }
         else
         {
+            NSDictionary *relatesToJSON = nil;
+            
+            // Store the "m.relates_to" data and remove them from event clear content before encrypting the event content
+            if (event.content[@"m.relates_to"])
+            {
+                relatesToJSON = event.content[@"m.relates_to"];
+                NSMutableDictionary *updatedContent = [event.content mutableCopy];
+                updatedContent[@"m.relates_to"] = nil;
+                contentCopy = [updatedContent copy];
+            }
+            
             // Check whether a local echo is required
             if ([eventTypeString isEqualToString:kMXEventTypeStringRoomMessage]
                 || [eventTypeString isEqualToString:kMXEventTypeStringSticker])
@@ -408,11 +419,24 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
 
                     if (event)
                     {
+                        NSDictionary *finalEncryptedContent;
+                        
+                        // Add "m.relates_to" to encrypted event content if any
+                        if (relatesToJSON)
+                        {
+                            NSMutableDictionary *updatedEncryptedContent = [encryptedContent mutableCopy];
+                            updatedEncryptedContent[@"m.relates_to"] = relatesToJSON;
+                        }
+                        else
+                        {
+                            finalEncryptedContent = encryptedContent;
+                        }
+                        
                         // Encapsulate the resulting event in a fake encrypted event
                         MXEvent *clearEvent = [self fakeEventWithEventId:event.eventId eventType:eventTypeString andContent:event.content];
 
                         event.wireType = encryptedEventType;
-                        event.wireContent = encryptedContent;
+                        event.wireContent = finalEncryptedContent;
 
                         MXEventDecryptionResult *decryptionResult = [[MXEventDecryptionResult alloc] init];
                         decryptionResult.clearEvent = clearEvent.JSONDictionary;
