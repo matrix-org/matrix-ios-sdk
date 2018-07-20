@@ -1968,46 +1968,28 @@ typedef void (^MXOnResumeDone)(void);
 {
     NSLog(@"[MXSession] preloadRooms: %@ rooms", @(roomIds.count));
 
-    [self preloadNextRoomDataIn:[roomIds mutableCopy] onComplete:^{
-        NSLog(@"[MXSession] preloadRoomsForSyncResponse: DONE");
-        onComplete();
-    }];
-}
-
-/**
- Preload the data on the next room in an array.
-
- @param roomIds an array to pop a room id from.
- @param onComplete block called once done.
- */
-- (void)preloadNextRoomDataIn:(NSMutableArray<NSString*> *)roomIds  onComplete:(dispatch_block_t)onComplete
-{
-    // Pop a room if there is still
-    NSString *roomId = [roomIds lastObject];
-
-    if (roomId)
+    dispatch_group_t group = dispatch_group_create();
+    for (NSString *roomId in roomIds)
     {
-        [roomIds removeLastObject];
-
         MXRoom *room = [self roomWithRoomId:roomId];
         if (room)
         {
+            dispatch_group_enter(group);
             [room liveTimeline:^(MXEventTimeline *liveTimeline) {
-                [self preloadNextRoomDataIn:roomIds onComplete:onComplete];
+                dispatch_group_leave(group);
             }];
         }
         else
         {
-            NSLog(@"[MXSession] preloadNextRoomIn: Unkown room id: %@", roomId);
-            [self preloadNextRoomDataIn:roomIds onComplete:onComplete];
+            NSLog(@"[MXSession] preloadRoomsData: Unkown room id: %@", roomId);
         }
     }
-    else
-    {
-        onComplete();
-    }
-}
 
+    dispatch_group_notify(group, dispatch_get_main_queue(), ^{
+        NSLog(@"[MXSession] preloadRoomsForSyncResponse: DONE");
+        onComplete();
+    });
+}
 
 #pragma mark - Rooms summaries
 - (MXRoomSummary *)roomSummaryWithRoomId:(NSString*)roomId
