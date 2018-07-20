@@ -530,6 +530,21 @@ NSString *const kMXEventIdentifierKey = @"kMXEventIdentifierKey";
     _clearEvent = nil;
     if (decryptionResult.clearEvent)
     {
+        NSDictionary *decryptionClearEventJSON;
+        NSDictionary *encryptedContentRelatesToJSON = _wireContent[@"m.relates_to"];
+        
+        // Add "m.relates_to" data from e2e event to the unencrypted event if any
+        if (encryptedContentRelatesToJSON)
+        {
+            NSMutableDictionary *decryptionClearEventUpdatedJSON = [decryptionResult.clearEvent mutableCopy];
+            decryptionClearEventUpdatedJSON[@"content"][@"m.relates_to"] = encryptedContentRelatesToJSON;
+            decryptionClearEventJSON = [decryptionClearEventUpdatedJSON copy];
+        }
+        else
+        {
+            decryptionClearEventJSON = decryptionResult.clearEvent;
+        }
+        
         _clearEvent = [MXEvent modelFromJSON:decryptionResult.clearEvent];
     }
 
