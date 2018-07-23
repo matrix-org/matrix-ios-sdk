@@ -461,13 +461,19 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
         {
             NSDictionary *relatesToJSON = nil;
             
+            NSDictionary *contentCopyToEncrypt = nil;
+            
             // Store the "m.relates_to" data and remove them from event clear content before encrypting the event content
-            if (event.content[@"m.relates_to"])
+            if (contentCopy[@"m.relates_to"])
             {
-                relatesToJSON = event.content[@"m.relates_to"];
-                NSMutableDictionary *updatedContent = [event.content mutableCopy];
+                relatesToJSON = contentCopy[@"m.relates_to"];
+                NSMutableDictionary *updatedContent = [contentCopy mutableCopy];
                 updatedContent[@"m.relates_to"] = nil;
-                contentCopy = [updatedContent copy];
+                contentCopyToEncrypt = [updatedContent copy];
+            }
+            else
+            {
+                contentCopyToEncrypt = contentCopy;
             }
             
             // Check whether a local echo is required
@@ -500,24 +506,25 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
                 MXStrongifyAndReturnIfNil(self);
 
                 MXWeakify(self);
-                MXHTTPOperation *operation = [self->mxSession.crypto encryptEventContent:contentCopy withType:eventTypeString inRoom:self success:^(NSDictionary *encryptedContent, NSString *encryptedEventType) {
+                MXHTTPOperation *operation = [self->mxSession.crypto encryptEventContent:contentCopyToEncrypt withType:eventTypeString inRoom:self success:^(NSDictionary *encryptedContent, NSString *encryptedEventType) {
                     MXStrongifyAndReturnIfNil(self);
 
+                    NSDictionary *finalEncryptedContent;
+                    
+                    // Add "m.relates_to" to encrypted event content if any
+                    if (relatesToJSON)
+                    {
+                        NSMutableDictionary *updatedEncryptedContent = [encryptedContent mutableCopy];
+                        updatedEncryptedContent[@"m.relates_to"] = relatesToJSON;
+                        finalEncryptedContent = [updatedEncryptedContent copy];
+                    }
+                    else
+                    {
+                        finalEncryptedContent = encryptedContent;
+                    }
+                    
                     if (event)
                     {
-                        NSDictionary *finalEncryptedContent;
-                        
-                        // Add "m.relates_to" to encrypted event content if any
-                        if (relatesToJSON)
-                        {
-                            NSMutableDictionary *updatedEncryptedContent = [encryptedContent mutableCopy];
-                            updatedEncryptedContent[@"m.relates_to"] = relatesToJSON;
-                        }
-                        else
-                        {
-                            finalEncryptedContent = encryptedContent;
-                        }
-                        
                         // Encapsulate the resulting event in a fake encrypted event
                         MXEvent *clearEvent = [self fakeEventWithEventId:event.eventId eventType:eventTypeString andContent:event.content];
 
@@ -539,7 +546,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
                     }
 
                     // Send the encrypted content
-                    MXHTTPOperation *operation2 = [self _sendEventOfType:encryptedEventType content:encryptedContent txnId:event.eventId success:onSuccess failure:onFailure];
+                    MXHTTPOperation *operation2 = [self _sendEventOfType:encryptedEventType content:finalEncryptedContent txnId:event.eventId success:onSuccess failure:onFailure];
                     if (operation2)
                     {
                         // Mutate MXHTTPOperation so that the user can cancel this new operation
@@ -1649,8 +1656,8 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
  Build reply to body and formatted body.
  
  @param eventToReply the event to reply. Should be 'm.room.message' event type.
- @param text the text to send.
- @param formattedText the optional HTML formatted string of the text to send.
+ @param textMessage the text to send.
+ @param formattedTextMessage the optional HTML formatted string of the text to send.
  @param replyContentBody reply string of the text to send.
  @param replyContentFormattedBody reply HTML formatted string of the text to send.
  @param stringLocalizations string localizations used when building reply content bodies.
@@ -1720,11 +1727,14 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
                                      isSenderMessageAReplyTo:eventToReplyIsAlreadyAReply
                                                 replyMessage:textMessage];
         
+        // As formatted body is mandatory for a reply message, use non formatted to build it
+        NSString *finalFormattedTextMessage = formattedTextMessage ?: textMessage;
+        
         *replyContentFormattedBody = [self replyMessageFormattedBodyFromEventToReply:eventToReply
                                                           senderMessageFormattedBody:senderMessageFormattedBody
                                                               isSenderMessageAnEmote:isSenderMessageAnEmote
                                                              isSenderMessageAReplyTo:eventToReplyIsAlreadyAReply
-                                                               replyFormattedMessage:formattedTextMessage
+                                                               replyFormattedMessage:finalFormattedTextMessage
                                                                  stringLocalizations:stringLocalizations];
     }
 }
@@ -1744,13 +1754,13 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
  @return Reply message body.
  */
 - (NSString*)replyMessageBodyFromSender:(NSString*)sender
-                      senderMessageBody:(NSString*)messageToReplyToContentBody
+                      senderMessageBody:(NSString*)senderMessageBody
                  isSenderMessageAnEmote:(BOOL)isSenderMessageAnEmote
                 isSenderMessageAReplyTo:(BOOL)isSenderMessageAReplyTo
                            replyMessage:(NSString*)replyMessage
 {
     // Sender reply body split by lines
-    NSMutableArray<NSString*> *senderReplyBodyLines = [[messageToReplyToContentBody componentsSeparatedByString:@"\n"] mutableCopy];
+    NSMutableArray<NSString*> *senderReplyBodyLines = [[senderMessageBody componentsSeparatedByString:@"\n"] mutableCopy];
     
     // Strip previous reply to, if the event was already a reply
     if (isSenderMessageAReplyTo)
@@ -1811,7 +1821,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
  Example of reply formatted body:
  `<mx-reply><blockquote><a href=\"https://matrix.to/#/!vjFxDRtZSSdspfTSEr:matrix.org/$15237084491191492ssFoA:matrix.org\">In reply to</a> <a href=\"https://matrix.to/#/@sender:matrix.org\">@sender:matrix.org</a><br>sent an image.</blockquote></mx-reply>Reply message`
  
- @param eventToRepy The sender event to reply.
+ @param eventToReply The sender event to reply.
  @param senderMessageFormattedBody The message body of the sender.
  @param isSenderMessageAnEmote Indicate if the sender message is an emote (/me).
  @param isSenderMessageAReplyTo Indicate if the sender message is already a reply to message.
