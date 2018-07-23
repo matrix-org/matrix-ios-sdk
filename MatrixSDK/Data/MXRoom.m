@@ -1525,7 +1525,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
         
         NSDictionary *relatesToDict = @{ @"m.in_reply_to" :
                                              @{
-                                                 @"eventId" : eventId
+                                                 @"event_id" : eventId
                                                  }
                                          };
         
@@ -1576,7 +1576,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
         return;
     }
     
-    BOOL eventToReplyIsAlreadyAReply = eventToReply.content[@"m.relates_to"][@"m.in_reply_to"][@"eventId"] != nil;
+    BOOL eventToReplyIsAlreadyAReply = eventToReply.content[@"m.relates_to"][@"m.in_reply_to"][@"event_id"] != nil;
     BOOL isSenderMessageAnEmote = [msgtype isEqualToString:kMXMessageTypeEmote];
     
     NSString *senderMessageBody;

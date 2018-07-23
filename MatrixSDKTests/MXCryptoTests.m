@@ -1427,8 +1427,8 @@
                 
                 NSString *secondEventBody = localEchoEvent.content[@"body"];
                 NSString *secondEventFormattedBody = localEchoEvent.content[@"formatted_body"];
-                NSString *secondEventRelatesToEventId = localEchoEvent.content[@"m.relates_to"][@"m.in_reply_to"][@"eventId"];
-                NSString *secondWiredEventRelatesToEventId = localEchoEvent.wireContent[@"m.relates_to"][@"m.in_reply_to"][@"eventId"];
+                NSString *secondEventRelatesToEventId = localEchoEvent.content[@"m.relates_to"][@"m.in_reply_to"][@"event_id"];
+                NSString *secondWiredEventRelatesToEventId = localEchoEvent.wireContent[@"m.relates_to"][@"m.in_reply_to"][@"event_id"];
                 
                 NSString *permalinkToUser = [MXTools permalinkToUserWithUserId:firstEventSender];
                 NSString *permalinkToEvent = [MXTools permalinkToEvent:firstEventId inRoom:roomId];
@@ -1460,8 +1460,8 @@
                 
                 NSString *thirdEventBody = localEchoEvent.content[@"body"];
                 NSString *thirdEventFormattedBody = localEchoEvent.content[@"formatted_body"];
-                NSString *thirdEventRelatesToEventId = localEchoEvent.content[@"m.relates_to"][@"m.in_reply_to"][@"eventId"];
-                NSString *thirdWiredEventRelatesToEventId = localEchoEvent.wireContent[@"m.relates_to"][@"m.in_reply_to"][@"eventId"];
+                NSString *thirdEventRelatesToEventId = localEchoEvent.content[@"m.relates_to"][@"m.in_reply_to"][@"event_id"];
+                NSString *thirdWiredEventRelatesToEventId = localEchoEvent.wireContent[@"m.relates_to"][@"m.in_reply_to"][@"event_id"];
                 
                 NSString *permalinkToUser = [MXTools permalinkToUserWithUserId:secondEventSender];
                 NSString *permalinkToEvent = [MXTools permalinkToEvent:secondEventId inRoom:roomId];
@@ -1495,13 +1495,13 @@
             else if (messageCountFromAlice == 2)
             {
                 secondEventId = event.eventId;
-                NSString *secondWiredEventRelatesToEventId = event.wireContent[@"m.relates_to"][@"m.in_reply_to"][@"eventId"];
+                NSString *secondWiredEventRelatesToEventId = event.wireContent[@"m.relates_to"][@"m.in_reply_to"][@"event_id"];
 
                 XCTAssert([secondWiredEventRelatesToEventId isEqualToString:firstEventId]);
             }
             else
             {
-                NSString *thirdWiredEventRelatesToEventId = event.wireContent[@"m.relates_to"][@"m.in_reply_to"][@"eventId"];
+                NSString *thirdWiredEventRelatesToEventId = event.wireContent[@"m.relates_to"][@"m.in_reply_to"][@"event_id"];
                 
                 XCTAssert([thirdWiredEventRelatesToEventId isEqualToString:secondEventId]);
                 
