@@ -1694,6 +1694,29 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
 }
 
 
+#pragma mark - Events listeners on the live timeline
+- (id)listenToEvents:(MXOnRoomEvent)onEvent
+{
+    // We do not need the live timeline data to be loaded to set a listener
+    return [liveTimeline listenToEvents:onEvent];
+}
+
+- (id)listenToEventsOfTypes:(NSArray<MXEventTypeString> *)types onEvent:(MXOnRoomEvent)onEvent
+{
+    return [liveTimeline listenToEventsOfTypes:types onEvent:onEvent];
+}
+
+- (void)removeListener:(id)listener
+{
+    [liveTimeline removeListener:listener];
+}
+
+- (void)removeAllListeners
+{
+    [liveTimeline removeAllListeners];
+}
+
+
 #pragma mark - Events timeline
 - (MXEventTimeline*)timelineOnEvent:(NSString*)eventId;
 {
@@ -2597,19 +2620,16 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
                                        success:nil
                                        failure:failure];
 
-        [self liveTimeline:^(MXEventTimeline *theLiveTimeline) {
+        // Wait for the event coming back from the hs
+        id eventBackListener;
+        eventBackListener = [self listenToEventsOfTypes:@[kMXEventTypeStringRoomEncryption] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
 
-            // Wait for the event coming back from the hs
-            id eventBackListener;
-            eventBackListener = [theLiveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomEncryption] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
+            [self removeListener:eventBackListener];
 
-                [theLiveTimeline removeListener:eventBackListener];
-
-                // Dispatch to let time to MXCrypto to digest the m.room.encryption event
-                dispatch_async(dispatch_get_main_queue(), ^{
-                    success();
-                });
-            }];
+            // Dispatch to let time to MXCrypto to digest the m.room.encryption event
+            dispatch_async(dispatch_get_main_queue(), ^{
+                success();
+            });
         }];
     }
     else

@@ -765,6 +765,37 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidFlushDataNotification;
                              failure:(void (^)(NSError *error))failure;
 
 
+#pragma mark - Events listeners on the live timeline
+/**
+ Register a listener to events of the room live timeline.
+
+ @param onEvent the block that will called once a new event has been handled.
+ @return a reference to use to unregister the listener
+ */
+- (id)listenToEvents:(MXOnRoomEvent)onEvent;
+
+/**
+ Register a listener for some types of events on the room live timeline.
+
+ @param types an array of event types strings (MXEventTypeString) to listen to.
+ @param onEvent the block that will called once a new event has been handled.
+ @return a reference to use to unregister the listener
+ */
+- (id)listenToEventsOfTypes:(NSArray<MXEventTypeString> *)types onEvent:(MXOnRoomEvent)onEvent;
+
+/**
+ Unregister a listener from the room live timeline.
+
+ @param listener the reference of the listener to remove.
+ */
+- (void)removeListener:(id)listener;
+
+/**
+ Unregister all listeners from the room live timeline.
+ */
+- (void)removeAllListeners;
+
+
 #pragma mark - Events timeline
 /**
  Open a new `MXEventTimeline` instance around the passed event.
@@ -773,6 +804,7 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidFlushDataNotification;
  @return a new `MXEventTimeline` instance.
  */
 - (MXEventTimeline*)timelineOnEvent:(NSString*)eventId;
+
 
 #pragma mark - Fake event objects creation
 /**

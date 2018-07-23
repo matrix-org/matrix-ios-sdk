@@ -3,7 +3,8 @@ Changes in Matrix iOS SDK in 0.11.0 ()
 
 Improvements:
 * MXRestClient: Add Matrix filter API.
-* MXRoom: Add an asynchronous methods for liveTimeline, state and members
+* MXRoom: Add an asynchronous methods for liveTimeline, state and members.
+* MXRoom: Add methods to manage the room liveTimeline listeners synchronously.
 * MXRoomState: Add a membersCount property to store members stats independently from MXRoomMember objects.
 * MXRoomSummary: Add a membersCount property to cache MXRoomState one.
 * MXRoomSummary: Add a membership property to cache MXRoomState one.

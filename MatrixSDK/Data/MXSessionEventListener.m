@@ -1,6 +1,7 @@
 /*
  Copyright 2014 OpenMarket Ltd
- 
+ Copyright 2018 New Vector Ltd
+
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
  You may obtain a copy of the License at
@@ -45,15 +46,9 @@
 {
     if (![roomEventListeners objectForKey:room.roomId])
     {
-        MXWeakify(self);
-        [room liveTimeline:^(MXEventTimeline *liveTimeline) {
-            MXStrongifyAndReturnIfNil(self);
-
-            self->roomEventListeners[room.roomId] =
-            [liveTimeline listenToEventsOfTypes:self.eventTypes onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
-                self.listenerBlock(event, direction, roomState);
-            }];
-
+        self->roomEventListeners[room.roomId] =
+        [room listenToEventsOfTypes:self.eventTypes onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
+            self.listenerBlock(event, direction, roomState);
         }];
     }
 }
@@ -62,13 +57,7 @@
 {
     if ([roomEventListeners objectForKey:room.roomId])
     {
-        MXWeakify(self);
-        [room liveTimeline:^(MXEventTimeline *liveTimeline) {
-            MXStrongifyAndReturnIfNil(self);
-
-            [liveTimeline removeListener:self->roomEventListeners[room.roomId]];
-        }];
-
+        [room removeListener:self->roomEventListeners[room.roomId]];
         [roomEventListeners removeObjectForKey:room.roomId];
     }
 }
@@ -81,13 +70,7 @@
     for (NSString *roomId in roomEventListeners)
     {
         MXRoom *room = [mxSession roomWithRoomId:roomId];
-
-        MXWeakify(self);
-        [room liveTimeline:^(MXEventTimeline *liveTimeline) {
-            MXStrongifyAndReturnIfNil(self);
-
-            [liveTimeline removeListener:self->roomEventListeners[room.roomId]];
-        }];
+        [room removeListener:self->roomEventListeners[room.roomId]];
     }
     [roomEventListeners removeAllObjects];
 }
