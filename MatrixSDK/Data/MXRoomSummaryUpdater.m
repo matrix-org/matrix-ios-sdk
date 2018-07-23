@@ -104,6 +104,11 @@
                 updated = YES;
                 break;
 
+            case MXEventTypeRoomAliases:
+                summary.aliases = roomState.aliases;
+                updated = YES;
+                break;
+
             case MXEventTypeRoomMember:
                 hasRoomMembersChange = YES;
                 break;

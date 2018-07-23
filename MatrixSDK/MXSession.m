@@ -1800,15 +1800,14 @@ typedef void (^MXOnResumeDone)(void);
 
     if (alias)
     {
-        // @TODO(async-state): Move aliases in summary?
-//        for (MXRoom *room in rooms.allValues)
-//        {
-//            if (room.state.aliases && NSNotFound != [room.state.aliases indexOfObject:alias])
-//            {
-//                theRoom = room;
-//                break;
-//            }
-//        }
+        for (MXRoomSummary *summary in roomsSummaries.allValues)
+        {
+            if (summary.aliases && NSNotFound != [summary.aliases indexOfObject:alias])
+            {
+                theRoom = [self roomWithRoomId:summary.roomId];
+                break;
+            }
+        }
     }
     return theRoom;
 }

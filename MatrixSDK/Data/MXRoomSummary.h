@@ -140,6 +140,11 @@ FOUNDATION_EXPORT NSString *const kMXRoomSummaryDidChangeNotification;
 @property (nonatomic) NSString *topic;
 
 /**
+ The aliases of this room.
+ */
+@property (nonatomic) NSArray<NSString *> *aliases;
+
+/**
  The membership state of the logged in user for this room.
  */
 @property (nonatomic) MXMembership membership;

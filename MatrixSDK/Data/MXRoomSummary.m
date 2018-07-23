@@ -124,6 +124,7 @@ NSString *const kMXRoomSummaryDidChangeNotification = @"kMXRoomSummaryDidChangeN
     _avatar = nil;
     _displayname = nil;
     _topic = nil;
+    _aliases = nil;
 
     MXWeakify(self);
     [room state:^(MXRoomState *roomState) {
@@ -526,6 +527,7 @@ NSString *const kMXRoomSummaryDidChangeNotification = @"kMXRoomSummaryDidChangeN
         _avatar = [aDecoder decodeObjectForKey:@"avatar"];
         _displayname = [aDecoder decodeObjectForKey:@"displayname"];
         _topic = [aDecoder decodeObjectForKey:@"topic"];
+        _aliases = [aDecoder decodeObjectForKey:@"aliases"];
         _membership = (MXMembership)[aDecoder decodeIntegerForKey:@"membership"];
         _membersCount = [aDecoder decodeObjectForKey:@"membersCount"];
         _isConferenceUserRoom = [(NSNumber*)[aDecoder decodeObjectForKey:@"isConferenceUserRoom"] boolValue];
@@ -565,6 +567,7 @@ NSString *const kMXRoomSummaryDidChangeNotification = @"kMXRoomSummaryDidChangeN
     [aCoder encodeObject:_avatar forKey:@"avatar"];
     [aCoder encodeObject:_displayname forKey:@"displayname"];
     [aCoder encodeObject:_topic forKey:@"topic"];
+    [aCoder encodeObject:_aliases forKey:@"aliases"];
     [aCoder encodeInteger:(NSInteger)_membership forKey:@"membership"];
     [aCoder encodeObject:_membersCount forKey:@"membersCount"];
     [aCoder encodeObject:@(_isConferenceUserRoom) forKey:@"isConferenceUserRoom"];
