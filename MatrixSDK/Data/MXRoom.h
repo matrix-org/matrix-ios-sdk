@@ -783,8 +783,6 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidFlushDataNotification;
  @param textMessage the text to send.
  @param formattedTextMessage the optional HTML formatted string of the text to send.
  @param stringLocalizations string localizations used when building reply message.
- @param success A block object called when the operation succeeds. It returns
- the event id of the event generated on the home server
  @param localEcho a pointer to a MXEvent object (@see sendMessageWithContent: for details).
  @param success A block object called when the operation succeeds. It returns
  the event id of the event generated on the home server
@@ -798,7 +796,7 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidFlushDataNotification;
                  stringLocalizations:(id<MXSendReplyEventStringsLocalizable>)stringLocalizations
                            localEcho:(MXEvent**)localEcho
                              success:(void (^)(NSString *eventId))success
-                             failure:(void (^)(NSError *error))failure;
+                             failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 
 #pragma mark - Events listeners on the live timeline
