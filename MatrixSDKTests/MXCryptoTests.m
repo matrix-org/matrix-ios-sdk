@@ -1426,13 +1426,26 @@
     
     MXSendReplyEventDefaultStringLocalizations *defaultStringLocalizations = [MXSendReplyEventDefaultStringLocalizations new];
     
+    __block NSUInteger successFullfillCount = 0;
+    NSUInteger expectedSuccessFulfillCount = 2; // Bob and Alice have finished their tests
+    
     [matrixSDKTestsE2EData doE2ETestWithAliceAndBobInARoom:self cryptedBob:YES warnOnUnknowDevices:NO readyToTest:^(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
         
+        void (^testExpectationFullfillIfComplete)(void) = ^() {
+            successFullfillCount++;
+            if (successFullfillCount == expectedSuccessFulfillCount)
+            {
+                [expectation fulfill];
+            }
+        };
+        
         __block NSUInteger messageCount = 0;
+        __block NSUInteger messageCountFromAlice = 0;
         
         MXRoom *roomFromBobPOV = [bobSession roomWithRoomId:roomId];
+        MXRoom *roomFromAlicePOV = [aliceSession roomWithRoomId:roomId];
         
-        // Listen to messages
+        // Listen to messages from Bob POV
         [roomFromBobPOV.liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
             messageCount++;
             
@@ -1456,6 +1469,7 @@
                 NSString *secondEventBody = localEchoEvent.content[@"body"];
                 NSString *secondEventFormattedBody = localEchoEvent.content[@"formatted_body"];
                 NSString *secondEventRelatesToEventId = localEchoEvent.content[@"m.relates_to"][@"m.in_reply_to"][@"eventId"];
+                NSString *secondWiredEventRelatesToEventId = localEchoEvent.wireContent[@"m.relates_to"][@"m.in_reply_to"][@"eventId"];
                 
                 NSString *permalinkToUser = [MXTools permalinkToUserWithUserId:firstEventSender];
                 NSString *permalinkToEvent = [MXTools permalinkToEvent:firstEventId inRoom:roomId];
@@ -1465,7 +1479,8 @@
                 
                 XCTAssert([secondEventBody isEqualToString:expectedSecondEventBody]);
                 XCTAssert([secondEventFormattedBody isEqualToString:expectedSecondEventFormattedBody]);
-                XCTAssert([firstEventId isEqualToString:secondEventRelatesToEventId]);
+                XCTAssert([secondEventRelatesToEventId isEqualToString:firstEventId]);
+                XCTAssert([secondWiredEventRelatesToEventId isEqualToString:firstEventId]);
             }
             else if (messageCount == 2)
             {
@@ -1487,6 +1502,7 @@
                 NSString *thirdEventBody = localEchoEvent.content[@"body"];
                 NSString *thirdEventFormattedBody = localEchoEvent.content[@"formatted_body"];
                 NSString *thirdEventRelatesToEventId = localEchoEvent.content[@"m.relates_to"][@"m.in_reply_to"][@"eventId"];
+                NSString *thirdWiredEventRelatesToEventId = localEchoEvent.wireContent[@"m.relates_to"][@"m.in_reply_to"][@"eventId"];
                 
                 NSString *permalinkToUser = [MXTools permalinkToUserWithUserId:secondEventSender];
                 NSString *permalinkToEvent = [MXTools permalinkToEvent:secondEventId inRoom:roomId];
@@ -1494,13 +1510,43 @@
                 NSString *expectedThirdEventBody = [NSString stringWithFormat:expectedThirdEventBodyStringFormat, secondEventSender];
                 NSString *expectedThirdEventFormattedBody = [NSString stringWithFormat:expectedThirdEventFormattedBodyStringFormat, permalinkToEvent, permalinkToUser, secondEventSender];
                 
+                
                 XCTAssert([thirdEventBody isEqualToString:expectedThirdEventBody]);
                 XCTAssert([thirdEventFormattedBody isEqualToString:expectedThirdEventFormattedBody]);
-                XCTAssert([secondEventId isEqualToString:thirdEventRelatesToEventId]);
+                XCTAssert([thirdEventRelatesToEventId isEqualToString:secondEventId]);
+                XCTAssert([thirdWiredEventRelatesToEventId isEqualToString:secondEventId]);
             }
             else
             {
-                [expectation fulfill];
+                testExpectationFullfillIfComplete();
+            }
+        }];
+        
+        __block NSString *firstEventId;
+        __block NSString *secondEventId;
+        
+        // Listen to messages from Alice POV
+        [roomFromAlicePOV.liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
+            messageCountFromAlice++;
+
+            if (messageCountFromAlice == 1)
+            {
+                firstEventId = event.eventId;
+            }
+            else if (messageCountFromAlice == 2)
+            {
+                secondEventId = event.eventId;
+                NSString *secondWiredEventRelatesToEventId = event.wireContent[@"m.relates_to"][@"m.in_reply_to"][@"eventId"];
+
+                XCTAssert([secondWiredEventRelatesToEventId isEqualToString:firstEventId]);
+            }
+            else
+            {
+                NSString *thirdWiredEventRelatesToEventId = event.wireContent[@"m.relates_to"][@"m.in_reply_to"][@"eventId"];
+                
+                XCTAssert([thirdWiredEventRelatesToEventId isEqualToString:secondEventId]);
+                
+                testExpectationFullfillIfComplete();
             }
         }];
         
