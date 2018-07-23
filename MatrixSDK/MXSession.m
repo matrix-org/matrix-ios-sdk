@@ -883,13 +883,6 @@ typedef void (^MXOnResumeDone)(void);
             [[MXSDKOptions sharedInstance].analyticsDelegate trackStartupSyncDuration:duration isInitial:isInitialSync];
         }
 
-        // Handle top-level account data
-        self->didDirectRoomsChange = NO;
-        if (syncResponse.accountData)
-        {
-            [self handleAccountData:syncResponse.accountData];
-        }
-
         // Handle the to device events before the room ones
         // to ensure to decrypt them properly
         for (MXEvent *toDeviceEvent in syncResponse.toDevice.events)
@@ -1024,6 +1017,14 @@ typedef void (^MXOnResumeDone)(void);
         // Sync point: wait that all rooms in the /sync response have been loaded
         // and their /sync response has been processed
         [self preloadRoomsData:[self roomsInSyncResponse:syncResponse] onComplete:^{
+
+            // Handle top-level account data
+            self->didDirectRoomsChange = NO;
+            if (syncResponse.accountData)
+            {
+                [self handleAccountData:syncResponse.accountData];
+            }
+
             if (self->didDirectRoomsChange)
             {
                 [self updateDirectRoomsData];
