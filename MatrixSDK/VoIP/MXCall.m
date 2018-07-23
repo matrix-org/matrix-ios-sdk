@@ -149,10 +149,10 @@ NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
         if (!_isConferenceCall)
         {
             MXWeakify(self);
-            [_room state:^(MXRoomState *roomState) {
+            [_room members:^(MXRoomMembers *roomMembers) {
                 MXStrongifyAndReturnIfNil(self);
 
-                for (MXRoomMember *roomMember in roomState.members.joinedMembers)
+                for (MXRoomMember *roomMember in roomMembers.joinedMembers)
                 {
                     if (![roomMember.userId isEqualToString:self.callerId])
                     {

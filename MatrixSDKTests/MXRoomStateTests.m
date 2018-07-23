@@ -682,19 +682,19 @@
             MXRoom *room = [mxSession roomWithRoomId:roomId];
             XCTAssertNotNil(room);
 
-            [room state:^(MXRoomState *roomState) {
+            [room members:^(MXRoomMembers *roomMembers) {
 
-                NSArray *members = roomState.members.members;
+                NSArray *members = roomMembers.members;
                 XCTAssertEqual(members.count, 1, "There must be only one member: mxBob, the creator");
 
-                for (MXRoomMember *member in roomState.members.members)
+                for (MXRoomMember *member in roomMembers.members)
                 {
                     XCTAssertTrue([member.userId isEqualToString:bobRestClient.credentials.userId], "This must be mxBob");
                 }
 
-                XCTAssertNotNil([roomState.members memberWithUserId:bobRestClient.credentials.userId], @"Bob must be retrieved");
+                XCTAssertNotNil([roomMembers memberWithUserId:bobRestClient.credentials.userId], @"Bob must be retrieved");
 
-                XCTAssertNil([roomState.members memberWithUserId:@"NonExistingUserId"], @"getMember must return nil if the user does not exist");
+                XCTAssertNil([roomMembers memberWithUserId:@"NonExistingUserId"], @"getMember must return nil if the user does not exist");
 
                 [expectation fulfill];
 
@@ -715,13 +715,13 @@
 
         NSString *bobUserId = matrixSDKTestsData.bobCredentials.userId;
 
-        [room state:^(MXRoomState *roomState) {
-            NSString *bobMemberName = [roomState.members memberName:bobUserId];
+        [room members:^(MXRoomMembers *roomMembers) {
+            NSString *bobMemberName = [roomMembers memberName:bobUserId];
 
             XCTAssertNotNil(bobMemberName);
             XCTAssertFalse([bobMemberName isEqualToString:@""], @"bobMemberName must not be an empty string");
 
-            XCTAssert([[roomState.members memberName:@"NonExistingUserId"] isEqualToString:@"NonExistingUserId"], @"memberName must return his id if the user does not exist");
+            XCTAssert([[roomMembers memberName:@"NonExistingUserId"] isEqualToString:@"NonExistingUserId"], @"memberName must return his id if the user does not exist");
 
             [expectation fulfill];
         }];
@@ -882,9 +882,9 @@
                     // The room has 2 members (Alice & Bob)
                     XCTAssertEqual(newRoom.summary.membersCount.members, 2);
 
-                    [newRoom state:^(MXRoomState *roomState) {
+                    [newRoom members:^(MXRoomMembers *roomMembers) {
 
-                        MXRoomMember *alice = [roomState.members memberWithUserId:aliceRestClient.credentials.userId];
+                        MXRoomMember *alice = [roomMembers memberWithUserId:aliceRestClient.credentials.userId];
                         XCTAssertNotNil(alice);
                         XCTAssertEqual(alice.membership, MXMembershipInvite);
                         XCTAssert([alice.originUserId isEqualToString:bobRestClient.credentials.userId], @"Wrong inviter: %@", alice.originUserId);
@@ -935,9 +935,9 @@
                             // The room has 2 members (Alice & Bob)
                             XCTAssertEqual(newRoom.summary.membersCount.members, 2);
 
-                            [newRoom state:^(MXRoomState *roomState) {
+                            [newRoom members:^(MXRoomMembers *roomMembers) {
 
-                                MXRoomMember *alice = [roomState.members memberWithUserId:aliceRestClient.credentials.userId];
+                                MXRoomMember *alice = [roomMembers memberWithUserId:aliceRestClient.credentials.userId];
                                 XCTAssertNotNil(alice);
                                 XCTAssertEqual(alice.membership, MXMembershipInvite);
                                 XCTAssert([alice.originUserId isEqualToString:bobRestClient.credentials.userId], @"Wrong inviter: %@", alice.originUserId);

@@ -191,7 +191,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
             pendingLiveTimelineRequesters = [NSMutableArray array];
 
             MXWeakify(self);
-            // @TODO(async-state): dispatch_async is just for testing
+            // @TODO(async-state): dispatch_async is just for testing that the async access works
             dispatch_async(dispatch_get_main_queue(), ^{
                 MXStrongifyAndReturnIfNil(self);
 
@@ -221,6 +221,16 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
     {
         onComplete(_liveTimeline);
     }
+}
+
+- (void)members:(void (^)(MXRoomMembers *))onComplete
+{
+    // @TODO(lazy-loading: This is currently a shortcut to `self.liveTimeline.state.members`.
+    // But this method will evolve with a request to the HS in order to  load all members of
+    // the room.
+    [self liveTimeline:^(MXEventTimeline *liveTimeline) {
+        onComplete(liveTimeline.state.members);
+    }];
 }
 
 - (void)state:(void (^)(MXRoomState *))onComplete
@@ -298,10 +308,10 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
 {
     // Handle here invite data to decide if it is direct or not
     MXWeakify(self);
-    [self state:^(MXRoomState *roomState) {
+    [self members:^(MXRoomMembers *roomMembers) {
         MXStrongifyAndReturnIfNil(self);
 
-        MXRoomMember *myUser = [roomState.members memberWithUserId:self.mxSession.myUser.userId];
+        MXRoomMember *myUser = [roomMembers memberWithUserId:self.mxSession.myUser.userId];
         BOOL isDirect = NO;
 
         if (myUser.originalEvent.content[@"is_direct"])
@@ -2375,7 +2385,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
     MXHTTPOperation *operation = [[MXHTTPOperation alloc] init];
 
     MXWeakify(self);
-    [self state:^(MXRoomState *roomState) {
+    [self members:^(MXRoomMembers *roomMembers) {
         MXStrongifyAndReturnIfNil(self);
 
         NSString *myUserId = self.mxSession.myUser.userId;
@@ -2437,7 +2447,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
             if (!newDirectUserId)
             {
                 // By default mark as direct this room for the oldest joined member.
-                NSArray<MXRoomMember *> *members = roomState.members.joinedMembers;
+                NSArray<MXRoomMember *> *members = roomMembers.joinedMembers;
                 MXRoomMember *oldestJoinedMember;
 
                 for (MXRoomMember *member in members)
@@ -2459,7 +2469,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
                 if (!newDirectUserId)
                 {
                     // Consider the first invited member if none has joined
-                    members = [roomState.members membersWithMembership:MXMembershipInvite];
+                    members = [roomMembers membersWithMembership:MXMembershipInvite];
 
                     MXRoomMember *oldestInvitedMember;
                     for (MXRoomMember *member in members)

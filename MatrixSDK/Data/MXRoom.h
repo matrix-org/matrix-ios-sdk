@@ -85,11 +85,16 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidFlushDataNotification;
 - (void)liveTimeline:(void (^)(MXEventTimeline *liveTimeline))onComplete;
 
 /**
- The up-to-date state of the room.
+ The current state of the room.
 
  This getter method is a shortcut to `liveTimeline.state`.
  */
 - (void)state:(void (^)(MXRoomState *roomState))onComplete;
+
+/**
+ The current list of members of the room.
+ */
+- (void)members:(void (^)(MXRoomMembers *roomMembers))onComplete;
 
 /**
  The private user data for this room.

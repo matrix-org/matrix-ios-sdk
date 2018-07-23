@@ -1897,11 +1897,11 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
     MXRoom *room = [_mxSession roomWithRoomId:event.roomId];
 
     MXWeakify(self);
-    [room state:^(MXRoomState *roomState) {
+    [room members:^(MXRoomMembers *roomMembers) {
         MXStrongifyAndReturnIfNil(self);
 
         NSMutableArray *members = [NSMutableArray array];
-        for (MXRoomMember *roomMember in roomState.members.joinedMembers)
+        for (MXRoomMember *roomMember in roomMembers.joinedMembers)
         {
             [members addObject:roomMember.userId];
         }
@@ -1932,11 +1932,11 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
     MXRoom *room = [_mxSession roomWithRoomId:event.roomId];
 
     MXWeakify(self);
-    [room state:^(MXRoomState *roomState) {
+    [room members:^(MXRoomMembers *roomMembers) {
         MXStrongifyAndReturnIfNil(self);
 
         NSString *userId = event.stateKey;
-        MXRoomMember *member = [roomState.members memberWithUserId:userId];
+        MXRoomMember *member = [roomMembers memberWithUserId:userId];
 
         if (member && member.membership == MXMembershipJoin)
         {

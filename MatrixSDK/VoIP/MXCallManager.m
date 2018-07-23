@@ -562,8 +562,8 @@ NSString *const kMXCallManagerConferenceUserDomain  = @"matrix.org";
 {
     NSString *conferenceUserId = [MXCallManager conferenceUserIdForRoom:room.roomId];
 
-    [room state:^(MXRoomState *roomState) {
-        MXRoomMember *conferenceUserMember = [roomState.members memberWithUserId:conferenceUserId];
+    [room members:^(MXRoomMembers *roomMembers) {
+        MXRoomMember *conferenceUserMember = [roomMembers memberWithUserId:conferenceUserId];
         if (conferenceUserMember && conferenceUserMember.membership == MXMembershipJoin)
         {
             success();
