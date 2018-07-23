@@ -590,32 +590,49 @@ NSString *const kMXCallManagerConferenceUserDomain  = @"matrix.org";
     NSString *conferenceUserId = [MXCallManager conferenceUserIdForRoom:roomId];
 
     // Use an existing 1:1 with the conference user; else make one
-    MXRoom *conferenceUserRoom;
+    __block MXRoom *conferenceUserRoom;
 
-    // @TODO: Create a dedicated MXStore API
-//    for (MXRoom *room in _mxSession.rooms)
-//    {
-//        if (room.summary.membersCount.members == 2 && [room.state.members memberWithUserId:conferenceUserId])
-//        {
-//            conferenceUserRoom = room;
-//        }
-//    }
-
-    if (conferenceUserRoom)
+    // TODO: This operation to find an existing room is heavy
+    // We need to create a dedicated MXStore API
+    dispatch_group_t group = dispatch_group_create();
+    for (MXRoomSummary *roomSummary in _mxSession.roomsSummaries)
     {
-        success(conferenceUserRoom);
-    }
-    else
-    {
-        [_mxSession createRoom:@{
-                                 @"preset": @"private_chat",
-                                 @"invite": @[conferenceUserId]
-                                } success:^(MXRoom *room) {
+        if (roomSummary.membersCount.members == 2)
+        {
+            dispatch_group_enter(group);
+            MXRoom *room = [_mxSession roomWithRoomId:roomSummary.roomId];
+            [room members:^(MXRoomMembers *roomMembers) {
 
-                                    success(room);
+                if ([roomMembers memberWithUserId:conferenceUserId])
+                {
+                    conferenceUserRoom = room;
+                }
 
-                                } failure:failure];
+                dispatch_group_leave(group);
+            }];
+        }
     }
+
+    MXWeakify(self);
+    dispatch_group_notify(group, dispatch_get_main_queue(), ^{
+        MXStrongifyAndReturnIfNil(self);
+
+        if (conferenceUserRoom)
+        {
+            success(conferenceUserRoom);
+        }
+        else
+        {
+            [self.mxSession createRoom:@{
+                                         @"preset": @"private_chat",
+                                         @"invite": @[conferenceUserId]
+                                         } success:^(MXRoom *room) {
+
+                                             success(room);
+
+                                         } failure:failure];
+        }
+    });
 }
 
 @end
