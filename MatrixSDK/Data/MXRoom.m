@@ -46,7 +46,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
      The liveTimeline instance.
      Its data is loaded only when [self liveTimeline:] is called.
      */
-    MXEventTimeline *_liveTimeline;
+    MXEventTimeline *liveTimeline;
 
     /**
      Flag to indicate that the data for `_liveTimeline` must be loaded before use.
@@ -100,7 +100,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
     {
         @autoreleasepool
         {
-            [_liveTimeline initialiseState:stateEvents];
+            [liveTimeline initialiseState:stateEvents];
 
             // Report the provided accountData.
             // Allocate a new instance if none, in order to handle room tag events for this room.
@@ -127,12 +127,12 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
 
         if (store)
         {
-            _liveTimeline = [[MXEventTimeline alloc] initWithRoom:self initialEventId:nil andStore:store];
+            liveTimeline = [[MXEventTimeline alloc] initWithRoom:self initialEventId:nil andStore:store];
         }
         else
         {
             // Let the timeline use the session store
-            _liveTimeline = [[MXEventTimeline alloc] initWithRoom:self andInitialEventId:nil];
+            liveTimeline = [[MXEventTimeline alloc] initWithRoom:self andInitialEventId:nil];
         }
         
         // Update the stored outgoing messages, by removing the sent messages and tagging as failed the others.
@@ -167,7 +167,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
 - (void)close
 {
     // Clean MXRoom
-    [_liveTimeline removeAllListeners];
+    [liveTimeline removeAllListeners];
 }
 
 #pragma mark - Properties implementation
@@ -198,7 +198,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
                 if (__needToLoadLiveTimeline)
                 {
                     MXRoomState *roomState = [MXRoomState loadRoomStateFromStore:self.mxSession.store withRoomId:self.roomId matrixSession:self.mxSession];
-                    [self->_liveTimeline setState:roomState];
+                    [self->liveTimeline setState:roomState];
                 }
 
                 // Provide the timelime to pending requesters
@@ -207,7 +207,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
 
                 for (void (^onRequesterComplete)(MXEventTimeline *) in liveTimelineRequesters)
                 {
-                    onRequesterComplete(self->_liveTimeline);
+                    onRequesterComplete(self->liveTimeline);
                 }
                 NSLog(@"[MXRoom] liveTimeline loaded. Pending requesters: %@", @(liveTimelineRequesters.count));
             });
@@ -219,8 +219,15 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
     }
     else
     {
-        onComplete(_liveTimeline);
+        onComplete(liveTimeline);
     }
+}
+
+- (void)state:(void (^)(MXRoomState *))onComplete
+{
+    [self liveTimeline:^(MXEventTimeline *theLiveTimeline) {
+        onComplete(theLiveTimeline.state);
+    }];
 }
 
 - (void)members:(void (^)(MXRoomMembers *))onComplete
@@ -228,15 +235,8 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
     // @TODO(lazy-loading: This is currently a shortcut to `self.liveTimeline.state.members`.
     // But this method will evolve with a request to the HS in order to  load all members of
     // the room.
-    [self liveTimeline:^(MXEventTimeline *liveTimeline) {
-        onComplete(liveTimeline.state.members);
-    }];
-}
-
-- (void)state:(void (^)(MXRoomState *))onComplete
-{
-    [self liveTimeline:^(MXEventTimeline *liveTimeline) {
-        onComplete(liveTimeline.state);
+    [self state:^(MXRoomState *roomState) {
+        onComplete(roomState.members);
     }];
 }
 
@@ -259,11 +259,11 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
 - (void)handleJoinedRoomSync:(MXRoomSync *)roomSync
 {
     MXWeakify(self);
-    [self liveTimeline:^(MXEventTimeline *liveTimeline) {
+    [self liveTimeline:^(MXEventTimeline *theLiveTimeline) {
         MXStrongifyAndReturnIfNil(self);
 
         // Let the live timeline handle live events
-        [liveTimeline handleJoinedRoomSync:roomSync];
+        [theLiveTimeline handleJoinedRoomSync:roomSync];
 
         // Handle here ephemeral events (if any)
         for (MXEvent *event in roomSync.ephemeral.events)
@@ -279,7 +279,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
                 MXJSONModelSetArray(self->_typingUsers, event.content[@"user_ids"]);
 
                 // Notify listeners
-                [liveTimeline notifyListeners:event direction:MXTimelineDirectionForwards];
+                [theLiveTimeline notifyListeners:event direction:MXTimelineDirectionForwards];
             }
             else if (event.eventType == MXEventTypeReceipt)
             {
@@ -288,16 +288,16 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
         }
 
         // Handle account data events (if any)
-        [self handleAccounDataEvents:roomSync.accountData.events liveTimeline:liveTimeline direction:MXTimelineDirectionForwards];
+        [self handleAccounDataEvents:roomSync.accountData.events liveTimeline:theLiveTimeline direction:MXTimelineDirectionForwards];
     }];
 }
 
 - (void)handleInvitedRoomSync:(MXInvitedRoomSync *)invitedRoomSync
 {
-    [self liveTimeline:^(MXEventTimeline *liveTimeline) {
+    [self liveTimeline:^(MXEventTimeline *theLiveTimeline) {
 
         // Let the live timeline handle live events
-        [liveTimeline handleInvitedRoomSync:invitedRoomSync];
+        [theLiveTimeline handleInvitedRoomSync:invitedRoomSync];
 
         // Handle direct flag to decide if it is direct or not
         [self handleInviteDirectFlag];
@@ -336,7 +336,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
  @param accounDataEvents the events to handle.
  @param direction the process direction: MXTimelineDirectionSync or MXTimelineDirectionForwards. MXTimelineDirectionBackwards is not applicable here.
  */
-- (void)handleAccounDataEvents:(NSArray<MXEvent*>*)accounDataEvents liveTimeline:(MXEventTimeline*)liveTimeline direction:(MXTimelineDirection)direction
+- (void)handleAccounDataEvents:(NSArray<MXEvent*>*)accounDataEvents liveTimeline:(MXEventTimeline*)theLiveTimeline direction:(MXTimelineDirection)direction
 {
     for (MXEvent *event in accounDataEvents)
     {
@@ -349,7 +349,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
         }
 
         // And notify listeners
-        [liveTimeline notifyListeners:event direction:direction];
+        [theLiveTimeline notifyListeners:event direction:direction];
     }
 }
 
@@ -2055,8 +2055,8 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
     if (managedEvents)
     {
         // Notify listeners
-        [self liveTimeline:^(MXEventTimeline *liveTimeline) {
-            [liveTimeline notifyListeners:event direction:direction];
+        [self liveTimeline:^(MXEventTimeline *theLiveTimeline) {
+            [theLiveTimeline notifyListeners:event direction:direction];
         }];
     }
     
@@ -2319,8 +2319,8 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
                                            }
                                    }];
 
-        [self liveTimeline:^(MXEventTimeline *liveTimeline) {
-            [liveTimeline notifyListeners:receiptEvent direction:MXTimelineDirectionForwards];
+        [self liveTimeline:^(MXEventTimeline *theLiveTimeline) {
+            [theLiveTimeline notifyListeners:receiptEvent direction:MXTimelineDirectionForwards];
         }];
     }
 
@@ -2597,13 +2597,13 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
                                        success:nil
                                        failure:failure];
 
-        [self liveTimeline:^(MXEventTimeline *liveTimeline) {
+        [self liveTimeline:^(MXEventTimeline *theLiveTimeline) {
 
             // Wait for the event coming back from the hs
             id eventBackListener;
-            eventBackListener = [liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomEncryption] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
+            eventBackListener = [theLiveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomEncryption] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
 
-                [liveTimeline removeListener:eventBackListener];
+                [theLiveTimeline removeListener:eventBackListener];
 
                 // Dispatch to let time to MXCrypto to digest the m.room.encryption event
                 dispatch_async(dispatch_get_main_queue(), ^{
