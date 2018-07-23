@@ -1595,6 +1595,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
     else if ([msgtype isEqualToString:kMXMessageTypeImage])
     {
         senderMessageBody = stringLocalizations.senderSentAnImage;
+        senderMessageFormattedBody = senderMessageBody;
     }
     else if ([msgtype isEqualToString:kMXMessageTypeVideo])
     {
