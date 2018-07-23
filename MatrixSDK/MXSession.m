@@ -1954,15 +1954,6 @@ typedef void (^MXOnResumeDone)(void);
     return room;
 }
 
-/**
- Make sure that the `MXRoom` internal data for a list of rooms is preloaded.
-
- Thus, next async calls to their internal data (like [MXRoom liveTimeline:])
- will behave synchronously.
-
- @param roomIds ids of rooms to preload data.
- @param onComplete block called once done.
- */
 - (void)preloadRoomsData:(NSArray<NSString*> *)roomIds onComplete:(dispatch_block_t)onComplete
 {
     NSLog(@"[MXSession] preloadRooms: %@ rooms", @(roomIds.count));
