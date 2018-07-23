@@ -1490,10 +1490,9 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
                              success:(void (^)(NSString *eventId))success
                              failure:(void (^)(NSError *error))failure
 {
-    // Reply is only supported on 'MXEventTypeRoomMessage' event type
-    if (eventToReply.eventType != MXEventTypeRoomMessage)
+    if (![self canReplyToEvent:eventToReply])
     {
-        NSLog(@"[MXRoom] Send reply only support 'm.room.message' event type");
+        NSLog(@"[MXRoom] Send reply to this event is not supported");
         return nil;
     }
     
@@ -1803,6 +1802,35 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
     [replyMessageFormattedBody appendString:replyFormattedMessage];
     
     return replyMessageFormattedBody;
+}
+
+- (BOOL)canReplyToEvent:(MXEvent *)eventToReply
+{
+    if (eventToReply.eventType != MXEventTypeRoomMessage)
+    {
+        return false;
+    }
+    
+    BOOL canReplyToEvent = NO;
+    
+    NSString *messageType = eventToReply.content[@"msgtype"];
+    
+    if (messageType)
+    {
+        NSArray *supportedMessageTypes = @[
+                                           kMXMessageTypeText,
+                                           kMXMessageTypeNotice,
+                                           kMXMessageTypeEmote,
+                                           kMXMessageTypeImage,
+                                           kMXMessageTypeVideo,
+                                           kMXMessageTypeAudio,
+                                           kMXMessageTypeFile
+                                           ];
+        
+        canReplyToEvent = [supportedMessageTypes containsObject:messageType];
+    }
+    
+    return canReplyToEvent;
 }
 
 #pragma mark - Message order preserving

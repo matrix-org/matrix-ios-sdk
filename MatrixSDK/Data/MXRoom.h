@@ -757,6 +757,15 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidFlushDataNotification;
 
 
 /**
+ Indicate if replying to the provided event is supported.
+ Only event of type 'MXEventTypeRoomMessage' are supported for the moment, and for certain msgtype.
+ 
+ @param eventToReply the event to reply to
+ @return YES if it is possible to reply to this event
+ */
+- (BOOL)canReplyToEvent:(MXEvent *)eventToReply;
+
+/**
  Send a reply to an event with text message to the room.
  
  It's only supported to reply to event with 'm.room.message' event type and following message types: 'm.text', 'm.text', 'm.emote', 'm.notice', 'm.image', 'm.file', 'm.video', 'm.audio'.
