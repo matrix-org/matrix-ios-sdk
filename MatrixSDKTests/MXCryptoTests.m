@@ -1477,10 +1477,10 @@
                 NSString *expectedSecondEventBody = [NSString stringWithFormat:expectedSecondEventBodyStringFormat, firstEventSender];
                 NSString *expectedSecondEventFormattedBody = [NSString stringWithFormat:expectedSecondEventFormattedBodyStringFormat, permalinkToEvent, permalinkToUser, firstEventSender];
                 
-                XCTAssert([secondEventBody isEqualToString:expectedSecondEventBody]);
-                XCTAssert([secondEventFormattedBody isEqualToString:expectedSecondEventFormattedBody]);
-                XCTAssert([secondEventRelatesToEventId isEqualToString:firstEventId]);
-                XCTAssert([secondWiredEventRelatesToEventId isEqualToString:firstEventId]);
+                XCTAssertEqualObjects(secondEventBody, expectedSecondEventBody);
+                XCTAssertEqualObjects(secondEventFormattedBody, expectedSecondEventFormattedBody);
+                XCTAssertEqualObjects(secondEventRelatesToEventId, firstEventId);
+                XCTAssertEqualObjects(secondWiredEventRelatesToEventId, firstEventId);
             }
             else if (messageCount == 2)
             {
@@ -1511,10 +1511,10 @@
                 NSString *expectedThirdEventFormattedBody = [NSString stringWithFormat:expectedThirdEventFormattedBodyStringFormat, permalinkToEvent, permalinkToUser, secondEventSender];
                 
                 
-                XCTAssert([thirdEventBody isEqualToString:expectedThirdEventBody]);
-                XCTAssert([thirdEventFormattedBody isEqualToString:expectedThirdEventFormattedBody]);
-                XCTAssert([thirdEventRelatesToEventId isEqualToString:secondEventId]);
-                XCTAssert([thirdWiredEventRelatesToEventId isEqualToString:secondEventId]);
+                XCTAssertEqualObjects(thirdEventBody, expectedThirdEventBody);
+                XCTAssertEqualObjects(thirdEventFormattedBody, expectedThirdEventFormattedBody);
+                XCTAssertEqualObjects(thirdEventRelatesToEventId, secondEventId);
+                XCTAssertEqualObjects(thirdWiredEventRelatesToEventId, secondEventId);
             }
             else
             {
@@ -1538,13 +1538,13 @@
                 secondEventId = event.eventId;
                 NSString *secondWiredEventRelatesToEventId = event.wireContent[@"m.relates_to"][@"m.in_reply_to"][@"event_id"];
 
-                XCTAssert([secondWiredEventRelatesToEventId isEqualToString:firstEventId]);
+                XCTAssertEqualObjects(secondWiredEventRelatesToEventId, firstEventId);
             }
             else
             {
                 NSString *thirdWiredEventRelatesToEventId = event.wireContent[@"m.relates_to"][@"m.in_reply_to"][@"event_id"];
-                
-                XCTAssert([thirdWiredEventRelatesToEventId isEqualToString:secondEventId]);
+
+                XCTAssertEqualObjects(thirdWiredEventRelatesToEventId, secondEventId);
                 
                 testExpectationFullfillIfComplete();
             }
