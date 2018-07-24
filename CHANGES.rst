@@ -10,6 +10,7 @@ Improvements:
 * MXRoomSummary: Add a membership property to cache MXRoomState one.
 * MXRoomSummary: add isConferenceUserRoom.
 * MXStore: Add Obj-C annotations.
+* MXFileStore: Add a setting to set which data to preload ([MXFileStore setPreloadOptions:]).
 
 Bug fix:
 

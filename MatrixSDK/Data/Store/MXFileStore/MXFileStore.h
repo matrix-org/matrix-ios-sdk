@@ -21,6 +21,22 @@
 NS_ASSUME_NONNULL_BEGIN
 
 /**
+ Options for preloading data during the `[MXStore openWithCredentials:]` operation.
+ */
+struct MXFileStorePreloadOptionsStruct
+{
+    // Preload rooms summaries
+    NSUInteger const roomSummary;
+
+    // Preload rooms states
+    NSUInteger const roomState;
+
+    // Preload rooms account data
+    NSUInteger const roomAccountData;
+};
+extern const struct MXFileStorePreloadOptionsStruct MXFileStorePreloadOptions;
+
+/**
  `MXFileStore` extends MXMemoryStore by adding permanent storage.
 
  The data are stored on [MXStore commit] and reloaded on [MXFileStore openWithCredentials:].
@@ -86,6 +102,15 @@ NS_ASSUME_NONNULL_BEGIN
  @param block the block called when the operation completes.
  */
 - (void)diskUsageWithBlock:(void(^)(NSUInteger diskUsage))block;
+
+/**
+ Set the preload options for the file store.
+
+ These options are used in the `[MXStore openWithCredentials:]`.
+
+ @param preloadOptions bit flags of `MXFileStorePreloadOptions`.
+ */
++ (void)setPreloadOptions:(NSUInteger)preloadOptions;
 
 #pragma mark - Async API
 

@@ -42,6 +42,14 @@ static NSString *const kMXFileStoreRoomSummaryFile = @"summary";
 static NSString *const kMXFileStoreRoomAccountDataFile = @"accountData";
 static NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
 
+const struct MXFileStorePreloadOptionsStruct MXFileStorePreloadOptions = {
+    .roomSummary = 0x1,
+    .roomState = 0x2,
+    .roomAccountData = 0x4,
+};
+
+static NSUInteger preloadOptions;
+
 @interface MXFileStore ()
 {
     // Meta data about the store. It is defined only if the passed MXCredentials contains all information.
@@ -112,6 +120,17 @@ static NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
 @end
 
 @implementation MXFileStore
+
++ (void)initialize
+{
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+
+        // By default, we do not need to preload rooms states now
+        preloadOptions = MXFileStorePreloadOptions.roomSummary
+        || MXFileStorePreloadOptions.roomAccountData;
+    });
+}
 
 - (instancetype)init;
 {
@@ -212,9 +231,18 @@ static NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
                 NSLog(@"[MXFileStore] Start data loading from files");
 
                 [self loadRoomsMessages];
-                [self preloadRoomsStates];
-                [self preloadRoomsSummaries];
-                [self preloadRoomsAccountData];
+                if (preloadOptions & MXFileStorePreloadOptions.roomState)
+                {
+                    [self preloadRoomsStates];
+                }
+                if (preloadOptions & MXFileStorePreloadOptions.roomSummary)
+                {
+                    [self preloadRoomsSummaries];
+                }
+                if (preloadOptions & MXFileStorePreloadOptions.roomAccountData)
+                {
+                    [self preloadRoomsAccountData];
+                }
                 [self loadReceipts];
                 [self loadUsers];
                 [self loadGroups];
@@ -276,6 +304,11 @@ static NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
     });
 }
 
+
++ (void)setPreloadOptions:(NSUInteger)thePreloadOptions
+{
+    preloadOptions = thePreloadOptions;
+}
 
 #pragma mark - MXStore
 - (void)storeEventForRoom:(NSString*)roomId event:(MXEvent*)event direction:(MXTimelineDirection)direction
