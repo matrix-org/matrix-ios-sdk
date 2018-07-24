@@ -3,6 +3,7 @@ Changes in Matrix iOS SDK in 0.11.0 ()
 
 Improvements:
 * MXRestClient: Add Matrix filter API.
+* MXRoom: Add send reply with text message (vector-im/riot-ios#1911).
 * MXRoom: Add an asynchronous methods for liveTimeline, state and members.
 * MXRoom: Add methods to manage the room liveTimeline listeners synchronously.
 * MXRoomState: Add a membersCount property to store members stats independently from MXRoomMember objects.

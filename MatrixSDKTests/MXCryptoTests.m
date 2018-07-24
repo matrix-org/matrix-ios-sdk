@@ -27,6 +27,8 @@
 #import "MXFileStore.h"
 
 #import "MXSDKOptions.h"
+#import "MXTools.h"
+#import "MXSendReplyEventDefaultStringLocalizations.h"
 
 #if 1 // MX_CRYPTO autamatic definiton does not work well for tests so force it
 //#ifdef MX_CRYPTO
@@ -1402,6 +1404,160 @@
         }];
     }];
 
+}
+
+// Test method copy from MXRoomTests -testSendReplyToTextMessage
+- (void)testSendReplyToTextMessage
+{
+    NSString *firstMessage = @"**First message!**";
+    NSString *firstFormattedMessage = @"<p><strong>First message!</strong></p>";
+    
+    NSString *secondMessageReplyToFirst = @"**Reply to first message**";
+    NSString *secondMessageFormattedReplyToFirst = @"<p><strong>Reply to first message</strong></p>";
+    
+    NSString *expectedSecondEventBodyStringFormat = @"> <%@> **First message!**\n\n**Reply to first message**";
+    NSString *expectedSecondEventFormattedBodyStringFormat = @"<mx-reply><blockquote><a href=\"%@\">In reply to</a> <a href=\"%@\">%@</a><br><p><strong>First message!</strong></p></blockquote></mx-reply><p><strong>Reply to first message</strong></p>";
+    
+    NSString *thirdMessageReplyToSecond = @"**Reply to second message**";
+    NSString *thirdMessageFormattedReplyToSecond = @"<p><strong>Reply to second message</strong></p>";
+    
+    NSString *expectedThirdEventBodyStringFormat = @"> <%@> **Reply to first message**\n\n**Reply to second message**";
+    NSString *expectedThirdEventFormattedBodyStringFormat = @"<mx-reply><blockquote><a href=\"%@\">In reply to</a> <a href=\"%@\">%@</a><br><p><strong>Reply to first message</strong></p></blockquote></mx-reply><p><strong>Reply to second message</strong></p>";
+    
+    MXSendReplyEventDefaultStringLocalizations *defaultStringLocalizations = [MXSendReplyEventDefaultStringLocalizations new];
+    
+    __block NSUInteger successFullfillCount = 0;
+    NSUInteger expectedSuccessFulfillCount = 2; // Bob and Alice have finished their tests
+    
+    [matrixSDKTestsE2EData doE2ETestWithAliceAndBobInARoom:self cryptedBob:YES warnOnUnknowDevices:NO readyToTest:^(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
+        
+        void (^testExpectationFullfillIfComplete)(void) = ^() {
+            successFullfillCount++;
+            if (successFullfillCount == expectedSuccessFulfillCount)
+            {
+                [expectation fulfill];
+            }
+        };
+        
+        __block NSUInteger messageCount = 0;
+        __block NSUInteger messageCountFromAlice = 0;
+        
+        MXRoom *roomFromBobPOV = [bobSession roomWithRoomId:roomId];
+        MXRoom *roomFromAlicePOV = [aliceSession roomWithRoomId:roomId];
+        
+        // Listen to messages from Bob POV
+        [roomFromBobPOV.liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
+            messageCount++;
+            
+            if (messageCount == 1)
+            {
+                __block MXEvent *localEchoEvent = nil;
+                
+                // Reply to first message
+                [roomFromBobPOV sendReplyToEvent:event withTextMessage:secondMessageReplyToFirst formattedTextMessage:secondMessageFormattedReplyToFirst stringLocalizations:defaultStringLocalizations localEcho:&localEchoEvent success:^(NSString *eventId) {
+                    NSLog(@"Send reply to first message with success");
+                } failure:^(NSError *error) {
+                    XCTFail(@"The request should not fail - NSError: %@", error);
+                    [expectation fulfill];
+                }];
+                
+                XCTAssertNotNil(localEchoEvent);
+                
+                NSString *firstEventId = event.eventId;
+                NSString *firstEventSender = event.sender;
+                
+                NSString *secondEventBody = localEchoEvent.content[@"body"];
+                NSString *secondEventFormattedBody = localEchoEvent.content[@"formatted_body"];
+                NSString *secondEventRelatesToEventId = localEchoEvent.content[@"m.relates_to"][@"m.in_reply_to"][@"event_id"];
+                NSString *secondWiredEventRelatesToEventId = localEchoEvent.wireContent[@"m.relates_to"][@"m.in_reply_to"][@"event_id"];
+                
+                NSString *permalinkToUser = [MXTools permalinkToUserWithUserId:firstEventSender];
+                NSString *permalinkToEvent = [MXTools permalinkToEvent:firstEventId inRoom:roomId];
+                
+                NSString *expectedSecondEventBody = [NSString stringWithFormat:expectedSecondEventBodyStringFormat, firstEventSender];
+                NSString *expectedSecondEventFormattedBody = [NSString stringWithFormat:expectedSecondEventFormattedBodyStringFormat, permalinkToEvent, permalinkToUser, firstEventSender];
+                
+                XCTAssertEqualObjects(secondEventBody, expectedSecondEventBody);
+                XCTAssertEqualObjects(secondEventFormattedBody, expectedSecondEventFormattedBody);
+                XCTAssertEqualObjects(secondEventRelatesToEventId, firstEventId);
+                XCTAssertEqualObjects(secondWiredEventRelatesToEventId, firstEventId);
+            }
+            else if (messageCount == 2)
+            {
+                __block MXEvent *localEchoEvent = nil;
+                
+                // Reply to second message, which was also a reply
+                [roomFromBobPOV sendReplyToEvent:event withTextMessage:thirdMessageReplyToSecond formattedTextMessage:thirdMessageFormattedReplyToSecond stringLocalizations:defaultStringLocalizations localEcho:&localEchoEvent success:^(NSString *eventId) {
+                    NSLog(@"Send reply to second message with success");
+                } failure:^(NSError *error) {
+                    XCTFail(@"The request should not fail - NSError: %@", error);
+                    [expectation fulfill];
+                }];
+                
+                XCTAssertNotNil(localEchoEvent);
+                
+                NSString *secondEventId = event.eventId;
+                NSString *secondEventSender = event.sender;
+                
+                NSString *thirdEventBody = localEchoEvent.content[@"body"];
+                NSString *thirdEventFormattedBody = localEchoEvent.content[@"formatted_body"];
+                NSString *thirdEventRelatesToEventId = localEchoEvent.content[@"m.relates_to"][@"m.in_reply_to"][@"event_id"];
+                NSString *thirdWiredEventRelatesToEventId = localEchoEvent.wireContent[@"m.relates_to"][@"m.in_reply_to"][@"event_id"];
+                
+                NSString *permalinkToUser = [MXTools permalinkToUserWithUserId:secondEventSender];
+                NSString *permalinkToEvent = [MXTools permalinkToEvent:secondEventId inRoom:roomId];
+                
+                NSString *expectedThirdEventBody = [NSString stringWithFormat:expectedThirdEventBodyStringFormat, secondEventSender];
+                NSString *expectedThirdEventFormattedBody = [NSString stringWithFormat:expectedThirdEventFormattedBodyStringFormat, permalinkToEvent, permalinkToUser, secondEventSender];
+                
+                
+                XCTAssertEqualObjects(thirdEventBody, expectedThirdEventBody);
+                XCTAssertEqualObjects(thirdEventFormattedBody, expectedThirdEventFormattedBody);
+                XCTAssertEqualObjects(thirdEventRelatesToEventId, secondEventId);
+                XCTAssertEqualObjects(thirdWiredEventRelatesToEventId, secondEventId);
+            }
+            else
+            {
+                testExpectationFullfillIfComplete();
+            }
+        }];
+        
+        __block NSString *firstEventId;
+        __block NSString *secondEventId;
+        
+        // Listen to messages from Alice POV
+        [roomFromAlicePOV.liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
+            messageCountFromAlice++;
+
+            if (messageCountFromAlice == 1)
+            {
+                firstEventId = event.eventId;
+            }
+            else if (messageCountFromAlice == 2)
+            {
+                secondEventId = event.eventId;
+                NSString *secondWiredEventRelatesToEventId = event.wireContent[@"m.relates_to"][@"m.in_reply_to"][@"event_id"];
+
+                XCTAssertEqualObjects(secondWiredEventRelatesToEventId, firstEventId);
+            }
+            else
+            {
+                NSString *thirdWiredEventRelatesToEventId = event.wireContent[@"m.relates_to"][@"m.in_reply_to"][@"event_id"];
+
+                XCTAssertEqualObjects(thirdWiredEventRelatesToEventId, secondEventId);
+                
+                testExpectationFullfillIfComplete();
+            }
+        }];
+        
+        // Send first message
+        [roomFromBobPOV sendTextMessage:firstMessage formattedText:firstFormattedMessage localEcho:nil success:^(NSString *eventId) {
+            NSLog(@"Send first message with success");
+        } failure:^(NSError *error) {
+            XCTFail(@"The request should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+    }];
 }
 
 
