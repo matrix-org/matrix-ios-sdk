@@ -42,12 +42,6 @@ static NSString *const kMXFileStoreRoomSummaryFile = @"summary";
 static NSString *const kMXFileStoreRoomAccountDataFile = @"accountData";
 static NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
 
-const struct MXFileStorePreloadOptionsStruct MXFileStorePreloadOptions = {
-    .roomSummary = 0x1,
-    .roomState = 0x2,
-    .roomAccountData = 0x4,
-};
-
 static NSUInteger preloadOptions;
 
 @interface MXFileStore ()
@@ -127,8 +121,7 @@ static NSUInteger preloadOptions;
     dispatch_once(&onceToken, ^{
 
         // By default, we do not need to preload rooms states now
-        preloadOptions = MXFileStorePreloadOptions.roomSummary
-        || MXFileStorePreloadOptions.roomAccountData;
+        preloadOptions = MXFileStorePreloadOptionRoomSummary | MXFileStorePreloadOptionRoomAccountData;
     });
 }
 
@@ -231,15 +224,15 @@ static NSUInteger preloadOptions;
                 NSLog(@"[MXFileStore] Start data loading from files");
 
                 [self loadRoomsMessages];
-                if (preloadOptions & MXFileStorePreloadOptions.roomState)
+                if (preloadOptions & MXFileStorePreloadOptionRoomState)
                 {
                     [self preloadRoomsStates];
                 }
-                if (preloadOptions & MXFileStorePreloadOptions.roomSummary)
+                if (preloadOptions & MXFileStorePreloadOptionRoomSummary)
                 {
                     [self preloadRoomsSummaries];
                 }
-                if (preloadOptions & MXFileStorePreloadOptions.roomAccountData)
+                if (preloadOptions & MXFileStorePreloadOptionRoomAccountData)
                 {
                     [self preloadRoomsAccountData];
                 }
@@ -305,7 +298,7 @@ static NSUInteger preloadOptions;
 }
 
 
-+ (void)setPreloadOptions:(NSUInteger)thePreloadOptions
++ (void)setPreloadOptions:(MXFileStorePreloadOptions)thePreloadOptions
 {
     preloadOptions = thePreloadOptions;
 }
