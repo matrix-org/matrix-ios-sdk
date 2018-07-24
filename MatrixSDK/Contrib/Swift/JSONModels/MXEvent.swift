@@ -56,6 +56,7 @@ public enum MXEventType {
     case callAnswer
     case callHangup
     case receipt
+    case roomTombStone
     
     case custom(String)
     
@@ -88,6 +89,7 @@ public enum MXEventType {
         case .callAnswer: return kMXEventTypeStringCallAnswer
         case .callHangup: return kMXEventTypeStringCallHangup
         case .receipt: return kMXEventTypeStringReceipt
+        case .roomTombStone: return kMXEventTypeStringRoomTombStone
             
         // Swift converts any constant with the suffix "Notification" as the type `Notification.Name`
         // The original value can be reached using the `rawValue` property.
@@ -98,7 +100,7 @@ public enum MXEventType {
     }
 
     public init(identifier: String) {
-        let events: [MXEventType] = [.roomName, .roomTopic, .roomAvatar, .roomMember, .roomCreate, .roomJoinRules, .roomPowerLevels, .roomAliases, .roomCanonicalAlias, .roomEncrypted, .roomEncryption, .roomGuestAccess, .roomHistoryVisibility, .roomKey, .roomForwardedKey, .roomKeyRequest, .roomMessage, .roomMessageFeedback, .roomRedaction, .roomThirdPartyInvite, .roomTag, .presence, .typing, .callInvite, .callCandidates, .callAnswer, .callHangup, .receipt]
+        let events: [MXEventType] = [.roomName, .roomTopic, .roomAvatar, .roomMember, .roomCreate, .roomJoinRules, .roomPowerLevels, .roomAliases, .roomCanonicalAlias, .roomEncrypted, .roomEncryption, .roomGuestAccess, .roomHistoryVisibility, .roomKey, .roomForwardedKey, .roomKeyRequest, .roomMessage, .roomMessageFeedback, .roomRedaction, .roomThirdPartyInvite, .roomTag, .presence, .typing, .callInvite, .callCandidates, .callAnswer, .callHangup, .receipt, .roomTombStone]
         self = events.first(where: { $0.identifier == identifier }) ?? .custom(identifier)
     }
 }
