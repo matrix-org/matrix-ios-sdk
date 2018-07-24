@@ -105,16 +105,20 @@
     return self;
 }
 
-+ (id)loadRoomStateFromStore:(id<MXStore>)store withRoomId:(NSString *)roomId matrixSession:(MXSession *)matrixSession
++ (void)loadRoomStateFromStore:(id<MXStore>)store
+                  withRoomId:(NSString *)roomId
+               matrixSession:(MXSession *)matrixSession
+                  onComplete:(void (^)(MXRoomState *roomState))onComplete
 {
-    MXRoomState *state = [[MXRoomState alloc] initWithRoomId:roomId andMatrixSession:matrixSession andDirection:YES];
-    if (state)
+    MXRoomState *roomState = [[MXRoomState alloc] initWithRoomId:roomId andMatrixSession:matrixSession andDirection:YES];
+    if (roomState)
     {
-        NSArray *stateEvents = [store stateOfRoom:roomId];
-        [state handleStateEvents:stateEvents];
-    }
+        [store stateOfRoom:roomId success:^(NSArray<MXEvent *> * _Nonnull stateEvents) {
+            [roomState handleStateEvents:stateEvents];
 
-    return state;
+            onComplete(roomState);
+        } failure:nil];
+    }
 }
 
 - (id)initBackStateWith:(MXRoomState*)state

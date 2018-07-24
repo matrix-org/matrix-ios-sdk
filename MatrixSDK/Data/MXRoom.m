@@ -57,9 +57,6 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
      FIFO queue of objects waiting for [self liveTimeline:]. 
      */
     NSMutableArray<void (^)(MXEventTimeline *)> *pendingLiveTimelineRequesters;
-
-    // @TODO(async-state): For dev
-    BOOL __forceAsyncLoad;
 }
 @end
 
@@ -80,7 +77,6 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
         _directUserId = nil;
 
         needToLoadLiveTimeline = NO;
-        __forceAsyncLoad = YES;
     }
     
     return self;
@@ -180,26 +176,18 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
 - (void)liveTimeline:(void (^)(MXEventTimeline *))onComplete
 {
     // Is timelime ready?
-    if (needToLoadLiveTimeline || pendingLiveTimelineRequesters || __forceAsyncLoad)
+    if (needToLoadLiveTimeline || pendingLiveTimelineRequesters)
     {
-        __forceAsyncLoad = NO;
-        BOOL __needToLoadLiveTimeline = needToLoadLiveTimeline;
-
         // Queue the requester
         if (!pendingLiveTimelineRequesters)
         {
             pendingLiveTimelineRequesters = [NSMutableArray array];
 
             MXWeakify(self);
-            // @TODO(async-state): dispatch_async is just for testing that the async access works
-            dispatch_async(dispatch_get_main_queue(), ^{
+            [MXRoomState loadRoomStateFromStore:self.mxSession.store withRoomId:self.roomId matrixSession:self.mxSession onComplete:^(MXRoomState *roomState) {
                 MXStrongifyAndReturnIfNil(self);
 
-                if (__needToLoadLiveTimeline)
-                {
-                    MXRoomState *roomState = [MXRoomState loadRoomStateFromStore:self.mxSession.store withRoomId:self.roomId matrixSession:self.mxSession];
-                    [self->liveTimeline setState:roomState];
-                }
+                [self->liveTimeline setState:roomState];
 
                 // Provide the timelime to pending requesters
                 NSArray<void (^)(MXEventTimeline *)> *liveTimelineRequesters = [self->pendingLiveTimelineRequesters copy];
@@ -210,7 +198,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
                     onRequesterComplete(self->liveTimeline);
                 }
                 NSLog(@"[MXRoom] liveTimeline loaded. Pending requesters: %@", @(liveTimelineRequesters.count));
-            });
+            }];
         }
 
         [pendingLiveTimelineRequesters addObject:onComplete];
