@@ -80,11 +80,11 @@
 
 - (void)close
 {
-    [super close];
-
     // Cancel the current server request (if any)
     [httpOperation cancel];
     httpOperation = nil;
+
+    [super close];
 }
 
 - (void)pause
