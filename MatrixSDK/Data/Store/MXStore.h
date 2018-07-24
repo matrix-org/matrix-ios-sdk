@@ -310,10 +310,12 @@
  Note: this method is required in permanent storage implementation.
 
  @param roomId the id of the room.
-
- @return the stored state events that define the room state.
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
  */
-- (NSArray<MXEvent*> * _Nullable)stateOfRoom:(nonnull NSString*)roomId;
+- (void)stateOfRoom:(nonnull NSString *)roomId
+            success:(nonnull void (^)(NSArray<MXEvent *> * _Nonnull stateEvents))success
+            failure:(nullable void (^)(NSError * _Nonnull error))failure;
 
 
 #pragma mark - Room summary

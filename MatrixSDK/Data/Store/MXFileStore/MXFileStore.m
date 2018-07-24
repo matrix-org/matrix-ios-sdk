@@ -1,6 +1,7 @@
 /*
  Copyright 2014 OpenMarket Ltd
  Copyright 2017 Vector Creations Ltd
+ Copyright 2018 New Vector Ltd
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -399,6 +400,18 @@ static NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
 - (void)storeStateForRoom:(NSString*)roomId stateEvents:(NSArray*)stateEvents
 {
     roomsToCommitForState[roomId] = stateEvents;
+}
+
+- (void)stateOfRoom:(NSString *)roomId success:(void (^)(NSArray<MXEvent *> * _Nonnull))success failure:(void (^)(NSError * _Nonnull))failure
+{
+    dispatch_async(dispatchQueue, ^{
+
+        NSArray<MXEvent *> *stateEvents = [self stateOfRoom:roomId];
+
+        dispatch_async(dispatch_get_main_queue(), ^{
+            success(stateEvents);
+        });
+    });
 }
 
 - (NSArray*)stateOfRoom:(NSString *)roomId
@@ -1748,18 +1761,6 @@ static NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
         dispatch_async(dispatch_get_main_queue(), ^{
             MXStrongifyAndReturnIfNil(self);
             success(self->preloadedRoomSummary.allValues);
-        });
-    });
-}
-
-- (void)asyncStateEventsOfRoom:(NSString *)roomId success:(void (^)(NSArray<MXEvent *> * _Nonnull))success failure:(nullable void (^)(NSError * _Nonnull))failure
-{
-    dispatch_async(dispatchQueue, ^{
-
-        NSArray<MXEvent *> *stateEvents = [self stateOfRoom:roomId];
-
-        dispatch_async(dispatch_get_main_queue(), ^{
-            success(stateEvents);
         });
     });
 }

@@ -1,6 +1,7 @@
 /*
  Copyright 2014 OpenMarket Ltd
  Copyright 2017 Vector Creations Ltd
+ Copyright 2018 New Vector Ltd
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -125,16 +126,6 @@ NS_ASSUME_NONNULL_BEGIN
  */
 - (void)asyncRoomsSummaries:(void (^)(NSArray<MXRoomSummary *> *roomsSummaries))success
                     failure:(nullable void (^)(NSError *error))failure;
-
-/**
- Get the stored room state for a specific room.
- @param roomId the Id of the room
- @param success A block object called when the operation succeeds.
- @param failure A block object called when the operation fails.
- */
-- (void)asyncStateEventsOfRoom:(NSString *)roomId
-                       success:(void (^)(NSArray<MXEvent *> * _Nonnull stateEvents))success
-                       failure:(nullable void (^)(NSError * _Nonnull error))failure;
 
 /**
  Get the stored account data for a specific room.

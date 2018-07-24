@@ -18,6 +18,7 @@ API break:
 * MXCall: callee access is now asynchronous.
 * MXRoomState: Remove displayName property. Use MXRoomSummary.displayName instead.
 * MXRoomState: Create a MXRoomMembers property. All members getter methods has been to the new class.
+* MXStore: Make the stateOfRoom method asynchronous.
 
 Changes in Matrix iOS SDK in 0.10.12 (2018-05-31)
 =============================================== 
