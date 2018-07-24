@@ -108,31 +108,31 @@
     notificationCenter.flatRules = @[rule];
 
     event = [self messageTextEventWithContent:@"foo bar"];
-    matchingRule = [notificationCenter ruleMatchingEvent:event];
+    matchingRule = [notificationCenter ruleMatchingEvent:event roomState:nil];
     XCTAssertNotNil(matchingRule);
     XCTAssertEqual(matchingRule, rule);
 
     event = [self messageTextEventWithContent:@"foo,bar"];
-    matchingRule = [notificationCenter ruleMatchingEvent:event];
+    matchingRule = [notificationCenter ruleMatchingEvent:event roomState:nil];
     XCTAssertNotNil(matchingRule);
     XCTAssertEqual(matchingRule, rule);
 
     event = [self messageTextEventWithContent:@"bar.foo"];
-    matchingRule = [notificationCenter ruleMatchingEvent:event];
+    matchingRule = [notificationCenter ruleMatchingEvent:event roomState:nil];
     XCTAssertNotNil(matchingRule);
     XCTAssertEqual(matchingRule, rule);
 
     event = [self messageTextEventWithContent:@"bar.foo!bar"];
-    matchingRule = [notificationCenter ruleMatchingEvent:event];
+    matchingRule = [notificationCenter ruleMatchingEvent:event roomState:nil];
     XCTAssertNotNil(matchingRule);
     XCTAssertEqual(matchingRule, rule);
 
     event = [self messageTextEventWithContent:@"foobar"];
-    matchingRule = [notificationCenter ruleMatchingEvent:event];
+    matchingRule = [notificationCenter ruleMatchingEvent:event roomState:nil];
     XCTAssertNil(matchingRule, @"'In this test, foo must be surrounded by word delimiters (e.g. punctuation and whitespace or start/end of line)");
 
     event = [self messageTextEventWithContent:@"barfoo"];
-    matchingRule = [notificationCenter ruleMatchingEvent:event];
+    matchingRule = [notificationCenter ruleMatchingEvent:event roomState:nil];
     XCTAssertNil(matchingRule, @"'In this test, foo must be surrounded by word delimiters (e.g. punctuation and whitespace or start/end of line)");
 
 }
@@ -149,32 +149,32 @@
     notificationCenter.flatRules = @[rule];
 
     event = [self messageTextEventWithContent:@"foo bar"];
-    matchingRule = [notificationCenter ruleMatchingEvent:event];
+    matchingRule = [notificationCenter ruleMatchingEvent:event roomState:nil];
     XCTAssertNotNil(matchingRule);
     XCTAssertEqual(matchingRule, rule);
 
     event = [self messageTextEventWithContent:@"foo,bar"];
-    matchingRule = [notificationCenter ruleMatchingEvent:event];
+    matchingRule = [notificationCenter ruleMatchingEvent:event roomState:nil];
     XCTAssertNotNil(matchingRule);
     XCTAssertEqual(matchingRule, rule);
 
     event = [self messageTextEventWithContent:@"bar.foo"];
-    matchingRule = [notificationCenter ruleMatchingEvent:event];
+    matchingRule = [notificationCenter ruleMatchingEvent:event roomState:nil];
     XCTAssertNotNil(matchingRule);
     XCTAssertEqual(matchingRule, rule);
 
     event = [self messageTextEventWithContent:@"bar.foo!bar"];
-    matchingRule = [notificationCenter ruleMatchingEvent:event];
+    matchingRule = [notificationCenter ruleMatchingEvent:event roomState:nil];
     XCTAssertNotNil(matchingRule);
     XCTAssertEqual(matchingRule, rule);
 
     event = [self messageTextEventWithContent:@"foobar"];
-    matchingRule = [notificationCenter ruleMatchingEvent:event];
+    matchingRule = [notificationCenter ruleMatchingEvent:event roomState:nil];
     XCTAssertNotNil(matchingRule);
     XCTAssertEqual(matchingRule, rule);
 
     event = [self messageTextEventWithContent:@"barfoo"];
-    matchingRule = [notificationCenter ruleMatchingEvent:event];
+    matchingRule = [notificationCenter ruleMatchingEvent:event roomState:nil];
     XCTAssertNil(matchingRule, @"'In this test, only words starting with foo must match");
 }
 
@@ -190,22 +190,22 @@
     notificationCenter.flatRules = @[rule];
 
     event = [self messageTextEventWithContent:@"foo bar"];
-    matchingRule = [notificationCenter ruleMatchingEvent:event];
+    matchingRule = [notificationCenter ruleMatchingEvent:event roomState:nil];
     XCTAssertNotNil(matchingRule);
     XCTAssertEqual(matchingRule, rule);
 
     event = [self messageTextEventWithContent:@"foobar"];
-    matchingRule = [notificationCenter ruleMatchingEvent:event];
+    matchingRule = [notificationCenter ruleMatchingEvent:event roomState:nil];
     XCTAssertNotNil(matchingRule);
     XCTAssertEqual(matchingRule, rule);
 
     event = [self messageTextEventWithContent:@"barfoo"];
-    matchingRule = [notificationCenter ruleMatchingEvent:event];
+    matchingRule = [notificationCenter ruleMatchingEvent:event roomState:nil];
     XCTAssertNotNil(matchingRule);
     XCTAssertEqual(matchingRule, rule);
 
     event = [self messageTextEventWithContent:@"foobarfoo"];
-    matchingRule = [notificationCenter ruleMatchingEvent:event];
+    matchingRule = [notificationCenter ruleMatchingEvent:event roomState:nil];
     XCTAssertNotNil(matchingRule);
     XCTAssertEqual(matchingRule, rule);
 }

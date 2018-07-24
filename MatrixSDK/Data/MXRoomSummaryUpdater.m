@@ -1,6 +1,7 @@
 /*
  Copyright 2017 OpenMarket Ltd
  Copyright 2017 Vector Creations Ltd
+ Copyright 2018 New Vector Ltd
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -79,16 +80,8 @@
     return updated;
 }
 
-- (BOOL)session:(MXSession *)session updateRoomSummary:(MXRoomSummary *)summary withStateEvents:(NSArray<MXEvent *> *)stateEvents
+- (BOOL)session:(MXSession *)session updateRoomSummary:(MXRoomSummary *)summary withStateEvents:(NSArray<MXEvent *> *)stateEvents roomState:(MXRoomState*)roomState
 {
-    MXRoom *room = summary.room;
-    if (!room.state)
-    {
-        // Should not happen
-        NSLog(@"[MXRoomSummaryUpdater] updateRoomSummary withStateEvents: room.state not ready");
-        return NO;
-    }
-
     BOOL hasRoomMembersChange = NO;
     BOOL updated = NO;
 
@@ -97,17 +90,22 @@
         switch (event.eventType)
         {
             case MXEventTypeRoomName:
-                summary.displayname = room.state.name;
+                summary.displayname = roomState.name;
                 updated = YES;
                 break;
 
             case MXEventTypeRoomAvatar:
-                summary.avatar = room.state.avatar;
+                summary.avatar = roomState.avatar;
                 updated = YES;
                 break;
 
             case MXEventTypeRoomTopic:
-                summary.topic = room.state.topic;
+                summary.topic = roomState.topic;
+                updated = YES;
+                break;
+
+            case MXEventTypeRoomAliases:
+                summary.aliases = roomState.aliases;
                 updated = YES;
                 break;
 
@@ -116,7 +114,7 @@
                 break;
 
             case MXEventTypeRoomEncryption:
-                summary.isEncrypted = room.state.isEncrypted;
+                summary.isEncrypted = roomState.isEncrypted;
                 updated = YES;
                 break;
 
@@ -128,15 +126,21 @@
     if (hasRoomMembersChange)
     {
         // Check if there was a change on room state cached data
-        if (![summary.membersCount isEqual:room.state.membersCount])
+        if (![summary.membersCount isEqual:roomState.membersCount])
         {
-            summary.membersCount = [room.state.membersCount copy];
+            summary.membersCount = [roomState.membersCount copy];
             updated = YES;
         }
 
-        if (summary.membership != room.state.membership)
+        if (summary.membership != roomState.membership)
         {
-            summary.membership = room.state.membership;
+            summary.membership = roomState.membership;
+            updated = YES;
+        }
+
+        if (summary.isConferenceUserRoom != roomState.isConferenceUserRoom)
+        {
+            summary.isConferenceUserRoom = roomState.isConferenceUserRoom;
             updated = YES;
         }
     }

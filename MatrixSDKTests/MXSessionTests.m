@@ -82,10 +82,13 @@
                 MXRoom *room = [mxSession roomWithAlias:response.roomAlias];
 
                 XCTAssertNotNil(room);
-                XCTAssertEqual(room.state.aliases.count, 1);
-                XCTAssertEqualObjects(room.state.aliases[0], response.roomAlias);
 
-                [expectation fulfill];
+                [room state:^(MXRoomState *roomState) {
+                    XCTAssertEqual(roomState.aliases.count, 1);
+                    XCTAssertEqualObjects(roomState.aliases[0], response.roomAlias);
+
+                    [expectation fulfill];
+                }];
 
             } failure:^(NSError *error) {
                 XCTFail(@"The request should not fail - NSError: %@", error);
@@ -289,9 +292,11 @@
 
             MXRoom *room = [mxSession roomWithRoomId:roomId];
             XCTAssert(room);
-            [room.liveTimeline listenToEvents:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
-                XCTFail(@"We should not receive events after closing the session. Received: %@", event);
-                [expectation fulfill];
+            [room liveTimeline:^(MXEventTimeline *liveTimeline) {
+                [liveTimeline listenToEvents:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
+                    XCTFail(@"We should not receive events after closing the session. Received: %@", event);
+                    [expectation fulfill];
+                }];
             }];
 
             MXUser *bob = [mxSession userWithUserId:bobRestClient.credentials.userId];
@@ -397,9 +402,11 @@
                 }];
 
                 MXRoom *room = [mxSession roomWithRoomId:roomId];
-                [room.liveTimeline listenToEvents:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
-                    eventCount++;
-                    XCTAssertFalse(paused, @"We should not receive events when paused. Received: %@", event);
+                [room liveTimeline:^(MXEventTimeline *liveTimeline) {
+                    [liveTimeline listenToEvents:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
+                        eventCount++;
+                        XCTAssertFalse(paused, @"We should not receive events when paused. Received: %@", event);
+                    }];
                 }];
 
                 MXUser *bob = [mxSession userWithUserId:bobRestClient.credentials.userId];
@@ -466,9 +473,11 @@
                 }];
 
                 MXRoom *room = [mxSession roomWithRoomId:roomId];
-                [room.liveTimeline listenToEvents:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
-                    eventCount++;
-                    XCTAssertFalse(paused, @"We should not receive events when paused. Received: %@", event);
+                [room liveTimeline:^(MXEventTimeline *liveTimeline) {
+                    [liveTimeline listenToEvents:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
+                        eventCount++;
+                        XCTAssertFalse(paused, @"We should not receive events when paused. Received: %@", event);
+                    }];
                 }];
 
                 MXUser *bob = [mxSession userWithUserId:bobRestClient.credentials.userId];
@@ -578,7 +587,7 @@
             BOOL isSync = (room.summary.membership != MXMembershipInvite && room.summary.membership != MXMembershipUnknown);
             XCTAssertTrue(isSync, @"The callback must be called once the room has been initialSynced");
 
-            XCTAssertEqual(1, room.summary.membersCount.members, @"Bob must be the only one. members: %@", room.state.members);
+            XCTAssertEqual(1, room.summary.membersCount.members, @"Bob must be the only one");
 
             [expectation fulfill];
 
@@ -704,16 +713,19 @@
                     [mxSession startWithMessagesLimit:0 onServerSyncDone:^{
                         
                         XCTAssertTrue(room.isDirect);
-                        
-                        // Check whether both members have the same power level (trusted_private_chat preset)
-                        MXRoomPowerLevels *roomPowerLevels = room.state.powerLevels;
-                        
-                        XCTAssertNotNil(roomPowerLevels);
-                        NSUInteger powerlLevel1 = [roomPowerLevels powerLevelOfUserWithUserID:mxSession.myUser.userId];
-                        NSUInteger powerlLevel2 = [roomPowerLevels powerLevelOfUserWithUserID:matrixSDKTestsData.aliceCredentials.userId];
-                        XCTAssertEqual(powerlLevel1, powerlLevel2, @"The members must have the same power level");
-                        
-                        [expectation fulfill];
+
+                        [room state:^(MXRoomState *roomState) {
+
+                            // Check whether both members have the same power level (trusted_private_chat preset)
+                            MXRoomPowerLevels *roomPowerLevels = roomState.powerLevels;
+
+                            XCTAssertNotNil(roomPowerLevels);
+                            NSUInteger powerlLevel1 = [roomPowerLevels powerLevelOfUserWithUserID:mxSession.myUser.userId];
+                            NSUInteger powerlLevel2 = [roomPowerLevels powerLevelOfUserWithUserID:matrixSDKTestsData.aliceCredentials.userId];
+                            XCTAssertEqual(powerlLevel1, powerlLevel2, @"The members must have the same power level");
+
+                            [expectation fulfill];
+                        }];
                         
                     } failure:^(NSError *error) {
                         XCTFail(@"Cannot sync direct rooms - error: %@", error);
@@ -742,12 +754,12 @@
         mxSession = bobSession;
         
         MXRoom *mxRoom1 = [mxSession directJoinedRoomWithUserId:aliceRestClient.credentials.userId];
-        XCTAssertEqualObjects(mxRoom1.state.roomId, roomId, @"We should retrieve the last created room");
+        XCTAssertEqualObjects(mxRoom1.roomId, roomId, @"We should retrieve the last created room");
         
         [mxSession leaveRoom:roomId success:^{
             MXRoom *mxRoom2 = [mxSession directJoinedRoomWithUserId:aliceRestClient.credentials.userId];
             if (mxRoom2) {
-                XCTAssertNotEqualObjects(mxRoom2.state.roomId, roomId, @"We should not retrieve the left room");
+                XCTAssertNotEqualObjects(mxRoom2.roomId, roomId, @"We should not retrieve the left room");
             }
             
             [expectation fulfill];
@@ -936,9 +948,9 @@
                                     // Room ordering: a tagged room with no order value must have higher priority
                                     // than the tagged rooms with order value.
 
-                                    XCTAssertEqualObjects(room1.state.topic, @"1", "The order is wrong");
-                                    XCTAssertEqualObjects(room2.state.topic, @"2", "The order is wrong");
-                                    XCTAssertEqualObjects(room3.state.topic, @"3", "The order is wrong");
+                                    XCTAssertEqualObjects(room1.summary.topic, @"1", "The order is wrong");
+                                    XCTAssertEqualObjects(room2.summary.topic, @"2", "The order is wrong");
+                                    XCTAssertEqualObjects(room3.summary.topic, @"3", "The order is wrong");
 
 
                                     // By the way, check roomsWithTag
@@ -1016,8 +1028,8 @@
                             NSArray<MXRoom*> *roomsWithTag = [mxSession roomsWithTag:tag];
 
                             // If the order is the same, the room must be sorted by their last event
-                            XCTAssertEqualObjects(roomsWithTag[0].state.topic, @"newest");
-                            XCTAssertEqualObjects(roomsWithTag[1].state.topic, @"oldest");
+                            XCTAssertEqualObjects(roomsWithTag[0].summary.topic, @"newest");
+                            XCTAssertEqualObjects(roomsWithTag[1].summary.topic, @"oldest");
 
                             [expectation fulfill];
 

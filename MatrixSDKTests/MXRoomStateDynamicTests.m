@@ -119,67 +119,69 @@
                 MXRoom *room = [mxSession roomWithRoomId:roomId];
                 
                 __block NSUInteger eventCount = 0;
-                [room.liveTimeline listenToEventsOfTypes:nil onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
-                    
-                    // Check each expected event and their roomState contect
-                    // Events are received in the reverse order
-                    switch (eventCount++) {
-                        case 0:
-                            // 6 - Bob: "Bonjour"
-                            XCTAssertEqual(event.eventType, MXEventTypeRoomMessage);
-                            
-                            XCTAssert([roomState.topic isEqualToString:@"Topic #2"], @"roomState.topic is wrong. Found: %@", roomState.topic);
-                            XCTAssert([room.state.topic isEqualToString:@"Topic #2"]);
-                            break;
-                            
-                        case 1:
-                            //  5 - Bob changes the room topic to "Topic #2"
-                            XCTAssertEqual(event.eventType, MXEventTypeRoomTopic);
-                            
-                            XCTAssert([roomState.topic isEqualToString:@"Topic #1"], @"roomState.topic is wrong. Found: %@", roomState.topic);
-                            XCTAssert([room.state.topic isEqualToString:@"Topic #2"]);
-                            break;
-                            
-                        case 2:
-                            //  4 - Bob: "Hola"
-                            XCTAssertEqual(event.eventType, MXEventTypeRoomMessage);
-                            
-                            XCTAssert([roomState.topic isEqualToString:@"Topic #1"], @"roomState.topic is wrong. Found: %@", roomState.topic);
-                            XCTAssert([room.state.topic isEqualToString:@"Topic #2"]);
-                            break;
-                            
-                        case 3:
-                            //  3 - Bob changes the room topic to "Topic #1"
-                            XCTAssertEqual(event.eventType, MXEventTypeRoomTopic);
-                            
-                            XCTAssertNil(roomState.topic, @"The room topic was undefined before getting this event. Found: %@", roomState.topic);
-                            XCTAssert([room.state.topic isEqualToString:@"Topic #2"]);
-                            break;
-                            
-                        case 4:
-                            //  2 - Bob: "Hello World"
-                            XCTAssertEqual(event.eventType, MXEventTypeRoomMessage);
-                            
-                            XCTAssertNil(roomState.topic, @"The room topic was undefined before getting this event. Found: %@", roomState.topic);
-                            XCTAssert([room.state.topic isEqualToString:@"Topic #2"]);
-                            break;
-                            
-                        default:
-                            break;
-                    }
-                    
-                }];
-                
-                [room.liveTimeline resetPagination];
-                [room.liveTimeline paginate:10 direction:MXTimelineDirectionBackwards onlyFromStore:NO complete:^{
-                    
-                    XCTAssertGreaterThan(eventCount, 4, @"We must have received events");
-                    
-                    [expectation fulfill];
-                    
-                } failure:^(NSError *error) {
-                    XCTFail(@"The request should not fail - NSError: %@", error);
-                    [expectation fulfill];
+                [room liveTimeline:^(MXEventTimeline *liveTimeline) {
+                    [liveTimeline listenToEventsOfTypes:nil onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
+
+                        // Check each expected event and their roomState contect
+                        // Events are received in the reverse order
+                        switch (eventCount++) {
+                            case 0:
+                                // 6 - Bob: "Bonjour"
+                                XCTAssertEqual(event.eventType, MXEventTypeRoomMessage);
+
+                                XCTAssertEqualObjects(roomState.topic, @"Topic #2");
+                                XCTAssertEqualObjects(room.summary.topic, @"Topic #2");
+                                break;
+
+                            case 1:
+                                //  5 - Bob changes the room topic to "Topic #2"
+                                XCTAssertEqual(event.eventType, MXEventTypeRoomTopic);
+
+                                XCTAssertEqualObjects(roomState.topic, @"Topic #1");
+                                XCTAssertEqualObjects(room.summary.topic, @"Topic #2");
+                                break;
+
+                            case 2:
+                                //  4 - Bob: "Hola"
+                                XCTAssertEqual(event.eventType, MXEventTypeRoomMessage);
+
+                                XCTAssertEqualObjects(roomState.topic, @"Topic #1");
+                                XCTAssertEqualObjects(room.summary.topic, @"Topic #2");
+                                break;
+
+                            case 3:
+                                //  3 - Bob changes the room topic to "Topic #1"
+                                XCTAssertEqual(event.eventType, MXEventTypeRoomTopic);
+
+                                XCTAssertNil(roomState.topic, @"The room topic was undefined before getting this event. Found: %@", roomState.topic);
+                                XCTAssertEqualObjects(room.summary.topic, @"Topic #2");
+                                break;
+
+                            case 4:
+                                //  2 - Bob: "Hello World"
+                                XCTAssertEqual(event.eventType, MXEventTypeRoomMessage);
+
+                                XCTAssertNil(roomState.topic, @"The room topic was undefined before getting this event. Found: %@", roomState.topic);
+                                XCTAssertEqualObjects(room.summary.topic, @"Topic #2");
+                                break;
+
+                            default:
+                                break;
+                        }
+
+                    }];
+
+                    [liveTimeline resetPagination];
+                    [liveTimeline paginate:10 direction:MXTimelineDirectionBackwards onlyFromStore:NO complete:^{
+
+                        XCTAssertGreaterThan(eventCount, 4, @"We must have received events");
+
+                        [expectation fulfill];
+
+                    } failure:^(NSError *error) {
+                        XCTFail(@"The request should not fail - NSError: %@", error);
+                        [expectation fulfill];
+                    }];
                 }];
                 
             } failure:^(NSError *error) {
@@ -203,73 +205,76 @@
             MXRoom *room = [mxSession roomWithRoomId:roomId];
             
             __block NSUInteger eventCount = 0;
-            [room.liveTimeline listenToEventsOfTypes:nil onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
-                
-                // Check each expected event and their roomState contect
-                // Events are live. Then comes in order
-                switch (eventCount++) {
+            [room liveTimeline:^(MXEventTimeline *liveTimeline) {
+                [liveTimeline listenToEventsOfTypes:nil onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
 
-                    case 0:
-                        //  2 - Bob: "Hello World"
-                        XCTAssertEqual(event.eventType, MXEventTypeRoomMessage);
-                        
-                        XCTAssertNotNil(roomState);
-                        
-                        XCTAssertNil(roomState.topic, @"The room topic is not yet defined. Found: %@", roomState.topic);
-                        XCTAssertNil(room.state.topic, @"The room topic is not yet defined. Found: %@", roomState.topic);
-                        break;
-                        
-                    case 1:
-                        //  3 - Bob changes the room topic to "Topic #1"
-                        XCTAssertEqual(event.eventType, MXEventTypeRoomTopic);
+                    // Check each expected event and their roomState contect
+                    // Events are live. Then comes in order
+                    switch (eventCount++) {
 
-                        XCTAssertNotNil(roomState);
+                        case 0:
+                            //  2 - Bob: "Hello World"
+                            XCTAssertEqual(event.eventType, MXEventTypeRoomMessage);
 
-                        XCTAssertNil(roomState.topic, @"The room topic was not yet defined before this event. Found: %@", roomState.topic);
-                        XCTAssert([room.state.topic isEqualToString:@"Topic #1"]);
-                        break;
-                        
-                    case 2:
-                        //  4 - Bob: "Hola"
-                        XCTAssertEqual(event.eventType, MXEventTypeRoomMessage);
+                            XCTAssertNotNil(roomState);
 
-                        XCTAssertNotNil(roomState);
+                            XCTAssertNil(roomState.topic, @"The room topic is not yet defined. Found: %@", roomState.topic);
+                            XCTAssertNil(room.summary.topic, @"The room topic is not yet defined. Found: %@", roomState.topic);
+                            break;
 
-                        XCTAssert([roomState.topic isEqualToString:@"Topic #1"], @"roomState.topic is wrong. Found: %@", roomState.topic);
-                        XCTAssert([room.state.topic isEqualToString:@"Topic #1"]);
-                        break;
-                        
-                    case 3:
-                        //  5 - Bob changes the room topic to "Topic #2"
-                        XCTAssertEqual(event.eventType, MXEventTypeRoomTopic);
+                        case 1:
+                            //  3 - Bob changes the room topic to "Topic #1"
+                            XCTAssertEqual(event.eventType, MXEventTypeRoomTopic);
 
-                        XCTAssertNotNil(roomState);
+                            XCTAssertNotNil(roomState);
 
-                        XCTAssertEqualObjects(roomState.topic, @"Topic #1", @"roomState.topic is wrong. Found: %@", roomState.topic);
-                        XCTAssert([room.state.topic isEqualToString:@"Topic #2"]);
-                        break;
-                        
-                    case 4:
-                        // 6 - Bob: "Bonjour"
-                        XCTAssertEqual(event.eventType, MXEventTypeRoomMessage);
+                            XCTAssertNil(roomState.topic, @"The room topic was not yet defined before this event. Found: %@", roomState.topic);
+                            XCTAssertEqualObjects(room.summary.topic, @"Topic #1");
+                            break;
 
-                        XCTAssertNotNil(roomState);
+                        case 2:
+                            //  4 - Bob: "Hola"
+                            XCTAssertEqual(event.eventType, MXEventTypeRoomMessage);
 
-                        XCTAssert([roomState.topic isEqualToString:@"Topic #2"], @"roomState.topic is wrong. Found: %@", roomState.topic);
-                        XCTAssert([room.state.topic isEqualToString:@"Topic #2"]);
-                        
-                        // No more events. This is the end of the test
-                        [expectation fulfill];
-                        break;
+                            XCTAssertNotNil(roomState);
 
-                    default:
-                        XCTFail(@"No more events are expected");
-                        [expectation fulfill];
-                        break;
-                }
-                
+                            XCTAssertEqualObjects(roomState.topic, @"Topic #1");
+                            XCTAssertEqualObjects(room.summary.topic, @"Topic #1");
+                            break;
+
+                        case 3:
+                            //  5 - Bob changes the room topic to "Topic #2"
+                            XCTAssertEqual(event.eventType, MXEventTypeRoomTopic);
+
+                            XCTAssertNotNil(roomState);
+
+                            XCTAssertEqualObjects(roomState.topic, @"Topic #1");
+                            XCTAssertEqualObjects(room.summary.topic, @"Topic #2");
+                            break;
+
+                        case 4:
+                            // 6 - Bob: "Bonjour"
+                            XCTAssertEqual(event.eventType, MXEventTypeRoomMessage);
+
+                            XCTAssertNotNil(roomState);
+
+                            XCTAssertEqualObjects(roomState.topic, @"Topic #2");
+                            XCTAssertEqualObjects(room.summary.topic, @"Topic #2");
+
+                            // No more events. This is the end of the test
+                            [expectation fulfill];
+                            break;
+
+                        default:
+                            XCTFail(@"No more events are expected");
+                            [expectation fulfill];
+                            break;
+                    }
+
+                }];
+
             }];
-            
+
             // Send events of the scenario
             [self createScenario1:bobRestClient inRoom:roomId expectation:expectation onComplete:^{
                 

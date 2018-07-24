@@ -271,21 +271,26 @@
                                          ];
 
     __block NSUInteger eventCount = 0;
-    [room.liveTimeline listenToEventsOfTypes:eventsFilterForMessages onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
 
-        eventCount++;
-    }];
+    [room liveTimeline:^(MXEventTimeline *liveTimeline) {
 
-    [room.liveTimeline resetPagination];
-    [room.liveTimeline paginate:5 direction:MXTimelineDirectionBackwards onlyFromStore:NO complete:^() {
+        [liveTimeline listenToEventsOfTypes:eventsFilterForMessages onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
 
-        XCTAssertEqual(eventCount, 5, @"We should get as many messages as requested");
+            eventCount++;
+        }];
 
-        [expectation fulfill];
+        [liveTimeline resetPagination];
+        [liveTimeline paginate:5 direction:MXTimelineDirectionBackwards onlyFromStore:NO complete:^() {
 
-    } failure:^(NSError *error) {
-        XCTFail(@"The request should not fail - NSError: %@", error);
-        [expectation fulfill];
+            XCTAssertEqual(eventCount, 5, @"We should get as many messages as requested");
+
+            [expectation fulfill];
+
+        } failure:^(NSError *error) {
+            XCTFail(@"The request should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+
     }];
 }
 
@@ -299,26 +304,30 @@
                                          ];
 
     __block NSUInteger eventCount = 0;
-    [room.liveTimeline listenToEventsOfTypes:eventsFilterForMessages onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
 
-        eventCount++;
+    [room liveTimeline:^(MXEventTimeline *liveTimeline) {
 
-        // Only events with a type declared in `eventsFilterForMessages`
-        // must appear in messages
-        XCTAssertNotEqual([eventsFilterForMessages indexOfObject:event.type], NSNotFound, "Event of this type must not be in messages. Event: %@", event);
+        [liveTimeline listenToEventsOfTypes:eventsFilterForMessages onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
 
-    }];
+            eventCount++;
 
-    [room.liveTimeline resetPagination];
-    [room.liveTimeline paginate:100 direction:MXTimelineDirectionBackwards onlyFromStore:NO complete:^() {
+            // Only events with a type declared in `eventsFilterForMessages`
+            // must appear in messages
+            XCTAssertNotEqual([eventsFilterForMessages indexOfObject:event.type], NSNotFound, "Event of this type must not be in messages. Event: %@", event);
 
-        XCTAssert(eventCount, "We should have received events in registerEventListenerForTypes");
+        }];
 
-        [expectation fulfill];
+        [liveTimeline resetPagination];
+        [liveTimeline paginate:100 direction:MXTimelineDirectionBackwards onlyFromStore:NO complete:^() {
 
-    } failure:^(NSError *error) {
-        XCTFail(@"The request should not fail - NSError: %@", error);
-        [expectation fulfill];
+            XCTAssert(eventCount, "We should have received events in registerEventListenerForTypes");
+
+            [expectation fulfill];
+
+        } failure:^(NSError *error) {
+            XCTFail(@"The request should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
     }];
 }
 
@@ -332,25 +341,29 @@
                                          ];
 
     __block uint64_t prev_ts = -1;
-    [room.liveTimeline listenToEventsOfTypes:eventsFilterForMessages onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
 
-        XCTAssert(event.originServerTs, @"The event should have an attempt: %@", event);
+    [room liveTimeline:^(MXEventTimeline *liveTimeline) {
 
-        XCTAssertLessThanOrEqual(event.originServerTs, prev_ts, @"Events in messages must be listed  one by one in antichronological order");
-        prev_ts = event.originServerTs;
+        [liveTimeline listenToEventsOfTypes:eventsFilterForMessages onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
 
-    }];
+            XCTAssert(event.originServerTs, @"The event should have an attempt: %@", event);
 
-    [room.liveTimeline resetPagination];
-    [room.liveTimeline paginate:100 direction:MXTimelineDirectionBackwards onlyFromStore:NO complete:^() {
+            XCTAssertLessThanOrEqual(event.originServerTs, prev_ts, @"Events in messages must be listed  one by one in antichronological order");
+            prev_ts = event.originServerTs;
 
-        XCTAssertNotEqual(prev_ts, -1, "We should have received events in registerEventListenerForTypes");
+        }];
 
-        [expectation fulfill];
+        [liveTimeline resetPagination];
+        [liveTimeline paginate:100 direction:MXTimelineDirectionBackwards onlyFromStore:NO complete:^() {
 
-    } failure:^(NSError *error) {
-        XCTFail(@"The request should not fail - NSError: %@", error);
-        [expectation fulfill];
+            XCTAssertNotEqual(prev_ts, -1, "We should have received events in registerEventListenerForTypes");
+
+            [expectation fulfill];
+
+        } failure:^(NSError *error) {
+            XCTFail(@"The request should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
     }];
 }
 
@@ -358,25 +371,28 @@
 {
     __block NSUInteger eventCount = 0;
     __block NSMutableArray *events = [NSMutableArray array];
-    [room.liveTimeline listenToEventsOfTypes:nil onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
+    [room liveTimeline:^(MXEventTimeline *liveTimeline) {
 
-        eventCount++;
+        [liveTimeline listenToEventsOfTypes:nil onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
 
-        [events addObject:event];
-    }];
+            eventCount++;
 
-    [room.liveTimeline resetPagination];
-    [room.liveTimeline paginate:100 direction:MXTimelineDirectionBackwards onlyFromStore:NO complete:^() {
+            [events addObject:event];
+        }];
 
-        XCTAssert(eventCount, "We should have received events in registerEventListenerForTypes");
+        [liveTimeline resetPagination];
+        [liveTimeline paginate:100 direction:MXTimelineDirectionBackwards onlyFromStore:NO complete:^() {
 
-        [self assertNoDuplicate:events text:@"events got one by one with paginateBackMessages"];
+            XCTAssert(eventCount, "We should have received events in registerEventListenerForTypes");
 
-        [expectation fulfill];
+            [self assertNoDuplicate:events text:@"events got one by one with paginateBackMessages"];
 
-    } failure:^(NSError *error) {
-        XCTFail(@"The request should not fail - NSError: %@", error);
-        [expectation fulfill];
+            [expectation fulfill];
+
+        } failure:^(NSError *error) {
+            XCTFail(@"The request should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
     }];
 
 }
@@ -384,77 +400,86 @@
 - (void)checkSeveralPaginateBacks:(MXRoom*)room
 {
     __block NSMutableArray *roomEvents = [NSMutableArray array];
-    [room.liveTimeline listenToEventsOfTypes:nil onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
+    [room liveTimeline:^(MXEventTimeline *liveTimeline) {
+        [liveTimeline listenToEventsOfTypes:nil onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
 
-        [roomEvents addObject:event];
-    }];
-
-    [room.liveTimeline resetPagination];
-    [room.liveTimeline paginate:100 direction:MXTimelineDirectionBackwards onlyFromStore:NO complete:^() {
-
-        // Use another MXRoom instance to do pagination in several times
-        MXRoom *room2 = [[MXRoom alloc] initWithRoomId:room.roomId andMatrixSession:mxSession];
-
-        __block NSMutableArray *room2Events = [NSMutableArray array];
-        [room2.liveTimeline listenToEventsOfTypes:nil onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
-
-            [room2Events addObject:event];
+            [roomEvents addObject:event];
         }];
 
-        // The several paginations
-        [room2.liveTimeline resetPagination];
+        [liveTimeline resetPagination];
+        [liveTimeline paginate:100 direction:MXTimelineDirectionBackwards onlyFromStore:NO complete:^() {
 
-        if (mxSession.store.isPermanent)
-        {
-            XCTAssertGreaterThanOrEqual(room2.liveTimeline.remainingMessagesForBackPaginationInStore, 7);
-        }
+            // Use another MXRoom instance to do pagination in several times
+            MXRoom *room2 = [[MXRoom alloc] initWithRoomId:room.roomId andMatrixSession:mxSession];
 
-        [room2.liveTimeline paginate:2 direction:MXTimelineDirectionBackwards onlyFromStore:NO complete:^() {
+            __block NSMutableArray *room2Events = [NSMutableArray array];
 
-            if (mxSession.store.isPermanent)
-            {
-                XCTAssertGreaterThanOrEqual(room2.liveTimeline.remainingMessagesForBackPaginationInStore, 5);
-            }
+            [room2 liveTimeline:^(MXEventTimeline *room2LiveTimeline) {
 
-            [room2.liveTimeline paginate:5 direction:MXTimelineDirectionBackwards onlyFromStore:NO complete:^() {
+                [room2LiveTimeline listenToEventsOfTypes:nil onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
 
-                [room2.liveTimeline paginate:100 direction:MXTimelineDirectionBackwards onlyFromStore:NO complete:^() {
+                    [room2Events addObject:event];
+                }];
 
-                    [self assertNoDuplicate:room2Events text:@"events got one by one with testSeveralPaginateBacks"];
+                // The several paginations
+                [room2LiveTimeline resetPagination];
 
-                    // Now, compare the result with the reference
-                    XCTAssertEqual(roomEvents.count, room2Events.count);
+                if (mxSession.store.isPermanent)
+                {
+                    XCTAssertGreaterThanOrEqual(room2LiveTimeline.remainingMessagesForBackPaginationInStore, 7);
+                }
 
-                    if (roomEvents.count == room2Events.count)
+                [room2LiveTimeline paginate:2 direction:MXTimelineDirectionBackwards onlyFromStore:NO complete:^() {
+
+                    if (mxSession.store.isPermanent)
                     {
-                        // Compare events one by one
-                        for (NSUInteger i = 0; i < room2Events.count; i++)
-                        {
-                            MXEvent *event = roomEvents[i];
-                            MXEvent *event2 = room2Events[i];
-
-                            XCTAssertTrue([event2.eventId isEqualToString:event.eventId], @"Events mismatch: %@ - %@", event, event2);
-                        }
+                        XCTAssertGreaterThanOrEqual(room2LiveTimeline.remainingMessagesForBackPaginationInStore, 5);
                     }
 
-                    [expectation fulfill];
+                    [room2LiveTimeline paginate:5 direction:MXTimelineDirectionBackwards onlyFromStore:NO complete:^() {
 
+                        // Log room2 to keep a ref on it up to here
+                        NSLog(@"%@", room2);
+
+                        [room2LiveTimeline paginate:100 direction:MXTimelineDirectionBackwards onlyFromStore:NO complete:^() {
+
+                            [self assertNoDuplicate:room2Events text:@"events got one by one with testSeveralPaginateBacks"];
+
+                            // Now, compare the result with the reference
+                            XCTAssertEqual(roomEvents.count, room2Events.count);
+
+                            if (roomEvents.count == room2Events.count)
+                            {
+                                // Compare events one by one
+                                for (NSUInteger i = 0; i < room2Events.count; i++)
+                                {
+                                    MXEvent *event = roomEvents[i];
+                                    MXEvent *event2 = room2Events[i];
+
+                                    XCTAssertTrue([event2.eventId isEqualToString:event.eventId], @"Events mismatch: %@ - %@", event, event2);
+                                }
+                            }
+
+                            [expectation fulfill];
+
+                        } failure:^(NSError *error) {
+                            XCTFail(@"The request should not fail - NSError: %@", error);
+                            [expectation fulfill];
+                        }];
+                    } failure:^(NSError *error) {
+                        XCTFail(@"The request should not fail - NSError: %@", error);
+                        [expectation fulfill];
+                    }];
                 } failure:^(NSError *error) {
                     XCTFail(@"The request should not fail - NSError: %@", error);
                     [expectation fulfill];
                 }];
-            } failure:^(NSError *error) {
-                XCTFail(@"The request should not fail - NSError: %@", error);
-                [expectation fulfill];
             }];
+
         } failure:^(NSError *error) {
             XCTFail(@"The request should not fail - NSError: %@", error);
             [expectation fulfill];
         }];
-
-    } failure:^(NSError *error) {
-        XCTFail(@"The request should not fail - NSError: %@", error);
-        [expectation fulfill];
     }];
 }
 
@@ -466,145 +491,161 @@
     MXRoom *room2 = [[MXRoom alloc] initWithRoomId:room.roomId andMatrixSession:mxSession];
 
     __block NSMutableArray *room2Events = [NSMutableArray array];
-    [room2.liveTimeline listenToEventsOfTypes:nil onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
+    [room2 liveTimeline:^(MXEventTimeline *room2liveTimeline) {
 
-        if (MXTimelineDirectionForwards != direction)
-        {
-            [room2Events addObject:event];
-        }
-    }];
+        [room2liveTimeline listenToEventsOfTypes:nil onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
 
-    __block NSUInteger liveEvents = 0;
-    [room.liveTimeline listenToEventsOfTypes:nil onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
-
-        if (MXTimelineDirectionForwards == direction)
-        {
-            // Do some paginations after receiving live events
-            liveEvents++;
-            if (1 == liveEvents)
+            if (MXTimelineDirectionForwards != direction)
             {
-                if (mxSession.store.isPermanent)
-                {
-                    XCTAssertGreaterThanOrEqual(room2.liveTimeline.remainingMessagesForBackPaginationInStore, 7);
-                }
-
-                [room2.liveTimeline paginate:2 direction:MXTimelineDirectionBackwards onlyFromStore:NO complete:^() {
-
-                    if (mxSession.store.isPermanent)
-                    {
-                        XCTAssertGreaterThanOrEqual(room2.liveTimeline.remainingMessagesForBackPaginationInStore, 5);
-                    }
-
-                    // Try with 2 more live events
-                    [room sendTextMessage:@"How is the pagination #2?" success:nil failure:nil];
-                    [room sendTextMessage:@"How is the pagination #3?" success:nil failure:nil];
-
-                } failure:^(NSError *error) {
-                    XCTFail(@"The request should not fail - NSError: %@", error);
-                    [expectation fulfill];
-                }];
+                [room2Events addObject:event];
             }
-            else if (3 == liveEvents)
+        }];
 
-                [room2.liveTimeline paginate:5 direction:MXTimelineDirectionBackwards onlyFromStore:NO complete:^() {
+        __block NSUInteger liveEvents = 0;
 
-                    [room2.liveTimeline paginate:100 direction:MXTimelineDirectionBackwards onlyFromStore:NO complete:^() {
+        [room liveTimeline:^(MXEventTimeline *liveTimeline) {
 
-                        [self assertNoDuplicate:room2Events text:@"events got one by one with testSeveralPaginateBacks"];
+            [liveTimeline listenToEventsOfTypes:nil onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
 
-                        // Now, compare the result with the reference
-                        XCTAssertEqual(roomEvents.count, room2Events.count);
-
-                        // Compare events one by one
-                        for (NSUInteger i = 0; i < room2Events.count; i++)
+                if (MXTimelineDirectionForwards == direction)
+                {
+                    // Do some paginations after receiving live events
+                    liveEvents++;
+                    if (1 == liveEvents)
+                    {
+                        if (mxSession.store.isPermanent)
                         {
-                            MXEvent *event = roomEvents[i];
-                            MXEvent *event2 = room2Events[i];
-
-                            XCTAssertTrue([event2.eventId isEqualToString:event.eventId], @"Events mismatch: %@ - %@", event, event2);
+                            XCTAssertGreaterThanOrEqual(room2liveTimeline.remainingMessagesForBackPaginationInStore, 7);
                         }
 
-                        [expectation fulfill];
+                        [room2liveTimeline paginate:2 direction:MXTimelineDirectionBackwards onlyFromStore:NO complete:^() {
 
-                } failure:^(NSError *error) {
-                    XCTFail(@"The request should not fail - NSError: %@", error);
-                    [expectation fulfill];
-                }];
+                            if (mxSession.store.isPermanent)
+                            {
+                                XCTAssertGreaterThanOrEqual(room2liveTimeline.remainingMessagesForBackPaginationInStore, 5);
+                            }
+
+                            // Try with 2 more live events
+                            [room sendTextMessage:@"How is the pagination #2?" success:nil failure:nil];
+                            [room sendTextMessage:@"How is the pagination #3?" success:nil failure:nil];
+
+                        } failure:^(NSError *error) {
+                            XCTFail(@"The request should not fail - NSError: %@", error);
+                            [expectation fulfill];
+                        }];
+                    }
+                    else if (3 == liveEvents)
+                    {
+                        [room2liveTimeline paginate:5 direction:MXTimelineDirectionBackwards onlyFromStore:NO complete:^() {
+
+                            // Log room2 to keep a ref on it up to here
+                            NSLog(@"%@", room2);
+                            
+                            [room2liveTimeline paginate:100 direction:MXTimelineDirectionBackwards onlyFromStore:NO complete:^() {
+
+                                [self assertNoDuplicate:room2Events text:@"events got one by one with testSeveralPaginateBacks"];
+
+                                // Now, compare the result with the reference
+                                XCTAssertEqual(roomEvents.count, room2Events.count);
+
+                                // Compare events one by one
+                                for (NSUInteger i = 0; i < room2Events.count; i++)
+                                {
+                                    MXEvent *event = roomEvents[i];
+                                    MXEvent *event2 = room2Events[i];
+
+                                    XCTAssertTrue([event2.eventId isEqualToString:event.eventId], @"Events mismatch: %@ - %@", event, event2);
+                                }
+
+                                [expectation fulfill];
+
+                            } failure:^(NSError *error) {
+                                XCTFail(@"The request should not fail - NSError: %@", error);
+                                [expectation fulfill];
+                            }];
+                        } failure:^(NSError *error) {
+                            XCTFail(@"The request should not fail - NSError: %@", error);
+                            [expectation fulfill];
+                        }];
+                    }
+                }
+                else
+                {
+                    [roomEvents addObject:event];
+                }
+            }];
+
+            // Take a snapshot of all room history
+            [liveTimeline resetPagination];
+            [liveTimeline paginate:100 direction:MXTimelineDirectionBackwards onlyFromStore:NO complete:^{
+
+                // Messages are now in the cache
+                // Start checking pagination from the cache
+                [room2liveTimeline resetPagination];
+
+                [room sendTextMessage:@"How is the pagination #1?" success:nil failure:nil];
+
             } failure:^(NSError *error) {
                 XCTFail(@"The request should not fail - NSError: %@", error);
                 [expectation fulfill];
             }];
-        }
-        else
-        {
-            [roomEvents addObject:event];
-        }
-    }];
-
-    // Take a snapshot of all room history
-    [room.liveTimeline resetPagination];
-    [room.liveTimeline paginate:100 direction:MXTimelineDirectionBackwards onlyFromStore:NO complete:^{
-
-        // Messages are now in the cache
-        // Start checking pagination from the cache
-        [room2.liveTimeline resetPagination];
-
-        [room sendTextMessage:@"How is the pagination #1?" success:nil failure:nil];
-
-    } failure:^(NSError *error) {
-        XCTFail(@"The request should not fail - NSError: %@", error);
-        [expectation fulfill];
+        }];
     }];
 }
 
 
 - (void)checkCanPaginateFromHomeServer:(MXRoom*)room
 {
-    [room.liveTimeline resetPagination];
-    XCTAssertTrue([room.liveTimeline canPaginate:MXTimelineDirectionBackwards], @"We can always paginate at the beginning");
+    [room liveTimeline:^(MXEventTimeline *liveTimeline) {
+        [liveTimeline resetPagination];
+        XCTAssertTrue([liveTimeline canPaginate:MXTimelineDirectionBackwards], @"We can always paginate at the beginning");
 
-    [room.liveTimeline paginate:100 direction:MXTimelineDirectionBackwards onlyFromStore:NO complete:^() {
+        [liveTimeline paginate:100 direction:MXTimelineDirectionBackwards onlyFromStore:NO complete:^() {
 
-        // Due to SPEC-319, we need to paginate twice to be sure to hit the limit
-        [room.liveTimeline paginate:100 direction:MXTimelineDirectionBackwards onlyFromStore:NO complete:^() {
+            // Due to SPEC-319, we need to paginate twice to be sure to hit the limit
+            [liveTimeline paginate:100 direction:MXTimelineDirectionBackwards onlyFromStore:NO complete:^() {
 
-            XCTAssertFalse([room.liveTimeline canPaginate:MXTimelineDirectionBackwards], @"We must have reached the end of the pagination");
+                XCTAssertFalse([liveTimeline canPaginate:MXTimelineDirectionBackwards], @"We must have reached the end of the pagination");
 
-            [expectation fulfill];
+                [expectation fulfill];
+
+            } failure:^(NSError *error) {
+                XCTFail(@"The request should not fail - NSError: %@", error);
+                [expectation fulfill];
+            }];
 
         } failure:^(NSError *error) {
             XCTFail(@"The request should not fail - NSError: %@", error);
             [expectation fulfill];
         }];
-
-    } failure:^(NSError *error) {
-        XCTFail(@"The request should not fail - NSError: %@", error);
-        [expectation fulfill];
     }];
 }
 
 - (void)checkCanPaginateFromMXStore:(MXRoom*)room
 {
-    [room.liveTimeline resetPagination];
-    XCTAssertTrue([room.liveTimeline canPaginate:MXTimelineDirectionBackwards], @"We can always paginate at the beginning");
+    [room liveTimeline:^(MXEventTimeline *liveTimeline) {
 
-    [room.liveTimeline paginate:100 direction:MXTimelineDirectionBackwards onlyFromStore:NO complete:^() {
+        [liveTimeline resetPagination];
+        XCTAssertTrue([liveTimeline canPaginate:MXTimelineDirectionBackwards], @"We can always paginate at the beginning");
 
-        // Do one more round trip so that SDK detect the limit
-        [room.liveTimeline paginate:1 direction:MXTimelineDirectionBackwards onlyFromStore:NO complete:^{
+        [liveTimeline paginate:100 direction:MXTimelineDirectionBackwards onlyFromStore:NO complete:^() {
 
-            XCTAssertFalse([room.liveTimeline canPaginate:MXTimelineDirectionBackwards], @"We must have reached the end of the pagination");
+            // Do one more round trip so that SDK detect the limit
+            [liveTimeline paginate:1 direction:MXTimelineDirectionBackwards onlyFromStore:NO complete:^{
 
-            [expectation fulfill];
+                XCTAssertFalse([liveTimeline canPaginate:MXTimelineDirectionBackwards], @"We must have reached the end of the pagination");
+
+                [expectation fulfill];
+
+            } failure:^(NSError *error) {
+                XCTFail(@"The request should not fail - NSError: %@", error);
+                [expectation fulfill];
+            }];
 
         } failure:^(NSError *error) {
             XCTFail(@"The request should not fail - NSError: %@", error);
             [expectation fulfill];
         }];
-
-    } failure:^(NSError *error) {
-        XCTFail(@"The request should not fail - NSError: %@", error);
-        [expectation fulfill];
     }];
 }
 
@@ -613,20 +654,23 @@
     MXEvent *lastMessage = room.summary.lastMessageEvent;
     XCTAssertEqual(lastMessage.eventType, MXEventTypeRoomMessage);
 
-    [room.liveTimeline resetPagination];
-    MXEvent *lastMessage2 = room.summary.lastMessageEvent;
-    XCTAssertEqualObjects(lastMessage2.eventId, lastMessage.eventId,  @"The last message should stay the same");
+    [room liveTimeline:^(MXEventTimeline *liveTimeline) {
 
-    [room.liveTimeline paginate:100 direction:MXTimelineDirectionBackwards onlyFromStore:NO complete:^() {
+        [liveTimeline resetPagination];
+        MXEvent *lastMessage2 = room.summary.lastMessageEvent;
+        XCTAssertEqualObjects(lastMessage2.eventId, lastMessage.eventId,  @"The last message should stay the same");
 
-        MXEvent *lastMessage3 = room.summary.lastMessageEvent;
-        XCTAssertEqualObjects(lastMessage3.eventId, lastMessage.eventId,  @"The last message should stay the same");
+        [liveTimeline paginate:100 direction:MXTimelineDirectionBackwards onlyFromStore:NO complete:^() {
 
-        [expectation fulfill];
+            MXEvent *lastMessage3 = room.summary.lastMessageEvent;
+            XCTAssertEqualObjects(lastMessage3.eventId, lastMessage.eventId,  @"The last message should stay the same");
 
-    } failure:^(NSError *error) {
-        XCTFail(@"The request should not fail - NSError: %@", error);
-        [expectation fulfill];
+            [expectation fulfill];
+
+        } failure:^(NSError *error) {
+            XCTFail(@"The request should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
     }];
 }
 
@@ -635,21 +679,23 @@
     MXEvent *lastMessage = room.summary.lastMessageEvent;
     XCTAssertEqual(lastMessage.eventType, MXEventTypeRoomMessage);
 
-    [room.liveTimeline listenToEvents:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
+    [room liveTimeline:^(MXEventTimeline *liveTimeline) {
+        [liveTimeline listenToEvents:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
 
-        // The room summary is handled afterwards
-        if (!observer)
-        {
-            observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXRoomSummaryDidChangeNotification object:room.summary queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
+            // The room summary is handled afterwards
+            if (!observer)
+            {
+                observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXRoomSummaryDidChangeNotification object:room.summary queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
 
-                MXEvent *lastMessage2 = room.summary.lastMessageEvent;
-                XCTAssertNotNil(lastMessage2);
-                XCTAssertEqual(lastMessage2.eventType, MXEventTypeRoomMember);
-                XCTAssertNotEqualObjects(lastMessage2.eventId, lastMessage.eventId);
+                    MXEvent *lastMessage2 = room.summary.lastMessageEvent;
+                    XCTAssertNotNil(lastMessage2);
+                    XCTAssertEqual(lastMessage2.eventType, MXEventTypeRoomMember);
+                    XCTAssertNotEqualObjects(lastMessage2.eventId, lastMessage.eventId);
 
-                [expectation fulfill];
-            }];
-        }
+                    [expectation fulfill];
+                }];
+            }
+        }];
     }];
 
     [room.mxSession.myUser setDisplayName:@"Toto" success:nil failure:^(NSError *error) {
@@ -667,21 +713,23 @@
     MXRoomSummaryUpdater *updater = [MXRoomSummaryUpdater roomSummaryUpdaterForSession:room.mxSession];
     updater.ignoreMemberProfileChanges = YES;
 
-    [room.liveTimeline listenToEvents:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
+    [room liveTimeline:^(MXEventTimeline *liveTimeline) {
+        [liveTimeline listenToEvents:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
 
-        MXEvent *lastMessage2 = room.summary.lastMessageEvent;
-        XCTAssertNotNil(lastMessage2);
-        XCTAssertEqual(lastMessage2.eventType, MXEventTypeRoomMessage);
-        XCTAssertEqualObjects(lastMessage2.eventId, lastMessage.eventId);
+            MXEvent *lastMessage2 = room.summary.lastMessageEvent;
+            XCTAssertNotNil(lastMessage2);
+            XCTAssertEqual(lastMessage2.eventType, MXEventTypeRoomMessage);
+            XCTAssertEqualObjects(lastMessage2.eventId, lastMessage.eventId);
 
-        // The room.summary.lastMessageEvent must no be updated in this case
-        [[NSNotificationCenter defaultCenter] addObserverForName:kMXRoomSummaryDidChangeNotification object:room.summary queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
+            // The room.summary.lastMessageEvent must no be updated in this case
+            [[NSNotificationCenter defaultCenter] addObserverForName:kMXRoomSummaryDidChangeNotification object:room.summary queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
 
-            XCTFail(@"The room.summary.lastMessageEvent must no be updated in this case");
-            
+                XCTFail(@"The room.summary.lastMessageEvent must no be updated in this case");
+
+            }];
+
+            [expectation fulfill];
         }];
-
-        [expectation fulfill];
     }];
 
     [room.mxSession.myUser setDisplayName:@"Toto" success:nil failure:^(NSError *error) {
@@ -719,33 +767,35 @@
                     [room2 join:^{
 
                         NSMutableArray *events = [NSMutableArray array];
-                        [room2.liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
+                        [room2 liveTimeline:^(MXEventTimeline *liveTimeline) {
+                            [liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
 
-                            if (direction == MXTimelineDirectionBackwards)
-                            {
-                                if (0 == events.count)
+                                if (direction == MXTimelineDirectionBackwards)
                                 {
-                                    // The most recent message must be "Hi bob" sent by Alice
-                                    XCTAssertEqualObjects(aliceTextEventId, event.eventId);
+                                    if (0 == events.count)
+                                    {
+                                        // The most recent message must be "Hi bob" sent by Alice
+                                        XCTAssertEqualObjects(aliceTextEventId, event.eventId);
+                                    }
+
+                                    [events addObject:event];
                                 }
 
-                                [events addObject:event];
-                            }
+                            }];
 
-                        }];
+                            [liveTimeline resetPagination];
+                            [liveTimeline paginate:100 direction:MXTimelineDirectionBackwards onlyFromStore:NO complete:^{
 
-                        [room2.liveTimeline resetPagination];
-                        [room2.liveTimeline paginate:100 direction:MXTimelineDirectionBackwards onlyFromStore:NO complete:^{
+                                XCTAssertEqual(events.count, 6, "The room should contain only 6 messages (the last message sent while the user is not in the room must be visible)");
 
-                            XCTAssertEqual(events.count, 6, "The room should contain only 6 messages (the last message sent while the user is not in the room must be visible)");
+                                [mxSession close];
+                                [expectation fulfill];
 
-                            [mxSession close];
-                            [expectation fulfill];
-
-                        } failure:^(NSError *error) {
-                            XCTFail(@"The request should not fail - NSError: %@", error);
-                            [mxSession close];
-                            [expectation fulfill];
+                            } failure:^(NSError *error) {
+                                XCTFail(@"The request should not fail - NSError: %@", error);
+                                [mxSession close];
+                                [expectation fulfill];
+                            }];
                         }];
 
                     } failure:^(NSError *error) {
@@ -800,41 +850,47 @@
 - (void)checkPaginateWhenReachingTheExactBeginningOfTheRoom:(MXRoom*)room
 {
     __block NSUInteger eventCount = 0;
-    [room.liveTimeline listenToEvents:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
+    [room liveTimeline:^(MXEventTimeline *liveTimeline) {
+        [liveTimeline listenToEvents:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
 
-        if (direction == MXTimelineDirectionBackwards)
-        {
-            eventCount++;
-        }
-    }];
+            if (direction == MXTimelineDirectionBackwards)
+            {
+                eventCount++;
+            }
+        }];
 
-    // First count how many messages to retrieve
-    [room.liveTimeline resetPagination];
-    [room.liveTimeline paginate:100 direction:MXTimelineDirectionBackwards onlyFromStore:NO complete:^() {
+        // First count how many messages to retrieve
+        [liveTimeline resetPagination];
+        [liveTimeline paginate:100 direction:MXTimelineDirectionBackwards onlyFromStore:NO complete:^() {
 
-        // Paginate for the exact number of events in the room
-        NSUInteger pagEnd = eventCount;
-        eventCount = 0;
-        [mxSession.store deleteRoom:room.roomId];
-        [room.liveTimeline resetPagination];
-
-        [room.liveTimeline paginate:pagEnd direction:MXTimelineDirectionBackwards onlyFromStore:NO complete:^{
-
-            XCTAssertEqual(eventCount, pagEnd, @"We should get as many messages as requested");
-
-            XCTAssert([room.liveTimeline canPaginate:MXTimelineDirectionBackwards], @"At this point the SDK cannot know it reaches the beginning of the history");
-
-            // Try to load more messages
+            // Paginate for the exact number of events in the room
+            NSUInteger pagEnd = eventCount;
             eventCount = 0;
-            [room.liveTimeline paginate:1 direction:MXTimelineDirectionBackwards onlyFromStore:NO complete:^{
+            [mxSession.store deleteRoom:room.roomId];
+            [liveTimeline resetPagination];
 
-                XCTAssertEqual(eventCount, 0, @"There must be no more event");
-                XCTAssertFalse([room.liveTimeline canPaginate:MXTimelineDirectionBackwards], @"SDK must now indicate there is no more event to paginate");
+            [liveTimeline paginate:pagEnd direction:MXTimelineDirectionBackwards onlyFromStore:NO complete:^{
 
-                [expectation fulfill];
+                XCTAssertEqual(eventCount, pagEnd, @"We should get as many messages as requested");
+
+                XCTAssert([liveTimeline canPaginate:MXTimelineDirectionBackwards], @"At this point the SDK cannot know it reaches the beginning of the history");
+
+                // Try to load more messages
+                eventCount = 0;
+                [liveTimeline paginate:1 direction:MXTimelineDirectionBackwards onlyFromStore:NO complete:^{
+
+                    XCTAssertEqual(eventCount, 0, @"There must be no more event");
+                    XCTAssertFalse([liveTimeline canPaginate:MXTimelineDirectionBackwards], @"SDK must now indicate there is no more event to paginate");
+
+                    [expectation fulfill];
+
+                } failure:^(NSError *error) {
+                    XCTFail(@"The request should not fail - see SYN-162 - NSError: %@", error);
+                    [expectation fulfill];
+                }];
 
             } failure:^(NSError *error) {
-                XCTFail(@"The request should not fail - see SYN-162 - NSError: %@", error);
+                XCTFail(@"Cannot set up intial test conditions - error: %@", error);
                 [expectation fulfill];
             }];
 
@@ -842,10 +898,6 @@
             XCTFail(@"Cannot set up intial test conditions - error: %@", error);
             [expectation fulfill];
         }];
-
-    } failure:^(NSError *error) {
-        XCTFail(@"Cannot set up intial test conditions - error: %@", error);
-        [expectation fulfill];
     }];
 }
 
@@ -853,44 +905,46 @@
 {
     __block NSString *messageEventId;
 
-    [room.liveTimeline listenToEvents:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
+    [room liveTimeline:^(MXEventTimeline *liveTimeline) {
+        [liveTimeline listenToEvents:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
 
-        if (MXEventTypeRoomMessage == event.eventType)
-        {
-            // Manage the case where message comes down the stream before the call of the success
-            // callback of [room sendTextMessage:...]
-            if (nil == messageEventId)
+            if (MXEventTypeRoomMessage == event.eventType)
             {
-                messageEventId = event.eventId;
+                // Manage the case where message comes down the stream before the call of the success
+                // callback of [room sendTextMessage:...]
+                if (nil == messageEventId)
+                {
+                    messageEventId = event.eventId;
+                }
+
+                MXEvent *notYetRedactedEvent = [mxSession.store eventWithEventId:messageEventId inRoom:room.roomId];
+
+                XCTAssertGreaterThan(notYetRedactedEvent.content.count, 0);
+                XCTAssertNil(notYetRedactedEvent.redacts);
+                XCTAssertNil(notYetRedactedEvent.redactedBecause);
+
+                // Redact this event
+                [room redactEvent:messageEventId reason:@"No reason" success:^{
+
+                } failure:^(NSError *error) {
+                    XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                    [expectation fulfill];
+                }];
+            }
+            else if (MXEventTypeRoomRedaction == event.eventType)
+            {
+                MXEvent *redactedEvent = [mxSession.store eventWithEventId:messageEventId inRoom:room.roomId];
+
+                XCTAssertEqual(redactedEvent.content.count, 0, @"Redacted event content must be now empty");
+                XCTAssertEqualObjects(event.eventId, redactedEvent.redactedBecause[@"event_id"], @"It must contain the event that redacted it");
+
+                // Tests more related to redaction (could be moved to a dedicated section somewhere else)
+                XCTAssertEqualObjects(event.redacts, messageEventId, @"");
+
+                [expectation fulfill];
             }
 
-            MXEvent *notYetRedactedEvent = [mxSession.store eventWithEventId:messageEventId inRoom:room.roomId];
-
-            XCTAssertGreaterThan(notYetRedactedEvent.content.count, 0);
-            XCTAssertNil(notYetRedactedEvent.redacts);
-            XCTAssertNil(notYetRedactedEvent.redactedBecause);
-
-            // Redact this event
-            [room redactEvent:messageEventId reason:@"No reason" success:^{
-
-            } failure:^(NSError *error) {
-                XCTFail(@"Cannot set up intial test conditions - error: %@", error);
-                [expectation fulfill];
-            }];
-        }
-        else if (MXEventTypeRoomRedaction == event.eventType)
-        {
-            MXEvent *redactedEvent = [mxSession.store eventWithEventId:messageEventId inRoom:room.roomId];
-
-            XCTAssertEqual(redactedEvent.content.count, 0, @"Redacted event content must be now empty");
-            XCTAssertEqualObjects(event.eventId, redactedEvent.redactedBecause[@"event_id"], @"It must contain the event that redacted it");
-
-            // Tests more related to redaction (could be moved to a dedicated section somewhere else)
-            XCTAssertEqualObjects(event.redacts, messageEventId, @"");
-
-            [expectation fulfill];
-        }
-
+        }];
     }];
 
     [room sendTextMessage:@"This is text message" success:^(NSString *eventId) {
@@ -1293,29 +1347,35 @@
             [mxSession startWithMessagesLimit:5 onServerSyncDone:^{
 
                 MXRoom *room = [mxSession roomWithRoomId:roomId];
-                [room.liveTimeline resetPagination];
-                [room.liveTimeline paginate:10 direction:MXTimelineDirectionBackwards onlyFromStore:NO complete:^{
 
-                    NSString *roomPaginationToken = [store paginationTokenOfRoom:roomId];
-                    XCTAssert(roomPaginationToken, @"The room must have a pagination after a pagination");
+                [room liveTimeline:^(MXEventTimeline *liveTimeline) {
+                    [liveTimeline resetPagination];
+                    [liveTimeline paginate:10 direction:MXTimelineDirectionBackwards onlyFromStore:NO complete:^{
 
-                    [mxSession close];
-                    mxSession = nil;
+                        NSString *roomPaginationToken = [store paginationTokenOfRoom:roomId];
+                        XCTAssert(roomPaginationToken, @"The room must have a pagination after a pagination");
 
-                    // Reopen a session and check roomPaginationToken
-                    id<MXStore> store2 = [[mxStoreClass alloc] init];
+                        [mxSession close];
+                        mxSession = nil;
 
-                    mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
-                    [mxSession setStore:store2 success:^{
+                        // Reopen a session and check roomPaginationToken
+                        id<MXStore> store2 = [[mxStoreClass alloc] init];
 
-                        XCTAssertEqualObjects(roomPaginationToken, [store2 paginationTokenOfRoom:roomId], @"The store must keep the pagination token");
+                        mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
+                        [mxSession setStore:store2 success:^{
 
-                        [mxSession start:^{
+                            XCTAssertEqualObjects(roomPaginationToken, [store2 paginationTokenOfRoom:roomId], @"The store must keep the pagination token");
 
-                            XCTAssertEqualObjects(roomPaginationToken, [store2 paginationTokenOfRoom:roomId], @"The store must keep the pagination token even after [MXSession start]");
+                            [mxSession start:^{
 
-                            [expectation fulfill];
+                                XCTAssertEqualObjects(roomPaginationToken, [store2 paginationTokenOfRoom:roomId], @"The store must keep the pagination token even after [MXSession start]");
 
+                                [expectation fulfill];
+
+                            } failure:^(NSError *error) {
+                                XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                                [expectation fulfill];
+                            }];
                         } failure:^(NSError *error) {
                             XCTFail(@"Cannot set up intial test conditions - error: %@", error);
                             [expectation fulfill];
@@ -1324,10 +1384,8 @@
                         XCTFail(@"Cannot set up intial test conditions - error: %@", error);
                         [expectation fulfill];
                     }];
-                } failure:^(NSError *error) {
-                    XCTFail(@"Cannot set up intial test conditions - error: %@", error);
-                    [expectation fulfill];
                 }];
+
             } failure:^(NSError *error) {
                 XCTFail(@"Cannot set up intial test conditions - error: %@", error);
                 [expectation fulfill];

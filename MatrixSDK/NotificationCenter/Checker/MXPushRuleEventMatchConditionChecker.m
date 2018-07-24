@@ -24,7 +24,7 @@
 
 @implementation MXPushRuleEventMatchConditionChecker
 
-- (BOOL)isCondition:(MXPushRuleCondition*)condition satisfiedBy:(MXEvent*)event withJsonDict:(NSDictionary*)contentAsJsonDict
+- (BOOL)isCondition:(MXPushRuleCondition*)condition satisfiedBy:(MXEvent*)event roomState:(MXRoomState*)roomState withJsonDict:(NSDictionary*)contentAsJsonDict
 {
     BOOL isSatisfied = NO;
     

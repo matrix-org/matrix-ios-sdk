@@ -19,6 +19,8 @@
 #import "MXJSONModels.h"
 #import "MXEvent.h"
 
+@class MXRoomState;
+
 /**
  `MXNotificationCenter` delegates push rule condition check to class that implements
  `MXPushRuleConditionChecker`.
@@ -33,6 +35,6 @@
  @param contentAsJsonDict the content as a dictionnary.
  @return YES if the event satisties the condition.
  */
-- (BOOL)isCondition:(MXPushRuleCondition*)condition satisfiedBy:(MXEvent*)event withJsonDict:(NSDictionary*)contentAsJsonDict;
+- (BOOL)isCondition:(MXPushRuleCondition*)condition satisfiedBy:(MXEvent*)event roomState:(MXRoomState*)roomState withJsonDict:(NSDictionary*)contentAsJsonDict;
 
 @end

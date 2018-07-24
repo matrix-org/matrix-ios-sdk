@@ -757,6 +757,17 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
 - (MXHTTPOperation*)uploadDirectRooms:(void (^)(void))success
                               failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
+/**
+ Make sure that the `MXRoom` internal data for a list of rooms is preloaded.
+
+ Thus, next async calls to their internal data (like [MXRoom liveTimeline:])
+ will behave synchronously.
+
+ @param roomIds ids of rooms to preload data.
+ @param onComplete block called once done.
+ */
+- (void)preloadRoomsData:(NSArray<NSString*> *)roomIds onComplete:(dispatch_block_t)onComplete;
+
 
 #pragma mark - Rooms summaries
 /**

@@ -106,33 +106,39 @@
         [mxSession start:^{
 
             MXRoom *room = [mxSession roomWithRoomId:roomId];
-            
-            for (MXEvent *stateEvent in room.state.stateEvents)
-            {
-                XCTAssertTrue(stateEvent.isState, "All events in room.stateEvents must be states. stateEvent: %@", stateEvent);
-            }
-            
-            
-            __block NSUInteger eventCount = 0;
-            [room.liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
-                
-                eventCount++;
-                XCTAssertFalse(event.isState, "Room messages are not states. message: %@", event);
-                
+
+            [room state:^(MXRoomState *roomState) {
+
+                for (MXEvent *stateEvent in roomState.stateEvents)
+                {
+                    XCTAssertTrue(stateEvent.isState, "All events in room.stateEvents must be states. stateEvent: %@", stateEvent);
+                }
+
+
+                __block NSUInteger eventCount = 0;
+                [room liveTimeline:^(MXEventTimeline *liveTimeline) {
+
+                    [liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
+
+                        eventCount++;
+                        XCTAssertFalse(event.isState, "Room messages are not states. message: %@", event);
+
+                    }];
+
+                    [liveTimeline resetPagination];
+                    [liveTimeline paginate:100 direction:MXTimelineDirectionBackwards onlyFromStore:NO complete:^() {
+
+                        XCTAssertGreaterThan(eventCount, 0, "We should have received events in registerEventListenerForTypes");
+
+                        [expectation fulfill];
+
+                    } failure:^(NSError *error) {
+                        XCTFail(@"The request should not fail - NSError: %@", error);
+                        [expectation fulfill];
+                    }];
+                }];
             }];
-            
-            [room.liveTimeline resetPagination];
-            [room.liveTimeline paginate:100 direction:MXTimelineDirectionBackwards onlyFromStore:NO complete:^() {
-                
-                XCTAssertGreaterThan(eventCount, 0, "We should have received events in registerEventListenerForTypes");
-                
-                [expectation fulfill];
-                
-            } failure:^(NSError *error) {
-                XCTFail(@"The request should not fail - NSError: %@", error);
-                [expectation fulfill];
-            }];
-            
+
         } failure:^(NSError *error) {
             XCTFail(@"The request should not fail - NSError: %@", error);
             [expectation fulfill];

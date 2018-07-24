@@ -1,5 +1,6 @@
 /*
  Copyright 2015 OpenMarket Ltd
+ Copyright 2018 New Vector Ltd
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -522,18 +523,18 @@ NSString *const kMXCallManagerConferenceUserDomain  = @"matrix.org";
     return isConferenceUser;
 }
 
-+ (BOOL)canPlaceConferenceCallInRoom:(MXRoom *)room
++ (BOOL)canPlaceConferenceCallInRoom:(MXRoom *)room roomState:(MXRoomState *)roomState
 {
     BOOL canPlaceConferenceCallInRoom = NO;
 
-    if (room.state.isOngoingConferenceCall)
+    if (roomState.isOngoingConferenceCall)
     {
         // All room members can join an existing conference call
         canPlaceConferenceCallInRoom = YES;
     }
     else
     {
-        MXRoomPowerLevels *powerLevels = room.state.powerLevels;
+        MXRoomPowerLevels *powerLevels = roomState.powerLevels;
         NSInteger oneSelfPowerLevel = [powerLevels powerLevelOfUserWithUserID:room.mxSession.myUser.userId];
 
         // Only member with invite power level can create a conference call
@@ -561,15 +562,17 @@ NSString *const kMXCallManagerConferenceUserDomain  = @"matrix.org";
 {
     NSString *conferenceUserId = [MXCallManager conferenceUserIdForRoom:room.roomId];
 
-    MXRoomMember *conferenceUserMember = [room.state.members memberWithUserId:conferenceUserId];
-    if (conferenceUserMember && conferenceUserMember.membership == MXMembershipJoin)
-    {
-        success();
-    }
-    else
-    {
-        [room inviteUser:conferenceUserId success:success failure:failure];
-    }
+    [room members:^(MXRoomMembers *roomMembers) {
+        MXRoomMember *conferenceUserMember = [roomMembers memberWithUserId:conferenceUserId];
+        if (conferenceUserMember && conferenceUserMember.membership == MXMembershipJoin)
+        {
+            success();
+        }
+        else
+        {
+            [room inviteUser:conferenceUserId success:success failure:failure];
+        }
+    }];
 }
 
 /**
@@ -587,30 +590,49 @@ NSString *const kMXCallManagerConferenceUserDomain  = @"matrix.org";
     NSString *conferenceUserId = [MXCallManager conferenceUserIdForRoom:roomId];
 
     // Use an existing 1:1 with the conference user; else make one
-    MXRoom *conferenceUserRoom;
-    for (MXRoom *room in _mxSession.rooms)
+    __block MXRoom *conferenceUserRoom;
+
+    // TODO: This operation to find an existing room is heavy
+    // We need to create a dedicated MXStore API
+    dispatch_group_t group = dispatch_group_create();
+    for (MXRoomSummary *roomSummary in _mxSession.roomsSummaries)
     {
-        if (room.summary.membersCount.members == 2 && [room.state.members memberWithUserId:conferenceUserId])
+        if (roomSummary.membersCount.members == 2)
         {
-            conferenceUserRoom = room;
+            dispatch_group_enter(group);
+            MXRoom *room = [_mxSession roomWithRoomId:roomSummary.roomId];
+            [room members:^(MXRoomMembers *roomMembers) {
+
+                if ([roomMembers memberWithUserId:conferenceUserId])
+                {
+                    conferenceUserRoom = room;
+                }
+
+                dispatch_group_leave(group);
+            }];
         }
     }
 
-    if (conferenceUserRoom)
-    {
-        success(conferenceUserRoom);
-    }
-    else
-    {
-        [_mxSession createRoom:@{
-                                 @"preset": @"private_chat",
-                                 @"invite": @[conferenceUserId]
-                                } success:^(MXRoom *room) {
+    MXWeakify(self);
+    dispatch_group_notify(group, dispatch_get_main_queue(), ^{
+        MXStrongifyAndReturnIfNil(self);
 
-                                    success(room);
+        if (conferenceUserRoom)
+        {
+            success(conferenceUserRoom);
+        }
+        else
+        {
+            [self.mxSession createRoom:@{
+                                         @"preset": @"private_chat",
+                                         @"invite": @[conferenceUserId]
+                                         } success:^(MXRoom *room) {
 
-                                } failure:failure];
-    }
+                                             success(room);
+
+                                         } failure:failure];
+        }
+    });
 }
 
 @end

@@ -1,5 +1,6 @@
 /*
  Copyright 2015 OpenMarket Ltd
+ Copyright 2018 New Vector Ltd
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -20,7 +21,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @class MXCall;
 @class MXCallKitAdapter;
-@class MXRoom;
+@class MXRoom, MXRoomState;
 @class MXRoomMember;
 @class MXSession;
 @class MXTurnServerResponse;
@@ -174,9 +175,10 @@ extern NSString *const kMXCallManagerConferenceFinished;
  invite power level can create a conference call.
 
  @param room the room to check.
+ @param roomState the state of the room.
  @return YES if the user can.
  */
-+ (BOOL)canPlaceConferenceCallInRoom:(MXRoom *)room;
++ (BOOL)canPlaceConferenceCallInRoom:(MXRoom *)room  roomState:(MXRoomState *)roomState;
 
 @end
 
