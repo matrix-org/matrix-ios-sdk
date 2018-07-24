@@ -1910,7 +1910,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
 {
     if (eventToReply.eventType != MXEventTypeRoomMessage)
     {
-        return false;
+        return NO;
     }
     
     BOOL canReplyToEvent = NO;
