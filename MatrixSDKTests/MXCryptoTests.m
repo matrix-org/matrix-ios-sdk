@@ -1446,7 +1446,7 @@
         MXRoom *roomFromAlicePOV = [aliceSession roomWithRoomId:roomId];
         
         // Listen to messages from Bob POV
-        [roomFromBobPOV.liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
+        [roomFromBobPOV listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
             messageCount++;
             
             if (messageCount == 1)
@@ -1526,7 +1526,7 @@
         __block NSString *secondEventId;
         
         // Listen to messages from Alice POV
-        [roomFromAlicePOV.liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
+        [roomFromAlicePOV listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
             messageCountFromAlice++;
 
             if (messageCountFromAlice == 1)

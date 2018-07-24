@@ -560,7 +560,7 @@
         __block NSUInteger messageCount = 0;
         
         // Listen to messages
-        [room.liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
+        [room listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
             messageCount++;
             
             if (messageCount == 1)
