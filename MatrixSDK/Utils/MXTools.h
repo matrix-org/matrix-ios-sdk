@@ -134,6 +134,14 @@ FOUNDATION_EXPORT NSString *const kMXToolsRegexStringForMatrixGroupIdentifier;
  */
 + (NSString*)permalinkToEvent:(NSString*)eventId inRoom:(NSString*)roomIdOrAlias;
 
+/*
+ Return a matrix.to permalink to a user.
+ 
+ @param userId the id of the user to link to.
+ @return the matrix.to permalink.
+ */
++ (NSString*)permalinkToUserWithUserId:(NSString*)userId;
+
 #pragma mark - File
 
 /**

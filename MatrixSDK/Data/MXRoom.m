@@ -27,6 +27,7 @@
 
 #import "MXMediaManager.h"
 #import "MXRoomOperation.h"
+#import "MXSendReplyEventDefaultStringLocalizations.h"
 
 #import "MXError.h"
 
@@ -372,6 +373,23 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
         }
         else
         {
+            NSDictionary *relatesToJSON = nil;
+            
+            NSDictionary *contentCopyToEncrypt = nil;
+            
+            // Store the "m.relates_to" data and remove them from event clear content before encrypting the event content
+            if (contentCopy[@"m.relates_to"])
+            {
+                relatesToJSON = contentCopy[@"m.relates_to"];
+                NSMutableDictionary *updatedContent = [contentCopy mutableCopy];
+                updatedContent[@"m.relates_to"] = nil;
+                contentCopyToEncrypt = [updatedContent copy];
+            }
+            else
+            {
+                contentCopyToEncrypt = contentCopy;
+            }
+            
             // Check whether a local echo is required
             if ([eventTypeString isEqualToString:kMXEventTypeStringRoomMessage]
                 || [eventTypeString isEqualToString:kMXEventTypeStringSticker])
@@ -402,16 +420,30 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
                 MXStrongifyAndReturnIfNil(self);
 
                 MXWeakify(self);
-                MXHTTPOperation *operation = [self->mxSession.crypto encryptEventContent:contentCopy withType:eventTypeString inRoom:self success:^(NSDictionary *encryptedContent, NSString *encryptedEventType) {
+                MXHTTPOperation *operation = [self->mxSession.crypto encryptEventContent:contentCopyToEncrypt withType:eventTypeString inRoom:self success:^(NSDictionary *encryptedContent, NSString *encryptedEventType) {
                     MXStrongifyAndReturnIfNil(self);
 
+                    NSDictionary *finalEncryptedContent;
+                    
+                    // Add "m.relates_to" to encrypted event content if any
+                    if (relatesToJSON)
+                    {
+                        NSMutableDictionary *updatedEncryptedContent = [encryptedContent mutableCopy];
+                        updatedEncryptedContent[@"m.relates_to"] = relatesToJSON;
+                        finalEncryptedContent = [updatedEncryptedContent copy];
+                    }
+                    else
+                    {
+                        finalEncryptedContent = encryptedContent;
+                    }
+                    
                     if (event)
                     {
                         // Encapsulate the resulting event in a fake encrypted event
                         MXEvent *clearEvent = [self fakeEventWithEventId:event.eventId eventType:eventTypeString andContent:event.content];
 
                         event.wireType = encryptedEventType;
-                        event.wireContent = encryptedContent;
+                        event.wireContent = finalEncryptedContent;
 
                         MXEventDecryptionResult *decryptionResult = [[MXEventDecryptionResult alloc] init];
                         decryptionResult.clearEvent = clearEvent.JSONDictionary;
@@ -428,7 +460,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
                     }
 
                     // Send the encrypted content
-                    MXHTTPOperation *operation2 = [self _sendEventOfType:encryptedEventType content:encryptedContent txnId:event.eventId success:onSuccess failure:onFailure];
+                    MXHTTPOperation *operation2 = [self _sendEventOfType:encryptedEventType content:finalEncryptedContent txnId:event.eventId success:onSuccess failure:onFailure];
                     if (operation2)
                     {
                         // Mutate MXHTTPOperation so that the user can cancel this new operation
@@ -1450,6 +1482,357 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
     return [mxSession.matrixRestClient setRoomRelatedGroups:self.roomId relatedGroups:relatedGroups success:success failure:failure];
 }
 
+- (MXHTTPOperation*)sendReplyToEvent:(MXEvent*)eventToReply
+                     withTextMessage:(NSString*)textMessage
+                formattedTextMessage:(NSString*)formattedTextMessage
+                 stringLocalizations:(id<MXSendReplyEventStringsLocalizable>)stringLocalizations
+                           localEcho:(MXEvent**)localEcho
+                             success:(void (^)(NSString *eventId))success
+                             failure:(void (^)(NSError *error))failure
+{
+    if (![self canReplyToEvent:eventToReply])
+    {
+        NSLog(@"[MXRoom] Send reply to this event is not supported");
+        return nil;
+    }
+    
+    id<MXSendReplyEventStringsLocalizable> finalStringLocalizations;
+    
+    if (stringLocalizations)
+    {
+        finalStringLocalizations = stringLocalizations;
+    }
+    else
+    {
+        finalStringLocalizations = [MXSendReplyEventDefaultStringLocalizations new];
+    }
+    
+    MXHTTPOperation* operation = nil;
+    
+    NSString *replyToBody;
+    NSString *replyToFormattedBody;
+    
+    [self getReplyContentBodiesWithEventToReply:eventToReply
+                                    textMessage:textMessage
+                           formattedTextMessage:formattedTextMessage
+                               replyContentBody:&replyToBody
+                      replyContentFormattedBody:&replyToFormattedBody
+                            stringLocalizations:finalStringLocalizations];
+    
+    if (replyToBody && replyToFormattedBody)
+    {
+        NSString *eventId = eventToReply.eventId;
+        
+        NSDictionary *relatesToDict = @{ @"m.in_reply_to" :
+                                             @{
+                                                 @"event_id" : eventId
+                                                 }
+                                         };
+        
+        NSMutableDictionary *msgContent = [NSMutableDictionary dictionary];
+        
+        msgContent[@"format"] = kMXRoomMessageFormatHTML;
+        msgContent[@"msgtype"] = kMXMessageTypeText;
+        msgContent[@"body"] = replyToBody;
+        msgContent[@"formatted_body"] = replyToFormattedBody;
+        msgContent[@"m.relates_to"] = relatesToDict;
+        
+        operation = [self sendMessageWithContent:msgContent
+                                       localEcho:localEcho
+                                         success:success
+                                         failure:failure];
+    }
+    else
+    {
+        NSLog(@"[MXRoom] Fail to generate reply body and formatted body");
+    }
+    
+    return operation;
+}
+
+/**
+ Build reply to body and formatted body.
+ 
+ @param eventToReply the event to reply. Should be 'm.room.message' event type.
+ @param textMessage the text to send.
+ @param formattedTextMessage the optional HTML formatted string of the text to send.
+ @param replyContentBody reply string of the text to send.
+ @param replyContentFormattedBody reply HTML formatted string of the text to send.
+ @param stringLocalizations string localizations used when building reply content bodies.
+ 
+ */
+- (void)getReplyContentBodiesWithEventToReply:(MXEvent*)eventToReply
+                                  textMessage:(NSString*)textMessage
+                         formattedTextMessage:(NSString*)formattedTextMessage
+                             replyContentBody:(NSString**)replyContentBody
+                    replyContentFormattedBody:(NSString**)replyContentFormattedBody
+                          stringLocalizations:(id<MXSendReplyEventStringsLocalizable>)stringLocalizations
+{
+    NSString *msgtype;
+    MXJSONModelSetString(msgtype, eventToReply.content[@"msgtype"]);
+    
+    if (!msgtype)
+    {
+        return;
+    }
+    
+    BOOL eventToReplyIsAlreadyAReply = eventToReply.content[@"m.relates_to"][@"m.in_reply_to"][@"event_id"] != nil;
+    BOOL isSenderMessageAnEmote = [msgtype isEqualToString:kMXMessageTypeEmote];
+    
+    NSString *senderMessageBody;
+    NSString *senderMessageFormattedBody;
+    
+    if ([msgtype isEqualToString:kMXMessageTypeText]
+        || [msgtype isEqualToString:kMXMessageTypeNotice]
+        || [msgtype isEqualToString:kMXMessageTypeEmote])
+    {
+        NSString *eventToReplyMessageBody = eventToReply.content[@"body"];
+        NSString *eventToReplyMessageFormattedBody = eventToReply.content[@"formatted_body"];
+        
+        senderMessageBody = eventToReplyMessageBody;
+        senderMessageFormattedBody = eventToReplyMessageFormattedBody ?: eventToReplyMessageBody;
+    }
+    else if ([msgtype isEqualToString:kMXMessageTypeImage])
+    {
+        senderMessageBody = stringLocalizations.senderSentAnImage;
+        senderMessageFormattedBody = senderMessageBody;
+    }
+    else if ([msgtype isEqualToString:kMXMessageTypeVideo])
+    {
+        senderMessageBody = stringLocalizations.senderSentAVideo;
+        senderMessageFormattedBody = senderMessageBody;
+    }
+    else if ([msgtype isEqualToString:kMXMessageTypeAudio])
+    {
+        senderMessageBody = stringLocalizations.senderSentAnAudioFile;
+        senderMessageFormattedBody = senderMessageBody;
+    }
+    else if ([msgtype isEqualToString:kMXMessageTypeFile])
+    {
+        senderMessageBody = stringLocalizations.senderSentAFile;
+        senderMessageFormattedBody = senderMessageBody;
+    }
+    else
+    {
+        // Other message types are not supported
+        NSLog(@"[MXRoom] Reply to message type %@ is not supported", msgtype);
+    }
+    
+    if (senderMessageBody && senderMessageFormattedBody)
+    {
+        *replyContentBody = [self replyMessageBodyFromSender:eventToReply.sender
+                                           senderMessageBody:senderMessageBody
+                                      isSenderMessageAnEmote:isSenderMessageAnEmote
+                                     isSenderMessageAReplyTo:eventToReplyIsAlreadyAReply
+                                                replyMessage:textMessage];
+        
+        // As formatted body is mandatory for a reply message, use non formatted to build it
+        NSString *finalFormattedTextMessage = formattedTextMessage ?: textMessage;
+        
+        *replyContentFormattedBody = [self replyMessageFormattedBodyFromEventToReply:eventToReply
+                                                          senderMessageFormattedBody:senderMessageFormattedBody
+                                                              isSenderMessageAnEmote:isSenderMessageAnEmote
+                                                             isSenderMessageAReplyTo:eventToReplyIsAlreadyAReply
+                                                               replyFormattedMessage:finalFormattedTextMessage
+                                                                 stringLocalizations:stringLocalizations];
+    }
+}
+
+/**
+ Build reply body.
+ 
+ Example of reply body:
+ `> <@sender:matrix.org> sent an image.\n\nReply message`
+ 
+ @param sender The sender of the message.
+ @param senderMessageBody The message body of the sender.
+ @param isSenderMessageAnEmote Indicate if the sender message is an emote (/me).
+ @param isSenderMessageAReplyTo Indicate if the sender message is already a reply to message.
+ @param replyMessage The response for the sender message.
+ 
+ @return Reply message body.
+ */
+- (NSString*)replyMessageBodyFromSender:(NSString*)sender
+                      senderMessageBody:(NSString*)senderMessageBody
+                 isSenderMessageAnEmote:(BOOL)isSenderMessageAnEmote
+                isSenderMessageAReplyTo:(BOOL)isSenderMessageAReplyTo
+                           replyMessage:(NSString*)replyMessage
+{
+    // Sender reply body split by lines
+    NSMutableArray<NSString*> *senderReplyBodyLines = [[senderMessageBody componentsSeparatedByString:@"\n"] mutableCopy];
+    
+    // Strip previous reply to, if the event was already a reply
+    if (isSenderMessageAReplyTo)
+    {
+        // Removes lines beginning with `> ` until you reach one that doesn't.
+        while (senderReplyBodyLines.count && [senderReplyBodyLines.firstObject hasPrefix:@"> "])
+        {
+            [senderReplyBodyLines removeObjectAtIndex:0];
+        }
+        
+        // Reply fallback has a blank line after it, so remove it to prevent leading newline
+        if (senderReplyBodyLines.firstObject.length == 0)
+        {
+            [senderReplyBodyLines removeObjectAtIndex:0];
+        }
+    }
+    
+    // Build sender message reply body part
+    
+    // Add user id on first line
+    NSString *firstLine = senderReplyBodyLines.firstObject;
+    if (firstLine)
+    {
+        NSString *newFirstLine;
+        
+        if (isSenderMessageAnEmote)
+        {
+            newFirstLine = [NSString stringWithFormat:@"* <%@> %@", sender, firstLine];
+        }
+        else
+        {
+            newFirstLine = [NSString stringWithFormat:@"<%@> %@", sender, firstLine];
+        }
+        senderReplyBodyLines[0] = newFirstLine;
+    }
+    
+    NSUInteger messageToReplyBodyLineIndex = 0;
+    
+    // Add reply `> ` sequence at begining of each line
+    for (NSString *messageToReplyBodyLine in [senderReplyBodyLines copy])
+    {
+        senderReplyBodyLines[messageToReplyBodyLineIndex] = [NSString stringWithFormat:@"> %@",  messageToReplyBodyLine];
+        messageToReplyBodyLineIndex++;
+    }
+    
+    // Build final message body with sender message and reply message
+    NSMutableString *messageBody = [NSMutableString string];
+    [messageBody appendString:[senderReplyBodyLines componentsJoinedByString:@"\n"]];
+    [messageBody appendString:@"\n\n"]; // Add separator between sender message and reply message
+    [messageBody appendString:replyMessage];
+    
+    return [messageBody copy];
+}
+
+/**
+ Build reply formatted body.
+ 
+ Example of reply formatted body:
+ `<mx-reply><blockquote><a href=\"https://matrix.to/#/!vjFxDRtZSSdspfTSEr:matrix.org/$15237084491191492ssFoA:matrix.org\">In reply to</a> <a href=\"https://matrix.to/#/@sender:matrix.org\">@sender:matrix.org</a><br>sent an image.</blockquote></mx-reply>Reply message`
+ 
+ @param eventToReply The sender event to reply.
+ @param senderMessageFormattedBody The message body of the sender.
+ @param isSenderMessageAnEmote Indicate if the sender message is an emote (/me).
+ @param isSenderMessageAReplyTo Indicate if the sender message is already a reply to message.
+ @param replyFormattedMessage The response for the sender message. HTML formatted string if any otherwise non formatted string as reply formatted body is mandatory.
+ @param stringLocalizations string localizations used when building formatted body.
+ 
+ @return reply message body.
+ */
+- (NSString*)replyMessageFormattedBodyFromEventToReply:(MXEvent*)eventToReply
+                            senderMessageFormattedBody:(NSString*)senderMessageFormattedBody
+                                isSenderMessageAnEmote:(BOOL)isSenderMessageAnEmote
+                               isSenderMessageAReplyTo:(BOOL)isSenderMessageAReplyTo
+                                 replyFormattedMessage:(NSString*)replyFormattedMessage
+                                   stringLocalizations:(id<MXSendReplyEventStringsLocalizable>)stringLocalizations
+{
+    NSString *eventId = eventToReply.eventId;
+    NSString *roomId = eventToReply.roomId;
+    NSString *sender = eventToReply.sender;
+    
+    if (!eventId || !roomId || !sender)
+    {
+        NSLog(@"[MXRoom] roomId, eventId and sender cound not be nil");
+        return nil;
+    }
+    
+    NSString *replySenderMessageFormattedBody;
+    
+    // Strip previous reply to, if the event was already a reply
+    if (isSenderMessageAReplyTo)
+    {
+        NSError *error = nil;
+        NSRegularExpression *replyRegex = [NSRegularExpression regularExpressionWithPattern:@"^<mx-reply>.*</mx-reply>" options:NSRegularExpressionCaseInsensitive error:&error];
+        NSString *senderMessageFormattedBodyWithoutReply = [replyRegex stringByReplacingMatchesInString:senderMessageFormattedBody options:0 range:NSMakeRange(0, senderMessageFormattedBody.length) withTemplate:@""];
+        
+        if (error)
+        {
+            NSLog(@"[MXRoom] Fail to strip previous reply to message");
+        }
+        
+        if (senderMessageFormattedBodyWithoutReply)
+        {
+            replySenderMessageFormattedBody = senderMessageFormattedBodyWithoutReply;
+        }
+    }
+    else
+    {
+        replySenderMessageFormattedBody = senderMessageFormattedBody;
+    }
+    
+    // Build reply formatted body
+    
+    NSString *eventPermalink = [MXTools permalinkToEvent:eventId inRoom:roomId];
+    NSString *userPermalink = [MXTools permalinkToUserWithUserId:sender];
+    
+    NSMutableString *replyMessageFormattedBody = [NSMutableString string];
+    
+    // Start reply quote
+    [replyMessageFormattedBody appendString:@"<mx-reply><blockquote>"];
+    
+    // Add event link
+    [replyMessageFormattedBody appendFormat:@"<a href=\"%@\">%@</a> ", eventPermalink, stringLocalizations.messageToReplyToPrefix];
+    
+    if (isSenderMessageAnEmote)
+    {
+        [replyMessageFormattedBody appendString:@"* "];
+    }
+    
+    // Add user link
+    [replyMessageFormattedBody appendFormat:@"<a href=\"%@\">%@</a>", userPermalink, sender];
+    
+    [replyMessageFormattedBody appendString:@"<br>"];
+    
+    // Add sender message
+    [replyMessageFormattedBody appendString:replySenderMessageFormattedBody];
+    
+    // End reply quote
+    [replyMessageFormattedBody appendString:@"</blockquote></mx-reply>"];
+    
+    // Add reply message
+    [replyMessageFormattedBody appendString:replyFormattedMessage];
+    
+    return replyMessageFormattedBody;
+}
+
+- (BOOL)canReplyToEvent:(MXEvent *)eventToReply
+{
+    if (eventToReply.eventType != MXEventTypeRoomMessage)
+    {
+        return NO;
+    }
+    
+    BOOL canReplyToEvent = NO;
+    
+    NSString *messageType = eventToReply.content[@"msgtype"];
+    
+    if (messageType)
+    {
+        NSArray *supportedMessageTypes = @[
+                                           kMXMessageTypeText,
+                                           kMXMessageTypeNotice,
+                                           kMXMessageTypeEmote,
+                                           kMXMessageTypeImage,
+                                           kMXMessageTypeVideo,
+                                           kMXMessageTypeAudio,
+                                           kMXMessageTypeFile
+                                           ];
+        
+        canReplyToEvent = [supportedMessageTypes containsObject:messageType];
+    }
+    
+    return canReplyToEvent;
+}
 
 #pragma mark - Message order preserving
 /**

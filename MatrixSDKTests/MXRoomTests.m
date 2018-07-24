@@ -20,6 +20,8 @@
 #import "MatrixSDKTestsData.h"
 
 #import "MXSession.h"
+#import "MXTools.h"
+#import "MXSendReplyEventDefaultStringLocalizations.h"
 
 // Do not bother with retain cycles warnings in tests
 #pragma clang diagnostic push
@@ -513,6 +515,113 @@
             [expectation fulfill];
         }];
         
+    }];
+}
+
+- (void)testSendReplyToTextMessage
+{
+    NSString *firstMessage = @"**First message!**";
+    NSString *firstFormattedMessage = @"<p><strong>First message!</strong></p>";
+    
+    NSString *secondMessageReplyToFirst = @"**Reply to first message**";
+    NSString *secondMessageFormattedReplyToFirst = @"<p><strong>Reply to first message</strong></p>";
+    
+    NSString *expectedSecondEventBodyStringFormat = @"> <%@> **First message!**\n\n**Reply to first message**";
+    NSString *expectedSecondEventFormattedBodyStringFormat = @"<mx-reply><blockquote><a href=\"%@\">In reply to</a> <a href=\"%@\">%@</a><br><p><strong>First message!</strong></p></blockquote></mx-reply><p><strong>Reply to first message</strong></p>";
+    
+    NSString *thirdMessageReplyToSecond = @"**Reply to second message**";
+    NSString *thirdMessageFormattedReplyToSecond = @"<p><strong>Reply to second message</strong></p>";
+    
+    NSString *expectedThirdEventBodyStringFormat = @"> <%@> **Reply to first message**\n\n**Reply to second message**";
+    NSString *expectedThirdEventFormattedBodyStringFormat = @"<mx-reply><blockquote><a href=\"%@\">In reply to</a> <a href=\"%@\">%@</a><br><p><strong>Reply to first message</strong></p></blockquote></mx-reply><p><strong>Reply to second message</strong></p>";
+    
+    MXSendReplyEventDefaultStringLocalizations *defaultStringLocalizations = [MXSendReplyEventDefaultStringLocalizations new];
+    
+    [matrixSDKTestsData doMXSessionTestWithBobAndARoomWithMessages:self readyToTest:^(MXSession *mxSession, MXRoom *room, XCTestExpectation *expectation) {
+        
+        __block NSUInteger messageCount = 0;
+        
+        // Listen to messages
+        [room.liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
+            messageCount++;
+            
+            if (messageCount == 1)
+            {
+                __block MXEvent *localEchoEvent = nil;
+                
+                // Reply to first message
+                [room sendReplyToEvent:event withTextMessage:secondMessageReplyToFirst formattedTextMessage:secondMessageFormattedReplyToFirst stringLocalizations:defaultStringLocalizations localEcho:&localEchoEvent success:^(NSString *eventId) {
+                    NSLog(@"Send reply to first message with success");
+                } failure:^(NSError *error) {
+                    XCTFail(@"The request should not fail - NSError: %@", error);
+                    [expectation fulfill];
+                }];
+                
+                XCTAssertNotNil(localEchoEvent);
+                
+                NSString *roomId = room.roomId;
+                NSString *firstEventId = event.eventId;
+                NSString *firstEventSender = event.sender;
+                
+                NSString *secondEventBody = localEchoEvent.content[@"body"];
+                NSString *secondEventFormattedBody = localEchoEvent.content[@"formatted_body"];
+                NSString *secondEventRelatesToEventId = localEchoEvent.content[@"m.relates_to"][@"m.in_reply_to"][@"event_id"];
+
+                NSString *permalinkToUser = [MXTools permalinkToUserWithUserId:firstEventSender];
+                NSString *permalinkToEvent = [MXTools permalinkToEvent:firstEventId inRoom:roomId];
+
+                NSString *expectedSecondEventBody = [NSString stringWithFormat:expectedSecondEventBodyStringFormat, firstEventSender];
+                NSString *expectedSecondEventFormattedBody = [NSString stringWithFormat:expectedSecondEventFormattedBodyStringFormat, permalinkToEvent, permalinkToUser, firstEventSender];
+
+                XCTAssertEqualObjects(secondEventBody, expectedSecondEventBody);
+                XCTAssertEqualObjects(secondEventFormattedBody, expectedSecondEventFormattedBody);
+                XCTAssertEqualObjects(firstEventId, secondEventRelatesToEventId);
+            }
+            else if (messageCount == 2)
+            {
+                __block MXEvent *localEchoEvent = nil;
+                
+                // Reply to second message, which was also a reply
+                [room sendReplyToEvent:event withTextMessage:thirdMessageReplyToSecond formattedTextMessage:thirdMessageFormattedReplyToSecond stringLocalizations:defaultStringLocalizations localEcho:&localEchoEvent success:^(NSString *eventId) {
+                    NSLog(@"Send reply to second message with success");
+                } failure:^(NSError *error) {
+                    XCTFail(@"The request should not fail - NSError: %@", error);
+                    [expectation fulfill];
+                }];
+                
+                XCTAssertNotNil(localEchoEvent);
+                
+                NSString *roomId = room.roomId;
+                NSString *secondEventId = event.eventId;
+                NSString *secondEventSender = event.sender;
+                
+                NSString *thirdEventBody = localEchoEvent.content[@"body"];
+                NSString *thirdEventFormattedBody = localEchoEvent.content[@"formatted_body"];
+                NSString *thirdEventRelatesToEventId = localEchoEvent.content[@"m.relates_to"][@"m.in_reply_to"][@"event_id"];
+                
+                NSString *permalinkToUser = [MXTools permalinkToUserWithUserId:secondEventSender];
+                NSString *permalinkToEvent = [MXTools permalinkToEvent:secondEventId inRoom:roomId];
+                
+                NSString *expectedThirdEventBody = [NSString stringWithFormat:expectedThirdEventBodyStringFormat, secondEventSender];
+                NSString *expectedThirdEventFormattedBody = [NSString stringWithFormat:expectedThirdEventFormattedBodyStringFormat, permalinkToEvent, permalinkToUser, secondEventSender];
+                
+                XCTAssertEqualObjects(thirdEventBody, expectedThirdEventBody);
+                XCTAssertEqualObjects(thirdEventFormattedBody, expectedThirdEventFormattedBody);
+                XCTAssertEqualObjects(secondEventId, thirdEventRelatesToEventId);
+            }
+            else
+            {
+                [expectation fulfill];
+            }
+        }];
+        
+        // Send first message
+        [room sendTextMessage:firstMessage formattedText:firstFormattedMessage localEcho:nil success:^(NSString *eventId) {
+            NSLog(@"Send first message with success");
+        } failure:^(NSError *error) {
+            XCTFail(@"The request should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
     }];
 }
 
