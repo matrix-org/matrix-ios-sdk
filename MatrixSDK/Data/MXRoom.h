@@ -179,7 +179,7 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidFlushDataNotification;
 
  @param store the store to mount data from and to store live data to.
  @param roomId the id of the room.
- @param mxSession the session to use.
+ @param matrixSession the session to use.
  @return the new instance.
  */
 + (id)loadRoomFromStore:(id<MXStore>)store withRoomId:(NSString *)roomId matrixSession:(MXSession *)matrixSession;

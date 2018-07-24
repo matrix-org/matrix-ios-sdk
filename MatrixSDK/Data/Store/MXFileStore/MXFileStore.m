@@ -1,6 +1,7 @@
 /*
  Copyright 2014 OpenMarket Ltd
  Copyright 2017 Vector Creations Ltd
+ Copyright 2018 New Vector Ltd
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -40,6 +41,8 @@ static NSString *const kMXFileStoreRoomStateFile = @"state";
 static NSString *const kMXFileStoreRoomSummaryFile = @"summary";
 static NSString *const kMXFileStoreRoomAccountDataFile = @"accountData";
 static NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
+
+static NSUInteger preloadOptions;
 
 @interface MXFileStore ()
 {
@@ -111,6 +114,16 @@ static NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
 @end
 
 @implementation MXFileStore
+
++ (void)initialize
+{
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+
+        // By default, we do not need to preload rooms states now
+        preloadOptions = MXFileStorePreloadOptionRoomSummary | MXFileStorePreloadOptionRoomAccountData;
+    });
+}
 
 - (instancetype)init;
 {
@@ -211,9 +224,18 @@ static NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
                 NSLog(@"[MXFileStore] Start data loading from files");
 
                 [self loadRoomsMessages];
-                [self preloadRoomsStates];
-                [self preloadRoomsSummaries];
-                [self preloadRoomsAccountData];
+                if (preloadOptions & MXFileStorePreloadOptionRoomState)
+                {
+                    [self preloadRoomsStates];
+                }
+                if (preloadOptions & MXFileStorePreloadOptionRoomSummary)
+                {
+                    [self preloadRoomsSummaries];
+                }
+                if (preloadOptions & MXFileStorePreloadOptionRoomAccountData)
+                {
+                    [self preloadRoomsAccountData];
+                }
                 [self loadReceipts];
                 [self loadUsers];
                 [self loadGroups];
@@ -275,6 +297,11 @@ static NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
     });
 }
 
+
++ (void)setPreloadOptions:(MXFileStorePreloadOptions)thePreloadOptions
+{
+    preloadOptions = thePreloadOptions;
+}
 
 #pragma mark - MXStore
 - (void)storeEventForRoom:(NSString*)roomId event:(MXEvent*)event direction:(MXTimelineDirection)direction
@@ -399,6 +426,18 @@ static NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
 - (void)storeStateForRoom:(NSString*)roomId stateEvents:(NSArray*)stateEvents
 {
     roomsToCommitForState[roomId] = stateEvents;
+}
+
+- (void)stateOfRoom:(NSString *)roomId success:(void (^)(NSArray<MXEvent *> * _Nonnull))success failure:(void (^)(NSError * _Nonnull))failure
+{
+    dispatch_async(dispatchQueue, ^{
+
+        NSArray<MXEvent *> *stateEvents = [self stateOfRoom:roomId];
+
+        dispatch_async(dispatch_get_main_queue(), ^{
+            success(stateEvents);
+        });
+    });
 }
 
 - (NSArray*)stateOfRoom:(NSString *)roomId
@@ -1748,18 +1787,6 @@ static NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
         dispatch_async(dispatch_get_main_queue(), ^{
             MXStrongifyAndReturnIfNil(self);
             success(self->preloadedRoomSummary.allValues);
-        });
-    });
-}
-
-- (void)asyncStateEventsOfRoom:(NSString *)roomId success:(void (^)(NSArray<MXEvent *> * _Nonnull))success failure:(nullable void (^)(NSError * _Nonnull))failure
-{
-    dispatch_async(dispatchQueue, ^{
-
-        NSArray<MXEvent *> *stateEvents = [self stateOfRoom:roomId];
-
-        dispatch_async(dispatch_get_main_queue(), ^{
-            success(stateEvents);
         });
     });
 }

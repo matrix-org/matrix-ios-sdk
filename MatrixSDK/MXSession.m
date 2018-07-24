@@ -267,7 +267,7 @@ typedef void (^MXOnResumeDone)(void);
         // A permanent MXStore must implement these methods:
         NSParameterAssert([_store respondsToSelector:@selector(rooms)]);
         NSParameterAssert([_store respondsToSelector:@selector(storeStateForRoom:stateEvents:)]);
-        NSParameterAssert([_store respondsToSelector:@selector(stateOfRoom:)]);
+        NSParameterAssert([_store respondsToSelector:@selector(stateOfRoom:success:failure:)]);
         NSParameterAssert([_store respondsToSelector:@selector(summaryOfRoom:)]);
     }
 
