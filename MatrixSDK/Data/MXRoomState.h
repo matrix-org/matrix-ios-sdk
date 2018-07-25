@@ -25,6 +25,7 @@
 #import "MXEnumConstants.h"
 #import "MXRoomMembersCount.h"
 #import "MXStore.h"
+#import "MXRoomTombStoneContent.h"
 
 @class MXSession;
 
@@ -143,6 +144,16 @@ Use MXRoomSummary.displayname to get a computed room display name.
  If any the encryption algorithm used in this room.
  */
 @property (nonatomic, readonly) NSString *encryptionAlgorithm;
+
+/**
+ Indicate whether this room is obsolete (had a `m.room.tombstone` state event type).
+ */
+@property (nonatomic, readonly) BOOL isObsolete;
+
+/**
+ If any the state event content for event type `m.room.tombstone`
+ */
+@property (nonatomic, strong, readonly) MXRoomTombStoneContent *tombStoneContent;
 
 
 /**
