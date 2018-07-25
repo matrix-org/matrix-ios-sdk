@@ -226,6 +226,8 @@
 		B172857D2100D4F60052C51E /* MXSendReplyEventDefaultStringLocalizations.m in Sources */ = {isa = PBXBuildFile; fileRef = B172857B2100D4F60052C51E /* MXSendReplyEventDefaultStringLocalizations.m */; };
 		B1B919052108789A00FE25B5 /* MXRoomTombStoneContent.h in Headers */ = {isa = PBXBuildFile; fileRef = B1B919032108789A00FE25B5 /* MXRoomTombStoneContent.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		B1B919062108789A00FE25B5 /* MXRoomTombStoneContent.m in Sources */ = {isa = PBXBuildFile; fileRef = B1B919042108789A00FE25B5 /* MXRoomTombStoneContent.m */; };
+		B1B919092108C18800FE25B5 /* MXRoomPredecessorInfo.h in Headers */ = {isa = PBXBuildFile; fileRef = B1B919072108C18800FE25B5 /* MXRoomPredecessorInfo.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		B1B9190A2108C18800FE25B5 /* MXRoomPredecessorInfo.m in Sources */ = {isa = PBXBuildFile; fileRef = B1B919082108C18800FE25B5 /* MXRoomPredecessorInfo.m */; };
 		C60165381E3AA57900B92CFA /* MXSDKOptions.h in Headers */ = {isa = PBXBuildFile; fileRef = F0C34CB91C18C80000C36F09 /* MXSDKOptions.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		C602B58C1F2268F700B67D87 /* MXRoom.swift in Sources */ = {isa = PBXBuildFile; fileRef = C602B58B1F2268F700B67D87 /* MXRoom.swift */; };
 		C602B58E1F22A8D700B67D87 /* MXImage.swift in Sources */ = {isa = PBXBuildFile; fileRef = C602B58D1F22A8D700B67D87 /* MXImage.swift */; };
@@ -514,6 +516,8 @@
 		B172857B2100D4F60052C51E /* MXSendReplyEventDefaultStringLocalizations.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MXSendReplyEventDefaultStringLocalizations.m; sourceTree = "<group>"; };
 		B1B919032108789A00FE25B5 /* MXRoomTombStoneContent.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MXRoomTombStoneContent.h; sourceTree = "<group>"; };
 		B1B919042108789A00FE25B5 /* MXRoomTombStoneContent.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MXRoomTombStoneContent.m; sourceTree = "<group>"; };
+		B1B919072108C18800FE25B5 /* MXRoomPredecessorInfo.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MXRoomPredecessorInfo.h; sourceTree = "<group>"; };
+		B1B919082108C18800FE25B5 /* MXRoomPredecessorInfo.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MXRoomPredecessorInfo.m; sourceTree = "<group>"; };
 		B1F1AE550CF4C15B653DDE6E /* Pods-MatrixSDKTests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-MatrixSDKTests.debug.xcconfig"; path = "Pods/Target Support Files/Pods-MatrixSDKTests/Pods-MatrixSDKTests.debug.xcconfig"; sourceTree = "<group>"; };
 		C602B58B1F2268F700B67D87 /* MXRoom.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MXRoom.swift; sourceTree = "<group>"; };
 		C602B58D1F22A8D700B67D87 /* MXImage.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MXImage.swift; sourceTree = "<group>"; };
@@ -644,6 +648,8 @@
 				B172857B2100D4F60052C51E /* MXSendReplyEventDefaultStringLocalizations.m */,
 				B1B919032108789A00FE25B5 /* MXRoomTombStoneContent.h */,
 				B1B919042108789A00FE25B5 /* MXRoomTombStoneContent.m */,
+				B1B919072108C18800FE25B5 /* MXRoomPredecessorInfo.h */,
+				B1B919082108C18800FE25B5 /* MXRoomPredecessorInfo.m */,
 			);
 			path = Data;
 			sourceTree = "<group>";
@@ -1241,6 +1247,7 @@
 				32A151261DABB0CB00400192 /* MXMegolmDecryption.h in Headers */,
 				3220094519EFBF30008DE41D /* MXSessionEventListener.h in Headers */,
 				32A9E8241EF4026E0081358A /* MXBackgroundModeHandler.h in Headers */,
+				B1B919092108C18800FE25B5 /* MXRoomPredecessorInfo.h in Headers */,
 				32BED28F1B00A23F00E668FE /* MXCallStack.h in Headers */,
 				F03EF4FE1DF014D9009DF592 /* MXMediaLoader.h in Headers */,
 				3264DB911CEC528D00B99881 /* MXAccountData.h in Headers */,
@@ -1466,6 +1473,7 @@
 				C63E78B01F26588000AC692F /* MXRoomPowerLevels.swift in Sources */,
 				323E0C5C1A306D7A00A31D73 /* MXEvent.m in Sources */,
 				F03EF5011DF014D9009DF592 /* MXMediaManager.m in Sources */,
+				B1B9190A2108C18800FE25B5 /* MXRoomPredecessorInfo.m in Sources */,
 				32CAB10C1A925B41008C5BB9 /* MXHTTPOperation.m in Sources */,
 				3281E8BA19E42DFE00976E1A /* MXJSONModels.m in Sources */,
 				3245A7531AF7B2930001D8A7 /* MXCallManager.m in Sources */,
