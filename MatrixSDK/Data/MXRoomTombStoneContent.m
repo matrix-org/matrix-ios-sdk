@@ -18,8 +18,8 @@
 
 #pragma mark - Defines & Constants
 
-static NSString* const kTombStoneConentJSONKeyBody = @"body";
-static NSString* const kTombStoneConentJSONKeyReplacementRoomId = @"replacement_room";
+static NSString* const kTombStoneContentBodyJSONKey = @"body";
+static NSString* const kTombStoneContentReplacementRoomIdJSONKey = @"replacement_room";
 
 #pragma mark - Private Interface
 
@@ -43,8 +43,8 @@ static NSString* const kTombStoneConentJSONKeyReplacementRoomId = @"replacement_
     NSString *body;
     NSString *replacementRoomId;
     
-    MXJSONModelSetString(body, jsonDictionary[kTombStoneConentJSONKeyBody]);
-    MXJSONModelSetString(replacementRoomId, jsonDictionary[kTombStoneConentJSONKeyReplacementRoomId]);
+    MXJSONModelSetString(body, jsonDictionary[kTombStoneContentBodyJSONKey]);
+    MXJSONModelSetString(replacementRoomId, jsonDictionary[kTombStoneContentReplacementRoomIdJSONKey]);
     
     if (body && replacementRoomId)
     {
@@ -60,8 +60,8 @@ static NSString* const kTombStoneConentJSONKeyReplacementRoomId = @"replacement_
 {
     NSMutableDictionary *jsonDictionary = [NSMutableDictionary dictionary];
     
-    jsonDictionary[kTombStoneConentJSONKeyBody] = self.body;
-    jsonDictionary[kTombStoneConentJSONKeyReplacementRoomId] = self.replacementRoomId;
+    jsonDictionary[kTombStoneContentBodyJSONKey] = self.body;
+    jsonDictionary[kTombStoneContentReplacementRoomIdJSONKey] = self.replacementRoomId;
     
     return jsonDictionary;
 }
