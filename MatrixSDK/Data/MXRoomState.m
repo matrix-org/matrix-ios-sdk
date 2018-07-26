@@ -357,6 +357,24 @@
     return roomTombStoneContent;
 }
 
+- (BOOL)hasRoomPredecessor
+{
+    return self.roomCreateContent.roomPredecessorInfo != nil;
+}
+
+- (MXRoomCreateContent *)roomCreateContent
+{
+    MXRoomCreateContent *roomCreateContent = nil;
+    
+    MXEvent *event = [stateEvents objectForKey:kMXEventTypeStringRoomCreate].lastObject;
+    if (event && [self contentOfEvent:event])
+    {    
+        roomCreateContent = [MXRoomCreateContent modelFromJSON:event.content];
+    }
+    
+    return roomCreateContent;
+}
+
 #pragma mark - State events handling
 - (void)handleStateEvents:(NSArray<MXEvent *> *)events;
 {
