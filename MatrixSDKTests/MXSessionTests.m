@@ -156,7 +156,8 @@
         
         // Create a room with messages in parallel
         // Use a 0 limit to avoid to get older messages from /sync 
-        [mxSession startWithMessagesLimit:0 onServerSyncDone:^{
+        [mxSession startWithSyncFilter:[MXFilterJSONModel syncFilterWithMessageLimit:0]
+                      onServerSyncDone:^{
             
             [matrixSDKTestsData doMXRestClientTestWithBobAndARoomWithMessages:nil readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation2) {
 
@@ -710,7 +711,8 @@
                     XCTAssertTrue(succeed);
                     
                     // Force sync to get direct rooms list
-                    [mxSession startWithMessagesLimit:0 onServerSyncDone:^{
+                    [mxSession startWithSyncFilter:[MXFilterJSONModel syncFilterWithMessageLimit:0]
+                                  onServerSyncDone:^{
                         
                         XCTAssertTrue(room.isDirect);
 

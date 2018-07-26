@@ -106,12 +106,6 @@ typedef void (^MXOnResumeDone)(void);
      */
     NSMutableArray *globalEventListeners;
 
-    /**
-     The limit value to use when doing /sync requests.
-     -1, the default value, let the homeserver use its default value.
-     */
-    NSInteger syncMessagesLimit;
-
     /** 
      The block to call when MSSession resume is complete.
      */
@@ -186,7 +180,6 @@ typedef void (^MXOnResumeDone)(void);
         _roomSummaryUpdateDelegate = [MXRoomSummaryUpdater roomSummaryUpdaterForSession:self];
         _directRooms = [NSMutableDictionary dictionary];
         globalEventListeners = [NSMutableArray array];
-        syncMessagesLimit = -1;
         _notificationCenter = [[MXNotificationCenter alloc] initWithMatrixSession:self];
         _accountData = [[MXAccountData alloc] init];
         peekingRooms = [NSMutableArray array];
@@ -375,12 +368,29 @@ typedef void (^MXOnResumeDone)(void);
 - (void)start:(void (^)(void))onServerSyncDone
       failure:(void (^)(NSError *error))failure
 {
-    [self startWithMessagesLimit:-1 onServerSyncDone:onServerSyncDone failure:failure];
+    [self startWithSyncFilter:nil onServerSyncDone:onServerSyncDone failure:failure];
 }
 
-- (void)startWithMessagesLimit:(NSUInteger)messagesLimit
-              onServerSyncDone:(void (^)(void))onServerSyncDone
-                       failure:(void (^)(NSError *error))failure
+- (void)startWithSyncFilter:(MXFilterJSONModel*)syncFilter
+           onServerSyncDone:(void (^)(void))onServerSyncDone
+                    failure:(void (^)(NSError *error))failure;
+{
+    // Build or retrieve the filter before launching the event stream
+    MXWeakify(self);
+    [self setFilter:syncFilter success:^(NSString *filterId) {
+        MXStrongifyAndReturnIfNil(self);
+
+        [self startWithSyncFilterId:filterId onServerSyncDone:onServerSyncDone failure:failure];
+
+    } failure:^(NSError *error) {
+        MXStrongifyAndReturnIfNil(self);
+
+        NSLog(@"[MXSesssion] startWithSyncFilter: Impossible to create the filter. Use no filter in /sync");
+        [self startWithSyncFilterId:nil onServerSyncDone:onServerSyncDone failure:failure];
+    }];
+}
+
+- (void)startWithSyncFilterId:(NSString *)syncFilterId onServerSyncDone:(void (^)(void))onServerSyncDone failure:(void (^)(NSError *))failure
 {
     if (nil == _store)
     {
@@ -393,7 +403,7 @@ typedef void (^MXOnResumeDone)(void);
             MXStrongifyAndReturnIfNil(self);
 
             // Then, start again
-            [self startWithMessagesLimit:messagesLimit onServerSyncDone:onServerSyncDone failure:failure];
+            [self startWithSyncFilterId:syncFilterId onServerSyncDone:onServerSyncDone failure:failure];
 
         } failure:^(NSError *error) {
             MXStrongifyAndReturnIfNil(self);
@@ -407,8 +417,8 @@ typedef void (^MXOnResumeDone)(void);
 
     [self setState:MXSessionStateSyncInProgress];
 
-    // Store the passed limit to reuse it when initialSyncing per room
-    syncMessagesLimit = messagesLimit;
+    // Store the passed filter id
+    _syncFilterId = syncFilterId;
 
     // Can we resume from data available in the cache
     if (_store.isPermanent && self.isEventStreamInitialised && 0 < _store.rooms.count)
@@ -839,25 +849,8 @@ typedef void (^MXOnResumeDone)(void);
 
     NSLog(@"[MXSession] Do a server sync%@", _catchingUp ? @" (catching up)" : @"");
 
-    // If required, define a filter
-    MXFilterJSONModel *filter = [[MXFilterJSONModel alloc] init];
-    if (-1 != syncMessagesLimit)
-    {
-        // If requested by the app, use a limit for the timeline in /sync
-        filter.room = [[MXRoomFilter alloc] init];
-        filter.room.timeline = [[MXRoomEventFilter alloc] init];
-        filter.room.timeline.limit = syncMessagesLimit;
-    }
-
-    NSString *inlineFilter;
-    if (filter.JSONDictionary.count)
-    {
-        // Serialise the filter to pass it inline in the request
-        inlineFilter = filter.jsonString;
-    }
-
     MXWeakify(self);
-    eventStreamRequest = [matrixRestClient syncFromToken:_store.eventStreamToken serverTimeout:serverTimeout clientTimeout:clientTimeout setPresence:setPresence filter:inlineFilter success:^(MXSyncResponse *syncResponse) {
+    eventStreamRequest = [matrixRestClient syncFromToken:_store.eventStreamToken serverTimeout:serverTimeout clientTimeout:clientTimeout setPresence:setPresence filter:_syncFilterId success:^(MXSyncResponse *syncResponse) {
         MXStrongifyAndReturnIfNil(self);
 
         // Make sure [MXSession close] or [MXSession pause] has not been called before the server response
@@ -3017,6 +3010,23 @@ typedef void (^MXOnResumeDone)(void);
 {
     return [matrixRestClient setAccountData:data forType:type success:success failure:failure];
 }
+
+
+#pragma mark - Matrix filters
+- (MXHTTPOperation*)setFilter:(MXFilterJSONModel*)filter
+                      success:(void (^)(NSString *filterId))success
+                      failure:(void (^)(NSError *error))failure
+{
+    return [matrixRestClient setFilter:filter success:success failure:failure];
+}
+
+- (MXHTTPOperation*)filterWithFilterId:(NSString*)filterId
+                               success:(void (^)(MXFilterJSONModel *filter))success
+                               failure:(void (^)(NSError *error))failure
+{
+    return [matrixRestClient getFilterWithFilterId:filterId success:success failure:failure];
+}
+
 
 #pragma mark - Crypto
 

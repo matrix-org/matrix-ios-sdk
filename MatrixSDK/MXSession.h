@@ -21,6 +21,7 @@
 #import "MXRestClient.h"
 #import "MXRoom.h"
 #import "MXPeekingRoom.h"
+#import "MXFilterJSONModel.h"
 #import "MXMyUser.h"
 #import "MXAccountData.h"
 #import "MXSessionEventListener.h"
@@ -347,6 +348,11 @@ FOUNDATION_EXPORT NSString *const kMXSessionNoRoomTag;
 @property (nonatomic, readonly) BOOL catchingUp;
 
 /**
+ The id of the filter being used in /sync requests.
+ */
+@property (nonatomic, readonly) NSString *syncFilterId;
+
+/**
  The profile of the current user.
  It is available only after the `onStoreDataReady` callback of `start` is called.
  */
@@ -413,18 +419,26 @@ FOUNDATION_EXPORT NSString *const kMXSessionNoRoomTag;
       failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 /**
- Start the session like `[MXSession start]` but preload the requested number of messages
- for each user's rooms.
+ Start the session like `[MXSession start]` but with using a filter in /sync requests.
 
- By default, [MXSession start] preloads 10 messages. Use this method to use a custom limit.
-
- @param messagesLimit the number of messages to retrieve in each room.
+ @param syncFilter the filter to use.
  @param onServerSyncDone A block object called when the data is up-to-date with the server.
  @param failure A block object called when the operation fails.
  */
-- (void)startWithMessagesLimit:(NSUInteger)messagesLimit
-              onServerSyncDone:(void (^)(void))onServerSyncDone
-                       failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
+- (void)startWithSyncFilter:(MXFilterJSONModel*)syncFilter
+           onServerSyncDone:(void (^)(void))onServerSyncDone
+                    failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
+
+/**
+ Start the session like `[MXSession startWithSyncFilter]` but with a filter id.
+
+ @param syncFilterId the id of the filter to use.
+ @param onServerSyncDone A block object called when the data is up-to-date with the server.
+ @param failure A block object called when the operation fails.
+ */
+- (void)startWithSyncFilterId:(NSString*)syncFilterId
+             onServerSyncDone:(void (^)(void))onServerSyncDone
+                      failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 /**
  Pause the session events stream.
@@ -1116,6 +1130,38 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
                            forType:(NSString*)type
                            success:(void (^)(void))success
                            failure:(void (^)(NSError *error))failure;
+
+
+#pragma mark - Matrix filters
+/**
+ Set a Matrix filter.
+
+ If the filter has been already created, this will return the stored filter id.
+
+ @param filter the Matrix filter.
+
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)setFilter:(MXFilterJSONModel*)filter
+                      success:(void (^)(NSString *filterId))success
+                      failure:(void (^)(NSError *error))failure;
+
+/**
+ Retrieve a Matrix filter either from the store of from the homeserver.
+
+ @param filterId the id of the Matrix filter to retrieve.
+
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)filterWithFilterId:(NSString*)filterId
+                               success:(void (^)(MXFilterJSONModel *filter))success
+                               failure:(void (^)(NSError *error))failure;
 
 
 #pragma mark - Crypto

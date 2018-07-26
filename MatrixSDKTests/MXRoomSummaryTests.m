@@ -253,7 +253,7 @@ NSString *uisiString = @"The sender's device has not sent us the keys for this m
         [mxSession2 setStore:[[MXMemoryStore alloc] init] success:^{
 
             // Start a new session by loading no message
-            [mxSession2 startWithMessagesLimit:0 onServerSyncDone:^{
+            [mxSession2 startWithSyncFilter:[MXFilterJSONModel syncFilterWithMessageLimit:0] onServerSyncDone:^{
 
                 MXRoomSummary *summary2 = [mxSession2 roomSummaryWithRoomId:roomId];
 
@@ -320,7 +320,7 @@ NSString *uisiString = @"The sender's device has not sent us the keys for this m
             [mxSession2 setStore:[[MXMemoryStore alloc] init] success:^{
 
                 // Start a new session by loading no message
-                [mxSession2 startWithMessagesLimit:0 onServerSyncDone:^{
+                [mxSession2 startWithSyncFilter:[MXFilterJSONModel syncFilterWithMessageLimit:0] onServerSyncDone:^{
 
                     MXRoomSummary *summary2 = [mxSession2 roomSummaryWithRoomId:roomId];
 
@@ -385,7 +385,7 @@ NSString *uisiString = @"The sender's device has not sent us the keys for this m
         [mxSession2 setStore:[[MXMemoryStore alloc] init] success:^{
 
             // Start a new session by loading no message
-            [mxSession2 startWithMessagesLimit:0 onServerSyncDone:^{
+            [mxSession2 startWithSyncFilter:[MXFilterJSONModel syncFilterWithMessageLimit:0] onServerSyncDone:^{
 
                 MXRoomSummary *summary2 = [mxSession2 roomSummaryWithRoomId:roomId];
 
@@ -916,7 +916,7 @@ NSString *uisiString = @"The sender's device has not sent us the keys for this m
                         defaultUpdater.ignoreRedactedEvent = YES;
 
                         // Start a new session by loading no message
-                        [mxSession2 startWithMessagesLimit:10 onServerSyncDone:^{
+                        [mxSession2 startWithSyncFilter:[MXFilterJSONModel syncFilterWithMessageLimit:10] onServerSyncDone:^{
 
                             MXRoomSummary *summary2 = [mxSession2 roomSummaryWithRoomId:roomId];
 

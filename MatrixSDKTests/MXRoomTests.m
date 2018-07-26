@@ -216,7 +216,9 @@
 
             [bobRestClient inviteUser:aliceRestClient.credentials.userId toRoom:roomId success:^{
 
-                [mxSession startWithMessagesLimit:0 onServerSyncDone:^{
+
+                [mxSession startWithSyncFilter:[MXFilterJSONModel syncFilterWithMessageLimit:0]
+                              onServerSyncDone:^{
 
                     MXRoom *room = [mxSession roomWithRoomId:roomId];
 
@@ -287,7 +289,7 @@
 
         mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
 
-        [mxSession startWithMessagesLimit:0 onServerSyncDone:^{
+        [mxSession startWithSyncFilter:[MXFilterJSONModel syncFilterWithMessageLimit:0] onServerSyncDone:^{
             
             MXRoom *room = [mxSession roomWithRoomId:roomId];
 
