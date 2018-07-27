@@ -80,6 +80,11 @@
 
 - (BOOL)isEqual:(id)object
 {
+    if (self == object)
+    {
+        return YES;
+    }
+
     BOOL isEqual = NO;
 
     if ([object isKindOfClass:MXFilterJSONModel.class])
