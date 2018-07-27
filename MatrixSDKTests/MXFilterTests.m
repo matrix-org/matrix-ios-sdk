@@ -372,6 +372,33 @@
     }];
 }
 
+// Check MXSession start if the passed filter is not supported by the homeserver
+- (void)testUnsupportedSyncFilter
+{
+    [matrixSDKTestsData doMXRestClientTestWithBob:self readyToTest:^(MXRestClient *bobRestClient, XCTestExpectation *expectation) {
+
+        MXSession *mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
+        [matrixSDKTestsData retain:mxSession];
+
+        MXFilterJSONModel *badFilter = [MXFilterJSONModel modelFromJSON:@{
+                                                                          @"room": @{
+                                                                                  @"say": @"hello"
+                                                                                  }
+                                                                          }];
+
+        [mxSession startWithSyncFilter:badFilter onServerSyncDone:^{
+
+            XCTAssertNil(mxSession.syncFilterId);
+
+            [expectation fulfill];
+
+        } failure:^(NSError *error) {
+            XCTFail(@"The operation should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+    }];
+}
+
 @end
 
 #pragma clang diagnostic pop

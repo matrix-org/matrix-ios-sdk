@@ -385,7 +385,7 @@ typedef void (^MXOnResumeDone)(void);
     } failure:^(NSError *error) {
         MXStrongifyAndReturnIfNil(self);
 
-        NSLog(@"[MXSesssion] startWithSyncFilter: Impossible to create the filter. Use no filter in /sync");
+        NSLog(@"[MXSesssion] startWithSyncFilter: WARNING: Impossible to create the filter. Use no filter in /sync");
         [self startWithSyncFilterId:nil onServerSyncDone:onServerSyncDone failure:failure];
     }];
 }
@@ -417,8 +417,16 @@ typedef void (^MXOnResumeDone)(void);
 
     [self setState:MXSessionStateSyncInProgress];
 
-    // Store the passed filter id
-    self.store.syncFilterId = syncFilterId;
+    if (![_store.syncFilterId isEqualToString:syncFilterId])
+    {
+        if (_store.eventStreamToken)
+        {
+            NSLog(@"[MXSesssion] startWithSyncFilterId: WARNING: Changing the sync filter while there is existing data in the store is not recommended");
+        }
+
+        // Store the passed filter id
+        _store.syncFilterId = syncFilterId;
+    }
 
     // Can we resume from data available in the cache
     if (_store.isPermanent && self.isEventStreamInitialised && 0 < _store.rooms.count)
