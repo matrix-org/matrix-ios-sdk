@@ -418,7 +418,7 @@ typedef void (^MXOnResumeDone)(void);
     [self setState:MXSessionStateSyncInProgress];
 
     // Store the passed filter id
-    _syncFilterId = syncFilterId;
+    self.store.syncFilterId = syncFilterId;
 
     // Can we resume from data available in the cache
     if (_store.isPermanent && self.isEventStreamInitialised && 0 < _store.rooms.count)
@@ -516,6 +516,11 @@ typedef void (^MXOnResumeDone)(void);
             
         }];
     }
+}
+
+- (NSString *)syncFilterId
+{
+    return _store.syncFilterId;
 }
 
 - (void)pause
@@ -850,7 +855,7 @@ typedef void (^MXOnResumeDone)(void);
     NSLog(@"[MXSession] Do a server sync%@", _catchingUp ? @" (catching up)" : @"");
 
     MXWeakify(self);
-    eventStreamRequest = [matrixRestClient syncFromToken:_store.eventStreamToken serverTimeout:serverTimeout clientTimeout:clientTimeout setPresence:setPresence filter:_syncFilterId success:^(MXSyncResponse *syncResponse) {
+    eventStreamRequest = [matrixRestClient syncFromToken:_store.eventStreamToken serverTimeout:serverTimeout clientTimeout:clientTimeout setPresence:setPresence filter:self.syncFilterId success:^(MXSyncResponse *syncResponse) {
         MXStrongifyAndReturnIfNil(self);
 
         // Make sure [MXSession close] or [MXSession pause] has not been called before the server response
@@ -3017,14 +3022,103 @@ typedef void (^MXOnResumeDone)(void);
                       success:(void (^)(NSString *filterId))success
                       failure:(void (^)(NSError *error))failure
 {
-    return [matrixRestClient setFilter:filter success:success failure:failure];
+    MXHTTPOperation *operation;
+
+    if (_store)
+    {
+        // Create an empty operation that will be mutated later
+        operation = [[MXHTTPOperation alloc] init];
+
+        // Check if the filter has been already created and cached
+        MXWeakify(self);
+        [_store filterIdForFilter:filter success:^(NSString * _Nullable filterId) {
+            MXStrongifyAndReturnIfNil(self);
+
+            if (filterId)
+            {
+                success(filterId);
+            }
+            else
+            {
+                // Else, create homeserver side
+                MXWeakify(self);
+                MXHTTPOperation *operation2 = [self.matrixRestClient setFilter:filter success:^(NSString *filterId) {
+                    MXStrongifyAndReturnIfNil(self);
+
+                    // And store it
+                    [self.store storeFilter:filter withFilterId:filterId];
+
+                    success(filterId);
+
+                } failure:failure];
+
+                if (operation2)
+                {
+                    [operation mutateTo:operation2];
+                }
+            }
+
+        } failure:failure];
+    }
+    else
+    {
+        operation = [self.matrixRestClient setFilter:filter success:success failure:failure];
+    }
+
+    return operation;
 }
 
 - (MXHTTPOperation*)filterWithFilterId:(NSString*)filterId
                                success:(void (^)(MXFilterJSONModel *filter))success
                                failure:(void (^)(NSError *error))failure
 {
-    return [matrixRestClient getFilterWithFilterId:filterId success:success failure:failure];
+    MXHTTPOperation *operation;
+
+    if (_store)
+    {
+        // Create an empty operation that will be mutated later
+        operation = [[MXHTTPOperation alloc] init];
+        
+        // Check in the store
+        MXWeakify(self);
+        [_store filterWithFilterId:filterId success:^(MXFilterJSONModel * _Nullable filter) {
+            MXStrongifyAndReturnIfNil(self);
+
+            if (filter)
+            {
+                success(filter);
+            }
+            else
+            {
+                // Check on the homeserver
+                MXWeakify(self);
+                MXHTTPOperation *operation2 = [self.matrixRestClient getFilterWithFilterId:filterId success:^(MXFilterJSONModel *filter) {
+                    MXStrongifyAndReturnIfNil(self);
+
+                    if (filter)
+                    {
+                        // Cache it locally
+                        [self.store storeFilter:filter withFilterId:filterId];
+                    }
+
+                    success(filter);
+
+                } failure:failure];
+
+                if (operation2)
+                {
+                    [operation mutateTo:operation2];
+                }
+            }
+
+        } failure:failure];
+    }
+    else
+    {
+         operation = [matrixRestClient getFilterWithFilterId:filterId success:success failure:failure];
+    }
+
+    return operation;
 }
 
 

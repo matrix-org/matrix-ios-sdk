@@ -78,6 +78,19 @@
     return JSONDictionary;
 }
 
+- (BOOL)isEqual:(id)object
+{
+    BOOL isEqual = NO;
+
+    if ([object isKindOfClass:MXFilterJSONModel.class])
+    {
+        MXFilterJSONModel *other = object;
+        isEqual = [self.JSONDictionary isEqualToDictionary:other.JSONDictionary];
+    }
+
+    return isEqual;
+}
+
 
 #pragma mark - Factory
 

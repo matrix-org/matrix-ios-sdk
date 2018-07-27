@@ -19,6 +19,8 @@
 
 #import "MXMemoryRoomStore.h"
 
+#import "MXTools.h"
+
 @interface MXMemoryStore()
 {
     NSString *eventStreamToken;
@@ -28,7 +30,7 @@
 
 @implementation MXMemoryStore
 
-@synthesize eventStreamToken, userAccountData;
+@synthesize eventStreamToken, userAccountData, syncFilterId;
 
 - (instancetype)init
 {
@@ -339,6 +341,55 @@
 {
     MXMemoryRoomStore *roomStore = [self getOrCreateRoomStore:roomId];
     return roomStore.outgoingMessages;
+}
+
+
+#pragma mark - Matrix filters
+- (void)storeFilter:(nonnull MXFilterJSONModel*)filter withFilterId:(nonnull NSString*)filterId
+{
+    if (!filters)
+    {
+        filters = [NSMutableDictionary dictionary];
+    }
+
+    filters[filterId] = filter.jsonString;
+}
+
+- (void)filterWithFilterId:(nonnull NSString*)filterId
+                   success:(nonnull void (^)(MXFilterJSONModel * _Nullable filter))success
+                   failure:(nullable void (^)(NSError * _Nullable error))failure
+{
+    MXFilterJSONModel *filter;
+
+    NSString *jsonString = filters[filterId];
+    if (jsonString)
+    {
+        NSDictionary *json = [MXTools deserialiseJSONString:jsonString];
+        filter = [MXFilterJSONModel modelFromJSON:json];
+    }
+
+    success(filter);
+}
+
+- (void)filterIdForFilter:(nonnull MXFilterJSONModel*)filter
+                  success:(nonnull void (^)(NSString * _Nullable filterId))success
+                  failure:(nullable void (^)(NSError * _Nullable error))failure
+{
+    NSString *theFilterId;
+
+    for (NSString *filterId in filters)
+    {
+        NSDictionary *json = [MXTools deserialiseJSONString:filters[filterId]];
+        MXFilterJSONModel *cachedFilter = [MXFilterJSONModel modelFromJSON:json];
+
+        if ([cachedFilter isEqual:filter])
+        {
+            theFilterId = filterId;
+            break;
+        }
+    }
+
+    success(theFilterId);
 }
 
 
