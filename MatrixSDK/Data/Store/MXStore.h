@@ -24,6 +24,7 @@
 #import "MXRoomSummary.h"
 #import "MXRoomAccountData.h"
 #import "MXGroup.h"
+#import "MXFilterJSONModel.h"
 
 #import "MXEventsEnumerator.h"
 
@@ -396,9 +397,48 @@
  */
 - (NSArray<MXEvent*>* _Nullable)outgoingMessagesInRoom:(nonnull NSString*)roomId;
 
+
+#pragma mark - User Account data
 /**
  Store/retrieve the user account data.
  */
 @property (nonatomic) NSDictionary * _Nullable userAccountData;
+
+
+#pragma mark - Matrix filters
+/**
+ Store/retrieve the id of the Matrix filter used in /sync requests.
+ */
+@property (nonatomic) NSString * _Nullable syncFilterId;
+
+/**
+ Store a created filter.
+
+ @param filter the filter to store.
+ @param filterId the id of this filter on the homeserver.
+ */
+- (void)storeFilter:(nonnull MXFilterJSONModel*)filter withFilterId:(nonnull NSString*)filterId;
+
+/**
+ Retrieve a filter with a given id.
+
+ @param filterId the id of the filter.
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+ */
+- (void)filterWithFilterId:(nonnull NSString*)filterId
+                   success:(nonnull void (^)(MXFilterJSONModel * _Nullable filter))success
+                   failure:(nullable void (^)(NSError * _Nullable error))failure;
+
+/**
+ Check if a filter already exists and return its filter id.
+
+ @param filter the filter to check the existence.
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+ */
+- (void)filterIdForFilter:(nonnull MXFilterJSONModel*)filter
+                  success:(nonnull void (^)(NSString * _Nullable filterId))success
+                  failure:(nullable void (^)(NSError * _Nullable error))failure;
 
 @end

@@ -25,10 +25,11 @@
 #import "MXSDKOptions.h"
 #import "MXTools.h"
 
-static NSUInteger const kMXFileVersion = 54;
+static NSUInteger const kMXFileVersion = 55;
 
 static NSString *const kMXFileStoreFolder = @"MXFileStore";
 static NSString *const kMXFileStoreMedaDataFile = @"MXFileStore";
+static NSString *const kMXFileStoreFiltersFile = @"filters";
 static NSString *const kMXFileStoreUsersFolder = @"users";
 static NSString *const kMXFileStoreGroupsFolder = @"groups";
 static NSString *const kMXFileStoreBackupFolder = @"backup";
@@ -85,6 +86,9 @@ static NSUInteger preloadOptions;
 
     // Flag to indicate metaData needs to be stored
     BOOL metaDataHasChanged;
+
+    // Flag to indicate Matrix filters need to be stored
+    BOOL filtersHasChanged;
 
     // Cache used to preload room states while the store is opening.
     // It is filled on the separate thread so that the UI thread will not be blocked
@@ -566,6 +570,73 @@ static NSUInteger preloadOptions;
     return metaData.userAccountData;
 }
 
+#pragma mark - Matrix filters
+- (void)setSyncFilterId:(NSString *)syncFilterId
+{
+    [super setSyncFilterId:syncFilterId];
+    if (metaData)
+    {
+        metaData.syncFilterId = syncFilterId;
+        metaDataHasChanged = YES;
+    }
+}
+
+- (NSString *)syncFilterId
+{
+    return  metaData.syncFilterId;
+}
+
+- (void)storeFilter:(nonnull MXFilterJSONModel*)filter withFilterId:(nonnull NSString*)filterId
+{
+    [super storeFilter:filter withFilterId:filterId];
+    filtersHasChanged = YES;
+}
+
+- (void)filterWithFilterId:(nonnull NSString*)filterId
+                   success:(nonnull void (^)(MXFilterJSONModel * _Nullable filter))success
+                   failure:(nullable void (^)(NSError * _Nullable error))failure
+{
+    if (filters)
+    {
+        [super filterWithFilterId:filterId success:success failure:failure];
+    }
+    else
+    {
+        // Load filters from the store
+        dispatch_async(dispatchQueue, ^{
+
+            [self loadFilters];
+
+            dispatch_async(dispatch_get_main_queue(), ^{
+                [super filterWithFilterId:filterId success:success failure:failure];
+            });
+        });
+    }
+}
+
+- (void)filterIdForFilter:(nonnull MXFilterJSONModel*)filter
+                  success:(nonnull void (^)(NSString * _Nullable filterId))success
+                  failure:(nullable void (^)(NSError * _Nullable error))failure
+{
+    if (filters)
+    {
+        [super filterIdForFilter:filter success:success failure:failure];
+    }
+    else
+    {
+        // Load filters from the store
+        dispatch_async(dispatchQueue, ^{
+
+            [self loadFilters];
+
+            dispatch_async(dispatch_get_main_queue(), ^{
+                [super filterIdForFilter:filter success:success failure:failure];
+            });
+        });
+    }
+}
+
+
 - (void)commit
 {
     // Save data only if metaData exists
@@ -660,6 +731,7 @@ static NSUInteger preloadOptions;
     [self saveUsers];
     [self saveGroupsDeletion];
     [self saveGroups];
+    [self saveFilters];
     [self saveMetaData];
 }
 
@@ -853,6 +925,26 @@ static NSUInteger preloadOptions;
         }
     }
 }
+
+- (NSString*)filtersFileForBackup:(BOOL)backup
+{
+    if (!backup)
+    {
+        return [storePath stringByAppendingPathComponent:kMXFileStoreFiltersFile];
+    }
+    else
+    {
+        if (backupEventStreamToken)
+        {
+            return [[storeBackupPath stringByAppendingPathComponent:backupEventStreamToken] stringByAppendingPathComponent:kMXFileStoreFiltersFile];
+        }
+        else
+        {
+            return nil;
+        }
+    }
+}
+
 
 #pragma mark - Storage validity
 - (BOOL)checkStorageValidity
@@ -1343,6 +1435,52 @@ static NSUInteger preloadOptions;
 #if DEBUG
             NSLog(@"[MXFileStore commit] lasted %.0fms for metadata", [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
 #endif
+        });
+    }
+}
+
+#pragma mark - Matrix filters
+- (void)loadFilters
+{
+    NSString *file = [storePath stringByAppendingPathComponent:kMXFileStoreFiltersFile];
+    filters = [NSKeyedUnarchiver unarchiveObjectWithFile:file];
+
+    if (!filters)
+    {
+        // This is used as flag to indicate it has been mounted from the file
+        filters = [NSMutableDictionary dictionary];
+    }
+}
+
+- (void)saveFilters
+{
+    // Save only in case of change
+    if (filtersHasChanged)
+    {
+        filtersHasChanged = NO;
+
+        MXWeakify(self);
+        dispatch_async(dispatchQueue, ^(void){
+            MXStrongifyAndReturnIfNil(self);
+
+            NSString *file = [self filtersFileForBackup:NO];
+            NSString *backupFile = [self filtersFileForBackup:YES];
+
+            // Backup the file
+            if (backupFile && [[NSFileManager defaultManager] fileExistsAtPath:file])
+            {
+                // Make sure the backup folder exists
+                NSString *storeBackupMetaDataPath = [self->storeBackupPath stringByAppendingPathComponent:self->backupEventStreamToken];
+                if (![NSFileManager.defaultManager fileExistsAtPath:storeBackupMetaDataPath])
+                {
+                    [[NSFileManager defaultManager] createDirectoryAtPath:storeBackupMetaDataPath withIntermediateDirectories:YES attributes:nil error:nil];
+                }
+
+                [[NSFileManager defaultManager] moveItemAtPath:file toPath:backupFile error:nil];
+            }
+
+            // Store new data
+            [NSKeyedArchiver archiveRootObject:self->filters toFile:file];
         });
     }
 }

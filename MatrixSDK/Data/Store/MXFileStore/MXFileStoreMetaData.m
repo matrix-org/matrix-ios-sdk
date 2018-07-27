@@ -27,6 +27,7 @@
         _homeServer = dict[@"homeServer"];
         _userId = dict[@"userId"];
         _eventStreamToken = dict[@"eventStreamToken"];
+        _syncFilterId = dict[@"syncFilterId"];
         _userAccountData = dict[@"userAccountData"];
 
         NSNumber *version = dict[@"version"];
@@ -37,7 +38,7 @@
 
 -(void)encodeWithCoder:(NSCoder *)aCoder
 {
-    // All properties are mandatory except eventStreamToken
+    // Mandatory, non-null, properties
     NSMutableDictionary *dict =[NSMutableDictionary dictionaryWithDictionary:
                                 @{
                                   @"homeServer": _homeServer,
@@ -45,9 +46,14 @@
                                   @"version": @(_version),
                                   }];
 
+    // Nullable properties
     if (_eventStreamToken)
     {
         dict[@"eventStreamToken"] = _eventStreamToken;
+    }
+    if (_syncFilterId)
+    {
+        dict[@"syncFilterId"] = _syncFilterId;
     }
     if (_userAccountData)
     {

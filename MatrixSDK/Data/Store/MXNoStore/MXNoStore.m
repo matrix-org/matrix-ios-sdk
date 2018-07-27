@@ -52,7 +52,7 @@
 
 @implementation MXNoStore
 
-@synthesize eventStreamToken, userAccountData;
+@synthesize eventStreamToken, userAccountData, syncFilterId;
 
 - (instancetype)init
 {
@@ -253,6 +253,25 @@
     {
         [groups removeObjectForKey:groupId];
     }
+}
+
+#pragma mark - Matrix filters
+- (void)storeFilter:(nonnull MXFilterJSONModel*)filter withFilterId:(nonnull NSString*)filterId
+{
+}
+
+- (void)filterWithFilterId:(nonnull NSString*)filterId
+                   success:(nonnull void (^)(MXFilterJSONModel * _Nullable filter))success
+                   failure:(nullable void (^)(NSError * _Nullable error))failure
+{
+    success(nil);
+}
+
+- (void)filterIdForFilter:(nonnull MXFilterJSONModel*)filter
+                  success:(nonnull void (^)(NSString * _Nullable filterId))success
+                  failure:(nullable void (^)(NSError * _Nullable error))failure
+{
+    success(nil);
 }
 
 - (void)storePartialTextMessageForRoom:(NSString *)roomId partialTextMessage:(NSString *)partialTextMessage

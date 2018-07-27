@@ -167,7 +167,7 @@
 
         [mxSession setStore:store success:^{
 
-            [mxSession startWithMessagesLimit:messagesLimit onServerSyncDone:^{
+            [mxSession startWithSyncFilter:[MXFilterJSONModel syncFilterWithMessageLimit:messagesLimit] onServerSyncDone:^{
                 MXRoom *room = [mxSession roomWithRoomId:roomId];
 
                 readyToTest(room);
@@ -1344,7 +1344,7 @@
         // Do a 1st [mxSession start] to fill the store
         mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
         [mxSession setStore:store success:^{
-            [mxSession startWithMessagesLimit:5 onServerSyncDone:^{
+            [mxSession startWithSyncFilter:[MXFilterJSONModel syncFilterWithMessageLimit:5] onServerSyncDone:^{
 
                 MXRoom *room = [mxSession roomWithRoomId:roomId];
 

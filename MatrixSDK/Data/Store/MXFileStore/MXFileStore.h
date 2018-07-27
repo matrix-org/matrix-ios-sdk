@@ -67,6 +67,7 @@ typedef NS_OPTIONS(NSInteger, MXFileStorePreloadOptions)
                 L groupA
                 L groupB
                 L ...
+            L filters: Matrix filters
             L MXFileStore : Information about the stored data
             + backup : This folder contains backup of files that are modified during
                   the commit process. It is flushed when the commit completes.

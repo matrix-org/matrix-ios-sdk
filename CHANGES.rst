@@ -2,6 +2,8 @@ Changes in Matrix iOS SDK in 0.11.0 ()
 ===============================================
 
 Improvements:
+* MXSession: Add the option to use a Matrix filter in /sync requests ([MXSession startWithSyncFilter:]).
+* MXSession: Add API to manage Matrix filters.
 * MXRestClient: Add Matrix filter API.
 * MXRoom: Add send reply with text message (vector-im/riot-ios#1911).
 * MXRoom: Add an asynchronous methods for liveTimeline, state and members.
@@ -16,6 +18,7 @@ Improvements:
 Bug fix:
 
 API break:
+* MXSession: [MXSession startWithMessagesLimit] has been removed. Use the more generic [MXSession startWithSyncFilter:].
 * MXRoom: liveTimeline and state accesses are now asynchronous.
 * MXCall: callee access is now asynchronous.
 * MXRoomState: Remove displayName property. Use MXRoomSummary.displayName instead.
