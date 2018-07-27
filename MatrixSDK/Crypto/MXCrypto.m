@@ -1912,7 +1912,7 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
                 [self setEncryptionInRoom:event.roomId withMembers:members algorithm:event.content[@"algorithm"] inhibitDeviceQuery:YES];
             });
         }
-    }];
+    } failure:nil]; // @TODO(lazy-loading): Handle errors
 }
 
 /**
@@ -1953,7 +1953,7 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
                 });
             }
         }
-    }];
+    } failure:nil]; // @TODO(lazy-loading): Handle errors
 }
 
 /**

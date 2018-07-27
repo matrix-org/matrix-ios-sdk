@@ -210,6 +210,12 @@ typedef void (^MXOnRoomEvent)(MXEvent *event, MXTimelineDirection direction, MXR
  */
 - (void)handleInvitedRoomSync:(MXInvitedRoomSync *)invitedRoomSync;
 
+/**
+ For live timeline, enrich lazy loaded state events with more state events.
+
+ @param stateEvents state events to append.
+ */
+- (void)handleLazyLoadedStateEvents:(NSArray<MXEvent *> *)stateEvents;
 
 #pragma mark - Events listeners
 /**

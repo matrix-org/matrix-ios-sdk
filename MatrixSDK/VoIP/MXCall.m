@@ -162,7 +162,7 @@ NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
                 }
 
                 onComplete(self->calleeId);
-            }];
+            } failure:nil]; // @TODO(lazy-loading): Handle errors
         }
     }
 }

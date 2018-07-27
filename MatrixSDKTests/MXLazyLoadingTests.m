@@ -363,8 +363,7 @@ Common initial conditions:
 
         MXRoom *room = [aliceSession roomWithRoomId:roomId];
 
-        MXHTTPOperation *operation; // = TODO
-        [room members:^(MXRoomMembers *roomMembers) {
+        MXHTTPOperation *operation = [room members:^(MXRoomMembers *roomMembers) {
 
             // The room members list in the room state is full known
             XCTAssertEqual(roomMembers.members.count, 4);
@@ -372,15 +371,18 @@ Common initial conditions:
             XCTAssertEqual([roomMembers membersWithMembership:MXMembershipInvite].count, 1);
 
             [expectation fulfill];
+        } failure:^(NSError *error) {
+            XCTFail(@"The operation should not fail - NSError: %@", error);
+            [expectation fulfill];
         }];
 
         if (lazyLoading)
         {
-            XCTAssert(operation, @"As members is only partial, [room members:] should trigger an HTTP request");
+            XCTAssert(operation.operation, @"As members is only partial, [room members:] should trigger an HTTP request");
         }
         else
         {
-            XCTAssertNil(operation);
+            XCTAssertNil(operation.operation);
         }
     }];
 }

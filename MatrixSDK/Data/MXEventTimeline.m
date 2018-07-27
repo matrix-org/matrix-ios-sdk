@@ -481,6 +481,17 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
     }
 }
 
+- (void)handleLazyLoadedStateEvents:(NSArray<MXEvent *> *)stateEvents
+{
+    [self handleStateEvents:stateEvents direction:MXTimelineDirectionForwards];
+
+    // Commit store changes
+    if ([store respondsToSelector:@selector(commit)])
+    {
+        [store commit];
+    }
+}
+
 - (void)handlePaginationResponse:(MXPaginationResponse*)paginatedResponse direction:(MXTimelineDirection)direction
 {
     // Check pagination end - @see SPEC-319 ticket

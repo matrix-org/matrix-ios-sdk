@@ -94,8 +94,18 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidFlushDataNotification;
 
 /**
  The current list of members of the room.
+
+ It may require a request to the homeserver if the client has not fetched yet all
+ data like in case of members lazy loading.
+
+ @param success A block object called when the operation succeeds. It returns
+                the MXRoomMembers object.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
  */
-- (void)members:(void (^)(MXRoomMembers *roomMembers))onComplete;
+- (MXHTTPOperation*)members:(void (^)(MXRoomMembers *roomMembers))success
+                    failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 /**
  The private user data for this room.

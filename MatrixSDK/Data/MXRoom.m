@@ -219,14 +219,32 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
     }];
 }
 
-- (void)members:(void (^)(MXRoomMembers *))onComplete
+- (MXHTTPOperation *)members:(void (^)(MXRoomMembers *roomMembers))success
+                    failure:(void (^)(NSError *error))failure
 {
-    // @TODO(lazy-loading: This is currently a shortcut to `self.liveTimeline.state.members`.
-    // But this method will evolve with a request to the HS in order to  load all members of
-    // the room.
-    [self state:^(MXRoomState *roomState) {
-        onComplete(roomState.members);
+    // Create an empty operation that will be mutated later
+    MXHTTPOperation *operation = [[MXHTTPOperation alloc] init];
+
+    [self liveTimeline:^(MXEventTimeline *liveTimeline) {
+
+        MXHTTPOperation *operation2 = [self.mxSession.matrixRestClient membersOfRoom:self.roomId success:^(NSArray *roomMemberEvents) {
+
+            [liveTimeline handleLazyLoadedStateEvents:roomMemberEvents];
+
+            if (success)
+            {
+                success(liveTimeline.state.members);
+            }
+
+        } failure:failure];
+
+        if (operation2)
+        {
+            [operation mutateTo:operation2];
+        }
     }];
+
+    return operation;
 }
 
 - (void)setPartialTextMessage:(NSString *)partialTextMessage
@@ -315,7 +333,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
                 NSLog(@"[MXRoom] Failed to tag an invite as a direct chat");
             }];
         }
-    }];
+    } failure:nil]; // @TODO(lazy-loading): Handle errors
 }
 
 #pragma mark - Room private account data handling
@@ -2968,7 +2986,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
         {
             success();
         }
-    }];
+    } failure:failure];
 
     return operation;
 }

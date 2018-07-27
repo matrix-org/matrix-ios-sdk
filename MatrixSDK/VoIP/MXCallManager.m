@@ -572,7 +572,7 @@ NSString *const kMXCallManagerConferenceUserDomain  = @"matrix.org";
         {
             [room inviteUser:conferenceUserId success:success failure:failure];
         }
-    }];
+    } failure:failure];
 }
 
 /**
@@ -601,6 +601,8 @@ NSString *const kMXCallManagerConferenceUserDomain  = @"matrix.org";
         {
             dispatch_group_enter(group);
             MXRoom *room = [_mxSession roomWithRoomId:roomSummary.roomId];
+
+            // @TODO(lazy-loading): We need to manage summary heroes to avoid request to HS
             [room members:^(MXRoomMembers *roomMembers) {
 
                 if ([roomMembers memberWithUserId:conferenceUserId])
@@ -609,7 +611,7 @@ NSString *const kMXCallManagerConferenceUserDomain  = @"matrix.org";
                 }
 
                 dispatch_group_leave(group);
-            }];
+            } failure:nil]; // @TODO(lazy-loading): Handle errors
         }
     }
 

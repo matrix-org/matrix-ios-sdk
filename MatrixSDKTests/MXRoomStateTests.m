@@ -698,6 +698,9 @@
 
                 [expectation fulfill];
 
+            } failure:^(NSError *error) {
+                XCTFail(@"The request should not fail - NSError: %@", error);
+                [expectation fulfill];
             }];
             
         } failure:^(NSError *error) {
@@ -723,6 +726,10 @@
 
             XCTAssert([[roomMembers memberName:@"NonExistingUserId"] isEqualToString:@"NonExistingUserId"], @"memberName must return his id if the user does not exist");
 
+            [expectation fulfill];
+
+        } failure:^(NSError *error) {
+            XCTFail(@"The request should not fail - NSError: %@", error);
             [expectation fulfill];
         }];
     }];
@@ -895,6 +902,10 @@
                         XCTAssertLessThan([[NSDate date] timeIntervalSince1970] * 1000 - lastMessage.originServerTs, 3000);
 
                         [expectation fulfill];
+
+                    } failure:^(NSError *error) {
+                        XCTFail(@"The request should not fail - NSError: %@", error);
+                        [expectation fulfill];
                     }];
                     
                 } failure:^(NSError *error) {
@@ -951,6 +962,10 @@
                                     XCTAssertLessThan([[NSDate date] timeIntervalSince1970] * 1000 - lastMessage.originServerTs, 3000);
 
                                 });
+                                
+                            } failure:^(NSError *error) {
+                                XCTFail(@"The request should not fail - NSError: %@", error);
+                                [expectation fulfill];
                             }];
                         }
                     }
