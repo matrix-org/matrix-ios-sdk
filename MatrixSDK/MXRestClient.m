@@ -2079,7 +2079,7 @@ MXAuthAction;
     
     if (roomEventFilter.dictionary.count)
     {
-        parameters[@"filter"] = roomEventFilter.dictionary;
+        parameters[@"filter"] = roomEventFilter.jsonString;
     }
 
     MXWeakify(self);
