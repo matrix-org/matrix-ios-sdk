@@ -260,7 +260,7 @@ Common initial conditions:
 // When paginating back to the beginning, lazy loaded room state passed in pagination callback must be updated with Bob, then Charlie and Dave.
 - (void)checkRoomStateWhilePaginatingWithLazyLoading:(BOOL)lazyLoading
 {
-    [self createScenarioWithLazyLoading:YES readyToTest:^(MXSession *aliceSession, MXSession *bobSession, MXSession *charlieSession, NSString *roomId, XCTestExpectation *expectation) {
+    [self createScenarioWithLazyLoading:lazyLoading readyToTest:^(MXSession *aliceSession, MXSession *bobSession, MXSession *charlieSession, NSString *roomId, XCTestExpectation *expectation) {
 
         MXRoom *room = [aliceSession roomWithRoomId:roomId];
 
@@ -273,11 +273,15 @@ Common initial conditions:
                         if (lazyLoading)
                         {
                             XCTAssertNil([roomState.members memberWithUserId:bobSession.myUser.userId]);
+                            XCTAssertNil([liveTimeline.state.members memberWithUserId:bobSession.myUser.userId]);
+                            XCTAssertNil([liveTimeline.state.members memberWithUserId:charlieSession.myUser.userId]);
                         }
                         else
                         {
-                            XCTAssert([roomState.members memberWithUserId:bobSession.myUser.userId]);
+                            XCTAssertNotNil([roomState.members memberWithUserId:bobSession.myUser.userId]);
                         }
+
+                        XCTAssertNotNil([liveTimeline.state.members memberWithUserId:aliceSession.myUser.userId]);
                         break;
                     case 51:
                         XCTAssert([roomState.members memberWithUserId:bobSession.myUser.userId]);
@@ -285,16 +289,23 @@ Common initial conditions:
                         if (lazyLoading)
                         {
                             XCTAssertNil([roomState.members memberWithUserId:charlieSession.myUser.userId]);
+                            XCTAssertNil([liveTimeline.state.members memberWithUserId:charlieSession.myUser.userId]);
                         }
                         else
                         {
                             XCTAssert([roomState.members memberWithUserId:charlieSession.myUser.userId]);
                         }
+
+                        // The room state of the room should have been enriched
+                        XCTAssertNotNil([liveTimeline.state.members memberWithUserId:bobSession.myUser.userId]);
+
                         break;
 
                     case 110:
-                        XCTAssert([roomState.members memberWithUserId:bobSession.myUser.userId]);
-                        XCTAssert([roomState.members memberWithUserId:charlieSession.myUser.userId]);
+                        XCTAssertNotNil([liveTimeline.state.members memberWithUserId:aliceSession.myUser.userId]);
+                        XCTAssertNotNil([liveTimeline.state.members memberWithUserId:bobSession.myUser.userId]);
+                        XCTAssertNotNil([liveTimeline.state.members memberWithUserId:charlieSession.myUser.userId]);
+                        break;
 
                     default:
                         break;

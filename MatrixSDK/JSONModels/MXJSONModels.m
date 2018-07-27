@@ -298,6 +298,7 @@ NSString *const kMXLoginIdentifierTypePhone = @"m.id.phone";
     if (paginationResponse)
     {
         MXJSONModelSetMXJSONModelArray(paginationResponse.chunk, MXEvent, JSONDictionary[@"chunk"]);
+        MXJSONModelSetMXJSONModelArray(paginationResponse.state, MXEvent, JSONDictionary[@"state"]);
         MXJSONModelSetString(paginationResponse.start, JSONDictionary[@"start"]);
         MXJSONModelSetString(paginationResponse.end, JSONDictionary[@"end"]);
 

@@ -104,6 +104,15 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
         _state = [[MXRoomState alloc] initWithRoomId:room.roomId andMatrixSession:room.mxSession andDirection:YES];
         
         _roomEventFilter = [[MXRoomEventFilter alloc] init];
+
+        // If the event stream runs with lazy loading, the timeline must do the same
+        // @TODO: This should be synchronous here but :/
+        [room.mxSession filterWithFilterId:room.mxSession.syncFilterId success:^(MXFilterJSONModel *filter) {
+            if (filter.room.state.lazyLoadMembers)
+            {
+                 self.roomEventFilter.lazyLoadMembers = YES;
+            }
+        } failure:nil];
     }
     return self;
 }
@@ -486,6 +495,13 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
         {
             hasReachedHomeServerForwardsPaginationEnd = YES;
         }
+    }
+
+    // Process additional state events (this happens in case of lazy loading)
+    if (paginatedResponse.state.count && direction == MXTimelineDirectionBackwards)
+    {
+        [self handleStateEvents:paginatedResponse.state direction:MXTimelineDirectionForwards];
+        [self handleStateEvents:paginatedResponse.state  direction:direction];
     }
 
     // Process received events

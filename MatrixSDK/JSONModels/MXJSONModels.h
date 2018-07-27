@@ -361,9 +361,14 @@ FOUNDATION_EXPORT NSString *const kMXLoginIdentifierTypePhone;
 @interface MXPaginationResponse : MXJSONModel
 
     /**
-     An array of MXEvents.
+     An array of timeline MXEvents.
      */
-    @property (nonatomic) NSArray *chunk;
+    @property (nonatomic) NSArray<MXEvent*> *chunk;
+
+    /**
+     In case of lazy loading, more state MXEvents.
+     */
+    @property (nonatomic) NSArray *state;
 
     /**
      The opaque token for the start.
