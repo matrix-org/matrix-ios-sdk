@@ -52,7 +52,7 @@ Common initial conditions:
  - Charlie joins the room
  - Dave is invited
  - Alice sends 50 messages
- - Bob sends a message
+ - Bob sends one message
  - Alice sends 50 messages
  - Alice makes an initial /sync with lazy-loading enabled or not
 */
@@ -82,10 +82,18 @@ Common initial conditions:
                                 [matrixSDKTestsData for:aliceRestClient andRoom:roomId sendMessages:50 success:^{
 
                                     // - Alice makes an initial /sync
-                                    // TODO: Manage lazyLoading
                                     MXSession *aliceSession = [[MXSession alloc] initWithMatrixRestClient:aliceRestClient];
                                     [matrixSDKTestsData retain:aliceSession];
-                                    [aliceSession start:^{
+
+
+                                    // Alice makes an initial /sync with lazy-loading enabled or not
+                                    MXFilterJSONModel *filter;
+                                    if (lazyLoading)
+                                    {
+                                        filter = [MXFilterJSONModel syncFilterForLazyLoading];
+                                    }
+
+                                    [aliceSession startWithSyncFilter:filter onServerSyncDone:^{
 
                                         // We are done
                                         readyToTest(aliceSession, bobSession, charlieSession, roomId, expectation);
@@ -118,6 +126,30 @@ Common initial conditions:
         }];
     }];
 }
+
+
+- (void)testLazyLoadingFilterSupportHSSide
+{
+    [matrixSDKTestsData doMXRestClientTestWithBob:self readyToTest:^(MXRestClient *bobRestClient, XCTestExpectation *expectation) {
+
+        MXSession *mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
+        [matrixSDKTestsData retain:mxSession];
+
+        MXFilterJSONModel *lazyLoadingFilter = [MXFilterJSONModel syncFilterForLazyLoading];
+
+        [mxSession startWithSyncFilter:lazyLoadingFilter onServerSyncDone:^{
+
+            XCTAssertNotNil(mxSession.syncFilterId);
+
+            [expectation fulfill];
+
+        } failure:^(NSError *error) {
+            XCTFail(@"The operation should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+    }];
+}
+
 
 // After the test scenario, room state should be lazy loaded and partial.
 // There should be only Alice and state.members.count = 1
@@ -185,10 +217,10 @@ Common initial conditions:
 
                 if (lazyLoading)
                 {
-                    XCTAssertEqual(roomState.members.members.count, 2, @"There should only Alice and Charlie in the lazy loaded room state");
+                    XCTAssertEqual(roomState.members.members.count, 2, @"There should only Alice and Charlie now in the lazy loaded room state");
 
                     XCTAssertEqual(roomState.membersCount.members, 2);
-                    XCTAssertEqual(roomState.membersCount.joined, 0);
+                    XCTAssertEqual(roomState.membersCount.joined, 2);
                     XCTAssertEqual(roomState.membersCount.invited, 0);
                 }
                 else
