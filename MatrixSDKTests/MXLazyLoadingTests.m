@@ -432,8 +432,14 @@ Common initial conditions:
 
         MXRoomSummary *roomSummary = [aliceSession roomSummaryWithRoomId:roomId];
 
-        // TODO
-        XCTAssertEqualObjects(roomSummary.displayname, @"");
+        if (lazyLoading)
+        {
+            XCTAssertNotNil(roomSummary.displayname, @"Thanks to the summary api, the SDK can build a room display name");
+        }
+        else
+        {
+            XCTAssertNil(roomSummary.displayname);
+        }
 
         [expectation fulfill];
     }];

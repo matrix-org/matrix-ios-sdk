@@ -110,6 +110,15 @@
                 updated = YES;
                 break;
 
+            case MXEventTypeRoomCanonicalAlias:
+                // If m.room.canonical_alias is set, use it if there is no m.room.name
+                if (!roomState.name && roomState.canonicalAlias)
+                {
+                    summary.displayname = roomState.canonicalAlias;
+                    updated = YES;
+                }
+                break;
+
             case MXEventTypeRoomMember:
                 hasRoomMembersChange = YES;
                 break;
@@ -162,8 +171,8 @@
         updated |= [self updateSummaryMemberCount:summary session:session withServerRoomSummary:serverRoomSummary roomState:roomState];
     }
 
-    // Update display name
-    if (serverRoomSummary.heroes)
+    // Compute display name from summary heroes if there was no name nor canonical alias
+    if (!roomState.name && !roomState.canonicalAlias)
     {
         updated |= [self updateSummaryDisplayname:summary session:session withServerRoomSummary:serverRoomSummary roomState:roomState];
     }
@@ -173,9 +182,58 @@
 
 - (BOOL)updateSummaryDisplayname:(MXRoomSummary *)summary session:(MXSession *)session withServerRoomSummary:(MXRoomSyncSummary *)serverRoomSummary roomState:(MXRoomState *)roomState
 {
-    // TODO: Compute a display name based on
+    BOOL updated = NO;
+
+    // Compute a non internationalised display name based on
     // https://docs.google.com/document/d/11i14UI1cUz-OJ0knD5BFu7fmT6Fo327zvMYqfSAR7xs/edit#
-    return NO;
+    if (serverRoomSummary.heroes.count == 0 || roomState.membersCount.members <= 1)
+    {
+        summary.displayname = @"Empty Room";
+        updated = YES;
+    }
+    else if (1 <= serverRoomSummary.heroes.count)
+    {
+        NSMutableArray<NSString*> *memberNames = [NSMutableArray arrayWithCapacity:serverRoomSummary.heroes.count];
+        for (NSString *hero in serverRoomSummary.heroes)
+        {
+            NSString *memberName = [roomState.members memberName:hero];
+            if (!memberName)
+            {
+                memberName = hero;
+            }
+
+            [memberNames addObject:memberName];
+        }
+
+        if (memberNames.count == 1)
+        {
+            summary.displayname = memberNames.firstObject;
+        }
+        else
+        {
+            if (serverRoomSummary.heroes.count == summary.membersCount.members - 1)
+            {
+                NSString *lastMemberName = memberNames.lastObject;
+                [memberNames removeLastObject];
+
+                summary.displayname = [NSString stringWithFormat:@"%@ & %@",
+                                       [memberNames componentsJoinedByString:@", "],
+                                       lastMemberName];
+            }
+            else
+            {
+                NSUInteger otherCount = summary.membersCount.members - 1 - serverRoomSummary.heroes.count;
+                summary.displayname = [NSString stringWithFormat:@"%@ & %@ %@",
+                                       [memberNames componentsJoinedByString:@", "],
+                                       @(otherCount),
+                                       (1 < otherCount) ? @"others" : @"other"];
+            }
+        }
+
+        updated = YES;
+    }
+
+    return updated;
 }
 
 - (BOOL)updateSummaryMemberCount:(MXRoomSummary *)summary session:(MXSession *)session withServerRoomSummary:(MXRoomSyncSummary *)serverRoomSummary roomState:(MXRoomState *)roomState
