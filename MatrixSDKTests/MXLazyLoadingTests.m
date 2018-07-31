@@ -140,6 +140,7 @@ Common initial conditions:
         [mxSession startWithSyncFilter:lazyLoadingFilter onServerSyncDone:^{
 
             XCTAssertNotNil(mxSession.syncFilterId);
+            XCTAssertTrue(mxSession.syncWithLazyLoadOfRoomMembers);
 
             [expectation fulfill];
 

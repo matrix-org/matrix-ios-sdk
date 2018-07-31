@@ -417,6 +417,7 @@ typedef void (^MXOnResumeDone)(void);
 
     [self setState:MXSessionStateSyncInProgress];
 
+    // Check update of the filter used for /sync requests
     if (![_store.syncFilterId isEqualToString:syncFilterId])
     {
         if (_store.eventStreamToken)
@@ -426,6 +427,20 @@ typedef void (^MXOnResumeDone)(void);
 
         // Store the passed filter id
         _store.syncFilterId = syncFilterId;
+    }
+
+    // Determine if this filter implies lazy loading of room members
+    if (syncFilterId)
+    {
+        MXWeakify(self);
+        [self filterWithFilterId:syncFilterId success:^(MXFilterJSONModel *filter) {
+            MXStrongifyAndReturnIfNil(self);
+
+            if (filter.room.state.lazyLoadMembers)
+            {
+                self->_syncWithLazyLoadOfRoomMembers = YES;
+            }
+        } failure:nil];
     }
 
     // Can we resume from data available in the cache

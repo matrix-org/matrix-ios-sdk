@@ -104,15 +104,6 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
         _state = [[MXRoomState alloc] initWithRoomId:room.roomId andMatrixSession:room.mxSession andDirection:YES];
         
         _roomEventFilter = [[MXRoomEventFilter alloc] init];
-
-        // If the event stream runs with lazy loading, the timeline must do the same
-        // @TODO: This should be synchronous here but :/
-        [room.mxSession filterWithFilterId:room.mxSession.syncFilterId success:^(MXFilterJSONModel *filter) {
-            if (filter.room.state.lazyLoadMembers)
-            {
-                 self.roomEventFilter.lazyLoadMembers = YES;
-            }
-        } failure:nil];
     }
     return self;
 }
@@ -311,6 +302,18 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
     else
     {
         paginationToken = forwardsPaginationToken;
+    }
+
+
+    // If the event stream runs with lazy loading, the timeline must do the same
+    if (room.mxSession.syncWithLazyLoadOfRoomMembers)
+    {
+        if (_roomEventFilter)
+        {
+            _roomEventFilter = [MXRoomEventFilter new];
+        }
+
+        _roomEventFilter.lazyLoadMembers = YES;
     }
 
     NSLog(@"[MXEventTimeline] paginate : request %tu messages from the server", numItems);
