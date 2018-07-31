@@ -18,6 +18,7 @@
 
 #import "MXRoomSummaryUpdater.h"
 
+#import "MXSession.h"
 #import "MXRoom.h"
 
 @implementation MXRoomSummaryUpdater
@@ -126,7 +127,10 @@
     if (hasRoomMembersChange)
     {
         // Check if there was a change on room state cached data
-        if (![summary.membersCount isEqual:roomState.membersCount])
+
+        // In case of lazy-loaded room members, roomState.membersCount is a partial count.
+        // The actual count will come with [updateRoomSummary:withServerRoomSummary:...].
+        if (!session.syncWithLazyLoadOfRoomMembers && ![summary.membersCount isEqual:roomState.membersCount])
         {
             summary.membersCount = [roomState.membersCount copy];
             updated = YES;
@@ -143,6 +147,61 @@
             summary.isConferenceUserRoom = roomState.isConferenceUserRoom;
             updated = YES;
         }
+    }
+
+    return updated;
+}
+
+- (BOOL)session:(MXSession *)session updateRoomSummary:(MXRoomSummary *)summary withServerRoomSummary:(MXRoomSyncSummary *)serverRoomSummary roomState:(MXRoomState *)roomState
+{
+    BOOL updated = NO;
+
+    // Update room members count
+    if (-1 != serverRoomSummary.joinedMemberCount || -1 != serverRoomSummary.invitedMemberCount)
+    {
+        updated |= [self updateSummaryMemberCount:summary session:session withServerRoomSummary:serverRoomSummary roomState:roomState];
+    }
+
+    // Update display name
+    if (serverRoomSummary.heroes)
+    {
+        updated |= [self updateSummaryDisplayname:summary session:session withServerRoomSummary:serverRoomSummary roomState:roomState];
+    }
+
+    return updated;
+}
+
+- (BOOL)updateSummaryDisplayname:(MXRoomSummary *)summary session:(MXSession *)session withServerRoomSummary:(MXRoomSyncSummary *)serverRoomSummary roomState:(MXRoomState *)roomState
+{
+    // TODO: Compute a display name based on
+    // https://docs.google.com/document/d/11i14UI1cUz-OJ0knD5BFu7fmT6Fo327zvMYqfSAR7xs/edit#
+    return NO;
+}
+
+- (BOOL)updateSummaryMemberCount:(MXRoomSummary *)summary session:(MXSession *)session withServerRoomSummary:(MXRoomSyncSummary *)serverRoomSummary roomState:(MXRoomState *)roomState
+{
+    BOOL updated = NO;
+
+    MXRoomMembersCount *memberCount = [summary.membersCount copy];
+    if (!memberCount)
+    {
+        memberCount = [MXRoomMembersCount new];
+    }
+
+    if (-1 != serverRoomSummary.joinedMemberCount)
+    {
+        memberCount.joined = serverRoomSummary.joinedMemberCount;
+    }
+    if (-1 != serverRoomSummary.invitedMemberCount)
+    {
+        memberCount.invited = serverRoomSummary.invitedMemberCount;
+    }
+    memberCount.members = memberCount.joined + memberCount.invited;
+
+    if (![summary.membersCount isEqual:memberCount])
+    {
+        summary.membersCount = memberCount;
+        updated = YES;
     }
 
     return updated;

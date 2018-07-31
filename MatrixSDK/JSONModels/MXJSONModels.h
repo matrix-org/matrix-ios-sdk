@@ -1217,6 +1217,33 @@ FOUNDATION_EXPORT NSString *const kMXPushRuleScopeStringDevice;
 @end
 
 /**
+ `MXRoomSyncSummary` represents the summary of a room.
+ */
+@interface MXRoomSyncSummary : MXJSONModel
+
+/**
+ Present only if the room has no m.room.name or m.room.canonical_alias.
+ Lists the mxids of the first 5 members in the room who are currently joined or
+ invited (ordered by stream ordering as seen on the server).
+ */
+@property (nonatomic) NSArray<NSString*> *heroes;
+
+/**
+ The number of m.room.members in state ‘joined’ (including the syncing user).
+ -1 means the information was not sent by the server.
+ */
+@property (nonatomic) NSUInteger joinedMemberCount;
+
+/**
+ The number of m.room.members in state ‘invited’.
+ -1 means the information was not sent by the server.
+ */
+@property (nonatomic) NSUInteger invitedMemberCount;
+
+@end
+
+
+/**
  `MXRoomSync` represents the response for a room during server sync.
  */
 @interface MXRoomSync : MXJSONModel
@@ -1245,6 +1272,11 @@ FOUNDATION_EXPORT NSString *const kMXPushRuleScopeStringDevice;
      The notification counts for the room.
      */
     @property (nonatomic) MXRoomSyncUnreadNotifications *unreadNotifications;
+
+    /**
+     The room summary. Sent in case of lazy-loading of members.
+     */
+    @property (nonatomic) MXRoomSyncSummary *summary;
 
 @end
 

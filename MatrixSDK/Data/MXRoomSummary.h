@@ -332,7 +332,7 @@ FOUNDATION_EXPORT NSString *const kMXRoomSummaryDidChangeNotification;
 - (BOOL)session:(MXSession*)session updateRoomSummary:(MXRoomSummary*)summary withLastEvent:(MXEvent*)event eventState:(MXRoomState*)eventState roomState:(MXRoomState*)roomState;
 
 /**
- Called to update the room summary on a received state event.
+ Called to update the room summary on received state events.
 
  @param session the session the room belongs to.
  @param summary the room summary.
@@ -341,5 +341,16 @@ FOUNDATION_EXPORT NSString *const kMXRoomSummaryDidChangeNotification;
  @return YES if the room summary has changed.
  */
 - (BOOL)session:(MXSession*)session updateRoomSummary:(MXRoomSummary*)summary withStateEvents:(NSArray<MXEvent*>*)stateEvents roomState:(MXRoomState*)roomState;
+
+/**
+ Called to update the room summary on received summary update.
+
+ @param session the session the room belongs to.
+ @param summary the room summary.
+ @param serverRoomSummary the homeserver side room summary.
+ @param roomState the current state of the room.
+ @return YES if the room summary has changed.
+ */
+- (BOOL)session:(MXSession*)session updateRoomSummary:(MXRoomSummary*)summary withServerRoomSummary:(MXRoomSyncSummary*)serverRoomSummary roomState:(MXRoomState*)roomState;
 
 @end
