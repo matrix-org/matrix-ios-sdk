@@ -315,9 +315,12 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
 {
     // Handle here invite data to decide if it is direct or not
     MXWeakify(self);
-    [self members:^(MXRoomMembers *roomMembers) {
+    [self state:^(MXRoomState *roomState) {
         MXStrongifyAndReturnIfNil(self);
 
+        // We can use roomState.members because, even in case of lazy loading of room members,
+        // my user must be in roomState.members
+        MXRoomMembers *roomMembers = roomState.members;
         MXRoomMember *myUser = [roomMembers memberWithUserId:self.mxSession.myUser.userId];
         BOOL isDirect = NO;
 
@@ -333,7 +336,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
                 NSLog(@"[MXRoom] Failed to tag an invite as a direct chat");
             }];
         }
-    } failure:nil]; // @TODO(lazy-loading): Handle errors
+    }];
 }
 
 #pragma mark - Room private account data handling

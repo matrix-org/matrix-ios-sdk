@@ -1824,7 +1824,7 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
                 }
                 else if (event.eventType == MXEventTypeRoomMember)
                 {
-                    [self onRoomMembership:event];
+                    [self onRoomMembership:event roomState:customObject];
                 }
             }
         }];
@@ -1932,7 +1932,7 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
 
  @param event the membership event causing the change
  */
-- (void)onRoomMembership:(MXEvent*)event
+- (void)onRoomMembership:(MXEvent*)event roomState:(MXRoomState*)roomState
 {
     id<MXEncrypting> alg = roomEncryptors[event.roomId];
     if (!alg)
@@ -1941,31 +1941,24 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
         return;
     }
 
-    MXRoom *room = [_mxSession roomWithRoomId:event.roomId];
+    NSString *userId = event.stateKey;
+    MXRoomMember *member = [roomState.members memberWithUserId:userId];
 
-    MXWeakify(self);
-    [room members:^(MXRoomMembers *roomMembers) {
-        MXStrongifyAndReturnIfNil(self);
+    if (member && member.membership == MXMembershipJoin)
+    {
+        NSLog(@"[MXCrypto] onRoomMembership: Join event for %@ in %@", member.userId, event.roomId);
 
-        NSString *userId = event.stateKey;
-        MXRoomMember *member = [roomMembers memberWithUserId:userId];
-
-        if (member && member.membership == MXMembershipJoin)
+        if (self.cryptoQueue)
         {
-            NSLog(@"[MXCrypto] onRoomMembership: Join event for %@ in %@", member.userId, event.roomId);
+            MXWeakify(self);
+            dispatch_async(self.cryptoQueue, ^{
+                MXStrongifyAndReturnIfNil(self);
 
-            if (self.cryptoQueue)
-            {
-                MXWeakify(self);
-                dispatch_async(self.cryptoQueue, ^{
-                    MXStrongifyAndReturnIfNil(self);
-
-                    // make sure we are tracking the deviceList for this user
-                    [self.deviceList startTrackingDeviceList:member.userId ];
-                });
-            }
+                // make sure we are tracking the deviceList for this user
+                [self.deviceList startTrackingDeviceList:member.userId ];
+            });
         }
-    } failure:nil]; // @TODO(lazy-loading): Handle errors
+    }
 }
 
 /**

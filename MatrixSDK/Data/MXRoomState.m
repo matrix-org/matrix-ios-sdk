@@ -349,9 +349,7 @@
     // Process the update on room members
     if ([_members handleStateEvents:events])
     {
-        // Update counters from self.members
-        // @TODO(lazy-loading): these values will be provided by the coming
-        // room summary in the matrix spec (https://github.com/matrix-org/matrix-doc/issues/688).
+        // Update counters for currently known room members
         _membersCount.members = _members.members.count;
         _membersCount.joined = _members.joinedMembers.count;
         _membersCount.invited =  [_members membersWithMembership:MXMembershipInvite].count;
