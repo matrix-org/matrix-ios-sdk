@@ -59,10 +59,26 @@ Common initial conditions:
 - (void)createScenarioWithLazyLoading:(BOOL)lazyLoading
                           readyToTest:(void (^)(MXSession *aliceSession, MXSession *bobSession, MXSession *charlieSession, NSString* roomId, XCTestExpectation *expectation))readyToTest
 {
+    [self createScenarioWithLazyLoading:lazyLoading inARoomWithName:YES readyToTest:readyToTest];
+}
+
+- (void)createScenarioWithLazyLoading:(BOOL)lazyLoading
+                      inARoomWithName:(BOOL)inARoomWithName
+                          readyToTest:(void (^)(MXSession *aliceSession, MXSession *bobSession, MXSession *charlieSession, NSString* roomId, XCTestExpectation *expectation))readyToTest
+{
     // - Alice, Bob in a room
     [matrixSDKTestsData doMXSessionTestWithBobAndAliceInARoom:self readyToTest:^(MXSession *bobSession, MXRestClient *aliceRestClient, NSString *roomId, XCTestExpectation *expectation) {
 
         MXRoom *roomFromBobPOV = [bobSession roomWithRoomId:roomId];
+
+        if (inARoomWithName)
+        {
+            // Set a room name to prevent the HS from sending us heroes through the summary API.
+            // When the HS sends heroes, it also sends m.room.membership events for them. This breaks
+            // how this tests suite was written.
+            [roomFromBobPOV setName:@"A name" success:nil failure:nil];
+        }
+
         [roomFromBobPOV setJoinRule:kMXRoomJoinRulePublic success:^{
 
             // - Charlie joins the room
@@ -167,7 +183,7 @@ Common initial conditions:
 
             if (lazyLoading)
             {
-                XCTAssertEqual(lazyloadedRoomMembers.members.count, 1, @"There should only Alice in the lazy loaded room state");
+                XCTAssertEqual(lazyloadedRoomMembers.members.count, 1, @"There should be only Alice in the lazy loaded room state");
 
                 XCTAssertEqual(roomState.membersCount.members, 1);
                 XCTAssertEqual(roomState.membersCount.joined, 1);
@@ -460,7 +476,7 @@ Common initial conditions:
 
             if (lazyLoading)
             {
-                XCTAssertEqual(lazyLoadedMembers.members.count, 1, @"There should only Alice in the lazy loaded room state");
+                XCTAssertEqual(lazyLoadedMembers.members.count, 1, @"There should be only Alice in the lazy loaded room state");
                 XCTAssertEqual(lazyLoadedMembers.joinedMembers.count, 1);
                 XCTAssertEqual([lazyLoadedMembers membersWithMembership:MXMembershipInvite].count, 0);
             }
@@ -516,20 +532,31 @@ Common initial conditions:
 // Check room display name computed from heroes provided in the room summary
 - (void)checkRoomSummaryDisplayNameFromHeroesWithLazyLoading:(BOOL)lazyLoading
 {
-    [self createScenarioWithLazyLoading:lazyLoading readyToTest:^(MXSession *aliceSession, MXSession *bobSession, MXSession *charlieSession, NSString *roomId, XCTestExpectation *expectation) {
+    // Do not set a room name for this test
+    [self createScenarioWithLazyLoading:lazyLoading inARoomWithName:NO readyToTest:^(MXSession *aliceSession, MXSession *bobSession, MXSession *charlieSession, NSString *roomId, XCTestExpectation *expectation) {
 
-        MXRoomSummary *roomSummary = [aliceSession roomSummaryWithRoomId:roomId];
+        MXRoom *room = [aliceSession roomWithRoomId:roomId];
+        [room state:^(MXRoomState *roomState) {
 
-        if (lazyLoading)
-        {
-            XCTAssertNotNil(roomSummary.displayname, @"Thanks to the summary api, the SDK can build a room display name");
-        }
-        else
-        {
-            XCTAssertNil(roomSummary.displayname);
-        }
+            // Membership events for heroes must have been lazy-loaded
+            // There are used to compute roomSummary.displayname
+            XCTAssertNotNil([roomState.members memberWithUserId:aliceSession.myUser.userId]);
+            XCTAssertNotNil([roomState.members memberWithUserId:bobSession.myUser.userId]);
+            XCTAssertNotNil([roomState.members memberWithUserId:charlieSession.myUser.userId]);
 
-        [expectation fulfill];
+            MXRoomSummary *roomSummary = [aliceSession roomSummaryWithRoomId:roomId];
+
+            if (lazyLoading)
+            {
+                XCTAssertNotNil(roomSummary.displayname, @"Thanks to the summary api, the SDK can build a room display name");
+            }
+            else
+            {
+                XCTAssertNil(roomSummary.displayname);
+            }
+
+            [expectation fulfill];
+        }];
     }];
 }
 
