@@ -1909,7 +1909,8 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
     MXRoom *room = [_mxSession roomWithRoomId:event.roomId];
 
     MXWeakify(self);
-    [room members:^(MXRoomMembers *roomMembers) {
+    void (^success)(MXRoomMembers *roomMembers) = ^void(MXRoomMembers *roomMembers)
+    {
         MXStrongifyAndReturnIfNil(self);
 
         NSMutableArray *members = [NSMutableArray array];
@@ -1924,7 +1925,17 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
                 [self setEncryptionInRoom:event.roomId withMembers:members algorithm:event.content[@"algorithm"] inhibitDeviceQuery:YES];
             });
         }
-    } failure:nil]; // @TODO(lazy-loading): Handle errors
+    };
+
+    [room members:^(MXRoomMembers *roomMembers) {
+        success(roomMembers);
+    } failure:^(NSError *error) {
+        NSLog(@"[MXCrypto] onCryptoEvent: Warning: Enable to get all members from the HS. Fallback by using lazy-loaded members");
+
+        [room state:^(MXRoomState *roomState) {
+            success(roomState.members);
+        }];
+    }];
 }
 
 /**
