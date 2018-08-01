@@ -222,6 +222,13 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
 - (MXHTTPOperation *)members:(void (^)(MXRoomMembers *roomMembers))success
                     failure:(void (^)(NSError *error))failure
 {
+    return [self members:success lazyLoadedMembers:nil failure:failure];
+}
+
+- (MXHTTPOperation*)members:(void (^)(MXRoomMembers *members))success
+          lazyLoadedMembers:(void (^)(MXRoomMembers *lazyLoadedMembers))lazyLoadedMembers
+                    failure:(void (^)(NSError *error))failure
+{
     // Create an empty operation that will be mutated later
     MXHTTPOperation *operation = [[MXHTTPOperation alloc] init];
 
@@ -236,6 +243,12 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
         }
         else
         {
+            // Return already lazy-loaded room members if requested
+            if (lazyLoadedMembers)
+            {
+                lazyLoadedMembers(liveTimeline.state.members);
+            }
+
             // Else get them from the homeserver
             MXWeakify(self);
             MXHTTPOperation *operation2 = [self.mxSession.matrixRestClient membersOfRoom:self.roomId success:^(NSArray *roomMemberEvents) {
@@ -265,6 +278,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
 
     return operation;
 }
+
 
 - (void)setPartialTextMessage:(NSString *)partialTextMessage
 {

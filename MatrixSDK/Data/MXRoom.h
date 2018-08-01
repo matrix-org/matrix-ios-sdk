@@ -108,6 +108,22 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidFlushDataNotification;
                     failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 /**
+ Same as `[MXRoom members:]` but it returns already lazy-loaded members if an
+ HTTP request to the homeserver is requested.
+
+ @param success A block object called when the operation succeeds. It returns
+                all members of the room.
+ @param lazyLoadedMembers A block object called when an HTTP request is required. It returns
+                          already lazy-loaded members.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)members:(void (^)(MXRoomMembers *members))success
+          lazyLoadedMembers:(void (^)(MXRoomMembers *lazyLoadedMembers))lazyLoadedMembers
+                    failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
+
+/**
  The private user data for this room.
  */
 @property (nonatomic, readonly) MXRoomAccountData *accountData;

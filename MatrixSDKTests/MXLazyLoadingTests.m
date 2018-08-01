@@ -440,6 +440,52 @@ Common initial conditions:
 }
 
 
+// Check [room members:lazyLoadedMembers:] callbacks call
+- (void)checkRoomMembersAndLazyLoadedMembersWithLazyLoading:(BOOL)lazyLoading
+{
+    [self createScenarioWithLazyLoading:lazyLoading readyToTest:^(MXSession *aliceSession, MXSession *bobSession, MXSession *charlieSession, NSString *roomId, XCTestExpectation *expectation) {
+
+        MXRoom *room = [aliceSession roomWithRoomId:roomId];
+
+        [room members:^(MXRoomMembers *members) {
+
+            // The room members list in the room state is full known
+            XCTAssertEqual(members.members.count, 4);
+            XCTAssertEqual(members.joinedMembers.count, 3);
+            XCTAssertEqual([members membersWithMembership:MXMembershipInvite].count, 1);
+
+            [expectation fulfill];
+
+        } lazyLoadedMembers:^(MXRoomMembers *lazyLoadedMembers) {
+
+            if (lazyLoading)
+            {
+                XCTAssertEqual(lazyLoadedMembers.members.count, 1, @"There should only Alice in the lazy loaded room state");
+                XCTAssertEqual(lazyLoadedMembers.joinedMembers.count, 1);
+                XCTAssertEqual([lazyLoadedMembers membersWithMembership:MXMembershipInvite].count, 0);
+            }
+            else
+            {
+                XCTFail(@"This block should not be called when we already know all room members");
+            }
+
+        } failure:^(NSError *error) {
+            XCTFail(@"The operation should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+    }];
+}
+
+- (void)testRoomMembersAndLazyLoadedMembers
+{
+    [self checkRoomMembersAndLazyLoadedMembersWithLazyLoading:YES];
+}
+
+- (void)testRoomMembersAndLazyLoadedMembersWithLazyLoadingOFF
+{
+    [self checkRoomMembersAndLazyLoadedMembersWithLazyLoading:NO];
+}
+
 
 // roomSummary.membersCount must be right in both cases
 - (void)checkRoomSummaryMembersCountWithLazyLoading:(BOOL)lazyLoading
