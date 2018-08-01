@@ -485,7 +485,8 @@
     float powerLevel = 0;
     
     // Get the user from the member list of the room
-    // @TODO(lazy-loading): We should not need it. This is not the job of the SDK to filter information like this
+    // If the app asks for information about a user id, it means that we already
+    // have the MXRoomMember data
     MXRoomMember *member = [self.members memberWithUserId:userId];
     
     // Ignore banned and left (kicked) members

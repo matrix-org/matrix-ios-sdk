@@ -180,18 +180,6 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidFlushDataNotification;
 - (id)initWithRoomId:(NSString*)roomId andMatrixSession:(MXSession*)mxSession;
 
 /**
- Create a `MXRoom` instance from room state and account data already available.
-
- @param roomId the id of the room.
- @param mxSession the session to use.
- @param stateEvents the state events of the room.
- @param accountData the account data for the room.
- @return the new instance.
- */
- // @TODO(lazy-loading): Remove this method. loadRoomFromStore should be enough
-- (id)initWithRoomId:(NSString*)roomId andMatrixSession:(MXSession*)mxSession andStateEvents:(NSArray<MXEvent *> *)stateEvents andAccountData:(MXRoomAccountData*)accountData;
-
-/**
  Create a `MXRoom` instance by specifying the store the live timeline must use.
 
  @param roomId the id of the room.

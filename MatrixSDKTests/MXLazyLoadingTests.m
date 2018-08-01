@@ -620,28 +620,8 @@ Common initial conditions:
 }
 
 
-// Check detection room with conference user in both caes
-- (void)checkConferenceUserRoomWithLazyLoading:(BOOL)lazyLoading
-{
-    // TODO
-    XCTAssert(nil);
-}
-
-- (void)testConferenceUserRoom
-{
-    [self checkConferenceUserRoomWithLazyLoading:YES];
-}
-
-- (void)testConferenceUserRoomWithLazyLoadingOFF
-{
-    [self checkConferenceUserRoomWithLazyLoading:NO];
-}
-
-
-
 /*
- @TODO:
- - test non support of lazy-loading
+ @TODO(lazy-loading):
  - test while paginating around a permalink
  - test read receipts
  */
