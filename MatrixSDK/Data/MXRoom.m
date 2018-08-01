@@ -225,22 +225,41 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
     // Create an empty operation that will be mutated later
     MXHTTPOperation *operation = [[MXHTTPOperation alloc] init];
 
+    MXWeakify(self);
     [self liveTimeline:^(MXEventTimeline *liveTimeline) {
+        MXStrongifyAndReturnIfNil(self);
 
-        MXHTTPOperation *operation2 = [self.mxSession.matrixRestClient membersOfRoom:self.roomId success:^(NSArray *roomMemberEvents) {
-
-            [liveTimeline handleLazyLoadedStateEvents:roomMemberEvents];
-
-            if (success)
-            {
-                success(liveTimeline.state.members);
-            }
-
-        } failure:failure];
-
-        if (operation2)
+        // Return directly liveTimeline.state.members if we have already all of them
+        if ([self.mxSession.store hasLoadedAllRoomMembersForRoom:self.roomId])
         {
-            [operation mutateTo:operation2];
+            success(liveTimeline.state.members);
+        }
+        else
+        {
+            // Else get them from the homeserver
+            MXWeakify(self);
+            MXHTTPOperation *operation2 = [self.mxSession.matrixRestClient membersOfRoom:self.roomId success:^(NSArray *roomMemberEvents) {
+                MXStrongifyAndReturnIfNil(self);
+
+                [liveTimeline handleLazyLoadedStateEvents:roomMemberEvents];
+
+                [self.mxSession.store storeHasLoadedAllRoomMembersForRoom:self.roomId andValue:YES];
+                if ([self.mxSession.store respondsToSelector:@selector(commit)])
+                {
+                    [self.mxSession.store commit];
+                }
+
+                if (success)
+                {
+                    success(liveTimeline.state.members);
+                }
+
+            } failure:failure];
+
+            if (operation2)
+            {
+                [operation mutateTo:operation2];
+            }
         }
     }];
 

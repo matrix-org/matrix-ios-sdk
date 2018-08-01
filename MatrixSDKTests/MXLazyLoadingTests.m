@@ -398,6 +398,48 @@ Common initial conditions:
     [self checkRoomMembersWithLazyLoading:NO];
 }
 
+// [MXRoom members:] should make an HTTP request to fetch members only once
+- (void)checkSingleRoomMembersRequestWithLazyLoading:(BOOL)lazyLoading
+{
+    [self createScenarioWithLazyLoading:lazyLoading readyToTest:^(MXSession *aliceSession, MXSession *bobSession, MXSession *charlieSession, NSString *roomId, XCTestExpectation *expectation) {
+
+        MXRoom *room = [aliceSession roomWithRoomId:roomId];
+
+        [room members:^(MXRoomMembers *members) {
+
+            MXHTTPOperation *operation = [room members:^(MXRoomMembers *roomMembers) {
+
+                // The room members list in the room state is full known
+                XCTAssertEqual(roomMembers.members.count, 4);
+                XCTAssertEqual(roomMembers.joinedMembers.count, 3);
+                XCTAssertEqual([roomMembers membersWithMembership:MXMembershipInvite].count, 1);
+
+                [expectation fulfill];
+            } failure:^(NSError *error) {
+                XCTFail(@"The operation should not fail - NSError: %@", error);
+                [expectation fulfill];
+            }];
+
+            XCTAssertNil(operation.operation);
+
+        } failure:^(NSError *error) {
+            XCTFail(@"The operation should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+    }];
+}
+
+- (void)testSingleRoomMembersRequest
+{
+    [self checkSingleRoomMembersRequestWithLazyLoading:YES];
+}
+
+- (void)testSingleRoomMembersRequestWithLazyLoadingOFF
+{
+    [self checkSingleRoomMembersRequestWithLazyLoading:NO];
+}
+
+
 
 // roomSummary.membersCount must be right in both cases
 - (void)checkRoomSummaryMembersCountWithLazyLoading:(BOOL)lazyLoading

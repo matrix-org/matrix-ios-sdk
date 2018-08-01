@@ -25,7 +25,7 @@
 #import "MXSDKOptions.h"
 #import "MXTools.h"
 
-static NSUInteger const kMXFileVersion = 55;
+static NSUInteger const kMXFileVersion = 56;
 
 static NSString *const kMXFileStoreFolder = @"MXFileStore";
 static NSString *const kMXFileStoreMedaDataFile = @"MXFileStore";
@@ -406,6 +406,17 @@ static NSUInteger preloadOptions;
         [roomsToCommitForMessages addObject:roomId];
     }
 }
+
+- (void)storeHasLoadedAllRoomMembersForRoom:(NSString *)roomId andValue:(BOOL)value
+{
+    [super storeHasLoadedAllRoomMembersForRoom:roomId andValue:value];
+
+    if (NSNotFound == [roomsToCommitForMessages indexOfObject:roomId])
+    {
+        [roomsToCommitForMessages addObject:roomId];
+    }
+}
+
 
 - (BOOL)isPermanent
 {

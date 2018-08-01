@@ -128,6 +128,18 @@
     return roomStore.hasReachedHomeServerPaginationEnd;
 }
 
+- (void)storeHasLoadedAllRoomMembersForRoom:(NSString *)roomId andValue:(BOOL)value
+{
+    MXMemoryRoomStore *roomStore = [self getOrCreateRoomStore:roomId];
+    roomStore.hasLoadedAllRoomMembersForRoom = value;
+}
+
+- (BOOL)hasLoadedAllRoomMembersForRoom:(NSString *)roomId
+{
+    MXMemoryRoomStore *roomStore = [self getOrCreateRoomStore:roomId];
+    return roomStore.hasLoadedAllRoomMembersForRoom;
+}
+
 
 - (id<MXEventsEnumerator>)messagesEnumeratorForRoom:(NSString *)roomId
 {

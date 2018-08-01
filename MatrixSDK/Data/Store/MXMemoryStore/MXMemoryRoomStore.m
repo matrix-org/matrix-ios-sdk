@@ -36,7 +36,9 @@
     {
         messages = [NSMutableArray array];
         messagesByEventIds = [NSMutableDictionary dictionary];
-        outgoingMessages = [NSMutableArray array];;
+        outgoingMessages = [NSMutableArray array];
+        _hasReachedHomeServerPaginationEnd = NO;
+        _hasLoadedAllRoomMembersForRoom = NO;
     }
     return self;
 }
@@ -154,7 +156,7 @@
 
 - (NSString *)description
 {
-    return [NSString stringWithFormat:@"%tu messages - paginationToken: %@ - hasReachedHomeServerPaginationEnd: %d", messages.count, _paginationToken, _hasReachedHomeServerPaginationEnd];
+    return [NSString stringWithFormat:@"%tu messages - paginationToken: %@ - hasReachedHomeServerPaginationEnd: %@ - hasLoadedAllRoomMembersForRoom: %@", messages.count, _paginationToken, @(_hasReachedHomeServerPaginationEnd), @(_hasLoadedAllRoomMembersForRoom)];
 }
 
 @end

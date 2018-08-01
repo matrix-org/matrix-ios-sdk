@@ -32,6 +32,9 @@
     // key: roomId, value: the bool value
     NSMutableDictionary *hasReachedHomeServerPaginations;
 
+    // key: roomId, value: the bool value
+    NSMutableDictionary *hasLoadedAllRoomMembersForRooms;
+
     // key: roomId, value: the last message of this room
     NSMutableDictionary *lastMessages;
 
@@ -63,6 +66,7 @@
         notificationCounts = [NSMutableDictionary dictionary];
         highlightCounts = [NSMutableDictionary dictionary];
         hasReachedHomeServerPaginations = [NSMutableDictionary dictionary];
+        hasLoadedAllRoomMembersForRooms = [NSMutableDictionary dictionary];
         lastMessages = [NSMutableDictionary dictionary];
         partialTextMessages = [NSMutableDictionary dictionary];
         users = [NSMutableDictionary dictionary];
@@ -139,6 +143,10 @@
     {
         [hasReachedHomeServerPaginations removeObjectForKey:roomId];
     }
+    if (hasLoadedAllRoomMembersForRooms[roomId])
+    {
+        [hasLoadedAllRoomMembersForRooms removeObjectForKey:roomId];
+    }
     if (lastMessages[roomId])
     {
         [lastMessages removeObjectForKey:roomId];
@@ -155,6 +163,7 @@
     [notificationCounts removeAllObjects];
     [highlightCounts removeAllObjects];
     [hasReachedHomeServerPaginations removeAllObjects];
+    [hasLoadedAllRoomMembersForRooms removeAllObjects];
     [lastMessages removeAllObjects];
     [partialTextMessages removeAllObjects];
 }
@@ -185,6 +194,25 @@
 
     return hasReachedHomeServerPaginationEnd;
 }
+
+- (void)storeHasLoadedAllRoomMembersForRoom:(NSString *)roomId andValue:(BOOL)value
+{
+    hasLoadedAllRoomMembersForRooms[roomId] = @(value);
+}
+
+- (BOOL)hasLoadedAllRoomMembersForRoom:(NSString *)roomId
+{
+    BOOL hasLoadedAllRoomMembers = NO;
+
+    NSNumber *hasLoadedAllRoomMembersNumber = hasLoadedAllRoomMembersForRooms[roomId];
+    if (hasLoadedAllRoomMembersNumber)
+    {
+        hasLoadedAllRoomMembers = [hasLoadedAllRoomMembersNumber boolValue];
+    }
+
+    return hasLoadedAllRoomMembers;
+}
+
 
 - (id<MXEventsEnumerator>)messagesEnumeratorForRoom:(NSString *)roomId
 {

@@ -125,6 +125,13 @@
 - (BOOL)hasReachedHomeServerPaginationEndForRoom:(nonnull NSString*)roomId;
 
 /**
+ Store/retrieve the flag indicating that the SDK has retrieved all room members
+ of a room.
+ */
+- (void)storeHasLoadedAllRoomMembersForRoom:(nonnull NSString*)roomId andValue:(BOOL)value;
+- (BOOL)hasLoadedAllRoomMembersForRoom:(nonnull NSString*)roomId;
+
+/**
  Get an events enumerator on all messages of a room.
  
  @param roomId the id of the room.
