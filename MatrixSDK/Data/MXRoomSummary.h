@@ -157,6 +157,7 @@ FOUNDATION_EXPORT NSString *const kMXRoomSummaryDidChangeNotification;
 /**
  Flag indicating if the room is a 1:1 room with a call conference user.
  In this case, the room is used as a call signaling room and does not need to be
+ displayed to the end user.
  */
 @property (nonatomic) BOOL isConferenceUserRoom;
 
