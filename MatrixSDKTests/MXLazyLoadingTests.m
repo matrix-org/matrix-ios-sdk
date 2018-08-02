@@ -168,6 +168,9 @@ Common initial conditions:
 }
 
 
+// @TODO(lazy-loading): Check fallback
+
+
 // After the test scenario, room state should be lazy loaded and partial.
 // There should be only Alice and state.members.count = 1
 - (void)checkRoomStateWithLazyLoading:(BOOL)lazyLoading
@@ -373,7 +376,8 @@ Common initial conditions:
 
 
 // As members is only partial, [room members:] should trigger an HTTP request
-// and returns the 4 persons,
+// and returns the 4 members.
+// @TODO(lazy-loading): test queueing in [MXRoom members:]
 - (void)checkRoomMembersWithLazyLoading:(BOOL)lazyLoading
 {
     [self createScenarioWithLazyLoading:lazyLoading readyToTest:^(MXSession *aliceSession, MXSession *bobSession, MXSession *charlieSession, NSString *roomId, XCTestExpectation *expectation) {
@@ -413,6 +417,7 @@ Common initial conditions:
 {
     [self checkRoomMembersWithLazyLoading:NO];
 }
+
 
 // [MXRoom members:] should make an HTTP request to fetch members only once
 - (void)checkSingleRoomMembersRequestWithLazyLoading:(BOOL)lazyLoading
@@ -500,6 +505,60 @@ Common initial conditions:
 - (void)testRoomMembersAndLazyLoadedMembersWithLazyLoadingOFF
 {
     [self checkRoomMembersAndLazyLoadedMembersWithLazyLoading:NO];
+}
+
+
+// Test MXRoomSummary.membership
+// With the scenario, if Alice and Charlie do an /initialSync, they must see them as joined
+// in the room.
+- (void)checkSummaryMembershipWithLazyLoading:(BOOL)lazyLoading
+{
+    [self createScenarioWithLazyLoading:lazyLoading readyToTest:^(MXSession *aliceSession, MXSession *bobSession, MXSession *charlieSession, NSString *roomId, XCTestExpectation *expectation) {
+
+        MXRoom *room = [aliceSession roomWithRoomId:roomId];
+        [room state:^(MXRoomState *roomState) {
+
+            // Check Alice membership
+            MXRoomSummary *roomSummary = [aliceSession roomSummaryWithRoomId:roomId];
+            XCTAssertEqual(roomSummary.membership, MXMembershipJoin);
+
+
+            // Check Charlie POV
+            // - Charlie makes an initial /sync
+            MXSession *charlieSession2 = [[MXSession alloc] initWithMatrixRestClient:charlieSession.matrixRestClient];
+            [charlieSession close];
+            [matrixSDKTestsData retain:charlieSession2];
+
+            MXFilterJSONModel *filter;
+            if (lazyLoading)
+            {
+                filter = [MXFilterJSONModel syncFilterForLazyLoading];
+            }
+
+            [charlieSession2 startWithSyncFilter:filter onServerSyncDone:^{
+
+                // Check Charlie membership
+               MXRoomSummary *roomFromCharliePOVSummary = [charlieSession2 roomSummaryWithRoomId:roomId];
+                XCTAssertEqual(roomFromCharliePOVSummary.membership, MXMembershipJoin);
+
+                [expectation fulfill];
+
+            } failure:^(NSError *error) {
+                XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                [expectation fulfill];
+            }];
+        }];
+    }];
+}
+
+- (void)testSummaryMembership
+{
+    [self checkSummaryMembershipWithLazyLoading:YES];
+}
+
+- (void)testSummaryMembershipWithLazyLoadingOFF
+{
+    [self checkSummaryMembershipWithLazyLoading:NO];
 }
 
 

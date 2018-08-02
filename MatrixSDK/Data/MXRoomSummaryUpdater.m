@@ -145,7 +145,7 @@
             updated = YES;
         }
 
-        if (summary.membership != roomState.membership)
+        if (summary.membership != roomState.membership && roomState.membership != MXMembershipUnknown)
         {
             summary.membership = roomState.membership;
             updated = YES;

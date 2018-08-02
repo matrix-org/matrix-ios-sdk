@@ -389,6 +389,13 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
         [store deleteRoom:self.state.roomId];
     }
 
+    // In case of lazy-loading, we may not have the membership event for our user.
+    // If handleJoinedRoomSync is called, the user is a joined member.
+    if (room.mxSession.syncWithLazyLoadOfRoomMembers && room.summary.membership != MXMembershipJoin)
+    {
+        room.summary.membership = MXMembershipJoin;
+    }
+
     // Build/Update first the room state corresponding to the 'start' of the timeline.
     // Note: We consider it is not required to clone the existing room state here, because no notification is posted for these events.
     for (MXEvent *event in roomSync.state.events)
@@ -468,6 +475,13 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
 
 - (void)handleInvitedRoomSync:(MXInvitedRoomSync *)invitedRoomSync
 {
+    // In case of lazy-loading, we may not have the membership event for our user.
+    // If handleInvitedRoomSync is called, the user is an invited member.
+    if (room.mxSession.syncWithLazyLoadOfRoomMembers && room.summary.membership != MXMembershipInvite)
+    {
+        room.summary.membership = MXMembershipInvite;
+    }
+
     // Handle the state events forwardly (the room state will be updated, and the listeners (if any) will be notified).
     for (MXEvent *event in invitedRoomSync.inviteState.events)
     {
@@ -734,7 +748,7 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
         // Update summary with this state events update
         [room.summary handleStateEvents:stateEvents];
 
-        if (!room.mxSession.syncWithLazyLoadOfRoomMembers)
+        if (!room.mxSession.syncWithLazyLoadOfRoomMembers && ![store hasLoadedAllRoomMembersForRoom:room.roomId])
         {
             // If there is no lazy loading of room members, consider we have fetched
             // all of them
