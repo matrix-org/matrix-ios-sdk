@@ -168,9 +168,6 @@ Common initial conditions:
 }
 
 
-// @TODO(lazy-loading): Check fallback
-
-
 // After the test scenario, room state should be lazy loaded and partial.
 // There should be only Alice and state.members.count = 1
 - (void)checkRoomStateWithLazyLoading:(BOOL)lazyLoading
