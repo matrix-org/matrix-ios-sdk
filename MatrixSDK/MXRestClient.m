@@ -2389,7 +2389,7 @@ MXAuthAction;
 
     if (filter)
     {
-        parameters[@"filter"] = filter.dictionary;
+        parameters[@"filter"] = filter.jsonString;
     }
 
     MXWeakify(self);
