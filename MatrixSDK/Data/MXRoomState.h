@@ -56,11 +56,17 @@
 
 /**
  Room members of the room.
+
+ In case of lazy-loading of room members (@see MXSession.syncWithLazyLoadOfRoomMembers),
+ `MXRoomState.members` contains only a subset of all actual room members. This subset
+ is enough to render the events timeline owning the `MXRoomState` instance.
+
+ Use [MXRoom members:] to get the full list of room members.
  */
 @property (nonatomic, readonly) MXRoomMembers *members;
 
 /**
- Room members counts.
+ Cache counts for MXRoomState.members`.
  */
 @property (nonatomic, readonly) MXRoomMembersCount *membersCount;
 

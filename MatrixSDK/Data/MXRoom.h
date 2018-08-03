@@ -94,8 +94,34 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidFlushDataNotification;
 
 /**
  The current list of members of the room.
+
+ It may require a request to the homeserver if the client has not fetched yet all
+ data like in case of members lazy loading.
+
+ @param success A block object called when the operation succeeds. It returns
+                the MXRoomMembers object.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
  */
-- (void)members:(void (^)(MXRoomMembers *roomMembers))onComplete;
+- (MXHTTPOperation*)members:(void (^)(MXRoomMembers *roomMembers))success
+                    failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
+
+/**
+ Same as `[MXRoom members:]` but it returns already lazy-loaded members if an
+ HTTP request to the homeserver is requested.
+
+ @param success A block object called when the operation succeeds. It returns
+                all members of the room.
+ @param lazyLoadedMembers A block object called when an HTTP request is required. It returns
+                          already lazy-loaded members.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)members:(void (^)(MXRoomMembers *members))success
+          lazyLoadedMembers:(void (^)(MXRoomMembers *lazyLoadedMembers))lazyLoadedMembers
+                    failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 /**
  The private user data for this room.
@@ -152,18 +178,6 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidFlushDataNotification;
  @return the new instance.
  */
 - (id)initWithRoomId:(NSString*)roomId andMatrixSession:(MXSession*)mxSession;
-
-/**
- Create a `MXRoom` instance from room state and account data already available.
-
- @param roomId the id of the room.
- @param mxSession the session to use.
- @param stateEvents the state events of the room.
- @param accountData the account data for the room.
- @return the new instance.
- */
- // @TODO(lazy-loading): Remove this method. loadRoomFromStore should be enough
-- (id)initWithRoomId:(NSString*)roomId andMatrixSession:(MXSession*)mxSession andStateEvents:(NSArray<MXEvent *> *)stateEvents andAccountData:(MXRoomAccountData*)accountData;
 
 /**
  Create a `MXRoom` instance by specifying the store the live timeline must use.

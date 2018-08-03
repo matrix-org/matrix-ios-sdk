@@ -112,14 +112,26 @@
 
 + (MXFilterJSONModel*)syncFilterForLazyLoading
 {
-    // @TODO
-    return nil;
+    MXFilterJSONModel *filter = [[MXFilterJSONModel alloc] init];
+
+    filter.room = [[MXRoomFilter alloc] init];
+    filter.room.state = [[MXRoomEventFilter alloc] init];
+    filter.room.state.lazyLoadMembers = YES;
+
+    return filter;
 }
 
 + (MXFilterJSONModel*)syncFilterForLazyLoadingWithMessageLimit:(NSUInteger)messageLimit
 {
-    // @TODO
-    return nil;
+    MXFilterJSONModel *filter = [[MXFilterJSONModel alloc] init];
+
+    filter.room = [[MXRoomFilter alloc] init];
+    filter.room.timeline = [[MXRoomEventFilter alloc] init];
+    filter.room.timeline.limit = messageLimit;
+    filter.room.state = [[MXRoomEventFilter alloc] init];
+    filter.room.state.lazyLoadMembers = YES;
+
+    return filter;
 }
 
 

@@ -69,4 +69,9 @@
  */
 @property (nonatomic) NSUInteger limit;
 
+/**
+ Enable lazy loading of members
+ */
+@property (nonatomic) BOOL lazyLoadMembers;
+
 @end

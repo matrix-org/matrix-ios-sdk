@@ -304,6 +304,18 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
         paginationToken = forwardsPaginationToken;
     }
 
+
+    // If the event stream runs with lazy loading, the timeline must do the same
+    if (room.mxSession.syncWithLazyLoadOfRoomMembers)
+    {
+        if (!_roomEventFilter)
+        {
+            _roomEventFilter = [MXRoomEventFilter new];
+        }
+
+        _roomEventFilter.lazyLoadMembers = YES;
+    }
+
     NSLog(@"[MXEventTimeline] paginate : request %tu messages from the server", numItems);
 
     MXWeakify(self);
@@ -375,6 +387,13 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
         // Reset the storage of this room. An initial sync of the room will be done with the provided 'roomSync'.
         NSLog(@"[MXEventTimeline] handleJoinedRoomSync: clean invited room from the store (%@).", self.state.roomId);
         [store deleteRoom:self.state.roomId];
+    }
+
+    // In case of lazy-loading, we may not have the membership event for our user.
+    // If handleJoinedRoomSync is called, the user is a joined member.
+    if (room.mxSession.syncWithLazyLoadOfRoomMembers && room.summary.membership != MXMembershipJoin)
+    {
+        room.summary.membership = MXMembershipJoin;
     }
 
     // Build/Update first the room state corresponding to the 'start' of the timeline.
@@ -456,6 +475,13 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
 
 - (void)handleInvitedRoomSync:(MXInvitedRoomSync *)invitedRoomSync
 {
+    // In case of lazy-loading, we may not have the membership event for our user.
+    // If handleInvitedRoomSync is called, the user is an invited member.
+    if (room.mxSession.syncWithLazyLoadOfRoomMembers && room.summary.membership != MXMembershipInvite)
+    {
+        room.summary.membership = MXMembershipInvite;
+    }
+
     // Handle the state events forwardly (the room state will be updated, and the listeners (if any) will be notified).
     for (MXEvent *event in invitedRoomSync.inviteState.events)
     {
@@ -472,6 +498,11 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
     }
 }
 
+- (void)handleLazyLoadedStateEvents:(NSArray<MXEvent *> *)stateEvents
+{
+    [self handleStateEvents:stateEvents direction:MXTimelineDirectionForwards];
+}
+
 - (void)handlePaginationResponse:(MXPaginationResponse*)paginatedResponse direction:(MXTimelineDirection)direction
 {
     // Check pagination end - @see SPEC-319 ticket
@@ -486,6 +517,16 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
         {
             hasReachedHomeServerForwardsPaginationEnd = YES;
         }
+    }
+
+    // Process additional state events (this happens in case of lazy loading)
+    if (paginatedResponse.state.count && direction == MXTimelineDirectionBackwards)
+    {
+        // Enrich the timeline root state with the additional state events observed during back pagination
+        [self handleStateEvents:paginatedResponse.state direction:MXTimelineDirectionForwards];
+
+        // Enrich intermediate room state while paginating
+        [self handleStateEvents:paginatedResponse.state  direction:direction];
     }
 
     // Process received events
@@ -709,6 +750,13 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
 
         // Update summary with this state events update
         [room.summary handleStateEvents:stateEvents];
+
+        if (!room.mxSession.syncWithLazyLoadOfRoomMembers && ![store hasLoadedAllRoomMembersForRoom:room.roomId])
+        {
+            // If there is no lazy loading of room members, consider we have fetched
+            // all of them
+            [store storeHasLoadedAllRoomMembersForRoom:room.roomId andValue:YES];
+        }
     }
 }
 

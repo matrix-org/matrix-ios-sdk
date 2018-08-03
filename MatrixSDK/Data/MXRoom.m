@@ -58,6 +58,11 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
      FIFO queue of objects waiting for [self liveTimeline:]. 
      */
     NSMutableArray<void (^)(MXEventTimeline *)> *pendingLiveTimelineRequesters;
+
+    /**
+     FIFO queue of objects waiting for [self members:].
+     */
+    NSMutableArray<void (^)(MXRoomMembers *)> *pendingMembersRequesters;
 }
 @end
 
@@ -87,31 +92,6 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
 {
     // Let's the live MXEventTimeline use its default store.
     return [self initWithRoomId:roomId matrixSession:mxSession2 andStore:nil];
-}
-
-// @TODO(lazy-loading): Remove this method. loadRoomFromStore should be enough
-- (id)initWithRoomId:(NSString *)roomId andMatrixSession:(MXSession *)mxSession2 andStateEvents:(NSArray<MXEvent *> *)stateEvents andAccountData:(MXRoomAccountData*)accountData
-{
-    self = [self initWithRoomId:roomId andMatrixSession:mxSession2];
-    if (self)
-    {
-        @autoreleasepool
-        {
-            [liveTimeline initialiseState:stateEvents];
-
-            // Report the provided accountData.
-            // Allocate a new instance if none, in order to handle room tag events for this room.
-            _accountData = accountData ? accountData : [[MXRoomAccountData alloc] init];
-            
-            // Check whether the room is pending on an invitation.
-            if (self.summary.membership == MXMembershipInvite)
-            {
-                // Handle direct flag to decide if it is direct or not
-                [self handleInviteDirectFlag];
-            }
-        }
-    }
-    return self;
 }
 
 - (id)initWithRoomId:(NSString *)roomId matrixSession:(MXSession *)mxSession2 andStore:(id<MXStore>)store
@@ -219,15 +199,82 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
     }];
 }
 
-- (void)members:(void (^)(MXRoomMembers *))onComplete
+- (MXHTTPOperation *)members:(void (^)(MXRoomMembers *roomMembers))success
+                    failure:(void (^)(NSError *error))failure
 {
-    // @TODO(lazy-loading: This is currently a shortcut to `self.liveTimeline.state.members`.
-    // But this method will evolve with a request to the HS in order to  load all members of
-    // the room.
-    [self state:^(MXRoomState *roomState) {
-        onComplete(roomState.members);
-    }];
+    return [self members:success lazyLoadedMembers:nil failure:failure];
 }
+
+- (MXHTTPOperation*)members:(void (^)(MXRoomMembers *members))success
+          lazyLoadedMembers:(void (^)(MXRoomMembers *lazyLoadedMembers))lazyLoadedMembers
+                    failure:(void (^)(NSError *error))failure
+{
+    // Create an empty operation that will be mutated later
+    MXHTTPOperation *operation = [[MXHTTPOperation alloc] init];
+
+    MXWeakify(self);
+    [self liveTimeline:^(MXEventTimeline *liveTimeline) {
+        MXStrongifyAndReturnIfNil(self);
+
+        // Return directly liveTimeline.state.members if we have already all of them
+        if ([self.mxSession.store hasLoadedAllRoomMembersForRoom:self.roomId])
+        {
+            success(liveTimeline.state.members);
+        }
+        else
+        {
+            // Return already lazy-loaded room members if requested
+            if (lazyLoadedMembers)
+            {
+                lazyLoadedMembers(liveTimeline.state.members);
+            }
+
+            // Queue the requester
+            if (!self->pendingMembersRequesters)
+            {
+                self->pendingMembersRequesters = [NSMutableArray array];
+
+                // Else get them from the homeserver
+                MXWeakify(self);
+                MXHTTPOperation *operation2 = [self.mxSession.matrixRestClient membersOfRoom:self.roomId success:^(NSArray *roomMemberEvents) {
+                    MXStrongifyAndReturnIfNil(self);
+
+                    [liveTimeline handleLazyLoadedStateEvents:roomMemberEvents];
+
+                    [self.mxSession.store storeHasLoadedAllRoomMembersForRoom:self.roomId andValue:YES];
+                    if ([self.mxSession.store respondsToSelector:@selector(commit)])
+                    {
+                        [self.mxSession.store commit];
+                    }
+
+                    // Provide the timelime to pending requesters
+                    NSArray<void (^)(MXRoomMembers *)> *pendingMembersRequesters = [self->pendingMembersRequesters copy];
+                    self->pendingMembersRequesters = nil;
+
+                    for (void (^onRequesterComplete)(MXRoomMembers *) in pendingMembersRequesters)
+                    {
+                        onRequesterComplete(liveTimeline.state.members);
+                    }
+                    NSLog(@"[MXRoom] members loaded. Pending requesters: %@", @(pendingMembersRequesters.count));
+
+                } failure:failure];
+
+                if (operation2)
+                {
+                    [operation mutateTo:operation2];
+                }
+            }
+
+            if (success)
+            {
+                [self->pendingMembersRequesters addObject:success];
+            }
+        }
+    }];
+
+    return operation;
+}
+
 
 - (void)setPartialTextMessage:(NSString *)partialTextMessage
 {
@@ -297,9 +344,12 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
 {
     // Handle here invite data to decide if it is direct or not
     MXWeakify(self);
-    [self members:^(MXRoomMembers *roomMembers) {
+    [self state:^(MXRoomState *roomState) {
         MXStrongifyAndReturnIfNil(self);
 
+        // We can use roomState.members because, even in case of lazy loading of room members,
+        // my user must be in roomState.members
+        MXRoomMembers *roomMembers = roomState.members;
         MXRoomMember *myUser = [roomMembers memberWithUserId:self.mxSession.myUser.userId];
         BOOL isDirect = NO;
 
@@ -2968,7 +3018,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
         {
             success();
         }
-    }];
+    } failure:failure];
 
     return operation;
 }

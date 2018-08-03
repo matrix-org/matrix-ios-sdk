@@ -16,6 +16,7 @@ Improvements:
 * MXFileStore: Add a setting to set which data to preload ([MXFileStore setPreloadOptions:]).
 
 Bug fix:
+* MXRestClient: Fix filter parameter in messagesForRoom. It must be sent as an inline JSON string.
 
 API break:
 * MXSession: [MXSession startWithMessagesLimit] has been removed. Use the more generic [MXSession startWithSyncFilter:].

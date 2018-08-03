@@ -353,6 +353,11 @@ FOUNDATION_EXPORT NSString *const kMXSessionNoRoomTag;
 @property (nonatomic, readonly) NSString *syncFilterId;
 
 /**
+ True when the filter used for /sync requests enables lazy loading of room members.
+ */
+@property (nonatomic, readonly) BOOL syncWithLazyLoadOfRoomMembers;
+
+/**
  The profile of the current user.
  It is available only after the `onStoreDataReady` callback of `start` is called.
  */

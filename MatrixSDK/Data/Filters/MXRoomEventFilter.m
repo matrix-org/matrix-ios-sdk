@@ -114,7 +114,7 @@
 
 - (void)setLimit:(NSUInteger)limit
 {
-    dictionary[@"limit"] = [NSNumber numberWithUnsignedInteger:limit];
+    dictionary[@"limit"] = @(limit);
 }
 
 - (NSUInteger)limit
@@ -122,6 +122,19 @@
     NSUInteger limit = 10;  // Basic default value used by homeservers
     MXJSONModelSetUInteger(limit, dictionary[@"limit"]);
     return limit;
+}
+
+
+- (void)setLazyLoadMembers:(BOOL)lazyLoadMembers
+{
+    dictionary[@"lazy_load_members"] = @(lazyLoadMembers);
+}
+
+- (BOOL)lazyLoadMembers
+{
+    BOOL lazyLoadMembers = NO; // Basic default value used by homeservers
+    MXJSONModelSetBoolean(lazyLoadMembers, dictionary[@"lazy_load_members"]);
+    return lazyLoadMembers;
 }
 
 @end

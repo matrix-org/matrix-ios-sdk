@@ -117,6 +117,11 @@ FOUNDATION_EXPORT NSString * const kMXTestsAliceAvatarURL;
                                   readyToTest:(void (^)(MXSession *bobSession,  MXRestClient *aliceRestClient, NSString* roomId, XCTestExpectation *expectation))readyToTest;
 
 
+#pragma mark - random user
+- (void)doMXSessionTestWithAUser:(XCTestCase*)testCase
+                     readyToTest:(void (^)(MXSession *aUserSession, XCTestExpectation *expectation))readyToTest;
+
+
 #pragma mark - HTTPS mxBob
 - (void)getHttpsBobCredentials:(void (^)(void))success;
 - (void)getHttpsBobCredentials:(void (^)(void))success onUnrecognizedCertificateBlock:(MXHTTPClientOnUnrecognizedCertificate)onUnrecognizedCertBlock;

@@ -416,6 +416,12 @@ NSString *const kMXRoomSummaryDidChangeNotification = @"kMXRoomSummaryDidChangeN
         BOOL updated = self->updatedWithStateEvents;
         self->updatedWithStateEvents = NO;
 
+        // Handle room summary sent by the home server
+        if (roomSync.summary)
+        {
+            updated |= [self.mxSession.roomSummaryUpdateDelegate session:self.mxSession updateRoomSummary:self withServerRoomSummary:roomSync.summary roomState:roomState];
+        }
+
         // Handle the last message starting by the most recent event.
         // Then, if the delegate refuses it as last message, pass the previous event.
         BOOL lastMessageUpdated = NO;

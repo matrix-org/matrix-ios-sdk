@@ -32,7 +32,6 @@
 /**
  Create a `MXRoomMembers` instance.
 
- // @TODO(lazy-loading): Remove those dependencies:
  @paran state the room state it depends on.
  @param matrixSession the session to the home server.
 
@@ -81,7 +80,6 @@
 /**
  A copy of the list of room members excluding the conference user.
  */
-// @TODO(lazy-loading): Nasty. Can be removed?
 - (NSArray<MXRoomMember*>*)membersWithoutConferenceUser;
 
 /**
@@ -91,7 +89,6 @@
  @param includeConferenceUser NO to filter the conference user.
  @return an array of MXRoomMember objects.
  */
-// @TODO(lazy-loading): Nasty. Can be removed?
 - (NSArray<MXRoomMember*>*)membersWithMembership:(MXMembership)membership includeConferenceUser:(BOOL)includeConferenceUser;
 
 

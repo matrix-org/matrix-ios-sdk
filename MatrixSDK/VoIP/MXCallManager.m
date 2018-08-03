@@ -572,7 +572,7 @@ NSString *const kMXCallManagerConferenceUserDomain  = @"matrix.org";
         {
             [room inviteUser:conferenceUserId success:success failure:failure];
         }
-    }];
+    } failure:failure];
 }
 
 /**
@@ -592,18 +592,16 @@ NSString *const kMXCallManagerConferenceUserDomain  = @"matrix.org";
     // Use an existing 1:1 with the conference user; else make one
     __block MXRoom *conferenceUserRoom;
 
-    // TODO: This operation to find an existing room is heavy
-    // We need to create a dedicated MXStore API
     dispatch_group_t group = dispatch_group_create();
     for (MXRoomSummary *roomSummary in _mxSession.roomsSummaries)
     {
-        if (roomSummary.membersCount.members == 2)
+        if (roomSummary.isConferenceUserRoom)
         {
             dispatch_group_enter(group);
             MXRoom *room = [_mxSession roomWithRoomId:roomSummary.roomId];
-            [room members:^(MXRoomMembers *roomMembers) {
 
-                if ([roomMembers memberWithUserId:conferenceUserId])
+            [room state:^(MXRoomState *roomState) {
+                if ([roomState.members memberWithUserId:conferenceUserId])
                 {
                     conferenceUserRoom = room;
                 }

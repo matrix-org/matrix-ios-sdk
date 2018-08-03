@@ -22,7 +22,6 @@
 
 @interface MXRoomMembers ()
 {
-    // @TODO(lazy-loading): Remove those dependencies
     MXSession *mxSession;
     MXRoomState *state;
 
