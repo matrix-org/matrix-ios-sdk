@@ -1930,7 +1930,7 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
     [room members:^(MXRoomMembers *roomMembers) {
         success(roomMembers);
     } failure:^(NSError *error) {
-        NSLog(@"[MXCrypto] onCryptoEvent: Warning: Enable to get all members from the HS. Fallback by using lazy-loaded members");
+        NSLog(@"[MXCrypto] onCryptoEvent: Warning: Unable to get all members from the HS. Fallback by using lazy-loaded members");
 
         [room state:^(MXRoomState *roomState) {
             success(roomState.members);
