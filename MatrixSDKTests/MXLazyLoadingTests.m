@@ -23,6 +23,8 @@
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Warc-retain-cycles"
 
+NSString * const bobMessage = @"I am Bob";
+
 @interface MXLazyLoadingTests : XCTestCase
 {
     MatrixSDKTestsData *matrixSDKTestsData;
@@ -92,7 +94,7 @@ Common initial conditions:
                         [matrixSDKTestsData for:aliceRestClient andRoom:roomId sendMessages:50 success:^{
 
                             // - Bob sends a message
-                            [roomFromBobPOV sendTextMessage:@"I am Bob" success:^(NSString *eventId) {
+                            [roomFromBobPOV sendTextMessage:bobMessage success:^(NSString *eventId) {
 
                                 // - Alice sends 50 messages
                                 [matrixSDKTestsData for:aliceRestClient andRoom:roomId sendMessages:50 success:^{
@@ -703,7 +705,7 @@ Common initial conditions:
 // Check encryption from a lazy loaded room state
 // - Alice sends a message from its lazy loaded room state where there is no Charlie
 // - Charlie must be able to decrypt it
-- (void)checkEncryptedMessage:(BOOL)lazyLoading
+- (void)checkEncryptedMessageWithLazyLoading:(BOOL)lazyLoading
 {
     [MXSDKOptions sharedInstance].enableCryptoWhenStartingMXSession = YES;
     [self createScenarioWithLazyLoading:lazyLoading readyToTest:^(MXSession *aliceSession, MXSession *bobSession, MXSession *charlieSession, NSString *roomId, XCTestExpectation *expectation) {
@@ -740,19 +742,19 @@ Common initial conditions:
 
 - (void)testEncryptedMessage
 {
-    [self checkEncryptedMessage:YES];
+    [self checkEncryptedMessageWithLazyLoading:YES];
 }
 
 - (void)testEncryptedMessageWithLazyLoadingOFF
 {
-    [self checkEncryptedMessage:NO];
+    [self checkEncryptedMessageWithLazyLoading:NO];
 }
 
 
 // After the test scenario, create a temporary timeline on the last event.
 // The timeline state should be lazy loaded and partial.
 // There should be only Alice and state.members.count = 1
-- (void)checkPermalinkRoomState:(BOOL)lazyLoading
+- (void)checkPermalinkRoomStateWithLazyLoading:(BOOL)lazyLoading
 {
     [self createScenarioWithLazyLoading:lazyLoading readyToTest:^(MXSession *aliceSession, MXSession *bobSession, MXSession *charlieSession, NSString *roomId, XCTestExpectation *expectation) {
 
@@ -798,17 +800,52 @@ Common initial conditions:
 
 - (void)testPermalinkRoomState
 {
-    [self checkPermalinkRoomState:YES];
+    [self checkPermalinkRoomStateWithLazyLoading:YES];
 }
 
 - (void)testPermalinkRoomStateWithLazyLoadingOFF
 {
-    [self checkPermalinkRoomState:NO];
+    [self checkPermalinkRoomStateWithLazyLoading:NO];
 }
+
+
+// After the test scenario, search for the message sent by Bob.
+// We should be able to display 
+- (void)checkSearchWithLazyLoading:(BOOL)lazyLoading
+{
+    [self createScenarioWithLazyLoading:lazyLoading readyToTest:^(MXSession *aliceSession, MXSession *bobSession, MXSession *charlieSession, NSString *roomId, XCTestExpectation *expectation) {
+
+        [aliceSession.matrixRestClient searchMessagesWithText:bobMessage roomEventFilter:nil beforeLimit:0 afterLimit:0 nextBatch:nil success:^(MXSearchRoomEventResults *roomEventResults) {
+
+            XCTAssertEqual(roomEventResults.results.count, 1);
+
+            if (roomEventResults.results.count)
+            {
+                XCTAssertNotNil(roomEventResults.results.firstObject.context.profileInfo[bobSession.myUser.userId].displayName);
+            }
+
+            [expectation fulfill];
+
+        } failure:^(NSError *error) {
+            XCTFail(@"The operation should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+    }];
+}
+
+- (void)testSearch
+{
+    [self checkSearchWithLazyLoading:YES];
+}
+
+- (void)testSearchWithLazyLoadingOFF
+{
+    [self checkSearchWithLazyLoading:NO];
+}
+
 
 /*
  @TODO(lazy-loading):
- - test search
  - test read receipts
  */
 @end
