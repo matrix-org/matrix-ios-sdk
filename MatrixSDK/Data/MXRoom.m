@@ -58,6 +58,11 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
      FIFO queue of objects waiting for [self liveTimeline:]. 
      */
     NSMutableArray<void (^)(MXEventTimeline *)> *pendingLiveTimelineRequesters;
+
+    /**
+     FIFO queue of objects waiting for [self members:].
+     */
+    NSMutableArray<void (^)(MXRoomMembers *)> *pendingMembersRequesters;
 }
 @end
 
@@ -224,29 +229,45 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
                 lazyLoadedMembers(liveTimeline.state.members);
             }
 
-            // Else get them from the homeserver
-            MXWeakify(self);
-            MXHTTPOperation *operation2 = [self.mxSession.matrixRestClient membersOfRoom:self.roomId success:^(NSArray *roomMemberEvents) {
-                MXStrongifyAndReturnIfNil(self);
-
-                [liveTimeline handleLazyLoadedStateEvents:roomMemberEvents];
-
-                [self.mxSession.store storeHasLoadedAllRoomMembersForRoom:self.roomId andValue:YES];
-                if ([self.mxSession.store respondsToSelector:@selector(commit)])
-                {
-                    [self.mxSession.store commit];
-                }
-
-                if (success)
-                {
-                    success(liveTimeline.state.members);
-                }
-
-            } failure:failure];
-
-            if (operation2)
+            // Queue the requester
+            if (!self->pendingMembersRequesters)
             {
-                [operation mutateTo:operation2];
+                self->pendingMembersRequesters = [NSMutableArray array];
+
+                // Else get them from the homeserver
+                MXWeakify(self);
+                MXHTTPOperation *operation2 = [self.mxSession.matrixRestClient membersOfRoom:self.roomId success:^(NSArray *roomMemberEvents) {
+                    MXStrongifyAndReturnIfNil(self);
+
+                    [liveTimeline handleLazyLoadedStateEvents:roomMemberEvents];
+
+                    [self.mxSession.store storeHasLoadedAllRoomMembersForRoom:self.roomId andValue:YES];
+                    if ([self.mxSession.store respondsToSelector:@selector(commit)])
+                    {
+                        [self.mxSession.store commit];
+                    }
+
+                    // Provide the timelime to pending requesters
+                    NSArray<void (^)(MXRoomMembers *)> *pendingMembersRequesters = [self->pendingMembersRequesters copy];
+                    self->pendingMembersRequesters = nil;
+
+                    for (void (^onRequesterComplete)(MXRoomMembers *) in pendingMembersRequesters)
+                    {
+                        onRequesterComplete(liveTimeline.state.members);
+                    }
+                    NSLog(@"[MXRoom] members loaded. Pending requesters: %@", @(pendingMembersRequesters.count));
+
+                } failure:failure];
+
+                if (operation2)
+                {
+                    [operation mutateTo:operation2];
+                }
+            }
+
+            if (success)
+            {
+                [self->pendingMembersRequesters addObject:success];
             }
         }
     }];

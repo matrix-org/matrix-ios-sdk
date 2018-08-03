@@ -374,10 +374,11 @@ Common initial conditions:
 
 // As members is only partial, [room members:] should trigger an HTTP request
 // and returns the 4 members.
-// @TODO(lazy-loading): test queueing in [MXRoom members:]
 - (void)checkRoomMembersWithLazyLoading:(BOOL)lazyLoading
 {
     [self createScenarioWithLazyLoading:lazyLoading readyToTest:^(MXSession *aliceSession, MXSession *bobSession, MXSession *charlieSession, NSString *roomId, XCTestExpectation *expectation) {
+
+        __block BOOL firstRequestComplete = NO;
 
         MXRoom *room = [aliceSession roomWithRoomId:roomId];
 
@@ -388,7 +389,8 @@ Common initial conditions:
             XCTAssertEqual(roomMembers.joinedMembers.count, 3);
             XCTAssertEqual([roomMembers membersWithMembership:MXMembershipInvite].count, 1);
 
-            [expectation fulfill];
+            firstRequestComplete = YES;
+
         } failure:^(NSError *error) {
             XCTFail(@"The operation should not fail - NSError: %@", error);
             [expectation fulfill];
@@ -402,6 +404,19 @@ Common initial conditions:
         {
             XCTAssertNil(operation.operation);
         }
+
+        MXHTTPOperation *secondOperation = [room members:^(MXRoomMembers *roomMembers) {
+
+            XCTAssertTrue(firstRequestComplete);
+
+            [expectation fulfill];
+
+        } failure:^(NSError *error) {
+            XCTFail(@"The operation should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+
+        XCTAssertNil(secondOperation.operation, @"There must be no second request to /members");
     }];
 }
 
