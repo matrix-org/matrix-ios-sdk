@@ -749,9 +749,66 @@ Common initial conditions:
 }
 
 
+// After the test scenario, create a temporary timeline on the last event.
+// The timeline state should be lazy loaded and partial.
+// There should be only Alice and state.members.count = 1
+- (void)checkPermalinkRoomState:(BOOL)lazyLoading
+{
+    [self createScenarioWithLazyLoading:lazyLoading readyToTest:^(MXSession *aliceSession, MXSession *bobSession, MXSession *charlieSession, NSString *roomId, XCTestExpectation *expectation) {
+
+        MXRoomSummary *summary = [aliceSession roomSummaryWithRoomId:roomId];
+        MXRoom *room = [aliceSession roomWithRoomId:roomId];
+
+        MXEventTimeline *eventTimeline = [room timelineOnEvent:summary.lastMessageEventId];
+
+        [eventTimeline resetPaginationAroundInitialEventWithLimit:10 success:^{
+
+            MXRoomState *roomState = eventTimeline.state;
+
+            MXRoomMembers *lazyloadedRoomMembers = roomState.members;
+
+            XCTAssert([lazyloadedRoomMembers memberWithUserId:aliceSession.myUser.userId]);
+
+            if (lazyLoading)
+            {
+                XCTAssertEqual(lazyloadedRoomMembers.members.count, 1, @"There should be only Alice in the lazy loaded room state");
+
+                XCTAssertEqual(roomState.membersCount.members, 1);
+                XCTAssertEqual(roomState.membersCount.joined, 1);
+                XCTAssertEqual(roomState.membersCount.invited, 0);
+            }
+            else
+            {
+                // The room members list in the room state is full known
+                XCTAssertEqual(lazyloadedRoomMembers.members.count, 4);
+
+                XCTAssertEqual(roomState.membersCount.members, 4);
+                XCTAssertEqual(roomState.membersCount.joined, 3);
+                XCTAssertEqual(roomState.membersCount.invited, 1);
+            }
+
+            [expectation fulfill];
+
+        } failure:^(NSError *error) {
+            XCTFail(@"The operation should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+    }];
+}
+
+- (void)testPermalinkRoomState
+{
+    [self checkPermalinkRoomState:YES];
+}
+
+- (void)testPermalinkRoomStateWithLazyLoadingOFF
+{
+    [self checkPermalinkRoomState:NO];
+}
+
 /*
  @TODO(lazy-loading):
- - test while paginating around a permalink
+ - test search
  - test read receipts
  */
 @end

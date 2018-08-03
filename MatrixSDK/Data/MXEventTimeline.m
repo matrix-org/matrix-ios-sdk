@@ -190,9 +190,16 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
     forwardsPaginationToken = nil;
     hasReachedHomeServerForwardsPaginationEnd = NO;
 
+    MXRoomEventFilter *filter;
+    if (room.mxSession.syncWithLazyLoadOfRoomMembers)
+    {
+        filter = [MXRoomEventFilter new];
+        filter.lazyLoadMembers = YES;
+    }
+
     // Get the context around the initial event
     MXWeakify(self);
-    return [room.mxSession.matrixRestClient contextOfEvent:_initialEventId inRoom:room.roomId limit:limit success:^(MXEventContext *eventContext) {
+    return [room.mxSession.matrixRestClient contextOfEvent:_initialEventId inRoom:room.roomId limit:limit filter:filter success:^(MXEventContext *eventContext) {
         MXStrongifyAndReturnIfNil(self);
 
         // And fill the timelime with received data
