@@ -561,6 +561,64 @@ Common initial conditions:
     [self checkSummaryMembershipWithLazyLoading:NO];
 }
 
+// Complementary test to testSummaryMembership
+// - Run the scenario
+// - Pause Alice MXSession
+// - Make her leave the room outside her MXSession
+// - Bob sends 50 messages
+// - Resume Alice MXSession
+// -> Alice must not know the room anymore
+- (void)checkRoomAfterLeavingFromAnotherDeviceWithLazyLoading:(BOOL)lazyLoading
+{
+    // - Run the scenario
+    [self createScenarioWithLazyLoading:lazyLoading readyToTest:^(MXSession *aliceSession, MXSession *bobSession, MXSession *charlieSession, NSString *roomId, XCTestExpectation *expectation) {
+
+        MXRoom *room = [aliceSession roomWithRoomId:roomId];
+        MXRoomSummary *summary = [aliceSession roomSummaryWithRoomId:roomId];
+
+        XCTAssertNotNil(room);
+        XCTAssertNotNil(summary);
+
+        // - Pause Alice MXSession
+        [aliceSession pause];
+
+        // - Make her leave the room outside her MXSession
+        [aliceSession.matrixRestClient leaveRoom:roomId success:^{
+
+            // - Bob sends 50 messages
+            [matrixSDKTestsData for:bobSession.matrixRestClient andRoom:roomId sendMessages:50 success:^{
+
+
+
+                // - Resume Alice MXSession
+                [aliceSession resume:^{
+
+                    MXRoom *room = [aliceSession roomWithRoomId:roomId];
+                    MXRoomSummary *summary = [aliceSession roomSummaryWithRoomId:roomId];
+
+                    XCTAssertNil(room);
+                    XCTAssertNil(summary);
+
+                    [expectation fulfill];
+                }];
+            }];
+        } failure:^(NSError *error) {
+            XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+            [expectation fulfill];
+        }];
+    }];
+}
+
+- (void)testRoomAfterLeavingFromAnotherDevice
+{
+    [self checkRoomAfterLeavingFromAnotherDeviceWithLazyLoading:YES];
+}
+
+- (void)testRoomAfterLeavingFromAnotherDeviceWithLazyLoadingOFF
+{
+    [self checkRoomAfterLeavingFromAnotherDeviceWithLazyLoading:NO];
+}
+
 
 // roomSummary.membersCount must be right in both cases
 - (void)checkRoomSummaryMembersCountWithLazyLoading:(BOOL)lazyLoading
