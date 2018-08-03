@@ -1941,7 +1941,8 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
 /**
  Handle a change in the membership state of a member of a room.
 
- @param event the membership event causing the change
+ @param event the membership event causing the change.
+ @param roomState the know state of the room when the event occurs.
  */
 - (void)onRoomMembership:(MXEvent*)event roomState:(MXRoomState*)roomState
 {

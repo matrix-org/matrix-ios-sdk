@@ -308,7 +308,7 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
     // If the event stream runs with lazy loading, the timeline must do the same
     if (room.mxSession.syncWithLazyLoadOfRoomMembers)
     {
-        if (_roomEventFilter)
+        if (!_roomEventFilter)
         {
             _roomEventFilter = [MXRoomEventFilter new];
         }
@@ -522,7 +522,10 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
     // Process additional state events (this happens in case of lazy loading)
     if (paginatedResponse.state.count && direction == MXTimelineDirectionBackwards)
     {
+        // Enrich the timeline root state with the additional state events observed during back pagination
         [self handleStateEvents:paginatedResponse.state direction:MXTimelineDirectionForwards];
+
+        // Enrich intermediate room state while paginating
         [self handleStateEvents:paginatedResponse.state  direction:direction];
     }
 
