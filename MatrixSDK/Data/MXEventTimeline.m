@@ -527,10 +527,13 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
     }
 
     // Process additional state events (this happens in case of lazy loading)
-    if (paginatedResponse.state.count && direction == MXTimelineDirectionBackwards)
+    if (paginatedResponse.state.count)
     {
-        // Enrich the timeline root state with the additional state events observed during back pagination
-        [self handleStateEvents:paginatedResponse.state direction:MXTimelineDirectionForwards];
+        if (direction == MXTimelineDirectionBackwards)
+        {
+            // Enrich the timeline root state with the additional state events observed during back pagination
+            [self handleStateEvents:paginatedResponse.state direction:MXTimelineDirectionForwards];
+        }
 
         // Enrich intermediate room state while paginating
         [self handleStateEvents:paginatedResponse.state  direction:direction];

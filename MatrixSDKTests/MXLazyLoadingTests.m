@@ -28,6 +28,9 @@ NSString * const bobMessage = @"I am Bob";
 @interface MXLazyLoadingTests : XCTestCase
 {
     MatrixSDKTestsData *matrixSDKTestsData;
+
+    // The id of the message by Bob in the scenario
+    NSString *bobMessageEventId;
 }
 
 @end
@@ -95,6 +98,8 @@ Common initial conditions:
 
                             // - Bob sends a message
                             [roomFromBobPOV sendTextMessage:bobMessage success:^(NSString *eventId) {
+
+                                bobMessageEventId = eventId;
 
                                 // - Alice sends 50 messages
                                 [matrixSDKTestsData for:aliceRestClient andRoom:roomId sendMessages:50 success:^{
@@ -806,6 +811,220 @@ Common initial conditions:
 - (void)testPermalinkRoomStateWithLazyLoadingOFF
 {
     [self checkPermalinkRoomStateWithLazyLoading:NO];
+}
+
+
+// Test lazy loaded members sent by the HS when paginating backward from a permalink
+// When paginating back to the beginning, lazy loaded room state passed in pagination callback must be updated with Bob, then Charlie and Dave.
+// Almost the same test as `checkRoomStateWhilePaginatingWithLazyLoading`.
+- (void)checkPermalinkRoomStateWhilePaginatingBackwardWithLazyLoading:(BOOL)lazyLoading
+{
+    [self createScenarioWithLazyLoading:lazyLoading readyToTest:^(MXSession *aliceSession, MXSession *bobSession, MXSession *charlieSession, NSString *roomId, XCTestExpectation *expectation) {
+
+        MXRoomSummary *summary = [aliceSession roomSummaryWithRoomId:roomId];
+        MXRoom *room = [aliceSession roomWithRoomId:roomId];
+
+        MXEventTimeline *eventTimeline = [room timelineOnEvent:summary.lastMessageEventId];
+
+        __block NSUInteger messageCount = 0;
+        [eventTimeline listenToEvents:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
+
+            switch (++messageCount)
+            {
+                case 1:
+                    XCTAssertEqualObjects(event.sender, aliceSession.myUser.userId);
+
+                    if (lazyLoading)
+                    {
+                        XCTAssertNil([roomState.members memberWithUserId:bobSession.myUser.userId]);
+                        XCTAssertNil([eventTimeline.state.members memberWithUserId:bobSession.myUser.userId]);
+                        XCTAssertNil([eventTimeline.state.members memberWithUserId:charlieSession.myUser.userId]);
+                    }
+                    else
+                    {
+                        XCTAssertNotNil([roomState.members memberWithUserId:bobSession.myUser.userId]);
+                    }
+
+                    XCTAssertNotNil([eventTimeline.state.members memberWithUserId:aliceSession.myUser.userId]);
+                    break;
+
+                case 50:
+                    if (lazyLoading)
+                    {
+                        // Disabled because the HS sends too early the Bob membership event (but not Charlie nor Dave)
+                        //XCTAssertNil([roomState.members memberWithUserId:bobSession.myUser.userId]);
+                        //XCTAssertNil([eventTimeline.state.members memberWithUserId:bobSession.myUser.userId]);
+                        XCTAssertNil([eventTimeline.state.members memberWithUserId:charlieSession.myUser.userId]);
+                    }
+                    else
+                    {
+                        XCTAssertNotNil([roomState.members memberWithUserId:bobSession.myUser.userId]);
+                    }
+
+                    XCTAssertNotNil([eventTimeline.state.members memberWithUserId:aliceSession.myUser.userId]);
+                    break;
+                case 51:
+                    XCTAssert([roomState.members memberWithUserId:bobSession.myUser.userId]);
+
+                    if (lazyLoading)
+                    {
+                        XCTAssertNil([roomState.members memberWithUserId:charlieSession.myUser.userId]);
+                        XCTAssertNil([eventTimeline.state.members memberWithUserId:charlieSession.myUser.userId]);
+                    }
+                    else
+                    {
+                        XCTAssert([roomState.members memberWithUserId:charlieSession.myUser.userId]);
+                    }
+
+                    // The room state of the room should have been enriched
+                    XCTAssertNotNil([eventTimeline.state.members memberWithUserId:bobSession.myUser.userId]);
+
+                    break;
+
+                case 110:
+                    XCTAssertNotNil([eventTimeline.state.members memberWithUserId:aliceSession.myUser.userId]);
+                    XCTAssertNotNil([eventTimeline.state.members memberWithUserId:bobSession.myUser.userId]);
+                    XCTAssertNotNil([eventTimeline.state.members memberWithUserId:charlieSession.myUser.userId]);
+                    break;
+
+                default:
+                    break;
+            }
+        }];
+
+        [eventTimeline resetPaginationAroundInitialEventWithLimit:0 success:^{
+
+            // Paginate the 50 last message where there is only Alice talking
+            [eventTimeline paginate:50 direction:MXTimelineDirectionBackwards onlyFromStore:NO complete:^{
+
+                // Pagine a bit more to get Bob's message
+                [eventTimeline paginate:25 direction:MXTimelineDirectionBackwards onlyFromStore:NO complete:^{
+
+                    // Paginate all to get a full room state
+                    [eventTimeline paginate:100 direction:MXTimelineDirectionBackwards onlyFromStore:NO complete:^{
+
+                        XCTAssertGreaterThan(messageCount, 110, @"The test has not fully run");
+
+                        [expectation fulfill];
+
+                    } failure:^(NSError *error) {
+                        XCTFail(@"The operation should not fail - NSError: %@", error);
+                        [expectation fulfill];
+                    }];
+
+                } failure:^(NSError *error) {
+                    XCTFail(@"The operation should not fail - NSError: %@", error);
+                    [expectation fulfill];
+                }];
+
+            } failure:^(NSError *error) {
+                XCTFail(@"The operation should not fail - NSError: %@", error);
+                [expectation fulfill];
+            }];
+        }
+        failure:^(NSError *error) {
+            XCTFail(@"The operation should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+    }];
+}
+
+- (void)testPermalinkRoomStateWhilePaginatingBackward
+{
+    [self checkPermalinkRoomStateWhilePaginatingBackwardWithLazyLoading:YES];
+}
+
+- (void)testPermalinkRoomStateWhilePaginatingWithLazyLoadingOFF
+{
+    [self checkPermalinkRoomStateWhilePaginatingBackwardWithLazyLoading:NO];
+}
+
+
+// Test lazy loaded members sent by the HS when paginating forward
+// - Come back to Bob message
+// - We should only know Bob membership
+// - Paginate forward to get Alice next message
+// - We should know Alice membership now
+- (void)checkPermalinkRoomStateWhilePaginatingForwardWithLazyLoading:(BOOL)lazyLoading
+{
+    [self createScenarioWithLazyLoading:lazyLoading readyToTest:^(MXSession *aliceSession, MXSession *bobSession, MXSession *charlieSession, NSString *roomId, XCTestExpectation *expectation) {
+
+        MXRoom *room = [aliceSession roomWithRoomId:roomId];
+
+        MXEventTimeline *eventTimeline = [room timelineOnEvent:bobMessageEventId];
+
+        __block NSUInteger messageCount = 0;
+        [eventTimeline listenToEvents:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
+
+            switch (++messageCount)
+            {
+                case 1:
+                    // Bob message
+                    // - We should only know Bob membership
+                    XCTAssertEqualObjects(event.sender, bobSession.myUser.userId);
+
+                    if (lazyLoading)
+                    {
+                        XCTAssertNil([eventTimeline.state.members memberWithUserId:aliceSession.myUser.userId]);
+                        XCTAssertNil([eventTimeline.state.members memberWithUserId:charlieSession.myUser.userId]);
+                    }
+                    else
+                    {
+                        XCTAssertNotNil([roomState.members memberWithUserId:aliceSession.myUser.userId]);
+                    }
+
+                    XCTAssertNotNil([eventTimeline.state.members memberWithUserId:bobSession.myUser.userId]);
+                    break;
+
+                case 2:
+                    // First next message from Alice
+                    // - We should know Alice membership now
+                    XCTAssertEqualObjects(event.sender, aliceSession.myUser.userId);
+
+                    if (lazyLoading)
+                    {
+                        XCTAssertNil([eventTimeline.state.members memberWithUserId:charlieSession.myUser.userId]);
+                    }
+
+                    XCTAssertNotNil([eventTimeline.state.members memberWithUserId:aliceSession.myUser.userId]);
+                    XCTAssertNotNil([eventTimeline.state.members memberWithUserId:bobSession.myUser.userId]);
+                    break;
+
+                default:
+                    break;
+            }
+        }];
+
+        // - Come back to Bob message
+        [eventTimeline resetPaginationAroundInitialEventWithLimit:0 success:^{
+
+            // - Paginate forward to get Alice next message
+            [eventTimeline paginate:1 direction:MXTimelineDirectionForwards onlyFromStore:NO complete:^{
+
+                XCTAssertGreaterThanOrEqual(messageCount, 2, @"The test has not fully run");
+
+                [expectation fulfill];
+
+            } failure:^(NSError *error) {
+                XCTFail(@"The operation should not fail - NSError: %@", error);
+                [expectation fulfill];
+            }];
+
+        } failure:^(NSError *error) {
+            XCTFail(@"The operation should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+    }];
+}
+
+- (void)testPermalinkRoomStateWhilePaginatingForward
+{
+    [self checkPermalinkRoomStateWhilePaginatingForwardWithLazyLoading:YES];
+}
+
+- (void)testPermalinkRoomStateWhilePaginatingForwardWithLazyLoadingOFF
+{
+    [self checkPermalinkRoomStateWhilePaginatingForwardWithLazyLoading:NO];
 }
 
 
