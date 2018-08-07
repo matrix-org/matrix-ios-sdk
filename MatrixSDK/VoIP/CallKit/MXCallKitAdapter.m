@@ -85,38 +85,29 @@ NSString * const kMXCallKitAdapterAudioSessionDidActive = @"kMXCallKitAdapterAud
 
 - (void)startCall:(MXCall *)call
 {
-    MXSession *mxSession = call.room.mxSession;
     NSUUID *callUUID = call.callUUID;
-    
-    NSString *contactIdentifier;
-    if (call.isConferenceCall)
-    {
-        contactIdentifier = call.room.summary.displayname;
-    }
-    else
-    {
-        MXUser *callee = [mxSession userWithUserId:call.calleeId];
-        contactIdentifier = callee.displayname;
-    }
-    
-    CXHandle *handle = [[CXHandle alloc] initWithType:CXHandleTypeGeneric value:call.room.roomId];
-    CXStartCallAction *action = [[CXStartCallAction alloc] initWithCallUUID:callUUID handle:handle];
-    action.contactIdentifier = contactIdentifier;
-    
-    CXTransaction *transaction = [[CXTransaction alloc] initWithAction:action];
-    [self.callController requestTransaction:transaction completion:^(NSError * _Nullable error) {
-        CXCallUpdate *update = [[CXCallUpdate alloc] init];
-        update.remoteHandle = handle;
-        update.localizedCallerName = contactIdentifier;
-        update.hasVideo = call.isVideoCall;
-        update.supportsHolding = NO;
-        update.supportsGrouping = NO;
-        update.supportsUngrouping = NO;
-        update.supportsDTMF = NO;
-        
-        [self.provider reportCallWithUUID:callUUID updated:update];
-        
-        [self.calls setObject:call forKey:callUUID];
+
+    [self contactIdentifierForCall:call onComplete:^(NSString *contactIdentifier) {
+
+        CXHandle *handle = [[CXHandle alloc] initWithType:CXHandleTypeGeneric value:call.room.roomId];
+        CXStartCallAction *action = [[CXStartCallAction alloc] initWithCallUUID:callUUID handle:handle];
+        action.contactIdentifier = contactIdentifier;
+
+        CXTransaction *transaction = [[CXTransaction alloc] initWithAction:action];
+        [self.callController requestTransaction:transaction completion:^(NSError * _Nullable error) {
+            CXCallUpdate *update = [[CXCallUpdate alloc] init];
+            update.remoteHandle = handle;
+            update.localizedCallerName = contactIdentifier;
+            update.hasVideo = call.isVideoCall;
+            update.supportsHolding = NO;
+            update.supportsGrouping = NO;
+            update.supportsUngrouping = NO;
+            update.supportsDTMF = NO;
+
+            [self.provider reportCallWithUUID:callUUID updated:update];
+
+            [self.calls setObject:call forKey:callUUID];
+        }];
     }];
 }
 
@@ -278,6 +269,24 @@ NSString * const kMXCallKitAdapterAudioSessionDidActive = @"kMXCallKitAdapterAud
     [call setAudioMuted:action.isMuted];
     
     [action fulfill];
+}
+
+
+#pragma mark - Private methods
+
+- (void)contactIdentifierForCall:(MXCall *)call onComplete:(void (^)(NSString *contactIdentifier))onComplete
+{
+    if (call.isConferenceCall)
+    {
+        onComplete(call.room.summary.displayname);
+    }
+    else
+    {
+        [call calleeId:^(NSString *calleeId) {
+            MXUser *callee = [call.room.mxSession userWithUserId:calleeId];
+            onComplete(callee.displayname);
+        }];
+    }
 }
 
 @end

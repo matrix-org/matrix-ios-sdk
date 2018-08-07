@@ -1154,7 +1154,7 @@ typedef enum : NSUInteger
  @param from the token to start getting results from.
  @param direction `MXTimelineDirectionForwards` or `MXTimelineDirectionBackwards`
  @param limit (optional, use -1 to not defined this value) the maximum number of messages to return.
- @param roomEventFilter to filter returned events with.
+ @param roomEventFilter the filter to pass in the request. Can be nil.
 
  @param success A block object called when the operation succeeds. It provides a `MXPaginationResponse` object.
  @param failure A block object called when the operation fails.
@@ -1314,6 +1314,7 @@ typedef enum : NSUInteger
  @param eventId the id of the event to get context around.
  @param roomId the id of the room to get events from.
  @param limit the maximum number of messages to return.
+ @param filter the filter to pass in the request. Can be nil.
 
  @param success A block object called when the operation succeeds. It provides the model created from
  the homeserver JSON response.
@@ -1324,6 +1325,7 @@ typedef enum : NSUInteger
 - (MXHTTPOperation*)contextOfEvent:(NSString*)eventId
                             inRoom:(NSString*)roomId
                              limit:(NSUInteger)limit
+                            filter:(MXRoomEventFilter*)filter
                            success:(void (^)(MXEventContext *eventContext))success
                            failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
@@ -1868,7 +1870,7 @@ typedef enum : NSUInteger
  Search a text in room messages.
 
  @param textPattern the text to search for in message body.
- @param roomEventFilter a nullable dictionary which defines the room event filtering during the search request.
+ @param roomEventFilter the filter to pass in the request. Can be nil.
  @param beforeLimit the number of events to get before the matching results.
  @param afterLimit the number of events to get after the matching results.
  @param nextBatch the token to pass for doing pagination from a previous response.

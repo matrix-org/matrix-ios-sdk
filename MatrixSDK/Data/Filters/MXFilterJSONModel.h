@@ -57,4 +57,31 @@
  */
 @property (nonatomic) MXRoomFilter *room;
 
+
+#pragma mark - Factory
+
+/**
+ Build a Matrix filter to retrieve a max given number of messages per room in /sync requests.
+
+ @param messageLimit messageLimit the messages count limit.
+ @return the Matrix filter.
+ */
++ (MXFilterJSONModel*)syncFilterWithMessageLimit:(NSUInteger)messageLimit;
+
+/**
+ Build a Matrix filter to enable room members lazy loading in /sync requests.
+
+ @return the Matrix filter.
+ */
++ (MXFilterJSONModel*)syncFilterForLazyLoading;
+
+/**
+ Build a Matrix filter to enable room members lazy loading in /sync requests
+ with a message count limit per room.
+
+ @param messageLimit messageLimit the messages count limit.
+ @return the Matrix filter.
+ */
++ (MXFilterJSONModel*)syncFilterForLazyLoadingWithMessageLimit:(NSUInteger)messageLimit;
+
 @end

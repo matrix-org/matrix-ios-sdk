@@ -78,6 +78,63 @@
     return JSONDictionary;
 }
 
+- (BOOL)isEqual:(id)object
+{
+    if (self == object)
+    {
+        return YES;
+    }
+
+    BOOL isEqual = NO;
+
+    if ([object isKindOfClass:MXFilterJSONModel.class])
+    {
+        MXFilterJSONModel *other = object;
+        isEqual = [self.JSONDictionary isEqualToDictionary:other.JSONDictionary];
+    }
+
+    return isEqual;
+}
+
+
+#pragma mark - Factory
+
++ (MXFilterJSONModel*)syncFilterWithMessageLimit:(NSUInteger)messageLimit
+{
+    MXFilterJSONModel *filter = [[MXFilterJSONModel alloc] init];
+
+    filter.room = [[MXRoomFilter alloc] init];
+    filter.room.timeline = [[MXRoomEventFilter alloc] init];
+    filter.room.timeline.limit = messageLimit;
+
+    return filter;
+}
+
++ (MXFilterJSONModel*)syncFilterForLazyLoading
+{
+    MXFilterJSONModel *filter = [[MXFilterJSONModel alloc] init];
+
+    filter.room = [[MXRoomFilter alloc] init];
+    filter.room.state = [[MXRoomEventFilter alloc] init];
+    filter.room.state.lazyLoadMembers = YES;
+
+    return filter;
+}
+
++ (MXFilterJSONModel*)syncFilterForLazyLoadingWithMessageLimit:(NSUInteger)messageLimit
+{
+    MXFilterJSONModel *filter = [[MXFilterJSONModel alloc] init];
+
+    filter.room = [[MXRoomFilter alloc] init];
+    filter.room.timeline = [[MXRoomEventFilter alloc] init];
+    filter.room.timeline.limit = messageLimit;
+    filter.room.state = [[MXRoomEventFilter alloc] init];
+    filter.room.state.lazyLoadMembers = YES;
+
+    return filter;
+}
+
+
 - (NSString *)description
 {
     return self.JSONDictionary.description;

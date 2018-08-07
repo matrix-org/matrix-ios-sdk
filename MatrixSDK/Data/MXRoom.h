@@ -1,6 +1,7 @@
 /*
  Copyright 2014 OpenMarket Ltd
  Copyright 2017 Vector Creations Ltd
+ Copyright 2018 New Vector Ltd
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -82,12 +83,45 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidFlushDataNotification;
 /**
  The live events timeline.
  */
-@property (nonatomic, readonly) MXEventTimeline *liveTimeline;
+- (void)liveTimeline:(void (^)(MXEventTimeline *liveTimeline))onComplete;
 
 /**
- The up-to-date state of the room.
+ The current state of the room.
+
+ This getter method is a shortcut to `liveTimeline.state`.
  */
-@property (nonatomic, readonly) MXRoomState *state;
+- (void)state:(void (^)(MXRoomState *roomState))onComplete;
+
+/**
+ The current list of members of the room.
+
+ It may require a request to the homeserver if the client has not fetched yet all
+ data like in case of members lazy loading.
+
+ @param success A block object called when the operation succeeds. It returns
+                the MXRoomMembers object.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)members:(void (^)(MXRoomMembers *roomMembers))success
+                    failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
+
+/**
+ Same as `[MXRoom members:]` but it returns already lazy-loaded members if an
+ HTTP request to the homeserver is requested.
+
+ @param success A block object called when the operation succeeds. It returns
+                all members of the room.
+ @param lazyLoadedMembers A block object called when an HTTP request is required. It returns
+                          already lazy-loaded members.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)members:(void (^)(MXRoomMembers *members))success
+          lazyLoadedMembers:(void (^)(MXRoomMembers *lazyLoadedMembers))lazyLoadedMembers
+                    failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 /**
  The private user data for this room.
@@ -146,18 +180,6 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidFlushDataNotification;
 - (id)initWithRoomId:(NSString*)roomId andMatrixSession:(MXSession*)mxSession;
 
 /**
- Create a `MXRoom` instance from room state and account data already available.
-
- @param roomId the id of the room.
- @param mxSession the session to use.
- @param stateEvents the state events of the room.
- @param accountData the account data for the room.
- @return the new instance.
- */
- // @TODO(lazy-loading): Remove this method. loadRoomFromStore should be enough
-- (id)initWithRoomId:(NSString*)roomId andMatrixSession:(MXSession*)mxSession andStateEvents:(NSArray<MXEvent *> *)stateEvents andAccountData:(MXRoomAccountData*)accountData;
-
-/**
  Create a `MXRoom` instance by specifying the store the live timeline must use.
 
  @param roomId the id of the room.
@@ -172,10 +194,12 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidFlushDataNotification;
 
  @param store the store to mount data from and to store live data to.
  @param roomId the id of the room.
- @param mxSession the session to use.
+ @param matrixSession the session to use.
  @return the new instance.
  */
 + (id)loadRoomFromStore:(id<MXStore>)store withRoomId:(NSString *)roomId matrixSession:(MXSession *)matrixSession;
+
+- (void)close;
 
 #pragma mark - Server sync
 
@@ -755,7 +779,6 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidFlushDataNotification;
                              success:(void (^)(void))success
                              failure:(void (^)(NSError *error))failure;
 
-
 /**
  Indicate if replying to the provided event is supported.
  Only event of type 'MXEventTypeRoomMessage' are supported for the moment, and for certain msgtype.
@@ -790,6 +813,37 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidFlushDataNotification;
                              failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 
+#pragma mark - Events listeners on the live timeline
+/**
+ Register a listener to events of the room live timeline.
+
+ @param onEvent the block that will called once a new event has been handled.
+ @return a reference to use to unregister the listener
+ */
+- (id)listenToEvents:(MXOnRoomEvent)onEvent;
+
+/**
+ Register a listener for some types of events on the room live timeline.
+
+ @param types an array of event types strings (MXEventTypeString) to listen to.
+ @param onEvent the block that will called once a new event has been handled.
+ @return a reference to use to unregister the listener
+ */
+- (id)listenToEventsOfTypes:(NSArray<MXEventTypeString> *)types onEvent:(MXOnRoomEvent)onEvent;
+
+/**
+ Unregister a listener from the room live timeline.
+
+ @param listener the reference of the listener to remove.
+ */
+- (void)removeListener:(id)listener;
+
+/**
+ Unregister all listeners from the room live timeline.
+ */
+- (void)removeAllListeners;
+
+
 #pragma mark - Events timeline
 /**
  Open a new `MXEventTimeline` instance around the passed event.
@@ -798,6 +852,7 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidFlushDataNotification;
  @return a new `MXEventTimeline` instance.
  */
 - (MXEventTimeline*)timelineOnEvent:(NSString*)eventId;
+
 
 #pragma mark - Fake event objects creation
 /**

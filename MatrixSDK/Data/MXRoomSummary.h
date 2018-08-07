@@ -1,6 +1,7 @@
 /*
  Copyright 2017 OpenMarket Ltd
  Copyright 2017 Vector Creations Ltd
+ Copyright 2018 New Vector Ltd
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -139,6 +140,11 @@ FOUNDATION_EXPORT NSString *const kMXRoomSummaryDidChangeNotification;
 @property (nonatomic) NSString *topic;
 
 /**
+ The aliases of this room.
+ */
+@property (nonatomic) NSArray<NSString *> *aliases;
+
+/**
  The membership state of the logged in user for this room.
  */
 @property (nonatomic) MXMembership membership;
@@ -147,6 +153,13 @@ FOUNDATION_EXPORT NSString *const kMXRoomSummaryDidChangeNotification;
  Room members counts.
  */
 @property (nonatomic) MXRoomMembersCount *membersCount;
+
+/**
+ Flag indicating if the room is a 1:1 room with a call conference user.
+ In this case, the room is used as a call signaling room and does not need to be
+ displayed to the end user.
+ */
+@property (nonatomic) BOOL isConferenceUserRoom;
 
 /**
  Indicate whether this room should be hidden from the user.
@@ -325,13 +338,25 @@ FOUNDATION_EXPORT NSString *const kMXRoomSummaryDidChangeNotification;
 - (BOOL)session:(MXSession*)session updateRoomSummary:(MXRoomSummary*)summary withLastEvent:(MXEvent*)event eventState:(MXRoomState*)eventState roomState:(MXRoomState*)roomState;
 
 /**
- Called to update the room summary on a received state event.
+ Called to update the room summary on received state events.
 
  @param session the session the room belongs to.
  @param summary the room summary.
  @param stateEvents state events that may change the room summary.
+ @param roomState the current state of the room.
  @return YES if the room summary has changed.
  */
-- (BOOL)session:(MXSession*)session updateRoomSummary:(MXRoomSummary*)summary withStateEvents:(NSArray<MXEvent*>*)stateEvents;
+- (BOOL)session:(MXSession*)session updateRoomSummary:(MXRoomSummary*)summary withStateEvents:(NSArray<MXEvent*>*)stateEvents roomState:(MXRoomState*)roomState;
+
+/**
+ Called to update the room summary on received summary update.
+
+ @param session the session the room belongs to.
+ @param summary the room summary.
+ @param serverRoomSummary the homeserver side room summary.
+ @param roomState the current state of the room.
+ @return YES if the room summary has changed.
+ */
+- (BOOL)session:(MXSession*)session updateRoomSummary:(MXRoomSummary*)summary withServerRoomSummary:(MXRoomSyncSummary*)serverRoomSummary roomState:(MXRoomState*)roomState;
 
 @end

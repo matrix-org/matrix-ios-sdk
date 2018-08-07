@@ -79,19 +79,21 @@
         };
         
         // Register the listener
-        [room.liveTimeline listenToEvents:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
-            
-            XCTAssertEqual(direction, MXTimelineDirectionForwards);
-            
-            XCTAssertEqual(event.eventType, MXEventTypeRoomMessage);
-            
-            XCTAssertNotNil(event.eventId);
-            
-            receivedMessageEventID = event.eventId;
-           
-            checkEventIDs();
+        [room liveTimeline:^(MXEventTimeline *liveTimeline) {
+
+            [liveTimeline listenToEvents:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
+
+                XCTAssertEqual(direction, MXTimelineDirectionForwards);
+
+                XCTAssertEqual(event.eventType, MXEventTypeRoomMessage);
+
+                XCTAssertNotNil(event.eventId);
+
+                receivedMessageEventID = event.eventId;
+
+                checkEventIDs();
+            }];
         }];
-        
         
         // Populate a text message in parallel
         [matrixSDKTestsData doMXRestClientTestWithBobAndThePublicRoom:nil readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation2) {
@@ -123,7 +125,7 @@
         __block NSString *sentMessageEventID;
         __block NSString *receivedMessageEventID;
         
-        void (^checkEventIDs)() = ^ void ()
+        void (^checkEventIDs)(void) = ^ void (void)
         {
             if (sentMessageEventID && receivedMessageEventID)
             {
@@ -134,18 +136,21 @@
         };
         
         // Register the listener for m.room.message.only
-        [room.liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage]
-                                          onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
-            
-            XCTAssertEqual(direction, MXTimelineDirectionForwards);
-            
-            XCTAssertEqual(event.eventType, MXEventTypeRoomMessage);
-                                              
-            XCTAssertNotNil(event.eventId);
-                                              
-            receivedMessageEventID = event.eventId;
-                                              
-            checkEventIDs();
+        [room liveTimeline:^(MXEventTimeline *liveTimeline) {
+
+            [liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage]
+                                        onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
+
+                                            XCTAssertEqual(direction, MXTimelineDirectionForwards);
+
+                                            XCTAssertEqual(event.eventType, MXEventTypeRoomMessage);
+
+                                            XCTAssertNotNil(event.eventId);
+
+                                            receivedMessageEventID = event.eventId;
+
+                                            checkEventIDs();
+                                        }];
         }];
         
         // Populate a text message in parallel
@@ -177,9 +182,11 @@
         NSString *roomId = room.roomId;
 
         __block MXMembership lastKnownMembership = MXMembershipUnknown;
-        [room.liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMember] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
+        [room liveTimeline:^(MXEventTimeline *liveTimeline) {
+            [liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMember] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
 
-            lastKnownMembership = room.summary.membership;
+                lastKnownMembership = liveTimeline.state.membership;
+            }];
         }];
         
         // This implicitly tests MXSession leaveRoom
@@ -209,7 +216,9 @@
 
             [bobRestClient inviteUser:aliceRestClient.credentials.userId toRoom:roomId success:^{
 
-                [mxSession startWithMessagesLimit:0 onServerSyncDone:^{
+
+                [mxSession startWithSyncFilter:[MXFilterJSONModel syncFilterWithMessageLimit:0]
+                              onServerSyncDone:^{
 
                     MXRoom *room = [mxSession roomWithRoomId:roomId];
 
@@ -251,11 +260,13 @@
 
             MXRoom *room = [mxSession roomWithRoomId:roomId];
 
-            [room.liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomPowerLevels] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
+            [room liveTimeline:^(MXEventTimeline *liveTimeline) {
+                [liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomPowerLevels] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
 
-                XCTAssertEqual([room.state.powerLevels powerLevelOfUserWithUserID:aliceRestClient.credentials.userId], 36);
+                    XCTAssertEqual([liveTimeline.state.powerLevels powerLevelOfUserWithUserID:aliceRestClient.credentials.userId], 36);
 
-               [expectation fulfill];
+                    [expectation fulfill];
+                }];
             }];
 
             [room setPowerLevelOfUserWithUserID:aliceRestClient.credentials.userId powerLevel:36 success:^{
@@ -278,33 +289,35 @@
 
         mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
 
-        [mxSession startWithMessagesLimit:0 onServerSyncDone:^{
+        [mxSession startWithSyncFilter:[MXFilterJSONModel syncFilterWithMessageLimit:0] onServerSyncDone:^{
             
             MXRoom *room = [mxSession roomWithRoomId:roomId];
 
             __block NSUInteger eventCount = 0;
-            [room.liveTimeline listenToEvents:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
+            [room liveTimeline:^(MXEventTimeline *liveTimeline) {
+                [liveTimeline listenToEvents:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
 
-                eventCount++;
-                XCTFail(@"We should not receive events. Received: %@", event);
-                [expectation fulfill];
+                    eventCount++;
+                    XCTFail(@"We should not receive events. Received: %@", event);
+                    [expectation fulfill];
 
+                }];
+
+                [liveTimeline resetPagination];
+                MXHTTPOperation *pagination = [liveTimeline paginate:100 direction:MXTimelineDirectionBackwards onlyFromStore:NO complete:^() {
+
+                    XCTFail(@"The cancelled operation must not complete");
+                    [expectation fulfill];
+
+                } failure:^(NSError *error) {
+                    XCTAssertEqual(eventCount, 0, "We should have received events in registerEventListenerForTypes");
+                    [expectation fulfill];
+                }];
+
+                XCTAssertNotNil(pagination);
+
+                [pagination cancel];
             }];
-
-            [room.liveTimeline resetPagination];
-            MXHTTPOperation *pagination = [room.liveTimeline paginate:100 direction:MXTimelineDirectionBackwards onlyFromStore:NO complete:^() {
-
-                XCTFail(@"The cancelled operation must not complete");
-                [expectation fulfill];
-
-            } failure:^(NSError *error) {
-                XCTAssertEqual(eventCount, 0, "We should have received events in registerEventListenerForTypes");
-                [expectation fulfill];
-            }];
-
-            XCTAssertNotNil(pagination);
-
-            [pagination cancel];
 
         } failure:^(NSError *error) {
             XCTFail(@"The request should not fail - NSError: %@", error);
@@ -324,12 +337,14 @@
 
             XCTAssertEqual(room.typingUsers.count, 0);
 
-            [room.liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringTypingNotification] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
+            [room liveTimeline:^(MXEventTimeline *liveTimeline) {
+                [liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringTypingNotification] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
 
-                XCTAssertEqual(room.typingUsers.count, 1);
-                XCTAssertEqualObjects(room.typingUsers[0], bobRestClient.credentials.userId);
+                    XCTAssertEqual(room.typingUsers.count, 1);
+                    XCTAssertEqualObjects(room.typingUsers[0], bobRestClient.credentials.userId);
 
-                [expectation fulfill];
+                    [expectation fulfill];
+                }];
             }];
 
             [room sendTypingNotification:YES timeout:30000 success:^{
@@ -357,30 +372,33 @@
         __block NSUInteger tagEventUpdata = 0;
 
         // Wait for the m.tag event to get the room tags update
-        [room.liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomTag] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
+        [room liveTimeline:^(MXEventTimeline *liveTimeline) {
+            [liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomTag] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
 
-            if (++tagEventUpdata == 1)
-            {
-                // This event is fired after the [room addTag:] request
-                MXRoomTag *roomTag = room.accountData.tags[tag];
+                if (++tagEventUpdata == 1)
+                {
+                    // This event is fired after the [room addTag:] request
+                    MXRoomTag *roomTag = room.accountData.tags[tag];
 
-                XCTAssertNotNil(roomTag);
-                XCTAssertEqualObjects(roomTag.name, tag);
-                XCTAssertEqualObjects(roomTag.order, order);
+                    XCTAssertNotNil(roomTag);
+                    XCTAssertEqualObjects(roomTag.name, tag);
+                    XCTAssertEqualObjects(roomTag.order, order);
 
-                [room removeTag:tag success:nil failure:^(NSError *error) {
-                    XCTFail(@"The request should not fail - NSError: %@", error);
+                    [room removeTag:tag success:nil failure:^(NSError *error) {
+                        XCTFail(@"The request should not fail - NSError: %@", error);
+                        [expectation fulfill];
+                    }];
+                }
+                else if (tagEventUpdata == 2)
+                {
+                    // This event is fired after the [room removeTag:] request
+                    XCTAssertNotNil(room.accountData.tags);
+                    XCTAssertEqual(room.accountData.tags.count, 0);
+
                     [expectation fulfill];
-                }];
-            }
-            else if (tagEventUpdata == 2)
-            {
-                // This event is fired after the [room removeTag:] request
-                XCTAssertNotNil(room.accountData.tags);
-                XCTAssertEqual(room.accountData.tags.count, 0);
+                }
+            }];
 
-                [expectation fulfill];
-            }
         }];
 
         // Do the test
@@ -402,17 +420,19 @@
         NSString *newTagOrder = nil;
 
         // Wait for the m.tag event that corresponds to "newTag"
-        [room.liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomTag] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
+        [room liveTimeline:^(MXEventTimeline *liveTimeline) {
+            [liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomTag] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
 
-            MXRoomTag *newRoomTag = room.accountData.tags[newTag];
-            if (newRoomTag)
-            {
-                XCTAssertNotNil(newRoomTag);
-                XCTAssertEqualObjects(newRoomTag.name, newTag);
-                XCTAssertEqualObjects(newRoomTag.order, newTagOrder);
+                MXRoomTag *newRoomTag = room.accountData.tags[newTag];
+                if (newRoomTag)
+                {
+                    XCTAssertNotNil(newRoomTag);
+                    XCTAssertEqualObjects(newRoomTag.name, newTag);
+                    XCTAssertEqualObjects(newRoomTag.order, newTagOrder);
 
-                [expectation fulfill];
-            }
+                    [expectation fulfill];
+                }
+            }];
         }];
 
         // Prepare initial condition: have a tag
@@ -542,7 +562,7 @@
         __block NSUInteger messageCount = 0;
         
         // Listen to messages
-        [room.liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
+        [room listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
             messageCount++;
             
             if (messageCount == 1)

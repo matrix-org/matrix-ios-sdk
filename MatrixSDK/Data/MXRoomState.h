@@ -58,11 +58,17 @@
 
 /**
  Room members of the room.
+
+ In case of lazy-loading of room members (@see MXSession.syncWithLazyLoadOfRoomMembers),
+ `MXRoomState.members` contains only a subset of all actual room members. This subset
+ is enough to render the events timeline owning the `MXRoomState` instance.
+
+ Use [MXRoom members:] to get the full list of room members.
  */
 @property (nonatomic, readonly) MXRoomMembers *members;
 
 /**
- Room members counts.
+ Cache counts for MXRoomState.members`.
  */
 @property (nonatomic, readonly) MXRoomMembersCount *membersCount;
 
@@ -192,12 +198,13 @@ Use MXRoomSummary.displayname to get a computed room display name.
 
  @param store the store to mount data from and to store live data to.
  @param roomId the id of the room.
- @param mxSession the session to use.
- @return the new instance.
+ @param matrixSession the session to use.
+ @param onComplete the block providing the new instance.
  */
-+ (id)loadRoomStateFromStore:(id<MXStore>)store
++ (void)loadRoomStateFromStore:(id<MXStore>)store
                   withRoomId:(NSString *)roomId
-               matrixSession:(MXSession *)matrixSession;
+               matrixSession:(MXSession *)matrixSession
+                  onComplete:(void (^)(MXRoomState *roomState))onComplete;
 
 /**
  Create a `MXRoomState` instance used as a back state of a room.

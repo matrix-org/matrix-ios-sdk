@@ -25,21 +25,16 @@ public extension MXSession {
      will resume the events streaming from where it had been stopped the time before.
      
      - parameters:
-        - limit: The number of messages to retrieve in each room. If `nil`, this preloads 10 messages.
-     Use this argument to use a custom limit.
+        - filterId: the id of the filter to use.
         - completion: A block object called when the operation completes. In case of failure during
      the initial sync, the session state is `MXSessionStateInitialSyncFailed`.
         - response: Indicates whether the operation was successful.
      */
-    @nonobjc func start(withMessagesLimit limit: UInt? = nil, completion: @escaping (_ response: MXResponse<Void>) -> Void) {
-        if let limit = limit {
-            __start(withMessagesLimit: limit, onServerSyncDone: currySuccess(completion), failure: curryFailure(completion))
-        } else {
-            __start(currySuccess(completion), failure: curryFailure(completion))
-        }
+    @nonobjc func start(withSyncFilterId filterId: String? = nil, completion: @escaping (_ response: MXResponse<Void>) -> Void) {
+        __start(withSyncFilterId:filterId, onServerSyncDone: currySuccess(completion), failure: curryFailure(completion))
     }
-    
-    
+
+
     /**
      Perform an events stream catchup in background (by keeping user offline).
      

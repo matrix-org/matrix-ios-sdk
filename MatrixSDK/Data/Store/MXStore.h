@@ -24,6 +24,7 @@
 #import "MXRoomSummary.h"
 #import "MXRoomAccountData.h"
 #import "MXGroup.h"
+#import "MXFilterJSONModel.h"
 
 #import "MXEventsEnumerator.h"
 
@@ -122,6 +123,13 @@
 // @TODO(summary): Move to MXRoomSummary
 - (void)storeHasReachedHomeServerPaginationEndForRoom:(nonnull NSString*)roomId andValue:(BOOL)value;
 - (BOOL)hasReachedHomeServerPaginationEndForRoom:(nonnull NSString*)roomId;
+
+/**
+ Store/retrieve the flag indicating that the SDK has retrieved all room members
+ of a room.
+ */
+- (void)storeHasLoadedAllRoomMembersForRoom:(nonnull NSString*)roomId andValue:(BOOL)value;
+- (BOOL)hasLoadedAllRoomMembersForRoom:(nonnull NSString*)roomId;
 
 /**
  Get an events enumerator on all messages of a room.
@@ -310,10 +318,12 @@
  Note: this method is required in permanent storage implementation.
 
  @param roomId the id of the room.
-
- @return the stored state events that define the room state.
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
  */
-- (NSArray<MXEvent*> * _Nullable)stateOfRoom:(nonnull NSString*)roomId;
+- (void)stateOfRoom:(nonnull NSString *)roomId
+            success:(nonnull void (^)(NSArray<MXEvent *> * _Nonnull stateEvents))success
+            failure:(nullable void (^)(NSError * _Nonnull error))failure;
 
 
 #pragma mark - Room summary
@@ -394,9 +404,48 @@
  */
 - (NSArray<MXEvent*>* _Nullable)outgoingMessagesInRoom:(nonnull NSString*)roomId;
 
+
+#pragma mark - User Account data
 /**
  Store/retrieve the user account data.
  */
 @property (nonatomic) NSDictionary * _Nullable userAccountData;
+
+
+#pragma mark - Matrix filters
+/**
+ Store/retrieve the id of the Matrix filter used in /sync requests.
+ */
+@property (nonatomic) NSString * _Nullable syncFilterId;
+
+/**
+ Store a created filter.
+
+ @param filter the filter to store.
+ @param filterId the id of this filter on the homeserver.
+ */
+- (void)storeFilter:(nonnull MXFilterJSONModel*)filter withFilterId:(nonnull NSString*)filterId;
+
+/**
+ Retrieve a filter with a given id.
+
+ @param filterId the id of the filter.
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+ */
+- (void)filterWithFilterId:(nonnull NSString*)filterId
+                   success:(nonnull void (^)(MXFilterJSONModel * _Nullable filter))success
+                   failure:(nullable void (^)(NSError * _Nullable error))failure;
+
+/**
+ Check if a filter already exists and return its filter id.
+
+ @param filter the filter to check the existence.
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+ */
+- (void)filterIdForFilter:(nonnull MXFilterJSONModel*)filter
+                  success:(nonnull void (^)(NSString * _Nullable filterId))success
+                  failure:(nullable void (^)(NSError * _Nullable error))failure;
 
 @end

@@ -30,6 +30,7 @@
         self.paginationToken = [aDecoder decodeObjectForKey:@"paginationToken"];
 
         self.hasReachedHomeServerPaginationEnd = [aDecoder decodeBoolForKey:@"hasReachedHomeServerPaginationEnd"];
+        self.hasLoadedAllRoomMembersForRoom = [aDecoder decodeBoolForKey:@"hasLoadedAllRoomMembersForRoom"];
 
         self.partialTextMessage = [aDecoder decodeObjectForKey:@"partialTextMessage"];
 
@@ -64,6 +65,7 @@
     }
     
     [aCoder encodeBool:self.hasReachedHomeServerPaginationEnd forKey:@"hasReachedHomeServerPaginationEnd"];
+    [aCoder encodeBool:self.hasLoadedAllRoomMembersForRoom forKey:@"hasLoadedAllRoomMembersForRoom"];
 
     if (self.partialTextMessage)
     {

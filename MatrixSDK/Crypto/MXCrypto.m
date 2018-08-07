@@ -338,75 +338,86 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
     // just as you are sending a secret message?
 
     // XXX what about rooms where invitees can see the content?
-    NSMutableArray *roomMembers = [NSMutableArray array];
-    for (MXRoomMember *roomMember in room.state.members.joinedMembers)
-    {
-        [roomMembers addObject:roomMember.userId];
-    }
-
     MXWeakify(self);
-    dispatch_async(_cryptoQueue, ^{
+    [room state:^(MXRoomState *roomState) {
         MXStrongifyAndReturnIfNil(self);
 
-        NSString *algorithm;
-        id<MXEncrypting> alg = self->roomEncryptors[room.roomId];
+        MXWeakify(self);
+        [room members:^(MXRoomMembers *roomMembers) {
+            MXStrongifyAndReturnIfNil(self);
 
-        if (!alg)
-        {
-            // If the crypto has been enabled after the initialSync (the global one or the one for this room),
-            // the algorithm has not been initialised yet. So, do it now from room state information
-            algorithm = room.state.encryptionAlgorithm;
-            if (algorithm)
+            NSMutableArray *userIds = [NSMutableArray array];
+            for (MXRoomMember *roomMember in roomMembers.joinedMembers)
             {
-                [self setEncryptionInRoom:room.roomId withMembers:roomMembers algorithm:algorithm inhibitDeviceQuery:NO];
-                alg = self->roomEncryptors[room.roomId];
+                [userIds addObject:roomMember.userId];
             }
-        }
-        else
-        {
-            // For log purpose
-            algorithm = NSStringFromClass(alg.class);
-        }
 
-        // Sanity check (we don't expect an encrypted content here).
-        if (alg && [eventType isEqualToString:kMXEventTypeStringRoomEncrypted] == NO)
-        {
+            MXWeakify(self);
+            dispatch_async(self.cryptoQueue, ^{
+                MXStrongifyAndReturnIfNil(self);
+
+                NSString *algorithm;
+                id<MXEncrypting> alg = self->roomEncryptors[room.roomId];
+
+                if (!alg)
+                {
+                    // If the crypto has been enabled after the initialSync (the global one or the one for this room),
+                    // the algorithm has not been initialised yet. So, do it now from room state information
+                    algorithm = roomState.encryptionAlgorithm;
+                    if (algorithm)
+                    {
+                        [self setEncryptionInRoom:room.roomId withMembers:userIds algorithm:algorithm inhibitDeviceQuery:NO];
+                        alg = self->roomEncryptors[room.roomId];
+                    }
+                }
+                else
+                {
+                    // For log purpose
+                    algorithm = NSStringFromClass(alg.class);
+                }
+
+                // Sanity check (we don't expect an encrypted content here).
+                if (alg && [eventType isEqualToString:kMXEventTypeStringRoomEncrypted] == NO)
+                {
 #ifdef DEBUG
-            NSLog(@"[MXCrypto] encryptEventContent with %@: %@", algorithm, eventContent);
+                    NSLog(@"[MXCrypto] encryptEventContent with %@: %@", algorithm, eventContent);
 #endif
 
-            MXHTTPOperation *operation2 = [alg encryptEventContent:eventContent eventType:eventType forUsers:roomMembers success:^(NSDictionary *encryptedContent) {
+                    MXHTTPOperation *operation2 = [alg encryptEventContent:eventContent eventType:eventType forUsers:userIds success:^(NSDictionary *encryptedContent) {
 
-                dispatch_async(dispatch_get_main_queue(), ^{
-                    success(encryptedContent, kMXEventTypeStringRoomEncrypted);
-                });
+                        dispatch_async(dispatch_get_main_queue(), ^{
+                            success(encryptedContent, kMXEventTypeStringRoomEncrypted);
+                        });
 
-            } failure:^(NSError *error) {
-                dispatch_async(dispatch_get_main_queue(), ^{
-                    failure(error);
-                });
-            }];
+                    } failure:^(NSError *error) {
+                        dispatch_async(dispatch_get_main_queue(), ^{
+                            failure(error);
+                        });
+                    }];
 
-            // Mutate the HTTP operation if an HTTP is required for the encryption
-            if (operation2)
-            {
-                [operation mutateTo:operation2];
-            }
-        }
-        else
-        {
-            NSError *error = [NSError errorWithDomain:MXDecryptingErrorDomain
-                                                 code:MXDecryptingErrorUnableToEncryptCode
-                                             userInfo:@{
-                                                        NSLocalizedDescriptionKey: MXDecryptingErrorUnableToEncrypt,
-                                                        NSLocalizedFailureReasonErrorKey: [NSString stringWithFormat:MXDecryptingErrorUnableToEncryptReason, algorithm]
-                                                        }];
-            
-            dispatch_async(dispatch_get_main_queue(), ^{
-                failure(error);
+                    // Mutate the HTTP operation if an HTTP is required for the encryption
+                    if (operation2)
+                    {
+                        [operation mutateTo:operation2];
+                    }
+                }
+                else
+                {
+                    NSError *error = [NSError errorWithDomain:MXDecryptingErrorDomain
+                                                         code:MXDecryptingErrorUnableToEncryptCode
+                                                     userInfo:@{
+                                                                NSLocalizedDescriptionKey: MXDecryptingErrorUnableToEncrypt,
+                                                                NSLocalizedFailureReasonErrorKey: [NSString stringWithFormat:MXDecryptingErrorUnableToEncryptReason, algorithm]
+                                                                }];
+
+                    dispatch_async(dispatch_get_main_queue(), ^{
+                        failure(error);
+                    });
+                }
             });
-        }
-    });
+
+        } failure:failure];
+    }];
 
     return operation;
 
@@ -469,71 +480,83 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
     MXRoom *room = [_mxSession roomWithRoomId:roomId];
     if (room.summary.isEncrypted)
     {
-        // Get user ids in this room
-        NSMutableArray *userIds = [NSMutableArray array];
-        for (MXRoomMember *member in room.state.members.joinedMembers)
-        {
-            [userIds addObject:member.userId];
-        }
-
         MXWeakify(self);
-        dispatch_async(_cryptoQueue, ^{
+        [room state:^(MXRoomState *roomState) {
             MXStrongifyAndReturnIfNil(self);
 
-            NSString *algorithm;
-            id<MXEncrypting> alg = self->roomEncryptors[room.roomId];
+            MXWeakify(self);
+            [room members:^(MXRoomMembers *roomMembers) {
+                MXStrongifyAndReturnIfNil(self);
 
-            if (!alg)
-            {
-                // The algorithm has not been initialised yet. So, do it now from room state information
-                algorithm = room.state.encryptionAlgorithm;
-                if (algorithm)
+                // Get user ids in this room
+                NSMutableArray *userIds = [NSMutableArray array];
+                for (MXRoomMember *member in roomMembers.joinedMembers)
                 {
-                    [self setEncryptionInRoom:room.roomId withMembers:userIds algorithm:algorithm inhibitDeviceQuery:NO];
-                    alg = self->roomEncryptors[room.roomId];
+                    [userIds addObject:member.userId];
                 }
-            }
 
-            if (alg)
-            {
-                // Check we have everything to encrypt events
-                MXHTTPOperation *operation2 = [alg ensureSessionForUsers:userIds success:^(NSObject *sessionInfo) {
+                MXWeakify(self);
+                dispatch_async(self.cryptoQueue, ^{
+                    MXStrongifyAndReturnIfNil(self);
 
-                    if (success)
+                    NSString *algorithm;
+                    id<MXEncrypting> alg = self->roomEncryptors[room.roomId];
+
+                    if (!alg)
                     {
-                        dispatch_async(dispatch_get_main_queue(), ^{
-                            success();
-                        });
+                        // The algorithm has not been initialised yet. So, do it now from room state information
+                        algorithm = roomState.encryptionAlgorithm;
+                        if (algorithm)
+                        {
+                            [self setEncryptionInRoom:room.roomId withMembers:userIds algorithm:algorithm inhibitDeviceQuery:NO];
+                            alg = self->roomEncryptors[room.roomId];
+                        }
                     }
 
-                } failure:^(NSError *error) {
-                    if (failure)
+                    if (alg)
                     {
+                        // Check we have everything to encrypt events
+                        MXHTTPOperation *operation2 = [alg ensureSessionForUsers:userIds success:^(NSObject *sessionInfo) {
+
+                            if (success)
+                            {
+                                dispatch_async(dispatch_get_main_queue(), ^{
+                                    success();
+                                });
+                            }
+
+                        } failure:^(NSError *error) {
+                            if (failure)
+                            {
+                                dispatch_async(dispatch_get_main_queue(), ^{
+                                    failure(error);
+                                });
+                            }
+                        }];
+
+                        if (operation2)
+                        {
+                            [operation mutateTo:operation2];
+                        }
+                    }
+                    else if (failure)
+                    {
+                        NSError *error = [NSError errorWithDomain:MXDecryptingErrorDomain
+                                                             code:MXDecryptingErrorUnableToEncryptCode
+                                                         userInfo:@{
+                                                                    NSLocalizedDescriptionKey: MXDecryptingErrorUnableToEncrypt,
+                                                                    NSLocalizedFailureReasonErrorKey: [NSString stringWithFormat:MXDecryptingErrorUnableToEncryptReason, algorithm]
+                                                                    }];
+
                         dispatch_async(dispatch_get_main_queue(), ^{
                             failure(error);
                         });
                     }
-                }];
-
-                if (operation2)
-                {
-                    [operation mutateTo:operation2];
-                }
-            }
-            else if (failure)
-            {
-                NSError *error = [NSError errorWithDomain:MXDecryptingErrorDomain
-                                                     code:MXDecryptingErrorUnableToEncryptCode
-                                                 userInfo:@{
-                                                            NSLocalizedDescriptionKey: MXDecryptingErrorUnableToEncrypt,
-                                                            NSLocalizedFailureReasonErrorKey: [NSString stringWithFormat:MXDecryptingErrorUnableToEncryptReason, algorithm]
-                                                            }];
-
-                dispatch_async(dispatch_get_main_queue(), ^{
-                    failure(error);
                 });
-            }
-        });
+
+
+            } failure:failure];
+        }];
     }
     else
 #endif
@@ -1801,7 +1824,7 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
                 }
                 else if (event.eventType == MXEventTypeRoomMember)
                 {
-                    [self onRoomMembership:event];
+                    [self onRoomMembership:event roomState:customObject];
                 }
             }
         }];
@@ -1885,26 +1908,43 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
 {
     MXRoom *room = [_mxSession roomWithRoomId:event.roomId];
 
-    NSMutableArray *members = [NSMutableArray array];
-    for (MXRoomMember *roomMember in room.state.members.joinedMembers)
+    MXWeakify(self);
+    void (^success)(MXRoomMembers *roomMembers) = ^void(MXRoomMembers *roomMembers)
     {
-        [members addObject:roomMember.userId];
-    }
+        MXStrongifyAndReturnIfNil(self);
 
-    if (_cryptoQueue)
-    {
-        dispatch_async(_cryptoQueue, ^{
-            [self setEncryptionInRoom:event.roomId withMembers:members algorithm:event.content[@"algorithm"] inhibitDeviceQuery:YES];
-        });
-    }
+        NSMutableArray *members = [NSMutableArray array];
+        for (MXRoomMember *roomMember in roomMembers.joinedMembers)
+        {
+            [members addObject:roomMember.userId];
+        }
+
+        if (self.cryptoQueue)
+        {
+            dispatch_async(self.cryptoQueue, ^{
+                [self setEncryptionInRoom:event.roomId withMembers:members algorithm:event.content[@"algorithm"] inhibitDeviceQuery:YES];
+            });
+        }
+    };
+
+    [room members:^(MXRoomMembers *roomMembers) {
+        success(roomMembers);
+    } failure:^(NSError *error) {
+        NSLog(@"[MXCrypto] onCryptoEvent: Warning: Unable to get all members from the HS. Fallback by using lazy-loaded members");
+
+        [room state:^(MXRoomState *roomState) {
+            success(roomState.members);
+        }];
+    }];
 }
 
 /**
  Handle a change in the membership state of a member of a room.
 
- @param event the membership event causing the change
+ @param event the membership event causing the change.
+ @param roomState the know state of the room when the event occurs.
  */
-- (void)onRoomMembership:(MXEvent*)event
+- (void)onRoomMembership:(MXEvent*)event roomState:(MXRoomState*)roomState
 {
     id<MXEncrypting> alg = roomEncryptors[event.roomId];
     if (!alg)
@@ -1914,16 +1954,16 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
     }
 
     NSString *userId = event.stateKey;
-    MXRoomMember *member = [[_mxSession roomWithRoomId:event.roomId].state.members memberWithUserId:userId];
+    MXRoomMember *member = [roomState.members memberWithUserId:userId];
 
     if (member && member.membership == MXMembershipJoin)
     {
         NSLog(@"[MXCrypto] onRoomMembership: Join event for %@ in %@", member.userId, event.roomId);
 
-        if (_cryptoQueue)
+        if (self.cryptoQueue)
         {
             MXWeakify(self);
-            dispatch_async(_cryptoQueue, ^{
+            dispatch_async(self.cryptoQueue, ^{
                 MXStrongifyAndReturnIfNil(self);
 
                 // make sure we are tracking the deviceList for this user

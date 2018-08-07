@@ -94,6 +94,7 @@
 		3265CB381A14C43E00E24B2F /* MXRoomState.h in Headers */ = {isa = PBXBuildFile; fileRef = 3265CB361A14C43E00E24B2F /* MXRoomState.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		3265CB391A14C43E00E24B2F /* MXRoomState.m in Sources */ = {isa = PBXBuildFile; fileRef = 3265CB371A14C43E00E24B2F /* MXRoomState.m */; };
 		3265CB3B1A151C3800E24B2F /* MXRoomStateTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 3265CB3A1A151C3800E24B2F /* MXRoomStateTests.m */; };
+		32684CB821085F770046D2F9 /* MXLazyLoadingTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 32684CB721085F770046D2F9 /* MXLazyLoadingTests.m */; };
 		326D1EF51BFC79300030947B /* MXPushRuleTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 326D1EF41BFC79300030947B /* MXPushRuleTests.m */; };
 		327137241A24BDDE00DB6757 /* MXUserTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 327137231A24BDDE00DB6757 /* MXUserTests.m */; };
 		327137271A24D50A00DB6757 /* MXMyUser.h in Headers */ = {isa = PBXBuildFile; fileRef = 327137251A24D50A00DB6757 /* MXMyUser.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -222,11 +223,11 @@
 		B17285792100C8EA0052C51E /* MXSendReplyEventStringsLocalizable.h in Headers */ = {isa = PBXBuildFile; fileRef = B17285782100C88A0052C51E /* MXSendReplyEventStringsLocalizable.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		B172857C2100D4F60052C51E /* MXSendReplyEventDefaultStringLocalizations.h in Headers */ = {isa = PBXBuildFile; fileRef = B172857A2100D4F60052C51E /* MXSendReplyEventDefaultStringLocalizations.h */; };
 		B172857D2100D4F60052C51E /* MXSendReplyEventDefaultStringLocalizations.m in Sources */ = {isa = PBXBuildFile; fileRef = B172857B2100D4F60052C51E /* MXSendReplyEventDefaultStringLocalizations.m */; };
-		B17982F52119E4A2001FD722 /* MXRoomCreateContent.h in Headers */ = {isa = PBXBuildFile; fileRef = B17982ED2119E49E001FD722 /* MXRoomCreateContent.h */; };
+		B17982F52119E4A2001FD722 /* MXRoomCreateContent.h in Headers */ = {isa = PBXBuildFile; fileRef = B17982ED2119E49E001FD722 /* MXRoomCreateContent.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		B17982F62119E4A2001FD722 /* MXRoomTombStoneContent.m in Sources */ = {isa = PBXBuildFile; fileRef = B17982EE2119E49F001FD722 /* MXRoomTombStoneContent.m */; };
-		B17982F72119E4A2001FD722 /* MXRoomPredecessorInfo.h in Headers */ = {isa = PBXBuildFile; fileRef = B17982EF2119E49F001FD722 /* MXRoomPredecessorInfo.h */; };
-		B17982F82119E4A2001FD722 /* MXRoomPowerLevels.h in Headers */ = {isa = PBXBuildFile; fileRef = B17982F02119E4A0001FD722 /* MXRoomPowerLevels.h */; };
-		B17982F92119E4A2001FD722 /* MXRoomTombStoneContent.h in Headers */ = {isa = PBXBuildFile; fileRef = B17982F12119E4A0001FD722 /* MXRoomTombStoneContent.h */; };
+		B17982F72119E4A2001FD722 /* MXRoomPredecessorInfo.h in Headers */ = {isa = PBXBuildFile; fileRef = B17982EF2119E49F001FD722 /* MXRoomPredecessorInfo.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		B17982F82119E4A2001FD722 /* MXRoomPowerLevels.h in Headers */ = {isa = PBXBuildFile; fileRef = B17982F02119E4A0001FD722 /* MXRoomPowerLevels.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		B17982F92119E4A2001FD722 /* MXRoomTombStoneContent.h in Headers */ = {isa = PBXBuildFile; fileRef = B17982F12119E4A0001FD722 /* MXRoomTombStoneContent.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		B17982FA2119E4A2001FD722 /* MXRoomCreateContent.m in Sources */ = {isa = PBXBuildFile; fileRef = B17982F22119E4A1001FD722 /* MXRoomCreateContent.m */; };
 		B17982FB2119E4A2001FD722 /* MXRoomPredecessorInfo.m in Sources */ = {isa = PBXBuildFile; fileRef = B17982F32119E4A1001FD722 /* MXRoomPredecessorInfo.m */; };
 		B17982FC2119E4A2001FD722 /* MXRoomPowerLevels.m in Sources */ = {isa = PBXBuildFile; fileRef = B17982F42119E4A2001FD722 /* MXRoomPowerLevels.m */; };
@@ -376,6 +377,7 @@
 		3265CB361A14C43E00E24B2F /* MXRoomState.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXRoomState.h; sourceTree = "<group>"; };
 		3265CB371A14C43E00E24B2F /* MXRoomState.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXRoomState.m; sourceTree = "<group>"; };
 		3265CB3A1A151C3800E24B2F /* MXRoomStateTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXRoomStateTests.m; sourceTree = "<group>"; };
+		32684CB721085F770046D2F9 /* MXLazyLoadingTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MXLazyLoadingTests.m; sourceTree = "<group>"; };
 		326D1EF41BFC79300030947B /* MXPushRuleTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXPushRuleTests.m; sourceTree = "<group>"; };
 		327137231A24BDDE00DB6757 /* MXUserTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXUserTests.m; sourceTree = "<group>"; };
 		327137251A24D50A00DB6757 /* MXMyUser.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXMyUser.h; sourceTree = "<group>"; };
@@ -1007,6 +1009,7 @@
 				324BE45A1E3FA7A8008D99D4 /* MXMegolmExportEncryptionTest.m */,
 				C6CC43261E5CB0FD00DB9C34 /* MatrixSDKTests-Bridging-Header.h */,
 				C61A4AF31E5DD88400442158 /* Dummy.swift */,
+				32684CB721085F770046D2F9 /* MXLazyLoadingTests.m */,
 			);
 			path = MatrixSDKTests;
 			sourceTree = "<group>";
@@ -1547,6 +1550,7 @@
 				3281E8A819E41A2000976E1A /* MatrixSDKTestsData.m in Sources */,
 				322A51D81D9E846800C8536D /* MXCryptoTests.m in Sources */,
 				32BD34BE1E84134A006EDC0D /* MatrixSDKTestsE2EData.m in Sources */,
+				32684CB821085F770046D2F9 /* MXLazyLoadingTests.m in Sources */,
 				32832B5D1BCC048300241108 /* MXStoreMemoryStoreTests.m in Sources */,
 				32114A7F1A24E15500FF2EC4 /* MXMyUserTests.m in Sources */,
 				32832B5E1BCC048300241108 /* MXStoreNoStoreTests.m in Sources */,

@@ -105,16 +105,20 @@
     return self;
 }
 
-+ (id)loadRoomStateFromStore:(id<MXStore>)store withRoomId:(NSString *)roomId matrixSession:(MXSession *)matrixSession
++ (void)loadRoomStateFromStore:(id<MXStore>)store
+                  withRoomId:(NSString *)roomId
+               matrixSession:(MXSession *)matrixSession
+                  onComplete:(void (^)(MXRoomState *roomState))onComplete
 {
-    MXRoomState *state = [[MXRoomState alloc] initWithRoomId:roomId andMatrixSession:matrixSession andDirection:YES];
-    if (state)
+    MXRoomState *roomState = [[MXRoomState alloc] initWithRoomId:roomId andMatrixSession:matrixSession andDirection:YES];
+    if (roomState)
     {
-        NSArray *stateEvents = [store stateOfRoom:roomId];
-        [state handleStateEvents:stateEvents];
-    }
+        [store stateOfRoom:roomId success:^(NSArray<MXEvent *> * _Nonnull stateEvents) {
+            [roomState handleStateEvents:stateEvents];
 
-    return state;
+            onComplete(roomState);
+        } failure:nil];
+    }
 }
 
 - (id)initBackStateWith:(MXRoomState*)state
@@ -364,9 +368,7 @@
     // Process the update on room members
     if ([_members handleStateEvents:events])
     {
-        // Update counters from self.members
-        // @TODO(lazy-loading): these values will be provided by the coming
-        // room summary in the matrix spec (https://github.com/matrix-org/matrix-doc/issues/688).
+        // Update counters for currently known room members
         _membersCount.members = _members.members.count;
         _membersCount.joined = _members.joinedMembers.count;
         _membersCount.invited =  [_members membersWithMembership:MXMembershipInvite].count;
@@ -502,7 +504,8 @@
     float powerLevel = 0;
     
     // Get the user from the member list of the room
-    // @TODO(lazy-loading): We should not need it. This is not the job of the SDK to filter information like this
+    // If the app asks for information about a user id, it means that we already
+    // have the MXRoomMember data
     MXRoomMember *member = [self.members memberWithUserId:userId];
     
     // Ignore banned and left (kicked) members

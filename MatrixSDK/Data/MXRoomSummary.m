@@ -1,6 +1,7 @@
 /*
  Copyright 2017 OpenMarket Ltd
  Copyright 2017 Vector Creations Ltd
+ Copyright 2018 New Vector Ltd
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -20,6 +21,7 @@
 #import "MXRoom.h"
 #import "MXRoomState.h"
 #import "MXSession.h"
+#import "MXTools.h"
 
 #import <Security/Security.h>
 #import <CommonCrypto/CommonCryptor.h>
@@ -122,11 +124,17 @@ NSString *const kMXRoomSummaryDidChangeNotification = @"kMXRoomSummaryDidChangeN
     _avatar = nil;
     _displayname = nil;
     _topic = nil;
+    _aliases = nil;
 
-    if ([_mxSession.roomSummaryUpdateDelegate session:_mxSession updateRoomSummary:self withStateEvents:room.state.stateEvents])
-    {
-        [self save:YES];
-    }
+    MXWeakify(self);
+    [room state:^(MXRoomState *roomState) {
+        MXStrongifyAndReturnIfNil(self);
+
+        if ([self.mxSession.roomSummaryUpdateDelegate session:self.mxSession updateRoomSummary:self withStateEvents:roomState.stateEvents roomState:roomState])
+        {
+            [self save:YES];
+        }
+    }];
 }
 
 
@@ -214,114 +222,127 @@ NSString *const kMXRoomSummaryDidChangeNotification = @"kMXRoomSummaryDidChangeN
         return nil;
     }
 
-    MXHTTPOperation *newOperation;
-
-    // Start by checking events we have in the store
-    MXRoomState *state = self.room.state;
-    id<MXEventsEnumerator> messagesEnumerator = room.enumeratorForStoredMessages;
-    NSUInteger messagesInStore = messagesEnumerator.remaining;
-    MXEvent *event = messagesEnumerator.nextEvent;
-
-    // 1.1 Find where we stopped at the previous call in the fetchLastMessage calls loop
-    BOOL firstIteration = YES;
-    if (lastEventIdChecked)
+    if (!operation)
     {
-        firstIteration = NO;
+        // Create an empty operation that will be mutated later
+        operation = [[MXHTTPOperation alloc] init];
+    }
+
+    MXWeakify(self);
+    [self.room state:^(MXRoomState *roomState) {
+        MXStrongifyAndReturnIfNil(self);
+
+        // Start by checking events we have in the store
+        MXRoomState *state = roomState;
+        id<MXEventsEnumerator> messagesEnumerator = room.enumeratorForStoredMessages;
+        NSUInteger messagesInStore = messagesEnumerator.remaining;
+        MXEvent *event = messagesEnumerator.nextEvent;
+        NSString *lastEventIdCheckedInBlock = lastEventIdChecked;
+
+        // 1.1 Find where we stopped at the previous call in the fetchLastMessage calls loop
+        BOOL firstIteration = YES;
+        if (lastEventIdCheckedInBlock)
+        {
+            firstIteration = NO;
+            while (event)
+            {
+                NSString *eventId = event.eventId;
+
+                event = messagesEnumerator.nextEvent;
+
+                if ([eventId isEqualToString:lastEventIdCheckedInBlock])
+                {
+                    break;
+                }
+            }
+        }
+
+        // 1.2 Check events one by one until finding the right last message for the room
+        BOOL lastMessageUpdated = NO;
         while (event)
         {
-            NSString *eventId = event.eventId;
-
-            event = messagesEnumerator.nextEvent;
-
-            if ([eventId isEqualToString:lastEventIdChecked])
+            // Decrypt the event if necessary
+            if (event.eventType == MXEventTypeRoomEncrypted)
             {
+                if (![self.mxSession decryptEvent:event inTimeline:nil])
+                {
+                    NSLog(@"[MXRoomSummary] fetchLastMessage: Warning: Unable to decrypt event: %@\nError: %@", event.content[@"body"], event.decryptionError);
+                }
+            }
+
+            if (event.isState)
+            {
+                // Need to go backward in the state to provide it as it was when the event occured
+                if (state.isLive)
+                {
+                    state = [state copy];
+                    state.isLive = NO;
+                }
+
+                [state handleStateEvents:@[event]];
+            }
+
+            lastEventIdCheckedInBlock = event.eventId;
+
+            // Propose the event as last message
+            lastMessageUpdated = [self.mxSession.roomSummaryUpdateDelegate session:self.mxSession updateRoomSummary:self withLastEvent:event eventState:state roomState:roomState];
+            if (lastMessageUpdated)
+            {
+                // The event is accepted. We have our last message
+                // The roomSummaryUpdateDelegate has stored the _lastMessageEventId
                 break;
             }
-        }
-    }
 
-    // 1.2 Check events one by one until finding the right last message for the room
-    BOOL lastMessageUpdated = NO;
-    while (event)
-    {
-        // Decrypt the event if necessary
-        if (event.eventType == MXEventTypeRoomEncrypted)
-        {
-            if (![_mxSession decryptEvent:event inTimeline:nil])
+            event = messagesEnumerator.nextEvent;
+        }
+
+        // 2.1 If lastMessageEventId is still nil, fetch events from the homeserver
+        MXWeakify(self);
+        [room liveTimeline:^(MXEventTimeline *liveTimeline) {
+            MXStrongifyAndReturnIfNil(self);
+
+            if (!self->_lastMessageEventId && [liveTimeline canPaginate:MXTimelineDirectionBackwards])
             {
-                NSLog(@"[MXRoomSummary] fetchLastMessage: Warning: Unable to decrypt event: %@\nError: %@", event.content[@"body"], event.decryptionError);
-            }
-        }
+                NSUInteger messagesToPaginate = 30;
 
-        if (event.isState)
-        {
-            // Need to go backward in the state to provide it as it was when the event occured
-            if (state.isLive)
+                // Reset pagination the first time
+                if (firstIteration)
+                {
+                    [liveTimeline resetPagination];
+
+                    // Make sure we paginate more than the events we have already in the store
+                    messagesToPaginate += messagesInStore;
+                }
+
+                // Paginate events from the homeserver
+                // XXX: Pagination on the timeline may conflict with request from the app
+                __block MXHTTPOperation *newOperation;
+                newOperation = [liveTimeline paginate:messagesToPaginate direction:MXTimelineDirectionBackwards onlyFromStore:NO complete:^{
+
+                    // Received messages have been stored in the store. We can make a new loop
+                    [self fetchLastMessage:complete failure:failure
+                        lastEventIdChecked:lastEventIdCheckedInBlock
+                                 operation:(operation ? operation : newOperation)
+                                    commit:commit];
+
+                } failure:failure];
+
+                // Update the current HTTP operation
+                [operation mutateTo:newOperation];
+            }
+            else
             {
-                state = [state copy];
-                state.isLive = NO;
+                if (complete)
+                {
+                    complete();
+                }
+
+                [self save:commit];
             }
+        }];
+    }];
 
-            [state handleStateEvents:@[event]];
-        }
-
-        lastEventIdChecked = event.eventId;
-
-        // Propose the event as last message
-        lastMessageUpdated = [_mxSession.roomSummaryUpdateDelegate session:_mxSession updateRoomSummary:self withLastEvent:event eventState:state roomState:self.room.state];
-        if (lastMessageUpdated)
-        {
-            // The event is accepted. We have our last message
-            // The roomSummaryUpdateDelegate has stored the _lastMessageEventId
-            break;
-        }
-
-        event = messagesEnumerator.nextEvent;
-    }
-
-    // 2.1 If lastMessageEventId is still nil, fetch events from the homeserver
-    if (!_lastMessageEventId && [room.liveTimeline canPaginate:MXTimelineDirectionBackwards])
-    {
-        NSUInteger messagesToPaginate = 30;
-
-        // Reset pagination the first time
-        if (firstIteration)
-        {
-            [room.liveTimeline resetPagination];
-
-            // Make sure we paginate more than the events we have already in the store
-            messagesToPaginate += messagesInStore;
-        }
-
-        // Paginate events from the homeserver
-        // XXX: Pagination on the timeline may conflict with request from the app
-        newOperation = [room.liveTimeline paginate:messagesToPaginate direction:MXTimelineDirectionBackwards onlyFromStore:NO complete:^{
-
-            // Received messages have been stored in the store. We can make a new loop
-            [self fetchLastMessage:complete failure:failure
-                lastEventIdChecked:lastEventIdChecked
-                         operation:(operation ? operation : newOperation)
-                            commit:commit];
-
-        } failure:failure];
-
-        // Update the current HTTP operation
-        if (operation)
-        {
-            [operation mutateTo:newOperation];
-        }
-    }
-    else
-    {
-        if (complete)
-        {
-            complete();
-        }
-
-        [self save:commit];
-    }
-
-    return operation ? operation : newOperation;
+    return operation;
 }
 
 - (void)eventDidChangeSentState:(NSNotification *)notif
@@ -376,85 +397,105 @@ NSString *const kMXRoomSummaryDidChangeNotification = @"kMXRoomSummaryDidChangeN
 {
     if (stateEvents.count)
     {
-        updatedWithStateEvents |= [_mxSession.roomSummaryUpdateDelegate session:_mxSession updateRoomSummary:self withStateEvents:stateEvents];
+        MXWeakify(self);
+        [self.room state:^(MXRoomState *roomState) {
+            MXStrongifyAndReturnIfNil(self);
+
+            self->updatedWithStateEvents |= [self.mxSession.roomSummaryUpdateDelegate session:self.mxSession updateRoomSummary:self withStateEvents:stateEvents roomState:roomState];
+        }];
     }
 }
 
 - (void)handleJoinedRoomSync:(MXRoomSync*)roomSync
 {
-    // Changes due to state events have been processed previously
-    BOOL updated = updatedWithStateEvents;
-    updatedWithStateEvents = NO;
+    MXWeakify(self);
+    [self.room state:^(MXRoomState *roomState) {
+        MXStrongifyAndReturnIfNil(self);
 
-    // Handle the last message starting by the most recent event.
-    // Then, if the delegate refuses it as last message, pass the previous event.
-    BOOL lastMessageUpdated = NO;
-    MXRoomState *state = self.room.state;
-    for (MXEvent *event in roomSync.timeline.events.reverseObjectEnumerator)
-    {
-        if (event.isState)
+        // Changes due to state events have been processed previously
+        BOOL updated = self->updatedWithStateEvents;
+        self->updatedWithStateEvents = NO;
+
+        // Handle room summary sent by the home server
+        if (roomSync.summary)
         {
-            // Need to go backward in the state to provide it as it was when the event occured
-            if (state.isLive)
+            updated |= [self.mxSession.roomSummaryUpdateDelegate session:self.mxSession updateRoomSummary:self withServerRoomSummary:roomSync.summary roomState:roomState];
+        }
+
+        // Handle the last message starting by the most recent event.
+        // Then, if the delegate refuses it as last message, pass the previous event.
+        BOOL lastMessageUpdated = NO;
+        MXRoomState *state = roomState;
+        for (MXEvent *event in roomSync.timeline.events.reverseObjectEnumerator)
+        {
+            if (event.isState)
             {
-                state = [state copy];
-                state.isLive = NO;
+                // Need to go backward in the state to provide it as it was when the event occured
+                if (state.isLive)
+                {
+                    state = [state copy];
+                    state.isLive = NO;
+                }
+
+                [state handleStateEvents:@[event]];
             }
 
-            [state handleStateEvents:@[event]];
-        }
-
-        lastMessageUpdated = [_mxSession.roomSummaryUpdateDelegate session:_mxSession updateRoomSummary:self withLastEvent:event eventState:state roomState:self.room.state];
-        if (lastMessageUpdated)
-        {
-            break;
-        }
-    }
-
-    // Store notification counts from unreadNotifications field in /sync response
-    if (roomSync.unreadNotifications)
-    {
-        // Caution: the server may provide a not null count whereas we know locally the user has read all room messages
-        // (see for example this issue https://github.com/matrix-org/synapse/issues/2193).
-        // Patch: Ignore the server information when the user has read all messages.
-        if (roomSync.unreadNotifications.notificationCount && self.localUnreadEventCount == 0)
-        {
-            if (_notificationCount != 0)
+            lastMessageUpdated = [self.mxSession.roomSummaryUpdateDelegate session:self.mxSession updateRoomSummary:self withLastEvent:event eventState:state roomState:roomState];
+            if (lastMessageUpdated)
             {
-                _notificationCount = 0;
-                _highlightCount = 0;
+                break;
+            }
+        }
+
+        // Store notification counts from unreadNotifications field in /sync response
+        if (roomSync.unreadNotifications)
+        {
+            // Caution: the server may provide a not null count whereas we know locally the user has read all room messages
+            // (see for example this issue https://github.com/matrix-org/synapse/issues/2193).
+            // Patch: Ignore the server information when the user has read all messages.
+            if (roomSync.unreadNotifications.notificationCount && self.localUnreadEventCount == 0)
+            {
+                if (self.notificationCount != 0)
+                {
+                    self->_notificationCount = 0;
+                    self->_highlightCount = 0;
+                    updated = YES;
+                }
+            }
+            else if (self.notificationCount != roomSync.unreadNotifications.notificationCount
+                     || self.highlightCount != roomSync.unreadNotifications.highlightCount)
+            {
+                self->_notificationCount = roomSync.unreadNotifications.notificationCount;
+                self->_highlightCount = roomSync.unreadNotifications.highlightCount;
                 updated = YES;
             }
         }
-        else if (_notificationCount != roomSync.unreadNotifications.notificationCount
-                 || _highlightCount != roomSync.unreadNotifications.highlightCount)
-        {
-            _notificationCount = roomSync.unreadNotifications.notificationCount;
-            _highlightCount = roomSync.unreadNotifications.highlightCount;
-            updated = YES;
-        }
-    }
 
-    if (updated || lastMessageUpdated)
-    {
-        [self save:NO];
-    }
+        if (updated || lastMessageUpdated)
+        {
+            [self save:NO];
+        }
+
+    }];
 }
 
 - (void)handleInvitedRoomSync:(MXInvitedRoomSync*)invitedRoomSync
 {
-    BOOL updated = updatedWithStateEvents;
-    updatedWithStateEvents = NO;
+    MXWeakify(self);
+    [self.room state:^(MXRoomState *roomState) {
+        MXStrongifyAndReturnIfNil(self);
 
-    MXRoom *room = self.room;
+        BOOL updated = self->updatedWithStateEvents;
+        self->updatedWithStateEvents = NO;
 
-    // Fake the last message with the invitation event contained in invitedRoomSync.inviteState
-    updated |= [_mxSession.roomSummaryUpdateDelegate session:_mxSession updateRoomSummary:self withLastEvent:invitedRoomSync.inviteState.events.lastObject eventState:nil roomState:room.state];
+        // Fake the last message with the invitation event contained in invitedRoomSync.inviteState
+        updated |= [self.mxSession.roomSummaryUpdateDelegate session:self.mxSession updateRoomSummary:self withLastEvent:invitedRoomSync.inviteState.events.lastObject eventState:nil roomState:roomState];
 
-    if (updated)
-    {
-        [self save:NO];
-    }
+        if (updated)
+        {
+            [self save:NO];
+        }
+    }];
 }
 
 
@@ -465,12 +506,18 @@ NSString *const kMXRoomSummaryDidChangeNotification = @"kMXRoomSummaryDidChangeN
 
     if (room)
     {
-        BOOL updated = [_mxSession.roomSummaryUpdateDelegate session:_mxSession updateRoomSummary:self withLastEvent:event eventState:nil roomState:room.state];
+        MXWeakify(self);
+        [self.room state:^(MXRoomState *roomState) {
+            MXStrongifyAndReturnIfNil(self);
 
-        if (updated)
-        {
-            [self save:YES];
-        }
+            BOOL updated = [self.mxSession.roomSummaryUpdateDelegate session:self.mxSession updateRoomSummary:self withLastEvent:event eventState:nil roomState:roomState];
+
+            if (updated)
+            {
+                [self save:YES];
+            }
+        }];
+
     }
 }
 
@@ -486,8 +533,10 @@ NSString *const kMXRoomSummaryDidChangeNotification = @"kMXRoomSummaryDidChangeN
         _avatar = [aDecoder decodeObjectForKey:@"avatar"];
         _displayname = [aDecoder decodeObjectForKey:@"displayname"];
         _topic = [aDecoder decodeObjectForKey:@"topic"];
+        _aliases = [aDecoder decodeObjectForKey:@"aliases"];
         _membership = (MXMembership)[aDecoder decodeIntegerForKey:@"membership"];
         _membersCount = [aDecoder decodeObjectForKey:@"membersCount"];
+        _isConferenceUserRoom = [(NSNumber*)[aDecoder decodeObjectForKey:@"isConferenceUserRoom"] boolValue];
 
         _others = [aDecoder decodeObjectForKey:@"others"];
         _isEncrypted = [aDecoder decodeBoolForKey:@"isEncrypted"];
@@ -526,8 +575,10 @@ NSString *const kMXRoomSummaryDidChangeNotification = @"kMXRoomSummaryDidChangeN
     [aCoder encodeObject:_avatar forKey:@"avatar"];
     [aCoder encodeObject:_displayname forKey:@"displayname"];
     [aCoder encodeObject:_topic forKey:@"topic"];
+    [aCoder encodeObject:_aliases forKey:@"aliases"];
     [aCoder encodeInteger:(NSInteger)_membership forKey:@"membership"];
     [aCoder encodeObject:_membersCount forKey:@"membersCount"];
+    [aCoder encodeObject:@(_isConferenceUserRoom) forKey:@"isConferenceUserRoom"];
 
     [aCoder encodeObject:_others forKey:@"others"];
     [aCoder encodeBool:_isEncrypted forKey:@"isEncrypted"];

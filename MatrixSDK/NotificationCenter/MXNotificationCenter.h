@@ -146,10 +146,11 @@ extern NSString *const kMXNotificationCenterAllOtherRoomMessagesRuleID;
 /**
  Find a push rule that is satisfied by an event.
  
- @param event the event to test
+ @param event the event to test.
+ @parm roomState the room state when the event occurs
  @return the push rule that matches the event. Nil if no match.
  */
-- (MXPushRule*)ruleMatchingEvent:(MXEvent*)event;
+- (MXPushRule*)ruleMatchingEvent:(MXEvent*)event roomState:(MXRoomState*)roomState;
 
 /**
  Get a push rule by using its id.

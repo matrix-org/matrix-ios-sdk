@@ -298,6 +298,7 @@ NSString *const kMXLoginIdentifierTypePhone = @"m.id.phone";
     if (paginationResponse)
     {
         MXJSONModelSetMXJSONModelArray(paginationResponse.chunk, MXEvent, JSONDictionary[@"chunk"]);
+        MXJSONModelSetMXJSONModelArray(paginationResponse.state, MXEvent, JSONDictionary[@"state"]);
         MXJSONModelSetString(paginationResponse.start, JSONDictionary[@"start"]);
         MXJSONModelSetString(paginationResponse.end, JSONDictionary[@"end"]);
 
@@ -1109,6 +1110,39 @@ NSString *const kMXPushRuleScopeStringDevice = @"device";
 
 @end
 
+@implementation MXRoomSyncSummary
+
+- (instancetype)init
+{
+    self = [super init];
+    if (self)
+    {
+        _joinedMemberCount = -1;
+        _invitedMemberCount = -1;
+    }
+    return self;
+}
+
++ (id)modelFromJSON:(NSDictionary *)JSONDictionary
+{
+    MXRoomSyncSummary *roomSyncSummary;
+
+    if (JSONDictionary.count)
+    {
+        roomSyncSummary = [MXRoomSyncSummary new];
+        if (roomSyncSummary)
+        {
+            MXJSONModelSetArray(roomSyncSummary.heroes, JSONDictionary[@"m.heroes"]);
+            MXJSONModelSetUInteger(roomSyncSummary.joinedMemberCount, JSONDictionary[@"m.joined_member_count"]);
+            MXJSONModelSetUInteger(roomSyncSummary.invitedMemberCount, JSONDictionary[@"m.invited_member_count"]);
+        }
+    }
+    return roomSyncSummary;
+}
+
+@end
+
+
 @implementation MXRoomSync
 
 + (id)modelFromJSON:(NSDictionary *)JSONDictionary
@@ -1121,6 +1155,7 @@ NSString *const kMXPushRuleScopeStringDevice = @"device";
         MXJSONModelSetMXJSONModel(roomSync.ephemeral, MXRoomSyncEphemeral, JSONDictionary[@"ephemeral"]);
         MXJSONModelSetMXJSONModel(roomSync.accountData, MXRoomSyncAccountData, JSONDictionary[@"account_data"]);
         MXJSONModelSetMXJSONModel(roomSync.unreadNotifications, MXRoomSyncUnreadNotifications, JSONDictionary[@"unread_notifications"]);
+        MXJSONModelSetMXJSONModel(roomSync.summary, MXRoomSyncSummary, JSONDictionary[@"summary"]);
     }
     return roomSync;
 }

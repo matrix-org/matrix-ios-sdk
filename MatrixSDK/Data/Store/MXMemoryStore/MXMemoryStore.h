@@ -37,6 +37,10 @@
     // Dict of dict of MXReceiptData indexed by userId
     NSMutableDictionary *receiptsByRoomId;
 
+    // Matrix filters
+    // FilterId -> Filter JSON string
+    NSMutableDictionary<NSString*, NSString*> *filters;
+
     // The user credentials
     MXCredentials *credentials;
 }
