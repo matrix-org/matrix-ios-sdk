@@ -15,6 +15,8 @@ Improvements:
 * MXStore: Add Obj-C annotations.
 * MXFileStore: Add a setting to set which data to preload ([MXFileStore setPreloadOptions:]).
 * Manage the new summary API from the homeserver( MSC: https://docs.google.com/document/d/11i14UI1cUz-OJ0knD5BFu7fmT6Fo327zvMYqfSAR7xs/edit#).
+* MXRoom: Add send reply with text message (vector-im/riot-ios#1911).
+* Support room versioning (vector-im/riot-ios#1938).
 
 Bug fix:
 * MXRestClient: Fix filter parameter in messagesForRoom. It must be sent as an inline JSON string.

@@ -65,6 +65,7 @@ typedef enum : NSUInteger
     MXEventTypeCallAnswer,
     MXEventTypeCallHangup,
     MXEventTypeSticker,
+    MXEventTypeRoomTombStone,
 
     // The event is a custom event. Refer to its `MXEventTypeString` version
     MXEventTypeCustom = 1000
@@ -109,6 +110,7 @@ FOUNDATION_EXPORT NSString *const kMXEventTypeStringCallCandidates;
 FOUNDATION_EXPORT NSString *const kMXEventTypeStringCallAnswer;
 FOUNDATION_EXPORT NSString *const kMXEventTypeStringCallHangup;
 FOUNDATION_EXPORT NSString *const kMXEventTypeStringSticker;
+FOUNDATION_EXPORT NSString *const kMXEventTypeStringRoomTombStone;
 
 /**
  Types of room messages

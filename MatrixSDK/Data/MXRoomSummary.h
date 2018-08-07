@@ -162,6 +162,11 @@ FOUNDATION_EXPORT NSString *const kMXRoomSummaryDidChangeNotification;
 @property (nonatomic) BOOL isConferenceUserRoom;
 
 /**
+ Indicate whether this room should be hidden from the user.
+ */
+@property (nonatomic) BOOL hiddenFromUser;
+
+/**
  Reset data related to room state.
  
  It recomputes every data related to the room state from the current room state.

@@ -342,6 +342,25 @@
     return stateEvents[kMXEventTypeStringRoomEncryption].lastObject.content[@"algorithm"];
 }
 
+- (BOOL)isObsolete
+{
+    return self.tombStoneContent != nil;
+}
+
+- (MXRoomTombStoneContent*)tombStoneContent
+{
+    MXRoomTombStoneContent *roomTombStoneContent = nil;
+    
+    // Check it from the state events
+    MXEvent *event = stateEvents[kMXEventTypeStringRoomTombStone].lastObject;
+    NSDictionary *eventContent = [self contentOfEvent:event];
+    if (eventContent)
+    {
+        roomTombStoneContent = [MXRoomTombStoneContent modelFromJSON:eventContent];
+    }
+    
+    return roomTombStoneContent;
+}
 
 #pragma mark - State events handling
 - (void)handleStateEvents:(NSArray<MXEvent *> *)events;

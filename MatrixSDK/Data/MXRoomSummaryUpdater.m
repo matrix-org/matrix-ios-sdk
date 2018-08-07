@@ -20,6 +20,7 @@
 
 #import "MXSession.h"
 #import "MXRoom.h"
+#import "MXSession.h"
 
 @implementation MXRoomSummaryUpdater
 
@@ -127,7 +128,20 @@
                 summary.isEncrypted = roomState.isEncrypted;
                 updated = YES;
                 break;
-
+                
+            case MXEventTypeRoomTombStone:
+            {
+                if ([self checkForTombStoneStateEventAndUpdateRoomSummaryIfNeeded:summary session:session room:room])
+                {
+                    updated = YES;
+                }
+                break;
+            }
+                
+            case MXEventTypeRoomCreate:
+                [self checkRoomCreateStateEventPredecessorAndUpdateObsoleteRoomSummaryIfNeededWithCreateEvent:event summary:summary session:session room:room];
+                break;
+                
             default:
                 break;
         }
@@ -159,6 +173,44 @@
     }
 
     return updated;
+}
+                 
+#pragma mark - Private
+
+// Hide tombstoned room from user only if the user joined the replacement room
+// Important: Room replacement summary could not be present in memory when making this process even if the user joined it,
+// in this case it should be processed when checking the room replacement in `checkRoomCreateStateEventPredecessorAndUpdateObsoleteRoomSummaryIfNeeded:session:room:`.
+- (BOOL)checkForTombStoneStateEventAndUpdateRoomSummaryIfNeeded:(MXRoomSummary*)summary session:(MXSession*)session room:(MXRoom*)room
+{
+    BOOL updated = NO;
+    
+    MXRoomTombStoneContent *roomTombStoneContent = room.state.tombStoneContent;
+    
+    if (roomTombStoneContent)
+    {
+        MXRoomSummary *replacementRoomSummary = [session roomSummaryWithRoomId:roomTombStoneContent.replacementRoomId];
+        
+        if (replacementRoomSummary)
+        {
+            summary.hiddenFromUser = replacementRoomSummary.membership == MXMembershipJoin;
+        }
+    }
+    
+    return updated;
+}
+
+// Hide tombstoned room predecessor from user only if the user joined the current room
+// Important: Room predecessor summary could not be present in memory when making this process,
+// in this case it should be processed when checking the room predecessor in `checkForTombStoneStateEventAndUpdateRoomSummaryIfNeeded:session:room:`.
+- (void)checkRoomCreateStateEventPredecessorAndUpdateObsoleteRoomSummaryIfNeededWithCreateEvent:(MXEvent*)createEvent summary:(MXRoomSummary*)summary session:(MXSession*)session room:(MXRoom*)room
+{
+    MXRoomCreateContent *createContent = [MXRoomCreateContent modelFromJSON:createEvent.content];
+    
+    if (createContent.roomPredecessorInfo)
+    {
+        MXRoomSummary *obsoleteRoomSummary = [session roomSummaryWithRoomId:createContent.roomPredecessorInfo.roomId];
+        obsoleteRoomSummary.hiddenFromUser = summary.membership == MXMembershipJoin; // Hide room predecessor if user joined the new one
+    }
 }
 
 - (BOOL)session:(MXSession *)session updateRoomSummary:(MXRoomSummary *)summary withServerRoomSummary:(MXRoomSyncSummary *)serverRoomSummary roomState:(MXRoomState *)roomState
