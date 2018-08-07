@@ -131,7 +131,7 @@
                 
             case MXEventTypeRoomTombStone:
             {
-                if ([self checkForTombStoneStateEventAndUpdateRoomSummaryIfNeeded:summary session:session room:room])
+                if ([self checkForTombStoneStateEventAndUpdateRoomSummaryIfNeeded:summary session:session roomState:roomState])
                 {
                     updated = YES;
                 }
@@ -139,7 +139,7 @@
             }
                 
             case MXEventTypeRoomCreate:
-                [self checkRoomCreateStateEventPredecessorAndUpdateObsoleteRoomSummaryIfNeededWithCreateEvent:event summary:summary session:session room:room];
+                [self checkRoomCreateStateEventPredecessorAndUpdateObsoleteRoomSummaryIfNeededWithCreateEvent:event summary:summary session:session roomState:roomState];
                 break;
                 
             default:
@@ -180,11 +180,11 @@
 // Hide tombstoned room from user only if the user joined the replacement room
 // Important: Room replacement summary could not be present in memory when making this process even if the user joined it,
 // in this case it should be processed when checking the room replacement in `checkRoomCreateStateEventPredecessorAndUpdateObsoleteRoomSummaryIfNeeded:session:room:`.
-- (BOOL)checkForTombStoneStateEventAndUpdateRoomSummaryIfNeeded:(MXRoomSummary*)summary session:(MXSession*)session room:(MXRoom*)room
+- (BOOL)checkForTombStoneStateEventAndUpdateRoomSummaryIfNeeded:(MXRoomSummary*)summary session:(MXSession*)session roomState:(MXRoomState*)roomState
 {
     BOOL updated = NO;
     
-    MXRoomTombStoneContent *roomTombStoneContent = room.state.tombStoneContent;
+    MXRoomTombStoneContent *roomTombStoneContent = roomState.tombStoneContent;
     
     if (roomTombStoneContent)
     {
@@ -202,7 +202,7 @@
 // Hide tombstoned room predecessor from user only if the user joined the current room
 // Important: Room predecessor summary could not be present in memory when making this process,
 // in this case it should be processed when checking the room predecessor in `checkForTombStoneStateEventAndUpdateRoomSummaryIfNeeded:session:room:`.
-- (void)checkRoomCreateStateEventPredecessorAndUpdateObsoleteRoomSummaryIfNeededWithCreateEvent:(MXEvent*)createEvent summary:(MXRoomSummary*)summary session:(MXSession*)session room:(MXRoom*)room
+- (void)checkRoomCreateStateEventPredecessorAndUpdateObsoleteRoomSummaryIfNeededWithCreateEvent:(MXEvent*)createEvent summary:(MXRoomSummary*)summary session:(MXSession*)session roomState:(MXRoomState*)roomState
 {
     MXRoomCreateContent *createContent = [MXRoomCreateContent modelFromJSON:createEvent.content];
     

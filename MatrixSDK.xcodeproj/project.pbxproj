@@ -223,11 +223,11 @@
 		B17285792100C8EA0052C51E /* MXSendReplyEventStringsLocalizable.h in Headers */ = {isa = PBXBuildFile; fileRef = B17285782100C88A0052C51E /* MXSendReplyEventStringsLocalizable.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		B172857C2100D4F60052C51E /* MXSendReplyEventDefaultStringLocalizations.h in Headers */ = {isa = PBXBuildFile; fileRef = B172857A2100D4F60052C51E /* MXSendReplyEventDefaultStringLocalizations.h */; };
 		B172857D2100D4F60052C51E /* MXSendReplyEventDefaultStringLocalizations.m in Sources */ = {isa = PBXBuildFile; fileRef = B172857B2100D4F60052C51E /* MXSendReplyEventDefaultStringLocalizations.m */; };
-		B17982F52119E4A2001FD722 /* MXRoomCreateContent.h in Headers */ = {isa = PBXBuildFile; fileRef = B17982ED2119E49E001FD722 /* MXRoomCreateContent.h */; };
+		B17982F52119E4A2001FD722 /* MXRoomCreateContent.h in Headers */ = {isa = PBXBuildFile; fileRef = B17982ED2119E49E001FD722 /* MXRoomCreateContent.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		B17982F62119E4A2001FD722 /* MXRoomTombStoneContent.m in Sources */ = {isa = PBXBuildFile; fileRef = B17982EE2119E49F001FD722 /* MXRoomTombStoneContent.m */; };
-		B17982F72119E4A2001FD722 /* MXRoomPredecessorInfo.h in Headers */ = {isa = PBXBuildFile; fileRef = B17982EF2119E49F001FD722 /* MXRoomPredecessorInfo.h */; };
-		B17982F82119E4A2001FD722 /* MXRoomPowerLevels.h in Headers */ = {isa = PBXBuildFile; fileRef = B17982F02119E4A0001FD722 /* MXRoomPowerLevels.h */; };
-		B17982F92119E4A2001FD722 /* MXRoomTombStoneContent.h in Headers */ = {isa = PBXBuildFile; fileRef = B17982F12119E4A0001FD722 /* MXRoomTombStoneContent.h */; };
+		B17982F72119E4A2001FD722 /* MXRoomPredecessorInfo.h in Headers */ = {isa = PBXBuildFile; fileRef = B17982EF2119E49F001FD722 /* MXRoomPredecessorInfo.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		B17982F82119E4A2001FD722 /* MXRoomPowerLevels.h in Headers */ = {isa = PBXBuildFile; fileRef = B17982F02119E4A0001FD722 /* MXRoomPowerLevels.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		B17982F92119E4A2001FD722 /* MXRoomTombStoneContent.h in Headers */ = {isa = PBXBuildFile; fileRef = B17982F12119E4A0001FD722 /* MXRoomTombStoneContent.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		B17982FA2119E4A2001FD722 /* MXRoomCreateContent.m in Sources */ = {isa = PBXBuildFile; fileRef = B17982F22119E4A1001FD722 /* MXRoomCreateContent.m */; };
 		B17982FB2119E4A2001FD722 /* MXRoomPredecessorInfo.m in Sources */ = {isa = PBXBuildFile; fileRef = B17982F32119E4A1001FD722 /* MXRoomPredecessorInfo.m */; };
 		B17982FC2119E4A2001FD722 /* MXRoomPowerLevels.m in Sources */ = {isa = PBXBuildFile; fileRef = B17982F42119E4A2001FD722 /* MXRoomPowerLevels.m */; };

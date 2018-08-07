@@ -843,39 +843,6 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidFlushDataNotification;
  */
 - (void)removeAllListeners;
 
-/**
- Indicate if replying to the provided event is supported.
- Only event of type 'MXEventTypeRoomMessage' are supported for the moment, and for certain msgtype.
- 
- @param eventToReply the event to reply to
- @return YES if it is possible to reply to this event
- */
-- (BOOL)canReplyToEvent:(MXEvent *)eventToReply;
-
-/**
- Send a reply to an event with text message to the room.
- 
- It's only supported to reply to event with 'm.room.message' event type and following message types: 'm.text', 'm.text', 'm.emote', 'm.notice', 'm.image', 'm.file', 'm.video', 'm.audio'.
- 
- @param eventToReply The event to reply.
- @param textMessage the text to send.
- @param formattedTextMessage the optional HTML formatted string of the text to send.
- @param stringLocalizations string localizations used when building reply message.
- @param localEcho a pointer to a MXEvent object (@see sendMessageWithContent: for details).
- @param success A block object called when the operation succeeds. It returns
- the event id of the event generated on the home server
- @param failure A block object called when the operation fails.
- 
- @return a MXHTTPOperation instance.
- */
-- (MXHTTPOperation*)sendReplyToEvent:(MXEvent*)eventToReply
-                     withTextMessage:(NSString*)textMessage
-                formattedTextMessage:(NSString*)formattedTextMessage
-                 stringLocalizations:(id<MXSendReplyEventStringsLocalizable>)stringLocalizations
-                           localEcho:(MXEvent**)localEcho
-                             success:(void (^)(NSString *eventId))success
-                             failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
-
 
 #pragma mark - Events timeline
 /**
