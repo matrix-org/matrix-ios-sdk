@@ -513,6 +513,8 @@ NSString *const kMXRoomSummaryDidChangeNotification = @"kMXRoomSummaryDidChangeN
         _lastMessageString = lastMessageData[@"lastMessageString"];
         _lastMessageAttributedString = lastMessageData[@"lastMessageAttributedString"];
         _lastMessageOthers = lastMessageData[@"lastMessageOthers"];
+        
+        _hiddenFromUser = [aDecoder decodeBoolForKey:@"hiddenFromUser"];
     }
     return self;
 }
@@ -568,6 +570,8 @@ NSString *const kMXRoomSummaryDidChangeNotification = @"kMXRoomSummaryDidChangeN
     {
         [aCoder encodeObject:lastMessageData forKey:@"lastMessageData"];
     }
+    
+    [aCoder encodeBool:_hiddenFromUser forKey:@"hiddenFromUser"];
 }
 
 

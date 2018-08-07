@@ -8,6 +8,7 @@ Improvements:
 * MXRoomSummary: Add a membership property to cache MXRoomState one
 * MXStore: Add Obj-C annotations.
 * MXRoom: Add send reply with text message (vector-im/riot-ios#1911).
+* Support room versioning (vector-im/riot-ios#1938).
 
 Bug fix:
 
