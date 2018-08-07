@@ -131,10 +131,9 @@
             }
                 
             case MXEventTypeRoomCreate:
-            {
-                [self checkRoomCreateStateEventPredecessorAndUpdateObsoleteRoomSummaryIfNeeded:summary session:session room: room];
+                [self checkRoomCreateStateEventPredecessorAndUpdateObsoleteRoomSummaryIfNeededWithCreateEvent:event summary:summary session:session room:room];
                 break;
-            }
+                
             default:
                 break;
         }
@@ -154,9 +153,6 @@
             summary.membership = room.state.membership;
             updated = YES;
         }
-        
-        // Make this check when membership change as we can have a `m.room.create` state event type and a membership not yet updated
-        [self checkRoomCreateStateEventPredecessorAndUpdateObsoleteRoomSummaryIfNeeded:summary session:session room:room];
     }
 
     return updated;
@@ -189,13 +185,13 @@
 // Hide tombstoned room predecessor from user only if the user joined the current room
 // Important: Room predecessor summary could not be present in memory when making this process,
 // in this case it should be processed when checking the room predecessor in `checkForTombStoneStateEventAndUpdateRoomSummaryIfNeeded:session:room:`.
-- (void)checkRoomCreateStateEventPredecessorAndUpdateObsoleteRoomSummaryIfNeeded:(MXRoomSummary*)summary session:(MXSession*)session room:(MXRoom*)room
+- (void)checkRoomCreateStateEventPredecessorAndUpdateObsoleteRoomSummaryIfNeededWithCreateEvent:(MXEvent*)createEvent summary:(MXRoomSummary*)summary session:(MXSession*)session room:(MXRoom*)room
 {
-    MXRoomPredecessorInfo *roomPredecessorInfo = room.state.roomCreateContent.roomPredecessorInfo;
+    MXRoomCreateContent *createContent = [MXRoomCreateContent modelFromJSON:createEvent.content];
     
-    if (roomPredecessorInfo)
+    if (createContent.roomPredecessorInfo)
     {
-        MXRoomSummary *obsoleteRoomSummary = [session roomSummaryWithRoomId:roomPredecessorInfo.roomId];
+        MXRoomSummary *obsoleteRoomSummary = [session roomSummaryWithRoomId:createContent.roomPredecessorInfo.roomId];
         obsoleteRoomSummary.hiddenFromUser = summary.membership == MXMembershipJoin; // Hide room predecessor if user joined the new one
     }
 }
