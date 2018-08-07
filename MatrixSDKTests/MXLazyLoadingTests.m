@@ -716,8 +716,8 @@ Common initial conditions:
     [self createScenarioWithLazyLoading:lazyLoading readyToTest:^(MXSession *aliceSession, MXSession *bobSession, MXSession *charlieSession, NSString *roomId, XCTestExpectation *expectation) {
         [MXSDKOptions sharedInstance].enableCryptoWhenStartingMXSession = NO;
 
-        MXRoom *roomFromBobPOV = [bobSession roomWithRoomId:roomId];
-        [roomFromBobPOV enableEncryptionWithAlgorithm:kMXCryptoMegolmAlgorithm success:^{
+        MXRoom *room = [aliceSession roomWithRoomId:roomId];
+        [room listenToEventsOfTypes:@[kMXEventTypeStringRoomEncryption] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
 
             aliceSession.crypto.warnOnUnknowDevices = NO;
 
@@ -732,13 +732,17 @@ Common initial conditions:
                 [expectation fulfill];
             }];
 
-            MXRoom *room = [aliceSession roomWithRoomId:roomId];
+            MXRoomSummary *summary = [aliceSession roomSummaryWithRoomId:roomId];
+            XCTAssertTrue(summary.isEncrypted);
+
             [room sendTextMessage:messageFromAlice success:nil failure:^(NSError *error) {
                 XCTFail(@"The operation should not fail - NSError: %@", error);
                 [expectation fulfill];
             }];
+        }];
 
-        } failure:^(NSError *error) {
+        MXRoom *roomFromBobPOV = [bobSession roomWithRoomId:roomId];
+        [roomFromBobPOV enableEncryptionWithAlgorithm:kMXCryptoMegolmAlgorithm success:nil failure:^(NSError *error) {
             XCTFail(@"The operation should not fail - NSError: %@", error);
             [expectation fulfill];
         }];

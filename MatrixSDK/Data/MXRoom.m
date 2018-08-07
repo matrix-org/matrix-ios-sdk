@@ -3049,7 +3049,10 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
 
             // Dispatch to let time to MXCrypto to digest the m.room.encryption event
             dispatch_async(dispatch_get_main_queue(), ^{
-                success();
+                if (success)
+                {
+                    success();
+                }
             });
         }];
     }
