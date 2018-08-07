@@ -348,31 +348,14 @@
     MXRoomTombStoneContent *roomTombStoneContent = nil;
     
     // Check it from the state events
-    MXEvent *event = [stateEvents objectForKey:kMXEventTypeStringRoomTombStone].lastObject;
-    if (event && [self contentOfEvent:event])
+    MXEvent *event = stateEvents[kMXEventTypeStringRoomTombStone].lastObject;
+    NSDictionary *eventContent = [self contentOfEvent:event];
+    if (eventContent)
     {
-        roomTombStoneContent = [MXRoomTombStoneContent modelFromJSON:event.content];
+        roomTombStoneContent = [MXRoomTombStoneContent modelFromJSON:eventContent];
     }
     
     return roomTombStoneContent;
-}
-
-- (BOOL)hasRoomPredecessor
-{
-    return self.roomCreateContent.roomPredecessorInfo != nil;
-}
-
-- (MXRoomCreateContent *)roomCreateContent
-{
-    MXRoomCreateContent *roomCreateContent = nil;
-    
-    MXEvent *event = [stateEvents objectForKey:kMXEventTypeStringRoomCreate].lastObject;
-    if (event && [self contentOfEvent:event])
-    {    
-        roomCreateContent = [MXRoomCreateContent modelFromJSON:event.content];
-    }
-    
-    return roomCreateContent;
 }
 
 #pragma mark - State events handling

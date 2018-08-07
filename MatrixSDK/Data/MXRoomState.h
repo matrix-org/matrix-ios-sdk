@@ -157,16 +157,6 @@ Use MXRoomSummary.displayname to get a computed room display name.
 @property (nonatomic, strong, readonly) MXRoomTombStoneContent *tombStoneContent;
 
 /**
- Indicate whether this room is a successor of an obsolete room (with state event `m.room.tombstone`).
- */
-@property (nonatomic, readonly) BOOL hasRoomPredecessor;
-
-/**
- The state event content for event type `m.room.create`.
- */
-@property (nonatomic, strong, readonly) MXRoomCreateContent *roomCreateContent;
-
-/**
  Create a `MXRoomState` instance.
  
  @param roomId the room id to the room.
