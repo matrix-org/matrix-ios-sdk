@@ -190,9 +190,16 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
     forwardsPaginationToken = nil;
     hasReachedHomeServerForwardsPaginationEnd = NO;
 
+    MXRoomEventFilter *filter;
+    if (room.mxSession.syncWithLazyLoadOfRoomMembers)
+    {
+        filter = [MXRoomEventFilter new];
+        filter.lazyLoadMembers = YES;
+    }
+
     // Get the context around the initial event
     MXWeakify(self);
-    return [room.mxSession.matrixRestClient contextOfEvent:_initialEventId inRoom:room.roomId limit:limit success:^(MXEventContext *eventContext) {
+    return [room.mxSession.matrixRestClient contextOfEvent:_initialEventId inRoom:room.roomId limit:limit filter:filter success:^(MXEventContext *eventContext) {
         MXStrongifyAndReturnIfNil(self);
 
         // And fill the timelime with received data
@@ -520,10 +527,13 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
     }
 
     // Process additional state events (this happens in case of lazy loading)
-    if (paginatedResponse.state.count && direction == MXTimelineDirectionBackwards)
+    if (paginatedResponse.state.count)
     {
-        // Enrich the timeline root state with the additional state events observed during back pagination
-        [self handleStateEvents:paginatedResponse.state direction:MXTimelineDirectionForwards];
+        if (direction == MXTimelineDirectionBackwards)
+        {
+            // Enrich the timeline root state with the additional state events observed during back pagination
+            [self handleStateEvents:paginatedResponse.state direction:MXTimelineDirectionForwards];
+        }
 
         // Enrich intermediate room state while paginating
         [self handleStateEvents:paginatedResponse.state  direction:direction];

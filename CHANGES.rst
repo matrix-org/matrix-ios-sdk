@@ -14,6 +14,7 @@ Improvements:
 * MXRoomSummary: add isConferenceUserRoom.
 * MXStore: Add Obj-C annotations.
 * MXFileStore: Add a setting to set which data to preload ([MXFileStore setPreloadOptions:]).
+* Manage the new summary API from the homeserver( MSC: https://docs.google.com/document/d/11i14UI1cUz-OJ0knD5BFu7fmT6Fo327zvMYqfSAR7xs/edit#).
 
 Bug fix:
 * MXRestClient: Fix filter parameter in messagesForRoom. It must be sent as an inline JSON string.
@@ -25,6 +26,7 @@ API break:
 * MXRoomState: Remove displayName property. Use MXRoomSummary.displayName instead.
 * MXRoomState: Create a MXRoomMembers property. All members getter methods has been to the new class.
 * MXStore: Make the stateOfRoom method asynchronous.
+* MXRestClient: contextOfEvent: Add a filter parameter.
 
 Changes in Matrix iOS SDK in 0.10.12 (2018-05-31)
 =============================================== 

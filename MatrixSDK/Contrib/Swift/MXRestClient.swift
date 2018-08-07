@@ -1208,13 +1208,14 @@ public extension MXRestClient {
         - eventId: the id of the event to get context around.
         - roomId: the id of the room to get events from.
         - limit: the maximum number of messages to return.
+        - filter the filter to pass in the request. Can be nil.
         - completion: A block object called when the operation completes.
         - response: Provides the model created from the homeserver JSON response on success.
      
      - returns: a `MXHTTPOperation` instance.
      */
-    @nonobjc @discardableResult func context(ofEvent eventId: String, inRoom roomId: String, limit: UInt, completion: @escaping (_ response: MXResponse<MXEventContext>) -> Void) -> MXHTTPOperation {
-        return __context(ofEvent: eventId, inRoom: roomId, limit: limit, success: currySuccess(completion), failure: curryFailure(completion))
+    @nonobjc @discardableResult func context(ofEvent eventId: String, inRoom roomId: String, limit: UInt, filter: MXRoomEventFilter? = nil, completion: @escaping (_ response: MXResponse<MXEventContext>) -> Void) -> MXHTTPOperation {
+        return __context(ofEvent: eventId, inRoom: roomId, limit: limit, filter:filter, success: currySuccess(completion), failure: curryFailure(completion))
     }
     
     

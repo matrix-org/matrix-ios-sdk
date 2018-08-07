@@ -945,7 +945,7 @@
             MXEvent *eventAfter = roomInitialSync.messages.chunk[6];
 
             // Get the context around it
-            [bobRestClient contextOfEvent:event.eventId inRoom:roomId limit:10 success:^(MXEventContext *eventContext) {
+            [bobRestClient contextOfEvent:event.eventId inRoom:roomId limit:10 filter:nil success:^(MXEventContext *eventContext) {
 
                 XCTAssertNotNil(eventContext);
                 XCTAssertNotNil(eventContext.start);

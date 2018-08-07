@@ -2357,7 +2357,7 @@ MXAuthAction;
                                           {
                                               NSLog(@"[MXRestClient] eventWithEventId: The homeserver does not support `/rooms/{roomId}/event/{eventId}` API. Try with `/context`");
 
-                                              MXHTTPOperation *operation2 = [self contextOfEvent:eventId inRoom:roomId limit:1 success:^(MXEventContext *eventContext) {
+                                              MXHTTPOperation *operation2 = [self contextOfEvent:eventId inRoom:roomId limit:1 filter:nil success:^(MXEventContext *eventContext) {
 
                                                   if (success)
                                                   {
@@ -2378,17 +2378,24 @@ MXAuthAction;
 - (MXHTTPOperation*)contextOfEvent:(NSString*)eventId
                             inRoom:(NSString*)roomId
                              limit:(NSUInteger)limit
+                            filter:(MXRoomEventFilter*)filter
                            success:(void (^)(MXEventContext *eventContext))success
                            failure:(void (^)(NSError *error))failure
 {
     NSString *path = [NSString stringWithFormat:@"%@/rooms/%@/context/%@", apiPathPrefix, roomId, eventId];
 
+    NSMutableDictionary *parameters = [NSMutableDictionary dictionary];
+    parameters[@"limit"] = @(limit);
+
+    if (filter)
+    {
+        parameters[@"filter"] = filter.jsonString;
+    }
+
     MXWeakify(self);
     return [httpClient requestWithMethod:@"GET"
                                     path:path
-                              parameters:@{
-                                           @"limit": [NSNumber numberWithInteger:limit]
-                                           }
+                              parameters:parameters
                                  success:^(NSDictionary *JSONResponse) {
                                      MXStrongifyAndReturnIfNil(self);
 
