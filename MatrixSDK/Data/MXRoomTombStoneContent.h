@@ -22,7 +22,14 @@
  */
 @interface MXRoomTombStoneContent : MXJSONModel
 
+/**
+ The reason message for the obsolence of the room.
+ */
 @property (nonatomic, copy, readonly, nonnull) NSString *body;
+
+/**
+ The identifier of the room that comes in replacement.
+ */
 @property (nonatomic, copy, readonly, nonnull) NSString *replacementRoomId;
 
 @end

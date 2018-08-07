@@ -23,7 +23,14 @@
  */
 @interface MXRoomPredecessorInfo : MXJSONModel
 
+/**
+ Room identifier of the previous version of the room.
+ */
 @property (nonatomic, copy, readonly, nonnull) NSString *roomId;
+
+/**
+ Event id of the `m.room.tombstone` event type in the previous version of the room.
+ */
 @property (nonatomic, copy, readonly, nonnull) NSString *tombStoneEventId;
 
 @end

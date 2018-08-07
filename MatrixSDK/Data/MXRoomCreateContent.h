@@ -21,7 +21,14 @@
  */
 @interface MXRoomCreateContent : MXJSONModel
 
+/**
+ The `user_id` of the room creator. This is set by the homeserver.
+ */
 @property (nonatomic, copy, readonly, nonnull) NSString *creatorUserId;
+
+/**
+ Room predecessor information if the current room is a new version of an old room (that has a state event `m.room.tombstone`).
+ */
 @property (nonatomic, strong, readonly, nullable) MXRoomPredecessorInfo *roomPredecessorInfo;
 
 @end
