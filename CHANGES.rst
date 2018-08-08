@@ -17,6 +17,7 @@ Improvements:
 * Manage the new summary API from the homeserver( MSC: https://docs.google.com/document/d/11i14UI1cUz-OJ0knD5BFu7fmT6Fo327zvMYqfSAR7xs/edit#).
 * MXRoom: Add send reply with text message (vector-im/riot-ios#1911).
 * Support room versioning (vector-im/riot-ios#1938).
+* Add SwiftSupport subspec to MatrixSDK in order to be able to expose Swift refinements to a project using both Swift and Objective-C.
 
 Bug fix:
 * MXRestClient: Fix filter parameter in messagesForRoom. It must be sent as an inline JSON string.
