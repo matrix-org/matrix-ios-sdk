@@ -65,4 +65,13 @@ Pod::Spec.new do |s|
     ss.ios.dependency 'GoogleAnalytics' 
   end
 
+  s.subspec 'SwiftSupport' do |ss|
+    ss.ios.deployment_target = "8.0"
+    ss.osx.deployment_target = "10.10"
+    
+    ss.source_files = "MatrixSDK", "MatrixSDK/**/*.{swift}"
+    
+    ss.dependency 'MatrixSDK/Core'      
+  end
+
 end
