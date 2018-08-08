@@ -20,6 +20,7 @@ Improvements:
 
 Bug fix:
 * MXRestClient: Fix filter parameter in messagesForRoom. It must be sent as an inline JSON string.
+* Sends read receipts on login (vector-im/riot-ios/issues/1918).
 
 API break:
 * MXSession: [MXSession startWithMessagesLimit] has been removed. Use the more generic [MXSession startWithSyncFilter:].
