@@ -2207,7 +2207,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
     }
 
     // If required, update the last message
-    if ([self.summary.lastMessageEvent.eventId isEqualToString:outgoingMessageEventId])
+    if ([self.summary.lastMessageEventId isEqualToString:outgoingMessageEventId])
     {
         [self.summary resetLastMessage:nil failure:nil commit:YES];
     }

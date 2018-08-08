@@ -142,24 +142,22 @@ NSString *const kMXRoomSummaryDidChangeNotification = @"kMXRoomSummaryDidChangeN
 
 - (MXEvent *)lastMessageEvent
 {
-    if (lastMessageEvent)
+    if (!lastMessageEvent)
     {
-        return lastMessageEvent;
-    }
-    
-    // The storage of the event depends if it is a true matrix event or a local echo
-    if (![_lastMessageEventId hasPrefix:kMXEventLocalEventIdPrefix])
-    {
-        lastMessageEvent = [_mxSession.store eventWithEventId:_lastMessageEventId inRoom:_roomId];
-    }
-    else
-    {
-        for (MXEvent *event in [_mxSession.store outgoingMessagesInRoom:_roomId])
+        // The storage of the event depends if it is a true matrix event or a local echo
+        if (![_lastMessageEventId hasPrefix:kMXEventLocalEventIdPrefix])
         {
-            if ([event.eventId isEqualToString:_lastMessageEventId])
+            lastMessageEvent = [_mxSession.store eventWithEventId:_lastMessageEventId inRoom:_roomId];
+        }
+        else
+        {
+            for (MXEvent *event in [_mxSession.store outgoingMessagesInRoom:_roomId])
             {
-                lastMessageEvent = event;
-                break;
+                if ([event.eventId isEqualToString:_lastMessageEventId])
+                {
+                    lastMessageEvent = event;
+                    break;
+                }
             }
         }
     }
