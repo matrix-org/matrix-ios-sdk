@@ -714,7 +714,7 @@
     updater.ignoreMemberProfileChanges = YES;
 
     [room liveTimeline:^(MXEventTimeline *liveTimeline) {
-        [liveTimeline listenToEvents:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
+        [liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMember] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
 
             MXEvent *lastMessage2 = room.summary.lastMessageEvent;
             XCTAssertNotNil(lastMessage2);
