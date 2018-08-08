@@ -1271,6 +1271,10 @@ NSString *uisiString = @"The sender's device has not sent us the keys for this m
         bobSession.roomSummaryUpdateDelegate = self;
 
         MXRoom *room = [bobSession roomWithRoomId:roomId];
+
+        // Set a RR position to get notifications for new incoming messsages
+        [room markAllAsRead];
+
         MXRoomSummary *summary = room.summary;
 
         NSUInteger notificationCount = room.summary.notificationCount;
