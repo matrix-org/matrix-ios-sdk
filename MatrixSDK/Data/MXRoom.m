@@ -2881,6 +2881,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
                 {
                     [operation mutateTo:operation2];
                 }
+                return;
             }
         }
         else if (!self.directUserId || (userId && ![userId isEqualToString:self.directUserId]))
@@ -3005,6 +3006,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
                 {
                     [operation mutateTo:operation2];
                 }
+                return;
             }
             else
             {

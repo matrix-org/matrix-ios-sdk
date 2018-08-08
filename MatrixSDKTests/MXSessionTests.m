@@ -754,21 +754,30 @@
     [matrixSDKTestsData doMXSessionTestWithBobAndAliceInARoom:self readyToTest:^(MXSession *bobSession, MXRestClient *aliceRestClient, NSString *roomId, XCTestExpectation *expectation) {
         
         mxSession = bobSession;
-        
-        MXRoom *mxRoom1 = [mxSession directJoinedRoomWithUserId:aliceRestClient.credentials.userId];
-        XCTAssertEqualObjects(mxRoom1.roomId, roomId, @"We should retrieve the last created room");
-        
-        [mxSession leaveRoom:roomId success:^{
-            MXRoom *mxRoom2 = [mxSession directJoinedRoomWithUserId:aliceRestClient.credentials.userId];
-            if (mxRoom2) {
-                XCTAssertNotEqualObjects(mxRoom2.roomId, roomId, @"We should not retrieve the left room");
-            }
-            
-            [expectation fulfill];
-            
+
+        MXRoom *room = [mxSession roomWithRoomId:roomId];
+        [room setIsDirect:YES withUserId:aliceRestClient.credentials.userId success:^{
+
+            MXRoom *mxRoom1 = [mxSession directJoinedRoomWithUserId:aliceRestClient.credentials.userId];
+            XCTAssertEqualObjects(mxRoom1.roomId, roomId, @"We should retrieve the last created room");
+
+            [mxSession leaveRoom:roomId success:^{
+                MXRoom *mxRoom2 = [mxSession directJoinedRoomWithUserId:aliceRestClient.credentials.userId];
+                if (mxRoom2)
+                {
+                    XCTAssertNotEqualObjects(mxRoom2.roomId, roomId, @"We should not retrieve the left room");
+                }
+
+                [expectation fulfill];
+
             } failure:^(NSError *error) {
                 XCTFail(@"Cannot set up intial test conditions - error: %@", error);
                 [expectation fulfill];
+            }];
+            
+        } failure:^(NSError *error) {
+            XCTFail(@"The request should not fail - NSError: %@", error);
+            [expectation fulfill];
         }];
     }];
 }
