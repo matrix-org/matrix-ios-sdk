@@ -231,6 +231,7 @@
 		B17982FA2119E4A2001FD722 /* MXRoomCreateContent.m in Sources */ = {isa = PBXBuildFile; fileRef = B17982F22119E4A1001FD722 /* MXRoomCreateContent.m */; };
 		B17982FB2119E4A2001FD722 /* MXRoomPredecessorInfo.m in Sources */ = {isa = PBXBuildFile; fileRef = B17982F32119E4A1001FD722 /* MXRoomPredecessorInfo.m */; };
 		B17982FC2119E4A2001FD722 /* MXRoomPowerLevels.m in Sources */ = {isa = PBXBuildFile; fileRef = B17982F42119E4A2001FD722 /* MXRoomPowerLevels.m */; };
+		B1798304211B3649001FD722 /* MXRoomSummary.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1798303211B3649001FD722 /* MXRoomSummary.swift */; };
 		C60165381E3AA57900B92CFA /* MXSDKOptions.h in Headers */ = {isa = PBXBuildFile; fileRef = F0C34CB91C18C80000C36F09 /* MXSDKOptions.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		C602B58C1F2268F700B67D87 /* MXRoom.swift in Sources */ = {isa = PBXBuildFile; fileRef = C602B58B1F2268F700B67D87 /* MXRoom.swift */; };
 		C602B58E1F22A8D700B67D87 /* MXImage.swift in Sources */ = {isa = PBXBuildFile; fileRef = C602B58D1F22A8D700B67D87 /* MXImage.swift */; };
@@ -524,6 +525,7 @@
 		B17982F22119E4A1001FD722 /* MXRoomCreateContent.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXRoomCreateContent.m; sourceTree = "<group>"; };
 		B17982F32119E4A1001FD722 /* MXRoomPredecessorInfo.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXRoomPredecessorInfo.m; sourceTree = "<group>"; };
 		B17982F42119E4A2001FD722 /* MXRoomPowerLevels.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXRoomPowerLevels.m; sourceTree = "<group>"; };
+		B1798303211B3649001FD722 /* MXRoomSummary.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXRoomSummary.swift; sourceTree = "<group>"; };
 		B1F1AE550CF4C15B653DDE6E /* Pods-MatrixSDKTests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-MatrixSDKTests.debug.xcconfig"; path = "Pods/Target Support Files/Pods-MatrixSDKTests/Pods-MatrixSDKTests.debug.xcconfig"; sourceTree = "<group>"; };
 		C602B58B1F2268F700B67D87 /* MXRoom.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MXRoom.swift; sourceTree = "<group>"; };
 		C602B58D1F22A8D700B67D87 /* MXImage.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MXImage.swift; sourceTree = "<group>"; };
@@ -1136,6 +1138,7 @@
 				C6F935831E5B3BE600FC34BF /* MX3PID.swift */,
 				C6F935841E5B3BE600FC34BF /* MXEventTimeline.swift */,
 				C6481AF11F1678A9000DB8A0 /* MXSessionEventListener.swift */,
+				B1798303211B3649001FD722 /* MXRoomSummary.swift */,
 			);
 			path = Data;
 			sourceTree = "<group>";
@@ -1479,6 +1482,7 @@
 				3264DB921CEC528D00B99881 /* MXAccountData.m in Sources */,
 				322691331E5EF77D00966A6E /* MXDeviceListOperation.m in Sources */,
 				3283F7791EAF30F700C1688C /* MXBugReportRestClient.m in Sources */,
+				B1798304211B3649001FD722 /* MXRoomSummary.swift in Sources */,
 				9274AFE91EE580240009BEB6 /* MXCallKitAdapter.m in Sources */,
 				C63E78B01F26588000AC692F /* MXRoomPowerLevels.swift in Sources */,
 				323E0C5C1A306D7A00A31D73 /* MXEvent.m in Sources */,

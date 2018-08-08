@@ -147,7 +147,7 @@ FOUNDATION_EXPORT NSString *const kMXRoomSummaryDidChangeNotification;
 /**
  The membership state of the logged in user for this room.
  */
-@property (nonatomic) MXMembership membership;
+@property (nonatomic) MXMembership membership NS_REFINED_FOR_SWIFT;
 
 /**
  Room members counts.
