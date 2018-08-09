@@ -769,41 +769,6 @@
     }];
 }
 
-// Test the room display name formatting: "roomName (roomAlias)"
-// KO before <- To remove
-- (void)testDisplayName1
-{
-    [matrixSDKTestsData doMXSessionTestWithBobAndThePublicRoom:self readyToTest:^(MXSession *mxSession2, MXRoom *room, XCTestExpectation *expectation) {
-        
-        mxSession = mxSession2;
-
-        [room state:^(MXRoomState *roomState) {
-            XCTAssertNotNil(roomState.name);
-            XCTAssertTrue([roomState.name hasPrefix:@"MX Public Room test (#mxPublic"], @"We must retrieve the #mxPublic room settings");
-        }];
-
-        [expectation fulfill];
-    }];
-}
-
-// Test the room display name formatting: "userID" (self chat)
-// Disabled as it seems that the registration method we use in tests now uses the
-// local part of the user id as the default displayname
-//- (void)testDisplayName2
-//{
-//    [matrixSDKTestsData doMXSessionTestWithBobAndARoomWithMessages:self readyToTest:^(MXSession *mxSession2, MXRoom *room, XCTestExpectation *expectation) {
-//        
-//        mxSession = mxSession2;
-//        
-//        // Test room the display formatting: "roomName (roomAlias)"
-//        XCTAssertNotNil(room.state.displayname);
-//        XCTAssertTrue([room.state.displayname isEqualToString:mxSession.matrixRestClient.credentials.userId], @"The room name must be Bob's userID as he has no displayname: %@ - %@", room.state.displayname, mxSession.matrixRestClient.credentials.userId);
-//        
-//        [expectation fulfill];
-//    }];
-//}
-
-
 /*
  Creates a room with the following historic.
  This scenario tests the "invite by other" behavior.

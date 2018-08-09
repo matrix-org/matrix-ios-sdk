@@ -2207,7 +2207,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
     }
 
     // If required, update the last message
-    if ([self.summary.lastMessageEvent.eventId isEqualToString:outgoingMessageEventId])
+    if ([self.summary.lastMessageEventId isEqualToString:outgoingMessageEventId])
     {
         [self.summary resetLastMessage:nil failure:nil commit:YES];
     }
@@ -2881,6 +2881,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
                 {
                     [operation mutateTo:operation2];
                 }
+                return;
             }
         }
         else if (!self.directUserId || (userId && ![userId isEqualToString:self.directUserId]))
@@ -3005,6 +3006,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
                 {
                     [operation mutateTo:operation2];
                 }
+                return;
             }
             else
             {

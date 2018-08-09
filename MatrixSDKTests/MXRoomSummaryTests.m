@@ -771,11 +771,10 @@ NSString *uisiString = @"The sender's device has not sent us the keys for this m
             switch (notifCount++)
             {
                 case 0:
-                    case 1:
-                    // Do not care about the local echo update for MXEventSentStateSending and then MXEventSentStateSent
+                    // Do not care about the local echo update for MXEventSentStateSending
                     break;
 
-                case 2:
+                case 1:
                 {
                     XCTAssertEqualObjects(summary.lastMessageEventId, newEventId);
 
@@ -788,7 +787,7 @@ NSString *uisiString = @"The sender's device has not sent us the keys for this m
                     break;
                 }
 
-                case 3:
+                case 2:
                 {
                     XCTAssertEqualObjects(summary.lastMessageEventId, lastMessageEventId, @"We must come back to the previous event");
 
@@ -844,7 +843,7 @@ NSString *uisiString = @"The sender's device has not sent us the keys for this m
                     break;
                 }
 
-                case 1:
+                case 2:
                 {
                     XCTAssertEqualObjects(summary.lastMessageEventId, lastMessageEventId, @"We must come back to the previous event");
 
@@ -1272,6 +1271,10 @@ NSString *uisiString = @"The sender's device has not sent us the keys for this m
         bobSession.roomSummaryUpdateDelegate = self;
 
         MXRoom *room = [bobSession roomWithRoomId:roomId];
+
+        // Set a RR position to get notifications for new incoming messsages
+        [room markAllAsRead];
+
         MXRoomSummary *summary = room.summary;
 
         NSUInteger notificationCount = room.summary.notificationCount;
