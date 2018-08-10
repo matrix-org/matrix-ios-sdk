@@ -1,6 +1,7 @@
 /*
  Copyright 2014 OpenMarket Ltd
  Copyright 2017 Vector Creations Ltd
+ Copyright 2018 New Vector Ltd
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -29,6 +30,7 @@
 #import "MXInvite3PID.h"
 #import "MXEventTimeline.h"
 #import "MXJSONModels.h"
+#import "MXFilterJSONModel.h"
 
 
 #pragma mark - Constants definitions
@@ -410,6 +412,39 @@ typedef enum : NSUInteger
                            success:(void (^)(void))success
                            failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
+
+#pragma mark - Filtering
+/**
+ Uploads a new filter definition to the homeserver.
+
+ @param filter the filter to set.
+
+ @param success A block object called when the operation succeeds. It provides the
+                id of the created filter.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)setFilter:(MXFilterJSONModel*)filter
+                      success:(void (^)(NSString *filterId))success
+                      failure:(void (^)(NSError *error))failure;
+
+/**
+ Download a filter.
+
+ @param filterId The filter id to download.
+
+ @param success A block object called when the operation succeeds. It provides the
+                filter object.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)getFilterWithFilterId:(NSString*)filterId
+                                  success:(void (^)(MXFilterJSONModel *filter))success
+                                  failure:(void (^)(NSError *error))failure;
+
+
 /**
  Gets a bearer token from the homeserver that the user can
  present to a third party in order to prove their ownership
@@ -422,6 +457,7 @@ typedef enum : NSUInteger
  */
 - (MXHTTPOperation*)openIdToken:(void (^)(MXOpenIdToken *tokenObject))success
                         failure:(void (^)(NSError *error))failure;
+
 
 #pragma mark - 3pid token request
 /**
@@ -1118,7 +1154,7 @@ typedef enum : NSUInteger
  @param from the token to start getting results from.
  @param direction `MXTimelineDirectionForwards` or `MXTimelineDirectionBackwards`
  @param limit (optional, use -1 to not defined this value) the maximum number of messages to return.
- @param roomEventFilter to filter returned events with.
+ @param roomEventFilter the filter to pass in the request. Can be nil.
 
  @param success A block object called when the operation succeeds. It provides a `MXPaginationResponse` object.
  @param failure A block object called when the operation fails.
@@ -1278,6 +1314,7 @@ typedef enum : NSUInteger
  @param eventId the id of the event to get context around.
  @param roomId the id of the room to get events from.
  @param limit the maximum number of messages to return.
+ @param filter the filter to pass in the request. Can be nil.
 
  @param success A block object called when the operation succeeds. It provides the model created from
  the homeserver JSON response.
@@ -1288,6 +1325,7 @@ typedef enum : NSUInteger
 - (MXHTTPOperation*)contextOfEvent:(NSString*)eventId
                             inRoom:(NSString*)roomId
                              limit:(NSUInteger)limit
+                            filter:(MXRoomEventFilter*)filter
                            success:(void (^)(MXEventContext *eventContext))success
                            failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
@@ -1832,7 +1870,7 @@ typedef enum : NSUInteger
  Search a text in room messages.
 
  @param textPattern the text to search for in message body.
- @param roomEventFilter a nullable dictionary which defines the room event filtering during the search request.
+ @param roomEventFilter the filter to pass in the request. Can be nil.
  @param beforeLimit the number of events to get before the matching results.
  @param afterLimit the number of events to get after the matching results.
  @param nextBatch the token to pass for doing pagination from a previous response.

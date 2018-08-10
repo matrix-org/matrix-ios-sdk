@@ -1,6 +1,7 @@
 /*
  Copyright 2014 OpenMarket Ltd
  Copyright 2017 Vector Creations Ltd
+ Copyright 2018 New Vector Ltd
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -24,10 +25,11 @@
 #import "MXSDKOptions.h"
 #import "MXTools.h"
 
-static NSUInteger const kMXFileVersion = 52;
+static NSUInteger const kMXFileVersion = 56;
 
 static NSString *const kMXFileStoreFolder = @"MXFileStore";
 static NSString *const kMXFileStoreMedaDataFile = @"MXFileStore";
+static NSString *const kMXFileStoreFiltersFile = @"filters";
 static NSString *const kMXFileStoreUsersFolder = @"users";
 static NSString *const kMXFileStoreGroupsFolder = @"groups";
 static NSString *const kMXFileStoreBackupFolder = @"backup";
@@ -40,6 +42,8 @@ static NSString *const kMXFileStoreRoomStateFile = @"state";
 static NSString *const kMXFileStoreRoomSummaryFile = @"summary";
 static NSString *const kMXFileStoreRoomAccountDataFile = @"accountData";
 static NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
+
+static NSUInteger preloadOptions;
 
 @interface MXFileStore ()
 {
@@ -83,6 +87,9 @@ static NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
     // Flag to indicate metaData needs to be stored
     BOOL metaDataHasChanged;
 
+    // Flag to indicate Matrix filters need to be stored
+    BOOL filtersHasChanged;
+
     // Cache used to preload room states while the store is opening.
     // It is filled on the separate thread so that the UI thread will not be blocked
     // when it will read rooms states.
@@ -111,6 +118,16 @@ static NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
 @end
 
 @implementation MXFileStore
+
++ (void)initialize
+{
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+
+        // By default, we do not need to preload rooms states now
+        preloadOptions = MXFileStorePreloadOptionRoomSummary | MXFileStorePreloadOptionRoomAccountData;
+    });
+}
 
 - (instancetype)init;
 {
@@ -211,9 +228,18 @@ static NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
                 NSLog(@"[MXFileStore] Start data loading from files");
 
                 [self loadRoomsMessages];
-                [self preloadRoomsStates];
-                [self preloadRoomsSummaries];
-                [self preloadRoomsAccountData];
+                if (preloadOptions & MXFileStorePreloadOptionRoomState)
+                {
+                    [self preloadRoomsStates];
+                }
+                if (preloadOptions & MXFileStorePreloadOptionRoomSummary)
+                {
+                    [self preloadRoomsSummaries];
+                }
+                if (preloadOptions & MXFileStorePreloadOptionRoomAccountData)
+                {
+                    [self preloadRoomsAccountData];
+                }
                 [self loadReceipts];
                 [self loadUsers];
                 [self loadGroups];
@@ -275,6 +301,11 @@ static NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
     });
 }
 
+
++ (void)setPreloadOptions:(MXFileStorePreloadOptions)thePreloadOptions
+{
+    preloadOptions = thePreloadOptions;
+}
 
 #pragma mark - MXStore
 - (void)storeEventForRoom:(NSString*)roomId event:(MXEvent*)event direction:(MXTimelineDirection)direction
@@ -376,6 +407,17 @@ static NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
     }
 }
 
+- (void)storeHasLoadedAllRoomMembersForRoom:(NSString *)roomId andValue:(BOOL)value
+{
+    [super storeHasLoadedAllRoomMembersForRoom:roomId andValue:value];
+
+    if (NSNotFound == [roomsToCommitForMessages indexOfObject:roomId])
+    {
+        [roomsToCommitForMessages addObject:roomId];
+    }
+}
+
+
 - (BOOL)isPermanent
 {
     return YES;
@@ -399,6 +441,18 @@ static NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
 - (void)storeStateForRoom:(NSString*)roomId stateEvents:(NSArray*)stateEvents
 {
     roomsToCommitForState[roomId] = stateEvents;
+}
+
+- (void)stateOfRoom:(NSString *)roomId success:(void (^)(NSArray<MXEvent *> * _Nonnull))success failure:(void (^)(NSError * _Nonnull))failure
+{
+    dispatch_async(dispatchQueue, ^{
+
+        NSArray<MXEvent *> *stateEvents = [self stateOfRoom:roomId];
+
+        dispatch_async(dispatch_get_main_queue(), ^{
+            success(stateEvents);
+        });
+    });
 }
 
 - (NSArray*)stateOfRoom:(NSString *)roomId
@@ -527,6 +581,73 @@ static NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
     return metaData.userAccountData;
 }
 
+#pragma mark - Matrix filters
+- (void)setSyncFilterId:(NSString *)syncFilterId
+{
+    [super setSyncFilterId:syncFilterId];
+    if (metaData)
+    {
+        metaData.syncFilterId = syncFilterId;
+        metaDataHasChanged = YES;
+    }
+}
+
+- (NSString *)syncFilterId
+{
+    return  metaData.syncFilterId;
+}
+
+- (void)storeFilter:(nonnull MXFilterJSONModel*)filter withFilterId:(nonnull NSString*)filterId
+{
+    [super storeFilter:filter withFilterId:filterId];
+    filtersHasChanged = YES;
+}
+
+- (void)filterWithFilterId:(nonnull NSString*)filterId
+                   success:(nonnull void (^)(MXFilterJSONModel * _Nullable filter))success
+                   failure:(nullable void (^)(NSError * _Nullable error))failure
+{
+    if (filters)
+    {
+        [super filterWithFilterId:filterId success:success failure:failure];
+    }
+    else
+    {
+        // Load filters from the store
+        dispatch_async(dispatchQueue, ^{
+
+            [self loadFilters];
+
+            dispatch_async(dispatch_get_main_queue(), ^{
+                [super filterWithFilterId:filterId success:success failure:failure];
+            });
+        });
+    }
+}
+
+- (void)filterIdForFilter:(nonnull MXFilterJSONModel*)filter
+                  success:(nonnull void (^)(NSString * _Nullable filterId))success
+                  failure:(nullable void (^)(NSError * _Nullable error))failure
+{
+    if (filters)
+    {
+        [super filterIdForFilter:filter success:success failure:failure];
+    }
+    else
+    {
+        // Load filters from the store
+        dispatch_async(dispatchQueue, ^{
+
+            [self loadFilters];
+
+            dispatch_async(dispatch_get_main_queue(), ^{
+                [super filterIdForFilter:filter success:success failure:failure];
+            });
+        });
+    }
+}
+
+
 - (void)commit
 {
     // Save data only if metaData exists
@@ -621,6 +742,7 @@ static NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
     [self saveUsers];
     [self saveGroupsDeletion];
     [self saveGroups];
+    [self saveFilters];
     [self saveMetaData];
 }
 
@@ -814,6 +936,26 @@ static NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
         }
     }
 }
+
+- (NSString*)filtersFileForBackup:(BOOL)backup
+{
+    if (!backup)
+    {
+        return [storePath stringByAppendingPathComponent:kMXFileStoreFiltersFile];
+    }
+    else
+    {
+        if (backupEventStreamToken)
+        {
+            return [[storeBackupPath stringByAppendingPathComponent:backupEventStreamToken] stringByAppendingPathComponent:kMXFileStoreFiltersFile];
+        }
+        else
+        {
+            return nil;
+        }
+    }
+}
+
 
 #pragma mark - Storage validity
 - (BOOL)checkStorageValidity
@@ -1308,6 +1450,52 @@ static NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
     }
 }
 
+#pragma mark - Matrix filters
+- (void)loadFilters
+{
+    NSString *file = [storePath stringByAppendingPathComponent:kMXFileStoreFiltersFile];
+    filters = [NSKeyedUnarchiver unarchiveObjectWithFile:file];
+
+    if (!filters)
+    {
+        // This is used as flag to indicate it has been mounted from the file
+        filters = [NSMutableDictionary dictionary];
+    }
+}
+
+- (void)saveFilters
+{
+    // Save only in case of change
+    if (filtersHasChanged)
+    {
+        filtersHasChanged = NO;
+
+        MXWeakify(self);
+        dispatch_async(dispatchQueue, ^(void){
+            MXStrongifyAndReturnIfNil(self);
+
+            NSString *file = [self filtersFileForBackup:NO];
+            NSString *backupFile = [self filtersFileForBackup:YES];
+
+            // Backup the file
+            if (backupFile && [[NSFileManager defaultManager] fileExistsAtPath:file])
+            {
+                // Make sure the backup folder exists
+                NSString *storeBackupMetaDataPath = [self->storeBackupPath stringByAppendingPathComponent:self->backupEventStreamToken];
+                if (![NSFileManager.defaultManager fileExistsAtPath:storeBackupMetaDataPath])
+                {
+                    [[NSFileManager defaultManager] createDirectoryAtPath:storeBackupMetaDataPath withIntermediateDirectories:YES attributes:nil error:nil];
+                }
+
+                [[NSFileManager defaultManager] moveItemAtPath:file toPath:backupFile error:nil];
+            }
+
+            // Store new data
+            [NSKeyedArchiver archiveRootObject:self->filters toFile:file];
+        });
+    }
+}
+
 #pragma mark - Matrix users
 /**
  Preload all users.
@@ -1748,18 +1936,6 @@ static NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
         dispatch_async(dispatch_get_main_queue(), ^{
             MXStrongifyAndReturnIfNil(self);
             success(self->preloadedRoomSummary.allValues);
-        });
-    });
-}
-
-- (void)asyncStateEventsOfRoom:(NSString *)roomId success:(void (^)(NSArray<MXEvent *> * _Nonnull))success failure:(nullable void (^)(NSError * _Nonnull))failure
-{
-    dispatch_async(dispatchQueue, ^{
-
-        NSArray<MXEvent *> *stateEvents = [self stateOfRoom:roomId];
-
-        dispatch_async(dispatch_get_main_queue(), ^{
-            success(stateEvents);
         });
     });
 }

@@ -1,5 +1,6 @@
 /*
  Copyright 2015 OpenMarket Ltd
+ Copyright 2018 New Vector Ltd
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -47,7 +48,7 @@
     return self;
 }
 
-- (BOOL)isCondition:(MXPushRuleCondition*)condition satisfiedBy:(MXEvent*)event withJsonDict:(NSDictionary*)contentAsJsonDict
+- (BOOL)isCondition:(MXPushRuleCondition*)condition satisfiedBy:(MXEvent*)event roomState:(MXRoomState*)roomState withJsonDict:(NSDictionary*)contentAsJsonDict
 {
     if (!event.eventId)
     {
@@ -84,27 +85,27 @@
             MXRoom *room = [mxSession roomWithRoomId:event.roomId];
             
             // sanity checks
-            if (room && room.state && room.state.members)
+            if (room && room.summary)
             {
                 if (nil == op || [op isEqualToString:@"=="])
                 {
-                    isSatisfied = (value == room.state.members.count);
+                    isSatisfied = (value == room.summary.membersCount.members);
                 }
                 else if ([op isEqualToString:@"<"])
                 {
-                    isSatisfied = (value < room.state.members.count);
+                    isSatisfied = (value < room.summary.membersCount.members);
                 }
                 else if ([op isEqualToString:@">"])
                 {
-                    isSatisfied = (value > room.state.members.count);
+                    isSatisfied = (value > room.summary.membersCount.members);
                 }
                 else if ([op isEqualToString:@">="])
                 {
-                    isSatisfied = (value >= room.state.members.count);
+                    isSatisfied = (value >= room.summary.membersCount.members);
                 }
                 else if ([op isEqualToString:@"<="])
                 {
-                    isSatisfied = (value <= room.state.members.count);
+                    isSatisfied = (value <= room.summary.membersCount.members);
                 }
             }
         }

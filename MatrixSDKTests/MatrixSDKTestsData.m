@@ -654,6 +654,46 @@ NSString * const kMXTestsAliceAvatarURL = @"mxc://matrix.org/kciiXusgZFKuNLIfLqm
 }
 
 
+#pragma mark - random user
+- (void)doMXSessionTestWithAUser:(XCTestCase*)testCase
+                     readyToTest:(void (^)(MXSession *aUserSession, XCTestExpectation *expectation))readyToTest
+{
+    XCTestExpectation *expectation;
+    if (testCase)
+    {
+        expectation = [testCase expectationWithDescription:@"asyncTest"];
+    }
+
+    __block MXRestClient *aUserRestClient = [[MXRestClient alloc] initWithHomeServer:kMXTestsHomeServerURL
+                                        andOnUnrecognizedCertificateBlock:^BOOL(NSData *certificate) {
+                                            return YES;
+                                        }];
+    [self retain:aUserRestClient];
+
+    // First, register a new random user
+    NSString *anUniqueUser = [NSString stringWithFormat:@"%@", [[NSUUID UUID] UUIDString]];
+    [aUserRestClient registerWithLoginType:kMXLoginFlowTypeDummy username:anUniqueUser password:@"123456" success:^(MXCredentials *credentials) {
+
+        aUserRestClient = [[MXRestClient alloc] initWithCredentials:credentials andOnUnrecognizedCertificateBlock:nil];
+        [self retain:aUserRestClient];
+
+        MXSession *aUserSession = [[MXSession alloc] initWithMatrixRestClient:aUserRestClient];
+        [self retain:aUserSession];
+
+        [aUserSession start:^{
+
+            readyToTest(aUserSession, expectation);
+
+        } failure:^(NSError *error) {
+            NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+        }];
+
+    } failure:^(NSError *error) {
+        NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+    }];
+}
+
+
 #pragma mark - HTTPS mxBob
 - (void)getHttpsBobCredentials:(void (^)(void))success
 {

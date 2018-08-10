@@ -56,6 +56,7 @@ NSString *const kMXEventTypeStringCallCandidates        = @"m.call.candidates";
 NSString *const kMXEventTypeStringCallAnswer            = @"m.call.answer";
 NSString *const kMXEventTypeStringCallHangup            = @"m.call.hangup";
 NSString *const kMXEventTypeStringSticker               = @"m.sticker";
+NSString *const kMXEventTypeStringRoomTombStone         = @"m.room.tombstone";
 
 NSString *const kMXMessageTypeText      = @"m.text";
 NSString *const kMXMessageTypeEmote     = @"m.emote";
@@ -530,7 +531,25 @@ NSString *const kMXEventIdentifierKey = @"kMXEventIdentifierKey";
     _clearEvent = nil;
     if (decryptionResult.clearEvent)
     {
-        _clearEvent = [MXEvent modelFromJSON:decryptionResult.clearEvent];
+        NSDictionary *decryptionClearEventJSON;
+        NSDictionary *encryptedContentRelatesToJSON = _wireContent[@"m.relates_to"];
+        
+        // Add "m.relates_to" data from e2e event to the unencrypted content event
+        if (encryptedContentRelatesToJSON)
+        {
+            NSMutableDictionary *decryptionClearEventUpdatedJSON = [decryptionResult.clearEvent mutableCopy];
+            NSMutableDictionary *clearEventContentUpdatedJSON = [decryptionClearEventUpdatedJSON[@"content"] mutableCopy];
+            
+            clearEventContentUpdatedJSON[@"m.relates_to"] = encryptedContentRelatesToJSON;
+            decryptionClearEventUpdatedJSON[@"content"] = [clearEventContentUpdatedJSON copy];
+            decryptionClearEventJSON = [decryptionClearEventUpdatedJSON copy];
+        }
+        else
+        {
+            decryptionClearEventJSON = decryptionResult.clearEvent;
+        }
+        
+        _clearEvent = [MXEvent modelFromJSON:decryptionClearEventJSON];
     }
 
     if (_clearEvent)

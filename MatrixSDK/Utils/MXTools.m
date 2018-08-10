@@ -94,7 +94,8 @@ static NSUInteger transactionIdCount;
                                 kMXEventTypeStringCallCandidates,
                                 kMXEventTypeStringCallAnswer,
                                 kMXEventTypeStringCallHangup,
-                                kMXEventTypeStringSticker
+                                kMXEventTypeStringSticker,
+                                kMXEventTypeStringRoomTombStone
                                 ];
 
         NSMutableDictionary *map = [NSMutableDictionary dictionaryWithCapacity:eventTypeMapEnumToString.count];
@@ -337,6 +338,11 @@ static NSUInteger transactionIdCount;
 {
     return [NSString stringWithFormat:@"%@/#/%@/%@", kMXMatrixDotToUrl, roomIdOrAlias, eventId];
 
+}
+
++ (NSString*)permalinkToUserWithUserId:(NSString*)userId
+{
+    return [NSString stringWithFormat:@"%@/#/%@", kMXMatrixDotToUrl, userId];
 }
 
 #pragma mark - File

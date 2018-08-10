@@ -114,6 +114,13 @@ typedef void (^MXOnRoomEvent)(MXEvent *event, MXTimelineDirection direction, MXR
 - (void)initialiseState:(NSArray<MXEvent*> *)stateEvents;
 
 /**
+ Reset the room evenTimeline state.
+
+ @param roomState the new state to use.
+ */
+- (void)setState:(MXRoomState *)roomState;
+
+/**
  Release RAM memory used by the timeline.
  */
 - (void)destroy;
@@ -203,6 +210,12 @@ typedef void (^MXOnRoomEvent)(MXEvent *event, MXTimelineDirection direction, MXR
  */
 - (void)handleInvitedRoomSync:(MXInvitedRoomSync *)invitedRoomSync;
 
+/**
+ For live timeline, enrich lazy loaded state events with more state events.
+
+ @param stateEvents state events to append.
+ */
+- (void)handleLazyLoadedStateEvents:(NSArray<MXEvent *> *)stateEvents;
 
 #pragma mark - Events listeners
 /**

@@ -126,12 +126,14 @@
 
             XCTAssertNotNil(room);
 
-            [room.liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
+            [room liveTimeline:^(MXEventTimeline *liveTimeline) {
+                [liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
 
-                XCTAssertEqual(direction, MXTimelineDirectionForwards);
-                XCTAssert([event.description containsString:@"Hello"]);
+                    XCTAssertEqual(direction, MXTimelineDirectionForwards);
+                    XCTAssert([event.description containsString:@"Hello"]);
 
-                [expectation fulfill];
+                    [expectation fulfill];
+                }];
             }];
 
             [room sendTextMessage:@"Hello" success:nil failure:^(NSError *error) {
@@ -161,13 +163,16 @@
 
             [room enableEncryptionWithAlgorithm:kMXCryptoMegolmAlgorithm success:^{
 
-                [room.liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
+                [room liveTimeline:^(MXEventTimeline *liveTimeline) {
 
-                    XCTAssertEqual(direction, MXTimelineDirectionForwards);
-                    XCTAssert(event.clearEvent);
-                    XCTAssert([event.clearEvent.description containsString:@"Hello"]);
+                    [liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
 
-                    [expectation fulfill];
+                        XCTAssertEqual(direction, MXTimelineDirectionForwards);
+                        XCTAssert(event.clearEvent);
+                        XCTAssert([event.clearEvent.description containsString:@"Hello"]);
+
+                        [expectation fulfill];
+                    }];
                 }];
 
                 [room sendTextMessage:@"Hello" success:nil failure:^(NSError *error) {
@@ -196,25 +201,28 @@
 
             XCTAssertNotNil(room);
 
-            [room.liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
+            [room liveTimeline:^(MXEventTimeline *liveTimeline) {
 
-                XCTAssertEqual(direction, MXTimelineDirectionForwards);
-                XCTAssertEqualObjects(event.content[@"msgtype"], kMXMessageTypeImage);
+                [liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
 
-                NSString *contentURL = event.content[@"url"];
-                XCTAssert(contentURL);
+                    XCTAssertEqual(direction, MXTimelineDirectionForwards);
+                    XCTAssertEqualObjects(event.content[@"msgtype"], kMXMessageTypeImage);
 
-                NSString *actualURL = [mxSession.matrixRestClient urlOfContent:contentURL];
-                XCTAssert(actualURL);
+                    NSString *contentURL = event.content[@"url"];
+                    XCTAssert(contentURL);
 
-                // Download back the image
-                [MXMediaManager downloadMediaFromURL:actualURL andSaveAtFilePath:nil success:^() {
+                    NSString *actualURL = [mxSession.matrixRestClient urlOfContent:contentURL];
+                    XCTAssert(actualURL);
 
-                    [expectation fulfill];
+                    // Download back the image
+                    [MXMediaManager downloadMediaFromURL:actualURL andSaveAtFilePath:nil success:^() {
 
-                } failure:^(NSError *error) {
-                    XCTFail(@"The request should not fail - NSError: %@", error);
-                    [expectation fulfill];
+                        [expectation fulfill];
+
+                    } failure:^(NSError *error) {
+                        XCTFail(@"The request should not fail - NSError: %@", error);
+                        [expectation fulfill];
+                    }];
                 }];
             }];
 
@@ -280,30 +288,33 @@
 
             XCTAssertNotNil(room);
 
-            [room.liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
+            [room liveTimeline:^(MXEventTimeline *liveTimeline) {
 
-                XCTAssertEqual(direction, MXTimelineDirectionForwards);
-                XCTAssertEqualObjects(event.content[@"msgtype"], kMXMessageTypeImage);
+                [liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
 
-                NSString *contentURL = event.content[@"url"];
-                XCTAssert(contentURL);
+                    XCTAssertEqual(direction, MXTimelineDirectionForwards);
+                    XCTAssertEqualObjects(event.content[@"msgtype"], kMXMessageTypeImage);
 
-                NSString *actualURL = [mxSession.matrixRestClient urlOfContent:contentURL];
-                XCTAssert(actualURL);
+                    NSString *contentURL = event.content[@"url"];
+                    XCTAssert(contentURL);
 
-                [mxSession close];
+                    NSString *actualURL = [mxSession.matrixRestClient urlOfContent:contentURL];
+                    XCTAssert(actualURL);
 
-                // Fake the case where our server was never not trusted
-                [[MXAllowedCertificates sharedInstance] reset];
+                    [mxSession close];
 
-                // Then, try to download back the image
-                [MXMediaManager downloadMediaFromURL:actualURL andSaveAtFilePath:nil success:^() {
+                    // Fake the case where our server was never not trusted
+                    [[MXAllowedCertificates sharedInstance] reset];
 
-                    XCTFail(@"The operation must fail because the self-signed certficate was not trusted (anymore)");
-                    [expectation fulfill];
+                    // Then, try to download back the image
+                    [MXMediaManager downloadMediaFromURL:actualURL andSaveAtFilePath:nil success:^() {
 
-                } failure:^(NSError *error) {
-                    [expectation fulfill];
+                        XCTFail(@"The operation must fail because the self-signed certficate was not trusted (anymore)");
+                        [expectation fulfill];
+
+                    } failure:^(NSError *error) {
+                        [expectation fulfill];
+                    }];
                 }];
             }];
 

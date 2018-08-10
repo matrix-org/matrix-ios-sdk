@@ -35,6 +35,11 @@
 @property (nonatomic) NSString *eventStreamToken;
 
 /**
+ The id of the filter being used in /sync requests.
+ */
+@property (nonatomic) NSString *syncFilterId;
+
+/**
  The current version of the store.
  */
 @property (nonatomic) NSUInteger version;

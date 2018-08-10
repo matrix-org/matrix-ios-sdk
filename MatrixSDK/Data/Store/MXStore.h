@@ -1,6 +1,7 @@
 /*
  Copyright 2014 OpenMarket Ltd
  Copyright 2017 Vector Creations Ltd
+ Copyright 2018 New Vector Ltd
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -23,6 +24,7 @@
 #import "MXRoomSummary.h"
 #import "MXRoomAccountData.h"
 #import "MXGroup.h"
+#import "MXFilterJSONModel.h"
 
 #import "MXEventsEnumerator.h"
 
@@ -44,7 +46,7 @@
  @param onComplete the callback called once the data has been loaded
  @param failure the callback called in case of error.
  */
-- (void)openWithCredentials:(MXCredentials*)credentials onComplete:(void (^)(void))onComplete failure:(void (^)(NSError *error))failure;
+- (void)openWithCredentials:(nonnull MXCredentials*)credentials onComplete:(nullable void (^)(void))onComplete failure:(nullable void (^)(NSError * _Nullable error))failure;
 
 /**
  Store a room event received from the home server.
@@ -56,7 +58,7 @@
  @param event the MXEvent object to store.
  @param direction the origin of the event. Live or past events.
  */
-- (void)storeEventForRoom:(NSString*)roomId event:(MXEvent*)event direction:(MXTimelineDirection)direction;
+- (void)storeEventForRoom:(nonnull NSString*)roomId event:(nonnull MXEvent*)event direction:(MXTimelineDirection)direction;
 
 /**
  Replace a room event (in case of redaction for example).
@@ -65,7 +67,7 @@
  @param event the MXEvent object to store.
  @param roomId the id of the room.
  */
-- (void)replaceEvent:(MXEvent*)event inRoom:(NSString*)roomId;
+- (void)replaceEvent:(nonnull MXEvent*)event inRoom:(nonnull NSString*)roomId;
 
 /**
  Returns a Boolean value that indicates whether an event is already stored.
@@ -75,7 +77,7 @@
 
  @return YES if the event exists in the store.
  */
-- (BOOL)eventExistsWithEventId:(NSString*)eventId inRoom:(NSString*)roomId;
+- (BOOL)eventExistsWithEventId:(nonnull NSString*)eventId inRoom:(nonnull NSString*)roomId;
 
 /**
  Get an event in a room from the store.
@@ -85,7 +87,7 @@
 
  @return the MXEvent object or nil if not found.
  */
-- (MXEvent*)eventWithEventId:(NSString*)eventId inRoom:(NSString*)roomId;
+- (MXEvent* _Nullable)eventWithEventId:(nonnull NSString*)eventId inRoom:(nonnull NSString*)roomId;
 
 /**
  Remove all existing messages in a room.
@@ -93,14 +95,14 @@
  
  @param roomId the id of the room.
  */
-- (void)deleteAllMessagesInRoom:(NSString *)roomId;
+- (void)deleteAllMessagesInRoom:(nonnull NSString *)roomId;
 
 /**
  Erase a room and all related data.
  
  @param roomId the id of the room.
  */
-- (void)deleteRoom:(NSString*)roomId;
+- (void)deleteRoom:(nonnull NSString*)roomId;
 
 /**
  Erase all data from the store.
@@ -111,16 +113,23 @@
  Store/retrieve the current pagination token of a room.
  */
 // @TODO(summary): Move to MXRoomSummary
-- (void)storePaginationTokenOfRoom:(NSString*)roomId andToken:(NSString*)token;
-- (NSString*)paginationTokenOfRoom:(NSString*)roomId;
+- (void)storePaginationTokenOfRoom:(nonnull NSString*)roomId andToken:(nonnull NSString*)token;
+- (NSString * _Nullable)paginationTokenOfRoom:(nonnull NSString*)roomId;
 
 /**
  Store/retrieve the flag indicating that the SDK has reached the end of pagination
  in its pagination requests to the home server.
  */
 // @TODO(summary): Move to MXRoomSummary
-- (void)storeHasReachedHomeServerPaginationEndForRoom:(NSString*)roomId andValue:(BOOL)value;
-- (BOOL)hasReachedHomeServerPaginationEndForRoom:(NSString*)roomId;
+- (void)storeHasReachedHomeServerPaginationEndForRoom:(nonnull NSString*)roomId andValue:(BOOL)value;
+- (BOOL)hasReachedHomeServerPaginationEndForRoom:(nonnull NSString*)roomId;
+
+/**
+ Store/retrieve the flag indicating that the SDK has retrieved all room members
+ of a room.
+ */
+- (void)storeHasLoadedAllRoomMembersForRoom:(nonnull NSString*)roomId andValue:(BOOL)value;
+- (BOOL)hasLoadedAllRoomMembersForRoom:(nonnull NSString*)roomId;
 
 /**
  Get an events enumerator on all messages of a room.
@@ -128,7 +137,7 @@
  @param roomId the id of the room.
  @return the events enumerator.
  */
-- (id<MXEventsEnumerator>)messagesEnumeratorForRoom:(NSString*)roomId;
+- (id<MXEventsEnumerator> _Nonnull)messagesEnumeratorForRoom:(nonnull NSString*)roomId;
 
 /**
  Get an events enumerator on messages of a room with a filter on the events types.
@@ -137,21 +146,21 @@
  @param types an array of event types strings (MXEventTypeString).
  @return the events enumerator.
  */
-- (id<MXEventsEnumerator>)messagesEnumeratorForRoom:(NSString*)roomId withTypeIn:(NSArray*)types;
+- (id<MXEventsEnumerator> _Nonnull)messagesEnumeratorForRoom:(nonnull NSString*)roomId withTypeIn:(nullable NSArray*)types;
 
 
 #pragma mark - Matrix users
 /**
  Store a matrix user.
  */
-- (void)storeUser:(MXUser*)user;
+- (void)storeUser:(nonnull MXUser*)user;
 
 /**
  Get the list of all stored matrix users.
 
  @return an array of MXUser.
  */
-- (NSArray<MXUser*>*)users;
+- (NSArray<MXUser*>* _Nullable)users;
 
 /**
  Get a matrix user.
@@ -159,20 +168,20 @@
  @param userId The id to the user.
  @return the MXUser instance or nil if not found.
  */
-- (MXUser*)userWithUserId:(NSString*)userId;
+- (MXUser* _Nullable)userWithUserId:(nonnull NSString*)userId;
 
 #pragma mark - groups
 /**
  Store a matrix group.
  */
-- (void)storeGroup:(MXGroup*)group;
+- (void)storeGroup:(nonnull MXGroup*)group;
 
 /**
  Get the list of all stored matrix groups.
  
  @return an array of MXGroup.
  */
-- (NSArray<MXGroup*>*)groups;
+- (NSArray<MXGroup*>* _Nullable)groups;
 
 /**
  Get a matrix group.
@@ -180,14 +189,14 @@
  @param groupId The id to the group.
  @return the MXGroup instance or nil if not found.
  */
-- (MXGroup*)groupWithGroupId:(NSString*)groupId;
+- (MXGroup* _Nullable)groupWithGroupId:(nonnull NSString*)groupId;
 
 /**
  Erase a group and all related data.
  
  @param groupId the id of the group.
  */
-- (void)deleteGroup:(NSString*)groupId;
+- (void)deleteGroup:(nonnull NSString*)groupId;
 
 #pragma mark -
 /**
@@ -197,7 +206,7 @@
  @param partialTextMessage the text to store. Nil to reset it.
  */
 // @TODO(summary): Move to MXRoomSummary
-- (void)storePartialTextMessageForRoom:(NSString*)roomId partialTextMessage:(NSString*)partialTextMessage;
+- (void)storePartialTextMessageForRoom:(nonnull NSString*)roomId partialTextMessage:(nonnull NSString*)partialTextMessage;
 
 /**
  The text message typed by the user but not yet sent.
@@ -205,7 +214,7 @@
  @param roomId the id of the room.
  @return the text message. Can be nil.
  */
-- (NSString*)partialTextMessageOfRoom:(NSString*)roomId;
+- (NSString* _Nullable)partialTextMessageOfRoom:(nonnull NSString*)roomId;
 
 
 /**
@@ -217,7 +226,7 @@
  @param sort to sort them from the latest to the oldest
  @return the receipts for an event in a dedicated room.
  */
-- (NSArray<MXReceiptData*> *)getEventReceipts:(NSString*)roomId eventId:(NSString*)eventId sorted:(BOOL)sort;
+- (NSArray<MXReceiptData*> * _Nullable)getEventReceipts:(nonnull NSString*)roomId eventId:(nonnull NSString*)eventId sorted:(BOOL)sort;
 
 /**
  Store the receipt for a user in a room
@@ -226,7 +235,7 @@
  @param roomId The roomId
  @return true if the receipt has been stored
  */
-- (BOOL)storeReceipt:(MXReceiptData*)receipt inRoom:(NSString*)roomId;
+- (BOOL)storeReceipt:(nonnull MXReceiptData*)receipt inRoom:(nonnull NSString*)roomId;
 
 /**
  Retrieve the receipt for a user in a room
@@ -235,7 +244,7 @@
  @param userId The user identifier
  @return the current stored receipt (nil by default).
  */
-- (MXReceiptData *)getReceiptInRoom:(NSString*)roomId forUserId:(NSString*)userId;
+- (MXReceiptData * _Nullable)getReceiptInRoom:(nonnull NSString*)roomId forUserId:(nonnull NSString*)userId;
 
 /**
  Count the unread events wrote in the store.
@@ -247,7 +256,7 @@
  @param types an array of event types strings (MXEventTypeString).
  @return The number of unread events which have their type listed in the provided array.
  */
-- (NSUInteger)localUnreadEventCount:(NSString*)roomId withTypeIn:(NSArray*)types;
+- (NSUInteger)localUnreadEventCount:(nonnull NSString*)roomId withTypeIn:(nullable NSArray*)types;
 
 /**
  Indicate if the MXStore implementation stores data permanently.
@@ -259,7 +268,7 @@
  The token indicating from where to start listening event stream to get
  live events.
  */
-@property (nonatomic) NSString *eventStreamToken;
+@property (nonatomic) NSString * _Nullable eventStreamToken;
 
 
 @optional
@@ -280,15 +289,18 @@
 - (void)close;
 
 
-#pragma mark - Permanent storage
+#pragma mark - Permanent storage -
+
 /**
  Return the ids of the rooms currently stored.
 
  Note: this method is required in permanent storage implementation.
- 
+
  @return the array of room ids.
  */
-- (NSArray*)rooms;
+- (NSArray* _Nullable)rooms;
+
+#pragma mark - Room state
 
 /**
  Store the state of a room.
@@ -298,7 +310,7 @@
  @param roomId the id of the room.
  @param stateEvents the state events that define the room state.
  */
-- (void)storeStateForRoom:(NSString*)roomId stateEvents:(NSArray*)stateEvents;
+- (void)storeStateForRoom:(nonnull NSString*)roomId stateEvents:(nonnull NSArray<MXEvent*> *)stateEvents;
 
 /**
  Get the state of a room.
@@ -306,11 +318,15 @@
  Note: this method is required in permanent storage implementation.
 
  @param roomId the id of the room.
-
- @return the stored state events that define the room state.
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
  */
-- (NSArray*)stateOfRoom:(NSString*)roomId;
+- (void)stateOfRoom:(nonnull NSString *)roomId
+            success:(nonnull void (^)(NSArray<MXEvent *> * _Nonnull stateEvents))success
+            failure:(nullable void (^)(NSError * _Nonnull error))failure;
 
+
+#pragma mark - Room summary
 
 /**
  Store the summary for a room.
@@ -320,7 +336,7 @@
  @param roomId the id of the room.
  @param summary the room summary.
  */
-- (void)storeSummaryForRoom:(NSString*)roomId summary:(MXRoomSummary*)summary;
+- (void)storeSummaryForRoom:(nonnull NSString*)roomId summary:(nonnull MXRoomSummary*)summary;
 
 /**
  Get the summary a room.
@@ -330,8 +346,10 @@
  @param roomId the id of the room.
  @return the user private data for this room.
  */
-- (MXRoomSummary*)summaryOfRoom:(NSString*)roomId;
+- (MXRoomSummary* _Nullable)summaryOfRoom:(nonnull NSString*)roomId;
 
+
+#pragma mark - Room user data
 
 /**
  Store the user data for a room.
@@ -341,7 +359,7 @@
  @param roomId the id of the room.
  @param accountData the private data the user defined for this room.
  */
-- (void)storeAccountDataForRoom:(NSString*)roomId userData:(MXRoomAccountData*)accountData;
+- (void)storeAccountDataForRoom:(nonnull NSString*)roomId userData:(nonnull MXRoomAccountData*)accountData;
 
 /**
  Get the user data for a room.
@@ -351,7 +369,7 @@
  @param roomId the id of the room.
  @return the user private data for this room.
 */
-- (MXRoomAccountData*)accountDataOfRoom:(NSString*)roomId;
+- (MXRoomAccountData* _Nullable)accountDataOfRoom:(nonnull NSString*)roomId;
 
 
 #pragma mark - Outgoing events
@@ -361,14 +379,14 @@
  @param roomId the id of the room.
  @param outgoingMessage the MXEvent object of the message.
  */
-- (void)storeOutgoingMessageForRoom:(NSString*)roomId outgoingMessage:(MXEvent*)outgoingMessage;
+- (void)storeOutgoingMessageForRoom:(nonnull NSString*)roomId outgoingMessage:(nonnull MXEvent*)outgoingMessage;
 
 /**
  Remove all outgoing messages from a room.
 
  @param roomId the id of the room.
  */
-- (void)removeAllOutgoingMessagesFromRoom:(NSString*)roomId;
+- (void)removeAllOutgoingMessagesFromRoom:(nonnull NSString*)roomId;
 
 /**
  Remove an outgoing message from a room.
@@ -376,7 +394,7 @@
  @param roomId the id of the room.
  @param outgoingMessageEventId the id of the message to remove.
  */
-- (void)removeOutgoingMessageFromRoom:(NSString*)roomId outgoingMessage:(NSString*)outgoingMessageEventId;
+- (void)removeOutgoingMessageFromRoom:(nonnull NSString*)roomId outgoingMessage:(nonnull NSString*)outgoingMessageEventId;
 
 /**
  Get all outgoing messages pending in a room.
@@ -384,11 +402,50 @@
  @param roomId the id of the room.
  @return the list of messages that have not been sent yet
  */
-- (NSArray<MXEvent*>*)outgoingMessagesInRoom:(NSString*)roomId;
+- (NSArray<MXEvent*>* _Nullable)outgoingMessagesInRoom:(nonnull NSString*)roomId;
 
+
+#pragma mark - User Account data
 /**
  Store/retrieve the user account data.
  */
-@property (nonatomic) NSDictionary *userAccountData;
+@property (nonatomic) NSDictionary * _Nullable userAccountData;
+
+
+#pragma mark - Matrix filters
+/**
+ Store/retrieve the id of the Matrix filter used in /sync requests.
+ */
+@property (nonatomic) NSString * _Nullable syncFilterId;
+
+/**
+ Store a created filter.
+
+ @param filter the filter to store.
+ @param filterId the id of this filter on the homeserver.
+ */
+- (void)storeFilter:(nonnull MXFilterJSONModel*)filter withFilterId:(nonnull NSString*)filterId;
+
+/**
+ Retrieve a filter with a given id.
+
+ @param filterId the id of the filter.
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+ */
+- (void)filterWithFilterId:(nonnull NSString*)filterId
+                   success:(nonnull void (^)(MXFilterJSONModel * _Nullable filter))success
+                   failure:(nullable void (^)(NSError * _Nullable error))failure;
+
+/**
+ Check if a filter already exists and return its filter id.
+
+ @param filter the filter to check the existence.
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+ */
+- (void)filterIdForFilter:(nonnull MXFilterJSONModel*)filter
+                  success:(nonnull void (^)(NSString * _Nullable filterId))success
+                  failure:(nullable void (^)(NSError * _Nullable error))failure;
 
 @end

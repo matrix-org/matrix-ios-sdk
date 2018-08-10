@@ -33,7 +33,7 @@
 @property (nonatomic, readonly) NSDictionary<NSString *, id> *dictionary;
 
 /**
- The JSON object representating the filter.
+ The JSON string representating the filter.
  */
 @property (nonatomic, readonly) NSString *jsonString;
 

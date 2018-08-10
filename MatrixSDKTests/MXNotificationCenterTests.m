@@ -158,24 +158,27 @@
         mxSession = bobSession;
 
         MXRoom *room = [mxSession roomWithRoomId:roomId];
-        [room.liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMember] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
+        [room liveTimeline:^(MXEventTimeline *liveTimeline) {
 
-            [bobSession.notificationCenter listenToNotifications:^(MXEvent *event, MXRoomState *roomState, MXPushRule *rule) {
+            [liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMember] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
 
-                // We must be alerted by the default content HS rule on any message
-                XCTAssertEqual(rule.kind, MXPushRuleKindUnderride);
-                XCTAssert(rule.isDefault, @"The rule must be the server default rule. Rule: %@", rule);
+                [bobSession.notificationCenter listenToNotifications:^(MXEvent *event, MXRoomState *roomState, MXPushRule *rule) {
 
-                [expectation fulfill];
+                    // We must be alerted by the default content HS rule on any message
+                    XCTAssertEqual(rule.kind, MXPushRuleKindUnderride);
+                    XCTAssert(rule.isDefault, @"The rule must be the server default rule. Rule: %@", rule);
+
+                    [expectation fulfill];
+                }];
+
+                [aliceRestClient sendTextMessageToRoom:roomId text:@"a message" success:^(NSString *eventId) {
+
+                } failure:^(NSError *error) {
+                    XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                    [expectation fulfill];
+                }];
+
             }];
-
-            [aliceRestClient sendTextMessageToRoom:roomId text:@"a message" success:^(NSString *eventId) {
-
-            } failure:^(NSError *error) {
-                XCTFail(@"Cannot set up intial test conditions - error: %@", error);
-                [expectation fulfill];
-            }];
-
         }];
 
         // Make sure there 3 are peoples in the room to avoid to fire the default "room_member_count == 2" rule
@@ -371,20 +374,23 @@
 
                     if (MXTimelineDirectionForwards == direction)
                     {
-                        MXPushRule *rule = [aliceSession.notificationCenter ruleMatchingEvent:event];
+                        [[aliceSession roomWithRoomId:event.roomId] state:^(MXRoomState *roomState) {
+                            
+                            MXPushRule *rule = [aliceSession.notificationCenter ruleMatchingEvent:event roomState:roomState];
 
-                        XCTAssert(rule, @"A push rule must be found for this event: %@", event);
+                            XCTAssert(rule, @"A push rule must be found for this event: %@", event);
 
-                        // Do the same test as in testDefaultDisplayNameCondition
-                        XCTAssertEqual(rule.kind, MXPushRuleKindOverride);
+                            // Do the same test as in testDefaultDisplayNameCondition
+                            XCTAssertEqual(rule.kind, MXPushRuleKindOverride);
 
-                        MXPushRuleCondition *condition = rule.conditions[0];
+                            MXPushRuleCondition *condition = rule.conditions[0];
 
-                        XCTAssertEqualObjects(condition.kind, kMXPushRuleConditionStringContainsDisplayName, @"The default content rule with contains_display_name condition must fire first");
-                        XCTAssertEqual(condition.kindType, MXPushRuleConditionTypeContainsDisplayName);
-                        
-                        [aliceSession close];
-                        [expectation fulfill];
+                            XCTAssertEqualObjects(condition.kind, kMXPushRuleConditionStringContainsDisplayName, @"The default content rule with contains_display_name condition must fire first");
+                            XCTAssertEqual(condition.kindType, MXPushRuleConditionTypeContainsDisplayName);
+
+                            [aliceSession close];
+                            [expectation fulfill];
+                        }];
                     }
                 }];
 

@@ -1,6 +1,7 @@
 /*
  Copyright 2014 OpenMarket Ltd
  Copyright 2017 Vector Creations Ltd
+ Copyright 2018 New Vector Ltd
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -18,6 +19,21 @@
 #import "MXMemoryStore.h"
 
 NS_ASSUME_NONNULL_BEGIN
+
+/**
+ Options for preloading data during the `[MXStore openWithCredentials:]` operation.
+ */
+typedef NS_OPTIONS(NSInteger, MXFileStorePreloadOptions)
+{
+    // Preload rooms summaries
+    MXFileStorePreloadOptionRoomSummary = 0x1,
+
+    // Preload rooms states
+    MXFileStorePreloadOptionRoomState = 0x2,
+
+    // Preload rooms account data
+    MXFileStorePreloadOptionRoomAccountData = 0x4
+};
 
 /**
  `MXFileStore` extends MXMemoryStore by adding permanent storage.
@@ -51,6 +67,7 @@ NS_ASSUME_NONNULL_BEGIN
                 L groupA
                 L groupB
                 L ...
+            L filters: Matrix filters
             L MXFileStore : Information about the stored data
             + backup : This folder contains backup of files that are modified during
                   the commit process. It is flushed when the commit completes.
@@ -85,6 +102,15 @@ NS_ASSUME_NONNULL_BEGIN
  @param block the block called when the operation completes.
  */
 - (void)diskUsageWithBlock:(void(^)(NSUInteger diskUsage))block;
+
+/**
+ Set the preload options for the file store.
+
+ These options are used in the `[MXStore openWithCredentials:]`.
+
+ @param preloadOptions bit flags of `MXFileStorePreloadOptions`.
+ */
++ (void)setPreloadOptions:(MXFileStorePreloadOptions)preloadOptions;
 
 #pragma mark - Async API
 
@@ -125,16 +151,6 @@ NS_ASSUME_NONNULL_BEGIN
  */
 - (void)asyncRoomsSummaries:(void (^)(NSArray<MXRoomSummary *> *roomsSummaries))success
                     failure:(nullable void (^)(NSError *error))failure;
-
-/**
- Get the stored room state for a specific room.
- @param roomId the Id of the room
- @param success A block object called when the operation succeeds.
- @param failure A block object called when the operation fails.
- */
-- (void)asyncStateEventsOfRoom:(NSString *)roomId
-                       success:(void (^)(NSArray<MXEvent *> * _Nonnull stateEvents))success
-                       failure:(nullable void (^)(NSError * _Nonnull error))failure;
 
 /**
  Get the stored account data for a specific room.

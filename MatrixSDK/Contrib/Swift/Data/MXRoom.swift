@@ -604,6 +604,39 @@ public extension MXRoom {
         return __reportEvent(eventId, score: score, reason: reason, success: currySuccess(completion), failure: curryFailure(completion))
     }
     
+    /**
+     Send a reply to an event with text message to the room.
+     
+     It's only supported to reply to event with 'm.room.message' event type and following message types: 'm.text', 'm.text', 'm.emote', 'm.notice', 'm.image', 'm.file', 'm.video', 'm.audio'.
+     
+     - parameters:
+        - eventToReply: The event to reply.
+        - textMessage: The text to send.
+        - formattedTextMessage: The optional HTML formatted string of the text to send.
+        - stringLocalizations: String localizations used when building reply message.
+        - localEcho: a pointer to an MXEvent object.
+
+             When the event type is `MXEventType.roomMessage`, this pointer is set to an actual
+             MXEvent object containing the local created event which should be used to echo the
+             message in the messages list until the resulting event comes through the server sync.
+             For information, the identifier of the created local event has the prefix:
+             `kMXEventLocalEventIdPrefix`.
+
+             You may specify nil for this parameter if you do not want this information.
+
+             You may provide your own MXEvent object, in this case only its send state is updated.
+
+             When the event type is `kMXEventTypeStringRoomEncrypted`, no local event is created.
+
+         - completion: A block object called when the operation completes.
+         - response: Provides the event id of the event generated on the home server on success
+
+         - returns: a `MXHTTPOperation` instance.
+     */
+    @nonobjc @discardableResult func sendReply(to eventToReply: MXEvent, textMessage: String, formattedTextMessage: String?, stringLocalizations: MXSendReplyEventStringsLocalizable?, localEcho: inout MXEvent?, completion: @escaping (_ response: MXResponse<String?>) -> Void) -> MXHTTPOperation {
+        return __sendReply(to: eventToReply, withTextMessage: textMessage, formattedTextMessage: formattedTextMessage, stringLocalizations: stringLocalizations, localEcho: &localEcho, success: currySuccess(completion), failure: curryFailure(completion))
+    }
+    
     
     // MARK: - Room Tags Operations
     

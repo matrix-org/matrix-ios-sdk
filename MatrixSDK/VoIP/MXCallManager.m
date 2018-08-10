@@ -1,5 +1,6 @@
 /*
  Copyright 2015 OpenMarket Ltd
+ Copyright 2018 New Vector Ltd
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -161,7 +162,7 @@ static NSString *const kMXCallManagerFallbackSTUNServer = @"stun:stun.l.google.c
     MXCall *theCall;
     for (MXCall *call in calls)
     {
-        if ([call.room.state.roomId isEqualToString:roomId])
+        if ([call.room.roomId isEqualToString:roomId])
         {
             theCall = call;
             break;
@@ -203,9 +204,9 @@ static NSString *const kMXCallManagerFallbackSTUNServer = @"stun:stun.l.google.c
     
     MXRoom *room = [_mxSession roomWithRoomId:roomId];
 
-    if (room && 1 < room.state.joinedMembers.count)
+    if (room && 1 < room.summary.membersCount.joined)
     {
-        if (2 == room.state.joinedMembers.count)
+        if (2 == room.summary.membersCount.joined)
         {
             // Do a peer to peer, one to one call
             MXCall *call = [[MXCall alloc] initWithRoomId:roomId andCallManager:self];
@@ -269,7 +270,7 @@ static NSString *const kMXCallManagerFallbackSTUNServer = @"stun:stun.l.google.c
     }
     else
     {
-        NSLog(@"[MXCallManager] placeCallInRoom: ERROR: Cannot place call in %@. Members count: %tu", roomId, room.state.joinedMembers.count);
+        NSLog(@"[MXCallManager] placeCallInRoom: ERROR: Cannot place call in %@. Members count: %tu", roomId, room.summary.membersCount.joined);
 
         if (failure)
         {
@@ -522,18 +523,18 @@ NSString *const kMXCallManagerConferenceUserDomain  = @"matrix.org";
     return isConferenceUser;
 }
 
-+ (BOOL)canPlaceConferenceCallInRoom:(MXRoom *)room
++ (BOOL)canPlaceConferenceCallInRoom:(MXRoom *)room roomState:(MXRoomState *)roomState
 {
     BOOL canPlaceConferenceCallInRoom = NO;
 
-    if (room.state.isOngoingConferenceCall)
+    if (roomState.isOngoingConferenceCall)
     {
         // All room members can join an existing conference call
         canPlaceConferenceCallInRoom = YES;
     }
     else
     {
-        MXRoomPowerLevels *powerLevels = room.state.powerLevels;
+        MXRoomPowerLevels *powerLevels = roomState.powerLevels;
         NSInteger oneSelfPowerLevel = [powerLevels powerLevelOfUserWithUserID:room.mxSession.myUser.userId];
 
         // Only member with invite power level can create a conference call
@@ -561,15 +562,17 @@ NSString *const kMXCallManagerConferenceUserDomain  = @"matrix.org";
 {
     NSString *conferenceUserId = [MXCallManager conferenceUserIdForRoom:room.roomId];
 
-    MXRoomMember *conferenceUserMember = [room.state memberWithUserId:conferenceUserId];
-    if (conferenceUserMember && conferenceUserMember.membership == MXMembershipJoin)
-    {
-        success();
-    }
-    else
-    {
-        [room inviteUser:conferenceUserId success:success failure:failure];
-    }
+    [room members:^(MXRoomMembers *roomMembers) {
+        MXRoomMember *conferenceUserMember = [roomMembers memberWithUserId:conferenceUserId];
+        if (conferenceUserMember && conferenceUserMember.membership == MXMembershipJoin)
+        {
+            success();
+        }
+        else
+        {
+            [room inviteUser:conferenceUserId success:success failure:failure];
+        }
+    } failure:failure];
 }
 
 /**
@@ -587,30 +590,47 @@ NSString *const kMXCallManagerConferenceUserDomain  = @"matrix.org";
     NSString *conferenceUserId = [MXCallManager conferenceUserIdForRoom:roomId];
 
     // Use an existing 1:1 with the conference user; else make one
-    MXRoom *conferenceUserRoom;
-    for (MXRoom *room in _mxSession.rooms)
+    __block MXRoom *conferenceUserRoom;
+
+    dispatch_group_t group = dispatch_group_create();
+    for (MXRoomSummary *roomSummary in _mxSession.roomsSummaries)
     {
-        if (room.state.members.count == 2 && [room.state memberWithUserId:conferenceUserId])
+        if (roomSummary.isConferenceUserRoom)
         {
-            conferenceUserRoom = room;
+            dispatch_group_enter(group);
+            MXRoom *room = [_mxSession roomWithRoomId:roomSummary.roomId];
+
+            [room state:^(MXRoomState *roomState) {
+                if ([roomState.members memberWithUserId:conferenceUserId])
+                {
+                    conferenceUserRoom = room;
+                }
+
+                dispatch_group_leave(group);
+            }];
         }
     }
 
-    if (conferenceUserRoom)
-    {
-        success(conferenceUserRoom);
-    }
-    else
-    {
-        [_mxSession createRoom:@{
-                                 @"preset": @"private_chat",
-                                 @"invite": @[conferenceUserId]
-                                } success:^(MXRoom *room) {
+    MXWeakify(self);
+    dispatch_group_notify(group, dispatch_get_main_queue(), ^{
+        MXStrongifyAndReturnIfNil(self);
 
-                                    success(room);
+        if (conferenceUserRoom)
+        {
+            success(conferenceUserRoom);
+        }
+        else
+        {
+            [self.mxSession createRoom:@{
+                                         @"preset": @"private_chat",
+                                         @"invite": @[conferenceUserId]
+                                         } success:^(MXRoom *room) {
 
-                                } failure:failure];
-    }
+                                             success(room);
+
+                                         } failure:failure];
+        }
+    });
 }
 
 @end

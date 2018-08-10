@@ -69,6 +69,11 @@
  */
 - (NSDictionary *)others;
 
+/**
+ The JSON string representating the filter.
+ */
+- (NSString *)jsonString;
+
 @end
 
 

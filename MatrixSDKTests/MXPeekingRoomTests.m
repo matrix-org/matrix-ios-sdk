@@ -73,11 +73,13 @@
                     XCTAssertEqual(mxSession.rooms.count, 0, @"MXPeekingRoom must not be listed by mxSession.rooms");
                     XCTAssertEqual(peekingRoom.roomId, room.roomId);
 
-                    XCTAssertEqual(peekingRoom.state.members.count, 1, @"The MXPeekingRoom state must be known now");
+                    [peekingRoom state:^(MXRoomState *roomState) {
+                        XCTAssertEqual(roomState.membersCount.members, 1, @"The MXPeekingRoom state must be known now");
 
-                    [mxSession stopPeeking:peekingRoom];
+                        [mxSession stopPeeking:peekingRoom];
 
-                    [expectation fulfill];
+                        [expectation fulfill];
+                    }];
 
                 } failure:^(NSError *error) {
                     XCTFail(@"The operation should not fail - NSError: %@", error);
@@ -127,18 +129,20 @@
         mxSession = mxSession2;
 
         XCTAssertEqual(mxSession.rooms.count, 1);
-        XCTAssertEqual(room.state.members.count, 1);
+        XCTAssertEqual(room.summary.membersCount.members, 1);
 
         [mxSession peekInRoomWithRoomId:room.roomId success:^(MXPeekingRoom *peekingRoom) {
 
             XCTAssertEqual(mxSession.rooms.count, 1, @"MXPeekingRoom must not be listed by mxSession.rooms");
             XCTAssertEqual(peekingRoom.roomId, room.roomId);
 
-            XCTAssertEqual(peekingRoom.state.members.count, 1, @"The MXPeekingRoom state must be known now");
+            [peekingRoom state:^(MXRoomState *roomState) {
+                XCTAssertEqual(roomState.membersCount.members, 1, @"The MXPeekingRoom state must be known now");
 
-            [mxSession stopPeeking:peekingRoom];
+                [mxSession stopPeeking:peekingRoom];
 
-            [expectation fulfill];
+                [expectation fulfill];
+            }];
 
         } failure:^(NSError *error) {
             XCTFail(@"The operation should not fail - NSError: %@", error);

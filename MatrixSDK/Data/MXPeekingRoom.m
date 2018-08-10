@@ -61,13 +61,21 @@
         }
         self->httpOperation = nil;
 
-        [self.liveTimeline initialiseState:roomInitialSync.state];
+        [self liveTimeline:^(MXEventTimeline *liveTimeline) {
+            [liveTimeline initialiseState:roomInitialSync.state];
 
-        // @TODO: start the events stream
+            // @TODO: start the events stream
 
-        onServerSyncDone();
+            onServerSyncDone();
+        }];
 
     } failure:failure];
+}
+
+- (MXRoomSummary *)summary
+{
+    NSLog(@"[MXPeekingRoom] Warning: MXPeekingRoom has no summary");
+    return nil;
 }
 
 - (void)close
@@ -76,8 +84,7 @@
     [httpOperation cancel];
     httpOperation = nil;
 
-    // Clean MXRoom
-    [self.liveTimeline removeAllListeners];
+    [super close];
 }
 
 - (void)pause

@@ -1,5 +1,6 @@
 /*
  Copyright 2017 Vector Creations Ltd
+ Copyright 2018 New Vector Ltd
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -36,7 +37,7 @@
     return self;
 }
 
-- (BOOL)isCondition:(MXPushRuleCondition*)condition satisfiedBy:(MXEvent*)event withJsonDict:(NSDictionary*)contentAsJsonDict
+- (BOOL)isCondition:(MXPushRuleCondition*)condition satisfiedBy:(MXEvent*)event  roomState:(MXRoomState*)roomState withJsonDict:(NSDictionary*)contentAsJsonDict
 {
     if (!event.eventId)
     {
@@ -53,7 +54,7 @@
         MXRoom *room = [mxSession roomWithRoomId:event.roomId];
         if (room)
         {
-            MXRoomPowerLevels *roomPowerLevels = room.state.powerLevels;
+            MXRoomPowerLevels *roomPowerLevels = roomState.powerLevels;
             NSInteger notifLevel = [roomPowerLevels minimumPowerLevelForNotifications:notifLevelKey defaultPower:50];
             NSInteger senderPowerLevel = [roomPowerLevels powerLevelOfUserWithUserID:event.sender];
 

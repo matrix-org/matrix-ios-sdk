@@ -1,7 +1,7 @@
 Pod::Spec.new do |s|
 
   s.name         = "MatrixSDK"
-  s.version      = "0.10.12"
+  s.version      = "0.11.0"
   s.summary      = "The iOS SDK to build apps compatible with Matrix (https://www.matrix.org)"
 
   s.description  = <<-DESC
@@ -17,7 +17,7 @@ Pod::Spec.new do |s|
   s.author             = { "matrix.org" => "support@matrix.org" }
   s.social_media_url   = "http://twitter.com/matrixdotorg"
 
-  s.source       = { :git => "https://github.com/matrix-org/matrix-ios-sdk.git", :tag => "v0.10.12" }
+  s.source       = { :git => "https://github.com/matrix-org/matrix-ios-sdk.git", :tag => "v#{s.version}" }
   
   s.requires_arc  = true
   
@@ -35,8 +35,8 @@ Pod::Spec.new do |s|
       ss.dependency 'GZIP', '~> 1.2.1'
 
       # Requirements for e2e encryption
-      ss.dependency 'OLMKit', '~> 2.2.2'
-      ss.dependency 'Realm', '~> 3.6.0'
+      ss.dependency 'OLMKit', '~> 2.3.0'
+      ss.dependency 'Realm', '~> 3.7.4'
   end
 
   s.subspec 'JingleCallStack' do |ss|
@@ -63,6 +63,12 @@ Pod::Spec.new do |s|
     ss.dependency 'MatrixSDK/Core'
     
     ss.ios.dependency 'GoogleAnalytics' 
+  end
+
+  s.subspec 'SwiftSupport' do |ss|    
+    ss.source_files = "MatrixSDK", "MatrixSDK/**/*.{swift}"
+    
+    ss.dependency 'MatrixSDK/Core'      
   end
 
 end

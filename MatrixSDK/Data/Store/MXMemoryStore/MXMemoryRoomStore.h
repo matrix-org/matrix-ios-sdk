@@ -70,6 +70,11 @@
 @property (nonatomic) BOOL hasReachedHomeServerPaginationEnd;
 
 /**
+ The flag indicating that the SDK has retrieved all room members.
+ */
+@property (nonatomic) BOOL hasLoadedAllRoomMembersForRoom;
+
+/**
  Reset the current messages array.
  */
 - (void)removeAllMessages;

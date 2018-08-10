@@ -1,3 +1,37 @@
+Changes in Matrix iOS SDK in 0.11.0 (2018-08-10)
+===============================================
+
+Improvements:
+* MXSession: Add the option to use a Matrix filter in /sync requests ([MXSession startWithSyncFilter:]).
+* MXSession: Add API to manage Matrix filters.
+* MXRestClient: Add Matrix filter API.
+* MXRoom: Add send reply with text message (vector-im/riot-ios#1911).
+* MXRoom: Add an asynchronous methods for liveTimeline, state and members.
+* MXRoom: Add methods to manage the room liveTimeline listeners synchronously.
+* MXRoomState: Add a membersCount property to store members stats independently from MXRoomMember objects.
+* MXRoomSummary: Add a membersCount property to cache MXRoomState one.
+* MXRoomSummary: Add a membership property to cache MXRoomState one.
+* MXRoomSummary: add isConferenceUserRoom.
+* MXStore: Add Obj-C annotations.
+* MXFileStore: Add a setting to set which data to preload ([MXFileStore setPreloadOptions:]).
+* Manage the new summary API from the homeserver( MSC: https://docs.google.com/document/d/11i14UI1cUz-OJ0knD5BFu7fmT6Fo327zvMYqfSAR7xs/edit#).
+* MXRoom: Add send reply with text message (vector-im/riot-ios#1911).
+* Support room versioning (vector-im/riot-ios#1938).
+* Add SwiftSupport subspec to MatrixSDK in order to be able to expose Swift refinements to a project using both Swift and Objective-C.
+
+Bug fix:
+* MXRestClient: Fix filter parameter in messagesForRoom. It must be sent as an inline JSON string.
+* Sends read receipts on login (vector-im/riot-ios/issues/1918).
+
+API break:
+* MXSession: [MXSession startWithMessagesLimit] has been removed. Use the more generic [MXSession startWithSyncFilter:].
+* MXRoom: liveTimeline and state accesses are now asynchronous.
+* MXCall: callee access is now asynchronous.
+* MXRoomState: Remove displayName property. Use MXRoomSummary.displayName instead.
+* MXRoomState: Create a MXRoomMembers property. All members getter methods has been to the new class.
+* MXStore: Make the stateOfRoom method asynchronous.
+* MXRestClient: contextOfEvent: Add a filter parameter.
+
 Changes in Matrix iOS SDK in 0.10.12 (2018-05-31)
 =============================================== 
 

@@ -110,10 +110,12 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
 
 - (void)initialiseState:(NSArray<MXEvent *> *)stateEvents
 {
-    for (MXEvent *event in stateEvents)
-    {
-        [self handleStateEvent:event direction:MXTimelineDirectionForwards];
-    }
+    [self handleStateEvents:stateEvents direction:MXTimelineDirectionForwards];
+}
+
+- (void)setState:(MXRoomState *)roomState
+{
+    _state = roomState;
 }
 
 - (void)destroy
@@ -188,9 +190,16 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
     forwardsPaginationToken = nil;
     hasReachedHomeServerForwardsPaginationEnd = NO;
 
+    MXRoomEventFilter *filter;
+    if (room.mxSession.syncWithLazyLoadOfRoomMembers)
+    {
+        filter = [MXRoomEventFilter new];
+        filter.lazyLoadMembers = YES;
+    }
+
     // Get the context around the initial event
     MXWeakify(self);
-    return [room.mxSession.matrixRestClient contextOfEvent:_initialEventId inRoom:room.roomId limit:limit success:^(MXEventContext *eventContext) {
+    return [room.mxSession.matrixRestClient contextOfEvent:_initialEventId inRoom:room.roomId limit:limit filter:filter success:^(MXEventContext *eventContext) {
         MXStrongifyAndReturnIfNil(self);
 
         // And fill the timelime with received data
@@ -302,6 +311,18 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
         paginationToken = forwardsPaginationToken;
     }
 
+
+    // If the event stream runs with lazy loading, the timeline must do the same
+    if (room.mxSession.syncWithLazyLoadOfRoomMembers)
+    {
+        if (!_roomEventFilter)
+        {
+            _roomEventFilter = [MXRoomEventFilter new];
+        }
+
+        _roomEventFilter.lazyLoadMembers = YES;
+    }
+
     NSLog(@"[MXEventTimeline] paginate : request %tu messages from the server", numItems);
 
     MXWeakify(self);
@@ -365,14 +386,21 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
 - (void)handleJoinedRoomSync:(MXRoomSync *)roomSync
 {
     // Is it an initial sync for this room?
-    BOOL isRoomInitialSync = (self.state.membership == MXMembershipUnknown || self.state.membership == MXMembershipInvite);
+    BOOL isRoomInitialSync = (room.summary.membership == MXMembershipUnknown || room.summary.membership == MXMembershipInvite);
 
     // Check whether the room was pending on an invitation.
-    if (self.state.membership == MXMembershipInvite)
+    if (room.summary.membership == MXMembershipInvite)
     {
         // Reset the storage of this room. An initial sync of the room will be done with the provided 'roomSync'.
         NSLog(@"[MXEventTimeline] handleJoinedRoomSync: clean invited room from the store (%@).", self.state.roomId);
         [store deleteRoom:self.state.roomId];
+    }
+
+    // In case of lazy-loading, we may not have the membership event for our user.
+    // If handleJoinedRoomSync is called, the user is a joined member.
+    if (room.mxSession.syncWithLazyLoadOfRoomMembers && room.summary.membership != MXMembershipJoin)
+    {
+        room.summary.membership = MXMembershipJoin;
     }
 
     // Build/Update first the room state corresponding to the 'start' of the timeline.
@@ -381,15 +409,9 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
     {
         // Report the room id in the event as it is skipped in /sync response
         event.roomId = _state.roomId;
-
-        [self handleStateEvent:event direction:MXTimelineDirectionForwards];
     }
 
-    // Update store with new room state when all state event have been processed
-    if ([store respondsToSelector:@selector(storeStateForRoom:stateEvents:)])
-    {
-        [store storeStateForRoom:_state.roomId stateEvents:_state.stateEvents];
-    }
+    [self handleStateEvents:roomSync.state.events direction:MXTimelineDirectionForwards];
 
     // Handle now timeline.events, the room state is updated during this step too (Note: timeline events are in chronological order)
     if (isRoomInitialSync)
@@ -437,9 +459,6 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
     // Finalize initial sync
     if (isRoomInitialSync)
     {
-        // Initialise notification counters homeserver side
-        [room markAllAsRead];
-
         // Notify that room has been sync'ed
         // Delay it so that MXRoom.summary is computed before sending it
         dispatch_async(dispatch_get_main_queue(), ^{
@@ -460,6 +479,13 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
 
 - (void)handleInvitedRoomSync:(MXInvitedRoomSync *)invitedRoomSync
 {
+    // In case of lazy-loading, we may not have the membership event for our user.
+    // If handleInvitedRoomSync is called, the user is an invited member.
+    if (room.mxSession.syncWithLazyLoadOfRoomMembers && room.summary.membership != MXMembershipInvite)
+    {
+        room.summary.membership = MXMembershipInvite;
+    }
+
     // Handle the state events forwardly (the room state will be updated, and the listeners (if any) will be notified).
     for (MXEvent *event in invitedRoomSync.inviteState.events)
     {
@@ -476,6 +502,11 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
     }
 }
 
+- (void)handleLazyLoadedStateEvents:(NSArray<MXEvent *> *)stateEvents
+{
+    [self handleStateEvents:stateEvents direction:MXTimelineDirectionForwards];
+}
+
 - (void)handlePaginationResponse:(MXPaginationResponse*)paginatedResponse direction:(MXTimelineDirection)direction
 {
     // Check pagination end - @see SPEC-319 ticket
@@ -490,6 +521,19 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
         {
             hasReachedHomeServerForwardsPaginationEnd = YES;
         }
+    }
+
+    // Process additional state events (this happens in case of lazy loading)
+    if (paginatedResponse.state.count)
+    {
+        if (direction == MXTimelineDirectionBackwards)
+        {
+            // Enrich the timeline root state with the additional state events observed during back pagination
+            [self handleStateEvents:paginatedResponse.state direction:MXTimelineDirectionForwards];
+        }
+
+        // Enrich intermediate room state while paginating
+        [self handleStateEvents:paginatedResponse.state  direction:direction];
     }
 
     // Process received events
@@ -540,13 +584,7 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
     {
         [self cloneState:direction];
 
-        [self handleStateEvent:event direction:direction];
-
-        // The store keeps only the most recent state of the room
-        if (direction == MXTimelineDirectionForwards && [store respondsToSelector:@selector(storeStateForRoom:stateEvents:)])
-        {
-            [store storeStateForRoom:_state.roomId stateEvents:_state.stateEvents];
-        }
+        [self handleStateEvents:@[event] direction:direction];
     }
 
     // Decrypt event if necessary
@@ -623,12 +661,6 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
                 // Reset the room state.
                 _state = [[MXRoomState alloc] initWithRoomId:room.roomId andMatrixSession:room.mxSession andDirection:YES];
                 [self initialiseState:stateEvents];
-                
-                // Update store with new room state when all state event have been processed
-                if ([store respondsToSelector:@selector(storeStateForRoom:stateEvents:)])
-                {
-                    [store storeStateForRoom:_state.roomId stateEvents:_state.stateEvents];
-                }
                 
                 // Reset the current pagination
                 [self resetPagination];
@@ -711,31 +743,26 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
     }
 }
 
-- (void)handleStateEvent:(MXEvent*)event direction:(MXTimelineDirection)direction
+- (void)handleStateEvents:(NSArray<MXEvent *> *)stateEvents direction:(MXTimelineDirection)direction
 {
     // Update the room state
     if (MXTimelineDirectionBackwards == direction)
     {
-        [backState handleStateEvent:event];
+        [backState handleStateEvents:stateEvents];
     }
     else
     {
         // Forwards events update the current state of the room
-        [_state handleStateEvent:event];
+        [_state handleStateEvents:stateEvents];
 
-        // Special handling for presence: update MXUser data in case of membership event.
-        // CAUTION: ignore here redacted state event, the redaction concerns only the context of the event room.
-        if (_isLiveTimeline && MXEventTypeRoomMember == event.eventType && !event.isRedactedEvent)
+        // Update summary with this state events update
+        [room.summary handleStateEvents:stateEvents];
+
+        if (!room.mxSession.syncWithLazyLoadOfRoomMembers && ![store hasLoadedAllRoomMembersForRoom:room.roomId])
         {
-            MXUser *user = [room.mxSession getOrCreateUser:event.sender];
-
-            MXRoomMember *roomMember = [_state memberWithUserId:event.sender];
-            if (roomMember && MXMembershipJoin == roomMember.membership)
-            {
-                [user updateWithRoomMemberEvent:event roomMember:roomMember inMatrixSession:room.mxSession];
-
-                [room.mxSession.store storeUser:user];
-            }
+            // If there is no lazy loading of room members, consider we have fetched
+            // all of them
+            [store storeHasLoadedAllRoomMembersForRoom:room.roomId andValue:YES];
         }
     }
 }

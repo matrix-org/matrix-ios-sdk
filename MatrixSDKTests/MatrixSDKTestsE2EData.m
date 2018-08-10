@@ -170,12 +170,15 @@
 
         __block NSUInteger messagesCount = 0;
 
-        [roomFromBobPOV.liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
-            if (++messagesCount == 5)
-            {
-                readyToTest(aliceSession, bobSession, roomId, expectation);
-            }
+        [roomFromBobPOV liveTimeline:^(MXEventTimeline *liveTimeline) {
+            [liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
+                if (++messagesCount == 5)
+                {
+                    readyToTest(aliceSession, bobSession, roomId, expectation);
+                }
+            }];
         }];
+
 
         // Send messages in expected order
         [roomFromAlicePOV sendTextMessage:messagesFromAlice[0] success:^(NSString *eventId) {

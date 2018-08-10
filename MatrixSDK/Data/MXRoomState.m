@@ -33,11 +33,6 @@
     NSMutableDictionary<NSString*, NSMutableArray<MXEvent*>*> *stateEvents;
 
     /**
-     Members ordered by userId.
-     */
-    NSMutableDictionary<NSString*, MXRoomMember*> *members;
-    
-    /**
      The room aliases. The key is the domain.
      */
     NSMutableDictionary<NSString*, MXEvent*> *roomAliases;
@@ -48,21 +43,9 @@
     NSMutableDictionary<NSString*, MXRoomThirdPartyInvite*> *thirdPartyInvites;
     
     /**
-     Additional and optional metadata got from initialSync
-     */
-    MXMembership membership;
-    
-    /**
      Maximum power level observed in power level list
      */
     NSInteger maxPowerLevel;
-
-    /**
-     Track the usage of members displaynames in order to disambiguate them if necessary,
-     ie if the same displayname is used by several users, we have to update their displaynames.
-     displayname -> count (= how many members of the room uses this displayname)
-     */
-    NSMutableDictionary<NSString*, NSNumber*> *membersNamesInUse;
 
     /**
      Cache for [self memberWithThirdPartyInviteToken].
@@ -93,10 +76,10 @@
         _isLive = isLive;
         
         stateEvents = [NSMutableDictionary dictionary];
-        members = [NSMutableDictionary dictionary];
+        _members = [[MXRoomMembers alloc] initWithRoomState:self andMatrixSession:mxSession];
+        _membersCount = [MXRoomMembersCount new];
         roomAliases = [NSMutableDictionary dictionary];
         thirdPartyInvites = [NSMutableDictionary dictionary];
-        membersNamesInUse = [NSMutableDictionary dictionary];
         membersWithThirdPartyInviteTokenCache = [NSMutableDictionary dictionary];
     }
     return self;
@@ -115,11 +98,27 @@
         {
             if (initialSync.membership)
             {
-                membership = [MXTools membership:initialSync.membership];
+                _membership = [MXTools membership:initialSync.membership];
             }
         }
     }
     return self;
+}
+
++ (void)loadRoomStateFromStore:(id<MXStore>)store
+                  withRoomId:(NSString *)roomId
+               matrixSession:(MXSession *)matrixSession
+                  onComplete:(void (^)(MXRoomState *roomState))onComplete
+{
+    MXRoomState *roomState = [[MXRoomState alloc] initWithRoomId:roomId andMatrixSession:matrixSession andDirection:YES];
+    if (roomState)
+    {
+        [store stateOfRoom:roomId success:^(NSArray<MXEvent *> * _Nonnull stateEvents) {
+            [roomState handleStateEvents:stateEvents];
+
+            onComplete(roomState);
+        } failure:nil];
+    }
 }
 
 - (id)initBackStateWith:(MXRoomState*)state
@@ -172,7 +171,7 @@
     }
 
     // Members are also state events
-    for (MXRoomMember *roomMember in self.members)
+    for (MXRoomMember *roomMember in self.members.members)
     {
         [state addObject:roomMember.originalEvent];
     }
@@ -190,16 +189,6 @@
     }
 
     return state;
-}
-
-- (NSArray<MXRoomMember *> *)members
-{
-    return [members allValues];
-}
-
-- (NSArray<MXRoomMember *> *)joinedMembers
-{
-    return [self membersWithMembership:MXMembershipJoin];
 }
 
 - (NSArray<MXRoomThirdPartyInvite *> *)thirdPartyInvites
@@ -343,145 +332,6 @@
     return guestAccess;
 }
 
-- (NSString *)displayname
-{
-    // Reuse the Synapse web client algo
-    
-    NSString *displayname = self.name;
-    
-    // Check for alias (consider first canonical alias).
-    NSString *alias = self.canonicalAlias;
-    if (!alias)
-    {
-        // For rooms where canonical alias is not defined, we use the 1st alias as a workaround
-        NSArray<NSString *> *aliases = self.aliases;
-        
-        if (aliases.count)
-        {
-            alias = [aliases[0] copy];
-        }
-    }
-    
-    // Compute a name if none
-    if (!displayname)
-    {
-        // use alias (if any)
-        if (alias)
-        {
-            displayname = alias;
-        }
-        // use members
-        else if (members.count > 0)
-        {
-            if (members.count >= 3)
-            {
-                // this is a group chat and should have the names of participants
-                // according to "(<num> <name1>, <name2>, <name3> ..."
-                NSMutableString* roomName = [[NSMutableString alloc] init];
-                int count = 0;
-                
-                for (NSString *memberUserId in members.allKeys)
-                {
-                    if (NO == [memberUserId isEqualToString:mxSession.matrixRestClient.credentials.userId])
-                    {
-                        MXRoomMember *member = [self memberWithUserId:memberUserId];
-                        
-                        // only manage the invited an joined users
-                        if ((member.membership == MXMembershipInvite) || (member.membership == MXMembershipJoin))
-                        {
-                            // some participants are already added
-                            if (roomName.length != 0)
-                            {
-                                // add a separator
-                                [roomName appendString:@", "];
-                            }
-                            
-                            NSString* username = [self memberSortedName:memberUserId];
-                            
-                            if (username.length == 0)
-                            {
-                                [roomName appendString:memberUserId];
-                            }
-                            else
-                            {
-                                [roomName appendString:username];
-                            }
-                            count++;
-                        }
-                    }
-                }
-                
-                displayname = [NSString stringWithFormat:@"(%d) %@",count, roomName];
-            }
-            else if (members.count == 2)
-            {
-                // this is a "one to one" room and should have the name of other user
-                
-                for (NSString *memberUserId in members.allKeys)
-                {
-                    if (NO == [memberUserId isEqualToString:mxSession.matrixRestClient.credentials.userId])
-                    {
-                        displayname = [self memberName:memberUserId];
-                        break;
-                    }
-                }
-            }
-            else if (members.count == 1)
-            {
-                // this could be just us (self-chat) or could be the other person
-                // in a room if they have invited us to the room. Find out which
-                
-                NSString *otherUserId;
-                
-                MXRoomMember *member = members.allValues[0];
-                
-                if ([mxSession.matrixRestClient.credentials.userId isEqualToString:member.userId])
-                {
-                    // It is an invite or a self chat
-                    otherUserId = member.originUserId;
-                }
-                else
-                {
-                    // XXX: Not sure how it can happen
-                    // The logged-in user should be always in the list of the room members
-                    otherUserId = member.userId;
-                }
-                displayname = [self memberName:otherUserId];
-            }
-        }
-    }
-    else if (([displayname hasPrefix:@"#"] == NO) && alias)
-    {
-        // Always show the alias in the room displayed name
-        displayname = [NSString stringWithFormat:@"%@ (%@)", displayname, alias];
-    }
-    
-    if (!displayname)
-    {
-        displayname = [_roomId copy];
-    }
-    
-    return displayname;
-}
-
-- (MXMembership)membership
-{
-    MXMembership result;
-    
-    // Find the current value in room state events
-    MXRoomMember *user = [self memberWithUserId:mxSession.matrixRestClient.credentials.userId];
-    if (user)
-    {
-        result = user.membership;
-    }
-    else
-    {
-        result = membership;
-    }
-    
-    return result;
-}
-
 - (BOOL)isEncrypted
 {
     return (0 != self.encryptionAlgorithm.length);
@@ -492,164 +342,151 @@
     return stateEvents[kMXEventTypeStringRoomEncryption].lastObject.content[@"algorithm"];
 }
 
+- (BOOL)isObsolete
+{
+    return self.tombStoneContent != nil;
+}
+
+- (MXRoomTombStoneContent*)tombStoneContent
+{
+    MXRoomTombStoneContent *roomTombStoneContent = nil;
+    
+    // Check it from the state events
+    MXEvent *event = stateEvents[kMXEventTypeStringRoomTombStone].lastObject;
+    NSDictionary *eventContent = [self contentOfEvent:event];
+    if (eventContent)
+    {
+        roomTombStoneContent = [MXRoomTombStoneContent modelFromJSON:eventContent];
+    }
+    
+    return roomTombStoneContent;
+}
 
 #pragma mark - State events handling
-- (void)handleStateEvent:(MXEvent*)event
+- (void)handleStateEvents:(NSArray<MXEvent *> *)events;
 {
-    switch (event.eventType)
+    // Process the update on room members
+    if ([_members handleStateEvents:events])
     {
-        case MXEventTypeRoomMember:
+        // Update counters for currently known room members
+        _membersCount.members = _members.members.count;
+        _membersCount.joined = _members.joinedMembers.count;
+        _membersCount.invited =  [_members membersWithMembership:MXMembershipInvite].count;
+    }
+
+    @autoreleasepool
+    {
+        for (MXEvent *event in events)
         {
-            // Remove the previous MXRoomMember of this user from membersNamesInUse
-            NSString *userId = event.stateKey;
-            MXRoomMember *oldRoomMember = members[userId];
-            if (oldRoomMember && oldRoomMember.displayname)
+            switch (event.eventType)
             {
-                NSNumber *memberNameCount = membersNamesInUse[oldRoomMember.displayname];
-                if (memberNameCount)
+                case MXEventTypeRoomMember:
                 {
-                    NSUInteger count = [memberNameCount unsignedIntegerValue];
-                    if (count)
+                    // User in this membership event
+                    NSString *userId = event.stateKey ? event.stateKey : event.sender;
+
+                    NSDictionary *content = [self contentOfEvent:event];
+
+                    // Compute my user membership indepently from MXRoomMembers
+                    if ([userId isEqualToString:mxSession.myUser.userId])
                     {
-                        count--;
+                        MXRoomMember *roomMember = [[MXRoomMember alloc] initWithMXEvent:event andEventContent:content];
+                        _membership = roomMember.membership;
                     }
 
-                    if (count)
+                    if (content[@"third_party_invite"][@"signed"][@"token"])
                     {
-                        membersNamesInUse[oldRoomMember.displayname] = @(count);
+                        // Cache room member event that is successor of a third party invite event
+                        MXRoomMember *roomMember = [[MXRoomMember alloc] initWithMXEvent:event andEventContent:content];
+                        membersWithThirdPartyInviteTokenCache[roomMember.thirdPartyInviteToken] = roomMember;
+                    }
+
+                    // In case of invite, process the provided but incomplete room state
+                    if (self.membership == MXMembershipInvite && event.inviteRoomState)
+                    {
+                        [self handleStateEvents:event.inviteRoomState];
+                    }
+                    else if (_isLive && self.membership == MXMembershipJoin && _membersCount.members > 2)
+                    {
+                        if ([userId isEqualToString:self.conferenceUserId])
+                        {
+                            // Forward the change of the conference user membership to the call manager
+                            MXRoomMember *roomMember = [[MXRoomMember alloc] initWithMXEvent:event andEventContent:content];
+                            [mxSession.callManager handleConferenceUserUpdate:roomMember inRoom:_roomId];
+                        }
+                    }
+
+                    break;
+                }
+                case MXEventTypeRoomThirdPartyInvite:
+                {
+                    // The content and the prev_content of a m.room.third_party_invite event are the same.
+                    // So, use isLive to know if the invite must be added or removed (case of back state).
+                    if (_isLive)
+                    {
+                        MXRoomThirdPartyInvite *thirdPartyInvite = [[MXRoomThirdPartyInvite alloc] initWithMXEvent:event];
+                        if (thirdPartyInvite)
+                        {
+                            thirdPartyInvites[thirdPartyInvite.token] = thirdPartyInvite;
+                        }
                     }
                     else
                     {
-                        [membersNamesInUse removeObjectForKey:oldRoomMember.displayname];
+                        // Note: the 3pid invite token is stored in the event state key
+                        [thirdPartyInvites removeObjectForKey:event.stateKey];
                     }
+                    break;
                 }
-            }
-
-            MXRoomMember *roomMember = [[MXRoomMember alloc] initWithMXEvent:event andEventContent:[self contentOfEvent:event]];
-            if (roomMember)
-            {
-                /// Update membersNamesInUse
-                if (roomMember.displayname)
+                case MXEventTypeRoomAliases:
                 {
-                    NSUInteger count = 1;
-
-                    NSNumber *memberNameCount = membersNamesInUse[roomMember.displayname];
-                    if (memberNameCount)
+                    // Sanity check
+                    if (event.stateKey.length)
                     {
-                        // We have several users using the same displayname
-                        count = [memberNameCount unsignedIntegerValue];
-                        count++;
+                        // Store the bunch of aliases for the domain (which is the state_key)
+                        roomAliases[event.stateKey] = event;
+                    }
+                    break;
+                }
+                case MXEventTypeRoomPowerLevels:
+                {
+                    powerLevels = [MXRoomPowerLevels modelFromJSON:[self contentOfEvent:event]];
+                    // Compute max power level
+                    maxPowerLevel = powerLevels.usersDefault;
+                    NSArray<NSNumber *> *array = powerLevels.users.allValues;
+                    for (NSNumber *powerLevel in array)
+                    {
+                        NSInteger level = 0;
+                        MXJSONModelSetInteger(level, powerLevel);
+                        if (level > maxPowerLevel)
+                        {
+                            maxPowerLevel = level;
+                        }
                     }
 
-                    membersNamesInUse[roomMember.displayname] = @(count);
+                    // Do not break here to store the event into the stateEvents dictionary.
                 }
-
-                members[roomMember.userId] = roomMember;
-
-                // Handle here the case where the member has no defined avatar.
-                if (nil == roomMember.avatarUrl && ![MXSDKOptions sharedInstance].disableIdenticonUseForUserAvatar)
-                {
-                    // Force to use an identicon url
-                    roomMember.avatarUrl = [mxSession.matrixRestClient urlOfIdenticon:roomMember.userId];
-                }
-
-                // Cache room member event that is successor of a third party invite event
-                if (roomMember.thirdPartyInviteToken)
-                {
-                    membersWithThirdPartyInviteTokenCache[roomMember.thirdPartyInviteToken] = roomMember;
-                }
+                default:
+                    // Store other states into the stateEvents dictionary.
+                    if (!stateEvents[event.type])
+                    {
+                        stateEvents[event.type] = [NSMutableArray array];
+                    }
+                    [stateEvents[event.type] addObject:event];
+                    break;
             }
-            else
-            {
-                // The user is no more part of the room. Remove him.
-                // This case happens during back pagination: we remove here users when they are not in the room yet.
-                [members removeObjectForKey:event.stateKey];
-            }
-
-            // In case of invite, process the provided but incomplete room state
-            if (self.membership == MXMembershipInvite && event.inviteRoomState)
-            {
-                for (MXEvent *inviteRoomStateEvent in event.inviteRoomState)
-                {
-                    [self handleStateEvent:inviteRoomStateEvent];
-                }
-            }
-            else if (_isLive && self.membership == MXMembershipJoin && members.count > 2 && [roomMember.userId isEqualToString:self.conferenceUserId])
-            {
-                // Forward the change of the conference user membership to the call manager
-                [mxSession.callManager handleConferenceUserUpdate:roomMember inRoom:_roomId];
-            }
-
-            break;
         }
-        case MXEventTypeRoomThirdPartyInvite:
-        {
-            // The content and the prev_content of a m.room.third_party_invite event are the same.
-            // So, use isLive to know if the invite must be added or removed (case of back state).
-            if (_isLive)
-            {
-                MXRoomThirdPartyInvite *thirdPartyInvite = [[MXRoomThirdPartyInvite alloc] initWithMXEvent:event];
-                if (thirdPartyInvite)
-                {
-                    thirdPartyInvites[thirdPartyInvite.token] = thirdPartyInvite;
-                }
-            }
-            else
-            {
-                // Note: the 3pid invite token is stored in the event state key
-                [thirdPartyInvites removeObjectForKey:event.stateKey];
-            }
-            break;
-        }
-        case MXEventTypeRoomAliases:
-        {
-            // Sanity check
-            if (event.stateKey.length)
-            {
-                // Store the bunch of aliases for the domain (which is the state_key)
-                roomAliases[event.stateKey] = event;
-            }
-            break;
-        }
-        case MXEventTypeRoomPowerLevels:
-        {
-            powerLevels = [MXRoomPowerLevels modelFromJSON:[self contentOfEvent:event]];
-            // Compute max power level
-            maxPowerLevel = powerLevels.usersDefault;
-            NSArray<NSNumber *> *array = powerLevels.users.allValues;
-            for (NSNumber *powerLevel in array)
-            {
-                NSInteger level = 0;
-                MXJSONModelSetInteger(level, powerLevel);
-                if (level > maxPowerLevel)
-                {
-                    maxPowerLevel = level;
-                }
-            }
-            
-            // Do not break here to store the event into the stateEvents dictionary.
-        }
-        default:
-            // Store other states into the stateEvents dictionary.
-            if (!stateEvents[event.type])
-            {
-                stateEvents[event.type] = [NSMutableArray array];
-            }
-            [stateEvents[event.type] addObject:event];
-            break;
+    }
+
+    // Update store with new room state when all state event have been processed
+    if (_isLive && [mxSession.store respondsToSelector:@selector(storeStateForRoom:stateEvents:)])
+    {
+        [mxSession.store storeStateForRoom:_roomId stateEvents:self.stateEvents];
     }
 }
 
 - (NSArray<MXEvent*> *)stateEventsWithType:(MXEventTypeString)eventType
 {
     return stateEvents[eventType];
-}
-
-
-#pragma mark - Memberships
-- (MXRoomMember*)memberWithUserId:(NSString *)userId
-{
-    return members[userId];
 }
 
 - (MXRoomMember *)memberWithThirdPartyInviteToken:(NSString *)thirdPartyInviteToken
@@ -662,65 +499,14 @@
     return thirdPartyInvites[thirdPartyInviteToken];
 }
 
-- (NSString*)memberName:(NSString*)userId
-{
-    // Sanity check (ignore the request if the room state is not initialized yet)
-    if (!userId.length || !membersNamesInUse)
-    {
-        return nil;
-    }
-
-    NSString *displayName;
-
-    // Get the user display name from the member list of the room
-    MXRoomMember *member = [self memberWithUserId:userId];
-    if (member && member.displayname.length)
-    {
-        displayName = member.displayname;
-    }
-
-    if (displayName)
-    {
-        // Do we need to disambiguate it?
-        NSNumber *memberNameCount = membersNamesInUse[displayName];
-        if (memberNameCount && [memberNameCount unsignedIntegerValue] > 1)
-        {
-            // There are more than one member that uses the same displayname, so, yes, disambiguate it
-            displayName = [NSString stringWithFormat:@"%@ (%@)", displayName, userId];
-        }
-    }
-    else
-    {
-        // By default, use the user ID
-        displayName = userId;
-    }
-
-    return displayName;
-}
-
-- (NSString*)memberSortedName:(NSString*)userId
-{
-    // Get the user display name from the member list of the room
-    MXRoomMember *member = [self memberWithUserId:userId];
-    NSString *displayName = member.displayname;
-    
-    // Do not disambiguate here members who have the same displayname in the room (see memberName:).
-    
-    if (!displayName)
-    {
-        // By default, use the user ID
-        displayName = userId;
-    }
-    
-    return displayName;
-}
-
 - (float)memberNormalizedPowerLevel:(NSString*)userId
 {
     float powerLevel = 0;
     
-    // Get the user display name from the member list of the room
-    MXRoomMember *member = [self memberWithUserId:userId];
+    // Get the user from the member list of the room
+    // If the app asks for information about a user id, it means that we already
+    // have the MXRoomMember data
+    MXRoomMember *member = [self.members memberWithUserId:userId];
     
     // Ignore banned and left (kicked) members
     if (member.membership != MXMembershipLeave && member.membership != MXMembershipBan)
@@ -732,26 +518,12 @@
     return powerLevel;
 }
 
-- (NSArray<MXRoomMember*>*)membersWithMembership:(MXMembership)theMembership
-{
-    NSMutableArray *membersWithMembership = [NSMutableArray array];
-    for (MXRoomMember *roomMember in members.allValues)
-    {
-        if (roomMember.membership == theMembership)
-        {
-            [membersWithMembership addObject:roomMember];
-        }
-    }
-    return membersWithMembership;
-}
-
-
 # pragma mark - Conference call
 - (BOOL)isOngoingConferenceCall
 {
     BOOL isOngoingConferenceCall = NO;
 
-    MXRoomMember *conferenceUserMember = [self memberWithUserId:self.conferenceUserId];
+    MXRoomMember *conferenceUserMember = [self.members memberWithUserId:self.conferenceUserId];
     if (conferenceUserMember)
     {
         isOngoingConferenceCall = (conferenceUserMember.membership == MXMembershipJoin);
@@ -765,16 +537,9 @@
     BOOL isConferenceUserRoom = NO;
 
     // A conference user room is a 1:1 room with a conference user
-    if (members.count == 2)
+    if (_membersCount.members == 2 && [self.members memberWithUserId:self.conferenceUserId])
     {
-        for (NSString *memberUserId in members)
-        {
-            if ([MXCallManager isConferenceUser:memberUserId])
-            {
-                isConferenceUserRoom = YES;
-                break;
-            }
-        }
+        isConferenceUserRoom = YES;
     }
 
     return isConferenceUserRoom;
@@ -788,68 +553,6 @@
     }
     return conferenceUserId;
 }
-
-- (NSArray<MXRoomMember *> *)membersWithoutConferenceUser
-{
-    NSArray<MXRoomMember *> *membersWithoutConferenceUser;
-
-    if (self.isConferenceUserRoom)
-    {
-        // Show everyone in a 1:1 room with a conference user
-        membersWithoutConferenceUser = self.members;
-    }
-    else if (![self memberWithUserId:self.conferenceUserId])
-    {
-        // There is no conference user. No need to filter
-        membersWithoutConferenceUser = self.members;
-    }
-    else
-    {
-        // Filter the conference user from the list
-        NSMutableDictionary<NSString*, MXRoomMember*> *membersWithoutConferenceUserDict = [NSMutableDictionary dictionaryWithDictionary:members];
-        [membersWithoutConferenceUserDict removeObjectForKey:self.conferenceUserId];
-        membersWithoutConferenceUser = membersWithoutConferenceUserDict.allValues;
-    }
-
-    return membersWithoutConferenceUser;
-}
-
-- (NSArray<MXRoomMember *> *)membersWithMembership:(MXMembership)theMembership includeConferenceUser:(BOOL)includeConferenceUser
-{
-    NSArray<MXRoomMember *> *membersWithMembership;
-
-    if (includeConferenceUser || self.isConferenceUserRoom)
-    {
-        // Show everyone in a 1:1 room with a conference user
-        membersWithMembership = [self membersWithMembership:theMembership];
-    }
-    else
-    {
-        MXRoomMember *conferenceUserMember = [self memberWithUserId:self.conferenceUserId];
-        if (!conferenceUserMember || conferenceUserMember.membership != theMembership)
-        {
-            // The conference user is not in list of members with the passed  membership
-            membersWithMembership = [self membersWithMembership:theMembership];
-        }
-        else
-        {
-            NSMutableDictionary *membersWithMembershipDict = [NSMutableDictionary dictionaryWithCapacity:members.count];
-            for (MXRoomMember *roomMember in members.allValues)
-            {
-                if (roomMember.membership == theMembership)
-                {
-                    membersWithMembershipDict[roomMember.userId] = roomMember;
-                }
-            }
-
-            [membersWithMembershipDict removeObjectForKey:self.conferenceUserId];
-            membersWithMembership = membersWithMembershipDict.allValues;
-        }
-    }
-
-    return membersWithMembership;
-}
-
 
 #pragma mark - NSCopying
 - (id)copyWithZone:(NSZone *)zone
@@ -869,10 +572,9 @@
         stateCopy->stateEvents[key] = [[NSMutableArray allocWithZone:zone] initWithArray:stateEvents[key]];
     }
 
-    // Same thing here. MXRoomMembers are also immutable. A new instance of it is created each time
-    // the sdk receives room member event, even if it is an update of an existing member like a
-    // membership change (ex: "invited" -> "joined")
-    stateCopy->members = [[NSMutableDictionary allocWithZone:zone] initWithDictionary:members];
+    stateCopy->_members = [_members copyWithZone:zone];
+
+    stateCopy->_membersCount = _membersCount;
     
     stateCopy->roomAliases = [[NSMutableDictionary allocWithZone:zone] initWithDictionary:roomAliases];
 
@@ -880,10 +582,8 @@
 
     stateCopy->membersWithThirdPartyInviteTokenCache= [[NSMutableDictionary allocWithZone:zone] initWithDictionary:membersWithThirdPartyInviteTokenCache];
     
-    stateCopy->membership = membership;
+    stateCopy->_membership = _membership;
 
-    stateCopy->membersNamesInUse = [[NSMutableDictionary allocWithZone:zone] initWithDictionary:membersNamesInUse];
-    
     stateCopy->powerLevels = [powerLevels copy];
     stateCopy->maxPowerLevel = maxPowerLevel;
 

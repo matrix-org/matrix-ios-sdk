@@ -20,6 +20,8 @@
 #import "MatrixSDKTestsData.h"
 
 #import "MXSession.h"
+#import "MXTools.h"
+#import "MXSendReplyEventDefaultStringLocalizations.h"
 
 // Do not bother with retain cycles warnings in tests
 #pragma clang diagnostic push
@@ -66,7 +68,7 @@
         __block NSString *sentMessageEventID;
         __block NSString *receivedMessageEventID;
         
-        void (^checkEventIDs)() = ^ void ()
+        void (^checkEventIDs)(void) = ^ void ()
         {
             if (sentMessageEventID && receivedMessageEventID)
             {
@@ -77,19 +79,21 @@
         };
         
         // Register the listener
-        [room.liveTimeline listenToEvents:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
-            
-            XCTAssertEqual(direction, MXTimelineDirectionForwards);
-            
-            XCTAssertEqual(event.eventType, MXEventTypeRoomMessage);
-            
-            XCTAssertNotNil(event.eventId);
-            
-            receivedMessageEventID = event.eventId;
-           
-            checkEventIDs();
+        [room liveTimeline:^(MXEventTimeline *liveTimeline) {
+
+            [liveTimeline listenToEvents:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
+
+                XCTAssertEqual(direction, MXTimelineDirectionForwards);
+
+                XCTAssertEqual(event.eventType, MXEventTypeRoomMessage);
+
+                XCTAssertNotNil(event.eventId);
+
+                receivedMessageEventID = event.eventId;
+
+                checkEventIDs();
+            }];
         }];
-        
         
         // Populate a text message in parallel
         [matrixSDKTestsData doMXRestClientTestWithBobAndThePublicRoom:nil readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation2) {
@@ -121,7 +125,7 @@
         __block NSString *sentMessageEventID;
         __block NSString *receivedMessageEventID;
         
-        void (^checkEventIDs)() = ^ void ()
+        void (^checkEventIDs)(void) = ^ void (void)
         {
             if (sentMessageEventID && receivedMessageEventID)
             {
@@ -132,18 +136,21 @@
         };
         
         // Register the listener for m.room.message.only
-        [room.liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage]
-                                          onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
-            
-            XCTAssertEqual(direction, MXTimelineDirectionForwards);
-            
-            XCTAssertEqual(event.eventType, MXEventTypeRoomMessage);
-                                              
-            XCTAssertNotNil(event.eventId);
-                                              
-            receivedMessageEventID = event.eventId;
-                                              
-            checkEventIDs();
+        [room liveTimeline:^(MXEventTimeline *liveTimeline) {
+
+            [liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage]
+                                        onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
+
+                                            XCTAssertEqual(direction, MXTimelineDirectionForwards);
+
+                                            XCTAssertEqual(event.eventType, MXEventTypeRoomMessage);
+
+                                            XCTAssertNotNil(event.eventId);
+
+                                            receivedMessageEventID = event.eventId;
+
+                                            checkEventIDs();
+                                        }];
         }];
         
         // Populate a text message in parallel
@@ -172,12 +179,14 @@
         
         mxSession = mxSession2;
         
-        NSString *roomId = room.state.roomId;
+        NSString *roomId = room.roomId;
 
         __block MXMembership lastKnownMembership = MXMembershipUnknown;
-        [room.liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMember] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
+        [room liveTimeline:^(MXEventTimeline *liveTimeline) {
+            [liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMember] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
 
-            lastKnownMembership = room.state.membership;
+                lastKnownMembership = liveTimeline.state.membership;
+            }];
         }];
         
         // This implicitly tests MXSession leaveRoom
@@ -207,17 +216,19 @@
 
             [bobRestClient inviteUser:aliceRestClient.credentials.userId toRoom:roomId success:^{
 
-                [mxSession startWithMessagesLimit:0 onServerSyncDone:^{
+
+                [mxSession startWithSyncFilter:[MXFilterJSONModel syncFilterWithMessageLimit:0]
+                              onServerSyncDone:^{
 
                     MXRoom *room = [mxSession roomWithRoomId:roomId];
 
-                    XCTAssertEqual(room.state.membership, MXMembershipInvite);
-                    XCTAssertEqual(room.state.members.count, 2, @"The room state information is limited while the room is joined");
+                    XCTAssertEqual(room.summary.membership, MXMembershipInvite);
+                    XCTAssertEqual(room.summary.membersCount.members, 2, @"The room state information is limited while the room is joined");
 
                     [room join:^{
 
-                        XCTAssertEqual(room.state.membership, MXMembershipJoin);
-                        XCTAssertEqual(room.state.members.count, 2, @"The room state must be fully known (after an initialSync on the room");
+                        XCTAssertEqual(room.summary.membership, MXMembershipJoin);
+                        XCTAssertEqual(room.summary.membersCount.members, 2, @"The room state must be fully known (after an initialSync on the room");
 
                         [expectation fulfill];
 
@@ -249,11 +260,13 @@
 
             MXRoom *room = [mxSession roomWithRoomId:roomId];
 
-            [room.liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomPowerLevels] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
+            [room liveTimeline:^(MXEventTimeline *liveTimeline) {
+                [liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomPowerLevels] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
 
-                XCTAssertEqual([room.state.powerLevels powerLevelOfUserWithUserID:aliceRestClient.credentials.userId], 36);
+                    XCTAssertEqual([liveTimeline.state.powerLevels powerLevelOfUserWithUserID:aliceRestClient.credentials.userId], 36);
 
-               [expectation fulfill];
+                    [expectation fulfill];
+                }];
             }];
 
             [room setPowerLevelOfUserWithUserID:aliceRestClient.credentials.userId powerLevel:36 success:^{
@@ -276,33 +289,35 @@
 
         mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
 
-        [mxSession startWithMessagesLimit:0 onServerSyncDone:^{
+        [mxSession startWithSyncFilter:[MXFilterJSONModel syncFilterWithMessageLimit:0] onServerSyncDone:^{
             
             MXRoom *room = [mxSession roomWithRoomId:roomId];
 
             __block NSUInteger eventCount = 0;
-            [room.liveTimeline listenToEvents:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
+            [room liveTimeline:^(MXEventTimeline *liveTimeline) {
+                [liveTimeline listenToEvents:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
 
-                eventCount++;
-                XCTFail(@"We should not receive events. Received: %@", event);
-                [expectation fulfill];
+                    eventCount++;
+                    XCTFail(@"We should not receive events. Received: %@", event);
+                    [expectation fulfill];
 
+                }];
+
+                [liveTimeline resetPagination];
+                MXHTTPOperation *pagination = [liveTimeline paginate:100 direction:MXTimelineDirectionBackwards onlyFromStore:NO complete:^() {
+
+                    XCTFail(@"The cancelled operation must not complete");
+                    [expectation fulfill];
+
+                } failure:^(NSError *error) {
+                    XCTAssertEqual(eventCount, 0, "We should have received events in registerEventListenerForTypes");
+                    [expectation fulfill];
+                }];
+
+                XCTAssertNotNil(pagination);
+
+                [pagination cancel];
             }];
-
-            [room.liveTimeline resetPagination];
-            MXHTTPOperation *pagination = [room.liveTimeline paginate:100 direction:MXTimelineDirectionBackwards onlyFromStore:NO complete:^() {
-
-                XCTFail(@"The cancelled operation must not complete");
-                [expectation fulfill];
-
-            } failure:^(NSError *error) {
-                XCTAssertEqual(eventCount, 0, "We should have received events in registerEventListenerForTypes");
-                [expectation fulfill];
-            }];
-
-            XCTAssertNotNil(pagination);
-
-            [pagination cancel];
 
         } failure:^(NSError *error) {
             XCTFail(@"The request should not fail - NSError: %@", error);
@@ -322,12 +337,14 @@
 
             XCTAssertEqual(room.typingUsers.count, 0);
 
-            [room.liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringTypingNotification] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
+            [room liveTimeline:^(MXEventTimeline *liveTimeline) {
+                [liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringTypingNotification] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
 
-                XCTAssertEqual(room.typingUsers.count, 1);
-                XCTAssertEqualObjects(room.typingUsers[0], bobRestClient.credentials.userId);
+                    XCTAssertEqual(room.typingUsers.count, 1);
+                    XCTAssertEqualObjects(room.typingUsers[0], bobRestClient.credentials.userId);
 
-                [expectation fulfill];
+                    [expectation fulfill];
+                }];
             }];
 
             [room sendTypingNotification:YES timeout:30000 success:^{
@@ -355,30 +372,33 @@
         __block NSUInteger tagEventUpdata = 0;
 
         // Wait for the m.tag event to get the room tags update
-        [room.liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomTag] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
+        [room liveTimeline:^(MXEventTimeline *liveTimeline) {
+            [liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomTag] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
 
-            if (++tagEventUpdata == 1)
-            {
-                // This event is fired after the [room addTag:] request
-                MXRoomTag *roomTag = room.accountData.tags[tag];
+                if (++tagEventUpdata == 1)
+                {
+                    // This event is fired after the [room addTag:] request
+                    MXRoomTag *roomTag = room.accountData.tags[tag];
 
-                XCTAssertNotNil(roomTag);
-                XCTAssertEqualObjects(roomTag.name, tag);
-                XCTAssertEqualObjects(roomTag.order, order);
+                    XCTAssertNotNil(roomTag);
+                    XCTAssertEqualObjects(roomTag.name, tag);
+                    XCTAssertEqualObjects(roomTag.order, order);
 
-                [room removeTag:tag success:nil failure:^(NSError *error) {
-                    XCTFail(@"The request should not fail - NSError: %@", error);
+                    [room removeTag:tag success:nil failure:^(NSError *error) {
+                        XCTFail(@"The request should not fail - NSError: %@", error);
+                        [expectation fulfill];
+                    }];
+                }
+                else if (tagEventUpdata == 2)
+                {
+                    // This event is fired after the [room removeTag:] request
+                    XCTAssertNotNil(room.accountData.tags);
+                    XCTAssertEqual(room.accountData.tags.count, 0);
+
                     [expectation fulfill];
-                }];
-            }
-            else if (tagEventUpdata == 2)
-            {
-                // This event is fired after the [room removeTag:] request
-                XCTAssertNotNil(room.accountData.tags);
-                XCTAssertEqual(room.accountData.tags.count, 0);
+                }
+            }];
 
-                [expectation fulfill];
-            }
         }];
 
         // Do the test
@@ -400,17 +420,19 @@
         NSString *newTagOrder = nil;
 
         // Wait for the m.tag event that corresponds to "newTag"
-        [room.liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomTag] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
+        [room liveTimeline:^(MXEventTimeline *liveTimeline) {
+            [liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomTag] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
 
-            MXRoomTag *newRoomTag = room.accountData.tags[newTag];
-            if (newRoomTag)
-            {
-                XCTAssertNotNil(newRoomTag);
-                XCTAssertEqualObjects(newRoomTag.name, newTag);
-                XCTAssertEqualObjects(newRoomTag.order, newTagOrder);
+                MXRoomTag *newRoomTag = room.accountData.tags[newTag];
+                if (newRoomTag)
+                {
+                    XCTAssertNotNil(newRoomTag);
+                    XCTAssertEqualObjects(newRoomTag.name, newTag);
+                    XCTAssertEqualObjects(newRoomTag.order, newTagOrder);
 
-                [expectation fulfill];
-            }
+                    [expectation fulfill];
+                }
+            }];
         }];
 
         // Prepare initial condition: have a tag
@@ -513,6 +535,113 @@
             [expectation fulfill];
         }];
         
+    }];
+}
+
+- (void)testSendReplyToTextMessage
+{
+    NSString *firstMessage = @"**First message!**";
+    NSString *firstFormattedMessage = @"<p><strong>First message!</strong></p>";
+    
+    NSString *secondMessageReplyToFirst = @"**Reply to first message**";
+    NSString *secondMessageFormattedReplyToFirst = @"<p><strong>Reply to first message</strong></p>";
+    
+    NSString *expectedSecondEventBodyStringFormat = @"> <%@> **First message!**\n\n**Reply to first message**";
+    NSString *expectedSecondEventFormattedBodyStringFormat = @"<mx-reply><blockquote><a href=\"%@\">In reply to</a> <a href=\"%@\">%@</a><br><p><strong>First message!</strong></p></blockquote></mx-reply><p><strong>Reply to first message</strong></p>";
+    
+    NSString *thirdMessageReplyToSecond = @"**Reply to second message**";
+    NSString *thirdMessageFormattedReplyToSecond = @"<p><strong>Reply to second message</strong></p>";
+    
+    NSString *expectedThirdEventBodyStringFormat = @"> <%@> **Reply to first message**\n\n**Reply to second message**";
+    NSString *expectedThirdEventFormattedBodyStringFormat = @"<mx-reply><blockquote><a href=\"%@\">In reply to</a> <a href=\"%@\">%@</a><br><p><strong>Reply to first message</strong></p></blockquote></mx-reply><p><strong>Reply to second message</strong></p>";
+    
+    MXSendReplyEventDefaultStringLocalizations *defaultStringLocalizations = [MXSendReplyEventDefaultStringLocalizations new];
+    
+    [matrixSDKTestsData doMXSessionTestWithBobAndARoomWithMessages:self readyToTest:^(MXSession *mxSession, MXRoom *room, XCTestExpectation *expectation) {
+        
+        __block NSUInteger messageCount = 0;
+        
+        // Listen to messages
+        [room listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
+            messageCount++;
+            
+            if (messageCount == 1)
+            {
+                __block MXEvent *localEchoEvent = nil;
+                
+                // Reply to first message
+                [room sendReplyToEvent:event withTextMessage:secondMessageReplyToFirst formattedTextMessage:secondMessageFormattedReplyToFirst stringLocalizations:defaultStringLocalizations localEcho:&localEchoEvent success:^(NSString *eventId) {
+                    NSLog(@"Send reply to first message with success");
+                } failure:^(NSError *error) {
+                    XCTFail(@"The request should not fail - NSError: %@", error);
+                    [expectation fulfill];
+                }];
+                
+                XCTAssertNotNil(localEchoEvent);
+                
+                NSString *roomId = room.roomId;
+                NSString *firstEventId = event.eventId;
+                NSString *firstEventSender = event.sender;
+                
+                NSString *secondEventBody = localEchoEvent.content[@"body"];
+                NSString *secondEventFormattedBody = localEchoEvent.content[@"formatted_body"];
+                NSString *secondEventRelatesToEventId = localEchoEvent.content[@"m.relates_to"][@"m.in_reply_to"][@"event_id"];
+
+                NSString *permalinkToUser = [MXTools permalinkToUserWithUserId:firstEventSender];
+                NSString *permalinkToEvent = [MXTools permalinkToEvent:firstEventId inRoom:roomId];
+
+                NSString *expectedSecondEventBody = [NSString stringWithFormat:expectedSecondEventBodyStringFormat, firstEventSender];
+                NSString *expectedSecondEventFormattedBody = [NSString stringWithFormat:expectedSecondEventFormattedBodyStringFormat, permalinkToEvent, permalinkToUser, firstEventSender];
+
+                XCTAssertEqualObjects(secondEventBody, expectedSecondEventBody);
+                XCTAssertEqualObjects(secondEventFormattedBody, expectedSecondEventFormattedBody);
+                XCTAssertEqualObjects(firstEventId, secondEventRelatesToEventId);
+            }
+            else if (messageCount == 2)
+            {
+                __block MXEvent *localEchoEvent = nil;
+                
+                // Reply to second message, which was also a reply
+                [room sendReplyToEvent:event withTextMessage:thirdMessageReplyToSecond formattedTextMessage:thirdMessageFormattedReplyToSecond stringLocalizations:defaultStringLocalizations localEcho:&localEchoEvent success:^(NSString *eventId) {
+                    NSLog(@"Send reply to second message with success");
+                } failure:^(NSError *error) {
+                    XCTFail(@"The request should not fail - NSError: %@", error);
+                    [expectation fulfill];
+                }];
+                
+                XCTAssertNotNil(localEchoEvent);
+                
+                NSString *roomId = room.roomId;
+                NSString *secondEventId = event.eventId;
+                NSString *secondEventSender = event.sender;
+                
+                NSString *thirdEventBody = localEchoEvent.content[@"body"];
+                NSString *thirdEventFormattedBody = localEchoEvent.content[@"formatted_body"];
+                NSString *thirdEventRelatesToEventId = localEchoEvent.content[@"m.relates_to"][@"m.in_reply_to"][@"event_id"];
+                
+                NSString *permalinkToUser = [MXTools permalinkToUserWithUserId:secondEventSender];
+                NSString *permalinkToEvent = [MXTools permalinkToEvent:secondEventId inRoom:roomId];
+                
+                NSString *expectedThirdEventBody = [NSString stringWithFormat:expectedThirdEventBodyStringFormat, secondEventSender];
+                NSString *expectedThirdEventFormattedBody = [NSString stringWithFormat:expectedThirdEventFormattedBodyStringFormat, permalinkToEvent, permalinkToUser, secondEventSender];
+                
+                XCTAssertEqualObjects(thirdEventBody, expectedThirdEventBody);
+                XCTAssertEqualObjects(thirdEventFormattedBody, expectedThirdEventFormattedBody);
+                XCTAssertEqualObjects(secondEventId, thirdEventRelatesToEventId);
+            }
+            else
+            {
+                [expectation fulfill];
+            }
+        }];
+        
+        // Send first message
+        [room sendTextMessage:firstMessage formattedText:firstFormattedMessage localEcho:nil success:^(NSString *eventId) {
+            NSLog(@"Send first message with success");
+        } failure:^(NSError *error) {
+            XCTFail(@"The request should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
     }];
 }
 

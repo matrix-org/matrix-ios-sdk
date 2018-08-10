@@ -1,5 +1,6 @@
 /*
  Copyright 2015 OpenMarket Ltd
+ Copyright 2018 New Vector Ltd
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -66,6 +67,11 @@ NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
      Timer for sending local ICE candidates.
      */
     NSTimer *localIceGatheringTimer;
+
+    /**
+     Cache for self.calleeId.
+     */
+    NSString *calleeId;
 }
 
 @end
@@ -96,20 +102,7 @@ NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
         _endReason = MXCallEndReasonUnknown;
 
         // Consider we are using a conference call when there are more than 2 users
-        _isConferenceCall = (2 < _room.state.joinedMembers.count);
-        
-        // Set caleeId only for regular calls
-        if (!_isConferenceCall)
-        {
-            for (MXRoomMember *roomMember in _room.state.joinedMembers)
-            {
-                if (![roomMember.userId isEqualToString:_callerId])
-                {
-                    _calleeId = roomMember.userId;
-                    break;
-                }
-            }
-        }
+        _isConferenceCall = (2 < _room.summary.membersCount.joined);
 
         localICECandidates = [NSMutableArray array];
 
@@ -144,6 +137,37 @@ NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
     return self;
 }
 
+- (void)calleeId:(void (^)(NSString * _Nonnull))onComplete
+{
+    if (calleeId)
+    {
+        onComplete(calleeId);
+    }
+    else
+    {
+        // Set caleeId only for regular calls
+        if (!_isConferenceCall)
+        {
+            MXWeakify(self);
+            [_room state:^(MXRoomState *roomState) {
+                MXStrongifyAndReturnIfNil(self);
+
+                MXRoomMembers *roomMembers = roomState.members;
+                for (MXRoomMember *roomMember in roomMembers.joinedMembers)
+                {
+                    if (![roomMember.userId isEqualToString:self.callerId])
+                    {
+                        self->calleeId = roomMember.userId;
+                        break;
+                    }
+                }
+
+                onComplete(self->calleeId);
+            }];
+        }
+    }
+}
+
 - (void)handleCallEvent:(MXEvent *)event
 {
     switch (event.eventType)
@@ -158,7 +182,7 @@ NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
 
                 _callId = callInviteEventContent.callId;
                 _callerId = event.sender;
-                _calleeId = callManager.mxSession.myUser.userId;
+                calleeId = callManager.mxSession.myUser.userId;
                 _isIncoming = YES;
 
                 // Store if it is voice or video call
@@ -335,7 +359,7 @@ NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
     // Sanity check on the call state
     // Note that e2e rooms requires several attempts of [MXCall answer] in case of unknown devices 
     if (self.state == MXCallStateRinging
-        || (_callSignalingRoom.state.isEncrypted && self.state == MXCallStateCreateAnswer))
+        || (_callSignalingRoom.summary.isEncrypted && self.state == MXCallStateCreateAnswer))
     {
         [self setState:MXCallStateCreateAnswer reason:nil];
 
@@ -387,7 +411,7 @@ NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
         // in the room before actually answering.
         // That will allow MXCall to send ICE candidates events without encryption errors like
         // MXEncryptingErrorUnknownDeviceReason.
-        if (_callSignalingRoom.state.isEncrypted)
+        if (_callSignalingRoom.summary.isEncrypted)
         {
             NSLog(@"[MXCall] answer: ensuring encryption is ready to use ...");
             [callManager.mxSession.crypto ensureEncryptionInRoom:_callSignalingRoom.roomId success:answer failure:^(NSError *error) {

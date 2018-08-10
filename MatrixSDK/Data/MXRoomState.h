@@ -19,10 +19,14 @@
 
 #import "MXEvent.h"
 #import "MXJSONModels.h"
-#import "MXRoomMember.h"
+#import "MXRoomMembers.h"
 #import "MXRoomThirdPartyInvite.h"
 #import "MXRoomPowerLevels.h"
 #import "MXEnumConstants.h"
+#import "MXRoomMembersCount.h"
+#import "MXStore.h"
+#import "MXRoomTombStoneContent.h"
+#import "MXRoomCreateContent.h"
 
 @class MXSession;
 
@@ -37,7 +41,7 @@
 @interface MXRoomState : NSObject <NSCopying>
 
 /**
- The room ID
+ The room id.
  */
 @property (nonatomic, readonly) NSString *roomId;
 
@@ -53,14 +57,20 @@
 @property (nonatomic, readonly) NSArray<MXEvent *> *stateEvents;
 
 /**
- A copy of the list of room members.
+ Room members of the room.
+
+ In case of lazy-loading of room members (@see MXSession.syncWithLazyLoadOfRoomMembers),
+ `MXRoomState.members` contains only a subset of all actual room members. This subset
+ is enough to render the events timeline owning the `MXRoomState` instance.
+
+ Use [MXRoom members:] to get the full list of room members.
  */
-@property (nonatomic, readonly) NSArray<MXRoomMember*> *members;
+@property (nonatomic, readonly) MXRoomMembers *members;
 
 /**
- A copy of the list of joined room members.
+ Cache counts for MXRoomState.members`.
  */
-@property (nonatomic, readonly) NSArray<MXRoomMember*> *joinedMembers;
+@property (nonatomic, readonly) MXRoomMembersCount *membersCount;
 
 /**
 A copy of the list of third party invites (actually MXRoomThirdPartyInvite instances).
@@ -89,6 +99,8 @@ A copy of the list of third party invites (actually MXRoomThirdPartyInvite insta
 
 /**
  The name of the room as provided by the home server.
+
+Use MXRoomSummary.displayname to get a computed room display name.
  */
 @property (nonatomic, readonly) NSString *name;
 
@@ -123,12 +135,6 @@ A copy of the list of third party invites (actually MXRoomThirdPartyInvite insta
 @property (nonatomic, readonly) MXRoomGuestAccess guestAccess NS_REFINED_FOR_SWIFT;
 
 /**
- The display name of the room.
- It is computed from information retrieved so far.
- */
-@property (nonatomic, readonly) NSString *displayname;
-
-/**
  The membership state of the logged in user for this room
  
  If the membership is `invite`, the room state contains few information.
@@ -146,6 +152,15 @@ A copy of the list of third party invites (actually MXRoomThirdPartyInvite insta
  */
 @property (nonatomic, readonly) NSString *encryptionAlgorithm;
 
+/**
+ Indicate whether this room is obsolete (had a `m.room.tombstone` state event type).
+ */
+@property (nonatomic, readonly) BOOL isObsolete;
+
+/**
+ If any the state event content for event type `m.room.tombstone`
+ */
+@property (nonatomic, strong, readonly) MXRoomTombStoneContent *tombStoneContent;
 
 /**
  Create a `MXRoomState` instance.
@@ -179,6 +194,19 @@ A copy of the list of third party invites (actually MXRoomThirdPartyInvite insta
         andDirection:(BOOL)isLive;
 
 /**
+ Load a `MXRoomState` instance from the store.
+
+ @param store the store to mount data from and to store live data to.
+ @param roomId the id of the room.
+ @param matrixSession the session to use.
+ @param onComplete the block providing the new instance.
+ */
++ (void)loadRoomStateFromStore:(id<MXStore>)store
+                  withRoomId:(NSString *)roomId
+               matrixSession:(MXSession *)matrixSession
+                  onComplete:(void (^)(MXRoomState *roomState))onComplete;
+
+/**
  Create a `MXRoomState` instance used as a back state of a room.
  Such instance holds the state of a room at a given time in the room history.
  
@@ -188,11 +216,11 @@ A copy of the list of third party invites (actually MXRoomThirdPartyInvite insta
 - (id)initBackStateWith:(MXRoomState*)state;
 
 /**
- Process a state event in order to update the room state.
+ Process state events in order to update the room state.
  
- @param event the state event.
+ @param stateEvents an array of state events.
  */
-- (void)handleStateEvent:(MXEvent*)event;
+- (void)handleStateEvents:(NSArray<MXEvent *> *)stateEvents;
 
 /**
  Return the state events with the given type.
@@ -203,12 +231,14 @@ A copy of the list of third party invites (actually MXRoomThirdPartyInvite insta
 - (NSArray<MXEvent*> *)stateEventsWithType:(MXEventTypeString)eventType NS_REFINED_FOR_SWIFT;
 
 /**
- Return the member with the given user id.
- 
- @param userId the id of the member to retrieve.
- @return the room member.
+ According to the direction of the instance, we are interested either by
+ the content of the event or its prev_content.
+
+ @param event the event to get the content from.
+
+ @return content or prev_content dictionary.
  */
-- (MXRoomMember*)memberWithUserId:(NSString*)userId;
+- (NSDictionary<NSString *, id> *)contentOfEvent:(MXEvent*)event;
 
 /**
  Return the member who was invited by a 3pid medium with the given token.
@@ -232,32 +262,12 @@ A copy of the list of third party invites (actually MXRoomThirdPartyInvite insta
 - (MXRoomThirdPartyInvite*)thirdPartyInviteWithToken:(NSString*)thirdPartyInviteToken;
 
 /**
- Return a display name for a member.
- It is his displayname member or, if nil, his userId.
- Disambiguate members who have the same displayname in the room by adding his userId.
- */
-- (NSString*)memberName:(NSString*)userId;
-
-/**
- Return a display name for a member suitable to compare and sort members list
- */
-- (NSString*)memberSortedName:(NSString*)userId;
-
-/**
  Normalize (between 0 and 1) the power level of a member compared to other members.
  
  @param userId the id of the member to consider.
  @return power level in [0, 1] interval.
  */
 - (float)memberNormalizedPowerLevel:(NSString*)userId;
-
-/**
- Return the list of members with a given membership.
- 
- @param membership the membership to look for.
- @return an array of MXRoomMember objects.
- */
-- (NSArray<MXRoomMember*>*)membersWithMembership:(MXMembership)membership;
 
 
 # pragma mark - Conference call
@@ -277,17 +287,4 @@ A copy of the list of third party invites (actually MXRoomThirdPartyInvite insta
  */
 @property (nonatomic, readonly) NSString *conferenceUserId;
 
-/**
- A copy of the list of room members excluding the conference user.
- */
-- (NSArray<MXRoomMember*>*)membersWithoutConferenceUser;
-
-/**
- Return the list of members with a given membership with or without the conference user.
-
- @param membership the membership to look for.
- @param includeConferenceUser NO to filter the conference user.
- @return an array of MXRoomMember objects.
- */
-- (NSArray<MXRoomMember*>*)membersWithMembership:(MXMembership)membership includeConferenceUser:(BOOL)includeConferenceUser;
 @end
