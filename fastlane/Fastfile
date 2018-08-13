@@ -1,0 +1,89 @@
+# This file contains the fastlane.tools configuration
+# You can find the documentation at https://docs.fastlane.tools
+#
+# For a list of all available actions, check out
+#
+#     https://docs.fastlane.tools/actions
+#
+# For a list of all available plugins, check out
+#
+#     https://docs.fastlane.tools/plugins/available-plugins
+#
+
+default_platform(:ios)
+
+platform :ios do
+
+  #### Pod ####
+
+  desc "Lint all podspecs"
+  lane :lint_pods do  	
+  	lint_pod_MatrixSDK
+  	lint_pod_SwiftMatrixSDK
+  end
+
+  desc "Lint MatrixSDK podspec"
+  lane :lint_pod_MatrixSDK do  	
+  	custom_pod_lib_lint(podspec: "../MatrixSDK.podspec", parameters: ['--use-libraries', '--allow-warnings'])
+  end
+
+  desc "Lint SwiftMatrixSDK podspec"
+  lane :lint_pod_SwiftMatrixSDK do  	
+  	custom_pod_lib_lint(podspec: "../SwiftMatrixSDK.podspec", parameters: ['--allow-warnings'])    
+  end
+
+  desc "Push all pods"
+  lane :push_pods do  	
+  	push_pod_MatrixSDK
+  	push_pod_SwiftMatrixSDK
+  end
+
+  desc "Push MatrixSDK pod"
+    lane :push_pod_MatrixSDK do  	
+  	pod_push(path: "MatrixSDK.podspec", use_libraries: true, allow_warnings: true)
+  end
+
+  desc "Push SwiftMatrixSDK pod"
+    lane :push_pod_SwiftMatrixSDK do  	
+  	pod_push(path: "SwiftMatrixSDK.podspec", allow_warnings: true)
+  end
+
+  #### Tests ####
+
+  desc "Run integration tests (Be sure to set up the homeserver before like described here https://github.com/matrix-org/matrix-ios-sdk#tests)"  
+  lane :test do	
+  	cocoapods
+  	      
+    opts = {
+      :clean => true,
+      :scheme =>  'MatrixSDK',
+      :workspace => 'MatrixSDK.xcworkspace',
+      :configuration => 'Debug',      
+      :code_coverage => true
+    }
+    scan(opts)
+  end
+
+  #### Private ####
+  
+  desc "Returns bundle Cocoapods version"
+  private_lane :cocoapods_version do
+  	sh('bundle exec pod --version', log: false)  	
+  end
+
+  desc "Pod lib lint with podspec parameter"
+  private_lane :custom_pod_lib_lint do |options|
+  	
+    puts "Lint pod " << options[:podspec] << " with Cocoapods version " << cocoapods_version
+
+  	command = []
+  	command << "bundle exec pod lib lint"
+  	command << options[:podspec]
+
+    if options[:parameters]
+    	command.concat(options[:parameters])
+	end
+
+	sh(command.join(' '))
+  end
+end
