@@ -1,4 +1,12 @@
 osx_image: xcode9.4
 language: objective-c
+
+cache:
+  - bundler
+  - cocoapods
+
+before_install:
+  - bundle update
+
 script:
-  – fastlane ios lint_pods
+  – bundle exec fastlane lint_pods
