@@ -1,4 +1,4 @@
 osx_image: xcode9.4
 language: objective-c
 script:
-– fastlane ios lint_pods
+  – fastlane ios lint_pods
