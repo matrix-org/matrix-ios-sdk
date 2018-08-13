@@ -9,4 +9,4 @@ before_install:
   - bundle update
 
 script:
-  – bundle exec fastlane lint_pods
+  - bundle exec fastlane lint_pods
