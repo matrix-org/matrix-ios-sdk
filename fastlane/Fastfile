@@ -16,25 +16,31 @@ platform :ios do
 
   #### Pod ####
 
-  desc "Lint MatrixSDK podspec"
-  lane :pods_lint do  	
-  	pod_lint_MatrixSDK
-  	pod_lint_SwiftMatrixSDK
+  desc "Lint all podspecs"
+  lane :lint_pods do  	
+  	lint_pod_MatrixSDK
+  	lint_pod_SwiftMatrixSDK
   end
 
   desc "Lint MatrixSDK podspec"
-  lane :pod_lint_MatrixSDK do  	
+  lane :lint_pod_MatrixSDK do  	
   	custom_pod_lib_lint(podspec: "../MatrixSDK.podspec", parameters: ['--use-libraries', '--allow-warnings'])
+  end
+
+  desc "Lint SwiftMatrixSDK podspec"
+  lane :lint_pod_SwiftMatrixSDK do  	
+  	custom_pod_lib_lint(podspec: "../SwiftMatrixSDK.podspec", parameters: ['--allow-warnings'])    
+  end
+
+  desc "Push all pods"
+  lane :push_pods do  	
+  	push_pod_MatrixSDK
+  	push_pod_SwiftMatrixSDK
   end
 
   desc "Push MatrixSDK pod"
     lane :push_pod_MatrixSDK do  	
   	pod_push(path: "MatrixSDK.podspec", use_libraries: true, allow_warnings: true)
-  end
-
-  desc "Lint SwiftMatrixSDK podspec"
-  lane :pod_lint_SwiftMatrixSDK do  	
-  	custom_pod_lib_lint(podspec: "../SwiftMatrixSDK.podspec", parameters: ['--allow-warnings'])    
   end
 
   desc "Push SwiftMatrixSDK pod"
