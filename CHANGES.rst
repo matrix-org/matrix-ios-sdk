@@ -1,3 +1,9 @@
+Changes in Matrix iOS SDK in 0.11.1 (2018-08-)
+===============================================
+
+Improvements:
+* Tests: Add DirectRoomTests
+
 Changes in Matrix iOS SDK in 0.11.0 (2018-08-10)
 ===============================================
 
