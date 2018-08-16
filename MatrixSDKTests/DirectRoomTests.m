@@ -46,6 +46,57 @@
     matrixSDKTestsData = nil;
 }
 
+// Create the following scenario with 3 rooms
+// - Bob & Alice in a room
+// - Bob sets the room as direct
+// - Alice invites Bob in a direct chat
+// - Charlie invites Bob in a direct chat
+- (void)createScenario:(void (^)(MXSession *bobSession, NSString *aliceUserId, NSString *charlieUserId, XCTestExpectation *expectation))readyToTest
+{
+    // - Bob & Alice in a room
+    [matrixSDKTestsData doMXSessionTestWithBobAndAliceInARoom:self readyToTest:^(MXSession *bobSession, MXRestClient *aliceRestClient, NSString *roomId, XCTestExpectation *expectation) {
+
+        [matrixSDKTestsData doMXSessionTestWithAUser:nil readyToTest:^(MXSession *charlieSession, XCTestExpectation *expectation2) {
+
+            __block id observer;
+            observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXSessionDirectRoomsDidChangeNotification object:bobSession queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
+
+                // Wait until we get the 3 direct rooms
+                if (observer
+                    && bobSession.directRooms[aliceRestClient.credentials.userId].count == 2
+                    && bobSession.directRooms[charlieSession.myUser.userId].count == 1)
+                {
+                    [[NSNotificationCenter defaultCenter] removeObserver:observer];
+                    observer = nil;
+
+                    readyToTest(bobSession, aliceRestClient.credentials.userId, charlieSession.myUser.userId, expectation);
+                }
+            }];
+
+
+            // - Bob set the room as direct
+            MXRoom *room = [bobSession roomWithRoomId:roomId];
+            [room setIsDirect:YES withUserId:aliceRestClient.credentials.userId success:nil failure:^(NSError *error) {
+                XCTFail(@"The operation should not fail - NSError: %@", error);
+                [expectation fulfill];
+            }];
+
+            // - Alice invites Bob in a direct chat
+            [aliceRestClient createRoom:nil visibility:kMXRoomDirectoryVisibilityPrivate roomAlias:nil topic:nil invite:@[bobSession.myUser.userId] invite3PID:nil isDirect:YES preset:kMXRoomPresetPrivateChat success:nil failure:^(NSError *error) {
+                XCTFail(@"The operation should not fail - NSError: %@", error);
+                [expectation fulfill];
+            }];
+
+            // - Charlie invites Bob in a direct chat
+            [charlieSession createRoom:nil visibility:kMXRoomDirectoryVisibilityPrivate roomAlias:nil topic:nil invite:@[bobSession.myUser.userId] invite3PID:nil isDirect:YES preset:kMXRoomPresetPrivateChat success:nil failure:^(NSError *error) {
+                XCTFail(@"The operation should not fail - NSError: %@", error);
+                [expectation fulfill];
+            }];
+        }];
+    }];
+}
+
+
 // - Bob & Alice in a room
 // - Bob must have no direct rooms at first
 // - Bob set the room as direct
@@ -199,69 +250,79 @@
     }];
 }
 
-// - Bob & Alice in a room
-// - Bob sets the room as direct
-// - Alice invites Bob in a direct chat
-// - Charlie invites Bob in a direct chat
+// After the scenario:
 // - Bob does an initial /sync
 // -> He must still see 2 direct rooms with Alice and 1 with Charlie
 - (void)testDirectRoomsAfterInitialSync
 {
-    // - Bob & Alice in a room
-    [matrixSDKTestsData doMXSessionTestWithBobAndAliceInARoom:self readyToTest:^(MXSession *bobSession, MXRestClient *aliceRestClient, NSString *roomId, XCTestExpectation *expectation) {
+    [self createScenario:^(MXSession *bobSession, NSString *aliceUserId, NSString *charlieUserId, XCTestExpectation *expectation) {
 
-        [matrixSDKTestsData doMXSessionTestWithAUser:nil readyToTest:^(MXSession *charlieSession, XCTestExpectation *expectation2) {
+        // - Bob does an initial /sync
+        MXSession *bobSession2 = [[MXSession alloc] initWithMatrixRestClient:bobSession.matrixRestClient];
+        [matrixSDKTestsData retain:bobSession2];
+        [bobSession close];
 
-            __block id observer;
-            observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXSessionDirectRoomsDidChangeNotification object:bobSession queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
+        [bobSession2 start:^{
 
-                // Wait until we get the 3 direct rooms
-                if (observer
-                    && bobSession.directRooms[aliceRestClient.credentials.userId].count == 2
-                    && bobSession.directRooms[charlieSession.myUser.userId].count == 1)
-                {
-                    [[NSNotificationCenter defaultCenter] removeObserver:observer];
-                    observer = nil;
+            // -> He must still see 2 direct rooms with Alice and 1 with Charlie
+            XCTAssertEqual(bobSession2.directRooms[aliceUserId].count, 2);
+            XCTAssertEqual(bobSession2.directRooms[charlieUserId].count, 1);
+            [expectation fulfill];
 
-                    // - Bob does an initial /sync
-                    MXSession *bobSession2 = [[MXSession alloc] initWithMatrixRestClient:bobSession.matrixRestClient];
-                    [matrixSDKTestsData retain:bobSession2];
-                    [bobSession close];
-
-                    [bobSession2 start:^{
-
-                        // -> He must still see 2 direct rooms with Alice and 1 with Charlie
-                        XCTAssertEqual(bobSession2.directRooms[aliceRestClient.credentials.userId].count, 2);
-                        XCTAssertEqual(bobSession2.directRooms[charlieSession.myUser.userId].count, 1);
-                        [expectation fulfill];
-
-                    } failure:^(NSError *error) {
-                        XCTFail(@"The operation should not fail - NSError: %@", error);
-                        [expectation fulfill];
-                    }];
-                }
-            }];
-
-
-            // - Bob set the room as direct
-            MXRoom *room = [bobSession roomWithRoomId:roomId];
-            [room setIsDirect:YES withUserId:aliceRestClient.credentials.userId success:nil failure:^(NSError *error) {
-                XCTFail(@"The operation should not fail - NSError: %@", error);
-                [expectation fulfill];
-            }];
-
-            // - Alice invites Bob in a direct chat
-            [aliceRestClient createRoom:nil visibility:kMXRoomDirectoryVisibilityPrivate roomAlias:nil topic:nil invite:@[bobSession.myUser.userId] invite3PID:nil isDirect:YES preset:kMXRoomPresetPrivateChat success:nil failure:^(NSError *error) {
-                XCTFail(@"The operation should not fail - NSError: %@", error);
-                [expectation fulfill];
-            }];
-
-            // - Charlie invites Bob in a direct chat
-            [charlieSession createRoom:nil visibility:kMXRoomDirectoryVisibilityPrivate roomAlias:nil topic:nil invite:@[bobSession.myUser.userId] invite3PID:nil isDirect:YES preset:kMXRoomPresetPrivateChat success:nil failure:^(NSError *error) {
-                XCTFail(@"The operation should not fail - NSError: %@", error);
-                [expectation fulfill];
-            }];
+        } failure:^(NSError *error) {
+            XCTFail(@"The operation should not fail - NSError: %@", error);
+            [expectation fulfill];
         }];
+    }];
+}
+
+// After the scenario:
+// - Bob makes the room with Charlie no more direct
+// - Bob makes one room with Alice no more direct
+// - Bob makes the room with Charlie direct again
+// -> Bob must have one direct room with Alice and one direct room with Charlie at the end
+// In case of race condtions in the code, this test can randomly fails.
+- (void)testDirectRoomsRaceConditions
+{
+    [self createScenario:^(MXSession *bobSession, NSString *aliceUserId, NSString *charlieUserId, XCTestExpectation *expectation) {
+
+        MXRoom *roomWithCharlie = [bobSession roomWithRoomId:bobSession.directRooms[charlieUserId].firstObject];
+        MXRoom *roomWithAlice = [bobSession roomWithRoomId:bobSession.directRooms[aliceUserId].firstObject];
+
+        __block id observer;
+        observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXSessionDirectRoomsDidChangeNotification object:bobSession queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
+
+            NSLog(@"[testDirectRoomsRaceConditions] Direct rooms with Alice: %@", @(bobSession.directRooms[aliceUserId].count));
+            NSLog(@"[testDirectRoomsRaceConditions] Direct rooms with Charlie: %@", @(bobSession.directRooms[charlieUserId].count));
+
+            // Wait until we get the 2 expected direct rooms
+            if (observer
+                && bobSession.directRooms[aliceUserId].count == 1
+                && bobSession.directRooms[charlieUserId].count == 1)
+            {
+                [[NSNotificationCenter defaultCenter] removeObserver:observer];
+                observer = nil;
+
+                [expectation fulfill];
+            }
+        }];
+
+        [roomWithCharlie setIsDirect:NO withUserId:nil success:nil failure:^(NSError *error) {
+            XCTFail(@"The operation should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+
+        [roomWithAlice setIsDirect:NO withUserId:nil success:nil failure:^(NSError *error) {
+            XCTFail(@"The operation should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+
+        [roomWithCharlie setIsDirect:YES withUserId:nil success:nil failure:^(NSError *error) {
+            XCTFail(@"The operation should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+
+
     }];
 }
 
