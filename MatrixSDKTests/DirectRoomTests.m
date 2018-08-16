@@ -181,7 +181,7 @@
                         break;
                     }
 
-                    case 3: // TODO: should be 1
+                    case 1:
 
                         // -> The kMXSessionDirectRoomsDidChangeNotification must be received with the
                         //    room no more marked as direct

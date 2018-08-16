@@ -748,33 +748,53 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
  */
 - (NSArray<MXRoom*>*)rooms NS_REFINED_FOR_SWIFT;
 
-/**
- Return the first joined direct chat listed in account data for this user.
- 
- @return the MXRoom instance (nil if no room exists yet).
- */
-- (MXRoom *)directJoinedRoomWithUserId:(NSString*)userId;
 
+#pragma mark - The user's direct rooms
 /**
  The list of the direct rooms by user identifiers.
  
  A dictionary where the keys are the user IDs and values are lists of room ID strings.
  of the 'direct' rooms for that user ID.
  */
-@property (nonatomic, readonly) NSMutableDictionary<NSString*, NSArray<NSString*>*> *directRooms;
+@property (nonatomic, readonly) NSDictionary<NSString*, NSArray<NSString*>*> *directRooms;
 
 /**
- Update the direct rooms list on homeserver side with the current value of the `directRooms` property.
- 
- The `kMXSessionDirectRoomsDidChangeNotification` notification is posted on success.
- 
+ Return the first joined direct chat listed in account data for this user.
+
+ @return the MXRoom instance (nil if no room exists yet).
+ */
+- (MXRoom *)directJoinedRoomWithUserId:(NSString*)userId;
+
+
+/**
+ Set a room as direct with a user.
+
+ @param roomId the id of the room.
+ @param userId the id of user with whom the room will be direct to. Nil removes existing direct user.
+
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)setRoom:(NSString*)roomId
+           directWithUserId:(NSString*)userId
+                    success:(void (^)(void))success
+                    failure:(void (^)(NSError *error))failure;
+
+/**
+ Update the direct rooms list on homeserver side.
+
+ @param directRooms the new direct rooms list (user id -> [room ids]).
+
  @param success A block object called when the operation succeeds.
  @param failure A block object called when the operation fails.
  
  @return a MXHTTPOperation instance.
  */
-- (MXHTTPOperation*)uploadDirectRooms:(void (^)(void))success
-                              failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
+- (MXHTTPOperation*)uploadDirectRooms:(NSDictionary<NSString*, NSArray<NSString*>*> *)directRooms
+                              success:(void (^)(void))success
+                              failure:(void (^)(NSError *error))failure;
 
 /**
  Make sure that the `MXRoom` internal data for a list of rooms is preloaded.

@@ -127,6 +127,12 @@ typedef void (^MXOnResumeDone)(void);
     NSMutableArray<MXRoom *> *invitedRooms;
 
     /**
+     The maintained list of direct rooms.
+     See self.directRooms.
+     */
+    NSMutableDictionary<NSString*, NSArray<NSString*>*> *directRooms;
+
+    /**
      The rooms being peeked.
      */
     NSMutableArray<MXPeekingRoom *> *peekingRooms;
@@ -178,7 +184,7 @@ typedef void (^MXOnResumeDone)(void);
         rooms = [NSMutableDictionary dictionary];
         roomsSummaries = [NSMutableDictionary dictionary];
         _roomSummaryUpdateDelegate = [MXRoomSummaryUpdater roomSummaryUpdaterForSession:self];
-        _directRooms = [NSMutableDictionary dictionary];
+        directRooms = [NSMutableDictionary dictionary];
         globalEventListeners = [NSMutableArray array];
         _notificationCenter = [[MXNotificationCenter alloc] initWithMatrixSession:self];
         _accountData = [[MXAccountData alloc] init];
@@ -332,8 +338,6 @@ typedef void (^MXOnResumeDone)(void);
                 NSLog(@"[MXSession] Total time to mount SDK data from MXStore: %.0fms", duration * 1000);
 
                 [[MXSDKOptions sharedInstance].analyticsDelegate trackStartupMountDataDuration:duration];
-
-                [self updateDirectRoomsData];
                 
                 [self setState:MXSessionStateStoreDataReady];
 
@@ -1049,8 +1053,6 @@ typedef void (^MXOnResumeDone)(void);
 
             if (self->didDirectRoomsChange)
             {
-                [self updateDirectRoomsData];
-
                 self->didDirectRoomsChange = NO;
 
                 [[NSNotificationCenter defaultCenter] postNotificationName:kMXSessionDirectRoomsDidChangeNotification
@@ -1378,11 +1380,11 @@ typedef void (^MXOnResumeDone)(void);
             {
                 if ([event[@"content"] isKindOfClass:NSDictionary.class])
                 {
-                    _directRooms = [NSMutableDictionary dictionaryWithDictionary:event[@"content"]];
+                    directRooms = [NSMutableDictionary dictionaryWithDictionary:event[@"content"]];
                 }
                 else
                 {
-                    [_directRooms removeAllObjects];
+                    [directRooms removeAllObjects];
                 }
                 
                 // Update the information of the direct rooms.
@@ -1414,36 +1416,6 @@ typedef void (^MXOnResumeDone)(void);
                                                       userInfo:@{
                                                                  kMXSessionNotificationEventKey: event
                                                                  }];
-}
-
-- (void)updateDirectRoomsData
-{
-    // Update for each room the user identifier for whom the room is tagged as direct if any.
-    
-    // Reset first the current data
-    for (MXRoom *room in self.rooms)
-    {
-        room.directUserId = nil;
-    }
-    
-    // Enumerate all the user identifiers for which a direct chat is defined.
-    NSArray<NSString *> *userIdWithDirectRoom = self.directRooms.allKeys;
-    
-    for (NSString *userId in userIdWithDirectRoom)
-    {
-        // Retrieve the direct chats
-        NSArray *directRoomIds = self.directRooms[userId];
-        
-        // Check whether the room is still existing, then set its direct user id.
-        for (NSString* directRoomId in directRoomIds)
-        {
-            MXRoom *directRoom = [rooms objectForKey:directRoomId];
-            if (directRoom)
-            {
-                directRoom.directUserId = userId;
-            }
-        }
-    }
 }
 
 /**
@@ -1840,6 +1812,14 @@ typedef void (^MXOnResumeDone)(void);
     return [rooms allValues];
 }
 
+
+#pragma mark - The user's direct rooms
+
+- (NSDictionary<NSString *,NSArray<NSString *> *> *)directRooms
+{
+    return [directRooms copy];
+}
+
 - (MXRoom *)directJoinedRoomWithUserId:(NSString*)userId
 {
     // Retrieve the existing direct chats
@@ -1862,25 +1842,79 @@ typedef void (^MXOnResumeDone)(void);
     return nil;
 }
 
-- (MXHTTPOperation*)uploadDirectRooms:(void (^)(void))success
-                              failure:(void (^)(NSError *error))failure
+
+- (MXHTTPOperation*)setRoom:(NSString*)roomId
+           directWithUserId:(NSString*)userId
+                    success:(void (^)(void))success
+                    failure:(void (^)(NSError *error))failure
 {
-    MXWeakify(self);
-    
-    // Push the current direct rooms dictionary to the homeserver.
-    return [self setAccountData:_directRooms forType:kMXAccountDataTypeDirect success:^{
-        MXStrongifyAndReturnIfNil(self);
-        
-        // Notify a change in direct rooms directory
-        [[NSNotificationCenter defaultCenter] postNotificationName:kMXSessionDirectRoomsDidChangeNotification
-                                                            object:self
-                                                          userInfo:nil];
+    NSMutableDictionary<NSString *,NSArray<NSString *> *> *newDirectRooms = [directRooms mutableCopy];
+
+    // Remove the current direct user id
+    MXRoom *room = [self roomWithRoomId:roomId];
+    NSString *currentDirectUserId = room.directUserId;
+    if (currentDirectUserId)
+    {
+        NSMutableArray *roomIds = [NSMutableArray arrayWithArray:newDirectRooms[currentDirectUserId]];
+        [roomIds removeObject:roomId];
+
+        if (roomIds.count)
+        {
+            newDirectRooms[currentDirectUserId] = roomIds;
+        }
+        else
+        {
+            [newDirectRooms removeObjectForKey:currentDirectUserId];
+        }
+    }
+
+    // Update with the new one
+    if (userId)
+    {
+        if (![newDirectRooms[userId] containsObject:roomId])
+        {
+            NSMutableArray *roomIds = [NSMutableArray arrayWithArray:newDirectRooms[userId]];
+            [roomIds addObject:roomId];
+            newDirectRooms[userId] = roomIds;
+        }
+    }
+
+    return [self uploadDirectRooms:newDirectRooms success:success failure:failure];
+}
+
+- (MXHTTPOperation*)uploadDirectRooms:(NSDictionary<NSString *,NSArray<NSString *> *> *)newDirectRooms
+                              success:(void (^)(void))success
+                              failure:(void (^)(NSError *))failure
+{
+    // If there is no change, do nothing
+    if (directRooms == newDirectRooms || [directRooms isEqualToDictionary:newDirectRooms])
+    {
         if (success)
         {
             success();
         }
-        
-    } failure:failure];
+
+        return nil;
+    }
+
+    // Wait that the response come back down the event stream
+    // Else, just wait for the corresponding kMXRoomInitialSyncNotification
+    // that will be fired from MXRoom.
+    if (success)
+    {
+        __block id directRoomsDidChangeObserver = [[NSNotificationCenter defaultCenter] addObserverForName:kMXSessionDirectRoomsDidChangeNotification object:nil queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
+
+            if ([newDirectRooms isEqualToDictionary:self.directRooms])
+            {
+                [[NSNotificationCenter defaultCenter] removeObserver:directRoomsDidChangeObserver];
+
+                success();
+            }
+        }];
+    }
+
+    // Push the current direct rooms dictionary to the homeserver
+    return [self setAccountData:newDirectRooms forType:kMXAccountDataTypeDirect success:nil failure:failure];
 }
 
 - (MXRoom *)getOrCreateRoom:(NSString *)roomId notify:(BOOL)notify
