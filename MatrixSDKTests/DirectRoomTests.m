@@ -277,10 +277,8 @@
 }
 
 // After the scenario:
-// - Bob makes the room with Charlie no more direct
-// - Bob makes one room with Alice no more direct
-// - Bob makes the room with Charlie direct again
-// -> Bob must have one direct room with Alice and one direct room with Charlie at the end
+// Bob changes several times his direct rooms configuration
+// -> After each request, Bob must have consistent direct rooms
 // In case of race condtions in the code, this test can randomly fails.
 - (void)testDirectRoomsRaceConditions
 {
@@ -288,41 +286,97 @@
 
         MXRoom *roomWithCharlie = [bobSession roomWithRoomId:bobSession.directRooms[charlieUserId].firstObject];
         MXRoom *roomWithAlice = [bobSession roomWithRoomId:bobSession.directRooms[aliceUserId].firstObject];
+        MXRoom *room2WithAlice = [bobSession roomWithRoomId:bobSession.directRooms[aliceUserId].lastObject];
 
+        __block NSUInteger successCount = 0, notificationCount = 0;
         __block id observer;
         observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXSessionDirectRoomsDidChangeNotification object:bobSession queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
 
-            NSLog(@"[testDirectRoomsRaceConditions] Direct rooms with Alice: %@", @(bobSession.directRooms[aliceUserId].count));
-            NSLog(@"[testDirectRoomsRaceConditions] Direct rooms with Charlie: %@", @(bobSession.directRooms[charlieUserId].count));
-
-            // Wait until we get the 2 expected direct rooms
-            if (observer
-                && bobSession.directRooms[aliceUserId].count == 1
-                && bobSession.directRooms[charlieUserId].count == 1)
+            if (observer)
             {
-                [[NSNotificationCenter defaultCenter] removeObserver:observer];
-                observer = nil;
+                NSLog(@"[testDirectRoomsRaceConditions] Direct rooms with Alice: %@", @(bobSession.directRooms[aliceUserId].count));
+                NSLog(@"[testDirectRoomsRaceConditions] Direct rooms with Charlie: %@", @(bobSession.directRooms[charlieUserId].count));
 
-                [expectation fulfill];
+                notificationCount++;
             }
         }];
 
-        [roomWithCharlie setIsDirect:NO withUserId:nil success:nil failure:^(NSError *error) {
+
+        XCTAssertTrue(roomWithCharlie.isDirect);
+        [roomWithCharlie setIsDirect:NO withUserId:nil success:^{
+            successCount++;
+            XCTAssertEqual(roomWithCharlie.directUserId, nil);
+        } failure:^(NSError *error) {
             XCTFail(@"The operation should not fail - NSError: %@", error);
             [expectation fulfill];
         }];
 
-        [roomWithAlice setIsDirect:NO withUserId:nil success:nil failure:^(NSError *error) {
+        XCTAssertTrue(roomWithAlice.isDirect);
+        [roomWithAlice setIsDirect:NO withUserId:nil success:^{
+            successCount++;
+            XCTAssertEqual(roomWithAlice.directUserId, nil);
+        } failure:^(NSError *error) {
             XCTFail(@"The operation should not fail - NSError: %@", error);
             [expectation fulfill];
         }];
 
-        [roomWithCharlie setIsDirect:YES withUserId:nil success:nil failure:^(NSError *error) {
+        XCTAssertTrue(room2WithAlice.isDirect);
+        [room2WithAlice setIsDirect:NO withUserId:nil success:^{
+            successCount++;
+            XCTAssertEqual(room2WithAlice.directUserId, nil);
+        } failure:^(NSError *error) {
             XCTFail(@"The operation should not fail - NSError: %@", error);
             [expectation fulfill];
         }];
 
+        // Set a random direct user id. There is no control on that
+        [roomWithCharlie setIsDirect:YES withUserId:@"@aRandomUser:matrix.org" success:^{
+            successCount++;
+            XCTAssertEqualObjects(roomWithCharlie.directUserId, @"@aRandomUser:matrix.org");
+        } failure:^(NSError *error) {
+            XCTFail(@"The operation should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
 
+        // Go back to Charlie as direct user id
+        [roomWithCharlie setIsDirect:YES withUserId:nil success:^{
+            successCount++;
+            XCTAssertEqualObjects(roomWithCharlie.directUserId, charlieUserId);
+        } failure:^(NSError *error) {
+            XCTFail(@"The operation should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+
+        // Repeat the same operation. kMXSessionDirectRoomsDidChangeNotification should not be called
+        [roomWithCharlie setIsDirect:YES withUserId:charlieUserId success:^{
+            successCount++;
+            XCTAssertEqualObjects(roomWithCharlie.directUserId, charlieUserId);
+        } failure:^(NSError *error) {
+            XCTFail(@"The operation should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+
+        [roomWithAlice setIsDirect:YES withUserId:nil success:^{
+            successCount++;
+            XCTAssertEqualObjects(roomWithAlice.directUserId, aliceUserId);
+
+            XCTAssertEqual(successCount, 7);
+            XCTAssertEqual(successCount - 1, notificationCount);    // The previous request should not have triggered kMXSessionDirectRoomsDidChangeNotification
+
+            // Expected direct rooms state at the end of the test
+            XCTAssertEqual(bobSession.directRooms.count, 2);
+            XCTAssertEqual(bobSession.directRooms[aliceUserId].count, 1);
+            XCTAssertEqual(bobSession.directRooms[charlieUserId].count, 1);
+
+            [[NSNotificationCenter defaultCenter] removeObserver:observer];
+            observer = nil;
+
+            [expectation fulfill];
+
+        } failure:^(NSError *error) {
+            XCTFail(@"The operation should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
     }];
 }
 

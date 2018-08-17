@@ -148,6 +148,12 @@ typedef void (^MXOnResumeDone)(void);
     BOOL didDirectRoomsChange;
     
     /**
+     Queue of requested direct room change operations ([MXSession setRoom:directWithUserId:]
+     or [MXSession uploadDirectRooms:])
+     */
+    NSMutableArray<dispatch_block_t> *directRoomsOperationsQueue;
+   
+    /**
      The current publicised groups list by userId dictionary.
      The key is the user id; the value, the list of the group ids that the user enabled in his profile.
      */
@@ -183,6 +189,7 @@ typedef void (^MXOnResumeDone)(void);
         _accountData = [[MXAccountData alloc] init];
         peekingRooms = [NSMutableArray array];
         _preventPauseCount = 0;
+        directRoomsOperationsQueue = [NSMutableArray array];
         publicisedGroupsByUserId = [[NSMutableDictionary alloc] init];
         
         firstSyncDone = NO;
@@ -685,6 +692,10 @@ typedef void (^MXOnResumeDone)(void);
     // Cancel the current server request (if any)
     [eventStreamRequest cancel];
     eventStreamRequest = nil;
+
+    // Flush pending direct room operations
+    [directRoomsOperationsQueue removeAllObjects];
+    directRoomsOperationsQueue = nil;
 
     // Clean MXUsers
     for (MXUser *user in self.users)
@@ -1836,47 +1847,80 @@ typedef void (^MXOnResumeDone)(void);
                     success:(void (^)(void))success
                     failure:(void (^)(NSError *error))failure
 {
-    NSMutableDictionary<NSString *,NSArray<NSString *> *> *newDirectRooms = [_directRooms mutableCopy];
-    if (!newDirectRooms)
-    {
-        newDirectRooms = [NSMutableDictionary dictionary];
-    }
+    MXHTTPOperation *operation = [MXHTTPOperation new];
 
-    // Remove the current direct user id
-    MXRoom *room = [self roomWithRoomId:roomId];
-    NSString *currentDirectUserId = room.directUserId;
-    if (currentDirectUserId)
-    {
-        NSMutableArray *roomIds = [NSMutableArray arrayWithArray:newDirectRooms[currentDirectUserId]];
-        [roomIds removeObject:roomId];
+    MXWeakify(self);
+    [self runOrQueueDirectRoomOperation:^{
+        MXStrongifyAndReturnIfNil(self);
 
-        if (roomIds.count)
+        NSMutableDictionary<NSString *,NSArray<NSString *> *> *newDirectRooms = [self.directRooms mutableCopy];
+        if (!newDirectRooms)
         {
-            newDirectRooms[currentDirectUserId] = roomIds;
+            newDirectRooms = [NSMutableDictionary dictionary];
         }
-        else
-        {
-            [newDirectRooms removeObjectForKey:currentDirectUserId];
-        }
-    }
 
-    // Update with the new one
-    if (userId)
-    {
-        if (![newDirectRooms[userId] containsObject:roomId])
+        // Remove the current direct user id
+        MXRoom *room = [self roomWithRoomId:roomId];
+        NSString *currentDirectUserId = room.directUserId;
+        if (currentDirectUserId)
         {
-            NSMutableArray *roomIds = [NSMutableArray arrayWithArray:newDirectRooms[userId]];
-            [roomIds addObject:roomId];
-            newDirectRooms[userId] = roomIds;
-        }
-    }
+            NSMutableArray *roomIds = [NSMutableArray arrayWithArray:newDirectRooms[currentDirectUserId]];
+            [roomIds removeObject:roomId];
 
-    return [self uploadDirectRooms:newDirectRooms success:success failure:failure];
+            if (roomIds.count)
+            {
+                newDirectRooms[currentDirectUserId] = roomIds;
+            }
+            else
+            {
+                [newDirectRooms removeObjectForKey:currentDirectUserId];
+            }
+        }
+
+        // Update with the new one
+        if (userId)
+        {
+            if (![newDirectRooms[userId] containsObject:roomId])
+            {
+                NSMutableArray *roomIds = [NSMutableArray arrayWithArray:newDirectRooms[userId]];
+                [roomIds addObject:roomId];
+                newDirectRooms[userId] = roomIds;
+            }
+        }
+
+        MXHTTPOperation *operation2 = [self uploadDirectRoomsInOperationsQueue:newDirectRooms success:success failure:failure];
+        if (operation2)
+        {
+            [operation mutateTo:operation2];
+        }
+    }];
+
+    return operation;
 }
 
 - (MXHTTPOperation*)uploadDirectRooms:(NSDictionary<NSString *,NSArray<NSString *> *> *)directRooms
                               success:(void (^)(void))success
                               failure:(void (^)(NSError *))failure
+{
+    MXHTTPOperation *operation = [MXHTTPOperation new];
+
+    MXWeakify(self);
+    [self runOrQueueDirectRoomOperation:^{
+        MXStrongifyAndReturnIfNil(self);
+
+        MXHTTPOperation *operation2 = [self uploadDirectRoomsInOperationsQueue:directRooms success:success failure:failure];
+        if (operation2)
+        {
+            [operation mutateTo:operation2];
+        }
+    }];
+
+    return operation;
+}
+
+- (MXHTTPOperation*)uploadDirectRoomsInOperationsQueue:(NSDictionary<NSString *,NSArray<NSString *> *> *)directRooms
+                                               success:(void (^)(void))success
+                                               failure:(void (^)(NSError *))failure
 {
     // If there is no change, do nothing
     if (_directRooms == directRooms
@@ -1888,29 +1932,67 @@ typedef void (^MXOnResumeDone)(void);
             success();
         }
 
+        [self runNextDirectRoomOperation];
         return nil;
     }
 
-    // Wait that the response come back down the event stream
-    // Else, just wait for the corresponding kMXRoomInitialSyncNotification
-    // that will be fired from MXRoom.
-    if (success)
-    {
-        MXWeakify(self);
-        __block id directRoomsDidChangeObserver = [[NSNotificationCenter defaultCenter] addObserverForName:kMXSessionDirectRoomsDidChangeNotification object:nil queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
-            MXStrongifyAndReturnIfNil(self);
+    // Wait that the response comes back down the event stream
+    MXWeakify(self);
+    __block id directRoomsDidChangeObserver = [[NSNotificationCenter defaultCenter] addObserverForName:kMXSessionDirectRoomsDidChangeNotification object:nil queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
+        MXStrongifyAndReturnIfNil(self);
 
-            if ([self.directRooms isEqualToDictionary:directRooms])
+        if ([self.directRooms isEqualToDictionary:directRooms])
+        {
+            [[NSNotificationCenter defaultCenter] removeObserver:directRoomsDidChangeObserver];
+
+            if (success)
             {
-                [[NSNotificationCenter defaultCenter] removeObserver:directRoomsDidChangeObserver];
-
                 success();
             }
-        }];
-    }
+
+            [self runNextDirectRoomOperation];
+        }
+    }];
 
     // Push the current direct rooms dictionary to the homeserver
-    return [self setAccountData:directRooms forType:kMXAccountDataTypeDirect success:nil failure:failure];
+    return [self setAccountData:directRooms forType:kMXAccountDataTypeDirect success:nil failure:^(NSError *error) {
+        MXStrongifyAndReturnIfNil(self);
+
+        if (failure)
+        {
+            failure(error);
+        }
+        
+        [self runNextDirectRoomOperation];
+    }];
+}
+
+// To avoid race conditions, run one HTTP request at a time
+// If there is a pending HTTP request, the change will be applied on the updated direct rooms data
+- (void)runOrQueueDirectRoomOperation:(dispatch_block_t)directRoomOperation
+{
+    [directRoomsOperationsQueue addObject:[directRoomOperation copy]];
+    if (directRoomsOperationsQueue.count == 1)
+    {
+        directRoomsOperationsQueue.firstObject();
+    }
+    else
+    {
+        NSLog(@"[MXSession] runOrQueueDirectRoomOperation: Queue operation %p", directRoomsOperationsQueue.lastObject);
+    }
+}
+
+- (void)runNextDirectRoomOperation
+{
+    // Dequeue the completed operation
+    [directRoomsOperationsQueue removeObjectAtIndex:0];
+
+    // And run the next one if any
+    if (directRoomsOperationsQueue.firstObject)
+    {
+        NSLog(@"[MXSession] runOrQueueDirectRoomOperation: Execute queued operation %p", directRoomsOperationsQueue.firstObject);
+        directRoomsOperationsQueue.firstObject();
+    }
 }
 
 - (MXRoom *)getOrCreateRoom:(NSString *)roomId notify:(BOOL)notify
