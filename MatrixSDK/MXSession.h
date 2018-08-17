@@ -754,7 +754,6 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
  The list of the direct rooms by user identifiers.
  
  A dictionary where the keys are the user IDs and values are lists of room ID strings.
- of the 'direct' rooms for that user ID.
  */
 @property (nonatomic, readonly) NSDictionary<NSString*, NSArray<NSString*>*> *directRooms;
 
@@ -764,7 +763,6 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
  @return the MXRoom instance (nil if no room exists yet).
  */
 - (MXRoom *)directJoinedRoomWithUserId:(NSString*)userId;
-
 
 /**
  Set a room as direct with a user.

@@ -2920,7 +2920,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
     }
     else
     {
-        // Remove the
+        // Remove the direct user id
         operation = [self.mxSession setRoom:_roomId directWithUserId:nil success:success failure:failure];
     }
 

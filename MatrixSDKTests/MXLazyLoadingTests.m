@@ -1107,7 +1107,8 @@ Common initial conditions:
                     directRoomsDidChangeNotificationCountWhileStarting++;
 
                     // We must receive a single big update
-                    // Else we have a race condition like in https://github.com/vector-im/riot-ios/issues/1983
+                    // Else the code decided to update direct rooms while processing the /sync responce.
+                    // which means there is a race condition like in https://github.com/vector-im/riot-ios/issues/1983
                     XCTAssertEqual(aliceSession2.directRooms.count, 2);
                     XCTAssertEqual(aliceSession2.directRooms[bobSession.myUser.userId].count, 2);
                     XCTAssertEqual(aliceSession2.directRooms[charlieSession.myUser.userId].count, 1);
