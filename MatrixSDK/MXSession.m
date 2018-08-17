@@ -1875,7 +1875,7 @@ typedef void (^MXOnResumeDone)(void);
         {
             if (![newDirectRooms[userId] containsObject:roomId])
             {
-                NSMutableArray *roomIds = [NSMutableArray arrayWithArray:newDirectRooms[userId]];
+                NSMutableArray *roomIds = (newDirectRooms[userId] ? [NSMutableArray arrayWithArray:newDirectRooms[userId]] : [NSMutableArray array]);
                 [roomIds addObject:roomId];
                 newDirectRooms[userId] = roomIds;
             }
