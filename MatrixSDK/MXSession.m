@@ -373,19 +373,26 @@ typedef void (^MXOnResumeDone)(void);
            onServerSyncDone:(void (^)(void))onServerSyncDone
                     failure:(void (^)(NSError *error))failure;
 {
-    // Build or retrieve the filter before launching the event stream
-    MXWeakify(self);
-    [self setFilter:syncFilter success:^(NSString *filterId) {
-        MXStrongifyAndReturnIfNil(self);
+    if (syncFilter)
+    {
+        // Build or retrieve the filter before launching the event stream
+        MXWeakify(self);
+        [self setFilter:syncFilter success:^(NSString *filterId) {
+            MXStrongifyAndReturnIfNil(self);
 
-        [self startWithSyncFilterId:filterId onServerSyncDone:onServerSyncDone failure:failure];
+            [self startWithSyncFilterId:filterId onServerSyncDone:onServerSyncDone failure:failure];
 
-    } failure:^(NSError *error) {
-        MXStrongifyAndReturnIfNil(self);
+        } failure:^(NSError *error) {
+            MXStrongifyAndReturnIfNil(self);
 
-        NSLog(@"[MXSesssion] startWithSyncFilter: WARNING: Impossible to create the filter. Use no filter in /sync");
+            NSLog(@"[MXSesssion] startWithSyncFilter: WARNING: Impossible to create the filter. Use no filter in /sync");
+            [self startWithSyncFilterId:nil onServerSyncDone:onServerSyncDone failure:failure];
+        }];
+    }
+    else
+    {
         [self startWithSyncFilterId:nil onServerSyncDone:onServerSyncDone failure:failure];
-    }];
+    }
 }
 
 - (void)startWithSyncFilterId:(NSString *)syncFilterId onServerSyncDone:(void (^)(void))onServerSyncDone failure:(void (^)(NSError *))failure

@@ -7,6 +7,7 @@ Improvements:
 Bug fix:
  * Direct rooms can be lost on an initial /sync (vector-im/riot-ios/issues/1983).
  * Fix possible race conditions in direct rooms management.
+ * Avoid to create an empty filter on each [MXSession start:]
 
 Changes in Matrix iOS SDK in 0.11.0 (2018-08-10)
 ===============================================
