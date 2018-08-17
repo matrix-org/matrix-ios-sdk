@@ -277,42 +277,48 @@
 
     [matrixSDKTestsData doMXSessionTestWithBob:self andStore:store readyToTest:^(MXSession *mxSession, XCTestExpectation *expectation) {
 
-        MXFilterJSONModel *filter = [MXFilterJSONModel syncFilterWithMessageLimit:0];
+        // Make a random request to wake up the store so that next requests will be
+        // more synchronousish and easier to test
+        [mxSession filterWithFilterId:@"aFakeFilterId" success:nil failure:^(NSError *error) {
 
-        MXHTTPOperation *operation = [mxSession setFilter:filter success:^(NSString *filterId) {
+            MXFilterJSONModel *filter = [MXFilterJSONModel syncFilterWithMessageLimit:0];
 
-            XCTAssertNotNil(filterId);
-
-            MXHTTPOperation *operation2 = [mxSession setFilter:filter success:^(NSString *filterId2) {
+            MXHTTPOperation *operation = [mxSession setFilter:filter success:^(NSString *filterId) {
 
                 XCTAssertNotNil(filterId);
-                XCTAssertEqualObjects(filterId, filterId2);
 
-                MXHTTPOperation *operation3 = [mxSession filterWithFilterId:filterId success:^(MXFilterJSONModel *filter2) {
+                MXHTTPOperation *operation2 = [mxSession setFilter:filter success:^(NSString *filterId2) {
 
-                    XCTAssertEqualObjects(filter, filter2);
-                    [expectation fulfill];
+                    XCTAssertNotNil(filterId);
+                    XCTAssertEqualObjects(filterId, filterId2);
+
+                    MXHTTPOperation *operation3 = [mxSession filterWithFilterId:filterId success:^(MXFilterJSONModel *filter2) {
+
+                        XCTAssertEqualObjects(filter, filter2);
+                        [expectation fulfill];
+
+                    } failure:^(NSError *error) {
+                        XCTFail(@"The operation should not fail - NSError: %@", error);
+                        [expectation fulfill];
+                    }];
+
+                    XCTAssertNil(operation3.operation, @"No HTTP request is required for filter already created");
 
                 } failure:^(NSError *error) {
                     XCTFail(@"The operation should not fail - NSError: %@", error);
                     [expectation fulfill];
                 }];
-                
-                XCTAssertNil(operation3.operation, @"No HTTP request is required for filter already created");
+
+                XCTAssertNil(operation2.operation, @"No HTTP request is required for filter already created");
 
             } failure:^(NSError *error) {
                 XCTFail(@"The operation should not fail - NSError: %@", error);
                 [expectation fulfill];
             }];
 
-            XCTAssertNil(operation2.operation, @"No HTTP request is required for filter already created");
+            XCTAssert(operation.operation, @"An HTTP request should have been made");
 
-        } failure:^(NSError *error) {
-            XCTFail(@"The operation should not fail - NSError: %@", error);
-            [expectation fulfill];
         }];
-
-        XCTAssert(operation.operation, @"An HTTP request should have been made");
     }];
 }
 

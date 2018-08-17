@@ -93,24 +93,27 @@
                     if (notif.object == bobSession)
                     {
                         // Yield so that bobSession completes the saving to the cache.
+                        // TODO: Find a more accurate point of sync...
                         dispatch_async(dispatch_get_main_queue(), ^{
+                            dispatch_async(dispatch_get_main_queue(), ^{
 
-                            [bobSession close];
+                                [bobSession close];
 
-                            // Check the information have been permanently stored
-                            MXSession *bobSession2 = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
-                            MXFileStore *store2 = [[MXFileStore alloc] init];
-                            [bobSession2 setStore:store2 success:^{
+                                // Check the information have been permanently stored
+                                MXSession *bobSession2 = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
+                                MXFileStore *store2 = [[MXFileStore alloc] init];
+                                [bobSession2 setStore:store2 success:^{
 
-                                XCTAssertEqual(bobSession2.ignoredUsers.count, 1);
-                                XCTAssertEqual([bobSession2 isUserIgnored:aliceRestClient.credentials.userId], YES);
+                                    XCTAssertEqual(bobSession2.ignoredUsers.count, 1);
+                                    XCTAssertEqual([bobSession2 isUserIgnored:aliceRestClient.credentials.userId], YES);
 
-                                [expectation fulfill];
+                                    [expectation fulfill];
 
-                            } failure:^(NSError *error) {
-                                XCTFail(@"Cannot set up intial test conditions - error: %@", error);
-                                [expectation fulfill];
-                            }];
+                                } failure:^(NSError *error) {
+                                    XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                                    [expectation fulfill];
+                                }];
+                            });
                         });
                     }
 
@@ -155,25 +158,28 @@
                     if (notif.object == bobSession)
                     {
                         // Yield so that bobSession completes the saving to the cache.
+                        // TODO: Find a more accurate point of sync...
                         dispatch_async(dispatch_get_main_queue(), ^{
+                            dispatch_async(dispatch_get_main_queue(), ^{
 
-                            [bobSession close];
+                                [bobSession close];
 
-                            // Check the information have been permanently stored
-                            MXSession *bobSession2 = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
-                            MXFileStore *store2 = [[MXFileStore alloc] init];
-                            [bobSession2 setStore:store2 success:^{
+                                // Check the information have been permanently stored
+                                MXSession *bobSession2 = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
+                                MXFileStore *store2 = [[MXFileStore alloc] init];
+                                [bobSession2 setStore:store2 success:^{
 
-                                MXPushRulesResponse *pushRules2 = bobSession2.notificationCenter.rules;
+                                    MXPushRulesResponse *pushRules2 = bobSession2.notificationCenter.rules;
 
-                                XCTAssert([pushRules.JSONDictionary isEqualToDictionary:pushRules2.JSONDictionary], @"Push Rules has unexpectedly changed: \n%@\nto:\n%@", pushRules.JSONDictionary, pushRules2.JSONDictionary);
+                                    XCTAssert([pushRules.JSONDictionary isEqualToDictionary:pushRules2.JSONDictionary], @"Push Rules has unexpectedly changed: \n%@\nto:\n%@", pushRules.JSONDictionary, pushRules2.JSONDictionary);
 
-                                [expectation fulfill];
+                                    [expectation fulfill];
 
-                            } failure:^(NSError *error) {
-                                XCTFail(@"Cannot set up intial test conditions - error: %@", error);
-                                [expectation fulfill];
-                            }];
+                                } failure:^(NSError *error) {
+                                    XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                                    [expectation fulfill];
+                                }];
+                            });
                         });
                     }
                 }];
