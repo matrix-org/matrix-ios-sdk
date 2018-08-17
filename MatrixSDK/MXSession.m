@@ -143,11 +143,6 @@ typedef void (^MXOnResumeDone)(void);
     BOOL firstSyncDone;
     
     /**
-     Tell whether the direct rooms list has been updated during last account data parsing.
-     */
-    BOOL didDirectRoomsChange;
-    
-    /**
      Queue of requested direct room change operations ([MXSession setRoom:directWithUserId:]
      or [MXSession uploadDirectRooms:])
      */
@@ -193,7 +188,6 @@ typedef void (^MXOnResumeDone)(void);
         publicisedGroupsByUserId = [[NSMutableDictionary alloc] init];
         
         firstSyncDone = NO;
-        didDirectRoomsChange = NO;
 
         id<MXBackgroundModeHandler> handler = [MXSDKOptions sharedInstance].backgroundModeHandler;
         if (handler)
@@ -928,6 +922,12 @@ typedef void (^MXOnResumeDone)(void);
             nextServerTimeout = 0;
         }
 
+        // Handle top-level account data
+        if (syncResponse.accountData)
+        {
+            [self handleAccountData:syncResponse.accountData];
+        }
+
         // Handle first joined rooms
         for (NSString *roomId in syncResponse.rooms.join)
         {
@@ -1047,22 +1047,6 @@ typedef void (^MXOnResumeDone)(void);
         // Sync point: wait that all rooms in the /sync response have been loaded
         // and their /sync response has been processed
         [self preloadRoomsData:[self roomsInSyncResponse:syncResponse] onComplete:^{
-
-            // Handle top-level account data
-            self->didDirectRoomsChange = NO;
-            if (syncResponse.accountData)
-            {
-                [self handleAccountData:syncResponse.accountData];
-            }
-
-            if (self->didDirectRoomsChange)
-            {
-                self->didDirectRoomsChange = NO;
-
-                [[NSNotificationCenter defaultCenter] postNotificationName:kMXSessionDirectRoomsDidChangeNotification
-                                                                    object:self
-                                                                  userInfo:nil];
-            }
 
             if (self.crypto)
             {
@@ -1391,7 +1375,9 @@ typedef void (^MXOnResumeDone)(void);
                     _directRooms = directRooms;
 
                     // Update the information of the direct rooms.
-                    didDirectRoomsChange = YES;
+                    [[NSNotificationCenter defaultCenter] postNotificationName:kMXSessionDirectRoomsDidChangeNotification
+                                                                        object:self
+                                                                      userInfo:nil];
                 }
             }
 

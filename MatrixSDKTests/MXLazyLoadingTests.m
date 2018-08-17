@@ -1079,7 +1079,7 @@ Common initial conditions:
     [self createScenarioWithLazyLoading:lazyLoading readyToTest:^(MXSession *aliceSession, MXSession *bobSession, MXSession *charlieSession, NSString *roomId, XCTestExpectation *expectation) {
 
         __block id observer;
-        observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXSessionDirectRoomsDidChangeNotification object:bobSession queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
+        observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXSessionDirectRoomsDidChangeNotification object:aliceSession queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
 
             // Wait until we get the 3 direct rooms
             if (observer
@@ -1101,9 +1101,28 @@ Common initial conditions:
                     filter = [MXFilterJSONModel syncFilterForLazyLoading];
                 }
 
+                __block NSUInteger directRoomsDidChangeNotificationCountWhileStarting = 0;
+                [[NSNotificationCenter defaultCenter] addObserverForName:kMXSessionDirectRoomsDidChangeNotification object:aliceSession2 queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
+
+                    directRoomsDidChangeNotificationCountWhileStarting++;
+
+                    // We must receive a single big update
+                    // Else we have a race condition like in https://github.com/vector-im/riot-ios/issues/1983
+                    XCTAssertEqual(aliceSession2.directRooms.count, 2);
+                    XCTAssertEqual(aliceSession2.directRooms[bobSession.myUser.userId].count, 2);
+                    XCTAssertEqual(aliceSession2.directRooms[charlieSession.myUser.userId].count, 1);
+
+                    if (directRoomsDidChangeNotificationCountWhileStarting > 1)
+                    {
+                        XCTFail(@"We should receive one big kMXSessionDirectRoomsDidChangeNotification");
+                    }
+                }];
+
+
                 [aliceSession2 startWithSyncFilter:filter onServerSyncDone:^{
 
                     // -> He must still see 2 direct rooms with Alice and 1 with Charlie
+                    XCTAssertEqual(aliceSession2.directRooms.count, 2);
                     XCTAssertEqual(aliceSession2.directRooms[bobSession.myUser.userId].count, 2);
                     XCTAssertEqual(aliceSession2.directRooms[charlieSession.myUser.userId].count, 1);
                     [expectation fulfill];
