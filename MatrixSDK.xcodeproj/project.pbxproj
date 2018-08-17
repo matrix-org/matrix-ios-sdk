@@ -174,6 +174,11 @@
 		32B76EA520FDE85100B095F6 /* MXRoomMembersCount.m in Sources */ = {isa = PBXBuildFile; fileRef = 32B76EA420FDE85100B095F6 /* MXRoomMembersCount.m */; };
 		32BD34BE1E84134A006EDC0D /* MatrixSDKTestsE2EData.m in Sources */ = {isa = PBXBuildFile; fileRef = 32BD34BD1E84134A006EDC0D /* MatrixSDKTestsE2EData.m */; };
 		32BED28F1B00A23F00E668FE /* MXCallStack.h in Headers */ = {isa = PBXBuildFile; fileRef = 32BED28E1B00A23F00E668FE /* MXCallStack.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		32C03CB62123076F00D92712 /* DirectRoomTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 32C03CB52123076F00D92712 /* DirectRoomTests.m */; };
+		32C03CBB21231C2600D92712 /* Podfile in Resources */ = {isa = PBXBuildFile; fileRef = 32C03CB721231C2500D92712 /* Podfile */; };
+		32C03CBC21231C2600D92712 /* README.rst in Resources */ = {isa = PBXBuildFile; fileRef = 32C03CB821231C2500D92712 /* README.rst */; };
+		32C03CBD21231C2600D92712 /* CHANGES.rst in Resources */ = {isa = PBXBuildFile; fileRef = 32C03CB921231C2500D92712 /* CHANGES.rst */; };
+		32C03CBE21231C2600D92712 /* AUTHORS.rst in Resources */ = {isa = PBXBuildFile; fileRef = 32C03CBA21231C2500D92712 /* AUTHORS.rst */; };
 		32C235721F827F3800E38FC5 /* MXRoomOperation.h in Headers */ = {isa = PBXBuildFile; fileRef = 32C235701F827F3800E38FC5 /* MXRoomOperation.h */; };
 		32C235731F827F3800E38FC5 /* MXRoomOperation.m in Sources */ = {isa = PBXBuildFile; fileRef = 32C235711F827F3800E38FC5 /* MXRoomOperation.m */; };
 		32C6F93319DD814400EA4E9C /* MatrixSDK.h in Headers */ = {isa = PBXBuildFile; fileRef = 32C6F93219DD814400EA4E9C /* MatrixSDK.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -463,6 +468,11 @@
 		32BD34BC1E84134A006EDC0D /* MatrixSDKTestsE2EData.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MatrixSDKTestsE2EData.h; sourceTree = "<group>"; };
 		32BD34BD1E84134A006EDC0D /* MatrixSDKTestsE2EData.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MatrixSDKTestsE2EData.m; sourceTree = "<group>"; };
 		32BED28E1B00A23F00E668FE /* MXCallStack.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXCallStack.h; sourceTree = "<group>"; };
+		32C03CB52123076F00D92712 /* DirectRoomTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DirectRoomTests.m; sourceTree = "<group>"; };
+		32C03CB721231C2500D92712 /* Podfile */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = Podfile; sourceTree = "<group>"; };
+		32C03CB821231C2500D92712 /* README.rst */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = README.rst; sourceTree = "<group>"; };
+		32C03CB921231C2500D92712 /* CHANGES.rst */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = CHANGES.rst; sourceTree = "<group>"; };
+		32C03CBA21231C2500D92712 /* AUTHORS.rst */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = AUTHORS.rst; sourceTree = "<group>"; };
 		32C235701F827F3800E38FC5 /* MXRoomOperation.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MXRoomOperation.h; sourceTree = "<group>"; };
 		32C235711F827F3800E38FC5 /* MXRoomOperation.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MXRoomOperation.m; sourceTree = "<group>"; };
 		32C6F92D19DD814400EA4E9C /* MatrixSDK.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = MatrixSDK.framework; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -916,6 +926,10 @@
 		32C6F92319DD814400EA4E9C = {
 			isa = PBXGroup;
 			children = (
+				32C03CBA21231C2500D92712 /* AUTHORS.rst */,
+				32C03CB921231C2500D92712 /* CHANGES.rst */,
+				32C03CB721231C2500D92712 /* Podfile */,
+				32C03CB821231C2500D92712 /* README.rst */,
 				32C6F92F19DD814400EA4E9C /* MatrixSDK */,
 				32C6F93919DD814400EA4E9C /* MatrixSDKTests */,
 				32C6F92E19DD814400EA4E9C /* Products */,
@@ -972,6 +986,7 @@
 		32C6F93919DD814400EA4E9C /* MatrixSDKTests */ = {
 			isa = PBXGroup;
 			children = (
+				32C03CB52123076F00D92712 /* DirectRoomTests.m */,
 				320E1BC01E0AD674009635F5 /* MXRoomSummaryTests.m */,
 				32322A471E57264E005DD155 /* MXSelfSignedHomeserverTests.m */,
 				32E226A81D081CE200E6CA54 /* MXPeekingRoomTests.m */,
@@ -1384,6 +1399,10 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				32C03CBE21231C2600D92712 /* AUTHORS.rst in Resources */,
+				32C03CBD21231C2600D92712 /* CHANGES.rst in Resources */,
+				32C03CBB21231C2600D92712 /* Podfile in Resources */,
+				32C03CBC21231C2600D92712 /* README.rst in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1580,6 +1599,7 @@
 				32A27D1F19EC335300BAFADE /* MXRoomTests.m in Sources */,
 				32D8CAC219DEE6ED002AF8A0 /* MXRestClientNoAuthAPITests.m in Sources */,
 				32FCAB4D19E578860049C555 /* MXRestClientTests.m in Sources */,
+				32C03CB62123076F00D92712 /* DirectRoomTests.m in Sources */,
 				329FB17C1A0A963700A5E88E /* MXRoomMemberTests.m in Sources */,
 				3246BDC51A1A0789000A7D62 /* MXRoomStateDynamicTests.m in Sources */,
 				3264DB941CECA72900B99881 /* MXAccountDataTests.m in Sources */,

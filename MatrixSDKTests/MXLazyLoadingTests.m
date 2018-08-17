@@ -1067,6 +1067,107 @@ Common initial conditions:
 }
 
 
+// Copied from testDirectRoomsAfterInitialSync
+// After the test scenario:
+// - Alice sets the room as direct
+// - Alice invites Bob in a direct chat
+// - Charlie invites Alice in a direct chat
+// - Alice does an initial /sync
+// -> Alice must still see 2 direct rooms with Alice and 1 with Charlie
+- (void)checkDirectRoomWithLazyLoading:(BOOL)lazyLoading
+{
+    [self createScenarioWithLazyLoading:lazyLoading readyToTest:^(MXSession *aliceSession, MXSession *bobSession, MXSession *charlieSession, NSString *roomId, XCTestExpectation *expectation) {
+
+        __block id observer;
+        observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXSessionDirectRoomsDidChangeNotification object:aliceSession queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
+
+            // Wait until we get the 3 direct rooms
+            if (observer
+                && aliceSession.directRooms[bobSession.myUser.userId].count == 2
+                && aliceSession.directRooms[charlieSession.myUser.userId].count == 1)
+            {
+                [[NSNotificationCenter defaultCenter] removeObserver:observer];
+                observer = nil;
+
+                // - Bob does an initial /sync
+                MXSession *aliceSession2 = [[MXSession alloc] initWithMatrixRestClient:aliceSession.matrixRestClient];
+                [matrixSDKTestsData retain:aliceSession2];
+                [aliceSession close];
+
+                // Alice makes an initial /sync with lazy-loading enabled or not
+                MXFilterJSONModel *filter;
+                if (lazyLoading)
+                {
+                    filter = [MXFilterJSONModel syncFilterForLazyLoading];
+                }
+
+                __block NSUInteger directRoomsDidChangeNotificationCountWhileStarting = 0;
+                [[NSNotificationCenter defaultCenter] addObserverForName:kMXSessionDirectRoomsDidChangeNotification object:aliceSession2 queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
+
+                    directRoomsDidChangeNotificationCountWhileStarting++;
+
+                    // We must receive a single big update
+                    // Else the code decided to update direct rooms while processing the /sync responce.
+                    // which means there is a race condition like in https://github.com/vector-im/riot-ios/issues/1983
+                    XCTAssertEqual(aliceSession2.directRooms.count, 2);
+                    XCTAssertEqual(aliceSession2.directRooms[bobSession.myUser.userId].count, 2);
+                    XCTAssertEqual(aliceSession2.directRooms[charlieSession.myUser.userId].count, 1);
+
+                    if (directRoomsDidChangeNotificationCountWhileStarting > 1)
+                    {
+                        XCTFail(@"We should receive one big kMXSessionDirectRoomsDidChangeNotification");
+                    }
+                }];
+
+
+                [aliceSession2 startWithSyncFilter:filter onServerSyncDone:^{
+
+                    // -> He must still see 2 direct rooms with Alice and 1 with Charlie
+                    XCTAssertEqual(aliceSession2.directRooms.count, 2);
+                    XCTAssertEqual(aliceSession2.directRooms[bobSession.myUser.userId].count, 2);
+                    XCTAssertEqual(aliceSession2.directRooms[charlieSession.myUser.userId].count, 1);
+                    [expectation fulfill];
+
+                } failure:^(NSError *error) {
+                    XCTFail(@"The operation should not fail - NSError: %@", error);
+                    [expectation fulfill];
+                }];
+            }
+        }];
+
+
+        // - Bob set the room as direct
+        MXRoom *room = [aliceSession roomWithRoomId:roomId];
+        [room setIsDirect:YES withUserId:bobSession.myUser.userId success:nil failure:^(NSError *error) {
+            XCTFail(@"The operation should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+
+        // - Alice invites Bob in a direct chat
+        [aliceSession createRoom:nil visibility:kMXRoomDirectoryVisibilityPrivate roomAlias:nil topic:nil invite:@[bobSession.myUser.userId] invite3PID:nil isDirect:YES preset:kMXRoomPresetPrivateChat success:nil failure:^(NSError *error) {
+            XCTFail(@"The operation should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+
+        // - Charlie invites Alice in a direct chat
+        [charlieSession createRoom:nil visibility:kMXRoomDirectoryVisibilityPrivate roomAlias:nil topic:nil invite:@[aliceSession.myUser.userId] invite3PID:nil isDirect:YES preset:kMXRoomPresetPrivateChat success:nil failure:^(NSError *error) {
+            XCTFail(@"The operation should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+    }];
+}
+
+- (void)testDirectRoom
+{
+    [self checkDirectRoomWithLazyLoading:YES];
+}
+
+- (void)testDirectRoomWithLazyLoadingOFF
+{
+    [self checkDirectRoomWithLazyLoading:NO];
+}
+
+
 /*
  @TODO(lazy-loading):
  - test read receipts

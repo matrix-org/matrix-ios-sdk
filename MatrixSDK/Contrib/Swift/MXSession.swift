@@ -227,20 +227,7 @@ public extension MXSession {
     @nonobjc var rooms: [MXRoom] {
         return __rooms()
     }
-    
-    
-    /**
-     Update the direct rooms list on homeserver side with the current value of the `directRooms` property.
-     
-     - parameters:
-        - completion: A block object called when the operation completes.
-        - response: Indicates whether the operation was successful.
-     
-     - returns: a `MXHTTPOperation` instance.
-     */
-    @nonobjc @discardableResult func uploadDirectRooms(completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation {
-        return __uploadDirectRooms(currySuccess(completion), failure: curryFailure(completion))
-    }
+
     
     
 
