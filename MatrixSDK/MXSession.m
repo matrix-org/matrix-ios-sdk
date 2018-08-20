@@ -1960,10 +1960,9 @@ typedef void (^MXOnResumeDone)(void);
     }];
 }
 
-// To avoid race conditions, run one HTTP request at a time
-// If there is a pending HTTP request, the change will be applied on the updated direct rooms data
 - (void)runOrQueueDirectRoomOperation:(dispatch_block_t)directRoomOperation
 {
+    // If there is a pending HTTP request, the change will be applied on the updated direct rooms data
     [directRoomsOperationsQueue addObject:[directRoomOperation copy]];
     if (directRoomsOperationsQueue.count == 1)
     {
