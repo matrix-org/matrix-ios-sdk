@@ -781,26 +781,9 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
                     failure:(void (^)(NSError *error))failure;
 
 /**
- Update the direct rooms list on homeserver side.
-
- @param directRooms the new direct rooms list (user id -> [room ids]).
-
- @param success A block object called when the operation succeeds.
- @param failure A block object called when the operation fails.
- 
- @return a MXHTTPOperation instance.
- */
-- (MXHTTPOperation*)uploadDirectRooms:(NSDictionary<NSString*, NSArray<NSString*>*> *)directRooms
-                              success:(void (^)(void))success
-                              failure:(void (^)(NSError *error))failure;
-
-/**
  Use this method to run or queue any other actions on the direct rooms to avoid race conditions.
  Run only one HTTP request in a block. If there is a pending action, the change will be applied
  on the updated direct rooms data.
- 
- Do not call `[setRoom:directWithUserId:success:failure:]` and `[uploadDirectRooms:success:failure:]`
- in the provided block.
  
  @param directRoomOperation A block object (use `[uploadDirectRoomsInOperationsQueue:success:failure:]`
  in this block if you need to upload the direct rooms dictionary).
