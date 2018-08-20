@@ -53,6 +53,16 @@ FOUNDATION_EXPORT NSString *const kMXErrorStringInvalidToken;
 FOUNDATION_EXPORT NSString *const kMXSDKErrCodeStringMissingParameters;
 
 /**
+ Keys and values that can be found in a Matrix error JSON dictionary.
+ */
+FOUNDATION_EXPORT NSString *const kMXErrorCodeKey;
+FOUNDATION_EXPORT NSString *const kMXErrorMessageKey;
+FOUNDATION_EXPORT NSString *const kMXErrorConsentNotGivenConsentURIKey;
+FOUNDATION_EXPORT NSString *const kMXErrorResourceLimitExceededLimitTypeKey;
+FOUNDATION_EXPORT NSString *const kMXErrorResourceLimitExceededAdminContactKey;
+FOUNDATION_EXPORT NSString *const kMXErrorResourceLimitExceededLimitTypeMonthlyActiveUserValue;
+
+/**
  `MXError` represents an error sent by the home server.
  MXErrors are encapsulated in NSError. This class is an helper to create NSError or extract MXError from NSError.
  */

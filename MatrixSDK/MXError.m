@@ -46,6 +46,13 @@ NSString *const kMXErrorStringInvalidToken      = @"Invalid token";
 
 NSString *const kMXSDKErrCodeStringMissingParameters = @"org.matrix.sdk.missing_parameters";
 
+NSString *const kMXErrorCodeKey                                             = @"errcode";
+NSString *const kMXErrorMessageKey                                          = @"error";
+NSString *const kMXErrorConsentNotGivenConsentURIKey                        = @"consent_uri";
+NSString *const kMXErrorResourceLimitExceededLimitTypeKey                   = @"limit_type";
+NSString *const kMXErrorResourceLimitExceededLimitTypeMonthlyActiveUserValue= @"monthly_active_user";
+NSString *const kMXErrorResourceLimitExceededAdminContactKey                = @"admin_contact";
+
 
 // Random NSError code
 // Matrix does not use integer but string for error code
