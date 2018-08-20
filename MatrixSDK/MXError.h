@@ -43,6 +43,7 @@ FOUNDATION_EXPORT NSString *const kMXErrCodeStringThreePIDNotFound;
 FOUNDATION_EXPORT NSString *const kMXErrCodeStringServerNotTrusted;
 FOUNDATION_EXPORT NSString *const kMXErrCodeStringGuestAccessForbidden;
 FOUNDATION_EXPORT NSString *const kMXErrCodeStringConsentNotGiven;
+FOUNDATION_EXPORT NSString *const kMXErrCodeStringResourceLimitExceeded;
 
 FOUNDATION_EXPORT NSString *const kMXErrorStringInvalidToken;
 
