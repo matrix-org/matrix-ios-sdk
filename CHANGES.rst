@@ -2,6 +2,7 @@ Changes in Matrix iOS SDK in 0.11.2 (2018-08-)
 ===============================================
 
 Improvements:
+ * MXRestClient: Add testUserRegistration to check earlier if a username can be registered.
  * MXError: Add kMXErrCodeStringResourceLimitExceeded to manage homeserver resource quota (vector-im/riot-ios/issues/1937).
 
 Bug fix:
