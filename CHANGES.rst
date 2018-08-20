@@ -1,3 +1,12 @@
+Changes in Matrix iOS SDK in 0.11.2 (2018-08-)
+===============================================
+
+Improvements:
+ * MXError: Add kMXErrCodeStringResourceLimitExceeded to manage homeserver resource quota (vector-im/riot-ios/issues/1937).
+
+Bug fix:
+ * MXError: MXError lost NSError.userInfo information.
+
 Changes in Matrix iOS SDK in 0.11.1 (2018-08-17)
 ===============================================
 
