@@ -80,8 +80,7 @@ platform :ios do
 
   	command = []
   	command << "bundle exec pod lib lint"
-  	command << podspec_path
-  	command << "--verbose"
+  	command << podspec_path  	
 
     if options[:parameters]
     	command.concat(options[:parameters])
