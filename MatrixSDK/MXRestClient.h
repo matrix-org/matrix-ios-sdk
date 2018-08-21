@@ -26,6 +26,7 @@
 
 #import "MXHTTPClient.h"
 #import "MXEvent.h"
+#import "MXError.h"
 #import "MXRoomEventFilter.h"
 #import "MXInvite3PID.h"
 #import "MXEventTimeline.h"
@@ -174,6 +175,18 @@ typedef enum : NSUInteger
 - (void)close;
 
 #pragma mark - Registration operations
+/**
+ Make a ping to the registration endpoint to detect a possible registration problem earlier.
+
+ @param username the user name to test (This value must not be nil).
+ @param callback A block object called when the operation is completed.
+                 It provides a MXError to check to verify if the user can be registered.
+
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)testUserRegistration:(NSString*)username
+                                callback:(void (^)(MXError *mxError))callback;
+
 /**
  Check whether a username is already in use.
 

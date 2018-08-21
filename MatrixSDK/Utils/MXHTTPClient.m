@@ -39,14 +39,6 @@ NSString * const MXHTTPClientErrorResponseDataKey = @"com.matrixsdk.httpclient.e
 NSString* const kMXHTTPClientUserConsentNotGivenErrorNotification = @"kMXHTTPClientUserConsentNotGivenErrorNotification";
 NSString* const kMXHTTPClientUserConsentNotGivenErrorNotificationConsentURIKey = @"kMXHTTPClientUserConsentNotGivenErrorNotificationConsentURIKey";
 
-/**
- Matrix error API JSON Keys
- */
-static NSString* const kMXErrorCodeJSONKey = @"errcode";
-static NSString* const kMXErrorMessageJSONKey = @"error";
-
-static NSString* const kMXErrorConsentNotGivenConsentURIJSONKey = @"consent_uri";
-
 
 @interface MXHTTPClient ()
 {
@@ -270,7 +262,7 @@ static NSString* const kMXErrorConsentNotGivenConsentURIJSONKey = @"consent_uri"
                 {
                     NSLog(@"[MXHTTPClient] Error JSONResponse: %@", JSONResponse);
 
-                    if (JSONResponse[kMXErrorCodeJSONKey] || JSONResponse[kMXErrorMessageJSONKey])
+                    if (JSONResponse[kMXErrorCodeKey] || JSONResponse[kMXErrorMessageKey])
                     {
                         // Extract values from the home server JSON response
                         MXError *mxError = [self mxErrorFromJSON:JSONResponse];
@@ -311,7 +303,7 @@ static NSString* const kMXErrorConsentNotGivenConsentURIJSONKey = @"consent_uri"
                         }
                         else if ([mxError.errcode isEqualToString:kMXErrCodeStringConsentNotGiven])
                         {
-                            NSString* consentURI = mxError.userInfo[kMXErrorConsentNotGivenConsentURIJSONKey];
+                            NSString* consentURI = mxError.userInfo[kMXErrorConsentNotGivenConsentURIKey];
 
                             if (consentURI.length > 0)
                             {
@@ -718,8 +710,8 @@ static NSString* const kMXErrorConsentNotGivenConsentURIJSONKey = @"consent_uri"
 {
     // Add key/values other than error code and error message in user info
     NSMutableDictionary *userInfo = [json mutableCopy];
-    [userInfo removeObjectForKey:kMXErrorCodeJSONKey];
-    [userInfo removeObjectForKey:kMXErrorMessageJSONKey];
+    [userInfo removeObjectForKey:kMXErrorCodeKey];
+    [userInfo removeObjectForKey:kMXErrorMessageKey];
     
     NSDictionary *mxErrorUserInfo = nil;
     
@@ -727,8 +719,8 @@ static NSString* const kMXErrorConsentNotGivenConsentURIJSONKey = @"consent_uri"
         mxErrorUserInfo = [NSDictionary dictionaryWithDictionary:userInfo];
     }
     
-    return [[MXError alloc] initWithErrorCode:json[kMXErrorCodeJSONKey]
-                                        error:json[kMXErrorMessageJSONKey]
+    return [[MXError alloc] initWithErrorCode:json[kMXErrorCodeKey]
+                                        error:json[kMXErrorMessageKey]
                                      userInfo:mxErrorUserInfo];
 }
 
