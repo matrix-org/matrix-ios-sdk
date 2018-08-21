@@ -73,17 +73,22 @@ platform :ios do
 
   desc "Pod lib lint with podspec parameter"
   private_lane :custom_pod_lib_lint do |options|
-  	
-    puts "Lint pod " << options[:podspec] << " with Cocoapods version " << cocoapods_version
+
+  	podspec_path = options[:podspec]
+
+    puts "Lint pod " << podspec_path << " with Cocoapods version " << cocoapods_version
 
   	command = []
   	command << "bundle exec pod lib lint"
-  	command << options[:podspec]
+  	command << podspec_path
+  	command << "--verbose"
 
     if options[:parameters]
     	command.concat(options[:parameters])
 	end
 
-	sh(command.join(' '))
+	result = sh(command.join(' '))
+	UI.success("Pod lib lint '"<< podspec_path << "' Successfully ⬆️ ")
+	return  result
   end
 end
