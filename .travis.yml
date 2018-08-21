@@ -6,7 +6,8 @@ cache:
   - cocoapods
 
 before_install:
-  - bundle update
+  - bundle update  
+  - bundle exec pod repo update
 
 script:
   - bundle exec fastlane lint_pods
