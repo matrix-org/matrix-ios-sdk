@@ -781,18 +781,29 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
                     failure:(void (^)(NSError *error))failure;
 
 /**
+ Use this method to run or queue any other actions on the direct rooms to avoid race conditions.
+ Run only one HTTP request in a block. If there is a pending action, the change will be applied
+ on the updated direct rooms data.
+ 
+ @param directRoomOperation A block object (use `[uploadDirectRoomsInOperationsQueue:success:failure:]`
+ in this block if you need to upload the direct rooms dictionary).
+ */
+- (void)runOrQueueDirectRoomOperation:(dispatch_block_t)directRoomOperation;
+
+/**
  Update the direct rooms list on homeserver side.
-
+ This method must be called in a block run by using `[runOrQueueDirectRoomOperation:]`
+ 
  @param directRooms the new direct rooms list (user id -> [room ids]).
-
+ 
  @param success A block object called when the operation succeeds.
  @param failure A block object called when the operation fails.
  
  @return a MXHTTPOperation instance.
  */
-- (MXHTTPOperation*)uploadDirectRooms:(NSDictionary<NSString*, NSArray<NSString*>*> *)directRooms
-                              success:(void (^)(void))success
-                              failure:(void (^)(NSError *error))failure;
+- (MXHTTPOperation*)uploadDirectRoomsInOperationsQueue:(NSDictionary<NSString *,NSArray<NSString *> *> *)directRooms
+                                               success:(void (^)(void))success
+                                               failure:(void (^)(NSError *))failure;
 
 /**
  Make sure that the `MXRoom` internal data for a list of rooms is preloaded.
