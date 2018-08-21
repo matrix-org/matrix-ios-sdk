@@ -30,6 +30,7 @@
 #import "MXCallManager.h"
 #import "MXCrypto.h"
 #import "MXGroup.h"
+#import "MXError.h"
 
 /**
  `MXSessionState` represents the states in the life cycle of a MXSession instance.
@@ -80,6 +81,15 @@ typedef enum : NSUInteger
      MXSessionStateRunning.
      */
     MXSessionStateHomeserverNotReachable,
+
+    /**
+     The homeserver returned a temporary error when trying to sync.
+     Check `MXSession.syncError` to get this error.
+
+     @discussion
+     The Matrix session will automatically go back MXSessionStateRunning once possible.
+     */
+    MXSessionStateSyncError,
 
     /**
      The session has been paused.
@@ -331,6 +341,11 @@ FOUNDATION_EXPORT NSString *const kMXSessionNoRoomTag;
  The current state of the session.
  */
 @property (nonatomic, readonly) MXSessionState state;
+
+/**
+ The current state of the session.
+ */
+@property (nonatomic, readonly) MXError *syncError;
 
 /**
  The flag indicating whether the initial sync has been done.

@@ -78,6 +78,11 @@ NSString *const kMXSessionNoRoomTag = @"m.recent";  // Use the same value as mat
 #define SERVER_TIMEOUT_MS 30000
 #define CLIENT_TIMEOUT_MS 120000
 
+/**
+ Time before retrying in case of `MXSessionStateSyncError`.
+ */
+#define RETRY_SYNC_AFTER_MXERROR_MS 5000
+
 
 // Block called when MSSession resume is complete
 typedef void (^MXOnResumeDone)(void);
@@ -241,6 +246,12 @@ typedef void (^MXOnResumeDone)(void);
     if (_state != state)
     {
         _state = state;
+
+        if (_state != MXSessionStateSyncError)
+        {
+            // Reset the sync error
+            _syncError = nil;
+        }
         
         NSNotificationCenter *notificationCenter = [NSNotificationCenter defaultCenter];
         [notificationCenter postNotificationName:kMXSessionStateDidChangeNotification object:self userInfo:nil];
@@ -1265,45 +1276,65 @@ typedef void (^MXOnResumeDone)(void);
         }
         else
         {
-            // Inform the app there is a problem with the connection to the homeserver
-            [self setState:MXSessionStateHomeserverNotReachable];
-
-            // Check if it is a network connectivity issue
-            AFNetworkReachabilityManager *networkReachabilityManager = [AFNetworkReachabilityManager sharedManager];
-            NSLog(@"[MXSession] events stream broken. Network reachability: %d", networkReachabilityManager.isReachable);
-
-            if (networkReachabilityManager.isReachable)
+            MXError *mxError = [[MXError alloc] initWithNSError:error];
+            if (mxError)
             {
-                // The problem is not the network
-                // Relaunch the request in a random near futur.
-                // Random time it used to avoid all Matrix clients to retry all in the same time
-                // if there is server side issue like server restart
-                dispatch_time_t delayTime = dispatch_time(DISPATCH_TIME_NOW, [MXHTTPClient timeForRetry:self->eventStreamRequest] * NSEC_PER_MSEC);
+                _syncError = mxError;
+                [self setState:MXSessionStateSyncError];
+
+                // Retry later
+                dispatch_time_t delayTime = dispatch_time(DISPATCH_TIME_NOW, RETRY_SYNC_AFTER_MXERROR_MS * NSEC_PER_MSEC);
                 dispatch_after(delayTime, dispatch_get_main_queue(), ^(void) {
 
                     if (self->eventStreamRequest)
                     {
-                        NSLog(@"[MXSession] Retry resuming events stream");
-                        [self setState:MXSessionStateSyncInProgress];
-                        [self serverSyncWithServerTimeout:0 success:success failure:nil clientTimeout:CLIENT_TIMEOUT_MS setPresence:nil];
+                        NSLog(@"[MXSession] Retry resuming events stream after error %@", mxError.errcode);
+                        [self serverSyncWithServerTimeout:0 success:success failure:failure clientTimeout:CLIENT_TIMEOUT_MS setPresence:nil];
                     }
                 });
             }
             else
             {
-                // The device is not connected to the internet, wait for the connection to be up again before retrying
-                __block __weak id reachabilityObserver =
-                [[NSNotificationCenter defaultCenter] addObserverForName:AFNetworkingReachabilityDidChangeNotification object:nil queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
+                // Inform the app there is a problem with the connection to the homeserver
+                [self setState:MXSessionStateHomeserverNotReachable];
 
-                    if (networkReachabilityManager.isReachable && self->eventStreamRequest)
-                    {
-                        [[NSNotificationCenter defaultCenter] removeObserver:reachabilityObserver];
+                // Check if it is a network connectivity issue
+                AFNetworkReachabilityManager *networkReachabilityManager = [AFNetworkReachabilityManager sharedManager];
+                NSLog(@"[MXSession] events stream broken. Network reachability: %d", networkReachabilityManager.isReachable);
 
-                        NSLog(@"[MXSession] Retry resuming events stream");
-                        [self setState:MXSessionStateSyncInProgress];
-                        [self serverSyncWithServerTimeout:0 success:success failure:nil clientTimeout:CLIENT_TIMEOUT_MS setPresence:nil];
-                    }
-                }];
+                if (networkReachabilityManager.isReachable)
+                {
+                    // The problem is not the network
+                    // Relaunch the request in a random near futur.
+                    // Random time it used to avoid all Matrix clients to retry all in the same time
+                    // if there is server side issue like server restart
+                    dispatch_time_t delayTime = dispatch_time(DISPATCH_TIME_NOW, [MXHTTPClient timeForRetry:self->eventStreamRequest] * NSEC_PER_MSEC);
+                    dispatch_after(delayTime, dispatch_get_main_queue(), ^(void) {
+
+                        if (self->eventStreamRequest)
+                        {
+                            NSLog(@"[MXSession] Retry resuming events stream");
+                            [self setState:MXSessionStateSyncInProgress];
+                            [self serverSyncWithServerTimeout:0 success:success failure:nil clientTimeout:CLIENT_TIMEOUT_MS setPresence:nil];
+                        }
+                    });
+                }
+                else
+                {
+                    // The device is not connected to the internet, wait for the connection to be up again before retrying
+                    __block __weak id reachabilityObserver =
+                    [[NSNotificationCenter defaultCenter] addObserverForName:AFNetworkingReachabilityDidChangeNotification object:nil queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
+
+                        if (networkReachabilityManager.isReachable && self->eventStreamRequest)
+                        {
+                            [[NSNotificationCenter defaultCenter] removeObserver:reachabilityObserver];
+
+                            NSLog(@"[MXSession] Retry resuming events stream");
+                            [self setState:MXSessionStateSyncInProgress];
+                            [self serverSyncWithServerTimeout:0 success:success failure:nil clientTimeout:CLIENT_TIMEOUT_MS setPresence:nil];
+                        }
+                    }];
+                }
             }
         }
     }
