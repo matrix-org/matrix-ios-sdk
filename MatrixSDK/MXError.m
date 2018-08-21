@@ -104,7 +104,7 @@ NSInteger const kMXNSErrorCode = 6;
 
 - (NSError *)createNSError
 {
-    NSMutableDictionary *userInfo = [NSMutableDictionary dictionaryWithDictionary:_userInfo];
+    NSMutableDictionary *userInfo = _userInfo ? [NSMutableDictionary dictionaryWithDictionary:_userInfo] : [NSMutableDictionary dictionary];
     
     if (self.errcode)
     {
