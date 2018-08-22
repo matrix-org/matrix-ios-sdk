@@ -78,6 +78,11 @@ NSString *const kMXSessionNoRoomTag = @"m.recent";  // Use the same value as mat
 #define SERVER_TIMEOUT_MS 30000
 #define CLIENT_TIMEOUT_MS 120000
 
+/**
+ Time before retrying in case of `MXSessionStateSyncError`.
+ */
+#define RETRY_SYNC_AFTER_MXERROR_MS 5000
+
 
 // Block called when MSSession resume is complete
 typedef void (^MXOnResumeDone)(void);
@@ -241,6 +246,12 @@ typedef void (^MXOnResumeDone)(void);
     if (_state != state)
     {
         _state = state;
+
+        if (_state != MXSessionStateSyncError)
+        {
+            // Reset the sync error
+            _syncError = nil;
+        }
         
         NSNotificationCenter *notificationCenter = [NSNotificationCenter defaultCenter];
         [notificationCenter postNotificationName:kMXSessionStateDidChangeNotification object:self userInfo:nil];
@@ -1178,96 +1189,121 @@ typedef void (^MXOnResumeDone)(void);
         }];
 
     } failure:^(NSError *error) {
-        MXStrongifyAndReturnIfNil(self);
-        
-        // Make sure [MXSession close] or [MXSession pause] has not been called before the server response
-        if (!self->eventStreamRequest)
+        [self handleServerSyncError:error forRequestWithServerTimeout:serverTimeout success:success failure:failure];
+    }];
+}
+
+- (void)handleServerSyncError:(NSError*)error forRequestWithServerTimeout:(NSUInteger)serverTimeout success:(void (^)(void))success failure:(void (^)(NSError *error))failure
+{
+    // Make sure [MXSession close] or [MXSession pause] has not been called before the server response
+    if (!self->eventStreamRequest)
+    {
+        return;
+    }
+
+    // Check whether the token is valid
+    if ([self isUnknownTokenError:error])
+    {
+        // Do nothing more because without a valid access_token, the session is useless
+        return;
+    }
+
+    // Handle failure during catch up first
+    if (self->onBackgroundSyncFail)
+    {
+        NSLog(@"[MXSession] background Sync fails %@", error);
+
+        // Operations on session may occur during this block. For example, [MXSession close] may be triggered.
+        // We run a copy of the block to prevent app from crashing if the block is released by one of these operations.
+        MXOnBackgroundSyncFail onBackgroundSyncFailCpy = [self->onBackgroundSyncFail copy];
+        onBackgroundSyncFailCpy(error);
+        self->onBackgroundSyncFail = nil;
+
+        // check that the application was not resumed while catching up in background
+        if (self.state == MXSessionStateBackgroundSyncInProgress)
         {
-            return;
-        }
-        
-        // Check whether the token is valid
-        if ([self isUnknownTokenError:error])
-        {
-            // Do nothing more because without a valid access_token, the session is useless
-            return;
-        }
-        
-        // Handle failure during catch up first
-        if (self->onBackgroundSyncFail)
-        {
-            NSLog(@"[MXSession] background Sync fails %@", error);
-            
-            // Operations on session may occur during this block. For example, [MXSession close] may be triggered.
-            // We run a copy of the block to prevent app from crashing if the block is released by one of these operations.
-            MXOnBackgroundSyncFail onBackgroundSyncFailCpy = [self->onBackgroundSyncFail copy];
-            onBackgroundSyncFailCpy(error);
-            self->onBackgroundSyncFail = nil;
-            
-            // check that the application was not resumed while catching up in background
-            if (self.state == MXSessionStateBackgroundSyncInProgress)
+            // Check that none required the session to keep running
+            if (self.preventPauseCount)
             {
-                // Check that none required the session to keep running
-                if (self.preventPauseCount)
-                {
-                    // Delay the pause by calling the reliable `pause` method.
-                    [self pause];
-                }
-                else
-                {
-                    NSLog(@"[MXSession] go to paused ");
-                    self->eventStreamRequest = nil;
-                    [self setState:MXSessionStatePaused];
-                    return;
-                }
+                // Delay the pause by calling the reliable `pause` method.
+                [self pause];
             }
             else
             {
-                NSLog(@"[MXSession] resume after a background Sync");
+                NSLog(@"[MXSession] go to paused ");
+                self->eventStreamRequest = nil;
+                [self setState:MXSessionStatePaused];
+                return;
             }
-        }
-        
-        // Check whether the caller wants to handle error himself
-        if (failure)
-        {
-            failure(error);
         }
         else
         {
-            // Handle error here
-            // on 64 bits devices, the error codes are huge integers.
-            int32_t code = (int32_t)error.code;
-            
-            if (code == kCFURLErrorCancelled)
+            NSLog(@"[MXSession] resume after a background Sync");
+        }
+    }
+
+    // Check whether the caller wants to handle error himself
+    if (failure)
+    {
+        failure(error);
+    }
+    else
+    {
+        // Handle error here
+        // on 64 bits devices, the error codes are huge integers.
+        int32_t code = (int32_t)error.code;
+
+        if ([error.domain isEqualToString:NSURLErrorDomain]
+            && code == kCFURLErrorCancelled)
+        {
+            NSLog(@"[MXSession] The connection has been cancelled.");
+        }
+        else if ([error.domain isEqualToString:NSURLErrorDomain]
+                 && code == kCFURLErrorTimedOut && serverTimeout == 0)
+        {
+            NSLog(@"[MXSession] The connection has been timeout.");
+            // The reconnection attempt failed on timeout: there is no data to retrieve from server
+            [self->eventStreamRequest cancel];
+            self->eventStreamRequest = nil;
+
+            // Notify the reconnection attempt has been done.
+            [[NSNotificationCenter defaultCenter] postNotificationName:kMXSessionDidSyncNotification
+                                                                object:self
+                                                              userInfo:@{
+                                                                         kMXSessionNotificationErrorKey: error
+                                                                         }];
+
+            // Switch back to the long poll management
+            [self serverSyncWithServerTimeout:SERVER_TIMEOUT_MS success:nil failure:nil clientTimeout:CLIENT_TIMEOUT_MS setPresence:nil];
+        }
+        else
+        {
+            MXError *mxError = [[MXError alloc] initWithNSError:error];
+            if (mxError)
             {
-                NSLog(@"[MXSession] The connection has been cancelled.");
-            }
-            else if ((code == kCFURLErrorTimedOut) && serverTimeout == 0)
-            {
-                NSLog(@"[MXSession] The connection has been timeout.");
-                // The reconnection attempt failed on timeout: there is no data to retrieve from server
-                [self->eventStreamRequest cancel];
-                self->eventStreamRequest = nil;
-                
-                // Notify the reconnection attempt has been done.
-                [[NSNotificationCenter defaultCenter] postNotificationName:kMXSessionDidSyncNotification
-                                                                    object:self
-                                                                  userInfo:@{
-                                                                             kMXSessionNotificationErrorKey: error
-                                                                             }];
-                
-                // Switch back to the long poll management
-                [self serverSyncWithServerTimeout:SERVER_TIMEOUT_MS success:nil failure:nil clientTimeout:CLIENT_TIMEOUT_MS setPresence:nil];
+                _syncError = mxError;
+                [self setState:MXSessionStateSyncError];
+
+                // Retry later
+                dispatch_time_t delayTime = dispatch_time(DISPATCH_TIME_NOW, RETRY_SYNC_AFTER_MXERROR_MS * NSEC_PER_MSEC);
+                dispatch_after(delayTime, dispatch_get_main_queue(), ^(void) {
+
+                    if (self->eventStreamRequest)
+                    {
+                        NSLog(@"[MXSession] Retry resuming events stream after error %@", mxError.errcode);
+                        [self serverSyncWithServerTimeout:0 success:success failure:failure clientTimeout:CLIENT_TIMEOUT_MS setPresence:nil];
+                    }
+                });
             }
             else
             {
                 // Inform the app there is a problem with the connection to the homeserver
                 [self setState:MXSessionStateHomeserverNotReachable];
-                
+
                 // Check if it is a network connectivity issue
                 AFNetworkReachabilityManager *networkReachabilityManager = [AFNetworkReachabilityManager sharedManager];
                 NSLog(@"[MXSession] events stream broken. Network reachability: %d", networkReachabilityManager.isReachable);
-                
+
                 if (networkReachabilityManager.isReachable)
                 {
                     // The problem is not the network
@@ -1276,7 +1312,7 @@ typedef void (^MXOnResumeDone)(void);
                     // if there is server side issue like server restart
                     dispatch_time_t delayTime = dispatch_time(DISPATCH_TIME_NOW, [MXHTTPClient timeForRetry:self->eventStreamRequest] * NSEC_PER_MSEC);
                     dispatch_after(delayTime, dispatch_get_main_queue(), ^(void) {
-                        
+
                         if (self->eventStreamRequest)
                         {
                             NSLog(@"[MXSession] Retry resuming events stream");
@@ -1290,11 +1326,11 @@ typedef void (^MXOnResumeDone)(void);
                     // The device is not connected to the internet, wait for the connection to be up again before retrying
                     __block __weak id reachabilityObserver =
                     [[NSNotificationCenter defaultCenter] addObserverForName:AFNetworkingReachabilityDidChangeNotification object:nil queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
-                        
+
                         if (networkReachabilityManager.isReachable && self->eventStreamRequest)
                         {
                             [[NSNotificationCenter defaultCenter] removeObserver:reachabilityObserver];
-                            
+
                             NSLog(@"[MXSession] Retry resuming events stream");
                             [self setState:MXSessionStateSyncInProgress];
                             [self serverSyncWithServerTimeout:0 success:success failure:nil clientTimeout:CLIENT_TIMEOUT_MS setPresence:nil];
@@ -1303,7 +1339,7 @@ typedef void (^MXOnResumeDone)(void);
                 }
             }
         }
-    }];
+    }
 }
 
 - (void)handlePresenceEvent:(MXEvent *)event direction:(MXTimelineDirection)direction
