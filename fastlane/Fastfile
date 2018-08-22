@@ -86,8 +86,6 @@ platform :ios do
     	command.concat(options[:parameters])
 	end
 
-	result = sh(command.join(' '))
-	UI.success("Pod lib lint '"<< podspec_path << "' Successfully ⬆️ ")
-	return  result
+	sh(command.join(' '))
   end
 end
