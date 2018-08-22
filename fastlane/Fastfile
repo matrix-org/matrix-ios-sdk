@@ -40,7 +40,7 @@ platform :ios do
 
   desc "Push MatrixSDK pod"
     lane :push_pod_MatrixSDK do  	
-  	pod_push(path: "MatrixSDK.podspec", use_libraries: true, allow_warnings: true)
+  	pod_push(path: "MatrixSDK.podspec", allow_warnings: true)
   end
 
   desc "Push SwiftMatrixSDK pod"
