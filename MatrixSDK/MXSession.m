@@ -1253,11 +1253,13 @@ typedef void (^MXOnResumeDone)(void);
         // on 64 bits devices, the error codes are huge integers.
         int32_t code = (int32_t)error.code;
 
-        if (code == kCFURLErrorCancelled)
+        if ([error.domain isEqualToString:NSURLErrorDomain]
+            && code == kCFURLErrorCancelled)
         {
             NSLog(@"[MXSession] The connection has been cancelled.");
         }
-        else if ((code == kCFURLErrorTimedOut) && serverTimeout == 0)
+        else if ([error.domain isEqualToString:NSURLErrorDomain]
+                 && code == kCFURLErrorTimedOut && serverTimeout == 0)
         {
             NSLog(@"[MXSession] The connection has been timeout.");
             // The reconnection attempt failed on timeout: there is no data to retrieve from server
