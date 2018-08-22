@@ -24,7 +24,7 @@ platform :ios do
 
   desc "Lint MatrixSDK podspec"
   lane :lint_pod_MatrixSDK do  	
-  	custom_pod_lib_lint(podspec: "../MatrixSDK.podspec", parameters: ['--use-libraries', '--allow-warnings'])
+  	custom_pod_lib_lint(podspec: "../MatrixSDK.podspec", parameters: ['--allow-warnings'])
   end
 
   desc "Lint SwiftMatrixSDK podspec"
