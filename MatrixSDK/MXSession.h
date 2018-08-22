@@ -606,6 +606,17 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
  */
 - (void)enableCrypto:(BOOL)enableCrypto success:(void (^)(void))success failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
+/**
+ Get the versions of the specification supported by the server.
+
+ @param success A block object called when the operation succeeds. It provides
+                the supported spec versions.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)supportedMatrixVersions:(void (^)(MXMatrixVersions *matrixVersions))success failure:(void (^)(NSError *error))failure;
+
 
 #pragma mark - Rooms operations
 /**

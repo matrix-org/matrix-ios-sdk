@@ -249,6 +249,39 @@ MXAuthAction;
     return httpClient.allowedCertificate;
 }
 
+
+#pragma mark - Server administration
+
+- (MXHTTPOperation*)supportedMatrixVersions:(void (^)(MXMatrixVersions *matrixVersions))success
+                        failure:(void (^)(NSError *error))failure
+{
+    // There is no versioning in the path of this API
+    NSString *path = @"_matrix/client/versions";
+
+    MXWeakify(self);
+    return [httpClient requestWithMethod:@"GET"
+                                    path:path
+                              parameters:nil
+                                 success:^(NSDictionary *JSONResponse) {
+                                     MXStrongifyAndReturnIfNil(self);
+
+                                     if (success)
+                                     {
+                                         __block MXMatrixVersions *matrixVersions;
+                                         [self dispatchProcessing:^{
+                                             MXJSONModelSetMXJSONModel(matrixVersions, MXMatrixVersions, JSONResponse);
+                                         } andCompletion:^{
+                                             success(matrixVersions);
+                                         }];
+                                     }
+                                 }
+                                 failure:^(NSError *error) {
+                                     MXStrongifyAndReturnIfNil(self);
+                                     [self dispatchFailure:error inBlock:failure];
+                                 }];
+}
+
+
 #pragma mark - Registration operations
 - (MXHTTPOperation *)testUserRegistration:(NSString *)username callback:(void (^)(MXError *mxError))callback
 {

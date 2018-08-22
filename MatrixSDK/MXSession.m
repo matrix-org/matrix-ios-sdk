@@ -1483,6 +1483,11 @@ typedef void (^MXOnResumeDone)(void);
     }
 }
 
+- (MXHTTPOperation*)supportedMatrixVersions:(void (^)(MXMatrixVersions *))success failure:(void (^)(NSError *))failure
+{
+    return [matrixRestClient supportedMatrixVersions:success failure:failure];
+}
+
 
 #pragma mark - Rooms operations
 
