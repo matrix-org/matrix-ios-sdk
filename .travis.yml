@@ -10,4 +10,4 @@ before_install:
   - bundle exec pod repo update
 
 script:
-  - travis_wait 30 bundle exec fastlane lint_pods
+  - travis_wait 50 bundle exec fastlane lint_pods
