@@ -54,24 +54,6 @@ Pod::Spec.new do |s|
     # Use WebRTC build at https://github.com/Anakros/WebRTC instead
     ss.ios.dependency 'WebRTC', '63.11.20455'
   end
-  
-
-  # This podspec has been disabled because we cannot lint SwiftSupport subspec with static libraries.
-  # pod lint returns:
-  #
-  # - ERROR | [iOS] [MatrixSDK/SwiftSupport] unknown: Encountered an unknown error (The following Swift pods cannot yet be integrated as static libraries:
-  #
-  # Please add "MatrixSDKExtensions/MXAnalyticsDelegate/GoogleAnalytics/**/*.{h,m}" files directly to your project and add 'GoogleAnalytics' pod to your podfile.
-
-  # s.subspec 'GoogleAnalytics' do |ss|
-  #   ss.ios.deployment_target = "8.0"
-    
-  #   ss.source_files  = "MatrixSDKExtensions/MXAnalyticsDelegate/GoogleAnalytics/**/*.{h,m}"
-    
-  #   ss.dependency 'MatrixSDK/Core'
-    
-  #   ss.ios.dependency 'GoogleAnalytics' 
-  # end
 
   s.subspec 'SwiftSupport' do |ss|    
     ss.source_files = "MatrixSDK", "MatrixSDK/**/*.{swift}"
