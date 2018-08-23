@@ -77,6 +77,12 @@ FOUNDATION_EXPORT NSString *const kMXAccountDataKeyIgnoredUser;
  */
 FOUNDATION_EXPORT NSString *const kMXRestClientErrorDomain;
 
+/**
+ Parameters that can be used in [MXRestClient membersOfRoom:withParameters:...].
+ */
+FOUNDATION_EXPORT NSString *const kMXMembersOfRoomParametersAt;
+FOUNDATION_EXPORT NSString *const kMXMembersOfRoomParametersMembership;
+FOUNDATION_EXPORT NSString *const kMXMembersOfRoomParametersNotMembership;
 
 /**
  Methods of thumnailing supported by the Matrix content repository.
@@ -1211,6 +1217,23 @@ typedef enum : NSUInteger
 - (MXHTTPOperation*)membersOfRoom:(NSString*)roomId
                           success:(void (^)(NSArray *roomMemberEvents))success
                           failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
+
+/**
+ Get a list of members for this room.
+
+ @param roomId the id of the room.
+ @param parameters additional parameters for the request. Check kMXMembersOfRoomParameters*.
+
+ @param success A block object called when the operation succeeds. It provides an array of `MXEvent`
+ objects  which type is m.room.member.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)membersOfRoom:(NSString*)roomId
+                   withParameters:(NSDictionary*)parameters
+                          success:(void (^)(NSArray *roomMemberEvents))success
+                          failure:(void (^)(NSError *error))failure ;
 
 /**
  Get a list of all the current state events for this room.
