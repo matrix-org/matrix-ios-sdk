@@ -233,11 +233,17 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
                 self->pendingMembersRequesters = [NSMutableArray array];
 
                 // Else get them from the homeserver
+                NSDictionary *parameters;
+                if (self.mxSession.store.eventStreamToken)
+                {
+                    parameters = @{
+                                   kMXMembersOfRoomParametersAt: self.mxSession.store.eventStreamToken
+                                   };
+                }
+
                 MXWeakify(self);
                 MXHTTPOperation *operation2 = [self.mxSession.matrixRestClient membersOfRoom:self.roomId
-                                                                              withParameters:@{
-                                                                                               kMXMembersOfRoomParametersAt: self.mxSession.store.eventStreamToken
-                                                                                               }
+                                                                              withParameters:parameters
                                                                                      success:^(NSArray *roomMemberEvents)
                 {
                     MXStrongifyAndReturnIfNil(self);
