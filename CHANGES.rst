@@ -7,6 +7,7 @@ Improvements:
  * MXSession: Add MXSessionStateSyncError state and MXSession.syncError to manage homeserver resource quota on /sync requests (vector-im/riot-ios/issues/1937).
  * MXError: Add kMXErrCodeStringResourceLimitExceeded to manage homeserver resource quota (vector-im/riot-ios/issues/1937).
  * MXError: Define constant strings for keys and values that can be found in a Matrix JSON dictionary error.
+ * Tests: MXHTTPClient_Private.h: Add method to set fake delay in HTTP requests.
  
 Bug fix:
  * MXError: MXError lost NSError.userInfo information.

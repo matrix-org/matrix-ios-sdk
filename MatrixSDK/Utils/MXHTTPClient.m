@@ -17,10 +17,12 @@
  */
 
 #import "MXHTTPClient.h"
+
 #import "MXError.h"
 #import "MXSDKOptions.h"
 #import "MXBackgroundModeHandler.h"
 #import "MXTools.h"
+#import "MXHTTPClient_Private.h"
 
 #import <AFNetworking/AFNetworking.h>
 
@@ -247,7 +249,18 @@ NSString* const kMXHTTPClientUserConsentNotGivenErrorNotificationConsentURIKey =
 
         if (!error)
         {
-            success(JSONResponse);
+            NSUInteger responseDelayMS = [MXHTTPClient delayForRequest:request];
+            if (responseDelayMS)
+            {
+                NSLog(@"[MXHTTPClient] Delay call of success for request %p", mxHTTPOperation);
+                dispatch_after(dispatch_time(DISPATCH_TIME_NOW, responseDelayMS * USEC_PER_SEC), dispatch_get_main_queue(), ^{
+                    success(JSONResponse);
+                });
+            }
+            else
+            {
+                success(JSONResponse);
+            }
         }
         else
         {
@@ -444,7 +457,18 @@ NSString* const kMXHTTPClientUserConsentNotGivenErrorNotificationConsentURIKey =
 
         if (error)
         {
-            failure(error);
+            NSUInteger responseDelayMS = [MXHTTPClient delayForRequest:request];
+            if (responseDelayMS)
+            {
+                NSLog(@"[MXHTTPClient] Delay call of failure for request %p", mxHTTPOperation);
+                dispatch_after(dispatch_time(DISPATCH_TIME_NOW, responseDelayMS * USEC_PER_SEC), dispatch_get_main_queue(), ^{
+                    failure(error);
+                });
+            }
+            else
+            {
+                failure(error);
+            }
         }
 
         // Delay the call of 'cleanupBackgroundTask' in order to let httpManager.tasks.count
@@ -755,6 +779,60 @@ NSString* const kMXHTTPClientUserConsentNotGivenErrorNotificationConsentURIKey =
         NSLog(@"[MXHTTPClient] error domain: %@, code:%zd", error.domain, error.code);
     }
 #endif
+}
+
+
+#pragma mark - MXHTTPClient_Private
+// See MXHTTPClient_Private.h for details
++ (NSMutableDictionary<NSString*, NSNumber*> *)delayedRequests
+{
+    static NSMutableDictionary<NSString*, NSNumber*> *delayedRequests;
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        delayedRequests = [NSMutableDictionary dictionary];
+    });
+    return delayedRequests;
+}
+
++ (void)setDelay:(NSUInteger)delayMs toRequestsContainingString:(NSString *)string
+{
+    if (string)
+    {
+        if (delayMs)
+        {
+            [MXHTTPClient delayedRequests][string] = @(delayMs);
+        }
+        else
+        {
+            [[MXHTTPClient delayedRequests] removeObjectForKey:string];
+        }
+    }
+}
+
++ (void)removeAllDelays
+{
+    [[MXHTTPClient delayedRequests] removeAllObjects];
+}
+
++ (NSUInteger)delayForRequest:(NSURLRequest*)request
+{
+    NSUInteger delayMs = 0;
+
+    NSMutableDictionary<NSString*, NSNumber*> *delayedRequests = [MXHTTPClient delayedRequests];
+    if (delayedRequests.count)
+    {
+        NSString *requestString = request.URL.absoluteString;
+        for (NSString *string in delayedRequests)
+        {
+            if ([requestString containsString:string])
+            {
+                delayMs = [delayedRequests[string] unsignedIntegerValue];
+                break;
+            }
+        }
+    }
+
+    return delayMs;
 }
 
 @end
