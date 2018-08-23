@@ -416,6 +416,7 @@ FOUNDATION_EXPORT NSString *const kMXLoginIdentifierTypePhone;
  */
 FOUNDATION_EXPORT NSString *const kMXRoomTagFavourite;
 FOUNDATION_EXPORT NSString *const kMXRoomTagLowPriority;
+FOUNDATION_EXPORT NSString *const kMXRoomTagServerNotice;
 
 /**
  `MXRoomTag` represents a room tag.

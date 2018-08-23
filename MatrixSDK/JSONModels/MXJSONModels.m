@@ -343,6 +343,7 @@ NSString *const kMXLoginIdentifierTypePhone = @"m.id.phone";
 
 NSString *const kMXRoomTagFavourite = @"m.favourite";
 NSString *const kMXRoomTagLowPriority = @"m.lowpriority";
+NSString *const kMXRoomTagServerNotice = @"m.server_notice";
 
 @interface MXRoomTag()
 {
