@@ -22,6 +22,7 @@
 #import "MXError.h"
 
 #import "MXRestClient.h"
+#import "MXHTTPClient_Private.h"
 
 #define MXTESTS_USER @"mxtest"
 #define MXTESTS_PWD @"password"
@@ -49,10 +50,11 @@
 
 - (void)tearDown
 {
+    [super tearDown];
+
+    [MXHTTPClient removeAllDelays];
     mxRestClient = nil;
     matrixSDKTestsData = nil;
-
-    [super tearDown];
 }
 
 // Make sure MXTESTS_USER exists on the HS
@@ -504,6 +506,32 @@
         XCTAssertFalse([[NSThread currentThread] isMainThread]);
         XCTAssertEqual(dispatch_get_current_queue(), client.completionQueue);
 
+        [expectation fulfill];
+    }];
+
+    [self waitForExpectationsWithTimeout:10 handler:nil];
+}
+
+- (void)testMXHTTPClientPrivateSetDelay
+{
+    XCTestExpectation *expectation = [self expectationWithDescription:@"asyncTest"];
+
+    // Define a delay for all requests
+    [MXHTTPClient setDelay:2000 toRequestsContainingString:@"/"];
+
+    mxRestClient = [[MXRestClient alloc] initWithHomeServer:kMXTestsHomeServerURL
+                                        andOnUnrecognizedCertificateBlock:nil];
+
+    NSDate *date = [NSDate date];
+    [mxRestClient supportedMatrixVersions:^(MXMatrixVersions *matrixVersions) {
+
+        NSDate *now = [NSDate date];
+        XCTAssertGreaterThanOrEqual([now timeIntervalSinceDate:date], 2);
+
+        [expectation fulfill];
+
+    } failure:^(NSError *error) {
+        XCTFail(@"The request should not fail - NSError: %@", error);
         [expectation fulfill];
     }];
 

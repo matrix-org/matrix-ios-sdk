@@ -68,6 +68,13 @@ NSString *const kMX3PIDMediumMSISDN = @"msisdn";
 NSString *const kMXRestClientErrorDomain = @"kMXRestClientErrorDomain";
 
 /**
+ Parameters that can be used in [MXRestClient membersOfRoom:withParameters:...].
+ */
+NSString *const kMXMembersOfRoomParametersAt            = @"at";
+NSString *const kMXMembersOfRoomParametersMembership    = @"membership";
+NSString *const kMXMembersOfRoomParametersNotMembership = @"not_membership";
+
+/**
  Authentication flow: register or login
  */
 typedef enum
@@ -2149,12 +2156,20 @@ MXAuthAction;
                           success:(void (^)(NSArray *roomMemberEvents))success
                           failure:(void (^)(NSError *error))failure
 {
+    return [self membersOfRoom:roomId withParameters:nil success:success failure:failure];
+}
+
+- (MXHTTPOperation*)membersOfRoom:(NSString*)roomId
+                   withParameters:(NSDictionary*)parameters
+                          success:(void (^)(NSArray *roomMemberEvents))success
+                          failure:(void (^)(NSError *error))failure
+{
     NSString *path = [NSString stringWithFormat:@"%@/rooms/%@/members", apiPathPrefix, roomId];
 
     MXWeakify(self);
     return [httpClient requestWithMethod:@"GET"
                                     path:path
-                              parameters:nil
+                              parameters:parameters
                                  success:^(NSDictionary *JSONResponse) {
                                      MXStrongifyAndReturnIfNil(self);
 

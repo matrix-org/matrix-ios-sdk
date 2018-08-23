@@ -234,8 +234,33 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
 
                 // Else get them from the homeserver
                 MXWeakify(self);
-                MXHTTPOperation *operation2 = [self.mxSession.matrixRestClient membersOfRoom:self.roomId success:^(NSArray *roomMemberEvents) {
+                MXHTTPOperation *operation2 = [self.mxSession.matrixRestClient membersOfRoom:self.roomId
+                                                                              withParameters:@{
+                                                                                               kMXMembersOfRoomParametersAt: self.mxSession.store.eventStreamToken
+                                                                                               }
+                                                                                     success:^(NSArray *roomMemberEvents)
+                {
                     MXStrongifyAndReturnIfNil(self);
+
+                    // Manage the possible race condition where we could have received
+                    // update of members from the events stream (/sync) while the /members
+                    // request was pending.
+                    // In that case, the response of /members is not up-to-date. We must not
+                    // use this response as is.
+                    // To fix that:
+                    //    - we consider that all lazy-loaded members are up-to-date
+                    //    - we ignore in the /member response all member events corresponding
+                    //      to these already lazy-loaded members
+                    NSMutableArray *updatedRoomMemberEvents = [NSMutableArray array];
+                    for (MXEvent *roomMemberEvent in roomMemberEvents)
+                    {
+                        if (![liveTimeline.state.members memberWithUserId:roomMemberEvent.stateKey])
+                        {
+                            // User not lazy loaded yet, keep their member event from /members response
+                            [updatedRoomMemberEvents addObject:roomMemberEvent];
+                        }
+                    }
+                    roomMemberEvents = updatedRoomMemberEvents;
 
                     [liveTimeline handleLazyLoadedStateEvents:roomMemberEvents];
 

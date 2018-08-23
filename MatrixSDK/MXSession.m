@@ -384,6 +384,8 @@ typedef void (^MXOnResumeDone)(void);
            onServerSyncDone:(void (^)(void))onServerSyncDone
                     failure:(void (^)(NSError *error))failure;
 {
+    NSLog(@"[MXSession] startWithSyncFilter: %@", syncFilter);
+
     if (syncFilter)
     {
         // Build or retrieve the filter before launching the event stream
@@ -396,7 +398,7 @@ typedef void (^MXOnResumeDone)(void);
         } failure:^(NSError *error) {
             MXStrongifyAndReturnIfNil(self);
 
-            NSLog(@"[MXSesssion] startWithSyncFilter: WARNING: Impossible to create the filter. Use no filter in /sync");
+            NSLog(@"[MXSession] startWithSyncFilter: WARNING: Impossible to create the filter. Use no filter in /sync");
             [self startWithSyncFilterId:nil onServerSyncDone:onServerSyncDone failure:failure];
         }];
     }

@@ -339,6 +339,7 @@
 		322A51C51D9BBD3C00C8536D /* MXOlmDevice.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXOlmDevice.h; sourceTree = "<group>"; };
 		322A51C61D9BBD3C00C8536D /* MXOlmDevice.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXOlmDevice.m; sourceTree = "<group>"; };
 		322A51D71D9E846800C8536D /* MXCryptoTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXCryptoTests.m; sourceTree = "<group>"; };
+		322DB456212EB8E600F4EFE9 /* MXHTTPClient_Private.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MXHTTPClient_Private.h; sourceTree = "<group>"; };
 		32322A471E57264E005DD155 /* MXSelfSignedHomeserverTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXSelfSignedHomeserverTests.m; sourceTree = "<group>"; };
 		32322A491E575F65005DD155 /* MXAllowedCertificates.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXAllowedCertificates.h; sourceTree = "<group>"; };
 		32322A4A1E575F65005DD155 /* MXAllowedCertificates.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXAllowedCertificates.m; sourceTree = "<group>"; };
@@ -680,6 +681,7 @@
 				F03EF5021DF01596009DF592 /* MXLRUCache.h */,
 				F03EF5031DF01596009DF592 /* MXLRUCache.m */,
 				320DFDD719DD99B60068622A /* MXHTTPClient.h */,
+				322DB456212EB8E600F4EFE9 /* MXHTTPClient_Private.h */,
 				320DFDD819DD99B60068622A /* MXHTTPClient.m */,
 				32CAB1091A925B41008C5BB9 /* MXHTTPOperation.h */,
 				32CAB10A1A925B41008C5BB9 /* MXHTTPOperation.m */,
