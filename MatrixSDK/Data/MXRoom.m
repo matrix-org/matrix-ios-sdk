@@ -2851,20 +2851,8 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
 
 - (NSString *)directUserId
 {
-    NSString *directUserId;
-
     // Get the information from the user account data that is managed by MXSession
-    NSDictionary<NSString*, NSArray<NSString*>*> *directRooms = self.mxSession.directRooms;
-    for (NSString *userId in directRooms)
-    {
-        if ([directRooms[userId] containsObject:_roomId])
-        {
-            directUserId = userId;
-            break;
-        }
-    }
-
-    return directUserId;
+    return [self.mxSession directUserIdInRoom:_roomId];
 }
 
 - (MXHTTPOperation*)setIsDirect:(BOOL)isDirect

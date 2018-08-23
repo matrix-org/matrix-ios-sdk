@@ -791,6 +791,14 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
 - (MXRoom *)directJoinedRoomWithUserId:(NSString*)userId;
 
 /**
+ Get the direct user id of a room.
+
+ @param roomId the id of the room.
+ @return the id of user with whom the room is direct to.
+ */
+- (NSString *)directUserIdInRoom:(NSString*)roomId;
+
+/**
  Set a room as direct with a user.
 
  @param roomId the id of the room.

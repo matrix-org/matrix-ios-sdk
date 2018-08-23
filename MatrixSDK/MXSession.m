@@ -1877,6 +1877,21 @@ typedef void (^MXOnResumeDone)(void);
     return nil;
 }
 
+- (NSString *)directUserIdInRoom:(NSString*)roomId
+{
+    NSString *directUserId;
+
+    for (NSString *userId in _directRooms)
+    {
+        if ([_directRooms[userId] containsObject:roomId])
+        {
+            directUserId = userId;
+            break;
+        }
+    }
+
+    return directUserId;
+}
 
 - (MXHTTPOperation*)setRoom:(NSString*)roomId
            directWithUserId:(NSString*)userId
