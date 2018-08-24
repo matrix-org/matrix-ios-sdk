@@ -1036,6 +1036,12 @@ typedef void (^MXOnResumeDone)(void);
             }
         }
 
+        if (isInitialSync)
+        {
+            // Update summaries direct user ids for retrieved rooms
+            [self updateSummaryDirectUserIdForRooms:[self directRoomIds]];
+        }
+
         // Handle invited groups
         for (NSString *groupId in syncResponse.groups.invite)
         {
@@ -1417,7 +1423,17 @@ typedef void (^MXOnResumeDone)(void);
                 if (directRooms != _directRooms
                     && ![directRooms isEqualToDictionary:_directRooms])
                 {
+                    // Collect previous direct rooms ids
+                    NSMutableSet<NSString*> *directRoomIds = [NSMutableSet set];
+                    [directRoomIds unionSet:[self directRoomIds]];
+
                     _directRooms = directRooms;
+
+                    // And collect current ones
+                    [directRoomIds unionSet:[self directRoomIds]];
+
+                    // In order to update room summaries
+                    [self updateSummaryDirectUserIdForRooms:directRoomIds];
 
                     // Update the information of the direct rooms.
                     [[NSNotificationCenter defaultCenter] postNotificationName:kMXSessionDirectRoomsDidChangeNotification
@@ -1431,6 +1447,30 @@ typedef void (^MXOnResumeDone)(void);
         }
 
         _store.userAccountData = _accountData.accountData;
+    }
+}
+
+- (void)updateSummaryDirectUserIdForRooms:(NSSet<NSString*> *)roomIds
+{
+    // If the initial sync response is not processed enough, rooms is not yet mounted.
+    // updateSummaryDirectUserIdForRooms will be called once the initial sync is done.
+    if (rooms.count)
+    {
+        for (NSString *roomId in roomIds)
+        {
+            MXRoomSummary *summary = [self roomSummaryWithRoomId:roomId];
+
+            NSString *directUserId = [self directUserIdInRoom:roomId];
+            NSString *summaryDirectUserId = summary.directUserId;
+
+            // Update the summary if necessary
+            if (directUserId != summaryDirectUserId
+                && ![directUserId isEqualToString:summaryDirectUserId])
+            {
+                summary.directUserId = directUserId;
+                [summary save:YES];
+            }
+        }
     }
 }
 
@@ -1877,6 +1917,33 @@ typedef void (^MXOnResumeDone)(void);
     return nil;
 }
 
+// Return ids of all current direct rooms
+- (NSSet<NSString*> *)directRoomIds
+{
+    NSMutableSet<NSString*> *roomIds = [NSMutableSet set];
+    for (NSArray *array in _directRooms.allValues)
+    {
+        [roomIds addObjectsFromArray:array];
+    }
+
+    return roomIds;
+}
+
+- (NSString *)directUserIdInRoom:(NSString*)roomId
+{
+    NSString *directUserId;
+
+    for (NSString *userId in _directRooms)
+    {
+        if ([_directRooms[userId] containsObject:roomId])
+        {
+            directUserId = userId;
+            break;
+        }
+    }
+
+    return directUserId;
+}
 
 - (MXHTTPOperation*)setRoom:(NSString*)roomId
            directWithUserId:(NSString*)userId

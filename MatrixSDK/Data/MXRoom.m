@@ -233,11 +233,17 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
                 self->pendingMembersRequesters = [NSMutableArray array];
 
                 // Else get them from the homeserver
+                NSDictionary *parameters;
+                if (self.mxSession.store.eventStreamToken)
+                {
+                    parameters = @{
+                                   kMXMembersOfRoomParametersAt: self.mxSession.store.eventStreamToken
+                                   };
+                }
+
                 MXWeakify(self);
                 MXHTTPOperation *operation2 = [self.mxSession.matrixRestClient membersOfRoom:self.roomId
-                                                                              withParameters:@{
-                                                                                               kMXMembersOfRoomParametersAt: self.mxSession.store.eventStreamToken
-                                                                                               }
+                                                                              withParameters:parameters
                                                                                      success:^(NSArray *roomMemberEvents)
                 {
                     MXStrongifyAndReturnIfNil(self);
@@ -2845,20 +2851,8 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
 
 - (NSString *)directUserId
 {
-    NSString *directUserId;
-
     // Get the information from the user account data that is managed by MXSession
-    NSDictionary<NSString*, NSArray<NSString*>*> *directRooms = self.mxSession.directRooms;
-    for (NSString *userId in directRooms)
-    {
-        if ([directRooms[userId] containsObject:_roomId])
-        {
-            directUserId = userId;
-            break;
-        }
-    }
-
-    return directUserId;
+    return [self.mxSession directUserIdInRoom:_roomId];
 }
 
 - (MXHTTPOperation*)setIsDirect:(BOOL)isDirect
