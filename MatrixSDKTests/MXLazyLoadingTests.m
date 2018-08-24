@@ -19,6 +19,8 @@
 #import "MatrixSDKTestsData.h"
 #import "MXSDKOptions.h"
 
+#import "MXHTTPClient_Private.h"
+
 // Do not bother with retain cycles warnings in tests
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Warc-retain-cycles"
@@ -47,6 +49,7 @@ NSString * const bobMessage = @"I am Bob";
 - (void)tearDown
 {
     [super tearDown];
+    [MXHTTPClient removeAllDelays];
 
     matrixSDKTestsData = nil;
 }
@@ -436,6 +439,64 @@ Common initial conditions:
 {
     [self checkRoomMembersWithLazyLoading:NO];
 }
+
+// From the scenario:
+// - Alice calls [MXRoom members:] with the underlying HTTP request that will be fakely delayed
+// - Bob changes his name
+// - [MXRoom members:] completes
+// -> Bob name must be correct
+- (void)checkRoomMembersRaceConditionsWithLazyLoading:(BOOL)lazyLoading
+{
+    [self createScenarioWithLazyLoading:lazyLoading readyToTest:^(MXSession *aliceSession, MXSession *bobSession, MXSession *charlieSession, NSString *roomId, XCTestExpectation *expectation) {
+
+        MXRoom *room = [aliceSession roomWithRoomId:roomId];
+        [room liveTimeline:^(MXEventTimeline *liveTimeline) {
+
+            NSString *newBobName = @"NewBob";
+
+            // updatedFromSync is used to check the test itself
+            __block BOOL updatedFromSync = NO;
+            [liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMember] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
+
+                if (direction == MXTimelineDirectionForwards)
+                {
+                    updatedFromSync = YES;
+                }
+            }];
+
+            // - Alice calls [MXRoom members:] with the underlying HTTP request that will be fakely delayed
+            [MXHTTPClient setDelay:2000 toRequestsContainingString:@"/members"];
+            [room members:^(MXRoomMembers *roomMembers) {
+
+                // - [MXRoom members:] completes
+                XCTAssertTrue(updatedFromSync);
+
+                // -> Bob name must be correct
+                MXRoomMember *bob = [roomMembers memberWithUserId:bobSession.myUser.userId];
+                XCTAssertEqualObjects(bob.displayname, newBobName);
+
+                [expectation fulfill];
+
+            } failure:^(NSError *error) {
+                XCTFail(@"The operation should not fail - NSError: %@", error);
+                [expectation fulfill];
+            }];
+
+            [bobSession.myUser setDisplayName:newBobName success:nil failure:nil];
+        }];
+    }];
+}
+
+- (void)testRoomMembersRaceConditions
+{
+    [self checkRoomMembersRaceConditionsWithLazyLoading:YES];
+}
+
+// There cannot be race conditions without LL
+//- (void)testRoomMembersRaceConditionsWithLazyLoadingOFF
+//{
+//    [self checkRoomMembersRaceConditionsWithLazyLoading:NO];
+//}
 
 
 // [MXRoom members:] should make an HTTP request to fetch members only once

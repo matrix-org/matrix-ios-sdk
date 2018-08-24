@@ -18,6 +18,7 @@
 
 #import "MatrixSDKTestsData.h"
 #import "MXSDKOptions.h"
+#import "MXFileStore.h"
 
 // Do not bother with retain cycles warnings in tests
 #pragma clang diagnostic push
@@ -372,6 +373,130 @@
             observer = nil;
 
             [expectation fulfill];
+
+        } failure:^(NSError *error) {
+            XCTFail(@"The operation should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+    }];
+}
+
+// https://github.com/vector-im/riot-ios/issues/1988
+// - Bob & Alice in a room
+// - Bob must have no direct rooms at first
+// - Bob set the room as direct
+// -> On success the room must be tagged as direct
+// -> It must be stored as direct too
+- (void)testSummaryStorage
+{
+    // - Bob & Alice in a room
+    MXFileStore *store = [[MXFileStore alloc] init];
+    [matrixSDKTestsData doMXSessionTestWithBobAndAliceInARoom:self andStore:store readyToTest:^(MXSession *bobSession, MXRestClient *aliceRestClient, NSString *roomId, XCTestExpectation *expectation) {
+
+        // - Bob must have no direct rooms at first
+        MXRoomSummary *summary = [bobSession roomSummaryWithRoomId:roomId];
+        XCTAssertFalse(summary.isDirect);
+
+        // - Bob set the room as direct
+        MXRoom *room = [bobSession roomWithRoomId:roomId];
+        [room setIsDirect:YES withUserId:aliceRestClient.credentials.userId success:^{
+
+            // -> On success the room must be tagged as direct
+            XCTAssertEqualObjects(summary.directUserId, aliceRestClient.credentials.userId);
+            XCTAssertTrue(summary.isDirect);
+
+            [bobSession close];
+
+            // Check content from the store
+            [store asyncRoomsSummaries:^(NSArray<MXRoomSummary *> * _Nonnull roomsSummaries) {
+
+                 // Test for checking the test
+                XCTAssertEqual(roomsSummaries.count, 1);
+
+                // -> It must be stored as direct too
+                MXRoomSummary *summaryFromStore = roomsSummaries.firstObject;
+                XCTAssertEqualObjects(summaryFromStore.directUserId, aliceRestClient.credentials.userId);
+                XCTAssertTrue(summaryFromStore.isDirect);
+
+                [expectation fulfill];
+
+            } failure:^(NSError *error) {
+                XCTFail(@"The operation should not fail - NSError: %@", error);
+                [expectation fulfill];
+            }];
+
+        } failure:^(NSError *error) {
+            XCTFail(@"The operation should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+    }];
+}
+
+// Another test case for https://github.com/vector-im/riot-ios/issues/1988
+// - Bob & Alice in a room
+// - Bob set the room as direct
+// - Bob does an initial /sync
+// -> On success the room must be tagged as direct
+// -> It must be stored as direct too
+- (void)testSummaryAfterInitialSyncAndStorage
+{
+    // - Bob & Alice in a room
+    MXFileStore *store = [[MXFileStore alloc] init];
+    [matrixSDKTestsData doMXSessionTestWithBobAndAliceInARoom:self andStore:store readyToTest:^(MXSession *bobSession, MXRestClient *aliceRestClient, NSString *roomId, XCTestExpectation *expectation) {
+
+        // - Bob set the room as direct
+        MXRoom *room = [bobSession roomWithRoomId:roomId];
+        [room setIsDirect:YES withUserId:aliceRestClient.credentials.userId success:^{
+
+            // - Bob does an initial /sync
+            MXSession *bobSession2 = [[MXSession alloc] initWithMatrixRestClient:bobSession.matrixRestClient];
+            [matrixSDKTestsData retain:bobSession2];
+            [bobSession close];
+            [store deleteAllData];
+
+            MXFileStore *store2 = [[MXFileStore alloc] init];
+            [bobSession2 setStore:store2 success:^{
+
+                [bobSession2 start:^{
+
+                    // Test for checking the test
+                    XCTAssertEqualObjects([bobSession2 roomWithRoomId:roomId].directUserId, aliceRestClient.credentials.userId);
+
+                    MXRoomSummary *summary = [bobSession2 roomSummaryWithRoomId:roomId];
+
+                    // -> On success the room must be tagged as direct
+                    XCTAssertEqualObjects(summary.directUserId, aliceRestClient.credentials.userId);
+                    XCTAssertTrue(summary.isDirect);
+
+                    [bobSession2 close];
+
+                    // Check content from the store
+                    [store2 asyncRoomsSummaries:^(NSArray<MXRoomSummary *> * _Nonnull roomsSummaries) {
+
+                        // Test for checking the test
+                        XCTAssertEqual(roomsSummaries.count, 1);
+
+                        // -> It must be stored as direct too
+                        MXRoomSummary *summaryFromStore = roomsSummaries.firstObject;
+                        XCTAssertEqualObjects(summaryFromStore.directUserId, aliceRestClient.credentials.userId);
+                        XCTAssertTrue(summaryFromStore.isDirect);
+
+                        [expectation fulfill];
+
+                    } failure:^(NSError *error) {
+                        XCTFail(@"The operation should not fail - NSError: %@", error);
+                        [expectation fulfill];
+                    }];
+
+                } failure:^(NSError *error) {
+                    XCTFail(@"The operation should not fail - NSError: %@", error);
+                    [expectation fulfill];
+                }];
+
+            } failure:^(NSError *error) {
+                XCTFail(@"The operation should not fail - NSError: %@", error);
+                [expectation fulfill];
+            }];
 
         } failure:^(NSError *error) {
             XCTFail(@"The operation should not fail - NSError: %@", error);

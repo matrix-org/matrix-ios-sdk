@@ -233,9 +233,40 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
                 self->pendingMembersRequesters = [NSMutableArray array];
 
                 // Else get them from the homeserver
+                NSDictionary *parameters;
+                if (self.mxSession.store.eventStreamToken)
+                {
+                    parameters = @{
+                                   kMXMembersOfRoomParametersAt: self.mxSession.store.eventStreamToken
+                                   };
+                }
+
                 MXWeakify(self);
-                MXHTTPOperation *operation2 = [self.mxSession.matrixRestClient membersOfRoom:self.roomId success:^(NSArray *roomMemberEvents) {
+                MXHTTPOperation *operation2 = [self.mxSession.matrixRestClient membersOfRoom:self.roomId
+                                                                              withParameters:parameters
+                                                                                     success:^(NSArray *roomMemberEvents)
+                {
                     MXStrongifyAndReturnIfNil(self);
+
+                    // Manage the possible race condition where we could have received
+                    // update of members from the events stream (/sync) while the /members
+                    // request was pending.
+                    // In that case, the response of /members is not up-to-date. We must not
+                    // use this response as is.
+                    // To fix that:
+                    //    - we consider that all lazy-loaded members are up-to-date
+                    //    - we ignore in the /member response all member events corresponding
+                    //      to these already lazy-loaded members
+                    NSMutableArray *updatedRoomMemberEvents = [NSMutableArray array];
+                    for (MXEvent *roomMemberEvent in roomMemberEvents)
+                    {
+                        if (![liveTimeline.state.members memberWithUserId:roomMemberEvent.stateKey])
+                        {
+                            // User not lazy loaded yet, keep their member event from /members response
+                            [updatedRoomMemberEvents addObject:roomMemberEvent];
+                        }
+                    }
+                    roomMemberEvents = updatedRoomMemberEvents;
 
                     [liveTimeline handleLazyLoadedStateEvents:roomMemberEvents];
 
@@ -2820,20 +2851,8 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
 
 - (NSString *)directUserId
 {
-    NSString *directUserId;
-
     // Get the information from the user account data that is managed by MXSession
-    NSDictionary<NSString*, NSArray<NSString*>*> *directRooms = self.mxSession.directRooms;
-    for (NSString *userId in directRooms)
-    {
-        if ([directRooms[userId] containsObject:_roomId])
-        {
-            directUserId = userId;
-            break;
-        }
-    }
-
-    return directUserId;
+    return [self.mxSession directUserIdInRoom:_roomId];
 }
 
 - (MXHTTPOperation*)setIsDirect:(BOOL)isDirect

@@ -26,12 +26,13 @@
 
 #import "MXHTTPClient.h"
 #import "MXEvent.h"
+#import "MXError.h"
 #import "MXRoomEventFilter.h"
 #import "MXInvite3PID.h"
 #import "MXEventTimeline.h"
 #import "MXJSONModels.h"
 #import "MXFilterJSONModel.h"
-
+#import "MXMatrixVersions.h"
 
 #pragma mark - Constants definitions
 /**
@@ -76,6 +77,12 @@ FOUNDATION_EXPORT NSString *const kMXAccountDataKeyIgnoredUser;
  */
 FOUNDATION_EXPORT NSString *const kMXRestClientErrorDomain;
 
+/**
+ Parameters that can be used in [MXRestClient membersOfRoom:withParameters:...].
+ */
+FOUNDATION_EXPORT NSString *const kMXMembersOfRoomParametersAt;
+FOUNDATION_EXPORT NSString *const kMXMembersOfRoomParametersMembership;
+FOUNDATION_EXPORT NSString *const kMXMembersOfRoomParametersNotMembership;
 
 /**
  Methods of thumnailing supported by the Matrix content repository.
@@ -173,7 +180,34 @@ typedef enum : NSUInteger
 
 - (void)close;
 
+
+#pragma mark - Server administration
+/**
+ Gets the versions of the specification supported by the server.
+
+ @param success A block object called when the operation succeeds. It provides
+                the supported spec versions.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)supportedMatrixVersions:(void (^)(MXMatrixVersions *matrixVersions))success
+                        failure:(void (^)(NSError *error))failure;
+
+
 #pragma mark - Registration operations
+/**
+ Make a ping to the registration endpoint to detect a possible registration problem earlier.
+
+ @param username the user name to test (This value must not be nil).
+ @param callback A block object called when the operation is completed.
+                 It provides a MXError to check to verify if the user can be registered.
+
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)testUserRegistration:(NSString*)username
+                                callback:(void (^)(MXError *mxError))callback;
+
 /**
  Check whether a username is already in use.
 
@@ -1183,6 +1217,23 @@ typedef enum : NSUInteger
 - (MXHTTPOperation*)membersOfRoom:(NSString*)roomId
                           success:(void (^)(NSArray *roomMemberEvents))success
                           failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
+
+/**
+ Get a list of members for this room.
+
+ @param roomId the id of the room.
+ @param parameters additional parameters for the request. Check kMXMembersOfRoomParameters*.
+
+ @param success A block object called when the operation succeeds. It provides an array of `MXEvent`
+ objects  which type is m.room.member.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)membersOfRoom:(NSString*)roomId
+                   withParameters:(NSDictionary*)parameters
+                          success:(void (^)(NSArray *roomMemberEvents))success
+                          failure:(void (^)(NSError *error))failure ;
 
 /**
  Get a list of all the current state events for this room.

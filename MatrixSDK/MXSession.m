@@ -42,7 +42,7 @@
 
 #pragma mark - Constants definitions
 
-const NSString *MatrixSDKVersion = @"0.11.1";
+const NSString *MatrixSDKVersion = @"0.11.2";
 NSString *const kMXSessionStateDidChangeNotification = @"kMXSessionStateDidChangeNotification";
 NSString *const kMXSessionNewRoomNotification = @"kMXSessionNewRoomNotification";
 NSString *const kMXSessionWillLeaveRoomNotification = @"kMXSessionWillLeaveRoomNotification";
@@ -77,6 +77,11 @@ NSString *const kMXSessionNoRoomTag = @"m.recent";  // Use the same value as mat
  */
 #define SERVER_TIMEOUT_MS 30000
 #define CLIENT_TIMEOUT_MS 120000
+
+/**
+ Time before retrying in case of `MXSessionStateSyncError`.
+ */
+#define RETRY_SYNC_AFTER_MXERROR_MS 5000
 
 
 // Block called when MSSession resume is complete
@@ -241,6 +246,12 @@ typedef void (^MXOnResumeDone)(void);
     if (_state != state)
     {
         _state = state;
+
+        if (_state != MXSessionStateSyncError)
+        {
+            // Reset the sync error
+            _syncError = nil;
+        }
         
         NSNotificationCenter *notificationCenter = [NSNotificationCenter defaultCenter];
         [notificationCenter postNotificationName:kMXSessionStateDidChangeNotification object:self userInfo:nil];
@@ -373,6 +384,8 @@ typedef void (^MXOnResumeDone)(void);
            onServerSyncDone:(void (^)(void))onServerSyncDone
                     failure:(void (^)(NSError *error))failure;
 {
+    NSLog(@"[MXSession] startWithSyncFilter: %@", syncFilter);
+
     if (syncFilter)
     {
         // Build or retrieve the filter before launching the event stream
@@ -385,7 +398,7 @@ typedef void (^MXOnResumeDone)(void);
         } failure:^(NSError *error) {
             MXStrongifyAndReturnIfNil(self);
 
-            NSLog(@"[MXSesssion] startWithSyncFilter: WARNING: Impossible to create the filter. Use no filter in /sync");
+            NSLog(@"[MXSession] startWithSyncFilter: WARNING: Impossible to create the filter. Use no filter in /sync");
             [self startWithSyncFilterId:nil onServerSyncDone:onServerSyncDone failure:failure];
         }];
     }
@@ -1023,6 +1036,12 @@ typedef void (^MXOnResumeDone)(void);
             }
         }
 
+        if (isInitialSync)
+        {
+            // Update summaries direct user ids for retrieved rooms
+            [self updateSummaryDirectUserIdForRooms:[self directRoomIds]];
+        }
+
         // Handle invited groups
         for (NSString *groupId in syncResponse.groups.invite)
         {
@@ -1178,96 +1197,121 @@ typedef void (^MXOnResumeDone)(void);
         }];
 
     } failure:^(NSError *error) {
-        MXStrongifyAndReturnIfNil(self);
-        
-        // Make sure [MXSession close] or [MXSession pause] has not been called before the server response
-        if (!self->eventStreamRequest)
+        [self handleServerSyncError:error forRequestWithServerTimeout:serverTimeout success:success failure:failure];
+    }];
+}
+
+- (void)handleServerSyncError:(NSError*)error forRequestWithServerTimeout:(NSUInteger)serverTimeout success:(void (^)(void))success failure:(void (^)(NSError *error))failure
+{
+    // Make sure [MXSession close] or [MXSession pause] has not been called before the server response
+    if (!self->eventStreamRequest)
+    {
+        return;
+    }
+
+    // Check whether the token is valid
+    if ([self isUnknownTokenError:error])
+    {
+        // Do nothing more because without a valid access_token, the session is useless
+        return;
+    }
+
+    // Handle failure during catch up first
+    if (self->onBackgroundSyncFail)
+    {
+        NSLog(@"[MXSession] background Sync fails %@", error);
+
+        // Operations on session may occur during this block. For example, [MXSession close] may be triggered.
+        // We run a copy of the block to prevent app from crashing if the block is released by one of these operations.
+        MXOnBackgroundSyncFail onBackgroundSyncFailCpy = [self->onBackgroundSyncFail copy];
+        onBackgroundSyncFailCpy(error);
+        self->onBackgroundSyncFail = nil;
+
+        // check that the application was not resumed while catching up in background
+        if (self.state == MXSessionStateBackgroundSyncInProgress)
         {
-            return;
-        }
-        
-        // Check whether the token is valid
-        if ([self isUnknownTokenError:error])
-        {
-            // Do nothing more because without a valid access_token, the session is useless
-            return;
-        }
-        
-        // Handle failure during catch up first
-        if (self->onBackgroundSyncFail)
-        {
-            NSLog(@"[MXSession] background Sync fails %@", error);
-            
-            // Operations on session may occur during this block. For example, [MXSession close] may be triggered.
-            // We run a copy of the block to prevent app from crashing if the block is released by one of these operations.
-            MXOnBackgroundSyncFail onBackgroundSyncFailCpy = [self->onBackgroundSyncFail copy];
-            onBackgroundSyncFailCpy(error);
-            self->onBackgroundSyncFail = nil;
-            
-            // check that the application was not resumed while catching up in background
-            if (self.state == MXSessionStateBackgroundSyncInProgress)
+            // Check that none required the session to keep running
+            if (self.preventPauseCount)
             {
-                // Check that none required the session to keep running
-                if (self.preventPauseCount)
-                {
-                    // Delay the pause by calling the reliable `pause` method.
-                    [self pause];
-                }
-                else
-                {
-                    NSLog(@"[MXSession] go to paused ");
-                    self->eventStreamRequest = nil;
-                    [self setState:MXSessionStatePaused];
-                    return;
-                }
+                // Delay the pause by calling the reliable `pause` method.
+                [self pause];
             }
             else
             {
-                NSLog(@"[MXSession] resume after a background Sync");
+                NSLog(@"[MXSession] go to paused ");
+                self->eventStreamRequest = nil;
+                [self setState:MXSessionStatePaused];
+                return;
             }
-        }
-        
-        // Check whether the caller wants to handle error himself
-        if (failure)
-        {
-            failure(error);
         }
         else
         {
-            // Handle error here
-            // on 64 bits devices, the error codes are huge integers.
-            int32_t code = (int32_t)error.code;
-            
-            if (code == kCFURLErrorCancelled)
+            NSLog(@"[MXSession] resume after a background Sync");
+        }
+    }
+
+    // Check whether the caller wants to handle error himself
+    if (failure)
+    {
+        failure(error);
+    }
+    else
+    {
+        // Handle error here
+        // on 64 bits devices, the error codes are huge integers.
+        int32_t code = (int32_t)error.code;
+
+        if ([error.domain isEqualToString:NSURLErrorDomain]
+            && code == kCFURLErrorCancelled)
+        {
+            NSLog(@"[MXSession] The connection has been cancelled.");
+        }
+        else if ([error.domain isEqualToString:NSURLErrorDomain]
+                 && code == kCFURLErrorTimedOut && serverTimeout == 0)
+        {
+            NSLog(@"[MXSession] The connection has been timeout.");
+            // The reconnection attempt failed on timeout: there is no data to retrieve from server
+            [self->eventStreamRequest cancel];
+            self->eventStreamRequest = nil;
+
+            // Notify the reconnection attempt has been done.
+            [[NSNotificationCenter defaultCenter] postNotificationName:kMXSessionDidSyncNotification
+                                                                object:self
+                                                              userInfo:@{
+                                                                         kMXSessionNotificationErrorKey: error
+                                                                         }];
+
+            // Switch back to the long poll management
+            [self serverSyncWithServerTimeout:SERVER_TIMEOUT_MS success:nil failure:nil clientTimeout:CLIENT_TIMEOUT_MS setPresence:nil];
+        }
+        else
+        {
+            MXError *mxError = [[MXError alloc] initWithNSError:error];
+            if (mxError)
             {
-                NSLog(@"[MXSession] The connection has been cancelled.");
-            }
-            else if ((code == kCFURLErrorTimedOut) && serverTimeout == 0)
-            {
-                NSLog(@"[MXSession] The connection has been timeout.");
-                // The reconnection attempt failed on timeout: there is no data to retrieve from server
-                [self->eventStreamRequest cancel];
-                self->eventStreamRequest = nil;
-                
-                // Notify the reconnection attempt has been done.
-                [[NSNotificationCenter defaultCenter] postNotificationName:kMXSessionDidSyncNotification
-                                                                    object:self
-                                                                  userInfo:@{
-                                                                             kMXSessionNotificationErrorKey: error
-                                                                             }];
-                
-                // Switch back to the long poll management
-                [self serverSyncWithServerTimeout:SERVER_TIMEOUT_MS success:nil failure:nil clientTimeout:CLIENT_TIMEOUT_MS setPresence:nil];
+                _syncError = mxError;
+                [self setState:MXSessionStateSyncError];
+
+                // Retry later
+                dispatch_time_t delayTime = dispatch_time(DISPATCH_TIME_NOW, RETRY_SYNC_AFTER_MXERROR_MS * NSEC_PER_MSEC);
+                dispatch_after(delayTime, dispatch_get_main_queue(), ^(void) {
+
+                    if (self->eventStreamRequest)
+                    {
+                        NSLog(@"[MXSession] Retry resuming events stream after error %@", mxError.errcode);
+                        [self serverSyncWithServerTimeout:0 success:success failure:failure clientTimeout:CLIENT_TIMEOUT_MS setPresence:nil];
+                    }
+                });
             }
             else
             {
                 // Inform the app there is a problem with the connection to the homeserver
                 [self setState:MXSessionStateHomeserverNotReachable];
-                
+
                 // Check if it is a network connectivity issue
                 AFNetworkReachabilityManager *networkReachabilityManager = [AFNetworkReachabilityManager sharedManager];
                 NSLog(@"[MXSession] events stream broken. Network reachability: %d", networkReachabilityManager.isReachable);
-                
+
                 if (networkReachabilityManager.isReachable)
                 {
                     // The problem is not the network
@@ -1276,7 +1320,7 @@ typedef void (^MXOnResumeDone)(void);
                     // if there is server side issue like server restart
                     dispatch_time_t delayTime = dispatch_time(DISPATCH_TIME_NOW, [MXHTTPClient timeForRetry:self->eventStreamRequest] * NSEC_PER_MSEC);
                     dispatch_after(delayTime, dispatch_get_main_queue(), ^(void) {
-                        
+
                         if (self->eventStreamRequest)
                         {
                             NSLog(@"[MXSession] Retry resuming events stream");
@@ -1290,11 +1334,11 @@ typedef void (^MXOnResumeDone)(void);
                     // The device is not connected to the internet, wait for the connection to be up again before retrying
                     __block __weak id reachabilityObserver =
                     [[NSNotificationCenter defaultCenter] addObserverForName:AFNetworkingReachabilityDidChangeNotification object:nil queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
-                        
+
                         if (networkReachabilityManager.isReachable && self->eventStreamRequest)
                         {
                             [[NSNotificationCenter defaultCenter] removeObserver:reachabilityObserver];
-                            
+
                             NSLog(@"[MXSession] Retry resuming events stream");
                             [self setState:MXSessionStateSyncInProgress];
                             [self serverSyncWithServerTimeout:0 success:success failure:nil clientTimeout:CLIENT_TIMEOUT_MS setPresence:nil];
@@ -1303,7 +1347,7 @@ typedef void (^MXOnResumeDone)(void);
                 }
             }
         }
-    }];
+    }
 }
 
 - (void)handlePresenceEvent:(MXEvent *)event direction:(MXTimelineDirection)direction
@@ -1379,7 +1423,17 @@ typedef void (^MXOnResumeDone)(void);
                 if (directRooms != _directRooms
                     && ![directRooms isEqualToDictionary:_directRooms])
                 {
+                    // Collect previous direct rooms ids
+                    NSMutableSet<NSString*> *directRoomIds = [NSMutableSet set];
+                    [directRoomIds unionSet:[self directRoomIds]];
+
                     _directRooms = directRooms;
+
+                    // And collect current ones
+                    [directRoomIds unionSet:[self directRoomIds]];
+
+                    // In order to update room summaries
+                    [self updateSummaryDirectUserIdForRooms:directRoomIds];
 
                     // Update the information of the direct rooms.
                     [[NSNotificationCenter defaultCenter] postNotificationName:kMXSessionDirectRoomsDidChangeNotification
@@ -1393,6 +1447,30 @@ typedef void (^MXOnResumeDone)(void);
         }
 
         _store.userAccountData = _accountData.accountData;
+    }
+}
+
+- (void)updateSummaryDirectUserIdForRooms:(NSSet<NSString*> *)roomIds
+{
+    // If the initial sync response is not processed enough, rooms is not yet mounted.
+    // updateSummaryDirectUserIdForRooms will be called once the initial sync is done.
+    if (rooms.count)
+    {
+        for (NSString *roomId in roomIds)
+        {
+            MXRoomSummary *summary = [self roomSummaryWithRoomId:roomId];
+
+            NSString *directUserId = [self directUserIdInRoom:roomId];
+            NSString *summaryDirectUserId = summary.directUserId;
+
+            // Update the summary if necessary
+            if (directUserId != summaryDirectUserId
+                && ![directUserId isEqualToString:summaryDirectUserId])
+            {
+                summary.directUserId = directUserId;
+                [summary save:YES];
+            }
+        }
     }
 }
 
@@ -1481,6 +1559,11 @@ typedef void (^MXOnResumeDone)(void);
             success();
         }
     }
+}
+
+- (MXHTTPOperation*)supportedMatrixVersions:(void (^)(MXMatrixVersions *))success failure:(void (^)(NSError *))failure
+{
+    return [matrixRestClient supportedMatrixVersions:success failure:failure];
 }
 
 
@@ -1834,6 +1917,33 @@ typedef void (^MXOnResumeDone)(void);
     return nil;
 }
 
+// Return ids of all current direct rooms
+- (NSSet<NSString*> *)directRoomIds
+{
+    NSMutableSet<NSString*> *roomIds = [NSMutableSet set];
+    for (NSArray *array in _directRooms.allValues)
+    {
+        [roomIds addObjectsFromArray:array];
+    }
+
+    return roomIds;
+}
+
+- (NSString *)directUserIdInRoom:(NSString*)roomId
+{
+    NSString *directUserId;
+
+    for (NSString *userId in _directRooms)
+    {
+        if ([_directRooms[userId] containsObject:roomId])
+        {
+            directUserId = userId;
+            break;
+        }
+    }
+
+    return directUserId;
+}
 
 - (MXHTTPOperation*)setRoom:(NSString*)roomId
            directWithUserId:(NSString*)userId
@@ -1960,10 +2070,9 @@ typedef void (^MXOnResumeDone)(void);
     }];
 }
 
-// To avoid race conditions, run one HTTP request at a time
-// If there is a pending HTTP request, the change will be applied on the updated direct rooms data
 - (void)runOrQueueDirectRoomOperation:(dispatch_block_t)directRoomOperation
 {
+    // If there is a pending HTTP request, the change will be applied on the updated direct rooms data
     [directRoomsOperationsQueue addObject:[directRoomOperation copy]];
     if (directRoomsOperationsQueue.count == 1)
     {

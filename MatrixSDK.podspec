@@ -1,7 +1,7 @@
 Pod::Spec.new do |s|
 
   s.name         = "MatrixSDK"
-  s.version      = "0.11.1"
+  s.version      = "0.11.2"
   s.summary      = "The iOS SDK to build apps compatible with Matrix (https://www.matrix.org)"
 
   s.description  = <<-DESC
@@ -54,29 +54,11 @@ Pod::Spec.new do |s|
     # Use WebRTC build at https://github.com/Anakros/WebRTC instead
     ss.ios.dependency 'WebRTC', '63.11.20455'
   end
-  
-  s.subspec 'GoogleAnalytics' do |ss|
-    ss.ios.deployment_target = "8.0"
-    
-    ss.source_files  = "MatrixSDKExtensions/MXAnalyticsDelegate/GoogleAnalytics/**/*.{h,m}"
-    
-    ss.dependency 'MatrixSDK/Core'
-    
-    ss.ios.dependency 'GoogleAnalytics' 
-  end
 
-#
-# This podspec has been disabled because it prevents from publishing the whole pod.
-# pod lint returns:
-#
-#    - ERROR | [iOS] [MatrixSDK/SwiftSupport] unknown: Encountered an unknown error (The following Swift pods cannot yet be integrated as static libraries:
-# 
-# The Swift pod `MatrixSDK` depends upon `AFNetworking`, `GZIP`, `OLMKit`, and `Realm`, which do not define modules. To opt into those targets generating module maps (which is necessary to import them from Swift when building as static libraries), you may set `use_modular_headers!` globally in your Podfile, or specify `:modular_headers => true` for particular dependencies.) during validation.
-#
-#  s.subspec 'SwiftSupport' do |ss|    
-#    ss.source_files = "MatrixSDK", "MatrixSDK/**/*.{swift}"
-#    
-#    ss.dependency 'MatrixSDK/Core'      
-#  end
+  s.subspec 'SwiftSupport' do |ss|    
+    ss.source_files = "MatrixSDK", "MatrixSDK/**/*.{swift}"
+   
+    ss.dependency 'MatrixSDK/Core'      
+  end
 
 end

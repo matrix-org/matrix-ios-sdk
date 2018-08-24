@@ -22,6 +22,7 @@
 #import "MXError.h"
 
 #import "MXRestClient.h"
+#import "MXHTTPClient_Private.h"
 
 #define MXTESTS_USER @"mxtest"
 #define MXTESTS_PWD @"password"
@@ -49,10 +50,11 @@
 
 - (void)tearDown
 {
+    [super tearDown];
+
+    [MXHTTPClient removeAllDelays];
     mxRestClient = nil;
     matrixSDKTestsData = nil;
-
-    [super tearDown];
 }
 
 // Make sure MXTESTS_USER exists on the HS
@@ -81,6 +83,55 @@
 {
     XCTAssertNotNil(mxRestClient, @"Valid init");
     XCTAssertTrue([mxRestClient.homeserver isEqualToString:kMXTestsHomeServerURL], @"Pass");
+}
+
+
+#pragma mark - Server administration
+- (void)testSupportedMatrixVersions
+{
+    XCTestExpectation *expectation = [self expectationWithDescription:@"asyncTest"];
+
+    [mxRestClient supportedMatrixVersions:^(MXMatrixVersions *matrixVersions) {
+
+        XCTAssertNotNil(matrixVersions);
+        XCTAssertNotNil(matrixVersions.versions);
+
+        // Check supported spec version at the time of writing this test
+        XCTAssert([matrixVersions.versions containsObject:@"r0.0.1"]);
+        XCTAssert([matrixVersions.versions containsObject:@"r0.1.0"]);
+        XCTAssert([matrixVersions.versions containsObject:@"r0.2.0"]);
+        XCTAssert([matrixVersions.versions containsObject:@"r0.3.0"]);
+
+        [expectation fulfill];
+
+    } failure:^(NSError *error) {
+        XCTFail(@"The request should not fail - NSError: %@", error);
+        [expectation fulfill];
+    }];
+
+    [self waitForExpectationsWithTimeout:10 handler:nil];
+}
+
+// At the time of introducing this test, MXMatrixVersions.supportLazyLoadMembers
+// was stored in MXMatrixVersions.unstableFeatures.
+// Make sure that, in future versions of the spec, supportLazyLoadMembers is still YES
+// wherever it will be stored.
+- (void)testSupportedMatrixVersionsSupportLazyLoadMembers
+{
+    XCTestExpectation *expectation = [self expectationWithDescription:@"asyncTest"];
+
+    [mxRestClient supportedMatrixVersions:^(MXMatrixVersions *matrixVersions) {
+
+        XCTAssert(matrixVersions.supportLazyLoadMembers);
+
+        [expectation fulfill];
+
+    } failure:^(NSError *error) {
+        XCTFail(@"The request should not fail - NSError: %@", error);
+        [expectation fulfill];
+    }];
+
+    [self waitForExpectationsWithTimeout:10 handler:nil];
 }
 
 
@@ -455,6 +506,32 @@
         XCTAssertFalse([[NSThread currentThread] isMainThread]);
         XCTAssertEqual(dispatch_get_current_queue(), client.completionQueue);
 
+        [expectation fulfill];
+    }];
+
+    [self waitForExpectationsWithTimeout:10 handler:nil];
+}
+
+- (void)testMXHTTPClientPrivateSetDelay
+{
+    XCTestExpectation *expectation = [self expectationWithDescription:@"asyncTest"];
+
+    // Define a delay for all requests
+    [MXHTTPClient setDelay:2000 toRequestsContainingString:@"/"];
+
+    mxRestClient = [[MXRestClient alloc] initWithHomeServer:kMXTestsHomeServerURL
+                                        andOnUnrecognizedCertificateBlock:nil];
+
+    NSDate *date = [NSDate date];
+    [mxRestClient supportedMatrixVersions:^(MXMatrixVersions *matrixVersions) {
+
+        NSDate *now = [NSDate date];
+        XCTAssertGreaterThanOrEqual([now timeIntervalSinceDate:date], 2);
+
+        [expectation fulfill];
+
+    } failure:^(NSError *error) {
+        XCTFail(@"The request should not fail - NSError: %@", error);
         [expectation fulfill];
     }];
 

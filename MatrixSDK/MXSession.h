@@ -30,6 +30,7 @@
 #import "MXCallManager.h"
 #import "MXCrypto.h"
 #import "MXGroup.h"
+#import "MXError.h"
 
 /**
  `MXSessionState` represents the states in the life cycle of a MXSession instance.
@@ -80,6 +81,15 @@ typedef enum : NSUInteger
      MXSessionStateRunning.
      */
     MXSessionStateHomeserverNotReachable,
+
+    /**
+     The homeserver returned a temporary error when trying to sync.
+     Check `MXSession.syncError` to get this error.
+
+     @discussion
+     The Matrix session will automatically go back MXSessionStateRunning once possible.
+     */
+    MXSessionStateSyncError,
 
     /**
      The session has been paused.
@@ -331,6 +341,11 @@ FOUNDATION_EXPORT NSString *const kMXSessionNoRoomTag;
  The current state of the session.
  */
 @property (nonatomic, readonly) MXSessionState state;
+
+/**
+ The current state of the session.
+ */
+@property (nonatomic, readonly) MXError *syncError;
 
 /**
  The flag indicating whether the initial sync has been done.
@@ -606,6 +621,17 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
  */
 - (void)enableCrypto:(BOOL)enableCrypto success:(void (^)(void))success failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
+/**
+ Get the versions of the specification supported by the server.
+
+ @param success A block object called when the operation succeeds. It provides
+                the supported spec versions.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)supportedMatrixVersions:(void (^)(MXMatrixVersions *matrixVersions))success failure:(void (^)(NSError *error))failure;
+
 
 #pragma mark - Rooms operations
 /**
@@ -765,6 +791,14 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
 - (MXRoom *)directJoinedRoomWithUserId:(NSString*)userId;
 
 /**
+ Get the direct user id of a room.
+
+ @param roomId the id of the room.
+ @return the id of user with whom the room is direct to.
+ */
+- (NSString *)directUserIdInRoom:(NSString*)roomId;
+
+/**
  Set a room as direct with a user.
 
  @param roomId the id of the room.
@@ -781,18 +815,29 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
                     failure:(void (^)(NSError *error))failure;
 
 /**
+ Use this method to run or queue any other actions on the direct rooms to avoid race conditions.
+ Run only one HTTP request in a block. If there is a pending action, the change will be applied
+ on the updated direct rooms data.
+ 
+ @param directRoomOperation A block object (use `[uploadDirectRoomsInOperationsQueue:success:failure:]`
+ in this block if you need to upload the direct rooms dictionary).
+ */
+- (void)runOrQueueDirectRoomOperation:(dispatch_block_t)directRoomOperation;
+
+/**
  Update the direct rooms list on homeserver side.
-
+ This method must be called in a block run by using `[runOrQueueDirectRoomOperation:]`
+ 
  @param directRooms the new direct rooms list (user id -> [room ids]).
-
+ 
  @param success A block object called when the operation succeeds.
  @param failure A block object called when the operation fails.
  
  @return a MXHTTPOperation instance.
  */
-- (MXHTTPOperation*)uploadDirectRooms:(NSDictionary<NSString*, NSArray<NSString*>*> *)directRooms
-                              success:(void (^)(void))success
-                              failure:(void (^)(NSError *error))failure;
+- (MXHTTPOperation*)uploadDirectRoomsInOperationsQueue:(NSDictionary<NSString *,NSArray<NSString *> *> *)directRooms
+                                               success:(void (^)(void))success
+                                               failure:(void (^)(NSError *))failure;
 
 /**
  Make sure that the `MXRoom` internal data for a list of rooms is preloaded.

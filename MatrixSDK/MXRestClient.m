@@ -68,6 +68,13 @@ NSString *const kMX3PIDMediumMSISDN = @"msisdn";
 NSString *const kMXRestClientErrorDomain = @"kMXRestClientErrorDomain";
 
 /**
+ Parameters that can be used in [MXRestClient membersOfRoom:withParameters:...].
+ */
+NSString *const kMXMembersOfRoomParametersAt            = @"at";
+NSString *const kMXMembersOfRoomParametersMembership    = @"membership";
+NSString *const kMXMembersOfRoomParametersNotMembership = @"not_membership";
+
+/**
  Authentication flow: register or login
  */
 typedef enum
@@ -249,21 +256,61 @@ MXAuthAction;
     return httpClient.allowedCertificate;
 }
 
+
+#pragma mark - Server administration
+
+- (MXHTTPOperation*)supportedMatrixVersions:(void (^)(MXMatrixVersions *matrixVersions))success
+                        failure:(void (^)(NSError *error))failure
+{
+    // There is no versioning in the path of this API
+    NSString *path = @"_matrix/client/versions";
+
+    MXWeakify(self);
+    return [httpClient requestWithMethod:@"GET"
+                                    path:path
+                              parameters:nil
+                                 success:^(NSDictionary *JSONResponse) {
+                                     MXStrongifyAndReturnIfNil(self);
+
+                                     if (success)
+                                     {
+                                         __block MXMatrixVersions *matrixVersions;
+                                         [self dispatchProcessing:^{
+                                             MXJSONModelSetMXJSONModel(matrixVersions, MXMatrixVersions, JSONResponse);
+                                         } andCompletion:^{
+                                             success(matrixVersions);
+                                         }];
+                                     }
+                                 }
+                                 failure:^(NSError *error) {
+                                     MXStrongifyAndReturnIfNil(self);
+                                     [self dispatchFailure:error inBlock:failure];
+                                 }];
+}
+
+
 #pragma mark - Registration operations
+- (MXHTTPOperation *)testUserRegistration:(NSString *)username callback:(void (^)(MXError *mxError))callback
+{
+    // Trigger a fake registration to know whether the user name can be registered
+    return [self registerWithParameters:@{@"username": username}
+                                success:nil
+                                failure:^(NSError *error)
+            {
+                // Retrieve the matrix error back
+                MXError *mxError = [[MXError alloc] initWithNSError:error];
+                callback(mxError);
+            }];
+}
+
 - (MXHTTPOperation*)isUserNameInUse:(NSString*)username
                            callback:(void (^)(BOOL isUserNameInUse))callback
 {
-    // Trigger a fake registration to know whether the user name is available or not.
-    return [self registerOrLogin:MXAuthActionRegister
-                      parameters:@{@"username": username}
-                         success:nil
-                         failure:^(NSError *error) {
-                             
-                             NSDictionary* dict = error.userInfo;
-                             BOOL isUserNameInUse = ([[dict valueForKey:@"errcode"] isEqualToString:kMXErrCodeStringUserInUse]);
-                             
-                             callback(isUserNameInUse);
-                         }];
+    return [self testUserRegistration:username callback:^(MXError *mxError) {
+
+        BOOL isUserNameInUse = ([mxError.errcode isEqualToString:kMXErrCodeStringUserInUse]);
+        callback(isUserNameInUse);
+    }];
 }
 
 - (MXHTTPOperation*)getRegisterSession:(void (^)(MXAuthenticationSession *authSession))success
@@ -2109,12 +2156,20 @@ MXAuthAction;
                           success:(void (^)(NSArray *roomMemberEvents))success
                           failure:(void (^)(NSError *error))failure
 {
+    return [self membersOfRoom:roomId withParameters:nil success:success failure:failure];
+}
+
+- (MXHTTPOperation*)membersOfRoom:(NSString*)roomId
+                   withParameters:(NSDictionary*)parameters
+                          success:(void (^)(NSArray *roomMemberEvents))success
+                          failure:(void (^)(NSError *error))failure
+{
     NSString *path = [NSString stringWithFormat:@"%@/rooms/%@/members", apiPathPrefix, roomId];
 
     MXWeakify(self);
     return [httpClient requestWithMethod:@"GET"
                                     path:path
-                              parameters:nil
+                              parameters:parameters
                                  success:^(NSDictionary *JSONResponse) {
                                      MXStrongifyAndReturnIfNil(self);
 

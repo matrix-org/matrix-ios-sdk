@@ -20,30 +20,38 @@
 
 NSString *const kMXNSErrorDomain = @"org.matrix.sdk";
 
-NSString *const kMXErrCodeStringForbidden           = @"M_FORBIDDEN";
-NSString *const kMXErrCodeStringUnknown             = @"M_UNKNOWN";
-NSString *const kMXErrCodeStringUnknownToken        = @"M_UNKNOWN_TOKEN";
-NSString *const kMXErrCodeStringBadJSON             = @"M_BAD_JSON";
-NSString *const kMXErrCodeStringNotJSON             = @"M_NOT_JSON";
-NSString *const kMXErrCodeStringNotFound            = @"M_NOT_FOUND";
-NSString *const kMXErrCodeStringLimitExceeded       = @"M_LIMIT_EXCEEDED";
-NSString *const kMXErrCodeStringUserInUse           = @"M_USER_IN_USE";
-NSString *const kMXErrCodeStringRoomInUse           = @"M_ROOM_IN_USE";
-NSString *const kMXErrCodeStringBadPagination       = @"M_BAD_PAGINATION";
-NSString *const kMXErrCodeStringUnauthorized        = @"M_UNAUTHORIZED";
-NSString *const kMXErrCodeStringOldVersion          = @"M_OLD_VERSION";
-NSString *const kMXErrCodeStringUnrecognized        = @"M_UNRECOGNIZED";
-NSString *const kMXErrCodeStringLoginEmailURLNotYet = @"M_LOGIN_EMAIL_URL_NOT_YET";
-NSString *const kMXErrCodeStringThreePIDAuthFailed  = @"M_THREEPID_AUTH_FAILED";
-NSString *const kMXErrCodeStringThreePIDInUse       = @"M_THREEPID_IN_USE";
-NSString *const kMXErrCodeStringThreePIDNotFound    = @"M_THREEPID_NOT_FOUND";
-NSString *const kMXErrCodeStringServerNotTrusted    = @"M_SERVER_NOT_TRUSTED";
-NSString *const kMXErrCodeStringGuestAccessForbidden= @"M_GUEST_ACCESS_FORBIDDEN";
-NSString *const kMXErrCodeStringConsentNotGiven     = @"M_CONSENT_NOT_GIVEN";
+NSString *const kMXErrCodeStringForbidden               = @"M_FORBIDDEN";
+NSString *const kMXErrCodeStringUnknown                 = @"M_UNKNOWN";
+NSString *const kMXErrCodeStringUnknownToken            = @"M_UNKNOWN_TOKEN";
+NSString *const kMXErrCodeStringBadJSON                 = @"M_BAD_JSON";
+NSString *const kMXErrCodeStringNotJSON                 = @"M_NOT_JSON";
+NSString *const kMXErrCodeStringNotFound                = @"M_NOT_FOUND";
+NSString *const kMXErrCodeStringLimitExceeded           = @"M_LIMIT_EXCEEDED";
+NSString *const kMXErrCodeStringUserInUse               = @"M_USER_IN_USE";
+NSString *const kMXErrCodeStringRoomInUse               = @"M_ROOM_IN_USE";
+NSString *const kMXErrCodeStringBadPagination           = @"M_BAD_PAGINATION";
+NSString *const kMXErrCodeStringUnauthorized            = @"M_UNAUTHORIZED";
+NSString *const kMXErrCodeStringOldVersion              = @"M_OLD_VERSION";
+NSString *const kMXErrCodeStringUnrecognized            = @"M_UNRECOGNIZED";
+NSString *const kMXErrCodeStringLoginEmailURLNotYet     = @"M_LOGIN_EMAIL_URL_NOT_YET";
+NSString *const kMXErrCodeStringThreePIDAuthFailed      = @"M_THREEPID_AUTH_FAILED";
+NSString *const kMXErrCodeStringThreePIDInUse           = @"M_THREEPID_IN_USE";
+NSString *const kMXErrCodeStringThreePIDNotFound        = @"M_THREEPID_NOT_FOUND";
+NSString *const kMXErrCodeStringServerNotTrusted        = @"M_SERVER_NOT_TRUSTED";
+NSString *const kMXErrCodeStringGuestAccessForbidden    = @"M_GUEST_ACCESS_FORBIDDEN";
+NSString *const kMXErrCodeStringConsentNotGiven         = @"M_CONSENT_NOT_GIVEN";
+NSString *const kMXErrCodeStringResourceLimitExceeded   = @"M_RESOURCE_LIMIT_EXCEEDED";
 
 NSString *const kMXErrorStringInvalidToken      = @"Invalid token";
 
 NSString *const kMXSDKErrCodeStringMissingParameters = @"org.matrix.sdk.missing_parameters";
+
+NSString *const kMXErrorCodeKey                                             = @"errcode";
+NSString *const kMXErrorMessageKey                                          = @"error";
+NSString *const kMXErrorConsentNotGivenConsentURIKey                        = @"consent_uri";
+NSString *const kMXErrorResourceLimitExceededLimitTypeKey                   = @"limit_type";
+NSString *const kMXErrorResourceLimitExceededLimitTypeMonthlyActiveUserValue= @"monthly_active_user";
+NSString *const kMXErrorResourceLimitExceededAdminContactKey                = @"admin_contact";
 
 
 // Random NSError code
@@ -81,6 +89,10 @@ NSInteger const kMXNSErrorCode = 6;
     {
         self = [self initWithErrorCode:nsError.userInfo[@"errcode"]
                                  error:nsError.userInfo[@"error"]];
+        if (self)
+        {
+            _userInfo = nsError.userInfo;
+        }
     }
     else
     {
@@ -92,7 +104,7 @@ NSInteger const kMXNSErrorCode = 6;
 
 - (NSError *)createNSError
 {
-    NSMutableDictionary *userInfo = [NSMutableDictionary dictionary];
+    NSMutableDictionary *userInfo = _userInfo ? [NSMutableDictionary dictionaryWithDictionary:_userInfo] : [NSMutableDictionary dictionary];
     
     if (self.errcode)
     {
