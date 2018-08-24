@@ -10,6 +10,7 @@ Improvements:
  * Tests: MXHTTPClient_Private.h: Add method to set fake delay in HTTP requests.
  
 Bug fix:
+ * People tab is empty in the share extension (vector-im/riot-ios/issues/1988).
  * MXError: MXError lost NSError.userInfo information.
 
 Changes in Matrix iOS SDK in 0.11.1 (2018-08-17)

@@ -374,11 +374,6 @@ NSString *const kMXRoomSummaryDidChangeNotification = @"kMXRoomSummaryDidChangeN
     return [_mxSession.store localUnreadEventCount:_roomId withTypeIn:_mxSession.unreadEventTypes];
 }
 
-- (NSString *)directUserId
-{
-    return self.room.directUserId;
-}
-
 - (BOOL)isDirect
 {
     return (self.directUserId != nil);
@@ -545,6 +540,7 @@ NSString *const kMXRoomSummaryDidChangeNotification = @"kMXRoomSummaryDidChangeN
         _isEncrypted = [aDecoder decodeBoolForKey:@"isEncrypted"];
         _notificationCount = (NSUInteger)[aDecoder decodeIntegerForKey:@"notificationCount"];
         _highlightCount = (NSUInteger)[aDecoder decodeIntegerForKey:@"highlightCount"];
+        _directUserId = [aDecoder decodeObjectForKey:@"directUserId"];
 
         _lastMessageEventId = [aDecoder decodeObjectForKey:@"lastMessageEventId"];
         _lastMessageOriginServerTs = [aDecoder decodeInt64ForKey:@"lastMessageOriginServerTs"];
@@ -586,6 +582,7 @@ NSString *const kMXRoomSummaryDidChangeNotification = @"kMXRoomSummaryDidChangeN
     [aCoder encodeBool:_isEncrypted forKey:@"isEncrypted"];
     [aCoder encodeInteger:(NSInteger)_notificationCount forKey:@"notificationCount"];
     [aCoder encodeInteger:(NSInteger)_highlightCount forKey:@"highlightCount"];
+    [aCoder encodeObject:_directUserId forKey:@"directUserId"];
 
     // Store last message metadata
     [aCoder encodeObject:_lastMessageEventId forKey:@"lastMessageEventId"];
