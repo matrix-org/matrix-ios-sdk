@@ -1,6 +1,7 @@
 /*
  Copyright 2014 OpenMarket Ltd
- 
+ Copyright 2018 New Vector Ltd
+
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
  You may obtain a copy of the License at
@@ -63,7 +64,15 @@
                dictionary = [NSMutableDictionary dictionaryWithDictionary:JSONDictionary];
             }
 
-            [dictionary removeObjectForKey:key];
+            if ([key isEqualToString:kMXRoomTagServerNotice])
+            {
+                // Use an empty dict
+                dictionary[key] = @{};
+            }
+            else
+            {
+                [dictionary removeObjectForKey:key];
+            }
         }
         else if ([value isKindOfClass:[NSDictionary class]])
         {
