@@ -1,4 +1,4 @@
-Changes in Matrix iOS SDK in 0.11.3 ()
+Changes in Matrix iOS SDK in 0.11.3 (2018-08-27)
 ===============================================
 
 Bug fix:
