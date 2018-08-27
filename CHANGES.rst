@@ -1,3 +1,9 @@
+Changes in Matrix iOS SDK in 0.11.3 ()
+===============================================
+
+Bug fix:
+ * MXJSONModel: Manage `m.server_notice` empty tag sent due to a bug server side (PR #556).
+
 Changes in Matrix iOS SDK in 0.11.2 (2018-08-24)
 ===============================================
 
