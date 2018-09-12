@@ -237,7 +237,8 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
                 if (self.mxSession.store.eventStreamToken)
                 {
                     parameters = @{
-                                   kMXMembersOfRoomParametersAt: self.mxSession.store.eventStreamToken
+                                   kMXMembersOfRoomParametersAt: self.mxSession.store.eventStreamToken,
+                                   kMXMembersOfRoomParametersNotMembership: kMXMembershipStringLeave
                                    };
                 }
 
