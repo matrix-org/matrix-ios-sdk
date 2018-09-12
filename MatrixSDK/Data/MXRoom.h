@@ -121,7 +121,7 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidFlushDataNotification;
  */
 - (MXHTTPOperation*)members:(void (^)(MXRoomMembers *members))success
           lazyLoadedMembers:(void (^)(MXRoomMembers *lazyLoadedMembers))lazyLoadedMembers
-                    failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
+                    failure:(void (^)(NSError *error))failure;
 
 /**
  The private user data for this room.
