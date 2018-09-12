@@ -1,3 +1,9 @@
+Changes in Matrix iOS SDK in 0.11.4 ()
+===============================================
+
+Improvements:
+ * [MXRoom] Expose room members access in Swift (PR #562).
+
 Changes in Matrix iOS SDK in 0.11.3 (2018-08-27)
 ===============================================
 
