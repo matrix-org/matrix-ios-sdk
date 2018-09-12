@@ -19,6 +19,24 @@ import Foundation
 
 public extension MXRoom {
     
+    
+    /**
+     The current list of members of the room.
+     
+     - parameters:
+     - completion: A block object called when the operation completes.
+     - response: Provides the room members of the room on success
+     
+     - returns: a `MXHTTPOperation` instance.
+     */
+    @nonobjc @discardableResult func members(completion: @escaping (_ response: MXResponse<MXRoomMembers?>) -> Void) -> MXHTTPOperation {
+        
+        let httpOperation = __members(currySuccess(completion), failure: curryFailure(completion))
+        return httpOperation!
+    }
+    
+    
+    
     // MARK: - Room Operations
     
     /**
