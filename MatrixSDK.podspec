@@ -36,7 +36,7 @@ Pod::Spec.new do |s|
 
       # Requirements for e2e encryption
       ss.dependency 'OLMKit', '~> 2.3.0'
-      ss.dependency 'Realm', '~> 3.7.4'
+      ss.dependency 'Realm', '~> 3.9.0'
   end
 
   s.subspec 'JingleCallStack' do |ss|
