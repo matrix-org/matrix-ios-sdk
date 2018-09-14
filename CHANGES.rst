@@ -6,7 +6,6 @@ Improvements:
 * MXPeekingRoom: Create a MXPeekingRoomSummary class to represent their summary data.
 
 Bug fix:
-* MXJSONModel: Manage `m.server_notice` empty tag sent due to a bug server side (PR #556).
 * Lazy-Loading: Fix regression on peeking (vector-im/riot-ios/issues/2035).
 
 Changes in Matrix iOS SDK in 0.11.3 (2018-08-27)
