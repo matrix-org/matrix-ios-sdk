@@ -24,6 +24,7 @@
 #import "MXEnumConstants.h"
 
 @class MXSession, MXRoom, MXRoomState, MXEvent;
+@protocol MXStore;
 
 
 /**
@@ -96,6 +97,16 @@ FOUNDATION_EXPORT NSString *const kMXRoomSummaryDidChangeNotification;
  @return the new instance.
  */
 - (instancetype)initWithRoomId:(NSString*)roomId andMatrixSession:(MXSession*)mxSession;
+
+/**
+ Create a `MXRoomSummary` instance by specifying the store to use.
+
+ @param roomId the id of the room.
+ @param mxSession the session to use.
+ @param store the store to use to store data.
+ @return the new instance.
+ */
+- (instancetype)initWithRoomId:(NSString *)roomId matrixSession:(MXSession *)mxSession andStore:(id<MXStore>)store;
 
 /**
  Dispose any resources and listener.

@@ -20,6 +20,7 @@
 #import "MXMemoryStore.h"
 #import "MXSession.h"
 #import "MXTools.h"
+#import "MXPeekingRoomSummary.h"
 
 @interface MXPeekingRoom ()
 {
@@ -27,6 +28,11 @@
      The current pending request.
      */
     MXHTTPOperation *httpOperation;
+
+    /**
+     The ephemeral summary of this room.
+     */
+    MXPeekingRoomSummary *summary;
 }
 
 @end
@@ -39,6 +45,10 @@
     // but to an ephemeral store
     MXMemoryStore *memoryStore = [[MXMemoryStore alloc] init];
     [memoryStore openWithCredentials:mxSession.matrixRestClient.credentials onComplete:nil failure:nil];
+
+    // Same thing for the summary
+    summary = [[MXPeekingRoomSummary alloc] initWithRoomId:roomId matrixSession:mxSession andStore:memoryStore];
+    [summary setPeekingRoom:self];
 
     return [self initWithRoomId:roomId matrixSession:mxSession andStore:memoryStore];
 }
@@ -74,8 +84,8 @@
 
 - (MXRoomSummary *)summary
 {
-    NSLog(@"[MXPeekingRoom] Warning: MXPeekingRoom has no summary");
-    return nil;
+    // Use the ephemeral summary
+    return summary;
 }
 
 - (void)close
