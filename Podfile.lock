@@ -20,15 +20,15 @@ PODS:
     - OLMKit/olmcpp (= 2.3.0)
   - OLMKit/olmc (2.3.0)
   - OLMKit/olmcpp (2.3.0)
-  - Realm (3.7.4):
-    - Realm/Headers (= 3.7.4)
-  - Realm/Headers (3.7.4)
+  - Realm (3.9.0):
+    - Realm/Headers (= 3.9.0)
+  - Realm/Headers (3.9.0)
 
 DEPENDENCIES:
   - AFNetworking (~> 3.2.0)
   - GZIP (~> 1.2.1)
   - OLMKit (~> 2.3.0)
-  - Realm (~> 3.7.4)
+  - Realm (~> 3.9.0)
 
 SPEC REPOS:
   https://github.com/cocoapods/specs.git:
@@ -41,8 +41,8 @@ SPEC CHECKSUMS:
   AFNetworking: b6f891fdfaed196b46c7a83cf209e09697b94057
   GZIP: 7ee835f989fb3c6ea79005fc90b8fa6af710a70d
   OLMKit: dd79cdc5fab9ec04c940a901e025195b7801f306
-  Realm: a469bb59e33f9926102ccaea4349822c53b9117e
+  Realm: 3d36f208bf3aff8335dc3298742140182bde4edb
 
-PODFILE CHECKSUM: ac8a8af85a45d601e5a4451ccc4a997501d45364
+PODFILE CHECKSUM: 88df2da194bf206647b8562c359335b286c080f2
 
 COCOAPODS: 1.5.3
