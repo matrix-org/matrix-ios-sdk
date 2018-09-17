@@ -129,6 +129,8 @@
 		328DDEC11A07E57E008C7DC8 /* MXJSONModelTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 328DDEC01A07E57E008C7DC8 /* MXJSONModelTests.m */; };
 		3291D4D41A68FFEB00C3BA41 /* MXFileRoomStore.h in Headers */ = {isa = PBXBuildFile; fileRef = 3291D4D21A68FFEB00C3BA41 /* MXFileRoomStore.h */; };
 		3291D4D51A68FFEB00C3BA41 /* MXFileRoomStore.m in Sources */ = {isa = PBXBuildFile; fileRef = 3291D4D31A68FFEB00C3BA41 /* MXFileRoomStore.m */; };
+		3293C700214BBA4F009B3DDB /* MXPeekingRoomSummary.h in Headers */ = {isa = PBXBuildFile; fileRef = 3293C6FE214BBA4F009B3DDB /* MXPeekingRoomSummary.h */; };
+		3293C701214BBA4F009B3DDB /* MXPeekingRoomSummary.m in Sources */ = {isa = PBXBuildFile; fileRef = 3293C6FF214BBA4F009B3DDB /* MXPeekingRoomSummary.m */; };
 		329571931B0240CE00ABB3BA /* MXVoIPTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 329571921B0240CE00ABB3BA /* MXVoIPTests.m */; };
 		329571991B024D2B00ABB3BA /* MXMockCallStack.m in Sources */ = {isa = PBXBuildFile; fileRef = 329571961B024D2B00ABB3BA /* MXMockCallStack.m */; };
 		3295719A1B024D2B00ABB3BA /* MXMockCallStackCall.m in Sources */ = {isa = PBXBuildFile; fileRef = 329571981B024D2B00ABB3BA /* MXMockCallStackCall.m */; };
@@ -423,6 +425,8 @@
 		328DDEC01A07E57E008C7DC8 /* MXJSONModelTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXJSONModelTests.m; sourceTree = "<group>"; };
 		3291D4D21A68FFEB00C3BA41 /* MXFileRoomStore.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXFileRoomStore.h; sourceTree = "<group>"; };
 		3291D4D31A68FFEB00C3BA41 /* MXFileRoomStore.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXFileRoomStore.m; sourceTree = "<group>"; };
+		3293C6FE214BBA4F009B3DDB /* MXPeekingRoomSummary.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MXPeekingRoomSummary.h; sourceTree = "<group>"; };
+		3293C6FF214BBA4F009B3DDB /* MXPeekingRoomSummary.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MXPeekingRoomSummary.m; sourceTree = "<group>"; };
 		329571921B0240CE00ABB3BA /* MXVoIPTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXVoIPTests.m; sourceTree = "<group>"; };
 		329571951B024D2B00ABB3BA /* MXMockCallStack.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXMockCallStack.h; sourceTree = "<group>"; };
 		329571961B024D2B00ABB3BA /* MXMockCallStack.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXMockCallStack.m; sourceTree = "<group>"; };
@@ -640,6 +644,8 @@
 				329D3E611E251027002E2F1E /* MXRoomSummaryUpdater.m */,
 				32E226A41D06AC9F00E6CA54 /* MXPeekingRoom.h */,
 				32E226A51D06AC9F00E6CA54 /* MXPeekingRoom.m */,
+				3293C6FE214BBA4F009B3DDB /* MXPeekingRoomSummary.h */,
+				3293C6FF214BBA4F009B3DDB /* MXPeekingRoomSummary.m */,
 				3265CB361A14C43E00E24B2F /* MXRoomState.h */,
 				3265CB371A14C43E00E24B2F /* MXRoomState.m */,
 				32618E7920EFA45B00E1D2EA /* MXRoomMembers.h */,
@@ -1298,6 +1304,7 @@
 				3233606F1A403A0D0071A488 /* MXFileStore.h in Headers */,
 				32A1513E1DAF768D00400192 /* MXOlmInboundGroupSession.h in Headers */,
 				32FA10C11FA1C9EE00E54233 /* MXOutgoingRoomKeyRequestManager.h in Headers */,
+				3293C700214BBA4F009B3DDB /* MXPeekingRoomSummary.h in Headers */,
 				326056851C76FDF2009D44AD /* MXEventTimeline.h in Headers */,
 				322A51C31D9AC8FE00C8536D /* MXCryptoAlgorithms.h in Headers */,
 				32F945F61FAB83D900622468 /* MXIncomingRoomKeyRequest.h in Headers */,
@@ -1495,6 +1502,7 @@
 				C6B40F521F2A35BE00C42C72 /* MXRoomState.swift in Sources */,
 				32F945F51FAB83D900622468 /* MXIncomingRoomKeyRequestCancellation.m in Sources */,
 				32D776821A27877300FC4AA2 /* MXMemoryRoomStore.m in Sources */,
+				3293C701214BBA4F009B3DDB /* MXPeekingRoomSummary.m in Sources */,
 				C602B58C1F2268F700B67D87 /* MXRoom.swift in Sources */,
 				32A151271DABB0CB00400192 /* MXMegolmDecryption.m in Sources */,
 				C6D5D60E1E4FBD2900706C0F /* MXSession.swift in Sources */,

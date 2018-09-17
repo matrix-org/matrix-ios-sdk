@@ -237,7 +237,8 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
                 if (self.mxSession.store.eventStreamToken)
                 {
                     parameters = @{
-                                   kMXMembersOfRoomParametersAt: self.mxSession.store.eventStreamToken
+                                   kMXMembersOfRoomParametersAt: self.mxSession.store.eventStreamToken,
+                                   kMXMembersOfRoomParametersNotMembership: kMXMembershipStringLeave
                                    };
                 }
 
@@ -2604,7 +2605,11 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
     if (updatedReadReceiptEvent)
     {
         // Update the oneself receipts
-        [self storeLocalReceipt:kMXEventTypeStringRead eventId:updatedReadReceiptEvent.eventId userId:myUserId ts:(uint64_t) ([[NSDate date] timeIntervalSince1970] * 1000)];
+        if ([self storeLocalReceipt:kMXEventTypeStringRead eventId:updatedReadReceiptEvent.eventId userId:myUserId ts:(uint64_t) ([[NSDate date] timeIntervalSince1970] * 1000)]
+            && [mxSession.store respondsToSelector:@selector(commit)])
+        {
+            [mxSession.store commit];
+        }
     }
     
     // Prepare read marker update
@@ -2769,11 +2774,6 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
     if ([mxSession.store storeReceipt:receiptData inRoom:_roomId])
     {
         result = YES;
-
-        if ([mxSession.store respondsToSelector:@selector(commit)])
-        {
-            [mxSession.store commit];
-        }
 
         // Notify SDK client about it with a local read receipt
         MXEvent *receiptEvent = [MXEvent modelFromJSON:

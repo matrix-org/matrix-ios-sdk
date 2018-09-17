@@ -2,7 +2,11 @@ Changes in Matrix iOS SDK in 0.11.4 ()
 ===============================================
 
 Improvements:
- * [MXRoom] Expose room members access in Swift (PR #562).
+* MXRoom: Expose room members access in Swift (PR #562).
+* MXPeekingRoom: Create a MXPeekingRoomSummary class to represent their summary data.
+
+Bug fix:
+* Lazy-Loading: Fix regression on peeking (vector-im/riot-ios/issues/2035).
 
 Changes in Matrix iOS SDK in 0.11.3 (2018-08-27)
 ===============================================
