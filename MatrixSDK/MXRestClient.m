@@ -3023,7 +3023,7 @@ MXAuthAction;
 
 #pragma mark - Directory operations
 - (MXHTTPOperation *)publicRoomsOnServer:(NSString *)server
-                                   limit:(NSUInteger)limit
+                                   limit:(NSInteger)limit
                                    since:(NSString *)since
                                   filter:(NSString *)filter
                     thirdPartyInstanceId:(NSString *)thirdPartyInstanceId
