@@ -270,6 +270,12 @@
         updated |= [self updateSummaryDisplayname:summary session:session withServerRoomSummary:serverRoomSummary roomState:roomState];
     }
 
+    // Compute the avatar from summary heroes if there was no avatar
+    if (!roomState.avatar)
+    {
+        updated |= [self updateSummaryAvatar:summary session:session withServerRoomSummary:serverRoomSummary roomState:roomState];
+    }
+
     return updated;
 }
 
@@ -324,6 +330,21 @@
         }
 
         updated = YES;
+    }
+
+    return updated;
+}
+
+- (BOOL)updateSummaryAvatar:(MXRoomSummary *)summary session:(MXSession *)session withServerRoomSummary:(MXRoomSyncSummary *)serverRoomSummary roomState:(MXRoomState *)roomState
+{
+    BOOL updated = NO;
+
+    if (serverRoomSummary.heroes.count == 1)
+    {
+        MXRoomMember *otherMember = [roomState.members memberWithUserId:serverRoomSummary.heroes.firstObject];
+        summary.avatar = otherMember.avatarUrl;
+
+        updated |= !summary.avatar;
     }
 
     return updated;
