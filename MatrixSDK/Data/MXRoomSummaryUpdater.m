@@ -172,6 +172,47 @@
         }
     }
 
+    if (summary.membership == MXMembershipInvite)
+    {
+        updated = [self session:session updateInvitedRoomSummary:summary withStateEvents:stateEvents roomState:roomState];
+    }
+
+    return updated;
+}
+
+- (BOOL)session:(MXSession *)session updateInvitedRoomSummary:(MXRoomSummary *)summary withStateEvents:(NSArray<MXEvent *> *)stateEvents roomState:(MXRoomState*)roomState
+{
+    BOOL updated = NO;
+
+    // TODO: There is bug here if someone invites us in a non 1:1 room with no avatar.
+    // In this case, the summary avatar would be the inviter avatar.
+    // We need more information from the homeserver (https://github.com/matrix-org/matrix-doc/issues/1679)
+    // Note: we have this bug since day #1
+    if (roomState.membersCount.members == 2)
+    {
+        MXRoomMember *otherMember;
+        for (MXRoomMember *member in roomState.members.members)
+        {
+            if (![member.userId isEqualToString:session.myUser.userId])
+            {
+                otherMember = member;
+                break;
+            }
+        }
+
+        if (!summary.displayname)
+        {
+            summary.displayname = otherMember.displayname;
+            updated = YES;
+        }
+
+        if (!summary.avatar)
+        {
+            summary.avatar = otherMember.avatarUrl;
+            updated = YES;
+        }
+    }
+
     return updated;
 }
                  
