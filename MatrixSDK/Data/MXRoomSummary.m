@@ -89,6 +89,7 @@ NSString *const kMXRoomSummaryDidChangeNotification = @"kMXRoomSummaryDidChangeN
     if (!_mxSession)
     {
         _mxSession = mxSession;
+        store = mxSession.store;
 
         // Listen to the event sent state changes
         // This is used to follow evolution of local echo events
