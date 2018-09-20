@@ -21,6 +21,7 @@
 #import "MXSession.h"
 #import "MXRoom.h"
 #import "MXSession.h"
+#import "MXRoomNameDefaultStringLocalizations.h"
 
 @implementation MXRoomSummaryUpdater
 
@@ -283,11 +284,16 @@
 {
     BOOL updated = NO;
 
-    // Compute a non internationalised display name based on
-    // https://docs.google.com/document/d/11i14UI1cUz-OJ0knD5BFu7fmT6Fo327zvMYqfSAR7xs/edit#
+    if (!_roomNameStringLocalizations)
+    {
+        _roomNameStringLocalizations = [MXRoomNameDefaultStringLocalizations new];
+    }
+
+    // Compute an internationalised display name based on Matrix room summaries
+    // (https://github.com/matrix-org/matrix-doc/issues/688).
     if (serverRoomSummary.heroes.count == 0 || roomState.membersCount.members <= 1)
     {
-        summary.displayname = @"Empty Room";
+        summary.displayname = _roomNameStringLocalizations.emptyRoom;
         updated = YES;
     }
     else if (1 <= serverRoomSummary.heroes.count)
@@ -304,29 +310,24 @@
             [memberNames addObject:memberName];
         }
 
-        if (memberNames.count == 1)
+        // We display 2 users names max. Then, for larger rooms, we display "Alice and X others"
+        switch (memberNames.count)
         {
-            summary.displayname = memberNames.firstObject;
-        }
-        else
-        {
-            if (serverRoomSummary.heroes.count == summary.membersCount.members - 1)
-            {
-                NSString *lastMemberName = memberNames.lastObject;
-                [memberNames removeLastObject];
+            case 1:
+                summary.displayname = memberNames.firstObject;
+                break;
 
-                summary.displayname = [NSString stringWithFormat:@"%@ & %@",
-                                       [memberNames componentsJoinedByString:@", "],
-                                       lastMemberName];
-            }
-            else
-            {
-                NSUInteger otherCount = summary.membersCount.members - 1 - serverRoomSummary.heroes.count;
-                summary.displayname = [NSString stringWithFormat:@"%@ & %@ %@",
-                                       [memberNames componentsJoinedByString:@", "],
-                                       @(otherCount),
-                                       (1 < otherCount) ? @"others" : @"other"];
-            }
+            case 2:
+                summary.displayname = [NSString stringWithFormat:_roomNameStringLocalizations.aliceAndBob,
+                                       memberNames[0],
+                                       memberNames[1]];
+                break;
+
+            default:
+                summary.displayname = [NSString stringWithFormat:_roomNameStringLocalizations.aliceAndOthers,
+                                       memberNames[0],
+                                       @(serverRoomSummary.joinedMemberCount + serverRoomSummary.invitedMemberCount - 2)];
+                break;
         }
 
         updated = YES;
