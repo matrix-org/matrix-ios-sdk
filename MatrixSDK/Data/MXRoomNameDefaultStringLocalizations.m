@@ -23,7 +23,7 @@
     self = [super init];
     if (self)
     {
-        _emptyRoom = @"Empty Room";
+        _emptyRoom = @"Empty room";
         _aliceAndBob = @"%@ and %@";
         _aliceAndOthers = @"%@ & %@ others";
     }
