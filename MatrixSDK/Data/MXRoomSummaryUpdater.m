@@ -291,6 +291,14 @@
         summary.displayname = roomState.canonicalAlias;
         updated = YES;
     }
+    // If the room has an alias, use that
+    // Note: This is out of Matrix spec for the moment but we need it to keep
+    // same room names as before the Matrix room summaries introduction
+    else if (roomState.aliases.count)
+    {
+        summary.displayname = roomState.aliases.firstObject;
+        updated = YES;
+    }
     // Else, use Matrix room summaries and heroes
     else if (serverRoomSummary)
     {
