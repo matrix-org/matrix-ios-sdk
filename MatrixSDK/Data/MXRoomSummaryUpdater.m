@@ -259,23 +259,9 @@
 {
     BOOL updated = NO;
 
-    // Update room members count
-    if (-1 != serverRoomSummary.joinedMemberCount || -1 != serverRoomSummary.invitedMemberCount)
-    {
-        updated |= [self updateSummaryMemberCount:summary session:session withServerRoomSummary:serverRoomSummary roomState:roomState];
-    }
-
-    // Compute display name from summary heroes if there was no name nor canonical alias
-    if (!roomState.name && !roomState.canonicalAlias)
-    {
-        updated |= [self updateSummaryDisplayname:summary session:session withServerRoomSummary:serverRoomSummary roomState:roomState];
-    }
-
-    // Compute the avatar from summary heroes if there was no avatar
-    if (!roomState.avatar)
-    {
-        updated |= [self updateSummaryAvatar:summary session:session withServerRoomSummary:serverRoomSummary roomState:roomState];
-    }
+    updated |= [self updateSummaryMemberCount:summary session:session withServerRoomSummary:serverRoomSummary roomState:roomState];
+    updated |= [self updateSummaryDisplayname:summary session:session withServerRoomSummary:serverRoomSummary roomState:roomState];
+    updated |= [self updateSummaryAvatar:summary session:session withServerRoomSummary:serverRoomSummary roomState:roomState];
 
     return updated;
 }
@@ -289,48 +275,66 @@
         _roomNameStringLocalizations = [MXRoomNameDefaultStringLocalizations new];
     }
 
-    // Compute an internationalised display name based on Matrix room summaries
-    // (https://github.com/matrix-org/matrix-doc/issues/688).
-    if (serverRoomSummary.heroes.count == 0 || roomState.membersCount.members <= 1)
+    // Compute a display name according to algorithm provided by Matrix room summaries
+    // (https://github.com/matrix-org/matrix-doc/issues/688)
+
+    // If m.room.name is set, use that
+    if (roomState.name.length)
     {
-        summary.displayname = _roomNameStringLocalizations.emptyRoom;
+        summary.displayname = roomState.name;
         updated = YES;
     }
-    else if (1 <= serverRoomSummary.heroes.count)
+    // If m.room.canonical_alias is set, use that
+    // Note: a "" for canonicalAlias means the previous one has been removed
+    else if (roomState.canonicalAlias.length)
     {
-        NSMutableArray<NSString*> *memberNames = [NSMutableArray arrayWithCapacity:serverRoomSummary.heroes.count];
-        for (NSString *hero in serverRoomSummary.heroes)
+        summary.displayname = roomState.canonicalAlias;
+        updated = YES;
+    }
+    // Else, use Matrix room summaries and heroes
+    else if (serverRoomSummary)
+    {
+        if (serverRoomSummary.heroes.count == 0 || roomState.membersCount.members <= 1)
         {
-            NSString *memberName = [roomState.members memberName:hero];
-            if (!memberName)
+            summary.displayname = _roomNameStringLocalizations.emptyRoom;
+            updated = YES;
+        }
+        else if (1 <= serverRoomSummary.heroes.count)
+        {
+            NSMutableArray<NSString*> *memberNames = [NSMutableArray arrayWithCapacity:serverRoomSummary.heroes.count];
+            for (NSString *hero in serverRoomSummary.heroes)
             {
-                memberName = hero;
+                NSString *memberName = [roomState.members memberName:hero];
+                if (!memberName)
+                {
+                    memberName = hero;
+                }
+
+                [memberNames addObject:memberName];
             }
 
-            [memberNames addObject:memberName];
+            // We display 2 users names max. Then, for larger rooms, we display "Alice and X others"
+            switch (memberNames.count)
+            {
+                case 1:
+                    summary.displayname = memberNames.firstObject;
+                    break;
+
+                case 2:
+                    summary.displayname = [NSString stringWithFormat:_roomNameStringLocalizations.twoMembers,
+                                           memberNames[0],
+                                           memberNames[1]];
+                    break;
+
+                default:
+                    summary.displayname = [NSString stringWithFormat:_roomNameStringLocalizations.moreThanTwoMembers,
+                                           memberNames[0],
+                                           @(serverRoomSummary.joinedMemberCount + serverRoomSummary.invitedMemberCount - 2)];
+                    break;
+            }
+
+            updated = YES;
         }
-
-        // We display 2 users names max. Then, for larger rooms, we display "Alice and X others"
-        switch (memberNames.count)
-        {
-            case 1:
-                summary.displayname = memberNames.firstObject;
-                break;
-
-            case 2:
-                summary.displayname = [NSString stringWithFormat:_roomNameStringLocalizations.twoMembers,
-                                       memberNames[0],
-                                       memberNames[1]];
-                break;
-
-            default:
-                summary.displayname = [NSString stringWithFormat:_roomNameStringLocalizations.moreThanTwoMembers,
-                                       memberNames[0],
-                                       @(serverRoomSummary.joinedMemberCount + serverRoomSummary.invitedMemberCount - 2)];
-                break;
-        }
-
-        updated = YES;
     }
 
     return updated;
@@ -340,12 +344,22 @@
 {
     BOOL updated = NO;
 
-    if (serverRoomSummary.heroes.count == 1)
+    // If m.room.avatar is set, use that
+    if (roomState.avatar)
     {
-        MXRoomMember *otherMember = [roomState.members memberWithUserId:serverRoomSummary.heroes.firstObject];
-        summary.avatar = otherMember.avatarUrl;
+        summary.avatar = roomState.avatar;
+        updated = YES;
+    }
+    // Else, use Matrix room summaries and heroes
+    if (serverRoomSummary)
+    {
+        if (serverRoomSummary.heroes.count == 1)
+        {
+            MXRoomMember *otherMember = [roomState.members memberWithUserId:serverRoomSummary.heroes.firstObject];
+            summary.avatar = otherMember.avatarUrl;
 
-        updated |= !summary.avatar;
+            updated |= !summary.avatar;
+        }
     }
 
     return updated;
@@ -355,26 +369,29 @@
 {
     BOOL updated = NO;
 
-    MXRoomMembersCount *memberCount = [summary.membersCount copy];
-    if (!memberCount)
+    if (-1 != serverRoomSummary.joinedMemberCount || -1 != serverRoomSummary.invitedMemberCount)
     {
-        memberCount = [MXRoomMembersCount new];
-    }
+        MXRoomMembersCount *memberCount = [summary.membersCount copy];
+        if (!memberCount)
+        {
+            memberCount = [MXRoomMembersCount new];
+        }
 
-    if (-1 != serverRoomSummary.joinedMemberCount)
-    {
-        memberCount.joined = serverRoomSummary.joinedMemberCount;
-    }
-    if (-1 != serverRoomSummary.invitedMemberCount)
-    {
-        memberCount.invited = serverRoomSummary.invitedMemberCount;
-    }
-    memberCount.members = memberCount.joined + memberCount.invited;
+        if (-1 != serverRoomSummary.joinedMemberCount)
+        {
+            memberCount.joined = serverRoomSummary.joinedMemberCount;
+        }
+        if (-1 != serverRoomSummary.invitedMemberCount)
+        {
+            memberCount.invited = serverRoomSummary.invitedMemberCount;
+        }
+        memberCount.members = memberCount.joined + memberCount.invited;
 
-    if (![summary.membersCount isEqual:memberCount])
-    {
-        summary.membersCount = memberCount;
-        updated = YES;
+        if (![summary.membersCount isEqual:memberCount])
+        {
+            summary.membersCount = memberCount;
+            updated = YES;
+        }
     }
 
     return updated;
