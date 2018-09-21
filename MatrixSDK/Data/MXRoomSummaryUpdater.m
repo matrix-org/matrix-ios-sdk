@@ -268,7 +268,7 @@
 
 - (BOOL)updateSummaryDisplayname:(MXRoomSummary *)summary session:(MXSession *)session withServerRoomSummary:(MXRoomSyncSummary *)serverRoomSummary roomState:(MXRoomState *)roomState
 {
-    BOOL updated = NO;
+    NSString *displayname;
 
     if (!_roomNameStringLocalizations)
     {
@@ -281,21 +281,18 @@
     // If m.room.name is set, use that
     if (roomState.name.length)
     {
-        summary.displayname = roomState.name;
-        updated = YES;
+        displayname = roomState.name;
     }
     // If m.room.canonical_alias is set, use that
     // Note: a "" for canonicalAlias means the previous one has been removed
     else if (roomState.canonicalAlias.length)
     {
-        summary.displayname = roomState.canonicalAlias;
-        updated = YES;
+        displayname = roomState.canonicalAlias;
     }
     // If the room has an alias, use that
     else if (roomState.aliases.count)
     {
-        summary.displayname = roomState.aliases.firstObject;
-        updated = YES;
+        displayname = roomState.aliases.firstObject;
     }
     else
     {
@@ -342,41 +339,44 @@
         switch (memberNames.count)
         {
             case 0:
-                summary.displayname = _roomNameStringLocalizations.emptyRoom;
+                displayname = _roomNameStringLocalizations.emptyRoom;
                 break;
 
             case 1:
-                summary.displayname = memberNames.firstObject;
+                displayname = memberNames.firstObject;
                 break;
 
             case 2:
-                summary.displayname = [NSString stringWithFormat:_roomNameStringLocalizations.twoMembers,
+                displayname = [NSString stringWithFormat:_roomNameStringLocalizations.twoMembers,
                                        memberNames[0],
                                        memberNames[1]];
                 break;
 
             default:
-                summary.displayname = [NSString stringWithFormat:_roomNameStringLocalizations.moreThanTwoMembers,
+                displayname = [NSString stringWithFormat:_roomNameStringLocalizations.moreThanTwoMembers,
                                        memberNames[0],
                                        @(memberCount - 2)];
                 break;
         }
-
-        updated = YES;
     }
 
-    return updated;
+    if (displayname != summary.displayname || ![displayname isEqualToString:summary.displayname])
+    {
+        summary.displayname = displayname;
+        return YES;
+    }
+
+    return NO;
 }
 
 - (BOOL)updateSummaryAvatar:(MXRoomSummary *)summary session:(MXSession *)session withServerRoomSummary:(MXRoomSyncSummary *)serverRoomSummary roomState:(MXRoomState *)roomState
 {
-    BOOL updated = NO;
+    NSString *avatar;
 
     // If m.room.avatar is set, use that
     if (roomState.avatar)
     {
-        summary.avatar = roomState.avatar;
-        updated = YES;
+        avatar = roomState.avatar;
     }
     // Else, use Matrix room summaries and heroes
     else if (serverRoomSummary)
@@ -384,9 +384,7 @@
         if (serverRoomSummary.heroes.count == 1)
         {
             MXRoomMember *otherMember = [roomState.members memberWithUserId:serverRoomSummary.heroes.firstObject];
-            summary.avatar = otherMember.avatarUrl;
-
-            updated |= !summary.avatar;
+            avatar = otherMember.avatarUrl;
         }
     }
     // Or in case of non lazy loading and no server room summary,
@@ -394,17 +392,20 @@
     else if (roomState.membersCount.members == 2)
     {
         NSArray<MXRoomMember*> *otherMembers = [self sortedOtherMembersInRoomState:roomState withMatrixSession:session];
-        summary.avatar = otherMembers.firstObject.avatarUrl;
-
-        updated |= !summary.avatar;
+        avatar = otherMembers.firstObject.avatarUrl;
     }
 
-    return updated;
+    if (avatar != summary.displayname || ![avatar isEqualToString:summary.avatar])
+    {
+        summary.avatar = avatar;
+        return YES;
+    }
+
+    return NO;
 }
 
 - (BOOL)updateSummaryMemberCount:(MXRoomSummary *)summary session:(MXSession *)session withServerRoomSummary:(MXRoomSyncSummary *)serverRoomSummary roomState:(MXRoomState *)roomState
 {
-    BOOL updated = NO;
 
     MXRoomMembersCount *membersCount;
 
@@ -430,10 +431,10 @@
     if (![summary.membersCount isEqual:membersCount])
     {
         summary.membersCount = membersCount;
-        updated = YES;
+        return YES;
     }
 
-    return updated;
+    return NO;
 }
 
 - (NSArray<MXRoomMember*> *)sortedOtherMembersInRoomState:(MXRoomState*)roomState withMatrixSession:(MXSession *)session
