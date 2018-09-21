@@ -6,6 +6,7 @@ Improvements:
 * MXPeekingRoom: Create a MXPeekingRoomSummary class to represent their summary data.
 * MXRoomSummary: If no avatar, try to compute it from heroes.
 * MXRoomSummary: If no avatar for an invited room, try to compute it from available state events.
+* MXRoomSummary: Internationalise the room name computation for rooms with no name.
 * MXRoomMember: Add Swift refinement for membership properties.
 
 Bug fix:
