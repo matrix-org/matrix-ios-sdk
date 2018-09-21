@@ -24,8 +24,8 @@
     if (self)
     {
         _emptyRoom = @"Empty room";
-        _aliceAndBob = @"%@ and %@";
-        _aliceAndOthers = @"%@ & %@ others";
+        _twoMembers = @"%@ and %@";
+        _moreThanTwoMembers = @"%@ & %@ others";
     }
     return self;
 }

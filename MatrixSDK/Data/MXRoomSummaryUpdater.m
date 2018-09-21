@@ -318,13 +318,13 @@
                 break;
 
             case 2:
-                summary.displayname = [NSString stringWithFormat:_roomNameStringLocalizations.aliceAndBob,
+                summary.displayname = [NSString stringWithFormat:_roomNameStringLocalizations.twoMembers,
                                        memberNames[0],
                                        memberNames[1]];
                 break;
 
             default:
-                summary.displayname = [NSString stringWithFormat:_roomNameStringLocalizations.aliceAndOthers,
+                summary.displayname = [NSString stringWithFormat:_roomNameStringLocalizations.moreThanTwoMembers,
                                        memberNames[0],
                                        @(serverRoomSummary.joinedMemberCount + serverRoomSummary.invitedMemberCount - 2)];
                 break;
