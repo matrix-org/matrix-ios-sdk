@@ -426,7 +426,9 @@ NSString *const kMXRoomSummaryDidChangeNotification = @"kMXRoomSummaryDidChangeN
         self->updatedWithStateEvents = NO;
 
         // Handle room summary sent by the home server
-        if (roomSync.summary)
+        // Call the method too in case of non lazy loading and no server room summary.
+        // This will share the same algorithm to compute room name, avatar, members count.
+        if (roomSync.summary || updated)
         {
             updated |= [self.mxSession.roomSummaryUpdateDelegate session:self.mxSession updateRoomSummary:self withServerRoomSummary:roomSync.summary roomState:roomState];
         }
