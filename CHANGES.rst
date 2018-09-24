@@ -12,6 +12,7 @@ Improvements:
 Bug fix:
 * Lazy-Loading: Fix regression on peeking (vector-im/riot-ios/issues/2035).
 * MXRestClient: Fix get public rooms list Swift refinement.
+* MXTools: Allow '@' in room alias (vector-im/riot-ios/issues/1977).
 
 Changes in Matrix iOS SDK in 0.11.3 (2018-08-27)
 ===============================================
