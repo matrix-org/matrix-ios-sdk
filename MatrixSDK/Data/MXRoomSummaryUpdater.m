@@ -175,48 +175,18 @@
 
     if (summary.membership == MXMembershipInvite)
     {
-        updated = [self session:session updateInvitedRoomSummary:summary withStateEvents:stateEvents roomState:roomState];
+        // The server does not send yet room summary for invited rooms (https://github.com/matrix-org/matrix-doc/issues/1679)
+        // but we could reuse same computation algos as joined rooms.
+        // Note that leads to a bug in case someone invites us in a non 1:1 room with no avatar.
+        // In this case, the summary avatar would be the inviter avatar.
+        // We need more information from the homeserver to solve it. The issue above should help to fix it
+        // Note: we have this bug since day #1
+        updated = [self session:session updateRoomSummary:summary withServerRoomSummary:nil roomState:roomState];
     }
 
     return updated;
 }
 
-- (BOOL)session:(MXSession *)session updateInvitedRoomSummary:(MXRoomSummary *)summary withStateEvents:(NSArray<MXEvent *> *)stateEvents roomState:(MXRoomState*)roomState
-{
-    BOOL updated = NO;
-
-    // TODO: There is bug here if someone invites us in a non 1:1 room with no avatar.
-    // In this case, the summary avatar would be the inviter avatar.
-    // We need more information from the homeserver (https://github.com/matrix-org/matrix-doc/issues/1679)
-    // Note: we have this bug since day #1
-    if (roomState.membersCount.members == 2)
-    {
-        MXRoomMember *otherMember;
-        for (MXRoomMember *member in roomState.members.members)
-        {
-            if (![member.userId isEqualToString:session.myUser.userId])
-            {
-                otherMember = member;
-                break;
-            }
-        }
-
-        if (!summary.displayname)
-        {
-            summary.displayname = otherMember.displayname;
-            updated = YES;
-        }
-
-        if (!summary.avatar)
-        {
-            summary.avatar = otherMember.avatarUrl;
-            updated = YES;
-        }
-    }
-
-    return updated;
-}
-                 
 #pragma mark - Private
 
 // Hide tombstoned room from user only if the user joined the replacement room
@@ -259,125 +229,214 @@
 {
     BOOL updated = NO;
 
-    // Update room members count
-    if (-1 != serverRoomSummary.joinedMemberCount || -1 != serverRoomSummary.invitedMemberCount)
-    {
-        updated |= [self updateSummaryMemberCount:summary session:session withServerRoomSummary:serverRoomSummary roomState:roomState];
-    }
-
-    // Compute display name from summary heroes if there was no name nor canonical alias
-    if (!roomState.name && !roomState.canonicalAlias)
-    {
-        updated |= [self updateSummaryDisplayname:summary session:session withServerRoomSummary:serverRoomSummary roomState:roomState];
-    }
-
-    // Compute the avatar from summary heroes if there was no avatar
-    if (!roomState.avatar)
-    {
-        updated |= [self updateSummaryAvatar:summary session:session withServerRoomSummary:serverRoomSummary roomState:roomState];
-    }
+    updated |= [self updateSummaryMemberCount:summary session:session withServerRoomSummary:serverRoomSummary roomState:roomState];
+    updated |= [self updateSummaryDisplayname:summary session:session withServerRoomSummary:serverRoomSummary roomState:roomState];
+    updated |= [self updateSummaryAvatar:summary session:session withServerRoomSummary:serverRoomSummary roomState:roomState];
 
     return updated;
 }
 
 - (BOOL)updateSummaryDisplayname:(MXRoomSummary *)summary session:(MXSession *)session withServerRoomSummary:(MXRoomSyncSummary *)serverRoomSummary roomState:(MXRoomState *)roomState
 {
-    BOOL updated = NO;
+    NSString *displayname;
 
     if (!_roomNameStringLocalizations)
     {
         _roomNameStringLocalizations = [MXRoomNameDefaultStringLocalizations new];
     }
 
-    // Compute an internationalised display name based on Matrix room summaries
-    // (https://github.com/matrix-org/matrix-doc/issues/688).
-    if (serverRoomSummary.heroes.count == 0 || roomState.membersCount.members <= 1)
+    // Compute a display name according to algorithm provided by Matrix room summaries
+    // (https://github.com/matrix-org/matrix-doc/issues/688)
+
+    // If m.room.name is set, use that
+    if (roomState.name.length)
     {
-        summary.displayname = _roomNameStringLocalizations.emptyRoom;
-        updated = YES;
+        displayname = roomState.name;
     }
-    else if (1 <= serverRoomSummary.heroes.count)
+    // If m.room.canonical_alias is set, use that
+    // Note: a "" for canonicalAlias means the previous one has been removed
+    else if (roomState.canonicalAlias.length)
     {
-        NSMutableArray<NSString*> *memberNames = [NSMutableArray arrayWithCapacity:serverRoomSummary.heroes.count];
-        for (NSString *hero in serverRoomSummary.heroes)
+        displayname = roomState.canonicalAlias;
+    }
+    // If the room has an alias, use that
+    else if (roomState.aliases.count)
+    {
+        displayname = roomState.aliases.firstObject;
+    }
+    else
+    {
+        NSUInteger memberCount = 0;
+        NSMutableArray<NSString*> *memberNames;
+
+        // Use Matrix room summaries and heroes
+        if (serverRoomSummary)
         {
-            NSString *memberName = [roomState.members memberName:hero];
-            if (!memberName)
+            if (serverRoomSummary.heroes.count)
             {
-                memberName = hero;
+                memberNames = [NSMutableArray arrayWithCapacity:serverRoomSummary.heroes.count];
+                for (NSString *hero in serverRoomSummary.heroes)
+                {
+                    NSString *memberName = [roomState.members memberName:hero];
+                    if (!memberName)
+                    {
+                        memberName = hero;
+                    }
+
+                    [memberNames addObject:memberName];
+                }
+
+                memberCount = serverRoomSummary.joinedMemberCount + serverRoomSummary.invitedMemberCount;
+            }
+        }
+        // Or in case of non lazy loading and no server room summary,
+        // use the full room state
+        else if (roomState.membersCount.members > 1)
+        {
+            NSArray *otherMembers = [self sortedOtherMembersInRoomState:roomState withMatrixSession:session];
+
+            memberNames = [NSMutableArray arrayWithCapacity:otherMembers.count];
+            for (MXRoomMember *member in otherMembers)
+            {
+                NSString *memberName = [roomState.members memberName:member.userId];
+                [memberNames addObject:memberName];
             }
 
-            [memberNames addObject:memberName];
+            memberCount = memberNames.count + 1;
         }
 
         // We display 2 users names max. Then, for larger rooms, we display "Alice and X others"
         switch (memberNames.count)
         {
+            case 0:
+                displayname = _roomNameStringLocalizations.emptyRoom;
+                break;
+
             case 1:
-                summary.displayname = memberNames.firstObject;
+                displayname = memberNames.firstObject;
                 break;
 
             case 2:
-                summary.displayname = [NSString stringWithFormat:_roomNameStringLocalizations.twoMembers,
+                displayname = [NSString stringWithFormat:_roomNameStringLocalizations.twoMembers,
                                        memberNames[0],
                                        memberNames[1]];
                 break;
 
             default:
-                summary.displayname = [NSString stringWithFormat:_roomNameStringLocalizations.moreThanTwoMembers,
+                displayname = [NSString stringWithFormat:_roomNameStringLocalizations.moreThanTwoMembers,
                                        memberNames[0],
-                                       @(serverRoomSummary.joinedMemberCount + serverRoomSummary.invitedMemberCount - 2)];
+                                       @(memberCount - 2)];
                 break;
         }
-
-        updated = YES;
     }
 
-    return updated;
+    if (displayname != summary.displayname || ![displayname isEqualToString:summary.displayname])
+    {
+        summary.displayname = displayname;
+        return YES;
+    }
+
+    return NO;
 }
 
 - (BOOL)updateSummaryAvatar:(MXRoomSummary *)summary session:(MXSession *)session withServerRoomSummary:(MXRoomSyncSummary *)serverRoomSummary roomState:(MXRoomState *)roomState
 {
-    BOOL updated = NO;
+    NSString *avatar;
 
-    if (serverRoomSummary.heroes.count == 1)
+    // If m.room.avatar is set, use that
+    if (roomState.avatar)
     {
-        MXRoomMember *otherMember = [roomState.members memberWithUserId:serverRoomSummary.heroes.firstObject];
-        summary.avatar = otherMember.avatarUrl;
-
-        updated |= !summary.avatar;
+        avatar = roomState.avatar;
+    }
+    // Else, use Matrix room summaries and heroes
+    else if (serverRoomSummary)
+    {
+        if (serverRoomSummary.heroes.count == 1)
+        {
+            MXRoomMember *otherMember = [roomState.members memberWithUserId:serverRoomSummary.heroes.firstObject];
+            avatar = otherMember.avatarUrl;
+        }
+    }
+    // Or in case of non lazy loading and no server room summary,
+    // use the full room state
+    else if (roomState.membersCount.members == 2)
+    {
+        NSArray<MXRoomMember*> *otherMembers = [self sortedOtherMembersInRoomState:roomState withMatrixSession:session];
+        avatar = otherMembers.firstObject.avatarUrl;
     }
 
-    return updated;
+    if (avatar != summary.displayname || ![avatar isEqualToString:summary.avatar])
+    {
+        summary.avatar = avatar;
+        return YES;
+    }
+
+    return NO;
 }
 
 - (BOOL)updateSummaryMemberCount:(MXRoomSummary *)summary session:(MXSession *)session withServerRoomSummary:(MXRoomSyncSummary *)serverRoomSummary roomState:(MXRoomState *)roomState
 {
-    BOOL updated = NO;
 
-    MXRoomMembersCount *memberCount = [summary.membersCount copy];
-    if (!memberCount)
+    MXRoomMembersCount *membersCount;
+
+    if (serverRoomSummary)
     {
-        memberCount = [MXRoomMembersCount new];
+        membersCount = [summary.membersCount copy];
+        if (!membersCount)
+        {
+            membersCount = [MXRoomMembersCount new];
+        }
+
+        membersCount.joined = serverRoomSummary.joinedMemberCount;
+        membersCount.invited = serverRoomSummary.invitedMemberCount;
+        membersCount.members = membersCount.joined + membersCount.invited;
+    }
+    // Or in case of non lazy loading and no server room summary,
+    // use the full room state
+    else
+    {
+        membersCount = roomState.membersCount;
     }
 
-    if (-1 != serverRoomSummary.joinedMemberCount)
+    if (![summary.membersCount isEqual:membersCount])
     {
-        memberCount.joined = serverRoomSummary.joinedMemberCount;
-    }
-    if (-1 != serverRoomSummary.invitedMemberCount)
-    {
-        memberCount.invited = serverRoomSummary.invitedMemberCount;
-    }
-    memberCount.members = memberCount.joined + memberCount.invited;
-
-    if (![summary.membersCount isEqual:memberCount])
-    {
-        summary.membersCount = memberCount;
-        updated = YES;
+        summary.membersCount = membersCount;
+        return YES;
     }
 
-    return updated;
+    return NO;
+}
+
+- (NSArray<MXRoomMember*> *)sortedOtherMembersInRoomState:(MXRoomState*)roomState withMatrixSession:(MXSession *)session
+{
+    // Get all joined and invited members other than my user
+    NSMutableArray<MXRoomMember*> *otherMembers = [NSMutableArray array];
+    for (MXRoomMember *member in roomState.members.members)
+    {
+        if ((member.membership == MXMembershipJoin || member.membership == MXMembershipInvite)
+            && ![member.userId isEqualToString:session.myUser.userId])
+        {
+            [otherMembers addObject:member];
+        }
+    }
+
+    // Sort members by their creation (oldest first)
+    [otherMembers sortUsingComparator:^NSComparisonResult(MXRoomMember *member1, MXRoomMember *member2) {
+
+        uint64_t originServerTs1 = member1.originalEvent.originServerTs;
+        uint64_t originServerTs2 = member2.originalEvent.originServerTs;
+
+        if (originServerTs1 == originServerTs2)
+        {
+            return NSOrderedSame;
+        }
+        else
+        {
+            return originServerTs1 > originServerTs2 ? NSOrderedDescending : NSOrderedAscending;
+        }
+    }];
+
+    return otherMembers;
 }
 
 @end
