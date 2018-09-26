@@ -18,6 +18,7 @@
 #import <Foundation/Foundation.h>
 
 #import "MXRoomSummary.h"
+#import "MXRoomNameStringsLocalizable.h"
 
 /**
  `MXRoomSummaryUpdater` is the default implementation for the `MXRoomSummaryUpdating` protocol.
@@ -57,5 +58,12 @@
  Default is NO.
  */
 @property (nonatomic) BOOL ignoreRedactedEvent;
+
+/**
+ String localizations used when computing names for room with no name.
+
+ Default is an instance of `MXRoomNameDefaultStringLocalizations`.
+ */
+@property id<MXRoomNameStringsLocalizable> roomNameStringLocalizations;
 
 @end

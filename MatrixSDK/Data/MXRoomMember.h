@@ -42,12 +42,12 @@
 /**
  The membership state.
  */
-@property (nonatomic, readonly) MXMembership membership;
+@property (nonatomic, readonly) MXMembership membership NS_REFINED_FOR_SWIFT;
 
 /**
  The previous membership state.
  */
-@property (nonatomic, readonly) MXMembership prevMembership;
+@property (nonatomic, readonly) MXMembership prevMembership NS_REFINED_FOR_SWIFT;
 
 /**
  The id of the user that made the last change on this member membership.

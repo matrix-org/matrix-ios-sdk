@@ -35,6 +35,9 @@ NSString *const kMXRoomSummaryDidChangeNotification = @"kMXRoomSummaryDidChangeN
 
     // Flag to avoid to notify several updates
     BOOL updatedWithStateEvents;
+
+    // The store to store events,
+    id<MXStore> store;
 }
 
 @end
@@ -51,16 +54,23 @@ NSString *const kMXRoomSummaryDidChangeNotification = @"kMXRoomSummaryDidChangeN
     return self;
 }
 
-- (instancetype)initWithRoomId:(NSString *)theRoomId andMatrixSession:(MXSession *)matrixSession
+- (instancetype)initWithRoomId:(NSString *)roomId andMatrixSession:(MXSession *)mxSession
+{
+    // Let's use the default store
+    return [self initWithRoomId:roomId matrixSession:mxSession andStore:mxSession.store];
+}
+
+- (instancetype)initWithRoomId:(NSString *)roomId matrixSession:(MXSession *)mxSession andStore:(id<MXStore>)theStore
 {
     self = [self init];
     if (self)
     {
-        _roomId = theRoomId;
+        _roomId = roomId;
         _lastMessageOthers = [NSMutableDictionary dictionary];
         _others = [NSMutableDictionary dictionary];
+        store = theStore;
 
-        [self setMatrixSession:matrixSession];
+        [self setMatrixSession:mxSession];
     }
 
     return self;
@@ -79,6 +89,7 @@ NSString *const kMXRoomSummaryDidChangeNotification = @"kMXRoomSummaryDidChangeN
     if (!_mxSession)
     {
         _mxSession = mxSession;
+        store = mxSession.store;
 
         // Listen to the event sent state changes
         // This is used to follow evolution of local echo events
@@ -94,13 +105,13 @@ NSString *const kMXRoomSummaryDidChangeNotification = @"kMXRoomSummaryDidChangeN
 
 - (void)save:(BOOL)commit
 {
-    if ([_mxSession.store respondsToSelector:@selector(storeSummaryForRoom:summary:)])
+    if ([store respondsToSelector:@selector(storeSummaryForRoom:summary:)])
     {
-        [_mxSession.store storeSummaryForRoom:_roomId summary:self];
+        [store storeSummaryForRoom:_roomId summary:self];
     }
-    if (commit && [_mxSession.store respondsToSelector:@selector(commit)])
+    if (commit && [store respondsToSelector:@selector(commit)])
     {
-        [_mxSession.store commit];
+        [store commit];
     }
 
     // Broadcast the change
@@ -147,11 +158,11 @@ NSString *const kMXRoomSummaryDidChangeNotification = @"kMXRoomSummaryDidChangeN
         // The storage of the event depends if it is a true matrix event or a local echo
         if (![_lastMessageEventId hasPrefix:kMXEventLocalEventIdPrefix])
         {
-            lastMessageEvent = [_mxSession.store eventWithEventId:_lastMessageEventId inRoom:_roomId];
+            lastMessageEvent = [store eventWithEventId:_lastMessageEventId inRoom:_roomId];
         }
         else
         {
-            for (MXEvent *event in [_mxSession.store outgoingMessagesInRoom:_roomId])
+            for (MXEvent *event in [store outgoingMessagesInRoom:_roomId])
             {
                 if ([event.eventId isEqualToString:_lastMessageEventId])
                 {
@@ -371,7 +382,7 @@ NSString *const kMXRoomSummaryDidChangeNotification = @"kMXRoomSummaryDidChangeN
 - (NSUInteger)localUnreadEventCount
 {
     // Check for unread events in store
-    return [_mxSession.store localUnreadEventCount:_roomId withTypeIn:_mxSession.unreadEventTypes];
+    return [store localUnreadEventCount:_roomId withTypeIn:_mxSession.unreadEventTypes];
 }
 
 - (BOOL)isDirect
@@ -415,7 +426,9 @@ NSString *const kMXRoomSummaryDidChangeNotification = @"kMXRoomSummaryDidChangeN
         self->updatedWithStateEvents = NO;
 
         // Handle room summary sent by the home server
-        if (roomSync.summary)
+        // Call the method too in case of non lazy loading and no server room summary.
+        // This will share the same algorithm to compute room name, avatar, members count.
+        if (roomSync.summary || updated)
         {
             updated |= [self.mxSession.roomSummaryUpdateDelegate session:self.mxSession updateRoomSummary:self withServerRoomSummary:roomSync.summary roomState:roomState];
         }

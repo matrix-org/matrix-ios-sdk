@@ -1648,7 +1648,7 @@ typedef enum : NSUInteger
  @return a MXHTTPOperation instance.
  */
 - (MXHTTPOperation*)publicRoomsOnServer:(NSString*)server
-                                  limit:(NSUInteger)limit
+                                  limit:(NSInteger)limit
                                   since:(NSString*)since
                                  filter:(NSString*)filter
                    thirdPartyInstanceId:(NSString*)thirdPartyInstanceId

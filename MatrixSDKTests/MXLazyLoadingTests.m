@@ -499,6 +499,98 @@ Common initial conditions:
 //}
 
 
+// From the scenario:
+// - Pause Alice MXSession
+// - 5 Eves join the room
+// - Eve0 sends 20 messages
+// - Resume Alice MXSession
+// -> Alice must know all Eves
+- (void)checkRoomMembersAfterLimitedSyncWithLazyLoading:(BOOL)lazyLoading
+{
+    // - Run the scenario
+    [self createScenarioWithLazyLoading:lazyLoading readyToTest:^(MXSession *aliceSession, MXSession *bobSession, MXSession *charlieSession, NSString *roomId, XCTestExpectation *expectation) {
+
+        // - Pause Alice MXSession
+        [aliceSession pause];
+
+        // - 5 Eve joins the room
+        [matrixSDKTestsData doMXSessionTestWithAUser:nil readyToTest:^(MXSession *eve0Session, XCTestExpectation *expectation2) {
+            [eve0Session joinRoom:roomId success:^(MXRoom *room) {
+
+                [matrixSDKTestsData doMXSessionTestWithAUser:nil readyToTest:^(MXSession *eve1Session, XCTestExpectation *expectation2) {
+                    [eve1Session joinRoom:roomId success:^(MXRoom *room) {
+
+                        [matrixSDKTestsData doMXSessionTestWithAUser:nil readyToTest:^(MXSession *eve2Session, XCTestExpectation *expectation2) {
+                            [eve2Session joinRoom:roomId success:^(MXRoom *room) {
+
+                                [matrixSDKTestsData doMXSessionTestWithAUser:nil readyToTest:^(MXSession *eve3Session, XCTestExpectation *expectation2) {
+                                    [eve3Session joinRoom:roomId success:^(MXRoom *room) {
+
+                                        [matrixSDKTestsData doMXSessionTestWithAUser:nil readyToTest:^(MXSession *eve4Session, XCTestExpectation *expectation2) {
+                                            [eve4Session joinRoom:roomId success:^(MXRoom *room) {
+
+
+                                                // - Eve0 sends 20 messages
+                                                [matrixSDKTestsData for:eve0Session.matrixRestClient andRoom:roomId sendMessages:20 success:^{
+
+                                                    // - Resume Alice MXSession
+                                                    [aliceSession resume:^{
+
+                                                        MXRoom *room = [aliceSession roomWithRoomId:roomId];
+                                                        [room state:^(MXRoomState *roomState) {
+
+                                                            // -> Alice must know all Eves
+                                                            XCTAssertNotNil([roomState.members memberWithUserId:eve0Session.myUser.userId]);
+                                                            XCTAssertNotNil([roomState.members memberWithUserId:eve1Session.myUser.userId]);
+                                                            XCTAssertNotNil([roomState.members memberWithUserId:eve2Session.myUser.userId]);
+                                                            XCTAssertNotNil([roomState.members memberWithUserId:eve3Session.myUser.userId]);
+                                                            XCTAssertNotNil([roomState.members memberWithUserId:eve4Session.myUser.userId]);
+
+                                                            [expectation fulfill];
+                                                        }];
+                                                    }];
+                                                }];
+
+                                            } failure:^(NSError *error) {
+                                                XCTFail(@"The operation should not fail - NSError: %@", error);
+                                                [expectation fulfill];
+                                            }];
+                                        }];
+                                    } failure:^(NSError *error) {
+                                        XCTFail(@"The operation should not fail - NSError: %@", error);
+                                        [expectation fulfill];
+                                    }];
+                                }];
+                            } failure:^(NSError *error) {
+                                XCTFail(@"The operation should not fail - NSError: %@", error);
+                                [expectation fulfill];
+                            }];
+                        }];
+                    } failure:^(NSError *error) {
+                        XCTFail(@"The operation should not fail - NSError: %@", error);
+                        [expectation fulfill];
+                    }];
+                }];
+
+            } failure:^(NSError *error) {
+                XCTFail(@"The operation should not fail - NSError: %@", error);
+                [expectation fulfill];
+            }];
+        }];
+    }];
+}
+
+- (void)testRoomMembersAfterLimitedSync
+{
+    [self checkRoomMembersAfterLimitedSyncWithLazyLoading:YES];
+}
+
+- (void)testRoomMembersAfterLimitedSyncLazyLoadingOFF
+{
+    [self checkRoomMembersAfterLimitedSyncWithLazyLoading:NO];
+}
+
+
 // [MXRoom members:] should make an HTTP request to fetch members only once
 - (void)checkSingleRoomMembersRequestWithLazyLoading:(BOOL)lazyLoading
 {
@@ -667,8 +759,6 @@ Common initial conditions:
 
             // - Bob sends 50 messages
             [matrixSDKTestsData for:bobSession.matrixRestClient andRoom:roomId sendMessages:50 success:^{
-
-
 
                 // - Resume Alice MXSession
                 [aliceSession resume:^{

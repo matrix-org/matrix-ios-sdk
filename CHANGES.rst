@@ -1,3 +1,19 @@
+Changes in Matrix iOS SDK in 0.11.4 (2018-09-26)
+===============================================
+
+Improvements:
+* MXRoom: Expose room members access in Swift (PR #562).
+* MXPeekingRoom: Create a MXPeekingRoomSummary class to represent their summary data.
+* MXRoomSummary: If no avatar, try to compute it from heroes.
+* MXRoomSummary: If no avatar for an invited room, try to compute it from available state events.
+* MXRoomSummary: Internationalise the room name computation for rooms with no name.
+* MXRoomMember: Add Swift refinement for membership properties.
+
+Bug fix:
+* Lazy-Loading: Fix regression on peeking (vector-im/riot-ios/issues/2035).
+* MXRestClient: Fix get public rooms list Swift refinement.
+* MXTools: Allow '@' in room alias (vector-im/riot-ios/issues/1977).
+
 Changes in Matrix iOS SDK in 0.11.3 (2018-08-27)
 ===============================================
 

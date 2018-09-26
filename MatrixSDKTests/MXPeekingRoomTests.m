@@ -74,6 +74,9 @@
                     XCTAssertEqual(peekingRoom.roomId, room.roomId);
 
                     [peekingRoom state:^(MXRoomState *roomState) {
+
+                        XCTAssertNotNil(roomState.name);
+                        XCTAssertNotNil(roomState.topic);
                         XCTAssertEqual(roomState.membersCount.members, 1, @"The MXPeekingRoom state must be known now");
 
                         [mxSession stopPeeking:peekingRoom];
@@ -91,10 +94,49 @@
             XCTFail(@"Cannot set up intial test conditions - error: %@", error);
             [expectation fulfill];
         }];
-
-
     }];
 }
+
+- (void)testPeekingSummary
+{
+    [matrixSDKTestsData doMXSessionTestWithBobAndThePublicRoom:self readyToTest:^(MXSession *mxSession2, MXRoom *room, XCTestExpectation *expectation) {
+
+        [room setHistoryVisibility:kMXRoomHistoryVisibilityWorldReadable success:^{
+
+            [matrixSDKTestsData doMXSessionTestWithAlice:nil readyToTest:^(MXSession *aliceSession, XCTestExpectation *expectation2) {
+
+                mxSession = aliceSession;
+
+                XCTAssertEqual(mxSession.rooms.count, 0);
+
+                [mxSession peekInRoomWithRoomId:room.roomId success:^(MXPeekingRoom *peekingRoom) {
+
+                    XCTAssertEqual(mxSession.rooms.count, 0, @"MXPeekingRoom must not be listed by mxSession.rooms");
+                    XCTAssertEqual(peekingRoom.roomId, room.roomId);
+
+                    XCTAssertNotNil(peekingRoom.summary);
+
+                    XCTAssertNotNil(peekingRoom.summary.displayname);
+                    XCTAssertNotNil(peekingRoom.summary.topic);
+                    XCTAssertEqual(peekingRoom.summary.membersCount.members, 1, @"The MXPeekingRoom state must be known now");
+
+                    [mxSession stopPeeking:peekingRoom];
+
+                    [expectation fulfill];
+
+                } failure:^(NSError *error) {
+                    XCTFail(@"The operation should not fail - NSError: %@", error);
+                    [expectation fulfill];
+                }];
+            }];
+
+        } failure:^(NSError *error) {
+            XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+            [expectation fulfill];
+        }];
+    }];
+}
+
 
 - (void)testPeekingOnNonWorldReadable
 {

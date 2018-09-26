@@ -1461,7 +1461,7 @@ public extension MXRestClient {
      
      - returns: a `MXHTTPOperation` instance.
      */
-    @nonobjc @discardableResult func publicRooms(onServer server: String, limit:UInt?, since: String? = nil, filter: String? = nil, thirdPartyInstanceId: String? = nil, includeAllNetworks: Bool? = false, completion: @escaping (_ response: MXResponse<MXPublicRoomsResponse>) -> Void) -> MXHTTPOperation {
+    @nonobjc @discardableResult func publicRooms(onServer server: String?, limit: UInt?, since: String? = nil, filter: String? = nil, thirdPartyInstanceId: String? = nil, includeAllNetworks: Bool = false, completion: @escaping (_ response: MXResponse<MXPublicRoomsResponse>) -> Void) -> MXHTTPOperation {
 
         // The `limit` variable should be set to -1 if it's not provided.
         let _limit: Int
@@ -1471,7 +1471,7 @@ public extension MXRestClient {
             _limit = -1;
         }
 
-        return __publicRooms(onServer: server, limit: UInt(_limit), since: since, filter: filter, thirdPartyInstanceId: thirdPartyInstanceId, includeAllNetworks: includeAllNetworks!, success: currySuccess(completion), failure: curryFailure(completion))
+        return __publicRooms(onServer: server, limit: _limit, since: since, filter: filter, thirdPartyInstanceId: thirdPartyInstanceId, includeAllNetworks: includeAllNetworks, success: currySuccess(completion), failure: curryFailure(completion))
     }
     
     /**
