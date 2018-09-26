@@ -18,7 +18,7 @@
 #import <Foundation/Foundation.h>
 
 #import "MXRoomSummary.h"
-#import "MatrixSDK/MXRoomNameStringsLocalizable.h"
+#import "MXRoomNameStringsLocalizable.h"
 
 /**
  `MXRoomSummaryUpdater` is the default implementation for the `MXRoomSummaryUpdating` protocol.
