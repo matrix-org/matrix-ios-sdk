@@ -359,7 +359,7 @@ therefore requires a seperate server decoupled from the homeserver to send
 Push Notifications, as you cannot trust arbitrary homeservers with your
 application's APNS private key. This is called the 'Push Gateway'. More about
 how notifications work in Matrix can be found at
-http://matrix.org/docs/spec/push_gateway/unstable.html
+https://matrix.org/docs/spec/push_gateway/latest.html
 
 In simple terms, for your application to receive push notifications, you will
 need to set up a push gateway. This is a publicly accessible server specific
@@ -369,7 +369,7 @@ which can be found at https://github.com/matrix-org/sygnal along with
 instructions on how to set it up.
 
 You can also write your own Push Gateway. See
-http://matrix.org/docs/spec/push_gateway/unstable.html
+https://matrix.org/docs/spec/push_gateway/latest.html
 for the specification on the HTTP Push Notification protocol. Your push
 gateway can listen for notifications on any path (as long as your app knows
 that path in order to inform the homeserver) but Matrix strongly recommends
