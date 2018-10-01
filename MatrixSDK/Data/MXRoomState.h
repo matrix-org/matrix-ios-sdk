@@ -143,6 +143,11 @@ Use MXRoomSummary.displayname to get a computed room display name.
 @property (nonatomic, readonly) MXMembership membership NS_REFINED_FOR_SWIFT;
 
 /**
+ Room pinned events.
+ */
+@property (nonatomic, readonly) NSArray<NSString*> *pinnedEvents;
+
+/**
  Indicate whether encryption is enabled for this room.
  */
 @property (nonatomic, readonly) BOOL isEncrypted;

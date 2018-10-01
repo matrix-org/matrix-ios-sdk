@@ -1,3 +1,12 @@
+Changes in Matrix iOS SDK in 0.11.5 (2018-10-)
+===============================================
+
+Improvements:
+* MXRoomState: Add pinnedEvents to list pinned events ids.
+
+Bug fix:
+* 
+
 Changes in Matrix iOS SDK in 0.11.4 (2018-09-26)
 ===============================================
 

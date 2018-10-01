@@ -45,6 +45,7 @@ NSString *const kMXEventTypeStringRoomPlumbing          = @"m.room.plumbing";
 NSString *const kMXEventTypeStringRoomRedaction         = @"m.room.redaction";
 NSString *const kMXEventTypeStringRoomThirdPartyInvite  = @"m.room.third_party_invite";
 NSString *const kMXEventTypeStringRoomRelatedGroups     = @"m.room.related_groups";
+NSString *const kMXEventTypeStringRoomPinnedEvents      = @"m.room.pinned_events";
 NSString *const kMXEventTypeStringRoomTag               = @"m.tag";
 NSString *const kMXEventTypeStringPresence              = @"m.presence";
 NSString *const kMXEventTypeStringTypingNotification    = @"m.typing";
