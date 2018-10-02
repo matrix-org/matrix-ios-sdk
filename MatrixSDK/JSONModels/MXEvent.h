@@ -126,6 +126,7 @@ FOUNDATION_EXPORT NSString *const kMXMessageTypeAudio;
 FOUNDATION_EXPORT NSString *const kMXMessageTypeVideo;
 FOUNDATION_EXPORT NSString *const kMXMessageTypeLocation;
 FOUNDATION_EXPORT NSString *const kMXMessageTypeFile;
+FOUNDATION_EXPORT NSString *const kMXMessageTypeServerNotice;
 
 /**
  Prefix used for id of temporary local event.

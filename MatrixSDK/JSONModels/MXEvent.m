@@ -59,14 +59,15 @@ NSString *const kMXEventTypeStringCallHangup            = @"m.call.hangup";
 NSString *const kMXEventTypeStringSticker               = @"m.sticker";
 NSString *const kMXEventTypeStringRoomTombStone         = @"m.room.tombstone";
 
-NSString *const kMXMessageTypeText      = @"m.text";
-NSString *const kMXMessageTypeEmote     = @"m.emote";
-NSString *const kMXMessageTypeNotice    = @"m.notice";
-NSString *const kMXMessageTypeImage     = @"m.image";
-NSString *const kMXMessageTypeAudio     = @"m.audio";
-NSString *const kMXMessageTypeVideo     = @"m.video";
-NSString *const kMXMessageTypeLocation  = @"m.location";
-NSString *const kMXMessageTypeFile      = @"m.file";
+NSString *const kMXMessageTypeText          = @"m.text";
+NSString *const kMXMessageTypeEmote         = @"m.emote";
+NSString *const kMXMessageTypeNotice        = @"m.notice";
+NSString *const kMXMessageTypeImage         = @"m.image";
+NSString *const kMXMessageTypeAudio         = @"m.audio";
+NSString *const kMXMessageTypeVideo         = @"m.video";
+NSString *const kMXMessageTypeLocation      = @"m.location";
+NSString *const kMXMessageTypeFile          = @"m.file";
+NSString *const kMXMessageTypeServerNotice  = @"m.server_notice";
 
 NSString *const kMXEventLocalEventIdPrefix = @"kMXEventLocalId_";
 
