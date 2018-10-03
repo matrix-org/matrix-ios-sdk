@@ -58,3 +58,5 @@ FOUNDATION_EXPORT NSString *MatrixSDKVersion;
 #import "MXCallKitConfiguration.h"
 
 #import "MXGroup.h"
+
+#import "MXServerNotices.h"

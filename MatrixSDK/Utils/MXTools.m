@@ -84,6 +84,7 @@ static NSUInteger transactionIdCount;
                                 kMXEventTypeStringRoomRedaction,
                                 kMXEventTypeStringRoomThirdPartyInvite,
                                 kMXEventTypeStringRoomRelatedGroups,
+                                kMXEventTypeStringRoomPinnedEvents,
                                 kMXEventTypeStringRoomTag,
                                 kMXEventTypeStringPresence,
                                 kMXEventTypeStringTypingNotification,

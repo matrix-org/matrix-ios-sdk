@@ -851,6 +851,24 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
 - (void)preloadRoomsData:(NSArray<NSString*> *)roomIds onComplete:(dispatch_block_t)onComplete;
 
 
+#pragma mark - Matrix Events
+/**
+ Retrieve an event from its event id.
+
+ @param eventId the id of the event to retrieve.
+ @param roomId (optional) the id of the room.
+
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)eventWithEventId:(NSString*)eventId
+                              inRoom:(NSString *)roomId
+                             success:(void (^)(MXEvent *event))success
+                             failure:(void (^)(NSError *error))failure;
+
+
 #pragma mark - Rooms summaries
 /**
  Get the MXRoomSummary instance of a room.
