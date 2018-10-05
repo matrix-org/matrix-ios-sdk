@@ -1,3 +1,11 @@
+Changes in Matrix iOS SDK in 0.11.5 (2018-10-05)
+===============================================
+
+Improvements:
+* MXSession: Add eventWithEventId:inRoom: method.
+* MXRoomState: Add pinnedEvents to list pinned events ids.
+* MXServerNotices: Add this class to get notices from the user homeserver.
+
 Changes in Matrix iOS SDK in 0.11.4 (2018-09-26)
 ===============================================
 

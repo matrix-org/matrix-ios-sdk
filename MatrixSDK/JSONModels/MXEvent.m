@@ -45,6 +45,7 @@ NSString *const kMXEventTypeStringRoomPlumbing          = @"m.room.plumbing";
 NSString *const kMXEventTypeStringRoomRedaction         = @"m.room.redaction";
 NSString *const kMXEventTypeStringRoomThirdPartyInvite  = @"m.room.third_party_invite";
 NSString *const kMXEventTypeStringRoomRelatedGroups     = @"m.room.related_groups";
+NSString *const kMXEventTypeStringRoomPinnedEvents      = @"m.room.pinned_events";
 NSString *const kMXEventTypeStringRoomTag               = @"m.tag";
 NSString *const kMXEventTypeStringPresence              = @"m.presence";
 NSString *const kMXEventTypeStringTypingNotification    = @"m.typing";
@@ -58,14 +59,15 @@ NSString *const kMXEventTypeStringCallHangup            = @"m.call.hangup";
 NSString *const kMXEventTypeStringSticker               = @"m.sticker";
 NSString *const kMXEventTypeStringRoomTombStone         = @"m.room.tombstone";
 
-NSString *const kMXMessageTypeText      = @"m.text";
-NSString *const kMXMessageTypeEmote     = @"m.emote";
-NSString *const kMXMessageTypeNotice    = @"m.notice";
-NSString *const kMXMessageTypeImage     = @"m.image";
-NSString *const kMXMessageTypeAudio     = @"m.audio";
-NSString *const kMXMessageTypeVideo     = @"m.video";
-NSString *const kMXMessageTypeLocation  = @"m.location";
-NSString *const kMXMessageTypeFile      = @"m.file";
+NSString *const kMXMessageTypeText          = @"m.text";
+NSString *const kMXMessageTypeEmote         = @"m.emote";
+NSString *const kMXMessageTypeNotice        = @"m.notice";
+NSString *const kMXMessageTypeImage         = @"m.image";
+NSString *const kMXMessageTypeAudio         = @"m.audio";
+NSString *const kMXMessageTypeVideo         = @"m.video";
+NSString *const kMXMessageTypeLocation      = @"m.location";
+NSString *const kMXMessageTypeFile          = @"m.file";
+NSString *const kMXMessageTypeServerNotice  = @"m.server_notice";
 
 NSString *const kMXEventLocalEventIdPrefix = @"kMXEventLocalId_";
 

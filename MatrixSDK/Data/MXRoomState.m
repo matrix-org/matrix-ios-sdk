@@ -337,6 +337,17 @@
     return (0 != self.encryptionAlgorithm.length);
 }
 
+- (NSArray<NSString *> *)pinnedEvents
+{
+    NSArray<NSString *> *pinnedEvents;
+
+    // Check them the m.room.pinned_events event
+    MXEvent *event = stateEvents[kMXEventTypeStringRoomPinnedEvents].lastObject;
+    MXJSONModelSetArray(pinnedEvents, [self contentOfEvent:event][@"pinned"]);
+
+    return pinnedEvents;
+}
+
 - (NSString *)encryptionAlgorithm
 {
     return stateEvents[kMXEventTypeStringRoomEncryption].lastObject.content[@"algorithm"];

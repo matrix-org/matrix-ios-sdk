@@ -42,7 +42,7 @@
 
 #pragma mark - Constants definitions
 
-const NSString *MatrixSDKVersion = @"0.11.4";
+const NSString *MatrixSDKVersion = @"0.11.5";
 NSString *const kMXSessionStateDidChangeNotification = @"kMXSessionStateDidChangeNotification";
 NSString *const kMXSessionNewRoomNotification = @"kMXSessionNewRoomNotification";
 NSString *const kMXSessionWillLeaveRoomNotification = @"kMXSessionWillLeaveRoomNotification";
@@ -2217,6 +2217,42 @@ typedef void (^MXOnResumeDone)(void);
         onComplete();
     });
 }
+
+
+#pragma mark - Matrix Events
+- (MXHTTPOperation*)eventWithEventId:(NSString*)eventId
+                              inRoom:(NSString *)roomId
+                             success:(void (^)(MXEvent *event))success
+                             failure:(void (^)(NSError *error))failure
+{
+    MXHTTPOperation *operation;
+
+    if (roomId)
+    {
+        // Try to find it from the store first
+        // (this operation requires a roomId for the moment)
+        MXEvent *event = [_store eventWithEventId:eventId inRoom:roomId];
+
+        if (event)
+        {
+            if (success)
+            {
+                success(event);
+            }
+        }
+        else
+        {
+            operation = [matrixRestClient eventWithEventId:eventId inRoom:roomId success:success failure:failure];
+        }
+    }
+    else
+    {
+        operation = [matrixRestClient eventWithEventId:eventId success:success failure:failure];
+    }
+
+    return operation;
+}
+
 
 #pragma mark - Rooms summaries
 - (MXRoomSummary *)roomSummaryWithRoomId:(NSString*)roomId
