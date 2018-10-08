@@ -50,11 +50,6 @@ NSString* const kMXHTTPClientUserConsentNotGivenErrorNotificationConsentURIKey =
     AFHTTPSessionManager *httpManager;
 
     /**
-     If defined, append it to the requested URL.
-     */
-    NSString *accessToken;
-
-    /**
      The main observer to AFNetworking reachability.
      */
     id reachabilityObserver;
@@ -91,13 +86,11 @@ NSString* const kMXHTTPClientUserConsentNotGivenErrorNotificationConsentURIKey =
     return [self initWithBaseURL:baseURL accessToken:nil andOnUnrecognizedCertificateBlock:onUnrecognizedCertBlock];
 }
 
--(id)initWithBaseURL:(NSString *)baseURL accessToken:(NSString *)access_token andOnUnrecognizedCertificateBlock:(MXHTTPClientOnUnrecognizedCertificate)onUnrecognizedCertBlock
+-(id)initWithBaseURL:(NSString *)baseURL accessToken:(NSString *)accessToken andOnUnrecognizedCertificateBlock:(MXHTTPClientOnUnrecognizedCertificate)onUnrecognizedCertBlock
 {
     self = [super init];
     if (self)
     {
-        accessToken = access_token;
-
         httpManager = [[AFHTTPSessionManager alloc] initWithBaseURL:[NSURL URLWithString:baseURL]];
 
         [self setDefaultSecurityPolicy];
@@ -110,11 +103,17 @@ NSString* const kMXHTTPClientUserConsentNotGivenErrorNotificationConsentURIKey =
             backgroundTaskIdentifier = [handler invalidIdentifier];
         }
 
+        // Send requests parameters in JSON format by default
+        self.requestParametersInJSON = YES;
+
         // No need for caching. The sdk caches the data it needs
         [httpManager.requestSerializer setCachePolicy:NSURLRequestReloadIgnoringLocalCacheData];
 
-        // Send requests parameters in JSON format by default
-        self.requestParametersInJSON = YES;
+        // No need for caching. The sdk caches the data it needs
+        if (accessToken)
+        {
+            [httpManager.requestSerializer setValue:[NSString stringWithFormat:@"Bearer %@", accessToken] forHTTPHeaderField:@"Authorization"];
+        }
 
         [self setUpNetworkReachibility];
         [self setUpSSLCertificatesHandler];
@@ -194,14 +193,6 @@ NSString* const kMXHTTPClientUserConsentNotGivenErrorNotificationConsentURIKey =
         return;
     }
 
-    // If an access token is set, use it
-    if (accessToken && (0 == [path rangeOfString:@"access_token="].length))
-    {
-        // Use '&' if there is already an url separator
-        NSString *urlSeparator = [path rangeOfString:@"?"].length ? @"&" : @"?";
-        path = [path stringByAppendingString:[NSString stringWithFormat:@"%@access_token=%@", urlSeparator, accessToken]];
-    }
-    
     NSString *URLString = [[NSURL URLWithString:path relativeToURL:httpManager.baseURL] absoluteString];
     
     NSMutableURLRequest *request;
@@ -241,7 +232,7 @@ NSString* const kMXHTTPClientUserConsentNotGivenErrorNotificationConsentURIKey =
         if (!weakself)
         {
             // Log which request failed because of a potentiel unexpected object release
-            [MXHTTPClient logRequestFailure:mxHTTPOperation path:path statusCode:response.statusCode accessToken:self->accessToken error:error];
+            [MXHTTPClient logRequestFailure:mxHTTPOperation path:path statusCode:response.statusCode error:error];
         }
         MXStrongifyAndReturnIfNil(self);
 
@@ -264,7 +255,7 @@ NSString* const kMXHTTPClientUserConsentNotGivenErrorNotificationConsentURIKey =
         }
         else
         {
-            [MXHTTPClient logRequestFailure:mxHTTPOperation path:path statusCode:response.statusCode accessToken:self->accessToken error:error];
+            [MXHTTPClient logRequestFailure:mxHTTPOperation path:path statusCode:response.statusCode error:error];
 
             if (response)
             {
@@ -751,34 +742,9 @@ NSString* const kMXHTTPClientUserConsentNotGivenErrorNotificationConsentURIKey =
 + (void)logRequestFailure:(MXHTTPOperation*)mxHTTPOperation
                      path:(NSString*)path
                statusCode:(NSUInteger)statusCode
-              accessToken:(NSString*)accessToken
                     error:(NSError*)error
 {
-#if DEBUG
-    NSLog(@"[MXHTTPClient] Request %p failed for path: %@ - HTTP code: %@", mxHTTPOperation, path, @(statusCode));
-    NSLog(@"[MXHTTPClient] error: %@", error);
-#else
-    // Hide access token in printed path
-    NSMutableString *printedPath = [NSMutableString stringWithString:path];
-    if (accessToken)
-    {
-        NSRange range = [path rangeOfString:accessToken];
-        if (range.location != NSNotFound)
-        {
-            [printedPath replaceCharactersInRange:range withString:@"<redacted>"];
-        }
-    }
-    NSLog(@"[MXHTTPClient] Request %p failed for path: %@ - HTTP code: %@", mxHTTPOperation, printedPath, @(statusCode));
-
-    if (error.userInfo[NSLocalizedDescriptionKey])
-    {
-        NSLog(@"[MXHTTPClient] error domain: %@, code:%zd, description: %@", error.domain, error.code, error.userInfo[NSLocalizedDescriptionKey]);
-    }
-    else
-    {
-        NSLog(@"[MXHTTPClient] error domain: %@, code:%zd", error.domain, error.code);
-    }
-#endif
+    NSLog(@"[MXHTTPClient] Request %p failed for path: %@ - HTTP code: %@. Error: %@", mxHTTPOperation, path, @(statusCode), error);
 }
 
 
