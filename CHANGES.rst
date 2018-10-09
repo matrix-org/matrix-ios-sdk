@@ -1,3 +1,9 @@
+Changes in Matrix iOS SDK in 0.11.6 (2018-10-)
+===============================================
+
+Improvements:
+MXHTTPClient: Send Access-Token as header instead of query param (vector-im/riot-ios/issues/2071).
+
 Changes in Matrix iOS SDK in 0.11.5 (2018-10-05)
 ===============================================
 
