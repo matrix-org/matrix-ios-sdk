@@ -168,6 +168,13 @@ NSString *uisiString = @"The sender's device has not sent us the keys for this m
     return [updater session:session updateRoomSummary:summary withStateEvents:stateEvents roomState:roomState];
 }
 
+- (BOOL)session:(MXSession *)session updateRoomSummary:(MXRoomSummary *)summary withServerRoomSummary:(MXRoomSyncSummary *)serverRoomSummary roomState:(MXRoomState *)roomState
+{
+    // Do a classic update
+    MXRoomSummaryUpdater *updater = [MXRoomSummaryUpdater roomSummaryUpdaterForSession:session];
+    return [updater session:session updateRoomSummary:summary withServerRoomSummary:serverRoomSummary roomState:roomState];
+}
+
 - (void)test
 {
     [matrixSDKTestsData doMXSessionTestWithBobAndARoomWithMessages:self readyToTest:^(MXSession *mxSession, MXRoom *room, XCTestExpectation *expectation) {
