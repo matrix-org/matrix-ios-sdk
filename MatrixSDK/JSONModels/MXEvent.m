@@ -162,9 +162,9 @@ NSString *const kMXEventIdentifierKey = @"kMXEventIdentifierKey";
             MXJSONModelSetDictionary(event.redactedBecause, event.unsignedData[@"redacted_because"]);
         }
         
-        if (JSONDictionary[@"invite_room_state"])
+        if (JSONDictionary[@"unsigned"][@"invite_room_state"])
         {
-            MXJSONModelSetMXJSONModelArray(event.inviteRoomState, MXEvent, JSONDictionary[@"invite_room_state"]);
+            MXJSONModelSetMXJSONModelArray(event.inviteRoomState, MXEvent, JSONDictionary[@"unsigned"][@"invite_room_state"]);
         }
 
         [event finalise];

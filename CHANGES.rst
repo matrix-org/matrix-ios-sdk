@@ -4,6 +4,9 @@ Changes in Matrix iOS SDK in 0.11.6 (2018-10-)
 Improvements:
 MXHTTPClient: Send Access-Token as header instead of query param (vector-im/riot-ios/issues/2071).
 
+Bug fix:
+* MXEvent: Move `invite_room_state` to the correct place in the client-server API (vector-im/riot-ios/issues/2010).
+
 Changes in Matrix iOS SDK in 0.11.5 (2018-10-05)
 ===============================================
 

@@ -26,10 +26,10 @@ Pod::Spec.new do |s|
   s.requires_arc  = true
 
   s.dependency 'AFNetworking', '~> 3.2.0'
-  s.dependency 'GZIP', '~> 1.2.1'
+  s.dependency 'GZIP', '~> 1.2.2'
   
   # Requirements for e2e encryption
   s.dependency 'OLMKit', '~> 2.2.2'
-  s.dependency 'Realm', '~> 3.9.0'
+  s.dependency 'Realm', '~> 3.11.0'
 
 end
