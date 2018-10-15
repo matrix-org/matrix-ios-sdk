@@ -1607,6 +1607,27 @@ typedef void (^MXOnResumeDone)(void);
 
 - (void)onCreatedDirectChat:(MXCreateRoomResponse*)response withUserId:(NSString*)userId success:(void (^)(MXRoom *room))success
 {
+    void (^tagRoomAsDirectChat)(MXRoom *) = ^(MXRoom *room) {
+        
+        // Tag the room as direct
+        [room setIsDirect:YES withUserId:userId success:^{
+            
+            if (success)
+            {
+                success(room);
+            }
+            
+        } failure:^(NSError *error) {
+            
+            NSLog(@"[MXSession] Failed to tag the room (%@) as a direct chat", response.roomId);
+            
+            if (success)
+            {
+                success(room);
+            }
+        }];
+    };
+    
     // Wait to receive data from /sync about this room before returning
     // CAUTION: The initial sync may not contain the invited member, they may be received later during the next sync.
     MXRoom *room = [self roomWithRoomId:response.roomId];
@@ -1619,16 +1640,7 @@ typedef void (^MXOnResumeDone)(void);
         // homeserver answer to the createRoom request.
         
         // Tag the room as direct
-        [room setIsDirect:YES withUserId:userId success:nil failure:^(NSError *error) {
-            
-            NSLog(@"[MXSession] Failed to tag the room (%@) as a direct chat", response.roomId);
-            
-        }];
-        
-        if (success)
-        {
-            success(room);
-        }
+        tagRoomAsDirectChat(room);
     }
     else
     {
@@ -1645,16 +1657,7 @@ typedef void (^MXOnResumeDone)(void);
                 [room markAllAsRead];
                 
                 // Tag the room as direct
-                [room setIsDirect:YES withUserId:userId success:nil failure:^(NSError *error) {
-                    
-                    NSLog(@"[MXSession] Failed to tag the room (%@) as a direct chat", response.roomId);
-                    
-                }];
-                
-                if (success)
-                {
-                    success(room);
-                }
+                tagRoomAsDirectChat(room);
                 
                 [[NSNotificationCenter defaultCenter] removeObserver:initialSyncObserver];
             }
