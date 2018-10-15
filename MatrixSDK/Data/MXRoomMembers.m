@@ -65,6 +65,18 @@
     return [self membersWithMembership:MXMembershipJoin];
 }
 
+- (NSArray<MXRoomMember *> *)encryptionTargetMembers:(MXRoomHistoryVisibility)historyVisibility
+{
+    // Retrieve first the joined members
+    NSMutableArray *encryptionTargetMembers = [NSMutableArray arrayWithArray:[self membersWithMembership:MXMembershipJoin]];
+    // Check whether we should encrypt for the invited members too
+    if (![historyVisibility isEqualToString:kMXRoomHistoryVisibilityJoined])
+    {
+        [encryptionTargetMembers addObjectsFromArray:[self membersWithMembership:MXMembershipInvite]];
+    }
+    return encryptionTargetMembers;
+}
+
 #pragma mark - Memberships
 - (MXRoomMember*)memberWithUserId:(NSString *)userId
 {

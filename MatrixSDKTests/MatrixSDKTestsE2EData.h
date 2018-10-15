@@ -56,6 +56,18 @@
                                bobStore:(id<MXStore>)bobStore
                             readyToTest:(void (^)(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation))readyToTest;
 
+- (void)doE2ETestWithAliceByInvitingBobInARoom:(XCTestCase*)testCase
+                                    cryptedBob:(BOOL)cryptedBob
+                           warnOnUnknowDevices:(BOOL)warnOnUnknowDevices
+                                   readyToTest:(void (^)(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation))readyToTest;
+
+- (void)doE2ETestWithAliceByInvitingBobInARoom:(XCTestCase*)testCase
+                                    cryptedBob:(BOOL)cryptedBob
+                           warnOnUnknowDevices:(BOOL)warnOnUnknowDevices
+                                    aliceStore:(id<MXStore>)aliceStore
+                                      bobStore:(id<MXStore>)bobStore
+                                   readyToTest:(void (^)(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation))readyToTest;
+
 - (void)doE2ETestWithAliceAndBobInARoomWithCryptedMessages:(XCTestCase*)testCase
                                                 cryptedBob:(BOOL)cryptedBob
                                                readyToTest:(void (^)(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation))readyToTest;
