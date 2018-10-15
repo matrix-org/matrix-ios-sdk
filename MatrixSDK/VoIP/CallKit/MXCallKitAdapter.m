@@ -192,7 +192,14 @@ NSString * const kMXCallKitAdapterAudioSessionDidActive = @"kMXCallKitAdapterAud
 
 + (BOOL)callKitAvailable
 {
-    return [NSProcessInfo.processInfo isOperatingSystemAtLeastVersion:(NSOperatingSystemVersion){10,0,0}];
+	if (@available(iOS 10.0, *)) {
+		// CallKit currently illegal in China
+		// https://github.com/vector-im/riot-ios/issues/1941
+
+		return ![NSLocale.currentLocale.countryCode isEqual: @"CN"];
+	}
+
+	return false;
 }
 
 #pragma mark - CXProviderDelegate
