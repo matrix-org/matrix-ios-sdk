@@ -337,7 +337,6 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
     // TODO: there is a race condition here! What if a new user turns up
     // just as you are sending a secret message?
 
-    // XXX what about rooms where invitees can see the content?
     MXWeakify(self);
     [room state:^(MXRoomState *roomState) {
         MXStrongifyAndReturnIfNil(self);
@@ -347,7 +346,8 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
             MXStrongifyAndReturnIfNil(self);
 
             NSMutableArray *userIds = [NSMutableArray array];
-            for (MXRoomMember *roomMember in roomMembers.joinedMembers)
+            NSArray<MXRoomMember *> *encryptionTargetMembers = [roomMembers encryptionTargetMembers:roomState.historyVisibility];
+            for (MXRoomMember *roomMember in encryptionTargetMembers)
             {
                 [userIds addObject:roomMember.userId];
             }
@@ -472,7 +472,6 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
                                    success:(void (^)(void))success
                                    failure:(void (^)(NSError *error))failure
 {
-
     // Create an empty operation that will be mutated later
     MXHTTPOperation *operation = [[MXHTTPOperation alloc] init];
 
@@ -490,7 +489,8 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
 
                 // Get user ids in this room
                 NSMutableArray *userIds = [NSMutableArray array];
-                for (MXRoomMember *member in roomMembers.joinedMembers)
+                NSArray<MXRoomMember *> *encryptionTargetMembers = [roomMembers encryptionTargetMembers:roomState.historyVisibility];
+                for (MXRoomMember *member in encryptionTargetMembers)
                 {
                     [userIds addObject:member.userId];
                 }
@@ -1909,12 +1909,13 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
     MXRoom *room = [_mxSession roomWithRoomId:event.roomId];
 
     MXWeakify(self);
-    void (^success)(MXRoomMembers *roomMembers) = ^void(MXRoomMembers *roomMembers)
+    void (^success)(MXRoomMembers *roomMembers, MXRoomState *roomState) = ^void(MXRoomMembers *roomMembers, MXRoomState *roomState)
     {
         MXStrongifyAndReturnIfNil(self);
 
         NSMutableArray *members = [NSMutableArray array];
-        for (MXRoomMember *roomMember in roomMembers.joinedMembers)
+        NSArray<MXRoomMember *> *encryptionTargetMembers = [roomMembers encryptionTargetMembers:roomState.historyVisibility];
+        for (MXRoomMember *roomMember in encryptionTargetMembers)
         {
             [members addObject:roomMember.userId];
         }
@@ -1926,14 +1927,13 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
             });
         }
     };
-
-    [room members:^(MXRoomMembers *roomMembers) {
-        success(roomMembers);
-    } failure:^(NSError *error) {
-        NSLog(@"[MXCrypto] onCryptoEvent: Warning: Unable to get all members from the HS. Fallback by using lazy-loaded members");
-
-        [room state:^(MXRoomState *roomState) {
-            success(roomState.members);
+    
+    [room state:^(MXRoomState *roomState) {
+        [room members:^(MXRoomMembers *roomMembers) {
+            success(roomMembers, roomState);
+        } failure:^(NSError *error) {
+            NSLog(@"[MXCrypto] onCryptoEvent: Warning: Unable to get all members from the HS. Fallback by using lazy-loaded members");
+            success(roomState.members, roomState);
         }];
     }];
 }
@@ -1953,23 +1953,39 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
         return;
     }
 
+    // Check whether we have to track the devices for this user.
+    BOOL shouldTrack = NO;
     NSString *userId = event.stateKey;
     MXRoomMember *member = [roomState.members memberWithUserId:userId];
-
-    if (member && member.membership == MXMembershipJoin)
+    if (member)
     {
-        NSLog(@"[MXCrypto] onRoomMembership: Join event for %@ in %@", member.userId, event.roomId);
-
-        if (self.cryptoQueue)
+        if (member.membership == MXMembershipJoin)
         {
-            MXWeakify(self);
-            dispatch_async(self.cryptoQueue, ^{
-                MXStrongifyAndReturnIfNil(self);
-
-                // make sure we are tracking the deviceList for this user
-                [self.deviceList startTrackingDeviceList:member.userId ];
-            });
+            NSLog(@"[MXCrypto] onRoomMembership: Join event for %@ in %@", member.userId, event.roomId);
+            shouldTrack = YES;
         }
+        // Check whether we should encrypt for the invited members too
+        else if (member.membership == MXMembershipInvite && ![roomState.historyVisibility isEqualToString:kMXRoomHistoryVisibilityJoined])
+        {
+            // track the deviceList for this invited user.
+            // Caution: there's a big edge case here in that federated servers do not
+            // know what other servers are in the room at the time they've been invited.
+            // They therefore will not send device updates if a user logs in whilst
+            // their state is invite.
+            NSLog(@"[MXCrypto] onRoomMembership: Invite event for %@ in %@", member.userId, event.roomId);
+            shouldTrack = YES;
+        }
+    }
+    
+    if (shouldTrack && self.cryptoQueue)
+    {
+        MXWeakify(self);
+        dispatch_async(self.cryptoQueue, ^{
+            MXStrongifyAndReturnIfNil(self);
+            
+            // make sure we are tracking the deviceList for this user
+            [self.deviceList startTrackingDeviceList:member.userId];
+        });
     }
 }
 
