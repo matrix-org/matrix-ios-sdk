@@ -1609,8 +1609,12 @@ typedef void (^MXOnResumeDone)(void);
 {
     void (^tagRoomAsDirectChat)(MXRoom *) = ^(MXRoom *room) {
         
+        MXWeakify(room);
+        
         // Tag the room as direct
         [room setIsDirect:YES withUserId:userId success:^{
+            
+            MXStrongifyAndReturnIfNil(room);
             
             if (success)
             {
@@ -1618,6 +1622,10 @@ typedef void (^MXOnResumeDone)(void);
             }
             
         } failure:^(NSError *error) {
+            
+            MXStrongifyAndReturnIfNil(room);
+            
+            // TODO: Find a way to handle direct tag failure and report this error in room creation failure block.
             
             NSLog(@"[MXSession] Failed to tag the room (%@) as a direct chat", response.roomId);
             
