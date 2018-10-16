@@ -199,7 +199,7 @@ NSString * const kMXCallKitAdapterAudioSessionDidActive = @"kMXCallKitAdapterAud
 		return ![NSLocale.currentLocale.countryCode isEqual: @"CN"];
 	}
 
-	return false;
+	return NO;
 }
 
 #pragma mark - CXProviderDelegate
