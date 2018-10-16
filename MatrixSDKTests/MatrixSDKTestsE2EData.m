@@ -159,6 +159,45 @@
     }];
 }
 
+- (void)doE2ETestWithAliceByInvitingBobInARoom:(XCTestCase*)testCase
+                             cryptedBob:(BOOL)cryptedBob
+                    warnOnUnknowDevices:(BOOL)warnOnUnknowDevices
+                            readyToTest:(void (^)(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation))readyToTest
+{
+    [self doE2ETestWithAliceByInvitingBobInARoom:testCase cryptedBob:cryptedBob warnOnUnknowDevices:warnOnUnknowDevices aliceStore:[[MXNoStore alloc] init] bobStore:[[MXNoStore alloc] init] readyToTest:readyToTest];
+}
+
+- (void)doE2ETestWithAliceByInvitingBobInARoom:(XCTestCase*)testCase
+                             cryptedBob:(BOOL)cryptedBob
+                    warnOnUnknowDevices:(BOOL)warnOnUnknowDevices
+                             aliceStore:(id<MXStore>)aliceStore
+                               bobStore:(id<MXStore>)bobStore
+                            readyToTest:(void (^)(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation))readyToTest
+{
+    [self doE2ETestWithAliceInARoom:testCase andStore:aliceStore readyToTest:^(MXSession *aliceSession, NSString *roomId, XCTestExpectation *expectation) {
+        
+        MXRoom *room = [aliceSession roomWithRoomId:roomId];
+        
+        [MXSDKOptions sharedInstance].enableCryptoWhenStartingMXSession = cryptedBob;
+        
+        [matrixSDKTestsData doMXSessionTestWithBob:nil andStore:bobStore readyToTest:^(MXSession *bobSession, XCTestExpectation *expectation2) {
+            
+            [MXSDKOptions sharedInstance].enableCryptoWhenStartingMXSession = NO;
+            
+            aliceSession.crypto.warnOnUnknowDevices = warnOnUnknowDevices;
+            bobSession.crypto.warnOnUnknowDevices = warnOnUnknowDevices;
+            
+            [room inviteUser:bobSession.myUser.userId success:^{
+                readyToTest(aliceSession, bobSession, room.roomId, expectation);
+            } failure:^(NSError *error) {
+                NSAssert(NO, @"Cannot invite Bob (%@) - error: %@", bobSession.myUser.userId, error);
+            }];
+            
+        }];
+        
+    }];
+}
+
 - (void)doE2ETestWithAliceAndBobInARoomWithCryptedMessages:(XCTestCase*)testCase
                                                 cryptedBob:(BOOL)cryptedBob
                                                readyToTest:(void (^)(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation))readyToTest

@@ -24,6 +24,8 @@
 @interface MXRoomMemberTests : XCTestCase
 {
     MatrixSDKTestsData *matrixSDKTestsData;
+    
+    MXSession *mxSession;
 }
 @end
 
@@ -38,6 +40,12 @@
 
 - (void)tearDown
 {
+    if (mxSession)
+    {
+        [mxSession close];
+        mxSession = nil;
+    }
+    
     matrixSDKTestsData = nil;
     
     [super tearDown];
@@ -76,6 +84,110 @@
         } failure:^(NSError *error) {
             XCTFail(@"The request should not fail - NSError: %@", error);
             [expectation fulfill];
+        }];
+    }];
+}
+
+- (void)testEncryptionTargetMembersWithoutInvitedMember
+{
+    [matrixSDKTestsData doMXSessionTestWithBobAndAliceInARoom:self readyToTest:^(MXSession *bobSession, MXRestClient *aliceRestClient, NSString *roomId, XCTestExpectation *expectation) {
+        MXRoom *room = [bobSession roomWithRoomId:roomId];
+        
+        [room state:^(MXRoomState *roomState) {
+            [room members:^(MXRoomMembers *roomMembers) {
+                NSArray *encryptionTargetMembers = [roomMembers encryptionTargetMembers:roomState.historyVisibility];
+                XCTAssertEqual(encryptionTargetMembers.count, 2, @"Encryption target members should include all the joined members");
+                [expectation fulfill];
+                
+            } failure:^(NSError *error) {
+                XCTFail(@"The request should not fail - NSError: %@", error);
+                [expectation fulfill];
+            }];
+        }];
+        
+    }];
+}
+
+// Test the list of members we should be encrypting for when there is some invited members and the room history visibility is enabled for invited members.
+- (void)testEncryptionTargetMembersWithInvitedMemberAndkRoomHistoryVisibilityInvited
+{
+    [matrixSDKTestsData doMXSessionTestWithBobAndARoomWithMessages:self readyToTest:^(MXSession *bobSession, MXRoom *room, XCTestExpectation *expectation) {
+        
+        [matrixSDKTestsData doMXRestClientTestWithAlice:nil readyToTest:^(MXRestClient *aliceRestClient, XCTestExpectation *expectation2) {
+            
+            // We will force the room history visibility for invited members.
+            [bobSession.matrixRestClient setRoomHistoryVisibility:room.roomId historyVisibility:kMXRoomHistoryVisibilityInvited success:^{
+                
+                // Listen to the invitation for Alice
+                [bobSession listenToEventsOfTypes:@[kMXEventTypeStringRoomMember] onEvent:^(MXEvent *event, MXTimelineDirection direction, id customObject) {
+                    
+                    // Check whether Alice belongs to the encryption target members
+                    [room state:^(MXRoomState *roomState) {
+                        [room members:^(MXRoomMembers *roomMembers) {
+                            NSArray *encryptionTargetMembers = [roomMembers encryptionTargetMembers:roomState.historyVisibility];
+                            XCTAssertEqual(encryptionTargetMembers.count, 2, @"Encryption target members should include bob and alice");
+                            [expectation fulfill];
+                            
+                        } failure:^(NSError *error) {
+                            XCTFail(@"The request should not fail - NSError: %@", error);
+                            [expectation fulfill];
+                        }];
+                    }];
+                    
+                }];
+                
+                // Send the invitation
+                [bobSession.matrixRestClient inviteUser:aliceRestClient.credentials.userId toRoom:room.roomId success:nil failure:^(NSError *error) {
+                    XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                    [expectation fulfill];
+                }];
+                
+            } failure:^(NSError *error) {
+                XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                [expectation fulfill];
+            }];
+        }];
+    }];
+}
+
+// Test the list of members we should be encrypting for when there is some invited members and the room history visibility is not enabled for invited members.
+- (void)testEncryptionTargetMembersWithInvitedMemberAndkRoomHistoryVisibilityJoined
+{
+    [matrixSDKTestsData doMXSessionTestWithBobAndARoomWithMessages:self readyToTest:^(MXSession *bobSession, MXRoom *room, XCTestExpectation *expectation) {
+        
+        [matrixSDKTestsData doMXRestClientTestWithAlice:nil readyToTest:^(MXRestClient *aliceRestClient, XCTestExpectation *expectation2) {
+            
+            // We will force the room history visibility for joined members.
+            [bobSession.matrixRestClient setRoomHistoryVisibility:room.roomId historyVisibility:kMXRoomHistoryVisibilityJoined success:^{
+                
+                // Listen to the invitation for Alice
+                [bobSession listenToEventsOfTypes:@[kMXEventTypeStringRoomMember] onEvent:^(MXEvent *event, MXTimelineDirection direction, id customObject) {
+                    
+                    // Check whether Alice doesn't belong to the encryption target members
+                    [room state:^(MXRoomState *roomState) {
+                        [room members:^(MXRoomMembers *roomMembers) {
+                            NSArray *encryptionTargetMembers = [roomMembers encryptionTargetMembers:roomState.historyVisibility];
+                            XCTAssertEqual(encryptionTargetMembers.count, 1, "There must be only one member: mxBob");
+                            [expectation fulfill];
+                            
+                        } failure:^(NSError *error) {
+                            XCTFail(@"The request should not fail - NSError: %@", error);
+                            [expectation fulfill];
+                        }];
+                    }];
+                    
+                }];
+                
+                // Send the invitation
+                [bobSession.matrixRestClient inviteUser:aliceRestClient.credentials.userId toRoom:room.roomId success:nil failure:^(NSError *error) {
+                    XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                    [expectation fulfill];
+                }];
+                
+            } failure:^(NSError *error) {
+                XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                [expectation fulfill];
+            }];
         }];
     }];
 }
