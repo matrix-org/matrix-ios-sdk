@@ -2689,7 +2689,6 @@ MXAuthAction;
                                          __block NSString *avatarUrl;
                                          [self dispatchProcessing:^{
                                              NSDictionary *cleanedJSONResponse = [MXJSONModel removeNullValuesInJSON:JSONResponse];
-                                             NSString *avatarUrl;
                                              MXJSONModelSetString(avatarUrl, cleanedJSONResponse[@"avatar_url"]);
                                          } andCompletion:^{
                                              success(avatarUrl);
