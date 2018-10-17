@@ -26,8 +26,8 @@
     if (keyBackupVersion)
     {
         MXJSONModelSetString(keyBackupVersion.algorithm, JSONDictionary[@"algorithm"]);
-        MXJSONModelSetDictionary(keyBackupVersion.authData, JSONDictionary[@"authData"]);
-        MXJSONModelSetInteger(keyBackupVersion.version, JSONDictionary[@"deviceInfo"]);
+        MXJSONModelSetDictionary(keyBackupVersion.authData, JSONDictionary[@"auth_data"]);
+        MXJSONModelSetString(keyBackupVersion.version, JSONDictionary[@"version"]);
     }
 
     return keyBackupVersion;
@@ -38,8 +38,11 @@
     NSMutableDictionary *JSONDictionary = [NSMutableDictionary dictionary];
 
     JSONDictionary[@"algorithm"] = _algorithm;
-    JSONDictionary[@"authData"] = _authData;
-    JSONDictionary[@"version"] = @(_version);
+    JSONDictionary[@"auth_data"] = _authData;
+    if (_version)
+    {
+        JSONDictionary[@"version"] = _version;
+    }
 
     return JSONDictionary;
 }

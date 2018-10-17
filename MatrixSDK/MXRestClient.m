@@ -3819,6 +3819,59 @@ MXAuthAction;
 }
 
 
+#pragma mark - Crypto: e2e keys backup
+- (MXHTTPOperation*)createKeyBackupVersion:(MXKeyBackupVersion*)keyBackupVersion
+                                   success:(void (^)(NSString *version))success
+                                   failure:(void (^)(NSError *error))failure
+{
+    MXWeakify(self);
+    return [httpClient requestWithMethod:@"POST"
+                                    path:[NSString stringWithFormat:@"%@/room_keys/version", kMXAPIPrefixPathUnstable]
+                              parameters:keyBackupVersion.JSONDictionary
+                                 success:^(NSDictionary *JSONResponse) {
+                                     MXStrongifyAndReturnIfNil(self);
+
+                                     if (success)
+                                     {
+                                         __block NSString *version;
+                                         [self dispatchProcessing:^{
+                                             MXJSONModelSetString(version, JSONResponse[@"version"]);
+                                         } andCompletion:^{
+                                             success(version);
+                                         }];
+                                     }
+                                 } failure:^(NSError *error) {
+                                     MXStrongifyAndReturnIfNil(self);
+                                     [self dispatchFailure:error inBlock:failure];
+                                 }];
+}
+
+- (MXHTTPOperation*)keyBackupVersion:(void (^)(MXKeyBackupVersion *keyBackupVersion))success
+                             failure:(void (^)(NSError *error))failure
+{
+    MXWeakify(self);
+    return [httpClient requestWithMethod:@"GET"
+                                    path:[NSString stringWithFormat:@"%@/room_keys/version", kMXAPIPrefixPathUnstable]
+                              parameters:nil
+                                 success:^(NSDictionary *JSONResponse) {
+                                     MXStrongifyAndReturnIfNil(self);
+
+                                     if (success)
+                                     {
+                                         __block MXKeyBackupVersion *keyBackupVersion;
+                                         [self dispatchProcessing:^{
+                                             MXJSONModelSetMXJSONModel(keyBackupVersion, MXKeyBackupVersion, JSONResponse);
+                                         } andCompletion:^{
+                                             success(keyBackupVersion);
+                                         }];
+                                     }
+                                 } failure:^(NSError *error) {
+                                     MXStrongifyAndReturnIfNil(self);
+                                     [self dispatchFailure:error inBlock:failure];
+                                 }];
+}
+
+
 #pragma mark - Direct-to-device messaging
 - (MXHTTPOperation*)sendToDevice:(NSString*)eventType contentMap:(MXUsersDevicesMap<NSDictionary*>*)contentMap
                            txnId:(NSString*)txnId

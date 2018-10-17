@@ -2054,6 +2054,33 @@ typedef enum : NSUInteger
                            failure:(void (^)(NSError *error))failure;
 
 
+#pragma mark - Crypto: e2e keys backup
+
+/**
+ Create a new backup version.
+
+ @param keyBackupVersion backup information.
+
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)createKeyBackupVersion:(MXKeyBackupVersion*)keyBackupVersion
+                                   success:(void (^)(NSString *version))success
+                                   failure:(void (^)(NSError *error))failure;
+
+/**
+ Get information about the current version.
+
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)keyBackupVersion:(void (^)(MXKeyBackupVersion *keyBackupVersion))success
+                             failure:(void (^)(NSError *error))failure;
+
 #pragma mark - Direct-to-device messaging
 /**
  Send an event to a specific list of devices
@@ -2071,6 +2098,7 @@ typedef enum : NSUInteger
                            txnId:(NSString*)txnId
                          success:(void (^)(void))success
                          failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
+
 
 #pragma mark - Device Management
 /**

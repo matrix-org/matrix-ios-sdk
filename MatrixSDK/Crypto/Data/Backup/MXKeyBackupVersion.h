@@ -39,7 +39,7 @@ NS_ASSUME_NONNULL_BEGIN
 /**
  The backup version.
  */
-@property (nonatomic) NSInteger version;
+@property (nonatomic, nullable) NSString *version;
 
 @end
 
