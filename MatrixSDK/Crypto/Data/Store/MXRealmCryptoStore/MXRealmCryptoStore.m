@@ -860,10 +860,26 @@ RLM_ARRAY_TYPE(MXRealmOlmInboundGroupSession)
     // will be called twice for the same room id which breaks the uniqueness of the
     // primary key (roomId) for this table.
     RLMRealmConfiguration *config = [RLMRealmConfiguration defaultConfiguration];
-    
+
+    NSURL *defaultRealmPathURL = config.fileURL.URLByDeletingLastPathComponent;
+
+#if TARGET_OS_SIMULATOR
+    // On simulator from iOS 11, the Documents folder used by Realm by default
+    // can be missing. Create it if required
+    // https://stackoverflow.com/a/50817364
+    if (![NSFileManager.defaultManager fileExistsAtPath:defaultRealmPathURL.path])
+    {
+        NSError *error;
+        [[NSFileManager defaultManager] createDirectoryAtPath:defaultRealmPathURL.path
+                                  withIntermediateDirectories:YES
+                                                   attributes:nil
+                                                        error:&error];
+        NSLog(@"[MXRealmCryptoStore] On simulator, create the file tree used by Realm. Error: %@", error);
+    }
+#endif
+
     // Default db file URL: use the default directory, but replace the filename with the userId.
-    NSURL *defaultRealmFileURL = [[[config.fileURL URLByDeletingLastPathComponent]
-                               URLByAppendingPathComponent:userId]
+    NSURL *defaultRealmFileURL = [[defaultRealmPathURL URLByAppendingPathComponent:userId]
                               URLByAppendingPathExtension:@"realm"];
     
     // Check for a potential application group id.

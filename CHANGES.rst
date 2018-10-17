@@ -1,3 +1,10 @@
+Changes in Matrix iOS SDK in 0.11.7 (2018-11-)
+===============================================
+
+Improvements:
+* Tests: Make MXRealmCryptoStore work the first time tests are launched on simulators for iOS 11 and higher.
+
+
 Changes in Matrix iOS SDK in 0.11.6 (2018-10-31)
 ===============================================
 
