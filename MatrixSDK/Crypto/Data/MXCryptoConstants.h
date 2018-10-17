@@ -27,6 +27,11 @@ FOUNDATION_EXPORT NSString *const kMXCryptoOlmAlgorithm;
  */
 FOUNDATION_EXPORT NSString *const kMXCryptoMegolmAlgorithm;
 
+/**
+ Matrix algorithm tag for megolm keys backup.
+ */
+FOUNDATION_EXPORT NSString *const kMXCryptoMegolmBackupAlgorithm;
+
 
 #pragma mark - Encrypting error
 
