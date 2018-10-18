@@ -2171,7 +2171,7 @@ typedef enum : NSUInteger
                            failure:(void (^)(NSError *error))failure;
 
 /**
- Retrive all keys backup from the homeserver.
+ Retrieve all keys backup from the homeserver.
 
  @param keysBackupData keys to backup.
  @param version the backup version.
@@ -2184,6 +2184,56 @@ typedef enum : NSUInteger
 - (MXHTTPOperation*)keysBackup:(NSString*)version
                        success:(void (^)(MXKeysBackupData *keysBackupData))success
                        failure:(void (^)(NSError *error))failure;
+
+/**
+ Delete the backup for a session key from the homeserver.
+
+ @param roomId the id of the room that the keys are for.
+ @param sessionId the id of the session that the keys are.
+ @param version the backup version.
+
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)deleteKeyFromBackup:(NSString*)roomId
+                                session:(NSString*)sessionId
+                                version:(NSString*)version
+                                success:(void (^)(void))success
+                                failure:(void (^)(NSError *error))failure;
+
+/**
+ Delete the backup for all keys in a room from the homeserver.
+
+ @param roomKeysBackupData keys to backup.
+ @param roomId the id of the room that the keys are for.
+ @param version the backup version.
+
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)deleteKeysInRoomFromBackup:(NSString*)roomId
+                                       version:(NSString*)version
+                                       success:(void (^)(void))success
+                                       failure:(void (^)(NSError *error))failure;
+
+/**
+ Delete all keys backup from the homeserver.
+
+ @param keysBackupData keys to backup.
+ @param version the backup version.
+
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)deleteKeysFromBackup:(NSString*)version
+                                 success:(void (^)(void))success
+                                 failure:(void (^)(NSError *error))failure;
 
 
 #pragma mark - Direct-to-device messaging

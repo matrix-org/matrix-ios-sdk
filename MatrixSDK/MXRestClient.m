@@ -4052,6 +4052,105 @@ MXAuthAction;
                                  }];
 }
 
+- (MXHTTPOperation*)deleteKeyFromBackup:(NSString*)roomId
+                                session:(NSString*)sessionId
+                                version:(NSString*)version
+                                success:(void (^)(void))success
+                                failure:(void (^)(NSError *error))failure
+{
+    NSString *path = [self keyBackupPath:roomId session:sessionId version:version];
+    if (!path || !roomId || !sessionId)
+    {
+        NSLog(@"[MXRestClient] deleteKeyFromBackup: ERROR: Bad parameters");
+        [self dispatchFailure:nil inBlock:failure];
+        return nil;
+    }
+
+    MXWeakify(self);
+    return [httpClient requestWithMethod:@"DELETE"
+                                    path:path
+                              parameters:nil
+                                 success:^(NSDictionary *JSONResponse) {
+                                     MXStrongifyAndReturnIfNil(self);
+
+                                     if (success)
+                                     {
+                                         [self dispatchProcessing:nil
+                                                    andCompletion:^{
+                                                        success();
+                                                    }];
+                                     }
+                                 } failure:^(NSError *error) {
+                                     MXStrongifyAndReturnIfNil(self);
+                                     [self dispatchFailure:error inBlock:failure];
+                                 }];
+}
+
+- (MXHTTPOperation*)deleteKeysInRoomFromBackup:(NSString*)roomId
+                                       version:(NSString*)version
+                                       success:(void (^)(void))success
+                                       failure:(void (^)(NSError *error))failure
+{
+    NSString *path = [self keyBackupPath:roomId session:nil version:version];
+    if (!path || !roomId)
+    {
+        NSLog(@"[MXRestClient] deleteKeysInRoomFromBackup: ERROR: Bad parameters");
+        [self dispatchFailure:nil inBlock:failure];
+        return nil;
+    }
+
+    MXWeakify(self);
+    return [httpClient requestWithMethod:@"DELETE"
+                                    path:path
+                              parameters:nil
+                                 success:^(NSDictionary *JSONResponse) {
+                                     MXStrongifyAndReturnIfNil(self);
+
+                                     if (success)
+                                     {
+                                         [self dispatchProcessing:nil
+                                                    andCompletion:^{
+                                                        success();
+                                                    }];
+                                     }
+                                 } failure:^(NSError *error) {
+                                     MXStrongifyAndReturnIfNil(self);
+                                     [self dispatchFailure:error inBlock:failure];
+                                 }];
+}
+
+- (MXHTTPOperation*)deleteKeysFromBackup:(NSString*)version
+                                 success:(void (^)(void))success
+                                 failure:(void (^)(NSError *error))failure
+{
+    NSString *path = [self keyBackupPath:nil session:nil version:version];
+    if (!path)
+    {
+        NSLog(@"[MXRestClient] keysBackup: ERROR: Bad parameters");
+        [self dispatchFailure:nil inBlock:failure];
+        return nil;
+    }
+
+    MXWeakify(self);
+    return [httpClient requestWithMethod:@"DELETE"
+                                    path:path
+                              parameters:nil
+                                 success:^(NSDictionary *JSONResponse) {
+                                     MXStrongifyAndReturnIfNil(self);
+
+                                     if (success)
+                                     {
+                                         [self dispatchProcessing:nil
+                                                    andCompletion:^{
+                                                        success();
+                                                    }];
+                                     }
+                                 } failure:^(NSError *error) {
+                                     MXStrongifyAndReturnIfNil(self);
+                                     [self dispatchFailure:error inBlock:failure];
+                                 }];
+}
+
 - (NSString*)keyBackupPath:(NSString*)roomId session:(NSString*)sessionId version:(NSString*)version
 {
     if (!version)

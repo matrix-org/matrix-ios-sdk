@@ -149,18 +149,90 @@
                     XCTFail(@"The request should not fail - NSError: %@", error);
                     [expectation fulfill];
                 }];
-
             } failure:^(NSError *error) {
                 XCTFail(@"The request should not fail - NSError: %@", error);
                 [expectation fulfill];
             }];
-
         } failure:^(NSError *error) {
             XCTFail(@"The request should not fail - NSError: %@", error);
             [expectation fulfill];
         }];
     }];
 }
+
+/**
+ - Create a backup version on the server
+ - Make a backup
+ - Delete it
+ - Get the backup back
+ -> Check it is now empty
+ */
+- (void)testRESTDeleteBackupKeys
+{
+    [matrixSDKTestsData doMXRestClientTestWithAlice:self readyToTest:^(MXRestClient *aliceRestClient, XCTestExpectation *expectation) {
+
+        // - Create a backup version on the server
+        MXKeyBackupVersion *keyBackupVersion =
+        [MXKeyBackupVersion modelFromJSON:@{
+                                            @"algorithm": kMXCryptoMegolmBackupAlgorithm,
+                                            @"auth_data": @{
+                                                    @"public_key": @"abcdefg",
+                                                    @"signatures": @{
+                                                            @"something": @{
+                                                                    @"ed25519:something": @"hijklmnop"
+                                                                    }
+                                                            }
+                                                    }
+                                            }];
+
+        [aliceRestClient createKeyBackupVersion:keyBackupVersion success:^(NSString *version) {
+
+            //- Make a backup
+            MXKeyBackupData *keyBackupData = [MXKeyBackupData new];
+            keyBackupData.firstMessageIndex = 1;
+            keyBackupData.forwardedCount = 2;
+            keyBackupData.verified = YES;
+            keyBackupData.sessionData = @{
+                                          @"key": @"value"
+                                          };
+
+            NSString *roomId = @"!aRoomId:matrix.org";
+            NSString *sessionId = @"ASession";
+
+            [aliceRestClient sendKeyBackup:keyBackupData room:roomId session:sessionId version:version success:^{
+
+                // - Delete it
+                [aliceRestClient deleteKeyFromBackup:roomId session:sessionId version:version success:^{
+
+                    // - Get the backup back
+                    // TODO: The test currently fails because of https://github.com/matrix-org/synapse/issues/4056
+                    [aliceRestClient keysBackup:version success:^(MXKeysBackupData *keysBackupData) {
+
+                        // -> Check it is now empty
+                        XCTAssertNotNil(keysBackupData);
+                        XCTAssertEqual(keysBackupData.rooms.count, 0);
+
+                        [expectation fulfill];
+
+                    } failure:^(NSError *error) {
+                        XCTFail(@"The request should not fail - NSError: %@", error);
+                        [expectation fulfill];
+                    }];
+                } failure:^(NSError *error) {
+                    XCTFail(@"The request should not fail - NSError: %@", error);
+                    [expectation fulfill];
+                }];
+            } failure:^(NSError *error) {
+                XCTFail(@"The request should not fail - NSError: %@", error);
+                [expectation fulfill];
+            }];
+        } failure:^(NSError *error) {
+            XCTFail(@"The request should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+    }];
+}
+
 @end
 
 #pragma clang diagnostic pop
