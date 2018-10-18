@@ -3871,6 +3871,220 @@ MXAuthAction;
                                  }];
 }
 
+- (MXHTTPOperation*)sendKeyBackup:(MXKeyBackupData*)keyBackupData
+                             room:(NSString*)roomId
+                          session:(NSString*)sessionId
+                          version:(NSString*)version
+                          success:(void (^)(void))success
+                          failure:(void (^)(NSError *error))failure
+{
+    NSString *path = [self keyBackupPath:roomId session:sessionId version:version];
+    if (!path || !keyBackupData || !roomId || !sessionId)
+    {
+        NSLog(@"[MXRestClient] sendKeyBackup: ERROR: Bad parameters");
+        [self dispatchFailure:nil inBlock:failure];
+        return nil;
+    }
+
+    return [self sendBackup:keyBackupData.JSONDictionary path:path success:success failure:failure];
+}
+
+- (MXHTTPOperation*)sendRoomKeysBackup:(MXRoomKeysBackupData*)roomKeysBackupData
+                                  room:(NSString*)roomId
+                               version:(NSString*)version
+                               success:(void (^)(void))success
+                               failure:(void (^)(NSError *error))failure
+{
+    NSString *path = [self keyBackupPath:roomId session:nil version:version];
+    if (!path || !roomKeysBackupData || !roomId)
+    {
+        NSLog(@"[MXRestClient] sendRoomKeysBackup: ERROR: Bad parameters");
+        [self dispatchFailure:nil inBlock:failure];
+        return nil;
+    }
+
+    return [self sendBackup:roomKeysBackupData.JSONDictionary path:path success:success failure:failure];
+}
+
+- (MXHTTPOperation*)sendKeysBackup:(MXKeysBackupData*)keysBackupData
+                           version:(NSString*)version
+                           success:(void (^)(void))success
+                           failure:(void (^)(NSError *error))failure
+{
+    NSString *path = [self keyBackupPath:nil session:nil version:nil];
+    if (!path || !keysBackupData)
+    {
+        NSLog(@"[MXRestClient] sendKeysBackup: ERROR: Bad parameters");
+        [self dispatchFailure:nil inBlock:failure];
+        return nil;
+    }
+
+    return [self sendBackup:keysBackupData.JSONDictionary path:path success:success failure:failure];
+}
+
+- (MXHTTPOperation*)sendBackup:(NSDictionary*)backupData
+                          path:(NSString*)path
+                       success:(void (^)(void))success
+                       failure:(void (^)(NSError *error))failure
+{
+    MXWeakify(self);
+    return [httpClient requestWithMethod:@"PUT"
+                                    path:path
+                              parameters:backupData
+                                 success:^(NSDictionary *JSONResponse) {
+                                     MXStrongifyAndReturnIfNil(self);
+
+                                     if (success)
+                                     {
+                                         [self dispatchProcessing:nil
+                                                    andCompletion:^{
+                                                        success();
+                                                    }];
+                                     }
+                                 } failure:^(NSError *error) {
+                                     MXStrongifyAndReturnIfNil(self);
+                                     [self dispatchFailure:error inBlock:failure];
+                                 }];
+}
+
+- (MXHTTPOperation*)keyBackup:(NSString*)roomId
+                      session:(NSString*)sessionId
+                      version:(NSString*)version
+                      success:(void (^)(MXKeyBackupData *keyBackupData))success
+                      failure:(void (^)(NSError *error))failure
+{
+    NSString *path = [self keyBackupPath:roomId session:sessionId version:version];
+    if (!path || !roomId || !sessionId)
+    {
+        NSLog(@"[MXRestClient] keyBackup: ERROR: Bad parameters");
+        [self dispatchFailure:nil inBlock:failure];
+        return nil;
+    }
+
+    MXWeakify(self);
+    return [httpClient requestWithMethod:@"GET"
+                                    path:path
+                              parameters:nil
+                                 success:^(NSDictionary *JSONResponse) {
+                                     MXStrongifyAndReturnIfNil(self);
+
+                                     if (success)
+                                     {
+                                         __block MXKeyBackupData *keyBackupData;
+                                         [self dispatchProcessing:^{
+                                             MXJSONModelSetMXJSONModel(keyBackupData, MXKeyBackupData, JSONResponse);
+                                         } andCompletion:^{
+                                             success(keyBackupData);
+                                         }];
+                                     }
+                                 } failure:^(NSError *error) {
+                                     MXStrongifyAndReturnIfNil(self);
+                                     [self dispatchFailure:error inBlock:failure];
+                                 }];
+}
+
+- (MXHTTPOperation*)roomKeysBackup:(NSString*)roomId
+                           version:(NSString*)version
+                           success:(void (^)(MXRoomKeysBackupData *roomKeysBackupData))success
+                           failure:(void (^)(NSError *error))failure
+{
+    NSString *path = [self keyBackupPath:roomId session:nil version:version];
+    if (!path || !roomId)
+    {
+        NSLog(@"[MXRestClient] roomKeysBackup: ERROR: Bad parameters");
+        [self dispatchFailure:nil inBlock:failure];
+        return nil;
+    }
+
+    MXWeakify(self);
+    return [httpClient requestWithMethod:@"GET"
+                                    path:path
+                              parameters:nil
+                                 success:^(NSDictionary *JSONResponse) {
+                                     MXStrongifyAndReturnIfNil(self);
+
+                                     if (success)
+                                     {
+                                         __block MXRoomKeysBackupData *roomKeysBackupData;
+                                         [self dispatchProcessing:^{
+                                             MXJSONModelSetMXJSONModel(roomKeysBackupData, MXRoomKeysBackupData, JSONResponse);
+                                         } andCompletion:^{
+                                             success(roomKeysBackupData);
+                                         }];
+                                     }
+                                 } failure:^(NSError *error) {
+                                     MXStrongifyAndReturnIfNil(self);
+                                     [self dispatchFailure:error inBlock:failure];
+                                 }];
+}
+
+- (MXHTTPOperation*)keysBackup:(NSString*)version
+                       success:(void (^)(MXKeysBackupData *keysBackupData))success
+                       failure:(void (^)(NSError *error))failure;
+{
+    NSString *path = [self keyBackupPath:nil session:nil version:version];
+    if (!path)
+    {
+        NSLog(@"[MXRestClient] keysBackup: ERROR: Bad parameters");
+        [self dispatchFailure:nil inBlock:failure];
+        return nil;
+    }
+
+    MXWeakify(self);
+    return [httpClient requestWithMethod:@"GET"
+                                    path:path
+                              parameters:nil
+                                 success:^(NSDictionary *JSONResponse) {
+                                     MXStrongifyAndReturnIfNil(self);
+
+                                     if (success)
+                                     {
+                                         __block MXKeysBackupData *keysBackupData;
+                                         [self dispatchProcessing:^{
+                                             MXJSONModelSetMXJSONModel(keysBackupData, MXKeysBackupData, JSONResponse);
+                                         } andCompletion:^{
+                                             success(keysBackupData);
+                                         }];
+                                     }
+                                 } failure:^(NSError *error) {
+                                     MXStrongifyAndReturnIfNil(self);
+                                     [self dispatchFailure:error inBlock:failure];
+                                 }];
+}
+
+- (NSString*)keyBackupPath:(NSString*)roomId session:(NSString*)sessionId version:(NSString*)version
+{
+    if (!version)
+    {
+        return nil;
+    }
+
+    NSMutableString *path = [NSMutableString stringWithFormat:@"%@/room_keys/keys", kMXAPIPrefixPathUnstable];
+
+    if (sessionId)
+    {
+        if (!roomId)
+        {
+            NSLog(@"[MXRestClient] keyBackupPath: ERROR: Null version");
+            return nil;
+        }
+        [path appendString:@"/"];
+        [path appendString:[roomId stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding]];
+        [path appendString:@"/"];
+        [path appendString:[sessionId stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding]];
+    }
+    else if (roomId)
+    {
+        [path appendString:@"/"];
+        [path appendString:[roomId stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding]];
+    }
+
+    [path appendString:@"?version="];
+    [path appendString:version];
+
+    return path;
+}
+
 
 #pragma mark - Direct-to-device messaging
 - (MXHTTPOperation*)sendToDevice:(NSString*)eventType contentMap:(MXUsersDevicesMap<NSDictionary*>*)contentMap

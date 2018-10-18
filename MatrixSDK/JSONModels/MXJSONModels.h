@@ -20,6 +20,7 @@
 #import "MXJSONModel.h"
 #import "MXUsersDevicesMap.h"
 #import "MXKeyBackupVersion.h"
+#import "MXKeyBackupData.h"
 #import "MXMegolmBackupAuthData.h"
 
 @class MXEvent, MXDeviceInfo, MXKey, MXUser;

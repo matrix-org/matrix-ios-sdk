@@ -2081,6 +2081,111 @@ typedef enum : NSUInteger
 - (MXHTTPOperation*)keyBackupVersion:(void (^)(MXKeyBackupVersion *keyBackupVersion))success
                              failure:(void (^)(NSError *error))failure;
 
+/**
+ Back up a session key to the homeserver.
+
+ @param keyBackupData the key to backup.
+ @param roomId the id of the room that the keys are for.
+ @param sessionId the id of the session that the keys are.
+ @param version the backup version.
+
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)sendKeyBackup:(MXKeyBackupData*)keyBackupData
+                             room:(NSString*)roomId
+                          session:(NSString*)sessionId
+                          version:(NSString*)version
+                          success:(void (^)(void))success
+                          failure:(void (^)(NSError *error))failure;
+
+/**
+ Back up keys in a room to the homeserver.
+
+ @param roomKeysBackupData keys to backup.
+ @param roomId the id of the room that the keys are for.
+ @param version the backup version.
+
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)sendRoomKeysBackup:(MXRoomKeysBackupData*)roomKeysBackupData
+                                  room:(NSString*)roomId
+                               version:(NSString*)version
+                               success:(void (^)(void))success
+                               failure:(void (^)(NSError *error))failure;
+
+/**
+ Back up keys to the homeserver.
+
+ @param keysBackupData keys to backup.
+ @param version the backup version.
+
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)sendKeysBackup:(MXKeysBackupData*)keysBackupData
+                           version:(NSString*)version
+                           success:(void (^)(void))success
+                           failure:(void (^)(NSError *error))failure;
+
+/**
+ Retrieve the backup for a session key from the homeserver.
+
+ @param roomId the id of the room that the keys are for.
+ @param sessionId the id of the session that the keys are.
+ @param version the backup version.
+
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)keyBackup:(NSString*)roomId
+                      session:(NSString*)sessionId
+                      version:(NSString*)version
+                      success:(void (^)(MXKeyBackupData *keyBackupData))success
+                      failure:(void (^)(NSError *error))failure;
+
+/**
+ Retrieve the backup for all keys in a room from the homeserver.
+
+ @param roomKeysBackupData keys to backup.
+ @param roomId the id of the room that the keys are for.
+ @param version the backup version.
+
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)roomKeysBackup:(NSString*)roomId
+                           version:(NSString*)version
+                           success:(void (^)(MXRoomKeysBackupData *roomKeysBackupData))success
+                           failure:(void (^)(NSError *error))failure;
+
+/**
+ Retrive all keys backup from the homeserver.
+
+ @param keysBackupData keys to backup.
+ @param version the backup version.
+
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)keysBackup:(NSString*)version
+                       success:(void (^)(MXKeysBackupData *keysBackupData))success
+                       failure:(void (^)(NSError *error))failure;
+
+
 #pragma mark - Direct-to-device messaging
 /**
  Send an event to a specific list of devices
