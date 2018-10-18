@@ -18,19 +18,30 @@
 
 @implementation MXKeyBackupVersion
 
+- (nullable instancetype)initWithJSON:(NSDictionary *)JSONDictionary
+{
+    self = [super init];
+    if (self)
+    {
+        MXJSONModelSetString(_algorithm, JSONDictionary[@"algorithm"]);
+        MXJSONModelSetDictionary(_authData, JSONDictionary[@"auth_data"]);
+        MXJSONModelSetString(_version, JSONDictionary[@"version"]);
+    }
+
+    // nonnull checks
+    if (!_algorithm || !_authData)
+    {
+        return nil;
+    }
+
+    return self;
+}
+
 #pragma mark - MXJSONModel
 
 + (id)modelFromJSON:(NSDictionary *)JSONDictionary
 {
-    MXKeyBackupVersion *keyBackupVersion = [MXKeyBackupVersion new];
-    if (keyBackupVersion)
-    {
-        MXJSONModelSetString(keyBackupVersion.algorithm, JSONDictionary[@"algorithm"]);
-        MXJSONModelSetDictionary(keyBackupVersion.authData, JSONDictionary[@"auth_data"]);
-        MXJSONModelSetString(keyBackupVersion.version, JSONDictionary[@"version"]);
-    }
-
-    return keyBackupVersion;
+    return [[MXKeyBackupVersion alloc] initWithJSON:JSONDictionary];
 }
 
 - (NSDictionary *)JSONDictionary

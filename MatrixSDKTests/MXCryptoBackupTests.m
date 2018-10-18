@@ -52,16 +52,17 @@
 {
     [matrixSDKTestsData doMXRestClientTestWithAlice:self readyToTest:^(MXRestClient *aliceRestClient, XCTestExpectation *expectation) {
 
-        MXKeyBackupVersion *keyBackupVersion = [MXKeyBackupVersion new];
-        keyBackupVersion.algorithm = kMXCryptoMegolmBackupAlgorithm;
-        keyBackupVersion.authData = @{
-                                      @"public_key": @"abcdefg",
-                                      @"signatures": @{
-                                              @"something": @{
-                                                      @"ed25519:something": @"hijklmnop"
-                                                      }
-                                              }
-                                      };
+        MXKeyBackupVersion *keyBackupVersion = [MXKeyBackupVersion modelFromJSON:@{
+                                                                                   @"algorithm": kMXCryptoMegolmBackupAlgorithm,
+                                                                                   @"auth_data": @{
+                                                                                           @"public_key": @"abcdefg",
+                                                                                           @"signatures": @{
+                                                                                                   @"something": @{
+                                                                                                           @"ed25519:something": @"hijklmnop"
+                                                                                                           }
+                                                                                                   }
+                                                                                           }
+                                                                                   }];
 
         [aliceRestClient createKeyBackupVersion:keyBackupVersion success:^(NSString *version) {
 
