@@ -18,7 +18,7 @@
 
 /**
  `MXEncryptedContentKey` stores the key information for an encrypted content.
- It is used in `MXEncryptedContentInfo`.
+ It is used in `MXEncryptedContentFile`.
  
     "key": {
         "alg": "A256CTR",
@@ -49,7 +49,7 @@
 /**
  The key operations. Must at least contain encrypt and decrypt.
  */
-@property (nonatomic) NSArray<NSString *> *key_ops;
+@property (nonatomic) NSArray<NSString *> *keyOps;
 
 /**
  The key type.

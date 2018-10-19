@@ -26,7 +26,7 @@
         MXJSONModelSetString(encryptedContentKey.alg, JSONDictionary[@"alg"]);
         MXJSONModelSetBoolean(encryptedContentKey.ext, JSONDictionary[@"ext"]);
         MXJSONModelSetString(encryptedContentKey.k, JSONDictionary[@"k"]);
-        MXJSONModelSetArray(encryptedContentKey.key_ops, JSONDictionary[@"key_ops"]);
+        MXJSONModelSetArray(encryptedContentKey.keyOps, JSONDictionary[@"key_ops"]);
         MXJSONModelSetString(encryptedContentKey.kty, JSONDictionary[@"kty"]);
     }
     return encryptedContentKey;
@@ -40,7 +40,7 @@
         JSONDictionary[@"alg"] = _alg;
         JSONDictionary[@"ext"] = @(_ext);
         JSONDictionary[@"k"] = _k;
-        JSONDictionary[@"key_ops"] = _key_ops;
+        JSONDictionary[@"key_ops"] = _keyOps;
         JSONDictionary[@"kty"] = _kty;
     }
     

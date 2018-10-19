@@ -16,6 +16,8 @@
 
 #import "MXEncryptedAttachments.h"
 #import "MXMediaLoader.h"
+#import "MXEncryptedContentFile.h"
+#import "MXEncryptedContentKey.h"
 
 #import <Security/Security.h>
 #import <CommonCrypto/CommonDigest.h>
@@ -30,7 +32,7 @@ NSString *const MXEncryptedAttachmentsErrorDomain = @"MXEncryptedAttachmentsErro
 + (void)encryptAttachment:(MXMediaLoader *)uploader
                  mimeType:(NSString *)mimeType
                  localUrl:(NSURL *)url
-                  success:(void(^)(NSDictionary *result))success
+                  success:(void(^)(MXEncryptedContentFile *result))success
                   failure:(void(^)(NSError *error))failure
 {
     NSError *err;
@@ -54,7 +56,7 @@ NSString *const MXEncryptedAttachmentsErrorDomain = @"MXEncryptedAttachmentsErro
 + (void)encryptAttachment:(MXMediaLoader *)uploader
                  mimeType:(NSString *)mimeType
                      data:(NSData *)data
-                  success:(void(^)(NSDictionary *result))success
+                  success:(void(^)(MXEncryptedContentFile *result))success
                   failure:(void(^)(NSError *error))failure
 {
     __block bool dataGiven = false;
@@ -72,7 +74,7 @@ NSString *const MXEncryptedAttachmentsErrorDomain = @"MXEncryptedAttachmentsErro
 + (void)encryptAttachment:(MXMediaLoader *)uploader
                  mimeType:(NSString *)mimeType
              dataCallback:(NSData *(^)(void))dataCallback
-                  success:(void(^)(NSDictionary *result))success
+                  success:(void(^)(MXEncryptedContentFile *result))success
                   failure:(void(^)(NSError *error))failure
 {
     NSError *err;
@@ -154,22 +156,24 @@ NSString *const MXEncryptedAttachmentsErrorDomain = @"MXEncryptedAttachmentsErro
     
     
     [uploader uploadData:ciphertext filename:nil mimeType:@"application/octet-stream" success:^(NSString *url) {
-        success(@{
-                  @"v": @"v2",
-                  @"url": url,
-                  @"mimetype": mimeType,
-                  @"key": @{
-                            @"alg": @"A256CTR",
-                            @"ext": @YES,
-                            @"key_ops": @[@"encrypt", @"decrypt"],
-                            @"kty": @"oct",
-                            @"k": [MXEncryptedAttachments base64ToBase64Url:[key base64EncodedStringWithOptions:0]],
-                          },
-                  @"iv": [iv base64EncodedStringWithOptions:0],
-                  @"hashes": @{
-                          @"sha256": [MXEncryptedAttachments base64ToUnpaddedBase64:[computedSha256 base64EncodedStringWithOptions:0]],
-                          }
-                  });
+        MXEncryptedContentKey *encryptedContentKey = [[MXEncryptedContentKey alloc] init];
+        encryptedContentKey.alg = @"A256CTR";
+        encryptedContentKey.ext = @YES;
+        encryptedContentKey.keyOps = @[@"encrypt", @"decrypt"];
+        encryptedContentKey.kty = @"oct";
+        encryptedContentKey.k = [MXEncryptedAttachments base64ToBase64Url:[key base64EncodedStringWithOptions:0]];
+        
+        MXEncryptedContentFile *encryptedContentFile = [[MXEncryptedContentFile alloc] init];
+        encryptedContentFile.v = @"v2";
+        encryptedContentFile.url = url;
+        encryptedContentFile.mimetype = mimeType;
+        encryptedContentFile.key = encryptedContentKey;
+        encryptedContentFile.iv = [iv base64EncodedStringWithOptions:0];
+        encryptedContentFile.hashes = @{
+                                        @"sha256": [MXEncryptedAttachments base64ToUnpaddedBase64:[computedSha256 base64EncodedStringWithOptions:0]],
+                                        };
+        
+        success(encryptedContentFile);
     } failure:^(NSError *error) {
         failure(error);
     }];
@@ -177,45 +181,45 @@ NSString *const MXEncryptedAttachmentsErrorDomain = @"MXEncryptedAttachmentsErro
 
 #pragma mark decrypt
 
-+ (NSError *)decryptAttachment:(NSDictionary *)fileInfo
++ (NSError *)decryptAttachment:(MXEncryptedContentFile *)fileInfo
               inputStream:(NSInputStream *)inputStream
              outputStream:(NSOutputStream *)outputStream {
     // NB. We don;t check the 'v' field here: future versions should be backwards compatible so we try to decode
     // whatever the version is. We can only really decode v1, but the difference is the IV wraparound so we can try
     // decoding v0 attachments and the worst that will happen is that it won't work.
-    if (!fileInfo[@"key"] || ![fileInfo[@"key"] isKindOfClass:[NSDictionary class]])
+    if (!fileInfo.key)
     {
         return [NSError errorWithDomain:MXEncryptedAttachmentsErrorDomain code:0 userInfo:@{@"err": @"missing_key"}];
     }
-    if (![fileInfo[@"key"][@"alg"] isKindOfClass:[NSString class]] || ![fileInfo[@"key"][@"alg"] isEqualToString:@"A256CTR"])
+    if (![fileInfo.key.alg isEqualToString:@"A256CTR"])
     {
         return [NSError errorWithDomain:MXEncryptedAttachmentsErrorDomain code:0 userInfo:@{@"err": @"missing_or_incorrect_key_alg"}];
     }
-    if (!fileInfo[@"key"][@"k"] || ![fileInfo[@"key"][@"k"] isKindOfClass:[NSString class]])
+    if (!fileInfo.key.k)
     {
         return [NSError errorWithDomain:MXEncryptedAttachmentsErrorDomain code:0 userInfo:@{@"err": @"missing_key_data"}];
     }
-    if (!fileInfo[@"iv"] || ![fileInfo[@"iv"] isKindOfClass:[NSString class]])
+    if (!fileInfo.iv)
     {
         return [NSError errorWithDomain:MXEncryptedAttachmentsErrorDomain code:0 userInfo:@{@"err": @"missing_iv"}];
     }
-    if (!fileInfo[@"hashes"] || ![fileInfo[@"hashes"] isKindOfClass:[NSDictionary class]])
+    if (!fileInfo.hashes)
     {
         return [NSError errorWithDomain:MXEncryptedAttachmentsErrorDomain code:0 userInfo:@{@"err": @"missing_hashes"}];
     }
-    if (![fileInfo[@"hashes"][@"sha256"] isKindOfClass:[NSString class]])
+    if (!fileInfo.hashes[@"sha256"])
     {
         return [NSError errorWithDomain:MXEncryptedAttachmentsErrorDomain code:0 userInfo:@{@"err": @"missing_sha256_hash"}];
     }
     
-    NSData *keyData = [[NSData alloc] initWithBase64EncodedString:[MXEncryptedAttachments base64UrlToBase64:fileInfo[@"key"][@"k"]]
+    NSData *keyData = [[NSData alloc] initWithBase64EncodedString:[MXEncryptedAttachments base64UrlToBase64:fileInfo.key.k]
                                                                    options:0];
     if (!keyData || keyData.length != kCCKeySizeAES256)
     {
         return [NSError errorWithDomain:MXEncryptedAttachmentsErrorDomain code:0 userInfo:@{@"err": @"bad_key_data"}];
     }
     
-    NSData *ivData = [[NSData alloc] initWithBase64EncodedString:[MXEncryptedAttachments padBase64:fileInfo[@"iv"]] options:0];
+    NSData *ivData = [[NSData alloc] initWithBase64EncodedString:[MXEncryptedAttachments padBase64:fileInfo.iv] options:0];
     if (!ivData || ivData.length != kCCBlockSizeAES128)
     {
         return [NSError errorWithDomain:MXEncryptedAttachmentsErrorDomain code:0 userInfo:@{@"err": @"bad_iv_data"}];
@@ -268,11 +272,11 @@ NSString *const MXEncryptedAttachmentsErrorDomain = @"MXEncryptedAttachmentsErro
     NSMutableData *computedSha256 = [[NSMutableData alloc] initWithLength:CC_SHA256_DIGEST_LENGTH];
     CC_SHA256_Final(computedSha256.mutableBytes, &sha256ctx);
     
-    NSData *expectedSha256 = [[NSData alloc] initWithBase64EncodedString:[MXEncryptedAttachments padBase64:fileInfo[@"hashes"][@"sha256"]] options:0];
+    NSData *expectedSha256 = [[NSData alloc] initWithBase64EncodedString:[MXEncryptedAttachments padBase64:fileInfo.hashes[@"sha256"]] options:0];
     
     if (![computedSha256 isEqualToData:expectedSha256])
     {
-        NSLog(@"Hash mismatch when decrypting attachment! Expected: %@, got %@", fileInfo[@"hashes"][@"sha256"], [computedSha256 base64EncodedStringWithOptions:0]);
+        NSLog(@"Hash mismatch when decrypting attachment! Expected: %@, got %@", fileInfo.hashes[@"sha256"], [computedSha256 base64EncodedStringWithOptions:0]);
         return [NSError errorWithDomain:MXEncryptedAttachmentsErrorDomain code:0 userInfo:@{@"err": @"hash_mismatch"}];
     }
     return nil;
