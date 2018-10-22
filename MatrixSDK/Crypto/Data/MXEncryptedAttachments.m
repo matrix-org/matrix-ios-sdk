@@ -158,7 +158,7 @@ NSString *const MXEncryptedAttachmentsErrorDomain = @"MXEncryptedAttachmentsErro
     [uploader uploadData:ciphertext filename:nil mimeType:@"application/octet-stream" success:^(NSString *url) {
         MXEncryptedContentKey *encryptedContentKey = [[MXEncryptedContentKey alloc] init];
         encryptedContentKey.alg = @"A256CTR";
-        encryptedContentKey.ext = @YES;
+        encryptedContentKey.ext = YES;
         encryptedContentKey.keyOps = @[@"encrypt", @"decrypt"];
         encryptedContentKey.kty = @"oct";
         encryptedContentKey.k = [MXEncryptedAttachments base64ToBase64Url:[key base64EncodedStringWithOptions:0]];
