@@ -24,6 +24,7 @@
 #import "MXDecryptionResult.h"
 
 #import "MXEncryptedAttachments.h"
+#import "MXEncryptedContentFile.h"
 
 #import "MXMediaManager.h"
 #import "MXRoomOperation.h"
@@ -913,10 +914,10 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
             }];
 
             NSURL *localURL = [NSURL URLWithString:cacheFilePath];
-            [MXEncryptedAttachments encryptAttachment:uploader mimeType:mimetype localUrl:localURL success:^(NSDictionary *result) {
+            [MXEncryptedAttachments encryptAttachment:uploader mimeType:mimetype localUrl:localURL success:^(MXEncryptedContentFile *result) {
 
                 [msgContent removeObjectForKey:@"url"];
-                msgContent[@"file"] = result;
+                msgContent[@"file"] = result.JSONDictionary;
 
                 void(^onDidUpload)(void) = ^{
 
@@ -956,9 +957,9 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
                     NSData *pngImageData = [newRep representationUsingType:NSPNGFileType properties:@{}];
 #endif
 
-                    [MXEncryptedAttachments encryptAttachment:thumbUploader mimeType:@"image/png" data:pngImageData success:^(NSDictionary *result) {
+                    [MXEncryptedAttachments encryptAttachment:thumbUploader mimeType:@"image/png" data:pngImageData success:^(MXEncryptedContentFile *result) {
 
-                        msgContent[@"info"][@"thumbnail_file"] = result;
+                        msgContent[@"info"][@"thumbnail_file"] = result.JSONDictionary;
 
                         onDidUpload();
 
@@ -1121,10 +1122,10 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
 
             if (self.mxSession.crypto && self.summary.isEncrypted)
             {
-                [MXEncryptedAttachments encryptAttachment:thumbUploader mimeType:@"image/jpeg" data:videoThumbnailData success:^(NSDictionary *result) {
+                [MXEncryptedAttachments encryptAttachment:thumbUploader mimeType:@"image/jpeg" data:videoThumbnailData success:^(MXEncryptedContentFile *result) {
 
                     // Update thumbnail URL with the actual mxc: URL
-                    msgContent[@"info"][@"thumbnail_file"] = result;
+                    msgContent[@"info"][@"thumbnail_file"] = result.JSONDictionary;
                     [msgContent[@"info"] removeObjectForKey:@"thumbnail_url"];
 
                     MXMediaLoader *videoUploader = [MXMediaManager prepareUploaderWithMatrixSession:self.mxSession initialRange:0.1 andRange:1];
@@ -1158,7 +1159,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
 
                     }];
 
-                    [MXEncryptedAttachments encryptAttachment:videoUploader mimeType:mimetype localUrl:convertedLocalURL success:^(NSDictionary *result) {
+                    [MXEncryptedAttachments encryptAttachment:videoUploader mimeType:mimetype localUrl:convertedLocalURL success:^(MXEncryptedContentFile *result) {
 
                         // Do not go further if the orignal request has been cancelled
                         if (roomOperation.isCancelled)
@@ -1168,7 +1169,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
                         }
 
                         [msgContent removeObjectForKey:@"url"];
-                        msgContent[@"file"] = result;
+                        msgContent[@"file"] = result.JSONDictionary;
 
                         // Send this content (the sent state of the local echo will be updated, its local storage too).
                         MXHTTPOperation *operation2 = [self sendMessageWithContent:msgContent localEcho:&event success:onSuccess failure:onFailure];
@@ -1402,7 +1403,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
 
             }];
 
-            [MXEncryptedAttachments encryptAttachment:uploader mimeType:mimeType localUrl:fileLocalURL success:^(NSDictionary *result) {
+            [MXEncryptedAttachments encryptAttachment:uploader mimeType:mimeType localUrl:fileLocalURL success:^(MXEncryptedContentFile *result) {
 
                 // Do not go further if the orignal request has been cancelled
                 if (roomOperation.isCancelled)
@@ -1412,7 +1413,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
                 }
 
                 [msgContent removeObjectForKey:@"url"];
-                msgContent[@"file"] = result;
+                msgContent[@"file"] = result.JSONDictionary;
 
                 MXHTTPOperation *operation2 = [self sendMessageWithContent:msgContent localEcho:&event success:onSuccess failure:onFailure];
 

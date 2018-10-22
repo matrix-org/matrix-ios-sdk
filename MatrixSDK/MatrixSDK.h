@@ -51,6 +51,7 @@ FOUNDATION_EXPORT NSString *MatrixSDKVersion;
 
 #import "MXCrypto.h"
 #import "MXMegolmExportEncryption.h"
+#import "MXEncryptedContentFile.h"
 
 #import "MXBugReportRestClient.h"
 
