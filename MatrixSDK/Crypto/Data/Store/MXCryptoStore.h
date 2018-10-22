@@ -215,6 +215,29 @@
 - (NSArray<MXOlmInboundGroupSession*> *)inboundGroupSessions;
 
 
+#pragma mark - Key backup
+/**
+ Mark all inbound group sessions as not backed up.
+ */
+- (void)resetBackupMarkers;
+
+/**
+ Mark an inbound group session as backed up on the user homeserver.
+
+ @param sessionId the session identifier.
+ @param senderKey the base64-encoded curve25519 key of the sender.
+ */
+- (void)markBackupDoneForInboundGroupSessionWithId:(NSString*)sessionId andSenderKey:(NSString*)senderKey;
+
+/**
+ Retrieve inbound group sessions that are not yet backed up.
+
+ @param limit the maximum number of sessions to return.
+ @return an array of non backed up inbound group sessions.
+ */
+- (NSArray<MXOlmInboundGroupSession*>*)inboundGroupSessionsToBackup:(NSUInteger)limit;
+
+
 #pragma mark - Key sharing - Outgoing key requests
 
 /**

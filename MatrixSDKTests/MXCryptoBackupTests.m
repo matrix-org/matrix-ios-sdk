@@ -19,6 +19,8 @@
 #import "MatrixSDKTestsData.h"
 #import "MatrixSDKTestsE2EData.h"
 
+#import "MXCrypto_Private.h"
+
 // Do not bother with retain cycles warnings in tests
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Warc-retain-cycles"
@@ -230,6 +232,36 @@
             XCTFail(@"The request should not fail - NSError: %@", error);
             [expectation fulfill];
         }];
+    }];
+}
+
+
+/**
+- From doE2ETestWithAliceAndBobInARoomWithCryptedMessages, we should have non backed up keys
+- Check backup keys after having marked one as backuped
+- Reset keys backup markers
+*/
+- (void)testBackupStore
+{
+    [matrixSDKTestsE2EData doE2ETestWithAliceAndBobInARoomWithCryptedMessages:self cryptedBob:YES readyToTest:^(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
+
+        // - From doE2ETestWithAliceAndBobInARoomWithCryptedMessages, we should have non backed up keys
+        NSArray<MXOlmInboundGroupSession*> *sessions = [aliceSession.crypto.store inboundGroupSessionsToBackup:100];
+        NSUInteger sessionsCount = sessions.count;
+        XCTAssertGreaterThan(sessionsCount, 0);
+
+        // - Check backup keys after having marked one as backuped
+        MXOlmInboundGroupSession *session = sessions.firstObject;
+        [aliceSession.crypto.store markBackupDoneForInboundGroupSessionWithId:session.session.sessionIdentifier andSenderKey:session.senderKey];
+        sessions = [aliceSession.crypto.store inboundGroupSessionsToBackup:100];
+        XCTAssertEqual(sessions.count, sessionsCount - 1);
+
+        // - Reset keys backup markers
+        [aliceSession.crypto.store resetBackupMarkers];
+        sessions = [aliceSession.crypto.store inboundGroupSessionsToBackup:100];
+        XCTAssertEqual(sessions.count, sessionsCount);
+
+        [expectation fulfill];
     }];
 }
 
