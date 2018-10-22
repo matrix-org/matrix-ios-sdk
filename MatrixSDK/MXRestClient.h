@@ -33,6 +33,9 @@
 #import "MXJSONModels.h"
 #import "MXFilterJSONModel.h"
 #import "MXMatrixVersions.h"
+#import "MXContentScanResult.h"
+#import "MXEncryptedContentFile.h"
+#import "MXContentScanEncryptedBody.h"
 
 #pragma mark - Constants definitions
 /**
@@ -41,7 +44,7 @@
 FOUNDATION_EXPORT NSString *const kMXAPIPrefixPathR0;
 
 /**
- A constant representing tthe URI path for as-yet unspecified of the Client-Server HTTP API.
+ A constant representing the URI path for as-yet unspecified of the Client-Server HTTP API.
  */
 FOUNDATION_EXPORT NSString *const kMXAPIPrefixPathUnstable;
 
@@ -49,6 +52,11 @@ FOUNDATION_EXPORT NSString *const kMXAPIPrefixPathUnstable;
  Prefix used in path of identity server API requests.
  */
 FOUNDATION_EXPORT NSString *const kMXIdentityAPIPrefixPath;
+
+/**
+ A constant representing the URI path for as-yet unspecified of the AntiVirus Client-Server HTTP API.
+ */
+FOUNDATION_EXPORT NSString *const kMXAntivirusAPIPrefixPathUnstable;
 
 /**
  Scheme used in Matrix content URIs.
@@ -147,6 +155,19 @@ typedef enum : NSUInteger
  this property.
  */
 @property (nonatomic) NSString *identityServer;
+
+/**
+ The antivirus server.
+ By default, it points to the defined home server. If needed, change it by setting
+ this property.
+ */
+@property (nonatomic) NSString *antivirusServer;
+
+/**
+ The Client-Server API prefix to use for the antivirus server
+ By default, it is defined by the constant kMXAntivirusAPIPrefixPathUnstable.
+ */
+@property (nonatomic) NSString *antivirusServerPathPrefix;
 
 /**
  The current trusted certificate (if any).
@@ -1860,12 +1881,69 @@ typedef enum : NSUInteger
                     success:(void (^)(NSDictionary *thirdPartySigned))success
                     failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
+
+#pragma mark - Antivirus server API
+
+/**
+ Get the current public curve25519 key that the antivirus server is advertising.
+ 
+ @param success A block object called when the operation succeeds. It provides the antivirus public key.
+ @param failure A block object called when the operation fails.
+ 
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)getAntivirusServerPublicKey:(void (^)(NSString *publicKey))success
+                                        failure:(void (^)(NSError *error))failure;
+
+/**
+ Scan an unencrypted content.
+ 
+ @param mxcContentURI the Matrix content URI to scan (in the form of "mxc://...").
+ @param success A block object called when the operation succeeds. It provides the scan result.
+ @param failure A block object called when the operation fails.
+ 
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)scanUnencryptedContent:(NSString*)mxcContentURI
+                                   success:(void (^)(MXContentScanResult *scanResult))success
+                                   failure:(void (^)(NSError *error))failure;
+
+/**
+ Scan an encrypted content.
+ 
+ @param encryptedContentFile the information of the encrypted content
+ @param success A block object called when the operation succeeds. It provides the scan result.
+ @param failure A block object called when the operation fails.
+ 
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)scanEncryptedContent:(MXEncryptedContentFile*)encryptedContentFile
+                                   success:(void (^)(MXContentScanResult *scanResult))success
+                                   failure:(void (^)(NSError *error))failure;
+
+/**
+ Scan an encrypted content by sending an encrypted body (produced by considering the antivirus
+ server public key).
+
+ @param encryptedbody the encrypted data used to
+ @param success A block object called when the operation succeeds. It provides the scan result.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)scanEncryptedContentWithSecureExchange:(MXContentScanEncryptedBody *)encryptedbody
+                                                   success:(void (^)(MXContentScanResult *scanResult))success
+                                                   failure:(void (^)(NSError *error))failure;
+
+
+#pragma mark - Certificates
 /**
  Set the certificates used to evaluate server trust according to the SSL pinning mode.
 
  @param pinnedCertificates the pinned certificates.
  */
 -(void)setPinnedCertificates:(NSSet <NSData *> *)pinnedCertificates;
+
 
 #pragma mark - VoIP API
 /**
