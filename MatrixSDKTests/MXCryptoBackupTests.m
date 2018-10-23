@@ -20,6 +20,7 @@
 #import "MatrixSDKTestsE2EData.h"
 
 #import "MXCrypto_Private.h"
+#import "MXRecoveryKey.h"
 
 // Do not bother with retain cycles warnings in tests
 #pragma clang diagnostic push
@@ -263,6 +264,41 @@
 
         [expectation fulfill];
     }];
+}
+
+/**
+ - Check [MXRecoveryKey encode:]
+ - Check [MXRecoveryKey decode:error:] with a valid recovery key
+ - Check [MXRecoveryKey decode:error:] with an invalid recovery key
+ */
+- (void)testRecoveryKey
+{
+    UInt8 privateKeyBytes[] = {
+        0x77, 0x07, 0x6D, 0x0A, 0x73, 0x18, 0xA5, 0x7D,
+        0x3C, 0x16, 0xC1, 0x72, 0x51, 0xB2, 0x66, 0x45,
+        0xDF, 0x4C, 0x2F, 0x87, 0xEB, 0xC0, 0x99, 0x2A,
+        0xB1, 0x77, 0xFB, 0xA5, 0x1D, 0xB9, 0x2C, 0x2A
+    };
+    NSData *privateKey = [NSData dataWithBytes:privateKeyBytes length:sizeof(privateKeyBytes)];
+
+    // Got this value from js console with recoveryKey.js:encodeRecoveryKey
+    NSString *recoveryKey = @"EsTc LW2K PGiF wKEA 3As5 g5c4 BXwk qeeJ ZJV8 Q9fu gUMN UE4d";
+
+    // - Check [MXRecoveryKey encode:]
+    NSString *recoveryKeyOut = [MXRecoveryKey encode:privateKey];
+    XCTAssertEqualObjects(recoveryKeyOut, recoveryKey);
+
+    // - Check [MXRecoveryKey decode:error:] with a valid recovery key
+    NSError *error;
+    NSData *privateKeyOut = [MXRecoveryKey decode:recoveryKey error:&error];
+    XCTAssertNil(error);
+    XCTAssertEqualObjects(privateKeyOut, privateKey);
+
+    // - Check [MXRecoveryKey decode:error:] with an invalid recovery key
+    NSString *badRecoveryKey = [recoveryKey stringByReplacingOccurrencesOfString:@"UE4d" withString:@"UE4e"];
+    privateKeyOut = [MXRecoveryKey decode:badRecoveryKey error:&error];
+    XCTAssertNil(privateKeyOut);
+    XCTAssertEqualObjects(error.domain, MXRecoveryKeyErrorDomain);
 }
 
 @end
