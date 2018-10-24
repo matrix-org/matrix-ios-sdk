@@ -1335,6 +1335,22 @@ public extension MXRestClient {
         return __avatarUrl(forUser: userId, success: currySuccess(transform: { return URL(string: $0 ?? "") }, completion), failure: curryFailure(completion))
     }
     
+    /**
+     Get the profile information of a user.
+     
+     - parameters:
+     - userId: the user id to look up.
+     - completion: A block object called when the operation completes.
+     - response: Provides the display name and avatar url if they are defined on success.
+     
+     - returns: a `MXHTTPOperation` instance.
+     */
+    @nonobjc @discardableResult func profile(forUser userId: String, completion: @escaping (_ response: MXResponse<(String?, String?)>) -> Void) -> MXHTTPOperation {
+                return __profile(forUser: userId, success: { (displayName, avatarUrl) -> Void in
+                    let profileInformation = (displayName, avatarUrl)
+                    completion(MXResponse.success(profileInformation))
+                }, failure: curryFailure(completion))
+    }
     
     /**
      Link an authenticated 3rd party id to the Matrix user.

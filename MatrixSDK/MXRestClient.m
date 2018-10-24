@@ -2702,6 +2702,44 @@ MXAuthAction;
                                  }];
 }
 
+- (MXHTTPOperation*)profileForUser:(NSString*)userId
+                           success:(void (^)(NSString *displayName, NSString *avatarUrl))success
+                           failure:(void (^)(NSError *error))failure
+{
+    if (!userId)
+    {
+        userId = credentials.userId;
+    }
+    
+    NSString *path = [NSString stringWithFormat:@"%@/profile/%@", apiPathPrefix,
+                      [userId stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding]];
+    
+    MXWeakify(self);
+    return [httpClient requestWithMethod:@"GET"
+                                    path:path
+                              parameters:nil
+                                 success:^(NSDictionary *JSONResponse) {
+                                     MXStrongifyAndReturnIfNil(self);
+                                     
+                                     if (success)
+                                     {
+                                         __block NSString *displayName;
+                                         __block NSString *avatarUrl;
+                                         [self dispatchProcessing:^{
+                                             NSDictionary *cleanedJSONResponse = [MXJSONModel removeNullValuesInJSON:JSONResponse];
+                                             MXJSONModelSetString(displayName, cleanedJSONResponse[@"displayname"]);
+                                             MXJSONModelSetString(avatarUrl, cleanedJSONResponse[@"avatar_url"]);
+                                         } andCompletion:^{
+                                             success(displayName, avatarUrl);
+                                         }];
+                                     }
+                                 }
+                                 failure:^(NSError *error) {
+                                     MXStrongifyAndReturnIfNil(self);
+                                     [self dispatchFailure:error inBlock:failure];
+                                 }];
+}
+
 - (MXHTTPOperation*)add3PID:(NSString*)sid
                clientSecret:(NSString*)clientSecret
                        bind:(BOOL)bind
