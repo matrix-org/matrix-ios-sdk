@@ -29,24 +29,24 @@ NS_ASSUME_NONNULL_BEGIN
  The algorithm used for storing backups.
  Currently, only kMXCryptoMegolmBackupAlgorithm (m.megolm_backup.v1.curve25519-aes-sha2) is defined.
  */
-@property (nonatomic, readonly) NSString *algorithm;
+@property (nonatomic) NSString *algorithm;
 
 /**
  Algorithm-dependent data.
  */
-@property (nonatomic, readonly) NSDictionary *authData;
+@property (nonatomic) NSDictionary *authData;
 
 /**
  The backup version.
  */
-@property (nonatomic, readonly, nullable) NSString *version;
+@property (nonatomic, nullable) NSString *version;
 
 /**
  Enforce usage of factory method to guarantee non-nullabity.
  TODO: Should be done at `MXJSONModel` model.
  */
-- (instancetype)init NS_UNAVAILABLE;
-+ (instancetype)new NS_UNAVAILABLE;
+//- (instancetype)init NS_UNAVAILABLE;
+//+ (instancetype)new NS_UNAVAILABLE;
 
 @end
 
