@@ -1732,6 +1732,16 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
     return alg;
 }
 
+- (NSDictionary*)signObject:(NSDictionary*)object
+{
+    return @{
+             myDevice.userId: @{
+                     [NSString stringWithFormat:@"ed25519:%@", myDevice.deviceId]: [_olmDevice signJSON:object]
+                     }
+             };
+}
+
+
 #pragma mark - Key sharing
 - (void)requestRoomKey:(NSDictionary*)requestBody recipients:(NSArray<NSDictionary<NSString*, NSString*>*>*)recipients
 {
@@ -2228,12 +2238,7 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
         // Sign each one-time key
         NSMutableDictionary *k = [NSMutableDictionary dictionary];
         k[@"key"] = oneTimeKeys[@"curve25519"][keyId];
-
-        k[@"signatures"] = @{
-                             myDevice.userId: @{
-                                     [NSString stringWithFormat:@"ed25519:%@", myDevice.deviceId]: [_olmDevice signJSON:k]
-                                     }
-                             };
+        k[@"signatures"] = [self signObject:k];
 
         oneTimeJson[[NSString stringWithFormat:@"signed_curve25519:%@", keyId]] = k;
     }

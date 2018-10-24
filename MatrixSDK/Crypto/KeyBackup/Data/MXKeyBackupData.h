@@ -52,6 +52,10 @@ NS_ASSUME_NONNULL_BEGIN
  */
 @interface MXRoomKeysBackupData : MXJSONModel
 
+/**
+ 
+ sessionId -> MXKeyBackupData
+ */
 @property (nonatomic) NSDictionary<NSString*, MXKeyBackupData*> *sessions;
 
 @end
@@ -61,6 +65,9 @@ NS_ASSUME_NONNULL_BEGIN
  */
 @interface MXKeysBackupData : MXJSONModel
 
+/**
+ roomId -> MXRoomKeysBackupData
+ */
 @property (nonatomic) NSDictionary<NSString*, MXRoomKeysBackupData*> *rooms;
 
 @end

@@ -227,6 +227,8 @@
 
     [olmDevice addInboundGroupSession:sessionId sessionKey:sessionKey roomId:roomId senderKey:senderKey forwardingCurve25519KeyChain:forwardingKeyChain keysClaimed:keysClaimed exportFormat:exportFormat];
 
+    [crypto.backup maybeSendKeyBackup];
+
     // cancel any outstanding room key requests for this session
     [crypto cancelRoomKeyRequest:@{
                                    @"algorithm": content[@"algorithm"],
@@ -241,6 +243,8 @@
 - (void)importRoomKey:(MXMegolmSessionData *)session
 {
     [olmDevice importInboundGroupSession:session];
+
+    [crypto.backup maybeSendKeyBackup];
 
     // Have another go at decrypting events sent with this session
     [self retryDecryption:session.senderKey sessionId:session.sessionId];

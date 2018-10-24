@@ -28,6 +28,7 @@
 #import "MXCryptoAlgorithms.h"
 #import "MXUsersDevicesMap.h"
 #import "MXOlmSessionResult.h"
+#import "MXKeyBackup_Private.h"
 
 #import "MXCrypto.h"
 
@@ -149,6 +150,14 @@
  @return the decryptor.
  */
 - (id<MXDecrypting>)getRoomDecryptor:(NSString*)roomId algorithm:(NSString*)algorithm;
+
+/**
+ Sign the given object with our ed25519 key.
+
+ @param Object the dictionary to sign.
+ @return signatures.
+ */
+- (NSDictionary*)signObject:(NSDictionary*)object;
 
 
 #pragma mark - Key sharing

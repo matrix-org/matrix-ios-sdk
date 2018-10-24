@@ -27,6 +27,8 @@
 #import "MXIncomingRoomKeyRequest.h"
 #import "MXIncomingRoomKeyRequestCancellation.h"
 
+#import "MXKeyBackup.h"
+
 @class MXSession;
 
 /**
@@ -74,6 +76,11 @@ FOUNDATION_EXPORT NSString *const kMXCryptoRoomKeyRequestCancellationNotificatio
  The olm library version.
  */
 @property (nonatomic, readonly) NSString *olmVersion;
+
+/**
+ The key backup manager.
+ */
+@property (nonatomic, readonly) MXKeyBackup *backup;
 
 /**
  Create a new crypto instance and data for the given user.
