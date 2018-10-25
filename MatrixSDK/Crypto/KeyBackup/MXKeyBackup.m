@@ -43,6 +43,12 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
 @interface MXKeyBackup ()
 {
     MXSession *mxSession;
+
+    // Observer to kMXKeyBackupDidStateChangeNotification when backupAllGroupSessions is progressing
+    id backupAllGroupSessionsObserver;
+
+    // Failure block when backupAllGroupSessions is progressing
+    void (^backupAllGroupSessionsFailure)(NSError *error);
     
     // track whether this device's megolm keys are being backed up incrementally
     // to the server or not.
@@ -94,6 +100,8 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
 
 - (void)disableKeyBackup
 {
+    [self resetBackupAllGroupSessionsObjects];
+    
     _keyBackupVersion = nil;
     _backupKey = nil;
     self.state = MXKeyBackupStateDisabled;
@@ -232,7 +240,14 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
         }
 
     } failure:^(NSError *error) {
-        // TODO: Manage failure
+        MXStrongifyAndReturnIfNil(self);
+
+        if (self->backupAllGroupSessionsFailure)
+        {
+            self->backupAllGroupSessionsFailure(error);
+        }
+
+        // TODO: Manage retries
         NSLog(@"[MXKeyBackup] sendKeyBackup: sendKeysBackup failed. Error: %@", error);
     }];
 }
@@ -374,46 +389,52 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
     return operation;
 }
 
-- (void)backupAllGroupSessions:(nullable void (^)(NSProgress * _Nonnull))onBackupProgress
-                    onComplete:(nullable void (^)(void))onComplete
+- (void)backupAllGroupSessions:(nullable void (^)(void))success
+                      progress:(nullable void (^)(NSProgress *backupProgress))progress
+                       failure:(nullable void (^)(NSError *error))failure;
 {
     // Get a status right now
     MXWeakify(self);
     [self backupProgress:^(NSProgress * _Nonnull backupProgress) {
         MXStrongifyAndReturnIfNil(self);
 
+        // Reset previous state if any
+        [self resetBackupAllGroupSessionsObjects];
+
         NSLog(@"[MXKeyBackup] backupAllGroupSessions: backupProgress: %@", backupProgress);
 
-        if (onBackupProgress)
+        if (progress)
         {
-            onBackupProgress(backupProgress);
+            progress(backupProgress);
         }
 
         if (backupProgress.finished)
         {
             NSLog(@"[MXKeyBackup] backupAllGroupSessions: complete");
-            onComplete();
+            if (success)
+            {
+                success();
+            }
             return;
         }
 
         // Listen to `self.state` change to determine when to call onBackupProgress and onComplete
         MXWeakify(self);
-        id observer;
-        observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXKeyBackupDidStateChangeNotification object:self queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *notif) {
+        self->backupAllGroupSessionsObserver = [[NSNotificationCenter defaultCenter] addObserverForName:kMXKeyBackupDidStateChangeNotification object:self queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *notif) {
             MXStrongifyAndReturnIfNil(self);
 
-                if (onBackupProgress)
+                if (progress)
                 {
-                    [self backupProgress:onBackupProgress];
+                    [self backupProgress:progress];
                 }
 
                 if (self.state == MXKeyBackupStateReadyToBackUp)
                 {
-                    [[NSNotificationCenter defaultCenter] removeObserver:observer];
+                    [self resetBackupAllGroupSessionsObjects];
 
-                    if (onComplete)
+                    if (success)
                     {
-                        onComplete();
+                        success();
                     }
                 }
         }];
@@ -421,9 +442,31 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
         dispatch_async(self->mxSession.crypto.cryptoQueue, ^{
             MXStrongifyAndReturnIfNil(self);
 
+            // Listen to error
+            if (failure)
+            {
+                MXWeakify(self);
+                self->backupAllGroupSessionsFailure = ^(NSError *error) {
+                    MXStrongifyAndReturnIfNil(self);
+
+                    failure(error);
+                    [self resetBackupAllGroupSessionsObjects];
+                };
+            }
+
             [self sendKeyBackup];
         });
     }];
+}
+
+- (void)resetBackupAllGroupSessionsObjects
+{
+    if (backupAllGroupSessionsObserver)
+    {
+        [[NSNotificationCenter defaultCenter] removeObserver:backupAllGroupSessionsObserver];
+        backupAllGroupSessionsObserver = nil;
+    }
+    backupAllGroupSessionsFailure = nil;
 }
 
 - (void)backupProgress:(void (^)(NSProgress *backupProgress))backupProgress

@@ -121,13 +121,15 @@ FOUNDATION_EXPORT NSString *const kMXKeyBackupDidStateChangeNotification;
 
  @param version the backup version to delete.
 
- @param success A block object called when the operation succeeds.
+ @param success A block object called when the operation complets.
+ @param progress A block object called to indicate operation progress based on number of backed up keys.
  @param failure A block object called when the operation fails.
 
  @return a MXHTTPOperation instance.
  */
-- (void)backupAllGroupSessions:(nullable void (^)(NSProgress *backupProgress))onBackupProgress
-                    onComplete:(nullable void (^)(void))onComplete;
+- (void)backupAllGroupSessions:(nullable void (^)(void))success
+                      progress:(nullable void (^)(NSProgress *backupProgress))progress
+                       failure:(nullable void (^)(NSError *error))failure;
 
 /**
  Get the current backup progress.
