@@ -429,9 +429,11 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
         self->backupAllGroupSessionsObserver = [[NSNotificationCenter defaultCenter] addObserverForName:kMXKeyBackupDidStateChangeNotification object:self queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *notif) {
             MXStrongifyAndReturnIfNil(self);
 
+            [self backupProgress:^(NSProgress * _Nonnull backupProgress) {
+
                 if (progress)
                 {
-                    [self backupProgress:progress];
+                    progress(backupProgress);
                 }
 
                 if (self.state == MXKeyBackupStateReadyToBackUp)
@@ -443,6 +445,7 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
                         success();
                     }
                 }
+            }];
         }];
 
         dispatch_async(self->mxSession.crypto.cryptoQueue, ^{
