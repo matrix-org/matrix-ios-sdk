@@ -144,7 +144,10 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
     if (!_backupKey || !_keyBackupVersion)
     {
         NSLog(@"[MXKeyBackup] sendKeyBackup: Invalide state: %@", @(_state));
+        return;
     }
+
+    self.state = MXKeyBackupStateBackingUp;
 
     // Gather data to send to the homeserver
     // roomId -> sessionId -> MXKeyBackupData
@@ -357,6 +360,76 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
     });
 
     return operation;
+}
+
+- (void)backupAllGroupSessions:(nullable void (^)(NSProgress * _Nonnull))onBackupProgress
+                    onComplete:(nullable void (^)(void))onComplete
+{
+    // Get a status right now
+    MXWeakify(self);
+    [self backupProgress:^(NSProgress * _Nonnull backupProgress) {
+        MXStrongifyAndReturnIfNil(self);
+
+        NSLog(@"[MXKeyBackup] backupAllGroupSessions: backupProgress: %@", backupProgress);
+
+        if (onBackupProgress)
+        {
+            onBackupProgress(backupProgress);
+        }
+
+        if (backupProgress.finished)
+        {
+            NSLog(@"[MXKeyBackup] backupAllGroupSessions: complete");
+            onComplete();
+            return;
+        }
+
+        // Listen to `self.state` change to determine when to call onBackupProgress and onComplete
+        MXWeakify(self);
+        id observer;
+        observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXKeyBackupDidStateChangeNotification object:self queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *notif) {
+            MXStrongifyAndReturnIfNil(self);
+
+                if (onBackupProgress)
+                {
+                    [self backupProgress:onBackupProgress];
+                }
+
+                if (self.state == MXKeyBackupStateReadyToBackUp)
+                {
+                    [[NSNotificationCenter defaultCenter] removeObserver:observer];
+
+                    if (onComplete)
+                    {
+                        onComplete();
+                    }
+                }
+        }];
+
+        dispatch_async(self->mxSession.crypto.cryptoQueue, ^{
+            MXStrongifyAndReturnIfNil(self);
+
+            [self sendKeyBackup];
+        });
+    }];
+}
+
+- (void)backupProgress:(void (^)(NSProgress *backupProgress))backupProgress
+{
+    MXWeakify(self);
+    dispatch_async(mxSession.crypto.cryptoQueue, ^{
+        MXStrongifyAndReturnIfNil(self);
+
+        NSUInteger keys = [self->mxSession.crypto.store inboundGroupSessionsCount:NO];
+        NSUInteger backedUpkeys = [self->mxSession.crypto.store inboundGroupSessionsCount:YES];
+
+        NSProgress *progress = [NSProgress progressWithTotalUnitCount:keys];
+        progress.completedUnitCount = backedUpkeys;
+
+        dispatch_async(dispatch_get_main_queue(), ^{
+            backupProgress(progress);
+        });
+     });
 }
 
 - (BOOL)enabled

@@ -237,6 +237,14 @@
  */
 - (NSArray<MXOlmInboundGroupSession*>*)inboundGroupSessionsToBackup:(NSUInteger)limit;
 
+/**
+ Number of stored inbound group sessions.
+
+ @param onlyBackedUp if YES, count only session marked as backed up.
+ @return a count.
+ */
+- (NSUInteger)inboundGroupSessionsCount:(BOOL)onlyBackedUp;
+
 
 #pragma mark - Key sharing - Outgoing key requests
 

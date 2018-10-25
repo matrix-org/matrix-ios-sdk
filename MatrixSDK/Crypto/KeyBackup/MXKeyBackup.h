@@ -117,6 +117,30 @@ FOUNDATION_EXPORT NSString *const kMXKeyBackupDidStateChangeNotification;
                                    failure:(nullable void (^)(NSError *error))failure;
 
 /**
+ Start to back up keys immediately.
+
+ @param version the backup version to delete.
+
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
+- (void)backupAllGroupSessions:(nullable void (^)(NSProgress *backupProgress))onBackupProgress
+                    onComplete:(nullable void (^)(void))onComplete;
+
+/**
+ Get the current backup progress.
+
+ Can be called at any `MXKeyBackup` state.
+ `backupProgress.totalUnitCount` represents the total number of (group sessions) keys.
+ `backupProgress.completedUnitCount` is the number of keys already backed up.
+
+ @param backupProgress the current backup progress
+ */
+- (void)backupProgress:(void (^)(NSProgress *backupProgress))backupProgress;
+
+/**
  The backup state.
  */
 @property (nonatomic, readonly) MXKeyBackupState state;

@@ -238,29 +238,35 @@
 
 
 /**
-- From doE2ETestWithAliceAndBobInARoomWithCryptedMessages, we should have non backed up keys
-- Check backup keys after having marked one as backuped
+- From doE2ETestWithAliceAndBobInARoomWithCryptedMessages, we should have no backed up keys
+- Check backup keys after having marked one as backed up
 - Reset keys backup markers
 */
 - (void)testBackupStore
 {
     [matrixSDKTestsE2EData doE2ETestWithAliceAndBobInARoomWithCryptedMessages:self cryptedBob:YES readyToTest:^(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
 
-        // - From doE2ETestWithAliceAndBobInARoomWithCryptedMessages, we should have non backed up keys
+        // - From doE2ETestWithAliceAndBobInARoomWithCryptedMessages, we should have no backed up keys
         NSArray<MXOlmInboundGroupSession*> *sessions = [aliceSession.crypto.store inboundGroupSessionsToBackup:100];
         NSUInteger sessionsCount = sessions.count;
         XCTAssertGreaterThan(sessionsCount, 0);
+        XCTAssertEqual([aliceSession.crypto.store inboundGroupSessionsCount:NO], sessionsCount);
+        XCTAssertEqual([aliceSession.crypto.store inboundGroupSessionsCount:YES], 0);
 
-        // - Check backup keys after having marked one as backuped
+        // - Check backup keys after having marked one as backed up
         MXOlmInboundGroupSession *session = sessions.firstObject;
         [aliceSession.crypto.store markBackupDoneForInboundGroupSessionWithId:session.session.sessionIdentifier andSenderKey:session.senderKey];
         sessions = [aliceSession.crypto.store inboundGroupSessionsToBackup:100];
         XCTAssertEqual(sessions.count, sessionsCount - 1);
+        XCTAssertEqual([aliceSession.crypto.store inboundGroupSessionsCount:NO], sessionsCount);
+        XCTAssertEqual([aliceSession.crypto.store inboundGroupSessionsCount:YES], 1);
 
         // - Reset keys backup markers
         [aliceSession.crypto.store resetBackupMarkers];
         sessions = [aliceSession.crypto.store inboundGroupSessionsToBackup:100];
         XCTAssertEqual(sessions.count, sessionsCount);
+        XCTAssertEqual([aliceSession.crypto.store inboundGroupSessionsCount:NO], sessionsCount);
+        XCTAssertEqual([aliceSession.crypto.store inboundGroupSessionsCount:YES], 0);
 
         [expectation fulfill];
     }];

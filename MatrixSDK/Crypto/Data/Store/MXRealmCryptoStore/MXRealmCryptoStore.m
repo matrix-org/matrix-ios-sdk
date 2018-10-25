@@ -775,6 +775,22 @@ RLM_ARRAY_TYPE(MXRealmOlmInboundGroupSession)
     return sessions;
 }
 
+- (NSUInteger)inboundGroupSessionsCount:(BOOL)onlyBackedUp
+{
+    RLMRealm *realm = self.realm;
+    RLMResults<MXRealmOlmInboundGroupSession *> *realmSessions;
+
+    if (onlyBackedUp)
+    {
+        realmSessions = [MXRealmOlmInboundGroupSession objectsInRealm:realm where:@"backedUp = YES"];
+    }
+    else
+    {
+        realmSessions = [MXRealmOlmInboundGroupSession allObjectsInRealm:realm];
+    }
+
+    return realmSessions.count;
+}
 
 #pragma mark - Key sharing - Outgoing key requests
 
