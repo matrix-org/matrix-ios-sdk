@@ -29,3 +29,8 @@ NSString *const MXEncryptingErrorDomain = @"org.matrix.sdk.encryption";
 NSString* const MXEncryptingErrorUnknownDeviceReason = @"This room contains unknown devices which have not been verified. We strongly recommend you verify them before continuing.";
 
 NSString* const MXEncryptingErrorUnknownDeviceDevicesKey = @"MXEncryptingErrorUnknownDeviceDevicesKey";
+
+
+#pragma mark - Backup error
+
+NSString *const MXKeyBackupErrorDomain = @"MXKeyBackupErrorDomain";

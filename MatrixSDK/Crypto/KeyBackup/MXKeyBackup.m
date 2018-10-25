@@ -69,7 +69,7 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
     return self;
 }
 
-- (BOOL)enableKeyBackup:(MXKeyBackupVersion*)version
+- (NSError*)enableKeyBackup:(MXKeyBackupVersion*)version
 {
     MXMegolmBackupAuthData *authData = [MXMegolmBackupAuthData modelFromJSON:version.authData];
     if (authData)
@@ -81,10 +81,15 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
         self.state = MXKeyBackupStateReadyToBackUp;
         
         [self maybeSendKeyBackup];
+
+        return nil;
     }
 
-    // wdty?
-    return _backupKey;
+    return [NSError errorWithDomain:MXKeyBackupErrorDomain
+                               code:MXKeyBackupErrorInvalidParametersCode
+                           userInfo:@{
+                                      NSLocalizedDescriptionKey: @"Invalid authentication data",
+                                      }];
 }
 
 - (void)disableKeyBackup
@@ -298,10 +303,17 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
 
             keyBackupVersion.version = version;
 
-            [self enableKeyBackup:keyBackupVersion];
+            NSError *error = [self enableKeyBackup:keyBackupVersion];
 
             dispatch_async(dispatch_get_main_queue(), ^{
-                success(keyBackupVersion);
+                if (!error)
+                {
+                    success(keyBackupVersion);
+                }
+                else if (failure)
+                {
+                    failure(error);
+                }
             });
 
         } failure:^(NSError *error) {

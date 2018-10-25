@@ -52,3 +52,12 @@ FOUNDATION_EXPORT NSString* const MXEncryptingErrorUnknownDeviceReason;
  */
 FOUNDATION_EXPORT NSString *const MXEncryptingErrorUnknownDeviceDevicesKey;
 
+
+#pragma mark - Backup error
+
+FOUNDATION_EXPORT NSString *const MXKeyBackupErrorDomain;
+
+typedef enum : NSUInteger
+{
+    MXKeyBackupErrorInvalidParametersCode
+} MXKeyBackupErrorCode;
