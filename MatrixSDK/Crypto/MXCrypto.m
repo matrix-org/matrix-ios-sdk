@@ -1363,6 +1363,8 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
 
         oneTimeKeyCount = -1;
 
+        _backup = [[MXKeyBackup alloc] initWithMatrixSession:_mxSession];
+
         outgoingRoomKeyRequestManager = [[MXOutgoingRoomKeyRequestManager alloc]
                                          initWithMatrixRestClient:_matrixRestClient
                                          deviceId:myDevice.deviceId

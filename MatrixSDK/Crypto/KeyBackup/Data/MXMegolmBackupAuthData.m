@@ -16,6 +16,22 @@
 
 #import "MXMegolmBackupAuthData.h"
 
+#import "MXTools.h"
+
 @implementation MXMegolmBackupAuthData
+
+- (NSDictionary *)JSONDictionary
+{
+    NSMutableDictionary *JSONDictionary = [NSMutableDictionary dictionary];
+
+    JSONDictionary[@"public_key"] = _publicKey;
+
+    if (_signatures)
+    {
+        JSONDictionary[@"signatures"] = [MXTools serialiseJSONObject:_signatures];
+    }
+
+    return JSONDictionary;
+}
 
 @end

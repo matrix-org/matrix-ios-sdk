@@ -307,6 +307,30 @@
     XCTAssertEqualObjects(error.domain, MXRecoveryKeyErrorDomain);
 }
 
+- (void)testPrepareKeyBackupVersion
+{
+    [matrixSDKTestsE2EData doE2ETestWithAliceAndBobInARoomWithCryptedMessages:self cryptedBob:YES readyToTest:^(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
+
+        XCTAssertNotNil(aliceSession.crypto.backup);
+        XCTAssertFalse(aliceSession.crypto.backup.enabled);
+
+        [aliceSession.crypto.backup prepareKeyBackupVersion:^(MXMegolmBackupCreationInfo * _Nonnull keyBackupCreationInfo) {
+
+            XCTAssertNotNil(keyBackupCreationInfo);
+            XCTAssertEqual(keyBackupCreationInfo.algorithm, kMXCryptoMegolmBackupAlgorithm);
+            XCTAssertNotNil(keyBackupCreationInfo.authData.publicKey);
+            XCTAssertNotNil(keyBackupCreationInfo.authData.signatures);
+            XCTAssertNotNil(keyBackupCreationInfo.recoveryKey);
+
+            [expectation fulfill];
+
+        } failure:^(NSError * _Nonnull error) {
+            XCTFail(@"The request should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+    }];
+}
+
 @end
 
 #pragma clang diagnostic pop
