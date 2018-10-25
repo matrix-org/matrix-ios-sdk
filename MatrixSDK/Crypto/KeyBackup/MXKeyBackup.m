@@ -226,6 +226,12 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
     [mxSession.crypto.matrixRestClient sendKeysBackup:keysBackupData version:_keyBackupVersion.version success:^{
         MXStrongifyAndReturnIfNil(self);
 
+        // Mark keys as backed up
+        for (MXOlmInboundGroupSession *session in sessions)
+        {
+            [self->mxSession.crypto.store markBackupDoneForInboundGroupSessionWithId:session.session.sessionIdentifier andSenderKey:session.senderKey];
+        }
+
         if (sessions.count < kMXKeyBackupSendKeysMaxCount)
         {
             NSLog(@"[MXKeyBackup] sendKeyBackup: All keys have been backed up");
