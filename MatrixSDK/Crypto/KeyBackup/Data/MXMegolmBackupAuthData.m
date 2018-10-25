@@ -16,9 +16,21 @@
 
 #import "MXMegolmBackupAuthData.h"
 
-#import "MXTools.h"
-
 @implementation MXMegolmBackupAuthData
+
+#pragma mark - MXJSONModel
+
++ (id)modelFromJSON:(NSDictionary *)JSONDictionary
+{
+    MXMegolmBackupAuthData *megolmBackupAuthData = [MXMegolmBackupAuthData new];
+    if (megolmBackupAuthData)
+    {
+        MXJSONModelSetString(megolmBackupAuthData.publicKey, JSONDictionary[@"public_key"]);
+        MXJSONModelSetDictionary(megolmBackupAuthData.signatures, JSONDictionary[@"signatures"]);
+    }
+
+    return megolmBackupAuthData;
+}
 
 - (NSDictionary *)JSONDictionary
 {
@@ -28,7 +40,7 @@
 
     if (_signatures)
     {
-        JSONDictionary[@"signatures"] = [MXTools serialiseJSONObject:_signatures];
+        JSONDictionary[@"signatures"] = _signatures;
     }
 
     return JSONDictionary;
