@@ -7,6 +7,7 @@ Improvements:
 * MXSession: When create a room as direct wait for room being tagged as direct chat before calling success block.
 * CallKit is now disabled in China (PR #578).
 * Add MXEncryptedContentFile and MXEncryptedContentKey classes.
+* MXRestClient: Handle GET /_matrix/client/r0/profile/{userId} request.
 
 Bug fix:
 * MXEvent: Move `invite_room_state` to the correct place in the client-server API (vector-im/riot-ios/issues/2010).
