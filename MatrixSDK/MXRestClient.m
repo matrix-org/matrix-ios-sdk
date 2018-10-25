@@ -3911,7 +3911,7 @@ MXAuthAction;
                            success:(void (^)(void))success
                            failure:(void (^)(NSError *error))failure
 {
-    NSString *path = [self keyBackupPath:nil session:nil version:nil];
+    NSString *path = [self keyBackupPath:nil session:nil version:version];
     if (!path || !keysBackupData)
     {
         NSLog(@"[MXRestClient] sendKeysBackup: ERROR: Bad parameters");
