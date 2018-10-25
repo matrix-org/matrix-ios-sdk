@@ -24,6 +24,11 @@
 #import "MXSession.h"   // TODO: To remove
 #import "MXTools.h"
 
+
+#pragma mark - Constants definitions
+
+NSString *const kMXKeyBackupDidStateChangeNotification = @"kMXKeyBackupDidStateChangeNotification";
+
 /**
  Maximum delay in ms in `[MXKeyBackup maybeSendKeyBackup]`.
  */
@@ -73,7 +78,7 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
         _backupKey = [OLMPkEncryption new];
         [_backupKey setRecipientKey:authData.publicKey];
 
-        self.state = MXKeyBackupStateReadyToBackup;
+        self.state = MXKeyBackupStateReadyToBackUp;
         
         [self maybeSendKeyBackup];
     }
@@ -94,9 +99,9 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
 
 - (void)maybeSendKeyBackup
 {
-    if (_state == MXKeyBackupStateReadyToBackup)
+    if (_state == MXKeyBackupStateReadyToBackUp)
     {
-        self.state = MXKeyBackupStateWillBackup;
+        self.state = MXKeyBackupStateWillBackUp;
 
         // Wait between 0 and 10 seconds, to avoid backup requests from
         // different clients hitting the server all at the same time when a
@@ -118,6 +123,7 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
 
 - (void)sendKeyBackup
 {
+    // Get a chunk of keys to backup
     NSArray<MXOlmInboundGroupSession*> *sessions = [mxSession.crypto.store inboundGroupSessionsToBackup:kMXKeyBackupSendKeysMaxCount];
 
     NSLog(@"[MXKeyBackup] sendKeyBackup: %@ sessions to back up", @(sessions.count));
@@ -204,15 +210,16 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
     [mxSession.crypto.matrixRestClient sendKeysBackup:keysBackupData version:_keyBackupVersion.version success:^{
         MXStrongifyAndReturnIfNil(self);
 
-        self.state = MXKeyBackupStateReadyToBackup;
-
         if (sessions.count < kMXKeyBackupSendKeysMaxCount)
         {
             NSLog(@"[MXKeyBackup] sendKeyBackup: All keys have been backed up");
+            self.state = MXKeyBackupStateReadyToBackUp;
         }
         else
         {
             NSLog(@"[MXKeyBackup] sendKeyBackup: Continue to back up keys");
+            self.state = MXKeyBackupStateWillBackUp;
+
             [self sendKeyBackup];
         }
 
@@ -365,7 +372,7 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
     _state = state;
 
     dispatch_async(dispatch_get_main_queue(), ^{
-        // TODO
+        [[NSNotificationCenter defaultCenter] postNotificationName:kMXKeyBackupDidStateChangeNotification object:self];
     });
 }
 

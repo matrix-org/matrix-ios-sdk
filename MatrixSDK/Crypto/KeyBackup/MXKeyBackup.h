@@ -22,17 +22,36 @@
 @class MXSession;
 @class OLMPkEncryption;
 
-// WDYT?
+NS_ASSUME_NONNULL_BEGIN
+
+#pragma mark - Constants definitions
+
+/**
+ E2e keys backup states.
+ */
 typedef enum : NSUInteger
 {
+    // Backup is not enabled
     MXKeyBackupStateDisabled = 0,
+
+    // Backup is being enabled
     MXKeyBackupStateEnabling,
-    MXKeyBackupStateReadyToBackup,
-    MXKeyBackupStateWillBackup,
+
+    // Backup is enabled and ready to send backup to the homeserver
+    MXKeyBackupStateReadyToBackUp,
+
+    // Backup is going to be send to the homeserver
+    MXKeyBackupStateWillBackUp,
+
+    // Backup is being sent to the homeserver
     MXKeyBackupStateBackingUp
 } MXKeyBackupState;
 
-NS_ASSUME_NONNULL_BEGIN
+/**
+ Posted when the state of the MXKeyBackup instance changes.
+ */
+FOUNDATION_EXPORT NSString *const kMXKeyBackupDidStateChangeNotification;
+
 
 /**
  A `MXKeyBackup` class instance manage incremental backup of e2e keys (megolm keys)
