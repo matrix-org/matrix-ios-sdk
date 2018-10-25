@@ -97,7 +97,7 @@ FOUNDATION_EXPORT NSString *const kMXKeyBackupDidStateChangeNotification;
  @return a MXHTTPOperation instance.
  */
 - (MXHTTPOperation*)createKeyBackupVersion:(MXMegolmBackupCreationInfo*)keyBackupCreationInfo
-                                   success:(void (^)(void))success
+                                   success:(void (^)(MXKeyBackupVersion *keyBackupVersion))success
                                    failure:(nullable void (^)(NSError *error))failure;
 
 /**
@@ -105,14 +105,14 @@ FOUNDATION_EXPORT NSString *const kMXKeyBackupDidStateChangeNotification;
 
  If we are backing up to this version. Backup will be stopped.
 
- @param keyBackupVersion the backup version to delete.
+ @param version the backup version to delete.
 
  @param success A block object called when the operation succeeds.
  @param failure A block object called when the operation fails.
 
  @return a MXHTTPOperation instance.
  */
-- (MXHTTPOperation*)deleteKeyBackupVersion:(MXKeyBackupVersion*)keyBackupVersion
+- (MXHTTPOperation*)deleteKeyBackupVersion:(NSString*)version
                                    success:(void (^)(void))success
                                    failure:(nullable void (^)(NSError *error))failure;
 

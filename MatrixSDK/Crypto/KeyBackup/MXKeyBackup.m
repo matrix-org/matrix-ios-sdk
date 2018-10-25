@@ -273,7 +273,7 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
 }
 
 - (MXHTTPOperation*)createKeyBackupVersion:(MXMegolmBackupCreationInfo*)keyBackupCreationInfo
-                                   success:(void (^)(void))success
+                                   success:(void (^)(MXKeyBackupVersion *keyBackupVersion))success
                                    failure:(nullable void (^)(NSError *error))failure
 {
     MXHTTPOperation *operation = [MXHTTPOperation new];
@@ -298,7 +298,7 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
             [self enableKeyBackup:keyBackupVersion];
 
             dispatch_async(dispatch_get_main_queue(), ^{
-                success();
+                success(keyBackupVersion);
             });
 
         } failure:^(NSError *error) {
@@ -318,7 +318,7 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
     return operation;
 }
 
-- (MXHTTPOperation*)deleteKeyBackupVersion:(MXKeyBackupVersion*)keyBackupVersion
+- (MXHTTPOperation*)deleteKeyBackupVersion:(NSString*)version
                                    success:(void (^)(void))success
                                    failure:(nullable void (^)(NSError *error))failure
 {
@@ -331,12 +331,12 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
         // If we're currently backing up to this backup... stop.
         // (We start using it automatically in createKeyBackupVersion
         // so this is symmetrical).
-        if ([self.keyBackupVersion.JSONDictionary isEqualToDictionary:keyBackupVersion.JSONDictionary])
+        if ([self.keyBackupVersion.version isEqualToString:version])
         {
-            //[self disableKeyBackup];
+            [self disableKeyBackup];
         }
 
-        MXHTTPOperation *operation2 = [self->mxSession.crypto.matrixRestClient deleteKeysFromBackup:keyBackupVersion.version success:^{
+        MXHTTPOperation *operation2 = [self->mxSession.crypto.matrixRestClient deleteKeysFromBackup:version success:^{
 
             dispatch_async(dispatch_get_main_queue(), ^{
                 success();
