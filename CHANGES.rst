@@ -23,6 +23,9 @@ Bug fix:
 * Left room is still displayed as "Empty room" in rooms list (vector-im/riot-ios/issues/2082).
 * Reply of reply with unexpected newlines renders badly (vector-im/riot-ios/issues/2086).
 
+API break:
+* MXCrypto: importRoomKeys methods now return number of imported keys.
+
 Changes in Matrix iOS SDK in 0.11.5 (2018-10-05)
 ===============================================
 

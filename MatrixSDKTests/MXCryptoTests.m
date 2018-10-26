@@ -2341,7 +2341,10 @@
                             }];
 
                             // Import the exported keys
-                            [bobSession.crypto importRoomKeys:keys success:^{
+                            [bobSession.crypto importRoomKeys:keys success:^(NSUInteger total, NSUInteger imported) {
+
+                                XCTAssertGreaterThan(total, 0);
+                                XCTAssertEqual(total, imported);
 
                                 XCTAssertEqual(encryptedEvents.count, 0, @"All events should have been decrypted after the keys import");
 
@@ -2422,8 +2425,11 @@
                             }];
 
                             // Import the exported keys
-                            [bobSession.crypto importRoomKeys:keyFile withPassword:password success:^{
+                            [bobSession.crypto importRoomKeys:keyFile withPassword:password success:^(NSUInteger total, NSUInteger imported) {
 
+                                XCTAssertGreaterThan(total, 0);
+                                XCTAssertEqual(total, imported);
+                                
                                 XCTAssertEqual(encryptedEvents.count, 0, @"All events should have been decrypted after the keys import");
 
                                 [expectation fulfill];
@@ -2468,7 +2474,7 @@
 
         [bobSession.crypto exportRoomKeysWithPassword:@"APassword" success:^(NSData *keyFile) {
 
-            [bobSession.crypto importRoomKeys:keyFile withPassword:@"AnotherPassword" success:^{
+            [bobSession.crypto importRoomKeys:keyFile withPassword:@"AnotherPassword" success:^(NSUInteger total, NSUInteger imported) {
 
                 XCTFail(@"The import must fail when using a wrong password");
                 [expectation fulfill];

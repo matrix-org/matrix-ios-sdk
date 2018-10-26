@@ -59,9 +59,11 @@
 /**
  Import a room key.
 
+ @param backUp YES to back up them to the homeserver.
  @param session the session data to import.
+ @return YES if the key has been imported.
  */
-- (void)importRoomKey:(MXMegolmSessionData*)session;
+- (BOOL)importRoomKey:(MXMegolmSessionData*)session backUp:(BOOL)backUp;
 
 /**
  Determine if we have the keys necessary to respond to a room key request.

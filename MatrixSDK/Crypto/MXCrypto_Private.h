@@ -160,6 +160,23 @@
 - (NSDictionary*)signObject:(NSDictionary*)object;
 
 
+#pragma mark - import/export
+
+/**
+ Import a list of megolm session keys.
+
+ @param sessionDatas megolm sessions.
+ @param backUp YES to back up them to the homeserver.
+ @param success A block object called when the operation succeeds.
+                It provides the number of found keys and the number of successfully imported keys.
+ @param failure A block object called when the operation fails.
+ */
+- (void)importMegolmSessionDatas:(NSArray<MXMegolmSessionData*>*)sessionDatas
+                          backUp:(BOOL)backUp
+                         success:(void (^)(NSUInteger total, NSUInteger imported))success
+                         failure:(void (^)(NSError *error))failure;
+
+
 #pragma mark - Key sharing
 
 /**

@@ -353,7 +353,7 @@
     return YES;
 }
 
-- (void)importInboundGroupSession:(MXMegolmSessionData *)data
+- (BOOL)importInboundGroupSession:(MXMegolmSessionData *)data
 {
     NSError *error;
     MXOlmInboundGroupSession *session = [self inboundGroupSessionWithId:data.sessionId senderKey:data.senderKey roomId:data.roomId error:&error];
@@ -364,12 +364,14 @@
         NSLog(@"[MXOlmDevice] importInboundGroupSession: Update for megolm session %@|%@", data.senderKey, data.sessionId);
 
         // For now we just ignore updates. TODO: implement something here
-        return;
+        return NO;
     }
 
     session = [[MXOlmInboundGroupSession alloc] initWithImportedSessionData:data];
 
     [store storeInboundGroupSession:session];
+
+    return YES;
 }
 
 - (MXDecryptionResult *)decryptGroupMessage:(NSString *)body roomId:(NSString *)roomId

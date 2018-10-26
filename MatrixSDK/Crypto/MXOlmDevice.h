@@ -232,9 +232,10 @@ Determine if an incoming messages is a prekey message matching an existing sessi
 /**
  Add a previously-exported inbound group session to the session store.
 
- @param data the session data
+ @param data the session data.
+ @return YES if the key has been imported.
  */
-- (void)importInboundGroupSession:(MXMegolmSessionData*)data;
+- (BOOL)importInboundGroupSession:(MXMegolmSessionData*)data;
 
 /**
  Decrypt a received message with an inbound group session.

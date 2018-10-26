@@ -297,10 +297,11 @@ FOUNDATION_EXPORT NSString *const kMXCryptoRoomKeyRequestCancellationNotificatio
  Import a list of room keys previously exported by exportRoomKeys.
 
  @param success A block object called when the operation succeeds.
+                It provides the number of found keys and the number of successfully imported keys.
  @param failure A block object called when the operation fails.
  */
 - (void)importRoomKeys:(NSArray<NSDictionary*>*)keys
-               success:(void (^)(void))success
+               success:(void (^)(NSUInteger total, NSUInteger imported))success
                failure:(void (^)(NSError *error))failure;
 
 /**
@@ -309,10 +310,11 @@ FOUNDATION_EXPORT NSString *const kMXCryptoRoomKeyRequestCancellationNotificatio
  @param keyFile the encrypted keys file data.
  @password the passphrase used to decrypts keys.
  @param success A block object called when the operation succeeds.
+                It provides the number of found keys and the number of successfully imported keys.
  @param failure A block object called when the operation fails.
  */
 - (void)importRoomKeys:(NSData *)keyFile withPassword:(NSString*)password
-               success:(void (^)(void))success
+               success:(void (^)(NSUInteger total, NSUInteger imported))success
                failure:(void (^)(NSError *error))failure;
 
 

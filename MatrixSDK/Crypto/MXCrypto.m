@@ -1001,17 +1001,31 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
 #endif
 }
 
-- (void)importRoomKeys:(NSArray<NSDictionary *> *)keys success:(void (^)(void))success failure:(void (^)(NSError *))failure
+- (void)importRoomKeys:(NSArray<NSDictionary *> *)keys success:(void (^)(NSUInteger total, NSUInteger imported))success failure:(void (^)(NSError *))failure
 {
 #ifdef MX_CRYPTO
     dispatch_async(_decryptionQueue, ^{
 
         NSLog(@"[MXCrypto] importRoomKeys:");
 
-        NSDate *startDate = [NSDate date];
-
         // Convert JSON to MXMegolmSessionData
         NSArray<MXMegolmSessionData *> *sessionDatas = [MXMegolmSessionData modelsFromJSON:keys];
+
+        [self importMegolmSessionDatas:sessionDatas backUp:YES success:success failure:failure];
+    });
+#endif
+}
+
+- (void)importMegolmSessionDatas:(NSArray<MXMegolmSessionData*>*)sessionDatas backUp:(BOOL)backUp success:(void (^)(NSUInteger total, NSUInteger imported))success failure:(void (^)(NSError *error))failure
+{
+#ifdef MX_CRYPTO
+    dispatch_async(_decryptionQueue, ^{
+
+        NSLog(@"[MXCrypto] importMegolmSessionDatas: backUp: %@", @(backUp));
+
+        NSUInteger imported = 0;
+        NSUInteger totalKeyCount = sessionDatas.count;
+        NSDate *startDate = [NSDate date];
 
         for (MXMegolmSessionData *sessionData in sessionDatas)
         {
@@ -1025,16 +1039,19 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
 
             // Import the session
             id<MXDecrypting> alg = [self getRoomDecryptor:sessionData.roomId algorithm:sessionData.algorithm];
-            [alg importRoomKey:sessionData];
+            if ([alg importRoomKey:sessionData backUp:backUp])
+            {
+                imported++;
+            }
         }
 
-        NSLog(@"[MXCrypto] importRoomKeys: Imported %tu keys in %.0fms", keys.count, [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
+        NSLog(@"[MXCrypto] importMegolmSessionDatas: Imported %tu keys from %tu provided keys in %.0fms", imported, totalKeyCount, [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
 
         dispatch_async(dispatch_get_main_queue(), ^{
 
             if (success)
             {
-                success();
+                success(totalKeyCount, imported);
             }
 
         });
@@ -1042,7 +1059,7 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
 #endif
 }
 
-- (void)importRoomKeys:(NSData *)keyFile withPassword:(NSString *)password success:(void (^)(void))success failure:(void (^)(NSError *))failure
+- (void)importRoomKeys:(NSData *)keyFile withPassword:(NSString *)password success:(void (^)(NSUInteger total, NSUInteger imported))success failure:(void (^)(NSError *))failure
 {
 #ifdef MX_CRYPTO
     dispatch_async(_decryptionQueue, ^{
@@ -1058,13 +1075,13 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
             NSArray *keys = [NSJSONSerialization JSONObjectWithData:jsonData options:0 error:&error];
             if (keys)
             {
-                [self importRoomKeys:keys success:^{
+                [self importRoomKeys:keys success:^(NSUInteger total, NSUInteger imported) {
 
-                    NSLog(@"[MXCrypto] importRoomKeys:withPassord: Imported %tu keys in %.0fms", keys.count, [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
+                    NSLog(@"[MXCrypto] importRoomKeys:withPassord: Imported %tu keys from %tu provided keys in %.0fms", imported, total, [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
 
                     if (success)
                     {
-                        success();
+                        success(total, imported);
                     }
 
                 } failure:failure];
@@ -1080,9 +1097,7 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
             {
                 failure(error);
             }
-
         });
-
     });
 #endif
 }
