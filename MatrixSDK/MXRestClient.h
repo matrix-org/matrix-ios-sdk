@@ -2138,8 +2138,8 @@ typedef enum : NSUInteger
 /**
  Retrieve the backup for a session key from the homeserver.
 
- @param roomId the id of the room that the keys are for.
  @param sessionId the id of the session that the keys are.
+ @param roomId the id of the room that the keys are for.
  @param version the backup version.
 
  @param success A block object called when the operation succeeds.
@@ -2147,16 +2147,15 @@ typedef enum : NSUInteger
 
  @return a MXHTTPOperation instance.
  */
-- (MXHTTPOperation*)keyBackup:(NSString*)roomId
-                      session:(NSString*)sessionId
-                      version:(NSString*)version
-                      success:(void (^)(MXKeyBackupData *keyBackupData))success
-                      failure:(void (^)(NSError *error))failure;
+- (MXHTTPOperation*)keyBackupForSession:(NSString*)sessionId
+                                 inRoom:(NSString*)roomId
+                                version:(NSString*)version
+                                success:(void (^)(MXKeyBackupData *keyBackupData))success
+                                failure:(void (^)(NSError *error))failure;
 
 /**
  Retrieve the backup for all keys in a room from the homeserver.
 
- @param roomKeysBackupData keys to backup.
  @param roomId the id of the room that the keys are for.
  @param version the backup version.
 
@@ -2165,15 +2164,14 @@ typedef enum : NSUInteger
 
  @return a MXHTTPOperation instance.
  */
-- (MXHTTPOperation*)roomKeysBackup:(NSString*)roomId
-                           version:(NSString*)version
-                           success:(void (^)(MXRoomKeysBackupData *roomKeysBackupData))success
-                           failure:(void (^)(NSError *error))failure;
+- (MXHTTPOperation*)keysBackupInRoom:(NSString*)roomId
+                             version:(NSString*)version
+                             success:(void (^)(MXRoomKeysBackupData *roomKeysBackupData))success
+                             failure:(void (^)(NSError *error))failure;
 
 /**
  Retrieve all keys backup from the homeserver.
 
- @param keysBackupData keys to backup.
  @param version the backup version.
 
  @param success A block object called when the operation succeeds.

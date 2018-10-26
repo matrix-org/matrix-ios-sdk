@@ -3947,11 +3947,11 @@ MXAuthAction;
                                  }];
 }
 
-- (MXHTTPOperation*)keyBackup:(NSString*)roomId
-                      session:(NSString*)sessionId
-                      version:(NSString*)version
-                      success:(void (^)(MXKeyBackupData *keyBackupData))success
-                      failure:(void (^)(NSError *error))failure
+- (MXHTTPOperation*)keyBackupForSession:(NSString*)sessionId
+                                 inRoom:(NSString*)roomId
+                                version:(NSString*)version
+                                success:(void (^)(MXKeyBackupData *keyBackupData))success
+                                failure:(void (^)(NSError *error))failure
 {
     NSString *path = [self keyBackupPath:roomId session:sessionId version:version];
     if (!path || !roomId || !sessionId)
@@ -3983,10 +3983,10 @@ MXAuthAction;
                                  }];
 }
 
-- (MXHTTPOperation*)roomKeysBackup:(NSString*)roomId
-                           version:(NSString*)version
-                           success:(void (^)(MXRoomKeysBackupData *roomKeysBackupData))success
-                           failure:(void (^)(NSError *error))failure
+- (MXHTTPOperation*)keysBackupInRoom:(NSString*)roomId
+                             version:(NSString*)version
+                             success:(void (^)(MXRoomKeysBackupData *roomKeysBackupData))success
+                             failure:(void (^)(NSError *error))failure
 {
     NSString *path = [self keyBackupPath:roomId session:nil version:version];
     if (!path || !roomId)
