@@ -63,7 +63,7 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
 
 @implementation MXKeyBackup
 
-#pragma mark - SDK-Private methods
+#pragma mark - SDK-Private methods -
 
 - (instancetype)initWithMatrixSession:(MXSession *)matrixSession
 {
@@ -169,38 +169,13 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
 
     for (MXOlmInboundGroupSession *session in sessions)
     {
-        // Gather information for each key
-        // TODO: userId?
-        MXDeviceInfo *device = [mxSession.crypto.deviceList deviceWithIdentityKey:session.senderKey forUser:nil andAlgorithm:kMXCryptoMegolmAlgorithm];
-
-        // Build the m.megolm_backup.v1.curve25519-aes-sha2 data as defined at
-        // https://github.com/uhoreg/matrix-doc/blob/e2e_backup/proposals/1219-storing-megolm-keys-serverside.md#mmegolm_backupv1curve25519-aes-sha2-key-format
-        MXMegolmSessionData *sessionData = session.exportSessionData;
-        NSDictionary *sessionBackupData = @{
-                                            @"algorithm": sessionData.algorithm,
-                                            @"sender_key": sessionData.senderKey,
-                                            @"sender_claimed_keys": sessionData.senderClaimedKeys,
-                                            @"forwarding_curve25519_key_chain": sessionData.forwardingCurve25519KeyChain ?  sessionData.forwardingCurve25519KeyChain : @[],
-                                            @"session_key": sessionData.sessionKey
-                                            };
-        OLMPkMessage *encryptedSessionBackupData = [_backupKey encryptMessage:[MXTools serialiseJSONObject:sessionBackupData] error:nil];
-
-        // Build backup data for that key
-        MXKeyBackupData *keyBackupData = [MXKeyBackupData new];
-        keyBackupData.firstMessageIndex = session.session.firstKnownIndex;
-        keyBackupData.forwardedCount = session.forwardingCurve25519KeyChain.count;
-        keyBackupData.verified = device.verified;
-        keyBackupData.sessionData = @{
-                                      @"ciphertext": encryptedSessionBackupData.ciphertext,
-                                      @"mac": encryptedSessionBackupData.mac,
-                                      @"ephemeral": encryptedSessionBackupData.ephemeralKey,
-                                      };
+        MXKeyBackupData *keyBackupData = [self encryptGroupSession:session withPkEncryption:_backupKey];
 
         if (!roomsKeyBackup[session.roomId])
         {
             roomsKeyBackup[session.roomId] = [NSMutableDictionary dictionary];
         }
-        roomsKeyBackup[session.roomId][sessionData.sessionId] = keyBackupData;
+        roomsKeyBackup[session.roomId][session.session.sessionIdentifier] = keyBackupData;
     }
 
     // Finalise data to send
@@ -259,7 +234,9 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
 }
 
 
-#pragma mark - Public methods
+#pragma mark - Public methods -
+
+#pragma mark - Backup management
 
 - (MXHTTPOperation *)version:(void (^)(MXKeyBackupVersion * _Nonnull))success failure:(void (^)(NSError * _Nonnull))failure
 {
@@ -395,6 +372,9 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
     return operation;
 }
 
+
+#pragma mark - Backup storing
+
 - (void)backupAllGroupSessions:(nullable void (^)(void))success
                       progress:(nullable void (^)(NSProgress *backupProgress))progress
                        failure:(nullable void (^)(NSError *error))failure;
@@ -496,13 +476,106 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
      });
 }
 
+
+#pragma mark - Backup restoring
+
++ (BOOL)isValidRecoveryKey:(NSString*)recoveryKey
+{
+    NSError *error;
+    NSData *privateKeyOut = [MXRecoveryKey decode:recoveryKey error:&error];
+
+    return !error && privateKeyOut;
+}
+
+- (MXHTTPOperation*)restoreKeyBackup:(NSString*)version
+                         recoveryKey:(NSString*)recoveryKey
+                                room:(nullable NSString*)roomId
+                             session:(nullable NSString*)sessionId
+                             success:(nullable void (^)(NSUInteger total, NSUInteger imported))success
+                             failure:(nullable void (^)(NSError *error))failure
+{
+    MXHTTPOperation *operation = [MXHTTPOperation new];
+
+    MXWeakify(self);
+    dispatch_async(mxSession.crypto.cryptoQueue, ^{
+        MXStrongifyAndReturnIfNil(self);
+
+        // Get a PK decryption instance
+        NSError *error;
+        OLMPkDecryption *decryption = [self pkDecryptionFromRecoveryKey:recoveryKey error:&error];
+        if (error)
+        {
+            NSLog(@"[MXKeyBackup] restoreKeyBackup: Invalid recovery key. Error: %@", error);
+            if (failure)
+            {
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    failure(error);
+                });
+            }
+            return;
+        }
+
+        // Get backup from the homeserver
+        MXWeakify(self);
+        MXHTTPOperation *operation2 = [self keyBackupForSession:sessionId inRoom:roomId version:version success:^(MXKeysBackupData *keysBackupData) {
+            MXStrongifyAndReturnIfNil(self);
+
+            NSMutableArray<MXMegolmSessionData*> *sessionDatas = [NSMutableArray array];
+
+            // Restore that data
+            for (NSString *roomId in keysBackupData.rooms)
+            {
+                for (NSString *sessionId in keysBackupData.rooms[roomId].sessions)
+                {
+                    MXKeyBackupData *keyBackupData = keysBackupData.rooms[roomId].sessions[sessionId];
+
+                    MXMegolmSessionData *sessionData = [self decryptKeyBackupData:keyBackupData forSession:sessionId inRoom:roomId withPkDecryption:decryption];
+
+                    [sessionDatas addObject:sessionData];
+                }
+            }
+
+            // Do not trigger a backup for them if they come from the backup version we are using
+            BOOL backUp = ![version isEqualToString:self.keyBackupVersion.version];
+
+            // Import them into the crypto store
+            [self->mxSession.crypto importMegolmSessionDatas:sessionDatas backUp:backUp success:success failure:^(NSError *error) {
+                if (failure)
+                {
+                    dispatch_async(dispatch_get_main_queue(), ^{
+                        failure(error);
+                    });
+                }
+            }];
+
+        } failure:^(NSError *error) {
+            if (failure)
+            {
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    failure(error);
+                });
+            }
+        }];
+
+        if (operation2)
+        {
+            [operation mutateTo:operation2];
+        }
+    });
+
+    return operation;
+}
+
+
+#pragma mark - Backup state
+
 - (BOOL)enabled
 {
     return _state != MXKeyBackupStateDisabled;
 }
 
 
-#pragma mark - Private methods
+#pragma mark - Private methods -
 
 - (void)setState:(MXKeyBackupState)state
 {
@@ -511,6 +584,132 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
     dispatch_async(dispatch_get_main_queue(), ^{
         [[NSNotificationCenter defaultCenter] postNotificationName:kMXKeyBackupDidStateChangeNotification object:self];
     });
+}
+
+// Same method as [MXRestClient keysBackupInRoom] except that it accepts nullable
+// parameters and always returns a MXKeysBackupData object
+- (MXHTTPOperation*)keyBackupForSession:(nullable NSString*)sessionId
+                                 inRoom:(nullable NSString*)roomId
+                                version:(NSString*)version
+                                success:(void (^)(MXKeysBackupData *keysBackupData))success
+                                failure:(void (^)(NSError *error))failure;
+{
+    MXHTTPOperation *operation;
+
+    if (!sessionId && !roomId)
+    {
+        operation = [mxSession.crypto.matrixRestClient keysBackup:version success:success failure:failure];
+    }
+    else if (!sessionId)
+    {
+        operation = [mxSession.crypto.matrixRestClient keysBackupInRoom:roomId version:version success:^(MXRoomKeysBackupData *roomKeysBackupData) {
+
+            MXKeysBackupData *keysBackupData = [MXKeysBackupData new];
+            keysBackupData.rooms = @{
+                                     roomId: roomKeysBackupData
+                                     };
+
+            success(keysBackupData);
+
+        } failure:failure];
+    }
+    else
+    {
+        operation =  [mxSession.crypto.matrixRestClient keyBackupForSession:sessionId inRoom:roomId version:version success:^(MXKeyBackupData *keyBackupData) {
+
+            MXRoomKeysBackupData *roomKeysBackupData = [MXRoomKeysBackupData new];
+            roomKeysBackupData.sessions = @{
+                                            sessionId: keyBackupData
+                                            };
+
+            MXKeysBackupData *keysBackupData = [MXKeysBackupData new];
+            keysBackupData.rooms = @{
+                                     roomId: roomKeysBackupData
+                                     };
+
+            success(keysBackupData);
+
+        } failure:failure];
+    }
+
+    return operation;
+}
+
+- (OLMPkDecryption*)pkDecryptionFromRecoveryKey:(NSString*)recoveryKey error:(NSError **)error
+{
+    // Extract the primary key
+    NSData *privateKey = [MXRecoveryKey decode:recoveryKey error:error];
+
+    // Built the PK decryption with it
+    OLMPkDecryption *decryption;
+    if (privateKey)
+    {
+        decryption = [OLMPkDecryption new];
+        [decryption setPrivateKey:privateKey error:error];
+    }
+
+    return decryption;
+}
+
+- (MXKeyBackupData*)encryptGroupSession:(MXOlmInboundGroupSession*)session withPkEncryption:(OLMPkEncryption*)encryption
+{
+    // Gather information for each key
+    // TODO: userId?
+    MXDeviceInfo *device = [mxSession.crypto.deviceList deviceWithIdentityKey:session.senderKey forUser:nil andAlgorithm:kMXCryptoMegolmAlgorithm];
+
+    // Build the m.megolm_backup.v1.curve25519-aes-sha2 data as defined at
+    // https://github.com/uhoreg/matrix-doc/blob/e2e_backup/proposals/1219-storing-megolm-keys-serverside.md#mmegolm_backupv1curve25519-aes-sha2-key-format
+    MXMegolmSessionData *sessionData = session.exportSessionData;
+    NSDictionary *sessionBackupData = @{
+                                        @"algorithm": sessionData.algorithm,
+                                        @"sender_key": sessionData.senderKey,
+                                        @"sender_claimed_keys": sessionData.senderClaimedKeys,
+                                        @"forwarding_curve25519_key_chain": sessionData.forwardingCurve25519KeyChain ?  sessionData.forwardingCurve25519KeyChain : @[],
+                                        @"session_key": sessionData.sessionKey
+                                        };
+    OLMPkMessage *encryptedSessionBackupData = [_backupKey encryptMessage:[MXTools serialiseJSONObject:sessionBackupData] error:nil];
+
+    // Build backup data for that key
+    MXKeyBackupData *keyBackupData = [MXKeyBackupData new];
+    keyBackupData.firstMessageIndex = session.session.firstKnownIndex;
+    keyBackupData.forwardedCount = session.forwardingCurve25519KeyChain.count;
+    keyBackupData.verified = device.verified;
+    keyBackupData.sessionData = @{
+                                  @"ciphertext": encryptedSessionBackupData.ciphertext,
+                                  @"mac": encryptedSessionBackupData.mac,
+                                  @"ephemeral": encryptedSessionBackupData.ephemeralKey,
+                                  };
+
+    return keyBackupData;
+}
+
+- (MXMegolmSessionData*)decryptKeyBackupData:(MXKeyBackupData*)keyBackupData forSession:(NSString*)sessionId inRoom:(NSString*)roomId withPkDecryption:(OLMPkDecryption*)decryption
+{
+    MXMegolmSessionData *sessionData;
+
+    NSString *ciphertext, *mac, *ephemeralKey;
+
+    MXJSONModelSetString(ciphertext, keyBackupData.sessionData[@"ciphertext"]);
+    MXJSONModelSetString(mac, keyBackupData.sessionData[@"mac"]);
+    MXJSONModelSetString(ephemeralKey, keyBackupData.sessionData[@"ephemeral"]);
+
+    if (ciphertext && mac && ephemeralKey)
+    {
+        OLMPkMessage *encrypted = [[OLMPkMessage alloc] initWithCiphertext:ciphertext mac:mac ephemeralKey:ephemeralKey];
+
+        NSError *error;
+        NSDictionary *sessionBackupData = [MXTools deserialiseJSONString:[decryption decryptMessage:encrypted error:&error]];
+
+        if (sessionBackupData)
+        {
+            MXJSONModelSetMXJSONModel(sessionData, MXMegolmSessionData, sessionBackupData);
+
+            sessionData.sessionId = sessionId;
+            sessionData.roomId = roomId;
+        }
+    }
+
+    return sessionData;
 }
 
 @end

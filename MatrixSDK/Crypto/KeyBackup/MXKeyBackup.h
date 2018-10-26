@@ -59,6 +59,8 @@ FOUNDATION_EXPORT NSString *const kMXKeyBackupDidStateChangeNotification;
  */
 @interface MXKeyBackup : NSObject
 
+#pragma mark - Backup management
+
 /**
  Get information about the current backup version.
 
@@ -116,6 +118,9 @@ FOUNDATION_EXPORT NSString *const kMXKeyBackupDidStateChangeNotification;
                                    success:(void (^)(void))success
                                    failure:(nullable void (^)(NSError *error))failure;
 
+
+#pragma mark - Backup storing
+
 /**
  Start to back up keys immediately.
 
@@ -141,6 +146,40 @@ FOUNDATION_EXPORT NSString *const kMXKeyBackupDidStateChangeNotification;
  @param backupProgress the current backup progress
  */
 - (void)backupProgress:(void (^)(NSProgress *backupProgress))backupProgress;
+
+
+#pragma mark - Backup restoring
+
+/**
+ Check if a key is a valid recovery key.
+
+ @param recoveryKey the string to valid.
+ @return YES if valid
+ */
++ (BOOL)isValidRecoveryKey:(NSString*)recoveryKey;
+
+/**
+ Restore a backup from a given backup version stored on the homeserver.
+
+ @param version the backup version to restore from.
+ @param recoveryKey the recovery key to decrypt the retrieved backup.
+ @param roomId the id of the room to get backup data from.
+ @param sessionId the id of the session to restore.
+
+ @param success A block object called when the operation succeeds.
+                It provides the number of found keys and the number of successfully imported keys.
+ @param failure A block object called when the operation fails.
+ 
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)restoreKeyBackup:(NSString*)version
+                         recoveryKey:(NSString*)recoveryKey
+                                room:(nullable NSString*)roomId
+                             session:(nullable NSString*)sessionId
+                             success:(nullable void (^)(NSUInteger total, NSUInteger imported))success
+                             failure:(nullable void (^)(NSError *error))failure;
+
+#pragma mark - Backup state
 
 /**
  The backup state.

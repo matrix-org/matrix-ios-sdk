@@ -22,6 +22,15 @@
 #import "MXCrypto_Private.h"
 #import "MXRecoveryKey.h"
 
+@interface MXKeyBackup (Testing)
+
+- (OLMPkDecryption*)pkDecryptionFromRecoveryKey:(NSString*)recoveryKey error:(NSError **)error;
+- (MXKeyBackupData*)encryptGroupSession:(MXOlmInboundGroupSession*)session withPkEncryption:(OLMPkEncryption*)encryption;
+- (MXMegolmSessionData*)decryptKeyBackupData:(MXKeyBackupData*)keyBackupData forSession:(NSString*)sessionId inRoom:(NSString*)roomId withPkDecryption:(OLMPkDecryption*)decryption;
+
+@end
+
+
 // Do not bother with retain cycles warnings in tests
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Warc-retain-cycles"
@@ -307,6 +316,19 @@
     XCTAssertEqualObjects(error.domain, MXRecoveryKeyErrorDomain);
 }
 
+- (void)testIsValidRecoveryKey
+{
+    NSString *recoveryKey         = @"EsTc LW2K PGiF wKEA 3As5 g5c4 BXwk qeeJ ZJV8 Q9fu gUMN UE4d";
+    NSString *invalidRecoveryKey1 = @"EsTc LW2K PGiF wKEA 3As5 g5c4 BXwk qeeJ ZJV8 Q9fu gUMN UE4e";
+    NSString *invalidRecoveryKey2 = @"EsTc LW2K PGiF wKEA 3As5 g5c4 BXwk qeeJ ZJV8 Q9fu gUMN UE4f";
+    NSString *invalidRecoveryKey3 = @"EqTc LW2K PGiF wKEA 3As5 g5c4 BXwk qeeJ ZJV8 Q9fu gUMN UE4d";
+
+    XCTAssertTrue([MXKeyBackup isValidRecoveryKey:recoveryKey]);
+    XCTAssertFalse([MXKeyBackup isValidRecoveryKey:invalidRecoveryKey1]);
+    XCTAssertFalse([MXKeyBackup isValidRecoveryKey:invalidRecoveryKey2]);
+    XCTAssertFalse([MXKeyBackup isValidRecoveryKey:invalidRecoveryKey3]);
+}
+
 /**
  Check that `[MXKeyBackup prepareKeyBackupVersion` returns valid data
  */
@@ -433,8 +455,6 @@
 
                 } progress:^(NSProgress * _Nonnull backupProgress) {
 
-                    NSLog(@"---- %@", backupProgress);
-
                     XCTAssertEqual(backupProgress.totalUnitCount, keys);
                     lastbackedUpkeysProgress = backupProgress.completedUnitCount;
 
@@ -450,6 +470,54 @@
             XCTFail(@"The request should not fail - NSError: %@", error);
             [expectation fulfill];
         }];
+    }];
+}
+
+/**
+ Check that encryption and decryption of megolm keys
+ - Pick a megolm key
+ - Check [MXKeyBackup encryptGroupSession] returns stg
+ - Check [MXKeyBackup pkDecryptionFromRecoveryKey] is able to create a OLMPkDecryption
+ - Check [MXKeyBackup decryptKeyBackupData] returns stg
+ - Compare the decrypted megolm key with the original one
+ */
+- (void)testEncryptAndDecryptKeyBackupData
+{
+    [matrixSDKTestsE2EData doE2ETestWithAliceAndBobInARoomWithCryptedMessages:self cryptedBob:YES readyToTest:^(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
+
+        // Pick a megolm key
+        MXOlmInboundGroupSession *session = [aliceSession.crypto.store inboundGroupSessionsToBackup:1].firstObject;
+
+        [aliceSession.crypto.backup prepareKeyBackupVersion:^(MXMegolmBackupCreationInfo * _Nonnull keyBackupCreationInfo) {
+            [aliceSession.crypto.backup createKeyBackupVersion:keyBackupCreationInfo success:^(MXKeyBackupVersion * _Nonnull keyBackupVersion) {
+
+                // Check [MXKeyBackup encryptGroupSession] returns stg
+                MXKeyBackupData *keyBackupData = [aliceSession.crypto.backup encryptGroupSession:session withPkEncryption:aliceSession.crypto.backup.backupKey];
+                XCTAssertNotNil(keyBackupData);
+                XCTAssertNotNil(keyBackupData.sessionData);
+
+                // Check [MXKeyBackup pkDecryptionFromRecoveryKey] is able to create a OLMPkDecryption
+                OLMPkDecryption *decryption = [aliceSession.crypto.backup pkDecryptionFromRecoveryKey:keyBackupCreationInfo.recoveryKey error:nil];
+                XCTAssertNotNil(decryption);
+
+                // Check [MXKeyBackup decryptKeyBackupData] returns stg
+                MXMegolmSessionData *sessionData = [aliceSession.crypto.backup decryptKeyBackupData:keyBackupData forSession:session.session.sessionIdentifier inRoom:roomId withPkDecryption:decryption];
+                XCTAssertNotNil(sessionData);
+
+                // Compare the decrypted megolm key with the original one
+                XCTAssertEqualObjects(session.exportSessionData.JSONDictionary, sessionData.JSONDictionary);
+
+                [expectation fulfill];
+
+            } failure:^(NSError * _Nonnull error) {
+                XCTFail(@"The request should not fail - NSError: %@", error);
+                [expectation fulfill];
+            }];
+        } failure:^(NSError * _Nonnull error) {
+            XCTFail(@"The request should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+
     }];
 }
 
