@@ -11,6 +11,7 @@ Improvements:
 
 Bug fix:
 * MXEvent: Move `invite_room_state` to the correct place in the client-server API (vector-im/riot-ios/issues/2010).
+* MXRoomSummaryUpdater: Fix minor issue in updateSummaryAvatar method.
 
 Changes in Matrix iOS SDK in 0.11.5 (2018-10-05)
 ===============================================
