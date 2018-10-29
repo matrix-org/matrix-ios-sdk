@@ -250,6 +250,10 @@
         {
             [crypto.backup maybeSendKeyBackup];
         }
+        else
+        {
+            [crypto.store markBackupDoneForInboundGroupSessionWithId:session.sessionId andSenderKey:session.senderKey];
+        }
 
         // Have another go at decrypting events sent with this session
         [self retryDecryption:session.senderKey sessionId:session.sessionId];

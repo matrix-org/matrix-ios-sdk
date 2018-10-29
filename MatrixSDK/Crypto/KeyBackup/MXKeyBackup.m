@@ -496,6 +496,8 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
 {
     MXHTTPOperation *operation = [MXHTTPOperation new];
 
+    NSLog(@"[MXKeyBackup] restoreKeyBackup: From backup version: %@", version);
+
     MXWeakify(self);
     dispatch_async(mxSession.crypto.cryptoQueue, ^{
         MXStrongifyAndReturnIfNil(self);
@@ -535,8 +537,14 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
                 }
             }
 
+            NSLog(@"[MXKeyBackup] restoreKeyBackup: Got %@ keys from the backup store on the homeserver", @(sessionDatas.count));
+
             // Do not trigger a backup for them if they come from the backup version we are using
             BOOL backUp = ![version isEqualToString:self.keyBackupVersion.version];
+            if (backUp)
+            {
+                NSLog(@"[MXKeyBackup] restoreKeyBackup: Those keys will be backed up to backup version: %@", self.keyBackupVersion.version);
+            }
 
             // Import them into the crypto store
             [self->mxSession.crypto importMegolmSessionDatas:sessionDatas backUp:backUp success:success failure:^(NSError *error) {
