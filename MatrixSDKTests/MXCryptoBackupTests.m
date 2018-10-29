@@ -533,57 +533,54 @@
 {
     [matrixSDKTestsE2EData doE2ETestWithAliceAndBobInARoomWithCryptedMessages:self cryptedBob:YES readyToTest:^(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
 
-        [aliceSession.crypto exportRoomKeys:^(NSArray<NSDictionary *> *aliceKeys1) {
+        NSArray<MXOlmInboundGroupSession *> *aliceKeys1 = [aliceSession.crypto.store inboundGroupSessionsToBackup:100];
 
-            NSArray<MXOlmInboundGroupSession*> *aliceKeys = [aliceSession.crypto.store inboundGroupSessionsToBackup:100];
+        // - Do an e2e backup to the homeserver
+        [aliceSession.crypto.backup prepareKeyBackupVersion:^(MXMegolmBackupCreationInfo * _Nonnull keyBackupCreationInfo) {
+            [aliceSession.crypto.backup createKeyBackupVersion:keyBackupCreationInfo success:^(MXKeyBackupVersion * _Nonnull keyBackupVersion) {
+                [aliceSession.crypto.backup backupAllGroupSessions:^{
 
-            // - Do an e2e backup to the homeserver
-            [aliceSession.crypto.backup prepareKeyBackupVersion:^(MXMegolmBackupCreationInfo * _Nonnull keyBackupCreationInfo) {
-                [aliceSession.crypto.backup createKeyBackupVersion:keyBackupCreationInfo success:^(MXKeyBackupVersion * _Nonnull keyBackupVersion) {
-                    [aliceSession.crypto.backup backupAllGroupSessions:^{
+                    // - Log Alice on a new device
+                    [MXSDKOptions sharedInstance].enableCryptoWhenStartingMXSession = YES;
+                    [matrixSDKTestsData relogUserSessionWithNewDevice:aliceSession withPassword:MXTESTS_ALICE_PWD onComplete:^(MXSession *aliceSession2) {
+                        [MXSDKOptions sharedInstance].enableCryptoWhenStartingMXSession = NO;
 
-                        // - Log Alice on a new device
-                        [MXSDKOptions sharedInstance].enableCryptoWhenStartingMXSession = YES;
-                        [matrixSDKTestsData relogUserSessionWithNewDevice:aliceSession withPassword:MXTESTS_ALICE_PWD onComplete:^(MXSession *aliceSession2) {
-                            [MXSDKOptions sharedInstance].enableCryptoWhenStartingMXSession = NO;
+                        // Test check: aliceSession2 has no keys at login
+                        XCTAssertEqual([aliceSession2.crypto.store inboundGroupSessionsCount:NO], 0);
 
-                            // Test check: aliceSession2 has no keys at login
-                            XCTAssertEqual([aliceSession2.crypto.store inboundGroupSessionsCount:NO], 0);
+                        // - Restore the e2e backup from the homeserver
+                        [aliceSession2.crypto.backup restoreKeyBackup:keyBackupVersion.version
+                                                          recoveryKey:keyBackupCreationInfo.recoveryKey
+                                                                 room:nil session:nil
+                                                              success:^(NSUInteger total, NSUInteger imported)
+                         {
+                             // - Imported keys number must be correct
+                             XCTAssertEqual(total, aliceKeys1.count);
+                             XCTAssertEqual(total, imported);
 
-                            // - Restore the e2e backup from the homeserver
-                            [aliceSession2.crypto.backup restoreKeyBackup:keyBackupVersion.version
-                                                              recoveryKey:keyBackupCreationInfo.recoveryKey
-                                                                     room:nil session:nil
-                                                                  success:^(NSUInteger total, NSUInteger imported)
+                             // - The new device must have the same count of megolm keys
+                             XCTAssertEqual([aliceSession2.crypto.store inboundGroupSessionsCount:NO], aliceKeys1.count);
+
+                             // TODO: This test will pass once the backup will be started automatically when a backup version
+                             // is detected
+                             XCTAssertEqual([aliceSession2.crypto.store inboundGroupSessionsCount:YES], aliceKeys1.count);
+
+                             // - Alice must have the same keys on both devices
+                             for (MXOlmInboundGroupSession *aliceKey1 in aliceKeys1)
                              {
-                                 // - Imported keys number must be correct
-                                 XCTAssertEqual(total, aliceKeys.count);
-                                 XCTAssertEqual(total, imported);
+                                 MXOlmInboundGroupSession *aliceKey2 = [aliceSession2.crypto.store inboundGroupSessionWithId:aliceKey1.session.sessionIdentifier andSenderKey:aliceKey1.senderKey];
+                                 XCTAssertNotNil(aliceKey2);
+                                 XCTAssertEqualObjects(aliceKey2.exportSessionData.JSONDictionary, aliceKey1.exportSessionData.JSONDictionary);
+                             }
 
-                                 // - The new device must have the same count of megolm keys
-                                 XCTAssertEqual([aliceSession2.crypto.store inboundGroupSessionsCount:NO], aliceKeys.count);
-                                 XCTAssertEqual([aliceSession2.crypto.store inboundGroupSessionsCount:YES], aliceKeys.count);
+                             [expectation fulfill];
 
-                                 // - Alice must have the same keys on both devices
-                                 [aliceSession2.crypto exportRoomKeys:^(NSArray<NSDictionary *> *aliceKeys2) {
-
-                                     XCTAssertEqualObjects(aliceKeys1, aliceKeys2);
-                                     [expectation fulfill];
-
-                                 } failure:^(NSError * _Nonnull error) {
-                                     XCTFail(@"The request should not fail - NSError: %@", error);
-                                     [expectation fulfill];
-                                 }];
-                             } failure:^(NSError * _Nonnull error) {
-                                 XCTFail(@"The request should not fail - NSError: %@", error);
-                                 [expectation fulfill];
-                             }];
-                        }];
-                    } progress:nil failure:^(NSError * _Nonnull error) {
-                        XCTFail(@"The request should not fail - NSError: %@", error);
-                        [expectation fulfill];
+                         } failure:^(NSError * _Nonnull error) {
+                             XCTFail(@"The request should not fail - NSError: %@", error);
+                             [expectation fulfill];
+                         }];
                     }];
-                } failure:^(NSError * _Nonnull error) {
+                } progress:nil failure:^(NSError * _Nonnull error) {
                     XCTFail(@"The request should not fail - NSError: %@", error);
                     [expectation fulfill];
                 }];
