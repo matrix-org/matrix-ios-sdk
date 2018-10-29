@@ -2,6 +2,7 @@ Changes in Matrix iOS SDK in 0.11.6 (2018-10-)
 ===============================================
 
 Improvements:
+* Upgrade OLMKit version (3.0.0).
 * MXHTTPClient: Send Access-Token as header instead of query param (vector-im/riot-ios/issues/2071).
 * MXCrypto: Encrypt the messages for invited members according to the history visibility (#559)
 * MXSession: When create a room as direct wait for room being tagged as direct chat before calling success block.
