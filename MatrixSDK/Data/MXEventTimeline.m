@@ -331,7 +331,11 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
 
         NSLog(@"[MXEventTimeline] paginate : got %tu messages from the server", paginatedResponse.chunk.count);
 
-        [self handlePaginationResponse:paginatedResponse direction:direction];
+        // Check if the room has not been left while waiting for the response
+        if ([self->room.mxSession hasRoomWithRoomId:self->room.roomId])
+        {
+            [self handlePaginationResponse:paginatedResponse direction:direction];
+        }
 
         // Inform the method caller
         complete();

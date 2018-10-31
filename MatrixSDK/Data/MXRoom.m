@@ -270,12 +270,16 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
                     }
                     roomMemberEvents = updatedRoomMemberEvents;
 
-                    [liveTimeline handleLazyLoadedStateEvents:roomMemberEvents];
-
-                    [self.mxSession.store storeHasLoadedAllRoomMembersForRoom:self.roomId andValue:YES];
-                    if ([self.mxSession.store respondsToSelector:@selector(commit)])
+                    // Check if the room has not been left while waiting for the response
+                    if ([self.mxSession hasRoomWithRoomId:self.roomId])
                     {
-                        [self.mxSession.store commit];
+                        [liveTimeline handleLazyLoadedStateEvents:roomMemberEvents];
+
+                        [self.mxSession.store storeHasLoadedAllRoomMembersForRoom:self.roomId andValue:YES];
+                        if ([self.mxSession.store respondsToSelector:@selector(commit)])
+                        {
+                            [self.mxSession.store commit];
+                        }
                     }
 
                     // Provide the timelime to pending requesters
