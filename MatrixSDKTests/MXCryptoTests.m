@@ -1560,6 +1560,100 @@
     }];
 }
 
+// Test the encryption for an invited member when the room history visibility is enabled for invited members.
+- (void)testInvitedMemberInACryptedRoom
+{
+    [matrixSDKTestsE2EData doE2ETestWithAliceByInvitingBobInARoom:self cryptedBob:YES warnOnUnknowDevices:NO readyToTest:^(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
+        
+        aliceSessionToClose = aliceSession;
+        bobSessionToClose = bobSession;
+        
+        NSString *messageFromAlice = @"Hello I'm Alice!";
+        
+        MXRoom *roomFromAlicePOV = [aliceSession roomWithRoomId:roomId];
+        
+        // We force the room history visibility for INVITED members.
+        [aliceSession.matrixRestClient setRoomHistoryVisibility:roomId historyVisibility:kMXRoomHistoryVisibilityInvited success:^{
+            
+            // Send a first message whereas Bob is invited
+            [roomFromAlicePOV sendTextMessage:messageFromAlice success:nil failure:^(NSError *error) {
+                XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                [expectation fulfill];
+            }];
+            
+            // Listen to the room messages in order to check that Bob is able to read the message sent by Alice
+            [bobSession listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage] onEvent:^(MXEvent *event, MXTimelineDirection direction, id customObject) {
+                
+                if ([event.roomId isEqualToString:roomId])
+                {
+                    XCTAssertEqual(0, [self checkEncryptedEvent:event roomId:roomId clearMessage:messageFromAlice senderSession:aliceSession]);
+                    [expectation fulfill];
+                }
+                
+            }];
+            
+            [bobSession joinRoom:roomId success:nil failure:^(NSError *error) {
+                NSAssert(NO, @"Cannot join a room - error: %@", error);
+                [expectation fulfill];
+            }];
+            
+        } failure:^(NSError *error) {
+            XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+            [expectation fulfill];
+        }];
+    }];
+}
+
+// Test the encryption when the room history visibility is disabled for invited members.
+- (void)testInvitedMemberInACryptedRoom2
+{
+    [matrixSDKTestsE2EData doE2ETestWithAliceByInvitingBobInARoom:self cryptedBob:YES warnOnUnknowDevices:NO readyToTest:^(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
+        
+        aliceSessionToClose = aliceSession;
+        bobSessionToClose = bobSession;
+        
+        NSString *messageFromAlice = @"Hello I'm Alice!";
+        NSString *message2FromAlice = @"I'm still Alice!";
+        
+        MXRoom *roomFromAlicePOV = [aliceSession roomWithRoomId:roomId];
+        
+        // We force the room history visibility for JOINED members.
+        [aliceSession.matrixRestClient setRoomHistoryVisibility:roomId historyVisibility:kMXRoomHistoryVisibilityJoined success:^{
+            
+            // Send a first message whereas Bob is invited
+            [roomFromAlicePOV sendTextMessage:messageFromAlice success:nil failure:^(NSError *error) {
+                XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                [expectation fulfill];
+            }];
+            
+            // Listen to the room messages in order to check that Bob is able to read only the second message sent by Alice
+            [bobSession listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage] onEvent:^(MXEvent *event, MXTimelineDirection direction, id customObject) {
+                
+                if ([event.roomId isEqualToString:roomId])
+                {
+                    XCTAssertEqual(0, [self checkEncryptedEvent:event roomId:roomId clearMessage:message2FromAlice senderSession:aliceSession]);
+                    [expectation fulfill];
+                }
+                
+            }];
+            
+            [bobSession joinRoom:roomId success:^(MXRoom *room) {
+                // Send a second message to Bob who just joins the room
+                [roomFromAlicePOV sendTextMessage:message2FromAlice success:nil failure:^(NSError *error) {
+                    XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                    [expectation fulfill];
+                }];
+            } failure:^(NSError *error) {
+                NSAssert(NO, @"Cannot join a room - error: %@", error);
+                [expectation fulfill];
+            }];
+            
+        } failure:^(NSError *error) {
+            XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+            [expectation fulfill];
+        }];
+    }];
+}
 
 #pragma mark - Edge cases
 

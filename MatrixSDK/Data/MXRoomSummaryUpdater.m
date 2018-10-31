@@ -365,7 +365,7 @@
         avatar = otherMembers.firstObject.avatarUrl;
     }
 
-    if (avatar != summary.displayname || ![avatar isEqualToString:summary.avatar])
+    if (avatar != summary.avatar || ![avatar isEqualToString:summary.avatar])
     {
         summary.avatar = avatar;
         return YES;

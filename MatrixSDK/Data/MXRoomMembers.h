@@ -50,6 +50,14 @@
 @property (nonatomic, readonly) NSArray<MXRoomMember*> *joinedMembers;
 
 /**
+ A copy of the list of members we should be encrypting for in this room.
+ 
+ @param historyVisibility the current history visibility of the room.
+ @return the list of members we should be encrypting for.
+ */
+- (NSArray<MXRoomMember *> *)encryptionTargetMembers:(MXRoomHistoryVisibility)historyVisibility;
+
+/**
  Return the member with the given user id.
 
  @param userId the id of the member to retrieve.
