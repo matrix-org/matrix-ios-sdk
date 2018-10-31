@@ -1867,6 +1867,11 @@ typedef void (^MXOnResumeDone)(void);
 
 
 #pragma mark - The user's rooms
+- (BOOL)hasRoomWithRoomId:(NSString*)roomId
+{
+    return (rooms[roomId] != nil);
+}
+
 - (MXRoom *)roomWithRoomId:(NSString *)roomId
 {
     // sanity check

@@ -750,6 +750,15 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
 
 #pragma mark - The user's rooms
 /**
+ Check if the user is in a room
+
+ @param roomId The room id to the room.
+
+ @return YES if they are.
+ */
+- (BOOL)hasRoomWithRoomId:(NSString*)roomId;
+
+/**
  Get the MXRoom instance of a room.
  
  @param roomId The room id to the room.

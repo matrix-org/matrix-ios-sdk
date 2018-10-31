@@ -20,6 +20,7 @@
 #import "MXSDKOptions.h"
 
 #import "MXHTTPClient_Private.h"
+#import "MXFileStore.h"
 
 // Do not bother with retain cycles warnings in tests
 #pragma clang diagnostic push
@@ -787,6 +788,143 @@ Common initial conditions:
 - (void)testRoomAfterLeavingFromAnotherDeviceWithLazyLoadingOFF
 {
     [self checkRoomAfterLeavingFromAnotherDeviceWithLazyLoading:NO];
+}
+
+
+// Complementary test to testRoomAfterLeavingFromAnotherDevice to check
+// the regression described at https://github.com/vector-im/riot-ios/issues/2082:
+// - Run the scenario
+// - Restart Alice session with a permanent store (MXFileStore)
+// - Alice requests all members from the HS
+// - and make a pagination request, because there is a bug here too
+// - Meanwhile, Alice leaves the room
+// - Close and reopen Alice session
+// -> Alice must not know the room anymore
+- (void)checkRoomAfterLeavingWithLazyLoading:(BOOL)lazyLoading
+{
+    // - Run the scenario
+    [self createScenarioWithLazyLoading:lazyLoading readyToTest:^(MXSession *aliceSession, MXSession *bobSession, MXSession *charlieSession, NSString *roomId, XCTestExpectation *expectation) {
+
+        MXRoom *room = [aliceSession roomWithRoomId:roomId];
+        MXRoomSummary *summary = [aliceSession roomSummaryWithRoomId:roomId];
+        XCTAssertNotNil(room);
+        XCTAssertNotNil(summary);
+
+        // - Restart Alice session with a permanent store (MXFileStore)
+        MXRestClient *aliceRestClient = aliceSession.matrixRestClient;
+        [aliceSession close];
+        aliceSession = nil;
+
+        MXFileStore *store = [[MXFileStore alloc] init];
+        __block MXSession *aliceSession2 = [[MXSession alloc] initWithMatrixRestClient:aliceRestClient];
+        [aliceSession2 setStore:store success:^{
+            [aliceSession2 start:^{
+
+                MXRoom *room2 = [aliceSession2 roomWithRoomId:roomId];
+                MXRoomSummary *summary2 = [aliceSession2 roomSummaryWithRoomId:roomId];
+                XCTAssertNotNil(room2);
+                XCTAssertNotNil(summary2);
+
+                [room2 liveTimeline:^(MXEventTimeline *liveTimeline) {
+
+                    // - Alice requests all members from the HS
+                    // Force [MXRoom members:] to make a request
+                    [aliceSession2.store storeHasLoadedAllRoomMembersForRoom:roomId andValue:NO];
+
+                    [MXHTTPClient setDelay:1000 toRequestsContainingString:@"/members"];
+                    [room2 members:^(MXRoomMembers *members) {
+
+                        MXRoom *room2a = [aliceSession2 roomWithRoomId:roomId];
+                        MXRoomSummary *summary2a = [aliceSession2 roomSummaryWithRoomId:roomId];
+                        XCTAssertNil(room2a);
+                        XCTAssertNil(summary2a);
+
+                    } failure:^(NSError *error) {
+                        XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                        [expectation fulfill];
+                    }];
+
+
+                    // - and a pagination request, because there is a bug here too
+                    [MXHTTPClient setDelay:1000 toRequestsContainingString:@"/messages"];
+                    [liveTimeline resetPagination];
+                    [liveTimeline paginate:30 direction:MXTimelineDirectionBackwards onlyFromStore:NO complete:^{
+
+                        MXRoom *room2a = [aliceSession2 roomWithRoomId:roomId];
+                        MXRoomSummary *summary2a = [aliceSession2 roomSummaryWithRoomId:roomId];
+                        XCTAssertNil(room2a);
+                        XCTAssertNil(summary2a);
+
+                    } failure:^(NSError *error) {
+                        XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                        [expectation fulfill];
+                    }];
+
+
+                    // - Meanwhile, she leaves the room
+                    [room2 leave:^{
+
+                        // Let time for the pagination to complete
+                        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 2000 * USEC_PER_SEC), dispatch_get_main_queue(), ^{
+
+                            // Keep a ref to room2 so that requests on it can complete
+                            NSLog(@"%@", room2);
+
+                            MXRoom *room2b = [aliceSession2 roomWithRoomId:roomId];
+                            MXRoomSummary *summary2b = [aliceSession2 roomSummaryWithRoomId:roomId];
+                            XCTAssertNil(room2b);
+                            XCTAssertNil(summary2b);
+
+                            // - Close and reopen Alice session
+                            [aliceSession2 close];
+                            aliceSession2 = nil;
+
+                            MXFileStore *store = [[MXFileStore alloc] init];
+                            MXSession *aliceSession3 = [[MXSession alloc] initWithMatrixRestClient:aliceRestClient];
+                            [aliceSession3 setStore:store success:^{
+                                [aliceSession3 start:^{
+
+                                    // -> Alice must not know the room anymore
+                                    MXRoom *room3 = [aliceSession3 roomWithRoomId:roomId];
+                                    MXRoomSummary *summary3 = [aliceSession3 roomSummaryWithRoomId:roomId];
+                                    XCTAssertNil(room3);
+                                    XCTAssertNil(summary3);
+
+                                    [expectation fulfill];
+
+                                } failure:^(NSError *error) {
+                                    XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                                    [expectation fulfill];
+                                }];
+                            } failure:^(NSError *error) {
+                                XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                                [expectation fulfill];
+                            }];
+                        });
+                    } failure:^(NSError *error) {
+                        XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                        [expectation fulfill];
+                    }];
+                }];
+            } failure:^(NSError *error) {
+                XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                [expectation fulfill];
+            }];
+        } failure:^(NSError *error) {
+            XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+            [expectation fulfill];
+        }];
+    }];
+}
+
+- (void)testRoomAfterLeaving
+{
+    [self checkRoomAfterLeavingWithLazyLoading:YES];
+}
+
+- (void)testRoomAfterLeavingWithLazyLoadingOFF
+{
+    [self checkRoomAfterLeavingWithLazyLoading:NO];
 }
 
 
