@@ -1938,7 +1938,9 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
     if (isSenderMessageAReplyTo)
     {
         NSError *error = nil;
-        NSRegularExpression *replyRegex = [NSRegularExpression regularExpressionWithPattern:@"^<mx-reply>.*</mx-reply>" options:NSRegularExpressionCaseInsensitive error:&error];
+        NSRegularExpression *replyRegex = [NSRegularExpression regularExpressionWithPattern:@"^<mx-reply>.*</mx-reply>"
+                                                                                    options:NSRegularExpressionCaseInsensitive | NSRegularExpressionDotMatchesLineSeparators
+                                                                                      error:&error];
         NSString *senderMessageFormattedBodyWithoutReply = [replyRegex stringByReplacingMatchesInString:senderMessageFormattedBody options:0 range:NSMakeRange(0, senderMessageFormattedBody.length) withTemplate:@""];
         
         if (error)
