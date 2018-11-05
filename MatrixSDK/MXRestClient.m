@@ -157,9 +157,8 @@ MXAuthAction;
                              }
                          }];
         
-        // By default, use the same address for the identity server, and the antivirus server
+        // By default, use the same address for the identity server
         self.identityServer = homeserver;
-        self.antivirusServer = homeserver;
 
         completionQueue = dispatch_get_main_queue();
 
@@ -223,9 +222,8 @@ MXAuthAction;
                              }
                          }];
         
-        // By default, use the same address for the identity server, and the antivirus server
+        // By default, use the same address for the identity server
         self.identityServer = homeserver;
-        self.antivirusServer = homeserver;
 
         completionQueue = dispatch_get_main_queue();
 
@@ -3543,9 +3541,18 @@ MXAuthAction;
 #pragma mark - Antivirus server API
 - (void)setAntivirusServer:(NSString *)antivirusServer
 {
-    _antivirusServer = [antivirusServer copy];
-    antivirusHttpClient = [[MXHTTPClient alloc] initWithBaseURL:[NSString stringWithFormat:@"%@/%@", antivirusServer, antivirusServerPathPrefix]
-                             andOnUnrecognizedCertificateBlock:nil];
+    if (antivirusServer.length)
+    {
+        _antivirusServer = [antivirusServer copy];
+        antivirusHttpClient = [[MXHTTPClient alloc] initWithBaseURL:[NSString stringWithFormat:@"%@/%@", antivirusServer, antivirusServerPathPrefix]
+                                  andOnUnrecognizedCertificateBlock:nil];
+    }
+    else
+    {
+        // Disable antivirus requests
+        _antivirusServer = nil;
+        antivirusHttpClient = nil;
+    }
 }
 
 - (MXHTTPOperation*)getAntivirusServerPublicKey:(void (^)(NSString *publicKey))success

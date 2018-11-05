@@ -632,6 +632,11 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
  */
 - (MXHTTPOperation*)supportedMatrixVersions:(void (^)(MXMatrixVersions *matrixVersions))success failure:(void (^)(NSError *error))failure;
 
+/**
+ The antivirus server URL (nil by default).
+ Set a non-null url to configure the antivirus scanner use.
+ */
+@property (nonatomic) NSString *antivirusServerURL;
 
 #pragma mark - Rooms operations
 /**

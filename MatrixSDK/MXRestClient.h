@@ -123,7 +123,7 @@ typedef enum : NSUInteger
 @interface MXRestClient : NSObject
 
 /**
- The homeserver.
+ The homeserver URL.
  */
 @property (nonatomic, readonly) NSString *homeserver;
 
@@ -150,22 +150,22 @@ typedef enum : NSUInteger
 @property (nonatomic) NSString *contentPathPrefix;
 
 /**
- The identity server.
+ The identity server URL.
  By default, it points to the defined home server. If needed, change it by setting
  this property.
  */
 @property (nonatomic) NSString *identityServer;
 
 /**
- The antivirus server.
- By default, it points to the defined home server. If needed, change it by setting
- this property.
+ The antivirus server URL (nil by default).
+ Set a non-null url to enable the antivirus scanner use.
  */
 @property (nonatomic) NSString *antivirusServer;
 
 /**
  The Client-Server API prefix to use for the antivirus server
  By default, it is defined by the constant kMXAntivirusAPIPrefixPathUnstable.
+ In case of a custom path prefix use, set it before settings the antivirus server url.
  */
 @property (nonatomic) NSString *antivirusServerPathPrefix;
 
