@@ -1537,6 +1537,19 @@ typedef enum : NSUInteger
                              failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 /**
+ Get the profile information of a user.
+ 
+ @param userId the user id.
+ @param success A block object called when the operation succeeds. It provides the user display name and avatar url.
+ @param failure A block object called when the operation fails.
+ 
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)profileForUser:(NSString*)userId
+                           success:(void (^)(NSString *displayName, NSString *avatarUrl))success
+                           failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
+
+/**
  Link an authenticated 3rd party id to the Matrix user.
 
  @param sid the id provided during the 3PID validation session (see [MXRestClient requestTokenForEmail:], or [MXRestClient requestEmailValidation:]).

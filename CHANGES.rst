@@ -1,15 +1,20 @@
-Changes in Matrix iOS SDK in 0.11.6 (2018-10-)
+Changes in Matrix iOS SDK in 0.11.6 (2018-10-31)
 ===============================================
 
 Improvements:
+* Upgrade OLMKit version (3.0.0).
 * MXHTTPClient: Send Access-Token as header instead of query param (vector-im/riot-ios/issues/2071).
 * MXCrypto: Encrypt the messages for invited members according to the history visibility (#559)
 * MXSession: When create a room as direct wait for room being tagged as direct chat before calling success block.
 * CallKit is now disabled in China (PR #578).
 * Add MXEncryptedContentFile and MXEncryptedContentKey classes.
+* MXRestClient: Handle GET /_matrix/client/r0/profile/{userId} request.
 
 Bug fix:
 * MXEvent: Move `invite_room_state` to the correct place in the client-server API (vector-im/riot-ios/issues/2010).
+* MXRoomSummaryUpdater: Fix minor issue in updateSummaryAvatar method.
+* Left room is still displayed as "Empty room" in rooms list (vector-im/riot-ios/issues/2082).
+* Reply of reply with unexpected newlines renders badly (vector-im/riot-ios/issues/2086).
 
 Changes in Matrix iOS SDK in 0.11.5 (2018-10-05)
 ===============================================

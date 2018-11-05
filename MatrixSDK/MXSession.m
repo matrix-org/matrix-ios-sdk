@@ -42,7 +42,7 @@
 
 #pragma mark - Constants definitions
 
-const NSString *MatrixSDKVersion = @"0.11.5";
+const NSString *MatrixSDKVersion = @"0.11.6";
 NSString *const kMXSessionStateDidChangeNotification = @"kMXSessionStateDidChangeNotification";
 NSString *const kMXSessionNewRoomNotification = @"kMXSessionNewRoomNotification";
 NSString *const kMXSessionWillLeaveRoomNotification = @"kMXSessionWillLeaveRoomNotification";
@@ -1867,6 +1867,11 @@ typedef void (^MXOnResumeDone)(void);
 
 
 #pragma mark - The user's rooms
+- (BOOL)hasRoomWithRoomId:(NSString*)roomId
+{
+    return (rooms[roomId] != nil);
+}
+
 - (MXRoom *)roomWithRoomId:(NSString *)roomId
 {
     // sanity check
