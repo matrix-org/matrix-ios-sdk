@@ -42,6 +42,16 @@ static NSUInteger storageCacheSize = 0;
 
 @implementation MXMediaManager
 
+- (id)initWithHomeServer:(NSString *)homeserverURL
+{
+    self = [super init];
+    if (self)
+    {
+        _homeserverURL = homeserverURL;
+    }
+    return self;
+}
+
 /**
  Table of downloads in progress
  */
@@ -333,6 +343,15 @@ static MXLRUCache* imagesCacheLruCache = nil;
     }
 }
 #endif
+
+
+#pragma mark - Media Repository API
+
+- (NSString *)urlOfIdenticon:(NSString *)identiconString
+{
+    return [NSString stringWithFormat:@"%@/%@/identicon/%@", _homeserverURL, kMXContentPrefixPath, [identiconString stringByAddingPercentEncodingWithAllowedCharacters:[NSCharacterSet URLHostAllowedCharacterSet]]];
+}
+
 
 #pragma mark - Media Download
 

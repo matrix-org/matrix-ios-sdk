@@ -41,6 +41,21 @@ extern NSString *const kMXMediaManagerDefaultCacheFolder;
  */
 @interface MXMediaManager : NSObject
 
+/**
+ Create an instance based on a homeserver url. This homeserver URL is required to resolve
+ the Matrix Content URI (in the form of "mxc://...").
+ 
+ @param homeserverURL the homeserver URL.
+ @return a MXMediaManager instance.
+ */
+- (id)initWithHomeServer:(NSString *)homeserverURL;
+
+/**
+ The homeserver URL.
+ */
+@property (nonatomic, readonly) NSString *homeserverURL;
+
+
 #pragma mark - File handling
 
 /**
@@ -126,6 +141,18 @@ extern NSString *const kMXMediaManagerDefaultCacheFolder;
 #if TARGET_OS_IPHONE
 + (void)saveMediaToPhotosLibrary:(NSURL*)fileURL isImage:(BOOL)isImage success:(void (^)(NSURL *imageURL))success failure:(void (^)(NSError *error))failure;
 #endif
+
+
+#pragma mark - Media Repository API
+
+/**
+ Get the HTTP URL of an identicon served by the media repository.
+ 
+ @param identiconString the string to build an identicon from.
+ @return the identicon HTTP URL.
+ */
+- (NSString*)urlOfIdenticon:(NSString*)identiconString;
+
 
 #pragma mark - Download
 

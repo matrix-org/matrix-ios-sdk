@@ -37,12 +37,6 @@ NSString *const kMXAPIPrefixPathUnstable = @"_matrix/client/unstable";
 NSString *const kMXIdentityAPIPrefixPath = @"_matrix/identity/api/v1";
 
 /**
- Matrix content respository path
- */
-NSString *const kMXContentUriScheme  = @"mxc://";
-NSString *const kMXContentPrefixPath = @"_matrix/media/v1";
-
-/**
  Account data types
  */
 NSString *const kMXAccountDataTypeIgnoredUserList = @"m.ignored_user_list";
@@ -3297,12 +3291,6 @@ MXAuthAction;
     // do not allow non-mxc content URLs: we should not be making requests out to whatever http urls people send us
     return nil;
 }
-
-- (NSString *)urlOfIdenticon:(NSString *)identiconString
-{
-    return [NSString stringWithFormat:@"%@/%@/identicon/%@", homeserver, contentPathPrefix, [identiconString stringByAddingPercentEncodingWithAllowedCharacters:[NSCharacterSet URLHostAllowedCharacterSet]]];
-}
-
 
 #pragma mark - Identity server API
 - (void)setIdentityServer:(NSString *)identityServer

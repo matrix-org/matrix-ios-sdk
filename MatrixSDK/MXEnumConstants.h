@@ -25,6 +25,15 @@
  */
 
 /**
+ Scheme used in Matrix content URIs.
+ */
+FOUNDATION_EXPORT NSString *const kMXContentUriScheme;
+/**
+ A constant representing the default prefix of the Matrix content repository path.
+ */
+FOUNDATION_EXPORT NSString *const kMXContentPrefixPath;
+
+/**
  Membership definitions
  */
 typedef enum : NSUInteger

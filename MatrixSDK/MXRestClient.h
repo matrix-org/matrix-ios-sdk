@@ -51,15 +51,6 @@ FOUNDATION_EXPORT NSString *const kMXAPIPrefixPathUnstable;
 FOUNDATION_EXPORT NSString *const kMXIdentityAPIPrefixPath;
 
 /**
- Scheme used in Matrix content URIs.
- */
-FOUNDATION_EXPORT NSString *const kMXContentUriScheme;
-/**
- A constant representing the prefix of the Matrix content repository path.
- */
-FOUNDATION_EXPORT NSString *const kMXContentPrefixPath;
-
-/**
  Account data types
  */
 FOUNDATION_EXPORT NSString *const kMXAccountDataTypeDirect;
@@ -1738,13 +1729,7 @@ typedef enum : NSUInteger
  */
 - (NSString*)urlOfContentThumbnail:(NSString*)mxcContentURI toFitViewSize:(CGSize)viewSize withMethod:(MXThumbnailingMethod)thumbnailingMethod;
 
-/**
- Get the HTTP URL of an identicon served by the media repository.
 
- @param identiconString the string to build an identicon from.
- @return the identicon HTTP URL.
- */
-- (NSString*)urlOfIdenticon:(NSString*)identiconString;
 
 
 #pragma mark - Identity server API

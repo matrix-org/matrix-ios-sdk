@@ -275,7 +275,7 @@
                         if (nil == roomMember.avatarUrl && ![MXSDKOptions sharedInstance].disableIdenticonUseForUserAvatar)
                         {
                             // Force to use an identicon url
-                            roomMember.avatarUrl = [mxSession.matrixRestClient urlOfIdenticon:roomMember.userId];
+                            roomMember.avatarUrl = [mxSession.mediaManager urlOfIdenticon:roomMember.userId];
                         }
                     }
                     else
