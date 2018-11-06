@@ -98,7 +98,6 @@ extern NSString *const kMXMediaUploadIdPrefix;
     blockMXMediaLoader_onError onError;
     
     // Media download
-    NSString *mediaURL;
     NSString *outputFilePath;
     long long expectedSize;
     NSMutableData *downloadData;
@@ -120,6 +119,12 @@ extern NSString *const kMXMediaUploadIdPrefix;
  Statistics on the operation in progress.
  */
 @property (strong, readonly) NSMutableDictionary* statisticsDict;
+
+/**
+ The downloaded media url defined when a media loader is instantiated as downloader.
+ Default is nil.
+ */
+@property (strong, readonly) NSString *downloadMediaURL;
 
 /**
  Upload id defined when a media loader is instantiated as uploader.

@@ -355,6 +355,135 @@ static MXLRUCache* imagesCacheLruCache = nil;
 
 #pragma mark - Media Download
 
+- (MXMediaLoader*)downloadMediaFromMatrixContentURI:(NSString *)mxcURI
+                                           withType:(NSString *)mimeType
+                                           inFolder:(NSString *)folder
+                                            success:(void (^)(NSString *outputFilePath))success
+                                            failure:(void (^)(NSError *error))failure
+{
+    // Check the provided mxc URI by resolving it into an HTTP URL.
+    NSString *mediaURL = [self urlOfContent:mxcURI];
+    if (!mediaURL)
+    {
+        NSLog(@"[MXMediaManager] Invalid media content URI");
+        return nil;
+    }
+    
+    // Build the outpout file path from mxcURI, and other inputs.
+    NSString *filePath = [MXMediaManager cachePathForMatrixContentURI:mxcURI andType:mimeType inFolder:folder];
+    
+    // Create a media loader to download data
+    return [MXMediaManager downloadMedia:mediaURL andSaveAtFilePath:filePath success:success failure:failure];
+}
+
+- (MXMediaLoader*)downloadMediaFromMatrixContentURI:(NSString *)mxcURI
+                                           withType:(NSString *)mimeType
+                                           inFolder:(NSString *)folder
+{
+    return [self downloadMediaFromMatrixContentURI:mxcURI withType:mimeType inFolder:folder success:nil failure:nil];
+}
+
+- (NSString*)urlOfContent:(NSString*)mxcContentURI
+{
+    NSString *contentURL;
+    
+    // Replace the "mxc://" scheme by the absolute http location of the content
+    if ([mxcContentURI hasPrefix:kMXContentUriScheme])
+    {
+        NSString *mxMediaPrefix = [NSString stringWithFormat:@"%@/%@/download/", _homeserverURL, kMXContentPrefixPath];
+        contentURL = [mxcContentURI stringByReplacingOccurrencesOfString:kMXContentUriScheme withString:mxMediaPrefix];
+        
+        // Remove the auto generated image tag from the URL
+        contentURL = [contentURL stringByReplacingOccurrencesOfString:@"#auto" withString:@""];
+        return contentURL;
+    }
+    
+    // do not allow non-mxc content URLs: we should not be making requests out to whatever http urls people send us
+    return nil;
+}
+
+// Private
++ (MXMediaLoader*)downloadMedia:(NSString *)mediaURL
+              andSaveAtFilePath:(NSString *)filePath
+                        success:(void (^)(NSString *outputFilePath))success
+                        failure:(void (^)(NSError *error))failure
+{
+    MXMediaLoader *mediaLoader;
+    
+    // Check whether there is a loader for this filePath in downloadTable.
+    mediaLoader = [MXMediaManager existingDownloaderWithOutputFilePath:filePath];
+    if (mediaLoader)
+    {
+        // This mediaLoader has been created for the same matrix content uri.
+        // But it may have been created with a different mediaURL (in case of multi sessions...)
+        // We will consider the notifications from mediaLoader.downloadMediaURL to handle the potential provided blocks.
+        __weak NSNotificationCenter *center = NSNotificationCenter.defaultCenter;
+        __block id successToken, failureToken;
+        
+        if (success)
+        {
+            successToken = [center addObserverForName:kMXMediaDownloadDidFinishNotification
+                                               object:mediaLoader.downloadMediaURL
+                                                queue:nil
+                                           usingBlock:^(NSNotification * _Nonnull note) {
+                                               // Sanity check on the returned output file path
+                                               NSString* cacheFilePath = note.userInfo[kMXMediaLoaderFilePathKey];
+                                               if ([cacheFilePath isEqualToString:filePath])
+                                               {
+                                                   success(filePath);
+                                                   [center removeObserver:successToken];
+                                                   if (failureToken)
+                                                   {
+                                                       [center removeObserver:failureToken];
+                                                   }
+                                               }
+                                           }];
+        }
+        
+        if (failure)
+        {
+            failureToken = [center addObserverForName:kMXMediaDownloadDidFailNotification
+                                               object:mediaLoader.downloadMediaURL
+                                                queue:nil
+                                           usingBlock:^(NSNotification * _Nonnull note) {
+                                               NSError* error = note.userInfo[kMXMediaLoaderErrorKey];
+                                               failure(error);
+                                               [center removeObserver:failureToken];
+                                               if (successToken)
+                                               {
+                                                   [center removeObserver:successToken];
+                                               }
+                                           }];
+        }
+    }
+    else
+    {
+        // Create a media loader to download data
+        mediaLoader = [[MXMediaLoader alloc] init];
+        // Report this loader
+        if (!downloadTable)
+        {
+            downloadTable = [[NSMutableDictionary alloc] init];
+        }
+        [downloadTable setValue:mediaLoader forKey:filePath];
+        
+        // Launch download
+        [mediaLoader downloadMediaFromURL:mediaURL andSaveAtFilePath:filePath success:^(NSString *outputFilePath) {
+            
+            [downloadTable removeObjectForKey:filePath];
+            if (success) success(outputFilePath);
+            
+        } failure:^(NSError *error) {
+            
+            if (failure) failure(error);
+            [downloadTable removeObjectForKey:filePath];
+            
+        }];
+    }
+    
+    return mediaLoader;
+}
+
 + (MXMediaLoader*)downloadMediaFromURL:(NSString *)mediaURL
                       andSaveAtFilePath:(NSString *)filePath
                                 success:(void (^)(void))success
@@ -575,6 +704,33 @@ static NSMutableDictionary* fileBaseFromMimeType = nil;
     }
     
     return fileBase;
+}
+
++ (NSString*)cachePathForMatrixContentURI:(NSString*)mxcURI andType:(NSString *)mimeType inFolder:(NSString*)folder
+{
+    NSString* fileBase = @"";
+    NSString *extension = @"";
+    
+    if (!folder.length)
+    {
+        folder = kMXMediaManagerDefaultCacheFolder;
+    }
+    
+    if (mimeType.length)
+    {
+        extension = [MXTools fileExtensionFromContentType:mimeType];
+        
+        // use the mime type to extract a base filename
+        fileBase = [MXMediaManager filebase:mimeType];
+    }
+    
+    if (!extension.length && [folder isEqualToString:kMXMediaManagerAvatarThumbnailFolder])
+    {
+        // Consider the default image type for thumbnail folder
+        extension = [MXTools fileExtensionFromContentType:@"image/jpeg"];
+    }
+    
+    return [[MXMediaManager cacheFolderPath:folder] stringByAppendingPathComponent:[NSString stringWithFormat:@"%@%lu%@", fileBase, (unsigned long)mxcURI.hash, extension]];
 }
 
 + (NSString*)cachePathForMediaWithURL:(NSString*)url andType:(NSString *)mimeType inFolder:(NSString*)folder

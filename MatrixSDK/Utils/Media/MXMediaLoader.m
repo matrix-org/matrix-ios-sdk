@@ -51,12 +51,12 @@ NSString *const kMXMediaUploadIdPrefix = @"upload-";
     // Cancel potential connection
     if (downloadConnection)
     {
-        NSLog(@"[MXMediaLoader] Media download has been cancelled (%@)", mediaURL);
+        NSLog(@"[MXMediaLoader] Media download has been cancelled (%@)", self.downloadMediaURL);
         if (onError){
             onError(nil);
         }
         [[NSNotificationCenter defaultCenter] postNotificationName:kMXMediaDownloadDidFailNotification
-                                                            object:mediaURL
+                                                            object:self.downloadMediaURL
                                                           userInfo:nil];
         // Reset blocks
         onSuccess = nil;
@@ -97,7 +97,7 @@ NSString *const kMXMediaUploadIdPrefix = @"upload-";
                      failure:(blockMXMediaLoader_onError)failure
 {
     // Report provided params
-    mediaURL = url;
+    _downloadMediaURL = url;
     outputFilePath = filePath;
     onSuccess = success;
     onError = failure;
@@ -119,7 +119,7 @@ NSString *const kMXMediaUploadIdPrefix = @"upload-";
 
 - (void)connection:(NSURLConnection *)connection didFailWithError:(NSError *)error
 {
-    NSLog(@"[MXMediaLoader] Failed to download media (%@): %@", mediaURL, error);
+    NSLog(@"[MXMediaLoader] Failed to download media (%@): %@", self.downloadMediaURL, error);
     // send the latest known upload info
     [self progressCheckTimeout:nil];
     statisticsDict = nil;
@@ -128,7 +128,7 @@ NSString *const kMXMediaUploadIdPrefix = @"upload-";
         onError (error);
     }
     [[NSNotificationCenter defaultCenter] postNotificationName:kMXMediaDownloadDidFailNotification
-                                                        object:mediaURL
+                                                        object:self.downloadMediaURL
                                                       userInfo:@{kMXMediaLoaderErrorKey:error}];
     
     downloadData = nil;
@@ -170,14 +170,14 @@ NSString *const kMXMediaUploadIdPrefix = @"upload-";
         if ((lastProgressEventTimeStamp == -1) || ((currentTime - lastProgressEventTimeStamp) > 0.1))
         {
             lastProgressEventTimeStamp = currentTime;
-            [[NSNotificationCenter defaultCenter] postNotificationName:kMXMediaDownloadProgressNotification object:mediaURL userInfo:statisticsDict];
+            [[NSNotificationCenter defaultCenter] postNotificationName:kMXMediaDownloadProgressNotification object:self.downloadMediaURL userInfo:statisticsDict];
         }
     }
 }
 
 - (IBAction)progressCheckTimeout:(id)sender
 {
-    [[NSNotificationCenter defaultCenter] postNotificationName:kMXMediaDownloadProgressNotification object:mediaURL userInfo:statisticsDict];
+    [[NSNotificationCenter defaultCenter] postNotificationName:kMXMediaDownloadProgressNotification object:self.downloadMediaURL userInfo:statisticsDict];
     [progressCheckTimer invalidate];
     progressCheckTimer = nil;
 }
@@ -199,28 +199,28 @@ NSString *const kMXMediaUploadIdPrefix = @"upload-";
                 onSuccess(outputFilePath);
             }
             [[NSNotificationCenter defaultCenter] postNotificationName:kMXMediaDownloadDidFinishNotification
-                                                                object:mediaURL
+                                                                object:self.downloadMediaURL
                                                               userInfo:@{kMXMediaLoaderFilePathKey: outputFilePath}];
         }
         else
         {
-            NSLog(@"[MXMediaLoader] Failed to write file: %@", mediaURL);
+            NSLog(@"[MXMediaLoader] Failed to write file: %@", self.downloadMediaURL);
             if (onError){
                 onError(nil);
             }
             [[NSNotificationCenter defaultCenter] postNotificationName:kMXMediaDownloadDidFailNotification
-                                                                object:mediaURL
+                                                                object:self.downloadMediaURL
                                                               userInfo:nil];
         }
     }
     else
     {
-        NSLog(@"[MXMediaLoader] Failed to download media: %@", mediaURL);
+        NSLog(@"[MXMediaLoader] Failed to download media: %@", self.downloadMediaURL);
         if (onError){
             onError(nil);
         }
         [[NSNotificationCenter defaultCenter] postNotificationName:kMXMediaDownloadDidFailNotification
-                                                            object:mediaURL
+                                                            object:self.downloadMediaURL
                                                           userInfo:nil];
     }
     

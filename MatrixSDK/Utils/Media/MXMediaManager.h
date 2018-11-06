@@ -157,6 +157,34 @@ extern NSString *const kMXMediaManagerDefaultCacheFolder;
 #pragma mark - Download
 
 /**
+ Download data from the provided Matrix Content (MXC) URI (in the form of "mxc://...").
+ 
+ @param mxcURI the Matrix Content URI.
+ @param mimeType the media mime type (may be nil).
+ @param folder the cache folder to use (may be nil). kMXMediaManagerDefaultCacheFolder is used by default.
+ @param success a block called when the download succeeds. This block gets the path of the resulting file.
+ @param failure a block called when the download fails
+ @return a media loader in order to let the user cancel this action.
+ */
+- (MXMediaLoader*)downloadMediaFromMatrixContentURI:(NSString *)mxcURI
+                                           withType:(NSString *)mimeType
+                                           inFolder:(NSString *)folder
+                                            success:(void (^)(NSString *outputFilePath))success
+                                            failure:(void (^)(NSError *error))failure;
+
+/**
+ Download data from the provided Matrix Content (MXC) URI (in the form of "mxc://...").
+ 
+ @param mxcURI the Matrix Content URI.
+ @param mimeType the media mime type (may be nil).
+ @param folder the cache folder to use (may be nil). kMXMediaManagerDefaultCacheFolder is used by default.
+ @return a media loader in order to let the user cancel this action.
+ */
+- (MXMediaLoader*)downloadMediaFromMatrixContentURI:(NSString *)mxcURI
+                                           withType:(NSString *)mimeType
+                                           inFolder:(NSString *)folder;
+
+/**
  Download data from the provided URL.
  
  @param mediaURL the remote media url.
@@ -166,9 +194,9 @@ extern NSString *const kMXMediaManagerDefaultCacheFolder;
  @return a media loader in order to let the user cancel this action.
  */
 + (MXMediaLoader*)downloadMediaFromURL:(NSString *)mediaURL
-                      andSaveAtFilePath:(NSString *)filePath
-                                success:(void (^)(void))success
-                                failure:(void (^)(NSError *error))failure;
+                     andSaveAtFilePath:(NSString *)filePath
+                               success:(void (^)(void))success
+                               failure:(void (^)(NSError *error))failure __attribute__((deprecated("Use [downloadMediaFromMatrixContentURI] instead")));
 
 /**
  Download data from the provided URL.
@@ -178,7 +206,7 @@ extern NSString *const kMXMediaManagerDefaultCacheFolder;
  @return a media loader in order to let the user cancel this action.
  */
 + (MXMediaLoader*)downloadMediaFromURL:(NSString *)mediaURL
-                      andSaveAtFilePath:(NSString *)filePath;
+                     andSaveAtFilePath:(NSString *)filePath __attribute__((deprecated("Use [downloadMediaFromMatrixContentURI] instead")));
 
 /**
  Check whether a download is already running with a specific output file path.
@@ -234,6 +262,20 @@ extern NSString *const kMXMediaManagerDefaultCacheFolder;
 #pragma mark - Cache handling
 
 /**
+ Build a cache file path based on the Matrix Content URI of the media and an optional cache folder.
+ 
+ The file extension is extracted from the provided mime type (if any).
+ By default 'image/jpeg' is considered for thumbnail folder (kMXMediaManagerAvatarThumbnailFolder). No default mime type
+ is defined for other folders.
+ 
+ @param mxcURI the Matrix Content URI (mxc://...).
+ @param mimeType the media mime type (may be nil).
+ @param folder cache folder to use (may be nil).
+ @return cache file path.
+ */
++ (NSString*)cachePathForMatrixContentURI:(NSString*)mxcURI andType:(NSString *)mimeType inFolder:(NSString*)folder;
+
+/**
  Build a cache file path based on media information and an optional cache folder.
  
  The file extension is extracted from the provided mime type (if any). If no type is available, we look for a potential
@@ -246,7 +288,7 @@ extern NSString *const kMXMediaManagerDefaultCacheFolder;
  @param folder cache folder to use (may be nil).
  @return cache file path.
  */
-+ (NSString*)cachePathForMediaWithURL:(NSString*)url andType:(NSString *)mimeType inFolder:(NSString*)folder;
++ (NSString*)cachePathForMediaWithURL:(NSString*)url andType:(NSString *)mimeType inFolder:(NSString*)folder __attribute__((deprecated("Use [cachePathForMatrixContentURI] instead")));
 
 /**
  Check if the media cache size must be reduced to fit the user expected cache size
