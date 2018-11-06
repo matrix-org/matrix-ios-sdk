@@ -11,7 +11,7 @@ pod 'OLMKit', '~> 3.0.0', :inhibit_warnings => true
 #pod 'OLMKit', :path => '../olm/OLMKit.podspec'
 
 pod 'Realm', '~> 3.11.1'
-pod 'CBBase58', '~> 0.9.1'
+pod 'libbase58', '~> 0.1.4'
 
 end
 

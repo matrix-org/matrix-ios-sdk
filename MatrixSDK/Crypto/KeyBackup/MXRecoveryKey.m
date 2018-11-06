@@ -19,7 +19,8 @@
 #import "MXTools.h"
 
 #import <OLMKit/OLMKit.h>
-#import "NS+BTCBase58.h"
+
+#import <libbase58/libbase58.h>
 
 
 NSString *const MXRecoveryKeyErrorDomain = @"org.matrix.sdk.recoverykey";
@@ -46,7 +47,7 @@ const UInt8 kOlmRecoveryKeyPrefix[] = {0x8B, 0x01};
     [buffer appendBytes:&parity length:sizeof(parity)];
 
     // Encode it in Base58
-    NSString *recoveryKey = [buffer base58String];
+    NSString *recoveryKey = [self encodeBase58:buffer];
 
     // Add white spaces
     return [MXTools addWhiteSpacesToString:recoveryKey every:4];
@@ -55,7 +56,18 @@ const UInt8 kOlmRecoveryKeyPrefix[] = {0x8B, 0x01};
 + (NSData *)decode:(NSString *)recoveryKey error:(NSError **)error
 {
     NSString *recoveryKeyWithNoSpaces = [recoveryKey stringByReplacingOccurrencesOfString:@" " withString:@""];
-    NSMutableData *result = [recoveryKeyWithNoSpaces dataFromBase58];
+    NSMutableData *result = [[self decodeBase58:recoveryKeyWithNoSpaces] mutableCopy];
+
+    if (!result)
+    {
+        *error = [NSError errorWithDomain:MXRecoveryKeyErrorDomain
+                                     code:MXRecoveryKeyErrorBase58Code
+                                 userInfo:@{
+                                            NSLocalizedDescriptionKey: @"Cannot decode Base58 string",
+                                            }];
+        return nil;
+    }
+
 
     // Check the checksum
     UInt8 parity = 0;
@@ -114,6 +126,54 @@ const UInt8 kOlmRecoveryKeyPrefix[] = {0x8B, 0x01};
     result.length -= 1;
 
     return result;
+}
+
+
+#pragma mark - Private methods
+
++ (NSString *)encodeBase58:(NSData *)data
+{
+    NSString *base58;
+
+    // Get the required buffer size
+    size_t base58Length = 0;
+    b58enc(nil, &base58Length, data.bytes, data.length);
+
+    // Encode
+    NSMutableData *base58Data = [NSMutableData dataWithLength:base58Length];
+    BOOL result = b58enc(base58Data.mutableBytes, &base58Length, data.bytes, data.length);
+
+    if (result)
+    {
+        base58 = [[NSString alloc] initWithData:base58Data encoding:NSUTF8StringEncoding];
+        base58 = [base58 substringToIndex:base58Length - 1];
+    }
+
+    return base58;
+}
+
++ (NSData *)decodeBase58:(NSString *)base58
+{
+    NSMutableData *data;
+
+    NSData *base58Data = [base58 dataUsingEncoding:NSUTF8StringEncoding];
+
+    // Get the required buffer size
+    // We need to pass a non null buffer, so allocate one using the base64 string length
+    // The decoded buffer can only be smaller
+    size_t dataLength = base58.length;
+    data = [NSMutableData dataWithLength:dataLength];
+    b58tobin(data.mutableBytes, &dataLength, base58Data.bytes, base58Data.length);
+
+    // Decode with the actual result size
+    data = [NSMutableData dataWithLength:dataLength];
+    BOOL result = b58tobin(data.mutableBytes, &dataLength, base58Data.bytes, base58Data.length);
+    if (!result)
+    {
+        data = nil;
+    }
+
+    return data;
 }
 
 @end

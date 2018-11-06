@@ -29,7 +29,8 @@ FOUNDATION_EXPORT NSString *const MXRecoveryKeyErrorDomain;
  */
 typedef enum : NSUInteger
 {
-    MXRecoveryKeyErrorParityCode = 0,
+    MXRecoveryKeyErrorBase58Code,
+    MXRecoveryKeyErrorParityCode,
     MXRecoveryKeyErrorHeaderCode,
     MXRecoveryKeyErrorLengthCode
 } MXRecoveryKeyErrorCode;
