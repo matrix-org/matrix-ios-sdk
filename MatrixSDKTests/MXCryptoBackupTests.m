@@ -217,7 +217,6 @@
                 [aliceRestClient deleteKeyFromBackup:roomId session:sessionId version:version success:^{
 
                     // - Get the backup back
-                    // TODO: The test currently fails because of https://github.com/matrix-org/synapse/issues/4056
                     [aliceRestClient keysBackup:version success:^(MXKeysBackupData *keysBackupData) {
 
                         // -> Check it is now empty
