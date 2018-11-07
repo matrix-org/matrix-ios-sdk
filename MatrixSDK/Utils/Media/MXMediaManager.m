@@ -345,7 +345,71 @@ static MXLRUCache* imagesCacheLruCache = nil;
 #endif
 
 
-#pragma mark - Media Repository API
+#pragma mark - Media Repository URL
+
+- (NSString*)urlOfContent:(NSString*)mxContentURI
+{
+    NSString *contentURL;
+    
+    // Replace the "mxc://" scheme by the absolute http location of the content
+    if ([mxContentURI hasPrefix:kMXContentUriScheme])
+    {
+        NSString *mxMediaPrefix = [NSString stringWithFormat:@"%@/%@/download/", _homeserverURL, kMXContentPrefixPath];
+        contentURL = [mxContentURI stringByReplacingOccurrencesOfString:kMXContentUriScheme withString:mxMediaPrefix];
+        
+        // Remove the auto generated image tag from the URL
+        contentURL = [contentURL stringByReplacingOccurrencesOfString:@"#auto" withString:@""];
+        return contentURL;
+    }
+    
+    // do not allow non-mxc content URLs: we should not be making requests out to whatever http urls people send us
+    return nil;
+}
+
+- (NSString*)urlOfContentThumbnail:(NSString*)mxContentURI
+                     toFitViewSize:(CGSize)viewSize
+                        withMethod:(MXThumbnailingMethod)thumbnailingMethod
+{
+    if ([mxContentURI hasPrefix:kMXContentUriScheme])
+    {
+        // Convert first the provided size in pixels
+#if TARGET_OS_IPHONE
+        CGFloat scale = [[UIScreen mainScreen] scale];
+#elif TARGET_OS_OSX
+        CGFloat scale = [[NSScreen mainScreen] backingScaleFactor];
+#endif
+        
+        CGSize sizeInPixels = CGSizeMake(viewSize.width * scale, viewSize.height * scale);
+        
+        // Replace the "mxc://" scheme by the absolute http location for the content thumbnail
+        NSString *mxThumbnailPrefix = [NSString stringWithFormat:@"%@/%@/thumbnail/", _homeserverURL, kMXContentPrefixPath];
+        NSString *thumbnailURL = [mxContentURI stringByReplacingOccurrencesOfString:kMXContentUriScheme withString:mxThumbnailPrefix];
+        
+        // Convert MXThumbnailingMethod to parameter string
+        NSString *thumbnailingMethodString;
+        switch (thumbnailingMethod)
+        {
+            case MXThumbnailingMethodScale:
+                thumbnailingMethodString = @"scale";
+                break;
+                
+            case MXThumbnailingMethodCrop:
+                thumbnailingMethodString = @"crop";
+                break;
+        }
+        
+        // Remove the auto generated image tag from the URL
+        thumbnailURL = [thumbnailURL stringByReplacingOccurrencesOfString:@"#auto" withString:@""];
+        
+        // Add thumbnailing parameters to the URL
+        thumbnailURL = [NSString stringWithFormat:@"%@?width=%tu&height=%tu&method=%@", thumbnailURL, (NSUInteger)sizeInPixels.width, (NSUInteger)sizeInPixels.height, thumbnailingMethodString];
+        
+        return thumbnailURL;
+    }
+    
+    // do not allow non-mxc content URLs: we should not be making requests out to whatever http urls people send us
+    return nil;
+}
 
 - (NSString *)urlOfIdenticon:(NSString *)identiconString
 {
@@ -355,51 +419,55 @@ static MXLRUCache* imagesCacheLruCache = nil;
 
 #pragma mark - Media Download
 
-- (MXMediaLoader*)downloadMediaFromMatrixContentURI:(NSString *)mxcURI
+- (MXMediaLoader*)downloadMediaFromMatrixContentURI:(NSString *)mxContentURI
                                            withType:(NSString *)mimeType
                                            inFolder:(NSString *)folder
                                             success:(void (^)(NSString *outputFilePath))success
                                             failure:(void (^)(NSError *error))failure
 {
     // Check the provided mxc URI by resolving it into an HTTP URL.
-    NSString *mediaURL = [self urlOfContent:mxcURI];
+    NSString *mediaURL = [self urlOfContent:mxContentURI];
     if (!mediaURL)
     {
         NSLog(@"[MXMediaManager] Invalid media content URI");
         return nil;
     }
     
-    // Build the outpout file path from mxcURI, and other inputs.
-    NSString *filePath = [MXMediaManager cachePathForMatrixContentURI:mxcURI andType:mimeType inFolder:folder];
+    // Build the outpout file path from mxContentURI, and other inputs.
+    NSString *filePath = [MXMediaManager cachePathForMatrixContentURI:mxContentURI andType:mimeType inFolder:folder];
     
     // Create a media loader to download data
     return [MXMediaManager downloadMedia:mediaURL andSaveAtFilePath:filePath success:success failure:failure];
 }
 
-- (MXMediaLoader*)downloadMediaFromMatrixContentURI:(NSString *)mxcURI
+- (MXMediaLoader*)downloadMediaFromMatrixContentURI:(NSString *)mxContentURI
                                            withType:(NSString *)mimeType
                                            inFolder:(NSString *)folder
 {
-    return [self downloadMediaFromMatrixContentURI:mxcURI withType:mimeType inFolder:folder success:nil failure:nil];
+    return [self downloadMediaFromMatrixContentURI:mxContentURI withType:mimeType inFolder:folder success:nil failure:nil];
 }
 
-- (NSString*)urlOfContent:(NSString*)mxcContentURI
+- (MXMediaLoader*)downloadThumbnailFromMatrixContentURI:(NSString *)mxContentURI
+                                               withType:(NSString *)mimeType
+                                               inFolder:(NSString *)folder
+                                          toFitViewSize:(CGSize)viewSize
+                                             withMethod:(MXThumbnailingMethod)thumbnailingMethod
+                                                success:(void (^)(NSString *outputFilePath))success
+                                                failure:(void (^)(NSError *error))failure
 {
-    NSString *contentURL;
-    
-    // Replace the "mxc://" scheme by the absolute http location of the content
-    if ([mxcContentURI hasPrefix:kMXContentUriScheme])
+    // Check the provided mxc URI by resolving it into an HTTP URL.
+    NSString *mediaURL = [self urlOfContentThumbnail:mxContentURI toFitViewSize:viewSize withMethod:thumbnailingMethod];
+    if (!mediaURL)
     {
-        NSString *mxMediaPrefix = [NSString stringWithFormat:@"%@/%@/download/", _homeserverURL, kMXContentPrefixPath];
-        contentURL = [mxcContentURI stringByReplacingOccurrencesOfString:kMXContentUriScheme withString:mxMediaPrefix];
-        
-        // Remove the auto generated image tag from the URL
-        contentURL = [contentURL stringByReplacingOccurrencesOfString:@"#auto" withString:@""];
-        return contentURL;
+        NSLog(@"[MXMediaManager] Invalid media content URI");
+        return nil;
     }
     
-    // do not allow non-mxc content URLs: we should not be making requests out to whatever http urls people send us
-    return nil;
+    // Build the outpout file path from mxContentURI, and other inputs.
+    NSString *filePath = [MXMediaManager thumbnailCachePathForMatrixContentURI:mxContentURI andType:mimeType inFolder:folder toFitViewSize:viewSize withMethod:thumbnailingMethod];
+    
+    // Create a media loader to download data
+    return [MXMediaManager downloadMedia:mediaURL andSaveAtFilePath:filePath success:success failure:failure];
 }
 
 // Private
@@ -706,7 +774,7 @@ static NSMutableDictionary* fileBaseFromMimeType = nil;
     return fileBase;
 }
 
-+ (NSString*)cachePathForMatrixContentURI:(NSString*)mxcURI andType:(NSString *)mimeType inFolder:(NSString*)folder
++ (NSString*)cachePathForMatrixContentURI:(NSString*)mxContentURI andType:(NSString *)mimeType inFolder:(NSString*)folder
 {
     NSString* fileBase = @"";
     NSString *extension = @"";
@@ -730,7 +798,40 @@ static NSMutableDictionary* fileBaseFromMimeType = nil;
         extension = [MXTools fileExtensionFromContentType:@"image/jpeg"];
     }
     
-    return [[MXMediaManager cacheFolderPath:folder] stringByAppendingPathComponent:[NSString stringWithFormat:@"%@%lu%@", fileBase, (unsigned long)mxcURI.hash, extension]];
+    return [[MXMediaManager cacheFolderPath:folder] stringByAppendingPathComponent:[NSString stringWithFormat:@"%@%lu%@", fileBase, (unsigned long)mxContentURI.hash, extension]];
+}
+
++ (NSString*)thumbnailCachePathForMatrixContentURI:(NSString*)mxContentURI
+                                           andType:(NSString *)mimeType
+                                          inFolder:(NSString*)folder
+                                     toFitViewSize:(CGSize)viewSize
+                                        withMethod:(MXThumbnailingMethod)thumbnailingMethod
+{
+    NSString* fileBase = @"";
+    NSString *extension = @"";
+    
+    if (!folder.length)
+    {
+        folder = kMXMediaManagerDefaultCacheFolder;
+    }
+    
+    if (mimeType.length)
+    {
+        extension = [MXTools fileExtensionFromContentType:mimeType];
+        
+        // use the mime type to extract a base filename
+        fileBase = [MXMediaManager filebase:mimeType];
+    }
+    
+    if (!extension.length && [folder isEqualToString:kMXMediaManagerAvatarThumbnailFolder])
+    {
+        // Consider the default image type for thumbnail folder
+        extension = [MXTools fileExtensionFromContentType:@"image/jpeg"];
+    }
+    
+    NSString *suffix = [NSString stringWithFormat:@"_w%tuh%tum%tu", (NSUInteger)viewSize.width, (NSUInteger)viewSize.height, thumbnailingMethod];
+    
+    return [[MXMediaManager cacheFolderPath:folder] stringByAppendingPathComponent:[NSString stringWithFormat:@"%@%lu%@%@", fileBase, (unsigned long)mxContentURI.hash, suffix, extension]];
 }
 
 + (NSString*)cachePathForMediaWithURL:(NSString*)url andType:(NSString *)mimeType inFolder:(NSString*)folder

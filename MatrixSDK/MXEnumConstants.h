@@ -34,6 +34,26 @@ FOUNDATION_EXPORT NSString *const kMXContentUriScheme;
 FOUNDATION_EXPORT NSString *const kMXContentPrefixPath;
 
 /**
+ Methods of thumnailing supported by the Matrix content repository.
+ */
+typedef enum : NSUInteger
+{
+    /**
+     "scale" tries to return an image where either the width or the height is smaller than the
+     requested size. The client should then scale and letterbox the image if it needs to
+     fit within a given rectangle.
+     */
+    MXThumbnailingMethodScale,
+    
+    /**
+     "crop" tries to return an image where the width and height are close to the requested size
+     and the aspect matches the requested size. The client should scale the image if it needs to
+     fit within a given rectangle.
+     */
+    MXThumbnailingMethodCrop
+} MXThumbnailingMethod;
+
+/**
  Membership definitions
  */
 typedef enum : NSUInteger
