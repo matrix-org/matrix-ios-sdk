@@ -24,6 +24,8 @@
 #import "MXAllowedCertificates.h"
 #import <AFNetworking/AFSecurityPolicy.h>
 
+NSString *const kMXMediaLoaderStateDidChangeNotification = @"kMXMediaLoaderStateDidChangeNotification";
+
 NSString *const kMXMediaDownloadProgressNotification = @"kMXMediaDownloadProgressNotification";
 NSString *const kMXMediaDownloadDidFinishNotification = @"kMXMediaDownloadDidFinishNotification";
 NSString *const kMXMediaDownloadDidFailNotification = @"kMXMediaDownloadDidFailNotification";
@@ -46,6 +48,24 @@ NSString *const kMXMediaUploadIdPrefix = @"upload-";
 
 @synthesize statisticsDict;
 
+- (id)init
+{
+    if (self = [super init])
+    {
+        _state = MXMediaLoaderStateIdle;
+    }
+    return self;
+}
+
+- (void)setState:(MXMediaLoaderState)state
+{
+    _state = state;
+    
+    [[NSNotificationCenter defaultCenter] postNotificationName:kMXMediaLoaderStateDidChangeNotification
+                                                        object:self
+                                                      userInfo:nil];
+}
+
 - (void)cancel
 {
     // Cancel potential connection
@@ -55,6 +75,8 @@ NSString *const kMXMediaUploadIdPrefix = @"upload-";
         if (onError){
             onError(nil);
         }
+        
+        // TODO: remove this notification (it would be handled by kMXMediaLoaderStateDidChangeNotification).
         [[NSNotificationCenter defaultCenter] postNotificationName:kMXMediaDownloadDidFailNotification
                                                             object:self.downloadMediaURL
                                                           userInfo:nil];
@@ -80,6 +102,8 @@ NSString *const kMXMediaUploadIdPrefix = @"upload-";
         onError = nil;
     }
     statisticsDict = nil;
+    
+    self.state = MXMediaLoaderStateCancelled;
 }
 
 - (void)dealloc
@@ -92,13 +116,15 @@ NSString *const kMXMediaUploadIdPrefix = @"upload-";
 #pragma mark - Download
 
 - (void)downloadMediaFromURL:(NSString *)url
+              withIdentifier:(NSString *)downloadId
            andSaveAtFilePath:(NSString *)filePath
                      success:(blockMXMediaLoader_onSuccess)success
                      failure:(blockMXMediaLoader_onError)failure
 {
     // Report provided params
     _downloadMediaURL = url;
-    outputFilePath = filePath;
+    _downloadId = downloadId;
+    _downloadOutputFilePath = filePath;
     onSuccess = success;
     onError = failure;
     
@@ -112,6 +138,15 @@ NSString *const kMXMediaUploadIdPrefix = @"upload-";
     downloadConnection = [[NSURLConnection alloc] initWithRequest:[NSURLRequest requestWithURL:nsURL] delegate:self];
 }
 
+- (void)downloadMediaFromURL:(NSString *)url
+           andSaveAtFilePath:(NSString *)filePath
+                     success:(blockMXMediaLoader_onSuccess)success
+                     failure:(blockMXMediaLoader_onError)failure
+{
+    // Use the provided filepath as identifier by default.
+    [self downloadMediaFromURL:url withIdentifier:filePath andSaveAtFilePath:filePath success:success failure:failure];
+}
+
 - (void)connection:(NSURLConnection *)connection didReceiveResponse:(NSURLResponse *)response
 {
     expectedSize = response.expectedContentLength;
@@ -120,19 +155,24 @@ NSString *const kMXMediaUploadIdPrefix = @"upload-";
 - (void)connection:(NSURLConnection *)connection didFailWithError:(NSError *)error
 {
     NSLog(@"[MXMediaLoader] Failed to download media (%@): %@", self.downloadMediaURL, error);
-    // send the latest known upload info
+    // send the latest known download info
     [self progressCheckTimeout:nil];
     statisticsDict = nil;
+    _error = error;
     if (onError)
     {
         onError (error);
     }
+    
+    // TODO: Remove this notification (the notification is handled now by the state change).
     [[NSNotificationCenter defaultCenter] postNotificationName:kMXMediaDownloadDidFailNotification
                                                         object:self.downloadMediaURL
                                                       userInfo:@{kMXMediaLoaderErrorKey:error}];
     
     downloadData = nil;
     downloadConnection = nil;
+    
+    self.state = MXMediaLoaderStateDownloadFailed;
 }
 
 - (void)connection:(NSURLConnection *)connection didReceiveData:(NSData *)data
@@ -162,7 +202,7 @@ NSString *const kMXMediaUploadIdPrefix = @"upload-";
         statisticsDict = dict;
         
         // after 0.1s, resend the progress info
-        // the upload can be stuck
+        // the download can be stuck
         [progressCheckTimer invalidate];
         progressCheckTimer = [NSTimer scheduledTimerWithTimeInterval:0.1 target:self selector:@selector(progressCheckTimeout:) userInfo:self repeats:NO];
         
@@ -170,6 +210,9 @@ NSString *const kMXMediaUploadIdPrefix = @"upload-";
         if ((lastProgressEventTimeStamp == -1) || ((currentTime - lastProgressEventTimeStamp) > 0.1))
         {
             lastProgressEventTimeStamp = currentTime;
+            self.state = MXMediaLoaderStateDownloadInProgress;
+            
+            // TODO: Remove this notification (the notification is handled now by the state change).
             [[NSNotificationCenter defaultCenter] postNotificationName:kMXMediaDownloadProgressNotification object:self.downloadMediaURL userInfo:statisticsDict];
         }
     }
@@ -177,7 +220,12 @@ NSString *const kMXMediaUploadIdPrefix = @"upload-";
 
 - (IBAction)progressCheckTimeout:(id)sender
 {
+    // Trigger a state change notification to notify about the progress update.
+    self.state = MXMediaLoaderStateDownloadInProgress;
+    
+    // TODO: Remove this notification (the notification is handled now by the state change).
     [[NSNotificationCenter defaultCenter] postNotificationName:kMXMediaDownloadProgressNotification object:self.downloadMediaURL userInfo:statisticsDict];
+    
     [progressCheckTimer invalidate];
     progressCheckTimer = nil;
 }
@@ -187,20 +235,25 @@ NSString *const kMXMediaUploadIdPrefix = @"upload-";
     // send the latest known upload info
     [self progressCheckTimeout:nil];
     statisticsDict = nil;
+    _error = nil;
     
     if (downloadData.length)
     {
         // Cache the downloaded data
-        if ([MXMediaManager writeMediaData:downloadData toFilePath:outputFilePath])
+        if ([MXMediaManager writeMediaData:downloadData toFilePath:_downloadOutputFilePath])
         {
             // Call registered block
             if (onSuccess)
             {
-                onSuccess(outputFilePath);
+                onSuccess(_downloadOutputFilePath);
             }
+            
+            self.state = MXMediaLoaderStateDownloadCompleted;
+            
+            // TODO: Remove this notification (the notification is handled now by the state change).
             [[NSNotificationCenter defaultCenter] postNotificationName:kMXMediaDownloadDidFinishNotification
                                                                 object:self.downloadMediaURL
-                                                              userInfo:@{kMXMediaLoaderFilePathKey: outputFilePath}];
+                                                              userInfo:@{kMXMediaLoaderFilePathKey: _downloadOutputFilePath}];
         }
         else
         {
@@ -208,6 +261,10 @@ NSString *const kMXMediaUploadIdPrefix = @"upload-";
             if (onError){
                 onError(nil);
             }
+            
+            self.state = MXMediaLoaderStateDownloadFailed;
+            
+            // TODO: Remove this notification (the notification is handled now by the state change).
             [[NSNotificationCenter defaultCenter] postNotificationName:kMXMediaDownloadDidFailNotification
                                                                 object:self.downloadMediaURL
                                                               userInfo:nil];
@@ -219,6 +276,10 @@ NSString *const kMXMediaUploadIdPrefix = @"upload-";
         if (onError){
             onError(nil);
         }
+        
+        self.state = MXMediaLoaderStateDownloadFailed;
+        
+        // TODO: Remove this notification (the notification is handled now by the state change).
         [[NSNotificationCenter defaultCenter] postNotificationName:kMXMediaDownloadDidFailNotification
                                                             object:self.downloadMediaURL
                                                           userInfo:nil];
@@ -351,16 +412,25 @@ NSString *const kMXMediaUploadIdPrefix = @"upload-";
                                                       {
                                                           success(url);
                                                       }
+                                                      
+                                                      self.state = MXMediaLoaderStateUploadCompleted;
+                                                      
+                                                      // TODO: Remove this notification (the notification is handled now by the state change).
                                                       [[NSNotificationCenter defaultCenter] postNotificationName:kMXMediaUploadDidFinishNotification
                                                                                                           object:self.uploadId
                                                                                                         userInfo:nil];
                                                   } failure:^(NSError *error) {
                                                       MXStrongifyAndReturnIfNil(self);
-
+                                                      self.error = error;
+                                                      
                                                       if (failure)
                                                       {
                                                           failure (error);
                                                       }
+                                                      
+                                                      self.state = MXMediaLoaderStateUploadFailed;
+                                                      
+                                                      // TODO: Remove this notification (the notification is handled now by the state change).
                                                       [[NSNotificationCenter defaultCenter] postNotificationName:kMXMediaUploadDidFailNotification
                                                                                                           object:self.uploadId
                                                                                                         userInfo:@{kMXMediaLoaderErrorKey:error}];
@@ -402,6 +472,9 @@ NSString *const kMXMediaUploadIdPrefix = @"upload-";
     [statisticsDict setValue:[NSNumber numberWithLongLong:totalBytesExpectedToWrite] forKey:kMXMediaLoaderTotalBytesCountKey];
     [statisticsDict setValue:[NSNumber numberWithFloat:dataRate] forKey:kMXMediaLoaderCurrentDataRateKey];
     
+    self.state = MXMediaLoaderStateUploadInProgress;
+    
+    // TODO: Remove this notification (the notification is handled now by the state change).
     [[NSNotificationCenter defaultCenter] postNotificationName:kMXMediaUploadProgressNotification object:_uploadId userInfo:statisticsDict];
 }
 

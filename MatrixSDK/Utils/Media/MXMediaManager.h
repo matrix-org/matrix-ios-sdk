@@ -158,6 +158,32 @@ extern NSString *const kMXMediaManagerDefaultCacheFolder;
 #pragma mark - Download
 
 /**
+ Get the unique download identifier for a Matrix Content URI, consider a potential cache folder to handle
+ several downloads in different cache areas.
+ 
+ @param mxContentURI the Matrix Content URI (mxc://...).
+ @param folder cache folder to use (may be nil). kMXMediaManagerDefaultCacheFolder is used by default.
+ @return the download identifier. nil if the Matrix Content URI is invalid.
+ */
++ (NSString*)downloadIdForMatrixContentURI:(NSString*)mxContentURI
+                                  inFolder:(NSString*)folder;
+
+/**
+ Get the unique download identifier for a thumbnail downloaded from on the Matrix Content URI,
+ consider a potential cache folder to handle several downloads in different cache areas.
+ 
+ @param mxContentURI the Matrix Content URI (mxc://...).
+ @param folder cache folder to use (may be nil). kMXMediaManagerDefaultCacheFolder is used by default.
+ @param viewSize the size in points of the view in which the thumbnail is supposed to be displayed.
+ @param thumbnailingMethod the method the Matrix content repository must use to generate the thumbnail.
+ @return the download identifier. nil if the Matrix Content URI is invalid.
+ */
++ (NSString*)thumbnailDownloadIdForMatrixContentURI:(NSString*)mxContentURI
+                                           inFolder:(NSString*)folder
+                                      toFitViewSize:(CGSize)viewSize
+                                         withMethod:(MXThumbnailingMethod)thumbnailingMethod;
+
+/**
  Download data from the provided Matrix Content (MXC) URI (in the form of "mxc://...").
  
  @param mxContentURI the Matrix Content URI.
@@ -237,7 +263,15 @@ extern NSString *const kMXMediaManagerDefaultCacheFolder;
  @param filePath output file.
  @return mediaLoader (if any)
  */
-+ (MXMediaLoader*)existingDownloaderWithOutputFilePath:(NSString *)filePath;
++ (MXMediaLoader*)existingDownloaderWithOutputFilePath:(NSString *)filePath __attribute__((deprecated("Use [downloadMediaFromMatrixContentURI] instead")));
+
+/**
+ Check whether a download is already running with a specific download identifier.
+ 
+ @param downloadId the identifier.
+ @return mediaLoader (if any)
+ */
++ (MXMediaLoader*)existingDownloaderWithIdentifier:(NSString *)downloadId;
 
 /**
  Cancel any pending download within a cache folder
@@ -294,7 +328,7 @@ extern NSString *const kMXMediaManagerDefaultCacheFolder;
  @param mxContentURI the Matrix Content URI (mxc://...).
  @param mimeType the media mime type (may be nil).
  @param folder cache folder to use (may be nil). kMXMediaManagerDefaultCacheFolder is used by default.
- @return cache file path.
+ @return cache file path. nil if the Matrix Content URI is invalid.
  */
 + (NSString*)cachePathForMatrixContentURI:(NSString*)mxContentURI
                                   andType:(NSString *)mimeType
@@ -312,7 +346,7 @@ extern NSString *const kMXMediaManagerDefaultCacheFolder;
  @param folder cache folder to use (may be nil). kMXMediaManagerDefaultCacheFolder is used by default.
  @param viewSize the size in points of the view in which the thumbnail is supposed to be displayed.
  @param thumbnailingMethod the method the Matrix content repository must use to generate the thumbnail.
- @return cache file path.
+ @return cache file path. nil if the Matrix Content URI is invalid.
  */
 + (NSString*)thumbnailCachePathForMatrixContentURI:(NSString*)mxContentURI
                                            andType:(NSString *)mimeType
