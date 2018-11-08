@@ -393,7 +393,7 @@
  - Check that `[MXKeyBackup createKeyBackupVersion` launches the backup
  - Check the backup completes
  */
-- (void)testBackupCreateKeyBackupVersion
+- (void)testBackupAfterCreateKeyBackupVersion
 {
     [matrixSDKTestsE2EData doE2ETestWithAliceAndBobInARoomWithCryptedMessages:self cryptedBob:YES readyToTest:^(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
 
@@ -416,6 +416,44 @@
 
                         [expectation fulfill];
                     }
+                }];
+
+            } failure:^(NSError * _Nonnull error) {
+                XCTFail(@"The request should not fail - NSError: %@", error);
+                [expectation fulfill];
+            }];
+        } failure:^(NSError * _Nonnull error) {
+            XCTFail(@"The request should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+    }];
+}
+
+/**
+ - Create a backup version
+ - Check the returned MXKeyBackupVersion is trusted
+ */
+- (void)testIsKeyBackupTrusted
+{
+    // - Create a backup version
+    [matrixSDKTestsE2EData doE2ETestWithAliceAndBobInARoomWithCryptedMessages:self cryptedBob:YES readyToTest:^(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
+
+        [aliceSession.crypto.backup prepareKeyBackupVersion:^(MXMegolmBackupCreationInfo * _Nonnull keyBackupCreationInfo) {
+            [aliceSession.crypto.backup createKeyBackupVersion:keyBackupCreationInfo success:^(MXKeyBackupVersion * _Nonnull keyBackupVersion) {
+
+                // - Check the returned MXKeyBackupVersion is trusted
+                [aliceSession.crypto.backup isKeyBackupTrusted:keyBackupVersion onComplete:^(MXKeyBackupVersionTrust * _Nonnull keyBackupVersionTrust) {
+
+                    XCTAssertNotNil(keyBackupVersionTrust);
+                    XCTAssertTrue(keyBackupVersionTrust.usable);
+
+                    XCTAssertEqual(keyBackupVersionTrust.signatures.count, 1);
+
+                    MXKeyBackupVersionTrustSignature *signature = keyBackupVersionTrust.signatures.firstObject;
+                    XCTAssertTrue(signature.valid);
+                    XCTAssertEqualObjects(signature.device.deviceId, aliceSession.matrixRestClient.credentials.deviceId);
+
+                    [expectation fulfill];
                 }];
 
             } failure:^(NSError * _Nonnull error) {

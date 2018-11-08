@@ -18,6 +18,7 @@
 
 #import "MXRestClient.h"
 #import "MXMegolmBackupCreationInfo.h"
+#import "MXKeyBackupVersionTrust.h"
 
 @class MXSession;
 @class OLMPkEncryption;
@@ -72,6 +73,14 @@ FOUNDATION_EXPORT NSString *const kMXKeyBackupDidStateChangeNotification;
 // TODO: hide it?
 - (MXHTTPOperation*)version:(void (^)(MXKeyBackupVersion *keyBackupVersion))success
                     failure:(void (^)(NSError *error))failure;
+
+/**
+ Check trust on a key backup version.
+
+ @param keyBackupVersion the backup version to check.
+ @param onComplete block called when the operations completes.
+ */
+- (void)isKeyBackupTrusted:(MXKeyBackupVersion*)keyBackupVersion onComplete:(void (^)(MXKeyBackupVersionTrust *keyBackupVersionTrust))onComplete;
 
 /**
  Set up the data required to create a new backup version.

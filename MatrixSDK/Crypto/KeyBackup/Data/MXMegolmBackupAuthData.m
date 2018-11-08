@@ -46,4 +46,11 @@
     return JSONDictionary;
 }
 
+- (NSDictionary *)signalableJSONDictionary
+{
+    return @{
+             @"public_key": _publicKey
+             };
+}
+
 @end

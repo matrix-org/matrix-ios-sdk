@@ -33,7 +33,13 @@ NS_ASSUME_NONNULL_BEGIN
 /**
  Signatures of the public key.
  */
-@property (nonatomic) NSDictionary *signatures;
+@property (nonatomic) NSDictionary<NSString*, NSDictionary*> *signatures;
+
+/**
+ Same as the parent [MXJSONModel JSONDictionary] but return only
+ data that must be signed.
+ */
+@property (nonatomic, readonly) NSDictionary *signalableJSONDictionary;
 
 @end
 

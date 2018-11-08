@@ -134,6 +134,8 @@
 		3283F7781EAF30F700C1688C /* MXBugReportRestClient.h in Headers */ = {isa = PBXBuildFile; fileRef = 3283F7761EAF30F700C1688C /* MXBugReportRestClient.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		3283F7791EAF30F700C1688C /* MXBugReportRestClient.m in Sources */ = {isa = PBXBuildFile; fileRef = 3283F7771EAF30F700C1688C /* MXBugReportRestClient.m */; };
 		3284A5A01DB7C00600A09972 /* MXCryptoStore.h in Headers */ = {isa = PBXBuildFile; fileRef = 3284A59D1DB7C00600A09972 /* MXCryptoStore.h */; };
+		328BCB3321947BE200A976D3 /* MXKeyBackupVersionTrust.h in Headers */ = {isa = PBXBuildFile; fileRef = 328BCB3121947BE200A976D3 /* MXKeyBackupVersionTrust.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		328BCB3421947BE200A976D3 /* MXKeyBackupVersionTrust.m in Sources */ = {isa = PBXBuildFile; fileRef = 328BCB3221947BE200A976D3 /* MXKeyBackupVersionTrust.m */; };
 		328DDEC11A07E57E008C7DC8 /* MXJSONModelTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 328DDEC01A07E57E008C7DC8 /* MXJSONModelTests.m */; };
 		3291D4D41A68FFEB00C3BA41 /* MXFileRoomStore.h in Headers */ = {isa = PBXBuildFile; fileRef = 3291D4D21A68FFEB00C3BA41 /* MXFileRoomStore.h */; };
 		3291D4D51A68FFEB00C3BA41 /* MXFileRoomStore.m in Sources */ = {isa = PBXBuildFile; fileRef = 3291D4D31A68FFEB00C3BA41 /* MXFileRoomStore.m */; };
@@ -455,6 +457,8 @@
 		3283F7761EAF30F700C1688C /* MXBugReportRestClient.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXBugReportRestClient.h; sourceTree = "<group>"; };
 		3283F7771EAF30F700C1688C /* MXBugReportRestClient.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXBugReportRestClient.m; sourceTree = "<group>"; };
 		3284A59D1DB7C00600A09972 /* MXCryptoStore.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXCryptoStore.h; sourceTree = "<group>"; };
+		328BCB3121947BE200A976D3 /* MXKeyBackupVersionTrust.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MXKeyBackupVersionTrust.h; sourceTree = "<group>"; };
+		328BCB3221947BE200A976D3 /* MXKeyBackupVersionTrust.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MXKeyBackupVersionTrust.m; sourceTree = "<group>"; };
 		328DDEC01A07E57E008C7DC8 /* MXJSONModelTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXJSONModelTests.m; sourceTree = "<group>"; };
 		3291D4D21A68FFEB00C3BA41 /* MXFileRoomStore.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXFileRoomStore.h; sourceTree = "<group>"; };
 		3291D4D31A68FFEB00C3BA41 /* MXFileRoomStore.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXFileRoomStore.m; sourceTree = "<group>"; };
@@ -1020,6 +1024,8 @@
 				32BBAE662178E99100D85F46 /* MXKeyBackupData.m */,
 				32BBAE672178E99100D85F46 /* MXKeyBackupVersion.h */,
 				32BBAE692178E99100D85F46 /* MXKeyBackupVersion.m */,
+				328BCB3121947BE200A976D3 /* MXKeyBackupVersionTrust.h */,
+				328BCB3221947BE200A976D3 /* MXKeyBackupVersionTrust.m */,
 				320A883E217F4E3E002EA952 /* MXMegolmBackupAuthData.h */,
 				320A883F217F4E3F002EA952 /* MXMegolmBackupAuthData.m */,
 				320A883A217F4E35002EA952 /* MXMegolmBackupCreationInfo.h */,
@@ -1405,6 +1411,7 @@
 				F082946D1DB66C3D00CEAB63 /* MXInvite3PID.h in Headers */,
 				3233606F1A403A0D0071A488 /* MXFileStore.h in Headers */,
 				32A1513E1DAF768D00400192 /* MXOlmInboundGroupSession.h in Headers */,
+				328BCB3321947BE200A976D3 /* MXKeyBackupVersionTrust.h in Headers */,
 				32FA10C11FA1C9EE00E54233 /* MXOutgoingRoomKeyRequestManager.h in Headers */,
 				3293C700214BBA4F009B3DDB /* MXPeekingRoomSummary.h in Headers */,
 				326056851C76FDF2009D44AD /* MXEventTimeline.h in Headers */,
@@ -1609,6 +1616,7 @@
 				3265CB391A14C43E00E24B2F /* MXRoomState.m in Sources */,
 				3281E8B819E42DFE00976E1A /* MXJSONModel.m in Sources */,
 				32A1514B1DAF7C0C00400192 /* MXUsersDevicesMap.m in Sources */,
+				328BCB3421947BE200A976D3 /* MXKeyBackupVersionTrust.m in Sources */,
 				C6B40F521F2A35BE00C42C72 /* MXRoomState.swift in Sources */,
 				32F945F51FAB83D900622468 /* MXIncomingRoomKeyRequestCancellation.m in Sources */,
 				32D776821A27877300FC4AA2 /* MXMemoryRoomStore.m in Sources */,
