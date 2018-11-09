@@ -29,6 +29,14 @@ NS_ASSUME_NONNULL_BEGIN
 - (instancetype)initWithMatrixSession:(MXSession*)mxSession;
 
 /**
+ Check the server for an active key backup.
+
+ If one is present and has a valid signature from one of the user's verified
+ devices, start backing up to it.
+ */
+- (void)checkAndStartKeyBackup;
+
+/**
  Enable backing up of keys.
 
  @param keyBackupVersion backup information object as returned by `[MXKeyBackup version]`.

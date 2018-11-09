@@ -28,14 +28,49 @@ NS_ASSUME_NONNULL_BEGIN
 #pragma mark - Constants definitions
 
 /**
- E2e keys backup states.
+ * E2e keys backup states.
+ *
+ *                                 |
+ *                                 V        deleteKeyBackupVersion (on current backup)
+ *    +---------------------->  UNKNOWN  <-------------
+ *    |                            |
+ *    |                            | checkAndStartKeyBackup (at startup or on new verified device)
+ *    |                            V
+ *    |                     CHECKING BACKUP
+ *    |                            |
+ *    |  Network error             |
+ *    +<---------------------------+---------> DISABLED <----------------------+
+ *    |                            |              |                            |
+ *    |                            |              | createKeyBackupVersion     |
+ *    |                            |              V                            |
+ *    |                            |           ENABLING                        |
+ *    |                            |              |                            |
+ *    |                            V              |                      error |
+ *    |                  +--->   READY   <--------+----------------------------+
+ *    |                  |         |
+ *    |                  |         | on new key
+ *    |                  |         V
+ *    |                  |    WILL BACK UP
+ *    |                  |         |
+ *    |                  |         V
+ *    |                  |     BACKING UP
+ *    | Error            |         |
+ *    +<-----------------+---------+
+ *
  */
 typedef enum : NSUInteger
 {
     // Backup is not enabled
-    MXKeyBackupStateDisabled = 0,
+    MXKeyBackupStateUnknown = 0,
+
+    // Backup is not enabled
+    MXKeyBackupStateCheckingBackUpOnHomeserver,
+
+    // Backup from this device is not enabled
+    MXKeyBackupStateDisabled,
 
     // Backup is being enabled
+    // The backup version is being created on the homeserver
     MXKeyBackupStateEnabling,
 
     // Backup is enabled and ready to send backup to the homeserver
@@ -70,7 +105,6 @@ FOUNDATION_EXPORT NSString *const kMXKeyBackupDidStateChangeNotification;
 
  @return a MXHTTPOperation instance.
  */
-// TODO: hide it?
 - (MXHTTPOperation*)version:(void (^)(MXKeyBackupVersion *keyBackupVersion))success
                     failure:(void (^)(NSError *error))failure;
 

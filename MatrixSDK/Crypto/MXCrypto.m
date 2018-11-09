@@ -246,6 +246,8 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
 
             [self->outgoingRoomKeyRequestManager start];
 
+            [self->_backup checkAndStartKeyBackup];
+
             dispatch_async(dispatch_get_main_queue(), ^{
                 self->startOperation = nil;
                 success();

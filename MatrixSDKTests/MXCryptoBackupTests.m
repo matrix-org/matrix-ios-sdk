@@ -406,11 +406,15 @@
 
                  NSUInteger keys = [aliceSession.crypto.store inboundGroupSessionsCount:NO];
 
-                [[NSNotificationCenter defaultCenter] addObserverForName:kMXKeyBackupDidStateChangeNotification object:aliceSession.crypto.backup queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *notif) {
+                __block id observer;
+                observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXKeyBackupDidStateChangeNotification object:aliceSession.crypto.backup queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *notif) {
 
                     // Check the backup completes
-                    if (aliceSession.crypto.backup.state == MXKeyBackupStateReadyToBackUp)
+                    if (observer && aliceSession.crypto.backup.state == MXKeyBackupStateReadyToBackUp)
                     {
+                        [[NSNotificationCenter defaultCenter] removeObserver:observer];
+                        observer = nil;
+
                         NSUInteger backedUpkeys = [aliceSession.crypto.store inboundGroupSessionsCount:YES];
                         XCTAssertEqual(backedUpkeys, keys, @"All keys must have been marked as backed up");
 
@@ -511,7 +515,7 @@
 }
 
 /**
- Check that encryption and decryption of megolm keys
+ Check encryption and decryption of megolm keys in the backup.
  - Pick a megolm key
  - Check [MXKeyBackup encryptGroupSession] returns stg
  - Check [MXKeyBackup pkDecryptionFromRecoveryKey] is able to create a OLMPkDecryption
@@ -554,7 +558,6 @@
             XCTFail(@"The request should not fail - NSError: %@", error);
             [expectation fulfill];
         }];
-
     }];
 }
 
@@ -598,10 +601,6 @@
                              // - The new device must have the same count of megolm keys
                              XCTAssertEqual([aliceSession2.crypto.store inboundGroupSessionsCount:NO], aliceKeys1.count);
 
-                             // TODO: This test will pass once the backup will be started automatically when a backup version
-                             // is detected
-                             XCTAssertEqual([aliceSession2.crypto.store inboundGroupSessionsCount:YES], aliceKeys1.count);
-
                              // - Alice must have the same keys on both devices
                              for (MXOlmInboundGroupSession *aliceKey1 in aliceKeys1)
                              {
@@ -621,6 +620,59 @@
                     XCTFail(@"The request should not fail - NSError: %@", error);
                     [expectation fulfill];
                 }];
+            } failure:^(NSError * _Nonnull error) {
+                XCTFail(@"The request should not fail - NSError: %@", error);
+                [expectation fulfill];
+            }];
+        } failure:^(NSError * _Nonnull error) {
+            XCTFail(@"The request should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+    }];
+}
+
+/**
+ Check backup starts automatically if there is an existing and compatible backup
+ version on the homeserver.
+ - Create a backup version
+ - Restart alice session
+ -> The new alice session must back up to the same version
+ */
+- (void)testCheckAndStartKeyBackupWhenRestartingAMatrixSession
+{
+    // - Create a backup version
+    [matrixSDKTestsE2EData doE2ETestWithAliceAndBobInARoomWithCryptedMessages:self cryptedBob:YES readyToTest:^(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
+
+        XCTAssertFalse(aliceSession.crypto.backup.enabled);
+
+        [aliceSession.crypto.backup prepareKeyBackupVersion:^(MXMegolmBackupCreationInfo * _Nonnull keyBackupCreationInfo) {
+            [aliceSession.crypto.backup createKeyBackupVersion:keyBackupCreationInfo success:^(MXKeyBackupVersion * _Nonnull keyBackupVersion) {
+
+                XCTAssertTrue(aliceSession.crypto.backup.enabled);
+
+                // - Restart alice session
+                MXSession *aliceSession2 = [[MXSession alloc] initWithMatrixRestClient:aliceSession.matrixRestClient];
+                [aliceSession close];
+                [aliceSession2 start:nil failure:^(NSError * _Nonnull error) {
+                    XCTFail(@"The request should not fail - NSError: %@", error);
+                    [expectation fulfill];
+                }];
+
+                // -> The new alice session must back up to the same version
+                __block id observer;
+                observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXKeyBackupDidStateChangeNotification object:aliceSession2.crypto.backup queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *notif) {
+
+                    if (observer && aliceSession2.crypto.backup.state == MXKeyBackupStateReadyToBackUp)
+                    {
+                        [[NSNotificationCenter defaultCenter] removeObserver:observer];
+                        observer = nil;
+
+                        XCTAssertEqualObjects(aliceSession2.crypto.backup.keyBackupVersion.version, keyBackupVersion.version);
+
+                        [expectation fulfill];
+                    }
+                }];
+
             } failure:^(NSError * _Nonnull error) {
                 XCTFail(@"The request should not fail - NSError: %@", error);
                 [expectation fulfill];
