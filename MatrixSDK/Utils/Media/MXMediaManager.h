@@ -1,6 +1,7 @@
 /*
  Copyright 2016 OpenMarket Ltd
  Copyright 2017 Vector Creations Ltd
+ Copyright 2018 New Vector Ltd
  
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -263,7 +264,7 @@ extern NSString *const kMXMediaManagerDefaultCacheFolder;
  @param filePath output file.
  @return mediaLoader (if any)
  */
-+ (MXMediaLoader*)existingDownloaderWithOutputFilePath:(NSString *)filePath __attribute__((deprecated("Use [downloadMediaFromMatrixContentURI] instead")));
++ (MXMediaLoader*)existingDownloaderWithOutputFilePath:(NSString *)filePath __attribute__((deprecated("Use [existingDownloaderWithIdentifier] instead")));
 
 /**
  Check whether a download is already running with a specific download identifier.

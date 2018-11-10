@@ -1,6 +1,7 @@
 /*
  Copyright 2016 OpenMarket Ltd
  Copyright 2017 Vector Creations Ltd
+ Copyright 2018 New Vector Ltd
  
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -700,8 +701,10 @@ static MXLRUCache* imagesCacheLruCache = nil;
             {
                 
                 MXMediaManager *sharedManager = [MXMediaManager sharedManager];
-                [[NSNotificationCenter defaultCenter] addObserver:sharedManager selector:@selector(onMediaUploadEnd:) name:kMXMediaUploadDidFinishNotification object:nil];
-                [[NSNotificationCenter defaultCenter] addObserver:sharedManager selector:@selector(onMediaUploadEnd:) name:kMXMediaUploadDidFailNotification object:nil];
+                [[NSNotificationCenter defaultCenter] addObserver:sharedManager
+                                                         selector:@selector(onMediaLoaderStateDidChange:)
+                                                             name:kMXMediaLoaderStateDidChangeNotification
+                                                           object:nil];
             }
         }
         [uploadTableById setValue:mediaLoader forKey:mediaLoader.uploadId];
@@ -719,16 +722,23 @@ static MXLRUCache* imagesCacheLruCache = nil;
     return nil;
 }
 
-- (void)onMediaUploadEnd:(NSNotification *)notif
+- (void)onMediaLoaderStateDidChange:(NSNotification *)notif
 {
-    [MXMediaManager removeUploaderWithId:notif.object];
+    MXMediaLoader *loader = (MXMediaLoader*)notif.object;
     
-    // If there is no more upload in progress, stop observing upload notifications
-    if (0 == uploadTableById.count)
-    {
-        
-        [[NSNotificationCenter defaultCenter] removeObserver:self name:kMXMediaUploadDidFinishNotification object:nil];
-        [[NSNotificationCenter defaultCenter] removeObserver:self name:kMXMediaUploadDidFailNotification object:nil];
+    // Consider only the end of uploading.
+    switch (loader.state) {
+        case MXMediaLoaderStateUploadCompleted:
+        case MXMediaLoaderStateUploadFailed:
+            [MXMediaManager removeUploaderWithId:loader.uploadId];
+            // If there is no more upload in progress, stop observing upload notifications
+            if (0 == uploadTableById.count)
+            {
+                [[NSNotificationCenter defaultCenter] removeObserver:self name:kMXMediaLoaderStateDidChangeNotification object:nil];
+            }
+            break;
+        default:
+            break;
     }
 }
 
@@ -813,8 +823,10 @@ static NSMutableDictionary* fileBaseFromMimeType = nil;
 
 + (NSString*)cachePathForMatrixContentURI:(NSString*)mxContentURI andType:(NSString *)mimeType inFolder:(NSString*)folder
 {
-    // Check whether the provided uri is valid
-    if (![mxContentURI hasPrefix:kMXContentUriScheme])
+    // Check whether the provided uri is valid.
+    // Note: When an uploading is in progress, the upload id is used temporarily as the content url (nasty trick).
+    // That is why we allow here to retrieve a cache file path from an upload identifier.
+    if (![mxContentURI hasPrefix:kMXContentUriScheme] && ![mxContentURI hasPrefix:kMXMediaUploadIdPrefix])
     {
         NSLog(@"[MXMediaManager] cachePathForMatrixContentURI: invalid media content URI");
         return nil;
@@ -851,7 +863,7 @@ static NSMutableDictionary* fileBaseFromMimeType = nil;
                                      toFitViewSize:(CGSize)viewSize
                                         withMethod:(MXThumbnailingMethod)thumbnailingMethod
 {
-    // Check whether the provided uri is valid
+    // Check whether the provided uri is valid.
     if (![mxContentURI hasPrefix:kMXContentUriScheme])
     {
         NSLog(@"[MXMediaManager] thumbnailCachePathForMatrixContentURI: invalid media content URI");

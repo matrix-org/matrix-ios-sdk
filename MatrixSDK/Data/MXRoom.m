@@ -808,9 +808,9 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
     // directly from its cache
     // Pass this id in the URL is a nasty trick to retrieve it later
     MXMediaLoader *uploader = [MXMediaManager prepareUploaderWithMatrixSession:mxSession initialRange:0 andRange:endRange];
-    NSString *fakeMediaManagerURL = uploader.uploadId;
+    NSString *fakeMediaURI = uploader.uploadId;
     
-    NSString *cacheFilePath = [MXMediaManager cachePathForMediaWithURL:fakeMediaManagerURL andType:mimetype inFolder:self.roomId];
+    NSString *cacheFilePath = [MXMediaManager cachePathForMatrixContentURI:fakeMediaURI andType:mimetype inFolder:self.roomId];
     [MXMediaManager writeMediaData:imageData toFilePath:cacheFilePath];
     
     // Create a fake image name based on imageData to keep the same name for the same image.
@@ -827,7 +827,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
     NSMutableDictionary *msgContent = [@{
                                          @"msgtype": kMXMessageTypeImage,
                                          @"body": filename,
-                                         @"url": fakeMediaManagerURL,
+                                         @"url": fakeMediaURI,
                                          @"info": [@{
                                                      @"mimetype": mimetype,
                                                      @"w": @(imageSize.width),
@@ -897,24 +897,33 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
         // Check whether the content must be encrypted before sending
         if (self.mxSession.crypto && self.summary.isEncrypted)
         {
-            // Register uploader observer
-            uploaderObserver = [[NSNotificationCenter defaultCenter] addObserverForName:kMXMediaUploadProgressNotification object:uploader queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *notif) {
+            // Add uploader observer to update the event state
+            MXWeakify(self);
+            uploaderObserver = [[NSNotificationCenter defaultCenter] addObserverForName:kMXMediaLoaderStateDidChangeNotification object:uploader queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *notif) {
 
-                if (uploader.statisticsDict)
-                {
-                    NSNumber* progressNumber = [uploader.statisticsDict valueForKey:kMXMediaLoaderProgressValueKey];
-                    if (progressNumber.floatValue)
+                MXStrongifyAndReturnIfNil(self);
+                MXMediaLoader *loader = (MXMediaLoader*)notif.object;
+                
+                // Consider only the upload progress state.
+                switch (loader.state) {
+                    case MXMediaLoaderStateUploadInProgress:
                     {
-                        event.sentState = MXEventSentStateUploading;
-
-                        // Update the stored echo.
-                        [self updateOutgoingMessage:event.eventId withOutgoingMessage:event];
-
-                        [[NSNotificationCenter defaultCenter] removeObserver:uploaderObserver];
-                        uploaderObserver = nil;
+                        NSNumber* progressNumber = [loader.statisticsDict valueForKey:kMXMediaLoaderProgressValueKey];
+                        if (progressNumber.floatValue)
+                        {
+                            event.sentState = MXEventSentStateUploading;
+                            
+                            // Update the stored echo.
+                            [self updateOutgoingMessage:event.eventId withOutgoingMessage:event];
+                            
+                            [[NSNotificationCenter defaultCenter] removeObserver:uploaderObserver];
+                            uploaderObserver = nil;
+                        }
+                        break;
                     }
+                    default:
+                        break;
                 }
-
             }];
 
             NSURL *localURL = [NSURL URLWithString:cacheFilePath];
@@ -984,8 +993,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
                 }
 
                 // Copy the cached image to the actual cacheFile path
-                NSString *absoluteURL = [self.mxSession.matrixRestClient urlOfContent:url];
-                NSString *actualCacheFilePath = [MXMediaManager cachePathForMediaWithURL:absoluteURL andType:mimetype inFolder:self.roomId];
+                NSString *actualCacheFilePath = [MXMediaManager cachePathForMatrixContentURI:url andType:mimetype inFolder:self.roomId];
                 NSError *error;
                 [[NSFileManager defaultManager] copyItemAtPath:cacheFilePath toPath:actualCacheFilePath error:&error];
 
@@ -1033,18 +1041,18 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
     // directly from its cache
     // Pass this id in the URL is a nasty trick to retrieve it later
     MXMediaLoader *thumbUploader = [MXMediaManager prepareUploaderWithMatrixSession:self.mxSession initialRange:0 andRange:0.1];
-    NSString *fakeMediaManagerThumbnailURL = thumbUploader.uploadId;
+    NSString *fakeMediaURI = thumbUploader.uploadId;
     
-    NSString *cacheFilePath = [MXMediaManager cachePathForMediaWithURL:fakeMediaManagerThumbnailURL andType:@"image/jpeg" inFolder:self.roomId];
+    NSString *cacheFilePath = [MXMediaManager cachePathForMatrixContentURI:fakeMediaURI andType:@"image/jpeg" inFolder:self.roomId];
     [MXMediaManager writeMediaData:videoThumbnailData toFilePath:cacheFilePath];
     
     // Prepare the message content for building an echo message
     NSMutableDictionary *msgContent = [@{
                                          @"msgtype": kMXMessageTypeVideo,
                                          @"body": @"Video",
-                                         @"url": fakeMediaManagerThumbnailURL,
+                                         @"url": fakeMediaURI,
                                          @"info": [@{
-                                                     @"thumbnail_url": fakeMediaManagerThumbnailURL,
+                                                     @"thumbnail_url": fakeMediaURI,
                                                      @"thumbnail_info": @{
                                                              @"mimetype": @"image/jpeg",
                                                              @"w": @(videoThumbnail.size.width),
@@ -1144,23 +1152,32 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
                     [self updateOutgoingMessage:event.eventId withOutgoingMessage:event];
 
                     // Register video uploader observer in order to trigger sent state change
-                    uploaderObserver = [[NSNotificationCenter defaultCenter] addObserverForName:kMXMediaUploadProgressNotification object:videoUploader queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *notif) {
+                    MXWeakify(self);
+                    uploaderObserver = [[NSNotificationCenter defaultCenter] addObserverForName:kMXMediaLoaderStateDidChangeNotification object:videoUploader queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *notif) {
 
-                        if (videoUploader.statisticsDict)
-                        {
-                            NSNumber* progressNumber = [videoUploader.statisticsDict valueForKey:kMXMediaLoaderProgressValueKey];
-                            if (progressNumber.floatValue)
+                        MXStrongifyAndReturnIfNil(self);
+                        MXMediaLoader *loader = (MXMediaLoader*)notif.object;
+                        
+                        // Consider only the upload progress state.
+                        switch (loader.state) {
+                            case MXMediaLoaderStateUploadInProgress:
                             {
-                                event.sentState = MXEventSentStateUploading;
-
-                                // Update the stored echo.
-                                [self updateOutgoingMessage:event.eventId withOutgoingMessage:event];
-
-                                [[NSNotificationCenter defaultCenter] removeObserver:uploaderObserver];
-                                uploaderObserver = nil;
+                                NSNumber* progressNumber = [loader.statisticsDict valueForKey:kMXMediaLoaderProgressValueKey];
+                                if (progressNumber.floatValue)
+                                {
+                                    event.sentState = MXEventSentStateUploading;
+                                    
+                                    // Update the stored echo.
+                                    [self updateOutgoingMessage:event.eventId withOutgoingMessage:event];
+                                    
+                                    [[NSNotificationCenter defaultCenter] removeObserver:uploaderObserver];
+                                    uploaderObserver = nil;
+                                }
+                                break;
                             }
+                            default:
+                                break;
                         }
-
                     }];
 
                     [MXEncryptedAttachments encryptAttachment:videoUploader mimeType:mimetype localUrl:convertedLocalURL success:^(MXEncryptedContentFile *result) {
@@ -1196,8 +1213,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
                     if (videoData)
                     {
                         // Copy the cached thumbnail to the actual cacheFile path
-                        NSString *absoluteURL = [self.mxSession.matrixRestClient urlOfContent:thumbnailUrl];
-                        NSString *actualCacheFilePath = [MXMediaManager cachePathForMediaWithURL:absoluteURL andType:@"image/jpeg" inFolder:self.roomId];
+                        NSString *actualCacheFilePath = [MXMediaManager cachePathForMatrixContentURI:thumbnailUrl andType:@"image/jpeg" inFolder:self.roomId];
                         NSError *error;
                         [[NSFileManager defaultManager] copyItemAtPath:cacheFilePath toPath:actualCacheFilePath error:&error];
 
@@ -1235,8 +1251,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
                             }
 
                             // Write the video to the actual cacheFile path
-                            NSString *absoluteURL = [self.mxSession.matrixRestClient urlOfContent:videoUrl];
-                            NSString *actualCacheFilePath = [MXMediaManager cachePathForMediaWithURL:absoluteURL andType:mimetype inFolder:self.roomId];
+                            NSString *actualCacheFilePath = [MXMediaManager cachePathForMatrixContentURI:videoUrl andType:mimetype inFolder:self.roomId];
                             [MXMediaManager writeMediaData:videoData toFilePath:actualCacheFilePath];
 
                             // Update video URL with the actual mxc: URL
@@ -1294,9 +1309,9 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
     // directly from its cache
     // Pass this id in the URL is a nasty trick to retrieve it later
     MXMediaLoader *uploader = [MXMediaManager prepareUploaderWithMatrixSession:self.mxSession initialRange:0 andRange:1];
-    NSString *fakeMediaManagerURL = uploader.uploadId;
+    NSString *fakeMediaURI = uploader.uploadId;
     
-    NSString *cacheFilePath = [MXMediaManager cachePathForMediaWithURL:fakeMediaManagerURL andType:mimeType inFolder:self.roomId];
+    NSString *cacheFilePath = [MXMediaManager cachePathForMatrixContentURI:fakeMediaURI andType:mimeType inFolder:self.roomId];
     [MXMediaManager writeMediaData:fileData toFilePath:cacheFilePath];
     
     // Create a fake name based on fileData to keep the same name for the same file.
@@ -1322,7 +1337,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
     NSMutableDictionary *msgContent = [@{
                                          @"msgtype": kMXMessageTypeFile,
                                          @"body": filename,
-                                         @"url": fakeMediaManagerURL,
+                                         @"url": fakeMediaURI,
                                          @"info": @{
                                                  @"mimetype": mimeType,
                                                  @"size": @(fileData.length)
@@ -1388,21 +1403,31 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
         if (self.mxSession.crypto && self.summary.isEncrypted)
         {
             // Register uploader observer
-            uploaderObserver = [[NSNotificationCenter defaultCenter] addObserverForName:kMXMediaUploadProgressNotification object:uploader queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *notif) {
+            MXWeakify(self);
+            uploaderObserver = [[NSNotificationCenter defaultCenter] addObserverForName:kMXMediaLoaderStateDidChangeNotification object:uploader queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *notif) {
 
-                if (uploader.statisticsDict)
-                {
-                    NSNumber* progressNumber = [uploader.statisticsDict valueForKey:kMXMediaLoaderProgressValueKey];
-                    if (progressNumber.floatValue)
+                MXStrongifyAndReturnIfNil(self);
+                MXMediaLoader *loader = (MXMediaLoader*)notif.object;
+                
+                // Consider only the upload progress state.
+                switch (loader.state) {
+                    case MXMediaLoaderStateUploadInProgress:
                     {
-                        event.sentState = MXEventSentStateUploading;
-
-                        // Update the stored echo.
-                        [self updateOutgoingMessage:event.eventId withOutgoingMessage:event];
-
-                        [[NSNotificationCenter defaultCenter] removeObserver:uploaderObserver];
-                        uploaderObserver = nil;
+                        NSNumber* progressNumber = [loader.statisticsDict valueForKey:kMXMediaLoaderProgressValueKey];
+                        if (progressNumber.floatValue)
+                        {
+                            event.sentState = MXEventSentStateUploading;
+                            
+                            // Update the stored echo.
+                            [self updateOutgoingMessage:event.eventId withOutgoingMessage:event];
+                            
+                            [[NSNotificationCenter defaultCenter] removeObserver:uploaderObserver];
+                            uploaderObserver = nil;
+                        }
+                        break;
                     }
+                    default:
+                        break;
                 }
 
             }];
@@ -1441,8 +1466,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
                 }
 
                 // Copy the cached file to the actual cacheFile path
-                NSString *absoluteURL = [self.mxSession.matrixRestClient urlOfContent:url];
-                NSString *actualCacheFilePath = [MXMediaManager cachePathForMediaWithURL:absoluteURL andType:mimeType inFolder:self.roomId];
+                NSString *actualCacheFilePath = [MXMediaManager cachePathForMatrixContentURI:url andType:mimeType inFolder:self.roomId];
                 NSError *error;
                 [[NSFileManager defaultManager] copyItemAtPath:cacheFilePath toPath:actualCacheFilePath error:&error];
 
