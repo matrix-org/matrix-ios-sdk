@@ -356,6 +356,18 @@ extern NSString *const kMXMediaManagerDefaultCacheFolder;
                                         withMethod:(MXThumbnailingMethod)thumbnailingMethod;
 
 /**
+ Build a unique cache file path for a temporary file.
+ 
+ The file extension is extracted from the provided mime type (if any).
+ 
+ @param folder cache folder to use (may be nil). kMXMediaManagerDefaultCacheFolder is used by default.
+ @param mimeType the media mime type (may be nil).
+ @return cache file path.
+ */
++ (NSString*)temporaryCachePathInFolder:(NSString*)folder
+                               withType:(NSString *)mimeType;
+
+/**
  Build a cache file path based on media information and an optional cache folder.
  
  The file extension is extracted from the provided mime type (if any). If no type is available, we look for a potential

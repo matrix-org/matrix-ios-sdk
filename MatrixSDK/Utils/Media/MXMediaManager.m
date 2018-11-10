@@ -32,6 +32,8 @@ NSUInteger const kMXMediaCacheSDKVersion = 2;
 NSString *const kMXMediaManagerAvatarThumbnailFolder = @"kMXMediaManagerAvatarThumbnailFolder";
 NSString *const kMXMediaManagerDefaultCacheFolder = @"kMXMediaManagerDefaultCacheFolder";
 
+NSString *const kMXMediaManagerTmpCachePathPrefix = @"tmpCache-";
+
 static NSString* mediaCachePath  = nil;
 static NSString *mediaDir        = @"mediacache";
 
@@ -895,6 +897,28 @@ static NSMutableDictionary* fileBaseFromMimeType = nil;
     NSString *suffix = [NSString stringWithFormat:@"_w%tuh%tum%tu", (NSUInteger)viewSize.width, (NSUInteger)viewSize.height, thumbnailingMethod];
     
     return [[MXMediaManager cacheFolderPath:folder] stringByAppendingPathComponent:[NSString stringWithFormat:@"%@%lu%@%@", fileBase, (unsigned long)mxContentURI.hash, suffix, extension]];
+}
+
++ (NSString*)temporaryCachePathInFolder:(NSString*)folder
+                               withType:(NSString *)mimeType
+{
+    NSString* fileBase = @"";
+    NSString *extension = @"";
+    
+    if (!folder.length)
+    {
+        folder = kMXMediaManagerDefaultCacheFolder;
+    }
+    
+    if (mimeType.length)
+    {
+        extension = [MXTools fileExtensionFromContentType:mimeType];
+        
+        // use the mime type to extract a base filename
+        fileBase = [MXMediaManager filebase:mimeType];
+    }
+    
+    return [[MXMediaManager cacheFolderPath:folder] stringByAppendingPathComponent:[NSString stringWithFormat:@"%@%@%@%@", kMXMediaManagerTmpCachePathPrefix, fileBase, [[NSProcessInfo processInfo] globallyUniqueString], extension]];
 }
 
 + (NSString*)cachePathForMediaWithURL:(NSString*)url andType:(NSString *)mimeType inFolder:(NSString*)folder
