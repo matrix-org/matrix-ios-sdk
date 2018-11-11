@@ -583,6 +583,7 @@ static MXLRUCache* imagesCacheLruCache = nil;
     return mediaLoader;
 }
 
+// TODO: MEDIA: Remove this deprecated method
 + (MXMediaLoader*)downloadMediaFromURL:(NSString *)mediaURL
                       andSaveAtFilePath:(NSString *)filePath
                                 success:(void (^)(void))success
@@ -621,6 +622,7 @@ static MXLRUCache* imagesCacheLruCache = nil;
     return nil;
 }
 
+// TODO: MEDIA: Remove this deprecated method
 + (MXMediaLoader*)downloadMediaFromURL:(NSString *)mediaURL
                       andSaveAtFilePath:(NSString *)filePath
 {

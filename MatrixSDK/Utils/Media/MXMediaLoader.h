@@ -91,19 +91,19 @@ FOUNDATION_EXPORT NSString *const kMXMediaLoaderStateDidChangeNotification;
  - kMXMediaLoaderTotalBytesCountKey: the total number of bytes tracked for the current job (NSNumber object).
  - kMXMediaLoaderCurrentDataRateKey: The observed data rate in Bytes/s (NSNumber object).
  */
-extern NSString *const kMXMediaDownloadProgressNotification __attribute__((deprecated("Use [kMXMediaLoaderStateDidChangeNotification] instead")));
+extern NSString *const kMXMediaDownloadProgressNotification __attribute__((deprecated("Use kMXMediaLoaderStateDidChangeNotification instead")));
 
 /**
  Posted when a media download is finished with success.
  The notification object is the media url. The `userInfo` dictionary contains an `NSString` object under the `kMXMediaLoaderFilePathKey` key, representing the resulting file path.
  */
-extern NSString *const kMXMediaDownloadDidFinishNotification __attribute__((deprecated("Use [kMXMediaLoaderStateDidChangeNotification] instead")));
+extern NSString *const kMXMediaDownloadDidFinishNotification __attribute__((deprecated("Use kMXMediaLoaderStateDidChangeNotification instead")));
 
 /**
  Posted when a media download failed.
  The notification object is the media url. The `userInfo` dictionary may contain an `NSError` object under the `kMXMediaLoaderErrorKey` key.
  */
-extern NSString *const kMXMediaDownloadDidFailNotification __attribute__((deprecated("Use [kMXMediaLoaderStateDidChangeNotification] instead")));
+extern NSString *const kMXMediaDownloadDidFailNotification __attribute__((deprecated("Use kMXMediaLoaderStateDidChangeNotification instead")));
 
 /**
  Posted to provide upload progress.
@@ -113,19 +113,19 @@ extern NSString *const kMXMediaDownloadDidFailNotification __attribute__((deprec
  - kMXMediaLoaderTotalBytesCountKey: the total number of bytes tracked for the current job (NSNumber object).
  - kMXMediaLoaderCurrentDataRateKey: The observed data rate in Bytes/s (NSNumber object).
  */
-extern NSString *const kMXMediaUploadProgressNotification __attribute__((deprecated("Use [kMXMediaLoaderStateDidChangeNotification] instead")));
+extern NSString *const kMXMediaUploadProgressNotification __attribute__((deprecated("Use kMXMediaLoaderStateDidChangeNotification instead")));
 
 /**
  Posted when a media upload is finished with success.
  The notification object is the upload id. The `userInfo` dictionary is nil.
  */
-extern NSString *const kMXMediaUploadDidFinishNotification __attribute__((deprecated("Use [kMXMediaLoaderStateDidChangeNotification] instead")));
+extern NSString *const kMXMediaUploadDidFinishNotification __attribute__((deprecated("Use kMXMediaLoaderStateDidChangeNotification instead")));
 
 /**
  Posted when a media upload failed.
  The notification object is the upload id. The `userInfo` dictionary may contain an `NSError` object under the `kMXMediaLoaderErrorKey` key.
  */
-extern NSString *const kMXMediaUploadDidFailNotification __attribute__((deprecated("Use [kMXMediaLoaderStateDidChangeNotification] instead")));
+extern NSString *const kMXMediaUploadDidFailNotification __attribute__((deprecated("Use kMXMediaLoaderStateDidChangeNotification instead")));
 
 /**
  Notifications `userInfo` keys
@@ -252,7 +252,7 @@ extern NSString *const kMXMediaUploadIdPrefix;
 - (void)downloadMediaFromURL:(NSString *)url
            andSaveAtFilePath:(NSString *)filePath
                      success:(blockMXMediaLoader_onSuccess)success
-                     failure:(blockMXMediaLoader_onError)failure __attribute__((deprecated("Use [kMXMediaLoaderStateDidChangeNotification] instead")));
+                     failure:(blockMXMediaLoader_onError)failure __attribute__((deprecated("Use [downloadMediaFromURL:withIdentifier:andSaveAtFilePath:success:failure] instead")));
 
 /**
  Initialise a media loader to upload data to a matrix content repository.
