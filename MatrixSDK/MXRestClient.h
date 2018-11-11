@@ -1698,7 +1698,7 @@ FOUNDATION_EXPORT NSString *const kMXMembersOfRoomParametersNotMembership;
  @param mxcContentURI the Matrix content URI to resolve.
  @return the Matrix content HTTP URL. nil if the Matrix content URI is invalid.
  */
-- (NSString*)urlOfContent:(NSString*)mxcContentURI;
+- (NSString*)urlOfContent:(NSString*)mxcContentURI __attribute__((deprecated("Should not be used anymore")));
 
 /**
  Get the suitable HTTP URL of a thumbnail image from a Matrix media content according to the destined view size.
@@ -1708,7 +1708,7 @@ FOUNDATION_EXPORT NSString *const kMXMembersOfRoomParametersNotMembership;
  @param thumbnailingMethod the method the Matrix content repository must use to generate the thumbnail.
  @return the thumbnail HTTP URL. The provided URI is returned if it is not a valid Matrix content URI.
  */
-- (NSString*)urlOfContentThumbnail:(NSString*)mxcContentURI toFitViewSize:(CGSize)viewSize withMethod:(MXThumbnailingMethod)thumbnailingMethod;
+- (NSString*)urlOfContentThumbnail:(NSString*)mxcContentURI toFitViewSize:(CGSize)viewSize withMethod:(MXThumbnailingMethod)thumbnailingMethod __attribute__((deprecated("Should not be used anymore")));
 
 
 
