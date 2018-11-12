@@ -715,7 +715,7 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
             MXStrongifyAndReturnIfNil(self);
 
             NSString *algorithm = event.wireContent[@"algorithm"];
-            device = [self.deviceList deviceWithIdentityKey:event.senderKey forUser:event.sender andAlgorithm:algorithm];
+            device = [self.deviceList deviceWithIdentityKey:event.senderKey andAlgorithm:algorithm];
 
         });
     }
@@ -1417,7 +1417,7 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
     // senderKey is the Curve25519 identity key of the device which the event
     // was sent from. In the case of Megolm, it's actually the Curve25519
     // identity key of the device which set up the Megolm session.
-    MXDeviceInfo *device = [_deviceList deviceWithIdentityKey:senderKey forUser:event.sender andAlgorithm:algorithm];
+    MXDeviceInfo *device = [_deviceList deviceWithIdentityKey:senderKey andAlgorithm:algorithm];
     if (!device)
     {
         // we haven't downloaded the details of this device yet.

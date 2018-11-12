@@ -226,7 +226,7 @@
     return [crypto.store devicesForUser:userId][deviceId];
 }
 
-- (MXDeviceInfo *)deviceWithIdentityKey:(NSString *)senderKey forUser:(NSString *)userId andAlgorithm:(NSString *)algorithm
+- (MXDeviceInfo *)deviceWithIdentityKey:(NSString *)senderKey andAlgorithm:(NSString *)algorithm
 {
     if (![algorithm isEqualToString:kMXCryptoOlmAlgorithm]
         && ![algorithm isEqualToString:kMXCryptoMegolmAlgorithm])
@@ -235,23 +235,7 @@
         return nil;
     }
 
-    for (MXDeviceInfo *device in [self storedDevicesForUser:userId])
-    {
-        for (NSString *keyId in device.keys)
-        {
-            if ([keyId hasPrefix:@"curve25519:"])
-            {
-                NSString *deviceKey = device.keys[keyId];
-                if ([senderKey isEqualToString:deviceKey])
-                {
-                    return device;
-                }
-            }
-        }
-    }
-
-    // Doesn't match a known device
-    return nil;
+    return [crypto.store deviceWithIdentityKey:senderKey];
 }
 
 - (void)startTrackingDeviceList:(NSString*)userId

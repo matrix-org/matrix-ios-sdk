@@ -115,7 +115,7 @@
 /**
  Store a device for a user.
 
- @param userId The user's id.
+ @param userId the user's id.
  @param device the device to store.
  */
 - (void)storeDeviceForUser:(NSString*)userId device:(MXDeviceInfo*)device;
@@ -123,11 +123,19 @@
 /**
  Retrieve a device for a user.
 
- @param deviceId The device id.
- @param userId The user's id.
- @return A map from device id to 'MXDevice' object for the device.
+ @param deviceId the device id.
+ @param userId the user's id.
+ @return The device.
  */
 - (MXDeviceInfo*)deviceWithDeviceId:(NSString*)deviceId forUser:(NSString*)userId;
+
+/**
+ Retrieve a device by its identity key.
+
+ @param identityKey the device identity key (`MXDeviceInfo.identityKey`)/
+ @return The device.
+ */
+- (MXDeviceInfo*)deviceWithIdentityKey:(NSString*)identityKey;
 
 /**
  Store the known devices for a user.

@@ -23,7 +23,7 @@
 #import "MXSession.h"
 #import "MXTools.h"
 
-NSUInteger const kMXRealmCryptoStoreVersion = 7;
+NSUInteger const kMXRealmCryptoStoreVersion = 8;
 
 static NSString *const kMXRealmCryptoStoreFolder = @"MXRealmCryptoStore";
 
@@ -33,6 +33,7 @@ static NSString *const kMXRealmCryptoStoreFolder = @"MXRealmCryptoStore";
 @interface MXRealmDeviceInfo : RLMObject
 @property NSData *deviceInfoData;
 @property (nonatomic) NSString *deviceId;
+@property (nonatomic) NSString *identityKey;
 @end
 
 @implementation MXRealmDeviceInfo
@@ -413,6 +414,7 @@ RLM_ARRAY_TYPE(MXRealmOlmInboundGroupSession)
                                                                     @"deviceId": device.deviceId,
                                                                     @"deviceInfoData": [NSKeyedArchiver archivedDataWithRootObject:device]
                                                                     }];
+            realmDevice.identityKey = device.identityKey;
             [realmUser.devices addObject:realmDevice];
         }
         else
@@ -430,6 +432,17 @@ RLM_ARRAY_TYPE(MXRealmOlmInboundGroupSession)
     MXRealmUser *realmUser = [MXRealmUser objectsInRealm:self.realm where:@"userId = %@", userID].firstObject;
 
     MXRealmDeviceInfo *realmDevice = [[realmUser.devices objectsWhere:@"deviceId = %@", deviceId] firstObject];
+    if (realmDevice)
+    {
+        return [NSKeyedUnarchiver unarchiveObjectWithData:realmDevice.deviceInfoData];
+    }
+
+    return nil;
+}
+
+- (MXDeviceInfo*)deviceWithIdentityKey:(NSString*)identityKey
+{
+    MXRealmDeviceInfo *realmDevice = [MXRealmDeviceInfo objectsInRealm:self.realm where:@"identityKey = %@", identityKey].firstObject;
     if (realmDevice)
     {
         return [NSKeyedUnarchiver unarchiveObjectWithData:realmDevice.deviceInfoData];
@@ -467,6 +480,7 @@ RLM_ARRAY_TYPE(MXRealmOlmInboundGroupSession)
                                                                                         @"deviceId": device.deviceId,
                                                                                         @"deviceInfoData": [NSKeyedArchiver archivedDataWithRootObject:device]
                                                                                         }];
+            realmDevice.identityKey = device.identityKey;
             [realmUser.devices addObject:realmDevice];
         }
     }];
@@ -1131,7 +1145,7 @@ RLM_ARRAY_TYPE(MXRealmOlmInboundGroupSession)
                 {
                     NSLog(@"[MXRealmCryptoStore] Migration from schema #6 -> #7");
 
-                    // We need to update the db because a sessionId property has been added MXRealmOlmSession
+                    // We need to update the db because a sessionId property has been added to MXRealmOlmSession
                     // to ensure uniqueness
                     NSLog(@"    Add sessionIdSenderKer, a combined primary key, to all MXRealmOlmInboundGroupSession objects");
                     [migration enumerateObjects:MXRealmOlmInboundGroupSession.className block:^(RLMObject *oldObject, RLMObject *newObject) {
@@ -1141,6 +1155,24 @@ RLM_ARRAY_TYPE(MXRealmOlmInboundGroupSession)
                     }];
 
                     NSLog(@"[MXRealmCryptoStore] Migration from schema #6 -> #7 completed");
+                }
+                case 7:
+                {
+                    NSLog(@"[MXRealmCryptoStore] Migration from schema #7 -> #8");
+
+                    // We need to update the db because a identityKey property has been added to MXRealmDeviceInfo
+                    NSLog(@"    Add identityKey to all MXRealmOlmInboundGroupSession objects");
+                    [migration enumerateObjects:MXRealmDeviceInfo.className block:^(RLMObject *oldObject, RLMObject *newObject) {
+
+                        MXDeviceInfo *device = [NSKeyedUnarchiver unarchiveObjectWithData:oldObject[@"deviceInfoData"]];
+                        NSString *identityKey = device.identityKey;
+                        if (identityKey)
+                        {
+                            newObject[@"identityKey"] = identityKey;
+                        }
+                    }];
+
+                    NSLog(@"[MXRealmCryptoStore] Migration from schema #7 -> #8 completed");
                 }
             }
         }
