@@ -8,17 +8,15 @@ Improvements:
  
 Bug Fix:
  * MXRestClient: [avatarUrlForUser:success:failure]: the returned url is always nil.
- 
-Deprecated API:
- * MXMediaManager: [downloadMediaFromURL:andSaveAtFilePath:success:failure:] is deprecated, use [downloadMediaFromMatrixContentURI:withType:inFolder:success:failure] or [downloadThumbnailFromMatrixContentURI:withType:inFolder:toFitViewSize:withMethod:success:failure] instead.
- * MXMediaManager: [downloadMediaFromURL:andSaveAtFilePath:] is deprecated, use [downloadMediaFromMatrixContentURI:withType:inFolder:] instead.
- * MXMediaManager: [existingDownloaderWithOutputFilePath:] is deprecated, use [existingDownloaderWithIdentifier:] instead.
- * MXMediaManager: [cachePathForMediaWithURL:andType:inFolder:] is deprecated, use [cachePathForMatrixContentURI:andType:inFolder:] instead.
- * MXMediaLoader: the notification names "kMXMediaDownloadxxx" and "kMXMediaUploadxxx" are deprecated, use kMXMediaLoaderStateDidChangeNotification instead.
- * MXMediaLoader: [downloadMediaFromURL:andSaveAtFilePath:success:failure] is deprecated, use [downloadMediaFromURL:withIdentifier:andSaveAtFilePath:success:failure] instead.
- * MXRestClient: [urlOfContent:] and [urlOfContentThumbnail:toFitViewSize:withMethod:] are deprecated.
 
 API break:
+ * MXMediaManager: [downloadMediaFromURL:andSaveAtFilePath:success:failure:] is removed, use [downloadMediaFromMatrixContentURI:withType:inFolder:success:failure] or [downloadThumbnailFromMatrixContentURI:withType:inFolder:toFitViewSize:withMethod:success:failure] instead.
+ * MXMediaManager: [downloadMediaFromURL:andSaveAtFilePath:] is removed, use [downloadMediaFromMatrixContentURI:withType:inFolder:] instead.
+ * MXMediaManager: [existingDownloaderWithOutputFilePath:] is removed, use [existingDownloaderWithIdentifier:] instead.
+ * MXMediaManager: [cachePathForMediaWithURL:andType:inFolder:] is removed, use [cachePathForMatrixContentURI:andType:inFolder:] instead.
+ * MXMediaLoader: the notification names "kMXMediaDownloadxxx" and "kMXMediaUploadxxx" are removed, use kMXMediaLoaderStateDidChangeNotification instead.
+ * MXMediaLoader: [downloadMediaFromURL:andSaveAtFilePath:success:failure] is removed, use [downloadMediaFromURL:withIdentifier:andSaveAtFilePath:success:failure] instead.
+ * MXRestClient: [urlOfContent:] and [urlOfContentThumbnail:toFitViewSize:withMethod:] are removed.
  * The Matrix Content repository contants are moved to MXEnumConstants.h
  * [urlOfIdenticon:] is moved from MXRestClient to MXMediaManager.
 

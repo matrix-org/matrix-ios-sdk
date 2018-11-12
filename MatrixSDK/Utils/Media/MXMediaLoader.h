@@ -84,50 +84,6 @@ typedef enum : NSUInteger
 FOUNDATION_EXPORT NSString *const kMXMediaLoaderStateDidChangeNotification;
 
 /**
- Posted to provide download progress.
- The notification object is the media url. The `userInfo` dictionary contains the following keys:
- - kMXMediaLoaderProgressValueKey: progress value in [0, 1] range (NSNumber object).
- - kMXMediaLoaderCompletedBytesCountKey: the number of bytes that have already been completed by the current job (NSNumber object).
- - kMXMediaLoaderTotalBytesCountKey: the total number of bytes tracked for the current job (NSNumber object).
- - kMXMediaLoaderCurrentDataRateKey: The observed data rate in Bytes/s (NSNumber object).
- */
-extern NSString *const kMXMediaDownloadProgressNotification __attribute__((deprecated("Use kMXMediaLoaderStateDidChangeNotification instead")));
-
-/**
- Posted when a media download is finished with success.
- The notification object is the media url. The `userInfo` dictionary contains an `NSString` object under the `kMXMediaLoaderFilePathKey` key, representing the resulting file path.
- */
-extern NSString *const kMXMediaDownloadDidFinishNotification __attribute__((deprecated("Use kMXMediaLoaderStateDidChangeNotification instead")));
-
-/**
- Posted when a media download failed.
- The notification object is the media url. The `userInfo` dictionary may contain an `NSError` object under the `kMXMediaLoaderErrorKey` key.
- */
-extern NSString *const kMXMediaDownloadDidFailNotification __attribute__((deprecated("Use kMXMediaLoaderStateDidChangeNotification instead")));
-
-/**
- Posted to provide upload progress.
- The notification object is the `uploadId`. The `userInfo` dictionary contains the following keys:
- - kMXMediaLoaderProgressValueKey: progress value in [0, 1] range (NSNumber object) [The properties `uploadInitialRange` and `uploadRange` are taken into account here].
- - kMXMediaLoaderCompletedBytesCountKey: the number of bytes that have already been completed by the current job (NSNumber object).
- - kMXMediaLoaderTotalBytesCountKey: the total number of bytes tracked for the current job (NSNumber object).
- - kMXMediaLoaderCurrentDataRateKey: The observed data rate in Bytes/s (NSNumber object).
- */
-extern NSString *const kMXMediaUploadProgressNotification __attribute__((deprecated("Use kMXMediaLoaderStateDidChangeNotification instead")));
-
-/**
- Posted when a media upload is finished with success.
- The notification object is the upload id. The `userInfo` dictionary is nil.
- */
-extern NSString *const kMXMediaUploadDidFinishNotification __attribute__((deprecated("Use kMXMediaLoaderStateDidChangeNotification instead")));
-
-/**
- Posted when a media upload failed.
- The notification object is the upload id. The `userInfo` dictionary may contain an `NSError` object under the `kMXMediaLoaderErrorKey` key.
- */
-extern NSString *const kMXMediaUploadDidFailNotification __attribute__((deprecated("Use kMXMediaLoaderStateDidChangeNotification instead")));
-
-/**
  Notifications `userInfo` keys
  */
 extern NSString *const kMXMediaLoaderProgressValueKey;
@@ -240,19 +196,6 @@ extern NSString *const kMXMediaUploadIdPrefix;
            andSaveAtFilePath:(NSString *)filePath
                      success:(blockMXMediaLoader_onSuccess)success
                      failure:(blockMXMediaLoader_onError)failure;
-
-/**
- Download data from the provided URL.
- 
- @param url remote media url.
- @param filePath output file in which downloaded media must be saved.
- @param success a block called when the operation succeeds.
- @param failure a block called when the operation fails.
- */
-- (void)downloadMediaFromURL:(NSString *)url
-           andSaveAtFilePath:(NSString *)filePath
-                     success:(blockMXMediaLoader_onSuccess)success
-                     failure:(blockMXMediaLoader_onError)failure __attribute__((deprecated("Use [downloadMediaFromURL:withIdentifier:andSaveAtFilePath:success:failure] instead")));
 
 /**
  Initialise a media loader to upload data to a matrix content repository.

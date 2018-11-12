@@ -27,7 +27,7 @@
 #import "MXLRUCache.h"
 #import "MXTools.h"
 
-NSUInteger const kMXMediaCacheSDKVersion = 2;
+NSUInteger const kMXMediaCacheSDKVersion = 3;
 
 NSString *const kMXMediaManagerAvatarThumbnailFolder = @"kMXMediaManagerAvatarThumbnailFolder";
 NSString *const kMXMediaManagerDefaultCacheFolder = @"kMXMediaManagerDefaultCacheFolder";
@@ -59,8 +59,6 @@ static NSUInteger storageCacheSize = 0;
  Table of downloads in progress
  */
 static NSMutableDictionary* downloadTable = nil;
-// TODO: remove this table when deprecated API will be removed.
-static NSMutableDictionary* legacyDownloadTable = nil;
 
 /**
  Table of uploads in progress
@@ -583,61 +581,6 @@ static MXLRUCache* imagesCacheLruCache = nil;
     return mediaLoader;
 }
 
-// TODO: MEDIA: Remove this deprecated method
-+ (MXMediaLoader*)downloadMediaFromURL:(NSString *)mediaURL
-                      andSaveAtFilePath:(NSString *)filePath
-                                success:(void (^)(void))success
-                                failure:(void (^)(NSError *error))failure
-{
-    // Check provided file path
-    if (!filePath.length)
-    {
-        filePath = [self cachePathForMediaWithURL:mediaURL andType:nil inFolder:kMXMediaManagerDefaultCacheFolder];
-    }
-    
-    if (mediaURL)
-    {
-        // Create a media loader to download data
-        MXMediaLoader *mediaLoader = [[MXMediaLoader alloc] init];
-        // Report this loader
-        if (!legacyDownloadTable)
-        {
-            legacyDownloadTable = [[NSMutableDictionary alloc] init];
-        }
-        [legacyDownloadTable setValue:mediaLoader forKey:filePath];
-        
-        // Launch download
-        [mediaLoader downloadMediaFromURL:mediaURL andSaveAtFilePath:filePath success:^(NSString *outputFilePath)
-         {
-             [legacyDownloadTable removeObjectForKey:filePath];
-             if (success) success();
-         } failure:^(NSError *error)
-         {
-             if (failure) failure(error);
-             [legacyDownloadTable removeObjectForKey:filePath];
-         }];
-        return mediaLoader;
-    }
-    
-    return nil;
-}
-
-// TODO: MEDIA: Remove this deprecated method
-+ (MXMediaLoader*)downloadMediaFromURL:(NSString *)mediaURL
-                      andSaveAtFilePath:(NSString *)filePath
-{
-    return [MXMediaManager downloadMediaFromURL:mediaURL andSaveAtFilePath:filePath success:nil failure:nil];
-}
-
-+ (MXMediaLoader*)existingDownloaderWithOutputFilePath:(NSString *)filePath
-{
-    if (legacyDownloadTable && filePath)
-    {
-        return [legacyDownloadTable valueForKey:filePath];
-    }
-    return nil;
-}
-
 + (MXMediaLoader*)existingDownloaderWithIdentifier:(NSString *)downloadId
 {
     if (downloadTable && downloadId)
@@ -921,59 +864,6 @@ static NSMutableDictionary* fileBaseFromMimeType = nil;
     }
     
     return [[MXMediaManager cacheFolderPath:folder] stringByAppendingPathComponent:[NSString stringWithFormat:@"%@%@%@%@", kMXMediaManagerTmpCachePathPrefix, fileBase, [[NSProcessInfo processInfo] globallyUniqueString], extension]];
-}
-
-+ (NSString*)cachePathForMediaWithURL:(NSString*)url andType:(NSString *)mimeType inFolder:(NSString*)folder
-{
-    NSString* fileBase = @"";
-    NSString *extension = @"";
-    
-    if (!folder.length)
-    {
-        folder = kMXMediaManagerDefaultCacheFolder;
-    }
-    
-    if (mimeType.length)
-    {
-        extension = [MXTools fileExtensionFromContentType:mimeType];
-        
-        // use the mime type to extract a base filename
-        fileBase = [MXMediaManager filebase:mimeType];
-    }
-    
-    if (!extension.length)
-    {
-        // Try to get this extension from url
-        NSString *pathExtension = [url pathExtension];
-        if (pathExtension.length)
-        {
-            extension = [NSString stringWithFormat:@".%@", pathExtension];
-        }
-        else if ([folder isEqualToString:kMXMediaManagerAvatarThumbnailFolder])
-        {
-            // Consider the default image type for thumbnail folder
-            extension = [MXTools fileExtensionFromContentType:@"image/jpeg"];
-        }
-    }
-    
-    // We observed an issue about the url.hash use: the returned integer was equal for different urls.
-    // This was observed when the urls start with the same characters on about 75 characters, and have the same suffix on about 32 char.
-    // This issue involves several rooms with the same avatar. It happens mainly for the users of the homeservers with a long name.
-    // Patch: we split the url in two components, and invert them in order to have the mediaId at the beginning of the string.
-    NSUInteger urlLength = url.length;
-    NSMutableString *reversedURL = nil;
-    if (urlLength > 2)
-    {
-        NSUInteger index = urlLength / 2;
-        reversedURL = [NSMutableString stringWithString:[url substringFromIndex:index]]; ;
-        [reversedURL appendString:[url substringToIndex:index]];
-    }
-    else if (url)
-    {
-        reversedURL = [NSMutableString stringWithString:url];
-    }
-    
-    return [[MXMediaManager cacheFolderPath:folder] stringByAppendingPathComponent:[NSString stringWithFormat:@"%@%lu%@", fileBase, (unsigned long)reversedURL.hash, extension]];
 }
 
 + (void)reduceCacheSizeToInsert:(NSUInteger)sizeInBytes

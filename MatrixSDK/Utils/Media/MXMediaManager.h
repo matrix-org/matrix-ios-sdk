@@ -235,38 +235,6 @@ extern NSString *const kMXMediaManagerDefaultCacheFolder;
                                                 failure:(void (^)(NSError *error))failure;
 
 /**
- Download data from the provided URL.
- 
- @param mediaURL the remote media url.
- @param filePath output file in which downloaded media must be saved (may be nil).
- @param success block called on success
- @param failure block called on failure
- @return a media loader in order to let the user cancel this action.
- */
-+ (MXMediaLoader*)downloadMediaFromURL:(NSString *)mediaURL
-                     andSaveAtFilePath:(NSString *)filePath
-                               success:(void (^)(void))success
-                               failure:(void (^)(NSError *error))failure __attribute__((deprecated("Use [downloadMediaFromMatrixContentURI:withType:inFolder:success:failure] or [downloadThumbnailFromMatrixContentURI:withType:inFolder:toFitViewSize:withMethod:success:failure] instead")));
-
-/**
- Download data from the provided URL.
- 
- @param mediaURL the remote media url.
- @param filePath output file in which downloaded media must be saved (may be nil).
- @return a media loader in order to let the user cancel this action.
- */
-+ (MXMediaLoader*)downloadMediaFromURL:(NSString *)mediaURL
-                     andSaveAtFilePath:(NSString *)filePath __attribute__((deprecated("Use [downloadMediaFromMatrixContentURI:withType:inFolder] instead")));
-
-/**
- Check whether a download is already running with a specific output file path.
- 
- @param filePath output file.
- @return mediaLoader (if any)
- */
-+ (MXMediaLoader*)existingDownloaderWithOutputFilePath:(NSString *)filePath __attribute__((deprecated("Use [existingDownloaderWithIdentifier:] instead")));
-
-/**
  Check whether a download is already running with a specific download identifier.
  
  @param downloadId the identifier.
@@ -366,21 +334,6 @@ extern NSString *const kMXMediaManagerDefaultCacheFolder;
  */
 + (NSString*)temporaryCachePathInFolder:(NSString*)folder
                                withType:(NSString *)mimeType;
-
-/**
- Build a cache file path based on media information and an optional cache folder.
- 
- The file extension is extracted from the provided mime type (if any). If no type is available, we look for a potential
- extension in the url.
- By default 'image/jpeg' is considered for thumbnail folder (kMXMediaManagerAvatarThumbnailFolder). No default mime type 
- is defined for other folders.
- 
- @param url the media url.
- @param mimeType the media mime type (may be nil).
- @param folder cache folder to use (may be nil).
- @return cache file path.
- */
-+ (NSString*)cachePathForMediaWithURL:(NSString*)url andType:(NSString *)mimeType inFolder:(NSString*)folder __attribute__((deprecated("Use [cachePathForMatrixContentURI:andType:inFolder:] instead")));
 
 /**
  Check if the media cache size must be reduced to fit the user expected cache size
