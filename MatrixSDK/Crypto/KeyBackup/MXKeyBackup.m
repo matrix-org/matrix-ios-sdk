@@ -21,7 +21,7 @@
 
 #import <OLMKit/OLMKit.h>
 #import "MXRecoveryKey.h"
-#import "MXSession.h"   // TODO: To remove
+#import "MXSession.h"
 #import "MXTools.h"
 #import "MXError.h"
 
@@ -50,14 +50,6 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
 
     // Failure block when backupAllGroupSessions is progressing
     void (^backupAllGroupSessionsFailure)(NSError *error);
-    
-    // track whether this device's megolm keys are being backed up incrementally
-    // to the server or not.
-    // XXX: this should probably have a single source of truth from OlmAccount
-// +    this.backupInfo = null; // The info dict from /room_keys/version
-// +   this.backupKey = null; // The encryption key object
-//    this._checkedForBackup = false; // Have we checked the server for a backup we can use?
-// X  this._sendingBackups = false; // Are we currently sending backups?
 }
 
 @end
@@ -599,7 +591,10 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
                 self->backupAllGroupSessionsFailure = ^(NSError *error) {
                     MXStrongifyAndReturnIfNil(self);
 
-                    failure(error);
+                    dispatch_async(dispatch_get_main_queue(), ^{
+                        failure(error);
+                    });
+
                     [self resetBackupAllGroupSessionsObjects];
                 };
             }
@@ -825,8 +820,7 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
 - (MXKeyBackupData*)encryptGroupSession:(MXOlmInboundGroupSession*)session withPkEncryption:(OLMPkEncryption*)encryption
 {
     // Gather information for each key
-    // TODO: userId?
-    MXDeviceInfo *device = [mxSession.crypto.deviceList deviceWithIdentityKey:session.senderKey forUser:nil andAlgorithm:kMXCryptoMegolmAlgorithm];
+    MXDeviceInfo *device = [mxSession.crypto.deviceList deviceWithIdentityKey:session.senderKey andAlgorithm:kMXCryptoMegolmAlgorithm];
 
     // Build the m.megolm_backup.v1.curve25519-aes-sha2 data as defined at
     // https://github.com/uhoreg/matrix-doc/blob/e2e_backup/proposals/1219-storing-megolm-keys-serverside.md#mmegolm_backupv1curve25519-aes-sha2-key-format
