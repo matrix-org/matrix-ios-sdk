@@ -34,37 +34,41 @@ NS_ASSUME_NONNULL_BEGIN
  *                                 V        deleteKeyBackupVersion (on current backup)
  *    +---------------------->  UNKNOWN  <-------------
  *    |                            |
- *    |                            | checkAndStartKeyBackup (at startup or on new verified device)
+ *    |                            | checkAndStartKeyBackup (at startup or on new verified device or a new detected backup)
  *    |                            V
  *    |                     CHECKING BACKUP
  *    |                            |
- *    |  Network error             |
- *    +<---------------------------+---------> DISABLED <----------------------+
- *    |                            |              |                            |
- *    |                            |              | createKeyBackupVersion     |
- *    |                            |              V                            |
- *    |                            |           ENABLING                        |
- *    |                            |              |                            |
- *    |                            V              |                      error |
- *    |                  +--->   READY   <--------+----------------------------+
- *    |                  |         |
- *    |                  |         | on new key
- *    |                  |         V
- *    |                  |    WILL BACK UP
- *    |                  |         |
- *    |                  |         V
- *    |                  |     BACKING UP
- *    | Error            |         |
- *    +<-----------------+---------+
+ *    | Network error              |
+ *    +<----------+----------------+---------> DISABLED <----------------------+
+ *    |           |                |              |                            |
+ *    |           |                |              | createKeyBackupVersion     |
+ *    |           V                |              V                            |
+ *    +<---  WRONG VERSION         |           ENABLING                        |
+ *                ^                |              |                            |
+ *                |                V              |                      error |
+ *                |              READY   <--------+----------------------------+
+ *                |                |              |
+ *                |                | on new key   |
+ *                |                V              |
+ *                |           WILL BACK UP        |
+ *                |                |              |
+ *                |                V              |
+ *                |            BACKING UP         |
+ *                | Error          |              |
+ *                +<---------------+------------->+
  *
  */
 typedef enum : NSUInteger
 {
-    // Backup is not enabled
+    // Need to check the current backup version on the homeserver
     MXKeyBackupStateUnknown = 0,
 
-    // Backup is not enabled
+    // Making the check request on the homeserver
     MXKeyBackupStateCheckingBackUpOnHomeserver,
+
+    // Backup has been stopped because a new backup version has been detected on
+    // the homeserver
+    MXKeyBackupStateWrongBackUpVersion,
 
     // Backup from this device is not enabled
     MXKeyBackupStateDisabled,

@@ -60,6 +60,22 @@
     [super tearDown];
 }
 
+- (MXKeyBackupVersion*)fakeKeyBackupVersion
+{
+    return [MXKeyBackupVersion modelFromJSON:@{
+                                        @"algorithm": kMXCryptoMegolmBackupAlgorithm,
+                                        @"auth_data": @{
+                                                @"public_key": @"abcdefg",
+                                                @"signatures": @{
+                                                        @"something": @{
+                                                                @"ed25519:something": @"hijklmnop"
+                                                                }
+                                                        }
+                                                }
+                                        }];
+}
+
+
 /**
  - Create a backup version on the server
  - Get the current version from the server
@@ -70,19 +86,7 @@
     [matrixSDKTestsData doMXRestClientTestWithAlice:self readyToTest:^(MXRestClient *aliceRestClient, XCTestExpectation *expectation) {
 
         // - Create a backup version on the server
-        MXKeyBackupVersion *keyBackupVersion =
-        [MXKeyBackupVersion modelFromJSON:@{
-                                            @"algorithm": kMXCryptoMegolmBackupAlgorithm,
-                                            @"auth_data": @{
-                                                    @"public_key": @"abcdefg",
-                                                    @"signatures": @{
-                                                            @"something": @{
-                                                                    @"ed25519:something": @"hijklmnop"
-                                                                    }
-                                                            }
-                                                    }
-                                            }];
-
+        MXKeyBackupVersion *keyBackupVersion = self.fakeKeyBackupVersion;
         [aliceRestClient createKeyBackupVersion:keyBackupVersion success:^(NSString *version) {
 
             // - Get the current version from the server
@@ -118,20 +122,7 @@
     [matrixSDKTestsData doMXRestClientTestWithAlice:self readyToTest:^(MXRestClient *aliceRestClient, XCTestExpectation *expectation) {
 
         // - Create a backup version on the server
-        MXKeyBackupVersion *keyBackupVersion =
-        [MXKeyBackupVersion modelFromJSON:@{
-                                            @"algorithm": kMXCryptoMegolmBackupAlgorithm,
-                                            @"auth_data": @{
-                                                    @"public_key": @"abcdefg",
-                                                    @"signatures": @{
-                                                            @"something": @{
-                                                                    @"ed25519:something": @"hijklmnop"
-                                                                    }
-                                                            }
-                                                    }
-                                            }];
-
-        [aliceRestClient createKeyBackupVersion:keyBackupVersion success:^(NSString *version) {
+        [aliceRestClient createKeyBackupVersion:self.fakeKeyBackupVersion success:^(NSString *version) {
 
             //- Make a backup
             MXKeyBackupData *keyBackupData = [MXKeyBackupData new];
@@ -184,20 +175,7 @@
     [matrixSDKTestsData doMXRestClientTestWithAlice:self readyToTest:^(MXRestClient *aliceRestClient, XCTestExpectation *expectation) {
 
         // - Create a backup version on the server
-        MXKeyBackupVersion *keyBackupVersion =
-        [MXKeyBackupVersion modelFromJSON:@{
-                                            @"algorithm": kMXCryptoMegolmBackupAlgorithm,
-                                            @"auth_data": @{
-                                                    @"public_key": @"abcdefg",
-                                                    @"signatures": @{
-                                                            @"something": @{
-                                                                    @"ed25519:something": @"hijklmnop"
-                                                                    }
-                                                            }
-                                                    }
-                                            }];
-
-        [aliceRestClient createKeyBackupVersion:keyBackupVersion success:^(NSString *version) {
+        [aliceRestClient createKeyBackupVersion:self.fakeKeyBackupVersion success:^(NSString *version) {
 
             //- Make a backup
             MXKeyBackupData *keyBackupData = [MXKeyBackupData new];
@@ -673,6 +651,57 @@
                     }
                 }];
 
+            } failure:^(NSError * _Nonnull error) {
+                XCTFail(@"The request should not fail - NSError: %@", error);
+                [expectation fulfill];
+            }];
+        } failure:^(NSError * _Nonnull error) {
+            XCTFail(@"The request should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+    }];
+}
+
+/**
+ Check backup starts automatically if there is an existing and compatible backup
+ version on the homeserver.
+ - Make alice back up her keys to her homeserver
+ - Create a new backup with fake data on the homeserver
+ - Make alice back up all her keys again
+ -> That must fail and her backup state must be disabled
+ */
+- (void)testBackupWhenAnotherBackupWasCreated
+{
+    [matrixSDKTestsE2EData doE2ETestWithAliceAndBobInARoomWithCryptedMessages:self cryptedBob:YES readyToTest:^(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
+
+        // - Make alice back up her keys to her homeserver
+        [aliceSession.crypto.backup prepareKeyBackupVersion:^(MXMegolmBackupCreationInfo * _Nonnull keyBackupCreationInfo) {
+            [aliceSession.crypto.backup createKeyBackupVersion:keyBackupCreationInfo success:^(MXKeyBackupVersion * _Nonnull keyBackupVersion) {
+
+                XCTAssertTrue(aliceSession.crypto.backup.enabled);
+
+                // - Create a new backup with fake data on the homeserver
+                [aliceSession.matrixRestClient createKeyBackupVersion:self.fakeKeyBackupVersion success:^(NSString *version) {
+
+                    // - Make alice back up all her keys again
+                    [aliceSession.crypto.backup backupAllGroupSessions:^{
+
+                        XCTFail(@"The backup must fail");
+                        [expectation fulfill];
+
+                    } progress:nil failure:^(NSError * _Nonnull error) {
+
+                        // -> That must fail and her backup state must be disabled
+                        XCTAssertEqual(aliceSession.crypto.backup.state, MXKeyBackupStateWrongBackUpVersion);
+                        XCTAssertFalse(aliceSession.crypto.backup.enabled);
+
+                        [expectation fulfill];
+                    }];
+
+                } failure:^(NSError * _Nonnull error) {
+                    XCTFail(@"The request should not fail - NSError: %@", error);
+                    [expectation fulfill];
+                }];
             } failure:^(NSError * _Nonnull error) {
                 XCTFail(@"The request should not fail - NSError: %@", error);
                 [expectation fulfill];

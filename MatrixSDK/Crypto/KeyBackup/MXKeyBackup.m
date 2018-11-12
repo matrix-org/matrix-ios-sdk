@@ -23,6 +23,7 @@
 #import "MXRecoveryKey.h"
 #import "MXSession.h"   // TODO: To remove
 #import "MXTools.h"
+#import "MXError.h"
 
 
 #pragma mark - Constants definitions
@@ -289,13 +290,26 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
     } failure:^(NSError *error) {
         MXStrongifyAndReturnIfNil(self);
 
-        if (self->backupAllGroupSessionsFailure)
+        NSLog(@"[MXKeyBackup] sendKeyBackup: sendKeysBackup failed. Error: %@", error);
+
+        void (^backupAllGroupSessionsFailure)(NSError *error) = self->backupAllGroupSessionsFailure;
+
+        MXError *mxError = [[MXError alloc] initWithNSError:error];
+        if ([mxError.errcode isEqualToString:kMXErrCodeStringBackupWrongKeysVersion])
         {
-            self->backupAllGroupSessionsFailure(error);
+            [self disableKeyBackup];
+            self.state = MXKeyBackupStateWrongBackUpVersion;
+        }
+        else
+        {
+            // Come back to the ready state so that we will retry on the next received key
+            self.state = MXKeyBackupStateReadyToBackUp;
         }
 
-        // TODO: Manage retries
-        NSLog(@"[MXKeyBackup] sendKeyBackup: sendKeysBackup failed. Error: %@", error);
+        if (backupAllGroupSessionsFailure)
+        {
+            backupAllGroupSessionsFailure(error);
+        }
     }];
 }
 
@@ -734,6 +748,8 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
 
 - (void)setState:(MXKeyBackupState)state
 {
+    NSLog(@"[MXKeyBackup] setState: %@ -> %@", @(_state), @(state));
+
     _state = state;
 
     dispatch_async(dispatch_get_main_queue(), ^{
