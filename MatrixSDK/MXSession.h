@@ -19,6 +19,7 @@
 #import <Foundation/Foundation.h>
 
 #import "MXRestClient.h"
+#import "MXMediaManager.h"
 #import "MXRoom.h"
 #import "MXPeekingRoom.h"
 #import "MXFilterJSONModel.h"
@@ -336,6 +337,11 @@ FOUNDATION_EXPORT NSString *const kMXSessionNoRoomTag;
  The matrix REST Client used to make Matrix API requests.
  */
 @property (nonatomic, readonly) MXRestClient *matrixRestClient;
+
+/**
+ The media manager used to handle the media stored on the Matrix Content repository.
+ */
+@property (nonatomic, readonly) MXMediaManager *mediaManager;
 
 /**
  The current state of the session.

@@ -1,6 +1,7 @@
 /*
  Copyright 2016 OpenMarket Ltd
  Copyright 2017 Vector Creations Ltd
+ Copyright 2018 New Vector Ltd
  
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -17,6 +18,7 @@
 
 #import <AVFoundation/AVFoundation.h>
 #import "MXMediaLoader.h"
+#import "MXEnumConstants.h"
 
 #if TARGET_OS_IPHONE
 #import <UIKit/UIKit.h>
@@ -40,6 +42,21 @@ extern NSString *const kMXMediaManagerDefaultCacheFolder;
  Media upload is based on matrix content repository. It requires a matrix session.
  */
 @interface MXMediaManager : NSObject
+
+/**
+ Create an instance based on a homeserver url. This homeserver URL is required to resolve
+ the Matrix Content URI (in the form of "mxc://...").
+ 
+ @param homeserverURL the homeserver URL.
+ @return a MXMediaManager instance.
+ */
+- (id)initWithHomeServer:(NSString *)homeserverURL;
+
+/**
+ The homeserver URL.
+ */
+@property (nonatomic, readonly) NSString *homeserverURL;
+
 
 #pragma mark - File handling
 
@@ -127,39 +144,103 @@ extern NSString *const kMXMediaManagerDefaultCacheFolder;
 + (void)saveMediaToPhotosLibrary:(NSURL*)fileURL isImage:(BOOL)isImage success:(void (^)(NSURL *imageURL))success failure:(void (^)(NSError *error))failure;
 #endif
 
+
+#pragma mark - Media Repository API
+
+/**
+ Get the HTTP URL of an identicon served by the media repository.
+ 
+ @param identiconString the string to build an identicon from.
+ @return the identicon HTTP URL.
+ */
+- (NSString*)urlOfIdenticon:(NSString*)identiconString;
+
+
 #pragma mark - Download
 
 /**
- Download data from the provided URL.
+ Get the unique download identifier for a Matrix Content URI, consider a potential cache folder to handle
+ several downloads in different cache areas.
  
- @param mediaURL the remote media url.
- @param filePath output file in which downloaded media must be saved (may be nil).
- @param success block called on success
- @param failure block called on failure
- @return a media loader in order to let the user cancel this action.
+ @param mxContentURI the Matrix Content URI (mxc://...).
+ @param folder cache folder to use (may be nil). kMXMediaManagerDefaultCacheFolder is used by default.
+ @return the download identifier. nil if the Matrix Content URI is invalid.
  */
-+ (MXMediaLoader*)downloadMediaFromURL:(NSString *)mediaURL
-                      andSaveAtFilePath:(NSString *)filePath
-                                success:(void (^)(void))success
-                                failure:(void (^)(NSError *error))failure;
++ (NSString*)downloadIdForMatrixContentURI:(NSString*)mxContentURI
+                                  inFolder:(NSString*)folder;
 
 /**
- Download data from the provided URL.
+ Get the unique download identifier for a thumbnail downloaded from on the Matrix Content URI,
+ consider a potential cache folder to handle several downloads in different cache areas.
  
- @param mediaURL the remote media url.
- @param filePath output file in which downloaded media must be saved (may be nil).
- @return a media loader in order to let the user cancel this action.
+ @param mxContentURI the Matrix Content URI (mxc://...).
+ @param folder cache folder to use (may be nil). kMXMediaManagerDefaultCacheFolder is used by default.
+ @param viewSize the size in points of the view in which the thumbnail is supposed to be displayed.
+ @param thumbnailingMethod the method the Matrix content repository must use to generate the thumbnail.
+ @return the download identifier. nil if the Matrix Content URI is invalid.
  */
-+ (MXMediaLoader*)downloadMediaFromURL:(NSString *)mediaURL
-                      andSaveAtFilePath:(NSString *)filePath;
++ (NSString*)thumbnailDownloadIdForMatrixContentURI:(NSString*)mxContentURI
+                                           inFolder:(NSString*)folder
+                                      toFitViewSize:(CGSize)viewSize
+                                         withMethod:(MXThumbnailingMethod)thumbnailingMethod;
 
 /**
- Check whether a download is already running with a specific output file path.
+ Download data from the provided Matrix Content (MXC) URI (in the form of "mxc://...").
  
- @param filePath output file.
+ @param mxContentURI the Matrix Content URI.
+ @param mimeType the media mime type (may be nil).
+ @param folder the cache folder to use (may be nil). kMXMediaManagerDefaultCacheFolder is used by default.
+ @param success a block called when the download succeeds. This block gets the path of the resulting file.
+ @param failure a block called when the download fails
+ @return a media loader in order to let the user cancel this action.
+ */
+- (MXMediaLoader*)downloadMediaFromMatrixContentURI:(NSString *)mxContentURI
+                                           withType:(NSString *)mimeType
+                                           inFolder:(NSString *)folder
+                                            success:(void (^)(NSString *outputFilePath))success
+                                            failure:(void (^)(NSError *error))failure;
+
+/**
+ Download data from the provided Matrix Content (MXC) URI (in the form of "mxc://...").
+ 
+ @param mxContentURI the Matrix Content URI.
+ @param mimeType the media mime type (may be nil).
+ @param folder the cache folder to use (may be nil). kMXMediaManagerDefaultCacheFolder is used by default.
+ @return a media loader in order to let the user cancel this action.
+ */
+- (MXMediaLoader*)downloadMediaFromMatrixContentURI:(NSString *)mxContentURI
+                                           withType:(NSString *)mimeType
+                                           inFolder:(NSString *)folder;
+
+/**
+ Download thumbnail data from the provided Matrix Content (MXC) URI (in the form of "mxc://...")
+ to fit a specific view size.
+ 
+ @param mxContentURI the Matrix Content URI.
+ @param mimeType the media mime type (may be nil).
+ @param folder the cache folder to use (may be nil). kMXMediaManagerDefaultCacheFolder is used by default.
+ @param viewSize the size in points of the view in which the thumbnail will be displayed, it will be converted
+ in pixels by considering screen scale.
+ @param thumbnailingMethod the method the Matrix content repository must use to generate the thumbnail.
+ @param success a block called when the download succeeds. This block gets the path of the resulting file.
+ @param failure a block called when the download fails
+ @return a media loader in order to let the user cancel this action.
+ */
+- (MXMediaLoader*)downloadThumbnailFromMatrixContentURI:(NSString *)mxContentURI
+                                               withType:(NSString *)mimeType
+                                               inFolder:(NSString *)folder
+                                          toFitViewSize:(CGSize)viewSize
+                                             withMethod:(MXThumbnailingMethod)thumbnailingMethod
+                                                success:(void (^)(NSString *outputFilePath))success
+                                                failure:(void (^)(NSError *error))failure;
+
+/**
+ Check whether a download is already running with a specific download identifier.
+ 
+ @param downloadId the identifier.
  @return mediaLoader (if any)
  */
-+ (MXMediaLoader*)existingDownloaderWithOutputFilePath:(NSString *)filePath;
++ (MXMediaLoader*)existingDownloaderWithIdentifier:(NSString *)downloadId;
 
 /**
  Cancel any pending download within a cache folder
@@ -207,19 +288,52 @@ extern NSString *const kMXMediaManagerDefaultCacheFolder;
 #pragma mark - Cache handling
 
 /**
- Build a cache file path based on media information and an optional cache folder.
+ Build a cache file path based on the Matrix Content URI of the media and an optional cache folder.
  
- The file extension is extracted from the provided mime type (if any). If no type is available, we look for a potential
- extension in the url.
- By default 'image/jpeg' is considered for thumbnail folder (kMXMediaManagerAvatarThumbnailFolder). No default mime type 
+ The file extension is extracted from the provided mime type (if any).
+ By default 'image/jpeg' is considered for thumbnail folder (kMXMediaManagerAvatarThumbnailFolder). No default mime type
  is defined for other folders.
  
- @param url the media url.
+ @param mxContentURI the Matrix Content URI (mxc://...).
  @param mimeType the media mime type (may be nil).
- @param folder cache folder to use (may be nil).
+ @param folder cache folder to use (may be nil). kMXMediaManagerDefaultCacheFolder is used by default.
+ @return cache file path. nil if the Matrix Content URI is invalid.
+ */
++ (NSString*)cachePathForMatrixContentURI:(NSString*)mxContentURI
+                                  andType:(NSString *)mimeType
+                                 inFolder:(NSString*)folder;
+
+/**
+ Build a cache file path for a thumbnail downloaded from on the Matrix Content URI.
+ 
+ The file extension is extracted from the provided mime type (if any).
+ By default 'image/jpeg' is considered for thumbnail folder (kMXMediaManagerAvatarThumbnailFolder). No default mime type
+ is defined for other folders.
+ 
+ @param mxContentURI the Matrix Content URI (mxc://...).
+ @param mimeType the media mime type (may be nil).
+ @param folder cache folder to use (may be nil). kMXMediaManagerDefaultCacheFolder is used by default.
+ @param viewSize the size in points of the view in which the thumbnail is supposed to be displayed.
+ @param thumbnailingMethod the method the Matrix content repository must use to generate the thumbnail.
+ @return cache file path. nil if the Matrix Content URI is invalid.
+ */
++ (NSString*)thumbnailCachePathForMatrixContentURI:(NSString*)mxContentURI
+                                           andType:(NSString *)mimeType
+                                          inFolder:(NSString*)folder
+                                     toFitViewSize:(CGSize)viewSize
+                                        withMethod:(MXThumbnailingMethod)thumbnailingMethod;
+
+/**
+ Build a unique cache file path for a temporary file.
+ 
+ The file extension is extracted from the provided mime type (if any).
+ 
+ @param folder cache folder to use (may be nil). kMXMediaManagerDefaultCacheFolder is used by default.
+ @param mimeType the media mime type (may be nil).
  @return cache file path.
  */
-+ (NSString*)cachePathForMediaWithURL:(NSString*)url andType:(NSString *)mimeType inFolder:(NSString*)folder;
++ (NSString*)temporaryCachePathInFolder:(NSString*)folder
+                               withType:(NSString *)mimeType;
 
 /**
  Check if the media cache size must be reduced to fit the user expected cache size

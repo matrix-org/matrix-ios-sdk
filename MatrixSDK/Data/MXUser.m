@@ -73,7 +73,7 @@
         if (nil == self.avatarUrl && ![MXSDKOptions sharedInstance].disableIdenticonUseForUserAvatar)
         {
             // Force to use an identicon url
-            self.avatarUrl = [mxSession.matrixRestClient urlOfIdenticon:self.userId];
+            self.avatarUrl = [mxSession.mediaManager urlOfIdenticon:self.userId];
         }
 
         [self notifyListeners:roomMemberEvent];
@@ -111,7 +111,7 @@
     if (nil == self.avatarUrl && ![MXSDKOptions sharedInstance].disableIdenticonUseForUserAvatar)
     {
         // Force to use an identicon url
-        self.avatarUrl = [mxSession.matrixRestClient urlOfIdenticon:self.userId];
+        self.avatarUrl = [mxSession.mediaManager urlOfIdenticon:self.userId];
     }
 
     _statusMsg = [presenceContent.statusMsg copy];

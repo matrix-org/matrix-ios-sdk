@@ -51,15 +51,6 @@ FOUNDATION_EXPORT NSString *const kMXAPIPrefixPathUnstable;
 FOUNDATION_EXPORT NSString *const kMXIdentityAPIPrefixPath;
 
 /**
- Scheme used in Matrix content URIs.
- */
-FOUNDATION_EXPORT NSString *const kMXContentUriScheme;
-/**
- A constant representing the prefix of the Matrix content repository path.
- */
-FOUNDATION_EXPORT NSString *const kMXContentPrefixPath;
-
-/**
  Account data types
  */
 FOUNDATION_EXPORT NSString *const kMXAccountDataTypeDirect;
@@ -84,25 +75,6 @@ FOUNDATION_EXPORT NSString *const kMXMembersOfRoomParametersAt;
 FOUNDATION_EXPORT NSString *const kMXMembersOfRoomParametersMembership;
 FOUNDATION_EXPORT NSString *const kMXMembersOfRoomParametersNotMembership;
 
-/**
- Methods of thumnailing supported by the Matrix content repository.
- */
-typedef enum : NSUInteger
-{
-    /**
-     "scale" tries to return an image where either the width or the height is smaller than the
-     requested size. The client should then scale and letterbox the image if it needs to
-     fit within a given rectangle.
-     */
-    MXThumbnailingMethodScale,
-
-    /**
-     "crop" tries to return an image where the width and height are close to the requested size
-     and the aspect matches the requested size. The client should scale the image if it needs to
-     fit within a given rectangle.
-     */
-    MXThumbnailingMethodCrop
-} MXThumbnailingMethod;
 
 /**
  `MXRestClient` makes requests to Matrix servers.
@@ -1719,32 +1691,6 @@ typedef enum : NSUInteger
                           success:(void (^)(NSString *url))success
                           failure:(void (^)(NSError *error))failure
                    uploadProgress:(void (^)(NSProgress *uploadProgress))uploadProgress NS_REFINED_FOR_SWIFT;
-
-/**
- Resolve a Matrix media content URI (in the form of "mxc://...") into an HTTP URL.
-
- @param mxcContentURI the Matrix content URI to resolve.
- @return the Matrix content HTTP URL. nil if the Matrix content URI is invalid.
- */
-- (NSString*)urlOfContent:(NSString*)mxcContentURI;
-
-/**
- Get the suitable HTTP URL of a thumbnail image from a Matrix media content according to the destined view size.
-
- @param mxcContentURI the Matrix content URI to resolve.
- @param viewSize in points, it will be converted in pixels by considering screen scale.
- @param thumbnailingMethod the method the Matrix content repository must use to generate the thumbnail.
- @return the thumbnail HTTP URL. The provided URI is returned if it is not a valid Matrix content URI.
- */
-- (NSString*)urlOfContentThumbnail:(NSString*)mxcContentURI toFitViewSize:(CGSize)viewSize withMethod:(MXThumbnailingMethod)thumbnailingMethod;
-
-/**
- Get the HTTP URL of an identicon served by the media repository.
-
- @param identiconString the string to build an identicon from.
- @return the identicon HTTP URL.
- */
-- (NSString*)urlOfIdenticon:(NSString*)identiconString;
 
 
 #pragma mark - Identity server API

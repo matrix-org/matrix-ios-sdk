@@ -1,27 +1,43 @@
-Changes in Matrix iOS SDK in 0.11.7 (2018-11-)
+Changes in Matrix iOS SDK in 0.12.0 (2018-11-)
 ===============================================
 
 Improvements:
-* Tests: Make MXRealmCryptoStore work the first time tests are launched on simulators for iOS 11 and higher.
+ * MXMediaManager/MXMediaLoader: Do not allow non-mxc content URLs.
+ * MXMediaManager: Add a constructor based on a homeserver URL, to handle directly the Matrix Content URI (mxc://...).
+ * MXSession: Add a MediaManager instance to handle the media stored on the Matrix Content repository.
+ * Tests: Make MXRealmCryptoStore work the first time tests are launched on simulators for iOS 11 and higher.
+ 
+Bug Fix:
+ * MXRestClient: [avatarUrlForUser:success:failure]: the returned url is always nil.
 
+API break:
+ * MXMediaManager: [downloadMediaFromURL:andSaveAtFilePath:success:failure:] is removed, use [downloadMediaFromMatrixContentURI:withType:inFolder:success:failure] or [downloadThumbnailFromMatrixContentURI:withType:inFolder:toFitViewSize:withMethod:success:failure] instead.
+ * MXMediaManager: [downloadMediaFromURL:andSaveAtFilePath:] is removed, use [downloadMediaFromMatrixContentURI:withType:inFolder:] instead.
+ * MXMediaManager: [existingDownloaderWithOutputFilePath:] is removed, use [existingDownloaderWithIdentifier:] instead.
+ * MXMediaManager: [cachePathForMediaWithURL:andType:inFolder:] is removed, use [cachePathForMatrixContentURI:andType:inFolder:] instead.
+ * MXMediaLoader: the notification names "kMXMediaDownloadxxx" and "kMXMediaUploadxxx" are removed, use kMXMediaLoaderStateDidChangeNotification instead.
+ * MXMediaLoader: [downloadMediaFromURL:andSaveAtFilePath:success:failure] is removed, use [downloadMediaFromURL:withIdentifier:andSaveAtFilePath:success:failure] instead.
+ * MXRestClient: [urlOfContent:] and [urlOfContentThumbnail:toFitViewSize:withMethod:] are removed.
+ * The Matrix Content repository contants are moved to MXEnumConstants.h
+ * [urlOfIdenticon:] is moved from MXRestClient to MXMediaManager.
 
 Changes in Matrix iOS SDK in 0.11.6 (2018-10-31)
 ===============================================
 
 Improvements:
-* Upgrade OLMKit version (3.0.0).
-* MXHTTPClient: Send Access-Token as header instead of query param (vector-im/riot-ios/issues/2071).
-* MXCrypto: Encrypt the messages for invited members according to the history visibility (#559)
-* MXSession: When create a room as direct wait for room being tagged as direct chat before calling success block.
-* CallKit is now disabled in China (PR #578).
-* Add MXEncryptedContentFile and MXEncryptedContentKey classes.
-* MXRestClient: Handle GET /_matrix/client/r0/profile/{userId} request.
+ * Upgrade OLMKit version (3.0.0).
+ * MXHTTPClient: Send Access-Token as header instead of query param (vector-im/riot-ios/issues/2071).
+ * MXCrypto: Encrypt the messages for invited members according to the history visibility (#559)
+ * MXSession: When create a room as direct wait for room being tagged as direct chat before calling success block.
+ * CallKit is now disabled in China (PR #578).
+ * Add MXEncryptedContentFile and MXEncryptedContentKey classes.
+ * MXRestClient: Handle GET /_matrix/client/r0/profile/{userId} request.
 
 Bug fix:
-* MXEvent: Move `invite_room_state` to the correct place in the client-server API (vector-im/riot-ios/issues/2010).
-* MXRoomSummaryUpdater: Fix minor issue in updateSummaryAvatar method.
-* Left room is still displayed as "Empty room" in rooms list (vector-im/riot-ios/issues/2082).
-* Reply of reply with unexpected newlines renders badly (vector-im/riot-ios/issues/2086).
+ * MXEvent: Move `invite_room_state` to the correct place in the client-server API (vector-im/riot-ios/issues/2010).
+ * MXRoomSummaryUpdater: Fix minor issue in updateSummaryAvatar method.
+ * Left room is still displayed as "Empty room" in rooms list (vector-im/riot-ios/issues/2082).
+ * Reply of reply with unexpected newlines renders badly (vector-im/riot-ios/issues/2086).
 
 API break:
 * MXCrypto: importRoomKeys methods now return number of imported keys.
@@ -30,25 +46,25 @@ Changes in Matrix iOS SDK in 0.11.5 (2018-10-05)
 ===============================================
 
 Improvements:
-* MXSession: Add eventWithEventId:inRoom: method.
-* MXRoomState: Add pinnedEvents to list pinned events ids.
-* MXServerNotices: Add this class to get notices from the user homeserver.
+ * MXSession: Add eventWithEventId:inRoom: method.
+ * MXRoomState: Add pinnedEvents to list pinned events ids.
+ * MXServerNotices: Add this class to get notices from the user homeserver.
 
 Changes in Matrix iOS SDK in 0.11.4 (2018-09-26)
 ===============================================
 
 Improvements:
-* MXRoom: Expose room members access in Swift (PR #562).
-* MXPeekingRoom: Create a MXPeekingRoomSummary class to represent their summary data.
-* MXRoomSummary: If no avatar, try to compute it from heroes.
-* MXRoomSummary: If no avatar for an invited room, try to compute it from available state events.
-* MXRoomSummary: Internationalise the room name computation for rooms with no name.
-* MXRoomMember: Add Swift refinement for membership properties.
+ * MXRoom: Expose room members access in Swift (PR #562).
+ * MXPeekingRoom: Create a MXPeekingRoomSummary class to represent their summary data.
+ * MXRoomSummary: If no avatar, try to compute it from heroes.
+ * MXRoomSummary: If no avatar for an invited room, try to compute it from available state events.
+ * MXRoomSummary: Internationalise the room name computation for rooms with no name.
+ * MXRoomMember: Add Swift refinement for membership properties.
 
 Bug fix:
-* Lazy-Loading: Fix regression on peeking (vector-im/riot-ios/issues/2035).
-* MXRestClient: Fix get public rooms list Swift refinement.
-* MXTools: Allow '@' in room alias (vector-im/riot-ios/issues/1977).
+ * Lazy-Loading: Fix regression on peeking (vector-im/riot-ios/issues/2035).
+ * MXRestClient: Fix get public rooms list Swift refinement.
+ * MXTools: Allow '@' in room alias (vector-im/riot-ios/issues/1977).
 
 Changes in Matrix iOS SDK in 0.11.3 (2018-08-27)
 ===============================================
@@ -75,7 +91,7 @@ Changes in Matrix iOS SDK in 0.11.1 (2018-08-17)
 ===============================================
 
 Improvements:
-* Tests: Add DirectRoomTests to test direct rooms management.
+ * Tests: Add DirectRoomTests to test direct rooms management.
 
 Bug fix:
  * Direct rooms can be lost on an initial /sync (vector-im/riot-ios/issues/1983).
@@ -86,34 +102,34 @@ Changes in Matrix iOS SDK in 0.11.0 (2018-08-10)
 ===============================================
 
 Improvements:
-* MXSession: Add the option to use a Matrix filter in /sync requests ([MXSession startWithSyncFilter:]).
-* MXSession: Add API to manage Matrix filters.
-* MXRestClient: Add Matrix filter API.
-* MXRoom: Add send reply with text message (vector-im/riot-ios#1911).
-* MXRoom: Add an asynchronous methods for liveTimeline, state and members.
-* MXRoom: Add methods to manage the room liveTimeline listeners synchronously.
-* MXRoomState: Add a membersCount property to store members stats independently from MXRoomMember objects.
-* MXRoomSummary: Add a membersCount property to cache MXRoomState one.
-* MXRoomSummary: Add a membership property to cache MXRoomState one.
-* MXRoomSummary: add isConferenceUserRoom.
-* MXStore: Add Obj-C annotations.
-* MXFileStore: Add a setting to set which data to preload ([MXFileStore setPreloadOptions:]).
-* Manage the new summary API from the homeserver( MSC: https://docs.google.com/document/d/11i14UI1cUz-OJ0knD5BFu7fmT6Fo327zvMYqfSAR7xs/edit#).
-* MXRoom: Add send reply with text message (vector-im/riot-ios#1911).
-* Support room versioning (vector-im/riot-ios#1938).
+ * MXSession: Add the option to use a Matrix filter in /sync requests ([MXSession startWithSyncFilter:]).
+ * MXSession: Add API to manage Matrix filters.
+ * MXRestClient: Add Matrix filter API.
+ * MXRoom: Add send reply with text message (vector-im/riot-ios#1911).
+ * MXRoom: Add an asynchronous methods for liveTimeline, state and members.
+ * MXRoom: Add methods to manage the room liveTimeline listeners synchronously.
+ * MXRoomState: Add a membersCount property to store members stats independently from MXRoomMember objects.
+ * MXRoomSummary: Add a membersCount property to cache MXRoomState one.
+ * MXRoomSummary: Add a membership property to cache MXRoomState one.
+ * MXRoomSummary: add isConferenceUserRoom.
+ * MXStore: Add Obj-C annotations.
+ * MXFileStore: Add a setting to set which data to preload ([MXFileStore setPreloadOptions:]).
+ * Manage the new summary API from the homeserver( MSC: https://docs.google.com/document/d/11i14UI1cUz-OJ0knD5BFu7fmT6Fo327zvMYqfSAR7xs/edit#).
+ * MXRoom: Add send reply with text message (vector-im/riot-ios#1911).
+ * Support room versioning (vector-im/riot-ios#1938).
 
 Bug fix:
-* MXRestClient: Fix filter parameter in messagesForRoom. It must be sent as an inline JSON string.
-* Sends read receipts on login (vector-im/riot-ios/issues/1918).
+ * MXRestClient: Fix filter parameter in messagesForRoom. It must be sent as an inline JSON string.
+ * Sends read receipts on login (vector-im/riot-ios/issues/1918).
 
 API break:
-* MXSession: [MXSession startWithMessagesLimit] has been removed. Use the more generic [MXSession startWithSyncFilter:].
-* MXRoom: liveTimeline and state accesses are now asynchronous.
-* MXCall: callee access is now asynchronous.
-* MXRoomState: Remove displayName property. Use MXRoomSummary.displayName instead.
-* MXRoomState: Create a MXRoomMembers property. All members getter methods has been to the new class.
-* MXStore: Make the stateOfRoom method asynchronous.
-* MXRestClient: contextOfEvent: Add a filter parameter.
+ * MXSession: [MXSession startWithMessagesLimit] has been removed. Use the more generic [MXSession startWithSyncFilter:].
+ * MXRoom: liveTimeline and state accesses are now asynchronous.
+ * MXCall: callee access is now asynchronous.
+ * MXRoomState: Remove displayName property. Use MXRoomSummary.displayName instead.
+ * MXRoomState: Create a MXRoomMembers property. All members getter methods has been to the new class.
+ * MXStore: Make the stateOfRoom method asynchronous.
+ * MXRestClient: contextOfEvent: Add a filter parameter.
 
 Changes in Matrix iOS SDK in 0.10.12 (2018-05-31)
 =============================================== 
