@@ -240,7 +240,7 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
     // Sanity check
     if (!self.enabled || !_backupKey || !_keyBackupVersion)
     {
-        NSLog(@"[MXKeyBackup] sendKeyBackup: Invalide state: %@", @(_state));
+        NSLog(@"[MXKeyBackup] sendKeyBackup: Invalid state: %@", @(_state));
         if (backupAllGroupSessionsFailure)
         {
             NSError *error = [NSError errorWithDomain:MXKeyBackupErrorDomain
