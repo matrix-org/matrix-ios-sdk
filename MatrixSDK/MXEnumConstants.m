@@ -18,6 +18,11 @@
 
 #import "MXSDKOptions.h"
 
+/**
+ Matrix content respository path
+ */
+NSString *const kMXContentUriScheme  = @"mxc://";
+NSString *const kMXContentPrefixPath = @"_matrix/media/v1";
 
 /**
  Membership definitions - String version

@@ -173,7 +173,7 @@ typedef void (^MXOnResumeDone)(void);
 @end
 
 @implementation MXSession
-@synthesize matrixRestClient;
+@synthesize matrixRestClient, mediaManager;
 
 - (id)initWithMatrixRestClient:(MXRestClient*)mxRestClient
 {
@@ -181,6 +181,7 @@ typedef void (^MXOnResumeDone)(void);
     if (self)
     {
         matrixRestClient = mxRestClient;
+        mediaManager = [[MXMediaManager alloc] initWithHomeServer:matrixRestClient.homeserver];
         rooms = [NSMutableDictionary dictionary];
         roomsSummaries = [NSMutableDictionary dictionary];
         _roomSummaryUpdateDelegate = [MXRoomSummaryUpdater roomSummaryUpdaterForSession:self];
@@ -776,6 +777,7 @@ typedef void (^MXOnResumeDone)(void);
     }
 
     _myUser = nil;
+    mediaManager = nil;
     matrixRestClient = nil;
 
     [self setState:MXSessionStateClosed];

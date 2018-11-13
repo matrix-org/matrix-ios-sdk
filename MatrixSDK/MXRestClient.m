@@ -37,12 +37,6 @@ NSString *const kMXAPIPrefixPathUnstable = @"_matrix/client/unstable";
 NSString *const kMXIdentityAPIPrefixPath = @"_matrix/identity/api/v1";
 
 /**
- Matrix content respository path
- */
-NSString *const kMXContentUriScheme  = @"mxc://";
-NSString *const kMXContentPrefixPath = @"_matrix/media/v1";
-
-/**
  Account data types
  */
 NSString *const kMXAccountDataTypeIgnoredUserList = @"m.ignored_user_list";
@@ -2689,7 +2683,6 @@ MXAuthAction;
                                          __block NSString *avatarUrl;
                                          [self dispatchProcessing:^{
                                              NSDictionary *cleanedJSONResponse = [MXJSONModel removeNullValuesInJSON:JSONResponse];
-                                             NSString *avatarUrl;
                                              MXJSONModelSetString(avatarUrl, cleanedJSONResponse[@"avatar_url"]);
                                          } andCompletion:^{
                                              success(avatarUrl);
@@ -3233,76 +3226,6 @@ MXAuthAction;
                                      [self dispatchFailure:error inBlock:failure];
                                  }];
 }
-
-- (NSString*)urlOfContent:(NSString*)mxcContentURI
-{
-    NSString *contentURL;
-    
-    // Replace the "mxc://" scheme by the absolute http location of the content
-    if ([mxcContentURI hasPrefix:kMXContentUriScheme])
-    {
-        NSString *mxMediaPrefix = [NSString stringWithFormat:@"%@/%@/download/", homeserver, contentPathPrefix];
-        contentURL = [mxcContentURI stringByReplacingOccurrencesOfString:kMXContentUriScheme withString:mxMediaPrefix];
-        
-        // Remove the auto generated image tag from the URL
-        contentURL = [contentURL stringByReplacingOccurrencesOfString:@"#auto" withString:@""];
-        return contentURL;
-    }
-    
-    // do not allow non-mxc content URLs: we should not be making requests out to whatever http urls people send us
-    return nil;
-}
-
-- (NSString*)urlOfContentThumbnail:(NSString*)mxcContentURI toFitViewSize:(CGSize)viewSize withMethod:(MXThumbnailingMethod)thumbnailingMethod
-{
-    NSString *thumbnailURL = mxcContentURI;
-    
-    if ([mxcContentURI hasPrefix:kMXContentUriScheme])
-    {
-        // Convert first the provided size in pixels
-#if TARGET_OS_IPHONE
-        CGFloat scale = [[UIScreen mainScreen] scale];
-#elif TARGET_OS_OSX
-        CGFloat scale = [[NSScreen mainScreen] backingScaleFactor];
-#endif
-        
-        CGSize sizeInPixels = CGSizeMake(viewSize.width * scale, viewSize.height * scale);
-        
-        // Replace the "mxc://" scheme by the absolute http location for the content thumbnail
-        NSString *mxThumbnailPrefix = [NSString stringWithFormat:@"%@/%@/thumbnail/", homeserver, contentPathPrefix];
-        thumbnailURL = [mxcContentURI stringByReplacingOccurrencesOfString:kMXContentUriScheme withString:mxThumbnailPrefix];
-        
-        // Convert MXThumbnailingMethod to parameter string
-        NSString *thumbnailingMethodString;
-        switch (thumbnailingMethod)
-        {
-            case MXThumbnailingMethodScale:
-                thumbnailingMethodString = @"scale";
-                break;
-                
-            case MXThumbnailingMethodCrop:
-                thumbnailingMethodString = @"crop";
-                break;
-        }
-        
-        // Remove the auto generated image tag from the URL
-        thumbnailURL = [thumbnailURL stringByReplacingOccurrencesOfString:@"#auto" withString:@""];
-        
-        // Add thumbnailing parameters to the URL
-        thumbnailURL = [NSString stringWithFormat:@"%@?width=%tu&height=%tu&method=%@", thumbnailURL, (NSUInteger)sizeInPixels.width, (NSUInteger)sizeInPixels.height, thumbnailingMethodString];
-        
-        return thumbnailURL;
-    }
-    
-    // do not allow non-mxc content URLs: we should not be making requests out to whatever http urls people send us
-    return nil;
-}
-
-- (NSString *)urlOfIdenticon:(NSString *)identiconString
-{
-    return [NSString stringWithFormat:@"%@/%@/identicon/%@", homeserver, contentPathPrefix, [identiconString stringByAddingPercentEncodingWithAllowedCharacters:[NSCharacterSet URLHostAllowedCharacterSet]]];
-}
-
 
 #pragma mark - Identity server API
 - (void)setIdentityServer:(NSString *)identityServer
