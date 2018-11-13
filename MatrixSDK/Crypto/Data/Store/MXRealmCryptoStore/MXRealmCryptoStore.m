@@ -23,7 +23,7 @@
 #import "MXSession.h"
 #import "MXTools.h"
 
-NSUInteger const kMXRealmCryptoStoreVersion = 8;
+NSUInteger const kMXRealmCryptoStoreVersion = 7;
 
 static NSString *const kMXRealmCryptoStoreFolder = @"MXRealmCryptoStore";
 
@@ -1174,12 +1174,6 @@ RLM_ARRAY_TYPE(MXRealmOlmInboundGroupSession)
                                                                                                         senderKey:oldObject[@"senderKey"]];
                     }];
 
-                    NSLog(@"[MXRealmCryptoStore] Migration from schema #6 -> #7 completed");
-                }
-                case 7:
-                {
-                    NSLog(@"[MXRealmCryptoStore] Migration from schema #7 -> #8");
-
                     // We need to update the db because a identityKey property has been added to MXRealmDeviceInfo
                     NSLog(@"    Add identityKey to all MXRealmOlmInboundGroupSession objects");
                     [migration enumerateObjects:MXRealmDeviceInfo.className block:^(RLMObject *oldObject, RLMObject *newObject) {
@@ -1192,7 +1186,7 @@ RLM_ARRAY_TYPE(MXRealmOlmInboundGroupSession)
                         }
                     }];
 
-                    NSLog(@"[MXRealmCryptoStore] Migration from schema #7 -> #8 completed");
+                    NSLog(@"[MXRealmCryptoStore] Migration from schema #6 -> #7 completed");
                 }
             }
         }
