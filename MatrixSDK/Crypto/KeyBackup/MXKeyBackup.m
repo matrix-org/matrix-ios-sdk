@@ -492,14 +492,14 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
     dispatch_async(mxSession.crypto.cryptoQueue, ^{
         MXStrongifyAndReturnIfNil(self);
 
-        // Reset backup markers
-        [self->mxSession.crypto.store resetBackupMarkers];
-
         MXKeyBackupVersion *keyBackupVersion = [MXKeyBackupVersion new];
         keyBackupVersion.algorithm = keyBackupCreationInfo.algorithm;
         keyBackupVersion.authData = keyBackupCreationInfo.authData.JSONDictionary;
 
         MXHTTPOperation *operation2 = [self->mxSession.crypto.matrixRestClient createKeyBackupVersion:keyBackupVersion success:^(NSString *version) {
+
+            // Reset backup markers
+            [self->mxSession.crypto.store resetBackupMarkers];
 
             keyBackupVersion.version = version;
 
