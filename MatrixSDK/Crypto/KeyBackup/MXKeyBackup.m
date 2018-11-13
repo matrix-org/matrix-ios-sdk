@@ -227,6 +227,7 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
     if (!sessions.count)
     {
         // Backup is up to date
+        self.state = MXKeyBackupStateReadyToBackUp;
         return;
     }
 
@@ -882,7 +883,7 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
                                         @"forwarding_curve25519_key_chain": sessionData.forwardingCurve25519KeyChain ?  sessionData.forwardingCurve25519KeyChain : @[],
                                         @"session_key": sessionData.sessionKey
                                         };
-    OLMPkMessage *encryptedSessionBackupData = [_backupKey encryptMessage:[MXTools serialiseJSONObject:sessionBackupData] error:nil];
+    OLMPkMessage *encryptedSessionBackupData = [encryption encryptMessage:[MXTools serialiseJSONObject:sessionBackupData] error:nil];
 
     // Build backup data for that key
     MXKeyBackupData *keyBackupData = [MXKeyBackupData new];

@@ -173,8 +173,6 @@ FOUNDATION_EXPORT NSString *const kMXKeyBackupDidStateChangeNotification;
 /**
  Start to back up keys immediately.
 
- @param version the backup version to delete.
-
  @param success A block object called when the operation complets.
  @param progress A block object called to indicate operation progress based on number of backed up keys.
  @param failure A block object called when the operation fails.

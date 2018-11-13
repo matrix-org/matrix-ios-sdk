@@ -68,6 +68,20 @@ const UInt8 kOlmRecoveryKeyPrefix[] = {0x8B, 0x01};
         return nil;
     }
 
+    // Check length
+    if (result.length !=
+        sizeof(kOlmRecoveryKeyPrefix) + [OLMPkDecryption privateKeyLength] + 1)
+    {
+        if (error)
+        {
+            *error = [NSError errorWithDomain:MXRecoveryKeyErrorDomain
+                                         code:MXRecoveryKeyErrorLengthCode
+                                     userInfo:@{
+                                                NSLocalizedDescriptionKey: @"Incorrect length",
+                                                }];
+        }
+        return nil;
+    }
 
     // Check the checksum
     UInt8 parity = 0;
@@ -106,23 +120,8 @@ const UInt8 kOlmRecoveryKeyPrefix[] = {0x8B, 0x01};
         }
     }
 
-    // Check length
-    if (result.length !=
-        sizeof(kOlmRecoveryKeyPrefix) + [OLMPkDecryption privateKeyLength] + 1)
-    {
-        if (error)
-        {
-            *error = [NSError errorWithDomain:MXRecoveryKeyErrorDomain
-                                         code:MXRecoveryKeyErrorLengthCode
-                                     userInfo:@{
-                                                NSLocalizedDescriptionKey: @"Incorrect length",
-                                                }];
-        }
-        return nil;
-    }
-
     // Remove header and checksum bytes
-    [result replaceBytesInRange:NSMakeRange(0, 2) withBytes:NULL length:0];
+    [result replaceBytesInRange:NSMakeRange(0, sizeof(kOlmRecoveryKeyPrefix)) withBytes:NULL length:0];
     result.length -= 1;
 
     return result;
