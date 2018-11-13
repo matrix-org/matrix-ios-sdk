@@ -99,7 +99,7 @@ RLM_ARRAY_TYPE(MXRealmOlmSession)
 
 // A primary key is required to update `backedUp`.
 // Do our combined primary key ourselves as it is not supported by Realm.
-@property NSString *sessionIdSenderKer;
+@property NSString *sessionIdSenderKey;
 
 // Indicate if the key has been backed up to the homeserver
 @property BOOL backedUp;
@@ -108,7 +108,7 @@ RLM_ARRAY_TYPE(MXRealmOlmSession)
 @implementation MXRealmOlmInboundGroupSession
 + (NSString *)primaryKey
 {
-    return @"sessionIdSenderKer";
+    return @"sessionIdSenderKey";
 }
 
 + (NSString *)primaryKeyWithSessionId:(NSString*)sessionId senderKey:(NSString*)senderKey
@@ -663,9 +663,9 @@ RLM_ARRAY_TYPE(MXRealmOlmInboundGroupSession)
 
     RLMRealm *realm = self.realm;
 
-    NSString *sessionIdSenderKer = [MXRealmOlmInboundGroupSession primaryKeyWithSessionId:session.session.sessionIdentifier
+    NSString *sessionIdSenderKey = [MXRealmOlmInboundGroupSession primaryKeyWithSessionId:session.session.sessionIdentifier
                                                                                 senderKey:session.senderKey];
-    MXRealmOlmInboundGroupSession *realmSession = [MXRealmOlmInboundGroupSession objectsInRealm:realm where:@"sessionIdSenderKer = %@", sessionIdSenderKer].firstObject;
+    MXRealmOlmInboundGroupSession *realmSession = [MXRealmOlmInboundGroupSession objectsInRealm:realm where:@"sessionIdSenderKey = %@", sessionIdSenderKey].firstObject;
     if (realmSession)
     {
         // Update the existing one
@@ -677,12 +677,12 @@ RLM_ARRAY_TYPE(MXRealmOlmInboundGroupSession)
     {
         // Create it
         isNew = YES;
-        NSString *sessionIdSenderKer = [MXRealmOlmInboundGroupSession primaryKeyWithSessionId:session.session.sessionIdentifier
+        NSString *sessionIdSenderKey = [MXRealmOlmInboundGroupSession primaryKeyWithSessionId:session.session.sessionIdentifier
                                                                                     senderKey:session.senderKey];
         realmSession = [[MXRealmOlmInboundGroupSession alloc] initWithValue:@{
                                                                               @"sessionId": session.session.sessionIdentifier,
                                                                               @"senderKey": session.senderKey,
-                                                                              @"sessionIdSenderKer": sessionIdSenderKer,
+                                                                              @"sessionIdSenderKey": sessionIdSenderKey,
                                                                               @"olmInboundGroupSessionData": [NSKeyedArchiver archivedDataWithRootObject:session]
                                                                               }];
 
@@ -697,9 +697,9 @@ RLM_ARRAY_TYPE(MXRealmOlmInboundGroupSession)
 - (MXOlmInboundGroupSession*)inboundGroupSessionWithId:(NSString*)sessionId andSenderKey:(NSString*)senderKey
 {
     MXOlmInboundGroupSession *session;
-    NSString *sessionIdSenderKer = [MXRealmOlmInboundGroupSession primaryKeyWithSessionId:sessionId
+    NSString *sessionIdSenderKey = [MXRealmOlmInboundGroupSession primaryKeyWithSessionId:sessionId
                                                                                 senderKey:senderKey];
-    MXRealmOlmInboundGroupSession *realmSession = [MXRealmOlmInboundGroupSession objectsInRealm:self.realm where:@"sessionIdSenderKer = %@", sessionIdSenderKer].firstObject;
+    MXRealmOlmInboundGroupSession *realmSession = [MXRealmOlmInboundGroupSession objectsInRealm:self.realm where:@"sessionIdSenderKey = %@", sessionIdSenderKey].firstObject;
 
     NSLog(@"[MXRealmCryptoStore] inboundGroupSessionWithId: %@ -> %@", sessionId, realmSession ? @"found" : @"not found");
 
@@ -776,9 +776,9 @@ RLM_ARRAY_TYPE(MXRealmOlmInboundGroupSession)
 {
     RLMRealm *realm = self.realm;
 
-    NSString *sessionIdSenderKer = [MXRealmOlmInboundGroupSession primaryKeyWithSessionId:sessionId
+    NSString *sessionIdSenderKey = [MXRealmOlmInboundGroupSession primaryKeyWithSessionId:sessionId
                                                                                 senderKey:senderKey];
-    MXRealmOlmInboundGroupSession *realmSession = [MXRealmOlmInboundGroupSession objectsInRealm:realm where:@"sessionIdSenderKer = %@", sessionIdSenderKer].firstObject;
+    MXRealmOlmInboundGroupSession *realmSession = [MXRealmOlmInboundGroupSession objectsInRealm:realm where:@"sessionIdSenderKey = %@", sessionIdSenderKey].firstObject;
 
     [realm transactionWithBlock:^{
         realmSession.backedUp = @(YES);
@@ -1167,10 +1167,10 @@ RLM_ARRAY_TYPE(MXRealmOlmInboundGroupSession)
 
                     // We need to update the db because a sessionId property has been added to MXRealmOlmSession
                     // to ensure uniqueness
-                    NSLog(@"    Add sessionIdSenderKer, a combined primary key, to all MXRealmOlmInboundGroupSession objects");
+                    NSLog(@"    Add sessionIdSenderKey, a combined primary key, to all MXRealmOlmInboundGroupSession objects");
                     [migration enumerateObjects:MXRealmOlmInboundGroupSession.className block:^(RLMObject *oldObject, RLMObject *newObject) {
 
-                        newObject[@"sessionIdSenderKer"] = [MXRealmOlmInboundGroupSession primaryKeyWithSessionId:oldObject[@"sessionId"]
+                        newObject[@"sessionIdSenderKey"] = [MXRealmOlmInboundGroupSession primaryKeyWithSessionId:oldObject[@"sessionId"]
                                                                                                         senderKey:oldObject[@"senderKey"]];
                     }];
 
