@@ -111,7 +111,7 @@ FOUNDATION_EXPORT NSString *const kMXKeyBackupDidStateChangeNotification;
 
  @return a MXHTTPOperation instance.
  */
-- (MXHTTPOperation*)version:(void (^)(MXKeyBackupVersion *keyBackupVersion))success
+- (MXHTTPOperation*)version:(void (^)(MXKeyBackupVersion * _Nullable keyBackupVersion))success
                     failure:(void (^)(NSError *error))failure;
 
 /**

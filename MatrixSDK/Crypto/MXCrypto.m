@@ -743,10 +743,13 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
         if (!device)
         {
             NSLog(@"[MXCrypto] setDeviceVerificationForDevice: Unknown device %@:%@", userId, deviceId);
-            
-            dispatch_async(dispatch_get_main_queue(), ^{
-                success();
-            });
+
+            if (success)
+            {
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    success();
+                });
+            }
             return;
         }
 
@@ -754,6 +757,14 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
         {
             device.verified = verificationStatus;
             [self.store storeDeviceForUser:userId device:device];
+
+            if ([userId isEqualToString:self.mxSession.myUser.userId])
+            {
+                // If one of the user's own devices is being marked as verified / unverified,
+                // check the key backup status, since whether or not we use this depends on
+                // whether it has a signature from a verified device
+                [self.backup checkAndStartKeyBackup];
+            }
         }
 
         if (success)

@@ -70,20 +70,22 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
 
 - (void)checkAndStartKeyBackup
 {
-    if (_state != MXKeyBackupStateUnknown)
-    {
-        return;
-    }
-
     self.state = MXKeyBackupStateCheckingBackUpOnHomeserver;
 
     MXWeakify(self);
-    [self version:^(MXKeyBackupVersion * _Nonnull keyBackupVersion) {
+    [self version:^(MXKeyBackupVersion * _Nullable keyBackupVersion) {
         MXStrongifyAndReturnIfNil(self);
 
         MXWeakify(self);
         dispatch_async(self->mxSession.crypto.cryptoQueue, ^{
             MXStrongifyAndReturnIfNil(self);
+
+            if (!keyBackupVersion)
+            {
+                NSLog(@"[MXKeyBackup] checkAndStartKeyBackup: Found no key backup version on the homeserver");
+                [self disableKeyBackup];
+                return;
+            }
 
             MXWeakify(self);
             [self isKeyBackupTrusted:keyBackupVersion onComplete:^(MXKeyBackupVersionTrust * _Nonnull trustInfo) {
@@ -135,8 +137,15 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
         });
 
     } failure:^(NSError * _Nonnull error) {
-        NSLog(@"[MXKeyBackup] checkAndStartKeyBackup: Failed to get current version: %@", error);
-        self.state = MXKeyBackupStateUnknown;
+        MXStrongifyAndReturnIfNil(self);
+
+        MXWeakify(self);
+        dispatch_async(self->mxSession.crypto.cryptoQueue, ^{
+            MXStrongifyAndReturnIfNil(self);
+
+            NSLog(@"[MXKeyBackup] checkAndStartKeyBackup: Failed to get current version: %@", error);
+            self.state = MXKeyBackupStateUnknown;
+        });
     }];
 }
 
@@ -334,10 +343,26 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
 
 #pragma mark - Backup management
 
-- (MXHTTPOperation *)version:(void (^)(MXKeyBackupVersion * _Nonnull))success failure:(void (^)(NSError * _Nonnull))failure
+- (MXHTTPOperation *)version:(void (^)(MXKeyBackupVersion * _Nullable))success failure:(void (^)(NSError * _Nonnull))failure
 {
     // Use mxSession.matrixRestClient to respond to the main thread as this method is public
-    return [mxSession.matrixRestClient keyBackupVersion:success failure:failure];
+    return [mxSession.matrixRestClient keyBackupVersion:success failure:^(NSError *error) {
+
+        // Workaround because the homeserver currently returns  M_NOT_FOUND when there is
+        // no key backup
+        MXError *mxError = [[MXError alloc] initWithNSError:error];
+        if ([mxError.errcode isEqualToString:kMXErrCodeStringNotFound])
+        {
+            if (success)
+            {
+                success(nil);
+            }
+        }
+        else if (failure)
+        {
+            failure(error);
+        }
+    }];
 }
 
 - (void)isKeyBackupTrusted:(MXKeyBackupVersion *)keyBackupVersion onComplete:(void (^)(MXKeyBackupVersionTrust * _Nonnull))onComplete

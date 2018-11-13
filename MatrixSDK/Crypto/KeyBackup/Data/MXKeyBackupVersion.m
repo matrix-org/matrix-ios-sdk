@@ -37,6 +37,11 @@
     return self;
 }
 
+- (NSString *)description
+{
+    return [NSString stringWithFormat:@"<MXKeyBackupVersion: %p> version: %@ - algorithm: %@", self, _version, _algorithm];
+}
+
 #pragma mark - MXJSONModel
 
 + (id)modelFromJSON:(NSDictionary *)JSONDictionary

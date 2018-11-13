@@ -663,8 +663,7 @@
 }
 
 /**
- Check backup starts automatically if there is an existing and compatible backup
- version on the homeserver.
+ Check MXKeyBackupStateWrongBackUpVersion state
  - Make alice back up her keys to her homeserver
  - Create a new backup with fake data on the homeserver
  - Make alice back up all her keys again
@@ -699,6 +698,106 @@
                     }];
 
                 } failure:^(NSError * _Nonnull error) {
+                    XCTFail(@"The request should not fail - NSError: %@", error);
+                    [expectation fulfill];
+                }];
+            } failure:^(NSError * _Nonnull error) {
+                XCTFail(@"The request should not fail - NSError: %@", error);
+                [expectation fulfill];
+            }];
+        } failure:^(NSError * _Nonnull error) {
+            XCTFail(@"The request should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+    }];
+}
+
+/**
+ - Do an e2e backup to the homeserver
+ - Log Alice on a new device
+ - Post a message to have a new megolm session
+ - Try to backup all
+ -> It must fail
+ - Validate the old device from the new one
+ -> Backup should automatically enable on the new device
+ -> It must use the same backup version
+ - Try to backup all again
+ -> It must success
+ */
+- (void)testBackupAfterVerifingADevice
+{
+    [matrixSDKTestsE2EData doE2ETestWithAliceAndBobInARoomWithCryptedMessages:self cryptedBob:YES readyToTest:^(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
+
+        // - Do an e2e backup to the homeserver
+        [aliceSession.crypto.backup prepareKeyBackupVersion:^(MXMegolmBackupCreationInfo * _Nonnull keyBackupCreationInfo) {
+            [aliceSession.crypto.backup createKeyBackupVersion:keyBackupCreationInfo success:^(MXKeyBackupVersion * _Nonnull keyBackupVersion) {
+                [aliceSession.crypto.backup backupAllGroupSessions:^{
+
+                    NSString *oldDeviceId = aliceSession.matrixRestClient.credentials.deviceId;
+                    MXKeyBackupVersion *oldKeyBackupVersion = aliceSession.crypto.backup.keyBackupVersion;
+
+                    // - Log Alice on a new device
+                    [MXSDKOptions sharedInstance].enableCryptoWhenStartingMXSession = YES;
+                    [matrixSDKTestsData relogUserSessionWithNewDevice:aliceSession withPassword:MXTESTS_ALICE_PWD onComplete:^(MXSession *aliceSession2) {
+                        [MXSDKOptions sharedInstance].enableCryptoWhenStartingMXSession = NO;
+
+                        // - Post a message to have a new megolm session
+                        aliceSession2.crypto.warnOnUnknowDevices = NO;
+                        MXRoom *room2 = [aliceSession2 roomWithRoomId:roomId];
+                        [room2 sendTextMessage:@"New keys" success:^(NSString *eventId) {
+
+                            // - Try to backup all
+                            [aliceSession2.crypto.backup backupAllGroupSessions:^{
+
+                                XCTFail(@"The backup must fail");
+                                [expectation fulfill];
+
+                            } progress:nil failure:^(NSError * _Nonnull error) {
+
+                                // -> It must fail
+                                XCTAssertEqualObjects(error.domain, MXKeyBackupErrorDomain);
+                                XCTAssertEqual(error.code, MXKeyBackupErrorInvalidStateCode);
+                                XCTAssertFalse(aliceSession2.crypto.backup.enabled);
+
+                                //  - Validate the old device from the new one
+                                [aliceSession2.crypto setDeviceVerification:MXDeviceVerified forDevice:oldDeviceId ofUser:aliceSession2.myUser.userId success:nil failure:^(NSError *error) {
+                                    XCTFail(@"The request should not fail - NSError: %@", error);
+                                    [expectation fulfill];
+                                }];
+
+                                // -> Backup should automatically enable on the new device
+                                __block id observer;
+                                observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXKeyBackupDidStateChangeNotification object:aliceSession2.crypto.backup queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *notif) {
+
+                                    if (observer && aliceSession2.crypto.backup.state == MXKeyBackupStateReadyToBackUp)
+                                    {
+                                        [[NSNotificationCenter defaultCenter] removeObserver:observer];
+                                        observer = nil;
+
+                                        // -> It must use the same backup version
+                                        XCTAssertEqualObjects(oldKeyBackupVersion.version, aliceSession2.crypto.backup.keyBackupVersion.version);
+
+                                        // - Try to backup all again
+                                        [aliceSession2.crypto.backup backupAllGroupSessions:^{
+
+                                            // -> It must success
+                                            XCTAssertTrue(aliceSession2.crypto.backup.enabled);
+
+                                            [expectation fulfill];
+
+                                        } progress:nil failure:^(NSError * _Nonnull error) {
+                                            XCTFail(@"The request should not fail - NSError: %@", error);
+                                            [expectation fulfill];
+                                        }];
+                                    }
+                                }];
+                            }];
+                        } failure:^(NSError *error) {
+                            XCTFail(@"The request should not fail - NSError: %@", error);
+                            [expectation fulfill];
+                        }];
+                    }];
+                } progress:nil failure:^(NSError * _Nonnull error) {
                     XCTFail(@"The request should not fail - NSError: %@", error);
                     [expectation fulfill];
                 }];
