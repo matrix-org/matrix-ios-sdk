@@ -224,6 +224,13 @@
 
 
 #pragma mark - Key backup
+
+/**
+ The backup version currently used.
+ Nil means no backup.
+ */
+@property (nonatomic) NSString *backupVersion;
+
 /**
  Mark all inbound group sessions as not backed up.
  */

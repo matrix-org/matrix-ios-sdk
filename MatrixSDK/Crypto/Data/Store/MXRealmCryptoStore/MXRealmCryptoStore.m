@@ -151,6 +151,12 @@ RLM_ARRAY_TYPE(MXRealmOlmInboundGroupSession)
  Settings for blacklisting unverified devices.
  */
 @property (nonatomic) BOOL globalBlacklistUnverifiedDevices;
+
+/**
+ The backup version currently used.
+ */
+@property (nonatomic) NSString *backupVersion;
+
 @end
 
 @implementation MXRealmOlmAccount
@@ -735,6 +741,20 @@ RLM_ARRAY_TYPE(MXRealmOlmInboundGroupSession)
 
 
 #pragma mark - Key backup
+
+- (void)setBackupVersion:(NSString *)backupVersion
+{
+    MXRealmOlmAccount *account = self.accountInCurrentThread;
+    [account.realm transactionWithBlock:^{
+        account.backupVersion = backupVersion;
+    }];
+}
+
+- (NSString *)backupVersion
+{
+    MXRealmOlmAccount *account = self.accountInCurrentThread;
+    return account.backupVersion;
+}
 
 - (void)resetBackupMarkers
 {

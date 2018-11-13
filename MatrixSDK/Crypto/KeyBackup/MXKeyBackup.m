@@ -92,6 +92,14 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
                 NSLog(@"[MXKeyBackup] checkAndStartKeyBackup: Found usable key backup. version: %@", keyBackupVersion.version);
                 if (!self.keyBackupVersion)
                 {
+                    // Check the version we used at the previous app run
+                    NSString *versionInStore = self->mxSession.crypto.store.backupVersion;
+                    if (versionInStore && ![versionInStore isEqualToString:keyBackupVersion.version])
+                    {
+                        NSLog(@"[MXKeyBackup] -> clean the previously used version(%@)", versionInStore);
+                        [self disableKeyBackup];
+                    }
+
                     NSLog(@"[MXKeyBackup]    -> enabling key backups");
                     [self enableKeyBackup:keyBackupVersion];
                 }
@@ -133,6 +141,7 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
     if (authData)
     {
         _keyBackupVersion = version;
+        self->mxSession.crypto.store.backupVersion = version.version;
         _backupKey = [OLMPkEncryption new];
         [_backupKey setRecipientKey:authData.publicKey];
 
@@ -155,6 +164,7 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
     [self resetBackupAllGroupSessionsObjects];
     
     _keyBackupVersion = nil;
+    self->mxSession.crypto.store.backupVersion = nil;
     _backupKey = nil;
     self.state = MXKeyBackupStateDisabled;
 
