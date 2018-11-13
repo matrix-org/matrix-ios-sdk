@@ -59,5 +59,6 @@ FOUNDATION_EXPORT NSString *const MXKeyBackupErrorDomain;
 
 typedef enum : NSUInteger
 {
+    MXKeyBackupErrorInvalidStateCode,
     MXKeyBackupErrorInvalidParametersCode
 } MXKeyBackupErrorCode;

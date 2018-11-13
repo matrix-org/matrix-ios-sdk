@@ -221,16 +221,25 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
         return;
     }
 
-    if (_state == MXKeyBackupStateBackingUp || !self.enabled)
+    if (_state == MXKeyBackupStateBackingUp)
     {
-        // Do nothing if we are already backing up or if the backup has been disabled
+        // Do nothing if we are already backing up
         return;
     }
 
     // Sanity check
-    if (!_backupKey || !_keyBackupVersion)
+    if (!self.enabled || !_backupKey || !_keyBackupVersion)
     {
         NSLog(@"[MXKeyBackup] sendKeyBackup: Invalide state: %@", @(_state));
+        if (backupAllGroupSessionsFailure)
+        {
+            NSError *error = [NSError errorWithDomain:MXKeyBackupErrorDomain
+                                                 code:MXKeyBackupErrorInvalidStateCode
+                                             userInfo:@{
+                                                        NSLocalizedDescriptionKey: [NSString stringWithFormat:@"Invalid state (%@) for making a backup", @(_state)]
+                                                        }];
+            backupAllGroupSessionsFailure(error);
+        }
         return;
     }
 
