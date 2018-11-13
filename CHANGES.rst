@@ -2,6 +2,7 @@ Changes in Matrix iOS SDK in 0.12.0 (2018-11-)
 ===============================================
 
 Improvements:
+ * MXCrypto: Add the MXKeyBackup module to manage e2e keys backup (vector-im/riot-ios#2070).
  * MXMediaManager/MXMediaLoader: Do not allow non-mxc content URLs.
  * MXMediaManager: Add a constructor based on a homeserver URL, to handle directly the Matrix Content URI (mxc://...).
  * MXSession: Add a MediaManager instance to handle the media stored on the Matrix Content repository.
