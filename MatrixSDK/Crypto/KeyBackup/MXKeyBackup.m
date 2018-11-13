@@ -82,52 +82,57 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
         MXStrongifyAndReturnIfNil(self);
 
         MXWeakify(self);
-        [self isKeyBackupTrusted:keyBackupVersion onComplete:^(MXKeyBackupVersionTrust * _Nonnull trustInfo) {
+        dispatch_async(self->mxSession.crypto.cryptoQueue, ^{
             MXStrongifyAndReturnIfNil(self);
 
-            self.state = MXKeyBackupStateDisabled;
+            MXWeakify(self);
+            [self isKeyBackupTrusted:keyBackupVersion onComplete:^(MXKeyBackupVersionTrust * _Nonnull trustInfo) {
+                MXStrongifyAndReturnIfNil(self);
 
-            if (trustInfo.usable)
-            {
-                NSLog(@"[MXKeyBackup] checkAndStartKeyBackup: Found usable key backup. version: %@", keyBackupVersion.version);
-                if (!self.keyBackupVersion)
+                self.state = MXKeyBackupStateDisabled;
+
+                if (trustInfo.usable)
                 {
-                    // Check the version we used at the previous app run
-                    NSString *versionInStore = self->mxSession.crypto.store.backupVersion;
-                    if (versionInStore && ![versionInStore isEqualToString:keyBackupVersion.version])
+                    NSLog(@"[MXKeyBackup] checkAndStartKeyBackup: Found usable key backup. version: %@", keyBackupVersion.version);
+                    if (!self.keyBackupVersion)
                     {
-                        NSLog(@"[MXKeyBackup] -> clean the previously used version(%@)", versionInStore);
+                        // Check the version we used at the previous app run
+                        NSString *versionInStore = self->mxSession.crypto.store.backupVersion;
+                        if (versionInStore && ![versionInStore isEqualToString:keyBackupVersion.version])
+                        {
+                            NSLog(@"[MXKeyBackup] -> clean the previously used version(%@)", versionInStore);
+                            [self disableKeyBackup];
+                        }
+
+                        NSLog(@"[MXKeyBackup]    -> enabling key backups");
+                        [self enableKeyBackup:keyBackupVersion];
+                    }
+                    else if ([self.keyBackupVersion.version isEqualToString:self.keyBackupVersion.version])
+                    {
+                        NSLog(@"[MXKeyBackup]    -> same backup version(%@). Keep usint it", self.keyBackupVersion.version);
+                    }
+                    else
+                    {
+                        NSLog(@"[MXKeyBackup]    -> disable the current version(%@) and enabling the new one", self.keyBackupVersion.version);
+                        [self disableKeyBackup];
+                        [self enableKeyBackup:keyBackupVersion];
+                    }
+                }
+                else
+                {
+                    NSLog(@"[MXKeyBackup] checkAndStartKeyBackup: No usable key backup. version: %@", keyBackupVersion.version);
+                    if (!self.keyBackupVersion)
+                    {
+                        NSLog(@"[MXKeyBackup]    -> not enabling key backup");
+                    }
+                    else
+                    {
+                        NSLog(@"[MXKeyBackup]    -> disabling key backup");
                         [self disableKeyBackup];
                     }
-
-                    NSLog(@"[MXKeyBackup]    -> enabling key backups");
-                    [self enableKeyBackup:keyBackupVersion];
                 }
-                else if ([self.keyBackupVersion.version isEqualToString:self.keyBackupVersion.version])
-                {
-                    NSLog(@"[MXKeyBackup]    -> same backup version(%@). Keep usint it", self.keyBackupVersion.version);
-                }
-                else
-                {
-                    NSLog(@"[MXKeyBackup]    -> disable the current version(%@) and enabling the new one", self.keyBackupVersion.version);
-                    [self disableKeyBackup];
-                    [self enableKeyBackup:keyBackupVersion];
-                }
-            }
-            else
-            {
-                NSLog(@"[MXKeyBackup] checkAndStartKeyBackup: No usable key backup. version: %@", keyBackupVersion.version);
-                if (!self.keyBackupVersion)
-                {
-                    NSLog(@"[MXKeyBackup]    -> not enabling key backup");
-                }
-                else
-                {
-                    NSLog(@"[MXKeyBackup]    -> disabling key backup");
-                    [self disableKeyBackup];
-                }
-            }
-        }];
+            }];
+        });
 
     } failure:^(NSError * _Nonnull error) {
         NSLog(@"[MXKeyBackup] checkAndStartKeyBackup: Failed to get current version: %@", error);
@@ -322,6 +327,7 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
 
 - (MXHTTPOperation *)version:(void (^)(MXKeyBackupVersion * _Nonnull))success failure:(void (^)(NSError * _Nonnull))failure
 {
+    // Use mxSession.matrixRestClient to respond to the main thread as this method is public
     return [mxSession.matrixRestClient keyBackupVersion:success failure:failure];
 }
 

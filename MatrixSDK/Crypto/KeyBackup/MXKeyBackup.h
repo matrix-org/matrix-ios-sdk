@@ -102,7 +102,9 @@ FOUNDATION_EXPORT NSString *const kMXKeyBackupDidStateChangeNotification;
 #pragma mark - Backup management
 
 /**
- Get information about the current backup version.
+ Get information about the current backup version defined on the homeserver.
+
+ It can be different than `self.keyBackupVersion`.
 
  @param success A block object called when the operation succeeds.
  @param failure A block object called when the operation fails.
