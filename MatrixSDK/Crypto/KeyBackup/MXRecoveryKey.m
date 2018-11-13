@@ -25,7 +25,7 @@
 
 NSString *const MXRecoveryKeyErrorDomain = @"org.matrix.sdk.recoverykey";
 
-// Picked arbitrarily but to try & avoid clashing with any bitcoin ones
+// Picked arbitrarily bits to try & avoid clashing with any bitcoin ones
 // (also base58 encoded, albeit with a lot of hashing)
 const UInt8 kOlmRecoveryKeyPrefix[] = {0x8B, 0x01};
 
