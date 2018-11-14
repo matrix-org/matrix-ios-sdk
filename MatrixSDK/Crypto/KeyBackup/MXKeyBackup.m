@@ -219,10 +219,12 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
 
 - (void)sendKeyBackup
 {
+    NSLog(@"[MXKeyBackup] sendKeyBackup");
+
     // Get a chunk of keys to backup
     NSArray<MXOlmInboundGroupSession*> *sessions = [mxSession.crypto.store inboundGroupSessionsToBackup:kMXKeyBackupSendKeysMaxCount];
 
-    NSLog(@"[MXKeyBackup] sendKeyBackup: %@ sessions to back up", @(sessions.count));
+    NSLog(@"[MXKeyBackup] sendKeyBackup: 1 - %@ sessions to back up", @(sessions.count));
 
     if (!sessions.count)
     {
@@ -255,6 +257,8 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
 
     self.state = MXKeyBackupStateBackingUp;
 
+    NSLog(@"[MXKeyBackup] sendKeyBackup: 2 - Encrypting keys");
+
     // Gather data to send to the homeserver
     // roomId -> sessionId -> MXKeyBackupData
     NSMutableDictionary<NSString *,
@@ -270,6 +274,8 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
         }
         roomsKeyBackup[session.roomId][session.session.sessionIdentifier] = keyBackupData;
     }
+
+    NSLog(@"[MXKeyBackup] sendKeyBackup: 3 - Finalising data to send");
 
     // Finalise data to send
     NSMutableDictionary<NSString*, MXRoomKeysBackupData*> *rooms = [NSMutableDictionary dictionary];
@@ -289,10 +295,14 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
     MXKeysBackupData *keysBackupData = [MXKeysBackupData new];
     keysBackupData.rooms = rooms;
 
+    NSLog(@"[MXKeyBackup] sendKeyBackup: 4 - Sending request");
+
     // Make the request
     MXWeakify(self);
     [mxSession.crypto.matrixRestClient sendKeysBackup:keysBackupData version:_keyBackupVersion.version success:^{
         MXStrongifyAndReturnIfNil(self);
+
+        NSLog(@"[MXKeyBackup] sendKeyBackup: 5a - Request complete");
 
         // Mark keys as backed up
         for (MXOlmInboundGroupSession *session in sessions)
@@ -316,7 +326,7 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
     } failure:^(NSError *error) {
         MXStrongifyAndReturnIfNil(self);
 
-        NSLog(@"[MXKeyBackup] sendKeyBackup: sendKeysBackup failed. Error: %@", error);
+        NSLog(@"[MXKeyBackup] sendKeyBackup: 5b - sendKeysBackup failed. Error: %@", error);
 
         void (^backupAllGroupSessionsFailure)(NSError *error) = self->backupAllGroupSessionsFailure;
 
@@ -328,8 +338,9 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
         }
         else
         {
-            // Come back to the ready state so that we will retry on the next received key
+            // Retry a bit later
             self.state = MXKeyBackupStateReadyToBackUp;
+            [self maybeSendKeyBackup];
         }
 
         if (backupAllGroupSessionsFailure)
