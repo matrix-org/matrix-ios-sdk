@@ -1189,63 +1189,60 @@
 //    }];
 //}
 
+- (void)testUserAvatarUrl
+{
+    [matrixSDKTestsData doMXRestClientTestWithAlice:self readyToTest:^(MXRestClient *aliceRestClient, XCTestExpectation *expectation) {
 
-// Disabled because setting avatar does not work anymore with local test homeserver
-//- (void)testUserAvatarUrl
-//{
-//    [matrixSDKTestsData doMXRestClientTestWithAlice:self readyToTest:^(MXRestClient *aliceRestClient, XCTestExpectation *expectation) {
-//
-//        // Set the avatar url
-//        __block NSString *newAvatarUrl = @"http://matrix.org/matrix2.png";
-//        [aliceRestClient setAvatarUrl:newAvatarUrl success:^{
-//
-//            // Then retrieve it
-//            [aliceRestClient avatarUrlForUser:nil success:^(NSString *avatarUrl) {
-//
-//                XCTAssertEqual(avatarUrl, newAvatarUrl);
-//                [expectation fulfill];
-//
-//            } failure:^(NSError *error) {
-//                XCTFail(@"The request should not fail - NSError: %@", error);
-//                [expectation fulfill];
-//            }];
-//
-//        } failure:^(NSError *error) {
-//            XCTFail(@"The request should not fail - NSError: %@", error);
-//            [expectation fulfill];
-//        }];
-//    }];
-//}
+        // Set the avatar url
+        __block NSString *newAvatarUrl = @"http://matrix.org/matrix2.png";
+        [aliceRestClient setAvatarUrl:newAvatarUrl success:^{
 
-// Disabled because setting avatar does not work anymore with local test homeserver
-//- (void)testOtherUserAvatarUrl
-//{
-//    [matrixSDKTestsData doMXRestClientTestWithAlice:self readyToTest:^(MXRestClient *aliceRestClient, XCTestExpectation *expectation) {
-//
-//        // Set the avatar url
-//        __block NSString *newAvatarUrl = @"http://matrix.org/matrix2.png";
-//        [aliceRestClient setAvatarUrl:newAvatarUrl success:^{
-//
-//            [matrixSDKTestsData doMXRestClientTestWithBob:nil readyToTest:^(MXRestClient *bobRestClient, XCTestExpectation *expectation2) {
-//
-//                // Then retrieve it from a Bob restClient
-//                [bobRestClient avatarUrlForUser:matrixSDKTestsData.aliceCredentials.userId success:^(NSString *avatarUrl) {
-//
-//                    XCTAssertEqual(avatarUrl, newAvatarUrl);
-//                    [expectation fulfill];
-//
-//                } failure:^(NSError *error) {
-//                    XCTFail(@"The request should not fail - NSError: %@", error);
-//                    [expectation fulfill];
-//                }];
-//            }];
-//
-//        } failure:^(NSError *error) {
-//            XCTFail(@"The request should not fail - NSError: %@", error);
-//            [expectation fulfill];
-//        }];
-//    }];
-//}
+            // Then retrieve it
+            [aliceRestClient avatarUrlForUser:nil success:^(NSString *avatarUrl) {
+
+                XCTAssertEqualObjects(avatarUrl, newAvatarUrl);
+                [expectation fulfill];
+
+            } failure:^(NSError *error) {
+                XCTFail(@"The request should not fail - NSError: %@", error);
+                [expectation fulfill];
+            }];
+
+        } failure:^(NSError *error) {
+            XCTFail(@"The request should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+    }];
+}
+
+- (void)testOtherUserAvatarUrl
+{
+    [matrixSDKTestsData doMXRestClientTestWithAlice:self readyToTest:^(MXRestClient *aliceRestClient, XCTestExpectation *expectation) {
+
+        // Set the avatar url
+        __block NSString *newAvatarUrl = @"http://matrix.org/matrix2.png";
+        [aliceRestClient setAvatarUrl:newAvatarUrl success:^{
+
+            [matrixSDKTestsData doMXRestClientTestWithBob:nil readyToTest:^(MXRestClient *bobRestClient, XCTestExpectation *expectation2) {
+
+                // Then retrieve it from a Bob restClient
+                [bobRestClient avatarUrlForUser:matrixSDKTestsData.aliceCredentials.userId success:^(NSString *avatarUrl) {
+
+                    XCTAssertEqualObjects(avatarUrl, newAvatarUrl);
+                    [expectation fulfill];
+
+                } failure:^(NSError *error) {
+                    XCTFail(@"The request should not fail - NSError: %@", error);
+                    [expectation fulfill];
+                }];
+            }];
+
+        } failure:^(NSError *error) {
+            XCTFail(@"The request should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+    }];
+}
 
 
 #pragma mark - Presence operations
@@ -1282,35 +1279,6 @@
         
     }];
 }
-
-
-#pragma mark - Content upload
-- (void)testUrlOfContent
-{
-    NSString *mxcURI = @"mxc://matrix.org/rQkrOoaFIRgiACATXUdQIuNJ";
-
-    MXRestClient *mxRestClient = [[MXRestClient alloc] initWithHomeServer:@"http://matrix.org"
-                                        andOnUnrecognizedCertificateBlock:nil];
-
-    NSString *contentURL = [mxRestClient urlOfContent:mxcURI];
-    XCTAssertEqualObjects(contentURL, @"http://matrix.org/_matrix/media/v1/download/matrix.org/rQkrOoaFIRgiACATXUdQIuNJ");
-}
-
-- (void)testUrlOfContentThumbnail
-{
-    NSString *mxcURI = @"mxc://matrix.org/rQkrOoaFIRgiACATXUdQIuNJ";
-
-    MXRestClient *mxRestClient = [[MXRestClient alloc] initWithHomeServer:@"http://matrix.org"
-                                        andOnUnrecognizedCertificateBlock:nil];
-    
-    CGFloat scale = [[UIScreen mainScreen] scale];
-    CGSize viewSize = CGSizeMake(320, 320);
-
-    NSString *thumbnailURL = [mxRestClient urlOfContentThumbnail:mxcURI toFitViewSize:viewSize withMethod:MXThumbnailingMethodScale];
-    NSString *expected = [NSString stringWithFormat:@"http://matrix.org/_matrix/media/v1/thumbnail/matrix.org/rQkrOoaFIRgiACATXUdQIuNJ?width=%tu&height=%tu&method=scale", (NSUInteger)(viewSize.width * scale), (NSUInteger)(viewSize.height * scale)];
-    XCTAssertEqualObjects(thumbnailURL, expected);
-}
-
 
 #pragma mark - Push rules
 // This test is based on default notification rules of a local home server.
