@@ -1,5 +1,6 @@
 /*
  Copyright 2016 OpenMarket Ltd
+ Copyright 2018 New Vector Ltd
  
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -25,48 +26,62 @@
 @class MXHTTPOperation;
 
 /**
- Posted to provide download progress.
- The notification object is the media url. The `userInfo` dictionary contains the following keys:
- - kMXMediaLoaderProgressValueKey: progress value in [0, 1] range (NSNumber object).
- - kMXMediaLoaderCompletedBytesCountKey: the number of bytes that have already been completed by the current job (NSNumber object).
- - kMXMediaLoaderTotalBytesCountKey: the total number of bytes tracked for the current job (NSNumber object).
- - kMXMediaLoaderCurrentDataRateKey: The observed data rate in Bytes/s (NSNumber object).
+ `MXMediaLoaderState` represents the states in the life cycle of a MXMediaLoader instance.
  */
-extern NSString *const kMXMediaDownloadProgressNotification;
+typedef enum : NSUInteger
+{
+    /**
+     The loader has just been created.
+     */
+    MXMediaLoaderStateIdle,
+    
+    /**
+     The loader has been instantiated as a downloader, and the download is in progress.
+     The download statistics are available in the property `statisticsDict`.
+     */
+    MXMediaLoaderStateDownloadInProgress,
+    
+    /**
+     The loader has been instantiated as a downloader, and the download is completed.
+     The downloaded data are available at the output file path: `downloadOutputFilePath`.
+     */
+    MXMediaLoaderStateDownloadCompleted,
+    
+    /**
+     The loader has been instantiated as downloader, and the download failed.
+     The error is available in the property `error`.
+     */
+    MXMediaLoaderStateDownloadFailed,
+    
+    /**
+     The loader has been instantiated as a uploader, and the upload is in progress.
+     The statistics are available in the property `statisticsDict`.
+     */
+    MXMediaLoaderStateUploadInProgress,
+    
+    /**
+     The loader has been instantiated as a uploader, and the upload is completed.
+     */
+    MXMediaLoaderStateUploadCompleted,
+    
+    /**
+     The loader has been instantiated as uploader, and the upload failed.
+     The error is available in the property `error`.
+     */
+    MXMediaLoaderStateUploadFailed,
+    
+    /**
+     The current operation (downloading or uploading) has been cancelled.
+     */
+    MXMediaLoaderStateCancelled
+    
+} MXMediaLoaderState;
 
 /**
- Posted when a media download is finished with success.
- The notification object is the media url. The `userInfo` dictionary contains an `NSString` object under the `kMXMediaLoaderFilePathKey` key, representing the resulting file path.
+ Posted when the state of the MXMediaLoader changes.
+ The notification object is the loader itself.
  */
-extern NSString *const kMXMediaDownloadDidFinishNotification;
-
-/**
- Posted when a media download failed.
- The notification object is the media url. The `userInfo` dictionary may contain an `NSError` object under the `kMXMediaLoaderErrorKey` key.
- */
-extern NSString *const kMXMediaDownloadDidFailNotification;
-
-/**
- Posted to provide upload progress.
- The notification object is the `uploadId`. The `userInfo` dictionary contains the following keys:
- - kMXMediaLoaderProgressValueKey: progress value in [0, 1] range (NSNumber object) [The properties `uploadInitialRange` and `uploadRange` are taken into account here].
- - kMXMediaLoaderCompletedBytesCountKey: the number of bytes that have already been completed by the current job (NSNumber object).
- - kMXMediaLoaderTotalBytesCountKey: the total number of bytes tracked for the current job (NSNumber object).
- - kMXMediaLoaderCurrentDataRateKey: The observed data rate in Bytes/s (NSNumber object).
- */
-extern NSString *const kMXMediaUploadProgressNotification;
-
-/**
- Posted when a media upload is finished with success.
- The notification object is the upload id. The `userInfo` dictionary is nil.
- */
-extern NSString *const kMXMediaUploadDidFinishNotification;
-
-/**
- Posted when a media upload failed.
- The notification object is the upload id. The `userInfo` dictionary may contain an `NSError` object under the `kMXMediaLoaderErrorKey` key.
- */
-extern NSString *const kMXMediaUploadDidFailNotification;
+FOUNDATION_EXPORT NSString *const kMXMediaLoaderStateDidChangeNotification;
 
 /**
  Notifications `userInfo` keys
@@ -98,8 +113,6 @@ extern NSString *const kMXMediaUploadIdPrefix;
     blockMXMediaLoader_onError onError;
     
     // Media download
-    NSString *mediaURL;
-    NSString *outputFilePath;
     long long expectedSize;
     NSMutableData *downloadData;
     NSURLConnection *downloadConnection;
@@ -117,9 +130,43 @@ extern NSString *const kMXMediaUploadIdPrefix;
 }
 
 /**
+ The current state of the loader.
+ */
+@property (nonatomic, readonly) MXMediaLoaderState state;
+
+/**
  Statistics on the operation in progress.
+ - kMXMediaLoaderProgressValueKey: progress value in [0, 1] range (NSNumber object) [In case of upload, the properties
+ `uploadInitialRange` and `uploadRange` are taken into account in this progress value].
+ - kMXMediaLoaderCompletedBytesCountKey: the number of bytes that have already been completed by the current job (NSNumber object).
+ - kMXMediaLoaderTotalBytesCountKey: the total number of bytes tracked for the current job (NSNumber object).
+ - kMXMediaLoaderCurrentDataRateKey: The observed data rate in Bytes/s (NSNumber object).
  */
 @property (strong, readonly) NSMutableDictionary* statisticsDict;
+
+/**
+ The potential error observed by the loader.
+ Default is nil.
+ */
+@property (strong) NSError *error;
+
+/**
+ Download id defined when a media loader is instantiated as a downloader.
+ Default is nil.
+ */
+@property (strong, readonly) NSString *downloadId;
+
+/**
+ The downloaded media url defined when a media loader is instantiated as a downloader.
+ Default is nil.
+ */
+@property (strong, readonly) NSString *downloadMediaURL;
+
+/**
+ The targeted output file path defined when a media loader is instantiated as a downloader.
+ Default is nil.
+ */
+@property (strong, readonly) NSString *downloadOutputFilePath;
 
 /**
  Upload id defined when a media loader is instantiated as uploader.
@@ -139,11 +186,13 @@ extern NSString *const kMXMediaUploadIdPrefix;
  Download data from the provided URL.
  
  @param url remote media url.
+ @param downloadId the download identifier.
  @param filePath output file in which downloaded media must be saved.
  @param success a block called when the operation succeeds.
  @param failure a block called when the operation fails.
  */
 - (void)downloadMediaFromURL:(NSString *)url
+              withIdentifier:(NSString *)downloadId
            andSaveAtFilePath:(NSString *)filePath
                      success:(blockMXMediaLoader_onSuccess)success
                      failure:(blockMXMediaLoader_onError)failure;

@@ -211,18 +211,16 @@
                     NSString *contentURL = event.content[@"url"];
                     XCTAssert(contentURL);
 
-                    NSString *actualURL = [mxSession.matrixRestClient urlOfContent:contentURL];
-                    XCTAssert(actualURL);
-
                     // Download back the image
-                    [MXMediaManager downloadMediaFromURL:actualURL andSaveAtFilePath:nil success:^() {
-
-                        [expectation fulfill];
-
-                    } failure:^(NSError *error) {
-                        XCTFail(@"The request should not fail - NSError: %@", error);
-                        [expectation fulfill];
-                    }];
+                    [mxSession.mediaManager downloadMediaFromMatrixContentURI:contentURL
+                                                                     withType:nil
+                                                                     inFolder:nil
+                                                                      success:^(NSString *outputFilePath) {
+                                                                          [expectation fulfill];
+                                                                      } failure:^(NSError *error) {
+                                                                          XCTFail(@"The request should not fail - NSError: %@", error);
+                                                                          [expectation fulfill];
+                                                                      }];
                 }];
             }];
 
@@ -239,23 +237,6 @@
             [expectation fulfill];
         }];
     }];
-}
-
-- (void)testMediaWithCACertificate
-{
-    XCTestExpectation *expectation = [self expectationWithDescription:@"asyncTest"];
-
-    // Download back the image from a https server with a CA cert
-    [MXMediaManager downloadMediaFromURL:@"https://matrix.org/matrix.png" andSaveAtFilePath:nil success:^() {
-
-        [expectation fulfill];
-
-    } failure:^(NSError *error) {
-        XCTFail(@"The request should not fail - NSError: %@", error);
-        [expectation fulfill];
-    }];
-
-    [self waitForExpectationsWithTimeout:10 handler:nil];
 }
 
 - (void)testNotTrustedCertificate
@@ -297,24 +278,26 @@
 
                     NSString *contentURL = event.content[@"url"];
                     XCTAssert(contentURL);
-
-                    NSString *actualURL = [mxSession.matrixRestClient urlOfContent:contentURL];
-                    XCTAssert(actualURL);
-
+                    
+                    MXMediaManager *mediaManager = [[MXMediaManager alloc] initWithHomeServer:mxSession.matrixRestClient.homeserver];
+                    XCTAssert(mediaManager);
+                    
                     [mxSession close];
 
                     // Fake the case where our server was never not trusted
                     [[MXAllowedCertificates sharedInstance] reset];
 
                     // Then, try to download back the image
-                    [MXMediaManager downloadMediaFromURL:actualURL andSaveAtFilePath:nil success:^() {
+                    [mediaManager downloadMediaFromMatrixContentURI:contentURL
+                                                                     withType:nil
+                                                                     inFolder:nil
+                                                                      success:^(NSString *outputFilePath) {
+                                                                          XCTFail(@"The operation must fail because the self-signed certficate was not trusted (anymore)");
+                                                                          [expectation fulfill];
+                                                                      } failure:^(NSError *error) {
+                                                                          [expectation fulfill];
+                                                                      }];
 
-                        XCTFail(@"The operation must fail because the self-signed certficate was not trusted (anymore)");
-                        [expectation fulfill];
-
-                    } failure:^(NSError *error) {
-                        [expectation fulfill];
-                    }];
                 }];
             }];
 

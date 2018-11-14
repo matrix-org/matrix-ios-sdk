@@ -44,7 +44,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 /**
  By default Matrix SDK sets an identicon url when user's avatar is undefined
- (see [MXRestClient urlOfIdenticon:] use).
+ (see [MXMediaManager urlOfIdenticon:] use).
  
  Use this property to disable identicon use at SDK level. NO by default.
  */
