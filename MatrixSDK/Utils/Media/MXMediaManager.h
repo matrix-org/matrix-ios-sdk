@@ -148,6 +148,24 @@ extern NSString *const kMXMediaManagerDefaultCacheFolder;
 #pragma mark - Media Repository API
 
 /**
+ Resolve a Matrix media content URI (in the form of "mxc://...") into an HTTP URL.
+ 
+ @param mxcContentURI the Matrix content URI to resolve.
+ @return the Matrix content HTTP URL. nil if the Matrix content URI is invalid.
+ */
+- (NSString*)urlOfContent:(NSString*)mxcContentURI;
+
+/**
+ Get the suitable HTTP URL of a thumbnail image from a Matrix media content according to the destined view size.
+
+ @param mxcContentURI the Matrix content URI to resolve.
+ @param viewSize in points, it will be converted in pixels by considering screen scale.
+ @param thumbnailingMethod the method the Matrix content repository must use to generate the thumbnail.
+ @return the thumbnail HTTP URL. The provided URI is returned if it is not a valid Matrix content URI.
+ */
+- (NSString*)urlOfContentThumbnail:(NSString*)mxcContentURI toFitViewSize:(CGSize)viewSize withMethod:(MXThumbnailingMethod)thumbnailingMethod;
+
+/**
  Get the HTTP URL of an identicon served by the media repository.
  
  @param identiconString the string to build an identicon from.
