@@ -111,7 +111,7 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
                     }
                     else if ([self.keyBackupVersion.version isEqualToString:keyBackupVersion.version])
                     {
-                        NSLog(@"[MXKeyBackup]    -> same backup version(%@). Keep usint it", self.keyBackupVersion.version);
+                        NSLog(@"[MXKeyBackup]    -> same backup version(%@). Keep using it", self.keyBackupVersion.version);
                     }
                     else
                     {
