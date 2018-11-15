@@ -37,18 +37,13 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)checkAndStartKeyBackup;
 
 /**
- Enable backing up of keys.
-
- @param keyBackupVersion backup information object as returned by `[MXKeyBackup version]`.
- @return an error if the operation fails.
- */
-- (NSError*)enableKeyBackup:(MXKeyBackupVersion*)keyBackupVersion;
-
-/**
  * Disable backing up of keys.
  */
 - (void)disableKeyBackup;
 
+/**
+ Do a backup if there are new keys.
+ */
 - (void)maybeSendKeyBackup;
 
 @end

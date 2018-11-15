@@ -149,6 +149,12 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
     }];
 }
 
+/**
+ Enable backing up of keys.
+
+ @param keyBackupVersion backup information object as returned by `[MXKeyBackup version]`.
+ @return an error if the operation fails.
+ */
 - (NSError*)enableKeyBackup:(MXKeyBackupVersion*)version
 {
     MXMegolmBackupAuthData *authData = [MXMegolmBackupAuthData modelFromJSON:version.authData];
