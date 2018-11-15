@@ -1568,6 +1568,14 @@ typedef void (^MXOnResumeDone)(void);
     return [matrixRestClient supportedMatrixVersions:success failure:failure];
 }
 
+- (void)setAntivirusServerURL:(NSString *)antivirusServerURL
+{
+    _antivirusServerURL = antivirusServerURL;
+    // Update the current restClient
+    [matrixRestClient setAntivirusServer:antivirusServerURL];
+    
+    // TODO: configure here a scan manager, and update the media manager.
+}
 
 #pragma mark - Rooms operations
 

@@ -34,6 +34,11 @@ FOUNDATION_EXPORT NSString *const kMXContentUriScheme;
 FOUNDATION_EXPORT NSString *const kMXContentPrefixPath;
 
 /**
+ A constant representing the URI path for as-yet unspecified of the AntiVirus Client-Server HTTP API.
+ */
+FOUNDATION_EXPORT NSString *const kMXAntivirusAPIPrefixPathUnstable;
+
+/**
  Methods of thumnailing supported by the Matrix content repository.
  */
 typedef enum : NSUInteger

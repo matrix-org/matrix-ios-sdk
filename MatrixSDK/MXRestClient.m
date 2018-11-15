@@ -93,6 +93,11 @@ MXAuthAction;
     MXHTTPClient *identityHttpClient;
     
     /**
+     HTTP client to the antivirus server.
+     */
+    MXHTTPClient *antivirusHttpClient;
+    
+    /**
      The queue to process server response.
      This queue is used to create models from JSON dictionary without blocking the main thread.
      */
@@ -101,7 +106,7 @@ MXAuthAction;
 @end
 
 @implementation MXRestClient
-@synthesize homeserver, homeserverSuffix, credentials, apiPathPrefix, contentPathPrefix, completionQueue;
+@synthesize homeserver, homeserverSuffix, credentials, apiPathPrefix, contentPathPrefix, completionQueue, antivirusServerPathPrefix;
 
 -(id)initWithHomeServer:(NSString *)inHomeserver andOnUnrecognizedCertificateBlock:(MXHTTPClientOnUnrecognizedCertificate)onUnrecognizedCertBlock
 {
@@ -110,6 +115,7 @@ MXAuthAction;
     {
         homeserver = inHomeserver;
         apiPathPrefix = kMXAPIPrefixPathR0;
+        antivirusServerPathPrefix = kMXAntivirusAPIPrefixPathUnstable;
         contentPathPrefix = kMXContentPrefixPath;
         
         httpClient = [[MXHTTPClient alloc] initWithBaseURL:homeserver
@@ -157,6 +163,7 @@ MXAuthAction;
     {
         homeserver = inCredentials.homeServer;
         apiPathPrefix = kMXAPIPrefixPathR0;
+        antivirusServerPathPrefix = kMXAntivirusAPIPrefixPathUnstable;
         contentPathPrefix = kMXContentPrefixPath;
         
         self.credentials = inCredentials;
@@ -221,6 +228,7 @@ MXAuthAction;
     homeserverSuffix = nil;
     httpClient = nil;
     identityHttpClient = nil;
+    antivirusHttpClient = nil;
     
     processingQueue = nil;
     completionQueue = nil;
@@ -3447,6 +3455,157 @@ MXAuthAction;
                                              [self dispatchFailure:error inBlock:failure];
                                          }];
 }
+
+#pragma mark - Antivirus server API
+- (void)setAntivirusServer:(NSString *)antivirusServer
+{
+    if (antivirusServer.length)
+    {
+        _antivirusServer = [antivirusServer copy];
+        antivirusHttpClient = [[MXHTTPClient alloc] initWithBaseURL:[NSString stringWithFormat:@"%@/%@", antivirusServer, antivirusServerPathPrefix]
+                                  andOnUnrecognizedCertificateBlock:nil];
+    }
+    else
+    {
+        // Disable antivirus requests
+        _antivirusServer = nil;
+        antivirusHttpClient = nil;
+    }
+}
+
+- (MXHTTPOperation*)getAntivirusServerPublicKey:(void (^)(NSString *publicKey))success
+                                        failure:(void (^)(NSError *error))failure
+{
+    MXWeakify(self);
+    return [antivirusHttpClient requestWithMethod:@"GET"
+                                             path:@"public_key"
+                                       parameters:nil
+                                          success:^(NSDictionary *JSONResponse) {
+                                              MXStrongifyAndReturnIfNil(self);
+                                              if (success)
+                                              {
+                                                  __block NSString *publicKey;
+                                                  [self dispatchProcessing:^{
+                                                      MXJSONModelSetString(publicKey, JSONResponse[@"public_key"]);
+                                                  } andCompletion:^{
+                                                      success(publicKey);
+                                                  }];
+                                              }
+                                          }
+                                          failure:^(NSError *error) {
+                                              MXStrongifyAndReturnIfNil(self);
+                                              [self dispatchFailure:error inBlock:failure];
+                                          }];
+}
+
+- (MXHTTPOperation*)scanUnencryptedContent:(NSString*)mxcContentURI
+                       success:(void (^)(MXContentScanResult *scanResult))success
+                       failure:(void (^)(NSError *error))failure
+{
+    // Sanity check
+    if (![mxcContentURI hasPrefix:kMXContentUriScheme])
+    {
+        // do not scan non-mxc content URLs
+        return nil;
+    }
+    
+    // Build request path by replacing the "mxc://" scheme
+    NSString *path = [mxcContentURI stringByReplacingOccurrencesOfString:kMXContentUriScheme withString:@"scan/"];
+    MXWeakify(self);
+    return [antivirusHttpClient requestWithMethod:@"GET"
+                                            path:path
+                                      parameters:nil
+                                         success:^(NSDictionary *JSONResponse) {
+                                             MXStrongifyAndReturnIfNil(self);
+                                             if (success)
+                                             {
+                                                 __block MXContentScanResult *scanResult;
+                                                 [self dispatchProcessing:^{
+                                                     MXJSONModelSetMXJSONModel(scanResult, MXContentScanResult, JSONResponse);
+                                                 } andCompletion:^{
+                                                     success(scanResult);
+                                                 }];
+                                             }
+                                         }
+                                         failure:^(NSError *error) {
+                                             MXStrongifyAndReturnIfNil(self);
+                                             [self dispatchFailure:error inBlock:failure];
+                                         }];
+}
+
+- (MXHTTPOperation*)scanEncryptedContent:(MXEncryptedContentFile*)encryptedContentFile
+                                 success:(void (^)(MXContentScanResult *scanResult))success
+                                 failure:(void (^)(NSError *error))failure
+{
+    NSData *payloadData = nil;
+    if (encryptedContentFile)
+    {
+        payloadData = [NSJSONSerialization dataWithJSONObject:@{@"file": encryptedContentFile.JSONDictionary} options:0 error:nil];
+    }
+    
+    MXWeakify(self);
+    return [antivirusHttpClient requestWithMethod:@"POST"
+                                             path:@"scan_encrypted"
+                                       parameters:nil
+                                             data:payloadData
+                                          headers:@{@"Content-Type": @"application/json"}
+                                          timeout:-1
+                                   uploadProgress:nil
+                                          success:^(NSDictionary *JSONResponse) {
+                                              MXStrongifyAndReturnIfNil(self);
+                                              if (success)
+                                              {
+                                                  __block MXContentScanResult *scanResult;
+                                                  [self dispatchProcessing:^{
+                                                      MXJSONModelSetMXJSONModel(scanResult, MXContentScanResult, JSONResponse);
+                                                  } andCompletion:^{
+                                                      success(scanResult);
+                                                  }];
+                                              }
+                                          }
+                                          failure:^(NSError *error) {
+                                              MXStrongifyAndReturnIfNil(self);
+                                              [self dispatchFailure:error inBlock:failure];
+                                          }];
+}
+
+- (MXHTTPOperation*)scanEncryptedContentWithSecureExchange:(MXContentScanEncryptedBody *)encryptedbody
+                                                   success:(void (^)(MXContentScanResult *scanResult))success
+                                                   failure:(void (^)(NSError *error))failure
+{
+    NSData *payloadData = nil;
+    if (encryptedbody)
+    {
+        payloadData = [NSJSONSerialization dataWithJSONObject:@{@"encrypted_body": encryptedbody.JSONDictionary} options:0 error:nil];
+    }
+    
+    MXWeakify(self);
+    return [antivirusHttpClient requestWithMethod:@"POST"
+                                             path:@"scan_encrypted"
+                                       parameters:nil
+                                             data:payloadData
+                                          headers:@{@"Content-Type": @"application/json"}
+                                          timeout:-1
+                                   uploadProgress:nil
+                                          success:^(NSDictionary *JSONResponse) {
+                                              MXStrongifyAndReturnIfNil(self);
+                                              if (success)
+                                              {
+                                                  __block MXContentScanResult *scanResult;
+                                                  [self dispatchProcessing:^{
+                                                      MXJSONModelSetMXJSONModel(scanResult, MXContentScanResult, JSONResponse);
+                                                  } andCompletion:^{
+                                                      success(scanResult);
+                                                  }];
+                                              }
+                                          }
+                                          failure:^(NSError *error) {
+                                              MXStrongifyAndReturnIfNil(self);
+                                              [self dispatchFailure:error inBlock:failure];
+                                          }];
+}
+
+#pragma mark - Certificates
 
 -(void)setPinnedCertificates:(NSSet <NSData *> *)pinnedCertificates {
     httpClient.pinnedCertificates = pinnedCertificates;
