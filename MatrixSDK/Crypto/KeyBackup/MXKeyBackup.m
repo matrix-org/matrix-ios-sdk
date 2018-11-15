@@ -109,7 +109,7 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
                         NSLog(@"[MXKeyBackup]    -> enabling key backups");
                         [self enableKeyBackup:keyBackupVersion];
                     }
-                    else if ([self.keyBackupVersion.version isEqualToString:self.keyBackupVersion.version])
+                    else if ([self.keyBackupVersion.version isEqualToString:keyBackupVersion.version])
                     {
                         NSLog(@"[MXKeyBackup]    -> same backup version(%@). Keep usint it", self.keyBackupVersion.version);
                     }
@@ -266,7 +266,7 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
 
     for (MXOlmInboundGroupSession *session in sessions)
     {
-        MXKeyBackupData *keyBackupData = [self encryptGroupSession:session withPkEncryption:_backupKey];
+        MXKeyBackupData *keyBackupData = [self encryptGroupSession:session];
 
         if (!roomsKeyBackup[session.roomId])
         {
@@ -879,7 +879,7 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
     return decryption;
 }
 
-- (MXKeyBackupData*)encryptGroupSession:(MXOlmInboundGroupSession*)session withPkEncryption:(OLMPkEncryption*)encryption
+- (MXKeyBackupData*)encryptGroupSession:(MXOlmInboundGroupSession*)session
 {
     // Gather information for each key
     MXDeviceInfo *device = [mxSession.crypto.deviceList deviceWithIdentityKey:session.senderKey andAlgorithm:kMXCryptoMegolmAlgorithm];
@@ -894,7 +894,7 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
                                         @"forwarding_curve25519_key_chain": sessionData.forwardingCurve25519KeyChain ?  sessionData.forwardingCurve25519KeyChain : @[],
                                         @"session_key": sessionData.sessionKey
                                         };
-    OLMPkMessage *encryptedSessionBackupData = [encryption encryptMessage:[MXTools serialiseJSONObject:sessionBackupData] error:nil];
+    OLMPkMessage *encryptedSessionBackupData = [_backupKey encryptMessage:[MXTools serialiseJSONObject:sessionBackupData] error:nil];
 
     // Build backup data for that key
     MXKeyBackupData *keyBackupData = [MXKeyBackupData new];

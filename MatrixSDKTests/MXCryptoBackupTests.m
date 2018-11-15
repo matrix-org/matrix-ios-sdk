@@ -25,7 +25,7 @@
 @interface MXKeyBackup (Testing)
 
 - (OLMPkDecryption*)pkDecryptionFromRecoveryKey:(NSString*)recoveryKey error:(NSError **)error;
-- (MXKeyBackupData*)encryptGroupSession:(MXOlmInboundGroupSession*)session withPkEncryption:(OLMPkEncryption*)encryption;
+- (MXKeyBackupData*)encryptGroupSession:(MXOlmInboundGroupSession*)session;
 - (MXMegolmSessionData*)decryptKeyBackupData:(MXKeyBackupData*)keyBackupData forSession:(NSString*)sessionId inRoom:(NSString*)roomId withPkDecryption:(OLMPkDecryption*)decryption;
 
 @end
@@ -511,7 +511,7 @@
             [aliceSession.crypto.backup createKeyBackupVersion:keyBackupCreationInfo success:^(MXKeyBackupVersion * _Nonnull keyBackupVersion) {
 
                 // - Check [MXKeyBackup encryptGroupSession] returns stg
-                MXKeyBackupData *keyBackupData = [aliceSession.crypto.backup encryptGroupSession:session withPkEncryption:aliceSession.crypto.backup.backupKey];
+                MXKeyBackupData *keyBackupData = [aliceSession.crypto.backup encryptGroupSession:session];
                 XCTAssertNotNil(keyBackupData);
                 XCTAssertNotNil(keyBackupData.sessionData);
 
@@ -724,7 +724,7 @@
  - Try to backup all again
  -> It must success
  */
-- (void)testBackupAfterVerifingADevice
+- (void)testBackupAfterVerifyingADevice
 {
     [matrixSDKTestsE2EData doE2ETestWithAliceAndBobInARoomWithCryptedMessages:self cryptedBob:YES readyToTest:^(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
 
