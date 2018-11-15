@@ -28,6 +28,7 @@
 #import "MXCryptoAlgorithms.h"
 #import "MXUsersDevicesMap.h"
 #import "MXOlmSessionResult.h"
+#import "MXKeyBackup_Private.h"
 
 #import "MXCrypto.h"
 
@@ -149,6 +150,31 @@
  @return the decryptor.
  */
 - (id<MXDecrypting>)getRoomDecryptor:(NSString*)roomId algorithm:(NSString*)algorithm;
+
+/**
+ Sign the given object with our ed25519 key.
+
+ @param Object the dictionary to sign.
+ @return signatures.
+ */
+- (NSDictionary*)signObject:(NSDictionary*)object;
+
+
+#pragma mark - import/export
+
+/**
+ Import a list of megolm session keys.
+
+ @param sessionDatas megolm sessions.
+ @param backUp YES to back up them to the homeserver.
+ @param success A block object called when the operation succeeds.
+                It provides the number of found keys and the number of successfully imported keys.
+ @param failure A block object called when the operation fails.
+ */
+- (void)importMegolmSessionDatas:(NSArray<MXMegolmSessionData*>*)sessionDatas
+                          backUp:(BOOL)backUp
+                         success:(void (^)(NSUInteger total, NSUInteger imported))success
+                         failure:(void (^)(NSError *error))failure;
 
 
 #pragma mark - Key sharing

@@ -236,9 +236,10 @@
     // No impact for olm
 }
 
-- (void)importRoomKey:(MXMegolmSessionData *)session
+- (BOOL)importRoomKey:(MXMegolmSessionData *)session backUp:(BOOL)backUp
 {
     // No impact for olm
+    return NO;
 }
 
 - (BOOL)hasKeysForKeyRequest:(MXIncomingRoomKeyRequest*)keyRequest

@@ -33,6 +33,9 @@
 #import "MXJSONModels.h"
 #import "MXFilterJSONModel.h"
 #import "MXMatrixVersions.h"
+#import "MXContentScanResult.h"
+#import "MXEncryptedContentFile.h"
+#import "MXContentScanEncryptedBody.h"
 
 #pragma mark - Constants definitions
 /**
@@ -41,7 +44,7 @@
 FOUNDATION_EXPORT NSString *const kMXAPIPrefixPathR0;
 
 /**
- A constant representing tthe URI path for as-yet unspecified of the Client-Server HTTP API.
+ A constant representing the URI path for as-yet unspecified of the Client-Server HTTP API.
  */
 FOUNDATION_EXPORT NSString *const kMXAPIPrefixPathUnstable;
 
@@ -87,7 +90,7 @@ FOUNDATION_EXPORT NSString *const kMXMembersOfRoomParametersNotMembership;
 @interface MXRestClient : NSObject
 
 /**
- The homeserver.
+ The homeserver URL.
  */
 @property (nonatomic, readonly) NSString *homeserver;
 
@@ -114,11 +117,24 @@ FOUNDATION_EXPORT NSString *const kMXMembersOfRoomParametersNotMembership;
 @property (nonatomic) NSString *contentPathPrefix;
 
 /**
- The identity server.
+ The identity server URL.
  By default, it points to the defined home server. If needed, change it by setting
  this property.
  */
 @property (nonatomic) NSString *identityServer;
+
+/**
+ The antivirus server URL (nil by default).
+ Set a non-null url to enable the antivirus scanner use.
+ */
+@property (nonatomic) NSString *antivirusServer;
+
+/**
+ The Client-Server API prefix to use for the antivirus server
+ By default, it is defined by the constant kMXAntivirusAPIPrefixPathUnstable.
+ In case of a custom path prefix use, set it before settings the antivirus server url.
+ */
+@property (nonatomic) NSString *antivirusServerPathPrefix;
 
 /**
  The current trusted certificate (if any).
@@ -1819,12 +1835,69 @@ FOUNDATION_EXPORT NSString *const kMXMembersOfRoomParametersNotMembership;
                     success:(void (^)(NSDictionary *thirdPartySigned))success
                     failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
+
+#pragma mark - Antivirus server API
+
+/**
+ Get the current public curve25519 key that the antivirus server is advertising.
+ 
+ @param success A block object called when the operation succeeds. It provides the antivirus public key.
+ @param failure A block object called when the operation fails.
+ 
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)getAntivirusServerPublicKey:(void (^)(NSString *publicKey))success
+                                        failure:(void (^)(NSError *error))failure;
+
+/**
+ Scan an unencrypted content.
+ 
+ @param mxcContentURI the Matrix content URI to scan (in the form of "mxc://...").
+ @param success A block object called when the operation succeeds. It provides the scan result.
+ @param failure A block object called when the operation fails.
+ 
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)scanUnencryptedContent:(NSString*)mxcContentURI
+                                   success:(void (^)(MXContentScanResult *scanResult))success
+                                   failure:(void (^)(NSError *error))failure;
+
+/**
+ Scan an encrypted content.
+ 
+ @param encryptedContentFile the information of the encrypted content
+ @param success A block object called when the operation succeeds. It provides the scan result.
+ @param failure A block object called when the operation fails.
+ 
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)scanEncryptedContent:(MXEncryptedContentFile*)encryptedContentFile
+                                   success:(void (^)(MXContentScanResult *scanResult))success
+                                   failure:(void (^)(NSError *error))failure;
+
+/**
+ Scan an encrypted content by sending an encrypted body (produced by considering the antivirus
+ server public key).
+
+ @param encryptedbody the encrypted data used to
+ @param success A block object called when the operation succeeds. It provides the scan result.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)scanEncryptedContentWithSecureExchange:(MXContentScanEncryptedBody *)encryptedbody
+                                                   success:(void (^)(MXContentScanResult *scanResult))success
+                                                   failure:(void (^)(NSError *error))failure;
+
+
+#pragma mark - Certificates
 /**
  Set the certificates used to evaluate server trust according to the SSL pinning mode.
 
  @param pinnedCertificates the pinned certificates.
  */
 -(void)setPinnedCertificates:(NSSet <NSData *> *)pinnedCertificates;
+
 
 #pragma mark - VoIP API
 /**
@@ -2000,6 +2073,186 @@ FOUNDATION_EXPORT NSString *const kMXMembersOfRoomParametersNotMembership;
                            failure:(void (^)(NSError *error))failure;
 
 
+#pragma mark - Crypto: e2e keys backup
+
+/**
+ Create a new backup version.
+
+ @param keyBackupVersion backup information.
+
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)createKeyBackupVersion:(MXKeyBackupVersion*)keyBackupVersion
+                                   success:(void (^)(NSString *version))success
+                                   failure:(void (^)(NSError *error))failure;
+
+/**
+ Get information about the current version.
+
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)keyBackupVersion:(void (^)(MXKeyBackupVersion *keyBackupVersion))success
+                             failure:(void (^)(NSError *error))failure;
+
+/**
+ Back up a session key to the homeserver.
+
+ @param keyBackupData the key to backup.
+ @param roomId the id of the room that the keys are for.
+ @param sessionId the id of the session that the keys are.
+ @param version the backup version.
+
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)sendKeyBackup:(MXKeyBackupData*)keyBackupData
+                             room:(NSString*)roomId
+                          session:(NSString*)sessionId
+                          version:(NSString*)version
+                          success:(void (^)(void))success
+                          failure:(void (^)(NSError *error))failure;
+
+/**
+ Back up keys in a room to the homeserver.
+
+ @param roomKeysBackupData keys to backup.
+ @param roomId the id of the room that the keys are for.
+ @param version the backup version.
+
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)sendRoomKeysBackup:(MXRoomKeysBackupData*)roomKeysBackupData
+                                  room:(NSString*)roomId
+                               version:(NSString*)version
+                               success:(void (^)(void))success
+                               failure:(void (^)(NSError *error))failure;
+
+/**
+ Back up keys to the homeserver.
+
+ @param keysBackupData keys to backup.
+ @param version the backup version.
+
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)sendKeysBackup:(MXKeysBackupData*)keysBackupData
+                           version:(NSString*)version
+                           success:(void (^)(void))success
+                           failure:(void (^)(NSError *error))failure;
+
+/**
+ Retrieve the backup for a session key from the homeserver.
+
+ @param sessionId the id of the session that the keys are.
+ @param roomId the id of the room that the keys are for.
+ @param version the backup version.
+
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)keyBackupForSession:(NSString*)sessionId
+                                 inRoom:(NSString*)roomId
+                                version:(NSString*)version
+                                success:(void (^)(MXKeyBackupData *keyBackupData))success
+                                failure:(void (^)(NSError *error))failure;
+
+/**
+ Retrieve the backup for all keys in a room from the homeserver.
+
+ @param roomId the id of the room that the keys are for.
+ @param version the backup version.
+
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)keysBackupInRoom:(NSString*)roomId
+                             version:(NSString*)version
+                             success:(void (^)(MXRoomKeysBackupData *roomKeysBackupData))success
+                             failure:(void (^)(NSError *error))failure;
+
+/**
+ Retrieve all keys backup from the homeserver.
+
+ @param version the backup version.
+
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)keysBackup:(NSString*)version
+                       success:(void (^)(MXKeysBackupData *keysBackupData))success
+                       failure:(void (^)(NSError *error))failure;
+
+/**
+ Delete the backup for a session key from the homeserver.
+
+ @param roomId the id of the room that the keys are for.
+ @param sessionId the id of the session that the keys are.
+ @param version the backup version.
+
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)deleteKeyFromBackup:(NSString*)roomId
+                                session:(NSString*)sessionId
+                                version:(NSString*)version
+                                success:(void (^)(void))success
+                                failure:(void (^)(NSError *error))failure;
+
+/**
+ Delete the backup for all keys in a room from the homeserver.
+
+ @param roomKeysBackupData keys to backup.
+ @param roomId the id of the room that the keys are for.
+ @param version the backup version.
+
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)deleteKeysInRoomFromBackup:(NSString*)roomId
+                                       version:(NSString*)version
+                                       success:(void (^)(void))success
+                                       failure:(void (^)(NSError *error))failure;
+
+/**
+ Delete all keys backup from the homeserver.
+
+ @param keysBackupData keys to backup.
+ @param version the backup version.
+
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)deleteKeysFromBackup:(NSString*)version
+                                 success:(void (^)(void))success
+                                 failure:(void (^)(NSError *error))failure;
+
+
 #pragma mark - Direct-to-device messaging
 /**
  Send an event to a specific list of devices
@@ -2017,6 +2270,7 @@ FOUNDATION_EXPORT NSString *const kMXMembersOfRoomParametersNotMembership;
                            txnId:(NSString*)txnId
                          success:(void (^)(void))success
                          failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
+
 
 #pragma mark - Device Management
 /**

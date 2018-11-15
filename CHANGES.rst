@@ -1,10 +1,12 @@
-Changes in Matrix iOS SDK in 0.11.x (2018-xx-xx)
+Changes in Matrix iOS SDK in 0.12.0 (2018-11-)
 ===============================================
 
 Improvements:
+ * MXCrypto: Add the MXKeyBackup module to manage e2e keys backup (vector-im/riot-ios#2070).
  * MXMediaManager/MXMediaLoader: Do not allow non-mxc content URLs.
  * MXMediaManager: Add a constructor based on a homeserver URL, to handle directly the Matrix Content URI (mxc://...).
  * MXSession: Add a MediaManager instance to handle the media stored on the Matrix Content repository.
+ * Tests: Make MXRealmCryptoStore work the first time tests are launched on simulators for iOS 11 and higher.
  
 Bug Fix:
  * MXRestClient: [avatarUrlForUser:success:failure]: the returned url is always nil.
@@ -37,6 +39,9 @@ Bug fix:
  * MXRoomSummaryUpdater: Fix minor issue in updateSummaryAvatar method.
  * Left room is still displayed as "Empty room" in rooms list (vector-im/riot-ios/issues/2082).
  * Reply of reply with unexpected newlines renders badly (vector-im/riot-ios/issues/2086).
+
+API break:
+* MXCrypto: importRoomKeys methods now return number of imported keys.
 
 Changes in Matrix iOS SDK in 0.11.5 (2018-10-05)
 ===============================================

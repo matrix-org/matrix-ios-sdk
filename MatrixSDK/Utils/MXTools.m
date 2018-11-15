@@ -271,6 +271,29 @@ static NSUInteger transactionIdCount;
     return string;
 }
 
++ (NSString*)addWhiteSpacesToString:(NSString *)inputString every:(NSUInteger)characters
+{
+    NSMutableString *whiteSpacedString = [NSMutableString new];
+    for (int i = 0; i < inputString.length / characters + 1; i++)
+    {
+        NSUInteger fromIndex = i * characters;
+        NSUInteger len = inputString.length - fromIndex;
+        if (len > characters)
+        {
+            len = characters;
+        }
+
+        NSString *whiteFormat = @"%@ ";
+        if (fromIndex + characters >= inputString.length)
+        {
+            whiteFormat = @"%@";
+        }
+        [whiteSpacedString appendFormat:whiteFormat, [inputString substringWithRange:NSMakeRange(fromIndex, len)]];
+    }
+
+    return whiteSpacedString;
+}
+
 
 #pragma mark - String kinds check
 

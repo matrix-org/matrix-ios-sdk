@@ -124,12 +124,11 @@ typedef enum : NSUInteger
 /**
  Find a device by curve25519 identity key
 
- @param userId the owner of the device.
  @param algorithm the encryption algorithm.
  @param senderKey the curve25519 key to match.
  @return the device info.
  */
-- (MXDeviceInfo*)deviceWithIdentityKey:(NSString*)senderKey forUser:(NSString*)userId andAlgorithm:(NSString*)algorithm;
+- (MXDeviceInfo*)deviceWithIdentityKey:(NSString*)senderKey andAlgorithm:(NSString*)algorithm;
 
 /**
  Flag the given user for device-list tracking, if they are not already.

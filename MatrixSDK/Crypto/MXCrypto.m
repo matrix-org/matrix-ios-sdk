@@ -246,6 +246,8 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
 
             [self->outgoingRoomKeyRequestManager start];
 
+            [self->_backup checkAndStartKeyBackup];
+
             dispatch_async(dispatch_get_main_queue(), ^{
                 self->startOperation = nil;
                 success();
@@ -713,7 +715,7 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
             MXStrongifyAndReturnIfNil(self);
 
             NSString *algorithm = event.wireContent[@"algorithm"];
-            device = [self.deviceList deviceWithIdentityKey:event.senderKey forUser:event.sender andAlgorithm:algorithm];
+            device = [self.deviceList deviceWithIdentityKey:event.senderKey andAlgorithm:algorithm];
 
         });
     }
@@ -741,10 +743,13 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
         if (!device)
         {
             NSLog(@"[MXCrypto] setDeviceVerificationForDevice: Unknown device %@:%@", userId, deviceId);
-            
-            dispatch_async(dispatch_get_main_queue(), ^{
-                success();
-            });
+
+            if (success)
+            {
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    success();
+                });
+            }
             return;
         }
 
@@ -752,6 +757,14 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
         {
             device.verified = verificationStatus;
             [self.store storeDeviceForUser:userId device:device];
+
+            if ([userId isEqualToString:self.mxSession.myUser.userId])
+            {
+                // If one of the user's own devices is being marked as verified / unverified,
+                // check the key backup status, since whether or not we use this depends on
+                // whether it has a signature from a verified device
+                [self.backup checkAndStartKeyBackup];
+            }
         }
 
         if (success)
@@ -1001,17 +1014,31 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
 #endif
 }
 
-- (void)importRoomKeys:(NSArray<NSDictionary *> *)keys success:(void (^)(void))success failure:(void (^)(NSError *))failure
+- (void)importRoomKeys:(NSArray<NSDictionary *> *)keys success:(void (^)(NSUInteger total, NSUInteger imported))success failure:(void (^)(NSError *))failure
 {
 #ifdef MX_CRYPTO
     dispatch_async(_decryptionQueue, ^{
 
         NSLog(@"[MXCrypto] importRoomKeys:");
 
-        NSDate *startDate = [NSDate date];
-
         // Convert JSON to MXMegolmSessionData
         NSArray<MXMegolmSessionData *> *sessionDatas = [MXMegolmSessionData modelsFromJSON:keys];
+
+        [self importMegolmSessionDatas:sessionDatas backUp:YES success:success failure:failure];
+    });
+#endif
+}
+
+- (void)importMegolmSessionDatas:(NSArray<MXMegolmSessionData*>*)sessionDatas backUp:(BOOL)backUp success:(void (^)(NSUInteger total, NSUInteger imported))success failure:(void (^)(NSError *error))failure
+{
+#ifdef MX_CRYPTO
+    dispatch_async(_decryptionQueue, ^{
+
+        NSLog(@"[MXCrypto] importMegolmSessionDatas: backUp: %@", @(backUp));
+
+        NSUInteger imported = 0;
+        NSUInteger totalKeyCount = sessionDatas.count;
+        NSDate *startDate = [NSDate date];
 
         for (MXMegolmSessionData *sessionData in sessionDatas)
         {
@@ -1025,16 +1052,19 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
 
             // Import the session
             id<MXDecrypting> alg = [self getRoomDecryptor:sessionData.roomId algorithm:sessionData.algorithm];
-            [alg importRoomKey:sessionData];
+            if ([alg importRoomKey:sessionData backUp:backUp])
+            {
+                imported++;
+            }
         }
 
-        NSLog(@"[MXCrypto] importRoomKeys: Imported %tu keys in %.0fms", keys.count, [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
+        NSLog(@"[MXCrypto] importMegolmSessionDatas: Imported %tu keys from %tu provided keys in %.0fms", imported, totalKeyCount, [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
 
         dispatch_async(dispatch_get_main_queue(), ^{
 
             if (success)
             {
-                success();
+                success(totalKeyCount, imported);
             }
 
         });
@@ -1042,7 +1072,7 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
 #endif
 }
 
-- (void)importRoomKeys:(NSData *)keyFile withPassword:(NSString *)password success:(void (^)(void))success failure:(void (^)(NSError *))failure
+- (void)importRoomKeys:(NSData *)keyFile withPassword:(NSString *)password success:(void (^)(NSUInteger total, NSUInteger imported))success failure:(void (^)(NSError *))failure
 {
 #ifdef MX_CRYPTO
     dispatch_async(_decryptionQueue, ^{
@@ -1058,13 +1088,13 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
             NSArray *keys = [NSJSONSerialization JSONObjectWithData:jsonData options:0 error:&error];
             if (keys)
             {
-                [self importRoomKeys:keys success:^{
+                [self importRoomKeys:keys success:^(NSUInteger total, NSUInteger imported) {
 
-                    NSLog(@"[MXCrypto] importRoomKeys:withPassord: Imported %tu keys in %.0fms", keys.count, [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
+                    NSLog(@"[MXCrypto] importRoomKeys:withPassord: Imported %tu keys from %tu provided keys in %.0fms", imported, total, [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
 
                     if (success)
                     {
-                        success();
+                        success(total, imported);
                     }
 
                 } failure:failure];
@@ -1080,9 +1110,7 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
             {
                 failure(error);
             }
-
         });
-
     });
 #endif
 }
@@ -1363,6 +1391,8 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
 
         oneTimeKeyCount = -1;
 
+        _backup = [[MXKeyBackup alloc] initWithMatrixSession:_mxSession];
+
         outgoingRoomKeyRequestManager = [[MXOutgoingRoomKeyRequestManager alloc]
                                          initWithMatrixRestClient:_matrixRestClient
                                          deviceId:myDevice.deviceId
@@ -1398,7 +1428,7 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
     // senderKey is the Curve25519 identity key of the device which the event
     // was sent from. In the case of Megolm, it's actually the Curve25519
     // identity key of the device which set up the Megolm session.
-    MXDeviceInfo *device = [_deviceList deviceWithIdentityKey:senderKey forUser:event.sender andAlgorithm:algorithm];
+    MXDeviceInfo *device = [_deviceList deviceWithIdentityKey:senderKey andAlgorithm:algorithm];
     if (!device)
     {
         // we haven't downloaded the details of this device yet.
@@ -1731,6 +1761,16 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
 
     return alg;
 }
+
+- (NSDictionary*)signObject:(NSDictionary*)object
+{
+    return @{
+             myDevice.userId: @{
+                     [NSString stringWithFormat:@"ed25519:%@", myDevice.deviceId]: [_olmDevice signJSON:object]
+                     }
+             };
+}
+
 
 #pragma mark - Key sharing
 - (void)requestRoomKey:(NSDictionary*)requestBody recipients:(NSArray<NSDictionary<NSString*, NSString*>*>*)recipients
@@ -2228,12 +2268,7 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
         // Sign each one-time key
         NSMutableDictionary *k = [NSMutableDictionary dictionary];
         k[@"key"] = oneTimeKeys[@"curve25519"][keyId];
-
-        k[@"signatures"] = @{
-                             myDevice.userId: @{
-                                     [NSString stringWithFormat:@"ed25519:%@", myDevice.deviceId]: [_olmDevice signJSON:k]
-                                     }
-                             };
+        k[@"signatures"] = [self signObject:k];
 
         oneTimeJson[[NSString stringWithFormat:@"signed_curve25519:%@", keyId]] = k;
     }

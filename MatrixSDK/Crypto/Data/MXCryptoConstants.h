@@ -27,6 +27,11 @@ FOUNDATION_EXPORT NSString *const kMXCryptoOlmAlgorithm;
  */
 FOUNDATION_EXPORT NSString *const kMXCryptoMegolmAlgorithm;
 
+/**
+ Matrix algorithm tag for megolm keys backup.
+ */
+FOUNDATION_EXPORT NSString *const kMXCryptoMegolmBackupAlgorithm;
+
 
 #pragma mark - Encrypting error
 
@@ -47,3 +52,13 @@ FOUNDATION_EXPORT NSString* const MXEncryptingErrorUnknownDeviceReason;
  */
 FOUNDATION_EXPORT NSString *const MXEncryptingErrorUnknownDeviceDevicesKey;
 
+
+#pragma mark - Backup error
+
+FOUNDATION_EXPORT NSString *const MXKeyBackupErrorDomain;
+
+typedef enum : NSUInteger
+{
+    MXKeyBackupErrorInvalidStateCode,
+    MXKeyBackupErrorInvalidParametersCode
+} MXKeyBackupErrorCode;
