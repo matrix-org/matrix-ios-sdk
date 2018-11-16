@@ -971,14 +971,8 @@ Common initial conditions:
 
             MXRoomSummary *roomSummary = [aliceSession roomSummaryWithRoomId:roomId];
 
-            if (lazyLoading)
-            {
-                XCTAssertNotNil(roomSummary.displayname, @"Thanks to the summary api, the SDK can build a room display name");
-            }
-            else
-            {
-                XCTAssertNil(roomSummary.displayname);
-            }
+            XCTAssertTrue(roomSummary.displayname.length
+                              && ![roomSummary.displayname isEqualToString:@"Empty room"], @"Unexpected null room name: %@", roomSummary.displayname);
 
             [expectation fulfill];
         }];
@@ -993,6 +987,79 @@ Common initial conditions:
 - (void)testRoomSummaryDisplayNameFromHeroesWithLazyLoadingOFF
 {
     [self checkRoomSummaryDisplayNameFromHeroesWithLazyLoading:NO];
+}
+
+
+// Check Synapse issue (https://github.com/matrix-org/synapse/issues/4194): the CS API should provide heroes if room name is ""
+// After the test scenario,
+// Remove the room name
+// -> The room name should be "Bob & 2 others"
+// Make alice do an initial sync
+// -> The room name should be "Bob & 2 others"
+- (void)checkRoomSummaryDisplayNameWhenNoMoreNameWithLazyLoading:(BOOL)lazyLoading
+{
+    // After the test scenario
+    [self createScenarioWithLazyLoading:lazyLoading inARoomWithName:YES readyToTest:^(MXSession *aliceSession, MXSession *bobSession, MXSession *charlieSession, NSString *roomId, XCTestExpectation *expectation) {
+
+        MXRoom *roomFromBobPOV = [bobSession roomWithRoomId:roomId];
+        [roomFromBobPOV setName:@"" success:^{
+
+            MXRoom *roomFromAlicePOV = [aliceSession roomWithRoomId:roomId];
+            [roomFromAlicePOV state:^(MXRoomState *roomState) {
+
+                // -> The room name should be "Bob & 2 others"
+                MXRoomSummary *roomSummary = [aliceSession roomSummaryWithRoomId:roomId];
+                XCTAssertTrue(roomSummary.displayname.length
+                              && ![roomSummary.displayname isEqualToString:@"Empty room"], @"Unexpected null room name: %@", roomSummary.displayname);
+
+
+                 // Make alice do an initial sync
+                MXSession *aliceSession2 = [[MXSession alloc] initWithMatrixRestClient:aliceSession.matrixRestClient];
+                [matrixSDKTestsData retain:aliceSession2];
+                [aliceSession close];
+
+                MXFilterJSONModel *filter;
+                if (lazyLoading)
+                {
+                    filter = [MXFilterJSONModel syncFilterForLazyLoading];
+                }
+                [aliceSession2 startWithSyncFilter:filter onServerSyncDone:^{
+
+                    MXRoom *room2 = [aliceSession2 roomWithRoomId:roomId];
+                    [room2 state:^(MXRoomState *roomState) {
+
+                        // -> The room name should be "Bob & 2 others"
+                        MXRoomSummary *roomSummary2 = [aliceSession2 roomSummaryWithRoomId:roomId];
+                        XCTAssertTrue(roomSummary2.displayname.length
+                                      && ![roomSummary2.displayname isEqualToString:@"Empty room"], @"Unexpected null room name: %@", roomSummary2.displayname);
+
+
+                        [expectation fulfill];
+                    }];
+
+                } failure:^(NSError *error) {
+                    XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                    [expectation fulfill];
+                }];
+
+            }];
+
+        } failure:^(NSError *error) {
+            XCTFail(@"The operation should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+
+    }];
+}
+
+- (void)testRoomSummaryDisplayNameWhenNoMoreName
+{
+    [self checkRoomSummaryDisplayNameWhenNoMoreNameWithLazyLoading:YES];
+}
+
+- (void)testRoomSummaryDisplayNameWhenNoMoreNameWithLazyLoadingOFF
+{
+    [self checkRoomSummaryDisplayNameWhenNoMoreNameWithLazyLoading:NO];
 }
 
 
