@@ -201,7 +201,7 @@ extern NSString *const kMXMediaUploadIdPrefix;
  Download data from the provided URL with optionally a dictionary of data to post.
  
  @param url remote media url.
- @param data (optional) a dictionary of data sent as as a JSON object in the message body.
+ @param data (optional) a dictionary of data sent as a JSON object in the message body.
  @param downloadId the download identifier.
  @param filePath output file in which downloaded media must be saved.
  @param success a block called when the operation succeeds.

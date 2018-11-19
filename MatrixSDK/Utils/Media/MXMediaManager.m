@@ -479,6 +479,7 @@ static MXLRUCache* imagesCacheLruCache = nil;
     if (!mediaURL)
     {
         NSLog(@"[MXMediaManager] downloadMediaFromMatrixContentURI: invalid media content URI");
+        if (failure) failure(nil);
         return nil;
     }
     
@@ -517,6 +518,7 @@ static MXLRUCache* imagesCacheLruCache = nil;
     if (!mediaURL)
     {
         NSLog(@"[MXMediaManager] downloadThumbnailFromMatrixContentURI: invalid media content URI");
+        if (failure) failure(nil);
         return nil;
     }
     
@@ -641,6 +643,7 @@ static MXLRUCache* imagesCacheLruCache = nil;
     if (!downloadMediaURL)
     {
         NSLog(@"[MXMediaManager] downloadEncryptedMediaFromMatrixContentFile: invalid media content URI");
+        if (failure) failure(nil);
         return nil;
     }
     
