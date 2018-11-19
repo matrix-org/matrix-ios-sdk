@@ -109,6 +109,16 @@ NSString *const kMXMediaUploadIdPrefix = @"upload-";
                      success:(blockMXMediaLoader_onSuccess)success
                      failure:(blockMXMediaLoader_onError)failure
 {
+    [self downloadMediaFromURL:url withData:nil identifier:downloadId andSaveAtFilePath:filePath success:success failure:failure];
+}
+
+- (void)downloadMediaFromURL:(NSString *)url
+                    withData:(NSDictionary *)data
+                  identifier:(NSString *)downloadId
+           andSaveAtFilePath:(NSString *)filePath
+                     success:(blockMXMediaLoader_onSuccess)success
+                     failure:(blockMXMediaLoader_onError)failure
+{
     // Report provided params
     _downloadMediaURL = url;
     _downloadId = downloadId;
@@ -123,7 +133,21 @@ NSString *const kMXMediaUploadIdPrefix = @"upload-";
     NSURL *nsURL = [NSURL URLWithString:url];
     downloadData = [[NSMutableData alloc] init];
     
-    downloadConnection = [[NSURLConnection alloc] initWithRequest:[NSURLRequest requestWithURL:nsURL] delegate:self];
+    if (data)
+    {
+        // Use an HTTP POST method to send this data as JSON object.
+        NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:nsURL];
+        request.HTTPMethod = @"POST";
+        [request setValue:@"application/json" forHTTPHeaderField:@"Content-Type"];
+        request.HTTPBody = [NSJSONSerialization dataWithJSONObject:data options:0 error:nil];
+        
+        downloadConnection = [[NSURLConnection alloc] initWithRequest:request delegate:self];
+    }
+    else
+    {
+        // Use a GET method by default
+        downloadConnection = [[NSURLConnection alloc] initWithRequest:[NSURLRequest requestWithURL:nsURL] delegate:self];
+    }
 }
 
 - (void)connection:(NSURLConnection *)connection didReceiveResponse:(NSURLResponse *)response

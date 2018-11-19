@@ -198,6 +198,23 @@ extern NSString *const kMXMediaUploadIdPrefix;
                      failure:(blockMXMediaLoader_onError)failure;
 
 /**
+ Download data from the provided URL with optionally a dictionary of data to post.
+ 
+ @param url remote media url.
+ @param data (optional) a dictionary of data sent as a JSON object in the message body.
+ @param downloadId the download identifier.
+ @param filePath output file in which downloaded media must be saved.
+ @param success a block called when the operation succeeds.
+ @param failure a block called when the operation fails.
+ */
+- (void)downloadMediaFromURL:(NSString *)url
+                    withData:(NSDictionary *)data
+                  identifier:(NSString *)downloadId
+           andSaveAtFilePath:(NSString *)filePath
+                     success:(blockMXMediaLoader_onSuccess)success
+                     failure:(blockMXMediaLoader_onError)failure;
+
+/**
  Initialise a media loader to upload data to a matrix content repository.
  Note: An upload could be a subpart of a global upload. For example, upload a video can be split in two parts :
  1 - upload the thumbnail -> initialRange = 0, range = 0.1 : assume that the thumbnail upload is 10% of the upload process

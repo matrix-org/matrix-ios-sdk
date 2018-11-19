@@ -1573,8 +1573,10 @@ typedef void (^MXOnResumeDone)(void);
     _antivirusServerURL = antivirusServerURL;
     // Update the current restClient
     [matrixRestClient setAntivirusServer:antivirusServerURL];
+    // Update the media manager
+    [mediaManager setAntivirusServerURL:antivirusServerURL];
     
-    // TODO: configure here a scan manager, and update the media manager.
+    // TODO: configure here a scan manager.
 }
 
 #pragma mark - Rooms operations

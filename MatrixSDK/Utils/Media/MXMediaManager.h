@@ -26,6 +26,7 @@
 #import <Cocoa/Cocoa.h>
 #endif
 
+@class MXEncryptedContentFile;
 
 /**
  The predefined folder for avatar thumbnail.
@@ -56,6 +57,18 @@ extern NSString *const kMXMediaManagerDefaultCacheFolder;
  The homeserver URL.
  */
 @property (nonatomic, readonly) NSString *homeserverURL;
+
+/**
+ The antivirus server URL (nil by default).
+ Set a non-null url to enable the antivirus server use.
+ */
+@property (nonatomic) NSString *antivirusServerURL;
+
+/**
+ The Client-Server API prefix to use for the antivirus server
+ By default, it is defined by the constant kMXAntivirusAPIPrefixPathUnstable.
+ */
+@property (nonatomic) NSString *antivirusServerPathPrefix;
 
 
 #pragma mark - File handling
@@ -251,6 +264,30 @@ extern NSString *const kMXMediaManagerDefaultCacheFolder;
                                              withMethod:(MXThumbnailingMethod)thumbnailingMethod
                                                 success:(void (^)(NSString *outputFilePath))success
                                                 failure:(void (^)(NSError *error))failure;
+
+/**
+ Download encrypted data from the Matrix Content repository.
+ 
+ @param encryptedContentFile the encrypted Matrix Content details.
+ @param folder the cache folder to use (may be nil). kMXMediaManagerDefaultCacheFolder is used by default.
+ @param success a block called when the download succeeds. This block gets the path of the resulting file.
+ @param failure a block called when the download fails
+ @return a media loader in order to let the user cancel this action.
+ */
+- (MXMediaLoader*)downloadEncryptedMediaFromMatrixContentFile:(MXEncryptedContentFile *)encryptedContentFile
+                                                     inFolder:(NSString *)folder
+                                                      success:(void (^)(NSString *outputFilePath))success
+                                                      failure:(void (^)(NSError *error))failure;
+
+/**
+ Download encrypted data from the Matrix Content repository.
+ 
+ @param encryptedContentFile the encrypted Matrix Content details.
+ @param folder the cache folder to use (may be nil). kMXMediaManagerDefaultCacheFolder is used by default.
+ @return a media loader in order to let the user cancel this action.
+ */
+- (MXMediaLoader*)downloadEncryptedMediaFromMatrixContentFile:(MXEncryptedContentFile *)encryptedContentFile
+                                                     inFolder:(NSString *)folder;
 
 /**
  Check whether a download is already running with a specific download identifier.

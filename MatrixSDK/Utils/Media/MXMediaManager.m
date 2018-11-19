@@ -22,6 +22,8 @@
 
 #import "MXMediaManager.h"
 
+#import "MXEncryptedContentFile.h"
+
 #import "MXSDKOptions.h"
 
 #import "MXLRUCache.h"
@@ -51,6 +53,8 @@ static NSUInteger storageCacheSize = 0;
     if (self)
     {
         _homeserverURL = homeserverURL;
+        _antivirusServerURL = nil;
+        _antivirusServerPathPrefix = kMXAntivirusAPIPrefixPathUnstable;
     }
     return self;
 }
@@ -75,6 +79,21 @@ static NSMutableDictionary* uploadTableById = nil;
         }
     }
     return sharedMediaManager;
+}
+
+#pragma mark - Antivirus server API
+
+- (void)setAntivirusServerURL:(NSString *)antivirusServerURL
+{
+    if (antivirusServerURL.length)
+    {
+        _antivirusServerURL = [antivirusServerURL copy];
+    }
+    else
+    {
+        // Disable antivirus use
+        _antivirusServerURL = nil;
+    }
 }
 
 #pragma mark - File handling
@@ -357,7 +376,18 @@ static MXLRUCache* imagesCacheLruCache = nil;
     // Replace the "mxc://" scheme by the absolute http location of the content
     if ([mxContentURI hasPrefix:kMXContentUriScheme])
     {
-        NSString *mxMediaPrefix = [NSString stringWithFormat:@"%@/%@/download/", _homeserverURL, kMXContentPrefixPath];
+        NSString *mxMediaPrefix;
+        
+        // Check whether an antivirus server is present
+        if (_antivirusServerURL)
+        {
+            mxMediaPrefix = [NSString stringWithFormat:@"%@/%@/download/", _antivirusServerURL, _antivirusServerPathPrefix];
+        }
+        else
+        {
+            mxMediaPrefix = [NSString stringWithFormat:@"%@/%@/download/", _homeserverURL, kMXContentPrefixPath];
+        }
+        
         contentURL = [mxContentURI stringByReplacingOccurrencesOfString:kMXContentUriScheme withString:mxMediaPrefix];
         
         // Remove the auto generated image tag from the URL
@@ -449,6 +479,7 @@ static MXLRUCache* imagesCacheLruCache = nil;
     if (!mediaURL)
     {
         NSLog(@"[MXMediaManager] downloadMediaFromMatrixContentURI: invalid media content URI");
+        if (failure) failure(nil);
         return nil;
     }
     
@@ -460,8 +491,9 @@ static MXLRUCache* imagesCacheLruCache = nil;
     
     // Create a media loader to download data
     return [MXMediaManager downloadMedia:mediaURL
-                          withIdentifier:downloadId
-                       andSaveAtFilePath:filePath
+                                withData:nil
+                           andIdentifier:downloadId
+                          saveAtFilePath:filePath
                                  success:success
                                  failure:failure];
 }
@@ -486,6 +518,7 @@ static MXLRUCache* imagesCacheLruCache = nil;
     if (!mediaURL)
     {
         NSLog(@"[MXMediaManager] downloadThumbnailFromMatrixContentURI: invalid media content URI");
+        if (failure) failure(nil);
         return nil;
     }
     
@@ -497,22 +530,24 @@ static MXLRUCache* imagesCacheLruCache = nil;
     
     // Create a media loader to download data
     return [MXMediaManager downloadMedia:mediaURL
-                          withIdentifier:downloadId
-                       andSaveAtFilePath:filePath
+                                withData:nil
+                           andIdentifier:downloadId
+                          saveAtFilePath:filePath
                                  success:success
                                  failure:failure];
 }
 
 // Private
 + (MXMediaLoader*)downloadMedia:(NSString *)mediaURL
-                 withIdentifier:(NSString *)downloadId
-              andSaveAtFilePath:(NSString *)filePath
+                       withData:(NSDictionary *)data
+                  andIdentifier:(NSString *)downloadId
+                 saveAtFilePath:(NSString *)filePath
                         success:(void (^)(NSString *outputFilePath))success
                         failure:(void (^)(NSError *error))failure
 {
     MXMediaLoader *mediaLoader;
     
-    // Check whether there is a loader for this filePath in downloadTable.
+    // Check whether there is a loader for this download id in downloadTable.
     mediaLoader = [MXMediaManager existingDownloaderWithIdentifier:downloadId];
     if (mediaLoader)
     {
@@ -560,9 +595,10 @@ static MXLRUCache* imagesCacheLruCache = nil;
         }
         [downloadTable setValue:mediaLoader forKey:downloadId];
         
-        // Launch download
+        // Launch the download
         [mediaLoader downloadMediaFromURL:mediaURL
-                           withIdentifier:downloadId
+                                 withData:data
+                               identifier:downloadId
                         andSaveAtFilePath:filePath
                                   success:^(NSString *outputFilePath) {
                                       
@@ -579,6 +615,60 @@ static MXLRUCache* imagesCacheLruCache = nil;
     }
     
     return mediaLoader;
+}
+
+- (MXMediaLoader*)downloadEncryptedMediaFromMatrixContentFile:(MXEncryptedContentFile *)encryptedContentFile
+                                                     inFolder:(NSString *)folder
+                                                      success:(void (^)(NSString *outputFilePath))success
+                                                      failure:(void (^)(NSError *error))failure
+{
+    // Check the provided mxc URI by resolving it into a download URL.
+    NSString *mxContentURI = encryptedContentFile.url;
+    NSString *downloadMediaURL;
+    NSDictionary *dataToPost;
+    
+    // Check whether an antivirus is present.
+    if (_antivirusServerURL && [mxContentURI hasPrefix:kMXContentUriScheme])
+    {
+        // In this case, the same URL is used to download all the encrypted content.
+        // The encrypted content file is sent in the request body.
+        downloadMediaURL = [NSString stringWithFormat:@"%@/%@/download_encrypted", _antivirusServerURL, _antivirusServerPathPrefix];
+        dataToPost = @{@"file": encryptedContentFile.JSONDictionary};
+    }
+    else
+    {
+        downloadMediaURL = [self urlOfContent:mxContentURI];
+    }
+    
+    if (!downloadMediaURL)
+    {
+        NSLog(@"[MXMediaManager] downloadEncryptedMediaFromMatrixContentFile: invalid media content URI");
+        if (failure) failure(nil);
+        return nil;
+    }
+    
+    // Build the outpout file path from mxContentURI, and other inputs.
+    NSString *filePath = [MXMediaManager cachePathForMatrixContentURI:mxContentURI
+                                                              andType:encryptedContentFile.mimetype
+                                                             inFolder:folder];
+    
+    // Build the download id from mxContentURI.
+    NSString *downloadId = [MXMediaManager downloadIdForMatrixContentURI:mxContentURI
+                                                                inFolder:folder];
+    
+    // Create a media loader to download data
+    return [MXMediaManager downloadMedia:downloadMediaURL
+                                withData:dataToPost
+                           andIdentifier:downloadId
+                          saveAtFilePath:filePath
+                                 success:success
+                                 failure:failure];
+}
+
+- (MXMediaLoader*)downloadEncryptedMediaFromMatrixContentFile:(MXEncryptedContentFile *)encryptedContentFile
+                                                     inFolder:(NSString *)folder
+{
+    return [self downloadEncryptedMediaFromMatrixContentFile:encryptedContentFile inFolder:folder success:nil failure:nil];
 }
 
 + (MXMediaLoader*)existingDownloaderWithIdentifier:(NSString *)downloadId
