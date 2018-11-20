@@ -3506,6 +3506,8 @@ MXAuthAction;
     if (![mxcContentURI hasPrefix:kMXContentUriScheme])
     {
         // do not scan non-mxc content URLs
+        NSError* error = [NSError errorWithDomain:@"Invalid content URI" code:500 userInfo:nil];
+        failure(error);
         return nil;
     }
     
