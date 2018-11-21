@@ -9,6 +9,7 @@ Improvements:
  * MXMediaManager: Support the media download from a Matrix Content Scanner (Antivirus Server).
  * Swift: Add explicit public initializer to MX3PID struct, thanks to @tladesignz (PR #594).
  * Tests: Make MXRealmCryptoStore work the first time tests are launched on simulators for iOS 11 and higher.
+ * Add MXScanManager a media antivirus scanner (PR#600).
  
 Bug Fix:
  * MXRestClient: [avatarUrlForUser:success:failure]: the returned url is always nil, thanks to @asydorov (PR #580) and @giomfo.
