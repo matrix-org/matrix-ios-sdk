@@ -270,6 +270,8 @@
 		B146D48021A59E2400D8C2C6 /* MXEventScan.m in Sources */ = {isa = PBXBuildFile; fileRef = B146D47E21A59E2300D8C2C6 /* MXEventScan.m */; };
 		B146D49C21A5A04300D8C2C6 /* MXMediaScanStoreDelegate.h in Headers */ = {isa = PBXBuildFile; fileRef = B146D48321A5A04200D8C2C6 /* MXMediaScanStoreDelegate.h */; };
 		B146D4AF21A5A04300D8C2C6 /* MXMediaScanStore.h in Headers */ = {isa = PBXBuildFile; fileRef = B146D49A21A5A04200D8C2C6 /* MXMediaScanStore.h */; };
+		B146D4B221A5A21800D8C2C6 /* MXEventScanStore.h in Headers */ = {isa = PBXBuildFile; fileRef = B146D4B021A5A21700D8C2C6 /* MXEventScanStore.h */; };
+		B146D4B321A5A21800D8C2C6 /* MXEventScanStoreDelegate.h in Headers */ = {isa = PBXBuildFile; fileRef = B146D4B121A5A21800D8C2C6 /* MXEventScanStoreDelegate.h */; };
 		B17285792100C8EA0052C51E /* MXSendReplyEventStringsLocalizable.h in Headers */ = {isa = PBXBuildFile; fileRef = B17285782100C88A0052C51E /* MXSendReplyEventStringsLocalizable.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		B172857C2100D4F60052C51E /* MXSendReplyEventDefaultStringLocalizations.h in Headers */ = {isa = PBXBuildFile; fileRef = B172857A2100D4F60052C51E /* MXSendReplyEventDefaultStringLocalizations.h */; };
 		B172857D2100D4F60052C51E /* MXSendReplyEventDefaultStringLocalizations.m in Sources */ = {isa = PBXBuildFile; fileRef = B172857B2100D4F60052C51E /* MXSendReplyEventDefaultStringLocalizations.m */; };
@@ -617,6 +619,8 @@
 		B146D47E21A59E2300D8C2C6 /* MXEventScan.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXEventScan.m; sourceTree = "<group>"; };
 		B146D48321A5A04200D8C2C6 /* MXMediaScanStoreDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXMediaScanStoreDelegate.h; sourceTree = "<group>"; };
 		B146D49A21A5A04200D8C2C6 /* MXMediaScanStore.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXMediaScanStore.h; sourceTree = "<group>"; };
+		B146D4B021A5A21700D8C2C6 /* MXEventScanStore.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXEventScanStore.h; sourceTree = "<group>"; };
+		B146D4B121A5A21800D8C2C6 /* MXEventScanStoreDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXEventScanStoreDelegate.h; sourceTree = "<group>"; };
 		B17285782100C88A0052C51E /* MXSendReplyEventStringsLocalizable.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MXSendReplyEventStringsLocalizable.h; sourceTree = "<group>"; };
 		B172857A2100D4F60052C51E /* MXSendReplyEventDefaultStringLocalizations.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MXSendReplyEventDefaultStringLocalizations.h; sourceTree = "<group>"; };
 		B172857B2100D4F60052C51E /* MXSendReplyEventDefaultStringLocalizations.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MXSendReplyEventDefaultStringLocalizations.m; sourceTree = "<group>"; };
@@ -1316,6 +1320,8 @@
 			children = (
 				B146D49A21A5A04200D8C2C6 /* MXMediaScanStore.h */,
 				B146D48321A5A04200D8C2C6 /* MXMediaScanStoreDelegate.h */,
+				B146D4B021A5A21700D8C2C6 /* MXEventScanStore.h */,
+				B146D4B121A5A21800D8C2C6 /* MXEventScanStoreDelegate.h */,
 			);
 			path = Store;
 			sourceTree = "<group>";
@@ -1485,6 +1491,7 @@
 				3265CB381A14C43E00E24B2F /* MXRoomState.h in Headers */,
 				3283F7781EAF30F700C1688C /* MXBugReportRestClient.h in Headers */,
 				B17982F82119E4A2001FD722 /* MXRoomPowerLevels.h in Headers */,
+				B146D4B321A5A21800D8C2C6 /* MXEventScanStoreDelegate.h in Headers */,
 				32DC15D41A8CF874006F9AD3 /* MXPushRuleEventMatchConditionChecker.h in Headers */,
 				32A151261DABB0CB00400192 /* MXMegolmDecryption.h in Headers */,
 				3220094519EFBF30008DE41D /* MXSessionEventListener.h in Headers */,
@@ -1498,6 +1505,7 @@
 				329FB1751A0A3A1600A5E88E /* MXRoomMember.h in Headers */,
 				320DFDE019DD99B60068622A /* MXSession.h in Headers */,
 				324095221AFA432F00D81C97 /* MXCallStackCall.h in Headers */,
+				B146D4B221A5A21800D8C2C6 /* MXEventScanStore.h in Headers */,
 				B17982F92119E4A2001FD722 /* MXRoomTombStoneContent.h in Headers */,
 				32A31BBE20D3F2EC005916C7 /* MXFilterObject.h in Headers */,
 				F082946D1DB66C3D00CEAB63 /* MXInvite3PID.h in Headers */,
