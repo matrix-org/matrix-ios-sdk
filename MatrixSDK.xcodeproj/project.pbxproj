@@ -285,6 +285,10 @@
 		B146D4F021A5AF7F00D8C2C6 /* MXRealmEventScanMapper.h in Headers */ = {isa = PBXBuildFile; fileRef = B146D4EA21A5AF7F00D8C2C6 /* MXRealmEventScanMapper.h */; };
 		B146D4F221A5AF7F00D8C2C6 /* MXRealmEventScanMapper.m in Sources */ = {isa = PBXBuildFile; fileRef = B146D4EC21A5AF7F00D8C2C6 /* MXRealmEventScanMapper.m */; };
 		B146D4F321A5AF7F00D8C2C6 /* MXRealmEventScan.m in Sources */ = {isa = PBXBuildFile; fileRef = B146D4ED21A5AF7F00D8C2C6 /* MXRealmEventScan.m */; };
+		B146D4F621A5BB9F00D8C2C6 /* MXRealmMediaScanStore.h in Headers */ = {isa = PBXBuildFile; fileRef = B146D4F421A5BB9F00D8C2C6 /* MXRealmMediaScanStore.h */; };
+		B146D4F721A5BB9F00D8C2C6 /* MXRealmMediaScanStore.m in Sources */ = {isa = PBXBuildFile; fileRef = B146D4F521A5BB9F00D8C2C6 /* MXRealmMediaScanStore.m */; };
+		B146D4FA21A5BF7200D8C2C6 /* MXRealmEventScanStore.h in Headers */ = {isa = PBXBuildFile; fileRef = B146D4F821A5BF7100D8C2C6 /* MXRealmEventScanStore.h */; };
+		B146D4FB21A5BF7200D8C2C6 /* MXRealmEventScanStore.m in Sources */ = {isa = PBXBuildFile; fileRef = B146D4F921A5BF7100D8C2C6 /* MXRealmEventScanStore.m */; };
 		B17285792100C8EA0052C51E /* MXSendReplyEventStringsLocalizable.h in Headers */ = {isa = PBXBuildFile; fileRef = B17285782100C88A0052C51E /* MXSendReplyEventStringsLocalizable.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		B172857C2100D4F60052C51E /* MXSendReplyEventDefaultStringLocalizations.h in Headers */ = {isa = PBXBuildFile; fileRef = B172857A2100D4F60052C51E /* MXSendReplyEventDefaultStringLocalizations.h */; };
 		B172857D2100D4F60052C51E /* MXSendReplyEventDefaultStringLocalizations.m in Sources */ = {isa = PBXBuildFile; fileRef = B172857B2100D4F60052C51E /* MXSendReplyEventDefaultStringLocalizations.m */; };
@@ -647,6 +651,10 @@
 		B146D4EA21A5AF7F00D8C2C6 /* MXRealmEventScanMapper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXRealmEventScanMapper.h; sourceTree = "<group>"; };
 		B146D4EC21A5AF7F00D8C2C6 /* MXRealmEventScanMapper.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXRealmEventScanMapper.m; sourceTree = "<group>"; };
 		B146D4ED21A5AF7F00D8C2C6 /* MXRealmEventScan.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXRealmEventScan.m; sourceTree = "<group>"; };
+		B146D4F421A5BB9F00D8C2C6 /* MXRealmMediaScanStore.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXRealmMediaScanStore.h; sourceTree = "<group>"; };
+		B146D4F521A5BB9F00D8C2C6 /* MXRealmMediaScanStore.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXRealmMediaScanStore.m; sourceTree = "<group>"; };
+		B146D4F821A5BF7100D8C2C6 /* MXRealmEventScanStore.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXRealmEventScanStore.h; sourceTree = "<group>"; };
+		B146D4F921A5BF7100D8C2C6 /* MXRealmEventScanStore.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXRealmEventScanStore.m; sourceTree = "<group>"; };
 		B17285782100C88A0052C51E /* MXSendReplyEventStringsLocalizable.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MXSendReplyEventStringsLocalizable.h; sourceTree = "<group>"; };
 		B172857A2100D4F60052C51E /* MXSendReplyEventDefaultStringLocalizations.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MXSendReplyEventDefaultStringLocalizations.h; sourceTree = "<group>"; };
 		B172857B2100D4F60052C51E /* MXSendReplyEventDefaultStringLocalizations.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MXSendReplyEventDefaultStringLocalizations.m; sourceTree = "<group>"; };
@@ -1382,6 +1390,8 @@
 				B146D4DD21A5AEF100D8C2C6 /* MXRealmMediaScan.m */,
 				B146D4DB21A5AEF100D8C2C6 /* MXRealmMediaScanMapper.h */,
 				B146D4DE21A5AEF100D8C2C6 /* MXRealmMediaScanMapper.m */,
+				B146D4F421A5BB9F00D8C2C6 /* MXRealmMediaScanStore.h */,
+				B146D4F521A5BB9F00D8C2C6 /* MXRealmMediaScanStore.m */,
 			);
 			path = Media;
 			sourceTree = "<group>";
@@ -1393,6 +1403,8 @@
 				B146D4ED21A5AF7F00D8C2C6 /* MXRealmEventScan.m */,
 				B146D4EA21A5AF7F00D8C2C6 /* MXRealmEventScanMapper.h */,
 				B146D4EC21A5AF7F00D8C2C6 /* MXRealmEventScanMapper.m */,
+				B146D4F821A5BF7100D8C2C6 /* MXRealmEventScanStore.h */,
+				B146D4F921A5BF7100D8C2C6 /* MXRealmEventScanStore.m */,
 			);
 			path = Event;
 			sourceTree = "<group>";
@@ -1509,6 +1521,7 @@
 				C6FE1EF01E65C4F7008587E4 /* MXAnalyticsDelegate.h in Headers */,
 				92634B7F1EF2A37A00DB9F60 /* MXCallAudioSessionConfigurator.h in Headers */,
 				323F8864212D4E470001C73C /* MXMatrixVersions.h in Headers */,
+				B146D4FA21A5BF7200D8C2C6 /* MXRealmEventScanStore.h in Headers */,
 				3291D4D41A68FFEB00C3BA41 /* MXFileRoomStore.h in Headers */,
 				320BBF431D6C81550079890E /* MXEventsEnumeratorOnArray.h in Headers */,
 				32B76EA320FDE2BE00B095F6 /* MXRoomMembersCount.h in Headers */,
@@ -1587,6 +1600,7 @@
 				32A31BBE20D3F2EC005916C7 /* MXFilterObject.h in Headers */,
 				F082946D1DB66C3D00CEAB63 /* MXInvite3PID.h in Headers */,
 				3233606F1A403A0D0071A488 /* MXFileStore.h in Headers */,
+				B146D4F621A5BB9F00D8C2C6 /* MXRealmMediaScanStore.h in Headers */,
 				32A1513E1DAF768D00400192 /* MXOlmInboundGroupSession.h in Headers */,
 				328BCB3321947BE200A976D3 /* MXKeyBackupVersionTrust.h in Headers */,
 				32FA10C11FA1C9EE00E54233 /* MXOutgoingRoomKeyRequestManager.h in Headers */,
@@ -1762,6 +1776,7 @@
 			files = (
 				32A1513F1DAF768D00400192 /* MXOlmInboundGroupSession.m in Sources */,
 				32481A851C03572900782AD3 /* MXRoomAccountData.m in Sources */,
+				B146D4FB21A5BF7200D8C2C6 /* MXRealmEventScanStore.m in Sources */,
 				B146D4D921A5A44E00D8C2C6 /* MXScanRealmFileProvider.m in Sources */,
 				F082946E1DB66C3D00CEAB63 /* MXInvite3PID.m in Sources */,
 				322360531A8E610500A3CA81 /* MXPushRuleDisplayNameCondtionChecker.m in Sources */,
@@ -1887,6 +1902,7 @@
 				32637ED51E5B00400011E20D /* MXDeviceList.m in Sources */,
 				B17982FA2119E4A2001FD722 /* MXRoomCreateContent.m in Sources */,
 				32A9E8261EF4026E0081358A /* MXUIKitBackgroundModeHandler.m in Sources */,
+				B146D4F721A5BB9F00D8C2C6 /* MXRealmMediaScanStore.m in Sources */,
 				322A51C81D9BBD3C00C8536D /* MXOlmDevice.m in Sources */,
 				329FB17A1A0A74B100A5E88E /* MXTools.m in Sources */,
 				329D3E631E251027002E2F1E /* MXRoomSummaryUpdater.m in Sources */,
