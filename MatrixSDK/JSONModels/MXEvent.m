@@ -19,6 +19,7 @@
 
 #import "MXTools.h"
 #import "MXEventDecryptionResult.h"
+#import "MXEncryptedContentFile.h"
 
 #pragma mark - Constants definitions
 
@@ -521,6 +522,123 @@ NSString *const kMXEventIdentifierKey = @"kMXEventIdentifierKey";
     return result;
 }
 
+- (NSArray<NSString*>*)getMediaURLs
+{
+    NSMutableArray<NSString*> *mediaURLs = [NSMutableArray new];
+    
+    if ([self.type isEqualToString:kMXEventTypeStringRoomMessage])
+    {
+        NSString *messageType = self.content[@"msgtype"];
+        
+        if ([messageType isEqualToString:kMXMessageTypeImage] || [messageType isEqualToString:kMXMessageTypeVideo])
+        {
+            NSString *mediaURL;
+            NSString *mediaThumbnailURL;
+            
+            if (self.isEncrypted)
+            {
+                mediaURL = self.content[@"file"][@"url"];
+                
+                NSDictionary *thubmnailFile = self.content[@"info"][@"thumbnail_file"];
+                
+                if (thubmnailFile)
+                {
+                    mediaThumbnailURL = thubmnailFile[@"url"];
+                }
+            }
+            else
+            {
+                mediaURL = self.content[@"url"];
+                mediaThumbnailURL = self.content[@"info"][@"thumbnail_url"];
+            }
+            
+            if (mediaURL)
+            {
+                [mediaURLs addObject:mediaURL];
+            }
+            
+            if (mediaThumbnailURL)
+            {
+                [mediaURLs addObject:mediaThumbnailURL];
+            }
+        }
+        else if ([messageType isEqualToString:kMXMessageTypeLocation])
+        {
+            NSString *mediaThumbnailURL;
+            
+            if (self.isEncrypted)
+            {
+                mediaThumbnailURL = self.content[@"file"][@"thumbnail_url"];
+            }
+            else
+            {
+                mediaThumbnailURL = self.content[@"thumbnail_url"];
+            }
+            
+            if (mediaThumbnailURL)
+            {
+                [mediaURLs addObject:mediaThumbnailURL];
+            }
+        }
+        else if ([messageType isEqualToString:kMXMessageTypeFile] || [messageType isEqualToString:kMXMessageTypeAudio])
+        {
+            NSString *mediaURL;
+            
+            if (self.isEncrypted)
+            {
+                mediaURL = self.content[@"file"][@"url"];
+            }
+            else
+            {
+                mediaURL = self.content[@"url"];
+            }
+            
+            if (mediaURL)
+            {
+                [mediaURLs addObject:mediaURL];
+            }
+        }
+    }
+    else if ([self.type isEqualToString:kMXEventTypeStringSticker])
+    {
+        NSString *mediaURL;
+        NSString *mediaThumbnailURL;
+        
+        if (self.isEncrypted)
+        {
+            mediaURL = self.content[@"file"][@"url"];
+            
+            NSDictionary *thubmnailFile = self.content[@"info"][@"thumbnail_file"];
+            
+            if (thubmnailFile)
+            {
+                mediaThumbnailURL = thubmnailFile[@"url"];
+            }
+        }
+        else
+        {
+            mediaURL = self.content[@"url"];
+            mediaThumbnailURL = self.content[@"info"][@"thumbnail_url"];
+        }
+        
+        if (mediaURL)
+        {
+            [mediaURLs addObject:mediaURL];
+        }
+        
+        if (mediaThumbnailURL)
+        {
+            [mediaURLs addObject:mediaThumbnailURL];
+        }
+    }
+    
+    return mediaURLs;
+}
+
+- (BOOL)isContentScannable
+{
+    return [self getMediaURLs].count != 0;
+}
 
 #pragma mark - Crypto
 - (BOOL)isEncrypted
@@ -622,7 +740,29 @@ NSString *const kMXEventIdentifierKey = @"kMXEventIdentifierKey";
     }
 }
 
+- (MXEncryptedContentFile*)getEncryptedThumbnaileFile
+{
+    MXEncryptedContentFile *encryptedContentFile;
+    
+    NSDictionary *contentInfo;
+    MXJSONModelSetDictionary(contentInfo, self.content[@"info"]);
+    
+    if (contentInfo)
+    {
+        MXJSONModelSetMXJSONModel(encryptedContentFile, MXEncryptedContentFile, contentInfo[@"thumbnail_file"]);
+    }
+    
+    return encryptedContentFile;
+}
 
+- (MXEncryptedContentFile*)getEncryptedContentFile
+{
+    MXEncryptedContentFile *encryptedContentFile;
+    
+    MXJSONModelSetMXJSONModel(encryptedContentFile, MXEncryptedContentFile, self.content[@"file"]);
+    
+    return encryptedContentFile;
+}
 
 #pragma mark - private
 - (NSMutableDictionary*)filterInEventWithKeys:(NSArray*)keys
