@@ -40,6 +40,8 @@
 
 #import "MXRoomFilter.h"
 
+#import "MXScanManager.h"
+
 #pragma mark - Constants definitions
 
 const NSString *MatrixSDKVersion = @"0.11.6";
@@ -169,6 +171,8 @@ typedef void (^MXOnResumeDone)(void);
  The count of prevent pause tokens.
  */
 @property (nonatomic) NSUInteger preventPauseCount;
+
+@property (nonatomic, readwrite) MXScanManager *scanManager;
 
 @end
 
@@ -1576,7 +1580,9 @@ typedef void (^MXOnResumeDone)(void);
     // Update the media manager
     [mediaManager setAntivirusServerURL:antivirusServerURL];
     
-    // TODO: configure here a scan manager.
+    // Configure scan manager
+    _scanManager = [[MXScanManager alloc] initWithRestClient:matrixRestClient];
+    [_scanManager resetAllAntivirusScanStatusInProgressToUnknown];
 }
 
 #pragma mark - Rooms operations
