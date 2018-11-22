@@ -144,7 +144,7 @@ static const char * const kProcessingQueueName = "org.MatrixSDK.MXScanManager";
 
 - (void)scanEvent:(nonnull MXEvent*)event completion:(void (^ _Nullable)(MXEventScan* _Nullable eventScan, BOOL eventScanDidSucceed))completion
 {
-    MXEvent *eventCopy = [MXEvent modelFromJSON:event.JSONDictionary];
+    MXEvent *eventCopy = [event copy];
     
     [self dispatchProcessing:^{
         NSString *eventId = eventCopy.eventId;
@@ -231,11 +231,11 @@ static const char * const kProcessingQueueName = "org.MatrixSDK.MXScanManager";
             
             if (!eventScan)
             {
-                [self.eventScanStore createOrUpdateWithId:eventId initialAntivirusStatus:MXAntivirusScanStatusInProgress andMediaURLs:mediaURLs];
+                [self.eventScanStore createOrUpdateWithId:eventId initialAntivirusStatus:antivirusScanStatus andMediaURLs:mediaURLs];
             }
             else
             {
-                [self.eventScanStore updateAntivirusScanStatus:MXAntivirusScanStatusInProgress forId:eventId];
+                [self.eventScanStore updateAntivirusScanStatus:antivirusScanStatus forId:eventId];
             }
             
             if (antivirusScanStatus == MXAntivirusScanStatusTrusted)
