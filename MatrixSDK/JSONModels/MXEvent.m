@@ -874,4 +874,18 @@ NSString *const kMXEventIdentifierKey = @"kMXEventIdentifierKey";
     }
 }
 
+#pragma mark - NSCopying
+
+- (id)copyWithZone:(NSZone *)zone
+{
+    MXEvent *event = [MXEvent modelFromJSON:self.JSONDictionary];
+    
+    if (self.isEncrypted && self.clearEvent.JSONDictionary)
+    {
+        event->_clearEvent = [MXEvent modelFromJSON:self.clearEvent.JSONDictionary];
+    }
+    
+    return event;
+}
+
 @end
