@@ -413,7 +413,7 @@ extern NSString *const kMXEventIdentifierKey;
 /**
  Indicate if event content could be scan by `MXScanManager`.
 
- @return Return true if event content could be scan by `MXScanManager`.
+ @return true if event content could be scan by `MXScanManager`.
  */
 - (BOOL)isContentScannable;
 
@@ -498,18 +498,10 @@ extern NSString *const kMXEventIdentifierKey;
 @property (nonatomic) NSError *decryptionError;
 
 /**
- Get encrypted thumbnail file from encrypted event if present.
+ Get encrypted content files from encrypted event if present.
  
- @return Return encrypted thumbnail file if present.
+ @return Encrypted content files.
  */
-- (MXEncryptedContentFile*)getEncryptedThumbnaileFile;
-
-/**
- Get encrypted content file from encrypted event if present.
- 
- @return Return encrypted content file if present.
- */
-- (MXEncryptedContentFile*)getEncryptedContentFile;
-
+- (NSArray<MXEncryptedContentFile*>*)getEncryptedContentFiles;
 
 @end

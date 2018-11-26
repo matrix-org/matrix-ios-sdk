@@ -145,22 +145,25 @@ static const char * const kProcessingQueueName = "org.MatrixSDK.MXScanManager";
 - (void)scanEvent:(nonnull MXEvent*)event completion:(void (^ _Nullable)(MXEventScan* _Nullable eventScan, BOOL eventScanDidSucceed))completion
 {
     MXEvent *eventCopy = [event copy];
+    NSString *eventId = eventCopy.eventId;
+    
+    // Sanity check, the event id should not be nil
+    if (!eventId)
+    {
+        if (completion)
+        {
+            [self dispatchCompletion:^{
+                completion(nil, NO);
+            }];
+        }
+        return;
+    }
     
     [self dispatchProcessing:^{
-        NSString *eventId = eventCopy.eventId;
         
         MXEventScan *eventScan = [self.eventScanStore findWithId:eventId];
-        
-        if (!eventId)
-        {
-            if (completion)
-            {
-                [self dispatchCompletion:^{
-                    completion(nil, NO);
-                }];
-            }
-        }
-        else if (eventScan.antivirusScanStatus == MXAntivirusScanStatusInProgress)
+
+        if (eventScan && eventScan.antivirusScanStatus == MXAntivirusScanStatusInProgress)
         {
             // If a scan is already in progress for the given event, wait for an update of the associated MXEventScan, only if a completion block exist
             if (completion)
@@ -257,21 +260,7 @@ static const char * const kProcessingQueueName = "org.MatrixSDK.MXScanManager";
                 
                 if (event.isEncrypted)
                 {
-                    NSMutableArray<MXEncryptedContentFile*> *encryptedContentFiles = [NSMutableArray new];
-                    
-                    MXEncryptedContentFile *contentFile = [event getEncryptedContentFile];
-                    
-                    if (contentFile)
-                    {
-                        [encryptedContentFiles addObject:contentFile];
-                    }
-                    
-                    MXEncryptedContentFile *thumbnailFile = [event getEncryptedThumbnaileFile];
-                    
-                    if (thumbnailFile)
-                    {
-                        [encryptedContentFiles addObject:thumbnailFile];
-                    }
+                    NSArray<MXEncryptedContentFile*> *encryptedContentFiles = [event getEncryptedContentFiles];
                     
                     for (MXEncryptedContentFile *encryptedContentFile in encryptedContentFiles)
                     {

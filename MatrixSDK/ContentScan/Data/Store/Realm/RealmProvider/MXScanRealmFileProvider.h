@@ -17,7 +17,7 @@
 #import "MXScanRealmProvider.h"
 
 /**
- `MXScanRealmInMemoryProvider` defines a Realm provider conforming to `MXScanRealmProvider` and using a file data storage.
+ `MXScanRealmProvider` defines a Realm provider conforming to `MXScanRealmProvider` and using a file data storage.
  */
 @interface MXScanRealmFileProvider : NSObject <MXScanRealmProvider>
 

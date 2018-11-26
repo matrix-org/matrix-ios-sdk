@@ -740,7 +740,7 @@ NSString *const kMXEventIdentifierKey = @"kMXEventIdentifierKey";
     }
 }
 
-- (MXEncryptedContentFile*)getEncryptedThumbnaileFile
+- (MXEncryptedContentFile*)getEncryptedThumbnailFile
 {
     MXEncryptedContentFile *encryptedContentFile;
     
@@ -762,6 +762,27 @@ NSString *const kMXEventIdentifierKey = @"kMXEventIdentifierKey";
     MXJSONModelSetMXJSONModel(encryptedContentFile, MXEncryptedContentFile, self.content[@"file"]);
     
     return encryptedContentFile;
+}
+
+- (NSArray<MXEncryptedContentFile *>*)getEncryptedContentFiles
+{
+    NSMutableArray<MXEncryptedContentFile*> *encryptedContentFiles = [NSMutableArray new];
+    
+    MXEncryptedContentFile *contentFile = [self getEncryptedContentFile];
+    
+    if (contentFile)
+    {
+        [encryptedContentFiles addObject:contentFile];
+    }
+    
+    MXEncryptedContentFile *thumbnailFile = [self getEncryptedThumbnailFile];
+    
+    if (thumbnailFile)
+    {
+        [encryptedContentFiles addObject:thumbnailFile];
+    }
+    
+    return encryptedContentFiles;
 }
 
 #pragma mark - private

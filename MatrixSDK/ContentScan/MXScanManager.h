@@ -20,13 +20,13 @@
 
 /**
  Notification name sent when event scans change. Provides event scans inserted, modified or deleted.
- Give an associated userInfo dictionary of type NSDictionary<NSString*, NSSAray<MXEventScan*>*> with following keys: "insertions", "modifications", "deletions". Use constants below for convenience.
+ Give an associated userInfo dictionary of type NSDictionary<NSString*, NSArray<MXEventScan*>*> with following keys: "insertions", "modifications", "deletions". Use constants below for convenience.
  */
 FOUNDATION_EXPORT NSString * _Nonnull const MXScanManagerEventScanDidChangeNotification;
 
 /**
  Notification name sent when media scans change. Provides media scans inserted, modified or deleted.
- Give an associated userInfo dictionary of type NSDictionary<NSString*, NSSAray<MXMediaScan*>*> with following keys: "insertions", "modifications", "deletions". Use constants below for convenience.
+ Give an associated userInfo dictionary of type NSDictionary<NSString*, NSArray<MXMediaScan*>*> with following keys: "insertions", "modifications", "deletions". Use constants below for convenience.
  */
 FOUNDATION_EXPORT NSString * _Nonnull const MXScanManagerMediaScanDidChangeNotification;
 

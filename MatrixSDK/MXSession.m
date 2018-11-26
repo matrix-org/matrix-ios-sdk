@@ -1580,9 +1580,16 @@ typedef void (^MXOnResumeDone)(void);
     // Update the media manager
     [mediaManager setAntivirusServerURL:antivirusServerURL];
     
-    // Configure scan manager
-    _scanManager = [[MXScanManager alloc] initWithRestClient:matrixRestClient];
-    [_scanManager resetAllAntivirusScanStatusInProgressToUnknown];
+    // Configure scan manager if antivirusServerURL is set
+    if (antivirusServerURL)
+    {
+        _scanManager = [[MXScanManager alloc] initWithRestClient:matrixRestClient];
+        [_scanManager resetAllAntivirusScanStatusInProgressToUnknown];
+    }
+    else
+    {
+        _scanManager = nil;
+    }
 }
 
 #pragma mark - Rooms operations
