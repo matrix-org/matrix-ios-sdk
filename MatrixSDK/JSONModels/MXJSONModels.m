@@ -160,6 +160,7 @@ NSString *const kMXLoginFlowTypeToken = @"m.login.token";
 NSString *const kMXLoginFlowTypeDummy = @"m.login.dummy";
 NSString *const kMXLoginFlowTypeEmailCode = @"m.login.email.code";
 NSString *const kMXLoginFlowTypeMSISDN = @"m.login.msisdn";
+NSString *const kMXLoginFlowTypeTerms = @"m.login.terms";
 
 NSString *const kMXLoginIdentifierTypeUser = @"m.id.user";
 NSString *const kMXLoginIdentifierTypeThirdParty = @"m.id.thirdparty";
