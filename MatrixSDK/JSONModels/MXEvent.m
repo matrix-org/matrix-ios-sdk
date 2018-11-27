@@ -536,12 +536,18 @@ NSString *const kMXEventIdentifierKey = @"kMXEventIdentifierKey";
             NSString *mediaURL;
             NSString *mediaThumbnailURL;
             
+            NSDictionary *info;
+            MXJSONModelSetDictionary(info, self.content[@"info"]);
+            
             if (self.isEncrypted)
             {
-                MXJSONModelSetString(mediaURL, self.content[@"file"][@"url"]);
+                NSDictionary *file;
+                MXJSONModelSetDictionary(file, self.content[@"file"]);
+                
+                MXJSONModelSetString(mediaURL, file[@"url"]);
                 
                 NSDictionary *thubmnailFile;
-                MXJSONModelSetDictionary(thubmnailFile, self.content[@"info"][@"thumbnail_file"])
+                MXJSONModelSetDictionary(thubmnailFile, info[@"thumbnail_file"]);
                 
                 if (thubmnailFile)
                 {
@@ -551,7 +557,7 @@ NSString *const kMXEventIdentifierKey = @"kMXEventIdentifierKey";
             else
             {
                 MXJSONModelSetString(mediaURL, self.content[@"url"]);
-                MXJSONModelSetString(mediaThumbnailURL, self.content[@"info"][@"thumbnail_url"]);
+                MXJSONModelSetString(mediaThumbnailURL, info[@"thumbnail_url"]);
             }
             
             if (mediaURL)
@@ -570,7 +576,10 @@ NSString *const kMXEventIdentifierKey = @"kMXEventIdentifierKey";
             
             if (self.isEncrypted)
             {
-                MXJSONModelSetString(mediaThumbnailURL, self.content[@"file"][@"thumbnail_url"]);
+                NSDictionary *file;
+                MXJSONModelSetDictionary(file, self.content[@"file"]);
+                
+                MXJSONModelSetString(mediaThumbnailURL, file[@"thumbnail_url"]);
             }
             else
             {
@@ -588,7 +597,9 @@ NSString *const kMXEventIdentifierKey = @"kMXEventIdentifierKey";
             
             if (self.isEncrypted)
             {
-                MXJSONModelSetString(mediaURL, self.content[@"file"][@"url"]);
+                NSDictionary *file;
+                MXJSONModelSetDictionary(file, self.content[@"file"]);
+                MXJSONModelSetString(mediaURL, file[@"url"]);
             }
             else
             {
@@ -606,12 +617,18 @@ NSString *const kMXEventIdentifierKey = @"kMXEventIdentifierKey";
         NSString *mediaURL;
         NSString *mediaThumbnailURL;
         
+        NSDictionary *info;
+        MXJSONModelSetDictionary(info, self.content[@"info"]);
+        
         if (self.isEncrypted)
         {
-            MXJSONModelSetString(mediaURL, self.content[@"file"][@"url"]);
+            NSDictionary *file;
+            MXJSONModelSetDictionary(file, self.content[@"file"]);
+            
+            MXJSONModelSetString(mediaURL, file[@"url"]);
             
             NSDictionary *thubmnailFile;
-            MXJSONModelSetDictionary(thubmnailFile, self.content[@"info"][@"thumbnail_file"]);
+            MXJSONModelSetDictionary(thubmnailFile, info[@"thumbnail_file"]);
             
             if (thubmnailFile)
             {
@@ -621,7 +638,7 @@ NSString *const kMXEventIdentifierKey = @"kMXEventIdentifierKey";
         else
         {
             MXJSONModelSetString(mediaURL, self.content[@"url"]);
-            MXJSONModelSetString(mediaThumbnailURL, self.content[@"info"][@"thumbnail_url"]);
+            MXJSONModelSetString(mediaThumbnailURL, info[@"thumbnail_url"]);
         }
         
         if (mediaURL)
