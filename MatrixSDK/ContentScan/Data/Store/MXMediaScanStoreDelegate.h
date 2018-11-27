@@ -18,8 +18,19 @@
 
 @class MXMediaScanStore, MXMediaScan;
 
+/**
+ `MXMediaScanStoreDelegate` is used to inform changes in the `MXMediaScanStore`.
+ */
 @protocol MXMediaScanStoreDelegate <NSObject>
 
+/**
+ Inform of `MXMediaScan` changes in a `MXMediaScanStore`.
+
+ @param mediaScanStore The `MXMediaScanStore` having changes.
+ @param insertions `MXMediaScan`s inserted.
+ @param modifications `MXMediaScan`s modified.
+ @param deletions `MXMediaScan`s deleted.
+ */
 - (void)mediaScanStore:(nonnull MXMediaScanStore*)mediaScanStore didObserveChangesWithInsertions:(nonnull NSArray<MXMediaScan*>*)insertions modifications:(nonnull NSArray<MXMediaScan*>*)modifications deletions:(nonnull NSArray<MXMediaScan*>*)deletions;
 
 @end

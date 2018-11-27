@@ -18,8 +18,19 @@
 
 @class MXEventScanStore, MXEventScan;
 
+/**
+ `MXEventScanStoreDelegate` is used to inform changes in the `MXEventScanStore`.
+ */
 @protocol MXEventScanStoreDelegate <NSObject>
 
+/**
+ Inform of `MXEventScan` changes in a `MXEventScanStore`.
+
+ @param eventScanStore The `MXEventScanStore` having changes.
+ @param insertions `MXEventScan`s inserted.
+ @param modifications `MXEventScan`s modified.
+ @param deletions `MXEventScan`s deleted.
+ */
 - (void)eventScanStore:(nonnull MXEventScanStore*)eventScanStore didObserveChangesWithInsertions:(nonnull NSArray<MXEventScan*>*)insertions modifications:(nonnull NSArray<MXEventScan*>*)modifications deletions:(nonnull NSArray<MXEventScan*>*)deletions;
 
 @end

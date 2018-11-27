@@ -14,7 +14,7 @@
  limitations under the License.
  */
 
-#import <Realm/Realm.h>
+@import Foundation;
 #import "MXAntivirusScanStatus.h"
 
 /**
