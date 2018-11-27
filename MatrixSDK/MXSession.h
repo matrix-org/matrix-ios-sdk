@@ -32,6 +32,7 @@
 #import "MXCrypto.h"
 #import "MXGroup.h"
 #import "MXError.h"
+#import "MXScanManager.h"
 
 /**
  `MXSessionState` represents the states in the life cycle of a MXSession instance.
@@ -411,6 +412,11 @@ FOUNDATION_EXPORT NSString *const kMXSessionNoRoomTag;
  */
 @property (nonatomic, readonly) MXCrypto *crypto;
 
+/**
+ Antivirus scanner used to scan medias.
+ Nil if `antivirusServerURL` is nil.
+ */
+@property (nonatomic, readonly) MXScanManager *scanManager;
 
 #pragma mark - Class methods
 
