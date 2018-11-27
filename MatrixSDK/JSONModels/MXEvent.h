@@ -411,7 +411,7 @@ extern NSString *const kMXEventIdentifierKey;
 - (NSArray<NSString*>*)getMediaURLs;
 
 /**
- Indicate if event content could be scan by `MXScanManager`.
+ Indicate if event content could be scanned by `MXScanManager`.
 
  @return true if event content could be scanned by `MXScanManager`.
  */
