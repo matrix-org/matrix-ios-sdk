@@ -7,6 +7,7 @@ Improvements:
  * MXMediaManager: Add a constructor based on a homeserver URL, to handle directly the Matrix Content URI (mxc://...).
  * MXSession: Add a MediaManager instance to handle the media stored on the Matrix Content repository.
  * MXMediaManager: Support the media download from a Matrix Content Scanner (Antivirus Server).
+ * MXJSONModels: Add data models for Terms of service / privacy policy API (https://github.com/matrix-org/matrix-doc/blob/travis/msc/terms-api/proposals/1692-terms-api.md).
  * Swift: Add explicit public initializer to MX3PID struct, thanks to @tladesignz (PR #594).
  * Tests: Make MXRealmCryptoStore work the first time tests are launched on simulators for iOS 11 and higher.
  * Add MXScanManager a media antivirus scanner (PR#600).

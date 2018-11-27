@@ -22,6 +22,7 @@
 #import "MXKeyBackupVersion.h"
 #import "MXKeyBackupData.h"
 #import "MXMegolmBackupAuthData.h"
+#import "MXLoginTerms.h"
 
 @class MXEvent, MXDeviceInfo, MXKey, MXUser;
 
@@ -204,6 +205,7 @@ FOUNDATION_EXPORT NSString *const kMXLoginFlowTypeEmailIdentity;
 FOUNDATION_EXPORT NSString *const kMXLoginFlowTypeToken;
 FOUNDATION_EXPORT NSString *const kMXLoginFlowTypeDummy;
 FOUNDATION_EXPORT NSString *const kMXLoginFlowTypeMSISDN;
+FOUNDATION_EXPORT NSString *const kMXLoginFlowTypeTerms;
 
 FOUNDATION_EXPORT NSString *const kMXLoginFlowTypeEmailCode; // Deprecated
 
