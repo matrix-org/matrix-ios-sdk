@@ -42,4 +42,32 @@
     return loginTerms;
 }
 
+- (NSArray<MXLoginPolicyData*> *)policiesDataForLanguage:(nullable NSString*)language defaultLanguage:(nullable NSString*)defaultLanguage
+{
+    NSMutableArray<MXLoginPolicyData*> *policies = [NSMutableArray array];
+
+    for (MXLoginPolicy *loginPolicy in _policies.allValues)
+    {
+        // Find the localised policy data that matches the requested language
+        MXLoginPolicyData *loginPolicyData = loginPolicy.data[language];
+        if (!loginPolicyData)
+        {
+            // Fallback on Default
+            loginPolicyData = loginPolicy.data[defaultLanguage];
+        }
+        if (!loginPolicyData)
+        {
+            // Then, the first data found in the server response
+            loginPolicyData = loginPolicy.data.allValues.firstObject;
+        }
+
+        if (loginPolicyData)
+        {
+            [policies addObject:loginPolicyData];
+        }
+    }
+
+    return policies;
+}
+
 @end

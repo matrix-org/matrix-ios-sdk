@@ -34,6 +34,15 @@ NS_ASSUME_NONNULL_BEGIN
  */
 @property (nonatomic) NSDictionary<NSString*, MXLoginPolicy*> *policies;
 
+/**
+ Return a flat array of `MXLoginPolicyData` objects to display for a given language.
+
+ @param language the code of the language to look for.
+ @param defaultLanguage the default language code.
+ @return all localised `MXLoginPolicyData` objects.
+ */
+- (NSArray<MXLoginPolicyData*> *)policiesDataForLanguage:(nullable NSString*)language defaultLanguage:(nullable NSString*)defaultLanguage;
+
 @end
 
 NS_ASSUME_NONNULL_END
