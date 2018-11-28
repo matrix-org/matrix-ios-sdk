@@ -757,7 +757,10 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
 
                     MXMegolmSessionData *sessionData = [self decryptKeyBackupData:keyBackupData forSession:sessionId inRoom:roomId withPkDecryption:decryption];
 
-                    [sessionDatas addObject:sessionData];
+                    if (sessionData)
+                    {
+                        [sessionDatas addObject:sessionData];
+                    }
                 }
             }
 
@@ -931,14 +934,23 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
         OLMPkMessage *encrypted = [[OLMPkMessage alloc] initWithCiphertext:ciphertext mac:mac ephemeralKey:ephemeralKey];
 
         NSError *error;
-        NSDictionary *sessionBackupData = [MXTools deserialiseJSONString:[decryption decryptMessage:encrypted error:&error]];
+        NSString *text = [decryption decryptMessage:encrypted error:&error];
 
-        if (sessionBackupData)
+        if (!error)
         {
-            MXJSONModelSetMXJSONModel(sessionData, MXMegolmSessionData, sessionBackupData);
+            NSDictionary *sessionBackupData = [MXTools deserialiseJSONString:text];
 
-            sessionData.sessionId = sessionId;
-            sessionData.roomId = roomId;
+            if (sessionBackupData)
+            {
+                MXJSONModelSetMXJSONModel(sessionData, MXMegolmSessionData, sessionBackupData);
+
+                sessionData.sessionId = sessionId;
+                sessionData.roomId = roomId;
+            }
+        }
+        else
+        {
+            NSLog(@"[MXKeyBackup] decryptKeyBackupData: Failed to decrypt session from backup. Error: %@", error);
         }
     }
 
