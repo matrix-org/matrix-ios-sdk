@@ -299,7 +299,10 @@
             for (MXRoomMember *member in otherMembers)
             {
                 NSString *memberName = [roomState.members memberName:member.userId];
-                [memberNames addObject:memberName];
+                if (memberName)
+                {
+                    [memberNames addObject:memberName];
+                }
             }
 
             memberCount = memberNames.count + 1;
@@ -329,7 +332,8 @@
                 break;
         }
 
-        if (memberCount > 1 && [displayname isEqualToString:_roomNameStringLocalizations.emptyRoom])
+        if (memberCount > 1
+            && (!displayname || [displayname isEqualToString:_roomNameStringLocalizations.emptyRoom]))
         {
             // Data are missing to compute the display name
             NSLog(@"[MXRoomSummaryUpdater] updateSummaryDisplayname: Warning: Computed an unexpected \"Empty Room\" name. memberCount: %@", @(memberCount));
@@ -366,7 +370,10 @@
     for (MXRoomMember *member in otherMembers)
     {
         NSString *memberName = [roomState.members memberName:member.userId];
-        [memberNames addObject:memberName];
+        if (memberName)
+        {
+            [memberNames addObject:memberName];
+        }
     }
 
     NSLog(@"[MXRoomSummaryUpdater] fixUnexpectedEmptyRoomDisplayname: Found %@ loaded members for %@ known other members", @(otherMembers.count), @(memberCount - 1));
@@ -386,7 +393,6 @@
             }
             else
             {
-                //
                 NSLog(@"[MXRoomSummaryUpdater] fixUnexpectedEmptyRoomDisplayname: Half fixed 1");
                 displayname = [NSString stringWithFormat:_roomNameStringLocalizations.moreThanTwoMembers,
                                memberNames[0],
