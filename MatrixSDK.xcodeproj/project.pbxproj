@@ -120,10 +120,10 @@
 		327187891DA7DCE50071C818 /* MXOlmEncryption.h in Headers */ = {isa = PBXBuildFile; fileRef = 327187871DA7DCE50071C818 /* MXOlmEncryption.h */; };
 		3271878A1DA7DCE50071C818 /* MXOlmEncryption.m in Sources */ = {isa = PBXBuildFile; fileRef = 327187881DA7DCE50071C818 /* MXOlmEncryption.m */; };
 		3275FD9421A6B46600B9C13D /* MXLoginTerms.m in Sources */ = {isa = PBXBuildFile; fileRef = 3275FD9221A6B46600B9C13D /* MXLoginTerms.m */; };
-		3275FD9521A6B46600B9C13D /* MXLoginTerms.h in Headers */ = {isa = PBXBuildFile; fileRef = 3275FD9321A6B46600B9C13D /* MXLoginTerms.h */; };
-		3275FD9821A6B53300B9C13D /* MXLoginPolicyData.h in Headers */ = {isa = PBXBuildFile; fileRef = 3275FD9621A6B53300B9C13D /* MXLoginPolicyData.h */; };
+		3275FD9521A6B46600B9C13D /* MXLoginTerms.h in Headers */ = {isa = PBXBuildFile; fileRef = 3275FD9321A6B46600B9C13D /* MXLoginTerms.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		3275FD9821A6B53300B9C13D /* MXLoginPolicyData.h in Headers */ = {isa = PBXBuildFile; fileRef = 3275FD9621A6B53300B9C13D /* MXLoginPolicyData.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		3275FD9921A6B53300B9C13D /* MXLoginPolicyData.m in Sources */ = {isa = PBXBuildFile; fileRef = 3275FD9721A6B53300B9C13D /* MXLoginPolicyData.m */; };
-		3275FD9C21A6B60B00B9C13D /* MXLoginPolicy.h in Headers */ = {isa = PBXBuildFile; fileRef = 3275FD9A21A6B60B00B9C13D /* MXLoginPolicy.h */; };
+		3275FD9C21A6B60B00B9C13D /* MXLoginPolicy.h in Headers */ = {isa = PBXBuildFile; fileRef = 3275FD9A21A6B60B00B9C13D /* MXLoginPolicy.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		3275FD9D21A6B60B00B9C13D /* MXLoginPolicy.m in Sources */ = {isa = PBXBuildFile; fileRef = 3275FD9B21A6B60B00B9C13D /* MXLoginPolicy.m */; };
 		327E37B61A974F75007F026F /* MXLogger.h in Headers */ = {isa = PBXBuildFile; fileRef = 327E37B41A974F75007F026F /* MXLogger.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		327E37B71A974F75007F026F /* MXLogger.m in Sources */ = {isa = PBXBuildFile; fileRef = 327E37B51A974F75007F026F /* MXLogger.m */; };
