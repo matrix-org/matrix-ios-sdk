@@ -1165,7 +1165,7 @@ RLM_ARRAY_TYPE(MXRealmOlmInboundGroupSession)
                 {
                     NSLog(@"[MXRealmCryptoStore] Migration from schema #6 -> #7");
 
-                    // We need to update the db because a sessionId property has been added to MXRealmOlmSession
+                    // We need to update the db because a sessionId property has been added to MXRealmOlmInboundGroupSession
                     // to ensure uniqueness
                     NSLog(@"    Add sessionIdSenderKey, a combined primary key, to all MXRealmOlmInboundGroupSession objects");
                     [migration enumerateObjects:MXRealmOlmInboundGroupSession.className block:^(RLMObject *oldObject, RLMObject *newObject) {
@@ -1175,7 +1175,7 @@ RLM_ARRAY_TYPE(MXRealmOlmInboundGroupSession)
                     }];
 
                     // We need to update the db because a identityKey property has been added to MXRealmDeviceInfo
-                    NSLog(@"    Add identityKey to all MXRealmOlmInboundGroupSession objects");
+                    NSLog(@"    Add identityKey to all MXRealmDeviceInfo objects");
                     [migration enumerateObjects:MXRealmDeviceInfo.className block:^(RLMObject *oldObject, RLMObject *newObject) {
 
                         MXDeviceInfo *device = [NSKeyedUnarchiver unarchiveObjectWithData:oldObject[@"deviceInfoData"]];
