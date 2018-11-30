@@ -38,24 +38,26 @@ NS_ASSUME_NONNULL_BEGIN
  *    |                            V
  *    |                     CHECKING BACKUP
  *    |                            |
- *    | Network error              |
- *    +<----------+----------------+---------> DISABLED <----------------------+
- *    |           |                |              |                            |
- *    |           |                |              | createKeyBackupVersion     |
- *    |           V                |              V                            |
- *    +<---  WRONG VERSION         |           ENABLING                        |
- *                ^                |              |                            |
- *                |                V              |                      error |
- *                |              READY   <--------+----------------------------+
- *                |                |              |
- *                |                | on new key   |
- *                |                V              |
- *                |           WILL BACK UP        |
- *                |                |              |
- *                |                V              |
- *                |            BACKING UP         |
- *                | Error          |              |
- *                +<---------------+------------->+
+ *    |    Network error           |
+ *    +<----------+----------------+-------> DISABLED <----------------------+
+ *    |           |                |            |                            |
+ *    |           |                |            | createKeyBackupVersion     |
+ *    |           V                |            V                            |
+ *    +<---  WRONG VERSION         |         ENABLING                        |
+ *                ^                |            |                            |
+ *                |                V       ok   |     error                  |
+ *                |     +------> READY <--------+----------------------------+
+ *                |     |          |
+ *                |     |          | on new key
+ *                |     |          V
+ *                |     |     WILL BACK UP (waiting a random duration)
+ *                |     |          |
+ *                |     |          |
+ *                |     | ok       V
+ *                |     +----- BACKING UP
+ *                |                |
+ *                |      Error     |
+ *                +<---------------+
  *
  */
 typedef enum : NSUInteger
