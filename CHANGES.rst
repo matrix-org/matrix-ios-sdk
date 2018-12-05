@@ -15,6 +15,7 @@ Improvements:
 Bug Fix:
  * MXRestClient: [avatarUrlForUser:success:failure]: the returned url is always nil, thanks to @asydorov (PR #580) and @giomfo.
  * MXRoomSummary: fix null Direct Chat displayname / avatar issue caused by limited syncs
+ * MXRoom: members methods don't respond after a failure.
 
 API break:
  * MXMediaManager: [downloadMediaFromURL:andSaveAtFilePath:success:failure:] is removed, use [downloadMediaFromMatrixContentURI:withType:inFolder:success:failure] or [downloadThumbnailFromMatrixContentURI:withType:inFolder:toFitViewSize:withMethod:success:failure] instead.
