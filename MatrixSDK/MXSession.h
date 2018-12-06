@@ -19,6 +19,7 @@
 #import <Foundation/Foundation.h>
 
 #import "MXRestClient.h"
+#import "MXMediaManager.h"
 #import "MXRoom.h"
 #import "MXPeekingRoom.h"
 #import "MXFilterJSONModel.h"
@@ -31,6 +32,7 @@
 #import "MXCrypto.h"
 #import "MXGroup.h"
 #import "MXError.h"
+#import "MXScanManager.h"
 
 /**
  `MXSessionState` represents the states in the life cycle of a MXSession instance.
@@ -338,6 +340,11 @@ FOUNDATION_EXPORT NSString *const kMXSessionNoRoomTag;
 @property (nonatomic, readonly) MXRestClient *matrixRestClient;
 
 /**
+ The media manager used to handle the media stored on the Matrix Content repository.
+ */
+@property (nonatomic, readonly) MXMediaManager *mediaManager;
+
+/**
  The current state of the session.
  */
 @property (nonatomic, readonly) MXSessionState state;
@@ -405,6 +412,11 @@ FOUNDATION_EXPORT NSString *const kMXSessionNoRoomTag;
  */
 @property (nonatomic, readonly) MXCrypto *crypto;
 
+/**
+ Antivirus scanner used to scan medias.
+ Nil if `antivirusServerURL` is nil.
+ */
+@property (nonatomic, readonly) MXScanManager *scanManager;
 
 #pragma mark - Class methods
 
@@ -632,6 +644,11 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
  */
 - (MXHTTPOperation*)supportedMatrixVersions:(void (^)(MXMatrixVersions *matrixVersions))success failure:(void (^)(NSError *error))failure;
 
+/**
+ The antivirus server URL (nil by default).
+ Set a non-null url to configure the antivirus scanner use.
+ */
+@property (nonatomic) NSString *antivirusServerURL;
 
 #pragma mark - Rooms operations
 /**

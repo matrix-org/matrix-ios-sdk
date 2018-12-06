@@ -154,6 +154,72 @@ Common initial conditions:
     }];
 }
 
+/**
+ Common initial conditions:
+ - We have Alice & Bob
+ - Alice creates a direct chat with Bob
+ - Bob joins it
+ - Alice makes an initial /sync with lazy-loading enabled or not
+ */
+- (void)createDirectChatScenarioWithLazyLoading:(BOOL)lazyLoading
+                                    readyToTest:(void (^)(MXSession *aliceSession, MXSession *bobSession, NSString* roomId, XCTestExpectation *expectation))readyToTest
+{
+    // - We have Alice & Bob
+    [matrixSDKTestsData doMXSessionTestWithBobAndAliceInARoom:self readyToTest:^(MXSession *bobSession, MXRestClient *aliceRestClient, NSString *roomId, XCTestExpectation *expectation) {
+
+        __block NSString *theRoomId;
+
+        // - Alice create a direct chat with Bob
+        __block id observer;
+        observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXSessionDirectRoomsDidChangeNotification object:bobSession queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
+
+            if (observer)
+            {
+                [[NSNotificationCenter defaultCenter] removeObserver:observer];
+                observer = nil;
+
+                [bobSession joinRoom:theRoomId success:^(MXRoom *room) {
+
+                    // - Alice makes an initial /sync
+                    MXSession *aliceSession = [[MXSession alloc] initWithMatrixRestClient:aliceRestClient];
+                    [matrixSDKTestsData retain:aliceSession];
+
+                    // Alice makes an initial /sync with lazy-loading enabled or not
+                    MXFilterJSONModel *filter;
+                    if (lazyLoading)
+                    {
+                        filter = [MXFilterJSONModel syncFilterForLazyLoading];
+                    }
+
+                    [aliceSession startWithSyncFilter:filter onServerSyncDone:^{
+
+                        readyToTest(aliceSession, bobSession, theRoomId, expectation);
+
+                    } failure:^(NSError *error) {
+                        XCTFail(@"The operation should not fail - NSError: %@", error);
+                        [expectation fulfill];
+                    }];
+
+                } failure:^(NSError *error) {
+                    XCTFail(@"The operation should not fail - NSError: %@", error);
+                    [expectation fulfill];
+                }];
+            }
+        }];
+
+        // - Alice create a direct chat with Bob
+        [aliceRestClient createRoom:nil visibility:kMXRoomDirectoryVisibilityPrivate roomAlias:nil topic:nil invite:@[bobSession.myUser.userId] invite3PID:nil isDirect:YES preset:kMXRoomPresetPrivateChat success:^(MXCreateRoomResponse *response) {
+
+            theRoomId = response.roomId;
+
+        } failure:^(NSError *error) {
+            XCTFail(@"The operation should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+    }];
+}
+
+
 
 - (void)testLazyLoadingFilterSupportHSSide
 {
@@ -971,14 +1037,8 @@ Common initial conditions:
 
             MXRoomSummary *roomSummary = [aliceSession roomSummaryWithRoomId:roomId];
 
-            if (lazyLoading)
-            {
-                XCTAssertNotNil(roomSummary.displayname, @"Thanks to the summary api, the SDK can build a room display name");
-            }
-            else
-            {
-                XCTAssertNil(roomSummary.displayname);
-            }
+            XCTAssertTrue(roomSummary.displayname.length
+                              && ![roomSummary.displayname isEqualToString:@"Empty room"], @"Unexpected null room name: %@", roomSummary.displayname);
 
             [expectation fulfill];
         }];
@@ -993,6 +1053,126 @@ Common initial conditions:
 - (void)testRoomSummaryDisplayNameFromHeroesWithLazyLoadingOFF
 {
     [self checkRoomSummaryDisplayNameFromHeroesWithLazyLoading:NO];
+}
+
+
+// Check Synapse issue (https://github.com/matrix-org/synapse/issues/4194): the CS API should provide heroes if room name is ""
+// After the test scenario,
+// Remove the room name
+// -> The room name should be "Bob & 2 others"
+// Make alice do an initial sync
+// -> The room name should be "Bob & 2 others"
+- (void)checkRoomSummaryDisplayNameWhenNoMoreNameWithLazyLoading:(BOOL)lazyLoading
+{
+    // After the test scenario
+    [self createScenarioWithLazyLoading:lazyLoading inARoomWithName:YES readyToTest:^(MXSession *aliceSession, MXSession *bobSession, MXSession *charlieSession, NSString *roomId, XCTestExpectation *expectation) {
+
+        MXRoom *roomFromBobPOV = [bobSession roomWithRoomId:roomId];
+        [roomFromBobPOV setName:@"" success:^{
+
+            MXRoom *roomFromAlicePOV = [aliceSession roomWithRoomId:roomId];
+            [roomFromAlicePOV state:^(MXRoomState *roomState) {
+
+                // -> The room name should be "Bob & 2 others"
+                MXRoomSummary *roomSummary = [aliceSession roomSummaryWithRoomId:roomId];
+                XCTAssertTrue(roomSummary.displayname.length
+                              && ![roomSummary.displayname isEqualToString:@"Empty room"], @"Unexpected null room name: %@", roomSummary.displayname);
+
+
+                 // Make alice do an initial sync
+                MXSession *aliceSession2 = [[MXSession alloc] initWithMatrixRestClient:aliceSession.matrixRestClient];
+                [matrixSDKTestsData retain:aliceSession2];
+                [aliceSession close];
+
+                MXFilterJSONModel *filter;
+                if (lazyLoading)
+                {
+                    filter = [MXFilterJSONModel syncFilterForLazyLoading];
+                }
+                [aliceSession2 startWithSyncFilter:filter onServerSyncDone:^{
+
+                    MXRoom *room2 = [aliceSession2 roomWithRoomId:roomId];
+                    [room2 state:^(MXRoomState *roomState) {
+
+                        // -> The room name should be "Bob & 2 others"
+                        MXRoomSummary *roomSummary2 = [aliceSession2 roomSummaryWithRoomId:roomId];
+                        XCTAssertTrue(roomSummary2.displayname.length
+                                      && ![roomSummary2.displayname isEqualToString:@"Empty room"], @"Unexpected null room name: %@", roomSummary2.displayname);
+
+
+                        [expectation fulfill];
+                    }];
+
+                } failure:^(NSError *error) {
+                    XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                    [expectation fulfill];
+                }];
+
+            }];
+
+        } failure:^(NSError *error) {
+            XCTFail(@"The operation should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+
+    }];
+}
+
+- (void)testRoomSummaryDisplayNameWhenNoMoreName
+{
+    [self checkRoomSummaryDisplayNameWhenNoMoreNameWithLazyLoading:YES];
+}
+
+- (void)testRoomSummaryDisplayNameWhenNoMoreNameWithLazyLoadingOFF
+{
+    [self checkRoomSummaryDisplayNameWhenNoMoreNameWithLazyLoading:NO];
+}
+
+// Check use case described in https://github.com/matrix-org/matrix-ios-sdk/pull/605
+// where display name for a direct chat becomes empty after a limited /sync
+//
+// After the direct chat test scenario
+// - Alice pauses its session
+// - Bob sends 50 messages
+// - Alice resumes (there will be a limited /sync)
+// -> The room name should be still the same
+- (void)checkRoomSummaryDisplayNameInDirectChatWithLazyLoading:(BOOL)lazyLoading
+{
+    [self createDirectChatScenarioWithLazyLoading:lazyLoading readyToTest:^(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
+
+        MXRoomSummary *roomSummary = [aliceSession roomSummaryWithRoomId:roomId];
+        XCTAssertTrue(roomSummary.displayname.length
+                      && ![roomSummary.displayname isEqualToString:@"Empty room"], @"Unexpected null room name: %@", roomSummary.displayname);
+
+        NSString *roomDisplayName = roomSummary.displayname;
+
+        [aliceSession pause];
+
+        //  - Bob sends 50 messages
+        [matrixSDKTestsData for:bobSession.matrixRestClient andRoom:roomId sendMessages:50 success:^{
+
+            // - Alice resumes (there will a limited /sync)
+            [aliceSession resume:^{
+
+                // -> The room name should be still the same
+                MXRoomSummary *roomSummary2 = [aliceSession roomSummaryWithRoomId:roomId];
+                XCTAssertEqualObjects(roomSummary2.displayname, roomDisplayName);
+
+                [expectation fulfill];
+            }];
+        }];
+
+    }];
+}
+
+- (void)testRoomSummaryDisplayNameInDirectChat
+{
+    [self checkRoomSummaryDisplayNameInDirectChatWithLazyLoading:YES];
+}
+
+- (void)testRoomSummaryDisplayNameInDirectChatWithLazyLoadingOFF
+{
+    [self checkRoomSummaryDisplayNameInDirectChatWithLazyLoading:NO];
 }
 
 

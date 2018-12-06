@@ -1,6 +1,7 @@
 /*
  Copyright 2016 OpenMarket Ltd
  Copyright 2017 Vector Creations Ltd
+ Copyright 2018 New Vector Ltd
  
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -21,15 +22,19 @@
 
 #import "MXMediaManager.h"
 
+#import "MXEncryptedContentFile.h"
+
 #import "MXSDKOptions.h"
 
 #import "MXLRUCache.h"
 #import "MXTools.h"
 
-NSUInteger const kMXMediaCacheSDKVersion = 2;
+NSUInteger const kMXMediaCacheSDKVersion = 3;
 
 NSString *const kMXMediaManagerAvatarThumbnailFolder = @"kMXMediaManagerAvatarThumbnailFolder";
 NSString *const kMXMediaManagerDefaultCacheFolder = @"kMXMediaManagerDefaultCacheFolder";
+
+NSString *const kMXMediaManagerTmpCachePathPrefix = @"tmpCache-";
 
 static NSString* mediaCachePath  = nil;
 static NSString *mediaDir        = @"mediacache";
@@ -41,6 +46,18 @@ static MXMediaManager *sharedMediaManager = nil;
 static NSUInteger storageCacheSize = 0;
 
 @implementation MXMediaManager
+
+- (id)initWithHomeServer:(NSString *)homeserverURL
+{
+    self = [super init];
+    if (self)
+    {
+        _homeserverURL = homeserverURL;
+        _antivirusServerURL = nil;
+        _antivirusServerPathPrefix = kMXAntivirusAPIPrefixPathUnstable;
+    }
+    return self;
+}
 
 /**
  Table of downloads in progress
@@ -62,6 +79,21 @@ static NSMutableDictionary* uploadTableById = nil;
         }
     }
     return sharedMediaManager;
+}
+
+#pragma mark - Antivirus server API
+
+- (void)setAntivirusServerURL:(NSString *)antivirusServerURL
+{
+    if (antivirusServerURL.length)
+    {
+        _antivirusServerURL = [antivirusServerURL copy];
+    }
+    else
+    {
+        // Disable antivirus use
+        _antivirusServerURL = nil;
+    }
 }
 
 #pragma mark - File handling
@@ -334,57 +366,316 @@ static MXLRUCache* imagesCacheLruCache = nil;
 }
 #endif
 
-#pragma mark - Media Download
 
-+ (MXMediaLoader*)downloadMediaFromURL:(NSString *)mediaURL
-                      andSaveAtFilePath:(NSString *)filePath
-                                success:(void (^)(void))success
-                                failure:(void (^)(NSError *error))failure
+#pragma mark - Media Repository URL
+
+- (NSString*)urlOfContent:(NSString*)mxContentURI
 {
-    // Check provided file path
-    if (!filePath.length)
+    NSString *contentURL;
+    
+    // Replace the "mxc://" scheme by the absolute http location of the content
+    if ([mxContentURI hasPrefix:kMXContentUriScheme])
     {
-        filePath = [self cachePathForMediaWithURL:mediaURL andType:nil inFolder:kMXMediaManagerDefaultCacheFolder];
+        NSString *mxMediaPrefix;
+        
+        // Check whether an antivirus server is present
+        if (_antivirusServerURL)
+        {
+            mxMediaPrefix = [NSString stringWithFormat:@"%@/%@/download/", _antivirusServerURL, _antivirusServerPathPrefix];
+        }
+        else
+        {
+            mxMediaPrefix = [NSString stringWithFormat:@"%@/%@/download/", _homeserverURL, kMXContentPrefixPath];
+        }
+        
+        contentURL = [mxContentURI stringByReplacingOccurrencesOfString:kMXContentUriScheme withString:mxMediaPrefix];
+        
+        // Remove the auto generated image tag from the URL
+        contentURL = [contentURL stringByReplacingOccurrencesOfString:@"#auto" withString:@""];
+        return contentURL;
     }
     
-    if (mediaURL)
+    // do not allow non-mxc content URLs: we should not be making requests out to whatever http urls people send us
+    return nil;
+}
+
+- (NSString*)urlOfContentThumbnail:(NSString*)mxContentURI
+                     toFitViewSize:(CGSize)viewSize
+                        withMethod:(MXThumbnailingMethod)thumbnailingMethod
+{
+    if ([mxContentURI hasPrefix:kMXContentUriScheme])
+    {
+        // Convert first the provided size in pixels
+#if TARGET_OS_IPHONE
+        CGFloat scale = [[UIScreen mainScreen] scale];
+#elif TARGET_OS_OSX
+        CGFloat scale = [[NSScreen mainScreen] backingScaleFactor];
+#endif
+        
+        CGSize sizeInPixels = CGSizeMake(viewSize.width * scale, viewSize.height * scale);
+        
+        // Replace the "mxc://" scheme by the absolute http location for the content thumbnail
+        NSString *mxThumbnailPrefix = [NSString stringWithFormat:@"%@/%@/thumbnail/", _homeserverURL, kMXContentPrefixPath];
+        NSString *thumbnailURL = [mxContentURI stringByReplacingOccurrencesOfString:kMXContentUriScheme withString:mxThumbnailPrefix];
+        
+        // Convert MXThumbnailingMethod to parameter string
+        NSString *thumbnailingMethodString;
+        switch (thumbnailingMethod)
+        {
+            case MXThumbnailingMethodScale:
+                thumbnailingMethodString = @"scale";
+                break;
+                
+            case MXThumbnailingMethodCrop:
+                thumbnailingMethodString = @"crop";
+                break;
+        }
+        
+        // Remove the auto generated image tag from the URL
+        thumbnailURL = [thumbnailURL stringByReplacingOccurrencesOfString:@"#auto" withString:@""];
+        
+        // Add thumbnailing parameters to the URL
+        thumbnailURL = [NSString stringWithFormat:@"%@?width=%tu&height=%tu&method=%@", thumbnailURL, (NSUInteger)sizeInPixels.width, (NSUInteger)sizeInPixels.height, thumbnailingMethodString];
+        
+        return thumbnailURL;
+    }
+    
+    // do not allow non-mxc content URLs: we should not be making requests out to whatever http urls people send us
+    return nil;
+}
+
+- (NSString *)urlOfIdenticon:(NSString *)identiconString
+{
+    return [NSString stringWithFormat:@"%@/%@/identicon/%@", _homeserverURL, kMXContentPrefixPath, [identiconString stringByAddingPercentEncodingWithAllowedCharacters:[NSCharacterSet URLHostAllowedCharacterSet]]];
+}
+
+
+#pragma mark - Media Download
+
++ (NSString*)downloadIdForMatrixContentURI:(NSString*)mxContentURI
+                                  inFolder:(NSString*)folder
+{
+    // Return the unique output file path built from the mxc uri and the potential folder (no type is required here)
+    return [MXMediaManager cachePathForMatrixContentURI:mxContentURI andType:nil inFolder:folder];
+}
+
++ (NSString*)thumbnailDownloadIdForMatrixContentURI:(NSString*)mxContentURI
+                                           inFolder:(NSString*)folder
+                                      toFitViewSize:(CGSize)viewSize
+                                         withMethod:(MXThumbnailingMethod)thumbnailingMethod
+{
+    // Return the unique output file path built from the mxc uri and the potential folder (no type is required here)
+    return [MXMediaManager thumbnailCachePathForMatrixContentURI:mxContentURI andType:nil inFolder:folder toFitViewSize:viewSize withMethod:thumbnailingMethod];
+}
+
+- (MXMediaLoader*)downloadMediaFromMatrixContentURI:(NSString *)mxContentURI
+                                           withType:(NSString *)mimeType
+                                           inFolder:(NSString *)folder
+                                            success:(void (^)(NSString *outputFilePath))success
+                                            failure:(void (^)(NSError *error))failure
+{
+    // Check the provided mxc URI by resolving it into an HTTP URL.
+    NSString *mediaURL = [self urlOfContent:mxContentURI];
+    if (!mediaURL)
+    {
+        NSLog(@"[MXMediaManager] downloadMediaFromMatrixContentURI: invalid media content URI");
+        if (failure) failure(nil);
+        return nil;
+    }
+    
+    // Build the outpout file path from mxContentURI, and other inputs.
+    NSString *filePath = [MXMediaManager cachePathForMatrixContentURI:mxContentURI andType:mimeType inFolder:folder];
+    
+    // Build the download id from mxContentURI.
+    NSString *downloadId = [MXMediaManager downloadIdForMatrixContentURI:mxContentURI inFolder:folder];
+    
+    // Create a media loader to download data
+    return [MXMediaManager downloadMedia:mediaURL
+                                withData:nil
+                           andIdentifier:downloadId
+                          saveAtFilePath:filePath
+                                 success:success
+                                 failure:failure];
+}
+
+- (MXMediaLoader*)downloadMediaFromMatrixContentURI:(NSString *)mxContentURI
+                                           withType:(NSString *)mimeType
+                                           inFolder:(NSString *)folder
+{
+    return [self downloadMediaFromMatrixContentURI:mxContentURI withType:mimeType inFolder:folder success:nil failure:nil];
+}
+
+- (MXMediaLoader*)downloadThumbnailFromMatrixContentURI:(NSString *)mxContentURI
+                                               withType:(NSString *)mimeType
+                                               inFolder:(NSString *)folder
+                                          toFitViewSize:(CGSize)viewSize
+                                             withMethod:(MXThumbnailingMethod)thumbnailingMethod
+                                                success:(void (^)(NSString *outputFilePath))success
+                                                failure:(void (^)(NSError *error))failure
+{
+    // Check the provided mxc URI by resolving it into an HTTP URL.
+    NSString *mediaURL = [self urlOfContentThumbnail:mxContentURI toFitViewSize:viewSize withMethod:thumbnailingMethod];
+    if (!mediaURL)
+    {
+        NSLog(@"[MXMediaManager] downloadThumbnailFromMatrixContentURI: invalid media content URI");
+        if (failure) failure(nil);
+        return nil;
+    }
+    
+    // Build the outpout file path from mxContentURI, and other inputs.
+    NSString *filePath = [MXMediaManager thumbnailCachePathForMatrixContentURI:mxContentURI andType:mimeType inFolder:folder toFitViewSize:viewSize withMethod:thumbnailingMethod];
+    
+    // Build the download id from mxContentURI.
+    NSString *downloadId = [MXMediaManager thumbnailDownloadIdForMatrixContentURI:mxContentURI inFolder:folder toFitViewSize:viewSize withMethod:thumbnailingMethod];
+    
+    // Create a media loader to download data
+    return [MXMediaManager downloadMedia:mediaURL
+                                withData:nil
+                           andIdentifier:downloadId
+                          saveAtFilePath:filePath
+                                 success:success
+                                 failure:failure];
+}
+
+// Private
++ (MXMediaLoader*)downloadMedia:(NSString *)mediaURL
+                       withData:(NSDictionary *)data
+                  andIdentifier:(NSString *)downloadId
+                 saveAtFilePath:(NSString *)filePath
+                        success:(void (^)(NSString *outputFilePath))success
+                        failure:(void (^)(NSError *error))failure
+{
+    MXMediaLoader *mediaLoader;
+    
+    // Check whether there is a loader for this download id in downloadTable.
+    mediaLoader = [MXMediaManager existingDownloaderWithIdentifier:downloadId];
+    if (mediaLoader)
+    {
+        // This mediaLoader has been created for the same matrix content uri, and cache folder.
+        if (success || failure)
+        {
+            __weak NSNotificationCenter *center = NSNotificationCenter.defaultCenter;
+            id token;
+            
+            token = [center addObserverForName:kMXMediaLoaderStateDidChangeNotification
+                                        object:mediaLoader
+                                         queue:nil
+                                    usingBlock:^(NSNotification * _Nonnull note) {
+                                        
+                                        MXMediaLoader *loader = (MXMediaLoader *)note.object;
+                                        switch (loader.state) {
+                                            case MXMediaLoaderStateDownloadCompleted:
+                                                if (success)
+                                                {
+                                                    success(loader.downloadOutputFilePath);
+                                                }
+                                                [center removeObserver:token];
+                                                break;
+                                            case MXMediaLoaderStateDownloadFailed:
+                                                if (failure)
+                                                {
+                                                    failure(loader.error);
+                                                }
+                                                [center removeObserver:token];
+                                                break;
+                                            default:
+                                                break;
+                                        }
+                                    }];
+        }
+    }
+    else
     {
         // Create a media loader to download data
-        MXMediaLoader *mediaLoader = [[MXMediaLoader alloc] init];
+        mediaLoader = [[MXMediaLoader alloc] init];
         // Report this loader
         if (!downloadTable)
         {
             downloadTable = [[NSMutableDictionary alloc] init];
         }
-        [downloadTable setValue:mediaLoader forKey:filePath];
+        [downloadTable setValue:mediaLoader forKey:downloadId];
         
-        // Launch download
-        [mediaLoader downloadMediaFromURL:mediaURL andSaveAtFilePath:filePath success:^(NSString *outputFilePath)
-         {
-             [downloadTable removeObjectForKey:filePath];
-             if (success) success();
-         } failure:^(NSError *error)
-         {
-             if (failure) failure(error);
-             [downloadTable removeObjectForKey:filePath];
-         }];
-        return mediaLoader;
+        // Launch the download
+        [mediaLoader downloadMediaFromURL:mediaURL
+                                 withData:data
+                               identifier:downloadId
+                        andSaveAtFilePath:filePath
+                                  success:^(NSString *outputFilePath) {
+                                      
+                                      [downloadTable removeObjectForKey:downloadId];
+                                      if (success) success(outputFilePath);
+                                      
+                                  }
+                                  failure:^(NSError *error) {
+                                      
+                                      if (failure) failure(error);
+                                      [downloadTable removeObjectForKey:downloadId];
+                                      
+                                  }];
     }
     
-    return nil;
+    return mediaLoader;
 }
 
-+ (MXMediaLoader*)downloadMediaFromURL:(NSString *)mediaURL
-                      andSaveAtFilePath:(NSString *)filePath
+- (MXMediaLoader*)downloadEncryptedMediaFromMatrixContentFile:(MXEncryptedContentFile *)encryptedContentFile
+                                                     inFolder:(NSString *)folder
+                                                      success:(void (^)(NSString *outputFilePath))success
+                                                      failure:(void (^)(NSError *error))failure
 {
-    return [MXMediaManager downloadMediaFromURL:mediaURL andSaveAtFilePath:filePath success:nil failure:nil];
-}
-
-+ (MXMediaLoader*)existingDownloaderWithOutputFilePath:(NSString *)filePath
-{
-    if (downloadTable && filePath)
+    // Check the provided mxc URI by resolving it into a download URL.
+    NSString *mxContentURI = encryptedContentFile.url;
+    NSString *downloadMediaURL;
+    NSDictionary *dataToPost;
+    
+    // Check whether an antivirus is present.
+    if (_antivirusServerURL && [mxContentURI hasPrefix:kMXContentUriScheme])
     {
-        return [downloadTable valueForKey:filePath];
+        // In this case, the same URL is used to download all the encrypted content.
+        // The encrypted content file is sent in the request body.
+        downloadMediaURL = [NSString stringWithFormat:@"%@/%@/download_encrypted", _antivirusServerURL, _antivirusServerPathPrefix];
+        dataToPost = @{@"file": encryptedContentFile.JSONDictionary};
+    }
+    else
+    {
+        downloadMediaURL = [self urlOfContent:mxContentURI];
+    }
+    
+    if (!downloadMediaURL)
+    {
+        NSLog(@"[MXMediaManager] downloadEncryptedMediaFromMatrixContentFile: invalid media content URI");
+        if (failure) failure(nil);
+        return nil;
+    }
+    
+    // Build the outpout file path from mxContentURI, and other inputs.
+    NSString *filePath = [MXMediaManager cachePathForMatrixContentURI:mxContentURI
+                                                              andType:encryptedContentFile.mimetype
+                                                             inFolder:folder];
+    
+    // Build the download id from mxContentURI.
+    NSString *downloadId = [MXMediaManager downloadIdForMatrixContentURI:mxContentURI
+                                                                inFolder:folder];
+    
+    // Create a media loader to download data
+    return [MXMediaManager downloadMedia:downloadMediaURL
+                                withData:dataToPost
+                           andIdentifier:downloadId
+                          saveAtFilePath:filePath
+                                 success:success
+                                 failure:failure];
+}
+
+- (MXMediaLoader*)downloadEncryptedMediaFromMatrixContentFile:(MXEncryptedContentFile *)encryptedContentFile
+                                                     inFolder:(NSString *)folder
+{
+    return [self downloadEncryptedMediaFromMatrixContentFile:encryptedContentFile inFolder:folder success:nil failure:nil];
+}
+
++ (MXMediaLoader*)existingDownloaderWithIdentifier:(NSString *)downloadId
+{
+    if (downloadTable && downloadId)
+    {
+        return [downloadTable valueForKey:downloadId];
     }
     return nil;
 }
@@ -420,7 +711,7 @@ static MXLRUCache* imagesCacheLruCache = nil;
 {
     NSArray* allKeys = [downloadTable allKeys];
     
-    for(NSString* key in allKeys)
+    for (NSString* key in allKeys)
     {
         [[downloadTable valueForKey:key] cancel];
         [downloadTable removeObjectForKey:key];
@@ -447,8 +738,10 @@ static MXLRUCache* imagesCacheLruCache = nil;
             {
                 
                 MXMediaManager *sharedManager = [MXMediaManager sharedManager];
-                [[NSNotificationCenter defaultCenter] addObserver:sharedManager selector:@selector(onMediaUploadEnd:) name:kMXMediaUploadDidFinishNotification object:nil];
-                [[NSNotificationCenter defaultCenter] addObserver:sharedManager selector:@selector(onMediaUploadEnd:) name:kMXMediaUploadDidFailNotification object:nil];
+                [[NSNotificationCenter defaultCenter] addObserver:sharedManager
+                                                         selector:@selector(onMediaLoaderStateDidChange:)
+                                                             name:kMXMediaLoaderStateDidChangeNotification
+                                                           object:nil];
             }
         }
         [uploadTableById setValue:mediaLoader forKey:mediaLoader.uploadId];
@@ -466,16 +759,23 @@ static MXLRUCache* imagesCacheLruCache = nil;
     return nil;
 }
 
-- (void)onMediaUploadEnd:(NSNotification *)notif
+- (void)onMediaLoaderStateDidChange:(NSNotification *)notif
 {
-    [MXMediaManager removeUploaderWithId:notif.object];
+    MXMediaLoader *loader = (MXMediaLoader*)notif.object;
     
-    // If there is no more upload in progress, stop observing upload notifications
-    if (0 == uploadTableById.count)
-    {
-        
-        [[NSNotificationCenter defaultCenter] removeObserver:self name:kMXMediaUploadDidFinishNotification object:nil];
-        [[NSNotificationCenter defaultCenter] removeObserver:self name:kMXMediaUploadDidFailNotification object:nil];
+    // Consider only the end of uploading.
+    switch (loader.state) {
+        case MXMediaLoaderStateUploadCompleted:
+        case MXMediaLoaderStateUploadFailed:
+            [MXMediaManager removeUploaderWithId:loader.uploadId];
+            // If there is no more upload in progress, stop observing upload notifications
+            if (0 == uploadTableById.count)
+            {
+                [[NSNotificationCenter defaultCenter] removeObserver:self name:kMXMediaLoaderStateDidChangeNotification object:nil];
+            }
+            break;
+        default:
+            break;
     }
 }
 
@@ -558,7 +858,84 @@ static NSMutableDictionary* fileBaseFromMimeType = nil;
     return fileBase;
 }
 
-+ (NSString*)cachePathForMediaWithURL:(NSString*)url andType:(NSString *)mimeType inFolder:(NSString*)folder
++ (NSString*)cachePathForMatrixContentURI:(NSString*)mxContentURI andType:(NSString *)mimeType inFolder:(NSString*)folder
+{
+    // Check whether the provided uri is valid.
+    // Note: When an uploading is in progress, the upload id is used temporarily as the content url (nasty trick).
+    // That is why we allow here to retrieve a cache file path from an upload identifier.
+    if (![mxContentURI hasPrefix:kMXContentUriScheme] && ![mxContentURI hasPrefix:kMXMediaUploadIdPrefix])
+    {
+        NSLog(@"[MXMediaManager] cachePathForMatrixContentURI: invalid media content URI");
+        return nil;
+    }
+    
+    NSString* fileBase = @"";
+    NSString *extension = @"";
+    
+    if (!folder.length)
+    {
+        folder = kMXMediaManagerDefaultCacheFolder;
+    }
+    
+    if (mimeType.length)
+    {
+        extension = [MXTools fileExtensionFromContentType:mimeType];
+        
+        // use the mime type to extract a base filename
+        fileBase = [MXMediaManager filebase:mimeType];
+    }
+    
+    if (!extension.length && [folder isEqualToString:kMXMediaManagerAvatarThumbnailFolder])
+    {
+        // Consider the default image type for thumbnail folder
+        extension = [MXTools fileExtensionFromContentType:@"image/jpeg"];
+    }
+    
+    return [[MXMediaManager cacheFolderPath:folder] stringByAppendingPathComponent:[NSString stringWithFormat:@"%@%lu%@", fileBase, (unsigned long)mxContentURI.hash, extension]];
+}
+
++ (NSString*)thumbnailCachePathForMatrixContentURI:(NSString*)mxContentURI
+                                           andType:(NSString *)mimeType
+                                          inFolder:(NSString*)folder
+                                     toFitViewSize:(CGSize)viewSize
+                                        withMethod:(MXThumbnailingMethod)thumbnailingMethod
+{
+    // Check whether the provided uri is valid.
+    if (![mxContentURI hasPrefix:kMXContentUriScheme])
+    {
+        NSLog(@"[MXMediaManager] thumbnailCachePathForMatrixContentURI: invalid media content URI");
+        return nil;
+    }
+    
+    NSString* fileBase = @"";
+    NSString *extension = @"";
+    
+    if (!folder.length)
+    {
+        folder = kMXMediaManagerDefaultCacheFolder;
+    }
+    
+    if (mimeType.length)
+    {
+        extension = [MXTools fileExtensionFromContentType:mimeType];
+        
+        // use the mime type to extract a base filename
+        fileBase = [MXMediaManager filebase:mimeType];
+    }
+    
+    if (!extension.length && [folder isEqualToString:kMXMediaManagerAvatarThumbnailFolder])
+    {
+        // Consider the default image type for thumbnail folder
+        extension = [MXTools fileExtensionFromContentType:@"image/jpeg"];
+    }
+    
+    NSString *suffix = [NSString stringWithFormat:@"_w%tuh%tum%tu", (NSUInteger)viewSize.width, (NSUInteger)viewSize.height, thumbnailingMethod];
+    
+    return [[MXMediaManager cacheFolderPath:folder] stringByAppendingPathComponent:[NSString stringWithFormat:@"%@%lu%@%@", fileBase, (unsigned long)mxContentURI.hash, suffix, extension]];
+}
+
++ (NSString*)temporaryCachePathInFolder:(NSString*)folder
+                               withType:(NSString *)mimeType
 {
     NSString* fileBase = @"";
     NSString *extension = @"";
@@ -576,39 +953,7 @@ static NSMutableDictionary* fileBaseFromMimeType = nil;
         fileBase = [MXMediaManager filebase:mimeType];
     }
     
-    if (!extension.length)
-    {
-        // Try to get this extension from url
-        NSString *pathExtension = [url pathExtension];
-        if (pathExtension.length)
-        {
-            extension = [NSString stringWithFormat:@".%@", pathExtension];
-        }
-        else if ([folder isEqualToString:kMXMediaManagerAvatarThumbnailFolder])
-        {
-            // Consider the default image type for thumbnail folder
-            extension = [MXTools fileExtensionFromContentType:@"image/jpeg"];
-        }
-    }
-    
-    // We observed an issue about the url.hash use: the returned integer was equal for different urls.
-    // This was observed when the urls start with the same characters on about 75 characters, and have the same suffix on about 32 char.
-    // This issue involves several rooms with the same avatar. It happens mainly for the users of the homeservers with a long name.
-    // Patch: we split the url in two components, and invert them in order to have the mediaId at the beginning of the string.
-    NSUInteger urlLength = url.length;
-    NSMutableString *reversedURL = nil;
-    if (urlLength > 2)
-    {
-        NSUInteger index = urlLength / 2;
-        reversedURL = [NSMutableString stringWithString:[url substringFromIndex:index]]; ;
-        [reversedURL appendString:[url substringToIndex:index]];
-    }
-    else if (url)
-    {
-        reversedURL = [NSMutableString stringWithString:url];
-    }
-    
-    return [[MXMediaManager cacheFolderPath:folder] stringByAppendingPathComponent:[NSString stringWithFormat:@"%@%lu%@", fileBase, (unsigned long)reversedURL.hash, extension]];
+    return [[MXMediaManager cacheFolderPath:folder] stringByAppendingPathComponent:[NSString stringWithFormat:@"%@%@%@%@", kMXMediaManagerTmpCachePathPrefix, fileBase, [[NSProcessInfo processInfo] globallyUniqueString], extension]];
 }
 
 + (void)reduceCacheSizeToInsert:(NSUInteger)sizeInBytes

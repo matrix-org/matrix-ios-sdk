@@ -37,12 +37,6 @@ NSString *const kMXAPIPrefixPathUnstable = @"_matrix/client/unstable";
 NSString *const kMXIdentityAPIPrefixPath = @"_matrix/identity/api/v1";
 
 /**
- Matrix content respository path
- */
-NSString *const kMXContentUriScheme  = @"mxc://";
-NSString *const kMXContentPrefixPath = @"_matrix/media/v1";
-
-/**
  Account data types
  */
 NSString *const kMXAccountDataTypeIgnoredUserList = @"m.ignored_user_list";
@@ -99,6 +93,11 @@ MXAuthAction;
     MXHTTPClient *identityHttpClient;
     
     /**
+     HTTP client to the antivirus server.
+     */
+    MXHTTPClient *antivirusHttpClient;
+    
+    /**
      The queue to process server response.
      This queue is used to create models from JSON dictionary without blocking the main thread.
      */
@@ -107,7 +106,7 @@ MXAuthAction;
 @end
 
 @implementation MXRestClient
-@synthesize homeserver, homeserverSuffix, credentials, apiPathPrefix, contentPathPrefix, completionQueue;
+@synthesize homeserver, homeserverSuffix, credentials, apiPathPrefix, contentPathPrefix, completionQueue, antivirusServerPathPrefix;
 
 -(id)initWithHomeServer:(NSString *)inHomeserver andOnUnrecognizedCertificateBlock:(MXHTTPClientOnUnrecognizedCertificate)onUnrecognizedCertBlock
 {
@@ -116,6 +115,7 @@ MXAuthAction;
     {
         homeserver = inHomeserver;
         apiPathPrefix = kMXAPIPrefixPathR0;
+        antivirusServerPathPrefix = kMXAntivirusAPIPrefixPathUnstable;
         contentPathPrefix = kMXContentPrefixPath;
         
         httpClient = [[MXHTTPClient alloc] initWithBaseURL:homeserver
@@ -163,6 +163,7 @@ MXAuthAction;
     {
         homeserver = inCredentials.homeServer;
         apiPathPrefix = kMXAPIPrefixPathR0;
+        antivirusServerPathPrefix = kMXAntivirusAPIPrefixPathUnstable;
         contentPathPrefix = kMXContentPrefixPath;
         
         self.credentials = inCredentials;
@@ -227,6 +228,7 @@ MXAuthAction;
     homeserverSuffix = nil;
     httpClient = nil;
     identityHttpClient = nil;
+    antivirusHttpClient = nil;
     
     processingQueue = nil;
     completionQueue = nil;
@@ -2689,7 +2691,6 @@ MXAuthAction;
                                          __block NSString *avatarUrl;
                                          [self dispatchProcessing:^{
                                              NSDictionary *cleanedJSONResponse = [MXJSONModel removeNullValuesInJSON:JSONResponse];
-                                             NSString *avatarUrl;
                                              MXJSONModelSetString(avatarUrl, cleanedJSONResponse[@"avatar_url"]);
                                          } andCompletion:^{
                                              success(avatarUrl);
@@ -3234,76 +3235,6 @@ MXAuthAction;
                                  }];
 }
 
-- (NSString*)urlOfContent:(NSString*)mxcContentURI
-{
-    NSString *contentURL;
-    
-    // Replace the "mxc://" scheme by the absolute http location of the content
-    if ([mxcContentURI hasPrefix:kMXContentUriScheme])
-    {
-        NSString *mxMediaPrefix = [NSString stringWithFormat:@"%@/%@/download/", homeserver, contentPathPrefix];
-        contentURL = [mxcContentURI stringByReplacingOccurrencesOfString:kMXContentUriScheme withString:mxMediaPrefix];
-        
-        // Remove the auto generated image tag from the URL
-        contentURL = [contentURL stringByReplacingOccurrencesOfString:@"#auto" withString:@""];
-        return contentURL;
-    }
-    
-    // do not allow non-mxc content URLs: we should not be making requests out to whatever http urls people send us
-    return nil;
-}
-
-- (NSString*)urlOfContentThumbnail:(NSString*)mxcContentURI toFitViewSize:(CGSize)viewSize withMethod:(MXThumbnailingMethod)thumbnailingMethod
-{
-    NSString *thumbnailURL = mxcContentURI;
-    
-    if ([mxcContentURI hasPrefix:kMXContentUriScheme])
-    {
-        // Convert first the provided size in pixels
-#if TARGET_OS_IPHONE
-        CGFloat scale = [[UIScreen mainScreen] scale];
-#elif TARGET_OS_OSX
-        CGFloat scale = [[NSScreen mainScreen] backingScaleFactor];
-#endif
-        
-        CGSize sizeInPixels = CGSizeMake(viewSize.width * scale, viewSize.height * scale);
-        
-        // Replace the "mxc://" scheme by the absolute http location for the content thumbnail
-        NSString *mxThumbnailPrefix = [NSString stringWithFormat:@"%@/%@/thumbnail/", homeserver, contentPathPrefix];
-        thumbnailURL = [mxcContentURI stringByReplacingOccurrencesOfString:kMXContentUriScheme withString:mxThumbnailPrefix];
-        
-        // Convert MXThumbnailingMethod to parameter string
-        NSString *thumbnailingMethodString;
-        switch (thumbnailingMethod)
-        {
-            case MXThumbnailingMethodScale:
-                thumbnailingMethodString = @"scale";
-                break;
-                
-            case MXThumbnailingMethodCrop:
-                thumbnailingMethodString = @"crop";
-                break;
-        }
-        
-        // Remove the auto generated image tag from the URL
-        thumbnailURL = [thumbnailURL stringByReplacingOccurrencesOfString:@"#auto" withString:@""];
-        
-        // Add thumbnailing parameters to the URL
-        thumbnailURL = [NSString stringWithFormat:@"%@?width=%tu&height=%tu&method=%@", thumbnailURL, (NSUInteger)sizeInPixels.width, (NSUInteger)sizeInPixels.height, thumbnailingMethodString];
-        
-        return thumbnailURL;
-    }
-    
-    // do not allow non-mxc content URLs: we should not be making requests out to whatever http urls people send us
-    return nil;
-}
-
-- (NSString *)urlOfIdenticon:(NSString *)identiconString
-{
-    return [NSString stringWithFormat:@"%@/%@/identicon/%@", homeserver, contentPathPrefix, [identiconString stringByAddingPercentEncodingWithAllowedCharacters:[NSCharacterSet URLHostAllowedCharacterSet]]];
-}
-
-
 #pragma mark - Identity server API
 - (void)setIdentityServer:(NSString *)identityServer
 {
@@ -3524,6 +3455,159 @@ MXAuthAction;
                                              [self dispatchFailure:error inBlock:failure];
                                          }];
 }
+
+#pragma mark - Antivirus server API
+- (void)setAntivirusServer:(NSString *)antivirusServer
+{
+    if (antivirusServer.length)
+    {
+        _antivirusServer = [antivirusServer copy];
+        antivirusHttpClient = [[MXHTTPClient alloc] initWithBaseURL:[NSString stringWithFormat:@"%@/%@", antivirusServer, antivirusServerPathPrefix]
+                                  andOnUnrecognizedCertificateBlock:nil];
+    }
+    else
+    {
+        // Disable antivirus requests
+        _antivirusServer = nil;
+        antivirusHttpClient = nil;
+    }
+}
+
+- (MXHTTPOperation*)getAntivirusServerPublicKey:(void (^)(NSString *publicKey))success
+                                        failure:(void (^)(NSError *error))failure
+{
+    MXWeakify(self);
+    return [antivirusHttpClient requestWithMethod:@"GET"
+                                             path:@"public_key"
+                                       parameters:nil
+                                          success:^(NSDictionary *JSONResponse) {
+                                              MXStrongifyAndReturnIfNil(self);
+                                              if (success)
+                                              {
+                                                  __block NSString *publicKey;
+                                                  [self dispatchProcessing:^{
+                                                      MXJSONModelSetString(publicKey, JSONResponse[@"public_key"]);
+                                                  } andCompletion:^{
+                                                      success(publicKey);
+                                                  }];
+                                              }
+                                          }
+                                          failure:^(NSError *error) {
+                                              MXStrongifyAndReturnIfNil(self);
+                                              [self dispatchFailure:error inBlock:failure];
+                                          }];
+}
+
+- (MXHTTPOperation*)scanUnencryptedContent:(NSString*)mxcContentURI
+                       success:(void (^)(MXContentScanResult *scanResult))success
+                       failure:(void (^)(NSError *error))failure
+{
+    // Sanity check
+    if (![mxcContentURI hasPrefix:kMXContentUriScheme])
+    {
+        // do not scan non-mxc content URLs
+        NSError* error = [NSError errorWithDomain:@"Invalid content URI" code:500 userInfo:nil];
+        failure(error);
+        return nil;
+    }
+    
+    // Build request path by replacing the "mxc://" scheme
+    NSString *path = [mxcContentURI stringByReplacingOccurrencesOfString:kMXContentUriScheme withString:@"scan/"];
+    MXWeakify(self);
+    return [antivirusHttpClient requestWithMethod:@"GET"
+                                            path:path
+                                      parameters:nil
+                                         success:^(NSDictionary *JSONResponse) {
+                                             MXStrongifyAndReturnIfNil(self);
+                                             if (success)
+                                             {
+                                                 __block MXContentScanResult *scanResult;
+                                                 [self dispatchProcessing:^{
+                                                     MXJSONModelSetMXJSONModel(scanResult, MXContentScanResult, JSONResponse);
+                                                 } andCompletion:^{
+                                                     success(scanResult);
+                                                 }];
+                                             }
+                                         }
+                                         failure:^(NSError *error) {
+                                             MXStrongifyAndReturnIfNil(self);
+                                             [self dispatchFailure:error inBlock:failure];
+                                         }];
+}
+
+- (MXHTTPOperation*)scanEncryptedContent:(MXEncryptedContentFile*)encryptedContentFile
+                                 success:(void (^)(MXContentScanResult *scanResult))success
+                                 failure:(void (^)(NSError *error))failure
+{
+    NSData *payloadData = nil;
+    if (encryptedContentFile)
+    {
+        payloadData = [NSJSONSerialization dataWithJSONObject:@{@"file": encryptedContentFile.JSONDictionary} options:0 error:nil];
+    }
+    
+    MXWeakify(self);
+    return [antivirusHttpClient requestWithMethod:@"POST"
+                                             path:@"scan_encrypted"
+                                       parameters:nil
+                                             data:payloadData
+                                          headers:@{@"Content-Type": @"application/json"}
+                                          timeout:-1
+                                   uploadProgress:nil
+                                          success:^(NSDictionary *JSONResponse) {
+                                              MXStrongifyAndReturnIfNil(self);
+                                              if (success)
+                                              {
+                                                  __block MXContentScanResult *scanResult;
+                                                  [self dispatchProcessing:^{
+                                                      MXJSONModelSetMXJSONModel(scanResult, MXContentScanResult, JSONResponse);
+                                                  } andCompletion:^{
+                                                      success(scanResult);
+                                                  }];
+                                              }
+                                          }
+                                          failure:^(NSError *error) {
+                                              MXStrongifyAndReturnIfNil(self);
+                                              [self dispatchFailure:error inBlock:failure];
+                                          }];
+}
+
+- (MXHTTPOperation*)scanEncryptedContentWithSecureExchange:(MXContentScanEncryptedBody *)encryptedbody
+                                                   success:(void (^)(MXContentScanResult *scanResult))success
+                                                   failure:(void (^)(NSError *error))failure
+{
+    NSData *payloadData = nil;
+    if (encryptedbody)
+    {
+        payloadData = [NSJSONSerialization dataWithJSONObject:@{@"encrypted_body": encryptedbody.JSONDictionary} options:0 error:nil];
+    }
+    
+    MXWeakify(self);
+    return [antivirusHttpClient requestWithMethod:@"POST"
+                                             path:@"scan_encrypted"
+                                       parameters:nil
+                                             data:payloadData
+                                          headers:@{@"Content-Type": @"application/json"}
+                                          timeout:-1
+                                   uploadProgress:nil
+                                          success:^(NSDictionary *JSONResponse) {
+                                              MXStrongifyAndReturnIfNil(self);
+                                              if (success)
+                                              {
+                                                  __block MXContentScanResult *scanResult;
+                                                  [self dispatchProcessing:^{
+                                                      MXJSONModelSetMXJSONModel(scanResult, MXContentScanResult, JSONResponse);
+                                                  } andCompletion:^{
+                                                      success(scanResult);
+                                                  }];
+                                              }
+                                          }
+                                          failure:^(NSError *error) {
+                                              MXStrongifyAndReturnIfNil(self);
+                                              [self dispatchFailure:error inBlock:failure];
+                                          }];
+}
+
+#pragma mark - Certificates
 
 -(void)setPinnedCertificates:(NSSet <NSData *> *)pinnedCertificates {
     httpClient.pinnedCertificates = pinnedCertificates;
@@ -3816,6 +3900,372 @@ MXAuthAction;
                                      MXStrongifyAndReturnIfNil(self);
                                      [self dispatchFailure:error inBlock:failure];
                                  }];
+}
+
+
+#pragma mark - Crypto: e2e keys backup
+- (MXHTTPOperation*)createKeyBackupVersion:(MXKeyBackupVersion*)keyBackupVersion
+                                   success:(void (^)(NSString *version))success
+                                   failure:(void (^)(NSError *error))failure
+{
+    MXWeakify(self);
+    return [httpClient requestWithMethod:@"POST"
+                                    path:[NSString stringWithFormat:@"%@/room_keys/version", kMXAPIPrefixPathUnstable]
+                              parameters:keyBackupVersion.JSONDictionary
+                                 success:^(NSDictionary *JSONResponse) {
+                                     MXStrongifyAndReturnIfNil(self);
+
+                                     if (success)
+                                     {
+                                         __block NSString *version;
+                                         [self dispatchProcessing:^{
+                                             MXJSONModelSetString(version, JSONResponse[@"version"]);
+                                         } andCompletion:^{
+                                             success(version);
+                                         }];
+                                     }
+                                 } failure:^(NSError *error) {
+                                     MXStrongifyAndReturnIfNil(self);
+                                     [self dispatchFailure:error inBlock:failure];
+                                 }];
+}
+
+- (MXHTTPOperation*)keyBackupVersion:(void (^)(MXKeyBackupVersion *keyBackupVersion))success
+                             failure:(void (^)(NSError *error))failure
+{
+    MXWeakify(self);
+    return [httpClient requestWithMethod:@"GET"
+                                    path:[NSString stringWithFormat:@"%@/room_keys/version", kMXAPIPrefixPathUnstable]
+                              parameters:nil
+                                 success:^(NSDictionary *JSONResponse) {
+                                     MXStrongifyAndReturnIfNil(self);
+
+                                     if (success)
+                                     {
+                                         __block MXKeyBackupVersion *keyBackupVersion;
+                                         [self dispatchProcessing:^{
+                                             MXJSONModelSetMXJSONModel(keyBackupVersion, MXKeyBackupVersion, JSONResponse);
+                                         } andCompletion:^{
+                                             success(keyBackupVersion);
+                                         }];
+                                     }
+                                 } failure:^(NSError *error) {
+                                     MXStrongifyAndReturnIfNil(self);
+                                     [self dispatchFailure:error inBlock:failure];
+                                 }];
+}
+
+- (MXHTTPOperation*)sendKeyBackup:(MXKeyBackupData*)keyBackupData
+                             room:(NSString*)roomId
+                          session:(NSString*)sessionId
+                          version:(NSString*)version
+                          success:(void (^)(void))success
+                          failure:(void (^)(NSError *error))failure
+{
+    NSString *path = [self keyBackupPath:roomId session:sessionId version:version];
+    if (!path || !keyBackupData || !roomId || !sessionId)
+    {
+        NSLog(@"[MXRestClient] sendKeyBackup: ERROR: Bad parameters");
+        [self dispatchFailure:nil inBlock:failure];
+        return nil;
+    }
+
+    return [self sendBackup:keyBackupData.JSONDictionary path:path success:success failure:failure];
+}
+
+- (MXHTTPOperation*)sendRoomKeysBackup:(MXRoomKeysBackupData*)roomKeysBackupData
+                                  room:(NSString*)roomId
+                               version:(NSString*)version
+                               success:(void (^)(void))success
+                               failure:(void (^)(NSError *error))failure
+{
+    NSString *path = [self keyBackupPath:roomId session:nil version:version];
+    if (!path || !roomKeysBackupData || !roomId)
+    {
+        NSLog(@"[MXRestClient] sendRoomKeysBackup: ERROR: Bad parameters");
+        [self dispatchFailure:nil inBlock:failure];
+        return nil;
+    }
+
+    return [self sendBackup:roomKeysBackupData.JSONDictionary path:path success:success failure:failure];
+}
+
+- (MXHTTPOperation*)sendKeysBackup:(MXKeysBackupData*)keysBackupData
+                           version:(NSString*)version
+                           success:(void (^)(void))success
+                           failure:(void (^)(NSError *error))failure
+{
+    NSString *path = [self keyBackupPath:nil session:nil version:version];
+    if (!path || !keysBackupData)
+    {
+        NSLog(@"[MXRestClient] sendKeysBackup: ERROR: Bad parameters");
+        [self dispatchFailure:nil inBlock:failure];
+        return nil;
+    }
+
+    return [self sendBackup:keysBackupData.JSONDictionary path:path success:success failure:failure];
+}
+
+- (MXHTTPOperation*)sendBackup:(NSDictionary*)backupData
+                          path:(NSString*)path
+                       success:(void (^)(void))success
+                       failure:(void (^)(NSError *error))failure
+{
+    MXWeakify(self);
+    return [httpClient requestWithMethod:@"PUT"
+                                    path:path
+                              parameters:backupData
+                                 success:^(NSDictionary *JSONResponse) {
+                                     MXStrongifyAndReturnIfNil(self);
+
+                                     if (success)
+                                     {
+                                         [self dispatchProcessing:nil
+                                                    andCompletion:^{
+                                                        success();
+                                                    }];
+                                     }
+                                 } failure:^(NSError *error) {
+                                     MXStrongifyAndReturnIfNil(self);
+                                     [self dispatchFailure:error inBlock:failure];
+                                 }];
+}
+
+- (MXHTTPOperation*)keyBackupForSession:(NSString*)sessionId
+                                 inRoom:(NSString*)roomId
+                                version:(NSString*)version
+                                success:(void (^)(MXKeyBackupData *keyBackupData))success
+                                failure:(void (^)(NSError *error))failure
+{
+    NSString *path = [self keyBackupPath:roomId session:sessionId version:version];
+    if (!path || !roomId || !sessionId)
+    {
+        NSLog(@"[MXRestClient] keyBackup: ERROR: Bad parameters");
+        [self dispatchFailure:nil inBlock:failure];
+        return nil;
+    }
+
+    MXWeakify(self);
+    return [httpClient requestWithMethod:@"GET"
+                                    path:path
+                              parameters:nil
+                                 success:^(NSDictionary *JSONResponse) {
+                                     MXStrongifyAndReturnIfNil(self);
+
+                                     if (success)
+                                     {
+                                         __block MXKeyBackupData *keyBackupData;
+                                         [self dispatchProcessing:^{
+                                             MXJSONModelSetMXJSONModel(keyBackupData, MXKeyBackupData, JSONResponse);
+                                         } andCompletion:^{
+                                             success(keyBackupData);
+                                         }];
+                                     }
+                                 } failure:^(NSError *error) {
+                                     MXStrongifyAndReturnIfNil(self);
+                                     [self dispatchFailure:error inBlock:failure];
+                                 }];
+}
+
+- (MXHTTPOperation*)keysBackupInRoom:(NSString*)roomId
+                             version:(NSString*)version
+                             success:(void (^)(MXRoomKeysBackupData *roomKeysBackupData))success
+                             failure:(void (^)(NSError *error))failure
+{
+    NSString *path = [self keyBackupPath:roomId session:nil version:version];
+    if (!path || !roomId)
+    {
+        NSLog(@"[MXRestClient] roomKeysBackup: ERROR: Bad parameters");
+        [self dispatchFailure:nil inBlock:failure];
+        return nil;
+    }
+
+    MXWeakify(self);
+    return [httpClient requestWithMethod:@"GET"
+                                    path:path
+                              parameters:nil
+                                 success:^(NSDictionary *JSONResponse) {
+                                     MXStrongifyAndReturnIfNil(self);
+
+                                     if (success)
+                                     {
+                                         __block MXRoomKeysBackupData *roomKeysBackupData;
+                                         [self dispatchProcessing:^{
+                                             MXJSONModelSetMXJSONModel(roomKeysBackupData, MXRoomKeysBackupData, JSONResponse);
+                                         } andCompletion:^{
+                                             success(roomKeysBackupData);
+                                         }];
+                                     }
+                                 } failure:^(NSError *error) {
+                                     MXStrongifyAndReturnIfNil(self);
+                                     [self dispatchFailure:error inBlock:failure];
+                                 }];
+}
+
+- (MXHTTPOperation*)keysBackup:(NSString*)version
+                       success:(void (^)(MXKeysBackupData *keysBackupData))success
+                       failure:(void (^)(NSError *error))failure;
+{
+    NSString *path = [self keyBackupPath:nil session:nil version:version];
+    if (!path)
+    {
+        NSLog(@"[MXRestClient] keysBackup: ERROR: Bad parameters");
+        [self dispatchFailure:nil inBlock:failure];
+        return nil;
+    }
+
+    MXWeakify(self);
+    return [httpClient requestWithMethod:@"GET"
+                                    path:path
+                              parameters:nil
+                                 success:^(NSDictionary *JSONResponse) {
+                                     MXStrongifyAndReturnIfNil(self);
+
+                                     if (success)
+                                     {
+                                         __block MXKeysBackupData *keysBackupData;
+                                         [self dispatchProcessing:^{
+                                             MXJSONModelSetMXJSONModel(keysBackupData, MXKeysBackupData, JSONResponse);
+                                         } andCompletion:^{
+                                             success(keysBackupData);
+                                         }];
+                                     }
+                                 } failure:^(NSError *error) {
+                                     MXStrongifyAndReturnIfNil(self);
+                                     [self dispatchFailure:error inBlock:failure];
+                                 }];
+}
+
+- (MXHTTPOperation*)deleteKeyFromBackup:(NSString*)roomId
+                                session:(NSString*)sessionId
+                                version:(NSString*)version
+                                success:(void (^)(void))success
+                                failure:(void (^)(NSError *error))failure
+{
+    NSString *path = [self keyBackupPath:roomId session:sessionId version:version];
+    if (!path || !roomId || !sessionId)
+    {
+        NSLog(@"[MXRestClient] deleteKeyFromBackup: ERROR: Bad parameters");
+        [self dispatchFailure:nil inBlock:failure];
+        return nil;
+    }
+
+    MXWeakify(self);
+    return [httpClient requestWithMethod:@"DELETE"
+                                    path:path
+                              parameters:nil
+                                 success:^(NSDictionary *JSONResponse) {
+                                     MXStrongifyAndReturnIfNil(self);
+
+                                     if (success)
+                                     {
+                                         [self dispatchProcessing:nil
+                                                    andCompletion:^{
+                                                        success();
+                                                    }];
+                                     }
+                                 } failure:^(NSError *error) {
+                                     MXStrongifyAndReturnIfNil(self);
+                                     [self dispatchFailure:error inBlock:failure];
+                                 }];
+}
+
+- (MXHTTPOperation*)deleteKeysInRoomFromBackup:(NSString*)roomId
+                                       version:(NSString*)version
+                                       success:(void (^)(void))success
+                                       failure:(void (^)(NSError *error))failure
+{
+    NSString *path = [self keyBackupPath:roomId session:nil version:version];
+    if (!path || !roomId)
+    {
+        NSLog(@"[MXRestClient] deleteKeysInRoomFromBackup: ERROR: Bad parameters");
+        [self dispatchFailure:nil inBlock:failure];
+        return nil;
+    }
+
+    MXWeakify(self);
+    return [httpClient requestWithMethod:@"DELETE"
+                                    path:path
+                              parameters:nil
+                                 success:^(NSDictionary *JSONResponse) {
+                                     MXStrongifyAndReturnIfNil(self);
+
+                                     if (success)
+                                     {
+                                         [self dispatchProcessing:nil
+                                                    andCompletion:^{
+                                                        success();
+                                                    }];
+                                     }
+                                 } failure:^(NSError *error) {
+                                     MXStrongifyAndReturnIfNil(self);
+                                     [self dispatchFailure:error inBlock:failure];
+                                 }];
+}
+
+- (MXHTTPOperation*)deleteKeysFromBackup:(NSString*)version
+                                 success:(void (^)(void))success
+                                 failure:(void (^)(NSError *error))failure
+{
+    NSString *path = [self keyBackupPath:nil session:nil version:version];
+    if (!path)
+    {
+        NSLog(@"[MXRestClient] keysBackup: ERROR: Bad parameters");
+        [self dispatchFailure:nil inBlock:failure];
+        return nil;
+    }
+
+    MXWeakify(self);
+    return [httpClient requestWithMethod:@"DELETE"
+                                    path:path
+                              parameters:nil
+                                 success:^(NSDictionary *JSONResponse) {
+                                     MXStrongifyAndReturnIfNil(self);
+
+                                     if (success)
+                                     {
+                                         [self dispatchProcessing:nil
+                                                    andCompletion:^{
+                                                        success();
+                                                    }];
+                                     }
+                                 } failure:^(NSError *error) {
+                                     MXStrongifyAndReturnIfNil(self);
+                                     [self dispatchFailure:error inBlock:failure];
+                                 }];
+}
+
+- (NSString*)keyBackupPath:(NSString*)roomId session:(NSString*)sessionId version:(NSString*)version
+{
+    if (!version)
+    {
+        return nil;
+    }
+
+    NSMutableString *path = [NSMutableString stringWithFormat:@"%@/room_keys/keys", kMXAPIPrefixPathUnstable];
+
+    if (sessionId)
+    {
+        if (!roomId)
+        {
+            NSLog(@"[MXRestClient] keyBackupPath: ERROR: Null version");
+            return nil;
+        }
+        [path appendString:@"/"];
+        [path appendString:[roomId stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding]];
+        [path appendString:@"/"];
+        [path appendString:[sessionId stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding]];
+    }
+    else if (roomId)
+    {
+        [path appendString:@"/"];
+        [path appendString:[roomId stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding]];
+    }
+
+    [path appendString:@"?version="];
+    [path appendString:version];
+
+    return path;
 }
 
 

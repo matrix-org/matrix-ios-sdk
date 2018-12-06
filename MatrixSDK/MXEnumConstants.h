@@ -25,6 +25,40 @@
  */
 
 /**
+ Scheme used in Matrix content URIs.
+ */
+FOUNDATION_EXPORT NSString *const kMXContentUriScheme;
+/**
+ A constant representing the default prefix of the Matrix content repository path.
+ */
+FOUNDATION_EXPORT NSString *const kMXContentPrefixPath;
+
+/**
+ A constant representing the URI path for as-yet unspecified of the AntiVirus Client-Server HTTP API.
+ */
+FOUNDATION_EXPORT NSString *const kMXAntivirusAPIPrefixPathUnstable;
+
+/**
+ Methods of thumnailing supported by the Matrix content repository.
+ */
+typedef enum : NSUInteger
+{
+    /**
+     "scale" tries to return an image where either the width or the height is smaller than the
+     requested size. The client should then scale and letterbox the image if it needs to
+     fit within a given rectangle.
+     */
+    MXThumbnailingMethodScale,
+    
+    /**
+     "crop" tries to return an image where the width and height are close to the requested size
+     and the aspect matches the requested size. The client should scale the image if it needs to
+     fit within a given rectangle.
+     */
+    MXThumbnailingMethodCrop
+} MXThumbnailingMethod;
+
+/**
  Membership definitions
  */
 typedef enum : NSUInteger

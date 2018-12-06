@@ -41,6 +41,7 @@ NSString *const kMXErrCodeStringServerNotTrusted        = @"M_SERVER_NOT_TRUSTED
 NSString *const kMXErrCodeStringGuestAccessForbidden    = @"M_GUEST_ACCESS_FORBIDDEN";
 NSString *const kMXErrCodeStringConsentNotGiven         = @"M_CONSENT_NOT_GIVEN";
 NSString *const kMXErrCodeStringResourceLimitExceeded   = @"M_RESOURCE_LIMIT_EXCEEDED";
+NSString *const kMXErrCodeStringBackupWrongKeysVersion  = @"M_WRONG_ROOM_KEYS_VERSION";
 
 NSString *const kMXErrorStringInvalidToken      = @"Invalid token";
 

@@ -141,7 +141,17 @@ NSString *const kMXRoomSummaryDidChangeNotification = @"kMXRoomSummaryDidChangeN
     [room state:^(MXRoomState *roomState) {
         MXStrongifyAndReturnIfNil(self);
 
-        if ([self.mxSession.roomSummaryUpdateDelegate session:self.mxSession updateRoomSummary:self withStateEvents:roomState.stateEvents roomState:roomState])
+        BOOL updated = [self.mxSession.roomSummaryUpdateDelegate session:self.mxSession updateRoomSummary:self withStateEvents:roomState.stateEvents roomState:roomState];
+
+        if (self.displayname == nil || self.avatar == nil)
+        {
+            // Avatar and displayname may not be recomputed from the state event list if
+            // the latter does not contain any `name` or `avatar` event. So, in this case,
+            // we reapply the Matrix name/avatar calculation algorithm.
+            updated |= [self.mxSession.roomSummaryUpdateDelegate session:self.mxSession updateRoomSummary:self withServerRoomSummary:nil roomState:roomState];
+        }
+
+        if (updated)
         {
             [self save:YES];
         }

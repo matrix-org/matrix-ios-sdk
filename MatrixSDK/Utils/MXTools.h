@@ -60,6 +60,15 @@
  */
 + (NSString*)stripNewlineCharacters:(NSString *)inputString;
 
+/**
+ Add a white space every given number of characters.
+
+ @param inputString the original string.
+ @param characters number of characters between each white space.
+ @return a string with white spaces.
+ */
++ (NSString*)addWhiteSpacesToString:(NSString *)inputString every:(NSUInteger)characters;
+
 
 #pragma mark - Strings kinds check
 

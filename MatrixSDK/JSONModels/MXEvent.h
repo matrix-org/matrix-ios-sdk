@@ -17,7 +17,7 @@
 
 #import "MXJSONModel.h"
 
-@class MXEventDecryptionResult;
+@class MXEventDecryptionResult, MXEncryptedContentFile;
 
 /**
  Types of Matrix events
@@ -403,6 +403,19 @@ extern NSString *const kMXEventIdentifierKey;
  */
 - (NSComparisonResult)compareOriginServerTs:(MXEvent *)otherEvent;
 
+/**
+ Retrieve all the media URLs contained in the event.
+
+ @return All available media URLs.
+ */
+- (NSArray<NSString*>*)getMediaURLs;
+
+/**
+ Indicate if event content could be scanned by `MXScanManager`.
+
+ @return true if event content could be scanned by `MXScanManager`.
+ */
+- (BOOL)isContentScannable;
 
 #pragma mark - Crypto
 
@@ -483,5 +496,12 @@ extern NSString *const kMXEventIdentifierKey;
  If any, the error that occured during decryption.
  */
 @property (nonatomic) NSError *decryptionError;
+
+/**
+ Get encrypted content files from encrypted event if present.
+ 
+ @return Encrypted content files.
+ */
+- (NSArray<MXEncryptedContentFile*>*)getEncryptedContentFiles;
 
 @end

@@ -344,6 +344,8 @@
                                 exportFormat:NO
      ];
 
+    [crypto.backup maybeSendKeyBackup];
+
     return [[MXOutboundSessionInfo alloc] initWithSessionID:sessionId];
 }
 

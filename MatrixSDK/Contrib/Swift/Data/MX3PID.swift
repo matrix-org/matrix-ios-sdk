@@ -46,6 +46,13 @@ public struct MX3PID {
     
     public var medium: Medium
     public var address: String
+
+    // Explicit public initializer, because automatically generated ones will
+    // stay package internal.
+    public init(medium: Medium, address: String) {
+        self.medium = medium
+        self.address = address
+    }
 }
 
 extension MX3PID : Hashable {

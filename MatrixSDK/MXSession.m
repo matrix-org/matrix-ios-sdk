@@ -40,9 +40,11 @@
 
 #import "MXRoomFilter.h"
 
+#import "MXScanManager.h"
+
 #pragma mark - Constants definitions
 
-const NSString *MatrixSDKVersion = @"0.11.6";
+const NSString *MatrixSDKVersion = @"0.12.0";
 NSString *const kMXSessionStateDidChangeNotification = @"kMXSessionStateDidChangeNotification";
 NSString *const kMXSessionNewRoomNotification = @"kMXSessionNewRoomNotification";
 NSString *const kMXSessionWillLeaveRoomNotification = @"kMXSessionWillLeaveRoomNotification";
@@ -170,10 +172,12 @@ typedef void (^MXOnResumeDone)(void);
  */
 @property (nonatomic) NSUInteger preventPauseCount;
 
+@property (nonatomic, readwrite) MXScanManager *scanManager;
+
 @end
 
 @implementation MXSession
-@synthesize matrixRestClient;
+@synthesize matrixRestClient, mediaManager;
 
 - (id)initWithMatrixRestClient:(MXRestClient*)mxRestClient
 {
@@ -181,6 +185,7 @@ typedef void (^MXOnResumeDone)(void);
     if (self)
     {
         matrixRestClient = mxRestClient;
+        mediaManager = [[MXMediaManager alloc] initWithHomeServer:matrixRestClient.homeserver];
         rooms = [NSMutableDictionary dictionary];
         roomsSummaries = [NSMutableDictionary dictionary];
         _roomSummaryUpdateDelegate = [MXRoomSummaryUpdater roomSummaryUpdaterForSession:self];
@@ -776,6 +781,7 @@ typedef void (^MXOnResumeDone)(void);
     }
 
     _myUser = nil;
+    mediaManager = nil;
     matrixRestClient = nil;
 
     [self setState:MXSessionStateClosed];
@@ -1566,6 +1572,25 @@ typedef void (^MXOnResumeDone)(void);
     return [matrixRestClient supportedMatrixVersions:success failure:failure];
 }
 
+- (void)setAntivirusServerURL:(NSString *)antivirusServerURL
+{
+    _antivirusServerURL = antivirusServerURL;
+    // Update the current restClient
+    [matrixRestClient setAntivirusServer:antivirusServerURL];
+    // Update the media manager
+    [mediaManager setAntivirusServerURL:antivirusServerURL];
+    
+    // Configure scan manager if antivirusServerURL is set
+    if (antivirusServerURL)
+    {
+        _scanManager = [[MXScanManager alloc] initWithRestClient:matrixRestClient];
+        [_scanManager resetAllAntivirusScanStatusInProgressToUnknown];
+    }
+    else
+    {
+        _scanManager = nil;
+    }
+}
 
 #pragma mark - Rooms operations
 

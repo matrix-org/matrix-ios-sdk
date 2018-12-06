@@ -272,6 +272,8 @@
         // Use Matrix room summaries and heroes
         if (serverRoomSummary)
         {
+            memberCount = serverRoomSummary.joinedMemberCount + serverRoomSummary.invitedMemberCount;
+
             if (serverRoomSummary.heroes.count)
             {
                 memberNames = [NSMutableArray arrayWithCapacity:serverRoomSummary.heroes.count];
@@ -285,8 +287,6 @@
 
                     [memberNames addObject:memberName];
                 }
-
-                memberCount = serverRoomSummary.joinedMemberCount + serverRoomSummary.invitedMemberCount;
             }
         }
         // Or in case of non lazy loading and no server room summary,
@@ -299,7 +299,10 @@
             for (MXRoomMember *member in otherMembers)
             {
                 NSString *memberName = [roomState.members memberName:member.userId];
-                [memberNames addObject:memberName];
+                if (memberName)
+                {
+                    [memberNames addObject:memberName];
+                }
             }
 
             memberCount = memberNames.count + 1;
@@ -328,6 +331,14 @@
                                        @(memberCount - 2)];
                 break;
         }
+
+        if (memberCount > 1
+            && (!displayname || [displayname isEqualToString:_roomNameStringLocalizations.emptyRoom]))
+        {
+            // Data are missing to compute the display name
+            NSLog(@"[MXRoomSummaryUpdater] updateSummaryDisplayname: Warning: Computed an unexpected \"Empty Room\" name. memberCount: %@", @(memberCount));
+            displayname = [self fixUnexpectedEmptyRoomDisplayname:memberCount session:session roomState:roomState];
+        }
     }
 
     if (displayname != summary.displayname || ![displayname isEqualToString:summary.displayname])
@@ -337,6 +348,84 @@
     }
 
     return NO;
+}
+
+/**
+ Try to fix an unexpected "Empty room" name.
+
+ One known reason is https://github.com/matrix-org/synapse/issues/4194.
+
+ @param memberCount The known member count.
+ @param session the session.
+ @param roomState the room state to get data from.
+ @return The new display name
+ */
+- (NSString*)fixUnexpectedEmptyRoomDisplayname:(NSUInteger)memberCount session:(MXSession*)session roomState:(MXRoomState*)roomState
+{
+    NSString *displayname;
+
+    // Try to fix it and to avoid unexpected "Empty room" room name with members already loaded
+    NSArray *otherMembers = [self sortedOtherMembersInRoomState:roomState withMatrixSession:session];
+    NSMutableArray<NSString*> *memberNames = [NSMutableArray arrayWithCapacity:otherMembers.count];
+    for (MXRoomMember *member in otherMembers)
+    {
+        NSString *memberName = [roomState.members memberName:member.userId];
+        if (memberName)
+        {
+            [memberNames addObject:memberName];
+        }
+    }
+
+    NSLog(@"[MXRoomSummaryUpdater] fixUnexpectedEmptyRoomDisplayname: Found %@ loaded members for %@ known other members", @(otherMembers.count), @(memberCount - 1));
+
+    switch (memberNames.count)
+    {
+        case 0:
+            NSLog(@"[MXRoomSummaryUpdater] fixUnexpectedEmptyRoomDisplayname: No luck");
+            displayname = _roomNameStringLocalizations.emptyRoom;
+            break;
+
+        case 1:
+            if (memberCount == 2)
+            {
+                NSLog(@"[MXRoomSummaryUpdater] fixUnexpectedEmptyRoomDisplayname: Fixed 1");
+                displayname = memberNames[0];
+            }
+            else
+            {
+                NSLog(@"[MXRoomSummaryUpdater] fixUnexpectedEmptyRoomDisplayname: Half fixed 1");
+                displayname = [NSString stringWithFormat:_roomNameStringLocalizations.moreThanTwoMembers,
+                               memberNames[0],
+                               @(memberCount - 1)];
+            }
+            break;
+
+        case 2:
+            if (memberCount == 3)
+            {
+                NSLog(@"[MXRoomSummaryUpdater] fixUnexpectedEmptyRoomDisplayname: Fixed 2");
+                displayname = [NSString stringWithFormat:_roomNameStringLocalizations.twoMembers,
+                               memberNames[0],
+                               memberNames[1]];
+            }
+            else
+            {
+                NSLog(@"[MXRoomSummaryUpdater] fixUnexpectedEmptyRoomDisplayname: Half fixed 2");
+                displayname = [NSString stringWithFormat:_roomNameStringLocalizations.moreThanTwoMembers,
+                               memberNames[0],
+                               @(memberCount - 2)];
+            }
+            break;
+
+        default:
+            NSLog(@"[MXRoomSummaryUpdater] fixUnexpectedEmptyRoomDisplayname: Fixed 3");
+            displayname = [NSString stringWithFormat:_roomNameStringLocalizations.moreThanTwoMembers,
+                           memberNames[0],
+                           @(memberCount - 2)];
+            break;
+    }
+
+    return displayname;
 }
 
 - (BOOL)updateSummaryAvatar:(MXRoomSummary *)summary session:(MXSession *)session withServerRoomSummary:(MXRoomSyncSummary *)serverRoomSummary roomState:(MXRoomState *)roomState
@@ -349,15 +438,12 @@
         avatar = roomState.avatar;
     }
     // Else, use Matrix room summaries and heroes
-    else if (serverRoomSummary)
+    else if (serverRoomSummary.heroes.count == 1)
     {
-        if (serverRoomSummary.heroes.count == 1)
-        {
-            MXRoomMember *otherMember = [roomState.members memberWithUserId:serverRoomSummary.heroes.firstObject];
-            avatar = otherMember.avatarUrl;
-        }
+        MXRoomMember *otherMember = [roomState.members memberWithUserId:serverRoomSummary.heroes.firstObject];
+        avatar = otherMember.avatarUrl;
     }
-    // Or in case of non lazy loading and no server room summary,
+    // Or in case of non lazy loading or no server room summary,
     // use the full room state
     else if (roomState.membersCount.members == 2)
     {

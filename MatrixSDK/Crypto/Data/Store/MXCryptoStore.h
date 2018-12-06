@@ -115,7 +115,7 @@
 /**
  Store a device for a user.
 
- @param userId The user's id.
+ @param userId the user's id.
  @param device the device to store.
  */
 - (void)storeDeviceForUser:(NSString*)userId device:(MXDeviceInfo*)device;
@@ -123,11 +123,19 @@
 /**
  Retrieve a device for a user.
 
- @param deviceId The device id.
- @param userId The user's id.
- @return A map from device id to 'MXDevice' object for the device.
+ @param deviceId the device id.
+ @param userId the user's id.
+ @return The device.
  */
 - (MXDeviceInfo*)deviceWithDeviceId:(NSString*)deviceId forUser:(NSString*)userId;
+
+/**
+ Retrieve a device by its identity key.
+
+ @param identityKey the device identity key (`MXDeviceInfo.identityKey`)/
+ @return The device.
+ */
+- (MXDeviceInfo*)deviceWithIdentityKey:(NSString*)identityKey;
 
 /**
  Store the known devices for a user.
@@ -213,6 +221,44 @@
  @return the list of all inbound group sessions.
  */
 - (NSArray<MXOlmInboundGroupSession*> *)inboundGroupSessions;
+
+
+#pragma mark - Key backup
+
+/**
+ The backup version currently used.
+ Nil means no backup.
+ */
+@property (nonatomic) NSString *backupVersion;
+
+/**
+ Mark all inbound group sessions as not backed up.
+ */
+- (void)resetBackupMarkers;
+
+/**
+ Mark an inbound group session as backed up on the user homeserver.
+
+ @param sessionId the session identifier.
+ @param senderKey the base64-encoded curve25519 key of the sender.
+ */
+- (void)markBackupDoneForInboundGroupSessionWithId:(NSString*)sessionId andSenderKey:(NSString*)senderKey;
+
+/**
+ Retrieve inbound group sessions that are not yet backed up.
+
+ @param limit the maximum number of sessions to return.
+ @return an array of non backed up inbound group sessions.
+ */
+- (NSArray<MXOlmInboundGroupSession*>*)inboundGroupSessionsToBackup:(NSUInteger)limit;
+
+/**
+ Number of stored inbound group sessions.
+
+ @param onlyBackedUp if YES, count only session marked as backed up.
+ @return a count.
+ */
+- (NSUInteger)inboundGroupSessionsCount:(BOOL)onlyBackedUp;
 
 
 #pragma mark - Key sharing - Outgoing key requests
