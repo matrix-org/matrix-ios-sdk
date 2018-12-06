@@ -61,9 +61,14 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
     NSMutableArray<void (^)(MXEventTimeline *)> *pendingLiveTimelineRequesters;
 
     /**
-     FIFO queue of objects waiting for [self members:].
+     FIFO queue of success blocks waiting for [self members:].
      */
     NSMutableArray<void (^)(MXRoomMembers *)> *pendingMembersRequesters;
+    
+    /**
+     FIFO queue of failure blocks waiting for [self members:].
+     */
+    NSMutableArray<void (^)(NSError *)> *pendingMembersFailureBlocks;
 }
 @end
 
@@ -232,6 +237,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
             if (!self->pendingMembersRequesters)
             {
                 self->pendingMembersRequesters = [NSMutableArray array];
+                self->pendingMembersFailureBlocks = [NSMutableArray array];
 
                 // Else get them from the homeserver
                 NSDictionary *parameters;
@@ -282,9 +288,10 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
                         }
                     }
 
-                    // Provide the timelime to pending requesters
+                    // Provide the members to pending requesters
                     NSArray<void (^)(MXRoomMembers *)> *pendingMembersRequesters = [self->pendingMembersRequesters copy];
                     self->pendingMembersRequesters = nil;
+                    self->pendingMembersFailureBlocks = nil;
 
                     for (void (^onRequesterComplete)(MXRoomMembers *) in pendingMembersRequesters)
                     {
@@ -292,7 +299,18 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
                     }
                     NSLog(@"[MXRoom] members loaded. Pending requesters: %@", @(pendingMembersRequesters.count));
 
-                } failure:failure];
+                } failure:^(NSError *error) {
+                    // Notify the failure to the pending requesters
+                    NSArray<void (^)(NSError *)> *pendingRequesters = [self->pendingMembersFailureBlocks copy];
+                    self->pendingMembersRequesters = nil;
+                    self->pendingMembersFailureBlocks = nil;
+                    
+                    for (void (^onFailure)(NSError *) in pendingRequesters)
+                    {
+                        onFailure(error);
+                    }
+                    NSLog(@"[MXRoom] get members failed. Pending requesters: %@", @(pendingRequesters.count));
+                }];
 
                 if (operation2)
                 {
@@ -303,6 +321,11 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
             if (success)
             {
                 [self->pendingMembersRequesters addObject:success];
+            }
+            
+            if (failure)
+            {
+                [self->pendingMembersFailureBlocks addObject:failure];
             }
         }
     }];
