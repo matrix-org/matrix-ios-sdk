@@ -720,10 +720,10 @@ RLM_ARRAY_TYPE(MXRealmOlmInboundGroupSession)
 - (void)removeInboundGroupSessionWithId:(NSString*)sessionId andSenderKey:(NSString*)senderKey
 {
     RLMRealm *realm = self.realm;
-
-    RLMResults<MXRealmOlmInboundGroupSession *> *realmSessions = [MXRealmOlmInboundGroupSession objectsInRealm:realm where:@"sessionId = %@ AND senderKey = %@", sessionId, senderKey];
-
     [realm transactionWithBlock:^{
+
+        RLMResults<MXRealmOlmInboundGroupSession *> *realmSessions = [MXRealmOlmInboundGroupSession objectsInRealm:realm where:@"sessionId = %@ AND senderKey = %@", sessionId, senderKey];
+
         [realm deleteObjects:realmSessions];
     }];
 }
@@ -848,19 +848,20 @@ RLM_ARRAY_TYPE(MXRealmOlmInboundGroupSession)
 - (void)storeOutgoingRoomKeyRequest:(MXOutgoingRoomKeyRequest*)request
 {
     RLMRealm *realm = self.realm;
-
-    NSString *requestBodyString = [MXTools serialiseJSONObject:request.requestBody];
-
-    MXRealmOutgoingRoomKeyRequest *realmOutgoingRoomKeyRequest = [[MXRealmOutgoingRoomKeyRequest alloc] initWithValue:@{
-                                                                          @"requestId": request.requestId,
-                                                                          @"recipientsData": [NSKeyedArchiver archivedDataWithRootObject:request.recipients],
-                                                                          @"requestBodyString": requestBodyString,
-                                                                          @"state": @(request.state)
-                                                                          }];
-
-    realmOutgoingRoomKeyRequest.cancellationTxnId = request.cancellationTxnId;
-
     [realm transactionWithBlock:^{
+
+        NSString *requestBodyString = [MXTools serialiseJSONObject:request.requestBody];
+
+        MXRealmOutgoingRoomKeyRequest *realmOutgoingRoomKeyRequest =
+        [[MXRealmOutgoingRoomKeyRequest alloc] initWithValue:@{
+                                                               @"requestId": request.requestId,
+                                                               @"recipientsData": [NSKeyedArchiver archivedDataWithRootObject:request.recipients],
+                                                               @"requestBodyString": requestBodyString,
+                                                               @"state": @(request.state)
+                                                               }];
+
+        realmOutgoingRoomKeyRequest.cancellationTxnId = request.cancellationTxnId;
+
         [realm addObject:realmOutgoingRoomKeyRequest];
     }];
 }
