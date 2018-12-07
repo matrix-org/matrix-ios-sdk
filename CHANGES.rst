@@ -1,3 +1,10 @@
+Changes in Matrix iOS SDK in 0.12.x (20xx-xx-xx)
+===============================================
+
+Improvements:
+ * MXScanManager: Support the encrypted body (the request body is now encrypted by default using the server public key).
+ * MXMediaManager: Support the encrypted body.
+
 Changes in Matrix iOS SDK in 0.12.0 (2018-12-06)
 ===============================================
 

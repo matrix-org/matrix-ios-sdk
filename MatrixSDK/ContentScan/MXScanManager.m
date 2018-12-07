@@ -15,6 +15,7 @@
  */
 
 #import "MXScanManager.h"
+#import <OLMKit/OLMKit.h>
 
 #import "MXMediaScanStore.h"
 #import "MXRealmMediaScanStore.h"
@@ -38,6 +39,9 @@ NSString *const MXScanManagerScanDidChangeNotificationInsertionsUserInfoKey = @"
 NSString *const MXScanManagerScanDidChangeNotificationModificationsUserInfoKey = @"modifications";
 NSString *const MXScanManagerScanDidChangeNotificationDeletionsUserInfoKey = @"deletions";
 
+NSString *const MXErrorContentScannerReasonKey                  = @"reason";
+NSString *const MXErrorContentScannerReasonValueBadDecryption   = @"MCS_BAD_DECRYPTION";
+
 static NSTimeInterval const kDefaultScanUpdateInterval = 600;
 static const char * const kProcessingQueueName = "org.MatrixSDK.MXScanManager";
 
@@ -51,6 +55,7 @@ static const char * const kProcessingQueueName = "org.MatrixSDK.MXScanManager";
 
 @property (nonatomic, strong) MXRestClient *restClient;
 @property (nonatomic) NSTimeInterval scanInterval;
+@property (nonatomic) NSString *serverPublicKey;
 
 @property (nonatomic, strong) dispatch_queue_t processingQueue;
 
@@ -68,14 +73,15 @@ static const char * const kProcessingQueueName = "org.MatrixSDK.MXScanManager";
     if (self)
     {
         NSString *antivirusServerDomain;
-        
-        NSString *antivirusServerURL = restClient.antivirusServer;
-        NSURLComponents *antivirusURLComponents = [[NSURLComponents alloc] initWithString:antivirusServerURL];
+        NSURLComponents *antivirusURLComponents = [[NSURLComponents alloc] initWithString:restClient.antivirusServer];
         antivirusServerDomain = antivirusURLComponents.host;
         
         if (antivirusServerDomain)
         {
             _restClient = restClient;
+            _antivirusServerURL = restClient.antivirusServer;
+            _antivirusServerPathPrefix = restClient.antivirusServerPathPrefix;
+            _enableEncryptedBoby = YES;
             id<MXScanRealmProvider> scanRealmProvider = [[MXScanRealmFileProvider alloc] initWithAntivirusServerDomain:antivirusServerDomain];
             _mediaScanStore = [[MXRealmMediaScanStore alloc] initWithRealmProvider:scanRealmProvider];
             _eventScanStore = [[MXRealmEventScanStore alloc] initWithRealmProvider:scanRealmProvider];
@@ -318,6 +324,39 @@ static const char * const kProcessingQueueName = "org.MatrixSDK.MXScanManager";
     [self scanEvent:event completion:nil];
 }
 
+#pragma mark Server key
+
+- (void)getAntivirusServerPublicKey:(void (^)(NSString* _Nullable publicKey))completion
+{
+    // Check whether the key has been already retrieved.
+    if (_serverPublicKey)
+    {
+        completion(_serverPublicKey);
+    }
+    else
+    {
+        MXWeakify(self);
+        [self.restClient getAntivirusServerPublicKey:^(NSString *publicKey) {
+            
+            MXStrongifyAndReturnIfNil(self);
+            self.serverPublicKey = publicKey;
+            completion(publicKey);
+            
+        } failure:^(NSError *error) {
+            
+            NSLog(@"[MXScanManager] get server key failed");
+            completion(nil);
+            
+        }];
+    }
+}
+
+- (void)resetAntivirusServerPublicKey
+{
+    NSLog(@"[MXScanManager] reset server public key");
+    _serverPublicKey = nil;
+}
+
 #pragma mark - Private
 
 #pragma mark Media
@@ -431,6 +470,16 @@ static const char * const kProcessingQueueName = "org.MatrixSDK.MXScanManager";
             void (^mediaScanFailure)(NSError *error) = ^void(NSError *error) {
                 MXStrongifyAndReturnIfNil(self);
                 
+                // Check whether the public key must be updated
+                if ([error.userInfo[MXHTTPClientErrorResponseDataKey] isKindOfClass:NSDictionary.class])
+                {
+                    NSDictionary *response = error.userInfo[MXHTTPClientErrorResponseDataKey];
+                    if ([response[MXErrorContentScannerReasonKey] isEqualToString:MXErrorContentScannerReasonValueBadDecryption])
+                    {
+                        [self resetAntivirusServerPublicKey];
+                    }
+                }
+                
                 [self.mediaScanStore updateAntivirusScanStatus:MXAntivirusScanStatusUnknown antivirusScanInfo:nil antivirusScanDate:[NSDate date] forURL:mediaURL];
                 
                 if (completion)
@@ -444,7 +493,30 @@ static const char * const kProcessingQueueName = "org.MatrixSDK.MXScanManager";
             
             if (encryptedContentFile)
             {
-                [self.restClient scanEncryptedContent:encryptedContentFile success:mediaScanSuccess failure:mediaScanFailure];
+                if (self.isEncryptedBobyEnabled)
+                {
+                    [self getAntivirusServerPublicKey:^(NSString * _Nullable publicKey) {
+                        if (publicKey.length)
+                        {
+                            OLMPkEncryption *olmPkEncryption = [OLMPkEncryption new];
+                            [olmPkEncryption setRecipientKey:publicKey];
+                            NSString *message = [MXTools serialiseJSONObject:@{@"file": encryptedContentFile.JSONDictionary}];
+                            OLMPkMessage *olmPkMessage = [olmPkEncryption encryptMessage:message error:nil];
+                            MXContentScanEncryptedBody *encryptedBody = [MXContentScanEncryptedBody modelFromOLMPkMessage:olmPkMessage];
+                            
+                            [self.restClient scanEncryptedContentWithSecureExchange:encryptedBody success:mediaScanSuccess failure:mediaScanFailure];
+                        }
+                        else
+                        {
+                            NSLog(@"[MXScanManager] scan encrypted content failed, a server public key is required");
+                            mediaScanFailure(nil);
+                        }
+                    }];
+                }
+                else
+                {
+                    [self.restClient scanEncryptedContent:encryptedContentFile success:mediaScanSuccess failure:mediaScanFailure];
+                }
             }
             else
             {

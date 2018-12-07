@@ -37,6 +37,9 @@ FOUNDATION_EXPORT NSString * _Nonnull const MXScanManagerScanDidChangeNotificati
 FOUNDATION_EXPORT NSString * _Nonnull const MXScanManagerScanDidChangeNotificationModificationsUserInfoKey;
 FOUNDATION_EXPORT NSString * _Nonnull const MXScanManagerScanDidChangeNotificationDeletionsUserInfoKey;
 
+FOUNDATION_EXPORT NSString * _Nonnull const MXErrorContentScannerReasonKey;
+FOUNDATION_EXPORT NSString * _Nonnull const MXErrorContentScannerReasonValueBadDecryption;
+
 #pragma mark - Types
 
 @class MXRestClient, MXEvent, MXEventScan, MXMediaScan, MXEncryptedContentFile;
@@ -57,6 +60,22 @@ FOUNDATION_EXPORT NSString * _Nonnull const MXScanManagerScanDidChangeNotificati
  Default is dispatch_get_main_queue().
  */
 @property (nonatomic, strong, nonnull) dispatch_queue_t completionQueue;
+
+/**
+ Tell whether the encryption information must be sent encrypted to the antivirus server.
+ Default is YES (the request body of any POST request is then encrypted using the server public key).
+ */
+@property (nonatomic, getter=isEncryptedBobyEnabled) BOOL enableEncryptedBoby;
+
+/**
+ The antivirus server URL.
+ */
+@property (nonatomic, readonly, nonnull) NSString *antivirusServerURL;
+
+/**
+ The Client-Server API prefix to use for the antivirus server.
+ */
+@property (nonatomic, readonly, nonnull) NSString *antivirusServerPathPrefix;
 
 #pragma mark - Methods
 
@@ -134,6 +153,21 @@ FOUNDATION_EXPORT NSString * _Nonnull const MXScanManagerScanDidChangeNotificati
  @param event The event to scan.
  */
 - (void)scanEventIfNeeded:(nonnull MXEvent*)event;
+
+#pragma mark Server key
+
+/**
+ Get the current public curve25519 key of the Antivirus server.
+ A server request is triggered only if the key is not already known.
+ 
+ @param completion A block object to be executed when the public key is available. `publicKey` provide the key.
+ */
+- (void)getAntivirusServerPublicKey:(void (^)(NSString* _Nullable publicKey))completion;
+
+/**
+ * Reset the current known Antivirus server public key (if any).
+ */
+- (void)resetAntivirusServerPublicKey;
 
 #pragma mark Other
 
