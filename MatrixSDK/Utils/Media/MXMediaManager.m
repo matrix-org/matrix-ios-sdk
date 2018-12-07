@@ -564,6 +564,7 @@ static MXLRUCache* imagesCacheLruCache = nil;
                                                 [center removeObserver:token];
                                                 break;
                                             case MXMediaLoaderStateDownloadFailed:
+                                            case MXMediaLoaderStateCancelled:
                                                 if (failure)
                                                 {
                                                     failure(loader.error);
@@ -811,6 +812,7 @@ static MXLRUCache* imagesCacheLruCache = nil;
     switch (loader.state) {
         case MXMediaLoaderStateUploadCompleted:
         case MXMediaLoaderStateUploadFailed:
+        case MXMediaLoaderStateCancelled:
             [MXMediaManager removeUploaderWithId:loader.uploadId];
             // If there is no more upload in progress, stop observing upload notifications
             if (0 == uploadTableById.count)
