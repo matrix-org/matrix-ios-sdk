@@ -42,7 +42,7 @@ NSString *const MXScanManagerScanDidChangeNotificationDeletionsUserInfoKey = @"d
 NSString *const MXErrorContentScannerReasonKey                  = @"reason";
 NSString *const MXErrorContentScannerReasonValueBadDecryption   = @"MCS_BAD_DECRYPTION";
 
-static NSTimeInterval const kDefaultScanUpdateInterval = 600;
+static NSTimeInterval const kDefaultScanUpdateInterval = 120;
 static const char * const kProcessingQueueName = "org.MatrixSDK.MXScanManager";
 
 #pragma mark - Private Interface
