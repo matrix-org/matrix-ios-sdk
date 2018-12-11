@@ -324,6 +324,27 @@ static const char * const kProcessingQueueName = "org.MatrixSDK.MXScanManager";
     [self scanEvent:event completion:nil];
 }
 
+#pragma mark Encrypted body
+
+- (void)encryptRequestBody:(NSDictionary *)requestBody completion:(void (^)(MXContentScanEncryptedBody* _Nullable encryptedBody))completion
+{
+    [self getAntivirusServerPublicKey:^(NSString * _Nullable publicKey) {
+        if (publicKey.length)
+        {
+            OLMPkEncryption *olmPkEncryption = [OLMPkEncryption new];
+            [olmPkEncryption setRecipientKey:publicKey];
+            NSString *message = [MXTools serialiseJSONObject:requestBody];
+            OLMPkMessage *olmPkMessage = [olmPkEncryption encryptMessage:message error:nil];
+            completion([MXContentScanEncryptedBody modelFromOLMPkMessage:olmPkMessage]);
+        }
+        else
+        {
+            NSLog(@"[MXScanManager] encrypt body failed, a server public key is required");
+            completion(nil);
+        }
+    }];
+}
+
 #pragma mark Server key
 
 - (void)getAntivirusServerPublicKey:(void (^)(NSString* _Nullable publicKey))completion
@@ -348,6 +369,18 @@ static const char * const kProcessingQueueName = "org.MatrixSDK.MXScanManager";
             completion(nil);
             
         }];
+    }
+}
+
+- (void)checkAntivirusServerPublicKeyOnError:(NSError *)error
+{
+    if ([error.userInfo[MXHTTPClientErrorResponseDataKey] isKindOfClass:NSDictionary.class])
+    {
+        NSDictionary *response = error.userInfo[MXHTTPClientErrorResponseDataKey];
+        if ([response[MXErrorContentScannerReasonKey] isEqualToString:MXErrorContentScannerReasonValueBadDecryption])
+        {
+            [self resetAntivirusServerPublicKey];
+        }
     }
 }
 
@@ -471,14 +504,7 @@ static const char * const kProcessingQueueName = "org.MatrixSDK.MXScanManager";
                 MXStrongifyAndReturnIfNil(self);
                 
                 // Check whether the public key must be updated
-                if ([error.userInfo[MXHTTPClientErrorResponseDataKey] isKindOfClass:NSDictionary.class])
-                {
-                    NSDictionary *response = error.userInfo[MXHTTPClientErrorResponseDataKey];
-                    if ([response[MXErrorContentScannerReasonKey] isEqualToString:MXErrorContentScannerReasonValueBadDecryption])
-                    {
-                        [self resetAntivirusServerPublicKey];
-                    }
-                }
+                [self checkAntivirusServerPublicKeyOnError:error];
                 
                 [self.mediaScanStore updateAntivirusScanStatus:MXAntivirusScanStatusUnknown antivirusScanInfo:nil antivirusScanDate:[NSDate date] forURL:mediaURL];
                 
@@ -495,20 +521,14 @@ static const char * const kProcessingQueueName = "org.MatrixSDK.MXScanManager";
             {
                 if (self.isEncryptedBobyEnabled)
                 {
-                    [self getAntivirusServerPublicKey:^(NSString * _Nullable publicKey) {
-                        if (publicKey.length)
+                    [self encryptRequestBody:@{@"file": encryptedContentFile.JSONDictionary} completion:^(MXContentScanEncryptedBody * _Nullable encryptedBody) {
+                        if (encryptedBody)
                         {
-                            OLMPkEncryption *olmPkEncryption = [OLMPkEncryption new];
-                            [olmPkEncryption setRecipientKey:publicKey];
-                            NSString *message = [MXTools serialiseJSONObject:@{@"file": encryptedContentFile.JSONDictionary}];
-                            OLMPkMessage *olmPkMessage = [olmPkEncryption encryptMessage:message error:nil];
-                            MXContentScanEncryptedBody *encryptedBody = [MXContentScanEncryptedBody modelFromOLMPkMessage:olmPkMessage];
-                            
                             [self.restClient scanEncryptedContentWithSecureExchange:encryptedBody success:mediaScanSuccess failure:mediaScanFailure];
                         }
                         else
                         {
-                            NSLog(@"[MXScanManager] scan encrypted content failed, a server public key is required");
+                            NSLog(@"[MXScanManager] scan encrypted content failed, body encryption failed");
                             mediaScanFailure(nil);
                         }
                     }];

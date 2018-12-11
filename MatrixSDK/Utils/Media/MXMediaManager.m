@@ -590,15 +590,9 @@ static MXLRUCache* imagesCacheLruCache = nil;
         
         if (data && scanManager.isEncryptedBobyEnabled)
         {
-            [scanManager getAntivirusServerPublicKey:^(NSString * _Nullable publicKey) {
-                if (publicKey.length)
+            [scanManager encryptRequestBody:data completion:^(MXContentScanEncryptedBody * _Nullable encryptedBody) {
+                if (encryptedBody)
                 {
-                    OLMPkEncryption *olmPkEncryption = [OLMPkEncryption new];
-                    [olmPkEncryption setRecipientKey:publicKey];
-                    NSString *message = [MXTools serialiseJSONObject:data];
-                    OLMPkMessage *olmPkMessage = [olmPkEncryption encryptMessage:message error:nil];
-                    MXContentScanEncryptedBody *encryptedBody = [MXContentScanEncryptedBody modelFromOLMPkMessage:olmPkMessage];
-                    
                     // Launch the download
                     [mediaLoader downloadMediaFromURL:mediaURL
                                              withData:@{@"encrypted_body": encryptedBody.JSONDictionary}
@@ -613,14 +607,7 @@ static MXLRUCache* imagesCacheLruCache = nil;
                                               failure:^(NSError *error) {
                                                   
                                                   // Check whether the public key must be updated
-                                                  if ([error.userInfo[MXHTTPClientErrorResponseDataKey] isKindOfClass:NSDictionary.class])
-                                                  {
-                                                      NSDictionary *response = error.userInfo[MXHTTPClientErrorResponseDataKey];
-                                                      if ([response[MXErrorContentScannerReasonKey] isEqualToString:MXErrorContentScannerReasonValueBadDecryption])
-                                                      {
-                                                          [scanManager resetAntivirusServerPublicKey];
-                                                      }
-                                                  }
+                                                  [scanManager checkAntivirusServerPublicKeyOnError:error];
                                                   
                                                   if (failure) failure(error);
                                                   [downloadTable removeObjectForKey:downloadId];
@@ -629,7 +616,7 @@ static MXLRUCache* imagesCacheLruCache = nil;
                 }
                 else
                 {
-                    NSLog(@"[MXMediaManager] download encrypted content failed, a server public key is required");
+                    NSLog(@"[MXMediaManager] download encrypted content failed");
                     if (failure) failure(nil);
                     [mediaLoader cancel];
                     [downloadTable removeObjectForKey:downloadId];

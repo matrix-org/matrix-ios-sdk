@@ -42,7 +42,7 @@ FOUNDATION_EXPORT NSString * _Nonnull const MXErrorContentScannerReasonValueBadD
 
 #pragma mark - Types
 
-@class MXRestClient, MXEvent, MXEventScan, MXMediaScan, MXEncryptedContentFile;
+@class MXRestClient, MXEvent, MXEventScan, MXMediaScan, MXEncryptedContentFile, MXContentScanEncryptedBody;
 
 #pragma mark - Interface
 
@@ -154,6 +154,18 @@ FOUNDATION_EXPORT NSString * _Nonnull const MXErrorContentScannerReasonValueBadD
  */
 - (void)scanEventIfNeeded:(nonnull MXEvent*)event;
 
+#pragma mark Encrypted body
+
+/**
+ Encrypt the provided dictionary using the server public key.
+ Use this method to prepare the POST request body when the encrypted body is enabled.
+ 
+ @param requestBody the data to encrypt.
+ @param completion A block object to be executed when the encrypted body is available. The returned instance is
+ null if the server doesn't have a public key, or if an error occured during the encryption.
+ */
+- (void)encryptRequestBody:(NSDictionary *)requestBody completion:(void (^)(MXContentScanEncryptedBody* _Nullable encryptedBody))completion;
+
 #pragma mark Server key
 
 /**
@@ -163,6 +175,11 @@ FOUNDATION_EXPORT NSString * _Nonnull const MXErrorContentScannerReasonValueBadD
  @param completion A block object to be executed when the public key is available. `publicKey` provide the key.
  */
 - (void)getAntivirusServerPublicKey:(void (^)(NSString* _Nullable publicKey))completion;
+
+/**
+ In case of a content scanner error, use this method to check the public key validity.
+ */
+- (void)checkAntivirusServerPublicKeyOnError:(NSError *)error;
 
 /**
  * Reset the current known Antivirus server public key (if any).
