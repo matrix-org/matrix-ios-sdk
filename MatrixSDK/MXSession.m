@@ -1575,10 +1575,9 @@ typedef void (^MXOnResumeDone)(void);
 - (void)setAntivirusServerURL:(NSString *)antivirusServerURL
 {
     _antivirusServerURL = antivirusServerURL;
+    
     // Update the current restClient
     [matrixRestClient setAntivirusServer:antivirusServerURL];
-    // Update the media manager
-    [mediaManager setAntivirusServerURL:antivirusServerURL];
     
     // Configure scan manager if antivirusServerURL is set
     if (antivirusServerURL)
@@ -1590,6 +1589,9 @@ typedef void (^MXOnResumeDone)(void);
     {
         _scanManager = nil;
     }
+    
+    // Update the media manager
+    [mediaManager setScanManager:_scanManager];
 }
 
 #pragma mark - Rooms operations

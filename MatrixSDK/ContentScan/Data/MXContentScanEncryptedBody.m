@@ -15,6 +15,7 @@
  */
 
 #import "MXContentScanEncryptedBody.h"
+#import "OLMPkMessage.h"
 
 @implementation MXContentScanEncryptedBody
 
@@ -26,6 +27,18 @@
         MXJSONModelSetString(contentScanEncryptedBody.ciphertext, JSONDictionary[@"ciphertext"]);
         MXJSONModelSetString(contentScanEncryptedBody.mac, JSONDictionary[@"mac"]);
         MXJSONModelSetString(contentScanEncryptedBody.ephemeral, JSONDictionary[@"ephemeral"]);
+    }
+    return contentScanEncryptedBody;
+}
+
++ (id)modelFromOLMPkMessage:(OLMPkMessage *)OLMPkMessage
+{
+    MXContentScanEncryptedBody *contentScanEncryptedBody = [[MXContentScanEncryptedBody alloc] init];
+    if (contentScanEncryptedBody)
+    {
+        contentScanEncryptedBody.ciphertext = OLMPkMessage.ciphertext;
+        contentScanEncryptedBody.mac = OLMPkMessage.mac;
+        contentScanEncryptedBody.ephemeral = OLMPkMessage.ephemeralKey;
     }
     return contentScanEncryptedBody;
 }

@@ -21,8 +21,10 @@
 #import <Photos/Photos.h>
 
 #import "MXMediaManager.h"
+#import "MXScanManager.h"
 
 #import "MXEncryptedContentFile.h"
+#import "MXContentScanEncryptedBody.h"
 
 #import "MXSDKOptions.h"
 
@@ -53,8 +55,7 @@ static NSUInteger storageCacheSize = 0;
     if (self)
     {
         _homeserverURL = homeserverURL;
-        _antivirusServerURL = nil;
-        _antivirusServerPathPrefix = kMXAntivirusAPIPrefixPathUnstable;
+        _scanManager = nil;
     }
     return self;
 }
@@ -79,21 +80,6 @@ static NSMutableDictionary* uploadTableById = nil;
         }
     }
     return sharedMediaManager;
-}
-
-#pragma mark - Antivirus server API
-
-- (void)setAntivirusServerURL:(NSString *)antivirusServerURL
-{
-    if (antivirusServerURL.length)
-    {
-        _antivirusServerURL = [antivirusServerURL copy];
-    }
-    else
-    {
-        // Disable antivirus use
-        _antivirusServerURL = nil;
-    }
 }
 
 #pragma mark - File handling
@@ -379,9 +365,9 @@ static MXLRUCache* imagesCacheLruCache = nil;
         NSString *mxMediaPrefix;
         
         // Check whether an antivirus server is present
-        if (_antivirusServerURL)
+        if (_scanManager)
         {
-            mxMediaPrefix = [NSString stringWithFormat:@"%@/%@/download/", _antivirusServerURL, _antivirusServerPathPrefix];
+            mxMediaPrefix = [NSString stringWithFormat:@"%@/%@/download/", _scanManager.antivirusServerURL, _scanManager.antivirusServerPathPrefix];
         }
         else
         {
@@ -494,6 +480,7 @@ static MXLRUCache* imagesCacheLruCache = nil;
                                 withData:nil
                            andIdentifier:downloadId
                           saveAtFilePath:filePath
+                             scanManager:_scanManager
                                  success:success
                                  failure:failure];
 }
@@ -533,6 +520,7 @@ static MXLRUCache* imagesCacheLruCache = nil;
                                 withData:nil
                            andIdentifier:downloadId
                           saveAtFilePath:filePath
+                             scanManager:_scanManager
                                  success:success
                                  failure:failure];
 }
@@ -542,6 +530,7 @@ static MXLRUCache* imagesCacheLruCache = nil;
                        withData:(NSDictionary *)data
                   andIdentifier:(NSString *)downloadId
                  saveAtFilePath:(NSString *)filePath
+                    scanManager:(MXScanManager *)scanManager
                         success:(void (^)(NSString *outputFilePath))success
                         failure:(void (^)(NSError *error))failure
 {
@@ -572,6 +561,7 @@ static MXLRUCache* imagesCacheLruCache = nil;
                                                 [center removeObserver:token];
                                                 break;
                                             case MXMediaLoaderStateDownloadFailed:
+                                            case MXMediaLoaderStateCancelled:
                                                 if (failure)
                                                 {
                                                     failure(loader.error);
@@ -595,23 +585,61 @@ static MXLRUCache* imagesCacheLruCache = nil;
         }
         [downloadTable setValue:mediaLoader forKey:downloadId];
         
-        // Launch the download
-        [mediaLoader downloadMediaFromURL:mediaURL
-                                 withData:data
-                               identifier:downloadId
-                        andSaveAtFilePath:filePath
-                                  success:^(NSString *outputFilePath) {
-                                      
-                                      [downloadTable removeObjectForKey:downloadId];
-                                      if (success) success(outputFilePath);
-                                      
-                                  }
-                                  failure:^(NSError *error) {
-                                      
-                                      if (failure) failure(error);
-                                      [downloadTable removeObjectForKey:downloadId];
-                                      
-                                  }];
+        if (data && scanManager.isEncryptedBobyEnabled)
+        {
+            [scanManager encryptRequestBody:data completion:^(MXContentScanEncryptedBody * _Nullable encryptedBody) {
+                if (encryptedBody)
+                {
+                    // Launch the download
+                    [mediaLoader downloadMediaFromURL:mediaURL
+                                             withData:@{@"encrypted_body": encryptedBody.JSONDictionary}
+                                           identifier:downloadId
+                                    andSaveAtFilePath:filePath
+                                              success:^(NSString *outputFilePath) {
+                                                  
+                                                  [downloadTable removeObjectForKey:downloadId];
+                                                  if (success) success(outputFilePath);
+                                                  
+                                              }
+                                              failure:^(NSError *error) {
+                                                  
+                                                  // Check whether the public key must be updated
+                                                  [scanManager checkAntivirusServerPublicKeyOnError:error];
+                                                  
+                                                  if (failure) failure(error);
+                                                  [downloadTable removeObjectForKey:downloadId];
+                                                  
+                                              }];
+                }
+                else
+                {
+                    NSLog(@"[MXMediaManager] download encrypted content failed");
+                    if (failure) failure(nil);
+                    [mediaLoader cancel];
+                    [downloadTable removeObjectForKey:downloadId];
+                }
+            }];
+        }
+        else
+        {
+            // Launch the download without encrypted the request body (if any).
+            [mediaLoader downloadMediaFromURL:mediaURL
+                                     withData:data
+                                   identifier:downloadId
+                            andSaveAtFilePath:filePath
+                                      success:^(NSString *outputFilePath) {
+                                          
+                                          [downloadTable removeObjectForKey:downloadId];
+                                          if (success) success(outputFilePath);
+                                          
+                                      }
+                                      failure:^(NSError *error) {
+                                          
+                                          if (failure) failure(error);
+                                          [downloadTable removeObjectForKey:downloadId];
+                                          
+                                      }];
+        }
     }
     
     return mediaLoader;
@@ -627,12 +655,12 @@ static MXLRUCache* imagesCacheLruCache = nil;
     NSString *downloadMediaURL;
     NSDictionary *dataToPost;
     
-    // Check whether an antivirus is present.
-    if (_antivirusServerURL && [mxContentURI hasPrefix:kMXContentUriScheme])
+    // Check whether an antivirus server is present.
+    if (_scanManager && [mxContentURI hasPrefix:kMXContentUriScheme])
     {
         // In this case, the same URL is used to download all the encrypted content.
         // The encrypted content file is sent in the request body.
-        downloadMediaURL = [NSString stringWithFormat:@"%@/%@/download_encrypted", _antivirusServerURL, _antivirusServerPathPrefix];
+        downloadMediaURL = [NSString stringWithFormat:@"%@/%@/download_encrypted", _scanManager.antivirusServerURL, _scanManager.antivirusServerPathPrefix];
         dataToPost = @{@"file": encryptedContentFile.JSONDictionary};
     }
     else
@@ -661,6 +689,7 @@ static MXLRUCache* imagesCacheLruCache = nil;
                                 withData:dataToPost
                            andIdentifier:downloadId
                           saveAtFilePath:filePath
+                             scanManager:_scanManager
                                  success:success
                                  failure:failure];
 }
@@ -767,6 +796,7 @@ static MXLRUCache* imagesCacheLruCache = nil;
     switch (loader.state) {
         case MXMediaLoaderStateUploadCompleted:
         case MXMediaLoaderStateUploadFailed:
+        case MXMediaLoaderStateCancelled:
             [MXMediaManager removeUploaderWithId:loader.uploadId];
             // If there is no more upload in progress, stop observing upload notifications
             if (0 == uploadTableById.count)
