@@ -19,7 +19,6 @@
 #import "TargetConditionals.h"
 
 #import <Photos/Photos.h>
-#import <OLMKit/OLMKit.h>
 
 #import "MXMediaManager.h"
 #import "MXScanManager.h"
@@ -31,8 +30,6 @@
 
 #import "MXLRUCache.h"
 #import "MXTools.h"
-
-#import "MXHTTPClient.h"
 
 NSUInteger const kMXMediaCacheSDKVersion = 3;
 
