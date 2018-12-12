@@ -326,7 +326,7 @@ static const char * const kProcessingQueueName = "org.MatrixSDK.MXScanManager";
 
 #pragma mark Encrypted body
 
-- (void)encryptRequestBody:(NSDictionary *)requestBody completion:(void (^)(MXContentScanEncryptedBody* _Nullable encryptedBody))completion
+- (void)encryptRequestBody:(nonnull NSDictionary *)requestBody completion:(void (^)(MXContentScanEncryptedBody* _Nullable encryptedBody))completion
 {
     [self getAntivirusServerPublicKey:^(NSString * _Nullable publicKey) {
         if (publicKey.length)
