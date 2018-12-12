@@ -326,7 +326,7 @@ static const char * const kProcessingQueueName = "org.MatrixSDK.MXScanManager";
 
 #pragma mark Encrypted body
 
-- (void)encryptRequestBody:(nonnull NSDictionary *)requestBody completion:(void (^)(MXContentScanEncryptedBody* _Nullable encryptedBody))completion
+- (void)encryptRequestBody:(nonnull NSDictionary *)requestBody completion:(void (^ _Nonnull)(MXContentScanEncryptedBody* _Nullable encryptedBody))completion
 {
     [self getAntivirusServerPublicKey:^(NSString * _Nullable publicKey) {
         if (publicKey.length)
@@ -347,7 +347,7 @@ static const char * const kProcessingQueueName = "org.MatrixSDK.MXScanManager";
 
 #pragma mark Server key
 
-- (void)getAntivirusServerPublicKey:(void (^)(NSString* _Nullable publicKey))completion
+- (void)getAntivirusServerPublicKey:(void (^ _Nonnull)(NSString* _Nullable publicKey))completion
 {
     // Check whether the key has been already retrieved.
     if (_serverPublicKey)
@@ -372,7 +372,7 @@ static const char * const kProcessingQueueName = "org.MatrixSDK.MXScanManager";
     }
 }
 
-- (void)checkAntivirusServerPublicKeyOnError:(NSError *)error
+- (void)checkAntivirusServerPublicKeyOnError:(nullable NSError *)error
 {
     if ([error.userInfo[MXHTTPClientErrorResponseDataKey] isKindOfClass:NSDictionary.class])
     {

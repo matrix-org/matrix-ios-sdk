@@ -164,7 +164,7 @@ FOUNDATION_EXPORT NSString * _Nonnull const MXErrorContentScannerReasonValueBadD
  @param completion A block object to be executed when the encrypted body is available. The returned instance is
  null if the server doesn't have a public key, or if an error occured during the encryption.
  */
-- (void)encryptRequestBody:(nonnull NSDictionary *)requestBody completion:(void (^)(MXContentScanEncryptedBody* _Nullable encryptedBody))completion;
+- (void)encryptRequestBody:(nonnull NSDictionary *)requestBody completion:(void (^ _Nonnull)(MXContentScanEncryptedBody* _Nullable encryptedBody))completion;
 
 #pragma mark Server key
 
@@ -174,12 +174,12 @@ FOUNDATION_EXPORT NSString * _Nonnull const MXErrorContentScannerReasonValueBadD
  
  @param completion A block object to be executed when the public key is available. `publicKey` provide the key.
  */
-- (void)getAntivirusServerPublicKey:(void (^)(NSString* _Nullable publicKey))completion;
+- (void)getAntivirusServerPublicKey:(void (^ _Nonnull)(NSString* _Nullable publicKey))completion;
 
 /**
  In case of a content scanner error, use this method to check the public key validity.
  */
-- (void)checkAntivirusServerPublicKeyOnError:(NSError *)error;
+- (void)checkAntivirusServerPublicKeyOnError:(nullable NSError *)error;
 
 /**
  * Reset the current known Antivirus server public key (if any).
