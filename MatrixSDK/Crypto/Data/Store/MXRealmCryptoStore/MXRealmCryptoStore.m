@@ -599,7 +599,7 @@ RLM_ARRAY_TYPE(MXRealmOlmInboundGroupSession)
 }
 
 
-- (void)storeSession:(OLMSession*)session forDevice:(NSString*)deviceKey
+- (void)storeSession:(MXOlmSession*)session forDevice:(NSString*)deviceKey
 {
     BOOL isNew = NO;
     NSDate *startDate = [NSDate date];
@@ -607,19 +607,19 @@ RLM_ARRAY_TYPE(MXRealmOlmInboundGroupSession)
     RLMRealm *realm = self.realm;
     [realm transactionWithBlock:^{
 
-        MXRealmOlmSession *realmOlmSession = [MXRealmOlmSession objectsInRealm:realm where:@"sessionId = %@ AND deviceKey = %@", session.sessionIdentifier, deviceKey].firstObject;
+        MXRealmOlmSession *realmOlmSession = [MXRealmOlmSession objectsInRealm:realm where:@"sessionId = %@ AND deviceKey = %@", session.session.sessionIdentifier, deviceKey].firstObject;
         if (realmOlmSession)
         {
             // Update the existing one
-            realmOlmSession.olmSessionData = [NSKeyedArchiver archivedDataWithRootObject:session];
+            realmOlmSession.olmSessionData = [NSKeyedArchiver archivedDataWithRootObject:session.session];
         }
         else
         {
             // Create it
             realmOlmSession = [[MXRealmOlmSession alloc] initWithValue:@{
-                                                                         @"sessionId": session.sessionIdentifier,
+                                                                         @"sessionId": session.session.sessionIdentifier,
                                                                          @"deviceKey": deviceKey,
-                                                                         @"olmSessionData": [NSKeyedArchiver archivedDataWithRootObject:session]
+                                                                         @"olmSessionData": [NSKeyedArchiver archivedDataWithRootObject:session.session]
                                                                          }];
             [realm addObject:realmOlmSession];
         }
@@ -628,17 +628,20 @@ RLM_ARRAY_TYPE(MXRealmOlmInboundGroupSession)
     NSLog(@"[MXRealmCryptoStore] storeSession (%@) in %.0fms", (isNew?@"NEW":@"UPDATE"), [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
 }
 
-- (OLMSession*)sessionWithDevice:(NSString*)deviceKey andSessionId:(NSString*)sessionId
+- (MXOlmSession*)sessionWithDevice:(NSString*)deviceKey andSessionId:(NSString*)sessionId
 {
     MXRealmOlmSession *realmOlmSession = [MXRealmOlmSession objectsInRealm:self.realm
                                                                       where:@"sessionId = %@ AND deviceKey = %@", sessionId, deviceKey].firstObject;
-    
-    return [NSKeyedUnarchiver unarchiveObjectWithData:realmOlmSession.olmSessionData];
+
+    OLMSession *olmSession = [NSKeyedUnarchiver unarchiveObjectWithData:realmOlmSession.olmSessionData];
+    MXOlmSession *mxOlmSession = [[MXOlmSession alloc] initWithOlmSession:olmSession];
+
+    return mxOlmSession;
 }
 
-- (NSArray<OLMSession*>*)sessionsWithDevice:(NSString*)deviceKey;
+- (NSArray<MXOlmSession*>*)sessionsWithDevice:(NSString*)deviceKey;
 {
-    NSMutableArray<OLMSession*> *sessionsWithDevice;
+    NSMutableArray<MXOlmSession*> *sessionsWithDevice;
 
     RLMResults<MXRealmOlmSession *> *realmOlmSessions = [MXRealmOlmSession objectsInRealm:self.realm where:@"deviceKey = %@", deviceKey];
     for (MXRealmOlmSession *realmOlmSession in realmOlmSessions)
@@ -648,7 +651,10 @@ RLM_ARRAY_TYPE(MXRealmOlmInboundGroupSession)
             sessionsWithDevice = [NSMutableArray array];
         }
 
-        [sessionsWithDevice addObject:[NSKeyedUnarchiver unarchiveObjectWithData:realmOlmSession.olmSessionData]];
+        OLMSession *olmSession = [NSKeyedUnarchiver unarchiveObjectWithData:realmOlmSession.olmSessionData];
+        MXOlmSession *mxOlmSession = [[MXOlmSession alloc] initWithOlmSession:olmSession];
+
+        [sessionsWithDevice addObject:mxOlmSession];
     }
 
     return sessionsWithDevice;

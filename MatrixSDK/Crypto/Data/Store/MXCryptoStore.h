@@ -24,6 +24,7 @@
 #import "MXJSONModels.h"
 
 #import <OLMKit/OLMKit.h>
+#import "MXOlmSession.h"
 #import "MXOlmInboundGroupSession.h"
 #import "MXDeviceInfo.h"
 #import "MXOutgoingRoomKeyRequest.h"
@@ -188,7 +189,7 @@
  @param deviceKey the public key of the other device.
  @param session the end-to-end session.
  */
-- (void)storeSession:(OLMSession*)session forDevice:(NSString*)deviceKey;
+- (void)storeSession:(MXOlmSession*)session forDevice:(NSString*)deviceKey;
 
 /**
  Retrieve an end-to-end session between the logged-in user and another
@@ -197,7 +198,7 @@
  @param deviceKey the public key of the other device.
  @return a array of end-to-end sessions sorted by the last updated first.
  */
-- (OLMSession*)sessionWithDevice:(NSString*)deviceKey andSessionId:(NSString*)sessionId;
+- (MXOlmSession*)sessionWithDevice:(NSString*)deviceKey andSessionId:(NSString*)sessionId;
 
 /**
  Retrieve all end-to-end sessions between the logged-in user and another
@@ -206,7 +207,7 @@
  @param deviceKey the public key of the other device.
  @return a array of end-to-end sessions.
  */
-- (NSArray<OLMSession*>*)sessionsWithDevice:(NSString*)deviceKey;
+- (NSArray<MXOlmSession*>*)sessionsWithDevice:(NSString*)deviceKey;
 
 
 /**
