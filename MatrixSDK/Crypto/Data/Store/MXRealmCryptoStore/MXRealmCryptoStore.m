@@ -1226,7 +1226,7 @@ RLM_ARRAY_TYPE(MXRealmOlmInboundGroupSession)
         [self cleanDuplicatedDevicesInRealm:realm];
         NSUInteger after = [MXRealmDeviceInfo allObjectsInRealm:realm].count;
 
-        NSLog(@"[MXRealmCryptoStore] Migration from schema #7 -> #8 completed. There is now %@ devices. It was %@ before. %@ devices has been removed.", @(after), @(before), @(before - after));
+        NSLog(@"[MXRealmCryptoStore] Migration from schema #7 -> #8 completed. There are now %@ devices. There were %@ before. %@ devices have been removed.", @(after), @(before), @(before - after));
     }
 
     // Wait for completion of other operations on this realm launched from other threads
