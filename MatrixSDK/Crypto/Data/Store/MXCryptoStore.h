@@ -191,13 +191,23 @@
 - (void)storeSession:(OLMSession*)session forDevice:(NSString*)deviceKey;
 
 /**
- Retrieve the end-to-end sessions between the logged-in user and another
+ Retrieve an end-to-end session between the logged-in user and another
  device.
 
  @param deviceKey the public key of the other device.
- @return {object} A map from sessionId to Base64 end-to-end session.
+ @return a array of end-to-end sessions sorted by the last updated first.
  */
-- (NSDictionary<NSString*, OLMSession*>*)sessionsWithDevice:(NSString*)deviceKey;
+- (OLMSession*)sessionWithDevice:(NSString*)deviceKey andSessionId:(NSString*)sessionId;
+
+/**
+ Retrieve all end-to-end sessions between the logged-in user and another
+ device.
+
+ @param deviceKey the public key of the other device.
+ @return a array of end-to-end sessions.
+ */
+- (NSArray<OLMSession*>*)sessionsWithDevice:(NSString*)deviceKey;
+
 
 /**
  Store an inbound group session.

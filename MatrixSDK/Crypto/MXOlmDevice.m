@@ -198,9 +198,15 @@
 
 - (NSArray<NSString *> *)sessionIdsForDevice:(NSString *)theirDeviceIdentityKey
 {
-    NSDictionary *sessions = [store sessionsWithDevice:theirDeviceIdentityKey];
+    NSArray<OLMSession*> *sessions = [store sessionsWithDevice:theirDeviceIdentityKey];
 
-    return sessions.allKeys;
+    NSMutableArray *sessionIds = [NSMutableArray arrayWithCapacity:sessions.count];
+    for (OLMSession *session in sessions)
+    {
+        [sessionIds addObject:session.sessionIdentifier];
+    }
+
+    return sessionIds;
 }
 
 - (NSString *)sessionIdForDevice:(NSString *)theirDeviceIdentityKey
@@ -561,7 +567,7 @@
 #pragma mark - Private methods
 - (OLMSession*)sessionForDevice:(NSString *)theirDeviceIdentityKey andSessionId:(NSString*)sessionId
 {
-    return [store sessionsWithDevice:theirDeviceIdentityKey][sessionId];
+    return [store sessionWithDevice:theirDeviceIdentityKey andSessionId:sessionId];
 }
 
 /**
