@@ -1,5 +1,8 @@
-Changes in Matrix iOS SDK in 0.12.x (20xx-xx-xx)
+Changes in Matrix iOS SDK in 0.12.1 (2012-12-xx)
 ===============================================
+
+Bug Fix:
+ * MXCryptoStore: Stop duplicating devices in the store (vector-im/riot-ios/issues/2132).
 
 Improvements:
  * MXScanManager: Support the encrypted body (the request body is now encrypted by default using the server public key).

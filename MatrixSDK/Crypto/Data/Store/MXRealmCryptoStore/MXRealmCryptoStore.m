@@ -23,7 +23,7 @@
 #import "MXSession.h"
 #import "MXTools.h"
 
-NSUInteger const kMXRealmCryptoStoreVersion = 7;
+NSUInteger const kMXRealmCryptoStoreVersion = 8;
 
 static NSString *const kMXRealmCryptoStoreFolder = @"MXRealmCryptoStore";
 
@@ -476,7 +476,7 @@ RLM_ARRAY_TYPE(MXRealmOlmInboundGroupSession)
         else
         {
             // Reset all previously stored devices for this user
-            [realmUser.devices removeAllObjects];
+            [realm deleteObjects:realmUser.devices];
         }
 
         for (NSString *deviceId in devices)
@@ -1059,6 +1059,8 @@ RLM_ARRAY_TYPE(MXRealmOlmInboundGroupSession)
 
     config.schemaVersion = kMXRealmCryptoStoreVersion;
 
+    __block BOOL cleanDuplicatedDevices = NO;
+
     // Set the block which will be called automatically when opening a Realm with a
     // schema version lower than the one set above
     config.migrationBlock = ^(RLMMigration *migration, uint64_t oldSchemaVersion) {
@@ -1177,6 +1179,16 @@ RLM_ARRAY_TYPE(MXRealmOlmInboundGroupSession)
 
                     NSLog(@"[MXRealmCryptoStore] Migration from schema #6 -> #7 completed");
                 }
+
+                case 7:
+                {
+                    NSLog(@"[MXRealmCryptoStore] Migration from schema #7 -> #8");
+
+                    // This schema update is only for cleaning duplicated devices.
+                    // With the Realm Obj-C SDK, the realm instance is not public. We cannot
+                    // make queries. So, the cleaning will be done afterwards.
+                    cleanDuplicatedDevices = YES;
+                }
             }
         }
     };
@@ -1206,11 +1218,50 @@ RLM_ARRAY_TYPE(MXRealmOlmInboundGroupSession)
                                                           userInfo:nil];
     }
 
+    if (cleanDuplicatedDevices)
+    {
+        NSLog(@"[MXRealmCryptoStore] Do cleaning for migration from schema #7 -> #8");
+
+        NSUInteger before = [MXRealmDeviceInfo allObjectsInRealm:realm].count;
+        [self cleanDuplicatedDevicesInRealm:realm];
+        NSUInteger after = [MXRealmDeviceInfo allObjectsInRealm:realm].count;
+
+        NSLog(@"[MXRealmCryptoStore] Migration from schema #7 -> #8 completed. There are now %@ devices. There were %@ before. %@ devices have been removed.", @(after), @(before), @(before - after));
+    }
+
     // Wait for completion of other operations on this realm launched from other threads
     [realm refresh];
 
     return realm;
- }
+}
+
+/**
+ Clean duplicated & orphan devices.
+
+ @param realm the DB instance to clean.
+ */
++ (void)cleanDuplicatedDevicesInRealm:(RLMRealm*)realm
+{
+    [realm transactionWithBlock:^{
+
+        // Due to a bug (https://github.com/vector-im/riot-ios/issues/2132), there were
+        // duplicated devices living in the database without no more relationship with
+        // their user.
+        // Keep only devices with a relationship with a user and delete all others.
+        for (MXRealmUser *realmUser in [MXRealmUser allObjectsInRealm:realm])
+        {
+            for (MXRealmDeviceInfo *device in realmUser.devices)
+            {
+                // The related device needs to be cloned in order to add it afterwards
+                MXRealmDeviceInfo *deviceCopy = [[MXRealmDeviceInfo alloc] initWithValue:device];
+
+                [realm deleteObjects:[MXRealmDeviceInfo objectsInRealm:realm where:@"identityKey = %@", device.identityKey]];
+
+                [realmUser.devices addObject:deviceCopy];
+            }
+        }
+    }];
+}
 
 @end
 
