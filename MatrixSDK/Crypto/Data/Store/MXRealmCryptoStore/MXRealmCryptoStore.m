@@ -636,10 +636,14 @@ RLM_ARRAY_TYPE(MXRealmOlmInboundGroupSession)
     MXRealmOlmSession *realmOlmSession = [MXRealmOlmSession objectsInRealm:self.realm
                                                                       where:@"sessionId = %@ AND deviceKey = %@", sessionId, deviceKey].firstObject;
 
-    OLMSession *olmSession = [NSKeyedUnarchiver unarchiveObjectWithData:realmOlmSession.olmSessionData];
+    MXOlmSession *mxOlmSession;
+    if (realmOlmSession.olmSessionData)
+    {
+        OLMSession *olmSession = [NSKeyedUnarchiver unarchiveObjectWithData:realmOlmSession.olmSessionData];
 
-    MXOlmSession *mxOlmSession = [[MXOlmSession alloc] initWithOlmSession:olmSession];
-    mxOlmSession.lastReceivedMessageTs = realmOlmSession.lastReceivedMessageTs;
+        mxOlmSession = [[MXOlmSession alloc] initWithOlmSession:olmSession];
+        mxOlmSession.lastReceivedMessageTs = realmOlmSession.lastReceivedMessageTs;
+    }
 
     return mxOlmSession;
 }
@@ -658,12 +662,15 @@ RLM_ARRAY_TYPE(MXRealmOlmInboundGroupSession)
             sessionsWithDevice = [NSMutableArray array];
         }
 
-        OLMSession *olmSession = [NSKeyedUnarchiver unarchiveObjectWithData:realmOlmSession.olmSessionData];
+        if (realmOlmSession.olmSessionData)
+        {
+            OLMSession *olmSession = [NSKeyedUnarchiver unarchiveObjectWithData:realmOlmSession.olmSessionData];
 
-        MXOlmSession *mxOlmSession = [[MXOlmSession alloc] initWithOlmSession:olmSession];
-        mxOlmSession.lastReceivedMessageTs = realmOlmSession.lastReceivedMessageTs;
+            MXOlmSession *mxOlmSession = [[MXOlmSession alloc] initWithOlmSession:olmSession];
+            mxOlmSession.lastReceivedMessageTs = realmOlmSession.lastReceivedMessageTs;
 
-        [sessionsWithDevice addObject:mxOlmSession];
+            [sessionsWithDevice addObject:mxOlmSession];
+        }
     }
 
     return sessionsWithDevice;
