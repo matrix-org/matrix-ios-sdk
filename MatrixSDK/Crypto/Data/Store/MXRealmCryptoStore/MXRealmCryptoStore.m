@@ -1231,7 +1231,7 @@ RLM_ARRAY_TYPE(MXRealmOlmInboundGroupSession)
                     NSLog(@"    Add lastReceivedMessageTs = 0 to all MXRealmOlmSession objects");
                     [migration enumerateObjects:MXRealmOlmSession.className block:^(RLMObject *oldObject, RLMObject *newObject) {
 
-                        newObject[@"lastReceivedMessageTs"] = 0;
+                        newObject[@"lastReceivedMessageTs"] = @(0);
                     }];
 
                     NSLog(@"[MXRealmCryptoStore] Migration from schema #8 -> #9 completed");
