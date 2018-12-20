@@ -1227,7 +1227,7 @@ RLM_ARRAY_TYPE(MXRealmOlmInboundGroupSession)
                         newObject[@"lastReceivedMessageTs"] = 0;
                     }];
 
-                    NSLog(@"[MXRealmCryptoStore] Migration from schema #6 -> #7 completed");
+                    NSLog(@"[MXRealmCryptoStore] Migration from schema #8 -> #9 completed");
                 }
             }
         }
