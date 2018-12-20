@@ -23,7 +23,7 @@
 #import "MXSession.h"
 #import "MXTools.h"
 
-NSUInteger const kMXRealmCryptoStoreVersion = 8;
+NSUInteger const kMXRealmCryptoStoreVersion = 9;
 
 static NSString *const kMXRealmCryptoStoreFolder = @"MXRealmCryptoStore";
 
@@ -84,6 +84,7 @@ RLM_ARRAY_TYPE(MXRealmRoomAlgorithm)
 @interface MXRealmOlmSession : RLMObject
 @property NSString *sessionId;
 @property NSString *deviceKey;
+@property NSTimeInterval lastReceivedMessageTs;
 @property NSData *olmSessionData;
 @end
 
@@ -621,6 +622,8 @@ RLM_ARRAY_TYPE(MXRealmOlmInboundGroupSession)
                                                                          @"deviceKey": deviceKey,
                                                                          @"olmSessionData": [NSKeyedArchiver archivedDataWithRootObject:session.session]
                                                                          }];
+            realmOlmSession.lastReceivedMessageTs = session.lastReceivedMessageTs;
+
             [realm addObject:realmOlmSession];
         }
     }];
@@ -634,7 +637,9 @@ RLM_ARRAY_TYPE(MXRealmOlmInboundGroupSession)
                                                                       where:@"sessionId = %@ AND deviceKey = %@", sessionId, deviceKey].firstObject;
 
     OLMSession *olmSession = [NSKeyedUnarchiver unarchiveObjectWithData:realmOlmSession.olmSessionData];
+
     MXOlmSession *mxOlmSession = [[MXOlmSession alloc] initWithOlmSession:olmSession];
+    mxOlmSession.lastReceivedMessageTs = realmOlmSession.lastReceivedMessageTs;
 
     return mxOlmSession;
 }
@@ -643,7 +648,9 @@ RLM_ARRAY_TYPE(MXRealmOlmInboundGroupSession)
 {
     NSMutableArray<MXOlmSession*> *sessionsWithDevice;
 
-    RLMResults<MXRealmOlmSession *> *realmOlmSessions = [MXRealmOlmSession objectsInRealm:self.realm where:@"deviceKey = %@", deviceKey];
+    RLMResults<MXRealmOlmSession *> *realmOlmSessions = [[MXRealmOlmSession objectsInRealm:self.realm
+                                                                                     where:@"deviceKey = %@", deviceKey]
+                                                         sortedResultsUsingKeyPath:@"lastReceivedMessageTs" ascending:NO];
     for (MXRealmOlmSession *realmOlmSession in realmOlmSessions)
     {
         if (!sessionsWithDevice)
@@ -652,7 +659,9 @@ RLM_ARRAY_TYPE(MXRealmOlmInboundGroupSession)
         }
 
         OLMSession *olmSession = [NSKeyedUnarchiver unarchiveObjectWithData:realmOlmSession.olmSessionData];
+
         MXOlmSession *mxOlmSession = [[MXOlmSession alloc] initWithOlmSession:olmSession];
+        mxOlmSession.lastReceivedMessageTs = realmOlmSession.lastReceivedMessageTs;
 
         [sessionsWithDevice addObject:mxOlmSession];
     }
@@ -1202,6 +1211,23 @@ RLM_ARRAY_TYPE(MXRealmOlmInboundGroupSession)
                     // With the Realm Obj-C SDK, the realm instance is not public. We cannot
                     // make queries. So, the cleaning will be done afterwards.
                     cleanDuplicatedDevices = YES;
+                }
+
+                case 8:
+                {
+                    // MXRealmOlmSession.lastReceivedMessageTs has been added to implement:
+                    // Use the last olm session that got a message
+                    // https://github.com/vector-im/riot-ios/issues/2128
+
+                    NSLog(@"[MXRealmCryptoStore] Migration from schema #8 -> #9");
+
+                    NSLog(@"    Add lastReceivedMessageTs = 0 to all MXRealmOlmSession objects");
+                    [migration enumerateObjects:MXRealmOlmSession.className block:^(RLMObject *oldObject, RLMObject *newObject) {
+
+                        newObject[@"lastReceivedMessageTs"] = 0;
+                    }];
+
+                    NSLog(@"[MXRealmCryptoStore] Migration from schema #6 -> #7 completed");
                 }
             }
         }

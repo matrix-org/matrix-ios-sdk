@@ -37,6 +37,18 @@ NS_ASSUME_NONNULL_BEGIN
  */
 @property (nonatomic, readonly) OLMSession *session;
 
+/**
+ Timestamp at which the session last received a message.
+ */
+@property (nonatomic) NSTimeInterval lastReceivedMessageTs;
+
+
+/**
+ Notify this model that a message has been received on this olm session
+ so that it updates `lastReceivedMessageTs`
+ */
+- (void)didReceiveMessage;
+
 @end
 
 NS_ASSUME_NONNULL_END

@@ -24,8 +24,14 @@
     if (self)
     {
         _session = session;
+        _lastReceivedMessageTs = 0;
     }
     return self;
+}
+
+- (void)didReceiveMessage
+{
+    _lastReceivedMessageTs = [[NSDate date] timeIntervalSince1970];
 }
 
 @end

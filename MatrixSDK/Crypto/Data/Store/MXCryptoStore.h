@@ -202,7 +202,7 @@
 
 /**
  Retrieve all end-to-end sessions between the logged-in user and another
- device.
+ device sorted by `lastReceivedMessageTs`, the most recent(higest value) first.
 
  @param deviceKey the public key of the other device.
  @return a array of end-to-end sessions.

@@ -149,6 +149,12 @@
     if (olmSession)
     {
         MXOlmSession *mxOlmSession = [[MXOlmSession alloc] initWithOlmSession:olmSession];
+
+        // Pretend we've received a message at this point, otherwise
+        // if we try to send a message to the device, it won't use
+        // this session
+        [mxOlmSession didReceiveMessage];
+
         [store storeSession:mxOlmSession forDevice:theirIdentityKey];
         return olmSession.sessionIdentifier;
     }
@@ -186,6 +192,11 @@
         }
 
         MXOlmSession *mxOlmSession = [[MXOlmSession alloc] initWithOlmSession:olmSession];
+
+        // This counts as a received message: set last received message time
+        // to now
+        [mxOlmSession didReceiveMessage];
+
         [store storeSession:mxOlmSession forDevice:theirDeviceIdentityKey];
 
         return olmSession.sessionIdentifier;
@@ -213,17 +224,9 @@
 
 - (NSString *)sessionIdForDevice:(NSString *)theirDeviceIdentityKey
 {
-    NSString *sessionId;
-
-    NSArray<NSString *> *sessionIds = [self sessionIdsForDevice:theirDeviceIdentityKey];
-    if (sessionIds.count)
-    {
-        // Use the session with the lowest ID.
-        NSArray *sortedSessionIds = [sessionIds sortedArrayUsingSelector:@selector(compare:)];
-        sessionId = sortedSessionIds[0];
-    }
-
-    return sessionId;
+    // Use the session that has most recently received a message
+    // This is the first item in the sorted array returned by the store
+    return [store sessionsWithDevice:theirDeviceIdentityKey].firstObject.session.sessionIdentifier;
 }
 
 - (NSDictionary *)encryptMessage:(NSString *)theirDeviceIdentityKey sessionId:(NSString *)sessionId payloadString:(NSString *)payloadString
@@ -272,6 +275,7 @@
             NSLog(@"[MXOlmDevice] decryptMessage failed: %@", error);
         }
 
+        [mxOlmSession didReceiveMessage];
         [store storeSession:mxOlmSession forDevice:theirDeviceIdentityKey];
     }
 
