@@ -178,8 +178,6 @@ FOUNDATION_EXPORT NSString *const kMXKeyBackupDidStateChangeNotification;
  @param success A block object called when the operation complets.
  @param progress A block object called to indicate operation progress based on number of backed up keys.
  @param failure A block object called when the operation fails.
-
- @return a MXHTTPOperation instance.
  */
 - (void)backupAllGroupSessions:(nullable void (^)(void))success
                       progress:(nullable void (^)(NSProgress *backupProgress))progress
