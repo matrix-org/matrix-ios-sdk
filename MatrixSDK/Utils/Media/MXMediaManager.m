@@ -389,6 +389,7 @@ static MXLRUCache* imagesCacheLruCache = nil;
                      toFitViewSize:(CGSize)viewSize
                         withMethod:(MXThumbnailingMethod)thumbnailingMethod
 {
+    // Replace the "mxc://" scheme by the absolute http location for the content thumbnail
     if ([mxContentURI hasPrefix:kMXContentUriScheme])
     {
         // Convert first the provided size in pixels
@@ -400,8 +401,17 @@ static MXLRUCache* imagesCacheLruCache = nil;
         
         CGSize sizeInPixels = CGSizeMake(viewSize.width * scale, viewSize.height * scale);
         
-        // Replace the "mxc://" scheme by the absolute http location for the content thumbnail
-        NSString *mxThumbnailPrefix = [NSString stringWithFormat:@"%@/%@/thumbnail/", _homeserverURL, kMXContentPrefixPath];
+        NSString *mxThumbnailPrefix;
+        
+        // Check whether an antivirus server is present
+        if (_scanManager)
+        {
+            mxThumbnailPrefix = [NSString stringWithFormat:@"%@/%@/thumbnail/", _scanManager.antivirusServerURL, _scanManager.antivirusServerPathPrefix];
+        }
+        else
+        {
+            mxThumbnailPrefix = [NSString stringWithFormat:@"%@/%@/thumbnail/", _homeserverURL, kMXContentPrefixPath];
+        }
         NSString *thumbnailURL = [mxContentURI stringByReplacingOccurrencesOfString:kMXContentUriScheme withString:mxThumbnailPrefix];
         
         // Convert MXThumbnailingMethod to parameter string
