@@ -2918,6 +2918,24 @@ typedef void (^MXOnResumeDone)(void);
     [peekingRoom close];
 }
 
+- (BOOL)isPeekingInRoomWithRoomId:(NSString *)roomId
+{
+   return ([self peekingRoomWithRoomId:roomId] != nil);
+}
+
+- (MXPeekingRoom *)peekingRoomWithRoomId:(NSString *)roomId
+{
+    for (MXPeekingRoom *peekingRoom in peekingRooms)
+    {
+        if ([peekingRoom.roomId isEqualToString:roomId])
+        {
+            return peekingRoom;
+        }
+    }
+    return nil;
+}
+
+
 #pragma mark - Matrix users
 
 - (MXUser *)userWithUserId:(NSString *)userId

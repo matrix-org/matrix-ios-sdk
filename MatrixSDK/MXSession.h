@@ -1105,6 +1105,24 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
  */
 - (void)stopPeeking:(MXPeekingRoom*)peekingRoom;
 
+/**
+ Check if there is a peeking in progress in a room.
+
+ @param roomId The id of the room.
+
+ @return YES if there is.
+ */
+- (BOOL)isPeekingInRoomWithRoomId:(NSString*)roomId;
+
+/**
+ Get the `MXPeekingRoom` object to a room if any.
+
+ @param roomId The id of the room.
+
+ @return the MXPeekingRoom instance.
+ */
+- (MXPeekingRoom *)peekingRoomWithRoomId:(NSString*)roomId;
+
 
 #pragma mark - Matrix users
 /**
