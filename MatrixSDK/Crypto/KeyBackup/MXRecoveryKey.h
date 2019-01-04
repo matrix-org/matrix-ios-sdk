@@ -52,7 +52,7 @@ typedef enum : NSUInteger
 /**
  Decode a base58 recovery key.
 
- @param key the recovery key.
+ @param recoveryKey the recovery key.
  @param error the output error.
  @return the private key.
  */

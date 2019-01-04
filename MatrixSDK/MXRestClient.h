@@ -2223,7 +2223,6 @@ FOUNDATION_EXPORT NSString *const kMXMembersOfRoomParametersNotMembership;
 /**
  Delete the backup for all keys in a room from the homeserver.
 
- @param roomKeysBackupData keys to backup.
  @param roomId the id of the room that the keys are for.
  @param version the backup version.
 
@@ -2240,7 +2239,6 @@ FOUNDATION_EXPORT NSString *const kMXMembersOfRoomParametersNotMembership;
 /**
  Delete all keys backup from the homeserver.
 
- @param keysBackupData keys to backup.
  @param version the backup version.
 
  @param success A block object called when the operation succeeds.

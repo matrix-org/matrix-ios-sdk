@@ -1,3 +1,15 @@
+Changes in Matrix iOS SDK in 0.12.1 (2019-01-04)
+===============================================
+
+Improvements:
+* MXCrypto: Use the last olm session that got a message (vector-im/riot-ios/issues/2128).
+* MXScanManager: Support the encrypted body (the request body is now encrypted by default using the server public key).
+* MXMediaManager: Support the encrypted body.
+
+Bug Fix:
+ * MXCryptoStore: Stop duplicating devices in the store (vector-im/riot-ios/issues/2132).
+ * MXPeekingRoom: the room preview is broken (vector-im/riot-ios/issues/2126).
+
 Changes in Matrix iOS SDK in 0.12.0 (2018-12-06)
 ===============================================
 

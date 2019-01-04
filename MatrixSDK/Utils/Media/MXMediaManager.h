@@ -27,6 +27,7 @@
 #endif
 
 @class MXEncryptedContentFile;
+@class MXScanManager;
 
 /**
  The predefined folder for avatar thumbnail.
@@ -59,16 +60,10 @@ extern NSString *const kMXMediaManagerDefaultCacheFolder;
 @property (nonatomic, readonly) NSString *homeserverURL;
 
 /**
- The antivirus server URL (nil by default).
- Set a non-null url to enable the antivirus server use.
+ Antivirus scanner used to scan medias.
+ Set a non-null instance to enable the antivirus server use.
  */
-@property (nonatomic) NSString *antivirusServerURL;
-
-/**
- The Client-Server API prefix to use for the antivirus server
- By default, it is defined by the constant kMXAntivirusAPIPrefixPathUnstable.
- */
-@property (nonatomic) NSString *antivirusServerPathPrefix;
+@property (nonatomic) MXScanManager *scanManager;
 
 
 #pragma mark - File handling

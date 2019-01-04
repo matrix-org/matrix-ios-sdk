@@ -154,7 +154,7 @@
 /**
  Sign the given object with our ed25519 key.
 
- @param Object the dictionary to sign.
+ @param object the dictionary to sign.
  @return signatures.
  */
 - (NSDictionary*)signObject:(NSDictionary*)object;

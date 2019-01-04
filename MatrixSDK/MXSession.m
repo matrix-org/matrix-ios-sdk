@@ -44,7 +44,7 @@
 
 #pragma mark - Constants definitions
 
-const NSString *MatrixSDKVersion = @"0.12.0";
+const NSString *MatrixSDKVersion = @"0.12.1";
 NSString *const kMXSessionStateDidChangeNotification = @"kMXSessionStateDidChangeNotification";
 NSString *const kMXSessionNewRoomNotification = @"kMXSessionNewRoomNotification";
 NSString *const kMXSessionWillLeaveRoomNotification = @"kMXSessionWillLeaveRoomNotification";
@@ -1575,10 +1575,9 @@ typedef void (^MXOnResumeDone)(void);
 - (void)setAntivirusServerURL:(NSString *)antivirusServerURL
 {
     _antivirusServerURL = antivirusServerURL;
+    
     // Update the current restClient
     [matrixRestClient setAntivirusServer:antivirusServerURL];
-    // Update the media manager
-    [mediaManager setAntivirusServerURL:antivirusServerURL];
     
     // Configure scan manager if antivirusServerURL is set
     if (antivirusServerURL)
@@ -1590,6 +1589,9 @@ typedef void (^MXOnResumeDone)(void);
     {
         _scanManager = nil;
     }
+    
+    // Update the media manager
+    [mediaManager setScanManager:_scanManager];
 }
 
 #pragma mark - Rooms operations
@@ -2915,6 +2917,24 @@ typedef void (^MXOnResumeDone)(void);
     [peekingRooms removeObject:peekingRoom];
     [peekingRoom close];
 }
+
+- (BOOL)isPeekingInRoomWithRoomId:(NSString *)roomId
+{
+   return ([self peekingRoomWithRoomId:roomId] != nil);
+}
+
+- (MXPeekingRoom *)peekingRoomWithRoomId:(NSString *)roomId
+{
+    for (MXPeekingRoom *peekingRoom in peekingRooms)
+    {
+        if ([peekingRoom.roomId isEqualToString:roomId])
+        {
+            return peekingRoom;
+        }
+    }
+    return nil;
+}
+
 
 #pragma mark - Matrix users
 

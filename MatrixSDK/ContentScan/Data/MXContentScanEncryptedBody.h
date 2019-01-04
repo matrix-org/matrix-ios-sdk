@@ -16,6 +16,8 @@
 
 #import "MXJSONModel.h"
 
+@class OLMPkMessage;
+
 /**
  `MXContentScanEncryptedBody` contains the encrypted body use to scan an encrypted content.
  */
@@ -35,5 +37,13 @@
  The base64-encoded string representing the ephemeral public key.
  */
 @property (nonatomic) NSString *ephemeral;
+
+/**
+ Create a model instance from a OLMPkMessage instance.
+ 
+ @param OLMPkMessage the encrypted message.
+ @return the newly created instance.
+ */
++ (id)modelFromOLMPkMessage:(OLMPkMessage *)OLMPkMessage;
 
 @end
