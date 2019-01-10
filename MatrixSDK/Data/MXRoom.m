@@ -1323,6 +1323,27 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
                      failure:(void (^)(NSError *error))failure
           keepActualFilename:(BOOL)keepActualName
 {
+    return [self sendFile:fileLocalURL msgType:kMXMessageTypeFile mimeType:mimeType localEcho:localEcho success:success failure:failure keepActualFilename:keepActualName];
+}
+
+- (MXHTTPOperation*)sendAudioFile:(NSURL*)fileLocalURL
+                    mimeType:(NSString*)mimeType
+                   localEcho:(MXEvent**)localEcho
+                     success:(void (^)(NSString *eventId))success
+                     failure:(void (^)(NSError *error))failure
+          keepActualFilename:(BOOL)keepActualName
+{
+    return [self sendFile:fileLocalURL msgType:kMXMessageTypeAudio mimeType:mimeType localEcho:localEcho success:success failure:failure keepActualFilename:keepActualName];
+}
+
+- (MXHTTPOperation*)sendFile:(NSURL*)fileLocalURL
+                     msgType:(NSString*)msgType
+                    mimeType:(NSString*)mimeType
+                   localEcho:(MXEvent**)localEcho
+                     success:(void (^)(NSString *eventId))success
+                     failure:(void (^)(NSError *error))failure
+          keepActualFilename:(BOOL)keepActualName
+{
     __block MXRoomOperation *roomOperation;
     
     NSData *fileData = [NSData dataWithContentsOfFile:fileLocalURL.path];
@@ -1358,7 +1379,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
     
     // Prepare the message content for building an echo message
     NSMutableDictionary *msgContent = [@{
-                                         @"msgtype": kMXMessageTypeFile,
+                                         @"msgtype": msgType,
                                          @"body": filename,
                                          @"url": fakeMediaURI,
                                          @"info": @{

@@ -435,6 +435,26 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidFlushDataNotification;
                      failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 /**
+ Send an audio file to the room.
+ 
+ @param fileLocalURL the local filesystem path of the file to send.
+ @param mimeType the mime type of the file.
+ @param localEcho a pointer to a MXEvent object (@see sendMessageWithContent: for details).
+ @param success A block object called when the operation succeeds. It returns
+ the event id of the event generated on the home server
+ @param failure A block object called when the operation fails.
+ @param keepActualName if YES, the filename in the local storage will be kept while sending.
+ 
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)sendAudioFile:(NSURL*)fileLocalURL
+                    mimeType:(NSString*)mimeType
+                   localEcho:(MXEvent**)localEcho
+                     success:(void (^)(NSString *eventId))success
+                     failure:(void (^)(NSError *error))failure
+          keepActualFilename:(BOOL)keepActualName NS_REFINED_FOR_SWIFT;
+
+/**
  Cancel a sending operation.
 
  Note that the local echo event will be not removed from the outgoing message queue.

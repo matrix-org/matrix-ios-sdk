@@ -266,7 +266,33 @@ public extension MXRoom {
         return __sendFile(localURL, mimeType: mimeType, localEcho: &localEcho, success: currySuccess(completion), failure: curryFailure(completion))
     }
     
+    /**
+     Send an audio file to the room.
+     
+     - parameters:
+     - localURL: the local filesystem path of the file to send.
+     - mimeType: the mime type of the file.
+     - localEcho: a pointer to a MXEvent object.
+     
+     This pointer is set to an actual MXEvent object
+     containing the local created event which should be used to echo the message in
+     the messages list until the resulting event come through the server sync.
+     For information, the identifier of the created local event has the prefix
+     `kMXEventLocalEventIdPrefix`.
+     
+     You may specify nil for this parameter if you do not want this information.
+     
+     You may provide your own MXEvent object, in this case only its send state is updated.
+     
+     - completion: A block object called when the operation completes.
+     - response: Provides the event id of the event generated on the home server on success.
+     
+     - returns: a `MXHTTPOperation` instance.
+     */
     
+    @nonobjc @discardableResult func sendAudioFile(localURL: URL, mimeType: String, localEcho: inout MXEvent?, completion: @escaping (_ response: MXResponse<String?>) -> Void) -> MXHTTPOperation {
+        return __sendAudioFile(localURL, mimeType: mimeType, localEcho: &localEcho, success: currySuccess(completion), failure: curryFailure(completion), keepActualFilename: false)
+    }
     
     /**
      Set the topic of the room.
