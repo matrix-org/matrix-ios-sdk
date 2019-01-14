@@ -23,7 +23,7 @@
 #import "MXSession.h"
 #import "MXTools.h"
 
-NSUInteger const kMXRealmCryptoStoreVersion = 9;
+NSUInteger const kMXRealmCryptoStoreVersion = 10;
 
 static NSString *const kMXRealmCryptoStoreFolder = @"MXRealmCryptoStore";
 
@@ -1236,6 +1236,14 @@ RLM_ARRAY_TYPE(MXRealmOlmInboundGroupSession)
 
                     NSLog(@"[MXRealmCryptoStore] Migration from schema #8 -> #9 completed");
                 }
+
+                case 9:
+                {
+                    NSLog(@"[MXRealmCryptoStore] Migration from schema #9 -> #10");
+
+                    // This schema update is only a fix of cleanDuplicatedDevicesInRealm introduced in schema #8.
+                    cleanDuplicatedDevices = YES;
+                }
             }
         }
     };
@@ -1267,13 +1275,13 @@ RLM_ARRAY_TYPE(MXRealmOlmInboundGroupSession)
 
     if (cleanDuplicatedDevices)
     {
-        NSLog(@"[MXRealmCryptoStore] Do cleaning for migration from schema #7 -> #8");
+        NSLog(@"[MXRealmCryptoStore] Do cleaning for duplicating devices");
 
         NSUInteger before = [MXRealmDeviceInfo allObjectsInRealm:realm].count;
         [self cleanDuplicatedDevicesInRealm:realm];
         NSUInteger after = [MXRealmDeviceInfo allObjectsInRealm:realm].count;
 
-        NSLog(@"[MXRealmCryptoStore] Migration from schema #7 -> #8 completed. There are now %@ devices. There were %@ before. %@ devices have been removed.", @(after), @(before), @(before - after));
+        NSLog(@"[MXRealmCryptoStore] Cleaning for duplicating devices completed. There are now %@ devices. There were %@ before. %@ devices have been removed.", @(after), @(before), @(before - after));
     }
 
     // Wait for completion of other operations on this realm launched from other threads
@@ -1299,12 +1307,15 @@ RLM_ARRAY_TYPE(MXRealmOlmInboundGroupSession)
         {
             for (MXRealmDeviceInfo *device in realmUser.devices)
             {
-                // The related device needs to be cloned in order to add it afterwards
-                MXRealmDeviceInfo *deviceCopy = [[MXRealmDeviceInfo alloc] initWithValue:device];
+                if (!device.isInvalidated)
+                {
+                    // The related device needs to be cloned in order to add it afterwards
+                    MXRealmDeviceInfo *deviceCopy = [[MXRealmDeviceInfo alloc] initWithValue:device];
 
-                [realm deleteObjects:[MXRealmDeviceInfo objectsInRealm:realm where:@"identityKey = %@", device.identityKey]];
+                    [realm deleteObjects:[MXRealmDeviceInfo objectsInRealm:realm where:@"identityKey = %@", device.identityKey]];
 
-                [realmUser.devices addObject:deviceCopy];
+                    [realmUser.devices addObject:deviceCopy];
+                }
             }
         }
     }];

@@ -1,3 +1,11 @@
+Changes in Matrix iOS SDK in 0.12.2 (2019-01-)
+===============================================
+
+Improvements:
+
+Bug Fix:
+* Crypto: Device deduplication method sometimes crashes (vector-im/riot-ios/issues/#2167).
+
 Changes in Matrix iOS SDK in 0.12.1 (2019-01-04)
 ===============================================
 
