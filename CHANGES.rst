@@ -2,17 +2,18 @@ Changes in Matrix iOS SDK in 0.12.2 (2019-01-)
 ===============================================
 
 Improvements:
+ * MXRoom: Add a sendAudioFile API to send file using msgType "m.audio", thanks to N-Pex (PR #616).
 
 Bug Fix:
-* Crypto: Device deduplication method sometimes crashes (vector-im/riot-ios/issues/#2167).
+ * Crypto: Device deduplication method sometimes crashes (vector-im/riot-ios/issues/#2167).
 
 Changes in Matrix iOS SDK in 0.12.1 (2019-01-04)
 ===============================================
 
 Improvements:
-* MXCrypto: Use the last olm session that got a message (vector-im/riot-ios/issues/2128).
-* MXScanManager: Support the encrypted body (the request body is now encrypted by default using the server public key).
-* MXMediaManager: Support the encrypted body.
+ * MXCrypto: Use the last olm session that got a message (vector-im/riot-ios/issues/2128).
+ * MXScanManager: Support the encrypted body (the request body is now encrypted by default using the server public key).
+ * MXMediaManager: Support the encrypted body.
 
 Bug Fix:
  * MXCryptoStore: Stop duplicating devices in the store (vector-im/riot-ios/issues/2132).
