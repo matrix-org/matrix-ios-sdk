@@ -90,7 +90,7 @@
         [aliceRestClient createKeyBackupVersion:keyBackupVersion success:^(NSString *version) {
 
             // - Get the current version from the server
-            [aliceRestClient keyBackupVersion:^(MXKeyBackupVersion *keyBackupVersion2) {
+            [aliceRestClient keyBackupVersion:nil success:^(MXKeyBackupVersion *keyBackupVersion2) {
 
                 // - Check they match
                 XCTAssertNotNil(keyBackupVersion2);

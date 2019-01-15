@@ -104,16 +104,18 @@ FOUNDATION_EXPORT NSString *const kMXKeyBackupDidStateChangeNotification;
 #pragma mark - Backup management
 
 /**
- Get information about the current backup version defined on the homeserver.
+ Get information about a backup version defined on the homeserver.
 
- It can be different than `self.keyBackupVersion`.
+ @param version the backup version.
+        nil returns the current backup version. It can be different than `self.keyBackupVersion`.
 
  @param success A block object called when the operation succeeds.
  @param failure A block object called when the operation fails.
 
  @return a MXHTTPOperation instance.
  */
-- (MXHTTPOperation*)version:(void (^)(MXKeyBackupVersion * _Nullable keyBackupVersion))success
+- (MXHTTPOperation*)version:(nullable NSString *)version
+                    success:(void (^)(MXKeyBackupVersion * _Nullable keyBackupVersion))success
                     failure:(void (^)(NSError *error))failure;
 
 /**

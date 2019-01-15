@@ -73,7 +73,7 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
     self.state = MXKeyBackupStateCheckingBackUpOnHomeserver;
 
     MXWeakify(self);
-    [self version:^(MXKeyBackupVersion * _Nullable keyBackupVersion) {
+    [self version:nil success:^(MXKeyBackupVersion * _Nullable keyBackupVersion) {
         MXStrongifyAndReturnIfNil(self);
 
         MXWeakify(self);
@@ -361,10 +361,10 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
 
 #pragma mark - Backup management
 
-- (MXHTTPOperation *)version:(void (^)(MXKeyBackupVersion * _Nullable))success failure:(void (^)(NSError * _Nonnull))failure
+- (MXHTTPOperation *)version:(NSString *)version success:(void (^)(MXKeyBackupVersion * _Nullable))success failure:(void (^)(NSError * _Nonnull))failure
 {
     // Use mxSession.matrixRestClient to respond to the main thread as this method is public
-    return [mxSession.matrixRestClient keyBackupVersion:success failure:^(NSError *error) {
+    return [mxSession.matrixRestClient keyBackupVersion:version success:success failure:^(NSError *error) {
 
         // Workaround because the homeserver currently returns  M_NOT_FOUND when there is
         // no key backup
