@@ -134,11 +134,15 @@ FOUNDATION_EXPORT NSString *const kMXKeyBackupDidStateChangeNotification;
  The returned `MXMegolmBackupCreationInfo` object has a `recoveryKey` member with
  the user-facing recovery key string.
 
+ @param password an optional passphrase string that can be entered by the user
+        when restoring the backup as an alternative to entering the recovery key.
+
  @param success A block object called when the operation succeeds.
  @param failure A block object called when the operation fails
  */
-- (void)prepareKeyBackupVersion:(void (^)(MXMegolmBackupCreationInfo *keyBackupCreationInfo))success
-                        failure:(nullable void (^)(NSError *error))failure;
+- (void)prepareKeyBackupVersionWithPassword:(nullable NSString *)password
+                                    success:(void (^)(MXMegolmBackupCreationInfo *keyBackupCreationInfo))success
+                                    failure:(nullable void (^)(NSError *error))failure;
 
 /**
  Create a new key backup version and enable it, using the information return from
@@ -208,7 +212,7 @@ FOUNDATION_EXPORT NSString *const kMXKeyBackupDidStateChangeNotification;
 + (BOOL)isValidRecoveryKey:(NSString*)recoveryKey;
 
 /**
- Restore a backup from a given backup version stored on the homeserver.
+ Restore a backup with a recovery key from a given backup version stored on the homeserver.
 
  @param version the backup version to restore from.
  @param recoveryKey the recovery key to decrypt the retrieved backup.
@@ -222,7 +226,28 @@ FOUNDATION_EXPORT NSString *const kMXKeyBackupDidStateChangeNotification;
  @return a MXHTTPOperation instance.
  */
 - (MXHTTPOperation*)restoreKeyBackup:(NSString*)version
-                         recoveryKey:(NSString*)recoveryKey
+                     withRecoveryKey:(NSString*)recoveryKey
+                                room:(nullable NSString*)roomId
+                             session:(nullable NSString*)sessionId
+                             success:(nullable void (^)(NSUInteger total, NSUInteger imported))success
+                             failure:(nullable void (^)(NSError *error))failure;
+
+/**
+ Restore a backup with a password from a given backup version stored on the homeserver.
+
+ @param version the backup version to restore from.
+ @param password the password to decrypt the retrieved backup.
+ @param roomId the id of the room to get backup data from.
+ @param sessionId the id of the session to restore.
+
+ @param success A block object called when the operation succeeds.
+ It provides the number of found keys and the number of successfully imported keys.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)restoreKeyBackup:(NSString*)version
+                        withPassword:(NSString*)password
                                 room:(nullable NSString*)roomId
                              session:(nullable NSString*)sessionId
                              success:(nullable void (^)(NSUInteger total, NSUInteger imported))success

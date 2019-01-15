@@ -21,6 +21,7 @@
 
 #import <OLMKit/OLMKit.h>
 #import "MXRecoveryKey.h"
+#import "MXKeyBackupPassword.h"
 #import "MXSession.h"
 #import "MXTools.h"
 #import "MXError.h"
@@ -463,8 +464,9 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
     });
 }
 
-- (void)prepareKeyBackupVersion:(void (^)(MXMegolmBackupCreationInfo *keyBackupCreationInfo))success
-                        failure:(nullable void (^)(NSError *error))failure;
+- (void)prepareKeyBackupVersionWithPassword:(NSString *)password
+                                    success:(void (^)(MXMegolmBackupCreationInfo * _Nonnull))success
+                                    failure:(void (^)(NSError * _Nonnull))failure
 {
     MXWeakify(self);
     dispatch_async(mxSession.crypto.cryptoQueue, ^{
@@ -474,7 +476,27 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
 
         NSError *error;
         MXMegolmBackupAuthData *authData = [MXMegolmBackupAuthData new];
-        authData.publicKey = [decryption generateKey:&error];
+        if (password)
+        {
+            // Generate a private from the password
+            NSString *salt;
+            NSUInteger iterations;
+            NSData *privateKey = [MXKeyBackupPassword generatePrivateKeyWithPassword:password
+                                                                                salt:&salt
+                                                                          iterations:&iterations
+                                                                               error:&error];
+            if (!error)
+            {
+                authData.publicKey = [decryption setPrivateKey:privateKey error:&error];
+                authData.privateKeySalt = salt;
+                authData.privateKeyIterations = iterations;
+            }
+        }
+        else
+        {
+            authData.publicKey = [decryption generateKey:&error];
+        }
+
         if (error)
         {
             if (failure)
@@ -712,7 +734,7 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
 }
 
 - (MXHTTPOperation*)restoreKeyBackup:(NSString*)version
-                         recoveryKey:(NSString*)recoveryKey
+                     withRecoveryKey:(NSString*)recoveryKey
                                 room:(nullable NSString*)roomId
                              session:(nullable NSString*)sessionId
                              success:(nullable void (^)(NSUInteger total, NSUInteger imported))success
@@ -720,7 +742,7 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
 {
     MXHTTPOperation *operation = [MXHTTPOperation new];
 
-    NSLog(@"[MXKeyBackup] restoreKeyBackup: From backup version: %@", version);
+    NSLog(@"[MXKeyBackup] restoreKeyBackup with recovery key: From backup version: %@", version);
 
     MXWeakify(self);
     dispatch_async(mxSession.crypto.cryptoQueue, ^{
@@ -797,6 +819,50 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
             [operation mutateTo:operation2];
         }
     });
+
+    return operation;
+}
+
+- (MXHTTPOperation*)restoreKeyBackup:(NSString*)version
+                        withPassword:(NSString*)password
+                                room:(nullable NSString*)roomId
+                             session:(nullable NSString*)sessionId
+                             success:(nullable void (^)(NSUInteger total, NSUInteger imported))success
+                             failure:(nullable void (^)(NSError *error))failure
+{
+    NSLog(@"[MXKeyBackup] restoreKeyBackup with password: From backup version: %@", version);
+
+    // Fetch authentication info about this version
+    // to retrieve the private key from the password
+    MXWeakify(self);
+    MXHTTPOperation *operation;
+    operation = [self version:version success:^(MXKeyBackupVersion * _Nullable keyBackupVersion) {
+        MXStrongifyAndReturnIfNil(self);
+
+        MXMegolmBackupAuthData *authData = [MXMegolmBackupAuthData modelFromJSON:keyBackupVersion.authData];
+        if (!authData.privateKeySalt || !authData.privateKeyIterations)
+        {
+            return;
+        }
+
+        NSError *error;
+        NSData *recoveryKeyData = [MXKeyBackupPassword retrievePrivateKeyWithPassword:password salt:authData.privateKeySalt iterations:authData.privateKeyIterations error:&error];
+
+        if (!error)
+        {
+            NSString *recoveryKey = [MXRecoveryKey encode:recoveryKeyData];
+            MXHTTPOperation *operation2 = [self restoreKeyBackup:version withRecoveryKey:recoveryKey room:roomId session:sessionId success:success failure:failure];
+            [operation mutateTo:operation2];
+        }
+        else
+        {
+            if (failure)
+            {
+                failure(error);
+            }
+        }
+
+    } failure:failure];
 
     return operation;
 }

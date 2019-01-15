@@ -372,7 +372,7 @@
         XCTAssertFalse(aliceSession.crypto.backup.enabled);
 
         // Check that `[MXKeyBackup prepareKeyBackupVersion` returns valid data
-        [aliceSession.crypto.backup prepareKeyBackupVersion:^(MXMegolmBackupCreationInfo * _Nonnull keyBackupCreationInfo) {
+        [aliceSession.crypto.backup prepareKeyBackupVersionWithPassword:nil success:^(MXMegolmBackupCreationInfo * _Nonnull keyBackupCreationInfo) {
 
             XCTAssertNotNil(keyBackupCreationInfo);
             XCTAssertEqualObjects(keyBackupCreationInfo.algorithm, kMXCryptoMegolmBackupAlgorithm);
@@ -399,7 +399,7 @@
         XCTAssertFalse(aliceSession.crypto.backup.enabled);
 
         // Check that `[MXKeyBackup createKeyBackupVersion` returns valid data
-        [aliceSession.crypto.backup prepareKeyBackupVersion:^(MXMegolmBackupCreationInfo * _Nonnull keyBackupCreationInfo) {
+        [aliceSession.crypto.backup prepareKeyBackupVersionWithPassword:nil success:^(MXMegolmBackupCreationInfo * _Nonnull keyBackupCreationInfo) {
             [aliceSession.crypto.backup createKeyBackupVersion:keyBackupCreationInfo success:^(MXKeyBackupVersion * _Nonnull keyBackupVersion) {
 
                 XCTAssertEqualObjects(keyBackupVersion.algorithm, kMXCryptoMegolmBackupAlgorithm);
@@ -430,7 +430,7 @@
 {
     [matrixSDKTestsE2EData doE2ETestWithAliceAndBobInARoomWithCryptedMessages:self cryptedBob:YES readyToTest:^(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
 
-        [aliceSession.crypto.backup prepareKeyBackupVersion:^(MXMegolmBackupCreationInfo * _Nonnull keyBackupCreationInfo) {
+        [aliceSession.crypto.backup prepareKeyBackupVersionWithPassword:nil success:^(MXMegolmBackupCreationInfo * _Nonnull keyBackupCreationInfo) {
             [aliceSession.crypto.backup createKeyBackupVersion:keyBackupCreationInfo success:^(MXKeyBackupVersion * _Nonnull keyBackupVersion) {
 
                 // Check that `[MXKeyBackup createKeyBackupVersion` launches the backup
@@ -475,7 +475,7 @@
     // - Create a backup version
     [matrixSDKTestsE2EData doE2ETestWithAliceAndBobInARoomWithCryptedMessages:self cryptedBob:YES readyToTest:^(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
 
-        [aliceSession.crypto.backup prepareKeyBackupVersion:^(MXMegolmBackupCreationInfo * _Nonnull keyBackupCreationInfo) {
+        [aliceSession.crypto.backup prepareKeyBackupVersionWithPassword:nil success:^(MXMegolmBackupCreationInfo * _Nonnull keyBackupCreationInfo) {
             [aliceSession.crypto.backup createKeyBackupVersion:keyBackupCreationInfo success:^(MXKeyBackupVersion * _Nonnull keyBackupVersion) {
 
                 // - Check the returned MXKeyBackupVersion is trusted
@@ -512,7 +512,7 @@
     [matrixSDKTestsE2EData doE2ETestWithAliceAndBobInARoomWithCryptedMessages:self cryptedBob:YES readyToTest:^(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
 
         // Check that `[MXKeyBackup backupAllGroupSessions]` returns valid data
-        [aliceSession.crypto.backup prepareKeyBackupVersion:^(MXMegolmBackupCreationInfo * _Nonnull keyBackupCreationInfo) {
+        [aliceSession.crypto.backup prepareKeyBackupVersionWithPassword:nil success:^(MXMegolmBackupCreationInfo * _Nonnull keyBackupCreationInfo) {
             [aliceSession.crypto.backup createKeyBackupVersion:keyBackupCreationInfo success:^(MXKeyBackupVersion * _Nonnull keyBackupVersion) {
 
                 NSUInteger keys = [aliceSession.crypto.store inboundGroupSessionsCount:NO];
@@ -562,7 +562,7 @@
         // - Pick a megolm key
         MXOlmInboundGroupSession *session = [aliceSession.crypto.store inboundGroupSessionsToBackup:1].firstObject;
 
-        [aliceSession.crypto.backup prepareKeyBackupVersion:^(MXMegolmBackupCreationInfo * _Nonnull keyBackupCreationInfo) {
+        [aliceSession.crypto.backup prepareKeyBackupVersionWithPassword:nil success:^(MXMegolmBackupCreationInfo * _Nonnull keyBackupCreationInfo) {
             [aliceSession.crypto.backup createKeyBackupVersion:keyBackupCreationInfo success:^(MXKeyBackupVersion * _Nonnull keyBackupVersion) {
 
                 // - Check [MXKeyBackup encryptGroupSession] returns stg
@@ -595,21 +595,18 @@
 }
 
 /**
+ Common initial conditions:
  - Do an e2e backup to the homeserver
  - Log Alice on a new device
- - Restore the e2e backup from the homeserver
- - Imported keys number must be correct
- - The new device must have the same count of megolm keys
- - Alice must have the same keys on both devices
  */
-- (void)testRestoreKeyBackup
+- (void)createKeyBackupScenarioWithPassword:(NSString*)password readyToTest:(void (^)(NSString *version, MXMegolmBackupCreationInfo *keyBackupCreationInfo, NSArray<MXOlmInboundGroupSession *> *aliceKeys, MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation))readyToTest
 {
     [matrixSDKTestsE2EData doE2ETestWithAliceAndBobInARoomWithCryptedMessages:self cryptedBob:YES readyToTest:^(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
 
-        NSArray<MXOlmInboundGroupSession *> *aliceKeys1 = [aliceSession.crypto.store inboundGroupSessionsToBackup:100];
+        NSArray<MXOlmInboundGroupSession *> *aliceKeys = [aliceSession.crypto.store inboundGroupSessionsToBackup:100];
 
         // - Do an e2e backup to the homeserver
-        [aliceSession.crypto.backup prepareKeyBackupVersion:^(MXMegolmBackupCreationInfo * _Nonnull keyBackupCreationInfo) {
+        [aliceSession.crypto.backup prepareKeyBackupVersionWithPassword:password success:^(MXMegolmBackupCreationInfo * _Nonnull keyBackupCreationInfo) {
             [aliceSession.crypto.backup createKeyBackupVersion:keyBackupCreationInfo success:^(MXKeyBackupVersion * _Nonnull keyBackupVersion) {
                 [aliceSession.crypto.backup backupAllGroupSessions:^{
 
@@ -621,33 +618,8 @@
                         // Test check: aliceSession2 has no keys at login
                         XCTAssertEqual([aliceSession2.crypto.store inboundGroupSessionsCount:NO], 0);
 
-                        // - Restore the e2e backup from the homeserver
-                        [aliceSession2.crypto.backup restoreKeyBackup:keyBackupVersion.version
-                                                          recoveryKey:keyBackupCreationInfo.recoveryKey
-                                                                 room:nil session:nil
-                                                              success:^(NSUInteger total, NSUInteger imported)
-                         {
-                             // - Imported keys number must be correct
-                             XCTAssertEqual(total, aliceKeys1.count);
-                             XCTAssertEqual(total, imported);
+                        readyToTest(keyBackupVersion.version, keyBackupCreationInfo, aliceKeys, aliceSession2, bobSession, roomId, expectation);
 
-                             // - The new device must have the same count of megolm keys
-                             XCTAssertEqual([aliceSession2.crypto.store inboundGroupSessionsCount:NO], aliceKeys1.count);
-
-                             // - Alice must have the same keys on both devices
-                             for (MXOlmInboundGroupSession *aliceKey1 in aliceKeys1)
-                             {
-                                 MXOlmInboundGroupSession *aliceKey2 = [aliceSession2.crypto.store inboundGroupSessionWithId:aliceKey1.session.sessionIdentifier andSenderKey:aliceKey1.senderKey];
-                                 XCTAssertNotNil(aliceKey2);
-                                 XCTAssertEqualObjects(aliceKey2.exportSessionData.JSONDictionary, aliceKey1.exportSessionData.JSONDictionary);
-                             }
-
-                             [expectation fulfill];
-
-                         } failure:^(NSError * _Nonnull error) {
-                             XCTFail(@"The request should not fail - NSError: %@", error);
-                             [expectation fulfill];
-                         }];
                     }];
                 } progress:nil failure:^(NSError * _Nonnull error) {
                     XCTFail(@"The request should not fail - NSError: %@", error);
@@ -665,6 +637,93 @@
 }
 
 /**
+ - Do an e2e backup to the homeserver
+ - Log Alice on a new device
+ - Restore the e2e backup with recovery key
+ - Imported keys number must be correct
+ - The new device must have the same count of megolm keys
+ - Alice must have the same keys on both devices
+ */
+- (void)testRestoreKeyBackup
+{
+    [self createKeyBackupScenarioWithPassword:nil readyToTest:^(NSString *version, MXMegolmBackupCreationInfo *keyBackupCreationInfo, NSArray<MXOlmInboundGroupSession *> *aliceKeys, MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
+
+        // - Restore the e2e backup with recovery key
+        [aliceSession.crypto.backup restoreKeyBackup:version
+                                     withRecoveryKey:keyBackupCreationInfo.recoveryKey
+                                                room:nil session:nil
+                                             success:^(NSUInteger total, NSUInteger imported)
+         {
+             // - Imported keys number must be correct
+             XCTAssertEqual(total, aliceKeys.count);
+             XCTAssertEqual(total, imported);
+
+             // - The new device must have the same count of megolm keys
+             XCTAssertEqual([aliceSession.crypto.store inboundGroupSessionsCount:NO], aliceKeys.count);
+
+             // - Alice must have the same keys on both devices
+             for (MXOlmInboundGroupSession *aliceKey1 in aliceKeys)
+             {
+                 MXOlmInboundGroupSession *aliceKey2 = [aliceSession.crypto.store inboundGroupSessionWithId:aliceKey1.session.sessionIdentifier andSenderKey:aliceKey1.senderKey];
+                 XCTAssertNotNil(aliceKey2);
+                 XCTAssertEqualObjects(aliceKey2.exportSessionData.JSONDictionary, aliceKey1.exportSessionData.JSONDictionary);
+             }
+
+             [expectation fulfill];
+
+         } failure:^(NSError * _Nonnull error) {
+             XCTFail(@"The request should not fail - NSError: %@", error);
+             [expectation fulfill];
+         }];
+    }];
+}
+
+/**
+ - Do an e2e backup to the homeserver
+ - Log Alice on a new device
+ - Restore the e2e backup with the password
+ - Imported keys number must be correct
+ - The new device must have the same count of megolm keys
+ - Alice must have the same keys on both devices
+ */
+- (void)testRestoreKeyBackupWithPassword
+{
+    NSString *password = @"password";
+
+    [self createKeyBackupScenarioWithPassword:password readyToTest:^(NSString *version, MXMegolmBackupCreationInfo *keyBackupCreationInfo, NSArray<MXOlmInboundGroupSession *> *aliceKeys, MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
+
+        // - Restore the e2e backup with the password
+        [aliceSession.crypto.backup restoreKeyBackup:version
+         //withRecoveryKey:keyBackupCreationInfo.recoveryKey
+                                        withPassword:password
+                                                room:nil session:nil
+                                             success:^(NSUInteger total, NSUInteger imported)
+         {
+             // - Imported keys number must be correct
+             XCTAssertEqual(total, aliceKeys.count);
+             XCTAssertEqual(total, imported);
+
+             // - The new device must have the same count of megolm keys
+             XCTAssertEqual([aliceSession.crypto.store inboundGroupSessionsCount:NO], aliceKeys.count);
+
+             // - Alice must have the same keys on both devices
+             for (MXOlmInboundGroupSession *aliceKey1 in aliceKeys)
+             {
+                 MXOlmInboundGroupSession *aliceKey2 = [aliceSession.crypto.store inboundGroupSessionWithId:aliceKey1.session.sessionIdentifier andSenderKey:aliceKey1.senderKey];
+                 XCTAssertNotNil(aliceKey2);
+                 XCTAssertEqualObjects(aliceKey2.exportSessionData.JSONDictionary, aliceKey1.exportSessionData.JSONDictionary);
+             }
+
+             [expectation fulfill];
+
+         } failure:^(NSError * _Nonnull error) {
+             XCTFail(@"The request should not fail - NSError: %@", error);
+             [expectation fulfill];
+         }];
+    }];
+}
+
+/**
  Check backup starts automatically if there is an existing and compatible backup
  version on the homeserver.
  - Create a backup version
@@ -678,7 +737,7 @@
 
         XCTAssertFalse(aliceSession.crypto.backup.enabled);
 
-        [aliceSession.crypto.backup prepareKeyBackupVersion:^(MXMegolmBackupCreationInfo * _Nonnull keyBackupCreationInfo) {
+        [aliceSession.crypto.backup prepareKeyBackupVersionWithPassword:nil success:^(MXMegolmBackupCreationInfo * _Nonnull keyBackupCreationInfo) {
             [aliceSession.crypto.backup createKeyBackupVersion:keyBackupCreationInfo success:^(MXKeyBackupVersion * _Nonnull keyBackupVersion) {
 
                 XCTAssertTrue(aliceSession.crypto.backup.enabled);
@@ -729,7 +788,7 @@
     [matrixSDKTestsE2EData doE2ETestWithAliceAndBobInARoomWithCryptedMessages:self cryptedBob:YES readyToTest:^(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
 
         // - Make alice back up her keys to her homeserver
-        [aliceSession.crypto.backup prepareKeyBackupVersion:^(MXMegolmBackupCreationInfo * _Nonnull keyBackupCreationInfo) {
+        [aliceSession.crypto.backup prepareKeyBackupVersionWithPassword:nil success:^(MXMegolmBackupCreationInfo * _Nonnull keyBackupCreationInfo) {
             [aliceSession.crypto.backup createKeyBackupVersion:keyBackupCreationInfo success:^(MXKeyBackupVersion * _Nonnull keyBackupVersion) {
 
                 XCTAssertTrue(aliceSession.crypto.backup.enabled);
@@ -784,7 +843,7 @@
     [matrixSDKTestsE2EData doE2ETestWithAliceAndBobInARoomWithCryptedMessages:self cryptedBob:YES readyToTest:^(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
 
         // - Do an e2e backup to the homeserver
-        [aliceSession.crypto.backup prepareKeyBackupVersion:^(MXMegolmBackupCreationInfo * _Nonnull keyBackupCreationInfo) {
+        [aliceSession.crypto.backup prepareKeyBackupVersionWithPassword:nil success:^(MXMegolmBackupCreationInfo * _Nonnull keyBackupCreationInfo) {
             [aliceSession.crypto.backup createKeyBackupVersion:keyBackupCreationInfo success:^(MXKeyBackupVersion * _Nonnull keyBackupVersion) {
                 [aliceSession.crypto.backup backupAllGroupSessions:^{
 
