@@ -3,6 +3,7 @@ Changes in Matrix iOS SDK in 0.12.2 (2019-01-)
 
 Improvements:
  * MXRoom: Add a sendAudioFile API to send file using msgType "m.audio", thanks to N-Pex (PR #616).
+ * MXCrypto: Add key backup passphrase support (vector-im/riot-ios#2127).
 
 Bug Fix:
  * Crypto: Device deduplication method sometimes crashes (vector-im/riot-ios/issues/#2167).

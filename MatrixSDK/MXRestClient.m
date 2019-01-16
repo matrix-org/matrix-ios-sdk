@@ -3930,12 +3930,19 @@ MXAuthAction;
                                  }];
 }
 
-- (MXHTTPOperation*)keyBackupVersion:(void (^)(MXKeyBackupVersion *keyBackupVersion))success
-                             failure:(void (^)(NSError *error))failure
+- (MXHTTPOperation*)keyBackupVersion:(NSString*)version
+                             success:(void (^)(MXKeyBackupVersion *keyBackupVersion))success
+                             failure:(void (^)(NSError *error))failure;
 {
+    NSMutableString *path = [NSMutableString stringWithFormat:@"%@/room_keys/version", kMXAPIPrefixPathUnstable];
+    if (version)
+    {
+        [path appendFormat:@"/%@", version];
+    }
+
     MXWeakify(self);
     return [httpClient requestWithMethod:@"GET"
-                                    path:[NSString stringWithFormat:@"%@/room_keys/version", kMXAPIPrefixPathUnstable]
+                                    path:path
                               parameters:nil
                                  success:^(NSDictionary *JSONResponse) {
                                      MXStrongifyAndReturnIfNil(self);

@@ -31,6 +31,17 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic) NSString *publicKey;
 
 /**
+ In case of a backup created from a password, the salt associated with the backup
+ private key.
+ */
+@property (nonatomic, nullable) NSString *privateKeySalt;
+
+/**
+ In case of a backup created from a password, the number of key derivations.
+ */
+@property (nonatomic) NSUInteger privateKeyIterations;
+
+/**
  Signatures of the public key.
  */
 @property (nonatomic) NSDictionary<NSString*, NSDictionary*> *signatures;

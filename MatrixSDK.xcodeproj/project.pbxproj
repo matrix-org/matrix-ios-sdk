@@ -76,6 +76,8 @@
 		324095221AFA432F00D81C97 /* MXCallStackCall.h in Headers */ = {isa = PBXBuildFile; fileRef = 3240951E1AFA432F00D81C97 /* MXCallStackCall.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		3240969D1F9F751600DBA607 /* MXPushRuleSenderNotificationPermissionConditionChecker.h in Headers */ = {isa = PBXBuildFile; fileRef = 3240969B1F9F751600DBA607 /* MXPushRuleSenderNotificationPermissionConditionChecker.h */; };
 		3240969E1F9F751600DBA607 /* MXPushRuleSenderNotificationPermissionConditionChecker.m in Sources */ = {isa = PBXBuildFile; fileRef = 3240969C1F9F751600DBA607 /* MXPushRuleSenderNotificationPermissionConditionChecker.m */; };
+		32442FB121EDD21300D2411B /* MXKeyBackupPassword.h in Headers */ = {isa = PBXBuildFile; fileRef = 32442FAF21EDD21300D2411B /* MXKeyBackupPassword.h */; };
+		32442FB221EDD21300D2411B /* MXKeyBackupPassword.m in Sources */ = {isa = PBXBuildFile; fileRef = 32442FB021EDD21300D2411B /* MXKeyBackupPassword.m */; };
 		3245A7501AF7B2930001D8A7 /* MXCall.h in Headers */ = {isa = PBXBuildFile; fileRef = 3245A74C1AF7B2930001D8A7 /* MXCall.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		3245A7511AF7B2930001D8A7 /* MXCall.m in Sources */ = {isa = PBXBuildFile; fileRef = 3245A74D1AF7B2930001D8A7 /* MXCall.m */; };
 		3245A7521AF7B2930001D8A7 /* MXCallManager.h in Headers */ = {isa = PBXBuildFile; fileRef = 3245A74E1AF7B2930001D8A7 /* MXCallManager.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -443,6 +445,8 @@
 		3240951E1AFA432F00D81C97 /* MXCallStackCall.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXCallStackCall.h; sourceTree = "<group>"; };
 		3240969B1F9F751600DBA607 /* MXPushRuleSenderNotificationPermissionConditionChecker.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MXPushRuleSenderNotificationPermissionConditionChecker.h; sourceTree = "<group>"; };
 		3240969C1F9F751600DBA607 /* MXPushRuleSenderNotificationPermissionConditionChecker.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MXPushRuleSenderNotificationPermissionConditionChecker.m; sourceTree = "<group>"; };
+		32442FAF21EDD21300D2411B /* MXKeyBackupPassword.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MXKeyBackupPassword.h; sourceTree = "<group>"; };
+		32442FB021EDD21300D2411B /* MXKeyBackupPassword.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MXKeyBackupPassword.m; sourceTree = "<group>"; };
 		3245A74C1AF7B2930001D8A7 /* MXCall.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXCall.h; sourceTree = "<group>"; };
 		3245A74D1AF7B2930001D8A7 /* MXCall.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXCall.m; sourceTree = "<group>"; };
 		3245A74E1AF7B2930001D8A7 /* MXCallManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXCallManager.h; sourceTree = "<group>"; };
@@ -1159,6 +1163,8 @@
 				32FFB4ED217DC0E900C96002 /* MXKeyBackup_Private.h */,
 				32FFB4EE217E146A00C96002 /* MXRecoveryKey.h */,
 				32FFB4EF217E146A00C96002 /* MXRecoveryKey.m */,
+				32442FAF21EDD21300D2411B /* MXKeyBackupPassword.h */,
+				32442FB021EDD21300D2411B /* MXKeyBackupPassword.m */,
 			);
 			path = KeyBackup;
 			sourceTree = "<group>";
@@ -1624,6 +1630,7 @@
 				B146D4D521A5A44E00D8C2C6 /* MXScanRealmProvider.h in Headers */,
 				32F634AB1FC5E3480054EF49 /* MXEventDecryptionResult.h in Headers */,
 				322A51C71D9BBD3C00C8536D /* MXOlmDevice.h in Headers */,
+				32442FB121EDD21300D2411B /* MXKeyBackupPassword.h in Headers */,
 				320DFDE419DD99B60068622A /* MXRestClient.h in Headers */,
 				3265CB381A14C43E00E24B2F /* MXRoomState.h in Headers */,
 				3283F7781EAF30F700C1688C /* MXBugReportRestClient.h in Headers */,
@@ -1958,6 +1965,7 @@
 				32A9E8261EF4026E0081358A /* MXUIKitBackgroundModeHandler.m in Sources */,
 				B146D4F721A5BB9F00D8C2C6 /* MXRealmMediaScanStore.m in Sources */,
 				322A51C81D9BBD3C00C8536D /* MXOlmDevice.m in Sources */,
+				32442FB221EDD21300D2411B /* MXKeyBackupPassword.m in Sources */,
 				329FB17A1A0A74B100A5E88E /* MXTools.m in Sources */,
 				329D3E631E251027002E2F1E /* MXRoomSummaryUpdater.m in Sources */,
 				B146D4D821A5A44E00D8C2C6 /* MXScanRealmInMemoryProvider.m in Sources */,
