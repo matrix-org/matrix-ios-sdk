@@ -691,6 +691,40 @@
 }
 
 /**
+ - Do an e2e backup to the homeserver with a recovery key
+ - Log Alice on a new device
+ - Try to restore the e2e backup with a wrong recovery key
+ - It must fail
+ */
+- (void)testRestoreKeyBackupWithAWrongRecoveryKey
+{
+    // - Do an e2e backup to the homeserver with a recovery key
+    // - Log Alice on a new device
+    [self createKeyBackupScenarioWithPassword:nil readyToTest:^(NSString *version, MXMegolmBackupCreationInfo *keyBackupCreationInfo, NSArray<MXOlmInboundGroupSession *> *aliceKeys, MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
+
+        // - Try to restore the e2e backup with a wrong recovery key
+        [aliceSession.crypto.backup restoreKeyBackup:version
+                                     withRecoveryKey:@"EsTc LW2K PGiF wKEA 3As5 g5c4 BXwk qeeJ ZJV8 Q9fu gUMN UE4d"
+                                                room:nil session:nil
+                                             success:^(NSUInteger total, NSUInteger imported)
+         {
+             // - It must fail
+             XCTFail(@"It must fail");
+
+             [expectation fulfill];
+
+         } failure:^(NSError * _Nonnull error) {
+
+             // - It must fail
+             XCTAssertEqualObjects(error.domain, MXKeyBackupErrorDomain);
+             XCTAssertEqual(error.code, MXKeyBackupErrorInvalidRecoveryKeyCode);
+
+             [expectation fulfill];
+         }];
+    }];
+}
+
+/**
  - Do an e2e backup to the homeserver with a password
  - Log Alice on a new device
  - Restore the e2e backup with the password
@@ -717,6 +751,40 @@
 
          } failure:^(NSError * _Nonnull error) {
              XCTFail(@"The request should not fail - NSError: %@", error);
+             [expectation fulfill];
+         }];
+    }];
+}
+
+/**
+ - Do an e2e backup to the homeserver with a password
+ - Log Alice on a new device
+ - Try to restore the e2e backup with a wrong password
+ - It must fail
+ */
+- (void)testRestoreKeyBackupWithAWrongPassword
+{
+    // - Do an e2e backup to the homeserver with a password
+    // - Log Alice on a new device
+    [self createKeyBackupScenarioWithPassword:@"password" readyToTest:^(NSString *version, MXMegolmBackupCreationInfo *keyBackupCreationInfo, NSArray<MXOlmInboundGroupSession *> *aliceKeys, MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
+
+        // - Try to restore the e2e backup with a wrong password
+        [aliceSession.crypto.backup restoreKeyBackup:version
+                                        withPassword:@"WrongPassword"
+                                                room:nil session:nil
+                                             success:^(NSUInteger total, NSUInteger imported)
+         {
+             // - It must fail
+             XCTFail(@"It must fail");
+
+             [expectation fulfill];
+
+         } failure:^(NSError * _Nonnull error) {
+
+             // - It must fail
+             XCTAssertEqualObjects(error.domain, MXKeyBackupErrorDomain);
+             XCTAssertEqual(error.code, MXKeyBackupErrorInvalidRecoveryKeyCode);
+
              [expectation fulfill];
          }];
     }];

@@ -771,10 +771,12 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
             NSMutableArray<MXMegolmSessionData*> *sessionDatas = [NSMutableArray array];
 
             // Restore that data
+            NSUInteger sessionsFromHSCount = 0;
             for (NSString *roomId in keysBackupData.rooms)
             {
                 for (NSString *sessionId in keysBackupData.rooms[roomId].sessions)
                 {
+                    sessionsFromHSCount++;
                     MXKeyBackupData *keyBackupData = keysBackupData.rooms[roomId].sessions[sessionId];
 
                     MXMegolmSessionData *sessionData = [self decryptKeyBackupData:keyBackupData forSession:sessionId inRoom:roomId withPkDecryption:decryption];
@@ -786,7 +788,24 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
                 }
             }
 
-            NSLog(@"[MXKeyBackup] restoreKeyBackup: Got %@ keys from the backup store on the homeserver", @(sessionDatas.count));
+            NSLog(@"[MXKeyBackup] restoreKeyBackup: Decrypted %@ keys out of %@ from the backup store on the homeserver", @(sessionDatas.count), @(sessionsFromHSCount));
+
+            if (sessionsFromHSCount && !sessionDatas.count)
+            {
+                // If we fail to decrypt any session, we have a credential problem
+                NSLog(@"[MXKeyBackup] restoreKeyBackup: Invalid recovery key or password");
+                if (failure)
+                {
+                    NSError *error = [NSError errorWithDomain:MXKeyBackupErrorDomain
+                                                         code:MXKeyBackupErrorInvalidRecoveryKeyCode
+                                                     userInfo:@{
+                                                                NSLocalizedDescriptionKey: @"Invalid recovery key or password"
+                                                                }];
+                    failure(error);
+                }
+
+                return;
+            }
 
             // Do not trigger a backup for them if they come from the backup version we are using
             BOOL backUp = ![version isEqualToString:self.keyBackupVersion.version];
@@ -844,11 +863,11 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
         {
             if (failure)
             {
-                NSLog(@"[MXKeyBackup] restoreKeyBackup: Salt and/or iterations not found: this backup cannot be restored with a passphrase");
+                NSLog(@"[MXKeyBackup] restoreKeyBackup: Salt and/or iterations not found: this backup cannot be restored with a password");
                 NSError *error = [NSError errorWithDomain:MXKeyBackupErrorDomain
                                                      code:MXKeyBackupErrorMissingPrivateKeySaltCode
                                                  userInfo:@{
-                                                            NSLocalizedDescriptionKey: @"Salt and/or iterations not found: this backup cannot be restored with a passphrase"
+                                                            NSLocalizedDescriptionKey: @"Salt and/or iterations not found: this backup cannot be restored with a password"
                                                             }];
                 failure(error);
             }
