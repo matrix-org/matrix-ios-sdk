@@ -637,15 +637,39 @@
 }
 
 /**
- - Do an e2e backup to the homeserver
- - Log Alice on a new device
- - Restore the e2e backup with recovery key
+ Common restore success check after `createKeyBackupScenarioWithPassword`:
  - Imported keys number must be correct
  - The new device must have the same count of megolm keys
  - Alice must have the same keys on both devices
  */
+- (void)checkRestoreSuccess:(NSArray<MXOlmInboundGroupSession *> *)aliceKeys aliceSession:(MXSession *)aliceSession total:(NSUInteger)total imported:(NSUInteger)imported
+{
+    // - Imported keys number must be correct
+    XCTAssertEqual(total, aliceKeys.count);
+    XCTAssertEqual(total, imported);
+
+    // - The new device must have the same count of megolm keys
+    XCTAssertEqual([aliceSession.crypto.store inboundGroupSessionsCount:NO], aliceKeys.count);
+
+    // - Alice must have the same keys on both devices
+    for (MXOlmInboundGroupSession *aliceKey1 in aliceKeys)
+    {
+        MXOlmInboundGroupSession *aliceKey2 = [aliceSession.crypto.store inboundGroupSessionWithId:aliceKey1.session.sessionIdentifier andSenderKey:aliceKey1.senderKey];
+        XCTAssertNotNil(aliceKey2);
+        XCTAssertEqualObjects(aliceKey2.exportSessionData.JSONDictionary, aliceKey1.exportSessionData.JSONDictionary);
+    }
+}
+
+/**
+ - Do an e2e backup to the homeserver with a recovery key
+ - And log Alice on a new device
+ - Restore the e2e backup with recovery key
+ - Restore must be successful
+ */
 - (void)testRestoreKeyBackup
 {
+    // - Do an e2e backup to the homeserver with a recovery key
+    // - And log Alice on a new device
     [self createKeyBackupScenarioWithPassword:nil readyToTest:^(NSString *version, MXMegolmBackupCreationInfo *keyBackupCreationInfo, NSArray<MXOlmInboundGroupSession *> *aliceKeys, MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
 
         // - Restore the e2e backup with recovery key
@@ -654,20 +678,8 @@
                                                 room:nil session:nil
                                              success:^(NSUInteger total, NSUInteger imported)
          {
-             // - Imported keys number must be correct
-             XCTAssertEqual(total, aliceKeys.count);
-             XCTAssertEqual(total, imported);
-
-             // - The new device must have the same count of megolm keys
-             XCTAssertEqual([aliceSession.crypto.store inboundGroupSessionsCount:NO], aliceKeys.count);
-
-             // - Alice must have the same keys on both devices
-             for (MXOlmInboundGroupSession *aliceKey1 in aliceKeys)
-             {
-                 MXOlmInboundGroupSession *aliceKey2 = [aliceSession.crypto.store inboundGroupSessionWithId:aliceKey1.session.sessionIdentifier andSenderKey:aliceKey1.senderKey];
-                 XCTAssertNotNil(aliceKey2);
-                 XCTAssertEqualObjects(aliceKey2.exportSessionData.JSONDictionary, aliceKey1.exportSessionData.JSONDictionary);
-             }
+             // - Restore must be successful
+             [self checkRestoreSuccess:aliceKeys aliceSession:aliceSession total:total imported:imported];
 
              [expectation fulfill];
 
@@ -679,45 +691,98 @@
 }
 
 /**
- - Do an e2e backup to the homeserver
+ - Do an e2e backup to the homeserver with a password
  - Log Alice on a new device
  - Restore the e2e backup with the password
- - Imported keys number must be correct
- - The new device must have the same count of megolm keys
- - Alice must have the same keys on both devices
+ - Restore must be successful
  */
 - (void)testRestoreKeyBackupWithPassword
 {
     NSString *password = @"password";
 
+    // - Do an e2e backup to the homeserver with a password
+    // - And log Alice on a new device
     [self createKeyBackupScenarioWithPassword:password readyToTest:^(NSString *version, MXMegolmBackupCreationInfo *keyBackupCreationInfo, NSArray<MXOlmInboundGroupSession *> *aliceKeys, MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
 
         // - Restore the e2e backup with the password
         [aliceSession.crypto.backup restoreKeyBackup:version
-         //withRecoveryKey:keyBackupCreationInfo.recoveryKey
                                         withPassword:password
                                                 room:nil session:nil
                                              success:^(NSUInteger total, NSUInteger imported)
          {
-             // - Imported keys number must be correct
-             XCTAssertEqual(total, aliceKeys.count);
-             XCTAssertEqual(total, imported);
-
-             // - The new device must have the same count of megolm keys
-             XCTAssertEqual([aliceSession.crypto.store inboundGroupSessionsCount:NO], aliceKeys.count);
-
-             // - Alice must have the same keys on both devices
-             for (MXOlmInboundGroupSession *aliceKey1 in aliceKeys)
-             {
-                 MXOlmInboundGroupSession *aliceKey2 = [aliceSession.crypto.store inboundGroupSessionWithId:aliceKey1.session.sessionIdentifier andSenderKey:aliceKey1.senderKey];
-                 XCTAssertNotNil(aliceKey2);
-                 XCTAssertEqualObjects(aliceKey2.exportSessionData.JSONDictionary, aliceKey1.exportSessionData.JSONDictionary);
-             }
+             // - Restore must be successful
+             [self checkRestoreSuccess:aliceKeys aliceSession:aliceSession total:total imported:imported];
 
              [expectation fulfill];
 
          } failure:^(NSError * _Nonnull error) {
              XCTFail(@"The request should not fail - NSError: %@", error);
+             [expectation fulfill];
+         }];
+    }];
+}
+
+/**
+ - Do an e2e backup to the homeserver with a password
+ - Log Alice on a new device
+ - Restore the e2e backup with the recovery key.
+ - Restore must be successful
+ */
+- (void)testUseRecoveryKeyToRestoreAPasswordKeyKeyBackup
+{
+    NSString *password = @"password";
+
+    // - Do an e2e backup to the homeserver with a password
+    // - And log Alice on a new device
+    [self createKeyBackupScenarioWithPassword:password readyToTest:^(NSString *version, MXMegolmBackupCreationInfo *keyBackupCreationInfo, NSArray<MXOlmInboundGroupSession *> *aliceKeys, MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
+
+        // - Restore the e2e backup with the recovery key.
+        [aliceSession.crypto.backup restoreKeyBackup:version
+                                     withRecoveryKey:keyBackupCreationInfo.recoveryKey
+                                                room:nil session:nil
+                                             success:^(NSUInteger total, NSUInteger imported)
+         {
+             // - Restore must be successful
+             [self checkRestoreSuccess:aliceKeys aliceSession:aliceSession total:total imported:imported];
+
+             [expectation fulfill];
+
+         } failure:^(NSError * _Nonnull error) {
+             XCTFail(@"The request should not fail - NSError: %@", error);
+             [expectation fulfill];
+         }];
+    }];
+}
+
+/**
+ - Do an e2e backup to the homeserver with a recovery key
+ - And log Alice on a new device
+ - Try to restore the e2e backup with a password
+ - It must fail
+ */
+- (void)testUsePasswordToRestoreARecoveryKeyKeyBackup
+{
+    // - Do an e2e backup to the homeserver with a recovery key
+    // - And log Alice on a new device
+    [self createKeyBackupScenarioWithPassword:nil readyToTest:^(NSString *version, MXMegolmBackupCreationInfo *keyBackupCreationInfo, NSArray<MXOlmInboundGroupSession *> *aliceKeys, MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
+
+        // - Try to restore the e2e backup with a password
+        [aliceSession.crypto.backup restoreKeyBackup:version
+                                        withPassword:@"password"
+                                                room:nil session:nil
+                                             success:^(NSUInteger total, NSUInteger imported)
+         {
+             // - It must fail
+             XCTFail(@"Restoring with a password a backup created with only a recovery key must fail");
+
+             [expectation fulfill];
+
+         } failure:^(NSError * _Nonnull error) {
+
+             // - It must fail
+             XCTAssertEqualObjects(error.domain, MXKeyBackupErrorDomain);
+             XCTAssertEqual(error.code, MXKeyBackupErrorMissingPrivateKeySaltCode);
+
              [expectation fulfill];
          }];
     }];

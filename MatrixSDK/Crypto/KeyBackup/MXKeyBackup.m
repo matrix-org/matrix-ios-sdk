@@ -842,6 +842,16 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
         MXMegolmBackupAuthData *authData = [MXMegolmBackupAuthData modelFromJSON:keyBackupVersion.authData];
         if (!authData.privateKeySalt || !authData.privateKeyIterations)
         {
+            if (failure)
+            {
+                NSLog(@"[MXKeyBackup] restoreKeyBackup: Salt and/or iterations not found: this backup cannot be restored with a passphrase");
+                NSError *error = [NSError errorWithDomain:MXKeyBackupErrorDomain
+                                                     code:MXKeyBackupErrorMissingPrivateKeySaltCode
+                                                 userInfo:@{
+                                                            NSLocalizedDescriptionKey: @"Salt and/or iterations not found: this backup cannot be restored with a passphrase"
+                                                            }];
+                failure(error);
+            }
             return;
         }
 
