@@ -792,7 +792,7 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
 
             if (sessionsFromHSCount && !sessionDatas.count)
             {
-                // If we fail to decrypt any session, we have a credential problem
+                // If we fail to decrypt all sessions, we have a credential problem
                 NSLog(@"[MXKeyBackup] restoreKeyBackup: Invalid recovery key or password");
                 if (failure)
                 {
