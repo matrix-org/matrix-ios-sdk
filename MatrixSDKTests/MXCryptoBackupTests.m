@@ -296,12 +296,16 @@
 
 - (void)testIsValidRecoveryKey
 {
-    NSString *recoveryKey         = @"EsTc LW2K PGiF wKEA 3As5 g5c4 BXwk qeeJ ZJV8 Q9fu gUMN UE4d";
+    NSString *recoveryKey1        = @"EsTc LW2K PGiF wKEA 3As5 g5c4 BXwk qeeJ ZJV8 Q9fu gUMN UE4d";
+    NSString *recoveryKey2        = @"EsTcLW2KPGiFwKEA3As5g5c4BXwkqeeJZJV8Q9fugUMNUE4d";
+    NSString *recoveryKey3        = @"EsTc LW2K PGiF wKEA 3As5 g5c4\r\nBXwk qeeJ ZJV8 Q9fu gUMN UE4d";
     NSString *invalidRecoveryKey1 = @"EsTc LW2K PGiF wKEA 3As5 g5c4 BXwk qeeJ ZJV8 Q9fu gUMN UE4e";
     NSString *invalidRecoveryKey2 = @"EsTc LW2K PGiF wKEA 3As5 g5c4 BXwk qeeJ ZJV8 Q9fu gUMN UE4f";
     NSString *invalidRecoveryKey3 = @"EqTc LW2K PGiF wKEA 3As5 g5c4 BXwk qeeJ ZJV8 Q9fu gUMN UE4d";
 
-    XCTAssertTrue([MXKeyBackup isValidRecoveryKey:recoveryKey]);
+    XCTAssertTrue([MXKeyBackup isValidRecoveryKey:recoveryKey1]);
+    XCTAssertTrue([MXKeyBackup isValidRecoveryKey:recoveryKey2]);
+    XCTAssertTrue([MXKeyBackup isValidRecoveryKey:recoveryKey3]);
     XCTAssertFalse([MXKeyBackup isValidRecoveryKey:invalidRecoveryKey1]);
     XCTAssertFalse([MXKeyBackup isValidRecoveryKey:invalidRecoveryKey2]);
     XCTAssertFalse([MXKeyBackup isValidRecoveryKey:invalidRecoveryKey3]);
