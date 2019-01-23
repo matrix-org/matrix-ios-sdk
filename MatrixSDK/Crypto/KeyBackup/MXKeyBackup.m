@@ -478,7 +478,7 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
         MXMegolmBackupAuthData *authData = [MXMegolmBackupAuthData new];
         if (password)
         {
-            // Generate a private from the password
+            // Generate a private key from the password
             NSString *salt;
             NSUInteger iterations;
             NSData *privateKey = [MXKeyBackupPassword generatePrivateKeyWithPassword:password

@@ -35,7 +35,7 @@ NS_ASSUME_NONNULL_BEGIN
 + (nullable NSData *)generatePrivateKeyWithPassword:(NSString*)password salt:(NSString**)salt iterations:(NSUInteger*)iterations error:(NSError * _Nullable *)error;
 
 /**
- Retrieve a private key from {password, salt, iterations)
+ Retrieve a private key from {password, salt, iterations}
 
  @param password the password used to generated the private key.
  @param salt the salt.
