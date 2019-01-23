@@ -23,7 +23,11 @@
 #import "MXSession.h"
 #import "MXTools.h"
 
-NSUInteger const kMXRealmCryptoStoreVersion = 10;
+// TODO: Come back to 10 for the release in order to fix the issue solved by
+// https://github.com/vector-im/riot-ios/issues/2167
+// We need to stay on 9 so that people can easily switch from app store to TestFlight
+// version and vice versa
+NSUInteger const kMXRealmCryptoStoreVersion = 9; // 10;
 
 static NSString *const kMXRealmCryptoStoreFolder = @"MXRealmCryptoStore";
 
