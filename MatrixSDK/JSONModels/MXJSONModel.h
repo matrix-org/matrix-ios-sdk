@@ -37,7 +37,7 @@
  @param JSONDictionary the JSON data.
  @return the newly created instance.
  */
-+ (id)modelFromJSON:(NSDictionary *)JSONDictionary;
++ (instancetype)modelFromJSON:(NSDictionary *)JSONDictionary;
 
 /**
  Create model instances from an array of JSON dictionaries.
