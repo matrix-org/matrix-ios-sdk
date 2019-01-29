@@ -444,7 +444,7 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
             {
                 NSLog(@"[MXKeyBackup] isKeyBackupTrusted: Bad signature from device %@: %@", device.deviceId, error);
             }
-            else if (device.verified)
+            else if (device.verified == MXDeviceVerified)
             {
                 keyBackupVersionTrust.usable = YES;
             }
