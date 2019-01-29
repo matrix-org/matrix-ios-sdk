@@ -83,7 +83,7 @@ typedef enum : NSUInteger
 
     // There is a backup available on the homeserver but it is not trusted.
     // It is not trusted because the signature is invalid or the device that created it is not verified
-    // Use `isKeyBackupTrusted` to get trust details.
+    // Use `trustForKeyBackupVersion` to get trust details.
     // Consequently, the backup from this device is not enabled.
     MXKeyBackupStateNotTrusted,
 

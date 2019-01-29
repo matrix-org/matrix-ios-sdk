@@ -474,7 +474,7 @@
  - Create a backup version
  - Check the returned MXKeyBackupVersion is trusted
  */
-- (void)testIsKeyBackupTrusted
+- (void)testTrustForKeyBackupVersion
 {
     // - Create a backup version
     [matrixSDKTestsE2EData doE2ETestWithAliceAndBobInARoomWithCryptedMessages:self cryptedBob:YES readyToTest:^(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {

@@ -395,7 +395,7 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
         if (!keyBackupVersion.algorithm || !authData
             || !authData.publicKey || !authData.signatures)
         {
-            NSLog(@"[MXKeyBackup] isKeyBackupTrusted: Key backup is absent or missing required data");
+            NSLog(@"[MXKeyBackup] trustForKeyBackupVersion: Key backup is absent or missing required data");
             dispatch_async(dispatch_get_main_queue(), ^{
                 onComplete(keyBackupVersionTrust);
             });
@@ -405,7 +405,7 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
         NSDictionary *mySigs = authData.signatures[myUserId];
         if (mySigs.count == 0)
         {
-            NSLog(@"[MXKeyBackup] isKeyBackupTrusted: Ignoring key backup because it lacks any signatures from this user");
+            NSLog(@"[MXKeyBackup] trustForKeyBackupVersion: Ignoring key backup because it lacks any signatures from this user");
             dispatch_async(dispatch_get_main_queue(), ^{
                 onComplete(keyBackupVersionTrust);
             });
@@ -435,7 +435,7 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
 
                     if (!valid)
                     {
-                        NSLog(@"[MXKeyBackup] isKeyBackupTrusted: Bad signature from device %@: %@", device.deviceId, error);
+                        NSLog(@"[MXKeyBackup] trustForKeyBackupVersion: Bad signature from device %@: %@", device.deviceId, error);
                     }
                     else if (device.verified == MXDeviceVerified)
                     {
@@ -444,7 +444,7 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
                 }
                 else
                 {
-                    NSLog(@"[MXKeyBackup] isKeyBackupTrusted: Signature from unknown key %@", deviceId);
+                    NSLog(@"[MXKeyBackup] trustForKeyBackupVersion: Signature from unknown key %@", deviceId);
                 }
 
                 MXKeyBackupVersionTrustSignature *signature = [MXKeyBackupVersionTrustSignature new];

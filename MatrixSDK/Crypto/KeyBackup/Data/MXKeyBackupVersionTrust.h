@@ -24,7 +24,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 
 /**
- Data model for response to [MXKeyBackup isKeyBackupTrusted:].
+ Data model for response to [MXKeyBackup trustForKeyBackupVersion:].
  */
 @interface MXKeyBackupVersionTrust : NSObject
 
