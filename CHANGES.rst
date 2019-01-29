@@ -11,6 +11,9 @@ Improvements:
 Bug Fix:
  * Crypto: Device deduplication method sometimes crashes (vector-im/riot-ios/issues/#2167).
 
+API break:
+* MXKeyBackup: Rename isKeyBackupTrusted to trustForKeyBackupVersion.
+
 Changes in Matrix iOS SDK in 0.12.1 (2019-01-04)
 ===============================================
 

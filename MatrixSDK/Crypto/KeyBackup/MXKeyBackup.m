@@ -89,7 +89,7 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
             }
 
             MXWeakify(self);
-            [self isKeyBackupTrusted:keyBackupVersion onComplete:^(MXKeyBackupVersionTrust * _Nonnull trustInfo) {
+            [self trustForKeyBackupVersion:keyBackupVersion onComplete:^(MXKeyBackupVersionTrust * _Nonnull trustInfo) {
                 MXStrongifyAndReturnIfNil(self);
 
                 self.state = MXKeyBackupStateDisabled;
@@ -385,7 +385,7 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
     }];
 }
 
-- (void)isKeyBackupTrusted:(MXKeyBackupVersion *)keyBackupVersion onComplete:(void (^)(MXKeyBackupVersionTrust * _Nonnull))onComplete
+- (void)trustForKeyBackupVersion:(MXKeyBackupVersion *)keyBackupVersion onComplete:(void (^)(MXKeyBackupVersionTrust * _Nonnull))onComplete
 {
     MXWeakify(self);
     dispatch_async(mxSession.crypto.cryptoQueue, ^{

@@ -483,7 +483,7 @@
             [aliceSession.crypto.backup createKeyBackupVersion:keyBackupCreationInfo success:^(MXKeyBackupVersion * _Nonnull keyBackupVersion) {
 
                 // - Check the returned MXKeyBackupVersion is trusted
-                [aliceSession.crypto.backup isKeyBackupTrusted:keyBackupVersion onComplete:^(MXKeyBackupVersionTrust * _Nonnull keyBackupVersionTrust) {
+                [aliceSession.crypto.backup trustForKeyBackupVersion:keyBackupVersion onComplete:^(MXKeyBackupVersionTrust * _Nonnull keyBackupVersionTrust) {
 
                     XCTAssertNotNil(keyBackupVersionTrust);
                     XCTAssertTrue(keyBackupVersionTrust.usable);

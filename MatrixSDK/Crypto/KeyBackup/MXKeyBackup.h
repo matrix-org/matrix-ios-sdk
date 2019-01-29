@@ -136,7 +136,7 @@ FOUNDATION_EXPORT NSString *const kMXKeyBackupDidStateChangeNotification;
  @param keyBackupVersion the backup version to check.
  @param onComplete block called when the operations completes.
  */
-- (void)isKeyBackupTrusted:(MXKeyBackupVersion*)keyBackupVersion onComplete:(void (^)(MXKeyBackupVersionTrust *keyBackupVersionTrust))onComplete;
+- (void)trustForKeyBackupVersion:(MXKeyBackupVersion*)keyBackupVersion onComplete:(void (^)(MXKeyBackupVersionTrust *keyBackupVersionTrust))onComplete;
 
 /**
  Set up the data required to create a new backup version.
