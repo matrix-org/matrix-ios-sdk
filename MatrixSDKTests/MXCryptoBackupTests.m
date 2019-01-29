@@ -491,6 +491,7 @@
                     XCTAssertEqual(keyBackupVersionTrust.signatures.count, 1);
 
                     MXKeyBackupVersionTrustSignature *signature = keyBackupVersionTrust.signatures.firstObject;
+                    XCTAssertEqualObjects(signature.deviceId, aliceSession.matrixRestClient.credentials.deviceId);
                     XCTAssertTrue(signature.valid);
                     XCTAssertEqualObjects(signature.device.deviceId, aliceSession.matrixRestClient.credentials.deviceId);
 
