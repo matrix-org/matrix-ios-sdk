@@ -918,7 +918,7 @@
  - Make alice back up her keys to her homeserver
  - Create a new backup with fake data on the homeserver
  - Make alice back up all her keys again
- -> That must fail and her backup state must be disabled
+ -> That must fail and her backup state must be MXKeyBackupStateWrongBackUpVersion
  */
 - (void)testBackupWhenAnotherBackupWasCreated
 {
@@ -941,7 +941,7 @@
 
                     } progress:nil failure:^(NSError * _Nonnull error) {
 
-                        // -> That must fail and her backup state must be disabled
+                        // -> That must fail and her backup state must be MXKeyBackupStateWrongBackUpVersion
                         XCTAssertEqual(aliceSession.crypto.backup.state, MXKeyBackupStateWrongBackUpVersion);
                         XCTAssertFalse(aliceSession.crypto.backup.enabled);
 
@@ -968,7 +968,7 @@
  - Log Alice on a new device
  - Post a message to have a new megolm session
  - Try to backup all
- -> It must fail
+ -> It must fail. Backup state must be MXKeyBackupStateNotTrusted
  - Validate the old device from the new one
  -> Backup should automatically enable on the new device
  -> It must use the same backup version
@@ -1005,9 +1005,10 @@
 
                             } progress:nil failure:^(NSError * _Nonnull error) {
 
-                                // -> It must fail
+                                // -> It must fail. Backup state must be MXKeyBackupStateNotTrusted
                                 XCTAssertEqualObjects(error.domain, MXKeyBackupErrorDomain);
                                 XCTAssertEqual(error.code, MXKeyBackupErrorInvalidStateCode);
+                                XCTAssertEqual(aliceSession2.crypto.backup.state, MXKeyBackupStateNotTrusted);
                                 XCTAssertFalse(aliceSession2.crypto.backup.enabled);
 
                                 //  - Validate the old device from the new one

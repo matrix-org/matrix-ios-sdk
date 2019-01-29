@@ -34,16 +34,22 @@ NS_ASSUME_NONNULL_BEGIN
  *                                 V        deleteKeyBackupVersion (on current backup)
  *    +---------------------->  UNKNOWN  <-------------
  *    |                            |
- *    |                            | checkAndStartKeyBackup (at startup or on new verified device or a new detected backup)
+ *    |                            | checkAndStartKeyBackup (at startup
+ *    |                            |         or on new verified device
+ *    |                            |         or a new detected backup)
  *    |                            V
  *    |                     CHECKING BACKUP
+ *    | Network error              |
  *    |                            |
- *    |    Network error           |
- *    +<----------+----------------+-------> DISABLED <----------------------+
- *    |           |                |            |                            |
- *    |           |                |            | createKeyBackupVersion     |
- *    |           V                |            V                            |
- *    +<---  WRONG VERSION         |         ENABLING                        |
+ *    +<---+------+----------------+-------> DISABLED <----------------------+
+ *         |      |                |            |                            |
+ *         |      |                |            |                            |
+ *         V      |                |            |                            |
+ *    BACKUP NOT  |                |            |                            |
+ *     TRUSTED    |                |            |                            |
+ *                |                |            | createKeyBackupVersion     |
+ *                V                |            V                            |
+ *           WRONG VERSION         |         ENABLING                        |
  *                ^                |            |                            |
  *                |                V       ok   |     error                  |
  *                |     +------> READY <--------+----------------------------+
@@ -74,6 +80,12 @@ typedef enum : NSUInteger
 
     // Backup from this device is not enabled
     MXKeyBackupStateDisabled,
+
+    // There is a backup available on the homeserver but it is not trusted.
+    // It is not trusted because the signature is invalid or the device that created it is not verified
+    // Use `isKeyBackupTrusted` to get trust details.
+    // Consequently, the backup from this device is not enabled.
+    MXKeyBackupStateNotTrusted,
 
     // Backup is being enabled
     // The backup version is being created on the homeserver

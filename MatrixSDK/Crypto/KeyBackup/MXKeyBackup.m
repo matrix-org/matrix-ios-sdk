@@ -127,6 +127,7 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
                     if (!self.keyBackupVersion)
                     {
                         NSLog(@"[MXKeyBackup]    -> not enabling key backup");
+                        self.state = MXKeyBackupStateNotTrusted;
                     }
                     else
                     {
@@ -426,34 +427,36 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
                 deviceId = components[1];
             }
 
-            MXDeviceInfo *device;
             if (deviceId)
             {
-                device = [self->mxSession.crypto.deviceList storedDevice:myUserId deviceId:deviceId];
-            }
-            if (!device)
-            {
-                NSLog(@"[MXKeyBackup] isKeyBackupTrusted: Ignoring signature from unknown key %@", deviceId);
-                continue;
-            }
+                BOOL valid = NO;
 
-            NSError *error;
-            BOOL valid = [self->mxSession.crypto.olmDevice verifySignature:device.fingerprint JSON:authData.signalableJSONDictionary signature:mySigs[keyId] error:&error];
+                MXDeviceInfo *device = [self->mxSession.crypto.deviceList storedDevice:myUserId deviceId:deviceId];
+                if (device)
+                {
+                    NSError *error;
+                    valid = [self->mxSession.crypto.olmDevice verifySignature:device.fingerprint JSON:authData.signalableJSONDictionary signature:mySigs[keyId] error:&error];
 
-            if (!valid)
-            {
-                NSLog(@"[MXKeyBackup] isKeyBackupTrusted: Bad signature from device %@: %@", device.deviceId, error);
+                    if (!valid)
+                    {
+                        NSLog(@"[MXKeyBackup] isKeyBackupTrusted: Bad signature from device %@: %@", device.deviceId, error);
+                    }
+                    else if (device.verified == MXDeviceVerified)
+                    {
+                        keyBackupVersionTrust.usable = YES;
+                    }
+                }
+                else
+                {
+                    NSLog(@"[MXKeyBackup] isKeyBackupTrusted: Signature from unknown key %@", deviceId);
+                }
+
+                MXKeyBackupVersionTrustSignature *signature = [MXKeyBackupVersionTrustSignature new];
+                signature.deviceId = deviceId;
+                signature.device = device;
+                signature.valid = valid;
+                [signatures addObject:signature];
             }
-            else if (device.verified == MXDeviceVerified)
-            {
-                keyBackupVersionTrust.usable = YES;
-            }
-
-            MXKeyBackupVersionTrustSignature *signature = [MXKeyBackupVersionTrustSignature new];
-            signature.device = device;
-            signature.valid = valid;
-
-            [signatures addObject:signature];
         }
 
         keyBackupVersionTrust.signatures = signatures;
