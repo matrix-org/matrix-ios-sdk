@@ -85,14 +85,13 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
             {
                 NSLog(@"[MXKeyBackup] checkAndStartKeyBackup: Found no key backup version on the homeserver");
                 [self disableKeyBackup];
+                self.state = MXKeyBackupStateDisabled;
                 return;
             }
 
             MXWeakify(self);
             [self trustForKeyBackupVersion:keyBackupVersion onComplete:^(MXKeyBackupVersionTrust * _Nonnull trustInfo) {
                 MXStrongifyAndReturnIfNil(self);
-
-                self.state = MXKeyBackupStateDisabled;
 
                 if (trustInfo.usable)
                 {
@@ -124,16 +123,14 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
                 else
                 {
                     NSLog(@"[MXKeyBackup] checkAndStartKeyBackup: No usable key backup. version: %@", keyBackupVersion.version);
-                    if (!self.keyBackupVersion)
+
+                    if (self.keyBackupVersion || self->mxSession.crypto.store.backupVersion)
                     {
-                        NSLog(@"[MXKeyBackup]    -> not enabling key backup");
-                        self.state = MXKeyBackupStateNotTrusted;
-                    }
-                    else
-                    {
-                        NSLog(@"[MXKeyBackup]    -> disabling key backup");
+                        NSLog(@"[MXKeyBackup]    -> disable the current version");
                         [self disableKeyBackup];
                     }
+
+                    self.state = MXKeyBackupStateNotTrusted;
                 }
             }];
         });
@@ -188,7 +185,6 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
     _keyBackupVersion = nil;
     self->mxSession.crypto.store.backupVersion = nil;
     _backupKey = nil;
-    self.state = MXKeyBackupStateDisabled;
 
     // Reset backup markers
     [self->mxSession.crypto.store resetBackupMarkers];
