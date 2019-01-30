@@ -641,7 +641,9 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
             NSLog(@"[MXKeyBackup] backupAllGroupSessions: complete");
             if (success)
             {
-                success();
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    success();
+                });
             }
             return;
         }
@@ -655,7 +657,9 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
 
                 if (progress)
                 {
-                    progress(backupProgress);
+                    dispatch_async(dispatch_get_main_queue(), ^{
+                        progress(backupProgress);
+                    });
                 }
 
                 if (self.state == MXKeyBackupStateReadyToBackUp)
@@ -664,7 +668,9 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
 
                     if (success)
                     {
-                        success();
+                        dispatch_async(dispatch_get_main_queue(), ^{
+                            success();
+                        });
                     }
                 }
             }];
@@ -800,7 +806,10 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
                                                      userInfo:@{
                                                                 NSLocalizedDescriptionKey: @"Invalid recovery key or password"
                                                                 }];
-                    failure(error);
+
+                    dispatch_async(dispatch_get_main_queue(), ^{
+                        failure(error);
+                    });
                 }
 
                 return;
@@ -868,7 +877,9 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
                                                  userInfo:@{
                                                             NSLocalizedDescriptionKey: @"Salt and/or iterations not found: this backup cannot be restored with a password"
                                                             }];
-                failure(error);
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    failure(error);
+                });
             }
             return;
         }
@@ -886,7 +897,9 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
         {
             if (failure)
             {
-                failure(error);
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    failure(error);
+                });
             }
         }
 
