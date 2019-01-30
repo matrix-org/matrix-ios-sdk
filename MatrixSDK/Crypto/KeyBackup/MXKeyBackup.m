@@ -85,14 +85,13 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
             {
                 NSLog(@"[MXKeyBackup] checkAndStartKeyBackup: Found no key backup version on the homeserver");
                 [self disableKeyBackup];
+                self.state = MXKeyBackupStateDisabled;
                 return;
             }
 
             MXWeakify(self);
-            [self isKeyBackupTrusted:keyBackupVersion onComplete:^(MXKeyBackupVersionTrust * _Nonnull trustInfo) {
+            [self trustForKeyBackupVersion:keyBackupVersion onComplete:^(MXKeyBackupVersionTrust * _Nonnull trustInfo) {
                 MXStrongifyAndReturnIfNil(self);
-
-                self.state = MXKeyBackupStateDisabled;
 
                 if (trustInfo.usable)
                 {
@@ -124,15 +123,14 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
                 else
                 {
                     NSLog(@"[MXKeyBackup] checkAndStartKeyBackup: No usable key backup. version: %@", keyBackupVersion.version);
-                    if (!self.keyBackupVersion)
+
+                    if (self.keyBackupVersion || self->mxSession.crypto.store.backupVersion)
                     {
-                        NSLog(@"[MXKeyBackup]    -> not enabling key backup");
-                    }
-                    else
-                    {
-                        NSLog(@"[MXKeyBackup]    -> disabling key backup");
+                        NSLog(@"[MXKeyBackup]    -> disable the current version");
                         [self disableKeyBackup];
                     }
+
+                    self.state = MXKeyBackupStateNotTrusted;
                 }
             }];
         });
@@ -187,7 +185,6 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
     _keyBackupVersion = nil;
     self->mxSession.crypto.store.backupVersion = nil;
     _backupKey = nil;
-    self.state = MXKeyBackupStateDisabled;
 
     // Reset backup markers
     [self->mxSession.crypto.store resetBackupMarkers];
@@ -384,7 +381,7 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
     }];
 }
 
-- (void)isKeyBackupTrusted:(MXKeyBackupVersion *)keyBackupVersion onComplete:(void (^)(MXKeyBackupVersionTrust * _Nonnull))onComplete
+- (void)trustForKeyBackupVersion:(MXKeyBackupVersion *)keyBackupVersion onComplete:(void (^)(MXKeyBackupVersionTrust * _Nonnull))onComplete
 {
     MXWeakify(self);
     dispatch_async(mxSession.crypto.cryptoQueue, ^{
@@ -398,7 +395,7 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
         if (!keyBackupVersion.algorithm || !authData
             || !authData.publicKey || !authData.signatures)
         {
-            NSLog(@"[MXKeyBackup] isKeyBackupTrusted: Key backup is absent or missing required data");
+            NSLog(@"[MXKeyBackup] trustForKeyBackupVersion: Key backup is absent or missing required data");
             dispatch_async(dispatch_get_main_queue(), ^{
                 onComplete(keyBackupVersionTrust);
             });
@@ -408,7 +405,7 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
         NSDictionary *mySigs = authData.signatures[myUserId];
         if (mySigs.count == 0)
         {
-            NSLog(@"[MXKeyBackup] isKeyBackupTrusted: Ignoring key backup because it lacks any signatures from this user");
+            NSLog(@"[MXKeyBackup] trustForKeyBackupVersion: Ignoring key backup because it lacks any signatures from this user");
             dispatch_async(dispatch_get_main_queue(), ^{
                 onComplete(keyBackupVersionTrust);
             });
@@ -426,34 +423,36 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
                 deviceId = components[1];
             }
 
-            MXDeviceInfo *device;
             if (deviceId)
             {
-                device = [self->mxSession.crypto.deviceList storedDevice:myUserId deviceId:deviceId];
-            }
-            if (!device)
-            {
-                NSLog(@"[MXKeyBackup] isKeyBackupTrusted: Ignoring signature from unknown key %@", deviceId);
-                continue;
-            }
+                BOOL valid = NO;
 
-            NSError *error;
-            BOOL valid = [self->mxSession.crypto.olmDevice verifySignature:device.fingerprint JSON:authData.signalableJSONDictionary signature:mySigs[keyId] error:&error];
+                MXDeviceInfo *device = [self->mxSession.crypto.deviceList storedDevice:myUserId deviceId:deviceId];
+                if (device)
+                {
+                    NSError *error;
+                    valid = [self->mxSession.crypto.olmDevice verifySignature:device.fingerprint JSON:authData.signalableJSONDictionary signature:mySigs[keyId] error:&error];
 
-            if (!valid)
-            {
-                NSLog(@"[MXKeyBackup] isKeyBackupTrusted: Bad signature from device %@: %@", device.deviceId, error);
+                    if (!valid)
+                    {
+                        NSLog(@"[MXKeyBackup] trustForKeyBackupVersion: Bad signature from device %@: %@", device.deviceId, error);
+                    }
+                    else if (device.verified == MXDeviceVerified)
+                    {
+                        keyBackupVersionTrust.usable = YES;
+                    }
+                }
+                else
+                {
+                    NSLog(@"[MXKeyBackup] trustForKeyBackupVersion: Signature from unknown key %@", deviceId);
+                }
+
+                MXKeyBackupVersionTrustSignature *signature = [MXKeyBackupVersionTrustSignature new];
+                signature.deviceId = deviceId;
+                signature.device = device;
+                signature.valid = valid;
+                [signatures addObject:signature];
             }
-            else if (device.verified)
-            {
-                keyBackupVersionTrust.usable = YES;
-            }
-
-            MXKeyBackupVersionTrustSignature *signature = [MXKeyBackupVersionTrustSignature new];
-            signature.device = device;
-            signature.valid = valid;
-
-            [signatures addObject:signature];
         }
 
         keyBackupVersionTrust.signatures = signatures;

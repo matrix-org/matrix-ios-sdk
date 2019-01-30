@@ -6,9 +6,13 @@ Improvements:
  * MXCrypto: Add key backup passphrase support (vector-im/riot-ios#2127).
  * MXCrypto: Key backup: Ignore all whitespaces in recovery key (vector-im/riot-ios#2194).
  * MXJSONModel: Use instancetype as return type of `modelFromJSON` initializer.
+ * MXKeyBackup: Add MXKeyBackupStateNotTrusted state.
 
 Bug Fix:
  * Crypto: Device deduplication method sometimes crashes (vector-im/riot-ios/issues/#2167).
+
+API break:
+* MXKeyBackup: Rename isKeyBackupTrusted to trustForKeyBackupVersion.
 
 Changes in Matrix iOS SDK in 0.12.1 (2019-01-04)
 ===============================================
