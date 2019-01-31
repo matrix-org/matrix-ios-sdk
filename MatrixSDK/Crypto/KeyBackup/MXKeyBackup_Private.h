@@ -37,9 +37,9 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)checkAndStartKeyBackup;
 
 /**
- * Disable backing up of keys.
+ * Reset all local key backup data.
  */
-- (void)disableKeyBackup;
+- (void)resetKeyBackupData;
 
 /**
  Do a backup if there are new keys.

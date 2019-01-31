@@ -95,7 +95,7 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
             if (!self.keyBackupVersion)
             {
                 NSLog(@"[MXKeyBackup] checkAndStartKeyBackup: Found no key backup version on the homeserver");
-                [self disableKeyBackup];
+                [self resetKeyBackupData];
                 self.state = MXKeyBackupStateDisabled;
                 return;
             }
@@ -113,7 +113,7 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
                     if (versionInStore && ![versionInStore isEqualToString:keyBackupVersion.version])
                     {
                         NSLog(@"[MXKeyBackup] -> clean the previously used version(%@)", versionInStore);
-                        [self disableKeyBackup];
+                        [self resetKeyBackupData];
                     }
 
                     NSLog(@"[MXKeyBackup]    -> enabling key backups");
@@ -126,7 +126,7 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
                     if (self->mxSession.crypto.store.backupVersion)
                     {
                         NSLog(@"[MXKeyBackup]    -> disable the current version");
-                        [self disableKeyBackup];
+                        [self resetKeyBackupData];
                     }
 
                     self->_keyBackupVersion = keyBackupVersion;
@@ -178,7 +178,7 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
                                       }];
 }
 
-- (void)disableKeyBackup
+- (void)resetKeyBackupData
 {
     [self resetBackupAllGroupSessionsObjects];
 
@@ -333,7 +333,7 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
         MXError *mxError = [[MXError alloc] initWithNSError:error];
         if ([mxError.errcode isEqualToString:kMXErrCodeStringBackupWrongKeysVersion])
         {
-            [self disableKeyBackup];
+            [self resetKeyBackupData];
             self.state = MXKeyBackupStateWrongBackUpVersion;
         }
         else
@@ -583,7 +583,7 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
         // so this is symmetrical).
         if ([self.keyBackupVersion.version isEqualToString:version])
         {
-            [self disableKeyBackup];
+            [self resetKeyBackupData];
             self->_keyBackupVersion = nil;
             self.state = MXKeyBackupStateUnknown;
         }
