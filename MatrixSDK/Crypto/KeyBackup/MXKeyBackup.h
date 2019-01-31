@@ -278,7 +278,7 @@ FOUNDATION_EXPORT NSString *const kMXKeyBackupDidStateChangeNotification;
 @property (nonatomic, readonly) BOOL enabled;
 
 /**
- The backup version being used.
+ The backup version.
  */
 @property (nonatomic, readonly, nullable) MXKeyBackupVersion *keyBackupVersion;
 

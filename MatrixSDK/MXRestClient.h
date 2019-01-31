@@ -2090,6 +2090,20 @@ FOUNDATION_EXPORT NSString *const kMXMembersOfRoomParametersNotMembership;
                                    failure:(void (^)(NSError *error))failure;
 
 /**
+ Delete a backup version.
+
+ @param version the backup version to delete.
+
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)deleteKeyBackupVersion:(NSString*)version
+                                   success:(void (^)(void))success
+                                   failure:(void (^)(NSError *error))failure;
+
+/**
  Get information about a backup version.
 
  @param version the backup version. Nil returns the current backup version.
