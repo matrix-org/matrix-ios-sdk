@@ -8,6 +8,7 @@ Improvements:
  * MXJSONModel: Use instancetype as return type of `modelFromJSON` initializer.
  * MXKeyBackup: Add MXKeyBackupStateNotTrusted state.
  * MXKeyBackup: Do not reset MXKeyBackup.keyBackupVersion in error states.
+ * MXKeyBackup: Implement the true deleteKeyBackupVersion Client-Server API.
 
 Bug Fix:
  * Crypto: Device deduplication method sometimes crashes (vector-im/riot-ios/issues/#2167).

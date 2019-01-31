@@ -588,7 +588,7 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
             self.state = MXKeyBackupStateUnknown;
         }
 
-        MXHTTPOperation *operation2 = [self->mxSession.crypto.matrixRestClient deleteKeysFromBackup:version success:^{
+        MXHTTPOperation *operation2 = [self->mxSession.crypto.matrixRestClient deleteKeyBackupVersion:version success:^{
 
             dispatch_async(dispatch_get_main_queue(), ^{
                 success();
