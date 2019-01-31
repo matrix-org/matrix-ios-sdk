@@ -588,13 +588,29 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
             self.state = MXKeyBackupStateUnknown;
         }
 
+        MXWeakify(self);
         MXHTTPOperation *operation2 = [self->mxSession.crypto.matrixRestClient deleteKeyBackupVersion:version success:^{
+            MXStrongifyAndReturnIfNil(self);
+
+            // Do not stay in MXKeyBackupStateUnknown but check what is available on the homeserver
+            if (self.state == MXKeyBackupStateUnknown)
+            {
+                [self checkAndStartKeyBackup];
+            }
 
             dispatch_async(dispatch_get_main_queue(), ^{
                 success();
             });
 
         } failure:^(NSError *error) {
+            MXStrongifyAndReturnIfNil(self);
+
+            // Do not stay in MXKeyBackupStateUnknown but check what is available on the homeserver
+            if (self.state == MXKeyBackupStateUnknown)
+            {
+                [self checkAndStartKeyBackup];
+            }
+
             if (failure) {
                 dispatch_async(dispatch_get_main_queue(), ^{
                     failure(error);
