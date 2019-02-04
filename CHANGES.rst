@@ -12,6 +12,7 @@ Improvements:
 
 Bug Fix:
  * Crypto: Device deduplication method sometimes crashes (vector-im/riot-ios/issues/#2167).
+ * MXSession/Swift: fix expected return type from createRoom.
 
 API break:
 * MXKeyBackup: Rename isKeyBackupTrusted to trustForKeyBackupVersion.

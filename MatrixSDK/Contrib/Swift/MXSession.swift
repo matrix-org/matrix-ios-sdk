@@ -176,7 +176,7 @@ public extension MXSession {
      
      - returns: a `MXHTTPOperation` instance.
      */
-    @nonobjc @discardableResult func createRoom(parameters: [String: Any], completion: @escaping (_ response: MXResponse<MXCreateRoomResponse>) -> Void) -> MXHTTPOperation {
+    @nonobjc @discardableResult func createRoom(parameters: [String: Any], completion: @escaping (_ response: MXResponse<MXRoom>) -> Void) -> MXHTTPOperation {
         return __createRoom(parameters, success: currySuccess(completion), failure: curryFailure(completion))
     }
     
