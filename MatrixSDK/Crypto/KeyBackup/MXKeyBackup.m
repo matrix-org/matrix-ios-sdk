@@ -129,7 +129,6 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
                         [self resetKeyBackupData];
                     }
 
-                    self->_keyBackupVersion = keyBackupVersion;
                     self.state = MXKeyBackupStateNotTrusted;
                 }
             }];
@@ -625,6 +624,51 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
     });
 
     return operation;
+}
+
+- (MXHTTPOperation*)forceRefresh:(nullable void (^)(BOOL valid))success
+                         failure:(nullable void (^)(NSError *error))failure
+{
+    // Fetch the last backup version on the server, compare it to the backup version
+    // currently used. If versions are not the same, the current backup is forgotten and
+    // checkAndStartKeyBackup is called in order to restart on the last version on the HS.
+    MXWeakify(self);
+    return [self version:nil success:^(MXKeyBackupVersion * _Nullable serverKeyBackupVersion) {
+        MXStrongifyAndReturnIfNil(self);
+
+        MXWeakify(self);
+        dispatch_async(self->mxSession.crypto.cryptoQueue, ^{
+            MXStrongifyAndReturnIfNil(self);
+
+            BOOL usingLastVersion = NO;
+
+            if ((serverKeyBackupVersion && [serverKeyBackupVersion.version isEqualToString:self.keyBackupVersion.version])
+                || (serverKeyBackupVersion == self.keyBackupVersion)) // both nil
+            {
+                usingLastVersion = YES;
+            }
+            else
+            {
+                NSLog(@"[MXKeyBackup] forceRefresh: New version detected on the homeserver. New version: %@. Old version: %@", serverKeyBackupVersion.version, self.keyBackupVersion.version);
+                usingLastVersion = NO;
+
+                // Stop current backup or start a new one
+                self->_keyBackupVersion = nil;
+                [self resetKeyBackupData];
+                self.state = MXKeyBackupStateUnknown;
+                [self checkAndStartKeyBackup];
+            }
+
+            if (success)
+            {
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    success(usingLastVersion);
+                });
+            }
+
+        });
+
+    } failure:failure];
 }
 
 
