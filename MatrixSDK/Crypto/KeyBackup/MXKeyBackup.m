@@ -129,7 +129,6 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
                         [self resetKeyBackupData];
                     }
 
-                    self->_keyBackupVersion = keyBackupVersion;
                     self.state = MXKeyBackupStateNotTrusted;
                 }
             }];
