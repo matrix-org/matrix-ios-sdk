@@ -9,6 +9,7 @@ Improvements:
  * MXKeyBackup: Add MXKeyBackupStateNotTrusted state.
  * MXKeyBackup: Do not reset MXKeyBackup.keyBackupVersion in error states.
  * MXKeyBackup: Implement the true deleteKeyBackupVersion Client-Server API.
+ * Podspec: Raise the deployment target for iOS to iOS 9 (#629).
 
 Bug Fix:
  * Crypto: Device deduplication method sometimes crashes (vector-im/riot-ios/issues/#2167).
@@ -16,7 +17,7 @@ Bug Fix:
  * MXSession/Swift: fix expected return type from createRoom.
 
 API break:
-* MXKeyBackup: Rename isKeyBackupTrusted to trustForKeyBackupVersion.
+ * MXKeyBackup: Rename isKeyBackupTrusted to trustForKeyBackupVersion.
 
 Changes in Matrix iOS SDK in 0.12.1 (2019-01-04)
 ===============================================
