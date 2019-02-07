@@ -31,7 +31,8 @@ NS_ASSUME_NONNULL_BEGIN
  * E2e keys backup states.
  *
  *                                 |
- *                                 V        deleteKeyBackupVersion (on current backup)
+ *                                 |        deleteKeyBackupVersion (on current backup)
+ *                                 V        or forceRefresh
  *    +---------------------->  UNKNOWN  <-------------
  *    |                            |
  *    |                            | checkAndStartKeyBackup (at startup
@@ -41,15 +42,15 @@ NS_ASSUME_NONNULL_BEGIN
  *    |                     CHECKING BACKUP
  *    | Network error              |
  *    |                            |
- *    +<---+------+----------------+-------> DISABLED <----------------------+
- *         |      |                |            |                            |
- *         |      |                |            |                            |
- *         V      |                |            |                            |
- *    BACKUP NOT  |                |            |                            |
- *     TRUSTED    |                |            |                            |
- *                |                |            | createKeyBackupVersion     |
- *                V                |            V                            |
- *           WRONG VERSION         |         ENABLING                        |
+ *    +<-----------+---------------+-------> DISABLED <----------------------+
+ *    |            |               |            |                            |
+ *    |            |               |            |                            |
+ *    |            V               |            |                            |
+ *    |       BACKUP NOT           |            |                            |
+ *    |         TRUSTED            |            |                            |
+ *    |                            |            | createKeyBackupVersion     |
+ *    |                            |            V                            |
+ *    +<---  WRONG VERSION         |         ENABLING                        |
  *                ^                |            |                            |
  *                |                V       ok   |     error                  |
  *                |     +------> READY <--------+----------------------------+
@@ -186,6 +187,20 @@ FOUNDATION_EXPORT NSString *const kMXKeyBackupDidStateChangeNotification;
 - (MXHTTPOperation*)deleteKeyBackupVersion:(NSString*)version
                                    success:(void (^)(void))success
                                    failure:(nullable void (^)(NSError *error))failure;
+
+/**
+ Check if the module uses the latest version available on the homeserver.
+
+ If not, if not current backup operations are stopped in order to use the
+ homeserver version.
+
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)forceRefresh:(nullable void (^)(BOOL usingLastVersion))success
+                         failure:(nullable void (^)(NSError *error))failure;
 
 
 #pragma mark - Backup storing
