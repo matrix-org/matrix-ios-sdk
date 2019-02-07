@@ -1,4 +1,4 @@
-Changes in Matrix iOS SDK in 0.12.2 (2019-01-)
+Changes in Matrix iOS SDK in 0.12.2 (2019-xx-)
 ===============================================
 
 Improvements:
@@ -12,6 +12,7 @@ Improvements:
 
 Bug Fix:
  * Crypto: Device deduplication method sometimes crashes (vector-im/riot-ios/issues/#2167).
+ * MXSession: A new invite to a direct chat that I left is not displayed as direct.
  * MXSession/Swift: fix expected return type from createRoom.
 
 API break:
