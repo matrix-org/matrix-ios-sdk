@@ -22,7 +22,7 @@
 
 #import <OLMKit/OLMKit.h>
 
-#import "NSObject+sortedKeys.h"
+#import "MXCryptoTools.h"
 
 @interface MXOlmDevice ()
 {
@@ -109,7 +109,7 @@
 
 - (NSString *)signJSON:(NSDictionary *)JSONDictinary
 {
-    return [self signMessage:[self canonicalJSONForJSON:JSONDictinary]];
+    return [self signMessage:[MXCryptoTools canonicalJSONDataForJSON:JSONDictinary]];
 }
 
 - (NSDictionary *)oneTimeKeys
@@ -561,7 +561,7 @@
 
 - (BOOL)verifySignature:(NSString *)key JSON:(NSDictionary *)JSONDictinary signature:(NSString *)signature error:(NSError *__autoreleasing *)error
 {
-    return [olmUtility verifyEd25519Signature:signature key:key message:[self canonicalJSONForJSON:JSONDictinary] error:error];
+    return [olmUtility verifyEd25519Signature:signature key:key message:[MXCryptoTools canonicalJSONDataForJSON:JSONDictinary] error:error];
 }
 
 - (NSString *)sha256:(NSString *)message
@@ -574,27 +574,6 @@
 - (MXOlmSession*)sessionForDevice:(NSString *)theirDeviceIdentityKey andSessionId:(NSString*)sessionId
 {
     return [store sessionWithDevice:theirDeviceIdentityKey andSessionId:sessionId];
-}
-
-/**
- Get the canonical version of a JSON dictionary.
- 
- This ensures that a JSON has the same string representation cross platforms.
-
- @param JSONDictinary the JSON to convert.
- @return the canonical version of the JSON.
- */
-- (NSData*)canonicalJSONForJSON:(NSDictionary*)JSONDictinary
-{
-    NSData *canonicalJSONData = [NSJSONSerialization dataWithJSONObject:[JSONDictinary objectWithSortedKeys] options:0 error:nil];
-
-    // NSJSONSerialization escapes the '/' character in base64 strings which is useless in our case
-    // and does not match with other platforms.
-    // Remove this escaping
-    NSString *unescapedCanonicalJSON = [[NSString alloc] initWithData:canonicalJSONData encoding:NSUTF8StringEncoding];
-    unescapedCanonicalJSON = [unescapedCanonicalJSON stringByReplacingOccurrencesOfString:@"\\/" withString:@"/"];
-
-    return [unescapedCanonicalJSON dataUsingEncoding:NSUTF8StringEncoding];
 }
 
 @end
