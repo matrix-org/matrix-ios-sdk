@@ -20,6 +20,7 @@
 #import "MatrixSDKTestsE2EData.h"
 
 #import "MXCrypto_Private.h"
+#import "MXCryptoStore.h"
 #import "MXRecoveryKey.h"
 #import "MXKeybackupPassword.h"
 
@@ -1062,6 +1063,53 @@
             XCTFail(@"The request should not fail - NSError: %@", error);
             [expectation fulfill];
         }];
+    }];
+}
+
+/**
+ This is the same as `testRestoreKeyBackup` but this test checks that pending key
+ share requests are cancelled.
+
+ - Do an e2e backup to the homeserver with a recovery key
+ - And log Alice on a new device
+ - Check the SDK sent key share requests
+ - Restore the e2e backup with recovery key
+ - Restore must be successful
+ - There must be no more pending key share requests
+ */
+- (void)testRestoreKeyBackupAndKeyShareRequests
+{
+    // - Do an e2e backup to the homeserver with a recovery key
+    // - And log Alice on a new device
+    [self createKeyBackupScenarioWithPassword:nil readyToTest:^(NSString *version, MXMegolmBackupCreationInfo *keyBackupCreationInfo, NSArray<MXOlmInboundGroupSession *> *aliceKeys, MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
+
+        // - Check the SDK sent key share requests
+        MXOutgoingRoomKeyRequest* unSentRequest = [aliceSession.crypto.store outgoingRoomKeyRequestWithState:MXRoomKeyRequestStateUnsent];
+        MXOutgoingRoomKeyRequest* sentRequest = [aliceSession.crypto.store outgoingRoomKeyRequestWithState:MXRoomKeyRequestStateSent];
+
+        XCTAssertTrue(unSentRequest != nil || sentRequest != nil);
+
+        // - Restore the e2e backup with recovery key
+        [aliceSession.crypto.backup restoreKeyBackup:version
+                                     withRecoveryKey:keyBackupCreationInfo.recoveryKey
+                                                room:nil session:nil
+                                             success:^(NSUInteger total, NSUInteger imported)
+         {
+             // - Restore must be successful
+             [self checkRestoreSuccess:aliceKeys aliceSession:aliceSession total:total imported:imported];
+
+             // - There must be no more pending key share requests
+             MXOutgoingRoomKeyRequest* unSentRequest = [aliceSession.crypto.store outgoingRoomKeyRequestWithState:MXRoomKeyRequestStateUnsent];
+             MXOutgoingRoomKeyRequest* sentRequest = [aliceSession.crypto.store outgoingRoomKeyRequestWithState:MXRoomKeyRequestStateSent];
+
+             XCTAssertTrue(unSentRequest == nil && sentRequest == nil);
+             
+             [expectation fulfill];
+
+         } failure:^(NSError * _Nonnull error) {
+             XCTFail(@"The request should not fail - NSError: %@", error);
+             [expectation fulfill];
+         }];
     }];
 }
 
