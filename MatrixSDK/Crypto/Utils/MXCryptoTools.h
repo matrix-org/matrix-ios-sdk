@@ -28,7 +28,7 @@ NS_ASSUME_NONNULL_BEGIN
  @param JSONDictinary the JSON to convert.
  @return the canonical serialisation of the JSON.
  */
-+ (NSString*)canonicalJSONStringForJSON:(NSDictionary*)JSONDictinary;
++ (nullable NSString*)canonicalJSONStringForJSON:(NSDictionary*)JSONDictinary;
 
 
 /**
@@ -37,7 +37,7 @@ NS_ASSUME_NONNULL_BEGIN
  @param JSONDictinary the JSON to convert.
  @return the canonical serialisation of the JSON in NSData format.
  */
-+ (NSData*)canonicalJSONDataForJSON:(NSDictionary*)JSONDictinary;
++ (nullable NSData*)canonicalJSONDataForJSON:(NSDictionary*)JSONDictinary;
 
 @end
 

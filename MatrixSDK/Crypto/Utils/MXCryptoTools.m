@@ -20,20 +20,26 @@
 
 @implementation MXCryptoTools
 
-+ (NSString *)canonicalJSONStringForJSON:(NSDictionary *)JSONDictinary
++ (nullable NSString *)canonicalJSONStringForJSON:(NSDictionary *)JSONDictinary
 {
+    NSString *unescapedCanonicalJSON;
+
     NSData *canonicalJSONData = [NSJSONSerialization dataWithJSONObject:[JSONDictinary objectWithSortedKeys] options:0 error:nil];
 
     // NSJSONSerialization escapes the '/' character in base64 strings which is useless in our case
     // and does not match with other platforms.
     // Remove this escaping
-    NSString *unescapedCanonicalJSON = [[NSString alloc] initWithData:canonicalJSONData encoding:NSUTF8StringEncoding];
-    unescapedCanonicalJSON = [unescapedCanonicalJSON stringByReplacingOccurrencesOfString:@"\\/" withString:@"/"];
+
+    if (canonicalJSONData)
+    {
+        unescapedCanonicalJSON = [[NSString alloc] initWithData:canonicalJSONData encoding:NSUTF8StringEncoding];
+        unescapedCanonicalJSON = [unescapedCanonicalJSON stringByReplacingOccurrencesOfString:@"\\/" withString:@"/"];
+    }
 
     return unescapedCanonicalJSON;
 }
 
-+ (NSData *)canonicalJSONDataForJSON:(NSDictionary *)JSONDictinary
++ (nullable NSData *)canonicalJSONDataForJSON:(NSDictionary *)JSONDictinary
 {
     return [[self canonicalJSONStringForJSON:JSONDictinary] dataUsingEncoding:NSUTF8StringEncoding];
 }

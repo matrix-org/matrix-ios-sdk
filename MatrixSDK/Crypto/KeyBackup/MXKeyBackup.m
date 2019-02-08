@@ -84,7 +84,7 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
     self.state = MXKeyBackupStateCheckingBackUpOnHomeserver;
 
     MXWeakify(self);
-    [self versionFromCryptoThread:nil success:^(MXKeyBackupVersion * _Nullable keyBackupVersion) {
+    [self versionFromCryptoQueue:nil success:^(MXKeyBackupVersion * _Nullable keyBackupVersion) {
         MXStrongifyAndReturnIfNil(self);
 
         self->_keyBackupVersion = keyBackupVersion;
@@ -346,7 +346,7 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
 
 - (MXHTTPOperation *)version:(NSString *)version success:(void (^)(MXKeyBackupVersion * _Nullable))success failure:(void (^)(NSError * _Nonnull))failure
 {
-    return [self versionFromCryptoThread:version success:^(MXKeyBackupVersion * _Nullable keyBackupVersion) {
+    return [self versionFromCryptoQueue:version success:^(MXKeyBackupVersion * _Nullable keyBackupVersion) {
         if (success)
         {
             dispatch_async(dispatch_get_main_queue(), ^{
@@ -363,7 +363,7 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
     }];
 }
 
-- (MXHTTPOperation *)versionFromCryptoThread:(NSString *)version success:(void (^)(MXKeyBackupVersion * _Nullable))success failure:(void (^)(NSError * _Nonnull))failure
+- (MXHTTPOperation *)versionFromCryptoQueue:(NSString *)version success:(void (^)(MXKeyBackupVersion * _Nullable))success failure:(void (^)(NSError * _Nonnull))failure
 {
     return [mxSession.crypto.matrixRestClient keyBackupVersion:version success:success failure:^(NSError *error) {
 
@@ -641,7 +641,7 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
     // currently used. If versions are not the same, the current backup is forgotten and
     // checkAndStartKeyBackup is called in order to restart on the last version on the HS.
     MXWeakify(self);
-    return [self versionFromCryptoThread:nil success:^(MXKeyBackupVersion * _Nullable serverKeyBackupVersion) {
+    return [self versionFromCryptoQueue:nil success:^(MXKeyBackupVersion * _Nullable serverKeyBackupVersion) {
         MXStrongifyAndReturnIfNil(self);
 
         MXWeakify(self);
@@ -928,7 +928,7 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
     // to retrieve the private key from the password
     MXWeakify(self);
     MXHTTPOperation *operation;
-    operation = [self versionFromCryptoThread:version success:^(MXKeyBackupVersion * _Nullable keyBackupVersion) {
+    operation = [self versionFromCryptoQueue:version success:^(MXKeyBackupVersion * _Nullable keyBackupVersion) {
         MXStrongifyAndReturnIfNil(self);
 
         MXMegolmBackupAuthData *authData = [MXMegolmBackupAuthData modelFromJSON:keyBackupVersion.authData];
