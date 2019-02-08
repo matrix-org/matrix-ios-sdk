@@ -22,12 +22,9 @@
 #import <Realm/Realm.h>
 #import "MXSession.h"
 #import "MXTools.h"
+#import "MXCryptoTools.h"
 
-// TODO: Come back to 10 for the release in order to fix the issue solved by
-// https://github.com/vector-im/riot-ios/issues/2167
-// We need to stay on 9 so that people can easily switch from app store to TestFlight
-// version and vice versa
-NSUInteger const kMXRealmCryptoStoreVersion = 9; // 10;
+NSUInteger const kMXRealmCryptoStoreVersion = 10;
 
 static NSString *const kMXRealmCryptoStoreFolder = @"MXRealmCryptoStore";
 
@@ -187,6 +184,7 @@ RLM_ARRAY_TYPE(MXRealmOlmInboundGroupSession)
 @property (nonatomic) NSString *cancellationTxnId;
 @property (nonatomic) NSData *recipientsData;
 @property (nonatomic) NSString *requestBodyString;
+@property (nonatomic) NSString *requestBodyHash;
 @property (nonatomic) NSNumber<RLMInt> *state;
 
 - (MXOutgoingRoomKeyRequest *)outgoingRoomKeyRequest;
@@ -855,9 +853,9 @@ RLM_ARRAY_TYPE(MXRealmOlmInboundGroupSession)
 {
     MXOutgoingRoomKeyRequest *request;
 
-    NSString *requestBodyString = [MXTools serialiseJSONObject:requestBody];
+    NSString *requestBodyHash = [MXCryptoTools canonicalJSONStringForJSON:requestBody];
 
-    RLMResults<MXRealmOutgoingRoomKeyRequest *> *realmOutgoingRoomKeyRequests =  [MXRealmOutgoingRoomKeyRequest objectsInRealm:self.realm where:@"requestBodyString = %@", requestBodyString];
+    RLMResults<MXRealmOutgoingRoomKeyRequest *> *realmOutgoingRoomKeyRequests =  [MXRealmOutgoingRoomKeyRequest objectsInRealm:self.realm where:@"requestBodyHash = %@", requestBodyHash];
     if (realmOutgoingRoomKeyRequests.count)
     {
         request = realmOutgoingRoomKeyRequests[0].outgoingRoomKeyRequest;
@@ -885,12 +883,14 @@ RLM_ARRAY_TYPE(MXRealmOlmInboundGroupSession)
     [realm transactionWithBlock:^{
 
         NSString *requestBodyString = [MXTools serialiseJSONObject:request.requestBody];
+        NSString *requestBodyHash = [MXCryptoTools canonicalJSONStringForJSON:request.requestBody];
 
         MXRealmOutgoingRoomKeyRequest *realmOutgoingRoomKeyRequest =
         [[MXRealmOutgoingRoomKeyRequest alloc] initWithValue:@{
                                                                @"requestId": request.requestId,
                                                                @"recipientsData": [NSKeyedArchiver archivedDataWithRootObject:request.recipients],
                                                                @"requestBodyString": requestBodyString,
+                                                               @"requestBodyHash": requestBodyHash,
                                                                @"state": @(request.state)
                                                                }];
 
@@ -1245,7 +1245,17 @@ RLM_ARRAY_TYPE(MXRealmOlmInboundGroupSession)
                 {
                     NSLog(@"[MXRealmCryptoStore] Migration from schema #9 -> #10");
 
-                    // This schema update is only a fix of cleanDuplicatedDevicesInRealm introduced in schema #8.
+                    NSLog(@"    Add requestBodyHash to all MXRealmOutgoingRoomKeyRequest objects");
+                    [migration enumerateObjects:MXRealmOutgoingRoomKeyRequest.className block:^(RLMObject *oldObject, RLMObject *newObject) {
+
+                        NSDictionary *requestBody = [MXTools deserialiseJSONString:oldObject[@"requestBodyString"]];
+                        if (requestBody)
+                        {
+                            newObject[@"requestBodyHash"] = [MXCryptoTools canonicalJSONStringForJSON:requestBody];
+                        }
+                    }];
+
+                    // This schema update needs a fix of cleanDuplicatedDevicesInRealm introduced in schema #8.
                     cleanDuplicatedDevices = YES;
                 }
             }

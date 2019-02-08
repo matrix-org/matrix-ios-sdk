@@ -255,6 +255,14 @@
             [crypto.store markBackupDoneForInboundGroupSessionWithId:session.sessionId andSenderKey:session.senderKey];
         }
 
+        // cancel any outstanding room key requests for this session
+        [crypto cancelRoomKeyRequest:@{
+                                       @"algorithm": session.algorithm,
+                                       @"room_id": session.roomId,
+                                       @"session_id": session.sessionId,
+                                       @"sender_key": session.senderKey
+                                       }];
+
         // Have another go at decrypting events sent with this session
         [self retryDecryption:session.senderKey sessionId:session.sessionId];
     }

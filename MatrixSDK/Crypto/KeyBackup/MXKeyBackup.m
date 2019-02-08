@@ -84,66 +84,56 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
     self.state = MXKeyBackupStateCheckingBackUpOnHomeserver;
 
     MXWeakify(self);
-    [self version:nil success:^(MXKeyBackupVersion * _Nullable keyBackupVersion) {
+    [self versionFromCryptoQueue:nil success:^(MXKeyBackupVersion * _Nullable keyBackupVersion) {
         MXStrongifyAndReturnIfNil(self);
 
+        self->_keyBackupVersion = keyBackupVersion;
+        if (!self.keyBackupVersion)
+        {
+            NSLog(@"[MXKeyBackup] checkAndStartKeyBackup: Found no key backup version on the homeserver");
+            [self resetKeyBackupData];
+            self.state = MXKeyBackupStateDisabled;
+            return;
+        }
+
         MXWeakify(self);
-        dispatch_async(self->mxSession.crypto.cryptoQueue, ^{
+        [self trustForKeyBackupVersion:keyBackupVersion onComplete:^(MXKeyBackupVersionTrust * _Nonnull trustInfo) {
             MXStrongifyAndReturnIfNil(self);
 
-            self->_keyBackupVersion = keyBackupVersion;
-            if (!self.keyBackupVersion)
+            if (trustInfo.usable)
             {
-                NSLog(@"[MXKeyBackup] checkAndStartKeyBackup: Found no key backup version on the homeserver");
-                [self resetKeyBackupData];
-                self.state = MXKeyBackupStateDisabled;
-                return;
+                NSLog(@"[MXKeyBackup] checkAndStartKeyBackup: Found usable key backup. version: %@", keyBackupVersion.version);
+
+                // Check the version we used at the previous app run
+                NSString *versionInStore = self->mxSession.crypto.store.backupVersion;
+                if (versionInStore && ![versionInStore isEqualToString:keyBackupVersion.version])
+                {
+                    NSLog(@"[MXKeyBackup] -> clean the previously used version(%@)", versionInStore);
+                    [self resetKeyBackupData];
+                }
+
+                NSLog(@"[MXKeyBackup]    -> enabling key backups");
+                [self enableKeyBackup:keyBackupVersion];
             }
+            else
+            {
+                NSLog(@"[MXKeyBackup] checkAndStartKeyBackup: No usable key backup. version: %@", keyBackupVersion.version);
 
-            MXWeakify(self);
-            [self trustForKeyBackupVersion:keyBackupVersion onComplete:^(MXKeyBackupVersionTrust * _Nonnull trustInfo) {
-                MXStrongifyAndReturnIfNil(self);
-
-                if (trustInfo.usable)
+                if (self->mxSession.crypto.store.backupVersion)
                 {
-                    NSLog(@"[MXKeyBackup] checkAndStartKeyBackup: Found usable key backup. version: %@", keyBackupVersion.version);
-
-                    // Check the version we used at the previous app run
-                    NSString *versionInStore = self->mxSession.crypto.store.backupVersion;
-                    if (versionInStore && ![versionInStore isEqualToString:keyBackupVersion.version])
-                    {
-                        NSLog(@"[MXKeyBackup] -> clean the previously used version(%@)", versionInStore);
-                        [self resetKeyBackupData];
-                    }
-
-                    NSLog(@"[MXKeyBackup]    -> enabling key backups");
-                    [self enableKeyBackup:keyBackupVersion];
+                    NSLog(@"[MXKeyBackup]    -> disable the current version");
+                    [self resetKeyBackupData];
                 }
-                else
-                {
-                    NSLog(@"[MXKeyBackup] checkAndStartKeyBackup: No usable key backup. version: %@", keyBackupVersion.version);
 
-                    if (self->mxSession.crypto.store.backupVersion)
-                    {
-                        NSLog(@"[MXKeyBackup]    -> disable the current version");
-                        [self resetKeyBackupData];
-                    }
-
-                    self.state = MXKeyBackupStateNotTrusted;
-                }
-            }];
-        });
+                self.state = MXKeyBackupStateNotTrusted;
+            }
+        }];
 
     } failure:^(NSError * _Nonnull error) {
         MXStrongifyAndReturnIfNil(self);
 
-        MXWeakify(self);
-        dispatch_async(self->mxSession.crypto.cryptoQueue, ^{
-            MXStrongifyAndReturnIfNil(self);
-
-            NSLog(@"[MXKeyBackup] checkAndStartKeyBackup: Failed to get current version: %@", error);
-            self.state = MXKeyBackupStateUnknown;
-        });
+        NSLog(@"[MXKeyBackup] checkAndStartKeyBackup: Failed to get current version: %@", error);
+        self.state = MXKeyBackupStateUnknown;
     }];
 }
 
@@ -356,8 +346,26 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
 
 - (MXHTTPOperation *)version:(NSString *)version success:(void (^)(MXKeyBackupVersion * _Nullable))success failure:(void (^)(NSError * _Nonnull))failure
 {
-    // Use mxSession.matrixRestClient to respond to the main thread as this method is public
-    return [mxSession.matrixRestClient keyBackupVersion:version success:success failure:^(NSError *error) {
+    return [self versionFromCryptoQueue:version success:^(MXKeyBackupVersion * _Nullable keyBackupVersion) {
+        if (success)
+        {
+            dispatch_async(dispatch_get_main_queue(), ^{
+                success(keyBackupVersion);
+            });
+        }
+    } failure:^(NSError * _Nonnull error) {
+        if (failure)
+        {
+            dispatch_async(dispatch_get_main_queue(), ^{
+                failure(error);
+            });
+        }
+    }];
+}
+
+- (MXHTTPOperation *)versionFromCryptoQueue:(NSString *)version success:(void (^)(MXKeyBackupVersion * _Nullable))success failure:(void (^)(NSError * _Nonnull))failure
+{
+    return [mxSession.crypto.matrixRestClient keyBackupVersion:version success:success failure:^(NSError *error) {
 
         // Workaround because the homeserver currently returns  M_NOT_FOUND when there is
         // no key backup
@@ -633,7 +641,7 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
     // currently used. If versions are not the same, the current backup is forgotten and
     // checkAndStartKeyBackup is called in order to restart on the last version on the HS.
     MXWeakify(self);
-    return [self version:nil success:^(MXKeyBackupVersion * _Nullable serverKeyBackupVersion) {
+    return [self versionFromCryptoQueue:nil success:^(MXKeyBackupVersion * _Nullable serverKeyBackupVersion) {
         MXStrongifyAndReturnIfNil(self);
 
         MXWeakify(self);
@@ -920,7 +928,7 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
     // to retrieve the private key from the password
     MXWeakify(self);
     MXHTTPOperation *operation;
-    operation = [self version:version success:^(MXKeyBackupVersion * _Nullable keyBackupVersion) {
+    operation = [self versionFromCryptoQueue:version success:^(MXKeyBackupVersion * _Nullable keyBackupVersion) {
         MXStrongifyAndReturnIfNil(self);
 
         MXMegolmBackupAuthData *authData = [MXMegolmBackupAuthData modelFromJSON:keyBackupVersion.authData];
