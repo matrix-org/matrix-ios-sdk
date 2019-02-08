@@ -14,6 +14,7 @@ Bug Fix:
  * Crypto: Device deduplication method sometimes crashes (vector-im/riot-ios/issues/#2167).
  * MXSession: A new invite to a direct chat that I left is not displayed as direct.
  * MXSession/Swift: fix expected return type from createRoom.
+ * MXRealmCryptoStore: fix outgoingRoomKeyRequestWithRequestBody that was sometimes not able to find existing request.
 
 API break:
 * MXKeyBackup: Rename isKeyBackupTrusted to trustForKeyBackupVersion.
