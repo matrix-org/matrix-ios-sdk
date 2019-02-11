@@ -132,14 +132,6 @@ FOUNDATION_EXPORT NSString *const kMXKeyBackupDidStateChangeNotification;
                     failure:(void (^)(NSError *error))failure;
 
 /**
- Check trust on a key backup version.
-
- @param keyBackupVersion the backup version to check.
- @param onComplete block called when the operations completes.
- */
-- (void)trustForKeyBackupVersion:(MXKeyBackupVersion*)keyBackupVersion onComplete:(void (^)(MXKeyBackupVersionTrust *keyBackupVersionTrust))onComplete;
-
-/**
  Set up the data required to create a new backup version.
 
  The backup version will not be created and enabled until `createKeyBackupVersion`
@@ -279,6 +271,18 @@ FOUNDATION_EXPORT NSString *const kMXKeyBackupDidStateChangeNotification;
                              session:(nullable NSString*)sessionId
                              success:(nullable void (^)(NSUInteger total, NSUInteger imported))success
                              failure:(nullable void (^)(NSError *error))failure;
+
+
+#pragma mark - Backup trust
+
+/**
+ Check trust on a key backup version.
+
+ @param keyBackupVersion the backup version to check.
+ @param onComplete block called when the operations completes.
+ */
+- (void)trustForKeyBackupVersion:(MXKeyBackupVersion*)keyBackupVersion onComplete:(void (^)(MXKeyBackupVersionTrust *keyBackupVersionTrust))onComplete;
+
 
 #pragma mark - Backup state
 

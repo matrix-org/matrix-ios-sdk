@@ -384,88 +384,6 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
     }];
 }
 
-- (void)trustForKeyBackupVersion:(MXKeyBackupVersion *)keyBackupVersion onComplete:(void (^)(MXKeyBackupVersionTrust * _Nonnull))onComplete
-{
-    MXWeakify(self);
-    dispatch_async(mxSession.crypto.cryptoQueue, ^{
-        MXStrongifyAndReturnIfNil(self);
-
-        NSString *myUserId = self->mxSession.myUser.userId;
-
-        MXKeyBackupVersionTrust *keyBackupVersionTrust = [MXKeyBackupVersionTrust new];
-
-        MXMegolmBackupAuthData *authData = [MXMegolmBackupAuthData modelFromJSON:keyBackupVersion.authData];
-        if (!keyBackupVersion.algorithm || !authData
-            || !authData.publicKey || !authData.signatures)
-        {
-            NSLog(@"[MXKeyBackup] trustForKeyBackupVersion: Key backup is absent or missing required data");
-            dispatch_async(dispatch_get_main_queue(), ^{
-                onComplete(keyBackupVersionTrust);
-            });
-            return;
-        }
-
-        NSDictionary *mySigs = authData.signatures[myUserId];
-        if (mySigs.count == 0)
-        {
-            NSLog(@"[MXKeyBackup] trustForKeyBackupVersion: Ignoring key backup because it lacks any signatures from this user");
-            dispatch_async(dispatch_get_main_queue(), ^{
-                onComplete(keyBackupVersionTrust);
-            });
-            return;
-        }
-
-        NSMutableArray<MXKeyBackupVersionTrustSignature*> *signatures = [NSMutableArray array];
-        for (NSString *keyId in mySigs)
-        {
-            // XXX: is this how we're supposed to get the device id?
-            NSString *deviceId;
-            NSArray<NSString *> *components = [keyId componentsSeparatedByString:@":"];
-            if (components.count == 2)
-            {
-                deviceId = components[1];
-            }
-
-            if (deviceId)
-            {
-                BOOL valid = NO;
-
-                MXDeviceInfo *device = [self->mxSession.crypto.deviceList storedDevice:myUserId deviceId:deviceId];
-                if (device)
-                {
-                    NSError *error;
-                    valid = [self->mxSession.crypto.olmDevice verifySignature:device.fingerprint JSON:authData.signalableJSONDictionary signature:mySigs[keyId] error:&error];
-
-                    if (!valid)
-                    {
-                        NSLog(@"[MXKeyBackup] trustForKeyBackupVersion: Bad signature from device %@: %@", device.deviceId, error);
-                    }
-                    else if (device.verified == MXDeviceVerified)
-                    {
-                        keyBackupVersionTrust.usable = YES;
-                    }
-                }
-                else
-                {
-                    NSLog(@"[MXKeyBackup] trustForKeyBackupVersion: Signature from unknown key %@", deviceId);
-                }
-
-                MXKeyBackupVersionTrustSignature *signature = [MXKeyBackupVersionTrustSignature new];
-                signature.deviceId = deviceId;
-                signature.device = device;
-                signature.valid = valid;
-                [signatures addObject:signature];
-            }
-        }
-
-        keyBackupVersionTrust.signatures = signatures;
-
-        dispatch_async(dispatch_get_main_queue(), ^{
-            onComplete(keyBackupVersionTrust);
-        });
-    });
-}
-
 - (void)prepareKeyBackupVersionWithPassword:(NSString *)password
                                     success:(void (^)(MXMegolmBackupCreationInfo * _Nonnull))success
                                     failure:(void (^)(NSError * _Nonnull))failure
@@ -971,6 +889,91 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
     } failure:failure];
 
     return operation;
+}
+
+
+#pragma mark - Backup trust
+
+- (void)trustForKeyBackupVersion:(MXKeyBackupVersion *)keyBackupVersion onComplete:(void (^)(MXKeyBackupVersionTrust * _Nonnull))onComplete
+{
+    MXWeakify(self);
+    dispatch_async(mxSession.crypto.cryptoQueue, ^{
+        MXStrongifyAndReturnIfNil(self);
+
+        NSString *myUserId = self->mxSession.myUser.userId;
+
+        MXKeyBackupVersionTrust *keyBackupVersionTrust = [MXKeyBackupVersionTrust new];
+
+        MXMegolmBackupAuthData *authData = [MXMegolmBackupAuthData modelFromJSON:keyBackupVersion.authData];
+        if (!keyBackupVersion.algorithm || !authData
+            || !authData.publicKey || !authData.signatures)
+        {
+            NSLog(@"[MXKeyBackup] trustForKeyBackupVersion: Key backup is absent or missing required data");
+            dispatch_async(dispatch_get_main_queue(), ^{
+                onComplete(keyBackupVersionTrust);
+            });
+            return;
+        }
+
+        NSDictionary *mySigs = authData.signatures[myUserId];
+        if (mySigs.count == 0)
+        {
+            NSLog(@"[MXKeyBackup] trustForKeyBackupVersion: Ignoring key backup because it lacks any signatures from this user");
+            dispatch_async(dispatch_get_main_queue(), ^{
+                onComplete(keyBackupVersionTrust);
+            });
+            return;
+        }
+
+        NSMutableArray<MXKeyBackupVersionTrustSignature*> *signatures = [NSMutableArray array];
+        for (NSString *keyId in mySigs)
+        {
+            // XXX: is this how we're supposed to get the device id?
+            NSString *deviceId;
+            NSArray<NSString *> *components = [keyId componentsSeparatedByString:@":"];
+            if (components.count == 2)
+            {
+                deviceId = components[1];
+            }
+
+            if (deviceId)
+            {
+                BOOL valid = NO;
+
+                MXDeviceInfo *device = [self->mxSession.crypto.deviceList storedDevice:myUserId deviceId:deviceId];
+                if (device)
+                {
+                    NSError *error;
+                    valid = [self->mxSession.crypto.olmDevice verifySignature:device.fingerprint JSON:authData.signalableJSONDictionary signature:mySigs[keyId] error:&error];
+
+                    if (!valid)
+                    {
+                        NSLog(@"[MXKeyBackup] trustForKeyBackupVersion: Bad signature from device %@: %@", device.deviceId, error);
+                    }
+                    else if (device.verified == MXDeviceVerified)
+                    {
+                        keyBackupVersionTrust.usable = YES;
+                    }
+                }
+                else
+                {
+                    NSLog(@"[MXKeyBackup] trustForKeyBackupVersion: Signature from unknown key %@", deviceId);
+                }
+
+                MXKeyBackupVersionTrustSignature *signature = [MXKeyBackupVersionTrustSignature new];
+                signature.deviceId = deviceId;
+                signature.device = device;
+                signature.valid = valid;
+                [signatures addObject:signature];
+            }
+        }
+
+        keyBackupVersionTrust.signatures = signatures;
+
+        dispatch_async(dispatch_get_main_queue(), ^{
+            onComplete(keyBackupVersionTrust);
+        });
+    });
 }
 
 
