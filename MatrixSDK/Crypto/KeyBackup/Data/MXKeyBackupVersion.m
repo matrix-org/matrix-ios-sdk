@@ -63,4 +63,18 @@
     return JSONDictionary;
 }
 
+
+#pragma mark - NSCopying
+
+- (id)copyWithZone:(NSZone *)zone
+{
+    MXKeyBackupVersion *keyBackupVersion = [MXKeyBackupVersion new];
+
+    keyBackupVersion.algorithm = [_algorithm copyWithZone:zone];
+    keyBackupVersion.authData = [_authData copyWithZone:zone];
+    keyBackupVersion.version = [_version copyWithZone:zone];
+
+    return keyBackupVersion;
+}
+
 @end

@@ -283,6 +283,57 @@ FOUNDATION_EXPORT NSString *const kMXKeyBackupDidStateChangeNotification;
  */
 - (void)trustForKeyBackupVersion:(MXKeyBackupVersion*)keyBackupVersion onComplete:(void (^)(MXKeyBackupVersionTrust *keyBackupVersionTrust))onComplete;
 
+/**
+ Set trust on a key backup version.
+
+ It adds (or removes) the signautre of the current device to the authentication
+ part of the key backup version.
+
+ @param keyBackupVersion the backup version to trust.
+ @param trust the trust to set to the key backup.
+
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)trustKeyBackupVersion:(MXKeyBackupVersion*)keyBackupVersion
+                                    trust:(BOOL)trust
+                                  success:(void (^)(void))success
+                                  failure:(nullable void (^)(NSError *error))failure;
+
+/**
+ Set trust on a key backup version.
+
+ @param keyBackupVersion the backup version to trust.
+ @param recoveryKey the recovery key to challenge with the key backup public key.
+
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)trustKeyBackupVersion:(MXKeyBackupVersion*)keyBackupVersion
+                          withRecoveryKey:(NSString*)recoveryKey
+                                  success:(void (^)(void))success
+                                  failure:(nullable void (^)(NSError *error))failure;
+
+/**
+ Set trust on a key backup version.
+
+ @param keyBackupVersion the backup version to trust.
+ @param password the password to challenge with the keyBackupVersion public key.
+
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)trustKeyBackupVersion:(MXKeyBackupVersion*)keyBackupVersion
+                             withPassword:(NSString*)password
+                                  success:(void (^)(void))success
+                                  failure:(nullable void (^)(NSError *error))failure;
+
 
 #pragma mark - Backup state
 

@@ -1113,6 +1113,40 @@
     }];
 }
 
+/**
+ - Do an e2e backup to the homeserver with a recovery key
+ - And log Alice on a new device
+ - The new device must see the previous backup as not trusted
+ */
+- (void)testTrustKeyBackupVersion
+{
+    // - Do an e2e backup to the homeserver with a recovery key
+    // - And log Alice on a new device
+    [self createKeyBackupScenarioWithPassword:nil readyToTest:^(NSString *version, MXMegolmBackupCreationInfo *keyBackupCreationInfo, NSArray<MXOlmInboundGroupSession *> *aliceKeys, MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
+
+        //  - The new device must see the previous backup as not trusted
+        XCTAssertNotNil(aliceSession.crypto.backup.keyBackupVersion);
+        XCTAssertFalse(aliceSession.crypto.backup.enabled);
+        XCTAssertEqual(aliceSession.crypto.backup.state, MXKeyBackupStateNotTrusted);
+
+        [aliceSession.crypto.backup trustKeyBackupVersion:aliceSession.crypto.backup.keyBackupVersion trust:YES success:^{
+
+            XCTAssertEqualObjects(aliceSession.crypto.backup.keyBackupVersion.version, version);
+            XCTAssertTrue(aliceSession.crypto.backup.enabled);
+
+            // TODO: TBC
+
+            [expectation fulfill];
+
+        } failure:^(NSError * _Nonnull error) {
+            XCTFail(@"The request should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+
+    }];
+}
+
+
 @end
 
 #pragma clang diagnostic pop
