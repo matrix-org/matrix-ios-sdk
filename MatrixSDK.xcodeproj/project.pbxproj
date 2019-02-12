@@ -205,6 +205,8 @@
 		32A9E8261EF4026E0081358A /* MXUIKitBackgroundModeHandler.m in Sources */ = {isa = PBXBuildFile; fileRef = 32A9E8231EF4026E0081358A /* MXUIKitBackgroundModeHandler.m */; };
 		32B76EA320FDE2BE00B095F6 /* MXRoomMembersCount.h in Headers */ = {isa = PBXBuildFile; fileRef = 32B76EA220FDE2BE00B095F6 /* MXRoomMembersCount.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		32B76EA520FDE85100B095F6 /* MXRoomMembersCount.m in Sources */ = {isa = PBXBuildFile; fileRef = 32B76EA420FDE85100B095F6 /* MXRoomMembersCount.m */; };
+		32B92CAC2212FE8000D6B1BF /* NSString+MatrixSDK.h in Headers */ = {isa = PBXBuildFile; fileRef = 32B92CAA2212FE8000D6B1BF /* NSString+MatrixSDK.h */; };
+		32B92CAD2212FE8000D6B1BF /* NSString+MatrixSDK.m in Sources */ = {isa = PBXBuildFile; fileRef = 32B92CAB2212FE8000D6B1BF /* NSString+MatrixSDK.m */; };
 		32BA86AC21529E29008F277E /* MXRoomNameStringsLocalizable.h in Headers */ = {isa = PBXBuildFile; fileRef = 32BA86AB21529AE3008F277E /* MXRoomNameStringsLocalizable.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		32BA86AF2152A79E008F277E /* MXRoomNameDefaultStringLocalizations.h in Headers */ = {isa = PBXBuildFile; fileRef = 32BA86AD2152A79E008F277E /* MXRoomNameDefaultStringLocalizations.h */; };
 		32BA86B02152A79E008F277E /* MXRoomNameDefaultStringLocalizations.m in Sources */ = {isa = PBXBuildFile; fileRef = 32BA86AE2152A79E008F277E /* MXRoomNameDefaultStringLocalizations.m */; };
@@ -580,6 +582,8 @@
 		32A9E8231EF4026E0081358A /* MXUIKitBackgroundModeHandler.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXUIKitBackgroundModeHandler.m; sourceTree = "<group>"; };
 		32B76EA220FDE2BE00B095F6 /* MXRoomMembersCount.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MXRoomMembersCount.h; sourceTree = "<group>"; };
 		32B76EA420FDE85100B095F6 /* MXRoomMembersCount.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MXRoomMembersCount.m; sourceTree = "<group>"; };
+		32B92CAA2212FE8000D6B1BF /* NSString+MatrixSDK.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "NSString+MatrixSDK.h"; sourceTree = "<group>"; };
+		32B92CAB2212FE8000D6B1BF /* NSString+MatrixSDK.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "NSString+MatrixSDK.m"; sourceTree = "<group>"; };
 		32BA86AB21529AE3008F277E /* MXRoomNameStringsLocalizable.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MXRoomNameStringsLocalizable.h; sourceTree = "<group>"; };
 		32BA86AD2152A79E008F277E /* MXRoomNameDefaultStringLocalizations.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MXRoomNameDefaultStringLocalizations.h; sourceTree = "<group>"; };
 		32BA86AE2152A79E008F277E /* MXRoomNameDefaultStringLocalizations.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MXRoomNameDefaultStringLocalizations.m; sourceTree = "<group>"; };
@@ -1527,6 +1531,8 @@
 			children = (
 				F08B8D5A1E014711006171A8 /* NSData+MatrixSDK.h */,
 				F08B8D5B1E014711006171A8 /* NSData+MatrixSDK.m */,
+				32B92CAA2212FE8000D6B1BF /* NSString+MatrixSDK.h */,
+				32B92CAB2212FE8000D6B1BF /* NSString+MatrixSDK.m */,
 			);
 			path = Categories;
 			sourceTree = "<group>";
@@ -1603,6 +1609,7 @@
 				32A9770421626E5C00919CC0 /* MXServerNotices.h in Headers */,
 				021AFBA42179E91900742B2C /* MXEncryptedContentFile.h in Headers */,
 				B146D4F021A5AF7F00D8C2C6 /* MXRealmEventScanMapper.h in Headers */,
+				32B92CAC2212FE8000D6B1BF /* NSString+MatrixSDK.h in Headers */,
 				B146D47F21A59E2400D8C2C6 /* MXEventScan.h in Headers */,
 				B146D4E121A5AEF200D8C2C6 /* MXRealmMediaScanMapper.h in Headers */,
 				F08B8D5C1E014711006171A8 /* NSData+MatrixSDK.h in Headers */,
@@ -1956,6 +1963,7 @@
 				3291D4D51A68FFEB00C3BA41 /* MXFileRoomStore.m in Sources */,
 				329FB1801A0B665800A5E88E /* MXUser.m in Sources */,
 				B146D4F321A5AF7F00D8C2C6 /* MXRealmEventScan.m in Sources */,
+				32B92CAD2212FE8000D6B1BF /* NSString+MatrixSDK.m in Sources */,
 				322691371E5EFF8700966A6E /* MXDeviceListOperationsPool.m in Sources */,
 				C6F935801E5B3ACA00FC34BF /* MXResponse.swift in Sources */,
 				32BA86B02152A79E008F277E /* MXRoomNameDefaultStringLocalizations.m in Sources */,
