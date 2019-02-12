@@ -802,9 +802,12 @@ RLM_ARRAY_TYPE(MXRealmOlmInboundGroupSession)
                                                                                     senderKey:senderKey];
         MXRealmOlmInboundGroupSession *realmSession = [MXRealmOlmInboundGroupSession objectsInRealm:realm where:@"sessionIdSenderKey = %@", sessionIdSenderKey].firstObject;
 
-        realmSession.backedUp = @(YES);
+        if (realmSession)
+        {
+            realmSession.backedUp = @(YES);
 
-        [realm addOrUpdateObject:realmSession];
+            [realm addOrUpdateObject:realmSession];
+        }
     }];
 }
 
@@ -905,12 +908,15 @@ RLM_ARRAY_TYPE(MXRealmOlmInboundGroupSession)
     RLMRealm *realm = self.realm;
     [realm transactionWithBlock:^{
 
-        MXRealmOutgoingRoomKeyRequest *realmOutgoingRoomKeyRequests = [MXRealmOutgoingRoomKeyRequest objectsInRealm:realm where:@"requestId = %@", request.requestId].firstObject;
+        MXRealmOutgoingRoomKeyRequest *realmOutgoingRoomKeyRequest = [MXRealmOutgoingRoomKeyRequest objectsInRealm:realm where:@"requestId = %@", request.requestId].firstObject;
 
-        // Well, only the state changes
-        realmOutgoingRoomKeyRequests.state = @(request.state);
-        
-        [realm addOrUpdateObject:realmOutgoingRoomKeyRequests];
+        if (realmOutgoingRoomKeyRequest)
+        {
+            // Well, only the state changes
+            realmOutgoingRoomKeyRequest.state = @(request.state);
+
+            [realm addOrUpdateObject:realmOutgoingRoomKeyRequest];
+        }
     }];
 }
 

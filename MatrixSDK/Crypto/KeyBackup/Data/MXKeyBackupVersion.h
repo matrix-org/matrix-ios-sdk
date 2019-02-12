@@ -23,7 +23,7 @@ NS_ASSUME_NONNULL_BEGIN
 /**
  Information on a backup version.
  */
-@interface MXKeyBackupVersion : MXJSONModel
+@interface MXKeyBackupVersion : MXJSONModel <NSCopying>
 
 /**
  The algorithm used for storing backups.
