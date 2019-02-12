@@ -908,14 +908,14 @@ RLM_ARRAY_TYPE(MXRealmOlmInboundGroupSession)
     RLMRealm *realm = self.realm;
     [realm transactionWithBlock:^{
 
-        MXRealmOutgoingRoomKeyRequest *realmOutgoingRoomKeyRequests = [MXRealmOutgoingRoomKeyRequest objectsInRealm:realm where:@"requestId = %@", request.requestId].firstObject;
+        MXRealmOutgoingRoomKeyRequest *realmOutgoingRoomKeyRequest = [MXRealmOutgoingRoomKeyRequest objectsInRealm:realm where:@"requestId = %@", request.requestId].firstObject;
 
-        if (realmOutgoingRoomKeyRequests)
+        if (realmOutgoingRoomKeyRequest)
         {
             // Well, only the state changes
-            realmOutgoingRoomKeyRequests.state = @(request.state);
+            realmOutgoingRoomKeyRequest.state = @(request.state);
 
-            [realm addOrUpdateObject:realmOutgoingRoomKeyRequests];
+            [realm addOrUpdateObject:realmOutgoingRoomKeyRequest];
         }
     }];
 }
