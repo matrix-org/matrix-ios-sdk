@@ -87,47 +87,7 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
     [self versionFromCryptoQueue:nil success:^(MXKeyBackupVersion * _Nullable keyBackupVersion) {
         MXStrongifyAndReturnIfNil(self);
 
-        self->_keyBackupVersion = keyBackupVersion;
-        if (!self.keyBackupVersion)
-        {
-            NSLog(@"[MXKeyBackup] checkAndStartKeyBackup: Found no key backup version on the homeserver");
-            [self resetKeyBackupData];
-            self.state = MXKeyBackupStateDisabled;
-            return;
-        }
-
-        MXWeakify(self);
-        [self trustForKeyBackupVersion:keyBackupVersion onComplete:^(MXKeyBackupVersionTrust * _Nonnull trustInfo) {
-            MXStrongifyAndReturnIfNil(self);
-
-            if (trustInfo.usable)
-            {
-                NSLog(@"[MXKeyBackup] checkAndStartKeyBackup: Found usable key backup. version: %@", keyBackupVersion.version);
-
-                // Check the version we used at the previous app run
-                NSString *versionInStore = self->mxSession.crypto.store.backupVersion;
-                if (versionInStore && ![versionInStore isEqualToString:keyBackupVersion.version])
-                {
-                    NSLog(@"[MXKeyBackup] -> clean the previously used version(%@)", versionInStore);
-                    [self resetKeyBackupData];
-                }
-
-                NSLog(@"[MXKeyBackup]    -> enabling key backups");
-                [self enableKeyBackup:keyBackupVersion];
-            }
-            else
-            {
-                NSLog(@"[MXKeyBackup] checkAndStartKeyBackup: No usable key backup. version: %@", keyBackupVersion.version);
-
-                if (self->mxSession.crypto.store.backupVersion)
-                {
-                    NSLog(@"[MXKeyBackup]    -> disable the current version");
-                    [self resetKeyBackupData];
-                }
-
-                self.state = MXKeyBackupStateNotTrusted;
-            }
-        }];
+        [self checkAndStartWithKeyBackupVersion:keyBackupVersion];
 
     } failure:^(NSError * _Nonnull error) {
         MXStrongifyAndReturnIfNil(self);
@@ -135,6 +95,48 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
         NSLog(@"[MXKeyBackup] checkAndStartKeyBackup: Failed to get current version: %@", error);
         self.state = MXKeyBackupStateUnknown;
     }];
+}
+
+- (void)checkAndStartWithKeyBackupVersion:(nullable MXKeyBackupVersion*)keyBackupVersion
+{
+    self->_keyBackupVersion = keyBackupVersion;
+    if (!self.keyBackupVersion)
+    {
+        NSLog(@"[MXKeyBackup] checkAndStartKeyBackup: Found no key backup version on the homeserver");
+        [self resetKeyBackupData];
+        self.state = MXKeyBackupStateDisabled;
+        return;
+    }
+
+    MXKeyBackupVersionTrust *trustInfo = [self trustForKeyBackupVersionFromCryptoQueue:keyBackupVersion];
+
+    if (trustInfo.usable)
+    {
+        NSLog(@"[MXKeyBackup] checkAndStartKeyBackup: Found usable key backup. version: %@", keyBackupVersion.version);
+
+        // Check the version we used at the previous app run
+        NSString *versionInStore = mxSession.crypto.store.backupVersion;
+        if (versionInStore && ![versionInStore isEqualToString:keyBackupVersion.version])
+        {
+            NSLog(@"[MXKeyBackup] -> clean the previously used version(%@)", versionInStore);
+            [self resetKeyBackupData];
+        }
+
+        NSLog(@"[MXKeyBackup]    -> enabling key backups");
+        [self enableKeyBackup:keyBackupVersion];
+    }
+    else
+    {
+        NSLog(@"[MXKeyBackup] checkAndStartKeyBackup: No usable key backup. version: %@", keyBackupVersion.version);
+
+        if (mxSession.crypto.store.backupVersion)
+        {
+            NSLog(@"[MXKeyBackup]    -> disable the current version");
+            [self resetKeyBackupData];
+        }
+
+        self.state = MXKeyBackupStateNotTrusted;
+    }
 }
 
 /**
@@ -582,7 +584,7 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
                 self->_keyBackupVersion = nil;
                 [self resetKeyBackupData];
                 self.state = MXKeyBackupStateUnknown;
-                [self checkAndStartKeyBackup];
+                [self checkAndStartWithKeyBackupVersion:serverKeyBackupVersion];
             }
 
             if (success)
@@ -896,84 +898,83 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
 
 - (void)trustForKeyBackupVersion:(MXKeyBackupVersion *)keyBackupVersion onComplete:(void (^)(MXKeyBackupVersionTrust * _Nonnull))onComplete
 {
-    MXWeakify(self);
     dispatch_async(mxSession.crypto.cryptoQueue, ^{
-        MXStrongifyAndReturnIfNil(self);
 
-        NSString *myUserId = self->mxSession.myUser.userId;
-
-        MXKeyBackupVersionTrust *keyBackupVersionTrust = [MXKeyBackupVersionTrust new];
-
-        MXMegolmBackupAuthData *authData = [MXMegolmBackupAuthData modelFromJSON:keyBackupVersion.authData];
-        if (!keyBackupVersion.algorithm || !authData
-            || !authData.publicKey || !authData.signatures)
-        {
-            NSLog(@"[MXKeyBackup] trustForKeyBackupVersion: Key backup is absent or missing required data");
-            dispatch_async(dispatch_get_main_queue(), ^{
-                onComplete(keyBackupVersionTrust);
-            });
-            return;
-        }
-
-        NSDictionary *mySigs = authData.signatures[myUserId];
-        if (mySigs.count == 0)
-        {
-            NSLog(@"[MXKeyBackup] trustForKeyBackupVersion: Ignoring key backup because it lacks any signatures from this user");
-            dispatch_async(dispatch_get_main_queue(), ^{
-                onComplete(keyBackupVersionTrust);
-            });
-            return;
-        }
-
-        NSMutableArray<MXKeyBackupVersionTrustSignature*> *signatures = [NSMutableArray array];
-        for (NSString *keyId in mySigs)
-        {
-            // XXX: is this how we're supposed to get the device id?
-            NSString *deviceId;
-            NSArray<NSString *> *components = [keyId componentsSeparatedByString:@":"];
-            if (components.count == 2)
-            {
-                deviceId = components[1];
-            }
-
-            if (deviceId)
-            {
-                BOOL valid = NO;
-
-                MXDeviceInfo *device = [self->mxSession.crypto.deviceList storedDevice:myUserId deviceId:deviceId];
-                if (device)
-                {
-                    NSError *error;
-                    valid = [self->mxSession.crypto.olmDevice verifySignature:device.fingerprint JSON:authData.signalableJSONDictionary signature:mySigs[keyId] error:&error];
-
-                    if (!valid)
-                    {
-                        NSLog(@"[MXKeyBackup] trustForKeyBackupVersion: Bad signature from device %@: %@", device.deviceId, error);
-                    }
-                    else if (device.verified == MXDeviceVerified)
-                    {
-                        keyBackupVersionTrust.usable = YES;
-                    }
-                }
-                else
-                {
-                    NSLog(@"[MXKeyBackup] trustForKeyBackupVersion: Signature from unknown key %@", deviceId);
-                }
-
-                MXKeyBackupVersionTrustSignature *signature = [MXKeyBackupVersionTrustSignature new];
-                signature.deviceId = deviceId;
-                signature.device = device;
-                signature.valid = valid;
-                [signatures addObject:signature];
-            }
-        }
-
-        keyBackupVersionTrust.signatures = signatures;
+        MXKeyBackupVersionTrust *keyBackupVersionTrust = [self trustForKeyBackupVersionFromCryptoQueue:keyBackupVersion];
 
         dispatch_async(dispatch_get_main_queue(), ^{
             onComplete(keyBackupVersionTrust);
         });
     });
+}
+
+- (MXKeyBackupVersionTrust *)trustForKeyBackupVersionFromCryptoQueue:(MXKeyBackupVersion *)keyBackupVersion
+{
+    NSString *myUserId = mxSession.myUser.userId;
+
+    MXKeyBackupVersionTrust *keyBackupVersionTrust = [MXKeyBackupVersionTrust new];
+
+    MXMegolmBackupAuthData *authData = [MXMegolmBackupAuthData modelFromJSON:keyBackupVersion.authData];
+    if (!keyBackupVersion.algorithm || !authData
+        || !authData.publicKey || !authData.signatures)
+    {
+        NSLog(@"[MXKeyBackup] trustForKeyBackupVersion: Key backup is absent or missing required data");
+        return keyBackupVersionTrust;
+    }
+
+    NSDictionary *mySigs = authData.signatures[myUserId];
+    if (mySigs.count == 0)
+    {
+        NSLog(@"[MXKeyBackup] trustForKeyBackupVersion: Ignoring key backup because it lacks any signatures from this user");
+        return keyBackupVersionTrust;
+    }
+
+    NSMutableArray<MXKeyBackupVersionTrustSignature*> *signatures = [NSMutableArray array];
+    for (NSString *keyId in mySigs)
+    {
+        // XXX: is this how we're supposed to get the device id?
+        NSString *deviceId;
+        NSArray<NSString *> *components = [keyId componentsSeparatedByString:@":"];
+        if (components.count == 2)
+        {
+            deviceId = components[1];
+        }
+
+        if (deviceId)
+        {
+            BOOL valid = NO;
+
+            MXDeviceInfo *device = [self->mxSession.crypto.deviceList storedDevice:myUserId deviceId:deviceId];
+            if (device)
+            {
+                NSError *error;
+                valid = [self->mxSession.crypto.olmDevice verifySignature:device.fingerprint JSON:authData.signalableJSONDictionary signature:mySigs[keyId] error:&error];
+
+                if (!valid)
+                {
+                    NSLog(@"[MXKeyBackup] trustForKeyBackupVersion: Bad signature from device %@: %@", device.deviceId, error);
+                }
+                else if (device.verified == MXDeviceVerified)
+                {
+                    keyBackupVersionTrust.usable = YES;
+                }
+            }
+            else
+            {
+                NSLog(@"[MXKeyBackup] trustForKeyBackupVersion: Signature from unknown key %@", deviceId);
+            }
+
+            MXKeyBackupVersionTrustSignature *signature = [MXKeyBackupVersionTrustSignature new];
+            signature.deviceId = deviceId;
+            signature.device = device;
+            signature.valid = valid;
+            [signatures addObject:signature];
+        }
+    }
+
+    keyBackupVersionTrust.signatures = signatures;
+
+    return keyBackupVersionTrust;
 }
 
 - (MXHTTPOperation *)trustKeyBackupVersion:(MXKeyBackupVersion *)keyBackupVersion
@@ -1036,7 +1037,10 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
         // And send it to the homeserver
         MXHTTPOperation *operation2 = [self->mxSession.crypto.matrixRestClient updateKeyBackupVersion:newKeyBackupVersion success:^(void) {
 
-             if (success)
+            // Relaunch the state machine on this updated backup version
+            [self checkAndStartWithKeyBackupVersion:newKeyBackupVersion];
+            
+            if (success)
             {
                 dispatch_async(dispatch_get_main_queue(), ^{
                     success();
