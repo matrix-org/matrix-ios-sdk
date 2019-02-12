@@ -2262,7 +2262,10 @@ MXAuthAction;
                         success:(void (^)(void))success
                         failure:(void (^)(NSError *error))failure
 {
-    NSString *path = [NSString stringWithFormat:@"%@/rooms/%@/redact/%@", apiPathPrefix, roomId, eventId];
+    NSString *path = [NSString stringWithFormat:@"%@/rooms/%@/redact/%@",
+                      apiPathPrefix,
+                      roomId,
+                      [eventId mx_escapedStringForPathComponent]];
     
     // All query parameters are optional. Fill the request parameters on demand
     NSMutableDictionary *parameters = [NSMutableDictionary dictionary];
@@ -2292,7 +2295,10 @@ MXAuthAction;
                         success:(void (^)(void))success
                         failure:(void (^)(NSError *))failure
 {
-    NSString *path = [NSString stringWithFormat:@"%@/rooms/%@/report/%@", apiPathPrefix, roomId, eventId];
+    NSString *path = [NSString stringWithFormat:@"%@/rooms/%@/report/%@",
+                      apiPathPrefix,
+                      roomId,
+                      [eventId mx_escapedStringForPathComponent]];
 
     NSMutableDictionary *parameters = [NSMutableDictionary dictionaryWithDictionary:@{
                                                                                       @"score": @(score)
@@ -2353,7 +2359,9 @@ MXAuthAction;
                              success:(void (^)(MXEvent *event))success
                              failure:(void (^)(NSError *error))failure
 {
-    NSString *path = [NSString stringWithFormat:@"%@/events/%@", apiPathPrefix, eventId];
+    NSString *path = [NSString stringWithFormat:@"%@/events/%@",
+                      apiPathPrefix,
+                      [eventId mx_escapedStringForPathComponent]];
 
     MXHTTPOperation *operation;
     MXWeakify(self);
@@ -2385,7 +2393,10 @@ MXAuthAction;
                              success:(void (^)(MXEvent *event))success
                              failure:(void (^)(NSError *error))failure
 {
-    NSString *path = [NSString stringWithFormat:@"%@/rooms/%@/event/%@", apiPathPrefix, roomId, eventId];
+    NSString *path = [NSString stringWithFormat:@"%@/rooms/%@/event/%@",
+                      apiPathPrefix,
+                      roomId,
+                      [eventId mx_escapedStringForPathComponent]];
 
     MXHTTPOperation *operation;
     MXWeakify(self);
@@ -2440,7 +2451,10 @@ MXAuthAction;
                            success:(void (^)(MXEventContext *eventContext))success
                            failure:(void (^)(NSError *error))failure
 {
-    NSString *path = [NSString stringWithFormat:@"%@/rooms/%@/context/%@", apiPathPrefix, roomId, eventId];
+    NSString *path = [NSString stringWithFormat:@"%@/rooms/%@/context/%@",
+                      apiPathPrefix,
+                      roomId,
+                      [eventId mx_escapedStringForPathComponent]];
 
     NSMutableDictionary *parameters = [NSMutableDictionary dictionary];
     parameters[@"limit"] = @(limit);
@@ -3015,9 +3029,14 @@ MXAuthAction;
                             success:(void (^)(void))success
                             failure:(void (^)(NSError *error))failure
 {
+    NSString *path = [NSString stringWithFormat:@"%@/rooms/%@/receipt/m.read/%@",
+                      apiPathPrefix,
+                      roomId,
+                      [eventId mx_escapedStringForPathComponent]];
+
     MXWeakify(self);
     return [httpClient requestWithMethod:@"POST"
-                                    path: [NSString stringWithFormat:@"%@/rooms/%@/receipt/m.read/%@", apiPathPrefix, roomId, eventId]
+                                    path:path
                               parameters:[[NSDictionary alloc] init]
                                  success:^(NSDictionary *JSONResponse) {
                                      MXStrongifyAndReturnIfNil(self);
