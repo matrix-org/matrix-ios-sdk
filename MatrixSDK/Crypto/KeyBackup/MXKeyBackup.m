@@ -995,10 +995,20 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
         if (!keyBackupVersion.algorithm || !authData
             || !authData.publicKey || !authData.signatures)
         {
-            NSLog(@"[MXKeyBackup] trustKeyBackupVersion:trust: Key backup is absent or missing required data");
-            dispatch_async(dispatch_get_main_queue(), ^{
-                //onComplete(keyBackupVersionTrust);
-            });
+            NSLog(@"[MXKeyBackup] trustKeyBackupVersion:trust: Key backup is missing required data");
+
+            if (failure)
+            {
+                NSError *error = [NSError errorWithDomain:MXKeyBackupErrorDomain
+                                                     code:MXKeyBackupErrorMissingAuthDataCode
+                                                 userInfo:@{
+                                                            NSLocalizedDescriptionKey: @"Key backup is missing required data"
+                                                            }];
+
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    failure(error);
+                });
+            }
             return;
         }
 
@@ -1075,24 +1085,10 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
 
         // Build PK decryption instance with the recovery key
         NSError *error;
-        OLMPkDecryption *decryption = [self pkDecryptionFromRecoveryKey:recoveryKey error:&error];
+        NSString *publicKey = [self pkPublicKeyFromRecoveryKey:recoveryKey error:&error];
         if (error)
         {
             NSLog(@"[MXKeyBackup] trustKeyBackupVersion:withRecoveryKey: Invalid recovery key. Error: %@", error);
-            if (failure)
-            {
-                dispatch_async(dispatch_get_main_queue(), ^{
-                    failure(error);
-                });
-            }
-            return;
-        }
-
-        // Get the associated public key
-        NSString *publicKey = [decryption generateKey:&error];
-        if (error)
-        {
-            NSLog(@"[MXKeyBackup] trustKeyBackupVersion:withRecoveryKey: Cannot retrieve public key. Error: %@", error);
             if (failure)
             {
                 dispatch_async(dispatch_get_main_queue(), ^{
@@ -1107,10 +1103,20 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
         if (!keyBackupVersion.algorithm || !authData
             || !authData.publicKey || !authData.signatures)
         {
-            NSLog(@"[MXKeyBackup] trustKeyBackupVersion:trust: Key backup is absent or missing required data");
-            dispatch_async(dispatch_get_main_queue(), ^{
-                //onComplete(keyBackupVersionTrust);
-            });
+            NSLog(@"[MXKeyBackup] trustKeyBackupVersion:withRecoveryKey: Key backup is missing required data");
+
+            if (failure)
+            {
+                NSError *error = [NSError errorWithDomain:MXKeyBackupErrorDomain
+                                                     code:MXKeyBackupErrorMissingAuthDataCode
+                                                 userInfo:@{
+                                                            NSLocalizedDescriptionKey: @"Key backup is missing required data"
+                                                            }];
+
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    failure(error);
+                });
+            }
             return;
         }
 
@@ -1118,10 +1124,16 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
         if (![publicKey isEqualToString:authData.publicKey])
         {
             NSLog(@"[MXKeyBackup] trustKeyBackupVersion:withRecoveryKey: Invalid recovery key");
+
             if (failure)
             {
+                NSError *error = [NSError errorWithDomain:MXKeyBackupErrorDomain
+                                                     code:MXKeyBackupErrorInvalidRecoveryKeyCode
+                                                 userInfo:@{
+                                                            NSLocalizedDescriptionKey: @"Invalid recovery key or password"
+                                                            }];
+
                 dispatch_async(dispatch_get_main_queue(), ^{
-                    // TODO
                     failure(error);
                 });
             }
@@ -1275,6 +1287,24 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
     }
 
     return decryption;
+}
+
+- (NSString*)pkPublicKeyFromRecoveryKey:(NSString*)recoveryKey error:(NSError **)error
+{
+    NSString *pkPublicKey;
+
+    // Extract the primary key
+    NSData *privateKey = [MXRecoveryKey decode:recoveryKey error:error];
+
+    // Built the PK decryption with it
+    OLMPkDecryption *decryption;
+    if (privateKey)
+    {
+        decryption = [OLMPkDecryption new];
+        pkPublicKey = [decryption setPrivateKey:privateKey error:error];
+    }
+
+    return pkPublicKey;
 }
 
 - (MXKeyBackupData*)encryptGroupSession:(MXOlmInboundGroupSession*)session

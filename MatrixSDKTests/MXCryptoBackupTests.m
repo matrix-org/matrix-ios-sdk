@@ -1165,10 +1165,63 @@
             XCTFail(@"The request should not fail - NSError: %@", error);
             [expectation fulfill];
         }];
-
     }];
 }
 
+/**
+ - Do an e2e backup to the homeserver with a recovery key
+ - And log Alice on a new device
+ - The new device must see the previous backup as not trusted
+ - Trust the backup from the new device with the recovery key
+ - Backup must be enabled on the new device
+ - Retrieve the last version from the server
+ - It must be the same
+ - It must be trusted and must have with 2 signatures now
+ */
+- (void)testTrustKeyBackupVersionWithRecoveryKey
+{
+    // - Do an e2e backup to the homeserver with a recovery key
+    // - And log Alice on a new device
+    [self createKeyBackupScenarioWithPassword:nil readyToTest:^(NSString *version, MXMegolmBackupCreationInfo *keyBackupCreationInfo, NSArray<MXOlmInboundGroupSession *> *aliceKeys, MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
+
+        // - The new device must see the previous backup as not trusted
+        XCTAssertNotNil(aliceSession.crypto.backup.keyBackupVersion);
+        XCTAssertFalse(aliceSession.crypto.backup.enabled);
+        XCTAssertEqual(aliceSession.crypto.backup.state, MXKeyBackupStateNotTrusted);
+
+        // - Trust the backup from the new device with the recovery key
+        [aliceSession.crypto.backup trustKeyBackupVersion:aliceSession.crypto.backup.keyBackupVersion withRecoveryKey:keyBackupCreationInfo.recoveryKey success:^{
+
+            // - Backup must be enabled on the new device
+            XCTAssertEqualObjects(aliceSession.crypto.backup.keyBackupVersion.version, version);
+            XCTAssertTrue(aliceSession.crypto.backup.enabled);
+            XCTAssertGreaterThan(aliceSession.crypto.backup.state, MXKeyBackupStateNotTrusted);
+
+            // - Retrieve the last version from the server
+            [aliceSession.crypto.backup version:nil success:^(MXKeyBackupVersion * _Nullable serverKeyBackupVersion) {
+
+                // - It must be the same
+                XCTAssertEqualObjects(serverKeyBackupVersion.version, version);
+
+                [aliceSession.crypto.backup trustForKeyBackupVersion:serverKeyBackupVersion onComplete:^(MXKeyBackupVersionTrust * _Nonnull keyBackupVersionTrust) {
+
+                    // - It must be trusted and must have 2 signatures now
+                    XCTAssertTrue(keyBackupVersionTrust.usable);
+                    XCTAssertEqual(keyBackupVersionTrust.signatures.count, 2);
+
+                    [expectation fulfill];
+                }];
+
+            } failure:^(NSError * _Nonnull error) {
+                XCTFail(@"The request should not fail - NSError: %@", error);
+                [expectation fulfill];
+            }];
+        } failure:^(NSError * _Nonnull error) {
+            XCTFail(@"The request should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+    }];
+}
 
 @end
 

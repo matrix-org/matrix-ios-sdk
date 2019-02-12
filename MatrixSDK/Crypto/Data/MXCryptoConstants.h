@@ -65,4 +65,6 @@ typedef enum : NSUInteger
     MXKeyBackupErrorCannotDeriveKeyCode,
     MXKeyBackupErrorInvalidRecoveryKeyCode,
     MXKeyBackupErrorMissingPrivateKeySaltCode,
+    MXKeyBackupErrorMissingAuthDataCode,
+    
 } MXKeyBackupErrorCode;
