@@ -1089,8 +1089,16 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
         if (error)
         {
             NSLog(@"[MXKeyBackup] trustKeyBackupVersion:withRecoveryKey: Invalid recovery key. Error: %@", error);
+
             if (failure)
             {
+                // Return a generic error
+                NSError *error = [NSError errorWithDomain:MXKeyBackupErrorDomain
+                                                     code:MXKeyBackupErrorInvalidRecoveryKeyCode
+                                                 userInfo:@{
+                                                            NSLocalizedDescriptionKey: @"Invalid recovery key or password"
+                                                            }];
+
                 dispatch_async(dispatch_get_main_queue(), ^{
                     failure(error);
                 });
