@@ -60,6 +60,7 @@
     XCTAssertTrue([MXTools isMatrixUserIdentifier:@"@+33012:matrix.org"]);
 
     XCTAssertTrue([MXTools isMatrixEventIdentifier:@"$123456EventId:matrix.org"]);
+    XCTAssertTrue([MXTools isMatrixEventIdentifier:@"$pmOSN/DognfuSfhdW/qivXT19lfCWpdSfaPFKDBTJUk+"]);
 
     XCTAssertTrue([MXTools isMatrixRoomIdentifier:@"!an1234Room:matrix.org"]);
 
