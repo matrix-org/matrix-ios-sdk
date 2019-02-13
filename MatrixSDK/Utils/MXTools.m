@@ -54,6 +54,10 @@ static NSRegularExpression *newlineCharactersRegex;
 
 static NSUInteger transactionIdCount;
 
+// Character set to use to encode/decide URI component
+NSString *const uriComponentCharsetExtra = @"-_.!~*'()";
+NSCharacterSet *uriComponentCharset;
+
 
 @implementation MXTools
 
@@ -129,6 +133,11 @@ static NSUInteger transactionIdCount;
                                                                            options:0 error:nil];
 
         transactionIdCount = 0;
+
+        // Set up charset for URI component coding
+        NSMutableCharacterSet *allowedCharacterSet = [NSMutableCharacterSet alphanumericCharacterSet];
+        [allowedCharacterSet addCharactersInString:uriComponentCharsetExtra];
+        uriComponentCharset = allowedCharacterSet;
     });
 }
 
@@ -355,6 +364,13 @@ static NSUInteger transactionIdCount;
         return (nil != [isMatrixGroupIdentifierRegex firstMatchInString:inputString options:0 range:NSMakeRange(0, inputString.length)]);
     }
     return NO;
+}
+
+
+#pragma mark - Strings encoding
++ (NSString *)encodeURIComponent:(NSString *)string
+{
+    return [string stringByAddingPercentEncodingWithAllowedCharacters:uriComponentCharset];
 }
 
 
