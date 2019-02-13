@@ -2,6 +2,7 @@ Changes in Matrix iOS SDK in 0.12.2 (2019-xx-)
 ===============================================
 
 Improvements:
+ * MXRestClient: Update CS API call to support event ids hashes in room version 3 (vector-im/riot-ios#2194).
  * MXRoom: Add a sendAudioFile API to send file using msgType "m.audio", thanks to N-Pex (PR #616).
  * MXCrypto: Add key backup passphrase support (vector-im/riot-ios#2127).
  * MXCrypto: Key backup: Ignore all whitespaces in recovery key (vector-im/riot-ios#2194).

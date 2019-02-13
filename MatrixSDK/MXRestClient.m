@@ -20,6 +20,7 @@
 
 #import "MXJSONModel.h"
 #import "MXTools.h"
+#import "NSString+MatrixSDK.h"
 #import "MXError.h"
 
 #import "MXAllowedCertificates.h"
@@ -1274,7 +1275,7 @@ MXAuthAction;
     }
 
     // Prepare the path
-    NSString *path = [NSString stringWithFormat:@"%@/rooms/%@/send/%@/%@", apiPathPrefix, roomId, eventTypeString, [txnId stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding]];
+    NSString *path = [NSString stringWithFormat:@"%@/rooms/%@/send/%@/%@", apiPathPrefix, roomId, eventTypeString, [txnId mx_escapedStringForPathComponent]];
 
     MXWeakify(self);
     return [httpClient requestWithMethod:@"PUT"
@@ -1309,7 +1310,7 @@ MXAuthAction;
     NSString *path;
     if (stateKey)
     {
-        path = [NSString stringWithFormat:@"%@/rooms/%@/state/%@/%@", apiPathPrefix, roomId, eventTypeString, [stateKey stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding]];
+        path = [NSString stringWithFormat:@"%@/rooms/%@/state/%@/%@", apiPathPrefix, roomId, eventTypeString, [stateKey mx_escapedStringForPathComponent]];
     }
     else
     {
@@ -1715,7 +1716,7 @@ MXAuthAction;
                          failure:(void (^)(NSError *error))failure
 {
     // Note: characters in a room alias need to be escaped in the URL
-    NSString *path = [NSString stringWithFormat:@"%@/directory/room/%@", apiPathPrefix, [roomAlias stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding]];
+    NSString *path = [NSString stringWithFormat:@"%@/directory/room/%@", apiPathPrefix, [roomAlias mx_escapedStringForPathComponent]];
 
     MXWeakify(self);
     return [httpClient requestWithMethod:@"PUT"
@@ -1738,7 +1739,7 @@ MXAuthAction;
                             failure:(void (^)(NSError *error))failure
 {
     // Note: characters in a room alias need to be escaped in the URL
-    NSString *path = [NSString stringWithFormat:@"%@/directory/room/%@", apiPathPrefix, [roomAlias stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding]];
+    NSString *path = [NSString stringWithFormat:@"%@/directory/room/%@", apiPathPrefix, [roomAlias mx_escapedStringForPathComponent]];
 
     MXWeakify(self);
     return [httpClient requestWithMethod:@"DELETE"
@@ -1808,7 +1809,7 @@ MXAuthAction;
     }
 
     // Characters in a room alias need to be escaped in the URL
-    NSString *path = [NSString stringWithFormat:@"%@/join/%@", apiPathPrefix, [roomIdOrAlias stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding]];
+    NSString *path = [NSString stringWithFormat:@"%@/join/%@", apiPathPrefix, [roomIdOrAlias mx_escapedStringForPathComponent]];
 
     MXWeakify(self);
     return [httpClient requestWithMethod:@"POST"
@@ -1922,7 +1923,7 @@ MXAuthAction;
 {
     NSString *path = [NSString stringWithFormat:@"%@/rooms/%@/state/m.room.member/%@", apiPathPrefix,
                       roomId,
-                      [userId stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding]];
+                      [userId mx_escapedStringForPathComponent]];
     
     NSMutableDictionary *parameters = [NSMutableDictionary dictionary];
     parameters[@"membership"] = @"kick";
@@ -2225,7 +2226,7 @@ MXAuthAction;
 {
     NSString *path = [NSString stringWithFormat:@"%@/rooms/%@/typing/%@", apiPathPrefix,
                       roomId,
-                      [self.credentials.userId stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding]];
+                      [self.credentials.userId mx_escapedStringForPathComponent]];
     
     // Fill the request parameters on demand
     NSMutableDictionary *parameters = [NSMutableDictionary dictionary];
@@ -2261,7 +2262,10 @@ MXAuthAction;
                         success:(void (^)(void))success
                         failure:(void (^)(NSError *error))failure
 {
-    NSString *path = [NSString stringWithFormat:@"%@/rooms/%@/redact/%@", apiPathPrefix, roomId, eventId];
+    NSString *path = [NSString stringWithFormat:@"%@/rooms/%@/redact/%@",
+                      apiPathPrefix,
+                      roomId,
+                      [eventId mx_escapedStringForPathComponent]];
     
     // All query parameters are optional. Fill the request parameters on demand
     NSMutableDictionary *parameters = [NSMutableDictionary dictionary];
@@ -2291,7 +2295,10 @@ MXAuthAction;
                         success:(void (^)(void))success
                         failure:(void (^)(NSError *))failure
 {
-    NSString *path = [NSString stringWithFormat:@"%@/rooms/%@/report/%@", apiPathPrefix, roomId, eventId];
+    NSString *path = [NSString stringWithFormat:@"%@/rooms/%@/report/%@",
+                      apiPathPrefix,
+                      roomId,
+                      [eventId mx_escapedStringForPathComponent]];
 
     NSMutableDictionary *parameters = [NSMutableDictionary dictionaryWithDictionary:@{
                                                                                       @"score": @(score)
@@ -2352,7 +2359,9 @@ MXAuthAction;
                              success:(void (^)(MXEvent *event))success
                              failure:(void (^)(NSError *error))failure
 {
-    NSString *path = [NSString stringWithFormat:@"%@/events/%@", apiPathPrefix, eventId];
+    NSString *path = [NSString stringWithFormat:@"%@/events/%@",
+                      apiPathPrefix,
+                      [eventId mx_escapedStringForPathComponent]];
 
     MXHTTPOperation *operation;
     MXWeakify(self);
@@ -2384,7 +2393,10 @@ MXAuthAction;
                              success:(void (^)(MXEvent *event))success
                              failure:(void (^)(NSError *error))failure
 {
-    NSString *path = [NSString stringWithFormat:@"%@/rooms/%@/event/%@", apiPathPrefix, roomId, eventId];
+    NSString *path = [NSString stringWithFormat:@"%@/rooms/%@/event/%@",
+                      apiPathPrefix,
+                      roomId,
+                      [eventId mx_escapedStringForPathComponent]];
 
     MXHTTPOperation *operation;
     MXWeakify(self);
@@ -2439,7 +2451,10 @@ MXAuthAction;
                            success:(void (^)(MXEventContext *eventContext))success
                            failure:(void (^)(NSError *error))failure
 {
-    NSString *path = [NSString stringWithFormat:@"%@/rooms/%@/context/%@", apiPathPrefix, roomId, eventId];
+    NSString *path = [NSString stringWithFormat:@"%@/rooms/%@/context/%@",
+                      apiPathPrefix,
+                      roomId,
+                      [eventId mx_escapedStringForPathComponent]];
 
     NSMutableDictionary *parameters = [NSMutableDictionary dictionary];
     parameters[@"limit"] = @(limit);
@@ -2619,7 +2634,7 @@ MXAuthAction;
     }
     
     NSString *path = [NSString stringWithFormat:@"%@/profile/%@/displayname", apiPathPrefix,
-                      [userId stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding]];
+                      [userId mx_escapedStringForPathComponent]];
 
     MXWeakify(self);
     return [httpClient requestWithMethod:@"GET"
@@ -2677,7 +2692,7 @@ MXAuthAction;
     }
     
     NSString *path = [NSString stringWithFormat:@"%@/profile/%@/avatar_url", apiPathPrefix,
-                      [userId stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding]];
+                      [userId mx_escapedStringForPathComponent]];
 
     MXWeakify(self);
     return [httpClient requestWithMethod:@"GET"
@@ -2713,7 +2728,7 @@ MXAuthAction;
     }
     
     NSString *path = [NSString stringWithFormat:@"%@/profile/%@", apiPathPrefix,
-                      [userId stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding]];
+                      [userId mx_escapedStringForPathComponent]];
     
     MXWeakify(self);
     return [httpClient requestWithMethod:@"GET"
@@ -2864,7 +2879,7 @@ MXAuthAction;
     }
     
     NSString *path = [NSString stringWithFormat:@"%@/presence/%@/status", apiPathPrefix,
-                      [userId stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding]];
+                      [userId mx_escapedStringForPathComponent]];
 
     MXWeakify(self);
     return [httpClient requestWithMethod:@"GET"
@@ -3014,9 +3029,14 @@ MXAuthAction;
                             success:(void (^)(void))success
                             failure:(void (^)(NSError *error))failure
 {
+    NSString *path = [NSString stringWithFormat:@"%@/rooms/%@/receipt/m.read/%@",
+                      apiPathPrefix,
+                      roomId,
+                      [eventId mx_escapedStringForPathComponent]];
+
     MXWeakify(self);
     return [httpClient requestWithMethod:@"POST"
-                                    path: [NSString stringWithFormat:@"%@/rooms/%@/receipt/m.read/%@", apiPathPrefix, roomId, eventId]
+                                    path:path
                               parameters:[[NSDictionary alloc] init]
                                  success:^(NSDictionary *JSONResponse) {
                                      MXStrongifyAndReturnIfNil(self);
@@ -3136,7 +3156,7 @@ MXAuthAction;
                                failure:(void (^)(NSError *error))failure
 {
     // Note: characters in a room alias need to be escaped in the URL
-    NSString *path = [NSString stringWithFormat:@"%@/directory/room/%@", apiPathPrefix, [roomAlias stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding]];
+    NSString *path = [NSString stringWithFormat:@"%@/directory/room/%@", apiPathPrefix, [roomAlias mx_escapedStringForPathComponent]];
 
     MXWeakify(self);
     return [httpClient requestWithMethod:@"GET"
@@ -3760,7 +3780,7 @@ MXAuthAction;
     NSString *path = [NSString stringWithFormat:@"%@/keys/upload", kMXAPIPrefixPathUnstable];
     if (deviceId)
     {
-        path = [NSString stringWithFormat:@"%@/%@", path, [deviceId stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding]];
+        path = [NSString stringWithFormat:@"%@/%@", path, [deviceId mx_escapedStringForPathComponent]];
     }
 
     NSMutableDictionary *parameters = [NSMutableDictionary dictionary];
@@ -4313,14 +4333,14 @@ MXAuthAction;
             return nil;
         }
         [path appendString:@"/"];
-        [path appendString:[roomId stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding]];
+        [path appendString:[roomId mx_escapedStringForPathComponent]];
         [path appendString:@"/"];
-        [path appendString:[sessionId stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding]];
+        [path appendString:[sessionId mx_escapedStringForPathComponent]];
     }
     else if (roomId)
     {
         [path appendString:@"/"];
-        [path appendString:[roomId stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding]];
+        [path appendString:[roomId mx_escapedStringForPathComponent]];
     }
 
     [path appendString:@"?version="];
@@ -4446,7 +4466,7 @@ MXAuthAction;
     // The request will fail with Unauthorized status code, but the auth session will be available in response data.
     MXWeakify(self);
     return [httpClient requestWithMethod:@"DELETE"
-                                    path:[NSString stringWithFormat:@"%@/devices/%@", kMXAPIPrefixPathUnstable, [deviceId stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding]]
+                                    path:[NSString stringWithFormat:@"%@/devices/%@", kMXAPIPrefixPathUnstable, [deviceId mx_escapedStringForPathComponent]]
                               parameters:nil
                                  success:^(NSDictionary *JSONResponse) {
                                      MXStrongifyAndReturnIfNil(self);
@@ -4503,7 +4523,7 @@ MXAuthAction;
 
     MXWeakify(self);
     return [httpClient requestWithMethod:@"DELETE"
-                                    path:[NSString stringWithFormat:@"%@/devices/%@", kMXAPIPrefixPathUnstable, [deviceId stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding]]
+                                    path:[NSString stringWithFormat:@"%@/devices/%@", kMXAPIPrefixPathUnstable, [deviceId mx_escapedStringForPathComponent]]
                               parameters:nil
                                     data:payloadData
                                  headers:@{@"Content-Type": @"application/json"}
@@ -4544,7 +4564,7 @@ MXAuthAction;
                                  success:(void (^)(void))success
                                  failure:(void (^)(NSError *error))failure
 {
-    NSString *path = [NSString stringWithFormat:@"%@/groups/%@/self/update_publicity", apiPathPrefix, [groupId stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding]];
+    NSString *path = [NSString stringWithFormat:@"%@/groups/%@/self/update_publicity", apiPathPrefix, [groupId mx_escapedStringForPathComponent]];
 
     MXWeakify(self);
     return [httpClient requestWithMethod:@"PUT"
@@ -4564,7 +4584,7 @@ MXAuthAction;
                             success:(void (^)(MXGroupProfile *groupProfile))success
                             failure:(void (^)(NSError *error))failure
 {
-    NSString *path = [NSString stringWithFormat:@"%@/groups/%@/profile", apiPathPrefix, [groupId stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding]];
+    NSString *path = [NSString stringWithFormat:@"%@/groups/%@/profile", apiPathPrefix, [groupId mx_escapedStringForPathComponent]];
 
     MXWeakify(self);
     return [httpClient requestWithMethod:@"GET"
@@ -4593,7 +4613,7 @@ MXAuthAction;
                             success:(void (^)(MXGroupSummary *groupSummary))success
                             failure:(void (^)(NSError *error))failure
 {
-    NSString *path = [NSString stringWithFormat:@"%@/groups/%@/summary", apiPathPrefix, [groupId stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding]];
+    NSString *path = [NSString stringWithFormat:@"%@/groups/%@/summary", apiPathPrefix, [groupId mx_escapedStringForPathComponent]];
 
     MXWeakify(self);
     return [httpClient requestWithMethod:@"GET"
@@ -4622,7 +4642,7 @@ MXAuthAction;
                           success:(void (^)(MXGroupUsers *groupUsers))success
                           failure:(void (^)(NSError *error))failure
 {
-    NSString *path = [NSString stringWithFormat:@"%@/groups/%@/users", apiPathPrefix, [groupId stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding]];
+    NSString *path = [NSString stringWithFormat:@"%@/groups/%@/users", apiPathPrefix, [groupId mx_escapedStringForPathComponent]];
 
     MXWeakify(self);
     return [httpClient requestWithMethod:@"GET"
@@ -4651,7 +4671,7 @@ MXAuthAction;
                                  success:(void (^)(MXGroupUsers *invitedUsers))success
                                  failure:(void (^)(NSError *error))failure
 {
-    NSString *path = [NSString stringWithFormat:@"%@/groups/%@/invited_users", apiPathPrefix, [groupId stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding]];
+    NSString *path = [NSString stringWithFormat:@"%@/groups/%@/invited_users", apiPathPrefix, [groupId mx_escapedStringForPathComponent]];
 
     MXWeakify(self);
     return [httpClient requestWithMethod:@"GET"
@@ -4680,7 +4700,7 @@ MXAuthAction;
                           success:(void (^)(MXGroupRooms *groupRooms))success
                           failure:(void (^)(NSError *error))failure
 {
-    NSString *path = [NSString stringWithFormat:@"%@/groups/%@/rooms", apiPathPrefix, [groupId stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding]];
+    NSString *path = [NSString stringWithFormat:@"%@/groups/%@/rooms", apiPathPrefix, [groupId mx_escapedStringForPathComponent]];
 
     MXWeakify(self);
     return [httpClient requestWithMethod:@"GET"
@@ -4712,7 +4732,7 @@ MXAuthAction;
                                      success:(void (^)(void))success
                                      failure:(void (^)(NSError *error))failure
 {
-    NSString *path = [NSString stringWithFormat:@"%@/groups/%@/self/%@", apiPathPrefix, [groupId stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding], membership];
+    NSString *path = [NSString stringWithFormat:@"%@/groups/%@/self/%@", apiPathPrefix, [groupId mx_escapedStringForPathComponent], membership];
     
     // A body is required even if empty
     if (nil == parameters)
