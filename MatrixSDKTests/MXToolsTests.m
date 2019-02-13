@@ -60,12 +60,47 @@
     XCTAssertTrue([MXTools isMatrixUserIdentifier:@"@+33012:matrix.org"]);
 
     XCTAssertTrue([MXTools isMatrixEventIdentifier:@"$123456EventId:matrix.org"]);
+    XCTAssertTrue([MXTools isMatrixEventIdentifier:@"$pmOSN/DognfuSfhdW/qivXT19lfCWpdSfaPFKDBTJUk+"]);
 
     XCTAssertTrue([MXTools isMatrixRoomIdentifier:@"!an1234Room:matrix.org"]);
 
     XCTAssertTrue([MXTools isMatrixRoomAlias:@"#matrix:matrix.org"]);
 
     XCTAssertTrue([MXTools isMatrixGroupIdentifier:@"+matrix:matrix.org"]);
+}
+
+
+#pragma mark - Strings encoding
+
+// Matrix identifiers can be found at https://matrix.org/docs/spec/appendices.html#common-identifier-format
+- (void)testRoomIdEscaping
+{
+    NSString *string = @"!tDRGDwZwQnlkowsjsm:matrix.org";
+    XCTAssertEqualObjects([MXTools encodeURIComponent:string], @"!tDRGDwZwQnlkowsjsm%3Amatrix.org");
+}
+
+- (void)testRoomAliasEscaping
+{
+    NSString *string = @"#riot-ios:matrix.org";
+    XCTAssertEqualObjects([MXTools encodeURIComponent:string], @"%23riot-ios%3Amatrix.org");
+}
+
+- (void)testEventIdEscaping
+{
+    NSString *string = @"$155006612045UiBxj:matrix.org";
+    XCTAssertEqualObjects([MXTools encodeURIComponent:string], @"%24155006612045UiBxj%3Amatrix.org");
+}
+
+- (void)testV3EventIdEscaping
+{
+    NSString *string = @"$pmOSN/DognfuSfhdW/qivXT19lfCWpdSfaPFKDBTJUk+";
+    XCTAssertEqualObjects([MXTools encodeURIComponent:string], @"%24pmOSN%2FDognfuSfhdW%2FqivXT19lfCWpdSfaPFKDBTJUk%2B");
+}
+
+- (void)testGroupIdEscaping
+{
+    NSString *string = @"+matrix:matrix.org";
+    XCTAssertEqualObjects([MXTools encodeURIComponent:string], @"%2Bmatrix%3Amatrix.org");
 }
 
 @end

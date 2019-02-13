@@ -125,6 +125,17 @@ FOUNDATION_EXPORT NSString *const kMXToolsRegexStringForMatrixGroupIdentifier;
 + (BOOL)isMatrixGroupIdentifier:(NSString *)inputString;
 
 
+#pragma mark - Strings encoding
+/**
+ Escape the string in the same way as the javascript encodeURIComponent method:
+ https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/encodeURIComponent#Description
+
+ @param string the string to escape.
+ @return an escaped string.
+ */
++ (NSString*)encodeURIComponent:(NSString*)string;
+
+
 #pragma mark - Permalink
 /*
  Return a matrix.to permalink to a room.

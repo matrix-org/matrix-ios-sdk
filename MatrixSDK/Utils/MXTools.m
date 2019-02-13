@@ -23,16 +23,17 @@
 #endif
 
 #pragma mark - Constant definition
-NSString *const kMXToolsRegexStringForEmailAddress          = @"[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,}";
+NSString *const kMXToolsRegexStringForEmailAddress              = @"[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,}";
 
 // The HS domain part in Matrix identifiers
 #define MATRIX_HOMESERVER_DOMAIN_REGEX                        @"[A-Z0-9.-]+(\\.[A-Z]{2,})?+(\\:[0-9]{2,})?"
 
-NSString *const kMXToolsRegexStringForMatrixUserIdentifier  = @"@[\\x21-\\x39\\x3B-\\x7F]+:" MATRIX_HOMESERVER_DOMAIN_REGEX;
-NSString *const kMXToolsRegexStringForMatrixRoomAlias       = @"#[A-Z0-9._%#@+-]+:" MATRIX_HOMESERVER_DOMAIN_REGEX;
-NSString *const kMXToolsRegexStringForMatrixRoomIdentifier  = @"![A-Z0-9]+:" MATRIX_HOMESERVER_DOMAIN_REGEX;
-NSString *const kMXToolsRegexStringForMatrixEventIdentifier = @"\\$[A-Z0-9]+:" MATRIX_HOMESERVER_DOMAIN_REGEX;
-NSString *const kMXToolsRegexStringForMatrixGroupIdentifier = @"\\+[A-Z0-9=_\\-./]+:" MATRIX_HOMESERVER_DOMAIN_REGEX;
+NSString *const kMXToolsRegexStringForMatrixUserIdentifier      = @"@[\\x21-\\x39\\x3B-\\x7F]+:" MATRIX_HOMESERVER_DOMAIN_REGEX;
+NSString *const kMXToolsRegexStringForMatrixRoomAlias           = @"#[A-Z0-9._%#@+-]+:" MATRIX_HOMESERVER_DOMAIN_REGEX;
+NSString *const kMXToolsRegexStringForMatrixRoomIdentifier      = @"![A-Z0-9]+:" MATRIX_HOMESERVER_DOMAIN_REGEX;
+NSString *const kMXToolsRegexStringForMatrixEventIdentifier     = @"\\$[A-Z0-9]+:" MATRIX_HOMESERVER_DOMAIN_REGEX;
+NSString *const kMXToolsRegexStringForMatrixEventIdentifierV3   = @"\\$[A-Z0-9\\/+]+";
+NSString *const kMXToolsRegexStringForMatrixGroupIdentifier     = @"\\+[A-Z0-9=_\\-./]+:" MATRIX_HOMESERVER_DOMAIN_REGEX;
 
 
 #pragma mark - MXTools static private members
@@ -45,12 +46,17 @@ static NSRegularExpression *isMatrixUserIdentifierRegex;
 static NSRegularExpression *isMatrixRoomAliasRegex;
 static NSRegularExpression *isMatrixRoomIdentifierRegex;
 static NSRegularExpression *isMatrixEventIdentifierRegex;
+static NSRegularExpression *isMatrixEventIdentifierV3Regex;
 static NSRegularExpression *isMatrixGroupIdentifierRegex;
 
 // A regex to find new lines
 static NSRegularExpression *newlineCharactersRegex;
 
 static NSUInteger transactionIdCount;
+
+// Character set to use to encode/decide URI component
+NSString *const uriComponentCharsetExtra = @"-_.!~*'()";
+NSCharacterSet *uriComponentCharset;
 
 
 @implementation MXTools
@@ -117,6 +123,9 @@ static NSUInteger transactionIdCount;
                                                                                 options:NSRegularExpressionCaseInsensitive error:nil];
         isMatrixEventIdentifierRegex = [NSRegularExpression regularExpressionWithPattern:[NSString stringWithFormat:@"^%@$", kMXToolsRegexStringForMatrixEventIdentifier]
                                                                                  options:NSRegularExpressionCaseInsensitive error:nil];
+        isMatrixEventIdentifierV3Regex = [NSRegularExpression regularExpressionWithPattern:[NSString stringWithFormat:@"^%@$", kMXToolsRegexStringForMatrixEventIdentifierV3]
+                                                                                 options:NSRegularExpressionCaseInsensitive error:nil];
+
         isMatrixGroupIdentifierRegex = [NSRegularExpression regularExpressionWithPattern:[NSString stringWithFormat:@"^%@$", kMXToolsRegexStringForMatrixGroupIdentifier]
                                                                                 options:NSRegularExpressionCaseInsensitive error:nil];
 
@@ -124,6 +133,11 @@ static NSUInteger transactionIdCount;
                                                                            options:0 error:nil];
 
         transactionIdCount = 0;
+
+        // Set up charset for URI component coding
+        NSMutableCharacterSet *allowedCharacterSet = [NSMutableCharacterSet alphanumericCharacterSet];
+        [allowedCharacterSet addCharactersInString:uriComponentCharsetExtra];
+        uriComponentCharset = allowedCharacterSet;
     });
 }
 
@@ -337,7 +351,8 @@ static NSUInteger transactionIdCount;
 {
     if (inputString)
     {
-        return (nil != [isMatrixEventIdentifierRegex firstMatchInString:inputString options:0 range:NSMakeRange(0, inputString.length)]);
+        return (nil != [isMatrixEventIdentifierRegex firstMatchInString:inputString options:0 range:NSMakeRange(0, inputString.length)])
+        || (nil != [isMatrixEventIdentifierV3Regex firstMatchInString:inputString options:0 range:NSMakeRange(0, inputString.length)]);
     }
     return NO;
 }
@@ -349,6 +364,13 @@ static NSUInteger transactionIdCount;
         return (nil != [isMatrixGroupIdentifierRegex firstMatchInString:inputString options:0 range:NSMakeRange(0, inputString.length)]);
     }
     return NO;
+}
+
+
+#pragma mark - Strings encoding
++ (NSString *)encodeURIComponent:(NSString *)string
+{
+    return [string stringByAddingPercentEncodingWithAllowedCharacters:uriComponentCharset];
 }
 
 
