@@ -851,30 +851,11 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
     operation = [self versionFromCryptoQueue:version success:^(MXKeyBackupVersion * _Nullable keyBackupVersion) {
         MXStrongifyAndReturnIfNil(self);
 
-        MXMegolmBackupAuthData *authData = [MXMegolmBackupAuthData modelFromJSON:keyBackupVersion.authData];
-        if (!authData.privateKeySalt || !authData.privateKeyIterations)
-        {
-            if (failure)
-            {
-                NSLog(@"[MXKeyBackup] restoreKeyBackup: Salt and/or iterations not found: this backup cannot be restored with a password");
-                NSError *error = [NSError errorWithDomain:MXKeyBackupErrorDomain
-                                                     code:MXKeyBackupErrorMissingPrivateKeySaltCode
-                                                 userInfo:@{
-                                                            NSLocalizedDescriptionKey: @"Salt and/or iterations not found: this backup cannot be restored with a password"
-                                                            }];
-                dispatch_async(dispatch_get_main_queue(), ^{
-                    failure(error);
-                });
-            }
-            return;
-        }
-
         NSError *error;
-        NSData *recoveryKeyData = [MXKeyBackupPassword retrievePrivateKeyWithPassword:password salt:authData.privateKeySalt iterations:authData.privateKeyIterations error:&error];
+        NSString *recoveryKey = [self recoveryKeyFromPassword:password inKeyBackupVersion:keyBackupVersion error:&error];
 
         if (!error)
         {
-            NSString *recoveryKey = [MXRecoveryKey encode:recoveryKeyData];
             MXHTTPOperation *operation2 = [self restoreKeyBackup:version withRecoveryKey:recoveryKey room:roomId session:sessionId success:success failure:failure];
             [operation mutateTo:operation2];
         }
@@ -1166,45 +1147,24 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
     dispatch_async(mxSession.crypto.cryptoQueue, ^{
         MXStrongifyAndReturnIfNil(self);
 
-        // Extract MXMegolmBackupAuthData
-        MXMegolmBackupAuthData *authData = [MXMegolmBackupAuthData modelFromJSON:keyBackupVersion.authData];
-        if (!authData.privateKeySalt || !authData.privateKeyIterations)
-        {
-            if (failure)
-            {
-                NSLog(@"[MXKeyBackup] trustKeyBackupVersion:withPassword: Salt and/or iterations not found: this backup cannot be restored with a password");
-                NSError *error = [NSError errorWithDomain:MXKeyBackupErrorDomain
-                                                     code:MXKeyBackupErrorMissingPrivateKeySaltCode
-                                                 userInfo:@{
-                                                            NSLocalizedDescriptionKey: @"Salt and/or iterations not found: this backup cannot be trusted with a password"
-                                                            }];
-                dispatch_async(dispatch_get_main_queue(), ^{
-                    failure(error);
-                });
-            }
-            return;
-        }
-
-        // Extract the recovery key from the passphrase
         NSError *error;
-        NSData *recoveryKeyData = [MXKeyBackupPassword retrievePrivateKeyWithPassword:password salt:authData.privateKeySalt iterations:authData.privateKeyIterations error:&error];
-        if (error)
+        NSString *recoveryKey = [self recoveryKeyFromPassword:password inKeyBackupVersion:keyBackupVersion error:&error];
+
+        if (!error)
         {
-            NSLog(@"[MXKeyBackup] trustKeyBackupVersion:withPassword: Cannot retrieve private key from password. Error: %@", error);
+            // Check trust using the recovery key
+            MXHTTPOperation *operation2 = [self trustKeyBackupVersion:keyBackupVersion withRecoveryKey:recoveryKey success:success failure:failure];
+            [operation mutateTo:operation2];
+        }
+        else
+        {
             if (failure)
             {
                 dispatch_async(dispatch_get_main_queue(), ^{
                     failure(error);
                 });
             }
-            return;
         }
-
-        NSString *recoveryKey = [MXRecoveryKey encode:recoveryKeyData];
-
-        // Check trust using the recovery key
-        MXHTTPOperation *operation2 = [self trustKeyBackupVersion:keyBackupVersion withRecoveryKey:recoveryKey success:success failure:failure];
-        [operation mutateTo:operation2];
     });
 
     return operation;
@@ -1382,6 +1342,41 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
     }
 
     return sessionData;
+}
+
+/**
+ Compute the recovery key from a password and key backup auth data.
+
+ @param password the password.
+ @param keyBackupVersion the backup and its auth data.
+ @param error the encountered error in case of failure.
+ @return the recovery key if successful.
+ */
+- (nullable NSString*)recoveryKeyFromPassword:(NSString*)password inKeyBackupVersion:(MXKeyBackupVersion*)keyBackupVersion error:(NSError **)error
+{
+    // Extract MXMegolmBackupAuthData
+    MXMegolmBackupAuthData *authData = [MXMegolmBackupAuthData modelFromJSON:keyBackupVersion.authData];
+    if (!authData.privateKeySalt || !authData.privateKeyIterations)
+    {
+        NSLog(@"[MXKeyBackup] recoveryFromPassword: Salt and/or iterations not found in key backup auth data");
+        *error = [NSError errorWithDomain:MXKeyBackupErrorDomain
+                                     code:MXKeyBackupErrorMissingPrivateKeySaltCode
+                                 userInfo:@{
+                                            NSLocalizedDescriptionKey: @"Salt and/or iterations not found in key backup auth data"
+                                            }];
+        return nil;
+    }
+
+
+    // Extract the recovery key from the passphrase
+    NSData *recoveryKeyData = [MXKeyBackupPassword retrievePrivateKeyWithPassword:password salt:authData.privateKeySalt iterations:authData.privateKeyIterations error:error];
+    if (*error)
+    {
+        NSLog(@"[MXKeyBackup] recoveryFromPassword: retrievePrivateKeyWithPassword failed: %@", *error);
+        return nil;
+    }
+
+    return [MXRecoveryKey encode:recoveryKeyData];
 }
 
 @end
