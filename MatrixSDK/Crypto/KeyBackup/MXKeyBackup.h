@@ -233,7 +233,7 @@ FOUNDATION_EXPORT NSString *const kMXKeyBackupDidStateChangeNotification;
 /**
  Restore a backup with a recovery key from a given backup version stored on the homeserver.
 
- @param version the backup version to restore from.
+ @param keyBackupVersion the backup version to restore from.
  @param recoveryKey the recovery key to decrypt the retrieved backup.
  @param roomId the id of the room to get backup data from.
  @param sessionId the id of the session to restore.
@@ -244,7 +244,7 @@ FOUNDATION_EXPORT NSString *const kMXKeyBackupDidStateChangeNotification;
  
  @return a MXHTTPOperation instance.
  */
-- (MXHTTPOperation*)restoreKeyBackup:(NSString*)version
+- (MXHTTPOperation*)restoreKeyBackup:(MXKeyBackupVersion*)keyBackupVersion
                      withRecoveryKey:(NSString*)recoveryKey
                                 room:(nullable NSString*)roomId
                              session:(nullable NSString*)sessionId
@@ -254,7 +254,7 @@ FOUNDATION_EXPORT NSString *const kMXKeyBackupDidStateChangeNotification;
 /**
  Restore a backup with a password from a given backup version stored on the homeserver.
 
- @param version the backup version to restore from.
+ @param keyBackupVersion the backup version to restore from.
  @param password the password to decrypt the retrieved backup.
  @param roomId the id of the room to get backup data from.
  @param sessionId the id of the session to restore.
@@ -265,7 +265,7 @@ FOUNDATION_EXPORT NSString *const kMXKeyBackupDidStateChangeNotification;
 
  @return a MXHTTPOperation instance.
  */
-- (MXHTTPOperation*)restoreKeyBackup:(NSString*)version
+- (MXHTTPOperation*)restoreKeyBackup:(MXKeyBackupVersion*)keyBackupVersion
                         withPassword:(NSString*)password
                                 room:(nullable NSString*)roomId
                              session:(nullable NSString*)sessionId

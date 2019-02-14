@@ -718,7 +718,7 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
     return !error && privateKeyOut;
 }
 
-- (MXHTTPOperation*)restoreKeyBackup:(NSString*)version
+- (MXHTTPOperation*)restoreKeyBackup:(MXKeyBackupVersion*)keyBackupVersion
                      withRecoveryKey:(NSString*)recoveryKey
                                 room:(nullable NSString*)roomId
                              session:(nullable NSString*)sessionId
@@ -727,7 +727,7 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
 {
     MXHTTPOperation *operation = [MXHTTPOperation new];
 
-    NSLog(@"[MXKeyBackup] restoreKeyBackup with recovery key: From backup version: %@", version);
+    NSLog(@"[MXKeyBackup] restoreKeyBackup with recovery key: From backup version: %@", keyBackupVersion.version);
 
     MXWeakify(self);
     dispatch_async(mxSession.crypto.cryptoQueue, ^{
@@ -750,7 +750,7 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
 
         // Get backup from the homeserver
         MXWeakify(self);
-        MXHTTPOperation *operation2 = [self keyBackupForSession:sessionId inRoom:roomId version:version success:^(MXKeysBackupData *keysBackupData) {
+        MXHTTPOperation *operation2 = [self keyBackupForSession:sessionId inRoom:roomId version:keyBackupVersion.version success:^(MXKeysBackupData *keysBackupData) {
             MXStrongifyAndReturnIfNil(self);
 
             NSMutableArray<MXMegolmSessionData*> *sessionDatas = [NSMutableArray array];
@@ -796,7 +796,7 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
             }
 
             // Do not trigger a backup for them if they come from the backup version we are using
-            BOOL backUp = ![version isEqualToString:self.keyBackupVersion.version];
+            BOOL backUp = ![keyBackupVersion.version isEqualToString:self.keyBackupVersion.version];
             if (backUp)
             {
                 NSLog(@"[MXKeyBackup] restoreKeyBackup: Those keys will be backed up to backup version: %@", self.keyBackupVersion.version);
@@ -830,28 +830,28 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
     return operation;
 }
 
-- (MXHTTPOperation*)restoreKeyBackup:(NSString*)version
+- (MXHTTPOperation*)restoreKeyBackup:(MXKeyBackupVersion*)keyBackupVersion
                         withPassword:(NSString*)password
                                 room:(nullable NSString*)roomId
                              session:(nullable NSString*)sessionId
                              success:(nullable void (^)(NSUInteger total, NSUInteger imported))success
                              failure:(nullable void (^)(NSError *error))failure
 {
-    NSLog(@"[MXKeyBackup] restoreKeyBackup with password: From backup version: %@", version);
+    MXHTTPOperation *operation = [MXHTTPOperation new];
 
-    // Fetch authentication info about this version
-    // to retrieve the private key from the password
+    NSLog(@"[MXKeyBackup] restoreKeyBackup with password: From backup version: %@", keyBackupVersion.version);
+
     MXWeakify(self);
-    MXHTTPOperation *operation;
-    operation = [self versionFromCryptoQueue:version success:^(MXKeyBackupVersion * _Nullable keyBackupVersion) {
+    dispatch_async(mxSession.crypto.cryptoQueue, ^{
         MXStrongifyAndReturnIfNil(self);
 
+        // Retrieve the private key from the password
         NSError *error;
         NSString *recoveryKey = [self recoveryKeyFromPassword:password inKeyBackupVersion:keyBackupVersion error:&error];
 
         if (!error)
         {
-            MXHTTPOperation *operation2 = [self restoreKeyBackup:version withRecoveryKey:recoveryKey room:roomId session:sessionId success:success failure:failure];
+            MXHTTPOperation *operation2 = [self restoreKeyBackup:keyBackupVersion withRecoveryKey:recoveryKey room:roomId session:sessionId success:success failure:failure];
             [operation mutateTo:operation2];
         }
         else
@@ -863,8 +863,7 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
                 });
             }
         }
-
-    } failure:failure];
+    });
 
     return operation;
 }

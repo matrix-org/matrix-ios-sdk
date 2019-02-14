@@ -679,7 +679,7 @@
     [self createKeyBackupScenarioWithPassword:nil readyToTest:^(NSString *version, MXMegolmBackupCreationInfo *keyBackupCreationInfo, NSArray<MXOlmInboundGroupSession *> *aliceKeys, MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
 
         // - Restore the e2e backup with recovery key
-        [aliceSession.crypto.backup restoreKeyBackup:version
+        [aliceSession.crypto.backup restoreKeyBackup:aliceSession.crypto.backup.keyBackupVersion
                                      withRecoveryKey:keyBackupCreationInfo.recoveryKey
                                                 room:nil session:nil
                                              success:^(NSUInteger total, NSUInteger imported)
@@ -709,7 +709,7 @@
     [self createKeyBackupScenarioWithPassword:nil readyToTest:^(NSString *version, MXMegolmBackupCreationInfo *keyBackupCreationInfo, NSArray<MXOlmInboundGroupSession *> *aliceKeys, MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
 
         // - Try to restore the e2e backup with a wrong recovery key
-        [aliceSession.crypto.backup restoreKeyBackup:version
+        [aliceSession.crypto.backup restoreKeyBackup:aliceSession.crypto.backup.keyBackupVersion
                                      withRecoveryKey:@"EsTc LW2K PGiF wKEA 3As5 g5c4 BXwk qeeJ ZJV8 Q9fu gUMN UE4d"
                                                 room:nil session:nil
                                              success:^(NSUInteger total, NSUInteger imported)
@@ -745,7 +745,7 @@
     [self createKeyBackupScenarioWithPassword:password readyToTest:^(NSString *version, MXMegolmBackupCreationInfo *keyBackupCreationInfo, NSArray<MXOlmInboundGroupSession *> *aliceKeys, MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
 
         // - Restore the e2e backup with the password
-        [aliceSession.crypto.backup restoreKeyBackup:version
+        [aliceSession.crypto.backup restoreKeyBackup:aliceSession.crypto.backup.keyBackupVersion
                                         withPassword:password
                                                 room:nil session:nil
                                              success:^(NSUInteger total, NSUInteger imported)
@@ -775,7 +775,7 @@
     [self createKeyBackupScenarioWithPassword:@"password" readyToTest:^(NSString *version, MXMegolmBackupCreationInfo *keyBackupCreationInfo, NSArray<MXOlmInboundGroupSession *> *aliceKeys, MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
 
         // - Try to restore the e2e backup with a wrong password
-        [aliceSession.crypto.backup restoreKeyBackup:version
+        [aliceSession.crypto.backup restoreKeyBackup:aliceSession.crypto.backup.keyBackupVersion
                                         withPassword:@"WrongPassword"
                                                 room:nil session:nil
                                              success:^(NSUInteger total, NSUInteger imported)
@@ -811,7 +811,7 @@
     [self createKeyBackupScenarioWithPassword:password readyToTest:^(NSString *version, MXMegolmBackupCreationInfo *keyBackupCreationInfo, NSArray<MXOlmInboundGroupSession *> *aliceKeys, MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
 
         // - Restore the e2e backup with the recovery key.
-        [aliceSession.crypto.backup restoreKeyBackup:version
+        [aliceSession.crypto.backup restoreKeyBackup:aliceSession.crypto.backup.keyBackupVersion
                                      withRecoveryKey:keyBackupCreationInfo.recoveryKey
                                                 room:nil session:nil
                                              success:^(NSUInteger total, NSUInteger imported)
@@ -841,7 +841,7 @@
     [self createKeyBackupScenarioWithPassword:nil readyToTest:^(NSString *version, MXMegolmBackupCreationInfo *keyBackupCreationInfo, NSArray<MXOlmInboundGroupSession *> *aliceKeys, MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
 
         // - Try to restore the e2e backup with a password
-        [aliceSession.crypto.backup restoreKeyBackup:version
+        [aliceSession.crypto.backup restoreKeyBackup:aliceSession.crypto.backup.keyBackupVersion
                                         withPassword:@"password"
                                                 room:nil session:nil
                                              success:^(NSUInteger total, NSUInteger imported)
@@ -1090,7 +1090,7 @@
         XCTAssertTrue(unSentRequest != nil || sentRequest != nil);
 
         // - Restore the e2e backup with recovery key
-        [aliceSession.crypto.backup restoreKeyBackup:version
+        [aliceSession.crypto.backup restoreKeyBackup:aliceSession.crypto.backup.keyBackupVersion
                                      withRecoveryKey:keyBackupCreationInfo.recoveryKey
                                                 room:nil session:nil
                                              success:^(NSUInteger total, NSUInteger imported)
