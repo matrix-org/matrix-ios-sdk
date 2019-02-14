@@ -733,9 +733,9 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
     dispatch_async(mxSession.crypto.cryptoQueue, ^{
         MXStrongifyAndReturnIfNil(self);
 
-        // Get a PK decryption instance
+        // Check if the recovery is valid before going any further
         NSError *error;
-        OLMPkDecryption *decryption = [self pkDecryptionFromRecoveryKey:recoveryKey error:&error];
+        [self isValidRecoveryKey:recoveryKey forKeyBackupVersion:keyBackupVersion error:&error];
         if (error)
         {
             NSLog(@"[MXKeyBackup] restoreKeyBackup: Invalid recovery key. Error: %@", error);
@@ -747,6 +747,10 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
             }
             return;
         }
+
+        // Get the PK decryption instance
+        // The operation always succeeds if the recovery key is valid
+        OLMPkDecryption *decryption = [self pkDecryptionFromRecoveryKey:recoveryKey error:&error];
 
         // Get backup from the homeserver
         MXWeakify(self);
@@ -774,26 +778,6 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
             }
 
             NSLog(@"[MXKeyBackup] restoreKeyBackup: Decrypted %@ keys out of %@ from the backup store on the homeserver", @(sessionDatas.count), @(sessionsFromHSCount));
-
-            if (sessionsFromHSCount && !sessionDatas.count)
-            {
-                // If we fail to decrypt all sessions, we have a credential problem
-                NSLog(@"[MXKeyBackup] restoreKeyBackup: Invalid recovery key or password");
-                if (failure)
-                {
-                    NSError *error = [NSError errorWithDomain:MXKeyBackupErrorDomain
-                                                         code:MXKeyBackupErrorInvalidRecoveryKeyCode
-                                                     userInfo:@{
-                                                                NSLocalizedDescriptionKey: @"Invalid recovery key or password"
-                                                                }];
-
-                    dispatch_async(dispatch_get_main_queue(), ^{
-                        failure(error);
-                    });
-                }
-
-                return;
-            }
 
             // Do not trigger a backup for them if they come from the backup version we are using
             BOOL backUp = ![keyBackupVersion.version isEqualToString:self.keyBackupVersion.version];
