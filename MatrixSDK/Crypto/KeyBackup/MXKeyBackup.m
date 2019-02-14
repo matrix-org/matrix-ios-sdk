@@ -1335,6 +1335,14 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
     return [MXRecoveryKey encode:recoveryKeyData];
 }
 
+/**
+ Check if a recovery key matches key backup authentication data.
+
+ @param recoveryKey the recovery key to challenge.
+ @param keyBackupVersion the backup and its auth data.
+ @param error the encountered error in case of failure.
+ @return YES if successful.
+ */
 - (BOOL)isValidRecoveryKey:(NSString*)recoveryKey forKeyBackupVersion:(MXKeyBackupVersion*)keyBackupVersion error:(NSError **)error
 {
     // Build PK decryption instance with the recovery key
