@@ -1053,66 +1053,24 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
     dispatch_async(mxSession.crypto.cryptoQueue, ^{
         MXStrongifyAndReturnIfNil(self);
 
-        // Build PK decryption instance with the recovery key
         NSError *error;
-        NSString *publicKey = [self pkPublicKeyFromRecoveryKey:recoveryKey error:&error];
-        if (error)
+        [self isValidRecoveryKey:recoveryKey forKeyBackupVersion:keyBackupVersion error:&error];
+        if (!error)
+        {
+            MXHTTPOperation *operation2 = [self trustKeyBackupVersion:keyBackupVersion trust:YES success:success failure:failure];
+            [operation mutateTo:operation2];
+        }
+        else
         {
             NSLog(@"[MXKeyBackup] trustKeyBackupVersion:withRecoveryKey: Invalid recovery key. Error: %@", error);
 
             if (failure)
             {
-                // Return a generic error
-                NSError *error = [NSError errorWithDomain:MXKeyBackupErrorDomain
-                                                     code:MXKeyBackupErrorInvalidRecoveryKeyCode
-                                                 userInfo:@{
-                                                            NSLocalizedDescriptionKey: @"Invalid recovery key or password"
-                                                            }];
-
                 dispatch_async(dispatch_get_main_queue(), ^{
                     failure(error);
                 });
             }
-            return;
         }
-
-        // Get the public key defined in the backup
-        MXMegolmBackupAuthData *authData = [self megolmBackupAuthDataFromKeyBackupVersion:keyBackupVersion error:&error];
-        if (error)
-        {
-            NSLog(@"[MXKeyBackup] trustKeyBackupVersion:withRecoveryKey: Key backup is missing required data");
-
-            if (failure)
-            {
-                dispatch_async(dispatch_get_main_queue(), ^{
-                    failure(error);
-                });
-            }
-            return;
-        }
-
-        // Compare both
-        if (![publicKey isEqualToString:authData.publicKey])
-        {
-            NSLog(@"[MXKeyBackup] trustKeyBackupVersion:withRecoveryKey: Invalid recovery key");
-
-            if (failure)
-            {
-                NSError *error = [NSError errorWithDomain:MXKeyBackupErrorDomain
-                                                     code:MXKeyBackupErrorInvalidRecoveryKeyCode
-                                                 userInfo:@{
-                                                            NSLocalizedDescriptionKey: @"Invalid recovery key or password"
-                                                            }];
-
-                dispatch_async(dispatch_get_main_queue(), ^{
-                    failure(error);
-                });
-            }
-            return;
-        }
-
-        MXHTTPOperation *operation2 = [self trustKeyBackupVersion:keyBackupVersion trust:YES success:success failure:failure];
-        [operation mutateTo:operation2];
     });
 
     return operation;
@@ -1392,6 +1350,47 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
     }
 
     return [MXRecoveryKey encode:recoveryKeyData];
+}
+
+- (BOOL)isValidRecoveryKey:(NSString*)recoveryKey forKeyBackupVersion:(MXKeyBackupVersion*)keyBackupVersion error:(NSError **)error
+{
+    // Build PK decryption instance with the recovery key
+    NSString *publicKey = [self pkPublicKeyFromRecoveryKey:recoveryKey error:error];
+    if (*error)
+    {
+        NSLog(@"[MXKeyBackup] isValidRecoveryKey: Invalid recovery key. Error: %@", *error);
+
+        // Return a generic error
+        *error = [NSError errorWithDomain:MXKeyBackupErrorDomain
+                                     code:MXKeyBackupErrorInvalidRecoveryKeyCode
+                                 userInfo:@{
+                                            NSLocalizedDescriptionKey: @"Invalid recovery key or password"
+                                            }];
+        return NO;
+    }
+
+    // Get the public key defined in the backup
+    MXMegolmBackupAuthData *authData = [self megolmBackupAuthDataFromKeyBackupVersion:keyBackupVersion error:error];
+    if (*error)
+    {
+        NSLog(@"[MXKeyBackup] isValidRecoveryKey: Key backup is missing required data");
+        return NO;
+    }
+
+    // Compare both
+    if (![publicKey isEqualToString:authData.publicKey])
+    {
+        NSLog(@"[MXKeyBackup] isValidRecoveryKey: Public keys mismatch");
+
+        *error = [NSError errorWithDomain:MXKeyBackupErrorDomain
+                                     code:MXKeyBackupErrorInvalidRecoveryKeyCode
+                                 userInfo:@{
+                                            NSLocalizedDescriptionKey: @"Invalid recovery key or password"
+                                            }];
+        return NO;
+    }
+
+    return YES;
 }
 
 @end
