@@ -59,10 +59,9 @@
 /**
  Notification that a room key has been imported.
 
- @param backUp YES to back up them to the homeserver.
  @param session the session data to import.
  */
-- (void)didImportRoomKey:(MXOlmInboundGroupSession*)session backUp:(BOOL)backUp;
+- (void)didImportRoomKey:(MXOlmInboundGroupSession*)session;
 
 /**
  Determine if we have the keys necessary to respond to a room key request.

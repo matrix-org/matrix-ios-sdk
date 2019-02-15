@@ -1043,17 +1043,30 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
         // Import keys
         NSArray<MXOlmInboundGroupSession *>* sessions = [self.olmDevice importInboundGroupSessions:sessionDatas];
 
+        NSLog(@"[MXCrypto] importMegolmSessionDatas: Imported %@ keys in store", @(sessions.count));
+
+        // Do not back up the key if it comes from a backup recovery
+        if (backUp)
+        {
+            [self.backup maybeSendKeyBackup];
+        }
+        else
+        {
+            [self.store markBackupDoneForInboundGroupSessions:sessions];
+        }
+
         // Notify there are new keys
+        NSLog(@"[MXCrypto] importMegolmSessionDatas: Notifying about new keys...");
         for (MXOlmInboundGroupSession *session in sessions)
         {
             id<MXDecrypting> alg = [self getRoomDecryptor:session.roomId algorithm:kMXCryptoMegolmAlgorithm];
-            [alg didImportRoomKey:session backUp:backUp];
+            [alg didImportRoomKey:session];
         }
 
         NSUInteger imported = sessions.count;
         NSUInteger totalKeyCount = sessionDatas.count;
 
-        NSLog(@"[MXCrypto] importMegolmSessionDatas: Imported %tu keys from %tu provided keys in %.0fms", imported, totalKeyCount, [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
+        NSLog(@"[MXCrypto] importMegolmSessionDatas: Complete. Imported %tu keys from %tu provided keys in %.0fms", imported, totalKeyCount, [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
 
         dispatch_async(dispatch_get_main_queue(), ^{
 

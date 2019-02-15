@@ -240,18 +240,8 @@
     [self retryDecryption:senderKey sessionId:content[@"session_id"]];
 }
 
-- (void)didImportRoomKey:(MXOlmInboundGroupSession *)session backUp:(BOOL)backUp
+- (void)didImportRoomKey:(MXOlmInboundGroupSession *)session
 {
-    // Do not back up the key if it comes from a backup recovery
-    if (backUp)
-    {
-        [crypto.backup maybeSendKeyBackup];
-    }
-    else
-    {
-        [crypto.store markBackupDoneForInboundGroupSessions:@[session]];
-    }
-
     // cancel any outstanding room key requests for this session
     [crypto cancelRoomKeyRequest:@{
                                    @"algorithm": kMXCryptoMegolmAlgorithm,

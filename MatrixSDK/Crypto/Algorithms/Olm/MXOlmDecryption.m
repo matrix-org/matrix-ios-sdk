@@ -236,7 +236,7 @@
     // No impact for olm
 }
 
-- (void)didImportRoomKey:(MXOlmInboundGroupSession *)session backUp:(BOOL)backUp
+- (void)didImportRoomKey:(MXOlmInboundGroupSession *)session
 {
     // No impact for olm
 }
