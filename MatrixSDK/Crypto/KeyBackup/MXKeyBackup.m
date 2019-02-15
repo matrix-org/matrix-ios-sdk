@@ -99,10 +99,11 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
 
 - (void)checkAndStartWithKeyBackupVersion:(nullable MXKeyBackupVersion*)keyBackupVersion
 {
+    NSLog(@"[MXKeyBackup] checkAndStartWithKeyBackupVersion: %@", keyBackupVersion.version);
+ 
     self->_keyBackupVersion = keyBackupVersion;
     if (!self.keyBackupVersion)
     {
-        NSLog(@"[MXKeyBackup] checkAndStartKeyBackup: Found no key backup version on the homeserver");
         [self resetKeyBackupData];
         self.state = MXKeyBackupStateDisabled;
         return;
@@ -112,7 +113,7 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
 
     if (trustInfo.usable)
     {
-        NSLog(@"[MXKeyBackup] checkAndStartKeyBackup: Found usable key backup. version: %@", keyBackupVersion.version);
+        NSLog(@"[MXKeyBackup] checkAndStartWithKeyBackupVersion: Found usable key backup. version: %@", keyBackupVersion.version);
 
         // Check the version we used at the previous app run
         NSString *versionInStore = mxSession.crypto.store.backupVersion;
@@ -127,7 +128,7 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
     }
     else
     {
-        NSLog(@"[MXKeyBackup] checkAndStartKeyBackup: No usable key backup. version: %@", keyBackupVersion.version);
+        NSLog(@"[MXKeyBackup] checkAndStartWithKeyBackupVersion: No usable key backup. version: %@", keyBackupVersion.version);
 
         if (mxSession.crypto.store.backupVersion)
         {
@@ -938,6 +939,8 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
                                    success:(void (^)(void))success
                                    failure:(void (^)(NSError * _Nonnull))failure
 {
+    NSLog(@"[MXKeyBackup] trustKeyBackupVersion:trust: %@. trust: %@", keyBackupVersion.version, @(trust));
+
     MXHTTPOperation *operation = [MXHTTPOperation new];
 
     MXWeakify(self);
@@ -1027,6 +1030,8 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
                                    success:(void (^)(void))success
                                    failure:(void (^)(NSError * _Nonnull))failure
 {
+    NSLog(@"[MXKeyBackup] trustKeyBackupVersion:withRecoveryKey: %@", keyBackupVersion.version);
+
     MXHTTPOperation *operation = [MXHTTPOperation new];
 
     MXWeakify(self);
@@ -1061,6 +1066,8 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
                                    success:(void (^)(void))success
                                    failure:(void (^)(NSError * _Nonnull))failure
 {
+    NSLog(@"[MXKeyBackup] trustKeyBackupVersion:withPassword: %@", keyBackupVersion.version);
+
     MXHTTPOperation *operation = [MXHTTPOperation new];
 
     MXWeakify(self);
