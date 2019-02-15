@@ -796,20 +796,23 @@ RLM_ARRAY_TYPE(MXRealmOlmInboundGroupSession)
     }];
 }
 
-- (void)markBackupDoneForInboundGroupSessionWithId:(NSString*)sessionId andSenderKey:(NSString*)senderKey
+- (void)markBackupDoneForInboundGroupSessions:(NSArray<MXOlmInboundGroupSession *>*)sessions
 {
     RLMRealm *realm = self.realm;
     [realm transactionWithBlock:^{
 
-        NSString *sessionIdSenderKey = [MXRealmOlmInboundGroupSession primaryKeyWithSessionId:sessionId
-                                                                                    senderKey:senderKey];
-        MXRealmOlmInboundGroupSession *realmSession = [MXRealmOlmInboundGroupSession objectsInRealm:realm where:@"sessionIdSenderKey = %@", sessionIdSenderKey].firstObject;
-
-        if (realmSession)
+        for (MXOlmInboundGroupSession *session in sessions)
         {
-            realmSession.backedUp = @(YES);
+            NSString *sessionIdSenderKey = [MXRealmOlmInboundGroupSession primaryKeyWithSessionId:session.session.sessionIdentifier
+                                                                                        senderKey:session.senderKey];
+            MXRealmOlmInboundGroupSession *realmSession = [MXRealmOlmInboundGroupSession objectsInRealm:realm where:@"sessionIdSenderKey = %@", sessionIdSenderKey].firstObject;
 
-            [realm addOrUpdateObject:realmSession];
+            if (realmSession)
+            {
+                realmSession.backedUp = @(YES);
+
+                [realm addOrUpdateObject:realmSession];
+            }
         }
     }];
 }

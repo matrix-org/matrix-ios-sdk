@@ -249,7 +249,7 @@
     }
     else
     {
-        [crypto.store markBackupDoneForInboundGroupSessionWithId:session.session.sessionIdentifier andSenderKey:session.senderKey];
+        [crypto.store markBackupDoneForInboundGroupSessions:@[session]];
     }
 
     // cancel any outstanding room key requests for this session

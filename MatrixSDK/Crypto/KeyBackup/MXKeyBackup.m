@@ -291,10 +291,7 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
         NSLog(@"[MXKeyBackup] sendKeyBackup: 5a - Request complete");
 
         // Mark keys as backed up
-        for (MXOlmInboundGroupSession *session in sessions)
-        {
-            [self->mxSession.crypto.store markBackupDoneForInboundGroupSessionWithId:session.session.sessionIdentifier andSenderKey:session.senderKey];
-        }
+        [self->mxSession.crypto.store markBackupDoneForInboundGroupSessions:sessions];
 
         if (sessions.count < kMXKeyBackupSendKeysMaxCount)
         {
