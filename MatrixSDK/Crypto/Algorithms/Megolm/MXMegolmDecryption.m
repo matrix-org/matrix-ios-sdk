@@ -240,34 +240,28 @@
     [self retryDecryption:senderKey sessionId:content[@"session_id"]];
 }
 
-- (BOOL)importRoomKey:(MXMegolmSessionData *)session backUp:(BOOL)backUp
+- (void)didImportRoomKey:(MXOlmInboundGroupSession *)session backUp:(BOOL)backUp
 {
-    BOOL imported = [olmDevice importInboundGroupSession:session];
-    if (imported)
+    // Do not back up the key if it comes from a backup recovery
+    if (backUp)
     {
-        // Do not back up the key if it comes from a backup recovery
-        if (backUp)
-        {
-            [crypto.backup maybeSendKeyBackup];
-        }
-        else
-        {
-            [crypto.store markBackupDoneForInboundGroupSessionWithId:session.sessionId andSenderKey:session.senderKey];
-        }
-
-        // cancel any outstanding room key requests for this session
-        [crypto cancelRoomKeyRequest:@{
-                                       @"algorithm": session.algorithm,
-                                       @"room_id": session.roomId,
-                                       @"session_id": session.sessionId,
-                                       @"sender_key": session.senderKey
-                                       }];
-
-        // Have another go at decrypting events sent with this session
-        [self retryDecryption:session.senderKey sessionId:session.sessionId];
+        [crypto.backup maybeSendKeyBackup];
+    }
+    else
+    {
+        [crypto.store markBackupDoneForInboundGroupSessionWithId:session.session.sessionIdentifier andSenderKey:session.senderKey];
     }
 
-    return imported;
+    // cancel any outstanding room key requests for this session
+    [crypto cancelRoomKeyRequest:@{
+                                   @"algorithm": kMXCryptoMegolmAlgorithm,
+                                   @"room_id": session.roomId,
+                                   @"session_id": session.session.sessionIdentifier,
+                                   @"sender_key": session.senderKey
+                                   }];
+
+    // Have another go at decrypting events sent with this session
+    [self retryDecryption:session.senderKey sessionId:session.session.sessionIdentifier];
 }
 
 - (BOOL)hasKeysForKeyRequest:(MXIncomingRoomKeyRequest*)keyRequest

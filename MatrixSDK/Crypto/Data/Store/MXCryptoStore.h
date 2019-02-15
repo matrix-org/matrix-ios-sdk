@@ -211,11 +211,11 @@
 
 
 /**
- Store an inbound group session.
+ Store inbound group sessions.
 
- @param session the inbound group session and its context.
+ @param sessions inbound group sessions.
  */
-- (void)storeInboundGroupSession:(MXOlmInboundGroupSession*)session;
+- (void)storeInboundGroupSessions:(NSArray<MXOlmInboundGroupSession *>*)sessions;
 
 /**
  Retrieve an inbound group session.

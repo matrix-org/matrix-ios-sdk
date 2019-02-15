@@ -22,7 +22,7 @@
 #import "MXEventDecryptionResult.h"
 #import "MXIncomingRoomKeyRequest.h"
 
-@class MXCrypto, MXMegolmSessionData;
+@class MXCrypto, MXOlmInboundGroupSession;
 
 
 @protocol MXDecrypting <NSObject>
@@ -57,13 +57,12 @@
 - (void)onRoomKeyEvent:(MXEvent*)event;
 
 /**
- Import a room key.
+ Notification that a room key has been imported.
 
  @param backUp YES to back up them to the homeserver.
  @param session the session data to import.
- @return YES if the key has been imported.
  */
-- (BOOL)importRoomKey:(MXMegolmSessionData*)session backUp:(BOOL)backUp;
+- (void)didImportRoomKey:(MXOlmInboundGroupSession*)session backUp:(BOOL)backUp;
 
 /**
  Determine if we have the keys necessary to respond to a room key request.
