@@ -22,8 +22,9 @@
 #import <Realm/Realm.h>
 #import "MXSession.h"
 #import "MXTools.h"
+#import "MXCryptoTools.h"
 
-NSUInteger const kMXRealmCryptoStoreVersion = 9;
+NSUInteger const kMXRealmCryptoStoreVersion = 10;
 
 static NSString *const kMXRealmCryptoStoreFolder = @"MXRealmCryptoStore";
 
@@ -183,6 +184,7 @@ RLM_ARRAY_TYPE(MXRealmOlmInboundGroupSession)
 @property (nonatomic) NSString *cancellationTxnId;
 @property (nonatomic) NSData *recipientsData;
 @property (nonatomic) NSString *requestBodyString;
+@property (nonatomic) NSString *requestBodyHash;
 @property (nonatomic) NSNumber<RLMInt> *state;
 
 - (MXOutgoingRoomKeyRequest *)outgoingRoomKeyRequest;
@@ -676,41 +678,44 @@ RLM_ARRAY_TYPE(MXRealmOlmInboundGroupSession)
     return sessionsWithDevice;
 }
 
-- (void)storeInboundGroupSession:(MXOlmInboundGroupSession*)session
+- (void)storeInboundGroupSessions:(NSArray<MXOlmInboundGroupSession *>*)sessions
 {
-    __block BOOL isNew = NO;
+    __block NSUInteger newCount = 0;
     NSDate *startDate = [NSDate date];
 
     RLMRealm *realm = self.realm;
     [realm transactionWithBlock:^{
 
-        NSString *sessionIdSenderKey = [MXRealmOlmInboundGroupSession primaryKeyWithSessionId:session.session.sessionIdentifier
-                                                                                    senderKey:session.senderKey];
-        MXRealmOlmInboundGroupSession *realmSession = [MXRealmOlmInboundGroupSession objectsInRealm:realm where:@"sessionIdSenderKey = %@", sessionIdSenderKey].firstObject;
-        if (realmSession)
+        for (MXOlmInboundGroupSession *session in sessions)
         {
-            // Update the existing one
-            realmSession.olmInboundGroupSessionData = [NSKeyedArchiver archivedDataWithRootObject:session];
-        }
-        else
-        {
-            // Create it
-            isNew = YES;
             NSString *sessionIdSenderKey = [MXRealmOlmInboundGroupSession primaryKeyWithSessionId:session.session.sessionIdentifier
                                                                                         senderKey:session.senderKey];
-            realmSession = [[MXRealmOlmInboundGroupSession alloc] initWithValue:@{
-                                                                                  @"sessionId": session.session.sessionIdentifier,
-                                                                                  @"senderKey": session.senderKey,
-                                                                                  @"sessionIdSenderKey": sessionIdSenderKey,
-                                                                                  @"olmInboundGroupSessionData": [NSKeyedArchiver archivedDataWithRootObject:session]
-                                                                                  }];
+            MXRealmOlmInboundGroupSession *realmSession = [MXRealmOlmInboundGroupSession objectsInRealm:realm where:@"sessionIdSenderKey = %@", sessionIdSenderKey].firstObject;
+            if (realmSession)
+            {
+                // Update the existing one
+                realmSession.olmInboundGroupSessionData = [NSKeyedArchiver archivedDataWithRootObject:session];
+            }
+            else
+            {
+                // Create it
+                newCount++;
+                NSString *sessionIdSenderKey = [MXRealmOlmInboundGroupSession primaryKeyWithSessionId:session.session.sessionIdentifier
+                                                                                            senderKey:session.senderKey];
+                realmSession = [[MXRealmOlmInboundGroupSession alloc] initWithValue:@{
+                                                                                      @"sessionId": session.session.sessionIdentifier,
+                                                                                      @"senderKey": session.senderKey,
+                                                                                      @"sessionIdSenderKey": sessionIdSenderKey,
+                                                                                      @"olmInboundGroupSessionData": [NSKeyedArchiver archivedDataWithRootObject:session]
+                                                                                      }];
 
-            [realm addObject:realmSession];
+                [realm addObject:realmSession];
+            }
         }
     }];
 
 
-    NSLog(@"[MXRealmCryptoStore] storeInboundGroupSession (%@) %@ in %.0fms", (isNew?@"NEW":@"UPDATE"), session.session.sessionIdentifier, [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
+    NSLog(@"[MXRealmCryptoStore] storeInboundGroupSessions: store %@ keys (%@ new) in %.0fms", @(sessions.count), @(newCount), [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
 }
 
 - (MXOlmInboundGroupSession*)inboundGroupSessionWithId:(NSString*)sessionId andSenderKey:(NSString*)senderKey
@@ -791,18 +796,24 @@ RLM_ARRAY_TYPE(MXRealmOlmInboundGroupSession)
     }];
 }
 
-- (void)markBackupDoneForInboundGroupSessionWithId:(NSString*)sessionId andSenderKey:(NSString*)senderKey
+- (void)markBackupDoneForInboundGroupSessions:(NSArray<MXOlmInboundGroupSession *>*)sessions
 {
     RLMRealm *realm = self.realm;
     [realm transactionWithBlock:^{
 
-        NSString *sessionIdSenderKey = [MXRealmOlmInboundGroupSession primaryKeyWithSessionId:sessionId
-                                                                                    senderKey:senderKey];
-        MXRealmOlmInboundGroupSession *realmSession = [MXRealmOlmInboundGroupSession objectsInRealm:realm where:@"sessionIdSenderKey = %@", sessionIdSenderKey].firstObject;
+        for (MXOlmInboundGroupSession *session in sessions)
+        {
+            NSString *sessionIdSenderKey = [MXRealmOlmInboundGroupSession primaryKeyWithSessionId:session.session.sessionIdentifier
+                                                                                        senderKey:session.senderKey];
+            MXRealmOlmInboundGroupSession *realmSession = [MXRealmOlmInboundGroupSession objectsInRealm:realm where:@"sessionIdSenderKey = %@", sessionIdSenderKey].firstObject;
 
-        realmSession.backedUp = @(YES);
+            if (realmSession)
+            {
+                realmSession.backedUp = @(YES);
 
-        [realm addOrUpdateObject:realmSession];
+                [realm addOrUpdateObject:realmSession];
+            }
+        }
     }];
 }
 
@@ -851,9 +862,9 @@ RLM_ARRAY_TYPE(MXRealmOlmInboundGroupSession)
 {
     MXOutgoingRoomKeyRequest *request;
 
-    NSString *requestBodyString = [MXTools serialiseJSONObject:requestBody];
+    NSString *requestBodyHash = [MXCryptoTools canonicalJSONStringForJSON:requestBody];
 
-    RLMResults<MXRealmOutgoingRoomKeyRequest *> *realmOutgoingRoomKeyRequests =  [MXRealmOutgoingRoomKeyRequest objectsInRealm:self.realm where:@"requestBodyString = %@", requestBodyString];
+    RLMResults<MXRealmOutgoingRoomKeyRequest *> *realmOutgoingRoomKeyRequests =  [MXRealmOutgoingRoomKeyRequest objectsInRealm:self.realm where:@"requestBodyHash = %@", requestBodyHash];
     if (realmOutgoingRoomKeyRequests.count)
     {
         request = realmOutgoingRoomKeyRequests[0].outgoingRoomKeyRequest;
@@ -881,12 +892,14 @@ RLM_ARRAY_TYPE(MXRealmOlmInboundGroupSession)
     [realm transactionWithBlock:^{
 
         NSString *requestBodyString = [MXTools serialiseJSONObject:request.requestBody];
+        NSString *requestBodyHash = [MXCryptoTools canonicalJSONStringForJSON:request.requestBody];
 
         MXRealmOutgoingRoomKeyRequest *realmOutgoingRoomKeyRequest =
         [[MXRealmOutgoingRoomKeyRequest alloc] initWithValue:@{
                                                                @"requestId": request.requestId,
                                                                @"recipientsData": [NSKeyedArchiver archivedDataWithRootObject:request.recipients],
                                                                @"requestBodyString": requestBodyString,
+                                                               @"requestBodyHash": requestBodyHash,
                                                                @"state": @(request.state)
                                                                }];
 
@@ -901,12 +914,15 @@ RLM_ARRAY_TYPE(MXRealmOlmInboundGroupSession)
     RLMRealm *realm = self.realm;
     [realm transactionWithBlock:^{
 
-        MXRealmOutgoingRoomKeyRequest *realmOutgoingRoomKeyRequests = [MXRealmOutgoingRoomKeyRequest objectsInRealm:realm where:@"requestId = %@", request.requestId].firstObject;
+        MXRealmOutgoingRoomKeyRequest *realmOutgoingRoomKeyRequest = [MXRealmOutgoingRoomKeyRequest objectsInRealm:realm where:@"requestId = %@", request.requestId].firstObject;
 
-        // Well, only the state changes
-        realmOutgoingRoomKeyRequests.state = @(request.state);
-        
-        [realm addOrUpdateObject:realmOutgoingRoomKeyRequests];
+        if (realmOutgoingRoomKeyRequest)
+        {
+            // Well, only the state changes
+            realmOutgoingRoomKeyRequest.state = @(request.state);
+
+            [realm addOrUpdateObject:realmOutgoingRoomKeyRequest];
+        }
     }];
 }
 
@@ -1236,6 +1252,24 @@ RLM_ARRAY_TYPE(MXRealmOlmInboundGroupSession)
 
                     NSLog(@"[MXRealmCryptoStore] Migration from schema #8 -> #9 completed");
                 }
+
+                case 9:
+                {
+                    NSLog(@"[MXRealmCryptoStore] Migration from schema #9 -> #10");
+
+                    NSLog(@"    Add requestBodyHash to all MXRealmOutgoingRoomKeyRequest objects");
+                    [migration enumerateObjects:MXRealmOutgoingRoomKeyRequest.className block:^(RLMObject *oldObject, RLMObject *newObject) {
+
+                        NSDictionary *requestBody = [MXTools deserialiseJSONString:oldObject[@"requestBodyString"]];
+                        if (requestBody)
+                        {
+                            newObject[@"requestBodyHash"] = [MXCryptoTools canonicalJSONStringForJSON:requestBody];
+                        }
+                    }];
+
+                    // This schema update needs a fix of cleanDuplicatedDevicesInRealm introduced in schema #8.
+                    cleanDuplicatedDevices = YES;
+                }
             }
         }
     };
@@ -1267,13 +1301,13 @@ RLM_ARRAY_TYPE(MXRealmOlmInboundGroupSession)
 
     if (cleanDuplicatedDevices)
     {
-        NSLog(@"[MXRealmCryptoStore] Do cleaning for migration from schema #7 -> #8");
+        NSLog(@"[MXRealmCryptoStore] Do cleaning for duplicating devices");
 
         NSUInteger before = [MXRealmDeviceInfo allObjectsInRealm:realm].count;
         [self cleanDuplicatedDevicesInRealm:realm];
         NSUInteger after = [MXRealmDeviceInfo allObjectsInRealm:realm].count;
 
-        NSLog(@"[MXRealmCryptoStore] Migration from schema #7 -> #8 completed. There are now %@ devices. There were %@ before. %@ devices have been removed.", @(after), @(before), @(before - after));
+        NSLog(@"[MXRealmCryptoStore] Cleaning for duplicating devices completed. There are now %@ devices. There were %@ before. %@ devices have been removed.", @(after), @(before), @(before - after));
     }
 
     // Wait for completion of other operations on this realm launched from other threads
@@ -1299,12 +1333,15 @@ RLM_ARRAY_TYPE(MXRealmOlmInboundGroupSession)
         {
             for (MXRealmDeviceInfo *device in realmUser.devices)
             {
-                // The related device needs to be cloned in order to add it afterwards
-                MXRealmDeviceInfo *deviceCopy = [[MXRealmDeviceInfo alloc] initWithValue:device];
+                if (!device.isInvalidated)
+                {
+                    // The related device needs to be cloned in order to add it afterwards
+                    MXRealmDeviceInfo *deviceCopy = [[MXRealmDeviceInfo alloc] initWithValue:device];
 
-                [realm deleteObjects:[MXRealmDeviceInfo objectsInRealm:realm where:@"identityKey = %@", device.identityKey]];
+                    [realm deleteObjects:[MXRealmDeviceInfo objectsInRealm:realm where:@"identityKey = %@", device.identityKey]];
 
-                [realmUser.devices addObject:deviceCopy];
+                    [realmUser.devices addObject:deviceCopy];
+                }
             }
         }
     }];

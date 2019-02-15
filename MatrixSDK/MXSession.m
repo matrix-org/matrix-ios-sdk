@@ -44,7 +44,7 @@
 
 #pragma mark - Constants definitions
 
-const NSString *MatrixSDKVersion = @"0.12.1";
+const NSString *MatrixSDKVersion = @"0.12.2";
 NSString *const kMXSessionStateDidChangeNotification = @"kMXSessionStateDidChangeNotification";
 NSString *const kMXSessionNewRoomNotification = @"kMXSessionNewRoomNotification";
 NSString *const kMXSessionWillLeaveRoomNotification = @"kMXSessionWillLeaveRoomNotification";
@@ -1042,9 +1042,10 @@ typedef void (^MXOnResumeDone)(void);
             }
         }
 
-        if (isInitialSync)
+        // Check the conditions to update summaries direct user ids for retrieved rooms (We have to do it
+        // when we receive some invites to handle correctly a new invite to a direct chat that the user has left).
+        if (isInitialSync || syncResponse.rooms.invite.count)
         {
-            // Update summaries direct user ids for retrieved rooms
             [self updateSummaryDirectUserIdForRooms:[self directRoomIds]];
         }
 

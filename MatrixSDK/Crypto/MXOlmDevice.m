@@ -22,7 +22,7 @@
 
 #import <OLMKit/OLMKit.h>
 
-#import "NSObject+sortedKeys.h"
+#import "MXCryptoTools.h"
 
 @interface MXOlmDevice ()
 {
@@ -109,7 +109,7 @@
 
 - (NSString *)signJSON:(NSDictionary *)JSONDictinary
 {
-    return [self signMessage:[self canonicalJSONForJSON:JSONDictinary]];
+    return [self signMessage:[MXCryptoTools canonicalJSONDataForJSON:JSONDictinary]];
 }
 
 - (NSDictionary *)oneTimeKeys
@@ -360,30 +360,42 @@
     session.keysClaimed = keysClaimed;
     session.forwardingCurve25519KeyChain = forwardingCurve25519KeyChain;
 
-    [store storeInboundGroupSession:session];
+    [store storeInboundGroupSessions:@[session]];
 
     return YES;
 }
 
-- (BOOL)importInboundGroupSession:(MXMegolmSessionData *)data
+- (NSArray<MXOlmInboundGroupSession *>*)importInboundGroupSessions:(NSArray<MXMegolmSessionData *>*)inboundGroupSessionsData;
 {
-    NSError *error;
-    MXOlmInboundGroupSession *session = [self inboundGroupSessionWithId:data.sessionId senderKey:data.senderKey roomId:data.roomId error:&error];
+    NSMutableArray<MXOlmInboundGroupSession *> *sessions = [NSMutableArray arrayWithCapacity:inboundGroupSessionsData.count];
 
-    if (session)
+    for (MXMegolmSessionData *sessionData in inboundGroupSessionsData)
     {
-        // If we already have this session, consider updating it
-        NSLog(@"[MXOlmDevice] importInboundGroupSession: Update for megolm session %@|%@", data.senderKey, data.sessionId);
+        if (!sessionData.roomId || !sessionData.algorithm)
+        {
+            NSLog(@"[MXOlmDevice] importInboundGroupSessions: ignoring session entry with missing fields: %@", sessionData);
+            continue;
+        }
 
-        // For now we just ignore updates. TODO: implement something here
-        return NO;
+        NSError *error;
+        MXOlmInboundGroupSession *session = [self inboundGroupSessionWithId:sessionData.sessionId senderKey:sessionData.senderKey roomId:sessionData.roomId error:&error];
+        if (session)
+        {
+            // If we already have this session, consider updating it
+            NSLog(@"[MXOlmDevice] importInboundGroupSessions: Update for megolm session %@|%@", sessionData.senderKey, sessionData.sessionId);
+
+            // For now we just ignore updates. TODO: implement something here
+        }
+        else
+        {
+            session = [[MXOlmInboundGroupSession alloc] initWithImportedSessionData:sessionData];
+            [sessions addObject:session];
+        }
     }
 
-    session = [[MXOlmInboundGroupSession alloc] initWithImportedSessionData:data];
+    [store storeInboundGroupSessions:sessions];
 
-    [store storeInboundGroupSession:session];
-
-    return YES;
+    return sessions;
 }
 
 - (MXDecryptionResult *)decryptGroupMessage:(NSString *)body roomId:(NSString *)roomId
@@ -399,7 +411,7 @@
         NSUInteger messageIndex;
         NSString *payloadString = [session.session decryptMessage:body messageIndex:&messageIndex error:error];
 
-        [store storeInboundGroupSession:session];
+        [store storeInboundGroupSessions:@[session]];
 
         if (payloadString)
         {
@@ -561,7 +573,7 @@
 
 - (BOOL)verifySignature:(NSString *)key JSON:(NSDictionary *)JSONDictinary signature:(NSString *)signature error:(NSError *__autoreleasing *)error
 {
-    return [olmUtility verifyEd25519Signature:signature key:key message:[self canonicalJSONForJSON:JSONDictinary] error:error];
+    return [olmUtility verifyEd25519Signature:signature key:key message:[MXCryptoTools canonicalJSONDataForJSON:JSONDictinary] error:error];
 }
 
 - (NSString *)sha256:(NSString *)message
@@ -574,27 +586,6 @@
 - (MXOlmSession*)sessionForDevice:(NSString *)theirDeviceIdentityKey andSessionId:(NSString*)sessionId
 {
     return [store sessionWithDevice:theirDeviceIdentityKey andSessionId:sessionId];
-}
-
-/**
- Get the canonical version of a JSON dictionary.
- 
- This ensures that a JSON has the same string representation cross platforms.
-
- @param JSONDictinary the JSON to convert.
- @return the canonical version of the JSON.
- */
-- (NSData*)canonicalJSONForJSON:(NSDictionary*)JSONDictinary
-{
-    NSData *canonicalJSONData = [NSJSONSerialization dataWithJSONObject:[JSONDictinary objectWithSortedKeys] options:0 error:nil];
-
-    // NSJSONSerialization escapes the '/' character in base64 strings which is useless in our case
-    // and does not match with other platforms.
-    // Remove this escaping
-    NSString *unescapedCanonicalJSON = [[NSString alloc] initWithData:canonicalJSONData encoding:NSUTF8StringEncoding];
-    unescapedCanonicalJSON = [unescapedCanonicalJSON stringByReplacingOccurrencesOfString:@"\\/" withString:@"/"];
-
-    return [unescapedCanonicalJSON dataUsingEncoding:NSUTF8StringEncoding];
 }
 
 @end

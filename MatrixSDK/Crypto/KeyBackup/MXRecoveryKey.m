@@ -55,7 +55,11 @@ const UInt8 kOlmRecoveryKeyPrefix[] = {0x8B, 0x01};
 
 + (NSData *)decode:(NSString *)recoveryKey error:(NSError **)error
 {
-    NSString *recoveryKeyWithNoSpaces = [recoveryKey stringByReplacingOccurrencesOfString:@" " withString:@""];
+    NSString *recoveryKeyWithNoSpaces = [recoveryKey stringByReplacingOccurrencesOfString:@"\\s"
+                                                                               withString:@""
+                                                                                  options:NSRegularExpressionSearch
+                                                                                    range:NSMakeRange(0, recoveryKey.length)];
+
     NSMutableData *result = [[self decodeBase58:recoveryKeyWithNoSpaces] mutableCopy];
 
     if (!result)

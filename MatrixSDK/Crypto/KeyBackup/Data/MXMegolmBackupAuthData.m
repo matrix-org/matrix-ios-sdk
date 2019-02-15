@@ -26,6 +26,8 @@
     if (megolmBackupAuthData)
     {
         MXJSONModelSetString(megolmBackupAuthData.publicKey, JSONDictionary[@"public_key"]);
+        MXJSONModelSetString(megolmBackupAuthData.privateKeySalt, JSONDictionary[@"private_key_salt"]);
+        MXJSONModelSetUInteger(megolmBackupAuthData.privateKeyIterations, JSONDictionary[@"private_key_iterations"]);
         MXJSONModelSetDictionary(megolmBackupAuthData.signatures, JSONDictionary[@"signatures"]);
     }
 
@@ -38,6 +40,16 @@
 
     JSONDictionary[@"public_key"] = _publicKey;
 
+    if (_privateKeySalt)
+    {
+        JSONDictionary[@"private_key_salt"] = _privateKeySalt;
+    }
+
+    if (_privateKeySalt)
+    {
+        JSONDictionary[@"private_key_iterations"] = @(_privateKeyIterations);
+    }
+
     if (_signatures)
     {
         JSONDictionary[@"signatures"] = _signatures;
@@ -48,9 +60,21 @@
 
 - (NSDictionary *)signalableJSONDictionary
 {
-    return @{
-             @"public_key": _publicKey
-             };
+    NSMutableDictionary *signalableJSONDictionary = [NSMutableDictionary dictionary];
+
+    signalableJSONDictionary[@"public_key"] = _publicKey;
+
+    if (_privateKeySalt)
+    {
+        signalableJSONDictionary[@"private_key_salt"] = _privateKeySalt;
+    }
+
+    if (_privateKeySalt)
+    {
+        signalableJSONDictionary[@"private_key_iterations"] = @(_privateKeyIterations);
+    }
+
+    return signalableJSONDictionary;
 }
 
 @end

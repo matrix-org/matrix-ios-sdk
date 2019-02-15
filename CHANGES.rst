@@ -1,10 +1,35 @@
+Changes in Matrix iOS SDK in 0.12.2 (2019-02-15)
+===============================================
+
+Improvements:
+ * MXRestClient: Update CS API call to support event ids hashes in room version 3 (vector-im/riot-ios#2194).
+ * MXRoom: Add a sendAudioFile API to send file using msgType "m.audio", thanks to N-Pex (PR #616).
+ * MXCrypto: Add key backup passphrase support (vector-im/riot-ios#2127).
+ * MXCrypto: Key backup: Ignore all whitespaces in recovery key (vector-im/riot-ios#2194).
+ * MXJSONModel: Use instancetype as return type of `modelFromJSON` initializer.
+ * MXKeyBackup: Add MXKeyBackupStateNotTrusted state.
+ * MXKeyBackup: Do not reset MXKeyBackup.keyBackupVersion in error states.
+ * MXKeyBackup: Implement the true deleteKeyBackupVersion Client-Server API.
+ * MXKeyBackup: Declare backup trust using new `PUT /room_keys/version/{version}` API (vector-im/riot-ios/issues/2223).
+ * Crypto: Cancel share request on restore/import (vector-im/riot-ios/issues/#2232).
+ * Crypto: Improve key import performance (vector-im/riot-ios/issues/#2248).
+
+Bug Fix:
+ * Crypto: Device deduplication method sometimes crashes (vector-im/riot-ios/issues/#2167).
+ * MXSession: A new invite to a direct chat that I left is not displayed as direct.
+ * MXSession/Swift: fix expected return type from createRoom.
+ * MXRealmCryptoStore: fix outgoingRoomKeyRequestWithRequestBody that was sometimes not able to find existing request.
+
+API break:
+* MXKeyBackup: Rename isKeyBackupTrusted to trustForKeyBackupVersion.
+
 Changes in Matrix iOS SDK in 0.12.1 (2019-01-04)
 ===============================================
 
 Improvements:
-* MXCrypto: Use the last olm session that got a message (vector-im/riot-ios/issues/2128).
-* MXScanManager: Support the encrypted body (the request body is now encrypted by default using the server public key).
-* MXMediaManager: Support the encrypted body.
+ * MXCrypto: Use the last olm session that got a message (vector-im/riot-ios/issues/2128).
+ * MXScanManager: Support the encrypted body (the request body is now encrypted by default using the server public key).
+ * MXMediaManager: Support the encrypted body.
 
 Bug Fix:
  * MXCryptoStore: Stop duplicating devices in the store (vector-im/riot-ios/issues/2132).

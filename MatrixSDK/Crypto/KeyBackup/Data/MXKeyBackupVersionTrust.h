@@ -24,7 +24,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 
 /**
- Data model for response to [MXKeyBackup isKeyBackupTrusted:].
+ Data model for response to [MXKeyBackup trustForKeyBackupVersion:].
  */
 @interface MXKeyBackupVersionTrust : NSObject
 
@@ -48,9 +48,15 @@ NS_ASSUME_NONNULL_BEGIN
 @interface MXKeyBackupVersionTrustSignature : NSObject
 
 /**
- The device that signed the backup version.
+ The id of the device that signed the backup version.
  */
-@property (nonatomic) MXDeviceInfo *device;
+@property (nonatomic) NSString *deviceId;
+
+/**
+ The device that signed the backup version.
+ Can be nil if the device is not known.
+ */
+@property (nonatomic, nullable) MXDeviceInfo *device;
 
 /**
  Flag to indicate the signature from this device is valid.

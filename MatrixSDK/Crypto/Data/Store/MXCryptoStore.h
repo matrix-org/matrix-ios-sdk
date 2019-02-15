@@ -211,11 +211,11 @@
 
 
 /**
- Store an inbound group session.
+ Store inbound group sessions.
 
- @param session the inbound group session and its context.
+ @param sessions inbound group sessions.
  */
-- (void)storeInboundGroupSession:(MXOlmInboundGroupSession*)session;
+- (void)storeInboundGroupSessions:(NSArray<MXOlmInboundGroupSession *>*)sessions;
 
 /**
  Retrieve an inbound group session.
@@ -248,12 +248,11 @@
 - (void)resetBackupMarkers;
 
 /**
- Mark an inbound group session as backed up on the user homeserver.
+ Mark inbound group sessions as backed up on the user homeserver.
 
- @param sessionId the session identifier.
- @param senderKey the base64-encoded curve25519 key of the sender.
+ @param sessions inbound group sessions.
  */
-- (void)markBackupDoneForInboundGroupSessionWithId:(NSString*)sessionId andSenderKey:(NSString*)senderKey;
+- (void)markBackupDoneForInboundGroupSessions:(NSArray<MXOlmInboundGroupSession *>*)sessions;
 
 /**
  Retrieve inbound group sessions that are not yet backed up.

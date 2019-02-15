@@ -31,18 +31,25 @@ NS_ASSUME_NONNULL_BEGIN
  * E2e keys backup states.
  *
  *                                 |
- *                                 V        deleteKeyBackupVersion (on current backup)
+ *                                 |        deleteKeyBackupVersion (on current backup)
+ *                                 V        or forceRefresh
  *    +---------------------->  UNKNOWN  <-------------
  *    |                            |
- *    |                            | checkAndStartKeyBackup (at startup or on new verified device or a new detected backup)
+ *    |                            | checkAndStartKeyBackup (at startup
+ *    |                            |         or on new verified device
+ *    |                            |         or a new detected backup)
  *    |                            V
  *    |                     CHECKING BACKUP
+ *    | Network error              |
  *    |                            |
- *    |    Network error           |
- *    +<----------+----------------+-------> DISABLED <----------------------+
- *    |           |                |            |                            |
- *    |           |                |            | createKeyBackupVersion     |
- *    |           V                |            V                            |
+ *    +<-----------+---------------+-------> DISABLED <----------------------+
+ *    |            |               |            |                            |
+ *    |            |               |            |                            |
+ *    |            V               |            |                            |
+ *    |       BACKUP NOT           |            |                            |
+ *    |         TRUSTED            |            |                            |
+ *    |                            |            | createKeyBackupVersion     |
+ *    |                            |            V                            |
  *    +<---  WRONG VERSION         |         ENABLING                        |
  *                ^                |            |                            |
  *                |                V       ok   |     error                  |
@@ -75,6 +82,12 @@ typedef enum : NSUInteger
     // Backup from this device is not enabled
     MXKeyBackupStateDisabled,
 
+    // There is a backup available on the homeserver but it is not trusted.
+    // It is not trusted because the signature is invalid or the device that created it is not verified
+    // Use `trustForKeyBackupVersion` to get trust details.
+    // Consequently, the backup from this device is not enabled.
+    MXKeyBackupStateNotTrusted,
+
     // Backup is being enabled
     // The backup version is being created on the homeserver
     MXKeyBackupStateEnabling,
@@ -104,25 +117,19 @@ FOUNDATION_EXPORT NSString *const kMXKeyBackupDidStateChangeNotification;
 #pragma mark - Backup management
 
 /**
- Get information about the current backup version defined on the homeserver.
+ Get information about a backup version defined on the homeserver.
 
- It can be different than `self.keyBackupVersion`.
+ @param version the backup version.
+        nil returns the current backup version. It can be different than `self.keyBackupVersion`.
 
  @param success A block object called when the operation succeeds.
  @param failure A block object called when the operation fails.
 
  @return a MXHTTPOperation instance.
  */
-- (MXHTTPOperation*)version:(void (^)(MXKeyBackupVersion * _Nullable keyBackupVersion))success
+- (MXHTTPOperation*)version:(nullable NSString *)version
+                    success:(void (^)(MXKeyBackupVersion * _Nullable keyBackupVersion))success
                     failure:(void (^)(NSError *error))failure;
-
-/**
- Check trust on a key backup version.
-
- @param keyBackupVersion the backup version to check.
- @param onComplete block called when the operations completes.
- */
-- (void)isKeyBackupTrusted:(MXKeyBackupVersion*)keyBackupVersion onComplete:(void (^)(MXKeyBackupVersionTrust *keyBackupVersionTrust))onComplete;
 
 /**
  Set up the data required to create a new backup version.
@@ -132,11 +139,15 @@ FOUNDATION_EXPORT NSString *const kMXKeyBackupDidStateChangeNotification;
  The returned `MXMegolmBackupCreationInfo` object has a `recoveryKey` member with
  the user-facing recovery key string.
 
+ @param password an optional passphrase string that can be entered by the user
+        when restoring the backup as an alternative to entering the recovery key.
+
  @param success A block object called when the operation succeeds.
  @param failure A block object called when the operation fails
  */
-- (void)prepareKeyBackupVersion:(void (^)(MXMegolmBackupCreationInfo *keyBackupCreationInfo))success
-                        failure:(nullable void (^)(NSError *error))failure;
+- (void)prepareKeyBackupVersionWithPassword:(nullable NSString *)password
+                                    success:(void (^)(MXMegolmBackupCreationInfo *keyBackupCreationInfo))success
+                                    failure:(nullable void (^)(NSError *error))failure;
 
 /**
  Create a new key backup version and enable it, using the information return from
@@ -168,6 +179,20 @@ FOUNDATION_EXPORT NSString *const kMXKeyBackupDidStateChangeNotification;
 - (MXHTTPOperation*)deleteKeyBackupVersion:(NSString*)version
                                    success:(void (^)(void))success
                                    failure:(nullable void (^)(NSError *error))failure;
+
+/**
+ Check if the module uses the latest version available on the homeserver.
+
+ If not, if not current backup operations are stopped in order to use the
+ homeserver version.
+
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)forceRefresh:(nullable void (^)(BOOL usingLastVersion))success
+                         failure:(nullable void (^)(NSError *error))failure;
 
 
 #pragma mark - Backup storing
@@ -206,9 +231,9 @@ FOUNDATION_EXPORT NSString *const kMXKeyBackupDidStateChangeNotification;
 + (BOOL)isValidRecoveryKey:(NSString*)recoveryKey;
 
 /**
- Restore a backup from a given backup version stored on the homeserver.
+ Restore a backup with a recovery key from a given backup version stored on the homeserver.
 
- @param version the backup version to restore from.
+ @param keyBackupVersion the backup version to restore from.
  @param recoveryKey the recovery key to decrypt the retrieved backup.
  @param roomId the id of the room to get backup data from.
  @param sessionId the id of the session to restore.
@@ -219,12 +244,96 @@ FOUNDATION_EXPORT NSString *const kMXKeyBackupDidStateChangeNotification;
  
  @return a MXHTTPOperation instance.
  */
-- (MXHTTPOperation*)restoreKeyBackup:(NSString*)version
-                         recoveryKey:(NSString*)recoveryKey
+- (MXHTTPOperation*)restoreKeyBackup:(MXKeyBackupVersion*)keyBackupVersion
+                     withRecoveryKey:(NSString*)recoveryKey
                                 room:(nullable NSString*)roomId
                              session:(nullable NSString*)sessionId
                              success:(nullable void (^)(NSUInteger total, NSUInteger imported))success
                              failure:(nullable void (^)(NSError *error))failure;
+
+/**
+ Restore a backup with a password from a given backup version stored on the homeserver.
+
+ @param keyBackupVersion the backup version to restore from.
+ @param password the password to decrypt the retrieved backup.
+ @param roomId the id of the room to get backup data from.
+ @param sessionId the id of the session to restore.
+
+ @param success A block object called when the operation succeeds.
+ It provides the number of found keys and the number of successfully imported keys.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)restoreKeyBackup:(MXKeyBackupVersion*)keyBackupVersion
+                        withPassword:(NSString*)password
+                                room:(nullable NSString*)roomId
+                             session:(nullable NSString*)sessionId
+                             success:(nullable void (^)(NSUInteger total, NSUInteger imported))success
+                             failure:(nullable void (^)(NSError *error))failure;
+
+
+#pragma mark - Backup trust
+
+/**
+ Check trust on a key backup version.
+
+ @param keyBackupVersion the backup version to check.
+ @param onComplete block called when the operations completes.
+ */
+- (void)trustForKeyBackupVersion:(MXKeyBackupVersion*)keyBackupVersion onComplete:(void (^)(MXKeyBackupVersionTrust *keyBackupVersionTrust))onComplete;
+
+/**
+ Set trust on a key backup version.
+
+ It adds (or removes) the signautre of the current device to the authentication
+ part of the key backup version.
+
+ @param keyBackupVersion the backup version to trust.
+ @param trust the trust to set to the key backup.
+
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)trustKeyBackupVersion:(MXKeyBackupVersion*)keyBackupVersion
+                                    trust:(BOOL)trust
+                                  success:(void (^)(void))success
+                                  failure:(nullable void (^)(NSError *error))failure;
+
+/**
+ Set trust on a key backup version.
+
+ @param keyBackupVersion the backup version to trust.
+ @param recoveryKey the recovery key to challenge with the key backup public key.
+
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)trustKeyBackupVersion:(MXKeyBackupVersion*)keyBackupVersion
+                          withRecoveryKey:(NSString*)recoveryKey
+                                  success:(void (^)(void))success
+                                  failure:(nullable void (^)(NSError *error))failure;
+
+/**
+ Set trust on a key backup version.
+
+ @param keyBackupVersion the backup version to trust.
+ @param password the password to challenge with the keyBackupVersion public key.
+
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)trustKeyBackupVersion:(MXKeyBackupVersion*)keyBackupVersion
+                             withPassword:(NSString*)password
+                                  success:(void (^)(void))success
+                                  failure:(nullable void (^)(NSError *error))failure;
+
 
 #pragma mark - Backup state
 
@@ -239,7 +348,7 @@ FOUNDATION_EXPORT NSString *const kMXKeyBackupDidStateChangeNotification;
 @property (nonatomic, readonly) BOOL enabled;
 
 /**
- The backup version being used.
+ The backup version.
  */
 @property (nonatomic, readonly, nullable) MXKeyBackupVersion *keyBackupVersion;
 
