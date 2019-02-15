@@ -243,7 +243,7 @@
 
         // - Check backup keys after having marked one as backed up
         MXOlmInboundGroupSession *session = sessions.firstObject;
-        [aliceSession.crypto.store markBackupDoneForInboundGroupSessionWithId:session.session.sessionIdentifier andSenderKey:session.senderKey];
+        [aliceSession.crypto.store markBackupDoneForInboundGroupSessions:@[session]];
         sessions = [aliceSession.crypto.store inboundGroupSessionsToBackup:100];
         XCTAssertEqual(sessions.count, sessionsCount - 1);
         XCTAssertEqual([aliceSession.crypto.store inboundGroupSessionsCount:NO], sessionsCount);

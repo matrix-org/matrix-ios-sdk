@@ -97,13 +97,13 @@ NSUInteger const SEND_KEY_REQUESTS_DELAY_MS = 500;
 {
     MXOutgoingRoomKeyRequest *request = [cryptoStore outgoingRoomKeyRequestWithRequestBody:requestBody];
 
-    NSLog(@"[MXOutgoingRoomKeyRequestManager] cancelRoomKeyRequest:andResend:%@: request.requestId: %@. state: %@", @(resend), request.requestId,  @(request.state));
-
     if (!request)
     {
         // no request was made for this key
         return;
     }
+
+    NSLog(@"[MXOutgoingRoomKeyRequestManager] cancelRoomKeyRequest:andResend:%@: request.requestId: %@. state: %@", @(resend), request.requestId,  @(request.state));
 
     switch (request.state)
     {

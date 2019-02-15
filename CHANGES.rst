@@ -12,6 +12,7 @@ Improvements:
  * MXKeyBackup: Implement the true deleteKeyBackupVersion Client-Server API.
  * MXKeyBackup: Declare backup trust using new `PUT /room_keys/version/{version}` API (vector-im/riot-ios/issues/2223).
  * Crypto: Cancel share request on restore/import (vector-im/riot-ios/issues/#2232).
+ * Crypto: Improve key import performance (vector-im/riot-ios/issues/#2248).
 
 Bug Fix:
  * Crypto: Device deduplication method sometimes crashes (vector-im/riot-ios/issues/#2167).

@@ -678,41 +678,44 @@ RLM_ARRAY_TYPE(MXRealmOlmInboundGroupSession)
     return sessionsWithDevice;
 }
 
-- (void)storeInboundGroupSession:(MXOlmInboundGroupSession*)session
+- (void)storeInboundGroupSessions:(NSArray<MXOlmInboundGroupSession *>*)sessions
 {
-    __block BOOL isNew = NO;
+    __block NSUInteger newCount = 0;
     NSDate *startDate = [NSDate date];
 
     RLMRealm *realm = self.realm;
     [realm transactionWithBlock:^{
 
-        NSString *sessionIdSenderKey = [MXRealmOlmInboundGroupSession primaryKeyWithSessionId:session.session.sessionIdentifier
-                                                                                    senderKey:session.senderKey];
-        MXRealmOlmInboundGroupSession *realmSession = [MXRealmOlmInboundGroupSession objectsInRealm:realm where:@"sessionIdSenderKey = %@", sessionIdSenderKey].firstObject;
-        if (realmSession)
+        for (MXOlmInboundGroupSession *session in sessions)
         {
-            // Update the existing one
-            realmSession.olmInboundGroupSessionData = [NSKeyedArchiver archivedDataWithRootObject:session];
-        }
-        else
-        {
-            // Create it
-            isNew = YES;
             NSString *sessionIdSenderKey = [MXRealmOlmInboundGroupSession primaryKeyWithSessionId:session.session.sessionIdentifier
                                                                                         senderKey:session.senderKey];
-            realmSession = [[MXRealmOlmInboundGroupSession alloc] initWithValue:@{
-                                                                                  @"sessionId": session.session.sessionIdentifier,
-                                                                                  @"senderKey": session.senderKey,
-                                                                                  @"sessionIdSenderKey": sessionIdSenderKey,
-                                                                                  @"olmInboundGroupSessionData": [NSKeyedArchiver archivedDataWithRootObject:session]
-                                                                                  }];
+            MXRealmOlmInboundGroupSession *realmSession = [MXRealmOlmInboundGroupSession objectsInRealm:realm where:@"sessionIdSenderKey = %@", sessionIdSenderKey].firstObject;
+            if (realmSession)
+            {
+                // Update the existing one
+                realmSession.olmInboundGroupSessionData = [NSKeyedArchiver archivedDataWithRootObject:session];
+            }
+            else
+            {
+                // Create it
+                newCount++;
+                NSString *sessionIdSenderKey = [MXRealmOlmInboundGroupSession primaryKeyWithSessionId:session.session.sessionIdentifier
+                                                                                            senderKey:session.senderKey];
+                realmSession = [[MXRealmOlmInboundGroupSession alloc] initWithValue:@{
+                                                                                      @"sessionId": session.session.sessionIdentifier,
+                                                                                      @"senderKey": session.senderKey,
+                                                                                      @"sessionIdSenderKey": sessionIdSenderKey,
+                                                                                      @"olmInboundGroupSessionData": [NSKeyedArchiver archivedDataWithRootObject:session]
+                                                                                      }];
 
-            [realm addObject:realmSession];
+                [realm addObject:realmSession];
+            }
         }
     }];
 
 
-    NSLog(@"[MXRealmCryptoStore] storeInboundGroupSession (%@) %@ in %.0fms", (isNew?@"NEW":@"UPDATE"), session.session.sessionIdentifier, [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
+    NSLog(@"[MXRealmCryptoStore] storeInboundGroupSessions: store %@ keys (%@ new) in %.0fms", @(sessions.count), @(newCount), [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
 }
 
 - (MXOlmInboundGroupSession*)inboundGroupSessionWithId:(NSString*)sessionId andSenderKey:(NSString*)senderKey
@@ -793,20 +796,23 @@ RLM_ARRAY_TYPE(MXRealmOlmInboundGroupSession)
     }];
 }
 
-- (void)markBackupDoneForInboundGroupSessionWithId:(NSString*)sessionId andSenderKey:(NSString*)senderKey
+- (void)markBackupDoneForInboundGroupSessions:(NSArray<MXOlmInboundGroupSession *>*)sessions
 {
     RLMRealm *realm = self.realm;
     [realm transactionWithBlock:^{
 
-        NSString *sessionIdSenderKey = [MXRealmOlmInboundGroupSession primaryKeyWithSessionId:sessionId
-                                                                                    senderKey:senderKey];
-        MXRealmOlmInboundGroupSession *realmSession = [MXRealmOlmInboundGroupSession objectsInRealm:realm where:@"sessionIdSenderKey = %@", sessionIdSenderKey].firstObject;
-
-        if (realmSession)
+        for (MXOlmInboundGroupSession *session in sessions)
         {
-            realmSession.backedUp = @(YES);
+            NSString *sessionIdSenderKey = [MXRealmOlmInboundGroupSession primaryKeyWithSessionId:session.session.sessionIdentifier
+                                                                                        senderKey:session.senderKey];
+            MXRealmOlmInboundGroupSession *realmSession = [MXRealmOlmInboundGroupSession objectsInRealm:realm where:@"sessionIdSenderKey = %@", sessionIdSenderKey].firstObject;
 
-            [realm addOrUpdateObject:realmSession];
+            if (realmSession)
+            {
+                realmSession.backedUp = @(YES);
+
+                [realm addOrUpdateObject:realmSession];
+            }
         }
     }];
 }
