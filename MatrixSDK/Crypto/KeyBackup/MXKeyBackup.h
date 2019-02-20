@@ -286,7 +286,7 @@ FOUNDATION_EXPORT NSString *const kMXKeyBackupDidStateChangeNotification;
 /**
  Set trust on a key backup version.
 
- It adds (or removes) the signautre of the current device to the authentication
+ It adds (or removes) the signature of the current device to the authentication
  part of the key backup version.
 
  @param keyBackupVersion the backup version to trust.

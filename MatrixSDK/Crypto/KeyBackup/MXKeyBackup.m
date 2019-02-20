@@ -1170,7 +1170,7 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
 
 - (OLMPkDecryption*)pkDecryptionFromRecoveryKey:(NSString*)recoveryKey error:(NSError **)error
 {
-    // Extract the primary key
+    // Extract the private key
     NSData *privateKey = [MXRecoveryKey decode:recoveryKey error:error];
 
     // Built the PK decryption with it
@@ -1188,7 +1188,7 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
 {
     NSString *pkPublicKey;
 
-    // Extract the primary key
+    // Extract the private key
     NSData *privateKey = [MXRecoveryKey decode:recoveryKey error:error];
 
     // Built the PK decryption with it
