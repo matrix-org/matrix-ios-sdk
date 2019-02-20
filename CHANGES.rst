@@ -1,3 +1,9 @@
+Changes in Matrix iOS SDK in 0.12.3 (2019-02-)
+===============================================
+
+Improvements:
+ * Update pods
+
 Changes in Matrix iOS SDK in 0.12.2 (2019-02-15)
 ===============================================
 

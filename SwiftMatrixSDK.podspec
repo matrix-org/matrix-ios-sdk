@@ -30,7 +30,7 @@ Pod::Spec.new do |s|
   
   # Requirements for e2e encryption
   s.dependency 'OLMKit', '~> 3.0.0'
-  s.dependency 'Realm', '~> 3.11.1'
+  s.dependency 'Realm', '~> 3.13.1'
   s.dependency 'libbase58', '~> 0.1.4'
 
 end
