@@ -20,7 +20,6 @@
 #import "MXMegolmBackupCreationInfo.h"
 #import "MXKeyBackupVersionTrust.h"
 
-@class MXSession;
 @class OLMPkEncryption;
 
 NS_ASSUME_NONNULL_BEGIN
