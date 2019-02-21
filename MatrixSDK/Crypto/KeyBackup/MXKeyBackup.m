@@ -46,6 +46,9 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
 {
     MXCrypto *crypto;
 
+    // The queue to run background tasks
+    dispatch_queue_t cryptoQueue;
+
     // Observer to kMXKeyBackupDidStateChangeNotification when backupAllGroupSessions is progressing
     id backupAllGroupSessionsObserver;
 
@@ -65,6 +68,7 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
     {
         _state = MXKeyBackupStateUnknown;
         crypto = theCrypto;
+        cryptoQueue = crypto.cryptoQueue;
     }
     return self;
 }
@@ -188,7 +192,7 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
         NSUInteger delayInMs = arc4random_uniform(kMXKeyBackupWaitingTimeToSendKeyBackup);
 
         MXWeakify(self);
-        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(delayInMs * NSEC_PER_MSEC)), crypto.cryptoQueue, ^{
+        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(delayInMs * NSEC_PER_MSEC)), cryptoQueue, ^{
             MXStrongifyAndReturnIfNil(self);
 
             [self sendKeyBackup];
@@ -384,7 +388,7 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
                                     failure:(void (^)(NSError * _Nonnull))failure
 {
     MXWeakify(self);
-    dispatch_async(crypto.cryptoQueue, ^{
+    dispatch_async(cryptoQueue, ^{
         MXStrongifyAndReturnIfNil(self);
 
         OLMPkDecryption *decryption = [OLMPkDecryption new];
@@ -444,7 +448,7 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
     [self setState:MXKeyBackupStateEnabling];
 
     MXWeakify(self);
-    dispatch_async(crypto.cryptoQueue, ^{
+    dispatch_async(cryptoQueue, ^{
         MXStrongifyAndReturnIfNil(self);
 
         MXKeyBackupVersion *keyBackupVersion = [MXKeyBackupVersion new];
@@ -495,7 +499,7 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
     MXHTTPOperation *operation = [MXHTTPOperation new];
 
     MXWeakify(self);
-    dispatch_async(crypto.cryptoQueue, ^{
+    dispatch_async(cryptoQueue, ^{
         MXStrongifyAndReturnIfNil(self);
 
         // If we're currently backing up to this backup... stop.
@@ -558,7 +562,7 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
         MXStrongifyAndReturnIfNil(self);
 
         MXWeakify(self);
-        dispatch_async(self->crypto.cryptoQueue, ^{
+        dispatch_async(self->cryptoQueue, ^{
             MXStrongifyAndReturnIfNil(self);
 
             BOOL usingLastVersion = NO;
@@ -654,7 +658,7 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
             }];
         }];
 
-        dispatch_async(self->crypto.cryptoQueue, ^{
+        dispatch_async(self->cryptoQueue, ^{
             MXStrongifyAndReturnIfNil(self);
 
             // Listen to error
@@ -690,7 +694,7 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
 - (void)backupProgress:(void (^)(NSProgress *backupProgress))backupProgress
 {
     MXWeakify(self);
-    dispatch_async(crypto.cryptoQueue, ^{
+    dispatch_async(cryptoQueue, ^{
         MXStrongifyAndReturnIfNil(self);
 
         NSUInteger keys = [self->crypto.store inboundGroupSessionsCount:NO];
@@ -728,7 +732,7 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
     NSLog(@"[MXKeyBackup] restoreKeyBackup with recovery key: From backup version: %@", keyBackupVersion.version);
 
     MXWeakify(self);
-    dispatch_async(crypto.cryptoQueue, ^{
+    dispatch_async(cryptoQueue, ^{
         MXStrongifyAndReturnIfNil(self);
 
         // Check if the recovery is valid before going any further
@@ -824,7 +828,7 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
     NSLog(@"[MXKeyBackup] restoreKeyBackup with password: From backup version: %@", keyBackupVersion.version);
 
     MXWeakify(self);
-    dispatch_async(crypto.cryptoQueue, ^{
+    dispatch_async(cryptoQueue, ^{
         MXStrongifyAndReturnIfNil(self);
 
         // Retrieve the private key from the password
@@ -855,7 +859,7 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
 
 - (void)trustForKeyBackupVersion:(MXKeyBackupVersion *)keyBackupVersion onComplete:(void (^)(MXKeyBackupVersionTrust * _Nonnull))onComplete
 {
-    dispatch_async(crypto.cryptoQueue, ^{
+    dispatch_async(cryptoQueue, ^{
 
         MXKeyBackupVersionTrust *keyBackupVersionTrust = [self trustForKeyBackupVersionFromCryptoQueue:keyBackupVersion];
 
@@ -944,7 +948,7 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
     MXHTTPOperation *operation = [MXHTTPOperation new];
 
     MXWeakify(self);
-    dispatch_async(crypto.cryptoQueue, ^{
+    dispatch_async(cryptoQueue, ^{
         MXStrongifyAndReturnIfNil(self);
 
         NSString *myUserId = self->crypto.matrixRestClient.credentials.userId;
@@ -1035,7 +1039,7 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
     MXHTTPOperation *operation = [MXHTTPOperation new];
 
     MXWeakify(self);
-    dispatch_async(crypto.cryptoQueue, ^{
+    dispatch_async(cryptoQueue, ^{
         MXStrongifyAndReturnIfNil(self);
 
         NSError *error;
@@ -1071,7 +1075,7 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
     MXHTTPOperation *operation = [MXHTTPOperation new];
 
     MXWeakify(self);
-    dispatch_async(crypto.cryptoQueue, ^{
+    dispatch_async(cryptoQueue, ^{
         MXStrongifyAndReturnIfNil(self);
 
         NSError *error;
