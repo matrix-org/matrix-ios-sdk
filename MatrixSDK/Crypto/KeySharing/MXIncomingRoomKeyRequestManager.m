@@ -24,7 +24,7 @@
 
 @interface MXIncomingRoomKeyRequestManager ()
 {
-    MXCrypto *crypto;
+    __weak MXCrypto *crypto;
 
     // The list of MXIncomingRoomKeyRequests/MXIncomingRoomKeyRequestCancellations
     // we received in the current sync.

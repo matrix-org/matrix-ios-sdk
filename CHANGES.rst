@@ -2,7 +2,10 @@ Changes in Matrix iOS SDK in 0.12.3 (2019-02-)
 ===============================================
 
 Improvements:
-* Maintenance: Update cocopoads and pods. Automatic update to Swift4.2
+ * Maintenance: Update cocopoads and pods. Automatic update to Swift4.2.
+
+Bug Fix:
+ * Crypto: Fix crash in MXKeyBackup (vector-im/riot-ios/issues/#2281).
 
 Changes in Matrix iOS SDK in 0.12.2 (2019-02-15)
 ===============================================

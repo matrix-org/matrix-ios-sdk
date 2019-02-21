@@ -16,6 +16,8 @@
 
 #import "MXKeyBackup.h"
 
+@class MXCrypto;
+
 NS_ASSUME_NONNULL_BEGIN
 
 /**
@@ -24,9 +26,11 @@ NS_ASSUME_NONNULL_BEGIN
 @interface MXKeyBackup ()
 
 /**
- 
+ Constructor.
+
+ @param crypto the related 'MXCrypto'.
  */
-- (instancetype)initWithMatrixSession:(MXSession*)mxSession;
+- (instancetype)initWithCrypto:(MXCrypto *)crypto;
 
 /**
  Check the server for an active key backup.

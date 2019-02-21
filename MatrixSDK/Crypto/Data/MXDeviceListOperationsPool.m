@@ -23,7 +23,7 @@
 
 @interface MXDeviceListOperationsPool ()
 {
-    MXCrypto *crypto;
+    __weak MXCrypto *crypto;
 }
 @end
 
