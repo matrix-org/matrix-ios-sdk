@@ -44,7 +44,7 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
 
 @interface MXKeyBackup ()
 {
-    MXCrypto *crypto;
+    __weak MXCrypto *crypto;
 
     // The queue to run background tasks
     dispatch_queue_t cryptoQueue;

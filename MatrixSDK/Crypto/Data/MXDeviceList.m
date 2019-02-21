@@ -26,7 +26,7 @@
 
 @interface MXDeviceList ()
 {
-    MXCrypto *crypto;
+    __weak MXCrypto *crypto;
 
     // Users we are tracking device status for.
     // userId -> MXDeviceTrackingStatus*
