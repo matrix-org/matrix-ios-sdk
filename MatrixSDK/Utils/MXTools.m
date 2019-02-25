@@ -377,12 +377,12 @@ NSCharacterSet *uriComponentCharset;
 #pragma mark - Permalink
 + (NSString *)permalinkToRoom:(NSString *)roomIdOrAlias
 {
-    return [NSString stringWithFormat:@"%@/#/%@", kMXMatrixDotToUrl, roomIdOrAlias];
+    return [NSString stringWithFormat:@"%@/#/%@", kMXMatrixDotToUrl, [MXTools encodeURIComponent:roomIdOrAlias]];
 }
 
 + (NSString *)permalinkToEvent:(NSString *)eventId inRoom:(NSString *)roomIdOrAlias
 {
-    return [NSString stringWithFormat:@"%@/#/%@/%@", kMXMatrixDotToUrl, roomIdOrAlias, eventId];
+    return [NSString stringWithFormat:@"%@/#/%@/%@", kMXMatrixDotToUrl, [MXTools encodeURIComponent:roomIdOrAlias], [MXTools encodeURIComponent:eventId]];
 
 }
 

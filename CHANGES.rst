@@ -6,6 +6,7 @@ Improvements:
 
 Bug Fix:
  * Crypto: Fix crash in MXKeyBackup (vector-im/riot-ios/issues/#2281).
+ * Escape room v3 event ids in permalinks (vector-im/riot-ios/issues/2277).
 
 Changes in Matrix iOS SDK in 0.12.2 (2019-02-15)
 ===============================================
