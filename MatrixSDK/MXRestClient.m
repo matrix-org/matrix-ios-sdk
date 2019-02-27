@@ -413,11 +413,12 @@ MXAuthAction;
 
             [self dispatchProcessing:nil andCompletion:^{
 
-                // Update our credentials
-                self.credentials = [MXCredentials modelFromJSON:JSONResponse];
+                MXLoginResponse *loginResponse;
+                MXJSONModelSetMXJSONModel(loginResponse, MXLoginResponse, JSONResponse);
 
-                // Workaround: HS does not return the right URL. Use the one we used to make the request
-                self->credentials.homeServer = self->homeserver;
+                // Update our credentials
+                self.credentials = [[MXCredentials alloc] initWithLoginResponse:loginResponse
+            withDefaultHomeServer:self->homeserver];
 
                 // Report the certificate trusted by user (if any)
                 self->credentials.allowedCertificate = self->httpClient.allowedCertificate;
@@ -553,11 +554,12 @@ MXAuthAction;
                    [self dispatchProcessing:nil andCompletion:^{
                        MXStrongifyAndReturnIfNil(self);
 
-                       // Update our credentials
-                       self.credentials = [MXCredentials modelFromJSON:JSONResponse];
+                       MXLoginResponse *loginResponse;
+                       MXJSONModelSetMXJSONModel(loginResponse, MXLoginResponse, JSONResponse);
 
-                       // Workaround: HS does not return the right URL. Use the one we used to make the request
-                       self->credentials.homeServer = self->homeserver;
+                       // Update our credentials
+                       self.credentials = [[MXCredentials alloc] initWithLoginResponse:loginResponse
+                                                                 withDefaultHomeServer:self->homeserver];
 
                        // Report the certificate trusted by user (if any)
                        self->credentials.allowedCertificate = self->httpClient.allowedCertificate;

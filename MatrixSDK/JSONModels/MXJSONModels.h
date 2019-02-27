@@ -266,19 +266,14 @@ FOUNDATION_EXPORT NSString *const kMXLoginIdentifierTypePhone;
 @end
 
 /**
- `MXCredentials` represents the response to a login or a register request.
+ `MXLoginResponse` represents the response to a login or a register request.
  */
-@interface MXCredentials : MXJSONModel
+@interface MXLoginResponse : MXJSONModel
 
     /**
      The home server url (ex: "https://matrix.org").
      */
-    @property (nonatomic) NSString *homeServer;
-
-    /**
-     The home server name (ex: "matrix.org").
-     */
-    @property (nonatomic, readonly) NSString *homeServerName;
+    @property (nonatomic) NSString *homeserver;
 
     /**
      The obtained user id.
@@ -294,23 +289,6 @@ FOUNDATION_EXPORT NSString *const kMXLoginIdentifierTypePhone;
      The device id.
      */
     @property (nonatomic) NSString *deviceId;
-
-    /**
-     The server certificate trusted by the user (nil when the server is trusted by the device).
-     */
-    @property (nonatomic) NSData *allowedCertificate;
-
-    /**
-     The ignored server certificate (set when the user ignores a certificate change).
-     */
-    @property (nonatomic) NSData *ignoredCertificate;
-
-    /**
-     Simple MXCredentials construtor
-     */
-    - (instancetype)initWithHomeServer:(NSString*)homeServer
-                                userId:(NSString*)userId
-                           accessToken:(NSString*)accessToken;
 
 @end
 

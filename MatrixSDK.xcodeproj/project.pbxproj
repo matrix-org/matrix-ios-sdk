@@ -65,6 +65,8 @@
 		32322A4C1E575F65005DD155 /* MXAllowedCertificates.m in Sources */ = {isa = PBXBuildFile; fileRef = 32322A4A1E575F65005DD155 /* MXAllowedCertificates.m */; };
 		3233606F1A403A0D0071A488 /* MXFileStore.h in Headers */ = {isa = PBXBuildFile; fileRef = 3233606D1A403A0D0071A488 /* MXFileStore.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		323360701A403A0D0071A488 /* MXFileStore.m in Sources */ = {isa = PBXBuildFile; fileRef = 3233606E1A403A0D0071A488 /* MXFileStore.m */; };
+		323547DC2226FC5700F15F94 /* MXCredentials.h in Headers */ = {isa = PBXBuildFile; fileRef = 323547DA2226FC5700F15F94 /* MXCredentials.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		323547DD2226FC5700F15F94 /* MXCredentials.m in Sources */ = {isa = PBXBuildFile; fileRef = 323547DB2226FC5700F15F94 /* MXCredentials.m */; };
 		323C5A081A70E53500FB0549 /* MXToolsTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 323C5A071A70E53500FB0549 /* MXToolsTests.m */; };
 		323E0C5B1A306D7A00A31D73 /* MXEvent.h in Headers */ = {isa = PBXBuildFile; fileRef = 323E0C591A306D7A00A31D73 /* MXEvent.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		323E0C5C1A306D7A00A31D73 /* MXEvent.m in Sources */ = {isa = PBXBuildFile; fileRef = 323E0C5A1A306D7A00A31D73 /* MXEvent.m */; };
@@ -436,6 +438,8 @@
 		32322A4A1E575F65005DD155 /* MXAllowedCertificates.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXAllowedCertificates.m; sourceTree = "<group>"; };
 		3233606D1A403A0D0071A488 /* MXFileStore.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXFileStore.h; sourceTree = "<group>"; };
 		3233606E1A403A0D0071A488 /* MXFileStore.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXFileStore.m; sourceTree = "<group>"; };
+		323547DA2226FC5700F15F94 /* MXCredentials.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MXCredentials.h; sourceTree = "<group>"; };
+		323547DB2226FC5700F15F94 /* MXCredentials.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MXCredentials.m; sourceTree = "<group>"; };
 		323C5A071A70E53500FB0549 /* MXToolsTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXToolsTests.m; sourceTree = "<group>"; };
 		323E0C591A306D7A00A31D73 /* MXEvent.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXEvent.h; sourceTree = "<group>"; };
 		323E0C5A1A306D7A00A31D73 /* MXEvent.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXEvent.m; sourceTree = "<group>"; };
@@ -824,6 +828,8 @@
 				320BBF3A1D6C7D9D0079890E /* EventsEnumerator */,
 				323F3F9020D3F0C700D26D6A /* Filters */,
 				32114A831A262CE000FF2EC4 /* Store */,
+				323547DA2226FC5700F15F94 /* MXCredentials.h */,
+				323547DB2226FC5700F15F94 /* MXCredentials.m */,
 				F0173EAA1FCF0E8800B5F6A3 /* MXGroup.h */,
 				F0173EAB1FCF0E8900B5F6A3 /* MXGroup.m */,
 				320DFDCA19DD99B60068622A /* MXRoom.h */,
@@ -1583,6 +1589,7 @@
 				32B76EA320FDE2BE00B095F6 /* MXRoomMembersCount.h in Headers */,
 				32C6F93319DD814400EA4E9C /* MatrixSDK.h in Headers */,
 				324BE46C1E422766008D99D4 /* MXMegolmSessionData.h in Headers */,
+				323547DC2226FC5700F15F94 /* MXCredentials.h in Headers */,
 				021AFBA62179E91900742B2C /* MXEncryptedContentKey.h in Headers */,
 				327187891DA7DCE50071C818 /* MXOlmEncryption.h in Headers */,
 				32A1514E1DAF897600400192 /* MXOlmSessionResult.h in Headers */,
@@ -1926,6 +1933,7 @@
 				02CAD43A217DD12F0074700B /* MXContentScanEncryptedBody.m in Sources */,
 				F03EF5091DF071D5009DF592 /* MXEncryptedAttachments.m in Sources */,
 				B172857D2100D4F60052C51E /* MXSendReplyEventDefaultStringLocalizations.m in Sources */,
+				323547DD2226FC5700F15F94 /* MXCredentials.m in Sources */,
 				32FA10CF1FA1C9F700E54233 /* MXOutgoingRoomKeyRequest.m in Sources */,
 				32322A4C1E575F65005DD155 /* MXAllowedCertificates.m in Sources */,
 				F03EF5051DF01596009DF592 /* MXLRUCache.m in Sources */,

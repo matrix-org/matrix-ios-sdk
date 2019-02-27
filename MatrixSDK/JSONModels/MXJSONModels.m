@@ -201,37 +201,20 @@ NSString *const kMXLoginIdentifierTypePhone = @"m.id.phone";
 
 @end
 
-@implementation MXCredentials
+@implementation MXLoginResponse
 
 + (id)modelFromJSON:(NSDictionary *)JSONDictionary
 {
-    MXCredentials *credentials = [[MXCredentials alloc] init];
-    if (credentials)
+    MXLoginResponse *loginResponse = [[MXLoginResponse alloc] init];
+    if (loginResponse)
     {
-        MXJSONModelSetString(credentials.homeServer, JSONDictionary[@"home_server"]);
-        MXJSONModelSetString(credentials.userId, JSONDictionary[@"user_id"]);
-        MXJSONModelSetString(credentials.accessToken, JSONDictionary[@"access_token"]);
-        MXJSONModelSetString(credentials.deviceId, JSONDictionary[@"device_id"]);
+        MXJSONModelSetString(loginResponse.homeserver, JSONDictionary[@"home_server"]);
+        MXJSONModelSetString(loginResponse.userId, JSONDictionary[@"user_id"]);
+        MXJSONModelSetString(loginResponse.accessToken, JSONDictionary[@"access_token"]);
+        MXJSONModelSetString(loginResponse.deviceId, JSONDictionary[@"device_id"]);
     }
 
-    return credentials;
-}
-
-- (instancetype)initWithHomeServer:(NSString *)homeServer userId:(NSString *)userId accessToken:(NSString *)accessToken
-{
-    self = [super init];
-    if (self)
-    {
-        _homeServer = [homeServer copy];
-        _userId = [userId copy];
-        _accessToken = [accessToken copy];
-    }
-    return self;
-}
-
-- (NSString *)homeServerName
-{
-    return [NSURL URLWithString:_homeServer].host;
+    return loginResponse;
 }
 
 @end
