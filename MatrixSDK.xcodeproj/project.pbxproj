@@ -65,6 +65,10 @@
 		32322A4C1E575F65005DD155 /* MXAllowedCertificates.m in Sources */ = {isa = PBXBuildFile; fileRef = 32322A4A1E575F65005DD155 /* MXAllowedCertificates.m */; };
 		3233606F1A403A0D0071A488 /* MXFileStore.h in Headers */ = {isa = PBXBuildFile; fileRef = 3233606D1A403A0D0071A488 /* MXFileStore.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		323360701A403A0D0071A488 /* MXFileStore.m in Sources */ = {isa = PBXBuildFile; fileRef = 3233606E1A403A0D0071A488 /* MXFileStore.m */; };
+		323547D42226D3F500F15F94 /* MXWellKnown.m in Sources */ = {isa = PBXBuildFile; fileRef = 323547D22226D3F500F15F94 /* MXWellKnown.m */; };
+		323547D52226D3F500F15F94 /* MXWellKnown.h in Headers */ = {isa = PBXBuildFile; fileRef = 323547D32226D3F500F15F94 /* MXWellKnown.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		323547D82226D5D600F15F94 /* MXWellKnownBaseConfig.h in Headers */ = {isa = PBXBuildFile; fileRef = 323547D62226D5D600F15F94 /* MXWellKnownBaseConfig.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		323547D92226D5D600F15F94 /* MXWellKnownBaseConfig.m in Sources */ = {isa = PBXBuildFile; fileRef = 323547D72226D5D600F15F94 /* MXWellKnownBaseConfig.m */; };
 		323547DC2226FC5700F15F94 /* MXCredentials.h in Headers */ = {isa = PBXBuildFile; fileRef = 323547DA2226FC5700F15F94 /* MXCredentials.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		323547DD2226FC5700F15F94 /* MXCredentials.m in Sources */ = {isa = PBXBuildFile; fileRef = 323547DB2226FC5700F15F94 /* MXCredentials.m */; };
 		323C5A081A70E53500FB0549 /* MXToolsTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 323C5A071A70E53500FB0549 /* MXToolsTests.m */; };
@@ -438,6 +442,10 @@
 		32322A4A1E575F65005DD155 /* MXAllowedCertificates.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXAllowedCertificates.m; sourceTree = "<group>"; };
 		3233606D1A403A0D0071A488 /* MXFileStore.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXFileStore.h; sourceTree = "<group>"; };
 		3233606E1A403A0D0071A488 /* MXFileStore.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXFileStore.m; sourceTree = "<group>"; };
+		323547D22226D3F500F15F94 /* MXWellKnown.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXWellKnown.m; sourceTree = "<group>"; };
+		323547D32226D3F500F15F94 /* MXWellKnown.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXWellKnown.h; sourceTree = "<group>"; };
+		323547D62226D5D600F15F94 /* MXWellKnownBaseConfig.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MXWellKnownBaseConfig.h; sourceTree = "<group>"; };
+		323547D72226D5D600F15F94 /* MXWellKnownBaseConfig.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MXWellKnownBaseConfig.m; sourceTree = "<group>"; };
 		323547DA2226FC5700F15F94 /* MXCredentials.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MXCredentials.h; sourceTree = "<group>"; };
 		323547DB2226FC5700F15F94 /* MXCredentials.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MXCredentials.m; sourceTree = "<group>"; };
 		323C5A071A70E53500FB0549 /* MXToolsTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXToolsTests.m; sourceTree = "<group>"; };
@@ -978,6 +986,17 @@
 			path = MXFileStore;
 			sourceTree = "<group>";
 		};
+		323547D12226D3F500F15F94 /* AutoDiscovery */ = {
+			isa = PBXGroup;
+			children = (
+				323547D62226D5D600F15F94 /* MXWellKnownBaseConfig.h */,
+				323547D72226D5D600F15F94 /* MXWellKnownBaseConfig.m */,
+				323547D32226D3F500F15F94 /* MXWellKnown.h */,
+				323547D22226D3F500F15F94 /* MXWellKnown.m */,
+			);
+			path = AutoDiscovery;
+			sourceTree = "<group>";
+		};
 		323F3F9020D3F0C700D26D6A /* Filters */ = {
 			isa = PBXGroup;
 			children = (
@@ -1065,6 +1084,7 @@
 		3281E8B219E42DFE00976E1A /* JSONModels */ = {
 			isa = PBXGroup;
 			children = (
+				323547D12226D3F500F15F94 /* AutoDiscovery */,
 				3275FD9121A6B46600B9C13D /* Authentication */,
 				3281E8B319E42DFE00976E1A /* MXJSONModel.h */,
 				3281E8B419E42DFE00976E1A /* MXJSONModel.m */,
@@ -1560,6 +1580,7 @@
 				32954019216385F100E300FC /* MXServerNoticeContent.h in Headers */,
 				327187851DA7D0220071C818 /* MXOlmDecryption.h in Headers */,
 				32D7767D1A27860600FC4AA2 /* MXMemoryStore.h in Headers */,
+				323547D52226D3F500F15F94 /* MXWellKnown.h in Headers */,
 				32FFB4F0217E146A00C96002 /* MXRecoveryKey.h in Headers */,
 				32CE6FB81A409B1F00317F1E /* MXFileStoreMetaData.h in Headers */,
 				32A31BC820D401FC005916C7 /* MXRoomFilter.h in Headers */,
@@ -1630,6 +1651,7 @@
 				32A31BC420D3FFB0005916C7 /* MXFilter.h in Headers */,
 				32A151481DAF7C0C00400192 /* MXKey.h in Headers */,
 				32BBAE6D2178E99100D85F46 /* MXKeyBackupVersion.h in Headers */,
+				323547D82226D5D600F15F94 /* MXWellKnownBaseConfig.h in Headers */,
 				32A151461DAF7C0C00400192 /* MXDeviceInfo.h in Headers */,
 				32CAB1071A91EA34008C5BB9 /* MXPushRuleRoomMemberCountConditionChecker.h in Headers */,
 				C61A4CC41E5F38CB00442158 /* SwiftMatrixSDK.h in Headers */,
@@ -1942,6 +1964,7 @@
 				3275FD9921A6B53300B9C13D /* MXLoginPolicyData.m in Sources */,
 				3240969E1F9F751600DBA607 /* MXPushRuleSenderNotificationPermissionConditionChecker.m in Sources */,
 				71DE22E01BC7C51200284153 /* MXReceiptData.m in Sources */,
+				323547D92226D5D600F15F94 /* MXWellKnownBaseConfig.m in Sources */,
 				327E37B71A974F75007F026F /* MXLogger.m in Sources */,
 				324BE4691E3FADB1008D99D4 /* MXMegolmExportEncryption.m in Sources */,
 				32A31BBF20D3F2EC005916C7 /* MXFilterObject.m in Sources */,
@@ -1989,6 +2012,7 @@
 				C6F935891E5B3BE600FC34BF /* MXEventTimeline.swift in Sources */,
 				C6F9358B1E5B3BE600FC34BF /* MXJSONModels.swift in Sources */,
 				32FA10C21FA1C9EE00E54233 /* MXOutgoingRoomKeyRequestManager.m in Sources */,
+				323547D42226D3F500F15F94 /* MXWellKnown.m in Sources */,
 				320DFDE519DD99B60068622A /* MXRestClient.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

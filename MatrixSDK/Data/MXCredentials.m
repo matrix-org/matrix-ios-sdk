@@ -42,8 +42,15 @@
         _accessToken = loginResponse.accessToken;
         _deviceId = loginResponse.deviceId;
 
-        // Workaround: HS does not return the right URL. Use the passed one
-        _homeServer = homeServer;
+        // Use wellknown data first
+        _homeServer = loginResponse.wellknown.homeServer.baseUrl;
+
+        if (!_homeServer)
+        {
+            // Workaround: HS does not return the right URL in loginResponse.homeserver.
+            // Use the passed one instead
+            _homeServer = homeServer;
+        }
     }
     return self;
 }

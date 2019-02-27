@@ -212,6 +212,7 @@ NSString *const kMXLoginIdentifierTypePhone = @"m.id.phone";
         MXJSONModelSetString(loginResponse.userId, JSONDictionary[@"user_id"]);
         MXJSONModelSetString(loginResponse.accessToken, JSONDictionary[@"access_token"]);
         MXJSONModelSetString(loginResponse.deviceId, JSONDictionary[@"device_id"]);
+        MXJSONModelSetMXJSONModel(loginResponse.wellknown, MXWellKnown, JSONDictionary[@"well_known"]);
     }
 
     return loginResponse;

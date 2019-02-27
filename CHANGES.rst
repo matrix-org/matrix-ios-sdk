@@ -4,6 +4,7 @@ Changes in Matrix iOS SDK in 0.12.3 (2019-02-)
 Improvements:
  * Maintenance: Update cocopoads and pods. Automatic update to Swift4.2.
  * MXCredentials: Create a new data model for it, separated from the CS API response data model (new MXLoginResponse class).
+ * Login: Handle well-known data in the login response - MSC1730 (vector-im/riot-ios/issues/2298).
 
 Bug Fix:
  * Crypto: Fix crash in MXKeyBackup (vector-im/riot-ios/issues/#2281).

@@ -23,6 +23,7 @@
 #import "MXKeyBackupData.h"
 #import "MXMegolmBackupAuthData.h"
 #import "MXLoginTerms.h"
+#import "MXWellKnown.h"
 
 @class MXEvent, MXDeviceInfo, MXKey, MXUser;
 
@@ -289,6 +290,11 @@ FOUNDATION_EXPORT NSString *const kMXLoginIdentifierTypePhone;
      The device id.
      */
     @property (nonatomic) NSString *deviceId;
+
+    /**
+     Wellknown data.
+     */
+    @property (nonatomic) MXWellKnown *wellknown;
 
 @end
 
