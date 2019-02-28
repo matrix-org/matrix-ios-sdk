@@ -21,7 +21,7 @@
 NS_ASSUME_NONNULL_BEGIN
 
 /**
- The `MXCredentials` class contains credentials to communicate with the  Matrix
+ The `MXCredentials` class contains credentials to communicate with the Matrix
  Client-Server API.
  */
 @interface MXCredentials : NSObject
