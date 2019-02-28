@@ -423,7 +423,13 @@ MXAuthAction;
 
 - (NSString*)registerFallback;
 {
-    return [[NSURL URLWithString:@"_matrix/static/client/register/" relativeToURL:[NSURL URLWithString:self.credentials.homeServer]] absoluteString];
+    NSString *registerFallback;
+
+    if (self.credentials.homeServer)
+    {
+        registerFallback = [[NSURL URLWithString:@"_matrix/static/client/register/" relativeToURL:[NSURL URLWithString:self.credentials.homeServer]] absoluteString];
+    }
+    return registerFallback;
 }
 
 - (MXHTTPOperation *)forgetPasswordForEmail:(NSString *)email
@@ -553,7 +559,13 @@ MXAuthAction;
 
 - (NSString*)loginFallback;
 {
-    return [[NSURL URLWithString:@"/_matrix/static/client/login/" relativeToURL:[NSURL URLWithString:self.credentials.homeServer]] absoluteString];
+    NSString *loginFallback;
+
+    if (self.credentials.homeServer)
+    {
+        loginFallback = [[NSURL URLWithString:@"/_matrix/static/client/login/" relativeToURL:[NSURL URLWithString:self.credentials.homeServer]] absoluteString];
+    }
+    return loginFallback;
 }
 
 
@@ -2758,6 +2770,11 @@ MXAuthAction;
                     success:(void (^)(void))success
                     failure:(void (^)(NSError *error))failure
 {
+    if (!self.credentials.identityServer)
+    {
+        NSLog(@"[MXRestClient] add3PID: Error: Missing identityServer");
+    }
+
     NSURL *identityServerURL = [NSURL URLWithString:self.credentials.identityServer];
     NSDictionary *parameters = @{
                                  @"three_pid_creds": @{
