@@ -125,7 +125,7 @@ MXAuthAction;
         antivirusServerPathPrefix = kMXAntivirusAPIPrefixPathUnstable;
         contentPathPrefix = kMXContentPrefixPath;
         
-        self.credentials = inCredentials;
+        credentials = inCredentials;
 
         if (credentials.homeServer)
         {
@@ -227,11 +227,6 @@ MXAuthAction;
     }
 
     return homeserverSuffix;
-}
-
-- (void)setCredentials:(MXCredentials *)inCredentials
-{
-    credentials = inCredentials;
 }
 
 - (NSData*)allowedCertificate
@@ -398,8 +393,8 @@ MXAuthAction;
                 MXJSONModelSetMXJSONModel(loginResponse, MXLoginResponse, JSONResponse);
 
                 // Update our credentials
-                self.credentials = [[MXCredentials alloc] initWithLoginResponse:loginResponse
-                                                          andDefaultCredentials:self.credentials];
+                self->credentials = [[MXCredentials alloc] initWithLoginResponse:loginResponse
+                                                           andDefaultCredentials:self.credentials];
 
                 // Report the certificate trusted by user (if any)
                 self->credentials.allowedCertificate = self->httpClient.allowedCertificate;
@@ -539,8 +534,8 @@ MXAuthAction;
                        MXJSONModelSetMXJSONModel(loginResponse, MXLoginResponse, JSONResponse);
 
                        // Update our credentials
-                       self.credentials = [[MXCredentials alloc] initWithLoginResponse:loginResponse
-                                                                 andDefaultCredentials:self.credentials];
+                       self->credentials = [[MXCredentials alloc] initWithLoginResponse:loginResponse
+                                                                  andDefaultCredentials:self.credentials];
 
                        // Report the certificate trusted by user (if any)
                        self->credentials.allowedCertificate = self->httpClient.allowedCertificate;
