@@ -15,7 +15,7 @@
  */
 
 #import "MXContentScanEncryptedBody.h"
-#import "OLMPkMessage.h"
+#import <OLMKit/OLMKit.h>
 
 @implementation MXContentScanEncryptedBody
 
