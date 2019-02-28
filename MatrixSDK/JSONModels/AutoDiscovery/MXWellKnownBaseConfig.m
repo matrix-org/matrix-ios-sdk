@@ -26,6 +26,12 @@
     MXJSONModelSetString(baseUrl, JSONDictionary[@"base_url"]);
     if (baseUrl)
     {
+        // Trim the last slash to make the url usable
+        if ([baseUrl hasSuffix:@"/"])
+        {
+            baseUrl = [baseUrl substringToIndex:baseUrl.length - 1];
+        }
+
         wellKnownBaseConfig = [MXWellKnownBaseConfig new];
         wellKnownBaseConfig.baseUrl = baseUrl;
     }
