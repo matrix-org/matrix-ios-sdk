@@ -29,42 +29,42 @@ NS_ASSUME_NONNULL_BEGIN
 /**
  The homeserver url (ex: "https://matrix.org").
  */
-@property (nonatomic) NSString *homeServer;
+@property (nonatomic, nullable) NSString *homeServer;
 
 /**
  The identity server url (ex: "https://vector.im").
  */
-@property (nonatomic) NSString *identityServer;
+@property (nonatomic, nullable) NSString *identityServer;
 
 /**
  The obtained user id.
  */
-@property (nonatomic) NSString *userId;
+@property (nonatomic, nullable) NSString *userId;
 
 /**
  The access token to create a MXRestClient
  */
-@property (nonatomic) NSString *accessToken;
+@property (nonatomic, nullable) NSString *accessToken;
 
 /**
  The device id.
  */
-@property (nonatomic) NSString *deviceId;
+@property (nonatomic, nullable) NSString *deviceId;
 
 /**
  The homeserver name (ex: "matrix.org").
  */
-- (NSString *)homeServerName;
+- (nullable NSString *)homeServerName;
 
 /**
  The server certificate trusted by the user (nil when the server is trusted by the device).
  */
-@property (nonatomic) NSData *allowedCertificate;
+@property (nonatomic, nullable) NSData *allowedCertificate;
 
 /**
  The ignored server certificate (set when the user ignores a certificate change).
  */
-@property (nonatomic) NSData *ignoredCertificate;
+@property (nonatomic, nullable) NSData *ignoredCertificate;
 
 
 /**
@@ -76,8 +76,8 @@ NS_ASSUME_NONNULL_BEGIN
  @return a MXCredentials instance.
  */
 - (instancetype)initWithHomeServer:(NSString*)homeServer
-                            userId:(NSString*)userId
-                       accessToken:(NSString*)accessToken;
+                            userId:(nullable NSString*)userId
+                       accessToken:(nullable NSString*)accessToken;
 
 /**
  Create credentials from a login or register response.
@@ -87,7 +87,7 @@ NS_ASSUME_NONNULL_BEGIN
  @return a MXCredentials instance.
  */
 - (instancetype)initWithLoginResponse:(MXLoginResponse*)loginResponse
-                andDefaultCredentials:(MXCredentials*)defaultCredentials;
+                andDefaultCredentials:(nullable MXCredentials*)defaultCredentials;
 
 @end
 
