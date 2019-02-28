@@ -32,9 +32,8 @@
     return self;
 }
 
-- (instancetype)initWithLoginResponse:(MXLoginResponse *)loginResponse
-                withDefaultHomeServer:(NSString *)homeServer
-            withDefaultIdentityServer:(NSString*)identityServer
+- (instancetype)initWithLoginResponse:(MXLoginResponse*)loginResponse
+                andDefaultCredentials:(MXCredentials*)defaultCredentials
 {
     self = [super init];
     if (self)
@@ -51,12 +50,12 @@
         {
             // Workaround: HS does not return the right URL in loginResponse.homeserver.
             // Use the passed one instead
-            _homeServer = homeServer;
+            _homeServer = [defaultCredentials.homeServer copy];
         }
 
         if (!_identityServer)
         {
-            _identityServer = identityServer;
+            _identityServer = [defaultCredentials.identityServer copy];
         }
     }
     return self;

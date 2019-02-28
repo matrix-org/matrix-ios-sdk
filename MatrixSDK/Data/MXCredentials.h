@@ -83,13 +83,11 @@ NS_ASSUME_NONNULL_BEGIN
  Create credentials from a login or register response.
 
  @param loginResponse the login or register response.
- @param homeServer the homeserver URL to use if we cannot trust loginResponse data.
- @param identityServer the identity server URL to use if not provided in loginResponse data.
+ @param defaultCredentials credentials to use if loginResponse data cannot be trusted or missing.
  @return a MXCredentials instance.
  */
 - (instancetype)initWithLoginResponse:(MXLoginResponse*)loginResponse
-                withDefaultHomeServer:(NSString*)homeServer
-            withDefaultIdentityServer:(NSString*)identityServer;
+                andDefaultCredentials:(MXCredentials*)defaultCredentials;
 
 @end
 

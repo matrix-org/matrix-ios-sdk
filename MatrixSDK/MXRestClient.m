@@ -108,52 +108,12 @@ MXAuthAction;
 @implementation MXRestClient
 @synthesize homeserver, homeserverSuffix, credentials, apiPathPrefix, contentPathPrefix, completionQueue, antivirusServerPathPrefix;
 
--(id)initWithHomeServer:(NSString *)inHomeserver andOnUnrecognizedCertificateBlock:(MXHTTPClientOnUnrecognizedCertificate)onUnrecognizedCertBlock
+-(id)initWithHomeServer:(NSString *)homeserver andOnUnrecognizedCertificateBlock:(MXHTTPClientOnUnrecognizedCertificate)onUnrecognizedCertBlock
 {
-    self = [super init];
-    if (self)
-    {
-        homeserver = inHomeserver;
-        apiPathPrefix = kMXAPIPrefixPathR0;
-        antivirusServerPathPrefix = kMXAntivirusAPIPrefixPathUnstable;
-        contentPathPrefix = kMXContentPrefixPath;
-        
-        httpClient = [[MXHTTPClient alloc] initWithBaseURL:homeserver
-                                               accessToken:nil
-                         andOnUnrecognizedCertificateBlock:^BOOL(NSData *certificate) {
+    MXCredentials *credentials = [MXCredentials new];
+    credentials.homeServer = homeserver;
 
-                             if ([[MXAllowedCertificates sharedInstance] isCertificateAllowed:certificate])
-                             {
-                                 return YES;
-                             }
-
-                             // Let the app ask the end user to verify it
-                             if (onUnrecognizedCertBlock)
-                             {
-                                 BOOL allowed = onUnrecognizedCertBlock(certificate);
-
-                                 if (allowed)
-                                 {
-                                     // Store the allowed certificate for further requests
-                                     [[MXAllowedCertificates sharedInstance] addCertificate:certificate];
-                                 }
-
-                                 return allowed;
-                             }
-                             else
-                             {
-                                 return NO;
-                             }
-                         }];
-        
-        // By default, use the same address for the identity server
-        self.identityServer = homeserver;
-
-        completionQueue = dispatch_get_main_queue();
-
-        processingQueue = dispatch_queue_create("MXRestClient", DISPATCH_QUEUE_SERIAL);
-    }
-    return self;
+    return [self initWithCredentials:credentials andOnUnrecognizedCertificateBlock:onUnrecognizedCertBlock];
 }
 
 -(id)initWithCredentials:(MXCredentials*)inCredentials andOnUnrecognizedCertificateBlock:(MXHTTPClientOnUnrecognizedCertificate)onUnrecognizedCertBlock
@@ -425,8 +385,7 @@ MXAuthAction;
 
                 // Update our credentials
                 self.credentials = [[MXCredentials alloc] initWithLoginResponse:loginResponse
-                                                          withDefaultHomeServer:self.homeserver
-                                                      withDefaultIdentityServer:self.identityServer];
+                                                          andDefaultCredentials:self.credentials];
 
                 // Report the certificate trusted by user (if any)
                 self->credentials.allowedCertificate = self->httpClient.allowedCertificate;
@@ -567,8 +526,7 @@ MXAuthAction;
 
                        // Update our credentials
                        self.credentials = [[MXCredentials alloc] initWithLoginResponse:loginResponse
-                                                                 withDefaultHomeServer:self.homeserver
-                                                             withDefaultIdentityServer:self.identityServer];
+                                                                 andDefaultCredentials:self.credentials];
 
                        // Report the certificate trusted by user (if any)
                        self->credentials.allowedCertificate = self->httpClient.allowedCertificate;
