@@ -210,9 +210,16 @@ MXAuthAction;
                                  return NO;
                              }
                          }];
-        
-        // By default, use the same address for the identity server
-        self.identityServer = homeserver;
+
+        if (inCredentials.identityServer)
+        {
+            self.identityServer = inCredentials.identityServer;
+        }
+        else
+        {
+            // By default, use the same address for the identity server
+            self.identityServer = homeserver;
+        }
 
         completionQueue = dispatch_get_main_queue();
 
@@ -418,7 +425,8 @@ MXAuthAction;
 
                 // Update our credentials
                 self.credentials = [[MXCredentials alloc] initWithLoginResponse:loginResponse
-            withDefaultHomeServer:self->homeserver];
+                                                          withDefaultHomeServer:self.homeserver
+                                                      withDefaultIdentityServer:self.identityServer];
 
                 // Report the certificate trusted by user (if any)
                 self->credentials.allowedCertificate = self->httpClient.allowedCertificate;
@@ -559,7 +567,8 @@ MXAuthAction;
 
                        // Update our credentials
                        self.credentials = [[MXCredentials alloc] initWithLoginResponse:loginResponse
-                                                                 withDefaultHomeServer:self->homeserver];
+                                                                 withDefaultHomeServer:self.homeserver
+                                                             withDefaultIdentityServer:self.identityServer];
 
                        // Report the certificate trusted by user (if any)
                        self->credentials.allowedCertificate = self->httpClient.allowedCertificate;

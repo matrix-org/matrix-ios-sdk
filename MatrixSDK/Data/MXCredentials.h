@@ -32,6 +32,11 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic) NSString *homeServer;
 
 /**
+ The identity server url (ex: "https://vector.im").
+ */
+@property (nonatomic) NSString *identityServer;
+
+/**
  The obtained user id.
  */
 @property (nonatomic) NSString *userId;
@@ -78,11 +83,13 @@ NS_ASSUME_NONNULL_BEGIN
  Create credentials from a login or register response.
 
  @param loginResponse the login or register response.
- @param homeServer the homeserver URL to use if we cannot trust loginResponse data
+ @param homeServer the homeserver URL to use if we cannot trust loginResponse data.
+ @param identityServer the identity server URL to use if not provided in loginResponse data.
  @return a MXCredentials instance.
  */
 - (instancetype)initWithLoginResponse:(MXLoginResponse*)loginResponse
-                withDefaultHomeServer:(NSString*)homeServer;
+                withDefaultHomeServer:(NSString*)homeServer
+            withDefaultIdentityServer:(NSString*)identityServer;
 
 @end
 

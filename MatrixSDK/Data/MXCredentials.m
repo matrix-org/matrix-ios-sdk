@@ -34,6 +34,7 @@
 
 - (instancetype)initWithLoginResponse:(MXLoginResponse *)loginResponse
                 withDefaultHomeServer:(NSString *)homeServer
+            withDefaultIdentityServer:(NSString*)identityServer
 {
     self = [super init];
     if (self)
@@ -44,12 +45,18 @@
 
         // Use wellknown data first
         _homeServer = loginResponse.wellknown.homeServer.baseUrl;
+        _identityServer = loginResponse.wellknown.homeServer.baseUrl;
 
         if (!_homeServer)
         {
             // Workaround: HS does not return the right URL in loginResponse.homeserver.
             // Use the passed one instead
             _homeServer = homeServer;
+        }
+
+        if (!_identityServer)
+        {
+            _identityServer = identityServer;
         }
     }
     return self;
