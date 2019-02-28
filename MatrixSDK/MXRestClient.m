@@ -127,58 +127,63 @@ MXAuthAction;
         contentPathPrefix = kMXContentPrefixPath;
         
         self.credentials = inCredentials;
-        
-        httpClient = [[MXHTTPClient alloc] initWithBaseURL:homeserver
-                                               accessToken:credentials.accessToken
-                         andOnUnrecognizedCertificateBlock:^BOOL(NSData *certificate) {
 
-                             // Check whether the provided certificate has been already trusted
-                             if ([[MXAllowedCertificates sharedInstance] isCertificateAllowed:certificate])
-                             {
-                                 return YES;
-                             }
-
-                             // Check whether the provided certificate is the already trusted by the user.
-                             if (inCredentials.allowedCertificate && [inCredentials.allowedCertificate isEqualToData:certificate])
-                             {
-                                 // Store the allowed certificate for further requests (from MXMediaManager)
-                                 [[MXAllowedCertificates sharedInstance] addCertificate:certificate];
-                                 return YES;
-                             }
-
-                             // Check whether the user has already ignored this certificate change.
-                             if (inCredentials.ignoredCertificate && [inCredentials.ignoredCertificate isEqualToData:certificate])
-                             {
-                                 return NO;
-                             }
-
-                             // Let the app ask the end user to verify it
-                             if (onUnrecognizedCertBlock)
-                             {
-                                 BOOL allowed = onUnrecognizedCertBlock(certificate);
-
-                                 if (allowed)
-                                 {
-                                     // Store the allowed certificate for further requests
-                                     [[MXAllowedCertificates sharedInstance] addCertificate:certificate];
-                                 }
-
-                                 return allowed;
-                             }
-                             else
-                             {
-                                 return NO;
-                             }
-                         }];
-
-        if (inCredentials.identityServer)
+        if (credentials.homeServer)
         {
-            self.identityServer = inCredentials.identityServer;
+            httpClient = [[MXHTTPClient alloc] initWithBaseURL:credentials.homeServer
+                                                   accessToken:credentials.accessToken
+                             andOnUnrecognizedCertificateBlock:^BOOL(NSData *certificate)
+                          {
+
+                              // Check whether the provided certificate has been already trusted
+                              if ([[MXAllowedCertificates sharedInstance] isCertificateAllowed:certificate])
+                              {
+                                  return YES;
+                              }
+
+                              // Check whether the provided certificate is the already trusted by the user.
+                              if (inCredentials.allowedCertificate && [inCredentials.allowedCertificate isEqualToData:certificate])
+                              {
+                                  // Store the allowed certificate for further requests (from MXMediaManager)
+                                  [[MXAllowedCertificates sharedInstance] addCertificate:certificate];
+                                  return YES;
+                              }
+
+                              // Check whether the user has already ignored this certificate change.
+                              if (inCredentials.ignoredCertificate && [inCredentials.ignoredCertificate isEqualToData:certificate])
+                              {
+                                  return NO;
+                              }
+
+                              // Let the app ask the end user to verify it
+                              if (onUnrecognizedCertBlock)
+                              {
+                                  BOOL allowed = onUnrecognizedCertBlock(certificate);
+
+                                  if (allowed)
+                                  {
+                                      // Store the allowed certificate for further requests
+                                      [[MXAllowedCertificates sharedInstance] addCertificate:certificate];
+                                  }
+
+                                  return allowed;
+                              }
+                              else
+                              {
+                                  return NO;
+                              }
+                          }];
         }
-        else
+
+
+        if (self.credentials.identityServer)
+        {
+            self.identityServer = self.credentials.identityServer;
+        }
+        else if (self.credentials.homeServer)
         {
             // By default, use the same address for the identity server
-            self.identityServer = homeserver;
+            self.identityServer = self.credentials.homeServer;
         }
 
         completionQueue = dispatch_get_main_queue();
