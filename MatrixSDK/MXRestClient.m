@@ -106,7 +106,7 @@ MXAuthAction;
 @end
 
 @implementation MXRestClient
-@synthesize homeserver, homeserverSuffix, credentials, apiPathPrefix, contentPathPrefix, completionQueue, antivirusServerPathPrefix;
+@synthesize credentials, apiPathPrefix, contentPathPrefix, completionQueue, antivirusServerPathPrefix;
 
 -(id)initWithHomeServer:(NSString *)homeserver andOnUnrecognizedCertificateBlock:(MXHTTPClientOnUnrecognizedCertificate)onUnrecognizedCertBlock
 {
@@ -121,7 +121,6 @@ MXAuthAction;
     self = [super init];
     if (self)
     {
-        homeserver = inCredentials.homeServer;
         apiPathPrefix = kMXAPIPrefixPathR0;
         antivirusServerPathPrefix = kMXAntivirusAPIPrefixPathUnstable;
         contentPathPrefix = kMXContentPrefixPath;
@@ -195,9 +194,7 @@ MXAuthAction;
 
 - (void)close
 {
-    homeserver = nil;
     credentials = nil;
-    homeserverSuffix = nil;
     httpClient = nil;
     identityHttpClient = nil;
     antivirusHttpClient = nil;
@@ -206,10 +203,15 @@ MXAuthAction;
     completionQueue = nil;
 }
 
-- (void)setCredentials:(MXCredentials *)inCredentials
+- (NSString *)homeserver
 {
-    credentials = inCredentials;
-    
+    return self.credentials.homeServer;
+}
+
+- (NSString *)homeserverSuffix
+{
+    NSString *homeserverSuffix;
+
     // Extract homeserver suffix from userId
     NSArray *components = [credentials.userId componentsSeparatedByString:@":"];
     if (components.count > 1)
@@ -223,6 +225,13 @@ MXAuthAction;
     {
         NSLog(@"[MXRestClient] Warning: the userId is not correctly formatted: %@", credentials.userId);
     }
+
+    return homeserverSuffix;
+}
+
+- (void)setCredentials:(MXCredentials *)inCredentials
+{
+    credentials = inCredentials;
 }
 
 - (NSData*)allowedCertificate
@@ -419,7 +428,7 @@ MXAuthAction;
 
 - (NSString*)registerFallback;
 {
-    return [[NSURL URLWithString:@"_matrix/static/client/register/" relativeToURL:[NSURL URLWithString:homeserver]] absoluteString];
+    return [[NSURL URLWithString:@"_matrix/static/client/register/" relativeToURL:[NSURL URLWithString:self.credentials.homeServer]] absoluteString];
 }
 
 - (MXHTTPOperation *)forgetPasswordForEmail:(NSString *)email
@@ -428,7 +437,7 @@ MXAuthAction;
                                     success:(void (^)(NSString *sid))success
                                     failure:(void (^)(NSError *error))failure
 {
-    NSString *identityServer = _identityServer;
+    NSString *identityServer = self.credentials.identityServer;
     if ([identityServer hasPrefix:@"http://"] || [identityServer hasPrefix:@"https://"])
     {
         identityServer = [identityServer substringFromIndex:[identityServer rangeOfString:@"://"].location + 3];
@@ -549,7 +558,7 @@ MXAuthAction;
 
 - (NSString*)loginFallback;
 {
-    return [[NSURL URLWithString:@"/_matrix/static/client/login/" relativeToURL:[NSURL URLWithString:homeserver]] absoluteString];
+    return [[NSURL URLWithString:@"/_matrix/static/client/login/" relativeToURL:[NSURL URLWithString:self.credentials.homeServer]] absoluteString];
 }
 
 
@@ -873,7 +882,7 @@ MXAuthAction;
                                  success:(void (^)(NSString *sid))success
                                  failure:(void (^)(NSError *error))failure
 {
-    NSString *identityServer = _identityServer;
+    NSString *identityServer = self.credentials.identityServer;
     if ([identityServer hasPrefix:@"http://"] || [identityServer hasPrefix:@"https://"])
     {
         identityServer = [identityServer substringFromIndex:[identityServer rangeOfString:@"://"].location + 3];
@@ -933,7 +942,7 @@ MXAuthAction;
                                        success:(void (^)(NSString *sid, NSString *msisdn))success
                                        failure:(void (^)(NSError *error))failure
 {
-    NSString *identityServer = _identityServer;
+    NSString *identityServer = self.credentials.identityServer;
     if ([identityServer hasPrefix:@"http://"] || [identityServer hasPrefix:@"https://"])
     {
         identityServer = [identityServer substringFromIndex:[identityServer rangeOfString:@"://"].location + 3];
@@ -1866,7 +1875,7 @@ MXAuthAction;
                              failure:(void (^)(NSError *error))failure
 {
     // The identity server must be defined
-    if (!_identityServer)
+    if (!self.credentials.identityServer)
     {
         MXError *error = [[MXError alloc] initWithErrorCode:kMXSDKErrCodeStringMissingParameters error:@"No supplied identity server URL"];
         [self dispatchFailure:[error createNSError] inBlock:failure];
@@ -1876,7 +1885,7 @@ MXAuthAction;
     NSString *path = [NSString stringWithFormat:@"%@/rooms/%@/invite", apiPathPrefix, roomId];
 
     // This request must not have the protocol part
-    NSString *identityServer = _identityServer;
+    NSString *identityServer = self.credentials.identityServer;
     if ([identityServer hasPrefix:@"http://"] || [identityServer hasPrefix:@"https://"])
     {
         identityServer = [identityServer substringFromIndex:[identityServer rangeOfString:@"://"].location + 3];
@@ -2754,7 +2763,7 @@ MXAuthAction;
                     success:(void (^)(void))success
                     failure:(void (^)(NSError *error))failure
 {
-    NSURL *identityServerURL = [NSURL URLWithString:_identityServer];
+    NSURL *identityServerURL = [NSURL URLWithString:self.credentials.identityServer];
     NSDictionary *parameters = @{
                                  @"three_pid_creds": @{
                                          @"id_server": identityServerURL.host,
@@ -3252,12 +3261,17 @@ MXAuthAction;
 #pragma mark - Identity server API
 - (void)setIdentityServer:(NSString *)identityServer
 {
-    _identityServer = [identityServer copy];
+    self.credentials.identityServer = [identityServer copy];
     identityHttpClient = [[MXHTTPClient alloc] initWithBaseURL:[NSString stringWithFormat:@"%@/%@", identityServer, kMXIdentityAPIPrefixPath]
                              andOnUnrecognizedCertificateBlock:nil];
 
     // The identity server accepts parameters in form data form not in JSON
     identityHttpClient.requestParametersInJSON = NO;
+}
+
+- (NSString *)identityServer
+{
+    return self.credentials.identityServer;
 }
 
 - (MXHTTPOperation*)lookup3pid:(NSString*)address
