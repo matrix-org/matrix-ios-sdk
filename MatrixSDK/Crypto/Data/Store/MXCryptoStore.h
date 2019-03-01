@@ -22,6 +22,7 @@
 #ifdef MX_CRYPTO
 
 #import "MXJSONModels.h"
+#import "MXCredentials.h"
 
 #import <OLMKit/OLMKit.h>
 #import "MXOlmSession.h"

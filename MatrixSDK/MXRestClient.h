@@ -90,14 +90,15 @@ FOUNDATION_EXPORT NSString *const kMXMembersOfRoomParametersNotMembership;
 @interface MXRestClient : NSObject
 
 /**
- The homeserver URL.
- */
-@property (nonatomic, readonly) NSString *homeserver;
-
-/**
- The user credentials on this home server.
+ Credentials for the Matrix Client-Server API.
  */
 @property (nonatomic, readonly) MXCredentials *credentials;
+
+/**
+ The homeserver URL.
+ Shortcut to credentials.homeServer.
+ */
+@property (nonatomic, readonly) NSString *homeserver;
 
 /**
  The homeserver suffix (for example ":matrix.org"). Available only when credentials have been set.
@@ -105,21 +106,8 @@ FOUNDATION_EXPORT NSString *const kMXMembersOfRoomParametersNotMembership;
 @property (nonatomic, readonly) NSString *homeserverSuffix;
 
 /**
- The Client-Server API prefix to use.
- By default, it is '_matrix/client/r0'. See kMXAPIPrefixPathR0 and kMXAPIPrefixPathUnstable for constants.
- */
-@property (nonatomic) NSString *apiPathPrefix;
-
-/**
- The Matrix content repository prefix to use.
- By default, it is defined by the constant kMXContentPrefixPath.
- */
-@property (nonatomic) NSString *contentPathPrefix;
-
-/**
  The identity server URL.
- By default, it points to the defined home server. If needed, change it by setting
- this property.
+ Shortcut to credentials.identityServer.
  */
 @property (nonatomic) NSString *identityServer;
 
@@ -135,6 +123,18 @@ FOUNDATION_EXPORT NSString *const kMXMembersOfRoomParametersNotMembership;
  In case of a custom path prefix use, set it before settings the antivirus server url.
  */
 @property (nonatomic) NSString *antivirusServerPathPrefix;
+
+/**
+ The Client-Server API prefix to use.
+ By default, it is '_matrix/client/r0'. See kMXAPIPrefixPathR0 and kMXAPIPrefixPathUnstable for constants.
+ */
+@property (nonatomic) NSString *apiPathPrefix;
+
+/**
+ The Matrix content repository prefix to use.
+ By default, it is defined by the constant kMXContentPrefixPath.
+ */
+@property (nonatomic) NSString *contentPathPrefix;
 
 /**
  The current trusted certificate (if any).

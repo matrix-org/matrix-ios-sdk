@@ -106,54 +106,14 @@ MXAuthAction;
 @end
 
 @implementation MXRestClient
-@synthesize homeserver, homeserverSuffix, credentials, apiPathPrefix, contentPathPrefix, completionQueue, antivirusServerPathPrefix;
+@synthesize credentials, apiPathPrefix, contentPathPrefix, completionQueue, antivirusServerPathPrefix;
 
--(id)initWithHomeServer:(NSString *)inHomeserver andOnUnrecognizedCertificateBlock:(MXHTTPClientOnUnrecognizedCertificate)onUnrecognizedCertBlock
+-(id)initWithHomeServer:(NSString *)homeserver andOnUnrecognizedCertificateBlock:(MXHTTPClientOnUnrecognizedCertificate)onUnrecognizedCertBlock
 {
-    self = [super init];
-    if (self)
-    {
-        homeserver = inHomeserver;
-        apiPathPrefix = kMXAPIPrefixPathR0;
-        antivirusServerPathPrefix = kMXAntivirusAPIPrefixPathUnstable;
-        contentPathPrefix = kMXContentPrefixPath;
-        
-        httpClient = [[MXHTTPClient alloc] initWithBaseURL:homeserver
-                                               accessToken:nil
-                         andOnUnrecognizedCertificateBlock:^BOOL(NSData *certificate) {
+    MXCredentials *credentials = [MXCredentials new];
+    credentials.homeServer = homeserver;
 
-                             if ([[MXAllowedCertificates sharedInstance] isCertificateAllowed:certificate])
-                             {
-                                 return YES;
-                             }
-
-                             // Let the app ask the end user to verify it
-                             if (onUnrecognizedCertBlock)
-                             {
-                                 BOOL allowed = onUnrecognizedCertBlock(certificate);
-
-                                 if (allowed)
-                                 {
-                                     // Store the allowed certificate for further requests
-                                     [[MXAllowedCertificates sharedInstance] addCertificate:certificate];
-                                 }
-
-                                 return allowed;
-                             }
-                             else
-                             {
-                                 return NO;
-                             }
-                         }];
-        
-        // By default, use the same address for the identity server
-        self.identityServer = homeserver;
-
-        completionQueue = dispatch_get_main_queue();
-
-        processingQueue = dispatch_queue_create("MXRestClient", DISPATCH_QUEUE_SERIAL);
-    }
-    return self;
+    return [self initWithCredentials:credentials andOnUnrecognizedCertificateBlock:onUnrecognizedCertBlock];
 }
 
 -(id)initWithCredentials:(MXCredentials*)inCredentials andOnUnrecognizedCertificateBlock:(MXHTTPClientOnUnrecognizedCertificate)onUnrecognizedCertBlock
@@ -161,58 +121,69 @@ MXAuthAction;
     self = [super init];
     if (self)
     {
-        homeserver = inCredentials.homeServer;
         apiPathPrefix = kMXAPIPrefixPathR0;
         antivirusServerPathPrefix = kMXAntivirusAPIPrefixPathUnstable;
         contentPathPrefix = kMXContentPrefixPath;
         
-        self.credentials = inCredentials;
-        
-        httpClient = [[MXHTTPClient alloc] initWithBaseURL:homeserver
-                                               accessToken:credentials.accessToken
-                         andOnUnrecognizedCertificateBlock:^BOOL(NSData *certificate) {
+        credentials = inCredentials;
 
-                             // Check whether the provided certificate has been already trusted
-                             if ([[MXAllowedCertificates sharedInstance] isCertificateAllowed:certificate])
-                             {
-                                 return YES;
-                             }
+        if (credentials.homeServer)
+        {
+            httpClient = [[MXHTTPClient alloc] initWithBaseURL:credentials.homeServer
+                                                   accessToken:credentials.accessToken
+                             andOnUnrecognizedCertificateBlock:^BOOL(NSData *certificate)
+                          {
 
-                             // Check whether the provided certificate is the already trusted by the user.
-                             if (inCredentials.allowedCertificate && [inCredentials.allowedCertificate isEqualToData:certificate])
-                             {
-                                 // Store the allowed certificate for further requests (from MXMediaManager)
-                                 [[MXAllowedCertificates sharedInstance] addCertificate:certificate];
-                                 return YES;
-                             }
+                              // Check whether the provided certificate has been already trusted
+                              if ([[MXAllowedCertificates sharedInstance] isCertificateAllowed:certificate])
+                              {
+                                  return YES;
+                              }
 
-                             // Check whether the user has already ignored this certificate change.
-                             if (inCredentials.ignoredCertificate && [inCredentials.ignoredCertificate isEqualToData:certificate])
-                             {
-                                 return NO;
-                             }
+                              // Check whether the provided certificate is the already trusted by the user.
+                              if (inCredentials.allowedCertificate && [inCredentials.allowedCertificate isEqualToData:certificate])
+                              {
+                                  // Store the allowed certificate for further requests (from MXMediaManager)
+                                  [[MXAllowedCertificates sharedInstance] addCertificate:certificate];
+                                  return YES;
+                              }
 
-                             // Let the app ask the end user to verify it
-                             if (onUnrecognizedCertBlock)
-                             {
-                                 BOOL allowed = onUnrecognizedCertBlock(certificate);
+                              // Check whether the user has already ignored this certificate change.
+                              if (inCredentials.ignoredCertificate && [inCredentials.ignoredCertificate isEqualToData:certificate])
+                              {
+                                  return NO;
+                              }
 
-                                 if (allowed)
-                                 {
-                                     // Store the allowed certificate for further requests
-                                     [[MXAllowedCertificates sharedInstance] addCertificate:certificate];
-                                 }
+                              // Let the app ask the end user to verify it
+                              if (onUnrecognizedCertBlock)
+                              {
+                                  BOOL allowed = onUnrecognizedCertBlock(certificate);
 
-                                 return allowed;
-                             }
-                             else
-                             {
-                                 return NO;
-                             }
-                         }];
-        
-        // By default, use the same address for the identity server
-        self.identityServer = homeserver;
+                                  if (allowed)
+                                  {
+                                      // Store the allowed certificate for further requests
+                                      [[MXAllowedCertificates sharedInstance] addCertificate:certificate];
+                                  }
+
+                                  return allowed;
+                              }
+                              else
+                              {
+                                  return NO;
+                              }
+                          }];
+        }
+
+
+        if (self.credentials.identityServer)
+        {
+            self.identityServer = self.credentials.identityServer;
+        }
+        else if (self.credentials.homeServer)
+        {
+            // By default, use the same address for the identity server
+            self.identityServer = self.credentials.homeServer;
+        }
 
         completionQueue = dispatch_get_main_queue();
 
@@ -223,9 +194,7 @@ MXAuthAction;
 
 - (void)close
 {
-    homeserver = nil;
     credentials = nil;
-    homeserverSuffix = nil;
     httpClient = nil;
     identityHttpClient = nil;
     antivirusHttpClient = nil;
@@ -234,10 +203,15 @@ MXAuthAction;
     completionQueue = nil;
 }
 
-- (void)setCredentials:(MXCredentials *)inCredentials
+- (NSString *)homeserver
 {
-    credentials = inCredentials;
-    
+    return self.credentials.homeServer;
+}
+
+- (NSString *)homeserverSuffix
+{
+    NSString *homeserverSuffix;
+
     // Extract homeserver suffix from userId
     NSArray *components = [credentials.userId componentsSeparatedByString:@":"];
     if (components.count > 1)
@@ -251,6 +225,8 @@ MXAuthAction;
     {
         NSLog(@"[MXRestClient] Warning: the userId is not correctly formatted: %@", credentials.userId);
     }
+
+    return homeserverSuffix;
 }
 
 - (NSData*)allowedCertificate
@@ -413,11 +389,12 @@ MXAuthAction;
 
             [self dispatchProcessing:nil andCompletion:^{
 
-                // Update our credentials
-                self.credentials = [MXCredentials modelFromJSON:JSONResponse];
+                MXLoginResponse *loginResponse;
+                MXJSONModelSetMXJSONModel(loginResponse, MXLoginResponse, JSONResponse);
 
-                // Workaround: HS does not return the right URL. Use the one we used to make the request
-                self->credentials.homeServer = self->homeserver;
+                // Update our credentials
+                self->credentials = [[MXCredentials alloc] initWithLoginResponse:loginResponse
+                                                           andDefaultCredentials:self.credentials];
 
                 // Report the certificate trusted by user (if any)
                 self->credentials.allowedCertificate = self->httpClient.allowedCertificate;
@@ -446,7 +423,13 @@ MXAuthAction;
 
 - (NSString*)registerFallback;
 {
-    return [[NSURL URLWithString:@"_matrix/static/client/register/" relativeToURL:[NSURL URLWithString:homeserver]] absoluteString];
+    NSString *registerFallback;
+
+    if (self.credentials.homeServer)
+    {
+        registerFallback = [[NSURL URLWithString:@"_matrix/static/client/register/" relativeToURL:[NSURL URLWithString:self.credentials.homeServer]] absoluteString];
+    }
+    return registerFallback;
 }
 
 - (MXHTTPOperation *)forgetPasswordForEmail:(NSString *)email
@@ -455,7 +438,7 @@ MXAuthAction;
                                     success:(void (^)(NSString *sid))success
                                     failure:(void (^)(NSError *error))failure
 {
-    NSString *identityServer = _identityServer;
+    NSString *identityServer = self.credentials.identityServer;
     if ([identityServer hasPrefix:@"http://"] || [identityServer hasPrefix:@"https://"])
     {
         identityServer = [identityServer substringFromIndex:[identityServer rangeOfString:@"://"].location + 3];
@@ -553,11 +536,12 @@ MXAuthAction;
                    [self dispatchProcessing:nil andCompletion:^{
                        MXStrongifyAndReturnIfNil(self);
 
-                       // Update our credentials
-                       self.credentials = [MXCredentials modelFromJSON:JSONResponse];
+                       MXLoginResponse *loginResponse;
+                       MXJSONModelSetMXJSONModel(loginResponse, MXLoginResponse, JSONResponse);
 
-                       // Workaround: HS does not return the right URL. Use the one we used to make the request
-                       self->credentials.homeServer = self->homeserver;
+                       // Update our credentials
+                       self->credentials = [[MXCredentials alloc] initWithLoginResponse:loginResponse
+                                                                  andDefaultCredentials:self.credentials];
 
                        // Report the certificate trusted by user (if any)
                        self->credentials.allowedCertificate = self->httpClient.allowedCertificate;
@@ -575,7 +559,13 @@ MXAuthAction;
 
 - (NSString*)loginFallback;
 {
-    return [[NSURL URLWithString:@"/_matrix/static/client/login/" relativeToURL:[NSURL URLWithString:homeserver]] absoluteString];
+    NSString *loginFallback;
+
+    if (self.credentials.homeServer)
+    {
+        loginFallback = [[NSURL URLWithString:@"/_matrix/static/client/login/" relativeToURL:[NSURL URLWithString:self.credentials.homeServer]] absoluteString];
+    }
+    return loginFallback;
 }
 
 
@@ -899,7 +889,7 @@ MXAuthAction;
                                  success:(void (^)(NSString *sid))success
                                  failure:(void (^)(NSError *error))failure
 {
-    NSString *identityServer = _identityServer;
+    NSString *identityServer = self.credentials.identityServer;
     if ([identityServer hasPrefix:@"http://"] || [identityServer hasPrefix:@"https://"])
     {
         identityServer = [identityServer substringFromIndex:[identityServer rangeOfString:@"://"].location + 3];
@@ -959,7 +949,7 @@ MXAuthAction;
                                        success:(void (^)(NSString *sid, NSString *msisdn))success
                                        failure:(void (^)(NSError *error))failure
 {
-    NSString *identityServer = _identityServer;
+    NSString *identityServer = self.credentials.identityServer;
     if ([identityServer hasPrefix:@"http://"] || [identityServer hasPrefix:@"https://"])
     {
         identityServer = [identityServer substringFromIndex:[identityServer rangeOfString:@"://"].location + 3];
@@ -1892,7 +1882,7 @@ MXAuthAction;
                              failure:(void (^)(NSError *error))failure
 {
     // The identity server must be defined
-    if (!_identityServer)
+    if (!self.credentials.identityServer)
     {
         MXError *error = [[MXError alloc] initWithErrorCode:kMXSDKErrCodeStringMissingParameters error:@"No supplied identity server URL"];
         [self dispatchFailure:[error createNSError] inBlock:failure];
@@ -1902,7 +1892,7 @@ MXAuthAction;
     NSString *path = [NSString stringWithFormat:@"%@/rooms/%@/invite", apiPathPrefix, roomId];
 
     // This request must not have the protocol part
-    NSString *identityServer = _identityServer;
+    NSString *identityServer = self.credentials.identityServer;
     if ([identityServer hasPrefix:@"http://"] || [identityServer hasPrefix:@"https://"])
     {
         identityServer = [identityServer substringFromIndex:[identityServer rangeOfString:@"://"].location + 3];
@@ -2780,7 +2770,12 @@ MXAuthAction;
                     success:(void (^)(void))success
                     failure:(void (^)(NSError *error))failure
 {
-    NSURL *identityServerURL = [NSURL URLWithString:_identityServer];
+    if (!self.credentials.identityServer)
+    {
+        NSLog(@"[MXRestClient] add3PID: Error: Missing identityServer");
+    }
+
+    NSURL *identityServerURL = [NSURL URLWithString:self.credentials.identityServer];
     NSDictionary *parameters = @{
                                  @"three_pid_creds": @{
                                          @"id_server": identityServerURL.host,
@@ -3278,12 +3273,17 @@ MXAuthAction;
 #pragma mark - Identity server API
 - (void)setIdentityServer:(NSString *)identityServer
 {
-    _identityServer = [identityServer copy];
+    self.credentials.identityServer = [identityServer copy];
     identityHttpClient = [[MXHTTPClient alloc] initWithBaseURL:[NSString stringWithFormat:@"%@/%@", identityServer, kMXIdentityAPIPrefixPath]
                              andOnUnrecognizedCertificateBlock:nil];
 
     // The identity server accepts parameters in form data form not in JSON
     identityHttpClient.requestParametersInJSON = NO;
+}
+
+- (NSString *)identityServer
+{
+    return self.credentials.identityServer;
 }
 
 - (MXHTTPOperation*)lookup3pid:(NSString*)address
