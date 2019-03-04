@@ -155,6 +155,8 @@
 NSString *const kMXLoginFlowTypePassword = @"m.login.password";
 NSString *const kMXLoginFlowTypeRecaptcha = @"m.login.recaptcha";
 NSString *const kMXLoginFlowTypeOAuth2 = @"m.login.oauth2";
+NSString *const kMXLoginFlowTypeCAS = @"m.login.cas";
+NSString *const kMXLoginFlowTypeSSO = @"m.login.sso";
 NSString *const kMXLoginFlowTypeEmailIdentity = @"m.login.email.identity";
 NSString *const kMXLoginFlowTypeToken = @"m.login.token";
 NSString *const kMXLoginFlowTypeDummy = @"m.login.dummy";
