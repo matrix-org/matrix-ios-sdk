@@ -202,11 +202,14 @@ typedef NSString* MXLoginFlowType NS_REFINED_FOR_SWIFT;
 FOUNDATION_EXPORT NSString *const kMXLoginFlowTypePassword;
 FOUNDATION_EXPORT NSString *const kMXLoginFlowTypeRecaptcha;
 FOUNDATION_EXPORT NSString *const kMXLoginFlowTypeOAuth2;
+FOUNDATION_EXPORT NSString *const kMXLoginFlowTypeCAS;
+FOUNDATION_EXPORT NSString *const kMXLoginFlowTypeSSO;
 FOUNDATION_EXPORT NSString *const kMXLoginFlowTypeEmailIdentity;
 FOUNDATION_EXPORT NSString *const kMXLoginFlowTypeToken;
 FOUNDATION_EXPORT NSString *const kMXLoginFlowTypeDummy;
 FOUNDATION_EXPORT NSString *const kMXLoginFlowTypeMSISDN;
 FOUNDATION_EXPORT NSString *const kMXLoginFlowTypeTerms;
+
 
 FOUNDATION_EXPORT NSString *const kMXLoginFlowTypeEmailCode; // Deprecated
 
