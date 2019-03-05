@@ -1109,6 +1109,11 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
     return _state >= MXKeyBackupStateReadyToBackUp;
 }
 
+- (BOOL)hasKeysToBackup
+{
+    return [crypto.store inboundGroupSessionsToBackup:1].count > 0;
+}
+
 
 #pragma mark - Private methods -
 

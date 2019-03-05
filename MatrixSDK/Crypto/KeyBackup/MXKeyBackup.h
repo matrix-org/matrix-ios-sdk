@@ -356,6 +356,11 @@ FOUNDATION_EXPORT NSString *const kMXKeyBackupDidStateChangeNotification;
  */
 @property (nonatomic, readonly, nullable) OLMPkEncryption *backupKey;
 
+/**
+ Indicate if their are keys to backup.
+ */
+@property (nonatomic, readonly) BOOL hasKeysToBackup;
+
 @end
 
 NS_ASSUME_NONNULL_END
