@@ -628,6 +628,11 @@ NSString *const kMXPushRuleConditionStringSenderNotificationPermission  = @"send
     return pushRule;
 }
 
+- (NSString *)description
+{
+    return [NSString stringWithFormat:@"<MXPushRule: %p> ruleId: %@ - isDefault: %@ - enabled: %@ - actions: %@", self, _ruleId, @(_isDefault), @(_enabled), _actions];
+}
+
 @end
 
 @implementation MXPushRuleAction
@@ -640,6 +645,11 @@ NSString *const kMXPushRuleConditionStringSenderNotificationPermission  = @"send
         _actionType = MXPushRuleActionTypeCustom;
     }
     return self;
+}
+
+- (NSString *)description
+{
+    return [NSString stringWithFormat:@"<MXPushRuleAction: %p> action: %@ - parameters: %@", self, _action, _parameters];
 }
 
 @end
