@@ -76,4 +76,12 @@
  */
 - (void)mutateTo:(MXHTTPOperation*)operation;
 
+/**
+ Extract the NSHTTPURLResponse from an error.
+
+ @param error the request error.
+ @return the HTTP response.
+ */
++ (NSHTTPURLResponse *)urlResponseFromError:(NSError*)error;
+
 @end

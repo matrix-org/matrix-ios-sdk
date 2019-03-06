@@ -7,6 +7,7 @@ Improvements:
  * Login: Handle well-known data in the login response - MSC1730 (vector-im/riot-ios/issues/2298).
  * Login: Add kMXLoginFlowTypeCAS & kMXLoginFlowTypeSSO.
  * MXRestClient: Expose acceptableContentTypes.
+ * MXHTTPOperation: Add urlResponseFromError:, a tool to retrieve the original NSHTTPURLResponse object.
 
 Bug Fix:
  * Crypto: Fix crash in MXKeyBackup (vector-im/riot-ios/issues/#2281).
