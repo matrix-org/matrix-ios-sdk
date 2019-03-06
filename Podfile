@@ -17,5 +17,7 @@ end
 
 target "MatrixSDKTests" do
 
+pod 'OHHTTPStubs', '~> 6.1.0'
+
 end
 

@@ -35,4 +35,9 @@
     return wellknown;
 }
 
+- (NSString *)description
+{
+    return [NSString stringWithFormat:@"<MXWellKnown: %p> homeserver: %@ - identityServer: %@", self, _homeServer.baseUrl, _identityServer.baseUrl];
+}
+
 @end
