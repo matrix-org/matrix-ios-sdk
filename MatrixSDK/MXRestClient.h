@@ -1728,10 +1728,8 @@ FOUNDATION_EXPORT NSString *const kMXMembersOfRoomParametersNotMembership;
 
 #pragma mark - Identity server API
 /**
- Check i
-
- @param address the id of the user in the 3rd party system.
- @param medium the 3rd party system (ex: "email").
+ Check if there is an identity server endpoint running at the provided
+ identity server address.
 
  @param success A block object called when the operation succeeds.
  @param failure A block object called when the operation fails.
