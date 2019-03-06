@@ -41,9 +41,7 @@
 
         // The .well-known/matrix/client API is often just a static file returned with no content type.
         // Make our HTTP client compatible with this behavior
-        NSMutableSet *acceptableContentTypes = [NSMutableSet setWithSet:restClient.acceptableContentTypes];
-        [acceptableContentTypes addObject:@"text/plain"];
-        restClient.acceptableContentTypes = acceptableContentTypes;
+        restClient.acceptableContentTypes = nil;
     }
     return self;
 }

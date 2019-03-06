@@ -16,7 +16,7 @@
 
 #import <Foundation/Foundation.h>
 
-#import "MXWellknown.h"
+#import "MXWellKnown.h"
 
 typedef NS_ENUM(NSInteger, MXDiscoveredClientConfigAction) {
     /**
