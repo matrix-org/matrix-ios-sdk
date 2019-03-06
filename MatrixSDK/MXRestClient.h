@@ -147,6 +147,11 @@ FOUNDATION_EXPORT NSString *const kMXMembersOfRoomParametersNotMembership;
  */
 @property (nonatomic, strong) dispatch_queue_t completionQueue;
 
+/**
+ The acceptable MIME types for responses.
+ */
+@property (nonatomic, copy) NSSet <NSString *> *acceptableContentTypes;
+
 
 /**
  Create an instance based on homeserver url.

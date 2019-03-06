@@ -234,6 +234,16 @@ MXAuthAction;
     return httpClient.allowedCertificate;
 }
 
+- (NSSet<NSString *> *)acceptableContentTypes
+{
+    return httpClient.acceptableContentTypes;
+}
+
+- (void)setAcceptableContentTypes:(NSSet<NSString *> *)acceptableContentTypes
+{
+    httpClient.acceptableContentTypes = acceptableContentTypes;
+}
+
 
 #pragma mark - Server administration
 
