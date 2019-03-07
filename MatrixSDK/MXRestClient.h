@@ -147,6 +147,11 @@ FOUNDATION_EXPORT NSString *const kMXMembersOfRoomParametersNotMembership;
  */
 @property (nonatomic, strong) dispatch_queue_t completionQueue;
 
+/**
+ The acceptable MIME types for responses.
+ */
+@property (nonatomic, copy) NSSet <NSString *> *acceptableContentTypes;
+
 
 /**
  Create an instance based on homeserver url.
@@ -180,7 +185,19 @@ FOUNDATION_EXPORT NSString *const kMXMembersOfRoomParametersNotMembership;
  @return a MXHTTPOperation instance.
  */
 - (MXHTTPOperation*)supportedMatrixVersions:(void (^)(MXMatrixVersions *matrixVersions))success
-                        failure:(void (^)(NSError *error))failure;
+                                    failure:(void (^)(NSError *error))failure;
+
+/**
+ Get the wellknwon data of the homeserver.
+
+ @param success A block object called when the operation succeeds. It provides
+                the wellknown data.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)wellKnow:(void (^)(MXWellKnown *wellKnown))success
+                     failure:(void (^)(NSError *error))failure;
 
 
 #pragma mark - Registration operations
@@ -1710,6 +1727,18 @@ FOUNDATION_EXPORT NSString *const kMXMembersOfRoomParametersNotMembership;
 
 
 #pragma mark - Identity server API
+/**
+ Check if there is an identity server endpoint running at the provided
+ identity server address.
+
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)pingIdentityServer:(void (^)(void))success
+                               failure:(void (^)(NSError *error))failure;
+
 /**
  Retrieve a user matrix id from a 3rd party id.
 

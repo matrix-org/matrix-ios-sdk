@@ -129,6 +129,11 @@
 		327187861DA7D0220071C818 /* MXOlmDecryption.m in Sources */ = {isa = PBXBuildFile; fileRef = 327187841DA7D0220071C818 /* MXOlmDecryption.m */; };
 		327187891DA7DCE50071C818 /* MXOlmEncryption.h in Headers */ = {isa = PBXBuildFile; fileRef = 327187871DA7DCE50071C818 /* MXOlmEncryption.h */; };
 		3271878A1DA7DCE50071C818 /* MXOlmEncryption.m in Sources */ = {isa = PBXBuildFile; fileRef = 327187881DA7DCE50071C818 /* MXOlmEncryption.m */; };
+		32720D9D222EAA6F0086FFF5 /* MXDiscoveredClientConfig.m in Sources */ = {isa = PBXBuildFile; fileRef = 32720D99222EAA6F0086FFF5 /* MXDiscoveredClientConfig.m */; };
+		32720D9E222EAA6F0086FFF5 /* MXAutoDiscovery.h in Headers */ = {isa = PBXBuildFile; fileRef = 32720D9A222EAA6F0086FFF5 /* MXAutoDiscovery.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		32720D9F222EAA6F0086FFF5 /* MXAutoDiscovery.m in Sources */ = {isa = PBXBuildFile; fileRef = 32720D9B222EAA6F0086FFF5 /* MXAutoDiscovery.m */; };
+		32720DA0222EAA6F0086FFF5 /* MXDiscoveredClientConfig.h in Headers */ = {isa = PBXBuildFile; fileRef = 32720D9C222EAA6F0086FFF5 /* MXDiscoveredClientConfig.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		32720DA2222EB5650086FFF5 /* MXAutoDiscoveryTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 32720DA1222EB5650086FFF5 /* MXAutoDiscoveryTests.m */; };
 		3275FD9421A6B46600B9C13D /* MXLoginTerms.m in Sources */ = {isa = PBXBuildFile; fileRef = 3275FD9221A6B46600B9C13D /* MXLoginTerms.m */; };
 		3275FD9521A6B46600B9C13D /* MXLoginTerms.h in Headers */ = {isa = PBXBuildFile; fileRef = 3275FD9321A6B46600B9C13D /* MXLoginTerms.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		3275FD9821A6B53300B9C13D /* MXLoginPolicyData.h in Headers */ = {isa = PBXBuildFile; fileRef = 3275FD9621A6B53300B9C13D /* MXLoginPolicyData.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -506,6 +511,11 @@
 		327187841DA7D0220071C818 /* MXOlmDecryption.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXOlmDecryption.m; sourceTree = "<group>"; };
 		327187871DA7DCE50071C818 /* MXOlmEncryption.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXOlmEncryption.h; sourceTree = "<group>"; };
 		327187881DA7DCE50071C818 /* MXOlmEncryption.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXOlmEncryption.m; sourceTree = "<group>"; };
+		32720D99222EAA6F0086FFF5 /* MXDiscoveredClientConfig.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXDiscoveredClientConfig.m; sourceTree = "<group>"; };
+		32720D9A222EAA6F0086FFF5 /* MXAutoDiscovery.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXAutoDiscovery.h; sourceTree = "<group>"; };
+		32720D9B222EAA6F0086FFF5 /* MXAutoDiscovery.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXAutoDiscovery.m; sourceTree = "<group>"; };
+		32720D9C222EAA6F0086FFF5 /* MXDiscoveredClientConfig.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXDiscoveredClientConfig.h; sourceTree = "<group>"; };
+		32720DA1222EB5650086FFF5 /* MXAutoDiscoveryTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MXAutoDiscoveryTests.m; sourceTree = "<group>"; };
 		3275FD9221A6B46600B9C13D /* MXLoginTerms.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXLoginTerms.m; sourceTree = "<group>"; };
 		3275FD9321A6B46600B9C13D /* MXLoginTerms.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXLoginTerms.h; sourceTree = "<group>"; };
 		3275FD9621A6B53300B9C13D /* MXLoginPolicyData.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MXLoginPolicyData.h; sourceTree = "<group>"; };
@@ -833,6 +843,7 @@
 		320DFDC719DD99B60068622A /* Data */ = {
 			isa = PBXGroup;
 			children = (
+				32720D98222EAA6F0086FFF5 /* AutoDiscovery */,
 				320BBF3A1D6C7D9D0079890E /* EventsEnumerator */,
 				323F3F9020D3F0C700D26D6A /* Filters */,
 				32114A831A262CE000FF2EC4 /* Store */,
@@ -1068,6 +1079,17 @@
 			path = Olm;
 			sourceTree = "<group>";
 		};
+		32720D98222EAA6F0086FFF5 /* AutoDiscovery */ = {
+			isa = PBXGroup;
+			children = (
+				32720D99222EAA6F0086FFF5 /* MXDiscoveredClientConfig.m */,
+				32720D9A222EAA6F0086FFF5 /* MXAutoDiscovery.h */,
+				32720D9B222EAA6F0086FFF5 /* MXAutoDiscovery.m */,
+				32720D9C222EAA6F0086FFF5 /* MXDiscoveredClientConfig.h */,
+			);
+			path = AutoDiscovery;
+			sourceTree = "<group>";
+		};
 		3275FD9121A6B46600B9C13D /* Authentication */ = {
 			isa = PBXGroup;
 			children = (
@@ -1282,6 +1304,7 @@
 		32C6F93919DD814400EA4E9C /* MatrixSDKTests */ = {
 			isa = PBXGroup;
 			children = (
+				32720DA1222EB5650086FFF5 /* MXAutoDiscoveryTests.m */,
 				32935F60216FA49D00A1BC24 /* MXCryptoBackupTests.m */,
 				32C03CB52123076F00D92712 /* DirectRoomTests.m */,
 				320E1BC01E0AD674009635F5 /* MXRoomSummaryTests.m */,
@@ -1673,6 +1696,7 @@
 				B146D4B321A5A21800D8C2C6 /* MXEventScanStoreDelegate.h in Headers */,
 				32DC15D41A8CF874006F9AD3 /* MXPushRuleEventMatchConditionChecker.h in Headers */,
 				32A151261DABB0CB00400192 /* MXMegolmDecryption.h in Headers */,
+				32720D9E222EAA6F0086FFF5 /* MXAutoDiscovery.h in Headers */,
 				3220094519EFBF30008DE41D /* MXSessionEventListener.h in Headers */,
 				32A9E8241EF4026E0081358A /* MXBackgroundModeHandler.h in Headers */,
 				B17982F72119E4A2001FD722 /* MXRoomPredecessorInfo.h in Headers */,
@@ -1684,6 +1708,7 @@
 				329FB1751A0A3A1600A5E88E /* MXRoomMember.h in Headers */,
 				320DFDE019DD99B60068622A /* MXSession.h in Headers */,
 				324095221AFA432F00D81C97 /* MXCallStackCall.h in Headers */,
+				32720DA0222EAA6F0086FFF5 /* MXDiscoveredClientConfig.h in Headers */,
 				B146D4B221A5A21800D8C2C6 /* MXEventScanStore.h in Headers */,
 				B17982F92119E4A2001FD722 /* MXRoomTombStoneContent.h in Headers */,
 				32A31BBE20D3F2EC005916C7 /* MXFilterObject.h in Headers */,
@@ -1906,6 +1931,7 @@
 				32A1513A1DAD292400400192 /* MXMegolmEncryption.m in Sources */,
 				32F945F71FAB83D900622468 /* MXIncomingRoomKeyRequest.m in Sources */,
 				F0173EAD1FCF0E8900B5F6A3 /* MXGroup.m in Sources */,
+				32720D9F222EAA6F0086FFF5 /* MXAutoDiscovery.m in Sources */,
 				92634B831EF2E3C400DB9F60 /* MXCallKitConfiguration.m in Sources */,
 				3265CB391A14C43E00E24B2F /* MXRoomState.m in Sources */,
 				3281E8B819E42DFE00976E1A /* MXJSONModel.m in Sources */,
@@ -1986,6 +2012,7 @@
 				F08B8D5D1E014711006171A8 /* NSData+MatrixSDK.m in Sources */,
 				3291D4D51A68FFEB00C3BA41 /* MXFileRoomStore.m in Sources */,
 				329FB1801A0B665800A5E88E /* MXUser.m in Sources */,
+				32720D9D222EAA6F0086FFF5 /* MXDiscoveredClientConfig.m in Sources */,
 				B146D4F321A5AF7F00D8C2C6 /* MXRealmEventScan.m in Sources */,
 				322691371E5EFF8700966A6E /* MXDeviceListOperationsPool.m in Sources */,
 				C6F935801E5B3ACA00FC34BF /* MXResponse.swift in Sources */,
@@ -2050,6 +2077,7 @@
 				320E1BC11E0AD674009635F5 /* MXRoomSummaryTests.m in Sources */,
 				3281E8A219E2DE4300976E1A /* MXSessionTests.m in Sources */,
 				327137241A24BDDE00DB6757 /* MXUserTests.m in Sources */,
+				32720DA2222EB5650086FFF5 /* MXAutoDiscoveryTests.m in Sources */,
 				327E37B91A977810007F026F /* MXLoggerTests.m in Sources */,
 				329571931B0240CE00ABB3BA /* MXVoIPTests.m in Sources */,
 				32A27D1F19EC335300BAFADE /* MXRoomTests.m in Sources */,

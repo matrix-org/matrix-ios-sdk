@@ -234,6 +234,16 @@ MXAuthAction;
     return httpClient.allowedCertificate;
 }
 
+- (NSSet<NSString *> *)acceptableContentTypes
+{
+    return httpClient.acceptableContentTypes;
+}
+
+- (void)setAcceptableContentTypes:(NSSet<NSString *> *)acceptableContentTypes
+{
+    httpClient.acceptableContentTypes = acceptableContentTypes;
+}
+
 
 #pragma mark - Server administration
 
@@ -266,6 +276,35 @@ MXAuthAction;
                                  }];
 }
 
+
+- (MXHTTPOperation*)wellKnow:(void (^)(MXWellKnown *wellKnown))success
+                     failure:(void (^)(NSError *error))failure
+{
+    NSString *path = @".well-known/matrix/client";
+
+    MXWeakify(self);
+    MXHTTPOperation *operation = [httpClient requestWithMethod:@"GET"
+                                                          path:path
+                                                    parameters:nil
+                                                       success:^(NSDictionary *JSONResponse) {
+                                                           MXStrongifyAndReturnIfNil(self);
+
+                                                           if (success)
+                                                           {
+                                                               __block MXWellKnown *wellKnown;
+                                                               [self dispatchProcessing:^{
+                                                                   MXJSONModelSetMXJSONModel(wellKnown, MXWellKnown, JSONResponse);
+                                                               } andCompletion:^{
+                                                                   success(wellKnown);
+                                                               }];
+                                                           }
+                                                       }
+                                                       failure:^(NSError *error) {
+                                                           MXStrongifyAndReturnIfNil(self);
+                                                           [self dispatchFailure:error inBlock:failure];
+                                                       }];
+    return operation;
+}
 
 #pragma mark - Registration operations
 - (MXHTTPOperation *)testUserRegistration:(NSString *)username callback:(void (^)(MXError *mxError))callback
@@ -3284,6 +3323,29 @@ MXAuthAction;
 - (NSString *)identityServer
 {
     return self.credentials.identityServer;
+}
+
+
+- (MXHTTPOperation *)pingIdentityServer:(void (^)(void))success failure:(void (^)(NSError *))failure
+{
+    // We cannot use "" as the HTTP client (AFNetworking) will request for "/v1/"
+	NSString *path = @"../v1";
+
+    return [identityHttpClient requestWithMethod:@"GET"
+                                            path:path
+                                      parameters:nil
+                                         success:^(NSDictionary *JSONResponse) {
+                                             if (success)
+                                             {
+                                                 [self dispatchProcessing:nil
+                                                            andCompletion:^{
+                                                                success();
+                                                            }];
+                                             }
+                                         }
+                                         failure:^(NSError *error) {
+                                             [self dispatchFailure:error inBlock:failure];
+                                         }];
 }
 
 - (MXHTTPOperation*)lookup3pid:(NSString*)address

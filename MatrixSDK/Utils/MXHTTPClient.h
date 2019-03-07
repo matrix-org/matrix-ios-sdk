@@ -63,6 +63,11 @@ typedef BOOL (^MXHTTPClientOnUnrecognizedCertificate)(NSData *certificate);
  */
 @property (nonatomic, readonly) NSData* allowedCertificate;
 
+/**
+ The acceptable MIME types for responses.
+ */
+@property (nonatomic, copy) NSSet <NSString *> *acceptableContentTypes;
+
 
 #pragma mark - Public methods
 /**
