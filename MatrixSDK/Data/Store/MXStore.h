@@ -17,7 +17,7 @@
  */
 
 #import "MXEnumConstants.h"
-#import "MXJSONModels.h"
+#import "MXCredentials.h"
 #import "MXEvent.h"
 #import "MXReceiptData.h"
 #import "MXUser.h"

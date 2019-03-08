@@ -20,7 +20,6 @@
 #import "MXMegolmBackupCreationInfo.h"
 #import "MXKeyBackupVersionTrust.h"
 
-@class MXSession;
 @class OLMPkEncryption;
 
 NS_ASSUME_NONNULL_BEGIN
@@ -286,7 +285,7 @@ FOUNDATION_EXPORT NSString *const kMXKeyBackupDidStateChangeNotification;
 /**
  Set trust on a key backup version.
 
- It adds (or removes) the signautre of the current device to the authentication
+ It adds (or removes) the signature of the current device to the authentication
  part of the key backup version.
 
  @param keyBackupVersion the backup version to trust.
@@ -356,6 +355,11 @@ FOUNDATION_EXPORT NSString *const kMXKeyBackupDidStateChangeNotification;
  The backup key being used.
  */
 @property (nonatomic, readonly, nullable) OLMPkEncryption *backupKey;
+
+/**
+ Indicate if their are keys to backup.
+ */
+@property (nonatomic, readonly) BOOL hasKeysToBackup;
 
 @end
 

@@ -155,6 +155,8 @@
 NSString *const kMXLoginFlowTypePassword = @"m.login.password";
 NSString *const kMXLoginFlowTypeRecaptcha = @"m.login.recaptcha";
 NSString *const kMXLoginFlowTypeOAuth2 = @"m.login.oauth2";
+NSString *const kMXLoginFlowTypeCAS = @"m.login.cas";
+NSString *const kMXLoginFlowTypeSSO = @"m.login.sso";
 NSString *const kMXLoginFlowTypeEmailIdentity = @"m.login.email.identity";
 NSString *const kMXLoginFlowTypeToken = @"m.login.token";
 NSString *const kMXLoginFlowTypeDummy = @"m.login.dummy";
@@ -201,37 +203,21 @@ NSString *const kMXLoginIdentifierTypePhone = @"m.id.phone";
 
 @end
 
-@implementation MXCredentials
+@implementation MXLoginResponse
 
 + (id)modelFromJSON:(NSDictionary *)JSONDictionary
 {
-    MXCredentials *credentials = [[MXCredentials alloc] init];
-    if (credentials)
+    MXLoginResponse *loginResponse = [[MXLoginResponse alloc] init];
+    if (loginResponse)
     {
-        MXJSONModelSetString(credentials.homeServer, JSONDictionary[@"home_server"]);
-        MXJSONModelSetString(credentials.userId, JSONDictionary[@"user_id"]);
-        MXJSONModelSetString(credentials.accessToken, JSONDictionary[@"access_token"]);
-        MXJSONModelSetString(credentials.deviceId, JSONDictionary[@"device_id"]);
+        MXJSONModelSetString(loginResponse.homeserver, JSONDictionary[@"home_server"]);
+        MXJSONModelSetString(loginResponse.userId, JSONDictionary[@"user_id"]);
+        MXJSONModelSetString(loginResponse.accessToken, JSONDictionary[@"access_token"]);
+        MXJSONModelSetString(loginResponse.deviceId, JSONDictionary[@"device_id"]);
+        MXJSONModelSetMXJSONModel(loginResponse.wellknown, MXWellKnown, JSONDictionary[@"well_known"]);
     }
 
-    return credentials;
-}
-
-- (instancetype)initWithHomeServer:(NSString *)homeServer userId:(NSString *)userId accessToken:(NSString *)accessToken
-{
-    self = [super init];
-    if (self)
-    {
-        _homeServer = [homeServer copy];
-        _userId = [userId copy];
-        _accessToken = [accessToken copy];
-    }
-    return self;
-}
-
-- (NSString *)homeServerName
-{
-    return [NSURL URLWithString:_homeServer].host;
+    return loginResponse;
 }
 
 @end
@@ -642,6 +628,11 @@ NSString *const kMXPushRuleConditionStringSenderNotificationPermission  = @"send
     return pushRule;
 }
 
+- (NSString *)description
+{
+    return [NSString stringWithFormat:@"<MXPushRule: %p> ruleId: %@ - isDefault: %@ - enabled: %@ - actions: %@", self, _ruleId, @(_isDefault), @(_enabled), _actions];
+}
+
 @end
 
 @implementation MXPushRuleAction
@@ -654,6 +645,11 @@ NSString *const kMXPushRuleConditionStringSenderNotificationPermission  = @"send
         _actionType = MXPushRuleActionTypeCustom;
     }
     return self;
+}
+
+- (NSString *)description
+{
+    return [NSString stringWithFormat:@"<MXPushRuleAction: %p> action: %@ - parameters: %@", self, _action, _parameters];
 }
 
 @end

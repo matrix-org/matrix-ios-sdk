@@ -582,6 +582,15 @@ NSString* const kMXHTTPClientUserConsentNotGivenErrorNotificationConsentURIKey =
     httpManager.securityPolicy = securityPolicy;
 }
 
+- (NSSet<NSString *> *)acceptableContentTypes
+{
+    return httpManager.responseSerializer.acceptableContentTypes;
+}
+
+- (void)setAcceptableContentTypes:(NSSet<NSString *> *)acceptableContentTypes
+{
+    httpManager.responseSerializer.acceptableContentTypes = acceptableContentTypes;
+}
 
 #pragma mark - Private methods
 - (void)cancel

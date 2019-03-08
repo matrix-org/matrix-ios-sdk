@@ -86,4 +86,9 @@
     }
 }
 
++ (NSHTTPURLResponse *)urlResponseFromError:(NSError*)error
+{
+    return error.userInfo[AFNetworkingOperationFailingURLResponseErrorKey];
+}
+
 @end

@@ -61,3 +61,5 @@ FOUNDATION_EXPORT NSString *MatrixSDKVersion;
 #import "MXGroup.h"
 
 #import "MXServerNotices.h"
+
+#import "MXAutoDiscovery.h"

@@ -90,14 +90,15 @@ FOUNDATION_EXPORT NSString *const kMXMembersOfRoomParametersNotMembership;
 @interface MXRestClient : NSObject
 
 /**
- The homeserver URL.
- */
-@property (nonatomic, readonly) NSString *homeserver;
-
-/**
- The user credentials on this home server.
+ Credentials for the Matrix Client-Server API.
  */
 @property (nonatomic, readonly) MXCredentials *credentials;
+
+/**
+ The homeserver URL.
+ Shortcut to credentials.homeServer.
+ */
+@property (nonatomic, readonly) NSString *homeserver;
 
 /**
  The homeserver suffix (for example ":matrix.org"). Available only when credentials have been set.
@@ -105,21 +106,8 @@ FOUNDATION_EXPORT NSString *const kMXMembersOfRoomParametersNotMembership;
 @property (nonatomic, readonly) NSString *homeserverSuffix;
 
 /**
- The Client-Server API prefix to use.
- By default, it is '_matrix/client/r0'. See kMXAPIPrefixPathR0 and kMXAPIPrefixPathUnstable for constants.
- */
-@property (nonatomic) NSString *apiPathPrefix;
-
-/**
- The Matrix content repository prefix to use.
- By default, it is defined by the constant kMXContentPrefixPath.
- */
-@property (nonatomic) NSString *contentPathPrefix;
-
-/**
  The identity server URL.
- By default, it points to the defined home server. If needed, change it by setting
- this property.
+ Shortcut to credentials.identityServer.
  */
 @property (nonatomic) NSString *identityServer;
 
@@ -137,6 +125,18 @@ FOUNDATION_EXPORT NSString *const kMXMembersOfRoomParametersNotMembership;
 @property (nonatomic) NSString *antivirusServerPathPrefix;
 
 /**
+ The Client-Server API prefix to use.
+ By default, it is '_matrix/client/r0'. See kMXAPIPrefixPathR0 and kMXAPIPrefixPathUnstable for constants.
+ */
+@property (nonatomic) NSString *apiPathPrefix;
+
+/**
+ The Matrix content repository prefix to use.
+ By default, it is defined by the constant kMXContentPrefixPath.
+ */
+@property (nonatomic) NSString *contentPathPrefix;
+
+/**
  The current trusted certificate (if any).
  */
 @property (nonatomic, readonly) NSData* allowedCertificate;
@@ -146,6 +146,11 @@ FOUNDATION_EXPORT NSString *const kMXMembersOfRoomParametersNotMembership;
  Default is dispatch_get_main_queue().
  */
 @property (nonatomic, strong) dispatch_queue_t completionQueue;
+
+/**
+ The acceptable MIME types for responses.
+ */
+@property (nonatomic, copy) NSSet <NSString *> *acceptableContentTypes;
 
 
 /**
@@ -180,7 +185,19 @@ FOUNDATION_EXPORT NSString *const kMXMembersOfRoomParametersNotMembership;
  @return a MXHTTPOperation instance.
  */
 - (MXHTTPOperation*)supportedMatrixVersions:(void (^)(MXMatrixVersions *matrixVersions))success
-                        failure:(void (^)(NSError *error))failure;
+                                    failure:(void (^)(NSError *error))failure;
+
+/**
+ Get the wellknwon data of the homeserver.
+
+ @param success A block object called when the operation succeeds. It provides
+                the wellknown data.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)wellKnow:(void (^)(MXWellKnown *wellKnown))success
+                     failure:(void (^)(NSError *error))failure;
 
 
 #pragma mark - Registration operations
@@ -1710,6 +1727,18 @@ FOUNDATION_EXPORT NSString *const kMXMembersOfRoomParametersNotMembership;
 
 
 #pragma mark - Identity server API
+/**
+ Check if there is an identity server endpoint running at the provided
+ identity server address.
+
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)pingIdentityServer:(void (^)(void))success
+                               failure:(void (^)(NSError *error))failure;
+
 /**
  Retrieve a user matrix id from a 3rd party id.
 

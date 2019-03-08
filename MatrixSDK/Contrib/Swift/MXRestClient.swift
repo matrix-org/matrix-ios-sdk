@@ -1571,7 +1571,7 @@ public extension MXRestClient {
             // [[<(MX3PIDMedium)media>, <(NSString*)address>, <(NSString*)userId>], ...].
             var responseDictionary = [MX3PID: String]()
             triplets?
-                .flatMap { return $0 as? [String] }
+                .compactMap { return $0 as? [String] }
                 .forEach { triplet in
                     
                     // Make sure the array contains 3 items
