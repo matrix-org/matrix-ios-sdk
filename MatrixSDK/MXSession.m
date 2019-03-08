@@ -44,7 +44,7 @@
 
 #pragma mark - Constants definitions
 
-const NSString *MatrixSDKVersion = @"0.12.2";
+const NSString *MatrixSDKVersion = @"0.12.3";
 NSString *const kMXSessionStateDidChangeNotification = @"kMXSessionStateDidChangeNotification";
 NSString *const kMXSessionNewRoomNotification = @"kMXSessionNewRoomNotification";
 NSString *const kMXSessionWillLeaveRoomNotification = @"kMXSessionWillLeaveRoomNotification";
