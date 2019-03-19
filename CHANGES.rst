@@ -1,3 +1,9 @@
+Changes in Matrix iOS SDK in 0.12.4 (2019-xx-xx)
+===============================================
+
+Bug Fix:
+* MXRestClient: Fix file upload with filename containing whitespace (PR #645).
+
 Changes in Matrix iOS SDK in 0.12.3 (2019-03-08)
 ===============================================
 
