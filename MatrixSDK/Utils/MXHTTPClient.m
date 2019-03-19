@@ -572,14 +572,14 @@ NSString* const kMXHTTPClientUserConsentNotGivenErrorNotificationConsentURIKey =
 - (void)setPinnedCertificates:(NSSet<NSData *> *)pinnedCertificates
 {
     _pinnedCertificates = pinnedCertificates;
+    
     if (!pinnedCertificates.count)
     {
         [self setDefaultSecurityPolicy];
         return;
     }
-    AFSecurityPolicy *securityPolicy = [AFSecurityPolicy policyWithPinningMode:AFSSLPinningModeCertificate];
-    securityPolicy.pinnedCertificates = pinnedCertificates;
-    httpManager.securityPolicy = securityPolicy;
+    
+    httpManager.securityPolicy = [AFSecurityPolicy policyWithPinningMode:AFSSLPinningModeCertificate withPinnedCertificates:pinnedCertificates];
 }
 
 - (NSSet<NSString *> *)acceptableContentTypes
