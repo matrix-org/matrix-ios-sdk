@@ -3279,7 +3279,7 @@ MXAuthAction;
 
     if (filename.length)
     {
-        path = [path stringByAppendingString:[NSString stringWithFormat:@"?filename=%@", filename]];
+        path = [path stringByAppendingString:[NSString stringWithFormat:@"?filename=%@", [MXTools encodeURIComponent:filename]]];
     }
 
     MXWeakify(self);
