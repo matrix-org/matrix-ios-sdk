@@ -306,7 +306,7 @@ typedef void (^MXOnResumeDone)(void);
             }
 
             // Can we start on data from the MXStore?
-            if (self.store.isPermanent && self.isEventStreamInitialised && 0 < self.store.rooms.count)
+            if (self.store.isPermanent && self.isEventStreamInitialised)
             {
                 // Mount data from the permanent store
                 NSLog(@"[MXSession] Loading room state events to build MXRoom objects...");
