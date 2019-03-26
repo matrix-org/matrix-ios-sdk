@@ -229,29 +229,41 @@
 
     [crypto.backup maybeSendKeyBackup];
 
-    // cancel any outstanding room key requests for this session
-    [crypto cancelRoomKeyRequest:@{
-                                   @"algorithm": content[@"algorithm"],
-                                   @"room_id": content[@"room_id"],
-                                   @"session_id": content[@"session_id"],
-                                   @"sender_key": senderKey
-                                   }];
+    MXWeakify(self);
+    [self retryDecryption:senderKey sessionId:content[@"session_id"] complete:^(BOOL allDecrypted) {
+        MXStrongifyAndReturnIfNil(self);
 
-    [self retryDecryption:senderKey sessionId:content[@"session_id"]];
+        if (allDecrypted)
+        {
+            // cancel any outstanding room key requests for this session
+            [self->crypto cancelRoomKeyRequest:@{
+                                                 @"algorithm": content[@"algorithm"],
+                                                 @"room_id": content[@"room_id"],
+                                                 @"session_id": content[@"session_id"],
+                                                 @"sender_key": senderKey
+                                                 }];
+        }
+    }];
 }
 
 - (void)didImportRoomKey:(MXOlmInboundGroupSession *)session
 {
-    // cancel any outstanding room key requests for this session
-    [crypto cancelRoomKeyRequest:@{
-                                   @"algorithm": kMXCryptoMegolmAlgorithm,
-                                   @"room_id": session.roomId,
-                                   @"session_id": session.session.sessionIdentifier,
-                                   @"sender_key": session.senderKey
-                                   }];
-
     // Have another go at decrypting events sent with this session
-    [self retryDecryption:session.senderKey sessionId:session.session.sessionIdentifier];
+    MXWeakify(self);
+    [self retryDecryption:session.senderKey sessionId:session.session.sessionIdentifier complete:^(BOOL allDecrypted) {
+        MXStrongifyAndReturnIfNil(self);
+
+        if (allDecrypted)
+        {
+            // cancel any outstanding room key requests for this session
+            [self->crypto cancelRoomKeyRequest:@{
+                                                 @"algorithm": kMXCryptoMegolmAlgorithm,
+                                                 @"room_id": session.roomId,
+                                                 @"session_id": session.session.sessionIdentifier,
+                                                 @"sender_key": session.senderKey
+                                                 }];
+        }
+    }];
 }
 
 - (BOOL)hasKeysForKeyRequest:(MXIncomingRoomKeyRequest*)keyRequest
@@ -334,9 +346,13 @@
 
  @param senderKey the sender key.
  @param sessionId the session id.
+ @param complete allDecrypted.
  */
-- (void)retryDecryption:(NSString*)senderKey sessionId:(NSString*)sessionId
+- (void)retryDecryption:(NSString*)senderKey sessionId:(NSString*)sessionId complete:(void (^)(BOOL allDecrypted))complete;
 {
+    __block BOOL allDecrypted = YES;
+    dispatch_group_t group = dispatch_group_create();
+
     NSString *k = [NSString stringWithFormat:@"%@|%@", senderKey, sessionId];
     NSDictionary<NSString*, NSDictionary<NSString*,MXEvent*>*> *pending = pendingEvents[k];
     if (pending)
@@ -355,6 +371,8 @@
                 }
                 else
                 {
+                    dispatch_group_enter(group);
+
                     // Go back to the main thread to retry to decrypt from the beginning of the chain.
                     // MXSession will then update MXEvent with clear content if successful
                     MXWeakify(self);
@@ -368,12 +386,19 @@
                         else
                         {
                             NSLog(@"[MXMegolmDecryption] retryDecryption: Still can't decrypt %@. Error: %@", event.eventId, event.decryptionError);
+                            allDecrypted = NO;
                         }
+
+                        dispatch_group_leave(group);
                     });
                 }
             }
         }
     }
+
+    dispatch_group_notify(group, crypto.decryptionQueue, ^{
+        complete(allDecrypted);
+    });
 }
 
 - (void)requestKeysForEvent:(MXEvent*)event
