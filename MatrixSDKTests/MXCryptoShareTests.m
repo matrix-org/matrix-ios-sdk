@@ -61,21 +61,6 @@
     }];
 }
 
-- (void)outgoingRoomKeyRequestInSession:(MXSession*)session complete:(void (^)(MXOutgoingRoomKeyRequest*))complete
-{
-    dispatch_async(session.crypto.decryptionQueue, ^{
-        MXOutgoingRoomKeyRequest *outgoingRoomKeyRequest = [session.crypto.store outgoingRoomKeyRequestWithState:MXRoomKeyRequestStateUnsent];
-        if (!outgoingRoomKeyRequest)
-        {
-            outgoingRoomKeyRequest = [session.crypto.store outgoingRoomKeyRequestWithState:MXRoomKeyRequestStateSent];
-        }
-
-        dispatch_async(dispatch_get_main_queue(), ^{
-            complete(outgoingRoomKeyRequest);
-        });
-    });
-}
-
 
 /**
  Common initial conditions:
@@ -164,7 +149,7 @@
             [liveTimeline resetPagination];
             [liveTimeline paginate:30 direction:MXTimelineDirectionBackwards onlyFromStore:NO complete:^{
 
-                [self outgoingRoomKeyRequestInSession:aliceSession complete:^(MXOutgoingRoomKeyRequest *outgoingRoomKeyRequest) {
+                [matrixSDKTestsE2EData outgoingRoomKeyRequestInSession:aliceSession complete:^(MXOutgoingRoomKeyRequest *outgoingRoomKeyRequest) {
 
                     // -> There must be pending outgoing key share request
                     XCTAssert(outgoingRoomKeyRequest);
@@ -173,14 +158,14 @@
                     [self mimicKeyShareResponseForSession:aliceSession withSessionData:partialSessionData complete:^{
 
                         // -> The outgoing key share request should still exist
-                        [self outgoingRoomKeyRequestInSession:aliceSession complete:^(MXOutgoingRoomKeyRequest *pendingOutgoingRoomKeyRequest) {
+                        [matrixSDKTestsE2EData outgoingRoomKeyRequestInSession:aliceSession complete:^(MXOutgoingRoomKeyRequest *pendingOutgoingRoomKeyRequest) {
 
                             XCTAssertEqualObjects(pendingOutgoingRoomKeyRequest.requestId, outgoingRoomKeyRequest.requestId);
 
                             // - Import the full megolm session data as if they come from key sharing
                             [self mimicKeyShareResponseForSession:aliceSession withSessionData:sessionData complete:^{
 
-                                [self outgoingRoomKeyRequestInSession:aliceSession complete:^(MXOutgoingRoomKeyRequest *stillPendingOutgoingRoomKeyRequest) {
+                                [matrixSDKTestsE2EData outgoingRoomKeyRequestInSession:aliceSession complete:^(MXOutgoingRoomKeyRequest *stillPendingOutgoingRoomKeyRequest) {
 
                                     // -> There should be no more outgoing key share request
                                     XCTAssertNil(stillPendingOutgoingRoomKeyRequest);

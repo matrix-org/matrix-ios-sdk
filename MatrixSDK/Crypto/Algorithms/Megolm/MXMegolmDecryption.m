@@ -379,14 +379,22 @@
                     dispatch_async(dispatch_get_main_queue(), ^{
                         MXStrongifyAndReturnIfNil(self);
 
-                        if ([self->crypto.mxSession decryptEvent:event inTimeline:(timelineId.length ? timelineId : nil)])
+                        if (event.clearEvent)
                         {
-                            NSLog(@"[MXMegolmDecryption] retryDecryption: successful re-decryption of %@", event.eventId);
+                            // This can happen when the event is in several timelines
+                            NSLog(@"[MXMegolmDecryption] retryDecryption: %@ already decrypted on main thread", event.eventId);
                         }
                         else
                         {
-                            NSLog(@"[MXMegolmDecryption] retryDecryption: Still can't decrypt %@. Error: %@", event.eventId, event.decryptionError);
-                            allDecrypted = NO;
+                            if ([self->crypto.mxSession decryptEvent:event inTimeline:(timelineId.length ? timelineId : nil)])
+                            {
+                                NSLog(@"[MXMegolmDecryption] retryDecryption: successful re-decryption of %@", event.eventId);
+                            }
+                            else
+                            {
+                                NSLog(@"[MXMegolmDecryption] retryDecryption: Still can't decrypt %@. Error: %@", event.eventId, event.decryptionError);
+                                allDecrypted = NO;
+                            }
                         }
 
                         dispatch_group_leave(group);
