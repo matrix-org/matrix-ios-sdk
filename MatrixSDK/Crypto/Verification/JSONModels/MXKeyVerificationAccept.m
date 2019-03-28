@@ -31,7 +31,30 @@
         MXJSONModelSetString(model.commitment, JSONDictionary[@"commitment"]);
     }
 
+    // Sanitiy check
+    if (!model.transactionId.length)
+    {
+        model = nil;
+    }
+
     return model;
+}
+
+- (BOOL)isValid
+{
+    BOOL isValid = YES;
+
+    if (_keyAgreementProtocol.length == 0
+        || _hashAlgorithm.length == 0
+        || _messageAuthenticationCode.length == 0
+        || _shortAuthenticationString.count == 0
+        || _commitment.length == 0)
+   {
+        NSLog(@"[MXKeyVerification] Invalid MXKeyVerificationAccept: %@", self);
+        isValid = NO;
+    }
+
+    return isValid;
 }
 
 @end

@@ -26,7 +26,7 @@ NS_ASSUME_NONNULL_BEGIN
 /**
  Must be “m.sas.v1” for interactive key verification.
  */
-@property (nonatomic) NSString *method;
+@property (nonatomic, nullable) NSString *method;
 
 /**
  Alice’s device ID.
@@ -39,29 +39,37 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic) NSString *transactionId;
 
 /**
- The key agreement protocol that Bob’s device has selected to use,
- out of the list proposed by Alice’s device.
+ An array of key agreement protocols that Alice’s client understands.
+ Must include “curve25519”.
+ Other methods may be defined in the future.
  */
-@property (nonatomic) NSString *keyAgreementProtocol;
+@property (nonatomic, nullable) NSArray<NSString*> *keyAgreementProtocols;
 
 /**
  Sn array of hashes that Alice’s client understands.
  Must include “sha256”. Other methods may be defined in the future.
  */
-@property (nonatomic) NSArray<NSString*> *hashAlgorithms;
+@property (nonatomic, nullable) NSArray<NSString*> *hashAlgorithms;
 
 /**
  An array of message authentication codes that Alice’s client understands.
  Must include “hmac-sha256”. Other methods may be defined in the future.
  */
-@property (nonatomic) NSArray<NSString*> *messageAuthenticationCodes;
+@property (nonatomic, nullable) NSArray<NSString*> *messageAuthenticationCodes;
 
 /**
  An array of short authentication string methods that Alice’s client (and Alice) understands.
  Must include “decimal”. This document also describes the “emoji” method.
  Other methods may be defined in the future.
  */
-@property (nonatomic) NSArray<NSString*> *shortAuthenticationString;
+@property (nonatomic, nullable) NSArray<NSString*> *shortAuthenticationString;
+
+/**
+ Check content validity.
+
+ @return YES if valid.
+ */
+- (BOOL)isValid;
 
 @end
 

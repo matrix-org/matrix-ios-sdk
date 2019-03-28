@@ -28,6 +28,12 @@
         MXJSONModelSetString(model.reason, JSONDictionary[@"reason"]);
     }
 
+    // Sanitiy check
+    if (!model.transactionId.length)
+    {
+        model = nil;
+    }
+
     return model;
 }
 

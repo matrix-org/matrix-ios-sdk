@@ -34,32 +34,40 @@ NS_ASSUME_NONNULL_BEGIN
  The key agreement protocol that Bob’s device has selected to use,
  out of the list proposed by Alice’s device.
  */
-@property (nonatomic) NSString *keyAgreementProtocol;
+@property (nonatomic, nullable) NSString *keyAgreementProtocol;
 
 /**
  The hash algorithm that Bob’s device has selected to use, out of the list proposed
  by Alice’s device.
  */
-@property (nonatomic) NSString *hashAlgorithm;
+@property (nonatomic, nullable) NSString *hashAlgorithm;
 
 /**
  The message authentication code that Bob’s device has selected to use,
  out of the list proposed by Alice’s device
  */
-@property (nonatomic) NSString *messageAuthenticationCode;
+@property (nonatomic, nullable) NSString *messageAuthenticationCode;
 
 /**
  An array of short authentication string methods that Bob’s client (and Bob) understands.
  Must be a subset of the list proposed by Alice’s device.
  */
-@property (nonatomic) NSArray<NSString*> *shortAuthenticationString;
+@property (nonatomic, nullable) NSArray<NSString*> *shortAuthenticationString;
 
 /**
  The hash (encoded as unpadded base64) of the concatenation of the device’s ephemeral
  public key (QB, encoded as unpadded base64) and the canonical JSON representation of
  the m.key.verification.start message.
  */
-@property (nonatomic) NSString *commitment;
+@property (nonatomic, nullable) NSString *commitment;
+
+
+/**
+ Check content validity.
+
+ @return YES if valid.
+ */
+- (BOOL)isValid;
 
 @end
 

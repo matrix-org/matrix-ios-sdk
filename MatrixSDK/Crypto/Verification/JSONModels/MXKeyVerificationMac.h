@@ -28,7 +28,7 @@ NS_ASSUME_NONNULL_BEGIN
 /**
  A map of key ID to the MAC of the key, as an unpadded base64 string, calculated using the MAC key.
  */
-@property (nonatomic) NSDictionary<NSString*, NSString*> *mac;
+@property (nonatomic, nullable) NSDictionary<NSString*, NSString*> *mac;
 
 /**
  The MAC of the comma-separated, sorted list of key IDs given in the mac property,
@@ -36,7 +36,15 @@ NS_ASSUME_NONNULL_BEGIN
  For example, if the mac property gives MACs for the keys ed25519:ABCDEFG and ed25519:HIJKLMN,
  then this property will give the MAC of the string “ed25519:ABCDEFG,ed25519:HIJKLMN”.
  */
-@property (nonatomic) NSString *keys;
+@property (nonatomic, nullable) NSString *keys;
+
+
+/**
+ Check content validity.
+
+ @return YES if valid.
+ */
+- (BOOL)isValid;
 
 @end
 

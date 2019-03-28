@@ -31,7 +31,15 @@ NS_ASSUME_NONNULL_BEGIN
 /**
  The device’s ephemeral public key, as an unpadded base64 string.
  */
-@property (nonatomic) NSString *key;
+@property (nonatomic, nullable) NSString *key;
+
+
+/**
+ Check content validity.
+
+ @return YES if valid.
+ */
+- (BOOL)isValid;
 
 @end
 

@@ -26,13 +26,41 @@
         MXJSONModelSetString(model.method, JSONDictionary[@"method"]);
         MXJSONModelSetString(model.fromDevice, JSONDictionary[@"from_device"]);
         MXJSONModelSetString(model.transactionId, JSONDictionary[@"transaction_id"]);
-        MXJSONModelSetString(model.keyAgreementProtocol, JSONDictionary[@"key_agreement_protocols"]);
+        MXJSONModelSetArray(model.keyAgreementProtocols, JSONDictionary[@"key_agreement_protocols"]);
         MXJSONModelSetArray(model.hashAlgorithms, JSONDictionary[@"hashes"]);
         MXJSONModelSetArray(model.messageAuthenticationCodes, JSONDictionary[@"message_authentication_codes"]);
         MXJSONModelSetArray(model.shortAuthenticationString, JSONDictionary[@"short_authentication_string"]);
     }
 
+    // Sanitiy check
+    if (!model.transactionId.length || !model.fromDevice.length)
+    {
+        model = nil;
+    }
+
     return model;
+}
+
+- (BOOL)isValid
+{
+    BOOL isValid = YES;
+
+    if (_method.length == 0
+        || _keyAgreementProtocols.count == 0
+        || _hashAlgorithms.count == 0
+        || [_hashAlgorithms containsObject:@"sha256"] == NO
+        || _messageAuthenticationCodes.count == 0
+        || [_messageAuthenticationCodes containsObject:@"hmac-sha256"] == NO
+        || _shortAuthenticationString.count == 0
+        || [_messageAuthenticationCodes containsObject:@"hmac-sha256"] == NO)
+
+        // || short_authentication_string?.contains(KeyVerificationStart.SAS_MODE_DECIMAL) == false) {
+    {
+        NSLog(@"[MXKeyVerification] Invalid MXKeyVerificationStart: %@", self);
+        isValid = NO;
+    }
+
+    return isValid;
 }
 
 @end

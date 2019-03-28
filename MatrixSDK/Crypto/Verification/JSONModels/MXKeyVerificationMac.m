@@ -28,7 +28,26 @@
         MXJSONModelSetString(model.keys, JSONDictionary[@"keys"]);
     }
 
+    // Sanitiy check
+    if (!model.transactionId.length)
+    {
+        model = nil;
+    }
+
     return model;
+}
+
+- (BOOL)isValid
+{
+    BOOL isValid = YES;
+
+    if (_mac.count == 0 || _keys.length == 0)
+    {
+        NSLog(@"[MXKeyVerification] Invalid MXKeyVerificationMac: %@", self);
+        isValid = NO;
+    }
+
+    return isValid;
 }
 
 @end
