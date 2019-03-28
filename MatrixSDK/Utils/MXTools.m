@@ -102,7 +102,12 @@ NSCharacterSet *uriComponentCharset;
                                 kMXEventTypeStringCallAnswer,
                                 kMXEventTypeStringCallHangup,
                                 kMXEventTypeStringSticker,
-                                kMXEventTypeStringRoomTombStone
+                                kMXEventTypeStringRoomTombStone,
+                                kMXEventTypeStringKeyVerificationStart,
+                                kMXEventTypeStringKeyVerificationAccept,
+                                kMXEventTypeStringKeyVerificationKey,
+                                kMXEventTypeStringKeyVerificationMac,
+                                kMXEventTypeStringKeyVerificationCancel,
                                 ];
 
         NSMutableDictionary *map = [NSMutableDictionary dictionaryWithCapacity:eventTypeMapEnumToString.count];

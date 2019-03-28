@@ -67,6 +67,11 @@ typedef enum : NSUInteger
     MXEventTypeCallHangup,
     MXEventTypeSticker,
     MXEventTypeRoomTombStone,
+    MXEventTypeKeyVerificationStart,
+    MXEventTypeKeyVerificationAccept,
+    MXEventTypeKeyVerificationKey,
+    MXEventTypeKeyVerificationMac,
+    MXEventTypeKeyVerificationCance,
 
     // The event is a custom event. Refer to its `MXEventTypeString` version
     MXEventTypeCustom = 1000
@@ -113,6 +118,13 @@ FOUNDATION_EXPORT NSString *const kMXEventTypeStringCallAnswer;
 FOUNDATION_EXPORT NSString *const kMXEventTypeStringCallHangup;
 FOUNDATION_EXPORT NSString *const kMXEventTypeStringSticker;
 FOUNDATION_EXPORT NSString *const kMXEventTypeStringRoomTombStone;
+
+// Interactive key verification
+FOUNDATION_EXPORT NSString *const kMXEventTypeStringKeyVerificationStart;
+FOUNDATION_EXPORT NSString *const kMXEventTypeStringKeyVerificationAccept;
+FOUNDATION_EXPORT NSString *const kMXEventTypeStringKeyVerificationKey;
+FOUNDATION_EXPORT NSString *const kMXEventTypeStringKeyVerificationMac;
+FOUNDATION_EXPORT NSString *const kMXEventTypeStringKeyVerificationCancel;
 
 /**
  Types of room messages

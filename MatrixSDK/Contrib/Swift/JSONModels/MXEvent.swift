@@ -57,7 +57,12 @@ public enum MXEventType {
     case callHangup
     case receipt
     case roomTombStone
-    
+    case keyVerificationStart
+    case keyVerificationAccept
+    case keyVerificationKey
+    case keyVerificationMac
+    case keyVerificationCancel
+
     case custom(String)
     
     public var identifier: String {
@@ -90,6 +95,11 @@ public enum MXEventType {
         case .callHangup: return kMXEventTypeStringCallHangup
         case .receipt: return kMXEventTypeStringReceipt
         case .roomTombStone: return kMXEventTypeStringRoomTombStone
+        case .keyVerificationStart: return kMXEventTypeStringKeyVerificationStart
+        case .keyVerificationAccept: return kMXEventTypeStringKeyVerificationAccept
+        case .keyVerificationKey: return kMXEventTypeStringKeyVerificationKey
+        case .keyVerificationMac: return kMXEventTypeStringKeyVerificationMac
+        case .keyVerificationCancel: return kMXEventTypeStringKeyVerificationCancel
             
         // Swift converts any constant with the suffix "Notification" as the type `Notification.Name`
         // The original value can be reached using the `rawValue` property.
