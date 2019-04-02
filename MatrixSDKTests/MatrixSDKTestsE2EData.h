@@ -22,6 +22,8 @@
 
 #import "MatrixSDKTestsData.h"
 
+@class MXOutgoingRoomKeyRequest;
+
 /**
  Class helper to create reusable initial conditions for e2e.
  */
@@ -77,6 +79,10 @@
                                    cryptedSam:(BOOL)cryptedSam
                           warnOnUnknowDevices:(BOOL)warnOnUnknowDevices
                                   readyToTest:(void (^)(MXSession *aliceSession, MXSession *bobSession, MXSession *samSession, NSString *roomId, XCTestExpectation *expectation))readyToTest;
+
+#pragma mark - Tools
+
+- (void)outgoingRoomKeyRequestInSession:(MXSession*)session complete:(void (^)(MXOutgoingRoomKeyRequest*))complete;
 
 @end
 
