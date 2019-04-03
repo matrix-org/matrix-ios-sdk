@@ -175,8 +175,8 @@
         // emoji: generate six bytes by using HKDF
         self.sasBytes = [self.olmSAS generateBytes:sasInfo length:6];
 
-        NSLog(@"[MXOutgoingSASTransaction] handleKey: ALICE CODE: %@", self.sasBytes);          // getDecimalCodeRepresentation
-        NSLog(@"[MXOutgoingSASTransaction] handleKey: ALICE EMOJI CODE: %@", self.sasBytes);    // getShortCodeRepresentation(KeyVerificationStart.SAS_MODE_EMOJI)
+        NSLog(@"[MXOutgoingSASTransaction] handleKey: ALICE CODE: %@", self.sasDecimal);
+        NSLog(@"[MXOutgoingSASTransaction] handleKey: ALICE EMOJI CODE: %@", self.sasEmoji);
 
         self.state = MXOutgoingSASTransactionStateShowSAS;
     }

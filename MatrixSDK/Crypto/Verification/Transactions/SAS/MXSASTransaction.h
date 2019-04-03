@@ -16,6 +16,9 @@
 
 #import "MXDeviceVerificationTransaction.h"
 
+#import "MXEmojiRepresentation.h"
+
+
 NS_ASSUME_NONNULL_BEGIN
 
 #pragma mark - Constants
@@ -34,7 +37,18 @@ FOUNDATION_EXPORT NSString * _Nonnull const kMXKeyVerificationSASModeEmoji;
 /**
  The Short Authentication Code bytes data.
  */
-@property (nonatomic, nullable) NSData *shortCodeBytes;
+@property (nonatomic, nullable) NSData *sasBytes;
+
+/**
+ `self.sasBytes` represented by a three 4-digit numbers string.
+ */
+@property (nonatomic, readonly, nullable) NSString *sasDecimal;
+
+/**
+ `self.sasBytes` represented by a 7 emojis
+ */
+@property (nonatomic, readonly, nullable) NSArray<MXEmojiRepresentation*> *sasEmoji;
+
 
 @end
 

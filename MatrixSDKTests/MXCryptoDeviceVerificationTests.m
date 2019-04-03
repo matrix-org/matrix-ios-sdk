@@ -128,7 +128,9 @@
                             XCTAssertEqual(transactionFromBobPOV.state, MXIncomingSASTransactionStateShowSAS);
 
                             // -> SASs must be the same
-                            XCTAssertEqualObjects(sasTransactionFromAlicePOV.shortCodeBytes, transactionFromBobPOV.shortCodeBytes);
+                            XCTAssertEqualObjects(sasTransactionFromAlicePOV.sasBytes, transactionFromBobPOV.sasBytes);
+                            XCTAssertEqualObjects(sasTransactionFromAlicePOV.sasDecimal, transactionFromBobPOV.sasDecimal);
+                            XCTAssertEqualObjects(sasTransactionFromAlicePOV.sasEmoji, transactionFromBobPOV.sasEmoji);
 
                             [expectation fulfill];
                             break;
