@@ -18,10 +18,25 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface MXKeyVerificationCancelCode : NSObject
+/**
+ A transaction cancellation.
+ */
+@interface MXTransactionCancelCode : NSObject
 
+/**
+ The error code.
+ */
 @property (nonatomic) NSString *value;
+
+/**
+ A human readable reason.
+ */
 @property (nonatomic) NSString *humanReadable;
+
+- (instancetype)initWithValue:(NSString*)value humanReadable:(NSString*)humanReadable;
+
+
+#pragma mark - Predefined cancel codes
 
 // The user cancelled the verification
 + (instancetype)user;

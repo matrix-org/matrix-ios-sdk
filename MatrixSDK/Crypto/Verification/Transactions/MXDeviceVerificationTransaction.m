@@ -1,0 +1,108 @@
+/*
+ Copyright 2019 New Vector Ltd
+
+ Licensed under the Apache License, Version 2.0 (the "License");
+ you may not use this file except in compliance with the License.
+ You may obtain a copy of the License at
+
+ http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
+ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ See the License for the specific language governing permissions and
+ limitations under the License.
+ */
+
+#import "MXDeviceVerificationTransaction.h"
+#import "MXDeviceVerificationTransaction_Private.h"
+
+#import "MXDeviceVerificationManager_Private.h"
+#import "MXCrypto_Private.h"
+#import "MXKeyVerificationStart.h"
+
+
+#pragma mark - Constants
+NSString * const MXDeviceVerificationTransactionDidChangeNotification = @"MXDeviceVerificationTransactionDidChangeNotification";
+
+
+@implementation MXDeviceVerificationTransaction
+
+- (instancetype)initWithOtherUser:(NSString*)otherUser andOtherDevice:(NSString*)otherDevice manager:(MXDeviceVerificationManager*)manager;
+{
+    self = [self init];
+    if (self)
+    {
+        _transactionId = @"TODO";
+        _manager = manager;
+        _otherUser = otherUser;
+        _otherDevice = otherDevice;
+    }
+    return self;
+}
+
+- (nullable instancetype)initWithStartEvent:(MXEvent *)event andManager:(MXDeviceVerificationManager *)manager
+{
+    MXKeyVerificationStart *startContent;
+    MXJSONModelSetMXJSONModel(startContent, MXKeyVerificationStart, event.content);
+    if (!startContent || !startContent.isValid)
+    {
+        NSLog(@"[MXDeviceVerificationTransaction]: ERROR: Invalid start event: %@", event);
+        return nil;
+    }
+
+    self = [self initWithOtherUser:event.sender andOtherDevice:startContent.fromDevice manager:manager];
+    if (self)
+    {
+        _startContent = startContent;
+        _transactionId = _startContent.transactionId;
+    }
+    return self;
+}
+
+- (void)cancelWithCancelCode:(MXTransactionCancelCode *)code
+{
+    dispatch_async(self.manager.crypto.decryptionQueue,^{
+        [self.manager cancelTransaction:self code:code];
+    });
+}
+
+- (MXHTTPOperation*)sendToOther:(NSString*)eventType content:(NSDictionary*)content
+                        success:(void (^)(void))success
+                        failure:(void (^)(NSError *error))failure
+{
+    return [_manager sendToOtherInTransaction:self eventType:eventType content:content success:success failure:failure];
+}
+
+- (void)didUpdateState
+{
+    dispatch_async(dispatch_get_main_queue(),^{
+        [[NSNotificationCenter defaultCenter] postNotificationName:MXDeviceVerificationTransactionDidChangeNotification object:self userInfo:nil];
+    });
+}
+
+- (void)handleAccept:(MXKeyVerificationAccept*)acceptContent
+{
+    // Must be handled by the specific implementation
+    NSAssert(NO, @"%@ does not implement handleAccept", self.class);
+}
+
+- (void)handleCancel:(MXKeyVerificationCancel*)cancelContent
+{
+    // Must be handled by the specific implementation
+    NSAssert(NO, @"%@ does not implement handleCancel", self.class);
+}
+
+- (void)handleKey:(MXKeyVerificationKey*)keyContent
+{
+    // Must be handled by the specific implementation
+    NSAssert(NO, @"%@ does not implement handleKey", self.class);
+}
+
+- (void)handleMac:(MXKeyVerificationMac*)macContent
+{
+    // Must be handled by the specific implementation
+    NSAssert(NO, @"%@ does not implement handleMac", self.class);
+}
+
+@end

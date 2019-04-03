@@ -36,6 +36,8 @@
 #import "MXOutgoingRoomKeyRequestManager.h"
 #import "MXIncomingRoomKeyRequestManager.h"
 
+#import "MXDeviceVerificationManager_Private.h"
+
 /**
  The store to use for crypto.
  */
@@ -1407,6 +1409,8 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
                                          cryptoStore:_store];
 
         incomingRoomKeyRequestManager = [[MXIncomingRoomKeyRequestManager alloc] initWithCrypto:self];
+
+        _deviceVerificationManager = [[MXDeviceVerificationManager alloc] initWithCrypto:self];
         
         [self registerEventHandlers];
         
