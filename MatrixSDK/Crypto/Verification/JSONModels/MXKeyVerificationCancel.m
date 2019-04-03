@@ -37,4 +37,19 @@
     return model;
 }
 
+- (NSDictionary *)JSONDictionary
+{
+    NSMutableDictionary *JSONDictionary = [NSMutableDictionary dictionaryWithDictionary:
+                                           @{
+                                             @"transaction_id": _transactionId,
+                                             @"code": _code
+                                             }];
+    if (_reason)
+    {
+        JSONDictionary[@"reason"] = _reason;
+    }
+
+    return JSONDictionary;
+}
+
 @end

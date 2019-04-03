@@ -40,6 +40,35 @@
     return model;
 }
 
+- (NSDictionary *)JSONDictionary
+{
+    NSMutableDictionary *JSONDictionary = [NSMutableDictionary dictionary];
+    JSONDictionary[@"transaction_id"] = _transactionId;
+
+    if (_keyAgreementProtocol)
+    {
+        JSONDictionary[@"key_agreement_protocol"] = _keyAgreementProtocol;
+    }
+    if (_hashAlgorithm)
+    {
+        JSONDictionary[@"hash"] = _hashAlgorithm;
+    }
+    if (_messageAuthenticationCode)
+    {
+        JSONDictionary[@"message_authentication_code"] = _messageAuthenticationCode;
+    }
+    if (_shortAuthenticationString)
+    {
+        JSONDictionary[@"short_authentication_string"] = _shortAuthenticationString;
+    }
+    if (_commitment)
+    {
+        JSONDictionary[@"commitment"] = _commitment;
+    }
+
+    return JSONDictionary;
+}
+
 - (BOOL)isValid
 {
     BOOL isValid = YES;

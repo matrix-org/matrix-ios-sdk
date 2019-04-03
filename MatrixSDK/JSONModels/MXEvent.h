@@ -71,7 +71,7 @@ typedef enum : NSUInteger
     MXEventTypeKeyVerificationAccept,
     MXEventTypeKeyVerificationKey,
     MXEventTypeKeyVerificationMac,
-    MXEventTypeKeyVerificationCance,
+    MXEventTypeKeyVerificationCancel,
 
     // The event is a custom event. Refer to its `MXEventTypeString` version
     MXEventTypeCustom = 1000

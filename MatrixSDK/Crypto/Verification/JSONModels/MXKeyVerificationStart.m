@@ -41,6 +41,19 @@
     return model;
 }
 
+- (NSDictionary *)JSONDictionary
+{
+    return @{
+             @"method": _method,
+             @"from_device": _fromDevice,
+             @"transaction_id": _transactionId,
+             @"key_agreement_protocols": _keyAgreementProtocols,
+             @"hashes": _hashAlgorithms,
+             @"message_authentication_codes": _messageAuthenticationCodes,
+             @"short_authentication_string": _shortAuthenticationString,
+             };
+}
+
 - (BOOL)isValid
 {
     BOOL isValid = YES;
@@ -53,8 +66,6 @@
         || [_messageAuthenticationCodes containsObject:@"hmac-sha256"] == NO
         || _shortAuthenticationString.count == 0
         || [_messageAuthenticationCodes containsObject:@"hmac-sha256"] == NO)
-
-        // || short_authentication_string?.contains(KeyVerificationStart.SAS_MODE_DECIMAL) == false) {
     {
         NSLog(@"[MXKeyVerification] Invalid MXKeyVerificationStart: %@", self);
         isValid = NO;
