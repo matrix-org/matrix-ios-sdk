@@ -21,6 +21,8 @@
 #import "MXCrypto_Private.h"
 #import "MXKeyVerificationStart.h"
 
+#import "MXTools.h"
+
 
 #pragma mark - Constants
 NSString * const MXDeviceVerificationTransactionDidChangeNotification = @"MXDeviceVerificationTransactionDidChangeNotification";
@@ -33,10 +35,10 @@ NSString * const MXDeviceVerificationTransactionDidChangeNotification = @"MXDevi
     self = [self init];
     if (self)
     {
-        _transactionId = @"TODO";
         _manager = manager;
         _otherUser = otherUser;
         _otherDevice = otherDevice;
+        _transactionId = [MXDeviceVerificationTransaction createUniqueIdWithOtherUser:otherUser otherDevice:otherDevice myUser:manager.crypto.mxSession.matrixRestClient.credentials];
     }
     return self;
 }
@@ -103,6 +105,15 @@ NSString * const MXDeviceVerificationTransactionDidChangeNotification = @"MXDevi
 {
     // Must be handled by the specific implementation
     NSAssert(NO, @"%@ does not implement handleMac", self.class);
+}
+
+
++ (NSString*)createUniqueIdWithOtherUser:(NSString*)otherUser otherDevice:(NSString*)otherDevice myUser:(MXCredentials*)myUser
+{
+    return [NSString stringWithFormat:@"%@:%@|%@:%@|%@",
+            myUser.userId, myUser.deviceId,
+            otherUser, otherDevice,
+            [MXTools generateTransactionId]];
 }
 
 @end
