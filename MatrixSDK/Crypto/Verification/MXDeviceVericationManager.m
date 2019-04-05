@@ -61,7 +61,9 @@ NSString *const kMXDeviceVerificationManagerNotificationTransactionKey = @"kMXDe
             [self addTransaction:transaction];
         }
 
-        complete(transaction);
+        dispatch_async(dispatch_get_main_queue(), ^{
+            complete(transaction);
+        });
     });
 }
 
