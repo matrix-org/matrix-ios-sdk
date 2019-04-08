@@ -18,7 +18,7 @@
 
 @implementation MXEmojiRepresentation
 
-- (instancetype)initWtihEmoji:(NSString *)emoji andName:(NSString *)name
+- (instancetype)initWithEmoji:(NSString *)emoji andName:(NSString *)name
 {
     self = [super init];
     if (self)

@@ -34,7 +34,7 @@ NS_ASSUME_NONNULL_BEGIN
  */
 @property (nonatomic, readonly) NSString *name;
 
-- (instancetype)initWtihEmoji:(NSString*)emoji andName:(NSString*)name;
+- (instancetype)initWithEmoji:(NSString*)emoji andName:(NSString*)name;
 
 @end
 
