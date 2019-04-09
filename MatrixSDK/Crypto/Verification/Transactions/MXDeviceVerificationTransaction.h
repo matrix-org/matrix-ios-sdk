@@ -18,6 +18,7 @@
 #import <Foundation/Foundation.h>
 
 #import "MXTransactionCancelCode.h"
+#import "MXDeviceInfo.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -43,6 +44,11 @@ FOUNDATION_EXPORT NSString * _Nonnull const MXDeviceVerificationTransactionDidCh
  YES for an incoming verification request.
  */
 @property (nonatomic) BOOL isIncoming;
+
+/**
+ The other user device.
+ */
+@property (nonatomic, readonly) MXDeviceInfo *otherDeviceInfo;
 
 /**
  The other user id.

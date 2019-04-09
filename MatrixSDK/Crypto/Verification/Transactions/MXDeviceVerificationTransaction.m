@@ -30,20 +30,19 @@ NSString * const MXDeviceVerificationTransactionDidChangeNotification = @"MXDevi
 
 @implementation MXDeviceVerificationTransaction
 
-- (instancetype)initWithOtherUser:(NSString*)otherUser andOtherDevice:(NSString*)otherDevice manager:(MXDeviceVerificationManager*)manager;
+- (instancetype)initWithOtherDevice:(MXDeviceInfo*)otherDevice andManager:(MXDeviceVerificationManager*)manager;
 {
     self = [self init];
     if (self)
     {
         _manager = manager;
-        _otherUser = otherUser;
-        _otherDevice = otherDevice;
-        _transactionId = [MXDeviceVerificationTransaction createUniqueIdWithOtherUser:otherUser otherDevice:otherDevice myUser:manager.crypto.mxSession.matrixRestClient.credentials];
+        _otherDeviceInfo = otherDevice;
+        _transactionId = [MXDeviceVerificationTransaction createUniqueIdWithOtherUser:self.otherUser otherDevice:self.otherDevice myUser:manager.crypto.mxSession.matrixRestClient.credentials];
     }
     return self;
 }
 
-- (nullable instancetype)initWithStartEvent:(MXEvent *)event andManager:(MXDeviceVerificationManager *)manager
+- (nullable instancetype)initWithOtherDevice:(MXDeviceInfo*)otherDevice startEvent:(MXEvent *)event andManager:(MXDeviceVerificationManager *)manager
 {
     MXKeyVerificationStart *startContent;
     MXJSONModelSetMXJSONModel(startContent, MXKeyVerificationStart, event.content);
@@ -53,13 +52,23 @@ NSString * const MXDeviceVerificationTransactionDidChangeNotification = @"MXDevi
         return nil;
     }
 
-    self = [self initWithOtherUser:event.sender andOtherDevice:startContent.fromDevice manager:manager];
+    self = [self initWithOtherDevice:otherDevice andManager:manager];
     if (self)
     {
         _startContent = startContent;
         _transactionId = _startContent.transactionId;
     }
     return self;
+}
+
+- (NSString *)otherUser
+{
+    return _otherDeviceInfo.userId;
+}
+
+- (NSString *)otherDevice
+{
+    return _otherDeviceInfo.deviceId;
 }
 
 - (void)cancelWithCancelCode:(MXTransactionCancelCode *)code

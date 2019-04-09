@@ -35,9 +35,9 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, readonly, weak) MXDeviceVerificationManager *manager;
 @property (nonatomic, nullable) MXKeyVerificationStart *startContent;
 
-- (instancetype)initWithOtherUser:(NSString*)otherUser andOtherDevice:(NSString*)otherDevice manager:(MXDeviceVerificationManager*)manager;
+- (instancetype)initWithOtherDevice:(MXDeviceInfo*)otherDevice andManager:(MXDeviceVerificationManager*)manager;
 
-- (nullable instancetype)initWithStartEvent:(MXEvent*)event andManager:(MXDeviceVerificationManager*)manager;
+- (nullable instancetype)initWithOtherDevice:(MXDeviceInfo*)otherDevice startEvent:(MXEvent *)event andManager:(MXDeviceVerificationManager *)manager;
 
 - (void)didUpdateState;
 

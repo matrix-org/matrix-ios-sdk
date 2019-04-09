@@ -85,9 +85,9 @@
 
 #pragma mark - SDK-Private methods -
 
-- (nullable instancetype)initWithStartEvent:(MXEvent *)event andManager:(MXDeviceVerificationManager *)manager
+- (nullable instancetype)initWithOtherDevice:(MXDeviceInfo *)otherDevice startEvent:(MXEvent *)event andManager:(MXDeviceVerificationManager *)manager
 {
-    self = [super initWithStartEvent:event andManager:manager];
+    self = [super initWithOtherDevice:otherDevice startEvent:event andManager:manager];
     if (self)
     {
         // Check validity
@@ -99,7 +99,6 @@
         }
 
         // Bob's case
-        // TODO: Make sure we have device keys
         self.state = MXSASTransactionStateIncomingShowAccept;
         self.isIncoming = YES;
     }

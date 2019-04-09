@@ -47,14 +47,15 @@ NSString *const kMXDeviceVerificationManagerNotificationTransactionKey = @"kMXDe
                                 method:(NSString*)method
                               complete:(void (^)(MXDeviceVerificationTransaction * _Nullable transaction))complete
 {
-    dispatch_async(cryptoQueue, ^{
+    // Make sure we have other device keys
+    [self loadDeviceWithDeviceId:deviceId andUserId:userId success:^(MXDeviceInfo *otherDevice) {
 
         MXDeviceVerificationTransaction *transaction;
 
         // We support only SAS at the moment
         if ([method isEqualToString:kMXKeyVerificationMethodSAS])
         {
-            MXOutgoingSASTransaction *sasTransaction = [[MXOutgoingSASTransaction alloc] initWithOtherUser:userId andOtherDevice:deviceId manager:self];
+            MXOutgoingSASTransaction *sasTransaction = [[MXOutgoingSASTransaction alloc] initWithOtherDevice:otherDevice andManager:self];
             [sasTransaction start];
 
             transaction = sasTransaction;
@@ -64,7 +65,11 @@ NSString *const kMXDeviceVerificationManagerNotificationTransactionKey = @"kMXDe
         dispatch_async(dispatch_get_main_queue(), ^{
             complete(transaction);
         });
-    });
+
+    } failure:^(NSError *error) {
+        // TODO
+        complete(nil);
+    }];
 }
 
 
@@ -219,20 +224,33 @@ NSString *const kMXDeviceVerificationManagerNotificationTransactionKey = @"kMXDe
     // Multiple keyshares between two devices: any two devices may only have at most one key verification in flight at a time.
     // https://github.com/matrix-org/matrix-android-sdk/compare/feature/sas#diff-6798da25d58b7650862f263f51cb38e1R139
 
-    // We support only SAS at the moment
-    MXIncomingSASTransaction *transaction = [[MXIncomingSASTransaction alloc] initWithStartEvent:event andManager:self];
-    if (!transaction)
-    {
-        NSLog(@"[MXKeyVerification] handleStartEvent: Unsupported transaction method: %@", event);
+    // Make sure we have other device keys
+    [self loadDeviceWithDeviceId:keyVerificationStart.fromDevice andUserId:event.sender success:^(MXDeviceInfo *otherDevice) {
+
+        // We support only SAS at the moment
+        MXIncomingSASTransaction *transaction = [[MXIncomingSASTransaction alloc] initWithOtherDevice:otherDevice startEvent:event andManager:self];
+        if (transaction)
+        {
+            [self addTransaction:transaction];
+        }
+        else
+        {
+            NSLog(@"[MXKeyVerification] handleStartEvent: Unsupported transaction method: %@", event);
+
+            [self cancelTransaction:keyVerificationStart.transactionId
+                         fromUserId:event.sender
+                          andDevice:keyVerificationStart.fromDevice
+                               code:MXTransactionCancelCode.unknownMethod];
+        }
+
+    } failure:^(NSError *error) {
+        NSLog(@"[MXKeyVerification] handleStartEvent: Failed to get other device keys: %@", event);
 
         [self cancelTransaction:keyVerificationStart.transactionId
                      fromUserId:event.sender
                       andDevice:keyVerificationStart.fromDevice
-                           code:MXTransactionCancelCode.unknownMethod];
-        return;
-    }
-
-    [self addTransaction:transaction];
+                           code:MXTransactionCancelCode.invalidMessage];
+    }];
 }
 
 - (void)handleCancelEvent:(MXEvent*)event
@@ -338,6 +356,31 @@ NSString *const kMXDeviceVerificationManagerNotificationTransactionKey = @"kMXDe
 
 
 #pragma mark - Private methods -
+
+- (void)loadDeviceWithDeviceId:(NSString*)deviceId
+                     andUserId:(NSString*)userId
+                       success:(void (^)(MXDeviceInfo *otherDevice))success
+                       failure:(void (^)(NSError *error))failure
+{
+    MXWeakify(self);
+    [_crypto downloadKeys:@[userId] forceDownload:NO success:^(MXUsersDevicesMap<MXDeviceInfo *> *usersDevicesInfoMap) {
+        MXStrongifyAndReturnIfNil(self);
+
+        dispatch_async(self->cryptoQueue, ^{
+            MXDeviceInfo *otherDevice = [usersDevicesInfoMap objectForDevice:deviceId forUser:userId];
+            if (otherDevice)
+            {
+                success(otherDevice);
+            }
+            else
+            {
+                // TODO
+                failure(nil);
+            }
+        });
+
+    } failure:failure];
+}
 
 - (MXDeviceVerificationTransaction*)transactionWithUser:(NSString*)userId andDevice:(NSString*)deviceId
 {

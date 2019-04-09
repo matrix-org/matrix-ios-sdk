@@ -136,15 +136,16 @@ static NSArray<MXEmojiRepresentation*> *kSasEmojis;
     });
 }
 
-- (instancetype)initWithOtherUser:(NSString *)otherUser andOtherDevice:(NSString *)otherDevice manager:(MXDeviceVerificationManager *)manager
+- (instancetype)initWithOtherDevice:(MXDeviceInfo*)otherDevice andManager:(MXDeviceVerificationManager*)manager
 {
-    self = [super initWithOtherUser:otherUser andOtherDevice:otherDevice manager:manager];
+    self = [super initWithOtherDevice:otherDevice andManager:manager];
     if (self)
     {
         _olmSAS = [OLMSAS new];
     }
     return self;
 }
+
 
 - (NSString*)hashUsingAgreedHashMethod:(NSString*)string
 {
