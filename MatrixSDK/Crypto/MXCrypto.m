@@ -62,9 +62,6 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
     NSMutableDictionary<NSString* /* roomId */,
         NSMutableDictionary<NSString* /* algorithm */, id<MXDecrypting>>*> *roomDecryptors;
 
-    // Our device keys
-    MXDeviceInfo *myDevice;
-
     // Listener on memberships changes
     id roomMembershipEventsListener;
 
@@ -319,7 +316,7 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
         [self->roomDecryptors removeAllObjects];
         self->roomDecryptors = nil;
 
-        self->myDevice = nil;
+        self->_myDevice = nil;
 
         NSLog(@"[MXCrypto] close: done");
     });
@@ -1384,18 +1381,18 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
 
         NSString *userId = _matrixRestClient.credentials.userId;
 
-        myDevice = [[MXDeviceInfo alloc] initWithDeviceId:deviceId];
-        myDevice.userId = userId;
-        myDevice.keys = @{
+        _myDevice = [[MXDeviceInfo alloc] initWithDeviceId:deviceId];
+        _myDevice.userId = userId;
+        _myDevice.keys = @{
                           [NSString stringWithFormat:@"ed25519:%@", deviceId]: _olmDevice.deviceEd25519Key,
                           [NSString stringWithFormat:@"curve25519:%@", deviceId]: _olmDevice.deviceCurve25519Key,
                           };
-        myDevice.algorithms = [[MXCryptoAlgorithms sharedAlgorithms] supportedAlgorithms];
-        myDevice.verified = MXDeviceVerified;
+        _myDevice.algorithms = [[MXCryptoAlgorithms sharedAlgorithms] supportedAlgorithms];
+        _myDevice.verified = MXDeviceVerified;
 
         // Add our own deviceinfo to the store
         NSMutableDictionary *myDevices = [NSMutableDictionary dictionaryWithDictionary:[_store devicesForUser:userId]];
-        myDevices[myDevice.deviceId] = myDevice;
+        myDevices[_myDevice.deviceId] = _myDevice;
         [_store storeDevicesForUser:userId devices:myDevices];
 
         oneTimeKeyCount = -1;
@@ -1404,8 +1401,8 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
 
         outgoingRoomKeyRequestManager = [[MXOutgoingRoomKeyRequestManager alloc]
                                          initWithMatrixRestClient:_matrixRestClient
-                                         deviceId:myDevice.deviceId
-                                         cryptoQueue:[MXCrypto dispatchQueueForUser:myDevice.userId]
+                                         deviceId:_myDevice.deviceId
+                                         cryptoQueue:[MXCrypto dispatchQueueForUser:_myDevice.userId]
                                          cryptoStore:_store];
 
         incomingRoomKeyRequestManager = [[MXIncomingRoomKeyRequestManager alloc] initWithCrypto:self];
@@ -1776,8 +1773,8 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
 - (NSDictionary*)signObject:(NSDictionary*)object
 {
     return @{
-             myDevice.userId: @{
-                     [NSString stringWithFormat:@"ed25519:%@", myDevice.deviceId]: [_olmDevice signJSON:object]
+             _myDevice.userId: @{
+                     [NSString stringWithFormat:@"ed25519:%@", _myDevice.deviceId]: [_olmDevice signJSON:object]
                      }
              };
 }
@@ -2055,16 +2052,16 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
 
     // Prepare the device keys data to send
     // Sign it
-    NSString *signature = [_olmDevice signJSON:myDevice.signalableJSONDictionary];
-    myDevice.signatures = @{
+    NSString *signature = [_olmDevice signJSON:_myDevice.signalableJSONDictionary];
+    _myDevice.signatures = @{
                             _matrixRestClient.credentials.userId: @{
-                                    [NSString stringWithFormat:@"ed25519:%@", myDevice.deviceId]: signature
+                                    [NSString stringWithFormat:@"ed25519:%@", _myDevice.deviceId]: signature
                                     }
                             };
 
     // For now, we set the device id explicitly, as we may not be using the
     // same one as used in login.
-    return [_matrixRestClient uploadKeys:myDevice.JSONDictionary oneTimeKeys:nil forDevice:myDevice.deviceId success:success failure:failure];
+    return [_matrixRestClient uploadKeys:_myDevice.JSONDictionary oneTimeKeys:nil forDevice:_myDevice.deviceId success:success failure:failure];
 }
 
 /**
@@ -2140,7 +2137,7 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
         NSLog(@"[MXCrypto] maybeUploadOneTimeKeys: Make a request to get available one-time keys on the homeserver");
 
         MXWeakify(self);
-        uploadOneTimeKeysOperation = [_matrixRestClient uploadKeys:myDevice.JSONDictionary oneTimeKeys:nil forDevice:myDevice.deviceId success:^(MXKeysUploadResponse *keysUploadResponse) {
+        uploadOneTimeKeysOperation = [_matrixRestClient uploadKeys:_myDevice.JSONDictionary oneTimeKeys:nil forDevice:_myDevice.deviceId success:^(MXKeysUploadResponse *keysUploadResponse) {
             MXStrongifyAndReturnIfNil(self);
 
             if (!self->uploadOneTimeKeysOperation)
@@ -2289,7 +2286,7 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
     // For now, we set the device id explicitly, as we may not be using the
     // same one as used in login.
     MXWeakify(self);
-    return [_matrixRestClient uploadKeys:nil oneTimeKeys:oneTimeJson forDevice:myDevice.deviceId success:^(MXKeysUploadResponse *keysUploadResponse) {
+    return [_matrixRestClient uploadKeys:nil oneTimeKeys:oneTimeJson forDevice:_myDevice.deviceId success:^(MXKeysUploadResponse *keysUploadResponse) {
         MXStrongifyAndReturnIfNil(self);
 
         self->lastPublishedOneTimeKeys = oneTimeKeys;
