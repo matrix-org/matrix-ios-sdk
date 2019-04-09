@@ -62,6 +62,12 @@ NS_ASSUME_NONNULL_BEGIN
 // An invalid message was received
 + (instancetype)invalidMessage;
 
+// Keys did not match
++ (instancetype)mismatchedKeys;
+
+// The user does not match
++ (instancetype)userMismatchError;
+
 @end
 
 NS_ASSUME_NONNULL_END

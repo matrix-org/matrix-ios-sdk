@@ -72,4 +72,14 @@
     return [[MXTransactionCancelCode alloc] initWithValue:@"m.invalid_message" humanReadable:@"An invalid message was received"];
 }
 
++ (instancetype)mismatchedKeys
+{
+    return [[MXTransactionCancelCode alloc] initWithValue:@"m.key_mismatch" humanReadable:@"Key mismatch"];
+}
+
++ (instancetype)userMismatchError
+{
+    return [[MXTransactionCancelCode alloc] initWithValue:@"m.user_error" humanReadable:@"User mismatch"];
+}
+
 @end
