@@ -32,11 +32,11 @@
 - (void)accept;
 {
     // Bob's POV
-    NSLog(@"[MXIncomingSASTransaction] accept");
+    NSLog(@"[MXKeyVerification][MXIncomingSASTransaction] accept");
 
     if (self.state != MXSASTransactionStateIncomingShowAccept)
     {
-        NSLog(@"[MXIncomingSASTransaction] accept: wrong state: %@", self);
+        NSLog(@"[MXKeyVerification][MXIncomingSASTransaction] accept: wrong state: %@", self);
         [self cancelWithCancelCode:MXTransactionCancelCode.unexpectedMessage];
         return;
     }
@@ -70,13 +70,13 @@
             self.state = MXSASTransactionStateWaitForPartnerKey;
         } failure:^(NSError * _Nonnull error) {
 
-            NSLog(@"[MXIncomingSASTransaction] accept: sendToOther:kMXEventTypeStringKeyVerificationAccept failed. Error: %@", error);
+            NSLog(@"[MXKeyVerification][MXIncomingSASTransaction] accept: sendToOther:kMXEventTypeStringKeyVerificationAccept failed. Error: %@", error);
             self.state = MXSASTransactionStateNetworkError;
         }];
     }
     else
     {
-        NSLog(@"[MXIncomingSASTransaction] accept: Failed to find agreement");
+        NSLog(@"[MXKeyVerification][MXIncomingSASTransaction] accept: Failed to find agreement");
         [self cancelWithCancelCode:MXTransactionCancelCode.unknownMethod];
         return;
     }
@@ -94,7 +94,7 @@
         if (![self.startContent.method isEqualToString:kMXKeyVerificationMethodSAS]
             || ![self.startContent.shortAuthenticationString containsObject:kMXKeyVerificationSASModeDecimal])
         {
-            NSLog(@"[MXIncomingSASTransaction]: ERROR: Invalid start event: %@", event);
+            NSLog(@"[MXKeyVerification][MXIncomingSASTransaction]: ERROR: Invalid start event: %@", event);
             return nil;
         }
 
@@ -111,18 +111,18 @@
 
 - (void)handleAccept:(MXKeyVerificationAccept*)acceptContent
 {
-    NSLog(@"[MXIncomingSASTransaction] handleAccept");
+    NSLog(@"[MXKeyVerification][MXIncomingSASTransaction] handleAccept");
 
     [self cancelWithCancelCode:MXTransactionCancelCode.unexpectedMessage];
 }
 
 - (void)handleKey:(MXKeyVerificationKey *)keyContent
 {
-    NSLog(@"[MXIncomingSASTransaction] handleKey");
+    NSLog(@"[MXKeyVerification][MXIncomingSASTransaction] handleKey");
 
     if (self.state != MXSASTransactionStateWaitForPartnerKey)
     {
-        NSLog(@"[MXIncomingSASTransaction] handleKey: wrong state: %@. keyContent: %@", self, keyContent);
+        NSLog(@"[MXKeyVerification][MXIncomingSASTransaction] handleKey: wrong state: %@. keyContent: %@", self, keyContent);
         [self cancelWithCancelCode:MXTransactionCancelCode.unexpectedMessage];
         return;
     }
@@ -156,7 +156,7 @@
         // - the transaction ID.
         NSString *sasInfo = [NSString stringWithFormat:@"MATRIX_KEY_VERIFICATION_SAS%@%@%@%@%@",
                              self.otherUser, self.otherDevice,
-                             self.manager.crypto.mxSession.matrixRestClient.credentials.userId,
+                             self.manager.crypto.myDevice.userId,
                              self.manager.crypto.myDevice.deviceId,
                              self.transactionId];
 
@@ -164,14 +164,14 @@
         // emoji: generate six bytes by using HKDF
         self.sasBytes = [self.olmSAS generateBytes:sasInfo length:6];
 
-        NSLog(@"[MXIncomingSASTransaction] handleKey: BOB CODE: %@", self.sasDecimal);
-        NSLog(@"[MXIncomingSASTransaction] handleKey: BOB EMOJI CODE: %@", self.sasEmoji);
+        NSLog(@"[MXKeyVerification][MXIncomingSASTransaction] handleKey: BOB CODE: %@", self.sasDecimal);
+        NSLog(@"[MXKeyVerification][MXIncomingSASTransaction] handleKey: BOB EMOJI CODE: %@", self.sasEmoji);
 
         self.state = MXSASTransactionStateShowSAS;
 
     } failure:^(NSError * _Nonnull error) {
 
-        NSLog(@"[MXIncomingSASTransaction] handleKey: sendToOther:kMXEventTypeStringKeyVerificationKey failed. Error: %@", error);
+        NSLog(@"[MXKeyVerification][MXIncomingSASTransaction] handleKey: sendToOther:kMXEventTypeStringKeyVerificationKey failed. Error: %@", error);
         self.state = MXSASTransactionStateNetworkError;
     }];
 }
