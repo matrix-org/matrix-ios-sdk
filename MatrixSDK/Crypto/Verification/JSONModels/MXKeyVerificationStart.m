@@ -63,9 +63,9 @@
         || _hashAlgorithms.count == 0
         || [_hashAlgorithms containsObject:@"sha256"] == NO
         || _messageAuthenticationCodes.count == 0
-        || [_messageAuthenticationCodes containsObject:@"hmac-sha256"] == NO
+        || [_messageAuthenticationCodes containsObject:kMXKeyVerificationSASMacSha256LongKdf] == NO
         || _shortAuthenticationString.count == 0
-        || [_messageAuthenticationCodes containsObject:@"hmac-sha256"] == NO)
+        || [_messageAuthenticationCodes containsObject:kMXKeyVerificationSASModeDecimal] == NO)
     {
         NSLog(@"[MXKeyVerification] Invalid MXKeyVerificationStart: %@", self);
         isValid = NO;

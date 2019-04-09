@@ -17,6 +17,7 @@
 #import "MXSASTransaction.h"
 #import "MXSASTransaction_Private.h"
 
+#import "MXCrypto_Private.h"
 #import "MXDeviceVerificationManager_Private.h"
 
 #pragma mark - Constants
@@ -24,6 +25,9 @@
 NSString * const kMXKeyVerificationMethodSAS        = @"m.sas.v1";
 NSString * const kMXKeyVerificationSASModeDecimal   = @"decimal";
 NSString * const kMXKeyVerificationSASModeEmoji     = @"emoji";
+
+NSString * const kMXKeyVerificationSASMacSha256         = @"hkdf-hmac-sha256";
+NSString * const kMXKeyVerificationSASMacSha256LongKdf  = @"hmac-sha256";
 
 NSArray<NSString*> *kKnownAgreementProtocols;
 NSArray<NSString*> *kKnownHashes;
@@ -57,6 +61,64 @@ static NSArray<MXEmojiRepresentation*> *kSasEmojis;
     return sasEmoji;
 }
 
+- (void)confirmSASMatch
+{
+    MXKeyVerificationMac *macContent;
+
+    // Alice and Bob’ devices calculate the HMAC of their own device keys and a comma-separated,
+    // sorted list of the key IDs that they wish the other user to verify,
+    // the shared secret as the input keying material, no salt, and with the input
+    // parameter set to the concatenation of:
+    //  - the string “MATRIX_KEY_VERIFICATION_MAC”,
+    //  - the Matrix ID of the user whose key is being MAC-ed,
+    //  - the device ID of the device sending the MAC,
+    //  - the Matrix ID of the other user,
+    //  - the device ID of the device receiving the MAC,
+    //  - the transaction ID, and
+    //  - the key ID of the key being MAC-ed, or the string “KEY_IDS” if the item being MAC-ed is the list of key IDs.
+    NSString *baseInfo = [NSString stringWithFormat:@"MATRIX_KEY_VERIFICATION_MAC%@%@%@%@%@",
+                          self.otherUser, self.otherDevice,
+                          self.manager.crypto.mxSession.matrixRestClient.credentials.userId,
+                          self.manager.crypto.myDevice.deviceId,
+                          self.transactionId];
+    NSString *keyId = [NSString stringWithFormat:@"ed25519:%@", self.manager.crypto.myDevice.deviceId];
+
+    NSString *macString = [self macUsingAgreedMethod:self.manager.crypto.myDevice.fingerprint
+                                                info:[NSString stringWithFormat:@"%@%@", baseInfo, keyId]];
+    NSString *keyStrings = [self macUsingAgreedMethod:keyId
+                                                 info:[NSString stringWithFormat:@"%@KEY_IDS", baseInfo]];
+
+    if (macString.length && keyStrings.length)
+    {
+        macContent = [MXKeyVerificationMac new];
+        macContent.transactionId = self.transactionId;
+        macContent.mac = @{
+                           keyId: macString
+                           };
+        macContent.keys = keyStrings;
+
+        //self.state = MXIncomingSASTransactionStateWaitForPartnerToConfirm;
+        self.myMac = macContent;
+
+        [self sendToOther:kMXEventTypeStringKeyVerificationMac content:macContent.JSONDictionary success:^{
+
+        } failure:^(NSError * _Nonnull error) {
+            NSLog(@"[MXKeyVerification][MXSASTransaction] accept: sendToOther:kMXEventTypeStringKeyVerificationAccept failed. Error: %@", error);
+            //self.state = MXIncomingSASTransactionStateNetworkError;
+        }];
+
+        // If we already the other device, compare them
+        if (self.theirMac)
+        {
+            [self verifyMacs];
+        }
+    }
+    else
+    {
+        NSLog(@"[MXKeyVerification][MXSASTransaction] confirmSASMatch: Failed to send KeyMac, empty key hashes");
+        [self cancelWithCancelCode:MXTransactionCancelCode.unexpectedMessage];
+    }
+}
 
 #pragma mark - SDK-Private methods -
 
@@ -67,7 +129,7 @@ static NSArray<MXEmojiRepresentation*> *kSasEmojis;
 
         kKnownAgreementProtocols = @[@"curve25519"];
         kKnownHashes = @[@"sha256"];
-        kKnownMacs = @[@"hmac-sha256"];
+        kKnownMacs = @[kMXKeyVerificationSASMacSha256, kMXKeyVerificationSASMacSha256LongKdf];
         kKnownShortCodes = @[kMXKeyVerificationSASModeEmoji, kMXKeyVerificationSASModeDecimal];
 
         [self initializeSasEmojis];
@@ -91,12 +153,59 @@ static NSArray<MXEmojiRepresentation*> *kSasEmojis;
     {
         hashUsingAgreedHashMethod = [[OLMUtility new] sha256:[string dataUsingEncoding:NSUTF8StringEncoding]];
     }
+    else
+    {
+        NSLog(@"[MXKeyVerification][MXSASTransaction] hashUsingAgreedHashMethod: Unsupported hash: %@", _accepted.hashAlgorithm);
+    }
 
     return hashUsingAgreedHashMethod;
 }
 
+- (NSString*)macUsingAgreedMethod:(NSString*)message info:(NSString*)info
+{
+    NSString *macUsingAgreedMethod;
+    NSError *error;
 
-#pragma mark -Private methods -
+    if ([_accepted.messageAuthenticationCode isEqualToString:kMXKeyVerificationSASMacSha256LongKdf])
+    {
+        macUsingAgreedMethod = [_olmSAS calculateMacLongKdf:message info:info error:&error];
+    }
+    else if ([_accepted.messageAuthenticationCode isEqualToString:kMXKeyVerificationSASMacSha256])
+    {
+        macUsingAgreedMethod = [_olmSAS calculateMac:message info:info error:&error];
+    }
+    else
+    {
+        NSLog(@"[MXKeyVerification][MXSASTransaction] macUsingAgreedMethod: Unsupported MAC format: %@", _accepted.messageAuthenticationCode);
+    }
+
+    if (error)
+    {
+        NSLog(@"[MXKeyVerification][MXSASTransaction] macUsingAgreedMethod: Error with MAC format: %@. Error: %@", _accepted.messageAuthenticationCode, error);
+    }
+
+    return macUsingAgreedMethod;
+}
+
+
+
+#pragma mark - Private methods -
+
+- (void)verifyMacs
+{
+    if (self.myMac && self.theirMac)
+    {
+        // TODO
+        if ([self.myMac.keys isEqualToString:self.theirMac.keys])
+        {
+            //self.state = MXIncomingSASTransactionStateVerified;
+        }
+        else
+        {
+            [self cancelWithCancelCode:MXTransactionCancelCode.mismatchedKeys];
+        }
+    }
+}
 
 #pragma mark - Decimal representation
 + (NSArray<NSNumber*> *)decimalRepresentationForSas:(NSData*)sas

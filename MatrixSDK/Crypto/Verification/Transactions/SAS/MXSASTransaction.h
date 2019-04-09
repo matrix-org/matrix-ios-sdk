@@ -28,6 +28,9 @@ FOUNDATION_EXPORT NSString * _Nonnull const kMXKeyVerificationMethodSAS;
 FOUNDATION_EXPORT NSString * _Nonnull const kMXKeyVerificationSASModeDecimal;
 FOUNDATION_EXPORT NSString * _Nonnull const kMXKeyVerificationSASModeEmoji;
 
+FOUNDATION_EXPORT NSString * const kMXKeyVerificationSASMacSha256;
+FOUNDATION_EXPORT NSString * const kMXKeyVerificationSASMacSha256LongKdf;
+
 
 /**
  An handler on an interactive device verification based on Short Authentication Code.
@@ -45,10 +48,15 @@ FOUNDATION_EXPORT NSString * _Nonnull const kMXKeyVerificationSASModeEmoji;
 @property (nonatomic, readonly, nullable) NSString *sasDecimal;
 
 /**
- `self.sasBytes` represented by a 7 emojis
+ `self.sasBytes` represented by a 7 emojis string.
  */
 @property (nonatomic, readonly, nullable) NSArray<MXEmojiRepresentation*> *sasEmoji;
 
+/**
+ To be called by the app when the user confirms that the SAS matches with the SAS
+ displayed on the other user device.
+ */
+- (void)confirmSASMatch;
 
 @end
 

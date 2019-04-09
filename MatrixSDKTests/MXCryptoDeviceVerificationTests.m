@@ -97,6 +97,11 @@
  -> 3. Transaction on Bob side must then move to ShowSAS
  -> 4. Transaction on Alice side must then move to ShowSAS
  -> 5. SASs must be the same
+ -  Alice confirms SAS
+ -> 6. Transaction on Alice side must then move to WaitForPartnerToConfirm
+ -  Bob confirms SAS
+ -> 7. Transaction on Bob side must then move to Verified
+ -> 8. Transaction on Alice side must then move to Verified
  */
 - (void)testAliceAndBobShowSAS
 {
@@ -132,6 +137,18 @@
                             XCTAssertEqualObjects(sasTransactionFromAlicePOV.sasDecimal, transactionFromBobPOV.sasDecimal);
                             XCTAssertEqualObjects(sasTransactionFromAlicePOV.sasEmoji, transactionFromBobPOV.sasEmoji);
 
+                            // -  Alice confirms SAS
+                            [sasTransactionFromAlicePOV confirmSASMatch];
+                            break;
+                        // -> 6. Transaction on Alice side must then move to WaitForPartnerToConfirm
+                        case MXOutgoingSASTransactionStateWaitForPartnerToConfirm:
+                            // -  Bob confirms SAS
+                            [transactionFromBobPOV confirmSASMatch];
+                            break;
+                        // -> 7. Transaction on Bob side must then move to Verified
+                        case MXOutgoingSASTransactionStateVerified:
+                            XCTAssertEqual(transactionFromBobPOV.state, MXIncomingSASTransactionStateVerified);
+
                             [expectation fulfill];
                             break;
                         default:
@@ -151,7 +168,9 @@
                             break;
                             // -> 3. Transaction on Bob side must then move to ShowSAS
                         case MXIncomingSASTransactionStateShowSAS:
-
+                            break;
+                            // -> 8. Transaction on Alice side must then move to Verified
+                        case MXIncomingSASTransactionStateVerified:
                             break;
                         default:
                             XCTAssert(NO, @"Unexpected alice transation state: %@", @(sasTransactionFromAlicePOV.state));

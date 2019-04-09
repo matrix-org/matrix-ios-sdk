@@ -41,7 +41,7 @@
     }
 
     MXKeyVerificationStart *startContent = [MXKeyVerificationStart new];
-    startContent.fromDevice = self.manager.crypto.mxSession.matrixRestClient.credentials.deviceId;
+    startContent.fromDevice = self.manager.crypto.myDevice.deviceId;
     startContent.method = kMXKeyVerificationMethodSAS;
     startContent.transactionId = self.transactionId;
     startContent.keyAgreementProtocols = kKnownAgreementProtocols;
@@ -157,7 +157,7 @@
     {
         [self.olmSAS setTheirPublicKey:keyContent.key];
 
-        //(Note: In all of the following HKDF is as defined in RFC 5869, and uses the previously agreed-on hash function as the hash function,
+        // (Note: In all of the following HKDF is as defined in RFC 5869, and uses the previously agreed-on hash function as the hash function,
         // the shared secret as the input keying material, no salt, and with the input parameter set to the concatenation of:
         // - the string “MATRIX_KEY_VERIFICATION_SAS”,
         // - the Matrix ID of the user who sent the m.key.verification.start message,
@@ -167,7 +167,7 @@
         // - the transaction ID.
         NSString *sasInfo = [NSString stringWithFormat:@"MATRIX_KEY_VERIFICATION_SAS%@%@%@%@%@",
                              self.manager.crypto.mxSession.matrixRestClient.credentials.userId,
-                             self.manager.crypto.mxSession.matrixRestClient.credentials.deviceId,
+                             self.manager.crypto.myDevice.deviceId,
                              self.otherUser, self.otherDevice,
                              self.transactionId];
 

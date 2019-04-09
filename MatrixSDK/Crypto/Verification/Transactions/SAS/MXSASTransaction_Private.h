@@ -36,6 +36,9 @@ FOUNDATION_EXPORT NSArray<NSString*> *kKnownShortCodes;
 @property (nonatomic) OLMSAS *olmSAS;
 @property (nonatomic) MXKeyVerificationAccept *accepted;
 
+@property (nonatomic, nullable) MXKeyVerificationMac *myMac;
+@property (nonatomic, nullable) MXKeyVerificationMac *theirMac;
+
 - (NSString*)hashUsingAgreedHashMethod:(NSString*)string;
 
 @end
