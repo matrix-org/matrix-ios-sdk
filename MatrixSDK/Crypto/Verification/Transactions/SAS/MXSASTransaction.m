@@ -63,40 +63,11 @@ static NSArray<MXEmojiRepresentation*> *kSasEmojis;
 
 - (void)confirmSASMatch
 {
-    MXKeyVerificationMac *macContent;
+    MXKeyVerificationMac *macContent = [self macContentWithDevice:self.manager.crypto.myDevice
+                                                   andOtherDevice:self.otherDevice];
 
-    // Alice and Bob’ devices calculate the HMAC of their own device keys and a comma-separated,
-    // sorted list of the key IDs that they wish the other user to verify,
-    // the shared secret as the input keying material, no salt, and with the input
-    // parameter set to the concatenation of:
-    //  - the string “MATRIX_KEY_VERIFICATION_MAC”,
-    //  - the Matrix ID of the user whose key is being MAC-ed,
-    //  - the device ID of the device sending the MAC,
-    //  - the Matrix ID of the other user,
-    //  - the device ID of the device receiving the MAC,
-    //  - the transaction ID, and
-    //  - the key ID of the key being MAC-ed, or the string “KEY_IDS” if the item being MAC-ed is the list of key IDs.
-    NSString *baseInfo = [NSString stringWithFormat:@"MATRIX_KEY_VERIFICATION_MAC%@%@%@%@%@",
-                          self.otherUserId, self.otherDeviceId,
-                          self.manager.crypto.myDevice.userId,
-                          self.manager.crypto.myDevice.deviceId,
-                          self.transactionId];
-    NSString *keyId = [NSString stringWithFormat:@"ed25519:%@", self.manager.crypto.myDevice.deviceId];
-
-    NSString *macString = [self macUsingAgreedMethod:self.manager.crypto.myDevice.fingerprint
-                                                info:[NSString stringWithFormat:@"%@%@", baseInfo, keyId]];
-    NSString *keyStrings = [self macUsingAgreedMethod:keyId
-                                                 info:[NSString stringWithFormat:@"%@KEY_IDS", baseInfo]];
-
-    if (macString.length && keyStrings.length)
+    if (macContent)
     {
-        macContent = [MXKeyVerificationMac new];
-        macContent.transactionId = self.transactionId;
-        macContent.mac = @{
-                           keyId: macString
-                           };
-        macContent.keys = keyStrings;
-
         self.state = MXSASTransactionStateWaitForPartnerToConfirm;
         self.myMac = macContent;
 
@@ -213,20 +184,83 @@ static NSArray<MXEmojiRepresentation*> *kSasEmojis;
     [self didUpdateState];
 }
 
+- (MXKeyVerificationMac*)macContentWithDevice:(MXDeviceInfo*)device andOtherDevice:(MXDeviceInfo*)otherDevice
+{
+    MXKeyVerificationMac *macContent;
+
+    // Alice and Bob’ devices calculate the HMAC of their own device keys and a comma-separated,
+    // sorted list of the key IDs that they wish the other user to verify,
+    // the shared secret as the input keying material, no salt, and with the input
+    // parameter set to the concatenation of:
+    //  - the string “MATRIX_KEY_VERIFICATION_MAC”,
+    //  - the Matrix ID of the user whose key is being MAC-ed,
+    //  - the device ID of the device sending the MAC,
+    //  - the Matrix ID of the other user,
+    //  - the device ID of the device receiving the MAC,
+    //  - the transaction ID, and
+    //  - the key ID of the key being MAC-ed, or the string “KEY_IDS” if the item being MAC-ed is the list of key IDs.
+    NSString *baseInfo = [NSString stringWithFormat:@"MATRIX_KEY_VERIFICATION_MAC%@%@%@%@%@",
+                          device.userId, device.deviceId,
+                          otherDevice.userId, otherDevice.deviceId,
+                          self.transactionId];
+
+    NSString *keyId = [NSString stringWithFormat:@"ed25519:%@", device.deviceId];
+
+    NSString *macString = [self macUsingAgreedMethod:device.fingerprint
+                                                info:[NSString stringWithFormat:@"%@%@", baseInfo, keyId]];
+    NSString *keyStrings = [self macUsingAgreedMethod:keyId
+                                                 info:[NSString stringWithFormat:@"%@KEY_IDS", baseInfo]];
+
+    if (macString.length && keyStrings.length)
+    {
+        macContent = [MXKeyVerificationMac new];
+        macContent.transactionId = self.transactionId;
+        macContent.mac = @{
+                           keyId: macString
+                           };
+        macContent.keys = keyStrings;
+    }
+
+    return macContent;
+}
+
 - (void)verifyMacs
 {
     if (self.myMac && self.theirMac)
     {
-        // TODO
-        if ([self.myMac.keys isEqualToString:self.theirMac.keys])
+        MXKeyVerificationMac *macContent = [self macContentWithDevice:self.otherDevice
+                                                       andOtherDevice:self.manager.crypto.myDevice];
+
+        if (!macContent)
         {
-            self.state = MXSASTransactionStateVerified;
+            [self cancelWithCancelCode:MXTransactionCancelCode.unexpectedMessage];
+            return;
         }
-        else
+
+        if (![_theirMac.keys isEqualToString:macContent.keys])
         {
             [self cancelWithCancelCode:MXTransactionCancelCode.mismatchedKeys];
+            return;
         }
+
+        if (![_theirMac.mac isEqualToDictionary:macContent.mac])
+        {
+            [self cancelWithCancelCode:MXTransactionCancelCode.mismatchedKeys];
+            return;
+        }
+
+        [self setDeviceAsVerified];
     }
+}
+
+- (void)setDeviceAsVerified
+{
+    [self.manager.crypto setDeviceVerification:MXDeviceVerified forDevice:self.otherDeviceId ofUser:self.otherUserId success:^{
+        self.state = MXSASTransactionStateVerified;
+    } failure:^(NSError *error) {
+        // Should never happen
+        [self cancelWithCancelCode:MXTransactionCancelCode.invalidMessage];
+    }];
 }
 
 

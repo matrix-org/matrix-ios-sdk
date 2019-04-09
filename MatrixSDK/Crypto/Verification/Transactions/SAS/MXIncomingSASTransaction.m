@@ -154,7 +154,7 @@
         // - he device ID of the device that sent the m.key.verification.accept message
         // - the transaction ID.
         NSString *sasInfo = [NSString stringWithFormat:@"MATRIX_KEY_VERIFICATION_SAS%@%@%@%@%@",
-                             self.otherUserId, self.otherDeviceId,
+                             self.otherDevice.userId, self.otherDevice.deviceId,
                              self.manager.crypto.myDevice.userId,
                              self.manager.crypto.myDevice.deviceId,
                              self.transactionId];

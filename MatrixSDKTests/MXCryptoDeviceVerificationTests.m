@@ -169,6 +169,8 @@
                             // -> 3. Transaction on Bob side must then move to ShowSAS
                         case MXSASTransactionStateShowSAS:
                             break;
+                        case MXSASTransactionStateWaitForPartnerToConfirm:
+                            break;
                             // -> 8. Transaction on Alice side must then move to Verified
                         case MXSASTransactionStateVerified:
                             break;
