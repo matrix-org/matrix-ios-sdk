@@ -36,8 +36,8 @@ NSString * const MXDeviceVerificationTransactionDidChangeNotification = @"MXDevi
     if (self)
     {
         _manager = manager;
-        _otherDeviceInfo = otherDevice;
-        _transactionId = [MXDeviceVerificationTransaction createUniqueIdWithOtherUser:self.otherUser otherDevice:self.otherDevice myUser:manager.crypto.mxSession.matrixRestClient.credentials];
+        _otherDevice = otherDevice;
+        _transactionId = [MXDeviceVerificationTransaction createUniqueIdWithOtherUser:self.otherUserId otherDevice:self.otherDeviceId myUser:manager.crypto.mxSession.matrixRestClient.credentials];
     }
     return self;
 }
@@ -61,14 +61,14 @@ NSString * const MXDeviceVerificationTransactionDidChangeNotification = @"MXDevi
     return self;
 }
 
-- (NSString *)otherUser
+- (NSString *)otherUserId
 {
-    return _otherDeviceInfo.userId;
+    return _otherDevice.userId;
 }
 
-- (NSString *)otherDevice
+- (NSString *)otherDeviceId
 {
-    return _otherDeviceInfo.deviceId;
+    return _otherDevice.deviceId;
 }
 
 - (void)cancelWithCancelCode:(MXTransactionCancelCode *)code

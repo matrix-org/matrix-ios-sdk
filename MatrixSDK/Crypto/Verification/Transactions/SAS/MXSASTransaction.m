@@ -77,7 +77,7 @@ static NSArray<MXEmojiRepresentation*> *kSasEmojis;
     //  - the transaction ID, and
     //  - the key ID of the key being MAC-ed, or the string “KEY_IDS” if the item being MAC-ed is the list of key IDs.
     NSString *baseInfo = [NSString stringWithFormat:@"MATRIX_KEY_VERIFICATION_MAC%@%@%@%@%@",
-                          self.otherUser, self.otherDevice,
+                          self.otherUserId, self.otherDeviceId,
                           self.manager.crypto.myDevice.userId,
                           self.manager.crypto.myDevice.deviceId,
                           self.transactionId];

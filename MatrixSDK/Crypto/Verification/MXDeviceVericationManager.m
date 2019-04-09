@@ -101,9 +101,9 @@ NSString *const kMXDeviceVerificationManagerNotificationTransactionKey = @"kMXDe
                                      failure:(void (^)(NSError *error))failure
 {
     MXUsersDevicesMap<NSDictionary*> *contentMap = [[MXUsersDevicesMap alloc] init];
-    [contentMap setObject:content forUser:transaction.otherUser andDevice:transaction.otherDevice];
+    [contentMap setObject:content forUser:transaction.otherUserId andDevice:transaction.otherDeviceId];
 
-    return [self sendToOther:transaction.otherUser deviceId:transaction.otherDevice eventType:eventType content:content success:success failure:failure];
+    return [self sendToOther:transaction.otherUserId deviceId:transaction.otherDeviceId eventType:eventType content:content success:success failure:failure];
 }
 
 - (MXHTTPOperation*)sendToOther:(NSString*)userId
@@ -121,7 +121,7 @@ NSString *const kMXDeviceVerificationManagerNotificationTransactionKey = @"kMXDe
 
 - (void)cancelTransaction:(MXDeviceVerificationTransaction*)transaction code:(MXTransactionCancelCode*)code
 {
-    [self cancelTransaction:transaction.transactionId fromUserId:transaction.otherUser andDevice:transaction.otherDevice code:code];
+    [self cancelTransaction:transaction.transactionId fromUserId:transaction.otherUserId andDevice:transaction.otherDeviceId code:code];
 }
 
 - (void)cancelTransaction:(NSString*)transactionId fromUserId:(NSString*)userId andDevice:(NSString*)deviceId code:(MXTransactionCancelCode*)code
@@ -409,7 +409,7 @@ NSString *const kMXDeviceVerificationManagerNotificationTransactionKey = @"kMXDe
 
 - (void)addTransaction:(MXDeviceVerificationTransaction*)transaction
 {
-    [transactions setObject:transaction forUser:transaction.otherUser andDevice:transaction.otherDevice];
+    [transactions setObject:transaction forUser:transaction.otherUserId andDevice:transaction.otherDeviceId];
 
     dispatch_async(dispatch_get_main_queue(),^{
         [[NSNotificationCenter defaultCenter] postNotificationName:kMXDeviceVerificationManagerNewTransactionNotification object:self userInfo:
@@ -424,7 +424,7 @@ NSString *const kMXDeviceVerificationManagerNotificationTransactionKey = @"kMXDe
     MXDeviceVerificationTransaction *transaction = [self transactionWithTransactionId:transactionId];
     if (transaction)
     {
-        [transactions removeObjectForUser:transaction.otherUser andDevice:transaction.otherDevice];
+        [transactions removeObjectForUser:transaction.otherUserId andDevice:transaction.otherDeviceId];
     }
 }
 

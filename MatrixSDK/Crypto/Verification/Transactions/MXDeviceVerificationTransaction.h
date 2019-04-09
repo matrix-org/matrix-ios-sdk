@@ -48,17 +48,17 @@ FOUNDATION_EXPORT NSString * _Nonnull const MXDeviceVerificationTransactionDidCh
 /**
  The other user device.
  */
-@property (nonatomic, readonly) MXDeviceInfo *otherDeviceInfo;
+@property (nonatomic, readonly) MXDeviceInfo *otherDevice;
 
 /**
  The other user id.
  */
-@property (nonatomic, readonly) NSString *otherUser;
+@property (nonatomic, readonly) NSString *otherUserId;
 
 /**
  The other user device id.
  */
-@property (nonatomic, readonly) NSString *otherDevice;
+@property (nonatomic, readonly) NSString *otherDeviceId;
 
 /**
  The cancellation reason, if any.

@@ -168,7 +168,7 @@
         NSString *sasInfo = [NSString stringWithFormat:@"MATRIX_KEY_VERIFICATION_SAS%@%@%@%@%@",
                              self.manager.crypto.myDevice.userId,
                              self.manager.crypto.myDevice.deviceId,
-                             self.otherUser, self.otherDevice,
+                             self.otherUserId, self.otherDeviceId,
                              self.transactionId];
 
 
@@ -206,7 +206,7 @@
     return [NSString stringWithFormat:@"<MXOutgoingSASTransaction: %p> id:%@ from %@:%@. State %@",
             self,
             self.transactionId,
-            self.otherUser, self.otherDevice,
+            self.otherUserId, self.otherDeviceId,
             @(self.state)];
 }
 
