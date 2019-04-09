@@ -205,6 +205,7 @@
         if (replacementRoomSummary)
         {
             summary.hiddenFromUser = replacementRoomSummary.membership == MXMembershipJoin;
+            updated = YES;
         }
     }
     
@@ -221,7 +222,14 @@
     if (createContent.roomPredecessorInfo)
     {
         MXRoomSummary *obsoleteRoomSummary = [session roomSummaryWithRoomId:createContent.roomPredecessorInfo.roomId];
+     
+        BOOL obsoleteRoomHiddenFromUserFormerValue = obsoleteRoomSummary.hiddenFromUser;
         obsoleteRoomSummary.hiddenFromUser = summary.membership == MXMembershipJoin; // Hide room predecessor if user joined the new one
+        
+        if (obsoleteRoomHiddenFromUserFormerValue != obsoleteRoomSummary.hiddenFromUser)
+        {
+            [obsoleteRoomSummary save:YES];
+        }
     }
 }
 
