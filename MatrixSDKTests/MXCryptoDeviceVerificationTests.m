@@ -125,12 +125,12 @@
                     switch (sasTransactionFromAlicePOV.state)
                     {
                             // -> 2. Transaction on Alice side must then move to WaitForPartnerKey
-                        case MXOutgoingSASTransactionStateWaitForPartnerKey:
-                            XCTAssertEqual(transactionFromBobPOV.state, MXIncomingSASTransactionStateWaitForPartnerKey);
+                        case MXSASTransactionStateWaitForPartnerKey:
+                            XCTAssertEqual(transactionFromBobPOV.state, MXSASTransactionStateWaitForPartnerKey);
                             break;
                             // -> 4. Transaction on Alice side must then move to ShowSAS
-                        case MXOutgoingSASTransactionStateShowSAS:
-                            XCTAssertEqual(transactionFromBobPOV.state, MXIncomingSASTransactionStateShowSAS);
+                        case MXSASTransactionStateShowSAS:
+                            XCTAssertEqual(transactionFromBobPOV.state, MXSASTransactionStateShowSAS);
 
                             // -> 5. SASs must be the same
                             XCTAssertEqualObjects(sasTransactionFromAlicePOV.sasBytes, transactionFromBobPOV.sasBytes);
@@ -141,13 +141,13 @@
                             [sasTransactionFromAlicePOV confirmSASMatch];
                             break;
                         // -> 6. Transaction on Alice side must then move to WaitForPartnerToConfirm
-                        case MXOutgoingSASTransactionStateWaitForPartnerToConfirm:
+                        case MXSASTransactionStateWaitForPartnerToConfirm:
                             // -  Bob confirms SAS
                             [transactionFromBobPOV confirmSASMatch];
                             break;
                         // -> 7. Transaction on Bob side must then move to Verified
-                        case MXOutgoingSASTransactionStateVerified:
-                            XCTAssertEqual(transactionFromBobPOV.state, MXIncomingSASTransactionStateVerified);
+                        case MXSASTransactionStateVerified:
+                            XCTAssertEqual(transactionFromBobPOV.state, MXSASTransactionStateVerified);
 
                             [expectation fulfill];
                             break;
@@ -163,14 +163,14 @@
                     switch (transactionFromBobPOV.state)
                     {
                             // -> 1. Transaction on Bob side must be WaitForPartnerKey (Alice is WaitForPartnerToAccept)
-                        case MXIncomingSASTransactionStateWaitForPartnerKey:
-                            XCTAssertEqual(sasTransactionFromAlicePOV.state, MXOutgoingSASTransactionStateWaitForPartnerToAccept);
+                        case MXSASTransactionStateWaitForPartnerKey:
+                            XCTAssertEqual(sasTransactionFromAlicePOV.state, MXSASTransactionStateOutgoingWaitForPartnerToAccept);
                             break;
                             // -> 3. Transaction on Bob side must then move to ShowSAS
-                        case MXIncomingSASTransactionStateShowSAS:
+                        case MXSASTransactionStateShowSAS:
                             break;
                             // -> 8. Transaction on Alice side must then move to Verified
-                        case MXIncomingSASTransactionStateVerified:
+                        case MXSASTransactionStateVerified:
                             break;
                         default:
                             XCTAssert(NO, @"Unexpected alice transation state: %@", @(sasTransactionFromAlicePOV.state));
@@ -209,7 +209,7 @@
             MXOutgoingSASTransaction *sasTransactionFromAlicePOV = (MXOutgoingSASTransaction*)transactionFromAlicePOV;
 
             // -> In the WaitForPartnerToAccept state
-            XCTAssertEqual(sasTransactionFromAlicePOV.state, MXOutgoingSASTransactionStateWaitForPartnerToAccept);
+            XCTAssertEqual(sasTransactionFromAlicePOV.state, MXSASTransactionStateOutgoingWaitForPartnerToAccept);
 
 
             //  -> Bob must receive an incoming transaction notification
@@ -219,7 +219,7 @@
                 XCTAssertEqualObjects(transactionFromBobPOV.transactionId, transactionFromAlicePOV.transactionId);
 
                 // -> The transaction must be in ShowAccept state
-                XCTAssertEqual(transactionFromBobPOV.state, MXIncomingSASTransactionStateShowAccept);
+                XCTAssertEqual(transactionFromBobPOV.state, MXSASTransactionStateIncomingShowAccept);
 
                 // - Alice cancels the transaction
                 [sasTransactionFromAlicePOV cancelWithCancelCode:MXTransactionCancelCode.user];
@@ -227,7 +227,7 @@
                 // -> Bob must be notified by the cancellation
                 [self observeTransactionUpdate:transactionFromBobPOV block:^{
 
-                    XCTAssertEqual(transactionFromBobPOV.state, MXIncomingSASTransactionStateCancelled);
+                    XCTAssertEqual(transactionFromBobPOV.state, MXSASTransactionStateCancelled);
 
                     XCTAssertNotNil(transactionFromBobPOV.cancelCode);
                     XCTAssertEqualObjects(transactionFromBobPOV.cancelCode.value, MXTransactionCancelCode.user.value);
@@ -265,7 +265,7 @@
                 // -> Alice must be notified by the cancellation
                 [self observeTransactionUpdate:sasTransactionFromAlicePOV block:^{
 
-                    XCTAssertEqual(sasTransactionFromAlicePOV.state, MXIncomingSASTransactionStateCancelled);
+                    XCTAssertEqual(sasTransactionFromAlicePOV.state, MXSASTransactionStateCancelled);
 
                     XCTAssertNotNil(sasTransactionFromAlicePOV.cancelCode);
                     XCTAssertEqualObjects(sasTransactionFromAlicePOV.cancelCode.value, MXTransactionCancelCode.user.value);

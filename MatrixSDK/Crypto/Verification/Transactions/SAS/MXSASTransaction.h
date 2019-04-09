@@ -31,11 +31,26 @@ FOUNDATION_EXPORT NSString * _Nonnull const kMXKeyVerificationSASModeEmoji;
 FOUNDATION_EXPORT NSString * const kMXKeyVerificationSASMacSha256;
 FOUNDATION_EXPORT NSString * const kMXKeyVerificationSASMacSha256LongKdf;
 
+typedef enum : NSUInteger
+{
+    MXSASTransactionStateUnknown = 0,
+    MXSASTransactionStateIncomingShowAccept,
+    MXSASTransactionStateOutgoingWaitForPartnerToAccept,
+    MXSASTransactionStateWaitForPartnerKey,
+    MXSASTransactionStateShowSAS,
+    MXSASTransactionStateWaitForPartnerToConfirm,
+    MXSASTransactionStateVerified,
+    MXSASTransactionStateCancelled,
+    MXSASTransactionStateNetworkError,
+    MXSASTransactionStateError
+} MXSASTransactionState;
 
 /**
  An handler on an interactive device verification based on Short Authentication Code.
  */
 @interface MXSASTransaction : MXDeviceVerificationTransaction
+
+@property (nonatomic/*, readonly*/) MXSASTransactionState state;
 
 /**
  The Short Authentication Code bytes data.

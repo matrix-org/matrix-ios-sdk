@@ -16,20 +16,6 @@
 
 #import "MXSASTransaction.h"
 
-#pragma mark - Constants
-
-typedef enum : NSUInteger
-{
-    MXIncomingSASTransactionStateShowAccept = 0,
-    MXIncomingSASTransactionStateWaitForPartnerKey,
-    MXIncomingSASTransactionStateShowSAS,
-    MXIncomingSASTransactionStateWaitForPartnerToConfirm,
-    MXIncomingSASTransactionStateVerified,
-    MXIncomingSASTransactionStateCancelled,
-    MXIncomingSASTransactionStateNetworkError,
-    MXIncomingSASTransactionStateError
-} MXIncomingSASTransactionState;
-
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -37,8 +23,6 @@ NS_ASSUME_NONNULL_BEGIN
  An handler on an incoming SAS device verification.
  */
 @interface MXIncomingSASTransaction : MXSASTransaction
-
-@property (nonatomic, readonly) MXIncomingSASTransactionState state;
 
 /**
  Accept the device verification request.

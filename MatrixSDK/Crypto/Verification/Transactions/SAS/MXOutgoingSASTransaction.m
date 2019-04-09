@@ -33,10 +33,10 @@
 {
     NSLog(@"[MXOutgoingSASTransaction] start");
 
-    if (_state != MXOutgoingSASTransactionStateUnknown)
+    if (self.state != MXSASTransactionStateUnknown)
     {
         NSLog(@"[MXOutgoingSASTransaction] start: wrong state: %@", self);
-        self.state = MXOutgoingSASTransactionStateCancelled;
+        self.state = MXSASTransactionStateCancelled;
         return;
     }
 
@@ -52,19 +52,19 @@
     if (startContent.isValid)
     {
         self.startContent = startContent;
-        self.state = MXOutgoingSASTransactionStateWaitForPartnerToAccept;
+        self.state = MXSASTransactionStateOutgoingWaitForPartnerToAccept;
 
         [self sendToOther:kMXEventTypeStringKeyVerificationStart content:startContent.JSONDictionary success:^{
             NSLog(@"[MXOutgoingSASTransaction] start: sendToOther:kMXEventTypeStringKeyVerificationStart succeeds");
         } failure:^(NSError * _Nonnull error) {
             NSLog(@"[MXOutgoingSASTransaction] start: sendToOther:kMXEventTypeStringKeyVerificationStart failed. Error: %@", error);
-            self.state = MXOutgoingSASTransactionStateNetworkError;
+            self.state = MXSASTransactionStateNetworkError;
         }];
     }
     else
     {
         NSLog(@"[MXOutgoingSASTransaction] start: Invalid startContent: %@", startContent);
-        self.state = MXOutgoingSASTransactionStateCancelled;
+        self.state = MXSASTransactionStateCancelled;
     }
 }
 
@@ -77,7 +77,7 @@
     if (self)
     {
         // Alice's case
-        self.state = MXOutgoingSASTransactionStateUnknown;
+        self.state = MXSASTransactionStateUnknown;
         self.isIncoming = NO;
     }
     return self;
@@ -91,7 +91,7 @@
     // Alice's POV
     NSLog(@"[MXOutgoingSASTransaction] handleAccept");
 
-    if (_state != MXOutgoingSASTransactionStateWaitForPartnerToAccept)
+    if (self.state != MXSASTransactionStateOutgoingWaitForPartnerToAccept)
     {
         NSLog(@"[MXOutgoingSASTransaction] handleAccept: wrong state: %@. acceptContent: %@", self, acceptContent);
         [self cancelWithCancelCode:MXTransactionCancelCode.unexpectedMessage];
@@ -123,11 +123,11 @@
 
     [self sendToOther:kMXEventTypeStringKeyVerificationKey content:keyContent.JSONDictionary success:^{
 
-        self.state = MXOutgoingSASTransactionStateWaitForPartnerKey;
+        self.state = MXSASTransactionStateWaitForPartnerKey;
 
     } failure:^(NSError * _Nonnull error) {
         NSLog(@"[MXOutgoingSASTransaction] handleAccept: sendToOther:kMXEventTypeStringKeyVerificationKey failed. Error: %@", error);
-        self.state = MXOutgoingSASTransactionStateNetworkError;
+        self.state = MXSASTransactionStateNetworkError;
     }];
 }
 
@@ -135,7 +135,7 @@
 {
     NSLog(@"[MXOutgoingSASTransaction] handleKey");
 
-    if (_state != MXOutgoingSASTransactionStateWaitForPartnerKey)
+    if (self.state != MXSASTransactionStateWaitForPartnerKey)
     {
         NSLog(@"[MXOutgoingSASTransaction] handleKey: wrong state: %@. keyContent: %@", self, keyContent);
         [self cancelWithCancelCode:MXTransactionCancelCode.unexpectedMessage];
@@ -179,7 +179,7 @@
         NSLog(@"[MXOutgoingSASTransaction] handleKey: ALICE CODE: %@", self.sasDecimal);
         NSLog(@"[MXOutgoingSASTransaction] handleKey: ALICE EMOJI CODE: %@", self.sasEmoji);
 
-        self.state = MXOutgoingSASTransactionStateShowSAS;
+        self.state = MXSASTransactionStateShowSAS;
     }
     else
     {
@@ -195,20 +195,11 @@
     self.cancelCode.value = cancelContent.code;
     self.cancelCode.humanReadable = cancelContent.reason;
 
-    self.state = MXOutgoingSASTransactionStateCancelled;
+    self.state = MXSASTransactionStateCancelled;
 }
 
 
 #pragma mark - Private methods
-
-- (void)setState:(MXOutgoingSASTransactionState)state
-{
-    NSLog(@"[MXOutgoingSASTransaction] setState: %@ -> %@", @(_state), @(state));
-
-    _state = state;
-    [self didUpdateState];
-}
-
 
 - (NSString *)description
 {
@@ -216,7 +207,7 @@
             self,
             self.transactionId,
             self.otherUser, self.otherDevice,
-            @(_state)];
+            @(self.state)];
 }
 
 @end

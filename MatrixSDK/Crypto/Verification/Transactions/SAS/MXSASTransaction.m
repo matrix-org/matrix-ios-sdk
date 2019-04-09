@@ -97,14 +97,14 @@ static NSArray<MXEmojiRepresentation*> *kSasEmojis;
                            };
         macContent.keys = keyStrings;
 
-        //self.state = MXIncomingSASTransactionStateWaitForPartnerToConfirm;
+        //self.state = MXSASTransactionStateWaitForPartnerToConfirm;
         self.myMac = macContent;
 
         [self sendToOther:kMXEventTypeStringKeyVerificationMac content:macContent.JSONDictionary success:^{
 
         } failure:^(NSError * _Nonnull error) {
             NSLog(@"[MXKeyVerification][MXSASTransaction] accept: sendToOther:kMXEventTypeStringKeyVerificationAccept failed. Error: %@", error);
-            //self.state = MXIncomingSASTransactionStateNetworkError;
+            //self.state = MXSASTransactionStateNetworkError;
         }];
 
         // If we already the other device, compare them
@@ -191,6 +191,14 @@ static NSArray<MXEmojiRepresentation*> *kSasEmojis;
 
 #pragma mark - Private methods -
 
+- (void)setState:(MXSASTransactionState)state
+{
+    NSLog(@"[MXKeyVerification][MXSASTransaction] setState: %@ -> %@", @(_state), @(state));
+
+    _state = state;
+    [self didUpdateState];
+}
+
 - (void)verifyMacs
 {
     if (self.myMac && self.theirMac)
@@ -198,7 +206,7 @@ static NSArray<MXEmojiRepresentation*> *kSasEmojis;
         // TODO
         if ([self.myMac.keys isEqualToString:self.theirMac.keys])
         {
-            //self.state = MXIncomingSASTransactionStateVerified;
+            //self.state = MXSASTransactionStateVerified;
         }
         else
         {

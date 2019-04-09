@@ -34,7 +34,7 @@
     // Bob's POV
     NSLog(@"[MXIncomingSASTransaction] accept");
 
-    if (_state != MXIncomingSASTransactionStateShowAccept)
+    if (self.state != MXSASTransactionStateIncomingShowAccept)
     {
         NSLog(@"[MXIncomingSASTransaction] accept: wrong state: %@", self);
         [self cancelWithCancelCode:MXTransactionCancelCode.unexpectedMessage];
@@ -67,11 +67,11 @@
     {
         [self sendToOther:kMXEventTypeStringKeyVerificationAccept content:acceptContent.JSONDictionary success:^{
 
-            self.state = MXIncomingSASTransactionStateWaitForPartnerKey;
+            self.state = MXSASTransactionStateWaitForPartnerKey;
         } failure:^(NSError * _Nonnull error) {
 
             NSLog(@"[MXIncomingSASTransaction] accept: sendToOther:kMXEventTypeStringKeyVerificationAccept failed. Error: %@", error);
-            self.state = MXIncomingSASTransactionStateNetworkError;
+            self.state = MXSASTransactionStateNetworkError;
         }];
     }
     else
@@ -100,7 +100,7 @@
 
         // Bob's case
         // TODO: Make sure we have device keys
-        self.state = MXIncomingSASTransactionStateShowAccept;
+        self.state = MXSASTransactionStateIncomingShowAccept;
         self.isIncoming = YES;
     }
     return self;
@@ -120,7 +120,7 @@
 {
     NSLog(@"[MXIncomingSASTransaction] handleKey");
 
-    if (_state != MXIncomingSASTransactionStateWaitForPartnerKey)
+    if (self.state != MXSASTransactionStateWaitForPartnerKey)
     {
         NSLog(@"[MXIncomingSASTransaction] handleKey: wrong state: %@. keyContent: %@", self, keyContent);
         [self cancelWithCancelCode:MXTransactionCancelCode.unexpectedMessage];
@@ -167,12 +167,12 @@
         NSLog(@"[MXIncomingSASTransaction] handleKey: BOB CODE: %@", self.sasDecimal);
         NSLog(@"[MXIncomingSASTransaction] handleKey: BOB EMOJI CODE: %@", self.sasEmoji);
 
-        self.state = MXIncomingSASTransactionStateShowSAS;
+        self.state = MXSASTransactionStateShowSAS;
 
     } failure:^(NSError * _Nonnull error) {
 
         NSLog(@"[MXIncomingSASTransaction] handleKey: sendToOther:kMXEventTypeStringKeyVerificationKey failed. Error: %@", error);
-        self.state = MXIncomingSASTransactionStateNetworkError;
+        self.state = MXSASTransactionStateNetworkError;
     }];
 }
 
@@ -182,20 +182,11 @@
     self.cancelCode.value = cancelContent.code;
     self.cancelCode.humanReadable = cancelContent.reason;
     
-    self.state = MXIncomingSASTransactionStateCancelled;
+    self.state = MXSASTransactionStateCancelled;
 }
 
 
 #pragma mark - Private methods
-
-- (void)setState:(MXIncomingSASTransactionState)state
-{
-    NSLog(@"[MXIncomingSASTransaction] setState: %@ -> %@", @(_state), @(state));
-
-    _state = state;
-    [self didUpdateState];
-}
-
 
 - (NSString *)description
 {
@@ -203,7 +194,7 @@
             self,
             self.transactionId,
             self.otherUser, self.otherDevice,
-            @(_state)];
+            @(self.state)];
 }
 
 @end
