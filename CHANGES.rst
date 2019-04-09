@@ -4,6 +4,9 @@ Changes in Matrix iOS SDK in 0.12.5 (2019-03-)
 Improvements:
  * Crypto: Handle partially-shared sessions better (vector-im/riot-ios/issues/2320).
 
+Bug Fix:
+ * MXRoomSummaryUpdater: Fix `MXRoomSummary.hiddenFromUser` property not being saved when associated room become tombstoned (vector-im/riot-ios/issues/2148).
+
 Changes in Matrix iOS SDK in 0.12.4 (2019-03-21)
 ===============================================
 
