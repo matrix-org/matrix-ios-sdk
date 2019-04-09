@@ -78,7 +78,7 @@ static NSArray<MXEmojiRepresentation*> *kSasEmojis;
     //  - the key ID of the key being MAC-ed, or the string “KEY_IDS” if the item being MAC-ed is the list of key IDs.
     NSString *baseInfo = [NSString stringWithFormat:@"MATRIX_KEY_VERIFICATION_MAC%@%@%@%@%@",
                           self.otherUser, self.otherDevice,
-                          self.manager.crypto.mxSession.matrixRestClient.credentials.userId,
+                          self.manager.crypto.myDevice.userId,
                           self.manager.crypto.myDevice.deviceId,
                           self.transactionId];
     NSString *keyId = [NSString stringWithFormat:@"ed25519:%@", self.manager.crypto.myDevice.deviceId];
@@ -97,17 +97,17 @@ static NSArray<MXEmojiRepresentation*> *kSasEmojis;
                            };
         macContent.keys = keyStrings;
 
-        //self.state = MXSASTransactionStateWaitForPartnerToConfirm;
+        self.state = MXSASTransactionStateWaitForPartnerToConfirm;
         self.myMac = macContent;
 
         [self sendToOther:kMXEventTypeStringKeyVerificationMac content:macContent.JSONDictionary success:^{
 
         } failure:^(NSError * _Nonnull error) {
             NSLog(@"[MXKeyVerification][MXSASTransaction] accept: sendToOther:kMXEventTypeStringKeyVerificationAccept failed. Error: %@", error);
-            //self.state = MXSASTransactionStateNetworkError;
+            self.state = MXSASTransactionStateNetworkError;
         }];
 
-        // If we already the other device, compare them
+        // If we already have the other mac, compare them
         if (self.theirMac)
         {
             [self verifyMacs];
@@ -188,6 +188,19 @@ static NSArray<MXEmojiRepresentation*> *kSasEmojis;
 }
 
 
+#pragma mark - Incoming to_device events
+
+- (void)handleMac:(MXKeyVerificationMac*)macContent
+{
+    if (self.state)
+    {
+        // TODO
+    }
+
+    self.theirMac = macContent;
+    [self verifyMacs];
+}
+
 
 #pragma mark - Private methods -
 
@@ -206,7 +219,7 @@ static NSArray<MXEmojiRepresentation*> *kSasEmojis;
         // TODO
         if ([self.myMac.keys isEqualToString:self.theirMac.keys])
         {
-            //self.state = MXSASTransactionStateVerified;
+            self.state = MXSASTransactionStateVerified;
         }
         else
         {
@@ -215,7 +228,9 @@ static NSArray<MXEmojiRepresentation*> *kSasEmojis;
     }
 }
 
+
 #pragma mark - Decimal representation
+
 + (NSArray<NSNumber*> *)decimalRepresentationForSas:(NSData*)sas
 {
     UInt8 *sasBytes = (UInt8 *)sas.bytes;

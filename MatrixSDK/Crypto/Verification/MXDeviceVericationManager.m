@@ -167,6 +167,10 @@ NSString *const kMXDeviceVerificationManagerNotificationTransactionKey = @"kMXDe
                 [self handleKeyEvent:event];
                 break;
 
+            case MXEventTypeKeyVerificationMac:
+                [self handleMacEvent:event];
+                break;
+
             default:
                 break;
         }
@@ -304,6 +308,31 @@ NSString *const kMXDeviceVerificationManagerNotificationTransactionKey = @"kMXDe
     else
     {
         NSLog(@"[MXKeyVerification] handleKeyEvent. Invalid event: %@", event);
+    }
+}
+
+- (void)handleMacEvent:(MXEvent*)event
+{
+    NSLog(@"[MXKeyVerification] handleMacEvent");
+
+    MXKeyVerificationMac *macContent;
+    MXJSONModelSetMXJSONModel(macContent, MXKeyVerificationMac, event.content);
+
+    if (macContent)
+    {
+        MXDeviceVerificationTransaction *transaction = [self transactionWithTransactionId:macContent.transactionId];
+        if (transaction)
+        {
+            [transaction handleMac:macContent];
+        }
+        else
+        {
+            NSLog(@"[MXKeyVerification] handleMacEvent. Unknown transaction: %@", event);
+        }
+    }
+    else
+    {
+        NSLog(@"[MXKeyVerification] handleMacEvent. Invalid event: %@", event);
     }
 }
 

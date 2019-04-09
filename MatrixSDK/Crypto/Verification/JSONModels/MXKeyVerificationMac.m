@@ -37,6 +37,23 @@
     return model;
 }
 
+- (NSDictionary *)JSONDictionary
+{
+    NSMutableDictionary *JSONDictionary = [NSMutableDictionary dictionary];
+    JSONDictionary[@"transaction_id"] = _transactionId;
+
+    if (_keys)
+    {
+        JSONDictionary[@"mac"] = _mac;
+    }
+    if (_mac)
+    {
+        JSONDictionary[@"keys"] = _keys;
+    }
+
+    return JSONDictionary;
+}
+
 - (BOOL)isValid
 {
     BOOL isValid = YES;
