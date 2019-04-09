@@ -41,9 +41,6 @@
         return;
     }
 
-    // https://github.com/matrix-org/matrix-android-sdk/compare/feature/sas#diff-01eeb8654af9ff0e143dfe1048f9d56dR258
-
-
     MXKeyVerificationAccept *acceptContent = [MXKeyVerificationAccept new];
     acceptContent.transactionId = self.transactionId;
 
@@ -102,7 +99,9 @@
         }
 
         // Bob's case
+        // TODO: Make sure we have device keys
         self.state = MXIncomingSASTransactionStateShowAccept;
+        self.isIncoming = YES;
     }
     return self;
 }
@@ -114,7 +113,7 @@
 {
     NSLog(@"[MXIncomingSASTransaction] handleAccept");
 
-    // TODO: send cancel
+    [self cancelWithCancelCode:MXTransactionCancelCode.unexpectedMessage];
 }
 
 - (void)handleKey:(MXKeyVerificationKey *)keyContent

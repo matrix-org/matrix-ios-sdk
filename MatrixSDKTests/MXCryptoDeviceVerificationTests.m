@@ -59,10 +59,10 @@
 
 - (void)observeSASIncomingTransactionInSession:(MXSession*)session block:(void (^)(MXIncomingSASTransaction * _Nullable transaction))block
 {
-    id observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXDeviceVerificationManagerDidReceiveIncomingTransactionNotification object:session.crypto.deviceVerificationManager queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *notif) {
+    id observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXDeviceVerificationManagerNewTransactionNotification object:session.crypto.deviceVerificationManager queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *notif) {
 
         MXDeviceVerificationTransaction *transaction = notif.userInfo[kMXDeviceVerificationManagerNotificationTransactionKey];
-        if ([transaction isKindOfClass:MXIncomingSASTransaction.class])
+        if (transaction.isIncoming && [transaction isKindOfClass:MXIncomingSASTransaction.class])
         {
             block((MXIncomingSASTransaction*)transaction);
         }
@@ -96,7 +96,7 @@
  -> 2. Transaction on Alice side must then move to WaitForPartnerKey
  -> 3. Transaction on Bob side must then move to ShowSAS
  -> 4. Transaction on Alice side must then move to ShowSAS
- -> SASs must be the same
+ -> 5. SASs must be the same
  */
 - (void)testAliceAndBobShowSAS
 {
@@ -127,7 +127,7 @@
                         case MXOutgoingSASTransactionStateShowSAS:
                             XCTAssertEqual(transactionFromBobPOV.state, MXIncomingSASTransactionStateShowSAS);
 
-                            // -> SASs must be the same
+                            // -> 5. SASs must be the same
                             XCTAssertEqualObjects(sasTransactionFromAlicePOV.sasBytes, transactionFromBobPOV.sasBytes);
                             XCTAssertEqualObjects(sasTransactionFromAlicePOV.sasDecimal, transactionFromBobPOV.sasDecimal);
                             XCTAssertEqualObjects(sasTransactionFromAlicePOV.sasEmoji, transactionFromBobPOV.sasEmoji);

@@ -78,6 +78,7 @@
     {
         // Alice's case
         self.state = MXOutgoingSASTransactionStateUnknown;
+        self.isIncoming = NO;
     }
     return self;
 }
@@ -171,7 +172,7 @@
                              self.transactionId];
 
 
-        // decimal: generate five bytes by using HKDF @TODO
+        // decimal: generate five bytes by using HKDF
         // emoji: generate six bytes by using HKDF
         self.sasBytes = [self.olmSAS generateBytes:sasInfo length:6];
 

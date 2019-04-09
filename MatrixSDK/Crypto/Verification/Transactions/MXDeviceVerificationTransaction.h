@@ -40,6 +40,11 @@ FOUNDATION_EXPORT NSString * _Nonnull const MXDeviceVerificationTransactionDidCh
 @property (nonatomic, readonly) NSString *transactionId;
 
 /**
+ YES for an incoming verification request.
+ */
+@property (nonatomic) BOOL isIncoming;
+
+/**
  The other user id.
  */
 @property (nonatomic, readonly) NSString *otherUser;

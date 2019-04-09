@@ -24,7 +24,7 @@
 
 #pragma mark - Constants
 
-NSString *const kMXDeviceVerificationManagerDidReceiveIncomingTransactionNotification = @"kMXDeviceVerificationManagerDidReceiveIncomingTransactionNotification";
+NSString *const kMXDeviceVerificationManagerNewTransactionNotification = @"kMXDeviceVerificationManagerNewTransactionNotification";
 NSString *const kMXDeviceVerificationManagerNotificationTransactionKey = @"kMXDeviceVerificationManagerNotificationTransactionKey";
 
 
@@ -229,13 +229,6 @@ NSString *const kMXDeviceVerificationManagerNotificationTransactionKey = @"kMXDe
     }
 
     [self addTransaction:transaction];
-
-    dispatch_async(dispatch_get_main_queue(),^{
-        [[NSNotificationCenter defaultCenter] postNotificationName:kMXDeviceVerificationManagerDidReceiveIncomingTransactionNotification object:self userInfo:
-         @{
-           kMXDeviceVerificationManagerNotificationTransactionKey: transaction
-           }];
-    });
 }
 
 - (void)handleCancelEvent:(MXEvent*)event
@@ -345,6 +338,13 @@ NSString *const kMXDeviceVerificationManagerNotificationTransactionKey = @"kMXDe
 - (void)addTransaction:(MXDeviceVerificationTransaction*)transaction
 {
     [transactions setObject:transaction forUser:transaction.otherUser andDevice:transaction.otherDevice];
+
+    dispatch_async(dispatch_get_main_queue(),^{
+        [[NSNotificationCenter defaultCenter] postNotificationName:kMXDeviceVerificationManagerNewTransactionNotification object:self userInfo:
+         @{
+           kMXDeviceVerificationManagerNotificationTransactionKey: transaction
+           }];
+    });
 }
 
 - (void)removeTransactionWithTransactionId:(NSString*)transactionId

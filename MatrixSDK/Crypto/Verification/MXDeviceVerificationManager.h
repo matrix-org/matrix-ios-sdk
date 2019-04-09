@@ -28,9 +28,9 @@ NS_ASSUME_NONNULL_BEGIN
 #pragma mark - Constants
 
 /**
- Posted when the state of the MXKeyBackup instance changes.
+ Posted on new device verification transaction.
  */
-FOUNDATION_EXPORT NSString *const kMXDeviceVerificationManagerDidReceiveIncomingTransactionNotification;
+FOUNDATION_EXPORT NSString *const kMXDeviceVerificationManagerNewTransactionNotification;
 
 /**
  The key in the notification userInfo dictionary containing the `MXDeviceVerificationTransaction` instance.
