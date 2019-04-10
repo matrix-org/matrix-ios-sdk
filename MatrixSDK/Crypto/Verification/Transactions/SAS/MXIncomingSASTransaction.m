@@ -31,7 +31,6 @@
 
 - (void)accept;
 {
-    // Bob's POV
     NSLog(@"[MXKeyVerification][MXIncomingSASTransaction] accept");
 
     if (self.state != MXSASTransactionStateIncomingShowAccept)
@@ -52,7 +51,6 @@
     acceptContent.messageAuthenticationCode = [self.startContent.messageAuthenticationCodes mx_intersectArray:kKnownMacs].firstObject;
     acceptContent.shortAuthenticationString = [self.startContent.shortAuthenticationString mx_intersectArray:kKnownShortCodes];
 
-    // TODO: bof
     self.accepted = acceptContent;
 
     // The hash commitment is the hash (using the selected hash algorithm) of the unpadded base64 representation of QB,
@@ -139,29 +137,7 @@
     [self sendToOther:kMXEventTypeStringKeyVerificationKey content:bobKeyContent.JSONDictionary success:^{
         MXStrongifyAndReturnIfNil(self);
 
-        // Alice’s and Bob’s devices perform an Elliptic-curve Diffie-Hellman
-        // (calculate the point (x,y)=dAQB=dBQA and use x as the result of the ECDH),
-        // using the result as the shared secret.
-
-        [self.olmSAS setTheirPublicKey:keyContent.key];
-
-        // (Note: In all of the following HKDF is as defined in RFC 5869, and uses the previously agreed-on hash function as the hash function,
-        // the shared secret as the input keying material, no salt, and with the input parameter set to the concatenation of:
-        // - the string “MATRIX_KEY_VERIFICATION_SAS”,
-        // - the Matrix ID of the user who sent the m.key.verification.start message,
-        // - the device ID of the device that sent the m.key.verification.start message,
-        // - the Matrix ID of the user who sent the m.key.verification.accept message,
-        // - he device ID of the device that sent the m.key.verification.accept message
-        // - the transaction ID.
-        NSString *sasInfo = [NSString stringWithFormat:@"MATRIX_KEY_VERIFICATION_SAS%@%@%@%@%@",
-                             self.otherDevice.userId, self.otherDevice.deviceId,
-                             self.manager.crypto.myDevice.userId,
-                             self.manager.crypto.myDevice.deviceId,
-                             self.transactionId];
-
-        // decimal: generate five bytes by using HKDF @TODO
-        // emoji: generate six bytes by using HKDF
-        self.sasBytes = [self.olmSAS generateBytes:sasInfo length:6];
+        self.sasBytes = [self generateSasBytesWithTheirPublicKey:keyContent.key requestingDevice:self.otherDevice otherDevice:self.manager.crypto.myDevice];
 
         NSLog(@"[MXKeyVerification][MXIncomingSASTransaction] handleKey: BOB CODE: %@", self.sasDecimal);
         NSLog(@"[MXKeyVerification][MXIncomingSASTransaction] handleKey: BOB EMOJI CODE: %@", self.sasEmoji);
@@ -173,15 +149,6 @@
         NSLog(@"[MXKeyVerification][MXIncomingSASTransaction] handleKey: sendToOther:kMXEventTypeStringKeyVerificationKey failed. Error: %@", error);
         self.state = MXSASTransactionStateNetworkError;
     }];
-}
-
-- (void)handleCancel:(MXKeyVerificationCancel *)cancelContent
-{
-    self.cancelCode = [MXTransactionCancelCode new];
-    self.cancelCode.value = cancelContent.code;
-    self.cancelCode.humanReadable = cancelContent.reason;
-    
-    self.state = MXSASTransactionStateCancelled;
 }
 
 

@@ -155,26 +155,7 @@
 
     if ([self.accepted.commitment isEqualToString:otherCommitment])
     {
-        [self.olmSAS setTheirPublicKey:keyContent.key];
-
-        // (Note: In all of the following HKDF is as defined in RFC 5869, and uses the previously agreed-on hash function as the hash function,
-        // the shared secret as the input keying material, no salt, and with the input parameter set to the concatenation of:
-        // - the string “MATRIX_KEY_VERIFICATION_SAS”,
-        // - the Matrix ID of the user who sent the m.key.verification.start message,
-        // - the device ID of the device that sent the m.key.verification.start message,
-        // - the Matrix ID of the user who sent the m.key.verification.accept message,
-        // - he device ID of the device that sent the m.key.verification.accept message
-        // - the transaction ID.
-        NSString *sasInfo = [NSString stringWithFormat:@"MATRIX_KEY_VERIFICATION_SAS%@%@%@%@%@",
-                             self.manager.crypto.myDevice.userId,
-                             self.manager.crypto.myDevice.deviceId,
-                             self.otherDevice.userId, self.otherDevice.deviceId,
-                             self.transactionId];
-
-
-        // decimal: generate five bytes by using HKDF
-        // emoji: generate six bytes by using HKDF
-        self.sasBytes = [self.olmSAS generateBytes:sasInfo length:6];
+        self.sasBytes = [self generateSasBytesWithTheirPublicKey:keyContent.key requestingDevice:self.manager.crypto.myDevice otherDevice:self.otherDevice];
 
         NSLog(@"[MXKeyVerification][MXOutgoingSASTransaction] handleKey: ALICE CODE: %@", self.sasDecimal);
         NSLog(@"[MXKeyVerification][MXOutgoingSASTransaction] handleKey: ALICE EMOJI CODE: %@", self.sasEmoji);
@@ -187,15 +168,6 @@
 
         [self cancelWithCancelCode:MXTransactionCancelCode.mismatchedCommitment];
     }
-}
-
-- (void)handleCancel:(MXKeyVerificationCancel *)cancelContent
-{
-    self.cancelCode = [MXTransactionCancelCode new];
-    self.cancelCode.value = cancelContent.code;
-    self.cancelCode.humanReadable = cancelContent.reason;
-
-    self.state = MXSASTransactionStateCancelled;
 }
 
 

@@ -63,6 +63,15 @@ static NSArray<MXEmojiRepresentation*> *kSasEmojis;
 
 - (void)confirmSASMatch
 {
+    if (self.state != MXSASTransactionStateShowSAS)
+    {
+        // Ignore and cancel
+        NSLog(@"[MXKeyVerification][MXSASTransaction] accept: Accepted short code from invalid state (%@)", @(self.state));
+        [self cancelWithCancelCode:MXTransactionCancelCode.unexpectedMessage];
+
+        return;
+    }
+
     MXKeyVerificationMac *macContent = [self macContentWithDevice:self.manager.crypto.myDevice
                                                    andOtherDevice:self.otherDevice];
 
@@ -133,6 +142,32 @@ static NSArray<MXEmojiRepresentation*> *kSasEmojis;
     return hashUsingAgreedHashMethod;
 }
 
+- (NSData*)generateSasBytesWithTheirPublicKey:(NSString*)theirPublicKey requestingDevice:(MXDeviceInfo*)requestingDevice otherDevice:(MXDeviceInfo*)otherDevice
+{
+    // Alice’s and Bob’s devices perform an Elliptic-curve Diffie-Hellman
+    // (calculate the point (x,y)=dAQB=dBQA and use x as the result of the ECDH),
+    // using the result as the shared secret.
+
+    [self.olmSAS setTheirPublicKey:theirPublicKey];
+
+    // (Note: In all of the following HKDF is as defined in RFC 5869, and uses the previously agreed-on hash function as the hash function,
+    // the shared secret as the input keying material, no salt, and with the input parameter set to the concatenation of:
+    // - the string “MATRIX_KEY_VERIFICATION_SAS”,
+    // - the Matrix ID of the user who sent the m.key.verification.start message,
+    // - the device ID of the device that sent the m.key.verification.start message,
+    // - the Matrix ID of the user who sent the m.key.verification.accept message,
+    // - he device ID of the device that sent the m.key.verification.accept message
+    // - the transaction ID.
+    NSString *sasInfo = [NSString stringWithFormat:@"MATRIX_KEY_VERIFICATION_SAS%@%@%@%@%@",
+                         requestingDevice.userId, requestingDevice.deviceId,
+                         otherDevice.userId, otherDevice.deviceId,
+                         self.transactionId];
+
+    // decimal: generate five bytes by using HKDF
+    // emoji: generate six bytes by using HKDF
+    return [self.olmSAS generateBytes:sasInfo length:6];
+}
+
 - (NSString*)macUsingAgreedMethod:(NSString*)message info:(NSString*)info
 {
     NSString *macUsingAgreedMethod;
@@ -171,6 +206,15 @@ static NSArray<MXEmojiRepresentation*> *kSasEmojis;
 
     self.theirMac = macContent;
     [self verifyMacs];
+}
+
+- (void)handleCancel:(MXKeyVerificationCancel *)cancelContent
+{
+    self.cancelCode = [MXTransactionCancelCode new];
+    self.cancelCode.value = cancelContent.code;
+    self.cancelCode.humanReadable = cancelContent.reason;
+
+    self.state = MXSASTransactionStateCancelled;
 }
 
 

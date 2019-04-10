@@ -40,6 +40,7 @@ FOUNDATION_EXPORT NSArray<NSString*> *kKnownShortCodes;
 @property (nonatomic, nullable) MXKeyVerificationMac *theirMac;
 
 - (NSString*)hashUsingAgreedHashMethod:(NSString*)string;
+- (NSData*)generateSasBytesWithTheirPublicKey:(NSString*)theirPublicKey requestingDevice:(MXDeviceInfo*)requestingDevice otherDevice:(MXDeviceInfo*)otherDevice;
 
 @end
 
