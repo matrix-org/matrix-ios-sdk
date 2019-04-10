@@ -19,6 +19,8 @@
 #import "MatrixSDKTestsData.h"
 #import "MatrixSDKTestsE2EData.h"
 
+#import "MXCrypto_Private.h"
+
 // Do not bother with retain cycles warnings in tests
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Warc-retain-cycles"
@@ -101,20 +103,40 @@
  -> 6. Transaction on Alice side must then move to WaitForPartnerToConfirm
  -  Bob confirms SAS
  -> 7. Transaction on Bob side must then move to Verified
- -> 8. Transaction on Alice side must then move to Verified
+ -> 7. Transaction on Alice side must then move to Verified
+ -> Devices must be really verified
  */
-- (void)testAliceAndBobShowSAS
+- (void)testFullWorkFlowWithAliceAndBob
 {
     // - Alice and Bob are in a room
     [matrixSDKTestsE2EData doE2ETestWithAliceAndBobInARoomWithCryptedMessages:self cryptedBob:YES readyToTest:^(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
 
-        // - Alice begins SAS verification of Bob's device
+        MXCredentials *alice = aliceSession.matrixRestClient.credentials;
         MXCredentials *bob = bobSession.matrixRestClient.credentials;
+
+        // - Alice begins SAS verification of Bob's device
         [aliceSession.crypto.deviceVerificationManager beginKeyVerificationWithUserId:bob.userId andDeviceId:bob.deviceId method:kMXKeyVerificationMethodSAS complete:^(MXDeviceVerificationTransaction * _Nullable transactionFromAlicePOV) {
 
             MXOutgoingSASTransaction *sasTransactionFromAlicePOV = (MXOutgoingSASTransaction*)transactionFromAlicePOV;
 
             [self observeSASIncomingTransactionInSession:bobSession block:^(MXIncomingSASTransaction * _Nullable transactionFromBobPOV) {
+
+                // Final checks
+                void (^checkBothDeviceVerified)(void) = ^ void ()
+                {
+                    if (sasTransactionFromAlicePOV.state == MXSASTransactionStateVerified
+                        && transactionFromBobPOV.state == MXSASTransactionStateVerified)
+                    {
+                        // -> Devices must be really verified
+                        MXDeviceInfo *bobDeviceFromAlicePOV = [aliceSession.crypto.store deviceWithDeviceId:bob.deviceId forUser:bob.userId];
+                        MXDeviceInfo *aliceDeviceFromBobPOV = [bobSession.crypto.store deviceWithDeviceId:alice.deviceId forUser:alice.userId];
+
+                        XCTAssertEqual(bobDeviceFromAlicePOV.verified, MXDeviceVerified);
+                        XCTAssertEqual(aliceDeviceFromBobPOV.verified, MXDeviceVerified);
+
+                        [expectation fulfill];
+                    }
+                };
 
                 // - Bob accepts it
                 [transactionFromBobPOV accept];
@@ -124,11 +146,11 @@
 
                     switch (sasTransactionFromAlicePOV.state)
                     {
-                            // -> 2. Transaction on Alice side must then move to WaitForPartnerKey
+                        // -> 2. Transaction on Alice side must then move to WaitForPartnerKey
                         case MXSASTransactionStateWaitForPartnerKey:
                             XCTAssertEqual(transactionFromBobPOV.state, MXSASTransactionStateWaitForPartnerKey);
                             break;
-                            // -> 4. Transaction on Alice side must then move to ShowSAS
+                        // -> 4. Transaction on Alice side must then move to ShowSAS
                         case MXSASTransactionStateShowSAS:
                             XCTAssertEqual(transactionFromBobPOV.state, MXSASTransactionStateShowSAS);
 
@@ -145,14 +167,12 @@
                             // -  Bob confirms SAS
                             [transactionFromBobPOV confirmSASMatch];
                             break;
-                        // -> 7. Transaction on Bob side must then move to Verified
+                        // -> 7. Transaction on Alice side must then move to Verified
                         case MXSASTransactionStateVerified:
-                            XCTAssertEqual(transactionFromBobPOV.state, MXSASTransactionStateVerified);
-
-                            [expectation fulfill];
+                            checkBothDeviceVerified();
                             break;
                         default:
-                            XCTAssert(NO, @"Unexpected alice transation state: %@", @(sasTransactionFromAlicePOV.state));
+                            XCTAssert(NO, @"Unexpected Alice transation state: %@", @(sasTransactionFromAlicePOV.state));
                             break;
                     }
                 }];
@@ -162,20 +182,21 @@
 
                     switch (transactionFromBobPOV.state)
                     {
-                            // -> 1. Transaction on Bob side must be WaitForPartnerKey (Alice is WaitForPartnerToAccept)
+                        // -> 1. Transaction on Bob side must be WaitForPartnerKey (Alice is WaitForPartnerToAccept)
                         case MXSASTransactionStateWaitForPartnerKey:
                             XCTAssertEqual(sasTransactionFromAlicePOV.state, MXSASTransactionStateOutgoingWaitForPartnerToAccept);
                             break;
-                            // -> 3. Transaction on Bob side must then move to ShowSAS
+                        // -> 3. Transaction on Bob side must then move to ShowSAS
                         case MXSASTransactionStateShowSAS:
                             break;
                         case MXSASTransactionStateWaitForPartnerToConfirm:
                             break;
-                            // -> 8. Transaction on Alice side must then move to Verified
+                        // 7. Transaction on Bob side must then move to Verified
                         case MXSASTransactionStateVerified:
+                            checkBothDeviceVerified();
                             break;
                         default:
-                            XCTAssert(NO, @"Unexpected alice transation state: %@", @(sasTransactionFromAlicePOV.state));
+                            XCTAssert(NO, @"Unexpected Bob transation state: %@", @(sasTransactionFromAlicePOV.state));
                             break;
                     }
                 }];
