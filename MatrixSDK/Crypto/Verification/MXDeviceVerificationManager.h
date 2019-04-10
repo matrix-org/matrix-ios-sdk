@@ -27,6 +27,15 @@ NS_ASSUME_NONNULL_BEGIN
 
 #pragma mark - Constants
 
+FOUNDATION_EXPORT NSString *const kMXDeviceVerificationErrorDomain;
+
+typedef enum : NSUInteger
+{
+    MXDeviceVerificationUnknownDeviceCode,
+    MXDeviceVerificationUnsupportedMethodCode
+} MXDeviceVerificationErrorCode;
+
+
 /**
  Posted on new device verification transaction.
  */
@@ -51,12 +60,14 @@ FOUNDATION_EXPORT NSString *const kMXDeviceVerificationManagerNotificationTransa
  @param userId the other user id.
  @param deviceId the other user device id.
  @param method the verification method (ex: kMXKeyVerificationMethodSAS).
- @param complete block containing the created outgoing transaction. It is nil if the method is not supported.
+ @param success a block called when the operation succeeds.
+ @param failure a block called when the operation fails.
  */
 - (void)beginKeyVerificationWithUserId:(NSString*)userId
                            andDeviceId:(NSString*)deviceId
                                 method:(NSString*)method
-                              complete:(void (^)(MXDeviceVerificationTransaction * _Nullable transaction))complete;
+                               success:(void(^)(MXDeviceVerificationTransaction *transaction))success
+                               failure:(void(^)(NSError *error))failure;
 
 @end
 

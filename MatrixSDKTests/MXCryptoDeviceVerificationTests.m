@@ -115,7 +115,7 @@
         MXCredentials *bob = bobSession.matrixRestClient.credentials;
 
         // - Alice begins SAS verification of Bob's device
-        [aliceSession.crypto.deviceVerificationManager beginKeyVerificationWithUserId:bob.userId andDeviceId:bob.deviceId method:kMXKeyVerificationMethodSAS complete:^(MXDeviceVerificationTransaction * _Nullable transactionFromAlicePOV) {
+        [aliceSession.crypto.deviceVerificationManager beginKeyVerificationWithUserId:bob.userId andDeviceId:bob.deviceId method:kMXKeyVerificationMethodSAS success:^(MXDeviceVerificationTransaction * _Nonnull transactionFromAlicePOV) {
 
             MXOutgoingSASTransaction *sasTransactionFromAlicePOV = (MXOutgoingSASTransaction*)transactionFromAlicePOV;
 
@@ -201,10 +201,30 @@
                     }
                 }];
             }];
+        } failure:^(NSError * _Nonnull error) {
+            XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+            [expectation fulfill];
         }];
     }];
 }
 
+/**
+ */
+- (void)testAliceDoingVerificationOnAWrongDevice
+{
+    [matrixSDKTestsE2EData doE2ETestWithAliceInARoom:self readyToTest:^(MXSession *aliceSession, NSString *roomId, XCTestExpectation *expectation) {
+
+        // - Alice begins SAS verification of a wrong device
+        [aliceSession.crypto.deviceVerificationManager beginKeyVerificationWithUserId:@"@bob:foo.bar" andDeviceId:@"DEVICEID" method:kMXKeyVerificationMethodSAS success:^(MXDeviceVerificationTransaction * _Nonnull transaction) {
+
+            XCTFail(@"The request should fail");
+            [expectation fulfill];
+
+        } failure:^(NSError * _Nonnull error) {
+            [expectation fulfill];
+        }];
+    }];
+}
 
 /**
  - Alice and Bob are in a room
@@ -224,7 +244,7 @@
 
         // - Alice begins SAS verification of Bob's device
         MXCredentials *bob = bobSession.matrixRestClient.credentials;
-        [aliceSession.crypto.deviceVerificationManager beginKeyVerificationWithUserId:bob.userId andDeviceId:bob.deviceId method:kMXKeyVerificationMethodSAS complete:^(MXDeviceVerificationTransaction * _Nullable transactionFromAlicePOV) {
+        [aliceSession.crypto.deviceVerificationManager beginKeyVerificationWithUserId:bob.userId andDeviceId:bob.deviceId method:kMXKeyVerificationMethodSAS success:^(MXDeviceVerificationTransaction * _Nonnull transactionFromAlicePOV) {
 
             // -> Alice must see the transaction as a MXOutgoingSASTransaction
             XCTAssert(transactionFromAlicePOV);
@@ -258,6 +278,9 @@
                 }];
 
             }];
+        } failure:^(NSError * _Nonnull error) {
+            XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+            [expectation fulfill];
         }];
     }];
 }
@@ -276,7 +299,7 @@
 
         // - Alice begins SAS verification of Bob's device
         MXCredentials *bob = bobSession.matrixRestClient.credentials;
-        [aliceSession.crypto.deviceVerificationManager beginKeyVerificationWithUserId:bob.userId andDeviceId:bob.deviceId method:kMXKeyVerificationMethodSAS complete:^(MXDeviceVerificationTransaction * _Nullable transactionFromAlicePOV) {
+        [aliceSession.crypto.deviceVerificationManager beginKeyVerificationWithUserId:bob.userId andDeviceId:bob.deviceId method:kMXKeyVerificationMethodSAS success:^(MXDeviceVerificationTransaction * _Nonnull transactionFromAlicePOV) {
 
             MXOutgoingSASTransaction *sasTransactionFromAlicePOV = (MXOutgoingSASTransaction*)transactionFromAlicePOV;
 
@@ -295,6 +318,9 @@
                     [expectation fulfill];
                 }];
             }];
+        } failure:^(NSError * _Nonnull error) {
+            XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+            [expectation fulfill];
         }];
     }];
 }

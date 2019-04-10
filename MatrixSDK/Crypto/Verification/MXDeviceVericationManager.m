@@ -24,6 +24,7 @@
 
 #pragma mark - Constants
 
+NSString *const kMXDeviceVerificationErrorDomain = @"org.matrix.sdk.verification";
 NSString *const kMXDeviceVerificationManagerNewTransactionNotification = @"kMXDeviceVerificationManagerNewTransactionNotification";
 NSString *const kMXDeviceVerificationManagerNotificationTransactionKey = @"kMXDeviceVerificationManagerNotificationTransactionKey";
 
@@ -45,12 +46,16 @@ NSString *const kMXDeviceVerificationManagerNotificationTransactionKey = @"kMXDe
 - (void)beginKeyVerificationWithUserId:(NSString*)userId
                            andDeviceId:(NSString*)deviceId
                                 method:(NSString*)method
-                              complete:(void (^)(MXDeviceVerificationTransaction * _Nullable transaction))complete
+                               success:(void(^)(MXDeviceVerificationTransaction *transaction))success
+                               failure:(void(^)(NSError *error))failure
 {
+    NSLog(@"[MXKeyVerification] beginKeyVerification: device: %@:%@ method:%@", userId, deviceId, method);
+
     // Make sure we have other device keys
     [self loadDeviceWithDeviceId:deviceId andUserId:userId success:^(MXDeviceInfo *otherDevice) {
 
         MXDeviceVerificationTransaction *transaction;
+        NSError *error;
 
         // We support only SAS at the moment
         if ([method isEqualToString:kMXKeyVerificationMethodSAS])
@@ -61,14 +66,30 @@ NSString *const kMXDeviceVerificationManagerNotificationTransactionKey = @"kMXDe
             transaction = sasTransaction;
             [self addTransaction:transaction];
         }
+        else
+        {
+            error = [NSError errorWithDomain:kMXDeviceVerificationErrorDomain
+                                        code:MXDeviceVerificationUnsupportedMethodCode
+                                    userInfo:@{
+                                               NSLocalizedDescriptionKey: [NSString stringWithFormat:@"Unsupported verification method: %@", method]
+                                               }];
+        }
 
         dispatch_async(dispatch_get_main_queue(), ^{
-            complete(transaction);
+            if (transaction)
+            {
+                success(transaction);
+            }
+            else
+            {
+                failure(error);
+            }
+
         });
 
     } failure:^(NSError *error) {
-        // TODO
-        complete(nil);
+        NSLog(@"[MXKeyVerification] beginKeyVerification: Error: %@", error);
+        failure(error);
     }];
 }
 
@@ -374,8 +395,12 @@ NSString *const kMXDeviceVerificationManagerNotificationTransactionKey = @"kMXDe
             }
             else
             {
-                // TODO
-                failure(nil);
+                NSError *error = [NSError errorWithDomain:kMXDeviceVerificationErrorDomain
+                                                     code:MXDeviceVerificationUnknownDeviceCode
+                                                 userInfo:@{
+                                                            NSLocalizedDescriptionKey: [NSString stringWithFormat:@"Unknown device: %@:%@", userId, deviceId]
+                                                            }];
+                failure(error);
             }
         });
 
