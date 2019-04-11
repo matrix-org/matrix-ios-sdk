@@ -106,7 +106,7 @@
  -> 7. Transaction on Alice side must then move to Verified
  -> Devices must be really verified
  */
-- (void)testFullWorkFlowWithAliceAndBob
+- (void)testFullFlowWithAliceAndBob
 {
     // - Alice and Bob are in a room
     [matrixSDKTestsE2EData doE2ETestWithAliceAndBobInARoomWithCryptedMessages:self cryptedBob:YES readyToTest:^(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
@@ -202,25 +202,60 @@
                 }];
             }];
         } failure:^(NSError * _Nonnull error) {
-            XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+            XCTFail(@"The request should not fail - NSError: %@", error);
             [expectation fulfill];
         }];
     }];
 }
 
 /**
+ - Alice begins SAS verification of a non-existing device
+ -> The request should fail
  */
-- (void)testAliceDoingVerificationOnAWrongDevice
+- (void)testAliceDoingVerificationOnANonExistingDevice
 {
     [matrixSDKTestsE2EData doE2ETestWithAliceInARoom:self readyToTest:^(MXSession *aliceSession, NSString *roomId, XCTestExpectation *expectation) {
 
-        // - Alice begins SAS verification of a wrong device
+        // - Alice begins SAS verification of a non-existing device
         [aliceSession.crypto.deviceVerificationManager beginKeyVerificationWithUserId:@"@bob:foo.bar" andDeviceId:@"DEVICEID" method:kMXKeyVerificationMethodSAS success:^(MXDeviceVerificationTransaction * _Nonnull transaction) {
 
+            // -> The request should fail
             XCTFail(@"The request should fail");
             [expectation fulfill];
 
         } failure:^(NSError * _Nonnull error) {
+            [expectation fulfill];
+        }];
+    }];
+}
+
+/**
+ - Alice begins SAS verification of a device she has never talked too
+ -> The request should succeed
+ -> Transaction must exist in both side
+ */
+- (void)testAliceDoingVerificationOnANotYetKnownDevice
+{
+    [matrixSDKTestsE2EData doE2ETestWithBobAndAlice:self readyToTest:^(MXSession *bobSession, MXSession *aliceSession, XCTestExpectation *expectation) {
+
+        MXCredentials *bob = bobSession.matrixRestClient.credentials;
+
+        // - Alice begins SAS verification of a device she has never talked too
+        [aliceSession.crypto.deviceVerificationManager beginKeyVerificationWithUserId:bob.userId andDeviceId:bob.deviceId method:kMXKeyVerificationMethodSAS success:^(MXDeviceVerificationTransaction * _Nonnull transactionFromAlicePOV) {
+
+            // -> The request should succeed
+            MXOutgoingSASTransaction *sasTransactionFromAlicePOV = (MXOutgoingSASTransaction*)transactionFromAlicePOV;
+
+            [self observeSASIncomingTransactionInSession:bobSession block:^(MXIncomingSASTransaction * _Nullable transactionFromBobPOV) {
+
+                // -> Transaction must exist in both side
+                XCTAssertEqual(transactionFromBobPOV.state, MXSASTransactionStateIncomingShowAccept);
+                XCTAssertEqual(sasTransactionFromAlicePOV.state, MXSASTransactionStateOutgoingWaitForPartnerToAccept);
+
+                [expectation fulfill];
+            }];
+        } failure:^(NSError * _Nonnull error) {
+            XCTFail(@"The request should not fail - NSError: %@", error);
             [expectation fulfill];
         }];
     }];
@@ -325,7 +360,67 @@
     }];
 }
 
+/**
+ - Alice and Bob are in a room
+ - Alice begins SAS verification of Bob's device
+ - Alice starts another SAS verification of Bob's device
+ -> Alice must see all her requests cancelled
+ */
+- (void)testAliceStartTwoVerifications
+{
+    [matrixSDKTestsE2EData doE2ETestWithBobAndAlice:self readyToTest:^(MXSession *bobSession, MXSession *aliceSession, XCTestExpectation *expectation) {
 
-// TODO: more tests
+        MXCredentials *bob = bobSession.matrixRestClient.credentials;
+
+        // - Alice begins SAS verification of Bob's device
+        [aliceSession.crypto.deviceVerificationManager beginKeyVerificationWithUserId:bob.userId andDeviceId:bob.deviceId method:kMXKeyVerificationMethodSAS success:^(MXDeviceVerificationTransaction * _Nonnull transactionFromAlicePOV) {
+
+            MXOutgoingSASTransaction *sasTransactionFromAlicePOV = (MXOutgoingSASTransaction*)transactionFromAlicePOV;
+
+            // - Alice must see all her requests cancelled
+            [self observeTransactionUpdate:sasTransactionFromAlicePOV block:^{
+
+                XCTAssertEqual(sasTransactionFromAlicePOV.state, MXSASTransactionStateCancelled);
+
+                [expectation fulfill];
+            }];
+
+        } failure:^(NSError * _Nonnull error) {
+            XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+            [expectation fulfill];
+        }];
+
+        // - Alice starts another SAS verification of Bob's device
+        [aliceSession.crypto.deviceVerificationManager beginKeyVerificationWithUserId:bob.userId andDeviceId:bob.deviceId method:kMXKeyVerificationMethodSAS success:^(MXDeviceVerificationTransaction * _Nonnull transaction2FromAlicePOV) {
+
+            MXOutgoingSASTransaction *sasTransaction2FromAlicePOV = (MXOutgoingSASTransaction*)transaction2FromAlicePOV;
+
+            // -> Alice must see all her requests cancelled
+            [self observeTransactionUpdate:sasTransaction2FromAlicePOV block:^{
+
+                XCTAssertEqual(sasTransaction2FromAlicePOV.state, MXSASTransactionStateCancelled);
+
+                [expectation fulfill];
+            }];
+
+        } failure:^(NSError * _Nonnull error) {
+            XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+            [expectation fulfill];
+        }];
+
+
+        // - Alice starts another SAS verification of Bob's device
+        [self observeSASIncomingTransactionInSession:bobSession block:^(MXIncomingSASTransaction * _Nullable transactionFromBobPOV) {
+
+            // -> Alice must see all her requests cancelled
+            [self observeTransactionUpdate:transactionFromBobPOV block:^{
+
+                XCTAssertEqual(transactionFromBobPOV.state, MXSASTransactionStateCancelled);
+
+                [expectation fulfill];
+            }];
+        }];
+    }];
+}
 
 @end

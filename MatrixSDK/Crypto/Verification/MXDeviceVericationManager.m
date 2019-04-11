@@ -241,13 +241,25 @@ NSString *const kMXDeviceVerificationManagerNotificationTransactionKey = @"kMXDe
         return;
     }
 
-    // TODO:
-    // Multiple keyshares between two devices: any two devices may only have at most one key verification in flight at a time.
-    // https://github.com/matrix-org/matrix-android-sdk/compare/feature/sas#diff-6798da25d58b7650862f263f51cb38e1R139
 
     // Make sure we have other device keys
     [self loadDeviceWithDeviceId:keyVerificationStart.fromDevice andUserId:event.sender success:^(MXDeviceInfo *otherDevice) {
 
+        // Multiple keyshares between two devices: any two devices may only have at most one key verification in flight at a time.
+        NSArray<MXDeviceVerificationTransaction*> *transactionsWithUser = [self transactionsWithUser:event.sender];
+        if (transactionsWithUser)
+        {
+            NSLog(@"[MXKeyVerification] handleStartEvent: already existing transaction with the user. Cancel both");
+
+            [existingTransaction cancelWithCancelCode:MXTransactionCancelCode.invalidMessage];
+            [self cancelTransaction:keyVerificationStart.transactionId
+                         fromUserId:event.sender
+                          andDevice:keyVerificationStart.fromDevice
+                               code:MXTransactionCancelCode.invalidMessage];
+            return;
+        }
+
+        
         // We support only SAS at the moment
         MXIncomingSASTransaction *transaction = [[MXIncomingSASTransaction alloc] initWithOtherDevice:otherDevice startEvent:event andManager:self];
         if (transaction)
