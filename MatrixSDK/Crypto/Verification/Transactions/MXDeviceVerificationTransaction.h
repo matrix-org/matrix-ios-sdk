@@ -63,7 +63,7 @@ FOUNDATION_EXPORT NSString * _Nonnull const MXDeviceVerificationTransactionDidCh
 /**
  The cancellation reason, if any.
  */
-@property (nonatomic, nullable) MXTransactionCancelCode *cancelCode;
+@property (nonatomic, nullable) MXTransactionCancelCode *reasonCancelCode;
 
 /**
  Cancel this transaction.

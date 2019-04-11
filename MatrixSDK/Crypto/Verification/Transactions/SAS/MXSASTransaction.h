@@ -34,15 +34,15 @@ FOUNDATION_EXPORT NSString * const kMXKeyVerificationSASMacSha256LongKdf;
 typedef enum : NSUInteger
 {
     MXSASTransactionStateUnknown = 0,
-    MXSASTransactionStateIncomingShowAccept,
-    MXSASTransactionStateOutgoingWaitForPartnerToAccept,
+    MXSASTransactionStateIncomingShowAccept,                // State only for incoming verification request
+    MXSASTransactionStateOutgoingWaitForPartnerToAccept,    // State only for outgoing verification request
     MXSASTransactionStateWaitForPartnerKey,
     MXSASTransactionStateShowSAS,
     MXSASTransactionStateWaitForPartnerToConfirm,
     MXSASTransactionStateVerified,
-    MXSASTransactionStateCancelled,
-    MXSASTransactionStateNetworkError,
-    MXSASTransactionStateError
+    MXSASTransactionStateCancelled,                         // Check self.reasonCancelCode for the reason
+    MXSASTransactionStateCancelledByMe,                     // Check self.reasonCancelCode for the reason
+    MXSASTransactionStateNetworkError
 } MXSASTransactionState;
 
 /**
@@ -50,7 +50,7 @@ typedef enum : NSUInteger
  */
 @interface MXSASTransaction : MXDeviceVerificationTransaction
 
-@property (nonatomic/*, readonly*/) MXSASTransactionState state;
+@property (nonatomic) MXSASTransactionState state;
 
 /**
  The Short Authentication Code bytes data.

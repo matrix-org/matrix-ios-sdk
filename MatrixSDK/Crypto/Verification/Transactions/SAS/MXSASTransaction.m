@@ -100,6 +100,15 @@ static NSArray<MXEmojiRepresentation*> *kSasEmojis;
     }
 }
 
+
+- (void)cancelWithCancelCode:(MXTransactionCancelCode *)code
+{
+    [super cancelWithCancelCode:code];
+    
+    self.state = MXSASTransactionStateCancelledByMe;
+    self.reasonCancelCode = code;
+}
+
 #pragma mark - SDK-Private methods -
 
 + (void)initialize
@@ -212,9 +221,9 @@ static NSArray<MXEmojiRepresentation*> *kSasEmojis;
 
 - (void)handleCancel:(MXKeyVerificationCancel *)cancelContent
 {
-    self.cancelCode = [MXTransactionCancelCode new];
-    self.cancelCode.value = cancelContent.code;
-    self.cancelCode.humanReadable = cancelContent.reason;
+    self.reasonCancelCode = [MXTransactionCancelCode new];
+    self.reasonCancelCode.value = cancelContent.code;
+    self.reasonCancelCode.humanReadable = cancelContent.reason;
 
     self.state = MXSASTransactionStateCancelled;
 }

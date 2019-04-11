@@ -271,6 +271,7 @@
  -> The transaction must be in ShowAccept state
  - Alice cancels the transaction
  -> Bob must be notified by the cancellation
+ -> Transaction on Alice side must then move to CancelledByMe
  */
 - (void)testAliceStartThenAliceCancel
 {
@@ -307,8 +308,13 @@
 
                     XCTAssertEqual(transactionFromBobPOV.state, MXSASTransactionStateCancelled);
 
-                    XCTAssertNotNil(transactionFromBobPOV.cancelCode);
-                    XCTAssertEqualObjects(transactionFromBobPOV.cancelCode.value, MXTransactionCancelCode.user.value);
+                    XCTAssertNotNil(transactionFromBobPOV.reasonCancelCode);
+                    XCTAssertEqualObjects(transactionFromBobPOV.reasonCancelCode.value, MXTransactionCancelCode.user.value);
+
+                    // -> Transaction on Alice side must then move to CancelledByMe
+                    XCTAssertEqual(sasTransactionFromAlicePOV.state, MXSASTransactionStateCancelledByMe);
+                    XCTAssertEqualObjects(sasTransactionFromAlicePOV.reasonCancelCode.value, MXTransactionCancelCode.user.value);
+
                     [expectation fulfill];
                 }];
 
@@ -326,6 +332,7 @@
  - Alice begins SAS verification of Bob's device
  - Bob cancels the incoming transaction
  -> Alice must be notified by the cancellation
+ -> Transaction on Bob side must then move to CancelledByMe
  */
 - (void)testAliceStartThenBobCancel
 {
@@ -348,8 +355,13 @@
 
                     XCTAssertEqual(sasTransactionFromAlicePOV.state, MXSASTransactionStateCancelled);
 
-                    XCTAssertNotNil(sasTransactionFromAlicePOV.cancelCode);
-                    XCTAssertEqualObjects(sasTransactionFromAlicePOV.cancelCode.value, MXTransactionCancelCode.user.value);
+                    XCTAssertNotNil(sasTransactionFromAlicePOV.reasonCancelCode);
+                    XCTAssertEqualObjects(sasTransactionFromAlicePOV.reasonCancelCode.value, MXTransactionCancelCode.user.value);
+
+                    // -> Transaction on Bob side must then move to CancelledByMe
+                    XCTAssertEqual(transactionFromBobPOV.state, MXSASTransactionStateCancelledByMe);
+                    XCTAssertEqualObjects(transactionFromBobPOV.reasonCancelCode.value, MXTransactionCancelCode.user.value);
+
                     [expectation fulfill];
                 }];
             }];
