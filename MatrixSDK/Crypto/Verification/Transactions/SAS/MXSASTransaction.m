@@ -199,9 +199,11 @@ static NSArray<MXEmojiRepresentation*> *kSasEmojis;
 
 - (void)handleMac:(MXKeyVerificationMac*)macContent
 {
-    if (self.state)
+    if (self.state != MXSASTransactionStateWaitForPartnerToConfirm)
     {
-        // TODO
+        NSLog(@"[MXKeyVerification] handleMac: wrong state: %@", self);
+        [self cancelWithCancelCode:MXTransactionCancelCode.unexpectedMessage];
+        return;
     }
 
     self.theirMac = macContent;
