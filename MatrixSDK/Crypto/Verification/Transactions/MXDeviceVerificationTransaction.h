@@ -66,6 +66,12 @@ FOUNDATION_EXPORT NSString * _Nonnull const MXDeviceVerificationTransactionDidCh
 @property (nonatomic, nullable) MXTransactionCancelCode *reasonCancelCode;
 
 /**
+ The occured error (like network error), if any.
+ */
+@property (nonatomic, nullable) NSError *error;
+
+
+/**
  Cancel this transaction.
 
  @param code the cancellation reason

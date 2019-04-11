@@ -58,7 +58,8 @@
             NSLog(@"[MXKeyVerification][MXOutgoingSASTransaction] start: sendToOther:kMXEventTypeStringKeyVerificationStart succeeds");
         } failure:^(NSError * _Nonnull error) {
             NSLog(@"[MXKeyVerification][MXOutgoingSASTransaction] start: sendToOther:kMXEventTypeStringKeyVerificationStart failed. Error: %@", error);
-            self.state = MXSASTransactionStateNetworkError;
+            self.error = error;
+            self.state = MXSASTransactionStateError;
         }];
     }
     else
@@ -127,7 +128,8 @@
 
     } failure:^(NSError * _Nonnull error) {
         NSLog(@"[MXKeyVerification][MXOutgoingSASTransaction] handleAccept: sendToOther:kMXEventTypeStringKeyVerificationKey failed. Error: %@", error);
-        self.state = MXSASTransactionStateNetworkError;
+        self.error = error;
+        self.state = MXSASTransactionStateError;
     }];
 }
 

@@ -84,7 +84,8 @@ static NSArray<MXEmojiRepresentation*> *kSasEmojis;
 
         } failure:^(NSError * _Nonnull error) {
             NSLog(@"[MXKeyVerification][MXSASTransaction] accept: sendToOther:kMXEventTypeStringKeyVerificationAccept failed. Error: %@", error);
-            self.state = MXSASTransactionStateNetworkError;
+            self.error = error;
+            self.state = MXSASTransactionStateError;
         }];
 
         // If we already have the other mac, compare them
