@@ -427,7 +427,7 @@
             // -> Alice must see all her requests cancelled
             [self observeTransactionUpdate:transactionFromBobPOV block:^{
 
-                XCTAssertEqual(transactionFromBobPOV.state, MXSASTransactionStateCancelled);
+                XCTAssertEqual(transactionFromBobPOV.state, MXSASTransactionStateCancelledByMe);
 
                 [expectation fulfill];
             }];
