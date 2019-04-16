@@ -228,30 +228,29 @@ NSString *const kMXDeviceVerificationManagerNotificationTransactionKey = @"kMXDe
     }
 
 
-    MXDeviceVerificationTransaction *existingTransaction = [self transactionWithUser:keyVerificationStart.transactionId andDevice:keyVerificationStart.fromDevice];
-    if (existingTransaction)
-    {
-        NSLog(@"[MXKeyVerification] handleStartEvent: already existing transaction. Cancel both");
-
-        [existingTransaction cancelWithCancelCode:MXTransactionCancelCode.invalidMessage];
-        [self cancelTransaction:keyVerificationStart.transactionId
-                     fromUserId:event.sender
-                      andDevice:keyVerificationStart.fromDevice
-                           code:MXTransactionCancelCode.invalidMessage];
-        return;
-    }
-
-
     // Make sure we have other device keys
     [self loadDeviceWithDeviceId:keyVerificationStart.fromDevice andUserId:event.sender success:^(MXDeviceInfo *otherDevice) {
 
+        MXDeviceVerificationTransaction *existingTransaction = [self transactionWithUser:event.sender andDevice:keyVerificationStart.fromDevice];
+        if (existingTransaction)
+        {
+            NSLog(@"[MXKeyVerification] handleStartEvent: already existing transaction. Cancel both");
+
+            [existingTransaction cancelWithCancelCode:MXTransactionCancelCode.invalidMessage];
+            [self cancelTransaction:keyVerificationStart.transactionId
+                         fromUserId:event.sender
+                          andDevice:keyVerificationStart.fromDevice
+                               code:MXTransactionCancelCode.invalidMessage];
+            return;
+        }
+
         // Multiple keyshares between two devices: any two devices may only have at most one key verification in flight at a time.
         NSArray<MXDeviceVerificationTransaction*> *transactionsWithUser = [self transactionsWithUser:event.sender];
-        if (transactionsWithUser)
+        if (transactionsWithUser.count)
         {
             NSLog(@"[MXKeyVerification] handleStartEvent: already existing transaction with the user. Cancel both");
 
-            [existingTransaction cancelWithCancelCode:MXTransactionCancelCode.invalidMessage];
+            [transactionsWithUser[0] cancelWithCancelCode:MXTransactionCancelCode.invalidMessage];
             [self cancelTransaction:keyVerificationStart.transactionId
                          fromUserId:event.sender
                           andDevice:keyVerificationStart.fromDevice

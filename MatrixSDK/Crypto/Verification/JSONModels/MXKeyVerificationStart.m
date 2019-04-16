@@ -63,7 +63,8 @@
         || _hashAlgorithms.count == 0
         || [_hashAlgorithms containsObject:@"sha256"] == NO
         || _messageAuthenticationCodes.count == 0
-        || [_messageAuthenticationCodes containsObject:kMXKeyVerificationSASMacSha256LongKdf] == NO
+        || ([_messageAuthenticationCodes containsObject:kMXKeyVerificationSASMacSha256] == NO
+            && [_messageAuthenticationCodes containsObject:kMXKeyVerificationSASMacSha256LongKdf] == NO)    // Accept old MAC format
         || _shortAuthenticationString.count == 0
         || [_shortAuthenticationString containsObject:kMXKeyVerificationSASModeDecimal] == NO)
     {
