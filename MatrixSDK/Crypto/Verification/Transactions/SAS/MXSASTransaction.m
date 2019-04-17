@@ -305,6 +305,7 @@ static NSArray<MXEmojiRepresentation*> *kSasEmojis;
             return;
         }
 
+        [self.manager removeTransactionWithTransactionId:self.transactionId];
         [self setDeviceAsVerified];
     }
 }

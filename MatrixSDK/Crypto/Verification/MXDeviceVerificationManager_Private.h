@@ -68,6 +68,13 @@ NS_ASSUME_NONNULL_BEGIN
  */
 - (void)cancelTransaction:(MXDeviceVerificationTransaction*)transaction code:(MXTransactionCancelCode*)code;
 
+/**
+ Remove a transaction from the queue.
+
+ @param transactionId the transaction to remove.
+ */
+- (void)removeTransactionWithTransactionId:(NSString*)transactionId;
+
 @end
 
 NS_ASSUME_NONNULL_END

@@ -20,10 +20,17 @@
 #import "MatrixSDKTestsE2EData.h"
 
 #import "MXCrypto_Private.h"
+#import "MXDeviceVerificationManager_Private.h"
 
 // Do not bother with retain cycles warnings in tests
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Warc-retain-cycles"
+
+@interface MXDeviceVerificationManager (Testing)
+
+- (MXDeviceVerificationTransaction*)transactionWithTransactionId:(NSString*)transactionId;
+
+@end
 
 @interface MXCryptoDeviceVerificationTests : XCTestCase
 {
@@ -105,6 +112,7 @@
  -> 7. Transaction on Bob side must then move to Verified
  -> 7. Transaction on Alice side must then move to Verified
  -> Devices must be really verified
+ -> Transaction must not be listed anymore
  */
 - (void)testFullFlowWithAliceAndBob
 {
@@ -133,6 +141,10 @@
 
                         XCTAssertEqual(bobDeviceFromAlicePOV.verified, MXDeviceVerified);
                         XCTAssertEqual(aliceDeviceFromBobPOV.verified, MXDeviceVerified);
+
+                        // -> Transaction must not be listed anymore
+                        XCTAssertNil([aliceSession.crypto.deviceVerificationManager transactionWithTransactionId:transactionFromAlicePOV.transactionId]);
+                        XCTAssertNil([bobSession.crypto.deviceVerificationManager transactionWithTransactionId:transactionFromBobPOV.transactionId]);
 
                         [expectation fulfill];
                     }
@@ -378,7 +390,7 @@
  - Alice starts another SAS verification of Bob's device
  -> Alice must see all her requests cancelled
  */
-- (void)testAliceStartTwoVerifications
+- (void)testAliceStartTwoVerificationsAtSameTime
 {
     [matrixSDKTestsE2EData doE2ETestWithBobAndAlice:self readyToTest:^(MXSession *bobSession, MXSession *aliceSession, XCTestExpectation *expectation) {
 
