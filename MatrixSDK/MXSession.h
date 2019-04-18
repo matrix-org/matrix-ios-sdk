@@ -201,6 +201,13 @@ FOUNDATION_EXPORT NSString *const kMXSessionIgnoredUsersDidChangeNotification;
 FOUNDATION_EXPORT NSString *const kMXSessionDirectRoomsDidChangeNotification;
 
 /**
+ Posted when the matrix account data are updated from homeserver.
+ 
+ The notification object is the concerned session (MXSession instance).
+ */
+FOUNDATION_EXPORT NSString *const kMXSessionAccountDataDidChangeNotification;
+
+/**
  Posted when MXSession data have been corrupted. The listener must reload the session data with a full server sync.
  
  The notification object is the concerned session (MXSession instance).
