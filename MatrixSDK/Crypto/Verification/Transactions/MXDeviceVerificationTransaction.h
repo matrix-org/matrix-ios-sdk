@@ -46,6 +46,11 @@ FOUNDATION_EXPORT NSString * _Nonnull const MXDeviceVerificationTransactionDidCh
 @property (nonatomic) BOOL isIncoming;
 
 /**
+ The creation date.
+ */
+@property (nonatomic, strong) NSDate *creationDate;
+
+/**
  The other user device.
  */
 @property (nonatomic, readonly) MXDeviceInfo *otherDevice;

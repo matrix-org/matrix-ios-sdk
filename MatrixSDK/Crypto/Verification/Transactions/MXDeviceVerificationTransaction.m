@@ -38,6 +38,7 @@ NSString * const MXDeviceVerificationTransactionDidChangeNotification = @"MXDevi
         _manager = manager;
         _otherDevice = otherDevice;
         _transactionId = [MXDeviceVerificationTransaction createUniqueIdWithOtherUser:self.otherUserId otherDevice:self.otherDeviceId myUser:manager.crypto.mxSession.matrixRestClient.credentials];
+        _creationDate = [NSDate date];
     }
     return self;
 }
@@ -57,6 +58,11 @@ NSString * const MXDeviceVerificationTransactionDidChangeNotification = @"MXDevi
     {
         _startContent = startContent;
         _transactionId = _startContent.transactionId;
+
+        // It would have been nice to timeout from the event creation date
+        // but we do not receive the information. originServerTs = 0
+        // So, use the time when we receive it instead
+        //_creationDate = [NSDate dateWithTimeIntervalSince1970: (event.originServerTs / 1000)];
     }
     return self;
 }
@@ -74,8 +80,13 @@ NSString * const MXDeviceVerificationTransactionDidChangeNotification = @"MXDevi
 - (void)cancelWithCancelCode:(MXTransactionCancelCode *)code
 {
     dispatch_async(self.manager.crypto.decryptionQueue,^{
-        [self.manager cancelTransaction:self code:code];
+        [self cancelWithCancelCodeFromCryptoQueue:code];
     });
+}
+
+- (void)cancelWithCancelCodeFromCryptoQueue:(MXTransactionCancelCode *)code
+{
+    [self.manager cancelTransaction:self code:code];
 }
 
 - (MXHTTPOperation*)sendToOther:(NSString*)eventType content:(NSDictionary*)content

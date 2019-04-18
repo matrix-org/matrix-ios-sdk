@@ -28,6 +28,9 @@ NSString *const kMXDeviceVerificationErrorDomain = @"org.matrix.sdk.verification
 NSString *const kMXDeviceVerificationManagerNewTransactionNotification = @"kMXDeviceVerificationManagerNewTransactionNotification";
 NSString *const kMXDeviceVerificationManagerNotificationTransactionKey = @"kMXDeviceVerificationManagerNotificationTransactionKey";
 
+// Transaction timeout in seconds
+NSTimeInterval const kMXDeviceVerificationTimeout = 10 * 60.0;
+
 
 @interface MXDeviceVerificationManager ()
 {
@@ -36,6 +39,9 @@ NSString *const kMXDeviceVerificationManagerNotificationTransactionKey = @"kMXDe
 
     // All running transactions
     MXUsersDevicesMap<MXDeviceVerificationTransaction*> *transactions;
+
+    // Timer to cancel transactions
+    NSTimer *timeoutTimer;
 }
 @end
 
@@ -110,6 +116,15 @@ NSString *const kMXDeviceVerificationManagerNotificationTransactionKey = @"kMXDe
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(onToDeviceEvent:) name:kMXSessionOnToDeviceEventNotification object:crypto.mxSession];
     }
     return self;
+}
+
+- (void)dealloc
+{
+    if (timeoutTimer)
+    {
+        [timeoutTimer invalidate];
+        timeoutTimer = nil;
+    }
 }
 
 
@@ -263,7 +278,19 @@ NSString *const kMXDeviceVerificationManagerNotificationTransactionKey = @"kMXDe
         MXIncomingSASTransaction *transaction = [[MXIncomingSASTransaction alloc] initWithOtherDevice:otherDevice startEvent:event andManager:self];
         if (transaction)
         {
-            [self addTransaction:transaction];
+            if ([self isCreationDateValid:transaction])
+            {
+                [self addTransaction:transaction];
+            }
+            else
+            {
+                NSLog(@"[MXKeyVerification] handleStartEvent: Expired transaction: %@", transaction);
+
+                [self cancelTransaction:transaction.transactionId
+                             fromUserId:transaction.otherUserId
+                              andDevice:transaction.otherDeviceId
+                                   code:MXTransactionCancelCode.timeout];
+            }
         }
         else
         {
@@ -418,6 +445,8 @@ NSString *const kMXDeviceVerificationManagerNotificationTransactionKey = @"kMXDe
     } failure:failure];
 }
 
+#pragma mark - Transactions queue
+
 - (MXDeviceVerificationTransaction*)transactionWithUser:(NSString*)userId andDevice:(NSString*)deviceId
 {
     return [transactions objectForDevice:deviceId forUser:userId];
@@ -446,6 +475,7 @@ NSString *const kMXDeviceVerificationManagerNotificationTransactionKey = @"kMXDe
 - (void)addTransaction:(MXDeviceVerificationTransaction*)transaction
 {
     [transactions setObject:transaction forUser:transaction.otherUserId andDevice:transaction.otherDeviceId];
+    [self scheduleTimeoutTimer];
 
     dispatch_async(dispatch_get_main_queue(),^{
         [[NSNotificationCenter defaultCenter] postNotificationName:kMXDeviceVerificationManagerNewTransactionNotification object:self userInfo:
@@ -461,6 +491,94 @@ NSString *const kMXDeviceVerificationManagerNotificationTransactionKey = @"kMXDe
     if (transaction)
     {
         [transactions removeObjectForUser:transaction.otherUserId andDevice:transaction.otherDeviceId];
+        [self scheduleTimeoutTimer];
+    }
+}
+
+- (nullable NSDate*)oldestTransactionCreationDate
+{
+    NSDate *oldestCreationDate;
+    for (MXDeviceVerificationTransaction *transaction in transactions.allObjects)
+    {
+        if (!oldestCreationDate
+            || transaction.creationDate.timeIntervalSince1970 < oldestCreationDate.timeIntervalSince1970)
+        {
+            oldestCreationDate = transaction.creationDate;
+        }
+    }
+    return oldestCreationDate;
+}
+
+- (BOOL)isCreationDateValid:(MXDeviceVerificationTransaction*)transaction
+{
+    return (transaction.creationDate.timeIntervalSinceNow > -kMXDeviceVerificationTimeout);
+}
+
+#pragma mark - Timeout management
+
+- (void)scheduleTimeoutTimer
+{
+    if (timeoutTimer)
+    {
+        if (!transactions.count)
+        {
+            NSLog(@"[MXKeyVerification] scheduleTimeoutTimer: Disable timer as there is no more transactions");
+            [timeoutTimer invalidate];
+            timeoutTimer = nil;
+        }
+
+        return;
+    }
+
+    NSDate *oldestCreationDate = [self oldestTransactionCreationDate];
+    if (oldestCreationDate)
+    {
+        MXWeakify(self);
+        dispatch_async(dispatch_get_main_queue(), ^{
+            MXStrongifyAndReturnIfNil(self);
+
+            if (self->timeoutTimer)
+            {
+                return;
+            }
+
+            NSLog(@"[MXKeyVerification] scheduleTimeoutTimer: Create timer");
+
+            NSDate *timeoutDate = [oldestCreationDate dateByAddingTimeInterval:kMXDeviceVerificationTimeout];
+            self->timeoutTimer = [[NSTimer alloc] initWithFireDate:timeoutDate
+                                                          interval:0
+                                                            target:self
+                                                          selector:@selector(onTimeoutTimer)
+                                                          userInfo:nil
+                                                           repeats:NO];
+            [[NSRunLoop mainRunLoop] addTimer:self->timeoutTimer forMode:NSDefaultRunLoopMode];
+        });
+    }
+}
+
+- (void)onTimeoutTimer
+{
+    NSLog(@"[MXKeyVerification] onTimeoutTimer");
+    self->timeoutTimer = nil;
+
+    if (cryptoQueue)
+    {
+        dispatch_async(cryptoQueue, ^{
+            [self checkTimeouts];
+            [self scheduleTimeoutTimer];
+        });
+    }
+}
+
+- (void)checkTimeouts
+{
+    for (MXDeviceVerificationTransaction *transaction in transactions.allObjects)
+    {
+        if (![self isCreationDateValid:transaction])
+        {
+            NSLog(@"[MXKeyVerification] checkTimeouts: timeout %@", transaction);
+            [transaction cancelWithCancelCode:MXTransactionCancelCode.timeout];
+        }
     }
 }
 

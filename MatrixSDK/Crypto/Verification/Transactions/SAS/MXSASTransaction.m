@@ -102,9 +102,9 @@ static NSArray<MXEmojiRepresentation*> *kSasEmojis;
 }
 
 
-- (void)cancelWithCancelCode:(MXTransactionCancelCode *)code
+- (void)cancelWithCancelCodeFromCryptoQueue:(MXTransactionCancelCode *)code
 {
-    [super cancelWithCancelCode:code];
+    [super cancelWithCancelCodeFromCryptoQueue:code];
     
     self.state = MXSASTransactionStateCancelledByMe;
     self.reasonCancelCode = code;
