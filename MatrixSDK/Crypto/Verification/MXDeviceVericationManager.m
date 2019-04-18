@@ -99,6 +99,19 @@ NSTimeInterval const kMXDeviceVerificationTimeout = 10 * 60.0;
     }];
 }
 
+- (void)transactions:(void(^)(NSArray<MXDeviceVerificationTransaction*> *transactions))complete
+{
+    MXWeakify(self);
+    dispatch_async(self->cryptoQueue, ^{
+        MXStrongifyAndReturnIfNil(self);
+
+        NSArray<MXDeviceVerificationTransaction*> *transactions = self->transactions.allObjects;
+        dispatch_async(dispatch_get_main_queue(), ^{
+            complete(transactions);
+        });
+    });
+}
+
 
 #pragma mark - SDK-Private methods -
 

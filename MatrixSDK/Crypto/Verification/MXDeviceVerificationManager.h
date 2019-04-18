@@ -69,6 +69,13 @@ FOUNDATION_EXPORT NSString *const kMXDeviceVerificationManagerNotificationTransa
                                success:(void(^)(MXDeviceVerificationTransaction *transaction))success
                                failure:(void(^)(NSError *error))failure;
 
+/**
+ All transactions in progress.
+
+ @param complete a block called with all transactions.
+ */
+- (void)transactions:(void(^)(NSArray<MXDeviceVerificationTransaction*> *transactions))complete;
+
 @end
 
 NS_ASSUME_NONNULL_END
