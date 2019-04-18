@@ -159,8 +159,8 @@
     {
         self.sasBytes = [self generateSasBytesWithTheirPublicKey:keyContent.key requestingDevice:self.manager.crypto.myDevice otherDevice:self.otherDevice];
 
-        NSLog(@"[MXKeyVerification][MXOutgoingSASTransaction] handleKey: ALICE CODE: %@", self.sasDecimal);
-        NSLog(@"[MXKeyVerification][MXOutgoingSASTransaction] handleKey: ALICE EMOJI CODE: %@", self.sasEmoji);
+//        NSLog(@"[MXKeyVerification][MXOutgoingSASTransaction] handleKey: ALICE CODE: %@", self.sasDecimal);
+//        NSLog(@"[MXKeyVerification][MXOutgoingSASTransaction] handleKey: ALICE EMOJI CODE: %@", self.sasEmoji);
 
         self.state = MXSASTransactionStateShowSAS;
     }

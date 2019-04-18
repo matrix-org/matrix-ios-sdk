@@ -140,8 +140,8 @@
 
         self.sasBytes = [self generateSasBytesWithTheirPublicKey:keyContent.key requestingDevice:self.otherDevice otherDevice:self.manager.crypto.myDevice];
 
-        NSLog(@"[MXKeyVerification][MXIncomingSASTransaction] handleKey: BOB CODE: %@", self.sasDecimal);
-        NSLog(@"[MXKeyVerification][MXIncomingSASTransaction] handleKey: BOB EMOJI CODE: %@", self.sasEmoji);
+//        NSLog(@"[MXKeyVerification][MXIncomingSASTransaction] handleKey: BOB CODE: %@", self.sasDecimal);
+//        NSLog(@"[MXKeyVerification][MXIncomingSASTransaction] handleKey: BOB EMOJI CODE: %@", self.sasEmoji);
 
         self.state = MXSASTransactionStateShowSAS;
 
