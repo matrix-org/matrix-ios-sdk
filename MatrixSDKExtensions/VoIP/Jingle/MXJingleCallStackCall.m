@@ -23,6 +23,7 @@
 #import "MXTools.h"
 
 #import "MXJingleVideoView.h"
+#import "MXJingleCameraCaptureController.h"
 #import <WebRTC/WebRTC.h>
 
 @interface MXJingleCallStackCall () <RTCPeerConnectionDelegate>
@@ -59,6 +60,9 @@
      */
     void (^onStartCapturingMediaWithVideoSuccess)(void);
 }
+
+@property (nonatomic, strong) RTCVideoCapturer *videoCapturer;
+@property (nonatomic, strong) MXJingleCameraCaptureController *captureController;
 
 @end
 
@@ -99,6 +103,10 @@
 
 - (void)end
 {
+    self.videoCapturer = nil;
+    [self.captureController stopCapture];
+    self.captureController = nil;
+    
     [peerConnection close];
     peerConnection = nil;
     
@@ -463,19 +471,15 @@ didRemoveIceCandidates:(NSArray<RTCIceCandidate *> *)candidates;
 - (void)setCameraPosition:(AVCaptureDevicePosition)theCameraPosition
 {
     cameraPosition = theCameraPosition;
-
+    
     if (localVideoTrack)
     {
-        RTCVideoSource* source = localVideoTrack.source;
-        if ([source isKindOfClass:[RTCAVFoundationVideoSource class]])
-        {
-            RTCAVFoundationVideoSource* avSource = (RTCAVFoundationVideoSource*)source;
-            avSource.useBackCamera = (cameraPosition == AVCaptureDevicePositionBack) ? YES : NO;
-
-            [self fixMirrorOnSelfVideoView];
-        }
+        [self fixMirrorOnSelfVideoView];
     }
+    
+    self.captureController.cameraPosition = theCameraPosition;
 }
+
 
 
 #pragma mark - Private methods
@@ -490,55 +494,78 @@ didRemoveIceCandidates:(NSArray<RTCIceCandidate *> *)candidates;
 
 - (void)createLocalMediaStream
 {
-    RTCMediaStream *localStream = [peerConnectionFactory mediaStreamWithStreamId:@"ARDAMS"];
-
     // Set up audio
-    localAudioTrack = [peerConnectionFactory audioTrackWithTrackId:@"ARDAMSa0"];
-    [localStream addAudioTrack:localAudioTrack];
-
+    localAudioTrack = [self createLocalAudioTrack];
+    
+    [peerConnection addTrack:localAudioTrack streamIds:@[@"ARDAMS"]];
+    
     // And video
     if (isVideoCall)
     {
-        // Find the device that corresponds to self.cameraPosition
-        AVCaptureDevice *device;
-        for (AVCaptureDevice *captureDevice in [AVCaptureDevice devicesWithMediaType:AVMediaTypeVideo])
-        {
-            if (captureDevice.position == cameraPosition)
-            {
-                device = captureDevice;
-                break;
-            }
-        }
-
+        localVideoTrack = [self createLocalVideoTrack];
         // Create a video track and add it to the media stream
-        if (device)
+        if (localVideoTrack)
         {
-            // Use RTCAVFoundationVideoSource to be able to switch the camera
-            RTCAVFoundationVideoSource *localVideoSource = [peerConnectionFactory avFoundationVideoSourceWithConstraints:nil];
-
-            localVideoTrack = [peerConnectionFactory videoTrackWithSource:localVideoSource trackId:@"ARDAMSv0"];
-            [localStream addVideoTrack:localVideoTrack];
-
+            [peerConnection addTrack:localVideoTrack streamIds:@[@"ARDAMS"]];
+            
             // Display the self view
             // Use selfVideoView as a container of a RTCEAGLVideoView
             MXJingleVideoView *renderView = [[MXJingleVideoView alloc] initWithContainerView:self.selfVideoView];
-            [localVideoTrack addRenderer:renderView];
-
-            [self fixMirrorOnSelfVideoView];
+            [self startVideoCaptureWithRenderer:renderView];
         }
     }
-
+    
     // Set the audio route
     self.audioToSpeaker = audioToSpeaker;
-
-    // Wire the streams to the call
-    [peerConnection addStream:localStream];
-
+    
     if (onStartCapturingMediaWithVideoSuccess)
     {
-    	onStartCapturingMediaWithVideoSuccess();
-    	onStartCapturingMediaWithVideoSuccess = nil;
+        onStartCapturingMediaWithVideoSuccess();
+        onStartCapturingMediaWithVideoSuccess = nil;
     }
+}
+
+- (RTCAudioTrack*)createLocalAudioTrack
+{
+    RTCMediaConstraints *mediaConstraints = [[RTCMediaConstraints alloc] initWithMandatoryConstraints:nil optionalConstraints:nil];
+    RTCAudioSource *localAudioSource = [peerConnectionFactory audioSourceWithConstraints:mediaConstraints];
+    return [peerConnectionFactory audioTrackWithSource:localAudioSource trackId:@"ARDAMSa0"];
+}
+
+- (RTCVideoTrack*)createLocalVideoTrack
+{
+    RTCVideoSource *localVideoSource = [peerConnectionFactory videoSource];
+    
+    self.videoCapturer = [self createVideoCapturerWithVideoSource:localVideoSource];
+    
+    return [peerConnectionFactory videoTrackWithSource:localVideoSource trackId:@"ARDAMSv0"];
+}
+
+- (RTCVideoCapturer*)createVideoCapturerWithVideoSource:(RTCVideoSource*)videoSource
+{
+    RTCVideoCapturer *videoCapturer;
+    
+    #if !TARGET_OS_SIMULATOR
+    videoCapturer = [[RTCCameraVideoCapturer alloc] initWithDelegate:videoSource];
+    #endif
+    
+    return videoCapturer;
+}
+
+- (void)startVideoCaptureWithRenderer:(id<RTCVideoRenderer>)videoRenderer
+{
+    if (!self.videoCapturer || ![self.videoCapturer isKindOfClass:[RTCCameraVideoCapturer class]])
+    {
+        return;
+    }
+    
+    RTCCameraVideoCapturer *cameraVideoCapturer = (RTCCameraVideoCapturer*)self.videoCapturer;
+    
+    self.captureController = [[MXJingleCameraCaptureController alloc] initWithCapturer:cameraVideoCapturer];
+    
+    [localVideoTrack addRenderer:videoRenderer];
+    
+    [self.captureController startCapture];
 }
 
 - (void)checkStartGetCaptureSourcesForVideo
