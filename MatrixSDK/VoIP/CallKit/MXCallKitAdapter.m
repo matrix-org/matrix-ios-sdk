@@ -224,13 +224,10 @@ NSString * const kMXCallKitAdapterAudioSessionDidActive = @"kMXCallKitAdapterAud
 - (void)provider:(CXProvider *)provider performStartCallAction:(CXStartCallAction *)action
 {
     MXCall *call = self.calls[action.callUUID];
-    if (!call)
+    if (call)
     {
-        [action fail];
-        return;
+        [self.audioSessionConfigurator configureAudioSessionForVideoCall:call.isVideoCall];
     }
-    
-    [self.audioSessionConfigurator configureAudioSessionForVideoCall:call.isVideoCall];
     
     [action fulfill];
 }
@@ -238,13 +235,10 @@ NSString * const kMXCallKitAdapterAudioSessionDidActive = @"kMXCallKitAdapterAud
 - (void)provider:(CXProvider *)provider performAnswerCallAction:(CXAnswerCallAction *)action
 {
     MXCall *call = self.calls[action.callUUID];
-    if (!call)
+    if (call)
     {
-        [action fail];
-        return;
+        [call answer];
     }
-    
-    [call answer];
     
     [action fulfill];
 }
@@ -252,14 +246,11 @@ NSString * const kMXCallKitAdapterAudioSessionDidActive = @"kMXCallKitAdapterAud
 - (void)provider:(CXProvider *)provider performEndCallAction:(CXEndCallAction *)action
 {
     MXCall *call = self.calls[action.callUUID];
-    if (!call)
+    if (call)
     {
-        [action fail];
-        return;
+        [call hangup];
+        [self.calls removeObjectForKey:action.UUID];
     }
-    
-    [call hangup];
-    [self.calls removeObjectForKey:action.UUID];
     
     [action fulfill];
 }
@@ -267,14 +258,11 @@ NSString * const kMXCallKitAdapterAudioSessionDidActive = @"kMXCallKitAdapterAud
 - (void)provider:(CXProvider *)provider performSetMutedCallAction:(CXSetMutedCallAction *)action
 {
     MXCall *call = self.calls[action.callUUID];
-    if (!call)
+    if (call)
     {
-        [action fail];
-        return;
+        [call setAudioMuted:action.isMuted];
     }
-    
-    [call setAudioMuted:action.isMuted];
-    
+
     [action fulfill];
 }
 
