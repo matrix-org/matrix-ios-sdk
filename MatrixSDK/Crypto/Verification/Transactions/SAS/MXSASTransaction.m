@@ -120,7 +120,7 @@ static NSArray<MXEmojiRepresentation*> *kSasEmojis;
         kKnownAgreementProtocols = @[@"curve25519"];
         kKnownHashes = @[@"sha256"];
         kKnownMacs = @[kMXKeyVerificationSASMacSha256, kMXKeyVerificationSASMacSha256LongKdf];
-        kKnownShortCodes = @[kMXKeyVerificationSASModeDecimal];
+        kKnownShortCodes = @[kMXKeyVerificationSASModeEmoji, kMXKeyVerificationSASModeDecimal];
 
         [self initializeSasEmojis];
     });
