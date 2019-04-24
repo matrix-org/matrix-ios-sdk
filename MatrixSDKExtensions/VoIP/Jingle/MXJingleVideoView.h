@@ -26,6 +26,7 @@ NS_ASSUME_NONNULL_BEGIN
 
  @see https://developers.google.com/talk/libjingle/developer_guide
  */
+NS_EXTENSION_UNAVAILABLE_IOS("Rendering not available in app extensions.")
 @interface MXJingleVideoView : RTCEAGLVideoView <RTCEAGLVideoViewDelegate>
 
 - (instancetype)initWithContainerView:(UIView *)containerView NS_DESIGNATED_INITIALIZER;

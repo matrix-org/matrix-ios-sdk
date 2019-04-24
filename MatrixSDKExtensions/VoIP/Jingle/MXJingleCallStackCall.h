@@ -31,6 +31,7 @@ NS_ASSUME_NONNULL_BEGIN
 
  @see https://developers.google.com/talk/libjingle/developer_guide
  */
+NS_EXTENSION_UNAVAILABLE_IOS("Camera capture and video rendering are not available in app extensions.")
 @interface MXJingleCallStackCall : NSObject <MXCallStackCall>
 
 - (instancetype)initWithFactory:(RTCPeerConnectionFactory *)factory NS_DESIGNATED_INITIALIZER;

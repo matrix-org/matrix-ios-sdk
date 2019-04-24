@@ -5,6 +5,7 @@ Improvements:
  * Crypto: Handle partially-shared sessions better (vector-im/riot-ios/issues/2320).
  * Crypto: Support Interaction Device Verification (vector-im/riot-ios/issues/2322).
  * MXSession: add a global notification posted when the account data are updated from the homeserver.
+ * VoIP: Use WebRTC framework included in Jitsi Meet SDK (vector-im/riot-ios/issues/1483).
 
 Bug Fix:
  * MXRoomSummaryUpdater: Fix `MXRoomSummary.hiddenFromUser` property not being saved when associated room become tombstoned (vector-im/riot-ios/issues/2148).

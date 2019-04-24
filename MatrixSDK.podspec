@@ -41,7 +41,7 @@ Pod::Spec.new do |s|
   end
 
   s.subspec 'JingleCallStack' do |ss|
-    ss.ios.deployment_target = "9.0"
+    ss.ios.deployment_target = "10.0"
     
     ss.source_files  = "MatrixSDKExtensions/VoIP/Jingle/**/*.{h,m}"
     
@@ -52,8 +52,9 @@ Pod::Spec.new do |s|
     # prevents us from submitting the MatrixSDK pod
     #ss.ios.dependency 'GoogleWebRTC', '~>1.1.21820'
     
-    # Use WebRTC build at https://github.com/Anakros/WebRTC instead
-    ss.ios.dependency 'WebRTC', '63.11.20455'
+    # Use WebRTC framework included in Jitsi Meet SDK
+    ss.ios.dependency 'JitsiMeetSDK', '~> 2.1.0'
+
   end
 
   s.subspec 'SwiftSupport' do |ss|    
