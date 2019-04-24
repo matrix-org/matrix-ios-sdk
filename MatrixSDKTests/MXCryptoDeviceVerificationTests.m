@@ -68,9 +68,9 @@
 
 - (void)observeSASIncomingTransactionInSession:(MXSession*)session block:(void (^)(MXIncomingSASTransaction * _Nullable transaction))block
 {
-    id observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXDeviceVerificationManagerNewTransactionNotification object:session.crypto.deviceVerificationManager queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *notif) {
+    id observer = [[NSNotificationCenter defaultCenter] addObserverForName:MXDeviceVerificationManagerNewTransactionNotification object:session.crypto.deviceVerificationManager queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *notif) {
 
-        MXDeviceVerificationTransaction *transaction = notif.userInfo[kMXDeviceVerificationManagerNotificationTransactionKey];
+        MXDeviceVerificationTransaction *transaction = notif.userInfo[MXDeviceVerificationManagerNotificationTransactionKey];
         if (transaction.isIncoming && [transaction isKindOfClass:MXIncomingSASTransaction.class])
         {
             block((MXIncomingSASTransaction*)transaction);

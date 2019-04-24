@@ -27,7 +27,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 #pragma mark - Constants
 
-FOUNDATION_EXPORT NSString *const kMXDeviceVerificationErrorDomain;
+FOUNDATION_EXPORT NSString *const MXDeviceVerificationErrorDomain;
 
 typedef enum : NSUInteger
 {
@@ -39,12 +39,12 @@ typedef enum : NSUInteger
 /**
  Posted on new device verification transaction.
  */
-FOUNDATION_EXPORT NSString *const kMXDeviceVerificationManagerNewTransactionNotification;
+FOUNDATION_EXPORT NSString *const MXDeviceVerificationManagerNewTransactionNotification;
 
 /**
  The key in the notification userInfo dictionary containing the `MXDeviceVerificationTransaction` instance.
  */
-FOUNDATION_EXPORT NSString *const kMXDeviceVerificationManagerNotificationTransactionKey;
+FOUNDATION_EXPORT NSString *const MXDeviceVerificationManagerNotificationTransactionKey;
 
 
 /**

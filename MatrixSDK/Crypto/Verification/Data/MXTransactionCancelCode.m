@@ -23,8 +23,8 @@
     self = [self init];
     if (self)
     {
-        self.value = value;
-        self.humanReadable = humanReadable;
+        _value = value;
+        _humanReadable = humanReadable;
     }
     return self;
 }

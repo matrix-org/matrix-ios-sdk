@@ -26,12 +26,12 @@ NS_ASSUME_NONNULL_BEGIN
 /**
  The error code.
  */
-@property (nonatomic) NSString *value;
+@property (nonatomic, readonly) NSString *value;
 
 /**
  A human readable reason.
  */
-@property (nonatomic) NSString *humanReadable;
+@property (nonatomic, readonly) NSString *humanReadable;
 
 - (instancetype)initWithValue:(NSString*)value humanReadable:(NSString*)humanReadable;
 

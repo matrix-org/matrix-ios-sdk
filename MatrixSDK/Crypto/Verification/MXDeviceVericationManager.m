@@ -24,12 +24,12 @@
 
 #pragma mark - Constants
 
-NSString *const kMXDeviceVerificationErrorDomain = @"org.matrix.sdk.verification";
-NSString *const kMXDeviceVerificationManagerNewTransactionNotification = @"kMXDeviceVerificationManagerNewTransactionNotification";
-NSString *const kMXDeviceVerificationManagerNotificationTransactionKey = @"kMXDeviceVerificationManagerNotificationTransactionKey";
+NSString *const MXDeviceVerificationErrorDomain = @"org.matrix.sdk.verification";
+NSString *const MXDeviceVerificationManagerNewTransactionNotification = @"MXDeviceVerificationManagerNewTransactionNotification";
+NSString *const MXDeviceVerificationManagerNotificationTransactionKey = @"MXDeviceVerificationManagerNotificationTransactionKey";
 
 // Transaction timeout in seconds
-NSTimeInterval const kMXDeviceVerificationTimeout = 10 * 60.0;
+NSTimeInterval const MXDeviceVerificationTimeout = 10 * 60.0;
 
 
 @interface MXDeviceVerificationManager ()
@@ -74,7 +74,7 @@ NSTimeInterval const kMXDeviceVerificationTimeout = 10 * 60.0;
         }
         else
         {
-            error = [NSError errorWithDomain:kMXDeviceVerificationErrorDomain
+            error = [NSError errorWithDomain:MXDeviceVerificationErrorDomain
                                         code:MXDeviceVerificationUnsupportedMethodCode
                                     userInfo:@{
                                                NSLocalizedDescriptionKey: [NSString stringWithFormat:@"Unsupported verification method: %@", method]
@@ -446,7 +446,7 @@ NSTimeInterval const kMXDeviceVerificationTimeout = 10 * 60.0;
             }
             else
             {
-                NSError *error = [NSError errorWithDomain:kMXDeviceVerificationErrorDomain
+                NSError *error = [NSError errorWithDomain:MXDeviceVerificationErrorDomain
                                                      code:MXDeviceVerificationUnknownDeviceCode
                                                  userInfo:@{
                                                             NSLocalizedDescriptionKey: [NSString stringWithFormat:@"Unknown device: %@:%@", userId, deviceId]
@@ -491,9 +491,9 @@ NSTimeInterval const kMXDeviceVerificationTimeout = 10 * 60.0;
     [self scheduleTimeoutTimer];
 
     dispatch_async(dispatch_get_main_queue(),^{
-        [[NSNotificationCenter defaultCenter] postNotificationName:kMXDeviceVerificationManagerNewTransactionNotification object:self userInfo:
+        [[NSNotificationCenter defaultCenter] postNotificationName:MXDeviceVerificationManagerNewTransactionNotification object:self userInfo:
          @{
-           kMXDeviceVerificationManagerNotificationTransactionKey: transaction
+           MXDeviceVerificationManagerNotificationTransactionKey: transaction
            }];
     });
 }
@@ -524,7 +524,7 @@ NSTimeInterval const kMXDeviceVerificationTimeout = 10 * 60.0;
 
 - (BOOL)isCreationDateValid:(MXDeviceVerificationTransaction*)transaction
 {
-    return (transaction.creationDate.timeIntervalSinceNow > -kMXDeviceVerificationTimeout);
+    return (transaction.creationDate.timeIntervalSinceNow > -MXDeviceVerificationTimeout);
 }
 
 #pragma mark - Timeout management
@@ -557,7 +557,7 @@ NSTimeInterval const kMXDeviceVerificationTimeout = 10 * 60.0;
 
             NSLog(@"[MXKeyVerification] scheduleTimeoutTimer: Create timer");
 
-            NSDate *timeoutDate = [oldestCreationDate dateByAddingTimeInterval:kMXDeviceVerificationTimeout];
+            NSDate *timeoutDate = [oldestCreationDate dateByAddingTimeInterval:MXDeviceVerificationTimeout];
             self->timeoutTimer = [[NSTimer alloc] initWithFireDate:timeoutDate
                                                           interval:0
                                                             target:self

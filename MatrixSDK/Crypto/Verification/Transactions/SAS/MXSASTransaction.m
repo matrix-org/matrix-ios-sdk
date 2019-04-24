@@ -223,9 +223,8 @@ static NSArray<MXEmojiRepresentation*> *kSasEmojis;
 
 - (void)handleCancel:(MXKeyVerificationCancel *)cancelContent
 {
-    self.reasonCancelCode = [MXTransactionCancelCode new];
-    self.reasonCancelCode.value = cancelContent.code;
-    self.reasonCancelCode.humanReadable = cancelContent.reason;
+    self.reasonCancelCode = [[MXTransactionCancelCode alloc] initWithValue:cancelContent.code
+                                                             humanReadable:cancelContent.reason];
 
     self.state = MXSASTransactionStateCancelled;
 }
