@@ -29,11 +29,11 @@ PODS:
   - OHHTTPStubs/NSURLSession (6.1.0):
     - OHHTTPStubs/Core
   - OHHTTPStubs/OHPathHelpers (6.1.0)
-  - OLMKit (3.0.0):
-    - OLMKit/olmc (= 3.0.0)
-    - OLMKit/olmcpp (= 3.0.0)
-  - OLMKit/olmc (3.0.0)
-  - OLMKit/olmcpp (3.0.0)
+  - OLMKit (3.1.0):
+    - OLMKit/olmc (= 3.1.0)
+    - OLMKit/olmcpp (= 3.1.0)
+  - OLMKit/olmc (3.1.0)
+  - OLMKit/olmcpp (3.1.0)
   - Realm (3.13.1):
     - Realm/Headers (= 3.13.1)
   - Realm/Headers (3.13.1)
@@ -43,7 +43,7 @@ DEPENDENCIES:
   - GZIP (~> 1.2.2)
   - libbase58 (~> 0.1.4)
   - OHHTTPStubs (~> 6.1.0)
-  - OLMKit (~> 3.0.0)
+  - OLMKit (~> 3.1.0)
   - Realm (~> 3.13.1)
 
 SPEC REPOS:
@@ -60,9 +60,9 @@ SPEC CHECKSUMS:
   GZIP: 12374d285e3b5d46cfcd480700fcfc7e16caf4f1
   libbase58: 7c040313537b8c44b6e2d15586af8e21f7354efd
   OHHTTPStubs: 1e21c7d2c084b8153fc53d48400d8919d2d432d0
-  OLMKit: 88eda69110489f817d59bcb4353b7c247570aa4f
+  OLMKit: 4ee0159d63feeb86d836fdcfefe418e163511639
   Realm: 50071da38fe079e0735e47c9f2eae738c68c5996
 
-PODFILE CHECKSUM: 654bc7a7252e16f611a2d3b410a768262b55d9ee
+PODFILE CHECKSUM: 278135edad062bc27b69b9d91c26249e8c3bb9b6
 
 COCOAPODS: 1.6.1

@@ -7,7 +7,7 @@ target "MatrixSDK" do
 pod 'AFNetworking', '~> 3.2.0'
 pod 'GZIP', '~> 1.2.2'
 
-pod 'OLMKit', '~> 3.0.0', :inhibit_warnings => true
+pod 'OLMKit', '~> 3.1.0', :inhibit_warnings => true
 #pod 'OLMKit', :path => '../olm/OLMKit.podspec'
 
 pod 'Realm', '~> 3.13.1'

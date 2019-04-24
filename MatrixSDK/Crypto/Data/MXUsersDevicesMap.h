@@ -43,6 +43,8 @@
 - (NSArray<NSString*>*)userIds;
 - (NSArray<NSString*>*)deviceIdsForUser:(NSString*)userId;
 - (ObjectType)objectForDevice:(NSString*)deviceId forUser:(NSString*)userId;
+- (NSArray<ObjectType>*)objectsForUser:(NSString*)userId;
+- (NSArray<ObjectType>*)allObjects;
 
 /**
  Feed helper methods.

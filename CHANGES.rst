@@ -3,6 +3,7 @@ Changes in Matrix iOS SDK in 0.12.5 (2019-03-)
 
 Improvements:
  * Crypto: Handle partially-shared sessions better (vector-im/riot-ios/issues/2320).
+ * Crypto: Support Interaction Device Verification (vector-im/riot-ios/issues/2322).
  * MXSession: add a global notification posted when the account data are updated from the homeserver.
 
 Bug Fix:
