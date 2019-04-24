@@ -90,8 +90,8 @@
     if (self)
     {
         // Check validity
-        if (![self.startContent.method isEqualToString:kMXKeyVerificationMethodSAS]
-            || ![self.startContent.shortAuthenticationString containsObject:kMXKeyVerificationSASModeDecimal])
+        if (![self.startContent.method isEqualToString:MXKeyVerificationMethodSAS]
+            || ![self.startContent.shortAuthenticationString containsObject:MXKeyVerificationSASModeDecimal])
         {
             NSLog(@"[MXKeyVerification][MXIncomingSASTransaction]: ERROR: Invalid start event: %@", event);
             return nil;

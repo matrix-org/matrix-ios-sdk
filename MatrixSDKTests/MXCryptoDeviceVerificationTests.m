@@ -123,7 +123,7 @@
         MXCredentials *bob = bobSession.matrixRestClient.credentials;
 
         // - Alice begins SAS verification of Bob's device
-        [aliceSession.crypto.deviceVerificationManager beginKeyVerificationWithUserId:bob.userId andDeviceId:bob.deviceId method:kMXKeyVerificationMethodSAS success:^(MXDeviceVerificationTransaction * _Nonnull transactionFromAlicePOV) {
+        [aliceSession.crypto.deviceVerificationManager beginKeyVerificationWithUserId:bob.userId andDeviceId:bob.deviceId method:MXKeyVerificationMethodSAS success:^(MXDeviceVerificationTransaction * _Nonnull transactionFromAlicePOV) {
 
             MXOutgoingSASTransaction *sasTransactionFromAlicePOV = (MXOutgoingSASTransaction*)transactionFromAlicePOV;
 
@@ -229,7 +229,7 @@
     [matrixSDKTestsE2EData doE2ETestWithAliceInARoom:self readyToTest:^(MXSession *aliceSession, NSString *roomId, XCTestExpectation *expectation) {
 
         // - Alice begins SAS verification of a non-existing device
-        [aliceSession.crypto.deviceVerificationManager beginKeyVerificationWithUserId:@"@bob:foo.bar" andDeviceId:@"DEVICEID" method:kMXKeyVerificationMethodSAS success:^(MXDeviceVerificationTransaction * _Nonnull transaction) {
+        [aliceSession.crypto.deviceVerificationManager beginKeyVerificationWithUserId:@"@bob:foo.bar" andDeviceId:@"DEVICEID" method:MXKeyVerificationMethodSAS success:^(MXDeviceVerificationTransaction * _Nonnull transaction) {
 
             // -> The request should fail
             XCTFail(@"The request should fail");
@@ -253,7 +253,7 @@
         MXCredentials *bob = bobSession.matrixRestClient.credentials;
 
         // - Alice begins SAS verification of a device she has never talked too
-        [aliceSession.crypto.deviceVerificationManager beginKeyVerificationWithUserId:bob.userId andDeviceId:bob.deviceId method:kMXKeyVerificationMethodSAS success:^(MXDeviceVerificationTransaction * _Nonnull transactionFromAlicePOV) {
+        [aliceSession.crypto.deviceVerificationManager beginKeyVerificationWithUserId:bob.userId andDeviceId:bob.deviceId method:MXKeyVerificationMethodSAS success:^(MXDeviceVerificationTransaction * _Nonnull transactionFromAlicePOV) {
 
             // -> The request should succeed
             MXOutgoingSASTransaction *sasTransactionFromAlicePOV = (MXOutgoingSASTransaction*)transactionFromAlicePOV;
@@ -292,7 +292,7 @@
 
         // - Alice begins SAS verification of Bob's device
         MXCredentials *bob = bobSession.matrixRestClient.credentials;
-        [aliceSession.crypto.deviceVerificationManager beginKeyVerificationWithUserId:bob.userId andDeviceId:bob.deviceId method:kMXKeyVerificationMethodSAS success:^(MXDeviceVerificationTransaction * _Nonnull transactionFromAlicePOV) {
+        [aliceSession.crypto.deviceVerificationManager beginKeyVerificationWithUserId:bob.userId andDeviceId:bob.deviceId method:MXKeyVerificationMethodSAS success:^(MXDeviceVerificationTransaction * _Nonnull transactionFromAlicePOV) {
 
             // -> Alice must see the transaction as a MXOutgoingSASTransaction
             XCTAssert(transactionFromAlicePOV);
@@ -353,7 +353,7 @@
 
         // - Alice begins SAS verification of Bob's device
         MXCredentials *bob = bobSession.matrixRestClient.credentials;
-        [aliceSession.crypto.deviceVerificationManager beginKeyVerificationWithUserId:bob.userId andDeviceId:bob.deviceId method:kMXKeyVerificationMethodSAS success:^(MXDeviceVerificationTransaction * _Nonnull transactionFromAlicePOV) {
+        [aliceSession.crypto.deviceVerificationManager beginKeyVerificationWithUserId:bob.userId andDeviceId:bob.deviceId method:MXKeyVerificationMethodSAS success:^(MXDeviceVerificationTransaction * _Nonnull transactionFromAlicePOV) {
 
             MXOutgoingSASTransaction *sasTransactionFromAlicePOV = (MXOutgoingSASTransaction*)transactionFromAlicePOV;
 
@@ -397,7 +397,7 @@
         MXCredentials *bob = bobSession.matrixRestClient.credentials;
 
         // - Alice begins SAS verification of Bob's device
-        [aliceSession.crypto.deviceVerificationManager beginKeyVerificationWithUserId:bob.userId andDeviceId:bob.deviceId method:kMXKeyVerificationMethodSAS success:^(MXDeviceVerificationTransaction * _Nonnull transactionFromAlicePOV) {
+        [aliceSession.crypto.deviceVerificationManager beginKeyVerificationWithUserId:bob.userId andDeviceId:bob.deviceId method:MXKeyVerificationMethodSAS success:^(MXDeviceVerificationTransaction * _Nonnull transactionFromAlicePOV) {
 
             MXOutgoingSASTransaction *sasTransactionFromAlicePOV = (MXOutgoingSASTransaction*)transactionFromAlicePOV;
 
@@ -415,7 +415,7 @@
         }];
 
         // - Alice starts another SAS verification of Bob's device
-        [aliceSession.crypto.deviceVerificationManager beginKeyVerificationWithUserId:bob.userId andDeviceId:bob.deviceId method:kMXKeyVerificationMethodSAS success:^(MXDeviceVerificationTransaction * _Nonnull transaction2FromAlicePOV) {
+        [aliceSession.crypto.deviceVerificationManager beginKeyVerificationWithUserId:bob.userId andDeviceId:bob.deviceId method:MXKeyVerificationMethodSAS success:^(MXDeviceVerificationTransaction * _Nonnull transaction2FromAlicePOV) {
 
             MXOutgoingSASTransaction *sasTransaction2FromAlicePOV = (MXOutgoingSASTransaction*)transaction2FromAlicePOV;
 

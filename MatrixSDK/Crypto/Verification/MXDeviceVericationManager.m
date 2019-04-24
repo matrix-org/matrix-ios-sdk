@@ -64,7 +64,7 @@ NSTimeInterval const MXDeviceVerificationTimeout = 10 * 60.0;
         NSError *error;
 
         // We support only SAS at the moment
-        if ([method isEqualToString:kMXKeyVerificationMethodSAS])
+        if ([method isEqualToString:MXKeyVerificationMethodSAS])
         {
             MXOutgoingSASTransaction *sasTransaction = [[MXOutgoingSASTransaction alloc] initWithOtherDevice:otherDevice andManager:self];
             [sasTransaction start];

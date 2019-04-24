@@ -42,7 +42,7 @@
 
     MXKeyVerificationStart *startContent = [MXKeyVerificationStart new];
     startContent.fromDevice = self.manager.crypto.myDevice.deviceId;
-    startContent.method = kMXKeyVerificationMethodSAS;
+    startContent.method = MXKeyVerificationMethodSAS;
     startContent.transactionId = self.transactionId;
     startContent.keyAgreementProtocols = kKnownAgreementProtocols;
     startContent.hashAlgorithms = kKnownHashes;

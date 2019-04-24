@@ -31,7 +31,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic) NSString *transactionId;
 
 /**
- Machine-readable reason for cancelling (kMXKeyVerificationCancelCodeXxx).
+ Machine-readable reason for cancelling (MXKeyVerificationCancelCodeXxx).
  */
 @property (nonatomic) NSString *code;
 

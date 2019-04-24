@@ -22,12 +22,12 @@
 
 #pragma mark - Constants
 
-NSString * const kMXKeyVerificationMethodSAS        = @"m.sas.v1";
-NSString * const kMXKeyVerificationSASModeDecimal   = @"decimal";
-NSString * const kMXKeyVerificationSASModeEmoji     = @"emoji";
+NSString * const MXKeyVerificationMethodSAS        = @"m.sas.v1";
+NSString * const MXKeyVerificationSASModeDecimal   = @"decimal";
+NSString * const MXKeyVerificationSASModeEmoji     = @"emoji";
 
-NSString * const kMXKeyVerificationSASMacSha256         = @"hkdf-hmac-sha256";
-NSString * const kMXKeyVerificationSASMacSha256LongKdf  = @"hmac-sha256";
+NSString * const MXKeyVerificationSASMacSha256         = @"hkdf-hmac-sha256";
+NSString * const MXKeyVerificationSASMacSha256LongKdf  = @"hmac-sha256";
 
 NSArray<NSString*> *kKnownAgreementProtocols;
 NSArray<NSString*> *kKnownHashes;
@@ -42,7 +42,7 @@ static NSArray<MXEmojiRepresentation*> *kSasEmojis;
 - (NSString *)sasDecimal
 {
     NSString *sasDecimal;
-    if (_sasBytes && [self.accepted.shortAuthenticationString containsObject:kMXKeyVerificationSASModeDecimal])
+    if (_sasBytes && [self.accepted.shortAuthenticationString containsObject:MXKeyVerificationSASModeDecimal])
     {
         sasDecimal = [[MXSASTransaction decimalRepresentationForSas:_sasBytes] componentsJoinedByString:@" "];
     }
@@ -53,7 +53,7 @@ static NSArray<MXEmojiRepresentation*> *kSasEmojis;
 - (NSArray<MXEmojiRepresentation *> *)sasEmoji
 {
     NSArray *sasEmoji;
-    if (_sasBytes && [self.accepted.shortAuthenticationString containsObject:kMXKeyVerificationSASModeEmoji])
+    if (_sasBytes && [self.accepted.shortAuthenticationString containsObject:MXKeyVerificationSASModeEmoji])
     {
         sasEmoji = [MXSASTransaction emojiRepresentationForSas:_sasBytes];
     }
@@ -119,8 +119,8 @@ static NSArray<MXEmojiRepresentation*> *kSasEmojis;
 
         kKnownAgreementProtocols = @[@"curve25519"];
         kKnownHashes = @[@"sha256"];
-        kKnownMacs = @[kMXKeyVerificationSASMacSha256, kMXKeyVerificationSASMacSha256LongKdf];
-        kKnownShortCodes = @[kMXKeyVerificationSASModeEmoji, kMXKeyVerificationSASModeDecimal];
+        kKnownMacs = @[MXKeyVerificationSASMacSha256, MXKeyVerificationSASMacSha256LongKdf];
+        kKnownShortCodes = @[MXKeyVerificationSASModeEmoji, MXKeyVerificationSASModeDecimal];
 
         [self initializeSasEmojis];
     });
@@ -183,11 +183,11 @@ static NSArray<MXEmojiRepresentation*> *kSasEmojis;
     NSString *macUsingAgreedMethod;
     NSError *error;
 
-    if ([_accepted.messageAuthenticationCode isEqualToString:kMXKeyVerificationSASMacSha256LongKdf])
+    if ([_accepted.messageAuthenticationCode isEqualToString:MXKeyVerificationSASMacSha256LongKdf])
     {
         macUsingAgreedMethod = [_olmSAS calculateMacLongKdf:message info:info error:&error];
     }
-    else if ([_accepted.messageAuthenticationCode isEqualToString:kMXKeyVerificationSASMacSha256])
+    else if ([_accepted.messageAuthenticationCode isEqualToString:MXKeyVerificationSASMacSha256])
     {
         macUsingAgreedMethod = [_olmSAS calculateMac:message info:info error:&error];
     }

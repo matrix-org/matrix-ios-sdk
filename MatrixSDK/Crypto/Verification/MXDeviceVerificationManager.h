@@ -59,7 +59,7 @@ FOUNDATION_EXPORT NSString *const MXDeviceVerificationManagerNotificationTransac
 
  @param userId the other user id.
  @param deviceId the other user device id.
- @param method the verification method (ex: kMXKeyVerificationMethodSAS).
+ @param method the verification method (ex: MXKeyVerificationMethodSAS).
  @param success a block called when the operation succeeds.
  @param failure a block called when the operation fails.
  */

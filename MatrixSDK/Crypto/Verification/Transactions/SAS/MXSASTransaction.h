@@ -23,13 +23,13 @@ NS_ASSUME_NONNULL_BEGIN
 
 #pragma mark - Constants
 
-FOUNDATION_EXPORT NSString * _Nonnull const kMXKeyVerificationMethodSAS;
+FOUNDATION_EXPORT NSString * _Nonnull const MXKeyVerificationMethodSAS;
 
-FOUNDATION_EXPORT NSString * _Nonnull const kMXKeyVerificationSASModeDecimal;
-FOUNDATION_EXPORT NSString * _Nonnull const kMXKeyVerificationSASModeEmoji;
+FOUNDATION_EXPORT NSString * _Nonnull const MXKeyVerificationSASModeDecimal;
+FOUNDATION_EXPORT NSString * _Nonnull const MXKeyVerificationSASModeEmoji;
 
-FOUNDATION_EXPORT NSString * const kMXKeyVerificationSASMacSha256;
-FOUNDATION_EXPORT NSString * const kMXKeyVerificationSASMacSha256LongKdf;
+FOUNDATION_EXPORT NSString * const MXKeyVerificationSASMacSha256;
+FOUNDATION_EXPORT NSString * const MXKeyVerificationSASMacSha256LongKdf;
 
 typedef enum : NSUInteger
 {

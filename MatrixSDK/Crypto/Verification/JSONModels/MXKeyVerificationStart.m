@@ -63,10 +63,10 @@
         || _hashAlgorithms.count == 0
         || [_hashAlgorithms containsObject:@"sha256"] == NO
         || _messageAuthenticationCodes.count == 0
-        || ([_messageAuthenticationCodes containsObject:kMXKeyVerificationSASMacSha256] == NO
-            && [_messageAuthenticationCodes containsObject:kMXKeyVerificationSASMacSha256LongKdf] == NO)    // Accept old MAC format
+        || ([_messageAuthenticationCodes containsObject:MXKeyVerificationSASMacSha256] == NO
+            && [_messageAuthenticationCodes containsObject:MXKeyVerificationSASMacSha256LongKdf] == NO)    // Accept old MAC format
         || _shortAuthenticationString.count == 0
-        || [_shortAuthenticationString containsObject:kMXKeyVerificationSASModeDecimal] == NO)
+        || [_shortAuthenticationString containsObject:MXKeyVerificationSASModeDecimal] == NO)
     {
         NSLog(@"[MXKeyVerification] Invalid MXKeyVerificationStart: %@", self);
         isValid = NO;
