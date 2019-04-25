@@ -14,8 +14,6 @@
  limitations under the License.
  */
 
-#import <UIKit/UIKit.h>
-
 #import "MXJSONModel.h"
 
 NS_ASSUME_NONNULL_BEGIN

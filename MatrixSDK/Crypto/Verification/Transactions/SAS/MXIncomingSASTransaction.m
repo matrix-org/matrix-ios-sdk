@@ -22,6 +22,7 @@
 
 #import "MXCryptoTools.h"
 #import "NSArray+MatrixSDK.h"
+#import "MXTools.h"
 
 @interface MXIncomingSASTransaction ()
 

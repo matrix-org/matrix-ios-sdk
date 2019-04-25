@@ -19,6 +19,7 @@
 
 #import "MXSession.h"
 #import "MXCrypto_Private.h"
+#import "MXTools.h"
 
 #import "MXTransactionCancelCode.h"
 

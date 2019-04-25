@@ -22,7 +22,8 @@
 #import "MXKeyVerificationMac.h"
 #import "MXKeyVerificationStart.h"
 
-@class MXDeviceVerificationManager;
+
+@class MXDeviceVerificationManager, MXHTTPOperation, MXEvent;
 
 
 NS_ASSUME_NONNULL_BEGIN

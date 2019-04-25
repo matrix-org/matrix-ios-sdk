@@ -16,6 +16,8 @@
 
 #import "MXKeyVerificationStart.h"
 
+#import "MXSASTransaction.h"
+
 @implementation MXKeyVerificationStart
 
 + (instancetype)modelFromJSON:(NSDictionary *)JSONDictionary
