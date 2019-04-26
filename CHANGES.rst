@@ -9,6 +9,7 @@ Improvements:
 
 Bug Fix:
  * MXRoomSummaryUpdater: Fix `MXRoomSummary.hiddenFromUser` property not being saved when associated room become tombstoned (vector-im/riot-ios/issues/2148).
+ * MXFileStore not loaded with 0 rooms, thanks to @asydorov (PR #647).
 
 Changes in Matrix iOS SDK in 0.12.4 (2019-03-21)
 ===============================================
