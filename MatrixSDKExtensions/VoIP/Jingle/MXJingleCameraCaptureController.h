@@ -14,7 +14,9 @@
  limitations under the License.
  */
 
-#import <WebRTC/RTCCameraVideoCapturer.h>
+@import AVFoundation;
+
+@class RTCCameraVideoCapturer;
 
 /**
  `MXJingleCameraCaptureController` controls the WebRTC camera capture.

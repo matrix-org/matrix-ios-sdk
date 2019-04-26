@@ -16,6 +16,7 @@
 
 #import "MXJingleCameraCaptureController.h"
 
+#import <WebRTC/RTCCameraVideoCapturer.h>
 
 static const Float64 kFramerateLimit = 30.0;
 static const int kDefaultResolutionWidth = 1280;
