@@ -14,7 +14,7 @@
  limitations under the License.
  */
 
-#import <MatrixSDK/MatrixSDK.h>
+#import "MXJSONModel.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
