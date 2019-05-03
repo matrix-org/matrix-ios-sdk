@@ -328,14 +328,6 @@
                   exportFormat:(BOOL)exportFormat
 {
     NSError *error;
-    if ([self inboundGroupSessionWithId:sessionId senderKey:senderKey roomId:roomId error:&error])
-    {
-        // If we already have this session, consider updating it
-        NSLog(@"[MXOlmDevice] addInboundGroupSession: Update for megolm session %@/%@", senderKey, sessionId);
-
-        // For now we just ignore updates. TODO: implement something here
-        return NO;
-    }
 
     MXOlmInboundGroupSession *session;
     if (exportFormat)
@@ -345,6 +337,20 @@
     else
     {
         session = [[MXOlmInboundGroupSession alloc] initWithSessionKey:sessionKey];
+    }
+
+    MXOlmInboundGroupSession *existingSession = [self inboundGroupSessionWithId:sessionId senderKey:senderKey roomId:roomId error:&error];
+    if (existingSession)
+    {
+        // If we already have this session, consider updating it
+        NSLog(@"[MXOlmDevice] addInboundGroupSession: Update for megolm session %@/%@", senderKey, sessionId);
+
+        // If our existing session is better, we keep it
+        if (existingSession.session.firstKnownIndex <= session.session.firstKnownIndex)
+        {
+            NSLog(@"[MXOlmDevice] addInboundGroupSession: Skip it. The index of the incoming session is higher (%@ vs %@)", @(session.session.firstKnownIndex), @(existingSession.session.firstKnownIndex));
+            return NO;
+        }
     }
 
     NSLog(@"[MXOlmDevice] addInboundGroupSession: Add megolm session %@/%@ (import: %@)", senderKey, sessionId, exportFormat ? @"YES" : @"NO");
@@ -377,20 +383,24 @@
             continue;
         }
 
+        MXOlmInboundGroupSession *session = [[MXOlmInboundGroupSession alloc] initWithImportedSessionData:sessionData];
+
         NSError *error;
-        MXOlmInboundGroupSession *session = [self inboundGroupSessionWithId:sessionData.sessionId senderKey:sessionData.senderKey roomId:sessionData.roomId error:&error];
-        if (session)
+        MXOlmInboundGroupSession *existingSession = [self inboundGroupSessionWithId:sessionData.sessionId senderKey:sessionData.senderKey roomId:sessionData.roomId error:&error];
+        if (existingSession)
         {
             // If we already have this session, consider updating it
             NSLog(@"[MXOlmDevice] importInboundGroupSessions: Update for megolm session %@|%@", sessionData.senderKey, sessionData.sessionId);
 
-            // For now we just ignore updates. TODO: implement something here
+            // If our existing session is better, we keep it
+            if (existingSession.session.firstKnownIndex <= session.session.firstKnownIndex)
+            {
+                NSLog(@"[MXOlmDevice] importInboundGroupSessions: Skip it. The index of the incoming session is higher (%@ vs %@)", @(session.session.firstKnownIndex), @(existingSession.session.firstKnownIndex));
+                continue;
+            }
         }
-        else
-        {
-            session = [[MXOlmInboundGroupSession alloc] initWithImportedSessionData:sessionData];
-            [sessions addObject:session];
-        }
+
+        [sessions addObject:session];
     }
 
     [store storeInboundGroupSessions:sessions];

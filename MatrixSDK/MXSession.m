@@ -44,7 +44,7 @@
 
 #pragma mark - Constants definitions
 
-const NSString *MatrixSDKVersion = @"0.12.4";
+const NSString *MatrixSDKVersion = @"0.12.5";
 NSString *const kMXSessionStateDidChangeNotification = @"kMXSessionStateDidChangeNotification";
 NSString *const kMXSessionNewRoomNotification = @"kMXSessionNewRoomNotification";
 NSString *const kMXSessionWillLeaveRoomNotification = @"kMXSessionWillLeaveRoomNotification";
@@ -54,6 +54,7 @@ NSString *const kMXSessionInvitedRoomsDidChangeNotification = @"kMXSessionInvite
 NSString *const kMXSessionOnToDeviceEventNotification = @"kMXSessionOnToDeviceEventNotification";
 NSString *const kMXSessionIgnoredUsersDidChangeNotification = @"kMXSessionIgnoredUsersDidChangeNotification";
 NSString *const kMXSessionDirectRoomsDidChangeNotification = @"kMXSessionDirectRoomsDidChangeNotification";
+NSString *const kMXSessionAccountDataDidChangeNotification = @"kMXSessionAccountDataDidChangeNotification";
 NSString *const kMXSessionDidCorruptDataNotification = @"kMXSessionDidCorruptDataNotification";
 NSString *const kMXSessionCryptoDidCorruptDataNotification = @"kMXSessionCryptoDidCorruptDataNotification";
 NSString *const kMXSessionNewGroupInviteNotification = @"kMXSessionNewGroupInviteNotification";
@@ -306,7 +307,7 @@ typedef void (^MXOnResumeDone)(void);
             }
 
             // Can we start on data from the MXStore?
-            if (self.store.isPermanent && self.isEventStreamInitialised && 0 < self.store.rooms.count)
+            if (self.store.isPermanent && self.isEventStreamInitialised)
             {
                 // Mount data from the permanent store
                 NSLog(@"[MXSession] Loading room state events to build MXRoom objects...");
@@ -1454,6 +1455,14 @@ typedef void (^MXOnResumeDone)(void);
         }
 
         _store.userAccountData = _accountData.accountData;
+        
+        // Trigger a global notification for the account data update
+        if (!isInitialSync)
+        {
+            [[NSNotificationCenter defaultCenter] postNotificationName:kMXSessionAccountDataDidChangeNotification
+                                                                object:self
+                                                              userInfo:nil];
+        }
     }
 }
 

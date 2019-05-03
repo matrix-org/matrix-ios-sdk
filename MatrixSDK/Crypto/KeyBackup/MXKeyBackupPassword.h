@@ -32,7 +32,7 @@ NS_ASSUME_NONNULL_BEGIN
  @param error the output error.
  @return a private key.
  */
-+ (nullable NSData *)generatePrivateKeyWithPassword:(NSString*)password salt:(NSString**)salt iterations:(NSUInteger*)iterations error:(NSError * _Nullable *)error;
++ (nullable NSData *)generatePrivateKeyWithPassword:(NSString*)password salt:(NSString * _Nullable *_Nonnull)salt iterations:(NSUInteger*)iterations error:(NSError * _Nullable *)error;
 
 /**
  Retrieve a private key from {password, salt, iterations}
