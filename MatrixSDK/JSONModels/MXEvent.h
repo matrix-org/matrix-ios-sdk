@@ -17,7 +17,7 @@
 
 #import "MXJSONModel.h"
 
-@class MXEventDecryptionResult, MXEncryptedContentFile;
+@class MXEventDecryptionResult, MXEncryptedContentFile, MXEventUnsignedData;
 
 /**
  Types of Matrix events
@@ -315,7 +315,7 @@ extern NSString *const kMXEventIdentifierKey;
  Information about this event which was not sent by the originating homeserver.
  HS sends this data under the 'unsigned' field but it is a reserved keyword. Hence, renaming.
  */
-@property (nonatomic) NSDictionary *unsignedData;
+@property (nonatomic) MXEventUnsignedData *unsignedData;
 
 /**
  The age of the event in milliseconds.

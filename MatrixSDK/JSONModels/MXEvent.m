@@ -20,6 +20,7 @@
 #import "MXTools.h"
 #import "MXEventDecryptionResult.h"
 #import "MXEncryptedContentFile.h"
+#import "MXEventUnsignedData.h"
 
 #pragma mark - Constants definitions
 
@@ -140,37 +141,17 @@ NSString *const kMXEventIdentifierKey = @"kMXEventIdentifierKey";
         MXJSONModelSetDictionary(event.wireContent, JSONDictionary[@"content"]);
         MXJSONModelSetString(event.stateKey, JSONDictionary[@"state_key"]);
         MXJSONModelSetUInt64(event.originServerTs, JSONDictionary[@"origin_server_ts"]);
-        MXJSONModelSetDictionary(event.unsignedData, JSONDictionary[@"unsigned"]);
+        MXJSONModelSetMXJSONModel(event.unsignedData, MXEventUnsignedData, JSONDictionary[@"unsigned"]);
         
         MXJSONModelSetString(event.redacts, JSONDictionary[@"redacts"]);
-        
+
+        // Data moved under unsigned
         MXJSONModelSetDictionary(event.prevContent, JSONDictionary[@"prev_content"]);
-        // 'prev_content' has been moved under unsigned in some server responses (see sync API).
-        if (!event.prevContent)
-        {
-            MXJSONModelSetDictionary(event.prevContent, event.unsignedData[@"prev_content"]);
-        }
-        
-        // 'age' has been moved under unsigned.
+        MXJSONModelSetDictionary(event.redactedBecause, JSONDictionary[@"redacted_because"]);
+        MXJSONModelSetDictionary(event.inviteRoomState, JSONDictionary[@"invite_room_state"]);
         if (JSONDictionary[@"age"])
         {
             MXJSONModelSetUInteger(event.age, JSONDictionary[@"age"]);
-        }
-        else if (event.unsignedData[@"age"])
-        {
-            MXJSONModelSetUInteger(event.age, event.unsignedData[@"age"]);
-        }
-        
-        MXJSONModelSetDictionary(event.redactedBecause, JSONDictionary[@"redacted_because"]);
-        if (!event.redactedBecause)
-        {
-            // 'redacted_because' has been moved under unsigned.
-            MXJSONModelSetDictionary(event.redactedBecause, event.unsignedData[@"redacted_because"]);
-        }
-        
-        if (JSONDictionary[@"unsigned"][@"invite_room_state"])
-        {
-            MXJSONModelSetMXJSONModelArray(event.inviteRoomState, MXEvent, JSONDictionary[@"unsigned"][@"invite_room_state"]);
         }
 
         [event finalise];
@@ -258,6 +239,8 @@ NSString *const kMXEventIdentifierKey = @"kMXEventIdentifierKey";
     _wireType = [MXTools eventTypeString:_wireEventType];
 }
 
+#pragma mark - Data moved to `unsigned`
+
 - (void)setAge:(NSUInteger)age
 {
     // If the age has not been stored yet in local time stamp, do it now
@@ -274,7 +257,26 @@ NSString *const kMXEventIdentifierKey = @"kMXEventIdentifierKey";
     {
         age = [[NSDate date] timeIntervalSince1970] * 1000 - _ageLocalTs;
     }
+    else
+    {
+        age = _unsignedData.age;
+    }
     return age;
+}
+
+- (NSDictionary<NSString *,id> *)prevContent
+{
+    return _prevContent ? _prevContent : _unsignedData.prevContent;
+}
+
+- (NSDictionary *)redactedBecause
+{
+    return _redactedBecause ? _redactedBecause : _unsignedData.redactedBecause;
+}
+
+- (NSArray<MXEvent *> *)inviteRoomState
+{
+    return _inviteRoomState ? _inviteRoomState : _unsignedData.inviteRoomState;
 }
 
 - (NSDictionary *)JSONDictionary
@@ -290,10 +292,21 @@ NSString *const kMXEventIdentifierKey = @"kMXEventIdentifierKey";
         JSONDictionary[@"state_key"] = _stateKey;
         JSONDictionary[@"origin_server_ts"] = @(_originServerTs);
         JSONDictionary[@"redacts"] = _redacts;
-        JSONDictionary[@"prev_content"] = _prevContent;
-        JSONDictionary[@"age"] = @(self.age);
-        JSONDictionary[@"redacted_because"] = _redactedBecause;
+        JSONDictionary[@"unsigned"] = _unsignedData.JSONDictionary;
 
+        // Manage data before they moved under unsigned
+        if (_prevContent)
+        {
+            JSONDictionary[@"prev_content"] = _prevContent;
+        }
+        if (_ageLocalTs != -1)
+        {
+            JSONDictionary[@"age"] = @(self.age);
+        }
+        if (_redactedBecause)
+        {
+            JSONDictionary[@"redacted_because"] = _redactedBecause;
+        }
         if (_inviteRoomState)
         {
             JSONDictionary[@"invite_room_state"] = _inviteRoomState;
