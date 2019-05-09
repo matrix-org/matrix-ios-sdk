@@ -17,6 +17,8 @@
 #import "MXEventUnsignedData.h"
 
 #import "MXEvent.h"
+#import "MXEventRelations.h"
+
 
 @implementation MXEventUnsignedData
 
@@ -39,6 +41,7 @@
         MXJSONModelSetDictionary(unsignedData->_redactedBecause, JSONDictionary[@"redacted_because"]);
         MXJSONModelSetDictionary(unsignedData->_transactionId, JSONDictionary[@"transaction_id"]);
         MXJSONModelSetDictionary(unsignedData->_inviteRoomState, JSONDictionary[@"invite_room_state"]);
+        MXJSONModelSetMXJSONModel(unsignedData->_relations, MXEventRelations, JSONDictionary[@"m.relations"]);
     }
 
     return unsignedData;
@@ -77,6 +80,10 @@
         {
             JSONDictionary[@"invite_room_state"] = _inviteRoomState;
         }
+        if (_relations)
+        {
+            JSONDictionary[@"m.relations"] = _relations.JSONDictionary;
+        }
     }
 
     return JSONDictionary;
@@ -97,6 +104,7 @@
         _redactedBecause = [aDecoder decodeObjectForKey:@"redactedBecause"];
         _transactionId = [aDecoder decodeObjectForKey:@"transactionId"];
         _inviteRoomState = [aDecoder decodeObjectForKey:@"inviteRoomState"];
+        _relations = [aDecoder decodeObjectForKey:@"relations"];
     }
     return self;
 }
@@ -110,6 +118,7 @@
     [aCoder encodeObject:_redactedBecause forKey:@"redactedBecause"];
     [aCoder encodeObject:_transactionId forKey:@"transactionId"];
     [aCoder encodeObject:_inviteRoomState forKey:@"inviteRoomState"];
+    [aCoder encodeObject:_relations forKey:@"relations"];
  }
 
 

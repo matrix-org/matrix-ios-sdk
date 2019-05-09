@@ -18,7 +18,7 @@
 
 #import "MXJSONModel.h"
 
-@class MXEvent;
+@class MXEvent, MXEventRelations;
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -75,6 +75,11 @@ NS_ASSUME_NONNULL_BEGIN
  and m.room.name SHOULD be included.
  */
 @property (nonatomic) NSArray<MXEvent *> *inviteRoomState;
+
+/**
+ Aggregated relations (reactions, edition, ...).
+ */
+@property (nonatomic, readonly, nullable) MXEventRelations *relations;
 
 @end
 
