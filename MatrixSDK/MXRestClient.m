@@ -4968,4 +4968,72 @@ MXAuthAction;
     }
 }
 
+
+#pragma mark - Aggregations
+
+- (MXHTTPOperation*)aggregationsForEvent:(NSString*)eventId
+                                  inRoom:(NSString*)roomId
+                            relationType:(NSString*)relationType
+                               eventType:(NSString*)eventType
+                                    from:(NSString*)from
+                               direction:(MXTimelineDirection)direction
+                                   limit:(NSUInteger)limit
+                                 success:(void (^)(MXAggregationPaginatedResponse *paginatedResponse))success
+                                 failure:(void (^)(NSError *error))failure
+{
+    NSMutableString *path = [NSMutableString stringWithFormat:@"%@/rooms/%@/aggregations/%@", apiPathPrefix, roomId, eventId];
+
+    if (relationType)
+    {
+        [path appendFormat:@"/%@", relationType];
+    }
+    if (eventType)
+    {
+        [path appendFormat:@"/%@", eventType];
+    }
+
+    // All query parameters are optional. Fill the request parameters on demand
+    NSMutableDictionary *parameters = [NSMutableDictionary dictionary];
+
+    if (from)
+    {
+        parameters[@"from"] = from;
+    }
+
+    if (direction == MXTimelineDirectionForwards)
+    {
+        parameters[@"dir"] = @"f";
+    }
+    else
+    {
+        parameters[@"dir"] = @"b";
+    }
+    if (-1 != limit)
+    {
+        parameters[@"limit"] = @(limit);
+    }
+
+    MXWeakify(self);
+    return [httpClient requestWithMethod:@"GET"
+                                    path:path
+                              parameters:parameters
+                                 success:^(NSDictionary *JSONResponse) {
+                                     MXStrongifyAndReturnIfNil(self);
+
+                                     if (success)
+                                     {
+                                         __block MXAggregationPaginatedResponse *paginatedResponse;
+                                         [self dispatchProcessing:^{
+                                             MXJSONModelSetMXJSONModel(paginatedResponse, MXAggregationPaginatedResponse, JSONResponse);
+                                         } andCompletion:^{
+                                             success(paginatedResponse);
+                                         }];
+                                     }
+                                 }
+                                 failure:^(NSError *error) {
+                                     MXStrongifyAndReturnIfNil(self);
+                                     [self dispatchFailure:error inBlock:failure];
+                                 }];
+}
+
 @end
