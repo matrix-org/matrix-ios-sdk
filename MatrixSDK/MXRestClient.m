@@ -4984,7 +4984,7 @@ MXAuthAction;
 
     // Prepare the path
     NSString *path = [NSString stringWithFormat:@"%@/rooms/%@/send_relation/%@/%@/%@/%@",
-                      apiPathPrefix,
+                      kMXAPIPrefixPathUnstable,    // TODO: use apiPathPrefix
                       roomId,
                       [MXTools encodeURIComponent:eventId],
                       relationType,
@@ -5025,7 +5025,7 @@ MXAuthAction;
                                  failure:(void (^)(NSError *error))failure
 {
     NSMutableString *path = [NSMutableString stringWithFormat:@"%@/rooms/%@/aggregations/%@",
-                             apiPathPrefix,
+                             kMXAPIPrefixPathUnstable,    // TODO: use apiPathPrefix
                              roomId,
                              [MXTools encodeURIComponent:eventId]];
 
