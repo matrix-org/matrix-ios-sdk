@@ -4971,6 +4971,49 @@ MXAuthAction;
 
 #pragma mark - Aggregations
 
+- (MXHTTPOperation*)sendRelationToEvent:(NSString*)eventId
+                                 inRoom:(NSString*)roomId
+                           relationType:(NSString*)relationType
+                              eventType:(NSString*)eventType
+                                content:(NSDictionary*)content
+                                success:(void (^)(NSString *eventId))success
+                                failure:(void (^)(NSError *error))failure
+{
+    // Create a random transaction id to prevent duplicated events
+    NSString *txnId = [MXTools generateTransactionId];
+
+    // Prepare the path
+    NSString *path = [NSString stringWithFormat:@"%@/rooms/%@/send_relation/%@/%@/%@/%@",
+                      apiPathPrefix,
+                      roomId,
+                      [MXTools encodeURIComponent:eventId],
+                      relationType,
+                      eventType,
+                      [MXTools encodeURIComponent:txnId]];
+
+    MXWeakify(self);
+    return [httpClient requestWithMethod:@"PUT"
+                                    path:path
+                              parameters:content
+                                 success:^(NSDictionary *JSONResponse) {
+                                     MXStrongifyAndReturnIfNil(self);
+
+                                     if (success)
+                                     {
+                                         __block NSString *eventId;
+                                         [self dispatchProcessing:^{
+                                             MXJSONModelSetString(eventId, JSONResponse[@"event_id"]);
+                                         } andCompletion:^{
+                                             success(eventId);
+                                         }];
+                                     }
+                                 }
+                                 failure:^(NSError *error) {
+                                     MXStrongifyAndReturnIfNil(self);
+                                     [self dispatchFailure:error inBlock:failure];
+                                 }];
+}
+
 - (MXHTTPOperation*)aggregationsForEvent:(NSString*)eventId
                                   inRoom:(NSString*)roomId
                             relationType:(NSString*)relationType
@@ -4981,7 +5024,10 @@ MXAuthAction;
                                  success:(void (^)(MXAggregationPaginatedResponse *paginatedResponse))success
                                  failure:(void (^)(NSError *error))failure
 {
-    NSMutableString *path = [NSMutableString stringWithFormat:@"%@/rooms/%@/aggregations/%@", apiPathPrefix, roomId, eventId];
+    NSMutableString *path = [NSMutableString stringWithFormat:@"%@/rooms/%@/aggregations/%@",
+                             apiPathPrefix,
+                             roomId,
+                             [MXTools encodeURIComponent:eventId]];
 
     if (relationType)
     {

@@ -20,32 +20,12 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-
-#pragma mark - Constants
-
-/**
- Annotation relation like reactions.
- */
-FOUNDATION_EXPORT NSString * _Nonnull const MXEventContentRelatesToAnnotationType;
-
-/**
- Reply relation.
- */
-
-FOUNDATION_EXPORT NSString * _Nonnull const MXEventContentRelatesToReferenceType;
-
-/**
- Edition relation.
- */
-FOUNDATION_EXPORT NSString * _Nonnull const MXEventContentRelatesToReplaceType;
-
-
 /**
  JSON model for MXEvent.content.relates_to.
  */
 @interface MXEventContentRelatesTo : MXJSONModel
 
-@property (nonatomic, readonly) NSString *relationType;
+@property (nonatomic, readonly) NSString *relationType;     // Ex: MXEventRelationTypeAnnotation
 @property (nonatomic, readonly) NSString *eventId;
 @property (nonatomic, readonly, nullable) NSString *key;
 

@@ -58,6 +58,7 @@ typedef enum : NSUInteger
     MXEventTypeRoomTag,
     MXEventTypePresence,
     MXEventTypeTypingNotification,
+    MXEventTypeReaction,
     MXEventTypeReceipt,
     MXEventTypeRead,
     MXEventTypeReadMarker,
@@ -109,6 +110,7 @@ FOUNDATION_EXPORT NSString *const kMXEventTypeStringRoomPinnedEvents;
 FOUNDATION_EXPORT NSString *const kMXEventTypeStringRoomTag;
 FOUNDATION_EXPORT NSString *const kMXEventTypeStringPresence;
 FOUNDATION_EXPORT NSString *const kMXEventTypeStringTypingNotification;
+FOUNDATION_EXPORT NSString *const kMXEventTypeStringReaction;
 FOUNDATION_EXPORT NSString *const kMXEventTypeStringReceipt;
 FOUNDATION_EXPORT NSString *const kMXEventTypeStringRead;
 FOUNDATION_EXPORT NSString *const kMXEventTypeStringReadMarker;
@@ -139,6 +141,13 @@ FOUNDATION_EXPORT NSString *const kMXMessageTypeVideo;
 FOUNDATION_EXPORT NSString *const kMXMessageTypeLocation;
 FOUNDATION_EXPORT NSString *const kMXMessageTypeFile;
 FOUNDATION_EXPORT NSString *const kMXMessageTypeServerNotice;
+
+/**
+ Event relations
+ */
+FOUNDATION_EXPORT NSString *const MXEventRelationTypeAnnotation;    // Reactions
+FOUNDATION_EXPORT NSString *const MXEventRelationTypeReference;     // Reply
+FOUNDATION_EXPORT NSString *const MXEventRelationTypeReplace;       // Edition
 
 /**
  Prefix used for id of temporary local event.

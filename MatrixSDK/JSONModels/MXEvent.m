@@ -51,6 +51,7 @@ NSString *const kMXEventTypeStringRoomPinnedEvents      = @"m.room.pinned_events
 NSString *const kMXEventTypeStringRoomTag               = @"m.tag";
 NSString *const kMXEventTypeStringPresence              = @"m.presence";
 NSString *const kMXEventTypeStringTypingNotification    = @"m.typing";
+NSString *const kMXEventTypeStringReaction              = @"m.reaction";
 NSString *const kMXEventTypeStringReceipt               = @"m.receipt";
 NSString *const kMXEventTypeStringRead                  = @"m.read";
 NSString *const kMXEventTypeStringReadMarker            = @"m.fully_read";
@@ -75,6 +76,10 @@ NSString *const kMXMessageTypeVideo         = @"m.video";
 NSString *const kMXMessageTypeLocation      = @"m.location";
 NSString *const kMXMessageTypeFile          = @"m.file";
 NSString *const kMXMessageTypeServerNotice  = @"m.server_notice";
+
+NSString *const MXEventRelationTypeAnnotation = @"m.annotation";
+NSString *const MXEventRelationTypeReference = @"m.reference";
+NSString *const MXEventRelationTypeReplace = @"m.replace";
 
 NSString *const kMXEventLocalEventIdPrefix = @"kMXEventLocalId_";
 

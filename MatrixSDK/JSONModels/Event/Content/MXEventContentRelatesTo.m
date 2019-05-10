@@ -17,12 +17,6 @@
 #import "MXEventContentRelatesTo.h"
 
 
-#pragma mark - Constants
-NSString *const MXEventContentRelatesToAnnotationType = @"m.annotation";
-NSString *const MXEventContentRelatesToReferenceType = @"m.reference";
-NSString *const MXEventContentRelatesToReplaceType = @"m.replace";
-
-
 @implementation MXEventContentRelatesTo
 
 #pragma mark - MXJSONModel

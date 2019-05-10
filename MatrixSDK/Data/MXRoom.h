@@ -833,6 +833,26 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidFlushDataNotification;
                              failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 
+
+#pragma mark - Aggregations
+/**
+ Send a reaction to an event.
+
+ @param eventId the event id.
+ @param reaction the reaction.
+
+ @param success A block object called when the operation succeeds. It returns
+                the event id of the event generated on the homeserver.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)sendReactionToEvent:(NSString*)eventId
+                               reaction:(NSString*)reaction
+                                success:(void (^)(NSString *eventId))success
+                                failure:(void (^)(NSError *error))failure; // NS_REFINED_FOR_SWIFT;
+
+
 #pragma mark - Events listeners on the live timeline
 /**
  Register a listener to events of the room live timeline.

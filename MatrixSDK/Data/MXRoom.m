@@ -2220,6 +2220,23 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
 }
 
 
+#pragma mark - Aggregations
+- (MXHTTPOperation*)sendReactionToEvent:(NSString*)eventId
+                               reaction:(NSString*)reaction
+                                success:(void (^)(NSString *eventId))success
+                                failure:(void (^)(NSError *error))failure
+{
+    return [mxSession.matrixRestClient sendRelationToEvent:eventId
+                                                    inRoom:_roomId
+                                              relationType:MXEventRelationTypeAnnotation
+                                                 eventType:kMXEventTypeStringReaction
+                                                   content:@{
+                                                             @"key": reaction
+                                                             }
+                                                   success:success failure:failure];
+}
+
+
 #pragma mark - Events listeners on the live timeline
 - (id)listenToEvents:(MXOnRoomEvent)onEvent
 {
