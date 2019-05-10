@@ -176,6 +176,8 @@
 		327E9AD92284803100A98BC1 /* MXEventAnnotationChunk.m in Sources */ = {isa = PBXBuildFile; fileRef = 327E9AD52284803100A98BC1 /* MXEventAnnotationChunk.m */; };
 		327E9ADC2284804500A98BC1 /* MXEventRelations.h in Headers */ = {isa = PBXBuildFile; fileRef = 327E9ADA2284804500A98BC1 /* MXEventRelations.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		327E9ADD2284804500A98BC1 /* MXEventRelations.m in Sources */ = {isa = PBXBuildFile; fileRef = 327E9ADB2284804500A98BC1 /* MXEventRelations.m */; };
+		327E9AE12285497100A98BC1 /* MXEventContentRelatesTo.h in Headers */ = {isa = PBXBuildFile; fileRef = 327E9ADF2285497100A98BC1 /* MXEventContentRelatesTo.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		327E9AE22285497100A98BC1 /* MXEventContentRelatesTo.m in Sources */ = {isa = PBXBuildFile; fileRef = 327E9AE02285497100A98BC1 /* MXEventContentRelatesTo.m */; };
 		327F8DB21C6112BA00581CA3 /* MXRoomThirdPartyInvite.h in Headers */ = {isa = PBXBuildFile; fileRef = 327F8DB01C6112BA00581CA3 /* MXRoomThirdPartyInvite.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		327F8DB31C6112BA00581CA3 /* MXRoomThirdPartyInvite.m in Sources */ = {isa = PBXBuildFile; fileRef = 327F8DB11C6112BA00581CA3 /* MXRoomThirdPartyInvite.m */; };
 		3281E89E19E299C000976E1A /* MXErrorTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 3281E89D19E299C000976E1A /* MXErrorTests.m */; };
@@ -598,6 +600,8 @@
 		327E9AD52284803100A98BC1 /* MXEventAnnotationChunk.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXEventAnnotationChunk.m; sourceTree = "<group>"; };
 		327E9ADA2284804500A98BC1 /* MXEventRelations.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MXEventRelations.h; sourceTree = "<group>"; };
 		327E9ADB2284804500A98BC1 /* MXEventRelations.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MXEventRelations.m; sourceTree = "<group>"; };
+		327E9ADF2285497100A98BC1 /* MXEventContentRelatesTo.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MXEventContentRelatesTo.h; sourceTree = "<group>"; };
+		327E9AE02285497100A98BC1 /* MXEventContentRelatesTo.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MXEventContentRelatesTo.m; sourceTree = "<group>"; };
 		327F8DB01C6112BA00581CA3 /* MXRoomThirdPartyInvite.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXRoomThirdPartyInvite.h; sourceTree = "<group>"; };
 		327F8DB11C6112BA00581CA3 /* MXRoomThirdPartyInvite.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXRoomThirdPartyInvite.m; sourceTree = "<group>"; };
 		3281E89D19E299C000976E1A /* MXErrorTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXErrorTests.m; sourceTree = "<group>"; };
@@ -1250,6 +1254,7 @@
 		327E9AB9228451E500A98BC1 /* Event */ = {
 			isa = PBXGroup;
 			children = (
+				327E9ADE2285492000A98BC1 /* Content */,
 				327E9AD22284803000A98BC1 /* MXEventAnnotation.h */,
 				327E9AD42284803100A98BC1 /* MXEventAnnotation.m */,
 				327E9AD32284803000A98BC1 /* MXEventAnnotationChunk.h */,
@@ -1260,6 +1265,15 @@
 				327E9ADB2284804500A98BC1 /* MXEventRelations.m */,
 			);
 			path = Event;
+			sourceTree = "<group>";
+		};
+		327E9ADE2285492000A98BC1 /* Content */ = {
+			isa = PBXGroup;
+			children = (
+				327E9ADF2285497100A98BC1 /* MXEventContentRelatesTo.h */,
+				327E9AE02285497100A98BC1 /* MXEventContentRelatesTo.m */,
+			);
+			path = Content;
 			sourceTree = "<group>";
 		};
 		3281E8B219E42DFE00976E1A /* JSONModels */ = {
@@ -1821,6 +1835,7 @@
 				329FB1791A0A74B100A5E88E /* MXTools.h in Headers */,
 				322691321E5EF77D00966A6E /* MXDeviceListOperation.h in Headers */,
 				32481A841C03572900782AD3 /* MXRoomAccountData.h in Headers */,
+				327E9AE12285497100A98BC1 /* MXEventContentRelatesTo.h in Headers */,
 				321CFDFB2254E728004D31DF /* MXTransactionCancelCode.h in Headers */,
 				32A9770421626E5C00919CC0 /* MXServerNotices.h in Headers */,
 				021AFBA42179E91900742B2C /* MXEncryptedContentFile.h in Headers */,
@@ -2123,6 +2138,7 @@
 				92634B831EF2E3C400DB9F60 /* MXCallKitConfiguration.m in Sources */,
 				3265CB391A14C43E00E24B2F /* MXRoomState.m in Sources */,
 				3281E8B819E42DFE00976E1A /* MXJSONModel.m in Sources */,
+				327E9AE22285497100A98BC1 /* MXEventContentRelatesTo.m in Sources */,
 				32A1514B1DAF7C0C00400192 /* MXUsersDevicesMap.m in Sources */,
 				328BCB3421947BE200A976D3 /* MXKeyBackupVersionTrust.m in Sources */,
 				C6B40F521F2A35BE00C42C72 /* MXRoomState.swift in Sources */,
