@@ -28,6 +28,7 @@
 #import "MXIncomingRoomKeyRequestCancellation.h"
 
 #import "MXKeyBackup.h"
+#import "MXDeviceVerificationManager.h"
 
 @class MXSession;
 
@@ -81,6 +82,11 @@ FOUNDATION_EXPORT NSString *const kMXCryptoRoomKeyRequestCancellationNotificatio
  The key backup manager.
  */
 @property (nonatomic, readonly) MXKeyBackup *backup;
+
+/**
+ The device verification manager.
+ */
+@property (nonatomic, readonly) MXDeviceVerificationManager *deviceVerificationManager;
 
 /**
  Create a new crypto instance and data for the given user.

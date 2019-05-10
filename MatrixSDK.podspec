@@ -1,7 +1,7 @@
 Pod::Spec.new do |s|
 
   s.name         = "MatrixSDK"
-  s.version      = "0.12.3"
+  s.version      = "0.12.5"
   s.summary      = "The iOS SDK to build apps compatible with Matrix (https://www.matrix.org)"
 
   s.description  = <<-DESC
@@ -35,13 +35,13 @@ Pod::Spec.new do |s|
       ss.dependency 'GZIP', '~> 1.2.2'
 
       # Requirements for e2e encryption
-      ss.dependency 'OLMKit', '~> 3.0.0'
+      ss.dependency 'OLMKit', '~> 3.1.0'
       ss.dependency 'Realm', '~> 3.13.1'
       ss.dependency 'libbase58', '~> 0.1.4'
   end
 
   s.subspec 'JingleCallStack' do |ss|
-    ss.ios.deployment_target = "9.0"
+    ss.ios.deployment_target = "10.0"
     
     ss.source_files  = "MatrixSDKExtensions/VoIP/Jingle/**/*.{h,m}"
     
@@ -52,8 +52,9 @@ Pod::Spec.new do |s|
     # prevents us from submitting the MatrixSDK pod
     #ss.ios.dependency 'GoogleWebRTC', '~>1.1.21820'
     
-    # Use WebRTC build at https://github.com/Anakros/WebRTC instead
-    ss.ios.dependency 'WebRTC', '63.11.20455'
+    # Use WebRTC framework included in Jitsi Meet SDK
+    ss.ios.dependency 'JitsiMeetSDK', '~> 2.1.0'
+
   end
 
   s.subspec 'SwiftSupport' do |ss|    

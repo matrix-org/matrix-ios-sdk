@@ -1058,6 +1058,8 @@ MXAuthAction;
     {
         NSError* error = [NSError errorWithDomain:@"Invalid params" code:500 userInfo:nil];
 
+        NSLog(@"[MXRestClient] setPusherWithPushkey: Error: Invalid params: ");
+
         [self dispatchFailure:error inBlock:failure];
         return nil;
     }
@@ -3279,7 +3281,7 @@ MXAuthAction;
 
     if (filename.length)
     {
-        path = [path stringByAppendingString:[NSString stringWithFormat:@"?filename=%@", filename]];
+        path = [path stringByAppendingString:[NSString stringWithFormat:@"?filename=%@", [MXTools encodeURIComponent:filename]]];
     }
 
     MXWeakify(self);

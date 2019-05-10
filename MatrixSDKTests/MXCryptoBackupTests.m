@@ -1084,32 +1084,38 @@
     [self createKeyBackupScenarioWithPassword:nil readyToTest:^(NSString *version, MXMegolmBackupCreationInfo *keyBackupCreationInfo, NSArray<MXOlmInboundGroupSession *> *aliceKeys, MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
 
         // - Check the SDK sent key share requests
-        MXOutgoingRoomKeyRequest* unSentRequest = [aliceSession.crypto.store outgoingRoomKeyRequestWithState:MXRoomKeyRequestStateUnsent];
-        MXOutgoingRoomKeyRequest* sentRequest = [aliceSession.crypto.store outgoingRoomKeyRequestWithState:MXRoomKeyRequestStateSent];
+        [matrixSDKTestsE2EData outgoingRoomKeyRequestInSession:aliceSession complete:^(MXOutgoingRoomKeyRequest *outgoingRoomKeyRequest) {
 
-        XCTAssertTrue(unSentRequest != nil || sentRequest != nil);
+            XCTAssertNotNil(outgoingRoomKeyRequest);
 
-        // - Restore the e2e backup with recovery key
-        [aliceSession.crypto.backup restoreKeyBackup:aliceSession.crypto.backup.keyBackupVersion
-                                     withRecoveryKey:keyBackupCreationInfo.recoveryKey
-                                                room:nil session:nil
-                                             success:^(NSUInteger total, NSUInteger imported)
-         {
-             // - Restore must be successful
-             [self checkRestoreSuccess:aliceKeys aliceSession:aliceSession total:total imported:imported];
+            // - Restore the e2e backup with recovery key
+            [aliceSession.crypto.backup restoreKeyBackup:aliceSession.crypto.backup.keyBackupVersion
+                                         withRecoveryKey:keyBackupCreationInfo.recoveryKey
+                                                    room:nil session:nil
+                                                 success:^(NSUInteger total, NSUInteger imported)
+             {
+                 // - Restore must be successful
+                 [self checkRestoreSuccess:aliceKeys aliceSession:aliceSession total:total imported:imported];
 
-             // - There must be no more pending key share requests
-             MXOutgoingRoomKeyRequest* unSentRequest = [aliceSession.crypto.store outgoingRoomKeyRequestWithState:MXRoomKeyRequestStateUnsent];
-             MXOutgoingRoomKeyRequest* sentRequest = [aliceSession.crypto.store outgoingRoomKeyRequestWithState:MXRoomKeyRequestStateSent];
+                 // Wait to check that no notification happens
+                 dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 2 * NSEC_PER_SEC), dispatch_get_main_queue(), ^{
 
-             XCTAssertTrue(unSentRequest == nil && sentRequest == nil);
-             
-             [expectation fulfill];
+                     // - There must be no more pending key share requests
+                     [matrixSDKTestsE2EData outgoingRoomKeyRequestInSession:aliceSession complete:^(MXOutgoingRoomKeyRequest *outgoingRoomKeyRequest) {
 
-         } failure:^(NSError * _Nonnull error) {
-             XCTFail(@"The request should not fail - NSError: %@", error);
-             [expectation fulfill];
-         }];
+                         XCTAssertNil(outgoingRoomKeyRequest);
+
+                         [expectation fulfill];
+                     }];
+
+                 });
+
+             } failure:^(NSError * _Nonnull error) {
+                 XCTFail(@"The request should not fail - NSError: %@", error);
+                 [expectation fulfill];
+             }];
+
+        }];
     }];
 }
 

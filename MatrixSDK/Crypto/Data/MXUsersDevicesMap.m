@@ -67,6 +67,24 @@
     return _map[userId][deviceId];
 }
 
+- (NSArray<id>*)objectsForUser:(NSString*)userId
+{
+    return _map[userId].allValues;
+}
+
+- (NSArray<id>*)allObjects
+{
+    NSMutableArray *objects = [NSMutableArray array];
+
+    for (NSString *userId in _map)
+    {
+        [objects addObjectsFromArray:_map[userId].allValues];
+    }
+
+    return objects;
+}
+
+
 - (void)setObject:(id)object forUser:(NSString *)userId andDevice:(NSString *)deviceId
 {
     NSMutableDictionary *mutableMap = [NSMutableDictionary dictionaryWithDictionary:self.map];

@@ -60,6 +60,11 @@
 @property (nonatomic, readonly) MXRestClient *matrixRestClient;
 
 /**
+ Our device keys
+ */
+@property (nonatomic, readonly) MXDeviceInfo *myDevice;
+
+/**
  The queue used for almost all crypto processing.
  */
 @property (nonatomic, readonly) dispatch_queue_t cryptoQueue;

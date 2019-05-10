@@ -289,6 +289,25 @@
     }];
 }
 
+
+#pragma mark - Tools
+
+- (void)outgoingRoomKeyRequestInSession:(MXSession*)session complete:(void (^)(MXOutgoingRoomKeyRequest*))complete
+{
+    dispatch_async(session.crypto.decryptionQueue, ^{
+        MXOutgoingRoomKeyRequest *outgoingRoomKeyRequest = [session.crypto.store outgoingRoomKeyRequestWithState:MXRoomKeyRequestStateUnsent];
+        if (!outgoingRoomKeyRequest)
+        {
+            outgoingRoomKeyRequest = [session.crypto.store outgoingRoomKeyRequestWithState:MXRoomKeyRequestStateSent];
+        }
+
+        dispatch_async(dispatch_get_main_queue(), ^{
+            complete(outgoingRoomKeyRequest);
+        });
+    });
+}
+
+
 @end
 
 #endif // MX_CRYPTO
