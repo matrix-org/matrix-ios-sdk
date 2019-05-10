@@ -1,3 +1,12 @@
+Changes in Matrix iOS SDK in 0.12.x (2019-xx-xx)
+===============================================
+
+Improvements:
+ * MXHTTPClient: support multiple SSL pinning modes (none/public key/certificate)
+
+Bug Fix:
+ *
+
 Changes in Matrix iOS SDK in 0.12.5 (2019-05-03)
 ===============================================
 

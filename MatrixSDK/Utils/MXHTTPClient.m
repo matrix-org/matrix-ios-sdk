@@ -571,6 +571,24 @@ NSString* const kMXHTTPClientUserConsentNotGivenErrorNotificationConsentURIKey =
 
 - (void)setPinnedCertificates:(NSSet<NSData *> *)pinnedCertificates
 {
+    [self setPinnedCertificates:pinnedCertificates withPinningMode:MXHTTPClientSSLPinningModeCertificate];
+}
+
+- (void)setPinnedCertificates:(NSSet<NSData *> *)pinnedCertificates withPinningMode:(MXHTTPClientSSLPinningMode)pinningMode
+{
+    AFSSLPinningMode mode = AFSSLPinningModeNone;
+    switch (pinningMode) {
+        case MXHTTPClientSSLPinningModePublicKey:
+            mode = AFSSLPinningModePublicKey;
+            break;
+        case MXHTTPClientSSLPinningModeCertificate:
+            mode = AFSSLPinningModeCertificate;
+            break;
+            
+        default:
+            break;
+    }
+    
     _pinnedCertificates = pinnedCertificates;
     
     if (!pinnedCertificates.count)
@@ -579,7 +597,7 @@ NSString* const kMXHTTPClientUserConsentNotGivenErrorNotificationConsentURIKey =
         return;
     }
     
-    httpManager.securityPolicy = [AFSecurityPolicy policyWithPinningMode:AFSSLPinningModeCertificate withPinnedCertificates:pinnedCertificates];
+    httpManager.securityPolicy = [AFSecurityPolicy policyWithPinningMode:mode withPinnedCertificates:pinnedCertificates];
 }
 
 - (NSSet<NSString *> *)acceptableContentTypes
