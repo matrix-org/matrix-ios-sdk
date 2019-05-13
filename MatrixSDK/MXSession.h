@@ -33,6 +33,7 @@
 #import "MXGroup.h"
 #import "MXError.h"
 #import "MXScanManager.h"
+#import "MXAggregations.h"
 
 /**
  `MXSessionState` represents the states in the life cycle of a MXSession instance.
@@ -424,6 +425,11 @@ FOUNDATION_EXPORT NSString *const kMXSessionNoRoomTag;
  Nil if `antivirusServerURL` is nil.
  */
 @property (nonatomic, readonly) MXScanManager *scanManager;
+
+/**
+ The module that manages aggregations (reactions, edition, ...).
+ */
+@property (nonatomic, readonly) MXAggregations *aggregations;
 
 #pragma mark - Class methods
 

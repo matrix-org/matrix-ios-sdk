@@ -24,6 +24,10 @@
 #import "MXEventAnnotationChunk.h"
 #import "MXEventAnnotation.h"
 
+// Do not bother with retain cycles warnings in tests
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Warc-retain-cycles"
+
 @interface MXReactionTests : XCTestCase
 {
     MatrixSDKTestsData *matrixSDKTestsData;
@@ -52,7 +56,7 @@
 
         [room sendTextMessage:@"Hello" success:^(NSString *eventId) {
 
-            [room sendReactionToEvent:eventId reaction:@"👍" success:^(NSString *reactionEventId) {
+            [mxSession.aggregations sendReactionToEvent:eventId inRoom:room.roomId reaction:@"👍" success:^(NSString *reactionEventId) {
 
                 readyToTest(mxSession, room, expectation, eventId, reactionEventId);
 
@@ -78,7 +82,7 @@
         [room sendTextMessage:@"Hello" success:^(NSString *eventId) {
 
             // - React on it
-            [room sendReactionToEvent:eventId reaction:@"👍" success:^(NSString *eventId) {
+            [mxSession.aggregations sendReactionToEvent:eventId inRoom:room.roomId reaction:@"👍" success:^(NSString *eventId) {
                 XCTAssertNotNil(eventId);
             } failure:^(NSError *error) {
                 XCTFail(@"The operation should not fail - NSError: %@", error);
@@ -105,28 +109,35 @@
     }];
 }
 
-// - Run the scenario
+// - Run the initial condition scenario
 // - Do an initial sync
-// -> The aggregated reactions count must be right
-- (void)testAggregationFromInitialSync
+// -> Data from aggregations must be right
+- (void)testAggregationsFromInitialSync
 {
-    // - Run the scenario
+    // - Run the initial condition scenario
     [self createScenario:^(MXSession *mxSession, MXRoom *room, XCTestExpectation *expectation, NSString *eventId, NSString *reactionEventId) {
 
+        MXRestClient *restClient = mxSession.matrixRestClient;
+
+        [mxSession close];
+        mxSession = nil;
+
         // - Do an initial sync
-        [matrixSDKTestsData relogUserSession:mxSession withPassword:MXTESTS_BOB_PWD onComplete:^(MXSession *newSession) {
+        mxSession = [[MXSession alloc] initWithMatrixRestClient:restClient];
+        [mxSession setStore:[[MXMemoryStore alloc] init] success:^{
 
-            [newSession eventWithEventId:eventId inRoom:room.roomId success:^(MXEvent *event) {
+            [mxSession start:^{
 
-                // -> The aggregated reactions count must be right
-                XCTAssertNotNil(event.unsignedData.relations.annotation);
+                // -> Data from aggregations must be right
+                NSArray<MXReactionCount*> *reactions = [mxSession.aggregations reactionsOnEvent:eventId inRoom:room.roomId];
 
-                XCTAssertEqual(event.unsignedData.relations.annotation.chunk.count, 1);
+                XCTAssertNotNil(reactions);
+                XCTAssertEqual(reactions.count, 1);
 
-                MXEventAnnotation *annotation = event.unsignedData.relations.annotation.chunk.firstObject;
-                XCTAssertEqualObjects(annotation.type, MXEventAnnotationReaction);
-                XCTAssertEqualObjects(annotation.key, @"👍");
-                XCTAssertEqual(annotation.count, 1);
+                MXReactionCount *reactionCount = reactions.firstObject;
+                XCTAssertEqualObjects(reactionCount.reaction, @"👍");
+                XCTAssertEqual(reactionCount.count, 1);
+                XCTAssertTrue(reactionCount.myUserHasReacted);
 
                 [expectation fulfill];
 
@@ -134,8 +145,14 @@
                 XCTFail(@"Cannot set up intial test conditions - error: %@", error);
                 [expectation fulfill];
             }];
+
+        } failure:^(NSError *error) {
+            XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+            [expectation fulfill];
         }];
     }];
 }
 
 @end
+
+#pragma clang diagnostic pop

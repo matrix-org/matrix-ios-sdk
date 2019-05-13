@@ -42,6 +42,8 @@
 
 #import "MXScanManager.h"
 
+#import "MXAggregations_Private.h"
+
 #pragma mark - Constants definitions
 
 const NSString *MatrixSDKVersion = @"0.12.5";
@@ -292,6 +294,8 @@ typedef void (^MXOnResumeDone)(void);
         {
             return;
         }
+
+        self->_aggregations = [[MXAggregations alloc] initWithMatrixSession:self];
 
         // Check if the user has enabled crypto
         MXWeakify(self);
