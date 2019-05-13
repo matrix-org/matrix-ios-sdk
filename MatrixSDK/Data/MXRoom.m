@@ -2230,9 +2230,10 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
                                                     inRoom:_roomId
                                               relationType:MXEventRelationTypeAnnotation
                                                  eventType:kMXEventTypeStringReaction
-                                                   content:@{
+                                                parameters:@{
                                                              @"key": reaction
                                                              }
+                                                   content:@{}
                                                    success:success failure:failure];
 }
 

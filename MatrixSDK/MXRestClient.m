@@ -4975,6 +4975,7 @@ MXAuthAction;
                                  inRoom:(NSString*)roomId
                            relationType:(NSString*)relationType
                               eventType:(NSString*)eventType
+                             parameters:(NSDictionary*)parameters
                                 content:(NSDictionary*)content
                                 success:(void (^)(NSString *eventId))success
                                 failure:(void (^)(NSError *error))failure
@@ -4983,13 +4984,37 @@ MXAuthAction;
     NSString *txnId = [MXTools generateTransactionId];
 
     // Prepare the path
-    NSString *path = [NSString stringWithFormat:@"%@/rooms/%@/send_relation/%@/%@/%@/%@",
-                      kMXAPIPrefixPathUnstable,    // TODO: use apiPathPrefix
-                      roomId,
-                      [MXTools encodeURIComponent:eventId],
-                      relationType,
-                      eventType,
-                      [MXTools encodeURIComponent:txnId]];
+    NSMutableString *path = [NSMutableString stringWithFormat:@"%@/rooms/%@/send_relation/%@/%@/%@/%@",
+                             kMXAPIPrefixPathUnstable,    // TODO: use apiPathPrefix
+                             roomId,
+                             [MXTools encodeURIComponent:eventId],
+                             relationType,
+                             eventType,
+                             [MXTools encodeURIComponent:txnId]];
+
+    // Serialise query parameters
+    if (parameters)
+    {
+        NSMutableString *queryParameters;
+        for (NSString *key in parameters)
+        {
+            NSString *value = [MXTools encodeURIComponent:parameters[key]];
+
+            if (!queryParameters)
+            {
+                queryParameters = [NSMutableString stringWithFormat:@"?%@=%@", key, value];
+            }
+            else
+            {
+                [queryParameters appendFormat:@"&%@=%@", key, value];
+            }
+        }
+
+        if (queryParameters)
+        {
+            [path appendString:queryParameters];
+        }
+    }
 
     MXWeakify(self);
     return [httpClient requestWithMethod:@"PUT"
