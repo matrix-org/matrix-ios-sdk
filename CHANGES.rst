@@ -3,6 +3,7 @@ Changes in Matrix iOS SDK in 0.12.6 (2019-05-)
 
 Improvements:
 * MXEvent: Create a MXEventUnsignedData model for `MXEvent.unsignedData`.
+* MXEvent: Add relatesTo property.
 
 Changes in Matrix iOS SDK in 0.12.5 (2019-05-03)
 ===============================================

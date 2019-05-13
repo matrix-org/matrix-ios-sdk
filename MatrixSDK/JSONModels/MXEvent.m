@@ -20,7 +20,6 @@
 #import "MXTools.h"
 #import "MXEventDecryptionResult.h"
 #import "MXEncryptedContentFile.h"
-#import "MXEventUnsignedData.h"
 
 #pragma mark - Constants definitions
 
@@ -282,6 +281,16 @@ NSString *const kMXEventIdentifierKey = @"kMXEventIdentifierKey";
 - (NSArray<MXEvent *> *)inviteRoomState
 {
     return _inviteRoomState ? _inviteRoomState : _unsignedData.inviteRoomState;
+}
+
+- (MXEventContentRelatesTo *)relatesTo
+{
+    MXEventContentRelatesTo *relatesTo;
+    if (self.content[@"m.relates_to"])
+    {
+        MXJSONModelSetMXJSONModel(relatesTo, MXEventContentRelatesTo, self.content[@"m.relates_to"])
+    }
+    return relatesTo;
 }
 
 - (NSDictionary *)JSONDictionary

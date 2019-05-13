@@ -17,7 +17,10 @@
 
 #import "MXJSONModel.h"
 
-@class MXEventDecryptionResult, MXEncryptedContentFile, MXEventUnsignedData;
+#import "MXEventUnsignedData.h"
+#import "MXEventContentRelatesTo.h"
+
+@class MXEventDecryptionResult, MXEncryptedContentFile;
 
 /**
  Types of Matrix events
@@ -356,6 +359,11 @@ extern NSString *const kMXEventIdentifierKey;
  In case of invite event, inviteRoomState contains a subset of the state of the room at the time of the invite.
  */
 @property (nonatomic) NSArray<MXEvent *> *inviteRoomState;
+
+/**
+ If the event relates to another one, some data about the relation.
+ */
+@property (nonatomic) MXEventContentRelatesTo *relatesTo;
 
 /**
  In case of sending failure (MXEventSentStateFailed), the error that occured.
