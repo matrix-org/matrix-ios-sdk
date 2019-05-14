@@ -39,7 +39,7 @@
         MXJSONModelSetString(unsignedData->_prevSender, JSONDictionary[@"prev_sender"]);
         MXJSONModelSetDictionary(unsignedData->_prevContent, JSONDictionary[@"prev_content"]);
         MXJSONModelSetDictionary(unsignedData->_redactedBecause, JSONDictionary[@"redacted_because"]);
-        MXJSONModelSetDictionary(unsignedData->_transactionId, JSONDictionary[@"transaction_id"]);
+        MXJSONModelSetString(unsignedData->_transactionId, JSONDictionary[@"transaction_id"]);
         MXJSONModelSetDictionary(unsignedData->_inviteRoomState, JSONDictionary[@"invite_room_state"]);
         MXJSONModelSetMXJSONModel(unsignedData->_relations, MXEventRelations, JSONDictionary[@"m.relations"]);
     }
