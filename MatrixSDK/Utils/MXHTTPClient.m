@@ -577,7 +577,8 @@ NSString* const kMXHTTPClientUserConsentNotGivenErrorNotificationConsentURIKey =
 - (void)setPinnedCertificates:(NSSet<NSData *> *)pinnedCertificates withPinningMode:(MXHTTPClientSSLPinningMode)pinningMode
 {
     AFSSLPinningMode mode = AFSSLPinningModeNone;
-    switch (pinningMode) {
+    switch (pinningMode)
+    {
         case MXHTTPClientSSLPinningModePublicKey:
             mode = AFSSLPinningModePublicKey;
             break;
