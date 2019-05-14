@@ -56,7 +56,7 @@
 
         [room sendTextMessage:@"Hello" success:^(NSString *eventId) {
 
-            [mxSession.aggregations sendReactionToEvent:eventId inRoom:room.roomId reaction:@"👍" success:^(NSString *reactionEventId) {
+            [mxSession.aggregations sendReaction:@"👍" toEvent:eventId inRoom:room.roomId success:^(NSString *reactionEventId) {
 
                 readyToTest(mxSession, room, expectation, eventId, reactionEventId);
 
@@ -82,7 +82,7 @@
         [room sendTextMessage:@"Hello" success:^(NSString *eventId) {
 
             // - React on it
-            [mxSession.aggregations sendReactionToEvent:eventId inRoom:room.roomId reaction:@"👍" success:^(NSString *eventId) {
+            [mxSession.aggregations sendReaction:@"👍" toEvent:eventId inRoom:room.roomId success:^(NSString *eventId) {
                 XCTAssertNotNil(eventId);
             } failure:^(NSError *error) {
                 XCTFail(@"The operation should not fail - NSError: %@", error);

@@ -39,11 +39,11 @@
 
 #pragma mark - Reactions
 
-- (MXHTTPOperation*)sendReactionToEvent:(NSString*)eventId
-                                 inRoom:(NSString*)roomId
-                               reaction:(NSString*)reaction
-                                success:(void (^)(NSString *eventId))success
-                                failure:(void (^)(NSError *error))failure;
+- (MXHTTPOperation*)sendReaction:(NSString*)reaction
+                         toEvent:(NSString*)eventId
+                          inRoom:(NSString*)roomId
+                         success:(void (^)(NSString *eventId))success
+                         failure:(void (^)(NSError *error))failure
 {
     return [self.restClient sendRelationToEvent:eventId
                                          inRoom:roomId

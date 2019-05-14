@@ -19,7 +19,7 @@ import MatrixSDK
 
 class MXEventAnnotationTests: XCTestCase {
 
-    let eventJSON = [
+    let eventJSON: [String : Any] = [
         "event_id": "$eventId",
         "type": "m.room.message",
         "origin_server_ts": 0,
@@ -38,7 +38,7 @@ class MXEventAnnotationTests: XCTestCase {
                 ],
             ]
         ]
-        ] as [String : AnyObject]
+        ]
 
     override func setUp() {
     }
@@ -63,10 +63,13 @@ class MXEventAnnotationTests: XCTestCase {
     func testJSONDictionary() {
         let event = MXEvent(fromJSON: eventJSON)
 
-        let jsonDictionary = event?.jsonDictionary() as! [String : AnyObject]
+        let jsonDictionary = event?.jsonDictionary() as? [String : AnyObject]
         XCTAssertNotNil(jsonDictionary)
 
-        XCTAssertTrue(NSDictionary(dictionary: jsonDictionary).isEqual(to: eventJSON), "JSON are different:\n\(jsonDictionary)\nvs\n\(eventJSON)")
+        if let jsonDictionary = jsonDictionary {
+            XCTAssertTrue(NSDictionary(dictionary: jsonDictionary).isEqual(to: eventJSON), "JSON are different:\n\(jsonDictionary)\nvs\n\(eventJSON)")
+
+        }
     }
 
     @available(iOS 9.0, *)

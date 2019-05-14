@@ -32,9 +32,9 @@ NS_ASSUME_NONNULL_BEGIN
 /**
  Send a reaction to an event in a room.
 
+ @param reaction the reaction.
  @param eventId the id of the event.
  @param roomId the id of the room.
- @param reaction the reaction.
 
  @param success A block object called when the operation succeeds. It returns
                 the event id of the event generated on the homeserver.
@@ -42,11 +42,11 @@ NS_ASSUME_NONNULL_BEGIN
 
  @return a MXHTTPOperation instance.
  */
-- (MXHTTPOperation*)sendReactionToEvent:(NSString*)eventId
-                                 inRoom:(NSString*)roomId
-                               reaction:(NSString*)reaction
-                                success:(void (^)(NSString *eventId))success
-                                failure:(void (^)(NSError *error))failure;
+- (MXHTTPOperation*)sendReaction:(NSString*)reaction
+                         toEvent:(NSString*)eventId
+                          inRoom:(NSString*)roomId
+                         success:(void (^)(NSString *eventId))success
+                         failure:(void (^)(NSError *error))failure;
 
 /**
  Returns the aggregated reactions counts.
