@@ -153,6 +153,28 @@
     }];
 }
 
+// - Run the initial condition scenario
+// -> Data from aggregations must be right
+- (void)testAggregationsLive
+{
+    // - Run the initial condition scenario
+    [self createScenario:^(MXSession *mxSession, MXRoom *room, XCTestExpectation *expectation, NSString *eventId, NSString *reactionEventId) {
+
+        // -> Data from aggregations must be right
+        NSArray<MXReactionCount*> *reactions = [mxSession.aggregations reactionsOnEvent:eventId inRoom:room.roomId];
+
+        XCTAssertNotNil(reactions);
+        XCTAssertEqual(reactions.count, 1);
+
+        MXReactionCount *reactionCount = reactions.firstObject;
+        XCTAssertEqualObjects(reactionCount.reaction, @"👍");
+        XCTAssertEqual(reactionCount.count, 1);
+        XCTAssertTrue(reactionCount.myUserHasReacted);
+
+        [expectation fulfill];
+    }];
+}
+
 @end
 
 #pragma clang diagnostic pop

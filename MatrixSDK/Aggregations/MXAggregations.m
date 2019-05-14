@@ -60,6 +60,7 @@
 {
     NSMutableArray *reactions;
 
+    // TODO: change that to use a separate dedicated store where data is aggregated
     MXEvent *event = [self.store eventWithEventId:eventId inRoom:roomId];
     if (event)
     {
@@ -106,7 +107,7 @@
 
 - (void)handleReaction:(MXEvent *)event
 {
-
+    // TODO: but need a dedicated store
 }
 
 
