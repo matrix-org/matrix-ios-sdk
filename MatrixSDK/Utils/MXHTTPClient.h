@@ -43,6 +43,24 @@ FOUNDATION_EXPORT NSString* const kMXHTTPClientUserConsentNotGivenErrorNotificat
 typedef BOOL (^MXHTTPClientOnUnrecognizedCertificate)(NSData *certificate);
 
 /**
+ SSL Pinning mode
+ */
+typedef NS_ENUM(NSUInteger, MXHTTPClientSSLPinningMode) {
+    /**
+     Do not used pinned certificates to validate servers.
+     */
+    MXHTTPClientSSLPinningModeNone,
+    /**
+     Validate host certificates against public keys of pinned certificates.
+     */
+    MXHTTPClientSSLPinningModePublicKey,
+    /**
+     Validate host certificates against pinned certificates.
+     */
+    MXHTTPClientSSLPinningModeCertificate,
+};
+
+/**
  `MXHTTPClient` is an abstraction layer for making requests to a HTTP server.
 
 */
@@ -165,8 +183,16 @@ typedef BOOL (^MXHTTPClientOnUnrecognizedCertificate)(NSData *certificate);
 + (NSUInteger)timeForRetry:(MXHTTPOperation*)httpOperation;
 
 /**
- The certificates used to evaluate server trust according to the SSL pinning mode.
+ The certificates used to evaluate server trust according to the SSL pinning mode (MXHTTPClientSSLPinningModeCertificate by default).
  */
-@property (nonatomic, strong) NSSet <NSData *> *pinnedCertificates;
+@property (nonatomic, strong) NSSet<NSData *> *pinnedCertificates;
+
+/**
+ Set the certificates used to evaluate server trust and the SSL pinning mode.
+ 
+ @param pinnedCertificates The certificates to pin against.
+ @param pinningMode The SSL pinning mode.
+ */
+- (void)setPinnedCertificates:(NSSet<NSData *> *)pinnedCertificates withPinningMode:(MXHTTPClientSSLPinningMode)pinningMode;
 
 @end
