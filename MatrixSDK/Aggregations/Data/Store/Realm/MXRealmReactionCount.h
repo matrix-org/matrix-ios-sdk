@@ -14,20 +14,28 @@
  limitations under the License.
  */
 
+#import <Realm/Realm.h>
+
 #import <Foundation/Foundation.h>
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface MXReactionCount : NSObject
 
+/**
+ `MXRealmReactionCount` is a Realm representation of `MXReactionCount`.
+ */
+@interface MXRealmReactionCount : RLMObject
+
+@property NSString *eventId;
+@property NSString *roomId;
 @property (nonatomic) NSString *reaction;
-@property (nonatomic) NSUInteger count;
+@property (nonatomic) NSInteger count;
+@property (nonatomic) NSString *myUserReactionEventId;
 
-// The id of the event if our user has made this reaction
-@property (nonatomic, nullable) NSString *myUserReactionEventId;
+// We need a primary key to use [RLMRealm addOrUpdateObject]
+@property (nonatomic) NSString *primaryKey;
 
-// YES if our user has made this reaction
-@property (nonatomic, readonly) BOOL myUserHasReacted;
++ (NSString*)primaryKeyFromEventId:(NSString*)eventId andReaction:(NSString*)reaction;
 
 @end
 

@@ -16,18 +16,19 @@
 
 #import <Foundation/Foundation.h>
 
+#import "MXReactionCount.h"
+#import "MXRealmReactionCount.h"
+
 NS_ASSUME_NONNULL_BEGIN
 
-@interface MXReactionCount : NSObject
 
-@property (nonatomic) NSString *reaction;
-@property (nonatomic) NSUInteger count;
+/**
+  `MXRealmAggregationsMapper` is used to convert `MXRealmReactionCount` into `MXReactionCount` and vice versa.
+ */
+@interface MXRealmAggregationsMapper : NSObject
 
-// The id of the event if our user has made this reaction
-@property (nonatomic, nullable) NSString *myUserReactionEventId;
-
-// YES if our user has made this reaction
-@property (nonatomic, readonly) BOOL myUserHasReacted;
+- (MXReactionCount*)reactionCountFromRealmReactionCount:(MXRealmReactionCount*)realmReactionCount;
+- (MXRealmReactionCount*)realmReactionCountFromReactionCount:(MXReactionCount*)reactionCount onEvent:(NSString*)eventId inRoomd:(NSString*)roomId;
 
 @end
 

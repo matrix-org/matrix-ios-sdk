@@ -58,7 +58,10 @@
 
             [mxSession.aggregations sendReaction:@"👍" toEvent:eventId inRoom:room.roomId success:^(NSString *reactionEventId) {
 
-                readyToTest(mxSession, room, expectation, eventId, reactionEventId);
+                // TODO: sendReaction should return only when the actual reaction event comes back the sync
+                dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 1 * NSEC_PER_SEC), dispatch_get_main_queue(), ^{
+                    readyToTest(mxSession, room, expectation, eventId, reactionEventId);
+                });
 
             } failure:^(NSError *error) {
                 XCTFail(@"Cannot set up intial test conditions - error: %@", error);
@@ -119,6 +122,7 @@
 
         MXRestClient *restClient = mxSession.matrixRestClient;
 
+        [mxSession.aggregations resetData];
         [mxSession close];
         mxSession = nil;
 

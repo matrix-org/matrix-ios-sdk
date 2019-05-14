@@ -18,4 +18,9 @@
 
 @implementation MXReactionCount
 
+- (BOOL)myUserHasReacted
+{
+    return (_myUserReactionEventId != nil);
+}
+
 @end

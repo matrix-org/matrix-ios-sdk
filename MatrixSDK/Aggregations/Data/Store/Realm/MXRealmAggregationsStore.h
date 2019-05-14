@@ -16,18 +16,11 @@
 
 #import <Foundation/Foundation.h>
 
+#import "MXAggregationsStore.h"
+
 NS_ASSUME_NONNULL_BEGIN
 
-@interface MXReactionCount : NSObject
-
-@property (nonatomic) NSString *reaction;
-@property (nonatomic) NSUInteger count;
-
-// The id of the event if our user has made this reaction
-@property (nonatomic, nullable) NSString *myUserReactionEventId;
-
-// YES if our user has made this reaction
-@property (nonatomic, readonly) BOOL myUserHasReacted;
+@interface MXRealmAggregationsStore : NSObject <MXAggregationsStore>
 
 @end
 

@@ -24,11 +24,14 @@
 #import "MXEventAnnotationChunk.h"
 #import "MXEventAnnotation.h"
 
+#import "MXRealmAggregationsStore.h"
+
 
 @interface MXAggregations ()
 
 @property (nonatomic, weak) MXRestClient *restClient;
-@property (nonatomic, weak) id<MXStore> store;
+@property (nonatomic, weak) id<MXStore> matrixStore;
+@property (nonatomic) id<MXAggregationsStore> store;
 
 @end
 
@@ -45,6 +48,7 @@
                          success:(void (^)(NSString *eventId))success
                          failure:(void (^)(NSError *error))failure
 {
+    // TODO: sendReaction should return only when the actual reaction event comes back the sync
     return [self.restClient sendRelationToEvent:eventId
                                          inRoom:roomId
                                    relationType:MXEventRelationTypeAnnotation
@@ -58,13 +62,117 @@
 
 - (nullable NSArray<MXReactionCount*> *)reactionsOnEvent:(NSString *)eventId inRoom:(NSString *)roomId
 {
+    NSArray<MXReactionCount*> *reactions = [self.store reactionCountsOnEvent:eventId];
+
+    if (!reactions)
+    {
+        reactions = [self reactionCountsFromMatrixStoreOnEvent:eventId inRoom:roomId];
+    }
+
+    return reactions;
+}
+
+
+#pragma mark - SDK-Private methods -
+
+- (instancetype)initWithMatrixSession:(MXSession *)mxSession
+{
+    self = [super init];
+    if (self)
+    {
+        self.restClient = mxSession.matrixRestClient;
+        self.matrixStore = mxSession.store;
+        self.store = [[MXRealmAggregationsStore alloc] initWithCredentials:mxSession.matrixRestClient.credentials];
+
+        [mxSession listenToEventsOfTypes:@[kMXEventTypeStringReaction] onEvent:^(MXEvent *event, MXTimelineDirection direction, id customObject) {
+
+            if (direction == MXTimelineDirectionForwards)
+            {
+                [self handleReaction:event];
+            }
+        }];
+    }
+
+    return self;
+}
+
+- (void)resetData
+{
+    [self.store deleteAll];
+}
+
+
+#pragma mark - Private methods -
+
+- (void)handleReaction:(MXEvent *)event
+{
+    NSString *parentEventId = event.relatesTo.eventId;
+    NSString *reaction = event.relatesTo.key;
+
+    if (parentEventId && reaction)
+    {
+        [self addReaction:reaction toEvent:parentEventId reactionEvent:event];
+    }
+    else
+    {
+        NSLog(@"[MXAggregations] handleReaction: ERROR: invalid reaction event: %@", event);
+    }
+}
+
+- (void)addReaction:(NSString*)reaction toEvent:(NSString*)eventId reactionEvent:(MXEvent *)reactionEvent
+{
+    // Update the current reaction count if it exists
+    MXReactionCount *reactionCount = [self.store reactionCountForReaction:reaction onEvent:eventId];
+
+    if (!reactionCount)
+    {
+        if ([self.store hasReactionCountsOnEvent:eventId])
+        {
+            // Else, if the aggregations store has already reaction on the event, create a new reaction count object
+            reactionCount = [MXReactionCount new];
+            reactionCount.reaction = reaction;
+        }
+        else
+        {
+            // Else, this is maybe the data is not yet transferred from the default matrix store to
+            // the aggregation store.
+            // Do the import
+            NSArray<MXReactionCount*> *reactions = [self reactionCountsFromMatrixStoreOnEvent:eventId inRoom:reactionEvent.roomId];
+            if (reactions)
+            {
+                [self.store setReactionCounts:reactions onEvent:eventId inRoom:reactionEvent.eventId];
+            }
+
+            reactionCount = [self.store reactionCountForReaction:reaction onEvent:eventId];
+            if (!reactionCount)
+            {
+                // If we still have no reaction count object, create one
+                reactionCount = [MXReactionCount new];
+                reactionCount.reaction = reaction;
+            }
+        }
+    }
+
+    // Add the reaction
+    reactionCount.count++;
+
+    // Store reaction made by our user
+    if ([reactionEvent.sender isEqualToString:self.restClient.credentials.userId])
+    {
+        reactionCount.myUserReactionEventId = reactionEvent.eventId;
+    }
+
+    [self.store addOrUpdateReactionCount:reactionCount onEvent:eventId inRoom:reactionEvent.roomId];
+}
+
+- (nullable NSArray<MXReactionCount*> *)reactionCountsFromMatrixStoreOnEvent:(NSString*)eventId inRoom:(NSString*)roomId
+{
     NSMutableArray *reactions;
 
-    // TODO: change that to use a separate dedicated store where data is aggregated
-    MXEvent *event = [self.store eventWithEventId:eventId inRoom:roomId];
+    MXEvent *event = [self.matrixStore eventWithEventId:eventId inRoom:roomId];
     if (event)
     {
-        reactions = [NSMutableArray array];
+        NSMutableArray *reactions = [NSMutableArray array];
 
         for (MXEventAnnotation *annotation in event.unsignedData.relations.annotation.chunk)
         {
@@ -81,34 +189,5 @@
 
     return reactions;
 }
-
-
-#pragma mark - SDK-Private methods -
-
-- (instancetype)initWithMatrixSession:(MXSession *)mxSession
-{
-    self = [super init];
-    if (self)
-    {
-        self.restClient = mxSession.matrixRestClient;
-        self.store = mxSession.store;
-
-        [mxSession listenToEventsOfTypes:@[kMXEventTypeStringReaction] onEvent:^(MXEvent *event, MXTimelineDirection direction, id customObject) {
-
-            if (direction == MXTimelineDirectionForwards)
-            {
-                [self handleReaction:event];
-            }
-        }];
-    }
-
-    return self;
-}
-
-- (void)handleReaction:(MXEvent *)event
-{
-    // TODO: but need a dedicated store
-}
-
 
 @end

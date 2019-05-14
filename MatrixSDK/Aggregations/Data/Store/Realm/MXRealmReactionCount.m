@@ -14,21 +14,18 @@
  limitations under the License.
  */
 
-#import <Foundation/Foundation.h>
+#import "MXRealmReactionCount.h"
 
-NS_ASSUME_NONNULL_BEGIN
+@implementation MXRealmReactionCount
 
-@interface MXReactionCount : NSObject
++ (NSString *)primaryKey
+{
+    return @"primaryKey";
+}
 
-@property (nonatomic) NSString *reaction;
-@property (nonatomic) NSUInteger count;
-
-// The id of the event if our user has made this reaction
-@property (nonatomic, nullable) NSString *myUserReactionEventId;
-
-// YES if our user has made this reaction
-@property (nonatomic, readonly) BOOL myUserHasReacted;
++ (NSString *)primaryKeyFromEventId:(NSString *)eventId andReaction:(NSString *)reaction
+{
+    return [NSString stringWithFormat:@"%@_%@", eventId, reaction];
+}
 
 @end
-
-NS_ASSUME_NONNULL_END

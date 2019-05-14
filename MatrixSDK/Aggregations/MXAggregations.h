@@ -57,6 +57,13 @@ NS_ASSUME_NONNULL_BEGIN
  */
 - (nullable NSArray<MXReactionCount*> *)reactionsOnEvent:(NSString*)eventId inRoom:(NSString*)roomId;
 
+/**
+ Clear cached data.
+
+ Note: An initial sync is then required to get valid data.
+ */
+- (void)resetData;
+
 @end
 
 NS_ASSUME_NONNULL_END
