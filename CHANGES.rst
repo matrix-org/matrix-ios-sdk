@@ -1,11 +1,11 @@
-Changes in Matrix iOS SDK in 0.12.x (2019-xx-xx)
+Changes in Matrix iOS SDK in 0.12.6 (2019-05-)
 ===============================================
 
 Improvements:
  * MXHTTPClient: support multiple SSL pinning modes (none/public key/certificate)
-
-Bug Fix:
- *
+ * MXEvent: Create a MXEventUnsignedData model for `MXEvent.unsignedData`.
+ * MXEvent: Add relatesTo property.
+ * Aggregations: Create MXSession.MXAggregations to manage Matrix aggregations API.
 
 Changes in Matrix iOS SDK in 0.12.5 (2019-05-03)
 ===============================================

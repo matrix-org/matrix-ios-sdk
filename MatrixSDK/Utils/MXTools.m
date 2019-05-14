@@ -94,6 +94,7 @@ NSCharacterSet *uriComponentCharset;
                                 kMXEventTypeStringRoomTag,
                                 kMXEventTypeStringPresence,
                                 kMXEventTypeStringTypingNotification,
+                                kMXEventTypeStringReaction,
                                 kMXEventTypeStringReceipt,
                                 kMXEventTypeStringRead,
                                 kMXEventTypeStringReadMarker,

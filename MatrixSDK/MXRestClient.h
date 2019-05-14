@@ -36,6 +36,7 @@
 #import "MXContentScanResult.h"
 #import "MXEncryptedContentFile.h"
 #import "MXContentScanEncryptedBody.h"
+#import "MXAggregationPaginatedResponse.h"
 
 #pragma mark - Constants definitions
 /**
@@ -2518,5 +2519,59 @@ FOUNDATION_EXPORT NSString *const kMXMembersOfRoomParametersNotMembership;
 - (MXHTTPOperation*)getPublicisedGroupsForUsers:(NSArray<NSString*>*)userIds
                                         success:(void (^)(NSDictionary<NSString*, NSArray<NSString*>*> *publicisedGroupsByUserId))success
                                         failure:(void (^)(NSError *error))failure;
+
+
+#pragma mark - Aggregations
+
+/**
+ Send a relation to an event.
+
+ @param eventId the id of the parent event.
+ @param roomId the id of the room.
+ @param relationType the type of relation (@see MXEventRelationTypeAnnotation and siblings).
+ @param eventType event type of the message.
+ @param parameters (optional) query parameters.
+ @param content (optional) the message content.
+
+ @param success A block object called when the operation succeeds. It returns
+                the event id of the event generated on the homeserver.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)sendRelationToEvent:(NSString*)eventId
+                                 inRoom:(NSString*)roomId
+                           relationType:(NSString*)relationType
+                              eventType:(NSString*)eventType
+                             parameters:(NSDictionary*)parameters
+                                content:(NSDictionary*)content
+                                success:(void (^)(NSString *eventId))success
+                                failure:(void (^)(NSError *error))failure;
+
+/**
+ Get a list of aggregated relations associated to an event.
+
+ @param eventId the id of the event,
+ @param roomId the id of the room.
+ @param relationType (optional) the type of relation.
+ @param eventType (optional) event type to filter by.
+ @param from the token to start getting results from.
+ @param direction `MXTimelineDirectionForwards` or `MXTimelineDirectionBackwards`
+ @param limit (optional, use -1 to not defined this value) the maximum number of messages to return.
+
+ @param success A block object called when the operation succeeds. It provides a `MXAggregationPaginatedResponse` object.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)aggregationsForEvent:(NSString*)eventId
+                                  inRoom:(NSString*)roomId
+                            relationType:(NSString*)relationType
+                               eventType:(NSString*)eventType
+                                    from:(NSString*)from
+                               direction:(MXTimelineDirection)direction
+                                   limit:(NSUInteger)limit
+                                 success:(void (^)(MXAggregationPaginatedResponse *paginatedResponse))success
+                                 failure:(void (^)(NSError *error))failure;
 
 @end
