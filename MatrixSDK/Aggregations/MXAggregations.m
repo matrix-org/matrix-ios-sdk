@@ -72,6 +72,11 @@
     return reactions;
 }
 
+- (void)resetData
+{
+    [self.store deleteAll];
+}
+
 
 #pragma mark - SDK-Private methods -
 
@@ -96,9 +101,9 @@
     return self;
 }
 
-- (void)resetData
+- (void)resetDataInRoom:(NSString *)roomId
 {
-    [self.store deleteAll];
+    [self.store deleteAllReactionCountsInRoom:roomId];
 }
 
 
@@ -111,7 +116,12 @@
 
     if (parentEventId && reaction)
     {
-        [self addReaction:reaction toEvent:parentEventId reactionEvent:event];
+        // Manage aggregated reactions only for events in timelines we have
+        MXEvent *parentEvent = [self.matrixStore eventWithEventId:parentEventId inRoom:event.roomId];
+        if (parentEvent)
+        {
+            [self addReaction:reaction toEvent:parentEventId reactionEvent:event];
+        }
     }
     else
     {

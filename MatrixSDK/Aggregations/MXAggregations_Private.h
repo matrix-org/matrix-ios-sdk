@@ -33,6 +33,15 @@ NS_ASSUME_NONNULL_BEGIN
  */
 - (instancetype)initWithMatrixSession:(MXSession *)mxSession;
 
+/**
+ Clear cached data for a room.
+
+ Events for that rooms are no more part of our timelines.
+ Because of gappy syncs, we cannot guarantee the data is up-to-date. So, erase it.
+ We will get aggregated data again in bundled data when paginating events.
+ */
+- (void)resetDataInRoom:(NSString *)roomId;
+
 @end
 
 NS_ASSUME_NONNULL_END
