@@ -25,6 +25,7 @@
 #import "MXEventAnnotation.h"
 
 #import "MXRealmAggregationsStore.h"
+#import "MXReactionCountChangeListener.h"
 
 
 @interface MXAggregations ()
@@ -32,6 +33,7 @@
 @property (nonatomic, weak) MXRestClient *restClient;
 @property (nonatomic, weak) id<MXStore> matrixStore;
 @property (nonatomic) id<MXAggregationsStore> store;
+@property (nonatomic) NSMutableArray<MXReactionCountChangeListener*> *listeners;
 
 @end
 
@@ -72,6 +74,22 @@
     return reactions;
 }
 
+- (id)listenToReactionCountUpdateInRoom:(NSString *)roomId block:(void (^)(NSDictionary<NSString *,MXReactionCountChange *> * _Nonnull))block
+{
+    MXReactionCountChangeListener *listener = [MXReactionCountChangeListener new];
+    listener.roomId = roomId;
+    listener.block = block;
+
+    [self.listeners addObject:listener];
+
+    return listener;
+}
+
+- (void)removeListener:(id)listener
+{
+    [self.listeners removeObject:listener];
+}
+
 - (void)resetData
 {
     [self.store deleteAll];
@@ -88,6 +106,7 @@
         self.restClient = mxSession.matrixRestClient;
         self.matrixStore = mxSession.store;
         self.store = [[MXRealmAggregationsStore alloc] initWithCredentials:mxSession.matrixRestClient.credentials];
+        self.listeners = [NSMutableArray array];
 
         [mxSession listenToEventsOfTypes:@[kMXEventTypeStringReaction] onEvent:^(MXEvent *event, MXTimelineDirection direction, id customObject) {
 
@@ -131,6 +150,8 @@
 
 - (void)addReaction:(NSString*)reaction toEvent:(NSString*)eventId reactionEvent:(MXEvent *)reactionEvent
 {
+    BOOL isANewReaction = NO;
+
     // Update the current reaction count if it exists
     MXReactionCount *reactionCount = [self.store reactionCountForReaction:reaction onEvent:eventId];
 
@@ -141,6 +162,7 @@
             // Else, if the aggregations store has already reaction on the event, create a new reaction count object
             reactionCount = [MXReactionCount new];
             reactionCount.reaction = reaction;
+            isANewReaction = YES;
         }
         else
         {
@@ -159,6 +181,7 @@
                 // If we still have no reaction count object, create one
                 reactionCount = [MXReactionCount new];
                 reactionCount.reaction = reaction;
+                isANewReaction = YES;
             }
         }
     }
@@ -172,7 +195,14 @@
         reactionCount.myUserReactionEventId = reactionEvent.eventId;
     }
 
+    // Update store
     [self.store addOrUpdateReactionCount:reactionCount onEvent:eventId inRoom:reactionEvent.roomId];
+
+    // Notify
+    [self notifyReactionCountChangeListenersOfRoom:reactionEvent.roomId
+                                             event:eventId
+                                     reactionCount:reactionCount
+                                     isNewReaction:isANewReaction];
 }
 
 - (nullable NSArray<MXReactionCount*> *)reactionCountsFromMatrixStoreOnEvent:(NSString*)eventId inRoom:(NSString*)roomId
@@ -198,6 +228,34 @@
     }
 
     return reactions;
+}
+
+- (void)notifyReactionCountChangeListenersOfRoom:(NSString*)roomId event:(NSString*)eventId reactionCount:(MXReactionCount*)reactionCount isNewReaction:(BOOL)isNewReaction
+{
+    MXReactionCountChange *reactionCountChange = [MXReactionCountChange new];
+    if (isNewReaction)
+    {
+        reactionCountChange.inserted = @[reactionCount];
+    }
+    else
+    {
+        reactionCountChange.modified = @[reactionCount];
+    }
+
+    [self notifyReactionCountChangeListenersOfRoom:roomId changes:@{
+                                                                                  eventId:reactionCountChange
+                                                                                  }];
+}
+
+- (void)notifyReactionCountChangeListenersOfRoom:(NSString*)roomId changes:(NSDictionary<NSString*, MXReactionCountChange*>*)changes
+{
+    for (MXReactionCountChangeListener *listener in self.listeners)
+    {
+        if ([listener.roomId isEqualToString:roomId])
+        {
+            listener.block(changes);
+        }
+    }
 }
 
 @end

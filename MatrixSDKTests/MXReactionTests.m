@@ -179,6 +179,42 @@
     }];
 }
 
+// - Run the initial condition scenario
+// - Add one more reaction
+// -> We must get notified about the reaction count change
+- (void)testAggregationsListener
+{
+    // - Run the initial condition scenario
+    [self createScenario:^(MXSession *mxSession, MXRoom *room, XCTestExpectation *expectation, NSString *eventId, NSString *reactionEventId) {
+
+        // -> We must get notified about the reaction count change
+        [mxSession.aggregations listenToReactionCountUpdateInRoom:room.roomId block:^(NSDictionary<NSString *,MXReactionCountChange *> * _Nonnull changes) {
+
+            XCTAssertEqual(changes.count, 1, @"Only one change");
+
+            MXReactionCountChange *change = changes[eventId];
+            XCTAssertNotNil(change);
+            XCTAssertNil(change.modified);
+            XCTAssertNil(change.deleted);
+
+            XCTAssertEqual(change.inserted.count, 1, @"Only one change");
+            MXReactionCount *reactionCount = change.inserted.firstObject;
+            XCTAssertEqualObjects(reactionCount.reaction, @"😄");
+            XCTAssertEqual(reactionCount.count, 1);
+            XCTAssertTrue(reactionCount.myUserHasReacted,);
+
+            [expectation fulfill];
+        }];
+
+        // - Add one more reaction
+        [mxSession.aggregations sendReaction:@"😄" toEvent:eventId inRoom:room.roomId success:^(NSString *eventId) {
+        } failure:^(NSError *error) {
+            XCTFail(@"The operation should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+    }];
+}
+
 @end
 
 #pragma clang diagnostic pop
