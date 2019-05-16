@@ -2,6 +2,7 @@
  Copyright 2014 OpenMarket Ltd
  Copyright 2017 Vector Creations Ltd
  Copyright 2018 New Vector Ltd
+ Copyright 2019 The Matrix.org Foundation C.I.C
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -1921,11 +1922,21 @@ FOUNDATION_EXPORT NSString *const kMXMembersOfRoomParametersNotMembership;
 
 #pragma mark - Certificates
 /**
- Set the certificates used to evaluate server trust according to the SSL pinning mode.
+ The certificates used to evaluate server trust.
+ The default SSL pinning mode is MXHTTPClientSSLPinningModeCertificate when the provided set is not empty.
+ Set an empty set or null to restore the default security policy.
 
  @param pinnedCertificates the pinned certificates.
  */
--(void)setPinnedCertificates:(NSSet <NSData *> *)pinnedCertificates;
+- (void)setPinnedCertificates:(NSSet<NSData *> *)pinnedCertificates;
+
+/**
+ Set the certificates used to evaluate server trust and the SSL pinning mode.
+ 
+ @param pinnedCertificates The certificates to pin against.
+ @param pinningMode The SSL pinning mode.
+ */
+- (void)setPinnedCertificates:(NSSet<NSData *> *)pinnedCertificates withPinningMode:(MXHTTPClientSSLPinningMode)pinningMode;
 
 
 #pragma mark - VoIP API
