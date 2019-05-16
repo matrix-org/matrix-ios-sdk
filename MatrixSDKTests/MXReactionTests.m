@@ -133,12 +133,12 @@
             [mxSession start:^{
 
                 // -> Data from aggregations must be right
-                NSArray<MXReactionCount*> *reactions = [mxSession.aggregations reactionsOnEvent:eventId inRoom:room.roomId];
+                MXAggregatedReactions *reactions = [mxSession.aggregations aggregatedReactionsOnEvent:eventId inRoom:room.roomId];
 
                 XCTAssertNotNil(reactions);
-                XCTAssertEqual(reactions.count, 1);
+                XCTAssertEqual(reactions.reactions.count, 1);
 
-                MXReactionCount *reactionCount = reactions.firstObject;
+                MXReactionCount *reactionCount = reactions.reactions.firstObject;
                 XCTAssertEqualObjects(reactionCount.reaction, @"👍");
                 XCTAssertEqual(reactionCount.count, 1);
                 XCTAssertTrue(reactionCount.myUserHasReacted);
@@ -165,12 +165,12 @@
     [self createScenario:^(MXSession *mxSession, MXRoom *room, XCTestExpectation *expectation, NSString *eventId, NSString *reactionEventId) {
 
         // -> Data from aggregations must be right
-        NSArray<MXReactionCount*> *reactions = [mxSession.aggregations reactionsOnEvent:eventId inRoom:room.roomId];
+        MXAggregatedReactions *reactions = [mxSession.aggregations aggregatedReactionsOnEvent:eventId inRoom:room.roomId];
 
-        XCTAssertNotNil(reactions);
-        XCTAssertEqual(reactions.count, 1);
+        XCTAssertNotNil(reactions.reactions);
+        XCTAssertEqual(reactions.reactions.count, 1);
 
-        MXReactionCount *reactionCount = reactions.firstObject;
+        MXReactionCount *reactionCount = reactions.reactions.firstObject;
         XCTAssertEqualObjects(reactionCount.reaction, @"👍");
         XCTAssertEqual(reactionCount.count, 1);
         XCTAssertTrue(reactionCount.myUserHasReacted);

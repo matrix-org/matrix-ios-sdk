@@ -17,6 +17,7 @@
 #import <Foundation/Foundation.h>
 
 #import "MXHTTPOperation.h"
+#import "MXAggregatedReactions.h"
 #import "MXReactionCount.h"
 #import "MXReactionCountChange.h"
 
@@ -56,7 +57,7 @@ NS_ASSUME_NONNULL_BEGIN
  @param roomId the id of the room.
  @return the top most reactions counts.
  */
-- (nullable NSArray<MXReactionCount*> *)reactionsOnEvent:(NSString*)eventId inRoom:(NSString*)roomId;
+- (nullable MXAggregatedReactions *)aggregatedReactionsOnEvent:(NSString*)eventId inRoom:(NSString*)roomId;
 
 
 /**
