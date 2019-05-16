@@ -78,7 +78,7 @@
 {
     MXReactionCountChangeListener *listener = [MXReactionCountChangeListener new];
     listener.roomId = roomId;
-    listener.block = block;
+    listener.notificationBlock = block;
 
     [self.listeners addObject:listener];
 
@@ -253,7 +253,7 @@
     {
         if ([listener.roomId isEqualToString:roomId])
         {
-            listener.block(changes);
+            listener.notificationBlock(changes);
         }
     }
 }

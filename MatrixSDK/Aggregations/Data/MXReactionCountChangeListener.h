@@ -25,7 +25,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic) NSString *roomId;
 
 // eventId -> changes
-@property (nonatomic) void (^block)(NSDictionary<NSString*, MXReactionCountChange*> *changes);
+@property (nonatomic, copy) void (^notificationBlock)(NSDictionary<NSString*, MXReactionCountChange*> *changes);
 
 @end
 
