@@ -14,13 +14,18 @@
  limitations under the License.
  */
 
-#import "MXReactionCount.h"
+#import "MXRealmReactionCount.h"
 
-@implementation MXReactionCount
+@implementation MXRealmReactionCount
 
-- (BOOL)myUserHasReacted
++ (NSString *)primaryKey
 {
-    return (_myUserReactionEventId != nil);
+    return @"primaryKey";
+}
+
++ (NSString *)primaryKeyFromEventId:(NSString *)eventId andReaction:(NSString *)reaction
+{
+    return [NSString stringWithFormat:@"%@_%@", eventId, reaction];
 }
 
 @end

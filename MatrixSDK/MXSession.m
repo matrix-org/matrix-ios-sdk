@@ -2215,6 +2215,7 @@ typedef void (^MXOnResumeDone)(void);
 
         // Clean the store
         [_store deleteRoom:roomId];
+        [_aggregations resetDataInRoom:roomId];
 
         // And remove the room and its summary from the list
         [rooms removeObjectForKey:roomId];

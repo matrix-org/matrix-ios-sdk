@@ -14,13 +14,19 @@
  limitations under the License.
  */
 
-#import "MXReactionCount.h"
+#import <Foundation/Foundation.h>
 
-@implementation MXReactionCount
+#import "MXReactionCountChange.h"
 
-- (BOOL)myUserHasReacted
-{
-    return (_myUserReactionEventId != nil);
-}
+NS_ASSUME_NONNULL_BEGIN
+
+@interface MXReactionCountChangeListener : NSObject
+
+@property (nonatomic) NSString *roomId;
+
+// eventId -> changes
+@property (nonatomic, copy) void (^notificationBlock)(NSDictionary<NSString*, MXReactionCountChange*> *changes);
 
 @end
+
+NS_ASSUME_NONNULL_END

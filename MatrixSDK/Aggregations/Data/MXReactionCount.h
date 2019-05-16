@@ -18,11 +18,19 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
+/**
+ `MXReactionCount` provides number of reactions on a reaction.
+ */
 @interface MXReactionCount : NSObject
 
 @property (nonatomic) NSString *reaction;
 @property (nonatomic) NSUInteger count;
-@property (nonatomic) BOOL myUserHasReacted;
+
+// The id of the event if our user has made this reaction
+@property (nonatomic, nullable) NSString *myUserReactionEventId;
+
+// YES if our user has made this reaction
+@property (nonatomic, readonly) BOOL myUserHasReacted;
 
 @end
 

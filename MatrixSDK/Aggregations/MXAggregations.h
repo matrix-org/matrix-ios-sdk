@@ -18,6 +18,7 @@
 
 #import "MXHTTPOperation.h"
 #import "MXReactionCount.h"
+#import "MXReactionCountChange.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -56,6 +57,33 @@ NS_ASSUME_NONNULL_BEGIN
  @return the top most reactions counts.
  */
 - (nullable NSArray<MXReactionCount*> *)reactionsOnEvent:(NSString*)eventId inRoom:(NSString*)roomId;
+
+
+/**
+ Add a listener to aggregated updates of events within a room.
+
+ Only updates on events stored in timelines are sent.
+
+ @param roomId the id of the room.
+ @param block the block called on updates. eventId -> reactionCounts changes
+ @return a listener id.
+ */
+- (id)listenToReactionCountUpdateInRoom:(NSString*)roomId block:(void (^)(NSDictionary<NSString*, MXReactionCountChange*> *changes))block;
+
+/**
+ Remove a listener.
+
+ @param listener the listener id.
+ */
+- (void)removeListener:(id)listener;
+
+
+/**
+ Clear cached data.
+
+ Note: An initial sync is then required to get valid data.
+ */
+- (void)resetData;
 
 @end
 

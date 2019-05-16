@@ -14,13 +14,22 @@
  limitations under the License.
  */
 
+#import <Foundation/Foundation.h>
+
 #import "MXReactionCount.h"
+#import "MXRealmReactionCount.h"
 
-@implementation MXReactionCount
+NS_ASSUME_NONNULL_BEGIN
 
-- (BOOL)myUserHasReacted
-{
-    return (_myUserReactionEventId != nil);
-}
+
+/**
+  `MXRealmAggregationsMapper` is used to convert `MXRealmReactionCount` into `MXReactionCount` and vice versa.
+ */
+@interface MXRealmAggregationsMapper : NSObject
+
+- (MXReactionCount*)reactionCountFromRealmReactionCount:(MXRealmReactionCount*)realmReactionCount;
+- (MXRealmReactionCount*)realmReactionCountFromReactionCount:(MXReactionCount*)reactionCount onEvent:(NSString*)eventId inRoomd:(NSString*)roomId;
 
 @end
+
+NS_ASSUME_NONNULL_END

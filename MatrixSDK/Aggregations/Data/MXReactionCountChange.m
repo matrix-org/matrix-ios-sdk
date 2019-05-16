@@ -14,13 +14,11 @@
  limitations under the License.
  */
 
-#import "MXReactionCount.h"
+#import "MXReactionCountChange.h"
 
-@implementation MXReactionCount
-
-- (BOOL)myUserHasReacted
-{
-    return (_myUserReactionEventId != nil);
-}
+/**
+ `MXReactionCountChange` represents changes on the reactions counts on an event.
+ */
+@implementation MXReactionCountChange
 
 @end

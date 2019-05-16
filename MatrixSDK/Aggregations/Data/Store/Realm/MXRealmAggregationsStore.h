@@ -14,13 +14,14 @@
  limitations under the License.
  */
 
-#import "MXReactionCount.h"
+#import <Foundation/Foundation.h>
 
-@implementation MXReactionCount
+#import "MXAggregationsStore.h"
 
-- (BOOL)myUserHasReacted
-{
-    return (_myUserReactionEventId != nil);
-}
+NS_ASSUME_NONNULL_BEGIN
+
+@interface MXRealmAggregationsStore : NSObject <MXAggregationsStore>
 
 @end
+
+NS_ASSUME_NONNULL_END

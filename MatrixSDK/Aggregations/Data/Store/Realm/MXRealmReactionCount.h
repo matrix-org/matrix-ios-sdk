@@ -14,35 +14,29 @@
  limitations under the License.
  */
 
-#import "MXAggregations.h"
+#import <Realm/Realm.h>
 
-@class MXSession;
-
+#import <Foundation/Foundation.h>
 
 NS_ASSUME_NONNULL_BEGIN
 
-/**
- The `MXAggregations_Private` extension exposes internal operations.
- */
-@interface MXAggregations ()
 
 /**
- Constructor.
-
- @param mxSession the related 'MXSession'.
+ `MXRealmReactionCount` is a Realm representation of `MXReactionCount`.
  */
-- (instancetype)initWithMatrixSession:(MXSession *)mxSession;
+@interface MXRealmReactionCount : RLMObject
 
-/**
- Clear cached data for a room.
+@property NSString *eventId;
+@property NSString *roomId;
+@property (nonatomic) NSString *reaction;
+@property (nonatomic) NSInteger count;
+@property (nonatomic) NSString *myUserReactionEventId;
 
- Events for that rooms are no more part of our timelines.
- Because of gappy syncs, we cannot guarantee the data is up-to-date. So, erase it.
- We will get aggregated data again in bundled data when paginating events.
- */
-- (void)resetDataInRoom:(NSString *)roomId;
+// We need a primary key to use [RLMRealm addOrUpdateObject]
+@property (nonatomic) NSString *primaryKey;
+
++ (NSString*)primaryKeyFromEventId:(NSString*)eventId andReaction:(NSString*)reaction;
 
 @end
 
 NS_ASSUME_NONNULL_END
-

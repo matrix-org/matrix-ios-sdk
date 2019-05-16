@@ -58,7 +58,10 @@
 
             [mxSession.aggregations sendReaction:@"👍" toEvent:eventId inRoom:room.roomId success:^(NSString *reactionEventId) {
 
-                readyToTest(mxSession, room, expectation, eventId, reactionEventId);
+                // TODO: sendReaction should return only when the actual reaction event comes back the sync
+                dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 1 * NSEC_PER_SEC), dispatch_get_main_queue(), ^{
+                    readyToTest(mxSession, room, expectation, eventId, reactionEventId);
+                });
 
             } failure:^(NSError *error) {
                 XCTFail(@"Cannot set up intial test conditions - error: %@", error);
@@ -119,6 +122,7 @@
 
         MXRestClient *restClient = mxSession.matrixRestClient;
 
+        [mxSession.aggregations resetData];
         [mxSession close];
         mxSession = nil;
 
@@ -172,6 +176,42 @@
         XCTAssertTrue(reactionCount.myUserHasReacted);
 
         [expectation fulfill];
+    }];
+}
+
+// - Run the initial condition scenario
+// - Add one more reaction
+// -> We must get notified about the reaction count change
+- (void)testAggregationsListener
+{
+    // - Run the initial condition scenario
+    [self createScenario:^(MXSession *mxSession, MXRoom *room, XCTestExpectation *expectation, NSString *eventId, NSString *reactionEventId) {
+
+        // -> We must get notified about the reaction count change
+        [mxSession.aggregations listenToReactionCountUpdateInRoom:room.roomId block:^(NSDictionary<NSString *,MXReactionCountChange *> * _Nonnull changes) {
+
+            XCTAssertEqual(changes.count, 1, @"Only one change");
+
+            MXReactionCountChange *change = changes[eventId];
+            XCTAssertNotNil(change);
+            XCTAssertNil(change.modified);
+            XCTAssertNil(change.deleted);
+
+            XCTAssertEqual(change.inserted.count, 1, @"Only one change");
+            MXReactionCount *reactionCount = change.inserted.firstObject;
+            XCTAssertEqualObjects(reactionCount.reaction, @"😄");
+            XCTAssertEqual(reactionCount.count, 1);
+            XCTAssertTrue(reactionCount.myUserHasReacted,);
+
+            [expectation fulfill];
+        }];
+
+        // - Add one more reaction
+        [mxSession.aggregations sendReaction:@"😄" toEvent:eventId inRoom:room.roomId success:^(NSString *eventId) {
+        } failure:^(NSError *error) {
+            XCTFail(@"The operation should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
     }];
 }
 
