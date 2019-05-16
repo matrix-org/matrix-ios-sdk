@@ -18,6 +18,9 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
+/**
+ `MXReactionCount` provides number of reactions on a reaction.
+ */
 @interface MXReactionCount : NSObject
 
 @property (nonatomic) NSString *reaction;

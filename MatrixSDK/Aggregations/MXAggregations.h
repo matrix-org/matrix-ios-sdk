@@ -60,7 +60,9 @@ NS_ASSUME_NONNULL_BEGIN
 
 
 /**
- Add a listener to aggregated updates within a room.
+ Add a listener to aggregated updates of events within a room.
+
+ Only updates on events stored in timelines are sent.
 
  @param roomId the id of the room.
  @param block the block called on updates. eventId -> reactionCounts changes
