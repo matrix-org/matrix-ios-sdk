@@ -132,6 +132,8 @@
 		3252DCCA224D1AEF0032264F /* MXKeyVerificationMac.m in Sources */ = {isa = PBXBuildFile; fileRef = 3252DCC8224D1AEF0032264F /* MXKeyVerificationMac.m */; };
 		3252DCCD224D1C170032264F /* MXKeyVerificationCancel.h in Headers */ = {isa = PBXBuildFile; fileRef = 3252DCCB224D1C170032264F /* MXKeyVerificationCancel.h */; };
 		3252DCCE224D1C170032264F /* MXKeyVerificationCancel.m in Sources */ = {isa = PBXBuildFile; fileRef = 3252DCCC224D1C170032264F /* MXKeyVerificationCancel.m */; };
+		325380E8228DAD4A00ADDEFA /* MXAggregatedReactions.h in Headers */ = {isa = PBXBuildFile; fileRef = 325380E6228DAD4A00ADDEFA /* MXAggregatedReactions.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		325380E9228DAD4A00ADDEFA /* MXAggregatedReactions.m in Sources */ = {isa = PBXBuildFile; fileRef = 325380E7228DAD4A00ADDEFA /* MXAggregatedReactions.m */; };
 		325653831A2E14ED00CC0423 /* MXStoreTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 325653821A2E14ED00CC0423 /* MXStoreTests.m */; };
 		3256E3811DCB91EB003C9718 /* MXCryptoConstants.h in Headers */ = {isa = PBXBuildFile; fileRef = 3256E37F1DCB91EB003C9718 /* MXCryptoConstants.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		3256E3821DCB91EB003C9718 /* MXCryptoConstants.m in Sources */ = {isa = PBXBuildFile; fileRef = 3256E3801DCB91EB003C9718 /* MXCryptoConstants.m */; };
@@ -574,6 +576,8 @@
 		3252DCCB224D1C170032264F /* MXKeyVerificationCancel.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MXKeyVerificationCancel.h; sourceTree = "<group>"; };
 		3252DCCC224D1C170032264F /* MXKeyVerificationCancel.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MXKeyVerificationCancel.m; sourceTree = "<group>"; };
 		3252DCCF224D25810032264F /* MXDeviceVerificationManager_Private.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MXDeviceVerificationManager_Private.h; sourceTree = "<group>"; };
+		325380E6228DAD4A00ADDEFA /* MXAggregatedReactions.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MXAggregatedReactions.h; sourceTree = "<group>"; };
+		325380E7228DAD4A00ADDEFA /* MXAggregatedReactions.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MXAggregatedReactions.m; sourceTree = "<group>"; };
 		325653821A2E14ED00CC0423 /* MXStoreTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXStoreTests.m; sourceTree = "<group>"; };
 		3256E37F1DCB91EB003C9718 /* MXCryptoConstants.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXCryptoConstants.h; sourceTree = "<group>"; };
 		3256E3801DCB91EB003C9718 /* MXCryptoConstants.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXCryptoConstants.m; sourceTree = "<group>"; };
@@ -1337,6 +1341,8 @@
 			isa = PBXGroup;
 			children = (
 				327E9AF9228AC1F600A98BC1 /* Store */,
+				325380E6228DAD4A00ADDEFA /* MXAggregatedReactions.h */,
+				325380E7228DAD4A00ADDEFA /* MXAggregatedReactions.m */,
 				327E9AF42289D53800A98BC1 /* MXReactionCount.h */,
 				327E9AF52289D53800A98BC1 /* MXReactionCount.m */,
 				3213301F228BF7BC0070BA9B /* MXReactionCountChange.h */,
@@ -1896,6 +1902,7 @@
 				B146D4AF21A5A04300D8C2C6 /* MXMediaScanStore.h in Headers */,
 				32FA10CE1FA1C9F700E54233 /* MXOutgoingRoomKeyRequest.h in Headers */,
 				32A1514A1DAF7C0C00400192 /* MXUsersDevicesMap.h in Headers */,
+				325380E8228DAD4A00ADDEFA /* MXAggregatedReactions.h in Headers */,
 				327E9AE72285A8C400A98BC1 /* MXAggregationPaginatedResponse.h in Headers */,
 				323E0C5B1A306D7A00A31D73 /* MXEvent.h in Headers */,
 				327F8DB21C6112BA00581CA3 /* MXRoomThirdPartyInvite.h in Headers */,
@@ -2259,6 +2266,7 @@
 				321CFDFE2254E8C4004D31DF /* MXEmojiRepresentation.m in Sources */,
 				C6D5D60E1E4FBD2900706C0F /* MXSession.swift in Sources */,
 				320DFDE319DD99B60068622A /* MXError.m in Sources */,
+				325380E9228DAD4A00ADDEFA /* MXAggregatedReactions.m in Sources */,
 				021AFBA52179E91900742B2C /* MXEncryptedContentKey.m in Sources */,
 				32F634AC1FC5E3480054EF49 /* MXEventDecryptionResult.m in Sources */,
 				327137281A24D50A00DB6757 /* MXMyUser.m in Sources */,

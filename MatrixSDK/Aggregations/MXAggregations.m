@@ -62,16 +62,22 @@
                                         success:success failure:failure];
 }
 
-- (nullable NSArray<MXReactionCount*> *)reactionsOnEvent:(NSString *)eventId inRoom:(NSString *)roomId
+- (nullable MXAggregatedReactions *)aggregatedReactionsOnEvent:(NSString*)eventId inRoom:(NSString*)roomId
 {
     NSArray<MXReactionCount*> *reactions = [self.store reactionCountsOnEvent:eventId];
-
     if (!reactions)
     {
         reactions = [self reactionCountsFromMatrixStoreOnEvent:eventId inRoom:roomId];
     }
 
-    return reactions;
+    MXAggregatedReactions *aggregatedReactions;
+    if (reactions)
+    {
+        aggregatedReactions = [MXAggregatedReactions new];
+        aggregatedReactions.reactions = reactions;
+    }
+    
+    return aggregatedReactions;
 }
 
 - (id)listenToReactionCountUpdateInRoom:(NSString *)roomId block:(void (^)(NSDictionary<NSString *,MXReactionCountChange *> * _Nonnull))block
