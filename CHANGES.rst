@@ -5,7 +5,7 @@ Improvements:
  * MXHTTPClient: support multiple SSL pinning modes (none/public key/certificate)
 
 Bug Fix:
- *
+ * MXMediaLoader: Disable trusting the built-in anchors certificates when the certificate pinning is enabled.
 
 Changes in Matrix iOS SDK in 0.12.5 (2019-05-03)
 ===============================================
