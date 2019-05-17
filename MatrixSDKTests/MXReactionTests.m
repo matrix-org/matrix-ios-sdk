@@ -1,5 +1,6 @@
 /*
  * Copyright 2019 New Vector Ltd
+ * Copyright 2019 The Matrix.org Foundation C.I.C
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -208,6 +209,45 @@
 
         // - Add one more reaction
         [mxSession.aggregations sendReaction:@"😄" toEvent:eventId inRoom:room.roomId success:^(NSString *eventId) {
+        } failure:^(NSError *error) {
+            XCTFail(@"The operation should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+    }];
+}
+
+// - Run the initial condition scenario
+// - Unreact
+// -> We must get notified about the reaction count change
+// -> Data from aggregations must be right
+- (void)testUnreact
+{
+    // - Run the initial condition scenario
+    [self createScenario:^(MXSession *mxSession, MXRoom *room, XCTestExpectation *expectation, NSString *eventId, NSString *reactionEventId) {
+
+        // -> We must get notified about the reaction count change
+        [mxSession.aggregations listenToReactionCountUpdateInRoom:room.roomId block:^(NSDictionary<NSString *,MXReactionCountChange *> * _Nonnull changes) {
+
+            XCTAssertEqual(changes.count, 1, @"Only one change");
+
+            MXReactionCountChange *change = changes[eventId];
+            XCTAssertNotNil(change.deleted);
+            XCTAssertNil(change.modified);
+            XCTAssertNil(change.inserted);
+
+            XCTAssertEqual(change.deleted.count, 1, @"Only one change");
+            NSString *reaction = change.deleted.firstObject;
+            XCTAssertEqualObjects(reaction, @"👍");
+
+            // -> Data from aggregations must be right
+            MXAggregatedReactions *reactions = [mxSession.aggregations aggregatedReactionsOnEvent:eventId inRoom:room.roomId];
+            XCTAssertNil(reactions);
+
+            [expectation fulfill];
+        }];
+
+        // - Unreact
+        [mxSession.aggregations unReactOnReaction:@"👍" toEvent:eventId inRoom:room.roomId success:^() {
         } failure:^(NSError *error) {
             XCTFail(@"The operation should not fail - NSError: %@", error);
             [expectation fulfill];

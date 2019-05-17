@@ -1,5 +1,6 @@
 /*
  Copyright 2019 New Vector Ltd
+ Copyright 2019 The Matrix.org Foundation C.I.C
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -30,7 +31,7 @@
 
 @interface MXAggregations ()
 
-@property (nonatomic, weak) MXRestClient *restClient;
+@property (nonatomic, weak) MXSession *mxSession;
 @property (nonatomic, weak) id<MXStore> matrixStore;
 @property (nonatomic) id<MXAggregationsStore> store;
 @property (nonatomic) NSMutableArray<MXReactionCountChangeListener*> *listeners;
@@ -51,15 +52,46 @@
                          failure:(void (^)(NSError *error))failure
 {
     // TODO: sendReaction should return only when the actual reaction event comes back the sync
-    return [self.restClient sendRelationToEvent:eventId
-                                         inRoom:roomId
-                                   relationType:MXEventRelationTypeAnnotation
-                                      eventType:kMXEventTypeStringReaction
-                                     parameters:@{
-                                                  @"key": reaction
-                                                  }
-                                        content:@{}
-                                        success:success failure:failure];
+    return [self.mxSession.matrixRestClient sendRelationToEvent:eventId
+                                                         inRoom:roomId
+                                                   relationType:MXEventRelationTypeAnnotation
+                                                      eventType:kMXEventTypeStringReaction
+                                                     parameters:@{
+                                                                  @"key": reaction
+                                                                  }
+                                                        content:@{}
+                                                        success:success failure:failure];
+}
+
+- (MXHTTPOperation*)unReactOnReaction:(NSString*)reaction
+                              toEvent:(NSString*)eventId
+                               inRoom:(NSString*)roomId
+                              success:(void (^)(void))success
+                              failure:(void (^)(NSError *error))failure
+{
+    MXHTTPOperation *operation;
+
+    MXReactionCount *reactionCount = [self.store reactionCountForReaction:reaction onEvent:eventId];
+    if (reactionCount && reactionCount.myUserReactionEventId)
+    {
+        MXRoom *room = [self.mxSession roomWithRoomId:roomId];
+        if (room)
+        {
+            [room redactEvent:reactionCount.myUserReactionEventId reason:nil success:success failure:failure];
+        }
+        else
+        {
+            NSLog(@"[MXAggregations] unReactOnReaction: ERROR: Unknown room %@", roomId);
+            success();
+        }
+    }
+    else
+    {
+        NSLog(@"[MXAggregations] unReactOnReaction: ERROR: Do not know reaction(%@) event on event %@", reaction, eventId);
+        success();
+    }
+    
+    return operation;
 }
 
 - (nullable MXAggregatedReactions *)aggregatedReactionsOnEvent:(NSString*)eventId inRoom:(NSString*)roomId
@@ -109,16 +141,25 @@
     self = [super init];
     if (self)
     {
-        self.restClient = mxSession.matrixRestClient;
+        self.mxSession = mxSession;
         self.matrixStore = mxSession.store;
         self.store = [[MXRealmAggregationsStore alloc] initWithCredentials:mxSession.matrixRestClient.credentials];
         self.listeners = [NSMutableArray array];
 
-        [mxSession listenToEventsOfTypes:@[kMXEventTypeStringReaction] onEvent:^(MXEvent *event, MXTimelineDirection direction, id customObject) {
+        [mxSession listenToEventsOfTypes:@[kMXEventTypeStringReaction, kMXEventTypeStringRoomRedaction] onEvent:^(MXEvent *event, MXTimelineDirection direction, id customObject) {
 
-            if (direction == MXTimelineDirectionForwards)
-            {
-                [self handleReaction:event];
+            switch (event.eventType) {
+                case MXEventTypeReaction:
+                    [self handleReaction:event direction:direction];
+                    break;
+                case MXEventTypeRoomRedaction:
+                    if (direction == MXTimelineDirectionForwards)
+                    {
+                        [self handleRedaction:event];
+                    }
+                    break;
+                default:
+                    break;
             }
         }];
     }
@@ -129,12 +170,13 @@
 - (void)resetDataInRoom:(NSString *)roomId
 {
     [self.store deleteAllReactionCountsInRoom:roomId];
+    [self.store deleteAllReactionRelationsInRoom:roomId];
 }
 
 
 #pragma mark - Private methods -
 
-- (void)handleReaction:(MXEvent *)event
+- (void)handleReaction:(MXEvent *)event direction:(MXTimelineDirection)direction
 {
     NSString *parentEventId = event.relatesTo.eventId;
     NSString *reaction = event.relatesTo.key;
@@ -145,7 +187,12 @@
         MXEvent *parentEvent = [self.matrixStore eventWithEventId:parentEventId inRoom:event.roomId];
         if (parentEvent)
         {
-            [self addReaction:reaction toEvent:parentEventId reactionEvent:event];
+            [self storeRelationForReaction:reaction toEvent:parentEventId reactionEvent:event];
+
+            if (direction == MXTimelineDirectionForwards)
+            {
+                [self updateReactionCountForReaction:reaction toEvent:parentEventId reactionEvent:event];
+            }
         }
     }
     else
@@ -154,49 +201,50 @@
     }
 }
 
-- (void)addReaction:(NSString*)reaction toEvent:(NSString*)eventId reactionEvent:(MXEvent *)reactionEvent
+- (void)handleRedaction:(MXEvent *)event
+{
+    NSString *redactedEventId = event.redacts;
+    MXReactionRelation *relation = [self.store reactionRelationWithReactionEventId:redactedEventId];
+
+    if (relation)
+    {
+        [self removeReaction:relation.reaction onEvent:relation.eventId inRoomId:event.roomId];
+        [self.store deleteReactionRelation:relation];
+    }
+}
+
+- (void)storeRelationForReaction:(NSString*)reaction toEvent:(NSString*)eventId reactionEvent:(MXEvent *)reactionEvent
+{
+    MXReactionRelation *relation = [MXReactionRelation new];
+    relation.reaction = reaction;
+    relation.eventId = eventId;
+    relation.reactionEventId = reactionEvent.eventId;
+    
+    [self.store addReactionRelation:relation inRoom:reactionEvent.roomId];
+}
+
+- (void)updateReactionCountForReaction:(NSString*)reaction toEvent:(NSString*)eventId reactionEvent:(MXEvent *)reactionEvent
 {
     BOOL isANewReaction = NO;
 
-    // Update the current reaction count if it exists
-    MXReactionCount *reactionCount = [self.store reactionCountForReaction:reaction onEvent:eventId];
+    // Migrate data from matrix store to aggregation store if needed
+    [self checkAggregationStoreForEvent:eventId inRoomId:reactionEvent.roomId];
 
+    // Create or update the current reaction count if it exists
+    MXReactionCount *reactionCount = [self.store reactionCountForReaction:reaction onEvent:eventId];
     if (!reactionCount)
     {
-        if ([self.store hasReactionCountsOnEvent:eventId])
-        {
-            // Else, if the aggregations store has already reaction on the event, create a new reaction count object
-            reactionCount = [MXReactionCount new];
-            reactionCount.reaction = reaction;
-            isANewReaction = YES;
-        }
-        else
-        {
-            // Else, this is maybe the data is not yet transferred from the default matrix store to
-            // the aggregation store.
-            // Do the import
-            NSArray<MXReactionCount*> *reactions = [self reactionCountsFromMatrixStoreOnEvent:eventId inRoom:reactionEvent.roomId];
-            if (reactions)
-            {
-                [self.store setReactionCounts:reactions onEvent:eventId inRoom:reactionEvent.eventId];
-            }
-
-            reactionCount = [self.store reactionCountForReaction:reaction onEvent:eventId];
-            if (!reactionCount)
-            {
-                // If we still have no reaction count object, create one
-                reactionCount = [MXReactionCount new];
-                reactionCount.reaction = reaction;
-                isANewReaction = YES;
-            }
-        }
+        // If we still have no reaction count object, create one
+        reactionCount = [MXReactionCount new];
+        reactionCount.reaction = reaction;
+        isANewReaction = YES;
     }
 
     // Add the reaction
     reactionCount.count++;
 
     // Store reaction made by our user
-    if ([reactionEvent.sender isEqualToString:self.restClient.credentials.userId])
+    if ([reactionEvent.sender isEqualToString:self.mxSession.myUser.userId])
     {
         reactionCount.myUserReactionEventId = reactionEvent.eventId;
     }
@@ -209,6 +257,46 @@
                                              event:eventId
                                      reactionCount:reactionCount
                                      isNewReaction:isANewReaction];
+}
+
+- (void)removeReaction:(NSString*)reaction onEvent:(NSString*)eventId inRoomId:(NSString*)roomId
+{
+    // Migrate data from matrix store to aggregation store if needed
+    [self checkAggregationStoreForEvent:eventId inRoomId:roomId];
+
+    // Create or update the current reaction count if it exists
+    MXReactionCount *reactionCount = [self.store reactionCountForReaction:reaction onEvent:eventId];
+    if (reactionCount)
+    {
+        if (reactionCount.count > 1)
+        {
+            reactionCount.count--;
+
+            [self.store addOrUpdateReactionCount:reactionCount onEvent:eventId inRoom:roomId];
+            [self notifyReactionCountChangeListenersOfRoom:roomId
+                                                     event:eventId
+                                             reactionCount:reactionCount
+                                             isNewReaction:NO];
+        }
+        else
+        {
+            [self.store deleteReactionCountsForReaction:reaction onEvent:eventId];
+            [self notifyReactionCountChangeListenersOfRoom:roomId event:eventId forDeletedReaction:reaction];
+        }
+    }
+}
+
+// If not already done, copy aggregation data from matrix store to aggregation store
+- (void)checkAggregationStoreForEvent:(NSString*)eventId inRoomId:(NSString*)roomId
+{
+    if (![self.store hasReactionCountsOnEvent:eventId])
+    {
+        NSArray<MXReactionCount*> *reactions = [self reactionCountsFromMatrixStoreOnEvent:eventId inRoom:roomId];
+        if (reactions)
+        {
+            [self.store setReactionCounts:reactions onEvent:eventId inRoom:roomId];
+        }
+    }
 }
 
 - (nullable NSArray<MXReactionCount*> *)reactionCountsFromMatrixStoreOnEvent:(NSString*)eventId inRoom:(NSString*)roomId
@@ -251,6 +339,16 @@
     [self notifyReactionCountChangeListenersOfRoom:roomId changes:@{
                                                                                   eventId:reactionCountChange
                                                                                   }];
+}
+
+- (void)notifyReactionCountChangeListenersOfRoom:(NSString*)roomId event:(NSString*)eventId forDeletedReaction:(NSString*)deletedReaction
+{
+    MXReactionCountChange *reactionCountChange = [MXReactionCountChange new];
+    reactionCountChange.deleted = @[deletedReaction];
+
+    [self notifyReactionCountChangeListenersOfRoom:roomId changes:@{
+                                                                    eventId:reactionCountChange
+                                                                    }];
 }
 
 - (void)notifyReactionCountChangeListenersOfRoom:(NSString*)roomId changes:(NSDictionary<NSString*, MXReactionCountChange*>*)changes

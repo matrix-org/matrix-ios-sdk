@@ -44,7 +44,9 @@
 }
 
 
-#pragma - Single object CRUD operations
+#pragma mark - Reaction count
+
+#pragma mark - Single object CRUD operations
 
 - (void)addOrUpdateReactionCount:(nonnull MXReactionCount *)reactionCount onEvent:(nonnull NSString *)eventId inRoom:(nonnull NSString *)roomId
 {
@@ -91,7 +93,7 @@
 }
 
 
-#pragma - Batch operations
+#pragma mark - Batch operations
 
 - (void)setReactionCounts:(nonnull NSArray<MXReactionCount *> *)reactionCounts onEvent:(nonnull NSString *)eventId inRoom:(nonnull NSString *)roomId
 {
@@ -132,11 +134,68 @@
     RLMRealm *realm = self.realm;
 
     [realm transactionWithBlock:^{
-        RLMResults<MXRealmReactionCount *> *realmReactionCounts = [MXRealmReactionCount objectsInRealm:self.realm
-                                                                                                 where:@"roomId = %@", roomId];
-        [realm deleteObjects:realmReactionCounts];
+        RLMResults<MXRealmReactionCount *> *results = [MXRealmReactionCount objectsInRealm:self.realm
+                                                                                     where:@"roomId = %@", roomId];
+        [realm deleteObjects:results];
     }];
 }
+
+
+#pragma mark - Reaction count
+
+#pragma mark - Single object CRUD operations
+- (void)addReactionRelation:(MXReactionRelation*)relation inRoom:(NSString*)roomId
+{
+    RLMRealm *realm = self.realm;
+
+    [realm transactionWithBlock:^{
+        MXRealmReactionRelation *realmRelation = [self.mapper realmReactionRelationFromReactionRelation:relation inRoomd:roomId];
+        [realm addOrUpdateObject:realmRelation];
+    }];
+}
+
+- (nullable MXReactionRelation*)reactionRelationWithReactionEventId:(NSString*)reactionEventId
+{
+    RLMResults<MXRealmReactionRelation *> *realmReactionRelations = [MXRealmReactionRelation objectsInRealm:self.realm
+                                                                                                      where:@"reactionEventId = %@", reactionEventId];
+
+    MXReactionRelation *relation;
+    if (realmReactionRelations.count)
+    {
+        relation = [self.mapper reactionRelationFromRealmReactionRelation:realmReactionRelations.firstObject];
+    }
+
+    return relation;
+}
+
+- (void)deleteReactionRelation:(MXReactionRelation*)relation
+{
+    RLMRealm *realm = self.realm;
+
+    [realm transactionWithBlock:^{
+        NSString *primaryKey = [MXRealmReactionRelation primaryKeyFromEventId:relation.eventId andReactionEventId:relation.reactionEventId];
+
+        RLMResults<MXRealmReactionRelation *> *results = [MXRealmReactionRelation objectsInRealm:self.realm
+                                                                                     where:@"primaryKey = %@", primaryKey];
+        [realm deleteObjects:results];
+    }];
+}
+
+#pragma mark - Batch operations
+
+- (void)deleteAllReactionRelationsInRoom:(NSString*)roomId
+{
+    RLMRealm *realm = self.realm;
+
+    [realm transactionWithBlock:^{
+        RLMResults<MXRealmReactionRelation *> *results = [MXRealmReactionRelation objectsInRealm:self.realm
+                                                                                           where:@"roomId = %@", roomId];
+        [realm deleteObjects:results];
+    }];
+}
+
+
+#pragma - Global -
 
 - (void)deleteAll
 {
@@ -148,7 +207,7 @@
 }
 
 
-#pragma mark - Private
+#pragma mark - Private -
 
 - (nullable RLMRealm*)realm
 {
