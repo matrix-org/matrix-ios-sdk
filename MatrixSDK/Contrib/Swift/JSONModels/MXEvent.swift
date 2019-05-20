@@ -55,6 +55,7 @@ public enum MXEventType {
     case callCandidates
     case callAnswer
     case callHangup
+    case reaction
     case receipt
     case roomTombStone
     case keyVerificationStart
@@ -93,6 +94,7 @@ public enum MXEventType {
         case .callCandidates: return kMXEventTypeStringCallCandidates
         case .callAnswer: return kMXEventTypeStringCallAnswer
         case .callHangup: return kMXEventTypeStringCallHangup
+        case .reaction: return kMXEventTypeStringReaction
         case .receipt: return kMXEventTypeStringReceipt
         case .roomTombStone: return kMXEventTypeStringRoomTombStone
         case .keyVerificationStart: return kMXEventTypeStringKeyVerificationStart

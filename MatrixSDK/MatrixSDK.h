@@ -65,3 +65,8 @@ FOUNDATION_EXPORT NSString *MatrixSDKVersion;
 #import "MXServerNotices.h"
 
 #import "MXAutoDiscovery.h"
+
+#import "MXEventUnsignedData.h"
+#import "MXEventRelations.h"
+#import "MXEventAnnotationChunk.h"
+#import "MXEventAnnotation.h"
