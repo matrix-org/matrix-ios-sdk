@@ -11,6 +11,9 @@ Improvements:
 Bug Fix:
  * MXMediaLoader: Disable trusting the built-in anchors certificates when the certificate pinning is enabled.
 
+API break:
+ * MXEvent: unsignedData is now of type MXEventUnsignedData.
+
 Changes in Matrix iOS SDK in 0.12.5 (2019-05-03)
 ===============================================
 
