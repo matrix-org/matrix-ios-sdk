@@ -306,8 +306,6 @@
     MXEvent *event = [self.matrixStore eventWithEventId:eventId inRoom:roomId];
     if (event)
     {
-        NSMutableArray *reactions = [NSMutableArray array];
-
         for (MXEventAnnotation *annotation in event.unsignedData.relations.annotation.chunk)
         {
             if ([annotation.type isEqualToString:MXEventAnnotationReaction])
@@ -316,6 +314,10 @@
                 reactionCount.reaction = annotation.key;
                 reactionCount.count = annotation.count;
 
+                if (!reactions)
+                {
+                    reactions = [NSMutableArray array];
+                }
                 [reactions addObject:reactionCount];
             }
         }
