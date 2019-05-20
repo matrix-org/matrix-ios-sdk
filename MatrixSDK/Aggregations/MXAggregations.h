@@ -1,5 +1,6 @@
 /*
  Copyright 2019 New Vector Ltd
+ Copyright 2019 The Matrix.org Foundation C.I.C
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -49,6 +50,24 @@ NS_ASSUME_NONNULL_BEGIN
                           inRoom:(NSString*)roomId
                          success:(void (^)(NSString *eventId))success
                          failure:(void (^)(NSError *error))failure;
+
+/**
+ Unreact a reaction to an event in a room.
+
+ @param reaction the reaction to unreact.
+ @param eventId the id of the event.
+ @param roomId the id of the room.
+
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)unReactOnReaction:(NSString*)reaction
+                              toEvent:(NSString*)eventId
+                               inRoom:(NSString*)roomId
+                              success:(void (^)(void))success
+                              failure:(void (^)(NSError *error))failure;
 
 /**
  Returns the aggregated reactions counts.

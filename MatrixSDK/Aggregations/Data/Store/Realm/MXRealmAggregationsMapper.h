@@ -1,5 +1,6 @@
 /*
  Copyright 2019 New Vector Ltd
+ Copyright 2019 The Matrix.org Foundation C.I.C
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -19,6 +20,9 @@
 #import "MXReactionCount.h"
 #import "MXRealmReactionCount.h"
 
+#import "MXReactionRelation.h"
+#import "MXRealmReactionRelation.h"
+
 NS_ASSUME_NONNULL_BEGIN
 
 
@@ -29,6 +33,9 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (MXReactionCount*)reactionCountFromRealmReactionCount:(MXRealmReactionCount*)realmReactionCount;
 - (MXRealmReactionCount*)realmReactionCountFromReactionCount:(MXReactionCount*)reactionCount onEvent:(NSString*)eventId inRoomd:(NSString*)roomId;
+
+- (MXReactionRelation*)reactionRelationFromRealmReactionRelation:(MXRealmReactionRelation*)realmReactionRelation;
+- (MXRealmReactionRelation*)realmReactionRelationFromReactionRelation:(MXReactionRelation*)reactionReaction inRoomd:(NSString*)roomId;
 
 @end
 

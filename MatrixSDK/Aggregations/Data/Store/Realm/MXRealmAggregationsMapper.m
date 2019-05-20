@@ -1,5 +1,6 @@
 /*
  Copyright 2019 New Vector Ltd
+ Copyright 2019 The Matrix.org Foundation C.I.C
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -36,9 +37,33 @@
     realmReactionCount.reaction = reactionCount.reaction;
     realmReactionCount.count = reactionCount.count;
     realmReactionCount.myUserReactionEventId = reactionCount.myUserReactionEventId;
-    realmReactionCount.primaryKey = [MXRealmReactionCount primaryKeyFromEventId:eventId andReaction:reactionCount.reaction];
+    realmReactionCount.primaryKey = [MXRealmReactionCount primaryKeyFromEventId:eventId
+                                                                    andReaction:reactionCount.reaction];
 
     return realmReactionCount;
+}
+
+- (MXReactionRelation*)reactionRelationFromRealmReactionRelation:(MXRealmReactionRelation*)realmReactionRelation
+{
+    MXReactionRelation *reactionRelation = [MXReactionRelation new];
+    reactionRelation.reaction = realmReactionRelation.reaction;
+    reactionRelation.eventId = realmReactionRelation.eventId;
+    reactionRelation.reactionEventId = realmReactionRelation.reactionEventId;
+
+    return reactionRelation;
+}
+
+- (MXRealmReactionRelation*)realmReactionRelationFromReactionRelation:(MXReactionRelation*)reactionRelation inRoomd:(NSString*)roomId
+{
+    MXRealmReactionRelation *realmReactionRelation= [MXRealmReactionRelation new];
+    realmReactionRelation.reaction = reactionRelation.reaction;
+    realmReactionRelation.eventId = reactionRelation.eventId;
+    realmReactionRelation.reactionEventId = reactionRelation.reactionEventId;
+    realmReactionRelation.roomId = roomId;
+    realmReactionRelation.primaryKey = [MXRealmReactionRelation primaryKeyFromEventId:reactionRelation.eventId
+                                                                   andReactionEventId:reactionRelation.reactionEventId];
+
+    return realmReactionRelation;
 }
 
 @end
