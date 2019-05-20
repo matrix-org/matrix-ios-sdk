@@ -19,6 +19,7 @@
 #import "MXAggregations_Private.h"
 
 #import "MXSession.h"
+#import "MXTools.h"
 
 #import "MXEventUnsignedData.h"
 #import "MXEventRelations.h"
@@ -52,6 +53,7 @@
                          failure:(void (^)(NSError *error))failure
 {
     // TODO: sendReaction should return only when the actual reaction event comes back the sync
+    MXWeakify(self);
     return [self.mxSession.matrixRestClient sendRelationToEvent:eventId
                                                          inRoom:roomId
                                                    relationType:MXEventRelationTypeAnnotation
@@ -60,7 +62,16 @@
                                                                   @"key": reaction
                                                                   }
                                                         content:@{}
-                                                        success:success failure:failure];
+                                                        success:success failure:^(NSError *error)
+            {
+                MXStrongifyAndReturnIfNil(self);
+
+                MXError *mxError = [[MXError alloc] initWithNSError:error];
+                if ([mxError.errcode isEqualToString:kMXErrCodeStringUnrecognized])
+                {
+                    [self sendReactionUsingHack:reaction toEvent:eventId inRoom:roomId success:success failure:failure];
+                }
+            }];
 }
 
 - (MXHTTPOperation*)unReactOnReaction:(NSString*)reaction
@@ -362,6 +373,34 @@
             listener.notificationBlock(changes);
         }
     }
+}
+
+// SendReactionUsingHack directly sends a `m.reaction` room message instead of using the `/send_relation` api.
+/// TODO: To remove once the feature has landed on matrix.org homeserver
+- (MXHTTPOperation*)sendReactionUsingHack:(NSString*)reaction
+                         toEvent:(NSString*)eventId
+                          inRoom:(NSString*)roomId
+                         success:(void (^)(NSString *eventId))success
+                         failure:(void (^)(NSError *error))failure
+{
+    NSLog(@"[MXAggregations] sendReactionUsingHack");
+
+    MXRoom *room = [self.mxSession roomWithRoomId:roomId];
+    if (!room)
+    {
+        NSLog(@"[MXAggregations] sendReactionUsingHack Error: Unknown room: %@", roomId);
+        return nil;
+    }
+
+    NSDictionary *reactionContent = @{
+                                      @"m.relates_to": @{
+                                                      @"rel_type": @"m.annotation",
+                                                      @"event_id": eventId,
+                                                      @"key": reaction
+                                                      }
+                                      };
+
+    return [room sendEventOfType:kMXEventTypeStringReaction content:reactionContent localEcho:nil success:success failure:failure];
 }
 
 @end
