@@ -273,32 +273,41 @@ NSString *const kMXMediaUploadIdPrefix = @"upload-";
     NSURLProtectionSpace *protectionSpace = [challenge protectionSpace];
     if ([protectionSpace.authenticationMethod isEqualToString:NSURLAuthenticationMethodServerTrust])
     {
-        // List all the allowed certificates to pin against.
-        NSMutableArray *pinnedCertificates = [NSMutableArray array];
+        SecTrustRef serverTrust = [protectionSpace serverTrust];
         
+        // Check first whether there are some pinned certificates (certificate included in the bundle).
         NSSet <NSData *> *certificates = [AFSecurityPolicy certificatesInBundle:[NSBundle mainBundle]];
-        for (NSData *certificateData in certificates)
+        if (certificates && certificates.count > 0)
         {
-            [pinnedCertificates addObject:(__bridge_transfer id)SecCertificateCreateWithData(NULL, (__bridge CFDataRef)certificateData)];
+            NSMutableArray *pinnedCertificates = [NSMutableArray array];
+            for (NSData *certificateData in certificates)
+            {
+                [pinnedCertificates addObject:(__bridge_transfer id)SecCertificateCreateWithData(NULL, (__bridge CFDataRef)certificateData)];
+            }
+            // Only use these certificates to pin against, and do not trust the built-in anchor certificates.
+            SecTrustSetAnchorCertificates(serverTrust, (__bridge CFArrayRef)pinnedCertificates);
         }
-        certificates = [MXAllowedCertificates sharedInstance].certificates;
-        for (NSData *certificateData in certificates)
+        else
         {
-            [pinnedCertificates addObject:(__bridge_transfer id)SecCertificateCreateWithData(NULL, (__bridge CFDataRef)certificateData)];
+            // Check whether some certificates have been trusted by the user (self-signed certificates support).
+            certificates = [MXAllowedCertificates sharedInstance].certificates;
+            if (certificates.count)
+            {
+                NSMutableArray *allowedCertificates = [NSMutableArray array];
+                for (NSData *certificateData in certificates)
+                {
+                    [allowedCertificates addObject:(__bridge_transfer id)SecCertificateCreateWithData(NULL, (__bridge CFDataRef)certificateData)];
+                }
+                // Add all the allowed certificates to the chain of trust
+                SecTrustSetAnchorCertificates(serverTrust, (__bridge CFArrayRef)allowedCertificates);
+                // Reenable trusting the built-in anchor certificates in addition to those passed in via the SecTrustSetAnchorCertificates API.
+                SecTrustSetAnchorCertificatesOnly(serverTrust, false);
+            }
         }
-        
-        if (pinnedCertificates.count > 0)
-        {
-            SecTrustSetAnchorCertificates(protectionSpace.serverTrust, (__bridge CFArrayRef)pinnedCertificates);
-            // Reenable trusting anchor certificates in addition to those passed in via the SecTrustSetAnchorCertificates API.
-            SecTrustSetAnchorCertificatesOnly(protectionSpace.serverTrust, false);
-        }
-        
-        SecTrustRef trust = [protectionSpace serverTrust];
 
         // Re-evaluate the trust policy
         SecTrustResultType secresult = kSecTrustResultInvalid;
-        if (SecTrustEvaluate(trust, &secresult) != errSecSuccess)
+        if (SecTrustEvaluate(serverTrust, &secresult) != errSecSuccess)
         {
             // Trust evaluation failed
             [connection cancel];
@@ -322,7 +331,7 @@ NSString *const kMXMediaUploadIdPrefix = @"upload-";
                 default:
                 {
                     // Consider here the leaf certificate (the one at index 0).
-                    SecCertificateRef certif = SecTrustGetCertificateAtIndex(trust, 0);
+                    SecCertificateRef certif = SecTrustGetCertificateAtIndex(serverTrust, 0);
 
                     NSData *certificate = (__bridge NSData*)SecCertificateCopyData(certif);
 

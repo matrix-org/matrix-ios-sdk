@@ -3,9 +3,13 @@ Changes in Matrix iOS SDK in 0.12.6 (2019-05-)
 
 Improvements:
  * MXHTTPClient: support multiple SSL pinning modes (none/public key/certificate)
+ * MXHTTPClient: Enable the certificate pinning mode by default as soon as some certificates are present in the application bundle.
  * MXEvent: Create a MXEventUnsignedData model for `MXEvent.unsignedData`.
  * MXEvent: Add relatesTo property.
  * Aggregations: Create MXSession.MXAggregations to manage Matrix aggregations API.
+
+Bug Fix:
+ * MXMediaLoader: Disable trusting the built-in anchors certificates when the certificate pinning is enabled.
 
 Changes in Matrix iOS SDK in 0.12.5 (2019-05-03)
 ===============================================

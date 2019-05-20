@@ -1,6 +1,7 @@
 /*
  Copyright 2014 OpenMarket Ltd
  Copyright 2017 Vector Creations Ltd
+ Copyright 2019 The Matrix.org Foundation C.I.C
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -183,7 +184,9 @@ typedef NS_ENUM(NSUInteger, MXHTTPClientSSLPinningMode) {
 + (NSUInteger)timeForRetry:(MXHTTPOperation*)httpOperation;
 
 /**
- The certificates used to evaluate server trust according to the SSL pinning mode (MXHTTPClientSSLPinningModeCertificate by default).
+ The certificates used to evaluate server trust.
+ The default SSL pinning mode is MXHTTPClientSSLPinningModeCertificate when the provided set is not empty.
+ Set an empty set or null to restore the default security policy.
  */
 @property (nonatomic, strong) NSSet<NSData *> *pinnedCertificates;
 
