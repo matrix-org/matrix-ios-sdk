@@ -58,6 +58,7 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)deleteReactionRelation:(MXReactionRelation*)relation;
 
 #pragma mark - Batch operations
+- (nullable NSArray<MXReactionRelation*> *)reactionRelationsOnEvent:(NSString*)eventId;
 - (void)deleteAllReactionRelationsInRoom:(NSString*)roomId;
 
 

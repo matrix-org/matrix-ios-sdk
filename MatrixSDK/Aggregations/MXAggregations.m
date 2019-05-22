@@ -113,6 +113,12 @@
         reactions = [self reactionCountsFromMatrixStoreOnEvent:eventId inRoom:roomId];
     }
 
+    if (!reactions)
+    {
+        // Check reaction data from the hack
+        reactions = [self reactionCountsUsingHackOnEvent:eventId inRoom:roomId];
+    }
+
     MXAggregatedReactions *aggregatedReactions;
     if (reactions)
     {
@@ -204,6 +210,10 @@
             {
                 [self updateReactionCountForReaction:reaction toEvent:parentEventId reactionEvent:event];
             }
+        }
+        else
+        {
+            [self storeRelationForHackForReaction:reaction toEvent:parentEventId reactionEvent:event];
         }
     }
     else
@@ -303,6 +313,13 @@
     if (![self.store hasReactionCountsOnEvent:eventId])
     {
         NSArray<MXReactionCount*> *reactions = [self reactionCountsFromMatrixStoreOnEvent:eventId inRoom:roomId];
+
+        if (!reactions)
+        {
+            // Check reaction data from the hack
+            reactions = [self reactionCountsUsingHackOnEvent:eventId inRoom:roomId];
+        }
+        
         if (reactions)
         {
             [self.store setReactionCounts:reactions onEvent:eventId inRoom:roomId];
@@ -350,8 +367,8 @@
     }
 
     [self notifyReactionCountChangeListenersOfRoom:roomId changes:@{
-                                                                                  eventId:reactionCountChange
-                                                                                  }];
+                                                                    eventId:reactionCountChange
+                                                                    }];
 }
 
 - (void)notifyReactionCountChangeListenersOfRoom:(NSString*)roomId event:(NSString*)eventId forDeletedReaction:(NSString*)deletedReaction
@@ -375,8 +392,10 @@
     }
 }
 
-// SendReactionUsingHack directly sends a `m.reaction` room message instead of using the `/send_relation` api.
+#pragma mark - Reactions hack (TODO: Remove all methods) -
 /// TODO: To remove once the feature has landed on matrix.org homeserver
+
+// SendReactionUsingHack directly sends a `m.reaction` room message instead of using the `/send_relation` api.
 - (MXHTTPOperation*)sendReactionUsingHack:(NSString*)reaction
                          toEvent:(NSString*)eventId
                           inRoom:(NSString*)roomId
@@ -401,6 +420,51 @@
                                       };
 
     return [room sendEventOfType:kMXEventTypeStringReaction content:reactionContent localEcho:nil success:success failure:failure];
+}
+
+// Compute reactions counts from relations we know
+// Note: This is not accurate and will be removed soon
+- (nullable NSArray<MXReactionCount*> *)reactionCountsUsingHackOnEvent:(NSString*)eventId inRoom:(NSString*)roomId
+{
+    NSDate *startDate = [NSDate date];
+    
+    NSMutableDictionary<NSString*, MXReactionCount*> *reactionCountDict = [NSMutableDictionary dictionary];
+
+    NSArray<MXReactionRelation*> *relations = [self.store reactionRelationsOnEvent:eventId];
+    for (MXReactionRelation *relation in relations)
+    {
+        MXReactionCount *reactionCount = reactionCountDict[relation.reaction];
+        if (!reactionCount)
+        {
+            reactionCount = [MXReactionCount new];
+            reactionCount.reaction = relation.reaction;
+            reactionCountDict[relation.reaction] = reactionCount;
+        }
+
+        reactionCount.count++;
+
+        if (!reactionCount.myUserReactionEventId)
+        {
+            // Determine if my user has reacted
+            MXEvent *event = [self.matrixStore eventWithEventId:relation.reactionEventId inRoom:roomId];
+            if ([event.sender isEqualToString:self.mxSession.myUser.userId])
+            {
+                reactionCount.myUserReactionEventId = relation.reactionEventId;
+            }
+        }
+    }
+
+    NSLog(@"[MXAggregations] reactionCountsUsingHackOnEvent: Build %@ reactionCounts in %.0fms",
+          @(reactionCountDict.count),
+          [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
+
+    return reactionCountDict.allValues;
+}
+
+// We need to store all received relations even if we do not know the event yet
+- (void)storeRelationForHackForReaction:(NSString*)reaction toEvent:(NSString*)eventId reactionEvent:(MXEvent *)reactionEvent
+{
+    [self storeRelationForReaction:reaction toEvent:eventId reactionEvent:reactionEvent];
 }
 
 @end

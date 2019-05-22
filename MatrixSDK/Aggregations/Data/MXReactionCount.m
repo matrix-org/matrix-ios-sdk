@@ -23,4 +23,16 @@
     return (_myUserReactionEventId != nil);
 }
 
+- (NSString *)description
+{
+    if (self.myUserHasReacted)
+    {
+        return [NSString stringWithFormat:@"(%@: %@)", self.reaction, @(self.count)];
+    }
+    else
+    {
+        return [NSString stringWithFormat:@"%@: %@", self.reaction, @(self.count)];
+    }
+}
+
 @end
