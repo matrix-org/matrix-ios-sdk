@@ -211,6 +211,10 @@
                 [self updateReactionCountForReaction:reaction toEvent:parentEventId reactionEvent:event];
             }
         }
+        else
+        {
+            [self storeRelationForHackForReaction:reaction toEvent:parentEventId reactionEvent:event];
+        }
     }
     else
     {
@@ -363,8 +367,8 @@
     }
 
     [self notifyReactionCountChangeListenersOfRoom:roomId changes:@{
-                                                                                  eventId:reactionCountChange
-                                                                                  }];
+                                                                    eventId:reactionCountChange
+                                                                    }];
 }
 
 - (void)notifyReactionCountChangeListenersOfRoom:(NSString*)roomId event:(NSString*)eventId forDeletedReaction:(NSString*)deletedReaction
@@ -388,7 +392,7 @@
     }
 }
 
-#pragma mark - Reactions hack -
+#pragma mark - Reactions hack (TODO: Remove all methods) -
 /// TODO: To remove once the feature has landed on matrix.org homeserver
 
 // SendReactionUsingHack directly sends a `m.reaction` room message instead of using the `/send_relation` api.
@@ -455,6 +459,12 @@
           [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
 
     return reactionCountDict.allValues;
+}
+
+// We need to store all received relations even if we do not know the event yet
+- (void)storeRelationForHackForReaction:(NSString*)reaction toEvent:(NSString*)eventId reactionEvent:(MXEvent *)reactionEvent
+{
+    [self storeRelationForReaction:reaction toEvent:eventId reactionEvent:reactionEvent];
 }
 
 @end
