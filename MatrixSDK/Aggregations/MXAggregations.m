@@ -25,13 +25,14 @@
 
 #import "MXRealmAggregationsStore.h"
 #import "MXAggregatedReactionsUpdater.h"
-
+#import "MXAggregatedEditsUpdater.h"
 
 @interface MXAggregations ()
 
 @property (nonatomic, weak) MXSession *mxSession;
 @property (nonatomic) id<MXAggregationsStore> store;
 @property (nonatomic) MXAggregatedReactionsUpdater *aggregatedReactionsUpdater;
+@property (nonatomic) MXAggregatedEditsUpdater *aggregatedEditsUpdater;
 
 @end
 
@@ -66,6 +67,10 @@
                 if ([mxError.errcode isEqualToString:kMXErrCodeStringUnrecognized])
                 {
                     [self sendReactionUsingHack:reaction toEvent:eventId inRoom:roomId success:success failure:failure];
+                }
+                else
+                {
+                    failure(error);
                 }
             }];
 }
@@ -122,6 +127,35 @@
 }
 
 
+#pragma mark - Edits
+
+- (MXHTTPOperation*)replaceTextMessageEvent:(MXEvent*)event
+                            withTextMessage:(nullable NSString*)text
+//                          formattedText:(nullable NSString*)formattedText     // TODO
+//                          localEcho:(MXEvent**)localEcho                      // TODO
+                                    success:(void (^)(NSString *eventId))success
+                                    failure:(void (^)(NSError *error))failure;
+{
+    NSDictionary *content = @{
+                              @"msgtype": kMXMessageTypeText,
+                              @"body": [NSString stringWithFormat:@"* %@", event.content[@"body"]],
+                              @"m.new_content": @{
+                                      @"msgtype": kMXMessageTypeText,
+                                      @"body": text
+                                      }
+                              };
+
+    // TODO: manage a sent state like when using classic /send
+    return [self.mxSession.matrixRestClient sendRelationToEvent:event.eventId
+                                                         inRoom:event.roomId
+                                                   relationType:MXEventRelationTypeReplace
+                                                      eventType:kMXEventTypeStringRoomMessage
+                                                     parameters:nil
+                                                        content:content
+                                                        success:success failure:failure];
+}
+
+
 #pragma mark - SDK-Private methods -
 
 - (instancetype)initWithMatrixSession:(MXSession *)mxSession
@@ -133,24 +167,13 @@
         self.store = [[MXRealmAggregationsStore alloc] initWithCredentials:mxSession.matrixRestClient.credentials];
 
         self.aggregatedReactionsUpdater = [[MXAggregatedReactionsUpdater alloc] initWithMyUser:mxSession.matrixRestClient.credentials.userId
-                                                                              aggregationStore:self.store matrixStore:mxSession.store];
+                                                                              aggregationStore:self.store
+                                                                                   matrixStore:mxSession.store];
+        self.aggregatedEditsUpdater = [[MXAggregatedEditsUpdater alloc] initWithMyUser:mxSession.matrixRestClient.credentials.userId
+                                                                      aggregationStore:self.store
+                                                                           matrixStore:mxSession.store];
 
-        [mxSession listenToEventsOfTypes:@[kMXEventTypeStringReaction, kMXEventTypeStringRoomRedaction] onEvent:^(MXEvent *event, MXTimelineDirection direction, id customObject) {
-
-            switch (event.eventType) {
-                case MXEventTypeReaction:
-                    [self.aggregatedReactionsUpdater handleReaction:event direction:direction];
-                    break;
-                case MXEventTypeRoomRedaction:
-                    if (direction == MXTimelineDirectionForwards)
-                    {
-                        [self.aggregatedReactionsUpdater handleRedaction:event];
-                    }
-                    break;
-                default:
-                    break;
-            }
-        }];
+        [self registerListener];
     }
 
     return self;
@@ -160,6 +183,36 @@
 {
     [self.aggregatedReactionsUpdater resetDataInRoom:roomId];
 }
+
+
+#pragma mark - Private methods
+
+- (void)registerListener
+{
+    [self.mxSession listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage, kMXEventTypeStringReaction, kMXEventTypeStringRoomRedaction] onEvent:^(MXEvent *event, MXTimelineDirection direction, id customObject) {
+
+        switch (event.eventType) {
+            case MXEventTypeRoomMessage:
+                if ([event.relatesTo.relationType isEqualToString:MXEventRelationTypeReplace])
+                {
+                    [self.aggregatedEditsUpdater handleReplace:event direction:direction];
+                }
+                break;
+            case MXEventTypeReaction:
+                [self.aggregatedReactionsUpdater handleReaction:event direction:direction];
+                break;
+            case MXEventTypeRoomRedaction:
+                if (direction == MXTimelineDirectionForwards)
+                {
+                    [self.aggregatedReactionsUpdater handleRedaction:event];
+                }
+                break;
+            default:
+                break;
+        }
+    }];
+}
+
 
 #pragma mark - Reactions hack (TODO: Remove all methods) -
 /// TODO: To remove once the feature has landed on matrix.org homeserver

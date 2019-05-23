@@ -114,6 +114,36 @@
 }
 
 // - Run the initial condition scenario
+// -> Check data is correctly aggregated when fetching the reacted event directly from the homeserver
+- (void)testAggregatedReaction
+{
+    // - Run the initial condition scenario
+    [self createScenario:^(MXSession *mxSession, MXRoom *room, XCTestExpectation *expectation, NSString *eventId, NSString *editEventId) {
+
+        // -> Check data is correctly aggregated when fetching the reacted event directly from the homeserver
+        [mxSession.matrixRestClient eventWithEventId:eventId inRoom:room.roomId success:^(MXEvent *event) {
+
+            MXEventAnnotationChunk *annotations = event.unsignedData.relations.annotation;
+            XCTAssertNotNil(annotations);
+            XCTAssertEqual(annotations.count, 1);
+            XCTAssertEqual(annotations.chunk.count, 1);
+
+            MXEventAnnotation *annotation = annotations.chunk.firstObject;
+            XCTAssertNotNil(annotation);
+            XCTAssertEqualObjects(annotation.type, MXEventAnnotationReaction);
+            XCTAssertEqualObjects(annotation.key, @"👍");
+            XCTAssertEqual(annotation.count, 1);
+
+            [expectation fulfill];
+
+        } failure:^(NSError *error) {
+            XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+            [expectation fulfill];
+        }];
+    }];
+}
+
+// - Run the initial condition scenario
 // - Do an initial sync
 // -> Data from aggregations must be right
 - (void)testAggregationsFromInitialSync
@@ -254,6 +284,8 @@
         }];
     }];
 }
+
+
 
 @end
 
