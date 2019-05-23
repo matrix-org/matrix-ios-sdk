@@ -132,7 +132,7 @@
         self.mxSession = mxSession;
         self.store = [[MXRealmAggregationsStore alloc] initWithCredentials:mxSession.matrixRestClient.credentials];
 
-        self.aggregatedReactionsUpdater = [[MXAggregatedReactionsUpdater alloc] initWithMyUser:self.mxSession.myUser.userId
+        self.aggregatedReactionsUpdater = [[MXAggregatedReactionsUpdater alloc] initWithMyUser:mxSession.matrixRestClient.credentials.userId
                                                                               aggregationStore:self.store matrixStore:mxSession.store];
 
         [mxSession listenToEventsOfTypes:@[kMXEventTypeStringReaction, kMXEventTypeStringRoomRedaction] onEvent:^(MXEvent *event, MXTimelineDirection direction, id customObject) {
