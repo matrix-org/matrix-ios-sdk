@@ -204,12 +204,12 @@
         MXEvent *parentEvent = [self.matrixStore eventWithEventId:parentEventId inRoom:event.roomId];
         if (parentEvent)
         {
-            [self storeRelationForReaction:reaction toEvent:parentEventId reactionEvent:event];
-
             if (direction == MXTimelineDirectionForwards)
             {
                 [self updateReactionCountForReaction:reaction toEvent:parentEventId reactionEvent:event];
             }
+
+            [self storeRelationForReaction:reaction toEvent:parentEventId reactionEvent:event];
         }
         else
         {
@@ -229,8 +229,8 @@
 
     if (relation)
     {
-        [self removeReaction:relation.reaction onEvent:relation.eventId inRoomId:event.roomId];
         [self.store deleteReactionRelation:relation];
+        [self removeReaction:relation.reaction onEvent:relation.eventId inRoomId:event.roomId];
     }
 }
 
@@ -428,11 +428,17 @@
 {
     NSDate *startDate = [NSDate date];
     
-    NSMutableDictionary<NSString*, MXReactionCount*> *reactionCountDict = [NSMutableDictionary dictionary];
+    NSMutableDictionary<NSString*, MXReactionCount*> *reactionCountDict;
 
     NSArray<MXReactionRelation*> *relations = [self.store reactionRelationsOnEvent:eventId];
     for (MXReactionRelation *relation in relations)
     {
+        if (!reactionCountDict)
+        {
+            // Have the same behavior as reactionCountsFromMatrixStoreOnEvent
+            reactionCountDict = [NSMutableDictionary dictionary];
+        }
+
         MXReactionCount *reactionCount = reactionCountDict[relation.reaction];
         if (!reactionCount)
         {
