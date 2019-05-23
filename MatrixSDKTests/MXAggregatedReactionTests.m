@@ -29,14 +29,14 @@
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Warc-retain-cycles"
 
-@interface MXReactionTests : XCTestCase
+@interface MXAggregatedReactionTests : XCTestCase
 {
     MatrixSDKTestsData *matrixSDKTestsData;
 }
 
 @end
 
-@implementation MXReactionTests
+@implementation MXAggregatedReactionTests
 
 - (void)setUp
 {
