@@ -653,6 +653,31 @@ NSString * const kMXTestsAliceAvatarURL = @"mxc://matrix.org/kciiXusgZFKuNLIfLqm
     }];
 }
 
+- (void)doTestWithAliceAndBobInARoom:(XCTestCase*)testCase
+                          aliceStore:(id<MXStore>)aliceStore
+                            bobStore:(id<MXStore>)bobStore
+                         readyToTest:(void (^)(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation))readyToTest
+{
+    [self doMXSessionTestWithBobAndAliceInARoom:testCase andStore:bobStore readyToTest:^(MXSession *bobSession, MXRestClient *aliceRestClient, NSString *roomId, XCTestExpectation *expectation) {
+
+        MXSession *aliceSession = [[MXSession alloc] initWithMatrixRestClient:aliceRestClient];
+        [self retain:aliceSession];
+
+        [aliceSession setStore:aliceStore success:^{
+
+            [aliceSession start:^{
+
+                readyToTest(aliceSession, bobSession, roomId, expectation);
+
+            } failure:^(NSError *error) {
+                NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+            }];
+        } failure:^(NSError *error) {
+            NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+        }];
+    }];
+}
+
 
 #pragma mark - random user
 - (void)doMXSessionTestWithAUser:(XCTestCase*)testCase
