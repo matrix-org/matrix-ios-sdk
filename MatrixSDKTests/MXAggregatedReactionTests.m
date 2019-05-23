@@ -354,6 +354,33 @@
 }
 
 
+#pragma mark - Pagination
+
+- (void)checkGappySyncScenarionReactions:(MXAggregatedReactions*)reactions
+{
+    XCTAssertNotNil(reactions.reactions);
+    XCTAssertEqual(reactions.reactions.count, 2);
+
+    for (MXReactionCount *reactionCount in reactions.reactions)
+    {
+        XCTAssertEqual(reactionCount.count, 1);
+        if ([reactionCount.reaction isEqualToString: @"👍"])
+        {
+            XCTAssertTrue(reactionCount.myUserHasReacted, @"We must know reaction made by our user");
+        }
+        else if ([reactionCount.reaction isEqualToString: @"🙂"])
+        {
+            XCTAssertFalse(reactionCount.myUserHasReacted);
+        }
+        else
+        {
+            XCTFail(@"Unexpected reaction: %@ in reactions: %@", reactionCount, reactions.reactions);
+        }
+    }
+}
+
+
+// Check we get valid reaction (from the HS) when paginating
 - (void)checkReactionsWhenPaginating:(MXSession*)mxSession room:(MXRoom*)room event:(NSString*)eventId expectation:(XCTestExpectation*)expectation
 {
     // TODO
@@ -367,26 +394,7 @@
 
             // -> Data from aggregations must be right
             MXAggregatedReactions *reactions = [mxSession.aggregations aggregatedReactionsOnEvent:eventId inRoom:room.roomId];
-
-            XCTAssertNotNil(reactions.reactions);
-            XCTAssertEqual(reactions.reactions.count, 2);
-
-            for (MXReactionCount *reactionCount in reactions.reactions)
-            {
-                XCTAssertEqual(reactionCount.count, 1);
-                if ([reactionCount.reaction isEqualToString: @"👍"])
-                {
-                    XCTAssertTrue(reactionCount.myUserHasReacted, @"We must know reaction made by our user");
-                }
-                else if ([reactionCount.reaction isEqualToString: @"🙂"])
-                {
-                    XCTAssertFalse(reactionCount.myUserHasReacted);
-                }
-                else
-                {
-                    XCTFail(@"Unexpected reaction: %@ in reactions: %@", reactionCount, reactions.reactions);
-                }
-            }
+            [self checkGappySyncScenarionReactions:reactions];
 
             [expectation fulfill];
 
@@ -415,6 +423,45 @@
     }];
 }
 
+
+#pragma mark - Permalink
+
+// Check we get valid reaction (from the HS) when paginating
+- (void)checkReactionsOnPermalink:(MXSession*)mxSession room:(MXRoom*)room event:(NSString*)eventId expectation:(XCTestExpectation*)expectation
+{
+    MXEventTimeline *timeline = [room timelineOnEvent:eventId];
+    [timeline resetPagination];
+    [timeline paginate:5 direction:MXTimelineDirectionBackwards onlyFromStore:NO complete:^{
+
+        // Random usage to keep a strong reference on timeline
+        [timeline resetPagination];
+
+        MXAggregatedReactions *reactions = [mxSession.aggregations aggregatedReactionsOnEvent:eventId inRoom:room.roomId];
+        [self checkGappySyncScenarionReactions:reactions];
+
+        [expectation fulfill];
+
+    } failure:^(NSError *error) {
+        XCTFail(@"The operation should not fail - NSError: %@", error);
+        [expectation fulfill];
+    }];
+}
+
+- (void)testReactionsOnPermalinkFromAGappySync
+{
+    [self createScenarioWithAGappySync:^(MXSession *mxSession, MXRoom *room, MXSession *otherSession, XCTestExpectation *expectation, NSString *eventId, NSString *reactionEventId) {
+
+        [self checkReactionsOnPermalink:mxSession room:room event:eventId expectation:expectation];
+    }];
+}
+
+- (void)testReactionsOnPermalinkFromAGappyInitialSync
+{
+    [self createScenarioWithAGappyInitialSync:^(MXSession *mxSession, MXRoom *room, MXSession *otherSession, XCTestExpectation *expectation, NSString *eventId, NSString *reactionEventId) {
+
+        [self checkReactionsOnPermalink:mxSession room:room event:eventId expectation:expectation];
+    }];
+}
 
 @end
 
