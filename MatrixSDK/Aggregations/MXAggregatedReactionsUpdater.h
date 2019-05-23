@@ -31,12 +31,15 @@ NS_ASSUME_NONNULL_BEGIN
                    matrixStore:(id<MXStore>)matrixStore;
 
 - (nullable MXAggregatedReactions *)aggregatedReactionsOnEvent:(NSString*)eventId inRoom:(NSString*)roomId;
+- (nullable MXReactionCount*)reactionCountForReaction:(NSString*)reaction onEvent:(NSString*)eventId;
 
 - (id)listenToReactionCountUpdateInRoom:(NSString *)roomId block:(void (^)(NSDictionary<NSString *,MXReactionCountChange *> * _Nonnull))block;
 - (void)removeListener:(id)listener;
 
 - (void)handleReaction:(MXEvent *)event direction:(MXTimelineDirection)direction;
 - (void)handleRedaction:(MXEvent *)event;
+
+- (void)resetDataInRoom:(NSString *)roomId;
 
 @end
 

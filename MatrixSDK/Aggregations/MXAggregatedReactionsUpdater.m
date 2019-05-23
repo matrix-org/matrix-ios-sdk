@@ -69,6 +69,10 @@
 
     return aggregatedReactions;
 }
+- (nullable MXReactionCount*)reactionCountForReaction:(NSString*)reaction onEvent:(NSString*)eventId
+{
+    return [self.store reactionCountForReaction:reaction onEvent:eventId];
+}
 
 - (id)listenToReactionCountUpdateInRoom:(NSString *)roomId block:(void (^)(NSDictionary<NSString *,MXReactionCountChange *> * _Nonnull))block
 {
@@ -127,6 +131,12 @@
         [self.store deleteReactionRelation:relation];
         [self removeReaction:relation.reaction onEvent:relation.eventId inRoomId:event.roomId];
     }
+}
+
+- (void)resetDataInRoom:(NSString *)roomId
+{
+    [self.store deleteAllReactionCountsInRoom:roomId];
+    [self.store deleteAllReactionRelationsInRoom:roomId];
 }
 
 #pragma mark - Private methods -

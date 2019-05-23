@@ -78,7 +78,7 @@
 {
     MXHTTPOperation *operation;
 
-    MXReactionCount *reactionCount = [self.store reactionCountForReaction:reaction onEvent:eventId];
+    MXReactionCount *reactionCount = [self.aggregatedReactionsUpdater reactionCountForReaction:reaction onEvent:eventId];
     if (reactionCount && reactionCount.myUserReactionEventId)
     {
         MXRoom *room = [self.mxSession roomWithRoomId:roomId];
@@ -158,8 +158,7 @@
 
 - (void)resetDataInRoom:(NSString *)roomId
 {
-    [self.store deleteAllReactionCountsInRoom:roomId];
-    [self.store deleteAllReactionRelationsInRoom:roomId];
+    [self.aggregatedReactionsUpdater resetDataInRoom:roomId];
 }
 
 #pragma mark - Reactions hack (TODO: Remove all methods) -
