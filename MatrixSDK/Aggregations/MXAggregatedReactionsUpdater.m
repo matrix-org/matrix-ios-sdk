@@ -23,7 +23,7 @@
 
 @interface MXAggregatedReactionsUpdater ()
 
-@property (nonatomic, weak) NSString *myUserId;
+@property (nonatomic) NSString *myUserId;
 @property (nonatomic, weak) id<MXStore> matrixStore;
 @property (nonatomic, weak) id<MXAggregationsStore> store;
 @property (nonatomic) NSMutableArray<MXReactionCountChangeListener*> *listeners;
