@@ -31,12 +31,15 @@ NS_ASSUME_NONNULL_BEGIN
               aggregationStore:(id<MXAggregationsStore>)store
                    matrixStore:(id<MXStore>)matrixStore;
 
+#pragma mark - Data access
 - (nullable MXAggregatedReactions *)aggregatedReactionsOnEvent:(NSString*)eventId inRoom:(NSString*)roomId;
 - (nullable MXReactionCount*)reactionCountForReaction:(NSString*)reaction onEvent:(NSString*)eventId;
 
+#pragma mark - Data update listener
 - (id)listenToReactionCountUpdateInRoom:(NSString *)roomId block:(void (^)(NSDictionary<NSString *,MXReactionCountChange *> * _Nonnull))block;
 - (void)removeListener:(id)listener;
 
+#pragma mark - Data update
 - (void)handleOriginalAggregatedDataOfEvent:(MXEvent *)event annotations:(MXEventAnnotationChunk*)annotations;
 - (void)handleReaction:(MXEvent *)event direction:(MXTimelineDirection)direction;
 - (void)handleRedaction:(MXEvent *)event;
