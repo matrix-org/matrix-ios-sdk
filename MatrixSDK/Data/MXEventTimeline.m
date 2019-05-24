@@ -444,9 +444,6 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
         {
             // Flush the existing messages for this room by keeping state events.
             [store deleteAllMessagesInRoom:_state.roomId];
-
-            // Flush aggregated data for the events in the timeline
-            [room.mxSession.aggregations resetDataInRoom:_state.roomId];
         }
 
         for (MXEvent *event in roomSync.timeline.events)

@@ -193,7 +193,7 @@
 
             MXEventAnnotationChunk *annotations = event.unsignedData.relations.annotation;
             XCTAssertNotNil(annotations);
-            XCTAssertEqual(annotations.count, 1);
+            XCTAssertEqual(annotations.count, 1);        // TODO: Ping Synapse team about that
             XCTAssertEqual(annotations.chunk.count, 1);
 
             MXEventAnnotation *annotation = annotations.chunk.firstObject;
@@ -420,6 +420,7 @@
         XCTAssertEqual(reactionCount.count, 1);
         if ([reactionCount.reaction isEqualToString: @"👍"])
         {
+            // TODO: https://github.com/vector-im/riot-ios/issues/2452
             XCTAssertTrue(reactionCount.myUserHasReacted, @"We must know reaction made by our user");
         }
         else if ([reactionCount.reaction isEqualToString: @"🙂"])
@@ -437,11 +438,6 @@
 // Check we get valid reaction (from the HS) when paginating
 - (void)checkReactionsWhenPaginating:(MXSession*)mxSession room:(MXRoom*)room event:(NSString*)eventId expectation:(XCTestExpectation*)expectation
 {
-    // TODO
-    //        MXAggregatedReactions *reactions = [mxSession.aggregations aggregatedReactionsOnEvent:eventId inRoom:room.roomId];
-    //        XCTAssertNotNil(reactions, @"TODO: The code should not forget reactions");
-    //        XCTAssertEqualObjects(reactions.reactions.firstObject.reaction, @"👍");
-
     [room liveTimeline:^(MXEventTimeline *liveTimeline) {
         [liveTimeline resetPagination];
         [liveTimeline paginate:100 direction:MXTimelineDirectionBackwards onlyFromStore:NO complete:^{
@@ -463,14 +459,18 @@
 {
     [self createScenarioWithAGappySync:^(MXSession *mxSession, MXRoom *room, MXSession *otherSession, XCTestExpectation *expectation, NSString *eventId, NSString *reactionEventId) {
 
+        // While we have not yet paginated back, we should see an outdated reaction count
+        MXAggregatedReactions *reactions = [mxSession.aggregations aggregatedReactionsOnEvent:eventId inRoom:room.roomId];
+        XCTAssertNotNil(reactions);
+        XCTAssertEqual(reactions.reactions.count, 1);
+        XCTAssertEqualObjects(reactions.reactions.firstObject.reaction, @"👍");
+
         [self checkReactionsWhenPaginating:mxSession room:room event:eventId expectation:expectation];
     }];
 }
 
 - (void)testReactionsWhenPaginatingFromAGappyInitialSync
 {
-    // TODO: reactionCount.myUserHasReacted fails because of spec
-    // https://github.com/vector-im/riot-ios/issues/2452
     [self createScenarioWithAGappyInitialSync:^(MXSession *mxSession, MXRoom *room, MXSession *otherSession, XCTestExpectation *expectation, NSString *eventId, NSString *reactionEventId) {
 
         [self checkReactionsWhenPaginating:mxSession room:room event:eventId expectation:expectation];
@@ -484,8 +484,7 @@
 - (void)checkReactionsOnPermalink:(MXSession*)mxSession room:(MXRoom*)room event:(NSString*)eventId expectation:(XCTestExpectation*)expectation
 {
     MXEventTimeline *timeline = [room timelineOnEvent:eventId];
-    [timeline resetPagination];
-    [timeline paginate:5 direction:MXTimelineDirectionBackwards onlyFromStore:NO complete:^{
+    [timeline resetPaginationAroundInitialEventWithLimit:0 success:^{
 
         // Random usage to keep a strong reference on timeline
         [timeline resetPagination];
@@ -504,6 +503,12 @@
 - (void)testReactionsOnPermalinkFromAGappySync
 {
     [self createScenarioWithAGappySync:^(MXSession *mxSession, MXRoom *room, MXSession *otherSession, XCTestExpectation *expectation, NSString *eventId, NSString *reactionEventId) {
+
+        // While we have not yet paginated back, we should see an outdated reaction count
+        MXAggregatedReactions *reactions = [mxSession.aggregations aggregatedReactionsOnEvent:eventId inRoom:room.roomId];
+        XCTAssertNotNil(reactions);
+        XCTAssertEqual(reactions.reactions.count, 1);
+        XCTAssertEqualObjects(reactions.reactions.firstObject.reaction, @"👍");
 
         [self checkReactionsOnPermalink:mxSession room:room event:eventId expectation:expectation];
     }];
