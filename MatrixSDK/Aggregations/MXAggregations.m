@@ -186,10 +186,6 @@
     {
         [self.aggregatedReactionsUpdater handleOriginalAggregatedDataOfEvent:event annotations:relations.annotation];
     }
-    //        else if (relations.replace)
-    //        {
-    //            // TODO: Manage edits
-    //        }
 }
 
 - (void)resetDataInRoom:(NSString *)roomId
@@ -206,9 +202,10 @@
 
         switch (event.eventType) {
             case MXEventTypeRoomMessage:
-                if ([event.relatesTo.relationType isEqualToString:MXEventRelationTypeReplace])
+                if (direction == MXTimelineDirectionForwards
+                    && [event.relatesTo.relationType isEqualToString:MXEventRelationTypeReplace])
                 {
-                    [self.aggregatedEditsUpdater handleReplace:event direction:direction];
+                    [self.aggregatedEditsUpdater handleReplace:event];
                 }
                 break;
             case MXEventTypeReaction:

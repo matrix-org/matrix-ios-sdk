@@ -20,7 +20,7 @@
 
 @property (nonatomic) NSString *myUserId;
 @property (nonatomic, weak) id<MXStore> matrixStore;
-@property (nonatomic, weak) id<MXAggregationsStore> store;
+@property (nonatomic, weak) id<MXAggregationsStore> store;  // TODO(@steve): To remove. As said IRL, we do not need the aggregations db. We update the event directly in matrixStore
 //@property (nonatomic) NSMutableArray<MXReactionCountChangeListener*> *listeners;
 
 @end
@@ -44,12 +44,6 @@
 }
 
 
-#pragma mark - Data access
-
-//- (nullable MXAggregatedReactions *)aggregatedReactionsOnEvent:(NSString*)eventId inRoom:(NSString*)roomId;
-//- (nullable MXReactionCount*)reactionCountForReaction:(NSString*)reaction onEvent:(NSString*)eventId;
-
-
 #pragma mark - Data update listener
 
 //- (id)listenToEditsUpdateInRoom:(NSString *)roomId block:(void (^)(NSDictionary<NSString *,MXReactionCountChange *> * _Nonnull))block;
@@ -58,21 +52,20 @@
 
 #pragma mark - Data update
 
-//- (void)handleOriginalAggregatedDataOfEvent:(MXEvent *)event replaces:(MXEventReplaceChunk*)replaces;
-
-- (void)handleReplace:(MXEvent *)event direction:(MXTimelineDirection)direction
+- (void)handleReplace:(MXEvent *)replaceEvent
 {
+    NSString *roomId = replaceEvent.roomId;
+    MXEvent *event = [self.matrixStore eventWithEventId:replaceEvent.relatesTo.eventId inRoom:roomId];
+    if (event)
+    {
+        // TODO(@steve): do all the business to update `event` as if we have received from an initial /sync
 
+        [self.matrixStore storeEventForRoom:roomId event:event direction:MXTimelineDirectionForwards];
+    }
 }
 
-- (void)handleRedaction:(MXEvent *)event
-{
-
-}
-
-- (void)resetDataInRoom:(NSString *)roomId
-{
-
-}
+//- (void)handleRedaction:(MXEvent *)event
+//{
+//}
 
 @end

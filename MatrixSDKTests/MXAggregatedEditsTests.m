@@ -134,7 +134,7 @@
 
             XCTAssertNotNil(event.unsignedData.relations);
 
-            XCTFail(@"TODO: Write the test once we know what we should receive");
+            XCTFail(@"TODO(@steve): test event.unsignedData.relations.replace ");
 
             [expectation fulfill];
 
@@ -166,7 +166,7 @@
             [mxSession start:^{
 
                 // -> Data from aggregations must be right
-                XCTFail(@"TODO: Write the test once we know what we should receive");
+                XCTFail(@"TODO(@steve): test event.body and event.unsignedData.relations.replace");
 
                 [expectation fulfill];
 
@@ -181,6 +181,22 @@
         }];
     }];
 }
+
+// TODO(@steve): TDD: do the equivalents test as in MXAggregatedEditsTests
+- (void)testAggregationsLive
+{
+    XCTFail(@"TODO");
+}
+- (void)testAggregationsListener
+{
+    XCTFail(@"TODO");
+}
+
+// TODO(@steve): phase:2
+//- (void)testReactionsWhenPaginatingFromAGappySync
+//- (void)testReactionsWhenPaginatingFromAGappyInitialSync
+//- (void)testReactionsOnPermalinkFromAGappySync
+//- (void)testReactionsOnPermalinkFromAGappyInitialSync
 
 @end
 

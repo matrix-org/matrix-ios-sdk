@@ -27,20 +27,13 @@ NS_ASSUME_NONNULL_BEGIN
               aggregationStore:(id<MXAggregationsStore>)store
                    matrixStore:(id<MXStore>)matrixStore;
 
-#pragma mark - Data access
-//- (nullable MXAggregatedReactions *)aggregatedReactionsOnEvent:(NSString*)eventId inRoom:(NSString*)roomId;
-//- (nullable MXReactionCount*)reactionCountForReaction:(NSString*)reaction onEvent:(NSString*)eventId;
-
 #pragma mark - Data update listener
 //- (id)listenToEditsUpdateInRoom:(NSString *)roomId block:(void (^)(NSDictionary<NSString *,MXReactionCountChange *> * _Nonnull))block;
 //- (void)removeListener:(id)listener;
 
 #pragma mark - Data update
-//- (void)handleOriginalAggregatedDataOfEvent:(MXEvent *)event replaces:(MXEventReplaceChunk*)replaces;
-- (void)handleReplace:(MXEvent *)event direction:(MXTimelineDirection)direction;
-- (void)handleRedaction:(MXEvent *)event;
-
-- (void)resetDataInRoom:(NSString *)roomId;
+- (void)handleReplace:(MXEvent *)replaceEvent;
+//- (void)handleRedaction:(MXEvent *)event;     // TODO(@steve): phase:2. We do not need to handle redaction of an edit for MVP
 
 @end
 

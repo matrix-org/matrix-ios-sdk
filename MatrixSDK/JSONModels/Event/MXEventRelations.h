@@ -29,7 +29,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property (nonatomic, readonly, nullable) MXEventAnnotationChunk *annotation;
 //@property (nonatomic, readonly, nullable) MXEventReferenceChunk *reference;
-//@property (nonatomic, readonly, nullable) MXEventReplaceChunk *replace;
+//@property (nonatomic, readonly, nullable) MXEventReplace *replace;   // TODO(@steve): MXEventReplace should have property eventId and later originServerTs
 
 @end
 

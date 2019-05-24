@@ -183,7 +183,7 @@
 
 // - Run the initial condition scenario
 // -> Check data is correctly aggregated when fetching the reacted event directly from the homeserver
-- (void)testAggregatedReaction
+- (void)testAggregatedReactionServerSide
 {
     // - Run the initial condition scenario
     [self createScenario:^(MXSession *mxSession, MXRoom *room, MXSession *otherSession, XCTestExpectation *expectation, NSString *eventId, NSString *editEventId) {
