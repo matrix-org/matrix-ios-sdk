@@ -49,10 +49,6 @@
 - (nullable MXAggregatedReactions *)aggregatedReactionsOnEvent:(NSString*)eventId inRoom:(NSString*)roomId
 {
     NSArray<MXReactionCount*> *reactions = [self.store reactionCountsOnEvent:eventId];
-    if (!reactions)
-    {
-        reactions = [self reactionCountsFromMatrixStoreOnEvent:eventId inRoom:roomId];
-    }
 
     if (!reactions)
     {
@@ -90,6 +86,32 @@
     [self.listeners removeObject:listener];
 }
 
+
+- (void)handleOriginalAggregatedDataOfEvent:(MXEvent *)event annotations:(MXEventAnnotationChunk*)annotations
+{
+    NSMutableArray *reactions;
+
+    for (MXEventAnnotation *annotation in annotations.chunk)
+    {
+        if ([annotation.type isEqualToString:MXEventAnnotationReaction])
+        {
+            MXReactionCount *reactionCount = [MXReactionCount new];
+            reactionCount.reaction = annotation.key;
+            reactionCount.count = annotation.count;
+
+            if (!reactions)
+            {
+                reactions = [NSMutableArray array];
+            }
+            [reactions addObject:reactionCount];
+        }
+    }
+
+    if (reactions)
+    {
+        [self.store setReactionCounts:reactions onEvent:event.eventId inRoom:event.roomId];
+    }
+}
 
 
 - (void)handleReaction:(MXEvent *)event direction:(MXTimelineDirection)direction
@@ -156,7 +178,7 @@
     BOOL isANewReaction = NO;
 
     // Migrate data from matrix store to aggregation store if needed
-    [self checkAggregationStoreForEvent:eventId inRoomId:reactionEvent.roomId];
+    [self checkAggregationStoreWithHackForEvent:eventId inRoomId:reactionEvent.roomId];
 
     // Create or update the current reaction count if it exists
     MXReactionCount *reactionCount = [self.store reactionCountForReaction:reaction onEvent:eventId];
@@ -190,7 +212,7 @@
 - (void)removeReaction:(NSString*)reaction onEvent:(NSString*)eventId inRoomId:(NSString*)roomId
 {
     // Migrate data from matrix store to aggregation store if needed
-    [self checkAggregationStoreForEvent:eventId inRoomId:roomId];
+    [self checkAggregationStoreWithHackForEvent:eventId inRoomId:roomId];
 
     // Create or update the current reaction count if it exists
     MXReactionCount *reactionCount = [self.store reactionCountForReaction:reaction onEvent:eventId];
@@ -212,53 +234,6 @@
             [self notifyReactionCountChangeListenersOfRoom:roomId event:eventId forDeletedReaction:reaction];
         }
     }
-}
-
-// If not already done, copy aggregation data from matrix store to aggregation store
-- (void)checkAggregationStoreForEvent:(NSString*)eventId inRoomId:(NSString*)roomId
-{
-    if (![self.store hasReactionCountsOnEvent:eventId])
-    {
-        NSArray<MXReactionCount*> *reactions = [self reactionCountsFromMatrixStoreOnEvent:eventId inRoom:roomId];
-
-        if (!reactions)
-        {
-            // Check reaction data from the hack
-            reactions = [self reactionCountsUsingHackOnEvent:eventId inRoom:roomId];
-        }
-
-        if (reactions)
-        {
-            [self.store setReactionCounts:reactions onEvent:eventId inRoom:roomId];
-        }
-    }
-}
-
-- (nullable NSArray<MXReactionCount*> *)reactionCountsFromMatrixStoreOnEvent:(NSString*)eventId inRoom:(NSString*)roomId
-{
-    NSMutableArray *reactions;
-
-    MXEvent *event = [self.matrixStore eventWithEventId:eventId inRoom:roomId];
-    if (event)
-    {
-        for (MXEventAnnotation *annotation in event.unsignedData.relations.annotation.chunk)
-        {
-            if ([annotation.type isEqualToString:MXEventAnnotationReaction])
-            {
-                MXReactionCount *reactionCount = [MXReactionCount new];
-                reactionCount.reaction = annotation.key;
-                reactionCount.count = annotation.count;
-
-                if (!reactions)
-                {
-                    reactions = [NSMutableArray array];
-                }
-                [reactions addObject:reactionCount];
-            }
-        }
-    }
-
-    return reactions;
 }
 
 - (void)notifyReactionCountChangeListenersOfRoom:(NSString*)roomId event:(NSString*)eventId reactionCount:(MXReactionCount*)reactionCount isNewReaction:(BOOL)isNewReaction
@@ -299,9 +274,25 @@
     }
 }
 
+
 #pragma mark - Reactions hack (TODO: Remove all methods) -
 /// TODO: To remove once the feature has landed on matrix.org homeserver
 
+
+// If not already done, run the hack: build reaction count from known relations
+- (void)checkAggregationStoreWithHackForEvent:(NSString*)eventId inRoomId:(NSString*)roomId
+{
+    if (![self.store hasReactionCountsOnEvent:eventId])
+    {
+        // Check reaction data from the hack
+        NSArray<MXReactionCount*> *reactions = [self reactionCountsUsingHackOnEvent:eventId inRoom:roomId];
+
+        if (reactions)
+        {
+            [self.store setReactionCounts:reactions onEvent:eventId inRoom:roomId];
+        }
+    }
+}
 
 // Compute reactions counts from relations we know
 // Note: This is not accurate and will be removed soon

@@ -17,6 +17,7 @@
 #import <Foundation/Foundation.h>
 
 #import "MXAggregatedReactions.h"
+#import "MXEventAnnotationChunk.h"
 
 #import "MXStore.h"
 #import "MXAggregationsStore.h"
@@ -36,6 +37,7 @@ NS_ASSUME_NONNULL_BEGIN
 - (id)listenToReactionCountUpdateInRoom:(NSString *)roomId block:(void (^)(NSDictionary<NSString *,MXReactionCountChange *> * _Nonnull))block;
 - (void)removeListener:(id)listener;
 
+- (void)handleOriginalAggregatedDataOfEvent:(MXEvent *)event annotations:(MXEventAnnotationChunk*)annotations;
 - (void)handleReaction:(MXEvent *)event direction:(MXTimelineDirection)direction;
 - (void)handleRedaction:(MXEvent *)event;
 

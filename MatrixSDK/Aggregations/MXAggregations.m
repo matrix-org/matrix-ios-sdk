@@ -179,6 +179,19 @@
     return self;
 }
 
+- (void)handleOriginalDataOfEvent:(MXEvent *)event
+{
+    MXEventRelations *relations = event.unsignedData.relations;
+    if (relations.annotation)
+    {
+        [self.aggregatedReactionsUpdater handleOriginalAggregatedDataOfEvent:event annotations:relations.annotation];
+    }
+    //        else if (relations.replace)
+    //        {
+    //            // TODO: Manage edits
+    //        }
+}
+
 - (void)resetDataInRoom:(NSString *)roomId
 {
     [self.aggregatedReactionsUpdater resetDataInRoom:roomId];
