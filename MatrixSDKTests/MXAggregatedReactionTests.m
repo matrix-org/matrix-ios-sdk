@@ -353,6 +353,60 @@
     }];
 }
 
+// Test for "Unreact can have no visual effect" (https://github.com/vector-im/riot-ios/issues/2470)
+// - Run the initial condition scenario
+// - Do an initial sync
+// - Unreact
+// -> Data from aggregations must be right
+- (void)testUnreactAfterInitialSync
+{
+    // - Run the initial condition scenario
+    [self createScenario:^(MXSession *mxSession, MXRoom *room, MXSession *otherSession, XCTestExpectation *expectation, NSString *eventId, NSString *reactionEventId) {
+
+        MXRestClient *restClient = mxSession.matrixRestClient;
+
+        [mxSession.aggregations resetData];
+        [mxSession close];
+        mxSession = nil;
+
+        // - Do an initial sync
+        mxSession = [[MXSession alloc] initWithMatrixRestClient:restClient];
+        [mxSession setStore:[[MXMemoryStore alloc] init] success:^{
+
+            [mxSession start:^{
+
+                [mxSession.aggregations listenToReactionCountUpdateInRoom:room.roomId block:^(NSDictionary<NSString *,MXReactionCountChange *> * _Nonnull changes) {
+
+                    XCTAssertEqual(changes.count, 1, @"Only one change");
+
+                    MXReactionCountChange *change = changes[eventId];
+                    XCTAssertNotNil(change.deleted);
+
+                    // -> Data from aggregations must be right
+                    MXAggregatedReactions *reactions = [mxSession.aggregations aggregatedReactionsOnEvent:eventId inRoom:room.roomId];
+                    XCTAssertNil(reactions);
+
+                    [expectation fulfill];
+                }];
+
+                // - Unreact
+                [mxSession.aggregations unReactOnReaction:@"👍" toEvent:eventId inRoom:room.roomId success:^() {
+                } failure:^(NSError *error) {
+                    XCTFail(@"The operation should not fail - NSError: %@", error);
+                    [expectation fulfill];
+                }];
+
+            } failure:^(NSError *error) {
+                XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                [expectation fulfill];
+            }];
+
+        } failure:^(NSError *error) {
+            XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+            [expectation fulfill];
+        }];
+    }];
+}
 
 #pragma mark - Pagination
 
