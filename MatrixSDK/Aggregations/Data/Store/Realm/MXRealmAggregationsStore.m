@@ -100,6 +100,12 @@
     RLMRealm *realm = self.realm;
 
     [realm transactionWithBlock:^{
+        // Flush previous data
+        RLMResults<MXRealmReactionCount *> *realmReactionCounts = [MXRealmReactionCount objectsInRealm:self.realm
+                                                                                                 where:@"eventId = %@", eventId];
+        [realm deleteObjects:realmReactionCounts];
+
+        // Set new one
         for (MXReactionCount *reactionCount in reactionCounts)
         {
             MXRealmReactionCount *realmReactionCount = [self.mapper realmReactionCountFromReactionCount:reactionCount

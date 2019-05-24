@@ -444,9 +444,6 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
         {
             // Flush the existing messages for this room by keeping state events.
             [store deleteAllMessagesInRoom:_state.roomId];
-
-            // Flush aggregated data for the events in the timeline
-            [room.mxSession.aggregations resetDataInRoom:_state.roomId];
         }
 
         for (MXEvent *event in roomSync.timeline.events)
@@ -625,6 +622,19 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
     if (!fromStore)
     {
         [store storeEventForRoom:_state.roomId event:event direction:direction];
+    }
+
+    // Notify the aggregation manager for every events so that it can store
+    // aggregated data sent by the server
+
+    // TODO: remove this check once https://github.com/matrix-org/synapse/pull/5220 is merged
+    if (_isLiveTimeline && direction == MXTimelineDirectionForwards && isRoomInitialSync)
+    {
+        // Do nothing to avoid double counting
+    }
+    else
+    {
+        [room.mxSession.aggregations handleOriginalDataOfEvent:event];
     }
 
     // Notify listeners

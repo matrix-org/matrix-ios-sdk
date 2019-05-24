@@ -21,6 +21,7 @@
 #import "MXAggregatedReactions.h"
 #import "MXReactionCount.h"
 #import "MXReactionCountChange.h"
+#import "MXEvent.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -96,6 +97,28 @@ NS_ASSUME_NONNULL_BEGIN
  @param listener the listener id.
  */
 - (void)removeListener:(id)listener;
+
+
+#pragma mark - Edits
+
+/**
+ Replace a text in a matrix event.
+
+ @param event The event to update
+ @param text The new message text
+
+ @param success A block object called when the operation succeeds. It returns
+                the event id of the event generated on the homeserver.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)replaceTextMessageEvent:(MXEvent*)event
+                            withTextMessage:(nullable NSString*)text
+//                          formattedText:(nullable NSString*)formattedText     // TODO
+//                          localEcho:(MXEvent**)localEcho                      // TODO
+                                    success:(void (^)(NSString *eventId))success
+                                    failure:(void (^)(NSError *error))failure;
 
 
 /**

@@ -16,7 +16,7 @@
 
 #import "MXAggregations.h"
 
-@class MXSession;
+@class MXSession, MXEvent;
 
 
 NS_ASSUME_NONNULL_BEGIN
@@ -32,6 +32,14 @@ NS_ASSUME_NONNULL_BEGIN
  @param mxSession the related 'MXSession'.
  */
 - (instancetype)initWithMatrixSession:(MXSession *)mxSession;
+
+/**
+ Notify the aggregation manager for every events so that it can store
+ aggregated data sent by the server.
+
+ @param event the event received in a timeline.
+ */
+- (void)handleOriginalDataOfEvent:(MXEvent*)event;
 
 /**
  Clear cached data for a room.
