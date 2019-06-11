@@ -20,6 +20,7 @@
 #import "MXTools.h"
 #import "MXEventDecryptionResult.h"
 #import "MXEncryptedContentFile.h"
+#import "MXEventRelations.h"
 
 #pragma mark - Constants definitions
 
@@ -395,6 +396,16 @@ NSString *const kMXEventIdentifierKey = @"kMXEventIdentifierKey";
     return NO;
 }
 
+- (BOOL)isEditEvent
+{
+    return self.eventType == MXEventTypeRoomMessage && [self.relatesTo.relationType isEqualToString:MXEventRelationTypeReplace];
+}
+
+- (BOOL)contentHasBeenEdited
+{
+    return self.unsignedData.relations.replace != nil;
+}
+
 - (NSArray *)readReceiptEventIds
 {
     NSMutableArray* list = nil;
@@ -538,6 +549,40 @@ NSString *const kMXEventIdentifierKey = @"kMXEventIdentifierKey";
     // Note: Contrary to server, we ignore here the "unsigned" event level key.
     
     return [MXEvent modelFromJSON:prunedEventDict];
+}
+
+- (MXEvent*)editedEventFromReplacementEvent:(MXEvent*)replaceEvent
+{
+    MXEvent *editedEvent;
+    MXEvent *event = self;
+    NSDictionary *newContentDict;
+    MXJSONModelSetDictionary(newContentDict, replaceEvent.content[@"m.new_content"])
+    
+    if (event.content[@"body"] && newContentDict && [newContentDict[@"msgtype"] isEqualToString:event.content[@"msgtype"]])
+    {
+        NSMutableDictionary *editedEventDict = [event.JSONDictionary mutableCopy];
+        NSMutableDictionary *editedEventContentDict = [editedEventDict[@"content"] mutableCopy];
+        editedEventContentDict[@"body"] = newContentDict[@"body"];
+        editedEventDict[@"content"] = editedEventContentDict;
+        
+        NSDictionary *replaceEventDict = @{ @"event_id": event.eventId };
+        
+        if (event.unsignedData.relations)
+        {
+            editedEventDict[@"unsigned"][@"m.relations"][@"m.replace"] = replaceEventDict;
+        }
+        else
+        {
+            editedEventDict[@"unsigned"] = @{ @"m.relations": @{
+                                                      @"m.replace": replaceEventDict
+                                                      }
+                                              };
+        }
+        
+        editedEvent = [MXEvent modelFromJSON:editedEventDict];
+    }
+    
+    return editedEvent;
 }
 
 - (NSComparisonResult)compareOriginServerTs:(MXEvent *)otherEvent
