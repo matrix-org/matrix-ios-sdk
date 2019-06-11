@@ -28,8 +28,8 @@ NS_ASSUME_NONNULL_BEGIN
                    matrixStore:(id<MXStore>)matrixStore;
 
 #pragma mark - Data update listener
-//- (id)listenToEditsUpdateInRoom:(NSString *)roomId block:(void (^)(NSDictionary<NSString *,MXReactionCountChange *> * _Nonnull))block;
-//- (void)removeListener:(id)listener;
+- (id)listenToEditsUpdateInRoom:(NSString *)roomId block:(void (^)(MXEvent* replaceEvent))block;
+- (void)removeListener:(id)listener;
 
 #pragma mark - Data update
 - (void)handleReplace:(MXEvent *)replaceEvent;
