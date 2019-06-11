@@ -19,10 +19,15 @@
 #import "MatrixSDKTestsData.h"
 
 #import "MXFileStore.h"
+#import "MXEventRelations.h"
+#import "MXEventReplace.h"
 
 // Do not bother with retain cycles warnings in tests
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Warc-retain-cycles"
+
+static NSString* const kOriginalMessageText = @"Bonjour";
+static NSString* const kEditedMessageText = @"I meant Hello";
 
 @interface MXAggregatedEditsTests : XCTestCase
 {
@@ -50,11 +55,10 @@
 {
     [matrixSDKTestsData doMXSessionTestWithBobAndARoom:self andStore:[[MXMemoryStore alloc] init] readyToTest:^(MXSession *mxSession, MXRoom *room, XCTestExpectation *expectation) {
 
-        [room sendTextMessage:@"Bonjour" success:^(NSString *eventId) {
+        [room sendTextMessage:kOriginalMessageText success:^(NSString *eventId) {
             [mxSession eventWithEventId:eventId inRoom:room.roomId success:^(MXEvent *event) {
-                [mxSession.aggregations replaceTextMessageEvent:event withTextMessage:@"I meant Hello" success:^(NSString * _Nonnull editEventId) {
-
-                    // TODO: replaceTextMessageEvent should return only when the actual edit event comes back the sync
+                [mxSession.aggregations replaceTextMessageEvent:event withTextMessage:kEditedMessageText success:^(NSString * _Nonnull editEventId) {
+                    
                     dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 1 * NSEC_PER_SEC), dispatch_get_main_queue(), ^{
                         readyToTest(mxSession, room, expectation, eventId, editEventId);
                     });
@@ -75,6 +79,58 @@
     }];
 }
 
+- (void)testEditingEventManually
+{
+    NSDictionary *messageEventDict = @{
+                                       @"content": @{
+                                               @"body": kOriginalMessageText,
+                                               @"msgtype": @"m.text"
+                                               },
+                                       @"event_id": @"$messageeventid:matrix.org",
+                                       @"origin_server_ts": @(1560253386247),
+                                       @"sender": @"@billsam:matrix.org",
+                                       @"type": @"m.room.message",
+                                       @"unsigned": @{
+                                               @"age": @(6117832)
+                                               },
+                                       @"room_id": @"!roomid:matrix.org"
+                                       };
+    
+    NSDictionary *replaceEventDict = @{
+                                       @"content": @{
+                                               @"body": [NSString stringWithFormat:@" * %@", kEditedMessageText],
+                                               @"m.new_content": @{
+                                                       @"body": kEditedMessageText,
+                                                       @"msgtype": @"m.text"
+                                                       },
+                                               @"m.relates_to": @{
+                                                       @"event_id": @"$messageeventid:matrix.org",
+                                                       @"rel_type": @"m.replace"
+                                                       },
+                                               @"msgtype": @"m.text"
+                                               },
+                                       @"event_id": @"$replaceeventid:matrix.org",
+                                       @"origin_server_ts": @(1560254175300),
+                                       @"sender": @("@billsam:matrix.org"),
+                                       @"type": @"m.room.message",
+                                       @"unsigned": @{
+                                               @"age": @(5328779)
+                                               },
+                                       @"room_id": @"!roomid:matrix.org"
+                                       };
+    
+    
+    MXEvent *messageEvent = [MXEvent modelFromJSON:messageEventDict];
+    MXEvent *replaceEvent = [MXEvent modelFromJSON:replaceEventDict];
+    
+    MXEvent *editedEvent = [messageEvent editedEventFromReplacementEvent:replaceEvent];
+    
+    XCTAssertNotNil(editedEvent);
+    XCTAssertTrue(editedEvent.contentHasBeenEdited);
+    XCTAssertEqualObjects(editedEvent.unsignedData.relations.replace.eventId, replaceEvent.eventId);
+    XCTAssertEqualObjects(editedEvent.content[@"body"], kEditedMessageText);
+}
+
 
 // - Send a message
 // - Edit it
@@ -84,12 +140,12 @@
     [matrixSDKTestsData doMXSessionTestWithBobAndARoom:self andStore:[[MXMemoryStore alloc] init] readyToTest:^(MXSession *mxSession, MXRoom *room, XCTestExpectation *expectation) {
 
         // - Send a message
-        [room sendTextMessage:@"Bonjour" success:^(NSString *eventId) {
+        [room sendTextMessage:kOriginalMessageText success:^(NSString *eventId) {
 
             [mxSession eventWithEventId:eventId inRoom:room.roomId success:^(MXEvent *event) {
 
                 // Edit it
-                [mxSession.aggregations replaceTextMessageEvent:event withTextMessage:@"I meant Hello" success:^(NSString * _Nonnull eventId) {
+                [mxSession.aggregations replaceTextMessageEvent:event withTextMessage:kEditedMessageText success:^(NSString * _Nonnull eventId) {
                      XCTAssertNotNil(eventId);
                  } failure:^(NSError *error) {
                      XCTFail(@"The operation should not fail - NSError: %@", error);
@@ -106,7 +162,7 @@
                     XCTAssertEqualObjects(event.relatesTo.eventId, eventId);
 
                     XCTAssertEqualObjects(event.content[@"m.new_content"][@"msgtype"], kMXMessageTypeText);
-                    XCTAssertEqualObjects(event.content[@"m.new_content"][@"body"], @"I meant Hello");
+                    XCTAssertEqualObjects(event.content[@"m.new_content"][@"body"], kEditedMessageText);
 
                     [expectation fulfill];
                 }];
@@ -131,10 +187,11 @@
 
         // -> Check data is correctly aggregated when fetching the edited event directly from the homeserver
         [mxSession.matrixRestClient eventWithEventId:eventId inRoom:room.roomId success:^(MXEvent *event) {
-
-            XCTAssertNotNil(event.unsignedData.relations);
-
-            XCTFail(@"TODO(@steve): test event.unsignedData.relations.replace ");
+            
+            XCTAssertNotNil(event);
+            XCTAssertTrue(event.contentHasBeenEdited);
+            XCTAssertEqualObjects(event.unsignedData.relations.replace.eventId, editEventId);
+            XCTAssertEqualObjects(event.content[@"body"], kEditedMessageText);
 
             [expectation fulfill];
 
@@ -165,8 +222,13 @@
 
             [mxSession start:^{
 
+                MXEvent *editedEvent = [mxSession.store eventWithEventId:eventId inRoom:room.roomId];
+                
                 // -> Data from aggregations must be right
-                XCTFail(@"TODO(@steve): test event.body and event.unsignedData.relations.replace");
+                XCTAssertNotNil(editedEvent);
+                XCTAssertTrue(editedEvent.contentHasBeenEdited);
+                XCTAssertEqualObjects(editedEvent.unsignedData.relations.replace.eventId, editEventId);
+                XCTAssertEqualObjects(editedEvent.content[@"body"], kEditedMessageText);
 
                 [expectation fulfill];
 
@@ -182,14 +244,57 @@
     }];
 }
 
-// TODO(@steve): TDD: do the equivalents test as in MXAggregatedEditsTests
+// - Run the initial condition scenario
+// -> Data from aggregations must be right
 - (void)testAggregationsLive
 {
-    XCTFail(@"TODO");
+    // - Run the initial condition scenario
+    [self createScenario:^(MXSession *mxSession, MXRoom *room, XCTestExpectation *expectation, NSString *eventId, NSString *editEventId) {
+        
+        // -> Data from aggregations must be right
+        MXEvent *editedEvent = [mxSession.store eventWithEventId:eventId inRoom:room.roomId];
+        
+        XCTAssertNotNil(editedEvent);
+        XCTAssertTrue(editedEvent.contentHasBeenEdited);
+        XCTAssertEqualObjects(editedEvent.unsignedData.relations.replace.eventId, editEventId);
+        XCTAssertEqualObjects(editedEvent.content[@"body"], kEditedMessageText);
+        
+        [expectation fulfill];
+    }];
 }
+
+// - Run the initial condition scenario
+// - Edit 2 times
+// -> We must get notified about the second replace event
 - (void)testAggregationsListener
 {
-    XCTFail(@"TODO");
+    NSString *secondEditionTextMessage = @"Oups";
+    
+    // - Run the initial condition scenario
+    [self createScenario:^(MXSession *mxSession, MXRoom *room, XCTestExpectation *expectation, NSString *eventId, NSString *editEventId) {
+        
+        // -> We must get notified about the reaction count change
+        [mxSession.aggregations listenToEditsUpdateInRoom:room.roomId block:^(MXEvent * _Nonnull replaceEvent) {
+            
+            MXEvent *editedEvent = [mxSession.store eventWithEventId:eventId inRoom:room.roomId];
+            
+            XCTAssertNotNil(editedEvent);
+            XCTAssertTrue(editedEvent.contentHasBeenEdited);
+            XCTAssertEqualObjects(editedEvent.unsignedData.relations.replace.eventId, replaceEvent.eventId);
+            XCTAssertEqualObjects(editedEvent.content[@"body"], secondEditionTextMessage);
+            
+            [expectation fulfill];
+        }];
+        
+        MXEvent *editedEvent = [mxSession.store eventWithEventId:eventId inRoom:room.roomId];
+        
+        [mxSession.aggregations replaceTextMessageEvent:editedEvent withTextMessage:secondEditionTextMessage success:^(NSString * _Nonnull eventId) {
+            
+        } failure:^(NSError * _Nonnull error) {
+            XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+            [expectation fulfill];
+        }];
+    }];
 }
 
 // TODO(@steve): phase:2
