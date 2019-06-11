@@ -45,6 +45,13 @@ FOUNDATION_EXPORT NSString *const kMXErrCodeStringGuestAccessForbidden;
 FOUNDATION_EXPORT NSString *const kMXErrCodeStringConsentNotGiven;
 FOUNDATION_EXPORT NSString *const kMXErrCodeStringResourceLimitExceeded;
 FOUNDATION_EXPORT NSString *const kMXErrCodeStringBackupWrongKeysVersion;
+FOUNDATION_EXPORT NSString *const kMXErrCodeStringPasswordTooShort;
+FOUNDATION_EXPORT NSString *const kMXErrCodeStringPasswordNoDigit;
+FOUNDATION_EXPORT NSString *const kMXErrCodeStringPasswordNoUppercase;
+FOUNDATION_EXPORT NSString *const kMXErrCodeStringPasswordNoLowercase;
+FOUNDATION_EXPORT NSString *const kMXErrCodeStringPasswordNoSymbol;
+FOUNDATION_EXPORT NSString *const kMXErrCodeStringPasswordInDictionary;
+FOUNDATION_EXPORT NSString *const kMXErrCodeStringWeakPassword;
 
 FOUNDATION_EXPORT NSString *const kMXErrorStringInvalidToken;
 
