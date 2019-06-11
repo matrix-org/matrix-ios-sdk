@@ -7,6 +7,7 @@ Improvements:
  * MXEvent: Create a MXEventUnsignedData model for `MXEvent.unsignedData`.
  * MXEvent: Add relatesTo property.
  * Aggregations: Create MXSession.MXAggregations to manage Matrix aggregations API.
+ * Add the Matrix errors related to the password policy.
 
 Bug Fix:
  * MXMediaLoader: Disable trusting the built-in anchors certificates when the certificate pinning is enabled.
