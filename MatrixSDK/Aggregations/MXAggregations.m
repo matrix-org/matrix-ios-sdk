@@ -26,6 +26,7 @@
 #import "MXRealmAggregationsStore.h"
 #import "MXAggregatedReactionsUpdater.h"
 #import "MXAggregatedEditsUpdater.h"
+#import "MXEventEditsListener.h"
 
 @interface MXAggregations ()
 
@@ -118,7 +119,14 @@
 
 - (void)removeListener:(id)listener
 {
-    [self.aggregatedReactionsUpdater removeListener:listener];
+    if ([listener isKindOfClass:[MXReactionCountChangeListener class]])
+    {
+        [self.aggregatedReactionsUpdater removeListener:listener];
+    }
+    else if ([listener isKindOfClass:[MXEventEditsListener class]])
+    {
+        [self.aggregatedEditsUpdater removeListener:listener];
+    }
 }
 
 - (void)resetData
@@ -155,6 +163,11 @@
                                                         success:success failure:failure];
 }
 
+
+- (id)listenToEditsUpdateInRoom:(NSString *)roomId block:(void (^)(MXEvent* replaceEvent))block
+{
+    return [self.aggregatedEditsUpdater listenToEditsUpdateInRoom:roomId block:block];
+}
 
 #pragma mark - SDK-Private methods -
 

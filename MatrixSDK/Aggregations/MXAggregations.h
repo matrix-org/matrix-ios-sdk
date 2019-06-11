@@ -121,6 +121,17 @@ NS_ASSUME_NONNULL_BEGIN
                                     failure:(void (^)(NSError *error))failure;
 
 
+
+/**
+ Add a listener to edits updates of events within a room.
+
+ @param roomId The id of the room.
+ @param block The block called on updates.
+ @return a listener id.
+ */
+- (id)listenToEditsUpdateInRoom:(NSString *)roomId block:(void (^)(MXEvent* replaceEvent))block;
+
+
 /**
  Clear cached data.
 
