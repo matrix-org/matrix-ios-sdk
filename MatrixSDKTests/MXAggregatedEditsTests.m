@@ -185,6 +185,8 @@ static NSString* const kEditedMessageText = @"I meant Hello";
     // - Run the initial condition scenario
     [self createScenario:^(MXSession *mxSession, MXRoom *room, XCTestExpectation *expectation, NSString *eventId, NSString *editEventId) {
 
+        MXEvent *localEditedEvent = [mxSession.store eventWithEventId:eventId inRoom:room.roomId];
+        
         // -> Check data is correctly aggregated when fetching the edited event directly from the homeserver
         [mxSession.matrixRestClient eventWithEventId:eventId inRoom:room.roomId success:^(MXEvent *event) {
             
@@ -192,6 +194,9 @@ static NSString* const kEditedMessageText = @"I meant Hello";
             XCTAssertTrue(event.contentHasBeenEdited);
             XCTAssertEqualObjects(event.unsignedData.relations.replace.eventId, editEventId);
             XCTAssertEqualObjects(event.content[@"body"], kEditedMessageText);
+            
+            XCTAssertEqualObjects(event.content, localEditedEvent.content);
+            XCTAssertEqualObjects(event.JSONDictionary[@"unsigned"][@"relations"], localEditedEvent.JSONDictionary[@"unsigned"][@"relations"]);
 
             [expectation fulfill];
 
@@ -231,7 +236,9 @@ static NSString* const kEditedMessageText = @"I meant Hello";
                 XCTAssertTrue(editedEvent.contentHasBeenEdited);
                 XCTAssertEqualObjects(editedEvent.unsignedData.relations.replace.eventId, editEventId);
                 XCTAssertEqualObjects(editedEvent.content[@"body"], kEditedMessageText);
-                XCTAssertEqualObjects(editedEvent.JSONDictionary, editedEventBeforeSync.JSONDictionary);
+                
+                XCTAssertEqualObjects(editedEvent.content, editedEventBeforeSync.content);
+                XCTAssertEqualObjects(editedEvent.JSONDictionary[@"unsigned"][@"relations"], editedEventBeforeSync.JSONDictionary[@"unsigned"][@"relations"]);
 
                 [expectation fulfill];
 
