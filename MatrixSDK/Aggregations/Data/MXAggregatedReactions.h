@@ -27,6 +27,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property (nonatomic) NSArray<MXReactionCount*> *reactions;
 
+- (nullable MXAggregatedReactions *)aggregatedReactionsWithNonZeroCount;
+
 @end
 
 NS_ASSUME_NONNULL_END
