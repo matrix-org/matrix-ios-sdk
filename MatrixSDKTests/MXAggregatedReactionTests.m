@@ -431,8 +431,12 @@
             MXAggregatedReactions *reactions = [mxSession.aggregations aggregatedReactionsOnEvent:eventId inRoom:room.roomId];
             XCTAssertNotNil(reactions);
             XCTAssertEqual(reactions.reactions.count, 1);
-            XCTAssertEqualObjects(reactions.reactions.firstObject.reaction, @"👍");
-            //XCTAssertTrue(reactions.reactions.firstObject.myUserHasReacted);     TODO
+
+            MXReactionCount *reactionCount = reactions.reactions.firstObject;
+            XCTAssertEqualObjects(reactionCount.reaction, @"👍");
+            XCTAssertEqual(reactionCount.count, 1);
+            XCTAssertTrue(reactionCount.myUserHasReacted);
+            XCTAssertTrue(reactionCount.containsLocalEcho);
 
             [expectation fulfill];
 
@@ -460,7 +464,15 @@
 
         // -> We must have reaction count before the request complete
         MXAggregatedReactions *reactions = [mxSession.aggregations aggregatedReactionsOnEvent:eventId inRoom:room.roomId];
-        XCTAssertNil(reactions);
+
+        XCTAssertNotNil(reactions);
+        XCTAssertEqual(reactions.reactions.count, 1);
+
+        MXReactionCount *reactionCount = reactions.reactions.firstObject;
+        XCTAssertEqualObjects(reactionCount.reaction, @"👍");
+        XCTAssertEqual(reactionCount.count, 0);
+        XCTAssertFalse(reactionCount.myUserHasReacted);
+        XCTAssertTrue(reactionCount.containsLocalEcho);
 
         [expectation fulfill];
     }];

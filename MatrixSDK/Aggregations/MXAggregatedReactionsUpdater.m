@@ -488,26 +488,29 @@
 
         for (NSString *reaction in self.reactionOperations[eventId])
         {
-            for (MXReactionOperation *reactionOperation in self.reactionOperations[eventId][reaction])
+            if (self.reactionOperations[eventId][reaction])
             {
-                if (reactionOperation.isAddOperation)
+                MXReactionCount *updatedReactionCount = reactionCountsByReaction[reaction];
+                if (!updatedReactionCount)
                 {
-                    if (!reactionCountsByReaction[reaction])
-                    {
-                        reactionCountsByReaction[reaction] = [MXReactionCount new];
-                        reactionCountsByReaction[reaction].reaction = reaction;
-                    }
+                    updatedReactionCount = [MXReactionCount new];
+                    updatedReactionCount.reaction = reaction;
+                    reactionCountsByReaction[reaction] = updatedReactionCount;
+                }
 
-                    reactionCountsByReaction[reaction].count++;
-                }
-                else if (reactionCountsByReaction[reaction])
+                for (MXReactionOperation *reactionOperation in self.reactionOperations[eventId][reaction])
                 {
-                    reactionCountsByReaction[reaction].count--;
-                    if (reactionCountsByReaction[reaction].count == 0)
+                    if (reactionOperation.isAddOperation)
                     {
-                        [reactionCountsByReaction removeObjectForKey:reaction];
+                        updatedReactionCount.count++;
+                    }
+                    else
+                    {
+                        updatedReactionCount.count--;
                     }
                 }
+
+                updatedReactionCount.localEchoesOperations = self.reactionOperations[eventId][reaction];
             }
         }
 

@@ -20,7 +20,20 @@
 
 - (BOOL)myUserHasReacted
 {
-    return (_myUserReactionEventId != nil);
+    // Take local echoes into consideration first
+    if (self.localEchoesOperations)
+    {
+        return self.localEchoesOperations.lastObject.isAddOperation;
+    }
+    else
+    {
+        return (_myUserReactionEventId != nil);
+    }
+}
+
+- (BOOL)containsLocalEcho
+{
+    return (self.localEchoesOperations.count > 0);
 }
 
 - (NSString *)description
