@@ -72,6 +72,7 @@
     if (self)
     {
         _annotation = [aDecoder decodeObjectForKey:@"annotation"];
+        _replace = [aDecoder decodeObjectForKey:@"replace"];
     }
     return self;
 }
@@ -79,6 +80,7 @@
 - (void)encodeWithCoder:(NSCoder *)aCoder
 {
     [aCoder encodeObject:_annotation forKey:@"annotation"];
+    [aCoder encodeObject:_replace forKey:@"replace"];
 }
 
 @end
