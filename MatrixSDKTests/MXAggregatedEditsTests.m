@@ -111,7 +111,7 @@ static NSString* const kEditedMessageText = @"I meant Hello";
                                                },
                                        @"event_id": @"$replaceeventid:matrix.org",
                                        @"origin_server_ts": @(1560254175300),
-                                       @"sender": @("@billsam:matrix.org"),
+                                       @"sender": @"@billsam:matrix.org",
                                        @"type": @"m.room.message",
                                        @"unsigned": @{
                                                @"age": @(5328779)
