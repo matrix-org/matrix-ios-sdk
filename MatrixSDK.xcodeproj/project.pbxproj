@@ -302,6 +302,8 @@
 		32C03CBE21231C2600D92712 /* AUTHORS.rst in Resources */ = {isa = PBXBuildFile; fileRef = 32C03CBA21231C2500D92712 /* AUTHORS.rst */; };
 		32C235721F827F3800E38FC5 /* MXRoomOperation.h in Headers */ = {isa = PBXBuildFile; fileRef = 32C235701F827F3800E38FC5 /* MXRoomOperation.h */; };
 		32C235731F827F3800E38FC5 /* MXRoomOperation.m in Sources */ = {isa = PBXBuildFile; fileRef = 32C235711F827F3800E38FC5 /* MXRoomOperation.m */; };
+		32C474C122AF7A2D00CFBCD2 /* MXReactionOperation.h in Headers */ = {isa = PBXBuildFile; fileRef = 32C474BF22AF7A2D00CFBCD2 /* MXReactionOperation.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		32C474C222AF7A2D00CFBCD2 /* MXReactionOperation.m in Sources */ = {isa = PBXBuildFile; fileRef = 32C474C022AF7A2D00CFBCD2 /* MXReactionOperation.m */; };
 		32C6F93319DD814400EA4E9C /* MatrixSDK.h in Headers */ = {isa = PBXBuildFile; fileRef = 32C6F93219DD814400EA4E9C /* MatrixSDK.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		32CAB1071A91EA34008C5BB9 /* MXPushRuleRoomMemberCountConditionChecker.h in Headers */ = {isa = PBXBuildFile; fileRef = 32CAB1051A91EA34008C5BB9 /* MXPushRuleRoomMemberCountConditionChecker.h */; };
 		32CAB1081A91EA34008C5BB9 /* MXPushRuleRoomMemberCountConditionChecker.m in Sources */ = {isa = PBXBuildFile; fileRef = 32CAB1061A91EA34008C5BB9 /* MXPushRuleRoomMemberCountConditionChecker.m */; };
@@ -765,6 +767,8 @@
 		32C03CBA21231C2500D92712 /* AUTHORS.rst */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = AUTHORS.rst; sourceTree = "<group>"; };
 		32C235701F827F3800E38FC5 /* MXRoomOperation.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MXRoomOperation.h; sourceTree = "<group>"; };
 		32C235711F827F3800E38FC5 /* MXRoomOperation.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MXRoomOperation.m; sourceTree = "<group>"; };
+		32C474BF22AF7A2D00CFBCD2 /* MXReactionOperation.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MXReactionOperation.h; sourceTree = "<group>"; };
+		32C474C022AF7A2D00CFBCD2 /* MXReactionOperation.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MXReactionOperation.m; sourceTree = "<group>"; };
 		32C6F92D19DD814400EA4E9C /* MatrixSDK.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = MatrixSDK.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		32C6F93119DD814400EA4E9C /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		32C6F93219DD814400EA4E9C /* MatrixSDK.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MatrixSDK.h; sourceTree = "<group>"; };
@@ -1381,6 +1385,8 @@
 				32133020228BF7BC0070BA9B /* MXReactionCountChange.m */,
 				32133023228BFA800070BA9B /* MXReactionCountChangeListener.h */,
 				32133024228BFA800070BA9B /* MXReactionCountChangeListener.m */,
+				32C474BF22AF7A2D00CFBCD2 /* MXReactionOperation.h */,
+				32C474C022AF7A2D00CFBCD2 /* MXReactionOperation.m */,
 				32B94DFF228EDEBC00716A26 /* MXReactionRelation.h */,
 				32B94E00228EDEBC00716A26 /* MXReactionRelation.m */,
 				B10AFB4522AA8A8D0092E6AF /* MXEventEditsListener.h */,
@@ -1965,6 +1971,7 @@
 				320BBF431D6C81550079890E /* MXEventsEnumeratorOnArray.h in Headers */,
 				32B76EA320FDE2BE00B095F6 /* MXRoomMembersCount.h in Headers */,
 				32C6F93319DD814400EA4E9C /* MatrixSDK.h in Headers */,
+				32C474C122AF7A2D00CFBCD2 /* MXReactionOperation.h in Headers */,
 				324BE46C1E422766008D99D4 /* MXMegolmSessionData.h in Headers */,
 				327E9AFC228AC22800A98BC1 /* MXAggregationsStore.h in Headers */,
 				323547DC2226FC5700F15F94 /* MXCredentials.h in Headers */,
@@ -2290,6 +2297,7 @@
 				32A151531DAF8A7200400192 /* MXQueuedEncryption.m in Sources */,
 				C6D5D60A1E4FA74000706C0F /* MXEnumConstants.swift in Sources */,
 				327E9ADD2284804500A98BC1 /* MXEventRelations.m in Sources */,
+				32C474C222AF7A2D00CFBCD2 /* MXReactionOperation.m in Sources */,
 				3256E3821DCB91EB003C9718 /* MXCryptoConstants.m in Sources */,
 				B18D18C22152B8E4003677D1 /* MXRoomMember.swift in Sources */,
 				32BBAE6F2178E99100D85F46 /* MXKeyBackupVersion.m in Sources */,

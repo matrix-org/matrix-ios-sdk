@@ -24,6 +24,8 @@
 #import "MXEventAnnotationChunk.h"
 #import "MXEventAnnotation.h"
 
+#import "MXReactionOperation.h"
+
 @interface MXAggregatedReactionsUpdater ()
 
 @property (nonatomic, weak) MXSession *mxSession;
@@ -31,6 +33,8 @@
 @property (nonatomic, weak) id<MXStore> matrixStore;
 @property (nonatomic, weak) id<MXAggregationsStore> store;
 @property (nonatomic) NSMutableArray<MXReactionCountChangeListener*> *listeners;
+@property (nonatomic) NSMutableDictionary<NSString* /* eventId */,
+                                    NSMutableDictionary<NSString* /* reaction */, NSMutableArray<MXReactionOperation*>*>*> *reactionOperations;
 
 @end
 
@@ -46,12 +50,15 @@
         self.store = store;
         self.matrixStore = mxSession.store;
 
+        self.reactionOperations = [NSMutableDictionary dictionary];
         self.listeners = [NSMutableArray array];
     }
     return self;
 }
 
+
 #pragma mark - Requests
+
 - (MXHTTPOperation*)sendReaction:(NSString*)reaction
                          toEvent:(NSString*)eventId
                           inRoom:(NSString*)roomId
@@ -59,28 +66,40 @@
                          failure:(void (^)(NSError *error))failure
 {
     MXWeakify(self);
-    return [self.mxSession.matrixRestClient sendRelationToEvent:eventId
-                                                         inRoom:roomId
-                                                   relationType:MXEventRelationTypeAnnotation
-                                                      eventType:kMXEventTypeStringReaction
-                                                     parameters:@{
-                                                                  @"key": reaction
-                                                                  }
-                                                        content:@{}
-                                                        success:success failure:^(NSError *error)
-            {
-                MXStrongifyAndReturnIfNil(self);
+    [self addOperationForReaction:reaction toEvent:eventId isAdd:YES block:^{
+        MXStrongifyAndReturnIfNil(self);
 
-                MXError *mxError = [[MXError alloc] initWithNSError:error];
-                if ([mxError.errcode isEqualToString:kMXErrCodeStringUnrecognized])
-                {
-                    [self sendReactionUsingHack:reaction toEvent:eventId inRoom:roomId success:success failure:failure];
-                }
-                else
-                {
-                    failure(error);
-                }
-            }];
+        [self.mxSession.matrixRestClient sendRelationToEvent:eventId
+                                                      inRoom:roomId
+                                                relationType:MXEventRelationTypeAnnotation
+                                                   eventType:kMXEventTypeStringReaction
+                                                  parameters:@{
+                                                               @"key": reaction
+                                                               }
+                                                     content:@{}
+                                                     success:success failure:^(NSError *error)
+         {
+             MXStrongifyAndReturnIfNil(self);
+
+             MXError *mxError = [[MXError alloc] initWithNSError:error];
+             if ([mxError.errcode isEqualToString:kMXErrCodeStringUnrecognized])
+             {
+                 [self sendReactionUsingHack:reaction toEvent:eventId inRoom:roomId success:success failure:^(NSError *error) {
+                     [self didOperationCompleteForReaction:reaction toEvent:eventId isAdd:YES];
+                     failure(error);
+                 }];
+             }
+             else
+             {
+                 [self didOperationCompleteForReaction:reaction toEvent:eventId isAdd:YES];
+                 failure(error);
+             }
+         }];
+    }];
+
+    // TODO: Change prototype
+    // This is too complex to handle a cancel
+    return nil;
 }
 
 - (MXHTTPOperation*)unReactOnReaction:(NSString*)reaction
@@ -89,30 +108,39 @@
                               success:(void (^)(void))success
                               failure:(void (^)(NSError *error))failure
 {
-    MXHTTPOperation *operation;
+    MXWeakify(self);
+    [self addOperationForReaction:reaction toEvent:eventId isAdd:NO block:^{
+        MXStrongifyAndReturnIfNil(self);
 
-    MXReactionCount *reactionCount = [self reactionCountForReaction:reaction onEvent:eventId];
-    if (reactionCount && reactionCount.myUserReactionEventId)
-    {
-        MXRoom *room = [self.mxSession roomWithRoomId:roomId];
-        if (room)
+        MXReactionCount *reactionCount = [self reactionCountForReaction:reaction onEvent:eventId];
+        if (reactionCount && reactionCount.myUserReactionEventId)
         {
-            [room redactEvent:reactionCount.myUserReactionEventId reason:nil success:success failure:failure];
+            MXRoom *room = [self.mxSession roomWithRoomId:roomId];
+            if (room)
+            {
+                [room redactEvent:reactionCount.myUserReactionEventId reason:nil success:success failure:^(NSError *error) {
+                    [self didOperationCompleteForReaction:reaction toEvent:eventId isAdd:NO];
+                    failure(error);
+                }];
+            }
+            else
+            {
+                NSLog(@"[MXAggregations] unReactOnReaction: ERROR: Unknown room %@", roomId);
+                [self didOperationCompleteForReaction:reaction toEvent:eventId isAdd:NO];
+                success();
+            }
         }
         else
         {
-            NSLog(@"[MXAggregations] unReactOnReaction: ERROR: Unknown room %@", roomId);
+            NSLog(@"[MXAggregations] unReactOnReaction: ERROR: Do not know reaction(%@) event on event %@", reaction, eventId);
+            [self didOperationCompleteForReaction:reaction toEvent:eventId isAdd:NO];
             success();
         }
-    }
-    else
-    {
-        NSLog(@"[MXAggregations] unReactOnReaction: ERROR: Do not know reaction(%@) event on event %@", reaction, eventId);
-        success();
-    }
+    }];
 
-    return operation;
+    return nil;
 }
+
 
 #pragma mark - Data access
 
@@ -126,8 +154,11 @@
         reactions = [self reactionCountsUsingHackOnEvent:eventId inRoom:roomId];
     }
 
+    // Count local echoes too
+    reactions = [self aggregateLocalEchoesToReactions:reactions onEvent:eventId];
+
     MXAggregatedReactions *aggregatedReactions;
-    if (reactions)
+    if (reactions.count)
     {
         aggregatedReactions = [MXAggregatedReactions new];
         aggregatedReactions.reactions = reactions;
@@ -225,6 +256,11 @@
 
     if (relation)
     {
+        if ([event.sender isEqualToString:self.myUserId])
+        {
+            [self didOperationCompleteForReaction:relation.reaction toEvent:relation.eventId isAdd:NO];
+        }
+
         [self.store deleteReactionRelation:relation];
         [self removeReaction:relation.reaction onEvent:relation.eventId inRoomId:event.roomId];
     }
@@ -251,6 +287,11 @@
 - (void)updateReactionCountForReaction:(NSString*)reaction toEvent:(NSString*)eventId reactionEvent:(MXEvent *)reactionEvent
 {
     BOOL isANewReaction = NO;
+
+    if ([reactionEvent.sender isEqualToString:self.myUserId])
+    {
+        [self didOperationCompleteForReaction:reaction toEvent:eventId isAdd:YES];
+    }
 
     // Migrate data from matrix store to aggregation store if needed
     [self checkAggregationStoreWithHackForEvent:eventId inRoomId:reactionEvent.roomId];
@@ -346,6 +387,135 @@
         {
             listener.notificationBlock(changes);
         }
+    }
+}
+
+
+#pragma mark - Reaction scheduler -
+
+/**
+ Queue a reaction operation on a reaction on a event.
+
+ This method ensures that only one operation on a reaction on a event is done at a time.
+ It also allows to count local echo
+
+ @param reaction the reaction to change.
+ @param eventId the id of the event to react.
+ @param isAdd YES for an operation that adds the reaction.
+ @param block block called when the operation on the reaction can be sent to the homeserver.
+ */
+- (void)addOperationForReaction:(NSString*)reaction toEvent:(NSString*)eventId isAdd:(BOOL)isAdd block:(void (^)(void))block
+{
+    MXReactionOperation *reactionOperation = [MXReactionOperation new];
+    reactionOperation.eventId = eventId;
+    reactionOperation.reaction = reaction;
+    reactionOperation.isAddOperation = isAdd;
+    reactionOperation.block = block;
+
+    // Queue the reaction or unreaction operation
+    // The queue will be used to could local echoes
+    if (!self.reactionOperations[eventId])
+    {
+        self.reactionOperations[eventId] = [NSMutableDictionary dictionary];
+    }
+    if (!self.reactionOperations[eventId][reaction])
+    {
+        self.reactionOperations[eventId][reaction] = [NSMutableArray array];
+    }
+    [self.reactionOperations[eventId][reaction] addObject:reactionOperation];
+
+    // Launch the operation if there is none pending or executing.
+    if (self.reactionOperations[eventId][reaction].count == 1)
+    {
+        reactionOperation.block();
+    }
+}
+
+/**
+ Called when we get an acknowledgement by the homeserver that our user has done
+ an operation on a reaction.
+
+ This methods updates local echoes and trigger the next opeation on that reaction.
+
+ @param reaction the reaction.
+ @param eventId the id of the event.
+ @param isAdd YES for an operation that added the reaction.
+ */
+- (void)didOperationCompleteForReaction:(NSString*)reaction toEvent:(NSString*)eventId isAdd:(BOOL)isAdd
+{
+    // Find the operation that corresponds to the information
+    MXReactionOperation *reactionOperationToRemove;
+    for (MXReactionOperation *reactionOperation in self.reactionOperations[eventId][reaction])
+    {
+        if (reactionOperation.isAddOperation == isAdd)
+        {
+            reactionOperationToRemove = reactionOperation;
+            break;
+        }
+    }
+
+    if (reactionOperationToRemove)
+    {
+        // It is done. Remove it.
+        // That will remove it from local echoes count too
+        [self.reactionOperations[eventId][reaction] removeObject:reactionOperationToRemove];
+
+        // Run the next operation if any
+        MXReactionOperation *nextReactionOperation = self.reactionOperations[eventId][reaction].firstObject;
+        if (nextReactionOperation)
+        {
+            nextReactionOperation.block();
+        }
+    }
+}
+
+/**
+ Add local echoes counts to reactions counts.
+
+ @param reactions a list of reaction counts.
+ @param eventId the event.
+ @return an updated list of reaction counts.
+ */
+-(NSArray<MXReactionCount*>*)aggregateLocalEchoesToReactions:(NSArray<MXReactionCount*>*)reactions onEvent:(NSString*)eventId
+{
+    if (self.reactionOperations[eventId])
+    {
+        NSMutableDictionary<NSString*, MXReactionCount*> *reactionCountsByReaction = [NSMutableDictionary dictionaryWithCapacity:reactions.count];
+        for (MXReactionCount *reactionCount in reactions)
+        {
+            reactionCountsByReaction[reactionCount.reaction] = reactionCount;
+        }
+
+        for (NSString *reaction in self.reactionOperations[eventId])
+        {
+            for (MXReactionOperation *reactionOperation in self.reactionOperations[eventId][reaction])
+            {
+                if (reactionOperation.isAddOperation)
+                {
+                    if (!reactionCountsByReaction[reaction])
+                    {
+                        reactionCountsByReaction[reaction] = [MXReactionCount new];
+                        reactionCountsByReaction[reaction].reaction = reaction;
+                    }
+
+                    reactionCountsByReaction[reaction].count++;
+                }
+                else if (reactionCountsByReaction[reaction])
+                {
+                    reactionCountsByReaction[reaction].count--;
+                    if (reactionCountsByReaction[reaction].count == 0)
+                    {
+                        [reactionCountsByReaction removeObjectForKey:reaction];
+                    }
+                }
+            }
+        }
+
+        return reactionCountsByReaction.allValues;
+    }
+    else
+    {
+        return reactions;
     }
 }
 
