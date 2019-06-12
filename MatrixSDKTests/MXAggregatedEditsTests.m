@@ -209,6 +209,8 @@ static NSString* const kEditedMessageText = @"I meant Hello";
 {
     // - Run the initial condition scenario
     [self createScenario:^(MXSession *mxSession, MXRoom *room, XCTestExpectation *expectation, NSString *eventId, NSString *editEventId) {
+        
+        MXEvent *editedEventBeforeSync = [mxSession.store eventWithEventId:eventId inRoom:room.roomId];
 
         MXRestClient *restClient = mxSession.matrixRestClient;
 
@@ -229,6 +231,7 @@ static NSString* const kEditedMessageText = @"I meant Hello";
                 XCTAssertTrue(editedEvent.contentHasBeenEdited);
                 XCTAssertEqualObjects(editedEvent.unsignedData.relations.replace.eventId, editEventId);
                 XCTAssertEqualObjects(editedEvent.content[@"body"], kEditedMessageText);
+                XCTAssertEqualObjects(editedEvent.JSONDictionary, editedEventBeforeSync.JSONDictionary);
 
                 [expectation fulfill];
 
