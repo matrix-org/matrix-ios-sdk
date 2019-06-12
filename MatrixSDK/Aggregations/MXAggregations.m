@@ -44,22 +44,22 @@
 
 #pragma mark - Reactions
 
-- (MXHTTPOperation*)sendReaction:(NSString*)reaction
-                         toEvent:(NSString*)eventId
-                          inRoom:(NSString*)roomId
-                         success:(void (^)(NSString *eventId))success
-                         failure:(void (^)(NSError *error))failure
+- (void)addReaction:(NSString*)reaction
+           forEvent:(NSString*)eventId
+             inRoom:(NSString*)roomId
+            success:(void (^)(void))success
+            failure:(void (^)(NSError *error))failure
 {
-    return [self.aggregatedReactionsUpdater sendReaction:reaction toEvent:eventId inRoom:roomId success:success failure:failure];
+    [self.aggregatedReactionsUpdater addReaction:reaction forEvent:eventId inRoom:roomId success:success failure:failure];
 }
 
-- (MXHTTPOperation*)unReactOnReaction:(NSString*)reaction
-                              toEvent:(NSString*)eventId
-                               inRoom:(NSString*)roomId
-                              success:(void (^)(void))success
-                              failure:(void (^)(NSError *error))failure
+- (void)removeReaction:(NSString*)reaction
+              forEvent:(NSString*)eventId
+                inRoom:(NSString*)roomId
+               success:(void (^)(void))success
+               failure:(void (^)(NSError *error))failure
 {
-    return [self.aggregatedReactionsUpdater unReactOnReaction:reaction toEvent:eventId inRoom:roomId success:success failure:failure];
+    [self.aggregatedReactionsUpdater removeReaction:reaction forEvent:eventId inRoom:roomId success:success failure:failure];
 }
 
 - (nullable MXAggregatedReactions *)aggregatedReactionsOnEvent:(NSString*)eventId inRoom:(NSString*)roomId

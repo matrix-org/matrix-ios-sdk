@@ -30,16 +30,16 @@ NS_ASSUME_NONNULL_BEGIN
 - (instancetype)initWithMatrixSession:(MXSession *)mxSession aggregationStore:(id<MXAggregationsStore>)store;
 
 #pragma mark - Requests
-- (MXHTTPOperation*)sendReaction:(NSString*)reaction
-                         toEvent:(NSString*)eventId
-                          inRoom:(NSString*)roomId
-                         success:(void (^)(NSString *eventId))success
-                         failure:(void (^)(NSError *error))failure;
-- (MXHTTPOperation*)unReactOnReaction:(NSString*)reaction
-                              toEvent:(NSString*)eventId
-                               inRoom:(NSString*)roomId
-                              success:(void (^)(void))success
-                              failure:(void (^)(NSError *error))failure;
+- (void)addReaction:(NSString*)reaction
+           forEvent:(NSString*)eventId
+             inRoom:(NSString*)roomId
+            success:(void (^)(void))success
+            failure:(void (^)(NSError *error))failure;
+- (void)removeReaction:(NSString*)reaction
+              forEvent:(NSString*)eventId
+                inRoom:(NSString*)roomId
+               success:(void (^)(void))success
+               failure:(void (^)(NSError *error))failure;
 
 #pragma mark - Data access
 - (nullable MXAggregatedReactions *)aggregatedReactionsOnEvent:(NSString*)eventId inRoom:(NSString*)roomId;
