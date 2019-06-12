@@ -66,7 +66,7 @@
                          failure:(void (^)(NSError *error))failure
 {
     MXWeakify(self);
-    [self addOperationForReaction:reaction toEvent:eventId isAdd:YES block:^{
+    [self addOperationForReaction:reaction toEvent:eventId inRoom:roomId isAdd:YES block:^{
         MXStrongifyAndReturnIfNil(self);
 
         [self.mxSession.matrixRestClient sendRelationToEvent:eventId
@@ -109,7 +109,7 @@
                               failure:(void (^)(NSError *error))failure
 {
     MXWeakify(self);
-    [self addOperationForReaction:reaction toEvent:eventId isAdd:NO block:^{
+    [self addOperationForReaction:reaction toEvent:eventId inRoom:roomId isAdd:NO block:^{
         MXStrongifyAndReturnIfNil(self);
 
         MXReactionCount *reactionCount = [self reactionCountForReaction:reaction onEvent:eventId];
@@ -169,7 +169,14 @@
 
 - (nullable MXReactionCount*)reactionCountForReaction:(NSString*)reaction onEvent:(NSString*)eventId
 {
-    return [self.store reactionCountForReaction:reaction onEvent:eventId];
+    MXReactionCount *reactionCount = [self.store reactionCountForReaction:reaction onEvent:eventId];
+
+    // Count local echoes too
+    reactionCount = [self aggregateLocalEchoesToReactions:reactionCount ? @[reactionCount] : nil
+                                                  onEvent:eventId].firstObject;
+
+
+    return reactionCount;
 }
 
 
@@ -245,7 +252,7 @@
     }
     else
     {
-        NSLog(@"[MXAggregations] handleReaction: ERROR: invalid reaction event: %@", event);
+        NSLog(@"[MXAggregations] handleReaction: ERROR: invalid reaction event: %@", event.JSONDictionary);
     }
 }
 
@@ -352,6 +359,9 @@
     }
 }
 
+
+#pragma mark - Listener notifications
+
 - (void)notifyReactionCountChangeListenersOfRoom:(NSString*)roomId event:(NSString*)eventId reactionCount:(MXReactionCount*)reactionCount isNewReaction:(BOOL)isNewReaction
 {
     MXReactionCountChange *reactionCountChange = [MXReactionCountChange new];
@@ -390,21 +400,57 @@
     }
 }
 
+- (void)notifyReactionCountChangeListenersOfRoom:(NSString*)roomId forLocalEchoForOperation:(MXReactionOperation*)reactionOperation
+{
+    MXReactionCountChange *reactionCountChange = [MXReactionCountChange new];
+    reactionCountChange.changeDueToLocalEcho = YES;
 
-#pragma mark - Reaction scheduler -
+    // Compute the changes
+    MXReactionCount *reactionCount = [self reactionCountForReaction:reactionOperation.reaction onEvent:reactionOperation.eventId];
+
+    if (reactionOperation.isAddOperation)
+    {
+        if (reactionCount.count == 1)
+        {
+            reactionCountChange.inserted = @[reactionCount];
+        }
+        else
+        {
+            reactionCountChange.modified = @[reactionCount];
+        }
+    }
+    else
+    {
+        if (reactionCount.count > 0)
+        {
+            reactionCountChange.modified = @[reactionCount];
+        }
+        else
+        {
+            reactionCountChange.deleted = @[reactionCount.reaction];
+        }
+    }
+
+    [self notifyReactionCountChangeListenersOfRoom:roomId changes:@{
+                                                                    reactionOperation.eventId: reactionCountChange
+                                                                    }];
+}
+
+#pragma mark - Reaction scheduler
 
 /**
  Queue a reaction operation on a reaction on a event.
 
  This method ensures that only one operation on a reaction on a event is done at a time.
- It also allows to count local echo
+ It also allows to count local echo.
 
  @param reaction the reaction to change.
+ @param roomId the id room.
  @param eventId the id of the event to react.
  @param isAdd YES for an operation that adds the reaction.
  @param block block called when the operation on the reaction can be sent to the homeserver.
  */
-- (void)addOperationForReaction:(NSString*)reaction toEvent:(NSString*)eventId isAdd:(BOOL)isAdd block:(void (^)(void))block
+- (void)addOperationForReaction:(NSString*)reaction toEvent:(NSString*)eventId inRoom:(NSString*)roomId isAdd:(BOOL)isAdd block:(void (^)(void))block
 {
     MXReactionOperation *reactionOperation = [MXReactionOperation new];
     reactionOperation.eventId = eventId;
@@ -423,6 +469,10 @@
         self.reactionOperations[eventId][reaction] = [NSMutableArray array];
     }
     [self.reactionOperations[eventId][reaction] addObject:reactionOperation];
+
+
+    // Notify the local echo
+    [self notifyReactionCountChangeListenersOfRoom:roomId forLocalEchoForOperation:reactionOperation];
 
     // Launch the operation if there is none pending or executing.
     if (self.reactionOperations[eventId][reaction].count == 1)
@@ -445,6 +495,7 @@
 {
     // Find the operation that corresponds to the information
     MXReactionOperation *reactionOperationToRemove;
+    BOOL isTopOperation = YES;
     for (MXReactionOperation *reactionOperation in self.reactionOperations[eventId][reaction])
     {
         if (reactionOperation.isAddOperation == isAdd)
@@ -452,6 +503,8 @@
             reactionOperationToRemove = reactionOperation;
             break;
         }
+
+        isTopOperation = NO;
     }
 
     if (reactionOperationToRemove)
@@ -459,12 +512,25 @@
         // It is done. Remove it.
         // That will remove it from local echoes count too
         [self.reactionOperations[eventId][reaction] removeObject:reactionOperationToRemove];
+        if (self.reactionOperations[eventId][reaction].count == 0)
+        {
+            [self.reactionOperations[eventId] removeObjectForKey:reaction];
+        }
+        if (self.reactionOperations[eventId].count == 0)
+        {
+            [self.reactionOperations removeObjectForKey:eventId];
+        }
 
         // Run the next operation if any
-        MXReactionOperation *nextReactionOperation = self.reactionOperations[eventId][reaction].firstObject;
-        if (nextReactionOperation)
+        if (isTopOperation)
         {
-            nextReactionOperation.block();
+            dispatch_async(dispatch_get_main_queue(), ^{
+                MXReactionOperation *nextReactionOperation = self.reactionOperations[eventId][reaction].firstObject;
+                if (nextReactionOperation)
+                {
+                    nextReactionOperation.block();
+                }
+            });
         }
     }
 }
@@ -476,7 +542,7 @@
  @param eventId the event.
  @return an updated list of reaction counts.
  */
--(NSArray<MXReactionCount*>*)aggregateLocalEchoesToReactions:(NSArray<MXReactionCount*>*)reactions onEvent:(NSString*)eventId
+-(nullable NSArray<MXReactionCount*>*)aggregateLocalEchoesToReactions:(nullable NSArray<MXReactionCount*>*)reactions onEvent:(NSString*)eventId
 {
     if (self.reactionOperations[eventId])
     {
@@ -488,7 +554,7 @@
 
         for (NSString *reaction in self.reactionOperations[eventId])
         {
-            if (self.reactionOperations[eventId][reaction])
+            if (self.reactionOperations[eventId][reaction].count)
             {
                 MXReactionCount *updatedReactionCount = reactionCountsByReaction[reaction];
                 if (!updatedReactionCount)

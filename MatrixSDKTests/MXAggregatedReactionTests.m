@@ -302,7 +302,10 @@
             XCTAssertEqual(reactionCount.count, 1);
             XCTAssertTrue(reactionCount.myUserHasReacted,);
 
-            [expectation fulfill];
+            if (!change.changeDueToLocalEcho)
+            {
+                [expectation fulfill];
+            }
         }];
 
         // - Add one more reaction
@@ -338,10 +341,13 @@
             XCTAssertEqualObjects(reaction, @"👍");
 
             // -> Data from aggregations must be right
-            MXAggregatedReactions *reactions = [mxSession.aggregations aggregatedReactionsOnEvent:eventId inRoom:room.roomId];
-            XCTAssertNil(reactions);
+            if (!change.changeDueToLocalEcho)
+            {
+                MXAggregatedReactions *reactions = [mxSession.aggregations aggregatedReactionsOnEvent:eventId inRoom:room.roomId];
+                XCTAssertNil(reactions);
 
-            [expectation fulfill];
+                [expectation fulfill];
+            }
         }];
 
         // - Unreact
@@ -383,10 +389,12 @@
                     XCTAssertNotNil(change.deleted);
 
                     // -> Data from aggregations must be right
-                    MXAggregatedReactions *reactions = [mxSession.aggregations aggregatedReactionsOnEvent:eventId inRoom:room.roomId];
-                    XCTAssertNil(reactions);
-
-                    [expectation fulfill];
+                    if (!changes.allValues.firstObject.changeDueToLocalEcho)
+                    {
+                        MXAggregatedReactions *reactions = [mxSession.aggregations aggregatedReactionsOnEvent:eventId inRoom:room.roomId];
+                        XCTAssertNil(reactions);
+                        [expectation fulfill];
+                    }
                 }];
 
                 // - Unreact

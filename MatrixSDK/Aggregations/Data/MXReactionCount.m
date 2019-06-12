@@ -21,7 +21,7 @@
 - (BOOL)myUserHasReacted
 {
     // Take local echoes into consideration first
-    if (self.localEchoesOperations)
+    if (self.localEchoesOperations.count)
     {
         return self.localEchoesOperations.lastObject.isAddOperation;
     }

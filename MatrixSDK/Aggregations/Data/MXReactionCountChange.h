@@ -26,6 +26,8 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, nullable) NSArray<MXReactionCount*> *modified;
 @property (nonatomic, nullable) NSArray<NSString* /*reaction string*/> *deleted;
 
+@property (nonatomic) BOOL changeDueToLocalEcho;
+
 @end
 
 NS_ASSUME_NONNULL_END
