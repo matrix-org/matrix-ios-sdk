@@ -115,10 +115,21 @@ NS_ASSUME_NONNULL_BEGIN
  */
 - (MXHTTPOperation*)replaceTextMessageEvent:(MXEvent*)event
                             withTextMessage:(nullable NSString*)text
-//                          formattedText:(nullable NSString*)formattedText     // TODO
-//                          localEcho:(MXEvent**)localEcho                      // TODO
+//                          formattedText:(nullable NSString*)formattedText     // TODO(@steve): in phase2
+//                          localEcho:(MXEvent**)localEcho                      // TODO(@steve): in phase2
                                     success:(void (^)(NSString *eventId))success
                                     failure:(void (^)(NSError *error))failure;
+
+
+
+/**
+ Add a listener to edits updates of events within a room.
+
+ @param roomId The id of the room.
+ @param block The block called on updates.
+ @return a listener id.
+ */
+- (id)listenToEditsUpdateInRoom:(NSString *)roomId block:(void (^)(MXEvent* replaceEvent))block;
 
 
 /**

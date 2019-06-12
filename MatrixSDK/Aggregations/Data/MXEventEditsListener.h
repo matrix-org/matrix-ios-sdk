@@ -1,12 +1,12 @@
 /*
  Copyright 2019 The Matrix.org Foundation C.I.C
-
+ 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
  You may obtain a copy of the License at
-
+ 
  http://www.apache.org/licenses/LICENSE-2.0
-
+ 
  Unless required by applicable law or agreed to in writing, software
  distributed under the License is distributed on an "AS IS" BASIS,
  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -16,24 +16,15 @@
 
 #import <Foundation/Foundation.h>
 
-#import "MXStore.h"
-#import "MXAggregationsStore.h"
-
 NS_ASSUME_NONNULL_BEGIN
 
-@interface MXAggregatedEditsUpdater : NSObject
+@class MXEvent;
 
-- (instancetype)initWithMyUser:(NSString*)userId
-              aggregationStore:(id<MXAggregationsStore>)store
-                   matrixStore:(id<MXStore>)matrixStore;
+@interface MXEventEditsListener : NSObject
 
-#pragma mark - Data update listener
-- (id)listenToEditsUpdateInRoom:(NSString *)roomId block:(void (^)(MXEvent* replaceEvent))block;
-- (void)removeListener:(id)listener;
+@property (nonatomic) NSString *roomId;
 
-#pragma mark - Data update
-- (void)handleReplace:(MXEvent *)replaceEvent;
-//- (void)handleRedaction:(MXEvent *)event;     // TODO(@steve): phase:2. We do not need to handle redaction of an edit for MVP
+@property (nonatomic, copy) void (^notificationBlock)(MXEvent *replaceEvent);
 
 @end
 

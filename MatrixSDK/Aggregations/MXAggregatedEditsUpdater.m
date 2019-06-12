@@ -16,12 +16,15 @@
 
 #import "MXAggregatedEditsUpdater.h"
 
+#import "MXEventRelations.h"
+#import "MXEventReplace.h"
+#import "MXEventEditsListener.h"
+
 @interface MXAggregatedEditsUpdater ()
 
 @property (nonatomic) NSString *myUserId;
 @property (nonatomic, weak) id<MXStore> matrixStore;
-@property (nonatomic, weak) id<MXAggregationsStore> store;
-//@property (nonatomic) NSMutableArray<MXReactionCountChangeListener*> *listeners;
+@property (nonatomic) NSMutableArray<MXEventEditsListener*> *listeners;
 
 @end
 
@@ -35,44 +38,66 @@
     if (self)
     {
         self.myUserId = userId;
-        self.store = store;
         self.matrixStore = matrixStore;
 
-        //self.listeners = [NSMutableArray array];
+        self.listeners = [NSMutableArray array];
     }
     return self;
 }
 
 
-#pragma mark - Data access
-
-//- (nullable MXAggregatedReactions *)aggregatedReactionsOnEvent:(NSString*)eventId inRoom:(NSString*)roomId;
-//- (nullable MXReactionCount*)reactionCountForReaction:(NSString*)reaction onEvent:(NSString*)eventId;
-
-
 #pragma mark - Data update listener
 
-//- (id)listenToEditsUpdateInRoom:(NSString *)roomId block:(void (^)(NSDictionary<NSString *,MXReactionCountChange *> * _Nonnull))block;
-//- (void)removeListener:(id)listener;
+- (id)listenToEditsUpdateInRoom:(NSString *)roomId block:(void (^)(MXEvent* replaceEvent))block
+{
+    MXEventEditsListener *listener = [MXEventEditsListener new];
+    listener.roomId = roomId;
+    listener.notificationBlock = block;
+    
+    [self.listeners addObject:listener];
+    
+    return listener;
+}
 
+- (void)removeListener:(id)listener
+{
+    [self.listeners removeObject:listener];
+}
 
 #pragma mark - Data update
 
-//- (void)handleOriginalAggregatedDataOfEvent:(MXEvent *)event replaces:(MXEventReplaceChunk*)replaces;
-
-- (void)handleReplace:(MXEvent *)event direction:(MXTimelineDirection)direction
+- (void)handleReplace:(MXEvent *)replaceEvent
 {
-
+    NSString *roomId = replaceEvent.roomId;
+    MXEvent *event = [self.matrixStore eventWithEventId:replaceEvent.relatesTo.eventId inRoom:roomId];
+    
+    if (![event.unsignedData.relations.replace.eventId isEqualToString:replaceEvent.eventId])
+    {
+        MXEvent *editedEvent = [event editedEventFromReplacementEvent:replaceEvent];
+        
+        if (editedEvent)
+        {
+            [self.matrixStore replaceEvent:editedEvent inRoom:roomId];
+            [self notifyEventEditsListenersOfRoom:roomId replaceEvent:replaceEvent];
+        }
+    }
 }
 
-- (void)handleRedaction:(MXEvent *)event
+//- (void)handleRedaction:(MXEvent *)event
+//{
+//}
+
+#pragma mark - Private
+
+- (void)notifyEventEditsListenersOfRoom:(NSString*)roomId replaceEvent:(MXEvent*)replaceEvent
 {
-
-}
-
-- (void)resetDataInRoom:(NSString *)roomId
-{
-
+    for (MXEventEditsListener *listener in self.listeners)
+    {
+        if ([listener.roomId isEqualToString:roomId])
+        {
+            listener.notificationBlock(replaceEvent);
+        }
+    }
 }
 
 @end

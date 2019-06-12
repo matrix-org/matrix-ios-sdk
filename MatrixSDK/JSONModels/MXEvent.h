@@ -401,6 +401,16 @@ extern NSString *const kMXEventIdentifierKey;
 - (BOOL)isMediaAttachment;
 
 /**
+ Return YES if the event is a replace event.
+ */
+- (BOOL)isEditEvent;
+
+/**
+ Return YES if the event content has been edited.
+ */
+- (BOOL)contentHasBeenEdited;
+
+/**
  Returns the event IDs for which a read receipt is defined in this event.
  
  This property is relevant only for events with 'kMXEventTypeStringReceipt' type.
@@ -421,6 +431,14 @@ extern NSString *const kMXEventIdentifierKey;
  but we do want to keep necessary information like type, state_key etc.
  */
 - (MXEvent*)prune;
+
+/**
+ Returns an edited event from a replace event as it should come from the sync.
+
+ @param event The replace event.
+ @return Return edited event with replace event content.
+ */
+- (MXEvent*)editedEventFromReplacementEvent:(MXEvent*)event;
 
 /**
  Comparator to use to order array of events by their originServerTs value.
