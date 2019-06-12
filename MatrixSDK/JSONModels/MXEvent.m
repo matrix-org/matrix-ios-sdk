@@ -571,6 +571,12 @@ NSString *const kMXEventIdentifierKey = @"kMXEventIdentifierKey";
         {
             editedEventDict[@"unsigned"][@"m.relations"][@"m.replace"] = replaceEventDict;
         }
+        else if (event.unsignedData)
+        {
+            editedEventDict[@"unsigned"][@"m.relations"] = @{
+                                                             @"m.replace": replaceEventDict
+                                                             };
+        }
         else
         {
             editedEventDict[@"unsigned"] = @{ @"m.relations": @{
