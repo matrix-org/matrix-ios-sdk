@@ -144,6 +144,12 @@ FOUNDATION_EXPORT NSString *const kMXMembersOfRoomParametersNotMembership;
 @property (nonatomic, readonly) NSData* allowedCertificate;
 
 /**
+ The server error codes for which we want to be notified (see `kMXHTTPClientTrackedErrorNotification`).
+ This set is empty by default.
+ */
+@property (nonatomic) NSSet<NSString *> *trackedServerErrorCodes;
+
+/**
  The queue on which asynchronous response blocks are called.
  Default is dispatch_get_main_queue().
  */

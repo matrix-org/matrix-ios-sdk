@@ -34,6 +34,14 @@ FOUNDATION_EXPORT NSString* const kMXHTTPClientUserConsentNotGivenErrorNotificat
  Consent URI userInfo key for notification kMXHTTPClientUserConsentNotGivenErrorNotification
  */
 FOUNDATION_EXPORT NSString* const kMXHTTPClientUserConsentNotGivenErrorNotificationConsentURIKey;
+/**
+ Posted when a server error code listed in `trackedServerErrorCodes` is observed.
+ */
+FOUNDATION_EXPORT NSString* const kMXHTTPClientTrackedErrorNotification;
+/**
+ Error code userInfo key for notification kMXHTTPClientTrackedErrorNotification
+ */
+FOUNDATION_EXPORT NSString* const kMXHTTPClientTrackedErrorNotificationErrorCodeKey;
 
 /**
  Block called when an authentication challenge from a server failed whereas a certificate is present in certificate chain.
@@ -197,5 +205,11 @@ typedef NS_ENUM(NSUInteger, MXHTTPClientSSLPinningMode) {
  @param pinningMode The SSL pinning mode.
  */
 - (void)setPinnedCertificates:(NSSet<NSData *> *)pinnedCertificates withPinningMode:(MXHTTPClientSSLPinningMode)pinningMode;
+
+/**
+ The server error codes for which we want to be notified (see `kMXHTTPClientTrackedErrorNotification`).
+ This set is empty by default.
+ */
+@property (nonatomic) NSSet<NSString *> *trackedServerErrorCodes;
 
 @end
