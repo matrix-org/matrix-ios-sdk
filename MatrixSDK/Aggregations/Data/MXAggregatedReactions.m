@@ -18,4 +18,25 @@
 
 @implementation MXAggregatedReactions
 
+- (nullable MXAggregatedReactions *)aggregatedReactionsWithNonZeroCount
+{
+    NSMutableArray *reactions = [NSMutableArray arrayWithCapacity:self.reactions.count];
+    for (MXReactionCount *reactionCount in self.reactions)
+    {
+        if (reactionCount.count > 0)
+        {
+            [reactions addObject:reactionCount];
+        }
+    }
+
+    MXAggregatedReactions *nonZeroCountAggregatedReactions;
+    if (reactions.count)
+    {
+        nonZeroCountAggregatedReactions = [MXAggregatedReactions new];
+        nonZeroCountAggregatedReactions.reactions = reactions;
+    }
+
+    return nonZeroCountAggregatedReactions;
+}
+
 @end

@@ -44,67 +44,22 @@
 
 #pragma mark - Reactions
 
-- (MXHTTPOperation*)sendReaction:(NSString*)reaction
-                         toEvent:(NSString*)eventId
-                          inRoom:(NSString*)roomId
-                         success:(void (^)(NSString *eventId))success
-                         failure:(void (^)(NSError *error))failure
+- (void)addReaction:(NSString*)reaction
+           forEvent:(NSString*)eventId
+             inRoom:(NSString*)roomId
+            success:(void (^)(void))success
+            failure:(void (^)(NSError *error))failure
 {
-    // TODO: sendReaction should return only when the actual reaction event comes back the sync
-    MXWeakify(self);
-    return [self.mxSession.matrixRestClient sendRelationToEvent:eventId
-                                                         inRoom:roomId
-                                                   relationType:MXEventRelationTypeAnnotation
-                                                      eventType:kMXEventTypeStringReaction
-                                                     parameters:@{
-                                                                  @"key": reaction
-                                                                  }
-                                                        content:@{}
-                                                        success:success failure:^(NSError *error)
-            {
-                MXStrongifyAndReturnIfNil(self);
-
-                MXError *mxError = [[MXError alloc] initWithNSError:error];
-                if ([mxError.errcode isEqualToString:kMXErrCodeStringUnrecognized])
-                {
-                    [self sendReactionUsingHack:reaction toEvent:eventId inRoom:roomId success:success failure:failure];
-                }
-                else
-                {
-                    failure(error);
-                }
-            }];
+    [self.aggregatedReactionsUpdater addReaction:reaction forEvent:eventId inRoom:roomId success:success failure:failure];
 }
 
-- (MXHTTPOperation*)unReactOnReaction:(NSString*)reaction
-                              toEvent:(NSString*)eventId
-                               inRoom:(NSString*)roomId
-                              success:(void (^)(void))success
-                              failure:(void (^)(NSError *error))failure
+- (void)removeReaction:(NSString*)reaction
+              forEvent:(NSString*)eventId
+                inRoom:(NSString*)roomId
+               success:(void (^)(void))success
+               failure:(void (^)(NSError *error))failure
 {
-    MXHTTPOperation *operation;
-
-    MXReactionCount *reactionCount = [self.aggregatedReactionsUpdater reactionCountForReaction:reaction onEvent:eventId];
-    if (reactionCount && reactionCount.myUserReactionEventId)
-    {
-        MXRoom *room = [self.mxSession roomWithRoomId:roomId];
-        if (room)
-        {
-            [room redactEvent:reactionCount.myUserReactionEventId reason:nil success:success failure:failure];
-        }
-        else
-        {
-            NSLog(@"[MXAggregations] unReactOnReaction: ERROR: Unknown room %@", roomId);
-            success();
-        }
-    }
-    else
-    {
-        NSLog(@"[MXAggregations] unReactOnReaction: ERROR: Do not know reaction(%@) event on event %@", reaction, eventId);
-        success();
-    }
-    
-    return operation;
+    [self.aggregatedReactionsUpdater removeReaction:reaction forEvent:eventId inRoom:roomId success:success failure:failure];
 }
 
 - (nullable MXAggregatedReactions *)aggregatedReactionsOnEvent:(NSString*)eventId inRoom:(NSString*)roomId
@@ -251,9 +206,7 @@
         self.mxSession = mxSession;
         self.store = [[MXRealmAggregationsStore alloc] initWithCredentials:mxSession.matrixRestClient.credentials];
 
-        self.aggregatedReactionsUpdater = [[MXAggregatedReactionsUpdater alloc] initWithMyUser:mxSession.matrixRestClient.credentials.userId
-                                                                              aggregationStore:self.store
-                                                                                   matrixStore:mxSession.store];
+        self.aggregatedReactionsUpdater = [[MXAggregatedReactionsUpdater alloc] initWithMatrixSession:self.mxSession aggregationStore:self.store];
         self.aggregatedEditsUpdater = [[MXAggregatedEditsUpdater alloc] initWithMyUser:mxSession.matrixRestClient.credentials.userId
                                                                       aggregationStore:self.store
                                                                            matrixStore:mxSession.store];
@@ -306,37 +259,6 @@
                 break;
         }
     }];
-}
-
-
-#pragma mark - Reactions hack (TODO: Remove all methods) -
-/// TODO: To remove once the feature has landed on matrix.org homeserver
-
-// SendReactionUsingHack directly sends a `m.reaction` room message instead of using the `/send_relation` api.
-- (MXHTTPOperation*)sendReactionUsingHack:(NSString*)reaction
-                                  toEvent:(NSString*)eventId
-                                   inRoom:(NSString*)roomId
-                                  success:(void (^)(NSString *eventId))success
-                                  failure:(void (^)(NSError *error))failure
-{
-    NSLog(@"[MXAggregations] sendReactionUsingHack");
-
-    MXRoom *room = [self.mxSession roomWithRoomId:roomId];
-    if (!room)
-    {
-        NSLog(@"[MXAggregations] sendReactionUsingHack Error: Unknown room: %@", roomId);
-        return nil;
-    }
-
-    NSDictionary *reactionContent = @{
-                                      @"m.relates_to": @{
-                                              @"rel_type": @"m.annotation",
-                                              @"event_id": eventId,
-                                              @"key": reaction
-                                              }
-                                      };
-
-    return [room sendEventOfType:kMXEventTypeStringReaction content:reactionContent localEcho:nil success:success failure:failure];
 }
 
 @end

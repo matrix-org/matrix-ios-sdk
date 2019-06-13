@@ -43,14 +43,12 @@ NS_ASSUME_NONNULL_BEGIN
  @param success A block object called when the operation succeeds. It returns
                 the event id of the event generated on the homeserver.
  @param failure A block object called when the operation fails.
-
- @return a MXHTTPOperation instance.
  */
-- (MXHTTPOperation*)sendReaction:(NSString*)reaction
-                         toEvent:(NSString*)eventId
-                          inRoom:(NSString*)roomId
-                         success:(void (^)(NSString *eventId))success
-                         failure:(void (^)(NSError *error))failure;
+- (void)addReaction:(NSString*)reaction
+        forEvent:(NSString*)eventId
+             inRoom:(NSString*)roomId
+            success:(void (^)(void))success
+            failure:(void (^)(NSError *error))failure;
 
 /**
  Unreact a reaction to an event in a room.
@@ -61,14 +59,12 @@ NS_ASSUME_NONNULL_BEGIN
 
  @param success A block object called when the operation succeeds.
  @param failure A block object called when the operation fails.
-
- @return a MXHTTPOperation instance.
  */
-- (MXHTTPOperation*)unReactOnReaction:(NSString*)reaction
-                              toEvent:(NSString*)eventId
-                               inRoom:(NSString*)roomId
-                              success:(void (^)(void))success
-                              failure:(void (^)(NSError *error))failure;
+- (void)removeReaction:(NSString*)reaction
+              forEvent:(NSString*)eventId
+                inRoom:(NSString*)roomId
+               success:(void (^)(void))success
+               failure:(void (^)(NSError *error))failure;
 
 /**
  Returns the aggregated reactions counts.

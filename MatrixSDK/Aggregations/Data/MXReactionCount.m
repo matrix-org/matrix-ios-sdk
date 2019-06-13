@@ -20,18 +20,33 @@
 
 - (BOOL)myUserHasReacted
 {
-    return (_myUserReactionEventId != nil);
+    // Take local echoes into consideration first
+    if (self.localEchoesOperations.count)
+    {
+        return self.localEchoesOperations.lastObject.isAddOperation;
+    }
+    else
+    {
+        return (_myUserReactionEventId != nil);
+    }
+}
+
+- (BOOL)containsLocalEcho
+{
+    return (self.localEchoesOperations.count > 0);
 }
 
 - (NSString *)description
 {
+    NSString *echoes = self.localEchoesOperations.count ? [NSString stringWithFormat:@" - echoes: %@", @(self.localEchoesOperations.count)] : @"";
+
     if (self.myUserHasReacted)
     {
-        return [NSString stringWithFormat:@"(%@: %@)", self.reaction, @(self.count)];
+        return [NSString stringWithFormat:@"(%@: %@%@)", self.reaction, @(self.count), echoes];
     }
     else
     {
-        return [NSString stringWithFormat:@"%@: %@", self.reaction, @(self.count)];
+        return [NSString stringWithFormat:@"%@: %@%@", self.reaction, @(self.count), echoes];
     }
 }
 

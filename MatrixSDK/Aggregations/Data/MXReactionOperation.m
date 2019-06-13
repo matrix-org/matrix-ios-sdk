@@ -1,5 +1,5 @@
 /*
- Copyright 2019 New Vector Ltd
+ Copyright 2019 The Matrix.org Foundation C.I.C
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -14,21 +14,14 @@
  limitations under the License.
  */
 
-#import <Foundation/Foundation.h>
+#import "MXReactionOperation.h"
 
-#import "MXReactionCount.h"
+@implementation MXReactionOperation
 
-NS_ASSUME_NONNULL_BEGIN
-
-/**
- `MXAggregatedReactions` is a summary of reactions on an event.
- */
-@interface MXAggregatedReactions : NSObject
-
-@property (nonatomic) NSArray<MXReactionCount*> *reactions;
-
-- (nullable MXAggregatedReactions *)aggregatedReactionsWithNonZeroCount;
+- (NSString *)description
+{
+    NSString *sign = self.isAddOperation ? @"+" : @"-";
+    return [NSString stringWithFormat:@"%@: %@", self.reaction, sign];
+}
 
 @end
-
-NS_ASSUME_NONNULL_END

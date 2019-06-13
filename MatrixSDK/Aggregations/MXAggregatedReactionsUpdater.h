@@ -27,9 +27,19 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface MXAggregatedReactionsUpdater : NSObject
 
-- (instancetype)initWithMyUser:(NSString*)userId
-              aggregationStore:(id<MXAggregationsStore>)store
-                   matrixStore:(id<MXStore>)matrixStore;
+- (instancetype)initWithMatrixSession:(MXSession *)mxSession aggregationStore:(id<MXAggregationsStore>)store;
+
+#pragma mark - Requests
+- (void)addReaction:(NSString*)reaction
+           forEvent:(NSString*)eventId
+             inRoom:(NSString*)roomId
+            success:(void (^)(void))success
+            failure:(void (^)(NSError *error))failure;
+- (void)removeReaction:(NSString*)reaction
+              forEvent:(NSString*)eventId
+                inRoom:(NSString*)roomId
+               success:(void (^)(void))success
+               failure:(void (^)(NSError *error))failure;
 
 #pragma mark - Data access
 - (nullable MXAggregatedReactions *)aggregatedReactionsOnEvent:(NSString*)eventId inRoom:(NSString*)roomId;

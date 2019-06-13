@@ -51,18 +51,18 @@
 }
 
 // Create a room with an event with a reaction on it
-- (void)createScenario:(void(^)(MXSession *mxSession, MXRoom *room, MXSession *otherSession, XCTestExpectation *expectation, NSString *eventId, NSString *reactionEventId))readyToTest
+- (void)createScenario:(void(^)(MXSession *mxSession, MXRoom *room, MXSession *otherSession, XCTestExpectation *expectation, NSString *eventId))readyToTest
 {
     [matrixSDKTestsData doTestWithAliceAndBobInARoom:self aliceStore:[[MXMemoryStore alloc] init] bobStore:[[MXMemoryStore alloc] init] readyToTest:^(MXSession *mxSession, MXSession *otherSession, NSString *roomId, XCTestExpectation *expectation) {
 
         MXRoom *room = [mxSession roomWithRoomId:roomId];
         [room sendTextMessage:@"Hello" success:^(NSString *eventId) {
 
-            [mxSession.aggregations sendReaction:@"👍" toEvent:eventId inRoom:room.roomId success:^(NSString *reactionEventId) {
+            [mxSession.aggregations addReaction:@"👍" forEvent:eventId inRoom:room.roomId success:^() {
 
                 // TODO: sendReaction should return only when the actual reaction event comes back the sync
                 dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 1 * NSEC_PER_SEC), dispatch_get_main_queue(), ^{
-                    readyToTest(mxSession, room, otherSession, expectation, eventId, reactionEventId);
+                    readyToTest(mxSession, room, otherSession, expectation, eventId);
                 });
 
             } failure:^(NSError *error) {
@@ -79,22 +79,22 @@
 // - Create a room with an event with a reaction on it
 // - Add enough messages while the session in background to trigger a gappy sync
 // - Add a reaction in the gap
-- (void)createScenarioWithAGappySync:(void(^)(MXSession *mxSession, MXRoom *room, MXSession *otherSession, XCTestExpectation *expectation, NSString *eventId, NSString *reactionEventId))readyToTest
+- (void)createScenarioWithAGappySync:(void(^)(MXSession *mxSession, MXRoom *room, MXSession *otherSession, XCTestExpectation *expectation, NSString *eventId))readyToTest
 {
     // - Create a room with an event with a reaction on it
-    [self createScenario:^(MXSession *mxSession, MXRoom *room, MXSession *otherSession, XCTestExpectation *expectation, NSString *eventId, NSString *reactionEventId) {
+    [self createScenario:^(MXSession *mxSession, MXRoom *room, MXSession *otherSession, XCTestExpectation *expectation, NSString *eventId) {
 
         // - Add enough messages while the session in background to trigger a gappy sync
         [mxSession pause];
         [matrixSDKTestsData for:mxSession.matrixRestClient andRoom:room.roomId sendMessages:10 success:^{
 
             // - Add a reaction in the gap
-            [otherSession.aggregations sendReaction:@"🙂" toEvent:eventId inRoom:room.roomId success:^(NSString * _Nonnull reactionEventId2) {
+            [otherSession.aggregations addReaction:@"🙂" forEvent:eventId inRoom:room.roomId success:^() {
 
                 [matrixSDKTestsData for:mxSession.matrixRestClient andRoom:room.roomId sendMessages:20 success:^{
 
                     [mxSession start:^{
-                        readyToTest(mxSession, room, otherSession, expectation, eventId, reactionEventId);
+                        readyToTest(mxSession, room, otherSession, expectation, eventId);
                     } failure:^(NSError *error) {
                         XCTFail(@"Cannot set up intial test conditions - error: %@", error);
                         [expectation fulfill];
@@ -114,9 +114,9 @@
 // - Add enough messages while the session in background to trigger a gappy sync
 // - Add a reaction in the gap
 // - Do an initial sync
-- (void)createScenarioWithAGappyInitialSync:(void(^)(MXSession *mxSession, MXRoom *room, MXSession *otherSession, XCTestExpectation *expectation, NSString *eventId, NSString *reactionEventId))readyToTest
+- (void)createScenarioWithAGappyInitialSync:(void(^)(MXSession *mxSession, MXRoom *room, MXSession *otherSession, XCTestExpectation *expectation, NSString *eventId))readyToTest
 {
-    [self createScenarioWithAGappySync:^(MXSession *mxSession, MXRoom *room, MXSession *otherSession, XCTestExpectation *expectation, NSString *eventId, NSString *reactionEventId) {
+    [self createScenarioWithAGappySync:^(MXSession *mxSession, MXRoom *room, MXSession *otherSession, XCTestExpectation *expectation, NSString *eventId) {
 
         MXRestClient *restClient = mxSession.matrixRestClient;
         NSString *roomId = room.roomId;
@@ -129,7 +129,7 @@
         [mxSession2 setStore:[[MXMemoryStore alloc] init] success:^{
 
             [mxSession2 start:^{
-                readyToTest(mxSession2, [mxSession2 roomWithRoomId:roomId], otherSession, expectation, eventId, reactionEventId);
+                readyToTest(mxSession2, [mxSession2 roomWithRoomId:roomId], otherSession, expectation, eventId);
             } failure:^(NSError *error) {
                 XCTFail(@"Cannot set up intial test conditions - error: %@", error);
                 [expectation fulfill];
@@ -154,7 +154,7 @@
         [room sendTextMessage:@"Hello" success:^(NSString *eventId) {
 
             // - React on it
-            [mxSession.aggregations sendReaction:@"👍" toEvent:eventId inRoom:room.roomId success:^(NSString *eventId) {
+            [mxSession.aggregations addReaction:@"👍" forEvent:eventId inRoom:room.roomId success:^() {
                 XCTAssertNotNil(eventId);
             } failure:^(NSError *error) {
                 XCTFail(@"The operation should not fail - NSError: %@", error);
@@ -186,7 +186,7 @@
 - (void)testAggregatedReactionServerSide
 {
     // - Run the initial condition scenario
-    [self createScenario:^(MXSession *mxSession, MXRoom *room, MXSession *otherSession, XCTestExpectation *expectation, NSString *eventId, NSString *editEventId) {
+    [self createScenario:^(MXSession *mxSession, MXRoom *room, MXSession *otherSession, XCTestExpectation *expectation, NSString *eventId) {
 
         // -> Check data is correctly aggregated when fetching the reacted event directly from the homeserver
         [mxSession.matrixRestClient eventWithEventId:eventId inRoom:room.roomId success:^(MXEvent *event) {
@@ -217,7 +217,7 @@
 - (void)testAggregationsFromInitialSync
 {
     // - Run the initial condition scenario
-    [self createScenario:^(MXSession *mxSession, MXRoom *room, MXSession *otherSession, XCTestExpectation *expectation, NSString *eventId, NSString *reactionEventId) {
+    [self createScenario:^(MXSession *mxSession, MXRoom *room, MXSession *otherSession, XCTestExpectation *expectation, NSString *eventId) {
 
         MXRestClient *restClient = mxSession.matrixRestClient;
 
@@ -261,7 +261,7 @@
 - (void)testAggregationsLive
 {
     // - Run the initial condition scenario
-    [self createScenario:^(MXSession *mxSession, MXRoom *room, MXSession *otherSession, XCTestExpectation *expectation, NSString *eventId, NSString *reactionEventId) {
+    [self createScenario:^(MXSession *mxSession, MXRoom *room, MXSession *otherSession, XCTestExpectation *expectation, NSString *eventId) {
 
         // -> Data from aggregations must be right
         MXAggregatedReactions *reactions = [mxSession.aggregations aggregatedReactionsOnEvent:eventId inRoom:room.roomId];
@@ -284,7 +284,7 @@
 - (void)testAggregationsListener
 {
     // - Run the initial condition scenario
-    [self createScenario:^(MXSession *mxSession, MXRoom *room, MXSession *otherSession, XCTestExpectation *expectation, NSString *eventId, NSString *reactionEventId) {
+    [self createScenario:^(MXSession *mxSession, MXRoom *room, MXSession *otherSession, XCTestExpectation *expectation, NSString *eventId) {
 
         // -> We must get notified about the reaction count change
         [mxSession.aggregations listenToReactionCountUpdateInRoom:room.roomId block:^(NSDictionary<NSString *,MXReactionCountChange *> * _Nonnull changes) {
@@ -302,11 +302,14 @@
             XCTAssertEqual(reactionCount.count, 1);
             XCTAssertTrue(reactionCount.myUserHasReacted,);
 
-            [expectation fulfill];
+            if (!change.changeDueToLocalEcho)
+            {
+                [expectation fulfill];
+            }
         }];
 
         // - Add one more reaction
-        [mxSession.aggregations sendReaction:@"😄" toEvent:eventId inRoom:room.roomId success:^(NSString *eventId) {
+        [mxSession.aggregations addReaction:@"😄" forEvent:eventId inRoom:room.roomId success:^() {
         } failure:^(NSError *error) {
             XCTFail(@"The operation should not fail - NSError: %@", error);
             [expectation fulfill];
@@ -321,7 +324,7 @@
 - (void)testUnreact
 {
     // - Run the initial condition scenario
-    [self createScenario:^(MXSession *mxSession, MXRoom *room, MXSession *otherSession, XCTestExpectation *expectation, NSString *eventId, NSString *reactionEventId) {
+    [self createScenario:^(MXSession *mxSession, MXRoom *room, MXSession *otherSession, XCTestExpectation *expectation, NSString *eventId) {
 
         // -> We must get notified about the reaction count change
         [mxSession.aggregations listenToReactionCountUpdateInRoom:room.roomId block:^(NSDictionary<NSString *,MXReactionCountChange *> * _Nonnull changes) {
@@ -338,14 +341,17 @@
             XCTAssertEqualObjects(reaction, @"👍");
 
             // -> Data from aggregations must be right
-            MXAggregatedReactions *reactions = [mxSession.aggregations aggregatedReactionsOnEvent:eventId inRoom:room.roomId];
-            XCTAssertNil(reactions);
+            if (!change.changeDueToLocalEcho)
+            {
+                MXAggregatedReactions *reactions = [mxSession.aggregations aggregatedReactionsOnEvent:eventId inRoom:room.roomId];
+                XCTAssertNil(reactions);
 
-            [expectation fulfill];
+                [expectation fulfill];
+            }
         }];
 
         // - Unreact
-        [mxSession.aggregations unReactOnReaction:@"👍" toEvent:eventId inRoom:room.roomId success:^() {
+        [mxSession.aggregations removeReaction:@"👍" forEvent:eventId inRoom:room.roomId success:^() {
         } failure:^(NSError *error) {
             XCTFail(@"The operation should not fail - NSError: %@", error);
             [expectation fulfill];
@@ -361,7 +367,7 @@
 - (void)testUnreactAfterInitialSync
 {
     // - Run the initial condition scenario
-    [self createScenario:^(MXSession *mxSession, MXRoom *room, MXSession *otherSession, XCTestExpectation *expectation, NSString *eventId, NSString *reactionEventId) {
+    [self createScenario:^(MXSession *mxSession, MXRoom *room, MXSession *otherSession, XCTestExpectation *expectation, NSString *eventId) {
 
         MXRestClient *restClient = mxSession.matrixRestClient;
 
@@ -383,14 +389,16 @@
                     XCTAssertNotNil(change.deleted);
 
                     // -> Data from aggregations must be right
-                    MXAggregatedReactions *reactions = [mxSession.aggregations aggregatedReactionsOnEvent:eventId inRoom:room.roomId];
-                    XCTAssertNil(reactions);
-
-                    [expectation fulfill];
+                    if (!changes.allValues.firstObject.changeDueToLocalEcho)
+                    {
+                        MXAggregatedReactions *reactions = [mxSession.aggregations aggregatedReactionsOnEvent:eventId inRoom:room.roomId];
+                        XCTAssertNil(reactions);
+                        [expectation fulfill];
+                    }
                 }];
 
                 // - Unreact
-                [mxSession.aggregations unReactOnReaction:@"👍" toEvent:eventId inRoom:room.roomId success:^() {
+                [mxSession.aggregations removeReaction:@"👍" forEvent:eventId inRoom:room.roomId success:^() {
                 } failure:^(NSError *error) {
                     XCTFail(@"The operation should not fail - NSError: %@", error);
                     [expectation fulfill];
@@ -407,6 +415,224 @@
         }];
     }];
 }
+
+// - Run the initial condition scenario
+// - Make another user react
+// - Unreact
+// -> We must get notified about the reaction count change
+// -> Data from aggregations must be right
+- (void)testUnreactOnEventReactedByOther
+{
+    // - Run the initial condition scenario
+    [self createScenario:^(MXSession *mxSession, MXRoom *room, MXSession *otherSession, XCTestExpectation *expectation, NSString *eventId) {
+
+        // - Make another user react
+        [otherSession.aggregations addReaction:@"👍" forEvent:eventId inRoom:room.roomId success:^{
+        } failure:^(NSError *error) {
+            XCTFail(@"The operation should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+
+        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 1 * NSEC_PER_SEC), dispatch_get_main_queue(), ^{
+
+            // -> We must get notified about the reaction count change
+            [mxSession.aggregations listenToReactionCountUpdateInRoom:room.roomId block:^(NSDictionary<NSString *,MXReactionCountChange *> * _Nonnull changes) {
+
+                XCTAssertEqual(changes.count, 1, @"Only one change");
+
+                MXReactionCountChange *change = changes[eventId];
+
+                XCTAssertNotNil(change);
+                XCTAssertNil(change.inserted);
+                XCTAssertNil(change.deleted);
+
+                XCTAssertEqual(change.modified.count, 1, @"Only one change");
+                MXReactionCount *reactionCount = change.modified.firstObject;
+                XCTAssertEqualObjects(reactionCount.reaction, @"👍");
+                XCTAssertEqual(reactionCount.count, 1);
+                XCTAssertFalse(reactionCount.myUserHasReacted,);
+
+                // -> Data from aggregations must be right
+                if (!change.changeDueToLocalEcho)
+                {
+                    [expectation fulfill];
+                }
+            }];
+
+            // - Unreact
+            [mxSession.aggregations removeReaction:@"👍" forEvent:eventId inRoom:room.roomId success:^() {
+            } failure:^(NSError *error) {
+                XCTFail(@"The operation should not fail - NSError: %@", error);
+                [expectation fulfill];
+            }];
+        });
+    }];
+}
+
+#pragma mark - Local echo
+
+// - Send a message
+// - React on it
+// -> We must have reaction count before the request complete
+- (void)testLocalEchoOnAddReaction
+{
+    [matrixSDKTestsData doMXSessionTestWithBobAndARoom:self andStore:[[MXMemoryStore alloc] init] readyToTest:^(MXSession *mxSession, MXRoom *room, XCTestExpectation *expectation) {
+
+        // - Send a message
+        [room sendTextMessage:@"Hello" success:^(NSString *eventId) {
+
+            // - React on it
+            [mxSession.aggregations addReaction:@"👍" forEvent:eventId inRoom:room.roomId success:^() {
+            } failure:^(NSError *error) {
+                XCTFail(@"The operation should not fail - NSError: %@", error);
+                [expectation fulfill];
+            }];
+
+            // -> We must have reaction count before the request complete
+            MXAggregatedReactions *reactions = [mxSession.aggregations aggregatedReactionsOnEvent:eventId inRoom:room.roomId];
+            XCTAssertNotNil(reactions);
+            XCTAssertEqual(reactions.reactions.count, 1);
+
+            MXReactionCount *reactionCount = reactions.reactions.firstObject;
+            XCTAssertEqualObjects(reactionCount.reaction, @"👍");
+            XCTAssertEqual(reactionCount.count, 1);
+            XCTAssertTrue(reactionCount.myUserHasReacted);
+            XCTAssertTrue(reactionCount.containsLocalEcho);
+
+            [expectation fulfill];
+
+        } failure:^(NSError *error) {
+            XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+            [expectation fulfill];
+        }];
+    }];
+}
+
+// - Run the initial condition scenario
+// - Unreact
+// -> We must have reaction count before the request complete
+- (void)testLocalEchoOnRemoveReaction
+{
+    // - Run the initial condition scenario
+    [self createScenario:^(MXSession *mxSession, MXRoom *room, MXSession *otherSession, XCTestExpectation *expectation, NSString *eventId) {
+
+        // - Unreact
+        [mxSession.aggregations removeReaction:@"👍" forEvent:eventId inRoom:room.roomId success:^() {
+        } failure:^(NSError *error) {
+            XCTFail(@"The operation should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+
+        // -> We must have reaction count before the request complete
+        MXAggregatedReactions *reactions = [mxSession.aggregations aggregatedReactionsOnEvent:eventId inRoom:room.roomId];
+
+        XCTAssertNotNil(reactions);
+        XCTAssertEqual(reactions.reactions.count, 1);
+
+        MXReactionCount *reactionCount = reactions.reactions.firstObject;
+        XCTAssertEqualObjects(reactionCount.reaction, @"👍");
+        XCTAssertEqual(reactionCount.count, 0);
+        XCTAssertFalse(reactionCount.myUserHasReacted);
+        XCTAssertTrue(reactionCount.containsLocalEcho);
+
+        [expectation fulfill];
+    }];
+}
+
+// - Run the initial condition scenario
+// - Unreact 4 times (with react in between)
+// - Unreact even twice
+// -> We must have right reaction count before the requests complete
+// -> We must have right reaction count at the end (ie, no reactions including no local reaction echoes)
+// -> Only one event (redaction) should have been sent
+- (void)testSeveralLocalEchoes
+{
+    // - Run the initial condition scenario
+    [self createScenario:^(MXSession *mxSession, MXRoom *room, MXSession *otherSession, XCTestExpectation *expectation, NSString *eventId) {
+
+        __block NSUInteger unreactionEventCount = 0;
+        [room listenToEventsOfTypes:@[kMXEventTypeStringRoomRedaction] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
+            unreactionEventCount++;
+        }];
+
+        __block NSUInteger reactionEventCount = 0;
+        [room listenToEventsOfTypes:@[kMXEventTypeStringReaction] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
+            reactionEventCount++;
+        }];
+
+
+        // - Unreact 4 times (with react in between)
+        [mxSession.aggregations removeReaction:@"👍" forEvent:eventId inRoom:room.roomId success:^() {
+        } failure:^(NSError *error) {
+            XCTFail(@"The operation should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+        [mxSession.aggregations addReaction:@"👍" forEvent:eventId inRoom:room.roomId success:^() {
+        } failure:^(NSError *error) {
+            XCTFail(@"The operation should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+        [mxSession.aggregations removeReaction:@"👍" forEvent:eventId inRoom:room.roomId success:^() {
+        } failure:^(NSError *error) {
+            XCTFail(@"The operation should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+        [mxSession.aggregations addReaction:@"👍" forEvent:eventId inRoom:room.roomId success:^() {
+        } failure:^(NSError *error) {
+            XCTFail(@"The operation should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+        [mxSession.aggregations removeReaction:@"👍" forEvent:eventId inRoom:room.roomId success:^() {
+        } failure:^(NSError *error) {
+            XCTFail(@"The operation should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+        // - Unreact even twice
+        [mxSession.aggregations removeReaction:@"👍" forEvent:eventId inRoom:room.roomId success:^() {
+        } failure:^(NSError *error) {
+            XCTFail(@"The operation should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+        [mxSession.aggregations addReaction:@"👍" forEvent:eventId inRoom:room.roomId success:^() {
+        } failure:^(NSError *error) {
+            XCTFail(@"The operation should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+        [mxSession.aggregations removeReaction:@"👍" forEvent:eventId inRoom:room.roomId success:^() {
+        } failure:^(NSError *error) {
+            XCTFail(@"The operation should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+
+        // -> We must have right reaction count before the requests complete
+        MXAggregatedReactions *reactions = [mxSession.aggregations aggregatedReactionsOnEvent:eventId inRoom:room.roomId];
+
+        XCTAssertNotNil(reactions);
+        XCTAssertEqual(reactions.reactions.count, 1);
+
+        MXReactionCount *reactionCount = reactions.reactions.firstObject;
+        XCTAssertEqualObjects(reactionCount.reaction, @"👍");
+        XCTAssertEqual(reactionCount.count, 0);
+        XCTAssertFalse(reactionCount.myUserHasReacted);
+        XCTAssertTrue(reactionCount.containsLocalEcho);
+
+        XCTAssertEqual(reactionCount.localEchoesOperations.count, 1);
+
+        // -> We must have right reaction count at the end (ie, no reactions including no local reaction echoes)
+        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 2 * NSEC_PER_SEC), dispatch_get_main_queue(), ^{
+
+            MXAggregatedReactions *reactions = [mxSession.aggregations aggregatedReactionsOnEvent:eventId inRoom:room.roomId];
+            XCTAssertNil(reactions);
+
+            // -> Only one event (redaction) should have been sent
+            XCTAssertEqual(unreactionEventCount, 1);
+            XCTAssertEqual(reactionEventCount, 0);
+
+            [expectation fulfill];
+        });
+    }];
+}
+
 
 #pragma mark - Pagination
 
@@ -457,7 +683,7 @@
 
 - (void)testReactionsWhenPaginatingFromAGappySync
 {
-    [self createScenarioWithAGappySync:^(MXSession *mxSession, MXRoom *room, MXSession *otherSession, XCTestExpectation *expectation, NSString *eventId, NSString *reactionEventId) {
+    [self createScenarioWithAGappySync:^(MXSession *mxSession, MXRoom *room, MXSession *otherSession, XCTestExpectation *expectation, NSString *eventId) {
 
         // While we have not yet paginated back, we should see an outdated reaction count
         MXAggregatedReactions *reactions = [mxSession.aggregations aggregatedReactionsOnEvent:eventId inRoom:room.roomId];
@@ -471,7 +697,7 @@
 
 - (void)testReactionsWhenPaginatingFromAGappyInitialSync
 {
-    [self createScenarioWithAGappyInitialSync:^(MXSession *mxSession, MXRoom *room, MXSession *otherSession, XCTestExpectation *expectation, NSString *eventId, NSString *reactionEventId) {
+    [self createScenarioWithAGappyInitialSync:^(MXSession *mxSession, MXRoom *room, MXSession *otherSession, XCTestExpectation *expectation, NSString *eventId) {
 
         [self checkReactionsWhenPaginating:mxSession room:room event:eventId expectation:expectation];
     }];
@@ -502,7 +728,7 @@
 
 - (void)testReactionsOnPermalinkFromAGappySync
 {
-    [self createScenarioWithAGappySync:^(MXSession *mxSession, MXRoom *room, MXSession *otherSession, XCTestExpectation *expectation, NSString *eventId, NSString *reactionEventId) {
+    [self createScenarioWithAGappySync:^(MXSession *mxSession, MXRoom *room, MXSession *otherSession, XCTestExpectation *expectation, NSString *eventId) {
 
         // While we have not yet paginated back, we should see an outdated reaction count
         MXAggregatedReactions *reactions = [mxSession.aggregations aggregatedReactionsOnEvent:eventId inRoom:room.roomId];
@@ -516,7 +742,7 @@
 
 - (void)testReactionsOnPermalinkFromAGappyInitialSync
 {
-    [self createScenarioWithAGappyInitialSync:^(MXSession *mxSession, MXRoom *room, MXSession *otherSession, XCTestExpectation *expectation, NSString *eventId, NSString *reactionEventId) {
+    [self createScenarioWithAGappyInitialSync:^(MXSession *mxSession, MXRoom *room, MXSession *otherSession, XCTestExpectation *expectation, NSString *eventId) {
 
         [self checkReactionsOnPermalink:mxSession room:room event:eventId expectation:expectation];
     }];

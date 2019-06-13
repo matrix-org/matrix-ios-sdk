@@ -16,6 +16,8 @@
 
 #import <Foundation/Foundation.h>
 
+#import "MXReactionOperation.h"
+
 NS_ASSUME_NONNULL_BEGIN
 
 /**
@@ -26,11 +28,20 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic) NSString *reaction;
 @property (nonatomic) NSUInteger count;
 
-// The id of the event if our user has made this reaction
+
+// The id of the reaction event if our user has made this reaction
 @property (nonatomic, nullable) NSString *myUserReactionEventId;
 
 // YES if our user has made this reaction
 @property (nonatomic, readonly) BOOL myUserHasReacted;
+
+
+// List of pending operation requests on this reaction
+// Note: self.count includes counts of them
+@property (nonatomic) NSArray<MXReactionOperation*> *localEchoesOperations;
+
+// YES if there are pending operations
+@property (nonatomic, readonly) BOOL containsLocalEcho;
 
 @end
 

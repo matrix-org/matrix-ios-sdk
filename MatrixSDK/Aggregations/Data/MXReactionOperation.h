@@ -1,5 +1,5 @@
 /*
- Copyright 2019 New Vector Ltd
+ Copyright 2019 The Matrix.org Foundation C.I.C
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -16,18 +16,21 @@
 
 #import <Foundation/Foundation.h>
 
-#import "MXReactionCount.h"
-
 NS_ASSUME_NONNULL_BEGIN
 
 /**
- `MXAggregatedReactions` is a summary of reactions on an event.
+ A `MXReactionOperation` represents a pending operation on a reaction on a event.
+ The `MXReactionOperation` exists while the operation has not been acknowledged
+ by the homeserver, ie while we have not received the reaction event back from
+ the event stream.
  */
-@interface MXAggregatedReactions : NSObject
+@interface MXReactionOperation : NSObject
 
-@property (nonatomic) NSArray<MXReactionCount*> *reactions;
+@property (nonatomic) NSString *eventId;
+@property (nonatomic) NSString *reaction;
+@property (nonatomic) BOOL isAddOperation;
 
-- (nullable MXAggregatedReactions *)aggregatedReactionsWithNonZeroCount;
+@property (nonatomic) void (^block)(BOOL requestAlreadyPending);
 
 @end
 
