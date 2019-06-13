@@ -115,7 +115,7 @@ NS_ASSUME_NONNULL_BEGIN
  */
 - (MXHTTPOperation*)replaceTextMessageEvent:(MXEvent*)event
                             withTextMessage:(nullable NSString*)text
-//                          formattedText:(nullable NSString*)formattedText     // TODO(@steve): in phase2
+                              formattedText:(nullable NSString*)formattedText
 //                          localEcho:(MXEvent**)localEcho                      // TODO(@steve): in phase2
                                     success:(void (^)(NSString *eventId))success
                                     failure:(void (^)(NSError *error))failure;
