@@ -535,7 +535,6 @@
 {
     // Find the operation that corresponds to the information
     MXReactionOperation *reactionOperationToRemove;
-    BOOL isTopOperation = YES;
     for (MXReactionOperation *reactionOperation in self.reactionOperations[eventId][reaction])
     {
         if (reactionOperation.isAddOperation == isAdd)
@@ -543,8 +542,6 @@
             reactionOperationToRemove = reactionOperation;
             break;
         }
-
-        isTopOperation = NO;
     }
 
     if (reactionOperationToRemove)
@@ -562,16 +559,13 @@
         }
 
         // Run the next operation if any
-        if (isTopOperation)
-        {
-            dispatch_async(dispatch_get_main_queue(), ^{
-                MXReactionOperation *nextReactionOperation = self.reactionOperations[eventId][reaction].firstObject;
-                if (nextReactionOperation)
-                {
-                    nextReactionOperation.block(NO);
-                }
-            });
-        }
+        dispatch_async(dispatch_get_main_queue(), ^{
+            MXReactionOperation *nextReactionOperation = self.reactionOperations[eventId][reaction].firstObject;
+            if (nextReactionOperation)
+            {
+                nextReactionOperation.block(NO);
+            }
+        });
     }
 }
 
