@@ -467,6 +467,12 @@
  */
 - (void)addOperationForReaction:(NSString*)reaction forEvent:(NSString*)eventId inRoom:(NSString*)roomId isAdd:(BOOL)isAdd block:(void (^)(BOOL requestAlreadyPending))block
 {
+    MXReactionOperation *reactionOperation = [MXReactionOperation new];
+    reactionOperation.eventId = eventId;
+    reactionOperation.reaction = reaction;
+    reactionOperation.isAddOperation = isAdd;
+    reactionOperation.block = block;
+
     // Debounce: a reaction from a user is binary. We should not have more than
     // 2 operations in the queue for the same reaction
     if (self.reactionOperations[eventId][reaction].count)
@@ -476,6 +482,7 @@
             // The same operation is already pending
             NSLog(@"[MXAggregations] addOperationForReaction: Debounce same reaction operation: %@",
                   isAdd ? @"ADD" : @"REMOVE");
+            [self notifyReactionCountChangeListenersOfRoom:roomId forLocalEchoForOperation:reactionOperation];
             block(YES);
             return;
         }
@@ -485,16 +492,11 @@
             NSLog(@"[MXAggregations] addOperationForReaction: Debounce: do only the reaction operation: %@",
                   isAdd ? @"ADD" : @"REMOVE");
             [self.reactionOperations[eventId][reaction] removeObjectAtIndex:1];
+            [self notifyReactionCountChangeListenersOfRoom:roomId forLocalEchoForOperation:reactionOperation];
             block(YES);
             return;
         }
     }
-
-    MXReactionOperation *reactionOperation = [MXReactionOperation new];
-    reactionOperation.eventId = eventId;
-    reactionOperation.reaction = reaction;
-    reactionOperation.isAddOperation = isAdd;
-    reactionOperation.block = block;
 
     // Queue the reaction or unreaction operation
     // The queue will be used to could local echoes
