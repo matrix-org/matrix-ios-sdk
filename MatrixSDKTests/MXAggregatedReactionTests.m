@@ -416,6 +416,59 @@
     }];
 }
 
+// - Run the initial condition scenario
+// - Make another user react
+// - Unreact
+// -> We must get notified about the reaction count change
+// -> Data from aggregations must be right
+- (void)testUnreactOnEventReactedByOther
+{
+    // - Run the initial condition scenario
+    [self createScenario:^(MXSession *mxSession, MXRoom *room, MXSession *otherSession, XCTestExpectation *expectation, NSString *eventId) {
+
+        // - Make another user react
+        [otherSession.aggregations addReaction:@"👍" forEvent:eventId inRoom:room.roomId success:^{
+        } failure:^(NSError *error) {
+            XCTFail(@"The operation should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+
+        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 1 * NSEC_PER_SEC), dispatch_get_main_queue(), ^{
+
+            // -> We must get notified about the reaction count change
+            [mxSession.aggregations listenToReactionCountUpdateInRoom:room.roomId block:^(NSDictionary<NSString *,MXReactionCountChange *> * _Nonnull changes) {
+
+                XCTAssertEqual(changes.count, 1, @"Only one change");
+
+                MXReactionCountChange *change = changes[eventId];
+
+                XCTAssertNotNil(change);
+                XCTAssertNil(change.inserted);
+                XCTAssertNil(change.deleted);
+
+                XCTAssertEqual(change.modified.count, 1, @"Only one change");
+                MXReactionCount *reactionCount = change.modified.firstObject;
+                XCTAssertEqualObjects(reactionCount.reaction, @"👍");
+                XCTAssertEqual(reactionCount.count, 1);
+                XCTAssertFalse(reactionCount.myUserHasReacted,);
+
+                // -> Data from aggregations must be right
+                if (!change.changeDueToLocalEcho)
+                {
+                    [expectation fulfill];
+                }
+            }];
+
+            // - Unreact
+            [mxSession.aggregations removeReaction:@"👍" forEvent:eventId inRoom:room.roomId success:^() {
+            } failure:^(NSError *error) {
+                XCTFail(@"The operation should not fail - NSError: %@", error);
+                [expectation fulfill];
+            }];
+        });
+    }];
+}
+
 #pragma mark - Local echo
 
 // - Send a message

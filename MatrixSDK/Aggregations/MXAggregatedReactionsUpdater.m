@@ -60,7 +60,7 @@
 #pragma mark - Requests
 
 - (void)addReaction:(NSString*)reaction
-            forEvent:(NSString*)eventId
+           forEvent:(NSString*)eventId
              inRoom:(NSString*)roomId
             success:(void (^)(void))success
             failure:(void (^)(NSError *error))failure
@@ -136,14 +136,14 @@
             }
             else
             {
-                NSLog(@"[MXAggregations] unReactOnReaction: ERROR: Unknown room %@", roomId);
+                NSLog(@"[MXAggregations] removeReaction: ERROR: Unknown room %@", roomId);
                 [self didOperationCompleteForReaction:reaction forEvent:eventId isAdd:NO];
                 success();
             }
         }
         else
         {
-            NSLog(@"[MXAggregations] unReactOnReaction: ERROR: Do not know reaction(%@) event on event %@", reaction, eventId);
+            NSLog(@"[MXAggregations] removeReaction: ERROR: Do not know reaction(%@) event on event %@", reaction, eventId);
             [self didOperationCompleteForReaction:reaction forEvent:eventId isAdd:NO];
             success();
         }
@@ -278,7 +278,7 @@
         }
 
         [self.store deleteReactionRelation:relation];
-        [self removeReaction:relation.reaction onEvent:relation.eventId inRoomId:event.roomId];
+        [self removeReaction:relation.reaction onEvent:relation.eventId inRoomId:event.roomId reactionEventId:redactedEventId];
     }
 }
 
@@ -341,7 +341,7 @@
                                      isNewReaction:isANewReaction];
 }
 
-- (void)removeReaction:(NSString*)reaction onEvent:(NSString*)eventId inRoomId:(NSString*)roomId
+- (void)removeReaction:(NSString*)reaction onEvent:(NSString*)eventId inRoomId:(NSString*)roomId reactionEventId:(NSString*)reactionEventId
 {
     // Migrate data from matrix store to aggregation store if needed
     [self checkAggregationStoreWithHackForEvent:eventId inRoomId:roomId];
@@ -353,6 +353,12 @@
         if (reactionCount.count > 1)
         {
             reactionCount.count--;
+
+            if ([reactionCount.myUserReactionEventId isEqualToString:reactionEventId])
+            {
+                // Reset my user reaction
+                reactionCount.myUserReactionEventId = nil;
+            }
 
             [self.store addOrUpdateReactionCount:reactionCount onEvent:eventId inRoom:roomId];
             [self notifyReactionCountChangeListenersOfRoom:roomId
