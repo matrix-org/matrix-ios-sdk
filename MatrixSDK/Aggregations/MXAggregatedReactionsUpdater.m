@@ -499,7 +499,7 @@
     }
 
     // Queue the reaction or unreaction operation
-    // The queue will be used to could local echoes
+    // The queue will be used to count local echoes
     if (!self.reactionOperations[eventId])
     {
         self.reactionOperations[eventId] = [NSMutableDictionary dictionary];
