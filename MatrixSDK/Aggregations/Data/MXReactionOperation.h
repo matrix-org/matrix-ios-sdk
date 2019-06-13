@@ -30,7 +30,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic) NSString *reaction;
 @property (nonatomic) BOOL isAddOperation;
 
-@property (nonatomic) void (^block)(void);
+@property (nonatomic) void (^block)(BOOL requestAlreadyPending);
 
 @end
 

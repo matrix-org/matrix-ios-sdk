@@ -488,29 +488,27 @@
 
 // - Run the initial condition scenario
 // - Unreact 4 times (with react in between)
+// - Unreact even twice
 // -> We must have right reaction count before the requests complete
-// -> We must have right reaction count when the requests complete (ie, no reactions including no local reaction echoes)
-- (void)testSeveralLocalEchoesFinishingByReactionRemoved
+// -> We must have right reaction count at the end (ie, no reactions including no local reaction echoes)
+// -> Only one event (redaction) should have been sent
+- (void)testSeveralLocalEchoes
 {
     // - Run the initial condition scenario
     [self createScenario:^(MXSession *mxSession, MXRoom *room, MXSession *otherSession, XCTestExpectation *expectation, NSString *eventId) {
 
-        __block NSUInteger unreactionCount = 0;
+        __block NSUInteger unreactionEventCount = 0;
         [room listenToEventsOfTypes:@[kMXEventTypeStringRoomRedaction] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
+            unreactionEventCount++;
+        }];
 
-            if (++unreactionCount == 4)
-            {
-                // -> We must have right reaction count when the requests complete (ie, no reactions including no local reaction echoes)
-                MXAggregatedReactions *reactions = [mxSession.aggregations aggregatedReactionsOnEvent:eventId inRoom:room.roomId];
-
-                XCTAssertNil(reactions);
-
-                [expectation fulfill];
-            }
+        __block NSUInteger reactionEventCount = 0;
+        [room listenToEventsOfTypes:@[kMXEventTypeStringReaction] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
+            reactionEventCount++;
         }];
 
 
-        // - Unreact 4 times
+        // - Unreact 4 times (with react in between)
         [mxSession.aggregations removeReaction:@"👍" forEvent:eventId inRoom:room.roomId success:^() {
         } failure:^(NSError *error) {
             XCTFail(@"The operation should not fail - NSError: %@", error);
@@ -531,6 +529,12 @@
             XCTFail(@"The operation should not fail - NSError: %@", error);
             [expectation fulfill];
         }];
+        [mxSession.aggregations removeReaction:@"👍" forEvent:eventId inRoom:room.roomId success:^() {
+        } failure:^(NSError *error) {
+            XCTFail(@"The operation should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+        // - Unreact even twice
         [mxSession.aggregations removeReaction:@"👍" forEvent:eventId inRoom:room.roomId success:^() {
         } failure:^(NSError *error) {
             XCTFail(@"The operation should not fail - NSError: %@", error);
@@ -558,6 +562,21 @@
         XCTAssertEqual(reactionCount.count, 0);
         XCTAssertFalse(reactionCount.myUserHasReacted);
         XCTAssertTrue(reactionCount.containsLocalEcho);
+
+        XCTAssertEqual(reactionCount.localEchoesOperations.count, 1);
+
+        // -> We must have right reaction count at the end (ie, no reactions including no local reaction echoes)
+        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 2 * NSEC_PER_SEC), dispatch_get_main_queue(), ^{
+
+            MXAggregatedReactions *reactions = [mxSession.aggregations aggregatedReactionsOnEvent:eventId inRoom:room.roomId];
+            XCTAssertNil(reactions);
+
+            // -> Only one event (redaction) should have been sent
+            XCTAssertEqual(unreactionEventCount, 1);
+            XCTAssertEqual(reactionEventCount, 0);
+
+            [expectation fulfill];
+        });
     }];
 }
 

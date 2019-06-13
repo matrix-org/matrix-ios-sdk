@@ -66,8 +66,14 @@
             failure:(void (^)(NSError *error))failure
 {
     MXWeakify(self);
-    [self addOperationForReaction:reaction forEvent:eventId inRoom:roomId isAdd:YES block:^{
+    [self addOperationForReaction:reaction forEvent:eventId inRoom:roomId isAdd:YES block:^(BOOL requestAlreadyPending) {
         MXStrongifyAndReturnIfNil(self);
+
+        if (requestAlreadyPending)
+        {
+            success();
+            return;
+        }
 
         [self.mxSession.matrixRestClient sendRelationToEvent:eventId
                                                       inRoom:roomId
@@ -108,8 +114,14 @@
                failure:(void (^)(NSError *error))failure
 {
     MXWeakify(self);
-    [self addOperationForReaction:reaction forEvent:eventId inRoom:roomId isAdd:NO block:^{
+    [self addOperationForReaction:reaction forEvent:eventId inRoom:roomId isAdd:NO block:^(BOOL requestAlreadyPending) {
         MXStrongifyAndReturnIfNil(self);
+
+        if (requestAlreadyPending)
+        {
+            success();
+            return;
+        }
 
         MXReactionCount *reactionCount = [self reactionCountForReaction:reaction onEvent:eventId];
         if (reactionCount && reactionCount.myUserReactionEventId)
@@ -447,8 +459,31 @@
  @param isAdd YES for an operation that adds the reaction.
  @param block block called when the operation on the reaction can be sent to the homeserver.
  */
-- (void)addOperationForReaction:(NSString*)reaction forEvent:(NSString*)eventId inRoom:(NSString*)roomId isAdd:(BOOL)isAdd block:(void (^)(void))block
+- (void)addOperationForReaction:(NSString*)reaction forEvent:(NSString*)eventId inRoom:(NSString*)roomId isAdd:(BOOL)isAdd block:(void (^)(BOOL requestAlreadyPending))block
 {
+    // Debounce: a reaction from a user is binary. We should not have more than
+    // 2 operations in the queue for the same reaction
+    if (self.reactionOperations[eventId][reaction].count)
+    {
+        if (self.reactionOperations[eventId][reaction].lastObject.isAddOperation == isAdd)
+        {
+            // The same operation is already pending
+            NSLog(@"[MXAggregations] addOperationForReaction: Debounce same reaction operation: %@",
+                  isAdd ? @"ADD" : @"REMOVE");
+            block(YES);
+            return;
+        }
+        else if (self.reactionOperations[eventId][reaction].count > 1)
+        {
+            // The app requires 3 binary switch operations, keep only the pending first one
+            NSLog(@"[MXAggregations] addOperationForReaction: Debounce: do only the reaction operation: %@",
+                  isAdd ? @"ADD" : @"REMOVE");
+            [self.reactionOperations[eventId][reaction] removeObjectAtIndex:1];
+            block(YES);
+            return;
+        }
+    }
+
     MXReactionOperation *reactionOperation = [MXReactionOperation new];
     reactionOperation.eventId = eventId;
     reactionOperation.reaction = reaction;
@@ -474,7 +509,7 @@
     // Launch the operation if there is none pending or executing.
     if (self.reactionOperations[eventId][reaction].count == 1)
     {
-        reactionOperation.block();
+        reactionOperation.block(NO);
     }
 }
 
@@ -525,7 +560,7 @@
                 MXReactionOperation *nextReactionOperation = self.reactionOperations[eventId][reaction].firstObject;
                 if (nextReactionOperation)
                 {
-                    nextReactionOperation.block();
+                    nextReactionOperation.block(NO);
                 }
             });
         }

@@ -38,13 +38,15 @@
 
 - (NSString *)description
 {
+    NSString *echoes = self.localEchoesOperations.count ? [NSString stringWithFormat:@" - echoes: %@", @(self.localEchoesOperations.count)] : @"";
+
     if (self.myUserHasReacted)
     {
-        return [NSString stringWithFormat:@"(%@: %@)", self.reaction, @(self.count)];
+        return [NSString stringWithFormat:@"(%@: %@%@)", self.reaction, @(self.count), echoes];
     }
     else
     {
-        return [NSString stringWithFormat:@"%@: %@", self.reaction, @(self.count)];
+        return [NSString stringWithFormat:@"%@: %@%@", self.reaction, @(self.count), echoes];
     }
 }
 

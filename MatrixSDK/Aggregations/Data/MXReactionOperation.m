@@ -18,4 +18,10 @@
 
 @implementation MXReactionOperation
 
+- (NSString *)description
+{
+    NSString *sign = self.isAddOperation ? @"+" : @"-";
+    return [NSString stringWithFormat:@"%@: %@", self.reaction, sign];
+}
+
 @end
