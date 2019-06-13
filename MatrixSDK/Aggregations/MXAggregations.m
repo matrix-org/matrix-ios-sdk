@@ -139,7 +139,7 @@
 
 - (MXHTTPOperation*)replaceTextMessageEvent:(MXEvent*)event
                             withTextMessage:(nullable NSString*)text
-//                          formattedText:(nullable NSString*)formattedText     // TODO
+                              formattedText:(nullable NSString*)formattedText
 //                          localEcho:(MXEvent**)localEcho                      // TODO
                                     success:(void (^)(NSString *eventId))success
                                     failure:(void (^)(NSError *error))failure;
@@ -163,38 +163,76 @@
 //                                                        success:success failure:failure];
     
     // Directly send a room message instead of using the `/send_relation` API to simplify local echo management for the moment.
-    return [self replaceTextMessageEventUsingHack:event withTextMessage:text localEcho:nil success:success failure:failure];
+    return [self replaceTextMessageEventUsingHack:event withTextMessage:text
+                                    formattedText:formattedText
+                                        localEcho:nil success:success failure:failure];
 }
 
-// Directly sends a room message with `m.relates_to` content instead of using the `/send_relation` API.
 - (MXHTTPOperation*)replaceTextMessageEventUsingHack:(MXEvent*)event
-                            withTextMessage:(nullable NSString*)text
-//                          formattedText:(nullable NSString*)formattedText     // TODO
-                                  localEcho:(MXEvent**)localEcho
-                                    success:(void (^)(NSString *eventId))success
-                                    failure:(void (^)(NSError *error))failure
+                                     withTextMessage:(nullable NSString*)text
+                                       formattedText:(nullable NSString*)formattedText
+                                           localEcho:(MXEvent**)localEcho
+                                             success:(void (^)(NSString *eventId))success
+                                             failure:(void (^)(NSError *error))failure
 {
     NSLog(@"[MXAggregations] replaceTextMessageEvent using hack");
-
+    
     NSString *roomId = event.roomId;
     MXRoom *room = [self.mxSession roomWithRoomId:roomId];
     if (!room)
     {
         NSLog(@"[MXAggregations] replaceTextMessageEvent using hack Error: Unknown room: %@", roomId);
+        failure(nil);
         return nil;
     }
-
-    NSDictionary *content = @{
-                              @"msgtype": kMXMessageTypeText,
-                              @"body": [NSString stringWithFormat:@"* %@", event.content[@"body"]],
-                              @"m.new_content": @{
-                                      @"msgtype": kMXMessageTypeText,
-                                      @"body": text
-                                      },
-                              @"m.relates_to": @{ @"rel_type" : @"m.replace",
-                                                  @"event_id": event.eventId
-                                                  }};
-
+    
+    NSString *messageType = event.content[@"msgtype"];
+    
+    if (![messageType isEqualToString:kMXMessageTypeText])
+    {
+        NSLog(@"[MXAggregations] replaceTextMessageEvent using hack. Error: Only message type %@ is supported", kMXMessageTypeText);
+        failure(nil);
+        return nil;
+    }
+    
+    NSMutableDictionary *content = [NSMutableDictionary new];
+    NSMutableDictionary *compatibilityContent = [NSMutableDictionary dictionaryWithDictionary:@{
+                                                                                                @"msgtype": kMXMessageTypeText,
+                                                                                                @"body": [NSString stringWithFormat:@"* %@", text]
+                                                                                                }];
+    
+    NSMutableDictionary *newContent = [NSMutableDictionary dictionaryWithDictionary:@{
+                                                                                      @"msgtype": kMXMessageTypeText,
+                                                                                      @"body": text
+                                                                                      }];
+    
+                                       
+    if (formattedText)
+    {
+        // Send the HTML formatted string
+        
+        [compatibilityContent addEntriesFromDictionary:@{
+                                            @"formatted_body": [NSString stringWithFormat:@"* %@", formattedText],
+                                            @"format": kMXRoomMessageFormatHTML
+                                            }];
+        
+        
+        [newContent addEntriesFromDictionary:@{
+                                               @"formatted_body": formattedText,
+                                               @"format": kMXRoomMessageFormatHTML
+                                               }];
+    }
+    
+    
+    [content addEntriesFromDictionary:compatibilityContent];
+    
+    content[@"m.new_content"] = newContent;
+    
+    content[@"m.relates_to"] = @{
+                                 @"rel_type" : @"m.replace",
+                                 @"event_id": event.eventId
+                                 };
+    
     return [room sendEventOfType:kMXEventTypeStringRoomMessage content:content localEcho:nil success:success failure:failure];
 }
 

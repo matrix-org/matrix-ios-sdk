@@ -563,6 +563,8 @@ NSString *const kMXEventIdentifierKey = @"kMXEventIdentifierKey";
         NSMutableDictionary *editedEventDict = [event.JSONDictionary mutableCopy];
         NSMutableDictionary *editedEventContentDict = [editedEventDict[@"content"] mutableCopy];
         editedEventContentDict[@"body"] = newContentDict[@"body"];
+        editedEventContentDict[@"formatted_body"] = newContentDict[@"formatted_body"];
+        editedEventContentDict[@"format"] = newContentDict[@"format"];
         editedEventDict[@"content"] = editedEventContentDict;
         
         NSDictionary *replaceEventDict = @{ @"event_id": replaceEvent.eventId };
