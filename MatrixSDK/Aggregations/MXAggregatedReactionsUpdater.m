@@ -75,35 +75,35 @@
             return;
         }
 
-        [self.mxSession.matrixRestClient sendRelationToEvent:eventId
-                                                      inRoom:roomId
-                                                relationType:MXEventRelationTypeAnnotation
-                                                   eventType:kMXEventTypeStringReaction
-                                                  parameters:@{
-                                                               @"key": reaction
-                                                               }
-                                                     content:@{}
-                                                     success:^(NSString *eventId)
-         {
-             success();
-         } failure:^(NSError *error)
-         {
-             MXStrongifyAndReturnIfNil(self);
-
-             MXError *mxError = [[MXError alloc] initWithNSError:error];
-             if ([mxError.errcode isEqualToString:kMXErrCodeStringUnrecognized])
-             {
+//        [self.mxSession.matrixRestClient sendRelationToEvent:eventId
+//                                                      inRoom:roomId
+//                                                relationType:MXEventRelationTypeAnnotation
+//                                                   eventType:kMXEventTypeStringReaction
+//                                                  parameters:@{
+//                                                               @"key": reaction
+//                                                               }
+//                                                     content:@{}
+//                                                     success:^(NSString *eventId)
+//         {
+//             success();
+//         } failure:^(NSError *error)
+//         {
+//             MXStrongifyAndReturnIfNil(self);
+//
+//             MXError *mxError = [[MXError alloc] initWithNSError:error];
+//             if ([mxError.errcode isEqualToString:kMXErrCodeStringUnrecognized])
+//             {
                  [self sendReactionUsingHack:reaction forEvent:eventId inRoom:roomId success:success failure:^(NSError *error) {
                      [self didOperationCompleteForReaction:reaction forEvent:eventId isAdd:YES];
                      failure(error);
                  }];
-             }
-             else
-             {
-                 [self didOperationCompleteForReaction:reaction forEvent:eventId isAdd:YES];
-                 failure(error);
-             }
-         }];
+//             }
+//             else
+//             {
+//                 [self didOperationCompleteForReaction:reaction forEvent:eventId isAdd:YES];
+//                 failure(error);
+//             }
+//         }];
     }];
 }
 
