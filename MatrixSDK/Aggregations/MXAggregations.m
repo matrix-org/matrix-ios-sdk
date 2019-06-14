@@ -95,11 +95,11 @@
 - (MXHTTPOperation*)replaceTextMessageEvent:(MXEvent*)event
                             withTextMessage:(nullable NSString*)text
                               formattedText:(nullable NSString*)formattedText
-//                          localEcho:(MXEvent**)localEcho                      // TODO
+                                  localEcho:(MXEvent *_Nullable* _Nullable)localEcho
                                     success:(void (^)(NSString *eventId))success
                                     failure:(void (^)(NSError *error))failure
 {
-    return [self.aggregatedEditsUpdater replaceTextMessageEvent:event withTextMessage:text formattedText:formattedText success:success failure:failure];
+    return [self.aggregatedEditsUpdater replaceTextMessageEvent:event withTextMessage:text formattedText:formattedText localEcho:localEcho success:success failure:failure];
 }
 
 - (id)listenToEditsUpdateInRoom:(NSString *)roomId block:(void (^)(MXEvent* replaceEvent))block

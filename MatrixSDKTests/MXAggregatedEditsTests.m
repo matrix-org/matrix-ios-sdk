@@ -62,7 +62,7 @@ static NSString* const kEditedMarkdownMessageFormattedText = @"<strong>I meant H
 
         [room sendTextMessage:kOriginalMessageText success:^(NSString *eventId) {
             [mxSession eventWithEventId:eventId inRoom:room.roomId success:^(MXEvent *event) {
-                [mxSession.aggregations replaceTextMessageEvent:event withTextMessage:kEditedMessageText formattedText:nil success:^(NSString * _Nonnull editEventId) {
+                [mxSession.aggregations replaceTextMessageEvent:event withTextMessage:kEditedMessageText formattedText:nil localEcho:nil success:^(NSString * _Nonnull editEventId) {
                     
                     dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 1 * NSEC_PER_SEC), dispatch_get_main_queue(), ^{
                         readyToTest(mxSession, room, expectation, eventId, editEventId);
@@ -91,7 +91,7 @@ static NSString* const kEditedMarkdownMessageFormattedText = @"<strong>I meant H
         
         [room sendTextMessage:kOriginalMarkdownMessageText success:^(NSString *eventId) {
             [mxSession eventWithEventId:eventId inRoom:room.roomId success:^(MXEvent *event) {
-                [mxSession.aggregations replaceTextMessageEvent:event withTextMessage:kEditedMarkdownMessageText formattedText:kEditedMarkdownMessageFormattedText success:^(NSString * _Nonnull editEventId) {
+                [mxSession.aggregations replaceTextMessageEvent:event withTextMessage:kEditedMarkdownMessageText formattedText:kEditedMarkdownMessageFormattedText localEcho:nil success:^(NSString * _Nonnull editEventId) {
                     
                     dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 1 * NSEC_PER_SEC), dispatch_get_main_queue(), ^{
                         readyToTest(mxSession, room, expectation, eventId, editEventId);
@@ -239,7 +239,7 @@ static NSString* const kEditedMarkdownMessageFormattedText = @"<strong>I meant H
             [mxSession eventWithEventId:eventId inRoom:room.roomId success:^(MXEvent *event) {
 
                 // Edit it
-                [mxSession.aggregations replaceTextMessageEvent:event withTextMessage:kEditedMessageText formattedText:nil  success:^(NSString * _Nonnull eventId) {
+                [mxSession.aggregations replaceTextMessageEvent:event withTextMessage:kEditedMessageText formattedText:nil localEcho:nil success:^(NSString * _Nonnull eventId) {
                      XCTAssertNotNil(eventId);
                  } failure:^(NSError *error) {
                      XCTFail(@"The operation should not fail - NSError: %@", error);
@@ -285,7 +285,7 @@ static NSString* const kEditedMarkdownMessageFormattedText = @"<strong>I meant H
             [mxSession eventWithEventId:eventId inRoom:room.roomId success:^(MXEvent *event) {
                 
                 // Edit it
-                [mxSession.aggregations replaceTextMessageEvent:event withTextMessage:kEditedMarkdownMessageText formattedText:kEditedMarkdownMessageFormattedText success:^(NSString * _Nonnull eventId) {
+                [mxSession.aggregations replaceTextMessageEvent:event withTextMessage:kEditedMarkdownMessageText formattedText:kEditedMarkdownMessageFormattedText localEcho:nil success:^(NSString * _Nonnull eventId) {
                     XCTAssertNotNil(eventId);
                 } failure:^(NSError *error) {
                     XCTFail(@"The operation should not fail - NSError: %@", error);
@@ -543,7 +543,7 @@ static NSString* const kEditedMarkdownMessageFormattedText = @"<strong>I meant H
         
         MXEvent *editedEvent = [mxSession.store eventWithEventId:eventId inRoom:room.roomId];
         
-        [mxSession.aggregations replaceTextMessageEvent:editedEvent withTextMessage:secondEditionTextMessage formattedText:nil success:^(NSString * _Nonnull eventId) {
+        [mxSession.aggregations replaceTextMessageEvent:editedEvent withTextMessage:secondEditionTextMessage formattedText:nil localEcho:nil success:^(NSString * _Nonnull eventId) {
             
         } failure:^(NSError * _Nonnull error) {
             XCTFail(@"Cannot set up intial test conditions - error: %@", error);

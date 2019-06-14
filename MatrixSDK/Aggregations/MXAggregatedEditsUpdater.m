@@ -55,7 +55,7 @@
 - (MXHTTPOperation*)replaceTextMessageEvent:(MXEvent*)event
                             withTextMessage:(nullable NSString*)text
                               formattedText:(nullable NSString*)formattedText
-//                          localEcho:(MXEvent**)localEcho                      // TODO
+                                  localEcho:(MXEvent *_Nullable* _Nullable)localEcho
                                     success:(void (^)(NSString *eventId))success
                                     failure:(void (^)(NSError *error))failure;
 {
@@ -80,7 +80,7 @@
     // Directly send a room message instead of using the `/send_relation` API to simplify local echo management for the moment.
     return [self replaceTextMessageEventUsingHack:event withTextMessage:text
                                     formattedText:formattedText
-                                        localEcho:nil success:success failure:failure];
+                                        localEcho:localEcho success:success failure:failure];
 }
 
 - (MXHTTPOperation*)replaceTextMessageEventUsingHack:(MXEvent*)event
@@ -148,7 +148,7 @@
                                  @"event_id": event.eventId
                                  };
 
-    return [room sendEventOfType:kMXEventTypeStringRoomMessage content:content localEcho:nil success:success failure:failure];
+    return [room sendEventOfType:kMXEventTypeStringRoomMessage content:content localEcho:localEcho success:success failure:failure];
 }
 
 
