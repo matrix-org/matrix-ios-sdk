@@ -59,44 +59,11 @@
                                     success:(void (^)(NSString *eventId))success
                                     failure:(void (^)(NSError *error))failure;
 {
-    //    NSDictionary *content = @{
-    //                              @"msgtype": kMXMessageTypeText,
-    //                              @"body": [NSString stringWithFormat:@"* %@", event.content[@"body"]],
-    //                              @"m.new_content": @{
-    //                                      @"msgtype": kMXMessageTypeText,
-    //                                      @"body": text
-    //                                      }
-    //                              };
-    //
-    //    // TODO: manage a sent state like when using classic /send
-    //    return [self.mxSession.matrixRestClient sendRelationToEvent:event.eventId
-    //                                                         inRoom:event.roomId
-    //                                                   relationType:MXEventRelationTypeReplace
-    //                                                      eventType:kMXEventTypeStringRoomMessage
-    //                                                     parameters:nil
-    //                                                        content:content
-    //                                                        success:success failure:failure];
-
-    // Directly send a room message instead of using the `/send_relation` API to simplify local echo management for the moment.
-    return [self replaceTextMessageEventUsingHack:event withTextMessage:text
-                                    formattedText:formattedText
-                                        localEcho:localEcho success:success failure:failure];
-}
-
-- (MXHTTPOperation*)replaceTextMessageEventUsingHack:(MXEvent*)event
-                                     withTextMessage:(nullable NSString*)text
-                                       formattedText:(nullable NSString*)formattedText
-                                           localEcho:(MXEvent**)localEcho
-                                             success:(void (^)(NSString *eventId))success
-                                             failure:(void (^)(NSError *error))failure
-{
-    NSLog(@"[MXAggregations] replaceTextMessageEvent using hack");
-
     NSString *roomId = event.roomId;
     MXRoom *room = [self.mxSession roomWithRoomId:roomId];
     if (!room)
     {
-        NSLog(@"[MXAggregations] replaceTextMessageEvent using hack Error: Unknown room: %@", roomId);
+        NSLog(@"[MXAggregations] replaceTextMessageEvent: Error: Unknown room: %@", roomId);
         failure(nil);
         return nil;
     }
@@ -105,7 +72,7 @@
 
     if (![messageType isEqualToString:kMXMessageTypeText])
     {
-        NSLog(@"[MXAggregations] replaceTextMessageEvent using hack. Error: Only message type %@ is supported", kMXMessageTypeText);
+        NSLog(@"[MXAggregations] replaceTextMessageEvent: Error: Only message type %@ is supported", kMXMessageTypeText);
         failure(nil);
         return nil;
     }
