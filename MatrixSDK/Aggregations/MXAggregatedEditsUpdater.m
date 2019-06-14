@@ -16,12 +16,16 @@
 
 #import "MXAggregatedEditsUpdater.h"
 
+#import "MXSession.h"
+#import "MXTools.h"
+
 #import "MXEventRelations.h"
 #import "MXEventReplace.h"
 #import "MXEventEditsListener.h"
 
 @interface MXAggregatedEditsUpdater ()
 
+@property (nonatomic, weak) MXSession *mxSession;
 @property (nonatomic) NSString *myUserId;
 @property (nonatomic, weak) id<MXStore> matrixStore;
 @property (nonatomic) NSMutableArray<MXEventEditsListener*> *listeners;
@@ -30,19 +34,132 @@
 
 @implementation MXAggregatedEditsUpdater
 
-- (instancetype)initWithMyUser:(NSString*)userId
-              aggregationStore:(id<MXAggregationsStore>)store
-                   matrixStore:(id<MXStore>)matrixStore
+- (instancetype)initWithMatrixSession:(MXSession *)mxSession
+                     aggregationStore:(id<MXAggregationsStore>)store
+                          matrixStore:(id<MXStore>)matrixStore
 {
     self = [super init];
     if (self)
     {
-        self.myUserId = userId;
+        self.mxSession = mxSession;
+        self.myUserId = mxSession.matrixRestClient.credentials.userId;
         self.matrixStore = matrixStore;
 
         self.listeners = [NSMutableArray array];
     }
     return self;
+}
+
+
+#pragma mark - Requests
+
+- (MXHTTPOperation*)replaceTextMessageEvent:(MXEvent*)event
+                            withTextMessage:(nullable NSString*)text
+                              formattedText:(nullable NSString*)formattedText
+                             localEchoBlock:(nullable void (^)(MXEvent *localEcho))localEchoBlock
+                                    success:(void (^)(NSString *eventId))success
+                                    failure:(void (^)(NSError *error))failure;
+{
+    NSString *roomId = event.roomId;
+    MXRoom *room = [self.mxSession roomWithRoomId:roomId];
+    if (!room)
+    {
+        NSLog(@"[MXAggregations] replaceTextMessageEvent: Error: Unknown room: %@", roomId);
+        failure(nil);
+        return nil;
+    }
+
+    NSString *messageType = event.content[@"msgtype"];
+
+    if (![messageType isEqualToString:kMXMessageTypeText])
+    {
+        NSLog(@"[MXAggregations] replaceTextMessageEvent: Error: Only message type %@ is supported", kMXMessageTypeText);
+        failure(nil);
+        return nil;
+    }
+
+    NSMutableDictionary *content = [NSMutableDictionary new];
+    NSMutableDictionary *compatibilityContent = [NSMutableDictionary dictionaryWithDictionary:@{
+                                                                                                @"msgtype": kMXMessageTypeText,
+                                                                                                @"body": [NSString stringWithFormat:@"* %@", text]
+                                                                                                }];
+
+    NSMutableDictionary *newContent = [NSMutableDictionary dictionaryWithDictionary:@{
+                                                                                      @"msgtype": kMXMessageTypeText,
+                                                                                      @"body": text
+                                                                                      }];
+
+
+    if (formattedText)
+    {
+        // Send the HTML formatted string
+
+        [compatibilityContent addEntriesFromDictionary:@{
+                                                         @"formatted_body": [NSString stringWithFormat:@"* %@", formattedText],
+                                                         @"format": kMXRoomMessageFormatHTML
+                                                         }];
+
+
+        [newContent addEntriesFromDictionary:@{
+                                               @"formatted_body": formattedText,
+                                               @"format": kMXRoomMessageFormatHTML
+                                               }];
+    }
+
+
+    [content addEntriesFromDictionary:compatibilityContent];
+
+    content[@"m.new_content"] = newContent;
+
+    content[@"m.relates_to"] = @{
+                                 @"rel_type" : @"m.replace",
+                                 @"event_id": event.eventId
+                                 };
+
+    MXHTTPOperation *operation;
+    MXEvent *localEcho;
+    if (event.isLocalEvent)
+    {
+        // Need to wait to get the final event id of the message being sent
+        NSLog(@"[MXAggregations] replaceTextMessageEvent: Event to edit is a local echo. Wait for the end of the sending");
+        operation = [MXHTTPOperation new];
+
+        MXWeakify(self);
+        __block id observer;
+        observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXEventDidChangeSentStateNotification object:event queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification * _Nonnull note) {
+            MXStrongifyAndReturnIfNil(self);
+
+            if (event.sentState == MXEventSentStateSent)
+            {
+                NSLog(@"[MXAggregations] replaceTextMessageEvent: Edit request can be done now");
+
+                [[NSNotificationCenter defaultCenter] removeObserver:observer];
+                observer = nil;
+
+                MXHTTPOperation *operation2 = [self replaceTextMessageEvent:event withTextMessage:text formattedText:formattedText localEchoBlock:localEchoBlock success:success failure:failure];
+
+                [operation mutateTo:operation2];
+            }
+        }];
+
+        if (localEchoBlock)
+        {
+            // Build a temporary local echo
+            localEcho = [room fakeEventWithEventId:nil eventType:kMXEventTypeStringRoomMessage andContent:content];
+            localEcho.sentState = MXEventSentStateSending;
+        }
+    }
+    else
+    {
+        operation = [room sendEventOfType:kMXEventTypeStringRoomMessage content:content localEcho:&localEcho success:success failure:failure];
+    }
+
+    if (localEchoBlock && localEcho)
+    {
+        localEchoBlock(localEcho);
+    }
+    
+    return operation;
 }
 
 

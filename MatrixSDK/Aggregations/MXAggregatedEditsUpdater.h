@@ -23,9 +23,17 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface MXAggregatedEditsUpdater : NSObject
 
-- (instancetype)initWithMyUser:(NSString*)userId
-              aggregationStore:(id<MXAggregationsStore>)store
-                   matrixStore:(id<MXStore>)matrixStore;
+- (instancetype)initWithMatrixSession:(MXSession *)mxSession
+                     aggregationStore:(id<MXAggregationsStore>)store
+                          matrixStore:(id<MXStore>)matrixStore;
+
+#pragma mark - Requests
+- (MXHTTPOperation*)replaceTextMessageEvent:(MXEvent*)event
+                            withTextMessage:(nullable NSString*)text
+                              formattedText:(nullable NSString*)formattedText
+                             localEchoBlock:(nullable void (^)(MXEvent *localEcho))localEchoBlock
+                                    success:(void (^)(NSString *eventId))success
+                                    failure:(void (^)(NSError *error))failure;
 
 #pragma mark - Data update listener
 - (id)listenToEditsUpdateInRoom:(NSString *)roomId block:(void (^)(MXEvent* replaceEvent))block;
