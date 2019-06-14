@@ -17,6 +17,7 @@
 #import "MXAggregatedEditsUpdater.h"
 
 #import "MXSession.h"
+#import "MXTools.h"
 
 #import "MXEventRelations.h"
 #import "MXEventReplace.h"
@@ -55,7 +56,7 @@
 - (MXHTTPOperation*)replaceTextMessageEvent:(MXEvent*)event
                             withTextMessage:(nullable NSString*)text
                               formattedText:(nullable NSString*)formattedText
-                                  localEcho:(MXEvent *_Nullable* _Nullable)localEcho
+                             localEchoBlock:(nullable void (^)(MXEvent *localEcho))localEchoBlock
                                     success:(void (^)(NSString *eventId))success
                                     failure:(void (^)(NSError *error))failure;
 {
@@ -115,7 +116,49 @@
                                  @"event_id": event.eventId
                                  };
 
-    return [room sendEventOfType:kMXEventTypeStringRoomMessage content:content localEcho:localEcho success:success failure:failure];
+    MXHTTPOperation *operation;
+    MXEvent *localEcho;
+    if (event.isLocalEvent)
+    {
+        // Need to wait to get the final event id of the message being sent
+        NSLog(@"[MXAggregations] replaceTextMessageEvent: Event to edit is a local echo. Wait for the end of the sending");
+        operation = [MXHTTPOperation new];
+
+        MXWeakify(self);
+        id observer;
+        observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXEventDidChangeSentStateNotification object:event queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification * _Nonnull note) {
+            MXStrongifyAndReturnIfNil(self);
+
+            if (event.sentState == MXEventSentStateSent)
+            {
+                NSLog(@"[MXAggregations] replaceTextMessageEvent: Edit request can be done now");
+
+                [[NSNotificationCenter defaultCenter] removeObserver:observer];
+
+                MXHTTPOperation *operation2 = [self replaceTextMessageEvent:event withTextMessage:text formattedText:formattedText localEchoBlock:localEchoBlock success:success failure:failure];
+
+                [operation mutateTo:operation2];
+            }
+        }];
+
+        if (localEchoBlock)
+        {
+            // Build a temporary local echo
+            localEcho = [room fakeEventWithEventId:nil eventType:kMXEventTypeStringRoomMessage andContent:content];
+            localEcho.sentState = MXEventSentStateSending;
+        }
+    }
+    else
+    {
+        operation = [room sendEventOfType:kMXEventTypeStringRoomMessage content:content localEcho:&localEcho success:success failure:failure];
+    }
+
+    if (localEchoBlock && localEcho)
+    {
+        localEchoBlock(localEcho);
+    }
+    
+    return operation;
 }
 
 

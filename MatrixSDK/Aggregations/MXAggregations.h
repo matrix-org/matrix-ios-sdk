@@ -102,6 +102,9 @@ NS_ASSUME_NONNULL_BEGIN
 
  @param event The event to update
  @param text The new message text
+ @param formattedText The new message formatted text
+ @param localEchoBlock block called to provide a local echo of the replacement event.
+                       It is called twice when the passed `event` is a local echo.
 
  @param success A block object called when the operation succeeds. It returns
                 the event id of the event generated on the homeserver.
@@ -112,7 +115,7 @@ NS_ASSUME_NONNULL_BEGIN
 - (MXHTTPOperation*)replaceTextMessageEvent:(MXEvent*)event
                             withTextMessage:(nullable NSString*)text
                               formattedText:(nullable NSString*)formattedText
-                                  localEcho:(MXEvent *_Nullable* _Nullable)localEcho
+                             localEchoBlock:(nullable void (^)(MXEvent *localEcho))localEchoBlock
                                     success:(void (^)(NSString *eventId))success
                                     failure:(void (^)(NSError *error))failure;
 
