@@ -5114,12 +5114,4 @@ MXAuthAction;
                                  }];
 }
 
-#pragma mark - Tracked server error code
-
--(void)setTrackedServerErrorCodes:(NSSet <NSString *> *)trackedServerErrorCodes
-{
-    _trackedServerErrorCodes = trackedServerErrorCodes;
-    httpClient.trackedServerErrorCodes = trackedServerErrorCodes;
-}
-
 @end

@@ -41,8 +41,8 @@
 NSString * const MXHTTPClientErrorResponseDataKey = @"com.matrixsdk.httpclient.error.response.data";
 NSString* const kMXHTTPClientUserConsentNotGivenErrorNotification = @"kMXHTTPClientUserConsentNotGivenErrorNotification";
 NSString* const kMXHTTPClientUserConsentNotGivenErrorNotificationConsentURIKey = @"kMXHTTPClientUserConsentNotGivenErrorNotificationConsentURIKey";
-NSString* const kMXHTTPClientTrackedErrorNotification = @"kMXHTTPClientTrackedErrorNotification";
-NSString* const kMXHTTPClientTrackedErrorNotificationErrorCodeKey = @"kMXHTTPClientTrackedErrorNotificationErrorCodeKey";
+NSString* const kMXHTTPClientMatrixErrorNotification = @"kMXHTTPClientMatrixErrorNotification";
+NSString* const kMXHTTPClientMatrixErrorNotificationErrorKey = @"kMXHTTPClientMatrixErrorNotificationErrorKey";
 
 
 @interface MXHTTPClient ()
@@ -274,14 +274,10 @@ NSString* const kMXHTTPClientTrackedErrorNotificationErrorCodeKey = @"kMXHTTPCli
                         // Extract values from the home server JSON response
                         MXError *mxError = [self mxErrorFromJSON:JSONResponse];
                         
-                        // Check first whether this error code is tracked or not.
-                        if (mxError.errcode && [self.trackedServerErrorCodes containsObject:mxError.errcode])
-                        {
-                            // Send a notification
-                            [[NSNotificationCenter defaultCenter] postNotificationName:kMXHTTPClientTrackedErrorNotification
-                                                                                object:self
-                                                                              userInfo:@{ kMXHTTPClientTrackedErrorNotificationErrorCodeKey: mxError.errcode }];
-                        }
+                        // Send a notification
+                        [[NSNotificationCenter defaultCenter] postNotificationName:kMXHTTPClientMatrixErrorNotification
+                                                                            object:self
+                                                                          userInfo:@{ kMXHTTPClientMatrixErrorNotificationErrorKey: mxError }];
 
                         if ([mxError.errcode isEqualToString:kMXErrCodeStringLimitExceeded])
                         {
