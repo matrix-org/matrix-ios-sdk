@@ -34,6 +34,12 @@ FOUNDATION_EXPORT NSString* const kMXHTTPClientUserConsentNotGivenErrorNotificat
  Consent URI userInfo key for notification kMXHTTPClientUserConsentNotGivenErrorNotification
  */
 FOUNDATION_EXPORT NSString* const kMXHTTPClientUserConsentNotGivenErrorNotificationConsentURIKey;
+/**
+ Posted when a Matrix error is observed.
+ The `userInfo` dictionary contains an `MXError` object under the `kMXHTTPClientMatrixErrorNotificationErrorKey` key
+ */
+FOUNDATION_EXPORT NSString* const kMXHTTPClientMatrixErrorNotification;
+FOUNDATION_EXPORT NSString* const kMXHTTPClientMatrixErrorNotificationErrorKey;
 
 /**
  Block called when an authentication challenge from a server failed whereas a certificate is present in certificate chain.

@@ -8,6 +8,7 @@ Improvements:
  * MXEvent: Add relatesTo property.
  * Aggregations: Create MXSession.MXAggregations to manage Matrix aggregations API.
  * Add the Matrix errors related to the password policy.
+ * MXHTTPClient: Add a new notification name `kMXHTTPClientMatrixErrorNotification` posted on each Matrix error.
 
 Bug Fix:
  * MXMediaLoader: Disable trusting the built-in anchors certificates when the certificate pinning is enabled.

@@ -41,6 +41,8 @@
 NSString * const MXHTTPClientErrorResponseDataKey = @"com.matrixsdk.httpclient.error.response.data";
 NSString* const kMXHTTPClientUserConsentNotGivenErrorNotification = @"kMXHTTPClientUserConsentNotGivenErrorNotification";
 NSString* const kMXHTTPClientUserConsentNotGivenErrorNotificationConsentURIKey = @"kMXHTTPClientUserConsentNotGivenErrorNotificationConsentURIKey";
+NSString* const kMXHTTPClientMatrixErrorNotification = @"kMXHTTPClientMatrixErrorNotification";
+NSString* const kMXHTTPClientMatrixErrorNotificationErrorKey = @"kMXHTTPClientMatrixErrorNotificationErrorKey";
 
 
 @interface MXHTTPClient ()
@@ -271,6 +273,11 @@ NSString* const kMXHTTPClientUserConsentNotGivenErrorNotificationConsentURIKey =
                     {
                         // Extract values from the home server JSON response
                         MXError *mxError = [self mxErrorFromJSON:JSONResponse];
+                        
+                        // Send a notification
+                        [[NSNotificationCenter defaultCenter] postNotificationName:kMXHTTPClientMatrixErrorNotification
+                                                                            object:self
+                                                                          userInfo:@{ kMXHTTPClientMatrixErrorNotificationErrorKey: mxError }];
 
                         if ([mxError.errcode isEqualToString:kMXErrCodeStringLimitExceeded])
                         {
