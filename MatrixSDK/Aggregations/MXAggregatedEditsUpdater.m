@@ -125,7 +125,7 @@
         operation = [MXHTTPOperation new];
 
         MXWeakify(self);
-        id observer;
+        __block id observer;
         observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXEventDidChangeSentStateNotification object:event queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification * _Nonnull note) {
             MXStrongifyAndReturnIfNil(self);
 
@@ -134,6 +134,7 @@
                 NSLog(@"[MXAggregations] replaceTextMessageEvent: Edit request can be done now");
 
                 [[NSNotificationCenter defaultCenter] removeObserver:observer];
+                observer = nil;
 
                 MXHTTPOperation *operation2 = [self replaceTextMessageEvent:event withTextMessage:text formattedText:formattedText localEchoBlock:localEchoBlock success:success failure:failure];
 
