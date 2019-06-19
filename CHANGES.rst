@@ -9,6 +9,7 @@ Improvements:
  * Aggregations: Create MXSession.MXAggregations to manage Matrix aggregations API.
  * Add the Matrix errors related to the password policy.
  * MXHTTPClient: Add a new notification name `kMXHTTPClientMatrixErrorNotification` posted on each Matrix error.
+ * SwiftMatrixSDK: Migrate to Swift 5.0.
 
 Bug Fix:
  * MXMediaLoader: Disable trusting the built-in anchors certificates when the certificate pinning is enabled.
