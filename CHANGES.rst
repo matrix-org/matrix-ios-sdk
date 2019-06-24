@@ -12,6 +12,7 @@ Improvements:
 
 Bug Fix:
  * MXMediaLoader: Disable trusting the built-in anchors certificates when the certificate pinning is enabled.
+ * Crypto: Device Verification: Name for 🔒 is "Lock" (vector-im/riot-ios/issues/2526).
 
 API break:
  * MXEvent: unsignedData is now of type MXEventUnsignedData.
