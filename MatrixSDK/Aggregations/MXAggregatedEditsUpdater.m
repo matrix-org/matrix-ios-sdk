@@ -156,7 +156,7 @@
         {
             // Build a temporary local echo
             localEcho = [room fakeEventWithEventId:nil eventType:kMXEventTypeStringRoomMessage andContent:content];
-            localEcho.sentState = MXEventSentStateSending;
+            localEcho.sentState = event.sentState;
         }
     }
     else
