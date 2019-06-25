@@ -17,6 +17,7 @@
 #import <XCTest/XCTest.h>
 
 #import "MatrixSDKTestsData.h"
+#import "MatrixSDKTestsE2EData.h"
 
 #import "MXFileStore.h"
 #import "MXEventRelations.h"
@@ -37,6 +38,7 @@ static NSString* const kEditedMarkdownMessageFormattedText = @"<strong>I meant H
 @interface MXAggregatedEditsTests : XCTestCase
 {
     MatrixSDKTestsData *matrixSDKTestsData;
+    MatrixSDKTestsE2EData *matrixSDKTestsE2EData;
 }
 
 @end
@@ -48,11 +50,13 @@ static NSString* const kEditedMarkdownMessageFormattedText = @"<strong>I meant H
     [super setUp];
 
     matrixSDKTestsData = [[MatrixSDKTestsData alloc] init];
+    matrixSDKTestsE2EData = [[MatrixSDKTestsE2EData alloc] initWithMatrixSDKTestsData:matrixSDKTestsData];
 }
 
 - (void)tearDown
 {
     matrixSDKTestsData = nil;
+    matrixSDKTestsE2EData = nil;
 }
 
 // Create a room with an event with an edit it on it
@@ -327,7 +331,7 @@ static NSString* const kEditedMarkdownMessageFormattedText = @"<strong>I meant H
 
 // - Run the initial condition scenario
 // -> Check data is correctly aggregated when fetching the edited event directly from the homeserver
-- (void)testAggregatedEditServerSide
+- (void)testEditServerSide
 {
     // - Run the initial condition scenario
     [self createScenario:^(MXSession *mxSession, MXRoom *room, XCTestExpectation *expectation, NSString *eventId, NSString *editEventId) {
@@ -356,7 +360,7 @@ static NSString* const kEditedMarkdownMessageFormattedText = @"<strong>I meant H
 
 // - Run the initial condition scenario
 // -> Check data is correctly aggregated when fetching the formatted edited event directly from the homeserver
-- (void)testAggregatedFormattedEditServerSide
+- (void)testFormattedEditServerSide
 {
     // - Run the initial condition scenario
     [self createScenarioWithFormattedText:^(MXSession *mxSession, MXRoom *room, XCTestExpectation *expectation, NSString *eventId, NSString *editEventId) {
@@ -481,7 +485,7 @@ static NSString* const kEditedMarkdownMessageFormattedText = @"<strong>I meant H
 
 // - Run the initial condition scenario
 // -> Data from aggregations must be right
-- (void)testAggregationsLive
+- (void)testEditLive
 {
     // - Run the initial condition scenario
     [self createScenario:^(MXSession *mxSession, MXRoom *room, XCTestExpectation *expectation, NSString *eventId, NSString *editEventId) {
@@ -521,7 +525,7 @@ static NSString* const kEditedMarkdownMessageFormattedText = @"<strong>I meant H
 // - Run the initial condition scenario
 // - Edit 2 times
 // -> We must get notified about the second replace event
-- (void)testAggregationsListener
+- (void)testEditsListener
 {
     NSString *secondEditionTextMessage = @"Oups";
     
@@ -624,6 +628,146 @@ static NSString* const kEditedMarkdownMessageFormattedText = @"<strong>I meant H
             // -> The local echo block must have been called twice
             XCTAssertEqual(localEchoBlockCount, 2);
 
+            [expectation fulfill];
+        }];
+    }];
+}
+
+
+#pragma mark - E2E
+
+// Create a room with an event with an edit it on it
+- (void)createE2EScenario:(void(^)(MXSession *mxSession, MXRoom *room, XCTestExpectation *expectation, NSString *eventId, NSString *editEventId))readyToTest
+{
+    [matrixSDKTestsE2EData doE2ETestWithAliceAndBobInARoom:self cryptedBob:YES warnOnUnknowDevices:NO aliceStore:[[MXMemoryStore alloc] init] bobStore:[[MXMemoryStore alloc] init] readyToTest:^(MXSession *mxSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
+
+        MXRoom *room = [mxSession roomWithRoomId:roomId];
+
+        [room sendTextMessage:kOriginalMessageText success:^(NSString *eventId) {
+            [mxSession eventWithEventId:eventId inRoom:room.roomId success:^(MXEvent *event) {
+                [mxSession.aggregations replaceTextMessageEvent:event withTextMessage:kEditedMessageText formattedText:nil localEchoBlock:nil success:^(NSString * _Nonnull editEventId) {
+
+                    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 1 * NSEC_PER_SEC), dispatch_get_main_queue(), ^{
+                        readyToTest(mxSession, room, expectation, eventId, editEventId);
+                    });
+
+                } failure:^(NSError *error) {
+                    XCTFail(@"The operation should not fail - NSError: %@", error);
+                    [expectation fulfill];
+                }];
+
+            } failure:^(NSError *error) {
+                XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                [expectation fulfill];
+            }];
+        } failure:^(NSError *error) {
+            XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+            [expectation fulfill];
+        }];
+    }];
+}
+
+
+// - Send a message in an e2e room
+// - Edit it
+// -> an edit m.room.message must appear in the timeline
+// -> Check the edited message in the store
+- (void)testEditSendAndReceiveInE2ERoom
+{
+    [matrixSDKTestsE2EData doE2ETestWithAliceAndBobInARoom:self cryptedBob:YES warnOnUnknowDevices:NO aliceStore:[[MXMemoryStore alloc] init] bobStore:[[MXMemoryStore alloc] init] readyToTest:^(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
+
+        MXRoom *room = [aliceSession roomWithRoomId:roomId];
+
+        // - Send a message
+        [room sendTextMessage:kOriginalMessageText success:^(NSString *eventId) {
+
+            [aliceSession eventWithEventId:eventId inRoom:room.roomId success:^(MXEvent *event) {
+
+                // Edit it
+                [aliceSession.aggregations replaceTextMessageEvent:event withTextMessage:kEditedMessageText formattedText:nil localEchoBlock:nil success:^(NSString * _Nonnull eventId) {
+                    XCTAssertNotNil(eventId);
+                } failure:^(NSError *error) {
+                    XCTFail(@"The operation should not fail - NSError: %@", error);
+                    [expectation fulfill];
+                }];
+
+                [room listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage] onEvent:^(MXEvent *editEvent, MXTimelineDirection direction, MXRoomState *roomState) {
+
+                    // -> an edit m.room.message must appear in the timeline
+                    XCTAssertEqual(editEvent.eventType, MXEventTypeRoomMessage);
+
+                    XCTAssertTrue(editEvent.isEncrypted);
+
+                    XCTAssertNotNil(editEvent.relatesTo);
+                    XCTAssertEqualObjects(editEvent.relatesTo.relationType, MXEventRelationTypeReplace);
+                    XCTAssertEqualObjects(editEvent.relatesTo.eventId, eventId);
+
+                    XCTAssertEqualObjects(editEvent.content[@"m.new_content"][@"msgtype"], kMXMessageTypeText);
+                    XCTAssertEqualObjects(editEvent.content[@"m.new_content"][@"body"], kEditedMessageText);
+
+                    // -> Check the edited message in the store
+                    [aliceSession eventWithEventId:eventId inRoom:room.roomId success:^(MXEvent *localEditedEvent) {
+
+                        XCTAssertNotNil(localEditedEvent);
+
+                        XCTAssertTrue(localEditedEvent.isEncrypted);
+                        XCTAssertTrue(localEditedEvent.contentHasBeenEdited);
+
+                        XCTAssertEqualObjects(localEditedEvent.content[@"msgtype"], kMXMessageTypeText);
+                        XCTAssertEqualObjects(localEditedEvent.content[@"body"], kEditedMessageText);
+
+                        // The event content must be encrypted
+                        XCTAssertNil(localEditedEvent.wireContent[@"body"]);
+                        XCTAssertNotNil(localEditedEvent.wireContent[@"ciphertext"]);
+
+                        [expectation fulfill];
+
+                    } failure:^(NSError *error) {
+                        XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                        [expectation fulfill];
+                    }];
+                }];
+
+            } failure:^(NSError *error) {
+                XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                [expectation fulfill];
+            }];
+        } failure:^(NSError *error) {
+            XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+            [expectation fulfill];
+        }];
+    }];
+}
+
+// - Run the initial E2E condition scenario
+// -> Check data is correctly aggregated when fetching the edited event directly from the homeserver
+- (void)testEditServerSideInE2ERoom
+{
+    // - Run the initial condition scenario
+    [self createE2EScenario:^(MXSession *mxSession, MXRoom *room, XCTestExpectation *expectation, NSString *eventId, NSString *editEventId) {
+
+        MXEvent *localEditedEvent = [mxSession.store eventWithEventId:eventId inRoom:room.roomId];
+
+        // -> Check data is correctly aggregated when fetching the edited event directly from the homeserver
+        [mxSession.matrixRestClient eventWithEventId:eventId inRoom:room.roomId success:^(MXEvent *event) {
+
+            XCTAssertNotNil(event);
+
+            XCTAssertTrue(event.isEncrypted);
+            XCTAssertTrue([mxSession decryptEvent:event inTimeline:nil], @"Decryption error: %@", event.decryptionError);
+
+            // TODO: Synapse does not support aggregation for e2e rooms yet
+            XCTAssertTrue(event.contentHasBeenEdited);
+            XCTAssertEqualObjects(event.unsignedData.relations.replace.eventId, editEventId);
+            XCTAssertEqualObjects(event.content[@"body"], kEditedMessageText);
+
+            XCTAssertEqualObjects(event.content, localEditedEvent.content);
+            XCTAssertEqualObjects(event.JSONDictionary[@"unsigned"][@"relations"], localEditedEvent.JSONDictionary[@"unsigned"][@"relations"]);
+
+            [expectation fulfill];
+
+        } failure:^(NSError *error) {
+            XCTFail(@"Cannot set up intial test conditions - error: %@", error);
             [expectation fulfill];
         }];
     }];

@@ -69,6 +69,16 @@
         return nil;
     }
 
+    if (event.isEncrypted && !event.clearEvent)
+    {
+        if (![self.mxSession decryptEvent:event inTimeline:nil])
+        {
+            NSLog(@"[MXAggregations] replaceTextMessageEvent: Fail to decrypt original event: %@", event.eventId);
+            failure(nil);
+            return nil;
+        }
+    }
+
     NSString *messageType = event.content[@"msgtype"];
 
     if (![messageType isEqualToString:kMXMessageTypeText])
@@ -187,16 +197,30 @@
 {
     NSString *roomId = replaceEvent.roomId;
     MXEvent *event = [self.matrixStore eventWithEventId:replaceEvent.relatesTo.eventId inRoom:roomId];
-    
-    if (![event.unsignedData.relations.replace.eventId isEqualToString:replaceEvent.eventId])
+
+    if (event)
     {
-        MXEvent *editedEvent = [event editedEventFromReplacementEvent:replaceEvent];
-        
-        if (editedEvent)
+        if (![event.unsignedData.relations.replace.eventId isEqualToString:replaceEvent.eventId])
         {
-            [self.matrixStore replaceEvent:editedEvent inRoom:roomId];
-            [self notifyEventEditsListenersOfRoom:roomId replaceEvent:replaceEvent];
+            MXEvent *editedEvent = [event editedEventFromReplacementEvent:replaceEvent];
+
+            if (editedEvent)
+            {
+                [self.matrixStore replaceEvent:editedEvent inRoom:roomId];
+
+                if (editedEvent.isEncrypted && !editedEvent.clearEvent)
+                {
+                    [self.mxSession decryptEvent:editedEvent inTimeline:nil];
+                }
+
+
+                [self notifyEventEditsListenersOfRoom:roomId replaceEvent:replaceEvent];
+            }
         }
+    }
+    else
+    {
+        NSLog(@"[MXAggregations] handleReplace: Unknown event id: %@", replaceEvent.relatesTo.eventId);
     }
 }
 
