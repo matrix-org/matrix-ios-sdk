@@ -30,6 +30,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 // TODO: We could add sender add senderId, originServerTs
 @property (nonatomic) NSString *reactionEventId;
+@property (nonatomic) uint64_t originServerTs;
 
 @end
 
