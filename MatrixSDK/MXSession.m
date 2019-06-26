@@ -225,6 +225,7 @@ typedef void (^MXOnResumeDone)(void);
                                       kMXEventTypeStringRoomRedaction,
                                       kMXEventTypeStringRoomThirdPartyInvite,
                                       kMXEventTypeStringRoomRelatedGroups,
+                                      kMXEventTypeStringReaction,
                                       kMXEventTypeStringCallInvite,
                                       kMXEventTypeStringCallCandidates,
                                       kMXEventTypeStringCallAnswer,
