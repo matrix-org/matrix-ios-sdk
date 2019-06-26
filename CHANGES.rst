@@ -9,6 +9,7 @@ Improvements:
  * Aggregations: Create MXSession.MXAggregations to manage Matrix aggregations API.
  * Add the Matrix errors related to the password policy.
  * MXHTTPClient: Add a new notification name `kMXHTTPClientMatrixErrorNotification` posted on each Matrix error.
+ * VoIP: Stop falling back to Google for STUN (vector-im/riot-ios/issues/2532).
 
 Bug Fix:
  * MXMediaLoader: Disable trusting the built-in anchors certificates when the certificate pinning is enabled.

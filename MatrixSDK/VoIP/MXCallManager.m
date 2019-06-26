@@ -30,8 +30,6 @@ NSString *const kMXCallManagerNewCall            = @"kMXCallManagerNewCall";
 NSString *const kMXCallManagerConferenceStarted  = @"kMXCallManagerConferenceStarted";
 NSString *const kMXCallManagerConferenceFinished = @"kMXCallManagerConferenceFinished";
 
-// Use Google STUN server as fallback
-static NSString *const kMXCallManagerFallbackSTUNServer = @"stun:stun.l.google.com:19302";
 
 @interface MXCallManager ()
 {
@@ -67,7 +65,6 @@ static NSString *const kMXCallManagerFallbackSTUNServer = @"stun:stun.l.google.c
     {
         _mxSession = mxSession;
         calls = [NSMutableArray array];
-        _fallbackSTUNServer = kMXCallManagerFallbackSTUNServer;
         _inviteLifetime = 30000;
 
         _callStack = callstack;

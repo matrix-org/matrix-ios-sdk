@@ -130,13 +130,6 @@
     if (!ICEServer)
     {
         NSLog(@"[MXJingleCallStackCall] addTURNServerUris: Warning: Failed to create RTCICEServer with credentials %@: %@ for:\n%@", username, password, uris);
-
-        // Define at least one server
-        ICEServer = [[RTCIceServer alloc] initWithURLStrings:@[@"stun:stun.l.google.com:19302"]];
-        if (!ICEServer)
-        {
-            NSLog(@"[MXJingleCallStackCall] addTURNServerUris: Warning: Failed to create fallback RTCICEServer");
-        }
     }
 
     if (ICEServer)
