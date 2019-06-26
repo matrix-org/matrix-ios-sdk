@@ -24,6 +24,7 @@
     MXReactionCount *reactionCount = [MXReactionCount new];
     reactionCount.reaction = realmReactionCount.reaction;
     reactionCount.count = realmReactionCount.count;
+    reactionCount.originServerTs = realmReactionCount.originServerTs;
     reactionCount.myUserReactionEventId = realmReactionCount.myUserReactionEventId;
 
     return reactionCount;
@@ -36,6 +37,7 @@
     realmReactionCount.roomId = roomId;
     realmReactionCount.reaction = reactionCount.reaction;
     realmReactionCount.count = reactionCount.count;
+    realmReactionCount.originServerTs = reactionCount.originServerTs;
     realmReactionCount.myUserReactionEventId = reactionCount.myUserReactionEventId;
     realmReactionCount.primaryKey = [MXRealmReactionCount primaryKeyFromEventId:eventId
                                                                     andReaction:reactionCount.reaction];
@@ -49,6 +51,7 @@
     reactionRelation.reaction = realmReactionRelation.reaction;
     reactionRelation.eventId = realmReactionRelation.eventId;
     reactionRelation.reactionEventId = realmReactionRelation.reactionEventId;
+    reactionRelation.originServerTs = realmReactionRelation.originServerTs;
 
     return reactionRelation;
 }
@@ -59,6 +62,7 @@
     realmReactionRelation.reaction = reactionRelation.reaction;
     realmReactionRelation.eventId = reactionRelation.eventId;
     realmReactionRelation.reactionEventId = reactionRelation.reactionEventId;
+    realmReactionRelation.originServerTs = reactionRelation.originServerTs;
     realmReactionRelation.roomId = roomId;
     realmReactionRelation.primaryKey = [MXRealmReactionRelation primaryKeyFromEventId:reactionRelation.eventId
                                                                    andReactionEventId:reactionRelation.reactionEventId];

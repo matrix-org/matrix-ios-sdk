@@ -27,7 +27,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property (nonatomic) NSString *reaction;
 @property (nonatomic) NSUInteger count;
-
+@property (nonatomic) uint64_t originServerTs;
 
 // The id of the reaction event if our user has made this reaction
 @property (nonatomic, nullable) NSString *myUserReactionEventId;
