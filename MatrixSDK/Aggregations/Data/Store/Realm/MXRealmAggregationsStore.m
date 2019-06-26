@@ -118,8 +118,8 @@
 
 - (nullable NSArray<MXReactionCount *> *)reactionCountsOnEvent:(nonnull NSString *)eventId
 {
-    RLMResults<MXRealmReactionCount *> *realmReactionCounts = [MXRealmReactionCount objectsInRealm:self.realm
-                                                                              where:@"eventId = %@", eventId];
+    RLMResults<MXRealmReactionCount *> *realmReactionCounts = [[MXRealmReactionCount objectsInRealm:self.realm
+                                                                              where:@"eventId = %@", eventId] sortedResultsUsingKeyPath:@"originServerTs" ascending:YES];
 
     NSMutableArray<MXReactionCount *> *reactionCounts;
     if (realmReactionCounts.count)

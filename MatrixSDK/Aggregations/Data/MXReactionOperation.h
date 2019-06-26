@@ -28,6 +28,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property (nonatomic) NSString *eventId;
 @property (nonatomic) NSString *reaction;
+@property (nonatomic) uint64_t originServerTs;
 @property (nonatomic) BOOL isAddOperation;
 
 @property (nonatomic) void (^block)(BOOL requestAlreadyPending);

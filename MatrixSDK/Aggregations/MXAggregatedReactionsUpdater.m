@@ -296,6 +296,7 @@
     relation.reaction = reaction;
     relation.eventId = eventId;
     relation.reactionEventId = reactionEvent.eventId;
+    relation.originServerTs = reactionEvent.originServerTs;
 
     [self.store addReactionRelation:relation inRoom:reactionEvent.roomId];
 }
@@ -319,6 +320,7 @@
         // If we still have no reaction count object, create one
         reactionCount = [MXReactionCount new];
         reactionCount.reaction = reaction;
+        reactionCount.originServerTs = reactionEvent.originServerTs;
         isANewReaction = YES;
     }
 
@@ -470,6 +472,7 @@
     MXReactionOperation *reactionOperation = [MXReactionOperation new];
     reactionOperation.eventId = eventId;
     reactionOperation.reaction = reaction;
+    reactionOperation.originServerTs = (uint64_t)([[NSDate date] timeIntervalSince1970] * 1000);;
     reactionOperation.isAddOperation = isAdd;
     reactionOperation.block = block;
 
@@ -608,17 +611,22 @@
                     {
                         updatedReactionCount.count--;
                     }
+                    
+                    if ((updatedReactionCount.originServerTs == 0 && reactionOperation.originServerTs > 0) || (updatedReactionCount.originServerTs > reactionOperation.originServerTs))
+                    {
+                        updatedReactionCount.originServerTs = reactionOperation.originServerTs;
+                    }
                 }
 
                 updatedReactionCount.localEchoesOperations = self.reactionOperations[eventId][reaction];
             }
         }
 
-        return reactionCountsByReaction.allValues;
+        return [self sortReactionCounts:reactionCountsByReaction.allValues];
     }
     else
     {
-        return reactions;
+        return [self sortReactionCounts:reactions];
     }
 }
 
@@ -691,7 +699,13 @@
         {
             reactionCount = [MXReactionCount new];
             reactionCount.reaction = relation.reaction;
+            reactionCount.originServerTs = relation.originServerTs;
             reactionCountDict[relation.reaction] = reactionCount;
+        }
+        
+        if ((reactionCount.originServerTs == 0 && relation.originServerTs > 0) || (reactionCount.originServerTs > reactionCount.originServerTs))
+        {
+            reactionCount.originServerTs = relation.originServerTs;
         }
 
         reactionCount.count++;
@@ -707,7 +721,20 @@
         }
     }
 
-    return reactionCountDict.allValues;
+    return [self sortReactionCounts:reactionCountDict.allValues];
+}
+
+- (NSArray<MXReactionCount*>*)sortReactionCounts:(NSArray<MXReactionCount*>*)reactionCounts
+{
+    if (!reactionCounts)
+    {
+        return nil;
+    }
+    
+    NSSortDescriptor *sortDescriptor;
+    sortDescriptor = [[NSSortDescriptor alloc] initWithKey:@"originServerTs" ascending:YES];
+    NSArray *sortedArray = [reactionCounts sortedArrayUsingDescriptors:@[sortDescriptor]];
+    return sortedArray;
 }
 
 // We need to store all received relations even if we do not know the event yet

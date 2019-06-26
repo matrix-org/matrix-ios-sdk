@@ -21,6 +21,7 @@
 #import "MXSession.h"
 #import "MXMemoryStore.h"
 #import "MXAggregations_Private.h"
+#import "MXEventRelations.h"
 
 #import "MXError.h"
 #import "MXTools.h"
@@ -596,7 +597,18 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
     // Decrypt event if necessary
     if (event.eventType == MXEventTypeRoomEncrypted)
     {
-        if (![room.mxSession decryptEvent:event inTimeline:_timelineId])
+
+        NSString *timelineId = _timelineId;
+        if (event.unsignedData.relations.replace)
+        {
+            // Do not track duplicate decryption (MXDecryptingErrorDuplicateMessageIndexCode)
+            // for content of replace event because the content is decrypted later too with
+            // the edited event
+            // TODO: Remove this with the coming update of MSC1849.
+            timelineId = nil;
+        }
+
+        if (![room.mxSession decryptEvent:event inTimeline:timelineId])
         {
             NSLog(@"[MXTimeline] addEvent: Warning: Unable to decrypt event: %@\nError: %@", event.content[@"body"], event.decryptionError);
         }

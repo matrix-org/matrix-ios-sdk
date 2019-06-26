@@ -69,6 +69,17 @@
         return nil;
     }
 
+    // If it is not already done, decrypt the event to build the new content
+    if (event.isEncrypted && !event.clearEvent)
+    {
+        if (![self.mxSession decryptEvent:event inTimeline:nil])
+        {
+            NSLog(@"[MXAggregations] replaceTextMessageEvent: Fail to decrypt original event: %@", event.eventId);
+            failure(nil);
+            return nil;
+        }
+    }
+
     NSString *messageType = event.content[@"msgtype"];
 
     if (![messageType isEqualToString:kMXMessageTypeText])
@@ -146,7 +157,7 @@
         {
             // Build a temporary local echo
             localEcho = [room fakeEventWithEventId:nil eventType:kMXEventTypeStringRoomMessage andContent:content];
-            localEcho.sentState = MXEventSentStateSending;
+            localEcho.sentState = event.sentState;
         }
     }
     else
@@ -187,16 +198,30 @@
 {
     NSString *roomId = replaceEvent.roomId;
     MXEvent *event = [self.matrixStore eventWithEventId:replaceEvent.relatesTo.eventId inRoom:roomId];
-    
-    if (![event.unsignedData.relations.replace.eventId isEqualToString:replaceEvent.eventId])
+
+    if (event)
     {
-        MXEvent *editedEvent = [event editedEventFromReplacementEvent:replaceEvent];
-        
-        if (editedEvent)
+        if (![event.unsignedData.relations.replace.eventId isEqualToString:replaceEvent.eventId])
         {
-            [self.matrixStore replaceEvent:editedEvent inRoom:roomId];
-            [self notifyEventEditsListenersOfRoom:roomId replaceEvent:replaceEvent];
+            MXEvent *editedEvent = [event editedEventFromReplacementEvent:replaceEvent];
+
+            if (editedEvent)
+            {
+                [self.matrixStore replaceEvent:editedEvent inRoom:roomId];
+
+                if (editedEvent.isEncrypted && !editedEvent.clearEvent)
+                {
+                    [self.mxSession decryptEvent:editedEvent inTimeline:nil];
+                }
+
+
+                [self notifyEventEditsListenersOfRoom:roomId replaceEvent:replaceEvent];
+            }
         }
+    }
+    else
+    {
+        NSLog(@"[MXAggregations] handleReplace: Unknown event id: %@", replaceEvent.relatesTo.eventId);
     }
 }
 
