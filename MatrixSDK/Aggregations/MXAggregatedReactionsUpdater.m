@@ -296,6 +296,7 @@
     relation.reaction = reaction;
     relation.eventId = eventId;
     relation.reactionEventId = reactionEvent.eventId;
+    relation.originServerTs = reactionEvent.originServerTs;
 
     [self.store addReactionRelation:relation inRoom:reactionEvent.roomId];
 }
