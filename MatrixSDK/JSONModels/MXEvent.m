@@ -559,8 +559,15 @@ NSString *const kMXEventIdentifierKey = @"kMXEventIdentifierKey";
     MXJSONModelSetDictionary(newContentDict, replaceEvent.content[@"m.new_content"])
 
     NSMutableDictionary *editedEventDict;
-    if (!replaceEvent.isEncrypted
-        && event.content[@"body"] && newContentDict && [newContentDict[@"msgtype"] isEqualToString:event.content[@"msgtype"]])
+    if (replaceEvent.isEncrypted)
+    {
+        // For e2e, use the encrypted content from the replace event
+        editedEventDict = [event.JSONDictionary mutableCopy];
+        NSMutableDictionary *editedEventContentDict = [replaceEvent.wireContent mutableCopy];
+        [editedEventContentDict removeObjectForKey:@"m.relates_to"];
+        editedEventDict[@"content"] = editedEventContentDict;
+    }
+    else if (event.content[@"body"] && newContentDict && [newContentDict[@"msgtype"] isEqualToString:event.content[@"msgtype"]])
     {
         editedEventDict = [event.JSONDictionary mutableCopy];
         NSMutableDictionary *editedEventContentDict = [editedEventDict[@"content"] mutableCopy];
@@ -568,25 +575,15 @@ NSString *const kMXEventIdentifierKey = @"kMXEventIdentifierKey";
         editedEventContentDict[@"formatted_body"] = newContentDict[@"formatted_body"];
         editedEventContentDict[@"format"] = newContentDict[@"format"];
         editedEventDict[@"content"] = editedEventContentDict;
-
-        // Local echo for e2e edits are in clear
-        editedEventDict[@"type"] = @"m.room.message";
     }
-    else if (replaceEvent.isEncrypted)
-    {
-        // Use the encrypted content from the replace event
-        editedEventDict = [event.JSONDictionary mutableCopy];
-        NSMutableDictionary *editedEventContentDict = [replaceEvent.wireContent mutableCopy];
-        [editedEventContentDict removeObjectForKey:@"m.relates_to"];
-        editedEventDict[@"content"] = editedEventContentDict;
-
-        // Local echo for e2e edits was in clear. Come back to encrypted
-        editedEventDict[@"type"] = @"m.room.encrypted";
-    }
-
 
     if (editedEventDict)
     {
+        // Use the same type as the replace event
+        // This is useful for local echoes in e2e room as local echoes are always non encryted/
+        // So, there are switching between "m.room.encrypted" and "m.room.message"
+        editedEventDict[@"type"] = replaceEvent.isEncrypted ? @"m.room.encrypted" : replaceEvent.type;
+
         NSDictionary *replaceEventDict = @{ @"event_id": replaceEvent.eventId };
         
         if (event.unsignedData.relations)
@@ -781,6 +778,7 @@ NSString *const kMXEventIdentifierKey = @"kMXEventIdentifierKey";
         {
             // If the event has been edited, use the new content
             // This can be done only on client side
+            // TODO: Remove this with the coming update of MSC1849.
             NSMutableDictionary *clearEventUpdatedJSON = [clearEventJSON mutableCopy];
             clearEventUpdatedJSON[@"content"] = clearEventJSON[@"content"][@"m.new_content"];
             clearEventJSON = clearEventUpdatedJSON;

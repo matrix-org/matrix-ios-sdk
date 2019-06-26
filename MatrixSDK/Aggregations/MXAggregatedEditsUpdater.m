@@ -69,6 +69,7 @@
         return nil;
     }
 
+    // If it is not already done, decrypt the event to build the new content
     if (event.isEncrypted && !event.clearEvent)
     {
         if (![self.mxSession decryptEvent:event inTimeline:nil])
