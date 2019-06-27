@@ -16,6 +16,9 @@
 
 #import "MXScanRealmInMemoryProvider.h"
 
+#import "MXRealmEventScan.h"
+#import "MXRealmMediaScan.h"
+
 @interface MXScanRealmInMemoryProvider()
 
 @property (nonatomic, strong) RLMRealmConfiguration *realmConfiguration;
@@ -70,7 +73,13 @@
     
     realmConfiguration.inMemoryIdentifier = antivirusServerDomain;
     realmConfiguration.deleteRealmIfMigrationNeeded = YES;
-    
+
+    // Manage only our objects in this realm 
+    realmConfiguration.objectClasses = @[
+                                         MXRealmEventScan.class,
+                                         MXRealmMediaScan.class
+                                         ];
+
     return realmConfiguration;
 }
 

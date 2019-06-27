@@ -11,6 +11,7 @@ Improvements:
  * MXHTTPClient: Add a new notification name `kMXHTTPClientMatrixErrorNotification` posted on each Matrix error.
  * SwiftMatrixSDK: Migrate to Swift 5.0.
  * VoIP: Stop falling back to Google for STUN (vector-im/riot-ios/issues/2532).
+ * Storage: Isolate our realm DBs to avoid migration due to change in another realm.
 
 Bug Fix:
  * MXMediaLoader: Disable trusting the built-in anchors certificates when the certificate pinning is enabled.
