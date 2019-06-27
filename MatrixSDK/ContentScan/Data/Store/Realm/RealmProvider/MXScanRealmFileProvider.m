@@ -18,6 +18,9 @@
 
 #import "MXRealmHelper.h"
 
+#import "MXRealmEventScan.h"
+#import "MXRealmMediaScan.h"
+
 @interface MXScanRealmFileProvider()
 
 @property (nonatomic, strong) RLMRealmConfiguration *realmConfiguration;
@@ -88,7 +91,13 @@
     
     realmConfiguration.fileURL = realmFileURL;
     realmConfiguration.deleteRealmIfMigrationNeeded = YES;
-    
+
+    // Manage only our objects in this realm 
+    realmConfiguration.objectClasses = @[
+                                         MXRealmEventScan.class,
+                                         MXRealmMediaScan.class
+                                         ];
+
     return realmConfiguration;
 }
 

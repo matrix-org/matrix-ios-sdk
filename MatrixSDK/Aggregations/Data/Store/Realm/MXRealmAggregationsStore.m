@@ -270,6 +270,12 @@
     realmConfiguration.fileURL = realmFileURL;
     realmConfiguration.deleteRealmIfMigrationNeeded = YES;
 
+    // Manage only our objects in this realm 
+    realmConfiguration.objectClasses = @[
+                                         MXRealmReactionCount.class,
+                                         MXRealmReactionRelation.class
+                                         ];
+
     return realmConfiguration;
 }
 

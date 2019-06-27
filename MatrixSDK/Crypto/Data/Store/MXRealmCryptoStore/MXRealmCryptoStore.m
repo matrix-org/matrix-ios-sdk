@@ -1103,6 +1103,18 @@ RLM_ARRAY_TYPE(MXRealmOlmInboundGroupSession)
         config.fileURL = defaultRealmFileURL;
     }
 
+    // Manage only our objects in this realm 
+    config.objectClasses = @[
+                             MXRealmDeviceInfo.class,
+                             MXRealmUser.class,
+                             MXRealmRoomAlgorithm.class,
+                             MXRealmOlmSession.class,
+                             MXRealmOlmInboundGroupSession.class,
+                             MXRealmOlmAccount.class,
+                             MXRealmOutgoingRoomKeyRequest.class,
+                             MXRealmIncomingRoomKeyRequest.class
+                             ];
+
     config.schemaVersion = kMXRealmCryptoStoreVersion;
 
     __block BOOL cleanDuplicatedDevices = NO;
