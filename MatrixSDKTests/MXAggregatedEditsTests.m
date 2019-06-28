@@ -897,7 +897,7 @@ static NSString* const kEditedMarkdownMessageFormattedText = @"<strong>I meant H
 // -> We must get an edit event and a nextBatch
 // - Paginate more
 // -> We must get all other edit events and no more nextBatch
-- (void)testEditsHistoryAPI
+- (void)testEditsHistory
 {
     // - Run the initial condition scenario
     [self createScenario:^(MXSession *mxSession, MXRoom *room, XCTestExpectation *expectation, NSString *eventId, NSString *editEventId) {
@@ -905,7 +905,7 @@ static NSString* const kEditedMarkdownMessageFormattedText = @"<strong>I meant H
         // - Edit the message 10 more times
         [self addEdits:10 toEvent:eventId inRoom:room mmSession:mxSession expectation:expectation onComplete:^{
 
-            [mxSession.matrixRestClient relationsForEvent:eventId inRoom:room.roomId relationType:nil eventType:nil from:nil limit:1 success:^(MXAggregationPaginatedResponse *paginatedResponse) {
+            [mxSession.aggregations replaceEventsForEvent:eventId inRoom:room.roomId from:nil limit:1 success:^(MXAggregationPaginatedResponse *paginatedResponse) {
 
                 // -> We must get an edit event and a nextBatch
                 XCTAssertNotNil(paginatedResponse);
@@ -914,7 +914,7 @@ static NSString* const kEditedMarkdownMessageFormattedText = @"<strong>I meant H
                 XCTAssertNotNil(paginatedResponse.nextBatch);
 
                 // - Paginate more
-                [mxSession.matrixRestClient relationsForEvent:eventId inRoom:room.roomId relationType:nil eventType:nil from:paginatedResponse.nextBatch limit:20 success:^(MXAggregationPaginatedResponse *paginatedResponse) {
+                [mxSession.aggregations replaceEventsForEvent:eventId inRoom:room.roomId from:paginatedResponse.nextBatch limit:20 success:^(MXAggregationPaginatedResponse *paginatedResponse) {
 
                     // -> We must get all other edit events and no more nextBatch
                     XCTAssertNotNil(paginatedResponse);
