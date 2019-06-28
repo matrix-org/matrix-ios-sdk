@@ -5046,17 +5046,16 @@ MXAuthAction;
                                  }];
 }
 
-- (MXHTTPOperation*)aggregationsForEvent:(NSString*)eventId
-                                  inRoom:(NSString*)roomId
-                            relationType:(NSString*)relationType
-                               eventType:(NSString*)eventType
-                                    from:(NSString*)from
-                               direction:(MXTimelineDirection)direction
-                                   limit:(NSUInteger)limit
-                                 success:(void (^)(MXAggregationPaginatedResponse *paginatedResponse))success
-                                 failure:(void (^)(NSError *error))failure
+- (MXHTTPOperation*)relationsForEvent:(NSString*)eventId
+                               inRoom:(NSString*)roomId
+                         relationType:(NSString*)relationType
+                            eventType:(NSString*)eventType
+                                 from:(NSString*)from
+                                limit:(NSUInteger)limit
+                              success:(void (^)(MXAggregationPaginatedResponse *paginatedResponse))success
+                              failure:(void (^)(NSError *error))failure
 {
-    NSMutableString *path = [NSMutableString stringWithFormat:@"%@/rooms/%@/aggregations/%@",
+    NSMutableString *path = [NSMutableString stringWithFormat:@"%@/rooms/%@/relations/%@",
                              kMXAPIPrefixPathUnstable,    // TODO: use apiPathPrefix
                              roomId,
                              [MXTools encodeURIComponent:eventId]];
@@ -5078,14 +5077,6 @@ MXAuthAction;
         parameters[@"from"] = from;
     }
 
-    if (direction == MXTimelineDirectionForwards)
-    {
-        parameters[@"dir"] = @"f";
-    }
-    else
-    {
-        parameters[@"dir"] = @"b";
-    }
     if (-1 != limit)
     {
         parameters[@"limit"] = @(limit);
