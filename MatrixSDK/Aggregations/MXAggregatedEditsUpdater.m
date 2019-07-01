@@ -29,6 +29,7 @@
 @property (nonatomic) NSString *myUserId;
 @property (nonatomic, weak) id<MXStore> matrixStore;
 @property (nonatomic) NSMutableArray<MXEventEditsListener*> *listeners;
+@property (nonatomic) NSArray<NSString*> *editSupportedMessageTypes;
 
 @end
 
@@ -44,8 +45,8 @@
         self.mxSession = mxSession;
         self.myUserId = mxSession.matrixRestClient.credentials.userId;
         self.matrixStore = matrixStore;
-
         self.listeners = [NSMutableArray array];
+        self.editSupportedMessageTypes = @[kMXMessageTypeText, kMXMessageTypeEmote];
     }
     return self;
 }
@@ -82,21 +83,21 @@
 
     NSString *messageType = event.content[@"msgtype"];
 
-    if (![messageType isEqualToString:kMXMessageTypeText])
+    if (![self.editSupportedMessageTypes containsObject:messageType])
     {
-        NSLog(@"[MXAggregations] replaceTextMessageEvent: Error: Only message type %@ is supported", kMXMessageTypeText);
+        NSLog(@"[MXAggregations] replaceTextMessageEvent: Error: Only message types %@ are supported", self.editSupportedMessageTypes);
         failure(nil);
         return nil;
     }
 
     NSMutableDictionary *content = [NSMutableDictionary new];
     NSMutableDictionary *compatibilityContent = [NSMutableDictionary dictionaryWithDictionary:@{
-                                                                                                @"msgtype": kMXMessageTypeText,
+                                                                                                @"msgtype": messageType,
                                                                                                 @"body": [NSString stringWithFormat:@"* %@", text]
                                                                                                 }];
 
     NSMutableDictionary *newContent = [NSMutableDictionary dictionaryWithDictionary:@{
-                                                                                      @"msgtype": kMXMessageTypeText,
+                                                                                      @"msgtype": messageType,
                                                                                       @"body": text
                                                                                       }];
 
