@@ -854,6 +854,93 @@ static NSString* const kEditedMarkdownMessageFormattedText = @"<strong>I meant H
     }];
 }
 
+
+#pragma mark - Edits history
+
+// Edit a message a number of times
+- (void)addEdits:(NSUInteger)editsCount toEvent:(NSString*)eventId inRoom:(MXRoom*)room mmSession:(MXSession*)mxSession expectation:(XCTestExpectation *)expectation onComplete:(dispatch_block_t)onComplete
+{
+    [mxSession eventWithEventId:eventId inRoom:room.roomId success:^(MXEvent *event) {
+
+        for (NSUInteger i = 1; i <= editsCount; i++)
+        {
+            NSString *editMessageText = [NSString stringWithFormat:@"%@ - %@", kEditedMessageText, @(i)];
+            [mxSession.aggregations replaceTextMessageEvent:event withTextMessage:editMessageText formattedText:nil localEchoBlock:nil success:^(NSString * _Nonnull eventId) {
+
+            } failure:^(NSError *error) {
+                XCTFail(@"The operation should not fail - NSError: %@", error);
+                [expectation fulfill];
+            }];
+        }
+
+        __block NSUInteger receivedEditsCount = 0;
+        [room listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
+            if (event.isEditEvent)
+            {
+                if (++receivedEditsCount == editsCount)
+                {
+                    onComplete();
+                }
+            }
+        }];
+
+    } failure:^(NSError *error) {
+        XCTFail(@"The operation should not fail - NSError: %@", error);
+        [expectation fulfill];
+    }];
+}
+
+
+// - Run the initial condition scenario
+// - Edit the message 10 more times
+// - Paginate one edit
+// -> We must get an edit event and a nextBatch
+// - Paginate more
+// -> We must get all other edit events and no more nextBatch
+- (void)testEditsHistory
+{
+    // - Run the initial condition scenario
+    [self createScenario:^(MXSession *mxSession, MXRoom *room, XCTestExpectation *expectation, NSString *eventId, NSString *editEventId) {
+
+        // - Edit the message 10 more times
+        [self addEdits:10 toEvent:eventId inRoom:room mmSession:mxSession expectation:expectation onComplete:^{
+
+            [mxSession.aggregations replaceEventsForEvent:eventId inRoom:room.roomId from:nil limit:1 success:^(MXAggregationPaginatedResponse *paginatedResponse) {
+
+                // -> We must get an edit event and a nextBatch
+                XCTAssertNotNil(paginatedResponse);
+                XCTAssertEqual(paginatedResponse.chunk.count, 1);
+                XCTAssertTrue(paginatedResponse.chunk.firstObject.isEditEvent);
+                XCTAssertNotNil(paginatedResponse.nextBatch);
+
+                // - Paginate more
+                [mxSession.aggregations replaceEventsForEvent:eventId inRoom:room.roomId from:paginatedResponse.nextBatch limit:20 success:^(MXAggregationPaginatedResponse *paginatedResponse) {
+
+                    // -> We must get all other edit events and no more nextBatch
+                    XCTAssertNotNil(paginatedResponse);
+                    XCTAssertEqual(paginatedResponse.chunk.count, 10);
+                    XCTAssertNil(paginatedResponse.nextBatch);
+
+                    for (MXEvent *event in paginatedResponse.chunk)
+                    {
+                        XCTAssertTrue(event.isEditEvent);
+                    }
+
+                    [expectation fulfill];
+
+                } failure:^(NSError *error) {
+                    XCTFail(@"The operation should not fail - NSError: %@", error);
+                    [expectation fulfill];
+                }];
+
+            } failure:^(NSError *error) {
+                XCTFail(@"The operation should not fail - NSError: %@", error);
+                [expectation fulfill];
+            }];
+        }];
+    }];
+}
+
 @end
 
 #pragma clang diagnostic pop

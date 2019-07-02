@@ -84,11 +84,6 @@
     }
 }
 
-- (void)resetData
-{
-    [self.store deleteAll];
-}
-
 
 #pragma mark - Edits
 
@@ -106,6 +101,25 @@
 {
     return [self.aggregatedEditsUpdater listenToEditsUpdateInRoom:roomId block:block];
 }
+
+- (MXHTTPOperation*)replaceEventsForEvent:(NSString*)eventId
+                                   inRoom:(NSString*)roomId
+                                     from:(nullable NSString*)from
+                                    limit:(NSUInteger)limit
+                                  success:(void (^)(MXAggregationPaginatedResponse *paginatedResponse))success
+                                  failure:(void (^)(NSError *error))failure
+{
+    return [self.mxSession.matrixRestClient relationsForEvent:eventId inRoom:roomId relationType:MXEventRelationTypeReplace eventType:kMXEventTypeStringRoomMessage from:from limit:limit success:success failure:failure];
+}
+
+
+#pragma mark - Data
+
+- (void)resetData
+{
+    [self.store deleteAll];
+}
+
 
 #pragma mark - SDK-Private methods -
 

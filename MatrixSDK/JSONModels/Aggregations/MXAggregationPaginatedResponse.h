@@ -17,14 +17,14 @@
 #import <Foundation/Foundation.h>
 
 #import "MXJSONModel.h"
+#import "MXEvent.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
 @interface MXAggregationPaginatedResponse : MXJSONModel
 
-@property (nonatomic, readonly) NSArray<NSDictionary*> *chunk;
+@property (nonatomic, readonly) NSArray<MXEvent*> *chunk;
 @property (nonatomic, readonly, nullable) NSString *nextBatch;
-@property (nonatomic, readonly, nullable) NSString *prevBatch;
 
 @end
 

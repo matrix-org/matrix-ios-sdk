@@ -22,6 +22,7 @@
 #import "MXReactionCount.h"
 #import "MXReactionCountChange.h"
 #import "MXEvent.h"
+#import "MXAggregationPaginatedResponse.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -130,6 +131,28 @@ NS_ASSUME_NONNULL_BEGIN
  */
 - (id)listenToEditsUpdateInRoom:(NSString *)roomId block:(void (^)(MXEvent* replaceEvent))block;
 
+/**
+ Fetch edits events for a given event.
+
+ @param eventId the id of the event,
+ @param roomId the id of the room.
+ @param from the `nextBatch` returned in the previous response.
+ @param limit (optional, use -1 to not defined this value) the maximum number of messages to return.
+
+ @param success A block object called when the operation succeeds. It provides a `MXAggregationPaginatedResponse` object.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)replaceEventsForEvent:(NSString*)eventId
+                                   inRoom:(NSString*)roomId
+                                     from:(nullable NSString*)from
+                                    limit:(NSUInteger)limit
+                                  success:(void (^)(MXAggregationPaginatedResponse *paginatedResponse))success
+                                  failure:(void (^)(NSError *error))failure;
+
+
+#pragma mark - Data
 
 /**
  Clear cached data.

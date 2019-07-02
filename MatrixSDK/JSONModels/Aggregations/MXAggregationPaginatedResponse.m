@@ -22,15 +22,15 @@
 {
     MXAggregationPaginatedResponse *paginatedResponse;
 
-    NSArray<NSDictionary*> *chunk;
-    MXJSONModelSetArray(chunk, JSONDictionary[@"chunk"]);
+    NSArray<MXEvent*> *chunk;
+    MXJSONModelSetMXJSONModelArray(chunk, MXEvent.class, JSONDictionary[@"chunk"])
 
     if (chunk)
     {
         paginatedResponse = [MXAggregationPaginatedResponse new];
 
+        paginatedResponse->_chunk = chunk;
         MXJSONModelSetString(paginatedResponse->_nextBatch, JSONDictionary[@"next_batch"])
-        MXJSONModelSetString(paginatedResponse->_prevBatch, JSONDictionary[@"prev_batch"])
     }
 
     return paginatedResponse;
