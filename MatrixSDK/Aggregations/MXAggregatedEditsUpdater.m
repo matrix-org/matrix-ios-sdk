@@ -107,7 +107,7 @@
         }
         else
         {
-            NSLog(@"[MXAggregations] replaceTextMessageEvent: Fail to decrypt original event: %@", event.eventId);
+            NSLog(@"[MXAggregations] replaceTextMessageEvent: Fail to parse reply event: %@", event.eventId);
             failure(nil);
             return nil;
         }
