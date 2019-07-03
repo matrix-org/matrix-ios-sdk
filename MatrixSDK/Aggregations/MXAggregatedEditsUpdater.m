@@ -97,7 +97,7 @@
     if (event.isReplyEvent)
     {
         MXReplyEventParser *replyEventParser = [MXReplyEventParser new];
-        MXReplyEventParts *replyEventParts = [replyEventPaser parse:event];
+        MXReplyEventParts *replyEventParts = [replyEventParser parse:event];
         
         if (replyEventParts)
         {
