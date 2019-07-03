@@ -1832,7 +1832,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
         return;
     }
     
-    BOOL eventToReplyIsAlreadyAReply = eventToReply.content[@"m.relates_to"][@"m.in_reply_to"][@"event_id"] != nil;
+    BOOL eventToReplyIsAlreadyAReply = eventToReply.isReplyEvent;
     BOOL isSenderMessageAnEmote = [msgtype isEqualToString:kMXMessageTypeEmote];
     
     NSString *senderMessageBody;

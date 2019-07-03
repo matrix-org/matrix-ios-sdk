@@ -406,6 +406,11 @@ extern NSString *const kMXEventIdentifierKey;
 - (BOOL)isEditEvent;
 
 /**
+ Return YES if the event is a reply event.
+ */
+- (BOOL)isReplyEvent;
+
+/**
  Return YES if the event content has been edited.
  */
 - (BOOL)contentHasBeenEdited;

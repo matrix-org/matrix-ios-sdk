@@ -22,6 +22,7 @@
 #import "MXEventRelations.h"
 #import "MXEventReplace.h"
 #import "MXEventEditsListener.h"
+#import "MXReplyEventParser.h"
 
 @interface MXAggregatedEditsUpdater ()
 
@@ -80,54 +81,81 @@
             return nil;
         }
     }
-
+    
     NSString *messageType = event.content[@"msgtype"];
-
+    
     if (![self.editSupportedMessageTypes containsObject:messageType])
     {
         NSLog(@"[MXAggregations] replaceTextMessageEvent: Error: Only message types %@ are supported", self.editSupportedMessageTypes);
         failure(nil);
         return nil;
     }
-
+    
+    NSString *finalText;
+    NSString *finalFormattedText;
+    
+    if (event.isReplyEvent)
+    {
+        MXReplyEventParser *replyEventParser = [MXReplyEventParser new];
+        MXReplyEventParts *replyEventParts = [replyEventPaser parse:event];
+        
+        if (replyEventParts)
+        {
+            finalText = [NSString stringWithFormat:@"%@%@", replyEventParts.bodyParts.replyTextPrefix, text];
+            NSString *formattedReplyText = formattedText ?: text;
+            finalFormattedText = [NSString stringWithFormat:@"%@%@", replyEventParts.formattedBodyParts.replyTextPrefix, formattedReplyText];
+        }
+        else
+        {
+            NSLog(@"[MXAggregations] replaceTextMessageEvent: Fail to parse reply event: %@", event.eventId);
+            failure(nil);
+            return nil;
+        }
+    }
+    else
+    {
+        finalText = text;
+        finalFormattedText = formattedText;
+    }
+    
     NSMutableDictionary *content = [NSMutableDictionary new];
     NSMutableDictionary *compatibilityContent = [NSMutableDictionary dictionaryWithDictionary:@{
                                                                                                 @"msgtype": messageType,
-                                                                                                @"body": [NSString stringWithFormat:@"* %@", text]
+                                                                                                @"body": [NSString stringWithFormat:@"* %@", finalText]
                                                                                                 }];
-
+    
     NSMutableDictionary *newContent = [NSMutableDictionary dictionaryWithDictionary:@{
                                                                                       @"msgtype": messageType,
-                                                                                      @"body": text
+                                                                                      @"body": finalText
                                                                                       }];
-
-
-    if (formattedText)
+    
+    
+    if (finalFormattedText)
     {
         // Send the HTML formatted string
-
+        
         [compatibilityContent addEntriesFromDictionary:@{
-                                                         @"formatted_body": [NSString stringWithFormat:@"* %@", formattedText],
+                                                         @"formatted_body": [NSString stringWithFormat:@"* %@", finalFormattedText],
                                                          @"format": kMXRoomMessageFormatHTML
                                                          }];
-
-
+        
+        
         [newContent addEntriesFromDictionary:@{
-                                               @"formatted_body": formattedText,
+                                               @"formatted_body": finalFormattedText,
                                                @"format": kMXRoomMessageFormatHTML
                                                }];
     }
-
-
+    
+    
     [content addEntriesFromDictionary:compatibilityContent];
-
+    
     content[@"m.new_content"] = newContent;
-
+    
     content[@"m.relates_to"] = @{
                                  @"rel_type" : @"m.replace",
                                  @"event_id": event.eventId
                                  };
-
+    
     MXHTTPOperation *operation;
     MXEvent *localEcho;
     if (event.isLocalEvent)

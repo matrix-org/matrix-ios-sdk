@@ -401,6 +401,11 @@ NSString *const kMXEventIdentifierKey = @"kMXEventIdentifierKey";
     return self.eventType == MXEventTypeRoomMessage && [self.relatesTo.relationType isEqualToString:MXEventRelationTypeReplace];
 }
 
+- (BOOL)isReplyEvent
+{
+    return self.eventType == MXEventTypeRoomMessage && self.content[@"m.relates_to"][@"m.in_reply_to"][@"event_id"] != nil;
+}
+
 - (BOOL)contentHasBeenEdited
 {
     return self.unsignedData.relations.replace != nil;
