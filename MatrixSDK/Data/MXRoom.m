@@ -545,7 +545,9 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
     };
 
     // Check whether the content must be encrypted before sending
-    if (mxSession.crypto && self.summary.isEncrypted)
+    if (mxSession.crypto
+        && self.summary.isEncrypted
+        && [self isEncryptionRequiredForEventType:eventTypeString])
     {
         // Check whether the provided content is already encrypted
         if ([eventTypeString isEqualToString:kMXEventTypeStringRoomEncrypted])
@@ -3065,6 +3067,25 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
     }
 
     return operation;
+}
+
+/**
+ Check if we need to encrypt event with a given type.
+
+ @param eventType the event type
+ @return YES to event.
+ */
+- (BOOL)isEncryptionRequiredForEventType:(MXEventTypeString)eventType
+{
+    BOOL isEncryptionRequired = YES;
+
+    if ([eventType isEqualToString:kMXEventTypeStringReaction])
+    {
+        // Do not encrypt reaction for the moment
+        isEncryptionRequired = NO;
+    }
+
+    return isEncryptionRequired;
 }
 
 
