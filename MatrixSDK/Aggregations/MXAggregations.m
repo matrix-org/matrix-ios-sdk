@@ -103,13 +103,15 @@
 }
 
 - (MXHTTPOperation*)replaceEventsForEvent:(NSString*)eventId
+                              isEncrypted:(BOOL)isEncrypted
                                    inRoom:(NSString*)roomId
                                      from:(nullable NSString*)from
                                     limit:(NSUInteger)limit
                                   success:(void (^)(MXAggregationPaginatedResponse *paginatedResponse))success
                                   failure:(void (^)(NSError *error))failure
 {
-    return [self.mxSession.matrixRestClient relationsForEvent:eventId inRoom:roomId relationType:MXEventRelationTypeReplace eventType:kMXEventTypeStringRoomMessage from:from limit:limit success:success failure:failure];
+    NSString *eventType = isEncrypted ? kMXEventTypeStringRoomEncrypted : kMXEventTypeStringRoomMessage;
+    return [self.mxSession.matrixRestClient relationsForEvent:eventId inRoom:roomId relationType:MXEventRelationTypeReplace eventType:eventType from:from limit:limit success:success failure:failure];
 }
 
 

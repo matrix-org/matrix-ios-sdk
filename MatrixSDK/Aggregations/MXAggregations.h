@@ -135,6 +135,7 @@ NS_ASSUME_NONNULL_BEGIN
  Fetch edits events for a given event.
 
  @param eventId the id of the event,
+ @param isEncrypted Indicate YES if the event is encrypted.
  @param roomId the id of the room.
  @param from the `nextBatch` returned in the previous response.
  @param limit (optional, use -1 to not defined this value) the maximum number of messages to return.
@@ -145,6 +146,7 @@ NS_ASSUME_NONNULL_BEGIN
  @return a MXHTTPOperation instance.
  */
 - (MXHTTPOperation*)replaceEventsForEvent:(NSString*)eventId
+                              isEncrypted:(BOOL)isEncrypted
                                    inRoom:(NSString*)roomId
                                      from:(nullable NSString*)from
                                     limit:(NSUInteger)limit
