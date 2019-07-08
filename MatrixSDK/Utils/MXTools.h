@@ -1,6 +1,7 @@
 /*
  Copyright 2014 OpenMarket Ltd
  Copyright 2018 New Vector Ltd
+ Copyright 2019 The Matrix.org Foundation C.I.C
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -123,6 +124,16 @@ FOUNDATION_EXPORT NSString *const kMXToolsRegexStringForMatrixGroupIdentifier;
  @return YES if the provided string is formatted as a matrix group identifier.
  */
 + (BOOL)isMatrixGroupIdentifier:(NSString *)inputString;
+
+/**
+ Extract the server name part of a matrix identifier.
+
+ For example, this methods returns "matrix.org" from "!anEvent:matrix.org"
+
+ @param identifier a Matrix identifier.
+ @return the server name part.
+ */
++ (NSString*)serverNameInMatrixIdentifier:(NSString *)identifier;
 
 
 #pragma mark - Strings encoding
