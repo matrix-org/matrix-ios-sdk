@@ -454,7 +454,7 @@
 {
     [matrixSDKTestsData doMXRestClientTestWithBobAndARoom:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
         
-        [bobRestClient joinRoom:roomId success:^(NSString *theRoomId) {
+        [bobRestClient joinRoom:roomId viaServers:nil withThirdPartySigned:nil success:^(NSString *theRoomId) {
             
             // No data to test. Just happy to go here.
             [expectation fulfill];
@@ -470,7 +470,7 @@
 {
     [matrixSDKTestsData doMXRestClientTestWithBobAndThePublicRoom:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
 
-        [bobRestClient joinRoom:matrixSDKTestsData.thePublicRoomAlias success:^(NSString *theRoomId) {
+        [bobRestClient joinRoom:matrixSDKTestsData.thePublicRoomAlias viaServers:nil withThirdPartySigned:nil success:^(NSString *theRoomId) {
 
             XCTAssertEqualObjects(roomId, theRoomId);
             [expectation fulfill];

@@ -225,7 +225,7 @@
                     XCTAssertEqual(room.summary.membership, MXMembershipInvite);
                     XCTAssertEqual(room.summary.membersCount.members, 2, @"The room state information is limited while the room is joined");
 
-                    [room join:^{
+                    [room joinViaServers:nil success:^{
 
                         XCTAssertEqual(room.summary.membership, MXMembershipJoin);
                         XCTAssertEqual(room.summary.membersCount.members, 2, @"The room state must be fully known (after an initialSync on the room");

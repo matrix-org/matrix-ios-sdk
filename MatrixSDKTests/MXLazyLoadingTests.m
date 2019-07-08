@@ -92,7 +92,7 @@ Common initial conditions:
 
             // - Charlie joins the room
             [matrixSDKTestsData doMXSessionTestWithAUser:nil readyToTest:^(MXSession *charlieSession, XCTestExpectation *expectation2) {
-                [charlieSession joinRoom:roomId success:^(MXRoom *room) {
+                [charlieSession joinRoom:roomId viaServers:nil success:^(MXRoom *room) {
 
                     // - Dave is invited
                     [roomFromBobPOV inviteUser:@"@dave:localhost:8480" success:^{
@@ -178,7 +178,7 @@ Common initial conditions:
                 [[NSNotificationCenter defaultCenter] removeObserver:observer];
                 observer = nil;
 
-                [bobSession joinRoom:theRoomId success:^(MXRoom *room) {
+                [bobSession joinRoom:theRoomId viaServers:nil success:^(MXRoom *room) {
 
                     // - Alice makes an initial /sync
                     MXSession *aliceSession = [[MXSession alloc] initWithMatrixRestClient:aliceRestClient];
@@ -582,19 +582,19 @@ Common initial conditions:
 
         // - 5 Eve joins the room
         [matrixSDKTestsData doMXSessionTestWithAUser:nil readyToTest:^(MXSession *eve0Session, XCTestExpectation *expectation2) {
-            [eve0Session joinRoom:roomId success:^(MXRoom *room) {
+            [eve0Session joinRoom:roomId viaServers:nil success:^(MXRoom *room) {
 
                 [matrixSDKTestsData doMXSessionTestWithAUser:nil readyToTest:^(MXSession *eve1Session, XCTestExpectation *expectation2) {
-                    [eve1Session joinRoom:roomId success:^(MXRoom *room) {
+                    [eve1Session joinRoom:roomId viaServers:nil success:^(MXRoom *room) {
 
                         [matrixSDKTestsData doMXSessionTestWithAUser:nil readyToTest:^(MXSession *eve2Session, XCTestExpectation *expectation2) {
-                            [eve2Session joinRoom:roomId success:^(MXRoom *room) {
+                            [eve2Session joinRoom:roomId viaServers:nil success:^(MXRoom *room) {
 
                                 [matrixSDKTestsData doMXSessionTestWithAUser:nil readyToTest:^(MXSession *eve3Session, XCTestExpectation *expectation2) {
-                                    [eve3Session joinRoom:roomId success:^(MXRoom *room) {
+                                    [eve3Session joinRoom:roomId viaServers:nil success:^(MXRoom *room) {
 
                                         [matrixSDKTestsData doMXSessionTestWithAUser:nil readyToTest:^(MXSession *eve4Session, XCTestExpectation *expectation2) {
-                                            [eve4Session joinRoom:roomId success:^(MXRoom *room) {
+                                            [eve4Session joinRoom:roomId viaServers:nil success:^(MXRoom *room) {
 
 
                                                 // - Eve0 sends 20 messages

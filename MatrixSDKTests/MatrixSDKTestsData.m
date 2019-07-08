@@ -591,7 +591,7 @@ NSString * const kMXTestsAliceAvatarURL = @"mxc://matrix.org/kciiXusgZFKuNLIfLqm
             
             [bobRestClient inviteUser:self.aliceCredentials.userId toRoom:roomId success:^{
                 
-                [aliceRestClient joinRoom:roomId success:^(NSString *theRoomId) {
+                [aliceRestClient joinRoom:roomId viaServers:nil withThirdPartySigned:nil success:^(NSString *theRoomId) {
                     
                     readyToTest(bobRestClient, aliceRestClient, roomId, expectation);
                     
@@ -638,7 +638,7 @@ NSString * const kMXTestsAliceAvatarURL = @"mxc://matrix.org/kciiXusgZFKuNLIfLqm
 
             [bobRestClient inviteUser:self.aliceCredentials.userId toRoom:roomId success:^{
 
-                [aliceRestClient joinRoom:roomId success:^(NSString *theRoomId) {
+                [aliceRestClient joinRoom:roomId viaServers:nil withThirdPartySigned:nil success:^(NSString *theRoomId) {
 
                     readyToTest(bobSession, aliceRestClient, roomId, expectation);
 

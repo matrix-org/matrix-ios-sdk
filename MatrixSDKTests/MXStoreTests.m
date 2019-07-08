@@ -764,7 +764,7 @@
                     // Join the room on the invitation and check we can paginate all expected text messages
                     // By default the last Alice's message (sent while Bob is not in the room) must be visible.
                     joinedRequestMade = YES;
-                    [room2 join:^{
+                    [room2 joinViaServers:nil success:^{
 
                         NSMutableArray *events = [NSMutableArray array];
                         [room2 liveTimeline:^(MXEventTimeline *liveTimeline) {
@@ -808,7 +808,7 @@
 
             // Make Alice send text message while Bob is not in the room.
             // Then, invite him.
-            [aliceRestClient joinRoom:roomId success:^(NSString *roomName){
+            [aliceRestClient joinRoom:roomId viaServers:nil withThirdPartySigned:nil success:^(NSString *roomName){
 
                 // Make Bob the room
                 [room leave:^{
