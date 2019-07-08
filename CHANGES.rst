@@ -21,7 +21,7 @@ Bug Fix:
 API break:
  * MXEvent: unsignedData is now of type MXEventUnsignedData.
  * MXRestClient: Remove the joinRoom method with least parameters.
- * MXSession, MXSession, MXRestClient: Add viaServers parameters to all joinRoom methods.
+ * MXSession, MXRestClient: Add viaServers parameters to all joinRoom methods.
 
 Changes in Matrix iOS SDK in 0.12.5 (2019-05-03)
 ===============================================

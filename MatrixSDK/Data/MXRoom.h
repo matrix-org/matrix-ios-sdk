@@ -634,17 +634,13 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidFlushDataNotification;
 /**
  Join this room where the user has been invited.
 
- @param viaServers The server names to try and join through in addition to those
-                   that are automatically chosen. Can be nil.
-
  @param success A block object called when the operation is complete.
  @param failure A block object called when the operation fails.
 
  @return a MXHTTPOperation instance.
  */
-- (MXHTTPOperation*)joinViaServers:(NSArray<NSString*>*)viaServers
-                           success:(void (^)(void))success
-                           failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
+- (MXHTTPOperation*)join:(void (^)(void))success
+                 failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 /**
  Leave this room.

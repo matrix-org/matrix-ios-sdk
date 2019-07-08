@@ -472,14 +472,13 @@ public extension MXRoom {
      Join this room where the user has been invited.
      
      - parameters:
-        - viaServers The server names to try and join through in addition to those that are automatically chosen
          - completion: A block object called when the operation completes.
          - response: Indicates whether the operation was a success or failure.
      
      - returns: a `MXHTTPOperation` instance.
      */
-    @nonobjc @discardableResult func join(viaServers: [String]? = nil, completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation {
-        return __join(viaServers: viaServers, success:currySuccess(completion), failure: curryFailure(completion))
+    @nonobjc @discardableResult func join(completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation {
+        return __join(currySuccess(completion), failure: curryFailure(completion))
     }
     
     /**

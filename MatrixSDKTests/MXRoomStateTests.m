@@ -994,7 +994,7 @@
                         }
                     }];
                     
-                    [newRoom joinViaServers:nil success:^{
+                    [newRoom join:^{
                         
                         // Now, we must have more information about the room
                         // Check its new state

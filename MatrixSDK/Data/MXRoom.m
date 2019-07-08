@@ -1622,11 +1622,12 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
     return [mxSession.matrixRestClient directoryVisibilityOfRoom:self.roomId success:success failure:failure];
 }
 
-- (MXHTTPOperation*)joinViaServers:(NSArray<NSString*>*)viaServers
-                           success:(void (^)(void))success
+- (MXHTTPOperation*)join:(void (^)(void))success
                            failure:(void (^)(NSError *error))failure
 {
-    return [mxSession joinRoom:self.roomId viaServers:viaServers success:^(MXRoom *room) {
+    // On an invite, there is no need of via parameters.
+    // The user homeserver already knows other homeservers
+    return [mxSession joinRoom:self.roomId viaServers:nil success:^(MXRoom *room) {
         success();
     } failure:failure];
 }

@@ -764,7 +764,7 @@
                     // Join the room on the invitation and check we can paginate all expected text messages
                     // By default the last Alice's message (sent while Bob is not in the room) must be visible.
                     joinedRequestMade = YES;
-                    [room2 joinViaServers:nil success:^{
+                    [room2 join:^{
 
                         NSMutableArray *events = [NSMutableArray array];
                         [room2 liveTimeline:^(MXEventTimeline *liveTimeline) {
