@@ -1623,7 +1623,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
 }
 
 - (MXHTTPOperation*)join:(void (^)(void))success
-                           failure:(void (^)(NSError *error))failure
+                 failure:(void (^)(NSError *error))failure
 {
     // On an invite, there is no need of via parameters.
     // The user homeserver already knows other homeservers
