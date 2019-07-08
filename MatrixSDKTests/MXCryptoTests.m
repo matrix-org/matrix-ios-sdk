@@ -1592,7 +1592,7 @@
                 
             }];
             
-            [bobSession joinRoom:roomId success:nil failure:^(NSError *error) {
+            [bobSession joinRoom:roomId viaServers:nil success:nil failure:^(NSError *error) {
                 NSAssert(NO, @"Cannot join a room - error: %@", error);
                 [expectation fulfill];
             }];
@@ -1637,7 +1637,7 @@
                 
             }];
             
-            [bobSession joinRoom:roomId success:^(MXRoom *room) {
+            [bobSession joinRoom:roomId viaServers:nil success:^(MXRoom *room) {
                 // Send a second message to Bob who just joins the room
                 [roomFromAlicePOV sendTextMessage:message2FromAlice success:nil failure:^(NSError *error) {
                     XCTFail(@"Cannot set up intial test conditions - error: %@", error);
@@ -1892,7 +1892,7 @@
 
             [roomFromAlicePOV enableEncryptionWithAlgorithm:kMXCryptoMegolmAlgorithm success:^{
 
-                [bobSession joinRoom:roomFromAlicePOV.roomId success:^(MXRoom *roomFromBobPOV) {
+                [bobSession joinRoom:roomFromAlicePOV.roomId viaServers:nil success:^(MXRoom *roomFromBobPOV) {
 
                     [roomFromBobPOV liveTimeline:^(MXEventTimeline *liveTimeline) {
                         [liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
@@ -1913,7 +1913,7 @@
 
                                         [MXSDKOptions sharedInstance].enableCryptoWhenStartingMXSession = NO;
 
-                                        [bobSession2 joinRoom:roomFromAlicePOV.roomId success:^(MXRoom *roomFromBobPOV2) {
+                                        [bobSession2 joinRoom:roomFromAlicePOV.roomId viaServers:nil success:^(MXRoom *roomFromBobPOV2) {
 
                                             // Bob should be able to receive the message from Alice
                                             [roomFromBobPOV2 liveTimeline:^(MXEventTimeline *liveTimeline) {
@@ -2009,7 +2009,7 @@
 
                         observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXSessionNewRoomNotification object:bobSession queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
 
-                            [bobSession joinRoom:note.userInfo[kMXSessionNotificationRoomIdKey] success:^(MXRoom *room) {
+                            [bobSession joinRoom:note.userInfo[kMXSessionNotificationRoomIdKey] viaServers:nil success:^(MXRoom *room) {
 
                                 // - Bob has an out of date list of Alice's devices
                                 MXRoom *roomFromBobPOV = [bobSession roomWithRoomId:newRoomId];
@@ -2081,7 +2081,7 @@
 
         [aliceSession createRoom:nil visibility:kMXRoomDirectoryVisibilityPublic roomAlias:nil topic:nil success:^(MXRoom *roomFromAlicePOV) {
 
-            [bobSession joinRoom:roomFromAlicePOV.roomId success:^(MXRoom *room) {
+            [bobSession joinRoom:roomFromAlicePOV.roomId viaServers:nil success:^(MXRoom *room) {
 
                 [roomFromAlicePOV sendTextMessage:messageFromAlice success:^(NSString *eventId) {
 

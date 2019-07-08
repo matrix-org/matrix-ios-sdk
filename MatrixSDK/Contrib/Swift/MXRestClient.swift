@@ -1,6 +1,7 @@
 /*
  Copyright 2017 Avery Pierce
  Copyright 2017 Vector Creations Ltd
+ Copyright 2019 The Matrix.org Foundation C.I.C
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -851,18 +852,15 @@ public extension MXRestClient {
      
      - parameters:
         - roomIdOrAlias: The id or an alias of the room to join.
+        - viaServers The server names to try and join through in addition to those that are automatically chosen.
         - thirdPartySigned: The signed data obtained by the validation of the 3PID invitation, if 3PID validation is used. The validation is made by `self.signUrl()`.
         - completion: A block object called when the operation completes.
         - response: Provides the room id on success.
      
      - returns: a `MXHTTPOperation` instance.
      */
-    @nonobjc @discardableResult func joinRoom(_ roomIdOrAlias: String, withThirdPartySigned dictionary: [String: Any]? = nil, completion: @escaping (_ response: MXResponse<String>) -> Void) -> MXHTTPOperation {
-        if let dictionary = dictionary {
-            return __joinRoom(roomIdOrAlias, withThirdPartySigned: dictionary, success: currySuccess(completion), failure: curryFailure(completion))
-        } else {
-            return __joinRoom(roomIdOrAlias, success: currySuccess(completion), failure: curryFailure(completion))
-        }
+    @nonobjc @discardableResult func joinRoom(_ roomIdOrAlias: String, viaServers: [String]? = nil, withThirdPartySigned dictionary: [String: Any]? = nil, completion: @escaping (_ response: MXResponse<String>) -> Void) -> MXHTTPOperation {
+        return __joinRoom(roomIdOrAlias, viaServers: viaServers, withThirdPartySigned: dictionary, success: currySuccess(completion), failure: curryFailure(completion))
     }
 
     /**

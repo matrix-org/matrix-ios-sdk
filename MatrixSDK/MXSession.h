@@ -2,6 +2,7 @@
  Copyright 2014 OpenMarket Ltd
  Copyright 2017 Vector Creations Ltd
  Copyright 2018 New Vector Ltd
+ Copyright 2019 The Matrix.org Foundation C.I.C
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -736,6 +737,8 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
  Join a room.
  
  @param roomIdOrAlias the id or an alias of the room to join.
+ @param viaServers The server names to try and join through in addition to those
+        that are automatically chosen. Can be nil.
  @param success A block object called when the operation succeeds. It provides the MXRoom 
         instance of the joined room.
  @param failure A block object called when the operation fails.
@@ -743,6 +746,7 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
  @return a MXHTTPOperation instance.
  */
 - (MXHTTPOperation*)joinRoom:(NSString*)roomIdOrAlias
+                  viaServers:(NSArray<NSString*>*)viaServers
                      success:(void (^)(MXRoom *room))success
                      failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
@@ -750,6 +754,8 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
  Join a room where the user has been invited by a 3PID invitation.
 
  @param roomIdOrAlias the id or an alias of the room to join.
+ @param viaServers The server names to try and join through in addition to those
+        that are automatically chosen. Can be nil.
  @param signUrl the url provided in the invitation.
  @param success A block object called when the operation succeeds. It provides the MXRoom
         instance of the joined room.
@@ -758,6 +764,7 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
  @return a MXHTTPOperation instance.
  */
 - (MXHTTPOperation*)joinRoom:(NSString*)roomIdOrAlias
+                  viaServers:(NSArray<NSString*>*)viaServers
                  withSignUrl:(NSString*)signUrl
                      success:(void (^)(MXRoom *room))success
                      failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;

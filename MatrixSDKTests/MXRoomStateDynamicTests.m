@@ -315,7 +315,7 @@
                 
                 [bobRestClient sendTextMessageToRoom:roomId text:@"I wait for Alice" success:^(NSString *eventId) {
                     
-                    [aliceRestClient joinRoom:roomId success:^(NSString *roomName){
+                    [aliceRestClient joinRoom:roomId viaServers:nil withThirdPartySigned:nil success:^(NSString *roomName){
                         
                         [aliceRestClient sendTextMessageToRoom:roomId text:@"Hi" success:^(NSString *eventId) {
 

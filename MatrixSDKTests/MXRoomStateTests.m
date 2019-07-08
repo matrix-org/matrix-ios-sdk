@@ -1043,7 +1043,7 @@
                     
                     XCTAssertNil(room, @"The room must not be known yet by the user");
                     
-                    [mxSession joinRoom:roomId success:^(MXRoom *room) {
+                    [mxSession joinRoom:roomId viaServers:nil success:^(MXRoom *room) {
                         
                         XCTAssert([room.roomId isEqualToString:roomId]);
                         
