@@ -2,6 +2,7 @@
  Copyright 2014 OpenMarket Ltd
  Copyright 2017 Vector Creations Ltd
  Copyright 2018 New Vector Ltd
+ Copyright 2019 The Matrix.org Foundation C.I.C
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -1621,10 +1622,11 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
     return [mxSession.matrixRestClient directoryVisibilityOfRoom:self.roomId success:success failure:failure];
 }
 
-- (MXHTTPOperation*)join:(void (^)(void))success
-                 failure:(void (^)(NSError *error))failure
+- (MXHTTPOperation*)joinViaServers:(NSArray<NSString*>*)viaServers
+                           success:(void (^)(void))success
+                           failure:(void (^)(NSError *error))failure
 {
-    return [mxSession joinRoom:self.roomId success:^(MXRoom *room) {
+    return [mxSession joinRoom:self.roomId viaServers:viaServers success:^(MXRoom *room) {
         success();
     } failure:failure];
 }

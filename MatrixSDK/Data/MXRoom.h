@@ -2,6 +2,7 @@
  Copyright 2014 OpenMarket Ltd
  Copyright 2017 Vector Creations Ltd
  Copyright 2018 New Vector Ltd
+ Copyright 2019 The Matrix.org Foundation C.I.C
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -632,14 +633,18 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidFlushDataNotification;
 
 /**
  Join this room where the user has been invited.
- 
+
+ @param viaServers The server names to try and join through in addition to those
+                   that are automatically chosen. Can be nil.
+
  @param success A block object called when the operation is complete.
  @param failure A block object called when the operation fails.
 
  @return a MXHTTPOperation instance.
  */
-- (MXHTTPOperation*)join:(void (^)(void))success
-                 failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
+- (MXHTTPOperation*)joinViaServers:(NSArray<NSString*>*)viaServers
+                           success:(void (^)(void))success
+                           failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 /**
  Leave this room.

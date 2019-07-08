@@ -1835,11 +1835,12 @@ MXAuthAction;
                      success:(void (^)(NSString *theRoomId))success
                      failure:(void (^)(NSError *error))failure
 {
-    return [self joinRoom:roomIdOrAlias withThirdPartySigned:nil success:success failure:failure];
+    return [self joinRoom:roomIdOrAlias viaServers:nil withThirdPartySigned:nil success:success failure:failure];
 }
 
 - (MXHTTPOperation*)joinRoom:(NSString*)roomIdOrAlias
-    withThirdPartySigned:(NSDictionary*)thirdPartySigned
+                  viaServers:(NSArray<NSString*>*)viaServers
+        withThirdPartySigned:(NSDictionary*)thirdPartySigned
                      success:(void (^)(NSString *theRoomId))success
                      failure:(void (^)(NSError *error))failure
 {
@@ -1855,6 +1856,27 @@ MXAuthAction;
     NSString *path = [NSString stringWithFormat:@"%@/join/%@",
                       apiPathPrefix,
                       [MXTools encodeURIComponent:roomIdOrAlias]];
+
+    // Add all servers as query parameters
+    if (viaServers.count)
+    {
+        NSMutableString *queryParameters;
+        for (NSString *viaServer in viaServers)
+        {
+            NSString *value = [MXTools encodeURIComponent:viaServer];
+
+            if (!queryParameters)
+            {
+                queryParameters = [NSMutableString stringWithFormat:@"?server_name=%@", value];
+            }
+            else
+            {
+                [queryParameters appendFormat:@"&server_name=%@", value];
+            }
+        }
+
+        path = [path stringByAppendingString:queryParameters];
+    }
 
     MXWeakify(self);
     return [httpClient requestWithMethod:@"POST"

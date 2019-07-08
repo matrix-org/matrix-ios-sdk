@@ -1006,6 +1006,8 @@ FOUNDATION_EXPORT NSString *const kMXMembersOfRoomParametersNotMembership;
  Join a room where the user has been invited by a 3PID invitation.
 
  @param roomIdOrAlias the id or an alias of the room to join.
+ @param viaServers The server names to try and join through in addition to those
+                   that are automatically chosen.
  @param thirdPartySigned the signed data obtained by the validation of the 3PID invitation.
                          The valisation is made by [self signUrl].
  @param success A block object called when the operation succeeds. It provides the room id.
@@ -1014,6 +1016,7 @@ FOUNDATION_EXPORT NSString *const kMXMembersOfRoomParametersNotMembership;
  @return a MXHTTPOperation instance.
  */
 - (MXHTTPOperation*)joinRoom:(NSString*)roomIdOrAlias
+                  viaServers:(NSArray<NSString*>*)viaServers
         withThirdPartySigned:(NSDictionary*)thirdPartySigned
                      success:(void (^)(NSString *theRoomId))success
                      failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
