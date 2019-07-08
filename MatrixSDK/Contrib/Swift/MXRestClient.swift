@@ -860,11 +860,7 @@ public extension MXRestClient {
      - returns: a `MXHTTPOperation` instance.
      */
     @nonobjc @discardableResult func joinRoom(_ roomIdOrAlias: String, viaServers: [String]? = nil, withThirdPartySigned dictionary: [String: Any]? = nil, completion: @escaping (_ response: MXResponse<String>) -> Void) -> MXHTTPOperation {
-        if let dictionary = dictionary {
-            return __joinRoom(roomIdOrAlias, viaServers: viaServers, withThirdPartySigned: dictionary, success: currySuccess(completion), failure: curryFailure(completion))
-        } else {
-            return __joinRoom(roomIdOrAlias, success: currySuccess(completion), failure: curryFailure(completion))
-        }
+        return __joinRoom(roomIdOrAlias, viaServers: viaServers, withThirdPartySigned: dictionary, success: currySuccess(completion), failure: curryFailure(completion))
     }
 
     /**
