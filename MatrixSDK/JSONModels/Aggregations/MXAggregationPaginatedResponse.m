@@ -31,6 +31,8 @@
 
         paginatedResponse->_chunk = chunk;
         MXJSONModelSetString(paginatedResponse->_nextBatch, JSONDictionary[@"next_batch"])
+
+        MXJSONModelSetMXJSONModel(paginatedResponse->_originalEvent, MXEvent.class, JSONDictionary[@"original_event"])
     }
 
     return paginatedResponse;

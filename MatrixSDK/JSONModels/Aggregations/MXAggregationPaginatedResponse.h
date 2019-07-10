@@ -26,6 +26,9 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, readonly) NSArray<MXEvent*> *chunk;
 @property (nonatomic, readonly, nullable) NSString *nextBatch;
 
+// TODO: Make it non null when homeservers support it
+@property (nonatomic, readonly, nullable) MXEvent *originalEvent;
+
 @end
 
 NS_ASSUME_NONNULL_END
