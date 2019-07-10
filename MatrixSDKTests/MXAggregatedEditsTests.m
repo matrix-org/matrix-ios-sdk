@@ -895,8 +895,10 @@ static NSString* const kEditedMarkdownMessageFormattedText = @"<strong>I meant H
 // - Edit the message 10 more times
 // - Paginate one edit
 // -> We must get an edit event and a nextBatch
+// -> We must get the original event
 // - Paginate more
 // -> We must get all other edit events and no more nextBatch
+// -> We must get the original event
 - (void)testEditsHistory
 {
     // - Run the initial condition scenario
@@ -913,6 +915,11 @@ static NSString* const kEditedMarkdownMessageFormattedText = @"<strong>I meant H
                 XCTAssertTrue(paginatedResponse.chunk.firstObject.isEditEvent);
                 XCTAssertNotNil(paginatedResponse.nextBatch);
 
+                // -> We must get the original event
+                XCTAssertNotNil(paginatedResponse.originalEvent);
+                XCTAssertEqualObjects(paginatedResponse.originalEvent.eventId, eventId);
+                XCTAssertEqualObjects(paginatedResponse.originalEvent.content[@"body"], kOriginalMessageText);
+
                 // - Paginate more
                 [mxSession.aggregations replaceEventsForEvent:eventId isEncrypted:NO inRoom:room.roomId from:paginatedResponse.nextBatch limit:20 success:^(MXAggregationPaginatedResponse *paginatedResponse) {
 
@@ -925,6 +932,11 @@ static NSString* const kEditedMarkdownMessageFormattedText = @"<strong>I meant H
                     {
                         XCTAssertTrue(event.isEditEvent);
                     }
+
+                    // -> We must get the original event
+                    XCTAssertNotNil(paginatedResponse.originalEvent);
+                    XCTAssertEqualObjects(paginatedResponse.originalEvent.eventId, eventId);
+                    XCTAssertEqualObjects(paginatedResponse.originalEvent.content[@"body"], kOriginalMessageText);
 
                     [expectation fulfill];
 
