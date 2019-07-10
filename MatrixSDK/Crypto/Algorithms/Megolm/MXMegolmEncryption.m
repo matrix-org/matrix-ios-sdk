@@ -369,14 +369,14 @@
                                       }
                               };
 
-    NSLog(@"[MXMegolEncryption] shareKey with %@", devicesByUser);
+    NSLog(@"[MXMegolmEncryption] shareKey with %@", devicesByUser);
 
     MXHTTPOperation *operation;
     MXWeakify(self);
     operation = [crypto ensureOlmSessionsForDevices:devicesByUser success:^(MXUsersDevicesMap<MXOlmSessionResult *> *results) {
         MXStrongifyAndReturnIfNil(self);
 
-        NSLog(@"[MXMegolEncryption] shareKey. ensureOlmSessionsForDevices result: %@", results);
+        NSLog(@"[MXMegolmEncryption] shareKey. ensureOlmSessionsForDevices result: %@", results);
 
         MXUsersDevicesMap<NSDictionary*> *contentMap = [[MXUsersDevicesMap alloc] init];
         BOOL haveTargets = NO;
@@ -419,8 +419,8 @@
 
         if (haveTargets)
         {
-            //NSLog(@"[MXMegolEncryption] shareKey. Actually share with %tu users and %tu devices: %@", contentMap.userIds.count, contentMap.count, contentMap);
-            NSLog(@"[MXMegolEncryption] shareKey. Actually share with %tu users and %tu devices", contentMap.userIds.count, contentMap.count);
+            //NSLog(@"[MXMegolmEncryption] shareKey. Actually share with %tu users and %tu devices: %@", contentMap.userIds.count, contentMap.count, contentMap);
+            NSLog(@"[MXMegolmEncryption] shareKey. Actually share with %tu users and %tu devices", contentMap.userIds.count, contentMap.count);
 
             MXHTTPOperation *operation2 = [self->crypto.matrixRestClient sendToDevice:kMXEventTypeStringRoomEncrypted contentMap:contentMap txnId:nil success:^{
 
