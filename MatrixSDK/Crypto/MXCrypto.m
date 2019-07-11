@@ -233,15 +233,15 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
             MXStrongifyAndReturnIfNil(self);
 
             NSLog(@"[MXCrypto] start ###########################################################");
-            NSLog(@" uploadDeviceKeys done for %@: ", self.mxSession.myUser.userId);
+            NSLog(@"[MXCrypto] uploadDeviceKeys done for %@: ", self.mxSession.myUser.userId);
 
-            NSLog(@"   - device id  : %@", self.store.deviceId);
-            NSLog(@"   - ed25519    : %@", self.olmDevice.deviceEd25519Key);
-            NSLog(@"   - curve25519 : %@", self.olmDevice.deviceCurve25519Key);
+            NSLog(@"[MXCrypto]    - device id  : %@", self.store.deviceId);
+            NSLog(@"[MXCrypto]    - ed25519    : %@", self.olmDevice.deviceEd25519Key);
+            NSLog(@"[MXCrypto]    - curve25519 : %@", self.olmDevice.deviceCurve25519Key);
             //NSLog(@"   - oneTimeKeys: %@", lastPublishedOneTimeKeys);
-            NSLog(@"");
-            NSLog(@"Store: %@", self.store);
-            NSLog(@"");
+            NSLog(@"[MXCrypto] ");
+            NSLog(@"[MXCrypto] Store: %@", self.store);
+            NSLog(@"[MXCrypto] ");
 
             [self->outgoingRoomKeyRequestManager start];
 
@@ -256,7 +256,7 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
         } failure:^(NSError *error) {
             MXStrongifyAndReturnIfNil(self);
 
-            NSLog(@"[MXCrypto] start. Error in maybeUploadOneTimeKeys");
+            NSLog(@"[MXCrypto] start. Error in maybeUploadOneTimeKeys: %@", error);
             dispatch_async(dispatch_get_main_queue(), ^{
                 self->startOperation = nil;
                 failure(error);
@@ -266,7 +266,7 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
     } failure:^(NSError *error) {
         MXStrongifyAndReturnIfNil(self);
 
-        NSLog(@"[MXCrypto] start. Error in uploadDeviceKeys");
+        NSLog(@"[MXCrypto] start. Error in uploadDeviceKeys: %@", error);
         dispatch_async(dispatch_get_main_queue(), ^{
             self->startOperation = nil;
             failure(error);
@@ -330,6 +330,10 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
 {
 #ifdef MX_CRYPTO
 
+    NSLog(@"[MXCrypto] encryptEventContent");
+
+    NSDate *startDate = [NSDate date];
+
     // Create an empty operation that will be mutated later
     MXHTTPOperation *operation = [[MXHTTPOperation alloc] init];
 
@@ -360,6 +364,8 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
                 NSString *algorithm;
                 id<MXEncrypting> alg = self->roomEncryptors[room.roomId];
 
+                NSLog(@"[MXCrypto] encryptEventContent: with %@", roomState.encryptionAlgorithm);
+
                 if (!alg)
                 {
                     // If the crypto has been enabled after the initialSync (the global one or the one for this room),
@@ -381,16 +387,22 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
                 if (alg && [eventType isEqualToString:kMXEventTypeStringRoomEncrypted] == NO)
                 {
 #ifdef DEBUG
-                    NSLog(@"[MXCrypto] encryptEventContent with %@: %@", algorithm, eventContent);
+                    NSLog(@"[MXCrypto] encryptEventContent: content: %@", eventContent);
 #endif
 
                     MXHTTPOperation *operation2 = [alg encryptEventContent:eventContent eventType:eventType forUsers:userIds success:^(NSDictionary *encryptedContent) {
+
+                        NSLog(@"[MXCrypto] encryptEventContent: Success in %.0fms using sessionId: %@",
+                              [[NSDate date] timeIntervalSinceDate:startDate] * 1000,
+                              encryptedContent[@"session_id"]);
 
                         dispatch_async(dispatch_get_main_queue(), ^{
                             success(encryptedContent, kMXEventTypeStringRoomEncrypted);
                         });
 
                     } failure:^(NSError *error) {
+                        NSLog(@"[MXCrypto] encryptEventContent: Error: %@", error);
+
                         dispatch_async(dispatch_get_main_queue(), ^{
                             failure(error);
                         });
@@ -404,6 +416,8 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
                 }
                 else
                 {
+                    NSLog(@"[MXCrypto] encryptEventContent: Invalid algorithm");
+
                     NSError *error = [NSError errorWithDomain:MXDecryptingErrorDomain
                                                          code:MXDecryptingErrorUnableToEncryptCode
                                                      userInfo:@{
@@ -581,7 +595,8 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
         return;
     }
 
-    NSLog(@"[MXCrypto] handleDeviceListsChanges:\nchanges: %@\nleft: %@", deviceLists.changed, deviceLists.left);
+    NSLog(@"[MXCrypto] handleDeviceListsChanges (changes: %@, left: %@):\nchanges: %@\nleft: %@", @(deviceLists.changed.count), @(deviceLists.left.count),
+          deviceLists.changed, deviceLists.left);
 
     MXWeakify(self);
     dispatch_async(_cryptoQueue, ^{
@@ -615,7 +630,7 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
         return;
     }
 
-    NSLog(@"[MXCrypto] handleDeviceOneTimeKeysCount: %@", deviceOneTimeKeysCount);
+    NSLog(@"[MXCrypto] handleDeviceOneTimeKeysCount: %@ keys on the homeserver", deviceOneTimeKeysCount[@"signed_curve25519"]);
 
     MXWeakify(self);
     dispatch_async(_cryptoQueue, ^{
@@ -1574,7 +1589,7 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
         }
     }
 
-    NSLog(@"[MXCrypto] ensureOlmSessionsForDevices (users count: %tu - devices: %tu): %@", devicesByUser.count, count, devicesByUser);
+    NSLog(@"[MXCrypto] ensureOlmSessionsForDevices (users: %tu - devices: %tu): %@", devicesByUser.count, count, devicesByUser);
 
     if (devicesWithoutSession.count == 0)
     {
@@ -1600,12 +1615,12 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
     //
     // That should eventually resolve itself, but it's poor form.
 
-    NSLog(@"[MXCrypto] ensureOlmSessionsForDevices: claimOneTimeKeysForUsersDevices (users count: %tu - devices: %tu)",
+    NSLog(@"[MXCrypto] ensureOlmSessionsForDevices: claimOneTimeKeysForUsersDevices (users: %tu - devices: %tu)",
           usersDevicesToClaim.map.count, usersDevicesToClaim.count);
 
     return [_matrixRestClient claimOneTimeKeysForUsersDevices:usersDevicesToClaim success:^(MXKeysClaimResponse *keysClaimResponse) {
 
-        NSLog(@"[MXCrypto] keysClaimResponse.oneTimeKeys (users count: %tu - devices: %tu): %@",
+        NSLog(@"[MXCrypto] ensureOlmSessionsForDevices: claimOneTimeKeysForUsersDevices response (users: %tu - devices: %tu): %@",
               keysClaimResponse.oneTimeKeys.map.count, keysClaimResponse.oneTimeKeys.count, keysClaimResponse.oneTimeKeys);
 
         for (NSString *userId in devicesByUser)
@@ -1630,7 +1645,7 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
 
                     if (!oneTimeKey)
                     {
-                        NSLog(@"[MXCrypto] No one-time keys (alg=%@)for device %@:%@", oneTimeKeyAlgorithm, userId, deviceId);
+                        NSLog(@"[MXCrypto] ensureOlmSessionsForDevices: No one-time keys (alg=%@) for device %@:%@", oneTimeKeyAlgorithm, userId, deviceId);
                         continue;
                     }
 
@@ -1649,7 +1664,7 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
 
     } failure:^(NSError *error) {
 
-        NSLog(@"[MXCrypto] ensureOlmSessionsForUsers: claimOneTimeKeysForUsersDevices request failed.");
+        NSLog(@"[MXCrypto] ensureOlmSessionsForDevices: claimOneTimeKeysForUsersDevices request failed.");
 
         if (failure)
         {
@@ -1680,12 +1695,12 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
         else
         {
             // Possibly a bad key
-            NSLog(@"[MXCrypto]Error starting session with device %@:%@", userId, deviceId);
+            NSLog(@"[MXCrypto] Error starting session with device %@:%@", userId, deviceId);
         }
     }
     else
     {
-        NSLog(@"[MXCrypto] Unable to verify signature on one-time key for device %@:%@.", userId, deviceId);
+        NSLog(@"[MXCrypto] Unable to verify signature on one-time key for device %@:%@. Error: %@", userId, deviceId, error.localizedFailureReason);
     }
 
     return sessionId;
