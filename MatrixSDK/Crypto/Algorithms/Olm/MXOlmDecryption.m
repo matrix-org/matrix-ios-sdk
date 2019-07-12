@@ -281,7 +281,7 @@
 
         if (payload)
         {
-            NSLog(@"[MXOlmDecryption] decryptMessage: Decrypted Olm message from %@ with session %@", theirDeviceIdentityKey, sessionId);
+            NSLog(@"[MXOlmDecryption] decryptMessage: Decrypted Olm message from sender key %@ with session %@", theirDeviceIdentityKey, sessionId);
             return payload;
         }
         else
