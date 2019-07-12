@@ -152,7 +152,7 @@
         pendingEvents[k][timelineId] = [NSMutableDictionary dictionary];
     }
 
-    NSLog(@"[MXMegolmDecryption] addEventToPendingList: %@", event.JSONDictionary);
+    NSLog(@"[MXMegolmDecryption] addEventToPendingList: %@ in %@: %@", event.eventId, event.roomId, event.JSONDictionary);
     pendingEvents[k][timelineId][event.eventId] = event;
 
     [self requestKeysForEvent:event];

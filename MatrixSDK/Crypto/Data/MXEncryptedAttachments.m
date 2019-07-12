@@ -276,7 +276,7 @@ NSString *const MXEncryptedAttachmentsErrorDomain = @"MXEncryptedAttachmentsErro
     
     if (![computedSha256 isEqualToData:expectedSha256])
     {
-        NSLog(@"Hash mismatch when decrypting attachment! Expected: %@, got %@", fileInfo.hashes[@"sha256"], [computedSha256 base64EncodedStringWithOptions:0]);
+        NSLog(@"[MXEncryptedAttachments] decryptAttachment: Hash mismatch when decrypting attachment! Expected: %@, got %@", fileInfo.hashes[@"sha256"], [computedSha256 base64EncodedStringWithOptions:0]);
         return [NSError errorWithDomain:MXEncryptedAttachmentsErrorDomain code:0 userInfo:@{@"err": @"hash_mismatch"}];
     }
     return nil;
