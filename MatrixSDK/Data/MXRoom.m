@@ -616,9 +616,13 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
             roomOperation = [self preserveOperationOrder:event block:^{
                 MXStrongifyAndReturnIfNil(self);
 
+                NSLog(@"[MXRoom] sendEventOfType(MXCrypto): Encrypting event %@", event.eventId);
+
                 MXWeakify(self);
                 MXHTTPOperation *operation = [self->mxSession.crypto encryptEventContent:contentCopyToEncrypt withType:eventTypeString inRoom:self success:^(NSDictionary *encryptedContent, NSString *encryptedEventType) {
                     MXStrongifyAndReturnIfNil(self);
+
+                    NSLog(@"[MXRoom] sendEventOfType(MXCrypto): Encrypt event %@ -> DONE using sessionId: %@", event.eventId, encryptedContent[@"session_id"]);
 
                     NSDictionary *finalEncryptedContent;
                     
@@ -657,7 +661,13 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
                     }
 
                     // Send the encrypted content
-                    MXHTTPOperation *operation2 = [self _sendEventOfType:encryptedEventType content:finalEncryptedContent txnId:event.eventId success:onSuccess failure:onFailure];
+                    MXHTTPOperation *operation2 = [self _sendEventOfType:encryptedEventType content:finalEncryptedContent txnId:event.eventId success:^(NSString *eventId) {
+
+                        NSLog(@"[MXRoom] sendEventOfType(MXCrypto): Send event %@ -> DONE. Final event id: %@", event.eventId, eventId);
+                        onSuccess(eventId);
+
+                    } failure:onFailure];
+
                     if (operation2)
                     {
                         // Mutate MXHTTPOperation so that the user can cancel this new operation
@@ -666,7 +676,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
 
                 } failure:^(NSError *error) {
 
-                    NSLog(@"[MXRoom] sendEventOfType: Cannot encrypt event. Error: %@", error);
+                    NSLog(@"[MXRoom] sendEventOfType(MXCrypto): Cannot encrypt event %@. Error: %@", event.eventId, error);
 
                     onFailure(error);
                 }];
