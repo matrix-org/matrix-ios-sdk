@@ -38,6 +38,7 @@
 #import "MXEncryptedContentFile.h"
 #import "MXContentScanEncryptedBody.h"
 #import "MXAggregationPaginatedResponse.h"
+#import "MXPusher.h"
 
 #pragma mark - Constants definitions
 /**
@@ -594,6 +595,18 @@ FOUNDATION_EXPORT NSString *const kMXMembersOfRoomParametersNotMembership;
                                   append:(BOOL)append
                                  success:(void (^)(void))success
                                  failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
+
+
+/**
+ Gets all currently active pushers for the authenticated user.
+
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)pushers:(void (^)(NSArray<MXPusher *> *pushers))success
+                    failure:(void (^)(NSError *))failure;
 
 /**
  Get all push notifications rules.

@@ -1093,6 +1093,32 @@ MXAuthAction;
                                  }];
 }
 
+- (MXHTTPOperation*)pushers:(void (^)(NSArray<MXPusher *> *pushers))success
+                    failure:(void (^)(NSError *))failure
+{
+    MXWeakify(self);
+    return [httpClient requestWithMethod:@"GET"
+                                    path:[NSString stringWithFormat:@"%@/pushers", apiPathPrefix]
+                              parameters:nil
+                                 success:^(NSDictionary *JSONResponse) {
+                                     MXStrongifyAndReturnIfNil(self);
+
+                                     if (success)
+                                     {
+                                         __block NSArray<MXPusher *> *pushers;
+                                         [self dispatchProcessing:^{
+                                             MXJSONModelSetMXJSONModelArray(pushers, MXPusher, JSONResponse[@"pushers"]);
+                                         } andCompletion:^{
+                                             success(pushers);
+                                         }];
+                                     }
+                                 }
+                                 failure:^(NSError *error) {
+                                     MXStrongifyAndReturnIfNil(self);
+                                     [self dispatchFailure:error inBlock:failure];
+                                 }];
+}
+
 - (MXHTTPOperation *)pushRules:(void (^)(MXPushRulesResponse *pushRules))success failure:(void (^)(NSError *))failure
 {
     MXWeakify(self);
