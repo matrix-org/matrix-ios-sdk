@@ -232,6 +232,10 @@
 		329571931B0240CE00ABB3BA /* MXVoIPTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 329571921B0240CE00ABB3BA /* MXVoIPTests.m */; };
 		329571991B024D2B00ABB3BA /* MXMockCallStack.m in Sources */ = {isa = PBXBuildFile; fileRef = 329571961B024D2B00ABB3BA /* MXMockCallStack.m */; };
 		3295719A1B024D2B00ABB3BA /* MXMockCallStackCall.m in Sources */ = {isa = PBXBuildFile; fileRef = 329571981B024D2B00ABB3BA /* MXMockCallStackCall.m */; };
+		32999DDF22DCD183004FF987 /* MXPusher.h in Headers */ = {isa = PBXBuildFile; fileRef = 32999DDD22DCD183004FF987 /* MXPusher.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		32999DE022DCD183004FF987 /* MXPusher.m in Sources */ = {isa = PBXBuildFile; fileRef = 32999DDE22DCD183004FF987 /* MXPusher.m */; };
+		32999DE322DCD1AD004FF987 /* MXPusherData.h in Headers */ = {isa = PBXBuildFile; fileRef = 32999DE122DCD1AD004FF987 /* MXPusherData.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		32999DE422DCD1AD004FF987 /* MXPusherData.m in Sources */ = {isa = PBXBuildFile; fileRef = 32999DE222DCD1AD004FF987 /* MXPusherData.m */; };
 		329D3E621E251027002E2F1E /* MXRoomSummaryUpdater.h in Headers */ = {isa = PBXBuildFile; fileRef = 329D3E601E251027002E2F1E /* MXRoomSummaryUpdater.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		329D3E631E251027002E2F1E /* MXRoomSummaryUpdater.m in Sources */ = {isa = PBXBuildFile; fileRef = 329D3E611E251027002E2F1E /* MXRoomSummaryUpdater.m */; };
 		329E8089224E261600A48C3A /* MXDeviceVerificationTransaction.m in Sources */ = {isa = PBXBuildFile; fileRef = 329E8088224E261600A48C3A /* MXDeviceVerificationTransaction.m */; };
@@ -705,6 +709,10 @@
 		329571961B024D2B00ABB3BA /* MXMockCallStack.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXMockCallStack.m; sourceTree = "<group>"; };
 		329571971B024D2B00ABB3BA /* MXMockCallStackCall.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXMockCallStackCall.h; sourceTree = "<group>"; };
 		329571981B024D2B00ABB3BA /* MXMockCallStackCall.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXMockCallStackCall.m; sourceTree = "<group>"; };
+		32999DDD22DCD183004FF987 /* MXPusher.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MXPusher.h; sourceTree = "<group>"; };
+		32999DDE22DCD183004FF987 /* MXPusher.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MXPusher.m; sourceTree = "<group>"; };
+		32999DE122DCD1AD004FF987 /* MXPusherData.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MXPusherData.h; sourceTree = "<group>"; };
+		32999DE222DCD1AD004FF987 /* MXPusherData.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MXPusherData.m; sourceTree = "<group>"; };
 		329D3E601E251027002E2F1E /* MXRoomSummaryUpdater.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXRoomSummaryUpdater.h; sourceTree = "<group>"; };
 		329D3E611E251027002E2F1E /* MXRoomSummaryUpdater.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXRoomSummaryUpdater.m; sourceTree = "<group>"; };
 		329E8088224E261600A48C3A /* MXDeviceVerificationTransaction.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXDeviceVerificationTransaction.m; sourceTree = "<group>"; };
@@ -1442,6 +1450,7 @@
 				323547D12226D3F500F15F94 /* AutoDiscovery */,
 				3275FD9121A6B46600B9C13D /* Authentication */,
 				327E9AB9228451E500A98BC1 /* Event */,
+				32999DDC22DCD139004FF987 /* Push */,
 				3281E8B319E42DFE00976E1A /* MXJSONModel.h */,
 				3281E8B419E42DFE00976E1A /* MXJSONModel.m */,
 				3281E8B519E42DFE00976E1A /* MXJSONModels.h */,
@@ -1482,6 +1491,17 @@
 				329571981B024D2B00ABB3BA /* MXMockCallStackCall.m */,
 			);
 			path = Mocks;
+			sourceTree = "<group>";
+		};
+		32999DDC22DCD139004FF987 /* Push */ = {
+			isa = PBXGroup;
+			children = (
+				32999DDD22DCD183004FF987 /* MXPusher.h */,
+				32999DDE22DCD183004FF987 /* MXPusher.m */,
+				32999DE122DCD1AD004FF987 /* MXPusherData.h */,
+				32999DE222DCD1AD004FF987 /* MXPusherData.m */,
+			);
+			path = Push;
 			sourceTree = "<group>";
 		};
 		32A151231DABB0A100400192 /* Megolm */ = {
@@ -2086,6 +2106,7 @@
 				B10AFB4722AA8A8E0092E6AF /* MXEventEditsListener.h in Headers */,
 				32F634AB1FC5E3480054EF49 /* MXEventDecryptionResult.h in Headers */,
 				322A51C71D9BBD3C00C8536D /* MXOlmDevice.h in Headers */,
+				32999DE322DCD1AD004FF987 /* MXPusherData.h in Headers */,
 				32442FB121EDD21300D2411B /* MXKeyBackupPassword.h in Headers */,
 				320DFDE419DD99B60068622A /* MXRestClient.h in Headers */,
 				3252DCAE224BE5D40032264F /* MXDeviceVerificationManager.h in Headers */,
@@ -2144,6 +2165,7 @@
 				320DFDE219DD99B60068622A /* MXError.h in Headers */,
 				B11BD45922CB58850064D8B0 /* MXReplyEventFormattedBodyParts.h in Headers */,
 				32BBAE702178E99100D85F46 /* MXKeyBackupData.h in Headers */,
+				32999DDF22DCD183004FF987 /* MXPusher.h in Headers */,
 				327E37B61A974F75007F026F /* MXLogger.h in Headers */,
 				320A883C217F4E35002EA952 /* MXMegolmBackupCreationInfo.h in Headers */,
 				3256E3811DCB91EB003C9718 /* MXCryptoConstants.h in Headers */,
@@ -2312,6 +2334,7 @@
 				32B76EA520FDE85100B095F6 /* MXRoomMembersCount.m in Sources */,
 				B146D47121A5939100D8C2C6 /* MXRealmHelper.m in Sources */,
 				327E9AD82284803100A98BC1 /* MXEventAnnotation.m in Sources */,
+				32999DE022DCD183004FF987 /* MXPusher.m in Sources */,
 				F03EF4FF1DF014D9009DF592 /* MXMediaLoader.m in Sources */,
 				320A8841217F4E3F002EA952 /* MXMegolmBackupAuthData.m in Sources */,
 				327E9AF72289D53800A98BC1 /* MXReactionCount.m in Sources */,
@@ -2476,6 +2499,7 @@
 				32A9E8261EF4026E0081358A /* MXUIKitBackgroundModeHandler.m in Sources */,
 				3252DCC6224D1A4D0032264F /* MXKeyVerificationKey.m in Sources */,
 				B146D4F721A5BB9F00D8C2C6 /* MXRealmMediaScanStore.m in Sources */,
+				32999DE422DCD1AD004FF987 /* MXPusherData.m in Sources */,
 				322A51C81D9BBD3C00C8536D /* MXOlmDevice.m in Sources */,
 				32442FB221EDD21300D2411B /* MXKeyBackupPassword.m in Sources */,
 				329FB17A1A0A74B100A5E88E /* MXTools.m in Sources */,
