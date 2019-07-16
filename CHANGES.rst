@@ -15,6 +15,7 @@ Improvements:
  * Storage: Isolate our realm DBs to avoid migration due to change in another realm.
  * MXRoom: sendFile: Use the original file name by default.
  * Push: MXRestClient: Add a method to get all pushers.
+ * MXRoomSummary: Send an update when the event id of a local echo changes.
 
 Bug Fix:
  * MXMediaLoader: Disable trusting the built-in anchors certificates when the certificate pinning is enabled.

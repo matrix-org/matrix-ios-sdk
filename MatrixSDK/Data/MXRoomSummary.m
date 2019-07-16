@@ -2,6 +2,7 @@
  Copyright 2017 OpenMarket Ltd
  Copyright 2017 Vector Creations Ltd
  Copyright 2018 New Vector Ltd
+ Copyright 2019 The Matrix.org Foundation C.I.C
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -81,6 +82,7 @@ NSString *const kMXRoomSummaryDidChangeNotification = @"kMXRoomSummaryDidChangeN
     NSLog(@"[MXKRoomSummary] Destroy %p - room id: %@", self, _roomId);
 
     [[NSNotificationCenter defaultCenter] removeObserver:self name:kMXEventDidChangeSentStateNotification object:nil];
+    [[NSNotificationCenter defaultCenter] removeObserver:self name:kMXEventDidChangeIdentifierNotification object:nil];
     [[NSNotificationCenter defaultCenter] removeObserver:self name:kMXRoomDidFlushDataNotification object:nil];
 }
 
@@ -95,6 +97,11 @@ NSString *const kMXRoomSummaryDidChangeNotification = @"kMXRoomSummaryDidChangeN
         // This is used to follow evolution of local echo events
         // (ex: when a sentState change from sending to sentFailed)
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(eventDidChangeSentState:) name:kMXEventDidChangeSentStateNotification object:nil];
+
+        // Listen to the event id change
+        // This is used to follow evolution of local echo events
+        // when they changed their local event id to the final event id
+        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(eventDidChangeIdentifier:) name:kMXEventDidChangeIdentifierNotification object:nil];
 
         // Listen to data being flush in a room
         // This is used to update the room summary in case of a state event redaction
@@ -372,6 +379,17 @@ NSString *const kMXRoomSummaryDidChangeNotification = @"kMXRoomSummaryDidChangeN
     // Do nothing when its sentState becomes sent. In this case, the last message will be
     // updated by the true event coming back from the homeserver.
     if (event.sentState != MXEventSentStateSent && [event.eventId isEqualToString:_lastMessageEventId])
+    {
+        [self handleEvent:event];
+    }
+}
+
+- (void)eventDidChangeIdentifier:(NSNotification *)notif
+{
+    MXEvent *event = notif.object;
+    NSString *previousId = notif.userInfo[kMXEventIdentifierKey];
+
+    if ([_lastMessageEventId isEqualToString:previousId])
     {
         [self handleEvent:event];
     }
