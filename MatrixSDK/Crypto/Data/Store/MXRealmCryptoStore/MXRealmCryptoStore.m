@@ -325,7 +325,7 @@ RLM_ARRAY_TYPE(MXRealmOlmInboundGroupSession)
             }
         }
 
-        NSLog(@"Schema version: %tu", account.realm.configuration.schemaVersion);
+        NSLog(@"[MXRealmCryptoStore] Schema version: %tu", account.realm.configuration.schemaVersion);
     }
     return self;
 }
@@ -1103,6 +1103,18 @@ RLM_ARRAY_TYPE(MXRealmOlmInboundGroupSession)
         config.fileURL = defaultRealmFileURL;
     }
 
+    // Manage only our objects in this realm 
+    config.objectClasses = @[
+                             MXRealmDeviceInfo.class,
+                             MXRealmUser.class,
+                             MXRealmRoomAlgorithm.class,
+                             MXRealmOlmSession.class,
+                             MXRealmOlmInboundGroupSession.class,
+                             MXRealmOlmAccount.class,
+                             MXRealmOutgoingRoomKeyRequest.class,
+                             MXRealmIncomingRoomKeyRequest.class
+                             ];
+
     config.schemaVersion = kMXRealmCryptoStoreVersion;
 
     __block BOOL cleanDuplicatedDevices = NO;
@@ -1131,7 +1143,7 @@ RLM_ARRAY_TYPE(MXRealmOlmInboundGroupSession)
 
                     // We need to update the db because a sessionId property has been added MXRealmOlmSession
                     // to ensure uniqueness
-                    NSLog(@"    Add sessionId field to all MXRealmOlmSession objects");
+                    NSLog(@"[MXRealmCryptoStore]    Add sessionId field to all MXRealmOlmSession objects");
                     [migration enumerateObjects:MXRealmOlmSession.className block:^(RLMObject *oldObject, RLMObject *newObject) {
 
                         OLMSession *olmSession =  [NSKeyedUnarchiver unarchiveObjectWithData:oldObject[@"olmSessionData"]];
@@ -1140,7 +1152,7 @@ RLM_ARRAY_TYPE(MXRealmOlmInboundGroupSession)
                     }];
 
                     // We need to clean the db from duplicated MXRealmOlmSessions
-                    NSLog(@"    Make MXRealmOlmSession objects unique for the (sessionId, deviceKey) pair");
+                    NSLog(@"[MXRealmCryptoStore]    Make MXRealmOlmSession objects unique for the (sessionId, deviceKey) pair");
                     __block NSUInteger deleteCount = 0;
                     NSMutableArray<NSString*> *olmSessionUniquePairs = [NSMutableArray array];
                     [migration enumerateObjects:MXRealmOlmSession.className block:^(RLMObject *oldObject, RLMObject *newObject) {
@@ -1153,16 +1165,16 @@ RLM_ARRAY_TYPE(MXRealmOlmInboundGroupSession)
                         }
                         else
                         {
-                            NSLog(@"        - delete MXRealmOlmSession: %@", olmSessionUniquePair);
+                            NSLog(@"[MXRealmCryptoStore]        - delete MXRealmOlmSession: %@", olmSessionUniquePair);
                             [migration deleteObject:newObject];
                             deleteCount++;
                         }
                     }];
 
-                    NSLog(@"    -> deleted %tu duplicated MXRealmOlmSession objects", deleteCount);
+                    NSLog(@"[MXRealmCryptoStore]    -> deleted %tu duplicated MXRealmOlmSession objects", deleteCount);
 
                     // And from duplicated MXRealmOlmInboundGroupSessions
-                    NSLog(@"    Make MXRealmOlmInboundGroupSession objects unique for the (sessionId, senderKey) pair");
+                    NSLog(@"[MXRealmCryptoStore]    Make MXRealmOlmInboundGroupSession objects unique for the (sessionId, senderKey) pair");
                     deleteCount = 0;
                     NSMutableArray<NSString*> *olmInboundGroupSessionUniquePairs = [NSMutableArray array];
                     [migration enumerateObjects:MXRealmOlmInboundGroupSession.className block:^(RLMObject *oldObject, RLMObject *newObject) {
@@ -1175,13 +1187,13 @@ RLM_ARRAY_TYPE(MXRealmOlmInboundGroupSession)
                         }
                         else
                         {
-                            NSLog(@"        - delete MXRealmOlmInboundGroupSession: %@", olmInboundGroupSessionUniquePair);
+                            NSLog(@"[MXRealmCryptoStore]        - delete MXRealmOlmInboundGroupSession: %@", olmInboundGroupSessionUniquePair);
                             [migration deleteObject:newObject];
                             deleteCount++;
                         }
                     }];
 
-                    NSLog(@"    -> deleted %tu duplicated MXRealmOlmInboundGroupSession objects", deleteCount);
+                    NSLog(@"[MXRealmCryptoStore]    -> deleted %tu duplicated MXRealmOlmInboundGroupSession objects", deleteCount);
 
                     NSLog(@"[MXRealmCryptoStore] Migration from schema #1 -> #2 completed");
                 }
@@ -1204,7 +1216,7 @@ RLM_ARRAY_TYPE(MXRealmOlmInboundGroupSession)
 
                     // We need to update the db because a sessionId property has been added to MXRealmOlmInboundGroupSession
                     // to ensure uniqueness
-                    NSLog(@"    Add sessionIdSenderKey, a combined primary key, to all MXRealmOlmInboundGroupSession objects");
+                    NSLog(@"[MXRealmCryptoStore]    Add sessionIdSenderKey, a combined primary key, to all MXRealmOlmInboundGroupSession objects");
                     [migration enumerateObjects:MXRealmOlmInboundGroupSession.className block:^(RLMObject *oldObject, RLMObject *newObject) {
 
                         newObject[@"sessionIdSenderKey"] = [MXRealmOlmInboundGroupSession primaryKeyWithSessionId:oldObject[@"sessionId"]
@@ -1212,7 +1224,7 @@ RLM_ARRAY_TYPE(MXRealmOlmInboundGroupSession)
                     }];
 
                     // We need to update the db because a identityKey property has been added to MXRealmDeviceInfo
-                    NSLog(@"    Add identityKey to all MXRealmDeviceInfo objects");
+                    NSLog(@"[MXRealmCryptoStore]    Add identityKey to all MXRealmDeviceInfo objects");
                     [migration enumerateObjects:MXRealmDeviceInfo.className block:^(RLMObject *oldObject, RLMObject *newObject) {
 
                         MXDeviceInfo *device = [NSKeyedUnarchiver unarchiveObjectWithData:oldObject[@"deviceInfoData"]];
@@ -1244,7 +1256,7 @@ RLM_ARRAY_TYPE(MXRealmOlmInboundGroupSession)
 
                     NSLog(@"[MXRealmCryptoStore] Migration from schema #8 -> #9");
 
-                    NSLog(@"    Add lastReceivedMessageTs = 0 to all MXRealmOlmSession objects");
+                    NSLog(@"[MXRealmCryptoStore]    Add lastReceivedMessageTs = 0 to all MXRealmOlmSession objects");
                     [migration enumerateObjects:MXRealmOlmSession.className block:^(RLMObject *oldObject, RLMObject *newObject) {
 
                         newObject[@"lastReceivedMessageTs"] = @(0);
@@ -1257,7 +1269,7 @@ RLM_ARRAY_TYPE(MXRealmOlmInboundGroupSession)
                 {
                     NSLog(@"[MXRealmCryptoStore] Migration from schema #9 -> #10");
 
-                    NSLog(@"    Add requestBodyHash to all MXRealmOutgoingRoomKeyRequest objects");
+                    NSLog(@"[MXRealmCryptoStore]    Add requestBodyHash to all MXRealmOutgoingRoomKeyRequest objects");
                     [migration enumerateObjects:MXRealmOutgoingRoomKeyRequest.className block:^(RLMObject *oldObject, RLMObject *newObject) {
 
                         NSDictionary *requestBody = [MXTools deserialiseJSONString:oldObject[@"requestBodyString"]];

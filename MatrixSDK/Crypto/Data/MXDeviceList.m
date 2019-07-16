@@ -119,13 +119,17 @@
             [usersToDownload addObject:userId];
             doANewQuery = YES;
         }
+        else
+        {
+            NSLog(@"[MXDeviceList] downloadKeys: Skip user %@. trackingStatus: %@", userId, @(trackingStatus));
+        }
     }
 
     __block MXDeviceListOperation *operation;
 
     if (usersToDownload.count)
     {
-        NSLog(@"[MXDeviceList] downloadKeys: %@", userIds);
+        NSLog(@"[MXDeviceList] downloadKeys for actually %tu users: %@", usersToDownload.count, usersToDownload);
 
         for (NSString *userId in usersToDownload)
         {
@@ -207,6 +211,7 @@
     }
     else
     {
+        NSLog(@"[MXDeviceList] downloadKeys: already have all necessary keys");
         if (success)
         {
             success([self devicesForUsers:userIds]);
@@ -311,7 +316,7 @@
     if (users.count)
     {
         [self downloadKeys:users forceDownload:NO success:^(MXUsersDevicesMap<MXDeviceInfo *> *usersDevicesInfoMap) {
-            NSLog(@"[MXDeviceList] refreshOutdatedDeviceLists: %@", usersDevicesInfoMap.userIds);
+            NSLog(@"[MXDeviceList] refreshOutdatedDeviceLists (users: %tu): %@", usersDevicesInfoMap.userIds.count, usersDevicesInfoMap.userIds);
         } failure:^(NSError *error) {
             NSLog(@"[MXDeviceList] refreshOutdatedDeviceLists: ERROR updating device keys for users %@", users);
         }];
@@ -379,7 +384,7 @@
 
 - (void)startCurrentPoolQuery
 {
-    NSLog(@"[MXDeviceList] startCurrentPoolQuery: %@: %@", currentQueryPool, currentQueryPool.userIds);
+    NSLog(@"[MXDeviceList] startCurrentPoolQuery (users: %tu): %@", currentQueryPool.userIds.count, currentQueryPool.userIds);
 
     if (currentQueryPool.userIds)
     {
@@ -390,7 +395,7 @@
         [currentQueryPool downloadKeys:token complete:^(NSDictionary<NSString *,NSDictionary *> *failedUserIds) {
             MXStrongifyAndReturnIfNil(self);
 
-            NSLog(@"[MXDeviceList] startCurrentPoolQuery -> DONE. failedUserIds: %@", failedUserIds);
+            NSLog(@"[MXDeviceList] startCurrentPoolQuery -> DONE. failedUserIds (users: %tu): %@", failedUserIds.count, failedUserIds);
 
             if (token)
             {

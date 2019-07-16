@@ -1,6 +1,7 @@
 /*
  Copyright 2017 OpenMarket Ltd
  Copyright 2017 Vector Creations Ltd
+ Copyright 2019 The Matrix.org Foundation C.I.C
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -637,7 +638,20 @@ NSString *uisiString = @"The sender's device has not sent us the keys for this m
 
                 case 1:
                 {
-                    // 2nd notif must be the event sent back by the hs
+                    // 2nd notif must be an intermediate state where the event id
+                    // changes from a local event id to the final event id
+                    XCTAssert(event);
+                    XCTAssertFalse(event.isLocalEvent);
+                    XCTAssertEqual(event.sentState, MXEventSentStateSending);
+
+                    [expectation fulfill];
+
+                    break;
+                }
+
+                case 2:
+                {
+                    // 3rd notif must be the event sent back by the hs
                     XCTAssert(event);
                     XCTAssertFalse(event.isLocalEvent);
                     XCTAssertEqual(event.sentState, MXEventSentStateSent);
@@ -778,10 +792,11 @@ NSString *uisiString = @"The sender's device has not sent us the keys for this m
             switch (notifCount++)
             {
                 case 0:
+                case 1:
                     // Do not care about the local echo update for MXEventSentStateSending
                     break;
 
-                case 1:
+                case 2:
                 {
                     XCTAssertEqualObjects(summary.lastMessageEventId, newEventId);
 
@@ -794,7 +809,7 @@ NSString *uisiString = @"The sender's device has not sent us the keys for this m
                     break;
                 }
 
-                case 2:
+                case 4:
                 {
                     XCTAssertEqualObjects(summary.lastMessageEventId, lastMessageEventId, @"We must come back to the previous event");
 

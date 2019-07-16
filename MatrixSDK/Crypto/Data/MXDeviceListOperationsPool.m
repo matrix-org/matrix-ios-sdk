@@ -81,14 +81,14 @@
 
 - (void)doKeyDownloadForUsers:(NSArray<NSString *> *)users token:(NSString *)token complete:(void (^)(NSDictionary<NSString *, NSDictionary *> *failedUserIds))complete
 {
-    NSLog(@"[MXDeviceListOperationsPool] doKeyDownloadForUsers: %@", users);
+    NSLog(@"[MXDeviceListOperationsPool] doKeyDownloadForUsers %@ users: %@", @(users.count), users);
 
     // Download
     MXWeakify(self);
     _httpOperation = [crypto.matrixRestClient downloadKeysForUsers:users token:token success:^(MXKeysQueryResponse *keysQueryResponse) {
         MXStrongifyAndReturnIfNil(self);
 
-        NSLog(@"[MXDeviceListOperationsPool] doKeyDownloadForUsers -> DONE");
+        NSLog(@"[MXDeviceListOperationsPool] doKeyDownloadForUsers -> DONE. Got keys for %@ users and %@ devices", @(keysQueryResponse.deviceKeys.map.count), @(keysQueryResponse.deviceKeys.count));
 
         self->_httpOperation = nil;
 
@@ -96,7 +96,7 @@
         {
             NSDictionary<NSString*, MXDeviceInfo*> *devices = keysQueryResponse.deviceKeys.map[userId];
 
-            NSLog(@"[MXDeviceListOperationsPool] Got keys for %@: %@", userId, devices);
+            NSLog(@"[MXDeviceListOperationsPool] doKeyDownloadForUsers: Got keys for %@: %@ devices: %@", userId, @(devices.count), devices);
 
             if (devices)
             {

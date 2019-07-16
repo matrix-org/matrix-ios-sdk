@@ -116,6 +116,11 @@ FOUNDATION_EXPORT NSString * const kMXTestsAliceAvatarURL;
                                      andStore:(id<MXStore>)bobStore
                                   readyToTest:(void (^)(MXSession *bobSession,  MXRestClient *aliceRestClient, NSString* roomId, XCTestExpectation *expectation))readyToTest;
 
+- (void)doTestWithAliceAndBobInARoom:(XCTestCase*)testCase
+                             aliceStore:(id<MXStore>)aliceStore
+                               bobStore:(id<MXStore>)bobStore
+                         readyToTest:(void (^)(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation))readyToTest;
+
 
 #pragma mark - random user
 - (void)doMXSessionTestWithAUser:(XCTestCase*)testCase

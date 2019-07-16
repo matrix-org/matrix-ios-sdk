@@ -1,6 +1,7 @@
 /*
  Copyright 2014 OpenMarket Ltd
  Copyright 2017 Vector Creations Ltd
+ Copyright 2019 The Matrix.org Foundation C.I.C
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -33,6 +34,12 @@ FOUNDATION_EXPORT NSString* const kMXHTTPClientUserConsentNotGivenErrorNotificat
  Consent URI userInfo key for notification kMXHTTPClientUserConsentNotGivenErrorNotification
  */
 FOUNDATION_EXPORT NSString* const kMXHTTPClientUserConsentNotGivenErrorNotificationConsentURIKey;
+/**
+ Posted when a Matrix error is observed.
+ The `userInfo` dictionary contains an `MXError` object under the `kMXHTTPClientMatrixErrorNotificationErrorKey` key
+ */
+FOUNDATION_EXPORT NSString* const kMXHTTPClientMatrixErrorNotification;
+FOUNDATION_EXPORT NSString* const kMXHTTPClientMatrixErrorNotificationErrorKey;
 
 /**
  Block called when an authentication challenge from a server failed whereas a certificate is present in certificate chain.
@@ -41,6 +48,24 @@ FOUNDATION_EXPORT NSString* const kMXHTTPClientUserConsentNotGivenErrorNotificat
  @return YES to accept/trust this certificate, NO to cancel/ignore it.
  */
 typedef BOOL (^MXHTTPClientOnUnrecognizedCertificate)(NSData *certificate);
+
+/**
+ SSL Pinning mode
+ */
+typedef NS_ENUM(NSUInteger, MXHTTPClientSSLPinningMode) {
+    /**
+     Do not used pinned certificates to validate servers.
+     */
+    MXHTTPClientSSLPinningModeNone,
+    /**
+     Validate host certificates against public keys of pinned certificates.
+     */
+    MXHTTPClientSSLPinningModePublicKey,
+    /**
+     Validate host certificates against pinned certificates.
+     */
+    MXHTTPClientSSLPinningModeCertificate,
+};
 
 /**
  `MXHTTPClient` is an abstraction layer for making requests to a HTTP server.
@@ -165,8 +190,18 @@ typedef BOOL (^MXHTTPClientOnUnrecognizedCertificate)(NSData *certificate);
 + (NSUInteger)timeForRetry:(MXHTTPOperation*)httpOperation;
 
 /**
- The certificates used to evaluate server trust according to the SSL pinning mode.
+ The certificates used to evaluate server trust.
+ The default SSL pinning mode is MXHTTPClientSSLPinningModeCertificate when the provided set is not empty.
+ Set an empty set or null to restore the default security policy.
  */
-@property (nonatomic, strong) NSSet <NSData *> *pinnedCertificates;
+@property (nonatomic, strong) NSSet<NSData *> *pinnedCertificates;
+
+/**
+ Set the certificates used to evaluate server trust and the SSL pinning mode.
+ 
+ @param pinnedCertificates The certificates to pin against.
+ @param pinningMode The SSL pinning mode.
+ */
+- (void)setPinnedCertificates:(NSSet<NSData *> *)pinnedCertificates withPinningMode:(MXHTTPClientSSLPinningMode)pinningMode;
 
 @end

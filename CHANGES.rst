@@ -1,3 +1,32 @@
+Changes in Matrix iOS SDK in 0.13.0 (2019-07-16)
+===============================================
+
+Improvements:
+ * MXHTTPClient: support multiple SSL pinning modes (none/public key/certificate)
+ * MXHTTPClient: Enable the certificate pinning mode by default as soon as some certificates are present in the application bundle.
+ * MXHTTPClient: Add a new notification name `kMXHTTPClientMatrixErrorNotification` posted on each Matrix error.
+ * Join Room: Support via parameters to better handle federation (vector-im/riot-ios/issues/2547).
+ * MXEvent: Create a MXEventUnsignedData model for `MXEvent.unsignedData`.
+ * MXEvent: Add relatesTo property.
+ * Aggregations: Create MXSession.MXAggregations to manage Matrix aggregations API.
+ * Add the Matrix errors related to the password policy.
+ * SwiftMatrixSDK: Migrate to Swift 5.0.
+ * VoIP: Stop falling back to Google for STUN (vector-im/riot-ios/issues/2532).
+ * Storage: Isolate our realm DBs to avoid migration due to change in another realm.
+ * MXRoom: sendFile: Use the original file name by default.
+ * Push: MXRestClient: Add a method to get all pushers.
+ * MXRoomSummary: Send an update when the event id of a local echo changes.
+ * MXRoomSummary: Manage edits (vector-im/riot-ios/issues/2583).
+
+Bug Fix:
+ * MXMediaLoader: Disable trusting the built-in anchors certificates when the certificate pinning is enabled.
+ * Crypto: Device Verification: Name for 🔒 is "Lock" (vector-im/riot-ios/issues/2526).
+
+API break:
+ * MXEvent: unsignedData is now of type MXEventUnsignedData.
+ * MXRestClient: Remove the joinRoom method with least parameters.
+ * MXSession, MXRestClient: Add viaServers parameters to all joinRoom methods.
+
 Changes in Matrix iOS SDK in 0.12.5 (2019-05-03)
 ===============================================
 

@@ -42,6 +42,13 @@ NSString *const kMXErrCodeStringGuestAccessForbidden    = @"M_GUEST_ACCESS_FORBI
 NSString *const kMXErrCodeStringConsentNotGiven         = @"M_CONSENT_NOT_GIVEN";
 NSString *const kMXErrCodeStringResourceLimitExceeded   = @"M_RESOURCE_LIMIT_EXCEEDED";
 NSString *const kMXErrCodeStringBackupWrongKeysVersion  = @"M_WRONG_ROOM_KEYS_VERSION";
+NSString *const kMXErrCodeStringPasswordTooShort        = @"M_PASSWORD_TOO_SHORT";
+NSString *const kMXErrCodeStringPasswordNoDigit         = @"M_PASSWORD_NO_DIGIT";
+NSString *const kMXErrCodeStringPasswordNoUppercase     = @"M_PASSWORD_NO_UPPERCASE";
+NSString *const kMXErrCodeStringPasswordNoLowercase     = @"M_PASSWORD_NO_LOWERCASE";
+NSString *const kMXErrCodeStringPasswordNoSymbol        = @"M_PASSWORD_NO_SYMBOL";
+NSString *const kMXErrCodeStringPasswordInDictionary    = @"M_PASSWORD_IN_DICTIONARY";
+NSString *const kMXErrCodeStringWeakPassword            = @"M_WEAK_PASSWORD";
 
 NSString *const kMXErrorStringInvalidToken      = @"Invalid token";
 

@@ -128,10 +128,14 @@ NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
                                 withUsername:callManager.turnServers.username
                                     password:callManager.turnServers.password];
         }
-        else
+        else if (callManager.fallbackSTUNServer)
         {
             NSLog(@"[MXCall] No TURN server: using fallback STUN server: %@", callManager.fallbackSTUNServer);
             [callStackCall addTURNServerUris:@[callManager.fallbackSTUNServer] withUsername:nil password:nil];
+        }
+        else
+        {
+            NSLog(@"[MXCall] No TURN server and no fallback TURN server");
         }
     }
     return self;

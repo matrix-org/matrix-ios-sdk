@@ -808,7 +808,7 @@
 
             // Make Alice send text message while Bob is not in the room.
             // Then, invite him.
-            [aliceRestClient joinRoom:roomId success:^(NSString *roomName){
+            [aliceRestClient joinRoom:roomId viaServers:nil withThirdPartySigned:nil success:^(NSString *roomName){
 
                 // Make Bob the room
                 [room leave:^{

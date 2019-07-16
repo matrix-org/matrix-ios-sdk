@@ -140,7 +140,7 @@
 
                 [[NSNotificationCenter defaultCenter] removeObserver:observer];
 
-                [bobSession joinRoom:note.userInfo[kMXSessionNotificationRoomIdKey] success:^(MXRoom *room) {
+                [bobSession joinRoom:note.userInfo[kMXSessionNotificationRoomIdKey] viaServers:nil success:^(MXRoom *room) {
 
                     readyToTest(aliceSession, bobSession, room.roomId, expectation);
 
@@ -271,7 +271,7 @@
 
                 [[NSNotificationCenter defaultCenter] removeObserver:observer];
 
-                [samSession joinRoom:note.userInfo[kMXSessionNotificationRoomIdKey] success:^(MXRoom *room) {
+                [samSession joinRoom:note.userInfo[kMXSessionNotificationRoomIdKey] viaServers:nil success:^(MXRoom *room) {
 
                     readyToTest(aliceSession, bobSession, samSession, room.roomId, expectation);
 

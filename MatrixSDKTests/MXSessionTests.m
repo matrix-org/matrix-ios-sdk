@@ -865,7 +865,7 @@
                     [expectation fulfill];
                 }];
 
-                [mxSession joinRoom:roomId success:nil failure:^(NSError *error) {
+                [mxSession joinRoom:roomId viaServers:nil success:nil failure:^(NSError *error) {
                     XCTFail(@"The request should not fail - NSError: %@", error);
                     [expectation fulfill];
                 }];
@@ -904,7 +904,7 @@
                     [expectation fulfill];
                 }];
 
-                [mxSession joinRoom:roomId success:nil failure:^(NSError *error) {
+                [mxSession joinRoom:roomId viaServers:nil success:nil failure:^(NSError *error) {
                     XCTFail(@"The request should not fail - NSError: %@", error);
                     [expectation fulfill];
                 }];

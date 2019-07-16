@@ -591,7 +591,7 @@ NSString * const kMXTestsAliceAvatarURL = @"mxc://matrix.org/kciiXusgZFKuNLIfLqm
             
             [bobRestClient inviteUser:self.aliceCredentials.userId toRoom:roomId success:^{
                 
-                [aliceRestClient joinRoom:roomId success:^(NSString *theRoomId) {
+                [aliceRestClient joinRoom:roomId viaServers:nil withThirdPartySigned:nil success:^(NSString *theRoomId) {
                     
                     readyToTest(bobRestClient, aliceRestClient, roomId, expectation);
                     
@@ -638,7 +638,7 @@ NSString * const kMXTestsAliceAvatarURL = @"mxc://matrix.org/kciiXusgZFKuNLIfLqm
 
             [bobRestClient inviteUser:self.aliceCredentials.userId toRoom:roomId success:^{
 
-                [aliceRestClient joinRoom:roomId success:^(NSString *theRoomId) {
+                [aliceRestClient joinRoom:roomId viaServers:nil withThirdPartySigned:nil success:^(NSString *theRoomId) {
 
                     readyToTest(bobSession, aliceRestClient, roomId, expectation);
 
@@ -649,6 +649,31 @@ NSString * const kMXTestsAliceAvatarURL = @"mxc://matrix.org/kciiXusgZFKuNLIfLqm
             } failure:^(NSError *error) {
                 NSAssert(NO, @"Cannot invite mxAlice");
             }];
+        }];
+    }];
+}
+
+- (void)doTestWithAliceAndBobInARoom:(XCTestCase*)testCase
+                          aliceStore:(id<MXStore>)aliceStore
+                            bobStore:(id<MXStore>)bobStore
+                         readyToTest:(void (^)(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation))readyToTest
+{
+    [self doMXSessionTestWithBobAndAliceInARoom:testCase andStore:bobStore readyToTest:^(MXSession *bobSession, MXRestClient *aliceRestClient, NSString *roomId, XCTestExpectation *expectation) {
+
+        MXSession *aliceSession = [[MXSession alloc] initWithMatrixRestClient:aliceRestClient];
+        [self retain:aliceSession];
+
+        [aliceSession setStore:aliceStore success:^{
+
+            [aliceSession start:^{
+
+                readyToTest(aliceSession, bobSession, roomId, expectation);
+
+            } failure:^(NSError *error) {
+                NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+            }];
+        } failure:^(NSError *error) {
+            NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
         }];
     }];
 }

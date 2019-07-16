@@ -2,6 +2,7 @@
  Copyright 2014 OpenMarket Ltd
  Copyright 2017 Vector Creations Ltd
  Copyright 2018 New Vector Ltd
+ Copyright 2019 The Matrix.org Foundation C.I.C
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -42,9 +43,11 @@
 
 #import "MXScanManager.h"
 
+#import "MXAggregations_Private.h"
+
 #pragma mark - Constants definitions
 
-const NSString *MatrixSDKVersion = @"0.12.5";
+const NSString *MatrixSDKVersion = @"0.13.0";
 NSString *const kMXSessionStateDidChangeNotification = @"kMXSessionStateDidChangeNotification";
 NSString *const kMXSessionNewRoomNotification = @"kMXSessionNewRoomNotification";
 NSString *const kMXSessionWillLeaveRoomNotification = @"kMXSessionWillLeaveRoomNotification";
@@ -223,6 +226,7 @@ typedef void (^MXOnResumeDone)(void);
                                       kMXEventTypeStringRoomRedaction,
                                       kMXEventTypeStringRoomThirdPartyInvite,
                                       kMXEventTypeStringRoomRelatedGroups,
+                                      kMXEventTypeStringReaction,
                                       kMXEventTypeStringCallInvite,
                                       kMXEventTypeStringCallCandidates,
                                       kMXEventTypeStringCallAnswer,
@@ -292,6 +296,8 @@ typedef void (^MXOnResumeDone)(void);
         {
             return;
         }
+
+        self->_aggregations = [[MXAggregations alloc] initWithMatrixSession:self];
 
         // Check if the user has enabled crypto
         MXWeakify(self);
@@ -1829,10 +1835,11 @@ typedef void (^MXOnResumeDone)(void);
 }
 
 - (MXHTTPOperation*)joinRoom:(NSString*)roomIdOrAlias
+                  viaServers:(NSArray<NSString*>*)viaServers
                      success:(void (^)(MXRoom *room))success
                      failure:(void (^)(NSError *error))failure
 {
-    return [matrixRestClient joinRoom:roomIdOrAlias success:^(NSString *theRoomId) {
+    return [matrixRestClient joinRoom:roomIdOrAlias viaServers:viaServers withThirdPartySigned:nil success:^(NSString *theRoomId) {
 
         [self onJoinedRoom:theRoomId success:success];
 
@@ -1840,6 +1847,7 @@ typedef void (^MXOnResumeDone)(void);
 }
 
 - (MXHTTPOperation*)joinRoom:(NSString*)roomIdOrAlias
+                  viaServers:(NSArray<NSString*>*)viaServers
                  withSignUrl:(NSString*)signUrl
                      success:(void (^)(MXRoom *room))success
                      failure:(void (^)(NSError *error))failure
@@ -1850,7 +1858,7 @@ typedef void (^MXOnResumeDone)(void);
     httpOperation = [matrixRestClient signUrl:signUrl success:^(NSDictionary *thirdPartySigned) {
         MXStrongifyAndReturnIfNil(self);
 
-        MXHTTPOperation *httpOperation2 = [self->matrixRestClient joinRoom:roomIdOrAlias withThirdPartySigned:thirdPartySigned success:^(NSString *theRoomId) {
+        MXHTTPOperation *httpOperation2 = [self->matrixRestClient joinRoom:roomIdOrAlias viaServers:viaServers withThirdPartySigned:thirdPartySigned success:^(NSString *theRoomId) {
 
             [self onJoinedRoom:theRoomId success:success];
 
@@ -2211,6 +2219,7 @@ typedef void (^MXOnResumeDone)(void);
 
         // Clean the store
         [_store deleteRoom:roomId];
+        [_aggregations resetDataInRoom:roomId];
 
         // And remove the room and its summary from the list
         [rooms removeObjectForKey:roomId];

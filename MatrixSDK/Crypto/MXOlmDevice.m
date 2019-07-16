@@ -343,7 +343,7 @@
     if (existingSession)
     {
         // If we already have this session, consider updating it
-        NSLog(@"[MXOlmDevice] addInboundGroupSession: Update for megolm session %@/%@", senderKey, sessionId);
+        NSLog(@"[MXOlmDevice] addInboundGroupSession: Update for megolm session %@|%@", senderKey, sessionId);
 
         // If our existing session is better, we keep it
         if (existingSession.session.firstKnownIndex <= session.session.firstKnownIndex)
@@ -353,7 +353,7 @@
         }
     }
 
-    NSLog(@"[MXOlmDevice] addInboundGroupSession: Add megolm session %@/%@ (import: %@)", senderKey, sessionId, exportFormat ? @"YES" : @"NO");
+    NSLog(@"[MXOlmDevice] addInboundGroupSession: Add megolm session %@|%@ (import: %@)", senderKey, sessionId, exportFormat ? @"YES" : @"NO");
 
     if (![session.session.sessionIdentifier isEqualToString:sessionId])
     {

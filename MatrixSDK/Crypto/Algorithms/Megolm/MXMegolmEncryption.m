@@ -369,14 +369,14 @@
                                       }
                               };
 
-    NSLog(@"[MXMegolEncryption] shareKey with %@", devicesByUser);
+    NSLog(@"[MXMegolmEncryption] shareKey: with %tu users: %@", devicesByUser.count, devicesByUser);
 
     MXHTTPOperation *operation;
     MXWeakify(self);
     operation = [crypto ensureOlmSessionsForDevices:devicesByUser success:^(MXUsersDevicesMap<MXOlmSessionResult *> *results) {
         MXStrongifyAndReturnIfNil(self);
 
-        NSLog(@"[MXMegolEncryption] shareKey. ensureOlmSessionsForDevices result: %@", results);
+        NSLog(@"[MXMegolmEncryption] shareKey: ensureOlmSessionsForDevices result (users: %tu - devices: %tu): %@", results.map.count,  results.count, results);
 
         MXUsersDevicesMap<NSDictionary*> *contentMap = [[MXUsersDevicesMap alloc] init];
         BOOL haveTargets = NO;
@@ -406,7 +406,7 @@
                     continue;
                 }
 
-                NSLog(@"[MXMegolmEncryption] Sharing keys with device %@:%@", userId, deviceID);
+                NSLog(@"[MXMegolmEncryption] shareKey: Sharing keys with device %@:%@", userId, deviceID);
 
                 MXDeviceInfo *deviceInfo = sessionResult.device;
 
@@ -419,10 +419,12 @@
 
         if (haveTargets)
         {
-            //NSLog(@"[MXMegolEncryption] shareKey. Actually share with %tu users and %tu devices: %@", contentMap.userIds.count, contentMap.count, contentMap);
-            NSLog(@"[MXMegolEncryption] shareKey. Actually share with %tu users and %tu devices", contentMap.userIds.count, contentMap.count);
+            //NSLog(@"[MXMegolmEncryption] shareKey. Actually share with %tu users and %tu devices: %@", contentMap.userIds.count, contentMap.count, contentMap);
+            NSLog(@"[MXMegolmEncryption] shareKey: Actually share with %tu users and %tu devices", contentMap.userIds.count, contentMap.count);
 
             MXHTTPOperation *operation2 = [self->crypto.matrixRestClient sendToDevice:kMXEventTypeStringRoomEncrypted contentMap:contentMap txnId:nil success:^{
+
+                NSLog(@"[MXMegolmEncryption] shareKey: request succeeded");
 
                 // Add the devices we have shared with to session.sharedWithDevices.
                 //
@@ -449,7 +451,14 @@
             success();
         }
 
-    } failure:failure];
+    } failure:^(NSError *error) {
+
+        NSLog(@"[MXMegolmEncryption] shareKey: request failed. Error: %@", error);
+        if (failure)
+        {
+            failure(error);
+        }
+    }];
 
     return operation;
 }
@@ -536,16 +545,15 @@
     {
         if (![devicesInRoom deviceIdsForUser:userId])
         {
-            NSLog(@"Starting new session because we shared with %@",  userId);
+            NSLog(@"[MXMegolmEncryption] Starting new session because we shared with %@",  userId);
             return YES;
         }
 
         for (NSString *deviceId in [_sharedWithDevices deviceIdsForUser:userId])
         {
-
             if (! [devicesInRoom objectForDevice:deviceId forUser:userId])
             {
-                NSLog(@"Starting new session because we shared with %@:%@", userId, deviceId);
+                NSLog(@"[MXMegolmEncryption] Starting new session because we shared with %@:%@", userId, deviceId);
                 return YES;
             }
         }

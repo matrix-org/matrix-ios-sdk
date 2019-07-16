@@ -1,7 +1,7 @@
 Pod::Spec.new do |s|
 
   s.name         = "SwiftMatrixSDK"
-  s.version      = "0.12.5"
+  s.version      = "0.13.0"
   s.summary      = "The iOS SDK to build apps compatible with Matrix (https://www.matrix.org)"
 
   s.description  = <<-DESC
@@ -16,6 +16,8 @@ Pod::Spec.new do |s|
 
   s.author             = { "matrix.org" => "support@matrix.org" }
   s.social_media_url   = "http://twitter.com/matrixdotorg"
+
+  s.swift_version = '5.0'
 
   s.ios.deployment_target = "8.0"
   s.osx.deployment_target = "10.10"

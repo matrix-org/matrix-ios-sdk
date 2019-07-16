@@ -393,7 +393,7 @@ static NSArray<MXEmojiRepresentation*> *kSasEmojis;
                    [[MXEmojiRepresentation alloc] initWithEmoji:@"✏️" andName:@"pencil"],     // 43
                    [[MXEmojiRepresentation alloc] initWithEmoji:@"📎" andName:@"paperclip"],  // 44
                    [[MXEmojiRepresentation alloc] initWithEmoji:@"✂️" andName:@"scissors"],   // 45
-                   [[MXEmojiRepresentation alloc] initWithEmoji:@"🔒" andName:@"padlock"],    // 46
+                   [[MXEmojiRepresentation alloc] initWithEmoji:@"🔒" andName:@"lock"],       // 46
                    [[MXEmojiRepresentation alloc] initWithEmoji:@"🔑" andName:@"key"],        // 47
                    [[MXEmojiRepresentation alloc] initWithEmoji:@"🔨" andName:@"hammer"],     // 48
                    [[MXEmojiRepresentation alloc] initWithEmoji:@"☎️" andName:@"telephone"],  // 49

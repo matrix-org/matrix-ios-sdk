@@ -2,6 +2,7 @@
  Copyright 2017 OpenMarket Ltd
  Copyright 2017 Vector Creations Ltd
  Copyright 2018 New Vector Ltd
+ Copyright 2019 The Matrix.org Foundation C.I.C
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -22,6 +23,8 @@
 #import "MXRoomState.h"
 #import "MXSession.h"
 #import "MXTools.h"
+#import "MXEventRelations.h"
+#import "MXEventReplace.h"
 
 #import <Security/Security.h>
 #import <CommonCrypto/CommonCryptor.h>
@@ -36,8 +39,11 @@ NSString *const kMXRoomSummaryDidChangeNotification = @"kMXRoomSummaryDidChangeN
     // Flag to avoid to notify several updates
     BOOL updatedWithStateEvents;
 
-    // The store to store events,
+    // The store to store events
     id<MXStore> store;
+
+    // The listener to edits in the room.
+    id eventEditsListener;
 }
 
 @end
@@ -81,7 +87,9 @@ NSString *const kMXRoomSummaryDidChangeNotification = @"kMXRoomSummaryDidChangeN
     NSLog(@"[MXKRoomSummary] Destroy %p - room id: %@", self, _roomId);
 
     [[NSNotificationCenter defaultCenter] removeObserver:self name:kMXEventDidChangeSentStateNotification object:nil];
+    [[NSNotificationCenter defaultCenter] removeObserver:self name:kMXEventDidChangeIdentifierNotification object:nil];
     [[NSNotificationCenter defaultCenter] removeObserver:self name:kMXRoomDidFlushDataNotification object:nil];
+    [self unregisterEventEditsListener];
 }
 
 - (void)setMatrixSession:(MXSession *)mxSession
@@ -96,10 +104,18 @@ NSString *const kMXRoomSummaryDidChangeNotification = @"kMXRoomSummaryDidChangeN
         // (ex: when a sentState change from sending to sentFailed)
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(eventDidChangeSentState:) name:kMXEventDidChangeSentStateNotification object:nil];
 
+        // Listen to the event id change
+        // This is used to follow evolution of local echo events
+        // when they changed their local event id to the final event id
+        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(eventDidChangeIdentifier:) name:kMXEventDidChangeIdentifierNotification object:nil];
+
         // Listen to data being flush in a room
         // This is used to update the room summary in case of a state event redaction
         // We may need to update the room displayname when it happens
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(roomDidFlushData:) name:kMXRoomDidFlushDataNotification object:nil];
+
+        // Listen to event edits within the room
+        [self registerEventEditsListener];
     }
  }
 
@@ -377,6 +393,17 @@ NSString *const kMXRoomSummaryDidChangeNotification = @"kMXRoomSummaryDidChangeN
     }
 }
 
+- (void)eventDidChangeIdentifier:(NSNotification *)notif
+{
+    MXEvent *event = notif.object;
+    NSString *previousId = notif.userInfo[kMXEventIdentifierKey];
+
+    if ([_lastMessageEventId isEqualToString:previousId])
+    {
+        [self handleEvent:event];
+    }
+}
+
 - (void)roomDidFlushData:(NSNotification *)notif
 {
     MXRoom *room = notif.object;
@@ -387,6 +414,33 @@ NSString *const kMXRoomSummaryDidChangeNotification = @"kMXRoomSummaryDidChangeN
         [self resetRoomStateData];
     }
 }
+
+
+#pragma mark - Edits management
+- (void)registerEventEditsListener
+{
+    MXWeakify(self);
+    eventEditsListener = [_mxSession.aggregations listenToEditsUpdateInRoom:_roomId block:^(MXEvent * _Nonnull replaceEvent) {
+        MXStrongifyAndReturnIfNil(self);
+
+        // Update the last event if it has been edited
+        if ([replaceEvent.relatesTo.eventId isEqualToString:self.lastMessageEventId])
+        {
+            MXEvent *editedEvent = [self.lastMessageEvent editedEventFromReplacementEvent:replaceEvent];
+            [self handleEvent:editedEvent];
+        }
+    }];
+}
+
+- (void)unregisterEventEditsListener
+{
+    if (eventEditsListener)
+    {
+        [self.mxSession.aggregations removeListener:eventEditsListener];
+        eventEditsListener = nil;
+    }
+}
+
 
 #pragma mark - Others
 - (NSUInteger)localUnreadEventCount

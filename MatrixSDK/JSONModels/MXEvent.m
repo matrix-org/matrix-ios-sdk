@@ -20,6 +20,7 @@
 #import "MXTools.h"
 #import "MXEventDecryptionResult.h"
 #import "MXEncryptedContentFile.h"
+#import "MXEventRelations.h"
 
 #pragma mark - Constants definitions
 
@@ -50,6 +51,7 @@ NSString *const kMXEventTypeStringRoomPinnedEvents      = @"m.room.pinned_events
 NSString *const kMXEventTypeStringRoomTag               = @"m.tag";
 NSString *const kMXEventTypeStringPresence              = @"m.presence";
 NSString *const kMXEventTypeStringTypingNotification    = @"m.typing";
+NSString *const kMXEventTypeStringReaction              = @"m.reaction";
 NSString *const kMXEventTypeStringReceipt               = @"m.receipt";
 NSString *const kMXEventTypeStringRead                  = @"m.read";
 NSString *const kMXEventTypeStringReadMarker            = @"m.fully_read";
@@ -74,6 +76,10 @@ NSString *const kMXMessageTypeVideo         = @"m.video";
 NSString *const kMXMessageTypeLocation      = @"m.location";
 NSString *const kMXMessageTypeFile          = @"m.file";
 NSString *const kMXMessageTypeServerNotice  = @"m.server_notice";
+
+NSString *const MXEventRelationTypeAnnotation = @"m.annotation";
+NSString *const MXEventRelationTypeReference = @"m.reference";
+NSString *const MXEventRelationTypeReplace = @"m.replace";
 
 NSString *const kMXEventLocalEventIdPrefix = @"kMXEventLocalId_";
 
@@ -140,37 +146,17 @@ NSString *const kMXEventIdentifierKey = @"kMXEventIdentifierKey";
         MXJSONModelSetDictionary(event.wireContent, JSONDictionary[@"content"]);
         MXJSONModelSetString(event.stateKey, JSONDictionary[@"state_key"]);
         MXJSONModelSetUInt64(event.originServerTs, JSONDictionary[@"origin_server_ts"]);
-        MXJSONModelSetDictionary(event.unsignedData, JSONDictionary[@"unsigned"]);
+        MXJSONModelSetMXJSONModel(event.unsignedData, MXEventUnsignedData, JSONDictionary[@"unsigned"]);
         
         MXJSONModelSetString(event.redacts, JSONDictionary[@"redacts"]);
-        
+
+        // Data moved under unsigned
         MXJSONModelSetDictionary(event.prevContent, JSONDictionary[@"prev_content"]);
-        // 'prev_content' has been moved under unsigned in some server responses (see sync API).
-        if (!event.prevContent)
-        {
-            MXJSONModelSetDictionary(event.prevContent, event.unsignedData[@"prev_content"]);
-        }
-        
-        // 'age' has been moved under unsigned.
+        MXJSONModelSetDictionary(event.redactedBecause, JSONDictionary[@"redacted_because"]);
+        MXJSONModelSetDictionary(event.inviteRoomState, JSONDictionary[@"invite_room_state"]);
         if (JSONDictionary[@"age"])
         {
             MXJSONModelSetUInteger(event.age, JSONDictionary[@"age"]);
-        }
-        else if (event.unsignedData[@"age"])
-        {
-            MXJSONModelSetUInteger(event.age, event.unsignedData[@"age"]);
-        }
-        
-        MXJSONModelSetDictionary(event.redactedBecause, JSONDictionary[@"redacted_because"]);
-        if (!event.redactedBecause)
-        {
-            // 'redacted_because' has been moved under unsigned.
-            MXJSONModelSetDictionary(event.redactedBecause, event.unsignedData[@"redacted_because"]);
-        }
-        
-        if (JSONDictionary[@"unsigned"][@"invite_room_state"])
-        {
-            MXJSONModelSetMXJSONModelArray(event.inviteRoomState, MXEvent, JSONDictionary[@"unsigned"][@"invite_room_state"]);
         }
 
         [event finalise];
@@ -258,6 +244,8 @@ NSString *const kMXEventIdentifierKey = @"kMXEventIdentifierKey";
     _wireType = [MXTools eventTypeString:_wireEventType];
 }
 
+#pragma mark - Data moved to `unsigned`
+
 - (void)setAge:(NSUInteger)age
 {
     // If the age has not been stored yet in local time stamp, do it now
@@ -274,7 +262,36 @@ NSString *const kMXEventIdentifierKey = @"kMXEventIdentifierKey";
     {
         age = [[NSDate date] timeIntervalSince1970] * 1000 - _ageLocalTs;
     }
+    else
+    {
+        age = _unsignedData.age;
+    }
     return age;
+}
+
+- (NSDictionary<NSString *,id> *)prevContent
+{
+    return _prevContent ? _prevContent : _unsignedData.prevContent;
+}
+
+- (NSDictionary *)redactedBecause
+{
+    return _redactedBecause ? _redactedBecause : _unsignedData.redactedBecause;
+}
+
+- (NSArray<MXEvent *> *)inviteRoomState
+{
+    return _inviteRoomState ? _inviteRoomState : _unsignedData.inviteRoomState;
+}
+
+- (MXEventContentRelatesTo *)relatesTo
+{
+    MXEventContentRelatesTo *relatesTo;
+    if (self.content[@"m.relates_to"])
+    {
+        MXJSONModelSetMXJSONModel(relatesTo, MXEventContentRelatesTo, self.content[@"m.relates_to"])
+    }
+    return relatesTo;
 }
 
 - (NSDictionary *)JSONDictionary
@@ -290,10 +307,21 @@ NSString *const kMXEventIdentifierKey = @"kMXEventIdentifierKey";
         JSONDictionary[@"state_key"] = _stateKey;
         JSONDictionary[@"origin_server_ts"] = @(_originServerTs);
         JSONDictionary[@"redacts"] = _redacts;
-        JSONDictionary[@"prev_content"] = _prevContent;
-        JSONDictionary[@"age"] = @(self.age);
-        JSONDictionary[@"redacted_because"] = _redactedBecause;
+        JSONDictionary[@"unsigned"] = _unsignedData.JSONDictionary;
 
+        // Manage data before they moved under unsigned
+        if (_prevContent)
+        {
+            JSONDictionary[@"prev_content"] = _prevContent;
+        }
+        if (_ageLocalTs != -1)
+        {
+            JSONDictionary[@"age"] = @(self.age);
+        }
+        if (_redactedBecause)
+        {
+            JSONDictionary[@"redacted_because"] = _redactedBecause;
+        }
         if (_inviteRoomState)
         {
             JSONDictionary[@"invite_room_state"] = _inviteRoomState;
@@ -366,6 +394,21 @@ NSString *const kMXEventIdentifierKey = @"kMXEventIdentifierKey";
         return YES;
     }
     return NO;
+}
+
+- (BOOL)isEditEvent
+{
+    return self.eventType == MXEventTypeRoomMessage && [self.relatesTo.relationType isEqualToString:MXEventRelationTypeReplace];
+}
+
+- (BOOL)isReplyEvent
+{
+    return self.eventType == MXEventTypeRoomMessage && self.content[@"m.relates_to"][@"m.in_reply_to"][@"event_id"] != nil;
+}
+
+- (BOOL)contentHasBeenEdited
+{
+    return self.unsignedData.relations.replace != nil;
 }
 
 - (NSArray *)readReceiptEventIds
@@ -511,6 +554,65 @@ NSString *const kMXEventIdentifierKey = @"kMXEventIdentifierKey";
     // Note: Contrary to server, we ignore here the "unsigned" event level key.
     
     return [MXEvent modelFromJSON:prunedEventDict];
+}
+
+- (MXEvent*)editedEventFromReplacementEvent:(MXEvent*)replaceEvent
+{
+    MXEvent *editedEvent;
+    MXEvent *event = self;
+    NSDictionary *newContentDict;
+    MXJSONModelSetDictionary(newContentDict, replaceEvent.content[@"m.new_content"])
+
+    NSMutableDictionary *editedEventDict;
+    if (replaceEvent.isEncrypted)
+    {
+        // For e2e, use the encrypted content from the replace event
+        editedEventDict = [event.JSONDictionary mutableCopy];
+        NSMutableDictionary *editedEventContentDict = [replaceEvent.wireContent mutableCopy];
+        [editedEventContentDict removeObjectForKey:@"m.relates_to"];
+        editedEventDict[@"content"] = editedEventContentDict;
+    }
+    else if (event.content[@"body"] && newContentDict && [newContentDict[@"msgtype"] isEqualToString:event.content[@"msgtype"]])
+    {
+        editedEventDict = [event.JSONDictionary mutableCopy];
+        NSMutableDictionary *editedEventContentDict = [editedEventDict[@"content"] mutableCopy];
+        editedEventContentDict[@"body"] = newContentDict[@"body"];
+        editedEventContentDict[@"formatted_body"] = newContentDict[@"formatted_body"];
+        editedEventContentDict[@"format"] = newContentDict[@"format"];
+        editedEventDict[@"content"] = editedEventContentDict;
+    }
+
+    if (editedEventDict)
+    {
+        // Use the same type as the replace event
+        // This is useful for local echoes in e2e room as local echoes are always non encryted/
+        // So, there are switching between "m.room.encrypted" and "m.room.message"
+        editedEventDict[@"type"] = replaceEvent.isEncrypted ? @"m.room.encrypted" : replaceEvent.type;
+
+        NSDictionary *replaceEventDict = @{ @"event_id": replaceEvent.eventId };
+        
+        if (event.unsignedData.relations)
+        {
+            editedEventDict[@"unsigned"][@"m.relations"][@"m.replace"] = replaceEventDict;
+        }
+        else if (event.unsignedData)
+        {
+            editedEventDict[@"unsigned"][@"m.relations"] = @{
+                                                             @"m.replace": replaceEventDict
+                                                             };
+        }
+        else
+        {
+            editedEventDict[@"unsigned"] = @{ @"m.relations": @{
+                                                      @"m.replace": replaceEventDict
+                                                      }
+                                              };
+        }
+        
+        editedEvent = [MXEvent modelFromJSON:editedEventDict];
+    }
+    
+    return editedEvent;
 }
 
 - (NSComparisonResult)compareOriginServerTs:(MXEvent *)otherEvent
@@ -676,13 +778,24 @@ NSString *const kMXEventIdentifierKey = @"kMXEventIdentifierKey";
     _clearEvent = nil;
     if (decryptionResult.clearEvent)
     {
+        NSDictionary *clearEventJSON = decryptionResult.clearEvent;
+        if (clearEventJSON[@"content"][@"m.new_content"] && !_wireContent[@"m.relates_to"])
+        {
+            // If the event has been edited, use the new content
+            // This can be done only on client side
+            // TODO: Remove this with the coming update of MSC1849.
+            NSMutableDictionary *clearEventUpdatedJSON = [clearEventJSON mutableCopy];
+            clearEventUpdatedJSON[@"content"] = clearEventJSON[@"content"][@"m.new_content"];
+            clearEventJSON = clearEventUpdatedJSON;
+        }
+
         NSDictionary *decryptionClearEventJSON;
         NSDictionary *encryptedContentRelatesToJSON = _wireContent[@"m.relates_to"];
         
         // Add "m.relates_to" data from e2e event to the unencrypted content event
         if (encryptedContentRelatesToJSON)
         {
-            NSMutableDictionary *decryptionClearEventUpdatedJSON = [decryptionResult.clearEvent mutableCopy];
+            NSMutableDictionary *decryptionClearEventUpdatedJSON = [clearEventJSON mutableCopy];
             NSMutableDictionary *clearEventContentUpdatedJSON = [decryptionClearEventUpdatedJSON[@"content"] mutableCopy];
             
             clearEventContentUpdatedJSON[@"m.relates_to"] = encryptedContentRelatesToJSON;
@@ -691,7 +804,7 @@ NSString *const kMXEventIdentifierKey = @"kMXEventIdentifierKey";
         }
         else
         {
-            decryptionClearEventJSON = decryptionResult.clearEvent;
+            decryptionClearEventJSON = clearEventJSON;
         }
         
         _clearEvent = [MXEvent modelFromJSON:decryptionClearEventJSON];

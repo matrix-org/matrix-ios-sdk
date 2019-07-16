@@ -1,7 +1,8 @@
 /*
  Copyright 2014 OpenMarket Ltd
  Copyright 2018 New Vector Ltd
- 
+ Copyright 2019 The Matrix.org Foundation C.I.C
+
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
  You may obtain a copy of the License at
@@ -94,6 +95,7 @@ NSCharacterSet *uriComponentCharset;
                                 kMXEventTypeStringRoomTag,
                                 kMXEventTypeStringPresence,
                                 kMXEventTypeStringTypingNotification,
+                                kMXEventTypeStringReaction,
                                 kMXEventTypeStringReceipt,
                                 kMXEventTypeStringRead,
                                 kMXEventTypeStringReadMarker,
@@ -369,6 +371,13 @@ NSCharacterSet *uriComponentCharset;
         return (nil != [isMatrixGroupIdentifierRegex firstMatchInString:inputString options:0 range:NSMakeRange(0, inputString.length)]);
     }
     return NO;
+}
+
++ (NSString*)serverNameInMatrixIdentifier:(NSString *)identifier
+{
+    // This converts something:example.org into a server domain
+    //  by splitting on colons and ignoring the first entry ("something").
+    return [identifier componentsSeparatedByString:@":"].lastObject;
 }
 
 

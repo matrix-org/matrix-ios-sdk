@@ -2,6 +2,7 @@
  Copyright 2014 OpenMarket Ltd
  Copyright 2017 Vector Creations Ltd
  Copyright 2018 New Vector Ltd
+ Copyright 2019 The Matrix.org Foundation C.I.C
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -40,6 +41,8 @@
 NSString * const MXHTTPClientErrorResponseDataKey = @"com.matrixsdk.httpclient.error.response.data";
 NSString* const kMXHTTPClientUserConsentNotGivenErrorNotification = @"kMXHTTPClientUserConsentNotGivenErrorNotification";
 NSString* const kMXHTTPClientUserConsentNotGivenErrorNotificationConsentURIKey = @"kMXHTTPClientUserConsentNotGivenErrorNotificationConsentURIKey";
+NSString* const kMXHTTPClientMatrixErrorNotification = @"kMXHTTPClientMatrixErrorNotification";
+NSString* const kMXHTTPClientMatrixErrorNotificationErrorKey = @"kMXHTTPClientMatrixErrorNotificationErrorKey";
 
 
 @interface MXHTTPClient ()
@@ -270,6 +273,11 @@ NSString* const kMXHTTPClientUserConsentNotGivenErrorNotificationConsentURIKey =
                     {
                         // Extract values from the home server JSON response
                         MXError *mxError = [self mxErrorFromJSON:JSONResponse];
+                        
+                        // Send a notification
+                        [[NSNotificationCenter defaultCenter] postNotificationName:kMXHTTPClientMatrixErrorNotification
+                                                                            object:self
+                                                                          userInfo:@{ kMXHTTPClientMatrixErrorNotificationErrorKey: mxError }];
 
                         if ([mxError.errcode isEqualToString:kMXErrCodeStringLimitExceeded])
                         {
@@ -571,15 +579,38 @@ NSString* const kMXHTTPClientUserConsentNotGivenErrorNotificationConsentURIKey =
 
 - (void)setPinnedCertificates:(NSSet<NSData *> *)pinnedCertificates
 {
-    _pinnedCertificates = pinnedCertificates;
+    // Restore the default security policy when the provided set is empty.
     if (!pinnedCertificates.count)
     {
+        _pinnedCertificates = pinnedCertificates;
         [self setDefaultSecurityPolicy];
+        
         return;
     }
-    AFSecurityPolicy *securityPolicy = [AFSecurityPolicy policyWithPinningMode:AFSSLPinningModeCertificate];
-    securityPolicy.pinnedCertificates = pinnedCertificates;
-    httpManager.securityPolicy = securityPolicy;
+    
+    // Else consider MXHTTPClientSSLPinningModeCertificate SSL pinning mode by default.
+    [self setPinnedCertificates:pinnedCertificates withPinningMode:MXHTTPClientSSLPinningModeCertificate];
+}
+
+- (void)setPinnedCertificates:(NSSet<NSData *> *)pinnedCertificates withPinningMode:(MXHTTPClientSSLPinningMode)pinningMode
+{
+    AFSSLPinningMode mode = AFSSLPinningModeNone;
+    switch (pinningMode)
+    {
+        case MXHTTPClientSSLPinningModePublicKey:
+            mode = AFSSLPinningModePublicKey;
+            break;
+        case MXHTTPClientSSLPinningModeCertificate:
+            mode = AFSSLPinningModeCertificate;
+            break;
+            
+        default:
+            break;
+    }
+    
+    _pinnedCertificates = pinnedCertificates;
+    
+    httpManager.securityPolicy = [AFSecurityPolicy policyWithPinningMode:mode withPinnedCertificates:pinnedCertificates];
 }
 
 - (NSSet<NSString *> *)acceptableContentTypes
@@ -720,13 +751,15 @@ NSString* const kMXHTTPClientUserConsentNotGivenErrorNotificationConsentURIKey =
 - (void)setDefaultSecurityPolicy
 {
     // If some certificates are included in app bundle, we enable the AFNetworking pinning mode based on certificate 'AFSSLPinningModeCertificate'.
-    // These certificates will be handled as pinned certificates, the app allows them without prompting the user.
-    // This is an additional option for the developer to handle certificates.
-    AFSecurityPolicy *securityPolicy = [AFSecurityPolicy policyWithPinningMode:AFSSLPinningModeCertificate];
-    if (securityPolicy.pinnedCertificates.count)
+    // These certificates will be handled as pinned certificates (only these certificates will be trusted).
+    NSSet<NSData *> *certificates = [AFSecurityPolicy certificatesInBundle:[NSBundle mainBundle]];
+    if (certificates && certificates.count)
     {
-        securityPolicy.allowInvalidCertificates = YES;
-        httpManager.securityPolicy = securityPolicy;
+        httpManager.securityPolicy = [AFSecurityPolicy policyWithPinningMode:AFSSLPinningModeCertificate withPinnedCertificates:certificates];
+    }
+    else
+    {
+        httpManager.securityPolicy = [AFSecurityPolicy defaultPolicy];
     }
 }
 

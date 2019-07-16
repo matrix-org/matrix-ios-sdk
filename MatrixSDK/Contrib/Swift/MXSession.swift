@@ -4,6 +4,7 @@
 //
 //  Created by Avery Pierce on 2/11/17.
 //  Copyright © 2017 matrix.org. All rights reserved.
+//  Copyright 2019 The Matrix.org Foundation C.I.C
 //
 
 import Foundation
@@ -189,17 +190,18 @@ public extension MXSession {
      
      - parameters:
         - roomIdOrAlias: The id or an alias of the room to join.
+        - viaServers The server names to try and join through in addition to those that are automatically chosen.
         - signUrl: the url provided in an invitation.
         - completion: A block object called when the operation completes.
         - response: Provides the room on success.
      
      - returns: a `MXHTTPOperation` instance.
      */
-    @nonobjc @discardableResult func joinRoom(_ roomIdOrAlias: String, withSignUrl signUrl: URL? = nil, completion: @escaping (_ response: MXResponse<MXRoom>) -> Void) -> MXHTTPOperation {
+    @nonobjc @discardableResult func joinRoom(_ roomIdOrAlias: String, viaServers: [String]? = nil, withSignUrl signUrl: URL? = nil, completion: @escaping (_ response: MXResponse<MXRoom>) -> Void) -> MXHTTPOperation {
         if let signUrl = signUrl {
-            return __joinRoom(roomIdOrAlias, withSignUrl: signUrl.absoluteString, success: currySuccess(completion), failure: curryFailure(completion))
+            return __joinRoom(roomIdOrAlias, viaServers: viaServers, withSignUrl: signUrl.absoluteString, success: currySuccess(completion), failure: curryFailure(completion))
         } else {
-            return __joinRoom(roomIdOrAlias, success: currySuccess(completion), failure: curryFailure(completion))
+            return __joinRoom(roomIdOrAlias, viaServers: viaServers, success: currySuccess(completion), failure: curryFailure(completion))
         }
     }
 

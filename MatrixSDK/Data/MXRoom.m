@@ -2,6 +2,7 @@
  Copyright 2014 OpenMarket Ltd
  Copyright 2017 Vector Creations Ltd
  Copyright 2018 New Vector Ltd
+ Copyright 2019 The Matrix.org Foundation C.I.C
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -545,7 +546,9 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
     };
 
     // Check whether the content must be encrypted before sending
-    if (mxSession.crypto && self.summary.isEncrypted)
+    if (mxSession.crypto
+        && self.summary.isEncrypted
+        && [self isEncryptionRequiredForEventType:eventTypeString])
     {
         // Check whether the provided content is already encrypted
         if ([eventTypeString isEqualToString:kMXEventTypeStringRoomEncrypted])
@@ -613,9 +616,13 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
             roomOperation = [self preserveOperationOrder:event block:^{
                 MXStrongifyAndReturnIfNil(self);
 
+                NSLog(@"[MXRoom] sendEventOfType(MXCrypto): Encrypting event %@", event.eventId);
+
                 MXWeakify(self);
                 MXHTTPOperation *operation = [self->mxSession.crypto encryptEventContent:contentCopyToEncrypt withType:eventTypeString inRoom:self success:^(NSDictionary *encryptedContent, NSString *encryptedEventType) {
                     MXStrongifyAndReturnIfNil(self);
+
+                    NSLog(@"[MXRoom] sendEventOfType(MXCrypto): Encrypt event %@ -> DONE using sessionId: %@", event.eventId, encryptedContent[@"session_id"]);
 
                     NSDictionary *finalEncryptedContent;
                     
@@ -654,7 +661,13 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
                     }
 
                     // Send the encrypted content
-                    MXHTTPOperation *operation2 = [self _sendEventOfType:encryptedEventType content:finalEncryptedContent txnId:event.eventId success:onSuccess failure:onFailure];
+                    MXHTTPOperation *operation2 = [self _sendEventOfType:encryptedEventType content:finalEncryptedContent txnId:event.eventId success:^(NSString *eventId) {
+
+                        NSLog(@"[MXRoom] sendEventOfType(MXCrypto): Send event %@ -> DONE. Final event id: %@", event.eventId, eventId);
+                        onSuccess(eventId);
+
+                    } failure:onFailure];
+
                     if (operation2)
                     {
                         // Mutate MXHTTPOperation so that the user can cancel this new operation
@@ -663,7 +676,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
 
                 } failure:^(NSError *error) {
 
-                    NSLog(@"[MXRoom] sendEventOfType: Cannot encrypt event. Error: %@", error);
+                    NSLog(@"[MXRoom] sendEventOfType(MXCrypto): Cannot encrypt event %@. Error: %@", event.eventId, error);
 
                     onFailure(error);
                 }];
@@ -1313,7 +1326,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
                      success:(void (^)(NSString *eventId))success
                      failure:(void (^)(NSError *error))failure
 {
-    return [self sendFile:fileLocalURL mimeType:mimeType localEcho:localEcho success:success failure:failure keepActualFilename:NO];
+    return [self sendFile:fileLocalURL mimeType:mimeType localEcho:localEcho success:success failure:failure keepActualFilename:YES];
 }
 
 - (MXHTTPOperation*)sendFile:(NSURL*)fileLocalURL
@@ -1622,7 +1635,9 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
 - (MXHTTPOperation*)join:(void (^)(void))success
                  failure:(void (^)(NSError *error))failure
 {
-    return [mxSession joinRoom:self.roomId success:^(MXRoom *room) {
+    // On an invite, there is no need of via parameters.
+    // The user homeserver already knows other homeservers
+    return [mxSession joinRoom:self.roomId viaServers:nil success:^(MXRoom *room) {
         success();
     } failure:failure];
 }
@@ -1830,7 +1845,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
         return;
     }
     
-    BOOL eventToReplyIsAlreadyAReply = eventToReply.content[@"m.relates_to"][@"m.in_reply_to"][@"event_id"] != nil;
+    BOOL eventToReplyIsAlreadyAReply = eventToReply.isReplyEvent;
     BOOL isSenderMessageAnEmote = [msgtype isEqualToString:kMXMessageTypeEmote];
     
     NSString *senderMessageBody;
@@ -3065,6 +3080,25 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
     }
 
     return operation;
+}
+
+/**
+ Check if we need to encrypt event with a given type.
+
+ @param eventType the event type
+ @return YES to event.
+ */
+- (BOOL)isEncryptionRequiredForEventType:(MXEventTypeString)eventType
+{
+    BOOL isEncryptionRequired = YES;
+
+    if ([eventType isEqualToString:kMXEventTypeStringReaction])
+    {
+        // Do not encrypt reaction for the moment
+        isEncryptionRequired = NO;
+    }
+
+    return isEncryptionRequired;
 }
 
 

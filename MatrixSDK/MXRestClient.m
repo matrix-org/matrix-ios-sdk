@@ -2,6 +2,7 @@
  Copyright 2014 OpenMarket Ltd
  Copyright 2017 Vector Creations Ltd
  Copyright 2018 New Vector Ltd
+ Copyright 2019 The Matrix.org Foundation C.I.C
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -1092,6 +1093,32 @@ MXAuthAction;
                                  }];
 }
 
+- (MXHTTPOperation*)pushers:(void (^)(NSArray<MXPusher *> *pushers))success
+                    failure:(void (^)(NSError *))failure
+{
+    MXWeakify(self);
+    return [httpClient requestWithMethod:@"GET"
+                                    path:[NSString stringWithFormat:@"%@/pushers", apiPathPrefix]
+                              parameters:nil
+                                 success:^(NSDictionary *JSONResponse) {
+                                     MXStrongifyAndReturnIfNil(self);
+
+                                     if (success)
+                                     {
+                                         __block NSArray<MXPusher *> *pushers;
+                                         [self dispatchProcessing:^{
+                                             MXJSONModelSetMXJSONModelArray(pushers, MXPusher, JSONResponse[@"pushers"]);
+                                         } andCompletion:^{
+                                             success(pushers);
+                                         }];
+                                     }
+                                 }
+                                 failure:^(NSError *error) {
+                                     MXStrongifyAndReturnIfNil(self);
+                                     [self dispatchFailure:error inBlock:failure];
+                                 }];
+}
+
 - (MXHTTPOperation *)pushRules:(void (^)(MXPushRulesResponse *pushRules))success failure:(void (^)(NSError *))failure
 {
     MXWeakify(self);
@@ -1834,11 +1861,12 @@ MXAuthAction;
                      success:(void (^)(NSString *theRoomId))success
                      failure:(void (^)(NSError *error))failure
 {
-    return [self joinRoom:roomIdOrAlias withThirdPartySigned:nil success:success failure:failure];
+    return [self joinRoom:roomIdOrAlias viaServers:nil withThirdPartySigned:nil success:success failure:failure];
 }
 
 - (MXHTTPOperation*)joinRoom:(NSString*)roomIdOrAlias
-    withThirdPartySigned:(NSDictionary*)thirdPartySigned
+                  viaServers:(NSArray<NSString*>*)viaServers
+        withThirdPartySigned:(NSDictionary*)thirdPartySigned
                      success:(void (^)(NSString *theRoomId))success
                      failure:(void (^)(NSError *error))failure
 {
@@ -1854,6 +1882,27 @@ MXAuthAction;
     NSString *path = [NSString stringWithFormat:@"%@/join/%@",
                       apiPathPrefix,
                       [MXTools encodeURIComponent:roomIdOrAlias]];
+
+    // Add all servers as query parameters
+    if (viaServers.count)
+    {
+        NSMutableString *queryParameters;
+        for (NSString *viaServer in viaServers)
+        {
+            NSString *value = [MXTools encodeURIComponent:viaServer];
+
+            if (!queryParameters)
+            {
+                queryParameters = [NSMutableString stringWithFormat:@"?server_name=%@", value];
+            }
+            else
+            {
+                [queryParameters appendFormat:@"&server_name=%@", value];
+            }
+        }
+
+        path = [path stringByAppendingString:queryParameters];
+    }
 
     MXWeakify(self);
     return [httpClient requestWithMethod:@"POST"
@@ -3713,8 +3762,14 @@ MXAuthAction;
 
 #pragma mark - Certificates
 
--(void)setPinnedCertificates:(NSSet <NSData *> *)pinnedCertificates {
+-(void)setPinnedCertificates:(NSSet <NSData *> *)pinnedCertificates
+{
     httpClient.pinnedCertificates = pinnedCertificates;
+}
+
+- (void)setPinnedCertificates:(NSSet<NSData *> *)pinnedCertificates withPinningMode:(MXHTTPClientSSLPinningMode)pinningMode
+{
+    [httpClient setPinnedCertificates:pinnedCertificates withPinningMode:pinningMode];
 }
 
 #pragma mark - VoIP API
@@ -4966,6 +5021,136 @@ MXAuthAction;
             }
         });
     }
+}
+
+
+#pragma mark - Aggregations
+
+- (MXHTTPOperation*)sendRelationToEvent:(NSString*)eventId
+                                 inRoom:(NSString*)roomId
+                           relationType:(NSString*)relationType
+                              eventType:(NSString*)eventType
+                             parameters:(NSDictionary*)parameters
+                                content:(NSDictionary*)content
+                                success:(void (^)(NSString *eventId))success
+                                failure:(void (^)(NSError *error))failure
+{
+    // Create a random transaction id to prevent duplicated events
+    NSString *txnId = [MXTools generateTransactionId];
+
+    // Prepare the path
+    NSMutableString *path = [NSMutableString stringWithFormat:@"%@/rooms/%@/send_relation/%@/%@/%@/%@",
+                             kMXAPIPrefixPathUnstable,    // TODO: use apiPathPrefix
+                             roomId,
+                             [MXTools encodeURIComponent:eventId],
+                             relationType,
+                             eventType,
+                             [MXTools encodeURIComponent:txnId]];
+
+    // Serialise query parameters
+    if (parameters)
+    {
+        NSMutableString *queryParameters;
+        for (NSString *key in parameters)
+        {
+            NSString *value = [MXTools encodeURIComponent:parameters[key]];
+
+            if (!queryParameters)
+            {
+                queryParameters = [NSMutableString stringWithFormat:@"?%@=%@", key, value];
+            }
+            else
+            {
+                [queryParameters appendFormat:@"&%@=%@", key, value];
+            }
+        }
+
+        if (queryParameters)
+        {
+            [path appendString:queryParameters];
+        }
+    }
+
+    MXWeakify(self);
+    return [httpClient requestWithMethod:@"PUT"
+                                    path:path
+                              parameters:content
+                                 success:^(NSDictionary *JSONResponse) {
+                                     MXStrongifyAndReturnIfNil(self);
+
+                                     if (success)
+                                     {
+                                         __block NSString *eventId;
+                                         [self dispatchProcessing:^{
+                                             MXJSONModelSetString(eventId, JSONResponse[@"event_id"]);
+                                         } andCompletion:^{
+                                             success(eventId);
+                                         }];
+                                     }
+                                 }
+                                 failure:^(NSError *error) {
+                                     MXStrongifyAndReturnIfNil(self);
+                                     [self dispatchFailure:error inBlock:failure];
+                                 }];
+}
+
+- (MXHTTPOperation*)relationsForEvent:(NSString*)eventId
+                               inRoom:(NSString*)roomId
+                         relationType:(NSString*)relationType
+                            eventType:(NSString*)eventType
+                                 from:(NSString*)from
+                                limit:(NSUInteger)limit
+                              success:(void (^)(MXAggregationPaginatedResponse *paginatedResponse))success
+                              failure:(void (^)(NSError *error))failure
+{
+    NSMutableString *path = [NSMutableString stringWithFormat:@"%@/rooms/%@/relations/%@",
+                             kMXAPIPrefixPathUnstable,    // TODO: use apiPathPrefix
+                             roomId,
+                             [MXTools encodeURIComponent:eventId]];
+
+    if (relationType)
+    {
+        [path appendFormat:@"/%@", relationType];
+    }
+    if (eventType)
+    {
+        [path appendFormat:@"/%@", eventType];
+    }
+
+    // All query parameters are optional. Fill the request parameters on demand
+    NSMutableDictionary *parameters = [NSMutableDictionary dictionary];
+
+    if (from)
+    {
+        parameters[@"from"] = from;
+    }
+
+    if (-1 != limit)
+    {
+        parameters[@"limit"] = @(limit);
+    }
+
+    MXWeakify(self);
+    return [httpClient requestWithMethod:@"GET"
+                                    path:path
+                              parameters:parameters
+                                 success:^(NSDictionary *JSONResponse) {
+                                     MXStrongifyAndReturnIfNil(self);
+
+                                     if (success)
+                                     {
+                                         __block MXAggregationPaginatedResponse *paginatedResponse;
+                                         [self dispatchProcessing:^{
+                                             MXJSONModelSetMXJSONModel(paginatedResponse, MXAggregationPaginatedResponse, JSONResponse);
+                                         } andCompletion:^{
+                                             success(paginatedResponse);
+                                         }];
+                                     }
+                                 }
+                                 failure:^(NSError *error) {
+                                     MXStrongifyAndReturnIfNil(self);
+                                     [self dispatchFailure:error inBlock:failure];
+                                 }];
 }
 
 @end

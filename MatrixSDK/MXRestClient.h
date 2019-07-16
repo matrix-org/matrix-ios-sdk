@@ -2,6 +2,7 @@
  Copyright 2014 OpenMarket Ltd
  Copyright 2017 Vector Creations Ltd
  Copyright 2018 New Vector Ltd
+ Copyright 2019 The Matrix.org Foundation C.I.C
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -36,6 +37,8 @@
 #import "MXContentScanResult.h"
 #import "MXEncryptedContentFile.h"
 #import "MXContentScanEncryptedBody.h"
+#import "MXAggregationPaginatedResponse.h"
+#import "MXPusher.h"
 
 #pragma mark - Constants definitions
 /**
@@ -593,6 +596,18 @@ FOUNDATION_EXPORT NSString *const kMXMembersOfRoomParametersNotMembership;
                                  success:(void (^)(void))success
                                  failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
+
+/**
+ Gets all currently active pushers for the authenticated user.
+
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)pushers:(void (^)(NSArray<MXPusher *> *pushers))success
+                    failure:(void (^)(NSError *))failure;
+
 /**
  Get all push notifications rules.
 
@@ -991,27 +1006,17 @@ FOUNDATION_EXPORT NSString *const kMXMembersOfRoomParametersNotMembership;
  Join a room.
 
  @param roomIdOrAlias the id or an alias of the room to join.
+ @param viaServers The server names to try and join through in addition to those
+                   that are automatically chosen. Can be nil.
+ @param thirdPartySigned the signed data obtained by the validation of an 3PID invitation.
+                         The valisation is made by [self signUrl]. Can be nil.
  @param success A block object called when the operation succeeds. It provides the room id.
  @param failure A block object called when the operation fails.
 
  @return a MXHTTPOperation instance.
  */
 - (MXHTTPOperation*)joinRoom:(NSString*)roomIdOrAlias
-                     success:(void (^)(NSString *theRoomId))success
-                     failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
-
-/**
- Join a room where the user has been invited by a 3PID invitation.
-
- @param roomIdOrAlias the id or an alias of the room to join.
- @param thirdPartySigned the signed data obtained by the validation of the 3PID invitation.
-                         The valisation is made by [self signUrl].
- @param success A block object called when the operation succeeds. It provides the room id.
- @param failure A block object called when the operation fails.
-
- @return a MXHTTPOperation instance.
- */
-- (MXHTTPOperation*)joinRoom:(NSString*)roomIdOrAlias
+                  viaServers:(NSArray<NSString*>*)viaServers
         withThirdPartySigned:(NSDictionary*)thirdPartySigned
                      success:(void (^)(NSString *theRoomId))success
                      failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
@@ -1921,11 +1926,21 @@ FOUNDATION_EXPORT NSString *const kMXMembersOfRoomParametersNotMembership;
 
 #pragma mark - Certificates
 /**
- Set the certificates used to evaluate server trust according to the SSL pinning mode.
+ The certificates used to evaluate server trust.
+ The default SSL pinning mode is MXHTTPClientSSLPinningModeCertificate when the provided set is not empty.
+ Set an empty set or null to restore the default security policy.
 
  @param pinnedCertificates the pinned certificates.
  */
--(void)setPinnedCertificates:(NSSet <NSData *> *)pinnedCertificates;
+- (void)setPinnedCertificates:(NSSet<NSData *> *)pinnedCertificates;
+
+/**
+ Set the certificates used to evaluate server trust and the SSL pinning mode.
+ 
+ @param pinnedCertificates The certificates to pin against.
+ @param pinningMode The SSL pinning mode.
+ */
+- (void)setPinnedCertificates:(NSSet<NSData *> *)pinnedCertificates withPinningMode:(MXHTTPClientSSLPinningMode)pinningMode;
 
 
 #pragma mark - VoIP API
@@ -2519,4 +2534,55 @@ FOUNDATION_EXPORT NSString *const kMXMembersOfRoomParametersNotMembership;
                                         success:(void (^)(NSDictionary<NSString*, NSArray<NSString*>*> *publicisedGroupsByUserId))success
                                         failure:(void (^)(NSError *error))failure;
 
+
+#pragma mark - Aggregations
+
+/**
+ Send a relation to an event.
+
+ @param eventId the id of the parent event.
+ @param roomId the id of the room.
+ @param relationType the type of relation (@see MXEventRelationTypeAnnotation and siblings).
+ @param eventType event type of the message.
+ @param parameters (optional) query parameters.
+ @param content (optional) the message content.
+
+ @param success A block object called when the operation succeeds. It returns
+                the event id of the event generated on the homeserver.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)sendRelationToEvent:(NSString*)eventId
+                                 inRoom:(NSString*)roomId
+                           relationType:(NSString*)relationType
+                              eventType:(NSString*)eventType
+                             parameters:(NSDictionary*)parameters
+                                content:(NSDictionary*)content
+                                success:(void (^)(NSString *eventId))success
+                                failure:(void (^)(NSError *error))failure;
+
+/**
+ Get relations for a given event.
+
+ @param eventId the id of the event,
+ @param roomId the id of the room.
+ @param relationType (optional) the type of relation.
+ @param eventType (optional) event type to filter by.
+ @param from the token to start getting results from.
+ @param limit (optional, use -1 to not defined this value) the maximum number of messages to return.
+
+ @param success A block object called when the operation succeeds. It provides a `MXAggregationPaginatedResponse` object.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)relationsForEvent:(NSString*)eventId
+                               inRoom:(NSString*)roomId
+                         relationType:(NSString*)relationType
+                            eventType:(NSString*)eventType
+                                 from:(NSString*)from
+                                limit:(NSUInteger)limit
+                              success:(void (^)(MXAggregationPaginatedResponse *paginatedResponse))success
+                              failure:(void (^)(NSError *error))failure;
 @end

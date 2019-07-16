@@ -17,6 +17,9 @@
 
 #import "MXJSONModel.h"
 
+#import "MXEventUnsignedData.h"
+#import "MXEventContentRelatesTo.h"
+
 @class MXEventDecryptionResult, MXEncryptedContentFile;
 
 /**
@@ -58,6 +61,7 @@ typedef enum : NSUInteger
     MXEventTypeRoomTag,
     MXEventTypePresence,
     MXEventTypeTypingNotification,
+    MXEventTypeReaction,
     MXEventTypeReceipt,
     MXEventTypeRead,
     MXEventTypeReadMarker,
@@ -109,6 +113,7 @@ FOUNDATION_EXPORT NSString *const kMXEventTypeStringRoomPinnedEvents;
 FOUNDATION_EXPORT NSString *const kMXEventTypeStringRoomTag;
 FOUNDATION_EXPORT NSString *const kMXEventTypeStringPresence;
 FOUNDATION_EXPORT NSString *const kMXEventTypeStringTypingNotification;
+FOUNDATION_EXPORT NSString *const kMXEventTypeStringReaction;
 FOUNDATION_EXPORT NSString *const kMXEventTypeStringReceipt;
 FOUNDATION_EXPORT NSString *const kMXEventTypeStringRead;
 FOUNDATION_EXPORT NSString *const kMXEventTypeStringReadMarker;
@@ -139,6 +144,13 @@ FOUNDATION_EXPORT NSString *const kMXMessageTypeVideo;
 FOUNDATION_EXPORT NSString *const kMXMessageTypeLocation;
 FOUNDATION_EXPORT NSString *const kMXMessageTypeFile;
 FOUNDATION_EXPORT NSString *const kMXMessageTypeServerNotice;
+
+/**
+ Event relations
+ */
+FOUNDATION_EXPORT NSString *const MXEventRelationTypeAnnotation;    // Reactions
+FOUNDATION_EXPORT NSString *const MXEventRelationTypeReference;     // Reply
+FOUNDATION_EXPORT NSString *const MXEventRelationTypeReplace;       // Edition
 
 /**
  Prefix used for id of temporary local event.
@@ -315,7 +327,7 @@ extern NSString *const kMXEventIdentifierKey;
  Information about this event which was not sent by the originating homeserver.
  HS sends this data under the 'unsigned' field but it is a reserved keyword. Hence, renaming.
  */
-@property (nonatomic) NSDictionary *unsignedData;
+@property (nonatomic) MXEventUnsignedData *unsignedData;
 
 /**
  The age of the event in milliseconds.
@@ -347,6 +359,11 @@ extern NSString *const kMXEventIdentifierKey;
  In case of invite event, inviteRoomState contains a subset of the state of the room at the time of the invite.
  */
 @property (nonatomic) NSArray<MXEvent *> *inviteRoomState;
+
+/**
+ If the event relates to another one, some data about the relation.
+ */
+@property (nonatomic) MXEventContentRelatesTo *relatesTo;
 
 /**
  In case of sending failure (MXEventSentStateFailed), the error that occured.
@@ -384,6 +401,21 @@ extern NSString *const kMXEventIdentifierKey;
 - (BOOL)isMediaAttachment;
 
 /**
+ Return YES if the event is a replace event.
+ */
+- (BOOL)isEditEvent;
+
+/**
+ Return YES if the event is a reply event.
+ */
+- (BOOL)isReplyEvent;
+
+/**
+ Return YES if the event content has been edited.
+ */
+- (BOOL)contentHasBeenEdited;
+
+/**
  Returns the event IDs for which a read receipt is defined in this event.
  
  This property is relevant only for events with 'kMXEventTypeStringReceipt' type.
@@ -404,6 +436,14 @@ extern NSString *const kMXEventIdentifierKey;
  but we do want to keep necessary information like type, state_key etc.
  */
 - (MXEvent*)prune;
+
+/**
+ Returns an edited event from a replace event as it should come from the sync.
+
+ @param event The replace event.
+ @return Return edited event with replace event content.
+ */
+- (MXEvent*)editedEventFromReplacementEvent:(MXEvent*)event;
 
 /**
  Comparator to use to order array of events by their originServerTs value.
