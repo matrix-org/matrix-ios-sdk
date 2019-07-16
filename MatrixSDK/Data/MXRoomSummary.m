@@ -23,6 +23,8 @@
 #import "MXRoomState.h"
 #import "MXSession.h"
 #import "MXTools.h"
+#import "MXEventRelations.h"
+#import "MXEventReplace.h"
 
 #import <Security/Security.h>
 #import <CommonCrypto/CommonCryptor.h>
@@ -37,8 +39,11 @@ NSString *const kMXRoomSummaryDidChangeNotification = @"kMXRoomSummaryDidChangeN
     // Flag to avoid to notify several updates
     BOOL updatedWithStateEvents;
 
-    // The store to store events,
+    // The store to store events
     id<MXStore> store;
+
+    // The listener to edits in the room.
+    id eventEditsListener;
 }
 
 @end
@@ -84,6 +89,7 @@ NSString *const kMXRoomSummaryDidChangeNotification = @"kMXRoomSummaryDidChangeN
     [[NSNotificationCenter defaultCenter] removeObserver:self name:kMXEventDidChangeSentStateNotification object:nil];
     [[NSNotificationCenter defaultCenter] removeObserver:self name:kMXEventDidChangeIdentifierNotification object:nil];
     [[NSNotificationCenter defaultCenter] removeObserver:self name:kMXRoomDidFlushDataNotification object:nil];
+    [self unregisterEventEditsListener];
 }
 
 - (void)setMatrixSession:(MXSession *)mxSession
@@ -107,6 +113,9 @@ NSString *const kMXRoomSummaryDidChangeNotification = @"kMXRoomSummaryDidChangeN
         // This is used to update the room summary in case of a state event redaction
         // We may need to update the room displayname when it happens
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(roomDidFlushData:) name:kMXRoomDidFlushDataNotification object:nil];
+
+        // Listen to event edits within the room
+        [self registerEventEditsListener];
     }
  }
 
@@ -405,6 +414,33 @@ NSString *const kMXRoomSummaryDidChangeNotification = @"kMXRoomSummaryDidChangeN
         [self resetRoomStateData];
     }
 }
+
+
+#pragma mark - Edits management
+- (void)registerEventEditsListener
+{
+    MXWeakify(self);
+    eventEditsListener = [_mxSession.aggregations listenToEditsUpdateInRoom:_roomId block:^(MXEvent * _Nonnull replaceEvent) {
+        MXStrongifyAndReturnIfNil(self);
+
+        // Update the last event if it has been edited
+        if ([replaceEvent.relatesTo.eventId isEqualToString:self.lastMessageEventId])
+        {
+            MXEvent *editedEvent = [self.lastMessageEvent editedEventFromReplacementEvent:replaceEvent];
+            [self handleEvent:editedEvent];
+        }
+    }];
+}
+
+- (void)unregisterEventEditsListener
+{
+    if (eventEditsListener)
+    {
+        [self.mxSession.aggregations removeListener:eventEditsListener];
+        eventEditsListener = nil;
+    }
+}
+
 
 #pragma mark - Others
 - (NSUInteger)localUnreadEventCount

@@ -16,6 +16,7 @@ Improvements:
  * MXRoom: sendFile: Use the original file name by default.
  * Push: MXRestClient: Add a method to get all pushers.
  * MXRoomSummary: Send an update when the event id of a local echo changes.
+ * MXRoomSummary: Manage edits (vector-im/riot-ios/issues/2583).
 
 Bug Fix:
  * MXMediaLoader: Disable trusting the built-in anchors certificates when the certificate pinning is enabled.
