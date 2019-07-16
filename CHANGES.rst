@@ -1,15 +1,15 @@
-Changes in Matrix iOS SDK in 0.12.6 (2019-05-)
+Changes in Matrix iOS SDK in 0.13.0 (2019-07-16)
 ===============================================
 
 Improvements:
  * MXHTTPClient: support multiple SSL pinning modes (none/public key/certificate)
  * MXHTTPClient: Enable the certificate pinning mode by default as soon as some certificates are present in the application bundle.
+ * MXHTTPClient: Add a new notification name `kMXHTTPClientMatrixErrorNotification` posted on each Matrix error.
  * Join Room: Support via parameters to better handle federation (vector-im/riot-ios/issues/2547).
  * MXEvent: Create a MXEventUnsignedData model for `MXEvent.unsignedData`.
  * MXEvent: Add relatesTo property.
  * Aggregations: Create MXSession.MXAggregations to manage Matrix aggregations API.
  * Add the Matrix errors related to the password policy.
- * MXHTTPClient: Add a new notification name `kMXHTTPClientMatrixErrorNotification` posted on each Matrix error.
  * SwiftMatrixSDK: Migrate to Swift 5.0.
  * VoIP: Stop falling back to Google for STUN (vector-im/riot-ios/issues/2532).
  * Storage: Isolate our realm DBs to avoid migration due to change in another realm.
