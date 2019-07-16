@@ -556,6 +556,26 @@ static NSString* const kEditedMarkdownMessageFormattedText = @"<strong>I meant H
     }];
 }
 
+// - Run the initial condition scenario
+// -> The room summary must contain aggregated data
+- (void)testEditInRoomSummary
+{
+    // - Run the initial condition scenario
+    [self createScenario:^(MXSession *mxSession, MXRoom *room, XCTestExpectation *expectation, NSString *eventId, NSString *editEventId) {
+
+        // -> The room summary must contain aggregated data
+        MXRoomSummary *roomSummary = [mxSession roomSummaryWithRoomId:room.roomId];
+        MXEvent *lastEvent = roomSummary.lastMessageEvent;
+
+        XCTAssertNotNil(lastEvent);
+        XCTAssertTrue(lastEvent.contentHasBeenEdited);
+        XCTAssertEqualObjects(lastEvent.unsignedData.relations.replace.eventId, editEventId);
+        XCTAssertEqualObjects(lastEvent.content[@"body"], kEditedMessageText);
+
+        [expectation fulfill];
+    }];
+}
+
 // - Send a message
 // - Edit its local echo
 // -> We must get notified about the replace event
