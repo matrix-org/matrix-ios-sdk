@@ -2,7 +2,8 @@ Changes in Matrix iOS SDK in 0.13.1 (2019-07-)
 ===============================================
 
 Improvements:
-* MXError: Expose httpResponse.
+ * MXError: Expose httpResponse.
+ * Soft logout: Handle new CS API error code (vector-im/riot-ios/issues/2584).
 
 Bug Fix:
 

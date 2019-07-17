@@ -70,6 +70,7 @@ FOUNDATION_EXPORT NSString *const kMXErrorConsentNotGivenConsentURIKey;
 FOUNDATION_EXPORT NSString *const kMXErrorResourceLimitExceededLimitTypeKey;
 FOUNDATION_EXPORT NSString *const kMXErrorResourceLimitExceededAdminContactKey;
 FOUNDATION_EXPORT NSString *const kMXErrorResourceLimitExceededLimitTypeMonthlyActiveUserValue;
+FOUNDATION_EXPORT NSString *const kMXErrorSoftLogoutKey;
 
 /**
  `MXError` represents an error sent by the home server.

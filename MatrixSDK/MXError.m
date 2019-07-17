@@ -61,6 +61,7 @@ NSString *const kMXErrorConsentNotGivenConsentURIKey                        = @"
 NSString *const kMXErrorResourceLimitExceededLimitTypeKey                   = @"limit_type";
 NSString *const kMXErrorResourceLimitExceededLimitTypeMonthlyActiveUserValue= @"monthly_active_user";
 NSString *const kMXErrorResourceLimitExceededAdminContactKey                = @"admin_contact";
+NSString *const kMXErrorSoftLogoutKey                                       = @"soft_logout";
 
 
 // Random NSError code
