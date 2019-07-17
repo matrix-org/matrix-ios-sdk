@@ -1,3 +1,13 @@
+Changes in Matrix iOS SDK in 0.13.1 (2019-07-)
+===============================================
+
+Improvements:
+* MXError: Expose httpResponse.
+
+Bug Fix:
+
+API break:
+
 Changes in Matrix iOS SDK in 0.13.0 (2019-07-16)
 ===============================================
 
