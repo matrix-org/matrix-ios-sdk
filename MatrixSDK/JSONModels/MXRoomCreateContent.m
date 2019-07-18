@@ -20,13 +20,17 @@
 
 static NSString* const kRoomCreateContentUserIdJSONKey = @"creator";
 static NSString* const kRoomCreateContentPredecessorInfoJSONKey = @"predecessor";
+static NSString* const kRoomCreateContentRoomVersionJSONKey = @"room_version";
+static NSString* const kRoomCreateContentFederateJSONKey = @"m.federate";
 
 #pragma mark - Private Interface
 
 @interface MXRoomCreateContent()
 
-@property (nonatomic, copy, readwrite, nonnull) NSString *creatorUserId;
+@property (nonatomic, copy, readwrite, nullable) NSString *creatorUserId;
 @property (nonatomic, strong, readwrite, nullable) MXRoomPredecessorInfo *roomPredecessorInfo;
+@property (nonatomic, copy, readwrite, nullable) NSString *roomVersion;
+@property (nonatomic, readwrite) BOOL isFederated;
 
 @end
 
@@ -34,26 +38,16 @@ static NSString* const kRoomCreateContentPredecessorInfoJSONKey = @"predecessor"
 
 + (id)modelFromJSON:(NSDictionary *)jsonDictionary
 {
-    MXRoomCreateContent *roomCreateContent = nil;
-        
-    NSString *roomCreatorUserId;
-    MXJSONModelSetString(roomCreatorUserId, jsonDictionary[kRoomCreateContentUserIdJSONKey]);
-    
-    if (roomCreatorUserId)
+    MXRoomCreateContent *roomCreateContent = [MXRoomCreateContent new];
+    if (roomCreateContent)
     {
-        roomCreateContent = [MXRoomCreateContent new];
+        // Set the isFederated flag to true (default value).
+        roomCreateContent.isFederated = YES;
         
-        MXRoomPredecessorInfo *roomPredecessorInfo = nil;
-        
-        NSDictionary *roomPredecessorJSON = jsonDictionary[kRoomCreateContentPredecessorInfoJSONKey];
-        
-        if (roomPredecessorJSON)
-        {
-            roomPredecessorInfo = [MXRoomPredecessorInfo modelFromJSON:roomPredecessorJSON];
-        }
-        
-        roomCreateContent.creatorUserId = roomCreatorUserId;
-        roomCreateContent.roomPredecessorInfo = roomPredecessorInfo;
+        MXJSONModelSetString(roomCreateContent.creatorUserId, jsonDictionary[kRoomCreateContentUserIdJSONKey]);
+        MXJSONModelSetMXJSONModel(roomCreateContent.roomPredecessorInfo, MXRoomPredecessorInfo, jsonDictionary[kRoomCreateContentPredecessorInfoJSONKey]);
+        MXJSONModelSetString(roomCreateContent.roomVersion, jsonDictionary[kRoomCreateContentRoomVersionJSONKey]);
+        MXJSONModelSetBoolean(roomCreateContent.isFederated, jsonDictionary[kRoomCreateContentFederateJSONKey])
     }
     
     return roomCreateContent;
@@ -63,12 +57,22 @@ static NSString* const kRoomCreateContentPredecessorInfoJSONKey = @"predecessor"
 {
     NSMutableDictionary *jsonDictionary = [NSMutableDictionary dictionary];
     
-    jsonDictionary[kRoomCreateContentUserIdJSONKey] = self.creatorUserId;
+    if (self.creatorUserId)
+    {
+        jsonDictionary[kRoomCreateContentUserIdJSONKey] = self.creatorUserId;
+    }
     
     if (self.roomPredecessorInfo)
     {
         jsonDictionary[kRoomCreateContentPredecessorInfoJSONKey] = [self.roomPredecessorInfo JSONDictionary];
     }
+    
+    if (self.roomVersion)
+    {
+        jsonDictionary[kRoomCreateContentRoomVersionJSONKey] = self.roomVersion;
+    }
+    
+    jsonDictionary[kRoomCreateContentFederateJSONKey] = @(self.isFederated);
     
     return jsonDictionary;
 }

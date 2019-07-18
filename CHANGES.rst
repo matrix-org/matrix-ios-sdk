@@ -4,6 +4,7 @@ Changes in Matrix iOS SDK in 0.13.1 (2019-07-)
 Improvements:
  * MXError: Expose httpResponse.
  * Soft logout: Handle new CS API error code (vector-im/riot-ios/issues/2584).
+ * MXRoomCreateContent - Update: Add missing fields `room_version` and `m.federate` (Note: `creator` field becomes optional (because of MSC2175)).
 
 Bug Fix:
 
