@@ -72,7 +72,7 @@ static NSString* const kRoomCreateContentFederateJSONKey = @"m.federate";
         jsonDictionary[kRoomCreateContentRoomVersionJSONKey] = self.roomVersion;
     }
     
-    jsonDictionary[kRoomCreateContentFederateJSONKey] = [NSNumber numberWithBool:self.isFederated];
+    jsonDictionary[kRoomCreateContentFederateJSONKey] = @(self.isFederated);
     
     return jsonDictionary;
 }
