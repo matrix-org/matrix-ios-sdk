@@ -1,5 +1,6 @@
 /*
  Copyright 2014 OpenMarket Ltd
+ Copyright 2019 The Matrix.org Foundation C.I.C
  
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -60,6 +61,7 @@ NSString *const kMXErrorConsentNotGivenConsentURIKey                        = @"
 NSString *const kMXErrorResourceLimitExceededLimitTypeKey                   = @"limit_type";
 NSString *const kMXErrorResourceLimitExceededLimitTypeMonthlyActiveUserValue= @"monthly_active_user";
 NSString *const kMXErrorResourceLimitExceededAdminContactKey                = @"admin_contact";
+NSString *const kMXErrorSoftLogoutKey                                       = @"soft_logout";
 
 
 // Random NSError code
@@ -108,6 +110,19 @@ NSInteger const kMXNSErrorCode = 6;
     }
 
     return self;
+}
+
+- (void)setHttpResponse:(NSHTTPURLResponse *)httpResponse
+{
+    // Store it to userInfo. This makes it easy to transport through a NSError object
+    NSMutableDictionary *userInfo = _userInfo ? [_userInfo mutableCopy] : [NSMutableDictionary dictionary];
+    userInfo[@"httpResponse"] = httpResponse;
+    _userInfo = userInfo;
+}
+
+- (NSHTTPURLResponse *)httpResponse
+{
+    return _userInfo[@"httpResponse"];
 }
 
 - (NSError *)createNSError
