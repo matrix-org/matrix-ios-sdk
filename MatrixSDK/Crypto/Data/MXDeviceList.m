@@ -195,7 +195,7 @@
             keyDownloadsInProgressByUser[userId] = operation;
         }
 
-        if (doANewQuery)
+        if (doANewQuery || !currentQueryPool)
         {
             NSLog(@"[MXDeviceList] downloadKeys: waiting for next key query");
 

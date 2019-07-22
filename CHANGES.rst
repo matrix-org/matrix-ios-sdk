@@ -7,6 +7,7 @@ Improvements:
  * MXRoomCreateContent - Update: Add missing fields `room_version` and `m.federate` (Note: `creator` field becomes optional (because of MSC2175)).
 
 Bug Fix:
+ * Crypto: Fix a race condition that prevented message from being sent (vector-im/riot-ios/issues/2541).
 
 API break:
 
