@@ -8,6 +8,7 @@ Improvements:
 
 Bug Fix:
  * Crypto: Fix a race condition that prevented message from being sent (vector-im/riot-ios/issues/2541).
+ * MXRoom: storeLocalReceipt: Add a sanity check to avoid crash.
 
 API break:
 
