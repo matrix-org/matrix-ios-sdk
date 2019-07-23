@@ -81,14 +81,14 @@
 
 - (void)doKeyDownloadForUsers:(NSArray<NSString *> *)users token:(NSString *)token complete:(void (^)(NSDictionary<NSString *, NSDictionary *> *failedUserIds))complete
 {
-    NSLog(@"[MXDeviceListOperationsPool] doKeyDownloadForUsers %@ users: %@", @(users.count), users);
+    NSLog(@"[MXDeviceListOperationsPool] doKeyDownloadForUsers(pool: %p) %@ users: %@", self, @(users.count), users);
 
     // Download
     MXWeakify(self);
     _httpOperation = [crypto.matrixRestClient downloadKeysForUsers:users token:token success:^(MXKeysQueryResponse *keysQueryResponse) {
         MXStrongifyAndReturnIfNil(self);
 
-        NSLog(@"[MXDeviceListOperationsPool] doKeyDownloadForUsers -> DONE. Got keys for %@ users and %@ devices", @(keysQueryResponse.deviceKeys.map.count), @(keysQueryResponse.deviceKeys.count));
+        NSLog(@"[MXDeviceListOperationsPool] doKeyDownloadForUsers(pool: %p) -> DONE. Got keys for %@ users and %@ devices", self, @(keysQueryResponse.deviceKeys.map.count), @(keysQueryResponse.deviceKeys.count));
 
         self->_httpOperation = nil;
 
@@ -178,7 +178,7 @@
 
         self->_httpOperation = nil;
 
-        NSLog(@"[MXDeviceListOperationsPool] doKeyDownloadForUsers -> FAILED. Error: %@", error);
+        NSLog(@"[MXDeviceListOperationsPool] doKeyDownloadForUsers(pool: %p) -> FAILED. Error: %@", self, error);
 
         dispatch_async(self->crypto.matrixRestClient.completionQueue, ^{
             for (MXDeviceListOperation *operation in self.operations)

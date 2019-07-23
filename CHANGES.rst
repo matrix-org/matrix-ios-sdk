@@ -5,8 +5,11 @@ Improvements:
  * MXError: Expose httpResponse.
  * Soft logout: Handle new CS API error code (vector-im/riot-ios/issues/2584).
  * MXRoomCreateContent - Update: Add missing fields `room_version` and `m.federate` (Note: `creator` field becomes optional (because of MSC2175)).
+ * Logs: Remove MXJSONModelSet warnings for MXRoomMemberEventContent and MXGroupProfile.
 
 Bug Fix:
+ * Crypto: Fix a race condition that prevented message from being sent (vector-im/riot-ios/issues/2541).
+ * MXRoom: storeLocalReceipt: Add a sanity check to avoid crash.
 
 API break:
 

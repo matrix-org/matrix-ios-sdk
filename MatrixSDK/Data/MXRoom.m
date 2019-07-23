@@ -2854,6 +2854,13 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
 
 - (BOOL)storeLocalReceipt:(NSString *)receiptType eventId:(NSString *)eventId userId:(NSString *)userId ts:(uint64_t)ts
 {
+    // Sanity check
+    if (!userId)
+    {
+        NSLog(@"[MXRoom] storeLocalReceipt: Error: nil user id");
+        return NO;
+    }
+
     BOOL result = NO;
 
     MXReceiptData* receiptData = [[MXReceiptData alloc] init];

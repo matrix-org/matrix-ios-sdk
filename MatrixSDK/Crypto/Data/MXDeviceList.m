@@ -143,7 +143,7 @@
         operation = [[MXDeviceListOperation alloc] initWithUserIds:usersToDownload success:^(NSArray<NSString *> *succeededUserIds, NSArray<NSString *> *failedUserIds) {
             MXStrongifyAndReturnIfNil(self);
 
-            NSLog(@"[MXDeviceList] downloadKeys -> DONE");
+            NSLog(@"[MXDeviceList] downloadKeys (operation: %p) -> DONE", operation);
 
             for (NSString *userId in succeededUserIds)
             {
@@ -152,7 +152,7 @@
                 // ignore the completion of the first one.
                 if (self->keyDownloadsInProgressByUser[userId] != operation)
                 {
-                    NSLog(@"[MXDeviceList] downloadKeys: Another update in the queue for %@ - not marking up-to-date", userId);
+                    NSLog(@"[MXDeviceList] downloadKeys: Another update (operation: %p) in the queue for %@ - not marking up-to-date", self->keyDownloadsInProgressByUser[userId], userId);
                     continue;
                 }
                 [self->keyDownloadsInProgressByUser removeObjectForKey:userId];
@@ -195,17 +195,15 @@
             keyDownloadsInProgressByUser[userId] = operation;
         }
 
-        if (doANewQuery)
+        if (doANewQuery || !currentQueryPool)
         {
-            NSLog(@"[MXDeviceList] downloadKeys: waiting for next key query");
+            NSLog(@"[MXDeviceList] downloadKeys: waiting for next key query. Operation: %p", operation);
 
             [self startOrQueueDeviceQuery:operation];
         }
         else
         {
-
-            NSLog(@"[MXDeviceList] downloadKeys: waiting for in-flight query to complete");
-            
+            NSLog(@"[MXDeviceList] downloadKeys: waiting for in-flight query to complete. Operation: %p", operation);
             [operation addToPool:currentQueryPool];
         }
     }
@@ -384,7 +382,7 @@
 
 - (void)startCurrentPoolQuery
 {
-    NSLog(@"[MXDeviceList] startCurrentPoolQuery (users: %tu): %@", currentQueryPool.userIds.count, currentQueryPool.userIds);
+    NSLog(@"[MXDeviceList] startCurrentPoolQuery(pool: %p) (users: %tu): %@", currentQueryPool, currentQueryPool.userIds.count, currentQueryPool.userIds);
 
     if (currentQueryPool.userIds)
     {
@@ -395,7 +393,7 @@
         [currentQueryPool downloadKeys:token complete:^(NSDictionary<NSString *,NSDictionary *> *failedUserIds) {
             MXStrongifyAndReturnIfNil(self);
 
-            NSLog(@"[MXDeviceList] startCurrentPoolQuery -> DONE. failedUserIds (users: %tu): %@", failedUserIds.count, failedUserIds);
+            NSLog(@"[MXDeviceList] startCurrentPoolQuery(pool: %p) -> DONE. failedUserIds (users: %tu): %@", self->currentQueryPool, failedUserIds.count, failedUserIds);
 
             if (token)
             {

@@ -312,6 +312,7 @@ NSString *const kMXLoginIdentifierTypePhone = @"m.id.phone";
     MXRoomMemberEventContent *roomMemberEventContent = [[MXRoomMemberEventContent alloc] init];
     if (roomMemberEventContent)
     {
+        JSONDictionary = [MXJSONModel removeNullValuesInJSON:JSONDictionary];
         MXJSONModelSetString(roomMemberEventContent.displayname, JSONDictionary[@"displayname"]);
         MXJSONModelSetString(roomMemberEventContent.avatarUrl, JSONDictionary[@"avatar_url"]);
         MXJSONModelSetString(roomMemberEventContent.membership, JSONDictionary[@"membership"]);
@@ -1666,6 +1667,7 @@ NSString *const kMXPushRuleScopeStringDevice = @"device";
     MXGroupProfile *profile = [[MXGroupProfile alloc] init];
     if (profile)
     {
+        JSONDictionary = [MXJSONModel removeNullValuesInJSON:JSONDictionary];
         MXJSONModelSetString(profile.shortDescription, JSONDictionary[@"short_description"]);
         MXJSONModelSetBoolean(profile.isPublic, JSONDictionary[@"is_public"]);
         MXJSONModelSetString(profile.avatarUrl, JSONDictionary[@"avatar_url"]);
