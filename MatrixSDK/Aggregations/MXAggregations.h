@@ -95,6 +95,25 @@ NS_ASSUME_NONNULL_BEGIN
  */
 - (void)removeListener:(id)listener;
 
+/**
+ Fetch reaction events for a given event.
+
+ @param eventId The id of the event.
+ @param roomId The id of the room.
+ @param from The `nextBatch` returned in the previous response.
+ @param limit (optional, use -1 to not defined this value) the maximum number of messages to return.
+ 
+ @param success A block object called when the operation succeeds. It provides a `MXAggregationPaginatedResponse` object.
+ @param failure A block object called when the operation fails.
+ 
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)reactionsEventsForEvent:(NSString*)eventId
+                                     inRoom:(NSString*)roomId
+                                       from:(nullable NSString*)from
+                                      limit:(NSUInteger)limit
+                                    success:(void (^)(MXAggregationPaginatedResponse *paginatedResponse))success
+                                    failure:(void (^)(NSError *error))failure;
 
 #pragma mark - Edits
 

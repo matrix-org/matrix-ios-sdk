@@ -84,6 +84,23 @@
     }
 }
 
+- (MXHTTPOperation*)reactionsEventsForEvent:(NSString*)eventId
+                                     inRoom:(NSString*)roomId
+                                       from:(nullable NSString*)from
+                                      limit:(NSUInteger)limit
+                                    success:(void (^)(MXAggregationPaginatedResponse *paginatedResponse))success
+                                    failure:(void (^)(NSError *error))failure
+{
+    return [self.mxSession.matrixRestClient relationsForEvent:eventId
+                                                       inRoom:roomId
+                                                 relationType:MXEventRelationTypeAnnotation
+                                                    eventType:kMXEventTypeStringReaction
+                                                         from:from                                                    
+                                                        limit:limit
+                                                      success:success
+                                                      failure:failure];
+}
+
 
 #pragma mark - Edits
 
