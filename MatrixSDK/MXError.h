@@ -1,5 +1,6 @@
 /*
  Copyright 2014 OpenMarket Ltd
+ Copyright 2019 The Matrix.org Foundation C.I.C
  
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -69,6 +70,7 @@ FOUNDATION_EXPORT NSString *const kMXErrorConsentNotGivenConsentURIKey;
 FOUNDATION_EXPORT NSString *const kMXErrorResourceLimitExceededLimitTypeKey;
 FOUNDATION_EXPORT NSString *const kMXErrorResourceLimitExceededAdminContactKey;
 FOUNDATION_EXPORT NSString *const kMXErrorResourceLimitExceededLimitTypeMonthlyActiveUserValue;
+FOUNDATION_EXPORT NSString *const kMXErrorSoftLogoutKey;
 
 /**
  `MXError` represents an error sent by the home server.
@@ -91,8 +93,15 @@ FOUNDATION_EXPORT NSString *const kMXErrorResourceLimitExceededLimitTypeMonthlyA
  */
 @property (nonatomic, readonly, copy) NSDictionary *userInfo;
 
-- (id)initWithErrorCode:(NSString*)errcode error:(NSString*)error;
+/**
+ The HTTP response
+ */
+@property (nonatomic) NSHTTPURLResponse *httpResponse;
 
+/**
+ Construtors.
+ */
+- (id)initWithErrorCode:(NSString*)errcode error:(NSString*)error;
 - (id)initWithErrorCode:(NSString*)errcode error:(NSString*)error userInfo:(NSDictionary*)userInfo;
 
 /**

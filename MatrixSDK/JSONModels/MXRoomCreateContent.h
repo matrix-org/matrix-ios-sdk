@@ -24,11 +24,21 @@
 /**
  The `user_id` of the room creator. This is set by the homeserver.
  */
-@property (nonatomic, copy, readonly, nonnull) NSString *creatorUserId;
+@property (nonatomic, copy, readonly, nullable) NSString *creatorUserId;
 
 /**
  Room predecessor information if the current room is a new version of an old room (that has a state event `m.room.tombstone`).
  */
 @property (nonatomic, strong, readonly, nullable) MXRoomPredecessorInfo *roomPredecessorInfo;
+
+/**
+ The version of the room.
+ */
+@property (nonatomic, copy, readonly, nullable) NSString *roomVersion;
+
+/**
+ Whether users on other servers can join this room.
+ */
+@property (nonatomic, readonly) BOOL isFederated;
 
 @end

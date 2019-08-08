@@ -47,7 +47,7 @@
 
 #pragma mark - Constants definitions
 
-const NSString *MatrixSDKVersion = @"0.13.0";
+const NSString *MatrixSDKVersion = @"0.13.1";
 NSString *const kMXSessionStateDidChangeNotification = @"kMXSessionStateDidChangeNotification";
 NSString *const kMXSessionNewRoomNotification = @"kMXSessionNewRoomNotification";
 NSString *const kMXSessionWillLeaveRoomNotification = @"kMXSessionWillLeaveRoomNotification";
@@ -845,8 +845,20 @@ typedef void (^MXOnResumeDone)(void);
         MXError *mxError = [[MXError alloc] initWithNSError:error];
         if ([mxError.errcode isEqualToString:kMXErrCodeStringUnknownToken])
         {
-            NSLog(@"[MXSession] The access token is no more valid. Go to MXSessionStateUnknownToken state.");
-            [self setState:MXSessionStateUnknownToken];
+            NSLog(@"[MXSession] isUnknownTokenError: The access token is no more valid.");
+
+            if (mxError.httpResponse.statusCode == 401
+                && [mxError.userInfo[kMXErrorSoftLogoutKey] isEqual:@(YES)])
+            {
+                NSLog(@"[MXSession] isUnknownTokenError: Go to MXSessionStateSoftLogout state.");
+                [self setState:MXSessionStateSoftLogout];
+            }
+            else
+            {
+                NSLog(@"[MXSession] isUnknownTokenError: Go to MXSessionStateUnknownToken state.");
+                [self setState:MXSessionStateUnknownToken];
+            }
+
             return YES;
         }
     }

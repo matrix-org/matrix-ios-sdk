@@ -123,7 +123,16 @@ typedef enum : NSUInteger
      This can happen when the user made a forget password request for example.
      The Matrix session is no more usable. The user must log in again.
      */
-    MXSessionStateUnknownToken
+    MXSessionStateUnknownToken,
+
+    /**
+     The user is logged out (invalid token) but they still have their local storage.
+     The user should log back in to rehydrate the client.
+
+     @discussion
+     This happens when the homeserver admin has signed the user out.
+     */
+    MXSessionStateSoftLogout
 
 } MXSessionState;
 

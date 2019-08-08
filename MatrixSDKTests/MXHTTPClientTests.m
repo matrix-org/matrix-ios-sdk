@@ -1,6 +1,7 @@
 /*
  Copyright 2014 OpenMarket Ltd
  Copyright 2017 Vector Creations Ltd
+ Copyright 2019 The Matrix.org Foundation C.I.C
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -103,9 +104,12 @@
                           }
                           failure:^(NSError *error) {
                               XCTAssertTrue([MXError isMXError:error], @"The HTTP client must have detected a Home Server error");
-                              
                               XCTAssertTrue([NSThread isMainThread], @"The block callback must be called from the main thread");
-                              
+
+                              MXError *mxError = [[MXError alloc] initWithNSError:error];
+                              XCTAssertNotNil(mxError.httpResponse);
+                              XCTAssertEqual(mxError.httpResponse.statusCode, 400);
+
                               [expectation fulfill];
                           }];
     

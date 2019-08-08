@@ -2626,6 +2626,86 @@
 }
 
 
+#pragma mark - Bug fix
+
+/**
+ Test for https://github.com/vector-im/riot-ios/issues/2541.
+
+ You need to hack the code and apply the following patch in MXDeviceListOperationsPool.m
+ to reproduce the race condition every time.
+ -        dispatch_async(self->crypto.matrixRestClient.completionQueue, ^{
+ +        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 1 * NSEC_PER_SEC), self->crypto.matrixRestClient.completionQueue, ^{
+
+ The test does:
+ - 1- Alice sends a message in a room
+ - 2- one device got updated in the room
+ - 3- Alice sends a second message
+ -> 4- It must be sent (it was never sent before the fix)
+ */
+- (void)testDeviceInvalidationWhileSending
+{
+    [matrixSDKTestsE2EData doE2ETestWithAliceInARoom:self readyToTest:^(MXSession *aliceSession, NSString *roomId, XCTestExpectation *expectation) {
+
+        aliceSessionToClose = aliceSession;
+
+        NSString *message = @"message";
+        NSString *message2 = @"message2";
+        NSString *message3 = @"message3";
+
+        MXRoom *roomFromAlicePOV = [aliceSession roomWithRoomId:roomId];
+
+        XCTAssert(roomFromAlicePOV.summary.isEncrypted);
+
+        __block NSUInteger messageCount = 0;
+        [roomFromAlicePOV liveTimeline:^(MXEventTimeline *liveTimeline) {
+
+            [liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
+
+                switch (++messageCount) {
+                    case 1:
+                    {
+
+                        //  - 2- one device got updated in the room
+                        [aliceSession.crypto.deviceList invalidateUserDeviceList:aliceSession.myUser.userId];
+
+                        // Delay the new message request so that the downloadKeys request from invalidateUserDeviceList can complete
+                        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 0.5 * NSEC_PER_SEC), dispatch_get_main_queue(), ^{
+
+                            // - 3- Alice sends a second message
+                            [roomFromAlicePOV sendTextMessage:message2 success:nil failure:^(NSError *error) {
+                                XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                                [expectation fulfill];
+                            }];
+
+                        });
+
+                        break;
+                    }
+
+                    case 2:
+                    {
+                        // -> 4- It must be sent (it was never sent before the fix)
+                        XCTAssertEqual(0, [self checkEncryptedEvent:event roomId:roomId clearMessage:message2 senderSession:aliceSession]);
+
+                        [expectation fulfill];
+                        break;
+                    }
+
+                    default:
+                        break;
+                }
+
+            }];
+        }];
+
+        // - 1- Alice sends a message in a room
+        [roomFromAlicePOV sendTextMessage:message success:nil failure:^(NSError *error) {
+            XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+            [expectation fulfill];
+        }];
+    }];
+}
+
 @end
 
 #pragma clang diagnostic pop
