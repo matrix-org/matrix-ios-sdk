@@ -227,6 +227,10 @@
 		32935F61216FA49D00A1BC24 /* MXCryptoBackupTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 32935F60216FA49D00A1BC24 /* MXCryptoBackupTests.m */; };
 		3293C700214BBA4F009B3DDB /* MXPeekingRoomSummary.h in Headers */ = {isa = PBXBuildFile; fileRef = 3293C6FE214BBA4F009B3DDB /* MXPeekingRoomSummary.h */; };
 		3293C701214BBA4F009B3DDB /* MXPeekingRoomSummary.m in Sources */ = {isa = PBXBuildFile; fileRef = 3293C6FF214BBA4F009B3DDB /* MXPeekingRoomSummary.m */; };
+		3294FD9D22F321B0007F1E60 /* MXServiceTermsRestClient.m in Sources */ = {isa = PBXBuildFile; fileRef = 3294FD9922F321B0007F1E60 /* MXServiceTermsRestClient.m */; };
+		3294FD9E22F321B0007F1E60 /* MXServiceTerms.m in Sources */ = {isa = PBXBuildFile; fileRef = 3294FD9A22F321B0007F1E60 /* MXServiceTerms.m */; };
+		3294FD9F22F321B0007F1E60 /* MXServiceTermsRestClient.h in Headers */ = {isa = PBXBuildFile; fileRef = 3294FD9B22F321B0007F1E60 /* MXServiceTermsRestClient.h */; };
+		3294FDA022F321B0007F1E60 /* MXServiceTerms.h in Headers */ = {isa = PBXBuildFile; fileRef = 3294FD9C22F321B0007F1E60 /* MXServiceTerms.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		32954019216385F100E300FC /* MXServerNoticeContent.h in Headers */ = {isa = PBXBuildFile; fileRef = 32954017216385F100E300FC /* MXServerNoticeContent.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		3295401A216385F100E300FC /* MXServerNoticeContent.m in Sources */ = {isa = PBXBuildFile; fileRef = 32954018216385F100E300FC /* MXServerNoticeContent.m */; };
 		329571931B0240CE00ABB3BA /* MXVoIPTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 329571921B0240CE00ABB3BA /* MXVoIPTests.m */; };
@@ -702,6 +706,10 @@
 		32935F60216FA49D00A1BC24 /* MXCryptoBackupTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MXCryptoBackupTests.m; sourceTree = "<group>"; };
 		3293C6FE214BBA4F009B3DDB /* MXPeekingRoomSummary.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MXPeekingRoomSummary.h; sourceTree = "<group>"; };
 		3293C6FF214BBA4F009B3DDB /* MXPeekingRoomSummary.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MXPeekingRoomSummary.m; sourceTree = "<group>"; };
+		3294FD9922F321B0007F1E60 /* MXServiceTermsRestClient.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXServiceTermsRestClient.m; sourceTree = "<group>"; };
+		3294FD9A22F321B0007F1E60 /* MXServiceTerms.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXServiceTerms.m; sourceTree = "<group>"; };
+		3294FD9B22F321B0007F1E60 /* MXServiceTermsRestClient.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXServiceTermsRestClient.h; sourceTree = "<group>"; };
+		3294FD9C22F321B0007F1E60 /* MXServiceTerms.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXServiceTerms.h; sourceTree = "<group>"; };
 		32954017216385F100E300FC /* MXServerNoticeContent.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXServerNoticeContent.h; sourceTree = "<group>"; };
 		32954018216385F100E300FC /* MXServerNoticeContent.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXServerNoticeContent.m; sourceTree = "<group>"; };
 		329571921B0240CE00ABB3BA /* MXVoIPTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXVoIPTests.m; sourceTree = "<group>"; };
@@ -1482,6 +1490,18 @@
 			path = Store;
 			sourceTree = "<group>";
 		};
+		3294FD9822F321B0007F1E60 /* ServiceTerms */ = {
+			isa = PBXGroup;
+			children = (
+				3294FD9C22F321B0007F1E60 /* MXServiceTerms.h */,
+				3294FD9A22F321B0007F1E60 /* MXServiceTerms.m */,
+				3294FD9B22F321B0007F1E60 /* MXServiceTermsRestClient.h */,
+				3294FD9922F321B0007F1E60 /* MXServiceTermsRestClient.m */,
+			);
+			name = ServiceTerms;
+			path = NotificationCenter/ServiceTerms;
+			sourceTree = "<group>";
+		};
 		329571941B024D2B00ABB3BA /* Mocks */ = {
 			isa = PBXGroup;
 			children = (
@@ -1627,6 +1647,7 @@
 				320DFDC719DD99B60068622A /* Data */,
 				3281E8B219E42DFE00976E1A /* JSONModels */,
 				32DC15CA1A8CF7AE006F9AD3 /* NotificationCenter */,
+				3294FD9822F321B0007F1E60 /* ServiceTerms */,
 				320DFDD619DD99B60068622A /* Utils */,
 				3245A74B1AF7B2930001D8A7 /* VoIP */,
 				32A151581DB5254D00400192 /* Lib */,
@@ -1993,6 +2014,7 @@
 				32792BDC2296B90A00F4FC9D /* MXAggregatedEditsUpdater.h in Headers */,
 				327E9AEF2289C61100A98BC1 /* MXAggregations.h in Headers */,
 				32DC15CF1A8CF7AE006F9AD3 /* MXPushRuleConditionChecker.h in Headers */,
+				3294FD9F22F321B0007F1E60 /* MXServiceTermsRestClient.h in Headers */,
 				32954019216385F100E300FC /* MXServerNoticeContent.h in Headers */,
 				327187851DA7D0220071C818 /* MXOlmDecryption.h in Headers */,
 				32D7767D1A27860600FC4AA2 /* MXMemoryStore.h in Headers */,
@@ -2174,6 +2196,7 @@
 				32133021228BF7BC0070BA9B /* MXReactionCountChange.h in Headers */,
 				B146D4D721A5A44E00D8C2C6 /* MXScanRealmFileProvider.h in Headers */,
 				320DFDDB19DD99B60068622A /* MXRoom.h in Headers */,
+				3294FDA022F321B0007F1E60 /* MXServiceTerms.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2443,6 +2466,7 @@
 				F03EF5091DF071D5009DF592 /* MXEncryptedAttachments.m in Sources */,
 				B172857D2100D4F60052C51E /* MXSendReplyEventDefaultStringLocalizations.m in Sources */,
 				321CFDEF225264C4004D31DF /* NSArray+MatrixSDK.m in Sources */,
+				3294FD9D22F321B0007F1E60 /* MXServiceTermsRestClient.m in Sources */,
 				323547DD2226FC5700F15F94 /* MXCredentials.m in Sources */,
 				32FA10CF1FA1C9F700E54233 /* MXOutgoingRoomKeyRequest.m in Sources */,
 				32322A4C1E575F65005DD155 /* MXAllowedCertificates.m in Sources */,
@@ -2493,6 +2517,7 @@
 				32BBAE752179CF4000D85F46 /* MXKeyBackup.m in Sources */,
 				322A51B71D9AB15900C8536D /* MXCrypto.m in Sources */,
 				B17982FB2119E4A2001FD722 /* MXRoomPredecessorInfo.m in Sources */,
+				3294FD9E22F321B0007F1E60 /* MXServiceTerms.m in Sources */,
 				32DC15D11A8CF7AE006F9AD3 /* MXNotificationCenter.m in Sources */,
 				32637ED51E5B00400011E20D /* MXDeviceList.m in Sources */,
 				B17982FA2119E4A2001FD722 /* MXRoomCreateContent.m in Sources */,

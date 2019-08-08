@@ -52,9 +52,15 @@ FOUNDATION_EXPORT NSString *const kMXAPIPrefixPathR0;
 FOUNDATION_EXPORT NSString *const kMXAPIPrefixPathUnstable;
 
 /**
- Prefix used in path of identity server API requests.
+ Prefix used in path of identity server for v1 API requests.
  */
-FOUNDATION_EXPORT NSString *const kMXIdentityAPIPrefixPath;
+FOUNDATION_EXPORT NSString *const kMXIdentityAPIPrefixPathV1;
+
+/**
+ Prefix used in path of identity server for v2 API requests.
+ */
+FOUNDATION_EXPORT NSString *const kMXIdentityAPIPrefixPathV2;
+
 
 /**
  Account data types
@@ -80,7 +86,6 @@ FOUNDATION_EXPORT NSString *const kMXRestClientErrorDomain;
 FOUNDATION_EXPORT NSString *const kMXMembersOfRoomParametersAt;
 FOUNDATION_EXPORT NSString *const kMXMembersOfRoomParametersMembership;
 FOUNDATION_EXPORT NSString *const kMXMembersOfRoomParametersNotMembership;
-
 
 /**
  `MXRestClient` makes requests to Matrix servers.

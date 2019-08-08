@@ -32,10 +32,8 @@
 NSString *const kMXAPIPrefixPathR0 = @"_matrix/client/r0";
 NSString *const kMXAPIPrefixPathUnstable = @"_matrix/client/unstable";
 
-/**
- Prefix used in path of identity server API requests.
- */
-NSString *const kMXIdentityAPIPrefixPath = @"_matrix/identity/api/v1";
+NSString *const kMXIdentityAPIPrefixPathV1 = @"_matrix/identity/api/v1";
+NSString *const kMXIdentityAPIPrefixPathV2 = @"_matrix/identity/v2";
 
 /**
  Account data types
@@ -3364,7 +3362,7 @@ MXAuthAction;
 - (void)setIdentityServer:(NSString *)identityServer
 {
     self.credentials.identityServer = [identityServer copy];
-    identityHttpClient = [[MXHTTPClient alloc] initWithBaseURL:[NSString stringWithFormat:@"%@/%@", identityServer, kMXIdentityAPIPrefixPath]
+    identityHttpClient = [[MXHTTPClient alloc] initWithBaseURL:[NSString stringWithFormat:@"%@/%@", identityServer, kMXIdentityAPIPrefixPathV1]
                              andOnUnrecognizedCertificateBlock:nil];
 
     // The identity server accepts parameters in form data form not in JSON
