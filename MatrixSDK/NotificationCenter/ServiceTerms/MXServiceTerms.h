@@ -50,14 +50,13 @@ NS_ASSUME_NONNULL_BEGIN
 
  @return a MXHTTPOperation instance.
  */
-- (MXHTTPOperation*)terms:(void (^)(MXLoginTerms * _Nullable terms))success
+- (MXHTTPOperation*)terms:(void (^)(MXLoginTerms * _Nullable terms, NSArray<NSString*> * _Nullable alreadyAcceptedTermsUrls))success
                   failure:(nullable void (^)(NSError * _Nonnull))failure;
 
 /**
  Accept terms by their urls.
 
  @param termsUrls urls of the terms documents.
- @param mxSession the Matrix session of the user.
 
  @param success A block object called when the operation succeeds.
  @param failure A block object called when the operation fails.

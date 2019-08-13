@@ -47,8 +47,6 @@
                                      MXLoginTerms *terms;
                                      MXJSONModelSetMXJSONModel(terms, MXLoginTerms.class, JSONResponse);
 
-                                     NSLog(@"#### %@", JSONResponse);
-
                                      success(terms);
                                  }
                                  failure:^(NSError *error) {

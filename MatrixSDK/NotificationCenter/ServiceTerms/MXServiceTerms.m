@@ -18,6 +18,7 @@
 #import "MXServiceTermsRestClient.h"
 
 #import "MXRestClient.h"
+#import "MXTools.h"
 
 
 NSString *const kMXIntegrationManagerAPIPrefixPathV1 = @"_matrix/integrations/v1";
@@ -42,26 +43,57 @@ NSString *const kMXIntegrationManagerAPIPrefixPathV1 = @"_matrix/integrations/v1
         _mxSession = mxSession;
         _accessToken = [accessToken copy];
 
-        _restClient = [[MXServiceTermsRestClient alloc] initWithBaseUrl:self.termsBaseUrl accessToken:accessToken];
+        _restClient = [[MXServiceTermsRestClient alloc] initWithBaseUrl:self.termsBaseUrl accessToken:@"bobo"];//accessToken];
     }
     return self;
 }
 
-- (MXHTTPOperation*)terms:(void (^)(MXLoginTerms * _Nullable terms))success
+- (MXHTTPOperation*)terms:(void (^)(MXLoginTerms * _Nullable terms, NSArray<NSString*> * _Nullable alreadyAcceptedTermsUrls))success
                   failure:(nullable void (^)(NSError * _Nonnull))failure
 {
-    return [_restClient terms:success failure:failure];
+    return [_restClient terms:^(MXLoginTerms * _Nullable terms) {
+        success(terms, self.acceptedTerms);
+    } failure:failure];
 }
 
 - (MXHTTPOperation *)agreeToTerms:(NSArray<NSString *> *)termsUrls
                           success:(void (^)(void))success
                           failure:(void (^)(NSError * _Nonnull))failure
 {
-    NSParameterAssert(_mxSession && _accessToken);
+    if (!_mxSession || !_accessToken)
+    {
+        if (failure)
+        {
+            MXError *error = [[MXError alloc] initWithErrorCode:kMXSDKErrCodeStringMissingParameters error:@"No Matrix session or no access token"];
+            failure([error createNSError]);
+        }
+        return nil;
+    }
 
-    // TODO
-    failure([[NSError alloc] initWithDomain:@"toto" code:0 userInfo:nil]);
-    return nil;
+    // First, send consents to the 3rd party server
+    MXHTTPOperation *operation;
+    MXWeakify(self);
+    operation = [_restClient agreeToTerms:termsUrls success:^{
+        MXStrongifyAndReturnIfNil(self);
+
+        // Then, store consents to the user account data
+        // Merge newly and previously accepted terms to store in account data
+        NSSet *acceptedTermsUrls = [NSSet setWithArray:termsUrls];
+        if (self.acceptedTerms)
+        {
+            acceptedTermsUrls = [acceptedTermsUrls setByAddingObjectsFromArray:self.acceptedTerms];
+        }
+
+        NSDictionary *accountDataAcceptedTerms = @{
+                                                   kMXAccountDataTypeAcceptedTermsKey: acceptedTermsUrls.allObjects
+                                                   };
+
+        MXHTTPOperation *operation;
+        operation = [self.mxSession setAccountData:accountDataAcceptedTerms forType:kMXAccountDataTypeAcceptedTerms success:success failure:failure];
+
+    } failure:failure];
+
+    return operation;
 }
 
 #pragma mark - Private methods
@@ -84,6 +116,20 @@ NSString *const kMXIntegrationManagerAPIPrefixPathV1 = @"_matrix/integrations/v1
     }
 
     return termsBaseUrl;
+}
+
+
+#pragma mark - Private methods
+
+// Accepted terms in account data
+- (nullable NSArray<NSString*> *)acceptedTerms
+{
+    NSArray<NSString*> *acceptedTerms;
+
+    MXJSONModelSetArray(acceptedTerms,
+                        [_mxSession.accountData accountDataForEventType:kMXAccountDataTypeAcceptedTerms][kMXAccountDataTypeAcceptedTermsKey]);
+
+    return acceptedTerms;
 }
 
 @end

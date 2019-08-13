@@ -42,6 +42,8 @@ NSString *const kMXAccountDataTypeIgnoredUserList = @"m.ignored_user_list";
 NSString *const kMXAccountDataTypePushRules = @"m.push_rules";
 NSString *const kMXAccountDataTypeDirect = @"m.direct";
 NSString *const kMXAccountDataTypeUserWidgets = @"m.widgets";
+NSString *const kMXAccountDataTypeAcceptedTerms = @"m.accepted_terms";
+NSString *const kMXAccountDataTypeAcceptedTermsKey = @"accepted";
 
 /**
  Account data keys
