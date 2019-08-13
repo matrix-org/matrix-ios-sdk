@@ -53,8 +53,6 @@ NSString *const kMXErrCodeStringWeakPassword            = @"M_WEAK_PASSWORD";
 
 NSString *const kMXErrorStringInvalidToken      = @"Invalid token";
 
-NSString *const kMXSDKErrCodeStringMissingParameters = @"org.matrix.sdk.missing_parameters";
-
 NSString *const kMXErrorCodeKey                                             = @"errcode";
 NSString *const kMXErrorMessageKey                                          = @"error";
 NSString *const kMXErrorConsentNotGivenConsentURIKey                        = @"consent_uri";
