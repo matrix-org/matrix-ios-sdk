@@ -75,6 +75,18 @@ FOUNDATION_EXPORT NSString *const kMXAccountDataKeyIgnoredUser;
 FOUNDATION_EXPORT NSString *const kMXRestClientErrorDomain;
 
 /**
+ MXRestClient errors
+ */
+
+NS_ERROR_ENUM(kMXRestClientErrorDomain)
+{
+    MXRestClientErrorUnknown,
+    MXRestClientErrorInvalidParameters,
+    MXRestClientErrorInvalidContentURI,
+    MXRestClientErrorMissingIdentityServer
+};
+
+/**
  Parameters that can be used in [MXRestClient membersOfRoom:withParameters:...].
  */
 FOUNDATION_EXPORT NSString *const kMXMembersOfRoomParametersAt;
