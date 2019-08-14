@@ -3493,7 +3493,7 @@ MXAuthAction;
                                    success:(void (^)(NSString *sid))success
                                    failure:(void (^)(NSError *error))failure
 {
-    if (identityHttpClient)
+    if (!identityHttpClient)
     {
         NSError *error = [NSError errorWithDomain:kMXRestClientErrorDomain code:MXRestClientErrorMissingIdentityServer userInfo:nil];
         [self dispatchFailure:error inBlock:failure];
