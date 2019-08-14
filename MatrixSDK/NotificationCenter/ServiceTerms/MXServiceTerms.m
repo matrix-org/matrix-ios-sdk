@@ -23,6 +23,11 @@
 
 NSString *const kMXIntegrationManagerAPIPrefixPathV1 = @"_matrix/integrations/v1";
 
+/**
+ MXServiceTerms error domain
+ */
+NSString *const MXServiceTermsErrorDomain = @"org.matrix.sdk.MXServiceTermsErrorDomain";
+
 @interface MXServiceTerms()
 
 @property (nonatomic, strong) MXServiceTermsRestClient *restClient;
@@ -64,8 +69,8 @@ NSString *const kMXIntegrationManagerAPIPrefixPathV1 = @"_matrix/integrations/v1
     {
         if (failure)
         {
-            MXError *error = [[MXError alloc] initWithErrorCode:kMXSDKErrCodeStringMissingParameters error:@"No Matrix session or no access token"];
-            failure([error createNSError]);
+            NSError *error = [NSError errorWithDomain:MXServiceTermsErrorDomain code:MXServiceTermsErrorMissingParameters userInfo:@{ NSLocalizedDescriptionKey : @"No Matrix session or no access token"}];
+            failure(error);
         }
         return nil;
     }
