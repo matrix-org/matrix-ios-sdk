@@ -174,17 +174,8 @@ MXAuthAction;
                               }
                           }];
         }
-
-
-        if (self.credentials.identityServer)
-        {
-            self.identityServer = self.credentials.identityServer;
-        }
-        else if (self.credentials.homeServer)
-        {
-            // By default, use the same address for the identity server
-            self.identityServer = self.credentials.homeServer;
-        }
+        
+        self.identityServer = self.credentials.identityServer;
 
         completionQueue = dispatch_get_main_queue();
 
@@ -618,7 +609,7 @@ MXAuthAction;
     // sanity check
     if (!parameters)
     {
-        NSError* error = [NSError errorWithDomain:@"Invalid params" code:500 userInfo:nil];
+        NSError *error = [NSError errorWithDomain:kMXRestClientErrorDomain code:MXRestClientErrorInvalidParameters userInfo:nil];
 
         [self dispatchFailure:error inBlock:failure];
         return nil;
@@ -645,7 +636,7 @@ MXAuthAction;
     // sanity check
     if (!oldPassword || !newPassword)
     {
-        NSError* error = [NSError errorWithDomain:@"Invalid params" code:500 userInfo:nil];
+        NSError *error = [NSError errorWithDomain:kMXRestClientErrorDomain code:MXRestClientErrorInvalidParameters userInfo:nil];
 
         [self dispatchFailure:error inBlock:failure];
         return nil;
@@ -777,7 +768,7 @@ MXAuthAction;
     // authParameters are required
     if (!authParameters)
     {
-        NSError* error = [NSError errorWithDomain:@"Invalid params" code:500 userInfo:nil];
+        NSError *error = [NSError errorWithDomain:kMXRestClientErrorDomain code:MXRestClientErrorInvalidParameters userInfo:nil];
         
         [self dispatchFailure:error inBlock:failure];
         return nil;
@@ -1057,7 +1048,7 @@ MXAuthAction;
     // sanity check
     if (!pushkey || !kind || !appDisplayName || !deviceDisplayName || !profileTag || !lang || !data)
     {
-        NSError* error = [NSError errorWithDomain:@"Invalid params" code:500 userInfo:nil];
+        NSError *error = [NSError errorWithDomain:kMXRestClientErrorDomain code:MXRestClientErrorInvalidParameters userInfo:nil];
 
         NSLog(@"[MXRestClient] setPusherWithPushkey: Error: Invalid params: ");
 
@@ -1312,7 +1303,8 @@ MXAuthAction;
     }
     else
     {
-        [self dispatchFailure:[NSError errorWithDomain:kMXRestClientErrorDomain code:0 userInfo:@{@"error": @"Invalid argument"}] inBlock:failure];
+        NSError *error = [NSError errorWithDomain:kMXRestClientErrorDomain code:MXRestClientErrorInvalidParameters userInfo:nil];
+        [self dispatchFailure:error inBlock:failure];
         return nil;
     }
 }
@@ -1974,8 +1966,8 @@ MXAuthAction;
     // The identity server must be defined
     if (!self.credentials.identityServer)
     {
-        MXError *error = [[MXError alloc] initWithErrorCode:kMXSDKErrCodeStringMissingParameters error:@"No supplied identity server URL"];
-        [self dispatchFailure:[error createNSError] inBlock:failure];
+        NSError *error = [NSError errorWithDomain:kMXRestClientErrorDomain code:MXRestClientErrorMissingIdentityServer userInfo:nil];
+        [self dispatchFailure:error inBlock:failure];
         return nil;
     }
 
@@ -2863,6 +2855,9 @@ MXAuthAction;
     if (!self.credentials.identityServer)
     {
         NSLog(@"[MXRestClient] add3PID: Error: Missing identityServer");
+        NSError *error = [NSError errorWithDomain:kMXRestClientErrorDomain code:MXRestClientErrorMissingIdentityServer userInfo:nil];
+        [self dispatchFailure:error inBlock:failure];
+        return nil;
     }
 
     NSURL *identityServerURL = [NSURL URLWithString:self.credentials.identityServer];
@@ -3363,12 +3358,20 @@ MXAuthAction;
 #pragma mark - Identity server API
 - (void)setIdentityServer:(NSString *)identityServer
 {
-    self.credentials.identityServer = [identityServer copy];
-    identityHttpClient = [[MXHTTPClient alloc] initWithBaseURL:[NSString stringWithFormat:@"%@/%@", identityServer, kMXIdentityAPIPrefixPathV1]
-                             andOnUnrecognizedCertificateBlock:nil];
-
-    // The identity server accepts parameters in form data form not in JSON
-    identityHttpClient.requestParametersInJSON = NO;
+    if (identityServer.length)
+    {
+        self.credentials.identityServer = [identityServer copy];
+        identityHttpClient = [[MXHTTPClient alloc] initWithBaseURL:[NSString stringWithFormat:@"%@/%@", identityServer, kMXIdentityAPIPrefixPathV1]
+                                 andOnUnrecognizedCertificateBlock:nil];
+        
+        // The identity server accepts parameters in form data form not in JSON
+        identityHttpClient.requestParametersInJSON = NO;
+    }
+    else
+    {
+        self.credentials.identityServer = nil;
+        identityHttpClient = nil;
+    }
 }
 
 - (NSString *)identityServer
@@ -3379,6 +3382,13 @@ MXAuthAction;
 
 - (MXHTTPOperation *)pingIdentityServer:(void (^)(void))success failure:(void (^)(NSError *))failure
 {
+    if (!identityHttpClient)
+    {
+        NSError *error = [NSError errorWithDomain:kMXRestClientErrorDomain code:MXRestClientErrorMissingIdentityServer userInfo:nil];
+        [self dispatchFailure:error inBlock:failure];
+        return nil;
+    }
+    
     // We cannot use "" as the HTTP client (AFNetworking) will request for "/v1/"
 	NSString *path = @"../v1";
 
@@ -3404,6 +3414,13 @@ MXAuthAction;
                        success:(void (^)(NSString *userId))success
                        failure:(void (^)(NSError *error))failure
 {
+    if (!identityHttpClient)
+    {
+        NSError *error = [NSError errorWithDomain:kMXRestClientErrorDomain code:MXRestClientErrorMissingIdentityServer userInfo:nil];
+        [self dispatchFailure:error inBlock:failure];
+        return nil;
+    }
+    
     return [identityHttpClient requestWithMethod:@"GET"
                                             path:@"lookup"
                                       parameters:@{
@@ -3430,6 +3447,13 @@ MXAuthAction;
                         success:(void (^)(NSArray *discoveredUsers))success
                         failure:(void (^)(NSError *error))failure
 {
+    if (!identityHttpClient)
+    {
+        NSError *error = [NSError errorWithDomain:kMXRestClientErrorDomain code:MXRestClientErrorMissingIdentityServer userInfo:nil];
+        [self dispatchFailure:error inBlock:failure];
+        return nil;
+    }
+    
     NSData *payloadData = nil;
     if (threepids)
     {
@@ -3469,6 +3493,13 @@ MXAuthAction;
                                    success:(void (^)(NSString *sid))success
                                    failure:(void (^)(NSError *error))failure
 {
+    if (!identityHttpClient)
+    {
+        NSError *error = [NSError errorWithDomain:kMXRestClientErrorDomain code:MXRestClientErrorMissingIdentityServer userInfo:nil];
+        [self dispatchFailure:error inBlock:failure];
+        return nil;
+    }
+    
     NSMutableDictionary *parameters = [NSMutableDictionary dictionaryWithDictionary:@{
                                                                                       @"email": email,
                                                                                       @"client_secret": clientSecret,
@@ -3507,6 +3538,13 @@ MXAuthAction;
                                          success:(void (^)(NSString *sid, NSString *msisdn))success
                                          failure:(void (^)(NSError *error))failure
 {
+    if (!identityHttpClient)
+    {
+        NSError *error = [NSError errorWithDomain:kMXRestClientErrorDomain code:MXRestClientErrorMissingIdentityServer userInfo:nil];
+        [self dispatchFailure:error inBlock:failure];
+        return nil;
+    }
+    
     NSMutableDictionary *parameters = [NSMutableDictionary dictionaryWithDictionary:@{
                                                                                       @"phone_number": phoneNumber,
                                                                                       @"country": (countryCode ? countryCode : @""),
@@ -3547,6 +3585,13 @@ MXAuthAction;
                                        success:(void (^)(void))success
                                        failure:(void (^)(NSError *))failure
 {
+    if (!identityHttpClient)
+    {
+        NSError *error = [NSError errorWithDomain:kMXRestClientErrorDomain code:MXRestClientErrorMissingIdentityServer userInfo:nil];
+        [self dispatchFailure:error inBlock:failure];
+        return nil;
+    }
+    
     // Sanity check
     if (!medium.length)
     {
@@ -3591,6 +3636,13 @@ MXAuthAction;
                     success:(void (^)(NSDictionary *thirdPartySigned))success
                     failure:(void (^)(NSError *error))failure
 {
+    if (!identityHttpClient)
+    {
+        NSError *error = [NSError errorWithDomain:kMXRestClientErrorDomain code:MXRestClientErrorMissingIdentityServer userInfo:nil];
+        [self dispatchFailure:error inBlock:failure];
+        return nil;
+    }
+    
     NSString *path = [NSString stringWithFormat:@"%@&mxid=%@", signUrl, credentials.userId];
 
     return [identityHttpClient requestWithMethod:@"POST"
@@ -3659,8 +3711,8 @@ MXAuthAction;
     if (![mxcContentURI hasPrefix:kMXContentUriScheme])
     {
         // do not scan non-mxc content URLs
-        NSError* error = [NSError errorWithDomain:@"Invalid content URI" code:500 userInfo:nil];
-        failure(error);
+        NSError *error = [NSError errorWithDomain:kMXRestClientErrorDomain code:MXRestClientErrorInvalidContentURI userInfo:nil];
+        [self dispatchFailure:error inBlock:failure];
         return nil;
     }
     
@@ -4918,8 +4970,7 @@ MXAuthAction;
     // sanity check
     if (!userIds || !userIds.count)
     {
-        NSError* error = [NSError errorWithDomain:@"Invalid params" code:500 userInfo:nil];
-        
+        NSError *error = [NSError errorWithDomain:kMXRestClientErrorDomain code:MXRestClientErrorInvalidParameters userInfo:nil];
         [self dispatchFailure:error inBlock:failure];
         return nil;
     }

@@ -32,6 +32,19 @@ typedef enum : NSUInteger
     MXServiceTypeIntegrationManager
 } MXServiceType;
 
+/**
+ MXServiceTerms error domain
+ */
+FOUNDATION_EXPORT NSString * _Nonnull const MXServiceTermsErrorDomain;
+
+/**
+ MXServiceTerms error codes
+ */
+NS_ERROR_ENUM(MXServiceTermsErrorDomain)
+{
+    MXServiceTermsErrorUnknown,
+    MXServiceTermsErrorMissingParameters
+};
 
 NS_ASSUME_NONNULL_BEGIN
 

@@ -44,7 +44,6 @@
 
         // Use wellknown data first
         _homeServer = loginResponse.wellknown.homeServer.baseUrl;
-        _identityServer = loginResponse.wellknown.homeServer.baseUrl;
 
         if (!_homeServer)
         {
