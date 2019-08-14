@@ -1,3 +1,9 @@
+Changes in Matrix iOS SDK in 0.13.2 (2019-08-)
+===============================================
+
+Improvements:
+ * MXServiceTerms: A class to support MSC2140 (Terms of Service API) (vector-im/riot-ios#2600).
+
 Changes in Matrix iOS SDK in 0.13.1 (2019-08-08)
 ===============================================
 

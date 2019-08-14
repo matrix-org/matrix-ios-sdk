@@ -1,6 +1,7 @@
 /*
  Copyright 2014 OpenMarket Ltd
  Copyright 2017 Vector Creations Ltd
+ Copyright 2019 The Matrix.org Foundation C.I.C
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -65,6 +66,7 @@ FOUNDATION_EXPORT NSString *MatrixSDKVersion;
 #import "MXServerNotices.h"
 
 #import "MXAutoDiscovery.h"
+#import "MXServiceTerms.h"
 
 #import "MXEventUnsignedData.h"
 #import "MXEventRelations.h"

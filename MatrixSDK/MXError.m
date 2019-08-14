@@ -50,6 +50,7 @@ NSString *const kMXErrCodeStringPasswordNoLowercase     = @"M_PASSWORD_NO_LOWERC
 NSString *const kMXErrCodeStringPasswordNoSymbol        = @"M_PASSWORD_NO_SYMBOL";
 NSString *const kMXErrCodeStringPasswordInDictionary    = @"M_PASSWORD_IN_DICTIONARY";
 NSString *const kMXErrCodeStringWeakPassword            = @"M_WEAK_PASSWORD";
+NSString *const kMXErrCodeStringTermsNotSigned          = @"M_TERMS_NOT_SIGNED";
 
 NSString *const kMXErrorStringInvalidToken      = @"Invalid token";
 
