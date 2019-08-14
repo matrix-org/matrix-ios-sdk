@@ -1,3 +1,9 @@
+Changes in Matrix iOS SDK in 0.13.2 (2019-08-)
+===============================================
+
+Improvements:
+ * MXRestClient: Remove Identity Server URL fallback to homeserver one's when there is no Identity Server configured.
+
 Changes in Matrix iOS SDK in 0.13.1 (2019-08-08)
 ===============================================
 
