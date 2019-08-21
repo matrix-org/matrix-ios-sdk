@@ -1865,26 +1865,26 @@ typedef void (^MXOnResumeDone)(void);
                      failure:(void (^)(NSError *error))failure
 {
     MXHTTPOperation *httpOperation;
-
+    
     MXWeakify(self);
-    httpOperation = [matrixRestClient signUrl:signUrl success:^(NSDictionary *thirdPartySigned) {
+    httpOperation = [self.identityService signUrl:signUrl success:^(NSDictionary *thirdPartySigned) {
         MXStrongifyAndReturnIfNil(self);
-
+        
         MXHTTPOperation *httpOperation2 = [self->matrixRestClient joinRoom:roomIdOrAlias viaServers:viaServers withThirdPartySigned:thirdPartySigned success:^(NSString *theRoomId) {
-
+            
             [self onJoinedRoom:theRoomId success:success];
-
+            
         } failure:failure];
-
+        
         // Transfer the new AFHTTPRequestOperation to the returned MXHTTPOperation
         // So that user has hand on it
         if (httpOperation)
         {
             httpOperation.operation = httpOperation2.operation;
         }
-
+        
     } failure:failure];
-
+    
     return httpOperation;
 }
 
