@@ -17,11 +17,14 @@
 #import "MXAutoDiscovery.h"
 
 #import "MXRestClient.h"
+#import "MXIdentityService.h"
 
 @interface MXAutoDiscovery ()
 {
     MXRestClient *restClient;
 }
+
+@property (nonatomic, strong) MXIdentityService *identityService;
 
 @end
 
@@ -112,8 +115,13 @@
 - (MXHTTPOperation *)validateHomeserverAndProceed:(MXWellKnown*)wellKnown
                                          complete:(void (^)(MXDiscoveredClientConfig * _Nonnull))complete
 {
+    NSString *identityServer = wellKnown.identityServer.baseUrl;
+    
     restClient = [[MXRestClient alloc] initWithHomeServer:wellKnown.homeServer.baseUrl andOnUnrecognizedCertificateBlock:nil];
-    restClient.identityServer = wellKnown.identityServer.baseUrl;
+    restClient.identityServer = identityServer;
+
+    MXIdentityService *identityService = [[MXIdentityService alloc] initWithIdentityServer:identityServer];
+    self.identityService = identityService;
 
     // Ping one CS API to check the HS
     MXHTTPOperation *operation;
@@ -152,20 +160,20 @@
 }
 
 - (MXHTTPOperation *)validateIdentityServerAndFinish:(MXWellKnown*)wellKnown
-                                         complete:(void (^)(MXDiscoveredClientConfig * _Nonnull))complete
+                                            complete:(void (^)(MXDiscoveredClientConfig * _Nonnull))complete
 {
     MXHTTPOperation *operation;
-    operation = [restClient pingIdentityServer:^{
-
+    operation = [self.identityService pingIdentityServer:^{
+        
         NSLog(@"[MXAutoDiscovery] validateIdentityServerAndFinish: PROMPT. wellKnown: %@", wellKnown);
         complete([[MXDiscoveredClientConfig alloc] initWithAction:MXDiscoveredClientConfigActionPrompt andWellKnown:wellKnown]);
-
+        
     } failure:^(NSError *error) {
-
+        
         NSLog(@"[MXAutoDiscovery] validateIdentityServerAndFinish: FAIL_ERROR (invalid identity server not responding)");
         complete([[MXDiscoveredClientConfig alloc] initWithAction:MXDiscoveredClientConfigActionFailError]);
     }];
-
+    
     return operation;
 }
 
