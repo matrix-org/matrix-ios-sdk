@@ -3,7 +3,11 @@ Changes in Matrix iOS SDK in 0.13.2 (2019-08-)
 
 Improvements:
  * MXServiceTerms: A class to support MSC2140 (Terms of Service API) (vector-im/riot-ios#2600).
- * MXRestClient: Remove Identity Server URL fallback to homeserver one's when there is no Identity Server configured.
+ * MXRestClient: Remove identity server URL fallback to homeserver one's when there is no Identity Server configured.
+ * Create MXIdentityServerRestClient and MXIdentityService to manage identity server requests (vector-im/riot-ios#2647).
+
+API break:
+ * MXRestClient: Remove identity server requests. Now MXIdentityService is used to perform identity server requests.
 
 Changes in Matrix iOS SDK in 0.13.1 (2019-08-08)
 ===============================================
