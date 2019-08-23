@@ -282,31 +282,41 @@ NSString* const kMXHTTPClientMatrixErrorNotificationErrorKey = @"kMXHTTPClientMa
 
                         if ([mxError.errcode isEqualToString:kMXErrCodeStringLimitExceeded])
                         {
+                            error = [mxError createNSError];
+                            
                             // Wait and retry if we have not retried too much
                             if (mxHTTPOperation.age < MXHTTPCLIENT_RATE_LIMIT_MAX_MS)
                             {
                                 NSString *retryAfterMsString = JSONResponse[@"retry_after_ms"];
                                 if (retryAfterMsString)
                                 {
-                                    error = nil;
-
-                                    NSLog(@"[MXHTTPClient] Request %p reached rate limiting. Wait for %@ms", mxHTTPOperation, retryAfterMsString);
-
-                                    // Wait for the time provided by the server before retrying
-                                    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, [retryAfterMsString intValue] * USEC_PER_SEC), dispatch_get_main_queue(), ^{
-
-                                        NSLog(@"[MXHTTPClient] Retry rate limited request %p", mxHTTPOperation);
-
-                                        [self tryRequest:mxHTTPOperation method:httpMethod path:path parameters:parameters data:data headers:headers timeout:timeoutInSeconds uploadProgress:uploadProgress success:^(NSDictionary *JSONResponse) {
-
-                                            NSLog(@"[MXHTTPClient] Success of rate limited request %p after %tu tries", mxHTTPOperation, mxHTTPOperation.numberOfTries);
-
-                                            success(JSONResponse);
-
-                                        } failure:^(NSError *error) {
-                                            failure(error);
-                                        }];
-                                    });
+                                    int delay = [retryAfterMsString intValue];
+                                    if (delay < MXHTTPCLIENT_RATE_LIMIT_MAX_MS)
+                                    {
+                                        error = nil;
+                                        
+                                        NSLog(@"[MXHTTPClient] Request %p reached rate limiting. Wait for %@ ms", mxHTTPOperation, retryAfterMsString);
+                                        
+                                        // Wait for the time provided by the server before retrying
+                                        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, delay * USEC_PER_SEC), dispatch_get_main_queue(), ^{
+                                            
+                                            NSLog(@"[MXHTTPClient] Retry rate limited request %p", mxHTTPOperation);
+                                            
+                                            [self tryRequest:mxHTTPOperation method:httpMethod path:path parameters:parameters data:data headers:headers timeout:timeoutInSeconds uploadProgress:uploadProgress success:^(NSDictionary *JSONResponse) {
+                                                
+                                                NSLog(@"[MXHTTPClient] Success of rate limited request %p after %tu tries", mxHTTPOperation, mxHTTPOperation.numberOfTries);
+                                                
+                                                success(JSONResponse);
+                                                
+                                            } failure:^(NSError *error) {
+                                                failure(error);
+                                            }];
+                                        });
+                                    }
+                                    else
+                                    {
+                                        NSLog(@"[MXHTTPClient] Giving up rate limited request %p (may retry after %@ ms).", mxHTTPOperation, retryAfterMsString);
+                                    }
                                 }
                             }
                             else
