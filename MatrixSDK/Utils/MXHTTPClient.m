@@ -282,6 +282,8 @@ NSString* const kMXHTTPClientMatrixErrorNotificationErrorKey = @"kMXHTTPClientMa
 
                         if ([mxError.errcode isEqualToString:kMXErrCodeStringLimitExceeded])
                         {
+                            error = [mxError createNSError];
+                            
                             // Wait and retry if we have not retried too much
                             if (mxHTTPOperation.age < MXHTTPCLIENT_RATE_LIMIT_MAX_MS)
                             {
