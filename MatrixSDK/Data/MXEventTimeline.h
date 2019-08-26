@@ -1,5 +1,6 @@
 /*
  Copyright 2016 OpenMarket Ltd
+ Copyright 2019 The Matrix.org Foundation C.I.C
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -74,8 +75,13 @@ typedef void (^MXOnRoomEvent)(MXEvent *event, MXTimelineDirection direction, MXR
 
 /**
  The room events filter which is applied during the history pagination.
+
+ The default value can be nil. It depends if the lazy loading of room members
+ is enabled or not.
+ The filter can be modified but only before starting paginating, ie before calling one
+ the resetPagination methods.
  */
-@property (nonatomic, readonly) MXRoomEventFilter *roomEventFilter;
+@property (nonatomic, copy) MXRoomEventFilter *roomEventFilter;
 
 /**
  The state of the room at the top most recent event of the timeline.
