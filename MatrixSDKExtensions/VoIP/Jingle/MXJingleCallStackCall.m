@@ -1,6 +1,7 @@
 /*
  Copyright 2016 OpenMarket Ltd
  Copyright 2018 New Vector Ltd
+ Copyright 2019 The Matrix.org Foundation C.I.C
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -123,29 +124,33 @@
 
 - (void)addTURNServerUris:(NSArray<NSString *> *)uris withUsername:(nullable NSString *)username password:(nullable NSString *)password
 {
-    RTCIceServer *ICEServer = [[RTCIceServer alloc] initWithURLStrings:uris
-                                                              username:username
-                                                            credential:password];
+    RTCConfiguration *configuration = [[RTCConfiguration alloc] init];
+    RTCIceServer *ICEServer;
 
-    if (!ICEServer)
+    if (uris)
     {
-        NSLog(@"[MXJingleCallStackCall] addTURNServerUris: Warning: Failed to create RTCICEServer with credentials %@: %@ for:\n%@", username, password, uris);
+        RTCIceServer *ICEServer = [[RTCIceServer alloc] initWithURLStrings:uris
+                                                                  username:username
+                                                                credential:password];
+
+        if (!ICEServer)
+        {
+            NSLog(@"[MXJingleCallStackCall] addTURNServerUris: Warning: Failed to create RTCICEServer with credentials %@: %@ for:\n%@", username, password, uris);
+        }
     }
 
+    RTCMediaConstraints  *constraints =
+    [[RTCMediaConstraints alloc] initWithMandatoryConstraints:nil
+                                          optionalConstraints:@{
+                                                                @"RtpDataChannels": @"true"
+                                                                }];
     if (ICEServer)
     {
-        RTCMediaConstraints  *constraints =
-        [[RTCMediaConstraints alloc] initWithMandatoryConstraints:nil
-                                              optionalConstraints:@{
-                                                                    @"RtpDataChannels": @"true"
-                                                                    }];
-
-        RTCConfiguration *configuration = [[RTCConfiguration alloc] init];
         configuration.iceServers = @[ICEServer];
-
-        // The libjingle call object can now be created
-        peerConnection = [peerConnectionFactory peerConnectionWithConfiguration:configuration constraints:constraints delegate:self];
     }
+
+    // The libjingle call object can now be created
+    peerConnection = [peerConnectionFactory peerConnectionWithConfiguration:configuration constraints:constraints delegate:self];
 }
 
 - (void)handleRemoteCandidate:(NSDictionary<NSString *, NSObject *> *)candidate
