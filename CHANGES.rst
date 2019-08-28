@@ -6,6 +6,7 @@ Improvements:
  * MXRestClient: Remove Identity Server URL fallback to homeserver one's when there is no Identity Server configured.
  * MXHTTPClient: Improve M_LIMIT_EXCEEDED error handling: Do not wait to try again if the mentioned delay is too long.
  * MXEventTimeline: The roomEventFilter property is now writable (vector-im/riot-ios#2615).
+ * VoIP: Make call start if there is no STUN server.
 
 Changes in Matrix iOS SDK in 0.13.1 (2019-08-08)
 ===============================================
