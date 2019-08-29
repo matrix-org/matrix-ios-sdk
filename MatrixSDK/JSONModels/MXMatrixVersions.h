@@ -18,6 +18,20 @@
 #import "MXJSONModel.h"
 
 /**
+ Matrix Client-Server API versions.
+ */
+struct MXMatrixClientServerAPIVersionStruct
+{
+    __unsafe_unretained NSString * const r0_0_1;
+    __unsafe_unretained NSString * const r0_1_0;
+    __unsafe_unretained NSString * const r0_2_0;
+    __unsafe_unretained NSString * const r0_3_0;
+    __unsafe_unretained NSString * const r0_4_0;
+    __unsafe_unretained NSString * const r0_5_0;
+};
+extern const struct MXMatrixClientServerAPIVersionStruct MXMatrixClientServerAPIVersion;
+
+/**
  Features declared in the matrix specification.
  */
 struct MXMatrixVersionsFeatureStruct

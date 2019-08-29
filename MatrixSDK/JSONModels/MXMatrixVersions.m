@@ -16,6 +16,15 @@
 
 #import "MXMatrixVersions.h"
 
+const struct MXMatrixClientServerAPIVersionStruct MXMatrixClientServerAPIVersion = {
+    .r0_0_1 = @"r0.0.1",
+    .r0_1_0 = @"r0.1.0",
+    .r0_2_0 = @"r0.2.0",
+    .r0_3_0 = @"r0.3.0",
+    .r0_4_0 = @"r0.4.0",
+    .r0_5_0 = @"r0.5.0",
+};
+
 const struct MXMatrixVersionsFeatureStruct MXMatrixVersionsFeature = {
     .lazyLoadMembers = @"m.lazy_load_members"
 };
@@ -35,7 +44,8 @@ const struct MXMatrixVersionsFeatureStruct MXMatrixVersionsFeature = {
 
 - (BOOL)supportLazyLoadMembers
 {
-    return [self.unstableFeatures[MXMatrixVersionsFeature.lazyLoadMembers] boolValue];
+    return [self.versions containsObject:MXMatrixClientServerAPIVersion.r0_5_0]
+        || [self.unstableFeatures[MXMatrixVersionsFeature.lazyLoadMembers] boolValue];
 }
 
 @end
