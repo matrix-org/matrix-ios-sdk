@@ -38,6 +38,8 @@ struct MXMatrixVersionsFeatureStruct
 {
     // Room members lazy loading
     __unsafe_unretained NSString * const lazyLoadMembers;
+    __unsafe_unretained NSString * const requireIdentityServer;
+    __unsafe_unretained NSString * const idAccessToken;
 };
 extern const struct MXMatrixVersionsFeatureStruct MXMatrixVersionsFeature;
 
@@ -63,5 +65,17 @@ extern const struct MXMatrixVersionsFeatureStruct MXMatrixVersionsFeature;
  Check whether the server supports the room members lazy loading.
  */
 @property (nonatomic, readonly) BOOL supportLazyLoadMembers;
+
+/**
+ Indicate if the `id_server` parameter is required when registering with an 3pid,
+ adding a 3pid or resetting password.
+ */
+@property (nonatomic, readonly) BOOL doesServerRequireIdentityServerParam;
+
+/**
+ Indicate if the `id_access_token` parameter can be safely passed to the homeserver.
+ Some homeservers may trigger errors if they are not prepared for the new parameter.
+ */
+@property (nonatomic, readonly) BOOL doesServerAcceptIdentityAccessToken;
 
 @end

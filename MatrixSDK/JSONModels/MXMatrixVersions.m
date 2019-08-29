@@ -26,7 +26,9 @@ const struct MXMatrixClientServerAPIVersionStruct MXMatrixClientServerAPIVersion
 };
 
 const struct MXMatrixVersionsFeatureStruct MXMatrixVersionsFeature = {
-    .lazyLoadMembers = @"m.lazy_load_members"
+    .lazyLoadMembers = @"m.lazy_load_members",
+    .requireIdentityServer = @"m.require_identity_server",
+    .idAccessToken = @"m.id_access_token"
 };
 
 @implementation MXMatrixVersions
@@ -46,6 +48,24 @@ const struct MXMatrixVersionsFeatureStruct MXMatrixVersionsFeature = {
 {
     return [self.versions containsObject:MXMatrixClientServerAPIVersion.r0_5_0]
         || [self.unstableFeatures[MXMatrixVersionsFeature.lazyLoadMembers] boolValue];
+}
+
+- (BOOL)doesServerRequireIdentityServerParam
+{
+    // YES by default
+    BOOL doesServerRequireIdentityServerParam = YES;
+
+    if (self.unstableFeatures[MXMatrixVersionsFeature.requireIdentityServer])
+    {
+        doesServerRequireIdentityServerParam = [self.unstableFeatures[MXMatrixVersionsFeature.requireIdentityServer] boolValue];
+    }
+
+    return doesServerRequireIdentityServerParam;
+}
+
+- (BOOL)doesServerAcceptIdentityAccessToken
+{
+    return [self.unstableFeatures[MXMatrixVersionsFeature.idAccessToken] boolValue];
 }
 
 @end
