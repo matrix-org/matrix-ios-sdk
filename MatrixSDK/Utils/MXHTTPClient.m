@@ -480,8 +480,11 @@ NSString* const kMXHTTPClientMatrixErrorNotificationErrorKey = @"kMXHTTPClientMa
             }
             else if (mxHTTPOperation.numberOfTries < mxHTTPOperation.maxNumberOfTries
                      && mxHTTPOperation.age < mxHTTPOperation.maxRetriesTime
-                     && !([error.domain isEqualToString:NSURLErrorDomain] && error.code == kCFURLErrorCancelled)    // No need to retry a cancelation (which can also happen on SSL error)
-                     && response.statusCode != 400 && response.statusCode != 401 && response.statusCode != 403      // No amount of retrying will save you now
+                     && !([error.domain isEqualToString:NSURLErrorDomain]
+                          && (error.code == kCFURLErrorCancelled                    // No need to retry a cancelation (which can also happen on SSL error)
+                              || error.code == kCFURLErrorCannotFindHost)           // No need to retry on a non existing host
+                         )
+                     && response.statusCode != 400 && response.statusCode != 401 && response.statusCode != 403     // No amount of retrying will save you now
                      )
             {
                 // Check if it is a network connectivity issue
