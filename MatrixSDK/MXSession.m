@@ -201,6 +201,11 @@ typedef void (^MXOnResumeDone)(void);
         directRoomsOperationsQueue = [NSMutableArray array];
         publicisedGroupsByUserId = [[NSMutableDictionary alloc] init];
         
+        if (mxRestClient.credentials.identityServer)
+        {
+            _identityService = [[MXIdentityService alloc] initWithCredentials:mxRestClient.credentials andHomeserverRestClient:mxRestClient];
+        }
+        
         firstSyncDone = NO;
 
         id<MXBackgroundModeHandler> handler = [MXSDKOptions sharedInstance].backgroundModeHandler;
@@ -1864,6 +1869,13 @@ typedef void (^MXOnResumeDone)(void);
                      success:(void (^)(MXRoom *room))success
                      failure:(void (^)(NSError *error))failure
 {
+    if (!self.identityService)
+    {
+        NSLog(@"[MXSession] Missing identity service");
+        failure(nil);
+        return nil;
+    }
+    
     MXHTTPOperation *httpOperation;
     
     MXWeakify(self);
