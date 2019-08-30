@@ -201,6 +201,11 @@ typedef void (^MXOnResumeDone)(void);
         directRoomsOperationsQueue = [NSMutableArray array];
         publicisedGroupsByUserId = [[NSMutableDictionary alloc] init];
         
+        if (mxRestClient.credentials.identityServer)
+        {
+            _identityService = [[MXIdentityService alloc] initWithCredentials:mxRestClient.credentials andHomeserverRestClient:mxRestClient];
+        }
+        
         firstSyncDone = NO;
 
         id<MXBackgroundModeHandler> handler = [MXSDKOptions sharedInstance].backgroundModeHandler;
@@ -1864,27 +1869,36 @@ typedef void (^MXOnResumeDone)(void);
                      success:(void (^)(MXRoom *room))success
                      failure:(void (^)(NSError *error))failure
 {
+    if (!self.identityService)
+    {
+        NSLog(@"[MXSession] Missing identity service");
+        failure([NSError errorWithDomain:kMXNSErrorDomain code:0 userInfo:@{
+                                                                            NSLocalizedDescriptionKey: @"Missing identity service"
+                                                                            }]);
+        return nil;
+    }
+    
     MXHTTPOperation *httpOperation;
-
+    
     MXWeakify(self);
-    httpOperation = [matrixRestClient signUrl:signUrl success:^(NSDictionary *thirdPartySigned) {
+    httpOperation = [self.identityService signUrl:signUrl success:^(NSDictionary *thirdPartySigned) {
         MXStrongifyAndReturnIfNil(self);
-
+        
         MXHTTPOperation *httpOperation2 = [self->matrixRestClient joinRoom:roomIdOrAlias viaServers:viaServers withThirdPartySigned:thirdPartySigned success:^(NSString *theRoomId) {
-
+            
             [self onJoinedRoom:theRoomId success:success];
-
+            
         } failure:failure];
-
+        
         // Transfer the new AFHTTPRequestOperation to the returned MXHTTPOperation
         // So that user has hand on it
         if (httpOperation)
         {
             httpOperation.operation = httpOperation2.operation;
         }
-
+        
     } failure:failure];
-
+    
     return httpOperation;
 }
 

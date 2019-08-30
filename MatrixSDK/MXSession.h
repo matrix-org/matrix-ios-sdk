@@ -35,6 +35,7 @@
 #import "MXError.h"
 #import "MXScanManager.h"
 #import "MXAggregations.h"
+#import "MXIdentityService.h"
 
 /**
  `MXSessionState` represents the states in the life cycle of a MXSession instance.
@@ -356,6 +357,11 @@ FOUNDATION_EXPORT NSString *const kMXSessionNoRoomTag;
  The matrix REST Client used to make Matrix API requests.
  */
 @property (nonatomic, readonly) MXRestClient *matrixRestClient;
+
+/**
+ The identity service used to handle Matrix identity server requests. Can be nil.
+ */
+@property (nonatomic) MXIdentityService *identityService;
 
 /**
  The media manager used to handle the media stored on the Matrix Content repository.

@@ -47,6 +47,11 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, nullable) NSString *accessToken;
 
 /**
+ The access token to create a MXIdentityServerRestClient
+ */
+@property (nonatomic, nullable) NSString *identityServerAccessToken;
+
+/**
  The device id.
  */
 @property (nonatomic, nullable) NSString *deviceId;

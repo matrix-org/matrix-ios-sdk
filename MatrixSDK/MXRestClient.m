@@ -32,9 +32,6 @@
 NSString *const kMXAPIPrefixPathR0 = @"_matrix/client/r0";
 NSString *const kMXAPIPrefixPathUnstable = @"_matrix/client/unstable";
 
-NSString *const kMXIdentityAPIPrefixPathV1 = @"_matrix/identity/api/v1";
-NSString *const kMXIdentityAPIPrefixPathV2 = @"_matrix/identity/v2";
-
 /**
  Account data types
  */
@@ -87,11 +84,6 @@ MXAuthAction;
      HTTP client to the home server.
      */
     MXHTTPClient *httpClient;
-    
-    /**
-     HTTP client to the identity server.
-     */
-    MXHTTPClient *identityHttpClient;
     
     /**
      HTTP client to the antivirus server.
@@ -174,8 +166,6 @@ MXAuthAction;
                               }
                           }];
         }
-        
-        self.identityServer = self.credentials.identityServer;
 
         completionQueue = dispatch_get_main_queue();
 
@@ -188,7 +178,6 @@ MXAuthAction;
 {
     credentials = nil;
     httpClient = nil;
-    identityHttpClient = nil;
     antivirusHttpClient = nil;
     
     processingQueue = nil;
@@ -3355,310 +3344,23 @@ MXAuthAction;
                                  }];
 }
 
-#pragma mark - Identity server API
+#pragma mark - Identity server
+
 - (void)setIdentityServer:(NSString *)identityServer
 {
     if (identityServer.length)
     {
         self.credentials.identityServer = [identityServer copy];
-        identityHttpClient = [[MXHTTPClient alloc] initWithBaseURL:[NSString stringWithFormat:@"%@/%@", identityServer, kMXIdentityAPIPrefixPathV1]
-                                 andOnUnrecognizedCertificateBlock:nil];
-        
-        // The identity server accepts parameters in form data form not in JSON
-        identityHttpClient.requestParametersInJSON = NO;
     }
     else
     {
         self.credentials.identityServer = nil;
-        identityHttpClient = nil;
     }
 }
 
 - (NSString *)identityServer
 {
     return self.credentials.identityServer;
-}
-
-
-- (MXHTTPOperation *)pingIdentityServer:(void (^)(void))success failure:(void (^)(NSError *))failure
-{
-    if (!identityHttpClient)
-    {
-        NSError *error = [NSError errorWithDomain:kMXRestClientErrorDomain code:MXRestClientErrorMissingIdentityServer userInfo:nil];
-        [self dispatchFailure:error inBlock:failure];
-        return nil;
-    }
-    
-    // We cannot use "" as the HTTP client (AFNetworking) will request for "/v1/"
-	NSString *path = @"../v1";
-
-    return [identityHttpClient requestWithMethod:@"GET"
-                                            path:path
-                                      parameters:nil
-                                         success:^(NSDictionary *JSONResponse) {
-                                             if (success)
-                                             {
-                                                 [self dispatchProcessing:nil
-                                                            andCompletion:^{
-                                                                success();
-                                                            }];
-                                             }
-                                         }
-                                         failure:^(NSError *error) {
-                                             [self dispatchFailure:error inBlock:failure];
-                                         }];
-}
-
-- (MXHTTPOperation*)lookup3pid:(NSString*)address
-                     forMedium:(MX3PIDMedium)medium
-                       success:(void (^)(NSString *userId))success
-                       failure:(void (^)(NSError *error))failure
-{
-    if (!identityHttpClient)
-    {
-        NSError *error = [NSError errorWithDomain:kMXRestClientErrorDomain code:MXRestClientErrorMissingIdentityServer userInfo:nil];
-        [self dispatchFailure:error inBlock:failure];
-        return nil;
-    }
-    
-    return [identityHttpClient requestWithMethod:@"GET"
-                                            path:@"lookup"
-                                      parameters:@{
-                                                   @"medium": medium,
-                                                   @"address": address
-                                                   }
-                                         success:^(NSDictionary *JSONResponse) {
-                                             if (success)
-                                             {
-                                                 __block NSString *mxid;
-                                                 [self dispatchProcessing:^{
-                                                     MXJSONModelSetString(mxid, JSONResponse[@"mxid"]);
-                                                 } andCompletion:^{
-                                                     success(mxid);
-                                                 }];
-                                             }
-                                         }
-                                         failure:^(NSError *error) {
-                                             [self dispatchFailure:error inBlock:failure];
-                                         }];
-}
-
-- (MXHTTPOperation*)lookup3pids:(NSArray*)threepids
-                        success:(void (^)(NSArray *discoveredUsers))success
-                        failure:(void (^)(NSError *error))failure
-{
-    if (!identityHttpClient)
-    {
-        NSError *error = [NSError errorWithDomain:kMXRestClientErrorDomain code:MXRestClientErrorMissingIdentityServer userInfo:nil];
-        [self dispatchFailure:error inBlock:failure];
-        return nil;
-    }
-    
-    NSData *payloadData = nil;
-    if (threepids)
-    {
-        payloadData = [NSJSONSerialization dataWithJSONObject:@{@"threepids": threepids} options:0 error:nil];
-    }
-    
-    return [identityHttpClient requestWithMethod:@"POST"
-                                            path:@"bulk_lookup"
-                                      parameters:nil
-                                            data:payloadData
-                                         headers:@{@"Content-Type": @"application/json"}
-                                         timeout:-1
-                                  uploadProgress:nil
-                                         success:^(NSDictionary *JSONResponse) {
-                                             if (success)
-                                             {
-                                                 __block NSArray *discoveredUsers;
-                                                 [self dispatchProcessing:^{
-                                                     // The identity server returns a dictionary with key 'threepids', which is a list of results
-                                                     // where each result is a 3 item list of medium, address, mxid.
-                                                     MXJSONModelSetArray(discoveredUsers, JSONResponse[@"threepids"]);
-                                                 } andCompletion:^{
-                                                     success(discoveredUsers);
-                                                 }];
-                                             }
-                                         }
-                                         failure:^(NSError *error) {
-                                             [self dispatchFailure:error inBlock:failure];
-                                         }];
-
-}
-
-- (MXHTTPOperation*)requestEmailValidation:(NSString*)email
-                              clientSecret:(NSString*)clientSecret
-                               sendAttempt:(NSUInteger)sendAttempt
-                                  nextLink:(NSString *)nextLink
-                                   success:(void (^)(NSString *sid))success
-                                   failure:(void (^)(NSError *error))failure
-{
-    if (!identityHttpClient)
-    {
-        NSError *error = [NSError errorWithDomain:kMXRestClientErrorDomain code:MXRestClientErrorMissingIdentityServer userInfo:nil];
-        [self dispatchFailure:error inBlock:failure];
-        return nil;
-    }
-    
-    NSMutableDictionary *parameters = [NSMutableDictionary dictionaryWithDictionary:@{
-                                                                                      @"email": email,
-                                                                                      @"client_secret": clientSecret,
-                                                                                      @"send_attempt" : @(sendAttempt)
-                                                                                      }];
-
-    if (nextLink)
-    {
-        parameters[@"next_link"] = nextLink;
-    }
-
-    return [identityHttpClient requestWithMethod:@"POST"
-                                            path:@"validate/email/requestToken"
-                                      parameters:parameters
-                                         success:^(NSDictionary *JSONResponse) {
-                                             if (success)
-                                             {
-                                                 __block NSString *sid;
-                                                 [self dispatchProcessing:^{
-                                                     MXJSONModelSetString(sid, JSONResponse[@"sid"]);
-                                                 } andCompletion:^{
-                                                     success(sid);
-                                                 }];
-                                             }
-                                         }
-                                         failure:^(NSError *error) {
-                                             [self dispatchFailure:error inBlock:failure];
-                                         }];
-}
-
-- (MXHTTPOperation*)requestPhoneNumberValidation:(NSString*)phoneNumber
-                                     countryCode:(NSString*)countryCode
-                                    clientSecret:(NSString*)clientSecret
-                                     sendAttempt:(NSUInteger)sendAttempt
-                                        nextLink:(NSString *)nextLink
-                                         success:(void (^)(NSString *sid, NSString *msisdn))success
-                                         failure:(void (^)(NSError *error))failure
-{
-    if (!identityHttpClient)
-    {
-        NSError *error = [NSError errorWithDomain:kMXRestClientErrorDomain code:MXRestClientErrorMissingIdentityServer userInfo:nil];
-        [self dispatchFailure:error inBlock:failure];
-        return nil;
-    }
-    
-    NSMutableDictionary *parameters = [NSMutableDictionary dictionaryWithDictionary:@{
-                                                                                      @"phone_number": phoneNumber,
-                                                                                      @"country": (countryCode ? countryCode : @""),
-                                                                                      @"client_secret": clientSecret,
-                                                                                      @"send_attempt" : @(sendAttempt)
-                                                                                      }];
-    if (nextLink)
-    {
-        parameters[@"next_link"] = nextLink;
-    }
-    
-    return [identityHttpClient requestWithMethod:@"POST"
-                                            path:@"validate/msisdn/requestToken"
-                                      parameters:parameters
-                                         success:^(NSDictionary *JSONResponse) {
-                                             if (success)
-                                             {
-                                                 __block NSString *sid, *msisdn;
-                                                 [self dispatchProcessing:^{
-                                                     MXJSONModelSetString(sid, JSONResponse[@"sid"]);
-                                                     MXJSONModelSetString(msisdn, JSONResponse[@"msisdn"]);
-                                                 } andCompletion:^{
-                                                     success(sid, msisdn);
-                                                 }];
-                                             }
-                                         }
-                                         failure:^(NSError *error) {
-                                             [self dispatchFailure:error inBlock:failure];
-                                         }];
-}
-
-
-
-- (MXHTTPOperation *)submit3PIDValidationToken:(NSString *)token
-                                        medium:(NSString *)medium
-                                  clientSecret:(NSString *)clientSecret
-                                           sid:(NSString *)sid
-                                       success:(void (^)(void))success
-                                       failure:(void (^)(NSError *))failure
-{
-    if (!identityHttpClient)
-    {
-        NSError *error = [NSError errorWithDomain:kMXRestClientErrorDomain code:MXRestClientErrorMissingIdentityServer userInfo:nil];
-        [self dispatchFailure:error inBlock:failure];
-        return nil;
-    }
-    
-    // Sanity check
-    if (!medium.length)
-    {
-        return nil;
-    }
-    
-    NSString *path = [NSString stringWithFormat:@"validate/%@/submitToken", medium];
-    
-    return [identityHttpClient requestWithMethod:@"POST"
-                                            path:path
-                                      parameters:@{
-                                                   @"token": token,
-                                                   @"client_secret": clientSecret,
-                                                   @"sid": sid
-                                                   }
-                                         success:^(NSDictionary *JSONResponse) {
-                                             __block BOOL successValue = NO;
-
-                                             [self dispatchProcessing:^{
-                                                 MXJSONModelSetBoolean(successValue, JSONResponse[@"success"]);
-                                             } andCompletion:^{
-                                                 if (successValue)
-                                                 {
-                                                     if (success)
-                                                     {
-                                                         success();
-                                                     }
-                                                 }
-                                                 else if (failure)
-                                                 {
-                                                     MXError *error = [[MXError alloc] initWithErrorCode:kMXErrCodeStringUnknownToken error:kMXErrorStringInvalidToken];
-                                                     failure([error createNSError]);
-                                                 }
-                                             }];
-                                         }
-                                         failure:^(NSError *error) {
-                                             [self dispatchFailure:error inBlock:failure];
-                                         }];
-}
-
-- (MXHTTPOperation*)signUrl:(NSString*)signUrl
-                    success:(void (^)(NSDictionary *thirdPartySigned))success
-                    failure:(void (^)(NSError *error))failure
-{
-    if (!identityHttpClient)
-    {
-        NSError *error = [NSError errorWithDomain:kMXRestClientErrorDomain code:MXRestClientErrorMissingIdentityServer userInfo:nil];
-        [self dispatchFailure:error inBlock:failure];
-        return nil;
-    }
-    
-    NSString *path = [NSString stringWithFormat:@"%@&mxid=%@", signUrl, credentials.userId];
-
-    return [identityHttpClient requestWithMethod:@"POST"
-                                            path:path
-                                      parameters:nil
-                                         success:^(NSDictionary *JSONResponse) {
-                                             if (success)
-                                             {
-                                                 [self dispatchProcessing:nil andCompletion:^{
-                                                     success(JSONResponse);
-                                                 }];
-                                             }
-
-                                         } failure:^(NSError *error) {
-                                             [self dispatchFailure:error inBlock:failure];
-                                         }];
 }
 
 #pragma mark - Antivirus server API

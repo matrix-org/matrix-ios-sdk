@@ -18,6 +18,7 @@
 #import "MXServiceTermsRestClient.h"
 
 #import "MXRestClient.h"
+#import "MXIdentityServerRestClient.h"
 #import "MXTools.h"
 
 
@@ -48,7 +49,7 @@ NSString *const MXServiceTermsErrorDomain = @"org.matrix.sdk.MXServiceTermsError
         _mxSession = mxSession;
         _accessToken = [accessToken copy];
 
-        _restClient = [[MXServiceTermsRestClient alloc] initWithBaseUrl:self.termsBaseUrl accessToken:@"bobo"];//accessToken];
+        _restClient = [[MXServiceTermsRestClient alloc] initWithBaseUrl:self.termsBaseUrl accessToken:accessToken];
     }
     return self;
 }
