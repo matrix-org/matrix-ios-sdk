@@ -24,6 +24,29 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
+#pragma mark - Defines & Constants
+
+/**
+ Notification name sent when "M_TERMS_NOT_SIGNED" error occured. Provides identity server and identity server access token.
+ Give an associated userInfo dictionary of type NSDictionary<NSString*, NSString*> with following keys: "userId", "identityServer", "accessToken". Use constants below for convenience.
+ */
+extern NSString *const MXIdentityServiceTermsNotSignedNotification;
+
+/**
+ Notification name sent when access token change. Provides user id, identity server and access token.
+ Give an associated userInfo dictionary of type NSDictionary<NSString*, NSString*> with following keys: "userId", "identityServer", "accessToken". Use constants below for convenience.
+ */
+extern NSString *const MXIdentityServiceDidChangeAccessTokenNotification;
+
+/**
+ userInfo dictionary keys used by `MXIdentityServiceTermsNotSignedNotification` and `MXIdentityServiceDidChangeAccessTokenNotification`.
+ */
+extern NSString *const MXIdentityServiceNotificationUserIdKey;
+extern NSString *const MXIdentityServiceNotificationIdentityServerKey;
+extern NSString *const MXIdentityServiceNotificationAccessTokenKey;
+
+@class MXRestClient;
+
 /**
  `MXIdentityService` manages requests to Matrix identity servers and abstract identity server REST client token and version management.
  */
@@ -42,46 +65,41 @@ NS_ASSUME_NONNULL_BEGIN
  */
 @property (nonatomic, strong) dispatch_queue_t completionQueue;
 
-
 #pragma mark - Setup
 
 /**
  Create an instance based on identity server URL.
  
- @param identityServer the identity server URL.
+ @param identityServer The identity server URL.
+ @param homeserverRestClient The homeserver REST client.
+ 
  @return a MXIdentityService instance.
  */
-- (instancetype)initWithIdentityServer:(NSString *)identityServer NS_REFINED_FOR_SWIFT;
+- (instancetype)initWithIdentityServer:(NSString *)identityServer andHomeserverRestClient:(MXRestClient*)homeserverRestClient NS_REFINED_FOR_SWIFT;
 
 /**
  Create an instance based on identity server URL.
  
  @param identityServerRestClient The identity server REST client.
+ @param homeserverRestClient The homeserver REST client.
+ 
  @return a MXIdentityService instance.
  */
-- (instancetype)initWithRestClient:(MXIdentityServerRestClient*)identityServerRestClient;
+- (instancetype)initWithIdentityServerRestClient:(MXIdentityServerRestClient*)identityServerRestClient andHomeserverRestClient:(MXRestClient*)homeserverRestClient;
 
+/**
+ Create an instance based on identity server URL.
+ 
+ @param credentials user's credentials.
+ @param homeserverRestClient The homeserver REST client.
+ 
+ @return a MXIdentityService instance.
+ */
+- (instancetype)initWithCredentials:(MXCredentials *)credentials andHomeserverRestClient:(MXRestClient*)homeserverRestClient;
 
 #pragma mark -
 
 #pragma mark Association lookup
-
-/**
- Retrieve a user matrix id from a 3rd party id.
- 
- @param address the id of the user in the 3rd party system.
- @param medium the 3rd party system (ex: "email").
- 
- @param success A block object called when the operation succeeds. It provides the Matrix user id.
- It is nil if the user is not found.
- @param failure A block object called when the operation fails.
- 
- @return a MXHTTPOperation instance.
- */
-- (MXHTTPOperation*)lookup3pid:(NSString*)address
-                     forMedium:(MX3PIDMedium)medium
-                       success:(nullable void (^)(NSString *userId))success
-                       failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 /**
  Retrieve user matrix ids from a list of 3rd party ids.
@@ -156,7 +174,7 @@ NS_ASSUME_NONNULL_BEGIN
                                      sendAttempt:(NSUInteger)sendAttempt
                                         nextLink:(nullable NSString *)nextLink
                                          success:(void (^)(NSString *sid, NSString *msisdn))success
-                                         failure:(void (^)(NSError *error))failure;
+                                         failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 /**
  Submit the validation token received by an email or a sms.
