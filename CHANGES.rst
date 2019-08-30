@@ -5,6 +5,8 @@ Improvements:
  * MXServiceTerms: A class to support MSC2140 (Terms of Service API) (vector-im/riot-ios#2600).
  * MXRestClient: Remove identity server URL fallback to homeserver one's when there is no Identity Server configured.
  * Create MXIdentityServerRestClient and MXIdentityService to manage identity server requests (vector-im/riot-ios#2647).
+ * MXHTTPClient: Add access token renewal plus request retry mechanism.
+ * MXIdentityService: Support identity server v2 API. Handle identity server v2 API authentification and use the hashed v2 lookup API for 3PIDs (vector-im/riot-ios#2603 and /vector-im/riot-ios#2652).
 
 API break:
  * MXRestClient: Remove identity server requests. Now MXIdentityService is used to perform identity server requests.
