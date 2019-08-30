@@ -359,7 +359,7 @@ FOUNDATION_EXPORT NSString *const kMXSessionNoRoomTag;
 @property (nonatomic, readonly) MXRestClient *matrixRestClient;
 
 /**
- The identity service used to handle Matrix identity server requests.
+ The identity service used to handle Matrix identity server requests. Can be nil.
  */
 @property (nonatomic) MXIdentityService *identityService;
 

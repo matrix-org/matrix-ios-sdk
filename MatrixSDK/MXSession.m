@@ -1872,7 +1872,9 @@ typedef void (^MXOnResumeDone)(void);
     if (!self.identityService)
     {
         NSLog(@"[MXSession] Missing identity service");
-        failure(nil);
+        failure([NSError errorWithDomain:kMXNSErrorDomain code:0 userInfo:@{
+                                                                            NSLocalizedDescriptionKey: @"Missing identity service"
+                                                                            }]);
         return nil;
     }
     
