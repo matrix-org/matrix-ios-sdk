@@ -46,8 +46,9 @@ FOUNDATION_EXPORT NSString *const MXIdentityServerRestClientErrorDomain;
 NS_ERROR_ENUM(MXIdentityServerRestClientErrorDomain)
 {
     MXIdentityServerRestClientErrorUnknown,
-    MXIdentityServerRestClientErrorMissinAPIPrefix,
-    MXIdentityServerRestClientErrorUnsupportedLookup3pidHashAlgorithm
+    MXIdentityServerRestClientErrorMissingAPIPrefix,
+    MXIdentityServerRestClientErrorAPIPrefixNotFound,
+    MXIdentityServerRestClientErrorUnsupportedHashAlgorithm
 };
 
 /**

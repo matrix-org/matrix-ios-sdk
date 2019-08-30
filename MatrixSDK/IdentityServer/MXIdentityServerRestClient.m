@@ -21,6 +21,7 @@
 #import "MXTools.h"
 #import "OLMUtility.h"
 #import "MXEncryptedAttachments.h"
+#import <AFNetworking/AFNetworking.h>
 
 #pragma mark - Constants definitions
 
@@ -139,11 +140,11 @@ NSString *const MXIdentityServerRestClientErrorDomain = @"org.matrix.sdk.MXIdent
                                     success:(void (^)(NSString *accessToken))success
                                     failure:(void (^)(NSError *error))failure
 {
-    NSString *path = [self buildAPIPathWithPath:@"account/register"];
+    NSString *path = [self buildAPIPathWithAPIPathPrefix:kMXIdentityAPIPrefixPathV2 andPath:@"account/register"];
     
     if (!path)
     {
-        NSError *error = [NSError errorWithDomain:MXIdentityServerRestClientErrorDomain code:MXIdentityServerRestClientErrorMissinAPIPrefix userInfo:nil];
+        NSError *error = [NSError errorWithDomain:MXIdentityServerRestClientErrorDomain code:MXIdentityServerRestClientErrorMissingAPIPrefix userInfo:nil];
         failure(error);
         return nil;
     }
@@ -182,11 +183,11 @@ NSString *const MXIdentityServerRestClientErrorDomain = @"org.matrix.sdk.MXIdent
                        success:(void (^)(NSString *userId))success
                        failure:(void (^)(NSError *error))failure
 {
-    NSString *path = [self buildAPIPathWithPath:@"lookup"];
+    NSString *path = [self buildAPIPathWithAPIPathPrefix:kMXIdentityAPIPrefixPathV1 andPath:@"lookup"];
     
     if (!path)
     {
-        NSError *error = [NSError errorWithDomain:MXIdentityServerRestClientErrorDomain code:MXIdentityServerRestClientErrorMissinAPIPrefix userInfo:nil];
+        NSError *error = [NSError errorWithDomain:MXIdentityServerRestClientErrorDomain code:MXIdentityServerRestClientErrorMissingAPIPrefix userInfo:nil];
         failure(error);
         return nil;
     }
@@ -216,11 +217,11 @@ NSString *const MXIdentityServerRestClientErrorDomain = @"org.matrix.sdk.MXIdent
                         success:(void (^)(NSArray *discoveredUsers))success
                         failure:(void (^)(NSError *error))failure
 {
-    NSString *path = [self buildAPIPathWithPath:@"bulk_lookup"];
+    NSString *path = [self buildAPIPathWithAPIPathPrefix:kMXIdentityAPIPrefixPathV1 andPath:@"bulk_lookup"];
     
     if (!path)
     {
-        NSError *error = [NSError errorWithDomain:MXIdentityServerRestClientErrorDomain code:MXIdentityServerRestClientErrorMissinAPIPrefix userInfo:nil];
+        NSError *error = [NSError errorWithDomain:MXIdentityServerRestClientErrorDomain code:MXIdentityServerRestClientErrorMissingAPIPrefix userInfo:nil];
         failure(error);
         return nil;
     }
@@ -257,11 +258,11 @@ NSString *const MXIdentityServerRestClientErrorDomain = @"org.matrix.sdk.MXIdent
 
 - (MXHTTPOperation*)hashDetailsWithSuccess:(void (^)(MXIdentityServerHashDetails *hashDetails))success failure:(void (^)(NSError *error))failure
 {
-    NSString *path = [self buildAPIPathWithPath:@"hash_details"];
+    NSString *path = [self buildAPIPathWithAPIPathPrefix:kMXIdentityAPIPrefixPathV2 andPath:@"hash_details"];
     
     if (!path)
     {
-        NSError *error = [NSError errorWithDomain:MXIdentityServerRestClientErrorDomain code:MXIdentityServerRestClientErrorMissinAPIPrefix userInfo:nil];
+        NSError *error = [NSError errorWithDomain:MXIdentityServerRestClientErrorDomain code:MXIdentityServerRestClientErrorMissingAPIPrefix userInfo:nil];
         failure(error);
         return nil;
     }
@@ -293,16 +294,16 @@ NSString *const MXIdentityServerRestClientErrorDomain = @"org.matrix.sdk.MXIdent
 {
     if (algorithm == MXIdentityServerHashAlgorithmUnknown)
     {
-        NSError *error = [NSError errorWithDomain:MXIdentityServerRestClientErrorDomain code:MXIdentityServerRestClientErrorUnsupportedLookup3pidHashAlgorithm userInfo:nil];
+        NSError *error = [NSError errorWithDomain:MXIdentityServerRestClientErrorDomain code:MXIdentityServerRestClientErrorUnsupportedHashAlgorithm userInfo:nil];
         failure(error);
         return nil;
     }
     
-    NSString *path = [self buildAPIPathWithPath:@"lookup"];
+    NSString *path = [self buildAPIPathWithAPIPathPrefix:kMXIdentityAPIPrefixPathV2 andPath:@"lookup"];
     
     if (!path)
     {
-        NSError *error = [NSError errorWithDomain:MXIdentityServerRestClientErrorDomain code:MXIdentityServerRestClientErrorMissinAPIPrefix userInfo:nil];
+        NSError *error = [NSError errorWithDomain:MXIdentityServerRestClientErrorDomain code:MXIdentityServerRestClientErrorMissingAPIPrefix userInfo:nil];
         failure(error);
         return nil;
     }
@@ -443,7 +444,7 @@ NSString *const MXIdentityServerRestClientErrorDomain = @"org.matrix.sdk.MXIdent
     
     if (!path)
     {
-        NSError *error = [NSError errorWithDomain:MXIdentityServerRestClientErrorDomain code:MXIdentityServerRestClientErrorMissinAPIPrefix userInfo:nil];
+        NSError *error = [NSError errorWithDomain:MXIdentityServerRestClientErrorDomain code:MXIdentityServerRestClientErrorMissingAPIPrefix userInfo:nil];
         failure(error);
         return nil;
     }
@@ -497,7 +498,7 @@ NSString *const MXIdentityServerRestClientErrorDomain = @"org.matrix.sdk.MXIdent
     
     if (!path)
     {
-        NSError *error = [NSError errorWithDomain:MXIdentityServerRestClientErrorDomain code:MXIdentityServerRestClientErrorMissinAPIPrefix userInfo:nil];
+        NSError *error = [NSError errorWithDomain:MXIdentityServerRestClientErrorDomain code:MXIdentityServerRestClientErrorMissingAPIPrefix userInfo:nil];
         failure(error);
         return nil;
     }
@@ -560,7 +561,7 @@ NSString *const MXIdentityServerRestClientErrorDomain = @"org.matrix.sdk.MXIdent
     
     if (!apiPath)
     {
-        NSError *error = [NSError errorWithDomain:MXIdentityServerRestClientErrorDomain code:MXIdentityServerRestClientErrorMissinAPIPrefix userInfo:nil];
+        NSError *error = [NSError errorWithDomain:MXIdentityServerRestClientErrorDomain code:MXIdentityServerRestClientErrorMissingAPIPrefix userInfo:nil];
         failure(error);
         return nil;
     }
@@ -613,7 +614,7 @@ NSString *const MXIdentityServerRestClientErrorDomain = @"org.matrix.sdk.MXIdent
     
     if (!apiPathPrefix)
     {
-        NSError *error = [NSError errorWithDomain:MXIdentityServerRestClientErrorDomain code:MXIdentityServerRestClientErrorMissinAPIPrefix userInfo:nil];
+        NSError *error = [NSError errorWithDomain:MXIdentityServerRestClientErrorDomain code:MXIdentityServerRestClientErrorMissingAPIPrefix userInfo:nil];
         failure(error);
         return nil;
     }
@@ -644,7 +645,21 @@ NSString *const MXIdentityServerRestClientErrorDomain = @"org.matrix.sdk.MXIdent
                                               [self dispatchSuccess:success];
                                           }
                                       } failure:^(NSError *error) {
-                                          [self dispatchFailure:error inBlock:failure];
+                                          
+                                          NSError *finalError = error;
+                                          
+                                          if ([error.domain isEqualToString:AFURLResponseSerializationErrorDomain])
+                                          {
+                                              NSHTTPURLResponse *httpURLResponse;
+                                              MXJSONModelSet(httpURLResponse, [NSHTTPURLResponse class], error.userInfo[AFNetworkingOperationFailingURLResponseErrorKey])
+                                              
+                                              if (httpURLResponse.statusCode == 404)
+                                              {
+                                                  finalError = [NSError errorWithDomain:MXIdentityServerRestClientErrorDomain code:MXIdentityServerRestClientErrorAPIPrefixNotFound userInfo:nil];
+                                              }
+                                          }
+                                          
+                                          [self dispatchFailure:finalError inBlock:failure];
                                       }];
 }
 
@@ -745,14 +760,7 @@ NSString *const MXIdentityServerRestClientErrorDomain = @"org.matrix.sdk.MXIdent
 
 - (NSString*)buildAPIPathWithPath:(NSString*)path
 {
-    NSString *apiPath;
-    
-    if (self.preferredAPIPathPrefix)
-    {
-        apiPath = [NSString stringWithFormat:@"%@/%@", self.preferredAPIPathPrefix, path];
-    }
-    
-    return apiPath;
+    return [self buildAPIPathWithAPIPathPrefix:self.preferredAPIPathPrefix andPath:path];
 }
 
 - (NSString*)buildAPIPathWithAPIPathPrefix:(NSString*)apiPathPrefix andPath:(NSString*)path

@@ -243,7 +243,7 @@ NSString *const MXIdentityServiceNotificationAccessTokenKey = @"accessToken";
         return nil;
     }
     
-    return [self.restClient isAPIPathPrefixAvailable:kMXIdentityAPIPrefixPathV2 success:^{
+    return [self.restClient isAPIPathPrefixAvailable:kMXIdentityAPIPrefixPathV2 success:^{    
         self.restClient.preferredAPIPathPrefix = kMXIdentityAPIPrefixPathV2;
         
         if (success)
@@ -254,9 +254,20 @@ NSString *const MXIdentityServiceNotificationAccessTokenKey = @"accessToken";
     } failure:^(NSError * _Nonnull error) {
         self.restClient.preferredAPIPathPrefix = kMXIdentityAPIPrefixPathV1;
         
-        if (failure)
+        // Call success only if API path prefix v2 is not found call failure for other errors
+        if ([error.domain isEqualToString:MXIdentityServerRestClientErrorDomain] && error.code == MXIdentityServerRestClientErrorAPIPrefixNotFound)
         {
-            failure(error);
+            if (success)
+            {
+                success();
+            }
+        }
+        else
+        {
+            if (failure)
+            {
+                failure(error);
+            }
         }
     }];
 }
@@ -325,29 +336,6 @@ NSString *const MXIdentityServiceNotificationAccessTokenKey = @"accessToken";
     return operation;
 }
 
-- (MXHTTPOperation*)checkAPIVersionAvailabilityAndPerformOperationOnSuccessHandler:(MXHTTPOperation* (^)(void))successHandler
-                                                                    failure:(void (^)(NSError *))failure
-{
-    __block MXHTTPOperation *operation;
-    
-    operation = [self checkAPIVersionAvailabilityWithSuccess:^{
-        
-        MXHTTPOperation *operation2 = successHandler();
-        
-        if (operation && operation2)
-        {
-            [operation mutateTo:operation2];
-        }
-        else
-        {
-            operation = operation2;
-        }
-        
-    } failure:failure];
-    
-    return operation;
-}
-
 - (MXHTTPOperation*)v2_lookupHashDetailsWithSuccess:(void (^)(MXIdentityServerHashDetails *hashDetails))success
                                             failure:(void (^)(NSError *error))failure;
 {
@@ -369,46 +357,32 @@ NSString *const MXIdentityServiceNotificationAccessTokenKey = @"accessToken";
                            success:(void (^)(NSArray *discoveredUsers))success
                            failure:(void (^)(NSError *error))failure
 {
+    
     __block MXHTTPOperation *operation;
     
-    operation = [self checkAPIVersionAvailabilityWithSuccess:^{
+    operation = [self v2_lookupHashDetailsWithSuccess:^(MXIdentityServerHashDetails *hashDetails) {
         
-        __block MXHTTPOperation *operation2;
+        MXHTTPOperation *operation2;
         
-        operation2 = [self v2_lookupHashDetailsWithSuccess:^(MXIdentityServerHashDetails *hashDetails) {
-            
-            MXHTTPOperation *operation3;
-            
-            MXIdentityServerHashAlgorithm lookupHashAlgorithm = [self preferredLookupAlgorithmForLookupoHashDetails:hashDetails];
-            
-            operation3 = [self.restClient lookup3pids:threepids
-                               algorithm:lookupHashAlgorithm
-                                  pepper:hashDetails.pepper
-                                 success:success
-                                 failure:^(NSError * _Nonnull error) {
-                                     
-                                     MXError *mxError = [[MXError alloc] initWithNSError:error];
-                                     if ([mxError.errcode isEqualToString:kMXErrCodeStringInvalidPepper])
-                                     {
-                                         // Identity server could rotate the pepper and it could become invalid
-                                         // TODO: Retry lookup with new pepper on invalid pepper error
-                                         self.identityServerHashDetails = nil;
-                                     }
-                                     
-                                     failure(error);
-                                 }];
-            
-            
-            if (operation && operation3)
-            {
-                [operation mutateTo:operation3];
-            }
-            else
-            {
-                operation = operation3;
-            }
-            
-        } failure:failure];
+        MXIdentityServerHashAlgorithm lookupHashAlgorithm = [self preferredLookupAlgorithmForLookupoHashDetails:hashDetails];
+        
+        operation2 = [self.restClient lookup3pids:threepids
+                                        algorithm:lookupHashAlgorithm
+                                           pepper:hashDetails.pepper
+                                          success:success
+                                          failure:^(NSError * _Nonnull error) {
+                                              
+                                              MXError *mxError = [[MXError alloc] initWithNSError:error];
+                                              if ([mxError.errcode isEqualToString:kMXErrCodeStringInvalidPepper])
+                                              {
+                                                  // Identity server could rotate the pepper and it could become invalid
+                                                  // TODO: Retry lookup with new pepper on invalid pepper error
+                                                  self.identityServerHashDetails = nil;
+                                              }
+                                              
+                                              failure(error);
+                                          }];
+        
         
         if (operation && operation2)
         {
@@ -449,7 +423,9 @@ NSString *const MXIdentityServiceNotificationAccessTokenKey = @"accessToken";
     
     NSString *accessToken = self.accessToken;
     
-    if (httpClient && [httpClient.baseURL.absoluteString hasPrefix:self.identityServer] && [mxError.errcode isEqualToString:kMXErrCodeStringTermsNotSigned] && accessToken)
+    if (httpClient
+        && [httpClient.baseURL.absoluteString hasPrefix:self.identityServer]
+        && [mxError.errcode isEqualToString:kMXErrCodeStringTermsNotSigned] && accessToken)
     {
         NSDictionary *userInfo = [self notificationUserInfoWithAccessToken:accessToken];
         [[NSNotificationCenter defaultCenter] postNotificationName:MXIdentityServiceTermsNotSignedNotification object:nil userInfo:userInfo];
