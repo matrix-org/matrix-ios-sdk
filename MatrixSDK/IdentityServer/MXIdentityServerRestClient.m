@@ -19,6 +19,8 @@
 #import "MXHTTPClient.h"
 #import "MXError.h"
 #import "MXTools.h"
+#import "OLMUtility.h"
+#import "MXEncryptedAttachments.h"
 
 #pragma mark - Constants definitions
 
@@ -27,6 +29,11 @@
  */
 NSString *const kMXIdentityAPIPrefixPathV1 = @"_matrix/identity/api/v1";
 NSString *const kMXIdentityAPIPrefixPathV2 = @"_matrix/identity/v2";
+
+/**
+ MXIdentityServerRestClient error domain
+ */
+NSString *const MXIdentityServerRestClientErrorDomain = @"org.matrix.sdk.MXIdentityServerRestClientErrorDomain";
 
 @interface MXIdentityServerRestClient()
 
@@ -43,15 +50,52 @@ NSString *const kMXIdentityAPIPrefixPathV2 = @"_matrix/identity/v2";
 
 @property (nonatomic, readwrite) MXCredentials *credentials;
 
+@property (nonatomic, readonly) BOOL isUsingV2API;
+
 @end
 
 @implementation MXIdentityServerRestClient
 
-#pragma mark - Properties
+#pragma mark - Properties override
 
 - (NSString *)identityServer
 {
     return self.credentials.identityServer;
+}
+
+- (void)setShouldRenewTokenHandler:(MXHTTPClientShouldRenewTokenHandler)shouldRenewTokenHandler
+{
+    self.httpClient.shouldRenewTokenHandler = shouldRenewTokenHandler;
+}
+
+- (MXHTTPClientShouldRenewTokenHandler)shouldRenewTokenHandler
+{
+    return self.httpClient.shouldRenewTokenHandler;
+}
+
+- (void)setRenewTokenHandler:(MXHTTPClientRenewTokenHandler)renewTokenHandler
+{
+    MXWeakify(self);
+    
+    self.httpClient.renewTokenHandler = ^MXHTTPOperation* (void (^success)(NSString *accessToken), void (^failure)(NSError *error)) {
+        MXStrongifyAndReturnValueIfNil(self, nil);
+        
+        return renewTokenHandler(^(NSString *accessToken) {
+            self.credentials.identityServerAccessToken = accessToken;
+            
+            success(accessToken);
+        }, failure);
+    };
+}
+
+- (MXHTTPClientRenewTokenHandler)renewTokenHandler
+{
+    return self.httpClient.renewTokenHandler;
+}
+
+- (BOOL)isUsingV2API
+{
+    return [self.preferredAPIPathPrefix isEqualToString:kMXIdentityAPIPrefixPathV2];
 }
 
 #pragma mark - Setup
@@ -69,18 +113,67 @@ NSString *const kMXIdentityAPIPrefixPathV2 = @"_matrix/identity/v2";
     self = [super init];
     if (self)
     {
-        MXHTTPClient *httpClient = [[MXHTTPClient alloc] initWithBaseURL:[NSString stringWithFormat:@"%@/%@", credentials.identityServer, kMXIdentityAPIPrefixPathV1]
-                                       andOnUnrecognizedCertificateBlock:onUnrecognizedCertBlock];
-        // The identity server accepts parameters in form data form not in JSON
-        httpClient.requestParametersInJSON = NO;
-        
-        self.httpClient = httpClient;
-        self.credentials = credentials;
+        if (credentials.identityServer)
+        {
+            MXHTTPClient *httpClient = [[MXHTTPClient alloc] initWithBaseURL:credentials.identityServer accessToken:credentials.identityServerAccessToken andOnUnrecognizedCertificateBlock:onUnrecognizedCertBlock];
+            // The identity server accepts parameters in form data form for some requests
+            httpClient.requestParametersInJSON = NO;
+            
+            self.httpClient = httpClient;
+            self.credentials = credentials;
+            
+            self.processingQueue = dispatch_queue_create("MXIdentityServerRestClient", DISPATCH_QUEUE_SERIAL);
+            self.completionQueue = dispatch_get_main_queue();
+        }
+        else
+        {
+            return nil;
+        }
     }
     return self;
 }
 
 #pragma mark - Public
+
+- (MXHTTPOperation*)registerWithOpenIdToken:(MXOpenIdToken*)openIdToken
+                                    success:(void (^)(NSString *accessToken))success
+                                    failure:(void (^)(NSError *error))failure
+{
+    NSString *path = [self buildAPIPathWithPath:@"account/register"];
+    
+    if (!path)
+    {
+        NSError *error = [NSError errorWithDomain:MXIdentityServerRestClientErrorDomain code:MXIdentityServerRestClientErrorMissinAPIPrefix userInfo:nil];
+        failure(error);
+        return nil;
+    }
+    
+    NSData *payloadData = [NSJSONSerialization dataWithJSONObject:openIdToken.JSONDictionary options:0 error:nil];
+    
+    return [self.httpClient requestWithMethod:@"POST"
+                                         path:path
+                                   parameters:nil
+                                         data:payloadData
+                                      headers:@{@"Content-Type": @"application/json"}
+                                      timeout:-1
+                               uploadProgress:nil
+                                      success:^(NSDictionary *JSONResponse) {
+                                          if (success)
+                                          {
+                                              __block NSString *token;
+                                              [self dispatchProcessing:^{
+                                                  MXJSONModelSetString(token, JSONResponse[@"access_token"]);
+                                              } andCompletion:^{
+                                                  success(token);
+                                              }];
+                                          }
+                                      } failure:^(NSError *error) {
+                                          [self dispatchFailure:error inBlock:failure];
+                                      }];
+}
+
+
+
 
 #pragma mark Association lookup
 
@@ -89,9 +182,17 @@ NSString *const kMXIdentityAPIPrefixPathV2 = @"_matrix/identity/v2";
                        success:(void (^)(NSString *userId))success
                        failure:(void (^)(NSError *error))failure
 {
+    NSString *path = [self buildAPIPathWithPath:@"lookup"];
+    
+    if (!path)
+    {
+        NSError *error = [NSError errorWithDomain:MXIdentityServerRestClientErrorDomain code:MXIdentityServerRestClientErrorMissinAPIPrefix userInfo:nil];
+        failure(error);
+        return nil;
+    }
     
     return [self.httpClient requestWithMethod:@"GET"
-                                         path:@"lookup"
+                                         path:path
                                    parameters:@{
                                                 @"medium": medium,
                                                 @"address": address
@@ -115,6 +216,15 @@ NSString *const kMXIdentityAPIPrefixPathV2 = @"_matrix/identity/v2";
                         success:(void (^)(NSArray *discoveredUsers))success
                         failure:(void (^)(NSError *error))failure
 {
+    NSString *path = [self buildAPIPathWithPath:@"bulk_lookup"];
+    
+    if (!path)
+    {
+        NSError *error = [NSError errorWithDomain:MXIdentityServerRestClientErrorDomain code:MXIdentityServerRestClientErrorMissinAPIPrefix userInfo:nil];
+        failure(error);
+        return nil;
+    }
+    
     NSData *payloadData = nil;
     if (threepids)
     {
@@ -122,7 +232,7 @@ NSString *const kMXIdentityAPIPrefixPathV2 = @"_matrix/identity/v2";
     }
     
     return [self.httpClient requestWithMethod:@"POST"
-                                         path:@"bulk_lookup"
+                                         path:path
                                    parameters:nil
                                          data:payloadData
                                       headers:@{@"Content-Type": @"application/json"}
@@ -143,6 +253,180 @@ NSString *const kMXIdentityAPIPrefixPathV2 = @"_matrix/identity/v2";
                                       } failure:^(NSError *error) {
                                           [self dispatchFailure:error inBlock:failure];
                                       }];
+}
+
+- (MXHTTPOperation*)hashDetailsWithSuccess:(void (^)(MXIdentityServerHashDetails *hashDetails))success failure:(void (^)(NSError *error))failure
+{
+    NSString *path = [self buildAPIPathWithPath:@"hash_details"];
+    
+    if (!path)
+    {
+        NSError *error = [NSError errorWithDomain:MXIdentityServerRestClientErrorDomain code:MXIdentityServerRestClientErrorMissinAPIPrefix userInfo:nil];
+        failure(error);
+        return nil;
+    }
+    
+    return [self.httpClient requestWithMethod:@"GET"
+                                         path:path
+                                   parameters:nil
+                           needsAuthorization:YES
+                                      success:^(NSDictionary *JSONResponse) {
+                                          if (success)
+                                          {
+                                              __block MXIdentityServerHashDetails *hashDetails;
+                                              [self dispatchProcessing:^{
+                                                  MXJSONModelSetMXJSONModel(hashDetails, [MXIdentityServerHashDetails class], JSONResponse);
+                                              } andCompletion:^{
+                                                  success(hashDetails);
+                                              }];
+                                          }
+                                      } failure:^(NSError *error) {
+                                          [self dispatchFailure:error inBlock:failure];
+                                      }];
+}
+
+- (MXHTTPOperation*)lookup3pids:(NSArray<NSArray<NSString*>*> *)threepids
+                      algorithm:(MXIdentityServerHashAlgorithm)algorithm
+                         pepper:(NSString*)pepper
+                        success:(void (^)(NSArray *discoveredUsers))success
+                        failure:(void (^)(NSError *error))failure
+{
+    if (algorithm == MXIdentityServerHashAlgorithmUnknown)
+    {
+        NSError *error = [NSError errorWithDomain:MXIdentityServerRestClientErrorDomain code:MXIdentityServerRestClientErrorUnsupportedLookup3pidHashAlgorithm userInfo:nil];
+        failure(error);
+        return nil;
+    }
+    
+    NSString *path = [self buildAPIPathWithPath:@"lookup"];
+    
+    if (!path)
+    {
+        NSError *error = [NSError errorWithDomain:MXIdentityServerRestClientErrorDomain code:MXIdentityServerRestClientErrorMissinAPIPrefix userInfo:nil];
+        failure(error);
+        return nil;
+    }
+    
+    NSData *payloadData = nil;
+    
+    NSMutableDictionary<NSString*, NSArray<NSString*>*> *threePidArrayByThreePidConcatHash = [NSMutableDictionary new];
+    
+    if (threepids)
+    {
+        NSMutableArray *hashedThreePids = [NSMutableArray new];
+        
+        for (NSArray<NSString*> *threepidArray in threepids)
+        {
+            if (threepidArray.count < 2)
+            {
+                continue;
+            }
+            
+            NSString *medium = threepidArray[0];
+            NSString *threepid = threepidArray[1];
+            
+            NSString *hashedTreePid;
+            
+            switch (algorithm)
+            {
+                case MXIdentityServerHashAlgorithmNone:
+                    hashedTreePid = [NSString stringWithFormat:@"%@ %@", threepid, medium];
+                    break;
+                case MXIdentityServerHashAlgorithmSHA256:
+                {
+                    NSString *threePidConcatenation = [NSString stringWithFormat:@"%@ %@ %@", threepid, medium, pepper];
+                    
+                    OLMUtility *olmUtility = [OLMUtility new];
+                    NSString *hashedSha256ThreePid = [olmUtility sha256:[threePidConcatenation dataUsingEncoding:NSUTF8StringEncoding]];
+                    hashedTreePid = [MXEncryptedAttachments base64ToBase64Url:hashedSha256ThreePid];
+                    
+                    threePidArrayByThreePidConcatHash[hashedTreePid] = threepidArray;
+                }
+                    break;
+                default:
+                    break;
+            }
+            
+            [hashedThreePids addObject:hashedTreePid];
+        }
+        
+        NSString *algorithmStringValue = [MXIdentityServerHashDetails stringValueForHashAlgorithm:algorithm];
+        
+        NSDictionary *jsonDictionary = @{
+                                         @"addresses": hashedThreePids,
+                                         @"algorithm": algorithmStringValue,
+                                         @"pepper": pepper,
+                                         };
+        
+        payloadData = [NSJSONSerialization dataWithJSONObject:jsonDictionary options:0 error:nil];
+    }
+    
+    return [self.httpClient requestWithMethod:@"POST"
+                                         path:path
+                                   parameters:nil
+                           needsAuthorization:YES
+                                         data:payloadData
+                                      headers:@{@"Content-Type": @"application/json"}
+                                      timeout:-1
+                               uploadProgress:nil
+                                      success:^(NSDictionary *JSONResponse) {
+                                          if (success)
+                                          {
+                                              __block NSMutableArray *discoveredUsers;
+                                              [self dispatchProcessing:^{
+                                                  
+                                                  NSDictionary *mappings;
+                                                  MXJSONModelSetDictionary(mappings, JSONResponse[@"mappings"]);
+                                                  
+                                                  if (mappings)
+                                                  {
+                                                      discoveredUsers = [NSMutableArray new];
+                                                      
+                                                      switch (algorithm)
+                                                      {
+                                                          case MXIdentityServerHashAlgorithmNone:
+                                                          {
+                                                              [mappings enumerateKeysAndObjectsUsingBlock:^(id key, id value, BOOL* stop) {
+                                                                  
+                                                                  NSArray *addressPlusMedium = [key componentsSeparatedByString:@" "];
+                                                                  
+                                                                  if (addressPlusMedium.count == 2)
+                                                                  {
+                                                                      // Medium, 3 pid, Matrix ID
+                                                                      NSArray *userItems = @[ addressPlusMedium[1], addressPlusMedium[0], value];
+                                                                      
+                                                                      [discoveredUsers addObject:userItems];
+                                                                  }
+                                                              }];
+                                                          }
+                                                              break;
+                                                          case MXIdentityServerHashAlgorithmSHA256:
+                                                          {
+                                                              [mappings enumerateKeysAndObjectsUsingBlock:^(id key, id value, BOOL* stop) {
+                                                                  
+                                                                  NSArray<NSString*> *threePidArray = threePidArrayByThreePidConcatHash[key];
+                                                                  
+                                                                  if (threePidArray.count == 2)
+                                                                  {
+                                                                      // Medium, 3 pid, Matrix ID
+                                                                      NSArray *userItems = @[ threePidArray[0], threePidArray[1], value];
+                                                                      [discoveredUsers addObject:userItems];
+                                                                  }
+                                                              }];
+                                                          }
+                                                              break;
+                                                          default:
+                                                              break;
+                                                      }
+                                                  }
+                                                  
+                                              } andCompletion:^{
+                                                  success(discoveredUsers);
+                                              }];
+                                          }
+                                      } failure:^(NSError *error) {
+                                          [self dispatchFailure:error inBlock:failure];
+                                      }];
     
 }
 
@@ -155,6 +439,15 @@ NSString *const kMXIdentityAPIPrefixPathV2 = @"_matrix/identity/v2";
                                    success:(void (^)(NSString *sid))success
                                    failure:(void (^)(NSError *error))failure
 {
+    NSString *path = [self buildAPIPathWithPath:@"validate/email/requestToken"];
+    
+    if (!path)
+    {
+        NSError *error = [NSError errorWithDomain:MXIdentityServerRestClientErrorDomain code:MXIdentityServerRestClientErrorMissinAPIPrefix userInfo:nil];
+        failure(error);
+        return nil;
+    }
+    
     NSMutableDictionary *parameters = [NSMutableDictionary dictionaryWithDictionary:@{
                                                                                       @"email": email,
                                                                                       @"client_secret": clientSecret,
@@ -166,9 +459,16 @@ NSString *const kMXIdentityAPIPrefixPathV2 = @"_matrix/identity/v2";
         parameters[@"next_link"] = nextLink;
     }
     
+    NSData *payloadData = [NSJSONSerialization dataWithJSONObject:parameters options:0 error:nil];
+
     return [self.httpClient requestWithMethod:@"POST"
-                                         path:@"validate/email/requestToken"
-                                   parameters:parameters
+                                         path:path
+                                   parameters:nil
+                           needsAuthorization:self.isUsingV2API
+                                         data:payloadData
+                                      headers:@{@"Content-Type": @"application/json"}
+                                      timeout:-1
+                               uploadProgress:nil
                                       success:^(NSDictionary *JSONResponse) {
                                           if (success)
                                           {
@@ -182,6 +482,7 @@ NSString *const kMXIdentityAPIPrefixPathV2 = @"_matrix/identity/v2";
                                       } failure:^(NSError *error) {
                                           [self dispatchFailure:error inBlock:failure];
                                       }];
+    
 }
 
 - (MXHTTPOperation*)requestPhoneNumberValidation:(NSString*)phoneNumber
@@ -192,6 +493,15 @@ NSString *const kMXIdentityAPIPrefixPathV2 = @"_matrix/identity/v2";
                                          success:(void (^)(NSString *sid, NSString *msisdn))success
                                          failure:(void (^)(NSError *error))failure
 {
+    NSString *path = [self buildAPIPathWithPath:@"validate/msisdn/requestToken"];
+    
+    if (!path)
+    {
+        NSError *error = [NSError errorWithDomain:MXIdentityServerRestClientErrorDomain code:MXIdentityServerRestClientErrorMissinAPIPrefix userInfo:nil];
+        failure(error);
+        return nil;
+    }
+    
     NSMutableDictionary *parameters = [NSMutableDictionary dictionaryWithDictionary:@{
                                                                                       @"phone_number": phoneNumber,
                                                                                       @"country": (countryCode ? countryCode : @""),
@@ -203,9 +513,16 @@ NSString *const kMXIdentityAPIPrefixPathV2 = @"_matrix/identity/v2";
         parameters[@"next_link"] = nextLink;
     }
     
+    NSData *payloadData = [NSJSONSerialization dataWithJSONObject:parameters options:0 error:nil];
+    
     return [self.httpClient requestWithMethod:@"POST"
-                                         path:@"validate/msisdn/requestToken"
-                                   parameters:parameters
+                                         path:path
+                                   parameters:nil
+                           needsAuthorization:self.isUsingV2API
+                                         data:payloadData
+                                      headers:@{@"Content-Type": @"application/json"}
+                                      timeout:-1
+                               uploadProgress:nil
                                       success:^(NSDictionary *JSONResponse) {
                                           if (success)
                                           {
@@ -222,8 +539,6 @@ NSString *const kMXIdentityAPIPrefixPathV2 = @"_matrix/identity/v2";
                                       }];
 }
 
-
-
 - (MXHTTPOperation *)submit3PIDValidationToken:(NSString *)token
                                         medium:(NSString *)medium
                                   clientSecret:(NSString *)clientSecret
@@ -234,18 +549,38 @@ NSString *const kMXIdentityAPIPrefixPathV2 = @"_matrix/identity/v2";
     // Sanity check
     if (!medium.length)
     {
+        NSError *error = [NSError errorWithDomain:MXIdentityServerRestClientErrorDomain code:MXIdentityServerRestClientErrorUnknown userInfo:nil];
+        failure(error);
         return nil;
     }
     
     NSString *path = [NSString stringWithFormat:@"validate/%@/submitToken", medium];
     
+    NSString *apiPath = [self buildAPIPathWithPath:path];
+    
+    if (!apiPath)
+    {
+        NSError *error = [NSError errorWithDomain:MXIdentityServerRestClientErrorDomain code:MXIdentityServerRestClientErrorMissinAPIPrefix userInfo:nil];
+        failure(error);
+        return nil;
+    }
+    
+    NSDictionary *jsonDictionary = @{
+                                     @"token": token,
+                                     @"client_secret": clientSecret,
+                                     @"sid": sid
+                                     };
+    
+    NSData *payloadData = [NSJSONSerialization dataWithJSONObject:jsonDictionary options:0 error:nil];
+    
     return [self.httpClient requestWithMethod:@"POST"
-                                         path:path
-                                   parameters:@{
-                                                @"token": token,
-                                                @"client_secret": clientSecret,
-                                                @"sid": sid
-                                                }
+                                         path:apiPath
+                                   parameters:nil
+                           needsAuthorization:self.isUsingV2API
+                                         data:payloadData
+                                      headers:@{@"Content-Type": @"application/json"}
+                                      timeout:-1
+                               uploadProgress:nil
                                       success:^(NSDictionary *JSONResponse) {
                                           __block BOOL successValue = NO;
                                           
@@ -274,19 +609,39 @@ NSString *const kMXIdentityAPIPrefixPathV2 = @"_matrix/identity/v2";
 
 - (MXHTTPOperation *)pingIdentityServer:(void (^)(void))success failure:(void (^)(NSError *))failure
 {
-    // We cannot use "" as the HTTP client (AFNetworking) will request for "/v1/"
-    NSString *path = @"../v1";
+    NSString *apiPathPrefix = self.preferredAPIPathPrefix;
     
+    if (!apiPathPrefix)
+    {
+        NSError *error = [NSError errorWithDomain:MXIdentityServerRestClientErrorDomain code:MXIdentityServerRestClientErrorMissinAPIPrefix userInfo:nil];
+        failure(error);
+        return nil;
+    }
+    
+    return [self isAPIPathPrefixAvailable:apiPathPrefix success:^{
+        if (success)
+        {
+            [self dispatchProcessing:nil
+                       andCompletion:^{
+                           success();
+                       }];
+        }
+    } failure:^(NSError * _Nonnull error) {
+        [self dispatchFailure:error inBlock:failure];
+    }];
+}
+
+- (MXHTTPOperation *)isAPIPathPrefixAvailable:(NSString*)apiPathPrefix
+                                      success:(void (^)(void))success
+                                      failure:(void (^)(NSError *))failure
+{
     return [self.httpClient requestWithMethod:@"GET"
-                                         path:path
+                                         path:apiPathPrefix
                                    parameters:nil
                                       success:^(NSDictionary *JSONResponse) {
                                           if (success)
                                           {
-                                              [self dispatchProcessing:nil
-                                                         andCompletion:^{
-                                                             success();
-                                                         }];
+                                              [self dispatchSuccess:success];
                                           }
                                       } failure:^(NSError *error) {
                                           [self dispatchFailure:error inBlock:failure];
@@ -386,6 +741,30 @@ NSString *const kMXIdentityAPIPrefixPathV2 = @"_matrix/identity/v2";
             }
         });
     }
+}
+
+- (NSString*)buildAPIPathWithPath:(NSString*)path
+{
+    NSString *apiPath;
+    
+    if (self.preferredAPIPathPrefix)
+    {
+        apiPath = [NSString stringWithFormat:@"%@/%@", self.preferredAPIPathPrefix, path];
+    }
+    
+    return apiPath;
+}
+
+- (NSString*)buildAPIPathWithAPIPathPrefix:(NSString*)apiPathPrefix andPath:(NSString*)path
+{
+    NSString *apiPath;
+    
+    if (apiPathPrefix)
+    {
+        apiPath = [NSString stringWithFormat:@"%@/%@", apiPathPrefix, path];
+    }
+    
+    return apiPath;
 }
 
 @end

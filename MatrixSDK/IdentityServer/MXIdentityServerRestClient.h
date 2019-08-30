@@ -20,6 +20,7 @@
 #import "MXInvite3PID.h"
 #import "MXJSONModels.h"
 #import "MXCredentials.h"
+#import "MXIdentityServerHashDetails.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -32,6 +33,22 @@ FOUNDATION_EXPORT NSString *const kMXIdentityAPIPrefixPathV1;
  Prefix used in path of identity server for v2 API requests.
  */
 FOUNDATION_EXPORT NSString *const kMXIdentityAPIPrefixPathV2;
+
+
+/**
+ MXIdentityServerRestClient error domain
+ */
+FOUNDATION_EXPORT NSString *const MXIdentityServerRestClientErrorDomain;
+
+/**
+ MXIdentityServerRestClient errors
+ */
+NS_ERROR_ENUM(MXIdentityServerRestClientErrorDomain)
+{
+    MXIdentityServerRestClientErrorUnknown,
+    MXIdentityServerRestClientErrorMissinAPIPrefix,
+    MXIdentityServerRestClientErrorUnsupportedLookup3pidHashAlgorithm
+};
 
 /**
  `MXIdentityServerRestClient` makes requests to Matrix identity servers.
@@ -57,6 +74,21 @@ FOUNDATION_EXPORT NSString *const kMXIdentityAPIPrefixPathV2;
 */
 @property (nonatomic, strong) dispatch_queue_t completionQueue;
 
+/**
+ The preferred API path prefix to use for requests (i.e. "_matrix/identity/v2").
+ */
+@property (nonatomic, strong, nullable) NSString *preferredAPIPathPrefix;
+
+/**
+ Block called when a request needs authorization and access token should be renewed.
+ */
+@property (nonatomic, copy) MXHTTPClientShouldRenewTokenHandler shouldRenewTokenHandler;
+
+/**
+ Block called when a request fails and needs authorization to determine if the access token should be renewed.
+ */
+@property (nonatomic, copy) MXHTTPClientRenewTokenHandler renewTokenHandler;
+
 #pragma mark - Setup
 
 /**
@@ -71,18 +103,33 @@ FOUNDATION_EXPORT NSString *const kMXIdentityAPIPrefixPathV2;
 /**
  Create an instance based on a matrix user account.
  
- @param credentials the response to a login or a register request.
+ @param credentials user's credentials.
  @param onUnrecognizedCertBlock the block called to handle unrecognized certificate (nil if unrecognized certificates are ignored).
  @return a MXRestClient instance.
  */
--(instancetype)initWithCredentials:(MXCredentials*)credentials andOnUnrecognizedCertificateBlock:(nullable MXHTTPClientOnUnrecognizedCertificate)onUnrecognizedCertBlock NS_REFINED_FOR_SWIFT;
+- (instancetype)initWithCredentials:(MXCredentials*)credentials andOnUnrecognizedCertificateBlock:(nullable MXHTTPClientOnUnrecognizedCertificate)onUnrecognizedCertBlock NS_REFINED_FOR_SWIFT;
 
 #pragma mark -
+
+#pragma mark Register
+
+/**
+ Register with an identity server using the OpenID token from the user's homeserver (v2 API).
+
+ @param openIdToken The OpenID token from an homeserver.
+ @param success A block object called when the operation succeeds. It provides the user access token for the identity server.
+ @param failure A block object called when the operation fails.
+ 
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)registerWithOpenIdToken:(MXOpenIdToken*)openIdToken
+                                    success:(void (^)(NSString *accessToken))success
+                                    failure:(void (^)(NSError *error))failure;
 
 #pragma mark Association lookup
 
 /**
- Retrieve a user matrix id from a 3rd party id.
+ Retrieve a user matrix id from a 3rd party id (v1 API).
  
  @param address the id of the user in the 3rd party system.
  @param medium the 3rd party system (ex: "email").
@@ -99,7 +146,7 @@ FOUNDATION_EXPORT NSString *const kMXIdentityAPIPrefixPathV2;
                        failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 /**
- Retrieve user matrix ids from a list of 3rd party ids.
+ Retrieve user matrix ids from a list of 3rd party ids (v1 API).
  
  @param threepids the list of 3rd party ids: [[<(MX3PIDMedium)media1>, <(NSString*)address1>], [<(MX3PIDMedium)media2>, <(NSString*)address2>], ...].
  @param success A block object called when the operation succeeds. It provides the array of the discovered users returned by the identity server.
@@ -111,6 +158,36 @@ FOUNDATION_EXPORT NSString *const kMXIdentityAPIPrefixPathV2;
 - (MXHTTPOperation*)lookup3pids:(NSArray*)threepids
                         success:(void (^)(NSArray *discoveredUsers))success
                         failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
+
+
+/**
+ Gets the V2 hashing information from the identity server. Primarily useful for lookups (v2 API).
+
+ @param success A block object called when the operation succeeds. It provides hash alogritms and pepper informations through the MXIdentityServerHashDetails object.
+ @param failure A block object called when the operation fails.
+ 
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)hashDetailsWithSuccess:(void (^)(MXIdentityServerHashDetails *hashDetails))success
+                                   failure:(void (^)(NSError *error))failure;
+
+/**
+ Retrieve user matrix ids from a list of 3rd party ids (v2 API). Require informations from `hashDetailsWithSuccess:failure` request.
+
+ @param threepids The list of 3rd party ids: [[<(MX3PIDMedium)media1>, <(NSString*)address1>], [<(MX3PIDMedium)media2>, <(NSString*)address2>], ...].
+ @param algorithm Three pids hash algorithm retrieved from "/hash_details" endpoint.
+ @param pepper Three pids hash pepper retrieved from "/hash_details" endpoint.
+ @param success A block object called when the operation succeeds. It provides the array of the discovered users returned by the identity server.
+ [[<(MX3PIDMedium)media>, <(NSString*)address>, <(NSString*)userId>], ...].
+ @param failure A block object called when the operation fails.
+ 
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)lookup3pids:(NSArray<NSArray<NSString*>*> *)threepids
+                      algorithm:(MXIdentityServerHashAlgorithm)algorithm
+                         pepper:(NSString*)pepper
+                        success:(void (^)(NSArray *discoveredUsers))success
+                        failure:(void (^)(NSError *error))failure;
 
 #pragma mark Establishing associations
 
@@ -208,6 +285,19 @@ FOUNDATION_EXPORT NSString *const kMXIdentityAPIPrefixPathV2;
  */
 - (MXHTTPOperation*)pingIdentityServer:(void (^)(void))success
                                failure:(void (^)(NSError *error))failure;
+
+
+/**
+ Check if API path prefix is reachable on identity server (i.e. "_matrix/identity/v2").
+
+ @param apiPathPrefix API path prefix to check.
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation *)isAPIPathPrefixAvailable:(NSString*)apiPathPrefix
+                                      success:(void (^)(void))success
+                                      failure:(void (^)(NSError *))failure;
 
 /**
  Sign a 3PID URL.

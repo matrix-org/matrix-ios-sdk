@@ -54,6 +54,7 @@ FOUNDATION_EXPORT NSString *const kMXErrCodeStringPasswordNoSymbol;
 FOUNDATION_EXPORT NSString *const kMXErrCodeStringPasswordInDictionary;
 FOUNDATION_EXPORT NSString *const kMXErrCodeStringWeakPassword;
 FOUNDATION_EXPORT NSString *const kMXErrCodeStringTermsNotSigned;
+FOUNDATION_EXPORT NSString *const kMXErrCodeStringInvalidPepper;
 
 FOUNDATION_EXPORT NSString *const kMXErrorStringInvalidToken;
 
