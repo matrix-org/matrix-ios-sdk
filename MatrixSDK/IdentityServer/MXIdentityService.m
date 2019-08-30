@@ -243,7 +243,7 @@ NSString *const MXIdentityServiceNotificationAccessTokenKey = @"accessToken";
         return nil;
     }
     
-    return [self.restClient isAPIPathPrefixAvailable:kMXIdentityAPIPrefixPathV2 success:^{    
+    return [self.restClient isAPIPathPrefixAvailable:kMXIdentityAPIPrefixPathV2 success:^{
         self.restClient.preferredAPIPathPrefix = kMXIdentityAPIPrefixPathV2;
         
         if (success)
@@ -252,11 +252,12 @@ NSString *const MXIdentityServiceNotificationAccessTokenKey = @"accessToken";
         }
         
     } failure:^(NSError * _Nonnull error) {
-        self.restClient.preferredAPIPathPrefix = kMXIdentityAPIPrefixPathV1;
         
         // Call success only if API path prefix v2 is not found call failure for other errors
         if ([error.domain isEqualToString:MXIdentityServerRestClientErrorDomain] && error.code == MXIdentityServerRestClientErrorAPIPrefixNotFound)
         {
+            self.restClient.preferredAPIPathPrefix = kMXIdentityAPIPrefixPathV1;
+            
             if (success)
             {
                 success();
