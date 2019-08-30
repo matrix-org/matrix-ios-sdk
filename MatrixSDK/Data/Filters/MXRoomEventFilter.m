@@ -1,6 +1,7 @@
 /*
  Copyright 2016 OpenMarket Ltd
  Copyright 2018 New Vector Ltd
+ Copyright 2019 The Matrix.org Foundation C.I.C
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -135,6 +136,14 @@
     BOOL lazyLoadMembers = NO; // Basic default value used by homeservers
     MXJSONModelSetBoolean(lazyLoadMembers, dictionary[@"lazy_load_members"]);
     return lazyLoadMembers;
+}
+
+
+#pragma mark - NSCopying
+
+- (id)copyWithZone:(NSZone *)zone
+{
+    return [[MXRoomEventFilter alloc] initWithDictionary:self.dictionary];
 }
 
 @end
