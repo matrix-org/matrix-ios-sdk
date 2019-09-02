@@ -30,16 +30,12 @@
 
 @implementation MXAutoDiscovery
 
-- (nullable instancetype)initWithDomain:(NSString *)domain
+- (nullable instancetype)initWithUrl:(NSString *)url
 {
     self = [super init];
     if (self)
     {
-        NSURLComponents *components = [NSURLComponents new];
-        components.scheme = @"https";
-        components.host = domain;
-
-        restClient = [[MXRestClient alloc] initWithHomeServer:components.URL.absoluteString
+        restClient = [[MXRestClient alloc] initWithHomeServer:url
                             andOnUnrecognizedCertificateBlock:nil];
 
         // The .well-known/matrix/client API is often just a static file returned with no content type.
@@ -47,6 +43,15 @@
         restClient.acceptableContentTypes = nil;
     }
     return self;
+}
+
+- (nullable instancetype)initWithDomain:(NSString *)domain
+{
+    NSURLComponents *components = [NSURLComponents new];
+    components.scheme = @"https";
+    components.host = domain;
+
+    return [self initWithUrl:components.URL.absoluteString];
 }
 
 - (MXHTTPOperation *)findClientConfig:(void (^)(MXDiscoveredClientConfig * _Nonnull))complete
