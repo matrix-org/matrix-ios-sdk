@@ -458,40 +458,28 @@ MXAuthAction;
                                     success:(void (^)(NSString *sid))success
                                     failure:(void (^)(NSError *error))failure
 {
-    NSString *identityServer = self.credentials.identityServer;
-    if ([identityServer hasPrefix:@"http://"] || [identityServer hasPrefix:@"https://"])
-    {
-        identityServer = [identityServer substringFromIndex:[identityServer rangeOfString:@"://"].location + 3];
-    }
-    
+    NSString *path = [NSString stringWithFormat:@"%@/account/password/email/requestToken", apiPathPrefix];
+
     NSDictionary *parameters = @{
                                  @"email" : email,
                                  @"client_secret" : clientSecret,
                                  @"send_attempt" : @(sendAttempt),
-                                 @"id_server" : identityServer
                                  };
 
     MXWeakify(self);
-    return [httpClient requestWithMethod:@"POST"
-                                    path:[NSString stringWithFormat:@"%@/account/password/email/requestToken", apiPathPrefix]
-                              parameters:parameters
-                                 success:^(NSDictionary *JSONResponse) {
-                                     MXStrongifyAndReturnIfNil(self);
+    return [self requestTokenFromEndpoint:path parameters:parameters success:^(NSDictionary *JSONResponse) {
+        MXStrongifyAndReturnIfNil(self);
 
-                                     if (success)
-                                     {
-                                         __block NSString *sid;
-                                         [self dispatchProcessing:^{
-                                             MXJSONModelSetString(sid, JSONResponse[@"sid"]);
-                                         } andCompletion:^{
-                                             success(sid);
-                                         }];
-                                     }
-                                 }
-                                 failure:^(NSError *error) {
-                                     MXStrongifyAndReturnIfNil(self);
-                                     [self dispatchFailure:error inBlock:failure];
-                                 }];
+        if (success)
+        {
+            __block NSString *sid;
+            [self dispatchProcessing:^{
+                MXJSONModelSetString(sid, JSONResponse[@"sid"]);
+            } andCompletion:^{
+                success(sid);
+            }];
+        }
+    } failure:failure];
 }
 
 #pragma mark - Login operations
@@ -909,17 +897,10 @@ MXAuthAction;
                                  success:(void (^)(NSString *sid))success
                                  failure:(void (^)(NSError *error))failure
 {
-    NSString *identityServer = self.credentials.identityServer;
-    if ([identityServer hasPrefix:@"http://"] || [identityServer hasPrefix:@"https://"])
-    {
-        identityServer = [identityServer substringFromIndex:[identityServer rangeOfString:@"://"].location + 3];
-    }
-    
     NSMutableDictionary *parameters = [NSMutableDictionary dictionaryWithDictionary:@{
                                                                                       @"email": email,
                                                                                       @"client_secret": clientSecret,
-                                                                                      @"send_attempt" : @(sendAttempt),
-                                                                                      @"id_server" : identityServer
+                                                                                      @"send_attempt" : @(sendAttempt)
                                                                                       }];
     
     if (nextLink)
@@ -938,26 +919,19 @@ MXAuthAction;
     }
 
     MXWeakify(self);
-    return [httpClient requestWithMethod:@"POST"
-                                    path:path
-                              parameters:parameters
-                                 success:^(NSDictionary *JSONResponse) {
-                                     MXStrongifyAndReturnIfNil(self);
+    return [self requestTokenFromEndpoint:path parameters:parameters success:^(NSDictionary *JSONResponse) {
+        MXStrongifyAndReturnIfNil(self);
 
-                                     if (success)
-                                     {
-                                         __block NSString *sid;
-                                         [self dispatchProcessing:^{
-                                             MXJSONModelSetString(sid, JSONResponse[@"sid"]);
-                                         } andCompletion:^{
-                                             success(sid);
-                                         }];
-                                     }
-                                 }
-                                 failure:^(NSError *error) {
-                                     MXStrongifyAndReturnIfNil(self);
-                                     [self dispatchFailure:error inBlock:failure];
-                                 }];
+        if (success)
+        {
+            __block NSString *sid;
+            [self dispatchProcessing:^{
+                MXJSONModelSetString(sid, JSONResponse[@"sid"]);
+            } andCompletion:^{
+                success(sid);
+            }];
+        }
+    } failure:failure];
 }
 
 - (MXHTTPOperation*)requestTokenForPhoneNumber:(NSString*)phoneNumber
@@ -969,18 +943,11 @@ MXAuthAction;
                                        success:(void (^)(NSString *sid, NSString *msisdn))success
                                        failure:(void (^)(NSError *error))failure
 {
-    NSString *identityServer = self.credentials.identityServer;
-    if ([identityServer hasPrefix:@"http://"] || [identityServer hasPrefix:@"https://"])
-    {
-        identityServer = [identityServer substringFromIndex:[identityServer rangeOfString:@"://"].location + 3];
-    }
-    
     NSMutableDictionary *parameters = [NSMutableDictionary dictionaryWithDictionary:@{
                                                                                       @"phone_number": phoneNumber,
                                                                                       @"country": (countryCode ? countryCode : @""),
                                                                                       @"client_secret": clientSecret,
-                                                                                      @"send_attempt" : @(sendAttempt),
-                                                                                      @"id_server" : identityServer
+                                                                                      @"send_attempt" : @(sendAttempt)
                                                                                       }];
     if (nextLink)
     {
@@ -998,23 +965,41 @@ MXAuthAction;
     }
 
     MXWeakify(self);
+    return [self requestTokenFromEndpoint:path parameters:parameters success:^(NSDictionary *JSONResponse) {
+        MXStrongifyAndReturnIfNil(self);
+
+        if (success)
+        {
+            __block NSString *sid, *msisdn;
+            [self dispatchProcessing:^{
+                MXJSONModelSetString(sid, JSONResponse[@"sid"]);
+                MXJSONModelSetString(msisdn, JSONResponse[@"msisdn"]);
+            } andCompletion:^{
+                success(sid, msisdn);
+            }];
+        }
+    } failure:failure];
+}
+
+
+- (MXHTTPOperation*)requestTokenFromEndpoint:(NSString *)path
+                                  parameters:(NSDictionary*)parameters
+                                     success:(void (^)(NSDictionary *JSONResponse))success
+                                     failure:(void (^)(NSError *error))failure
+{
+
+    NSMutableDictionary *params = [NSMutableDictionary dictionaryWithDictionary:parameters];
+    if (self.credentials.identityServer)
+    {
+        NSURL *identityServerURL = [NSURL URLWithString:self.credentials.identityServer];
+        params[@"id_server"] = identityServerURL.host;
+    }
+
+    MXWeakify(self);
     return [httpClient requestWithMethod:@"POST"
                                     path:path
-                              parameters:parameters
-                                 success:^(NSDictionary *JSONResponse) {
-                                     MXStrongifyAndReturnIfNil(self);
-
-                                     if (success)
-                                     {
-                                         __block NSString *sid, *msisdn;
-                                         [self dispatchProcessing:^{
-                                             MXJSONModelSetString(sid, JSONResponse[@"sid"]);
-                                             MXJSONModelSetString(msisdn, JSONResponse[@"msisdn"]);
-                                         } andCompletion:^{
-                                             success(sid, msisdn);
-                                         }];
-                                     }
-                                 }
+                              parameters:params
+                                 success:success
                                  failure:^(NSError *error) {
                                      MXStrongifyAndReturnIfNil(self);
                                      [self dispatchFailure:error inBlock:failure];
