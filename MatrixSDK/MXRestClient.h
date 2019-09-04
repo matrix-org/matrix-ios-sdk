@@ -118,10 +118,11 @@ FOUNDATION_EXPORT NSString *const kMXMembersOfRoomParametersNotMembership;
 @property (nonatomic, readonly) NSString *homeserverSuffix;
 
 /**
- The identity server URL.
- Shortcut to credentials.identityServer.
+ The identity server URL (ex: "https://vector.im").
+ 
+ TODO: Remove it when all HSes will no more require IS.
  */
-@property (nonatomic) NSString *identityServer;
+@property (nonatomic, copy) NSString *identityServer;
 
 /**
  The antivirus server URL (nil by default).

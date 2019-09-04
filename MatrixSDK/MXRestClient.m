@@ -119,6 +119,7 @@ MXAuthAction;
         contentPathPrefix = kMXContentPrefixPath;
         
         credentials = inCredentials;
+        _identityServer = credentials.identityServer;
 
         if (credentials.homeServer)
         {
@@ -989,9 +990,9 @@ MXAuthAction;
 {
 
     NSMutableDictionary *params = [NSMutableDictionary dictionaryWithDictionary:parameters];
-    if (self.credentials.identityServer)
+    if (self.identityServer)
     {
-        NSURL *identityServerURL = [NSURL URLWithString:self.credentials.identityServer];
+        NSURL *identityServerURL = [NSURL URLWithString:self.identityServer];
         params[@"id_server"] = identityServerURL.host;
     }
 
@@ -1938,7 +1939,7 @@ MXAuthAction;
                              failure:(void (^)(NSError *error))failure
 {
     // The identity server must be defined
-    if (!self.credentials.identityServer)
+    if (!self.identityServer)
     {
         NSError *error = [NSError errorWithDomain:kMXRestClientErrorDomain code:MXRestClientErrorMissingIdentityServer userInfo:nil];
         [self dispatchFailure:error inBlock:failure];
@@ -1948,7 +1949,7 @@ MXAuthAction;
     NSString *path = [NSString stringWithFormat:@"%@/rooms/%@/invite", apiPathPrefix, roomId];
 
     // This request must not have the protocol part
-    NSString *identityServer = self.credentials.identityServer;
+    NSString *identityServer = self.identityServer;
     if ([identityServer hasPrefix:@"http://"] || [identityServer hasPrefix:@"https://"])
     {
         identityServer = [identityServer substringFromIndex:[identityServer rangeOfString:@"://"].location + 3];
@@ -2826,7 +2827,7 @@ MXAuthAction;
                     success:(void (^)(void))success
                     failure:(void (^)(NSError *error))failure
 {
-    if (!self.credentials.identityServer)
+    if (!self.identityServer)
     {
         NSLog(@"[MXRestClient] add3PID: Error: Missing identityServer");
         NSError *error = [NSError errorWithDomain:kMXRestClientErrorDomain code:MXRestClientErrorMissingIdentityServer userInfo:nil];
@@ -3327,25 +3328,6 @@ MXAuthAction;
                                      MXStrongifyAndReturnIfNil(self);
                                      [self dispatchFailure:error inBlock:failure];
                                  }];
-}
-
-#pragma mark - Identity server
-
-- (void)setIdentityServer:(NSString *)identityServer
-{
-    if (identityServer.length)
-    {
-        self.credentials.identityServer = [identityServer copy];
-    }
-    else
-    {
-        self.credentials.identityServer = nil;
-    }
-}
-
-- (NSString *)identityServer
-{
-    return self.credentials.identityServer;
 }
 
 #pragma mark - Antivirus server API
