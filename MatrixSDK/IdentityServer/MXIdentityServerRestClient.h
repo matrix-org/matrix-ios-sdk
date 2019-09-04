@@ -65,11 +65,6 @@ NS_ERROR_ENUM(MXIdentityServerRestClientErrorDomain)
 @property (nonatomic, readonly) NSString *identityServer;
 
 /**
- Credentials for the Matrix identity server API.
-*/
-@property (nonatomic, readonly) MXCredentials *credentials;
-
-/**
  The queue on which asynchronous response blocks are called.
  Default is dispatch_get_main_queue().
 */
@@ -96,19 +91,12 @@ NS_ERROR_ENUM(MXIdentityServerRestClientErrorDomain)
  Create an instance based on identity server URL.
 
  @param identityServer the identity server URL.
+ @param accessToken the identity server access token. Nil if not known yet.
  @param onUnrecognizedCertBlock the block called to handle unrecognized certificate (nil if unrecognized certificates are ignored).
  @return a MXIdentityServerRestClient instance.
 */
-- (instancetype)initWithIdentityServer:(NSString *)identityServer andOnUnrecognizedCertificateBlock:(nullable MXHTTPClientOnUnrecognizedCertificate)onUnrecognizedCertBlock NS_REFINED_FOR_SWIFT;
+- (instancetype)initWithIdentityServer:(NSString *)identityServer accessToken:(nullable NSString*)accessToken andOnUnrecognizedCertificateBlock:(nullable MXHTTPClientOnUnrecognizedCertificate)onUnrecognizedCertBlock NS_REFINED_FOR_SWIFT;
 
-/**
- Create an instance based on a matrix user account.
- 
- @param credentials user's credentials.
- @param onUnrecognizedCertBlock the block called to handle unrecognized certificate (nil if unrecognized certificates are ignored).
- @return a MXRestClient instance.
- */
-- (instancetype)initWithCredentials:(MXCredentials*)credentials andOnUnrecognizedCertificateBlock:(nullable MXHTTPClientOnUnrecognizedCertificate)onUnrecognizedCertBlock NS_REFINED_FOR_SWIFT;
 
 #pragma mark -
 
@@ -304,12 +292,14 @@ NS_ERROR_ENUM(MXIdentityServerRestClientErrorDomain)
  Sign a 3PID URL.
  
  @param signUrl the URL that will be called for signing.
+ @param mxid the user matrix id.
  @param success A block object called when the operation succeeds. It provides the signed data.
  @param failure A block object called when the operation fails.
  
  @return a MXHTTPOperation instance.
  */
 - (MXHTTPOperation*)signUrl:(NSString*)signUrl
+                       mxid:(NSString*)mxid
                     success:(void (^)(NSDictionary *thirdPartySigned))success
                     failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 

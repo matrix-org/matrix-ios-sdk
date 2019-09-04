@@ -200,11 +200,8 @@ typedef void (^MXOnResumeDone)(void);
         _preventPauseCount = 0;
         directRoomsOperationsQueue = [NSMutableArray array];
         publicisedGroupsByUserId = [[NSMutableDictionary alloc] init];
-        
-        if (mxRestClient.credentials.identityServer)
-        {
-            _identityService = [[MXIdentityService alloc] initWithCredentials:mxRestClient.credentials andHomeserverRestClient:mxRestClient];
-        }
+
+        [self setIdentityServer:mxRestClient.identityServer andAccessToken:mxRestClient.credentials.identityServerAccessToken];
         
         firstSyncDone = NO;
 
@@ -389,6 +386,20 @@ typedef void (^MXOnResumeDone)(void);
             failure(error);
         }
     }];
+}
+
+- (void)setIdentityServer:(NSString *)identityServer andAccessToken:(NSString *)accessToken
+{
+    matrixRestClient.identityServer = identityServer;
+
+    if (identityServer)
+    {
+        _identityService = [[MXIdentityService alloc] initWithIdentityServer:identityServer accessToken:accessToken andHomeserverRestClient:matrixRestClient];
+    }
+    else
+    {
+        _identityService = nil;
+    }
 }
 
 - (void)start:(void (^)(void))onServerSyncDone

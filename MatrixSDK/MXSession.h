@@ -361,7 +361,7 @@ FOUNDATION_EXPORT NSString *const kMXSessionNoRoomTag;
 /**
  The identity service used to handle Matrix identity server requests. Can be nil.
  */
-@property (nonatomic) MXIdentityService *identityService;
+@property (nonatomic, readonly) MXIdentityService *identityService;
 
 /**
  The media manager used to handle the media stored on the Matrix Content repository.
@@ -629,6 +629,16 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
  */
 - (void)setStore:(id<MXStore>)store success:(void (^)(void))onStoreDataReady
          failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
+
+/**
+ Set a new identity server.
+
+ The method updates underlaying services.
+
+ @param identityServer the new identityServer. Nil for no IS
+ @param accessToken the access token of the IS. Can be nil.
+ */
+- (void)setIdentityServer:(NSString*)identityServer andAccessToken:(NSString*)accessToken;
 
 /**
  An array of event types for which read receipts are sent.

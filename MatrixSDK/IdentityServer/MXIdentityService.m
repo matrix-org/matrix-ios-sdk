@@ -72,11 +72,11 @@ NSString *const MXIdentityServiceNotificationAccessTokenKey = @"accessToken";
 
 #pragma mark - Setup
 
-- (instancetype)initWithIdentityServer:(NSString *)identityServer andHomeserverRestClient:(MXRestClient*)homeserverRestClient
+- (instancetype)initWithIdentityServer:(NSString *)identityServer accessToken:(nullable NSString*)accessToken andHomeserverRestClient:(MXRestClient*)homeserverRestClient
 {
-    // TODO: Use separate credentials for identity server REST client and homeserver REST client
-    MXCredentials *identityServerCredentials = [[self class] identityServerCredentialsFromIdentityServer:identityServer andHomeserverCredentials:homeserverRestClient.credentials];
-    return [self initWithCredentials:identityServerCredentials andHomeserverRestClient:homeserverRestClient];
+    MXIdentityServerRestClient *identityServerRestClient = [[MXIdentityServerRestClient alloc] initWithIdentityServer:identityServer accessToken:accessToken andOnUnrecognizedCertificateBlock:nil];
+
+    return [self initWithIdentityServerRestClient:identityServerRestClient andHomeserverRestClient:homeserverRestClient];
 }
 
 - (instancetype)initWithIdentityServerRestClient:(MXIdentityServerRestClient*)identityServerRestClient andHomeserverRestClient:(MXRestClient*)homeserverRestClient
@@ -116,12 +116,6 @@ NSString *const MXIdentityServiceNotificationAccessTokenKey = @"accessToken";
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(handleHTTPClientError:) name:kMXHTTPClientMatrixErrorNotification object:nil];
     }
     return self;
-}
-
-- (instancetype)initWithCredentials:(MXCredentials *)credentials andHomeserverRestClient:(MXRestClient*)homeserverRestClient
-{
-    MXIdentityServerRestClient *identityServerRestClient = [[MXIdentityServerRestClient alloc] initWithCredentials:credentials andOnUnrecognizedCertificateBlock:nil];    
-    return [self initWithIdentityServerRestClient:identityServerRestClient andHomeserverRestClient:homeserverRestClient];
 }
 
 #pragma mark - Public
@@ -230,7 +224,7 @@ NSString *const MXIdentityServiceNotificationAccessTokenKey = @"accessToken";
                     success:(void (^)(NSDictionary *thirdPartySigned))success
                     failure:(void (^)(NSError *error))failure
 {    
-    return [self.restClient signUrl:signUrl success:success failure:failure];
+    return [self.restClient signUrl:signUrl mxid:self.homeserverRestClient.credentials.userId success:success failure:failure];
 }
 
 #pragma mark - Private
@@ -449,7 +443,7 @@ NSString *const MXIdentityServiceNotificationAccessTokenKey = @"accessToken";
                                                                                       MXIdentityServiceNotificationAccessTokenKey : accessToken
                                                                                       }];
     
-    NSString *userId = self.restClient.credentials.userId;
+    NSString *userId = self.homeserverRestClient.credentials.userId;
     
     if (userId)
     {
@@ -457,32 +451,6 @@ NSString *const MXIdentityServiceNotificationAccessTokenKey = @"accessToken";
     }
     
     return userInfo;
-}
-
-+ (nonnull MXCredentials*)identityServerCredentialsFromIdentityServer:(nonnull NSString*)identityServer andHomeserverCredentials:(nullable MXCredentials*)homeserverCredentials
-{
-    MXCredentials *identityServerCredentials;
-    
-    if (homeserverCredentials)
-    {
-        if ([homeserverCredentials.identityServer isEqualToString:identityServer])
-        {
-            identityServerCredentials = homeserverCredentials;
-        }
-        else
-        {
-            identityServerCredentials = homeserverCredentials;
-            identityServerCredentials.identityServerAccessToken = nil;
-            identityServerCredentials.identityServer = identityServer;
-        }
-    }
-    else
-    {
-        identityServerCredentials = [MXCredentials new];
-        identityServerCredentials.identityServer = identityServer;
-    }
-    
-    return identityServerCredentials;
 }
 
 @end

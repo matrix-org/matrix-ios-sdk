@@ -26,26 +26,13 @@ public extension MXIdentityServerRestClient {
      
      - parameters:
      - identityServer: The identity server address.
+     - accessToken: The identity server access token if known
      - handler: the block called to handle unrecognized certificate (`nil` if unrecognized certificates are ignored).
      
      - returns: a `MXIdentityServerRestClient` instance.
      */
-    @nonobjc convenience init(identityServer: URL, unrecognizedCertificateHandler handler: MXHTTPClientOnUnrecognizedCertificate?) {
-        self.init(__identityServer: identityServer.absoluteString, andOnUnrecognizedCertificateBlock: handler)
-    }
-    
-    
-    /**
-     Create an instance based on existing user credentials.
-     
-     - parameters:
-     - credentials: A set of existing user credentials.
-     - handler: the block called to handle unrecognized certificate (`nil` if unrecognized certificates are ignored).
-     
-     - returns: a `MXIdentityServerRestClient` instance.
-     */
-    @nonobjc convenience init(credentials: MXCredentials, unrecognizedCertificateHandler handler: MXHTTPClientOnUnrecognizedCertificate?) {
-        self.init(__credentials: credentials, andOnUnrecognizedCertificateBlock: handler)
+    @nonobjc convenience init(identityServer: URL, accessToken: String?, unrecognizedCertificateHandler handler: MXHTTPClientOnUnrecognizedCertificate?) {
+        self.init(__identityServer: identityServer.absoluteString, accessToken: accessToken, andOnUnrecognizedCertificateBlock: handler)
     }
     
     
@@ -156,13 +143,14 @@ public extension MXIdentityServerRestClient {
      
      - parameters:
      - signUrl: the URL that will be called for signing.
+     - mxid: the user matrix id.
      - completion: A block object called when the operation completes.
      - response: Provides the signed data on success.
      
      - returns: a `MXHTTPOperation` instance.
      */
-    @nonobjc @discardableResult func signUrl(_ signUrl: String, completion: @escaping (_ response: MXResponse<[String: Any]>) -> Void) -> MXHTTPOperation {
-        return __signUrl(signUrl, success: currySuccess(completion), failure: curryFailure(completion))
+    @nonobjc @discardableResult func signUrl(_ signUrl: String, mxid: String, completion: @escaping (_ response: MXResponse<[String: Any]>) -> Void) -> MXHTTPOperation {
+        return __signUrl(signUrl, mxid: mxid, success: currySuccess(completion), failure: curryFailure(completion))
     }
     
 }
