@@ -49,8 +49,6 @@ NSString *const MXIdentityServerRestClientErrorDomain = @"org.matrix.sdk.MXIdent
  */
 @property (nonatomic) dispatch_queue_t processingQueue;
 
-@property (nonatomic, readwrite) MXCredentials *credentials;
-
 @property (nonatomic, readonly) BOOL isUsingV2API;
 
 @end
@@ -58,11 +56,6 @@ NSString *const MXIdentityServerRestClientErrorDomain = @"org.matrix.sdk.MXIdent
 @implementation MXIdentityServerRestClient
 
 #pragma mark - Properties override
-
-- (NSString *)identityServer
-{
-    return self.credentials.identityServer;
-}
 
 - (void)setShouldRenewTokenHandler:(MXHTTPClientShouldRenewTokenHandler)shouldRenewTokenHandler
 {
@@ -76,14 +69,8 @@ NSString *const MXIdentityServerRestClientErrorDomain = @"org.matrix.sdk.MXIdent
 
 - (void)setRenewTokenHandler:(MXHTTPClientRenewTokenHandler)renewTokenHandler
 {
-    MXWeakify(self);
-    
     self.httpClient.renewTokenHandler = ^MXHTTPOperation* (void (^success)(NSString *accessToken), void (^failure)(NSError *error)) {
-        MXStrongifyAndReturnValueIfNil(self, nil);
-        
         return renewTokenHandler(^(NSString *accessToken) {
-            self.credentials.identityServerAccessToken = accessToken;
-            
             success(accessToken);
         }, failure);
     };
@@ -101,35 +88,22 @@ NSString *const MXIdentityServerRestClientErrorDomain = @"org.matrix.sdk.MXIdent
 
 #pragma mark - Setup
 
-- (instancetype)initWithIdentityServer:(NSString *)identityServer andOnUnrecognizedCertificateBlock:(MXHTTPClientOnUnrecognizedCertificate)onUnrecognizedCertBlock
-{
-    MXCredentials *credentials = [MXCredentials new];
-    credentials.identityServer = identityServer;
-    
-    return [self initWithCredentials:credentials andOnUnrecognizedCertificateBlock:onUnrecognizedCertBlock];
-}
-
-- (instancetype)initWithCredentials:(MXCredentials*)credentials andOnUnrecognizedCertificateBlock:(MXHTTPClientOnUnrecognizedCertificate)onUnrecognizedCertBlock
+- (instancetype)initWithIdentityServer:(NSString *)identityServer
+                           accessToken:(nullable NSString *)accessToken
+     andOnUnrecognizedCertificateBlock:(nullable MXHTTPClientOnUnrecognizedCertificate)onUnrecognizedCertBlock
 {
     self = [super init];
     if (self)
     {
-        if (credentials.identityServer)
-        {
-            MXHTTPClient *httpClient = [[MXHTTPClient alloc] initWithBaseURL:credentials.identityServer accessToken:credentials.identityServerAccessToken andOnUnrecognizedCertificateBlock:onUnrecognizedCertBlock];
-            // The identity server accepts parameters in form data form for some requests
-            httpClient.requestParametersInJSON = NO;
-            
-            self.httpClient = httpClient;
-            self.credentials = credentials;
-            
-            self.processingQueue = dispatch_queue_create("MXIdentityServerRestClient", DISPATCH_QUEUE_SERIAL);
-            self.completionQueue = dispatch_get_main_queue();
-        }
-        else
-        {
-            return nil;
-        }
+        MXHTTPClient *httpClient = [[MXHTTPClient alloc] initWithBaseURL:identityServer accessToken:accessToken andOnUnrecognizedCertificateBlock:onUnrecognizedCertBlock];
+        // The identity server accepts parameters in form data form for some requests
+        httpClient.requestParametersInJSON = NO;
+
+        self.httpClient = httpClient;
+        _identityServer = identityServer;
+
+        self.processingQueue = dispatch_queue_create("MXIdentityServerRestClient", DISPATCH_QUEUE_SERIAL);
+        self.completionQueue = dispatch_get_main_queue();
     }
     return self;
 }
@@ -664,10 +638,11 @@ NSString *const MXIdentityServerRestClientErrorDomain = @"org.matrix.sdk.MXIdent
 }
 
 - (MXHTTPOperation*)signUrl:(NSString*)signUrl
+                       mxid:(NSString*)mxid
                     success:(void (^)(NSDictionary *thirdPartySigned))success
                     failure:(void (^)(NSError *error))failure
 {
-    NSString *path = [NSString stringWithFormat:@"%@&mxid=%@", signUrl, self.credentials.userId];
+    NSString *path = [NSString stringWithFormat:@"%@&mxid=%@", signUrl, mxid];
     
     return [self.httpClient requestWithMethod:@"POST"
                                          path:path

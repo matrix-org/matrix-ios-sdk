@@ -71,11 +71,12 @@ extern NSString *const MXIdentityServiceNotificationAccessTokenKey;
  Create an instance based on identity server URL.
  
  @param identityServer The identity server URL.
+ @param accessToken the identity server access token. Nil if not known yet.
  @param homeserverRestClient The homeserver REST client.
  
  @return a MXIdentityService instance.
  */
-- (instancetype)initWithIdentityServer:(NSString *)identityServer andHomeserverRestClient:(MXRestClient*)homeserverRestClient NS_REFINED_FOR_SWIFT;
+- (instancetype)initWithIdentityServer:(NSString *)identityServer accessToken:(nullable NSString*)accessToken andHomeserverRestClient:(MXRestClient*)homeserverRestClient NS_REFINED_FOR_SWIFT;
 
 /**
  Create an instance based on identity server URL.
@@ -86,16 +87,6 @@ extern NSString *const MXIdentityServiceNotificationAccessTokenKey;
  @return a MXIdentityService instance.
  */
 - (instancetype)initWithIdentityServerRestClient:(MXIdentityServerRestClient*)identityServerRestClient andHomeserverRestClient:(MXRestClient*)homeserverRestClient;
-
-/**
- Create an instance based on identity server URL.
- 
- @param credentials user's credentials.
- @param homeserverRestClient The homeserver REST client.
- 
- @return a MXIdentityService instance.
- */
-- (instancetype)initWithCredentials:(MXCredentials *)credentials andHomeserverRestClient:(MXRestClient*)homeserverRestClient;
 
 #pragma mark -
 

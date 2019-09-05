@@ -62,7 +62,7 @@ NS_ASSUME_NONNULL_BEGIN
  @param username the username of the Matrix user on these TURN servers.
  @param password the associated password.
  */
-- (void)addTURNServerUris:(NSArray<NSString *> *)uris withUsername:(nullable NSString *)username password:(nullable NSString *)password;
+- (void)addTURNServerUris:(nullable NSArray<NSString *> *)uris withUsername:(nullable NSString *)username password:(nullable NSString *)password;
 
 /**
  Make the call stack process an incoming candidate.
