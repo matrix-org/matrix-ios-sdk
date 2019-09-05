@@ -220,6 +220,13 @@ FOUNDATION_EXPORT NSString *const kMXSessionDirectRoomsDidChangeNotification;
 FOUNDATION_EXPORT NSString *const kMXSessionAccountDataDidChangeNotification;
 
 /**
+ Posted when the identity server in the user account data has changed.
+
+ The notification object is the concerned session (MXSession instance).
+ */
+FOUNDATION_EXPORT NSString *const kMXSessionAccountDataDidChangeIdentityServerNotification;
+
+/**
  Posted when MXSession data have been corrupted. The listener must reload the session data with a full server sync.
  
  The notification object is the concerned session (MXSession instance).
@@ -1305,6 +1312,37 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
                            forType:(NSString*)type
                            success:(void (^)(void))success
                            failure:(void (^)(NSError *error))failure;
+
+/**
+ Set the identity server in the user's account data.
+
+ `kMXSessionAccountDataDidChangeIdentityServerNotification` will be sent once the
+ user's account data is updated with the new value.
+
+ @param identityServer the base url of the identity server (ex: "https://vector.im"). Nil to indicate no IS.
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)setAccountDataIdentityServer:(NSString*)identityServer
+                                         success:(void (^)(void))success
+                                         failure:(void (^)(NSError *error))failure;
+/**
+ Indicate if an IS is set in the user's account data.
+
+ @return YES if YES.
+ */
+- (BOOL)hasAccountDataIdentityServer;
+
+/**
+ The IS set in the user's account data.
+
+ @return the identity server. Nil means either the user have not set yet a IS
+         or they do not want to use an IS. Use [self hasAccountDataIdentityServer]
+         to differentiate the 2 options.
+ */
+- (NSString*)accountDataIdentityServer;
 
 
 #pragma mark - Matrix filters

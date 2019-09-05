@@ -39,13 +39,15 @@ NSString *const kMXAccountDataTypeIgnoredUserList = @"m.ignored_user_list";
 NSString *const kMXAccountDataTypePushRules = @"m.push_rules";
 NSString *const kMXAccountDataTypeDirect = @"m.direct";
 NSString *const kMXAccountDataTypeUserWidgets = @"m.widgets";
+NSString *const kMXAccountDataTypeIdentityServer = @"m.identity_server";
 NSString *const kMXAccountDataTypeAcceptedTerms = @"m.accepted_terms";
-NSString *const kMXAccountDataTypeAcceptedTermsKey = @"accepted";
 
 /**
  Account data keys
  */
 NSString *const kMXAccountDataKeyIgnoredUser = @"ignored_users";
+NSString *const kMXAccountDataKeyIdentityServer = @"base_url";
+NSString *const kMXAccountDataTypeAcceptedTermsKey = @"accepted";
 
 /**
  Types of third party media.

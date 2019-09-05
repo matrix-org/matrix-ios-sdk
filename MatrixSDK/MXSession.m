@@ -58,6 +58,7 @@ NSString *const kMXSessionOnToDeviceEventNotification = @"kMXSessionOnToDeviceEv
 NSString *const kMXSessionIgnoredUsersDidChangeNotification = @"kMXSessionIgnoredUsersDidChangeNotification";
 NSString *const kMXSessionDirectRoomsDidChangeNotification = @"kMXSessionDirectRoomsDidChangeNotification";
 NSString *const kMXSessionAccountDataDidChangeNotification = @"kMXSessionAccountDataDidChangeNotification";
+NSString *const kMXSessionAccountDataDidChangeIdentityServerNotification = @"kMXSessionAccountDataDidChangeIdentityServerNotification";
 NSString *const kMXSessionDidCorruptDataNotification = @"kMXSessionDidCorruptDataNotification";
 NSString *const kMXSessionCryptoDidCorruptDataNotification = @"kMXSessionCryptoDidCorruptDataNotification";
 NSString *const kMXSessionNewGroupInviteNotification = @"kMXSessionNewGroupInviteNotification";
@@ -390,6 +391,8 @@ typedef void (^MXOnResumeDone)(void);
 
 - (void)setIdentityServer:(NSString *)identityServer andAccessToken:(NSString *)accessToken
 {
+    NSLog(@"[MXSession] setIdentityServer: %@", identityServer);
+    
     matrixRestClient.identityServer = identityServer;
 
     if (identityServer)
@@ -1486,6 +1489,24 @@ typedef void (^MXOnResumeDone)(void);
 
             // Update the corresponding part of account data
             [_accountData updateWithEvent:event];
+
+            if ([event[@"type"] isEqualToString:kMXAccountDataTypeIdentityServer])
+            {
+                NSString *identityServer = self.accountDataIdentityServer;
+                if (identityServer != self.identityService.identityServer
+                    && ![identityServer isEqualToString:self.identityService.identityServer])
+                {
+                    NSLog(@"[MXSession] handleAccountData: Update identity server: %@ -> %@", self.identityService.identityServer, identityServer);
+
+                    // Use the IS from the account data
+                    [self setIdentityServer:identityServer andAccessToken:nil];
+
+                    // And notify
+                    [[NSNotificationCenter defaultCenter] postNotificationName:kMXSessionAccountDataDidChangeIdentityServerNotification
+                                                                        object:self
+                                                                      userInfo:nil];
+                }
+            }
         }
 
         _store.userAccountData = _accountData.accountData;
@@ -3405,6 +3426,87 @@ typedef void (^MXOnResumeDone)(void);
                            failure:(void (^)(NSError *error))failure
 {
     return [matrixRestClient setAccountData:data forType:type success:success failure:failure];
+}
+
+- (MXHTTPOperation *)setAccountDataIdentityServer:(NSString *)identityServer
+                                          success:(void (^)(void))success
+                                          failure:(void (^)(NSError *))failure
+{
+    // Sanitise the passed URL
+    if (!identityServer.length)
+    {
+        identityServer = nil;
+    }
+    if (identityServer)
+    {
+        if (![identityServer hasPrefix:@"http"])
+        {
+            identityServer = [NSString stringWithFormat:@"https://%@", identityServer];
+        }
+        if ([identityServer hasSuffix:@"/"])
+        {
+            identityServer = [identityServer substringToIndex:identityServer.length - 1];
+        }
+    }
+
+    NSLog(@"[MXSession] setAccountDataIdentityServer: %@", identityServer);
+
+    MXHTTPOperation *operation;
+    if (identityServer)
+    {
+        // Does the URL point to a true IS
+        __block MXIdentityService *identityService = [[MXIdentityService alloc] initWithIdentityServer:identityServer accessToken:nil andHomeserverRestClient:matrixRestClient];
+
+        operation = [identityService pingIdentityServer:^{
+            identityService = nil;
+
+            MXHTTPOperation *operation2 = [self setAccountData:@{
+                                                                 kMXAccountDataKeyIdentityServer:identityServer
+                                                                 }
+                                                       forType:kMXAccountDataTypeIdentityServer
+                                                       success:success failure:failure];
+
+            if (operation2)
+            {
+                [operation mutateTo:operation2];
+            }
+
+        } failure:^(NSError * _Nonnull error) {
+            identityService = nil;
+
+            NSLog(@"[MXSession] setAccountDataIdentityServer: Invalid identity server. Error: %@", error);
+
+            if (failure)
+            {
+                failure(error);
+            }
+        }];
+    }
+    else
+    {
+        operation = [self setAccountData:@{
+                                            kMXAccountDataKeyIdentityServer:NSNull.null
+                                            }
+                                  forType:kMXAccountDataTypeIdentityServer
+                                  success:success failure:failure];
+    }
+
+    return operation;
+}
+
+- (BOOL)hasAccountDataIdentityServer
+{
+    return ([self.accountData accountDataForEventType:kMXAccountDataTypeIdentityServer] != nil);
+}
+
+- (NSString *)accountDataIdentityServer
+{
+    NSString *accountDataIdentityServer;
+
+    NSDictionary *content = [self.accountData accountDataForEventType:kMXAccountDataTypeIdentityServer];
+    MXJSONModelSetString(accountDataIdentityServer, content[kMXAccountDataKeyIdentityServer]);
+
+    return accountDataIdentityServer;
 }
 
 
