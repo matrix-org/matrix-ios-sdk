@@ -59,6 +59,7 @@ FOUNDATION_EXPORT NSString *const kMXAccountDataTypeDirect;
 FOUNDATION_EXPORT NSString *const kMXAccountDataTypePushRules;
 FOUNDATION_EXPORT NSString *const kMXAccountDataTypeIgnoredUserList;
 FOUNDATION_EXPORT NSString *const kMXAccountDataTypeUserWidgets;
+FOUNDATION_EXPORT NSString *const kMXAccountDataTypeIdentityServer;
 FOUNDATION_EXPORT NSString *const kMXAccountDataTypeAcceptedTerms;
 FOUNDATION_EXPORT NSString *const kMXAccountDataTypeAcceptedTermsKey;
 
@@ -66,6 +67,8 @@ FOUNDATION_EXPORT NSString *const kMXAccountDataTypeAcceptedTermsKey;
  Account data keys
  */
 FOUNDATION_EXPORT NSString *const kMXAccountDataKeyIgnoredUser;
+FOUNDATION_EXPORT NSString *const kMXAccountDataKeyIdentityServer;
+
 
 /**
  MXRestClient error domain
