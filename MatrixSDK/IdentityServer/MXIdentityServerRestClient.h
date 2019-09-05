@@ -60,7 +60,6 @@ NS_ERROR_ENUM(MXIdentityServerRestClientErrorDomain)
 
 /**
  The identity server URL.
- Shortcut to credentials.identityServer.
  */
 @property (nonatomic, readonly) NSString *identityServer;
 
