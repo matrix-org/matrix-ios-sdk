@@ -14,6 +14,7 @@ Improvements:
  * MXHTTPClient: Do not retry requests if the host is not valid.
  * MXAutoDiscovery: Add initWithUrl contructor.
  * Privacy: Store Identity Server in Account Data ([MSC2230](https://github.com/matrix-org/matrix-doc/pull/2230))(vector-im/riot-ios#2665).
+ * Privacy: Lowercase emails during IS lookup calls (vector-im/riot-ios#2696).
 
 API break:
  * MXRestClient: Remove identity server requests. Now MXIdentityService is used to perform identity server requests.

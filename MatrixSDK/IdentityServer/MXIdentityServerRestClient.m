@@ -165,6 +165,12 @@ NSString *const MXIdentityServerRestClientErrorDomain = @"org.matrix.sdk.MXIdent
         failure(error);
         return nil;
     }
+
+    if ([medium isEqualToString:kMX3PIDMediumEmail])
+    {
+        // Email should be lower case
+        address = address.lowercaseString;
+    }
     
     return [self.httpClient requestWithMethod:@"GET"
                                          path:path
@@ -199,11 +205,37 @@ NSString *const MXIdentityServerRestClientErrorDomain = @"org.matrix.sdk.MXIdent
         failure(error);
         return nil;
     }
+
+    // Emails should be lower case
+    NSMutableArray<NSArray<NSString*>*> *lowercaseThreepids = [NSMutableArray new];
+    for (NSArray<NSString*> *threepidArray in threepids)
+    {
+        if (threepidArray.count < 2)
+        {
+            continue;
+        }
+
+        NSString *medium = threepidArray[0];
+        NSString *address = threepidArray[1];
+
+        if ([medium isEqualToString:kMX3PIDMediumEmail])
+        {
+            [lowercaseThreepids addObject:@[
+                                            medium,
+                                            address.lowercaseString
+                                            ]];
+        }
+        else
+        {
+            [lowercaseThreepids addObject:threepidArray];
+        }
+    }
+
     
     NSData *payloadData = nil;
     if (threepids)
     {
-        payloadData = [NSJSONSerialization dataWithJSONObject:@{@"threepids": threepids} options:0 error:nil];
+        payloadData = [NSJSONSerialization dataWithJSONObject:@{@"threepids": lowercaseThreepids} options:0 error:nil];
     }
     
     return [self.httpClient requestWithMethod:@"POST"
@@ -299,6 +331,12 @@ NSString *const MXIdentityServerRestClientErrorDomain = @"org.matrix.sdk.MXIdent
             
             NSString *medium = threepidArray[0];
             NSString *threepid = threepidArray[1];
+
+            if ([medium isEqualToString:kMX3PIDMediumEmail])
+            {
+                // Email should be lower case
+                threepid = threepid.lowercaseString;
+            }
             
             NSString *hashedTreePid;
             
