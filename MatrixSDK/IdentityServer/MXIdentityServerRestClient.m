@@ -38,6 +38,8 @@ NSString *const MXIdentityServerRestClientErrorDomain = @"org.matrix.sdk.MXIdent
 
 @interface MXIdentityServerRestClient()
 
+@property (nonatomic, strong) NSString *accessToken;
+
 /**
  HTTP client to the identity server.
  */
@@ -69,8 +71,13 @@ NSString *const MXIdentityServerRestClientErrorDomain = @"org.matrix.sdk.MXIdent
 
 - (void)setRenewTokenHandler:(MXHTTPClientRenewTokenHandler)renewTokenHandler
 {
+    MXWeakify(self);
+    
     self.httpClient.renewTokenHandler = ^MXHTTPOperation* (void (^success)(NSString *accessToken), void (^failure)(NSError *error)) {
+        MXStrongifyAndReturnValueIfNil(self, nil);
+        
         return renewTokenHandler(^(NSString *accessToken) {
+            self.accessToken = accessToken;
             success(accessToken);
         }, failure);
     };
@@ -101,6 +108,7 @@ NSString *const MXIdentityServerRestClientErrorDomain = @"org.matrix.sdk.MXIdent
 
         self.httpClient = httpClient;
         _identityServer = identityServer;
+        _accessToken = accessToken;
 
         self.processingQueue = dispatch_queue_create("MXIdentityServerRestClient", DISPATCH_QUEUE_SERIAL);
         self.completionQueue = dispatch_get_main_queue();
@@ -109,6 +117,8 @@ NSString *const MXIdentityServerRestClientErrorDomain = @"org.matrix.sdk.MXIdent
 }
 
 #pragma mark - Public
+
+#pragma mark Authentication
 
 - (MXHTTPOperation*)registerWithOpenIdToken:(MXOpenIdToken*)openIdToken
                                     success:(void (^)(NSString *accessToken))success
@@ -148,6 +158,36 @@ NSString *const MXIdentityServerRestClientErrorDomain = @"org.matrix.sdk.MXIdent
 }
 
 
+- (MXHTTPOperation*)accountWithSuccess:(void (^)(NSString *userId))success
+                               failure:(void (^)(NSError *error))failure
+{
+    NSString *path = [self buildAPIPathWithAPIPathPrefix:kMXIdentityAPIPrefixPathV2 andPath:@"account"];
+    
+    if (!path)
+    {
+        NSError *error = [NSError errorWithDomain:MXIdentityServerRestClientErrorDomain code:MXIdentityServerRestClientErrorMissingAPIPrefix userInfo:nil];
+        failure(error);
+        return nil;
+    }
+    
+    return [self.httpClient requestWithMethod:@"GET"
+                                         path:path
+                                   parameters:nil
+                           needsAuthorization:YES
+                                      success:^(NSDictionary *JSONResponse) {
+                                          if (success)
+                                          {
+                                              __block NSString *userId;
+                                              [self dispatchProcessing:^{
+                                                  MXJSONModelSetString(userId, JSONResponse[@"user_id"]);
+                                              } andCompletion:^{
+                                                  success(userId);
+                                              }];
+                                          }
+                                      } failure:^(NSError *error) {
+                                          [self dispatchFailure:error inBlock:failure];
+                                      }];
+}
 
 
 #pragma mark Association lookup

@@ -64,6 +64,11 @@ NS_ERROR_ENUM(MXIdentityServerRestClientErrorDomain)
 @property (nonatomic, readonly) NSString *identityServer;
 
 /**
+ The access token used for authenticated requests.
+ */
+@property (nonatomic, readonly, nullable) NSString *accessToken;
+
+/**
  The queue on which asynchronous response blocks are called.
  Default is dispatch_get_main_queue().
 */
@@ -99,7 +104,7 @@ NS_ERROR_ENUM(MXIdentityServerRestClientErrorDomain)
 
 #pragma mark -
 
-#pragma mark Register
+#pragma mark Authentication
 
 /**
  Register with an identity server using the OpenID token from the user's homeserver (v2 API).
@@ -113,6 +118,18 @@ NS_ERROR_ENUM(MXIdentityServerRestClientErrorDomain)
 - (MXHTTPOperation*)registerWithOpenIdToken:(MXOpenIdToken*)openIdToken
                                     success:(void (^)(NSString *accessToken))success
                                     failure:(void (^)(NSError *error))failure;
+
+
+/**
+ Gets information about the token's owner, such as the user ID for which it belongs.
+
+ @param success A block object called when the operation succeeds. It provides the user ID which was represented in the OpenID object provided to /register.
+ @param failure A block object called when the operation fails.
+ 
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)accountWithSuccess:(void (^)(NSString *userId))success
+                               failure:(void (^)(NSError *error))failure;
 
 #pragma mark Association lookup
 

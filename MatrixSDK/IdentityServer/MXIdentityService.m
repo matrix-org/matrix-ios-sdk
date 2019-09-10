@@ -227,6 +227,14 @@ NSString *const MXIdentityServiceNotificationAccessTokenKey = @"accessToken";
     return [self.restClient signUrl:signUrl mxid:self.homeserverRestClient.credentials.userId success:success failure:failure];
 }
 
+- (MXHTTPOperation*)accountWithSuccess:(void (^)(NSString *userId))success
+                               failure:(void (^)(NSError *error))failure
+{
+    return [self checkAPIVersionAvailabilityAndPerformOperationOnSuccess:^MXHTTPOperation* {
+        return [self.restClient accountWithSuccess:success failure:failure];
+    } failure:failure];
+}
+
 #pragma mark - Private
 
 - (MXHTTPOperation*)checkAPIVersionAvailabilityWithSuccess:(void (^)(void))success failure:(void (^)(NSError *))failure
@@ -276,8 +284,6 @@ NSString *const MXIdentityServiceNotificationAccessTokenKey = @"accessToken";
         return nil;
     }
     
-    self.accessToken = nil;
-    
     MXHTTPOperation *operation;
     
     MXWeakify(self);
@@ -287,10 +293,6 @@ NSString *const MXIdentityServiceNotificationAccessTokenKey = @"accessToken";
         MXStrongifyAndReturnIfNil(self);
         
         MXHTTPOperation *operation2 = [self.restClient registerWithOpenIdToken:tokenObject success:^(NSString * _Nonnull accessToken) {
-            
-            MXStrongifyAndReturnIfNil(self);
-            
-            self.accessToken = accessToken;
             
             success(accessToken);
             
@@ -416,7 +418,7 @@ NSString *const MXIdentityServiceNotificationAccessTokenKey = @"accessToken";
     MXError *mxError;
     MXJSONModelSet(mxError, [MXError class], nofitication.userInfo[kMXHTTPClientMatrixErrorNotificationErrorKey]);
     
-    NSString *accessToken = self.accessToken;
+    NSString *accessToken = self.restClient.accessToken;
     
     if (httpClient
         && [httpClient.baseURL.absoluteString hasPrefix:self.identityServer]
