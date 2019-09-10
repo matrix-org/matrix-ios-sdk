@@ -1367,6 +1367,21 @@ public extension MXRestClient {
     }
     
     /**
+     Remove a 3rd party id from the Matrix user information.
+     
+     - parameters:
+     - address: the 3rd party id.
+     - medium: medium the type of the 3rd party id.
+     - completion: A block object called when the operation completes.
+     - response:  Indicates whether the operation was successful.
+     
+     - returns: a `MXHTTPOperation` instance.
+     */
+    @nonobjc @discardableResult func remove3PID(address: String, medium: String, completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation {
+        return __remove3PID(address, medium: medium, success: currySuccess(completion), failure: curryFailure(completion))
+    }
+    
+    /**
      List all 3PIDs linked to the Matrix user account.
      
      - parameters:

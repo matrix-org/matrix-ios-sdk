@@ -550,7 +550,7 @@ FOUNDATION_EXPORT NSString *const kMXMembersOfRoomParametersNotMembership;
                              sendAttempt:(NSUInteger)sendAttempt
                                 nextLink:(NSString*)nextLink
                                  success:(void (^)(NSString *sid))success
-                                 failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
+                                 failure:(void (^)(NSError *error))failure;
 
 /**
  Requests a text message verification token for the purposes of registration.
@@ -1587,7 +1587,7 @@ FOUNDATION_EXPORT NSString *const kMXMembersOfRoomParametersNotMembership;
 - (MXHTTPOperation*)remove3PID:(NSString*)address
                         medium:(NSString*)medium
                        success:(void (^)(void))success
-                       failure:(void (^)(NSError *error))failure;
+                       failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 /**
  List all 3PIDs linked to the Matrix user account.
