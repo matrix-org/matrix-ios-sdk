@@ -216,6 +216,18 @@ extern NSString *const MXIdentityServiceNotificationAccessTokenKey;
                     success:(void (^)(NSDictionary *thirdPartySigned))success
                     failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
+/**
+ Gets information about the token's owner, such as the user ID for which it belongs.
+ 
+ @param success A block object called when the operation succeeds. It provides the user ID.
+ @param failure A block object called when the operation fails.
+ 
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)accountWithSuccess:(void (^)(NSString *userId))success
+                               failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
+
+
 @end
 
 NS_ASSUME_NONNULL_END

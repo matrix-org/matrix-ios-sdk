@@ -159,4 +159,16 @@ public extension MXIdentityService {
         return __signUrl(signUrl, success: currySuccess(completion), failure: curryFailure(completion))
     }
     
+    /**
+     Gets information about the token's owner, such as the user ID for which it belongs.
+     
+     - parameters:
+     - completion: A block object called when the operation completes.
+     - response: It provides the user ID on success.
+     
+     - returns: a `MXHTTPOperation` instance.
+     */
+    @nonobjc @discardableResult func account(completion: @escaping (_ response: MXResponse<String>) -> Void) -> MXHTTPOperation {
+        return __account(success: currySuccess(completion), failure: curryFailure(completion))
+    }
 }

@@ -282,6 +282,10 @@ NSString* const kMXHTTPClientMatrixErrorNotificationErrorKey = @"kMXHTTPClientMa
                          });
                      });
                  }
+                 else
+                 {
+                     failure(error);
+                 }
              }];
     
     return mxHTTPOperation;
@@ -916,7 +920,7 @@ NSString* const kMXHTTPClientMatrixErrorNotificationErrorKey = @"kMXHTTPClientMa
     }
     else
     {
-        [httpManager.requestSerializer setValue:nil forHTTPHeaderField:@"Authorization"];
+        [httpManager.requestSerializer clearAuthorizationHeader];
     }
 }
 
