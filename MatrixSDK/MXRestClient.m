@@ -24,6 +24,7 @@
 #import "MXError.h"
 
 #import "MXAllowedCertificates.h"
+#import "MXIdentityService.h"
 
 #pragma mark - Constants definitions
 /**
@@ -990,24 +991,95 @@ MXAuthAction;
                                      success:(void (^)(NSDictionary *JSONResponse))success
                                      failure:(void (^)(NSError *error))failure
 {
-
-    NSMutableDictionary *params = [NSMutableDictionary dictionaryWithDictionary:parameters];
+    MXHTTPOperation *operation;
     if (self.identityServer)
     {
+        NSMutableDictionary *params = [NSMutableDictionary dictionaryWithDictionary:parameters];
+
         NSURL *identityServerURL = [NSURL URLWithString:self.identityServer];
         params[@"id_server"] = identityServerURL.host;
+
+        operation = [self addIdentityAccessTokenToParameters:params success:^(NSDictionary *updatedParameters) {
+
+            MXHTTPOperation *operation2 = [self requestTokenFromEndpoint2:path parameters:updatedParameters success:success failure:failure];
+            if (operation2)
+            {
+                [operation mutateTo:operation2];
+            }
+
+        } failure:failure];
+    }
+    else
+    {
+        operation = [self requestTokenFromEndpoint2:path parameters:parameters success:success failure:failure];
     }
 
-    MXWeakify(self);
+    return operation;
+}
+
+- (MXHTTPOperation*)requestTokenFromEndpoint2:(NSString *)path
+                                   parameters:(NSDictionary*)parameters
+                                      success:(void (^)(NSDictionary *JSONResponse))success
+                                      failure:(void (^)(NSError *error))failure
+{
     return [httpClient requestWithMethod:@"POST"
                                     path:path
-                              parameters:params
+                              parameters:parameters
                                  success:success
                                  failure:^(NSError *error) {
-                                     MXStrongifyAndReturnIfNil(self);
                                      [self dispatchFailure:error inBlock:failure];
                                  }];
 }
+
+
+#pragma mark - Identity Server Parameters
+
+// Add the "id_access_token" parameter if the HS requires it
+- (MXHTTPOperation*)addIdentityAccessTokenToParameters:(NSDictionary *)parameters
+                                               success:(void (^)(NSDictionary *updatedParameters))success
+                                               failure:(void (^)(NSError *error))failure
+{
+    MXHTTPOperation *operation;
+
+    operation = [self supportedMatrixVersions:^(MXMatrixVersions *matrixVersions) {
+
+        MXHTTPOperation *operation2;
+        if (matrixVersions.doesServerAcceptIdentityAccessToken || 1)
+        {
+            MXIdentityService *identityService = [[MXIdentityService alloc] initWithIdentityServer:self.identityServer accessToken:self.identityServerAccessToken andHomeserverRestClient:self];
+
+            operation2 = [identityService accessTokenWithSuccess:^(NSString * _Nullable accessToken) {
+
+                if (accessToken)
+                {
+                    NSMutableDictionary *updatedParameters = [NSMutableDictionary dictionaryWithDictionary:parameters];
+                    updatedParameters[@"id_access_token"] = accessToken;
+
+                    success(updatedParameters);
+                }
+                else
+                {
+                    NSError *error = [NSError errorWithDomain:kMXRestClientErrorDomain code:MXRestClientErrorMissingIdentityServerAccessToken userInfo:nil];
+                    [self dispatchFailure:error inBlock:failure];
+                }
+
+            } failure:failure];
+        }
+        else
+        {
+            success(parameters);
+        }
+
+        if (operation2)
+        {
+            [operation mutateTo:operation2];
+        }
+
+    } failure:failure];
+
+    return operation;
+}
+
 
 #pragma mark - Push Notifications
 - (MXHTTPOperation*)setPusherWithPushkey:(NSString *)pushkey
@@ -1948,8 +2020,6 @@ MXAuthAction;
         return nil;
     }
 
-    NSString *path = [NSString stringWithFormat:@"%@/rooms/%@/invite", apiPathPrefix, roomId];
-
     // This request must not have the protocol part
     NSString *identityServer = self.identityServer;
     if ([identityServer hasPrefix:@"http://"] || [identityServer hasPrefix:@"https://"])
@@ -1962,6 +2032,30 @@ MXAuthAction;
                                  @"medium": medium,
                                  @"address": address
                                  };
+
+    MXHTTPOperation *operation;
+
+    MXWeakify(self);
+    operation = [self addIdentityAccessTokenToParameters:parameters success:^(NSDictionary *updatedParameters) {
+        MXStrongifyAndReturnIfNil(self);
+
+        MXHTTPOperation *operation2 = [self inviteByThreePidToRoom:roomId parameters:parameters success:success failure:failure];
+        if (operation2)
+        {
+            [operation mutateTo:operation2];
+        }
+
+    } failure:failure];
+
+    return operation;
+}
+
+- (MXHTTPOperation*)inviteByThreePidToRoom:(NSString*)roomId
+                                parameters:(NSDictionary*)parameters
+                                   success:(void (^)(void))success
+                                   failure:(void (^)(NSError *error))failure
+{
+    NSString *path = [NSString stringWithFormat:@"%@/rooms/%@/invite", apiPathPrefix, roomId];
 
     MXWeakify(self);
     return [httpClient requestWithMethod:@"POST"

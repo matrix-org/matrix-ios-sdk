@@ -394,6 +394,7 @@ typedef void (^MXOnResumeDone)(void);
     NSLog(@"[MXSession] setIdentityServer: %@", identityServer);
     
     matrixRestClient.identityServer = identityServer;
+    matrixRestClient.identityServerAccessToken = accessToken;
 
     if (identityServer)
     {

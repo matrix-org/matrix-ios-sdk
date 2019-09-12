@@ -84,7 +84,8 @@ NS_ERROR_ENUM(kMXRestClientErrorDomain)
     MXRestClientErrorUnknown,
     MXRestClientErrorInvalidParameters,
     MXRestClientErrorInvalidContentURI,
-    MXRestClientErrorMissingIdentityServer
+    MXRestClientErrorMissingIdentityServer,
+    MXRestClientErrorMissingIdentityServerAccessToken
 };
 
 /**
@@ -126,6 +127,7 @@ FOUNDATION_EXPORT NSString *const kMXMembersOfRoomParametersNotMembership;
  TODO: Remove it when all HSes will no more require IS.
  */
 @property (nonatomic, copy) NSString *identityServer;
+@property (nonatomic, copy) NSString *identityServerAccessToken;
 
 /**
  The antivirus server URL (nil by default).
