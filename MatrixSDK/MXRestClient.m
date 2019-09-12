@@ -1044,7 +1044,7 @@ MXAuthAction;
     operation = [self supportedMatrixVersions:^(MXMatrixVersions *matrixVersions) {
 
         MXHTTPOperation *operation2;
-        if (matrixVersions.doesServerAcceptIdentityAccessToken || 1)
+        if (matrixVersions.doesServerAcceptIdentityAccessToken)
         {
             MXIdentityService *identityService = [[MXIdentityService alloc] initWithIdentityServer:self.identityServer accessToken:self.identityServerAccessToken andHomeserverRestClient:self];
 
