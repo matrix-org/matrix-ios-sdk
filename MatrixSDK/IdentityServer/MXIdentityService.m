@@ -74,6 +74,8 @@ NSString *const MXIdentityServiceNotificationAccessTokenKey = @"accessToken";
 
 - (instancetype)initWithIdentityServer:(NSString *)identityServer accessToken:(nullable NSString*)accessToken andHomeserverRestClient:(MXRestClient*)homeserverRestClient
 {
+    _accessToken = accessToken;
+    
     MXIdentityServerRestClient *identityServerRestClient = [[MXIdentityServerRestClient alloc] initWithIdentityServer:identityServer accessToken:accessToken andOnUnrecognizedCertificateBlock:nil];
 
     return [self initWithIdentityServerRestClient:identityServerRestClient andHomeserverRestClient:homeserverRestClient];
@@ -106,11 +108,13 @@ NSString *const MXIdentityServiceNotificationAccessTokenKey = @"accessToken";
             MXStrongifyAndReturnValueIfNil(self, nil);
             
             return [self renewAccessTokenWithSuccess:^(NSString *accessToken) {
+                self.accessToken = accessToken;
                 success(accessToken);
             } failure:failure];
         };
         
         self.restClient = identityServerRestClient;
+        _accessToken = identityServerRestClient.accessToken;
         self.homeserverRestClient = homeserverRestClient;
         
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(handleHTTPClientError:) name:kMXHTTPClientMatrixErrorNotification object:nil];
