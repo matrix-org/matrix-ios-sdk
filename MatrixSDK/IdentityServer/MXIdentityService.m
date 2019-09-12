@@ -120,6 +120,22 @@ NSString *const MXIdentityServiceNotificationAccessTokenKey = @"accessToken";
 
 #pragma mark - Public
 
+#pragma mark Access token
+- (nullable MXHTTPOperation *)accessTokenWithSuccess:(void (^)(NSString * _Nullable accessToken))success
+                                             failure:(void (^)(NSError *error))failure
+{
+    if (self.accessToken)
+    {
+        success(self.accessToken);
+        return nil;
+    }
+
+    return [self accountWithSuccess:^(NSString * _Nonnull userId) {
+        // If we get here, we have an access token
+        success(self.accessToken);
+    } failure:failure];
+}
+
 #pragma mark Association lookup
 
 - (MXHTTPOperation*)lookup3pid:(NSString*)address

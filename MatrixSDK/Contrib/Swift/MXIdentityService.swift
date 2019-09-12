@@ -33,6 +33,26 @@ public extension MXIdentityService {
     @nonobjc convenience init(identityServer: URL, accessToken: String?, homeserverRestClient: MXRestClient) {
         self.init(__identityServer: identityServer.absoluteString, accessToken: accessToken, andHomeserverRestClient: homeserverRestClient)
     }
+
+
+    // MARK: - Access token
+
+    /**
+     Get the access token to use on the identity server.
+
+     The method triggers an /account request in order to force the setup of the
+     access token, which can lead to a "M_TERMS_NOT_SIGNED" error.
+
+     - parameters:
+     - completion: A block object called when the operation completes.
+     - response: Provides the access token
+
+     - returns: a `MXHTTPOperation` instance.
+     */
+    @nonobjc @discardableResult func accessToken(completion: @escaping (_ response: MXResponse<String>) -> Void) -> MXHTTPOperation? {
+        return __accessToken(success: currySuccess(completion), failure: curryFailure(completion))
+    }
+
     
     // MARK: -
     
