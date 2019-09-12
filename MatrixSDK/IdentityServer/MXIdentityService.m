@@ -74,11 +74,14 @@ NSString *const MXIdentityServiceNotificationAccessTokenKey = @"accessToken";
 
 - (instancetype)initWithIdentityServer:(NSString *)identityServer accessToken:(nullable NSString*)accessToken andHomeserverRestClient:(MXRestClient*)homeserverRestClient
 {
-    _accessToken = accessToken;
-    
     MXIdentityServerRestClient *identityServerRestClient = [[MXIdentityServerRestClient alloc] initWithIdentityServer:identityServer accessToken:accessToken andOnUnrecognizedCertificateBlock:nil];
 
-    return [self initWithIdentityServerRestClient:identityServerRestClient andHomeserverRestClient:homeserverRestClient];
+    self = [self initWithIdentityServerRestClient:identityServerRestClient andHomeserverRestClient:homeserverRestClient];
+    if (self)
+    {
+        _accessToken = accessToken;
+    }
+    return self;
 }
 
 - (instancetype)initWithIdentityServerRestClient:(MXIdentityServerRestClient*)identityServerRestClient andHomeserverRestClient:(MXRestClient*)homeserverRestClient
