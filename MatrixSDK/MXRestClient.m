@@ -1047,7 +1047,9 @@ MXAuthAction;
         {
             if (self.identityServerAccessTokenHandler)
             {
+                MXWeakify(self);
                 self.identityServerAccessTokenHandler(^(NSString *accessToken) {
+                    MXStrongifyAndReturnIfNil(self);
 
                     if (accessToken)
                     {
