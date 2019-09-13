@@ -24,7 +24,6 @@
 #import "MXError.h"
 
 #import "MXAllowedCertificates.h"
-#import "MXIdentityService.h"
 
 #pragma mark - Constants definitions
 /**
@@ -1046,24 +1045,34 @@ MXAuthAction;
         MXHTTPOperation *operation2;
         if (matrixVersions.doesServerAcceptIdentityAccessToken)
         {
-            MXIdentityService *identityService = [[MXIdentityService alloc] initWithIdentityServer:self.identityServer accessToken:self.identityServerAccessToken andHomeserverRestClient:self];
+            if (self.identityServerAccessTokenHandler)
+            {
+                self.identityServerAccessTokenHandler(^(NSString *accessToken) {
 
-            operation2 = [identityService accessTokenWithSuccess:^(NSString * _Nullable accessToken) {
+                    if (accessToken)
+                    {
+                        NSMutableDictionary *updatedParameters = [NSMutableDictionary dictionaryWithDictionary:parameters];
+                        updatedParameters[@"id_access_token"] = accessToken;
 
-                if (accessToken)
-                {
-                    NSMutableDictionary *updatedParameters = [NSMutableDictionary dictionaryWithDictionary:parameters];
-                    updatedParameters[@"id_access_token"] = accessToken;
+                        success(updatedParameters);
+                    }
+                    else
+                    {
+                        NSLog(@"[MXRestClient] addIdentityAccessTokenToParameters: Error: identityServerAccessTokenHandler returned no token");
+                        NSError *error = [NSError errorWithDomain:kMXRestClientErrorDomain code:MXRestClientErrorMissingIdentityServerAccessToken userInfo:nil];
+                        [self dispatchFailure:error inBlock:failure];
+                    }
 
-                    success(updatedParameters);
-                }
-                else
-                {
-                    NSError *error = [NSError errorWithDomain:kMXRestClientErrorDomain code:MXRestClientErrorMissingIdentityServerAccessToken userInfo:nil];
-                    [self dispatchFailure:error inBlock:failure];
-                }
-
-            } failure:failure];
+                }, ^(NSError *error) {
+                    failure(error);
+                });
+            }
+            else
+            {
+                NSLog(@"[MXRestClient] addIdentityAccessTokenToParameters: Error: No identityServerAccessTokenHandler");
+                NSError *error = [NSError errorWithDomain:kMXRestClientErrorDomain code:MXRestClientErrorMissingIdentityServerAccessToken userInfo:nil];
+                [self dispatchFailure:error inBlock:failure];
+            }
         }
         else
         {

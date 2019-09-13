@@ -95,6 +95,18 @@ FOUNDATION_EXPORT NSString *const kMXMembersOfRoomParametersAt;
 FOUNDATION_EXPORT NSString *const kMXMembersOfRoomParametersMembership;
 FOUNDATION_EXPORT NSString *const kMXMembersOfRoomParametersNotMembership;
 
+
+/**
+ Block called when a request needs the identity server access token.
+
+ @param success A block object called when the operation succeeds. It provides the access token.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
+typedef MXHTTPOperation* (^MXRestClientIdentityServerAccessTokenHandler)(void (^success)(NSString *accessToken), void (^failure)(NSError *error));
+
+
 /**
  `MXRestClient` makes requests to Matrix servers.
 
@@ -127,7 +139,11 @@ FOUNDATION_EXPORT NSString *const kMXMembersOfRoomParametersNotMembership;
  TODO: Remove it when all HSes will no more require IS.
  */
 @property (nonatomic, copy) NSString *identityServer;
-@property (nonatomic, copy) NSString *identityServerAccessToken;
+
+/**
+ Block called when a request needs the identity server access token.
+ */
+@property (nonatomic, copy) MXRestClientIdentityServerAccessTokenHandler identityServerAccessTokenHandler;
 
 /**
  The antivirus server URL (nil by default).

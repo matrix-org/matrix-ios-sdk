@@ -394,7 +394,6 @@ typedef void (^MXOnResumeDone)(void);
     NSLog(@"[MXSession] setIdentityServer: %@", identityServer);
     
     matrixRestClient.identityServer = identityServer;
-    matrixRestClient.identityServerAccessToken = accessToken;
 
     if (identityServer)
     {
@@ -404,6 +403,12 @@ typedef void (^MXOnResumeDone)(void);
     {
         _identityService = nil;
     }
+
+    MXWeakify(self);
+    matrixRestClient.identityServerAccessTokenHandler = ^MXHTTPOperation *(void (^success)(NSString *accessToken), void (^failure)(NSError *error)) {
+        MXStrongifyAndReturnValueIfNil(self, nil);
+        return [self.identityService accessTokenWithSuccess:success failure:failure];
+    };
 }
 
 - (void)start:(void (^)(void))onServerSyncDone
