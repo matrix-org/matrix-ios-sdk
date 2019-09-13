@@ -76,7 +76,12 @@ NSString *const MXIdentityServiceNotificationAccessTokenKey = @"accessToken";
 {
     MXIdentityServerRestClient *identityServerRestClient = [[MXIdentityServerRestClient alloc] initWithIdentityServer:identityServer accessToken:accessToken andOnUnrecognizedCertificateBlock:nil];
 
-    return [self initWithIdentityServerRestClient:identityServerRestClient andHomeserverRestClient:homeserverRestClient];
+    self = [self initWithIdentityServerRestClient:identityServerRestClient andHomeserverRestClient:homeserverRestClient];
+    if (self)
+    {
+        _accessToken = accessToken;
+    }
+    return self;
 }
 
 - (instancetype)initWithIdentityServerRestClient:(MXIdentityServerRestClient*)identityServerRestClient andHomeserverRestClient:(MXRestClient*)homeserverRestClient
@@ -106,11 +111,13 @@ NSString *const MXIdentityServiceNotificationAccessTokenKey = @"accessToken";
             MXStrongifyAndReturnValueIfNil(self, nil);
             
             return [self renewAccessTokenWithSuccess:^(NSString *accessToken) {
+                self.accessToken = accessToken;
                 success(accessToken);
             } failure:failure];
         };
         
         self.restClient = identityServerRestClient;
+        _accessToken = identityServerRestClient.accessToken;
         self.homeserverRestClient = homeserverRestClient;
         
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(handleHTTPClientError:) name:kMXHTTPClientMatrixErrorNotification object:nil];
@@ -119,6 +126,22 @@ NSString *const MXIdentityServiceNotificationAccessTokenKey = @"accessToken";
 }
 
 #pragma mark - Public
+
+#pragma mark Access token
+- (nullable MXHTTPOperation *)accessTokenWithSuccess:(void (^)(NSString * _Nullable accessToken))success
+                                             failure:(void (^)(NSError *error))failure
+{
+    if (self.accessToken)
+    {
+        success(self.accessToken);
+        return nil;
+    }
+
+    return [self accountWithSuccess:^(NSString * _Nonnull userId) {
+        // If we get here, we have an access token
+        success(self.accessToken);
+    } failure:failure];
+}
 
 #pragma mark Association lookup
 

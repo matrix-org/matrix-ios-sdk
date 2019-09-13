@@ -88,6 +88,24 @@ extern NSString *const MXIdentityServiceNotificationAccessTokenKey;
  */
 - (instancetype)initWithIdentityServerRestClient:(MXIdentityServerRestClient*)identityServerRestClient andHomeserverRestClient:(MXRestClient*)homeserverRestClient;
 
+
+#pragma mark - Access token
+
+/**
+ Get the access token to use on the identity server.
+
+ The method triggers an /account request in order to force the setup of the
+ access token, which can lead to a "M_TERMS_NOT_SIGNED" error.
+
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance. Nil if the access token is already known
+         and no HTTP request is required.
+ */
+- (nullable MXHTTPOperation *)accessTokenWithSuccess:(void (^)(NSString * _Nullable accessToken))success
+                                             failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
+
 #pragma mark -
 
 #pragma mark Association lookup
