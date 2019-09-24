@@ -998,7 +998,9 @@ MXAuthAction;
         NSURL *identityServerURL = [NSURL URLWithString:self.identityServer];
         params[@"id_server"] = identityServerURL.host;
 
+        MXWeakify(self);
         operation = [self addIdentityAccessTokenToParameters:params success:^(NSDictionary *updatedParameters) {
+            MXStrongifyAndReturnIfNil(self);
 
             MXHTTPOperation *operation2 = [self requestTokenFromEndpoint2:path parameters:updatedParameters success:success failure:failure];
             if (operation2)
