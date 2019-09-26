@@ -219,7 +219,7 @@ extern NSString *const MXIdentityServiceNotificationAccessTokenKey;
  @return a MXHTTPOperation instance.
  */
 - (MXHTTPOperation*)pingIdentityServer:(void (^)(void))success
-                               failure:(void (^)(NSError *error))failure;
+                               failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 /**
  Sign a 3PID URL.

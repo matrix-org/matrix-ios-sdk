@@ -49,7 +49,7 @@ public extension MXIdentityService {
 
      - returns: a `MXHTTPOperation` instance.
      */
-    @nonobjc @discardableResult func accessToken(completion: @escaping (_ response: MXResponse<String>) -> Void) -> MXHTTPOperation? {
+    @nonobjc @discardableResult func accessToken(completion: @escaping (_ response: MXResponse<String?>) -> Void) -> MXHTTPOperation? {
         return __accessToken(success: currySuccess(completion), failure: curryFailure(completion))
     }
 
@@ -190,5 +190,21 @@ public extension MXIdentityService {
      */
     @nonobjc @discardableResult func account(completion: @escaping (_ response: MXResponse<String>) -> Void) -> MXHTTPOperation {
         return __account(success: currySuccess(completion), failure: curryFailure(completion))
+    }
+
+
+    // MARK: - OTher
+
+    /**
+     Check if there is an identity server endpoint running at the provided
+     identity server address.
+
+     @param success A block object called when the operation succeeds.
+     @param failure A block object called when the operation fails.
+
+     @return a MXHTTPOperation instance.
+     */
+    @nonobjc @discardableResult func pingIdentityServer(completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation {
+        return __pingIdentityServer(currySuccess(completion), failure: curryFailure(completion))
     }
 }

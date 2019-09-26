@@ -1390,7 +1390,7 @@ public extension MXRestClient {
      
      - returns: a `MXHTTPOperation` instance.
      */
-    @nonobjc @discardableResult func thirdPartyIdentifiers(_ completion: @escaping (_ response: MXResponse<[MXThirdPartyIdentifier]>) -> Void) -> MXHTTPOperation {
+    @nonobjc @discardableResult func thirdPartyIdentifiers(_ completion: @escaping (_ response: MXResponse<[MXThirdPartyIdentifier]?>) -> Void) -> MXHTTPOperation {
         return __threePIDs(currySuccess(completion), failure: curryFailure(completion))
     }
     
