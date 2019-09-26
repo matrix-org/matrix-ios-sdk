@@ -62,34 +62,26 @@ NSString *const MXServiceTermsErrorDomain = @"org.matrix.sdk.MXServiceTermsError
     } failure:failure];
 }
 
-- (MXHTTPOperation*)areAllTermsAgreed:(void (^)(BOOL areAllTermsAgreed))success
+- (MXHTTPOperation*)areAllTermsAgreed:(void (^)(NSProgress *agreedTermsProgress))success
                               failure:(nullable void (^)(NSError * _Nonnull))failure
 {
     return [_restClient terms:^(MXLoginTerms * _Nullable terms) {
         
-        __block BOOL areAllTermsAgreed = YES;
-        
+        NSProgress *agreedTermsProgress = [NSProgress progressWithTotalUnitCount:terms.policies.count];
+
         [terms.policies enumerateKeysAndObjectsUsingBlock:^(NSString * _Nonnull policyKey, MXLoginPolicy * _Nonnull loginPolicy, BOOL * _Nonnull stopLoginPolicy) {
             
-            __block BOOL isLoginPolicyAggreed = NO;
-            
             [loginPolicy.data enumerateKeysAndObjectsUsingBlock:^(NSString * _Nonnull policyDataKey, MXLoginPolicyData * _Nonnull policyData, BOOL * _Nonnull stopPolicyData) {
-                
+
                 if ([self.acceptedTerms containsObject:policyData.url])
                 {
-                    isLoginPolicyAggreed = YES;
-                    *stopLoginPolicy = YES;
+                    agreedTermsProgress.completedUnitCount++;
+                    *stopPolicyData = YES;
                 }
             }];
-            
-            if (!isLoginPolicyAggreed)
-            {
-                areAllTermsAgreed = NO;
-                *stopLoginPolicy = YES;
-            }
         }];
         
-        success(areAllTermsAgreed);
+        success(agreedTermsProgress);
         
     } failure:failure];
 }
