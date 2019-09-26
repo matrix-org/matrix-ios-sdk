@@ -8,6 +8,7 @@ Improvements:
  * MXEventTimeline: The roomEventFilter property is now writable (vector-im/riot-ios#2615).
  * VoIP: Make call start if there is no STUN server.
  * MXMatrixVersions: Add doesServerRequireIdentityServerParam and doesServerAcceptIdentityAccessToken properties.
+ * MXMatrixVersions: Support r0.6.0. Add doesServerSupportSeparateAddAndBind (vector-im/riot-ios#2718).
  * Create MXIdentityServerRestClient and MXIdentityService to manage identity server requests (vector-im/riot-ios#2647).
  * MXIdentityService: Support identity server v2 API. Handle identity server v2 API authentification and use the hashed v2 lookup API for 3PIDs (vector-im/riot-ios#2603 and /vector-im/riot-ios#2652).
  * MXHTTPClient: Add access token renewal plus request retry mechanism.

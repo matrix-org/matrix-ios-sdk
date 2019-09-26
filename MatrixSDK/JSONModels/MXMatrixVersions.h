@@ -28,6 +28,7 @@ struct MXMatrixClientServerAPIVersionStruct
     __unsafe_unretained NSString * const r0_3_0;
     __unsafe_unretained NSString * const r0_4_0;
     __unsafe_unretained NSString * const r0_5_0;
+    __unsafe_unretained NSString * const r0_6_0;
 };
 extern const struct MXMatrixClientServerAPIVersionStruct MXMatrixClientServerAPIVersion;
 
@@ -40,6 +41,7 @@ struct MXMatrixVersionsFeatureStruct
     __unsafe_unretained NSString * const lazyLoadMembers;
     __unsafe_unretained NSString * const requireIdentityServer;
     __unsafe_unretained NSString * const idAccessToken;
+    __unsafe_unretained NSString * const separateAddAndBind;
 };
 extern const struct MXMatrixVersionsFeatureStruct MXMatrixVersionsFeature;
 
@@ -77,5 +79,12 @@ extern const struct MXMatrixVersionsFeatureStruct MXMatrixVersionsFeature;
  Some homeservers may trigger errors if they are not prepared for the new parameter.
  */
 @property (nonatomic, readonly) BOOL doesServerAcceptIdentityAccessToken;
+
+/**
+ Indicate if the server to see if it supports separate 3PID add and bind functions.
+ This affects the sequence of API calls clients should use for these operations,
+ so it's helpful to be able to check for support.
+ */
+@property (nonatomic, readonly) BOOL doesServerSupportSeparateAddAndBind;
 
 @end
