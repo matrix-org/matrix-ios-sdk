@@ -991,29 +991,47 @@ MXAuthAction;
                                      failure:(void (^)(NSError *error))failure
 {
     MXHTTPOperation *operation;
-    if (self.identityServer)
-    {
-        NSMutableDictionary *params = [NSMutableDictionary dictionaryWithDictionary:parameters];
 
-        NSURL *identityServerURL = [NSURL URLWithString:self.identityServer];
-        params[@"id_server"] = identityServerURL.host;
+    // If the HS supports separate add and bind, then requestToken endpoints
+    // don't need an IS as they are all validated by the HS directly.
+    MXWeakify(self);
+    operation = [self supportedMatrixVersions:^(MXMatrixVersions *matrixVersions) {
+        MXStrongifyAndReturnIfNil(self);
 
-        MXWeakify(self);
-        operation = [self addIdentityAccessTokenToParameters:params success:^(NSDictionary *updatedParameters) {
-            MXStrongifyAndReturnIfNil(self);
+        if (!matrixVersions.doesServerSupportSeparateAddAndBind && self.identityServer)
+        {
+            NSMutableDictionary *params = [NSMutableDictionary dictionaryWithDictionary:parameters];
 
-            MXHTTPOperation *operation2 = [self requestTokenFromEndpoint2:path parameters:updatedParameters success:success failure:failure];
+            NSURL *identityServerURL = [NSURL URLWithString:self.identityServer];
+            params[@"id_server"] = identityServerURL.host;
+
+            MXWeakify(self);
+            MXHTTPOperation *operation2 = [self addIdentityAccessTokenToParameters:params success:^(NSDictionary *updatedParameters) {
+                MXStrongifyAndReturnIfNil(self);
+
+                MXHTTPOperation *operation3 = [self requestTokenFromEndpoint2:path parameters:updatedParameters success:success failure:failure];
+                if (operation3)
+                {
+                    [operation mutateTo:operation3];
+                }
+
+            } failure:failure];
+
             if (operation2)
             {
                 [operation mutateTo:operation2];
             }
+        }
+        else
+        {
+            MXHTTPOperation *operation2 = [self requestTokenFromEndpoint2:path parameters:parameters success:success failure:failure];
 
-        } failure:failure];
-    }
-    else
-    {
-        operation = [self requestTokenFromEndpoint2:path parameters:parameters success:success failure:failure];
-    }
+            if (operation2)
+            {
+                [operation mutateTo:operation2];
+            }
+        }
+    } failure:failure];
 
     return operation;
 }
@@ -1050,7 +1068,7 @@ MXAuthAction;
             if (self.identityServerAccessTokenHandler)
             {
                 MXWeakify(self);
-                self.identityServerAccessTokenHandler(^(NSString *accessToken) {
+                operation2 = self.identityServerAccessTokenHandler(^(NSString *accessToken) {
                     MXStrongifyAndReturnIfNil(self);
 
                     if (accessToken)
