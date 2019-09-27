@@ -81,7 +81,7 @@ extern const struct MXMatrixVersionsFeatureStruct MXMatrixVersionsFeature;
 @property (nonatomic, readonly) BOOL doesServerAcceptIdentityAccessToken;
 
 /**
- Indicate if the server to see if it supports separate 3PID add and bind functions.
+ Indicate if the server supports separate 3PID add and bind functions.
  This affects the sequence of API calls clients should use for these operations,
  so it's helpful to be able to check for support.
  */
