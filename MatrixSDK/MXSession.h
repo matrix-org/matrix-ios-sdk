@@ -36,6 +36,7 @@
 #import "MXScanManager.h"
 #import "MXAggregations.h"
 #import "MXIdentityService.h"
+#import "MX3PidAddManager.h"
 
 /**
  `MXSessionState` represents the states in the life cycle of a MXSession instance.
@@ -369,6 +370,11 @@ FOUNDATION_EXPORT NSString *const kMXSessionNoRoomTag;
  The identity service used to handle Matrix identity server requests. Can be nil.
  */
 @property (nonatomic, readonly) MXIdentityService *identityService;
+
+/**
+ The module that manages add of third party identifiers.
+ */
+@property (nonatomic, readonly)  MX3PidAddManager *threePidAddManager;
 
 /**
  The media manager used to handle the media stored on the Matrix Content repository.
