@@ -323,6 +323,7 @@
 		32D2CC0423422462002BD8CA /* MX3PidAddManager.h in Headers */ = {isa = PBXBuildFile; fileRef = 32D2CC0023422462002BD8CA /* MX3PidAddManager.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		32D2CC0523422462002BD8CA /* MX3PidAddSession.h in Headers */ = {isa = PBXBuildFile; fileRef = 32D2CC0123422462002BD8CA /* MX3PidAddSession.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		32D2CC0623422462002BD8CA /* MX3PidAddManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 32D2CC0223422462002BD8CA /* MX3PidAddManager.m */; };
+		32D2CC09234336D6002BD8CA /* MX3PidAddManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 32D2CC08234336D6002BD8CA /* MX3PidAddManager.swift */; };
 		32D7767D1A27860600FC4AA2 /* MXMemoryStore.h in Headers */ = {isa = PBXBuildFile; fileRef = 32D7767B1A27860600FC4AA2 /* MXMemoryStore.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		32D7767E1A27860600FC4AA2 /* MXMemoryStore.m in Sources */ = {isa = PBXBuildFile; fileRef = 32D7767C1A27860600FC4AA2 /* MXMemoryStore.m */; };
 		32D776811A27877300FC4AA2 /* MXMemoryRoomStore.h in Headers */ = {isa = PBXBuildFile; fileRef = 32D7767F1A27877300FC4AA2 /* MXMemoryRoomStore.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -821,6 +822,7 @@
 		32D2CC0023422462002BD8CA /* MX3PidAddManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MX3PidAddManager.h; sourceTree = "<group>"; };
 		32D2CC0123422462002BD8CA /* MX3PidAddSession.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MX3PidAddSession.h; sourceTree = "<group>"; };
 		32D2CC0223422462002BD8CA /* MX3PidAddManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MX3PidAddManager.m; sourceTree = "<group>"; };
+		32D2CC08234336D6002BD8CA /* MX3PidAddManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MX3PidAddManager.swift; sourceTree = "<group>"; };
 		32D7767B1A27860600FC4AA2 /* MXMemoryStore.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXMemoryStore.h; sourceTree = "<group>"; };
 		32D7767C1A27860600FC4AA2 /* MXMemoryStore.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXMemoryStore.m; sourceTree = "<group>"; };
 		32D7767F1A27877300FC4AA2 /* MXMemoryRoomStore.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXMemoryRoomStore.h; sourceTree = "<group>"; };
@@ -1781,6 +1783,14 @@
 			path = ThreePidAdd;
 			sourceTree = "<group>";
 		};
+		32D2CC0723433684002BD8CA /* ThreePidAdd */ = {
+			isa = PBXGroup;
+			children = (
+				32D2CC08234336D6002BD8CA /* MX3PidAddManager.swift */,
+			);
+			path = ThreePidAdd;
+			sourceTree = "<group>";
+		};
 		32D7767A1A2785CE00FC4AA2 /* MXMemoryStore */ = {
 			isa = PBXGroup;
 			children = (
@@ -1992,6 +2002,7 @@
 		C6F9357A1E5B391B00FC34BF /* Swift */ = {
 			isa = PBXGroup;
 			children = (
+				32D2CC0723433684002BD8CA /* ThreePidAdd */,
 				C6F935821E5B3BE600FC34BF /* Data */,
 				C6F935851E5B3BE600FC34BF /* JSONModels */,
 				C6F9357E1E5B3ACA00FC34BF /* MXResponse.swift */,
@@ -2469,6 +2480,7 @@
 				327E9ABD2284521C00A98BC1 /* MXEventUnsignedData.m in Sources */,
 				32A1513A1DAD292400400192 /* MXMegolmEncryption.m in Sources */,
 				32F945F71FAB83D900622468 /* MXIncomingRoomKeyRequest.m in Sources */,
+				32D2CC09234336D6002BD8CA /* MX3PidAddManager.swift in Sources */,
 				F0173EAD1FCF0E8900B5F6A3 /* MXGroup.m in Sources */,
 				32720D9F222EAA6F0086FFF5 /* MXAutoDiscovery.m in Sources */,
 				32D2CC0623422462002BD8CA /* MX3PidAddManager.m in Sources */,

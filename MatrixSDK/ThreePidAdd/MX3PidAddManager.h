@@ -48,7 +48,7 @@ NS_ERROR_ENUM(MX3PidAddManagerErrorDomain)
  */
 @interface MX3PidAddManager : NSObject
 
-- (instancetype)initWithMatrixSession:(MXSession*)session;
+- (instancetype)initWithMatrixSession:(MXSession*)session NS_REFINED_FOR_SWIFT;
 
 
 #pragma mark - Add Email
@@ -71,7 +71,7 @@ NS_ERROR_ENUM(MX3PidAddManagerErrorDomain)
 - (MX3PidAddSession*)startAddEmailSessionWithEmail:(NSString*)email
                                           nextLink:(nullable NSString*)nextLink
                                            success:(void (^)(void))success
-                                           failure:(void (^)(NSError * _Nonnull))failure;
+                                           failure:(void (^)(NSError * _Nonnull))failure NS_REFINED_FOR_SWIFT;
 
 /**
  Try to finalise the email addition.
@@ -85,7 +85,7 @@ NS_ERROR_ENUM(MX3PidAddManagerErrorDomain)
  */
 - (void)tryFinaliseAddEmailSession:(MX3PidAddSession*)threePidAddSession
                            success:(void (^)(void))success
-                           failure:(void (^)(NSError * _Nonnull))failure;
+                           failure:(void (^)(NSError * _Nonnull))failure NS_REFINED_FOR_SWIFT;
 
 
 #pragma mark - Add MSISDN
@@ -107,7 +107,7 @@ NS_ERROR_ENUM(MX3PidAddManagerErrorDomain)
 - (MX3PidAddSession*)startAddPhoneNumberSessionWithPhoneNumber:(NSString*)phoneNumber
                                                    countryCode:(nullable NSString*)countryCode
                                                        success:(void (^)(void))success
-                                                       failure:(void (^)(NSError * _Nonnull))failure;
+                                                       failure:(void (^)(NSError * _Nonnull))failure NS_REFINED_FOR_SWIFT;
 
 /**
  Finalise the phone number addition.
@@ -121,7 +121,77 @@ NS_ERROR_ENUM(MX3PidAddManagerErrorDomain)
 - (void)finaliseAddPhoneNumberSession:(MX3PidAddSession*)threePidAddSession
                             withToken:(NSString*)token
                               success:(void (^)(void))success
-                              failure:(void (^)(NSError * _Nonnull))failure;
+                              failure:(void (^)(NSError * _Nonnull))failure NS_REFINED_FOR_SWIFT;
+
+
+#pragma mark - Bind Email
+
+/**
+ Add (bind) an email to the user identity server.
+
+ The user will receive a validation email.
+ Use then `tryFinaliseBindEmailSession` to complete the session.
+
+ @param email the email.
+
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+
+ @return a 3pid add session.
+ */
+- (MX3PidAddSession*)startBindEmailSessionWithEmail:(NSString*)email
+                                            success:(void (^)(void))success
+                                            failure:(void (^)(NSError * _Nonnull))failure NS_REFINED_FOR_SWIFT;
+
+/**
+ Try to finalise the email addition to the user identity server.
+
+ This must be called after the user has clicked the validation link.
+
+ @param threePidAddSession the session to finalise.
+
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+ */
+- (void)tryFinaliseBindEmailSession:(MX3PidAddSession*)threePidAddSession
+                            success:(void (^)(void))success
+                            failure:(void (^)(NSError * _Nonnull))failure NS_REFINED_FOR_SWIFT;
+
+
+#pragma mark - Bind Phone Number
+
+/**
+ Add (bind) a phone number to the user identity server.
+
+ The user will receive a code by SMS.
+ Use then `finaliseBindPhoneNumberSession` to complete the session.
+
+ @param phoneNumber the phone number.
+ @param countryCode the country code. Can be nil if `phoneNumber` is internationalised.
+
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+
+ @return a 3pid add session.
+ */
+- (MX3PidAddSession*)startBindPhoneNumberSessionWithPhoneNumber:(NSString*)phoneNumber
+                                                    countryCode:(nullable NSString*)countryCode
+                                                        success:(void (^)(void))success
+                                                        failure:(void (^)(NSError * _Nonnull))failure NS_REFINED_FOR_SWIFT;
+
+/**
+ Finalise the phone number addition.
+
+ @param threePidAddSession the session to finalise.
+ @param token the code received by SMS.
+
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+ */
+- (void)finaliseBindPhoneNumberSession:(MX3PidAddSession*)threePidAddSession
+                             withToken:(NSString*)token
+                               success:(void (^)(void))success
+                               failure:(void (^)(NSError * _Nonnull))failure NS_REFINED_FOR_SWIFT;
 
 @end
 
