@@ -2988,6 +2988,32 @@ MXAuthAction;
                                  }];
 }
 
+- (MXHTTPOperation*)add3PIDOnlyWithSessionId:(NSString*)sid
+                                clientSecret:(NSString*)clientSecret
+                                     success:(void (^)(void))success
+                                     failure:(void (^)(NSError *error))failure
+{
+    NSString *path = [NSString stringWithFormat:@"%@/account/3pid/add", kMXAPIPrefixPathUnstable];
+
+    NSDictionary *parameters = @{
+                                 @"sid": sid,
+                                 @"client_secret": clientSecret
+                                 };
+
+    MXWeakify(self);
+    return [httpClient requestWithMethod:@"POST"
+                                    path:path
+                              parameters:parameters
+                                 success:^(NSDictionary *JSONResponse) {
+                                     MXStrongifyAndReturnIfNil(self);
+                                     [self dispatchSuccess:success];
+                                 }
+                                 failure:^(NSError *error) {
+                                     MXStrongifyAndReturnIfNil(self);
+                                     [self dispatchFailure:error inBlock:failure];
+                                 }];
+}
+
 - (MXHTTPOperation*)remove3PID:(NSString*)address
                         medium:(NSString*)medium
                        success:(void (^)(void))success

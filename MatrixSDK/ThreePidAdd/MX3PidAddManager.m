@@ -108,17 +108,34 @@ NSString *const MX3PidAddManagerErrorDomain = @"org.matrix.sdk.MX3PidAddManagerE
         return;
     }
 
-    threePidAddSession.httpOperation = [mxSession.matrixRestClient add3PID:threePidAddSession.sid clientSecret:threePidAddSession.clientSecret bind:NO success:^{
-        threePidAddSession.httpOperation = nil;
+    if (doesServerSupportSeparateAddAndBind)
+    {
+        threePidAddSession.httpOperation = [mxSession.matrixRestClient add3PIDOnlyWithSessionId:threePidAddSession.sid clientSecret:threePidAddSession.clientSecret success:^{
 
-        NSLog(@"[MX3PidAddManager] tryFinaliseAddEmailSession: DONE: threePid: %@", threePidAddSession);
+            NSLog(@"[MX3PidAddManager] tryFinaliseAddEmailSession: DONE: threePid: %@", threePidAddSession);
 
-        success();
+            threePidAddSession.httpOperation = nil;
+            success();
 
-    } failure:^(NSError *error) {
-        threePidAddSession.httpOperation = nil;
-        failure(error);
-    }];
+        } failure:^(NSError *error) {
+            threePidAddSession.httpOperation = nil;
+            failure(error);
+        }];
+    }
+    else
+    {
+        threePidAddSession.httpOperation = [mxSession.matrixRestClient add3PID:threePidAddSession.sid clientSecret:threePidAddSession.clientSecret bind:NO success:^{
+            threePidAddSession.httpOperation = nil;
+
+            NSLog(@"[MX3PidAddManager] tryFinaliseAddEmailSession: DONE: threePid: %@", threePidAddSession);
+
+            success();
+
+        } failure:^(NSError *error) {
+            threePidAddSession.httpOperation = nil;
+            failure(error);
+        }];
+    }
 }
 
 
@@ -185,17 +202,35 @@ NSString *const MX3PidAddManagerErrorDomain = @"org.matrix.sdk.MX3PidAddManagerE
     threePidAddSession.httpOperation = [self submitValidationToken:token for3PidAddSession:threePidAddSession success:^{
         MXStrongifyAndReturnIfNil(self);
 
-        MXHTTPOperation *operation = [self->mxSession.matrixRestClient add3PID:threePidAddSession.sid clientSecret:threePidAddSession.clientSecret bind:NO success:^{
+        MXHTTPOperation *operation;
+        if (self->doesServerSupportSeparateAddAndBind)
+        {
+            operation = [self->mxSession.matrixRestClient add3PIDOnlyWithSessionId:threePidAddSession.sid clientSecret:threePidAddSession.clientSecret success:^{
 
-            NSLog(@"[MX3PidAddManager] finaliseAddPhoneNumberSession: DONE: threePid: %@", threePidAddSession);
+                NSLog(@"[MX3PidAddManager] finaliseAddPhoneNumberSession: DONE: threePid: %@", threePidAddSession);
 
-            threePidAddSession.httpOperation = nil;
-            success();
+                threePidAddSession.httpOperation = nil;
+                success();
 
-        } failure:^(NSError *error) {
-            threePidAddSession.httpOperation = nil;
-            failure(error);
-        }];
+            } failure:^(NSError *error) {
+                threePidAddSession.httpOperation = nil;
+                failure(error);
+            }];
+        }
+        else
+        {
+            operation = [self->mxSession.matrixRestClient add3PID:threePidAddSession.sid clientSecret:threePidAddSession.clientSecret bind:NO success:^{
+
+                NSLog(@"[MX3PidAddManager] finaliseAddPhoneNumberSession: DONE: threePid: %@", threePidAddSession);
+
+                threePidAddSession.httpOperation = nil;
+                success();
+
+            } failure:^(NSError *error) {
+                threePidAddSession.httpOperation = nil;
+                failure(error);
+            }];
+        }
 
         if (operation)
         {
@@ -295,6 +330,9 @@ NSString *const MX3PidAddManagerErrorDomain = @"org.matrix.sdk.MX3PidAddManagerE
         MXStrongifyAndReturnIfNil(self);
 
         NSLog(@"[MX3PidAddManager] checkIdentityServerRequirement: %@", matrixVersions.doesServerRequireIdentityServerParam ? @"YES": @"NO");
+
+        NSLog(@"[MX3PidAddManager] doesServerSupportSeparateAddAndBind: %@", matrixVersions.doesServerSupportSeparateAddAndBind ? @"YES": @"NO");
+        self->doesServerSupportSeparateAddAndBind = matrixVersions.doesServerSupportSeparateAddAndBind;
 
         if (matrixVersions.doesServerRequireIdentityServerParam
             && !self->mxSession.matrixRestClient.identityServer)

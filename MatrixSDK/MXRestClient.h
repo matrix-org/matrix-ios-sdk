@@ -1576,6 +1576,9 @@ typedef MXHTTPOperation* (^MXRestClientIdentityServerAccessTokenHandler)(void (^
 /**
  Link an authenticated 3rd party id to the Matrix user.
 
+ This API is deprecated, and you should instead use `addThreePidOnly`
+ for homeservers that support it.
+
  @param sid the id provided during the 3PID validation session (see [MXRestClient requestTokenForEmail:], or [MXRestClient requestEmailValidation:]).
  @param clientSecret the same secret key used in the validation session.
  @param bind whether the homeserver should also bind this third party identifier
@@ -1591,6 +1594,28 @@ typedef MXHTTPOperation* (^MXRestClientIdentityServerAccessTokenHandler)(void (^
                        bind:(BOOL)bind
                     success:(void (^)(void))success
                     failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
+
+/**
+ Add a 3PID to your homeserver account
+
+ This API does not use an identity server, as the homeserver is expected to
+ handle 3PID ownership validation.
+
+ You can check whether a homeserver supports this API via
+ `doesServerSupportSeparateAddAndBind`.
+
+ @param sid the session id provided during the 3PID validation session.
+ @param clientSecret the same secret key used in the validation session.
+
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)add3PIDOnlyWithSessionId:(NSString*)sid
+                                clientSecret:(NSString*)clientSecret
+                                     success:(void (^)(void))success
+                                     failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 /**
  Remove a 3rd party id from the Matrix user information.
