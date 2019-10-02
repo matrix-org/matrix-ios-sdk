@@ -137,8 +137,9 @@ NS_ERROR_ENUM(MX3PidAddManagerErrorDomain)
 /**
  Add (bind) or remove (unbind) an email to/from the user identity server.
 
- The user will receive a validation email.
+ If a validation(needValidation) is required, the user will receive a validation email.
  Use then `tryFinaliseBindOrUnBindEmailSession` to complete the session.
+ Else, no more action is required.
 
  @param email the email.
 
@@ -149,7 +150,7 @@ NS_ERROR_ENUM(MX3PidAddManagerErrorDomain)
  */
 - (MX3PidAddSession*)startIdentityServerEmailSessionWithEmail:(NSString*)email
                                                          bind:(BOOL)bind
-                                                      success:(void (^)(void))success
+                                                      success:(void (^)(BOOL needValidation))success
                                                       failure:(void (^)(NSError * _Nonnull))failure NS_REFINED_FOR_SWIFT;
 
 /**
@@ -172,8 +173,9 @@ NS_ERROR_ENUM(MX3PidAddManagerErrorDomain)
 /**
   Add (bind) or remove (unbind) a phone number to/from the user identity server.
 
- The user will receive a code by SMS.
+ If a validation(needValidation) is required, the user will receive a code by SMS.
  Use then `finaliseBindPhoneNumberSession` to complete the session.
+ Else, no more action is required.
 
  @param phoneNumber the phone number.
  @param countryCode the country code. Can be nil if `phoneNumber` is internationalised.
@@ -186,7 +188,7 @@ NS_ERROR_ENUM(MX3PidAddManagerErrorDomain)
 - (MX3PidAddSession*)startIdentityServerPhoneNumberSessionWithPhoneNumber:(NSString*)phoneNumber
                                                               countryCode:(nullable NSString*)countryCode
                                                                      bind:(BOOL)bind
-                                                                  success:(void (^)(void))success
+                                                                  success:(void (^)(BOOL needValidation))success
                                                                   failure:(void (^)(NSError * _Nonnull))failure NS_REFINED_FOR_SWIFT;
 
 /**
