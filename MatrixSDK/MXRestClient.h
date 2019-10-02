@@ -1618,6 +1618,45 @@ typedef MXHTTPOperation* (^MXRestClientIdentityServerAccessTokenHandler)(void (^
 - (MXHTTPOperation*)threePIDs:(void (^)(NSArray<MXThirdPartyIdentifier*> *threePIDs))success
                       failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
+/**
+ Bind a 3PID for discovery onto an identity server via the homeserver.
+
+ The identity server handles 3PID ownership validation and the homeserver records
+ the new binding to track where all 3PIDs for the account are bound.
+
+ You can check whether a homeserver supports this API via
+ `doesServerSupportSeparateAddAndBind`.
+
+ @param sid the session id provided during the 3PID validation session.
+ @param clientSecret the same secret key used in the validation session.
+
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+ */
+- (MXHTTPOperation*)bind3PidWithSessionId:(NSString*)sid
+                             clientSecret:(NSString*)clientSecret
+                                  success:(void (^)(void))success
+                                  failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
+
+/**
+ Unbind a 3PID for discovery on an identity server via the homeserver.
+
+ The homeserver removes its record of the binding to keep an updated record of
+ where all 3PIDs for the account are bound.
+
+ @param address the 3rd party id.
+ @param medium the type of the 3rd party id.
+
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)unbind3PidWithAddress:(NSString*)address
+                                   medium:(NSString*)medium
+                                  success:(void (^)(void))success
+                                  failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
+
 
 #pragma mark - Presence operations
 /**
