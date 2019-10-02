@@ -135,10 +135,10 @@ NS_ERROR_ENUM(MX3PidAddManagerErrorDomain)
 #pragma mark - Bind Email
 
 /**
- Add (bind) an email to the user identity server.
+ Add (bind) or remove (unbind) an email to/from the user identity server.
 
  The user will receive a validation email.
- Use then `tryFinaliseBindEmailSession` to complete the session.
+ Use then `tryFinaliseBindOrUnBindEmailSession` to complete the session.
 
  @param email the email.
 
@@ -147,12 +147,13 @@ NS_ERROR_ENUM(MX3PidAddManagerErrorDomain)
 
  @return a 3pid add session.
  */
-- (MX3PidAddSession*)startBindEmailSessionWithEmail:(NSString*)email
-                                            success:(void (^)(void))success
-                                            failure:(void (^)(NSError * _Nonnull))failure NS_REFINED_FOR_SWIFT;
+- (MX3PidAddSession*)startIdentityServerEmailSessionWithEmail:(NSString*)email
+                                                         bind:(BOOL)bind
+                                                      success:(void (^)(void))success
+                                                      failure:(void (^)(NSError * _Nonnull))failure NS_REFINED_FOR_SWIFT;
 
 /**
- Try to finalise the email addition to the user identity server.
+ Try to finalise the email addition or removal.
 
  This must be called after the user has clicked the validation link.
 
@@ -161,15 +162,15 @@ NS_ERROR_ENUM(MX3PidAddManagerErrorDomain)
  @param success A block object called when the operation succeeds.
  @param failure A block object called when the operation fails.
  */
-- (void)tryFinaliseBindEmailSession:(MX3PidAddSession*)threePidAddSession
-                            success:(void (^)(void))success
-                            failure:(void (^)(NSError * _Nonnull))failure NS_REFINED_FOR_SWIFT;
+- (void)tryFinaliseIdentityServerEmailSession:(MX3PidAddSession*)threePidAddSession
+                                      success:(void (^)(void))success
+                                      failure:(void (^)(NSError * _Nonnull))failure NS_REFINED_FOR_SWIFT;
 
 
 #pragma mark - Bind Phone Number
 
 /**
- Add (bind) a phone number to the user identity server.
+  Add (bind) or remove (unbind) a phone number to/from the user identity server.
 
  The user will receive a code by SMS.
  Use then `finaliseBindPhoneNumberSession` to complete the session.
@@ -182,13 +183,14 @@ NS_ERROR_ENUM(MX3PidAddManagerErrorDomain)
 
  @return a 3pid add session.
  */
-- (MX3PidAddSession*)startBindPhoneNumberSessionWithPhoneNumber:(NSString*)phoneNumber
-                                                    countryCode:(nullable NSString*)countryCode
-                                                        success:(void (^)(void))success
-                                                        failure:(void (^)(NSError * _Nonnull))failure NS_REFINED_FOR_SWIFT;
+- (MX3PidAddSession*)startIdentityServerPhoneNumberSessionWithPhoneNumber:(NSString*)phoneNumber
+                                                              countryCode:(nullable NSString*)countryCode
+                                                                     bind:(BOOL)bind
+                                                                  success:(void (^)(void))success
+                                                                  failure:(void (^)(NSError * _Nonnull))failure NS_REFINED_FOR_SWIFT;
 
 /**
- Finalise the phone number addition.
+ Finalise the phone number addition or removal.
 
  @param threePidAddSession the session to finalise.
  @param token the code received by SMS.
@@ -196,11 +198,12 @@ NS_ERROR_ENUM(MX3PidAddManagerErrorDomain)
  @param success A block object called when the operation succeeds.
  @param failure A block object called when the operation fails.
  */
-- (void)finaliseBindPhoneNumberSession:(MX3PidAddSession*)threePidAddSession
-                             withToken:(NSString*)token
-                               success:(void (^)(void))success
-                               failure:(void (^)(NSError * _Nonnull))failure NS_REFINED_FOR_SWIFT;
+- (void)finaliseIdentityServerPhoneNumberSession:(MX3PidAddSession*)threePidAddSession
+                                       withToken:(NSString*)token
+                                         success:(void (^)(void))success
+                                         failure:(void (^)(NSError * _Nonnull))failure NS_REFINED_FOR_SWIFT;
 
 @end
 
 NS_ASSUME_NONNULL_END
+

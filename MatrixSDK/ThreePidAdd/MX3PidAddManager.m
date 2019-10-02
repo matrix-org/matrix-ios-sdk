@@ -208,59 +208,26 @@ NSString *const MX3PidAddManagerErrorDomain = @"org.matrix.sdk.MX3PidAddManagerE
 
 #pragma mark - Bind Email
 
-- (MX3PidAddSession*)startBindEmailSessionWithEmail:(NSString*)email
-                                            success:(void (^)(void))success
-                                            failure:(void (^)(NSError * _Nonnull))failure
+- (MX3PidAddSession*)startIdentityServerEmailSessionWithEmail:(NSString*)email
+                                                         bind:(BOOL)bind
+                                                      success:(void (^)(void))success
+                                                      failure:(void (^)(NSError * _Nonnull))failure
 {
     MX3PidAddSession *threePidAddSession = [[MX3PidAddSession alloc] initWithMedium:kMX3PIDMediumEmail andAddress:email];
+    threePidAddSession.bind = bind;
 
-    NSLog(@"[MX3PidAddManager] startBindEmailSessionWithEmail: threePid: %@", threePidAddSession);
+    NSLog(@"[MX3PidAddManager] startIdentityServerEmailSessionWithEmail (bind:%@) : threePid: %@", @(bind), threePidAddSession);
 
-    if (!mxSession.identityService)
-    {
-        NSError *error = [NSError errorWithDomain:MX3PidAddManagerErrorDomain
-                                             code:MX3PidAddManagerErrorDomainIdentityServerRequired
-                                         userInfo:nil];
-        failure(error);
-        return threePidAddSession;
-    }
-
-    threePidAddSession.httpOperation = [self doesServerSupportSeparateAddAndBind:^(bool doesServerSupportSeparateAddAndBind) {
-
-        MXHTTPOperation *operation;
-//        if (doesServerSupportSeparateAddAndBind)
-//        {
-//            // TODO
-//        }
-//        else
-        {
-            operation = [self startBind3PidSessionWithOldHomeserver:threePidAddSession success:^{
-                threePidAddSession.httpOperation = nil;
-                success();
-            } failure:^(NSError *error) {
-                threePidAddSession.httpOperation = nil;
-                failure(error);
-            }];
-        }
-
-        if (operation)
-        {
-            [threePidAddSession.httpOperation mutateTo:operation];
-        }
-
-    } failure:^(NSError * _Nonnull error) {
-        threePidAddSession.httpOperation = nil;
-        failure(error);
-    }];
+    [self startIdentityServer3PidSession:threePidAddSession success:success failure:failure];
 
     return threePidAddSession;
 }
 
-- (void)tryFinaliseBindEmailSession:(MX3PidAddSession*)threePidAddSession
-                            success:(void (^)(void))success
-                            failure:(void (^)(NSError * _Nonnull))failure
+- (void)tryFinaliseIdentityServerEmailSession:(MX3PidAddSession*)threePidAddSession
+                                      success:(void (^)(void))success
+                                      failure:(void (^)(NSError * _Nonnull))failure
 {
-    NSLog(@"[MX3PidAddManager] tryFinaliseBindEmailSession: threePid: %@", threePidAddSession);
+    NSLog(@"[MX3PidAddManager] tryFinaliseIdentityServerEmailSession: threePid: %@", threePidAddSession);
 
     NSParameterAssert([threePidAddSession.medium isEqualToString:kMX3PIDMediumEmail]);
 
@@ -274,10 +241,10 @@ NSString *const MX3PidAddManagerErrorDomain = @"org.matrix.sdk.MX3PidAddManagerE
     }
 
     // TODO: this is for !doesServerSupportSeparateAddAndBind
-    threePidAddSession.httpOperation = [mxSession.matrixRestClient add3PID:threePidAddSession.sid clientSecret:threePidAddSession.clientSecret bind:YES success:^{
+    threePidAddSession.httpOperation = [mxSession.matrixRestClient add3PID:threePidAddSession.sid clientSecret:threePidAddSession.clientSecret bind:threePidAddSession.bind success:^{
         threePidAddSession.httpOperation = nil;
 
-        NSLog(@"[MX3PidAddManager] tryFinaliseBindEmailSession: DONE: threePid: %@", threePidAddSession);
+        NSLog(@"[MX3PidAddManager] tryFinaliseIdentityServerEmailSession: DONE: threePid: %@", threePidAddSession);
 
         success();
 
@@ -290,22 +257,149 @@ NSString *const MX3PidAddManagerErrorDomain = @"org.matrix.sdk.MX3PidAddManagerE
 
 #pragma mark - Bind Phone Number
 
-- (MX3PidAddSession*)startBindPhoneNumberSessionWithPhoneNumber:(NSString*)phoneNumber
-                                                    countryCode:(nullable NSString*)countryCode
-                                                        success:(void (^)(void))success
-                                                        failure:(void (^)(NSError * _Nonnull))failure NS_REFINED_FOR_SWIFT
+- (MX3PidAddSession*)startIdentityServerPhoneNumberSessionWithPhoneNumber:(NSString*)phoneNumber
+                                                              countryCode:(nullable NSString*)countryCode
+                                                                     bind:(BOOL)bind
+                                                                  success:(void (^)(void))success
+                                                                  failure:(void (^)(NSError * _Nonnull))failure
 {
     MX3PidAddSession *threePidAddSession = [[MX3PidAddSession alloc] initWithMedium:kMX3PIDMediumMSISDN andAddress:phoneNumber];
+    threePidAddSession.bind = bind;
 
-    NSLog(@"[MX3PidAddManager] startBindPhoneNumberSessionWithPhoneNumber: threePid: %@", threePidAddSession);
+    NSLog(@"[MX3PidAddManager] startIdentityServerPhoneNumberSessionWithPhoneNumber (bind: %@): threePid: %@", @(bind), threePidAddSession);
 
+    [self startIdentityServer3PidSession:threePidAddSession success:success failure:failure];
+
+    return threePidAddSession;
+}
+
+- (void)finaliseIdentityServerPhoneNumberSession:(MX3PidAddSession*)threePidAddSession
+                                       withToken:(NSString*)token
+                                         success:(void (^)(void))success
+                                         failure:(void (^)(NSError * _Nonnull))failure
+{
+    NSLog(@"[MX3PidAddManager] finaliseIdentityServerPhoneNumberSession: threePid: %@", threePidAddSession);
+
+    NSParameterAssert([threePidAddSession.medium isEqualToString:kMX3PIDMediumMSISDN]);
+
+    if (threePidAddSession.httpOperation || !threePidAddSession.sid)
+    {
+        NSError *error = [NSError errorWithDomain:MX3PidAddManagerErrorDomain
+                                             code:MX3PidAddManagerErrorDomainErrorInvalidParameters
+                                         userInfo:nil];
+        failure(error);
+        return;
+    }
+
+    // TODO: this is for !doesServerSupportSeparateAddAndBind
+    MXWeakify(self);
+    threePidAddSession.httpOperation = [self submitValidationToken:token for3PidAddSession:threePidAddSession success:^{
+        MXStrongifyAndReturnIfNil(self);
+
+        MXHTTPOperation *operation = [self->mxSession.matrixRestClient add3PID:threePidAddSession.sid clientSecret:threePidAddSession.clientSecret bind:threePidAddSession.bind success:^{
+
+            NSLog(@"[MX3PidAddManager] finaliseIdentityServerPhoneNumberSession: DONE: threePid: %@", threePidAddSession);
+
+            threePidAddSession.httpOperation = nil;
+            success();
+
+        } failure:^(NSError *error) {
+            threePidAddSession.httpOperation = nil;
+            failure(error);
+        }];
+
+        if (operation)
+        {
+            [threePidAddSession.httpOperation mutateTo:operation];
+        }
+
+    } failure:^(NSError *error) {
+        threePidAddSession.httpOperation = nil;
+        failure(error);
+    }];
+}
+
+
+#pragma mark - Private methods -
+
+- (MXHTTPOperation *)checkIdentityServerRequirementForAdding3PidWithSuccess:(void (^)(void))success
+                                                                    failure:(void (^)(NSError * _Nonnull))failure
+{
+    MXWeakify(self);
+    return [mxSession.matrixRestClient supportedMatrixVersions:^(MXMatrixVersions *matrixVersions) {
+        MXStrongifyAndReturnIfNil(self);
+
+        NSLog(@"[MX3PidAddManager] checkIdentityServerRequirement: %@", matrixVersions.doesServerRequireIdentityServerParam ? @"YES": @"NO");
+
+        if (matrixVersions.doesServerRequireIdentityServerParam
+            && !self->mxSession.matrixRestClient.identityServer)
+        {
+            NSError *error = [NSError errorWithDomain:MX3PidAddManagerErrorDomain
+                                                 code:MX3PidAddManagerErrorDomainIdentityServerRequired
+                                             userInfo:nil];
+            failure(error);
+        }
+        else
+        {
+            success();
+        }
+
+    } failure:failure];
+}
+
+- (MXHTTPOperation *)doesServerSupportSeparateAddAndBind:(void (^)(bool doesServerSupportSeparateAddAndBind))success
+                                                 failure:(void (^)(NSError * _Nonnull))failure
+{
+    return [mxSession.matrixRestClient supportedMatrixVersions:^(MXMatrixVersions *matrixVersions) {
+
+        NSLog(@"[MX3PidAddManager] doesServerSupportSeparateAddAndBind: %@", matrixVersions.doesServerSupportSeparateAddAndBind ? @"YES": @"NO");
+        success(matrixVersions.doesServerSupportSeparateAddAndBind);
+
+    } failure:failure];
+}
+
+- (nullable MXHTTPOperation *)submitValidationToken:(NSString *)token
+                                  for3PidAddSession:(MX3PidAddSession*)threePidAddSession
+                                            success:(void (^)(void))success
+                                            failure:(void (^)(NSError * _Nonnull))failure
+{
+    MXHTTPOperation *operation;
+    if (mxSession.identityService)
+    {
+        operation = [mxSession.identityService submit3PIDValidationToken:token
+                                                                  medium:threePidAddSession.medium
+                                                            clientSecret:threePidAddSession.clientSecret
+                                                                     sid:threePidAddSession.sid
+                                                                 success:success
+                                                                 failure:failure];
+    }
+    else
+    {
+        NSLog(@"[MX3PidAddManager] submitValidationToken: ERROR: Failed to submit validation token for 3PID: %@, identity service is not set", threePidAddSession);
+
+        NSError *error = [NSError errorWithDomain:MX3PidAddManagerErrorDomain
+                                             code:MX3PidAddManagerErrorDomainIdentityServerRequired
+                                         userInfo:nil];
+        failure(error);
+    }
+
+    return operation;
+}
+
+
+#pragma mark - Bind to Identity Server
+
+- (void)startIdentityServer3PidSession:(MX3PidAddSession*)threePidAddSession
+                     success:(void (^)(void))success
+                     failure:(void (^)(NSError * _Nonnull))failure
+{
     if (!mxSession.identityService)
     {
         NSError *error = [NSError errorWithDomain:MX3PidAddManagerErrorDomain
                                              code:MX3PidAddManagerErrorDomainIdentityServerRequired
                                          userInfo:nil];
         failure(error);
-        return threePidAddSession;
+        return;
     }
 
     threePidAddSession.httpOperation = [self doesServerSupportSeparateAddAndBind:^(bool doesServerSupportSeparateAddAndBind) {
@@ -335,124 +429,7 @@ NSString *const MX3PidAddManagerErrorDomain = @"org.matrix.sdk.MX3PidAddManagerE
         threePidAddSession.httpOperation = nil;
         failure(error);
     }];
-
-    return threePidAddSession;
 }
-
-- (void)finaliseBindPhoneNumberSession:(MX3PidAddSession*)threePidAddSession
-                             withToken:(NSString*)token
-                               success:(void (^)(void))success
-                               failure:(void (^)(NSError * _Nonnull))failure NS_REFINED_FOR_SWIFT
-{
-    NSLog(@"[MX3PidAddManager] finaliseBindPhoneNumberSession: threePid: %@", threePidAddSession);
-
-    NSParameterAssert([threePidAddSession.medium isEqualToString:kMX3PIDMediumMSISDN]);
-
-    if (threePidAddSession.httpOperation || !threePidAddSession.sid)
-    {
-        NSError *error = [NSError errorWithDomain:MX3PidAddManagerErrorDomain
-                                             code:MX3PidAddManagerErrorDomainErrorInvalidParameters
-                                         userInfo:nil];
-        failure(error);
-        return;
-    }
-
-    // TODO: this is for !doesServerSupportSeparateAddAndBind
-    MXWeakify(self);
-    threePidAddSession.httpOperation = [self submitValidationToken:token for3PidAddSession:threePidAddSession success:^{
-        MXStrongifyAndReturnIfNil(self);
-
-        MXHTTPOperation *operation = [self->mxSession.matrixRestClient add3PID:threePidAddSession.sid clientSecret:threePidAddSession.clientSecret bind:YES success:^{
-
-            NSLog(@"[MX3PidAddManager] finaliseBindPhoneNumberSession: DONE: threePid: %@", threePidAddSession);
-
-            threePidAddSession.httpOperation = nil;
-            success();
-
-        } failure:^(NSError *error) {
-            threePidAddSession.httpOperation = nil;
-            failure(error);
-        }];
-
-        if (operation)
-        {
-            [threePidAddSession.httpOperation mutateTo:operation];
-        }
-
-    } failure:^(NSError *error) {
-        threePidAddSession.httpOperation = nil;
-        failure(error);
-    }];
-}
-
-#pragma mark - Private methods -
-
-- (MXHTTPOperation *)checkIdentityServerRequirementForAdding3PidWithSuccess:(void (^)(void))success
-                                                       failure:(void (^)(NSError * _Nonnull))failure
-{
-    MXWeakify(self);
-    return [mxSession.matrixRestClient supportedMatrixVersions:^(MXMatrixVersions *matrixVersions) {
-        MXStrongifyAndReturnIfNil(self);
-
-        NSLog(@"[MX3PidAddManager] checkIdentityServerRequirement: %@", matrixVersions.doesServerRequireIdentityServerParam ? @"YES": @"NO");
-
-        if (matrixVersions.doesServerRequireIdentityServerParam
-            && !self->mxSession.matrixRestClient.identityServer)
-        {
-            NSError *error = [NSError errorWithDomain:MX3PidAddManagerErrorDomain
-                                                 code:MX3PidAddManagerErrorDomainIdentityServerRequired
-                                             userInfo:nil];
-            failure(error);
-        }
-        else
-        {
-            success();
-        }
-
-    } failure:failure];
-}
-
-- (MXHTTPOperation *)doesServerSupportSeparateAddAndBind:(void (^)(bool doesServerSupportSeparateAddAndBind))success
-                                                                    failure:(void (^)(NSError * _Nonnull))failure
-{
-    return [mxSession.matrixRestClient supportedMatrixVersions:^(MXMatrixVersions *matrixVersions) {
-
-        NSLog(@"[MX3PidAddManager] doesServerSupportSeparateAddAndBind: %@", matrixVersions.doesServerSupportSeparateAddAndBind ? @"YES": @"NO");
-        success(matrixVersions.doesServerSupportSeparateAddAndBind);
-
-    } failure:failure];
-}
-
-- (nullable MXHTTPOperation *)submitValidationToken:(NSString *)token
-            for3PidAddSession:(MX3PidAddSession*)threePidAddSession
-                      success:(void (^)(void))success
-                      failure:(void (^)(NSError * _Nonnull))failure
-{
-    MXHTTPOperation *operation;
-    if (mxSession.identityService)
-    {
-        operation = [mxSession.identityService submit3PIDValidationToken:token
-                                                                  medium:threePidAddSession.medium
-                                                            clientSecret:threePidAddSession.clientSecret
-                                                                     sid:threePidAddSession.sid
-                                                                 success:success
-                                                                 failure:failure];
-    }
-    else
-    {
-        NSLog(@"[MX3PidAddManager] submitValidationToken: ERROR: Failed to submit validation token for 3PID: %@, identity service is not set", threePidAddSession);
-
-        NSError *error = [NSError errorWithDomain:MX3PidAddManagerErrorDomain
-                                             code:MX3PidAddManagerErrorDomainIdentityServerRequired
-                                         userInfo:nil];
-        failure(error);
-    }
-
-    return operation;
-}
-
-
-#pragma mark - Bind to Identity Server
 
 - (MXHTTPOperation *)startBind3PidSessionWithOldHomeserver:(MX3PidAddSession*)threePidAddSession
                                                    success:(void (^)(void))success

@@ -61,6 +61,11 @@ NS_ASSUME_NONNULL_BEGIN
  */
 @property (nonatomic) NSUInteger sendAttempt;
 
+/**
+ Flag indicating if the 3Pid must be add to the identity server.
+ */
+@property (nonatomic) BOOL bind;
+
 @end
 
 NS_ASSUME_NONNULL_END
