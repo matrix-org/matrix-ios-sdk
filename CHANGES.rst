@@ -4,6 +4,7 @@ Changes in Matrix iOS SDK in 0.13.2 (2019-08-)
 Improvements:
  * MXServiceTerms: A class to support MSC2140 (Terms of Service API) (vector-im/riot-ios#2600).
  * MXRestClient: Remove identity server URL fallback to homeserver one's when there is no identity server configured.
+ * MXRestClient: Add new APIs from MSC2290 (matrix-org/matrix-doc/pull/2290).
  * MXHTTPClient: Improve M_LIMIT_EXCEEDED error handling: Do not wait to try again if the mentioned delay is too long.
  * MXEventTimeline: The roomEventFilter property is now writable (vector-im/riot-ios#2615).
  * VoIP: Make call start if there is no STUN server.

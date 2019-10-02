@@ -1352,6 +1352,9 @@ public extension MXRestClient {
     
     /**
      Link an authenticated 3rd party id to the Matrix user.
+
+     This API is deprecated, and you should instead use `addThirdPartyIdentifierOnly`
+     for homeservers that support it.
      
      - parameters:
         - sid: the id provided during the 3PID validation session (MXRestClient.requestEmailValidation).
@@ -1364,6 +1367,27 @@ public extension MXRestClient {
      */
     @nonobjc @discardableResult func addThirdPartyIdentifier(_ sid: String, clientSecret: String, bind: Bool, completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation {
         return __add3PID(sid, clientSecret: clientSecret, bind: bind, success: currySuccess(completion), failure: curryFailure(completion))
+    }
+
+    /**
+     Add a 3PID to your homeserver account.
+
+     This API does not use an identity server, as the homeserver is expected to
+     handle 3PID ownership validation.
+
+     You can check whether a homeserver supports this API via
+     `doesServerSupportSeparateAddAndBind`.
+
+     - parameters:
+     - sid: the session id provided during the 3PID validation session.
+     - clientSecret: the same secret key used in the validation session.
+     - completion: A block object called when the operation completes.
+     - response:  Indicates whether the operation was successful.
+
+     - returns: a `MXHTTPOperation` instance.
+     */
+    @nonobjc @discardableResult func addThirdPartyIdentifierOnly(withSessionId sid: String, clientSecret: String, completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation {
+        return __add3PIDOnly(withSessionId: sid, clientSecret: clientSecret, success: currySuccess(completion), failure: curryFailure(completion))
     }
     
     /**
@@ -1393,7 +1417,44 @@ public extension MXRestClient {
     @nonobjc @discardableResult func thirdPartyIdentifiers(_ completion: @escaping (_ response: MXResponse<[MXThirdPartyIdentifier]?>) -> Void) -> MXHTTPOperation {
         return __threePIDs(currySuccess(completion), failure: curryFailure(completion))
     }
-    
+
+    /**
+     Bind a 3PID for discovery onto an identity server via the homeserver.
+
+     The identity server handles 3PID ownership validation and the homeserver records
+     the new binding to track where all 3PIDs for the account are bound.
+
+     You can check whether a homeserver supports this API via
+     `doesServerSupportSeparateAddAndBind`.
+
+     - parameters:
+     - sid: the session id provided during the 3PID validation session.
+     - clientSecret: the same secret key used in the validation session.
+     - completion: A block object called when the operation completes.
+     - response:  Indicates whether the operation was successful.
+
+     - returns: a `MXHTTPOperation` instance.
+     */
+    @nonobjc @discardableResult func bind3Pid(withSessionId sid: String, clientSecret: String, completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation {
+        return __bind3Pid(withSessionId: sid, clientSecret: clientSecret, success: currySuccess(completion), failure: curryFailure(completion))
+    }
+
+    /**
+     Unbind a 3PID for discovery on an identity server via the homeserver.
+
+     - parameters:
+     - address: the 3rd party id.
+     - medium: medium the type of the 3rd party id.
+     - completion: A block object called when the operation completes.
+     - response:  Indicates whether the operation was successful.
+
+     - returns: a `MXHTTPOperation` instance.
+     */
+    @nonobjc @discardableResult func unbind3Pid(withAddress address: String, medium: String, completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation {
+        return __unbind3Pid(withAddress: address, medium: medium, success: currySuccess(completion), failure: curryFailure(completion))
+    }
+
+
     
     // MARK: - Presence operations
     

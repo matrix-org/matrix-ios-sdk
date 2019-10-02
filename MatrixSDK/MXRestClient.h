@@ -1596,7 +1596,7 @@ typedef MXHTTPOperation* (^MXRestClientIdentityServerAccessTokenHandler)(void (^
                     failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 /**
- Add a 3PID to your homeserver account
+ Add a 3PID to your homeserver account.
 
  This API does not use an identity server, as the homeserver is expected to
  handle 3PID ownership validation.
