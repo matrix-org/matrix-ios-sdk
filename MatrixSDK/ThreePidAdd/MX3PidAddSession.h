@@ -42,6 +42,11 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, readonly) NSString *address;
 
 /**
+ The 3PID country code when applicable.
+ */
+@property (nonatomic, nullable) NSString *countryCode;
+
+/**
  The client secret key used during third party validation.
  */
 @property (nonatomic, readonly) NSString *clientSecret;
