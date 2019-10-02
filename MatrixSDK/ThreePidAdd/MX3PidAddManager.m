@@ -311,7 +311,7 @@ NSString *const MX3PidAddManagerErrorDomain = @"org.matrix.sdk.MX3PidAddManagerE
 
     if (doesServerSupportSeparateAddAndBind)
     {
-        [self tryFinaliseIdentityServer3PidSessionWithNewHomeserver:threePidAddSession withToken:nil success:success failure:failure];
+        [self tryFinaliseIdentityServer3PidSessionWithNewHomeserver:threePidAddSession withToken:token success:success failure:failure];
     }
     else
     {
