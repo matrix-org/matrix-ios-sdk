@@ -23,41 +23,45 @@ public extension MX3PidAddManager {
         self.init(__matrixSession: session)
     }
 
+    @nonobjc func cancel(session: MX3PidAddSession) {
+        __cancel3PidAddSession(session)
+    }
+
     // MARK: - Email
     @nonobjc @discardableResult func startAddEmailSession(_ email: String, nextLink: String?, completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MX3PidAddSession {
-        return __startAddEmailSession(withEmail: email, nextLink: nextLink, success: currySuccess(completion), failure: curryFailure(completion));
+        return __startAddEmailSession(withEmail: email, nextLink: nextLink, success: currySuccess(completion), failure: curryFailure(completion))
     }
     
     @nonobjc func tryFinaliseAddEmailSession(_ session: MX3PidAddSession, completion: @escaping (_ response: MXResponse<Void>) -> Void) -> Void {
-        return __tryFinaliseAddEmailSession(session, success: currySuccess(completion), failure: curryFailure(completion));
+        return __tryFinaliseAddEmailSession(session, success: currySuccess(completion), failure: curryFailure(completion))
     }
 
 
     // MARK: - Add MSISDN
     @nonobjc @discardableResult func startAddPhoneNumberSession(_ phoneNumber: String, countryCode: String?, completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MX3PidAddSession {
-        return __startAddPhoneNumberSession(withPhoneNumber: phoneNumber, countryCode: countryCode, success: currySuccess(completion), failure: curryFailure(completion));
+        return __startAddPhoneNumberSession(withPhoneNumber: phoneNumber, countryCode: countryCode, success: currySuccess(completion), failure: curryFailure(completion))
     }
 
     @nonobjc func finaliseAddPhoneNumberSession(_ session: MX3PidAddSession, token: String, completion: @escaping (_ response: MXResponse<Void>) -> Void) -> Void {
-        return __finaliseAddPhoneNumber(session, withToken: token, success: currySuccess(completion), failure: curryFailure(completion));
+        return __finaliseAddPhoneNumber(session, withToken: token, success: currySuccess(completion), failure: curryFailure(completion))
     }
 
 
     // MARK: - Bind Email
     @nonobjc @discardableResult func startBindEmailSession(_ email: String, completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MX3PidAddSession {
-        return __startBindEmailSession(withEmail: email, success: currySuccess(completion), failure: curryFailure(completion));
+        return __startBindEmailSession(withEmail: email, success: currySuccess(completion), failure: curryFailure(completion))
     }
 
     @nonobjc func tryFinaliseBindEmailSession(_ session: MX3PidAddSession, completion: @escaping (_ response: MXResponse<Void>) -> Void) -> Void {
-        return __tryFinaliseBindEmailSession(session, success: currySuccess(completion), failure: curryFailure(completion));
+        return __tryFinaliseBindEmailSession(session, success: currySuccess(completion), failure: curryFailure(completion))
     }
 
     // MARK: - Bind phone number
     @nonobjc @discardableResult func startBindPhoneNumberSession(_ phoneNumber: String, countryCode: String?, completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MX3PidAddSession {
-        return __startBindPhoneNumberSession(withPhoneNumber: phoneNumber, countryCode: countryCode, success: currySuccess(completion), failure: curryFailure(completion));
+        return __startBindPhoneNumberSession(withPhoneNumber: phoneNumber, countryCode: countryCode, success: currySuccess(completion), failure: curryFailure(completion))
     }
 
     @nonobjc func tryFinaliseBindPhoneNumberSession(_ session: MX3PidAddSession, token: String, completion: @escaping (_ response: MXResponse<Void>) -> Void) -> Void {
-        return __finaliseBindPhoneNumber(session, withToken: token, success: currySuccess(completion), failure: curryFailure(completion));
+        return __finaliseBindPhoneNumber(session, withToken: token, success: currySuccess(completion), failure: curryFailure(completion))
     }
 }

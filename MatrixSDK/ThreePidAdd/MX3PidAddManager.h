@@ -51,6 +51,14 @@ NS_ERROR_ENUM(MX3PidAddManagerErrorDomain)
 - (instancetype)initWithMatrixSession:(MXSession*)session NS_REFINED_FOR_SWIFT;
 
 
+/**
+ Cancel a session and its current operation.
+
+ @param threePidAddSession the session to cancel.
+ */
+- (void)cancel3PidAddSession:(MX3PidAddSession*)threePidAddSession NS_REFINED_FOR_SWIFT;
+
+
 #pragma mark - Add Email
 
 /**

@@ -40,6 +40,14 @@ NSString *const MX3PidAddManagerErrorDomain = @"org.matrix.sdk.MX3PidAddManagerE
     return self;
 }
 
+- (void)cancel3PidAddSession:(MX3PidAddSession*)threePidAddSession
+{
+    NSLog(@"[MX3PidAddManager] cancel3PidAddSession: threePid: %@", threePidAddSession);
+
+    [threePidAddSession.httpOperation cancel];
+    threePidAddSession.httpOperation = nil;
+}
+
 
 #pragma mark - Add Email
 
