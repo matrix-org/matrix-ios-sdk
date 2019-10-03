@@ -354,7 +354,7 @@ NSString *const MX3PidAddManagerErrorDomain = @"org.matrix.sdk.MX3PidAddManagerE
     } failure:failure];
 }
 
-- (MXHTTPOperation *)doesServerSupportSeparateAddAndBind:(void (^)(bool doesServerSupportSeparateAddAndBind))success
+- (MXHTTPOperation *)doesServerSupportSeparateAddAndBind:(void (^)(BOOL doesServerSupportSeparateAddAndBind))success
                                                  failure:(void (^)(NSError * _Nonnull))failure
 {
     __block MXHTTPOperation *operation;
@@ -466,7 +466,7 @@ NSString *const MX3PidAddManagerErrorDomain = @"org.matrix.sdk.MX3PidAddManagerE
 
                     threePidAddSession.httpOperation = nil;
 
-                    NSLog(@"[MX3PidAddManager] tryFinaliseIdentityServer3PidSessionWithNewHomeserver: DONE: threePid: %@", threePidAddSession);
+                    NSLog(@"[MX3PidAddManager] startIdentityServer3PidSession: DONE: threePid: %@", threePidAddSession);
                     success(NO);
 
                 } failure:^(NSError *error) {
