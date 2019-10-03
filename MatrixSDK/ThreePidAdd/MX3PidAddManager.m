@@ -110,6 +110,7 @@ NSString *const MX3PidAddManagerErrorDomain = @"org.matrix.sdk.MX3PidAddManagerE
 
     if (doesServerSupportSeparateAddAndBind)
     {
+        // https://gist.github.com/jryans/839a09bf0c5a70e2f36ed990d50ed928#2b-adding-a-3pid-to-hs-account-after-registration-post-msc2290
         threePidAddSession.httpOperation = [mxSession.matrixRestClient add3PIDOnlyWithSessionId:threePidAddSession.sid clientSecret:threePidAddSession.clientSecret success:^{
 
             NSLog(@"[MX3PidAddManager] tryFinaliseAddEmailSession: DONE: threePid: %@", threePidAddSession);
@@ -124,6 +125,7 @@ NSString *const MX3PidAddManagerErrorDomain = @"org.matrix.sdk.MX3PidAddManagerE
     }
     else
     {
+        // https://gist.github.com/jryans/839a09bf0c5a70e2f36ed990d50ed928#2a-adding-a-3pid-to-hs-account-after-registration-pre-msc2290
         threePidAddSession.httpOperation = [mxSession.matrixRestClient add3PID:threePidAddSession.sid clientSecret:threePidAddSession.clientSecret bind:NO success:^{
             threePidAddSession.httpOperation = nil;
 
@@ -205,6 +207,7 @@ NSString *const MX3PidAddManagerErrorDomain = @"org.matrix.sdk.MX3PidAddManagerE
         MXHTTPOperation *operation;
         if (self->doesServerSupportSeparateAddAndBind)
         {
+            // https://gist.github.com/jryans/839a09bf0c5a70e2f36ed990d50ed928#2b-adding-a-3pid-to-hs-account-after-registration-post-msc2290
             operation = [self->mxSession.matrixRestClient add3PIDOnlyWithSessionId:threePidAddSession.sid clientSecret:threePidAddSession.clientSecret success:^{
 
                 NSLog(@"[MX3PidAddManager] finaliseAddPhoneNumberSession: DONE: threePid: %@", threePidAddSession);
@@ -219,6 +222,7 @@ NSString *const MX3PidAddManagerErrorDomain = @"org.matrix.sdk.MX3PidAddManagerE
         }
         else
         {
+            // https://gist.github.com/jryans/839a09bf0c5a70e2f36ed990d50ed928#2a-adding-a-3pid-to-hs-account-after-registration-pre-msc2290
             operation = [self->mxSession.matrixRestClient add3PID:threePidAddSession.sid clientSecret:threePidAddSession.clientSecret bind:NO success:^{
 
                 NSLog(@"[MX3PidAddManager] finaliseAddPhoneNumberSession: DONE: threePid: %@", threePidAddSession);
@@ -406,6 +410,7 @@ NSString *const MX3PidAddManagerErrorDomain = @"org.matrix.sdk.MX3PidAddManagerE
 
 #pragma mark - Bind to Identity Server -
 
+// https://gist.github.com/jryans/839a09bf0c5a70e2f36ed990d50ed928#3b-changing-the-bind-status-of-a-3pid-post-msc2290
 - (void)startIdentityServer3PidSession:(MX3PidAddSession*)threePidAddSession
                      success:(void (^)(BOOL needValidation))success
                      failure:(void (^)(NSError * _Nonnull))failure
@@ -581,6 +586,7 @@ NSString *const MX3PidAddManagerErrorDomain = @"org.matrix.sdk.MX3PidAddManagerE
 #pragma mark - Legacy implementation
 // TODO: To remove once these are abandonned
 
+// https://gist.github.com/jryans/839a09bf0c5a70e2f36ed990d50ed928#3a-changing-the-bind-status-of-a-3pid-pre-msc2290
 - (MXHTTPOperation *)startBind3PidSessionWithOldHomeserver:(MX3PidAddSession*)threePidAddSession
                                                    success:(void (^)(void))success
                                                    failure:(void (^)(NSError * _Nonnull))failure
