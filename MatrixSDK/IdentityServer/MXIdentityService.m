@@ -254,7 +254,17 @@ NSString *const MXIdentityServiceNotificationAccessTokenKey = @"accessToken";
                                failure:(void (^)(NSError *error))failure
 {
     return [self checkAPIVersionAvailabilityAndPerformOperationOnSuccess:^MXHTTPOperation* {
-        return [self.restClient accountWithSuccess:success failure:failure];
+        if (self.restClient.preferredAPIPathPrefix == kMXIdentityAPIPrefixPathV2)
+        {
+            return [self.restClient accountWithSuccess:success failure:failure];
+        }
+        else
+        {
+            // There is no account in v1
+            success(nil);
+            return nil;
+        }
+
     } failure:failure];
 }
 
