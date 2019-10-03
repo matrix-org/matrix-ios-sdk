@@ -357,7 +357,7 @@ NSString *const MX3PidAddManagerErrorDomain = @"org.matrix.sdk.MX3PidAddManagerE
 - (MXHTTPOperation *)doesServerSupportSeparateAddAndBind:(void (^)(bool doesServerSupportSeparateAddAndBind))success
                                                  failure:(void (^)(NSError * _Nonnull))failure
 {
-    MXHTTPOperation *operation;
+    __block MXHTTPOperation *operation;
     if (doesServerSupportSeparateAddAndBind)
     {
         success(doesServerSupportSeparateAddAndBind);
@@ -366,12 +366,30 @@ NSString *const MX3PidAddManagerErrorDomain = @"org.matrix.sdk.MX3PidAddManagerE
     else
     {
         MXWeakify(self);
-        operation = [mxSession.matrixRestClient supportedMatrixVersions:^(MXMatrixVersions *matrixVersions) {
+        operation = [mxSession.identityService accessTokenWithSuccess:^(NSString * _Nullable accessToken) {
             MXStrongifyAndReturnIfNil(self);
 
-            NSLog(@"[MX3PidAddManager] doesServerSupportSeparateAddAndBind: %@", matrixVersions.doesServerSupportSeparateAddAndBind ? @"YES": @"NO");
-            self->doesServerSupportSeparateAddAndBind = matrixVersions.doesServerSupportSeparateAddAndBind;
-            success(self->doesServerSupportSeparateAddAndBind);
+            if (accessToken)
+            {
+                MXHTTPOperation *operation2 = [self->mxSession.matrixRestClient supportedMatrixVersions:^(MXMatrixVersions *matrixVersions) {
+
+                    NSLog(@"[MX3PidAddManager] doesServerSupportSeparateAddAndBind: %@", matrixVersions.doesServerSupportSeparateAddAndBind ? @"YES": @"NO");
+                    self->doesServerSupportSeparateAddAndBind = matrixVersions.doesServerSupportSeparateAddAndBind;
+                    success(self->doesServerSupportSeparateAddAndBind);
+
+                } failure:failure];
+
+                if (operation2)
+                {
+                    [operation mutateTo:operation2];
+                }
+            }
+            else
+            {
+                // If the IS does not support v2, use legacy APIs
+                NSLog(@"[MX3PidAddManager] doesServerSupportSeparateAddAndBind: NO because v1 identity server");
+                success(NO);
+            }
 
         } failure:failure];
     }
