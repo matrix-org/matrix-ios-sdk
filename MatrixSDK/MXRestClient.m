@@ -2988,6 +2988,32 @@ MXAuthAction;
                                  }];
 }
 
+- (MXHTTPOperation*)add3PIDOnlyWithSessionId:(NSString*)sid
+                                clientSecret:(NSString*)clientSecret
+                                     success:(void (^)(void))success
+                                     failure:(void (^)(NSError *error))failure
+{
+    NSString *path = [NSString stringWithFormat:@"%@/account/3pid/add", kMXAPIPrefixPathUnstable];
+
+    NSDictionary *parameters = @{
+                                 @"sid": sid,
+                                 @"client_secret": clientSecret
+                                 };
+
+    MXWeakify(self);
+    return [httpClient requestWithMethod:@"POST"
+                                    path:path
+                              parameters:parameters
+                                 success:^(NSDictionary *JSONResponse) {
+                                     MXStrongifyAndReturnIfNil(self);
+                                     [self dispatchSuccess:success];
+                                 }
+                                 failure:^(NSError *error) {
+                                     MXStrongifyAndReturnIfNil(self);
+                                     [self dispatchFailure:error inBlock:failure];
+                                 }];
+}
+
 - (MXHTTPOperation*)remove3PID:(NSString*)address
                         medium:(NSString*)medium
                        success:(void (^)(void))success
@@ -3032,6 +3058,103 @@ MXAuthAction;
                                          } andCompletion:^{
                                              success(threePIDs);
                                          }];
+                                     }
+                                 }
+                                 failure:^(NSError *error) {
+                                     MXStrongifyAndReturnIfNil(self);
+                                     [self dispatchFailure:error inBlock:failure];
+                                 }];
+}
+
+- (MXHTTPOperation*)bind3PidWithSessionId:(NSString*)sid
+                             clientSecret:(NSString*)clientSecret
+                                  success:(void (^)(void))success
+                                  failure:(void (^)(NSError *error))failure
+{
+    NSString *path = [NSString stringWithFormat:@"%@/account/3pid/bind", kMXAPIPrefixPathUnstable];
+
+    if (!self.identityServer)
+    {
+        NSLog(@"[MXRestClient] bind3PidWithSessionId: Error: Missing identityServer");
+        NSError *error = [NSError errorWithDomain:kMXRestClientErrorDomain code:MXRestClientErrorMissingIdentityServer userInfo:nil];
+        [self dispatchFailure:error inBlock:failure];
+        return nil;
+    }
+
+    NSURL *identityServerURL = [NSURL URLWithString:self.credentials.identityServer];
+    NSDictionary *parameters = @{
+                                 @"id_server": identityServerURL.host,
+                                 @"sid": sid,
+                                 @"client_secret": clientSecret
+                                 };
+
+    MXWeakify(self);
+    __block MXHTTPOperation *operation;
+    operation = [self addIdentityAccessTokenToParameters:parameters success:^(NSDictionary *updatedParameters) {
+        MXStrongifyAndReturnIfNil(self);
+
+        MXHTTPOperation *operation2 = [self->httpClient requestWithMethod:@"POST"
+                                                               path:path
+                                                         parameters:updatedParameters
+                                                            success:^(NSDictionary *JSONResponse) {
+                                                                MXStrongifyAndReturnIfNil(self);
+
+                                                                if (success)
+                                                                {
+                                                                    [self dispatchProcessing:nil
+                                                                               andCompletion:success];
+                                                                }
+                                                            }
+                                                            failure:^(NSError *error) {
+                                                                MXStrongifyAndReturnIfNil(self);
+                                                                [self dispatchFailure:error inBlock:failure];
+                                                            }];
+        if (operation2)
+        {
+            [operation mutateTo:operation2];
+        }
+
+    } failure:^(NSError *error) {
+        MXStrongifyAndReturnIfNil(self);
+        [self dispatchFailure:error inBlock:failure];
+    }];
+
+    return operation;
+}
+
+- (MXHTTPOperation*)unbind3PidWithAddress:(NSString*)address
+                                   medium:(NSString*)medium
+                                  success:(void (^)(void))success
+                                  failure:(void (^)(NSError *error))failure
+{
+    NSString *path = [NSString stringWithFormat:@"%@/account/3pid/unbind", kMXAPIPrefixPathUnstable];
+
+    if (!self.identityServer)
+    {
+        NSLog(@"[MXRestClient] add3PID: Error: Missing identityServer");
+        NSError *error = [NSError errorWithDomain:kMXRestClientErrorDomain code:MXRestClientErrorMissingIdentityServer userInfo:nil];
+        [self dispatchFailure:error inBlock:failure];
+        return nil;
+    }
+
+    NSURL *identityServerURL = [NSURL URLWithString:self.credentials.identityServer];
+    NSDictionary *parameters = @{
+                                 @"id_server": identityServerURL.host,
+                                 @"medium": medium,
+                                 @"address": address
+                                 };
+
+    MXWeakify(self);
+    return [httpClient requestWithMethod:@"POST"
+                                    path:path
+                              parameters:parameters
+                                 success:^(NSDictionary *JSONResponse) {
+                                     MXStrongifyAndReturnIfNil(self);
+
+                                     if (success)
+                                     {
+                                         [self dispatchProcessing:nil
+                                                    andCompletion:success];
                                      }
                                  }
                                  failure:^(NSError *error) {
