@@ -30,4 +30,9 @@
     return self;
 }
 
+- (NSString *)description
+{
+    return [NSString stringWithFormat:@"<MXOlmSessionResult> %@: %@", _device.deviceId, _sessionId];
+}
+
 @end

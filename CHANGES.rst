@@ -1,4 +1,4 @@
-Changes in Matrix iOS SDK in 0.13.2 (2019-08-)
+Changes in Matrix iOS SDK in 0.14.0 (2019-10-)
 ===============================================
 
 Improvements:
@@ -20,9 +20,11 @@ Improvements:
  * Privacy: Lowercase emails during IS lookup calls (vector-im/riot-ios#2696).
  * Privacy: MXRestClient: Use `id_access_token` in CS API when required (vector-im/riot-ios#2704).
 
-
 API break:
  * MXRestClient: Remove identity server requests. Now MXIdentityService is used to perform identity server requests.
+ 
+Bug Fix:
+ * Send kMXSessionCryptoDidCorruptDataNotification from the main thread.
 
 Changes in Matrix iOS SDK in 0.13.1 (2019-08-08)
 ===============================================

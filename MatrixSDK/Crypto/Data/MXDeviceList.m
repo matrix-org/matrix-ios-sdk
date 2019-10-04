@@ -346,6 +346,8 @@
         }
     }
 
+    NSLog(@"[MXDeviceList] devicesForUsers: %@", usersDevicesInfoMap);
+
     return usersDevicesInfoMap;
 }
 

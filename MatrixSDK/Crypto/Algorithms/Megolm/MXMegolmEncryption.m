@@ -222,6 +222,7 @@
                     || (deviceInfo.verified != MXDeviceVerified && encryptToVerifiedDevicesOnly))
                 {
                     // Remove any blocked devices
+                    NSLog(@"[MXMegolmEncryption] getDevicesInRoom: blocked device: %@", deviceInfo);
                     continue;
                 }
 
