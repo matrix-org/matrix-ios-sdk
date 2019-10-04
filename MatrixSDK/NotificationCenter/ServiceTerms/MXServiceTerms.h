@@ -67,6 +67,19 @@ NS_ASSUME_NONNULL_BEGIN
                   failure:(nullable void (^)(NSError * _Nonnull))failure;
 
 /**
+ Check if all terms of the service are aggreed.
+ 
+ @param success A block object called when the operation succeeds with a progress
+                object indicating how many terms have been already accepted out of
+                all terms to accept.
+ @param failure A block object called when the operation fails.
+ 
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)areAllTermsAgreed:(void (^)(NSProgress *agreedTermsProgress))success
+                              failure:(nullable void (^)(NSError * _Nonnull))failure;
+
+/**
  Accept terms by their urls.
 
  @param termsUrls urls of the terms documents.

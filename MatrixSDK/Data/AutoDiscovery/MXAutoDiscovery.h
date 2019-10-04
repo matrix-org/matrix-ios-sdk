@@ -26,6 +26,14 @@ NS_ASSUME_NONNULL_BEGIN
 /**
  Create a `MXAutoDiscovery` instance.
 
+ @param url the homeserver url (ex: "https://matrix.org").
+ @return a `MXAutoDiscovery` instance.
+ */
+- (nullable instancetype)initWithUrl:(NSString *)url;
+
+/**
+ Create a `MXAutoDiscovery` instance.
+
  @param domain  homeserver domain (ex: "matrix.org" from userId "@user:matrix.org").
  @return a `MXAutoDiscovery` instance.
  */

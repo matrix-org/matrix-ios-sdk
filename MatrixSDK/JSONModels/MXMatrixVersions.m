@@ -16,8 +16,21 @@
 
 #import "MXMatrixVersions.h"
 
+const struct MXMatrixClientServerAPIVersionStruct MXMatrixClientServerAPIVersion = {
+    .r0_0_1 = @"r0.0.1",
+    .r0_1_0 = @"r0.1.0",
+    .r0_2_0 = @"r0.2.0",
+    .r0_3_0 = @"r0.3.0",
+    .r0_4_0 = @"r0.4.0",
+    .r0_5_0 = @"r0.5.0",
+    .r0_6_0 = @"r0.6.0",
+};
+
 const struct MXMatrixVersionsFeatureStruct MXMatrixVersionsFeature = {
-    .lazyLoadMembers = @"m.lazy_load_members"
+    .lazyLoadMembers = @"m.lazy_load_members",
+    .requireIdentityServer = @"m.require_identity_server",
+    .idAccessToken = @"m.id_access_token",
+    .separateAddAndBind = @"m.separate_add_and_bind"
 };
 
 @implementation MXMatrixVersions
@@ -35,7 +48,37 @@ const struct MXMatrixVersionsFeatureStruct MXMatrixVersionsFeature = {
 
 - (BOOL)supportLazyLoadMembers
 {
-    return [self.unstableFeatures[MXMatrixVersionsFeature.lazyLoadMembers] boolValue];
+    return [self.versions containsObject:MXMatrixClientServerAPIVersion.r0_5_0]
+        || [self.unstableFeatures[MXMatrixVersionsFeature.lazyLoadMembers] boolValue];
+}
+
+- (BOOL)doesServerRequireIdentityServerParam
+{
+    // YES by default
+    BOOL doesServerRequireIdentityServerParam = YES;
+
+    if ([self.versions containsObject:MXMatrixClientServerAPIVersion.r0_6_0])
+    {
+        doesServerRequireIdentityServerParam = NO;
+    }
+    else if (self.unstableFeatures[MXMatrixVersionsFeature.requireIdentityServer])
+    {
+        doesServerRequireIdentityServerParam = [self.unstableFeatures[MXMatrixVersionsFeature.requireIdentityServer] boolValue];
+    }
+
+    return doesServerRequireIdentityServerParam;
+}
+
+- (BOOL)doesServerAcceptIdentityAccessToken
+{
+    return  [self.versions containsObject:MXMatrixClientServerAPIVersion.r0_6_0]
+        || [self.unstableFeatures[MXMatrixVersionsFeature.idAccessToken] boolValue];
+}
+
+- (BOOL)doesServerSupportSeparateAddAndBind
+{
+    return  [self.versions containsObject:MXMatrixClientServerAPIVersion.r0_6_0]
+        || [self.unstableFeatures[MXMatrixVersionsFeature.separateAddAndBind] boolValue];
 }
 
 @end

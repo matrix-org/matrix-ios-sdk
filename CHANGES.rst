@@ -1,11 +1,27 @@
-Changes in Matrix iOS SDK in 0.13.2 (2019-08-)
+Changes in Matrix iOS SDK in 0.14.0 (2019-10-)
 ===============================================
 
 Improvements:
  * MXServiceTerms: A class to support MSC2140 (Terms of Service API) (vector-im/riot-ios#2600).
- * MXRestClient: Remove Identity Server URL fallback to homeserver one's when there is no Identity Server configured.
+ * MXRestClient: Remove identity server URL fallback to homeserver one's when there is no identity server configured.
+ * MXRestClient: Add new APIs from MSC2290 (matrix-org/matrix-doc/pull/2290).
  * MXHTTPClient: Improve M_LIMIT_EXCEEDED error handling: Do not wait to try again if the mentioned delay is too long.
  * MXEventTimeline: The roomEventFilter property is now writable (vector-im/riot-ios#2615).
+ * VoIP: Make call start if there is no STUN server.
+ * MXMatrixVersions: Add doesServerRequireIdentityServerParam and doesServerAcceptIdentityAccessToken properties.
+ * MXMatrixVersions: Support r0.6.0. Add doesServerSupportSeparateAddAndBind (vector-im/riot-ios#2718).
+ * Create MXIdentityServerRestClient and MXIdentityService to manage identity server requests (vector-im/riot-ios#2647).
+ * MXIdentityService: Support identity server v2 API. Handle identity server v2 API authentification and use the hashed v2 lookup API for 3PIDs (vector-im/riot-ios#2603 and /vector-im/riot-ios#2652).
+ * MXHTTPClient: Add access token renewal plus request retry mechanism.
+ * MXHTTPClient: Do not retry requests if the host is not valid.
+ * MXAutoDiscovery: Add initWithUrl contructor.
+ * MX3PidAddManager: New class to handle add 3pids to HS and to bind to IS.
+ * Privacy: Store Identity Server in Account Data ([MSC2230](https://github.com/matrix-org/matrix-doc/pull/2230))(vector-im/riot-ios#2665).
+ * Privacy: Lowercase emails during IS lookup calls (vector-im/riot-ios#2696).
+ * Privacy: MXRestClient: Use `id_access_token` in CS API when required (vector-im/riot-ios#2704).
+
+API break:
+ * MXRestClient: Remove identity server requests. Now MXIdentityService is used to perform identity server requests.
  
 Bug Fix:
  * Send kMXSessionCryptoDidCorruptDataNotification from the main thread.

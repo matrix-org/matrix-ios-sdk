@@ -18,6 +18,7 @@
 #import "MXServiceTermsRestClient.h"
 
 #import "MXRestClient.h"
+#import "MXIdentityServerRestClient.h"
 #import "MXTools.h"
 
 
@@ -48,7 +49,7 @@ NSString *const MXServiceTermsErrorDomain = @"org.matrix.sdk.MXServiceTermsError
         _mxSession = mxSession;
         _accessToken = [accessToken copy];
 
-        _restClient = [[MXServiceTermsRestClient alloc] initWithBaseUrl:self.termsBaseUrl accessToken:@"bobo"];//accessToken];
+        _restClient = [[MXServiceTermsRestClient alloc] initWithBaseUrl:self.termsBaseUrl accessToken:accessToken];
     }
     return self;
 }
@@ -59,6 +60,41 @@ NSString *const MXServiceTermsErrorDomain = @"org.matrix.sdk.MXServiceTermsError
     return [_restClient terms:^(MXLoginTerms * _Nullable terms) {
         success(terms, self.acceptedTerms);
     } failure:failure];
+}
+
+- (MXHTTPOperation*)areAllTermsAgreed:(void (^)(NSProgress *agreedTermsProgress))success
+                              failure:(nullable void (^)(NSError * _Nonnull))failure
+{
+    return [_restClient terms:^(MXLoginTerms * _Nullable terms) {
+        
+        NSProgress *agreedTermsProgress = [NSProgress progressWithTotalUnitCount:terms.policies.count];
+
+        [terms.policies enumerateKeysAndObjectsUsingBlock:^(NSString * _Nonnull policyKey, MXLoginPolicy * _Nonnull loginPolicy, BOOL * _Nonnull stopLoginPolicy) {
+            
+            [loginPolicy.data enumerateKeysAndObjectsUsingBlock:^(NSString * _Nonnull policyDataKey, MXLoginPolicyData * _Nonnull policyData, BOOL * _Nonnull stopPolicyData) {
+
+                if ([self.acceptedTerms containsObject:policyData.url])
+                {
+                    agreedTermsProgress.completedUnitCount++;
+                    *stopPolicyData = YES;
+                }
+            }];
+        }];
+        
+        success(agreedTermsProgress);
+        
+    } failure:^(NSError * _Nonnull error) {
+        NSHTTPURLResponse *urlResponse = [MXHTTPOperation urlResponseFromError:error];
+        if (urlResponse.statusCode == 404)
+        {
+            NSLog(@"[MXServiceTerms] areAllTermsAgreed: No terms (404).");
+            success([NSProgress new]);
+            return;
+        }
+        
+        NSLog(@"[MXServiceTerms] areAllTermsAgreed: Error");
+        failure(error);
+    }];
 }
 
 - (MXHTTPOperation *)agreeToTerms:(NSArray<NSString *> *)termsUrls

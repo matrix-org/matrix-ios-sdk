@@ -1,6 +1,7 @@
 /*
  Copyright 2015 OpenMarket Ltd
  Copyright 2018 New Vector Ltd
+ Copyright 2019 The Matrix.org Foundation C.I.C
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -135,7 +136,10 @@ NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
         }
         else
         {
-            NSLog(@"[MXCall] No TURN server and no fallback TURN server");
+            NSLog(@"[MXCall] No TURN server and no fallback STUN server");
+
+            // Setup the call with no STUN server
+            [callStackCall addTURNServerUris:nil withUsername:nil password:nil];
         }
     }
     return self;

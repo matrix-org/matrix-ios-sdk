@@ -35,6 +35,8 @@
 #import "MXError.h"
 #import "MXScanManager.h"
 #import "MXAggregations.h"
+#import "MXIdentityService.h"
+#import "MX3PidAddManager.h"
 
 /**
  `MXSessionState` represents the states in the life cycle of a MXSession instance.
@@ -219,6 +221,13 @@ FOUNDATION_EXPORT NSString *const kMXSessionDirectRoomsDidChangeNotification;
 FOUNDATION_EXPORT NSString *const kMXSessionAccountDataDidChangeNotification;
 
 /**
+ Posted when the identity server in the user account data has changed.
+
+ The notification object is the concerned session (MXSession instance).
+ */
+FOUNDATION_EXPORT NSString *const kMXSessionAccountDataDidChangeIdentityServerNotification;
+
+/**
  Posted when MXSession data have been corrupted. The listener must reload the session data with a full server sync.
  
  The notification object is the concerned session (MXSession instance).
@@ -356,6 +365,16 @@ FOUNDATION_EXPORT NSString *const kMXSessionNoRoomTag;
  The matrix REST Client used to make Matrix API requests.
  */
 @property (nonatomic, readonly) MXRestClient *matrixRestClient;
+
+/**
+ The identity service used to handle Matrix identity server requests. Can be nil.
+ */
+@property (nonatomic, readonly) MXIdentityService *identityService;
+
+/**
+ The module that manages add of third party identifiers.
+ */
+@property (nonatomic, readonly)  MX3PidAddManager *threePidAddManager;
 
 /**
  The media manager used to handle the media stored on the Matrix Content repository.
@@ -623,6 +642,16 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
  */
 - (void)setStore:(id<MXStore>)store success:(void (^)(void))onStoreDataReady
          failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
+
+/**
+ Set a new identity server.
+
+ The method updates underlaying services.
+
+ @param identityServer the new identityServer. Nil for no IS
+ @param accessToken the access token of the IS. Can be nil.
+ */
+- (void)setIdentityServer:(NSString*)identityServer andAccessToken:(NSString*)accessToken;
 
 /**
  An array of event types for which read receipts are sent.
@@ -1289,6 +1318,37 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
                            forType:(NSString*)type
                            success:(void (^)(void))success
                            failure:(void (^)(NSError *error))failure;
+
+/**
+ Set the identity server in the user's account data.
+
+ `kMXSessionAccountDataDidChangeIdentityServerNotification` will be sent once the
+ user's account data is updated with the new value.
+
+ @param identityServer the base url of the identity server (ex: "https://vector.im"). Nil to indicate no IS.
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)setAccountDataIdentityServer:(NSString*)identityServer
+                                         success:(void (^)(void))success
+                                         failure:(void (^)(NSError *error))failure;
+/**
+ Indicate if an IS is set in the user's account data.
+
+ @return YES if YES.
+ */
+- (BOOL)hasAccountDataIdentityServer;
+
+/**
+ The IS set in the user's account data.
+
+ @return the identity server. Nil means either the user have not set yet a IS
+         or they do not want to use an IS. Use [self hasAccountDataIdentityServer]
+         to differentiate the 2 options.
+ */
+- (NSString*)accountDataIdentityServer;
 
 
 #pragma mark - Matrix filters
