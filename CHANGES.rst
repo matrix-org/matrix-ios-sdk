@@ -19,9 +19,11 @@ Improvements:
  * Privacy: Store Identity Server in Account Data ([MSC2230](https://github.com/matrix-org/matrix-doc/pull/2230))(vector-im/riot-ios#2665).
  * Privacy: Lowercase emails during IS lookup calls (vector-im/riot-ios#2696).
  * Privacy: MXRestClient: Use `id_access_token` in CS API when required (vector-im/riot-ios#2704).
+ * Privacy: Sending Third-Party Request Tokens via the Homeserver ([MSC2078](https://github.com/matrix-org/matrix-doc/pull/2078)).
 
 API break:
  * MXRestClient: Remove identity server requests. Now MXIdentityService is used to perform identity server requests.
+ * MXRestClient: requestTokenForPhoneNumber returns an additional optional parameter (`submitUrl`).
  
 Bug Fix:
  * Send kMXSessionCryptoDidCorruptDataNotification from the main thread.

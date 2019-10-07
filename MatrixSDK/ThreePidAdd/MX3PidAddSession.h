@@ -71,6 +71,12 @@ NS_ASSUME_NONNULL_BEGIN
  */
 @property (nonatomic) BOOL bind;
 
+/**
+ The url where the validation token should be sent.
+ @see [self submitMsisdnTokenOtherUrl:] for more details.
+ */
+@property (nonatomic, nullable) NSString *submitUrl;
+
 @end
 
 NS_ASSUME_NONNULL_END

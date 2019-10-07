@@ -943,7 +943,7 @@ MXAuthAction;
                                   clientSecret:(NSString*)clientSecret
                                    sendAttempt:(NSUInteger)sendAttempt
                                       nextLink:(NSString *)nextLink
-                                       success:(void (^)(NSString *sid, NSString *msisdn))success
+                                       success:(void (^)(NSString *sid, NSString *msisdn, NSString *submitUrl))success
                                        failure:(void (^)(NSError *error))failure
 {
     NSMutableDictionary *parameters = [NSMutableDictionary dictionaryWithDictionary:@{
@@ -973,12 +973,13 @@ MXAuthAction;
 
         if (success)
         {
-            __block NSString *sid, *msisdn;
+            __block NSString *sid, *msisdn, *submitUrl;
             [self dispatchProcessing:^{
                 MXJSONModelSetString(sid, JSONResponse[@"sid"]);
                 MXJSONModelSetString(msisdn, JSONResponse[@"msisdn"]);
+                MXJSONModelSetString(submitUrl, JSONResponse[@"submit_url"]);
             } andCompletion:^{
-                success(sid, msisdn);
+                success(sid, msisdn, submitUrl);
             }];
         }
     } failure:failure];
