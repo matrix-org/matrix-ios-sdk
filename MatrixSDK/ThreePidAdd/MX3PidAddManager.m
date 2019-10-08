@@ -155,13 +155,14 @@ NSString *const MX3PidAddManagerErrorDomain = @"org.matrix.sdk.MX3PidAddManagerE
 
     threePidAddSession.httpOperation = [self checkIdentityServerRequirementForAdding3PidWithSuccess:^{
 
-        MXHTTPOperation *operation = [self->mxSession.matrixRestClient requestTokenForPhoneNumber:phoneNumber isDuringRegistration:NO countryCode:countryCode clientSecret:threePidAddSession.clientSecret sendAttempt:threePidAddSession.sendAttempt++ nextLink:nil success:^(NSString *sid, NSString *msisdn) {
+        MXHTTPOperation *operation = [self->mxSession.matrixRestClient requestTokenForPhoneNumber:phoneNumber isDuringRegistration:NO countryCode:countryCode clientSecret:threePidAddSession.clientSecret sendAttempt:threePidAddSession.sendAttempt++ nextLink:nil success:^(NSString *sid, NSString *msisdn, NSString *submitUrl) {
 
             NSLog(@"[MX3PidAddManager] startAddPhoneNumberSessionWithPhoneNumber: DONE: threePid: %@", threePidAddSession);
 
             threePidAddSession.httpOperation = nil;
 
             threePidAddSession.sid = sid;
+            threePidAddSession.submitUrl = submitUrl;
             success();
 
         } failure:^(NSError *error) {
@@ -402,8 +403,21 @@ NSString *const MX3PidAddManagerErrorDomain = @"org.matrix.sdk.MX3PidAddManagerE
                                             success:(void (^)(void))success
                                             failure:(void (^)(NSError * _Nonnull))failure
 {
+    NSLog(@"[MX3PidAddManager] submitValidationToken: for3PidAddSession: %@", threePidAddSession);
+
     MXHTTPOperation *operation;
-    if (mxSession.identityService)
+    if ([threePidAddSession.medium isEqualToString:kMX3PIDMediumMSISDN]
+        && threePidAddSession.submitUrl)
+    {
+        operation = [self submitMsisdnTokenOtherUrl:threePidAddSession.submitUrl
+                                              token:token
+                                             medium:threePidAddSession.medium
+                                       clientSecret:threePidAddSession.clientSecret
+                                                sid:threePidAddSession.sid
+                                            success:success
+                                            failure:failure];
+    }
+    else if (mxSession.identityService)
     {
         operation = [mxSession.identityService submit3PIDValidationToken:token
                                                                   medium:threePidAddSession.medium
@@ -423,6 +437,50 @@ NSString *const MX3PidAddManagerErrorDomain = @"org.matrix.sdk.MX3PidAddManagerE
     }
 
     return operation;
+}
+
+/**
+ Submits a MSISDN token to an arbitrary URL.
+
+ This is used when submitting the code sent by SMS to a phone number in the
+ newer 3PID flow where the homeserver validates 3PID ownership (as part of
+ `[MXRestClient requestTokenForPhoneNumber:]`). The homeserver response may
+ include a `submit_url` to specify where the token should be sent, and this
+ helper can be used to pass the token to this URL.
+
+ @param url the URL to post data to.
+ @param token the validation token.
+ @param medium the type of the third-party id (see kMX3PIDMediumEmail, kMX3PIDMediumMSISDN).
+ @param clientSecret the clientSecret used during the validation request.
+ @param sid the validation session id returned by the server.
+
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+ */
+- (MXHTTPOperation *)submitMsisdnTokenOtherUrl:(NSString *)url
+                                         token:(NSString*)token
+                                        medium:(NSString *)medium
+                                  clientSecret:(NSString *)clientSecret
+                                           sid:(NSString *)sid
+                                       success:(void (^)(void))success
+                                       failure:(void (^)(NSError *))failure
+{
+    NSLog(@"[MX3PidAddManager] submitMsisdnTokenOtherUrl: %@", url);
+
+    NSDictionary *parameters = @{
+                                 @"sid": sid,
+                                 @"client_secret": clientSecret,
+                                 @"token": token
+                                 };
+
+   MXHTTPClient *httpClient = [[MXHTTPClient alloc] initWithBaseURL:nil andOnUnrecognizedCertificateBlock:nil];
+   return [httpClient requestWithMethod:@"POST"
+                                    path:url
+                              parameters:parameters
+                                 success:^(NSDictionary *JSONResponse) {
+                                     success();
+                                 }
+                                 failure:failure];
 }
 
 
@@ -633,7 +691,7 @@ NSString *const MX3PidAddManagerErrorDomain = @"org.matrix.sdk.MX3PidAddManagerE
         }
         else
         {
-            operation2 = [self->mxSession.matrixRestClient requestTokenForPhoneNumber:threePidAddSession.address isDuringRegistration:NO countryCode:threePidAddSession.countryCode clientSecret:threePidAddSession.clientSecret sendAttempt:threePidAddSession.sendAttempt++ nextLink:nil success:^(NSString *sid, NSString *msisdn) {
+            operation2 = [self->mxSession.matrixRestClient requestTokenForPhoneNumber:threePidAddSession.address isDuringRegistration:NO countryCode:threePidAddSession.countryCode clientSecret:threePidAddSession.clientSecret sendAttempt:threePidAddSession.sendAttempt++ nextLink:nil success:^(NSString *sid, NSString *msisdn, NSString *submitUrl) {
 
                 NSLog(@"[MX3PidAddManager] startBind3PidSessionWithOldHomeserver: DONE: threePid: %@", threePidAddSession);
 

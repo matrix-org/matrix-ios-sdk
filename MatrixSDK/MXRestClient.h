@@ -599,7 +599,7 @@ typedef MXHTTPOperation* (^MXRestClientIdentityServerAccessTokenHandler)(void (^
                                   clientSecret:(NSString*)clientSecret
                                    sendAttempt:(NSUInteger)sendAttempt
                                       nextLink:(NSString *)nextLink
-                                       success:(void (^)(NSString *sid, NSString *msisdn))success
+                                       success:(void (^)(NSString *sid, NSString *msisdn, NSString *submitUrl))success
                                        failure:(void (^)(NSError *error))failure;
 
 #pragma mark - Push Notifications
