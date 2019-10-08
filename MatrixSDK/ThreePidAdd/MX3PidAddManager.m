@@ -443,7 +443,7 @@ NSString *const MX3PidAddManagerErrorDomain = @"org.matrix.sdk.MX3PidAddManagerE
     }
 
     MXWeakify(self);
-    threePidAddSession.httpOperation = [self doesServerSupportSeparateAddAndBind:^(bool doesServerSupportSeparateAddAndBind) {
+    threePidAddSession.httpOperation = [self doesServerSupportSeparateAddAndBind:^(BOOL doesServerSupportSeparateAddAndBind) {
         MXStrongifyAndReturnIfNil(self);
 
         MXHTTPOperation *operation;
