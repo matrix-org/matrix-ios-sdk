@@ -3501,7 +3501,7 @@ typedef void (^MXOnResumeDone)(void);
     return operation;
 }
 
-- (BOOL)hasAccountDataIdentityServer
+- (BOOL)hasAccountDataIdentityServerValue
 {
     return ([self.accountData accountDataForEventType:kMXAccountDataTypeIdentityServer] != nil);
 }

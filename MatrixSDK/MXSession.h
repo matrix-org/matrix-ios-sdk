@@ -1335,11 +1335,13 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
                                          success:(void (^)(void))success
                                          failure:(void (^)(NSError *error))failure;
 /**
- Indicate if an IS is set in the user's account data.
+ Indicate if user has set an identity server value in their account data.
+ This value (returned by accountDataIdentityServer) can be nil if the user does
+ not want to use an identity server.
 
  @return YES if YES.
  */
-- (BOOL)hasAccountDataIdentityServer;
+- (BOOL)hasAccountDataIdentityServerValue;
 
 /**
  The IS set in the user's account data.
