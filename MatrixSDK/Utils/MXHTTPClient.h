@@ -118,6 +118,11 @@ typedef NS_ENUM(NSUInteger, MXHTTPClientSSLPinningMode) {
 @property (nonatomic, readonly) NSURL *baseURL;
 
 /**
+ The access token used for authenticated requests.
+ */
+@property (nonatomic, readonly) NSString *accessToken;
+
+/**
  Block called when a request needs authorization and access token should be renewed.
  */
 @property (nonatomic, copy) MXHTTPClientShouldRenewTokenHandler shouldRenewTokenHandler;
@@ -282,6 +287,19 @@ typedef NS_ENUM(NSUInteger, MXHTTPClientSSLPinningMode) {
                        uploadProgress:(void (^)(NSProgress *uploadProgress))uploadProgress
                               success:(void (^)(NSDictionary *JSONResponse))success
                               failure:(void (^)(NSError *error))failure;
+
+/**
+ Get current access or get a new one if not exist.
+ Note: There is no guarantee that current access token is valid.
+
+ @param success A block object called when the operation succeeds. It provides the access token.
+ @param failure A block object called when the operation fails.
+ 
+ @return a MXHTTPOperation instance. Nil if the access token is already known
+ and no HTTP request is required.
+ */
+- (MXHTTPOperation *)getAccessTokenAndRenewIfNeededWithSuccess:(void (^)(NSString *accessToken))success
+                                                       failure:(void (^)(NSError *error))failure;
 
 /**
  Return the amount of time to wait before retrying a request.

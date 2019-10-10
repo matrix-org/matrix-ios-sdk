@@ -291,6 +291,33 @@ NSString* const kMXHTTPClientMatrixErrorNotificationErrorKey = @"kMXHTTPClientMa
     return mxHTTPOperation;
 }
 
+- (MXHTTPOperation *)getAccessTokenAndRenewIfNeededWithSuccess:(void (^)(NSString *accessToken))success
+                                                       failure:(void (^)(NSError *error))failure
+{
+    if (self.accessToken)
+    {
+        success(self.accessToken);
+        return nil;
+    }
+    
+    typeof(self) __weak weakSelf = self;
+    
+    return self.renewTokenHandler(^(NSString *accessToken) {
+        
+        typeof(self) strongSelf = weakSelf;
+        
+        if (strongSelf)
+        {
+            strongSelf.accessToken = accessToken;
+        }
+        
+        success(accessToken);
+        
+    }, ^(NSError *error) {
+        failure(error);
+    });
+}
+
 - (void)tryRequest:(MXHTTPOperation*)mxHTTPOperation
             method:(NSString *)httpMethod
               path:(NSString *)path
