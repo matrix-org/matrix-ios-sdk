@@ -136,8 +136,8 @@ NSString *const MXIdentityServiceNotificationAccessTokenKey = @"accessToken";
         success(self.accessToken);
         return nil;
     }
-
-    return [self accountWithSuccess:^(NSString * _Nonnull userId) {
+    
+    return [self.restClient getAccessTokenAndRenewIfNeededWithSuccess:^(NSString * _Nonnull accessToken) {
         // If we get here, we have an access token
         success(self.accessToken);
     } failure:failure];
