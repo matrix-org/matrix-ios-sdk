@@ -38,8 +38,6 @@ NSString *const MXIdentityServerRestClientErrorDomain = @"org.matrix.sdk.MXIdent
 
 @interface MXIdentityServerRestClient()
 
-@property (nonatomic, strong) NSString *accessToken;
-
 /**
  HTTP client to the identity server.
  */
@@ -59,6 +57,11 @@ NSString *const MXIdentityServerRestClientErrorDomain = @"org.matrix.sdk.MXIdent
 
 #pragma mark - Properties override
 
+- (NSString *)accessToken
+{
+    return self.httpClient.accessToken;
+}
+
 - (void)setShouldRenewTokenHandler:(MXHTTPClientShouldRenewTokenHandler)shouldRenewTokenHandler
 {
     self.httpClient.shouldRenewTokenHandler = shouldRenewTokenHandler;
@@ -71,16 +74,7 @@ NSString *const MXIdentityServerRestClientErrorDomain = @"org.matrix.sdk.MXIdent
 
 - (void)setRenewTokenHandler:(MXHTTPClientRenewTokenHandler)renewTokenHandler
 {
-    MXWeakify(self);
-    
-    self.httpClient.renewTokenHandler = ^MXHTTPOperation* (void (^success)(NSString *accessToken), void (^failure)(NSError *error)) {
-        MXStrongifyAndReturnValueIfNil(self, nil);
-        
-        return renewTokenHandler(^(NSString *accessToken) {
-            self.accessToken = accessToken;
-            success(accessToken);
-        }, failure);
-    };
+    self.httpClient.renewTokenHandler = renewTokenHandler;
 }
 
 - (MXHTTPClientRenewTokenHandler)renewTokenHandler
@@ -108,7 +102,6 @@ NSString *const MXIdentityServerRestClientErrorDomain = @"org.matrix.sdk.MXIdent
 
         self.httpClient = httpClient;
         _identityServer = identityServer;
-        _accessToken = accessToken;
 
         self.processingQueue = dispatch_queue_create("MXIdentityServerRestClient", DISPATCH_QUEUE_SERIAL);
         self.completionQueue = dispatch_get_main_queue();
@@ -736,6 +729,12 @@ NSString *const MXIdentityServerRestClientErrorDomain = @"org.matrix.sdk.MXIdent
                                       } failure:^(NSError *error) {
                                           [self dispatchFailure:error inBlock:failure];
                                       }];
+}
+
+- (MXHTTPOperation *)getAccessTokenAndRenewIfNeededWithSuccess:(void (^)(NSString *accessToken))success
+                                                       failure:(void (^)(NSError *error))failure
+{
+    return [self.httpClient getAccessTokenAndRenewIfNeededWithSuccess:success failure:failure];
 }
 
 #pragma mark - Private methods
