@@ -78,10 +78,30 @@ NSString* const kMXHTTPClientMatrixErrorNotificationErrorKey = @"kMXHTTPClientMa
      */
     BOOL invalidatedSession;
 }
+
+/**
+ The access token used for authenticated requests.
+ */
+@property (nonatomic, strong) NSString *accessToken;
+
 @end
 
 @implementation MXHTTPClient
 
+#pragma mark - Properties override
+
+// TODO: Set Authorization field only for authenticated requests
+- (void)setAccessToken:(NSString *)accessToken
+{
+    _accessToken = accessToken;
+    
+    [self updateAuthorizationBearHTTPHeaderFieldWithAccessToken:accessToken];
+}
+
+- (NSURL *)baseURL
+{
+    return httpManager.baseURL;
+}
 
 #pragma mark - Public methods
 -(id)initWithBaseURL:(NSString *)baseURL andOnUnrecognizedCertificateBlock:(MXHTTPClientOnUnrecognizedCertificate)onUnrecognizedCertBlock
@@ -112,9 +132,10 @@ NSString* const kMXHTTPClientMatrixErrorNotificationErrorKey = @"kMXHTTPClientMa
         // No need for caching. The sdk caches the data it needs
         [httpManager.requestSerializer setCachePolicy:NSURLRequestReloadIgnoringLocalCacheData];
 
-        // No need for caching. The sdk caches the data it needs
+        // Set authorization HTTP header if access token is present
         if (accessToken)
         {
+            _accessToken = accessToken;
             [httpManager.requestSerializer setValue:[NSString stringWithFormat:@"Bearer %@", accessToken] forHTTPHeaderField:@"Authorization"];
         }
 
@@ -175,6 +196,126 @@ NSString* const kMXHTTPClientMatrixErrorNotificationErrorKey = @"kMXHTTPClientMa
     [self tryRequest:mxHTTPOperation method:httpMethod path:path parameters:parameters data:data headers:headers timeout:timeoutInSeconds uploadProgress:uploadProgress success:success failure:failure];
 
     return mxHTTPOperation;
+}
+
+- (MXHTTPOperation*)requestWithMethod:(NSString *)httpMethod
+                                 path:(NSString *)path
+                           parameters:(NSDictionary*)parameters
+                   needsAuthorization:(BOOL)needsAuthorization
+                              success:(void (^)(NSDictionary *JSONResponse))success
+                              failure:(void (^)(NSError *error))failure
+{
+    return [self requestWithMethod:httpMethod path:path parameters:parameters needsAuthorization:needsAuthorization timeout:-1 success:success failure:failure];
+}
+
+- (MXHTTPOperation*)requestWithMethod:(NSString *)httpMethod
+                                 path:(NSString *)path
+                           parameters:(NSDictionary*)parameters
+                   needsAuthorization:(BOOL)needsAuthorization
+                              timeout:(NSTimeInterval)timeoutInSeconds
+                              success:(void (^)(NSDictionary *JSONResponse))success
+                              failure:(void (^)(NSError *error))failure
+{
+    return [self requestWithMethod:httpMethod path:path parameters:parameters needsAuthorization:needsAuthorization data:nil headers:nil timeout:timeoutInSeconds uploadProgress:nil success:success failure:failure];
+}
+
+
+- (MXHTTPOperation*)requestWithMethod:(NSString *)httpMethod
+                                 path:(NSString *)path
+                           parameters:(NSDictionary*)parameters
+                   needsAuthorization:(BOOL)needsAuthorization
+                                 data:(NSData *)data
+                              headers:(NSDictionary*)headers
+                              timeout:(NSTimeInterval)timeoutInSeconds
+                       uploadProgress:(void (^)(NSProgress *uploadProgress))uploadProgress
+                              success:(void (^)(NSDictionary *JSONResponse))success
+                              failure:(void (^)(NSError *error))failure
+{
+    MXHTTPOperation *mxHTTPOperation = [[MXHTTPOperation alloc] init];
+    
+    [self tryRequest:mxHTTPOperation
+              method:httpMethod
+                path:path
+          parameters:parameters
+                data:data
+            headers:headers
+             timeout:timeoutInSeconds
+      uploadProgress:uploadProgress
+             success:success
+             failure:^(NSError *error) {
+                 
+                 if (needsAuthorization
+                     && error
+                     && self.shouldRenewTokenHandler(error)
+                     && self.renewTokenHandler)
+                 {
+                     dispatch_async(dispatch_get_main_queue(), ^{
+                         
+                         // Remove current access token
+                         self.accessToken = nil;
+                         
+                         mxHTTPOperation.operation = nil;
+                         
+                         typeof(self) __weak weakSelf = self;
+                         
+                         self.renewTokenHandler(^(NSString *accessToken) {
+                             
+                             typeof(self) strongSelf = weakSelf;
+                             
+                             if (strongSelf)
+                             {
+                                 strongSelf.accessToken = accessToken;
+                                 
+                                 [strongSelf tryRequest:mxHTTPOperation
+                                                 method:httpMethod
+                                                   path:path
+                                             parameters:parameters
+                                                   data:data
+                                                headers:headers
+                                                timeout:timeoutInSeconds
+                                         uploadProgress:uploadProgress
+                                                success:success
+                                                failure:failure];
+                             }
+                         }, ^(NSError *error) {
+                             failure(error);
+                         });
+                     });
+                 }
+                 else
+                 {
+                     failure(error);
+                 }
+             }];
+    
+    return mxHTTPOperation;
+}
+
+- (MXHTTPOperation *)getAccessTokenAndRenewIfNeededWithSuccess:(void (^)(NSString *accessToken))success
+                                                       failure:(void (^)(NSError *error))failure
+{
+    if (self.accessToken)
+    {
+        success(self.accessToken);
+        return nil;
+    }
+    
+    typeof(self) __weak weakSelf = self;
+    
+    return self.renewTokenHandler(^(NSString *accessToken) {
+        
+        typeof(self) strongSelf = weakSelf;
+        
+        if (strongSelf)
+        {
+            strongSelf.accessToken = accessToken;
+        }
+        
+        success(accessToken);
+        
+    }, ^(NSError *error) {
+        failure(error);
+    });
 }
 
 - (void)tryRequest:(MXHTTPOperation*)mxHTTPOperation
@@ -282,31 +423,41 @@ NSString* const kMXHTTPClientMatrixErrorNotificationErrorKey = @"kMXHTTPClientMa
 
                         if ([mxError.errcode isEqualToString:kMXErrCodeStringLimitExceeded])
                         {
+                            error = [mxError createNSError];
+                            
                             // Wait and retry if we have not retried too much
                             if (mxHTTPOperation.age < MXHTTPCLIENT_RATE_LIMIT_MAX_MS)
                             {
                                 NSString *retryAfterMsString = JSONResponse[@"retry_after_ms"];
                                 if (retryAfterMsString)
                                 {
-                                    error = nil;
-
-                                    NSLog(@"[MXHTTPClient] Request %p reached rate limiting. Wait for %@ms", mxHTTPOperation, retryAfterMsString);
-
-                                    // Wait for the time provided by the server before retrying
-                                    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, [retryAfterMsString intValue] * USEC_PER_SEC), dispatch_get_main_queue(), ^{
-
-                                        NSLog(@"[MXHTTPClient] Retry rate limited request %p", mxHTTPOperation);
-
-                                        [self tryRequest:mxHTTPOperation method:httpMethod path:path parameters:parameters data:data headers:headers timeout:timeoutInSeconds uploadProgress:uploadProgress success:^(NSDictionary *JSONResponse) {
-
-                                            NSLog(@"[MXHTTPClient] Success of rate limited request %p after %tu tries", mxHTTPOperation, mxHTTPOperation.numberOfTries);
-
-                                            success(JSONResponse);
-
-                                        } failure:^(NSError *error) {
-                                            failure(error);
-                                        }];
-                                    });
+                                    int delay = [retryAfterMsString intValue];
+                                    if (delay < MXHTTPCLIENT_RATE_LIMIT_MAX_MS)
+                                    {
+                                        error = nil;
+                                        
+                                        NSLog(@"[MXHTTPClient] Request %p reached rate limiting. Wait for %@ ms", mxHTTPOperation, retryAfterMsString);
+                                        
+                                        // Wait for the time provided by the server before retrying
+                                        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, delay * USEC_PER_SEC), dispatch_get_main_queue(), ^{
+                                            
+                                            NSLog(@"[MXHTTPClient] Retry rate limited request %p", mxHTTPOperation);
+                                            
+                                            [self tryRequest:mxHTTPOperation method:httpMethod path:path parameters:parameters data:data headers:headers timeout:timeoutInSeconds uploadProgress:uploadProgress success:^(NSDictionary *JSONResponse) {
+                                                
+                                                NSLog(@"[MXHTTPClient] Success of rate limited request %p after %tu tries", mxHTTPOperation, mxHTTPOperation.numberOfTries);
+                                                
+                                                success(JSONResponse);
+                                                
+                                            } failure:^(NSError *error) {
+                                                failure(error);
+                                            }];
+                                        });
+                                    }
+                                    else
+                                    {
+                                        NSLog(@"[MXHTTPClient] Giving up rate limited request %p (may retry after %@ ms).", mxHTTPOperation, retryAfterMsString);
+                                    }
                                 }
                             }
                             else
@@ -360,8 +511,11 @@ NSString* const kMXHTTPClientMatrixErrorNotificationErrorKey = @"kMXHTTPClientMa
             }
             else if (mxHTTPOperation.numberOfTries < mxHTTPOperation.maxNumberOfTries
                      && mxHTTPOperation.age < mxHTTPOperation.maxRetriesTime
-                     && !([error.domain isEqualToString:NSURLErrorDomain] && error.code == kCFURLErrorCancelled)    // No need to retry a cancelation (which can also happen on SSL error)
-                     && response.statusCode != 400 && response.statusCode != 401 && response.statusCode != 403      // No amount of retrying will save you now
+                     && !([error.domain isEqualToString:NSURLErrorDomain]
+                          && (error.code == kCFURLErrorCancelled                    // No need to retry a cancelation (which can also happen on SSL error)
+                              || error.code == kCFURLErrorCannotFindHost)           // No need to retry on a non existing host
+                         )
+                     && response.statusCode != 400 && response.statusCode != 401 && response.statusCode != 403     // No amount of retrying will save you now
                      )
             {
                 // Check if it is a network connectivity issue
@@ -513,6 +667,9 @@ NSString* const kMXHTTPClientMatrixErrorNotificationErrorKey = @"kMXHTTPClientMa
     {
         httpManager.requestSerializer = [AFHTTPRequestSerializer serializer];
     }
+    
+    // Refresh authorization HTTP header field
+    [self updateAuthorizationBearHTTPHeaderFieldWithAccessToken:self.accessToken];
 }
 
 
@@ -780,6 +937,18 @@ NSString* const kMXHTTPClientMatrixErrorNotificationErrorKey = @"kMXHTTPClientMa
     return [[MXError alloc] initWithErrorCode:json[kMXErrorCodeKey]
                                         error:json[kMXErrorMessageKey]
                                      userInfo:mxErrorUserInfo];
+}
+
+- (void)updateAuthorizationBearHTTPHeaderFieldWithAccessToken:(NSString *)accessToken
+{
+    if (accessToken)
+    {
+        [httpManager.requestSerializer setValue:[NSString stringWithFormat:@"Bearer %@", accessToken] forHTTPHeaderField:@"Authorization"];
+    }
+    else
+    {
+        [httpManager.requestSerializer clearAuthorizationHeader];
+    }
 }
 
 + (void)logRequestFailure:(MXHTTPOperation*)mxHTTPOperation

@@ -1,5 +1,5 @@
 /*
- Copyright 2016 OpenMarket Ltd
+ Copyright 2019 The Matrix.org Foundation C.I.C
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -14,25 +14,22 @@
  limitations under the License.
  */
 
-#import "MXOlmSessionResult.h"
+#import "MX3PidAddSession.h"
 
-@implementation MXOlmSessionResult
+#import "MXTools.h"
 
-- (instancetype)initWithDevice:(MXDeviceInfo *)device andOlmSession:(NSString *)sessionId
+@implementation MX3PidAddSession
+
+- (instancetype)initWithMedium:(NSString *)medium andAddress:(NSString *)address
 {
-    self = [self init];
+    self = [super init];
     if (self)
     {
-        _device = device;
-        _sessionId = sessionId;
+        _medium = [medium copy];
+        _address = [address copy];
+        _clientSecret = [MXTools generateSecret];
     }
-
     return self;
-}
-
-- (NSString *)description
-{
-    return [NSString stringWithFormat:@"<MXOlmSessionResult> %@: %@", _device.deviceId, _sessionId];
 }
 
 @end

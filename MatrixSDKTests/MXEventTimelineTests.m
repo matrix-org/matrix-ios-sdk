@@ -1,5 +1,6 @@
 /*
  Copyright 2016 OpenMarket Ltd
+ Copyright 2019 The Matrix.org Foundation C.I.C
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -375,5 +376,56 @@ NSString *theInitialEventMessage = @"The initial timelime event";
     }];
     
 }
+
+/*
+ Test custom MXEventTimeline.roomEventFilter
+  - Run the initial condition scenario
+  - Set a custom filter on the live timeline
+  - Paginate all messages in one request
+  -> We must not receive filtered events
+ */
+- (void)testRoomEventFilter
+{
+    // - Run the initial condition scenario
+    [self doTestWithARoomOf41Messages:self readyToTest:^(MXRoom *room, XCTestExpectation *expectation, NSString *initialEventId) {
+
+        [room liveTimeline:^(MXEventTimeline *liveTimeline) {
+
+            __block NSUInteger eventCount = 0;
+
+            // - Set a custom filter on the live timeline
+            MXRoomEventFilter *filter = liveTimeline.roomEventFilter;
+            if (!filter)
+            {
+                filter = [MXRoomEventFilter new];
+            }
+            filter.notTypes = @[kMXEventTypeStringRoomCreate, kMXEventTypeStringRoomMember];
+
+            liveTimeline.roomEventFilter = filter;
+
+            // - Paginate all messages in one request
+            [liveTimeline resetPagination];
+            [liveTimeline paginate:100 direction:MXTimelineDirectionBackwards onlyFromStore:NO complete:^{
+
+                XCTAssertGreaterThan(eventCount, 41, "We should get at least all messages events from the pagination");
+                [expectation fulfill];
+
+            } failure:^(NSError *error) {
+                XCTFail(@"The operation should not fail - NSError: %@", error);
+                [expectation fulfill];
+            }];
+
+            [liveTimeline listenToEvents:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
+                eventCount++;
+
+                // -> We must not receive filtered events
+                XCTAssertNotEqualObjects(event.type, kMXEventTypeStringRoomCreate);
+                XCTAssertNotEqualObjects(event.type, kMXEventTypeStringRoomMember);
+            }];
+
+        }];
+    }];
+}
+
 
 @end

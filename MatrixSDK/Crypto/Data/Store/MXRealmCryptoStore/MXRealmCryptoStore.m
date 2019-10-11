@@ -1306,9 +1306,11 @@ RLM_ARRAY_TYPE(MXRealmOlmInboundGroupSession)
 
         // Report this db reset to higher modules
         // A user logout and in is anyway required to make crypto work reliably again
-        [[NSNotificationCenter defaultCenter] postNotificationName:kMXSessionCryptoDidCorruptDataNotification
-                                                            object:userId
-                                                          userInfo:nil];
+        dispatch_async(dispatch_get_main_queue(),^{
+            [[NSNotificationCenter defaultCenter] postNotificationName:kMXSessionCryptoDidCorruptDataNotification
+                                                                object:userId
+                                                              userInfo:nil];
+        });
     }
 
     if (cleanDuplicatedDevices)

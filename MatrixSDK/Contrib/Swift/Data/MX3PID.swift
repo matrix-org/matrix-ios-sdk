@@ -68,8 +68,9 @@ extension MX3PID : Hashable {
     public static func ==(lhs: MX3PID, rhs: MX3PID) -> Bool {
         return lhs.medium.identifier == rhs.medium.identifier && lhs.address == rhs.address
     }
-
-    public var hashValue: Int {
-        return "\(medium.identifier)\(address)".hashValue
+    
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(medium.identifier)
+        hasher.combine(address)
     }
 }
