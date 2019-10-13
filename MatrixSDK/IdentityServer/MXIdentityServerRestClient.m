@@ -698,7 +698,7 @@ NSString *const MXIdentityServerRestClientErrorDomain = @"org.matrix.sdk.MXIdent
                                               NSHTTPURLResponse *httpURLResponse;
                                               MXJSONModelSet(httpURLResponse, [NSHTTPURLResponse class], error.userInfo[AFNetworkingOperationFailingURLResponseErrorKey])
                                               
-                                              if (httpURLResponse.statusCode == 404)
+                                              if (httpURLResponse.statusCode == 404 || httpURLResponse.statusCode == 403)
                                               {
                                                   finalError = [NSError errorWithDomain:MXIdentityServerRestClientErrorDomain code:MXIdentityServerRestClientErrorAPIPrefixNotFound userInfo:nil];
                                               }
