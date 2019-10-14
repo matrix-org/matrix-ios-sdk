@@ -1,3 +1,9 @@
+Changes in Matrix iOS SDK in 0.xx.xx (2019-xx-xx)
+===============================================
+
+Bug fix:
+ * Room members who left are listed with the actual members #2737
+
 Changes in Matrix iOS SDK in 0.14.0 (2019-10-11)
 ===============================================
 
