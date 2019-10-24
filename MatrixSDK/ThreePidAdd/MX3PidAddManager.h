@@ -59,6 +59,20 @@ NS_ERROR_ENUM(MX3PidAddManagerErrorDomain)
 - (void)cancel3PidAddSession:(MX3PidAddSession*)threePidAddSession NS_REFINED_FOR_SWIFT;
 
 
+#pragma mark - Add 3rd-Party Identifier
+
+/**
+ Get the authentication flow required to add a 3rd party id to the user homeserver account.
+
+ @param success A block object called when the operation succeeds. If the returned flows is nil, no auth is required.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)authenticationFlowForAdd3PidWithSuccess:(void (^)(NSArray<MXLoginFlow*> * _Nullable flows))success
+                                                    failure:(void (^)(NSError * _Nonnull))failure;
+
+
 #pragma mark - Add Email
 
 /**
@@ -95,6 +109,15 @@ NS_ERROR_ENUM(MX3PidAddManagerErrorDomain)
                            success:(void (^)(void))success
                            failure:(void (^)(NSError * _Nonnull))failure NS_REFINED_FOR_SWIFT;
 
+- (void)tryFinaliseAddEmailSession:(MX3PidAddSession*)threePidAddSession
+                      withPassword:(nullable NSString*)password
+                           success:(void (^)(void))success
+                           failure:(void (^)(NSError * _Nonnull))failure NS_REFINED_FOR_SWIFT;
+
+- (void)tryFinaliseAddEmailSession:(MX3PidAddSession*)threePidAddSession
+                        authParams:(nullable NSDictionary*)authParams
+                           success:(void (^)(void))success
+                           failure:(void (^)(NSError * _Nonnull))failure NS_REFINED_FOR_SWIFT;
 
 #pragma mark - Add MSISDN
 
@@ -128,6 +151,18 @@ NS_ERROR_ENUM(MX3PidAddManagerErrorDomain)
  */
 - (void)finaliseAddPhoneNumberSession:(MX3PidAddSession*)threePidAddSession
                             withToken:(NSString*)token
+                              success:(void (^)(void))success
+                              failure:(void (^)(NSError * _Nonnull))failure NS_REFINED_FOR_SWIFT;
+
+- (void)finaliseAddPhoneNumberSession:(MX3PidAddSession*)threePidAddSession
+                            withToken:(NSString*)token
+                             password:(nullable NSString*)password
+                              success:(void (^)(void))success
+                              failure:(void (^)(NSError * _Nonnull))failure NS_REFINED_FOR_SWIFT;
+
+- (void)finaliseAddPhoneNumberSession:(MX3PidAddSession*)threePidAddSession
+                            withToken:(NSString*)token
+                           authParams:(nullable NSDictionary*)authParams
                               success:(void (^)(void))success
                               failure:(void (^)(NSError * _Nonnull))failure NS_REFINED_FOR_SWIFT;
 

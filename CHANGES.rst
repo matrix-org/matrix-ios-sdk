@@ -1,6 +1,9 @@
 Changes in Matrix iOS SDK in 0.xx.xx (2019-xx-xx)
 ===============================================
 
+Improvements:
+ * MX3PidAddManager: Add User-Interactive Auth to /account/3pid/add (vector-im/riot-ios#2744).
+
 Bug fix:
  * Room members who left are listed with the actual members (vector-im/riot-ios#2737).
 

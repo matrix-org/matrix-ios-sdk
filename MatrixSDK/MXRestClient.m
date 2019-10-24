@@ -2991,15 +2991,21 @@ MXAuthAction;
 
 - (MXHTTPOperation*)add3PIDOnlyWithSessionId:(NSString*)sid
                                 clientSecret:(NSString*)clientSecret
+                                  authParams:(NSDictionary*)authParameters
                                      success:(void (^)(void))success
                                      failure:(void (^)(NSError *error))failure
 {
     NSString *path = [NSString stringWithFormat:@"%@/account/3pid/add", kMXAPIPrefixPathUnstable];
 
-    NSDictionary *parameters = @{
+    NSMutableDictionary *parameters = [@{
                                  @"sid": sid,
                                  @"client_secret": clientSecret
-                                 };
+                                 } mutableCopy];
+
+    if (authParameters)
+    {
+        parameters[@"auth"] = authParameters;
+    }
 
     MXWeakify(self);
     return [httpClient requestWithMethod:@"POST"

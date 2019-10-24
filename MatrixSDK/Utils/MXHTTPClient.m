@@ -38,7 +38,7 @@
  */
 #define MXHTTPCLIENT_RETRY_JITTER_MS 3000
 
-NSString * const MXHTTPClientErrorResponseDataKey = @"com.matrixsdk.httpclient.error.response.data";
+NSString* const MXHTTPClientErrorResponseDataKey = @"com.matrixsdk.httpclient.error.response.data";
 NSString* const kMXHTTPClientUserConsentNotGivenErrorNotification = @"kMXHTTPClientUserConsentNotGivenErrorNotification";
 NSString* const kMXHTTPClientUserConsentNotGivenErrorNotificationConsentURIKey = @"kMXHTTPClientUserConsentNotGivenErrorNotificationConsentURIKey";
 NSString* const kMXHTTPClientMatrixErrorNotification = @"kMXHTTPClientMatrixErrorNotification";
