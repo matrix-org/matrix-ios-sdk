@@ -6,6 +6,8 @@ Improvements:
 
 Bug fix:
  * Room members who left are listed with the actual members (vector-im/riot-ios#2737).
+ * MX3PidAddManager: Add User-Interactive Auth to /account/3pid/add (vector-im/riot-ios#2744).
+ * MXHTTPOperation: Make urlResponseFromError return the url response in case of MXError.
 
 Changes in Matrix iOS SDK in 0.14.0 (2019-10-11)
 ===============================================
