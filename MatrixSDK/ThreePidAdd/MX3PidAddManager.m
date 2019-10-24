@@ -600,7 +600,7 @@ NSString *const MX3PidAddManagerErrorDomain = @"org.matrix.sdk.MX3PidAddManagerE
  @param password the password to use.
  @return the params to make an authenticated API request.
  */
-- (NSDictionary*)authParamsFromError:(NSError*)error andPassword:(NSString*)password
+- (NSDictionary*)authParamsFromError:(NSError*)error andPassword:(nullable NSString*)password
 {
     NSDictionary *authParams;
     NSHTTPURLResponse *urlResponse = [MXHTTPOperation urlResponseFromError:error];
@@ -619,6 +619,7 @@ NSString *const MX3PidAddManagerErrorDomain = @"org.matrix.sdk.MX3PidAddManagerE
                                    @"type": kMXLoginIdentifierTypeUser,
                                    @"user": userId
                                    },
+                           @"session": authSession.session,
                            @"password": password,
                            @"user": userId
                            };
