@@ -51,6 +51,50 @@ NSString *const MX3PidAddManagerErrorDomain = @"org.matrix.sdk.MX3PidAddManagerE
 }
 
 
+
+#pragma mark - Add 3rd-Party Identifier
+
+- (MXHTTPOperation*)authenticationFlowForAdd3PidWithSuccess:(void (^)(NSArray<MXLoginFlow*> * _Nullable flows))success
+                                                    failure:(void (^)(NSError * _Nonnull))failure
+{
+    // Trigger a random request to the API
+    // If authentication is required, it will provide the flow in the error response
+    return [self->mxSession.matrixRestClient add3PIDOnlyWithSessionId:@"" clientSecret:@"" authParams:nil success:^{
+        // This should not happen
+        success(nil);
+    } failure:^(NSError *error) {
+        NSHTTPURLResponse *urlResponse = [MXHTTPOperation urlResponseFromError:error];
+        if (urlResponse)
+        {
+            switch (urlResponse.statusCode)
+            {
+                case 400:
+                    // No required authentication
+                    success(nil);
+                    break;
+
+                case 401:
+                {
+                    // Extract authentication flows
+                    MXAuthenticationSession *authSession;
+                    MXJSONModelSetMXJSONModel(authSession, MXAuthenticationSession, error.userInfo[MXHTTPClientErrorResponseDataKey]);
+                    success(authSession.flows);
+                    break;
+                }
+
+                default:
+                    failure(error);
+                    break;
+            }
+        }
+        else
+        {
+            failure(error);
+        }
+    }];
+}
+
+
 #pragma mark - Add Email
 
 - (MX3PidAddSession*)startAddEmailSessionWithEmail:(NSString*)email
@@ -95,6 +139,37 @@ NSString *const MX3PidAddManagerErrorDomain = @"org.matrix.sdk.MX3PidAddManagerE
                            success:(void (^)(void))success
                            failure:(void (^)(NSError * _Nonnull))failure
 {
+    [self tryFinaliseAddEmailSession:threePidAddSession authParams:nil success:success failure:failure];
+}
+
+- (void)tryFinaliseAddEmailSession:(MX3PidAddSession*)threePidAddSession
+                      withPassword:(nullable NSString*)password
+                           success:(void (^)(void))success
+                           failure:(void (^)(NSError * _Nonnull))failure
+{
+    // Make a first request to start user-interactive authentication
+    MXWeakify(self);
+    [self tryFinaliseAddEmailSession:threePidAddSession authParams:nil success:success failure:^(NSError * _Nonnull error) {
+        MXStrongifyAndReturnIfNil(self);
+
+        NSDictionary *authParams = [self authParamsFromError:error andPassword:password];
+        if (authParams)
+        {
+            // Retry but authenticated
+            [self tryFinaliseAddEmailSession:threePidAddSession authParams:authParams success:success failure:failure];
+        }
+        else
+        {
+            failure(error);
+        }
+    }];
+}
+
+- (void)tryFinaliseAddEmailSession:(MX3PidAddSession*)threePidAddSession
+                        authParams:(nullable NSDictionary*)authParams
+                           success:(void (^)(void))success
+                           failure:(void (^)(NSError * _Nonnull))failure
+{
     NSLog(@"[MX3PidAddManager] tryFinaliseAddEmailSession: threePid: %@", threePidAddSession);
 
     NSParameterAssert([threePidAddSession.medium isEqualToString:kMX3PIDMediumEmail]);
@@ -111,7 +186,7 @@ NSString *const MX3PidAddManagerErrorDomain = @"org.matrix.sdk.MX3PidAddManagerE
     if (doesServerSupportSeparateAddAndBind)
     {
         // https://gist.github.com/jryans/839a09bf0c5a70e2f36ed990d50ed928#2b-adding-a-3pid-to-hs-account-after-registration-post-msc2290
-        threePidAddSession.httpOperation = [mxSession.matrixRestClient add3PIDOnlyWithSessionId:threePidAddSession.sid clientSecret:threePidAddSession.clientSecret success:^{
+        threePidAddSession.httpOperation = [mxSession.matrixRestClient add3PIDOnlyWithSessionId:threePidAddSession.sid clientSecret:threePidAddSession.clientSecret authParams:authParams success:^{
 
             NSLog(@"[MX3PidAddManager] tryFinaliseAddEmailSession: DONE: threePid: %@", threePidAddSession);
 
@@ -188,6 +263,39 @@ NSString *const MX3PidAddManagerErrorDomain = @"org.matrix.sdk.MX3PidAddManagerE
                               success:(void (^)(void))success
                               failure:(void (^)(NSError * _Nonnull))failure
 {
+    [self finaliseAddPhoneNumberSession:threePidAddSession withToken:token authParams:nil success:success failure:failure];
+}
+
+- (void)finaliseAddPhoneNumberSession:(MX3PidAddSession*)threePidAddSession
+                            withToken:(NSString*)token
+                             password:(nullable NSString*)password
+                              success:(void (^)(void))success
+                              failure:(void (^)(NSError * _Nonnull))failure
+{
+    // Make a first request to start user-interactive authentication
+    MXWeakify(self);
+    [self finaliseAddPhoneNumberSession:threePidAddSession withToken:token authParams:nil success:success failure:^(NSError * _Nonnull error) {
+        MXStrongifyAndReturnIfNil(self);
+
+        NSDictionary *authParams = [self authParamsFromError:error andPassword:password];
+        if (authParams)
+        {
+            // Retry but authenticated
+            [self finaliseAddPhoneNumberSession:threePidAddSession withToken:token authParams:authParams success:success failure:failure];
+        }
+        else
+        {
+            failure(error);
+        }
+    }];
+}
+
+- (void)finaliseAddPhoneNumberSession:(MX3PidAddSession*)threePidAddSession
+                            withToken:(NSString*)token
+                           authParams:(nullable NSDictionary*)authParams
+                              success:(void (^)(void))success
+                              failure:(void (^)(NSError * _Nonnull))failure
+{
     NSLog(@"[MX3PidAddManager] finaliseAddPhoneNumberSession: threePid: %@", threePidAddSession);
 
     NSParameterAssert([threePidAddSession.medium isEqualToString:kMX3PIDMediumMSISDN]);
@@ -209,7 +317,7 @@ NSString *const MX3PidAddManagerErrorDomain = @"org.matrix.sdk.MX3PidAddManagerE
         if (self->doesServerSupportSeparateAddAndBind)
         {
             // https://gist.github.com/jryans/839a09bf0c5a70e2f36ed990d50ed928#2b-adding-a-3pid-to-hs-account-after-registration-post-msc2290
-            operation = [self->mxSession.matrixRestClient add3PIDOnlyWithSessionId:threePidAddSession.sid clientSecret:threePidAddSession.clientSecret success:^{
+            operation = [self->mxSession.matrixRestClient add3PIDOnlyWithSessionId:threePidAddSession.sid clientSecret:threePidAddSession.clientSecret authParams:authParams success:^{
 
                 NSLog(@"[MX3PidAddManager] finaliseAddPhoneNumberSession: DONE: threePid: %@", threePidAddSession);
 
@@ -481,6 +589,44 @@ NSString *const MX3PidAddManagerErrorDomain = @"org.matrix.sdk.MX3PidAddManagerE
                                      success();
                                  }
                                  failure:failure];
+}
+
+/**
+ Build auth params when User-Interactive Authentication is required.
+
+ The supported auth flow is "m.login.password".
+
+ @param error the error got from the API request.
+ @param password the password to use.
+ @return the params to make an authenticated API request.
+ */
+- (NSDictionary*)authParamsFromError:(NSError*)error andPassword:(nullable NSString*)password
+{
+    NSDictionary *authParams;
+    NSHTTPURLResponse *urlResponse = [MXHTTPOperation urlResponseFromError:error];
+
+    if (urlResponse && urlResponse.statusCode == 401)
+    {
+
+        MXAuthenticationSession *authSession;
+        MXJSONModelSetMXJSONModel(authSession, MXAuthenticationSession, error.userInfo[MXHTTPClientErrorResponseDataKey]);
+        if (authSession && password)
+        {
+            NSString *userId = self->mxSession.matrixRestClient.credentials.userId;
+            authParams = @{
+                           @"type": kMXLoginFlowTypePassword,
+                           @"identifier": @{
+                                   @"type": kMXLoginIdentifierTypeUser,
+                                   @"user": userId
+                                   },
+                           @"session": authSession.session,
+                           @"password": password,
+                           @"user": userId
+                           };
+        }
+    }
+
+    return authParams;
 }
 
 

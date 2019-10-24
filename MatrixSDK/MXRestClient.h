@@ -1606,6 +1606,7 @@ typedef MXHTTPOperation* (^MXRestClientIdentityServerAccessTokenHandler)(void (^
 
  @param sid the session id provided during the 3PID validation session.
  @param clientSecret the same secret key used in the validation session.
+ @param authParameters The additional authentication information for the user-interactive authentication API.
 
  @param success A block object called when the operation succeeds.
  @param failure A block object called when the operation fails.
@@ -1614,6 +1615,7 @@ typedef MXHTTPOperation* (^MXRestClientIdentityServerAccessTokenHandler)(void (^
  */
 - (MXHTTPOperation*)add3PIDOnlyWithSessionId:(NSString*)sid
                                 clientSecret:(NSString*)clientSecret
+                                  authParams:(NSDictionary*)authParameters
                                      success:(void (^)(void))success
                                      failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 

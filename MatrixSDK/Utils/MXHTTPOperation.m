@@ -18,6 +18,7 @@
 #import "MXHTTPOperation.h"
 
 #import <AFNetworking/AFNetworking.h>
+#import "MXError.h"
 
 #pragma mark - Constants definitions
 
@@ -88,7 +89,17 @@
 
 + (NSHTTPURLResponse *)urlResponseFromError:(NSError*)error
 {
-    return error.userInfo[AFNetworkingOperationFailingURLResponseErrorKey];
+    NSHTTPURLResponse *response;
+    if ([MXError isMXError:error])
+    {
+        MXError *mxError = [[MXError alloc] initWithNSError:error];
+        response = mxError.httpResponse;
+    }
+    else
+    {
+        response = error.userInfo[AFNetworkingOperationFailingURLResponseErrorKey];
+    }
+    return response;
 }
 
 @end
