@@ -45,6 +45,9 @@ NSString* const kMXHTTPClientMatrixErrorNotification = @"kMXHTTPClientMatrixErro
 NSString* const kMXHTTPClientMatrixErrorNotificationErrorKey = @"kMXHTTPClientMatrixErrorNotificationErrorKey";
 
 
+static NSUInteger requestCount = 0;
+
+
 @interface MXHTTPClient ()
 {
     /**
@@ -359,6 +362,11 @@ NSString* const kMXHTTPClientMatrixErrorNotificationErrorKey = @"kMXHTTPClientMa
 
     MXWeakify(self);
 
+    NSDate *startDate = [NSDate date];
+    NSUInteger requestNumber = requestCount++;
+
+    NSLog(@"[MXHTTPClient] #%@ - %@", @(requestNumber), path);
+
     mxHTTPOperation.numberOfTries++;
     mxHTTPOperation.operation = [httpManager dataTaskWithRequest:request uploadProgress:^(NSProgress * _Nonnull theUploadProgress) {
         
@@ -372,6 +380,8 @@ NSString* const kMXHTTPClientMatrixErrorNotificationErrorKey = @"kMXHTTPClientMa
         
     } downloadProgress:nil completionHandler:^(NSURLResponse * _Nonnull theResponse, NSDictionary *JSONResponse, NSError * _Nullable error) {
         NSHTTPURLResponse *response = (NSHTTPURLResponse*)theResponse;
+
+        NSLog(@"[MXHTTPClient] #%@ - %@ completed in %.0fms" ,@(requestNumber), path, [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
 
         if (!weakself)
         {
