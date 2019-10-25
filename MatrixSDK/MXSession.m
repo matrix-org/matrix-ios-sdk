@@ -503,36 +503,20 @@ typedef void (^MXOnResumeDone)(void);
     // Can we resume from data available in the cache
     if (_store.isPermanent && self.isEventStreamInitialised && 0 < _store.rooms.count)
     {
+        // Resume the stream (presence will be retrieved during server sync)
+        NSLog(@"[MXSession] Resuming the events stream from %@...", self.store.eventStreamToken);
+        NSDate *startDate2 = [NSDate date];
+        [self resume:^{
+            NSLog(@"[MXSession] Events stream resumed in %.0fms", [[NSDate date] timeIntervalSinceDate:startDate2] * 1000);
+
+            onServerSyncDone();
+        }];
+
         // Start crypto if enabled
-        MXWeakify(self);
         [self startCrypto:^{
-            MXStrongifyAndReturnIfNil(self);
-
-            // Resume the stream (presence will be retrieved during server sync)
-            NSLog(@"[MXSession] Resuming the events stream from %@...", self.store.eventStreamToken);
-            NSDate *startDate2 = [NSDate date];
-            [self resume:^{
-                NSLog(@"[MXSession] Events stream resumed in %.0fms", [[NSDate date] timeIntervalSinceDate:startDate2] * 1000);
-
-                onServerSyncDone();
-            }];
-
+            NSLog(@"[MXSession] Crypto has been started");
         }  failure:^(NSError *error) {
-
             NSLog(@"[MXSession] Crypto failed to start. Error: %@", error);
-            
-            // Check whether the token is valid
-            if ([self isUnknownTokenError:error])
-            {
-                // Do nothing more because without a valid access_token, the session is useless
-                return;
-            }
-            
-            // Else consider the sync has failed
-            [self setState:MXSessionStateInitialSyncFailed];
-            // Inform the caller that an error has occurred
-            failure(error);
-
         }];
     }
     else
