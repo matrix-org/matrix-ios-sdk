@@ -34,9 +34,9 @@ PODS:
     - OLMKit/olmcpp (= 3.1.0)
   - OLMKit/olmc (3.1.0)
   - OLMKit/olmcpp (3.1.0)
-  - Realm (3.13.1):
-    - Realm/Headers (= 3.13.1)
-  - Realm/Headers (3.13.1)
+  - Realm (3.17.3):
+    - Realm/Headers (= 3.17.3)
+  - Realm/Headers (3.17.3)
 
 DEPENDENCIES:
   - AFNetworking (~> 3.2.0)
@@ -44,7 +44,7 @@ DEPENDENCIES:
   - libbase58 (~> 0.1.4)
   - OHHTTPStubs (~> 6.1.0)
   - OLMKit (~> 3.1.0)
-  - Realm (~> 3.13.1)
+  - Realm (~> 3.17.3)
 
 SPEC REPOS:
   https://github.com/CocoaPods/Specs.git:
@@ -61,8 +61,8 @@ SPEC CHECKSUMS:
   libbase58: 7c040313537b8c44b6e2d15586af8e21f7354efd
   OHHTTPStubs: 1e21c7d2c084b8153fc53d48400d8919d2d432d0
   OLMKit: 4ee0159d63feeb86d836fdcfefe418e163511639
-  Realm: 50071da38fe079e0735e47c9f2eae738c68c5996
+  Realm: 5a1d9d47bfc101dd597668b1a8af4288a2557f6d
 
-PODFILE CHECKSUM: 278135edad062bc27b69b9d91c26249e8c3bb9b6
+PODFILE CHECKSUM: a3d1ca57b0ed793a3a7ee01236209a432c74692c
 
-COCOAPODS: 1.8.3
+COCOAPODS: 1.8.4
