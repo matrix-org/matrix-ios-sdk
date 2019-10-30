@@ -178,7 +178,7 @@ NSString *const MXIdentityServiceNotificationAccessTokenKey = @"accessToken";
                                       failure:failure];
         }
         
-        if (operation && operation2)
+        if (operation)
         {
             [operation mutateTo:operation2];
         }
@@ -352,7 +352,7 @@ NSString *const MXIdentityServiceNotificationAccessTokenKey = @"accessToken";
         
         MXHTTPOperation *operation2 = operationOnSuccess();
         
-        if (operation && operation2)
+        if (operation)
         {
             [operation mutateTo:operation2];
         }
@@ -414,7 +414,7 @@ NSString *const MXIdentityServiceNotificationAccessTokenKey = @"accessToken";
                                           }];
         
         
-        if (operation && operation2)
+        if (operation)
         {
             [operation mutateTo:operation2];
         }

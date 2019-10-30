@@ -409,10 +409,7 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
                     }];
 
                     // Mutate the HTTP operation if an HTTP is required for the encryption
-                    if (operation2)
-                    {
-                        [operation mutateTo:operation2];
-                    }
+                    [operation mutateTo:operation2];
                 }
                 else
                 {
@@ -557,11 +554,8 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
                                 });
                             }
                         }];
-
-                        if (operation2)
-                        {
-                            [operation mutateTo:operation2];
-                        }
+                        
+                        [operation mutateTo:operation2];
                     }
                     else if (failure)
                     {
@@ -868,11 +862,8 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
                 });
             }
         }];
-
-        if (operation2)
-        {
-            [operation mutateTo:operation2];
-        }
+        
+        [operation mutateTo:operation2];
     });
 
     return operation;
@@ -2203,10 +2194,7 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
                 }];
 
                 // Mutate MXHTTPOperation so that the user can cancel this new operation
-                if (operation2)
-                {
-                    [self->uploadOneTimeKeysOperation mutateTo:operation2];
-                }
+                [self->uploadOneTimeKeysOperation mutateTo:operation2];                
             }
             else
             {

@@ -72,6 +72,11 @@
 
 - (void)mutateTo:(MXHTTPOperation *)operation
 {
+    if (!operation)
+    {
+        return;
+    }
+    
     // Apply all data from the other MXHTTPOperation
     _operation = operation.operation;
     creationDate = operation->creationDate;
