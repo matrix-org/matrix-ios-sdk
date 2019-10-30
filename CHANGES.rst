@@ -4,6 +4,7 @@ Changes in Matrix iOS SDK in 0.xx.xx (2019-xx-xx)
 Improvements:
  * MX3PidAddManager: Add User-Interactive Auth to /account/3pid/add (vector-im/riot-ios#2744).
  * MXSession: On resume, make the first /sync request trigger earlier (vector-im/riot-ios#2793).
+ * MXCrypto: Do not fail to decrypt when there is nothing to decrypt (redacted events).
 
 Bug fix:
  * Room members who left are listed with the actual members (vector-im/riot-ios#2737).
