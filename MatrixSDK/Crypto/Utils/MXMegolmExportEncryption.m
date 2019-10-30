@@ -465,7 +465,7 @@ NSString *const MXMegolmExportEncryptionTrailerLine = @"-----END MEGOLM SESSION 
     NSMutableString *s = [NSMutableString string];
     for (NSUInteger i = 0; i < data.length; i++)
     {
-        [s appendFormat:@"%tu, ", bytes[i]];
+        [s appendFormat:@"%hhu, ", bytes[i]];
     }
 
     NSLog(@"%tu bytes:\n%@", data.length, s);

@@ -92,7 +92,7 @@
                          success:(void (^)(MXUsersDevicesMap<MXDeviceInfo*> *usersDevicesInfoMap))success
                          failure:(void (^)(NSError *error))failure
 {
-    NSLog(@"[MXDeviceList] downloadKeys(forceDownload: %tu) for %tu users", forceDownload, userIds.count);
+    NSLog(@"[MXDeviceList] downloadKeys(forceDownload: %d) for %tu users", forceDownload, userIds.count);
 
     NSMutableArray *usersToDownload = [NSMutableArray array];
     BOOL doANewQuery = NO;
