@@ -1011,26 +1011,18 @@ MXAuthAction;
                 MXStrongifyAndReturnIfNil(self);
 
                 MXHTTPOperation *operation3 = [self requestTokenFromEndpoint2:path parameters:updatedParameters success:success failure:failure];
-                if (operation3)
-                {
-                    [operation mutateTo:operation3];
-                }
-
+                
+                [operation mutateTo:operation3];
+                
             } failure:failure];
-
-            if (operation2)
-            {
-                [operation mutateTo:operation2];
-            }
+            
+            [operation mutateTo:operation2];
         }
         else
         {
             MXHTTPOperation *operation2 = [self requestTokenFromEndpoint2:path parameters:parameters success:success failure:failure];
-
-            if (operation2)
-            {
-                [operation mutateTo:operation2];
-            }
+            
+            [operation mutateTo:operation2];
         }
     } failure:failure];
 
@@ -1101,11 +1093,8 @@ MXAuthAction;
         {
             success(parameters);
         }
-
-        if (operation2)
-        {
-            [operation mutateTo:operation2];
-        }
+        
+        [operation mutateTo:operation2];
 
     } failure:failure];
 
@@ -2072,10 +2061,8 @@ MXAuthAction;
         MXStrongifyAndReturnIfNil(self);
 
         MXHTTPOperation *operation2 = [self inviteByThreePidToRoom:roomId parameters:parameters success:success failure:failure];
-        if (operation2)
-        {
-            [operation mutateTo:operation2];
-        }
+        
+        [operation mutateTo:operation2];
 
     } failure:failure];
 
@@ -3116,10 +3103,8 @@ MXAuthAction;
                                                                 MXStrongifyAndReturnIfNil(self);
                                                                 [self dispatchFailure:error inBlock:failure];
                                                             }];
-        if (operation2)
-        {
-            [operation mutateTo:operation2];
-        }
+        
+        [operation mutateTo:operation2];
 
     } failure:^(NSError *error) {
         MXStrongifyAndReturnIfNil(self);

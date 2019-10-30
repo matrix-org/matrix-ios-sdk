@@ -122,10 +122,8 @@ NSString *const MX3PidAddManagerErrorDomain = @"org.matrix.sdk.MX3PidAddManagerE
             failure(error);
         }];
 
-        if (operation)
-        {
-            [threePidAddSession.httpOperation mutateTo:operation];
-        }
+        
+        [threePidAddSession.httpOperation mutateTo:operation];
         
     } failure:^(NSError * _Nonnull error) {
         threePidAddSession.httpOperation = nil;
@@ -244,11 +242,8 @@ NSString *const MX3PidAddManagerErrorDomain = @"org.matrix.sdk.MX3PidAddManagerE
             threePidAddSession.httpOperation = nil;
             failure(error);
         }];
-
-        if (operation)
-        {
-            [threePidAddSession.httpOperation mutateTo:operation];
-        }
+    
+        [threePidAddSession.httpOperation mutateTo:operation];
 
     } failure:^(NSError * _Nonnull error) {
         threePidAddSession.httpOperation = nil;
@@ -344,11 +339,8 @@ NSString *const MX3PidAddManagerErrorDomain = @"org.matrix.sdk.MX3PidAddManagerE
                 failure(error);
             }];
         }
-
-        if (operation)
-        {
-            [threePidAddSession.httpOperation mutateTo:operation];
-        }
+        
+        [threePidAddSession.httpOperation mutateTo:operation];
 
     } failure:^(NSError *error) {
         threePidAddSession.httpOperation = nil;
@@ -487,11 +479,8 @@ NSString *const MX3PidAddManagerErrorDomain = @"org.matrix.sdk.MX3PidAddManagerE
                     success(self->doesServerSupportSeparateAddAndBind);
 
                 } failure:failure];
-
-                if (operation2)
-                {
-                    [operation mutateTo:operation2];
-                }
+                
+                [operation mutateTo:operation2];
             }
             else
             {
@@ -689,11 +678,8 @@ NSString *const MX3PidAddManagerErrorDomain = @"org.matrix.sdk.MX3PidAddManagerE
                 failure(error);
             }];
         }
-
-        if (operation)
-        {
-            [threePidAddSession.httpOperation mutateTo:operation];
-        }
+        
+        [threePidAddSession.httpOperation mutateTo:operation];
 
     } failure:^(NSError * _Nonnull error) {
         threePidAddSession.httpOperation = nil;
@@ -790,10 +776,7 @@ NSString *const MX3PidAddManagerErrorDomain = @"org.matrix.sdk.MX3PidAddManagerE
                 failure(error);
             }];
 
-            if (operation)
-            {
-                [threePidAddSession.httpOperation mutateTo:operation];
-            }
+            [threePidAddSession.httpOperation mutateTo:operation];
 
         } failure:^(NSError *error) {
             threePidAddSession.httpOperation = nil;
@@ -849,12 +832,8 @@ NSString *const MX3PidAddManagerErrorDomain = @"org.matrix.sdk.MX3PidAddManagerE
                 failure(error);
             }];
         }
-
-        if (operation2)
-        {
-            [operation mutateTo:operation2];
-        }
-
+    
+        [operation mutateTo:operation2];
 
     } failure:^(NSError *error) {
 
@@ -911,11 +890,8 @@ NSString *const MX3PidAddManagerErrorDomain = @"org.matrix.sdk.MX3PidAddManagerE
                 threePidAddSession.httpOperation = nil;
                 failure(error);
             }];
-
-            if (operation)
-            {
-                [threePidAddSession.httpOperation mutateTo:operation];
-            }
+            
+            [threePidAddSession.httpOperation mutateTo:operation];
 
         } failure:^(NSError *error) {
             threePidAddSession.httpOperation = nil;

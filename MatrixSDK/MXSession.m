@@ -2101,10 +2101,7 @@ typedef void (^MXOnResumeDone)(void);
         }
 
         MXHTTPOperation *operation2 = [self uploadDirectRoomsInOperationsQueue:newDirectRooms success:success failure:failure];
-        if (operation2)
-        {
-            [operation mutateTo:operation2];
-        }
+        [operation mutateTo:operation2];
     }];
 
     return operation;
@@ -2121,10 +2118,7 @@ typedef void (^MXOnResumeDone)(void);
         MXStrongifyAndReturnIfNil(self);
 
         MXHTTPOperation *operation2 = [self uploadDirectRoomsInOperationsQueue:directRooms success:success failure:failure];
-        if (operation2)
-        {
-            [operation mutateTo:operation2];
-        }
+        [operation mutateTo:operation2];
     }];
 
     return operation;
@@ -3455,11 +3449,8 @@ typedef void (^MXOnResumeDone)(void);
                                                                  }
                                                        forType:kMXAccountDataTypeIdentityServer
                                                        success:success failure:failure];
-
-            if (operation2)
-            {
-                [operation mutateTo:operation2];
-            }
+            
+            [operation mutateTo:operation2];
 
         } failure:^(NSError * _Nonnull error) {
             identityService = nil;
@@ -3534,11 +3525,8 @@ typedef void (^MXOnResumeDone)(void);
                     success(filterId);
 
                 } failure:failure];
-
-                if (operation2)
-                {
-                    [operation mutateTo:operation2];
-                }
+                
+                [operation mutateTo:operation2];
             }
 
         } failure:failure];
@@ -3587,11 +3575,8 @@ typedef void (^MXOnResumeDone)(void);
                     success(filter);
 
                 } failure:failure];
-
-                if (operation2)
-                {
-                    [operation mutateTo:operation2];
-                }
+                
+                [operation mutateTo:operation2];
             }
 
         } failure:failure];
