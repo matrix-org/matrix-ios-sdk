@@ -933,10 +933,11 @@ typedef void (^MXOnResumeDone)(void);
     // Determine if we are catching up
     _catchingUp = (0 == serverTimeout);
 
-    NSLog(@"[MXSession] Do a server sync%@", _catchingUp ? @" (catching up)" : @"");
+    NSString * streamToken = _store.eventStreamToken;
+    NSLog(@"[MXSession] Do a server sync%@: %@", _catchingUp ? @" (catching up)" : @"", streamToken);
 
     MXWeakify(self);
-    eventStreamRequest = [matrixRestClient syncFromToken:_store.eventStreamToken serverTimeout:serverTimeout clientTimeout:clientTimeout setPresence:setPresence filter:self.syncFilterId success:^(MXSyncResponse *syncResponse) {
+    eventStreamRequest = [matrixRestClient syncFromToken:streamToken serverTimeout:serverTimeout clientTimeout:clientTimeout setPresence:setPresence filter:self.syncFilterId success:^(MXSyncResponse *syncResponse) {
         MXStrongifyAndReturnIfNil(self);
 
         // Make sure [MXSession close] or [MXSession pause] has not been called before the server response
