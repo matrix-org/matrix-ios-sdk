@@ -11,6 +11,7 @@ Bug fix:
  * MX3PidAddManager: Add User-Interactive Auth to /account/3pid/add (vector-im/riot-ios#2744).
  * MXHTTPOperation: Make urlResponseFromError return the url response in case of MXError.
  * MXHTTPOperation: Fix a crash in `-mutateTo:` method when operation parameter is nil.
+ * VoIP: Fix regression when using a TURN server (vector-im/riot-ios#2796).
 
 Changes in Matrix iOS SDK in 0.14.0 (2019-10-11)
 ===============================================
