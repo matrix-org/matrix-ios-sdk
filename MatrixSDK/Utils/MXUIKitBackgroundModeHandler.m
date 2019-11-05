@@ -1,5 +1,6 @@
 /*
  Copyright 2017 Vector Creations Ltd
+ Copyright 2019 The Matrix.org Foundation C.I.C
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -19,48 +20,15 @@
 #if TARGET_OS_IPHONE
 
 #import <UIKit/UIKit.h>
+#import "MXUIKitBackgroundTask.h"
 
 @implementation MXUIKitBackgroundModeHandler
 
 #pragma mark - MXBackgroundModeHandler
 
-- (NSUInteger)invalidIdentifier
+- (id<MXBackgroundTask>)startBackgroundTaskWithName:(NSString *)name expirationHandler:(nullable MXBackgroundTaskExpirationHandler)expirationHandler
 {
-    return UIBackgroundTaskInvalid;
-}
-
-- (NSUInteger)startBackgroundTask
-{
-    return [self startBackgroundTaskWithName:nil completion:nil];
-}
-
-- (NSUInteger)startBackgroundTaskWithName:(NSString *)name completion:(void(^)(void))completion
-{
-    NSUInteger token = UIBackgroundTaskInvalid;
-    
-    UIApplication *sharedApplication = [UIApplication performSelector:@selector(sharedApplication)];
-    if (sharedApplication)
-    {
-        if (name)
-        {
-            token = [sharedApplication beginBackgroundTaskWithName:name expirationHandler:completion];
-        }
-        else
-        {
-            token = [sharedApplication beginBackgroundTaskWithExpirationHandler:completion];
-        }
-    }
-    
-    return token;
-}
-
-- (void)endBackgrounTaskWithIdentifier:(NSUInteger)identifier
-{
-    UIApplication *sharedApplication = [UIApplication performSelector:@selector(sharedApplication)];
-    if (sharedApplication)
-    {
-        [sharedApplication endBackgroundTask:identifier];
-    }
+    return [[MXUIKitBackgroundTask alloc] initAndStartWithName:name expirationHandler:expirationHandler];;
 }
 
 @end
