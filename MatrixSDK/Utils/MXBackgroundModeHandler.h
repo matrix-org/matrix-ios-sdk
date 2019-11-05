@@ -1,6 +1,7 @@
 /*
  Copyright 2017 Samuel Gallet
  Copyright 2017 Vector Creations Ltd
+ Copyright 2019 The Matrix.org Foundation C.I.C
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -19,15 +20,21 @@
 #define MXBackgroundModeHandler_h
 
 #import <Foundation/Foundation.h>
+#import "MXBackgroundTask.h"
+
+typedef void (^MXBackgroundTaskExpirationHandler)(void);
+
+NS_ASSUME_NONNULL_BEGIN
 
 /**
  Interface to handle enabling background mode
  */
 @protocol MXBackgroundModeHandler <NSObject>
-- (NSUInteger)invalidIdentifier;
-- (NSUInteger)startBackgroundTask;
-- (NSUInteger)startBackgroundTaskWithName:(NSString *)name completion:(void(^)(void))completion;
-- (void)endBackgrounTaskWithIdentifier:(NSUInteger)identifier;
+
+- (id<MXBackgroundTask>)startBackgroundTaskWithName:(NSString *)name expirationHandler:(nullable MXBackgroundTaskExpirationHandler)expirationHandler;
+
 @end
+
+NS_ASSUME_NONNULL_END
 
 #endif /* MXBackgroundModeHandler_h */
