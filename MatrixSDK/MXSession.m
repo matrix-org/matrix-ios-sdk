@@ -144,12 +144,6 @@ typedef void (^MXOnResumeDone)(void);
     NSMutableArray<MXPeekingRoom *> *peekingRooms;
 
     /**
-     The background task used when the session continue to run the events stream when
-     the app goes in background.
-     */
-    NSUInteger backgroundTaskIdentifier;
-
-    /**
      For debug, indicate if the first sync after the MXSession startup is done.
      */
     BOOL firstSyncDone;
@@ -179,6 +173,12 @@ typedef void (^MXOnResumeDone)(void);
 
 @property (nonatomic, readwrite) MXScanManager *scanManager;
 
+/**
+ The background task used when the session continue to run the events stream when
+ the app goes in background.
+ */
+@property (nonatomic, strong) id<MXBackgroundTask> backgroundTask;
+
 @end
 
 @implementation MXSession
@@ -206,12 +206,6 @@ typedef void (^MXOnResumeDone)(void);
         [self setIdentityServer:mxRestClient.identityServer andAccessToken:mxRestClient.credentials.identityServerAccessToken];
         
         firstSyncDone = NO;
-
-        id<MXBackgroundModeHandler> handler = [MXSDKOptions sharedInstance].backgroundModeHandler;
-        if (handler)
-        {
-            backgroundTaskIdentifier = [handler invalidIdentifier];
-        }
 
         _acknowledgableEventTypes = @[kMXEventTypeStringRoomName,
                                       kMXEventTypeStringRoomTopic,
@@ -600,18 +594,17 @@ typedef void (^MXOnResumeDone)(void);
             NSLog(@"[MXSession pause] Prevent the session from being paused. preventPauseCount: %tu", _preventPauseCount);
             
             id<MXBackgroundModeHandler> handler = [MXSDKOptions sharedInstance].backgroundModeHandler;
-            if (handler && backgroundTaskIdentifier == [handler invalidIdentifier])
+            
+            if (handler && !self.backgroundTask.isRunning)
             {
                 MXWeakify(self);
-                backgroundTaskIdentifier = [handler startBackgroundTaskWithName:@"MXSessionBackgroundTask" completion:^{
+                
+                self.backgroundTask = [handler startBackgroundTaskWithName:@"[MXSession] pause" expirationHandler:^{
                     MXStrongifyAndReturnIfNil(self);
-
-                    NSLog(@"[MXSession pause] Background task #%tu is going to expire - ending it", self->backgroundTaskIdentifier);
                     
                     // We cannot continue to run in background. Pause the session for real
                     self.preventPauseCount = 0;
                 }];
-                NSLog(@"[MXSession pause] Created background task #%tu", backgroundTaskIdentifier);
             }
             
             [self setState:MXSessionStatePauseRequested];
@@ -644,13 +637,11 @@ typedef void (^MXOnResumeDone)(void);
 - (void)resume:(void (^)(void))resumeDone
 {
     NSLog(@"[MXSession] resume the event stream from state %tu", _state);
-
-    id<MXBackgroundModeHandler> handler = [MXSDKOptions sharedInstance].backgroundModeHandler;
-    if (handler && backgroundTaskIdentifier != [handler invalidIdentifier])
+    
+    if (self.backgroundTask.isRunning)
     {
-        NSLog(@"[MXSession resume] Stop background task #%tu", backgroundTaskIdentifier);
-        [handler endBackgrounTaskWithIdentifier:backgroundTaskIdentifier];
-        backgroundTaskIdentifier = [handler invalidIdentifier];
+        [self.backgroundTask stop];
+        self.backgroundTask = nil;
     }
 
     // Check whether no request is already in progress
@@ -790,11 +781,10 @@ typedef void (^MXOnResumeDone)(void);
     userIdsWithOutdatedPublicisedGroups = nil;
 
     // Stop background task
-    id<MXBackgroundModeHandler> handler = [MXSDKOptions sharedInstance].backgroundModeHandler;
-    if (handler && backgroundTaskIdentifier != [handler invalidIdentifier])
+    if (self.backgroundTask.isRunning)
     {
-        [handler endBackgrounTaskWithIdentifier:backgroundTaskIdentifier];
-        backgroundTaskIdentifier = [handler invalidIdentifier];
+        [self.backgroundTask stop];
+        self.backgroundTask = nil;
     }
 
     _myUser = nil;
@@ -902,12 +892,11 @@ typedef void (^MXOnResumeDone)(void);
     if (_preventPauseCount == 0)
     {
         // The background task can be released
-        id<MXBackgroundModeHandler> handler = [MXSDKOptions sharedInstance].backgroundModeHandler;
-        if (handler && backgroundTaskIdentifier != [handler invalidIdentifier])
+        if (self.backgroundTask.isRunning)
         {
-            NSLog(@"[MXSession pause] Stop background task #%tu", backgroundTaskIdentifier);
-            [handler endBackgrounTaskWithIdentifier:backgroundTaskIdentifier];
-            backgroundTaskIdentifier = [handler invalidIdentifier];
+            NSLog(@"[MXSession pause] Stop background task %@", self.backgroundTask);
+            [self.backgroundTask stop];
+            self.backgroundTask = nil;
         }
 
         // And the session can be paused for real if it was not resumed before
