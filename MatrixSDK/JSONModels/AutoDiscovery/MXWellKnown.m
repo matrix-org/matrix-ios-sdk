@@ -30,6 +30,7 @@
         wellknown.homeServer = homeServerBaseConfig;
 
         MXJSONModelSetMXJSONModel(wellknown.identityServer, MXWellKnownBaseConfig, JSONDictionary[@"m.identity_server"]);
+        MXJSONModelSetMXJSONModel(wellknown.integrations, MXWellknownIntegrations, JSONDictionary[@"m.integrations"]);
     }
 
     return wellknown;

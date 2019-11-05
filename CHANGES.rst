@@ -5,6 +5,7 @@ Improvements:
  * MX3PidAddManager: Add User-Interactive Auth to /account/3pid/add (vector-im/riot-ios#2744).
  * MXSession: On resume, make the first /sync request trigger earlier (vector-im/riot-ios#2793).
  * MXCrypto: Do not fail to decrypt when there is nothing to decrypt (redacted events).
+ * Well-known: Expose "m.integrations" according to [MSC1957](https://github.com/matrix-org/matrix-doc/pull/1957) (vector-im/riot-ios#2815).
 
 Bug fix:
  * Room members who left are listed with the actual members (vector-im/riot-ios#2737).
