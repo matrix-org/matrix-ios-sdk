@@ -71,11 +71,6 @@ static NSUInteger requestCount = 0;
     MXHTTPClientOnUnrecognizedCertificate onUnrecognizedCertificateBlock;
 
     /**
-     The current background task id if any.
-     */
-    NSUInteger backgroundTaskIdentifier;
-
-    /**
      Flag to indicate that the underlying NSURLSession has been invalidated.
      In this state, we can not use anymore NSURLSession else it crashes.
      */
@@ -86,6 +81,11 @@ static NSUInteger requestCount = 0;
  The access token used for authenticated requests.
  */
 @property (nonatomic, strong) NSString *accessToken;
+
+/**
+ The current background task id if any.
+ */
+@property (nonatomic, strong) id<MXBackgroundTask> backgroundTask;
 
 @end
 
@@ -122,12 +122,6 @@ static NSUInteger requestCount = 0;
         [self setDefaultSecurityPolicy];
 
         onUnrecognizedCertificateBlock = onUnrecognizedCertBlock;
-
-        id<MXBackgroundModeHandler> handler = [MXSDKOptions sharedInstance].backgroundModeHandler;
-        if (handler)
-        {
-            backgroundTaskIdentifier = [handler invalidIdentifier];
-        }
 
         // Send requests parameters in JSON format by default
         self.requestParametersInJSON = YES;
@@ -696,27 +690,20 @@ static NSUInteger requestCount = 0;
     @synchronized(self)
     {
         id<MXBackgroundModeHandler> handler = [MXSDKOptions sharedInstance].backgroundModeHandler;
-        if (handler && backgroundTaskIdentifier == [handler invalidIdentifier])
+        if (handler && !self.backgroundTask.isRunning)
         {
             MXWeakify(self);
-            backgroundTaskIdentifier = [handler startBackgroundTaskWithName:nil completion:^{
-
-                NSLog(@"[MXHTTPClient] Background task #%tu is going to expire - Try to end it",
-                      self->backgroundTaskIdentifier);
-
+            self.backgroundTask = [handler startBackgroundTaskWithName:@"[MXHTTPClient] startBackgroundTask" expirationHandler:^{
+                
                 MXStrongifyAndReturnIfNil(self);
-
+                
                 // Cancel all the tasks currently run by the managed session
                 NSArray *tasks = self->httpManager.tasks;
                 for (NSURLSessionTask *sessionTask in tasks)
                 {
                     [sessionTask cancel];
                 }
-
-                [self cleanupBackgroundTask];
             }];
-
-            NSLog(@"[MXHTTPClient] Background task #%tu started", backgroundTaskIdentifier);
         }
     }
 }
@@ -730,17 +717,13 @@ static NSUInteger requestCount = 0;
 - (void)cleanupBackgroundTask
 {
     NSLog(@"[MXHTTPClient] cleanupBackgroundTask");
-
+    
     @synchronized(self)
     {
-        id<MXBackgroundModeHandler> handler = [MXSDKOptions sharedInstance].backgroundModeHandler;
-        if (handler && backgroundTaskIdentifier != [handler invalidIdentifier] && httpManager.tasks.count == 0)
+        if (self.backgroundTask.isRunning && httpManager.tasks.count == 0)
         {
-            NSLog(@"[MXHTTPClient] Background task #%tu is complete",
-                  backgroundTaskIdentifier);
-
-            [handler endBackgrounTaskWithIdentifier:backgroundTaskIdentifier];
-            backgroundTaskIdentifier = [handler invalidIdentifier];
+            [self.backgroundTask stop];
+            self.backgroundTask = nil;
         }
     }
 }
