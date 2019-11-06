@@ -276,7 +276,7 @@ NSCharacterSet *uriComponentCharset;
 
 + (NSString *)generateTransactionId
 {
-    return [NSString stringWithFormat:@"m%tu.%tu", arc4random_uniform(INT32_MAX), transactionIdCount++];
+    return [NSString stringWithFormat:@"m%u.%tu", arc4random_uniform(INT32_MAX), transactionIdCount++];
 }
 
 + (NSString*)stripNewlineCharacters:(NSString *)inputString

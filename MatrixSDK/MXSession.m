@@ -47,7 +47,7 @@
 
 #pragma mark - Constants definitions
 
-const NSString *MatrixSDKVersion = @"0.14.0";
+const NSString *MatrixSDKVersion = @"0.15.0";
 NSString *const kMXSessionStateDidChangeNotification = @"kMXSessionStateDidChangeNotification";
 NSString *const kMXSessionNewRoomNotification = @"kMXSessionNewRoomNotification";
 NSString *const kMXSessionWillLeaveRoomNotification = @"kMXSessionWillLeaveRoomNotification";
@@ -144,12 +144,6 @@ typedef void (^MXOnResumeDone)(void);
     NSMutableArray<MXPeekingRoom *> *peekingRooms;
 
     /**
-     The background task used when the session continue to run the events stream when
-     the app goes in background.
-     */
-    NSUInteger backgroundTaskIdentifier;
-
-    /**
      For debug, indicate if the first sync after the MXSession startup is done.
      */
     BOOL firstSyncDone;
@@ -179,6 +173,12 @@ typedef void (^MXOnResumeDone)(void);
 
 @property (nonatomic, readwrite) MXScanManager *scanManager;
 
+/**
+ The background task used when the session continue to run the events stream when
+ the app goes in background.
+ */
+@property (nonatomic, strong) id<MXBackgroundTask> backgroundTask;
+
 @end
 
 @implementation MXSession
@@ -206,12 +206,6 @@ typedef void (^MXOnResumeDone)(void);
         [self setIdentityServer:mxRestClient.identityServer andAccessToken:mxRestClient.credentials.identityServerAccessToken];
         
         firstSyncDone = NO;
-
-        id<MXBackgroundModeHandler> handler = [MXSDKOptions sharedInstance].backgroundModeHandler;
-        if (handler)
-        {
-            backgroundTaskIdentifier = [handler invalidIdentifier];
-        }
 
         _acknowledgableEventTypes = @[kMXEventTypeStringRoomName,
                                       kMXEventTypeStringRoomTopic,
@@ -503,36 +497,20 @@ typedef void (^MXOnResumeDone)(void);
     // Can we resume from data available in the cache
     if (_store.isPermanent && self.isEventStreamInitialised && 0 < _store.rooms.count)
     {
+        // Resume the stream (presence will be retrieved during server sync)
+        NSLog(@"[MXSession] Resuming the events stream from %@...", self.store.eventStreamToken);
+        NSDate *startDate2 = [NSDate date];
+        [self resume:^{
+            NSLog(@"[MXSession] Events stream resumed in %.0fms", [[NSDate date] timeIntervalSinceDate:startDate2] * 1000);
+
+            onServerSyncDone();
+        }];
+
         // Start crypto if enabled
-        MXWeakify(self);
         [self startCrypto:^{
-            MXStrongifyAndReturnIfNil(self);
-
-            // Resume the stream (presence will be retrieved during server sync)
-            NSLog(@"[MXSession] Resuming the events stream from %@...", self.store.eventStreamToken);
-            NSDate *startDate2 = [NSDate date];
-            [self resume:^{
-                NSLog(@"[MXSession] Events stream resumed in %.0fms", [[NSDate date] timeIntervalSinceDate:startDate2] * 1000);
-
-                onServerSyncDone();
-            }];
-
+            NSLog(@"[MXSession] Crypto has been started");
         }  failure:^(NSError *error) {
-
             NSLog(@"[MXSession] Crypto failed to start. Error: %@", error);
-            
-            // Check whether the token is valid
-            if ([self isUnknownTokenError:error])
-            {
-                // Do nothing more because without a valid access_token, the session is useless
-                return;
-            }
-            
-            // Else consider the sync has failed
-            [self setState:MXSessionStateInitialSyncFailed];
-            // Inform the caller that an error has occurred
-            failure(error);
-
         }];
     }
     else
@@ -616,18 +594,17 @@ typedef void (^MXOnResumeDone)(void);
             NSLog(@"[MXSession pause] Prevent the session from being paused. preventPauseCount: %tu", _preventPauseCount);
             
             id<MXBackgroundModeHandler> handler = [MXSDKOptions sharedInstance].backgroundModeHandler;
-            if (handler && backgroundTaskIdentifier == [handler invalidIdentifier])
+            
+            if (handler && !self.backgroundTask.isRunning)
             {
                 MXWeakify(self);
-                backgroundTaskIdentifier = [handler startBackgroundTaskWithName:@"MXSessionBackgroundTask" completion:^{
+                
+                self.backgroundTask = [handler startBackgroundTaskWithName:@"[MXSession] pause" expirationHandler:^{
                     MXStrongifyAndReturnIfNil(self);
-
-                    NSLog(@"[MXSession pause] Background task #%tu is going to expire - ending it", self->backgroundTaskIdentifier);
                     
                     // We cannot continue to run in background. Pause the session for real
                     self.preventPauseCount = 0;
                 }];
-                NSLog(@"[MXSession pause] Created background task #%tu", backgroundTaskIdentifier);
             }
             
             [self setState:MXSessionStatePauseRequested];
@@ -660,13 +637,11 @@ typedef void (^MXOnResumeDone)(void);
 - (void)resume:(void (^)(void))resumeDone
 {
     NSLog(@"[MXSession] resume the event stream from state %tu", _state);
-
-    id<MXBackgroundModeHandler> handler = [MXSDKOptions sharedInstance].backgroundModeHandler;
-    if (handler && backgroundTaskIdentifier != [handler invalidIdentifier])
+    
+    if (self.backgroundTask.isRunning)
     {
-        NSLog(@"[MXSession resume] Stop background task #%tu", backgroundTaskIdentifier);
-        [handler endBackgrounTaskWithIdentifier:backgroundTaskIdentifier];
-        backgroundTaskIdentifier = [handler invalidIdentifier];
+        [self.backgroundTask stop];
+        self.backgroundTask = nil;
     }
 
     // Check whether no request is already in progress
@@ -806,11 +781,10 @@ typedef void (^MXOnResumeDone)(void);
     userIdsWithOutdatedPublicisedGroups = nil;
 
     // Stop background task
-    id<MXBackgroundModeHandler> handler = [MXSDKOptions sharedInstance].backgroundModeHandler;
-    if (handler && backgroundTaskIdentifier != [handler invalidIdentifier])
+    if (self.backgroundTask.isRunning)
     {
-        [handler endBackgrounTaskWithIdentifier:backgroundTaskIdentifier];
-        backgroundTaskIdentifier = [handler invalidIdentifier];
+        [self.backgroundTask stop];
+        self.backgroundTask = nil;
     }
 
     _myUser = nil;
@@ -918,12 +892,11 @@ typedef void (^MXOnResumeDone)(void);
     if (_preventPauseCount == 0)
     {
         // The background task can be released
-        id<MXBackgroundModeHandler> handler = [MXSDKOptions sharedInstance].backgroundModeHandler;
-        if (handler && backgroundTaskIdentifier != [handler invalidIdentifier])
+        if (self.backgroundTask.isRunning)
         {
-            NSLog(@"[MXSession pause] Stop background task #%tu", backgroundTaskIdentifier);
-            [handler endBackgrounTaskWithIdentifier:backgroundTaskIdentifier];
-            backgroundTaskIdentifier = [handler invalidIdentifier];
+            NSLog(@"[MXSession pause] Stop background task %@", self.backgroundTask);
+            [self.backgroundTask stop];
+            self.backgroundTask = nil;
         }
 
         // And the session can be paused for real if it was not resumed before
@@ -949,10 +922,11 @@ typedef void (^MXOnResumeDone)(void);
     // Determine if we are catching up
     _catchingUp = (0 == serverTimeout);
 
-    NSLog(@"[MXSession] Do a server sync%@", _catchingUp ? @" (catching up)" : @"");
+    NSString * streamToken = _store.eventStreamToken;
+    NSLog(@"[MXSession] Do a server sync%@: %@", _catchingUp ? @" (catching up)" : @"", streamToken);
 
     MXWeakify(self);
-    eventStreamRequest = [matrixRestClient syncFromToken:_store.eventStreamToken serverTimeout:serverTimeout clientTimeout:clientTimeout setPresence:setPresence filter:self.syncFilterId success:^(MXSyncResponse *syncResponse) {
+    eventStreamRequest = [matrixRestClient syncFromToken:streamToken serverTimeout:serverTimeout clientTimeout:clientTimeout setPresence:setPresence filter:self.syncFilterId success:^(MXSyncResponse *syncResponse) {
         MXStrongifyAndReturnIfNil(self);
 
         // Make sure [MXSession close] or [MXSession pause] has not been called before the server response
@@ -2117,10 +2091,7 @@ typedef void (^MXOnResumeDone)(void);
         }
 
         MXHTTPOperation *operation2 = [self uploadDirectRoomsInOperationsQueue:newDirectRooms success:success failure:failure];
-        if (operation2)
-        {
-            [operation mutateTo:operation2];
-        }
+        [operation mutateTo:operation2];
     }];
 
     return operation;
@@ -2137,10 +2108,7 @@ typedef void (^MXOnResumeDone)(void);
         MXStrongifyAndReturnIfNil(self);
 
         MXHTTPOperation *operation2 = [self uploadDirectRoomsInOperationsQueue:directRooms success:success failure:failure];
-        if (operation2)
-        {
-            [operation mutateTo:operation2];
-        }
+        [operation mutateTo:operation2];
     }];
 
     return operation;
@@ -3471,11 +3439,8 @@ typedef void (^MXOnResumeDone)(void);
                                                                  }
                                                        forType:kMXAccountDataTypeIdentityServer
                                                        success:success failure:failure];
-
-            if (operation2)
-            {
-                [operation mutateTo:operation2];
-            }
+            
+            [operation mutateTo:operation2];
 
         } failure:^(NSError * _Nonnull error) {
             identityService = nil;
@@ -3550,11 +3515,8 @@ typedef void (^MXOnResumeDone)(void);
                     success(filterId);
 
                 } failure:failure];
-
-                if (operation2)
-                {
-                    [operation mutateTo:operation2];
-                }
+                
+                [operation mutateTo:operation2];
             }
 
         } failure:failure];
@@ -3603,11 +3565,8 @@ typedef void (^MXOnResumeDone)(void);
                     success(filter);
 
                 } failure:failure];
-
-                if (operation2)
-                {
-                    [operation mutateTo:operation2];
-                }
+                
+                [operation mutateTo:operation2];
             }
 
         } failure:failure];

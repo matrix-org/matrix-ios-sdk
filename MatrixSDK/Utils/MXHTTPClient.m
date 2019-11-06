@@ -38,11 +38,14 @@
  */
 #define MXHTTPCLIENT_RETRY_JITTER_MS 3000
 
-NSString * const MXHTTPClientErrorResponseDataKey = @"com.matrixsdk.httpclient.error.response.data";
+NSString* const MXHTTPClientErrorResponseDataKey = @"com.matrixsdk.httpclient.error.response.data";
 NSString* const kMXHTTPClientUserConsentNotGivenErrorNotification = @"kMXHTTPClientUserConsentNotGivenErrorNotification";
 NSString* const kMXHTTPClientUserConsentNotGivenErrorNotificationConsentURIKey = @"kMXHTTPClientUserConsentNotGivenErrorNotificationConsentURIKey";
 NSString* const kMXHTTPClientMatrixErrorNotification = @"kMXHTTPClientMatrixErrorNotification";
 NSString* const kMXHTTPClientMatrixErrorNotificationErrorKey = @"kMXHTTPClientMatrixErrorNotificationErrorKey";
+
+
+static NSUInteger requestCount = 0;
 
 
 @interface MXHTTPClient ()
@@ -68,11 +71,6 @@ NSString* const kMXHTTPClientMatrixErrorNotificationErrorKey = @"kMXHTTPClientMa
     MXHTTPClientOnUnrecognizedCertificate onUnrecognizedCertificateBlock;
 
     /**
-     The current background task id if any.
-     */
-    NSUInteger backgroundTaskIdentifier;
-
-    /**
      Flag to indicate that the underlying NSURLSession has been invalidated.
      In this state, we can not use anymore NSURLSession else it crashes.
      */
@@ -83,6 +81,11 @@ NSString* const kMXHTTPClientMatrixErrorNotificationErrorKey = @"kMXHTTPClientMa
  The access token used for authenticated requests.
  */
 @property (nonatomic, strong) NSString *accessToken;
+
+/**
+ The current background task id if any.
+ */
+@property (nonatomic, strong) id<MXBackgroundTask> backgroundTask;
 
 @end
 
@@ -119,12 +122,6 @@ NSString* const kMXHTTPClientMatrixErrorNotificationErrorKey = @"kMXHTTPClientMa
         [self setDefaultSecurityPolicy];
 
         onUnrecognizedCertificateBlock = onUnrecognizedCertBlock;
-
-        id<MXBackgroundModeHandler> handler = [MXSDKOptions sharedInstance].backgroundModeHandler;
-        if (handler)
-        {
-            backgroundTaskIdentifier = [handler invalidIdentifier];
-        }
 
         // Send requests parameters in JSON format by default
         self.requestParametersInJSON = YES;
@@ -359,6 +356,11 @@ NSString* const kMXHTTPClientMatrixErrorNotificationErrorKey = @"kMXHTTPClientMa
 
     MXWeakify(self);
 
+    NSDate *startDate = [NSDate date];
+    NSUInteger requestNumber = requestCount++;
+
+    NSLog(@"[MXHTTPClient] #%@ - %@", @(requestNumber), path);
+
     mxHTTPOperation.numberOfTries++;
     mxHTTPOperation.operation = [httpManager dataTaskWithRequest:request uploadProgress:^(NSProgress * _Nonnull theUploadProgress) {
         
@@ -372,6 +374,8 @@ NSString* const kMXHTTPClientMatrixErrorNotificationErrorKey = @"kMXHTTPClientMa
         
     } downloadProgress:nil completionHandler:^(NSURLResponse * _Nonnull theResponse, NSDictionary *JSONResponse, NSError * _Nullable error) {
         NSHTTPURLResponse *response = (NSHTTPURLResponse*)theResponse;
+
+        NSLog(@"[MXHTTPClient] #%@ - %@ completed in %.0fms" ,@(requestNumber), path, [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
 
         if (!weakself)
         {
@@ -686,27 +690,20 @@ NSString* const kMXHTTPClientMatrixErrorNotificationErrorKey = @"kMXHTTPClientMa
     @synchronized(self)
     {
         id<MXBackgroundModeHandler> handler = [MXSDKOptions sharedInstance].backgroundModeHandler;
-        if (handler && backgroundTaskIdentifier == [handler invalidIdentifier])
+        if (handler && !self.backgroundTask.isRunning)
         {
             MXWeakify(self);
-            backgroundTaskIdentifier = [handler startBackgroundTaskWithName:nil completion:^{
-
-                NSLog(@"[MXHTTPClient] Background task #%tu is going to expire - Try to end it",
-                      self->backgroundTaskIdentifier);
-
+            self.backgroundTask = [handler startBackgroundTaskWithName:@"[MXHTTPClient] startBackgroundTask" expirationHandler:^{
+                
                 MXStrongifyAndReturnIfNil(self);
-
+                
                 // Cancel all the tasks currently run by the managed session
                 NSArray *tasks = self->httpManager.tasks;
                 for (NSURLSessionTask *sessionTask in tasks)
                 {
                     [sessionTask cancel];
                 }
-
-                [self cleanupBackgroundTask];
             }];
-
-            NSLog(@"[MXHTTPClient] Background task #%tu started", backgroundTaskIdentifier);
         }
     }
 }
@@ -720,17 +717,13 @@ NSString* const kMXHTTPClientMatrixErrorNotificationErrorKey = @"kMXHTTPClientMa
 - (void)cleanupBackgroundTask
 {
     NSLog(@"[MXHTTPClient] cleanupBackgroundTask");
-
+    
     @synchronized(self)
     {
-        id<MXBackgroundModeHandler> handler = [MXSDKOptions sharedInstance].backgroundModeHandler;
-        if (handler && backgroundTaskIdentifier != [handler invalidIdentifier] && httpManager.tasks.count == 0)
+        if (self.backgroundTask.isRunning && httpManager.tasks.count == 0)
         {
-            NSLog(@"[MXHTTPClient] Background task #%tu is complete",
-                  backgroundTaskIdentifier);
-
-            [handler endBackgrounTaskWithIdentifier:backgroundTaskIdentifier];
-            backgroundTaskIdentifier = [handler invalidIdentifier];
+            [self.backgroundTask stop];
+            self.backgroundTask = nil;
         }
     }
 }

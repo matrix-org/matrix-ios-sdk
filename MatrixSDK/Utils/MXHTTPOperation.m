@@ -18,6 +18,7 @@
 #import "MXHTTPOperation.h"
 
 #import <AFNetworking/AFNetworking.h>
+#import "MXError.h"
 
 #pragma mark - Constants definitions
 
@@ -71,6 +72,11 @@
 
 - (void)mutateTo:(MXHTTPOperation *)operation
 {
+    if (!operation)
+    {
+        return;
+    }
+    
     // Apply all data from the other MXHTTPOperation
     _operation = operation.operation;
     creationDate = operation->creationDate;
@@ -88,7 +94,17 @@
 
 + (NSHTTPURLResponse *)urlResponseFromError:(NSError*)error
 {
-    return error.userInfo[AFNetworkingOperationFailingURLResponseErrorKey];
+    NSHTTPURLResponse *response;
+    if ([MXError isMXError:error])
+    {
+        MXError *mxError = [[MXError alloc] initWithNSError:error];
+        response = mxError.httpResponse;
+    }
+    else
+    {
+        response = error.userInfo[AFNetworkingOperationFailingURLResponseErrorKey];
+    }
+    return response;
 }
 
 @end

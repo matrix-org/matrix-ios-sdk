@@ -72,7 +72,7 @@
  This allows to chain HTTP requests and let the user keep the control on consecutive
  requests, ie he will able to cancel subsequent http requests.
  
- @param operation the other operation to copy data from.
+ @param operation the other operation to copy data from. If the other operation is nil do nothing.
  */
 - (void)mutateTo:(MXHTTPOperation*)operation;
 

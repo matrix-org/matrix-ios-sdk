@@ -36,6 +36,13 @@ public extension MX3PidAddManager {
         return __tryFinaliseAddEmailSession(session, success: currySuccess(completion), failure: curryFailure(completion))
     }
 
+    @nonobjc func tryFinaliseAddEmailSession(_ session: MX3PidAddSession, password: String?, completion: @escaping (_ response: MXResponse<Void>) -> Void) -> Void {
+        return __tryFinaliseAddEmailSession(session, withPassword: password, success: currySuccess(completion), failure: curryFailure(completion))
+    }
+
+    @nonobjc func tryFinaliseAddEmailSession(_ session: MX3PidAddSession, authParams: [String: Any]?, completion: @escaping (_ response: MXResponse<Void>) -> Void) -> Void {
+        return __tryFinaliseAddEmailSession(session, authParams: authParams, success: currySuccess(completion), failure: curryFailure(completion))
+    }
 
     // MARK: - Add MSISDN
     @nonobjc @discardableResult func startAddPhoneNumberSession(_ phoneNumber: String, countryCode: String?, completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MX3PidAddSession {
@@ -44,6 +51,14 @@ public extension MX3PidAddManager {
 
     @nonobjc func finaliseAddPhoneNumberSession(_ session: MX3PidAddSession, token: String, completion: @escaping (_ response: MXResponse<Void>) -> Void) -> Void {
         return __finaliseAddPhoneNumber(session, withToken: token, success: currySuccess(completion), failure: curryFailure(completion))
+    }
+
+    @nonobjc func finaliseAddPhoneNumberSession(_ session: MX3PidAddSession, token: String, password: String?, completion: @escaping (_ response: MXResponse<Void>) -> Void) -> Void {
+        return __finaliseAddPhoneNumber(session, withToken: token, password: password, success: currySuccess(completion), failure: curryFailure(completion))
+    }
+
+    @nonobjc func finaliseAddPhoneNumberSession(_ session: MX3PidAddSession, token: String, authParams: [String: Any]?, completion: @escaping (_ response: MXResponse<Void>) -> Void) -> Void {
+        return __finaliseAddPhoneNumber(session, withToken: token, authParams: authParams, success: currySuccess(completion), failure: curryFailure(completion))
     }
 
 

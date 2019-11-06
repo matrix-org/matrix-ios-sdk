@@ -1381,13 +1381,14 @@ public extension MXRestClient {
      - parameters:
      - sid: the session id provided during the 3PID validation session.
      - clientSecret: the same secret key used in the validation session.
+     - authParameters: The additional authentication information for the user-interactive authentication API.
      - completion: A block object called when the operation completes.
      - response:  Indicates whether the operation was successful.
 
      - returns: a `MXHTTPOperation` instance.
      */
-    @nonobjc @discardableResult func addThirdPartyIdentifierOnly(withSessionId sid: String, clientSecret: String, completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation {
-        return __add3PIDOnly(withSessionId: sid, clientSecret: clientSecret, success: currySuccess(completion), failure: curryFailure(completion))
+    @nonobjc @discardableResult func addThirdPartyIdentifierOnly(withSessionId sid: String, clientSecret: String, authParameters: [String: Any]?, completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation {
+        return __add3PIDOnly(withSessionId: sid, clientSecret: clientSecret, authParams: authParameters, success: currySuccess(completion), failure: curryFailure(completion))
     }
     
     /**

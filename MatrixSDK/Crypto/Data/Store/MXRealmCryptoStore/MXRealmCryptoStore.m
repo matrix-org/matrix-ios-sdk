@@ -325,7 +325,7 @@ RLM_ARRAY_TYPE(MXRealmOlmInboundGroupSession)
             }
         }
 
-        NSLog(@"[MXRealmCryptoStore] Schema version: %tu", account.realm.configuration.schemaVersion);
+        NSLog(@"[MXRealmCryptoStore] Schema version: %llu", account.realm.configuration.schemaVersion);
     }
     return self;
 }
@@ -1129,7 +1129,7 @@ RLM_ARRAY_TYPE(MXRealmOlmInboundGroupSession)
 
         if (oldSchemaVersion < kMXRealmCryptoStoreVersion)
         {
-            NSLog(@"[MXRealmCryptoStore] Required migration detected. oldSchemaVersion: %tu - current: %tu", oldSchemaVersion, kMXRealmCryptoStoreVersion);
+            NSLog(@"[MXRealmCryptoStore] Required migration detected. oldSchemaVersion: %llu - current: %tu", oldSchemaVersion, kMXRealmCryptoStoreVersion);
 
             switch (oldSchemaVersion)
             {

@@ -482,11 +482,8 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
                 });
             }
         }];
-
-        if (operation2)
-        {
-            [operation mutateTo:operation2];
-        }
+        
+        [operation mutateTo:operation2];
     });
 
     return operation;
@@ -541,11 +538,8 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
                 });
             }
         }];
-
-        if (operation2)
-        {
-            [operation mutateTo:operation2];
-        }
+        
+        [operation mutateTo:operation2];
     });
 
     return operation;
@@ -806,11 +800,8 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
                 });
             }
         }];
-
-        if (operation2)
-        {
-            [operation mutateTo:operation2];
-        }
+        
+        [operation mutateTo:operation2];
     });
 
     return operation;

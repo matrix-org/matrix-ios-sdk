@@ -124,14 +124,13 @@
 
 - (void)addTURNServerUris:(NSArray<NSString *> *)uris withUsername:(nullable NSString *)username password:(nullable NSString *)password
 {
-    RTCConfiguration *configuration = [[RTCConfiguration alloc] init];
     RTCIceServer *ICEServer;
 
     if (uris)
     {
-        RTCIceServer *ICEServer = [[RTCIceServer alloc] initWithURLStrings:uris
-                                                                  username:username
-                                                                credential:password];
+        ICEServer = [[RTCIceServer alloc] initWithURLStrings:uris
+                                                    username:username
+                                                  credential:password];
 
         if (!ICEServer)
         {
@@ -144,6 +143,8 @@
                                           optionalConstraints:@{
                                                                 @"RtpDataChannels": @"true"
                                                                 }];
+
+    RTCConfiguration *configuration = [[RTCConfiguration alloc] init];
     if (ICEServer)
     {
         configuration.iceServers = @[ICEServer];

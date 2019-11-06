@@ -409,10 +409,7 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
                     }];
 
                     // Mutate the HTTP operation if an HTTP is required for the encryption
-                    if (operation2)
-                    {
-                        [operation mutateTo:operation2];
-                    }
+                    [operation mutateTo:operation2];
                 }
                 else
                 {
@@ -451,10 +448,19 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
     // At the moment, we lock the main thread while decrypting events.
     // Fortunately, decrypting is far quicker that encrypting.
     dispatch_sync(_decryptionQueue, ^{
+
+        if (!event.content.count)
+        {
+            NSLog(@"[MXCrypto] decryptEvent: No content to decrypt in event %@ (isRedacted: %@). Event: %@", event.eventId, @(event.isRedactedEvent), event.JSONDictionary);
+            result = [[MXEventDecryptionResult alloc] init];
+            result.clearEvent = event.content;
+            return;
+        }
+
         id<MXDecrypting> alg = [self getRoomDecryptor:event.roomId algorithm:event.content[@"algorithm"]];
         if (!alg)
         {
-            NSLog(@"[MXCrypto] decryptEvent: Unable to decrypt %@", event.content[@"algorithm"]);
+            NSLog(@"[MXCrypto] decryptEvent: Unable to decrypt %@ with algorithm %@. Event: %@", event.eventId, event.content[@"algorithm"], event.JSONDictionary);
 
             if (error)
             {
@@ -471,7 +477,7 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
             result = [alg decryptEvent:event inTimeline:timeline error:error];
             if (error && *error)
             {
-                NSLog(@"[MXCrypto] decryptEvent: Error: %@", *error);
+                NSLog(@"[MXCrypto] decryptEvent: Error for %@: %@\nEvent: %@", event.eventId, *error, event.JSONDictionary);
             }
         }
     });
@@ -548,11 +554,8 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
                                 });
                             }
                         }];
-
-                        if (operation2)
-                        {
-                            [operation mutateTo:operation2];
-                        }
+                        
+                        [operation mutateTo:operation2];
                     }
                     else if (failure)
                     {
@@ -859,11 +862,8 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
                 });
             }
         }];
-
-        if (operation2)
-        {
-            [operation mutateTo:operation2];
-        }
+        
+        [operation mutateTo:operation2];
     });
 
     return operation;
@@ -2194,10 +2194,7 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
                 }];
 
                 // Mutate MXHTTPOperation so that the user can cancel this new operation
-                if (operation2)
-                {
-                    [self->uploadOneTimeKeysOperation mutateTo:operation2];
-                }
+                [self->uploadOneTimeKeysOperation mutateTo:operation2];                
             }
             else
             {

@@ -522,8 +522,22 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
     {
         if (direction == MXTimelineDirectionBackwards)
         {
-            // Enrich the timeline root state with the additional state events observed during back pagination
-            [self handleStateEvents:paginatedResponse.state direction:MXTimelineDirectionForwards];
+            // Enrich the timeline root state with the additional state events observed during back pagination.
+            // Check that it is a member state event (it should always be the case) and
+            // that this memeber is not already known in our live room state
+            NSMutableArray<MXEvent *> *selectedStateEvents = [NSMutableArray array];
+            for (MXEvent *stateEvent in paginatedResponse.state)
+            {
+                if ((stateEvent.eventType == MXEventTypeRoomMember)
+                    && ![_state.members memberWithUserId: stateEvent.stateKey]) {
+                    [selectedStateEvents addObject:stateEvent];
+                }
+            }
+            
+            if (selectedStateEvents.count)
+            {
+                [self handleStateEvents:selectedStateEvents direction:MXTimelineDirectionForwards];
+            }
         }
 
         // Enrich intermediate room state while paginating
@@ -597,7 +611,7 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
 
         if (![room.mxSession decryptEvent:event inTimeline:timelineId])
         {
-            NSLog(@"[MXTimeline] addEvent: Warning: Unable to decrypt event: %@\nError: %@", event.content[@"body"], event.decryptionError);
+            NSLog(@"[MXTimeline] addEvent: Warning: Unable to decrypt event %@\nError: %@", event.eventId, event.decryptionError);
         }
     }
 

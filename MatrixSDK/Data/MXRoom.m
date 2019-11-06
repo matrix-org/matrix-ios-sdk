@@ -313,10 +313,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
                     NSLog(@"[MXRoom] get members failed. Pending requesters: %@", @(pendingRequesters.count));
                 }];
 
-                if (operation2)
-                {
-                    [operation mutateTo:operation2];
-                }
+                [operation mutateTo:operation2];
             }
 
             if (success)
@@ -1709,11 +1706,8 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
         MXHTTPOperation *operation2 = [self sendStateEventOfType:kMXEventTypeStringRoomPowerLevels content:newPowerLevelsEventContent stateKey:nil success:^(NSString *eventId) {
             success();
         } failure:failure];
-
-        if (operation2)
-        {
-            [operation mutateTo:operation2];
-        }
+        
+        [operation mutateTo:operation2];
     }];
 
     return operation;
@@ -3026,11 +3020,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
 
                 // Retry the operation with a user id
                 MXHTTPOperation *operation2 =  [self setIsDirect:isDirect withUserId:newDirectUserId success:success failure:failure];
-
-                if (operation2)
-                {
-                    [operation mutateTo:operation2];
-                }
+                [operation mutateTo:operation2];
             } failure:failure];
         }
     }

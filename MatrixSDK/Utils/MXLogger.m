@@ -183,7 +183,7 @@ static void handleUncaughtException(NSException *exception)
     NSString *version = [[NSProcessInfo processInfo] operatingSystemVersionString];
 #endif
     NSArray  *backtrace = [exception callStackSymbols];
-    NSString *description = [NSString stringWithFormat:@"%tu - %@\n%@\nApplication: %@ (%@)\nApplication version: %@\nMatrix SDK version: %@\nBuild: %@\n%@ %@\n\nMain thread: %@\n%@\n",
+    NSString *description = [NSString stringWithFormat:@"%.0f - %@\n%@\nApplication: %@ (%@)\nApplication version: %@\nMatrix SDK version: %@\nBuild: %@\n%@ %@\n\nMain thread: %@\n%@\n",
                              [[NSDate date] timeIntervalSince1970],
                              [NSDate date],
                              exception.description,

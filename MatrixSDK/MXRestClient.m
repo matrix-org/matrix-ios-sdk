@@ -1011,26 +1011,18 @@ MXAuthAction;
                 MXStrongifyAndReturnIfNil(self);
 
                 MXHTTPOperation *operation3 = [self requestTokenFromEndpoint2:path parameters:updatedParameters success:success failure:failure];
-                if (operation3)
-                {
-                    [operation mutateTo:operation3];
-                }
-
+                
+                [operation mutateTo:operation3];
+                
             } failure:failure];
-
-            if (operation2)
-            {
-                [operation mutateTo:operation2];
-            }
+            
+            [operation mutateTo:operation2];
         }
         else
         {
             MXHTTPOperation *operation2 = [self requestTokenFromEndpoint2:path parameters:parameters success:success failure:failure];
-
-            if (operation2)
-            {
-                [operation mutateTo:operation2];
-            }
+            
+            [operation mutateTo:operation2];
         }
     } failure:failure];
 
@@ -1101,11 +1093,8 @@ MXAuthAction;
         {
             success(parameters);
         }
-
-        if (operation2)
-        {
-            [operation mutateTo:operation2];
-        }
+        
+        [operation mutateTo:operation2];
 
     } failure:failure];
 
@@ -2072,10 +2061,8 @@ MXAuthAction;
         MXStrongifyAndReturnIfNil(self);
 
         MXHTTPOperation *operation2 = [self inviteByThreePidToRoom:roomId parameters:parameters success:success failure:failure];
-        if (operation2)
-        {
-            [operation mutateTo:operation2];
-        }
+        
+        [operation mutateTo:operation2];
 
     } failure:failure];
 
@@ -2991,15 +2978,21 @@ MXAuthAction;
 
 - (MXHTTPOperation*)add3PIDOnlyWithSessionId:(NSString*)sid
                                 clientSecret:(NSString*)clientSecret
+                                  authParams:(NSDictionary*)authParameters
                                      success:(void (^)(void))success
                                      failure:(void (^)(NSError *error))failure
 {
     NSString *path = [NSString stringWithFormat:@"%@/account/3pid/add", kMXAPIPrefixPathUnstable];
 
-    NSDictionary *parameters = @{
+    NSMutableDictionary *parameters = [@{
                                  @"sid": sid,
                                  @"client_secret": clientSecret
-                                 };
+                                 } mutableCopy];
+
+    if (authParameters)
+    {
+        parameters[@"auth"] = authParameters;
+    }
 
     MXWeakify(self);
     return [httpClient requestWithMethod:@"POST"
@@ -3110,10 +3103,8 @@ MXAuthAction;
                                                                 MXStrongifyAndReturnIfNil(self);
                                                                 [self dispatchFailure:error inBlock:failure];
                                                             }];
-        if (operation2)
-        {
-            [operation mutateTo:operation2];
-        }
+        
+        [operation mutateTo:operation2];
 
     } failure:^(NSError *error) {
         MXStrongifyAndReturnIfNil(self);
