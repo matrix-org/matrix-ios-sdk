@@ -34,7 +34,7 @@ NS_ASSUME_NONNULL_BEGIN
  *     }
  * }
  */
-@interface MXWellKnown : MXJSONModel
+@interface MXWellKnown : MXJSONModel<NSCoding>
 
 @property (nonatomic) MXWellKnownBaseConfig *homeServer;
 

@@ -37,14 +37,14 @@ NS_ASSUME_NONNULL_BEGIN
  */
 @class MXWellknownIntegrationsManager;
 
-@interface MXWellknownIntegrations : MXJSONModel
+@interface MXWellknownIntegrations : MXJSONModel<NSCoding>
 
 @property (nonatomic) NSArray<MXWellknownIntegrationsManager*> *managers;
 
 @end
 
 
-@interface MXWellknownIntegrationsManager : MXJSONModel
+@interface MXWellknownIntegrationsManager : MXJSONModel<NSCoding>
 
 @property (nonatomic) NSString *apiUrl;
 @property (nonatomic, nullable) NSString *uiUrl;

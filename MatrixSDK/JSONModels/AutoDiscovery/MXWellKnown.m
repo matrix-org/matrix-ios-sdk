@@ -41,4 +41,26 @@
     return [NSString stringWithFormat:@"<MXWellKnown: %p> homeserver: %@ - identityServer: %@", self, _homeServer.baseUrl, _identityServer.baseUrl];
 }
 
+
+#pragma mark - NSCoding
+
+- (id)initWithCoder:(NSCoder *)aDecoder
+{
+    self = [super init];
+    if (self)
+    {
+        _homeServer = [aDecoder decodeObjectForKey:@"m.homeserver"];
+        _identityServer = [aDecoder decodeObjectForKey:@"m.identity_server"];
+        _integrations = [aDecoder decodeObjectForKey:@"m.integrations"];
+    }
+    return self;
+}
+
+- (void)encodeWithCoder:(NSCoder *)aCoder
+{
+    [aCoder encodeObject:_homeServer forKey:@"m.homeserver"];
+    [aCoder encodeObject:_identityServer forKey:@"m.identity_server"];
+    [aCoder encodeObject:_integrations forKey:@"m.integrations"];
+}
+
 @end

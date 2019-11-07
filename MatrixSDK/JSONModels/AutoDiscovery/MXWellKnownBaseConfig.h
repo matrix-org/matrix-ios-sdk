@@ -27,7 +27,7 @@ NS_ASSUME_NONNULL_BEGIN
  *     "base_url": "https://matrix.org"
  * }
  */
-@interface MXWellKnownBaseConfig : MXJSONModel
+@interface MXWellKnownBaseConfig : MXJSONModel<NSCoding>
 
 @property (nonatomic) NSString *baseUrl;
 

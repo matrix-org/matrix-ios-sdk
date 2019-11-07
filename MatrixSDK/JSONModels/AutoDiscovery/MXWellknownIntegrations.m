@@ -33,7 +33,27 @@
     return integrations;
 }
 
+
+#pragma mark - NSCoding
+
+- (id)initWithCoder:(NSCoder *)aDecoder
+{
+    self = [super init];
+    if (self)
+    {
+        _managers = [aDecoder decodeObjectForKey:@"managers"];
+    }
+    return self;
+}
+
+- (void)encodeWithCoder:(NSCoder *)aCoder
+{
+    [aCoder encodeObject:_managers forKey:@"managers"];
+}
+
 @end
+
+
 
 @implementation MXWellknownIntegrationsManager
 
@@ -53,6 +73,26 @@
     }
 
     return manager;
+}
+
+
+#pragma mark - NSCoding
+
+- (id)initWithCoder:(NSCoder *)aDecoder
+{
+    self = [super init];
+    if (self)
+    {
+        _apiUrl = [aDecoder decodeObjectForKey:@"api_url"];
+        _uiUrl = [aDecoder decodeObjectForKey:@"ui_url"];
+    }
+    return self;
+}
+
+- (void)encodeWithCoder:(NSCoder *)aCoder
+{
+    [aCoder encodeObject:_apiUrl forKey:@"api_url"];
+    [aCoder encodeObject:_uiUrl forKey:@"ui_url"];
 }
 
 @end
