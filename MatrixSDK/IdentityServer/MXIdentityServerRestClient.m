@@ -16,12 +16,13 @@
 
 #import "MXIdentityServerRestClient.h"
 
+#import <AFNetworking/AFNetworking.h>
+#import <OLMKit/OLMUtility.h>
+
 #import "MXHTTPClient.h"
 #import "MXError.h"
 #import "MXTools.h"
-#import "OLMUtility.h"
 #import "MXEncryptedAttachments.h"
-#import <AFNetworking/AFNetworking.h>
 
 #pragma mark - Constants definitions
 
