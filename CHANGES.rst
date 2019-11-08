@@ -1,3 +1,9 @@
+Changes in Matrix iOS SDK in 0.15.1 (2019-xx-xx)
+===============================================
+Improvements:
+ * Well-known: Expose "m.integrations" according to [MSC1957](https://github.com/matrix-org/matrix-doc/pull/1957) (vector-im/riot-ios#2815).
+ * MXSession: Expose and store homeserverWellknown.
+
 Changes in Matrix iOS SDK in 0.15.0 (2019-11-06)
 ===============================================
 
@@ -5,7 +11,6 @@ Improvements:
  * MX3PidAddManager: Add User-Interactive Auth to /account/3pid/add (vector-im/riot-ios#2744).
  * MXSession: On resume, make the first /sync request trigger earlier (vector-im/riot-ios#2793).
  * MXCrypto: Do not fail to decrypt when there is nothing to decrypt (redacted events).
- * MXBackgroundModeHandler: Update interface and now return a MXBackgroundTask, a protocol describing a background task regardless of the plartform used.
 
 Bug fix:
  * Room members who left are listed with the actual members (vector-im/riot-ios#2737).
