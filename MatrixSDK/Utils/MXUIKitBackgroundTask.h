@@ -1,13 +1,12 @@
 /*
- Copyright 2017 Vector Creations Ltd
  Copyright 2019 The Matrix.org Foundation C.I.C
-
+ 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
  You may obtain a copy of the License at
-
+ 
  http://www.apache.org/licenses/LICENSE-2.0
-
+ 
  Unless required by applicable law or agreed to in writing, software
  distributed under the License is distributed on an "AS IS" BASIS,
  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -15,22 +14,22 @@
  limitations under the License.
  */
 
-#import "MXUIKitBackgroundModeHandler.h"
+#import <Foundation/Foundation.h>
+#import "MXBackgroundTask.h"
 
 #if TARGET_OS_IPHONE
 
-#import <UIKit/UIKit.h>
-#import "MXUIKitBackgroundTask.h"
+NS_ASSUME_NONNULL_BEGIN
 
-@implementation MXUIKitBackgroundModeHandler
+/**
+ MXUIKitBackgroundTask is a concrete implementation of MXBackgroundTask using UIApplication background task.
+ */
+@interface MXUIKitBackgroundTask : NSObject<MXBackgroundTask>
 
-#pragma mark - MXBackgroundModeHandler
-
-- (id<MXBackgroundTask>)startBackgroundTaskWithName:(NSString *)name expirationHandler:(nullable MXBackgroundTaskExpirationHandler)expirationHandler
-{
-    return [[MXUIKitBackgroundTask alloc] initAndStartWithName:name expirationHandler:expirationHandler];;
-}
+- (instancetype)initAndStartWithName:(NSString*)name expirationHandler:(nullable MXBackgroundTaskExpirationHandler)expirationHandler;
 
 @end
+
+NS_ASSUME_NONNULL_END
 
 #endif
