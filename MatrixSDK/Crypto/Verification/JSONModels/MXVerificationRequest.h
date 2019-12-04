@@ -14,25 +14,31 @@
  limitations under the License.
  */
 
+#import <Foundation/Foundation.h>
+
 #import "MXJSONModel.h"
+
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface MXKeyVerificationJSONModel : MXJSONModel
+@interface MXVerificationRequest : MXJSONModel
 
 /**
- The transaction ID from the m.key.verification.start message.
+ The device ID which is initiating the request.
  */
-@property (nonatomic) NSString *transactionId;
+@property (nonatomic) NSString *fromDevice;
 
 /**
- In case of direct message transport, the first event that triggered the transaction flow.
+ The verification methods supported by the sender.
  */
- @property (nonatomic) NSString *relatedEventId;;
+@property (nonatomic) NSArray<NSString*> *methods;
 
-
-- (instancetype)initWithJSONDictionary:(NSDictionary *)JSONDictionary;
-- (NSMutableDictionary*)JSONDictionaryWithTransactionId;
+/**
+ The POSIX timestamp in milliseconds for when the request was made.
+ If the request is in the future by more than 5 minutes or more than 10 minutes
+ in the past, the message should be ignored by the receiver.
+ */
+@property (nonatomic) uint64_t timestamp;
 
 @end
 

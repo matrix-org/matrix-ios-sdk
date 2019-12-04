@@ -16,10 +16,6 @@
 
 #import "MXKeyVerificationJSONModel.h"
 
-@interface MXKeyVerificationJSONModel()
-@property (nonatomic) NSString *relatedEventId;
-@end
-
 @implementation MXKeyVerificationJSONModel
 
 - (instancetype)initWithJSONDictionary:(NSDictionary *)JSONDictionary
