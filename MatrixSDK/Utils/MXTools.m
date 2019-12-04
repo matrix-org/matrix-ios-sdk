@@ -110,6 +110,7 @@ NSCharacterSet *uriComponentCharset;
                                 kMXEventTypeStringKeyVerificationKey,
                                 kMXEventTypeStringKeyVerificationMac,
                                 kMXEventTypeStringKeyVerificationCancel,
+                                kMXEventTypeStringKeyVerificationDone,
                                 ];
 
         NSMutableDictionary *map = [NSMutableDictionary dictionaryWithCapacity:eventTypeMapEnumToString.count];

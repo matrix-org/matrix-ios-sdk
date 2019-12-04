@@ -76,6 +76,7 @@ typedef enum : NSUInteger
     MXEventTypeKeyVerificationKey,
     MXEventTypeKeyVerificationMac,
     MXEventTypeKeyVerificationCancel,
+    MXEventTypeKeyVerificationDone,
 
     // The event is a custom event. Refer to its `MXEventTypeString` version
     MXEventTypeCustom = 1000
@@ -130,6 +131,7 @@ FOUNDATION_EXPORT NSString *const kMXEventTypeStringKeyVerificationAccept;
 FOUNDATION_EXPORT NSString *const kMXEventTypeStringKeyVerificationKey;
 FOUNDATION_EXPORT NSString *const kMXEventTypeStringKeyVerificationMac;
 FOUNDATION_EXPORT NSString *const kMXEventTypeStringKeyVerificationCancel;
+FOUNDATION_EXPORT NSString *const kMXEventTypeStringKeyVerificationDone;
 
 /**
  Types of room messages

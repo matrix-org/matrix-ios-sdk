@@ -470,6 +470,7 @@
  -> 7. Transaction on Alice side must then move to Verified
  -> Devices must be really verified
  -> Transaction must not be listed anymore
+ -> Both ends must get a done message
  */
 
 - (void)testVerificationByDMFullFlow
@@ -550,8 +551,6 @@
                     // -> Transaction must not be listed anymore
                     XCTAssertNil([aliceSession.crypto.deviceVerificationManager transactionWithTransactionId:sasTransactionFromAlicePOV.transactionId]);
                     XCTAssertNil([bobSession.crypto.deviceVerificationManager transactionWithTransactionId:transactionFromBobPOV.transactionId]);
-
-                    [expectation fulfill];
                 }
             };
 
@@ -618,6 +617,29 @@
                 }
             }];
         }];
+
+        // -> Both ends must get a done message
+        NSMutableArray<MXKeyVerificationDone*> *doneDone = [NSMutableArray new];
+        void (^checkDoneDone)(MXEvent *event, MXTimelineDirection direction, id customObject) = ^ void (MXEvent *event, MXTimelineDirection direction, id customObject)
+        {
+            XCTAssertEqual(event.eventType, MXEventTypeKeyVerificationDone);
+
+            // Check done format
+            MXKeyVerificationDone *done;
+            MXJSONModelSetMXJSONModel(done, MXKeyVerificationDone.class, event.content);
+            XCTAssertNotNil(done);
+
+            [doneDone addObject:done];
+            if (doneDone.count == 2)
+            {
+                [expectation fulfill];
+            }
+        };
+
+        [aliceSession listenToEventsOfTypes:@[kMXEventTypeStringKeyVerificationDone]
+                                    onEvent:checkDoneDone];
+        [bobSession listenToEventsOfTypes:@[kMXEventTypeStringKeyVerificationDone]
+                                    onEvent:checkDoneDone];
     }];
 }
 

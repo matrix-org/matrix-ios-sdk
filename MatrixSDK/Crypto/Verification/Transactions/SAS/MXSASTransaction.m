@@ -20,6 +20,7 @@
 #import "MXCrypto_Private.h"
 #import "MXDeviceVerificationManager_Private.h"
 
+
 #pragma mark - Constants
 
 NSString * const MXKeyVerificationMethodSAS        = @"m.sas.v1";
@@ -313,7 +314,18 @@ static NSArray<MXEmojiRepresentation*> *kSasEmojis;
 - (void)setDeviceAsVerified
 {
     [self.manager.crypto setDeviceVerification:MXDeviceVerified forDevice:self.otherDeviceId ofUser:self.otherUserId success:^{
+
+        // Inform the other peer we are done
+        MXKeyVerificationDone *doneContent = [MXKeyVerificationDone new];
+        doneContent.transactionId = self.transactionId;
+        if (self.transport == MKeyVerificationTransportDirectMessage)
+        {
+            doneContent.relatedEventId = self.dmEventId;
+        }
+        [self sendToOther:kMXEventTypeStringKeyVerificationDone content:doneContent.JSONDictionary success:^{} failure:^(NSError * _Nonnull error) {}];
+
         self.state = MXSASTransactionStateVerified;
+        
     } failure:^(NSError *error) {
         // Should never happen
         [self cancelWithCancelCode:MXTransactionCancelCode.invalidMessage];
