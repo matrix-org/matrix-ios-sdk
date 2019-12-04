@@ -3,6 +3,7 @@ Changes in Matrix iOS SDK in 0.15.1 (2019-xx-xx)
 Improvements:
  * Well-known: Expose "m.integrations" according to [MSC1957](https://github.com/matrix-org/matrix-doc/pull/1957) (vector-im/riot-ios#2815).
  * MXSession: Expose and store homeserverWellknown.
+ * SwiftMatrixSDK: Add missing start(withSyncFilter:) refinement to MXSession.swift.
  
 Bug fix:
  * MXIdentityServerRestClient: Match registration endpoint to the IS r0.3.0 spec (vector-im/riot-ios#2824).
