@@ -14,13 +14,11 @@
  limitations under the License.
  */
 
-#import <UIKit/UIKit.h>
 #import <XCTest/XCTest.h>
 
 #import "MatrixSDKTestsData.h"
 
 #import "MXSession.h"
-#import <UIKit/UIKit.h>
 #import <XCTest/XCTest.h>
 
 @interface MXMyUserTests : XCTestCase
