@@ -1,5 +1,9 @@
-Changes in Matrix iOS SDK in 0.15.1 (2019-xx-xx)
+Changes in Matrix iOS SDK in 0.15.2 (2019-xx-xx)
 ===============================================
+
+Changes in Matrix iOS SDK in 0.15.1 (2019-12-04)
+===============================================
+
 Improvements:
  * Well-known: Expose "m.integrations" according to [MSC1957](https://github.com/matrix-org/matrix-doc/pull/1957) (vector-im/riot-ios#2815).
  * MXSession: Expose and store homeserverWellknown.
