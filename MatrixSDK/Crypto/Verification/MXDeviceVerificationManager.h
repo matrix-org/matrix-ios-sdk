@@ -17,7 +17,7 @@
 
 #import <Foundation/Foundation.h>
 
-#import "MXVerificationRequest.h"
+#import "MXKeyVerificationRequest.h"
 #import "MXDeviceVerificationTransaction.h"
 
 #import "MXSASTransaction.h"

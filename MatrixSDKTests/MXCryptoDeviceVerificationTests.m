@@ -510,6 +510,11 @@
              {
                  XCTAssertEqualObjects(event.eventId, requestEventId);
 
+                 // Check verification by DM request format
+                 MXKeyVerificationRequest *request;
+                 MXJSONModelSetMXJSONModel(request, MXKeyVerificationRequest.class, event.content);
+                 XCTAssertNotNil(request);
+
                  // - Alice accepts it and begins a SAS verification
                  [aliceSession.crypto.deviceVerificationManager acceptVerificationByDMFromEvent:event method:MXKeyVerificationMethodSAS success:^(MXDeviceVerificationTransaction * _Nonnull transactionFromAlicePOV) {
 

@@ -74,16 +74,13 @@ NSTimeInterval const MXDeviceVerificationTimeout = 10 * 60.0;
         return;
     }
 
-    NSDictionary *content = @{
-                              @"msgtype": kMXMessageTypeKeyVerificationRequest,
-                              @"body": fallbackText,
-                              @"methods": methods,
-                              @"to": userId,
-                              @"from_device": _crypto.myDevice.deviceId
-                              };
+    MXKeyVerificationRequest *request = [MXKeyVerificationRequest new];
+    request.body = fallbackText;
+    request.methods = methods;
+    request.to = userId;
+    request.fromDevice = _crypto.myDevice.deviceId;
 
-
-    [room sendMessageWithContent:content localEcho:nil success:^(NSString *eventId) {
+    [room sendMessageWithContent:request.JSONDictionary localEcho:nil success:^(NSString *eventId) {
         NSLog(@"[MXKeyVerification] requestVerificationByDMWithUserId: -> Request event id: %@", eventId);
         success(eventId);
     } failure:failure];

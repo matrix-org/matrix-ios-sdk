@@ -21,12 +21,21 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface MXVerificationRequest : MXJSONModel
+/**
+ Model for m.key.verification.request.
+ As described at https://github.com/uhoreg/matrix-doc/blob/e2e_verification_in_dms/proposals/2241-e2e-verification-in-dms.md#requesting-a-key-verification
+ */
+@interface MXKeyVerificationRequest : MXJSONModel
 
 /**
- The device ID which is initiating the request.
+ A fallback message to alert users that their client does not support the key verification framework.
  */
-@property (nonatomic) NSString *fromDevice;
+@property (nonatomic) NSString *body;
+
+/**
+ "m.key.verification.request"
+ */
+@property (nonatomic) NSString *msgtype;
 
 /**
  The verification methods supported by the sender.
@@ -34,11 +43,14 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic) NSArray<NSString*> *methods;
 
 /**
- The POSIX timestamp in milliseconds for when the request was made.
- If the request is in the future by more than 5 minutes or more than 10 minutes
- in the past, the message should be ignored by the receiver.
+ The user to verify.
  */
-@property (nonatomic) uint64_t timestamp;
+@property (nonatomic) NSString *to;
+
+/**
+ The device ID which is initiating the request.
+ */
+@property (nonatomic) NSString *fromDevice;
 
 @end
 

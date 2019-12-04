@@ -14,22 +14,27 @@
  limitations under the License.
  */
 
-#import "MXVerificationRequest.h"
+#import "MXKeyVerificationRequest.h"
 
-@implementation MXVerificationRequest
+#import "MXEvent.h"
+
+@implementation MXKeyVerificationRequest
 
 + (instancetype)modelFromJSON:(NSDictionary *)JSONDictionary
 {
-    MXVerificationRequest *request = [MXVerificationRequest new];
+    MXKeyVerificationRequest *request = [MXKeyVerificationRequest new];
     if (request)
     {
-        MXJSONModelSetString(request.fromDevice, JSONDictionary[@"from_device"]);
+        MXJSONModelSetString(request.body, JSONDictionary[@"body"]);
+        MXJSONModelSetString(request.msgtype, JSONDictionary[@"msgtype"]);
         MXJSONModelSetArray(request.methods, JSONDictionary[@"methods"]);
-        MXJSONModelSetUInt64(request.timestamp, JSONDictionary[@"timestamp"]);
+        MXJSONModelSetString(request.to, JSONDictionary[@"to"]);
+        MXJSONModelSetString(request.fromDevice, JSONDictionary[@"from_device"]);
     }
 
     // Sanitiy check
-    if (!request.fromDevice.length
+    if (![request.msgtype isEqualToString:kMXMessageTypeKeyVerificationRequest]
+        || !request.fromDevice.length
         || !request.methods.count)
     {
         request = nil;
@@ -41,11 +46,22 @@
 - (NSDictionary *)JSONDictionary
 {
     NSMutableDictionary *JSONDictionary = [NSMutableDictionary dictionary];
-    JSONDictionary[@"from_device"] = _fromDevice;
+    JSONDictionary[@"body"] = _body;
+    JSONDictionary[@"msgtype"] = _msgtype;
     JSONDictionary[@"methods"] = _methods;
-    JSONDictionary[@"timestamp"] = @(_timestamp);
+    JSONDictionary[@"to"] = _to;
+    JSONDictionary[@"from_device"] = _fromDevice;
 
     return JSONDictionary;
+}
+
+- (instancetype)init
+{
+    self = [super init];
+    if (self) {
+        _msgtype = kMXMessageTypeKeyVerificationRequest;
+    }
+    return self;
 }
 
 @end
