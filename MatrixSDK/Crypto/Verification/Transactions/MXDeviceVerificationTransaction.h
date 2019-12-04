@@ -29,6 +29,11 @@ NS_ASSUME_NONNULL_BEGIN
  */
 FOUNDATION_EXPORT NSString * _Nonnull const MXDeviceVerificationTransactionDidChangeNotification;
 
+typedef NS_ENUM(NSInteger, MKeyVerificationTransport) {
+    MKeyVerificationTransportToDevice = 0,
+    MKeyVerificationTransportDirectMessage,
+};
+
 
 /**
  An handler on an interactive device verification.
@@ -39,6 +44,12 @@ FOUNDATION_EXPORT NSString * _Nonnull const MXDeviceVerificationTransactionDidCh
  The transaction id.
  */
 @property (nonatomic, readonly) NSString *transactionId;
+
+/**
+ Transport layer.
+ Default is by to_device events.
+ */
+@property (nonatomic, readonly) MKeyVerificationTransport transport;
 
 /**
  YES for an incoming verification request.
@@ -75,13 +86,21 @@ FOUNDATION_EXPORT NSString * _Nonnull const MXDeviceVerificationTransactionDidCh
  */
 @property (nonatomic, nullable) NSError *error;
 
-
 /**
  Cancel this transaction.
 
  @param code the cancellation reason
  */
 - (void)cancelWithCancelCode:(MXTransactionCancelCode*)code;
+
+
+#pragma mark - Transport layer
+#pragma mark Direct message
+
+- (void)setDirectMessageTransportInRoom:(NSString*)roomId originalEvent:(NSString*)eventId;
+
+@property (nonatomic, nullable, readonly) NSString *dmRoomId;
+@property (nonatomic, nullable, readonly) NSString *dmEventId;
 
 @end
 

@@ -59,12 +59,28 @@ NSString * const MXDeviceVerificationTransactionDidChangeNotification = @"MXDevi
         _startContent = startContent;
         _transactionId = _startContent.transactionId;
 
+        // Detect verification by DM
+        if (startContent.relatedEventId)
+        {
+            [self setDirectMessageTransportInRoom:event.roomId originalEvent:startContent.relatedEventId];
+        }
+
         // It would have been nice to timeout from the event creation date
         // but we do not receive the information. originServerTs = 0
         // So, use the time when we receive it instead
         //_creationDate = [NSDate dateWithTimeIntervalSince1970: (event.originServerTs / 1000)];
     }
     return self;
+}
+
+- (void)setDirectMessageTransportInRoom:(NSString *)roomId originalEvent:(NSString *)eventId
+{
+    _transport = MKeyVerificationTransportDirectMessage;
+    _dmRoomId = roomId;
+    _dmEventId = eventId;
+
+    // The original event id is used as the transaction id
+    _transactionId = eventId;
 }
 
 - (NSString *)otherUserId

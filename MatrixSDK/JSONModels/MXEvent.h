@@ -144,6 +144,7 @@ FOUNDATION_EXPORT NSString *const kMXMessageTypeVideo;
 FOUNDATION_EXPORT NSString *const kMXMessageTypeLocation;
 FOUNDATION_EXPORT NSString *const kMXMessageTypeFile;
 FOUNDATION_EXPORT NSString *const kMXMessageTypeServerNotice;
+FOUNDATION_EXPORT NSString *const kMXMessageTypeKeyVerificationRequest;
 
 /**
  Event relations

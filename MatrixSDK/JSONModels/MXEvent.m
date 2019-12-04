@@ -76,6 +76,7 @@ NSString *const kMXMessageTypeVideo         = @"m.video";
 NSString *const kMXMessageTypeLocation      = @"m.location";
 NSString *const kMXMessageTypeFile          = @"m.file";
 NSString *const kMXMessageTypeServerNotice  = @"m.server_notice";
+NSString *const kMXMessageTypeKeyVerificationRequest = @"m.key.verification.request";
 
 NSString *const MXEventRelationTypeAnnotation = @"m.annotation";
 NSString *const MXEventRelationTypeReference = @"m.reference";
