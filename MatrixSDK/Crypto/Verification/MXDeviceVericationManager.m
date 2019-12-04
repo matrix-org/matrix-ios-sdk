@@ -110,6 +110,34 @@ NSTimeInterval const MXDeviceVerificationTimeout = 10 * 60.0;
     [self beginKeyVerificationWithUserId:event.sender andDeviceId:fromDevice dmEvent:event method:method success:success failure:failure];
 }
 
+- (void)cancelVerificationByDMFromEvent:(MXEvent*)event
+                                success:(void(^)(void))success
+                                failure:(void(^)(NSError *error))failure
+{
+    MXTransactionCancelCode *cancelCode = MXTransactionCancelCode.user;
+
+    // If there is transaction in progress, cancel it
+    MXDeviceVerificationTransaction *transaction = [self transactionWithTransactionId:event.eventId];
+    if (transaction)
+    {
+        MXDeviceVerificationTransaction *transaction = [self transactionWithTransactionId:event.eventId];
+        [self cancelTransaction:transaction code:cancelCode];
+    }
+    else
+    {
+        // Else only cancel the request
+        MXKeyVerificationCancel *cancel = [MXKeyVerificationCancel new];
+        cancel.transactionId = transaction.transactionId;
+        cancel.code = cancelCode.value;
+        cancel.reason = cancelCode.humanReadable;
+
+        [self sendMessage:event.sender roomId:event.roomId eventType:kMXEventTypeStringKeyVerificationCancel relatedTo:event.eventId content:cancel.JSONDictionary success:^{} failure:^(NSError *error) {
+
+            NSLog(@"[MXKeyVerification] cancelTransactionFromStartEvent. Error: %@", error);
+        }];
+    }
+}
+
 
 #pragma mark Transactions
 

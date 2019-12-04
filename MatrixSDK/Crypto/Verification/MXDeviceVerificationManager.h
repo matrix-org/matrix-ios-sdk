@@ -93,6 +93,17 @@ FOUNDATION_EXPORT NSString *const MXDeviceVerificationManagerNotificationTransac
                                 success:(void(^)(MXDeviceVerificationTransaction *transaction))success
                                 failure:(void(^)(NSError *error))failure;
 
+/**
+ Cancel a key verification request or reject an incoming key verification request by Direct Message.
+
+ @param event the original request event.
+ @param success a block called when the operation succeeds.
+ @param failure a block called when the operation fails.
+ */
+- (void)cancelVerificationByDMFromEvent:(MXEvent*)event
+                                success:(void(^)(void))success
+                                failure:(void(^)(NSError *error))failure;
+
 
 #pragma mark - Transactions
 

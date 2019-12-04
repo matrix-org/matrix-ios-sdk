@@ -448,7 +448,7 @@
 }
 
 
-# pragma mark - Verification by DM
+# pragma mark - Verification by DM -
 
 /**
  Nomical case: The full flow
@@ -472,7 +472,6 @@
  -> Transaction must not be listed anymore
  -> Both ends must get a done message
  */
-
 - (void)testVerificationByDMFullFlow
 {
     // - Alice and Bob are in a room
@@ -640,6 +639,87 @@
                                     onEvent:checkDoneDone];
         [bobSession listenToEventsOfTypes:@[kMXEventTypeStringKeyVerificationDone]
                                     onEvent:checkDoneDone];
+    }];
+}
+
+
+/**
+ Nomical case: The full flow
+ It reuses code from testFullFlowWithAliceAndBob.
+
+ - Alice and Bob are in a room
+ - Bob requests a verification of Alice in this Room
+ - Alice gets the request in the timeline
+ - Alice rejects the incoming request
+ -> Both ends must see a cancel message
+ */
+- (void)testVerificationByDMCancelledByAlice
+{
+    // - Alice and Bob are in a room
+    [matrixSDKTestsE2EData doE2ETestWithAliceAndBobInARoomWithCryptedMessages:self cryptedBob:YES readyToTest:^(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
+
+        NSString *fallbackText = @"fallbackText";
+        __block NSString *requestEventId;
+
+        MXCredentials *alice = aliceSession.matrixRestClient.credentials;
+
+        // - Bob requests a verification of Alice in this Room
+        [bobSession.crypto.deviceVerificationManager requestVerificationByDMWithUserId:alice.userId
+                                                                                roomId:roomId
+                                                                          fallbackText:fallbackText
+                                                                               methods:@[MXKeyVerificationMethodSAS, @"toto"]
+                                                                               success:^(NSString * _Nonnull eventId)
+         {
+             requestEventId = eventId;
+         }
+                                                                               failure:^(NSError * _Nonnull error)
+         {
+             XCTFail(@"The request should not fail - NSError: %@", error);
+             [expectation fulfill];
+         }];
+
+        // Alice gets the request in the timeline
+        [aliceSession listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage]
+                                    onEvent:^(MXEvent *event, MXTimelineDirection direction, id customObject)
+         {
+             if ([event.content[@"msgtype"] isEqualToString:kMXMessageTypeKeyVerificationRequest])
+             {
+                 MXKeyVerificationRequest *request;
+                 MXJSONModelSetMXJSONModel(request, MXKeyVerificationRequest.class, event.content);
+                 XCTAssertNotNil(request);
+
+                  // - Alice rejects the incoming request
+                 [aliceSession.crypto.deviceVerificationManager cancelVerificationByDMFromEvent:event success:^{
+
+                 } failure:^(NSError * _Nonnull error) {
+
+                 }];
+             }
+         }];
+
+        // -> Both ends must see a cancel message
+        NSMutableArray<MXKeyVerificationCancel*> *cancelCancel = [NSMutableArray new];
+        void (^checkCancelCancel)(MXEvent *event, MXTimelineDirection direction, id customObject) = ^ void (MXEvent *event, MXTimelineDirection direction, id customObject)
+        {
+            XCTAssertEqual(event.eventType, MXEventTypeKeyVerificationCancel);
+
+            // Check cancel format
+            MXKeyVerificationCancel *cancel;
+            MXJSONModelSetMXJSONModel(cancel, MXKeyVerificationCancel.class, event.content);
+            XCTAssertNotNil(cancel);
+
+            [cancelCancel addObject:cancel];
+            if (cancelCancel.count == 2)
+            {
+                [expectation fulfill];
+            }
+        };
+
+        [aliceSession listenToEventsOfTypes:@[kMXEventTypeStringKeyVerificationCancel]
+                                    onEvent:checkCancelCancel];
+        [bobSession listenToEventsOfTypes:@[kMXEventTypeStringKeyVerificationCancel]
+                                  onEvent:checkCancelCancel];
+
     }];
 }
 
