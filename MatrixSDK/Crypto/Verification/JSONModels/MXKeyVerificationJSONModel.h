@@ -1,5 +1,5 @@
 /*
- Copyright 2019 New Vector Ltd
+ Copyright 2019 The Matrix.org Foundation C.I.C
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -14,27 +14,19 @@
  limitations under the License.
  */
 
-#import "MXKeyVerificationJSONModel.h"
+#import "MXJSONModel.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
-/**
- Sent by both devices to send their ephemeral Curve25519 public key the other device.
- */
-@interface MXKeyVerificationKey : MXKeyVerificationJSONModel
+@interface MXKeyVerificationJSONModel : MXJSONModel
 
 /**
- The device’s ephemeral public key, as an unpadded base64 string.
+ The transaction ID from the m.key.verification.start message.
  */
-@property (nonatomic, nullable) NSString *key;
+@property (nonatomic) NSString *transactionId;
 
-
-/**
- Check content validity.
-
- @return YES if valid.
- */
-- (BOOL)isValid;
+- (instancetype)initWithJSONDictionary:(NSDictionary *)JSONDictionary;
+- (NSMutableDictionary*)JSONDictionaryWithTransactionId;
 
 @end
 
