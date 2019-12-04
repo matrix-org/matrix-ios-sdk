@@ -40,7 +40,7 @@ NS_ASSUME_NONNULL_BEGIN
 - (instancetype)initWithCrypto:(MXCrypto *)crypto;
 
 
-#pragma mark - Outgoing to_device events
+#pragma mark - Outgoing events
 
 /**
  Send a message to the other a peer in a device verification transaction.
