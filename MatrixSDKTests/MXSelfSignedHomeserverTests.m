@@ -47,6 +47,7 @@
     [super tearDown];
 }
 
+#if TARGET_OS_IPHONE
 - (UIImage *)anImageWithSize:(CGSize)size
 {
     // Create a "canvas" (image context) to draw in.
@@ -59,7 +60,7 @@
 
     return image;
 }
-
+#endif
 
 - (void)testRegiter
 {
@@ -192,6 +193,7 @@
     }];
 }
 
+#if TARGET_OS_IPHONE
 // Create a room and upload an image
 - (void)testRoomAndMedia
 {
@@ -238,6 +240,7 @@
         }];
     }];
 }
+#endif
 
 - (void)testNotTrustedCertificate
 {
@@ -260,6 +263,7 @@
     [self waitForExpectationsWithTimeout:10 handler:nil];
 }
 
+#if TARGET_OS_IPHONE
 - (void)testMediaWithNotTrustedCertificate
 {
     // First, upload an image to our self-signed hs
@@ -315,6 +319,6 @@
         }];
     }];
 }
-
+#endif
 
 @end

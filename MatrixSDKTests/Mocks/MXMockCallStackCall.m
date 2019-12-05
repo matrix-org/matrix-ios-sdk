@@ -23,7 +23,11 @@
 @end
 
 @implementation MXMockCallStackCall
-@synthesize selfVideoView, remoteVideoView, selfOrientation, delegate;
+@synthesize selfVideoView, remoteVideoView, delegate;
+@synthesize audioMuted;
+@synthesize cameraPosition;
+@synthesize videoMuted;
+@synthesize audioToSpeaker;
 
 - (instancetype)init
 {
@@ -81,6 +85,10 @@
     dispatch_async(dispatch_get_main_queue(), ^{
         success();
     });
+}
+
+- (void)handleOffer:(nonnull NSString *)sdpOffer success:(nonnull void (^)(void))success failure:(nonnull void (^)(NSError * _Nonnull))failure
+{    
 }
 
 @end

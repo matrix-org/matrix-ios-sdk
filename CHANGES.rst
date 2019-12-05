@@ -1,6 +1,16 @@
 Changes in Matrix iOS SDK in 0.15.2 (2019-xx-xx)
 ===============================================
 
+Improvements:
+ * Add macOS target with unit tests.
+
+Bug fix:
+ * MXCallAudioSessionConfigurator: Fix compilation issue with macOS.
+ * MXRoomSummary: Fix potential crash when `_lastMessageOthers` is null.
+ 
+API break:
+ * MXCallAudioSessionConfigurator: Now unavailable for macOS.
+
 Changes in Matrix iOS SDK in 0.15.1 (2019-12-04)
 ===============================================
 

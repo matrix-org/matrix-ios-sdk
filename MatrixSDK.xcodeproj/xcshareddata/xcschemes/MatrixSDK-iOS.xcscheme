@@ -16,7 +16,7 @@
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "32C6F92C19DD814400EA4E9C"
                BuildableName = "MatrixSDK.framework"
-               BlueprintName = "MatrixSDK"
+               BlueprintName = "MatrixSDK-iOS"
                ReferencedContainer = "container:MatrixSDK.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
@@ -29,22 +29,8 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "32C6F93719DD814400EA4E9C"
-               BuildableName = "MatrixSDKTests.xctest"
-               BlueprintName = "MatrixSDKTests"
-               ReferencedContainer = "container:MatrixSDK.xcodeproj">
-            </BuildableReference>
-         </BuildActionEntry>
-         <BuildActionEntry
-            buildForTesting = "YES"
-            buildForRunning = "YES"
-            buildForProfiling = "YES"
-            buildForArchiving = "YES"
-            buildForAnalyzing = "YES">
-            <BuildableReference
-               BuildableIdentifier = "primary"
-               BlueprintIdentifier = "323B2AE61BCD5C7F00B11F34"
-               BuildableName = "MatrixSDKBundle.bundle"
-               BlueprintName = "MatrixSDKBundle"
+               BuildableName = "MatrixSDKTests-iOS.xctest"
+               BlueprintName = "MatrixSDKTests-iOS"
                ReferencedContainer = "container:MatrixSDK.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
@@ -62,8 +48,8 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "32C6F93719DD814400EA4E9C"
-               BuildableName = "MatrixSDKTests.xctest"
-               BlueprintName = "MatrixSDKTests"
+               BuildableName = "MatrixSDKTests-iOS.xctest"
+               BlueprintName = "MatrixSDKTests-iOS"
                ReferencedContainer = "container:MatrixSDK.xcodeproj">
             </BuildableReference>
          </TestableReference>
@@ -73,7 +59,7 @@
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "32C6F92C19DD814400EA4E9C"
             BuildableName = "MatrixSDK.framework"
-            BlueprintName = "MatrixSDK"
+            BlueprintName = "MatrixSDK-iOS"
             ReferencedContainer = "container:MatrixSDK.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
@@ -95,7 +81,7 @@
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "32C6F92C19DD814400EA4E9C"
             BuildableName = "MatrixSDK.framework"
-            BlueprintName = "MatrixSDK"
+            BlueprintName = "MatrixSDK-iOS"
             ReferencedContainer = "container:MatrixSDK.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
@@ -113,7 +99,7 @@
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "32C6F92C19DD814400EA4E9C"
             BuildableName = "MatrixSDK.framework"
-            BlueprintName = "MatrixSDK"
+            BlueprintName = "MatrixSDK-iOS"
             ReferencedContainer = "container:MatrixSDK.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
