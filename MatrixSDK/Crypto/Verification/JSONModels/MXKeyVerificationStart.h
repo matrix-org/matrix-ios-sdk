@@ -14,14 +14,14 @@
  limitations under the License.
  */
 
-#import "MXJSONModel.h"
+#import "MXKeyVerificationJSONModel.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
 /**
  Sent by Alice to initiate an interactive key verification.
  */
-@interface MXKeyVerificationStart : MXJSONModel
+@interface MXKeyVerificationStart : MXKeyVerificationJSONModel
 
 /**
  Must be “m.sas.v1” for interactive key verification.
@@ -32,11 +32,6 @@ NS_ASSUME_NONNULL_BEGIN
  Alice’s device ID.
  */
 @property (nonatomic) NSString *fromDevice;
-
-/**
- The transaction ID from the m.key.verification.start message.
- */
-@property (nonatomic) NSString *transactionId;
 
 /**
  An array of key agreement protocols that Alice’s client understands.

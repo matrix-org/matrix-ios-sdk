@@ -63,6 +63,7 @@ public enum MXEventType {
     case keyVerificationKey
     case keyVerificationMac
     case keyVerificationCancel
+    case keyVerificationDone
 
     case custom(String)
     
@@ -102,6 +103,7 @@ public enum MXEventType {
         case .keyVerificationKey: return kMXEventTypeStringKeyVerificationKey
         case .keyVerificationMac: return kMXEventTypeStringKeyVerificationMac
         case .keyVerificationCancel: return kMXEventTypeStringKeyVerificationCancel
+        case .keyVerificationDone: return kMXEventTypeStringKeyVerificationDone
             
         // Swift converts any constant with the suffix "Notification" as the type `Notification.Name`
         // The original value can be reached using the `rawValue` property.

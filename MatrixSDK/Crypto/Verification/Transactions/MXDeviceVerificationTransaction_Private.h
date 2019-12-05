@@ -21,6 +21,7 @@
 #import "MXKeyVerificationKey.h"
 #import "MXKeyVerificationMac.h"
 #import "MXKeyVerificationStart.h"
+#import "MXKeyVerificationDone.h"
 
 
 @class MXDeviceVerificationManager, MXHTTPOperation, MXEvent;

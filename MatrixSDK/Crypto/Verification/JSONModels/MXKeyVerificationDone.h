@@ -1,5 +1,5 @@
 /*
- Copyright 2019 New Vector Ltd
+ Copyright 2019 The Matrix.org Foundation C.I.C
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -19,22 +19,10 @@
 NS_ASSUME_NONNULL_BEGIN
 
 /**
- Sent by both devices to send their ephemeral Curve25519 public key the other device.
+ Model for m.key.verification.done.
+ As described at https://github.com/uhoreg/matrix-doc/blob/e2e_verification_in_dms/proposals/2241-e2e-verification-in-dms.md#concluding-a-key-verification
  */
-@interface MXKeyVerificationKey : MXKeyVerificationJSONModel
-
-/**
- The device’s ephemeral public key, as an unpadded base64 string.
- */
-@property (nonatomic, nullable) NSString *key;
-
-
-/**
- Check content validity.
-
- @return YES if valid.
- */
-- (BOOL)isValid;
+@interface MXKeyVerificationDone : MXKeyVerificationJSONModel
 
 @end
 

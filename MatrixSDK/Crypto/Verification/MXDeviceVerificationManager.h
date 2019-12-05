@@ -1,5 +1,6 @@
 /*
  Copyright 2019 New Vector Ltd
+ Copyright 2019 The Matrix.org Foundation C.I.C
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -16,11 +17,14 @@
 
 #import <Foundation/Foundation.h>
 
+#import "MXKeyVerificationRequest.h"
 #import "MXDeviceVerificationTransaction.h"
 
 #import "MXSASTransaction.h"
 #import "MXIncomingSASTransaction.h"
 #import "MXOutgoingSASTransaction.h"
+
+#import "MXEvent.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -32,7 +36,8 @@ FOUNDATION_EXPORT NSString *const MXDeviceVerificationErrorDomain;
 typedef enum : NSUInteger
 {
     MXDeviceVerificationUnknownDeviceCode,
-    MXDeviceVerificationUnsupportedMethodCode
+    MXDeviceVerificationUnsupportedMethodCode,
+    MXDeviceVerificationUnknownRoomCode,
 } MXDeviceVerificationErrorCode;
 
 
@@ -53,6 +58,54 @@ FOUNDATION_EXPORT NSString *const MXDeviceVerificationManagerNotificationTransac
  https://github.com/matrix-org/matrix-doc/issues/1267.
  */
 @interface MXDeviceVerificationManager : NSObject
+
+
+#pragma mark - Requests
+
+/**
+ Make a key verification request by Direct Message.
+
+ @param userId the other user id.
+ @param roomId the room to exchange direct messages
+ @param fallbackText a text description if the app does not support verification by DM.
+ @param methods Verification methods like MXKeyVerificationMethodSAS.
+ @param success a block called when the operation succeeds.
+ @param failure a block called when the operation fails.
+ */
+- (void)requestVerificationByDMWithUserId:(NSString*)userId
+                                   roomId:(NSString*)roomId
+                             fallbackText:(NSString*)fallbackText
+                                  methods:(NSArray<NSString*>*)methods
+                                  success:(void(^)(NSString *eventId))success
+                                  failure:(void(^)(NSError *error))failure;
+
+
+/**
+ Accept an incoming key verification request by Direct Message.
+
+ @param event the event in the DM room.
+ @param method the method to use.
+ @param success a block called when the operation succeeds.
+ @param failure a block called when the operation fails.
+ */
+- (void)acceptVerificationByDMFromEvent:(MXEvent*)event
+                                 method:(NSString*)method
+                                success:(void(^)(MXDeviceVerificationTransaction *transaction))success
+                                failure:(void(^)(NSError *error))failure;
+
+/**
+ Cancel a key verification request or reject an incoming key verification request by Direct Message.
+
+ @param event the original request event.
+ @param success a block called when the operation succeeds.
+ @param failure a block called when the operation fails.
+ */
+- (void)cancelVerificationByDMFromEvent:(MXEvent*)event
+                                success:(void(^)(void))success
+                                failure:(void(^)(NSError *error))failure;
+
+
+#pragma mark - Transactions
 
 /**
  Begin a device verification.

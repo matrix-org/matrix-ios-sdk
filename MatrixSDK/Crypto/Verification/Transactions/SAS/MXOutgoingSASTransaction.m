@@ -49,6 +49,11 @@
     startContent.messageAuthenticationCodes = kKnownMacs;
     startContent.shortAuthenticationString = kKnownShortCodes;
 
+    if (self.transport == MKeyVerificationTransportDirectMessage)
+    {
+        startContent.relatedEventId = self.dmEventId;
+    }
+
     if (startContent.isValid)
     {
         self.startContent = startContent;
