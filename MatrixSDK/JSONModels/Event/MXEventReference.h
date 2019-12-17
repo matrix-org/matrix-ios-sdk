@@ -1,5 +1,5 @@
 /*
- Copyright 2019 New Vector Ltd
+ Copyright 2019 The Matrix.org Foundation C.I.C
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -18,20 +18,25 @@
 
 #import "MXJSONModel.h"
 
-@class MXEventAnnotationChunk;
-@class MXEventReplace;
-@class MXEventReferenceChunk;
 
 NS_ASSUME_NONNULL_BEGIN
 
-/**
- JSON model for MXEvent.unsignedData.relations.
- */
-@interface MXEventRelations : MXJSONModel
+@interface MXEventReference : MXJSONModel
 
-@property (nonatomic, readonly, nullable) MXEventAnnotationChunk *annotation;
-@property (nonatomic, readonly, nullable) MXEventReferenceChunk *reference;
-@property (nonatomic, readonly, nullable) MXEventReplace *replace;
+/**
+ Event id.
+ */
+@property (nonatomic, readonly) NSString *eventId;
+
+/**
+ Event type.
+
+ TODO: Remove nullable once Synapse respects MSC1849.
+ */
+@property (nonatomic, readonly, nullable) NSString *type;
+
+
+- (instancetype)initWithEventId:(NSString *)eventId type:(nullable NSString *)type;
 
 @end
 

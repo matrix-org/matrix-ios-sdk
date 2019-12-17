@@ -449,6 +449,14 @@ extern NSString *const kMXEventIdentifierKey;
 - (MXEvent*)editedEventFromReplacementEvent:(MXEvent*)event;
 
 /**
+ Returns the event with a new reference relation as it should come from the sync.
+
+ @param event The reference event.
+ @return Return an updated event with the new relation.
+ */
+- (MXEvent*)eventWithNewReferenceRelation:(MXEvent*)referenceEvent;
+
+/**
  Comparator to use to order array of events by their originServerTs value.
  
  Arrays are then sorting so that the newest event will be positionned at index 0.

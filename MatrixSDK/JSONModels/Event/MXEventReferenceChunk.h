@@ -1,5 +1,5 @@
 /*
- Copyright 2019 New Vector Ltd
+ Copyright 2019 The Matrix.org Foundation C.I.C
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -17,21 +17,18 @@
 #import <Foundation/Foundation.h>
 
 #import "MXJSONModel.h"
+#import "MXEventReference.h"
 
-@class MXEventAnnotationChunk;
-@class MXEventReplace;
-@class MXEventReferenceChunk;
 
 NS_ASSUME_NONNULL_BEGIN
 
-/**
- JSON model for MXEvent.unsignedData.relations.
- */
-@interface MXEventRelations : MXJSONModel
+@interface MXEventReferenceChunk : MXJSONModel
 
-@property (nonatomic, readonly, nullable) MXEventAnnotationChunk *annotation;
-@property (nonatomic, readonly, nullable) MXEventReferenceChunk *reference;
-@property (nonatomic, readonly, nullable) MXEventReplace *replace;
+@property (nonatomic, readonly) NSArray<MXEventReference*> *chunk;
+@property (nonatomic, readonly) NSUInteger count;
+@property (nonatomic, readonly) BOOL limited;
+
+- (instancetype)initWithChunk:(NSArray<MXEventReference*> *)chunk count:(NSUInteger)count limited:(BOOL)limited;
 
 @end
 

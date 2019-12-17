@@ -21,6 +21,7 @@
 #import "MXEventDecryptionResult.h"
 #import "MXEncryptedContentFile.h"
 #import "MXEventRelations.h"
+#import "MXEventReferenceChunk.h"
 
 #pragma mark - Constants definitions
 
@@ -615,6 +616,47 @@ NSString *const kMXEventIdentifierKey = @"kMXEventIdentifierKey";
     }
     
     return editedEvent;
+}
+
+- (MXEvent*)eventWithNewReferenceRelation:(MXEvent*)referenceEvent
+{
+    MXEvent *newEvent;
+
+    MXEventReferenceChunk *references = self.unsignedData.relations.reference;
+    NSMutableArray<MXEventReference*> *newChunk = [references.chunk mutableCopy] ?: [NSMutableArray new];
+
+    MXEventReference *newReference = [[MXEventReference alloc] initWithEventId:referenceEvent.eventId type:referenceEvent.type];
+    [newChunk addObject:newReference];
+
+    MXEventReferenceChunk *newReferences = [[MXEventReferenceChunk alloc] initWithChunk:newChunk
+                                                                                  count:references.count + 1
+                                                                                limited:references.limited];
+
+    NSDictionary *newReferenceDict = newReferences.JSONDictionary;
+
+    NSMutableDictionary *newEventDict = [self.JSONDictionary mutableCopy];
+    if (self.unsignedData.relations)
+    {
+        newEventDict[@"unsigned"][@"m.relations"][@"m.reference"] = newReferenceDict;
+    }
+    else if (self.unsignedData)
+    {
+        newEventDict[@"unsigned"][@"m.relations"] = @{
+                                                         @"m.reference": newReferenceDict
+                                                         };
+    }
+    else
+    {
+        newEventDict[@"unsigned"] = @{
+                                      @"m.relations": @{
+                                              @"m.reference": newReferenceDict
+                                              }
+                                      };
+    }
+
+    newEvent = [MXEvent modelFromJSON:newEventDict];
+    
+    return newEvent;
 }
 
 - (NSComparisonResult)compareOriginServerTs:(MXEvent *)otherEvent
