@@ -614,7 +614,7 @@ NSTimeInterval const MXDeviceVerificationTimeout = 10 * 60.0;
     NSMutableDictionary *eventContent = [content mutableCopy];
 
     eventContent[@"m.relates_to"] = @{
-                                      @"rel_type": @"m.reference",
+                                      @"rel_type": MXEventRelationTypeReference,
                                       @"event_id": relatedTo,
                                       };
 
