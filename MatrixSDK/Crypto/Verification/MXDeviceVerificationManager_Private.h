@@ -40,7 +40,34 @@ NS_ASSUME_NONNULL_BEGIN
 - (instancetype)initWithCrypto:(MXCrypto *)crypto;
 
 
-#pragma mark - Outgoing events
+#pragma mark - Requests
+
+/**
+ Accept an incoming key verification request.
+
+ @param request the request.
+ @param method the method to use.
+ @param success a block called when the operation succeeds.
+ @param failure a block called when the operation fails.
+ */
+- (void)acceptVerificationRequest:(MXKeyVerificationRequest*)request
+                           method:(NSString*)method
+                          success:(void(^)(MXDeviceVerificationTransaction *transaction))success
+                          failure:(void(^)(NSError *error))failure;
+
+/**
+ Cancel a key verification request or reject an incoming key verification request.
+
+ @param request the request.
+ @param success a block called when the operation succeeds.
+ @param failure a block called when the operation fails.
+ */
+- (void)cancelVerificationRequest:(MXKeyVerificationRequest*)request
+                          success:(void(^)(void))success
+                          failure:(void(^)(NSError *error))failure;
+
+
+#pragma mark - Transactions
 
 /**
  Send a message to the other a peer in a device verification transaction.

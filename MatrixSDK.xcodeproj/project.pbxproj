@@ -25,6 +25,10 @@
 		320B3935239FA56900BE2C06 /* MXKeyVerificationByDMRequest.h in Headers */ = {isa = PBXBuildFile; fileRef = 320B3932239FA56900BE2C06 /* MXKeyVerificationByDMRequest.h */; };
 		320B3936239FA56900BE2C06 /* MXKeyVerificationByDMRequest.m in Sources */ = {isa = PBXBuildFile; fileRef = 320B3933239FA56900BE2C06 /* MXKeyVerificationByDMRequest.m */; };
 		320B3937239FA56900BE2C06 /* MXKeyVerificationByDMRequest.m in Sources */ = {isa = PBXBuildFile; fileRef = 320B3933239FA56900BE2C06 /* MXKeyVerificationByDMRequest.m */; };
+		320B393A239FD15E00BE2C06 /* MXKeyVerificationRequest.h in Headers */ = {isa = PBXBuildFile; fileRef = 320B3938239FD15E00BE2C06 /* MXKeyVerificationRequest.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		320B393B239FD15E00BE2C06 /* MXKeyVerificationRequest.h in Headers */ = {isa = PBXBuildFile; fileRef = 320B3938239FD15E00BE2C06 /* MXKeyVerificationRequest.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		320B393C239FD15E00BE2C06 /* MXKeyVerificationRequest.m in Sources */ = {isa = PBXBuildFile; fileRef = 320B3939239FD15E00BE2C06 /* MXKeyVerificationRequest.m */; };
+		320B393D239FD15E00BE2C06 /* MXKeyVerificationRequest.m in Sources */ = {isa = PBXBuildFile; fileRef = 320B3939239FD15E00BE2C06 /* MXKeyVerificationRequest.m */; };
 		320BBF3C1D6C7D9D0079890E /* MXEventsEnumerator.h in Headers */ = {isa = PBXBuildFile; fileRef = 320BBF3B1D6C7D9D0079890E /* MXEventsEnumerator.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		320BBF411D6C81550079890E /* MXEventsByTypesEnumeratorOnArray.m in Sources */ = {isa = PBXBuildFile; fileRef = 320BBF3D1D6C81550079890E /* MXEventsByTypesEnumeratorOnArray.m */; };
 		320BBF421D6C81550079890E /* MXEventsByTypesEnumeratorOnArray.h in Headers */ = {isa = PBXBuildFile; fileRef = 320BBF3E1D6C81550079890E /* MXEventsByTypesEnumeratorOnArray.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -1027,6 +1031,9 @@
 		320A883F217F4E3F002EA952 /* MXMegolmBackupAuthData.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXMegolmBackupAuthData.m; sourceTree = "<group>"; };
 		320B3932239FA56900BE2C06 /* MXKeyVerificationByDMRequest.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MXKeyVerificationByDMRequest.h; sourceTree = "<group>"; };
 		320B3933239FA56900BE2C06 /* MXKeyVerificationByDMRequest.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MXKeyVerificationByDMRequest.m; sourceTree = "<group>"; };
+		320B3938239FD15E00BE2C06 /* MXKeyVerificationRequest.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MXKeyVerificationRequest.h; sourceTree = "<group>"; };
+		320B3939239FD15E00BE2C06 /* MXKeyVerificationRequest.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MXKeyVerificationRequest.m; sourceTree = "<group>"; };
+		320B393E239FD48400BE2C06 /* MXKeyVerificationRequest_Private.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MXKeyVerificationRequest_Private.h; sourceTree = "<group>"; };
 		320BBF3B1D6C7D9D0079890E /* MXEventsEnumerator.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXEventsEnumerator.h; sourceTree = "<group>"; };
 		320BBF3D1D6C81550079890E /* MXEventsByTypesEnumeratorOnArray.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXEventsByTypesEnumeratorOnArray.m; sourceTree = "<group>"; };
 		320BBF3E1D6C81550079890E /* MXEventsByTypesEnumeratorOnArray.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXEventsByTypesEnumeratorOnArray.h; sourceTree = "<group>"; };
@@ -1620,6 +1627,9 @@
 			children = (
 				320B3932239FA56900BE2C06 /* MXKeyVerificationByDMRequest.h */,
 				320B3933239FA56900BE2C06 /* MXKeyVerificationByDMRequest.m */,
+				320B3938239FD15E00BE2C06 /* MXKeyVerificationRequest.h */,
+				320B393E239FD48400BE2C06 /* MXKeyVerificationRequest_Private.h */,
+				320B3939239FD15E00BE2C06 /* MXKeyVerificationRequest.m */,
 			);
 			path = Requests;
 			sourceTree = "<group>";
@@ -2724,6 +2734,7 @@
 				3281E8B719E42DFE00976E1A /* MXJSONModel.h in Headers */,
 				3284A5A01DB7C00600A09972 /* MXCryptoStore.h in Headers */,
 				327E9AF62289D53800A98BC1 /* MXReactionCount.h in Headers */,
+				320B393A239FD15E00BE2C06 /* MXKeyVerificationRequest.h in Headers */,
 				B146D4AF21A5A04300D8C2C6 /* MXMediaScanStore.h in Headers */,
 				32FA10CE1FA1C9F700E54233 /* MXOutgoingRoomKeyRequest.h in Headers */,
 				32A1514A1DAF7C0C00400192 /* MXUsersDevicesMap.h in Headers */,
@@ -2959,6 +2970,7 @@
 				B14EF2C12397E90400758AF0 /* MXKeyBackup.h in Headers */,
 				B14EF2C22397E90400758AF0 /* MXCallKitConfiguration.h in Headers */,
 				B14EF2C32397E90400758AF0 /* MXFilterJSONModel.h in Headers */,
+				320B393B239FD15E00BE2C06 /* MXKeyVerificationRequest.h in Headers */,
 				B14EF2C42397E90400758AF0 /* MXRealmHelper.h in Headers */,
 				B14EF2C52397E90400758AF0 /* MXPushRuleDisplayNameCondtionChecker.h in Headers */,
 				B14EF2C62397E90400758AF0 /* MXReactionRelation.h in Headers */,
@@ -3512,6 +3524,7 @@
 				32E226A71D06AC9F00E6CA54 /* MXPeekingRoom.m in Sources */,
 				021AFBA72179E91900742B2C /* MXEncryptedContentFile.m in Sources */,
 				3220094619EFBF30008DE41D /* MXSessionEventListener.m in Sources */,
+				320B393C239FD15E00BE2C06 /* MXKeyVerificationRequest.m in Sources */,
 				32A31BC920D401FC005916C7 /* MXRoomFilter.m in Sources */,
 				32A151471DAF7C0C00400192 /* MXDeviceInfo.m in Sources */,
 				321CFDEB22525DEE004D31DF /* MXIncomingSASTransaction.m in Sources */,
@@ -3748,6 +3761,7 @@
 				B14EF21C2397E90400758AF0 /* MXAggregatedReactions.m in Sources */,
 				B14EF21D2397E90400758AF0 /* MXEncryptedContentKey.m in Sources */,
 				B14EF21E2397E90400758AF0 /* MXEventDecryptionResult.m in Sources */,
+				320B393D239FD15E00BE2C06 /* MXKeyVerificationRequest.m in Sources */,
 				B14EF21F2397E90400758AF0 /* MXMyUser.m in Sources */,
 				B14EF2202397E90400758AF0 /* (null) in Sources */,
 				B14EF2212397E90400758AF0 /* MX3PID.swift in Sources */,
