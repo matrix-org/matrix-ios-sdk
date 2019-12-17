@@ -511,8 +511,8 @@
                  XCTAssertEqualObjects(event.eventId, requestEventId);
 
                  // Check verification by DM request format
-                 MXKeyVerificationRequest *request;
-                 MXJSONModelSetMXJSONModel(request, MXKeyVerificationRequest.class, event.content);
+                 MXKeyVerificationRequestJSONModel *request;
+                 MXJSONModelSetMXJSONModel(request, MXKeyVerificationRequestJSONModel.class, event.content);
                  XCTAssertNotNil(request);
 
                  // - Alice accepts it and begins a SAS verification
@@ -684,8 +684,8 @@
          {
              if ([event.content[@"msgtype"] isEqualToString:kMXMessageTypeKeyVerificationRequest])
              {
-                 MXKeyVerificationRequest *request;
-                 MXJSONModelSetMXJSONModel(request, MXKeyVerificationRequest.class, event.content);
+                 MXKeyVerificationRequestJSONModel *request;
+                 MXJSONModelSetMXJSONModel(request, MXKeyVerificationRequestJSONModel.class, event.content);
                  XCTAssertNotNil(request);
 
                   // - Alice rejects the incoming request

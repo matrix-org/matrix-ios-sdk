@@ -24,6 +24,8 @@
 
 #import "MXTransactionCancelCode.h"
 
+#import "MXKeyVerificationRequestJSONModel.h"
+
 #pragma mark - Constants
 
 NSString *const MXDeviceVerificationErrorDomain = @"org.matrix.sdk.verification";
@@ -74,7 +76,7 @@ NSTimeInterval const MXDeviceVerificationTimeout = 10 * 60.0;
         return;
     }
 
-    MXKeyVerificationRequest *request = [MXKeyVerificationRequest new];
+    MXKeyVerificationRequestJSONModel *request = [MXKeyVerificationRequestJSONModel new];
     request.body = fallbackText;
     request.methods = methods;
     request.to = userId;
