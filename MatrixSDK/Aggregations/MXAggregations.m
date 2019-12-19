@@ -140,7 +140,32 @@
                                     success:(void (^)(MXAggregationPaginatedResponse *paginatedResponse))success
                                     failure:(void (^)(NSError *error))failure
 {
-    return [self.mxSession.matrixRestClient relationsForEvent:eventId inRoom:roomId relationType:MXEventRelationTypeReference eventType:nil from:from limit:limit success:success failure:failure];
+    return [self.mxSession.matrixRestClient relationsForEvent:eventId inRoom:roomId relationType:MXEventRelationTypeReference eventType:nil from:from limit:limit success:^(MXAggregationPaginatedResponse *paginatedResponse) {
+
+        // Decrypt events if required
+        NSArray<MXEvent *> *allEvents;
+        if (paginatedResponse.originalEvent)
+        {
+            if (paginatedResponse.chunk)
+            {
+                allEvents = [paginatedResponse.chunk arrayByAddingObject:paginatedResponse.originalEvent];
+            }
+            else
+            {
+                allEvents = @[paginatedResponse.originalEvent];
+            }
+        }
+
+        for (MXEvent *event in allEvents)
+        {
+            if (event.isEncrypted && !event.clearEvent)
+            {
+                [self.mxSession decryptEvent:event inTimeline:nil];
+            }
+        }
+
+        success(paginatedResponse);
+    } failure:failure];
 }
 
 #pragma mark - Data
