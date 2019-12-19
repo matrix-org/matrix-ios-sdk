@@ -16,6 +16,9 @@
 
 #import "MXKeyVerificationRequest.h"
 
+#import "MXKeyVerificationStart.h"
+#import "MXKeyVerificationCancel.h"
+
 @class MXDeviceVerificationManager, MXHTTPOperation;
 
 
@@ -36,5 +39,8 @@
 
 @property (nonatomic) BOOL isFromMyUser;
 @property (nonatomic) MXKeyVerificationRequestState state;
+
+- (void)handleStart:(MXKeyVerificationStart*)startContent;
+- (void)handleCancel:(MXKeyVerificationCancel*)cancelContent;
 
 @end

@@ -21,6 +21,7 @@
 
 #import "MXCrypto_Private.h"
 #import "MXDeviceVerificationManager_Private.h"
+#import "MXFileStore.h"
 
 #import "MXKeyVerificationRequestJSONModel.h"
 
@@ -545,11 +546,12 @@
  -> Devices must be really verified
  -> Transaction must not be listed anymore
  -> Both ends must get a done message
+ - Then, test MXKeyVerification
  */
 - (void)testVerificationByDMFullFlow
 {
     // - Alice and Bob are in a room
-    [matrixSDKTestsE2EData doE2ETestWithAliceAndBobInARoomWithCryptedMessages:self cryptedBob:YES readyToTest:^(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
+    [matrixSDKTestsE2EData doE2ETestWithAliceAndBobInARoom:self cryptedBob:YES warnOnUnknowDevices:NO aliceStore:[[MXMemoryStore alloc] init] bobStore:[[MXMemoryStore alloc] init] readyToTest:^(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
 
         NSString *fallbackText = @"fallbackText";
         __block NSString *requestId;
@@ -713,7 +715,17 @@
             [doneDone addObject:done];
             if (doneDone.count == 2)
             {
-                [expectation fulfill];
+                // Then, test MXKeyVerification
+                MXEvent *event = [aliceSession.store eventWithEventId:requestId inRoom:roomId];
+                [aliceSession.crypto.deviceVerificationManager keyVerificationFromKeyVerificationEvent:event success:^(MXKeyVerification * _Nonnull verificationFromAlicePOV) {
+
+                    XCTAssertEqual(verificationFromAlicePOV.state, MXKeyVerificationStateVerified);
+
+                    [expectation fulfill];
+                } failure:^(NSError * _Nonnull error) {
+                    XCTFail(@"The request should not fail - NSError: %@", error);
+                    [expectation fulfill];
+                }];
             }
         };
 
@@ -734,6 +746,7 @@
  - Alice gets the request in the timeline
  - Alice rejects the incoming request
  -> Both ends must see a cancel message
+ - Then, test MXKeyVerification
  */
 - (void)testVerificationByDMCancelledByAlice
 {
@@ -795,7 +808,16 @@
             [cancelCancel addObject:cancel];
             if (cancelCancel.count == 2)
             {
-                [expectation fulfill];
+                // Then, test MXKeyVerification
+                [aliceSession.crypto.deviceVerificationManager keyVerificationFromKeyVerificationEvent:event success:^(MXKeyVerification * _Nonnull verificationFromAlicePOV) {
+
+                    XCTAssertEqual(verificationFromAlicePOV.state, MXKeyVerificationStateRequestCancelledByMe);
+
+                    [expectation fulfill];
+                } failure:^(NSError * _Nonnull error) {
+                    XCTFail(@"The request should not fail - NSError: %@", error);
+                    [expectation fulfill];
+                }];
             }
         };
 

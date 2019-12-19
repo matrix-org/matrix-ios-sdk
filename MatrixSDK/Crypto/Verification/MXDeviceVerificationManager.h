@@ -19,12 +19,14 @@
 
 #import "MXKeyVerificationRequest.h"
 #import "MXDeviceVerificationTransaction.h"
+#import "MXKeyVerification.h"
 
 #import "MXSASTransaction.h"
 #import "MXIncomingSASTransaction.h"
 #import "MXOutgoingSASTransaction.h"
 
 #import "MXEvent.h"
+#import "MXHTTPOperation.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -38,6 +40,7 @@ typedef enum : NSUInteger
     MXDeviceVerificationUnknownDeviceCode,
     MXDeviceVerificationUnsupportedMethodCode,
     MXDeviceVerificationUnknownRoomCode,
+    MXDeviceVerificationUnknownIdentifier,
 } MXDeviceVerificationErrorCode;
 
 
@@ -130,6 +133,29 @@ FOUNDATION_EXPORT NSString *const MXDeviceVerificationManagerNotificationTransac
  @param complete a block called with all transactions.
  */
 - (void)transactions:(void(^)(NSArray<MXDeviceVerificationTransaction*> *transactions))complete;
+
+
+#pragma mark - Verification status
+
+/**
+ Retrieve the verification status from an event.
+
+ @param event an event in the verification process.
+ @param success a block called when the operation succeeds.
+ @param failure a block called when the operation fails.
+ @return an HTTP operation or nil if the response is synchronous.
+ */
+- (nullable MXHTTPOperation *)keyVerificationFromKeyVerificationEvent:(MXEvent*)event
+                                                              success:(void(^)(MXKeyVerification *keyVerification))success
+                                                              failure:(void(^)(NSError *error))failure;
+
+/**
+ Extract the verification identifier from an event.
+
+ @param event an event in the verification process.
+ @return the key verification id. Nil if the event is not a verification event.
+ */
+- (nullable NSString *)keyVerificationIdFromDMEvent:(MXEvent*)event;
 
 @end
 

@@ -56,12 +56,22 @@ NSString * const MXKeyVerificationRequestDidChangeNotification = @"MXKeyVerifica
 
 - (void)acceptWithMethod:(NSString *)method success:(void (^)(MXDeviceVerificationTransaction * _Nonnull))success failure:(void (^)(NSError * _Nonnull))failure
 {
-    [self.manager acceptVerificationRequest:self method:method success:success failure:failure];
+    [self.manager acceptVerificationRequest:self method:method success:^(MXDeviceVerificationTransaction * _Nonnull transaction) {
+        self.state = MXKeyVerificationRequestStateAccepted;
+        [self.manager removePendingRequestWithRequestId:self.requestId];
+
+        success(transaction);
+    }  failure:failure];
 }
 
 - (void)cancelWithCancelCode:(MXTransactionCancelCode *)code
 {
     [self.manager cancelVerificationRequest:self success:^{
+        self.reasonCancelCode = code;
+
+        self.state = MXKeyVerificationRequestStateCancelledByMe;
+        [self.manager removePendingRequestWithRequestId:self.requestId];
+
     } failure:^(NSError * _Nonnull error) {
     } ];
 }
@@ -79,6 +89,21 @@ NSString * const MXKeyVerificationRequestDidChangeNotification = @"MXKeyVerifica
     dispatch_async(dispatch_get_main_queue(),^{
         [[NSNotificationCenter defaultCenter] postNotificationName:MXKeyVerificationRequestDidChangeNotification object:self userInfo:nil];
     });
+}
+
+- (void)handleStart:(MXKeyVerificationStart*)startContent
+{
+    self.state = MXKeyVerificationRequestStateAccepted;
+    [self.manager removePendingRequestWithRequestId:self.requestId];
+}
+
+- (void)handleCancel:(MXKeyVerificationCancel *)cancelContent
+{
+    self.reasonCancelCode = [[MXTransactionCancelCode alloc] initWithValue:cancelContent.code
+                                                             humanReadable:cancelContent.reason];
+
+    self.state = MXKeyVerificationRequestStateCancelled;
+    [self.manager removePendingRequestWithRequestId:self.requestId];
 }
 
 @end

@@ -20,6 +20,11 @@
 
 @implementation MXKeyVerificationJSONModel
 
++ (id)modelFromJSON:(NSDictionary *)JSONDictionary
+{
+    return [[self alloc] initWithJSONDictionary:JSONDictionary];
+}
+
 - (instancetype)initWithJSONDictionary:(NSDictionary *)JSONDictionary
 {
     MXJSONModelSetString(_transactionId, JSONDictionary[@"transaction_id"]);

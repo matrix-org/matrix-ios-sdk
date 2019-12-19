@@ -61,6 +61,11 @@ Accept an incoming key verification request.
  */
 - (void)cancelWithCancelCode:(MXTransactionCancelCode*)code;
 
+/**
+ The cancellation reason, if any.
+ */
+@property (nonatomic, nullable) MXTransactionCancelCode *reasonCancelCode;
+
 
 @property (nonatomic, readonly) NSString *requestId;
 
