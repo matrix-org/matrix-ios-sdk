@@ -32,7 +32,7 @@
  Custom events types, out of the specification, may exist. In this case, 
  `MXEventTypeString` must be checked.
  */
-typedef enum : NSUInteger
+typedef NS_ENUM(NSInteger, MXEventType)
 {
     MXEventTypeRoomName = 0,
     MXEventTypeRoomTopic,
@@ -80,7 +80,7 @@ typedef enum : NSUInteger
 
     // The event is a custom event. Refer to its `MXEventTypeString` version
     MXEventTypeCustom = 1000
-} MXEventType NS_REFINED_FOR_SWIFT;
+} NS_REFINED_FOR_SWIFT;
 
 /**
  Types of Matrix events - String version
