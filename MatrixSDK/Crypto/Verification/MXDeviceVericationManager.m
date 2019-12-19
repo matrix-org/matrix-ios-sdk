@@ -45,6 +45,8 @@ NSTimeInterval const MXTransactionTimeout = 10 * 60.0;
 // Request timeout in seconds
 NSTimeInterval const MXRequestDefaultTimeout = 5 * 60.0;
 
+static NSArray<MXEventTypeString> *MXDeviceVerificationManagerDMEventTypes;
+
 
 @interface MXDeviceVerificationManager ()
 {
@@ -298,6 +300,21 @@ NSTimeInterval const MXRequestDefaultTimeout = 5 * 60.0;
 
 
 #pragma mark - SDK-Private methods -
+
++ (void)initialize
+{
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        MXDeviceVerificationManagerDMEventTypes = @[
+                                                    kMXEventTypeStringKeyVerificationStart,
+                                                    kMXEventTypeStringKeyVerificationAccept,
+                                                    kMXEventTypeStringKeyVerificationKey,
+                                                    kMXEventTypeStringKeyVerificationMac,
+                                                    kMXEventTypeStringKeyVerificationCancel,
+                                                    kMXEventTypeStringKeyVerificationDone
+                                                    ];
+    });
+}
 
 - (instancetype)initWithCrypto:(MXCrypto *)crypto
 {
@@ -737,14 +754,7 @@ NSTimeInterval const MXRequestDefaultTimeout = 5 * 60.0;
 
 - (void)setupIncomingDMEvents
 {
-    NSArray *types = @[
-                       kMXEventTypeStringKeyVerificationStart,
-                       kMXEventTypeStringKeyVerificationAccept,
-                       kMXEventTypeStringKeyVerificationKey,
-                       kMXEventTypeStringKeyVerificationMac,
-                       kMXEventTypeStringKeyVerificationCancel
-                       ];
-    [_crypto.mxSession listenToEventsOfTypes:types onEvent:^(MXEvent *event, MXTimelineDirection direction, id customObject) {
+    [_crypto.mxSession listenToEventsOfTypes:MXDeviceVerificationManagerDMEventTypes onEvent:^(MXEvent *event, MXTimelineDirection direction, id customObject) {
         if (direction == MXTimelineDirectionForwards
             && ![event.sender isEqualToString:self.crypto.mxSession.myUser.userId])
         {
@@ -755,14 +765,7 @@ NSTimeInterval const MXRequestDefaultTimeout = 5 * 60.0;
 
 - (BOOL)isVerificationByDMEventType:(MXEventTypeString)type
 {
-    return [@[
-              kMXEventTypeStringKeyVerificationStart,
-              kMXEventTypeStringKeyVerificationAccept,
-              kMXEventTypeStringKeyVerificationKey,
-              kMXEventTypeStringKeyVerificationMac,
-              kMXEventTypeStringKeyVerificationCancel,
-              kMXEventTypeStringKeyVerificationDone
-              ] containsObject:type];
+    return [MXDeviceVerificationManagerDMEventTypes containsObject:type];
 }
 
 - (MXHTTPOperation*)sendMessage:(NSString*)userId
