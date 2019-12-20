@@ -2,6 +2,7 @@ Changes in Matrix iOS SDK in 0.15.3 (2019-xx-xx)
 ===============================================
 
 Improvements:
+ * Make enums conform to `Equatable`/`Hashable` where applicable.
  * Aggregations: Implement m.reference aggregations, aka thread ([MSC1849](https://github.com/matrix-org/matrix-doc/blob/matthew/msc1849/proposals/1849-aggregations.md)).
 
 

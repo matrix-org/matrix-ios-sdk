@@ -21,7 +21,7 @@ import Foundation
 
 
 /// Represents account data type
-public enum MXAccountDataType {
+public enum MXAccountDataType: Equatable, Hashable {
     case direct
     case pushRules
     case ignoredUserList
@@ -41,7 +41,7 @@ public enum MXAccountDataType {
 
 
 /// Method of inviting a user to a room
-public enum MXRoomInvitee {
+public enum MXRoomInvitee: Equatable, Hashable {
     
     /// Invite a user by username
     case userId(String)
