@@ -14,15 +14,15 @@
  limitations under the License.
  */
 
-#import "MXKeyVerificationRequest.h"
+#import "MXKeyVerificationRequestJSONModel.h"
 
 #import "MXEvent.h"
 
-@implementation MXKeyVerificationRequest
+@implementation MXKeyVerificationRequestJSONModel
 
 + (instancetype)modelFromJSON:(NSDictionary *)JSONDictionary
 {
-    MXKeyVerificationRequest *request = [MXKeyVerificationRequest new];
+    MXKeyVerificationRequestJSONModel *request = [MXKeyVerificationRequestJSONModel new];
     if (request)
     {
         MXJSONModelSetString(request.body, JSONDictionary[@"body"]);

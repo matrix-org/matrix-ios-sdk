@@ -16,7 +16,14 @@
 
 #import "MXKeyVerificationJSONModel.h"
 
+#import "MXEvent.h"
+
 @implementation MXKeyVerificationJSONModel
+
++ (id)modelFromJSON:(NSDictionary *)JSONDictionary
+{
+    return [[self alloc] initWithJSONDictionary:JSONDictionary];
+}
 
 - (instancetype)initWithJSONDictionary:(NSDictionary *)JSONDictionary
 {
@@ -44,7 +51,7 @@
     {
         JSONDictionary[@"m.relates_to"] = @{
                                             @"event_id": _relatedEventId,
-                                            @"rel_type": @"m.reference"
+                                            @"rel_type": MXEventRelationTypeReference
                                             };
     }
     else

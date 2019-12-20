@@ -21,6 +21,9 @@
 
 #import "MXCrypto_Private.h"
 #import "MXDeviceVerificationManager_Private.h"
+#import "MXFileStore.h"
+
+#import "MXKeyVerificationRequestJSONModel.h"
 
 // Do not bother with retain cycles warnings in tests
 #pragma clang diagnostic push
@@ -88,6 +91,24 @@
 {
     id observer = [[NSNotificationCenter defaultCenter] addObserverForName:MXDeviceVerificationTransactionDidChangeNotification object:transaction queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *notif) {
             block();
+    }];
+
+    [observers addObject:observer];
+}
+
+- (void)observeKeyVerificationRequestInSession:(MXSession*)session block:(void (^)(MXKeyVerificationRequest * _Nullable request))block
+{
+    id observer = [[NSNotificationCenter defaultCenter] addObserverForName:MXDeviceVerificationManagerNewRequestNotification object:session.crypto.deviceVerificationManager queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *notif) {
+
+        MXKeyVerificationRequest *request = notif.userInfo[MXDeviceVerificationManagerNotificationRequestKey];
+        if ([request isKindOfClass:MXKeyVerificationRequest.class])
+        {
+            block((MXKeyVerificationRequest*)request);
+        }
+        else
+        {
+            XCTFail(@"We support only SAS. transaction: %@", request);
+        }
     }];
 
     [observers addObject:observer];
@@ -448,7 +469,61 @@
 }
 
 
-# pragma mark - Verification by DM -
+#pragma mark - Verification by DM requests -
+/**
+ Test new requests
+
+ - Alice and Bob are in a room
+ - Bob requests a verification of Alice in this Room
+ -> Alice gets the requests notification
+ -> They both have it in their pending requests
+ */
+- (void)testVerificationByDMRequests
+{
+    // - Alice and Bob are in a room
+    [matrixSDKTestsE2EData doE2ETestWithAliceAndBobInARoomWithCryptedMessages:self cryptedBob:YES readyToTest:^(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
+
+        NSString *fallbackText = @"fallbackText";
+        __block NSString *requestId;
+
+        MXCredentials *alice = aliceSession.matrixRestClient.credentials;
+        MXCredentials *bob = bobSession.matrixRestClient.credentials;
+
+        // - Bob requests a verification of Alice in this Room
+        [bobSession.crypto.deviceVerificationManager requestVerificationByDMWithUserId:alice.userId
+                                                                                roomId:roomId
+                                                                          fallbackText:fallbackText
+                                                                               methods:@[MXKeyVerificationMethodSAS, @"toto"]
+                                                                               success:^(MXKeyVerificationRequest *request)
+         {
+             requestId = request.requestId;
+         }
+                                                                               failure:^(NSError * _Nonnull error)
+         {
+             XCTFail(@"The request should not fail - NSError: %@", error);
+             [expectation fulfill];
+         }];
+
+
+        // -> Alice gets the requests notification
+        [self observeKeyVerificationRequestInSession:aliceSession block:^(MXKeyVerificationRequest * _Nullable request) {
+            XCTAssertEqualObjects(request.requestId, requestId);
+            XCTAssertFalse(request.isFromMyUser);
+
+            MXKeyVerificationRequest *requestFromAlicePOV = aliceSession.crypto.deviceVerificationManager.pendingRequests.firstObject;
+            MXKeyVerificationRequest *requestFromBobPOV = bobSession.crypto.deviceVerificationManager.pendingRequests.firstObject;
+
+            XCTAssertNotNil(requestFromAlicePOV);
+            XCTAssertNotNil(requestFromBobPOV);
+
+
+            [expectation fulfill];
+        }];
+    }];
+}
+
+
+#pragma mark - Verification by DM -
 
 /**
  Nomical case: The full flow
@@ -471,14 +546,15 @@
  -> Devices must be really verified
  -> Transaction must not be listed anymore
  -> Both ends must get a done message
+ - Then, test MXKeyVerification
  */
 - (void)testVerificationByDMFullFlow
 {
     // - Alice and Bob are in a room
-    [matrixSDKTestsE2EData doE2ETestWithAliceAndBobInARoomWithCryptedMessages:self cryptedBob:YES readyToTest:^(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
+    [matrixSDKTestsE2EData doE2ETestWithAliceAndBobInARoom:self cryptedBob:YES warnOnUnknowDevices:NO aliceStore:[[MXMemoryStore alloc] init] bobStore:[[MXMemoryStore alloc] init] readyToTest:^(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
 
         NSString *fallbackText = @"fallbackText";
-        __block NSString *requestEventId;
+        __block NSString *requestId;
 
         MXCredentials *alice = aliceSession.matrixRestClient.credentials;
         MXCredentials *bob = bobSession.matrixRestClient.credentials;
@@ -488,9 +564,9 @@
                                                                                 roomId:roomId
                                                                           fallbackText:fallbackText
                                                                                methods:@[MXKeyVerificationMethodSAS, @"toto"]
-                                                                               success:^(NSString * _Nonnull eventId)
+                                                                               success:^(MXKeyVerificationRequest *request)
          {
-             requestEventId = eventId;
+             requestId = request.requestId;
          }
                                                                                failure:^(NSError * _Nonnull error)
          {
@@ -508,26 +584,34 @@
          {
              if ([event.content[@"msgtype"] isEqualToString:kMXMessageTypeKeyVerificationRequest])
              {
-                 XCTAssertEqualObjects(event.eventId, requestEventId);
+                 XCTAssertEqualObjects(event.eventId, requestId);
 
                  // Check verification by DM request format
-                 MXKeyVerificationRequest *request;
-                 MXJSONModelSetMXJSONModel(request, MXKeyVerificationRequest.class, event.content);
-                 XCTAssertNotNil(request);
+                 MXKeyVerificationRequestJSONModel *requestJSON;
+                 MXJSONModelSetMXJSONModel(requestJSON, MXKeyVerificationRequestJSONModel.class, event.content);
+                 XCTAssertNotNil(requestJSON);
 
                  // - Alice accepts it and begins a SAS verification
-                 [aliceSession.crypto.deviceVerificationManager acceptVerificationByDMFromEvent:event method:MXKeyVerificationMethodSAS success:^(MXDeviceVerificationTransaction * _Nonnull transactionFromAlicePOV) {
 
-                     XCTAssertEqualObjects(transactionFromAlicePOV.transactionId, event.eventId);
+                 // Wait a bit
+                 dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 1 * NSEC_PER_SEC), dispatch_get_main_queue(), ^{
+                     // - Alice rejects the incoming request
+                     MXKeyVerificationRequest *requestFromAlicePOV = aliceSession.crypto.deviceVerificationManager.pendingRequests.firstObject;
+                     XCTAssertNotNil(requestFromAlicePOV);
 
-                     XCTAssert(transactionFromAlicePOV);
-                     XCTAssertTrue([transactionFromAlicePOV isKindOfClass:MXOutgoingSASTransaction.class]);
-                     sasTransactionFromAlicePOV = (MXOutgoingSASTransaction*)transactionFromAlicePOV;
+                     [requestFromAlicePOV acceptWithMethod:MXKeyVerificationMethodSAS success:^(MXDeviceVerificationTransaction * _Nonnull transactionFromAlicePOV) {
 
-                 } failure:^(NSError * _Nonnull error) {
-                     XCTFail(@"The request should not fail - NSError: %@", error);
-                     [expectation fulfill];
-                 }];
+                         XCTAssertEqualObjects(transactionFromAlicePOV.transactionId, event.eventId);
+
+                         XCTAssert(transactionFromAlicePOV);
+                         XCTAssertTrue([transactionFromAlicePOV isKindOfClass:MXOutgoingSASTransaction.class]);
+                         sasTransactionFromAlicePOV = (MXOutgoingSASTransaction*)transactionFromAlicePOV;
+
+                     } failure:^(NSError * _Nonnull error) {
+                         XCTFail(@"The request should not fail - NSError: %@", error);
+                         [expectation fulfill];
+                     }];
+                 });
              }
          }];
 
@@ -631,7 +715,17 @@
             [doneDone addObject:done];
             if (doneDone.count == 2)
             {
-                [expectation fulfill];
+                // Then, test MXKeyVerification
+                MXEvent *event = [aliceSession.store eventWithEventId:requestId inRoom:roomId];
+                [aliceSession.crypto.deviceVerificationManager keyVerificationFromKeyVerificationEvent:event success:^(MXKeyVerification * _Nonnull verificationFromAlicePOV) {
+
+                    XCTAssertEqual(verificationFromAlicePOV.state, MXKeyVerificationStateVerified);
+
+                    [expectation fulfill];
+                } failure:^(NSError * _Nonnull error) {
+                    XCTFail(@"The request should not fail - NSError: %@", error);
+                    [expectation fulfill];
+                }];
             }
         };
 
@@ -652,6 +746,7 @@
  - Alice gets the request in the timeline
  - Alice rejects the incoming request
  -> Both ends must see a cancel message
+ - Then, test MXKeyVerification
  */
 - (void)testVerificationByDMCancelledByAlice
 {
@@ -659,7 +754,7 @@
     [matrixSDKTestsE2EData doE2ETestWithAliceAndBobInARoomWithCryptedMessages:self cryptedBob:YES readyToTest:^(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
 
         NSString *fallbackText = @"fallbackText";
-        __block NSString *requestEventId;
+        __block NSString *requestId;
 
         MXCredentials *alice = aliceSession.matrixRestClient.credentials;
 
@@ -668,9 +763,9 @@
                                                                                 roomId:roomId
                                                                           fallbackText:fallbackText
                                                                                methods:@[MXKeyVerificationMethodSAS, @"toto"]
-                                                                               success:^(NSString * _Nonnull eventId)
+                                                                               success:^(MXKeyVerificationRequest *request)
          {
-             requestEventId = eventId;
+             requestId = request.requestId;
          }
                                                                                failure:^(NSError * _Nonnull error)
          {
@@ -684,16 +779,18 @@
          {
              if ([event.content[@"msgtype"] isEqualToString:kMXMessageTypeKeyVerificationRequest])
              {
-                 MXKeyVerificationRequest *request;
-                 MXJSONModelSetMXJSONModel(request, MXKeyVerificationRequest.class, event.content);
-                 XCTAssertNotNil(request);
+                 MXKeyVerificationRequestJSONModel *requestJSON;
+                 MXJSONModelSetMXJSONModel(requestJSON, MXKeyVerificationRequestJSONModel.class, event.content);
+                 XCTAssertNotNil(requestJSON);
 
-                  // - Alice rejects the incoming request
-                 [aliceSession.crypto.deviceVerificationManager cancelVerificationByDMFromEvent:event success:^{
+                 // Wait a bit
+                 dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 1 * NSEC_PER_SEC), dispatch_get_main_queue(), ^{
+                     // - Alice rejects the incoming request
+                     MXKeyVerificationRequest *requestFromAlicePOV = aliceSession.crypto.deviceVerificationManager.pendingRequests.firstObject;
+                     XCTAssertNotNil(requestFromAlicePOV);
 
-                 } failure:^(NSError * _Nonnull error) {
-
-                 }];
+                     [requestFromAlicePOV cancelWithCancelCode:MXTransactionCancelCode.user];
+                 });
              }
          }];
 
@@ -711,7 +808,16 @@
             [cancelCancel addObject:cancel];
             if (cancelCancel.count == 2)
             {
-                [expectation fulfill];
+                // Then, test MXKeyVerification
+                [aliceSession.crypto.deviceVerificationManager keyVerificationFromKeyVerificationEvent:event success:^(MXKeyVerification * _Nonnull verificationFromAlicePOV) {
+
+                    XCTAssertEqual(verificationFromAlicePOV.state, MXKeyVerificationStateRequestCancelledByMe);
+
+                    [expectation fulfill];
+                } failure:^(NSError * _Nonnull error) {
+                    XCTFail(@"The request should not fail - NSError: %@", error);
+                    [expectation fulfill];
+                }];
             }
         };
 

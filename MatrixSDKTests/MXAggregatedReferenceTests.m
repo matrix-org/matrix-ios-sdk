@@ -280,6 +280,88 @@ static NSString* const kThreadedMessage1Text = @"Morning!";
     }];
 }
 
+
+#pragma mark - E2E
+
+// Create a room with an event with an edit it on it
+- (void)createE2EScenario:(void(^)(MXSession *mxSession, MXRoom *room, XCTestExpectation *expectation, NSString *eventId, NSString *editEventId))readyToTest
+{
+    [matrixSDKTestsE2EData doE2ETestWithAliceAndBobInARoom:self cryptedBob:YES warnOnUnknowDevices:NO aliceStore:[[MXMemoryStore alloc] init] bobStore:[[MXMemoryStore alloc] init] readyToTest:^(MXSession *mxSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
+
+        MXRoom *room = [mxSession roomWithRoomId:roomId];
+
+        [room sendTextMessage:kOriginalMessageText success:^(NSString *eventId) {
+
+            NSDictionary *eventContent = @{
+                                           @"msgtype": kMXMessageTypeText,
+                                           @"body": kThreadedMessage1Text,
+                                           @"m.relates_to":  @{
+                                                   @"rel_type": MXEventRelationTypeReference,
+                                                   @"event_id": eventId,
+                                                   }
+                                           };
+
+            [room sendEventOfType:kMXEventTypeStringRoomMessage content:eventContent localEcho:nil success:^(NSString *referenceEventId) {
+
+                dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 1 * NSEC_PER_SEC), dispatch_get_main_queue(), ^{
+                    readyToTest(mxSession, room, expectation, eventId, referenceEventId);
+                });
+
+            } failure:^(NSError *error) {
+                XCTFail(@"The operation should not fail - NSError: %@", error);
+                [expectation fulfill];
+            }];
+
+        } failure:^(NSError *error) {
+            XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+            [expectation fulfill];
+        }];
+    }];
+}
+
+// - Run the initial e2e condition scenario
+// - Get all references from the HS
+// -> Events must be decrypted
+// -> We must get all reference events and no more nextBatch
+// -> We must get the original event
+- (void)testE2EFetchAllReferenceEvents
+{
+    // - Run the initial condition scenario
+    [self createE2EScenario:^(MXSession *mxSession, MXRoom *room, XCTestExpectation *expectation, NSString *eventId, NSString *referenceEventId) {
+
+        // - Get all references from the HS
+        [mxSession.aggregations referenceEventsForEvent:eventId inRoom:room.roomId from:nil limit:-1 success:^(MXAggregationPaginatedResponse * _Nonnull paginatedResponse) {
+
+            // -> Events must be decrypted
+            XCTAssertTrue(paginatedResponse.originalEvent.isEncrypted);
+            XCTAssertNotNil(paginatedResponse.originalEvent.clearEvent);
+            XCTAssertTrue(paginatedResponse.chunk.firstObject.isEncrypted);
+            XCTAssertNotNil(paginatedResponse.chunk.firstObject.clearEvent);
+
+            // -> We must get all reference events and no more nextBatch
+            XCTAssertNotNil(paginatedResponse);
+            XCTAssertEqual(paginatedResponse.chunk.count, 1);
+            XCTAssertNil(paginatedResponse.nextBatch);
+
+            XCTAssertEqualObjects(paginatedResponse.chunk.firstObject.eventId, referenceEventId);
+            XCTAssertEqualObjects(paginatedResponse.chunk.firstObject.content[@"body"], kThreadedMessage1Text);
+
+            // -> We must get the original event
+            XCTAssertNotNil(paginatedResponse.originalEvent);
+            XCTAssertEqualObjects(paginatedResponse.originalEvent.eventId, eventId);
+            XCTAssertEqualObjects(paginatedResponse.originalEvent.content[@"body"], kOriginalMessageText);
+
+            [expectation fulfill];
+
+        } failure:^(NSError *error) {
+            XCTFail(@"The operation should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+    }];
+}
+
+
+
 @end
 
 #pragma clang diagnostic pop
