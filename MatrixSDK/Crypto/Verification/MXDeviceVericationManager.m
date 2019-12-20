@@ -45,7 +45,7 @@ NSTimeInterval const MXTransactionTimeout = 10 * 60.0;
 // Request timeout in seconds
 NSTimeInterval const MXRequestDefaultTimeout = 5 * 60.0;
 
-static NSArray<MXEventTypeString> *MXDeviceVerificationManagerDMEventTypes;
+static NSArray<MXEventTypeString> *kMXDeviceVerificationManagerDMEventTypes;
 
 
 @interface MXDeviceVerificationManager ()
@@ -305,7 +305,7 @@ static NSArray<MXEventTypeString> *MXDeviceVerificationManagerDMEventTypes;
 {
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
-        MXDeviceVerificationManagerDMEventTypes = @[
+        kMXDeviceVerificationManagerDMEventTypes = @[
                                                     kMXEventTypeStringKeyVerificationStart,
                                                     kMXEventTypeStringKeyVerificationAccept,
                                                     kMXEventTypeStringKeyVerificationKey,
@@ -754,7 +754,7 @@ static NSArray<MXEventTypeString> *MXDeviceVerificationManagerDMEventTypes;
 
 - (void)setupIncomingDMEvents
 {
-    [_crypto.mxSession listenToEventsOfTypes:MXDeviceVerificationManagerDMEventTypes onEvent:^(MXEvent *event, MXTimelineDirection direction, id customObject) {
+    [_crypto.mxSession listenToEventsOfTypes:kMXDeviceVerificationManagerDMEventTypes onEvent:^(MXEvent *event, MXTimelineDirection direction, id customObject) {
         if (direction == MXTimelineDirectionForwards
             && ![event.sender isEqualToString:self.crypto.mxSession.myUser.userId])
         {
@@ -765,7 +765,7 @@ static NSArray<MXEventTypeString> *MXDeviceVerificationManagerDMEventTypes;
 
 - (BOOL)isVerificationByDMEventType:(MXEventTypeString)type
 {
-    return [MXDeviceVerificationManagerDMEventTypes containsObject:type];
+    return [kMXDeviceVerificationManagerDMEventTypes containsObject:type];
 }
 
 - (MXHTTPOperation*)sendMessage:(NSString*)userId
