@@ -2377,6 +2377,37 @@ typedef MXHTTPOperation* (^MXRestClientIdentityServerAccessTokenHandler)(void (^
                                    success:(void (^)(void))success
                                    failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
+
+#pragma mark - Cross-Signing
+
+/**
+ Get an authentication session to upload cross-signing keys.
+
+ @param success A block object called when the operation succeeds. It provides the server response
+ as an MXAuthenticationSession instance.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)authSessionToUploadDeviceSigningKeys:(void (^)(MXAuthenticationSession *authSession))success
+                                                 failure:(void (^)(NSError *error))failure;
+
+/**
+ Upload cross-signing keys.
+
+ @param keys A dictionary containing keys.
+ @param authParameters The additional authentication information for the user-interactive authentication API.
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)uploadDeviceSigningKeys:(NSDictionary *)keys
+                                 authParams:(NSDictionary*)authParameters
+                                    success:(void (^)(void))success
+                                    failure:(void (^)(NSError *error))failure;
+
+
 #pragma mark - Groups
     
 /**

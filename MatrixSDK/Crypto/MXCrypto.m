@@ -37,6 +37,7 @@
 #import "MXIncomingRoomKeyRequestManager.h"
 
 #import "MXDeviceVerificationManager_Private.h"
+#import "MXCrossSigning_Private.h"
 
 /**
  The store to use for crypto.
@@ -1423,6 +1424,8 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
         incomingRoomKeyRequestManager = [[MXIncomingRoomKeyRequestManager alloc] initWithCrypto:self];
 
         _deviceVerificationManager = [[MXDeviceVerificationManager alloc] initWithCrypto:self];
+
+        _crossSigning = [[MXCrossSigning alloc] initWithCrypto:self];
         
         [self registerEventHandlers];
         

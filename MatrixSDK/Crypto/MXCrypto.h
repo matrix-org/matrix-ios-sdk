@@ -29,6 +29,7 @@
 
 #import "MXKeyBackup.h"
 #import "MXDeviceVerificationManager.h"
+#import "MXCrossSigning.h"
 
 @class MXSession;
 
@@ -87,6 +88,11 @@ FOUNDATION_EXPORT NSString *const kMXCryptoRoomKeyRequestCancellationNotificatio
  The device verification manager.
  */
 @property (nonatomic, readonly) MXDeviceVerificationManager *deviceVerificationManager;
+
+/**
+ The cross-signing manager.
+ */
+@property (nonatomic, readonly) MXCrossSigning *crossSigning;
 
 /**
  Create a new crypto instance and data for the given user.
