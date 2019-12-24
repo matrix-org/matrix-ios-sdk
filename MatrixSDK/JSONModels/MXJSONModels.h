@@ -24,6 +24,7 @@
 #import "MXMegolmBackupAuthData.h"
 #import "MXLoginTerms.h"
 #import "MXWellKnown.h"
+#import "MXCrossSigningKey.h"
 
 @class MXEvent, MXDeviceInfo, MXKey, MXUser;
 
@@ -1661,6 +1662,21 @@ FOUNDATION_EXPORT NSString *const kMXPushRuleScopeStringDevice;
      The device keys per devices per users.
      */
     @property (nonatomic) MXUsersDevicesMap<MXDeviceInfo*> *deviceKeys;
+
+    /**
+     Master keys per users.
+     */
+    @property (nonatomic) NSDictionary<NSString*, MXCrossSigningKey*> *masterKeys;
+
+    /**
+     Self-signed keys per users.
+     */
+    @property (nonatomic) NSDictionary<NSString*, MXCrossSigningKey*> *selfSignedKeys;
+
+    /**
+     User-signed keys per users.
+     */
+    @property (nonatomic) NSDictionary<NSString*, MXCrossSigningKey*> *userSignedKeys;
 
     /**
      The failures sorted by homeservers.

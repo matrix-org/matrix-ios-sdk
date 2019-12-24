@@ -165,16 +165,37 @@
 
             [aliceSession.matrixRestClient uploadDeviceSigningKeys:signingKeys authParams:authParams success:^{
 
-                // TODO: Fetch back
-                // [aliceSession.matrixRestClient ...
 
-                [expectation fulfill];
+                // Fetch back them
+                [aliceSession.matrixRestClient downloadKeysForUsers:@[aliceUserId] token:nil success:^(MXKeysQueryResponse *keysQueryResponse) {
 
+                    XCTAssertNotNil(keysQueryResponse.masterKeys);
+                    MXCrossSigningKey *masterKey = keysQueryResponse.masterKeys[aliceUserId];
+                    XCTAssertNotNil(masterKey);
+                    XCTAssertEqualObjects(masterKey.usage, @[MXCrossSigningKeyType.master]);
+
+                    XCTAssertNotNil(keysQueryResponse.selfSignedKeys);
+                    MXCrossSigningKey *key = keysQueryResponse.selfSignedKeys[aliceUserId];
+                    XCTAssertNotNil(key);
+                    XCTAssertEqualObjects(key.usage, @[MXCrossSigningKeyType.selfSigning]);
+                    XCTAssertNotNil([key signatureFromUserId:aliceUserId withPublicKey:masterKey.keys]);
+
+                    XCTAssertNotNil(keysQueryResponse.userSignedKeys);
+                    key = keysQueryResponse.userSignedKeys[aliceUserId];
+                    XCTAssertNotNil(key);
+                    XCTAssertEqualObjects(key.usage, @[MXCrossSigningKeyType.userSigning]);
+                    XCTAssertNotNil([key signatureFromUserId:aliceUserId withPublicKey:masterKey.keys]);
+
+                    [expectation fulfill];
+
+                } failure:^(NSError *error) {
+                    XCTFail(@"The operation should not fail - NSError: %@", error);
+                    [expectation fulfill];
+                }];
             } failure:^(NSError *error) {
                 XCTFail(@"The operation should not fail - NSError: %@", error);
                 [expectation fulfill];
             }];
-
         } failure:^(NSError *error) {
             XCTFail(@"The operation should not fail - NSError: %@", error);
             [expectation fulfill];

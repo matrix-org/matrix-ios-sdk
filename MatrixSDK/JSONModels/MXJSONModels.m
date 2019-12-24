@@ -1543,6 +1543,7 @@ NSString *const kMXPushRuleScopeStringDevice = @"device";
     MXKeysQueryResponse *keysQueryResponse = [[MXKeysQueryResponse alloc] init];
     if (keysQueryResponse)
     {
+        // Devices keys
         NSMutableDictionary *map = [NSMutableDictionary dictionary];
 
         if ([JSONDictionary isKindOfClass:NSDictionary.class])
@@ -1567,9 +1568,35 @@ NSString *const kMXPushRuleScopeStringDevice = @"device";
         keysQueryResponse.deviceKeys = [[MXUsersDevicesMap<MXDeviceInfo*> alloc] initWithMap:map];
 
         MXJSONModelSetDictionary(keysQueryResponse.failures, JSONDictionary[@"failures"]);
+
+        // Cross-signing keys
+        keysQueryResponse.masterKeys = [self extractUserKeysFromJSON:JSONDictionary[@"master_keys"]];
+        keysQueryResponse.selfSignedKeys = [self extractUserKeysFromJSON:JSONDictionary[@"self_signing_keys"]];
+        keysQueryResponse.userSignedKeys = [self extractUserKeysFromJSON:JSONDictionary[@"user_signing_keys"]];
     }
 
     return keysQueryResponse;
+}
+
++ (NSDictionary<NSString*, MXCrossSigningKey*>*)extractUserKeysFromJSON:(NSDictionary *)keysJSONDictionary
+{
+    NSMutableDictionary<NSString*, MXCrossSigningKey*> *keys = [NSMutableDictionary dictionary];
+    for (NSString *userId in keysJSONDictionary)
+    {
+        MXCrossSigningKey *key;
+        MXJSONModelSetMXJSONModel(key, MXCrossSigningKey, keysJSONDictionary[userId]);
+        if (key)
+        {
+            keys[userId] = key;
+        }
+    }
+
+    if (!keys.count)
+    {
+        keys = nil;
+    }
+
+    return keys;
 }
 
 @end
