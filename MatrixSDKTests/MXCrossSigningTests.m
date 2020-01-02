@@ -169,19 +169,21 @@
                 // Fetch back them
                 [aliceSession.matrixRestClient downloadKeysForUsers:@[aliceUserId] token:nil success:^(MXKeysQueryResponse *keysQueryResponse) {
 
-                    XCTAssertNotNil(keysQueryResponse.masterKeys);
-                    MXCrossSigningKey *masterKey = keysQueryResponse.masterKeys[aliceUserId];
+                    XCTAssertEqual(keysQueryResponse.crossSigningKeys.count, 1);
+
+                    MXCrossSigningInfo *aliceCrossSigningKeys = keysQueryResponse.crossSigningKeys[aliceUserId];
+                    XCTAssertNotNil(aliceCrossSigningKeys);
+
+                    MXCrossSigningKey *masterKey = aliceCrossSigningKeys.masterKeys;
                     XCTAssertNotNil(masterKey);
                     XCTAssertEqualObjects(masterKey.usage, @[MXCrossSigningKeyType.master]);
 
-                    XCTAssertNotNil(keysQueryResponse.selfSignedKeys);
-                    MXCrossSigningKey *key = keysQueryResponse.selfSignedKeys[aliceUserId];
+                    MXCrossSigningKey *key = aliceCrossSigningKeys.selfSignedKeys;
                     XCTAssertNotNil(key);
                     XCTAssertEqualObjects(key.usage, @[MXCrossSigningKeyType.selfSigning]);
                     XCTAssertNotNil([key signatureFromUserId:aliceUserId withPublicKey:masterKey.keys]);
 
-                    XCTAssertNotNil(keysQueryResponse.userSignedKeys);
-                    key = keysQueryResponse.userSignedKeys[aliceUserId];
+                    key = aliceCrossSigningKeys.userSignedKeys;
                     XCTAssertNotNil(key);
                     XCTAssertEqualObjects(key.usage, @[MXCrossSigningKeyType.userSigning]);
                     XCTAssertNotNil([key signatureFromUserId:aliceUserId withPublicKey:masterKey.keys]);

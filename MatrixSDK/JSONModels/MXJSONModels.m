@@ -22,6 +22,7 @@
 #import "MXTools.h"
 #import "MXUsersDevicesMap.h"
 #import "MXDeviceInfo.h"
+#import "MXCrossSigningInfo_Private.h"
 #import "MXKey.h"
 
 @implementation MXPublicRoom
@@ -1569,10 +1570,35 @@ NSString *const kMXPushRuleScopeStringDevice = @"device";
 
         MXJSONModelSetDictionary(keysQueryResponse.failures, JSONDictionary[@"failures"]);
 
-        // Cross-signing keys
-        keysQueryResponse.masterKeys = [self extractUserKeysFromJSON:JSONDictionary[@"master_keys"]];
-        keysQueryResponse.selfSignedKeys = [self extractUserKeysFromJSON:JSONDictionary[@"self_signing_keys"]];
-        keysQueryResponse.userSignedKeys = [self extractUserKeysFromJSON:JSONDictionary[@"user_signing_keys"]];
+        // Extract cross-signing keys
+        NSMutableDictionary *crossSigningKeys = [NSMutableDictionary dictionary];
+
+        // Gather all of them by type by user
+        NSDictionary<NSString*, NSDictionary<NSString*, MXCrossSigningKey*>*> *allKeys =
+        @{
+          MXCrossSigningKeyType.master: [self extractUserKeysFromJSON:JSONDictionary[@"master_keys"]],
+          MXCrossSigningKeyType.selfSigning: [self extractUserKeysFromJSON:JSONDictionary[@"self_signing_keys"]],
+          MXCrossSigningKeyType.userSigning: [self extractUserKeysFromJSON:JSONDictionary[@"user_signing_keys"]],
+          };
+
+        // Package them into a `userId -> MXCrossSigningInfo` dictionary
+        for (NSString *keyType in allKeys)
+        {
+            NSDictionary<NSString*, MXCrossSigningKey*> *keys = allKeys[keyType];
+            for (NSString *userId in keys)
+            {
+                MXCrossSigningInfo *crossSigningInfo = crossSigningKeys[userId];
+                if (!crossSigningInfo)
+                {
+                    crossSigningInfo = [[MXCrossSigningInfo alloc] initWithUserId:userId];
+                    crossSigningKeys[userId] = crossSigningInfo;
+                }
+
+                [crossSigningInfo addCrossSigningKey:keys[userId] type:keyType];
+            }
+        }
+
+        keysQueryResponse.crossSigningKeys = crossSigningKeys;
     }
 
     return keysQueryResponse;
