@@ -18,6 +18,7 @@
 
 #import "MXCrypto_Private.h"
 #import "MXCrossSigningTools.h"
+#import "MXCrossSigningInfo_Private.h"
 #import "MXKey.h"
 
 @interface MXCrossSigning ()
@@ -29,11 +30,13 @@
 
 @implementation MXCrossSigning
 
-- (NSDictionary<NSString*, MXCrossSigningKey*>*)createKeys
+- (MXCrossSigningInfo*)createKeys
 {
     NSString *myUserId = _crypto.mxSession.myUser.userId;
 
-    NSMutableDictionary<NSString*, MXCrossSigningKey*> *keys = [NSMutableDictionary dictionary];
+    MXCrossSigningInfo *crossSigningKeys = [[MXCrossSigningInfo alloc] initWithUserId:myUserId];
+    crossSigningKeys.firstUse = NO;
+
     NSMutableDictionary<NSString*, NSData*> *privateKeys = [NSMutableDictionary dictionary];
 
     // Master key
@@ -46,10 +49,8 @@
         NSString *type = MXCrossSigningKeyType.master;
 
         MXCrossSigningKey *masterKey = [[MXCrossSigningKey alloc] initWithUserId:myUserId usage:@[type] keys:masterKeyPublic];
-        keys[type] = masterKey;
+        [crossSigningKeys addCrossSigningKey:masterKey type:type];
         privateKeys[type] = masterKeyPrivate;
-
-        NSLog(@"##### %@", masterKey.JSONDictionary);
     }
 
     // self_signing key
@@ -63,10 +64,8 @@
         MXCrossSigningKey *ssk = [[MXCrossSigningKey alloc] initWithUserId:myUserId usage:@[type] keys:sskPublic];
         [crossSigningTools pkSign:ssk withPkSigning:masterSigning userId:myUserId publicKey:masterKeyPublic];
 
-        keys[type] = ssk;
+        [crossSigningKeys addCrossSigningKey:ssk type:type];
         privateKeys[type] = sskPrivate;
-
-        NSLog(@"##### %@", ssk.JSONDictionary);
     }
 
     // user_signing key
@@ -80,13 +79,11 @@
         MXCrossSigningKey *usk = [[MXCrossSigningKey alloc] initWithUserId:myUserId usage:@[type] keys:uskPublic];
         [crossSigningTools pkSign:usk withPkSigning:masterSigning userId:myUserId publicKey:masterKeyPublic];
 
-        keys[type] = usk;
+        [crossSigningKeys addCrossSigningKey:usk type:type];
         privateKeys[type] = uskPrivate;
-
-        NSLog(@"##### %@", usk.JSONDictionary);
     }
 
-    return keys;
+    return crossSigningKeys;
 }
 
 

@@ -24,7 +24,7 @@ NS_ASSUME_NONNULL_BEGIN
 @interface MXCrossSigning : NSObject
 
 // TODO: make it resetKeys or something
-- (NSDictionary<NSString*, MXCrossSigningKey*>*)createKeys;
+- (MXCrossSigningInfo*)createKeys;
 
 
 // JS SDK API that we should offer too

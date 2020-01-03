@@ -14,7 +14,7 @@
  limitations under the License.
  */
 
-#import "MXCrossSigningInfo.h"
+#import "MXCrossSigningInfo_Private.h"
 
 @implementation MXCrossSigningInfo
 
@@ -45,6 +45,11 @@
         _firstUse = YES;
     }
     return self;
+}
+
+- (void)setFirstUse:(BOOL)firstUse
+{
+    _firstUse = firstUse;
 }
 
 - (void)addCrossSigningKey:(MXCrossSigningKey*)crossSigningKey type:(NSString*)type

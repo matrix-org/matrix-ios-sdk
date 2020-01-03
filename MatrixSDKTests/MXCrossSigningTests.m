@@ -53,6 +53,51 @@
     matrixSDKTestsE2EData = nil;
 }
 
+
+#pragma mark - Scenarii
+
+- (void)doTestWithBobAndAlice:(XCTestCase*)testCase
+                  readyToTest:(void (^)(MXSession *bobSession, MXSession *aliceSession, XCTestExpectation *expectation))readyToTest
+{
+    [matrixSDKTestsE2EData doE2ETestWithBobAndAlice:self readyToTest:^(MXSession *bobSession, MXSession *aliceSession, XCTestExpectation *expectation) {
+
+        NSString *aliceUserId = aliceSession.matrixRestClient.credentials.userId;
+
+        MXCrossSigningInfo *keys = [aliceSession.crypto.crossSigning createKeys];
+        NSDictionary *signingKeys = @{
+                                      @"master_key": keys.masterKeys.JSONDictionary,
+                                      @"self_signing_key": keys.selfSignedKeys.JSONDictionary,
+                                      @"user_signing_key": keys.userSignedKeys.JSONDictionary,
+                                      };
+
+        // Upload the keys using password authentication
+        [aliceSession.matrixRestClient authSessionToUploadDeviceSigningKeys:^(MXAuthenticationSession *authSession) {
+            XCTAssertNotNil(authSession);
+            XCTAssertGreaterThan(authSession.flows.count, 0);
+
+            NSDictionary *authParams = @{
+                                         @"session": authSession.session,
+                                         @"user": aliceUserId,
+                                         @"password": MXTESTS_ALICE_PWD,
+                                         @"type": kMXLoginFlowTypePassword
+                                         };
+
+            [aliceSession.matrixRestClient uploadDeviceSigningKeys:signingKeys authParams:authParams success:^{
+
+                readyToTest(bobSession, aliceSession, expectation);
+
+            } failure:^(NSError *error) {
+                XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                [expectation fulfill];
+            }];
+        } failure:^(NSError *error) {
+            XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+            [expectation fulfill];
+        }];
+    }];
+}
+
+
 - (void)testMXCrossSigningKeyMXJSONModel
 {
     NSString *userId = @"@alice:example.com";
@@ -138,66 +183,36 @@
 }
 
 
-- (void)testCSAPIs
+- (void)testKeysDownloadCSAPIs
 {
-    [matrixSDKTestsE2EData doE2ETestWithBobAndAlice:self readyToTest:^(MXSession *bobSession, MXSession *aliceSession, XCTestExpectation *expectation) {
+    [self doTestWithBobAndAlice:self readyToTest:^(MXSession *bobSession, MXSession *aliceSession, XCTestExpectation *expectation) {
 
         NSString *aliceUserId = aliceSession.matrixRestClient.credentials.userId;
 
-        NSDictionary<NSString*, MXCrossSigningKey*> *keys = [aliceSession.crypto.crossSigning createKeys];
-        NSDictionary *signingKeys = @{
-                                      @"master_key": keys[MXCrossSigningKeyType.master].JSONDictionary,
-                                      @"self_signing_key": keys[MXCrossSigningKeyType.selfSigning].JSONDictionary,
-                                      @"user_signing_key": keys[MXCrossSigningKeyType.userSigning].JSONDictionary,
-                                      };
+        // Fetch alice keys back
+        [aliceSession.matrixRestClient downloadKeysForUsers:@[aliceUserId] token:nil success:^(MXKeysQueryResponse *keysQueryResponse) {
 
-        // Upload the keys using password authentication
-        [aliceSession.matrixRestClient authSessionToUploadDeviceSigningKeys:^(MXAuthenticationSession *authSession) {
-            XCTAssertNotNil(authSession);
-            XCTAssertGreaterThan(authSession.flows.count, 0);
+            XCTAssertEqual(keysQueryResponse.crossSigningKeys.count, 1);
 
-            NSDictionary *authParams = @{
-                                         @"session": authSession.session,
-                                         @"user": aliceUserId,
-                                         @"password": MXTESTS_ALICE_PWD,
-                                         @"type": kMXLoginFlowTypePassword
-                                         };
+            MXCrossSigningInfo *aliceCrossSigningKeys = keysQueryResponse.crossSigningKeys[aliceUserId];
+            XCTAssertNotNil(aliceCrossSigningKeys);
 
-            [aliceSession.matrixRestClient uploadDeviceSigningKeys:signingKeys authParams:authParams success:^{
+            MXCrossSigningKey *masterKey = aliceCrossSigningKeys.masterKeys;
+            XCTAssertNotNil(masterKey);
+            XCTAssertEqualObjects(masterKey.usage, @[MXCrossSigningKeyType.master]);
 
+            MXCrossSigningKey *key = aliceCrossSigningKeys.selfSignedKeys;
+            XCTAssertNotNil(key);
+            XCTAssertEqualObjects(key.usage, @[MXCrossSigningKeyType.selfSigning]);
+            XCTAssertNotNil([key signatureFromUserId:aliceUserId withPublicKey:masterKey.keys]);
 
-                // Fetch back them
-                [aliceSession.matrixRestClient downloadKeysForUsers:@[aliceUserId] token:nil success:^(MXKeysQueryResponse *keysQueryResponse) {
+            key = aliceCrossSigningKeys.userSignedKeys;
+            XCTAssertNotNil(key);
+            XCTAssertEqualObjects(key.usage, @[MXCrossSigningKeyType.userSigning]);
+            XCTAssertNotNil([key signatureFromUserId:aliceUserId withPublicKey:masterKey.keys]);
 
-                    XCTAssertEqual(keysQueryResponse.crossSigningKeys.count, 1);
+            [expectation fulfill];
 
-                    MXCrossSigningInfo *aliceCrossSigningKeys = keysQueryResponse.crossSigningKeys[aliceUserId];
-                    XCTAssertNotNil(aliceCrossSigningKeys);
-
-                    MXCrossSigningKey *masterKey = aliceCrossSigningKeys.masterKeys;
-                    XCTAssertNotNil(masterKey);
-                    XCTAssertEqualObjects(masterKey.usage, @[MXCrossSigningKeyType.master]);
-
-                    MXCrossSigningKey *key = aliceCrossSigningKeys.selfSignedKeys;
-                    XCTAssertNotNil(key);
-                    XCTAssertEqualObjects(key.usage, @[MXCrossSigningKeyType.selfSigning]);
-                    XCTAssertNotNil([key signatureFromUserId:aliceUserId withPublicKey:masterKey.keys]);
-
-                    key = aliceCrossSigningKeys.userSignedKeys;
-                    XCTAssertNotNil(key);
-                    XCTAssertEqualObjects(key.usage, @[MXCrossSigningKeyType.userSigning]);
-                    XCTAssertNotNil([key signatureFromUserId:aliceUserId withPublicKey:masterKey.keys]);
-
-                    [expectation fulfill];
-
-                } failure:^(NSError *error) {
-                    XCTFail(@"The operation should not fail - NSError: %@", error);
-                    [expectation fulfill];
-                }];
-            } failure:^(NSError *error) {
-                XCTFail(@"The operation should not fail - NSError: %@", error);
-                [expectation fulfill];
-            }];
         } failure:^(NSError *error) {
             XCTFail(@"The operation should not fail - NSError: %@", error);
             [expectation fulfill];
