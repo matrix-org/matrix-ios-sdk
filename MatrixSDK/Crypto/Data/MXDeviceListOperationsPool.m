@@ -19,6 +19,7 @@
 #ifdef MX_CRYPTO
 
 #import "MXCrypto_Private.h"
+#import "MXCrossSigningInfo_Private.h"
 #import "MXTools.h"
 
 @interface MXDeviceListOperationsPool ()
@@ -88,12 +89,13 @@
     _httpOperation = [crypto.matrixRestClient downloadKeysForUsers:users token:token success:^(MXKeysQueryResponse *keysQueryResponse) {
         MXStrongifyAndReturnIfNil(self);
 
-        NSLog(@"[MXDeviceListOperationsPool] doKeyDownloadForUsers(pool: %p) -> DONE. Got keys for %@ users and %@ devices", self, @(keysQueryResponse.deviceKeys.map.count), @(keysQueryResponse.deviceKeys.count));
+        NSLog(@"[MXDeviceListOperationsPool] doKeyDownloadForUsers(pool: %p) -> DONE. Got keys for %@ users and %@ devices. Got cross-signing keys for %@ users", self, @(keysQueryResponse.deviceKeys.map.count), @(keysQueryResponse.deviceKeys.count), @(keysQueryResponse.crossSigningKeys.count));
 
         self->_httpOperation = nil;
 
         for (NSString *userId in users)
         {
+            // Handle user devices keys
             NSDictionary<NSString*, MXDeviceInfo*> *devices = keysQueryResponse.deviceKeys.map[userId];
 
             NSLog(@"[MXDeviceListOperationsPool] doKeyDownloadForUsers: Got keys for %@: %@ devices: %@", userId, @(devices.count), devices);
@@ -131,6 +133,26 @@
                 // Update the store
                 // Note that devices which aren't in the response will be removed from the store
                 [self->crypto.store storeDevicesForUser:userId devices:mutabledevices];
+            }
+
+
+            // Handle user cross-signing keys
+            MXCrossSigningInfo *crossSigningKeys = keysQueryResponse.crossSigningKeys[userId];
+            if (crossSigningKeys)
+            {
+                NSLog(@"[MXDeviceListOperationsPool] doKeyDownloadForUsers: Got cross-signing keys for %@: %@", userId, crossSigningKeys);
+
+                // Get the potential previously stored value
+                MXCrossSigningInfo *previouslyStoredCcrossSigningKeys = [self->crypto.store crossSigningKeysForUser:userId];
+
+                if (previouslyStoredCcrossSigningKeys)
+                {
+                    // To keep the firstUse state
+                    crossSigningKeys.firstUse = previouslyStoredCcrossSigningKeys.firstUse;
+                }
+
+                // Note that keys which aren't in the response will be removed from the store
+                [self->crypto.store storeCrossSigningKeys:crossSigningKeys];
             }
         }
 

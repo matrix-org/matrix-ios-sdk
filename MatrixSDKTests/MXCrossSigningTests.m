@@ -235,6 +235,44 @@
     }];
 }
 
+// Test /keys/query response parsing for cross signing data
+// - Set up the scenario with alice with cross-signing keys
+// - Make Bob fetch Alice's cross-signing keys
+// -> Check retrieved data
+- (void)testMXCryptoDownloadKeys
+{
+    // - Set up the scenario with alice with cross-signing keys
+    [self doTestWithBobAndAlice:self readyToTest:^(MXSession *bobSession, MXSession *aliceSession, XCTestExpectation *expectation) {
+        NSString *aliceUserId = aliceSession.matrixRestClient.credentials.userId;
+
+        // - Make Bob fetch Alice's cross-signing keys
+        [bobSession.crypto downloadKeys:@[aliceUserId] forceDownload:NO success:^(MXUsersDevicesMap<MXDeviceInfo *> *usersDevicesInfoMap, NSDictionary<NSString *,MXCrossSigningInfo *> *crossSigningKeysMap) {
+
+            // -> Check retrieved data
+            XCTAssertNotNil(crossSigningKeysMap);
+            XCTAssertEqual(crossSigningKeysMap.count, 1);
+
+            MXCrossSigningInfo *aliceCrossSigningKeys = crossSigningKeysMap[aliceUserId];
+            XCTAssertNotNil(aliceCrossSigningKeys);
+
+            XCTAssertEqualObjects(aliceCrossSigningKeys.userId, aliceUserId);
+
+            // Bob should only see 2 from the 3 Alice's cross-signing keys
+            // The user signing key is private
+            XCTAssertEqual(aliceCrossSigningKeys.keys.count, 2);
+            XCTAssertNotNil(aliceCrossSigningKeys.masterKeys);
+            XCTAssertNotNil(aliceCrossSigningKeys.selfSignedKeys);
+            XCTAssertNil(aliceCrossSigningKeys.userSignedKeys);
+
+            [expectation fulfill];
+
+        } failure:^(NSError *error) {
+            XCTFail(@"The operation should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+    }];
+}
+
 // Check MXCrossSigningInfo storage in the crypto store
 // - Create Alice's cross-signing keys
 // - Store their keys and retrieve them

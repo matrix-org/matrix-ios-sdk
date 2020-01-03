@@ -838,7 +838,8 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
 
 - (MXHTTPOperation*)downloadKeys:(NSArray<NSString*>*)userIds
                    forceDownload:(BOOL)forceDownload
-                         success:(void (^)(MXUsersDevicesMap<MXDeviceInfo*> *usersDevicesInfoMap))success
+                         success:(void (^)(MXUsersDevicesMap<MXDeviceInfo*> *usersDevicesInfoMap,
+                                           NSDictionary<NSString*, MXCrossSigningInfo*> *crossSigningKeysMap))success
                          failure:(void (^)(NSError *error))failure
 {
 #ifdef MX_CRYPTO
@@ -848,11 +849,11 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
 
     dispatch_async(_cryptoQueue, ^{
 
-        MXHTTPOperation *operation2 = [self.deviceList downloadKeys:userIds forceDownload:forceDownload success:^(MXUsersDevicesMap<MXDeviceInfo *> *usersDevicesInfoMap) {
+        MXHTTPOperation *operation2 = [self.deviceList downloadKeys:userIds forceDownload:forceDownload success:^(MXUsersDevicesMap<MXDeviceInfo *> *usersDevicesInfoMap, NSDictionary<NSString *,MXCrossSigningInfo *> *crossSigningKeysMap) {
             if (success)
             {
                 dispatch_async(dispatch_get_main_queue(), ^{
-                    success(usersDevicesInfoMap);
+                    success(usersDevicesInfoMap, crossSigningKeysMap);
                 });
             }
         } failure:^(NSError *error) {

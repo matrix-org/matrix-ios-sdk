@@ -16,9 +16,25 @@
 
 #import <Foundation/Foundation.h>
 
+#import "MXCrossSigningInfo.h"
 #import "MXCrossSigningKey.h"
 
 NS_ASSUME_NONNULL_BEGIN
+
+//typedef NS_OPTIONS(NSUInteger, DownloadViewStatus) {
+//    FileNotDownloaded = (1 << 0), // => 00000001
+//    FileDownloading   = (1 << 1), // => 00000010
+//    FileDownloaded    = (1 << 2)  // => 00000100
+//};
+//
+//
+//typedef NS_ENUM(NSInteger, MXAntivirusScanStatus) {
+//    MXAntivirusScanStatusUnknown = 0,
+//    MXAntivirusScanStatusInProgress,
+//    MXAntivirusScanStatusTrusted,
+//    MXAntivirusScanStatusInfected
+//};
+
 
 
 @interface MXCrossSigning : NSObject

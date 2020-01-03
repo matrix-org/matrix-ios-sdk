@@ -1576,9 +1576,9 @@ NSString *const kMXPushRuleScopeStringDevice = @"device";
         // Gather all of them by type by user
         NSDictionary<NSString*, NSDictionary<NSString*, MXCrossSigningKey*>*> *allKeys =
         @{
-          MXCrossSigningKeyType.master: [self extractUserKeysFromJSON:JSONDictionary[@"master_keys"]],
-          MXCrossSigningKeyType.selfSigning: [self extractUserKeysFromJSON:JSONDictionary[@"self_signing_keys"]],
-          MXCrossSigningKeyType.userSigning: [self extractUserKeysFromJSON:JSONDictionary[@"user_signing_keys"]],
+          MXCrossSigningKeyType.master: [self extractUserKeysFromJSON:JSONDictionary[@"master_keys"]] ?: @{},
+          MXCrossSigningKeyType.selfSigning: [self extractUserKeysFromJSON:JSONDictionary[@"self_signing_keys"]] ?: @{},
+          MXCrossSigningKeyType.userSigning: [self extractUserKeysFromJSON:JSONDictionary[@"user_signing_keys"]] ?: @{},
           };
 
         // Package them into a `userId -> MXCrossSigningInfo` dictionary

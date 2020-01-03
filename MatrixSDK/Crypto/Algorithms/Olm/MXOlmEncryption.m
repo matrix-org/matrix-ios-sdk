@@ -107,7 +107,8 @@
     // XXX: This class is not used so fix it later
     MXWeakify(self);
     MXHTTPOperation *operation;
-    operation = [crypto.deviceList downloadKeys:users forceDownload:NO success:^(MXUsersDevicesMap<MXDeviceInfo *> *usersDevicesInfoMap) {
+    operation = [crypto.deviceList downloadKeys:users forceDownload:NO success:^(MXUsersDevicesMap<MXDeviceInfo *> *usersDevicesInfoMap, NSDictionary<NSString *,MXCrossSigningInfo *> *crossSigningKeysMap) {
+
         MXStrongifyAndReturnIfNil(self);
 
         MXHTTPOperation *operation2 = [self->crypto ensureOlmSessionsForUsers:users success:^(MXUsersDevicesMap<MXOlmSessionResult *> *results) {

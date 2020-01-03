@@ -237,7 +237,7 @@ FOUNDATION_EXPORT NSString *const kMXCryptoRoomKeyRequestCancellationNotificatio
                complete:(void (^)(void))complete;
 
 /**
- Get the device keys for a list of users.
+ Get the device and cross-sigining keys for a list of users.
 
  Keys will be downloaded from the matrix homeserver and stored into the crypto store
  if the information in the store is not up-to-date.
@@ -253,7 +253,8 @@ FOUNDATION_EXPORT NSString *const kMXCryptoRoomKeyRequestCancellationNotificatio
  */
 - (MXHTTPOperation*)downloadKeys:(NSArray<NSString*>*)userIds
                    forceDownload:(BOOL)forceDownload
-                         success:(void (^)(MXUsersDevicesMap<MXDeviceInfo*> *usersDevicesInfoMap))success
+                         success:(void (^)(MXUsersDevicesMap<MXDeviceInfo*> *usersDevicesInfoMap,
+                                           NSDictionary<NSString* /* userId*/, MXCrossSigningInfo*> *crossSigningKeysMap))success
                          failure:(void (^)(NSError *error))failure;
 
 /**
