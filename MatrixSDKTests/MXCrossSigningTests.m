@@ -19,7 +19,9 @@
 #import "MatrixSDKTestsData.h"
 #import "MatrixSDKTestsE2EData.h"
 
+#import "MXCrypto_Private.h"
 #import "MXCrossSigning_Private.h"
+#import "MXCrossSigningInfo_Private.h"
 #import "MXCrossSigningTools.h"
 
 
@@ -56,13 +58,18 @@
 
 #pragma mark - Scenarii
 
+// - Create Alice & Bob account
+// - Create Alice's cross-signing keys
+// - Upload the keys using password authentication
 - (void)doTestWithBobAndAlice:(XCTestCase*)testCase
                   readyToTest:(void (^)(MXSession *bobSession, MXSession *aliceSession, XCTestExpectation *expectation))readyToTest
 {
-    [matrixSDKTestsE2EData doE2ETestWithBobAndAlice:self readyToTest:^(MXSession *bobSession, MXSession *aliceSession, XCTestExpectation *expectation) {
+    // - Create Alice & Bob account
+    [matrixSDKTestsE2EData doE2ETestWithBobAndAlice:testCase readyToTest:^(MXSession *bobSession, MXSession *aliceSession, XCTestExpectation *expectation) {
 
         NSString *aliceUserId = aliceSession.matrixRestClient.credentials.userId;
 
+        // - Create Alice's cross-signing keys
         MXCrossSigningInfo *keys = [aliceSession.crypto.crossSigning createKeys];
         NSDictionary *signingKeys = @{
                                       @"master_key": keys.masterKeys.JSONDictionary,
@@ -70,7 +77,7 @@
                                       @"user_signing_key": keys.userSignedKeys.JSONDictionary,
                                       };
 
-        // Upload the keys using password authentication
+        // - Upload the keys using password authentication
         [aliceSession.matrixRestClient authSessionToUploadDeviceSigningKeys:^(MXAuthenticationSession *authSession) {
             XCTAssertNotNil(authSession);
             XCTAssertGreaterThan(authSession.flows.count, 0);
@@ -97,7 +104,7 @@
     }];
 }
 
-
+// Test MXJSONModel implementation of MXCrossSigningKey
 - (void)testMXCrossSigningKeyMXJSONModel
 {
     NSString *userId = @"@alice:example.com";
@@ -130,6 +137,7 @@
     XCTAssertTrue([key.JSONDictionary isEqualToDictionary:JSONDict], "\n%@\nvs\n%@", key.JSONDictionary, JSONDict);
 }
 
+// Test [MXCrossSigningTools pkVerify:]
 - (void)testPkVerify
 {
     MXCrossSigningTools *crossSigningTools = [MXCrossSigningTools new];
@@ -182,20 +190,27 @@
     XCTAssertNotNil(error);
 }
 
-
+// Test /keys/query response parsing for cross signing data
+// - Set up the scenario with alice with cross-signing keys
+// - Use the CS API to retrieve alice keys
+// -> Check response data
 - (void)testKeysDownloadCSAPIs
 {
+    // - Set up the scenario with Alice with cross-signing keys
     [self doTestWithBobAndAlice:self readyToTest:^(MXSession *bobSession, MXSession *aliceSession, XCTestExpectation *expectation) {
 
         NSString *aliceUserId = aliceSession.matrixRestClient.credentials.userId;
 
-        // Fetch alice keys back
+        // - Use the CS API to retrieve alice keys
         [aliceSession.matrixRestClient downloadKeysForUsers:@[aliceUserId] token:nil success:^(MXKeysQueryResponse *keysQueryResponse) {
 
+            // -> Check response data
             XCTAssertEqual(keysQueryResponse.crossSigningKeys.count, 1);
 
             MXCrossSigningInfo *aliceCrossSigningKeys = keysQueryResponse.crossSigningKeys[aliceUserId];
             XCTAssertNotNil(aliceCrossSigningKeys);
+
+            XCTAssertEqualObjects(aliceCrossSigningKeys.userId, aliceUserId);
 
             MXCrossSigningKey *masterKey = aliceCrossSigningKeys.masterKeys;
             XCTAssertNotNil(masterKey);
@@ -217,6 +232,42 @@
             XCTFail(@"The operation should not fail - NSError: %@", error);
             [expectation fulfill];
         }];
+    }];
+}
+
+// Check MXCrossSigningInfo storage in the crypto store
+// - Create Alice's cross-signing keys
+// - Store their keys and retrieve them
+// - Update keys test
+- (void)testMXCrossSigningInfoStorage
+{
+    // - Set up the scenario with alice with cross-signing keys
+    [matrixSDKTestsE2EData doE2ETestWithBobAndAlice:self readyToTest:^(MXSession *bobSession, MXSession *aliceSession, XCTestExpectation *expectation) {
+
+        NSString *aliceUserId = aliceSession.matrixRestClient.credentials.userId;
+
+        // - Create Alice's cross-signing keys
+        MXCrossSigningInfo *keys = [aliceSession.crypto.crossSigning createKeys];
+
+        // - Store their keys and retrieve them
+        [aliceSession.crypto.store storeCrossSigningKeys:keys];
+        MXCrossSigningInfo *storedKeys = [aliceSession.crypto.store crossSigningKeysForUser:aliceUserId];
+        XCTAssertNotNil(storedKeys);
+
+        XCTAssertEqualObjects(storedKeys.userId, keys.userId);
+        XCTAssertFalse(storedKeys.firstUse);
+        XCTAssertEqual(storedKeys.keys.count, keys.keys.count);
+        XCTAssertEqualObjects(storedKeys.masterKeys.JSONDictionary, keys.masterKeys.JSONDictionary);
+        XCTAssertEqualObjects(storedKeys.selfSignedKeys.JSONDictionary, keys.selfSignedKeys.JSONDictionary);
+        XCTAssertEqualObjects(storedKeys.userSignedKeys.JSONDictionary, keys.userSignedKeys.JSONDictionary);
+
+        // - Update keys test
+        keys.firstUse = YES;
+        [aliceSession.crypto.store storeCrossSigningKeys:keys];
+        storedKeys = [aliceSession.crypto.store crossSigningKeysForUser:aliceUserId];
+        XCTAssertTrue(storedKeys.firstUse);
+
+        [expectation fulfill];
     }];
 }
 

@@ -41,10 +41,19 @@ static NSString *const kMXRealmCryptoStoreFolder = @"MXRealmCryptoStore";
 @end
 RLM_ARRAY_TYPE(MXRealmDeviceInfo)
 
+@interface MXRealmCrossSigningInfo : RLMObject
+@property NSData *data;
+@end
+
+@implementation MXRealmCrossSigningInfo
+@end
+RLM_ARRAY_TYPE(MXRealmCrossSigningInfo)
+
 
 @interface MXRealmUser : RLMObject
 @property (nonatomic) NSString *userId;
 @property RLMArray<MXRealmDeviceInfo *><MXRealmDeviceInfo> *devices;
+@property MXRealmCrossSigningInfo *crossSigningKeys;
 @end
 
 @implementation MXRealmUser
@@ -529,6 +538,49 @@ RLM_ARRAY_TYPE(MXRealmOlmInboundGroupSession)
         account.deviceTrackingStatusData = [NSKeyedArchiver archivedDataWithRootObject:statusMap];
     }];
 }
+
+
+#pragma mark - Cross-signing keys
+
+- (void)storeCrossSigningKeys:(MXCrossSigningInfo*)crossSigningInfo
+{
+    RLMRealm *realm = self.realm;
+
+    [realm transactionWithBlock:^{
+
+        MXRealmUser *realmUser = [MXRealmUser objectsInRealm:realm where:@"userId = %@", crossSigningInfo.userId].firstObject;
+        if (!realmUser)
+        {
+            realmUser = [[MXRealmUser alloc] initWithValue:@{
+                                                             @"userId": crossSigningInfo.userId,
+                                                             }];
+
+            [realm addObject:realmUser];
+        }
+
+        MXRealmCrossSigningInfo *realmCrossSigningKeys = [[MXRealmCrossSigningInfo alloc] initWithValue:@{
+                                                                                                    @"data": [NSKeyedArchiver archivedDataWithRootObject:crossSigningInfo]
+                                                                                                   }];
+
+        realmUser.crossSigningKeys = realmCrossSigningKeys;
+    }];
+}
+
+- (MXCrossSigningInfo*)crossSigningKeysForUser:(NSString*)userId
+{
+    MXCrossSigningInfo *crossSigningKeys;
+
+    MXRealmUser *realmUser = [MXRealmUser objectsInRealm:self.realm where:@"userId = %@", userId].firstObject;
+    if (realmUser)
+    {
+        crossSigningKeys = [NSKeyedUnarchiver unarchiveObjectWithData:realmUser.crossSigningKeys.data];
+    }
+
+    return crossSigningKeys;
+}
+
+
+#pragma mark - Message keys
 
 - (void)storeAlgorithmForRoom:(NSString*)roomId algorithm:(NSString*)algorithm
 {
@@ -1106,6 +1158,7 @@ RLM_ARRAY_TYPE(MXRealmOlmInboundGroupSession)
     // Manage only our objects in this realm 
     config.objectClasses = @[
                              MXRealmDeviceInfo.class,
+                             MXRealmCrossSigningInfo.class,
                              MXRealmUser.class,
                              MXRealmRoomAlgorithm.class,
                              MXRealmOlmSession.class,

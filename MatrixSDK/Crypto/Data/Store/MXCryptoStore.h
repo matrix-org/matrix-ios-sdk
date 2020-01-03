@@ -28,6 +28,7 @@
 #import "MXOlmSession.h"
 #import "MXOlmInboundGroupSession.h"
 #import "MXDeviceInfo.h"
+#import "MXCrossSigningInfo.h"
 #import "MXOutgoingRoomKeyRequest.h"
 #import "MXIncomingRoomKeyRequest.h"
 
@@ -169,6 +170,27 @@
  @param statusMap A map from user id to MXDeviceTrackingStatus.
  */
 - (void)storeDeviceTrackingStatus:(NSDictionary<NSString*, NSNumber*>*)statusMap;
+
+
+#pragma mark - Cross-signing keys
+
+/**
+ Store cross signing keys for a user.
+
+ @param crossSigningInfo The user's cross signing keys.
+ */
+- (void)storeCrossSigningKeys:(MXCrossSigningInfo*)crossSigningInfo;
+
+/**
+ Retrieve the cross signing keys for a user.
+
+ @param userId The user's id.
+ @return the cross signing keys.
+ */
+- (MXCrossSigningInfo*)crossSigningKeysForUser:(NSString*)userId;
+
+
+#pragma mark - Message keys
 
 /**
  Store the crypto algorithm for a room.

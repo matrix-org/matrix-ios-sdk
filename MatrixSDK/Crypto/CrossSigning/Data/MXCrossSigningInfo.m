@@ -34,6 +34,28 @@
 }
 
 
+#pragma mark - NSCoding
+
+- (id)initWithCoder:(NSCoder *)aDecoder
+{
+    self = [super init];
+    if (self)
+    {
+        _userId = [aDecoder decodeObjectForKey:@"userId"];
+        _firstUse = [aDecoder decodeBoolForKey:@"firstUse"];
+        _keys = [aDecoder decodeObjectForKey:@"keys"];
+    }
+    return self;
+}
+
+- (void)encodeWithCoder:(NSCoder *)aCoder
+{
+    [aCoder encodeObject:_userId forKey:@"userId"];
+    [aCoder encodeBool:_firstUse forKey:@"firstUse"];
+    [aCoder encodeObject:_keys forKey:@"keys"];
+}
+
+
 #pragma mark - SDK-Private methods -
 
 - (instancetype)initWithUserId:(NSString *)userId

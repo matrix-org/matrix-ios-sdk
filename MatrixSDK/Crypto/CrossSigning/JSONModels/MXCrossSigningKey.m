@@ -118,4 +118,28 @@ const struct MXCrossSigningKeyType MXCrossSigningKeyType = {
     return JSONDictionary;
 }
 
+
+#pragma mark - NSCoding
+
+- (id)initWithCoder:(NSCoder *)aDecoder
+{
+    self = [super init];
+    if (self)
+    {
+        _userId = [aDecoder decodeObjectForKey:@"userId"];
+        _usage = [aDecoder decodeObjectForKey:@"usage"];
+        _keys = [aDecoder decodeObjectForKey:@"keys"];
+        _signatures = [aDecoder decodeObjectForKey:@"signatures"];
+    }
+    return self;
+}
+
+- (void)encodeWithCoder:(NSCoder *)aCoder
+{
+    [aCoder encodeObject:_userId forKey:@"userId"];
+    [aCoder encodeObject:_usage forKey:@"usage"];
+    [aCoder encodeObject:_keys forKey:@"keys"];
+    [aCoder encodeObject:_signatures forKey:@"signatures"];
+}
+
 @end

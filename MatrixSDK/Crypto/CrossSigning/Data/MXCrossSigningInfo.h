@@ -23,7 +23,7 @@ NS_ASSUME_NONNULL_BEGIN
 /**
  `MXCrossSigningInfo` gathers information about a user's cross-signing keys.
  */
-@interface MXCrossSigningInfo : NSObject
+@interface MXCrossSigningInfo : NSObject <NSCoding>
 
 /**
  The user's id.
