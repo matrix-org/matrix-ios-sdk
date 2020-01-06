@@ -24,6 +24,13 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface MXCrossSigningTools : NSObject
 
+// TODO: -> pkSign
+- (NSDictionary*)pkSignObject:(NSDictionary*)object withPkSigning:(OLMPkSigning*)pkSigning userId:(NSString*)userId publicKey:(NSString*)publicKey error:(NSError* _Nullable *)error;
+
+- (BOOL)pkVerifyObject:(NSDictionary*)object userId:(NSString*)userId publicKey:(NSString*)publicKey error:(NSError**)error;
+
+
+// TODO: -> pkSignKey
 - (void)pkSign:(MXCrossSigningKey*)crossSigningKey withPkSigning:(OLMPkSigning*)pkSigning userId:(NSString*)userId publicKey:(NSString*)publicKey;
 
 - (BOOL)pkVerify:(MXCrossSigningKey*)crossSigningKey userId:(NSString*)userId publicKey:(NSString*)publicKey error:(NSError**)error;

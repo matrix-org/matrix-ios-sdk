@@ -17,6 +17,7 @@
 #import "MXCrossSigningTools.h"
 
 #import "MXCryptoTools.h"
+#import "MXKey.h"
 
 
 @interface MXCrossSigningTools ()
@@ -35,6 +36,56 @@
         olmUtility = [OLMUtility new];
     }
     return self;
+}
+
+- (NSDictionary*)pkSignObject:(NSDictionary*)object withPkSigning:(OLMPkSigning*)pkSigning userId:(NSString*)userId publicKey:(NSString*)publicKey error:(NSError**)error
+{
+    // Sign the passed object without its `signatures` and `unsigned` fields
+    NSMutableDictionary *signatures = [(object[@"signatures"] ?: @{}) mutableCopy];
+    NSDictionary *unsignedData = object[@"unsigned"];
+
+    NSMutableDictionary *signedObject = [object mutableCopy];
+    [signedObject removeObjectsForKeys:@[@"signatures", @"unsigned"]];
+
+    NSString *signature = [pkSigning sign:[MXCryptoTools canonicalJSONStringForJSON:signedObject] error:error];
+
+    if (!*error)
+    {
+        // Reinject data
+        if (unsignedData)
+        {
+            signedObject[@"unsigned"] = unsignedData;
+        }
+
+        NSMutableDictionary *userSignatures = [(signatures[userId]?: @{}) mutableCopy];
+        NSString *keyId = [NSString stringWithFormat:@"%@:%@", kMXKeyEd25519Type, publicKey];
+        userSignatures[keyId] = signature;
+        signatures[userId] = userSignatures;
+
+        signedObject[@"signatures"] = signatures;
+    }
+
+    return signedObject;
+}
+
+- (BOOL)pkVerifyObject:(NSDictionary*)object userId:(NSString*)userId publicKey:(NSString*)publicKey error:(NSError**)error
+{
+    NSString *keyId = [NSString stringWithFormat:@"%@:%@", kMXKeyEd25519Type, publicKey];
+    NSString *signature;
+    MXJSONModelSetString(signature, object[@"signatures"][userId][keyId]);
+
+    if (!signature)
+    {
+        // TODO
+        // throw new Error("No signature");
+        return NO;
+    }
+
+    NSMutableDictionary *signedObject = [object mutableCopy];
+    [signedObject removeObjectsForKeys:@[@"signatures", @"unsigned"]];
+
+    NSData *message = [[MXCryptoTools canonicalJSONStringForJSON:signedObject] dataUsingEncoding:NSUTF8StringEncoding];
+    return [olmUtility verifyEd25519Signature:signature key:publicKey message:message error:error];
 }
 
 - (void)pkSign:(MXCrossSigningKey*)crossSigningKey withPkSigning:(OLMPkSigning*)pkSigning userId:(NSString*)userId publicKey:(NSString*)publicKey
@@ -59,5 +110,6 @@
     NSData *message = [[MXCryptoTools canonicalJSONStringForJSON:crossSigningKey.signalableJSONDictionary] dataUsingEncoding:NSUTF8StringEncoding];
     return [olmUtility verifyEd25519Signature:signature key:publicKey message:message error:error];
 }
+
 
 @end

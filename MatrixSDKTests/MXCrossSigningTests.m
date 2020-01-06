@@ -137,6 +137,55 @@
     XCTAssertTrue([key.JSONDictionary isEqualToDictionary:JSONDict], "\n%@\nvs\n%@", key.JSONDictionary, JSONDict);
 }
 
+// Test [MXCrossSigningTools testPkVerifyObject:]
+- (void)testPkVerifyObject
+{
+    MXCrossSigningTools *crossSigningTools = [MXCrossSigningTools new];
+
+    // Data taken from js-sdk tests to check cross-platform compatibility
+    NSDictionary *JSONDict = @{
+                               @"user_id": @"@alice:example.com",
+                               @"usage": @[@"self-signing"],
+                               @"keys": @{
+                                       @"ed25519:EmkqvokUn8p+vQAGZitOk4PWjp7Ukp3txV2TbMPEiBQ":
+                                           @"EmkqvokUn8p+vQAGZitOk4PWjp7Ukp3txV2TbMPEiBQ",
+                                       },
+                               @"signatures": @{
+                                       @"@alice:example.com": @{
+                                               @"ed25519:nqOvzeuGWT/sRx3h7+MHoInYj3Uk2LD/unI9kDYcHwk":
+                                                   @"Wqx/HXR851KIi8/u/UX+fbAMtq9Uj8sr8FsOcqrLfVYa6lAmbXsVhfy4AlZ3dnEtjgZx0U0QDrghEn2eYBeOCA",
+                                               },
+                                       }
+                               };
+
+    NSError *error;
+    BOOL result = [crossSigningTools pkVerifyObject:JSONDict userId:@"@alice:example.com" publicKey:@"nqOvzeuGWT/sRx3h7+MHoInYj3Uk2LD/unI9kDYcHwk" error:&error];
+
+    XCTAssertTrue(result);
+    XCTAssertNil(error);
+
+
+    NSDictionary *JSONDictWithCorruptedSignature = @{
+                                                     @"user_id": @"@alice:example.com",
+                                                     @"usage": @[@"self-signing"],
+                                                     @"keys": @{
+                                                             @"ed25519:EmkqvokUn8p+vQAGZitOk4PWjp7Ukp3txV2TbMPEiBQ":
+                                                                 @"EmkqvokUn8p+vQAGZitOk4PWjp7Ukp3txV2TbMPEiBQ",
+                                                             },
+                                                     @"signatures": @{
+                                                             @"@alice:example.com": @{
+                                                                     @"ed25519:nqOvzeuGWT/sRx3h7+MHoInYj3Uk2LD/unI9kDYcHwk":
+                                                                         @"Bug/HXR851KIi8/u/UX+fbAMtq9Uj8sr8FsOcqrLfVYa6lAmbXsVhfy4AlZ3dnEtjgZx0U0QDrghEn2eYBeOCA",
+                                                                     },
+                                                             }
+                                                     };
+
+    result = [crossSigningTools pkVerifyObject:JSONDictWithCorruptedSignature userId:@"@alice:example.com" publicKey:@"nqOvzeuGWT/sRx3h7+MHoInYj3Uk2LD/unI9kDYcHwk" error:&error];
+
+    XCTAssertFalse(result);
+    XCTAssertNotNil(error);
+}
+
 // Test [MXCrossSigningTools pkVerify:]
 - (void)testPkVerify
 {
@@ -189,6 +238,7 @@
     XCTAssertFalse(result);
     XCTAssertNotNil(error);
 }
+
 
 // Test /keys/query response parsing for cross signing data
 // - Set up the scenario with alice with cross-signing keys
