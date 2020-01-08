@@ -88,7 +88,7 @@
     return [olmUtility verifyEd25519Signature:signature key:publicKey message:message error:error];
 }
 
-- (void)pkSign:(MXCrossSigningKey*)crossSigningKey withPkSigning:(OLMPkSigning*)pkSigning userId:(NSString*)userId publicKey:(NSString*)publicKey
+- (void)pkSignKey:(MXCrossSigningKey*)crossSigningKey withPkSigning:(OLMPkSigning*)pkSigning userId:(NSString*)userId publicKey:(NSString*)publicKey
 {
     NSError *error;
     NSString *signature = [pkSigning sign:[MXCryptoTools canonicalJSONStringForJSON:crossSigningKey.signalableJSONDictionary] error:&error];
@@ -98,7 +98,7 @@
     }
 }
 
-- (BOOL)pkVerify:(MXCrossSigningKey*)crossSigningKey userId:(NSString*)userId publicKey:(NSString*)publicKey error:(NSError**)error;
+- (BOOL)pkVerifyKey:(MXCrossSigningKey*)crossSigningKey userId:(NSString*)userId publicKey:(NSString*)publicKey error:(NSError**)error;
 {
     NSString *signature = [crossSigningKey signatureFromUserId:userId withPublicKey:publicKey];
 

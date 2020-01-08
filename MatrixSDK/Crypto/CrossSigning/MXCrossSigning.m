@@ -123,7 +123,7 @@
         NSString *type = MXCrossSigningKeyType.selfSigning;
 
         MXCrossSigningKey *ssk = [[MXCrossSigningKey alloc] initWithUserId:myUserId usage:@[type] keys:sskPublic];
-        [_crossSigningTools pkSign:ssk withPkSigning:masterSigning userId:myUserId publicKey:masterKeyPublic];
+        [_crossSigningTools pkSignKey:ssk withPkSigning:masterSigning userId:myUserId publicKey:masterKeyPublic];
 
         [crossSigningKeys addCrossSigningKey:ssk type:type];
         privateKeys[type] = sskPrivate;
@@ -138,7 +138,7 @@
         NSString *type = MXCrossSigningKeyType.userSigning;
 
         MXCrossSigningKey *usk = [[MXCrossSigningKey alloc] initWithUserId:myUserId usage:@[type] keys:uskPublic];
-        [_crossSigningTools pkSign:usk withPkSigning:masterSigning userId:myUserId publicKey:masterKeyPublic];
+        [_crossSigningTools pkSignKey:usk withPkSigning:masterSigning userId:myUserId publicKey:masterKeyPublic];
 
         [crossSigningKeys addCrossSigningKey:usk type:type];
         privateKeys[type] = uskPrivate;

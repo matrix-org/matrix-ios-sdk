@@ -236,8 +236,8 @@
     XCTAssertNotNil(error);
 }
 
-// Test [MXCrossSigningTools pkVerify:]
-- (void)testPkVerify
+// Test [MXCrossSigningTools pkVerifyKey:]
+- (void)testPkVerifyKey
 {
     MXCrossSigningTools *crossSigningTools = [MXCrossSigningTools new];
 
@@ -261,7 +261,7 @@
     MXJSONModelSetMXJSONModel(key, MXCrossSigningKey, JSONDict);
 
     NSError *error;
-    BOOL result = [crossSigningTools pkVerify:key userId:@"@alice:example.com" publicKey:@"nqOvzeuGWT/sRx3h7+MHoInYj3Uk2LD/unI9kDYcHwk" error:&error];
+    BOOL result = [crossSigningTools pkVerifyKey:key userId:@"@alice:example.com" publicKey:@"nqOvzeuGWT/sRx3h7+MHoInYj3Uk2LD/unI9kDYcHwk" error:&error];
 
     XCTAssertTrue(result);
     XCTAssertNil(error);
@@ -283,7 +283,7 @@
                                                      };
     MXJSONModelSetMXJSONModel(key, MXCrossSigningKey, JSONDictWithCorruptedSignature);
 
-    result = [crossSigningTools pkVerify:key userId:@"@alice:example.com" publicKey:@"nqOvzeuGWT/sRx3h7+MHoInYj3Uk2LD/unI9kDYcHwk" error:&error];
+    result = [crossSigningTools pkVerifyKey:key userId:@"@alice:example.com" publicKey:@"nqOvzeuGWT/sRx3h7+MHoInYj3Uk2LD/unI9kDYcHwk" error:&error];
 
     XCTAssertFalse(result);
     XCTAssertNotNil(error);
