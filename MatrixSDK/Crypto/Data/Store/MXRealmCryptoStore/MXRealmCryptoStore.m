@@ -24,7 +24,7 @@
 #import "MXTools.h"
 #import "MXCryptoTools.h"
 
-NSUInteger const kMXRealmCryptoStoreVersion = 10;
+NSUInteger const kMXRealmCryptoStoreVersion = 11;
 
 static NSString *const kMXRealmCryptoStoreFolder = @"MXRealmCryptoStore";
 
@@ -1335,6 +1335,9 @@ RLM_ARRAY_TYPE(MXRealmOlmInboundGroupSession)
                     // This schema update needs a fix of cleanDuplicatedDevicesInRealm introduced in schema #8.
                     cleanDuplicatedDevices = YES;
                 }
+
+                case 10:
+                    NSLog(@"[MXRealmCryptoStore] Migration from schema #10 -> #11: Nothing to do (added optional MXRealmUser.crossSigningKeys)");
             }
         }
     };
