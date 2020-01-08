@@ -91,7 +91,8 @@
 
 - (MXCrossSigningInfo *)createKeys:(NSDictionary<NSString *,NSData *> *__autoreleasing  _Nonnull *)outPrivateKeys
 {
-    NSString *myUserId = _crypto.mxSession.myUser.userId;
+    NSString *myUserId = _crypto.mxSession.matrixRestClient.credentials.userId;
+    NSString *myDeviceId = _crypto.mxSession.matrixRestClient.credentials.deviceId;
 
     MXCrossSigningInfo *crossSigningKeys = [[MXCrossSigningInfo alloc] initWithUserId:myUserId];
     crossSigningKeys.firstUse = NO;
@@ -111,7 +112,8 @@
         [crossSigningKeys addCrossSigningKey:masterKey type:type];
         privateKeys[type] = masterKeyPrivate;
 
-        // TODO: Sign MSK with device
+        // Sign the MSK with device
+        [masterKey addSignatureFromUserId:myUserId publicKey:myDeviceId signature:[_crypto.olmDevice signJSON:masterKey.signalableJSONDictionary]];
     }
 
     // self_signing key

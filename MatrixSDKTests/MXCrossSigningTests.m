@@ -322,6 +322,7 @@
     [self doTestWithBobAndAlice:self readyToTest:^(MXSession *bobSession, MXSession *aliceSession, XCTestExpectation *expectation) {
 
         NSString *aliceUserId = aliceSession.matrixRestClient.credentials.userId;
+        NSString *aliceDeviceId = aliceSession.matrixRestClient.credentials.deviceId;
 
         // - Use the CS API to retrieve alice keys
         [aliceSession.matrixRestClient downloadKeysForUsers:@[aliceUserId] token:nil success:^(MXKeysQueryResponse *keysQueryResponse) {
@@ -337,6 +338,7 @@
             MXCrossSigningKey *masterKey = aliceCrossSigningKeys.masterKeys;
             XCTAssertNotNil(masterKey);
             XCTAssertEqualObjects(masterKey.usage, @[MXCrossSigningKeyType.master]);
+            XCTAssertNotNil([masterKey signatureFromUserId:aliceUserId withPublicKey:aliceDeviceId]);
 
             MXCrossSigningKey *key = aliceCrossSigningKeys.selfSignedKeys;
             XCTAssertNotNil(key);
