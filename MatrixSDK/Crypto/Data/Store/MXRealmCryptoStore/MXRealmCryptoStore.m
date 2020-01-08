@@ -24,7 +24,7 @@
 #import "MXTools.h"
 #import "MXCryptoTools.h"
 
-NSUInteger const kMXRealmCryptoStoreVersion = 11;
+NSUInteger const kMXRealmCryptoStoreVersion = 12;
 
 static NSString *const kMXRealmCryptoStoreFolder = @"MXRealmCryptoStore";
 
@@ -1338,6 +1338,28 @@ RLM_ARRAY_TYPE(MXRealmOlmInboundGroupSession)
 
                 case 10:
                     NSLog(@"[MXRealmCryptoStore] Migration from schema #10 -> #11: Nothing to do (added optional MXRealmUser.crossSigningKeys)");
+
+                case 11:
+                {
+                    NSLog(@"[MXRealmCryptoStore] Migration from schema #10 -> #11");
+
+                    // Because of https://github.com/vector-im/riot-ios/issues/2896, algorithms were not stored
+                    // Fix it by defaulting to usual values
+                    NSLog(@"[MXRealmCryptoStore]    Fix missing algorithms to all MXRealmDeviceInfo objects");
+
+                    [migration enumerateObjects:MXRealmDeviceInfo.className block:^(RLMObject *oldObject, RLMObject *newObject) {
+
+                        MXDeviceInfo *device = [NSKeyedUnarchiver unarchiveObjectWithData:oldObject[@"deviceInfoData"]];
+                        if (!device.algorithms)
+                        {
+                            device.algorithms = @[
+                                                  kMXCryptoOlmAlgorithm,
+                                                  kMXCryptoMegolmAlgorithm
+                                                  ];
+                        }
+                        newObject[@"deviceInfoData"] = [NSKeyedArchiver archivedDataWithRootObject:device];
+                    }];
+                }
             }
         }
     };

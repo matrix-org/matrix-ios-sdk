@@ -8,6 +8,7 @@ Improvements:
 
 Bug fix:
  * MXEventType: Fix Swift refinement.
+ * MXCryptoStore does not store device.algorithm (https://github.com/vector-im/riot-ios/issues/2896).
 
 API break:
  * MXCrypto: the downloadKeys method now returns users cross-signing keys.

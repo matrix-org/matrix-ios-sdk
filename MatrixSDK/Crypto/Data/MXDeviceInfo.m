@@ -122,6 +122,7 @@
     {
         _deviceId = [aDecoder decodeObjectForKey:@"deviceId"];
         _userId = [aDecoder decodeObjectForKey:@"userId"];
+        _algorithms = [aDecoder decodeObjectForKey:@"algorithms"];
         _keys = [aDecoder decodeObjectForKey:@"keys"];
         _signatures = [aDecoder decodeObjectForKey:@"signatures"];
         _unsignedData = [aDecoder decodeObjectForKey:@"unsignedData"];
@@ -136,6 +137,10 @@
     if (_userId)
     {
         [aCoder encodeObject:_userId forKey:@"userId"];
+    }
+    if (_algorithms)
+    {
+        [aCoder encodeObject:_algorithms forKey:@"algorithms"];
     }
     if (_keys)
     {
