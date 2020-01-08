@@ -785,7 +785,7 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
             }
         }
 
-        // Do cross-signing
+        // Cross-sign our own device
         if (self.crossSigning.isBootstrapped
             && verificationStatus == MXDeviceVerified
             && [userId isEqualToString:self.mxSession.myUser.userId])

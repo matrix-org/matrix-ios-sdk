@@ -17,14 +17,10 @@
 #import "MXCrossSigning_Private.h"
 
 #import "MXCrypto_Private.h"
-#import "MXCrossSigningTools.h"
 #import "MXCrossSigningInfo_Private.h"
 #import "MXKey.h"
 
 @interface MXCrossSigning ()
-
-@property (nonatomic) MXCrossSigningInfo *myUserCrossSigningKeys;
-@property (nonatomic) MXCrossSigningTools *crossSigningTools;
 
 @end
 
@@ -166,10 +162,30 @@
         if (!device)
         {
             NSLog(@"[MXCrossSigning] crossSignDeviceWithDeviceId: Unknown device %@", deviceId);
-            success();
+            failure(nil);
+            return;
         }
 
         [self signDevice:device success:success failure:failure];
+    });
+}
+
+- (void)signUserWithUserId:(NSString*)userId
+                   success:(void (^)(void))success
+                   failure:(void (^)(NSError *error))failure
+{
+    dispatch_async(_crypto.cryptoQueue, ^{
+        MXCrossSigningKey *otherUserMasterKeys = [self.crypto.store crossSigningKeysForUser:userId].masterKeys;
+
+        // Sanity check
+        if (!otherUserMasterKeys)
+        {
+            NSLog(@"[MXCrossSigning] signUserWithUserId: User %@ unknown locally", userId);
+            failure(nil);
+            return;
+        }
+
+        [self signKey:otherUserMasterKeys success:success failure:failure];
     });
 }
 
@@ -238,6 +254,26 @@
                  [self.crypto.mxSession.matrixRestClient uploadKeySignatures:@{
                                                                                myUserId: @{
                                                                                        device.deviceId: signedObject
+                                                                                       }
+                                                                               }
+                                                                     success:success
+                                                                     failure:failure];
+             }
+             failure:failure];
+}
+
+- (void)signKey:(MXCrossSigningKey*)key
+           success:(void (^)(void))success
+           failure:(void (^)(NSError *error))failure
+{
+    // Sign the other user key
+    [self signObject:key.signalableJSONDictionary
+         withKeyType:MXCrossSigningKeyType.userSigning
+             success:^(NSDictionary *signedObject) {
+                 // And upload the signature
+                 [self.crypto.mxSession.matrixRestClient uploadKeySignatures:@{
+                                                                               key.userId: @{
+                                                                                       key.keys: signedObject
                                                                                        }
                                                                                }
                                                                      success:success

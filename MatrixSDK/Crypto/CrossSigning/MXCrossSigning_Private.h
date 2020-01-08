@@ -16,11 +16,16 @@
 
 #import "MXCrossSigning.h"
 
+#import "MXCrossSigningTools.h"
+
 @class MXCrypto;
 
 NS_ASSUME_NONNULL_BEGIN
 
 @interface MXCrossSigning ()
+
+@property (nonatomic) MXCrossSigningInfo *myUserCrossSigningKeys;
+@property (nonatomic) MXCrossSigningTools *crossSigningTools;
 
 /**
  The Matrix crypto.

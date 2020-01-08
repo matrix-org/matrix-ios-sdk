@@ -116,6 +116,20 @@ NS_ASSUME_NONNULL_BEGIN
                             success:(void (^)(void))success
                             failure:(void (^)(NSError *error))failure;
 
+/**
+ Sign a user from one of their devices.
+
+ This method will use keysStorageDelegate get the private part of the User Signing
+ Key (MXCrossSigningKeyType.userSigning).
+
+ @param userId the id of ther user.
+
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+ */
+- (void)signUserWithUserId:(NSString*)userId
+                   success:(void (^)(void))success
+                   failure:(void (^)(NSError *error))failure;
 
 /**
  The secure storage for the private parts of our user cross-signing keys.
