@@ -22,15 +22,74 @@
 #import "MXKey.h"
 
 @interface MXCrossSigning ()
-{
-    MXCrossSigningTools *crossSigningTools;
-}
+
+@property (nonatomic) MXCrossSigningInfo *myUserCrossSigningKeys;
+@property (nonatomic) MXCrossSigningTools *crossSigningTools;
+
 @end
 
 
 @implementation MXCrossSigning
 
-- (MXCrossSigningInfo*)createKeys
+- (BOOL)isBootstrapped
+{
+    return self.myUserCrossSigningKeys != nil;
+}
+
+- (void)bootstrapWithPassword:(NSString*)password
+                      success:(void (^)(void))success
+                      failure:(void (^)(NSError *error))failure
+{
+     // We must have a storage implementation (default should be SSSS)
+    NSParameterAssert(self.keysStorageDelegate);
+
+    MXCredentials *myUser = _crypto.mxSession.matrixRestClient.credentials;
+    NSString *myUserId = _crypto.mxSession.myUser.userId;
+
+    // Create keys
+    NSDictionary<NSString*, NSData*> *privateKeys;
+    MXCrossSigningInfo *keys = [self createKeys:&privateKeys];
+
+    // Delegate the storage of them
+    [self.keysStorageDelegate saveCrossSigningKeys:self userId:myUser.userId deviceId:myUser.deviceId privateKeys:privateKeys success:^{
+
+        NSDictionary *signingKeys = @{
+                                      @"master_key": keys.masterKeys.JSONDictionary,
+                                      @"self_signing_key": keys.selfSignedKeys.JSONDictionary,
+                                      @"user_signing_key": keys.userSignedKeys.JSONDictionary,
+                                      };
+
+        // Do the auth dance to upload them to the HS
+        [self.crypto.matrixRestClient authSessionToUploadDeviceSigningKeys:^(MXAuthenticationSession *authSession) {
+
+            NSDictionary *authParams = @{
+                                         @"session": authSession.session,
+                                         @"user": myUserId,
+                                         @"password": password,
+                                         @"type": kMXLoginFlowTypePassword
+                                         };
+
+            [self.crypto.matrixRestClient uploadDeviceSigningKeys:signingKeys authParams:authParams success:^{
+
+                // Store our user's keys
+                [self.crypto.store storeCrossSigningKeys:keys];
+
+                // Cross-signing is bootstrapped
+                self.myUserCrossSigningKeys = keys;
+
+                success();
+
+            } failure:failure];
+
+        } failure:failure];
+        
+    } failure:^(NSError * _Nonnull error) {
+        failure(error);
+    }];
+}
+
+
+- (MXCrossSigningInfo *)createKeys:(NSDictionary<NSString *,NSData *> *__autoreleasing  _Nonnull *)outPrivateKeys
 {
     NSString *myUserId = _crypto.mxSession.myUser.userId;
 
@@ -51,6 +110,8 @@
         MXCrossSigningKey *masterKey = [[MXCrossSigningKey alloc] initWithUserId:myUserId usage:@[type] keys:masterKeyPublic];
         [crossSigningKeys addCrossSigningKey:masterKey type:type];
         privateKeys[type] = masterKeyPrivate;
+
+        // TODO: Sign MSK with device
     }
 
     // self_signing key
@@ -62,7 +123,7 @@
         NSString *type = MXCrossSigningKeyType.selfSigning;
 
         MXCrossSigningKey *ssk = [[MXCrossSigningKey alloc] initWithUserId:myUserId usage:@[type] keys:sskPublic];
-        [crossSigningTools pkSign:ssk withPkSigning:masterSigning userId:myUserId publicKey:masterKeyPublic];
+        [_crossSigningTools pkSign:ssk withPkSigning:masterSigning userId:myUserId publicKey:masterKeyPublic];
 
         [crossSigningKeys addCrossSigningKey:ssk type:type];
         privateKeys[type] = sskPrivate;
@@ -77,15 +138,38 @@
         NSString *type = MXCrossSigningKeyType.userSigning;
 
         MXCrossSigningKey *usk = [[MXCrossSigningKey alloc] initWithUserId:myUserId usage:@[type] keys:uskPublic];
-        [crossSigningTools pkSign:usk withPkSigning:masterSigning userId:myUserId publicKey:masterKeyPublic];
+        [_crossSigningTools pkSign:usk withPkSigning:masterSigning userId:myUserId publicKey:masterKeyPublic];
 
         [crossSigningKeys addCrossSigningKey:usk type:type];
         privateKeys[type] = uskPrivate;
     }
 
+    if (outPrivateKeys)
+    {
+        *outPrivateKeys = privateKeys;
+    }
+
     return crossSigningKeys;
 }
 
+- (void)crossSignDeviceWithDeviceId:(NSString*)deviceId
+                            success:(void (^)(void))success
+                            failure:(void (^)(NSError *error))failure
+{
+    dispatch_async(_crypto.cryptoQueue, ^{
+        NSString *myUserId = self.crypto.mxSession.myUser.userId;
+        MXDeviceInfo *device = [self.crypto.store deviceWithDeviceId:deviceId forUser:myUserId];
+
+        // Sanity check
+        if (!device)
+        {
+            NSLog(@"[MXCrossSigning] crossSignDeviceWithDeviceId: Unknown device %@", deviceId);
+            success();
+        }
+
+        [self signDevice:device success:success failure:failure];
+    });
+}
 
 #pragma mark - SDK-Private methods -
 
@@ -95,7 +179,8 @@
     if (self)
     {
         _crypto = crypto;
-        crossSigningTools = [MXCrossSigningTools new];
+        _myUserCrossSigningKeys = [_crypto.store crossSigningKeysForUser:_crypto.mxSession.myUser.userId];
+        _crossSigningTools = [MXCrossSigningTools new];
      }
     return self;
 }
@@ -125,6 +210,100 @@
         *privateKey = privKey;
     }
     return pubKey;
+}
+
+
+#pragma mark - Signing
+
+- (void)signDevice:(MXDeviceInfo*)device
+           success:(void (^)(void))success
+           failure:(void (^)(NSError *error))failure
+{
+    NSString *myUserId = _crypto.mxSession.myUser.userId;
+
+    NSDictionary *object = @{
+                             @"algorithms": device.algorithms,
+                             @"keys": device.keys,
+                             @"device_id": device.deviceId,
+                             @"user_id": myUserId,
+                             };
+
+    // Sign the device
+    [self signObject:object
+         withKeyType:MXCrossSigningKeyType.selfSigning
+             success:^(NSDictionary *signedObject) {
+                 // And upload the signature
+                 [self.crypto.mxSession.matrixRestClient uploadKeySignatures:@{
+                                                                               myUserId: @{
+                                                                                       device.deviceId: signedObject
+                                                                                       }
+                                                                               }
+                                                                     success:success
+                                                                     failure:failure];
+             }
+             failure:failure];
+}
+
+- (void)signObject:(NSDictionary*)object withKeyType:(NSString*)keyType
+           success:(void (^)(NSDictionary *signedObject))success
+           failure:(void (^)(NSError *error))failure
+{
+    [self getCrossSigningKeyWithKeyType:keyType success:^(NSString *publicKey, OLMPkSigning *signing) {
+
+        NSString *myUserId = self.crypto.mxSession.myUser.userId;
+
+        NSError *error;
+        NSDictionary *signedObject = [self.crossSigningTools pkSignObject:object withPkSigning:signing userId:myUserId publicKey:publicKey error:&error];
+        if (!error)
+        {
+            success(signedObject);
+        }
+        else
+        {
+            failure(error);
+        }
+    } failure:failure];
+}
+
+- (void)getCrossSigningKeyWithKeyType:(NSString*)keyType
+                              success:(void (^)(NSString *publicKey, OLMPkSigning *signing))success
+                              failure:(void (^)(NSError *error))failure
+{
+    // We must have a storage implementation (default should be SSSS)
+    NSParameterAssert(self.keysStorageDelegate);
+
+    NSString *expectedPublicKey = _myUserCrossSigningKeys.keys[keyType].keys;
+    if (!expectedPublicKey)
+    {
+        NSLog(@"[MXCrossSigning] getCrossSigningKeyWithKeyType: %@ failed. No such key present", keyType);
+        failure(nil);
+        return;
+    }
+
+    MXCredentials *myUser = _crypto.mxSession.matrixRestClient.credentials;
+
+    [self.keysStorageDelegate getCrossSigningKey:self userId:myUser.userId deviceId:myUser.deviceId withKeyType:keyType expectedPublicKey:expectedPublicKey success:^(NSData * _Nonnull privateKey) {
+
+        NSError *error;
+        OLMPkSigning *pkSigning = [[OLMPkSigning alloc] init];
+        NSString *gotPublicKey = [pkSigning doInitWithSeed:privateKey error:&error];
+        if (error)
+        {
+            NSLog(@"[MXCrossSigning] getCrossSigningKeyWithKeyType failed to build PK signing. Error: %@", error);
+            failure(error);
+            return;
+        }
+
+        if (![gotPublicKey isEqualToString:expectedPublicKey])
+        {
+            NSLog(@"[MXCrossSigning] getCrossSigningKeyWithKeyType failed. Keys do not match: %@ vs %@", gotPublicKey, expectedPublicKey);
+            failure(nil);
+            return;
+        }
+
+        success(gotPublicKey, pkSigning);
+
+    } failure:failure];
 }
 
 @end

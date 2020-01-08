@@ -765,7 +765,7 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
             if (success)
             {
                 dispatch_async(dispatch_get_main_queue(), ^{
-                    success();
+                    failure(nil);
                 });
             }
             return;
@@ -785,7 +785,14 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
             }
         }
 
-        if (success)
+        // Do cross-signing
+        if (self.crossSigning.isBootstrapped
+            && verificationStatus == MXDeviceVerified
+            && [userId isEqualToString:self.mxSession.myUser.userId])
+        {
+            [self.crossSigning crossSignDeviceWithDeviceId:deviceId success:success failure:failure];
+        }
+        else if (success)
         {
             dispatch_async(dispatch_get_main_queue(), ^{
                 success();

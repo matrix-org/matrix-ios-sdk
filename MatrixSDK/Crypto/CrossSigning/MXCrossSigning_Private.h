@@ -44,35 +44,6 @@ NS_ASSUME_NONNULL_END
 // JS SDK callbacks that we may need too
 
 /*
- * @param {object} opts.cryptoCallbacks Optional. Callbacks for crypto and cross-signing.
- *     The cross-signing API is currently UNSTABLE and may change without notice.
- *
- * @param {function} [opts.cryptoCallbacks.getCrossSigningKey]
- * Optional. Function to call when a cross-signing private key is needed.
- * Secure Secret Storage will be used by default if this is unset.
- * Args:
- *    {string} type The type of key needed.  Will be one of "master",
- *      "self_signing", or "user_signing"
- *    {Uint8Array} publicKey The public key matching the expected private key.
- *        This can be passed to checkPrivateKey() along with the private key
- *        in order to check that a given private key matches what is being
- *        requested.
- *   Should return a promise that resolves with the private key as a
- *   UInt8Array or rejects with an error.
-
-
-
-
- * @param {function} [opts.cryptoCallbacks.saveCrossSigningKeys]
- * Optional. Called when new private keys for cross-signing need to be saved.
- * Secure Secret Storage will be used by default if this is unset.
- * Args:
- *   {object} keys the private keys to save. Map of key name to private key
- *       as a UInt8Array. The getPrivateKey callback above will be called
- *       with the corresponding key name when the keys are required again.
-
-
-
 
  * @param {function} [opts.cryptoCallbacks.shouldUpgradeDeviceVerifications]
  * Optional. Called when there are device-to-device verifications that can be

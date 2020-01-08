@@ -35,26 +35,95 @@ NS_ASSUME_NONNULL_BEGIN
 //    MXAntivirusScanStatusInfected
 //};
 
+@class MXCrossSigning;
+
+@protocol MXCrossSigningKeysStorageDelegate <NSObject>
+
+/**
+ Called when a cross-signing private key is needed.
+
+ @param crossSigning The `MXCrossSigning` module.
+ @param keyType The type of key needed.  Will be one of MXCrossSigningKeyType.
+ @param expectedPublicKey The public key matching the expected private key.
+
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+ */
+- (void)getCrossSigningKey:(MXCrossSigning*)crossSigning
+                    userId:(NSString*)userId
+                  deviceId:(NSString*)deviceId
+               withKeyType:(NSString*)keyType
+         expectedPublicKey:(NSString*)expectedPublicKey
+                   success:(void (^)(NSData *privateKey))success
+                   failure:(void (^)(NSError *error))failure;
+
+/**
+ Called when new private keys for cross-signing need to be saved.
+
+ @param crossSigning The `MXCrossSigning` module.
+ @param privateKeys Private keys to store. Map of key name to private key as a NSData.
+
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+ */
+- (void)saveCrossSigningKeys:(MXCrossSigning*)crossSigning
+                      userId:(NSString*)userId
+                    deviceId:(NSString*)deviceId
+                 privateKeys:(NSDictionary<NSString*, NSData*>*)privateKeys
+                     success:(void (^)(void))success
+                     failure:(void (^)(NSError *error))failure;
+
+@end
+
 
 
 @interface MXCrossSigning : NSObject
 
-// TODO: make it resetKeys or something
-- (MXCrossSigningInfo*)createKeys;
+// Flag indicating if cross-signing is set up on this device
+@property (nonatomic, readonly) BOOL isBootstrapped;
+
+/**
+ Bootstrap cross-signing on this device.
+
+ This creates cross-signing keys. It will use keysStorageDelegate to store
+ private parts.
+
+ TODO: Support other authentication flows than password.
+ TODO: This method will probably change or disappear. It is here mostly for development
+ while SSSS is not available.
+
+ @param password the account password to upload keys to the HS.
+
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+ */
+- (void)bootstrapWithPassword:(NSString*)password
+                      success:(void (^)(void))success
+                      failure:(void (^)(NSError *error))failure;
+
+/**
+ Cross-sign another device of our user.
+
+ This method will use keysStorageDelegate get the private part of the Self Signing
+ Key (MXCrossSigningKeyType.selfSigning).
+
+ @param deviceId the id of the device to cross-sign.
+
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+ */
+- (void)crossSignDeviceWithDeviceId:(NSString*)deviceId
+                            success:(void (^)(void))success
+                            failure:(void (^)(NSError *error))failure;
+
+
+/**
+ The secure storage for the private parts of our user cross-signing keys.
+ */
+@property (nonatomic, weak) id<MXCrossSigningKeysStorageDelegate> keysStorageDelegate;
 
 
 // JS SDK API that we should offer too
-
-/**
- * Generate new cross-signing keys.
- * The cross-signing API is currently UNSTABLE and may change without notice.
- *
- * @function module:client~MatrixClient#resetCrossSigningKeys
- * @param {object} authDict Auth data to supply for User-Interactive auth.
- * @param {CrossSigningLevel} [level] the level of cross-signing to reset.  New
- * keys will be created for the given level and below.  Defaults to
- * regenerating all keys.
- */
 
 /**
  * Get the user's cross-signing key ID.

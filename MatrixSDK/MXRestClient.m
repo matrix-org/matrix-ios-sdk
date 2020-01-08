@@ -3920,6 +3920,30 @@ MXAuthAction;
                                  }];
 }
 
+- (MXHTTPOperation*)uploadKeySignatures:(NSDictionary*)signatures
+                                success:(void (^)(void))success
+                                failure:(void (^)(NSError *error))failure
+{
+    MXWeakify(self);
+    return [httpClient requestWithMethod:@"POST"
+                                    path:[NSString stringWithFormat:@"%@/keys/signatures/upload", kMXAPIPrefixPathUnstable]
+                              parameters:signatures
+                                 success:^(NSDictionary *JSONResponse) {
+                                     MXStrongifyAndReturnIfNil(self);
+
+                                     if (success)
+                                     {
+                                         [self dispatchProcessing:nil
+                                                    andCompletion:^{
+                                                        success();
+                                                    }];
+                                     }
+                                 } failure:^(NSError *error) {
+                                     MXStrongifyAndReturnIfNil(self);
+                                     [self dispatchFailure:error inBlock:failure];
+                                 }];
+}
+
 - (MXHTTPOperation*)downloadKeysForUsers:(NSArray<NSString*>*)userIds
                                    token:(NSString *)token
                                  success:(void (^)(MXKeysQueryResponse *keysQueryResponse))success

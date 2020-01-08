@@ -259,6 +259,8 @@
 		3283F7781EAF30F700C1688C /* MXBugReportRestClient.h in Headers */ = {isa = PBXBuildFile; fileRef = 3283F7761EAF30F700C1688C /* MXBugReportRestClient.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		3283F7791EAF30F700C1688C /* MXBugReportRestClient.m in Sources */ = {isa = PBXBuildFile; fileRef = 3283F7771EAF30F700C1688C /* MXBugReportRestClient.m */; };
 		3284A5A01DB7C00600A09972 /* MXCryptoStore.h in Headers */ = {isa = PBXBuildFile; fileRef = 3284A59D1DB7C00600A09972 /* MXCryptoStore.h */; };
+		3287164F23C4C11F00D720CA /* MXDeviceVerificationManager_Private.h in Headers */ = {isa = PBXBuildFile; fileRef = 3252DCCF224D25810032264F /* MXDeviceVerificationManager_Private.h */; };
+		3287165023C4C12200D720CA /* MXDeviceVerificationManager_Private.h in Headers */ = {isa = PBXBuildFile; fileRef = 3252DCCF224D25810032264F /* MXDeviceVerificationManager_Private.h */; };
 		328BCB3321947BE200A976D3 /* MXKeyBackupVersionTrust.h in Headers */ = {isa = PBXBuildFile; fileRef = 328BCB3121947BE200A976D3 /* MXKeyBackupVersionTrust.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		328BCB3421947BE200A976D3 /* MXKeyBackupVersionTrust.m in Sources */ = {isa = PBXBuildFile; fileRef = 328BCB3221947BE200A976D3 /* MXKeyBackupVersionTrust.m */; };
 		328DDEC11A07E57E008C7DC8 /* MXJSONModelTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 328DDEC01A07E57E008C7DC8 /* MXJSONModelTests.m */; };
@@ -2934,6 +2936,7 @@
 				32CEEF4323AD2A6C0039BA98 /* MXCrossSigningKey.h in Headers */,
 				327E9ABC2284521C00A98BC1 /* MXEventUnsignedData.h in Headers */,
 				B10AFB4722AA8A8E0092E6AF /* MXEventEditsListener.h in Headers */,
+				3287164F23C4C11F00D720CA /* MXDeviceVerificationManager_Private.h in Headers */,
 				32F634AB1FC5E3480054EF49 /* MXEventDecryptionResult.h in Headers */,
 				322A51C71D9BBD3C00C8536D /* MXOlmDevice.h in Headers */,
 				32999DE322DCD1AD004FF987 /* MXPusherData.h in Headers */,
@@ -3192,6 +3195,7 @@
 				B14EF3342397E90400758AF0 /* MXCallStackCall.h in Headers */,
 				B14EF3352397E90400758AF0 /* MXDiscoveredClientConfig.h in Headers */,
 				B14EF3362397E90400758AF0 /* MXEventScanStore.h in Headers */,
+				3287165023C4C12200D720CA /* MXDeviceVerificationManager_Private.h in Headers */,
 				324AAC7E2399143400380A66 /* MXKeyVerificationCancel.h in Headers */,
 				B14EF3372397E90400758AF0 /* MXRoomTombStoneContent.h in Headers */,
 				B14EF3382397E90400758AF0 /* MXFilterObject.h in Headers */,
