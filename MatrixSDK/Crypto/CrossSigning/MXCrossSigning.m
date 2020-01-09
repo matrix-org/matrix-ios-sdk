@@ -29,7 +29,9 @@
 
 - (BOOL)isBootstrapped
 {
-    return self.myUserCrossSigningKeys != nil;
+    // TODO: Find a better way to know that we have cross-signing ON
+    return self.myUserCrossSigningKeys != nil
+    && self.keysStorageDelegate != nil;
 }
 
 - (void)bootstrapWithPassword:(NSString*)password
