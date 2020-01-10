@@ -18,37 +18,7 @@
 #import <Foundation/Foundation.h>
 
 #import "MXJSONModel.h"
-
-/**
- The device verification state.
- */
-typedef enum : NSUInteger
-{
-    /**
-     The user has not yet verified this device.
-     */
-    MXDeviceUnverified,
-
-    /**
-     The user has verified this device.
-     */
-    MXDeviceVerified,
-
-    /**
-     The user has blocked the device.
-     */
-    MXDeviceBlocked,
-
-    /**
-     This is the first time the user sees the device.
- 
-     Note: The position of this value in the enum does not reflect the life cycle of the verification
-     state. It is at the end because it was added afterwards and we need to stay compatible
-     with what was stored in the crypto store.
-     */
-    MXDeviceUnknown
-
-} MXDeviceVerification;
+#import "MXDeviceTrustLevel.h"
 
 
 /**
@@ -112,9 +82,15 @@ typedef enum : NSUInteger
 #pragma mark - Additional information
 
 /**
- Verification state of this device.
+ The trust on this device.
  */
-@property (nonatomic) MXDeviceVerification verified;
+ @property (nonatomic) MXDeviceTrustLevel *trustLevel;
+
+/**
+ Local verification state of this device.
+ Shorcut to self.trustLevel.localVerification
+ */
+@property (nonatomic, readonly) MXDeviceVerification verified;
 
 
 #pragma mark - Instance methods

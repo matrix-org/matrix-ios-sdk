@@ -25,7 +25,7 @@
     if (self)
     {
         _deviceId = deviceId;
-        _verified = MXDeviceUnknown;
+        _trustLevel = [MXDeviceTrustLevel new];
     }
     return self;
 }
@@ -44,6 +44,11 @@
 - (NSString *)displayName
 {
     return _unsignedData[@"device_display_name"];
+}
+
+- (MXDeviceVerification)verified
+{
+    return self.trustLevel.localVerificationStatus;
 }
 
 
@@ -126,7 +131,15 @@
         _keys = [aDecoder decodeObjectForKey:@"keys"];
         _signatures = [aDecoder decodeObjectForKey:@"signatures"];
         _unsignedData = [aDecoder decodeObjectForKey:@"unsignedData"];
-        _verified = [(NSNumber*)[aDecoder decodeObjectForKey:@"verified"] unsignedIntegerValue];
+        _trustLevel = [aDecoder decodeObjectForKey:@"trustLevel"];
+        if (!_trustLevel)
+        {
+            // Manage migration from old data schema
+            MXDeviceVerification verified = [(NSNumber*)[aDecoder decodeObjectForKey:@"verified"] unsignedIntegerValue];
+
+            _trustLevel = [MXDeviceTrustLevel new];
+            _trustLevel.localVerificationStatus = verified;
+        }
     }
     return self;
 }
@@ -154,12 +167,12 @@
     {
         [aCoder encodeObject:_unsignedData forKey:@"unsignedData"];
     }
-    [aCoder encodeObject:[NSNumber numberWithUnsignedInteger:_verified] forKey:@"verified"];
+    [aCoder encodeObject:_trustLevel forKey:@"trustLevel"];
 }
 
 - (NSString *)description
 {
-    return [NSString stringWithFormat:@"%@:%@ - curve25519: %@ (verified: %@)", _userId, _deviceId, self.identityKey, @(_verified)];
+    return [NSString stringWithFormat:@"%@:%@ - curve25519: %@ (trustLevel: %@)", _userId, _deviceId, self.identityKey, _trustLevel];
 }
 
 @end

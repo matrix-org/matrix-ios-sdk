@@ -455,17 +455,17 @@
         XCTAssertNotNil(storedKeys);
 
         XCTAssertEqualObjects(storedKeys.userId, keys.userId);
-        XCTAssertFalse(storedKeys.firstUse);
+        XCTAssertFalse(storedKeys.trustLevel.isVerified);
         XCTAssertEqual(storedKeys.keys.count, keys.keys.count);
         XCTAssertEqualObjects(storedKeys.masterKeys.JSONDictionary, keys.masterKeys.JSONDictionary);
         XCTAssertEqualObjects(storedKeys.selfSignedKeys.JSONDictionary, keys.selfSignedKeys.JSONDictionary);
         XCTAssertEqualObjects(storedKeys.userSignedKeys.JSONDictionary, keys.userSignedKeys.JSONDictionary);
 
         // - Update keys test
-        keys.firstUse = YES;
+        keys.trustLevel.isCrossSigningVerified = YES;
         [aliceSession.crypto.store storeCrossSigningKeys:keys];
         storedKeys = [aliceSession.crypto.store crossSigningKeysForUser:aliceUserId];
-        XCTAssertTrue(storedKeys.firstUse);
+        XCTAssertTrue(storedKeys.trustLevel.isVerified);
 
         [expectation fulfill];
     }];
@@ -499,7 +499,10 @@
                     XCTAssertNotNil(signatures);
                     XCTAssertEqual(signatures.count, 2);    // 2 = device own signature + signature from the SSK
 
-                    // TODO: Check trust on this device
+                    // Check trust for this device
+                    MXDeviceTrustLevel *trustLevel = [alice1Session.crypto deviceTrustLevelForDevice:alice0Creds.deviceId ofUser:alice0Creds.userId];
+                    XCTAssertNotNil(trustLevel);
+                    XCTAssertTrue(trustLevel.isCrossSigningVerified);
 
                     [expectation fulfill];
 
@@ -525,6 +528,8 @@
 // - Make bob know alice
 // - bob signs alice
 // -> Check bob sees their user-signing signature on alice's master key
+// -> Check trust level for alice see by bob
+// -> Check trust level for bob see by bob
 - (void)testSignUser
 {
     // - Set up the scenario with 2 bootstrapped accounts
@@ -551,6 +556,16 @@
 
                     XCTAssertNotNil(bobUSKSignature);
 
+                    // -> Check trust level for alice see by bob
+                    MXUserTrustLevel *trustLevel = crossSigningKeysMap[alice0Creds.userId].trustLevel;
+                    XCTAssertNotNil(trustLevel);
+                    XCTAssertTrue(trustLevel.isCrossSigningVerified);
+
+                    // -> Check trust level for bob see by bob
+                    trustLevel = [bobSession.crypto trustLevelForUser:bobSession.myUser.userId];
+                    XCTAssertNotNil(trustLevel);
+                    XCTAssertTrue(trustLevel.isCrossSigningVerified);
+                    
                     [expectation fulfill];
 
                 } failure:^(NSError *error) {

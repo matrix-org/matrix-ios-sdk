@@ -17,6 +17,8 @@
 #import <Foundation/Foundation.h>
 
 #import "MXCrossSigningKey.h"
+#import "MXUserTrustLevel.h"
+
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -30,11 +32,6 @@ NS_ASSUME_NONNULL_BEGIN
  */
 @property (nonatomic, readonly) NSString *userId;
 
-/**
- First time we use these keys.
- */
-@property (nonatomic, readonly) BOOL firstUse;
-
 // All cross signing keys
 // key type (MXCrossSigningKeyType) -> keys
 @property (nonatomic, readonly) NSDictionary<NSString*, MXCrossSigningKey*> *keys;
@@ -43,6 +40,11 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, nullable, readonly) MXCrossSigningKey *masterKeys;
 @property (nonatomic, nullable, readonly) MXCrossSigningKey *selfSignedKeys;
 @property (nonatomic, nullable, readonly) MXCrossSigningKey *userSignedKeys;
+
+
+#pragma mark - Additional information
+
+@property (nonatomic, readonly) MXUserTrustLevel *trustLevel;
 
 @end
 

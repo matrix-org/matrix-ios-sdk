@@ -19,6 +19,7 @@
 
 
 #import "MXDeviceInfo.h"
+#import "MXCrossSigningInfo.h"
 #import "MXCryptoConstants.h"
 #import "MXEventDecryptionResult.h"
 
@@ -212,6 +213,9 @@ FOUNDATION_EXPORT NSString *const kMXCryptoRoomKeyRequestCancellationNotificatio
  */
 - (MXDeviceInfo *)eventDeviceInfo:(MXEvent*)event;
 
+
+#pragma mark - Local trust
+
 /**
  Update the blocked/verified state of the given device
 
@@ -235,6 +239,15 @@ FOUNDATION_EXPORT NSString *const kMXCryptoRoomKeyRequestCancellationNotificatio
  */
 - (void)setDevicesKnown:(MXUsersDevicesMap<MXDeviceInfo*>*)devices
                complete:(void (^)(void))complete;
+
+
+#pragma mark - Cross-signing trust
+
+- (MXUserTrustLevel*)trustLevelForUser:(NSString*)userId;
+- (MXDeviceTrustLevel*)deviceTrustLevelForDevice:(NSString*)deviceId ofUser:(NSString*)userId;
+
+
+#pragma mark - Users keys
 
 /**
  Get the device and cross-sigining keys for a list of users.

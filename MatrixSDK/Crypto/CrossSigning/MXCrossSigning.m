@@ -70,6 +70,7 @@
             [self.crypto.matrixRestClient uploadDeviceSigningKeys:signingKeys authParams:authParams success:^{
 
                 // Store our user's keys
+                keys.trustLevel.isCrossSigningVerified = YES;
                 [self.crypto.store storeCrossSigningKeys:keys];
 
                 // Cross-signing is bootstrapped
@@ -93,7 +94,6 @@
     NSString *myDeviceId = _crypto.mxSession.matrixRestClient.credentials.deviceId;
 
     MXCrossSigningInfo *crossSigningKeys = [[MXCrossSigningInfo alloc] initWithUserId:myUserId];
-    crossSigningKeys.firstUse = NO;
 
     NSMutableDictionary<NSString*, NSData*> *privateKeys = [NSMutableDictionary dictionary];
 
@@ -177,7 +177,9 @@
                    failure:(void (^)(NSError *error))failure
 {
     dispatch_async(_crypto.cryptoQueue, ^{
-        MXCrossSigningKey *otherUserMasterKeys = [self.crypto.store crossSigningKeysForUser:userId].masterKeys;
+
+        MXCrossSigningInfo *otherUserKeys = [self.crypto.store crossSigningKeysForUser:userId];
+        MXCrossSigningKey *otherUserMasterKeys = otherUserKeys.masterKeys;
 
         // Sanity check
         if (!otherUserMasterKeys)
@@ -187,7 +189,9 @@
             return;
         }
 
-        [self signKey:otherUserMasterKeys success:success failure:failure];
+        [self signKey:otherUserMasterKeys success:^{
+            success();
+        } failure:failure];
     });
 }
 
@@ -203,6 +207,77 @@
         _crossSigningTools = [MXCrossSigningTools new];
      }
     return self;
+}
+
+- (MXUserTrustLevel*)computeUserTrustLevelForCrossSigningKeys:(MXCrossSigningInfo*)crossSigningKeys
+{
+    MXUserTrustLevel *trustLevel = [MXUserTrustLevel new];
+
+    // If we're checking our own key, then it's trusted if the master key
+    // and self-signing key match
+    NSString *myUserId = _crypto.mxSession.myUser.userId;
+    if ([myUserId isEqualToString:crossSigningKeys.userId]
+        && [self.myUserCrossSigningKeys.masterKeys.keys isEqualToString:crossSigningKeys.masterKeys.keys]
+        && [self.myUserCrossSigningKeys.selfSignedKeys.keys isEqualToString:crossSigningKeys.selfSignedKeys.keys])
+    {
+        trustLevel.isCrossSigningVerified = YES;
+        return trustLevel;
+    }
+
+    if (!self.myUserCrossSigningKeys.userSignedKeys)
+    {
+        // If there's no user signing key, they can't possibly be verified
+        trustLevel.isCrossSigningVerified = NO;
+        return trustLevel;
+    }
+
+    NSError *error;
+    trustLevel.isCrossSigningVerified = [self.crossSigningTools pkVerifyKey:crossSigningKeys.masterKeys
+                                                                     userId:myUserId
+                                                                  publicKey:self.myUserCrossSigningKeys.userSignedKeys.keys
+                                                                      error:&error];
+    if (error)
+    {
+        NSLog(@"[MXCrossSigning] computeUserTrustLevelForCrossSigningKeys failed. Error: %@", error);
+    }
+
+    return trustLevel;
+}
+
+- (MXDeviceTrustLevel*)computeDeviceTrustLevelForCrossSigningKeys:(MXDeviceInfo*)device
+{
+    MXDeviceTrustLevel *trustLevel = [MXDeviceTrustLevel new];
+
+    MXCrossSigningInfo *userCrossSigning = [self.crypto.store crossSigningKeysForUser:device.userId];
+    MXUserTrustLevel *userTrustLevel = [self.crypto trustLevelForUser:device.userId];
+
+    MXCrossSigningKey *userSSK = userCrossSigning.selfSignedKeys;
+    if (!userSSK)
+    {
+        // If the user has no self-signing key then we cannot make any
+        // trust assertions about this device from cross-signing
+        return trustLevel;
+    }
+
+    // If we can verify the user's SSK from their master key...
+    BOOL userSSKVerify = [self.crossSigningTools pkVerifyKey:userSSK
+                                                      userId:userCrossSigning.userId
+                                                   publicKey:userCrossSigning.masterKeys.keys
+                                                       error:nil];
+
+    // ...and this device's key from their SSK...
+    BOOL deviceVerify = [self.crossSigningTools pkVerifyObject:device.JSONDictionary
+                                                        userId:userCrossSigning.userId
+                                                     publicKey:userSSK.keys
+                                                         error:nil];
+
+    // ...then we trust this device as much as far as we trust the user
+    if (userSSKVerify && deviceVerify)
+    {
+        trustLevel.isCrossSigningVerified = userTrustLevel.isCrossSigningVerified;
+    }
+
+    return trustLevel;
 }
 
 

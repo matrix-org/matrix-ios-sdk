@@ -19,6 +19,7 @@
 #ifdef MX_CRYPTO
 
 #import "MXCrypto_Private.h"
+#import "MXCrossSigning_Private.h"
 #import "MXCrossSigningInfo_Private.h"
 #import "MXTools.h"
 
@@ -95,6 +96,21 @@
 
         for (NSString *userId in users)
         {
+            // Handle user cross-signing keys
+            MXCrossSigningInfo *crossSigningKeys = keysQueryResponse.crossSigningKeys[userId];
+            if (crossSigningKeys)
+            {
+                NSLog(@"[MXDeviceListOperationsPool] doKeyDownloadForUsers: Got cross-signing keys for %@: %@", userId, crossSigningKeys);
+
+                // Compute trust on this user
+                // Note this overwrites the previous value
+                crossSigningKeys.trustLevel = [self->crypto.crossSigning computeUserTrustLevelForCrossSigningKeys:crossSigningKeys];
+
+                // Note that keys which aren't in the response will be removed from the store
+                [self->crypto.store storeCrossSigningKeys:crossSigningKeys];
+            }
+
+
             // Handle user devices keys
             NSDictionary<NSString*, MXDeviceInfo*> *devices = keysQueryResponse.deviceKeys.map[userId];
 
@@ -109,6 +125,8 @@
                     // Get the potential previously store device keys for this device
                     MXDeviceInfo *previouslyStoredDeviceKeys = [self->crypto.store deviceWithDeviceId:deviceId forUser:userId];
 
+                    MXDeviceVerification previousLocalState = MXDeviceUnknown;
+                    
                     // Validate received keys
                     if (![self validateDeviceKeys:mutabledevices[deviceId] forUser:userId andDevice:deviceId previouslyStoredDeviceKeys:previouslyStoredDeviceKeys])
                     {
@@ -126,33 +144,18 @@
                         // The verified status is not sync'ed with hs.
                         // This is a client side information, valid only for this client.
                         // So, transfer its previous value
-                        mutabledevices[deviceId].verified = previouslyStoredDeviceKeys.verified;
+                        previousLocalState = previouslyStoredDeviceKeys.trustLevel.localVerificationStatus;
+                        mutabledevices[deviceId].trustLevel = previouslyStoredDeviceKeys.trustLevel;
                     }
+
+                    MXDeviceTrustLevel *trustLevel = [self->crypto.crossSigning computeDeviceTrustLevelForCrossSigningKeys:mutabledevices[deviceId]];
+                    trustLevel.localVerificationStatus = previousLocalState;
+                    mutabledevices[deviceId].trustLevel = trustLevel;
                 }
 
                 // Update the store
                 // Note that devices which aren't in the response will be removed from the store
                 [self->crypto.store storeDevicesForUser:userId devices:mutabledevices];
-            }
-
-
-            // Handle user cross-signing keys
-            MXCrossSigningInfo *crossSigningKeys = keysQueryResponse.crossSigningKeys[userId];
-            if (crossSigningKeys)
-            {
-                NSLog(@"[MXDeviceListOperationsPool] doKeyDownloadForUsers: Got cross-signing keys for %@: %@", userId, crossSigningKeys);
-
-                // Get the potential previously stored value
-                MXCrossSigningInfo *previouslyStoredCcrossSigningKeys = [self->crypto.store crossSigningKeysForUser:userId];
-
-                if (previouslyStoredCcrossSigningKeys)
-                {
-                    // To keep the firstUse state
-                    crossSigningKeys.firstUse = previouslyStoredCcrossSigningKeys.firstUse;
-                }
-
-                // Note that keys which aren't in the response will be removed from the store
-                [self->crypto.store storeCrossSigningKeys:crossSigningKeys];
             }
         }
 

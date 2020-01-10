@@ -17,6 +17,7 @@
 #import "MXCrossSigning.h"
 
 #import "MXCrossSigningTools.h"
+#import "MXDeviceInfo.h"
 
 @class MXCrypto;
 
@@ -38,6 +39,9 @@ NS_ASSUME_NONNULL_BEGIN
  @param crypto the related 'MXCrypto' instance.
  */
 - (instancetype)initWithCrypto:(MXCrypto *)crypto;
+
+- (MXUserTrustLevel*)computeUserTrustLevelForCrossSigningKeys:(MXCrossSigningInfo*)crossSigningKeys;
+- (MXDeviceTrustLevel*)computeDeviceTrustLevelForCrossSigningKeys:(MXDeviceInfo*)device;
 
 @end
 

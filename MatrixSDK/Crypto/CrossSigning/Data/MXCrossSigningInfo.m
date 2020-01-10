@@ -38,12 +38,12 @@
 
 - (id)initWithCoder:(NSCoder *)aDecoder
 {
-    self = [super init];
+    self = [self init];
     if (self)
     {
         _userId = [aDecoder decodeObjectForKey:@"userId"];
-        _firstUse = [aDecoder decodeBoolForKey:@"firstUse"];
         _keys = [aDecoder decodeObjectForKey:@"keys"];
+        _trustLevel = [aDecoder decodeObjectForKey:@"trustLevel"];
     }
     return self;
 }
@@ -51,8 +51,8 @@
 - (void)encodeWithCoder:(NSCoder *)aCoder
 {
     [aCoder encodeObject:_userId forKey:@"userId"];
-    [aCoder encodeBool:_firstUse forKey:@"firstUse"];
     [aCoder encodeObject:_keys forKey:@"keys"];
+    [aCoder encodeObject:_trustLevel forKey:@"trustLevel"];
 }
 
 
@@ -60,18 +60,18 @@
 
 - (instancetype)initWithUserId:(NSString *)userId
 {
-    self = [super init];
+    self = [self init];
     if (self)
     {
         _userId = userId;
-        _firstUse = YES;
+        _trustLevel = [MXUserTrustLevel new];
     }
     return self;
 }
 
-- (void)setFirstUse:(BOOL)firstUse
+- (void)setTrustLevel:(MXUserTrustLevel*)trustLevel;
 {
-    _firstUse = firstUse;
+    _trustLevel = trustLevel;
 }
 
 - (void)addCrossSigningKey:(MXCrossSigningKey*)crossSigningKey type:(NSString*)type

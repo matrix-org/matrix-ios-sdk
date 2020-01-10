@@ -14,19 +14,22 @@
  limitations under the License.
  */
 
-#import "MXCrossSigningInfo.h"
-
+#import <Foundation/Foundation.h>
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface MXCrossSigningInfo ()
+@interface MXUserTrustLevel : NSObject <NSCoding>
 
-- (instancetype)initWithUserId:(NSString *)userId;
+/**
+ YES if this device is verified via any means.
+ */
+@property (nonatomic, readonly) BOOL isVerified;
 
-- (void)setTrustLevel:(MXUserTrustLevel*)trustLevel;
-- (void)addCrossSigningKey:(MXCrossSigningKey*)crossSigningKey type:(NSString*)type;
+/**
+ YES if this user is verified via cross signing.
+ */
+@property (nonatomic) BOOL isCrossSigningVerified;
 
 @end
-
 
 NS_ASSUME_NONNULL_END

@@ -743,6 +743,9 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
     return device;
 }
 
+
+#pragma mark - Local trust
+
 - (void)setDeviceVerification:(MXDeviceVerification)verificationStatus forDevice:(NSString*)deviceId ofUser:(NSString*)userId
                       success:(void (^)(void))success
                       failure:(void (^)(NSError *error))failure
@@ -773,7 +776,7 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
 
         if (device.verified != verificationStatus)
         {
-            device.verified = verificationStatus;
+            device.trustLevel.localVerificationStatus = verificationStatus;
             [self.store storeDeviceForUser:userId device:device];
 
             if ([userId isEqualToString:self.mxSession.myUser.userId])
@@ -822,7 +825,7 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
 
                 if (device.verified == MXDeviceUnknown)
                 {
-                    device.verified = MXDeviceUnverified;
+                    device.trustLevel.localVerificationStatus = MXDeviceUnverified;
                     [self.store storeDeviceForUser:device.userId device:device];
                 }
             }
@@ -842,6 +845,21 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
     }
 #endif
 }
+
+
+#pragma mark - Cross-signing trust
+
+- (MXUserTrustLevel*)trustLevelForUser:(NSString*)userId
+{
+    return [self.store crossSigningKeysForUser:userId].trustLevel ?: [MXUserTrustLevel new];
+}
+
+- (MXDeviceTrustLevel*)deviceTrustLevelForDevice:(NSString*)deviceId ofUser:(NSString*)userId;
+{
+    return [self.store deviceWithDeviceId:deviceId forUser:userId].trustLevel;
+}
+
+#pragma mark - Users keys
 
 - (MXHTTPOperation*)downloadKeys:(NSArray<NSString*>*)userIds
                    forceDownload:(BOOL)forceDownload
@@ -1412,7 +1430,7 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
                           [NSString stringWithFormat:@"curve25519:%@", deviceId]: _olmDevice.deviceCurve25519Key,
                           };
         _myDevice.algorithms = [[MXCryptoAlgorithms sharedAlgorithms] supportedAlgorithms];
-        _myDevice.verified = MXDeviceVerified;
+        _myDevice.trustLevel.localVerificationStatus = MXDeviceVerified;
 
         // Add our own deviceinfo to the store
         NSMutableDictionary *myDevices = [NSMutableDictionary dictionaryWithDictionary:[_store devicesForUser:userId]];
