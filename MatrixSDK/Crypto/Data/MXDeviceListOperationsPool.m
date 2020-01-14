@@ -20,6 +20,7 @@
 
 #import "MXCrypto_Private.h"
 #import "MXCrossSigning_Private.h"
+#import "MXDeviceInfo_Private.h"
 #import "MXCrossSigningInfo_Private.h"
 #import "MXTools.h"
 
@@ -152,7 +153,7 @@
                     MXDeviceTrustLevel *trustLevel = [MXDeviceTrustLevel trustLevelWithLocalVerificationStatus:previousLocalState
                                                                                           crossSigningVerified:crossSigningVerified];
 
-                    mutabledevices[deviceId].trustLevel = trustLevel;
+                    [mutabledevices[deviceId] updateTrustLevel:trustLevel];
                 }
 
                 // Update the store

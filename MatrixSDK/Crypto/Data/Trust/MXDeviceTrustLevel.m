@@ -51,6 +51,26 @@
 }
 
 
+- (BOOL)isEqual:(id)object
+{
+    if (self == object)
+    {
+        return YES;
+    }
+
+    BOOL isEqual = NO;
+
+    if ([object isKindOfClass:MXDeviceTrustLevel.class])
+    {
+        MXDeviceTrustLevel *other = object;
+        isEqual = other.localVerificationStatus == self.localVerificationStatus
+        && other.isCrossSigningVerified == self.isCrossSigningVerified;
+    }
+
+    return isEqual;
+}
+
+
 - (NSString *)description
 {
     return [NSString stringWithFormat:@"MXDeviceTrustLevel: local: %@ - cross-signing: %@ - firstUse: %@",  @(_localVerificationStatus), @(_isCrossSigningVerified), @(_trustOnFirstUse)];

@@ -84,7 +84,7 @@
 /**
  The trust on this device.
  */
- @property (nonatomic) MXDeviceTrustLevel *trustLevel;
+ @property (nonatomic, readonly) MXDeviceTrustLevel *trustLevel;
 
 /**
  Local verification state of this device.

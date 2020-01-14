@@ -15,7 +15,7 @@
  limitations under the License.
  */
 
-#import "MXDeviceInfo.h"
+#import "MXDeviceInfo_Private.h"
 
 @implementation MXDeviceInfo
 
@@ -49,6 +49,22 @@
 - (MXDeviceVerification)verified
 {
     return self.trustLevel.localVerificationStatus;
+}
+
+
+#pragma mark - SDK-Private methods
+
+- (BOOL)updateTrustLevel:(MXDeviceTrustLevel*)trustLevel
+{
+    BOOL updated = NO;
+
+    if (![_trustLevel isEqual:trustLevel])
+    {
+        _trustLevel = trustLevel;
+        updated = YES;
+    }
+
+    return updated;
 }
 
 

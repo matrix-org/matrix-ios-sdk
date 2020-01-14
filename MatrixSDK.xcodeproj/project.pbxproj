@@ -1453,6 +1453,7 @@
 		32FCAB4C19E578860049C555 /* MXRestClientTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; lineEnding = 0; path = MXRestClientTests.m; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objc; };
 		32FE41341D0AB7070060835E /* MXEnumConstants.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXEnumConstants.h; sourceTree = "<group>"; };
 		32FE41351D0AB7070060835E /* MXEnumConstants.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXEnumConstants.m; sourceTree = "<group>"; };
+		32FF948023CE077200DA5B15 /* MXDeviceInfo_Private.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MXDeviceInfo_Private.h; sourceTree = "<group>"; };
 		32FFB4ED217DC0E900C96002 /* MXKeyBackup_Private.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MXKeyBackup_Private.h; sourceTree = "<group>"; };
 		32FFB4EE217E146A00C96002 /* MXRecoveryKey.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MXRecoveryKey.h; sourceTree = "<group>"; };
 		32FFB4EF217E146A00C96002 /* MXRecoveryKey.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MXRecoveryKey.m; sourceTree = "<group>"; };
@@ -2275,6 +2276,7 @@
 				3256E37F1DCB91EB003C9718 /* MXCryptoConstants.h */,
 				3256E3801DCB91EB003C9718 /* MXCryptoConstants.m */,
 				32A151401DAF7C0C00400192 /* MXDeviceInfo.h */,
+				32FF948023CE077200DA5B15 /* MXDeviceInfo_Private.h */,
 				32A151411DAF7C0C00400192 /* MXDeviceInfo.m */,
 				32637ED21E5B00400011E20D /* MXDeviceList.h */,
 				32637ED31E5B00400011E20D /* MXDeviceList.m */,
