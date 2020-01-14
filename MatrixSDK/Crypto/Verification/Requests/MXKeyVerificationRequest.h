@@ -58,8 +58,12 @@ Accept an incoming key verification request.
  Cancel this request.
 
  @param code the cancellation reason
+ @param success a block called when the operation succeeds.
+ @param failure a block called when the operation fails.
  */
-- (void)cancelWithCancelCode:(MXTransactionCancelCode*)code;
+- (void)cancelWithCancelCode:(MXTransactionCancelCode*)code
+                     success:(void(^ _Nullable)(void))success
+                     failure:(void(^ _Nullable)(NSError *error))failure;
 
 /**
  The cancellation reason, if any.

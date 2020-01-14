@@ -139,27 +139,27 @@
                 // by me or declined by the other
                 if ([firstEvent.sender isEqualToString:myUserId])
                 {
-                    request.state = MXKeyVerificationRequestStateCancelledByMe;
+                    [request updateState:MXKeyVerificationRequestStateCancelledByMe notifiy:NO];
                 }
                 else
                 {
-                    request.state = MXKeyVerificationRequestStateCancelled;
+                    [request updateState:MXKeyVerificationRequestStateCancelled notifiy:NO];
                 }
             }
             else if (events.count)
             {
                 // If there are events but no cancel event at first, the transaction
                 // has started = the request has been accepted
-                request.state = MXKeyVerificationRequestStateAccepted;
+                [request updateState:MXKeyVerificationRequestStateAccepted notifiy:NO];
             }
             // There is only the request event. What is the status of it?
             else if (![self.manager isRequestStillPending:request])
             {
-                request.state = MXKeyVerificationRequestStateExpired;
+                [request updateState:MXKeyVerificationRequestStateExpired notifiy:NO];
             }
             else
             {
-                request.state = MXKeyVerificationRequestStatePending;
+                [request updateState:MXKeyVerificationRequestStatePending notifiy:NO];
             }
         }
     }

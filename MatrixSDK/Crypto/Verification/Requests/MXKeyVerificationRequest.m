@@ -22,6 +22,11 @@
 #pragma mark - Constants
 NSString * const MXKeyVerificationRequestDidChangeNotification = @"MXKeyVerificationRequestDidChangeNotification";
 
+@interface MXKeyVerificationRequest()
+
+@property (nonatomic, readwrite) MXKeyVerificationRequestState state;
+
+@end
 
 @implementation MXKeyVerificationRequest
 
@@ -58,30 +63,42 @@ NSString * const MXKeyVerificationRequestDidChangeNotification = @"MXKeyVerifica
 {
     [self.manager acceptVerificationRequest:self method:method success:^(MXDeviceVerificationTransaction * _Nonnull transaction) {
         self.state = MXKeyVerificationRequestStateAccepted;
+        [self updateState:MXKeyVerificationRequestStateAccepted notifiy:YES];
         [self.manager removePendingRequestWithRequestId:self.requestId];
 
         success(transaction);
     }  failure:failure];
 }
 
-- (void)cancelWithCancelCode:(MXTransactionCancelCode *)code
+- (void)cancelWithCancelCode:(MXTransactionCancelCode*)code success:(void(^)(void))success failure:(void(^)(NSError *error))failure
 {
     [self.manager cancelVerificationRequest:self success:^{
         self.reasonCancelCode = code;
-
-        self.state = MXKeyVerificationRequestStateCancelledByMe;
+        
+        [self updateState:MXKeyVerificationRequestStateCancelledByMe notifiy:YES];
         [self.manager removePendingRequestWithRequestId:self.requestId];
-
-    } failure:^(NSError * _Nonnull error) {
-    } ];
+        
+        if (success)
+        {
+            success();
+        }
+        
+    } failure:failure];
 }
 
-- (void)setState:(MXKeyVerificationRequestState)state
+- (void)updateState:(MXKeyVerificationRequestState)state notifiy:(BOOL)notify
 {
-    NSLog(@"[MXKeyVerification][MXKeyVerificationRequest] setState: %@ -> %@", @(_state), @(state));
-
-    _state = state;
-    [self didUpdateState];
+    if (state == self.state)
+    {
+        return;
+    }
+    
+    self.state = state;
+    
+    if (notify)
+    {
+        [self didUpdateState];
+    }
 }
 
 - (void)didUpdateState
@@ -93,7 +110,7 @@ NSString * const MXKeyVerificationRequestDidChangeNotification = @"MXKeyVerifica
 
 - (void)handleStart:(MXKeyVerificationStart*)startContent
 {
-    self.state = MXKeyVerificationRequestStateAccepted;
+    [self updateState:MXKeyVerificationRequestStateAccepted notifiy:YES];
     [self.manager removePendingRequestWithRequestId:self.requestId];
 }
 
@@ -101,8 +118,8 @@ NSString * const MXKeyVerificationRequestDidChangeNotification = @"MXKeyVerifica
 {
     self.reasonCancelCode = [[MXTransactionCancelCode alloc] initWithValue:cancelContent.code
                                                              humanReadable:cancelContent.reason];
-
-    self.state = MXKeyVerificationRequestStateCancelled;
+    
+    [self updateState:MXKeyVerificationRequestStateCancelled notifiy:YES];
     [self.manager removePendingRequestWithRequestId:self.requestId];
 }
 
