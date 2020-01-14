@@ -25,7 +25,7 @@ NS_ASSUME_NONNULL_BEGIN
 /**
  Overall verification state.
  */
-typedef enum : NSUInteger
+typedef NS_ENUM(NSInteger, MXKeyVerificationState)
 {
     // First request states
     MXKeyVerificationStateRequestPending = 0,
@@ -40,7 +40,7 @@ typedef enum : NSUInteger
 
     MXKeyVerificationStateVerified,
 
-} MXKeyVerificationState;
+};
 
 /**
  Represents the status of a key verification.
