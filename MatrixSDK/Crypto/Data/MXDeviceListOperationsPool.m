@@ -104,8 +104,9 @@
 
                 // Compute trust on this user
                 // Note this overwrites the previous value
-                crossSigningKeys.trustLevel = [self->crypto.crossSigning computeUserTrustLevelForCrossSigningKeys:crossSigningKeys];
-
+                BOOL isCrossSigningVerified = [self->crypto.crossSigning isUserWithCrossSigningKeysVerified:crossSigningKeys];
+                crossSigningKeys.trustLevel = [MXUserTrustLevel trustLevelWithCrossSigningVerified:isCrossSigningVerified];
+                
                 // Note that keys which aren't in the response will be removed from the store
                 [self->crypto.store storeCrossSigningKeys:crossSigningKeys];
             }
@@ -145,11 +146,12 @@
                         // This is a client side information, valid only for this client.
                         // So, transfer its previous value
                         previousLocalState = previouslyStoredDeviceKeys.trustLevel.localVerificationStatus;
-                        mutabledevices[deviceId].trustLevel = previouslyStoredDeviceKeys.trustLevel;
                     }
 
-                    MXDeviceTrustLevel *trustLevel = [self->crypto.crossSigning computeDeviceTrustLevelForCrossSigningKeys:mutabledevices[deviceId]];
-                    trustLevel.localVerificationStatus = previousLocalState;
+                    BOOL crossSigningVerified = [self->crypto.crossSigning isDeviceVerified:mutabledevices[deviceId]];
+                    MXDeviceTrustLevel *trustLevel = [MXDeviceTrustLevel trustLevelWithLocalVerificationStatus:previousLocalState
+                                                                                          crossSigningVerified:crossSigningVerified];
+
                     mutabledevices[deviceId].trustLevel = trustLevel;
                 }
 

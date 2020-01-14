@@ -28,7 +28,16 @@ NS_ASSUME_NONNULL_BEGIN
 /**
  YES if this user is verified via cross signing.
  */
-@property (nonatomic) BOOL isCrossSigningVerified;
+@property (nonatomic, readonly) BOOL isCrossSigningVerified;
+
+@end
+
+
+#pragma mark - Factory
+
+@interface MXUserTrustLevel()
+
++ (MXUserTrustLevel*)trustLevelWithCrossSigningVerified:(BOOL)crossSigningVerified;
 
 @end
 

@@ -30,6 +30,16 @@
     return self;
 }
 
++ (MXDeviceTrustLevel*)trustLevelWithLocalVerificationStatus:(MXDeviceVerification)localVerificationStatus
+                                        crossSigningVerified:(BOOL)crossSigningVerified
+{
+    MXDeviceTrustLevel *trustLevel = [MXDeviceTrustLevel new];
+    trustLevel->_localVerificationStatus = localVerificationStatus;
+    trustLevel->_isCrossSigningVerified = crossSigningVerified;
+
+    return trustLevel;
+}
+
 - (BOOL)isVerified
 {
     return self.isLocallyVerified || _isCrossSigningVerified;

@@ -64,12 +64,12 @@ typedef enum : NSUInteger
 /**
  YES if this device is verified via cross signing.
  */
-@property (nonatomic) BOOL isCrossSigningVerified;
+@property (nonatomic, readonly) BOOL isCrossSigningVerified;
 
 /**
  Local device verication state
  */
-@property (nonatomic) MXDeviceVerification localVerificationStatus;
+@property (nonatomic, readonly) MXDeviceVerification localVerificationStatus;
 @property (nonatomic, readonly) BOOL isLocallyVerified;
 
 /**
@@ -77,6 +77,16 @@ typedef enum : NSUInteger
  */
 // TODO: What is this?
 @property (nonatomic) BOOL trustOnFirstUse;
+
+@end
+
+
+#pragma mark - Factory
+
+@interface MXDeviceTrustLevel()
+
++ (MXDeviceTrustLevel*)trustLevelWithLocalVerificationStatus:(MXDeviceVerification)localVerificationStatus
+                                        crossSigningVerified:(BOOL)crossSigningVerified;
 
 @end
 

@@ -137,8 +137,8 @@
             // Manage migration from old data schema
             MXDeviceVerification verified = [(NSNumber*)[aDecoder decodeObjectForKey:@"verified"] unsignedIntegerValue];
 
-            _trustLevel = [MXDeviceTrustLevel new];
-            _trustLevel.localVerificationStatus = verified;
+            _trustLevel = [MXDeviceTrustLevel trustLevelWithLocalVerificationStatus:verified
+                                                               crossSigningVerified:NO];
         }
     }
     return self;

@@ -70,7 +70,7 @@
             [self.crypto.matrixRestClient uploadDeviceSigningKeys:signingKeys authParams:authParams success:^{
 
                 // Store our user's keys
-                keys.trustLevel.isCrossSigningVerified = YES;
+                keys.trustLevel = [MXUserTrustLevel trustLevelWithCrossSigningVerified:YES];
                 [self.crypto.store storeCrossSigningKeys:keys];
 
                 // Cross-signing is bootstrapped
@@ -209,9 +209,9 @@
     return self;
 }
 
-- (MXUserTrustLevel*)computeUserTrustLevelForCrossSigningKeys:(MXCrossSigningInfo*)crossSigningKeys
+- (BOOL)isUserWithCrossSigningKeysVerified:(MXCrossSigningInfo*)crossSigningKeys
 {
-    MXUserTrustLevel *trustLevel = [MXUserTrustLevel new];
+    BOOL isUserVerified = NO;
 
     // If we're checking our own key, then it's trusted if the master key
     // and self-signing key match
@@ -220,19 +220,17 @@
         && [self.myUserCrossSigningKeys.masterKeys.keys isEqualToString:crossSigningKeys.masterKeys.keys]
         && [self.myUserCrossSigningKeys.selfSignedKeys.keys isEqualToString:crossSigningKeys.selfSignedKeys.keys])
     {
-        trustLevel.isCrossSigningVerified = YES;
-        return trustLevel;
+        return YES;
     }
 
     if (!self.myUserCrossSigningKeys.userSignedKeys)
     {
         // If there's no user signing key, they can't possibly be verified
-        trustLevel.isCrossSigningVerified = NO;
-        return trustLevel;
+        return NO;
     }
 
     NSError *error;
-    trustLevel.isCrossSigningVerified = [self.crossSigningTools pkVerifyKey:crossSigningKeys.masterKeys
+    isUserVerified = [self.crossSigningTools pkVerifyKey:crossSigningKeys.masterKeys
                                                                      userId:myUserId
                                                                   publicKey:self.myUserCrossSigningKeys.userSignedKeys.keys
                                                                       error:&error];
@@ -241,12 +239,12 @@
         NSLog(@"[MXCrossSigning] computeUserTrustLevelForCrossSigningKeys failed. Error: %@", error);
     }
 
-    return trustLevel;
+    return isUserVerified;
 }
 
-- (MXDeviceTrustLevel*)computeDeviceTrustLevelForCrossSigningKeys:(MXDeviceInfo*)device
+- (BOOL)isDeviceVerified:(MXDeviceInfo*)device
 {
-    MXDeviceTrustLevel *trustLevel = [MXDeviceTrustLevel new];
+    BOOL isDeviceVerified = NO;
 
     MXCrossSigningInfo *userCrossSigning = [self.crypto.store crossSigningKeysForUser:device.userId];
     MXUserTrustLevel *userTrustLevel = [self.crypto trustLevelForUser:device.userId];
@@ -256,7 +254,7 @@
     {
         // If the user has no self-signing key then we cannot make any
         // trust assertions about this device from cross-signing
-        return trustLevel;
+        return NO;
     }
 
     // If we can verify the user's SSK from their master key...
@@ -274,10 +272,10 @@
     // ...then we trust this device as much as far as we trust the user
     if (userSSKVerify && deviceVerify)
     {
-        trustLevel.isCrossSigningVerified = userTrustLevel.isCrossSigningVerified;
+        isDeviceVerified = userTrustLevel.isCrossSigningVerified;
     }
 
-    return trustLevel;
+    return isDeviceVerified;
 }
 
 

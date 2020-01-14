@@ -776,7 +776,9 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
 
         if (device.verified != verificationStatus)
         {
-            device.trustLevel.localVerificationStatus = verificationStatus;
+            MXDeviceTrustLevel *trustLevel = [MXDeviceTrustLevel trustLevelWithLocalVerificationStatus:verificationStatus
+                                                                     crossSigningVerified:device.trustLevel.isCrossSigningVerified];
+            device.trustLevel = trustLevel;
             [self.store storeDeviceForUser:userId device:device];
 
             if ([userId isEqualToString:self.mxSession.myUser.userId])
@@ -825,7 +827,10 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
 
                 if (device.verified == MXDeviceUnknown)
                 {
-                    device.trustLevel.localVerificationStatus = MXDeviceUnverified;
+                    MXDeviceTrustLevel *trustLevel =
+                    [MXDeviceTrustLevel trustLevelWithLocalVerificationStatus:MXDeviceUnverified
+                                                         crossSigningVerified:device.trustLevel.isCrossSigningVerified];
+                    device.trustLevel = trustLevel;
                     [self.store storeDeviceForUser:device.userId device:device];
                 }
             }
@@ -1430,7 +1435,8 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
                           [NSString stringWithFormat:@"curve25519:%@", deviceId]: _olmDevice.deviceCurve25519Key,
                           };
         _myDevice.algorithms = [[MXCryptoAlgorithms sharedAlgorithms] supportedAlgorithms];
-        _myDevice.trustLevel.localVerificationStatus = MXDeviceVerified;
+        _myDevice.trustLevel = [MXDeviceTrustLevel trustLevelWithLocalVerificationStatus:MXDeviceVerified
+                                                                    crossSigningVerified:NO];
 
         // Add our own deviceinfo to the store
         NSMutableDictionary *myDevices = [NSMutableDictionary dictionaryWithDictionary:[_store devicesForUser:userId]];

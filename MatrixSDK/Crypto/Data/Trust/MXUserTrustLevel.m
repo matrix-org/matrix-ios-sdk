@@ -28,6 +28,14 @@
     return self;
 }
 
++ (MXUserTrustLevel *)trustLevelWithCrossSigningVerified:(BOOL)crossSigningVerified
+{
+    MXUserTrustLevel *trustLevel = [MXUserTrustLevel new];
+    trustLevel->_isCrossSigningVerified = crossSigningVerified;
+
+    return trustLevel;
+}
+
 - (BOOL)isVerified
 {
     return _isCrossSigningVerified;
