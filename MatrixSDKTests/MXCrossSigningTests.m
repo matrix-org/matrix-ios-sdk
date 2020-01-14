@@ -528,56 +528,38 @@
 // - Make bob know alice
 // - bob signs alice
 // -> Check bob sees their user-signing signature on alice's master key
-// -> Check trust level for alice see by bob
-// -> Check trust level for bob see by bob
+// -> Check bob trust alice as a user
+// -> Check bob trust bob as a user
+// -> Check bob trusts now alice devices
 - (void)testSignUser
 {
     // - Set up the scenario with 2 bootstrapped accounts
     [self doBootstrappedTestBobAndAliceWithTwoDevices:self readyToTest:^(MXSession *bobSession, MXSession *alice1Session, MXCredentials *alice0Creds, XCTestExpectation *expectation) {
 
-        NSString *bobUserId = bobSession.myUser.userId;
-
         // - Make bob know alice
-        [bobSession.crypto downloadKeys:@[alice0Creds.userId] forceDownload:YES success:^(MXUsersDevicesMap<MXDeviceInfo *> *usersDevicesInfoMap, NSDictionary<NSString *,MXCrossSigningInfo *> *crossSigningKeysMap) {
+        MXDeviceTrustLevel *aliceDevice0TrustBefore = [bobSession.crypto deviceTrustLevelForDevice:alice0Creds.deviceId ofUser:alice0Creds.userId];
+        XCTAssertNil(aliceDevice0TrustBefore);
 
-            MXCrossSigningKey *aliceMasterKeys = crossSigningKeysMap[alice0Creds.userId].masterKeys;
-            XCTAssertEqual(aliceMasterKeys.signatures.count, 1);    // = alice device signature
+        // - bob signs alice
+        [bobSession.crypto.crossSigning signUserWithUserId:alice0Creds.userId success:^{
 
-            // - bob signs alice
-            [bobSession.crypto.crossSigning signUserWithUserId:alice0Creds.userId success:^{
+            // -> Check bob trust alice as a user
+            MXUserTrustLevel *aliceTrust = [bobSession.crypto trustLevelForUser:alice0Creds.userId];
+            XCTAssertNotNil(aliceTrust);
+            XCTAssertTrue(aliceTrust.isCrossSigningVerified);
 
-                // -> Check bob sees their user-signing signature on alice's master key
-                [bobSession.crypto downloadKeys:@[alice0Creds.userId] forceDownload:YES success:^(MXUsersDevicesMap<MXDeviceInfo *> *usersDevicesInfoMap, NSDictionary<NSString *,MXCrossSigningInfo *> *crossSigningKeysMap) {
+            // -> Check bob trust bob as a user
+            MXUserTrustLevel *bobTrust = [bobSession.crypto trustLevelForUser:bobSession.myUser.userId];
+            XCTAssertNotNil(bobTrust);
+            XCTAssertTrue(bobTrust.isCrossSigningVerified);
 
-                    MXCrossSigningKey *aliceMasterKeys = crossSigningKeysMap[alice0Creds.userId].masterKeys;
-                    XCTAssertEqual(aliceMasterKeys.signatures.count, 2);        // = alice device signature + bob USK signature
+            // -> Check bob trusts now alice devices
+            MXDeviceTrustLevel *aliceDevice0Trust = [bobSession.crypto deviceTrustLevelForDevice:alice0Creds.deviceId ofUser:alice0Creds.userId];
+            XCTAssertNotNil(aliceDevice0Trust);
+            XCTAssertTrue(aliceDevice0Trust.isCrossSigningVerified);
+            XCTAssertTrue(aliceDevice0Trust.isVerified);
 
-                    NSString *bobUSKSignature = [aliceMasterKeys signatureFromUserId:bobUserId withPublicKey:bobSession.crypto.crossSigning.myUserCrossSigningKeys.userSignedKeys.keys];
-
-                    XCTAssertNotNil(bobUSKSignature);
-
-                    // -> Check trust level for alice see by bob
-                    MXUserTrustLevel *trustLevel = crossSigningKeysMap[alice0Creds.userId].trustLevel;
-                    XCTAssertNotNil(trustLevel);
-                    XCTAssertTrue(trustLevel.isCrossSigningVerified);
-
-                    // -> Check trust level for bob see by bob
-                    trustLevel = [bobSession.crypto trustLevelForUser:bobSession.myUser.userId];
-                    XCTAssertNotNil(trustLevel);
-                    XCTAssertTrue(trustLevel.isCrossSigningVerified);
-                    
-                    [expectation fulfill];
-
-                } failure:^(NSError *error) {
-                    XCTFail(@"The operation should not fail - NSError: %@", error);
-                    [expectation fulfill];
-                }];
-
-            } failure:^(NSError *error) {
-                XCTFail(@"The operation should not fail - NSError: %@", error);
-                [expectation fulfill];
-            }];
-
+            [expectation fulfill];
         } failure:^(NSError *error) {
             XCTFail(@"The operation should not fail - NSError: %@", error);
             [expectation fulfill];

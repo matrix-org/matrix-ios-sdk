@@ -21,19 +21,16 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-//typedef NS_OPTIONS(NSUInteger, DownloadViewStatus) {
-//    FileNotDownloaded = (1 << 0), // => 00000001
-//    FileDownloading   = (1 << 1), // => 00000010
-//    FileDownloaded    = (1 << 2)  // => 00000100
-//};
-//
-//
-//typedef NS_ENUM(NSInteger, MXAntivirusScanStatus) {
-//    MXAntivirusScanStatusUnknown = 0,
-//    MXAntivirusScanStatusInProgress,
-//    MXAntivirusScanStatusTrusted,
-//    MXAntivirusScanStatusInfected
-//};
+
+#pragma mark - Constants
+
+FOUNDATION_EXPORT NSString *const MXCrossSigningErrorDomain;
+
+typedef enum : NSUInteger
+{
+    MXCrossSigningUnknownErrorCode,
+} MXCrossSigningErrorCode;
+
 
 @class MXCrossSigning;
 
@@ -117,7 +114,7 @@ NS_ASSUME_NONNULL_BEGIN
                             failure:(void (^)(NSError *error))failure;
 
 /**
- Sign a user from one of their devices.
+ Trust a user from one of their devices.
 
  This method will use keysStorageDelegate get the private part of the User Signing
  Key (MXCrossSigningKeyType.userSigning).

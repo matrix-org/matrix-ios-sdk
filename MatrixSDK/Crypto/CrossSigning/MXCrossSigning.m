@@ -17,8 +17,15 @@
 #import "MXCrossSigning_Private.h"
 
 #import "MXCrypto_Private.h"
+#import "MXDeviceInfo_Private.h"
 #import "MXCrossSigningInfo_Private.h"
 #import "MXKey.h"
+
+
+#pragma mark - Constants
+
+NSString *const MXCrossSigningErrorDomain = @"org.matrix.sdk.crosssigning";
+
 
 @interface MXCrossSigning ()
 
@@ -176,23 +183,48 @@
                    success:(void (^)(void))success
                    failure:(void (^)(NSError *error))failure
 {
-    dispatch_async(_crypto.cryptoQueue, ^{
+    // Make sure we have latest data from the user
+    [self.crypto downloadKeys:@[userId] forceDownload:NO success:^(MXUsersDevicesMap<MXDeviceInfo *> *userDevices, NSDictionary<NSString *,MXCrossSigningInfo *> *crossSigningKeysMap) {
 
-        MXCrossSigningInfo *otherUserKeys = [self.crypto.store crossSigningKeysForUser:userId];
-        MXCrossSigningKey *otherUserMasterKeys = otherUserKeys.masterKeys;
+        dispatch_async(self.crypto.cryptoQueue, ^{
+            MXCrossSigningInfo *otherUserKeys = [self.crypto.store crossSigningKeysForUser:userId];
+            MXCrossSigningKey *otherUserMasterKeys = otherUserKeys.masterKeys;
 
-        // Sanity check
-        if (!otherUserMasterKeys)
-        {
-            NSLog(@"[MXCrossSigning] signUserWithUserId: User %@ unknown locally", userId);
-            failure(nil);
-            return;
-        }
+            // Sanity check
+            if (!otherUserMasterKeys)
+            {
+                NSLog(@"[MXCrossSigning] signUserWithUserId: User %@ unknown locally", userId);
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    NSError *error = [NSError errorWithDomain:MXCrossSigningErrorDomain
+                                                         code:MXCrossSigningUnknownErrorCode
+                                                     userInfo:@{
+                                                                NSLocalizedDescriptionKey: @"Unknown user",
+                                                                }];
+                    failure(error);
+                });
+                return;
+            }
 
-        [self signKey:otherUserMasterKeys success:^{
-            success();
-        } failure:failure];
-    });
+            [self signKey:otherUserMasterKeys success:^{
+
+                // Update trust for other user
+                [otherUserKeys updateTrustLevel:[MXUserTrustLevel trustLevelWithCrossSigningVerified:YES]];
+                [self.crypto.store storeCrossSigningKeys:otherUserKeys];
+
+                // Update other user's devices trust
+                [self checkTrustLevelForDevicesOfUser:userId];
+
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    success();
+                });
+            } failure:^(NSError *error) {
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    failure(error);
+                });
+            }];
+        });
+
+    } failure:failure];
 }
 
 #pragma mark - SDK-Private methods -
@@ -276,6 +308,22 @@
     }
 
     return isDeviceVerified;
+}
+
+- (void)checkTrustLevelForDevicesOfUser:(NSString*)userId
+{
+    NSArray<MXDeviceInfo*> *devices = [self.crypto.store devicesForUser:userId].allValues;
+
+    for (MXDeviceInfo *device in devices)
+    {
+        BOOL crossSigningVerified = [self isDeviceVerified:device];
+        MXDeviceTrustLevel *trustLevel = [MXDeviceTrustLevel trustLevelWithLocalVerificationStatus:device.trustLevel.localVerificationStatus crossSigningVerified:crossSigningVerified];
+
+        if ([device updateTrustLevel:trustLevel])
+        {
+            [self.crypto.store storeDeviceForUser:device.userId device:device];
+        }
+    }
 }
 
 
