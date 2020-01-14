@@ -70,7 +70,7 @@
             [self.crypto.matrixRestClient uploadDeviceSigningKeys:signingKeys authParams:authParams success:^{
 
                 // Store our user's keys
-                keys.trustLevel = [MXUserTrustLevel trustLevelWithCrossSigningVerified:YES];
+                [keys updateTrustLevel:[MXUserTrustLevel trustLevelWithCrossSigningVerified:YES]];
                 [self.crypto.store storeCrossSigningKeys:keys];
 
                 // Cross-signing is bootstrapped

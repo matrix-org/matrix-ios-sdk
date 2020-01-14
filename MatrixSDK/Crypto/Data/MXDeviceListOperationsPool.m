@@ -106,7 +106,7 @@
                 // Compute trust on this user
                 // Note this overwrites the previous value
                 BOOL isCrossSigningVerified = [self->crypto.crossSigning isUserWithCrossSigningKeysVerified:crossSigningKeys];
-                crossSigningKeys.trustLevel = [MXUserTrustLevel trustLevelWithCrossSigningVerified:isCrossSigningVerified];
+                [crossSigningKeys updateTrustLevel:[MXUserTrustLevel trustLevelWithCrossSigningVerified:isCrossSigningVerified]];
                 
                 // Note that keys which aren't in the response will be removed from the store
                 [self->crypto.store storeCrossSigningKeys:crossSigningKeys];

@@ -42,6 +42,25 @@
 }
 
 
+- (BOOL)isEqual:(id)object
+{
+    if (self == object)
+    {
+        return YES;
+    }
+
+    BOOL isEqual = NO;
+
+    if ([object isKindOfClass:MXUserTrustLevel.class])
+    {
+        MXUserTrustLevel *other = object;
+        isEqual = other.isCrossSigningVerified == self.isCrossSigningVerified;
+    }
+
+    return isEqual;
+}
+
+
 #pragma mark - NSCoding
 
 - (id)initWithCoder:(NSCoder *)aDecoder

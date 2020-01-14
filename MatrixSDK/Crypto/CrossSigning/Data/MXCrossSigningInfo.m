@@ -69,9 +69,17 @@
     return self;
 }
 
-- (void)setTrustLevel:(MXUserTrustLevel*)trustLevel;
+- (BOOL)updateTrustLevel:(MXUserTrustLevel*)trustLevel;
 {
-    _trustLevel = trustLevel;
+    BOOL updated = NO;
+
+    if (![_trustLevel isEqual:trustLevel])
+    {
+        _trustLevel = trustLevel;
+        updated = YES;
+    }
+
+    return updated;
 }
 
 - (void)addCrossSigningKey:(MXCrossSigningKey*)crossSigningKey type:(NSString*)type

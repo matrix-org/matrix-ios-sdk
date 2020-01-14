@@ -462,7 +462,7 @@
         XCTAssertEqualObjects(storedKeys.userSignedKeys.JSONDictionary, keys.userSignedKeys.JSONDictionary);
 
         // - Update keys test
-        keys.trustLevel = [MXUserTrustLevel trustLevelWithCrossSigningVerified:YES];
+        [keys updateTrustLevel:[MXUserTrustLevel trustLevelWithCrossSigningVerified:YES]];
         [aliceSession.crypto.store storeCrossSigningKeys:keys];
         storedKeys = [aliceSession.crypto.store crossSigningKeysForUser:aliceUserId];
         XCTAssertTrue(storedKeys.trustLevel.isVerified);
