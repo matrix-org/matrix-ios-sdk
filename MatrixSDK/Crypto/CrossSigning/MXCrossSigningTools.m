@@ -20,6 +20,11 @@
 #import "MXKey.h"
 
 
+#pragma mark - Constants
+
+NSString *const MXCrossSigningToolsErrorDomain = @"org.matrix.sdk.crosssigning.tools";
+
+
 @interface MXCrossSigningTools ()
 {
     OLMUtility *olmUtility;
@@ -76,8 +81,12 @@
 
     if (!signature)
     {
-        // TODO
-        // throw new Error("No signature");
+        NSLog(@"[MXCrossSigningTools] pkVerifyObject. Error: Missing signature for %@:%@ in %@", userId, keyId, object[@"signatures"]);
+        *error = [NSError errorWithDomain:MXCrossSigningToolsErrorDomain
+                                     code:MXCrossSigningToolsMissingSignatureErrorCode
+                                 userInfo:@{
+                                            NSLocalizedDescriptionKey: @"Missing signature",
+                                            }];
         return NO;
     }
 

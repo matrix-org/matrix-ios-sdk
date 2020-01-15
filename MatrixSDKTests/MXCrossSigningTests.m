@@ -644,7 +644,7 @@
 
         // - Check trust before
         MXDeviceTrustLevel *aliceDevice0TrustBefore = [bobSession.crypto deviceTrustLevelForDevice:alice0Creds.deviceId ofUser:alice0Creds.userId];
-        XCTAssertNil(aliceDevice0TrustBefore);
+        XCTAssertFalse(aliceDevice0TrustBefore.isVerified);
 
         // - bob signs alice
         [bobSession.crypto.crossSigning signUserWithUserId:alice0Creds.userId success:^{

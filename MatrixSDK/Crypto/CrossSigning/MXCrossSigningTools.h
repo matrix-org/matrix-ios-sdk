@@ -22,6 +22,17 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
+
+#pragma mark - Constants
+
+FOUNDATION_EXPORT NSString *const MXCrossSigningToolsErrorDomain;
+
+typedef enum : NSUInteger
+{
+    MXCrossSigningToolsMissingSignatureErrorCode,
+} MXCrossSigningToolsErrorCode;
+
+
 @interface MXCrossSigningTools : NSObject
 
 - (NSDictionary*)pkSignObject:(NSDictionary*)object withPkSigning:(OLMPkSigning*)pkSigning userId:(NSString*)userId publicKey:(NSString*)publicKey error:(NSError* _Nullable *)error;
