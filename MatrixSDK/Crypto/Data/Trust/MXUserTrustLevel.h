@@ -21,7 +21,7 @@ NS_ASSUME_NONNULL_BEGIN
 @interface MXUserTrustLevel : NSObject <NSCoding>
 
 /**
- YES if this device is verified via any means.
+ YES if this user is verified via any means.
  */
 @property (nonatomic, readonly) BOOL isVerified;
 
