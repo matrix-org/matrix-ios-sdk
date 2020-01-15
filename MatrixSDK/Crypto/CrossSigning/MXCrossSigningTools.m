@@ -82,11 +82,14 @@ NSString *const MXCrossSigningToolsErrorDomain = @"org.matrix.sdk.crosssigning.t
     if (!signature)
     {
         NSLog(@"[MXCrossSigningTools] pkVerifyObject. Error: Missing signature for %@:%@ in %@", userId, keyId, object[@"signatures"]);
-        *error = [NSError errorWithDomain:MXCrossSigningToolsErrorDomain
-                                     code:MXCrossSigningToolsMissingSignatureErrorCode
-                                 userInfo:@{
-                                            NSLocalizedDescriptionKey: @"Missing signature",
-                                            }];
+        if (error)
+        {
+            *error = [NSError errorWithDomain:MXCrossSigningToolsErrorDomain
+                                         code:MXCrossSigningToolsMissingSignatureErrorCode
+                                     userInfo:@{
+                                                NSLocalizedDescriptionKey: @"Missing signature",
+                                                }];
+        }
         return NO;
     }
 
