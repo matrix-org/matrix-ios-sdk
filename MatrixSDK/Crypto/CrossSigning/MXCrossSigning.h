@@ -26,11 +26,11 @@ NS_ASSUME_NONNULL_BEGIN
 
 FOUNDATION_EXPORT NSString *const MXCrossSigningErrorDomain;
 
-typedef enum : NSUInteger
+typedef NS_ENUM(NSInteger, MXCrossSigningErrorCode)
 {
     MXCrossSigningUnknownUserIdErrorCode,
     MXCrossSigningUnknownDeviceIdErrorCode,
-} MXCrossSigningErrorCode;
+};
 
 
 @class MXCrossSigning;

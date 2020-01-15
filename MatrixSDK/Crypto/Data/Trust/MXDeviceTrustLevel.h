@@ -22,7 +22,7 @@ NS_ASSUME_NONNULL_BEGIN
 /**
  The device verification state.
  */
-typedef enum : NSUInteger
+typedef NS_ENUM(NSInteger, MXDeviceVerification)
 {
     /**
      The user has not yet verified this device.
@@ -48,7 +48,7 @@ typedef enum : NSUInteger
      */
     MXDeviceUnknown
 
-} MXDeviceVerification;
+};
 
 
 /**

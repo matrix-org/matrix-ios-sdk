@@ -78,7 +78,17 @@ const struct MXCrossSigningKeyType MXCrossSigningKeyType = {
 
     MXJSONModelSetString(userId, JSONDictionary[@"user_id"]);
     MXJSONModelSetArray(usage, JSONDictionary[@"usage"]);
-    signatures = [[MXUsersDevicesMap<NSString*> alloc] initWithMap:JSONDictionary[@"signatures"]];
+
+    NSDictionary *signaturesDict;
+    MXJSONModelSetDictionary(signaturesDict, JSONDictionary[@"signatures"]);
+    if (signaturesDict)
+    {
+        signatures = [[MXUsersDevicesMap<NSString*> alloc] initWithMap:signaturesDict];
+    }
+    else
+    {
+        signatures  = [MXUsersDevicesMap<NSString*> new];
+    }
 
     NSDictionary<NSString*, NSString*> *keysDict;
     MXJSONModelSetDictionary(keysDict, JSONDictionary[@"keys"]);

@@ -27,10 +27,10 @@ NS_ASSUME_NONNULL_BEGIN
 
 FOUNDATION_EXPORT NSString *const MXCrossSigningToolsErrorDomain;
 
-typedef enum : NSUInteger
+typedef NS_ENUM(NSInteger, MXCrossSigningToolsErrorCode)
 {
     MXCrossSigningToolsMissingSignatureErrorCode,
-} MXCrossSigningToolsErrorCode;
+};
 
 
 @interface MXCrossSigningTools : NSObject
