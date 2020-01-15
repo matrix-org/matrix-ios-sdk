@@ -48,15 +48,14 @@ NSString *const MXCrossSigningErrorDomain = @"org.matrix.sdk.crosssigning";
      // We must have a storage implementation (default should be SSSS)
     NSParameterAssert(self.keysStorageDelegate);
 
-    MXCredentials *myUser = _crypto.mxSession.matrixRestClient.credentials;
-    NSString *myUserId = _crypto.mxSession.myUser.userId;
+    MXCredentials *myCreds = _crypto.mxSession.matrixRestClient.credentials;
 
     // Create keys
     NSDictionary<NSString*, NSData*> *privateKeys;
     MXCrossSigningInfo *keys = [self createKeys:&privateKeys];
 
     // Delegate the storage of them
-    [self.keysStorageDelegate saveCrossSigningKeys:self userId:myUser.userId deviceId:myUser.deviceId privateKeys:privateKeys success:^{
+    [self.keysStorageDelegate saveCrossSigningKeys:self userId:myCreds.userId deviceId:myCreds.deviceId privateKeys:privateKeys success:^{
 
         NSDictionary *signingKeys = @{
                                       @"master_key": keys.masterKeys.JSONDictionary,
@@ -69,7 +68,7 @@ NSString *const MXCrossSigningErrorDomain = @"org.matrix.sdk.crosssigning";
 
             NSDictionary *authParams = @{
                                          @"session": authSession.session,
-                                         @"user": myUserId,
+                                         @"user": myCreds.userId,
                                          @"password": password,
                                          @"type": kMXLoginFlowTypePassword
                                          };
@@ -83,7 +82,9 @@ NSString *const MXCrossSigningErrorDomain = @"org.matrix.sdk.crosssigning";
                 // Cross-signing is bootstrapped
                 self.myUserCrossSigningKeys = keys;
 
-                success();
+                // Expose this device to other users as signed by me
+                // TODO: Check if it is the right way to do so
+                [self crossSignDeviceWithDeviceId:myCreds.deviceId success:success failure:failure];
 
             } failure:failure];
 
@@ -171,11 +172,22 @@ NSString *const MXCrossSigningErrorDomain = @"org.matrix.sdk.crosssigning";
         if (!device)
         {
             NSLog(@"[MXCrossSigning] crossSignDeviceWithDeviceId: Unknown device %@", deviceId);
-            failure(nil);
+            dispatch_async(dispatch_get_main_queue(), ^{
+                // TODO
+                failure(nil);
+            });
             return;
         }
 
-        [self signDevice:device success:success failure:failure];
+        [self signDevice:device success:^{
+            dispatch_async(dispatch_get_main_queue(), ^{
+                success();
+            });
+        } failure:^(NSError *error) {
+            dispatch_async(dispatch_get_main_queue(), ^{
+                failure(error);
+            });
+        }];
     });
 }
 
@@ -186,6 +198,7 @@ NSString *const MXCrossSigningErrorDomain = @"org.matrix.sdk.crosssigning";
     // Make sure we have latest data from the user
     [self.crypto downloadKeys:@[userId] forceDownload:NO success:^(MXUsersDevicesMap<MXDeviceInfo *> *userDevices, NSDictionary<NSString *,MXCrossSigningInfo *> *crossSigningKeysMap) {
 
+        // TODO: avoid switching thread
         dispatch_async(self.crypto.cryptoQueue, ^{
             MXCrossSigningInfo *otherUserKeys = [self.crypto.store crossSigningKeysForUser:userId];
             MXCrossSigningKey *otherUserMasterKeys = otherUserKeys.masterKeys;
@@ -372,22 +385,30 @@ NSString *const MXCrossSigningErrorDomain = @"org.matrix.sdk.crosssigning";
     // Sign the device
     [self signObject:object
          withKeyType:MXCrossSigningKeyType.selfSigning
-             success:^(NSDictionary *signedObject) {
-                 // And upload the signature
-                 [self.crypto.mxSession.matrixRestClient uploadKeySignatures:@{
-                                                                               myUserId: @{
-                                                                                       device.deviceId: signedObject
-                                                                                       }
+             success:^(NSDictionary *signedObject)
+     {
+         // And upload the signature
+         [self.crypto.mxSession.matrixRestClient uploadKeySignatures:@{
+                                                                       myUserId: @{
+                                                                               device.deviceId: signedObject
                                                                                }
-                                                                     success:success
-                                                                     failure:failure];
-             }
-             failure:failure];
+                                                                       }
+                                                             success:^
+          {
+              // Refresh data locally before returning
+              // TODO: This network request is suboptimal. We could update data in the store directly
+              [self.crypto.deviceList downloadKeys:@[myUserId] forceDownload:YES success:^(MXUsersDevicesMap<MXDeviceInfo *> *usersDevicesInfoMap, NSDictionary<NSString *,MXCrossSigningInfo *> *crossSigningKeysMap) {
+                  success();
+              } failure:failure];
+
+          } failure:failure];
+
+     } failure:failure];
 }
 
 - (void)signKey:(MXCrossSigningKey*)key
-           success:(void (^)(void))success
-           failure:(void (^)(NSError *error))failure
+        success:(void (^)(void))success
+        failure:(void (^)(NSError *error))failure
 {
     // Sign the other user key
     [self signObject:key.signalableJSONDictionary

@@ -328,6 +328,8 @@
 
 // - Create Alice & Bob account
 // - Bootstrap cross-singing on Alice using password
+// -> Cross-signing must be bootstrapped
+// -> Alice must see their device trusted
 - (void)testBootstrapWithPassword
 {
     // - Create Alice & Bob account
@@ -339,7 +341,16 @@
         aliceSession.crypto.crossSigning.keysStorageDelegate = self;
         [aliceSession.crypto.crossSigning bootstrapWithPassword:MXTESTS_ALICE_PWD success:^{
 
+            // -> Cross-signing must be bootstrapped
             XCTAssertTrue(aliceSession.crypto.crossSigning.isBootstrapped);
+
+            // -> Alice must see their device trusted
+            MXDeviceTrustLevel *aliceDevice1Trust = [aliceSession.crypto deviceTrustLevelForDevice:aliceSession.matrixRestClient.credentials.deviceId ofUser:aliceSession.matrixRestClient.credentials.userId];
+            XCTAssertNotNil(aliceDevice1Trust);
+            XCTAssertTrue(aliceDevice1Trust.isVerified);
+            XCTAssertEqual(aliceDevice1Trust.localVerificationStatus, MXDeviceVerified);
+            XCTAssertTrue(aliceDevice1Trust.isCrossSigningVerified);
+
             [expectation fulfill];
 
         } failure:^(NSError *error) {
@@ -530,7 +541,7 @@
 // -> Check bob sees their user-signing signature on alice's master key
 // -> Check bob trust alice as a user
 // -> Check bob trust bob as a user
-// -> Check bob trusts now alice devices
+// -> Check bob trusts now all alice devices
 - (void)testSignUser
 {
     // - Set up the scenario with 2 bootstrapped accounts
@@ -558,6 +569,11 @@
             XCTAssertNotNil(aliceDevice0Trust);
             XCTAssertTrue(aliceDevice0Trust.isCrossSigningVerified);
             XCTAssertTrue(aliceDevice0Trust.isVerified);
+
+            MXDeviceTrustLevel *aliceDevice1Trust = [bobSession.crypto deviceTrustLevelForDevice:alice1Session.matrixRestClient.credentials.deviceId ofUser:alice0Creds.userId];
+            XCTAssertNotNil(aliceDevice1Trust);
+            XCTAssertTrue(aliceDevice1Trust.isCrossSigningVerified);
+            XCTAssertTrue(aliceDevice1Trust.isVerified);
 
             [expectation fulfill];
         } failure:^(NSError *error) {
