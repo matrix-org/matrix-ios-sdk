@@ -220,10 +220,6 @@ NSString *const MXCrossSigningErrorDomain = @"org.matrix.sdk.crosssigning";
 
             [self signKey:otherUserMasterKeys success:^{
 
-                // Update trust for other user
-                [otherUserKeys updateTrustLevel:[MXUserTrustLevel trustLevelWithCrossSigningVerified:YES]];
-                [self.crypto.store storeCrossSigningKeys:otherUserKeys];
-
                 // Update other user's devices trust
                 [self checkTrustLevelForDevicesOfUser:userId];
 
@@ -413,16 +409,24 @@ NSString *const MXCrossSigningErrorDomain = @"org.matrix.sdk.crosssigning";
     // Sign the other user key
     [self signObject:key.signalableJSONDictionary
          withKeyType:MXCrossSigningKeyType.userSigning
-             success:^(NSDictionary *signedObject) {
-                 // And upload the signature
-                 [self.crypto.mxSession.matrixRestClient uploadKeySignatures:@{
-                                                                               key.userId: @{
-                                                                                       key.keys: signedObject
-                                                                                       }
+             success:^(NSDictionary *signedObject)
+     {
+         // And upload the signature
+         [self.crypto.mxSession.matrixRestClient uploadKeySignatures:@{
+                                                                       key.userId: @{
+                                                                               key.keys: signedObject
                                                                                }
-                                                                     success:success
-                                                                     failure:failure];
-             }
+                                                                       }
+                                                             success:^
+          {
+              // Refresh data locally before returning
+              // TODO: This network request is suboptimal. We could update data in the store directly
+              [self.crypto.deviceList downloadKeys:@[key.userId] forceDownload:YES success:^(MXUsersDevicesMap<MXDeviceInfo *> *usersDevicesInfoMap, NSDictionary<NSString *,MXCrossSigningInfo *> *crossSigningKeysMap) {
+                  success();
+              } failure:failure];
+
+          } failure:failure];
+     }
              failure:failure];
 }
 
