@@ -28,7 +28,8 @@ FOUNDATION_EXPORT NSString *const MXCrossSigningErrorDomain;
 
 typedef enum : NSUInteger
 {
-    MXCrossSigningUnknownErrorCode,
+    MXCrossSigningUnknownUserIdErrorCode,
+    MXCrossSigningUnknownDeviceIdErrorCode,
 } MXCrossSigningErrorCode;
 
 

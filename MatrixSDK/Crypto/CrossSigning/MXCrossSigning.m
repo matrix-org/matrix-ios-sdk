@@ -164,8 +164,11 @@ NSString *const MXCrossSigningErrorDomain = @"org.matrix.sdk.crosssigning";
                             success:(void (^)(void))success
                             failure:(void (^)(NSError *error))failure
 {
-    dispatch_async(_crypto.cryptoQueue, ^{
-        NSString *myUserId = self.crypto.mxSession.myUser.userId;
+    NSString *myUserId = self.crypto.mxSession.myUser.userId;
+
+    // Make sure we have latest data from the user
+    [self.crypto.deviceList downloadKeys:@[myUserId] forceDownload:NO success:^(MXUsersDevicesMap<MXDeviceInfo *> *userDevices, NSDictionary<NSString *,MXCrossSigningInfo *> *crossSigningKeysMap) {
+
         MXDeviceInfo *device = [self.crypto.store deviceWithDeviceId:deviceId forUser:myUserId];
 
         // Sanity check
@@ -173,8 +176,12 @@ NSString *const MXCrossSigningErrorDomain = @"org.matrix.sdk.crosssigning";
         {
             NSLog(@"[MXCrossSigning] crossSignDeviceWithDeviceId: Unknown device %@", deviceId);
             dispatch_async(dispatch_get_main_queue(), ^{
-                // TODO
-                failure(nil);
+                NSError *error = [NSError errorWithDomain:MXCrossSigningErrorDomain
+                                                     code:MXCrossSigningUnknownDeviceIdErrorCode
+                                                 userInfo:@{
+                                                            NSLocalizedDescriptionKey: @"Unknown device",
+                                                            }];
+                failure(error);
             });
             return;
         }
@@ -188,7 +195,7 @@ NSString *const MXCrossSigningErrorDomain = @"org.matrix.sdk.crosssigning";
                 failure(error);
             });
         }];
-    });
+    } failure:failure];
 }
 
 - (void)signUserWithUserId:(NSString*)userId
@@ -196,42 +203,39 @@ NSString *const MXCrossSigningErrorDomain = @"org.matrix.sdk.crosssigning";
                    failure:(void (^)(NSError *error))failure
 {
     // Make sure we have latest data from the user
-    [self.crypto downloadKeys:@[userId] forceDownload:NO success:^(MXUsersDevicesMap<MXDeviceInfo *> *userDevices, NSDictionary<NSString *,MXCrossSigningInfo *> *crossSigningKeysMap) {
+    [self.crypto.deviceList downloadKeys:@[userId] forceDownload:NO success:^(MXUsersDevicesMap<MXDeviceInfo *> *userDevices, NSDictionary<NSString *,MXCrossSigningInfo *> *crossSigningKeysMap) {
 
-        // TODO: avoid switching thread
-        dispatch_async(self.crypto.cryptoQueue, ^{
-            MXCrossSigningInfo *otherUserKeys = [self.crypto.store crossSigningKeysForUser:userId];
-            MXCrossSigningKey *otherUserMasterKeys = otherUserKeys.masterKeys;
+        MXCrossSigningInfo *otherUserKeys = [self.crypto.store crossSigningKeysForUser:userId];
+        MXCrossSigningKey *otherUserMasterKeys = otherUserKeys.masterKeys;
 
-            // Sanity check
-            if (!otherUserMasterKeys)
-            {
-                NSLog(@"[MXCrossSigning] signUserWithUserId: User %@ unknown locally", userId);
-                dispatch_async(dispatch_get_main_queue(), ^{
-                    NSError *error = [NSError errorWithDomain:MXCrossSigningErrorDomain
-                                                         code:MXCrossSigningUnknownErrorCode
-                                                     userInfo:@{
-                                                                NSLocalizedDescriptionKey: @"Unknown user",
-                                                                }];
-                    failure(error);
-                });
-                return;
-            }
+        // Sanity check
+        if (!otherUserMasterKeys)
+        {
+            NSLog(@"[MXCrossSigning] signUserWithUserId: User %@ unknown locally", userId);
+            dispatch_async(dispatch_get_main_queue(), ^{
+                NSError *error = [NSError errorWithDomain:MXCrossSigningErrorDomain
+                                                     code:MXCrossSigningUnknownUserIdErrorCode
+                                                 userInfo:@{
+                                                            NSLocalizedDescriptionKey: @"Unknown user",
+                                                            }];
+                failure(error);
+            });
+            return;
+        }
 
-            [self signKey:otherUserMasterKeys success:^{
+        [self signKey:otherUserMasterKeys success:^{
 
-                // Update other user's devices trust
-                [self checkTrustLevelForDevicesOfUser:userId];
+            // Update other user's devices trust
+            [self checkTrustLevelForDevicesOfUser:userId];
 
-                dispatch_async(dispatch_get_main_queue(), ^{
-                    success();
-                });
-            } failure:^(NSError *error) {
-                dispatch_async(dispatch_get_main_queue(), ^{
-                    failure(error);
-                });
-            }];
-        });
+            dispatch_async(dispatch_get_main_queue(), ^{
+                success();
+            });
+        } failure:^(NSError *error) {
+            dispatch_async(dispatch_get_main_queue(), ^{
+                failure(error);
+            });
+        }];
 
     } failure:failure];
 }
