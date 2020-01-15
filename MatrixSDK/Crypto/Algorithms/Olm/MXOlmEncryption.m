@@ -78,7 +78,7 @@
                     continue;
                 }
 
-                if (device.verified == MXDeviceBlocked)
+                if (device.trustLevel.localVerificationStatus == MXDeviceBlocked)
                 {
                     // Don't bother setting up sessions with blocked users
                     continue;

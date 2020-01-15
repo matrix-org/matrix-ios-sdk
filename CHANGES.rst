@@ -11,7 +11,8 @@ Bug fix:
  * MXCryptoStore does not store device.algorithm (https://github.com/vector-im/riot-ios/issues/2896).
 
 API break:
- * MXCrypto: the downloadKeys method now returns users cross-signing keys.
+ * MXCrypto: the `downloadKeys` method now returns users cross-signing keys.
+ * MXDeviceInfo: the `verified` property has been replaced by `trustLevel`.
 
 Changes in Matrix iOS SDK in 0.15.2 (2019-12-05)
 ===============================================

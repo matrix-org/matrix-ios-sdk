@@ -24,6 +24,9 @@
 #import "MXCrossSigningInfo_Private.h"
 #import "MXCrossSigningTools.h"
 
+#import "MXFileStore.h"
+#import "MXNoStore.h"
+
 
 // Do not bother with retain cycles warnings in tests
 #pragma clang diagnostic push
@@ -103,33 +106,43 @@
 // - Create Alice & Bob account
 // - Bootstrap cross-singing on Alice using password
 - (void)doTestWithBobAndBootstrappedAlice:(XCTestCase*)testCase
-                  readyToTest:(void (^)(MXSession *bobSession, MXSession *aliceSession, XCTestExpectation *expectation))readyToTest
+                  readyToTest:(void (^)(MXSession *bobSession, MXSession *aliceSession, NSString *roomId, XCTestExpectation *expectation))readyToTest
 {
     // - Create Alice & Bob account
-    [matrixSDKTestsE2EData doE2ETestWithBobAndAlice:testCase readyToTest:^(MXSession *bobSession, MXSession *aliceSession, XCTestExpectation *expectation) {
+    [matrixSDKTestsE2EData doE2ETestWithAliceAndBobInARoom:testCase
+                                                cryptedBob:YES
+                                       warnOnUnknowDevices:YES
+                                                aliceStore:[[MXNoStore alloc] init]
+                                                  bobStore:[[MXNoStore alloc] init]
+                                               readyToTest:^(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation)
+     {
+         // - Bootstrap cross-singing on Alice using password
+         aliceSession.crypto.crossSigning.keysStorageDelegate = self;
+         [aliceSession.crypto.crossSigning bootstrapWithPassword:MXTESTS_ALICE_PWD success:^{
 
-        // - Bootstrap cross-singing on Alice using password
-        aliceSession.crypto.crossSigning.keysStorageDelegate = self;
-        [aliceSession.crypto.crossSigning bootstrapWithPassword:MXTESTS_ALICE_PWD success:^{
+             readyToTest(bobSession, aliceSession, roomId, expectation);
 
-            readyToTest(bobSession, aliceSession, expectation);
-
-        } failure:^(NSError *error) {
-            XCTFail(@"Cannot set up intial test conditions - error: %@", error);
-            [expectation fulfill];
-        }];
-    }];
+         } failure:^(NSError *error) {
+             XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+             [expectation fulfill];
+         }];
+     }];
 }
 
 // - Create Alice & Bob account
 // - Log Alice on a new device (alice1)
 // - Bootstrap cross-siging from alice1
 - (void)doTestWithBobAndBootstrappedAliceWithTwoDevices:(XCTestCase*)testCase
-                  readyToTest:(void (^)(MXSession *bobSession, MXSession *alice1Session, MXCredentials *alice0Creds, XCTestExpectation *expectation))readyToTest
+                  readyToTest:(void (^)(MXSession *bobSession, MXSession *alice1Session, NSString *roomId, MXCredentials *alice0Creds, XCTestExpectation *expectation))readyToTest
 {
     // - Create Alice & Bob account
-    [matrixSDKTestsE2EData doE2ETestWithBobAndAlice:testCase readyToTest:^(MXSession *bobSession, MXSession *alice0Session, XCTestExpectation *expectation) {
-
+    [matrixSDKTestsE2EData doE2ETestWithAliceAndBobInARoom:testCase
+                                                cryptedBob:YES
+                                       warnOnUnknowDevices:YES
+                                                aliceStore:[[MXNoStore alloc] init]
+                                                  bobStore:[[MXNoStore alloc] init]
+                                               readyToTest:^(MXSession *alice0Session, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation)
+     {
         MXCredentials *alice0Creds = alice0Session.matrixRestClient.credentials;
 
         // - Log Alice on a new device
@@ -141,7 +154,7 @@
             alice1Session.crypto.crossSigning.keysStorageDelegate = self;
             [alice1Session.crypto.crossSigning bootstrapWithPassword:MXTESTS_ALICE_PWD success:^{
 
-                readyToTest(bobSession, alice1Session, alice0Creds, expectation);
+                readyToTest(bobSession, alice1Session, roomId, alice0Creds, expectation);
 
             } failure:^(NSError *error) {
                 XCTFail(@"Cannot set up intial test conditions - error: %@", error);
@@ -156,10 +169,10 @@
 // - Alice 2nd device cross-signs the 1st one
 // - Bootstrap cross-siging for bob
 - (void)doBootstrappedTestBobAndAliceWithTwoDevices:(XCTestCase*)testCase
-                                        readyToTest:(void (^)(MXSession *bobSession, MXSession *alice1Session, MXCredentials *alice0Creds, XCTestExpectation *expectation))readyToTest
+                                        readyToTest:(void (^)(MXSession *bobSession, MXSession *alice1Session, NSString *roomId, MXCredentials *alice0Creds, XCTestExpectation *expectation))readyToTest
 {
     // - Create Alice with 2 devices & Bob account
-    [self doTestWithBobAndBootstrappedAliceWithTwoDevices:testCase readyToTest:^(MXSession *bobSession, MXSession *alice1Session, MXCredentials *alice0Creds, XCTestExpectation *expectation) {
+    [self doTestWithBobAndBootstrappedAliceWithTwoDevices:testCase readyToTest:^(MXSession *bobSession, MXSession *alice1Session, NSString *roomId, MXCredentials *alice0Creds, XCTestExpectation *expectation) {
 
         // - Alice 2nd device cross-signs the 1st one
         [alice1Session.crypto downloadKeys:@[alice0Creds.userId] forceDownload:NO success:^(MXUsersDevicesMap<MXDeviceInfo *> *usersDevicesInfoMap, NSDictionary<NSString *,MXCrossSigningInfo *> *crossSigningKeysMap) {
@@ -170,7 +183,7 @@
                 bobSession.crypto.crossSigning.keysStorageDelegate = self;
                 [bobSession.crypto.crossSigning bootstrapWithPassword:MXTESTS_BOB_PWD success:^{
 
-                    readyToTest(bobSession, alice1Session, alice0Creds, expectation);
+                    readyToTest(bobSession, alice1Session, roomId, alice0Creds, expectation);
 
                 } failure:^(NSError *error) {
                     XCTFail(@"Cannot set up intial test conditions - error: %@", error);
@@ -188,6 +201,27 @@
         }];
     }];
 }
+
+// - Set up the scenario with 2 bootstrapped accounts
+// - bob signs alice and thus trusts all their cross-signed devices
+- (void)doBootstrappedTestBobTrustingAliceWithTwoDevices:(XCTestCase*)testCase
+                                             readyToTest:(void (^)(MXSession *bobSession, MXSession *alice1Session, NSString *roomId, MXCredentials *alice0Creds, XCTestExpectation *expectation))readyToTest
+{
+    // - Set up the scenario with 2 bootstrapped accounts
+    [self doBootstrappedTestBobAndAliceWithTwoDevices:testCase readyToTest:^(MXSession *bobSession, MXSession *alice1Session, NSString *roomId, MXCredentials *alice0Creds, XCTestExpectation *expectation) {
+
+        // - bob signs alice
+        [bobSession.crypto.crossSigning signUserWithUserId:alice0Creds.userId success:^{
+
+            readyToTest(bobSession, alice1Session, roomId, alice0Creds, expectation);
+
+        } failure:^(NSError *error) {
+            XCTFail(@"The operation should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+    }];
+}
+
 
 #pragma mark - Tests
 
@@ -367,7 +401,7 @@
 - (void)testKeysDownloadCSAPIs
 {
     // - Set up the scenario with Alice with cross-signing keys
-    [self doTestWithBobAndBootstrappedAlice:self readyToTest:^(MXSession *bobSession, MXSession *aliceSession, XCTestExpectation *expectation) {
+    [self doTestWithBobAndBootstrappedAlice:self readyToTest:^(MXSession *bobSession, MXSession *aliceSession, NSString *roomId, XCTestExpectation *expectation) {
 
         NSString *aliceUserId = aliceSession.matrixRestClient.credentials.userId;
         NSString *aliceDeviceId = aliceSession.matrixRestClient.credentials.deviceId;
@@ -414,7 +448,7 @@
 - (void)testMXCryptoDownloadKeys
 {
     // - Set up the scenario with alice with cross-signing keys
-    [self doTestWithBobAndBootstrappedAlice:self readyToTest:^(MXSession *bobSession, MXSession *aliceSession, XCTestExpectation *expectation) {
+    [self doTestWithBobAndBootstrappedAlice:self readyToTest:^(MXSession *bobSession, MXSession *aliceSession, NSString *roomId, XCTestExpectation *expectation) {
         NSString *aliceUserId = aliceSession.matrixRestClient.credentials.userId;
 
         // - Make Bob fetch Alice's cross-signing keys
@@ -489,7 +523,7 @@
 - (void)testCrossSignDevice1
 {
     // - Set up the scenario with alice with 2 devices (cross-signing is enabled on the 2nd device)
-    [self doTestWithBobAndBootstrappedAliceWithTwoDevices:self readyToTest:^(MXSession *bobSession, MXSession *alice1Session, MXCredentials *alice0Creds, XCTestExpectation *expectation) {
+    [self doTestWithBobAndBootstrappedAliceWithTwoDevices:self readyToTest:^(MXSession *bobSession, MXSession *alice1Session, NSString *roomId, MXCredentials *alice0Creds, XCTestExpectation *expectation) {
 
         NSString *aliceUserId = alice0Creds.userId;
 
@@ -527,7 +561,7 @@
 - (void)testCrossSignDevice2
 {
     // - Set up the scenario with alice with 2 devices (cross-signing is enabled on the 2nd device)
-    [self doTestWithBobAndBootstrappedAliceWithTwoDevices:self readyToTest:^(MXSession *bobSession, MXSession *alice1Session, MXCredentials *alice0Creds, XCTestExpectation *expectation) {
+    [self doTestWithBobAndBootstrappedAliceWithTwoDevices:self readyToTest:^(MXSession *bobSession, MXSession *alice1Session, NSString *roomdId, MXCredentials *alice0Creds, XCTestExpectation *expectation) {
 
         [alice1Session.crypto setDeviceVerification:MXDeviceVerified forDevice:alice0Creds.deviceId ofUser:alice0Creds.userId success:^{
 
@@ -553,7 +587,7 @@
 - (void)testSignUser1
 {
     // - Set up the scenario with 2 bootstrapped accounts
-    [self doBootstrappedTestBobAndAliceWithTwoDevices:self readyToTest:^(MXSession *bobSession, MXSession *alice1Session, MXCredentials *alice0Creds, XCTestExpectation *expectation) {
+    [self doBootstrappedTestBobAndAliceWithTwoDevices:self readyToTest:^(MXSession *bobSession, MXSession *alice1Session, NSString *roomdId, MXCredentials *alice0Creds, XCTestExpectation *expectation) {
 
         NSString *bobUserId = bobSession.myUser.userId;
 
@@ -606,7 +640,7 @@
 - (void)testSignUser2
 {
     // - Set up the scenario with 2 bootstrapped accounts
-    [self doBootstrappedTestBobAndAliceWithTwoDevices:self readyToTest:^(MXSession *bobSession, MXSession *alice1Session, MXCredentials *alice0Creds, XCTestExpectation *expectation) {
+    [self doBootstrappedTestBobAndAliceWithTwoDevices:self readyToTest:^(MXSession *bobSession, MXSession *alice1Session, NSString *roomId, MXCredentials *alice0Creds, XCTestExpectation *expectation) {
 
         // - Check trust before
         MXDeviceTrustLevel *aliceDevice0TrustBefore = [bobSession.crypto deviceTrustLevelForDevice:alice0Creds.deviceId ofUser:alice0Creds.userId];
@@ -639,6 +673,107 @@
             [expectation fulfill];
         } failure:^(NSError *error) {
             XCTFail(@"The operation should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+    }];
+}
+
+
+// Sending message in a room where users are trusted and device cross-signed must work with no effort
+// - Set up the scenario with 2 bootstrapped accounts with 3 (cross-signed) devices
+// - Bob sends a message
+// -> This just must work
+- (void)testMessageSendInACrossSignedWorld
+{
+    // - Set up the scenario with 2 bootstrapped accounts with 3 (cross-signed) devices
+    [self doBootstrappedTestBobTrustingAliceWithTwoDevices:self readyToTest:^(MXSession *bobSession, MXSession *alice1Session, NSString *roomId, MXCredentials *alice0Creds, XCTestExpectation *expectation) {
+
+        // - Bob sends a message
+        MXRoom *roomFromBobPOV = [bobSession roomWithRoomId:roomId];
+        [roomFromBobPOV sendTextMessage:@"An e2e message" success:^(NSString *eventId) {
+
+            // -> This just must work
+            [expectation fulfill];
+
+        } failure:^(NSError *error) {
+            XCTFail(@"The operation should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+    }];
+}
+
+
+// Non regression test: If bob does not trust alice, sending message to her must fail.
+// - Set up the scenario with 2 bootstrapped accounts but not trusted
+// - Bob sends a message
+// -> This must fail because of 2 unknown devices
+- (void)testMessageSendToNotTrustedUser
+{
+    // - Set up the scenario with 2 bootstrapped accounts but not trusted
+    [self doBootstrappedTestBobAndAliceWithTwoDevices:self readyToTest:^(MXSession *bobSession, MXSession *alice1Session, NSString *roomId, MXCredentials *alice0Creds, XCTestExpectation *expectation) {
+
+        // - Bob sends a message
+        MXRoom *roomFromBobPOV = [bobSession roomWithRoomId:roomId];
+        [roomFromBobPOV sendTextMessage:@"An e2e message" success:^(NSString *eventId) {
+
+            XCTFail(@"The operation must fail");
+            [expectation fulfill];
+
+        } failure:^(NSError *error) {
+            // -> This must fail because of 2 unknown devices
+            XCTAssertEqualObjects(error.domain, MXEncryptingErrorDomain);
+            XCTAssertEqual(error.code, MXEncryptingErrorUnknownDeviceCode);
+
+            MXUsersDevicesMap<MXDeviceInfo *> *unknownDevices = error.userInfo[MXEncryptingErrorUnknownDeviceDevicesKey];
+            XCTAssertEqual(unknownDevices.count, 2);
+
+            [expectation fulfill];
+        }];
+    }];
+}
+
+// Non regression test: If bob trusts alice but alice has a non cross-signed message, sending message to her must fail.
+// - Set up the scenario with 2 bootstrapped accounts but not trusted and not cross-signed devices
+// - Bob trusts Alice
+// - Bob sends a message
+// -> This must fail because of 1 unknown device (the uncross-signed device)
+- (void)testMessageSendToNotCrossSignedDevices
+{
+    // - Set up the scenario with 2 bootstrapped accounts but not trusted and not cross-signed devices
+    [self doTestWithBobAndBootstrappedAliceWithTwoDevices:self readyToTest:^(MXSession *bobSession, MXSession *alice1Session, NSString *roomId, MXCredentials *alice0Creds, XCTestExpectation *expectation) {
+
+        // - Bootstrap cross-siging for bob
+        bobSession.crypto.crossSigning.keysStorageDelegate = self;
+        [bobSession.crypto.crossSigning bootstrapWithPassword:MXTESTS_BOB_PWD success:^{
+
+            // - Bob trusts Alice
+            [bobSession.crypto.crossSigning signUserWithUserId:alice0Creds.userId success:^{
+
+                // - Bob sends a message
+                MXRoom *roomFromBobPOV = [bobSession roomWithRoomId:roomId];
+                [roomFromBobPOV sendTextMessage:@"An e2e message" success:^(NSString *eventId) {
+
+                    XCTFail(@"The operation must fail");
+                    [expectation fulfill];
+
+                } failure:^(NSError *error) {
+                    // -> This must fail because of 1 unknown device (the uncross-signed device)
+                    XCTAssertEqualObjects(error.domain, MXEncryptingErrorDomain);
+                    XCTAssertEqual(error.code, MXEncryptingErrorUnknownDeviceCode);
+
+                    MXUsersDevicesMap<MXDeviceInfo *> *unknownDevices = error.userInfo[MXEncryptingErrorUnknownDeviceDevicesKey];
+                    XCTAssertEqual(unknownDevices.count, 1);
+
+                    [expectation fulfill];
+                }];
+
+            } failure:^(NSError *error) {
+                XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                [expectation fulfill];
+            }];
+
+        } failure:^(NSError *error) {
+            XCTFail(@"Cannot set up intial test conditions - error: %@", error);
             [expectation fulfill];
         }];
     }];

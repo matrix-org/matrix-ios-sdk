@@ -86,13 +86,6 @@
  */
  @property (nonatomic, readonly) MXDeviceTrustLevel *trustLevel;
 
-/**
- Local verification state of this device.
- Shorcut to self.trustLevel.localVerification
- */
-@property (nonatomic, readonly) MXDeviceVerification verified;
-
-
 #pragma mark - Instance methods
 /**
  Same as the parent [MXJSONModel JSONDictionary] but return only

@@ -775,7 +775,7 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
             return;
         }
 
-        if (device.verified != verificationStatus)
+        if (device.trustLevel.localVerificationStatus != verificationStatus)
         {
             MXDeviceTrustLevel *trustLevel = [MXDeviceTrustLevel trustLevelWithLocalVerificationStatus:verificationStatus
                                                                      crossSigningVerified:device.trustLevel.isCrossSigningVerified];
@@ -826,7 +826,7 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
             {
                 MXDeviceInfo *device = [devices objectForDevice:deviceID forUser:userId];
 
-                if (device.verified == MXDeviceUnknown)
+                if (device.trustLevel.localVerificationStatus == MXDeviceUnknown)
                 {
                     MXDeviceTrustLevel *trustLevel =
                     [MXDeviceTrustLevel trustLevelWithLocalVerificationStatus:MXDeviceUnverified
@@ -1583,7 +1583,7 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
                 continue;
             }
 
-            if (device.verified == MXDeviceBlocked) {
+            if (device.trustLevel.localVerificationStatus == MXDeviceBlocked) {
                 // Don't bother setting up sessions with blocked users
                 continue;
             }
