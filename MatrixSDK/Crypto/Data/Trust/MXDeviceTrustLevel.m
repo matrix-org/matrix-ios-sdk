@@ -25,7 +25,6 @@
     {
         _localVerificationStatus = MXDeviceUnknown;
         _isCrossSigningVerified = NO;
-        _trustOnFirstUse = NO;
     }
     return self;
 }
@@ -73,7 +72,7 @@
 
 - (NSString *)description
 {
-    return [NSString stringWithFormat:@"MXDeviceTrustLevel: local: %@ - cross-signing: %@ - firstUse: %@",  @(_localVerificationStatus), @(_isCrossSigningVerified), @(_trustOnFirstUse)];
+    return [NSString stringWithFormat:@"MXDeviceTrustLevel: local: %@ - cross-signing: %@",  @(_localVerificationStatus), @(_isCrossSigningVerified)];
 }
 
 
@@ -86,7 +85,6 @@
     {
         _localVerificationStatus = [(NSNumber*)[aDecoder decodeObjectForKey:@"localVerificationStatus"] unsignedIntegerValue];
         _isCrossSigningVerified = [aDecoder decodeBoolForKey:@"isCrossSigningVerified"];
-        _trustOnFirstUse = [aDecoder decodeBoolForKey:@"trustOnFirstUse"];
     }
     return self;
 }
@@ -95,7 +93,6 @@
 {
     [aCoder encodeObject:@(_localVerificationStatus) forKey:@"localVerificationStatus"];
     [aCoder encodeBool:_isCrossSigningVerified forKey:@"isCrossSigningVerified"];
-    [aCoder encodeBool:_trustOnFirstUse forKey:@"trustOnFirstUse"];
 }
 
 @end

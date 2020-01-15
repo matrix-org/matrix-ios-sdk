@@ -72,12 +72,6 @@ typedef enum : NSUInteger
 @property (nonatomic, readonly) MXDeviceVerification localVerificationStatus;
 @property (nonatomic, readonly) BOOL isLocallyVerified;
 
-/**
- YES if this device is trusted from a user's key  that is trusted on first use.
- */
-// TODO: What is this?
-@property (nonatomic) BOOL trustOnFirstUse;
-
 @end
 
 
