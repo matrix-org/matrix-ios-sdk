@@ -116,7 +116,7 @@ static NSArray<MXEventTypeString> *kMXDeviceVerificationManagerDMEventTypes;
             observer = nil;
 
             MXKeyVerificationRequest *request = [self verificationRequestInDMEvent:event];
-            request.state = MXKeyVerificationRequestStatePending;
+            [request updateState:MXKeyVerificationRequestStatePending notifiy:YES];
             [self addPendingRequest:request notify:NO];
 
             success(request);
@@ -783,8 +783,12 @@ static NSArray<MXEventTypeString> *kMXDeviceVerificationManagerDMEventTypes;
                                              code:MXDeviceVerificationUnknownRoomCode
                                          userInfo:@{
                                                     NSLocalizedDescriptionKey: [NSString stringWithFormat:@"Unknown room: %@", roomId]
+        
                                                     }];
-        failure(error);
+        if (failure)
+        {
+            failure(error);
+        }
         return nil;
     }
 
@@ -798,7 +802,10 @@ static NSArray<MXEventTypeString> *kMXDeviceVerificationManagerDMEventTypes;
     [eventContent removeObjectForKey:@"transaction_id"];
 
     return [room sendEventOfType:eventType content:eventContent localEcho:nil success:^(NSString *eventId) {
-        success();
+        if (success)
+        {
+            success();
+        }
     } failure:failure];
 }
 
@@ -996,7 +1003,7 @@ static NSArray<MXEventTypeString> *kMXDeviceVerificationManagerDMEventTypes;
         if ([self isRequestStillPending:request])
         {
             NSLog(@"[MXKeyVerificationRequest] checkTimeouts: timeout %@", request);
-            [request cancelWithCancelCode:MXTransactionCancelCode.timeout];
+            [request cancelWithCancelCode:MXTransactionCancelCode.timeout success:nil failure:nil];
         }
     }
 }

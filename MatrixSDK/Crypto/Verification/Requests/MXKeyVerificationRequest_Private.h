@@ -38,7 +38,8 @@
                         manager:(MXDeviceVerificationManager*)manager;
 
 @property (nonatomic) BOOL isFromMyUser;
-@property (nonatomic) MXKeyVerificationRequestState state;
+
+- (void)updateState:(MXKeyVerificationRequestState)state notifiy:(BOOL)notify;
 
 - (void)handleStart:(MXKeyVerificationStart*)startContent;
 - (void)handleCancel:(MXKeyVerificationCancel*)cancelContent;
