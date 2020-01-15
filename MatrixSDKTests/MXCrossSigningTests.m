@@ -482,38 +482,99 @@
     }];
 }
 
-// Test cross-sign of a device
+// Test cross-sign of a device (as seen HS side)
 // - Set up the scenario with alice with 2 devices (cross-signing is enabled on the 2nd device)
-// - Make alice 2nd device cross-signs the 1st one
 // - Download alice devices
 // -> the 1st device must appear as cross-signed
-- (void)testCrossSignDevice
+- (void)testCrossSignDevice1
 {
     // - Set up the scenario with alice with 2 devices (cross-signing is enabled on the 2nd device)
     [self doTestWithBobAndBootstrappedAliceWithTwoDevices:self readyToTest:^(MXSession *bobSession, MXSession *alice1Session, MXCredentials *alice0Creds, XCTestExpectation *expectation) {
 
         NSString *aliceUserId = alice0Creds.userId;
 
-        // - Make alice 2nd device cross-signs the 1st one
-        [alice1Session.crypto downloadKeys:@[aliceUserId] forceDownload:NO success:^(MXUsersDevicesMap<MXDeviceInfo *> *usersDevicesInfoMap, NSDictionary<NSString *,MXCrossSigningInfo *> *crossSigningKeysMap) {
+        [alice1Session.crypto setDeviceVerification:MXDeviceVerified forDevice:alice0Creds.deviceId ofUser:alice0Creds.userId success:^{
 
-            [alice1Session.crypto setDeviceVerification:MXDeviceVerified forDevice:alice0Creds.deviceId ofUser:alice0Creds.userId success:^{
+            // - Download alice devices
+            [alice1Session.crypto downloadKeys:@[aliceUserId] forceDownload:YES success:^(MXUsersDevicesMap<MXDeviceInfo *> *usersDevicesInfoMap, NSDictionary<NSString *,MXCrossSigningInfo *> *crossSigningKeysMap) {
 
-                // - Download alice devices
-                [alice1Session.crypto downloadKeys:@[aliceUserId] forceDownload:YES success:^(MXUsersDevicesMap<MXDeviceInfo *> *usersDevicesInfoMap, NSDictionary<NSString *,MXCrossSigningInfo *> *crossSigningKeysMap) {
+                // -> the 1st device must appear as cross-signed
+                MXDeviceInfo *aliceDevice0 = [usersDevicesInfoMap objectForDevice:alice0Creds.deviceId forUser:aliceUserId];
+                XCTAssertNotNil(aliceDevice0);
 
-                    // -> the 1st device must appear as cross-signed
-                    MXDeviceInfo *aliceDevice0 = [usersDevicesInfoMap objectForDevice:alice0Creds.deviceId forUser:aliceUserId];
-                    XCTAssertNotNil(aliceDevice0);
+                NSDictionary *signatures = aliceDevice0.signatures[aliceUserId];
+                XCTAssertNotNil(signatures);
+                XCTAssertEqual(signatures.count, 2);    // 2 = device own signature + signature from the SSK
 
-                    NSDictionary *signatures = aliceDevice0.signatures[aliceUserId];
-                    XCTAssertNotNil(signatures);
-                    XCTAssertEqual(signatures.count, 2);    // 2 = device own signature + signature from the SSK
+                [expectation fulfill];
 
-                    // Check trust for this device
-                    MXDeviceTrustLevel *trustLevel = [alice1Session.crypto deviceTrustLevelForDevice:alice0Creds.deviceId ofUser:alice0Creds.userId];
-                    XCTAssertNotNil(trustLevel);
-                    XCTAssertTrue(trustLevel.isCrossSigningVerified);
+            } failure:^(NSError *error) {
+                XCTFail(@"The operation should not fail - NSError: %@", error);
+                [expectation fulfill];
+            }];
+
+        } failure:^(NSError *error) {
+            XCTFail(@"The operation should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+    }];
+}
+
+// Test cross-sign of a device (as seen local side)
+// - Set up the scenario with alice with 2 devices (cross-signing is enabled on the 2nd device)
+// - Download alice devices
+// -> the 1st device must appear as cross-signed
+- (void)testCrossSignDevice2
+{
+    // - Set up the scenario with alice with 2 devices (cross-signing is enabled on the 2nd device)
+    [self doTestWithBobAndBootstrappedAliceWithTwoDevices:self readyToTest:^(MXSession *bobSession, MXSession *alice1Session, MXCredentials *alice0Creds, XCTestExpectation *expectation) {
+
+        [alice1Session.crypto setDeviceVerification:MXDeviceVerified forDevice:alice0Creds.deviceId ofUser:alice0Creds.userId success:^{
+
+            // Check trust for this device
+            MXDeviceTrustLevel *trustLevel = [alice1Session.crypto deviceTrustLevelForDevice:alice0Creds.deviceId ofUser:alice0Creds.userId];
+            XCTAssertNotNil(trustLevel);
+            XCTAssertTrue(trustLevel.isCrossSigningVerified);
+
+            [expectation fulfill];
+
+        } failure:^(NSError *error) {
+            XCTFail(@"The operation should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+    }];
+}
+
+// Test signing of a user (as seen HS side)
+// - Set up the scenario with 2 bootstrapped accounts
+// - Check trust before
+// - bob signs alice
+// -> Check bob sees their user-signing signature on alice's master key
+- (void)testSignUser1
+{
+    // - Set up the scenario with 2 bootstrapped accounts
+    [self doBootstrappedTestBobAndAliceWithTwoDevices:self readyToTest:^(MXSession *bobSession, MXSession *alice1Session, MXCredentials *alice0Creds, XCTestExpectation *expectation) {
+
+        NSString *bobUserId = bobSession.myUser.userId;
+
+        // - Check trust before
+        [bobSession.crypto downloadKeys:@[alice0Creds.userId] forceDownload:YES success:^(MXUsersDevicesMap<MXDeviceInfo *> *usersDevicesInfoMap, NSDictionary<NSString *,MXCrossSigningInfo *> *crossSigningKeysMap) {
+
+            MXCrossSigningKey *aliceMasterKeys = crossSigningKeysMap[alice0Creds.userId].masterKeys;
+            XCTAssertEqual(aliceMasterKeys.signatures.count, 1);    // = alice device signature
+
+            // - bob signs alice
+            [bobSession.crypto.crossSigning signUserWithUserId:alice0Creds.userId success:^{
+
+                // -> Check bob sees their user-signing signature on alice's master key
+                [bobSession.crypto downloadKeys:@[alice0Creds.userId] forceDownload:YES success:^(MXUsersDevicesMap<MXDeviceInfo *> *usersDevicesInfoMap, NSDictionary<NSString *,MXCrossSigningInfo *> *crossSigningKeysMap) {
+
+                    MXCrossSigningKey *aliceMasterKeys = crossSigningKeysMap[alice0Creds.userId].masterKeys;
+                    XCTAssertEqual(aliceMasterKeys.signatures.count, 2);        // = alice device signature + bob USK signature
+
+                    NSString *bobUSKSignature = [aliceMasterKeys signatureFromUserId:bobUserId withPublicKey:bobSession.crypto.crossSigning.myUserCrossSigningKeys.userSignedKeys.keys];
+
+                    XCTAssertNotNil(bobUSKSignature);
 
                     [expectation fulfill];
 
@@ -534,20 +595,20 @@
     }];
 }
 
-// Test signing of a user
+// Test signing of a user (as seen local side)
 // - Set up the scenario with 2 bootstrapped accounts
-// - Make bob know alice
+// - Check trust before
 // - bob signs alice
 // -> Check bob sees their user-signing signature on alice's master key
 // -> Check bob trust alice as a user
 // -> Check bob trust bob as a user
 // -> Check bob trusts now all alice devices
-- (void)testSignUser
+- (void)testSignUser2
 {
     // - Set up the scenario with 2 bootstrapped accounts
     [self doBootstrappedTestBobAndAliceWithTwoDevices:self readyToTest:^(MXSession *bobSession, MXSession *alice1Session, MXCredentials *alice0Creds, XCTestExpectation *expectation) {
 
-        // - Make bob know alice
+        // - Check trust before
         MXDeviceTrustLevel *aliceDevice0TrustBefore = [bobSession.crypto deviceTrustLevelForDevice:alice0Creds.deviceId ofUser:alice0Creds.userId];
         XCTAssertNil(aliceDevice0TrustBefore);
 
