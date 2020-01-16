@@ -3920,6 +3920,30 @@ MXAuthAction;
                                  }];
 }
 
+- (MXHTTPOperation*)uploadKeySignatures:(NSDictionary*)signatures
+                                success:(void (^)(void))success
+                                failure:(void (^)(NSError *error))failure
+{
+    MXWeakify(self);
+    return [httpClient requestWithMethod:@"POST"
+                                    path:[NSString stringWithFormat:@"%@/keys/signatures/upload", kMXAPIPrefixPathUnstable]
+                              parameters:signatures
+                                 success:^(NSDictionary *JSONResponse) {
+                                     MXStrongifyAndReturnIfNil(self);
+
+                                     if (success)
+                                     {
+                                         [self dispatchProcessing:nil
+                                                    andCompletion:^{
+                                                        success();
+                                                    }];
+                                     }
+                                 } failure:^(NSError *error) {
+                                     MXStrongifyAndReturnIfNil(self);
+                                     [self dispatchFailure:error inBlock:failure];
+                                 }];
+}
+
 - (MXHTTPOperation*)downloadKeysForUsers:(NSArray<NSString*>*)userIds
                                    token:(NSString *)token
                                  success:(void (^)(MXKeysQueryResponse *keysQueryResponse))success
@@ -4641,7 +4665,49 @@ MXAuthAction;
                                      [self dispatchFailure:error inBlock:failure];
                                  }];
 }
-    
+
+
+#pragma mark - Cross-Signing
+
+- (MXHTTPOperation*)authSessionToUploadDeviceSigningKeys:(void (^)(MXAuthenticationSession *authSession))success
+                                                 failure:(void (^)(NSError *error))failure
+{
+    return [self authSessionForRequestWithMethod:@"POST"
+                                            path:[NSString stringWithFormat:@"%@/keys/device_signing/upload", kMXAPIPrefixPathUnstable]
+                                      parameters:@{}
+                                         success:success
+                                         failure:failure];
+}
+
+- (MXHTTPOperation*)uploadDeviceSigningKeys:(NSDictionary *)keys
+                                 authParams:(NSDictionary*)authParameters
+                                    success:(void (^)(void))success
+                                    failure:(void (^)(NSError *error))failure
+{
+    NSMutableDictionary *parameters = [keys mutableCopy];
+    parameters[@"auth"] = authParameters;
+
+    MXWeakify(self);
+    return [httpClient requestWithMethod:@"POST"
+                                    path:[NSString stringWithFormat:@"%@/keys/device_signing/upload", kMXAPIPrefixPathUnstable]
+                              parameters:parameters
+                                 success:^(NSDictionary *JSONResponse) {
+                                     MXStrongifyAndReturnIfNil(self);
+
+                                     if (success)
+                                     {
+                                         [self dispatchProcessing:nil
+                                                    andCompletion:^{
+                                                        success();
+                                                    }];
+                                     }
+                                 } failure:^(NSError *error) {
+                                     MXStrongifyAndReturnIfNil(self);
+                                     [self dispatchFailure:error inBlock:failure];
+                                 }];
+}
+
+
 #pragma mark - Groups
 - (MXHTTPOperation*)acceptGroupInvite:(NSString*)groupId
                               success:(void (^)(void))success
@@ -4984,6 +5050,55 @@ MXAuthAction;
         });
     }
 }
+
+- (MXHTTPOperation*)authSessionForRequestWithMethod:(NSString *)httpMethod
+                                               path:(NSString *)path
+                                         parameters:(NSDictionary*)parameters
+                                            success:(void (^)(MXAuthenticationSession *authSession))success
+                                            failure:(void (^)(NSError *error))failure
+{
+    return [httpClient requestWithMethod:httpMethod
+                                    path:path
+                              parameters:parameters
+                                 success:^(NSDictionary *JSONResponse) {
+
+                                     NSLog(@"[MXRestClient] authSessionForRequestWithMethod: Warning: get an authentication session failed");
+                                     if (success)
+                                     {
+                                         [self dispatchProcessing:nil
+                                                    andCompletion:^{
+                                                        success(nil);
+                                                    }];
+                                     }
+                                 }
+                                 failure:^(NSError *error) {
+                                     __block MXAuthenticationSession *authSession;
+                                     [self dispatchProcessing:^{
+                                         if (error.userInfo[MXHTTPClientErrorResponseDataKey])
+                                         {
+                                             // The auth session should be available in response data in case of unauthorized request.
+                                             NSDictionary *JSONResponse = error.userInfo[MXHTTPClientErrorResponseDataKey];
+                                             if (JSONResponse)
+                                             {
+                                                 MXJSONModelSetMXJSONModel(authSession, MXAuthenticationSession, JSONResponse);
+                                             }
+                                         }
+                                     } andCompletion:^{
+                                         if (authSession)
+                                         {
+                                             if (success)
+                                             {
+                                                 success(authSession);
+                                             }
+                                         }
+                                         else if (failure)
+                                         {
+                                             failure(error);
+                                         }
+                                     }];
+                                 }];
+}
+
 
 
 #pragma mark - Aggregations

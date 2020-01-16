@@ -1,13 +1,18 @@
-Changes in Matrix iOS SDK in 0.15.3 (2019-xx-xx)
+Changes in Matrix iOS SDK in 0.16.0 (2019-xx-xx)
 ===============================================
 
 Improvements:
  * Make enums conform to `Equatable`/`Hashable` where applicable.
  * Aggregations: Implement m.reference aggregations, aka thread ([MSC1849](https://github.com/matrix-org/matrix-doc/blob/matthew/msc1849/proposals/1849-aggregations.md)).
+ * Cross-Signing: Add a new module, MXCrossSigning, to handle device cross-signing (vector-im/riot-ios/issues/2890).
 
 Bug fix:
  * MXEventType: Fix Swift refinement.
+ * MXCryptoStore does not store device.algorithm (https://github.com/vector-im/riot-ios/issues/2896).
 
+API break:
+ * MXCrypto: the `downloadKeys` method now returns users cross-signing keys.
+ * MXDeviceInfo: the `verified` property has been replaced by `trustLevel`.
 
 Changes in Matrix iOS SDK in 0.15.2 (2019-12-05)
 ===============================================

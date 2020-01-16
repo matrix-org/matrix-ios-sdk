@@ -193,7 +193,7 @@
     // with them, which means that they will have announced any new devices via
     // an m.new_device.
     MXWeakify(self);
-    return [crypto.deviceList downloadKeys:users forceDownload:NO success:^(MXUsersDevicesMap<MXDeviceInfo *> *devices) {
+    return [crypto.deviceList downloadKeys:users forceDownload:NO success:^(MXUsersDevicesMap<MXDeviceInfo *> *devices, NSDictionary<NSString *,MXCrossSigningInfo *> *crossSigningKeysMap) {
         MXStrongifyAndReturnIfNil(self);
 
         BOOL encryptToVerifiedDevicesOnly = self->crypto.globalBlacklistUnverifiedDevices
@@ -208,15 +208,16 @@
             {
                 MXDeviceInfo *deviceInfo = [devices objectForDevice:deviceID forUser:userId];
 
-                if (self->crypto.warnOnUnknowDevices && deviceInfo.verified == MXDeviceUnknown)
+                if (!deviceInfo.trustLevel.isVerified
+                    && self->crypto.warnOnUnknowDevices && deviceInfo.trustLevel.localVerificationStatus == MXDeviceUnknown)
                 {
                     // The device is not yet known by the user
                     [unknownDevices setObject:deviceInfo forUser:userId andDevice:deviceID];
                     continue;
                 }
 
-                if (deviceInfo.verified == MXDeviceBlocked
-                    || (deviceInfo.verified != MXDeviceVerified && encryptToVerifiedDevicesOnly))
+                if (deviceInfo.trustLevel.localVerificationStatus == MXDeviceBlocked
+                    || (!deviceInfo.trustLevel.isVerified && encryptToVerifiedDevicesOnly))
                 {
                     // Remove any blocked devices
                     NSLog(@"[MXMegolmEncryption] getDevicesInRoom: blocked device: %@", deviceInfo);

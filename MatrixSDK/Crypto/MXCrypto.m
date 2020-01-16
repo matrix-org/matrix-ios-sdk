@@ -37,6 +37,8 @@
 #import "MXIncomingRoomKeyRequestManager.h"
 
 #import "MXDeviceVerificationManager_Private.h"
+#import "MXDeviceInfo_Private.h"
+#import "MXCrossSigning_Private.h"
 
 /**
  The store to use for crypto.
@@ -742,6 +744,9 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
     return device;
 }
 
+
+#pragma mark - Local trust
+
 - (void)setDeviceVerification:(MXDeviceVerification)verificationStatus forDevice:(NSString*)deviceId ofUser:(NSString*)userId
                       success:(void (^)(void))success
                       failure:(void (^)(NSError *error))failure
@@ -764,15 +769,17 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
             if (success)
             {
                 dispatch_async(dispatch_get_main_queue(), ^{
-                    success();
+                    failure(nil);
                 });
             }
             return;
         }
 
-        if (device.verified != verificationStatus)
+        if (device.trustLevel.localVerificationStatus != verificationStatus)
         {
-            device.verified = verificationStatus;
+            MXDeviceTrustLevel *trustLevel = [MXDeviceTrustLevel trustLevelWithLocalVerificationStatus:verificationStatus
+                                                                     crossSigningVerified:device.trustLevel.isCrossSigningVerified];
+            [device updateTrustLevel:trustLevel];
             [self.store storeDeviceForUser:userId device:device];
 
             if ([userId isEqualToString:self.mxSession.myUser.userId])
@@ -784,7 +791,14 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
             }
         }
 
-        if (success)
+        // Cross-sign our own device
+        if (self.crossSigning.isBootstrapped
+            && verificationStatus == MXDeviceVerified
+            && [userId isEqualToString:self.mxSession.myUser.userId])
+        {
+            [self.crossSigning crossSignDeviceWithDeviceId:deviceId success:success failure:failure];
+        }
+        else if (success)
         {
             dispatch_async(dispatch_get_main_queue(), ^{
                 success();
@@ -812,9 +826,12 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
             {
                 MXDeviceInfo *device = [devices objectForDevice:deviceID forUser:userId];
 
-                if (device.verified == MXDeviceUnknown)
+                if (device.trustLevel.localVerificationStatus == MXDeviceUnknown)
                 {
-                    device.verified = MXDeviceUnverified;
+                    MXDeviceTrustLevel *trustLevel =
+                    [MXDeviceTrustLevel trustLevelWithLocalVerificationStatus:MXDeviceUnverified
+                                                         crossSigningVerified:device.trustLevel.isCrossSigningVerified];
+                    [device updateTrustLevel:trustLevel];
                     [self.store storeDeviceForUser:device.userId device:device];
                 }
             }
@@ -835,9 +852,25 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
 #endif
 }
 
+
+#pragma mark - Cross-signing trust
+
+- (MXUserTrustLevel*)trustLevelForUser:(NSString*)userId
+{
+    return [self.store crossSigningKeysForUser:userId].trustLevel ?: [MXUserTrustLevel new];
+}
+
+- (MXDeviceTrustLevel*)deviceTrustLevelForDevice:(NSString*)deviceId ofUser:(NSString*)userId;
+{
+    return [self.store deviceWithDeviceId:deviceId forUser:userId].trustLevel;
+}
+
+#pragma mark - Users keys
+
 - (MXHTTPOperation*)downloadKeys:(NSArray<NSString*>*)userIds
                    forceDownload:(BOOL)forceDownload
-                         success:(void (^)(MXUsersDevicesMap<MXDeviceInfo*> *usersDevicesInfoMap))success
+                         success:(void (^)(MXUsersDevicesMap<MXDeviceInfo*> *usersDevicesInfoMap,
+                                           NSDictionary<NSString*, MXCrossSigningInfo*> *crossSigningKeysMap))success
                          failure:(void (^)(NSError *error))failure
 {
 #ifdef MX_CRYPTO
@@ -847,11 +880,11 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
 
     dispatch_async(_cryptoQueue, ^{
 
-        MXHTTPOperation *operation2 = [self.deviceList downloadKeys:userIds forceDownload:forceDownload success:^(MXUsersDevicesMap<MXDeviceInfo *> *usersDevicesInfoMap) {
+        MXHTTPOperation *operation2 = [self.deviceList downloadKeys:userIds forceDownload:forceDownload success:^(MXUsersDevicesMap<MXDeviceInfo *> *usersDevicesInfoMap, NSDictionary<NSString *,MXCrossSigningInfo *> *crossSigningKeysMap) {
             if (success)
             {
                 dispatch_async(dispatch_get_main_queue(), ^{
-                    success(usersDevicesInfoMap);
+                    success(usersDevicesInfoMap, crossSigningKeysMap);
                 });
             }
         } failure:^(NSError *error) {
@@ -874,6 +907,28 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
     }
     return nil;
 #endif
+}
+
+-(MXCrossSigningInfo *)crossSigningKeysForUser:(NSString *)userId
+{
+    MXCrossSigningInfo *crossSigningKeys;
+
+#ifdef MX_CRYPTO
+    crossSigningKeys = [self.store crossSigningKeysForUser:userId];
+#endif
+
+    return crossSigningKeys;
+}
+
+- (MXDeviceInfo *)deviceWithDeviceId:(NSString*)deviceId ofUser:(NSString*)userId
+{
+    MXDeviceInfo *device;
+
+#ifdef MX_CRYPTO
+    device = [self.store devicesForUser:userId][deviceId];
+#endif
+
+    return device;
 }
 
 - (void)resetReplayAttackCheckInTimeline:(NSString*)timeline
@@ -1403,7 +1458,8 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
                           [NSString stringWithFormat:@"curve25519:%@", deviceId]: _olmDevice.deviceCurve25519Key,
                           };
         _myDevice.algorithms = [[MXCryptoAlgorithms sharedAlgorithms] supportedAlgorithms];
-        _myDevice.verified = MXDeviceVerified;
+        [_myDevice updateTrustLevel:[MXDeviceTrustLevel trustLevelWithLocalVerificationStatus:MXDeviceVerified
+                                                                         crossSigningVerified:NO]];
 
         // Add our own deviceinfo to the store
         NSMutableDictionary *myDevices = [NSMutableDictionary dictionaryWithDictionary:[_store devicesForUser:userId]];
@@ -1423,6 +1479,8 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
         incomingRoomKeyRequestManager = [[MXIncomingRoomKeyRequestManager alloc] initWithCrypto:self];
 
         _deviceVerificationManager = [[MXDeviceVerificationManager alloc] initWithCrypto:self];
+
+        _crossSigning = [[MXCrossSigning alloc] initWithCrypto:self];
         
         [self registerEventHandlers];
         
@@ -1547,7 +1605,7 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
                 continue;
             }
 
-            if (device.verified == MXDeviceBlocked) {
+            if (device.trustLevel.localVerificationStatus == MXDeviceBlocked) {
                 // Don't bother setting up sessions with blocked users
                 continue;
             }

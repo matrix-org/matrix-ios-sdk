@@ -867,7 +867,7 @@ static NSArray<MXEventTypeString> *kMXDeviceVerificationManagerDMEventTypes;
                        failure:(void (^)(NSError *error))failure
 {
     MXWeakify(self);
-    [_crypto downloadKeys:@[userId] forceDownload:NO success:^(MXUsersDevicesMap<MXDeviceInfo *> *usersDevicesInfoMap) {
+    [_crypto downloadKeys:@[userId] forceDownload:NO success:^(MXUsersDevicesMap<MXDeviceInfo *> *usersDevicesInfoMap, NSDictionary<NSString *,MXCrossSigningInfo *> *crossSigningKeysMap) {
         MXStrongifyAndReturnIfNil(self);
 
         dispatch_async(self->cryptoQueue, ^{

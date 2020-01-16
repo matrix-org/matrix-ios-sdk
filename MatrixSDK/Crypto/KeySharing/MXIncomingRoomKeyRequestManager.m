@@ -157,7 +157,7 @@
 
     // if the device is verified already, share the keys
     MXDeviceInfo *device = [crypto.store deviceWithDeviceId:deviceId forUser:userId];
-    if (device && device.verified == MXDeviceVerified)
+    if (device && device.trustLevel.isVerified)
     {
         NSLog(@"[MXIncomingRoomKeyRequestManager] device is already verified: sharing keys");
         [decryptor shareKeysWithDevice:req success:nil failure:nil];

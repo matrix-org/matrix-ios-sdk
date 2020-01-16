@@ -270,7 +270,7 @@
             }
         };
 
-        MXHTTPOperation *operation1 = [aliceSession.crypto.deviceList downloadKeys:@[bobSession.myUser.userId] forceDownload:NO success:^(MXUsersDevicesMap<MXDeviceInfo *> *usersDevicesInfoMap) {
+        MXHTTPOperation *operation1 = [aliceSession.crypto.deviceList downloadKeys:@[bobSession.myUser.userId] forceDownload:NO success:^(MXUsersDevicesMap<MXDeviceInfo *> *usersDevicesInfoMap, NSDictionary<NSString *,MXCrossSigningInfo *> *crossSigningKeysMap) {
 
             onSuccess();
 
@@ -289,7 +289,7 @@
         
 
         // A parallel operation
-        MXHTTPOperation *operation2 = [aliceSession.crypto.deviceList downloadKeys:@[bobSession.myUser.userId] forceDownload:NO success:^(MXUsersDevicesMap<MXDeviceInfo *> *usersDevicesInfoMap) {
+        MXHTTPOperation *operation2 = [aliceSession.crypto.deviceList downloadKeys:@[bobSession.myUser.userId] forceDownload:NO success:^(MXUsersDevicesMap<MXDeviceInfo *> *usersDevicesInfoMap, NSDictionary<NSString *,MXCrossSigningInfo *> *crossSigningKeysMap) {
 
             onSuccess();
 
@@ -320,7 +320,7 @@
         aliceSessionToClose = aliceSession;
         bobSessionToClose = bobSession;
 
-        [aliceSession.crypto.deviceList downloadKeys:@[bobSession.myUser.userId] forceDownload:NO success:^(MXUsersDevicesMap<MXDeviceInfo *> *usersDevicesInfoMap) {
+        [aliceSession.crypto.deviceList downloadKeys:@[bobSession.myUser.userId] forceDownload:NO success:^(MXUsersDevicesMap<MXDeviceInfo *> *usersDevicesInfoMap, NSDictionary<NSString *,MXCrossSigningInfo *> *crossSigningKeysMap) {
 
             NSArray *bobDevices = [usersDevicesInfoMap deviceIdsForUser:bobSession.myUser.userId];
             XCTAssertNotNil(bobDevices, @"[MXCrypto downloadKeys] should return @[] for Bob to distinguish him from an unknown user");
@@ -351,7 +351,7 @@
 
         // Try to get info from a user on matrix.org.
         // The local hs we use for tests is not federated and is not able to talk with matrix.org
-        [aliceSession.crypto.deviceList downloadKeys:@[bobSession.myUser.userId, @"@auser:matrix.org"] forceDownload:NO success:^(MXUsersDevicesMap<MXDeviceInfo *> *usersDevicesInfoMap) {
+        [aliceSession.crypto.deviceList downloadKeys:@[bobSession.myUser.userId, @"@auser:matrix.org"] forceDownload:NO success:^(MXUsersDevicesMap<MXDeviceInfo *> *usersDevicesInfoMap, NSDictionary<NSString *,MXCrossSigningInfo *> *crossSigningKeysMap) {
 
             // We can get info only for Bob
             XCTAssertEqual(1, usersDevicesInfoMap.map.count);

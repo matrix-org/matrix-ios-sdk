@@ -24,7 +24,7 @@
 #import "MXTools.h"
 #import "MXCryptoTools.h"
 
-NSUInteger const kMXRealmCryptoStoreVersion = 10;
+NSUInteger const kMXRealmCryptoStoreVersion = 12;
 
 static NSString *const kMXRealmCryptoStoreFolder = @"MXRealmCryptoStore";
 
@@ -41,10 +41,19 @@ static NSString *const kMXRealmCryptoStoreFolder = @"MXRealmCryptoStore";
 @end
 RLM_ARRAY_TYPE(MXRealmDeviceInfo)
 
+@interface MXRealmCrossSigningInfo : RLMObject
+@property NSData *data;
+@end
+
+@implementation MXRealmCrossSigningInfo
+@end
+RLM_ARRAY_TYPE(MXRealmCrossSigningInfo)
+
 
 @interface MXRealmUser : RLMObject
 @property (nonatomic) NSString *userId;
 @property RLMArray<MXRealmDeviceInfo *><MXRealmDeviceInfo> *devices;
+@property MXRealmCrossSigningInfo *crossSigningKeys;
 @end
 
 @implementation MXRealmUser
@@ -529,6 +538,49 @@ RLM_ARRAY_TYPE(MXRealmOlmInboundGroupSession)
         account.deviceTrackingStatusData = [NSKeyedArchiver archivedDataWithRootObject:statusMap];
     }];
 }
+
+
+#pragma mark - Cross-signing keys
+
+- (void)storeCrossSigningKeys:(MXCrossSigningInfo*)crossSigningInfo
+{
+    RLMRealm *realm = self.realm;
+
+    [realm transactionWithBlock:^{
+
+        MXRealmUser *realmUser = [MXRealmUser objectsInRealm:realm where:@"userId = %@", crossSigningInfo.userId].firstObject;
+        if (!realmUser)
+        {
+            realmUser = [[MXRealmUser alloc] initWithValue:@{
+                                                             @"userId": crossSigningInfo.userId,
+                                                             }];
+
+            [realm addObject:realmUser];
+        }
+
+        MXRealmCrossSigningInfo *realmCrossSigningKeys = [[MXRealmCrossSigningInfo alloc] initWithValue:@{
+                                                                                                    @"data": [NSKeyedArchiver archivedDataWithRootObject:crossSigningInfo]
+                                                                                                   }];
+
+        realmUser.crossSigningKeys = realmCrossSigningKeys;
+    }];
+}
+
+- (MXCrossSigningInfo*)crossSigningKeysForUser:(NSString*)userId
+{
+    MXCrossSigningInfo *crossSigningKeys;
+
+    MXRealmUser *realmUser = [MXRealmUser objectsInRealm:self.realm where:@"userId = %@", userId].firstObject;
+    if (realmUser)
+    {
+        crossSigningKeys = [NSKeyedUnarchiver unarchiveObjectWithData:realmUser.crossSigningKeys.data];
+    }
+
+    return crossSigningKeys;
+}
+
+
+#pragma mark - Message keys
 
 - (void)storeAlgorithmForRoom:(NSString*)roomId algorithm:(NSString*)algorithm
 {
@@ -1106,6 +1158,7 @@ RLM_ARRAY_TYPE(MXRealmOlmInboundGroupSession)
     // Manage only our objects in this realm 
     config.objectClasses = @[
                              MXRealmDeviceInfo.class,
+                             MXRealmCrossSigningInfo.class,
                              MXRealmUser.class,
                              MXRealmRoomAlgorithm.class,
                              MXRealmOlmSession.class,
@@ -1281,6 +1334,31 @@ RLM_ARRAY_TYPE(MXRealmOlmInboundGroupSession)
 
                     // This schema update needs a fix of cleanDuplicatedDevicesInRealm introduced in schema #8.
                     cleanDuplicatedDevices = YES;
+                }
+
+                case 10:
+                    NSLog(@"[MXRealmCryptoStore] Migration from schema #10 -> #11: Nothing to do (added optional MXRealmUser.crossSigningKeys)");
+
+                case 11:
+                {
+                    NSLog(@"[MXRealmCryptoStore] Migration from schema #10 -> #11");
+
+                    // Because of https://github.com/vector-im/riot-ios/issues/2896, algorithms were not stored
+                    // Fix it by defaulting to usual values
+                    NSLog(@"[MXRealmCryptoStore]    Fix missing algorithms to all MXRealmDeviceInfo objects");
+
+                    [migration enumerateObjects:MXRealmDeviceInfo.className block:^(RLMObject *oldObject, RLMObject *newObject) {
+
+                        MXDeviceInfo *device = [NSKeyedUnarchiver unarchiveObjectWithData:oldObject[@"deviceInfoData"]];
+                        if (!device.algorithms)
+                        {
+                            device.algorithms = @[
+                                                  kMXCryptoOlmAlgorithm,
+                                                  kMXCryptoMegolmAlgorithm
+                                                  ];
+                        }
+                        newObject[@"deviceInfoData"] = [NSKeyedArchiver archivedDataWithRootObject:device];
+                    }];
                 }
             }
         }

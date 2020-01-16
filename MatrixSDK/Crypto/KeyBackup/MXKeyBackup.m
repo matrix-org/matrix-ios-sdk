@@ -906,7 +906,7 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
                 {
                     NSLog(@"[MXKeyBackup] trustForKeyBackupVersion: Bad signature from device %@: %@", device.deviceId, error);
                 }
-                else if (device.verified == MXDeviceVerified)
+                else if (device.trustLevel.isVerified)
                 {
                     keyBackupVersionTrust.usable = YES;
                 }
@@ -1223,7 +1223,7 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
     MXKeyBackupData *keyBackupData = [MXKeyBackupData new];
     keyBackupData.firstMessageIndex = session.session.firstKnownIndex;
     keyBackupData.forwardedCount = session.forwardingCurve25519KeyChain.count;
-    keyBackupData.verified = device.verified;
+    keyBackupData.verified = device.trustLevel.isVerified;
     keyBackupData.sessionData = @{
                                   @"ciphertext": encryptedSessionBackupData.ciphertext,
                                   @"mac": encryptedSessionBackupData.mac,

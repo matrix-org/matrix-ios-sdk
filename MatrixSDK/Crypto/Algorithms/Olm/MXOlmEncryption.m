@@ -78,7 +78,7 @@
                     continue;
                 }
 
-                if (device.verified == MXDeviceBlocked)
+                if (device.trustLevel.localVerificationStatus == MXDeviceBlocked)
                 {
                     // Don't bother setting up sessions with blocked users
                     continue;
@@ -107,7 +107,8 @@
     // XXX: This class is not used so fix it later
     MXWeakify(self);
     MXHTTPOperation *operation;
-    operation = [crypto.deviceList downloadKeys:users forceDownload:NO success:^(MXUsersDevicesMap<MXDeviceInfo *> *usersDevicesInfoMap) {
+    operation = [crypto.deviceList downloadKeys:users forceDownload:NO success:^(MXUsersDevicesMap<MXDeviceInfo *> *usersDevicesInfoMap, NSDictionary<NSString *,MXCrossSigningInfo *> *crossSigningKeysMap) {
+
         MXStrongifyAndReturnIfNil(self);
 
         MXHTTPOperation *operation2 = [self->crypto ensureOlmSessionsForUsers:users success:^(MXUsersDevicesMap<MXOlmSessionResult *> *results) {

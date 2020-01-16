@@ -160,8 +160,8 @@
                         MXDeviceInfo *bobDeviceFromAlicePOV = [aliceSession.crypto.store deviceWithDeviceId:bob.deviceId forUser:bob.userId];
                         MXDeviceInfo *aliceDeviceFromBobPOV = [bobSession.crypto.store deviceWithDeviceId:alice.deviceId forUser:alice.userId];
 
-                        XCTAssertEqual(bobDeviceFromAlicePOV.verified, MXDeviceVerified);
-                        XCTAssertEqual(aliceDeviceFromBobPOV.verified, MXDeviceVerified);
+                        XCTAssertEqual(bobDeviceFromAlicePOV.trustLevel.localVerificationStatus, MXDeviceVerified);
+                        XCTAssertEqual(aliceDeviceFromBobPOV.trustLevel.localVerificationStatus, MXDeviceVerified);
 
                         // -> Transaction must not be listed anymore
                         XCTAssertNil([aliceSession.crypto.deviceVerificationManager transactionWithTransactionId:transactionFromAlicePOV.transactionId]);
@@ -628,8 +628,8 @@
                     MXDeviceInfo *bobDeviceFromAlicePOV = [aliceSession.crypto.store deviceWithDeviceId:bob.deviceId forUser:bob.userId];
                     MXDeviceInfo *aliceDeviceFromBobPOV = [bobSession.crypto.store deviceWithDeviceId:alice.deviceId forUser:alice.userId];
 
-                    XCTAssertEqual(bobDeviceFromAlicePOV.verified, MXDeviceVerified);
-                    XCTAssertEqual(aliceDeviceFromBobPOV.verified, MXDeviceVerified);
+                    XCTAssertEqual(bobDeviceFromAlicePOV.trustLevel.localVerificationStatus, MXDeviceVerified);
+                    XCTAssertEqual(aliceDeviceFromBobPOV.trustLevel.localVerificationStatus, MXDeviceVerified);
 
                     // -> Transaction must not be listed anymore
                     XCTAssertNil([aliceSession.crypto.deviceVerificationManager transactionWithTransactionId:sasTransactionFromAlicePOV.transactionId]);
