@@ -271,6 +271,25 @@ FOUNDATION_EXPORT NSString *const kMXCryptoRoomKeyRequestCancellationNotificatio
                          failure:(void (^)(NSError *error))failure;
 
 /**
+ Get the stored cross-siging information of a user.
+
+ @param userId The user.
+ @return the cross-signing information if any.
+ */
+- (MXCrossSigningInfo *)crossSigningKeysForUser:(NSString*)userId;
+
+
+/**
+ Get the stored information about a device.
+
+ @param deviceId The device.
+ @param userId The device user.
+ @return the device if any.
+ */
+- (MXDeviceInfo *)deviceWithDeviceId:(NSString*)deviceId ofUser:(NSString*)userId;
+
+
+/**
  Reset replay attack data for the given timeline.
 
  @param timeline the id of the timeline.
