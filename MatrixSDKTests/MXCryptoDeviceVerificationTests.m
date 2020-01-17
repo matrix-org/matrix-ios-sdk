@@ -789,7 +789,9 @@
                      MXKeyVerificationRequest *requestFromAlicePOV = aliceSession.crypto.deviceVerificationManager.pendingRequests.firstObject;
                      XCTAssertNotNil(requestFromAlicePOV);
 
-                     [requestFromAlicePOV cancelWithCancelCode:MXTransactionCancelCode.user];
+                     [requestFromAlicePOV cancelWithCancelCode:MXTransactionCancelCode.user success:^{
+                     } failure:^(NSError * _Nonnull error) {
+                     }];
                  });
              }
          }];
