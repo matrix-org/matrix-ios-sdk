@@ -46,7 +46,7 @@
 
 - (BOOL)isLocallyVerified
 {
-    return _isCrossSigningVerified == MXDeviceVerified;
+    return _localVerificationStatus == MXDeviceVerified;
 }
 
 
