@@ -248,10 +248,23 @@ NSString *const MXCrossSigningErrorDomain = @"org.matrix.sdk.crosssigning";
     if (self)
     {
         _crypto = crypto;
-        _myUserCrossSigningKeys = [_crypto.store crossSigningKeysForUser:_crypto.mxSession.myUser.userId];
+        [self loadCrossSigningKeys];
         _crossSigningTools = [MXCrossSigningTools new];
      }
     return self;
+}
+
+- (void)loadCrossSigningKeys
+{
+    NSString *myUserId = _crypto.mxSession.matrixRestClient.credentials.userId;
+
+    _myUserCrossSigningKeys = [_crypto.store crossSigningKeysForUser:myUserId];
+
+    // Refresh user's keys
+    [self.crypto.deviceList downloadKeys:@[myUserId] forceDownload:NO success:^(MXUsersDevicesMap<MXDeviceInfo *> *usersDevicesInfoMap, NSDictionary<NSString *,MXCrossSigningInfo *> *crossSigningKeysMap) {
+        self.myUserCrossSigningKeys = crossSigningKeysMap[myUserId];
+    } failure:^(NSError *error) {
+    }];
 }
 
 - (BOOL)isUserWithCrossSigningKeysVerified:(MXCrossSigningInfo*)crossSigningKeys
