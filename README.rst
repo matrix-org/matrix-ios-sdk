@@ -482,7 +482,7 @@ If you have already installed all dependencies, the steps are::
 
       $ git clone https://github.com/matrix-org/synapse.git
       $ cd synapse
-      $ virtualenv -p python2.7 env
+      $ virtualenv -p python3 env
       $ source env/bin/activate
       (env) $ python synapse/python_dependencies.py | xargs pip install
       (env) $ pip install lxml mock
@@ -495,7 +495,7 @@ Installation is done.
 
 Every time you want to launch these test homeservers, type::
 
-      $ virtualenv -p python2.7 env
+      $ virtualenv -p python3 env
       $ source env/bin/activate
       (env) $ demo/start.sh --no-rate-limit
 

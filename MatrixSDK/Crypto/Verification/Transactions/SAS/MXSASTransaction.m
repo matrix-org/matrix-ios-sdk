@@ -18,7 +18,10 @@
 #import "MXSASTransaction_Private.h"
 
 #import "MXCrypto_Private.h"
+#import "MXCrossSigning_Private.h"
 #import "MXDeviceVerificationManager_Private.h"
+
+#import "MXKey.h"
 
 
 #pragma mark - Constants
@@ -261,20 +264,45 @@ static NSArray<MXEmojiRepresentation*> *kSasEmojis;
                           otherDevice.userId, otherDevice.deviceId,
                           self.transactionId];
 
-    NSString *keyId = [NSString stringWithFormat:@"ed25519:%@", device.deviceId];
+    NSMutableDictionary<NSString*, NSString*> *mac;
+    NSMutableArray<NSString*>* keyList = [NSMutableArray array];
 
-    NSString *macString = [self macUsingAgreedMethod:device.fingerprint
-                                                info:[NSString stringWithFormat:@"%@%@", baseInfo, keyId]];
-    NSString *keyStrings = [self macUsingAgreedMethod:keyId
+    // MAC with own device keys
+    MXKey *deviceKey = [[MXKey alloc] initWithType:kMXKeyEd25519Type
+                                             keyId:device.deviceId
+                                             value:@""];
+    deviceKey.value = [self macUsingAgreedMethod:device.fingerprint
+                                            info:[NSString stringWithFormat:@"%@%@", baseInfo, deviceKey.keyFullId]];
+    [keyList addObject:deviceKey.keyFullId];
+
+    mac = [deviceKey.JSONDictionary mutableCopy];
+
+    // MAC with own cross-signing key
+    MXCrossSigningInfo *myUserCrossSigningKeys = self.manager.crypto.crossSigning.myUserCrossSigningKeys;
+    if (myUserCrossSigningKeys)
+    {
+        NSString *crossSigningId = myUserCrossSigningKeys.masterKeys.keys;
+        MXKey *crossSigninKey = [[MXKey alloc] initWithType:kMXKeyEd25519Type
+                                                      keyId:crossSigningId
+                                                      value:@""];
+        crossSigninKey.value = [self macUsingAgreedMethod:crossSigningId
+                                                     info:[NSString stringWithFormat:@"%@%@", baseInfo, crossSigninKey.keyFullId]];
+        [keyList addObject:crossSigninKey.keyFullId];
+
+        [mac addEntriesFromDictionary:crossSigninKey.JSONDictionary];
+    }
+
+    // MAC of the list of key IDs
+    NSString *keyListIds = [[keyList sortedArrayUsingSelector:@selector(localizedCaseInsensitiveCompare:)]
+                            componentsJoinedByString:@","];
+    NSString *keyStrings = [self macUsingAgreedMethod:keyListIds
                                                  info:[NSString stringWithFormat:@"%@KEY_IDS", baseInfo]];
 
-    if (macString.length && keyStrings.length)
+    if (mac.count >= 1 && keyStrings.length)
     {
         macContent = [MXKeyVerificationMac new];
         macContent.transactionId = self.transactionId;
-        macContent.mac = @{
-                           keyId: macString
-                           };
+        macContent.mac = mac;
         macContent.keys = keyStrings;
     }
 
