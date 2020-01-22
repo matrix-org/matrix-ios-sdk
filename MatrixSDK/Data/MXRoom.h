@@ -1096,4 +1096,12 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidFlushDataNotification;
  */
 - (NSComparisonResult)compareLastMessageEventOriginServerTs:(MXRoom *)otherRoom;
 
+/**
+ Provide the number of trusted members (and percentage) for an encrypted room.
+
+ @param success A block object called when the operation succeeds. It provides the number of trusted users and total members count throught a NSProgress object.
+ @param failure A block object called when the operation fails.
+ */
+- (void)trustedMembersProgressWithSuccess:(void (^)(NSProgress *trustedMembersProgress))success failure:(void (^)(NSError *error))failure;
+
 @end

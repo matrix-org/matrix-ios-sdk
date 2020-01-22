@@ -3098,6 +3098,44 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
     return isEncryptionRequired;
 }
 
+- (void)trustedMembersProgressWithSuccess:(void (^)(NSProgress *trustedMembersProgress))success failure:(void (^)(NSError *error))failure;
+{
+    MXCrypto *crypto = mxSession.crypto;
+    
+    if (crypto && self.summary.isEncrypted)
+    {
+        [self members:^(MXRoomMembers *roomMembers) {
+            
+            NSArray<MXRoomMember*> *members = roomMembers.members;
+            NSUInteger membersCount = members.count;
+            NSUInteger trustedMembersCount = 0;
+            
+            for (MXRoomMember *member in members)
+            {
+                MXUserTrustLevel *memberTrustLevel = [crypto trustLevelForUser:member.userId];
+                if (memberTrustLevel.isVerified)
+                {
+                    trustedMembersCount+=1;
+                }
+            }
+            
+            NSProgress *progress = [NSProgress progressWithTotalUnitCount:membersCount];
+            progress.completedUnitCount = trustedMembersCount;
+            
+            success(progress);
+            
+        } failure:failure];
+    }
+    else
+    {
+        NSError *error = [NSError errorWithDomain:MXDecryptingErrorDomain
+                                             code:MXDecryptingErrorEncryptionNotEnabledCode
+                                         userInfo:@{
+                                                    NSLocalizedDescriptionKey: MXDecryptingErrorEncryptionNotEnabledReason
+                                                    }];
+        failure(error);
+    }
+}
 
 #pragma mark - Utils
 
