@@ -20,6 +20,10 @@
 #import "MXJSONModel.h"
 #import "MXDeviceTrustLevel.h"
 
+/**
+ Notification sent when the device trust level has been updated.
+ */
+extern NSString *const MXDeviceInfoTrustLevelDidChangeNotification;
 
 /**
  Information about a user's device.
