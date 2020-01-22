@@ -5,6 +5,7 @@ Improvements:
  * Make enums conform to `Equatable`/`Hashable` where applicable.
  * Aggregations: Implement m.reference aggregations, aka thread ([MSC1849](https://github.com/matrix-org/matrix-doc/blob/matthew/msc1849/proposals/1849-aggregations.md)).
  * Cross-Signing: Add a new module, MXCrossSigning, to handle device cross-signing (vector-im/riot-ios/issues/2890).
+ * MXRoom: Add a method to retrieve trusted members count in an encrypted room.
 
 Bug fix:
  * MXEventType: Fix Swift refinement.
