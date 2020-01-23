@@ -42,6 +42,7 @@
 
 @class MXRoom;
 @class MXSession;
+@class MXUsersTrustLevelSummary;
 
 #pragma mark - Notifications
 
@@ -1097,11 +1098,11 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidFlushDataNotification;
 - (NSComparisonResult)compareLastMessageEventOriginServerTs:(MXRoom *)otherRoom;
 
 /**
- Provide the number of trusted members (and percentage) for an encrypted room.
+ Provides a summary of members trust level for an encrypted room.
 
- @param success A block object called when the operation succeeds. It provides the number of trusted users and total members count throught a NSProgress object.
+ @param success A block object called when the operation succeeds. It provides a summary of members trust level for an encrypted room..
  @param failure A block object called when the operation fails.
  */
-- (void)trustedMembersProgressWithSuccess:(void (^)(NSProgress *trustedMembersProgress))success failure:(void (^)(NSError *error))failure;
+- (void)membersTrustLevelSummaryWithSuccess:(void (^)(MXUsersTrustLevelSummary *usersTrustLevelSummary))success failure:(void (^)(NSError *error))failure;
 
 @end
