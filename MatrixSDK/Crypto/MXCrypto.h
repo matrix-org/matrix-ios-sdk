@@ -31,6 +31,7 @@
 #import "MXKeyBackup.h"
 #import "MXDeviceVerificationManager.h"
 #import "MXCrossSigning.h"
+#import "MXUsersTrustLevelSummary.h"
 
 @class MXSession;
 
@@ -246,6 +247,17 @@ FOUNDATION_EXPORT NSString *const kMXCryptoRoomKeyRequestCancellationNotificatio
 - (MXUserTrustLevel*)trustLevelForUser:(NSString*)userId;
 - (MXDeviceTrustLevel*)deviceTrustLevelForDevice:(NSString*)deviceId ofUser:(NSString*)userId;
 
+
+/**
+ Get a summary of users trust level (trusted users and devices count).
+
+ @param userIds The user ids.
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+ */
+- (void)trustLevelSummaryForUserIds:(NSArray<NSString*>*)userIds
+                            success:(void (^)(MXUsersTrustLevelSummary *usersTrustLevelSummary))success
+                            failure:(void (^)(NSError *error))failure;
 
 #pragma mark - Users keys
 
