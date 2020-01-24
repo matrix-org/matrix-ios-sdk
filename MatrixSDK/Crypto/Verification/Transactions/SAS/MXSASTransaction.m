@@ -259,10 +259,7 @@ static NSArray<MXEmojiRepresentation*> *kSasEmojis;
     //  - the device ID of the device receiving the MAC,
     //  - the transaction ID, and
     //  - the key ID of the key being MAC-ed, or the string “KEY_IDS” if the item being MAC-ed is the list of key IDs.
-    NSString *baseInfo = [NSString stringWithFormat:@"MATRIX_KEY_VERIFICATION_MAC%@%@%@%@%@",
-                          device.userId, device.deviceId,
-                          otherDevice.userId, otherDevice.deviceId,
-                          self.transactionId];
+    NSString *baseInfo = [self baseInfoWithDevice:device andOtherDevice:otherDevice];
 
     NSMutableDictionary<NSString*, NSString*> *mac;
     NSMutableArray<NSString*>* keyList = [NSMutableArray array];
@@ -313,51 +310,133 @@ static NSArray<MXEmojiRepresentation*> *kSasEmojis;
 {
     if (self.myMac && self.theirMac)
     {
-        MXKeyVerificationMac *macContent = [self macContentWithDevice:self.otherDevice
-                                                       andOtherDevice:self.manager.crypto.myDevice];
+        NSString *baseInfo = [self baseInfoWithDevice:self.otherDevice andOtherDevice:self.manager.crypto.myDevice];
 
-        if (!macContent)
-        {
-            [self cancelWithCancelCode:MXTransactionCancelCode.unexpectedMessage];
-            return;
-        }
+        // Check MAC of the list of key IDs
+        NSString *keyListIds = [[self.theirMac.mac.allKeys sortedArrayUsingSelector:@selector(localizedCaseInsensitiveCompare:)]
+                                componentsJoinedByString:@","];
+        NSString *keyStrings = [self macUsingAgreedMethod:keyListIds
+                                                     info:[NSString stringWithFormat:@"%@KEY_IDS", baseInfo]];
 
-        if (![_theirMac.keys isEqualToString:macContent.keys])
-        {
-            [self cancelWithCancelCode:MXTransactionCancelCode.mismatchedKeys];
-            return;
-        }
-
-        if (![_theirMac.mac isEqualToDictionary:macContent.mac])
+        if (![self.theirMac.keys isEqualToString:keyStrings])
         {
             [self cancelWithCancelCode:MXTransactionCancelCode.mismatchedKeys];
             return;
         }
+        
 
-        [self.manager removeTransactionWithTransactionId:self.transactionId];
-        [self setDeviceAsVerified];
+        __block MXTransactionCancelCode *cancelCode;
+        dispatch_group_t group = dispatch_group_create();
+
+        for (NSString *keyFullId in self.theirMac.mac)
+        {
+            MXKey *key = [[MXKey alloc] initWithKeyFullId:keyFullId value:self.theirMac.mac[keyFullId]];
+
+            // Check MAC with device keys
+            MXDeviceInfo *device = [self.manager.crypto deviceWithDeviceId:key.keyId ofUser:self.otherDevice.userId];
+            if (device)
+            {
+                if ([key.value isEqualToString:[self macUsingAgreedMethod:device.keys[keyFullId]
+                                                                     info:[NSString stringWithFormat:@"%@%@", baseInfo, keyFullId]]])
+                {
+                    // Mark device as verified
+                    NSLog(@"[MXKeyVerification][MXSASTransaction] verifyMacs: Mark device %@ as verified", device);
+                    dispatch_group_enter(group);
+                    [self.manager.crypto setDeviceVerification:MXDeviceVerified forDevice:self.otherDeviceId ofUser:self.otherUserId success:^{
+                        dispatch_group_leave(group);
+                        
+                    } failure:^(NSError *error) {
+                        // Should never happen
+                        cancelCode = MXTransactionCancelCode.invalidMessage;
+
+                        dispatch_group_leave(group);
+                    }];
+                }
+                else
+                {
+                    cancelCode = MXTransactionCancelCode.mismatchedKeys;
+                    break;
+                }
+            }
+            else
+            {
+                // This key is maybe a cross-signing master key
+                MXCrossSigningKey *otherUserMasterKeys= [self.manager.crypto crossSigningKeysForUser:self.otherDevice.userId].masterKeys;
+                if (otherUserMasterKeys)
+                {
+                    // Check MAC with  user's MSK keys
+                    if ([key.value isEqualToString:[self macUsingAgreedMethod:otherUserMasterKeys.keys
+                                                                         info:[NSString stringWithFormat:@"%@%@", baseInfo, keyFullId]]])
+                    {
+                        if (self.manager.crypto.crossSigning.isBootstrapped)
+                        {
+                            // Mark user as verified
+                            NSLog(@"[MXKeyVerification][MXSASTransaction] verifyMacs: Mark user %@ as verified", self.otherDevice.userId);
+                            [self.manager.crypto.crossSigning signUserWithUserId:self.otherDevice.userId success:^{
+                                dispatch_group_leave(group);
+
+                            } failure:^(NSError *error) {
+                                // Should never happen
+                                cancelCode = MXTransactionCancelCode.invalidMessage;
+
+                                dispatch_group_leave(group);
+                            }];
+                        }
+                        else
+                        {
+                            // TODO
+                            NSLog(@"[MXKeyVerification][MXSASTransaction] verifyMacs: Cannot Mark user %@ as verified as cross-signing is not fully implemented", self.otherDevice.userId);
+                        }
+
+                    }
+                    else
+                    {
+                        cancelCode = MXTransactionCancelCode.mismatchedKeys;
+                        break;
+                    }
+                }
+                else
+                {
+                    // Unknown key
+                    NSLog(@"[MXKeyVerification][MXSASTransaction] verifyMacs: Could not find keys %@ to verify", keyFullId);
+                }
+            }
+        }
+
+        dispatch_group_notify(group, dispatch_get_main_queue(), ^{
+            if (cancelCode)
+            {
+                [self cancelWithCancelCode:cancelCode];
+            }
+            else
+            {
+                [self sendVerified];
+            }
+            [self.manager removeTransactionWithTransactionId:self.transactionId];
+        });
     }
 }
 
-- (void)setDeviceAsVerified
+- (NSString*)baseInfoWithDevice:(MXDeviceInfo*)device andOtherDevice:(MXDeviceInfo*)otherDevice
 {
-    [self.manager.crypto setDeviceVerification:MXDeviceVerified forDevice:self.otherDeviceId ofUser:self.otherUserId success:^{
+    return [NSString stringWithFormat:@"MATRIX_KEY_VERIFICATION_MAC%@%@%@%@%@",
+            device.userId, device.deviceId,
+            otherDevice.userId, otherDevice.deviceId,
+            self.transactionId];
+}
 
-        // Inform the other peer we are done
-        MXKeyVerificationDone *doneContent = [MXKeyVerificationDone new];
-        doneContent.transactionId = self.transactionId;
-        if (self.transport == MKeyVerificationTransportDirectMessage)
-        {
-            doneContent.relatedEventId = self.dmEventId;
-        }
-        [self sendToOther:kMXEventTypeStringKeyVerificationDone content:doneContent.JSONDictionary success:^{} failure:^(NSError * _Nonnull error) {}];
+- (void)sendVerified
+{
+    // Inform the other peer we are done
+    MXKeyVerificationDone *doneContent = [MXKeyVerificationDone new];
+    doneContent.transactionId = self.transactionId;
+    if (self.transport == MKeyVerificationTransportDirectMessage)
+    {
+        doneContent.relatedEventId = self.dmEventId;
+    }
+    [self sendToOther:kMXEventTypeStringKeyVerificationDone content:doneContent.JSONDictionary success:^{} failure:^(NSError * _Nonnull error) {}];
 
-        self.state = MXSASTransactionStateVerified;
-        
-    } failure:^(NSError *error) {
-        // Should never happen
-        [self cancelWithCancelCode:MXTransactionCancelCode.invalidMessage];
-    }];
+    self.state = MXSASTransactionStateVerified;
 }
 
 
