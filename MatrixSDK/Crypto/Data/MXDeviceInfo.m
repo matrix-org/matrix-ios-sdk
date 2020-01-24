@@ -17,6 +17,10 @@
 
 #import "MXDeviceInfo_Private.h"
 
+#pragma mark - Constants
+
+NSString *const MXDeviceInfoTrustLevelDidChangeNotification = @"MXDeviceInfoTrustLevelDidChangeNotification";
+
 @implementation MXDeviceInfo
 
 - (instancetype)initWithDeviceId:(NSString *)deviceId
@@ -62,11 +66,18 @@
     {
         _trustLevel = trustLevel;
         updated = YES;
+        [self didUpdateTrustLevel];
     }
 
     return updated;
 }
 
+- (void)didUpdateTrustLevel
+{
+    dispatch_async(dispatch_get_main_queue(),^{
+        [[NSNotificationCenter defaultCenter] postNotificationName:MXDeviceInfoTrustLevelDidChangeNotification object:self userInfo:nil];
+    });
+}
 
 #pragma mark - MXJSONModel
 + (id)modelFromJSON:(NSDictionary *)JSONDictionary

@@ -16,6 +16,10 @@
 
 #import "MXCrossSigningInfo_Private.h"
 
+#pragma mark - Constants
+
+NSString *const MXCrossSigningInfoTrustLevelDidChangeNotification = @"MXCrossSigningInfoTrustLevelDidChangeNotification";
+
 @implementation MXCrossSigningInfo
 
 - (MXCrossSigningKey *)masterKeys
@@ -77,9 +81,17 @@
     {
         _trustLevel = trustLevel;
         updated = YES;
+        [self didUpdateTrustLevel];
     }
 
     return updated;
+}
+
+- (void)didUpdateTrustLevel
+{
+    dispatch_async(dispatch_get_main_queue(),^{
+        [[NSNotificationCenter defaultCenter] postNotificationName:MXCrossSigningInfoTrustLevelDidChangeNotification object:self userInfo:nil];
+    });
 }
 
 - (void)addCrossSigningKey:(MXCrossSigningKey*)crossSigningKey type:(NSString*)type

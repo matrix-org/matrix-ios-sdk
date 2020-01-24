@@ -865,6 +865,50 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
     return [self.store deviceWithDeviceId:deviceId forUser:userId].trustLevel;
 }
 
+- (void)trustLevelSummaryForUserIds:(NSArray<NSString*>*)userIds
+                            success:(void (^)(MXUsersTrustLevelSummary *usersTrustLevelSummary))success
+                            failure:(void (^)(NSError *error))failure
+{
+    [self downloadKeys:userIds forceDownload:NO success:^(MXUsersDevicesMap<MXDeviceInfo *> *usersDevicesInfoMap, NSDictionary<NSString *,MXCrossSigningInfo *> *crossSigningKeysMap) {
+        
+        NSUInteger usersCount = userIds.count;
+        __block NSUInteger trustedUsersCount = 0;
+        __block NSUInteger devicesCount = 0;
+        __block NSUInteger trustedDevicesCount = 0;
+        
+        [usersDevicesInfoMap.map enumerateKeysAndObjectsUsingBlock:^(NSString * _Nonnull key, NSDictionary<NSString *, MXDeviceInfo *> * _Nonnull obj, BOOL * _Nonnull stop) {
+            
+            MXUserTrustLevel *memberTrustLevel = [self trustLevelForUser:key];
+            
+            if (memberTrustLevel.isVerified)
+            {
+                trustedUsersCount+=1;
+            }
+            
+            [obj enumerateKeysAndObjectsUsingBlock:^(NSString * _Nonnull key, MXDeviceInfo * _Nonnull obj, BOOL * _Nonnull stop) {
+                
+                devicesCount+=1;
+                
+                if (obj.trustLevel.isVerified)
+                {
+                    trustedDevicesCount+=1;
+                }
+            }];
+        }];
+        
+        NSProgress *trustedUsersProgress = [NSProgress progressWithTotalUnitCount:usersCount];
+        trustedUsersProgress.completedUnitCount = trustedUsersCount;
+        
+        NSProgress *trustedDevicesProgress = [NSProgress progressWithTotalUnitCount:devicesCount];
+        trustedDevicesProgress.completedUnitCount = trustedDevicesCount;
+        
+        MXUsersTrustLevelSummary *trustLevelSummary = [[MXUsersTrustLevelSummary alloc] initWithTrustedUsersProgress:trustedUsersProgress andTrustedDevicesProgress:trustedDevicesProgress];
+        
+        success(trustLevelSummary);
+        
+    } failure:failure];
+}
+
 #pragma mark - Users keys
 
 - (MXHTTPOperation*)downloadKeys:(NSArray<NSString*>*)userIds

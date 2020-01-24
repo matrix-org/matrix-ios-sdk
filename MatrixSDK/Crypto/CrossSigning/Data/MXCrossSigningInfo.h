@@ -23,6 +23,11 @@
 NS_ASSUME_NONNULL_BEGIN
 
 /**
+ Notification sent when the user trust level has been updated.
+ */
+extern NSString *const MXCrossSigningInfoTrustLevelDidChangeNotification;
+
+/**
  `MXCrossSigningInfo` gathers information about a user's cross-signing keys.
  */
 @interface MXCrossSigningInfo : NSObject <NSCoding>
