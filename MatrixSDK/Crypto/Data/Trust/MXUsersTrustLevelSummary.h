@@ -29,7 +29,7 @@ NS_ASSUME_NONNULL_BEGIN
 // The number of trusted devices and total devices count throught a NSProgress object.
 @property (nonatomic, strong, readonly) NSProgress *trustedDevicesProgress;
 
-- (instancetype)initWithTrustedUsersProgress:(NSProgress*)trustedMembersProgress andTrustedDevicesProgress:(NSProgress*)trustedDevicesProgress;
+- (instancetype)initWithTrustedUsersProgress:(NSProgress*)trustedUsersProgress andTrustedDevicesProgress:(NSProgress*)trustedDevicesProgress;
 
 @end
 
