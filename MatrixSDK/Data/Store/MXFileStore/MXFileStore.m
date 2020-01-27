@@ -319,6 +319,18 @@ static NSUInteger preloadOptions;
     }
 }
 
+- (BOOL)removeAllMessagesSentBefore:(uint64_t)limitTs inRoom:(nonnull NSString *)roomId
+{
+    BOOL ret = [super removeAllMessagesSentBefore:limitTs inRoom:roomId];
+    
+    if (ret && NSNotFound == [roomsToCommitForMessages indexOfObject:roomId])
+    {
+        [roomsToCommitForMessages addObject:roomId];
+    }
+    
+    return ret;
+}
+
 - (void)deleteAllMessagesInRoom:(NSString *)roomId
 {
     [super deleteAllMessagesInRoom:roomId];
