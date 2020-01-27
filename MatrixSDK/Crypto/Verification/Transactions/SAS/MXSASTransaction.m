@@ -290,7 +290,7 @@ static NSArray<MXEmojiRepresentation*> *kSasEmojis;
     }
 
     // MAC of the list of key IDs
-    NSString *keyListIds = [[keyList sortedArrayUsingSelector:@selector(localizedCaseInsensitiveCompare:)]
+    NSString *keyListIds = [[keyList sortedArrayUsingSelector:@selector(compare:)]
                             componentsJoinedByString:@","];
     NSString *keyStrings = [self macUsingAgreedMethod:keyListIds
                                                  info:[NSString stringWithFormat:@"%@KEY_IDS", baseInfo]];
@@ -313,7 +313,7 @@ static NSArray<MXEmojiRepresentation*> *kSasEmojis;
         NSString *baseInfo = [self baseInfoWithDevice:self.otherDevice andOtherDevice:self.manager.crypto.myDevice];
 
         // Check MAC of the list of key IDs
-        NSString *keyListIds = [[self.theirMac.mac.allKeys sortedArrayUsingSelector:@selector(localizedCaseInsensitiveCompare:)]
+        NSString *keyListIds = [[self.theirMac.mac.allKeys sortedArrayUsingSelector:@selector(compare:)]
                                 componentsJoinedByString:@","];
         NSString *keyStrings = [self macUsingAgreedMethod:keyListIds
                                                      info:[NSString stringWithFormat:@"%@KEY_IDS", baseInfo]];
