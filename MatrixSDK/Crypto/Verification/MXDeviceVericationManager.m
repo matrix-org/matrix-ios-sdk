@@ -84,44 +84,24 @@ static NSArray<MXEventTypeString> *kMXDeviceVerificationManagerDMEventTypes;
 {
     NSLog(@"[MXKeyVerification] requestVerificationByDMWithUserId: %@. RoomId: %@", userId, roomId);
 
-    MXRoom *room = [_crypto.mxSession roomWithRoomId:roomId];
-    if (!room)
-    {
-        NSError *error = [NSError errorWithDomain:MXDeviceVerificationErrorDomain
-                                             code:MXDeviceVerificationUnknownRoomCode
-                                         userInfo:@{
-                                                    NSLocalizedDescriptionKey: [NSString stringWithFormat:@"Unknown room: %@", roomId]
-                                                    }];
-        failure(error);
-        return;
-    }
-
     MXKeyVerificationRequestJSONModel *request = [MXKeyVerificationRequestJSONModel new];
     request.body = fallbackText;
     request.methods = methods;
     request.to = userId;
     request.fromDevice = _crypto.myDevice.deviceId;
 
-    MXEvent *event = nil;
-    [room sendMessageWithContent:request.JSONDictionary localEcho:&event success:^(NSString *eventId) {
+    [self sendEventOfType:kMXEventTypeStringRoomMessage toRoom:roomId content:request.JSONDictionary success:^(NSString *eventId) {
+
+        // Build the corresponding the event
+        MXRoom *room = [self.crypto.mxSession roomWithRoomId:roomId];
+        MXEvent *event = [room fakeRoomMessageEventWithEventId:eventId andContent:request.JSONDictionary];
+
+        MXKeyVerificationRequest *request = [self verificationRequestInDMEvent:event];
+        [request updateState:MXKeyVerificationRequestStatePending notifiy:YES];
+        [self addPendingRequest:request notify:NO];
+
+        success(request);
     } failure:failure];
-
-    // Wait for the event to be sent
-    __block id observer;
-    observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXEventDidChangeSentStateNotification object:event queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification * _Nonnull note) {
-
-        if (event.sentState == MXEventSentStateSent)
-        {
-            [[NSNotificationCenter defaultCenter] removeObserver:observer];
-            observer = nil;
-
-            MXKeyVerificationRequest *request = [self verificationRequestInDMEvent:event];
-            [request updateState:MXKeyVerificationRequestStatePending notifiy:YES];
-            [self addPendingRequest:request notify:NO];
-
-            success(request);
-        }
-    }];
 }
 
 #pragma mark Current requests
@@ -776,22 +756,6 @@ static NSArray<MXEventTypeString> *kMXDeviceVerificationManagerDMEventTypes;
                         success:(void (^)(void))success
                         failure:(void (^)(NSError *error))failure
 {
-    MXRoom *room = [_crypto.mxSession roomWithRoomId:roomId];
-    if (!room)
-    {
-        NSError *error = [NSError errorWithDomain:MXDeviceVerificationErrorDomain
-                                             code:MXDeviceVerificationUnknownRoomCode
-                                         userInfo:@{
-                                                    NSLocalizedDescriptionKey: [NSString stringWithFormat:@"Unknown room: %@", roomId]
-        
-                                                    }];
-        if (failure)
-        {
-            failure(error);
-        }
-        return nil;
-    }
-
     NSMutableDictionary *eventContent = [content mutableCopy];
 
     eventContent[@"m.relates_to"] = @{
@@ -801,7 +765,7 @@ static NSArray<MXEventTypeString> *kMXDeviceVerificationManagerDMEventTypes;
 
     [eventContent removeObjectForKey:@"transaction_id"];
 
-    return [room sendEventOfType:eventType content:eventContent localEcho:nil success:^(NSString *eventId) {
+    return [self sendEventOfType:eventType toRoom:roomId content:eventContent success:^(NSString *eventId) {
         if (success)
         {
             success();
@@ -888,6 +852,56 @@ static NSArray<MXEventTypeString> *kMXDeviceVerificationManagerDMEventTypes;
         });
 
     } failure:failure];
+}
+
+/**
+ Send a message to a room even if it is e2e encrypted.
+ This may require to mark unknown devices as known, which is legitimate because
+ we are going to verify them or their user.
+ */
+- (MXHTTPOperation*)sendEventOfType:(MXEventTypeString)eventType
+                             toRoom:(NSString*)roomId
+                            content:(NSDictionary*)content
+                            success:(void (^)(NSString *eventId))success
+                            failure:(void (^)(NSError *error))failure
+{
+    // Check we have a room
+    MXRoom *room = [_crypto.mxSession roomWithRoomId:roomId];
+    if (!room)
+    {
+        NSError *error = [NSError errorWithDomain:MXDeviceVerificationErrorDomain
+                                             code:MXDeviceVerificationUnknownRoomCode
+                                         userInfo:@{
+                                                    NSLocalizedDescriptionKey: [NSString stringWithFormat:@"Unknown room: %@", roomId]
+                                                    }];
+        if (failure)
+        {
+            failure(error);
+        }
+        return nil;
+    }
+
+    MXHTTPOperation *operation = [MXHTTPOperation new];
+    operation = [room sendEventOfType:eventType content:content localEcho:nil success:success failure:^(NSError *error) {
+
+        if ([error.domain isEqualToString:MXEncryptingErrorDomain] &&
+            error.code == MXEncryptingErrorUnknownDeviceCode)
+        {
+            // Acknownledge unknown devices
+            MXUsersDevicesMap<MXDeviceInfo *> *unknownDevices = error.userInfo[MXEncryptingErrorUnknownDeviceDevicesKey];
+            [self.crypto setDevicesKnown:unknownDevices complete:^{
+                // And retry
+                MXHTTPOperation *operation2 = [room sendEventOfType:eventType content:content localEcho:nil success:success failure:failure];
+                [operation mutateTo:operation2];
+            }];
+        }
+        else if (failure)
+        {
+            failure(error);
+        }
+    }];
+
+    return operation;
 }
 
 
