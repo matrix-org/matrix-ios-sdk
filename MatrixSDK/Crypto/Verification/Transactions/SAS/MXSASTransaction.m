@@ -384,7 +384,7 @@ static NSArray<MXEmojiRepresentation*> *kSasEmojis;
                         }
                         else
                         {
-                            // TODO
+                            // TODO (MXCrossSigning.isBootstrapped will be removed in the future)
                             NSLog(@"[MXKeyVerification][MXSASTransaction] verifyMacs: Cannot Mark user %@ as verified as cross-signing is not fully implemented", self.otherDevice.userId);
                         }
 
