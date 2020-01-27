@@ -68,6 +68,12 @@
     [roomStore replaceEvent:event];
 }
 
+- (BOOL)removeAllMessagesSentBefore:(uint64_t)limitTs inRoom:(nonnull NSString *)roomId
+{
+    MXMemoryRoomStore *roomStore = [self getOrCreateRoomStore:roomId];
+    return [roomStore removeAllMessagesSentBefore:limitTs];
+}
+
 - (BOOL)eventExistsWithEventId:(NSString *)eventId inRoom:(NSString *)roomId
 {
     return (nil != [self eventWithEventId:eventId inRoom:roomId]);

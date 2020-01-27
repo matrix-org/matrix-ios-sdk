@@ -71,6 +71,18 @@
 - (void)replaceEvent:(nonnull MXEvent*)event inRoom:(nonnull NSString*)roomId;
 
 /**
+ Remove all the messages sent before a specific timestamp in a room.
+ The state events are not removed during this operation. We keep them in the timeline.
+ This operation doesn't change the pagination token, and the flag indicating that the SDK has reached the end of pagination.
+ 
+ @param limitTs the timestamp from which the messages are kept.
+ @param roomId the id of the room.
+ 
+ @return YES if at least one event has been removed.
+ */
+- (BOOL)removeAllMessagesSentBefore:(uint64_t)limitTs inRoom:(nonnull NSString *)roomId;
+
+/**
  Returns a Boolean value that indicates whether an event is already stored.
  
  @param eventId the id of the event to retrieve.
