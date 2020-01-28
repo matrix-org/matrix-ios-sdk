@@ -54,6 +54,9 @@ NS_ASSUME_NONNULL_BEGIN
 // Convenience parameter for setting various default state events based on a preset.
 @property (nonatomic, nullable) MXRoomPreset preset;
 
+// A list of state events to set in the new room.
+@property (nonatomic, nullable) NSArray<NSDictionary*> *initialStateEvents;
+
 
 /**
  Return the data as a JSON dictionary.
@@ -70,6 +73,8 @@ NS_ASSUME_NONNULL_BEGIN
 @interface MXRoomCreationParameters ()
 
 + (instancetype)parametersForDirectRoomWithUser:(NSString*)userId;
+
++ (NSDictionary*)initialStateEventForEncryptionWithAlgorithm:(NSString*)algorithm;
 
 @end
 

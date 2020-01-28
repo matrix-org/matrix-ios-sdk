@@ -75,6 +75,10 @@
     {
         dictionary[@"preset"] = _preset;
     }
+    if (_initialStateEvents)
+    {
+        dictionary[@"initial_state"] = _initialStateEvents;
+    }
 
     return dictionary;
 }
@@ -90,6 +94,17 @@
     roomCreationParameters.preset = kMXRoomPresetTrustedPrivateChat;
 
     return roomCreationParameters;
+}
+
++ (NSDictionary *)initialStateEventForEncryptionWithAlgorithm:(NSString *)algorithm
+{
+    return @{
+             @"type": @"m.room.encryption",
+             @"state_key": @"",
+             @"content": @{
+                     @"algorithm": algorithm
+                     }
+             };
 }
 
 @end
