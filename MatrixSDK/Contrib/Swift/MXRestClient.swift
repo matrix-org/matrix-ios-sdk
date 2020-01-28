@@ -977,7 +977,7 @@ public extension MXRestClient {
 
      - returns: a `MXHTTPOperation` instance.
      */
-    @nonobjc @discardableResult func createRoom(parameters: MXRoomCreationParameters, completion: @escaping (_ response: MXResponse<MXRoom>) -> Void) -> MXHTTPOperation {
+    @nonobjc @discardableResult func createRoom(parameters: MXRoomCreationParameters, completion: @escaping (_ response: MXResponse<MXCreateRoomResponse>) -> Void) -> MXHTTPOperation {
         return __createRoom(with: parameters, success: currySuccess(completion), failure: curryFailure(completion))
     }
     
