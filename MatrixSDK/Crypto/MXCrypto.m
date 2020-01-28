@@ -964,6 +964,18 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
     return crossSigningKeys;
 }
 
+
+- (NSDictionary<NSString*, MXDeviceInfo*>*)devicesForUser:(NSString*)userId
+{
+    NSDictionary<NSString*, MXDeviceInfo*> *devices;
+
+#ifdef MX_CRYPTO
+    devices = [self.store devicesForUser:userId];
+#endif
+
+    return devices;
+}
+
 - (MXDeviceInfo *)deviceWithDeviceId:(NSString*)deviceId ofUser:(NSString*)userId
 {
     MXDeviceInfo *device;
