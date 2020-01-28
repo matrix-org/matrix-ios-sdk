@@ -1003,6 +1003,20 @@ public extension MXRestClient {
     
     /**
      Create a room.
+
+     - parameters:
+     - parameters: The parameters for room creation.
+     - completion: A block object called when the operation completes.
+     - response: Provides a MXCreateRoomResponse object on success.
+
+     - returns: a `MXHTTPOperation` instance.
+     */
+    @nonobjc @discardableResult func createRoom(parameters: MXRoomCreationParameters, completion: @escaping (_ response: MXResponse<MXRoom>) -> Void) -> MXHTTPOperation {
+        return __createRoom(with: parameters, success: currySuccess(completion), failure: curryFailure(completion))
+    }
+    
+    /**
+     Create a room.
      
      - parameters:
         - parameters: The parameters. Refer to the matrix specification for details.
