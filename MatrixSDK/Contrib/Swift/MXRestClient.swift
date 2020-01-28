@@ -971,7 +971,7 @@ public extension MXRestClient {
      Create a room.
 
      - parameters:
-     - parameters: The parameters for room creation.
+        - parameters: The parameters for room creation.
      - completion: A block object called when the operation completes.
      - response: Provides a MXCreateRoomResponse object on success.
 
