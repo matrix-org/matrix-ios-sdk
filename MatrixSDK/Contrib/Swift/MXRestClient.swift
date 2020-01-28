@@ -973,7 +973,7 @@ public extension MXRestClient {
      - parameters:
         - parameters: The parameters for room creation.
         - completion: A block object called when the operation completes.
-     - response: Provides a MXCreateRoomResponse object on success.
+        - response: Provides a MXCreateRoomResponse object on success.
 
      - returns: a `MXHTTPOperation` instance.
      */
