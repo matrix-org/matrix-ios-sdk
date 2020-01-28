@@ -1613,13 +1613,21 @@ Common initial conditions:
         }];
 
         // - Alice invites Bob in a direct chat
-        [aliceSession createRoom:nil visibility:kMXRoomDirectoryVisibilityPrivate roomAlias:nil topic:nil invite:@[bobSession.myUser.userId] invite3PID:nil isDirect:YES preset:kMXRoomPresetPrivateChat success:nil failure:^(NSError *error) {
+        MXRoomCreationParameters *parameters = [MXRoomCreationParameters new];
+        parameters.inviteArray = @[bobSession.myUser.userId];
+        parameters.isDirect = YES;
+        parameters.visibility = kMXRoomDirectoryVisibilityPrivate;
+        [aliceSession createRoomWithParameters:parameters success:nil failure:^(NSError *error) {
             XCTFail(@"The operation should not fail - NSError: %@", error);
             [expectation fulfill];
         }];
 
         // - Charlie invites Alice in a direct chat
-        [charlieSession createRoom:nil visibility:kMXRoomDirectoryVisibilityPrivate roomAlias:nil topic:nil invite:@[aliceSession.myUser.userId] invite3PID:nil isDirect:YES preset:kMXRoomPresetPrivateChat success:nil failure:^(NSError *error) {
+        parameters = [MXRoomCreationParameters new];
+        parameters.visibility = kMXRoomDirectoryVisibilityPrivate;
+        parameters.isDirect = YES;
+        parameters.inviteArray = @[aliceSession.myUser.userId];
+        [charlieSession createRoomWithParameters:parameters success:nil failure:^(NSError *error) {
             XCTFail(@"The operation should not fail - NSError: %@", error);
             [expectation fulfill];
         }];
