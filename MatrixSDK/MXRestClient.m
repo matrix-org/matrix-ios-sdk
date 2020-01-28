@@ -2188,64 +2188,11 @@ MXAuthAction;
     return [self createRoom:parameters success:success failure:failure];
 }
 
-- (MXHTTPOperation*)createRoom:(NSString*)name 
-                    visibility:(MXRoomDirectoryVisibility)visibility
-                     roomAlias:(NSString*)roomAlias
-                         topic:(NSString*)topic
-                        invite:(NSArray<NSString*>*)inviteArray
-                    invite3PID:(NSArray<MXInvite3PID*>*)invite3PIDArray
-                      isDirect:(BOOL)isDirect
-                        preset:(MXRoomPreset)preset
-                       success:(void (^)(MXCreateRoomResponse *response))success
-                       failure:(void (^)(NSError *error))failure
+- (MXHTTPOperation*)createRoomWithParameters:(MXRoomCreationParameters*)parameters
+                                     success:(void (^)(MXCreateRoomResponse *response))success
+                                     failure:(void (^)(NSError *error))failure
 {
-    // All parameters are optional. Fill the request parameters on demand
-    NSMutableDictionary *parameters = [NSMutableDictionary dictionary];
-
-    if (name)
-    {
-        parameters[@"name"] = name;
-    }
-    if (visibility)
-    {
-        parameters[@"visibility"] = visibility;
-    }
-    if (roomAlias)
-    {
-        parameters[@"room_alias_name"] = roomAlias;
-    }
-    if (topic)
-    {
-        parameters[@"topic"] = topic;
-    }
-    if (inviteArray)
-    {
-        parameters[@"invite"] = inviteArray;
-    }
-    if (invite3PIDArray)
-    {
-        NSMutableArray *invite3PIDArray2 = [NSMutableArray arrayWithCapacity:invite3PIDArray.count];
-        for (MXInvite3PID *invite3PID in invite3PIDArray)
-        {
-            if (invite3PID.dictionary)
-            {
-                [invite3PIDArray2 addObject:invite3PID.dictionary];
-            }
-        }
-        
-        if (invite3PIDArray2.count)
-        {
-            parameters[@"invite_3pid"] = invite3PIDArray2;
-        }
-    }
-    if (preset)
-    {
-        parameters[@"preset"] = preset;
-    }
-    
-    parameters[@"is_direct"] = [NSNumber numberWithBool:isDirect];
-
-    return [self createRoom:parameters success:success failure:failure];
+    return [self createRoom:parameters.JSONDictionary success:success failure:failure];
 }
 
 - (MXHTTPOperation*)createRoom:(NSDictionary*)parameters

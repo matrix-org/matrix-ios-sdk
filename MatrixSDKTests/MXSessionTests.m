@@ -631,7 +631,10 @@
             mxSession = mxSession2;
             
             // Create a random room with no params
-            [mxSession createRoom:nil visibility:nil roomAlias:nil topic:nil invite:@[matrixSDKTestsData.aliceCredentials.userId] invite3PID:nil isDirect:NO preset:nil success:^(MXRoom *room) {
+            MXRoomCreationParameters *parameters = [MXRoomCreationParameters new];
+            parameters.inviteArray = @[matrixSDKTestsData.aliceCredentials.userId];
+
+            [mxSession createRoomWithParameters:parameters success:^(MXRoom *room) {
                 
                 XCTAssertNotNil(room);
                 
@@ -683,7 +686,8 @@
             mxSession = mxSession2;
             
             // Create a random room with no params
-            [mxSession createRoom:nil visibility:nil roomAlias:nil topic:nil invite:@[matrixSDKTestsData.aliceCredentials.userId] invite3PID:nil isDirect:YES preset:kMXRoomPresetTrustedPrivateChat success:^(MXRoom *room) {
+            MXRoomCreationParameters *parameters = [MXRoomCreationParameters parametersForDirectRoomWithUser:matrixSDKTestsData.aliceCredentials.userId];
+            [mxSession createRoomWithParameters:parameters success:^(MXRoom *room) {
                 
                 XCTAssertNotNil(room);
                 
