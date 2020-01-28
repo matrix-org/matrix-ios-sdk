@@ -86,7 +86,6 @@
 {
     MXRoomCreationParameters *roomCreationParameters = [MXRoomCreationParameters new];
     roomCreationParameters.inviteArray = @[userId];
-    roomCreationParameters.visibility = kMXRoomDirectoryVisibilityPrivate;
     roomCreationParameters.isDirect = YES;
     roomCreationParameters.preset = kMXRoomPresetTrustedPrivateChat;
 
