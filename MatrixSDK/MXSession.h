@@ -727,38 +727,6 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
 /**
  Create a room.
 
- @param name (optional) the room name.
- @param visibility (optional) the visibility of the room in the current HS's room directory.
- @param roomAlias (optional) the room alias on the home server the room will be created.
- @param topic (optional) the room topic.
- @param inviteArray (optional) A list of user IDs to invite to the room. This will tell the server to invite everyone in the list to the newly created room.
- @param invite3PIDArray (optional) A list of objects representing third party IDs to invite into the room.
- @param isDirect tells whether the resulting room must be tagged as a direct room.
- @param preset (optional) Convenience parameter for setting various default state events based on a preset.
-
- @param success A block object called when the operation succeeds. It provides the MXRoom
-                instance of the joined room.
- @param failure A block object called when the operation fails.
- 
- @discussion When the flag isDirect is turned on, only one user id is expected in the inviteArray. The room will be considered
- as direct only for the first mentioned user in case of several user ids.
-
- @return a MXHTTPOperation instance.
- */
-- (MXHTTPOperation*)createRoom:(NSString*)name
-                    visibility:(MXRoomDirectoryVisibility)visibility
-                     roomAlias:(NSString*)roomAlias
-                         topic:(NSString*)topic
-                        invite:(NSArray<NSString*>*)inviteArray
-                    invite3PID:(NSArray<MXInvite3PID*>*)invite3PIDArray
-                      isDirect:(BOOL)isDirect
-                        preset:(MXRoomPreset)preset
-                       success:(void (^)(MXRoom *room))success
-                       failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
-
-/**
- Create a room.
-
  @param parameters the parameters.
 
  @param success A block object called when the operation succeeds. It provides the MXRoom

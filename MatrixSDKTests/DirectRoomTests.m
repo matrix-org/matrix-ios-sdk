@@ -251,8 +251,8 @@
 
 
         // - Alice invites Bob in a direct chat
-        [aliceRestClient createRoom:nil visibility:kMXRoomDirectoryVisibilityPrivate roomAlias:nil topic:nil invite:@[bobSession.myUser.userId] invite3PID:nil isDirect:YES preset:kMXRoomPresetPrivateChat success:nil failure:^(NSError *error) {
-
+        MXRoomCreationParameters *parameters = [MXRoomCreationParameters parametersForDirectRoomWithUser:bobSession.myUser.userId];
+        [aliceRestClient createRoomWithParameters:parameters success:nil failure:^(NSError *error) {
             XCTFail(@"The operation should not fail - NSError: %@", error);
             [expectation fulfill];
         }];

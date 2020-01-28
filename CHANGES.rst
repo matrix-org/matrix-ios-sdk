@@ -16,6 +16,8 @@ Bug fix:
 API break:
  * MXCrypto: the `downloadKeys` method now returns users cross-signing keys.
  * MXDeviceInfo: the `verified` property has been replaced by `trustLevel`.
+ * MXSession & MXRestClient: the `createRoom` method with a long list of parameters
+   has been replaced by `createRoomWithParameters`.
 
 Changes in Matrix iOS SDK in 0.15.2 (2019-12-05)
 ===============================================

@@ -208,7 +208,8 @@ Common initial conditions:
         }];
 
         // - Alice create a direct chat with Bob
-        [aliceRestClient createRoom:nil visibility:kMXRoomDirectoryVisibilityPrivate roomAlias:nil topic:nil invite:@[bobSession.myUser.userId] invite3PID:nil isDirect:YES preset:kMXRoomPresetPrivateChat success:^(MXCreateRoomResponse *response) {
+        MXRoomCreationParameters *parameters = [MXRoomCreationParameters parametersForDirectRoomWithUser:bobSession.myUser.userId];
+        [aliceRestClient createRoomWithParameters:parameters success:^(MXCreateRoomResponse *response) {
 
             theRoomId = response.roomId;
 
