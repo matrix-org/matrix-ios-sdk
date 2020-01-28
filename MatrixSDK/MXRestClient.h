@@ -39,6 +39,7 @@
 #import "MXContentScanEncryptedBody.h"
 #import "MXAggregationPaginatedResponse.h"
 #import "MXPusher.h"
+#import "MXRoomCreationParameters.h"
 
 #pragma mark - Constants definitions
 /**
@@ -1211,6 +1212,20 @@ typedef MXHTTPOperation* (^MXRestClientIdentityServerAccessTokenHandler)(void (^
                         preset:(MXRoomPreset)preset
                        success:(void (^)(MXCreateRoomResponse *response))success
                        failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
+
+/**
+ Create a room.
+
+ @param parameters the parameters.
+
+ @param success A block object called when the operation succeeds. It provides a MXCreateRoomResponse object.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)createRoomWithParameters:(MXRoomCreationParameters*)parameters
+                                     success:(void (^)(MXCreateRoomResponse *response))success
+                                     failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 /**
  Create a room.

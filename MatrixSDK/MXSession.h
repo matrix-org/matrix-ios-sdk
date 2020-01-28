@@ -759,6 +759,21 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
 /**
  Create a room.
 
+ @param parameters the parameters.
+
+ @param success A block object called when the operation succeeds. It provides the MXRoom
+                instance of the joined room.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)createRoomWithParameters:(MXRoomCreationParameters*)parameters
+                                     success:(void (^)(MXRoom *room))success
+                                     failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
+
+/**
+ Create a room.
+
  @param parameters the parameters. Refer to the matrix specification for details.
 
  @param success A block object called when the operation succeeds. It provides the MXRoom

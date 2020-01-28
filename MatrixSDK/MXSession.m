@@ -1799,6 +1799,28 @@ typedef void (^MXOnResumeDone)(void);
     } failure:failure];
 }
 
+- (MXHTTPOperation*)createRoomWithParameters:(MXRoomCreationParameters*)parameters
+                                     success:(void (^)(MXRoom *room))success
+                                     failure:(void (^)(NSError *error))failure
+{
+    return [matrixRestClient createRoomWithParameters:parameters success:^(MXCreateRoomResponse *response) {
+
+        if (parameters.isDirect)
+        {
+            // When the flag isDirect is turned on, only one user id is expected in the inviteArray.
+            // The room is considered as direct only for the first mentioned user in case of several user ids.
+            // Note: It is not possible FTM to mark as direct a room with an invited third party.
+            NSString *directUserId = (parameters.inviteArray.count ? parameters.inviteArray.firstObject : nil);
+            [self onCreatedDirectChat:response withUserId:directUserId success:success];
+        }
+        else
+        {
+            [self onCreatedRoom:response success:success];
+        }
+
+    } failure:failure];
+}
+
 - (MXHTTPOperation*)createRoom:(NSDictionary*)parameters
                        success:(void (^)(MXRoom *room))success
                        failure:(void (^)(NSError *error))failure

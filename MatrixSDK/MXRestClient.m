@@ -2248,6 +2248,14 @@ MXAuthAction;
     return [self createRoom:parameters success:success failure:failure];
 }
 
+
+- (MXHTTPOperation*)createRoomWithParameters:(MXRoomCreationParameters*)parameters
+                                     success:(void (^)(MXCreateRoomResponse *response))success
+                                     failure:(void (^)(NSError *error))failure
+{
+    return [self createRoom:parameters.JSONDictionary success:success failure:failure];
+}
+
 - (MXHTTPOperation*)createRoom:(NSDictionary*)parameters
                        success:(void (^)(MXCreateRoomResponse *response))success
                        failure:(void (^)(NSError *error))failure;
