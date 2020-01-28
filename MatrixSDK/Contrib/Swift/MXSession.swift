@@ -146,7 +146,7 @@ public extension MXSession {
      - parameters:
      - parameters: The parameters for room creation.
      - completion: A block object called when the operation completes.
-     - response: Provides a MXCreateRoomResponse object on success.
+        - response: Provides a MXRoom object on success.
 
      - returns: a `MXHTTPOperation` instance.
      */
