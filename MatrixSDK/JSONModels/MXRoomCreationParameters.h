@@ -64,4 +64,13 @@ NS_ASSUME_NONNULL_BEGIN
 
 @end
 
+
+#pragma mark - Factory
+
+@interface MXRoomCreationParameters ()
+
++ (instancetype)parametersForDirectRoomWithUser:(NSString*)userId;
+
+@end
+
 NS_ASSUME_NONNULL_END

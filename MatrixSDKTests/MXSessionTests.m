@@ -686,10 +686,7 @@
             mxSession = mxSession2;
             
             // Create a random room with no params
-            MXRoomCreationParameters *parameters = [MXRoomCreationParameters new];
-            parameters.inviteArray = @[matrixSDKTestsData.aliceCredentials.userId];
-            parameters.isDirect = YES;
-            parameters.preset = kMXRoomPresetTrustedPrivateChat;
+            MXRoomCreationParameters *parameters = [MXRoomCreationParameters parametersForDirectRoomWithUser:matrixSDKTestsData.aliceCredentials.userId];
             [mxSession createRoomWithParameters:parameters success:^(MXRoom *room) {
                 
                 XCTAssertNotNil(room);

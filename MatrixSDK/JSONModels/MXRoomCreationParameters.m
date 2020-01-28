@@ -79,4 +79,18 @@
     return dictionary;
 }
 
+
+#pragma mark - Factory
+
++ (instancetype)parametersForDirectRoomWithUser:(NSString*)userId
+{
+    MXRoomCreationParameters *roomCreationParameters = [MXRoomCreationParameters new];
+    roomCreationParameters.inviteArray = @[userId];
+    roomCreationParameters.visibility = kMXRoomDirectoryVisibilityPrivate;
+    roomCreationParameters.isDirect = YES;
+    roomCreationParameters.preset = kMXRoomPresetTrustedPrivateChat;
+
+    return roomCreationParameters;
+}
+
 @end
