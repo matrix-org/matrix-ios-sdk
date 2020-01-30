@@ -1952,6 +1952,29 @@ typedef void (^MXOnResumeDone)(void);
     } failure:failure];
 }
 
+- (MXHTTPOperation*)canEnableE2EByDefaultInNewRoomWithUsers:(NSArray<NSString*>*)userIds
+                                                    success:(void (^)(BOOL canEnableE2E))success
+                                                    failure:(void (^)(NSError *error))failure
+{
+    // Check whether all users have uploaded device keys before.
+    // If so, encryption can be enabled in the new room
+    return [self.crypto downloadKeys:userIds forceDownload:NO success:^(MXUsersDevicesMap<MXDeviceInfo *> *usersDevicesInfoMap, NSDictionary<NSString *,MXCrossSigningInfo *> *crossSigningKeysMap) {
+        
+        BOOL allUsersHaveDeviceKeys = YES;
+        for (NSString *userId in userIds)
+        {
+            if ([usersDevicesInfoMap deviceIdsForUser:userId].count == 0)
+            {
+                allUsersHaveDeviceKeys = NO;
+                break;
+            }
+        }
+        
+        success(allUsersHaveDeviceKeys);
+        
+    } failure:failure];
+}
+
 
 #pragma mark - The user's rooms
 - (BOOL)hasRoomWithRoomId:(NSString*)roomId

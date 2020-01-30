@@ -484,14 +484,7 @@ If you have already installed all dependencies, the steps are::
       $ cd synapse
       $ virtualenv -p python3 env
       $ source env/bin/activate
-      (env) $ python synapse/python_dependencies.py | xargs pip install
-      (env) $ pip install lxml mock
-     
-Then, you need to set Synapse up for running demo scripts (https://github.com/matrix-org/synapse/blob/master/demo/README)::
-
-      (env) $ python setup.py develop
-
-Installation is done.
+      (env) $ python -m pip install --no-use-pep517 -e .
 
 Every time you want to launch these test homeservers, type::
 

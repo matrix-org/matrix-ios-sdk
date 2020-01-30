@@ -76,30 +76,70 @@ static NSArray<MXEventTypeString> *kMXDeviceVerificationManagerDMEventTypes;
 #pragma mark Requests
 
 - (void)requestVerificationByDMWithUserId:(NSString*)userId
-                                   roomId:(NSString*)roomId
+                                   roomId:(nullable NSString*)roomId
                              fallbackText:(NSString*)fallbackText
                                   methods:(NSArray<NSString*>*)methods
                                   success:(void(^)(MXKeyVerificationRequest *request))success
                                   failure:(void(^)(NSError *error))failure
 {
-    NSLog(@"[MXKeyVerification] requestVerificationByDMWithUserId: %@. RoomId: %@", userId, roomId);
+    if (roomId)
+    {
+        [self requestVerificationByDMWithUserId2:userId roomId:roomId fallbackText:fallbackText methods:methods success:success failure:failure];
+    }
+    else
+    {
+        // Use an existing direct room if any
+        MXRoom *room = [self.crypto.mxSession directJoinedRoomWithUserId:userId];
+        if (room)
+        {
+            [self requestVerificationByDMWithUserId2:userId roomId:room.roomId fallbackText:fallbackText methods:methods success:success failure:failure];
+        }
+        else
+        {
+            // Create a new DM with E2E by default if possible
+            [self.crypto.mxSession canEnableE2EByDefaultInNewRoomWithUsers:@[userId] success:^(BOOL canEnableE2E) {
+                MXRoomCreationParameters *roomCreationParameters = [MXRoomCreationParameters parametersForDirectRoomWithUser:userId];
+                
+                if (canEnableE2E)
+                {
+                    roomCreationParameters.initialStateEvents = @[
+                                                                  [MXRoomCreationParameters initialStateEventForEncryptionWithAlgorithm:kMXCryptoMegolmAlgorithm
+                                                                   ]];
+                }
 
+                [self.crypto.mxSession createRoomWithParameters:roomCreationParameters success:^(MXRoom *room) {
+                    [self requestVerificationByDMWithUserId2:userId roomId:room.roomId fallbackText:fallbackText methods:methods success:success failure:failure];
+                } failure:failure];
+            } failure:failure];
+        }
+    }
+}
+
+- (void)requestVerificationByDMWithUserId2:(NSString*)userId
+                                    roomId:(NSString*)roomId
+                              fallbackText:(NSString*)fallbackText
+                                   methods:(NSArray<NSString*>*)methods
+                                   success:(void(^)(MXKeyVerificationRequest *request))success
+                                   failure:(void(^)(NSError *error))failure
+{
+    NSLog(@"[MXKeyVerification] requestVerificationByDMWithUserId: %@. RoomId: %@", userId, roomId);
+    
     MXKeyVerificationRequestJSONModel *request = [MXKeyVerificationRequestJSONModel new];
     request.body = fallbackText;
     request.methods = methods;
     request.to = userId;
     request.fromDevice = _crypto.myDevice.deviceId;
-
+    
     [self sendEventOfType:kMXEventTypeStringRoomMessage toRoom:roomId content:request.JSONDictionary success:^(NSString *eventId) {
-
+        
         // Build the corresponding the event
         MXRoom *room = [self.crypto.mxSession roomWithRoomId:roomId];
         MXEvent *event = [room fakeRoomMessageEventWithEventId:eventId andContent:request.JSONDictionary];
-
+        
         MXKeyVerificationRequest *request = [self verificationRequestInDMEvent:event];
         [request updateState:MXKeyVerificationRequestStatePending notifiy:YES];
         [self addPendingRequest:request notify:NO];
-
+        
         success(request);
     } failure:failure];
 }
@@ -578,6 +618,12 @@ static NSArray<MXEventTypeString> *kMXDeviceVerificationManagerDMEventTypes;
             if ([self isCreationDateValid:transaction])
             {
                 [self addTransaction:transaction];
+                
+                if (request)
+                {
+                    NSLog(@"[MXKeyVerification] handleStartEvent: auto accept incoming transaction in response of a request");
+                    [transaction accept];
+                }
             }
             else
             {
