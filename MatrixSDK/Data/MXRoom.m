@@ -3098,7 +3098,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
     return isEncryptionRequired;
 }
 
-- (void)membersTrustLevelSummaryWithSuccess:(void (^)(MXUsersTrustLevelSummary *usersTrustLevelSummary))success failure:(void (^)(NSError *error))failure
+- (void)membersTrustLevelSummaryWithForceDownload:(BOOL)forceDownload success:(void (^)(MXUsersTrustLevelSummary *usersTrustLevelSummary))success failure:(void (^)(NSError *error))failure
 {
     MXCrypto *crypto = mxSession.crypto;
     
@@ -3115,8 +3115,15 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
                 [memberIds addObject:member.userId];
             }
             
-            [crypto trustLevelSummaryForUserIds:memberIds success:success failure:failure];
-             
+            if (forceDownload)
+            {
+                [crypto trustLevelSummaryForUserIds:memberIds success:success failure:failure];
+            }
+            else
+            {
+                success([crypto trustLevelSummaryForUserIds:memberIds]);
+            }
+            
         } failure:failure];
     }
     else

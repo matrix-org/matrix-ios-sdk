@@ -871,42 +871,53 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
 {
     [self downloadKeys:userIds forceDownload:NO success:^(MXUsersDevicesMap<MXDeviceInfo *> *usersDevicesInfoMap, NSDictionary<NSString *,MXCrossSigningInfo *> *crossSigningKeysMap) {
         
-        NSUInteger usersCount = userIds.count;
-        __block NSUInteger trustedUsersCount = 0;
-        __block NSUInteger devicesCount = 0;
-        __block NSUInteger trustedDevicesCount = 0;
-        
-        [usersDevicesInfoMap.map enumerateKeysAndObjectsUsingBlock:^(NSString * _Nonnull key, NSDictionary<NSString *, MXDeviceInfo *> * _Nonnull obj, BOOL * _Nonnull stop) {
-            
-            MXUserTrustLevel *memberTrustLevel = [self trustLevelForUser:key];
-            
-            if (memberTrustLevel.isVerified)
-            {
-                trustedUsersCount+=1;
-            }
-            
-            [obj enumerateKeysAndObjectsUsingBlock:^(NSString * _Nonnull key, MXDeviceInfo * _Nonnull obj, BOOL * _Nonnull stop) {
-                
-                devicesCount+=1;
-                
-                if (obj.trustLevel.isVerified)
-                {
-                    trustedDevicesCount+=1;
-                }
-            }];
-        }];
-        
-        NSProgress *trustedUsersProgress = [NSProgress progressWithTotalUnitCount:usersCount];
-        trustedUsersProgress.completedUnitCount = trustedUsersCount;
-        
-        NSProgress *trustedDevicesProgress = [NSProgress progressWithTotalUnitCount:devicesCount];
-        trustedDevicesProgress.completedUnitCount = trustedDevicesCount;
-        
-        MXUsersTrustLevelSummary *trustLevelSummary = [[MXUsersTrustLevelSummary alloc] initWithTrustedUsersProgress:trustedUsersProgress andTrustedDevicesProgress:trustedDevicesProgress];
-        
-        success(trustLevelSummary);
+        // Read data from the store
+        // It has been updated in the process of the downloadKeys response
+        success([self trustLevelSummaryForUserIds:userIds]);
         
     } failure:failure];
+}
+
+- (MXUsersTrustLevelSummary *)trustLevelSummaryForUserIds:(NSArray<NSString*>*)userIds
+{
+    NSUInteger usersCount = 0;
+    NSUInteger trustedUsersCount = 0;
+    NSUInteger devicesCount = 0;
+    NSUInteger trustedDevicesCount = 0;
+    
+    for (NSString *userId in userIds)
+    {
+        if (![userId isEqualToString:_mxSession.myUser.userId])
+        {
+            usersCount++;
+            MXUserTrustLevel *userTrustLevel = [self trustLevelForUser:userId];
+            if (userTrustLevel.isVerified)
+            {
+                trustedUsersCount++;
+            }
+        }
+        
+        for (MXDeviceInfo *device in [self.store devicesForUser:userId].allValues)
+        {
+            if (![userId isEqualToString:_mxSession.myUser.userId]
+                || ![device.deviceId isEqualToString:_store.deviceId])
+            {
+                devicesCount++;
+                if (device.trustLevel.isVerified)
+                {
+                    trustedDevicesCount++;
+                }
+            }
+        }
+    }
+    
+    NSProgress *trustedUsersProgress = [NSProgress progressWithTotalUnitCount:usersCount];
+    trustedUsersProgress.completedUnitCount = trustedUsersCount;
+    
+    NSProgress *trustedDevicesProgress = [NSProgress progressWithTotalUnitCount:devicesCount];
+    trustedDevicesProgress.completedUnitCount = trustedDevicesCount;
+    
+    return [[MXUsersTrustLevelSummary alloc] initWithTrustedUsersProgress:trustedUsersProgress andTrustedDevicesProgress:trustedDevicesProgress];
 }
 
 #pragma mark - Users keys
