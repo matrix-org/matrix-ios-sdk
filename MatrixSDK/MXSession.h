@@ -805,6 +805,23 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
                       success:(void (^)(void))success
                       failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
+/**
+ Determine if E2E can be enabled in a new room with a list users.
+ 
+ E2E will be adviced if all users have at least one device that supports
+ encryption.
+ 
+ @param userIds the list of users;
+ 
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+ 
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)canEnableE2EByDefaultInNewRoomWithUsers:(NSArray<NSString*>*)userIds
+                                                    success:(void (^)(BOOL canEnableE2E))success
+                                                    failure:(void (^)(NSError *error))failure;
+
 
 #pragma mark - The user's rooms
 /**

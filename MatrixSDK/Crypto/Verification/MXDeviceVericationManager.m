@@ -96,10 +96,20 @@ static NSArray<MXEventTypeString> *kMXDeviceVerificationManagerDMEventTypes;
         }
         else
         {
-            // Create a new DM
-            MXRoomCreationParameters *parameters = [MXRoomCreationParameters parametersForDirectRoomWithUser:userId];
-            [self.crypto.mxSession createRoomWithParameters:parameters success:^(MXRoom *room) {
-                [self requestVerificationByDMWithUserId2:userId roomId:room.roomId fallbackText:fallbackText methods:methods success:success failure:failure];
+            // Create a new DM with E2E by default if possible
+            [self.crypto.mxSession canEnableE2EByDefaultInNewRoomWithUsers:@[userId] success:^(BOOL canEnableE2E) {
+                MXRoomCreationParameters *roomCreationParameters = [MXRoomCreationParameters parametersForDirectRoomWithUser:userId];
+                
+                if (canEnableE2E)
+                {
+                    roomCreationParameters.initialStateEvents = @[
+                                                                  [MXRoomCreationParameters initialStateEventForEncryptionWithAlgorithm:kMXCryptoMegolmAlgorithm
+                                                                   ]];
+                }
+
+                [self.crypto.mxSession createRoomWithParameters:roomCreationParameters success:^(MXRoom *room) {
+                    [self requestVerificationByDMWithUserId2:userId roomId:room.roomId fallbackText:fallbackText methods:methods success:success failure:failure];
+                } failure:failure];
             } failure:failure];
         }
     }

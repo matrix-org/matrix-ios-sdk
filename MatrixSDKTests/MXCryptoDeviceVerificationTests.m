@@ -849,7 +849,6 @@
         __block NSString *requestId;
         
         MXCredentials *alice = aliceSession.matrixRestClient.credentials;
-        MXCredentials *bob = bobSession.matrixRestClient.credentials;
         
         MXRoom *roomFromBobPOV = [bobSession roomWithRoomId:roomId];
         [roomFromBobPOV setIsDirect:YES withUserId:alice.userId success:^{
@@ -907,7 +906,6 @@
         __block NSString *requestId;
         
         MXCredentials *alice = aliceSession.matrixRestClient.credentials;
-        MXCredentials *bob = bobSession.matrixRestClient.credentials;
             
         // - Bob requests a verification of Alice without indicating a room to use
         [bobSession.crypto.deviceVerificationManager requestVerificationByDMWithUserId:alice.userId
@@ -927,7 +925,9 @@
             
             [[NSNotificationCenter defaultCenter] removeObserver:observer];
             
-            [aliceSession joinRoom:note.userInfo[kMXSessionNotificationRoomIdKey] viaServers:nil success:nil failure:^(NSError *error) {
+            [aliceSession joinRoom:note.userInfo[kMXSessionNotificationRoomIdKey] viaServers:nil success:^(MXRoom *room) {
+                XCTAssertTrue(room.summary.isEncrypted);
+            } failure:^(NSError *error) {
                 XCTFail(@"Cannot set up intial test conditions - error: %@", error);
                 [expectation fulfill];
             }];
@@ -935,6 +935,8 @@
         
         // -> Alice gets the requests notification
         [self observeKeyVerificationRequestInSession:aliceSession block:^(MXKeyVerificationRequest * _Nullable request) {
+        
+            
             XCTAssertEqualObjects(request.requestId, requestId);
             XCTAssertFalse(request.isFromMyUser);
             
