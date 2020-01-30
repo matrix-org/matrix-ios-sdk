@@ -637,9 +637,6 @@
                 }
             };
 
-            // - Bob accepts it
-            [transactionFromBobPOV accept];
-
             // -> Transaction on Alice side must be WaitForPartnerKey, then ShowSAS
             [self observeTransactionUpdate:sasTransactionFromAlicePOV block:^{
 

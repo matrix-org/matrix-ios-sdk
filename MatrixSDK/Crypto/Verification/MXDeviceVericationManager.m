@@ -618,6 +618,12 @@ static NSArray<MXEventTypeString> *kMXDeviceVerificationManagerDMEventTypes;
             if ([self isCreationDateValid:transaction])
             {
                 [self addTransaction:transaction];
+                
+                if (request)
+                {
+                    NSLog(@"[MXKeyVerification] handleStartEvent: auto accept incoming transaction in response of a request");
+                    [transaction accept];
+                }
             }
             else
             {
