@@ -1100,9 +1100,10 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidFlushDataNotification;
 /**
  Provides a summary of members trust level for an encrypted room.
 
+ @param forceDownload YES to fetch data from the homeserver. NO to retrieve stored data.
  @param success A block object called when the operation succeeds. It provides a summary of members trust level for an encrypted room..
  @param failure A block object called when the operation fails.
  */
-- (void)membersTrustLevelSummaryWithSuccess:(void (^)(MXUsersTrustLevelSummary *usersTrustLevelSummary))success failure:(void (^)(NSError *error))failure;
+- (void)membersTrustLevelSummaryWithForceDownload:(BOOL)forceDownload success:(void (^)(MXUsersTrustLevelSummary *usersTrustLevelSummary))success failure:(void (^)(NSError *error))failure;
 
 @end

@@ -909,6 +909,40 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
     } failure:failure];
 }
 
+- (MXUsersTrustLevelSummary *)trustLevelSummaryForUserIds:(NSArray<NSString*>*)userIds
+{
+    NSUInteger usersCount = userIds.count;
+    NSUInteger trustedUsersCount = 0;
+    NSUInteger devicesCount = 0;
+    NSUInteger trustedDevicesCount = 0;
+    
+    for (NSString *userId in userIds)
+    {
+        MXUserTrustLevel *userTrustLevel = [self trustLevelForUser:userId];
+        if (userTrustLevel.isVerified)
+        {
+            trustedUsersCount++;
+        }
+        
+        for (MXDeviceInfo *device in [self.store devicesForUser:userId])
+        {
+            devicesCount++;
+            if (device.trustLevel.isVerified)
+            {
+                trustedDevicesCount++;
+            }
+        }
+    }
+    
+    NSProgress *trustedUsersProgress = [NSProgress progressWithTotalUnitCount:usersCount];
+    trustedUsersProgress.completedUnitCount = trustedUsersCount;
+    
+    NSProgress *trustedDevicesProgress = [NSProgress progressWithTotalUnitCount:devicesCount];
+    trustedDevicesProgress.completedUnitCount = trustedDevicesCount;
+    
+    return [[MXUsersTrustLevelSummary alloc] initWithTrustedUsersProgress:trustedUsersProgress andTrustedDevicesProgress:trustedDevicesProgress];
+}
+
 #pragma mark - Users keys
 
 - (MXHTTPOperation*)downloadKeys:(NSArray<NSString*>*)userIds

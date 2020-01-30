@@ -259,6 +259,15 @@ FOUNDATION_EXPORT NSString *const kMXCryptoRoomKeyRequestCancellationNotificatio
                             success:(void (^)(MXUsersTrustLevelSummary *usersTrustLevelSummary))success
                             failure:(void (^)(NSError *error))failure;
 
+/**
+ Get the stored summary of users trust level (trusted users and devices count).
+ 
+ @param userIds The user ids.
+ @return the trust summary.
+ */
+- (MXUsersTrustLevelSummary *)trustLevelSummaryForUserIds:(NSArray<NSString*>*)userIds;
+
+
 #pragma mark - Users keys
 
 /**
