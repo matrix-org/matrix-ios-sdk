@@ -831,4 +831,123 @@
     }];
 }
 
+/**
+ Test new requests without indicating a room to use
+ 
+ - Alice and Bob are in a room
+ - Make sure this room is direct
+ - Bob requests a verification of Alice without indicating a room to use
+ -> Alice gets the requests notification
+ -> They both have it in their pending requests
+ */
+- (void)testVerificationWithRoomDetection
+{
+    // - Alice and Bob are in a room
+    [matrixSDKTestsE2EData doE2ETestWithAliceAndBobInARoomWithCryptedMessages:self cryptedBob:YES readyToTest:^(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
+        
+        NSString *fallbackText = @"fallbackText";
+        __block NSString *requestId;
+        
+        MXCredentials *alice = aliceSession.matrixRestClient.credentials;
+        MXCredentials *bob = bobSession.matrixRestClient.credentials;
+        
+        MXRoom *roomFromBobPOV = [bobSession roomWithRoomId:roomId];
+        [roomFromBobPOV setIsDirect:YES withUserId:alice.userId success:^{
+            
+            // - Bob requests a verification of Alice without indicating a room to use
+            [bobSession.crypto.deviceVerificationManager requestVerificationByDMWithUserId:alice.userId
+                                                                                    roomId:nil
+                                                                              fallbackText:fallbackText
+                                                                                   methods:@[MXKeyVerificationMethodSAS, @"toto"]
+                                                                                   success:^(MXKeyVerificationRequest *request)
+             {
+                 requestId = request.requestId;
+             } failure:^(NSError * _Nonnull error) {
+                 XCTFail(@"The request should not fail - NSError: %@", error);
+                 [expectation fulfill];
+             }];
+            
+        } failure:^(NSError *error) {
+            XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+            [expectation fulfill];
+        }];
+        
+        // -> Alice gets the requests notification
+        [self observeKeyVerificationRequestInSession:aliceSession block:^(MXKeyVerificationRequest * _Nullable request) {
+            XCTAssertEqualObjects(request.requestId, requestId);
+            XCTAssertFalse(request.isFromMyUser);
+            
+            MXKeyVerificationRequest *requestFromAlicePOV = aliceSession.crypto.deviceVerificationManager.pendingRequests.firstObject;
+            MXKeyVerificationRequest *requestFromBobPOV = bobSession.crypto.deviceVerificationManager.pendingRequests.firstObject;
+            
+            XCTAssertNotNil(requestFromAlicePOV);
+            XCTAssertNotNil(requestFromBobPOV);
+            
+            
+            [expectation fulfill];
+        }];
+    }];
+}
+
+/**
+ Test new requests without indicating a room to use
+ 
+ - Alice and Bob are in a room
+ - Bob requests a verification of Alice
+ - Alice gets a room invite and join
+ -> Alice gets the requests notification
+ -> They both have it in their pending requests
+ */
+- (void)testVerificationWithNoRoom
+{
+    // - Alice and Bob are in a room
+    [matrixSDKTestsE2EData doE2ETestWithBobAndAlice:self readyToTest:^(MXSession *aliceSession, MXSession *bobSession, XCTestExpectation *expectation) {
+        
+        NSString *fallbackText = @"fallbackText";
+        __block NSString *requestId;
+        
+        MXCredentials *alice = aliceSession.matrixRestClient.credentials;
+        MXCredentials *bob = bobSession.matrixRestClient.credentials;
+            
+        // - Bob requests a verification of Alice without indicating a room to use
+        [bobSession.crypto.deviceVerificationManager requestVerificationByDMWithUserId:alice.userId
+                                                                                roomId:nil
+                                                                          fallbackText:fallbackText
+                                                                               methods:@[MXKeyVerificationMethodSAS, @"toto"]
+                                                                               success:^(MXKeyVerificationRequest *request)
+         {
+             requestId = request.requestId;
+         } failure:^(NSError * _Nonnull error) {
+             XCTFail(@"The request should not fail - NSError: %@", error);
+             [expectation fulfill];
+         }];
+        
+         // - Alice gets a room invite and join
+        __block id observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXSessionNewRoomNotification object:aliceSession queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
+            
+            [[NSNotificationCenter defaultCenter] removeObserver:observer];
+            
+            [aliceSession joinRoom:note.userInfo[kMXSessionNotificationRoomIdKey] viaServers:nil success:nil failure:^(NSError *error) {
+                XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                [expectation fulfill];
+            }];
+        }];
+        
+        // -> Alice gets the requests notification
+        [self observeKeyVerificationRequestInSession:aliceSession block:^(MXKeyVerificationRequest * _Nullable request) {
+            XCTAssertEqualObjects(request.requestId, requestId);
+            XCTAssertFalse(request.isFromMyUser);
+            
+            MXKeyVerificationRequest *requestFromAlicePOV = aliceSession.crypto.deviceVerificationManager.pendingRequests.firstObject;
+            MXKeyVerificationRequest *requestFromBobPOV = bobSession.crypto.deviceVerificationManager.pendingRequests.firstObject;
+            
+            XCTAssertNotNil(requestFromAlicePOV);
+            XCTAssertNotNil(requestFromBobPOV);
+            
+            
+            [expectation fulfill];
+        }];
+    }];
+}
+
 @end

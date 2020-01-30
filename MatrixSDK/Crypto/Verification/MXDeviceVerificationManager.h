@@ -91,14 +91,14 @@ FOUNDATION_EXPORT NSString *const MXDeviceVerificationManagerNotificationTransac
  Make a key verification request by Direct Message.
 
  @param userId the other user id.
- @param roomId the room to exchange direct messages
+ @param roomId the room to exchange direct messages. Nil to let SDK set up the room.
  @param fallbackText a text description if the app does not support verification by DM.
  @param methods Verification methods like MXKeyVerificationMethodSAS.
  @param success a block called when the operation succeeds.
  @param failure a block called when the operation fails.
  */
 - (void)requestVerificationByDMWithUserId:(NSString*)userId
-                                   roomId:(NSString*)roomId
+                                   roomId:(nullable NSString*)roomId
                              fallbackText:(NSString*)fallbackText
                                   methods:(NSArray<NSString*>*)methods
                                   success:(void(^)(MXKeyVerificationRequest *request))success
