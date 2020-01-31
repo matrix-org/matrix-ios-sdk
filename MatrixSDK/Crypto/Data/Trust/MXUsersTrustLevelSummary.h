@@ -21,7 +21,7 @@ NS_ASSUME_NONNULL_BEGIN
 /**
  A summary of the trust for a group of users and their devices
  */
-@interface MXUsersTrustLevelSummary : NSObject
+@interface MXUsersTrustLevelSummary : NSObject <NSCoding>
 
 // The ratio of trusted users excluding our user
 @property (nonatomic, strong, readonly) NSProgress *trustedUsersProgress;
