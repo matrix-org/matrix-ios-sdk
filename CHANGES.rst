@@ -9,6 +9,7 @@ Improvements:
  * MXSession: Add createRoomWithParameters with a MXRoomCreationParameters model class.
  * MXRoomCreationParameters: Support the initial_state parameter and allow e2e on room creation (vector-im/riot-ios/issues/2943).
  * MXCrypto: Expose devicesForUser.
+ * MXRoomSummary: Add the trust property to indicate trust in other users and devices in the room (vector-im/riot-ios/issues/2906).
 
 Bug fix:
  * MXEventType: Fix Swift refinement.

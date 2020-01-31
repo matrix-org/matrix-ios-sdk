@@ -18,22 +18,53 @@
 
 @interface MXUsersTrustLevelSummary()
 
-@property (nonatomic, strong, readwrite) NSProgress *trustedMembersProgress;
+@property (nonatomic, strong, readwrite) NSProgress *trustedUsersProgress;
 @property (nonatomic, strong, readwrite) NSProgress *trustedDevicesProgress;
 
 @end
 
 @implementation MXUsersTrustLevelSummary
 
-- (instancetype)initWithTrustedUsersProgress:(NSProgress*)trustedMembersProgress andTrustedDevicesProgress:(NSProgress*)trustedDevicesProgress
+- (instancetype)initWithTrustedUsersProgress:(NSProgress*)trustedUsersProgress andTrustedDevicesProgress:(NSProgress*)trustedDevicesProgress
 {
     self = [super init];
     if (self)
     {
-        self.trustedMembersProgress = trustedMembersProgress;
+        self.trustedUsersProgress = trustedUsersProgress;
         self.trustedDevicesProgress = trustedDevicesProgress;
     }
     return self;
 }
+
+
+#pragma mark - NSCoding
+
+- (id)initWithCoder:(NSCoder *)aDecoder
+{
+    self = [self init];
+    if (self)
+    {
+        NSUInteger usersCount = [aDecoder decodeIntegerForKey:@"usersCount"];
+        NSUInteger trustedUsersCount = [aDecoder decodeIntegerForKey:@"trustedUsersCount"];
+        NSUInteger devicesCount = [aDecoder decodeIntegerForKey:@"devicesCount"];
+        NSUInteger trustedDevicesCount = [aDecoder decodeIntegerForKey:@"trustedDevicesCount"];
+        
+        self.trustedUsersProgress = [NSProgress progressWithTotalUnitCount:usersCount];
+        self.trustedUsersProgress.completedUnitCount = trustedUsersCount;
+        
+        self.trustedDevicesProgress = [NSProgress progressWithTotalUnitCount:devicesCount];
+        self.trustedDevicesProgress.completedUnitCount = trustedDevicesCount;
+    }
+    return self;
+}
+
+- (void)encodeWithCoder:(NSCoder *)aCoder
+{
+    [aCoder encodeInteger:self.trustedUsersProgress.totalUnitCount forKey:@"usersCount"];
+    [aCoder encodeInteger:self.trustedUsersProgress.completedUnitCount forKey:@"trustedUsersCount"];
+    [aCoder encodeInteger:self.trustedDevicesProgress.totalUnitCount forKey:@"devicesCount"];
+    [aCoder encodeInteger:self.trustedDevicesProgress.completedUnitCount forKey:@"trustedDevicesCount"];
+}
+
 
 @end

@@ -413,6 +413,8 @@
 		32D2CC0523422462002BD8CA /* MX3PidAddSession.h in Headers */ = {isa = PBXBuildFile; fileRef = 32D2CC0123422462002BD8CA /* MX3PidAddSession.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		32D2CC0623422462002BD8CA /* MX3PidAddManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 32D2CC0223422462002BD8CA /* MX3PidAddManager.m */; };
 		32D2CC09234336D6002BD8CA /* MX3PidAddManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 32D2CC08234336D6002BD8CA /* MX3PidAddManager.swift */; };
+		32D5D16323E400A600E3E37C /* MXRoomSummaryTrustTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 32D5D16223E400A600E3E37C /* MXRoomSummaryTrustTests.m */; };
+		32D5D16423E400A600E3E37C /* MXRoomSummaryTrustTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 32D5D16223E400A600E3E37C /* MXRoomSummaryTrustTests.m */; };
 		32D7767D1A27860600FC4AA2 /* MXMemoryStore.h in Headers */ = {isa = PBXBuildFile; fileRef = 32D7767B1A27860600FC4AA2 /* MXMemoryStore.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		32D7767E1A27860600FC4AA2 /* MXMemoryStore.m in Sources */ = {isa = PBXBuildFile; fileRef = 32D7767C1A27860600FC4AA2 /* MXMemoryStore.m */; };
 		32D776811A27877300FC4AA2 /* MXMemoryRoomStore.h in Headers */ = {isa = PBXBuildFile; fileRef = 32D7767F1A27877300FC4AA2 /* MXMemoryRoomStore.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -1432,6 +1434,7 @@
 		32D2CC0123422462002BD8CA /* MX3PidAddSession.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MX3PidAddSession.h; sourceTree = "<group>"; };
 		32D2CC0223422462002BD8CA /* MX3PidAddManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MX3PidAddManager.m; sourceTree = "<group>"; };
 		32D2CC08234336D6002BD8CA /* MX3PidAddManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MX3PidAddManager.swift; sourceTree = "<group>"; };
+		32D5D16223E400A600E3E37C /* MXRoomSummaryTrustTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MXRoomSummaryTrustTests.m; sourceTree = "<group>"; };
 		32D7767B1A27860600FC4AA2 /* MXMemoryStore.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXMemoryStore.h; sourceTree = "<group>"; };
 		32D7767C1A27860600FC4AA2 /* MXMemoryStore.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXMemoryStore.m; sourceTree = "<group>"; };
 		32D7767F1A27877300FC4AA2 /* MXMemoryRoomStore.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXMemoryRoomStore.h; sourceTree = "<group>"; };
@@ -2430,6 +2433,7 @@
 		32C6F93919DD814400EA4E9C /* MatrixSDKTests */ = {
 			isa = PBXGroup;
 			children = (
+				32D5D16223E400A600E3E37C /* MXRoomSummaryTrustTests.m */,
 				B11BD45B22CB8ABC0064D8B0 /* MXReplyEventParserTests.m */,
 				32792BE02296C64200F4FC9D /* MXAggregatedEditsTests.m */,
 				32792BDE2296C59B00F4FC9D /* MXAggregatedReactionTests.m */,
@@ -3808,6 +3812,7 @@
 				321809B919EEBF3000377451 /* MXEventTests.m in Sources */,
 				32A31BC120D3F4C4005916C7 /* MXFilterTests.m in Sources */,
 				32B0E3E423A384D40054FF1A /* MXAggregatedReferenceTests.m in Sources */,
+				32D5D16323E400A600E3E37C /* MXRoomSummaryTrustTests.m in Sources */,
 				C61A4AF41E5DD88400442158 /* Dummy.swift in Sources */,
 				32935F61216FA49D00A1BC24 /* MXCryptoBackupTests.m in Sources */,
 				328DDEC11A07E57E008C7DC8 /* MXJSONModelTests.m in Sources */,
@@ -4097,6 +4102,7 @@
 				B1E09A292397FD080057C069 /* MXLoggerTests.m in Sources */,
 				B1E09A492398028D0057C069 /* MXSelfSignedHomeserverTests.m in Sources */,
 				32B0E3E523A384D40054FF1A /* MXAggregatedReferenceTests.m in Sources */,
+				32D5D16423E400A600E3E37C /* MXRoomSummaryTrustTests.m in Sources */,
 				B1E09A1B2397FCE90057C069 /* MXAggregatedReactionTests.m in Sources */,
 				B1E09A3F2397FD820057C069 /* MXNotificationCenterTests.m in Sources */,
 				B1E09A222397FCE90057C069 /* MXRoomSummaryTests.m in Sources */,

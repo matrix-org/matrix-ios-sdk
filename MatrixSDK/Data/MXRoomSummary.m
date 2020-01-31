@@ -22,6 +22,7 @@
 #import "MXRoom.h"
 #import "MXRoomState.h"
 #import "MXSession.h"
+#import "MXSDKOptions.h"
 #import "MXTools.h"
 #import "MXEventRelations.h"
 #import "MXEventReplace.h"
@@ -442,6 +443,102 @@ NSString *const kMXRoomSummaryDidChangeNotification = @"kMXRoomSummaryDidChangeN
 }
 
 
+#pragma mark - Trust management
+
+- (void)setIsEncrypted:(BOOL)isEncrypted
+{
+    _isEncrypted = isEncrypted;
+    if (_isEncrypted && [MXSDKOptions sharedInstance].computeE2ERoomSummaryTrust)
+    {
+        // Bootstrap trust computation
+        [self registerTrustLevelDidChangeNotifications];
+        
+        if (!self.trust)
+        {
+            [self triggerComputeTrust:YES];
+        }
+    }
+}
+
+- (void)setMembersCount:(MXRoomMembersCount *)membersCount
+{
+    _membersCount = membersCount;
+    if (_isEncrypted && [MXSDKOptions sharedInstance].computeE2ERoomSummaryTrust)
+    {
+        [self triggerComputeTrust:YES];
+    }
+}
+
+- (void)registerTrustLevelDidChangeNotifications
+{
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(deviceInfoTrustLevelDidChange:) name:MXDeviceInfoTrustLevelDidChangeNotification object:nil];
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(crossSigningInfoTrustLevelDidChange:) name:MXCrossSigningInfoTrustLevelDidChangeNotification object:nil];
+}
+
+- (void)deviceInfoTrustLevelDidChange:(NSNotification*)notification
+{
+    MXDeviceInfo *deviceInfo = notification.object;
+    
+    NSString *userId = deviceInfo.userId;
+    if (userId)
+    {
+        [self encryptionTrustLevelDidChangeRelatedToUserId:userId];
+    }
+}
+
+- (void)crossSigningInfoTrustLevelDidChange:(NSNotification*)notification
+{
+    MXCrossSigningInfo *crossSigningInfo = notification.object;
+    
+    NSString *userId = crossSigningInfo.userId;
+    if (userId)
+    {
+        [self encryptionTrustLevelDidChangeRelatedToUserId:userId];
+    }
+}
+
+- (void)encryptionTrustLevelDidChangeRelatedToUserId:(NSString*)userId
+{
+    [self.room members:^(MXRoomMembers *roomMembers) {
+        MXRoomMember *roomMember = [roomMembers memberWithUserId:userId];
+        
+        // If user belongs to the room refresh the trust level
+        if (roomMember)
+        {
+            [self triggerComputeTrust:NO];
+        }
+        
+    } failure:^(NSError *error) {
+        NSLog(@"[MXRoomSummary] trustLevelDidChangeRelatedToUserId fails to retrieve room members");
+    }];
+}
+
+- (void)triggerComputeTrust:(BOOL)forceDownload
+{
+    if (!_isEncrypted || ![MXSDKOptions sharedInstance].computeE2ERoomSummaryTrust)
+    {
+        return;
+    }
+    
+    // To improve
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 1 * NSEC_PER_SEC), dispatch_get_main_queue(), ^{
+        [self computeTrust:forceDownload];
+    });
+}
+
+- (void)computeTrust:(BOOL)forceDownload
+{
+    [self.room membersTrustLevelSummaryWithForceDownload:forceDownload success:^(MXUsersTrustLevelSummary *usersTrustLevelSummary) {
+        
+        self.trust = usersTrustLevelSummary;
+        [self save:YES];
+        
+    } failure:^(NSError *error) {
+        NSLog(@"[MXRoomSummary] trustLevelDidChangeRelatedToUserId fails to retrieve room members trusted progress");
+    }];
+}
+
+
 #pragma mark - Others
 - (NSUInteger)localUnreadEventCount
 {
@@ -615,6 +712,7 @@ NSString *const kMXRoomSummaryDidChangeNotification = @"kMXRoomSummaryDidChangeN
 
         _others = [aDecoder decodeObjectForKey:@"others"];
         _isEncrypted = [aDecoder decodeBoolForKey:@"isEncrypted"];
+        _trust = [aDecoder decodeObjectForKey:@"trust"];
         _notificationCount = (NSUInteger)[aDecoder decodeIntegerForKey:@"notificationCount"];
         _highlightCount = (NSUInteger)[aDecoder decodeIntegerForKey:@"highlightCount"];
         _directUserId = [aDecoder decodeObjectForKey:@"directUserId"];
@@ -639,6 +737,13 @@ NSString *const kMXRoomSummaryDidChangeNotification = @"kMXRoomSummaryDidChangeN
         _lastMessageOthers = lastMessageData[@"lastMessageOthers"];
         
         _hiddenFromUser = [aDecoder decodeBoolForKey:@"hiddenFromUser"];
+        
+        if (_isEncrypted && !_trust)
+        {
+            dispatch_async(dispatch_get_main_queue(), ^{
+                [self triggerComputeTrust:YES];
+            });
+        }
     }
     return self;
 }
@@ -657,6 +762,10 @@ NSString *const kMXRoomSummaryDidChangeNotification = @"kMXRoomSummaryDidChangeN
 
     [aCoder encodeObject:_others forKey:@"others"];
     [aCoder encodeBool:_isEncrypted forKey:@"isEncrypted"];
+    if (_trust)
+    {
+        [aCoder encodeObject:_trust forKey:@"trust"];
+    }
     [aCoder encodeInteger:(NSInteger)_notificationCount forKey:@"notificationCount"];
     [aCoder encodeInteger:(NSInteger)_highlightCount forKey:@"highlightCount"];
     [aCoder encodeObject:_directUserId forKey:@"directUserId"];
