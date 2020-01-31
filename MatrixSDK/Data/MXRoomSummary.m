@@ -30,7 +30,23 @@
 #import <Security/Security.h>
 #import <CommonCrypto/CommonCryptor.h>
 
+/**
+ RoomEncryptionTrustLevel represents the room members trust level in an encrypted room.
+ */
+typedef NS_ENUM(NSUInteger, MXRoomSummaryNextTrustComputation) {
+    MXRoomSummaryNextTrustComputationNone,
+    MXRoomSummaryNextTrustComputationPending,
+    MXRoomSummaryNextTrustComputationPendingWithForceDownload,
+};
+
+
 NSString *const kMXRoomSummaryDidChangeNotification = @"kMXRoomSummaryDidChangeNotification";
+
+/**
+ Time to wait before refreshing trust when a change has been detected.
+ */
+static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
+
 
 @interface MXRoomSummary ()
 {
@@ -45,6 +61,8 @@ NSString *const kMXRoomSummaryDidChangeNotification = @"kMXRoomSummaryDidChangeN
 
     // The listener to edits in the room.
     id eventEditsListener;
+    
+    MXRoomSummaryNextTrustComputation nextTrustComputation;
 }
 
 @end
@@ -57,6 +75,7 @@ NSString *const kMXRoomSummaryDidChangeNotification = @"kMXRoomSummaryDidChangeN
     if (self)
     {
         updatedWithStateEvents = NO;
+        nextTrustComputation = MXRoomSummaryNextTrustComputationNone;
     }
     return self;
 }
@@ -520,9 +539,41 @@ NSString *const kMXRoomSummaryDidChangeNotification = @"kMXRoomSummaryDidChangeN
         return;
     }
     
-    // To improve
-    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 1 * NSEC_PER_SEC), dispatch_get_main_queue(), ^{
-        [self computeTrust:forceDownload];
+    // Decide what to do
+    if (nextTrustComputation == MXRoomSummaryNextTrustComputationNone)
+    {
+        nextTrustComputation = MXRoomSummaryNextTrustComputationPending;
+    }
+    else
+    {
+        if (forceDownload)
+        {
+            nextTrustComputation = MXRoomSummaryNextTrustComputationPendingWithForceDownload;
+        }
+        
+        // Skip this request. Wait for the current one to finish
+        NSLog(@"[MXRoomSummary] triggerComputeTrust: Skip it. A request is pending");
+        return;
+    }
+    
+    // TODO: To improve
+    // This delay allows to gather multiple changes that occured in a room
+    // and make only computation and request
+    MXWeakify(self);
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, kMXRoomSummaryTrustComputationDelayMs * NSEC_PER_MSEC), dispatch_get_main_queue(), ^{
+        MXStrongifyAndReturnIfNil(self);
+        
+        BOOL forceDownload = (self->nextTrustComputation == MXRoomSummaryNextTrustComputationPendingWithForceDownload);
+        
+        if (self.mxSession.state == MXSessionStateRunning)
+        {
+            [self computeTrust:forceDownload];
+            self->nextTrustComputation = MXRoomSummaryNextTrustComputationNone;
+        }
+        else
+        {
+            [self triggerComputeTrust:forceDownload];
+        }
     });
 }
 
@@ -534,7 +585,7 @@ NSString *const kMXRoomSummaryDidChangeNotification = @"kMXRoomSummaryDidChangeN
         [self save:YES];
         
     } failure:^(NSError *error) {
-        NSLog(@"[MXRoomSummary] trustLevelDidChangeRelatedToUserId fails to retrieve room members trusted progress");
+        NSLog(@"[MXRoomSummary] computeTrust: fails to retrieve room members trusted progress");
     }];
 }
 

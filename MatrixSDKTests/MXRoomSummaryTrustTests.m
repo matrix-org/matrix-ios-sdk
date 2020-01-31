@@ -24,6 +24,9 @@
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Warc-retain-cycles"
 
+// TODO: To remove
+static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
+
 
 @interface MXRoomSummaryTrustTests : XCTestCase
 {
@@ -71,17 +74,20 @@
     // - Alice and Bob are in a room
     [matrixSDKTestsE2EData doE2ETestWithAliceAndBobInARoom:self cryptedBob:YES warnOnUnknowDevices:YES readyToTest:^(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
         
-        // -> Alice must see 0% of trust in this room
-        MXRoom *roomFromAlicePOV = [aliceSession roomWithRoomId:roomId];
-        MXUsersTrustLevelSummary *trust = roomFromAlicePOV.summary.trust;
-        
-        XCTAssertNotNil(trust);
-        XCTAssertEqual(trust.trustedUsersProgress.totalUnitCount, 1);
-        XCTAssertEqual(trust.trustedUsersProgress.completedUnitCount, 0);
-        XCTAssertEqual(trust.trustedDevicesProgress.totalUnitCount, 1);
-        XCTAssertEqual(trust.trustedDevicesProgress.completedUnitCount, 0);
-        
-        [expectation fulfill];
+        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, kMXRoomSummaryTrustComputationDelayMs * NSEC_PER_MSEC), dispatch_get_main_queue(), ^{
+
+            // -> Alice must see 0% of trust in this room
+            MXRoom *roomFromAlicePOV = [aliceSession roomWithRoomId:roomId];
+            MXUsersTrustLevelSummary *trust = roomFromAlicePOV.summary.trust;
+            
+            XCTAssertNotNil(trust);
+            XCTAssertEqual(trust.trustedUsersProgress.totalUnitCount, 1);
+            XCTAssertEqual(trust.trustedUsersProgress.completedUnitCount, 0);
+            XCTAssertEqual(trust.trustedDevicesProgress.totalUnitCount, 1);
+            XCTAssertEqual(trust.trustedDevicesProgress.completedUnitCount, 0);
+            
+            [expectation fulfill];
+        });
     }];
 }
 
@@ -95,28 +101,31 @@
     //  - Alice and Bob are in a room
     [matrixSDKTestsE2EData doE2ETestWithAliceAndBobInARoom:self cryptedBob:YES warnOnUnknowDevices:YES readyToTest:^(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
         
-        MXRoom *roomFromAlicePOV = [aliceSession roomWithRoomId:roomId];
-        MXUsersTrustLevelSummary *trust = roomFromAlicePOV.summary.trust;
-        
-        XCTAssertNotNil(trust);
-        XCTAssertEqual(trust.trustedDevicesProgress.completedUnitCount, 0);
-        
-        id observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXRoomSummaryDidChangeNotification object:roomFromAlicePOV.summary queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *notif) {
-            
-            // -> Alice must be notified for 100% of trust in this room
+        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, kMXRoomSummaryTrustComputationDelayMs * NSEC_PER_MSEC), dispatch_get_main_queue(), ^{
+
+            MXRoom *roomFromAlicePOV = [aliceSession roomWithRoomId:roomId];
             MXUsersTrustLevelSummary *trust = roomFromAlicePOV.summary.trust;
-            XCTAssertEqual(trust.trustedDevicesProgress.completedUnitCount, 1);
-            [expectation fulfill];
             
-        }];
-        [observers addObject:observer];
-        
-        // - Alice trusts Bob devices locally
-        MXCredentials *bob = bobSession.matrixRestClient.credentials;
-        [aliceSession.crypto setDeviceVerification:MXDeviceVerified forDevice:bob.deviceId ofUser:bob.userId success:nil failure:^(NSError *error) {
-            XCTFail(@"Cannot set up intial test conditions - error: %@", error);
-            [expectation fulfill];
-        }];
+            XCTAssertNotNil(trust);
+            XCTAssertEqual(trust.trustedDevicesProgress.completedUnitCount, 0);
+            
+            id observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXRoomSummaryDidChangeNotification object:roomFromAlicePOV.summary queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *notif) {
+                
+                // -> Alice must be notified for 100% of trust in this room
+                MXUsersTrustLevelSummary *trust = roomFromAlicePOV.summary.trust;
+                XCTAssertEqual(trust.trustedDevicesProgress.completedUnitCount, 1);
+                [expectation fulfill];
+                
+            }];
+            [observers addObject:observer];
+            
+            // - Alice trusts Bob devices locally
+            MXCredentials *bob = bobSession.matrixRestClient.credentials;
+            [aliceSession.crypto setDeviceVerification:MXDeviceVerified forDevice:bob.deviceId ofUser:bob.userId success:nil failure:^(NSError *error) {
+                XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                [expectation fulfill];
+            }];
+        });
     }];
 }
 
@@ -138,27 +147,31 @@
         MXCredentials *bob = bobSession.matrixRestClient.credentials;
         [aliceSession.crypto setDeviceVerification:MXDeviceVerified forDevice:bob.deviceId ofUser:bob.userId success:^{
             
-            MXUsersTrustLevelSummary *trust = roomFromAlicePOV.summary.trust;
-            XCTAssertEqual(trust.trustedDevicesProgress.completedUnitCount, 1);
-            
-            // - Bob signs in on a new device
-            [MXSDKOptions sharedInstance].enableCryptoWhenStartingMXSession = YES;
-            [matrixSDKTestsData relogUserSessionWithNewDevice:bobSession withPassword:MXTESTS_BOB_PWD onComplete:^(MXSession *bobSession2) {
-                [MXSDKOptions sharedInstance].enableCryptoWhenStartingMXSession = NO;
-            }];
-            
-            id observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXRoomSummaryDidChangeNotification object:roomFromAlicePOV.summary queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *notif) {
-                
-                // -> Alice must be notified for 100% of trust in this room
+            dispatch_after(dispatch_time(DISPATCH_TIME_NOW, kMXRoomSummaryTrustComputationDelayMs * NSEC_PER_MSEC), dispatch_get_main_queue(), ^{
+
                 MXUsersTrustLevelSummary *trust = roomFromAlicePOV.summary.trust;
-                if (trust.trustedDevicesProgress.totalUnitCount == 2)   // If could take for the SDK to detect the second Bob's device
-                {
-                    XCTAssertEqual(trust.trustedDevicesProgress.completedUnitCount, 1);
-                    XCTAssertEqual(trust.trustedDevicesProgress.totalUnitCount, 2);
-                    [expectation fulfill];
-                }
-            }];
-            [observers addObject:observer];
+                XCTAssertEqual(trust.trustedDevicesProgress.completedUnitCount, 1);
+                
+                // - Bob signs in on a new device
+                [MXSDKOptions sharedInstance].enableCryptoWhenStartingMXSession = YES;
+                [matrixSDKTestsData relogUserSessionWithNewDevice:bobSession withPassword:MXTESTS_BOB_PWD onComplete:^(MXSession *bobSession2) {
+                    [MXSDKOptions sharedInstance].enableCryptoWhenStartingMXSession = NO;
+                }];
+                
+                id observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXRoomSummaryDidChangeNotification object:roomFromAlicePOV.summary queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *notif) {
+                    
+                    // -> Alice must be notified for 100% of trust in this room
+                    MXUsersTrustLevelSummary *trust = roomFromAlicePOV.summary.trust;
+                    if (trust.trustedDevicesProgress.totalUnitCount == 2)   // If could take for the SDK to detect the second Bob's device
+                    {
+                        XCTAssertEqual(trust.trustedDevicesProgress.completedUnitCount, 1);
+                        XCTAssertEqual(trust.trustedDevicesProgress.totalUnitCount, 2);
+                        [expectation fulfill];
+                    }
+                }];
+                [observers addObject:observer];
+                
+            });
             
         } failure:^(NSError *error) {
             XCTFail(@"Cannot set up intial test conditions - error: %@", error);
@@ -167,5 +180,6 @@
     }];
 }
 
-
 @end
+
+#pragma clang diagnostic pop
