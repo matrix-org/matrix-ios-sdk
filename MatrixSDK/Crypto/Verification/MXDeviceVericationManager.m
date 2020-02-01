@@ -472,6 +472,8 @@ static NSArray<MXEventTypeString> *kMXDeviceVerificationManagerDMEventTypes;
 
 - (void)cancelTransaction:(MXDeviceVerificationTransaction*)transaction code:(MXTransactionCancelCode*)code
 {
+    NSLog(@"[MXKeyVerification] cancelTransaction. code: %@", code.value);
+    
     MXKeyVerificationCancel *cancel = [MXKeyVerificationCancel new];
     cancel.transactionId = transaction.transactionId;
     cancel.code = code.value;
@@ -573,6 +575,12 @@ static NSArray<MXEventTypeString> *kMXDeviceVerificationManagerDMEventTypes;
     if (request)
     {
         [request handleStart:keyVerificationStart];
+    }
+    else if ([event.relatesTo.relationType isEqualToString:MXEventRelationTypeReference])
+    {
+        // This is a start response to a request we did not make. Ignore it
+        NSLog(@"[MXKeyVerification] handleStartEvent: Start event for verification by DM(%@) not triggered by this device. Ignore it", requestId);
+        return;
     }
 
     if (!keyVerificationStart.isValid)
