@@ -887,20 +887,14 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
     
     for (NSString *userId in userIds)
     {
-        if (![userId isEqualToString:_mxSession.myUser.userId])
-        {
-            usersCount++;
-            MXUserTrustLevel *userTrustLevel = [self trustLevelForUser:userId];
-            if (userTrustLevel.isVerified)
-            {
-                trustedUsersCount++;
-            }
-        }
+        usersCount++;
         
-        for (MXDeviceInfo *device in [self.store devicesForUser:userId].allValues)
+        MXUserTrustLevel *userTrustLevel = [self trustLevelForUser:userId];
+        if (userTrustLevel.isVerified)
         {
-            if (![userId isEqualToString:_mxSession.myUser.userId]
-                || ![device.deviceId isEqualToString:_store.deviceId])
+            trustedUsersCount++;
+
+            for (MXDeviceInfo *device in [self.store devicesForUser:userId].allValues)
             {
                 devicesCount++;
                 if (device.trustLevel.isVerified)
