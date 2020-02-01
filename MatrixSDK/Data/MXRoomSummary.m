@@ -562,13 +562,13 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
     MXWeakify(self);
     dispatch_after(dispatch_time(DISPATCH_TIME_NOW, kMXRoomSummaryTrustComputationDelayMs * NSEC_PER_MSEC), dispatch_get_main_queue(), ^{
         MXStrongifyAndReturnIfNil(self);
-        
+        self->nextTrustComputation = MXRoomSummaryNextTrustComputationNone;
+
         BOOL forceDownload = (self->nextTrustComputation == MXRoomSummaryNextTrustComputationPendingWithForceDownload);
         
         if (self.mxSession.state == MXSessionStateRunning)
         {
             [self computeTrust:forceDownload];
-            self->nextTrustComputation = MXRoomSummaryNextTrustComputationNone;
         }
         else
         {

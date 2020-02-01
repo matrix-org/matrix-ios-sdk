@@ -23,10 +23,10 @@ NS_ASSUME_NONNULL_BEGIN
  */
 @interface MXUsersTrustLevelSummary : NSObject <NSCoding>
 
-// The ratio of trusted users excluding our user
+// The ratio of trusted users
 @property (nonatomic, strong, readonly) NSProgress *trustedUsersProgress;
 
-// The ratio of trusted users excluding our device
+// The ratio of trusted devices for trusted users
 @property (nonatomic, strong, readonly) NSProgress *trustedDevicesProgress;
 
 - (instancetype)initWithTrustedUsersProgress:(NSProgress*)trustedUsersProgress andTrustedDevicesProgress:(NSProgress*)trustedDevicesProgress;
