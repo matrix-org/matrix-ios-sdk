@@ -354,6 +354,7 @@ static NSArray<MXEmojiRepresentation*> *kSasEmojis;
                 }
                 else
                 {
+                    NSLog(@"[MXKeyVerification][MXSASTransaction] verifyMacs: ERROR: mac for device keys do not match: %@\vs %@", self.theirMac.JSONDictionary, self.myMac.JSONDictionary);
                     cancelCode = MXTransactionCancelCode.mismatchedKeys;
                     break;
                 }
@@ -364,7 +365,7 @@ static NSArray<MXEmojiRepresentation*> *kSasEmojis;
                 MXCrossSigningKey *otherUserMasterKeys= [self.manager.crypto crossSigningKeysForUser:self.otherDevice.userId].masterKeys;
                 if (otherUserMasterKeys)
                 {
-                    // Check MAC with  user's MSK keys
+                    // Check MAC with user's MSK keys
                     if ([key.value isEqualToString:[self macUsingAgreedMethod:otherUserMasterKeys.keys
                                                                          info:[NSString stringWithFormat:@"%@%@", baseInfo, keyFullId]]])
                     {
@@ -372,6 +373,7 @@ static NSArray<MXEmojiRepresentation*> *kSasEmojis;
                         {
                             // Mark user as verified
                             NSLog(@"[MXKeyVerification][MXSASTransaction] verifyMacs: Mark user %@ as verified", self.otherDevice.userId);
+                            dispatch_group_enter(group);
                             [self.manager.crypto.crossSigning signUserWithUserId:self.otherDevice.userId success:^{
                                 dispatch_group_leave(group);
 
@@ -391,6 +393,7 @@ static NSArray<MXEmojiRepresentation*> *kSasEmojis;
                     }
                     else
                     {
+                        NSLog(@"[MXKeyVerification][MXSASTransaction] verifyMacs: ERROR: mac for master keys do not match: %@\vs %@", self.theirMac.JSONDictionary, self.myMac.JSONDictionary);
                         cancelCode = MXTransactionCancelCode.mismatchedKeys;
                         break;
                     }
@@ -403,7 +406,7 @@ static NSArray<MXEmojiRepresentation*> *kSasEmojis;
             }
         }
 
-        dispatch_group_notify(group, dispatch_get_main_queue(), ^{
+        dispatch_group_notify(group, self.manager.crypto.cryptoQueue, ^{
             if (cancelCode)
             {
                 [self cancelWithCancelCode:cancelCode];
