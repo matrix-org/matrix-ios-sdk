@@ -301,6 +301,11 @@ static NSArray<MXEmojiRepresentation*> *kSasEmojis;
         macContent.transactionId = self.transactionId;
         macContent.mac = mac;
         macContent.keys = keyStrings;
+        
+        // TODO: To remove
+        NSLog(@"keyListIds: %@", keyListIds);
+        NSLog(@"otherUserMasterKeys: %@", myUserCrossSigningKeys.masterKeys.keys);
+        NSLog(@"info: %@", [NSString stringWithFormat:@"%@%@", baseInfo, deviceKey.keyFullId]);
     }
 
     return macContent;
@@ -394,6 +399,10 @@ static NSArray<MXEmojiRepresentation*> *kSasEmojis;
                     else
                     {
                         NSLog(@"[MXKeyVerification][MXSASTransaction] verifyMacs: ERROR: mac for master keys do not match: %@\vs %@", self.theirMac.JSONDictionary, self.myMac.JSONDictionary);
+                        NSLog(@"keyListIds: %@", keyListIds);
+                        NSLog(@"otherUserMasterKeys: %@", otherUserMasterKeys.keys);
+                        NSLog(@"info: %@", [NSString stringWithFormat:@"%@%@", baseInfo, keyFullId]);
+                        
                         cancelCode = MXTransactionCancelCode.mismatchedKeys;
                         break;
                     }
