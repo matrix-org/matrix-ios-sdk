@@ -165,79 +165,92 @@ NSString *const MXCrossSigningErrorDomain = @"org.matrix.sdk.crosssigning";
                             failure:(void (^)(NSError *error))failure
 {
     NSString *myUserId = self.crypto.mxSession.myUser.userId;
-
-    // Make sure we have latest data from the user
-    [self.crypto.deviceList downloadKeys:@[myUserId] forceDownload:NO success:^(MXUsersDevicesMap<MXDeviceInfo *> *userDevices, NSDictionary<NSString *,MXCrossSigningInfo *> *crossSigningKeysMap) {
-
-        MXDeviceInfo *device = [self.crypto.store deviceWithDeviceId:deviceId forUser:myUserId];
-
-        // Sanity check
-        if (!device)
-        {
-            NSLog(@"[MXCrossSigning] crossSignDeviceWithDeviceId: Unknown device %@", deviceId);
-            dispatch_async(dispatch_get_main_queue(), ^{
-                NSError *error = [NSError errorWithDomain:MXCrossSigningErrorDomain
-                                                     code:MXCrossSigningUnknownDeviceIdErrorCode
-                                                 userInfo:@{
-                                                            NSLocalizedDescriptionKey: @"Unknown device",
-                                                            }];
-                failure(error);
-            });
-            return;
-        }
-
-        [self signDevice:device success:^{
-            dispatch_async(dispatch_get_main_queue(), ^{
-                success();
-            });
+    
+    dispatch_async(self.crypto.cryptoQueue, ^{
+        
+        // Make sure we have latest data from the user
+        [self.crypto.deviceList downloadKeys:@[myUserId] forceDownload:NO success:^(MXUsersDevicesMap<MXDeviceInfo *> *userDevices, NSDictionary<NSString *,MXCrossSigningInfo *> *crossSigningKeysMap) {
+            
+            MXDeviceInfo *device = [self.crypto.store deviceWithDeviceId:deviceId forUser:myUserId];
+            
+            // Sanity check
+            if (!device)
+            {
+                NSLog(@"[MXCrossSigning] crossSignDeviceWithDeviceId: Unknown device %@", deviceId);
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    NSError *error = [NSError errorWithDomain:MXCrossSigningErrorDomain
+                                                         code:MXCrossSigningUnknownDeviceIdErrorCode
+                                                     userInfo:@{
+                                                                NSLocalizedDescriptionKey: @"Unknown device",
+                                                                }];
+                    failure(error);
+                });
+                return;
+            }
+            
+            [self signDevice:device success:^{
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    success();
+                });
+            } failure:^(NSError *error) {
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    failure(error);
+                });
+            }];
         } failure:^(NSError *error) {
             dispatch_async(dispatch_get_main_queue(), ^{
                 failure(error);
             });
         }];
-    } failure:failure];
+    });
 }
 
 - (void)signUserWithUserId:(NSString*)userId
                    success:(void (^)(void))success
                    failure:(void (^)(NSError *error))failure
 {
-    // Make sure we have latest data from the user
-    [self.crypto.deviceList downloadKeys:@[userId] forceDownload:NO success:^(MXUsersDevicesMap<MXDeviceInfo *> *userDevices, NSDictionary<NSString *,MXCrossSigningInfo *> *crossSigningKeysMap) {
-
-        MXCrossSigningInfo *otherUserKeys = [self.crypto.store crossSigningKeysForUser:userId];
-        MXCrossSigningKey *otherUserMasterKeys = otherUserKeys.masterKeys;
-
-        // Sanity check
-        if (!otherUserMasterKeys)
-        {
-            NSLog(@"[MXCrossSigning] signUserWithUserId: User %@ unknown locally", userId);
-            dispatch_async(dispatch_get_main_queue(), ^{
-                NSError *error = [NSError errorWithDomain:MXCrossSigningErrorDomain
-                                                     code:MXCrossSigningUnknownUserIdErrorCode
-                                                 userInfo:@{
-                                                            NSLocalizedDescriptionKey: @"Unknown user",
-                                                            }];
-                failure(error);
-            });
-            return;
-        }
-
-        [self signKey:otherUserMasterKeys success:^{
-
-            // Update other user's devices trust
-            [self checkTrustLevelForDevicesOfUser:userId];
-
-            dispatch_async(dispatch_get_main_queue(), ^{
-                success();
-            });
+    dispatch_async(self.crypto.cryptoQueue, ^{
+        // Make sure we have latest data from the user
+        [self.crypto.deviceList downloadKeys:@[userId] forceDownload:NO success:^(MXUsersDevicesMap<MXDeviceInfo *> *userDevices, NSDictionary<NSString *,MXCrossSigningInfo *> *crossSigningKeysMap) {
+            
+            MXCrossSigningInfo *otherUserKeys = [self.crypto.store crossSigningKeysForUser:userId];
+            MXCrossSigningKey *otherUserMasterKeys = otherUserKeys.masterKeys;
+            
+            // Sanity check
+            if (!otherUserMasterKeys)
+            {
+                NSLog(@"[MXCrossSigning] signUserWithUserId: User %@ unknown locally", userId);
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    NSError *error = [NSError errorWithDomain:MXCrossSigningErrorDomain
+                                                         code:MXCrossSigningUnknownUserIdErrorCode
+                                                     userInfo:@{
+                                                                NSLocalizedDescriptionKey: @"Unknown user",
+                                                                }];
+                    failure(error);
+                });
+                return;
+            }
+            
+            [self signKey:otherUserMasterKeys success:^{
+                
+                // Update other user's devices trust
+                [self checkTrustLevelForDevicesOfUser:userId];
+                
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    success();
+                });
+            } failure:^(NSError *error) {
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    failure(error);
+                });
+            }];
+            
         } failure:^(NSError *error) {
             dispatch_async(dispatch_get_main_queue(), ^{
                 failure(error);
             });
         }];
-
-    } failure:failure];
+    });
 }
 
 #pragma mark - SDK-Private methods -
@@ -485,28 +498,37 @@ NSString *const MXCrossSigningErrorDomain = @"org.matrix.sdk.crosssigning";
 
     MXCredentials *myUser = _crypto.mxSession.matrixRestClient.credentials;
 
-    [self.keysStorageDelegate getCrossSigningKey:self userId:myUser.userId deviceId:myUser.deviceId withKeyType:keyType expectedPublicKey:expectedPublicKey success:^(NSData * _Nonnull privateKey) {
-
-        NSError *error;
-        OLMPkSigning *pkSigning = [[OLMPkSigning alloc] init];
-        NSString *gotPublicKey = [pkSigning doInitWithSeed:privateKey error:&error];
-        if (error)
-        {
-            NSLog(@"[MXCrossSigning] getCrossSigningKeyWithKeyType failed to build PK signing. Error: %@", error);
-            failure(error);
-            return;
-        }
-
-        if (![gotPublicKey isEqualToString:expectedPublicKey])
-        {
-            NSLog(@"[MXCrossSigning] getCrossSigningKeyWithKeyType failed. Keys do not match: %@ vs %@", gotPublicKey, expectedPublicKey);
-            failure(nil);
-            return;
-        }
-
-        success(gotPublicKey, pkSigning);
-
-    } failure:failure];
+    // Interact with the outside on the main thread
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [self.keysStorageDelegate getCrossSigningKey:self userId:myUser.userId deviceId:myUser.deviceId withKeyType:keyType expectedPublicKey:expectedPublicKey success:^(NSData * _Nonnull privateKey) {
+            
+            dispatch_async(self.crypto.cryptoQueue, ^{
+                NSError *error;
+                OLMPkSigning *pkSigning = [[OLMPkSigning alloc] init];
+                NSString *gotPublicKey = [pkSigning doInitWithSeed:privateKey error:&error];
+                if (error)
+                {
+                    NSLog(@"[MXCrossSigning] getCrossSigningKeyWithKeyType failed to build PK signing. Error: %@", error);
+                    failure(error);
+                    return;
+                }
+                
+                if (![gotPublicKey isEqualToString:expectedPublicKey])
+                {
+                    NSLog(@"[MXCrossSigning] getCrossSigningKeyWithKeyType failed. Keys do not match: %@ vs %@", gotPublicKey, expectedPublicKey);
+                    failure(nil);
+                    return;
+                }
+                
+                success(gotPublicKey, pkSigning);
+            });
+            
+        } failure:^(NSError * _Nonnull error) {
+            dispatch_async(self.crypto.cryptoQueue, ^{
+                failure(error);
+            });
+        }];
+    });
 }
 
 @end

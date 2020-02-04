@@ -386,6 +386,8 @@
 		32C474C122AF7A2D00CFBCD2 /* MXReactionOperation.h in Headers */ = {isa = PBXBuildFile; fileRef = 32C474BF22AF7A2D00CFBCD2 /* MXReactionOperation.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		32C474C222AF7A2D00CFBCD2 /* MXReactionOperation.m in Sources */ = {isa = PBXBuildFile; fileRef = 32C474C022AF7A2D00CFBCD2 /* MXReactionOperation.m */; };
 		32C6F93319DD814400EA4E9C /* MatrixSDK.h in Headers */ = {isa = PBXBuildFile; fileRef = 32C6F93219DD814400EA4E9C /* MatrixSDK.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		32C9B71823E81A1C00C6F30A /* MXCrossSigningVerificationTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 32C9B71723E81A1C00C6F30A /* MXCrossSigningVerificationTests.m */; };
+		32C9B71923E81A1C00C6F30A /* MXCrossSigningVerificationTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 32C9B71723E81A1C00C6F30A /* MXCrossSigningVerificationTests.m */; };
 		32CAB1071A91EA34008C5BB9 /* MXPushRuleRoomMemberCountConditionChecker.h in Headers */ = {isa = PBXBuildFile; fileRef = 32CAB1051A91EA34008C5BB9 /* MXPushRuleRoomMemberCountConditionChecker.h */; };
 		32CAB1081A91EA34008C5BB9 /* MXPushRuleRoomMemberCountConditionChecker.m in Sources */ = {isa = PBXBuildFile; fileRef = 32CAB1061A91EA34008C5BB9 /* MXPushRuleRoomMemberCountConditionChecker.m */; };
 		32CAB10B1A925B41008C5BB9 /* MXHTTPOperation.h in Headers */ = {isa = PBXBuildFile; fileRef = 32CAB1091A925B41008C5BB9 /* MXHTTPOperation.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -1413,6 +1415,7 @@
 		32C6F93219DD814400EA4E9C /* MatrixSDK.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MatrixSDK.h; sourceTree = "<group>"; };
 		32C6F93819DD814400EA4E9C /* MatrixSDKTests-iOS.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "MatrixSDKTests-iOS.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 		32C6F93B19DD814400EA4E9C /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		32C9B71723E81A1C00C6F30A /* MXCrossSigningVerificationTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MXCrossSigningVerificationTests.m; sourceTree = "<group>"; };
 		32CAB1051A91EA34008C5BB9 /* MXPushRuleRoomMemberCountConditionChecker.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXPushRuleRoomMemberCountConditionChecker.h; sourceTree = "<group>"; };
 		32CAB1061A91EA34008C5BB9 /* MXPushRuleRoomMemberCountConditionChecker.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXPushRuleRoomMemberCountConditionChecker.m; sourceTree = "<group>"; };
 		32CAB1091A925B41008C5BB9 /* MXHTTPOperation.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXHTTPOperation.h; sourceTree = "<group>"; };
@@ -2433,6 +2436,7 @@
 		32C6F93919DD814400EA4E9C /* MatrixSDKTests */ = {
 			isa = PBXGroup;
 			children = (
+				32C9B71723E81A1C00C6F30A /* MXCrossSigningVerificationTests.m */,
 				32D5D16223E400A600E3E37C /* MXRoomSummaryTrustTests.m */,
 				B11BD45B22CB8ABC0064D8B0 /* MXReplyEventParserTests.m */,
 				32792BE02296C64200F4FC9D /* MXAggregatedEditsTests.m */,
@@ -3797,6 +3801,7 @@
 				32832B5D1BCC048300241108 /* MXStoreMemoryStoreTests.m in Sources */,
 				32114A7F1A24E15500FF2EC4 /* MXMyUserTests.m in Sources */,
 				32832B5E1BCC048300241108 /* MXStoreNoStoreTests.m in Sources */,
+				32C9B71823E81A1C00C6F30A /* MXCrossSigningVerificationTests.m in Sources */,
 				323C5A081A70E53500FB0549 /* MXToolsTests.m in Sources */,
 				3281E89E19E299C000976E1A /* MXErrorTests.m in Sources */,
 				3265CB3B1A151C3800E24B2F /* MXRoomStateTests.m in Sources */,
@@ -4087,6 +4092,7 @@
 				B1E09A1A2397FCE90057C069 /* MXAggregatedEditsTests.m in Sources */,
 				B1E09A1F2397FCE90057C069 /* MXAutoDiscoveryTests.m in Sources */,
 				B1E09A2E2397FD750057C069 /* MXRestClientTests.m in Sources */,
+				32C9B71923E81A1C00C6F30A /* MXCrossSigningVerificationTests.m in Sources */,
 				B1E09A1D2397FCE90057C069 /* MXCryptoDeviceVerificationTests.m in Sources */,
 				B1E09A472397FD990057C069 /* MXEventScanStoreTests.m in Sources */,
 				B1E09A3D2397FD820057C069 /* MXStoreFileStoreTests.m in Sources */,
