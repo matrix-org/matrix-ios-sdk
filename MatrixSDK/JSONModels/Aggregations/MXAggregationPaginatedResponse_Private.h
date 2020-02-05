@@ -21,7 +21,7 @@ NS_ASSUME_NONNULL_BEGIN
  */
 @interface MXAggregationPaginatedResponse()
 
-- (instancetype)initWithOriginalEvent:(nullable MXEvent*)originalEvent
+- (instancetype)initWithOriginalEvent:(MXEvent*)originalEvent
                                 chunk:(NSArray<MXEvent*> *)chunk
                             nextBatch:(nullable NSString *)nextBatch;
 
