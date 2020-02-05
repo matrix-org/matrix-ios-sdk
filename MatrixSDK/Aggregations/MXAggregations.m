@@ -28,6 +28,7 @@
 #import "MXAggregatedEditsUpdater.h"
 #import "MXAggregatedReferencesUpdater.h"
 #import "MXEventEditsListener.h"
+#import "MXAggregationPaginatedResponse_Private.h"
 
 @interface MXAggregations ()
 
@@ -140,8 +141,9 @@
                                     success:(void (^)(MXAggregationPaginatedResponse *paginatedResponse))success
                                     failure:(void (^)(NSError *error))failure
 {
-    return [self.mxSession.matrixRestClient relationsForEvent:eventId inRoom:roomId relationType:MXEventRelationTypeReference eventType:nil from:from limit:limit success:^(MXAggregationPaginatedResponse *paginatedResponse) {
-
+    MXHTTPOperation* operation;
+    
+    void (^processPaginatedResponse)(MXAggregationPaginatedResponse *paginatedResponse) = ^(MXAggregationPaginatedResponse *paginatedResponse) {
         // Decrypt events if required
         NSArray<MXEvent *> *allEvents;
         if (paginatedResponse.originalEvent)
@@ -155,7 +157,7 @@
                 allEvents = @[paginatedResponse.originalEvent];
             }
         }
-
+        
         for (MXEvent *event in allEvents)
         {
             if (event.isEncrypted && !event.clearEvent)
@@ -163,9 +165,29 @@
                 [self.mxSession decryptEvent:event inTimeline:nil];
             }
         }
-
+        
         success(paginatedResponse);
-    } failure:failure];
+    };
+    
+    MXEvent *event = [self.mxSession.store eventWithEventId:eventId inRoom:roomId];
+    
+    if (!event)
+    {
+        operation = [self.mxSession.matrixRestClient relationsForEvent:eventId inRoom:roomId relationType:MXEventRelationTypeReference eventType:nil from:from limit:limit success:^(MXAggregationPaginatedResponse *paginatedResponse) {
+            processPaginatedResponse(paginatedResponse);
+        } failure:failure];
+    }
+    else
+    {
+        NSArray<MXEvent *> *referenceEvents = [self.mxSession.store relationsForEvent:eventId inRoom:roomId relationType:MXEventRelationTypeReference];
+
+        MXAggregationPaginatedResponse *paginatedResponse = [[MXAggregationPaginatedResponse alloc] initWithOriginalEvent:event
+                                                                                                                    chunk:referenceEvents
+                                                                                                                nextBatch:nil];
+        processPaginatedResponse(paginatedResponse);
+    }
+
+    return operation;
 }
 
 #pragma mark - Data
