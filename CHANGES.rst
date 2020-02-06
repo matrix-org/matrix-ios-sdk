@@ -11,6 +11,7 @@ Improvements:
  * MXCrypto: Expose devicesForUser.
  * MXRoomSummary: Add the trust property to indicate trust in other users and devices in the room (vector-im/riot-ios/issues/2906).
  * MXStore: Add a method to get related events for a specific event.
+ * MXCrypto: Start tracking current user devices at MXCrypto instantiation.
 
 Bug fix:
  * MXEventType: Fix Swift refinement.

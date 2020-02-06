@@ -1527,6 +1527,9 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
         myDevices[_myDevice.deviceId] = _myDevice;
         [_store storeDevicesForUser:userId devices:myDevices];
 
+        // Track other devices of current user
+        [_deviceList startTrackingDeviceList:userId];
+
         oneTimeKeyCount = -1;
 
         _backup = [[MXKeyBackup alloc] initWithCrypto:self];
