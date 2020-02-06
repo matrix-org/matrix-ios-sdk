@@ -297,6 +297,7 @@
     operation = [crypto ensureOlmSessionsForDevices:@{
                                           userId: @[deviceInfo]
                                           }
+                                              force:NO
                                 success:^(MXUsersDevicesMap<MXOlmSessionResult *> *results)
      {
          MXStrongifyAndReturnIfNil(self);

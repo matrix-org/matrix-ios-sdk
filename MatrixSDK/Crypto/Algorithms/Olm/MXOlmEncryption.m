@@ -122,6 +122,17 @@
     return operation;
 }
 
+- (MXHTTPOperation*)reshareKey:(NSString*)sessionId
+                      withUser:(NSString*)userId
+                     andDevice:(NSString*)deviceId
+                     senderKey:(NSString*)senderKey
+                       success:(void (^)(void))success
+                       failure:(void (^)(NSError *error))failure
+{
+    // No need for olm
+    return nil;
+}
+
 @end
 
 #endif
