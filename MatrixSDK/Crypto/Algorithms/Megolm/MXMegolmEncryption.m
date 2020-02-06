@@ -495,6 +495,7 @@
         return nil;
     }
     
+    // @TODO: Manu: To use
     NSUInteger chainIndex = [chainIndexNumber unsignedIntegerValue];
 
     MXHTTPOperation *operation;
@@ -526,7 +527,7 @@
                      
                      NSLog(@"[MXMegolmEncryption] reshareKey: sharing keys for session %@|%@:%@ with device %@:%@", senderKey, sessionId, @(chainIndex), userId, deviceId);
                      
-                     NSDictionary *payload = [self buildKeyForwardingMessage:self->roomId senderKey:senderKey sessionId:sessionId];
+                     NSDictionary *payload = [self->crypto buildMegolmKeyForwardingMessage:self->roomId senderKey:senderKey sessionId:sessionId];
                     
                      
                      MXUsersDevicesMap<NSDictionary*> *contentMap = [[MXUsersDevicesMap alloc] init];
@@ -539,29 +540,6 @@
                  } failure:failure];
     
     return operation;
-}
-
-- (NSDictionary*)buildKeyForwardingMessage:(NSString*)roomId senderKey:(NSString*)senderKey sessionId:(NSString*)sessionId
-{
-    NSDictionary *key = [crypto.olmDevice getInboundGroupSessionKey:roomId senderKey:senderKey sessionId:sessionId];
-    if (key)
-    {
-        return @{
-                 @"type": kMXEventTypeStringRoomForwardedKey,
-                 @"content": @{
-                         @"algorithm": kMXCryptoMegolmAlgorithm,
-                         @"room_id": roomId,
-                         @"sender_key": senderKey,
-                         @"sender_claimed_ed25519_key": key[@"sender_claimed_ed25519_key"],
-                         @"session_id": sessionId,
-                         @"session_key": key[@"key"],
-                         @"chain_index": key[@"chain_index"],
-                         @"forwarding_curve25519_key_chain": key[@"forwarding_curve25519_key_chain"]
-                         }
-                 };
-    }
-    
-    return nil;
 }
 
 - (void)processPendingEncryptionsInSession:(MXOutboundSessionInfo*)session withError:(NSError*)error
