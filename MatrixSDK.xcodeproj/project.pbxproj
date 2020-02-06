@@ -928,6 +928,8 @@
 		B17285792100C8EA0052C51E /* MXSendReplyEventStringsLocalizable.h in Headers */ = {isa = PBXBuildFile; fileRef = B17285782100C88A0052C51E /* MXSendReplyEventStringsLocalizable.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		B172857C2100D4F60052C51E /* MXSendReplyEventDefaultStringLocalizations.h in Headers */ = {isa = PBXBuildFile; fileRef = B172857A2100D4F60052C51E /* MXSendReplyEventDefaultStringLocalizations.h */; };
 		B172857D2100D4F60052C51E /* MXSendReplyEventDefaultStringLocalizations.m in Sources */ = {isa = PBXBuildFile; fileRef = B172857B2100D4F60052C51E /* MXSendReplyEventDefaultStringLocalizations.m */; };
+		B176B25123EB03E4001879C6 /* MXAggregationPaginatedResponse_Private.h in Headers */ = {isa = PBXBuildFile; fileRef = B176B25023EB03E3001879C6 /* MXAggregationPaginatedResponse_Private.h */; };
+		B176B25223EB03E4001879C6 /* MXAggregationPaginatedResponse_Private.h in Headers */ = {isa = PBXBuildFile; fileRef = B176B25023EB03E3001879C6 /* MXAggregationPaginatedResponse_Private.h */; };
 		B17982F52119E4A2001FD722 /* MXRoomCreateContent.h in Headers */ = {isa = PBXBuildFile; fileRef = B17982ED2119E49E001FD722 /* MXRoomCreateContent.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		B17982F62119E4A2001FD722 /* MXRoomTombStoneContent.m in Sources */ = {isa = PBXBuildFile; fileRef = B17982EE2119E49F001FD722 /* MXRoomTombStoneContent.m */; };
 		B17982F72119E4A2001FD722 /* MXRoomPredecessorInfo.h in Headers */ = {isa = PBXBuildFile; fileRef = B17982EF2119E49F001FD722 /* MXRoomPredecessorInfo.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -1548,6 +1550,7 @@
 		B17285782100C88A0052C51E /* MXSendReplyEventStringsLocalizable.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = MXSendReplyEventStringsLocalizable.h; path = ../MXSendReplyEventStringsLocalizable.h; sourceTree = "<group>"; };
 		B172857A2100D4F60052C51E /* MXSendReplyEventDefaultStringLocalizations.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = MXSendReplyEventDefaultStringLocalizations.h; path = ../MXSendReplyEventDefaultStringLocalizations.h; sourceTree = "<group>"; };
 		B172857B2100D4F60052C51E /* MXSendReplyEventDefaultStringLocalizations.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; name = MXSendReplyEventDefaultStringLocalizations.m; path = ../MXSendReplyEventDefaultStringLocalizations.m; sourceTree = "<group>"; };
+		B176B25023EB03E3001879C6 /* MXAggregationPaginatedResponse_Private.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MXAggregationPaginatedResponse_Private.h; sourceTree = "<group>"; };
 		B17982ED2119E49E001FD722 /* MXRoomCreateContent.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXRoomCreateContent.h; sourceTree = "<group>"; };
 		B17982EE2119E49F001FD722 /* MXRoomTombStoneContent.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXRoomTombStoneContent.m; sourceTree = "<group>"; };
 		B17982EF2119E49F001FD722 /* MXRoomPredecessorInfo.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXRoomPredecessorInfo.h; sourceTree = "<group>"; };
@@ -2121,6 +2124,7 @@
 			children = (
 				327E9AE52285A8C400A98BC1 /* MXAggregationPaginatedResponse.h */,
 				327E9AE62285A8C400A98BC1 /* MXAggregationPaginatedResponse.m */,
+				B176B25023EB03E3001879C6 /* MXAggregationPaginatedResponse_Private.h */,
 			);
 			path = Aggregations;
 			sourceTree = "<group>";
@@ -2915,6 +2919,7 @@
 				327E9AFC228AC22800A98BC1 /* MXAggregationsStore.h in Headers */,
 				323547DC2226FC5700F15F94 /* MXCredentials.h in Headers */,
 				325AD43F23BE3E7500FF5277 /* MXCrossSigningInfo.h in Headers */,
+				B176B25123EB03E4001879C6 /* MXAggregationPaginatedResponse_Private.h in Headers */,
 				021AFBA62179E91900742B2C /* MXEncryptedContentKey.h in Headers */,
 				327187891DA7DCE50071C818 /* MXOlmEncryption.h in Headers */,
 				32A1514E1DAF897600400192 /* MXOlmSessionResult.h in Headers */,
@@ -3290,6 +3295,7 @@
 				B14EF3562397E90400758AF0 /* MXGroup.h in Headers */,
 				B14EF3572397E90400758AF0 /* MX3PidAddSession.h in Headers */,
 				B14EF3582397E90400758AF0 /* MXUser.h in Headers */,
+				B176B25223EB03E4001879C6 /* MXAggregationPaginatedResponse_Private.h in Headers */,
 				3297912823A93D4B00F7BB9B /* MXKeyVerification.h in Headers */,
 				B14EF3592397E90400758AF0 /* MXError.h in Headers */,
 				B14EF35A2397E90400758AF0 /* MXReplyEventFormattedBodyParts.h in Headers */,
