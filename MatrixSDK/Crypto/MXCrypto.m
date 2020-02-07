@@ -54,6 +54,7 @@ NSString *const kMXCryptoRoomKeyRequestCancellationNotificationRequestKey = @"kM
 
 // Frequency with which to check & upload one-time keys
 NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
+NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
 
 @interface MXCrypto ()
 {
@@ -89,6 +90,10 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
 
     // The manager for incoming room key requests
     MXIncomingRoomKeyRequestManager *incomingRoomKeyRequestManager;
+    
+    // The date of the last time we forced establishment
+    // of a new session for each user:device.
+    MXUsersDevicesMap<NSDate*> *lastNewSessionForcedDates;
 }
 @end
 
@@ -1549,6 +1554,8 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
 
         _crossSigning = [[MXCrossSigning alloc] initWithCrypto:self];
         
+        lastNewSessionForcedDates = [MXUsersDevicesMap new];
+        
         [self registerEventHandlers];
         
     }
@@ -2485,9 +2492,14 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
         return;
     }
     
-    // check when we last forced a new session with this device: if we've already done so
+    // Check when we last forced a new session with this device: if we've already done so
     // recently, don't do it again.
-    // @TODO: Manu
+    NSDate *lastNewSessionForcedDate = [lastNewSessionForcedDates objectForDevice:deviceKey forUser:sender];
+    if ([lastNewSessionForcedDate timeIntervalSinceNow] < -kMXCryptoMinForceSessionPeriod)
+    {
+        NSLog(@"[MXCrypto] markOlmSessionForUnwedging: New session already forced with device at %@. Not forcing another", lastNewSessionForcedDate);
+        return;
+    }
 
     // Establish a new olm session with this device since we're failing to decrypt messages
     // on a current session.
@@ -2499,6 +2511,8 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
     }
     
     NSLog(@"[MXCrypto] markOlmSessionForUnwedging from %@:%@", sender, device.deviceId);
+    
+    [lastNewSessionForcedDates setObject:[NSDate date] forUser:sender andDevice:deviceKey];
     
     NSDictionary *userDevice = @{
                                  sender: @[device]
