@@ -487,16 +487,13 @@
     
     // Get the chain index of the key we previously sent this device
     MXOutboundSessionInfo *obSessionInfo = outboundSessions[sessionId];
-    NSNumber *chainIndexNumber = [obSessionInfo.sharedWithDevices objectForDevice:deviceId forUser:userId];
-    if (!chainIndexNumber)
+    NSNumber *chainIndex = [obSessionInfo.sharedWithDevices objectForDevice:deviceId forUser:userId];
+    if (!chainIndex)
     {
         NSLog(@"[MXMegolmEncryption] reshareKey: ERROR: Never share megolm with this device");
         failure(nil);
         return nil;
     }
-    
-    // @TODO: Manu: To use
-    NSUInteger chainIndex = [chainIndexNumber unsignedIntegerValue];
 
     MXHTTPOperation *operation;
     MXWeakify(self);
@@ -525,9 +522,9 @@
                      
                      MXDeviceInfo *deviceInfo = olmSessionResult.device;
                      
-                     NSLog(@"[MXMegolmEncryption] reshareKey: sharing keys for session %@|%@:%@ with device %@:%@", senderKey, sessionId, @(chainIndex), userId, deviceId);
+                     NSLog(@"[MXMegolmEncryption] reshareKey: sharing keys for session %@|%@:%@ with device %@:%@", senderKey, sessionId, chainIndex, userId, deviceId);
                      
-                     NSDictionary *payload = [self->crypto buildMegolmKeyForwardingMessage:self->roomId senderKey:senderKey sessionId:sessionId];
+                     NSDictionary *payload = [self->crypto buildMegolmKeyForwardingMessage:self->roomId senderKey:senderKey sessionId:sessionId chainIndex:chainIndex];
                     
                      
                      MXUsersDevicesMap<NSDictionary*> *contentMap = [[MXUsersDevicesMap alloc] init];

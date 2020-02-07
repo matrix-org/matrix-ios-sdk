@@ -210,7 +210,7 @@
 - (void)cancelRoomKeyRequest:(NSDictionary*)requestBody;
 
 // Create a message to forward a megolm session
-- (NSDictionary*)buildMegolmKeyForwardingMessage:(NSString*)roomId senderKey:(NSString*)senderKey sessionId:(NSString*)sessionId;
+- (NSDictionary*)buildMegolmKeyForwardingMessage:(NSString*)roomId senderKey:(NSString*)senderKey sessionId:(NSString*)sessionId chainIndex:(NSNumber*)chainIndex;
 
 @end
 

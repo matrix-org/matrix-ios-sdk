@@ -324,7 +324,7 @@
 
          NSLog(@"[MXMegolmDecryption] shareKeysWithDevice: sharing keys for session %@|%@ with device %@:%@", senderKey, sessionId, userId, deviceId);
 
-         NSDictionary *payload = [self->crypto buildMegolmKeyForwardingMessage:roomId senderKey:senderKey sessionId:sessionId];
+         NSDictionary *payload = [self->crypto buildMegolmKeyForwardingMessage:roomId senderKey:senderKey sessionId:sessionId chainIndex:nil];
 
          MXDeviceInfo *deviceInfo = olmSessionResult.device;
 

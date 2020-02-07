@@ -1941,9 +1941,9 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
     [outgoingRoomKeyRequestManager cancelRoomKeyRequest:requestBody];
 }
 
-- (NSDictionary*)buildMegolmKeyForwardingMessage:(NSString*)roomId senderKey:(NSString*)senderKey sessionId:(NSString*)sessionId
+- (NSDictionary*)buildMegolmKeyForwardingMessage:(NSString*)roomId senderKey:(NSString*)senderKey sessionId:(NSString*)sessionId  chainIndex:(NSNumber*)chainIndex
 {
-    NSDictionary *key = [self.olmDevice getInboundGroupSessionKey:roomId senderKey:senderKey sessionId:sessionId];
+    NSDictionary *key = [self.olmDevice getInboundGroupSessionKey:roomId senderKey:senderKey sessionId:sessionId chainIndex:chainIndex];
     if (key)
     {
         return @{
