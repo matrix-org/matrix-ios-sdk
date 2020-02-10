@@ -131,6 +131,7 @@
  @param failure A block object called when the operation fails.
  */
 - (MXHTTPOperation*)ensureOlmSessionsForDevices:(NSDictionary<NSString* /* userId */, NSArray<MXDeviceInfo*>*>*)devicesByUser
+                                          force:(BOOL)force
                                       success:(void (^)(MXUsersDevicesMap<MXOlmSessionResult*> *results))success
                                       failure:(void (^)(NSError *error))failure;
 
@@ -155,6 +156,15 @@
  @return the decryptor.
  */
 - (id<MXDecrypting>)getRoomDecryptor:(NSString*)roomId algorithm:(NSString*)algorithm;
+
+/**
+ Get the encryptor for a given room and algorithm.
+ 
+ @param roomId room id for encryptor.
+ @param algorithm the crypto algorithm.
+ @return the decryptor.
+ */
+- (id<MXEncrypting>)getRoomEncryptor:(NSString*)roomId algorithm:(NSString*)algorithm;
 
 /**
  Sign the given object with our ed25519 key.
@@ -198,6 +208,9 @@
  @param requestBody parameters to match for cancellation
  */
 - (void)cancelRoomKeyRequest:(NSDictionary*)requestBody;
+
+// Create a message to forward a megolm session
+- (NSDictionary*)buildMegolmKeyForwardingMessage:(NSString*)roomId senderKey:(NSString*)senderKey sessionId:(NSString*)sessionId chainIndex:(NSNumber*)chainIndex;
 
 @end
 

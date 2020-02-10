@@ -656,7 +656,7 @@ RLM_ARRAY_TYPE(MXRealmOlmInboundGroupSession)
 
 - (void)storeSession:(MXOlmSession*)session forDevice:(NSString*)deviceKey
 {
-    BOOL isNew = NO;
+    __block BOOL isNew = NO;
     NSDate *startDate = [NSDate date];
 
     RLMRealm *realm = self.realm;
@@ -671,6 +671,7 @@ RLM_ARRAY_TYPE(MXRealmOlmInboundGroupSession)
         else
         {
             // Create it
+            isNew = YES;
             realmOlmSession = [[MXRealmOlmSession alloc] initWithValue:@{
                                                                          @"sessionId": session.session.sessionIdentifier,
                                                                          @"deviceKey": deviceKey,

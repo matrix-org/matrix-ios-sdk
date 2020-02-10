@@ -54,6 +54,7 @@ NSString *const kMXCryptoRoomKeyRequestCancellationNotificationRequestKey = @"kM
 
 // Frequency with which to check & upload one-time keys
 NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
+NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
 
 @interface MXCrypto ()
 {
@@ -89,6 +90,10 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
 
     // The manager for incoming room key requests
     MXIncomingRoomKeyRequestManager *incomingRoomKeyRequestManager;
+    
+    // The date of the last time we forced establishment
+    // of a new session for each user:device.
+    MXUsersDevicesMap<NSDate*> *lastNewSessionForcedDates;
 }
 @end
 
@@ -480,6 +485,12 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
             if (error && *error)
             {
                 NSLog(@"[MXCrypto] decryptEvent: Error for %@: %@\nEvent: %@", event.eventId, *error, event.JSONDictionary);
+                
+                if ([(*error).domain isEqualToString:MXDecryptingErrorDomain]
+                    && (*error).code == MXDecryptingErrorBadEncryptedMessageCode)
+                {
+                    [self markOlmSessionForUnwedgingInEvent:event];
+                }
             }
         }
     });
@@ -1543,6 +1554,8 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
 
         _crossSigning = [[MXCrossSigning alloc] initWithCrypto:self];
         
+        lastNewSessionForcedDates = [MXUsersDevicesMap new];
+        
         [self registerEventHandlers];
         
     }
@@ -1675,10 +1688,11 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
         }
     }
 
-    return [self ensureOlmSessionsForDevices:devicesByUser success:success failure:failure];
+    return [self ensureOlmSessionsForDevices:devicesByUser force:NO success:success failure:failure];
 }
 
 - (MXHTTPOperation*)ensureOlmSessionsForDevices:(NSDictionary<NSString* /* userId */, NSArray<MXDeviceInfo*>*>*)devicesByUser
+                                          force:(BOOL)force
                                         success:(void (^)(MXUsersDevicesMap<MXOlmSessionResult*> *results))success
                                         failure:(void (^)(NSError *error))failure
 
@@ -1698,7 +1712,7 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
             NSString *key = deviceInfo.identityKey;
 
             NSString *sessionId = [_olmDevice sessionIdForDevice:key];
-            if (!sessionId)
+            if (!sessionId || force)
             {
                 [devicesWithoutSession addObject:deviceInfo];
             }
@@ -1708,7 +1722,7 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
         }
     }
 
-    NSLog(@"[MXCrypto] ensureOlmSessionsForDevices (users: %tu - devices: %tu): %@", devicesByUser.count, count, devicesByUser);
+    NSLog(@"[MXCrypto] ensureOlmSessionsForDevices (users: %tu - devices: %tu - force: %@): %@", devicesByUser.count, count, @(force), devicesByUser);
 
     if (devicesWithoutSession.count == 0)
     {
@@ -1750,7 +1764,7 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
                 for (NSString *deviceId in [keysClaimResponse.oneTimeKeys deviceIdsForUser:userId])
                 {
                     MXOlmSessionResult *olmSessionResult = [results objectForDevice:deviceId forUser:userId];
-                    if (olmSessionResult.sessionId)
+                    if (olmSessionResult.sessionId && !force)
                     {
                         // We already have a result for this device
                         continue;
@@ -1904,6 +1918,15 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
     return alg;
 }
 
+- (id<MXEncrypting>)getRoomEncryptor:(NSString*)roomId algorithm:(NSString*)algorithm
+{
+    if (![algorithm isEqualToString:kMXCryptoMegolmAlgorithm])
+    {
+        return nil;
+    }
+    return roomEncryptors[roomId];
+}
+
 - (NSDictionary*)signObject:(NSDictionary*)object
 {
     return @{
@@ -1925,6 +1948,28 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
     [outgoingRoomKeyRequestManager cancelRoomKeyRequest:requestBody];
 }
 
+- (NSDictionary*)buildMegolmKeyForwardingMessage:(NSString*)roomId senderKey:(NSString*)senderKey sessionId:(NSString*)sessionId  chainIndex:(NSNumber*)chainIndex
+{
+    NSDictionary *key = [self.olmDevice getInboundGroupSessionKey:roomId senderKey:senderKey sessionId:sessionId chainIndex:chainIndex];
+    if (key)
+    {
+        return @{
+                 @"type": kMXEventTypeStringRoomForwardedKey,
+                 @"content": @{
+                         @"algorithm": kMXCryptoMegolmAlgorithm,
+                         @"room_id": roomId,
+                         @"sender_key": senderKey,
+                         @"sender_claimed_ed25519_key": key[@"sender_claimed_ed25519_key"],
+                         @"session_id": sessionId,
+                         @"session_key": key[@"key"],
+                         @"chain_index": key[@"chain_index"],
+                         @"forwarding_curve25519_key_chain": key[@"forwarding_curve25519_key_chain"]
+                         }
+                 };
+    }
+    
+    return nil;
+}
 
 #pragma mark - Private methods
 /**
@@ -2427,6 +2472,73 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
     } failure:^(NSError *error) {
         NSLog(@"[MXCrypto] uploadOneTimeKeys fails.");
         failure(error);
+    }];
+}
+
+
+#pragma mark Wedged olm sessions
+
+- (void)markOlmSessionForUnwedgingInEvent:(MXEvent*)event
+{
+    NSString *sender = event.sender;
+    NSString *deviceKey, *algorithm;
+    MXJSONModelSetString(deviceKey, event.content[@"sender_key"]);
+    MXJSONModelSetString(algorithm, event.content[@"algorithm"]);
+    
+    NSLog(@"[MXCrypto] markOlmSessionForUnwedging from %@:%@", sender, deviceKey);
+
+    if (!sender || !deviceKey || !algorithm)
+    {
+        return;
+    }
+    
+    // Check when we last forced a new session with this device: if we've already done so
+    // recently, don't do it again.
+    NSDate *lastNewSessionForcedDate = [lastNewSessionForcedDates objectForDevice:deviceKey forUser:sender];
+    if ([lastNewSessionForcedDate timeIntervalSinceNow] < -kMXCryptoMinForceSessionPeriod)
+    {
+        NSLog(@"[MXCrypto] markOlmSessionForUnwedging: New session already forced with device at %@. Not forcing another", lastNewSessionForcedDate);
+        return;
+    }
+
+    // Establish a new olm session with this device since we're failing to decrypt messages
+    // on a current session.
+    MXDeviceInfo *device = [_store deviceWithIdentityKey:deviceKey];
+    if (!device)
+    {
+        NSLog(@"[MXCrypto] markOlmSessionForUnwedgingInEvent: Couldn't find device for identity key %@: not re-establishing session", deviceKey);
+        return;
+    }
+    
+    NSLog(@"[MXCrypto] markOlmSessionForUnwedging from %@:%@", sender, device.deviceId);
+    
+    [lastNewSessionForcedDates setObject:[NSDate date] forUser:sender andDevice:deviceKey];
+    
+    NSDictionary *userDevice = @{
+                                 sender: @[device]
+                                 };
+    [self ensureOlmSessionsForDevices:userDevice force:YES success:^(MXUsersDevicesMap<MXOlmSessionResult *> *results) {
+        
+        // Now send a blank message on that session so the other side knows about it.
+        // (The keyshare request is sent in the clear so that won't do)
+        // We send this first such that, as long as the toDevice messages arrive in the
+        // same order we sent them, the other end will get this first, set up the new session,
+        // then get the keyshare request and send the key over this new session (because it
+        // is the session it has most recently received a message on).
+        NSDictionary *encryptedContent = [self encryptMessage:@{
+                                                                @"type": @"m.dummy"
+                                                                }
+                                                   forDevices:@[device]];
+        
+        MXUsersDevicesMap<NSDictionary*> *contentMap = [MXUsersDevicesMap new];
+        [contentMap setObject:encryptedContent forUser:sender andDevice:device.deviceId];
+        
+        [self.matrixRestClient sendToDevice:kMXEventTypeStringRoomEncrypted contentMap:contentMap txnId:nil success:nil failure:^(NSError *error) {
+            NSLog(@"[MXCrypto] markOlmSessionForUnwedgingInEvent: ERROR for sendToDevice: %@", error);
+        }];
+        
+    } failure:^(NSError *error) {
+        NSLog(@"[MXCrypto] markOlmSessionForUnwedgingInEvent: ERROR for ensureOlmSessionsForDevices: %@", error);
     }];
 }
 
