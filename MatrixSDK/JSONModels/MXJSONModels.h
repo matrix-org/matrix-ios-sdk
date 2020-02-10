@@ -59,6 +59,11 @@ FOUNDATION_EXPORT NSString *const kMX3PIDMediumMSISDN;
     @property (nonatomic) NSString *name;
 
     /**
+     The main address of the room.
+     */
+    @property (nonatomic) NSString *canonicalAlias;
+
+    /**
      Aliases of the room.
      */
     @property (nonatomic) NSArray<NSString*> *aliases;
