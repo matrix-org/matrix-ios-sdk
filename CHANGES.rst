@@ -12,6 +12,7 @@ Improvements:
  * MXCrypto: Restart broken Olm sessions ([MSC1719](https://github.com/matrix-org/matrix-doc/pull/1719)) (vector-im/riot-ios/issues/2129).
  * MXRoomSummary: Add the trust property to indicate trust in other users and devices in the room (vector-im/riot-ios/issues/2906).
  * MXStore: Add a method to get related events for a specific event.
+ * MXPublicRoom: Add canonical alias property.
 
 Bug fix:
  * MXEventType: Fix Swift refinement.

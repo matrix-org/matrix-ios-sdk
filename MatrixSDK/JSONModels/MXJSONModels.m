@@ -37,6 +37,7 @@
         MXJSONModelSetString(publicRoom.roomId , sanitisedJSONDictionary[@"room_id"]);
         MXJSONModelSetString(publicRoom.name , sanitisedJSONDictionary[@"name"]);
         MXJSONModelSetArray(publicRoom.aliases , sanitisedJSONDictionary[@"aliases"]);
+        MXJSONModelSetString(publicRoom.canonicalAlias , sanitisedJSONDictionary[@"canonical_alias"]);
         MXJSONModelSetString(publicRoom.topic , sanitisedJSONDictionary[@"topic"]);
         MXJSONModelSetInteger(publicRoom.numJoinedMembers, sanitisedJSONDictionary[@"num_joined_members"]);
         MXJSONModelSetBoolean(publicRoom.worldReadable, sanitisedJSONDictionary[@"world_readable"]);
