@@ -14,7 +14,7 @@
  limitations under the License.
  */
 
-#import "MXDeviceVerificationTransaction.h"
+#import "MXKeyVerificationTransaction.h"
 
 #import "MXKeyVerificationAccept.h"
 #import "MXKeyVerificationCancel.h"
@@ -24,22 +24,22 @@
 #import "MXKeyVerificationDone.h"
 
 
-@class MXDeviceVerificationManager, MXHTTPOperation, MXEvent;
+@class MXKeyVerificationManager, MXHTTPOperation, MXEvent;
 
 
 NS_ASSUME_NONNULL_BEGIN
 
 /**
- The `MXDeviceVerificationTransaction` extension exposes internal operations.
+ The `MXKeyVerificationTransaction` extension exposes internal operations.
  */
-@interface MXDeviceVerificationTransaction ()
+@interface MXKeyVerificationTransaction ()
 
-@property (nonatomic, readonly, weak) MXDeviceVerificationManager *manager;
+@property (nonatomic, readonly, weak) MXKeyVerificationManager *manager;
 @property (nonatomic, nullable) MXKeyVerificationStart *startContent;
 
-- (instancetype)initWithOtherDevice:(MXDeviceInfo*)otherDevice andManager:(MXDeviceVerificationManager*)manager;
+- (instancetype)initWithOtherDevice:(MXDeviceInfo*)otherDevice andManager:(MXKeyVerificationManager*)manager;
 
-- (nullable instancetype)initWithOtherDevice:(MXDeviceInfo*)otherDevice startEvent:(MXEvent *)event andManager:(MXDeviceVerificationManager *)manager;
+- (nullable instancetype)initWithOtherDevice:(MXDeviceInfo*)otherDevice startEvent:(MXEvent *)event andManager:(MXKeyVerificationManager *)manager;
 
 - (void)didUpdateState;
 

@@ -17,7 +17,7 @@
 #import "MXOutgoingSASTransaction.h"
 #import "MXSASTransaction_Private.h"
 
-#import "MXDeviceVerificationManager_Private.h"
+#import "MXKeyVerificationManager_Private.h"
 #import "MXCrypto_Private.h"
 
 #import "MXCryptoTools.h"
@@ -77,7 +77,7 @@
 
 #pragma mark - SDK-Private methods -
 
-- (instancetype)initWithOtherDevice:(MXDeviceInfo *)otherDevice andManager:(MXDeviceVerificationManager *)manager
+- (instancetype)initWithOtherDevice:(MXDeviceInfo *)otherDevice andManager:(MXKeyVerificationManager *)manager
 {
     self = [super initWithOtherDevice:otherDevice andManager:manager];
     if (self)

@@ -15,7 +15,7 @@
  */
 
 #import "MXSASTransaction.h"
-#import "MXDeviceVerificationTransaction_Private.h"
+#import "MXKeyVerificationTransaction_Private.h"
 
 #import <OLMKit/OLMKit.h>
 
@@ -29,7 +29,7 @@ FOUNDATION_EXPORT NSArray<NSString*> *kKnownMacs;
 FOUNDATION_EXPORT NSArray<NSString*> *kKnownShortCodes;
 
 /**
- The `MXDeviceVerificationTransaction` extension exposes internal operations.
+ The `MXKeyVerificationTransaction` extension exposes internal operations.
  */
 @interface MXSASTransaction ()
 

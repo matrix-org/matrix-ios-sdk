@@ -19,6 +19,7 @@ Bug fix:
  * MXCryptoStore does not store device.algorithm (https://github.com/vector-im/riot-ios/issues/2896).
 
 API break:
+ * MXCrypto: Rename MXDeviceVerificationManager to MXKeyVerificationManager.
  * MXCrypto: the `downloadKeys` method now returns users cross-signing keys.
  * MXDeviceInfo: the `verified` property has been replaced by `trustLevel`.
  * MXSession & MXRestClient: the `createRoom` method with a long list of parameters

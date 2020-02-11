@@ -17,7 +17,7 @@
 #import <Foundation/Foundation.h>
 
 #import "MXKeyVerificationRequest.h"
-#import "MXDeviceVerificationTransaction.h"
+#import "MXKeyVerificationTransaction.h"
 
 
 NS_ASSUME_NONNULL_BEGIN
@@ -55,7 +55,7 @@ typedef NS_ENUM(NSInteger, MXKeyVerificationState)
 
 // Those values may be not provided if there are not in progress
 @property (nonatomic, nullable) MXKeyVerificationRequest *request;
-@property (nonatomic, nullable) MXDeviceVerificationTransaction *transaction;
+@property (nonatomic, nullable) MXKeyVerificationTransaction *transaction;
 
 @property (nonatomic, readonly) BOOL isRequestAccepted;
 
