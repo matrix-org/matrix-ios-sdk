@@ -27,7 +27,7 @@ NS_ASSUME_NONNULL_BEGIN
 /**
  Notification sent when the transaction has been updated.
  */
-FOUNDATION_EXPORT NSString * _Nonnull const MXDeviceVerificationTransactionDidChangeNotification;
+FOUNDATION_EXPORT NSString * _Nonnull const MXKeyVerificationTransactionDidChangeNotification;
 
 typedef NS_ENUM(NSInteger, MKeyVerificationTransport) {
     MKeyVerificationTransportToDevice = 0,
@@ -38,7 +38,7 @@ typedef NS_ENUM(NSInteger, MKeyVerificationTransport) {
 /**
  An handler on an interactive device verification.
  */
-@interface MXDeviceVerificationTransaction: NSObject
+@interface MXKeyVerificationTransaction: NSObject
 
 /**
  The transaction id.

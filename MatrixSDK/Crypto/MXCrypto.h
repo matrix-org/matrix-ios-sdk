@@ -29,7 +29,7 @@
 #import "MXIncomingRoomKeyRequestCancellation.h"
 
 #import "MXKeyBackup.h"
-#import "MXDeviceVerificationManager.h"
+#import "MXKeyVerificationManager.h"
 #import "MXCrossSigning.h"
 #import "MXUsersTrustLevelSummary.h"
 
@@ -89,7 +89,7 @@ FOUNDATION_EXPORT NSString *const kMXCryptoRoomKeyRequestCancellationNotificatio
 /**
  The device verification manager.
  */
-@property (nonatomic, readonly) MXDeviceVerificationManager *deviceVerificationManager;
+@property (nonatomic, readonly) MXKeyVerificationManager *keyVerificationManager;
 
 /**
  The cross-signing manager.

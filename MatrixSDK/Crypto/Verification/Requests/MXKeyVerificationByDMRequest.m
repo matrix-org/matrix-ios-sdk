@@ -25,7 +25,7 @@
 
 @implementation MXKeyVerificationByDMRequest
 
-- (instancetype)initWithEvent:(MXEvent*)event andManager:(MXDeviceVerificationManager*)manager
+- (instancetype)initWithEvent:(MXEvent*)event andManager:(MXKeyVerificationManager*)manager
 {
     // Check verification by DM request format
     MXKeyVerificationRequestJSONModel *request;

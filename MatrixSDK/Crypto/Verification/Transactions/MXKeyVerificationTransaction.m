@@ -14,10 +14,10 @@
  limitations under the License.
  */
 
-#import "MXDeviceVerificationTransaction.h"
-#import "MXDeviceVerificationTransaction_Private.h"
+#import "MXKeyVerificationTransaction.h"
+#import "MXKeyVerificationTransaction_Private.h"
 
-#import "MXDeviceVerificationManager_Private.h"
+#import "MXKeyVerificationManager_Private.h"
 #import "MXCrypto_Private.h"
 #import "MXKeyVerificationStart.h"
 
@@ -25,31 +25,31 @@
 
 
 #pragma mark - Constants
-NSString * const MXDeviceVerificationTransactionDidChangeNotification = @"MXDeviceVerificationTransactionDidChangeNotification";
+NSString * const MXKeyVerificationTransactionDidChangeNotification = @"MXKeyVerificationTransactionDidChangeNotification";
 
 
-@implementation MXDeviceVerificationTransaction
+@implementation MXKeyVerificationTransaction
 
-- (instancetype)initWithOtherDevice:(MXDeviceInfo*)otherDevice andManager:(MXDeviceVerificationManager*)manager;
+- (instancetype)initWithOtherDevice:(MXDeviceInfo*)otherDevice andManager:(MXKeyVerificationManager*)manager;
 {
     self = [self init];
     if (self)
     {
         _manager = manager;
         _otherDevice = otherDevice;
-        _transactionId = [MXDeviceVerificationTransaction createUniqueIdWithOtherUser:self.otherUserId otherDevice:self.otherDeviceId myUser:manager.crypto.mxSession.matrixRestClient.credentials];
+        _transactionId = [MXKeyVerificationTransaction createUniqueIdWithOtherUser:self.otherUserId otherDevice:self.otherDeviceId myUser:manager.crypto.mxSession.matrixRestClient.credentials];
         _creationDate = [NSDate date];
     }
     return self;
 }
 
-- (nullable instancetype)initWithOtherDevice:(MXDeviceInfo*)otherDevice startEvent:(MXEvent *)event andManager:(MXDeviceVerificationManager *)manager
+- (nullable instancetype)initWithOtherDevice:(MXDeviceInfo*)otherDevice startEvent:(MXEvent *)event andManager:(MXKeyVerificationManager *)manager
 {
     MXKeyVerificationStart *startContent;
     MXJSONModelSetMXJSONModel(startContent, MXKeyVerificationStart, event.content);
     if (!startContent || !startContent.isValid)
     {
-        NSLog(@"[MXDeviceVerificationTransaction]: ERROR: Invalid start event: %@", event);
+        NSLog(@"[MXKeyVerificationTransaction]: ERROR: Invalid start event: %@", event);
         return nil;
     }
 
@@ -115,7 +115,7 @@ NSString * const MXDeviceVerificationTransactionDidChangeNotification = @"MXDevi
 - (void)didUpdateState
 {
     dispatch_async(dispatch_get_main_queue(),^{
-        [[NSNotificationCenter defaultCenter] postNotificationName:MXDeviceVerificationTransactionDidChangeNotification object:self userInfo:nil];
+        [[NSNotificationCenter defaultCenter] postNotificationName:MXKeyVerificationTransactionDidChangeNotification object:self userInfo:nil];
     });
 }
 

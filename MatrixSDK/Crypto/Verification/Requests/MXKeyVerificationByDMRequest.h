@@ -18,7 +18,7 @@
 
 #import "MXKeyVerificationRequest.h"
 
-@class MXEvent, MXDeviceVerificationManager;
+@class MXEvent, MXKeyVerificationManager;
 
 
 NS_ASSUME_NONNULL_BEGIN
@@ -31,7 +31,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, readonly) NSString *roomId;
 @property (nonatomic, readonly) NSString *eventId;
 
-- (instancetype)initWithEvent:(MXEvent*)event andManager:(MXDeviceVerificationManager*)manager;
+- (instancetype)initWithEvent:(MXEvent*)event andManager:(MXKeyVerificationManager*)manager;
 
 @end
 

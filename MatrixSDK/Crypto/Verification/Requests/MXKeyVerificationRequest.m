@@ -16,7 +16,7 @@
 
 #import "MXKeyVerificationRequest_Private.h"
 
-#import "MXDeviceVerificationManager_Private.h"
+#import "MXKeyVerificationManager_Private.h"
 
 
 #pragma mark - Constants
@@ -43,7 +43,7 @@ NSString * const MXKeyVerificationRequestDidChangeNotification = @"MXKeyVerifica
                            sender:(NSString*)sender
                        fromDevice:(NSString*)fromDevice
                        ageLocalTs:(uint64_t)ageLocalTs
-                          manager:(MXDeviceVerificationManager*)manager
+                          manager:(MXKeyVerificationManager*)manager
 {
     self = [super init];
     if (self)
@@ -59,9 +59,9 @@ NSString * const MXKeyVerificationRequestDidChangeNotification = @"MXKeyVerifica
     return self;
 }
 
-- (void)acceptWithMethod:(NSString *)method success:(void (^)(MXDeviceVerificationTransaction * _Nonnull))success failure:(void (^)(NSError * _Nonnull))failure
+- (void)acceptWithMethod:(NSString *)method success:(void (^)(MXKeyVerificationTransaction * _Nonnull))success failure:(void (^)(NSError * _Nonnull))failure
 {
-    [self.manager acceptVerificationRequest:self method:method success:^(MXDeviceVerificationTransaction * _Nonnull transaction) {
+    [self.manager acceptVerificationRequest:self method:method success:^(MXKeyVerificationTransaction * _Nonnull transaction) {
         self.state = MXKeyVerificationRequestStateAccepted;
         [self updateState:MXKeyVerificationRequestStateAccepted notifiy:YES];
         [self.manager removePendingRequestWithRequestId:self.requestId];

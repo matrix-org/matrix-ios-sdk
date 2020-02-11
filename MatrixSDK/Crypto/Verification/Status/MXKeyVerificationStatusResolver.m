@@ -20,20 +20,20 @@
 #import "MXKeyVerificationByDMRequest.h"
 #import "MXKeyVerificationRequest_Private.h"
 #import "MXKeyVerification.h"
-#import "MXDeviceVerificationManager_Private.h"
+#import "MXKeyVerificationManager_Private.h"
 
 #import "MXKeyVerificationCancel.h"
 
 
 @interface MXKeyVerificationStatusResolver ()
-@property (nonatomic, weak) MXDeviceVerificationManager *manager;
+@property (nonatomic, weak) MXKeyVerificationManager *manager;
 @property (nonatomic) MXSession *mxSession;
 @end
 
 
 @implementation MXKeyVerificationStatusResolver
 
-- (instancetype)initWithManager:(MXDeviceVerificationManager*)manager matrixSession:(MXSession*)matrixSession;
+- (instancetype)initWithManager:(MXKeyVerificationManager*)manager matrixSession:(MXSession*)matrixSession;
 
 {
     self = [super init];
@@ -71,8 +71,8 @@
                 }
                 else
                 {
-                    NSError *error = [NSError errorWithDomain:MXDeviceVerificationErrorDomain
-                                                         code:MXDeviceVerificationUnknownIdentifier
+                    NSError *error = [NSError errorWithDomain:MXKeyVerificationErrorDomain
+                                                         code:MXKeyVerificationUnknownIdentifier
                                                      userInfo:@{
                                                                 NSLocalizedDescriptionKey: [NSString stringWithFormat:@"Unknown id"]
                                                                 }];

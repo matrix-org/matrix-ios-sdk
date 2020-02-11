@@ -19,7 +19,7 @@
 #import "MXKeyVerificationStart.h"
 #import "MXKeyVerificationCancel.h"
 
-@class MXDeviceVerificationManager, MXHTTPOperation;
+@class MXKeyVerificationManager, MXHTTPOperation;
 
 
 /**
@@ -27,7 +27,7 @@
  */
 @interface MXKeyVerificationRequest ()
 
-@property (nonatomic, readonly, weak) MXDeviceVerificationManager *manager;
+@property (nonatomic, readonly, weak) MXKeyVerificationManager *manager;
 
 
 - (instancetype)initWithRequestId:(NSString*)requestId
@@ -35,7 +35,7 @@
                          sender:(NSString*)sender
                      fromDevice:(NSString*)fromDevice
                      ageLocalTs:(uint64_t)ageLocalTs
-                        manager:(MXDeviceVerificationManager*)manager;
+                        manager:(MXKeyVerificationManager*)manager;
 
 @property (nonatomic) BOOL isFromMyUser;
 

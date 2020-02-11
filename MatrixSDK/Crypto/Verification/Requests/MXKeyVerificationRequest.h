@@ -16,7 +16,7 @@
 
 #import <Foundation/Foundation.h>
 
-#import "MXDeviceVerificationTransaction.h"
+#import "MXKeyVerificationTransaction.h"
 
 
 #pragma mark - Constants
@@ -51,7 +51,7 @@ Accept an incoming key verification request.
 @param failure a block called when the operation fails.
 */
 - (void)acceptWithMethod:(NSString*)method
-                 success:(void(^)(MXDeviceVerificationTransaction *transaction))success
+                 success:(void(^)(MXKeyVerificationTransaction *transaction))success
                  failure:(void(^)(NSError *error))failure;
 
 /**

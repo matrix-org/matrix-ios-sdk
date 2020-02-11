@@ -18,7 +18,7 @@
 
 #import "MXKeyVerification.h"
 
-@class MXDeviceVerificationManager, MXSession, MXHTTPOperation, MXEvent;
+@class MXKeyVerificationManager, MXSession, MXHTTPOperation, MXEvent;
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -28,7 +28,7 @@ NS_ASSUME_NONNULL_BEGIN
  */
 @interface MXKeyVerificationStatusResolver : NSObject
 
-- (instancetype)initWithManager:(MXDeviceVerificationManager*)manager matrixSession:(MXSession*)matrixSession;
+- (instancetype)initWithManager:(MXKeyVerificationManager*)manager matrixSession:(MXSession*)matrixSession;
 
 - (nullable MXHTTPOperation *)keyVerificationWithKeyVerificationId:(NSString*)keyVerificationId
                                                              event:(MXEvent*)event

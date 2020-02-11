@@ -18,7 +18,7 @@
 #import <Foundation/Foundation.h>
 
 #import "MXKeyVerificationRequest.h"
-#import "MXDeviceVerificationTransaction.h"
+#import "MXKeyVerificationTransaction.h"
 #import "MXKeyVerification.h"
 
 #import "MXSASTransaction.h"
@@ -33,15 +33,15 @@ NS_ASSUME_NONNULL_BEGIN
 
 #pragma mark - Constants
 
-FOUNDATION_EXPORT NSString *const MXDeviceVerificationErrorDomain;
+FOUNDATION_EXPORT NSString *const MXKeyVerificationErrorDomain;
 
 typedef enum : NSUInteger
 {
-    MXDeviceVerificationUnknownDeviceCode,
-    MXDeviceVerificationUnsupportedMethodCode,
-    MXDeviceVerificationUnknownRoomCode,
-    MXDeviceVerificationUnknownIdentifier,
-} MXDeviceVerificationErrorCode;
+    MXKeyVerificationUnknownDeviceCode,
+    MXKeyVerificationUnsupportedMethodCode,
+    MXKeyVerificationUnknownRoomCode,
+    MXKeyVerificationUnknownIdentifier,
+} MXKeyVerificationErrorCode;
 
 
 #pragma mark - Requests
@@ -49,12 +49,12 @@ typedef enum : NSUInteger
 /**
  Posted on new device verification request.
  */
-FOUNDATION_EXPORT NSString *const MXDeviceVerificationManagerNewRequestNotification;
+FOUNDATION_EXPORT NSString *const MXKeyVerificationManagerNewRequestNotification;
 
 /**
  The key in the notification userInfo dictionary containing the `MXKeyVerificationRequest` instance.
  */
-FOUNDATION_EXPORT NSString *const MXDeviceVerificationManagerNotificationRequestKey;
+FOUNDATION_EXPORT NSString *const MXKeyVerificationManagerNotificationRequestKey;
 
 
 
@@ -63,20 +63,20 @@ FOUNDATION_EXPORT NSString *const MXDeviceVerificationManagerNotificationRequest
 /**
  Posted on new device verification transaction.
  */
-FOUNDATION_EXPORT NSString *const MXDeviceVerificationManagerNewTransactionNotification;
+FOUNDATION_EXPORT NSString *const MXKeyVerificationManagerNewTransactionNotification;
 
 /**
- The key in the notification userInfo dictionary containing the `MXDeviceVerificationTransaction` instance.
+ The key in the notification userInfo dictionary containing the `MXKeyVerificationTransaction` instance.
  */
-FOUNDATION_EXPORT NSString *const MXDeviceVerificationManagerNotificationTransactionKey;
+FOUNDATION_EXPORT NSString *const MXKeyVerificationManagerNotificationTransactionKey;
 
 
 /**
- The `MXDeviceVerificationManager` class instance manages interactive device
+ The `MXKeyVerificationManager` class instance manages interactive key
  verifications according to MSC1267 (Interactive key verification):
  https://github.com/matrix-org/matrix-doc/issues/1267.
  */
-@interface MXDeviceVerificationManager : NSObject
+@interface MXKeyVerificationManager : NSObject
 
 
 #pragma mark - Requests
@@ -124,7 +124,7 @@ FOUNDATION_EXPORT NSString *const MXDeviceVerificationManagerNotificationTransac
 - (void)beginKeyVerificationWithUserId:(NSString*)userId
                            andDeviceId:(NSString*)deviceId
                                 method:(NSString*)method
-                               success:(void(^)(MXDeviceVerificationTransaction *transaction))success
+                               success:(void(^)(MXKeyVerificationTransaction *transaction))success
                                failure:(void(^)(NSError *error))failure;
 
 /**
@@ -132,7 +132,7 @@ FOUNDATION_EXPORT NSString *const MXDeviceVerificationManagerNotificationTransac
 
  @param complete a block called with all transactions.
  */
-- (void)transactions:(void(^)(NSArray<MXDeviceVerificationTransaction*> *transactions))complete;
+- (void)transactions:(void(^)(NSArray<MXKeyVerificationTransaction*> *transactions))complete;
 
 
 #pragma mark - Verification status

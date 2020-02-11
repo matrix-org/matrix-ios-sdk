@@ -14,9 +14,9 @@
  limitations under the License.
  */
 
-#import "MXDeviceVerificationManager.h"
+#import "MXKeyVerificationManager.h"
 
-#import "MXDeviceVerificationTransaction_Private.h"
+#import "MXKeyVerificationTransaction_Private.h"
 
 @class MXCrypto;
 
@@ -25,7 +25,7 @@ NS_ASSUME_NONNULL_BEGIN
 /**
  The `MXKeyBackup_Private` extension exposes internal operations.
  */
-@interface MXDeviceVerificationManager ()
+@interface MXKeyVerificationManager ()
 
 /**
  The Matrix crypto.
@@ -52,7 +52,7 @@ NS_ASSUME_NONNULL_BEGIN
  */
 - (void)acceptVerificationRequest:(MXKeyVerificationRequest*)request
                            method:(NSString*)method
-                          success:(void(^)(MXDeviceVerificationTransaction *transaction))success
+                          success:(void(^)(MXKeyVerificationTransaction *transaction))success
                           failure:(void(^)(NSError *error))failure;
 
 /**
@@ -85,7 +85,7 @@ NS_ASSUME_NONNULL_BEGIN
 
  @return a MXHTTPOperation instance.
  */
-- (MXHTTPOperation*)sendToOtherInTransaction:(MXDeviceVerificationTransaction*)transaction
+- (MXHTTPOperation*)sendToOtherInTransaction:(MXKeyVerificationTransaction*)transaction
                                    eventType:(NSString*)eventType
                                      content:(NSDictionary*)content
                                      success:(void (^)(void))success
@@ -97,7 +97,7 @@ NS_ASSUME_NONNULL_BEGIN
  @param transaction the transaction to cancel.
  @param code the cancellation reason.
  */
-- (void)cancelTransaction:(MXDeviceVerificationTransaction*)transaction code:(MXTransactionCancelCode*)code;
+- (void)cancelTransaction:(MXKeyVerificationTransaction*)transaction code:(MXTransactionCancelCode*)code;
 
 /**
  Remove a transaction from the queue.
