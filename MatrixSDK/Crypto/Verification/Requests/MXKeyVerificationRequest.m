@@ -18,6 +18,8 @@
 
 #import "MXKeyVerificationManager_Private.h"
 
+#import "MXCrypto_Private.h"
+
 
 #pragma mark - Constants
 NSString * const MXKeyVerificationRequestDidChangeNotification = @"MXKeyVerificationRequestDidChangeNotification";
@@ -59,14 +61,20 @@ NSString * const MXKeyVerificationRequestDidChangeNotification = @"MXKeyVerifica
     return self;
 }
 
-- (void)acceptWithMethod:(NSString *)method success:(void (^)(MXKeyVerificationTransaction * _Nonnull))success failure:(void (^)(NSError * _Nonnull))failure
+- (void)acceptWithMethods:(NSArray<NSString *> *)methods success:(dispatch_block_t)success failure:(void (^)(NSError * _Nonnull))failure
 {
-    [self.manager acceptVerificationRequest:self method:method success:^(MXKeyVerificationTransaction * _Nonnull transaction) {
-        self.state = MXKeyVerificationRequestStateAccepted;
-        [self updateState:MXKeyVerificationRequestStateAccepted notifiy:YES];
-        [self.manager removePendingRequestWithRequestId:self.requestId];
+    NSString *myDeviceId = self.manager.crypto.mxSession.matrixRestClient.credentials.deviceId;
+    
+    MXKeyVerificationReady *ready = [MXKeyVerificationReady new];
+    ready.transactionId = _requestId;
+    ready.relatedEventId = _requestId;
+    ready.methods = methods;
+    ready.fromDevice = myDeviceId;
 
-        success(transaction);
+    [self.manager sendToOtherInRequest:self eventType:kMXEventTypeStringKeyVerificationReady content:ready.JSONDictionary success:^{
+        [self updateState:MXKeyVerificationRequestStateAccepted notifiy:YES];
+
+        success();
     }  failure:failure];
 }
 
@@ -108,8 +116,9 @@ NSString * const MXKeyVerificationRequestDidChangeNotification = @"MXKeyVerifica
     });
 }
 
-- (void)handleStart:(MXKeyVerificationStart*)startContent
+- (void)handleReady:(MXKeyVerificationReady*)readyContent
 {
+    // TODO: store returned methods
     [self updateState:MXKeyVerificationRequestStateAccepted notifiy:YES];
     [self.manager removePendingRequestWithRequestId:self.requestId];
 }

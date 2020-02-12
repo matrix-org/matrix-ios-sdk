@@ -245,13 +245,20 @@
                              MXKeyVerificationRequest *requestFromAlicePOV = aliceSession.crypto.keyVerificationManager.pendingRequests.firstObject;
                              XCTAssertNotNil(requestFromAlicePOV);
                              
-                             [requestFromAlicePOV acceptWithMethod:MXKeyVerificationMethodSAS success:^(MXKeyVerificationTransaction * _Nonnull transactionFromAlicePOV) {
+                             [requestFromAlicePOV acceptWithMethods:@[MXKeyVerificationMethodSAS] success:^{
                                  
-                                 XCTAssertEqualObjects(transactionFromAlicePOV.transactionId, event.eventId);
-                                 
-                                 XCTAssert(transactionFromAlicePOV);
-                                 XCTAssertTrue([transactionFromAlicePOV isKindOfClass:MXOutgoingSASTransaction.class]);
-                                 sasTransactionFromAlicePOV = (MXOutgoingSASTransaction*)transactionFromAlicePOV;
+                                 [aliceSession.crypto.keyVerificationManager beginKeyVerificationFromRequest:requestFromAlicePOV method:MXKeyVerificationMethodSAS success:^(MXKeyVerificationTransaction * _Nonnull transactionFromAlicePOV) {
+
+                                     XCTAssertEqualObjects(transactionFromAlicePOV.transactionId, event.eventId);
+                                     
+                                     XCTAssert(transactionFromAlicePOV);
+                                     XCTAssertTrue([transactionFromAlicePOV isKindOfClass:MXOutgoingSASTransaction.class]);
+                                     sasTransactionFromAlicePOV = (MXOutgoingSASTransaction*)transactionFromAlicePOV;
+                                     
+                                 } failure:^(NSError * _Nonnull error) {
+                                     XCTFail(@"The request should not fail - NSError: %@", error);
+                                     [expectation fulfill];
+                                 }];
                                  
                              } failure:^(NSError * _Nonnull error) {
                                  XCTFail(@"The request should not fail - NSError: %@", error);

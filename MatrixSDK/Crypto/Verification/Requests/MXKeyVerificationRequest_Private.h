@@ -16,7 +16,7 @@
 
 #import "MXKeyVerificationRequest.h"
 
-#import "MXKeyVerificationStart.h"
+#import "MXKeyVerificationReady.h"
 #import "MXKeyVerificationCancel.h"
 
 @class MXKeyVerificationManager, MXHTTPOperation;
@@ -41,7 +41,7 @@
 
 - (void)updateState:(MXKeyVerificationRequestState)state notifiy:(BOOL)notify;
 
-- (void)handleStart:(MXKeyVerificationStart*)startContent;
+- (void)handleReady:(MXKeyVerificationReady*)readyContent;
 - (void)handleCancel:(MXKeyVerificationCancel*)cancelContent;
 
 @end

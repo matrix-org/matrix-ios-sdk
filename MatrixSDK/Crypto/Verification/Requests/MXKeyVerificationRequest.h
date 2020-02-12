@@ -46,13 +46,13 @@ NS_ASSUME_NONNULL_BEGIN
 /**
 Accept an incoming key verification request.
 
-@param method the method to use.
+@param method possible methods.
 @param success a block called when the operation succeeds.
 @param failure a block called when the operation fails.
 */
-- (void)acceptWithMethod:(NSString*)method
-                 success:(void(^)(MXKeyVerificationTransaction *transaction))success
-                 failure:(void(^)(NSError *error))failure;
+- (void)acceptWithMethods:(NSArray<NSString*>*)methods
+                  success:(dispatch_block_t)success
+                  failure:(void(^)(NSError *error))failure;
 
 /**
  Cancel this request.
