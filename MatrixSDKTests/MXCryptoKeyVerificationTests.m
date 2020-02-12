@@ -710,7 +710,7 @@
             XCTAssertNotNil(done);
 
             [doneDone addObject:done];
-            if (doneDone.count == 2)
+            if (doneDone.count == 4)
             {
                 // Then, test MXKeyVerification
                 MXEvent *event = [aliceSession.store eventWithEventId:requestId inRoom:roomId];
