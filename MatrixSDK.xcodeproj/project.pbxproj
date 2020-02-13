@@ -162,8 +162,8 @@
 		325380E9228DAD4A00ADDEFA /* MXAggregatedReactions.m in Sources */ = {isa = PBXBuildFile; fileRef = 325380E7228DAD4A00ADDEFA /* MXAggregatedReactions.m */; };
 		32549AF723F2E2790002576B /* MXKeyVerificationReady.m in Sources */ = {isa = PBXBuildFile; fileRef = 32549AF523F2E2790002576B /* MXKeyVerificationReady.m */; };
 		32549AF823F2E2790002576B /* MXKeyVerificationReady.m in Sources */ = {isa = PBXBuildFile; fileRef = 32549AF523F2E2790002576B /* MXKeyVerificationReady.m */; };
-		32549AF923F2E2790002576B /* MXKeyVerificationReady.h in Headers */ = {isa = PBXBuildFile; fileRef = 32549AF623F2E2790002576B /* MXKeyVerificationReady.h */; };
-		32549AFA23F2E2790002576B /* MXKeyVerificationReady.h in Headers */ = {isa = PBXBuildFile; fileRef = 32549AF623F2E2790002576B /* MXKeyVerificationReady.h */; };
+		32549AF923F2E2790002576B /* MXKeyVerificationReady.h in Headers */ = {isa = PBXBuildFile; fileRef = 32549AF623F2E2790002576B /* MXKeyVerificationReady.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		32549AFA23F2E2790002576B /* MXKeyVerificationReady.h in Headers */ = {isa = PBXBuildFile; fileRef = 32549AF623F2E2790002576B /* MXKeyVerificationReady.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		325653831A2E14ED00CC0423 /* MXStoreTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 325653821A2E14ED00CC0423 /* MXStoreTests.m */; };
 		3256E3811DCB91EB003C9718 /* MXCryptoConstants.h in Headers */ = {isa = PBXBuildFile; fileRef = 3256E37F1DCB91EB003C9718 /* MXCryptoConstants.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		3256E3821DCB91EB003C9718 /* MXCryptoConstants.m in Sources */ = {isa = PBXBuildFile; fileRef = 3256E3801DCB91EB003C9718 /* MXCryptoConstants.m */; };

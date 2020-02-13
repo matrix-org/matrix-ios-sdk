@@ -31,8 +31,6 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, readonly) NSString *roomId;
 @property (nonatomic, readonly) NSString *eventId;
 
-- (instancetype)initWithEvent:(MXEvent*)event andManager:(MXKeyVerificationManager*)manager;
-
 @end
 
 NS_ASSUME_NONNULL_END

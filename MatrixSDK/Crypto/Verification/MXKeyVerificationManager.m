@@ -171,8 +171,7 @@ static NSArray<MXEventTypeString> *kMXKeyVerificationManagerDMEventTypes;
     NSLog(@"[MXKeyVerification] beginKeyVerificationFromRequest: event: %@", request.requestId);
     
     // Sanity checks
-    NSString *fromDevice = request.fromDevice; // TODO: can be ourselves
-    if (!fromDevice)
+    if (!request.otherDevice)
     {
         NSError *error = [NSError errorWithDomain:MXKeyVerificationErrorDomain
                                              code:MXKeyVerificationUnknownDeviceCode
@@ -197,7 +196,7 @@ static NSArray<MXEventTypeString> *kMXKeyVerificationManagerDMEventTypes;
     if ([request isKindOfClass:MXKeyVerificationByDMRequest.class])
     {
         MXKeyVerificationByDMRequest *requestByDM = (MXKeyVerificationByDMRequest*)request;
-        [self beginKeyVerificationWithUserId:request.sender andDeviceId:fromDevice dmRoomId:requestByDM.roomId dmEventId:requestByDM.eventId method:method success:^(MXKeyVerificationTransaction *transaction) {
+        [self beginKeyVerificationWithUserId:request.otherUser andDeviceId:request.otherDevice dmRoomId:requestByDM.roomId dmEventId:requestByDM.eventId method:method success:^(MXKeyVerificationTransaction *transaction) {
             [self removePendingRequestWithRequestId:request.requestId];
             success(transaction);
         } failure:failure];
@@ -372,6 +371,7 @@ static NSArray<MXEventTypeString> *kMXKeyVerificationManagerDMEventTypes;
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
         kMXKeyVerificationManagerDMEventTypes = @[
+                                                    kMXEventTypeStringKeyVerificationReady,
                                                     kMXEventTypeStringKeyVerificationStart,
                                                     kMXEventTypeStringKeyVerificationAccept,
                                                     kMXEventTypeStringKeyVerificationKey,
@@ -428,13 +428,11 @@ static NSArray<MXEventTypeString> *kMXKeyVerificationManagerDMEventTypes;
     NSLog(@"[MXKeyVerification] sendToOtherInRequest: eventType: %@\n%@",
           eventType, content);
     
-    NSString *otherUserId = request.isFromMyUser ? request.to : request.sender;
-    
     MXHTTPOperation *operation;
     if ([request isKindOfClass:MXKeyVerificationByDMRequest.class])
     {
         MXKeyVerificationByDMRequest *requestByDM = (MXKeyVerificationByDMRequest*)request;
-        operation = [self sendMessage:otherUserId roomId:requestByDM.roomId eventType:eventType relatedTo:requestByDM.eventId content:content success:success failure:failure];
+        operation = [self sendMessage:request.otherUser roomId:requestByDM.roomId eventType:eventType relatedTo:requestByDM.eventId content:content success:success failure:failure];
     }
     else
     {
@@ -559,6 +557,10 @@ static NSArray<MXEventTypeString> *kMXKeyVerificationManagerDMEventTypes;
     dispatch_async(cryptoQueue, ^{
         switch (event.eventType)
         {
+            case MXEventTypeKeyVerificationReady:
+                [self handleReadyEvent:event];
+                break;
+                
             case MXEventTypeKeyVerificationStart:
                 [self handleStartEvent:event];
                 break;
@@ -585,6 +587,26 @@ static NSArray<MXEventTypeString> *kMXKeyVerificationManagerDMEventTypes;
     });
 }
 
+- (void)handleReadyEvent:(MXEvent*)event
+{
+    NSLog(@"[MXKeyVerification] handleReadyEvent");
+    
+    MXKeyVerificationReady *keyVerificationReady;
+    MXJSONModelSetMXJSONModel(keyVerificationReady, MXKeyVerificationReady, event.content);
+    
+    if (!keyVerificationReady)
+    {
+        return;
+    }
+    
+    NSString *requestId = keyVerificationReady.transactionId;
+    MXKeyVerificationRequest *request = [self pendingRequestWithRequestId:requestId];
+    if (request)
+    {
+        [request handleReady:keyVerificationReady];
+    }
+}
+    
 - (void)handleStartEvent:(MXEvent*)event
 {
     NSLog(@"[MXKeyVerification] handleStartEvent");
@@ -879,9 +901,9 @@ static NSArray<MXEventTypeString> *kMXKeyVerificationManagerDMEventTypes;
 {
     NSLog(@"[MXKeyVerification] handleKeyVerificationRequest: %@", request);
 
-    if (![request.to isEqualToString:self.crypto.mxSession.myUser.userId])
+    if (![request.request.to isEqualToString:self.crypto.mxSession.myUser.userId])
     {
-        NSLog(@"[MXKeyVerification] handleKeyVerificationRequest: Request for another user: %@", request.to);
+        NSLog(@"[MXKeyVerification] handleKeyVerificationRequest: Request for another user: %@", request.request.to);
         return;
     }
 

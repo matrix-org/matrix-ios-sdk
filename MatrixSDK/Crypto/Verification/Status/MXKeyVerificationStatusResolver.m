@@ -129,7 +129,7 @@
         if (request)
         {
             NSString *myUserId = self.mxSession.myUser.userId;
-            BOOL isFromMyUser = [request.sender isEqualToString:myUserId];
+            BOOL isFromMyUser = [event.sender isEqualToString:myUserId];
             request.isFromMyUser = isFromMyUser;
 
             MXEvent *firstEvent = events.firstObject;
@@ -150,6 +150,17 @@
             {
                 // If there are events but no cancel event at first, the transaction
                 // has started = the request has been accepted
+                for (MXEvent *event in events)
+                {
+                    // In case the other sent a ready event, store its content
+                    if (event.eventType == MXEventTypeKeyVerificationReady)
+                    {
+                        MXKeyVerificationReady *keyVerificationReady;
+                        MXJSONModelSetMXJSONModel(keyVerificationReady, MXKeyVerificationReady, event.content);
+                        request.acceptedData = keyVerificationReady;
+                    }
+                }
+        
                 [request updateState:MXKeyVerificationRequestStateAccepted notifiy:NO];
             }
             // There is only the request event. What is the status of it?
@@ -198,7 +209,8 @@
     {
         NSString *myUserId = self.mxSession.myUser.userId;
 
-        switch (event.eventType) {
+        switch (event.eventType)
+        {
             case MXEventTypeKeyVerificationCancel:
             {
                 MXKeyVerificationCancel *cancel;

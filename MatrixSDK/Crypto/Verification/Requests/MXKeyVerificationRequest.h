@@ -16,8 +16,10 @@
 
 #import <Foundation/Foundation.h>
 
+#import "MXEvent.h"
 #import "MXKeyVerificationTransaction.h"
-
+#import "MXKeyVerificationRequestJSONModel.h"
+#import "MXKeyVerificationReady.h"
 
 #pragma mark - Constants
 
@@ -46,7 +48,7 @@ NS_ASSUME_NONNULL_BEGIN
 /**
 Accept an incoming key verification request.
 
-@param method possible methods.
+@param methods possible methods.
 @param success a block called when the operation succeeds.
 @param failure a block called when the operation fails.
 */
@@ -70,20 +72,34 @@ Accept an incoming key verification request.
  */
 @property (nonatomic, nullable) MXTransactionCancelCode *reasonCancelCode;
 
+// Current state
+@property (nonatomic, readonly) MXKeyVerificationRequestState state;
 
-@property (nonatomic, readonly) NSString *requestId;
+// Original data for this request
+@property (nonatomic, readonly) MXEvent *event;
+@property (nonatomic, readonly) MXKeyVerificationRequestJSONModel *request;
 
+// Original data from the accepted (aka m.verification.ready) event
+@property (nonatomic, readonly, nullable) MXKeyVerificationReady *acceptedData;
+
+// Is it a request made by our user?
 @property (nonatomic, readonly) BOOL isFromMyUser;
 
-@property (nonatomic) NSString *to;
+// The other party
+@property (nonatomic, readonly) NSString *otherUser;
+@property (nonatomic, readonly, nullable) NSString *otherDevice;  // This is unknown and nil while the request has not been accepted
 
-@property (nonatomic, readonly) NSString *sender;
-@property (nonatomic, readonly) NSString *fromDevice;
-
-@property (nonatomic, readonly) NSUInteger age;
+// Shortcuts to the original request
+@property (nonatomic, readonly) NSString *requestId;
 @property (nonatomic, readonly) uint64_t ageLocalTs;
+@property (nonatomic, readonly) NSArray<NSString*> *methods;
 
-@property (nonatomic, readonly) MXKeyVerificationRequestState state;
+// Shortcuts to the accepted event
+@property (nonatomic, readonly, nullable) NSArray<NSString*> *acceptedMethods;
+
+// Shortcuts of methods according to the point of view
+@property (nonatomic, readonly, nullable) NSArray<NSString*> *myMethods;
+@property (nonatomic, readonly, nullable) NSArray<NSString*> *otherMethods;
 
 @end
 

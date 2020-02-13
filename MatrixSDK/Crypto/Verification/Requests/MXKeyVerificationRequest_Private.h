@@ -29,15 +29,10 @@
 
 @property (nonatomic, readonly, weak) MXKeyVerificationManager *manager;
 
-
-- (instancetype)initWithRequestId:(NSString*)requestId
-                               to:(NSString*)to
-                         sender:(NSString*)sender
-                     fromDevice:(NSString*)fromDevice
-                     ageLocalTs:(uint64_t)ageLocalTs
-                        manager:(MXKeyVerificationManager*)manager;
+- (instancetype)initWithEvent:(MXEvent*)event andManager:(MXKeyVerificationManager*)manager;
 
 @property (nonatomic) BOOL isFromMyUser;
+@property (nonatomic) MXKeyVerificationReady *acceptedData;
 
 - (void)updateState:(MXKeyVerificationRequestState)state notifiy:(BOOL)notify;
 
