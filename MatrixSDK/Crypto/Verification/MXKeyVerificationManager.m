@@ -623,8 +623,9 @@ static NSArray<MXEventTypeString> *kMXKeyVerificationManagerDMEventTypes;
     MXKeyVerificationRequest *request = [self pendingRequestWithRequestId:requestId];
     if (request)
     {
-        // TODO: hmm
-        //[request handleStart:keyVerificationStart];
+        // The other party decided to create a transaction from the request
+        // The request is complete
+        [self removePendingRequestWithRequestId:request.requestId];
     }
     else if ([event.relatesTo.relationType isEqualToString:MXEventRelationTypeReference])
     {
