@@ -62,6 +62,7 @@ NSString *const kMXEventTypeStringCallAnswer            = @"m.call.answer";
 NSString *const kMXEventTypeStringCallHangup            = @"m.call.hangup";
 NSString *const kMXEventTypeStringSticker               = @"m.sticker";
 NSString *const kMXEventTypeStringRoomTombStone         = @"m.room.tombstone";
+NSString *const kMXEventTypeStringKeyVerificationReady  = @"m.key.verification.ready";
 NSString *const kMXEventTypeStringKeyVerificationStart  = @"m.key.verification.start";
 NSString *const kMXEventTypeStringKeyVerificationAccept = @"m.key.verification.accept";
 NSString *const kMXEventTypeStringKeyVerificationKey    = @"m.key.verification.key";

@@ -1,5 +1,5 @@
 /*
- Copyright 2019 The Matrix.org Foundation C.I.C
+ Copyright 2020 The Matrix.org Foundation C.I.C
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -14,22 +14,32 @@
  limitations under the License.
  */
 
-#import <Foundation/Foundation.h>
-
-#import "MXKeyVerificationRequest.h"
-
-@class MXEvent, MXKeyVerificationManager;
-
+#import "MXKeyVerificationJSONModel.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
 /**
- An handler on an interactive request for verification by Direct Message.
+ "m.key.verification.ready" model.
  */
-@interface MXKeyVerificationByDMRequest : MXKeyVerificationRequest
+@interface MXKeyVerificationReady : MXKeyVerificationJSONModel
 
-@property (nonatomic, readonly) NSString *roomId;
-@property (nonatomic, readonly) NSString *eventId;
+/**
+ An array of verification methods("m.sas.v1", etc) that the device supports.
+ */
+@property (nonatomic) NSArray<NSString*> *methods;
+
+/**
+ The ID of the device that sent the m.key.verification.ready message
+ */
+@property (nonatomic) NSString *fromDevice;
+
+
+/**
+ Check content validity.
+
+ @return YES if valid.
+ */
+- (BOOL)isValid;
 
 @end
 

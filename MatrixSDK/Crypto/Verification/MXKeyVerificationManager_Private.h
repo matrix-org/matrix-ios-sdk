@@ -35,7 +35,7 @@ NS_ASSUME_NONNULL_BEGIN
 /**
  Constructor.
 
- @param mxSession the related 'MXSession'.
+ @param crypto the related 'MXCrypto'.
  */
 - (instancetype)initWithCrypto:(MXCrypto *)crypto;
 
@@ -43,17 +43,22 @@ NS_ASSUME_NONNULL_BEGIN
 #pragma mark - Requests
 
 /**
- Accept an incoming key verification request.
-
- @param request the request.
- @param method the method to use.
- @param success a block called when the operation succeeds.
- @param failure a block called when the operation fails.
+ Send a message to the other peer in a device verification request.
+ 
+ @param request the request to talk trough.
+ @param eventType the message type.
+ @param content the message content.
+ 
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+ 
+ @return a MXHTTPOperation instance.
  */
-- (void)acceptVerificationRequest:(MXKeyVerificationRequest*)request
-                           method:(NSString*)method
-                          success:(void(^)(MXKeyVerificationTransaction *transaction))success
-                          failure:(void(^)(NSError *error))failure;
+- (MXHTTPOperation*)sendToOtherInRequest:(MXKeyVerificationRequest*)request
+                               eventType:(NSString*)eventType
+                                 content:(NSDictionary*)content
+                                 success:(dispatch_block_t)success
+                                 failure:(void (^)(NSError *error))failure;
 
 /**
  Cancel a key verification request or reject an incoming key verification request.
@@ -74,7 +79,7 @@ NS_ASSUME_NONNULL_BEGIN
 #pragma mark - Transactions
 
 /**
- Send a message to the other a peer in a device verification transaction.
+ Send a message to the other peer in a device verification transaction.
 
  @param transaction the transation to talk trough.
  @param eventType the message type.

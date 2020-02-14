@@ -39,6 +39,7 @@ typedef enum : NSUInteger
 {
     MXKeyVerificationUnknownDeviceCode,
     MXKeyVerificationUnsupportedMethodCode,
+    MXKeyVerificationInvalidStateCode,
     MXKeyVerificationUnknownRoomCode,
     MXKeyVerificationUnknownIdentifier,
 } MXKeyVerificationErrorCode;
@@ -126,6 +127,18 @@ FOUNDATION_EXPORT NSString *const MXKeyVerificationManagerNotificationTransactio
                                 method:(NSString*)method
                                success:(void(^)(MXKeyVerificationTransaction *transaction))success
                                failure:(void(^)(NSError *error))failure;
+
+/**
+ Begin a device verification from a request.
+ 
+ @param request the verification request.
+ @param success a block called when the operation succeeds.
+ @param failure a block called when the operation fails.
+ */
+- (void)beginKeyVerificationFromRequest:(MXKeyVerificationRequest*)request
+                                 method:(NSString*)method
+                                success:(void(^)(MXKeyVerificationTransaction *transaction))success
+                                failure:(void(^)(NSError *error))failure;
 
 /**
  All transactions in progress.

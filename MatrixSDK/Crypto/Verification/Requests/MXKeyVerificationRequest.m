@@ -18,6 +18,8 @@
 
 #import "MXKeyVerificationManager_Private.h"
 
+#import "MXCrypto_Private.h"
+
 
 #pragma mark - Constants
 NSString * const MXKeyVerificationRequestDidChangeNotification = @"MXKeyVerificationRequestDidChangeNotification";
@@ -30,43 +32,45 @@ NSString * const MXKeyVerificationRequestDidChangeNotification = @"MXKeyVerifica
 
 @implementation MXKeyVerificationRequest
 
-- (NSUInteger)age
-{
-    return [[NSDate date] timeIntervalSince1970] * 1000 - _ageLocalTs;
-}
-
-
 #pragma mark - SDK-Private methods -
 
-- (instancetype)initWithRequestId:(NSString*)requestId
-                               to:(NSString*)to
-                           sender:(NSString*)sender
-                       fromDevice:(NSString*)fromDevice
-                       ageLocalTs:(uint64_t)ageLocalTs
-                          manager:(MXKeyVerificationManager*)manager
+- (instancetype)initWithEvent:(MXEvent*)event andManager:(MXKeyVerificationManager*)manager
 {
+    // Check verification by DM request format
+    MXKeyVerificationRequestJSONModel *request;
+    MXJSONModelSetMXJSONModel(request, MXKeyVerificationRequestJSONModel.class, event.content);
+    
+    if (!request)
+    {
+        return nil;
+    }
+    
     self = [super init];
     if (self)
     {
+        _event = event;
+        _request = request;
         _state = MXKeyVerificationRequestStatePending;
-        _requestId = requestId;
-        _to = to;
-        _sender = sender;
-        _fromDevice = fromDevice;
-        _ageLocalTs = ageLocalTs;
         _manager = manager;
     }
     return self;
 }
 
-- (void)acceptWithMethod:(NSString *)method success:(void (^)(MXKeyVerificationTransaction * _Nonnull))success failure:(void (^)(NSError * _Nonnull))failure
+- (void)acceptWithMethods:(NSArray<NSString *> *)methods success:(dispatch_block_t)success failure:(void (^)(NSError * _Nonnull))failure
 {
-    [self.manager acceptVerificationRequest:self method:method success:^(MXKeyVerificationTransaction * _Nonnull transaction) {
-        self.state = MXKeyVerificationRequestStateAccepted;
-        [self updateState:MXKeyVerificationRequestStateAccepted notifiy:YES];
-        [self.manager removePendingRequestWithRequestId:self.requestId];
+    NSString *myDeviceId = self.manager.crypto.mxSession.matrixRestClient.credentials.deviceId;
+    
+    MXKeyVerificationReady *ready = [MXKeyVerificationReady new];
+    ready.transactionId = self.requestId;
+    ready.relatedEventId = _event.eventId;
+    ready.methods = methods;
+    ready.fromDevice = myDeviceId;
 
-        success(transaction);
+    [self.manager sendToOtherInRequest:self eventType:kMXEventTypeStringKeyVerificationReady content:ready.JSONDictionary success:^{
+        self.acceptedData = ready;
+        [self updateState:MXKeyVerificationRequestStateAccepted notifiy:YES];
+
+        success();
     }  failure:failure];
 }
 
@@ -108,10 +112,10 @@ NSString * const MXKeyVerificationRequestDidChangeNotification = @"MXKeyVerifica
     });
 }
 
-- (void)handleStart:(MXKeyVerificationStart*)startContent
+- (void)handleReady:(MXKeyVerificationReady*)readyContent
 {
+    self.acceptedData = readyContent;
     [self updateState:MXKeyVerificationRequestStateAccepted notifiy:YES];
-    [self.manager removePendingRequestWithRequestId:self.requestId];
 }
 
 - (void)handleCancel:(MXKeyVerificationCancel *)cancelContent
@@ -121,6 +125,63 @@ NSString * const MXKeyVerificationRequestDidChangeNotification = @"MXKeyVerifica
     
     [self updateState:MXKeyVerificationRequestStateCancelled notifiy:YES];
     [self.manager removePendingRequestWithRequestId:self.requestId];
+}
+
+// Shortcuts
+- (NSString *)requestId
+{
+    return _event.eventId;
+}
+
+- (uint64_t)ageLocalTs
+{
+    return _event.ageLocalTs;
+}
+
+
+// Shortcuts to the original request
+- (NSString *)to
+{
+    return _request.to;
+}
+
+- (NSString *)otherUser
+{
+    return _isFromMyUser ? _request.to : _event.sender;
+}
+
+- (NSString *)otherDevice
+{
+    return _isFromMyUser ? _acceptedData.fromDevice : _request.fromDevice;
+}
+
+- (NSString *)fromDevice
+{
+    return _request.fromDevice;
+}
+
+- (NSArray<NSString *> *)methods
+{
+    return _request.methods;
+}
+
+
+// Shortcuts to the accepted event
+-(NSArray<NSString *> *)acceptedMethods
+{
+    return _acceptedData.methods;
+}
+
+
+// Shortcuts of methods according to the point of view
+- (NSArray<NSString *> *)myMethods
+{
+    return _isFromMyUser ? self.methods : self.acceptedMethods;
+}
+
+- (NSArray<NSString *> *)otherMethods
+{
+    return _isFromMyUser ? self.acceptedMethods : self.methods;
 }
 
 @end

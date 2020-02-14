@@ -18,7 +18,6 @@
 #import "MXKeyVerificationByDMRequest.h"
 
 #import "MXKeyVerificationRequest_Private.h"
-#import "MXKeyVerificationRequestJSONModel.h"
 
 #import "MXEvent.h"
 
@@ -27,22 +26,7 @@
 
 - (instancetype)initWithEvent:(MXEvent*)event andManager:(MXKeyVerificationManager*)manager
 {
-    // Check verification by DM request format
-    MXKeyVerificationRequestJSONModel *request;
-    MXJSONModelSetMXJSONModel(request, MXKeyVerificationRequestJSONModel.class, event.content);
-
-    if (!request)
-    {
-        return nil;
-    }
-
-    // Use the event id as identifier
-    self = [self initWithRequestId:event.eventId
-                                to:request.to
-                            sender:event.sender
-                        fromDevice:request.fromDevice
-                        ageLocalTs:event.ageLocalTs
-                           manager:manager];
+    self = [super initWithEvent:event andManager:manager];
     if (self)
     {
         _roomId = event.roomId;
