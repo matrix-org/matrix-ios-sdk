@@ -90,7 +90,7 @@ static NSArray<MXEventTypeString> *kMXKeyVerificationManagerDMEventTypes;
     requestJSONModel.fromDevice = _crypto.myDevice.deviceId;
     requestJSONModel.transactionId = [MXTools generateSecret];
     requestJSONModel.methods = methods;
-    requestJSONModel.timestamp = [NSDate date].timeIntervalSince1970;
+    requestJSONModel.timestamp = [NSDate date].timeIntervalSince1970 * 1000;
     
     MXUsersDevicesMap<NSDictionary*> *contentMap = [[MXUsersDevicesMap alloc] init];
     
@@ -1156,13 +1156,13 @@ static NSArray<MXEventTypeString> *kMXKeyVerificationManagerDMEventTypes;
         NSLog(@"[MXKeyVerificationRequest] scheduleTimeoutTimer: Create timer");
 
         NSDate *timeoutDate = [oldestRequestDate dateByAddingTimeInterval:self.requestTimeout];
-        self->requestTimeoutTimer = [[NSTimer alloc] initWithFireDate:timeoutDate
+        requestTimeoutTimer = [[NSTimer alloc] initWithFireDate:timeoutDate
                                                       interval:0
                                                         target:self
                                                       selector:@selector(onRequestTimeoutTimer)
                                                       userInfo:nil
                                                        repeats:NO];
-        [[NSRunLoop mainRunLoop] addTimer:self->requestTimeoutTimer forMode:NSDefaultRunLoopMode];
+        [[NSRunLoop mainRunLoop] addTimer:requestTimeoutTimer forMode:NSDefaultRunLoopMode];
     }
 }
 
