@@ -71,6 +71,7 @@ typedef NS_ENUM(NSInteger, MXEventType)
     MXEventTypeCallHangup,
     MXEventTypeSticker,
     MXEventTypeRoomTombStone,
+    MXEventTypeKeyVerificationRequest,
     MXEventTypeKeyVerificationReady,
     MXEventTypeKeyVerificationStart,
     MXEventTypeKeyVerificationAccept,
@@ -127,6 +128,7 @@ FOUNDATION_EXPORT NSString *const kMXEventTypeStringSticker;
 FOUNDATION_EXPORT NSString *const kMXEventTypeStringRoomTombStone;
 
 // Interactive key verification
+FOUNDATION_EXPORT NSString *const kMXEventTypeStringKeyVerificationRequest;
 FOUNDATION_EXPORT NSString *const kMXEventTypeStringKeyVerificationReady;
 FOUNDATION_EXPORT NSString *const kMXEventTypeStringKeyVerificationStart;
 FOUNDATION_EXPORT NSString *const kMXEventTypeStringKeyVerificationAccept;

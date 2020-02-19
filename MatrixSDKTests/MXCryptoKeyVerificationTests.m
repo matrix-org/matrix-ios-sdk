@@ -142,7 +142,7 @@
 
         MXCredentials *alice = aliceSession.matrixRestClient.credentials;
         MXCredentials *bob = bobSession.matrixRestClient.credentials;
-
+        
         // - Alice begins SAS verification of Bob's device
         [aliceSession.crypto.keyVerificationManager beginKeyVerificationWithUserId:bob.userId andDeviceId:bob.deviceId method:MXKeyVerificationMethodSAS success:^(MXKeyVerificationTransaction * _Nonnull transactionFromAlicePOV) {
 
@@ -469,6 +469,58 @@
 }
 
 
+#pragma mark - Verification with requests -
+/**
+ Test new requests
+ 
+ - Alice and Bob are in a room
+ - Bob requests a verification of Alice in this Room
+ -> Alice gets the requests notification
+ -> They both have it in their pending requests
+ */
+- (void)testVerificationWithRequests
+{
+    // - Alice and Bob are in a room
+    [matrixSDKTestsE2EData doE2ETestWithAliceAndBobInARoomWithCryptedMessages:self cryptedBob:YES readyToTest:^(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
+
+        __block NSString *requestId;
+
+        MXCredentials *alice = aliceSession.matrixRestClient.credentials;
+
+        // - Bob requests a verification of Alice
+        [bobSession.crypto.keyVerificationManager requestVerificationByToDeviceWithUserId:alice.userId
+                                                                      deviceIds:@[alice.deviceId]
+                                                                        methods:@[MXKeyVerificationMethodSAS, @"toto"]
+                                                                        success:^(MXKeyVerificationRequest *request)
+         {
+             requestId = request.requestId;
+         }
+                                                                            failure:^(NSError * _Nonnull error)
+         {
+             XCTFail(@"The request should not fail - NSError: %@", error);
+             [expectation fulfill];
+         }];
+
+
+        // -> Alice gets the requests notification
+        [self observeKeyVerificationRequestInSession:aliceSession block:^(MXKeyVerificationRequest * _Nullable request) {
+            XCTAssertEqualObjects(request.requestId, requestId);
+            XCTAssertFalse(request.isFromMyUser);
+
+            MXKeyVerificationRequest *requestFromAlicePOV = aliceSession.crypto.keyVerificationManager.pendingRequests.firstObject;
+            MXKeyVerificationRequest *requestFromBobPOV = bobSession.crypto.keyVerificationManager.pendingRequests.firstObject;
+
+            XCTAssertNotNil(requestFromAlicePOV);
+            XCTAssertEqual(requestFromAlicePOV.transport, MKeyVerificationTransportToDevice);
+            XCTAssertNotNil(requestFromBobPOV);
+            XCTAssertEqual(requestFromBobPOV.transport, MKeyVerificationTransportToDevice);
+
+            [expectation fulfill];
+        }];
+    }];
+}
+
+
 #pragma mark - Verification by DM requests -
 /**
  Test new requests
@@ -514,8 +566,9 @@
             MXKeyVerificationRequest *requestFromBobPOV = bobSession.crypto.keyVerificationManager.pendingRequests.firstObject;
 
             XCTAssertNotNil(requestFromAlicePOV);
+            XCTAssertEqual(requestFromAlicePOV.transport, MKeyVerificationTransportDirectMessage);
             XCTAssertNotNil(requestFromBobPOV);
-
+            XCTAssertEqual(requestFromBobPOV.transport, MKeyVerificationTransportDirectMessage);
 
             [expectation fulfill];
         }];

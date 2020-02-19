@@ -105,6 +105,7 @@ NSCharacterSet *uriComponentCharset;
                                 kMXEventTypeStringCallHangup,
                                 kMXEventTypeStringSticker,
                                 kMXEventTypeStringRoomTombStone,
+                                kMXEventTypeStringKeyVerificationRequest,
                                 kMXEventTypeStringKeyVerificationReady,
                                 kMXEventTypeStringKeyVerificationStart,
                                 kMXEventTypeStringKeyVerificationAccept,

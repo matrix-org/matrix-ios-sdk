@@ -25,7 +25,10 @@
 #import "MXTransactionCancelCode.h"
 
 #import "MXKeyVerificationRequest_Private.h"
+#import "MXKeyVerificationByToDeviceRequest.h"
 #import "MXKeyVerificationByDMRequest.h"
+
+#import "MXKeyVerificationRequestByToDeviceJSONModel.h"
 #import "MXKeyVerificationRequestByDMJSONModel.h"
 
 #import "MXKeyVerificationStatusResolver.h"
@@ -74,6 +77,43 @@ static NSArray<MXEventTypeString> *kMXKeyVerificationManagerDMEventTypes;
 #pragma mark - Public methods -
 
 #pragma mark Requests
+
+- (void)requestVerificationByToDeviceWithUserId:(NSString*)userId
+                                      deviceIds:(nullable NSArray<NSString*>*)deviceIds
+                                        methods:(NSArray<NSString*>*)methods
+                                        success:(void(^)(MXKeyVerificationRequest *request))success
+                                        failure:(void(^)(NSError *error))failure
+{
+    NSLog(@"[MXKeyVerification] requestVerificationByToDeviceWithUserId: %@. deviceIds: %@", userId, deviceIds);
+    
+    MXKeyVerificationRequestByToDeviceJSONModel *requestJSONModel = [MXKeyVerificationRequestByToDeviceJSONModel new];
+    requestJSONModel.fromDevice = _crypto.myDevice.deviceId;
+    requestJSONModel.transactionId = [MXTools generateSecret];
+    requestJSONModel.methods = methods;
+    requestJSONModel.timestamp = [NSDate date].timeIntervalSince1970;
+    
+    MXUsersDevicesMap<NSDictionary*> *contentMap = [[MXUsersDevicesMap alloc] init];
+    
+    for (NSString *deviceId in deviceIds)
+    {
+        [contentMap setObject:requestJSONModel.JSONDictionary forUser:userId andDevice:deviceId];
+    }
+    
+    [self.crypto.matrixRestClient sendToDevice:kMXMessageTypeKeyVerificationRequest contentMap:contentMap txnId:nil success:^{
+        
+        MXEvent *event = [MXEvent modelFromJSON:@{
+                                                  @"sender": self.crypto.mxSession.myUser.userId,
+                                                  @"type": kMXMessageTypeKeyVerificationRequest,
+                                                  @"content": requestJSONModel.JSONDictionary
+                                                  }];
+        MXKeyVerificationByToDeviceRequest *request = [[MXKeyVerificationByToDeviceRequest alloc] initWithEvent:event andManager:self];
+        [request updateState:MXKeyVerificationRequestStatePending notifiy:YES];
+        [self addPendingRequest:request notify:NO];
+        
+        success(request);
+        
+    } failure:failure];
+}
 
 - (void)requestVerificationByDMWithUserId:(NSString*)userId
                                    roomId:(nullable NSString*)roomId
@@ -557,6 +597,11 @@ static NSArray<MXEventTypeString> *kMXKeyVerificationManagerDMEventTypes;
     dispatch_async(cryptoQueue, ^{
         switch (event.eventType)
         {
+            case MXEventTypeKeyVerificationRequest:
+                // Only requests by to_device come here
+                [self handleToDeviceRequestEvent:event];
+                break;
+                
             case MXEventTypeKeyVerificationReady:
                 [self handleReadyEvent:event];
                 break;
@@ -585,6 +630,21 @@ static NSArray<MXEventTypeString> *kMXKeyVerificationManagerDMEventTypes;
                 break;
         }
     });
+}
+
+
+- (void)handleToDeviceRequestEvent:(MXEvent*)event
+{
+    NSLog(@"[MXKeyVerification] handleToDeviceRequestEvent");
+    
+    MXKeyVerificationByToDeviceRequest *keyVerificationRequest = [[MXKeyVerificationByToDeviceRequest alloc] initWithEvent:event andManager:self];
+    
+    if (!keyVerificationRequest)
+    {
+        return;
+    }
+    
+    [self addPendingRequest:keyVerificationRequest notify:YES];
 }
 
 - (void)handleReadyEvent:(MXEvent*)event
@@ -891,20 +951,20 @@ static NSArray<MXEventTypeString> *kMXKeyVerificationManagerDMEventTypes;
             MXKeyVerificationByDMRequest *requestByDM = [[MXKeyVerificationByDMRequest alloc] initWithEvent:event andManager:self];
             if (requestByDM)
             {
-                [self handleKeyVerificationRequest:requestByDM event:event];
+                [self handleKeyVerificationRequestByDM:requestByDM event:event];
             }
         }
     }];
 }
 
 
-- (void)handleKeyVerificationRequest:(MXKeyVerificationRequest*)request event:(MXEvent*)event
+- (void)handleKeyVerificationRequestByDM:(MXKeyVerificationByDMRequest*)request event:(MXEvent*)event
 {
-    NSLog(@"[MXKeyVerification] handleKeyVerificationRequest: %@", request);
+    NSLog(@"[MXKeyVerification] handleKeyVerificationRequestByDM: %@", request);
 
     if (![request.request.to isEqualToString:self.crypto.mxSession.myUser.userId])
     {
-        NSLog(@"[MXKeyVerification] handleKeyVerificationRequest: Request for another user: %@", request.request.to);
+        NSLog(@"[MXKeyVerification] handleKeyVerificationRequestByDM: Request for another user: %@", request.request.to);
         return;
     }
 
@@ -921,7 +981,7 @@ static NSArray<MXEventTypeString> *kMXKeyVerificationManagerDMEventTypes;
             }
 
         } failure:^(NSError *error) {
-            NSLog(@"[MXKeyVerificationRequest] handleKeyVerificationRequest: Failed to resolve state: %@", request.requestId);
+            NSLog(@"[MXKeyVerificationRequest] handleKeyVerificationRequestByDM: Failed to resolve state: %@", request.requestId);
         }];
     });
 }
@@ -1062,9 +1122,9 @@ static NSArray<MXEventTypeString> *kMXKeyVerificationManagerDMEventTypes;
     for (MXKeyVerificationRequest *request in pendingRequestsMap.allValues)
     {
         if (!oldestRequestDate
-            || request.ageLocalTs < oldestRequestDate.timeIntervalSince1970)
+            || request.timestamp < oldestRequestDate.timeIntervalSince1970)
         {
-            oldestRequestDate = [NSDate dateWithTimeIntervalSince1970:(request.ageLocalTs / 1000)];
+            oldestRequestDate = [NSDate dateWithTimeIntervalSince1970:(request.timestamp / 1000)];
         }
     }
     return oldestRequestDate;
@@ -1072,7 +1132,7 @@ static NSArray<MXEventTypeString> *kMXKeyVerificationManagerDMEventTypes;
 
 - (BOOL)isRequestStillPending:(MXKeyVerificationRequest*)request
 {
-    NSDate *requestDate = [NSDate dateWithTimeIntervalSince1970:(request.ageLocalTs / 1000)];
+    NSDate *requestDate = [NSDate dateWithTimeIntervalSince1970:(request.timestamp / 1000)];
     return (requestDate.timeIntervalSinceNow > -_requestTimeout);
 }
 
