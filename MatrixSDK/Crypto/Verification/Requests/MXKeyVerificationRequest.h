@@ -18,7 +18,6 @@
 
 #import "MXEvent.h"
 #import "MXKeyVerificationTransaction.h"
-#import "MXKeyVerificationRequestByDMJSONModel.h"
 #import "MXKeyVerificationReady.h"
 
 #pragma mark - Constants
@@ -77,22 +76,25 @@ Accept an incoming key verification request.
 
 // Original data for this request
 @property (nonatomic, readonly) MXEvent *event;
-@property (nonatomic, readonly) MXKeyVerificationRequestByDMJSONModel *request;
-
-// Original data from the accepted (aka m.verification.ready) event
-@property (nonatomic, readonly, nullable) MXKeyVerificationReady *acceptedData;
 
 // Is it a request made by our user?
 @property (nonatomic, readonly) BOOL isFromMyUser;
+
+
+// Shortcuts to the original request
+@property (nonatomic, readonly) NSString *requestId;
+@property (nonatomic, readonly) MKeyVerificationTransport transport;
+@property (nonatomic, readonly) NSString *fromDevice;
+@property (nonatomic, readonly) uint64_t timestamp;
+@property (nonatomic, readonly) NSArray<NSString*> *methods;
 
 // The other party
 @property (nonatomic, readonly) NSString *otherUser;
 @property (nonatomic, readonly, nullable) NSString *otherDevice;  // This is unknown and nil while the request has not been accepted
 
-// Shortcuts to the original request
-@property (nonatomic, readonly) NSString *requestId;
-@property (nonatomic, readonly) uint64_t ageLocalTs;
-@property (nonatomic, readonly) NSArray<NSString*> *methods;
+
+// Original data from the accepted (aka m.verification.ready) event
+@property (nonatomic, readonly, nullable) MXKeyVerificationReady *acceptedData;
 
 // Shortcuts to the accepted event
 @property (nonatomic, readonly, nullable) NSArray<NSString*> *acceptedMethods;

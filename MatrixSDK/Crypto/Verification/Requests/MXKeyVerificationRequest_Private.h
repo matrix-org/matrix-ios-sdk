@@ -31,7 +31,6 @@
 
 - (instancetype)initWithEvent:(MXEvent*)event andManager:(MXKeyVerificationManager*)manager;
 
-@property (nonatomic) BOOL isFromMyUser;
 @property (nonatomic) MXKeyVerificationReady *acceptedData;
 
 - (void)updateState:(MXKeyVerificationRequestState)state notifiy:(BOOL)notify;

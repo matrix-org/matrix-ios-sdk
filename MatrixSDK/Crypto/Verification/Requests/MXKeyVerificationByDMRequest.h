@@ -17,6 +17,7 @@
 #import <Foundation/Foundation.h>
 
 #import "MXKeyVerificationRequest.h"
+#import "MXKeyVerificationRequestByDMJSONModel.h"
 
 @class MXEvent, MXKeyVerificationManager;
 
@@ -30,6 +31,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property (nonatomic, readonly) NSString *roomId;
 @property (nonatomic, readonly) NSString *eventId;
+
+@property (nonatomic, readonly) MXKeyVerificationRequestByDMJSONModel *request;
 
 @end
 

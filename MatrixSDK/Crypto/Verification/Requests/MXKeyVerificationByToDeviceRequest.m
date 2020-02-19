@@ -50,7 +50,22 @@
     return _request.transactionId;
 }
 
-- (uint64_t)ageLocalTs
+- (MKeyVerificationTransport)transport
+{
+    return MKeyVerificationTransportToDevice;
+}
+
+- (NSString *)fromDevice
+{
+    return _request.fromDevice;
+}
+
+- (NSArray<NSString *> *)methods
+{
+    return _request.methods;
+}
+
+- (uint64_t)timestamp
 {
     return _request.timestamp;
 }
@@ -65,16 +80,6 @@
 - (NSString *)otherDevice
 {
     return self.isFromMyUser ? self.acceptedData.fromDevice : _request.fromDevice;
-}
-
-- (NSString *)fromDevice
-{
-    return _request.fromDevice;
-}
-
-- (NSArray<NSString *> *)methods
-{
-    return _request.methods;
 }
 
 @end

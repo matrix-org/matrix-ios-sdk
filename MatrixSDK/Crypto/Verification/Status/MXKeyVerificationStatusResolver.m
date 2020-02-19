@@ -85,6 +85,7 @@
 
         default:
             // Requests by to_device are not supported
+            // TODO: Can we really do something? This is all by DM here
             NSParameterAssert(NO);
             break;
     }
@@ -129,8 +130,6 @@
         if (request)
         {
             NSString *myUserId = self.mxSession.myUser.userId;
-            BOOL isFromMyUser = [event.sender isEqualToString:myUserId];
-            request.isFromMyUser = isFromMyUser;
 
             MXEvent *firstEvent = events.firstObject;
             if (firstEvent.eventType == MXEventTypeKeyVerificationCancel)

@@ -26,13 +26,61 @@
 
 - (instancetype)initWithEvent:(MXEvent*)event andManager:(MXKeyVerificationManager*)manager
 {
+    // Check verification by DM request format
+    MXKeyVerificationRequestByDMJSONModel *request;
+    MXJSONModelSetMXJSONModel(request, MXKeyVerificationRequestByDMJSONModel.class, event.content);
+    
+    if (!request)
+    {
+        return nil;
+    }
+    
     self = [super initWithEvent:event andManager:manager];
     if (self)
     {
+        _request = request;
         _roomId = event.roomId;
         _eventId = event.eventId;
     }
     return self;
+}
+
+
+// Shortcuts
+- (NSString *)requestId
+{
+    return self.event.eventId;
+}
+
+- (MKeyVerificationTransport)transport
+{
+    return MKeyVerificationTransportDirectMessage;
+}
+
+- (NSString *)fromDevice
+{
+    return _request.fromDevice;
+}
+
+- (uint64_t)timestamp
+{
+    return self.event.ageLocalTs;
+}
+
+- (NSArray<NSString *> *)methods
+{
+    return _request.methods;
+}
+
+// Shortcuts to the original request
+- (NSString *)otherUser
+{
+    return self.isFromMyUser ? _request.to : self.event.sender;
+}
+
+- (NSString *)otherDevice
+{
+    return self.isFromMyUser ? self.acceptedData.fromDevice : _request.fromDevice;
 }
 
 @end
