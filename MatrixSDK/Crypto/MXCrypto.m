@@ -2497,7 +2497,8 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
     // Check when we last forced a new session with this device: if we've already done so
     // recently, don't do it again.
     NSDate *lastNewSessionForcedDate = [lastNewSessionForcedDates objectForDevice:deviceKey forUser:sender];
-    if ([lastNewSessionForcedDate timeIntervalSinceNow] < -kMXCryptoMinForceSessionPeriod)
+    if (lastNewSessionForcedDate
+        && -[lastNewSessionForcedDate timeIntervalSinceNow] < kMXCryptoMinForceSessionPeriod)
     {
         NSLog(@"[MXCrypto] markOlmSessionForUnwedging: New session already forced with device at %@. Not forcing another", lastNewSessionForcedDate);
         return;
