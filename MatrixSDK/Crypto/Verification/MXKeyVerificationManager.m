@@ -26,7 +26,7 @@
 
 #import "MXKeyVerificationRequest_Private.h"
 #import "MXKeyVerificationByDMRequest.h"
-#import "MXKeyVerificationRequestJSONModel.h"
+#import "MXKeyVerificationRequestByDMJSONModel.h"
 
 #import "MXKeyVerificationStatusResolver.h"
 
@@ -124,7 +124,7 @@ static NSArray<MXEventTypeString> *kMXKeyVerificationManagerDMEventTypes;
 {
     NSLog(@"[MXKeyVerification] requestVerificationByDMWithUserId: %@. RoomId: %@", userId, roomId);
     
-    MXKeyVerificationRequestJSONModel *request = [MXKeyVerificationRequestJSONModel new];
+    MXKeyVerificationRequestByDMJSONModel *request = [MXKeyVerificationRequestByDMJSONModel new];
     request.body = fallbackText;
     request.methods = methods;
     request.to = userId;

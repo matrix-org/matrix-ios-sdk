@@ -37,8 +37,8 @@ NSString * const MXKeyVerificationRequestDidChangeNotification = @"MXKeyVerifica
 - (instancetype)initWithEvent:(MXEvent*)event andManager:(MXKeyVerificationManager*)manager
 {
     // Check verification by DM request format
-    MXKeyVerificationRequestJSONModel *request;
-    MXJSONModelSetMXJSONModel(request, MXKeyVerificationRequestJSONModel.class, event.content);
+    MXKeyVerificationRequestByDMJSONModel *request;
+    MXJSONModelSetMXJSONModel(request, MXKeyVerificationRequestByDMJSONModel.class, event.content);
     
     if (!request)
     {

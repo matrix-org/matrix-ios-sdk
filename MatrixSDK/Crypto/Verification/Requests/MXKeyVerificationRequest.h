@@ -18,7 +18,7 @@
 
 #import "MXEvent.h"
 #import "MXKeyVerificationTransaction.h"
-#import "MXKeyVerificationRequestJSONModel.h"
+#import "MXKeyVerificationRequestByDMJSONModel.h"
 #import "MXKeyVerificationReady.h"
 
 #pragma mark - Constants
@@ -77,7 +77,7 @@ Accept an incoming key verification request.
 
 // Original data for this request
 @property (nonatomic, readonly) MXEvent *event;
-@property (nonatomic, readonly) MXKeyVerificationRequestJSONModel *request;
+@property (nonatomic, readonly) MXKeyVerificationRequestByDMJSONModel *request;
 
 // Original data from the accepted (aka m.verification.ready) event
 @property (nonatomic, readonly, nullable) MXKeyVerificationReady *acceptedData;

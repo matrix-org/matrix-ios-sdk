@@ -22,10 +22,10 @@
 NS_ASSUME_NONNULL_BEGIN
 
 /**
- Model for m.key.verification.request.
+ Model for m.key.verification.request sent as a room message.
  As described at https://github.com/uhoreg/matrix-doc/blob/e2e_verification_in_dms/proposals/2241-e2e-verification-in-dms.md#requesting-a-key-verification
  */
-@interface MXKeyVerificationRequestJSONModel : MXJSONModel
+@interface MXKeyVerificationRequestByDMJSONModel : MXJSONModel
 
 /**
  A fallback message to alert users that their client does not support the key verification framework.
