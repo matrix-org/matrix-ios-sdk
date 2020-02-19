@@ -2494,6 +2494,13 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
         return;
     }
     
+    if ([sender isEqualToString:_mxSession.myUser.userId]
+        && [deviceKey isEqualToString:self.olmDevice.deviceCurve25519Key])
+    {
+        NSLog(@"[MXCrypto] markOlmSessionForUnwedging: Do not unwedge ourselves");
+        return;
+    }
+    
     // Check when we last forced a new session with this device: if we've already done so
     // recently, don't do it again.
     NSDate *lastNewSessionForcedDate = [lastNewSessionForcedDates objectForDevice:deviceKey forUser:sender];
