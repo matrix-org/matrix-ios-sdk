@@ -489,7 +489,9 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
                 if ([(*error).domain isEqualToString:MXDecryptingErrorDomain]
                     && (*error).code == MXDecryptingErrorBadEncryptedMessageCode)
                 {
-                    [self markOlmSessionForUnwedgingInEvent:event];
+                    dispatch_async(self.decryptionQueue, ^{
+                        [self markOlmSessionForUnwedgingInEvent:event];
+                    });
                 }
             }
         }
@@ -2492,10 +2494,18 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
         return;
     }
     
+    if ([sender isEqualToString:_mxSession.myUser.userId]
+        && [deviceKey isEqualToString:self.olmDevice.deviceCurve25519Key])
+    {
+        NSLog(@"[MXCrypto] markOlmSessionForUnwedging: Do not unwedge ourselves");
+        return;
+    }
+    
     // Check when we last forced a new session with this device: if we've already done so
     // recently, don't do it again.
     NSDate *lastNewSessionForcedDate = [lastNewSessionForcedDates objectForDevice:deviceKey forUser:sender];
-    if ([lastNewSessionForcedDate timeIntervalSinceNow] < -kMXCryptoMinForceSessionPeriod)
+    if (lastNewSessionForcedDate
+        && -[lastNewSessionForcedDate timeIntervalSinceNow] < kMXCryptoMinForceSessionPeriod)
     {
         NSLog(@"[MXCrypto] markOlmSessionForUnwedging: New session already forced with device at %@. Not forcing another", lastNewSessionForcedDate);
         return;
