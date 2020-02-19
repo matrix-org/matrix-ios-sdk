@@ -489,7 +489,9 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
                 if ([(*error).domain isEqualToString:MXDecryptingErrorDomain]
                     && (*error).code == MXDecryptingErrorBadEncryptedMessageCode)
                 {
-                    [self markOlmSessionForUnwedgingInEvent:event];
+                    dispatch_async(self.decryptionQueue, ^{
+                        [self markOlmSessionForUnwedgingInEvent:event];
+                    });
                 }
             }
         }
