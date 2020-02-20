@@ -202,9 +202,12 @@
         [bobSession.crypto.keyVerificationManager requestVerificationByToDeviceWithUserId:alice.userId
                                                                                 deviceIds:@[alice.deviceId]
                                                                                   methods:@[MXKeyVerificationMethodSAS, @"toto"]
-                                                                                  success:^(MXKeyVerificationRequest *request)
+                                                                                  success:^(MXKeyVerificationRequest *requestFromBobPOV)
          {
-             requestId = request.requestId;
+             requestId = requestFromBobPOV.requestId;
+             
+             XCTAssertEqualObjects(requestFromBobPOV.otherUser, alice.userId);
+             XCTAssertNil(requestFromBobPOV.otherDevice);
          }
                                                                                   failure:^(NSError * _Nonnull error)
          {
@@ -802,9 +805,11 @@
                                                                                 roomId:roomId
                                                                           fallbackText:fallbackText
                                                                                methods:methods
-                                                                               success:^(MXKeyVerificationRequest *request)
+                                                                               success:^(MXKeyVerificationRequest *requestFromBobPOV)
          {
-             requestId = request.requestId;
+             requestId = requestFromBobPOV.requestId;
+             XCTAssertEqualObjects(requestFromBobPOV.otherUser, alice.userId);
+             XCTAssertNil(requestFromBobPOV.otherDevice);
          }
                                                                                failure:^(NSError * _Nonnull error)
          {

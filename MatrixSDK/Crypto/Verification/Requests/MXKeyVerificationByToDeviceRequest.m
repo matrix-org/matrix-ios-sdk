@@ -24,7 +24,7 @@
 
 @implementation MXKeyVerificationByToDeviceRequest
 
-- (instancetype)initWithEvent:(MXEvent*)event andManager:(MXKeyVerificationManager*)manager
+- (instancetype)initWithEvent:(MXEvent*)event andManager:(MXKeyVerificationManager*)manager to:(nonnull NSString *)toUserId
 {
     // Check verification by DM request format
     MXKeyVerificationRequestByToDeviceJSONModel *request;
@@ -39,6 +39,7 @@
     if (self)
     {
         _request = request;
+        _to = toUserId;
     }
     return self;
 }
@@ -74,7 +75,7 @@
 // Shortcuts to the original request
 - (NSString *)otherUser
 {
-    return self.isFromMyUser ? self.event.sender : self.manager.crypto.mxSession.myUser.userId;
+    return self.isFromMyUser ? _to : self.event.sender;
 }
 
 - (NSString *)otherDevice

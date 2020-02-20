@@ -19,6 +19,8 @@
 #import "MXKeyVerificationRequest.h"
 #import "MXKeyVerificationRequestByToDeviceJSONModel.h"
 
+@class MXKeyVerificationManager;
+
 NS_ASSUME_NONNULL_BEGIN
 
 /**
@@ -27,6 +29,11 @@ NS_ASSUME_NONNULL_BEGIN
 @interface MXKeyVerificationByToDeviceRequest : MXKeyVerificationRequest
 
 @property (nonatomic, readonly) MXKeyVerificationRequestByToDeviceJSONModel *request;
+
+// The recipient user id for this request
+@property (nonatomic, readonly) NSString *to;
+
+- (instancetype)initWithEvent:(MXEvent*)event andManager:(MXKeyVerificationManager*)manager to:(NSString*)toUserId;
 
 @end
 
