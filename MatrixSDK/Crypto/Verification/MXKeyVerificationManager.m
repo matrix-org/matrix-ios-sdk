@@ -1148,7 +1148,7 @@ static NSArray<MXEventTypeString> *kMXKeyVerificationManagerDMEventTypes;
     return oldestRequestDate;
 }
 
-- (BOOL)isRequestStillPending:(MXKeyVerificationRequest*)request
+- (BOOL)isRequestStillValid:(MXKeyVerificationRequest*)request
 {
     NSDate *requestDate = [NSDate dateWithTimeIntervalSince1970:(request.timestamp / 1000)];
     return (requestDate.timeIntervalSinceNow > -_requestTimeout);
@@ -1189,20 +1189,30 @@ static NSArray<MXEventTypeString> *kMXKeyVerificationManagerDMEventTypes;
     NSLog(@"[MXKeyVerificationRequest] onTimeoutTimer");
     requestTimeoutTimer = nil;
 
-    [self checkRequestTimeouts];
-    [self scheduleRequestTimeoutTimer];
+    [self checkRequestTimeoutsWithCompletion:^{
+        [self scheduleRequestTimeoutTimer];
+    }];
 }
 
-- (void)checkRequestTimeouts
+- (void)checkRequestTimeoutsWithCompletion:(dispatch_block_t)completionBlock
 {
+    dispatch_group_t group = dispatch_group_create();
     for (MXKeyVerificationRequest *request in pendingRequestsMap.allValues)
     {
-        if ([self isRequestStillPending:request])
+        if (![self isRequestStillValid:request])
         {
             NSLog(@"[MXKeyVerificationRequest] checkTimeouts: timeout %@", request);
-            [request cancelWithCancelCode:MXTransactionCancelCode.timeout success:nil failure:nil];
+            
+            dispatch_group_enter(group);
+            [request cancelWithCancelCode:MXTransactionCancelCode.timeout success:^{
+                dispatch_group_leave(group);
+            } failure:^(NSError * _Nonnull error) {
+                dispatch_group_leave(group);
+            }];
         }
     }
+    
+    dispatch_group_notify(group, dispatch_get_main_queue(), completionBlock);
 }
 
 

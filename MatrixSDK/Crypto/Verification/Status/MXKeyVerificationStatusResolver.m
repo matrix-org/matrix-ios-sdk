@@ -163,7 +163,7 @@
                 [request updateState:MXKeyVerificationRequestStateAccepted notifiy:NO];
             }
             // There is only the request event. What is the status of it?
-            else if (![self.manager isRequestStillPending:request])
+            else if (![self.manager isRequestStillValid:request])
             {
                 [request updateState:MXKeyVerificationRequestStateExpired notifiy:NO];
             }

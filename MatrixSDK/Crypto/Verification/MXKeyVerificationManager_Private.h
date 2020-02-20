@@ -71,7 +71,7 @@ NS_ASSUME_NONNULL_BEGIN
                           success:(void(^)(void))success
                           failure:(void(^)(NSError *error))failure;
 
-- (BOOL)isRequestStillPending:(MXKeyVerificationRequest*)request;
+- (BOOL)isRequestStillValid:(MXKeyVerificationRequest*)request;
 
 - (void)removePendingRequestWithRequestId:(NSString*)requestId;
 
