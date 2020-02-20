@@ -1111,10 +1111,12 @@ static NSArray<MXEventTypeString> *kMXKeyVerificationManagerDMEventTypes;
 
         if (notify)
         {
-            [[NSNotificationCenter defaultCenter] postNotificationName:MXKeyVerificationManagerNewRequestNotification object:self userInfo:
-             @{
-               MXKeyVerificationManagerNotificationRequestKey: request
-               }];
+            dispatch_async(dispatch_get_main_queue(),^{
+                [[NSNotificationCenter defaultCenter] postNotificationName:MXKeyVerificationManagerNewRequestNotification object:self userInfo:
+                 @{
+                   MXKeyVerificationManagerNotificationRequestKey: request
+                   }];
+            });
         }
     }
     [self scheduleRequestTimeoutTimer];
