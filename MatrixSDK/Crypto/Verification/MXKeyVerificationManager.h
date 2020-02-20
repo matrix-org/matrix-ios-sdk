@@ -89,6 +89,21 @@ FOUNDATION_EXPORT NSString *const MXKeyVerificationManagerNotificationTransactio
 @property (nonatomic) NSTimeInterval requestTimeout;
 
 /**
+ Make a key verification request by to_device events.
+ 
+ @param userId the other user id.
+ @param deviceIds array of device IDs to send requests to. Use nil for all devices owned by the user
+ @param methods Verification methods like MXKeyVerificationMethodSAS.
+ @param success a block called when the operation succeeds.
+ @param failure a block called when the operation fails.
+ */
+- (void)requestVerificationByToDeviceWithUserId:(NSString*)userId
+                                      deviceIds:(nullable NSArray<NSString*>*)deviceIds
+                                        methods:(NSArray<NSString*>*)methods
+                                        success:(void(^)(MXKeyVerificationRequest *request))success
+                                        failure:(void(^)(NSError *error))failure;
+
+/**
  Make a key verification request by Direct Message.
 
  @param userId the other user id.
@@ -126,7 +141,7 @@ FOUNDATION_EXPORT NSString *const MXKeyVerificationManagerNotificationTransactio
                            andDeviceId:(NSString*)deviceId
                                 method:(NSString*)method
                                success:(void(^)(MXKeyVerificationTransaction *transaction))success
-                               failure:(void(^)(NSError *error))failure;
+                               failure:(void(^)(NSError *error))failure __attribute__((deprecated("Start key verification with a request (requestVerificationByToDeviceWithUserId) instead")));
 
 /**
  Begin a device verification from a request.

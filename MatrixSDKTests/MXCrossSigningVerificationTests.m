@@ -24,7 +24,7 @@
 #import "MXKeyVerificationManager_Private.h"
 #import "MXFileStore.h"
 
-#import "MXKeyVerificationRequestJSONModel.h"
+#import "MXKeyVerificationRequestByDMJSONModel.h"
 
 // Do not bother with retain cycles warnings in tests
 #pragma clang diagnostic push
@@ -233,8 +233,8 @@
                          XCTAssertEqualObjects(event.eventId, requestId);
                          
                          // Check verification by DM request format
-                         MXKeyVerificationRequestJSONModel *requestJSON;
-                         MXJSONModelSetMXJSONModel(requestJSON, MXKeyVerificationRequestJSONModel.class, event.content);
+                         MXKeyVerificationRequestByDMJSONModel *requestJSON;
+                         MXJSONModelSetMXJSONModel(requestJSON, MXKeyVerificationRequestByDMJSONModel.class, event.content);
                          XCTAssertNotNil(requestJSON);
                          
                          // - Alice accepts it and begins a SAS verification

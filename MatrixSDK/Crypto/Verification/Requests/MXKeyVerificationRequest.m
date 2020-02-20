@@ -36,20 +36,10 @@ NSString * const MXKeyVerificationRequestDidChangeNotification = @"MXKeyVerifica
 
 - (instancetype)initWithEvent:(MXEvent*)event andManager:(MXKeyVerificationManager*)manager
 {
-    // Check verification by DM request format
-    MXKeyVerificationRequestJSONModel *request;
-    MXJSONModelSetMXJSONModel(request, MXKeyVerificationRequestJSONModel.class, event.content);
-    
-    if (!request)
-    {
-        return nil;
-    }
-    
     self = [super init];
     if (self)
     {
         _event = event;
-        _request = request;
         _state = MXKeyVerificationRequestStatePending;
         _manager = manager;
     }
@@ -125,44 +115,6 @@ NSString * const MXKeyVerificationRequestDidChangeNotification = @"MXKeyVerifica
     
     [self updateState:MXKeyVerificationRequestStateCancelled notifiy:YES];
     [self.manager removePendingRequestWithRequestId:self.requestId];
-}
-
-// Shortcuts
-- (NSString *)requestId
-{
-    return _event.eventId;
-}
-
-- (uint64_t)ageLocalTs
-{
-    return _event.ageLocalTs;
-}
-
-
-// Shortcuts to the original request
-- (NSString *)to
-{
-    return _request.to;
-}
-
-- (NSString *)otherUser
-{
-    return _isFromMyUser ? _request.to : _event.sender;
-}
-
-- (NSString *)otherDevice
-{
-    return _isFromMyUser ? _acceptedData.fromDevice : _request.fromDevice;
-}
-
-- (NSString *)fromDevice
-{
-    return _request.fromDevice;
-}
-
-- (NSArray<NSString *> *)methods
-{
-    return _request.methods;
 }
 
 

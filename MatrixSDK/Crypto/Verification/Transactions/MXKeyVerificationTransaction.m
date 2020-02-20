@@ -75,7 +75,7 @@ NSString * const MXKeyVerificationTransactionDidChangeNotification = @"MXKeyVeri
 
 - (void)setDirectMessageTransportInRoom:(NSString *)roomId originalEvent:(NSString *)eventId
 {
-    _transport = MKeyVerificationTransportDirectMessage;
+    _transport = MXKeyVerificationTransportDirectMessage;
     _dmRoomId = roomId;
     _dmEventId = eventId;
 

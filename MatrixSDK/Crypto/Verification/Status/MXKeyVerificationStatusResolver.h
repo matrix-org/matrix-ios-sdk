@@ -32,7 +32,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (nullable MXHTTPOperation *)keyVerificationWithKeyVerificationId:(NSString*)keyVerificationId
                                                              event:(MXEvent*)event
-                                                         transport:(MKeyVerificationTransport)transport
+                                                         transport:(MXKeyVerificationTransport)transport
                                                            success:(void(^)(MXKeyVerification *keyVerification))success
                                                            failure:(void(^)(NSError *error))failure;
 

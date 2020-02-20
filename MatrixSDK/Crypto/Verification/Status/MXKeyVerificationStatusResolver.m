@@ -48,14 +48,14 @@
 
 - (nullable MXHTTPOperation *)keyVerificationWithKeyVerificationId:(NSString*)keyVerificationId
                                                              event:(MXEvent*)event
-                                                         transport:(MKeyVerificationTransport)transport
+                                                         transport:(MXKeyVerificationTransport)transport
                                                            success:(void(^)(MXKeyVerification *keyVerification))success
                                                            failure:(void(^)(NSError *error))failure
 {
     MXHTTPOperation *operation;
     switch (transport)
     {
-        case MKeyVerificationTransportDirectMessage:
+        case MXKeyVerificationTransportDirectMessage:
         {
             operation = [self eventsInVerificationByDMThreadFromOriginalEventId:keyVerificationId inRoom:event.roomId success:^(MXEvent *originalEvent, NSArray<MXEvent*> *events) {
 
@@ -85,6 +85,7 @@
 
         default:
             // Requests by to_device are not supported
+            // TODO: Can we really do something? This is all by DM here
             NSParameterAssert(NO);
             break;
     }
@@ -129,8 +130,6 @@
         if (request)
         {
             NSString *myUserId = self.mxSession.myUser.userId;
-            BOOL isFromMyUser = [event.sender isEqualToString:myUserId];
-            request.isFromMyUser = isFromMyUser;
 
             MXEvent *firstEvent = events.firstObject;
             if (firstEvent.eventType == MXEventTypeKeyVerificationCancel)
@@ -164,7 +163,7 @@
                 [request updateState:MXKeyVerificationRequestStateAccepted notifiy:NO];
             }
             // There is only the request event. What is the status of it?
-            else if (![self.manager isRequestStillPending:request])
+            else if (![self.manager isRequestStillValid:request])
             {
                 [request updateState:MXKeyVerificationRequestStateExpired notifiy:NO];
             }
