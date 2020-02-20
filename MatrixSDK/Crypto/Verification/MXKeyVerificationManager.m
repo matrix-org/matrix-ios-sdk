@@ -235,7 +235,7 @@ static NSArray<MXEventTypeString> *kMXKeyVerificationManagerDMEventTypes;
     
     switch (request.transport)
     {
-        case MKeyVerificationTransportDirectMessage:
+        case MXKeyVerificationTransportDirectMessage:
             if ([request isKindOfClass:MXKeyVerificationByDMRequest.class])
             {
                 MXKeyVerificationByDMRequest *requestByDM = (MXKeyVerificationByDMRequest*)request;
@@ -246,7 +246,7 @@ static NSArray<MXEventTypeString> *kMXKeyVerificationManagerDMEventTypes;
             }
             break;
             
-        case MKeyVerificationTransportToDevice:
+        case MXKeyVerificationTransportToDevice:
             [self beginKeyVerificationWithUserId:request.otherUser andDeviceId:request.otherDevice transactionId:request.requestId dmRoomId:nil dmEventId:nil method:method success:^(MXKeyVerificationTransaction * _Nonnull transaction) {
                 [self removePendingRequestWithRequestId:request.requestId];
                 success(transaction);
@@ -338,14 +338,14 @@ static NSArray<MXEventTypeString> *kMXKeyVerificationManagerDMEventTypes;
                                                               success:(void(^)(MXKeyVerification *keyVerification))success
                                                               failure:(void(^)(NSError *error))failure
 {
-    MKeyVerificationTransport transport = MKeyVerificationTransportToDevice;
+    MXKeyVerificationTransport transport = MXKeyVerificationTransportToDevice;
     MXKeyVerification *keyVerification;
 
     // Check if it is a Verification by DM Event
     NSString *keyVerificationId = [self keyVerificationIdFromDMEvent:event];
     if (keyVerificationId)
     {
-        transport = MKeyVerificationTransportDirectMessage;
+        transport = MXKeyVerificationTransportDirectMessage;
     }
     else
     {
@@ -483,7 +483,7 @@ static NSArray<MXEventTypeString> *kMXKeyVerificationManagerDMEventTypes;
     MXHTTPOperation *operation;
     switch (request.transport)
     {
-        case MKeyVerificationTransportDirectMessage:
+        case MXKeyVerificationTransportDirectMessage:
             if ([request isKindOfClass:MXKeyVerificationByDMRequest.class])
             {
                 MXKeyVerificationByDMRequest *requestByDM = (MXKeyVerificationByDMRequest*)request;
@@ -491,7 +491,7 @@ static NSArray<MXEventTypeString> *kMXKeyVerificationManagerDMEventTypes;
             }
             break;
             
-        case MKeyVerificationTransportToDevice:
+        case MXKeyVerificationTransportToDevice:
             operation = [self sendToDevice:request.otherUser deviceId:request.otherDevice eventType:eventType content:content success:success failure:failure];
             break;
     }
@@ -539,10 +539,10 @@ static NSArray<MXEventTypeString> *kMXKeyVerificationManagerDMEventTypes;
     MXHTTPOperation *operation;
     switch (transaction.transport)
     {
-        case MKeyVerificationTransportToDevice:
+        case MXKeyVerificationTransportToDevice:
             operation = [self sendToDevice:transaction.otherUserId deviceId:transaction.otherDeviceId eventType:eventType content:content success:success failure:failure];
             break;
-        case MKeyVerificationTransportDirectMessage:
+        case MXKeyVerificationTransportDirectMessage:
             operation = [self sendMessage:transaction.otherUserId roomId:transaction.dmRoomId eventType:eventType relatedTo:transaction.dmEventId content:content success:success failure:failure];
             break;
     }
@@ -989,7 +989,7 @@ static NSArray<MXEventTypeString> *kMXKeyVerificationManagerDMEventTypes;
         MXStrongifyAndReturnIfNil(self);
 
         // This is a live event, we should have all data
-        [self->statusResolver keyVerificationWithKeyVerificationId:request.requestId event:event transport:MKeyVerificationTransportDirectMessage success:^(MXKeyVerification * _Nonnull keyVerification) {
+        [self->statusResolver keyVerificationWithKeyVerificationId:request.requestId event:event transport:MXKeyVerificationTransportDirectMessage success:^(MXKeyVerification * _Nonnull keyVerification) {
 
             if (keyVerification.request.state == MXKeyVerificationRequestStatePending)
             {

@@ -48,14 +48,14 @@
 
 - (nullable MXHTTPOperation *)keyVerificationWithKeyVerificationId:(NSString*)keyVerificationId
                                                              event:(MXEvent*)event
-                                                         transport:(MKeyVerificationTransport)transport
+                                                         transport:(MXKeyVerificationTransport)transport
                                                            success:(void(^)(MXKeyVerification *keyVerification))success
                                                            failure:(void(^)(NSError *error))failure
 {
     MXHTTPOperation *operation;
     switch (transport)
     {
-        case MKeyVerificationTransportDirectMessage:
+        case MXKeyVerificationTransportDirectMessage:
         {
             operation = [self eventsInVerificationByDMThreadFromOriginalEventId:keyVerificationId inRoom:event.roomId success:^(MXEvent *originalEvent, NSArray<MXEvent*> *events) {
 

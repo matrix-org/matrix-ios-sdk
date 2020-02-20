@@ -83,7 +83,7 @@ Accept an incoming key verification request.
 
 // Shortcuts to the original request
 @property (nonatomic, readonly) NSString *requestId;
-@property (nonatomic, readonly) MKeyVerificationTransport transport;
+@property (nonatomic, readonly) MXKeyVerificationTransport transport;
 @property (nonatomic, readonly) NSString *fromDevice;
 @property (nonatomic, readonly) uint64_t timestamp;
 @property (nonatomic, readonly) NSArray<NSString*> *methods;

@@ -51,9 +51,9 @@
     return _request.transactionId;
 }
 
-- (MKeyVerificationTransport)transport
+- (MXKeyVerificationTransport)transport
 {
-    return MKeyVerificationTransportToDevice;
+    return MXKeyVerificationTransportToDevice;
 }
 
 - (NSString *)fromDevice

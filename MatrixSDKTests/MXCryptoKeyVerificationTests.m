@@ -157,9 +157,9 @@
             MXKeyVerificationRequest *requestFromBobPOV = bobSession.crypto.keyVerificationManager.pendingRequests.firstObject;
             
             XCTAssertNotNil(requestFromAlicePOV);
-            XCTAssertEqual(requestFromAlicePOV.transport, MKeyVerificationTransportToDevice);
+            XCTAssertEqual(requestFromAlicePOV.transport, MXKeyVerificationTransportToDevice);
             XCTAssertNotNil(requestFromBobPOV);
-            XCTAssertEqual(requestFromBobPOV.transport, MKeyVerificationTransportToDevice);
+            XCTAssertEqual(requestFromBobPOV.transport, MXKeyVerificationTransportToDevice);
             
             [expectation fulfill];
         }];
@@ -752,9 +752,9 @@
             MXKeyVerificationRequest *requestFromBobPOV = bobSession.crypto.keyVerificationManager.pendingRequests.firstObject;
 
             XCTAssertNotNil(requestFromAlicePOV);
-            XCTAssertEqual(requestFromAlicePOV.transport, MKeyVerificationTransportDirectMessage);
+            XCTAssertEqual(requestFromAlicePOV.transport, MXKeyVerificationTransportDirectMessage);
             XCTAssertNotNil(requestFromBobPOV);
-            XCTAssertEqual(requestFromBobPOV.transport, MKeyVerificationTransportDirectMessage);
+            XCTAssertEqual(requestFromBobPOV.transport, MXKeyVerificationTransportDirectMessage);
 
             [expectation fulfill];
         }];

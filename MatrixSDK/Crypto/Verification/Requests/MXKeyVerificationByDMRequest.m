@@ -52,9 +52,9 @@
     return self.event.eventId;
 }
 
-- (MKeyVerificationTransport)transport
+- (MXKeyVerificationTransport)transport
 {
-    return MKeyVerificationTransportDirectMessage;
+    return MXKeyVerificationTransportDirectMessage;
 }
 
 - (NSString *)fromDevice

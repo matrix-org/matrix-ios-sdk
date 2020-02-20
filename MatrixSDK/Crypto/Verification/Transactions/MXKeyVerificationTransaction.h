@@ -29,9 +29,9 @@ NS_ASSUME_NONNULL_BEGIN
  */
 FOUNDATION_EXPORT NSString * _Nonnull const MXKeyVerificationTransactionDidChangeNotification;
 
-typedef NS_ENUM(NSInteger, MKeyVerificationTransport) {
-    MKeyVerificationTransportToDevice = 0,
-    MKeyVerificationTransportDirectMessage,
+typedef NS_ENUM(NSInteger, MXKeyVerificationTransport) {
+    MXKeyVerificationTransportToDevice = 0,
+    MXKeyVerificationTransportDirectMessage,
 };
 
 
@@ -49,7 +49,7 @@ typedef NS_ENUM(NSInteger, MKeyVerificationTransport) {
  Transport layer.
  Default is by to_device events.
  */
-@property (nonatomic, readonly) MKeyVerificationTransport transport;
+@property (nonatomic, readonly) MXKeyVerificationTransport transport;
 
 /**
  YES for an incoming verification request.

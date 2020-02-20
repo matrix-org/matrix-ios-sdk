@@ -442,7 +442,7 @@ static NSArray<MXEmojiRepresentation*> *kSasEmojis;
     // Inform the other peer we are done
     MXKeyVerificationDone *doneContent = [MXKeyVerificationDone new];
     doneContent.transactionId = self.transactionId;
-    if (self.transport == MKeyVerificationTransportDirectMessage)
+    if (self.transport == MXKeyVerificationTransportDirectMessage)
     {
         doneContent.relatedEventId = self.dmEventId;
     }
