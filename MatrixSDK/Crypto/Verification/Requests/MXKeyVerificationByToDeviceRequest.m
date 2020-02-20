@@ -40,6 +40,10 @@
     {
         _request = request;
         _to = toUserId;
+        
+        MXCredentials *myCreds = manager.crypto.mxSession.matrixRestClient.credentials;
+        self.isFromMyUser = [event.sender isEqualToString:myCreds.userId];
+        self.isFromMyDevice = [request.fromDevice isEqualToString:myCreds.deviceId];
     }
     return self;
 }
@@ -80,7 +84,7 @@
 
 - (NSString *)otherDevice
 {
-    return self.isFromMyUser ? self.acceptedData.fromDevice : _request.fromDevice;
+    return self.isFromMyDevice ? self.acceptedData.fromDevice : _request.fromDevice;
 }
 
 @end

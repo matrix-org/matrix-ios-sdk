@@ -18,6 +18,8 @@
 #import "MXKeyVerificationByDMRequest.h"
 
 #import "MXKeyVerificationRequest_Private.h"
+#import "MXKeyVerificationManager_Private.h"
+#import "MXCrypto_Private.h"
 
 #import "MXEvent.h"
 
@@ -41,6 +43,10 @@
         _request = request;
         _roomId = event.roomId;
         _eventId = event.eventId;
+        
+        MXCredentials *myCreds = manager.crypto.mxSession.matrixRestClient.credentials;
+        self.isFromMyUser = [event.sender isEqualToString:myCreds.userId];
+        self.isFromMyDevice = [request.fromDevice isEqualToString:myCreds.deviceId];
     }
     return self;
 }
@@ -80,7 +86,7 @@
 
 - (NSString *)otherDevice
 {
-    return self.isFromMyUser ? self.acceptedData.fromDevice : _request.fromDevice;
+    return self.isFromMyDevice ? self.acceptedData.fromDevice : _request.fromDevice;
 }
 
 @end

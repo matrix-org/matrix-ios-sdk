@@ -42,9 +42,6 @@ NSString * const MXKeyVerificationRequestDidChangeNotification = @"MXKeyVerifica
         _event = event;
         _state = MXKeyVerificationRequestStatePending;
         _manager = manager;
-        
-        NSString *myUserId = self.manager.crypto.mxSession.myUser.userId;
-        _isFromMyUser = [event.sender isEqualToString:myUserId];
     }
     return self;
 }

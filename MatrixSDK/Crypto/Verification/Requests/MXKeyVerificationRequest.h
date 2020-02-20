@@ -79,6 +79,7 @@ Accept an incoming key verification request.
 
 // Is it a request made by our user?
 @property (nonatomic, readonly) BOOL isFromMyUser;
+@property (nonatomic, readonly) BOOL isFromMyDevice;
 
 
 // Shortcuts to the original request
