@@ -115,6 +115,7 @@
 }
 
 
+#pragma mark - Verification by to_device
 /**
  Test new to_device requests
  
@@ -348,6 +349,10 @@
 }
 
 
+#pragma mark - Verification by to_device (legacy)
+// We plan to make every transaction start with a request.
+// Tests in that section send a m.verification.start event. They must be updated.
+
 /**
  Nomical case: The full flow:
 
@@ -367,7 +372,7 @@
  -> Devices must be really verified
  -> Transaction must not be listed anymore
  */
-- (void)testFullFlowWithAliceAndBob
+- (void)testLegacyVerificationByToDeviceFullFlow
 {
     // - Alice and Bob are in a room
     [matrixSDKTestsE2EData doE2ETestWithAliceAndBobInARoomWithCryptedMessages:self cryptedBob:YES readyToTest:^(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
@@ -477,7 +482,7 @@
  - Alice begins SAS verification of a non-existing device
  -> The request should fail
  */
-- (void)testAliceDoingVerificationOnANonExistingDevice
+- (void)testLegacyAliceDoingVerificationOnANonExistingDevice
 {
     [matrixSDKTestsE2EData doE2ETestWithAliceInARoom:self readyToTest:^(MXSession *aliceSession, NSString *roomId, XCTestExpectation *expectation) {
 
@@ -499,7 +504,7 @@
  -> The request should succeed
  -> Transaction must exist in both side
  */
-- (void)testAliceDoingVerificationOnANotYetKnownDevice
+- (void)testLegacyAliceDoingVerificationOnANotYetKnownDevice
 {
     [matrixSDKTestsE2EData doE2ETestWithBobAndAlice:self readyToTest:^(MXSession *bobSession, MXSession *aliceSession, XCTestExpectation *expectation) {
 
@@ -538,7 +543,7 @@
  -> Bob must be notified by the cancellation
  -> Transaction on Alice side must then move to CancelledByMe
  */
-- (void)testAliceStartThenAliceCancel
+- (void)testLegacyAliceStartThenAliceCancel
 {
     // - Alice and Bob are in a room
     [matrixSDKTestsE2EData doE2ETestWithAliceAndBobInARoomWithCryptedMessages:self cryptedBob:YES readyToTest:^(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
@@ -599,7 +604,7 @@
  -> Alice must be notified by the cancellation
  -> Transaction on Bob side must then move to CancelledByMe
  */
-- (void)testAliceStartThenBobCancel
+- (void)testLegacyAliceStartThenBobCancel
 {
     // - Alice and Bob are in a room
     [matrixSDKTestsE2EData doE2ETestWithAliceAndBobInARoomWithCryptedMessages:self cryptedBob:YES readyToTest:^(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
@@ -643,7 +648,7 @@
  - Alice starts another SAS verification of Bob's device
  -> Alice must see all her requests cancelled
  */
-- (void)testAliceStartTwoVerificationsAtSameTime
+- (void)testLegacyAliceStartTwoVerificationsAtSameTime
 {
     [matrixSDKTestsE2EData doE2ETestWithBobAndAlice:self readyToTest:^(MXSession *bobSession, MXSession *aliceSession, XCTestExpectation *expectation) {
 
@@ -701,12 +706,8 @@
 }
 
 
-#pragma mark - Verification with requests -
 
-
-
-
-#pragma mark - Verification by DM requests -
+#pragma mark - Verification by DM
 /**
  Test new requests
 
@@ -759,9 +760,6 @@
         }];
     }];
 }
-
-
-#pragma mark - Verification by DM -
 
 /**
  Nomical case: The full flow
@@ -1098,7 +1096,7 @@
  -> Alice gets the requests notification
  -> They both have it in their pending requests
  */
-- (void)testVerificationWithRoomDetection
+- (void)testVerificationByDMWithRoomDetection
 {
     // - Alice and Bob are in a room
     [matrixSDKTestsE2EData doE2ETestWithAliceAndBobInARoomWithCryptedMessages:self cryptedBob:YES readyToTest:^(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
@@ -1155,7 +1153,7 @@
  -> Alice gets the requests notification
  -> They both have it in their pending requests
  */
-- (void)testVerificationWithNoRoom
+- (void)testVerificationByDMWithNoRoom
 {
     // - Alice and Bob are in a room
     [matrixSDKTestsE2EData doE2ETestWithBobAndAlice:self readyToTest:^(MXSession *aliceSession, MXSession *bobSession, XCTestExpectation *expectation) {
