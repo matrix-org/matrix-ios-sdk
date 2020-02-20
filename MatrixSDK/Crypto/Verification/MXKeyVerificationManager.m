@@ -200,7 +200,7 @@ static NSArray<MXEventTypeString> *kMXKeyVerificationManagerDMEventTypes;
                                success:(void(^)(MXKeyVerificationTransaction *transaction))success
                                failure:(void(^)(NSError *error))failure
 {
-    [self beginKeyVerificationWithUserId:userId andDeviceId:deviceId dmRoomId:nil dmEventId:nil method:method success:success failure:failure];
+    [self beginKeyVerificationWithUserId:userId andDeviceId:deviceId transactionId:nil dmRoomId:nil dmEventId:nil method:method success:success failure:failure];
 }
 
 - (void)beginKeyVerificationFromRequest:(MXKeyVerificationRequest*)request
@@ -233,23 +233,31 @@ static NSArray<MXEventTypeString> *kMXKeyVerificationManagerDMEventTypes;
         return;
     }
     
-    if ([request isKindOfClass:MXKeyVerificationByDMRequest.class])
+    switch (request.transport)
     {
-        MXKeyVerificationByDMRequest *requestByDM = (MXKeyVerificationByDMRequest*)request;
-        [self beginKeyVerificationWithUserId:request.otherUser andDeviceId:request.otherDevice dmRoomId:requestByDM.roomId dmEventId:requestByDM.eventId method:method success:^(MXKeyVerificationTransaction *transaction) {
-            [self removePendingRequestWithRequestId:request.requestId];
-            success(transaction);
-        } failure:failure];
-    }
-    else
-    {
-        // Requests by to_device are not supported
-        NSParameterAssert(NO);
+        case MKeyVerificationTransportDirectMessage:
+            if ([request isKindOfClass:MXKeyVerificationByDMRequest.class])
+            {
+                MXKeyVerificationByDMRequest *requestByDM = (MXKeyVerificationByDMRequest*)request;
+                [self beginKeyVerificationWithUserId:request.otherUser andDeviceId:request.otherDevice transactionId:request.requestId dmRoomId:requestByDM.roomId dmEventId:requestByDM.eventId method:method success:^(MXKeyVerificationTransaction *transaction) {
+                    [self removePendingRequestWithRequestId:request.requestId];
+                    success(transaction);
+                } failure:failure];
+            }
+            break;
+            
+        case MKeyVerificationTransportToDevice:
+            [self beginKeyVerificationWithUserId:request.otherUser andDeviceId:request.otherDevice transactionId:request.requestId dmRoomId:nil dmEventId:nil method:method success:^(MXKeyVerificationTransaction * _Nonnull transaction) {
+                [self removePendingRequestWithRequestId:request.requestId];
+                success(transaction);
+            } failure:failure];
+            break;
     }
 }
 
 - (void)beginKeyVerificationWithUserId:(NSString*)userId
                            andDeviceId:(NSString*)deviceId
+                         transactionId:(nullable NSString*)transactionId
                               dmRoomId:(nullable NSString*)dmRoomId
                              dmEventId:(nullable NSString*)dmEventId
                                 method:(NSString*)method
@@ -268,6 +276,10 @@ static NSArray<MXEventTypeString> *kMXKeyVerificationManagerDMEventTypes;
         if ([method isEqualToString:MXKeyVerificationMethodSAS])
         {
             MXOutgoingSASTransaction *sasTransaction = [[MXOutgoingSASTransaction alloc] initWithOtherDevice:otherDevice andManager:self];
+            if (transactionId)
+            {
+                sasTransaction.transactionId = transactionId;
+            }
 
             // Detect verification by DM
             if (dmRoomId)
@@ -469,15 +481,19 @@ static NSArray<MXEventTypeString> *kMXKeyVerificationManagerDMEventTypes;
           eventType, content);
     
     MXHTTPOperation *operation;
-    if ([request isKindOfClass:MXKeyVerificationByDMRequest.class])
+    switch (request.transport)
     {
-        MXKeyVerificationByDMRequest *requestByDM = (MXKeyVerificationByDMRequest*)request;
-        operation = [self sendMessage:request.otherUser roomId:requestByDM.roomId eventType:eventType relatedTo:requestByDM.eventId content:content success:success failure:failure];
-    }
-    else
-    {
-        // Requests by to_device are not supported
-        NSParameterAssert(NO);
+        case MKeyVerificationTransportDirectMessage:
+            if ([request isKindOfClass:MXKeyVerificationByDMRequest.class])
+            {
+                MXKeyVerificationByDMRequest *requestByDM = (MXKeyVerificationByDMRequest*)request;
+                operation = [self sendMessage:request.otherUser roomId:requestByDM.roomId eventType:eventType relatedTo:requestByDM.eventId content:content success:success failure:failure];
+            }
+            break;
+            
+        case MKeyVerificationTransportToDevice:
+            operation = [self sendToDevice:request.otherUser deviceId:request.otherDevice eventType:eventType content:content success:success failure:failure];
+            break;
     }
     
     return operation;

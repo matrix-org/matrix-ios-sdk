@@ -97,8 +97,6 @@ typedef NS_ENUM(NSInteger, MKeyVerificationTransport) {
 #pragma mark - Transport layer
 #pragma mark Direct message
 
-- (void)setDirectMessageTransportInRoom:(NSString*)roomId originalEvent:(NSString*)eventId;
-
 @property (nonatomic, nullable, readonly) NSString *dmRoomId;
 @property (nonatomic, nullable, readonly) NSString *dmEventId;
 

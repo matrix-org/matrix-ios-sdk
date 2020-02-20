@@ -41,6 +41,9 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (nullable instancetype)initWithOtherDevice:(MXDeviceInfo*)otherDevice startEvent:(MXEvent *)event andManager:(MXKeyVerificationManager *)manager;
 
+@property (nonatomic) NSString *transactionId;
+- (void)setDirectMessageTransportInRoom:(NSString*)roomId originalEvent:(NSString*)eventId;
+
 - (void)didUpdateState;
 
 - (void)cancelWithCancelCodeFromCryptoQueue:(MXTransactionCancelCode *)code;
