@@ -251,10 +251,8 @@ RLM_ARRAY_TYPE(MXRealmOlmInboundGroupSession)
 
 @interface MXRealmCryptoStore ()
 {
-    /**
-     The user id.
-     */
     NSString *userId;
+    NSString *deviceId;
 }
 
 /**
@@ -276,7 +274,7 @@ RLM_ARRAY_TYPE(MXRealmOlmInboundGroupSession)
 
 + (BOOL)hasDataForCredentials:(MXCredentials*)credentials
 {
-    RLMRealm *realm = [MXRealmCryptoStore realmForUser:credentials.userId];
+    RLMRealm *realm = [MXRealmCryptoStore realmForUser:credentials.userId andDevice:credentials.deviceId];
     return (nil != [MXRealmOlmAccount objectsInRealm:realm where:@"userId = %@", credentials.userId].firstObject);
 }
 
@@ -284,7 +282,7 @@ RLM_ARRAY_TYPE(MXRealmOlmInboundGroupSession)
 {
     NSLog(@"[MXRealmCryptoStore] createStore for %@:%@", credentials.userId, credentials.deviceId);
 
-    RLMRealm *realm = [MXRealmCryptoStore realmForUser:credentials.userId];
+    RLMRealm *realm = [MXRealmCryptoStore realmForUser:credentials.userId andDevice:credentials.deviceId];
 
     MXRealmOlmAccount *account = [[MXRealmOlmAccount alloc] initWithValue:@{
                                                                           @"userId" : credentials.userId,
@@ -302,7 +300,7 @@ RLM_ARRAY_TYPE(MXRealmOlmInboundGroupSession)
 {
     NSLog(@"[MXRealmCryptoStore] deleteStore for %@:%@", credentials.userId, credentials.deviceId);
 
-    RLMRealm *realm = [MXRealmCryptoStore realmForUser:credentials.userId];
+    RLMRealm *realm = [MXRealmCryptoStore realmForUser:credentials.userId andDevice:credentials.deviceId];
 
     [realm transactionWithBlock:^{
         [realm deleteAllObjects];
@@ -317,6 +315,7 @@ RLM_ARRAY_TYPE(MXRealmOlmInboundGroupSession)
     if (self)
     {
         userId = credentials.userId;
+        deviceId = credentials.deviceId;
 
         MXRealmOlmAccount *account = self.accountInCurrentThread;
         if (!account)
@@ -341,7 +340,7 @@ RLM_ARRAY_TYPE(MXRealmOlmInboundGroupSession)
 
 - (RLMRealm *)realm
 {
-    return [MXRealmCryptoStore realmForUser:userId];
+    return [MXRealmCryptoStore realmForUser:userId andDevice:deviceId];
 }
 
 - (MXRealmOlmAccount*)accountInCurrentThread
@@ -1070,7 +1069,7 @@ RLM_ARRAY_TYPE(MXRealmOlmInboundGroupSession)
 }
 
 #pragma mark - Private methods
-+ (RLMRealm*)realmForUser:(NSString*)userId
++ (RLMRealm*)realmForUser:(NSString*)userId andDevice:(NSString*)deviceId
 {
     // Each user has its own db file.
     // Else, it can lead to issue with primary keys.
@@ -1095,9 +1094,17 @@ RLM_ARRAY_TYPE(MXRealmOlmInboundGroupSession)
         NSLog(@"[MXRealmCryptoStore] On simulator, create the file tree used by Realm. Error: %@", error);
     }
 #endif
-
+    
     // Default db file URL: use the default directory, but replace the filename with the userId.
-    NSURL *defaultRealmFileURL = [[defaultRealmPathURL URLByAppendingPathComponent:userId]
+    NSString *realmFile = userId;
+    if (MXTools.isRunningUnitTests)
+    {
+        // Append the device id for unit tests so that we can run e2e tests 
+        // with users with several devices
+        realmFile = [NSString stringWithFormat:@"%@-%@", userId, deviceId];
+    }
+
+    NSURL *defaultRealmFileURL = [[defaultRealmPathURL URLByAppendingPathComponent:realmFile]
                               URLByAppendingPathExtension:@"realm"];
     
     // Check for a potential application group id.

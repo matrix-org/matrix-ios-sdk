@@ -748,4 +748,14 @@ static NSMutableDictionary *fileExtensionByContentType = nil;
     return [NSJSONSerialization JSONObjectWithData:jsonData options:0 error:nil];
 }
 
++ (BOOL)isRunningUnitTests
+{
+#if DEBUG
+    NSDictionary* environment = [[NSProcessInfo processInfo] environment];
+    return (environment[@"XCTestConfigurationFilePath"] != nil);
+#else
+    return NO;
+#endif
+}
+
 @end
