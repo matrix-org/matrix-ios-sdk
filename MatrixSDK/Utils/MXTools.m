@@ -113,6 +113,8 @@ NSCharacterSet *uriComponentCharset;
                                 kMXEventTypeStringKeyVerificationMac,
                                 kMXEventTypeStringKeyVerificationCancel,
                                 kMXEventTypeStringKeyVerificationDone,
+                                kMXEventTypeStringSecretRequest,
+                                kMXEventTypeStringSecretSend,
                                 ];
 
         NSMutableDictionary *map = [NSMutableDictionary dictionaryWithCapacity:eventTypeMapEnumToString.count];
