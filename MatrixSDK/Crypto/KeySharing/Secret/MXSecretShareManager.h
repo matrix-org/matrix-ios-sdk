@@ -22,17 +22,44 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
+/**
+ Secret sharing manager.
+ 
+ See https://github.com/uhoreg/matrix-doc/blob/ssss/proposals/1946-secure_server-side_storage.md#sharing.
+ */
 @interface MXSecretShareManager : NSObject
 
+/**
+ Request a secret from other user's devices.
+
+ @param secretId the id of the secret
+ @param deviceIds ids of device to make request. Nil to request all.
+ 
+ @param success A block object called when the operation succeeds. It provides the id of the request.
+ @param onSecretReceived A block called when the secret has been received from another device
+ @param failure A block object called when the operation fails.
+ 
+ @return a MXHTTPOperation instance.
+ */
 - (MXHTTPOperation *)requestSecret:(NSString*)secretId
                        toDeviceIds:(nullable NSArray<NSString*>*)deviceIds
                            success:(void (^)(NSString *requestId))success
                   onSecretReceived:(void (^)(NSString *secret))onSecretReceived
                            failure:(void (^)(NSError *error))failure;
 
-//- (MXHTTPOperation *)cancelRequest:(NSString*)secretId
-//                           success:(void (^)(void))success
-//                           failure:(void (^)(NSError *error))failure;
+/**
+ Cancel a secret request.
+ 
+ @param requestId the id of the request.
+ 
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+ 
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation *)cancelRequestWithRequestId:(NSString*)requestId
+                                        success:(void (^)(void))success
+                                        failure:(void (^)(NSError *error))failure;
 
 @end
 
