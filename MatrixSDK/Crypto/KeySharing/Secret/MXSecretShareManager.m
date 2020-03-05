@@ -43,6 +43,8 @@ static NSArray<MXEventTypeString> *kMXSecretShareEventTypes;
                   onSecretReceived:(void (^)(NSString *secret))onSecretReceived
                            failure:(void (^)(NSError *error))failure
 {
+    NSLog(@"[MXSecretShareManager] requestSecret: %@ to %@", secretId, deviceIds);
+    
     MXCredentials *myUser = _crypto.mxSession.matrixRestClient.credentials;
     
     MXSecretShareRequest *request = [MXSecretShareRequest new];
@@ -61,33 +63,18 @@ static NSArray<MXEventTypeString> *kMXSecretShareEventTypes;
     // TODO: store it permanently?
     // Probably no
     
-    NSDictionary *requestContent = request.JSONDictionary;
-    
-    MXUsersDevicesMap<NSDictionary*> *contentMap = [[MXUsersDevicesMap alloc] init];
-    if (deviceIds)
-    {
-        for (NSString *deviceId in deviceIds)
-        {
-            [contentMap setObject:requestContent forUser:myUser.userId andDevice:deviceId];
-        }
-    }
-    else
-    {
-        [contentMap setObject:requestContent forUser:myUser.userId andDevice:@"*"];
-    }
-    
     MXWeakify(self);
-    return [_crypto.matrixRestClient sendToDevice:kMXEventTypeStringSecretRequest contentMap:contentMap txnId:request.requestId success:^{
+    return [self sendMessage:request.JSONDictionary toDeviceIds:deviceIds success:^{
         
         dispatch_async(dispatch_get_main_queue(), ^{
             success(request.requestId);
         });
-
+        
     } failure:^(NSError *error) {
         MXStrongifyAndReturnIfNil(self);
         
         [self->pendingSecretShareRequests removeObjectForKey:request.requestId];
-
+        
         dispatch_async(dispatch_get_main_queue(), ^{
             failure(error);
         });
@@ -98,6 +85,16 @@ static NSArray<MXEventTypeString> *kMXSecretShareEventTypes;
                                         success:(void (^)(void))success
                                         failure:(void (^)(NSError *error))failure
 {
+    NSLog(@"[MXSecretShareManager] cancelRequestWithRequestId: %@", requestId);
+    
+    MXPendingSecretShareRequest *pendingRequest = pendingSecretShareRequests[requestId];
+    if (!pendingRequest)
+    {
+        NSLog(@"[MXSecretShareManager] cancelRequestWithRequestId: Unknown request: %@", requestId);
+        failure(nil);
+        return nil;
+    }
+    
     MXCredentials *myUser = _crypto.mxSession.matrixRestClient.credentials;
     
     MXSecretShareRequest *request = [MXSecretShareRequest new];
@@ -105,8 +102,22 @@ static NSArray<MXEventTypeString> *kMXSecretShareEventTypes;
     request.requestingDeviceId = myUser.deviceId;
     request.requestId = requestId;
     
-    // TODO
-    return nil;
+    MXWeakify(self);
+    return [self sendMessage:request.JSONDictionary toDeviceIds:pendingRequest.requestedDeviceIds success:^{
+        MXStrongifyAndReturnIfNil(self);
+
+        [self->pendingSecretShareRequests removeObjectForKey:request.requestId];
+        
+        dispatch_async(dispatch_get_main_queue(), ^{
+            success();
+        });
+        
+    } failure:^(NSError *error) {
+        
+        dispatch_async(dispatch_get_main_queue(), ^{
+            failure(error);
+        });
+    }];
 }
 
 
@@ -139,6 +150,29 @@ static NSArray<MXEventTypeString> *kMXSecretShareEventTypes;
 
 
 #pragma mark - Private methods -
+
+- (MXHTTPOperation*)sendMessage:(NSDictionary*)message
+                    toDeviceIds:(nullable NSArray<NSString*>*)deviceIds
+                        success:(void (^)(void))success
+                        failure:(void (^)(NSError *error))failure
+{
+    MXCredentials *myUser = _crypto.mxSession.matrixRestClient.credentials;
+    
+    MXUsersDevicesMap<NSDictionary*> *contentMap = [[MXUsersDevicesMap alloc] init];
+    if (deviceIds)
+    {
+        for (NSString *deviceId in deviceIds)
+        {
+            [contentMap setObject:message forUser:myUser.userId andDevice:deviceId];
+        }
+    }
+    else
+    {
+        [contentMap setObject:message forUser:myUser.userId andDevice:@"*"];
+    }
+    
+    return [_crypto.matrixRestClient sendToDevice:kMXEventTypeStringSecretRequest contentMap:contentMap txnId:nil success:success failure:failure];
+}
 
 - (BOOL)isSecretShareEvent:(MXEventTypeString)type
 {
@@ -198,6 +232,20 @@ static NSArray<MXEventTypeString> *kMXSecretShareEventTypes;
         return;
     }
     
+    if ([request.action isEqualToString:MXSecretShareRequestAction.request])
+    {
+        [self handleSecretRequest:request];
+    }
+    else if ([request.action isEqualToString:MXSecretShareRequestAction.requestCancellation])
+    {
+        [self handleSecretRequestCancellation:request];
+    }
+}
+    
+- (void)handleSecretRequest:(MXSecretShareRequest*)request
+{
+    MXCredentials *myUser = _crypto.mxSession.matrixRestClient.credentials;
+
     if ([request.requestingDeviceId isEqualToString:myUser.deviceId])
     {
         // Ignore own requests
@@ -221,6 +269,11 @@ static NSArray<MXEventTypeString> *kMXSecretShareEventTypes;
     }
     
     [self shareSecret:secret toRequest:request];
+}
+
+- (void)handleSecretRequestCancellation:(MXSecretShareRequest*)request
+{
+    // TODO
 }
 
 - (void)shareSecret:(NSString*)secret toRequest:(MXSecretShareRequest*)request
@@ -288,7 +341,8 @@ static NSArray<MXEventTypeString> *kMXSecretShareEventTypes;
     }
     
     pendingRequest.onSecretReceivedBlock(shareSend.secret);
-    [pendingSecretShareRequests removeObjectForKey:shareSend.requestId];
+    
+    [self cancelRequestWithRequestId:shareSend.requestId success:^{} failure:^(NSError * _Nonnull error) {}];
 }
 
 @end
