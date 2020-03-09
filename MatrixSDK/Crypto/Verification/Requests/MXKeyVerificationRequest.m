@@ -48,20 +48,73 @@ NSString * const MXKeyVerificationRequestDidChangeNotification = @"MXKeyVerifica
 
 - (void)acceptWithMethods:(NSArray<NSString *> *)methods success:(dispatch_block_t)success failure:(void (^)(NSError * _Nonnull))failure
 {
-    NSString *myDeviceId = self.manager.crypto.mxSession.matrixRestClient.credentials.deviceId;
-    
-    MXKeyVerificationReady *ready = [MXKeyVerificationReady new];
-    ready.transactionId = self.requestId;
-    ready.relatedEventId = _event.eventId;
-    ready.methods = methods;
-    ready.fromDevice = myDeviceId;
-
-    [self.manager sendToOtherInRequest:self eventType:kMXEventTypeStringKeyVerificationReady content:ready.JSONDictionary success:^{
-        self.acceptedData = ready;
-        [self updateState:MXKeyVerificationRequestStateAccepted notifiy:YES];
-
-        success();
-    }  failure:failure];
+    [self.manager computeReadyMethodsFromVerificationRequestWithId:self.requestId
+                                               andSupportedMethods:methods
+                                                        completion:^(NSArray<NSString *> * _Nonnull readyMethods, MXQRCodeData * _Nullable qrCodeData)
+    {
+        if (!readyMethods.count)
+        {
+            void (^noReadyMethodsFailure)(void) = ^{
+                
+                NSError *error = [NSError errorWithDomain:MXKeyVerificationErrorDomain
+                                                     code:MXKeyVerificationUnsupportedMethodCode
+                                                 userInfo:@{
+                                                            NSLocalizedDescriptionKey: [NSString stringWithFormat:@"Unsupported verification methods: %@", self.methods]
+                                                            }];
+                
+                if (failure)
+                {
+                    failure(error);
+                }
+            };
+            
+            [self cancelWithCancelCode:MXTransactionCancelCode.unexpectedMessage success:^{
+                noReadyMethodsFailure();
+            } failure:^(NSError * _Nonnull error) {
+                noReadyMethodsFailure();
+            }];
+            
+            return;
+        }
+        
+        NSString *myDeviceId = self.manager.crypto.mxSession.matrixRestClient.credentials.deviceId;
+        
+        MXKeyVerificationReady *ready = [MXKeyVerificationReady new];
+        ready.transactionId = self.requestId;
+        ready.relatedEventId = self.event.eventId;
+        ready.methods = readyMethods;
+        ready.fromDevice = myDeviceId;
+        
+        [self.manager sendToOtherInRequest:self eventType:kMXEventTypeStringKeyVerificationReady content:ready.JSONDictionary success:^{
+            
+            self.acceptedData = ready;
+            
+            if (qrCodeData)
+            {
+                [self.manager createQRCodeTransactionFromRequest:self qrCodeData:qrCodeData success:^(MXQRCodeTransaction * _Nonnull transaction) {
+                    [self updateState:MXKeyVerificationRequestStateReady notifiy:YES];
+                    success();
+                } failure:^(NSError * _Nonnull error) {
+                    
+                    NSLog(@"[MXKeyVerificationRequest] acceptWithMethods fail to create qrCodeData.");
+                    
+                    [self cancelWithCancelCode:MXTransactionCancelCode.unexpectedMessage success:^{
+                        
+                    } failure:^(NSError * _Nonnull error) {
+                        NSLog(@"[MXKeyVerificationRequest] acceptWithMethods fail to cancel request");
+                    }];
+                    
+                    failure(error);
+                }];
+            }
+            else
+            {
+                [self updateState:MXKeyVerificationRequestStateReady notifiy:YES];
+                success();
+            }
+                        
+        }  failure:failure];
+    }];
 }
 
 - (void)cancelWithCancelCode:(MXTransactionCancelCode*)code success:(void(^)(void))success failure:(void(^)(NSError *error))failure
@@ -104,8 +157,34 @@ NSString * const MXKeyVerificationRequestDidChangeNotification = @"MXKeyVerifica
 
 - (void)handleReady:(MXKeyVerificationReady*)readyContent
 {
+    MXQRCodeData *qrCodeData;
+    
+    // Check if other user is able to scan QR code
+    if ([readyContent.methods containsObject:MXKeyVerificationMethodQRCodeScan] && [self.methods containsObject:MXKeyVerificationMethodQRCodeShow])
+    {
+        qrCodeData = [self.manager createQRCodeDataWithTransactionId:self.requestId otherUserId:self.otherUser otherDeviceId:self.otherDevice];
+    }
+    
     self.acceptedData = readyContent;
-    [self updateState:MXKeyVerificationRequestStateAccepted notifiy:YES];
+    
+    if ([readyContent.methods containsObject:MXKeyVerificationMethodReciprocate])
+    {
+        [self.manager createQRCodeTransactionFromRequest:self qrCodeData:qrCodeData success:^(MXQRCodeTransaction * _Nonnull transaction) {
+            
+            [self updateState:MXKeyVerificationRequestStateReady notifiy:YES];
+            
+        } failure:^(NSError * _Nonnull error) {
+            [self cancelWithCancelCode:MXTransactionCancelCode.unexpectedMessage success:^{
+                
+            } failure:^(NSError * _Nonnull error) {
+                NSLog(@"[MXKeyVerificationRequest] handleReady fail to cancel request");
+            }];
+        }];
+    }
+    else
+    {
+        [self updateState:MXKeyVerificationRequestStateReady notifiy:YES];
+    }
 }
 
 - (void)handleCancel:(MXKeyVerificationCancel *)cancelContent
