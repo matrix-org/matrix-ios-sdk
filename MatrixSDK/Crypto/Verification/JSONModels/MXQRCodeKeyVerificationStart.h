@@ -14,31 +14,16 @@
  limitations under the License.
  */
 
-#import "MXKeyVerificationJSONModel.h"
+#import "MXKeyVerificationStart.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
-/**
- Sent by Alice to initiate an interactive key verification.
- */
-@interface MXKeyVerificationStart : MXKeyVerificationJSONModel
+@interface MXQRCodeKeyVerificationStart : MXKeyVerificationStart
 
 /**
- Must be “m.sas.v1” for interactive key verification.
+ The shared secret from the QR code, encoded using unpadded base64.
  */
-@property (nonatomic, nullable) NSString *method;
-
-/**
- Alice’s device ID.
- */
-@property (nonatomic) NSString *fromDevice;
-
-/**
- Check content validity.
-
- @return YES if valid.
- */
-- (BOOL)isValid;
+@property (nonatomic, nullable) NSString *sharedSecret;
 
 @end
 
