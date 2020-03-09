@@ -40,7 +40,7 @@
         return;
     }
 
-    MXKeyVerificationStart *startContent = [MXKeyVerificationStart new];
+    MXSASKeyVerificationStart *startContent = [MXSASKeyVerificationStart new];
     startContent.fromDevice = self.manager.crypto.myDevice.deviceId;
     startContent.method = MXKeyVerificationMethodSAS;
     startContent.transactionId = self.transactionId;
