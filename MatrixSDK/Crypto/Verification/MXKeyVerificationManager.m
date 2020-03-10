@@ -17,6 +17,7 @@
 
 #import "MXKeyVerificationManager.h"
 #import "MXKeyVerificationManager_Private.h"
+#import "MXIncomingSASTransaction_Private.h"
 
 #import "MXSession.h"
 #import "MXCrypto_Private.h"
@@ -230,7 +231,7 @@ static NSArray<MXEventTypeString> *kMXKeyVerificationManagerDMEventTypes;
         return;
     }
     
-    if (request.state != MXKeyVerificationRequestStateAccepted)
+    if (request.state != MXKeyVerificationRequestStateAccepted && request.state != MXKeyVerificationRequestStateReady)
     {
         NSError *error = [NSError errorWithDomain:MXKeyVerificationErrorDomain
                                              code:MXKeyVerificationInvalidStateCode
