@@ -23,7 +23,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 #pragma mark - Constants
 
-//! Cross-signing key types
+//! Actions for secret sharing requests
 extern const struct MXSecretShareRequestAction {
     __unsafe_unretained NSString *request;
     __unsafe_unretained NSString *requestCancellation;

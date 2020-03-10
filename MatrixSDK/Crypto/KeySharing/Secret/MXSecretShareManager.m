@@ -61,9 +61,6 @@ static NSArray<MXEventTypeString> *kMXSecretShareEventTypes;
     
     pendingSecretShareRequests[request.requestId] = pendingRequest;
     
-    // TODO: store it permanently?
-    // Probably no
-    
     MXWeakify(self);
     return [self sendMessage:request.JSONDictionary toDeviceIds:deviceIds success:^{
         
@@ -257,7 +254,7 @@ static NSArray<MXEventTypeString> *kMXSecretShareEventTypes;
     if (self.crypto.mxSession.state == MXSessionStateSyncInProgress
         || self.crypto.mxSession.state == MXSessionStateBackgroundSyncInProgress)
     {
-        // TODO: Be more accurate to
+        // TODO: Be more accurate to detect the first sync is done
         dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 0.1 * NSEC_PER_SEC), self.crypto.cryptoQueue, ^{
             [self handleSecretRequest:request];
         });
@@ -286,6 +283,7 @@ static NSArray<MXEventTypeString> *kMXSecretShareEventTypes;
     }
     
     // TODO: Add more contraints before sharing? (like the verification must have occurred less than 5min ago)
+    // No matrix SDKs do it for the moment
     
     NSString *secret = [_crypto.store secretWithSecretId:request.name];
     if (!secret)
