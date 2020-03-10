@@ -119,4 +119,72 @@
     }];
 }
 
+/**
+ Test cancellation: Make sure devices do share secrets when the request has been cancelled.
+ 
+ - Alice has a secret on her 1st device
+ - Alice logs in on a new device
+ - Alice trusts the new device
+ - Alice pauses the first device
+ - Alice requests the secret from the new device
+ - Alice cancels the request
+ - Alice resumes the first device
+ -> The first device should not have sent the secret through MXEventTypeSecretSend event
+ */
+- (void)testSecretRequestCancellation
+{
+    [matrixSDKTestsE2EData doE2ETestWithAliceInARoom:self readyToTest:^(MXSession *aliceSession, NSString *roomId, XCTestExpectation *expectation) {
+        
+        NSString *secretId = @"secretId";
+        NSString *secret = @"A secret";
+        
+        // - Alice has a secret on her 1st device
+        [aliceSession.crypto.store storeSecret:secret withSecretId:secretId];
+        
+        // - Alice logs in on a new device
+        [matrixSDKTestsE2EData loginUserOnANewDevice:aliceSession.matrixRestClient.credentials withPassword:MXTESTS_ALICE_PWD onComplete:^(MXSession *newAliceSession) {
+            
+            MXCredentials *newAlice = newAliceSession.matrixRestClient.credentials;
+            
+            // - Alice trusts the new device
+            [aliceSession.crypto setDeviceVerification:MXDeviceVerified forDevice:newAlice.deviceId ofUser:newAlice.userId success:nil failure:nil];
+            
+            // - Alice pauses the first device
+            [aliceSession pause];
+            
+            // - Alice requests the secret from the new device
+            [newAliceSession.crypto.secretShareManager requestSecret:secretId toDeviceIds:nil success:^(NSString * _Nonnull requestId) {
+                
+                // - Alice cancels the request
+                [newAliceSession.crypto.secretShareManager cancelRequestWithRequestId:requestId success:^{
+                } failure:^(NSError * _Nonnull error) {
+                    XCTFail(@"The operation should not fail - NSError: %@", error);
+                    [expectation fulfill];
+                }];
+                
+                [aliceSession resume:^{
+                    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 1 * NSEC_PER_SEC), dispatch_get_main_queue(), ^{
+                        [expectation fulfill];
+                    });
+                }];
+                
+            } onSecretReceived:^(NSString * _Nonnull sharedSecret) {
+                XCTFail(@"The operation should never complete");
+                [expectation fulfill];
+            } failure:^(NSError * _Nonnull error) {
+                XCTFail(@"The operation should not fail - NSError: %@", error);
+                [expectation fulfill];
+            }];
+            
+            [[NSNotificationCenter defaultCenter] addObserverForName:kMXSessionOnToDeviceEventNotification object:newAliceSession queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification * _Nonnull notification) {
+                
+                // -> The first device should not have sent the secret through MXEventTypeSecretSend event
+                MXEvent *event = notification.userInfo[kMXSessionNotificationEventKey];
+                XCTAssertNotEqual(event.eventType, MXEventTypeSecretSend);
+            }];
+        }];
+    }];
+}
+
+
 @end

@@ -28,6 +28,7 @@ static NSArray<MXEventTypeString> *kMXSecretShareEventTypes;
 @interface MXSecretShareManager ()
 {
     NSMutableDictionary<NSString*, MXPendingSecretShareRequest*> *pendingSecretShareRequests;
+    NSMutableArray<NSString*> *cancelledRequestIds;
 }
 
 @property (nonatomic, readonly, weak) MXCrypto *crypto;
@@ -141,6 +142,7 @@ static NSArray<MXEventTypeString> *kMXSecretShareEventTypes;
     {
         _crypto = crypto;
         pendingSecretShareRequests = [NSMutableDictionary dictionary];
+        cancelledRequestIds = [NSMutableArray array];
         
         // Observe incoming secret share requests
         [self setupIncomingRequests];
@@ -232,6 +234,12 @@ static NSArray<MXEventTypeString> *kMXSecretShareEventTypes;
         return;
     }
     
+    if ([request.requestingDeviceId isEqualToString:myUser.deviceId])
+    {
+        // Ignore own requests
+        return;
+    }
+    
     if ([request.action isEqualToString:MXSecretShareRequestAction.request])
     {
         [self handleSecretRequest:request];
@@ -241,16 +249,34 @@ static NSArray<MXEventTypeString> *kMXSecretShareEventTypes;
         [self handleSecretRequestCancellation:request];
     }
 }
-    
+
 - (void)handleSecretRequest:(MXSecretShareRequest*)request
 {
-    MXCredentials *myUser = _crypto.mxSession.matrixRestClient.credentials;
-
-    if ([request.requestingDeviceId isEqualToString:myUser.deviceId])
+    // Handle secret requests only when the sync has been done.
+    // This allows to manage cancellations events for that requests
+    if (self.crypto.mxSession.state == MXSessionStateSyncInProgress
+        || self.crypto.mxSession.state == MXSessionStateBackgroundSyncInProgress)
     {
-        // Ignore own requests
+        // TODO: Be more accurate to
+        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 0.1 * NSEC_PER_SEC), self.crypto.cryptoQueue, ^{
+            [self handleSecretRequest:request];
+        });
         return;
     }
+    
+    [self handleSecretRequest2:request];
+}
+
+- (void)handleSecretRequest2:(MXSecretShareRequest*)request
+{
+    if ([cancelledRequestIds containsObject:request.requestId])
+    {
+        NSLog(@"[MXSecretShareManager] handleSecretRequestEvent: Ignored cancelled request: %@", request.requestId);
+        [cancelledRequestIds removeObject:request.requestId];
+        return;
+    }
+    
+    MXCredentials *myUser = _crypto.mxSession.matrixRestClient.credentials;
     
     MXDeviceInfo *otherDevice = [_crypto.store deviceWithDeviceId:request.requestingDeviceId forUser:myUser.userId];
     if (!otherDevice.trustLevel.isVerified)
@@ -273,7 +299,15 @@ static NSArray<MXEventTypeString> *kMXSecretShareEventTypes;
 
 - (void)handleSecretRequestCancellation:(MXSecretShareRequest*)request
 {
-    // TODO
+    NSLog(@"[MXSecretShareManager] handleSecretRequestCancellation: %@ from device %@", request.name, request.requestingDeviceId);
+    
+    // Store cancelled requests
+    // Those requests will be ignored at the end of the sync processing
+    if (self.crypto.mxSession.state == MXSessionStateSyncInProgress
+        || self.crypto.mxSession.state == MXSessionStateBackgroundSyncInProgress)
+    {
+        [cancelledRequestIds addObject:request.requestId];
+    }
 }
 
 - (void)shareSecret:(NSString*)secret toRequest:(MXSecretShareRequest*)request
