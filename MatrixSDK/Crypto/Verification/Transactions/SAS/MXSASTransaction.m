@@ -43,36 +43,6 @@ static NSArray<MXEmojiRepresentation*> *kSasEmojis;
 
 @implementation MXSASTransaction
 
-- (nullable instancetype)initWithOtherDevice:(MXDeviceInfo*)otherDevice startEvent:(MXEvent *)event andManager:(MXKeyVerificationManager *)manager
-{
-    MXSASKeyVerificationStart *startContent;
-    MXJSONModelSetMXJSONModel(startContent, MXSASKeyVerificationStart, event.content);
-    if (!startContent || !startContent.isValid)
-    {
-        NSLog(@"[MXKeyVerificationTransaction]: ERROR: Invalid start event: %@", event);
-        return nil;
-    }
-    
-    self = [super initWithOtherDevice:otherDevice andManager:manager];
-    if (self)
-    {
-        _startContent = startContent;
-        self.transactionId = _startContent.transactionId;
-        
-        // Detect verification by DM
-        if (startContent.relatedEventId)
-        {
-            [self setDirectMessageTransportInRoom:event.roomId originalEvent:startContent.relatedEventId];
-        }
-        
-        // It would have been nice to timeout from the event creation date
-        // but we do not receive the information. originServerTs = 0
-        // So, use the time when we receive it instead
-        //_creationDate = [NSDate dateWithTimeIntervalSince1970: (event.originServerTs / 1000)];
-    }
-    return self;
-}
-
 - (NSString *)sasDecimal
 {
     NSString *sasDecimal;

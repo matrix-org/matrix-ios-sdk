@@ -41,8 +41,6 @@ FOUNDATION_EXPORT NSArray<NSString*> *kKnownShortCodes;
 @property (nonatomic, nullable) MXKeyVerificationMac *myMac;
 @property (nonatomic, nullable) MXKeyVerificationMac *theirMac;
 
-- (nullable instancetype)initWithOtherDevice:(MXDeviceInfo*)otherDevice startEvent:(MXEvent *)event andManager:(MXKeyVerificationManager *)manager;
-
 - (void)handleAccept:(MXKeyVerificationAccept*)acceptContent;
 - (void)handleKey:(MXKeyVerificationKey*)keyContent;
 - (void)handleMac:(MXKeyVerificationMac*)macContent;

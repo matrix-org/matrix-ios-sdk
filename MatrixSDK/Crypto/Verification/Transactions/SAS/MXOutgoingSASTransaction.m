@@ -148,6 +148,13 @@
         [self cancelWithCancelCode:MXTransactionCancelCode.unexpectedMessage];
         return;
     }
+    
+    if (!keyContent.isValid)
+    {
+        NSLog(@"[MXKeyVerification][MXOutgoingSASTransaction] handleKey: key content is invalid. keyContent: %@", keyContent);
+        [self cancelWithCancelCode:MXTransactionCancelCode.unexpectedMessage];
+        return;
+    }
 
     // Upon receipt of the m.key.verification.key message from Bob’s device,
     // Alice’s device checks that the commitment property from the Bob’s m.key.verification.accept
