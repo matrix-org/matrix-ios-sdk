@@ -56,7 +56,7 @@ static NSArray<MXEventTypeString> *kMXSecretShareEventTypes;
     
     MXPendingSecretShareRequest *pendingRequest = [MXPendingSecretShareRequest new];
     pendingRequest.request = request;
-    pendingRequest.onSecretReceivedBlock = [onSecretReceived copy];
+    pendingRequest.onSecretReceivedBlock = onSecretReceived;
     pendingRequest.requestedDeviceIds = deviceIds;
     
     pendingSecretShareRequests[request.requestId] = pendingRequest;
@@ -244,6 +244,10 @@ static NSArray<MXEventTypeString> *kMXSecretShareEventTypes;
     else if ([request.action isEqualToString:MXSecretShareRequestAction.requestCancellation])
     {
         [self handleSecretRequestCancellation:request];
+    }
+    else
+    {
+        NSLog(@"[MXSecretShareManager] handleSecretRequestEvent. Unsupported action: %@. Event: %@", request.action, event.JSONDictionary);
     }
 }
 
