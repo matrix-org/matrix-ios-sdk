@@ -54,7 +54,7 @@
         || ![self.method isEqualToString:MXKeyVerificationMethodReciprocate]
         || self.sharedSecret.length == 0)
     {
-        NSLog(@"[MXKeyVerification] Invalid MXKeyVerificationStart: %@", self);
+        NSLog(@"[MXKeyVerification] Invalid MXQRCodeKeyVerificationStart: %@", self);
         return NO;
     }
     
