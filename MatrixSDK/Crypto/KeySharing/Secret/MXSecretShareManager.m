@@ -282,8 +282,9 @@ static NSArray<MXEventTypeString> *kMXSecretShareEventTypes;
         return;
     }
     
-    // TODO: Add more contraints before sharing? (like the verification must have occurred less than 5min ago)
-    // No matrix SDKs do it for the moment
+    // TODO: Add a timeout constraint
+    // Share the secret only if the verification occurred less than 5min ago
+    // https://github.com/vector-im/riot-ios/issues/3023
     
     NSString *secret = [_crypto.store secretWithSecretId:request.name];
     if (!secret)
