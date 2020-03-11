@@ -25,6 +25,13 @@
 static NSString* const kQRCodeFormatPrefix = @"MATRIX";
 static NSUInteger const kQRCodeFormatVersion = 2;
 
+static NSUInteger const kQRCodeFormatMinimumDataByteCount = 10;
+static NSUInteger const kQRCodeFormatVersionByteCount = 1;
+static NSUInteger const kQRCodeFormatVerificationModeByteCount = 1;
+static NSUInteger const kQRCodeFormatTransactionIdByteCount = 2;
+static NSUInteger const kQRCodeFormatKeyByteCount = 32;
+static NSUInteger const kQRCodeFormatMinimumSharedSecretByteCount = 8;
+
 @interface MXQRCodeDataCoder()
 
 @property (nonatomic, strong) NSData *prefixData;
@@ -51,9 +58,7 @@ static NSUInteger const kQRCodeFormatVersion = 2;
 {
     NSInteger dataByteCount = data.length;
     
-    NSInteger minimumDataByteCount = 10;
-    
-    if (dataByteCount < minimumDataByteCount)
+    if (dataByteCount < kQRCodeFormatMinimumDataByteCount)
     {
         NSLog(@"[MXQRCodeDataCoder] Data byte count is too short");
         return nil;
@@ -88,10 +93,9 @@ static NSUInteger const kQRCodeFormatVersion = 2;
     }
     
     // Check the QR code version
-    NSUInteger versionLength = 1;
-    uint8_t versionBuffer[versionLength];
+    uint8_t versionBuffer[kQRCodeFormatVersionByteCount];
     
-    currenReadBytesCount = [inputStream read:versionBuffer maxLength:versionLength];
+    currenReadBytesCount = [inputStream read:versionBuffer maxLength:kQRCodeFormatVersionByteCount];
     
     if (currenReadBytesCount < 0)
     {
@@ -109,11 +113,10 @@ static NSUInteger const kQRCodeFormatVersion = 2;
         return nil;
     }
     
-    // Find the QR code verification mode    
-    NSUInteger verificationModeLength = 1;
-    uint8_t verificationModeBuffer[versionLength];
+    // Find the QR code verification mode
+    uint8_t verificationModeBuffer[kQRCodeFormatVerificationModeByteCount];
     
-    currenReadBytesCount = [inputStream read:verificationModeBuffer maxLength:verificationModeLength];
+    currenReadBytesCount = [inputStream read:verificationModeBuffer maxLength:kQRCodeFormatVerificationModeByteCount];
     
     if (currenReadBytesCount < 0)
     {
@@ -137,10 +140,10 @@ static NSUInteger const kQRCodeFormatVersion = 2;
     }
     
     // Find the transaction id length
-    NSUInteger transactionIdByteLength = 2;
-    uint8_t transactionIdLengthBuffer[transactionIdByteLength];
+    uint8_t transactionIdLengthBuffer[kQRCodeFormatTransactionIdByteCount];
     
-    currenReadBytesCount = [inputStream read:transactionIdLengthBuffer maxLength:transactionIdByteLength];
+    // Cannot read big-endian with NSInputStream so just go forward and use -[NSData getBytes] to extract transaction id length
+    currenReadBytesCount = [inputStream read:transactionIdLengthBuffer maxLength:kQRCodeFormatTransactionIdByteCount];
     
     if (currenReadBytesCount < 0)
     {
@@ -150,7 +153,7 @@ static NSUInteger const kQRCodeFormatVersion = 2;
     
     uint16_t transactionIdLengthBigEndian;
     
-    [data getBytes:&transactionIdLengthBigEndian range:NSMakeRange(totalReadBytesCount, transactionIdByteLength)];
+    [data getBytes:&transactionIdLengthBigEndian range:NSMakeRange(totalReadBytesCount, kQRCodeFormatTransactionIdByteCount)];
     
     totalReadBytesCount += currenReadBytesCount;
     
@@ -178,10 +181,9 @@ static NSUInteger const kQRCodeFormatVersion = 2;
     NSString *transactionId = [[NSString alloc] initWithBytes:transactionIdBuffer length:transactionIdLength encoding:NSASCIIStringEncoding];
     
     // Find the first key
-    NSUInteger keyByteLength = 32;
-    uint8_t firstKeyBuffer[keyByteLength];
+    uint8_t firstKeyBuffer[kQRCodeFormatKeyByteCount];
     
-    currenReadBytesCount = [inputStream read:firstKeyBuffer maxLength:keyByteLength];
+    currenReadBytesCount = [inputStream read:firstKeyBuffer maxLength:kQRCodeFormatKeyByteCount];
     
     if (currenReadBytesCount < 0)
     {
@@ -191,13 +193,13 @@ static NSUInteger const kQRCodeFormatVersion = 2;
     
     totalReadBytesCount += currenReadBytesCount;
     
-    NSData *firstKeyData = [[NSData alloc] initWithBytes:firstKeyBuffer length:keyByteLength];
+    NSData *firstKeyData = [[NSData alloc] initWithBytes:firstKeyBuffer length:kQRCodeFormatKeyByteCount];
     NSString *firstKey = [MXBase64Tools unpaddedBase64FromData:firstKeyData];
     
     // Find the second key
-    uint8_t secondKeyBuffer[keyByteLength];
+    uint8_t secondKeyBuffer[kQRCodeFormatKeyByteCount];
     
-    currenReadBytesCount = [inputStream read:secondKeyBuffer maxLength:keyByteLength];
+    currenReadBytesCount = [inputStream read:secondKeyBuffer maxLength:kQRCodeFormatKeyByteCount];
     
     if (currenReadBytesCount < 0)
     {
@@ -207,16 +209,14 @@ static NSUInteger const kQRCodeFormatVersion = 2;
     
     totalReadBytesCount += currenReadBytesCount;
     
-    NSData *secondKeyData = [[NSData alloc] initWithBytes:secondKeyBuffer length:keyByteLength];
+    NSData *secondKeyData = [[NSData alloc] initWithBytes:secondKeyBuffer length:kQRCodeFormatKeyByteCount];
     NSString *secondKey = [MXBase64Tools unpaddedBase64FromData:secondKeyData];
     
     // Find the shared secret
-    NSInteger minimumSharedSecretByteCount = 8;
-    
     NSInteger remainingBytesCount = dataByteCount - totalReadBytesCount;
     
     // Shared secret should be 8 bytes length minimum
-    if (remainingBytesCount < minimumSharedSecretByteCount)
+    if (remainingBytesCount < kQRCodeFormatMinimumSharedSecretByteCount)
     {
         NSLog(@"[MXQRCodeDataCoder] Fail to parse shared secret");
         return nil;
