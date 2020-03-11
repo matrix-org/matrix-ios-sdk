@@ -107,7 +107,7 @@ static NSUInteger const kQRCodeFormatVersion = 2;
     
     if (version != self.supportedQRCodeVersion)
     {
-        NSLog(@"[MXQRCodeDataCoder] Unsupported QR code version");
+        NSLog(@"[MXQRCodeDataCoder] Unsupported QR code version: %@", @(version));
         return nil;
     }
     
