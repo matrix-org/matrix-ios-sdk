@@ -423,7 +423,7 @@
  - Alice accepts it and wait for Bob to scan her QR code
  -> 1. Transaction on Bob side must be Unknown
  -> 2. Transaction on Alice side must be Unknown
- -  Bob scan Alice QR code
+ -  Bob scans Alice QR code
  -> 3. Transaction on Bob side must then move to ScannedOtherQR
  -> 4. Transaction on Bob side must then move to Verified
  -> 5. Transaction on Alice side must then move to QRScannedByOther
