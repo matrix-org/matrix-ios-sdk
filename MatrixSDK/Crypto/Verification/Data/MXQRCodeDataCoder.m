@@ -65,8 +65,7 @@ static NSUInteger const kQRCodeFormatVersion = 2;
     NSInputStream *inputStream = [NSInputStream inputStreamWithData:data];
     [inputStream open];
     
-    // Find the ASCII string "MATRIX"
-    
+    // Find the ASCII string "MATRIX"    
     NSUInteger prefixLength = self.prefixData.length;
     uint8_t prefixBuffer[prefixLength];
     
@@ -89,7 +88,6 @@ static NSUInteger const kQRCodeFormatVersion = 2;
     }
     
     // Check the QR code version
-    
     NSUInteger versionLength = 1;
     uint8_t versionBuffer[versionLength];
     
@@ -111,8 +109,7 @@ static NSUInteger const kQRCodeFormatVersion = 2;
         return nil;
     }
     
-    // Find the QR code verification mode
-    
+    // Find the QR code verification mode    
     NSUInteger verificationModeLength = 1;
     uint8_t verificationModeBuffer[versionLength];
     
@@ -140,7 +137,6 @@ static NSUInteger const kQRCodeFormatVersion = 2;
     }
     
     // Find the transaction id length
-    
     NSUInteger transactionIdByteLength = 2;
     uint8_t transactionIdLengthBuffer[transactionIdByteLength];
     
@@ -167,7 +163,6 @@ static NSUInteger const kQRCodeFormatVersion = 2;
     }
     
     // Find the transaction id
-    
     uint8_t transactionIdBuffer[transactionIdLength];
     
     currenReadBytesCount = [inputStream read:transactionIdBuffer maxLength:transactionIdLength];
@@ -183,7 +178,6 @@ static NSUInteger const kQRCodeFormatVersion = 2;
     NSString *transactionId = [[NSString alloc] initWithBytes:transactionIdBuffer length:transactionIdLength encoding:NSASCIIStringEncoding];
     
     // Find the first key
-    
     NSUInteger keyByteLength = 32;
     uint8_t firstKeyBuffer[keyByteLength];
     
@@ -201,7 +195,6 @@ static NSUInteger const kQRCodeFormatVersion = 2;
     NSString *firstKey = [MXBase64Tools unpaddedBase64FromData:firstKeyData];
     
     // Find the second key
-    
     uint8_t secondKeyBuffer[keyByteLength];
     
     currenReadBytesCount = [inputStream read:secondKeyBuffer maxLength:keyByteLength];
@@ -218,7 +211,6 @@ static NSUInteger const kQRCodeFormatVersion = 2;
     NSString *secondKey = [MXBase64Tools unpaddedBase64FromData:secondKeyData];
     
     // Find the shared secret
-    
     NSInteger minimumSharedSecretByteCount = 8;
     
     NSInteger remainingBytesCount = dataByteCount - totalReadBytesCount;
@@ -239,7 +231,6 @@ static NSUInteger const kQRCodeFormatVersion = 2;
     totalReadBytesCount += currenReadBytesCount;
     
     // Create QR code data
-    
     return [self.qrCodeDataBuilder buildQRCodeDataWithVerificationMode:verificationMode
                                                          transactionId:transactionId
                                                               firstKey:firstKey
@@ -252,42 +243,34 @@ static NSUInteger const kQRCodeFormatVersion = 2;
     NSMutableData *qrCodeRawData = [NSMutableData data];
     
     // the ASCII string "MATRIX"
-    
     [qrCodeRawData appendData:self.prefixData];
     
     // one byte indicating the QR code version
-
     uint8_t versionBytes = qrCodeDataCodable.version;
     [qrCodeRawData appendBytes:&versionBytes length:sizeof(versionBytes)];
 
     // one byte indicating the QR code verification mode. May be one of the following values:
-
     NSInteger verificationModeInt = qrCodeDataCodable.verificationMode;
     uint8_t verificationModeUInt8 = verificationModeInt;
     [qrCodeRawData appendBytes:&verificationModeInt length:sizeof(verificationModeUInt8)];
     
     // two bytes in network byte order (big-endian) indicating the length of the ID
-    
     uint16_t transactionIDLenghtBytes = CFSwapInt16HostToBig(qrCodeDataCodable.transactionId.length);
     [qrCodeRawData appendBytes:&transactionIDLenghtBytes length:sizeof(transactionIDLenghtBytes)];
     
     // the ID as an ASCII string
-
     NSData *transactionIDData = [qrCodeDataCodable.transactionId dataUsingEncoding:NSASCIIStringEncoding];
     [qrCodeRawData appendData:transactionIDData];
     
     // the first key, as 32 bytes. The key to use depends on the mode field:
-    
     NSData *firstKeyData = [MXBase64Tools dataFromUnpaddedBase64:qrCodeDataCodable.firstKey];
     [qrCodeRawData appendData:firstKeyData];
 
     // the second key, as 32 bytes. The key to use depends on the mode field:
-    
     NSData *secondKeyData = [MXBase64Tools dataFromUnpaddedBase64:qrCodeDataCodable.secondKey];
     [qrCodeRawData appendData:secondKeyData];
 
     // a random shared secret
-    
     [qrCodeRawData appendData:qrCodeDataCodable.sharedSecret];
 
     return qrCodeRawData;
