@@ -24,7 +24,7 @@ NS_ASSUME_NONNULL_BEGIN
 @interface MXKeyVerificationStart : MXKeyVerificationJSONModel
 
 /**
- Must be “m.sas.v1” for interactive key verification.
+ The verification method to use.
  */
 @property (nonatomic, nullable) NSString *method;
 
