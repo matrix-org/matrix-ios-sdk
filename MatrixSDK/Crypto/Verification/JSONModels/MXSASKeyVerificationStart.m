@@ -71,7 +71,7 @@
         || _shortAuthenticationString.count == 0
         || [_shortAuthenticationString containsObject:MXKeyVerificationSASModeDecimal] == NO)
     {
-        NSLog(@"[MXKeyVerification] Invalid MXKeyVerificationStart: %@", self);
+        NSLog(@"[MXKeyVerification] Invalid MXSASKeyVerificationStart: %@", self);
         isValid = NO;
     }
     
