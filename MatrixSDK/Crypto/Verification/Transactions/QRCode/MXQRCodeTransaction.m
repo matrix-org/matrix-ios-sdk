@@ -269,7 +269,7 @@ NSString * const MXKeyVerificationMethodReciprocate = @"m.reciprocate.v1";
     // If not me, sign their MSK and upload the signature
     if (qrCodeData.verificationMode == MXQRCodeVerificationModeVerifyingAnotherUser && !isSelfVerification)
     {
-        // we should trust this master key
+        // we should trust their master key
         [self trustOtherUserWithId:self.otherUserId];
     }
     else if (qrCodeData.verificationMode == MXQRCodeVerificationModeSelfVerifyingMasterKeyNotTrusted && isSelfVerification)
