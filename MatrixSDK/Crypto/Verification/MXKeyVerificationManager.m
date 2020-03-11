@@ -438,7 +438,7 @@ static NSArray<MXEventTypeString> *kMXKeyVerificationManagerDMEventTypes;
         NSLog(@"[MXKeyVerification] createQRCodeTransaction: Error: %@", error);
         dispatch_async(dispatch_get_main_queue(), ^{
             failure(error);
-        }
+        });
     }];
 }
 
