@@ -28,7 +28,7 @@ FOUNDATION_EXPORT NSString * const MXKeyVerificationMethodReciprocate;
 
 typedef NS_ENUM(NSInteger, MXQRCodeTransactionState) {
     MXQRCodeTransactionStateUnknown = 0,
-    MXQRCodeTransactionStateScannedOtherQR,     // User scan other QR code
+    MXQRCodeTransactionStateScannedOtherQR,     // My user scanned the QR code of the other user
     MXQRCodeTransactionStateQRScannedByOther,   // Other user scanned my QR code
     MXQRCodeTransactionStateVerified,
     MXQRCodeTransactionStateCancelled,          // Check self.reasonCancelCode for the reason
