@@ -106,6 +106,25 @@ NSString * const MXKeyVerificationMethodReciprocate = @"m.reciprocate.v1";
     }
 }
 
+- (void)userHasScannedOtherQrCodeData:(MXQRCodeData*)otherQRCodeData
+{
+    BOOL isOtherQRCodeDataKeysValid = [self.manager isOtherQRCodeDataKeysValid:otherQRCodeData otherUserId:self.otherUserId otherDevice:self.otherDevice];
+    
+    if (!isOtherQRCodeDataKeysValid)
+    {
+        [self cancelWithCancelCode:MXTransactionCancelCode.mismatchedKeys];
+        return;
+    }
+    
+    // All checks are correct. Send the shared secret so that sender can trust me.
+    // otherQRCodeData.sharedSecret will be used to send the start request
+    [self startWithOtherQRCodeSharedSecret:otherQRCodeData.sharedSecret success:^{
+        [self trustOtherWithOtherQRCodeData:otherQRCodeData];
+    } failure:^(NSError *error) {
+        [self cancelWithCancelCode:MXTransactionCancelCode.invalidMessage];
+    }];
+}
+
 - (void)handleCancel:(MXKeyVerificationCancel *)cancelContent
 {
     self.reasonCancelCode = [[MXTransactionCancelCode alloc] initWithValue:cancelContent.code
@@ -151,25 +170,6 @@ NSString * const MXKeyVerificationMethodReciprocate = @"m.reciprocate.v1";
     
     self.startContent = start;
     self.state = MXQRCodeTransactionStateQRScannedByOther;
-}
-
-- (void)userHasScannedOtherQrCodeData:(MXQRCodeData*)otherQRCodeData
-{
-    BOOL isOtherQRCodeDataKeysValid = [self.manager isOtherQRCodeDataKeysValid:otherQRCodeData otherUserId:self.otherUserId otherDevice:self.otherDevice];
-    
-    if (!isOtherQRCodeDataKeysValid)
-    {
-        [self cancelWithCancelCode:MXTransactionCancelCode.mismatchedKeys];
-        return;
-    }
-    
-    // All checks are correct. Send the shared secret so that sender can trust me.
-    // otherQRCodeData.sharedSecret will be used to send the start request
-    [self startWithOtherQRCodeSharedSecret:otherQRCodeData.sharedSecret success:^{
-        [self trustOtherWithOtherQRCodeData:otherQRCodeData];
-    } failure:^(NSError *error) {
-        [self cancelWithCancelCode:MXTransactionCancelCode.invalidMessage];
-    }];
 }
 
 - (void)startWithOtherQRCodeSharedSecret:(NSData*)otherQRCodeSharedSecret success:(dispatch_block_t)success failure:(void (^)(NSError* error))failure;
