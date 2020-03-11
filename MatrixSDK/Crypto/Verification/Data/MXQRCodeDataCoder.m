@@ -65,7 +65,7 @@ static NSUInteger const kQRCodeFormatVersion = 2;
     NSInputStream *inputStream = [NSInputStream inputStreamWithData:data];
     [inputStream open];
     
-    // Found the ASCII string "MATRIX"
+    // Find the ASCII string "MATRIX"
     
     NSUInteger prefixLength = self.prefixData.length;
     uint8_t prefixBuffer[prefixLength];
