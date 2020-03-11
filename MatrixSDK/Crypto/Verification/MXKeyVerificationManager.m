@@ -815,7 +815,7 @@ static NSArray<MXEventTypeString> *kMXKeyVerificationManagerDMEventTypes;
     }
     else
     {
-        NSLog(@"[MXKeyVerification] handleCancelEvent. Invalid event: %@", event);
+        NSLog(@"[MXKeyVerification] handleCancelEvent. Invalid event: %@", event.JSONDictionary);
     }
 }
 
