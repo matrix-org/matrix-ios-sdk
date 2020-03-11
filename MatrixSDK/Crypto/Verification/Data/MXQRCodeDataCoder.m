@@ -208,7 +208,7 @@ static NSUInteger const kQRCodeFormatVersion = 2;
     
     if (currenReadBytesCount < 0)
     {
-        NSLog(@"[MXQRCodeDataCoder] Fail to parse first key inputStream.streamError: %@", inputStream.streamError);
+        NSLog(@"[MXQRCodeDataCoder] Fail to parse second key inputStream.streamError: %@", inputStream.streamError);
         return nil;
     }
     
