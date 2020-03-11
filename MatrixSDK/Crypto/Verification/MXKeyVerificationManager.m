@@ -328,7 +328,7 @@ static NSArray<MXEventTypeString> *kMXKeyVerificationManagerDMEventTypes;
 }
 
 - (void)createQRCodeTransactionFromRequest:(MXKeyVerificationRequest*)request
-                                qrCodeData:(MXQRCodeData*)qrCodeData
+                                qrCodeData:(nullable MXQRCodeData*)qrCodeData
                                    success:(void(^)(MXQRCodeTransaction *transaction))success
                                    failure:(void(^)(NSError *error))failure
 {
@@ -385,7 +385,7 @@ static NSArray<MXEventTypeString> *kMXKeyVerificationManagerDMEventTypes;
                                         failure:failure];
 }
 
-- (void)createQRCodeTransactionWithQRCodeData:(MXQRCodeData*)qrCodeData
+- (void)createQRCodeTransactionWithQRCodeData:(nullable MXQRCodeData*)qrCodeData
                                        userId:(NSString*)userId
                                      deviceId:(NSString*)deviceId
                                 transactionId:(nullable NSString*)transactionId
@@ -436,7 +436,9 @@ static NSArray<MXEventTypeString> *kMXKeyVerificationManagerDMEventTypes;
         
     } failure:^(NSError *error) {
         NSLog(@"[MXKeyVerification] createQRCodeTransaction: Error: %@", error);
-        failure(error);
+        dispatch_async(dispatch_get_main_queue(), ^{
+            failure(error);
+        }
     }];
 }
 
@@ -706,7 +708,6 @@ static NSArray<MXEventTypeString> *kMXKeyVerificationManagerDMEventTypes;
         }
 
         [self removeTransactionWithTransactionId:keyVerificationStart.transactionId];
-        return;
     }
 }
 

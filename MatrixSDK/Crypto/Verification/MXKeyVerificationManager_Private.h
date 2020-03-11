@@ -80,8 +80,6 @@ NS_ASSUME_NONNULL_BEGIN
                                      andSupportedMethods:(NSArray<NSString*>*)supportedMethods
                                               completion:(void (^)(NSArray<NSString*>* readyMethods, MXQRCodeData * _Nullable qrCodeData))completion;
 
-- (MXQRCodeData*)createQRCodeDataWithTransactionId:(NSString*)transactionId otherUserId:(NSString*)otherUserId otherDeviceId:(NSString*)otherDeviceId;
-
 - (void)createQRCodeTransactionWithQRCodeData:(nullable MXQRCodeData*)qrCodeData
                                        userId:(NSString*)userId
                                      deviceId:(NSString*)deviceId
