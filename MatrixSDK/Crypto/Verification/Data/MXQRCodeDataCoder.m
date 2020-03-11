@@ -28,7 +28,7 @@ static NSUInteger const kQRCodeFormatVersion = 2;
 static NSUInteger const kQRCodeFormatMinimumDataByteCount = 10;
 static NSUInteger const kQRCodeFormatVersionByteCount = 1;
 static NSUInteger const kQRCodeFormatVerificationModeByteCount = 1;
-static NSUInteger const kQRCodeFormatTransactionIdByteCount = 2;
+static NSUInteger const kQRCodeFormatTransactionIdLengthByteCount = 2;
 static NSUInteger const kQRCodeFormatKeyByteCount = 32;
 static NSUInteger const kQRCodeFormatMinimumSharedSecretByteCount = 8;
 
@@ -140,10 +140,10 @@ static NSUInteger const kQRCodeFormatMinimumSharedSecretByteCount = 8;
     }
     
     // Find the transaction id length
-    uint8_t transactionIdLengthBuffer[kQRCodeFormatTransactionIdByteCount];
+    uint8_t transactionIdLengthBuffer[kQRCodeFormatTransactionIdLengthByteCount];
     
     // Cannot read big-endian with NSInputStream so just go forward and use -[NSData getBytes] to extract transaction id length
-    currenReadBytesCount = [inputStream read:transactionIdLengthBuffer maxLength:kQRCodeFormatTransactionIdByteCount];
+    currenReadBytesCount = [inputStream read:transactionIdLengthBuffer maxLength:kQRCodeFormatTransactionIdLengthByteCount];
     
     if (currenReadBytesCount < 0)
     {
@@ -153,7 +153,7 @@ static NSUInteger const kQRCodeFormatMinimumSharedSecretByteCount = 8;
     
     uint16_t transactionIdLengthBigEndian;
     
-    [data getBytes:&transactionIdLengthBigEndian range:NSMakeRange(totalReadBytesCount, kQRCodeFormatTransactionIdByteCount)];
+    [data getBytes:&transactionIdLengthBigEndian range:NSMakeRange(totalReadBytesCount, kQRCodeFormatTransactionIdLengthByteCount)];
     
     totalReadBytesCount += currenReadBytesCount;
     
