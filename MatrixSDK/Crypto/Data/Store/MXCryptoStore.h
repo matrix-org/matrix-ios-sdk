@@ -370,6 +370,33 @@
 - (MXUsersDevicesMap<NSArray<MXIncomingRoomKeyRequest *> *> *)incomingRoomKeyRequests;
 
 
+#pragma mark - Secret storage
+
+/**
+ Store a secret.
+ 
+ @param secret the secret.
+ @param secretId the id of the secret.
+ */
+- (void)storeSecret:(NSString*)secret withSecretId:(NSString*)secretId;
+
+/**
+ Retrieve a secret.
+ 
+ @param secretId the id of the secret.
+ @return the secret. Nil if the secret does not exist.
+ */
+- (NSString*)secretWithSecretId:(NSString*)secretId;
+
+
+/**
+ Delete a secret.
+ 
+ @param secretId the id of the secret.
+ */
+- (void)deleteSecretWithSecretId:(NSString*)secretId;
+
+
 #pragma mark - Crypto settings
 
 /**

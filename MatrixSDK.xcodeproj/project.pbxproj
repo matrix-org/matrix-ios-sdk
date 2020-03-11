@@ -360,6 +360,26 @@
 		32A9E8241EF4026E0081358A /* MXBackgroundModeHandler.h in Headers */ = {isa = PBXBuildFile; fileRef = 32A9E8211EF4026E0081358A /* MXBackgroundModeHandler.h */; };
 		32A9E8251EF4026E0081358A /* MXUIKitBackgroundModeHandler.h in Headers */ = {isa = PBXBuildFile; fileRef = 32A9E8221EF4026E0081358A /* MXUIKitBackgroundModeHandler.h */; };
 		32A9E8261EF4026E0081358A /* MXUIKitBackgroundModeHandler.m in Sources */ = {isa = PBXBuildFile; fileRef = 32A9E8231EF4026E0081358A /* MXUIKitBackgroundModeHandler.m */; };
+		32AF927D240EA0190008A0FD /* MXSecretShareManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 32AF927B240EA0190008A0FD /* MXSecretShareManager.m */; };
+		32AF927E240EA0190008A0FD /* MXSecretShareManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 32AF927B240EA0190008A0FD /* MXSecretShareManager.m */; };
+		32AF927F240EA0190008A0FD /* MXSecretShareManager.h in Headers */ = {isa = PBXBuildFile; fileRef = 32AF927C240EA0190008A0FD /* MXSecretShareManager.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		32AF9280240EA0190008A0FD /* MXSecretShareManager.h in Headers */ = {isa = PBXBuildFile; fileRef = 32AF927C240EA0190008A0FD /* MXSecretShareManager.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		32AF9284240EA2430008A0FD /* MXSecretShareRequest.h in Headers */ = {isa = PBXBuildFile; fileRef = 32AF9282240EA2430008A0FD /* MXSecretShareRequest.h */; };
+		32AF9285240EA2430008A0FD /* MXSecretShareRequest.h in Headers */ = {isa = PBXBuildFile; fileRef = 32AF9282240EA2430008A0FD /* MXSecretShareRequest.h */; };
+		32AF9286240EA2430008A0FD /* MXSecretShareRequest.m in Sources */ = {isa = PBXBuildFile; fileRef = 32AF9283240EA2430008A0FD /* MXSecretShareRequest.m */; };
+		32AF9287240EA2430008A0FD /* MXSecretShareRequest.m in Sources */ = {isa = PBXBuildFile; fileRef = 32AF9283240EA2430008A0FD /* MXSecretShareRequest.m */; };
+		32AF928A240EA3880008A0FD /* MXSecretShareSend.h in Headers */ = {isa = PBXBuildFile; fileRef = 32AF9288240EA3880008A0FD /* MXSecretShareSend.h */; };
+		32AF928B240EA3880008A0FD /* MXSecretShareSend.h in Headers */ = {isa = PBXBuildFile; fileRef = 32AF9288240EA3880008A0FD /* MXSecretShareSend.h */; };
+		32AF928C240EA3880008A0FD /* MXSecretShareSend.m in Sources */ = {isa = PBXBuildFile; fileRef = 32AF9289240EA3880008A0FD /* MXSecretShareSend.m */; };
+		32AF928D240EA3880008A0FD /* MXSecretShareSend.m in Sources */ = {isa = PBXBuildFile; fileRef = 32AF9289240EA3880008A0FD /* MXSecretShareSend.m */; };
+		32AF928F24110ADD0008A0FD /* MXSecretShareManager_Private.h in Headers */ = {isa = PBXBuildFile; fileRef = 32AF928E24110ADD0008A0FD /* MXSecretShareManager_Private.h */; };
+		32AF929024110ADD0008A0FD /* MXSecretShareManager_Private.h in Headers */ = {isa = PBXBuildFile; fileRef = 32AF928E24110ADD0008A0FD /* MXSecretShareManager_Private.h */; };
+		32AF9292241112850008A0FD /* MXCryptoSecretShareTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 32AF9291241112850008A0FD /* MXCryptoSecretShareTests.m */; };
+		32AF9293241112850008A0FD /* MXCryptoSecretShareTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 32AF9291241112850008A0FD /* MXCryptoSecretShareTests.m */; };
+		32AF929724115D8B0008A0FD /* MXPendingSecretShareRequest.h in Headers */ = {isa = PBXBuildFile; fileRef = 32AF929524115D8B0008A0FD /* MXPendingSecretShareRequest.h */; };
+		32AF929824115D8B0008A0FD /* MXPendingSecretShareRequest.h in Headers */ = {isa = PBXBuildFile; fileRef = 32AF929524115D8B0008A0FD /* MXPendingSecretShareRequest.h */; };
+		32AF929924115D8B0008A0FD /* MXPendingSecretShareRequest.m in Sources */ = {isa = PBXBuildFile; fileRef = 32AF929624115D8B0008A0FD /* MXPendingSecretShareRequest.m */; };
+		32AF929A24115D8B0008A0FD /* MXPendingSecretShareRequest.m in Sources */ = {isa = PBXBuildFile; fileRef = 32AF929624115D8B0008A0FD /* MXPendingSecretShareRequest.m */; };
 		32B0E33923A2989A0054FF1A /* MXEventReferenceChunk.h in Headers */ = {isa = PBXBuildFile; fileRef = 32B0E33723A2989A0054FF1A /* MXEventReferenceChunk.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		32B0E33A23A2989A0054FF1A /* MXEventReferenceChunk.h in Headers */ = {isa = PBXBuildFile; fileRef = 32B0E33723A2989A0054FF1A /* MXEventReferenceChunk.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		32B0E33B23A2989A0054FF1A /* MXEventReferenceChunk.m in Sources */ = {isa = PBXBuildFile; fileRef = 32B0E33823A2989A0054FF1A /* MXEventReferenceChunk.m */; };
@@ -1398,6 +1418,16 @@
 		32A9E8211EF4026E0081358A /* MXBackgroundModeHandler.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXBackgroundModeHandler.h; sourceTree = "<group>"; };
 		32A9E8221EF4026E0081358A /* MXUIKitBackgroundModeHandler.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXUIKitBackgroundModeHandler.h; sourceTree = "<group>"; };
 		32A9E8231EF4026E0081358A /* MXUIKitBackgroundModeHandler.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXUIKitBackgroundModeHandler.m; sourceTree = "<group>"; };
+		32AF927B240EA0190008A0FD /* MXSecretShareManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXSecretShareManager.m; sourceTree = "<group>"; };
+		32AF927C240EA0190008A0FD /* MXSecretShareManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXSecretShareManager.h; sourceTree = "<group>"; };
+		32AF9282240EA2430008A0FD /* MXSecretShareRequest.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MXSecretShareRequest.h; sourceTree = "<group>"; };
+		32AF9283240EA2430008A0FD /* MXSecretShareRequest.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MXSecretShareRequest.m; sourceTree = "<group>"; };
+		32AF9288240EA3880008A0FD /* MXSecretShareSend.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MXSecretShareSend.h; sourceTree = "<group>"; };
+		32AF9289240EA3880008A0FD /* MXSecretShareSend.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MXSecretShareSend.m; sourceTree = "<group>"; };
+		32AF928E24110ADD0008A0FD /* MXSecretShareManager_Private.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MXSecretShareManager_Private.h; sourceTree = "<group>"; };
+		32AF9291241112850008A0FD /* MXCryptoSecretShareTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MXCryptoSecretShareTests.m; sourceTree = "<group>"; };
+		32AF929524115D8B0008A0FD /* MXPendingSecretShareRequest.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MXPendingSecretShareRequest.h; sourceTree = "<group>"; };
+		32AF929624115D8B0008A0FD /* MXPendingSecretShareRequest.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MXPendingSecretShareRequest.m; sourceTree = "<group>"; };
 		32B0E33723A2989A0054FF1A /* MXEventReferenceChunk.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MXEventReferenceChunk.h; sourceTree = "<group>"; };
 		32B0E33823A2989A0054FF1A /* MXEventReferenceChunk.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MXEventReferenceChunk.m; sourceTree = "<group>"; };
 		32B0E33D23A378310054FF1A /* MXEventReference.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MXEventReference.h; sourceTree = "<group>"; };
@@ -2363,6 +2393,38 @@
 			name = Lib;
 			sourceTree = "<group>";
 		};
+		32AF927A240EA0190008A0FD /* Secret */ = {
+			isa = PBXGroup;
+			children = (
+				32AF929424115D3F0008A0FD /* Data */,
+				32AF9281240EA03F0008A0FD /* JSONModels */,
+				32AF927B240EA0190008A0FD /* MXSecretShareManager.m */,
+				32AF927C240EA0190008A0FD /* MXSecretShareManager.h */,
+				32AF928E24110ADD0008A0FD /* MXSecretShareManager_Private.h */,
+			);
+			path = Secret;
+			sourceTree = "<group>";
+		};
+		32AF9281240EA03F0008A0FD /* JSONModels */ = {
+			isa = PBXGroup;
+			children = (
+				32AF9282240EA2430008A0FD /* MXSecretShareRequest.h */,
+				32AF9283240EA2430008A0FD /* MXSecretShareRequest.m */,
+				32AF9288240EA3880008A0FD /* MXSecretShareSend.h */,
+				32AF9289240EA3880008A0FD /* MXSecretShareSend.m */,
+			);
+			path = JSONModels;
+			sourceTree = "<group>";
+		};
+		32AF929424115D3F0008A0FD /* Data */ = {
+			isa = PBXGroup;
+			children = (
+				32AF929524115D8B0008A0FD /* MXPendingSecretShareRequest.h */,
+				32AF929624115D8B0008A0FD /* MXPendingSecretShareRequest.m */,
+			);
+			path = Data;
+			sourceTree = "<group>";
+		};
 		32BBAE642178E99100D85F46 /* KeyBackup */ = {
 			isa = PBXGroup;
 			children = (
@@ -2464,6 +2526,7 @@
 		32C6F93919DD814400EA4E9C /* MatrixSDKTests */ = {
 			isa = PBXGroup;
 			children = (
+				32AF9291241112850008A0FD /* MXCryptoSecretShareTests.m */,
 				32C9B71723E81A1C00C6F30A /* MXCrossSigningVerificationTests.m */,
 				32D5D16223E400A600E3E37C /* MXRoomSummaryTrustTests.m */,
 				B11BD45B22CB8ABC0064D8B0 /* MXReplyEventParserTests.m */,
@@ -2616,6 +2679,7 @@
 		32FA10B21FA1C28100E54233 /* KeySharing */ = {
 			isa = PBXGroup;
 			children = (
+				32AF927A240EA0190008A0FD /* Secret */,
 				32FA10C31FA1C9F700E54233 /* Data */,
 				32FA10BF1FA1C9EE00E54233 /* MXOutgoingRoomKeyRequestManager.h */,
 				32FA10C01FA1C9EE00E54233 /* MXOutgoingRoomKeyRequestManager.m */,
@@ -2882,6 +2946,7 @@
 				32A1515B1DB525DA00400192 /* NSObject+sortedKeys.h in Headers */,
 				329D3E621E251027002E2F1E /* MXRoomSummaryUpdater.h in Headers */,
 				321B413F1E09937E009EEEC7 /* MXRoomSummary.h in Headers */,
+				32AF9284240EA2430008A0FD /* MXSecretShareRequest.h in Headers */,
 				B17982F52119E4A2001FD722 /* MXRoomCreateContent.h in Headers */,
 				32792BDC2296B90A00F4FC9D /* MXAggregatedEditsUpdater.h in Headers */,
 				327E9AEF2289C61100A98BC1 /* MXAggregations.h in Headers */,
@@ -2894,6 +2959,7 @@
 				327E9AD72284803100A98BC1 /* MXEventAnnotationChunk.h in Headers */,
 				323547D52226D3F500F15F94 /* MXWellKnown.h in Headers */,
 				32FFB4F0217E146A00C96002 /* MXRecoveryKey.h in Headers */,
+				32AF928A240EA3880008A0FD /* MXSecretShareSend.h in Headers */,
 				32133015228AF4EF0070BA9B /* MXRealmAggregationsStore.h in Headers */,
 				32CE6FB81A409B1F00317F1E /* MXFileStoreMetaData.h in Headers */,
 				32A31BC820D401FC005916C7 /* MXRoomFilter.h in Headers */,
@@ -2943,6 +3009,7 @@
 				327E9AFC228AC22800A98BC1 /* MXAggregationsStore.h in Headers */,
 				323547DC2226FC5700F15F94 /* MXCredentials.h in Headers */,
 				325AD43F23BE3E7500FF5277 /* MXCrossSigningInfo.h in Headers */,
+				32AF928F24110ADD0008A0FD /* MXSecretShareManager_Private.h in Headers */,
 				B176B25123EB03E4001879C6 /* MXAggregationPaginatedResponse_Private.h in Headers */,
 				021AFBA62179E91900742B2C /* MXEncryptedContentKey.h in Headers */,
 				327187891DA7DCE50071C818 /* MXOlmEncryption.h in Headers */,
@@ -3055,6 +3122,7 @@
 				32133019228B010C0070BA9B /* MXRealmReactionCount.h in Headers */,
 				3275FD9821A6B53300B9C13D /* MXLoginPolicyData.h in Headers */,
 				F082946D1DB66C3D00CEAB63 /* MXInvite3PID.h in Headers */,
+				32AF929724115D8B0008A0FD /* MXPendingSecretShareRequest.h in Headers */,
 				3233606F1A403A0D0071A488 /* MXFileStore.h in Headers */,
 				B146D4F621A5BB9F00D8C2C6 /* MXRealmMediaScanStore.h in Headers */,
 				32A1513E1DAF768D00400192 /* MXOlmInboundGroupSession.h in Headers */,
@@ -3062,6 +3130,7 @@
 				32FA10C11FA1C9EE00E54233 /* MXOutgoingRoomKeyRequestManager.h in Headers */,
 				3293C700214BBA4F009B3DDB /* MXPeekingRoomSummary.h in Headers */,
 				326056851C76FDF2009D44AD /* MXEventTimeline.h in Headers */,
+				32AF927F240EA0190008A0FD /* MXSecretShareManager.h in Headers */,
 				321CFDEE225264C4004D31DF /* NSArray+MatrixSDK.h in Headers */,
 				B11BD44822CB56790064D8B0 /* MXReplyEventParser.h in Headers */,
 				321CFDEA22525DEE004D31DF /* MXIncomingSASTransaction.h in Headers */,
@@ -3150,6 +3219,7 @@
 				B14EF2BA2397E90400758AF0 /* MXOutgoingRoomKeyRequest.h in Headers */,
 				B14EF2BB2397E90400758AF0 /* MXUsersDevicesMap.h in Headers */,
 				B14EF2BC2397E90400758AF0 /* MXAggregatedReactions.h in Headers */,
+				32AF9280240EA0190008A0FD /* MXSecretShareManager.h in Headers */,
 				B14EF2BD2397E90400758AF0 /* MXAggregationPaginatedResponse.h in Headers */,
 				B14EF2BE2397E90400758AF0 /* MXEvent.h in Headers */,
 				B14EF2BF2397E90400758AF0 /* MXRoomThirdPartyInvite.h in Headers */,
@@ -3176,6 +3246,7 @@
 				B14EF2D12397E90400758AF0 /* MXEventsEnumeratorOnArray.h in Headers */,
 				B14EF2D22397E90400758AF0 /* MXReplyEventParts.h in Headers */,
 				B14EF2D32397E90400758AF0 /* MXRoomMembersCount.h in Headers */,
+				32AF929024110ADD0008A0FD /* MXSecretShareManager_Private.h in Headers */,
 				B14EF2D42397E90400758AF0 /* MatrixSDK.h in Headers */,
 				B14EF2D52397E90400758AF0 /* MXReactionOperation.h in Headers */,
 				B14EF2D62397E90400758AF0 /* MXMegolmSessionData.h in Headers */,
@@ -3195,8 +3266,10 @@
 				B14EF2E32397E90400758AF0 /* MXDecrypting.h in Headers */,
 				B14EF2E42397E90400758AF0 /* MXStore.h in Headers */,
 				B14EF2E52397E90400758AF0 /* MXRoomNameDefaultStringLocalizations.h in Headers */,
+				32AF928B240EA3880008A0FD /* MXSecretShareSend.h in Headers */,
 				B14EF2E62397E90400758AF0 /* MXMegolmEncryption.h in Headers */,
 				B14EF2E72397E90400758AF0 /* MXLRUCache.h in Headers */,
+				32AF929824115D8B0008A0FD /* MXPendingSecretShareRequest.h in Headers */,
 				B14EF2E82397E90400758AF0 /* MXSendReplyEventDefaultStringLocalizations.h in Headers */,
 				B14EF2E92397E90400758AF0 /* MXTools.h in Headers */,
 				B14EF2EA2397E90400758AF0 /* MXDeviceListOperation.h in Headers */,
@@ -3334,6 +3407,7 @@
 				B14EF35D2397E90400758AF0 /* MXLogger.h in Headers */,
 				B14EF35E2397E90400758AF0 /* MXMegolmBackupCreationInfo.h in Headers */,
 				B14EF35F2397E90400758AF0 /* MXCryptoConstants.h in Headers */,
+				32AF9285240EA2430008A0FD /* MXSecretShareRequest.h in Headers */,
 				B14EF3602397E90400758AF0 /* MXHTTPClient.h in Headers */,
 				B14EF3612397E90400758AF0 /* MXMegolmBackupAuthData.h in Headers */,
 				B14EF3622397E90400758AF0 /* MXReactionCountChange.h in Headers */,
@@ -3661,6 +3735,7 @@
 				326056861C76FDF2009D44AD /* MXEventTimeline.m in Sources */,
 				327A5F4F239805F600ED6329 /* MXKeyVerificationAccept.m in Sources */,
 				327E9ABD2284521C00A98BC1 /* MXEventUnsignedData.m in Sources */,
+				32AF9286240EA2430008A0FD /* MXSecretShareRequest.m in Sources */,
 				32A1513A1DAD292400400192 /* MXMegolmEncryption.m in Sources */,
 				32F945F71FAB83D900622468 /* MXIncomingRoomKeyRequest.m in Sources */,
 				32D2CC09234336D6002BD8CA /* MX3PidAddManager.swift in Sources */,
@@ -3672,6 +3747,7 @@
 				92634B831EF2E3C400DB9F60 /* MXCallKitConfiguration.m in Sources */,
 				3265CB391A14C43E00E24B2F /* MXRoomState.m in Sources */,
 				3281E8B819E42DFE00976E1A /* MXJSONModel.m in Sources */,
+				32AF929924115D8B0008A0FD /* MXPendingSecretShareRequest.m in Sources */,
 				327E9AE22285497100A98BC1 /* MXEventContentRelatesTo.m in Sources */,
 				32A1514B1DAF7C0C00400192 /* MXUsersDevicesMap.m in Sources */,
 				328BCB3421947BE200A976D3 /* MXKeyBackupVersionTrust.m in Sources */,
@@ -3727,6 +3803,7 @@
 				F03EF5011DF014D9009DF592 /* MXMediaManager.m in Sources */,
 				32CAB10C1A925B41008C5BB9 /* MXHTTPOperation.m in Sources */,
 				32BBAE6C2178E99100D85F46 /* MXKeyBackupData.m in Sources */,
+				32AF928C240EA3880008A0FD /* MXSecretShareSend.m in Sources */,
 				3281E8BA19E42DFE00976E1A /* MXJSONModels.m in Sources */,
 				3245A7531AF7B2930001D8A7 /* MXCallManager.m in Sources */,
 				32E226A71D06AC9F00E6CA54 /* MXPeekingRoom.m in Sources */,
@@ -3800,6 +3877,7 @@
 				32BBAE752179CF4000D85F46 /* MXKeyBackup.m in Sources */,
 				322A51B71D9AB15900C8536D /* MXCrypto.m in Sources */,
 				B17982FB2119E4A2001FD722 /* MXRoomPredecessorInfo.m in Sources */,
+				32AF927D240EA0190008A0FD /* MXSecretShareManager.m in Sources */,
 				3294FD9E22F321B0007F1E60 /* MXServiceTerms.m in Sources */,
 				32DC15D11A8CF7AE006F9AD3 /* MXNotificationCenter.m in Sources */,
 				32637ED51E5B00400011E20D /* MXDeviceList.m in Sources */,
@@ -3852,6 +3930,7 @@
 				325653831A2E14ED00CC0423 /* MXStoreTests.m in Sources */,
 				3295719A1B024D2B00ABB3BA /* MXMockCallStackCall.m in Sources */,
 				B11BD45C22CB8ABC0064D8B0 /* MXReplyEventParserTests.m in Sources */,
+				32AF9292241112850008A0FD /* MXCryptoSecretShareTests.m in Sources */,
 				3281E8A019E2CC1200976E1A /* MXHTTPClientTests.m in Sources */,
 				321809B919EEBF3000377451 /* MXEventTests.m in Sources */,
 				32A31BC120D3F4C4005916C7 /* MXFilterTests.m in Sources */,
@@ -4010,6 +4089,7 @@
 				B14EF2342397E90400758AF0 /* MXCallKitAdapter.m in Sources */,
 				327C3E4E23A39D91006183D1 /* MXAggregatedReferencesUpdater.m in Sources */,
 				B14EF2352397E90400758AF0 /* MXRoomPowerLevels.swift in Sources */,
+				32AF9287240EA2430008A0FD /* MXSecretShareRequest.m in Sources */,
 				B14EF2362397E90400758AF0 /* MXAggregations.m in Sources */,
 				B14EF2372397E90400758AF0 /* MXKeyVerificationManager.m in Sources */,
 				B14EF2382397E90400758AF0 /* MXEvent.m in Sources */,
@@ -4027,6 +4107,7 @@
 				B14EF2442397E90400758AF0 /* NSObject+sortedKeys.m in Sources */,
 				B14EF2452397E90400758AF0 /* MXAggregatedReactionsUpdater.m in Sources */,
 				B14EF2462397E90400758AF0 /* MXRoomMembers.m in Sources */,
+				32AF927E240EA0190008A0FD /* MXSecretShareManager.m in Sources */,
 				B14EF2472397E90400758AF0 /* MXContentScanEncryptedBody.m in Sources */,
 				32CEEF4623AD2A6C0039BA98 /* MXCrossSigningKey.m in Sources */,
 				B14EF2482397E90400758AF0 /* MXEncryptedAttachments.m in Sources */,
@@ -4061,6 +4142,7 @@
 				324AAC7C2399140D00380A66 /* MXKeyVerificationStart.m in Sources */,
 				B14EF2632397E90400758AF0 /* MXReactionCountChange.m in Sources */,
 				324AAC762399140D00380A66 /* MXKeyVerificationCancel.m in Sources */,
+				32AF928D240EA3880008A0FD /* MXSecretShareSend.m in Sources */,
 				B14EF2642397E90400758AF0 /* MXKey.m in Sources */,
 				B14EF2652397E90400758AF0 /* MXIdentityServerRestClient.m in Sources */,
 				B14EF2662397E90400758AF0 /* MXSDKOptions.m in Sources */,
@@ -4088,6 +4170,7 @@
 				B14EF27A2397E90400758AF0 /* MXSessionEventListener.swift in Sources */,
 				B14EF27B2397E90400758AF0 /* MXOlmSessionResult.m in Sources */,
 				B14EF27C2397E90400758AF0 /* MXRestClient.swift in Sources */,
+				32AF929A24115D8B0008A0FD /* MXPendingSecretShareRequest.m in Sources */,
 				B14EF27D2397E90400758AF0 /* MXKeyBackup.m in Sources */,
 				B14EF27E2397E90400758AF0 /* MXCrypto.m in Sources */,
 				B14EF27F2397E90400758AF0 /* MXRoomPredecessorInfo.m in Sources */,
@@ -4146,6 +4229,7 @@
 				B1E09A422397FD820057C069 /* MXCryptoTests.m in Sources */,
 				B1E09A382397FD7D0057C069 /* MXUserTests.m in Sources */,
 				B1E09A212397FCE90057C069 /* DirectRoomTests.m in Sources */,
+				32AF9293241112850008A0FD /* MXCryptoSecretShareTests.m in Sources */,
 				B1E09A462397FD990057C069 /* MXMediaScanStoreTests.m in Sources */,
 				B1E09A292397FD080057C069 /* MXLoggerTests.m in Sources */,
 				B1E09A492398028D0057C069 /* MXSelfSignedHomeserverTests.m in Sources */,
