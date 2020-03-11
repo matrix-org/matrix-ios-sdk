@@ -266,7 +266,7 @@ NSString * const MXKeyVerificationMethodReciprocate = @"m.reciprocate.v1";
     NSString *currentUserId = self.manager.crypto.mxSession.myUser.userId;
     BOOL isSelfVerification = [currentUserId isEqualToString:self.otherUserId];
     
-    // If not me sign his MSK and upload the signature
+    // If not me, sign their MSK and upload the signature
     if (qrCodeData.verificationMode == MXQRCodeVerificationModeVerifyingAnotherUser && !isSelfVerification)
     {
         // we should trust this master key
