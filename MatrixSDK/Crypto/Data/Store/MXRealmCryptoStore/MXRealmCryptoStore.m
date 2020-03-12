@@ -247,6 +247,22 @@ RLM_ARRAY_TYPE(MXRealmOlmInboundGroupSession)
 
 @end
 
+
+@interface MXRealmSecret : RLMObject
+@property NSString *secretId;
+@property NSString *secret;
+@end
+
+@implementation MXRealmSecret
+
++ (NSString *)primaryKey
+{
+    return @"secretId";
+}
+@end
+RLM_ARRAY_TYPE(MXRealmSecret)
+
+
 #pragma mark - MXRealmCryptoStore
 
 @interface MXRealmCryptoStore ()
@@ -1052,6 +1068,38 @@ RLM_ARRAY_TYPE(MXRealmOlmInboundGroupSession)
     return incomingRoomKeyRequests;
 }
 
+
+#pragma mark - Secret storage
+
+- (void)storeSecret:(NSString*)secret withSecretId:(NSString*)secretId
+{
+    RLMRealm *realm = self.realm;
+    [realm transactionWithBlock:^{
+        
+        MXRealmSecret *realmSecret =
+        [[MXRealmSecret alloc] initWithValue:@{
+                                               @"secretId": secretId,
+                                               @"secret": secret,
+                                               }];
+        [realm addOrUpdateObject:realmSecret];
+    }];
+}
+
+- (NSString*)secretWithSecretId:(NSString*)secretId
+{
+    RLMResults<MXRealmSecret *> *realmSecrets = [MXRealmSecret objectsInRealm:self.realm where:@"secretId = %@", secretId];
+    return realmSecrets.firstObject.secret;
+}
+
+- (void)deleteSecretWithSecretId:(NSString*)secretId
+{
+    RLMRealm *realm = self.realm;
+    [realm transactionWithBlock:^{
+        [realm deleteObjects:[MXRealmSecret objectsInRealm:self.realm where:@"secretId = %@", secretId]];
+    }];
+}
+
+
 #pragma mark - Crypto settings
 
 - (BOOL)globalBlacklistUnverifiedDevices
@@ -1170,10 +1218,11 @@ RLM_ARRAY_TYPE(MXRealmOlmInboundGroupSession)
                              MXRealmUser.class,
                              MXRealmRoomAlgorithm.class,
                              MXRealmOlmSession.class,
-                             MXRealmOlmInboundGroupSession.class,
+                             MXRealmOlmInboundGroupSession.class,   
                              MXRealmOlmAccount.class,
                              MXRealmOutgoingRoomKeyRequest.class,
-                             MXRealmIncomingRoomKeyRequest.class
+                             MXRealmIncomingRoomKeyRequest.class,
+                             MXRealmSecret.class,
                              ];
 
     config.schemaVersion = kMXRealmCryptoStoreVersion;

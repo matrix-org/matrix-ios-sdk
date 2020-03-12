@@ -289,6 +289,36 @@
     }];
 }
 
+- (void)loginUserOnANewDevice:(MXCredentials*)credentials withPassword:(NSString*)password onComplete:(void (^)(MXSession *newSession))onComplete
+{
+    [MXSDKOptions sharedInstance].enableCryptoWhenStartingMXSession = YES;
+    
+    MXRestClient *mxRestClient = [[MXRestClient alloc] initWithHomeServer:credentials.homeServer
+                                        andOnUnrecognizedCertificateBlock:nil];
+    [matrixSDKTestsData retain:mxRestClient];
+    
+    [mxRestClient loginWithLoginType:kMXLoginFlowTypePassword username:credentials.userId password:password success:^(MXCredentials *credentials2) {
+        
+        MXRestClient *mxRestClient2 = [[MXRestClient alloc] initWithCredentials:credentials2 andOnUnrecognizedCertificateBlock:nil];
+        [matrixSDKTestsData retain:mxRestClient2];
+        
+        MXSession *newSession = [[MXSession alloc] initWithMatrixRestClient:mxRestClient2];
+        [matrixSDKTestsData retain:newSession];
+        
+        [newSession start:^{
+            [MXSDKOptions sharedInstance].enableCryptoWhenStartingMXSession = NO;
+            
+            onComplete(newSession);
+            
+        } failure:^(NSError *error) {
+            NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+        }];
+        
+    } failure:^(NSError *error) {
+        NSAssert(NO, @"Cannot log %@ in again. Error: %@", credentials.userId , error);
+    }];
+}
+
 
 #pragma mark - Tools
 

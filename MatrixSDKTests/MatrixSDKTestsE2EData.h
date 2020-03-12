@@ -80,6 +80,8 @@
                           warnOnUnknowDevices:(BOOL)warnOnUnknowDevices
                                   readyToTest:(void (^)(MXSession *aliceSession, MXSession *bobSession, MXSession *samSession, NSString *roomId, XCTestExpectation *expectation))readyToTest;
 
+- (void)loginUserOnANewDevice:(MXCredentials*)credentials withPassword:(NSString*)password onComplete:(void (^)(MXSession *newSession))onComplete;
+
 #pragma mark - Tools
 
 - (void)outgoingRoomKeyRequestInSession:(MXSession*)session complete:(void (^)(MXOutgoingRoomKeyRequest*))complete;
