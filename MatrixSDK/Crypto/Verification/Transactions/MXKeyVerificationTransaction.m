@@ -19,7 +19,6 @@
 
 #import "MXKeyVerificationManager_Private.h"
 #import "MXCrypto_Private.h"
-#import "MXKeyVerificationStart.h"
 
 #import "MXTools.h"
 
@@ -39,36 +38,6 @@ NSString * const MXKeyVerificationTransactionDidChangeNotification = @"MXKeyVeri
         _otherDevice = otherDevice;
         _transactionId = [MXKeyVerificationTransaction createUniqueIdWithOtherUser:self.otherUserId otherDevice:self.otherDeviceId myUser:manager.crypto.mxSession.matrixRestClient.credentials];
         _creationDate = [NSDate date];
-    }
-    return self;
-}
-
-- (nullable instancetype)initWithOtherDevice:(MXDeviceInfo*)otherDevice startEvent:(MXEvent *)event andManager:(MXKeyVerificationManager *)manager
-{
-    MXKeyVerificationStart *startContent;
-    MXJSONModelSetMXJSONModel(startContent, MXKeyVerificationStart, event.content);
-    if (!startContent || !startContent.isValid)
-    {
-        NSLog(@"[MXKeyVerificationTransaction]: ERROR: Invalid start event: %@", event);
-        return nil;
-    }
-
-    self = [self initWithOtherDevice:otherDevice andManager:manager];
-    if (self)
-    {
-        _startContent = startContent;
-        _transactionId = _startContent.transactionId;
-
-        // Detect verification by DM
-        if (startContent.relatedEventId)
-        {
-            [self setDirectMessageTransportInRoom:event.roomId originalEvent:startContent.relatedEventId];
-        }
-
-        // It would have been nice to timeout from the event creation date
-        // but we do not receive the information. originServerTs = 0
-        // So, use the time when we receive it instead
-        //_creationDate = [NSDate dateWithTimeIntervalSince1970: (event.originServerTs / 1000)];
     }
     return self;
 }
@@ -119,30 +88,11 @@ NSString * const MXKeyVerificationTransactionDidChangeNotification = @"MXKeyVeri
     });
 }
 
-- (void)handleAccept:(MXKeyVerificationAccept*)acceptContent
-{
-    // Must be handled by the specific implementation
-    NSAssert(NO, @"%@ does not implement handleAccept", self.class);
-}
-
 - (void)handleCancel:(MXKeyVerificationCancel*)cancelContent
 {
     // Must be handled by the specific implementation
     NSAssert(NO, @"%@ does not implement handleCancel", self.class);
 }
-
-- (void)handleKey:(MXKeyVerificationKey*)keyContent
-{
-    // Must be handled by the specific implementation
-    NSAssert(NO, @"%@ does not implement handleKey", self.class);
-}
-
-- (void)handleMac:(MXKeyVerificationMac*)macContent
-{
-    // Must be handled by the specific implementation
-    NSAssert(NO, @"%@ does not implement handleMac", self.class);
-}
-
 
 + (NSString*)createUniqueIdWithOtherUser:(NSString*)otherUser otherDevice:(NSString*)otherDevice myUser:(MXCredentials*)myUser
 {

@@ -33,6 +33,7 @@ typedef enum : NSUInteger
     MXKeyVerificationRequestStateExpired,
     MXKeyVerificationRequestStateCancelled,
     MXKeyVerificationRequestStateCancelledByMe,
+    MXKeyVerificationRequestStateReady,
     MXKeyVerificationRequestStateAccepted
 } MXKeyVerificationRequestState;
 

@@ -36,6 +36,8 @@ NS_ASSUME_NONNULL_BEGIN
                                                            success:(void(^)(MXKeyVerification *keyVerification))success
                                                            failure:(void(^)(NSError *error))failure;
 
+- (nullable MXKeyVerification*)keyVerificationFromRequest:(nullable MXKeyVerificationRequest*)request andTransaction:(nullable MXKeyVerificationTransaction*)transaction;
+
 @end
 
 NS_ASSUME_NONNULL_END

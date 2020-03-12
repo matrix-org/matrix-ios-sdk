@@ -14,32 +14,33 @@
  limitations under the License.
  */
 
-#import "MXKeyVerificationJSONModel.h"
+#import "MXVerifyingAnotherUserQRCodeData.h"
 
-NS_ASSUME_NONNULL_BEGIN
+@implementation MXVerifyingAnotherUserQRCodeData
 
-/**
- Sent by Alice to initiate an interactive key verification.
- */
-@interface MXKeyVerificationStart : MXKeyVerificationJSONModel
+- (MXQRCodeVerificationMode)verificationMode
+{
+    return MXQRCodeVerificationModeVerifyingAnotherUser;
+}
 
-/**
- The verification method to use.
- */
-@property (nonatomic, nullable) NSString *method;
+- (void)setFirstKey:(NSString *)firstKey
+{
+    _userCrossSigningMasterKeyPublic = firstKey;
+}
 
-/**
- Alice’s device ID.
- */
-@property (nonatomic) NSString *fromDevice;
+- (NSString *)firstKey
+{
+    return self.userCrossSigningMasterKeyPublic;
+}
 
-/**
- Check content validity.
+- (void)setSecondKey:(NSString *)secondKey
+{
+    _otherUserCrossSigningMasterKeyPublic = secondKey;
+}
 
- @return YES if valid.
- */
-- (BOOL)isValid;
+- (NSString *)secondKey
+{
+    return self.otherUserCrossSigningMasterKeyPublic;
+}
 
 @end
-
-NS_ASSUME_NONNULL_END

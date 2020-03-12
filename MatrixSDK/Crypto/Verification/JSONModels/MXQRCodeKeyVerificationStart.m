@@ -14,17 +14,23 @@
  limitations under the License.
  */
 
-#import "MXKeyVerificationStart.h"
+#import "MXQRCodeKeyVerificationStart.h"
 
-@implementation MXKeyVerificationStart
+#import "MXQRCodeTransaction.h"
+
+@implementation MXQRCodeKeyVerificationStart
 
 - (instancetype)initWithJSONDictionary:(NSDictionary *)JSONDictionary
 {
     self = [super initWithJSONDictionary:JSONDictionary];
     if (self)
     {
-        MXJSONModelSetString(_method, JSONDictionary[@"method"]);
-        MXJSONModelSetString(_fromDevice, JSONDictionary[@"from_device"]);
+        MXJSONModelSetString(_sharedSecret, JSONDictionary[@"secret"]);
+    }    
+    
+    if (!self.isValid)
+    {
+        return nil;
     }
     
     return self;
@@ -32,21 +38,27 @@
 
 - (NSDictionary *)JSONDictionary
 {
-    NSMutableDictionary *JSONDictionary = [@{
-                                             @"method": _method,
-                                             @"from_device": _fromDevice,
-                                             } mutableCopy];
-
+    NSMutableDictionary *JSONDictionary = [[super JSONDictionary] mutableCopy];
+    
+    JSONDictionary[@"secret"] = _sharedSecret;
+    
     [JSONDictionary addEntriesFromDictionary:self.JSONDictionaryWithTransactionId];
-
+    
     return JSONDictionary;
 }
 
 - (BOOL)isValid
 {
-    // Must be handled by the specific implementation
-    NSAssert(NO, @"%@ does not implement isValid", self.class);
-    return NO;
+    if (self.fromDevice.length == 0
+        || self.method.length == 0
+        || ![self.method isEqualToString:MXKeyVerificationMethodReciprocate]
+        || self.sharedSecret.length == 0)
+    {
+        NSLog(@"[MXKeyVerification] Invalid MXQRCodeKeyVerificationStart: %@", self);
+        return NO;
+    }
+    
+    return YES;
 }
 
 @end

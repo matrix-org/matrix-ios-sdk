@@ -30,6 +30,7 @@ typedef NS_ENUM(NSInteger, MXKeyVerificationState)
     // First request states
     MXKeyVerificationStateRequestPending = 0,
     MXKeyVerificationStateRequestExpired,
+    MXKeyVerificationStateRequestReady,
     MXKeyVerificationStateRequestCancelled,
     MXKeyVerificationStateRequestCancelledByMe,
     // Once the request has been accepted, we have transaction states
@@ -38,8 +39,7 @@ typedef NS_ENUM(NSInteger, MXKeyVerificationState)
     MXKeyVerificationStateTransactionCancelledByMe,
     MXKeyVerificationStateTransactionFailed,
 
-    MXKeyVerificationStateVerified,
-
+    MXKeyVerificationStateVerified
 };
 
 /**

@@ -14,31 +14,16 @@
  limitations under the License.
  */
 
-#import "MXKeyVerificationJSONModel.h"
+#import <OLMKit/OLMKit.h>
 
 NS_ASSUME_NONNULL_BEGIN
 
 /**
- Sent by Alice to initiate an interactive key verification.
+ The `MXKeyVerificationTransaction` extension exposes internal operations.
  */
-@interface MXKeyVerificationStart : MXKeyVerificationJSONModel
+@interface MXIncomingSASTransaction ()
 
-/**
- The verification method to use.
- */
-@property (nonatomic, nullable) NSString *method;
-
-/**
- Alice’s device ID.
- */
-@property (nonatomic) NSString *fromDevice;
-
-/**
- Check content validity.
-
- @return YES if valid.
- */
-- (BOOL)isValid;
+- (nullable instancetype)initWithOtherDevice:(MXDeviceInfo*)otherDevice startEvent:(MXEvent *)event andManager:(MXKeyVerificationManager *)manager;
 
 @end
 

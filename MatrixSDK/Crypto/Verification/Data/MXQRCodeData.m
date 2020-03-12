@@ -14,32 +14,17 @@
  limitations under the License.
  */
 
-#import "MXKeyVerificationJSONModel.h"
+#import "MXQRCodeData.h"
 
-NS_ASSUME_NONNULL_BEGIN
+static NSUInteger const kQRCodeFormatVersion = 2;
 
-/**
- Sent by Alice to initiate an interactive key verification.
- */
-@interface MXKeyVerificationStart : MXKeyVerificationJSONModel
+@implementation MXQRCodeData
 
-/**
- The verification method to use.
- */
-@property (nonatomic, nullable) NSString *method;
+@synthesize verificationMode;
 
-/**
- Alice’s device ID.
- */
-@property (nonatomic) NSString *fromDevice;
-
-/**
- Check content validity.
-
- @return YES if valid.
- */
-- (BOOL)isValid;
+- (NSUInteger)version
+{
+    return kQRCodeFormatVersion;
+}
 
 @end
-
-NS_ASSUME_NONNULL_END

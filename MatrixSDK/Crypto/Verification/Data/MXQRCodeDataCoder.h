@@ -14,31 +14,33 @@
  limitations under the License.
  */
 
-#import "MXKeyVerificationJSONModel.h"
+#import <Foundation/Foundation.h>
+
+#import "MXQRCodeDataCodable.h"
+#import "MXQRCodeData.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
 /**
- Sent by Alice to initiate an interactive key verification.
+ MXQRCodeDataCoder is used to parse or encode QR code binary format.
  */
-@interface MXKeyVerificationStart : MXKeyVerificationJSONModel
+@interface MXQRCodeDataCoder : NSObject
 
 /**
- The verification method to use.
+ Parse an MXQRCodeData subclass from raw data.
+
+ @param data QR code binary data.
+ @return Approriate MXQRCodeData subclass or nil if binary data are not valid.
  */
-@property (nonatomic, nullable) NSString *method;
+- (nullable MXQRCodeData*)decode:(NSData*)data;
 
 /**
- Alice’s device ID.
- */
-@property (nonatomic) NSString *fromDevice;
+ Encode a QR code format class conforming to MXQRCodeDataCodable.
 
-/**
- Check content validity.
-
- @return YES if valid.
+ @param qrCodeDataCodable QR code format class.
+ @return QR code binary data.
  */
-- (BOOL)isValid;
+- (NSData*)encode:(id <MXQRCodeDataCodable>)qrCodeDataCodable;
 
 @end
 

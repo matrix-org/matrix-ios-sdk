@@ -14,31 +14,31 @@
  limitations under the License.
  */
 
-#import "MXKeyVerificationJSONModel.h"
+#import <Foundation/Foundation.h>
 
 NS_ASSUME_NONNULL_BEGIN
 
-/**
- Sent by Alice to initiate an interactive key verification.
- */
-@interface MXKeyVerificationStart : MXKeyVerificationJSONModel
+@interface MXBase64Tools : NSObject
 
-/**
- The verification method to use.
- */
-@property (nonatomic, nullable) NSString *method;
+#pragma mark - Padding
 
-/**
- Alice’s device ID.
- */
-@property (nonatomic) NSString *fromDevice;
++ (NSString *)base64ToUnpaddedBase64:(NSString *)base64;
 
-/**
- Check content validity.
++ (NSString *)padBase64:(NSString *)unpadded;
 
- @return YES if valid.
- */
-- (BOOL)isValid;
+#pragma mark - URL
+
++ (NSString *)base64UrlToBase64:(NSString *)base64Url;
+
++ (NSString *)base64ToBase64Url:(NSString *)base64;
+
+#pragma mark - Data
+
++ (NSData *)dataFromUnpaddedBase64:(NSString *)unpaddedBase64;
+
++ (NSString *)base64FromData:(NSData *)data;
+
++ (NSString *)unpaddedBase64FromData:(NSData *)data;
 
 @end
 

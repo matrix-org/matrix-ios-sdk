@@ -40,7 +40,7 @@
         return;
     }
 
-    MXKeyVerificationStart *startContent = [MXKeyVerificationStart new];
+    MXSASKeyVerificationStart *startContent = [MXSASKeyVerificationStart new];
     startContent.fromDevice = self.manager.crypto.myDevice.deviceId;
     startContent.method = MXKeyVerificationMethodSAS;
     startContent.transactionId = self.transactionId;
@@ -145,6 +145,13 @@
     if (self.state != MXSASTransactionStateWaitForPartnerKey)
     {
         NSLog(@"[MXKeyVerification][MXOutgoingSASTransaction] handleKey: wrong state: %@. keyContent: %@", self, keyContent);
+        [self cancelWithCancelCode:MXTransactionCancelCode.unexpectedMessage];
+        return;
+    }
+    
+    if (!keyContent.isValid)
+    {
+        NSLog(@"[MXKeyVerification][MXOutgoingSASTransaction] handleKey: key content is invalid. keyContent: %@", keyContent);
         [self cancelWithCancelCode:MXTransactionCancelCode.unexpectedMessage];
         return;
     }

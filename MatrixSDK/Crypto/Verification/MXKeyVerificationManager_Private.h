@@ -19,6 +19,7 @@
 #import "MXKeyVerificationTransaction_Private.h"
 
 @class MXCrypto;
+@class MXQRCodeData;
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -75,6 +76,27 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)removePendingRequestWithRequestId:(NSString*)requestId;
 
+- (void)computeReadyMethodsFromVerificationRequestWithId:(NSString*)transactionId
+                                     andSupportedMethods:(NSArray<NSString*>*)supportedMethods
+                                              completion:(void (^)(NSArray<NSString*>* readyMethods, MXQRCodeData * _Nullable qrCodeData))completion;
+
+- (MXQRCodeData*)createQRCodeDataWithTransactionId:(NSString*)transactionId otherUserId:(NSString*)otherUserId otherDeviceId:(NSString*)otherDeviceId;
+
+- (void)createQRCodeTransactionWithQRCodeData:(nullable MXQRCodeData*)qrCodeData
+                                       userId:(NSString*)userId
+                                     deviceId:(NSString*)deviceId
+                                transactionId:(nullable NSString*)transactionId
+                                     dmRoomId:(nullable NSString*)dmRoomId
+                                    dmEventId:(nullable NSString*)dmEventId
+                                      success:(void(^)(MXQRCodeTransaction *transaction))success
+                                      failure:(void(^)(NSError *error))failure;
+
+- (void)createQRCodeTransactionFromRequest:(MXKeyVerificationRequest*)request
+                                qrCodeData:(nullable MXQRCodeData*)qrCodeData
+                                   success:(void(^)(MXQRCodeTransaction *transaction))success
+                                   failure:(void(^)(NSError *error))failure;
+
+- (BOOL)isOtherQRCodeDataKeysValid:(MXQRCodeData*)otherQRCodeData otherUserId:(NSString*)otherUserId otherDevice:(MXDeviceInfo*)otherDevice;
 
 #pragma mark - Transactions
 

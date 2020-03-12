@@ -57,6 +57,22 @@ FOUNDATION_EXPORT NSString *MatrixSDKVersion;
 #import "MXEncryptedContentFile.h"
 #import "MXEncryptedContentKey.h"
 #import "MXKeyVerificationStart.h"
+#import "MXKeyVerificationAccept.h"
+#import "MXKeyVerificationCancel.h"
+#import "MXKeyVerificationDone.h"
+#import "MXKeyVerificationKey.h"
+#import "MXKeyVerificationMac.h"
+#import "MXKeyVerificationRequestByDMJSONModel.h"
+#import "MXSASKeyVerificationStart.h"
+#import "MXQRCodeKeyVerificationStart.h"
+
+#import "MXQRCodeDataCodable.h"
+#import "MXQRCodeDataBuilder.h"
+#import "MXQRCodeDataCoder.h"
+#import "MXQRCodeData.h"
+#import "MXVerifyingAnotherUserQRCodeData.h"
+#import "MXSelfVerifyingMasterKeyTrustedQRCodeData.h"
+#import "MXSelfVerifyingMasterKeyNotTrustedQRCodeData.h"
 
 #import "MXBugReportRestClient.h"
 

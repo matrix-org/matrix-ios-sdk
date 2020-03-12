@@ -35,13 +35,10 @@ NS_ASSUME_NONNULL_BEGIN
 @interface MXKeyVerificationTransaction ()
 
 @property (nonatomic, readonly, weak) MXKeyVerificationManager *manager;
-@property (nonatomic, nullable) MXKeyVerificationStart *startContent;
+@property (nonatomic, readwrite) NSString *transactionId;
 
 - (instancetype)initWithOtherDevice:(MXDeviceInfo*)otherDevice andManager:(MXKeyVerificationManager*)manager;
 
-- (nullable instancetype)initWithOtherDevice:(MXDeviceInfo*)otherDevice startEvent:(MXEvent *)event andManager:(MXKeyVerificationManager *)manager;
-
-@property (nonatomic) NSString *transactionId;
 - (void)setDirectMessageTransportInRoom:(NSString*)roomId originalEvent:(NSString*)eventId;
 
 - (void)didUpdateState;
@@ -57,10 +54,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 #pragma mark - Incoming to_device events
 
-- (void)handleAccept:(MXKeyVerificationAccept*)acceptContent;
 - (void)handleCancel:(MXKeyVerificationCancel*)cancelContent;
-- (void)handleKey:(MXKeyVerificationKey*)keyContent;
-- (void)handleMac:(MXKeyVerificationMac*)macContent;
 
 @end
 

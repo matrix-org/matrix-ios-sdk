@@ -14,31 +14,17 @@
  limitations under the License.
  */
 
-#import "MXKeyVerificationJSONModel.h"
+#import "MXQRCodeData.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
-/**
- Sent by Alice to initiate an interactive key verification.
- */
-@interface MXKeyVerificationStart : MXKeyVerificationJSONModel
+@interface MXSelfVerifyingMasterKeyNotTrustedQRCodeData : MXQRCodeData
 
-/**
- The verification method to use.
- */
-@property (nonatomic, nullable) NSString *method;
+// then the current device's device key
+@property (nonatomic, strong, readonly, nullable) NSString *currentDeviceKey;
 
-/**
- Alice’s device ID.
- */
-@property (nonatomic) NSString *fromDevice;
-
-/**
- Check content validity.
-
- @return YES if valid.
- */
-- (BOOL)isValid;
+// what the device thinks the user's master cross-signing key is
+@property (nonatomic, strong, readonly, nullable) NSString *userCrossSigningMasterKeyPublic;
 
 @end
 

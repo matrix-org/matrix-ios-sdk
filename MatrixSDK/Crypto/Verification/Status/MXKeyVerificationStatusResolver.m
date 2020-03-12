@@ -24,6 +24,8 @@
 
 #import "MXKeyVerificationCancel.h"
 
+#import "MXQRCodeTransaction.h"
+#import "MXSASTransaction.h"
 
 @interface MXKeyVerificationStatusResolver ()
 @property (nonatomic, weak) MXKeyVerificationManager *manager;
@@ -32,6 +34,8 @@
 
 
 @implementation MXKeyVerificationStatusResolver
+
+#pragma mark - Setup
 
 - (instancetype)initWithManager:(MXKeyVerificationManager*)manager matrixSession:(MXSession*)matrixSession;
 
@@ -45,6 +49,7 @@
     return self;
 }
 
+#pragma mark - Public
 
 - (nullable MXHTTPOperation *)keyVerificationWithKeyVerificationId:(NSString*)keyVerificationId
                                                              event:(MXEvent*)event
@@ -93,6 +98,33 @@
     return operation;
 }
 
+- (nullable MXKeyVerification*)keyVerificationFromRequest:(nullable MXKeyVerificationRequest*)request andTransaction:(nullable MXKeyVerificationTransaction*)transaction
+{
+    if (!request && !transaction)
+    {
+        return nil;
+    }
+    
+    MXKeyVerification *keyVerification = [MXKeyVerification new];
+    
+    MXKeyVerificationState state = [self stateFromRequest:request andTransaction:transaction];
+    
+    if (transaction && state >= MXKeyVerificationStateTransactionStarted)
+    {
+        keyVerification.transaction = transaction;
+    }
+    else
+    {
+        keyVerification.request = request;
+    }
+    
+    keyVerification.state = state;
+    
+    return keyVerification;
+}
+
+#pragma mark - Private
+
 - (nullable MXHTTPOperation *)eventsInVerificationByDMThreadFromOriginalEventId:(NSString*)originalEventId
                                                                          inRoom:(NSString*)roomId
                                                                         success:(void(^)(MXEvent *originalEvent, NSArray<MXEvent*> *events))success
@@ -124,60 +156,157 @@
 - (nullable MXKeyVerificationByDMRequest*)verificationRequestInDMEvent:(MXEvent*)event events:(NSArray<MXEvent*> *)events
 {
     MXKeyVerificationByDMRequest *request;
-    if ([event.content[@"msgtype"] isEqualToString:kMXMessageTypeKeyVerificationRequest])
+    if (![event.content[@"msgtype"] isEqualToString:kMXMessageTypeKeyVerificationRequest])
     {
-        request = [[MXKeyVerificationByDMRequest alloc] initWithEvent:event andManager:self.manager];
-        if (request)
+        return nil;
+    }
+    
+    request = [[MXKeyVerificationByDMRequest alloc] initWithEvent:event andManager:self.manager];
+    
+    if (!request)
+    {
+        return nil;
+    }
+    
+    MXKeyVerificationRequestState requestState = MXKeyVerificationRequestStatePending;
+    NSString *myUserId = self.mxSession.myUser.userId;
+    
+    MXEvent *firstEvent = events.firstObject;
+    if (firstEvent.eventType == MXEventTypeKeyVerificationCancel)
+    {
+        // If the first event is a cancel, the request has been cancelled
+        // by me or declined by the other
+        if ([firstEvent.sender isEqualToString:myUserId])
         {
-            NSString *myUserId = self.mxSession.myUser.userId;
-
-            MXEvent *firstEvent = events.firstObject;
-            if (firstEvent.eventType == MXEventTypeKeyVerificationCancel)
+            requestState = MXKeyVerificationRequestStateCancelledByMe;
+        }
+        else
+        {
+            requestState = MXKeyVerificationRequestStateCancelled;
+        }
+    }
+    else if (events.count)
+    {
+        // If there are events but no cancel event at first, the transaction
+        // has started = the request has been accepted
+        for (MXEvent *event in events)
+        {
+            // In case the other sent a ready event, store its content
+            if (event.eventType == MXEventTypeKeyVerificationReady)
             {
-                // If the first event is a cancel, the request has been cancelled
-                // by me or declined by the other
-                if ([firstEvent.sender isEqualToString:myUserId])
+                // Avoid to overwrite requestState if value was set to MXKeyVerificationRequestStateAccepted
+                if (requestState != MXKeyVerificationRequestStateAccepted)
                 {
-                    [request updateState:MXKeyVerificationRequestStateCancelledByMe notifiy:NO];
+                    requestState = MXKeyVerificationRequestStateReady;
                 }
-                else
-                {
-                    [request updateState:MXKeyVerificationRequestStateCancelled notifiy:NO];
-                }
+                
+                MXKeyVerificationReady *keyVerificationReady;
+                MXJSONModelSetMXJSONModel(keyVerificationReady, MXKeyVerificationReady, event.content);
+                request.acceptedData = keyVerificationReady;
             }
-            else if (events.count)
+            // For SAS or QR code if I sent MXEventTypeKeyVerificationStart I have accepted the request.
+            else if (event.eventType == MXEventTypeKeyVerificationStart)
             {
-                // If there are events but no cancel event at first, the transaction
-                // has started = the request has been accepted
-                for (MXEvent *event in events)
-                {
-                    // In case the other sent a ready event, store its content
-                    if (event.eventType == MXEventTypeKeyVerificationReady)
-                    {
-                        MXKeyVerificationReady *keyVerificationReady;
-                        MXJSONModelSetMXJSONModel(keyVerificationReady, MXKeyVerificationReady, event.content);
-                        request.acceptedData = keyVerificationReady;
-                    }
-                }
-        
-                [request updateState:MXKeyVerificationRequestStateAccepted notifiy:NO];
-            }
-            // There is only the request event. What is the status of it?
-            else if (![self.manager isRequestStillValid:request])
-            {
-                [request updateState:MXKeyVerificationRequestStateExpired notifiy:NO];
-            }
-            else
-            {
-                [request updateState:MXKeyVerificationRequestStatePending notifiy:NO];
+                requestState = MXKeyVerificationRequestStateAccepted;
             }
         }
     }
+    // There is only the request event. What is the status of it?
+    else if (![self.manager isRequestStillValid:request])
+    {
+        requestState = MXKeyVerificationRequestStateExpired;
+    }
+    else
+    {
+        requestState = MXKeyVerificationRequestStatePending;
+    }
+    
+    [request updateState:requestState notifiy:NO];
+
     return request;
 }
 
 
 - (MXKeyVerificationState)stateFromRequestState:(MXKeyVerificationRequestState)requestState andEvents:(NSArray<MXEvent*> *)events
+{
+    MXKeyVerificationState state;
+    
+    if (requestState == MXKeyVerificationRequestStateAccepted)
+    {
+        state = [self computeTranscationStateWithEvents:events];
+    }
+    else
+    {
+        state = [self stateFromRequestState:requestState];
+    }
+
+    return state;
+}
+
+- (MXKeyVerificationState)computeTranscationStateWithEvents:(NSArray<MXEvent*> *)events
+{
+    MXKeyVerificationState state = MXKeyVerificationStateTransactionStarted;
+    
+    BOOL exitLoop = NO;
+    
+    for (MXEvent *event in events)
+    {
+        NSString *myUserId = self.mxSession.myUser.userId;
+        
+        switch (event.eventType)
+        {
+            case MXEventTypeKeyVerificationCancel:
+            {
+                MXKeyVerificationCancel *cancel;
+                MXJSONModelSetMXJSONModel(cancel, MXKeyVerificationCancel.class, event.content);
+                
+                NSString *cancelCode = cancel.code;
+                if ([cancelCode isEqualToString:MXTransactionCancelCode.user.value]
+                    || [cancelCode isEqualToString:MXTransactionCancelCode.timeout.value])
+                {
+                    if ([event.sender isEqualToString:myUserId])
+                    {
+                        state = MXKeyVerificationStateTransactionCancelledByMe;
+                        exitLoop = YES;
+                    }
+                    else
+                    {
+                        state = MXKeyVerificationStateTransactionCancelled;
+                        exitLoop = YES;
+                    }
+                }
+                else
+                {
+                    state = MXKeyVerificationStateTransactionFailed;
+                    exitLoop = YES;
+                }
+                break;
+            }
+            case MXEventTypeKeyVerificationReady:
+                state = MXKeyVerificationStateRequestReady;
+                break;
+            case MXEventTypeKeyVerificationDone:
+                if ([event.sender isEqualToString:myUserId])
+                {
+                    state = MXKeyVerificationStateVerified;
+                    exitLoop = YES;
+                }
+                break;
+                
+            default:
+                break;
+        }
+        
+        if (exitLoop)
+        {
+            break;
+        }
+    }
+    
+    return state;
+}
+
+- (MXKeyVerificationState)stateFromRequestState:(MXKeyVerificationRequestState)requestState
 {
     MXKeyVerificationState state;
     switch (requestState)
@@ -194,60 +323,89 @@
         case MXKeyVerificationRequestStateCancelledByMe:
             state = MXKeyVerificationStateRequestCancelledByMe;
             break;
+        case MXKeyVerificationRequestStateReady:
+            state = MXKeyVerificationStateRequestReady;
+            break;
         case MXKeyVerificationRequestStateAccepted:
-            state = [self computeTranscationStateWithEvents:events];
+            state = MXKeyVerificationStateTransactionStarted;
             break;
     }
-
+    
     return state;
 }
 
-- (MXKeyVerificationState)computeTranscationStateWithEvents:(NSArray<MXEvent*> *)events
+- (MXKeyVerificationState)stateFromRequest:(nullable MXKeyVerificationRequest*)request andTransaction:(nullable MXKeyVerificationTransaction*)transaction
 {
-    for (MXEvent *event in events)
+    MXKeyVerificationState keyVerificationState = MXKeyVerificationStateRequestPending;
+    
+    if (transaction)
     {
-        NSString *myUserId = self.mxSession.myUser.userId;
-
-        switch (event.eventType)
+        if ([transaction isKindOfClass:MXQRCodeTransaction.class])
         {
-            case MXEventTypeKeyVerificationCancel:
-            {
-                MXKeyVerificationCancel *cancel;
-                MXJSONModelSetMXJSONModel(cancel, MXKeyVerificationCancel.class, event.content);
-
-                NSString *cancelCode = cancel.code;
-                if ([cancelCode isEqualToString:MXTransactionCancelCode.user.value]
-                    || [cancelCode isEqualToString:MXTransactionCancelCode.timeout.value])
-                {
-                    if ([event.sender isEqualToString:myUserId])
+            MXQRCodeTransaction *qrCodeTransaction = (MXQRCodeTransaction*)transaction;
+            
+            switch (qrCodeTransaction.state) {
+                case MXQRCodeTransactionStateUnknown:
+                    
+                    if (request)
                     {
-                        return MXKeyVerificationStateTransactionCancelledByMe;
+                        keyVerificationState = [self stateFromRequestState:request.state];
                     }
                     else
                     {
-                        return MXKeyVerificationStateTransactionCancelled;
+                        keyVerificationState = MXKeyVerificationStateRequestPending;
                     }
-                }
-                else
-                {
-                    return MXKeyVerificationStateTransactionFailed;
-                }
-                break;
+                    
+                    break;
+                case MXQRCodeTransactionStateQRScannedByOther:
+                case MXQRCodeTransactionStateScannedOtherQR:
+                    keyVerificationState = MXKeyVerificationStateTransactionStarted;
+                    break;
+                case MXQRCodeTransactionStateVerified:
+                    keyVerificationState = MXKeyVerificationStateVerified;
+                    break;
+                case MXQRCodeTransactionStateCancelled:
+                    keyVerificationState = MXKeyVerificationStateTransactionCancelled;
+                    break;
+                case MXQRCodeTransactionStateCancelledByMe:
+                    keyVerificationState = MXKeyVerificationStateTransactionCancelledByMe;
+                    break;
+                case MXQRCodeTransactionStateError:
+                    keyVerificationState = MXKeyVerificationStateTransactionFailed;
+                    break;
+                default:
+                    break;
             }
-
-            case MXEventTypeKeyVerificationDone:
-                if ([event.sender isEqualToString:myUserId])
-                {
-                    return MXKeyVerificationStateVerified;
-                }
-                break;
-
-            default:
-                break;
+        }
+        else if ([transaction isKindOfClass:MXSASTransaction.class])
+        {
+            MXSASTransaction *sasTransaction = (MXSASTransaction*)transaction;
+            
+            switch (sasTransaction.state) {
+                case MXSASTransactionStateVerified:
+                    keyVerificationState = MXKeyVerificationStateVerified;
+                    break;
+                case MXSASTransactionStateCancelled:
+                    keyVerificationState = MXKeyVerificationStateTransactionCancelled;
+                    break;
+                case MXSASTransactionStateCancelledByMe:
+                    keyVerificationState = MXKeyVerificationStateTransactionCancelledByMe;
+                    break;
+                case MXSASTransactionStateError:
+                    keyVerificationState = MXKeyVerificationStateTransactionFailed;
+                    break;
+                default:
+                    keyVerificationState = MXKeyVerificationStateTransactionStarted;
+                    break;
+            }
         }
     }
-
-    return MXKeyVerificationStateTransactionStarted;
+    else if (request)
+    {
+        keyVerificationState = [self stateFromRequestState:request.state];
+    }
+    
+    return keyVerificationState;
 }
 
 @end

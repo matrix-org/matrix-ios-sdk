@@ -25,6 +25,8 @@
 #import "MXIncomingSASTransaction.h"
 #import "MXOutgoingSASTransaction.h"
 
+#import "MXQRCodeTransaction.h"
+
 #import "MXEvent.h"
 #import "MXHTTPOperation.h"
 

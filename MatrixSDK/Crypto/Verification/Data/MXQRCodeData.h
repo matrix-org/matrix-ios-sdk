@@ -14,31 +14,24 @@
  limitations under the License.
  */
 
-#import "MXKeyVerificationJSONModel.h"
+#import <Foundation/Foundation.h>
+#import "MXQRCodeDataCodable.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
-/**
- Sent by Alice to initiate an interactive key verification.
- */
-@interface MXKeyVerificationStart : MXKeyVerificationJSONModel
+@interface MXQRCodeData : NSObject <MXQRCodeDataCodable>
 
-/**
- The verification method to use.
- */
-@property (nonatomic, nullable) NSString *method;
+// the event ID or transaction id of the associated verification request event
+@property (nonatomic, strong, readwrite) NSString *transactionId;
 
-/**
- Alice’s device ID.
- */
-@property (nonatomic) NSString *fromDevice;
+// the first key, as 32 bytes. The key to use depends on the verification mode
+@property (nonatomic, strong, readwrite) NSString *firstKey;
 
-/**
- Check content validity.
+// the second key, as 32 bytes. The key to use depends on the verification mode
+@property (nonatomic, strong, readwrite) NSString *secondKey;
 
- @return YES if valid.
- */
-- (BOOL)isValid;
+// random shared secret
+@property (nonatomic, strong, readwrite) NSData *sharedSecret;
 
 @end
 

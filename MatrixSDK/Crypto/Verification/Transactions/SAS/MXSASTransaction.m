@@ -140,6 +140,17 @@ static NSArray<MXEmojiRepresentation*> *kSasEmojis;
     return self;
 }
 
+- (void)handleAccept:(MXKeyVerificationAccept*)acceptContent
+{
+    // Must be handled by the specific implementation
+    NSAssert(NO, @"%@ does not implement handleAccept", self.class);
+}
+
+- (void)handleKey:(MXKeyVerificationKey*)keyContent
+{
+    // Must be handled by the specific implementation
+    NSAssert(NO, @"%@ does not implement handleKey", self.class);
+}
 
 - (NSString*)hashUsingAgreedHashMethod:(NSString*)string
 {
