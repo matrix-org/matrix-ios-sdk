@@ -187,27 +187,17 @@
     }
     else if (events.count)
     {
-        BOOL hasGoneToReadyState = NO;
-        BOOL hasGoneToAcceptState = NO;
-        
         // If there are events but no cancel event at first, the transaction
         // has started = the request has been accepted
         for (MXEvent *event in events)
         {
-            BOOL isEventSentByMe = [event.sender isEqualToString:myUserId];
-            
             // In case the other sent a ready event, store its content
             if (event.eventType == MXEventTypeKeyVerificationReady)
             {
-                // I sent the ready to the other
-                if (isEventSentByMe)
+                // Avoid to overwrite requestState if value was set to MXKeyVerificationRequestStateAccepted
+                if (requestState != MXKeyVerificationRequestStateAccepted)
                 {
-                    hasGoneToReadyState = YES;
-                }
-                // I sent the request and the ready come from the other
-                else if (request.isFromMyUser)
-                {
-                    hasGoneToReadyState = YES;
+                    requestState = MXKeyVerificationRequestStateReady;
                 }
                 
                 MXKeyVerificationReady *keyVerificationReady;
@@ -217,17 +207,8 @@
             // For SAS or QR code if I sent MXEventTypeKeyVerificationStart I have accepted the request.
             else if (event.eventType == MXEventTypeKeyVerificationStart)
             {
-                hasGoneToAcceptState = YES;
+                requestState = MXKeyVerificationRequestStateAccepted;
             }
-        }
-        
-        if (hasGoneToAcceptState)
-        {
-            requestState = MXKeyVerificationRequestStateAccepted;
-        }
-        else if (hasGoneToReadyState)
-        {
-            requestState = MXKeyVerificationRequestStateReady;
         }
     }
     // There is only the request event. What is the status of it?
