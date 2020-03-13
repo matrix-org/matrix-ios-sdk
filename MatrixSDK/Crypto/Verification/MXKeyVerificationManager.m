@@ -859,15 +859,19 @@ static NSArray<MXEventTypeString> *kMXKeyVerificationManagerDMEventTypes;
     MXKeyVerificationRequest *request = [self pendingRequestWithRequestId:requestId];
     if (request)
     {
-        // The other party decided to create a transaction from the request
-        // The request is complete
+        // We have a start response. The request is complete
         [self removePendingRequestWithRequestId:request.requestId];
     }
-    else if ([event.relatesTo.relationType isEqualToString:MXEventRelationTypeReference])
+    
+    if ([event.relatesTo.relationType isEqualToString:MXEventRelationTypeReference])
     {
-        // This is a start response to a request we did not make. Ignore it
-        NSLog(@"[MXKeyVerification] handleStartEvent: Start event for verification by DM(%@) not triggered by this device. Ignore it", requestId);
-        return;
+        if (!request
+            || (request.isFromMyUser && !request.isFromMyDevice))
+        {
+            // This is a start response to a request we did not make. Ignore it
+            NSLog(@"[MXKeyVerification] handleStartEvent: Start event for verification by DM(%@) not triggered by this device. Ignore it", requestId);
+            return;
+        }
     }
     
     if (!keyVerificationStart.isValid)
@@ -1028,15 +1032,19 @@ static NSArray<MXEventTypeString> *kMXKeyVerificationManagerDMEventTypes;
     MXKeyVerificationRequest *request = [self pendingRequestWithRequestId:requestId];
     if (request)
     {
-        // The other party decided to create a transaction from the request
-        // The request is complete
+        // We have a start response. The request is complete
         [self removePendingRequestWithRequestId:request.requestId];
     }
-    else if ([event.relatesTo.relationType isEqualToString:MXEventRelationTypeReference])
+    
+    if ([event.relatesTo.relationType isEqualToString:MXEventRelationTypeReference])
     {
-        // This is a start response to a request we did not make. Ignore it
-        NSLog(@"[MXKeyVerification] handleStartEvent: Start event for verification by DM(%@) not triggered by this device. Ignore it", requestId);
-        return;
+        if (!request
+            || (request.isFromMyUser && !request.isFromMyDevice))
+        {
+            // This is a start response to a request we did not make. Ignore it
+            NSLog(@"[MXKeyVerification] handleStartEvent: Start event for verification by DM(%@) not triggered by this device. Ignore it", requestId);
+            return;
+        }
     }
     
     if (!keyVerificationStart.isValid)
