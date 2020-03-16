@@ -763,8 +763,19 @@
 
 /**
  Nomical case: The full flow
- It reuses code from testFullFlowWithAliceAndBob.
+ */
+- (void)testVerificationByDMFullFlow
+{
+    // - Alice and Bob are in a room
+    [matrixSDKTestsE2EData doE2ETestWithAliceAndBobInARoom:self cryptedBob:YES warnOnUnknowDevices:YES aliceStore:[[MXMemoryStore alloc] init] bobStore:[[MXMemoryStore alloc] init] readyToTest:^(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
+        
+        [self checkVerificationByDMFullFlowWithAliceSession:aliceSession bobSession:bobSession roomId:roomId expectation:expectation];
+    }];
+}
 
+/**
+ It reuses code from testFullFlowWithAliceAndBob.
+ 
  - Alice and Bob are in a room
  - Bob requests a verification of Alice in this Room
  - Alice gets the request in the timeline
@@ -785,211 +796,208 @@
  -> Both ends must get a done message
  - Then, test MXKeyVerification
  */
-- (void)testVerificationByDMFullFlow
+- (void)checkVerificationByDMFullFlowWithAliceSession:(MXSession*)aliceSession bobSession:(MXSession*)bobSession roomId:(NSString*)roomId expectation:(XCTestExpectation*)expectation
 {
-    // - Alice and Bob are in a room
-    [matrixSDKTestsE2EData doE2ETestWithAliceAndBobInARoom:self cryptedBob:YES warnOnUnknowDevices:YES aliceStore:[[MXMemoryStore alloc] init] bobStore:[[MXMemoryStore alloc] init] readyToTest:^(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
-
-        NSString *fallbackText = @"fallbackText";
-        __block NSString *requestId;
-
-        MXCredentials *alice = aliceSession.matrixRestClient.credentials;
-        MXCredentials *bob = bobSession.matrixRestClient.credentials;
-        
-        NSArray *methods = @[MXKeyVerificationMethodSAS, @"toto"];
-
-        // - Bob requests a verification of Alice in this Room
-        [bobSession.crypto.keyVerificationManager requestVerificationByDMWithUserId:alice.userId
-                                                                                roomId:roomId
-                                                                          fallbackText:fallbackText
-                                                                               methods:methods
-                                                                               success:^(MXKeyVerificationRequest *requestFromBobPOV)
+    NSString *fallbackText = @"fallbackText";
+    __block NSString *requestId;
+    
+    MXCredentials *alice = aliceSession.matrixRestClient.credentials;
+    MXCredentials *bob = bobSession.matrixRestClient.credentials;
+    
+    NSArray *methods = @[MXKeyVerificationMethodSAS, @"toto"];
+    
+    // - Bob requests a verification of Alice in this Room
+    [bobSession.crypto.keyVerificationManager requestVerificationByDMWithUserId:alice.userId
+                                                                         roomId:roomId
+                                                                   fallbackText:fallbackText
+                                                                        methods:methods
+                                                                        success:^(MXKeyVerificationRequest *requestFromBobPOV)
+     {
+         requestId = requestFromBobPOV.requestId;
+         XCTAssertEqualObjects(requestFromBobPOV.otherUser, alice.userId);
+         XCTAssertNil(requestFromBobPOV.otherDevice);
+     }
+                                                                        failure:^(NSError * _Nonnull error)
+     {
+         XCTFail(@"The request should not fail - NSError: %@", error);
+         [expectation fulfill];
+     }];
+    
+    
+    __block MXOutgoingSASTransaction *sasTransactionFromAlicePOV;
+    
+    
+    // Alice gets the request in the timeline
+    [aliceSession listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage]
+                                onEvent:^(MXEvent *event, MXTimelineDirection direction, id customObject)
+     {
+         if ([event.content[@"msgtype"] isEqualToString:kMXMessageTypeKeyVerificationRequest])
          {
-             requestId = requestFromBobPOV.requestId;
-             XCTAssertEqualObjects(requestFromBobPOV.otherUser, alice.userId);
-             XCTAssertNil(requestFromBobPOV.otherDevice);
-         }
-                                                                               failure:^(NSError * _Nonnull error)
-         {
-             XCTFail(@"The request should not fail - NSError: %@", error);
-             [expectation fulfill];
-         }];
-
-
-        __block MXOutgoingSASTransaction *sasTransactionFromAlicePOV;
-
-
-        // Alice gets the request in the timeline
-        [aliceSession listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage]
-                                  onEvent:^(MXEvent *event, MXTimelineDirection direction, id customObject)
-         {
-             if ([event.content[@"msgtype"] isEqualToString:kMXMessageTypeKeyVerificationRequest])
-             {
-                 XCTAssertEqualObjects(event.eventId, requestId);
-
-                 // Check verification by DM request format
-                 MXKeyVerificationRequestByDMJSONModel *requestJSON;
-                 MXJSONModelSetMXJSONModel(requestJSON, MXKeyVerificationRequestByDMJSONModel.class, event.content);
-                 XCTAssertNotNil(requestJSON);
-
-                 // Wait a bit
-                 dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 1 * NSEC_PER_SEC), dispatch_get_main_queue(), ^{
+             XCTAssertEqualObjects(event.eventId, requestId);
+             
+             // Check verification by DM request format
+             MXKeyVerificationRequestByDMJSONModel *requestJSON;
+             MXJSONModelSetMXJSONModel(requestJSON, MXKeyVerificationRequestByDMJSONModel.class, event.content);
+             XCTAssertNotNil(requestJSON);
+             
+             // Wait a bit
+             dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 1 * NSEC_PER_SEC), dispatch_get_main_queue(), ^{
+                 
+                 MXKeyVerificationRequest *requestFromAlicePOV = aliceSession.crypto.keyVerificationManager.pendingRequests.firstObject;
+                 XCTAssertNotNil(requestFromAlicePOV);
+                 
+                 XCTAssertEqualObjects(requestFromAlicePOV.methods, methods);
+                 XCTAssertEqualObjects(requestFromAlicePOV.otherMethods, methods);
+                 XCTAssertNil(requestFromAlicePOV.myMethods);
+                 
+                 XCTAssertEqualObjects(requestFromAlicePOV.otherUser, bob.userId);
+                 XCTAssertEqualObjects(requestFromAlicePOV.otherDevice, bob.deviceId);
+                 
+                 // - Alice accepts it
+                 [requestFromAlicePOV acceptWithMethods:@[MXKeyVerificationMethodSAS] success:^{
                      
-                     MXKeyVerificationRequest *requestFromAlicePOV = aliceSession.crypto.keyVerificationManager.pendingRequests.firstObject;
-                     XCTAssertNotNil(requestFromAlicePOV);
-         
-                     XCTAssertEqualObjects(requestFromAlicePOV.methods, methods);
-                     XCTAssertEqualObjects(requestFromAlicePOV.otherMethods, methods);
-                     XCTAssertNil(requestFromAlicePOV.myMethods);
+                     MXKeyVerificationRequest *requestFromAlicePOV2 = aliceSession.crypto.keyVerificationManager.pendingRequests.firstObject;
+                     XCTAssertNotNil(requestFromAlicePOV2);
+                     XCTAssertEqualObjects(requestFromAlicePOV2.myMethods, @[MXKeyVerificationMethodSAS]);
                      
-                     XCTAssertEqualObjects(requestFromAlicePOV.otherUser, bob.userId);
-                     XCTAssertEqualObjects(requestFromAlicePOV.otherDevice, bob.deviceId);
-
-                     // - Alice accepts it
-                     [requestFromAlicePOV acceptWithMethods:@[MXKeyVerificationMethodSAS] success:^{
+                     // - Alice begins a SAS verification
+                     [aliceSession.crypto.keyVerificationManager beginKeyVerificationFromRequest:requestFromAlicePOV2 method:MXKeyVerificationMethodSAS success:^(MXKeyVerificationTransaction * _Nonnull transactionFromAlicePOV) {
                          
-                         MXKeyVerificationRequest *requestFromAlicePOV2 = aliceSession.crypto.keyVerificationManager.pendingRequests.firstObject;
-                         XCTAssertNotNil(requestFromAlicePOV2);
-                         XCTAssertEqualObjects(requestFromAlicePOV2.myMethods, @[MXKeyVerificationMethodSAS]);
+                         XCTAssertEqualObjects(transactionFromAlicePOV.transactionId, event.eventId);
                          
-                         // - Alice begins a SAS verification
-                         [aliceSession.crypto.keyVerificationManager beginKeyVerificationFromRequest:requestFromAlicePOV2 method:MXKeyVerificationMethodSAS success:^(MXKeyVerificationTransaction * _Nonnull transactionFromAlicePOV) {
-
-                             XCTAssertEqualObjects(transactionFromAlicePOV.transactionId, event.eventId);
-                             
-                             XCTAssert(transactionFromAlicePOV);
-                             XCTAssertTrue([transactionFromAlicePOV isKindOfClass:MXOutgoingSASTransaction.class]);
-                             sasTransactionFromAlicePOV = (MXOutgoingSASTransaction*)transactionFromAlicePOV;
-
-                         } failure:^(NSError * _Nonnull error) {
-                             XCTFail(@"The request should not fail - NSError: %@", error);
-                             [expectation fulfill];
-                         }];
+                         XCTAssert(transactionFromAlicePOV);
+                         XCTAssertTrue([transactionFromAlicePOV isKindOfClass:MXOutgoingSASTransaction.class]);
+                         sasTransactionFromAlicePOV = (MXOutgoingSASTransaction*)transactionFromAlicePOV;
                          
                      } failure:^(NSError * _Nonnull error) {
                          XCTFail(@"The request should not fail - NSError: %@", error);
                          [expectation fulfill];
                      }];
-                 });
-             }
-         }];
-
-
-        [self observeSASIncomingTransactionInSession:bobSession block:^(MXIncomingSASTransaction * _Nullable transactionFromBobPOV) {
-
-            // Final checks
-            void (^checkBothDeviceVerified)(void) = ^ void ()
-            {
-                if (sasTransactionFromAlicePOV.state == MXSASTransactionStateVerified
-                    && transactionFromBobPOV.state == MXSASTransactionStateVerified)
-                {
-                    // -> Devices must be really verified
-                    MXDeviceInfo *bobDeviceFromAlicePOV = [aliceSession.crypto.store deviceWithDeviceId:bob.deviceId forUser:bob.userId];
-                    MXDeviceInfo *aliceDeviceFromBobPOV = [bobSession.crypto.store deviceWithDeviceId:alice.deviceId forUser:alice.userId];
-
-                    XCTAssertEqual(bobDeviceFromAlicePOV.trustLevel.localVerificationStatus, MXDeviceVerified);
-                    XCTAssertEqual(aliceDeviceFromBobPOV.trustLevel.localVerificationStatus, MXDeviceVerified);
-
-                    // -> Transaction must not be listed anymore
-                    XCTAssertNil([aliceSession.crypto.keyVerificationManager transactionWithTransactionId:sasTransactionFromAlicePOV.transactionId]);
-                    XCTAssertNil([bobSession.crypto.keyVerificationManager transactionWithTransactionId:transactionFromBobPOV.transactionId]);
-                }
-            };
-
-            // -> Transaction on Alice side must be WaitForPartnerKey, then ShowSAS
-            [self observeTransactionUpdate:sasTransactionFromAlicePOV block:^{
-
-                switch (sasTransactionFromAlicePOV.state)
-                {
-                        // -> 2. Transaction on Alice side must then move to WaitForPartnerKey
-                    case MXSASTransactionStateWaitForPartnerKey:
-                        XCTAssertEqual(transactionFromBobPOV.state, MXSASTransactionStateWaitForPartnerKey);
-                        break;
-                        // -> 4. Transaction on Alice side must then move to ShowSAS
-                    case MXSASTransactionStateShowSAS:
-                        XCTAssertEqual(transactionFromBobPOV.state, MXSASTransactionStateShowSAS);
-
-                        // -> 5. SASs must be the same
-                        XCTAssertEqualObjects(sasTransactionFromAlicePOV.sasBytes, transactionFromBobPOV.sasBytes);
-                        XCTAssertEqualObjects(sasTransactionFromAlicePOV.sasDecimal, transactionFromBobPOV.sasDecimal);
-                        XCTAssertEqualObjects(sasTransactionFromAlicePOV.sasEmoji, transactionFromBobPOV.sasEmoji);
-
-                        // -  Alice confirms SAS
-                        [sasTransactionFromAlicePOV confirmSASMatch];
-                        break;
-                        // -> 6. Transaction on Alice side must then move to WaitForPartnerToConfirm
-                    case MXSASTransactionStateWaitForPartnerToConfirm:
-                        // -  Bob confirms SAS
-                        [transactionFromBobPOV confirmSASMatch];
-                        break;
-                        // -> 7. Transaction on Alice side must then move to Verified
-                    case MXSASTransactionStateVerified:
-                        checkBothDeviceVerified();
-                        break;
-                    default:
-                        XCTAssert(NO, @"Unexpected Alice transation state: %@", @(sasTransactionFromAlicePOV.state));
-                        break;
-                }
-            }];
-
-            // -> Transaction on Bob side must be WaitForPartnerKey, then ShowSAS
-            [self observeTransactionUpdate:transactionFromBobPOV block:^{
-
-                switch (transactionFromBobPOV.state)
-                {
-                        // -> 1. Transaction on Bob side must be WaitForPartnerKey (Alice is WaitForPartnerToAccept)
-                    case MXSASTransactionStateWaitForPartnerKey:
-                        XCTAssertEqual(sasTransactionFromAlicePOV.state, MXSASTransactionStateOutgoingWaitForPartnerToAccept);
-                        break;
-                        // -> 3. Transaction on Bob side must then move to ShowSAS
-                    case MXSASTransactionStateShowSAS:
-                        break;
-                    case MXSASTransactionStateWaitForPartnerToConfirm:
-                        break;
-                        // 7. Transaction on Bob side must then move to Verified
-                    case MXSASTransactionStateVerified:
-                        checkBothDeviceVerified();
-                        break;
-                    default:
-                        XCTAssert(NO, @"Unexpected Bob transation state: %@", @(sasTransactionFromAlicePOV.state));
-                        break;
-                }
-            }];
-        }];
-
-        // -> Both ends must get a done message
-        NSMutableArray<MXKeyVerificationDone*> *doneDone = [NSMutableArray new];
-        void (^checkDoneDone)(MXEvent *event, MXTimelineDirection direction, id customObject) = ^ void (MXEvent *event, MXTimelineDirection direction, id customObject)
+                     
+                 } failure:^(NSError * _Nonnull error) {
+                     XCTFail(@"The request should not fail - NSError: %@", error);
+                     [expectation fulfill];
+                 }];
+             });
+         }
+     }];
+    
+    
+    [self observeSASIncomingTransactionInSession:bobSession block:^(MXIncomingSASTransaction * _Nullable transactionFromBobPOV) {
+        
+        // Final checks
+        void (^checkBothDeviceVerified)(void) = ^ void ()
         {
-            XCTAssertEqual(event.eventType, MXEventTypeKeyVerificationDone);
-
-            // Check done format
-            MXKeyVerificationDone *done;
-            MXJSONModelSetMXJSONModel(done, MXKeyVerificationDone.class, event.content);
-            XCTAssertNotNil(done);
-
-            [doneDone addObject:done];
-            if (doneDone.count == 4)
+            if (sasTransactionFromAlicePOV.state == MXSASTransactionStateVerified
+                && transactionFromBobPOV.state == MXSASTransactionStateVerified)
             {
-                // Then, test MXKeyVerification
-                MXEvent *event = [aliceSession.store eventWithEventId:requestId inRoom:roomId];
-                [aliceSession.crypto.keyVerificationManager keyVerificationFromKeyVerificationEvent:event success:^(MXKeyVerification * _Nonnull verificationFromAlicePOV) {
-
-                    XCTAssertEqual(verificationFromAlicePOV.state, MXKeyVerificationStateVerified);
-
-                    [expectation fulfill];
-                } failure:^(NSError * _Nonnull error) {
-                    XCTFail(@"The request should not fail - NSError: %@", error);
-                    [expectation fulfill];
-                }];
+                // -> Devices must be really verified
+                MXDeviceInfo *bobDeviceFromAlicePOV = [aliceSession.crypto.store deviceWithDeviceId:bob.deviceId forUser:bob.userId];
+                MXDeviceInfo *aliceDeviceFromBobPOV = [bobSession.crypto.store deviceWithDeviceId:alice.deviceId forUser:alice.userId];
+                
+                XCTAssertEqual(bobDeviceFromAlicePOV.trustLevel.localVerificationStatus, MXDeviceVerified);
+                XCTAssertEqual(aliceDeviceFromBobPOV.trustLevel.localVerificationStatus, MXDeviceVerified);
+                
+                // -> Transaction must not be listed anymore
+                XCTAssertNil([aliceSession.crypto.keyVerificationManager transactionWithTransactionId:sasTransactionFromAlicePOV.transactionId]);
+                XCTAssertNil([bobSession.crypto.keyVerificationManager transactionWithTransactionId:transactionFromBobPOV.transactionId]);
             }
         };
-
-        [aliceSession listenToEventsOfTypes:@[kMXEventTypeStringKeyVerificationDone]
-                                    onEvent:checkDoneDone];
-        [bobSession listenToEventsOfTypes:@[kMXEventTypeStringKeyVerificationDone]
-                                    onEvent:checkDoneDone];
+        
+        // -> Transaction on Alice side must be WaitForPartnerKey, then ShowSAS
+        [self observeTransactionUpdate:sasTransactionFromAlicePOV block:^{
+            
+            switch (sasTransactionFromAlicePOV.state)
+            {
+                    // -> 2. Transaction on Alice side must then move to WaitForPartnerKey
+                case MXSASTransactionStateWaitForPartnerKey:
+                    XCTAssertEqual(transactionFromBobPOV.state, MXSASTransactionStateWaitForPartnerKey);
+                    break;
+                    // -> 4. Transaction on Alice side must then move to ShowSAS
+                case MXSASTransactionStateShowSAS:
+                    XCTAssertEqual(transactionFromBobPOV.state, MXSASTransactionStateShowSAS);
+                    
+                    // -> 5. SASs must be the same
+                    XCTAssertEqualObjects(sasTransactionFromAlicePOV.sasBytes, transactionFromBobPOV.sasBytes);
+                    XCTAssertEqualObjects(sasTransactionFromAlicePOV.sasDecimal, transactionFromBobPOV.sasDecimal);
+                    XCTAssertEqualObjects(sasTransactionFromAlicePOV.sasEmoji, transactionFromBobPOV.sasEmoji);
+                    
+                    // -  Alice confirms SAS
+                    [sasTransactionFromAlicePOV confirmSASMatch];
+                    break;
+                    // -> 6. Transaction on Alice side must then move to WaitForPartnerToConfirm
+                case MXSASTransactionStateWaitForPartnerToConfirm:
+                    // -  Bob confirms SAS
+                        [transactionFromBobPOV confirmSASMatch];
+                    break;
+                    // -> 7. Transaction on Alice side must then move to Verified
+                case MXSASTransactionStateVerified:
+                    checkBothDeviceVerified();
+                    break;
+                default:
+                    XCTAssert(NO, @"Unexpected Alice transation state: %@", @(sasTransactionFromAlicePOV.state));
+                    break;
+            }
+        }];
+        
+        // -> Transaction on Bob side must be WaitForPartnerKey, then ShowSAS
+        [self observeTransactionUpdate:transactionFromBobPOV block:^{
+            
+            switch (transactionFromBobPOV.state)
+            {
+                    // -> 1. Transaction on Bob side must be WaitForPartnerKey (Alice is WaitForPartnerToAccept)
+                case MXSASTransactionStateWaitForPartnerKey:
+                    XCTAssertEqual(sasTransactionFromAlicePOV.state, MXSASTransactionStateOutgoingWaitForPartnerToAccept);
+                    break;
+                    // -> 3. Transaction on Bob side must then move to ShowSAS
+                case MXSASTransactionStateShowSAS:
+                    break;
+                case MXSASTransactionStateWaitForPartnerToConfirm:
+                    break;
+                    // 7. Transaction on Bob side must then move to Verified
+                case MXSASTransactionStateVerified:
+                    checkBothDeviceVerified();
+                    break;
+                default:
+                    XCTAssert(NO, @"Unexpected Bob transation state: %@", @(sasTransactionFromAlicePOV.state));
+                    break;
+            }
+        }];
     }];
+    
+    // -> Both ends must get a done message
+    NSMutableArray<MXKeyVerificationDone*> *doneDone = [NSMutableArray new];
+    void (^checkDoneDone)(MXEvent *event, MXTimelineDirection direction, id customObject) = ^ void (MXEvent *event, MXTimelineDirection direction, id customObject)
+    {
+        XCTAssertEqual(event.eventType, MXEventTypeKeyVerificationDone);
+        
+        // Check done format
+        MXKeyVerificationDone *done;
+        MXJSONModelSetMXJSONModel(done, MXKeyVerificationDone.class, event.content);
+        XCTAssertNotNil(done);
+        
+        [doneDone addObject:done];
+        if (doneDone.count == 4)
+        {
+            // Then, test MXKeyVerification
+            MXEvent *event = [aliceSession.store eventWithEventId:requestId inRoom:roomId];
+            [aliceSession.crypto.keyVerificationManager keyVerificationFromKeyVerificationEvent:event success:^(MXKeyVerification * _Nonnull verificationFromAlicePOV) {
+                
+                XCTAssertEqual(verificationFromAlicePOV.state, MXKeyVerificationStateVerified);
+                
+                [expectation fulfill];
+            } failure:^(NSError * _Nonnull error) {
+                XCTFail(@"The request should not fail - NSError: %@", error);
+                [expectation fulfill];
+            }];
+        }
+    };
+    
+    [aliceSession listenToEventsOfTypes:@[kMXEventTypeStringKeyVerificationDone]
+                                onEvent:checkDoneDone];
+    [bobSession listenToEventsOfTypes:@[kMXEventTypeStringKeyVerificationDone]
+                              onEvent:checkDoneDone];
+
 }
 
 
@@ -1207,6 +1215,36 @@
         }];
     }];
 }
+
+/**
+ Same tests as testVerificationByDMFullFlow but with alice with 2 sessions
+ */
+- (void)testVerificationByDMWithAliceWith2Devices
+{
+    // - Alice and Bob are in a room
+    [matrixSDKTestsE2EData doE2ETestWithAliceAndBobInARoom:self cryptedBob:YES warnOnUnknowDevices:YES aliceStore:[[MXMemoryStore alloc] init] bobStore:[[MXMemoryStore alloc] init] readyToTest:^(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
+        
+        [matrixSDKTestsE2EData loginUserOnANewDevice:aliceSession.matrixRestClient.credentials withPassword:MXTESTS_ALICE_PWD onComplete:^(MXSession *newAliceSession) {
+            
+            [self checkVerificationByDMFullFlowWithAliceSession:aliceSession bobSession:bobSession roomId:roomId expectation:expectation];
+        }];
+    }];
+}
+
+/**
+ Same tests as testVerificationByDMFullFlow but with bob with 2 sessions
+ */
+- (void)testVerificationByDMWithAUserWith2Devices
+{
+    // - Alice and Bob are in a room
+    [matrixSDKTestsE2EData doE2ETestWithAliceAndBobInARoom:self cryptedBob:YES warnOnUnknowDevices:YES aliceStore:[[MXMemoryStore alloc] init] bobStore:[[MXMemoryStore alloc] init] readyToTest:^(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
+        
+        [matrixSDKTestsE2EData loginUserOnANewDevice:bobSession.matrixRestClient.credentials withPassword:MXTESTS_BOB_PWD onComplete:^(MXSession *newBobSession) {
+            [self checkVerificationByDMFullFlowWithAliceSession:aliceSession bobSession:bobSession roomId:roomId expectation:expectation];
+        }];
+    }];
+}
+
 
 @end
 

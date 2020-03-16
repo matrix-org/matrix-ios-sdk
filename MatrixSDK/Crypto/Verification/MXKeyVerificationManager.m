@@ -716,9 +716,14 @@ static NSArray<MXEventTypeString> *kMXKeyVerificationManagerDMEventTypes;
 
 - (void)handleKeyVerificationEvent:(MXEvent*)event
 {
-    NSLog(@"[MXKeyVerification] handleKeyVerificationEvent: eventType: %@\n%@", event.type, event.clearEvent.JSONDictionary);
-
     dispatch_async(cryptoQueue, ^{
+
+        BOOL eventFromMyUser = [event.sender isEqualToString:self.crypto.mxSession.myUser.userId];
+        NSLog(@"[MXKeyVerification] handleKeyVerificationEvent(from my user: %@): eventType: %@ \n%@",
+              eventFromMyUser ? @"YES": @"NO",
+              event.type,
+              event.clearEvent.JSONDictionary);
+
         switch (event.eventType)
         {
             case MXEventTypeKeyVerificationRequest:
@@ -731,23 +736,38 @@ static NSArray<MXEventTypeString> *kMXKeyVerificationManagerDMEventTypes;
                 break;
                 
             case MXEventTypeKeyVerificationStart:
-                [self handleStartEvent:event];
+                if (!eventFromMyUser)
+                {
+                    [self handleStartEvent:event];
+                }
                 break;
 
             case MXEventTypeKeyVerificationCancel:
-                [self handleCancelEvent:event];
+                if (!eventFromMyUser)
+                {
+                    [self handleCancelEvent:event];
+                }
                 break;
 
             case MXEventTypeKeyVerificationAccept:
-                [self handleAcceptEvent:event];
+                if (!eventFromMyUser)
+                {
+                    [self handleAcceptEvent:event];
+                }
                 break;
 
             case MXEventTypeKeyVerificationKey:
-                [self handleKeyEvent:event];
+                if (!eventFromMyUser)
+                {
+                    [self handleKeyEvent:event];
+                }
                 break;
 
             case MXEventTypeKeyVerificationMac:
-                [self handleMacEvent:event];
+                if (!eventFromMyUser)
+                {
+                    [self handleMacEvent:event];
+                }
                 break;
 
             default:
@@ -785,9 +805,25 @@ static NSArray<MXEventTypeString> *kMXKeyVerificationManagerDMEventTypes;
     
     NSString *requestId = keyVerificationReady.transactionId;
     MXKeyVerificationRequest *request = [self pendingRequestWithRequestId:requestId];
+    
     if (request)
     {
-        [request handleReady:keyVerificationReady];
+        MXCredentials *myCreds = _crypto.mxSession.matrixRestClient.credentials;
+
+        BOOL eventFromMyUser = [event.sender isEqualToString:self.crypto.mxSession.myUser.userId];
+        BOOL eventFromMyDevice = [keyVerificationReady.fromDevice isEqualToString:myCreds.deviceId];
+        if (eventFromMyUser && !eventFromMyDevice)
+        {
+            // This is a ready response to a request the user made from another device
+            NSLog(@"[MXKeyVerification] handleReadyEvent: The request (%@) has been accepted on another device. Ignore it.", requestId);
+            [self removePendingRequestWithRequestId:request.requestId];
+            return;
+        }
+        
+        if (!eventFromMyUser)
+        {
+            [request handleReady:keyVerificationReady];
+        }
     }
 }
 
@@ -1118,7 +1154,7 @@ static NSArray<MXEventTypeString> *kMXKeyVerificationManagerDMEventTypes;
 {
     [_crypto.mxSession listenToEventsOfTypes:kMXKeyVerificationManagerDMEventTypes onEvent:^(MXEvent *event, MXTimelineDirection direction, id customObject) {
         if (direction == MXTimelineDirectionForwards
-            && ![event.sender isEqualToString:self.crypto.mxSession.myUser.userId])
+            )
         {
             [self handleKeyVerificationEvent:event];
         }
