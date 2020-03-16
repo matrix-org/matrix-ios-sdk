@@ -295,6 +295,7 @@ NSString * const MXKeyVerificationMethodReciprocate = @"m.reciprocate.v1";
     {
         // TODO (MXCrossSigning.isBootstrapped will be removed in the future)
         NSLog(@"[MXKeyVerification][MXQRCodeTransaction] trustOtherDeviceWithId: Cannot Mark user %@ as verified as cross-signing is not fully implemented", otherUserId);
+        [self cancelWithCancelCode:MXTransactionCancelCode.user];
         return;
     }
     
@@ -313,6 +314,7 @@ NSString * const MXKeyVerificationMethodReciprocate = @"m.reciprocate.v1";
     {
         // TODO (MXCrossSigning.isBootstrapped will be removed in the future)
         NSLog(@"[MXKeyVerification][MXQRCodeTransaction] trustOtherDeviceWithId: Cannot Mark device %@ as verified as cross-signing is not fully implemented", otherDeviceId);
+        [self cancelWithCancelCode:MXTransactionCancelCode.user];
         return;
     }
     
