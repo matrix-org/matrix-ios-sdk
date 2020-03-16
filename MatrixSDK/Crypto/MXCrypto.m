@@ -1538,9 +1538,7 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
                                                                          crossSigningVerified:NO]];
 
         // Add our own deviceinfo to the store
-        NSMutableDictionary *myDevices = [NSMutableDictionary dictionaryWithDictionary:[_store devicesForUser:userId]];
-        myDevices[_myDevice.deviceId] = _myDevice;
-        [_store storeDevicesForUser:userId devices:myDevices];
+        [_store storeDeviceForUser:userId device:_myDevice];
 
         oneTimeKeyCount = -1;
 
