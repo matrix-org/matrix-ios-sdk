@@ -310,47 +310,14 @@ NSString * const MXKeyVerificationMethodReciprocate = @"m.reciprocate.v1";
 
 - (void)trustOtherDeviceWithId:(NSString*)otherDeviceId
 {
-    if (!self.manager.crypto.crossSigning.canCrossSign)
-    {
-        // Cross-signing ability should have been checked before going into this hole
-        NSLog(@"[MXKeyVerification][MXQRCodeTransaction] trustOtherDeviceWithId: Cannot mark device %@ as verified because this device cannot cross-sign", otherDeviceId);
-        [self cancelWithCancelCode:MXTransactionCancelCode.user];
-        return;
-    }
+    NSString *currentUserId = self.manager.crypto.mxSession.myUser.userId;
     
-    __block MXTransactionCancelCode *cancelCode;
-    dispatch_group_t group = dispatch_group_create();
-    
-    dispatch_group_enter(group);
-    
-    [self.manager.crypto.crossSigning crossSignDeviceWithDeviceId:self.otherDeviceId success:^{
-        dispatch_group_leave(group);
-    } failure:^(NSError * _Nonnull error) {
-        NSLog(@"[MXKeyVerification][MXQRCodeTransaction] trustOtherDeviceWithId: Fail to cross sign other device with id: %@", self.otherUserId);
-        cancelCode = MXTransactionCancelCode.invalidMessage;
-        dispatch_group_leave(group);
-    }];
-    
-    dispatch_group_enter(group);
-    
-    [self.manager.crypto setDeviceVerification:MXDeviceVerified forDevice:self.otherDeviceId ofUser:self.otherUserId success:^{
-        dispatch_group_leave(group);
+    // setDeviceVerification will automatically cross sign the device
+    [self.manager.crypto setDeviceVerification:MXDeviceVerified forDevice:otherDeviceId ofUser:currentUserId success:^{
+        [self sendVerified];
     } failure:^(NSError *error) {
-        // Should never happen
-        cancelCode = MXTransactionCancelCode.invalidMessage;
-        dispatch_group_leave(group);
+        [self cancelWithCancelCode:MXTransactionCancelCode.invalidMessage];
     }];
-    
-    dispatch_group_notify(group, self.manager.crypto.cryptoQueue, ^{
-        if (cancelCode)
-        {
-            [self cancelWithCancelCode:cancelCode];
-        }
-        else
-        {
-            [self sendVerified];
-        }
-    });
 }
 
 - (void)sendVerified
