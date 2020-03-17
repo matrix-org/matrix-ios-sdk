@@ -24,8 +24,46 @@ NS_ASSUME_NONNULL_BEGIN
 
 #pragma mark - Constants
 
-FOUNDATION_EXPORT NSString *const MXCrossSigningErrorDomain;
+/**
+ Cross-signing state of the current acount.
+ */
+typedef NS_ENUM(NSInteger, MXCrossSigningState)
+{
+    /**
+     Cross-signing is not enabled for this account.
+     No cross-signing keys have been published on the server.
+     */
+    MXCrossSigningStateNotBootstrapped = 0,
+    
+    /**
+     Cross-signing has been enabled for this account.
+     Cross-signing keys have been published on the server but they are not trusted by this device.
+     */
+    MXCrossSigningStatePublicKeysExist,
+    
+    /**
+     MXCrossSigningStatePublicKeysExist and they are trusted by this device.
+     We can read trust based on cross-signing:
+     - trust for other users and their cross-signed devices
+     - trust for other cross-signed devices of this account.
+     */
+    MXCrossSigningStateTrustPublicKeys,
+    
+    /**
+     MXCrossSigningStateTrustPublicKeys and we can cross-sign other users or other devices of this account.
+     We can upload trust update to the homeserver.
+     */
+    MXCrossSigningStateHavePrivateKeys,
+    
+    /**
+     Same as MXCrossSigningStateHavePrivateKeys but private keys can only be used asynchronously.
+     Access to these key may require UI interaction with the user like passphrase, Face ID, etc.
+     */
+    MXCrossSigningStateHavePrivateKeysAsynchronously,
+};
 
+
+FOUNDATION_EXPORT NSString *const MXCrossSigningErrorDomain;
 typedef NS_ENUM(NSInteger, MXCrossSigningErrorCode)
 {
     MXCrossSigningUnknownUserIdErrorCode,
@@ -77,8 +115,12 @@ typedef NS_ENUM(NSInteger, MXCrossSigningErrorCode)
 
 @interface MXCrossSigning : NSObject
 
-// Flag indicating if cross-signing is set up on this device
-@property (nonatomic, readonly) BOOL isBootstrapped;
+/**
+ Cross-signing state for this account and this device.
+ */
+@property (nonatomic, readonly) MXCrossSigningState state;
+@property (nonatomic, readonly) BOOL canReadCrossSignTrust;
+@property (nonatomic, readonly) BOOL canCrossSign;
 
 /**
  Bootstrap cross-signing on this device.

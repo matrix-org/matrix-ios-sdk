@@ -369,14 +369,18 @@
     // - Create Alice & Bob account
     [matrixSDKTestsE2EData doE2ETestWithBobAndAlice:self readyToTest:^(MXSession *bobSession, MXSession *aliceSession, XCTestExpectation *expectation) {
 
-        XCTAssertFalse(aliceSession.crypto.crossSigning.isBootstrapped);
+        XCTAssertEqual(aliceSession.crypto.crossSigning.state, MXCrossSigningStateNotBootstrapped);
+        XCTAssertFalse(aliceSession.crypto.crossSigning.canCrossSign);
+        XCTAssertFalse(aliceSession.crypto.crossSigning.canReadCrossSignTrust);
 
         // - Bootstrap cross-singing on Alice using password
         aliceSession.crypto.crossSigning.keysStorageDelegate = self;
         [aliceSession.crypto.crossSigning bootstrapWithPassword:MXTESTS_ALICE_PWD success:^{
 
             // -> Cross-signing must be bootstrapped
-            XCTAssertTrue(aliceSession.crypto.crossSigning.isBootstrapped);
+            XCTAssertEqual(aliceSession.crypto.crossSigning.state, MXCrossSigningStateHavePrivateKeysAsynchronously);
+            XCTAssertTrue(aliceSession.crypto.crossSigning.canCrossSign);
+            XCTAssertTrue(aliceSession.crypto.crossSigning.canReadCrossSignTrust);
 
             // -> Alice must see their device trusted
             MXDeviceTrustLevel *aliceDevice1Trust = [aliceSession.crypto deviceTrustLevelForDevice:aliceSession.matrixRestClient.credentials.deviceId ofUser:aliceSession.matrixRestClient.credentials.userId];

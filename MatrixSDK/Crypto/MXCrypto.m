@@ -809,7 +809,7 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
         }
 
         // Cross-sign our own device
-        if (self.crossSigning.isBootstrapped
+        if (self.crossSigning.canCrossSign
             && verificationStatus == MXDeviceVerified
             && [userId isEqualToString:self.mxSession.myUser.userId])
         {

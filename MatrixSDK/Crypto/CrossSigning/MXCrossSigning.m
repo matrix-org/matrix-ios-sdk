@@ -34,11 +34,20 @@ NSString *const MXCrossSigningErrorDomain = @"org.matrix.sdk.crosssigning";
 
 @implementation MXCrossSigning
 
-- (BOOL)isBootstrapped
+- (BOOL)canCrossSign
 {
-    // TODO: Find a better way to know that we have cross-signing ON
-    return self.myUserCrossSigningKeys != nil
-    && self.keysStorageDelegate != nil;
+    return (_state >= MXCrossSigningStateHavePrivateKeys);
+}
+
+- (BOOL)canReadCrossSignTrust
+{
+    return (_state >= MXCrossSigningStateTrustPublicKeys);
+}
+
+- (void)setKeysStorageDelegate:(id<MXCrossSigningKeysStorageDelegate>)keysStorageDelegate
+{
+    _keysStorageDelegate = keysStorageDelegate;
+    [self computeState];
 }
 
 - (void)bootstrapWithPassword:(NSString*)password
@@ -81,6 +90,7 @@ NSString *const MXCrossSigningErrorDomain = @"org.matrix.sdk.crosssigning";
 
                 // Cross-signing is bootstrapped
                 self.myUserCrossSigningKeys = keys;
+                [self computeState];
 
                 // Expose this device to other users as signed by me
                 // TODO: Check if it is the right way to do so
@@ -260,8 +270,11 @@ NSString *const MXCrossSigningErrorDomain = @"org.matrix.sdk.crosssigning";
     self = [super init];
     if (self)
     {
+        _state = MXCrossSigningStateNotBootstrapped;
         _crypto = crypto;
         _crossSigningTools = [MXCrossSigningTools new];
+        
+        [self computeState];
      }
     return self;
 }
@@ -274,8 +287,11 @@ NSString *const MXCrossSigningErrorDomain = @"org.matrix.sdk.crosssigning";
 
     // Refresh user's keys
     [self.crypto.deviceList downloadKeys:@[myUserId] forceDownload:NO success:^(MXUsersDevicesMap<MXDeviceInfo *> *usersDevicesInfoMap, NSDictionary<NSString *,MXCrossSigningInfo *> *crossSigningKeysMap) {
+        
         self.myUserCrossSigningKeys = crossSigningKeysMap[myUserId];
+        [self computeState];
     } failure:^(NSError *error) {
+        NSLog(@"[MXCrossSigning] loadCrossSigningKeys: Failed to load my user's keys");
     }];
 }
 
@@ -366,6 +382,31 @@ NSString *const MXCrossSigningErrorDomain = @"org.matrix.sdk.crosssigning";
 
 
 #pragma mark - Private methods -
+
+- (void)computeState
+{
+    MXCrossSigningState state = MXCrossSigningStateNotBootstrapped;
+    
+    if (_myUserCrossSigningKeys)
+    {
+        state = MXCrossSigningStatePublicKeysExist;
+        
+        if (_myUserCrossSigningKeys.trustLevel.isVerified)
+        {
+            state = MXCrossSigningStateTrustPublicKeys;
+            
+            // TODO: MXCrossSigningStateHavePrivateKeys
+            
+            if (_keysStorageDelegate
+                /* && TODO */)
+            {
+                state = MXCrossSigningStateHavePrivateKeysAsynchronously;
+            }
+        }
+    }
+    
+    _state = state;
+}
 
 - (NSString *)makeSigningKey:(OLMPkSigning * _Nullable *)signing privateKey:(NSData* _Nullable *)privateKey
 {

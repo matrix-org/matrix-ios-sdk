@@ -291,10 +291,10 @@ NSString * const MXKeyVerificationMethodReciprocate = @"m.reciprocate.v1";
 
 - (void)trustOtherUserWithId:(NSString*)otherUserId
 {
-    if (!self.manager.crypto.crossSigning.isBootstrapped)
+    if (!self.manager.crypto.crossSigning.canCrossSign)
     {
-        // TODO (MXCrossSigning.isBootstrapped will be removed in the future)
-        NSLog(@"[MXKeyVerification][MXQRCodeTransaction] trustOtherDeviceWithId: Cannot Mark user %@ as verified as cross-signing is not fully implemented", otherUserId);
+        // Cross-signing ability should have been checked before going into this hole
+        NSLog(@"[MXKeyVerification][MXQRCodeTransaction] trustOtherUserWithId: Cannot mark user %@ as verified because this device cannot cross-sign", otherUserId);
         [self cancelWithCancelCode:MXTransactionCancelCode.user];
         return;
     }
@@ -310,10 +310,10 @@ NSString * const MXKeyVerificationMethodReciprocate = @"m.reciprocate.v1";
 
 - (void)trustOtherDeviceWithId:(NSString*)otherDeviceId
 {
-    if (!self.manager.crypto.crossSigning.isBootstrapped)
+    if (!self.manager.crypto.crossSigning.canCrossSign)
     {
-        // TODO (MXCrossSigning.isBootstrapped will be removed in the future)
-        NSLog(@"[MXKeyVerification][MXQRCodeTransaction] trustOtherDeviceWithId: Cannot Mark device %@ as verified as cross-signing is not fully implemented", otherDeviceId);
+        // Cross-signing ability should have been checked before going into this hole
+        NSLog(@"[MXKeyVerification][MXQRCodeTransaction] trustOtherDeviceWithId: Cannot mark device %@ as verified because this device cannot cross-sign", otherDeviceId);
         [self cancelWithCancelCode:MXTransactionCancelCode.user];
         return;
     }
