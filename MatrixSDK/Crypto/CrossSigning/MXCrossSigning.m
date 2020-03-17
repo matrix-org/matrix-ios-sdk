@@ -261,7 +261,6 @@ NSString *const MXCrossSigningErrorDomain = @"org.matrix.sdk.crosssigning";
     if (self)
     {
         _crypto = crypto;
-        [self loadCrossSigningKeys];
         _crossSigningTools = [MXCrossSigningTools new];
      }
     return self;
