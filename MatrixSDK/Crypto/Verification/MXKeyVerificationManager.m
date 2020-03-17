@@ -442,6 +442,15 @@ static NSArray<MXEventTypeString> *kMXKeyVerificationManagerDMEventTypes;
     }];
 }
 
+- (void)removeQRCodeTransactionWithTransactionId:(NSString*)transactionId
+{
+    MXQRCodeTransaction *qrCodeTransaction = [self qrCodeTransactionWithTransactionId:transactionId];
+    
+    if (qrCodeTransaction)
+    {
+        [self removeQRCodeTransactionWithTransactionId:qrCodeTransaction.transactionId];
+    }
+}
 
 - (void)transactions:(void(^)(NSArray<MXKeyVerificationTransaction*> *transactions))complete
 {
