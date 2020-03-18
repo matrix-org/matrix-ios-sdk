@@ -36,12 +36,12 @@ NSString *const MXCrossSigningErrorDomain = @"org.matrix.sdk.crosssigning";
 
 - (BOOL)canCrossSign
 {
-    return (_state >= MXCrossSigningStateHavePrivateKeys);
+    return (_state >= MXCrossSigningStateCanCrossSign);
 }
 
-- (BOOL)canReadCrossSignTrust
+- (BOOL)canTrustCrossSigning
 {
-    return (_state >= MXCrossSigningStateTrustPublicKeys);
+    return (_state >= MXCrossSigningStateTrustCrossSigning);
 }
 
 - (void)setKeysStorageDelegate:(id<MXCrossSigningKeysStorageDelegate>)keysStorageDelegate
@@ -389,18 +389,19 @@ NSString *const MXCrossSigningErrorDomain = @"org.matrix.sdk.crosssigning";
     
     if (_myUserCrossSigningKeys)
     {
-        state = MXCrossSigningStatePublicKeysExist;
+        state = MXCrossSigningStateCrossSigningExists;
         
         if (_myUserCrossSigningKeys.trustLevel.isVerified)
         {
-            state = MXCrossSigningStateTrustPublicKeys;
+            state = MXCrossSigningStateTrustCrossSigning;
             
-            // TODO: MXCrossSigningStateHavePrivateKeys
+            // TODO: MXCrossSigningStateCanCrossSign
+            // This will happen with gossiping
             
             if (_keysStorageDelegate
-                /* && TODO */)
+                /* && TODO: Check this async storage has these keys */)     // This will happen with full implementation of SSSS
             {
-                state = MXCrossSigningStateHavePrivateKeysAsynchronously;
+                state = MXCrossSigningStateCanCrossSignAsynchronously;
             }
         }
     }

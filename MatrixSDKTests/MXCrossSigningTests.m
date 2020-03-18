@@ -371,16 +371,16 @@
 
         XCTAssertEqual(aliceSession.crypto.crossSigning.state, MXCrossSigningStateNotBootstrapped);
         XCTAssertFalse(aliceSession.crypto.crossSigning.canCrossSign);
-        XCTAssertFalse(aliceSession.crypto.crossSigning.canReadCrossSignTrust);
+        XCTAssertFalse(aliceSession.crypto.crossSigning.canTrustCrossSigning);
 
         // - Bootstrap cross-singing on Alice using password
         aliceSession.crypto.crossSigning.keysStorageDelegate = self;
         [aliceSession.crypto.crossSigning bootstrapWithPassword:MXTESTS_ALICE_PWD success:^{
 
             // -> Cross-signing must be bootstrapped
-            XCTAssertEqual(aliceSession.crypto.crossSigning.state, MXCrossSigningStateHavePrivateKeysAsynchronously);
+            XCTAssertEqual(aliceSession.crypto.crossSigning.state, MXCrossSigningStateCanCrossSignAsynchronously);
             XCTAssertTrue(aliceSession.crypto.crossSigning.canCrossSign);
-            XCTAssertTrue(aliceSession.crypto.crossSigning.canReadCrossSignTrust);
+            XCTAssertTrue(aliceSession.crypto.crossSigning.canTrustCrossSigning);
 
             // -> Alice must see their device trusted
             MXDeviceTrustLevel *aliceDevice1Trust = [aliceSession.crypto deviceTrustLevelForDevice:aliceSession.matrixRestClient.credentials.deviceId ofUser:aliceSession.matrixRestClient.credentials.userId];

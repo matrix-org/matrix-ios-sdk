@@ -37,29 +37,30 @@ typedef NS_ENUM(NSInteger, MXCrossSigningState)
     
     /**
      Cross-signing has been enabled for this account.
-     Cross-signing keys have been published on the server but they are not trusted by this device.
+     Cross-signing public keys have been published on the server but they are not trusted by this device.
      */
-    MXCrossSigningStatePublicKeysExist,
+    MXCrossSigningStateCrossSigningExists,
     
     /**
-     MXCrossSigningStatePublicKeysExist and they are trusted by this device.
-     We can read trust based on cross-signing:
-     - trust for other users and their cross-signed devices
-     - trust for other cross-signed devices of this account.
+     MXCrossSigningStateCrossSigningExists and it is trusted by this device.
+     Based on cross-signing:
+         - this device can trust other users and their cross-signed devices
+         - this device can trust other cross-signed devices of this account
      */
-    MXCrossSigningStateTrustPublicKeys,
+    MXCrossSigningStateTrustCrossSigning,
     
     /**
-     MXCrossSigningStateTrustPublicKeys and we can cross-sign other users or other devices of this account.
-     We can upload trust update to the homeserver.
+     MXCrossSigningStateTrustCrossSigning and we can cross-sign.
+     This device has cross-signing private keys.
+     It can cross-sign other users or other devices of this account.
      */
-    MXCrossSigningStateHavePrivateKeys,
+    MXCrossSigningStateCanCrossSign,
     
     /**
-     Same as MXCrossSigningStateHavePrivateKeys but private keys can only be used asynchronously.
-     Access to these key may require UI interaction with the user like passphrase, Face ID, etc.
+     Same as MXCrossSigningStateCanCrossSign but private keys can only be used asynchronously.
+     Access to these keys may require UI interaction with the user like passphrase, Face ID, etc.
      */
-    MXCrossSigningStateHavePrivateKeysAsynchronously,
+    MXCrossSigningStateCanCrossSignAsynchronously,
 };
 
 
@@ -119,7 +120,7 @@ typedef NS_ENUM(NSInteger, MXCrossSigningErrorCode)
  Cross-signing state for this account and this device.
  */
 @property (nonatomic, readonly) MXCrossSigningState state;
-@property (nonatomic, readonly) BOOL canReadCrossSignTrust;
+@property (nonatomic, readonly) BOOL canTrustCrossSigning;
 @property (nonatomic, readonly) BOOL canCrossSign;
 
 /**
