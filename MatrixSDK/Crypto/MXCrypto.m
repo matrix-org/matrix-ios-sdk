@@ -252,10 +252,12 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
             NSLog(@"[MXCrypto] Store: %@", self.store);
             NSLog(@"[MXCrypto] ");
 
+            [self->_crossSigning loadCrossSigningKeys];
+            
             [self->outgoingRoomKeyRequestManager start];
 
             [self->_backup checkAndStartKeyBackup];
-
+            
             dispatch_async(dispatch_get_main_queue(), ^{
                 self->startOperation = nil;
                 success();
@@ -807,7 +809,7 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
         }
 
         // Cross-sign our own device
-        if (self.crossSigning.isBootstrapped
+        if (self.crossSigning.canCrossSign
             && verificationStatus == MXDeviceVerified
             && [userId isEqualToString:self.mxSession.myUser.userId])
         {
@@ -1538,9 +1540,7 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
                                                                          crossSigningVerified:NO]];
 
         // Add our own deviceinfo to the store
-        NSMutableDictionary *myDevices = [NSMutableDictionary dictionaryWithDictionary:[_store devicesForUser:userId]];
-        myDevices[_myDevice.deviceId] = _myDevice;
-        [_store storeDevicesForUser:userId devices:myDevices];
+        [_store storeDeviceForUser:userId device:_myDevice];
 
         oneTimeKeyCount = -1;
 

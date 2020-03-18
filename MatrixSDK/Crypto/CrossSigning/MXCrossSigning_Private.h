@@ -40,6 +40,8 @@ NS_ASSUME_NONNULL_BEGIN
  */
 - (instancetype)initWithCrypto:(MXCrypto *)crypto;
 
+- (void)loadCrossSigningKeys;
+
 - (BOOL)isUserWithCrossSigningKeysVerified:(MXCrossSigningInfo*)crossSigningKeys;
 - (BOOL)isDeviceVerified:(MXDeviceInfo*)device;
 

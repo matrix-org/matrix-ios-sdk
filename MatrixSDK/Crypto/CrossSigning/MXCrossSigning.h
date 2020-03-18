@@ -24,8 +24,47 @@ NS_ASSUME_NONNULL_BEGIN
 
 #pragma mark - Constants
 
-FOUNDATION_EXPORT NSString *const MXCrossSigningErrorDomain;
+/**
+ Cross-signing state of the current acount.
+ */
+typedef NS_ENUM(NSInteger, MXCrossSigningState)
+{
+    /**
+     Cross-signing is not enabled for this account.
+     No cross-signing keys have been published on the server.
+     */
+    MXCrossSigningStateNotBootstrapped = 0,
+    
+    /**
+     Cross-signing has been enabled for this account.
+     Cross-signing public keys have been published on the server but they are not trusted by this device.
+     */
+    MXCrossSigningStateCrossSigningExists,
+    
+    /**
+     MXCrossSigningStateCrossSigningExists and it is trusted by this device.
+     Based on cross-signing:
+         - this device can trust other users and their cross-signed devices
+         - this device can trust other cross-signed devices of this account
+     */
+    MXCrossSigningStateTrustCrossSigning,
+    
+    /**
+     MXCrossSigningStateTrustCrossSigning and we can cross-sign.
+     This device has cross-signing private keys.
+     It can cross-sign other users or other devices of this account.
+     */
+    MXCrossSigningStateCanCrossSign,
+    
+    /**
+     Same as MXCrossSigningStateCanCrossSign but private keys can only be used asynchronously.
+     Access to these keys may require UI interaction with the user like passphrase, Face ID, etc.
+     */
+    MXCrossSigningStateCanCrossSignAsynchronously,
+};
 
+
+FOUNDATION_EXPORT NSString *const MXCrossSigningErrorDomain;
 typedef NS_ENUM(NSInteger, MXCrossSigningErrorCode)
 {
     MXCrossSigningUnknownUserIdErrorCode,
@@ -77,8 +116,12 @@ typedef NS_ENUM(NSInteger, MXCrossSigningErrorCode)
 
 @interface MXCrossSigning : NSObject
 
-// Flag indicating if cross-signing is set up on this device
-@property (nonatomic, readonly) BOOL isBootstrapped;
+/**
+ Cross-signing state for this account and this device.
+ */
+@property (nonatomic, readonly) MXCrossSigningState state;
+@property (nonatomic, readonly) BOOL canTrustCrossSigning;
+@property (nonatomic, readonly) BOOL canCrossSign;
 
 /**
  Bootstrap cross-signing on this device.
