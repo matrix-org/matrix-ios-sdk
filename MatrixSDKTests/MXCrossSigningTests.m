@@ -38,12 +38,10 @@
 @end
 
 
-@interface MXCrossSigningTests : XCTestCase <MXCrossSigningKeysStorageDelegate>
+@interface MXCrossSigningTests : XCTestCase
 {
     MatrixSDKTestsData *matrixSDKTestsData;
     MatrixSDKTestsE2EData *matrixSDKTestsE2EData;
-
-    MXUsersDevicesMap<NSData*> *userPrivateKeys;
 }
 
 @end
@@ -57,43 +55,12 @@
 
     matrixSDKTestsData = [[MatrixSDKTestsData alloc] init];
     matrixSDKTestsE2EData = [[MatrixSDKTestsE2EData alloc] initWithMatrixSDKTestsData:matrixSDKTestsData];
-
-    userPrivateKeys = [MXUsersDevicesMap new];
 }
 
 - (void)tearDown
 {
     matrixSDKTestsData = nil;
     matrixSDKTestsE2EData = nil;
-}
-
-
-#pragma mark - MXCrossSigningKeysStorageDelegate
-
-- (void)crossSigning:(nonnull MXCrossSigning *)crossSigning
-privateKeyWithKeyType:(nonnull NSString *)keyType
-   expectedPublicKey:(nonnull NSString *)expectedPublicKey
-             success:(nonnull void (^)(NSData * _Nonnull))success
-             failure:(nonnull void (^)(NSError * _Nonnull))failure
-{
-    NSData *privateKey = [userPrivateKeys objectForDevice:keyType forUser:crossSigning.crypto.myDevice.deviceId];
-    if (privateKey)
-    {
-        success(privateKey);
-    }
-    else
-    {
-        failure([NSError errorWithDomain:@"MXCrossSigningTests: Unknown keys" code:0 userInfo:nil]);
-    }
-}
-
-- (void)crossSigning:(nonnull MXCrossSigning *)crossSigning
-     savePrivateKeys:(nonnull NSDictionary<NSString *,NSData *> *)privateKeys
-             success:(nonnull void (^)(void))success
-             failure:(nonnull void (^)(NSError * _Nonnull))failure
-{
-    [userPrivateKeys setObjects:privateKeys forUser:crossSigning.crypto.myDevice.deviceId];
-    success();
 }
 
 
@@ -113,7 +80,6 @@ privateKeyWithKeyType:(nonnull NSString *)keyType
                                                readyToTest:^(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation)
      {
          // - Bootstrap cross-singing on Alice using password
-         aliceSession.crypto.crossSigning.keysStorageDelegate = self;
          [aliceSession.crypto.crossSigning bootstrapWithPassword:MXTESTS_ALICE_PWD success:^{
 
              readyToTest(bobSession, aliceSession, roomId, expectation);
@@ -147,7 +113,6 @@ privateKeyWithKeyType:(nonnull NSString *)keyType
             [MXSDKOptions sharedInstance].enableCryptoWhenStartingMXSession = NO;
 
             // - Bootstrap cross-siging from alice1
-            alice1Session.crypto.crossSigning.keysStorageDelegate = self;
             [alice1Session.crypto.crossSigning bootstrapWithPassword:MXTESTS_ALICE_PWD success:^{
 
                 readyToTest(bobSession, alice1Session, roomId, alice0Creds, expectation);
@@ -176,7 +141,6 @@ privateKeyWithKeyType:(nonnull NSString *)keyType
             [alice1Session.crypto setDeviceVerification:MXDeviceVerified forDevice:alice0Creds.deviceId ofUser:alice0Creds.userId success:^{
 
                 // - Bootstrap cross-siging for bob
-                bobSession.crypto.crossSigning.keysStorageDelegate = self;
                 [bobSession.crypto.crossSigning bootstrapWithPassword:MXTESTS_BOB_PWD success:^{
 
                     readyToTest(bobSession, alice1Session, roomId, alice0Creds, expectation);
@@ -742,7 +706,6 @@ privateKeyWithKeyType:(nonnull NSString *)keyType
     [self doTestWithBobAndBootstrappedAliceWithTwoDevices:self readyToTest:^(MXSession *bobSession, MXSession *alice1Session, NSString *roomId, MXCredentials *alice0Creds, XCTestExpectation *expectation) {
 
         // - Bootstrap cross-siging for bob
-        bobSession.crypto.crossSigning.keysStorageDelegate = self;
         [bobSession.crypto.crossSigning bootstrapWithPassword:MXTESTS_BOB_PWD success:^{
 
             // - Bob trusts Alice

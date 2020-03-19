@@ -63,6 +63,8 @@ typedef NS_ENUM(NSInteger, MXCrossSigningState)
      Same as MXCrossSigningStateCanCrossSign but private keys can only be used asynchronously.
      Access to these keys may require UI interaction with the user like passphrase, Face ID, etc.
      */
+    // TODO: This is unused for the moment but it will come back with the full implemenation of SSSS.
+    // All related code has been removed to remove noise. Check the code in this commit.
     MXCrossSigningStateCanCrossSignAsynchronously,
 };
 
@@ -73,44 +75,6 @@ typedef NS_ENUM(NSInteger, MXCrossSigningErrorCode)
     MXCrossSigningUnknownUserIdErrorCode,
     MXCrossSigningUnknownDeviceIdErrorCode,
 };
-
-
-@class MXCrossSigning;
-
-@protocol MXCrossSigningKeysStorageDelegate <NSObject>
-
-/**
- Called when a cross-signing private key is needed.
-
- @param crossSigning The `MXCrossSigning` module.
- @param keyType The type of key needed.  Will be one of MXCrossSigningKeyType.
- @param expectedPublicKey The public key matching the expected private key.
-
- @param success A block object called when the operation succeeds.
- @param failure A block object called when the operation fails.
- */
-- (void)crossSigning:(MXCrossSigning*)crossSigning
-privateKeyWithKeyType:(NSString*)keyType
-   expectedPublicKey:(NSString*)expectedPublicKey
-             success:(void (^)(NSData *privateKey))success
-             failure:(void (^)(NSError *error))failure;
-
-/**
- Called when new private keys for cross-signing need to be saved.
-
- @param crossSigning The `MXCrossSigning` module.
- @param privateKeys Private keys to store. Map of key name to private key as a NSData.
-
- @param success A block object called when the operation succeeds.
- @param failure A block object called when the operation fails.
- */
-- (void)crossSigning:(MXCrossSigning*)crossSigning
-     savePrivateKeys:(NSDictionary<NSString*, NSData*>*)privateKeys
-             success:(void (^)(void))success
-             failure:(void (^)(NSError *error))failure;
-
-@end
-
 
 
 @interface MXCrossSigning : NSObject
@@ -175,11 +139,6 @@ privateKeyWithKeyType:(NSString*)keyType
 - (void)signUserWithUserId:(NSString*)userId
                    success:(void (^)(void))success
                    failure:(void (^)(NSError *error))failure;
-
-/**
- The secure storage for the private parts of our user cross-signing keys.
- */
-@property (nonatomic, weak) id<MXCrossSigningKeysStorageDelegate> keysStorageDelegate;
 
 @end
 
