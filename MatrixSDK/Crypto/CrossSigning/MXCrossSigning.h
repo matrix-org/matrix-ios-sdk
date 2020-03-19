@@ -149,6 +149,21 @@ typedef NS_ENUM(NSInteger, MXCrossSigningErrorCode)
                    success:(void (^)(void))success
                    failure:(void (^)(NSError *error))failure;
 
+
+/**
+ Request private keys for cross-signing from other devices.
+ 
+ @param deviceIds ids of device to make requests to. Nil to request all.
+ 
+ @param success A block object called when the operation succeeds.
+ @param onPrivateKeysReceived A block called when the secret has been received from another device.
+ @param failure A block object called when the operation fails.
+ */
+- (void)requestPrivateKeysToDeviceIds:(nullable NSArray<NSString*>*)deviceIds
+                              success:(void (^)(void))success
+                onPrivateKeysReceived:(void (^)(void))onPrivateKeysReceived
+                              failure:(void (^)(NSError *error))failure;
+
 @end
 
 NS_ASSUME_NONNULL_END

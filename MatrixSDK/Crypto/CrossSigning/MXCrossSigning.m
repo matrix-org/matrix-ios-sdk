@@ -259,6 +259,62 @@ NSString *const MXCrossSigningErrorDomain = @"org.matrix.sdk.crosssigning";
     });
 }
 
+- (void)requestPrivateKeysToDeviceIds:(nullable NSArray<NSString*>*)deviceIds
+                              success:(void (^)(void))success
+                onPrivateKeysReceived:(void (^)(void))onPrivateKeysReceived
+                              failure:(void (^)(NSError *error))failure
+{
+    NSLog(@"[MXCrossSigning] requestPrivateKeysToDeviceIds: %@", deviceIds);
+    
+    // Make a secret share request for USK and SSK
+    dispatch_group_t successGroup = dispatch_group_create();
+    dispatch_group_t onPrivateKeysReceivedGroup = dispatch_group_create();
+    
+    __block NSString *uskRequestId, *sskRequestId;
+    
+    dispatch_group_enter(successGroup);
+    dispatch_group_enter(onPrivateKeysReceivedGroup);
+    [self.crypto.secretShareManager requestSecret:MXSecretId.crossSigningUserSigning toDeviceIds:deviceIds success:^(NSString * _Nonnull requestId) {
+        uskRequestId = requestId;
+        dispatch_group_leave(successGroup);
+    } onSecretReceived:^(NSString * _Nonnull secret) {
+        [self.crypto.store storeSecret:secret withSecretId:MXSecretId.crossSigningUserSigning];
+        dispatch_group_leave(onPrivateKeysReceivedGroup);
+    } failure:^(NSError * _Nonnull error) {
+        // Cancel the other request
+        [self.crypto.secretShareManager cancelRequestWithRequestId:sskRequestId success:^{} failure:^(NSError * _Nonnull error) {
+        }];
+        failure(error);
+    }];
+    
+    dispatch_group_enter(successGroup);
+    dispatch_group_enter(onPrivateKeysReceivedGroup);
+    [self.crypto.secretShareManager requestSecret:MXSecretId.crossSigningSelfSigning toDeviceIds:deviceIds success:^(NSString * _Nonnull requestId) {
+        sskRequestId = requestId;
+        dispatch_group_leave(successGroup);
+    } onSecretReceived:^(NSString * _Nonnull secret) {
+        [self.crypto.store storeSecret:secret withSecretId:MXSecretId.crossSigningSelfSigning];
+        dispatch_group_leave(onPrivateKeysReceivedGroup);
+    } failure:^(NSError * _Nonnull error) {
+        // Cancel the other request
+        [self.crypto.secretShareManager cancelRequestWithRequestId:uskRequestId success:^{} failure:^(NSError * _Nonnull error) {
+        }];
+        failure(error);
+    }];
+    
+    dispatch_group_notify(successGroup, dispatch_get_main_queue(), ^{
+        NSLog(@"[MXCrossSigning] requestPrivateKeysToDeviceIds: request succeeded");
+        success();
+    });
+    
+    dispatch_group_notify(onPrivateKeysReceivedGroup, dispatch_get_main_queue(), ^{
+        NSLog(@"[MXCrossSigning] requestPrivateKeysToDeviceIds: Got keys");
+        [self computeState];
+        onPrivateKeysReceived();
+    });
+}
+
+
 #pragma mark - SDK-Private methods -
 
 - (instancetype)initWithCrypto:(MXCrypto *)crypto;

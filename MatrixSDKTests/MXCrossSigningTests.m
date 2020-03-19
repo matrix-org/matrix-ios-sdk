@@ -429,6 +429,74 @@
     }];
 }
 
+//
+// Verify that a verified device gets cross-signing private keys so that it can cross-sign.
+//
+// - Bootstrap cross-signing on a 1st device
+// - Create a 2nd devices
+// - Cross-sign the 2nd device from the 1st one
+// - The 2nd device requests cross-signing keys from the 1st one
+// -> The 2nd device should be able to cross-sign now
+- (void)testPrivateKeysGossiping
+{
+    // - Create Alice
+    [matrixSDKTestsE2EData doE2ETestWithBobAndAlice:self readyToTest:^(MXSession *bobSession, MXSession *aliceSession, XCTestExpectation *expectation) {
+        
+        // - Bootstrap cross-signing on a 1st device
+        [aliceSession.crypto.crossSigning bootstrapWithPassword:MXTESTS_ALICE_PWD success:^{
+            XCTAssertEqual(aliceSession.crypto.crossSigning.state, MXCrossSigningStateCanCrossSign);
+            
+            // - Create a 2nd device
+            [matrixSDKTestsE2EData loginUserOnANewDevice:aliceSession.matrixRestClient.credentials withPassword:MXTESTS_ALICE_PWD onComplete:^(MXSession *newAliceSession) {
+                
+                    // - Cross-sign the 2nd device from the 1st one
+                    // We need to force the 1st session to see the second one (Is it a bug)?
+                    [aliceSession.crypto downloadKeys:@[aliceSession.myUser.userId] forceDownload:YES success:^(MXUsersDevicesMap<MXDeviceInfo *> *usersDevicesInfoMap, NSDictionary<NSString *,MXCrossSigningInfo *> *crossSigningKeysMap) {
+                        
+                        [aliceSession.crypto.crossSigning crossSignDeviceWithDeviceId:newAliceSession.matrixRestClient.credentials.deviceId success:^{
+                            
+                            [newAliceSession.crypto.crossSigning refreshStateWithSuccess:^(BOOL stateUpdated) {
+    
+                                XCTAssertEqual(newAliceSession.crypto.crossSigning.state, MXCrossSigningStateTrustCrossSigning);
+                                
+                                // - The 2nd device requests cross-signing keys from the 1st one
+                                [newAliceSession.crypto.crossSigning requestPrivateKeysToDeviceIds:nil success:^{
+                                } onPrivateKeysReceived:^{
+                                    
+                                    // -> The 2nd device should be able to cross-sign now
+                                    XCTAssertEqual(newAliceSession.crypto.crossSigning.state, MXCrossSigningStateCanCrossSign);
+                                    [expectation fulfill];
+                                    
+                                } failure:^(NSError * _Nonnull error) {
+                                    XCTFail(@"The operation should not fail - NSError: %@", error);
+                                    [expectation fulfill];
+                                }];
+                                
+                            } failure:^(NSError * _Nonnull error) {
+                                XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                                [expectation fulfill];
+                            }];
+                            
+                        } failure:^(NSError * _Nonnull error) {
+                            XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                            [expectation fulfill];
+                        }];
+                        
+                    } failure:^(NSError * _Nonnull error) {
+                        XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                        [expectation fulfill];
+                    }];
+
+            }];
+            
+        } failure:^(NSError *error) {
+            XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+            [expectation fulfill];
+        }];
+    }];
+}
+
+
 // Test /keys/query response parsing for cross signing data
 // - Set up the scenario with alice with cross-signing keys
 // - Use the CS API to retrieve alice keys
