@@ -252,7 +252,7 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
             NSLog(@"[MXCrypto] Store: %@", self.store);
             NSLog(@"[MXCrypto] ");
 
-            [self->_crossSigning loadCrossSigningKeys];
+            [self->_crossSigning refreshStateWithSuccess:nil failure:nil];
             
             [self->outgoingRoomKeyRequestManager start];
 

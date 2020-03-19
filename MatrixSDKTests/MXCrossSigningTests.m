@@ -320,13 +320,13 @@
     XCTAssertNotNil(error);
 }
 
-// - Create Alice & Bob account
-// - Bootstrap cross-singing on Alice using password
+// - Create Alice
+// - Bootstrap cross-signing on Alice using password
 // -> Cross-signing must be bootstrapped
 // -> Alice must see their device trusted
 - (void)testBootstrapWithPassword
 {
-    // - Create Alice & Bob account
+    // - Create Alice
     [matrixSDKTestsE2EData doE2ETestWithBobAndAlice:self readyToTest:^(MXSession *bobSession, MXSession *aliceSession, XCTestExpectation *expectation) {
 
         XCTAssertEqual(aliceSession.crypto.crossSigning.state, MXCrossSigningStateNotBootstrapped);
@@ -350,6 +350,78 @@
 
             [expectation fulfill];
 
+        } failure:^(NSError *error) {
+            XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+            [expectation fulfill];
+        }];
+    }];
+}
+
+// Test [MXCrossSigning refreshStateWithSuccess:]
+//
+// - Bootstrap cross-signing on a 1st device
+// - Create a 2nd device
+// - Check 2nd device cross-signing state
+// -> It should be MXCrossSigningStateCrossSigningExists
+// - Cross-sign the 2nd device from the 1st one
+// - Check 2nd device cross-signing state
+// -> It should be MXCrossSigningStateTrustCrossSigning
+- (void)testRefreshState
+{
+    // - Create Alice
+    [matrixSDKTestsE2EData doE2ETestWithBobAndAlice:self readyToTest:^(MXSession *bobSession, MXSession *aliceSession, XCTestExpectation *expectation) {
+        
+        // - Bootstrap cross-signing on a 1st device
+        [aliceSession.crypto.crossSigning bootstrapWithPassword:MXTESTS_ALICE_PWD success:^{
+            XCTAssertEqual(aliceSession.crypto.crossSigning.state, MXCrossSigningStateCanCrossSign);
+            
+            // - Create a 2nd device
+            [matrixSDKTestsE2EData loginUserOnANewDevice:aliceSession.matrixRestClient.credentials withPassword:MXTESTS_ALICE_PWD onComplete:^(MXSession *newAliceSession) {
+                
+                // - Check 2nd device cross-signing state
+                [newAliceSession.crypto.crossSigning refreshStateWithSuccess:^(BOOL stateUpdated) {
+                    
+                    // -> It should be MXCrossSigningStateCrossSigningExists
+                    XCTAssertEqual(newAliceSession.crypto.crossSigning.state, MXCrossSigningStateCrossSigningExists);
+                    XCTAssertFalse(newAliceSession.crypto.crossSigning.canTrustCrossSigning);
+                    XCTAssertFalse(newAliceSession.crypto.crossSigning.canCrossSign);
+                    
+                    // - Cross-sign the 2nd device from the 1st one
+                    // We need to force the 1st session to see the second one (Is it a bug)?
+                    [aliceSession.crypto downloadKeys:@[aliceSession.myUser.userId] forceDownload:YES success:^(MXUsersDevicesMap<MXDeviceInfo *> *usersDevicesInfoMap, NSDictionary<NSString *,MXCrossSigningInfo *> *crossSigningKeysMap) {
+                        
+                        [aliceSession.crypto.crossSigning crossSignDeviceWithDeviceId:newAliceSession.matrixRestClient.credentials.deviceId success:^{
+                            
+                            // - Check 2nd device cross-signing state
+                            [newAliceSession.crypto.crossSigning refreshStateWithSuccess:^(BOOL stateUpdated) {
+                                
+                                // -> It should be MXCrossSigningStateTrustCrossSigning
+                                XCTAssertEqual(newAliceSession.crypto.crossSigning.state, MXCrossSigningStateTrustCrossSigning);
+                                XCTAssertTrue(newAliceSession.crypto.crossSigning.canTrustCrossSigning);
+                                XCTAssertFalse(newAliceSession.crypto.crossSigning.canCrossSign);
+                                
+                                [expectation fulfill];
+                            } failure:^(NSError * _Nonnull error) {
+                                XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                                [expectation fulfill];
+                            }];
+                            
+                        } failure:^(NSError * _Nonnull error) {
+                            XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                            [expectation fulfill];
+                        }];
+                        
+                    } failure:^(NSError * _Nonnull error) {
+                        XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                        [expectation fulfill];
+                    }];
+                    
+                } failure:^(NSError * _Nonnull error) {
+                    XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                    [expectation fulfill];
+                }];
+            }];
+            
         } failure:^(NSError *error) {
             XCTFail(@"Cannot set up intial test conditions - error: %@", error);
             [expectation fulfill];

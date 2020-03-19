@@ -92,6 +92,15 @@ typedef NS_ENUM(NSInteger, MXCrossSigningErrorCode)
 @property (nonatomic, readonly) BOOL canCrossSign;
 
 /**
+ Check update for this device cross-signing state (self.state).
+ 
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+ */
+- (void)refreshStateWithSuccess:(nullable void (^)(BOOL stateUpdated))success
+                        failure:(nullable void (^)(NSError *error))failure;
+
+/**
  Bootstrap cross-signing on this device.
 
  This creates cross-signing keys. It will use keysStorageDelegate to store

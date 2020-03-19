@@ -166,6 +166,8 @@ NSString *const MXCrossSigningErrorDomain = @"org.matrix.sdk.crosssigning";
                             success:(void (^)(void))success
                             failure:(void (^)(NSError *error))failure
 {
+    NSLog(@"[MXCrossSigning] crossSignDeviceWithDeviceId: %@", deviceId);
+          
     NSString *myUserId = self.crypto.mxSession.myUser.userId;
     
     dispatch_async(self.crypto.cryptoQueue, ^{
@@ -211,6 +213,8 @@ NSString *const MXCrossSigningErrorDomain = @"org.matrix.sdk.crosssigning";
                    success:(void (^)(void))success
                    failure:(void (^)(NSError *error))failure
 {
+    NSLog(@"[MXCrossSigning] signUserWithUserId: %@", userId);
+    
     dispatch_async(self.crypto.cryptoQueue, ^{
         // Make sure we have latest data from the user
         [self.crypto.deviceList downloadKeys:@[userId] forceDownload:NO success:^(MXUsersDevicesMap<MXDeviceInfo *> *userDevices, NSDictionary<NSString *,MXCrossSigningInfo *> *crossSigningKeysMap) {
@@ -271,10 +275,12 @@ NSString *const MXCrossSigningErrorDomain = @"org.matrix.sdk.crosssigning";
     return self;
 }
 
-- (void)loadCrossSigningKeys
+- (void)refreshStateWithSuccess:(nullable void (^)(BOOL stateUpdated))success
+                        failure:(nullable void (^)(NSError *error))failure
 {
+    MXCrossSigningState oldState = _state;
+    
     NSString *myUserId = _crypto.mxSession.matrixRestClient.credentials.userId;
-
     _myUserCrossSigningKeys = [_crypto.store crossSigningKeysForUser:myUserId];
 
     // Refresh user's keys
@@ -282,8 +288,17 @@ NSString *const MXCrossSigningErrorDomain = @"org.matrix.sdk.crosssigning";
         
         self.myUserCrossSigningKeys = crossSigningKeysMap[myUserId];
         [self computeState];
+        
+        if (success)
+        {
+            success(self.state != oldState);
+        }
     } failure:^(NSError *error) {
-        NSLog(@"[MXCrossSigning] loadCrossSigningKeys: Failed to load my user's keys");
+        NSLog(@"[MXCrossSigning] refreshStateWithSuccess: Failed to load my user's keys");
+        if (failure)
+        {
+            failure(error);
+        }
     }];
 }
 
