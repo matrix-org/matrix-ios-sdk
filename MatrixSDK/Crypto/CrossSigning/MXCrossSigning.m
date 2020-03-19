@@ -64,7 +64,7 @@ NSString *const MXCrossSigningErrorDomain = @"org.matrix.sdk.crosssigning";
     MXCrossSigningInfo *keys = [self createKeys:&privateKeys];
 
     // Delegate the storage of them
-    [self.keysStorageDelegate saveCrossSigningKeys:self userId:myCreds.userId deviceId:myCreds.deviceId privateKeys:privateKeys success:^{
+    [self.keysStorageDelegate crossSigning:self savePrivateKeys:privateKeys success:^{
 
         NSDictionary *signingKeys = @{
                                       @"master_key": keys.masterKeys.JSONDictionary,
@@ -537,11 +537,9 @@ NSString *const MXCrossSigningErrorDomain = @"org.matrix.sdk.crosssigning";
         return;
     }
 
-    MXCredentials *myUser = _crypto.mxSession.matrixRestClient.credentials;
-
     // Interact with the outside on the main thread
     dispatch_async(dispatch_get_main_queue(), ^{
-        [self.keysStorageDelegate getCrossSigningKey:self userId:myUser.userId deviceId:myUser.deviceId withKeyType:keyType expectedPublicKey:expectedPublicKey success:^(NSData * _Nonnull privateKey) {
+        [self.keysStorageDelegate crossSigning:self privateKeyWithKeyType:keyType expectedPublicKey:expectedPublicKey success:^(NSData * _Nonnull privateKey) {
             
             dispatch_async(self.crypto.cryptoQueue, ^{
                 NSError *error;

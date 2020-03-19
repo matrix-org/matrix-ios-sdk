@@ -19,7 +19,6 @@
 #import "MXCrossSigningTools.h"
 #import "MXDeviceInfo.h"
 
-@class MXCrypto;
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -27,11 +26,6 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property (nonatomic) MXCrossSigningInfo *myUserCrossSigningKeys;
 @property (nonatomic) MXCrossSigningTools *crossSigningTools;
-
-/**
- The Matrix crypto.
- */
-@property (nonatomic, readonly, weak) MXCrypto *crypto;
 
 /**
  Constructor.

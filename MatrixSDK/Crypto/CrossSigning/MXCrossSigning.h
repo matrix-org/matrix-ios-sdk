@@ -19,6 +19,9 @@
 #import "MXCrossSigningInfo.h"
 #import "MXCrossSigningKey.h"
 
+@class MXCrypto;
+
+
 NS_ASSUME_NONNULL_BEGIN
 
 
@@ -86,13 +89,11 @@ typedef NS_ENUM(NSInteger, MXCrossSigningErrorCode)
  @param success A block object called when the operation succeeds.
  @param failure A block object called when the operation fails.
  */
-- (void)getCrossSigningKey:(MXCrossSigning*)crossSigning
-                    userId:(NSString*)userId
-                  deviceId:(NSString*)deviceId
-               withKeyType:(NSString*)keyType
-         expectedPublicKey:(NSString*)expectedPublicKey
-                   success:(void (^)(NSData *privateKey))success
-                   failure:(void (^)(NSError *error))failure;
+- (void)crossSigning:(MXCrossSigning*)crossSigning
+privateKeyWithKeyType:(NSString*)keyType
+   expectedPublicKey:(NSString*)expectedPublicKey
+             success:(void (^)(NSData *privateKey))success
+             failure:(void (^)(NSError *error))failure;
 
 /**
  Called when new private keys for cross-signing need to be saved.
@@ -103,18 +104,21 @@ typedef NS_ENUM(NSInteger, MXCrossSigningErrorCode)
  @param success A block object called when the operation succeeds.
  @param failure A block object called when the operation fails.
  */
-- (void)saveCrossSigningKeys:(MXCrossSigning*)crossSigning
-                      userId:(NSString*)userId
-                    deviceId:(NSString*)deviceId
-                 privateKeys:(NSDictionary<NSString*, NSData*>*)privateKeys
-                     success:(void (^)(void))success
-                     failure:(void (^)(NSError *error))failure;
+- (void)crossSigning:(MXCrossSigning*)crossSigning
+     savePrivateKeys:(NSDictionary<NSString*, NSData*>*)privateKeys
+             success:(void (^)(void))success
+             failure:(void (^)(NSError *error))failure;
 
 @end
 
 
 
 @interface MXCrossSigning : NSObject
+
+/**
+ The Matrix crypto.
+ */
+@property (nonatomic, readonly, weak) MXCrypto *crypto;
 
 /**
  Cross-signing state for this account and this device.

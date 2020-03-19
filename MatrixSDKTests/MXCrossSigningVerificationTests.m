@@ -143,15 +143,13 @@
 
 #pragma mark - MXCrossSigningKeysStorageDelegate
 
-- (void)getCrossSigningKey:(nonnull MXCrossSigning *)crossSigning
-                    userId:(nonnull NSString*)userId
-                  deviceId:(nonnull NSString*)deviceId
-               withKeyType:(nonnull NSString *)keyType
-         expectedPublicKey:(nonnull NSString *)expectedPublicKey
-                   success:(nonnull void (^)(NSData * _Nonnull))success
-                   failure:(nonnull void (^)(NSError * _Nonnull))failure
+- (void)crossSigning:(nonnull MXCrossSigning *)crossSigning
+privateKeyWithKeyType:(nonnull NSString *)keyType
+   expectedPublicKey:(nonnull NSString *)expectedPublicKey
+             success:(nonnull void (^)(NSData * _Nonnull))success
+             failure:(nonnull void (^)(NSError * _Nonnull))failure
 {
-    NSData *privateKey = [userPrivateKeys objectForDevice:keyType forUser:userId];
+    NSData *privateKey = [userPrivateKeys objectForDevice:keyType forUser:crossSigning.crypto.myDevice.deviceId];
     if (privateKey)
     {
         success(privateKey);
@@ -162,14 +160,12 @@
     }
 }
 
-- (void)saveCrossSigningKeys:(nonnull MXCrossSigning *)crossSigning
-                      userId:(nonnull NSString*)userId
-                    deviceId:(nonnull NSString*)deviceId
-                 privateKeys:(nonnull NSDictionary<NSString *,NSData *> *)privateKeys
-                     success:(nonnull void (^)(void))success
-                     failure:(nonnull void (^)(NSError * _Nonnull))failure
+- (void)crossSigning:(nonnull MXCrossSigning *)crossSigning
+     savePrivateKeys:(nonnull NSDictionary<NSString *,NSData *> *)privateKeys
+             success:(nonnull void (^)(void))success
+             failure:(nonnull void (^)(NSError * _Nonnull))failure
 {
-    [userPrivateKeys setObjects:privateKeys forUser:userId];
+    [userPrivateKeys setObjects:privateKeys forUser:crossSigning.crypto.myDevice.deviceId];
     success();
 }
 
