@@ -20,6 +20,7 @@
 #import "MXDeviceInfo_Private.h"
 #import "MXCrossSigningInfo_Private.h"
 #import "MXKey.h"
+#import "MXBase64Tools.h"
 
 
 #pragma mark - Constants
@@ -54,9 +55,6 @@ NSString *const MXCrossSigningErrorDomain = @"org.matrix.sdk.crosssigning";
                       success:(void (^)(void))success
                       failure:(void (^)(NSError *error))failure
 {
-     // We must have a storage implementation (default should be SSSS)
-    NSParameterAssert(self.keysStorageDelegate);
-
     MXCredentials *myCreds = _crypto.mxSession.matrixRestClient.credentials;
 
     // Create keys
@@ -64,7 +62,7 @@ NSString *const MXCrossSigningErrorDomain = @"org.matrix.sdk.crosssigning";
     MXCrossSigningInfo *keys = [self createKeys:&privateKeys];
 
     // Delegate the storage of them
-    [self.keysStorageDelegate crossSigning:self savePrivateKeys:privateKeys success:^{
+    [self storeCrossSigningKeys:privateKeys success:^{
 
         NSDictionary *signingKeys = @{
                                       @"master_key": keys.masterKeys.JSONDictionary,
@@ -395,10 +393,11 @@ NSString *const MXCrossSigningErrorDomain = @"org.matrix.sdk.crosssigning";
         {
             state = MXCrossSigningStateTrustCrossSigning;
             
-            // TODO: MXCrossSigningStateCanCrossSign
-            // This will happen with gossiping
-            
-            if (_keysStorageDelegate
+            if (self.haveCrossSigningPrivateKeysInCryptoStore)
+            {
+                state = MXCrossSigningStateCanCrossSign;
+            }
+            else if (_keysStorageDelegate
                 /* && TODO: Check this async storage has these keys */)     // This will happen with full implementation of SSSS
             {
                 state = MXCrossSigningStateCanCrossSignAsynchronously;
@@ -505,7 +504,7 @@ NSString *const MXCrossSigningErrorDomain = @"org.matrix.sdk.crosssigning";
            success:(void (^)(NSDictionary *signedObject))success
            failure:(void (^)(NSError *error))failure
 {
-    [self getCrossSigningKeyWithKeyType:keyType success:^(NSString *publicKey, OLMPkSigning *signing) {
+    [self crossSigningKeyWithKeyType:keyType success:^(NSString *publicKey, OLMPkSigning *signing) {
 
         NSString *myUserId = self.crypto.mxSession.myUser.userId;
 
@@ -522,13 +521,19 @@ NSString *const MXCrossSigningErrorDomain = @"org.matrix.sdk.crosssigning";
     } failure:failure];
 }
 
-- (void)getCrossSigningKeyWithKeyType:(NSString*)keyType
-                              success:(void (^)(NSString *publicKey, OLMPkSigning *signing))success
-                              failure:(void (^)(NSError *error))failure
-{
-    // We must have a storage implementation (default should be SSSS)
-    NSParameterAssert(self.keysStorageDelegate);
 
+#pragma mark - Private keys storage
+
+- (BOOL)haveCrossSigningPrivateKeysInCryptoStore
+{
+    return [self.crypto.store secretWithSecretId:MXSecretId.crossSigningSelfSigning]
+    && [self.crypto.store secretWithSecretId:MXSecretId.crossSigningUserSigning];
+}
+
+- (void)crossSigningKeyWithKeyType:(NSString*)keyType
+                           success:(void (^)(NSString *publicKey, OLMPkSigning *signing))success
+                           failure:(void (^)(NSError *error))failure
+{
     NSString *expectedPublicKey = _myUserCrossSigningKeys.keys[keyType].keys;
     if (!expectedPublicKey)
     {
@@ -536,38 +541,142 @@ NSString *const MXCrossSigningErrorDomain = @"org.matrix.sdk.crosssigning";
         failure(nil);
         return;
     }
-
-    // Interact with the outside on the main thread
-    dispatch_async(dispatch_get_main_queue(), ^{
-        [self.keysStorageDelegate crossSigning:self privateKeyWithKeyType:keyType expectedPublicKey:expectedPublicKey success:^(NSData * _Nonnull privateKey) {
-            
-            dispatch_async(self.crypto.cryptoQueue, ^{
-                NSError *error;
-                OLMPkSigning *pkSigning = [[OLMPkSigning alloc] init];
-                NSString *gotPublicKey = [pkSigning doInitWithSeed:privateKey error:&error];
-                if (error)
+    
+    // Check local store
+    NSString *secretId = [self secretIdFromKeyType:keyType];
+    if (secretId)
+    {
+        NSString *privateKeyBase64 = [self.crypto.store secretWithSecretId:secretId];
+        if (privateKeyBase64)
+        {
+            NSData *privateKey = [MXBase64Tools dataFromUnpaddedBase64:privateKeyBase64];
+            if (privateKey)
+            {
+                OLMPkSigning *pkSigning = [self pkSigningFromPrivateKey:privateKey withExpectedPublicKey:expectedPublicKey];
+                if (!pkSigning)
                 {
-                    NSLog(@"[MXCrossSigning] getCrossSigningKeyWithKeyType failed to build PK signing. Error: %@", error);
-                    failure(error);
-                    return;
-                }
-                
-                if (![gotPublicKey isEqualToString:expectedPublicKey])
-                {
-                    NSLog(@"[MXCrossSigning] getCrossSigningKeyWithKeyType failed. Keys do not match: %@ vs %@", gotPublicKey, expectedPublicKey);
+                    NSLog(@"[MXCrossSigning] getCrossSigningKeyWithKeyType failed to get PK signing");
                     failure(nil);
                     return;
                 }
                 
-                success(gotPublicKey, pkSigning);
-            });
+                success(expectedPublicKey, pkSigning);
+                return;
+            }
+        }
+    }
+    
+    // Require??
+    if (self.keysStorageDelegate)
+    {
+        // Interact with the outside on the main thread
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [self.keysStorageDelegate crossSigning:self privateKeyWithKeyType:keyType expectedPublicKey:expectedPublicKey success:^(NSData * _Nonnull privateKey) {
+                
+                dispatch_async(self.crypto.cryptoQueue, ^{
+                    OLMPkSigning *pkSigning = [self pkSigningFromPrivateKey:privateKey withExpectedPublicKey:expectedPublicKey];
+                    
+                    if (!pkSigning)
+                    {
+                        NSLog(@"[MXCrossSigning] getCrossSigningKeyWithKeyType failed to get PK signing");
+                        failure(nil);
+                        return;
+                    }
+                    
+                    success(expectedPublicKey, pkSigning);
+                });
+                
+            } failure:^(NSError * _Nonnull error) {
+                dispatch_async(self.crypto.cryptoQueue, ^{
+                    failure(error);
+                });
+            }];
+        });
+    }
+    else
+    {
+        NSLog(@"[MXCrossSigning] getCrossSigningKeyWithKeyType: %@ failed. No keysStorageDelegate to get the key", keyType);
+        failure(nil);
+        return;
+    }
+}
+
+- (void)storeCrossSigningKeys:(NSDictionary<NSString*, NSData*>*)privateKeys
+                      success:(void (^)(void))success
+                      failure:(void (^)(NSError *error))failure
+{
+    // Store MSK, USK & SSK keys to crypto store
+    for (NSString *keyType in privateKeys)
+    {
+        NSString *secretId = [self secretIdFromKeyType:keyType];
+        if (secretId)
+        {
+            NSString *secret = [MXBase64Tools unpaddedBase64FromData:privateKeys[keyType]];
+            [self.crypto.store storeSecret:secret withSecretId:secretId];
+        }
+    }
+    
+    // Require??
+    if (self.keysStorageDelegate)
+    {
+        // Interact with the outside on the main thread
+        dispatch_async(dispatch_get_main_queue(), ^{
             
-        } failure:^(NSError * _Nonnull error) {
-            dispatch_async(self.crypto.cryptoQueue, ^{
-                failure(error);
-            });
-        }];
-    });
+            [self.keysStorageDelegate crossSigning:self savePrivateKeys:privateKeys success:^{
+                dispatch_async(self.crypto.cryptoQueue, ^{
+                    success();
+                });
+            } failure:^(NSError * _Nonnull error) {
+                dispatch_async(self.crypto.cryptoQueue, ^{
+                    failure(error);
+                });
+            }];
+        });
+    }
+    else
+    {
+        success();
+    }
+}
+
+// Convert a cross-signing key type to a SSSS secret id
+- (nullable NSString*)secretIdFromKeyType:(NSString*)keyType
+{
+    NSString *secretId;
+    if ([keyType isEqualToString:MXCrossSigningKeyType.master])
+    {
+        secretId = MXSecretId.crossSigningMaster;
+    }
+    else if ([keyType isEqualToString:MXCrossSigningKeyType.selfSigning])
+    {
+        secretId = MXSecretId.crossSigningSelfSigning;
+    }
+    else if ([keyType isEqualToString:MXCrossSigningKeyType.userSigning])
+    {
+        secretId = MXSecretId.crossSigningUserSigning;
+    }
+    
+    return secretId;
+}
+
+- (nullable OLMPkSigning*)pkSigningFromPrivateKey:(NSData*)privateKey withExpectedPublicKey:(NSString*)expectedPublicKey
+{
+    NSError *error;
+    OLMPkSigning *pkSigning = [[OLMPkSigning alloc] init];
+    NSString *gotPublicKey = [pkSigning doInitWithSeed:privateKey error:&error];
+    if (error)
+    {
+        NSLog(@"[MXCrossSigning] pkSigningFromPrivateKey failed to build PK signing. Error: %@", error);
+        return nil;
+    }
+    
+    if (![gotPublicKey isEqualToString:expectedPublicKey])
+    {
+        NSLog(@"[MXCrossSigning] pkSigningFromPrivateKey failed. Keys do not match: %@ vs %@", gotPublicKey, expectedPublicKey);
+        return nil;
+    }
+    
+    return pkSigning;
 }
 
 @end

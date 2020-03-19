@@ -370,11 +370,10 @@ privateKeyWithKeyType:(nonnull NSString *)keyType
         XCTAssertFalse(aliceSession.crypto.crossSigning.canTrustCrossSigning);
 
         // - Bootstrap cross-singing on Alice using password
-        aliceSession.crypto.crossSigning.keysStorageDelegate = self;
         [aliceSession.crypto.crossSigning bootstrapWithPassword:MXTESTS_ALICE_PWD success:^{
 
             // -> Cross-signing must be bootstrapped
-            XCTAssertEqual(aliceSession.crypto.crossSigning.state, MXCrossSigningStateCanCrossSignAsynchronously);
+            XCTAssertEqual(aliceSession.crypto.crossSigning.state, MXCrossSigningStateCanCrossSign);
             XCTAssertTrue(aliceSession.crypto.crossSigning.canCrossSign);
             XCTAssertTrue(aliceSession.crypto.crossSigning.canTrustCrossSigning);
 

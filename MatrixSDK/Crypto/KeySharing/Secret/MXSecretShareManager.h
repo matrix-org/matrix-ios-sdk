@@ -22,6 +22,17 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
+
+#pragma mark - Constants
+
+//! Secret identifiers
+extern const struct MXSecretId {
+    __unsafe_unretained NSString *crossSigningMaster;
+    __unsafe_unretained NSString *crossSigningSelfSigning;
+    __unsafe_unretained NSString *crossSigningUserSigning;
+} MXSecretId;
+
+
 /**
  Secret sharing manager.
  

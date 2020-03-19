@@ -22,6 +22,16 @@
 #import "MXSecretShareSend.h"
 #import "MXTools.h"
 
+
+#pragma mark - Constants
+
+const struct MXSecretId MXSecretId = {
+    .crossSigningMaster = @"m.cross_signing.master",
+    .crossSigningSelfSigning = @"m.cross_signing.self_signing",
+    .crossSigningUserSigning = @"m.cross_signing.user_signing"
+};
+
+
 static NSArray<MXEventTypeString> *kMXSecretShareEventTypes;
 
 
