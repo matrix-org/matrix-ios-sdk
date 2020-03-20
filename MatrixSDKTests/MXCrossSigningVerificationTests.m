@@ -39,14 +39,12 @@
 
 @end
 
-@interface MXCrossSigningVerificationTests : XCTestCase <MXCrossSigningKeysStorageDelegate>
+@interface MXCrossSigningVerificationTests : XCTestCase
 {
     MatrixSDKTestsData *matrixSDKTestsData;
     MatrixSDKTestsE2EData *matrixSDKTestsE2EData;
     
     NSMutableArray<id> *observers;
-    
-    MXUsersDevicesMap<NSData*> *userPrivateKeys;
 }
 @end
 
@@ -60,7 +58,6 @@
     matrixSDKTestsE2EData = [[MatrixSDKTestsE2EData alloc] initWithMatrixSDKTestsData:matrixSDKTestsData];
     
     observers = [NSMutableArray array];
-    userPrivateKeys = [MXUsersDevicesMap new];
 }
 
 - (void)tearDown
@@ -140,44 +137,10 @@
     [observers addObject:observer];
 }
 
-
-#pragma mark - MXCrossSigningKeysStorageDelegate
-
-- (void)getCrossSigningKey:(nonnull MXCrossSigning *)crossSigning
-                    userId:(nonnull NSString*)userId
-                  deviceId:(nonnull NSString*)deviceId
-               withKeyType:(nonnull NSString *)keyType
-         expectedPublicKey:(nonnull NSString *)expectedPublicKey
-                   success:(nonnull void (^)(NSData * _Nonnull))success
-                   failure:(nonnull void (^)(NSError * _Nonnull))failure
-{
-    NSData *privateKey = [userPrivateKeys objectForDevice:keyType forUser:userId];
-    if (privateKey)
-    {
-        success(privateKey);
-    }
-    else
-    {
-        failure([NSError errorWithDomain:@"MXCrossSigningTests: Unknown keys" code:0 userInfo:nil]);
-    }
-}
-
-- (void)saveCrossSigningKeys:(nonnull MXCrossSigning *)crossSigning
-                      userId:(nonnull NSString*)userId
-                    deviceId:(nonnull NSString*)deviceId
-                 privateKeys:(nonnull NSDictionary<NSString *,NSData *> *)privateKeys
-                     success:(nonnull void (^)(void))success
-                     failure:(nonnull void (^)(NSError * _Nonnull))failure
-{
-    [userPrivateKeys setObjects:privateKeys forUser:userId];
-    success();
-}
-
 - (void)bootstrapCrossSigningOnSession:(MXSession*)session
                               password:(NSString*)password
                               completion:(void (^)(void))completionBlock
 {
-    session.crypto.crossSigning.keysStorageDelegate = self;
     [session.crypto.crossSigning bootstrapWithPassword:password success:^{
         completionBlock();
     } failure:^(NSError *error) {

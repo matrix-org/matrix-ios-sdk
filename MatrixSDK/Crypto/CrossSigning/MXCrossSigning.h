@@ -19,6 +19,9 @@
 #import "MXCrossSigningInfo.h"
 #import "MXCrossSigningKey.h"
 
+@class MXCrypto;
+
+
 NS_ASSUME_NONNULL_BEGIN
 
 
@@ -60,6 +63,8 @@ typedef NS_ENUM(NSInteger, MXCrossSigningState)
      Same as MXCrossSigningStateCanCrossSign but private keys can only be used asynchronously.
      Access to these keys may require UI interaction with the user like passphrase, Face ID, etc.
      */
+    // TODO: This is unused for the moment but it will come back with the full implemenation of SSSS.
+    // All related code has been removed to remove noise. Check the code in this commit.
     MXCrossSigningStateCanCrossSignAsynchronously,
 };
 
@@ -72,49 +77,12 @@ typedef NS_ENUM(NSInteger, MXCrossSigningErrorCode)
 };
 
 
-@class MXCrossSigning;
-
-@protocol MXCrossSigningKeysStorageDelegate <NSObject>
-
-/**
- Called when a cross-signing private key is needed.
-
- @param crossSigning The `MXCrossSigning` module.
- @param keyType The type of key needed.  Will be one of MXCrossSigningKeyType.
- @param expectedPublicKey The public key matching the expected private key.
-
- @param success A block object called when the operation succeeds.
- @param failure A block object called when the operation fails.
- */
-- (void)getCrossSigningKey:(MXCrossSigning*)crossSigning
-                    userId:(NSString*)userId
-                  deviceId:(NSString*)deviceId
-               withKeyType:(NSString*)keyType
-         expectedPublicKey:(NSString*)expectedPublicKey
-                   success:(void (^)(NSData *privateKey))success
-                   failure:(void (^)(NSError *error))failure;
-
-/**
- Called when new private keys for cross-signing need to be saved.
-
- @param crossSigning The `MXCrossSigning` module.
- @param privateKeys Private keys to store. Map of key name to private key as a NSData.
-
- @param success A block object called when the operation succeeds.
- @param failure A block object called when the operation fails.
- */
-- (void)saveCrossSigningKeys:(MXCrossSigning*)crossSigning
-                      userId:(NSString*)userId
-                    deviceId:(NSString*)deviceId
-                 privateKeys:(NSDictionary<NSString*, NSData*>*)privateKeys
-                     success:(void (^)(void))success
-                     failure:(void (^)(NSError *error))failure;
-
-@end
-
-
-
 @interface MXCrossSigning : NSObject
+
+/**
+ The Matrix crypto.
+ */
+@property (nonatomic, readonly, weak) MXCrypto *crypto;
 
 /**
  Cross-signing state for this account and this device.
@@ -122,6 +90,15 @@ typedef NS_ENUM(NSInteger, MXCrossSigningErrorCode)
 @property (nonatomic, readonly) MXCrossSigningState state;
 @property (nonatomic, readonly) BOOL canTrustCrossSigning;
 @property (nonatomic, readonly) BOOL canCrossSign;
+
+/**
+ Check update for this device cross-signing state (self.state).
+ 
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+ */
+- (void)refreshStateWithSuccess:(nullable void (^)(BOOL stateUpdated))success
+                        failure:(nullable void (^)(NSError *error))failure;
 
 /**
  Bootstrap cross-signing on this device.
@@ -172,10 +149,20 @@ typedef NS_ENUM(NSInteger, MXCrossSigningErrorCode)
                    success:(void (^)(void))success
                    failure:(void (^)(NSError *error))failure;
 
+
 /**
- The secure storage for the private parts of our user cross-signing keys.
+ Request private keys for cross-signing from other devices.
+ 
+ @param deviceIds ids of device to make requests to. Nil to request all.
+ 
+ @param success A block object called when the operation succeeds.
+ @param onPrivateKeysReceived A block called when the secret has been received from another device.
+ @param failure A block object called when the operation fails.
  */
-@property (nonatomic, weak) id<MXCrossSigningKeysStorageDelegate> keysStorageDelegate;
+- (void)requestPrivateKeysToDeviceIds:(nullable NSArray<NSString*>*)deviceIds
+                              success:(void (^)(void))success
+                onPrivateKeysReceived:(void (^)(void))onPrivateKeysReceived
+                              failure:(void (^)(NSError *error))failure;
 
 @end
 
