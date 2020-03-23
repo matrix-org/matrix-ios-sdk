@@ -196,6 +196,18 @@
         {
             keyDownloadsInProgressByUser[userId] = operation;
         }
+        
+        if (currentQueryPool && doANewQuery == NO)
+        {
+            // Before reusing currentQueryPool, make sure it has all requested user ids
+            BOOL containsAllUserIds = [currentQueryPool hasUsers:operation.userIds];
+            if (containsAllUserIds == NO)
+            {
+                // It does not have all
+                // Some user ids are in nextQueryPool
+                doANewQuery = YES;
+            }
+        }
 
         if (doANewQuery || !currentQueryPool)
         {

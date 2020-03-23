@@ -61,6 +61,11 @@
 
 - (void)addOperation:(MXDeviceListOperation *)operation
 {
+    // If the request is already made, we can only accept operations
+    // for users we made the request
+    NSParameterAssert(_httpOperation == nil
+                      || [self hasUsers:operation.userIds]);
+    
     if (![_operations containsObject:operation])
     {
         [_operations addObject:operation];
@@ -75,6 +80,11 @@
     {
         [self cancel];
     }
+}
+        
+- (BOOL)hasUsers:(NSArray<NSString*>*)userIds
+{
+    return [[NSSet setWithArray:userIds] isSubsetOfSet:self.userIds];
 }
 
 - (void)downloadKeys:(NSString *)token complete:(void (^)(NSDictionary<NSString *, NSDictionary *> *failedUserIds))complete
@@ -164,7 +174,7 @@
 
         // Delay
         dispatch_async(self->crypto.matrixRestClient.completionQueue, ^{
-
+            
             for (MXDeviceListOperation *operation in self.operations)
             {
                 // Report the success to children
