@@ -64,7 +64,9 @@ NSString * const MXKeyVerificationRequestDidChangeNotification = @"MXKeyVerifica
                 
                 if (failure)
                 {
-                    failure(error);
+                    dispatch_async(dispatch_get_main_queue(), ^{
+                        failure(error);
+                    });
                 }
             };
             
@@ -93,7 +95,9 @@ NSString * const MXKeyVerificationRequestDidChangeNotification = @"MXKeyVerifica
             {
                 [self.manager createQRCodeTransactionFromRequest:self qrCodeData:qrCodeData success:^(MXQRCodeTransaction * _Nonnull transaction) {
                     [self updateState:MXKeyVerificationRequestStateReady notifiy:YES];
-                    success();
+                    dispatch_async(dispatch_get_main_queue(), ^{
+                        success();
+                    });
                 } failure:^(NSError * _Nonnull error) {
                     
                     NSLog(@"[MXKeyVerificationRequest] acceptWithMethods fail to create qrCodeData.");
@@ -104,16 +108,24 @@ NSString * const MXKeyVerificationRequestDidChangeNotification = @"MXKeyVerifica
                         NSLog(@"[MXKeyVerificationRequest] acceptWithMethods fail to cancel request");
                     }];
                     
-                    failure(error);
+                    dispatch_async(dispatch_get_main_queue(), ^{
+                        failure(error);
+                    });
                 }];
             }
             else
             {
                 [self updateState:MXKeyVerificationRequestStateReady notifiy:YES];
-                success();
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    success();
+                });
             }
                         
-        }  failure:failure];
+        }  failure:^(NSError * _Nonnull error) {
+            dispatch_async(dispatch_get_main_queue(), ^{
+                failure(error);
+            });
+        }];
     }];
 }
 
