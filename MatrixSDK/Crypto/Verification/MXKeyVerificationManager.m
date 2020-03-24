@@ -723,15 +723,19 @@ static NSArray<MXEventTypeString> *kMXKeyVerificationManagerDMEventTypes;
 
 #pragma mark - Incoming events
 
-- (void)handleKeyVerificationEvent:(MXEvent*)event
+- (void)handleKeyVerificationEvent:(MXEvent*)event isToDeviceEvent:(BOOL)isToDeviceEvent
 {
     dispatch_async(cryptoQueue, ^{
 
         BOOL eventFromMyUser = [event.sender isEqualToString:self.crypto.mxSession.myUser.userId];
-        NSLog(@"[MXKeyVerification] handleKeyVerificationEvent(from my user: %@): eventType: %@ \n%@",
+        BOOL isEventIntendedForMyDevice = isToDeviceEvent || !eventFromMyUser;
+
+        NSLog(@"[MXKeyVerification] handleKeyVerificationEvent(from my user: %@, isToDeviceEvent: %@, intendedForMyDevice: %@): eventType: %@ \n%@",
               eventFromMyUser ? @"YES": @"NO",
+              isToDeviceEvent ? @"YES": @"NO",
+              isEventIntendedForMyDevice ? @"MAYBE": @"NO",     // MAYBE because it depends on the type of event
               event.type,
-              event.clearEvent.JSONDictionary);
+              event.clearEvent ? event.clearEvent.JSONDictionary : event.JSONDictionary);
 
         switch (event.eventType)
         {
@@ -741,39 +745,39 @@ static NSArray<MXEventTypeString> *kMXKeyVerificationManagerDMEventTypes;
                 break;
                 
             case MXEventTypeKeyVerificationReady:
-                [self handleReadyEvent:event];
+                [self handleReadyEvent:event isToDeviceEvent:isToDeviceEvent];
                 break;
                 
             case MXEventTypeKeyVerificationStart:
-                if (!eventFromMyUser)
+                if (isEventIntendedForMyDevice)
                 {
                     [self handleStartEvent:event];
                 }
                 break;
 
             case MXEventTypeKeyVerificationCancel:
-                if (!eventFromMyUser)
+                if (isEventIntendedForMyDevice)
                 {
                     [self handleCancelEvent:event];
                 }
                 break;
 
             case MXEventTypeKeyVerificationAccept:
-                if (!eventFromMyUser)
+                if (isEventIntendedForMyDevice)
                 {
                     [self handleAcceptEvent:event];
                 }
                 break;
 
             case MXEventTypeKeyVerificationKey:
-                if (!eventFromMyUser)
+                if (isEventIntendedForMyDevice)
                 {
                     [self handleKeyEvent:event];
                 }
                 break;
 
             case MXEventTypeKeyVerificationMac:
-                if (!eventFromMyUser)
+                if (isEventIntendedForMyDevice)
                 {
                     [self handleMacEvent:event];
                 }
@@ -800,7 +804,7 @@ static NSArray<MXEventTypeString> *kMXKeyVerificationManagerDMEventTypes;
     [self addPendingRequest:keyVerificationRequest notify:YES];
 }
 
-- (void)handleReadyEvent:(MXEvent*)event
+- (void)handleReadyEvent:(MXEvent*)event isToDeviceEvent:(BOOL)isToDeviceEvent
 {
     NSLog(@"[MXKeyVerification] handleReadyEvent");
     
@@ -819,19 +823,23 @@ static NSArray<MXEventTypeString> *kMXKeyVerificationManagerDMEventTypes;
     {
         MXCredentials *myCreds = _crypto.mxSession.matrixRestClient.credentials;
 
-        BOOL eventFromMyUser = [event.sender isEqualToString:self.crypto.mxSession.myUser.userId];
-        BOOL eventFromMyDevice = [keyVerificationReady.fromDevice isEqualToString:myCreds.deviceId];
-        if (eventFromMyUser && !eventFromMyDevice)
-        {
-            // This is a ready response to a request the user made from another device
-            NSLog(@"[MXKeyVerification] handleReadyEvent: The request (%@) has been accepted on another device. Ignore it.", requestId);
-            [self removePendingRequestWithRequestId:request.requestId];
-            return;
-        }
+        BOOL eventFromMyUser = [event.sender isEqualToString:myCreds.userId];
+        BOOL isEventIntendedForMyDevice = isToDeviceEvent || !eventFromMyUser;
         
-        if (!eventFromMyUser)
+        if (isEventIntendedForMyDevice)
         {
             [request handleReady:keyVerificationReady];
+        }
+        else
+        {
+            BOOL eventFromMyDevice = [keyVerificationReady.fromDevice isEqualToString:myCreds.deviceId];
+            if (!eventFromMyDevice)
+            {
+                // This is a ready response to a request the user made from another device
+                // Remove it from pending requests will ignore any other events related to this request id
+                NSLog(@"[MXKeyVerification] handleReadyEvent: The request (%@) has been accepted on another device. Ignore it.", requestId);
+                [self removePendingRequestWithRequestId:request.requestId];
+            }
         }
     }
 }
@@ -867,6 +875,8 @@ static NSArray<MXEventTypeString> *kMXKeyVerificationManagerDMEventTypes;
 
 - (void)handleStartEvent:(MXEvent*)event
 {
+    NSLog(@"[MXKeyVerification] handleStartEvent");
+    
     MXSASKeyVerificationStart *keyVerificationSASStart;
     MXJSONModelSetMXJSONModel(keyVerificationSASStart, MXSASKeyVerificationStart, event.content);
     
@@ -1140,7 +1150,7 @@ static NSArray<MXEventTypeString> *kMXKeyVerificationManagerDMEventTypes;
 - (void)onToDeviceEvent:(NSNotification *)notification
 {
     MXEvent *event = notification.userInfo[kMXSessionNotificationEventKey];
-    [self handleKeyVerificationEvent:event];
+    [self handleKeyVerificationEvent:event isToDeviceEvent:YES];
 }
 
 - (MXHTTPOperation*)sendToDevice:(NSString*)userId
@@ -1162,10 +1172,9 @@ static NSArray<MXEventTypeString> *kMXKeyVerificationManagerDMEventTypes;
 - (void)setupIncomingDMEvents
 {
     [_crypto.mxSession listenToEventsOfTypes:kMXKeyVerificationManagerDMEventTypes onEvent:^(MXEvent *event, MXTimelineDirection direction, id customObject) {
-        if (direction == MXTimelineDirectionForwards
-            )
+        if (direction == MXTimelineDirectionForwards)
         {
-            [self handleKeyVerificationEvent:event];
+            [self handleKeyVerificationEvent:event isToDeviceEvent:NO];
         }
     }];
 }

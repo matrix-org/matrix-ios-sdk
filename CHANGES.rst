@@ -19,6 +19,7 @@ Improvements:
 Bug fix:
  * MXEventType: Fix Swift refinement.
  * MXCryptoStore does not store device.algorithm (https://github.com/vector-im/riot-ios/issues/2896).
+ * MXCrypto: Fix users keys download that can fail in some condition
 
 API break:
  * MXCrypto: Rename MXDeviceVerificationManager to MXKeyVerificationManager.
