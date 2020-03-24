@@ -278,6 +278,7 @@ NSString *const MXCrossSigningErrorDomain = @"org.matrix.sdk.crosssigning";
         uskRequestId = requestId;
         dispatch_group_leave(successGroup);
     } onSecretReceived:^(NSString * _Nonnull secret) {
+        NSLog(@"[MXCrossSigning] requestPrivateKeysToDeviceIds: Got USK");        
         [self.crypto.store storeSecret:secret withSecretId:MXSecretId.crossSigningUserSigning];
         dispatch_group_leave(onPrivateKeysReceivedGroup);
     } failure:^(NSError * _Nonnull error) {
@@ -293,6 +294,7 @@ NSString *const MXCrossSigningErrorDomain = @"org.matrix.sdk.crosssigning";
         sskRequestId = requestId;
         dispatch_group_leave(successGroup);
     } onSecretReceived:^(NSString * _Nonnull secret) {
+        NSLog(@"[MXCrossSigning] requestPrivateKeysToDeviceIds: Got SSK");
         [self.crypto.store storeSecret:secret withSecretId:MXSecretId.crossSigningSelfSigning];
         dispatch_group_leave(onPrivateKeysReceivedGroup);
     } failure:^(NSError * _Nonnull error) {
