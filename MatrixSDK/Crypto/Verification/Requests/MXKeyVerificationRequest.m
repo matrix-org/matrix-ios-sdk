@@ -219,12 +219,12 @@ NSString * const MXKeyVerificationRequestDidChangeNotification = @"MXKeyVerifica
 // Shortcuts of methods according to the point of view
 - (NSArray<NSString *> *)myMethods
 {
-    return _isFromMyUser ? self.methods : self.acceptedMethods;
+    return _isFromMyDevice ? self.methods : self.acceptedMethods;
 }
 
 - (NSArray<NSString *> *)otherMethods
 {
-    return _isFromMyUser ? self.acceptedMethods : self.methods;
+    return _isFromMyDevice ? self.acceptedMethods : self.methods;
 }
 
 @end
