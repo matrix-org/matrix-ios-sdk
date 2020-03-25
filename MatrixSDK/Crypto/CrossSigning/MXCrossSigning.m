@@ -608,8 +608,6 @@ NSString *const MXCrossSigningErrorDomain = @"org.matrix.sdk.crosssigning";
          withKeyType:MXCrossSigningKeyType.selfSigning
              success:^(NSDictionary *signedObject)
      {
-         NSLog(@"#### 1. %@", self.myUserCrossSigningKeys.selfSignedKeys.signatures);
-         
          // And upload the signature
          [self.crypto.mxSession.matrixRestClient uploadKeySignatures:@{
                                                                        myUserId: @{
@@ -618,9 +616,7 @@ NSString *const MXCrossSigningErrorDomain = @"org.matrix.sdk.crosssigning";
                                                                        }
                                                              success:^
           {
-              NSLog(@"#### 2. %@", self.myUserCrossSigningKeys.selfSignedKeys.signatures);
               [self refreshStateWithSuccess:^(BOOL stateUpdated) {
-                  NSLog(@"#### 3. %@", self.myUserCrossSigningKeys.selfSignedKeys.signatures);
                   success();
               } failure:failure];
 
