@@ -452,8 +452,8 @@
             // - Create a 2nd device
             [matrixSDKTestsE2EData loginUserOnANewDevice:aliceSession.matrixRestClient.credentials withPassword:MXTESTS_ALICE_PWD onComplete:^(MXSession *newAliceSession) {
                 
-                // - Cross-sign the 2nd device from the 1st one
-                // We need to force the 1st session to see the second one (Is it a bug)?
+                // - Make each device trust each other
+                //   This simulates a self verification and trigger cross-signing behind the shell
                 [newAliceSession.crypto setDeviceVerification:MXDeviceVerified forDevice:aliceSession.matrixRestClient.credentials.deviceId ofUser:aliceSession.matrixRestClient.credentials.userId success:^{
                     
                     [aliceSession.crypto setDeviceVerification:MXDeviceVerified forDevice:newAliceSession.matrixRestClient.credentials.deviceId ofUser:aliceSession.matrixRestClient.credentials.userId success:^{
