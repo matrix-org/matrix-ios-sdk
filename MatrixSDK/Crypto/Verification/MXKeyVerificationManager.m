@@ -609,7 +609,10 @@ static NSArray<MXEventTypeString> *kMXKeyVerificationManagerDMEventTypes;
             break;
             
         case MXKeyVerificationTransportToDevice:
-            operation = [self sendToDevice:request.otherUser deviceId:request.otherDevice eventType:eventType content:content success:success failure:failure];
+            if (request.otherDevice)
+            {
+                operation = [self sendToDevice:request.otherUser deviceId:request.otherDevice eventType:eventType content:content success:success failure:failure];
+            }
             break;
     }
     
