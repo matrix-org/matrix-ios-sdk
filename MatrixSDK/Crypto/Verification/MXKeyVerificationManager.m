@@ -965,7 +965,20 @@ static NSArray<MXEventTypeString> *kMXKeyVerificationManagerDMEventTypes;
             }
         }
         
-        if (existingQRCodeTransaction && !(isExistingTransactionTemporary))
+        if ([existingTransaction isKindOfClass:MXQRCodeTransaction.class])
+        {
+             MXQRCodeTransaction *existingQRCodeTransaction = (MXQRCodeTransaction*)existingTransaction;
+
+            if (existingQRCodeTransaction.state == MXQRCodeTransactionStateUnknown)
+            {
+                existingTransaction = nil;
+
+                // Remove fake QR code transaction
+                [self removeQRCodeTransactionWithTransactionId:existingQRCodeTransaction.transactionId];
+            }
+        }
+
+        if (existingTransaction)
         {
             NSLog(@"[MXKeyVerification] handleStartEvent: already existing transaction. Cancel both");
             
