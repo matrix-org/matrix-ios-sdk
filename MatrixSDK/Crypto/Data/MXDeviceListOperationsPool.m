@@ -176,7 +176,8 @@
             }
         }
         
-        [[NSNotificationCenter defaultCenter] postNotificationName:MXDeviceListDidUpdateUsersDevicesNotification object:nil userInfo:usersDevices];
+        // Post notification using MXCrypto instance as MXDeviceListOperationsPool is an internal class.
+        [[NSNotificationCenter defaultCenter] postNotificationName:MXDeviceListDidUpdateUsersDevicesNotification object:self->crypto userInfo:usersDevices];
 
         // Delay
         dispatch_async(self->crypto.matrixRestClient.completionQueue, ^{
