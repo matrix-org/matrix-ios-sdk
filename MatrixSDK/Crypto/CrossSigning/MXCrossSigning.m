@@ -529,7 +529,7 @@ NSString *const MXCrossSigningErrorDomain = @"org.matrix.sdk.crosssigning";
         {
             NSDictionary *userInfo = @{ MXCrossSigningNotificationDeviceIdsKey: newDeviceIds };
             
-            [[NSNotificationCenter defaultCenter] postNotificationName:MXCrossSigningMyUserDidSignInOnNewDeviceNotification object:nil userInfo:userInfo];
+            [[NSNotificationCenter defaultCenter] postNotificationName:MXCrossSigningMyUserDidSignInOnNewDeviceNotification object:self userInfo:userInfo];
         }
     }
 }
