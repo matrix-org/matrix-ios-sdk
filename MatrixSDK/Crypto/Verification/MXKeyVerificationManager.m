@@ -948,33 +948,15 @@ static NSArray<MXEventTypeString> *kMXKeyVerificationManagerDMEventTypes;
         
         MXKeyVerificationTransaction *existingTransaction = [self transactionWithUser:event.sender andDevice:keyVerificationStart.fromDevice];
         
-        MXQRCodeTransaction *existingQRCodeTransaction;
-        
-        BOOL isExistingTransactionTemporary = NO;
-        
         if ([existingTransaction isKindOfClass:MXQRCodeTransaction.class])
         {
-            existingQRCodeTransaction = (MXQRCodeTransaction*)existingTransaction;
+            MXQRCodeTransaction *existingQRCodeTransaction = (MXQRCodeTransaction*)existingTransaction;
             
             if (existingQRCodeTransaction.state == MXQRCodeTransactionStateUnknown)
             {
-                isExistingTransactionTemporary = YES;
-                
                 // Remove fake QR code transaction
                 [self removeQRCodeTransactionWithTransactionId:existingQRCodeTransaction.transactionId];
-            }
-        }
-        
-        if ([existingTransaction isKindOfClass:MXQRCodeTransaction.class])
-        {
-             MXQRCodeTransaction *existingQRCodeTransaction = (MXQRCodeTransaction*)existingTransaction;
-
-            if (existingQRCodeTransaction.state == MXQRCodeTransactionStateUnknown)
-            {
                 existingTransaction = nil;
-
-                // Remove fake QR code transaction
-                [self removeQRCodeTransactionWithTransactionId:existingQRCodeTransaction.transactionId];
             }
         }
 
