@@ -448,7 +448,7 @@ static NSArray<MXEventTypeString> *kMXKeyVerificationManagerDMEventTypes;
     
     if (qrCodeTransaction)
     {
-        [self removeQRCodeTransactionWithTransactionId:qrCodeTransaction.transactionId];
+        [self removeTransactionWithTransactionId:qrCodeTransaction.transactionId];
     }
 }
 
@@ -947,7 +947,25 @@ static NSArray<MXEventTypeString> *kMXKeyVerificationManagerDMEventTypes;
     [self loadDeviceWithDeviceId:keyVerificationStart.fromDevice andUserId:event.sender success:^(MXDeviceInfo *otherDevice) {
         
         MXKeyVerificationTransaction *existingTransaction = [self transactionWithUser:event.sender andDevice:keyVerificationStart.fromDevice];
-        if (existingTransaction)
+        
+        MXQRCodeTransaction *existingQRCodeTransaction;
+        
+        BOOL isExistingTransactionTemporary = NO;
+        
+        if ([existingTransaction isKindOfClass:MXQRCodeTransaction.class])
+        {
+            existingQRCodeTransaction = (MXQRCodeTransaction*)existingTransaction;
+            
+            if (existingQRCodeTransaction.state == MXQRCodeTransactionStateUnknown)
+            {
+                isExistingTransactionTemporary = YES;
+                
+                // Remove fake QR code transaction
+                [self removeQRCodeTransactionWithTransactionId:existingQRCodeTransaction.transactionId];
+            }
+        }
+        
+        if (existingQRCodeTransaction && !(isExistingTransactionTemporary))
         {
             NSLog(@"[MXKeyVerification] handleStartEvent: already existing transaction. Cancel both");
             
@@ -966,9 +984,7 @@ static NSArray<MXEventTypeString> *kMXKeyVerificationManagerDMEventTypes;
             [self cancelTransactionFromStartEvent:event code:MXTransactionCancelCode.invalidMessage];
             return;
         }
-        
-        
-        // We support only SAS at the moment
+                    
         MXIncomingSASTransaction *transaction = [[MXIncomingSASTransaction alloc] initWithOtherDevice:otherDevice startEvent:event andManager:self];
         if (transaction)
         {
