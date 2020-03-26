@@ -15,6 +15,7 @@ Improvements:
  * MXStore: Add a method to get related events for a specific event.
  * MXPublicRoom: Add canonical alias property.
  * MXLogger: Add a parameter to indicate the number of log files.
+ * Cross-Signing: Detect and expose new sign-ins (/vector-im/riot-ios/issues/2918).
 
 Bug fix:
  * MXEventType: Fix Swift refinement.
