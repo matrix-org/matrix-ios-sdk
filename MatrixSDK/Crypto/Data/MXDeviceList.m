@@ -24,6 +24,8 @@
 #import "MXDeviceListOperationsPool.h"
 #import "MXTools.h"
 
+NSString *const MXDeviceListDidUpdateUsersDevicesNotification = @"MXDeviceListDidUpdateUsersDevicesNotification";
+
 @interface MXDeviceList ()
 {
     __weak MXCrypto *crypto;
