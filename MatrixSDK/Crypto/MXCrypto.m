@@ -834,14 +834,26 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
         }
     }
     
-    // Cross-sign our own device
-    if (self.crossSigning.canCrossSign
-        && verificationStatus == MXDeviceVerified
+    if (verificationStatus == MXDeviceVerified
         && [userId isEqualToString:self.mxSession.myUser.userId])
     {
-        [self.crossSigning crossSignDeviceWithDeviceId:deviceId success:success failure:failure];
+        // Manage self-verification
+        if (self.crossSigning.canCrossSign)
+        {
+            // Cross-sign our own device
+            NSLog(@"[MXCrypto] setDeviceVerificationForDevice: Mark device %@ as self verified", deviceId);
+            [self.crossSigning crossSignDeviceWithDeviceId:deviceId success:success failure:failure];
+            return;
+        }
+        else if (self.crossSigning.state == MXCrossSigningStateCrossSigningExists)
+        {
+            // This is a good time to request cross-signing private keys
+            NSLog(@"[MXCrypto] setDeviceVerificationForDevice: Request cross-signing private keys for device %@", deviceId);
+            [self.crossSigning scheduleRequestForPrivateKeys];
+        }
     }
-    else if (success)
+    
+    if (success)
     {
         dispatch_async(dispatch_get_main_queue(), ^{
             success();
