@@ -332,7 +332,7 @@ NSString *const MXCrossSigningErrorDomain = @"org.matrix.sdk.crosssigning";
         _crossSigningTools = [MXCrossSigningTools new];
         
         [self computeState];
-        [self registerUserDevicesUpdateNotification];
+        [self registerUsersDevicesUpdateNotification];
      }
     return self;
 }
@@ -500,12 +500,12 @@ NSString *const MXCrossSigningErrorDomain = @"org.matrix.sdk.crosssigning";
     return pubKey;
 }
 
-- (void)registerUserDevicesUpdateNotification
+- (void)registerUsersDevicesUpdateNotification
 {
-    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(userDevicesDidUpdate:) name:MXDeviceListDidUpdateUsersDevicesNotification object:nil];
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(usersDevicesDidUpdate:) name:MXDeviceListDidUpdateUsersDevicesNotification object:self];
 }
 
-- (void)userDevicesDidUpdate:(NSNotification*)notification
+- (void)usersDevicesDidUpdate:(NSNotification*)notification
 {
     NSDictionary *userInfo = notification.userInfo;
     
