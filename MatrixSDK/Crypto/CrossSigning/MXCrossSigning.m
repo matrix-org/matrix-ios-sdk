@@ -25,6 +25,9 @@
 
 #pragma mark - Constants
 
+NSString *const MXCrossSigningMyUserDidSignInOnNewDeviceNotification = @"MXCrossSigningMyUserDidSignInOnNewDeviceNotification";
+NSString *const MXCrossSigningNotificationDeviceIdsKey = @"deviceIds";
+
 NSString *const MXCrossSigningErrorDomain = @"org.matrix.sdk.crosssigning";
 
 
@@ -329,6 +332,7 @@ NSString *const MXCrossSigningErrorDomain = @"org.matrix.sdk.crosssigning";
         _crossSigningTools = [MXCrossSigningTools new];
         
         [self computeState];
+        [self registerUsersDevicesUpdateNotification];
      }
     return self;
 }
@@ -496,6 +500,39 @@ NSString *const MXCrossSigningErrorDomain = @"org.matrix.sdk.crosssigning";
     return pubKey;
 }
 
+- (void)registerUsersDevicesUpdateNotification
+{
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(usersDevicesDidUpdate:) name:MXDeviceListDidUpdateUsersDevicesNotification object:self.crypto];
+}
+
+- (void)usersDevicesDidUpdate:(NSNotification*)notification
+{
+    NSDictionary *userInfo = notification.userInfo;
+    
+    MXCredentials *myUser = _crypto.mxSession.matrixRestClient.credentials;
+    
+    NSArray<MXDeviceInfo*> *myUserDevices = userInfo[myUser.userId];
+    
+    if (myUserDevices)
+    {
+        NSMutableArray<NSString*> *newDeviceIds = [NSMutableArray new];
+        
+        for (MXDeviceInfo *deviceInfo in myUserDevices)
+        {
+            if (deviceInfo.trustLevel.localVerificationStatus == MXDeviceUnknown)
+            {
+                [newDeviceIds addObject:deviceInfo.deviceId];
+            }
+        }
+        
+        if (newDeviceIds.count)
+        {
+            NSDictionary *userInfo = @{ MXCrossSigningNotificationDeviceIdsKey: newDeviceIds };
+            
+            [[NSNotificationCenter defaultCenter] postNotificationName:MXCrossSigningMyUserDidSignInOnNewDeviceNotification object:self userInfo:userInfo];
+        }
+    }
+}
 
 #pragma mark - Signing
 
