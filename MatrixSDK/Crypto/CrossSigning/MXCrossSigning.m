@@ -502,7 +502,7 @@ NSString *const MXCrossSigningErrorDomain = @"org.matrix.sdk.crosssigning";
 
 - (void)registerUsersDevicesUpdateNotification
 {
-    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(usersDevicesDidUpdate:) name:MXDeviceListDidUpdateUsersDevicesNotification object:self];
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(usersDevicesDidUpdate:) name:MXDeviceListDidUpdateUsersDevicesNotification object:self.crypto];
 }
 
 - (void)usersDevicesDidUpdate:(NSNotification*)notification
