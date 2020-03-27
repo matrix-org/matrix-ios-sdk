@@ -115,7 +115,7 @@ static NSArray<MXEventTypeString> *kMXKeyVerificationManagerDMEventTypes;
                                                   @"type": kMXMessageTypeKeyVerificationRequest,
                                                   @"content": requestJSONModel.JSONDictionary
                                                   }];
-        MXKeyVerificationByToDeviceRequest *request = [[MXKeyVerificationByToDeviceRequest alloc] initWithEvent:event andManager:self to:userId];
+        MXKeyVerificationByToDeviceRequest *request = [[MXKeyVerificationByToDeviceRequest alloc] initWithEvent:event andManager:self to:userId requestedOtherDeviceIds:deviceIds];
         [request updateState:MXKeyVerificationRequestStatePending notifiy:YES];
         [self addPendingRequest:request notify:NO];
         
@@ -797,7 +797,7 @@ static NSArray<MXEventTypeString> *kMXKeyVerificationManagerDMEventTypes;
 {
     NSLog(@"[MXKeyVerification] handleToDeviceRequestEvent");
     
-    MXKeyVerificationByToDeviceRequest *keyVerificationRequest = [[MXKeyVerificationByToDeviceRequest alloc] initWithEvent:event andManager:self to:self.crypto.mxSession.myUser.userId];
+    MXKeyVerificationByToDeviceRequest *keyVerificationRequest = [[MXKeyVerificationByToDeviceRequest alloc] initWithEvent:event andManager:self to:self.crypto.mxSession.myUser.userId requestedOtherDeviceIds:@[]];
     
     if (!keyVerificationRequest)
     {

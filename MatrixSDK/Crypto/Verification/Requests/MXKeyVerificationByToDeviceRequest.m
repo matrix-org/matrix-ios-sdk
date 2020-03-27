@@ -22,9 +22,15 @@
 
 #import "MXEvent.h"
 
+@interface MXKeyVerificationByToDeviceRequest()
+
+@property (nonatomic, readwrite) NSArray<NSString*> *requestedOtherDeviceIds;
+    
+@end
+
 @implementation MXKeyVerificationByToDeviceRequest
 
-- (instancetype)initWithEvent:(MXEvent*)event andManager:(MXKeyVerificationManager*)manager to:(nonnull NSString *)toUserId
+- (instancetype)initWithEvent:(MXEvent*)event andManager:(MXKeyVerificationManager*)manager to:(nonnull NSString *)toUserId requestedOtherDeviceIds:(nonnull NSArray<NSString *> *)requestedOtherDeviceIds
 {
     // Check verification by DM request format
     MXKeyVerificationRequestByToDeviceJSONModel *request;
@@ -44,6 +50,8 @@
         MXCredentials *myCreds = manager.crypto.mxSession.matrixRestClient.credentials;
         self.isFromMyUser = [event.sender isEqualToString:myCreds.userId];
         self.isFromMyDevice = [request.fromDevice isEqualToString:myCreds.deviceId];
+        
+        _requestedOtherDeviceIds = self.isFromMyDevice ? requestedOtherDeviceIds : @[];
     }
     return self;
 }
@@ -84,7 +92,18 @@
 
 - (NSString *)otherDevice
 {
-    return self.isFromMyDevice ? self.acceptedData.fromDevice : _request.fromDevice;
+    NSString* otherDeviceId;
+    
+    if (self.isFromMyUser)
+    {
+        otherDeviceId = self.acceptedData.fromDevice ?: self.requestedOtherDeviceIds.firstObject;
+    }
+    else
+    {
+        otherDeviceId = _request.fromDevice;
+    }
+    
+    return otherDeviceId;
 }
 
 @end
