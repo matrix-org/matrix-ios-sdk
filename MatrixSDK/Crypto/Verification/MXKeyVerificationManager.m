@@ -635,7 +635,7 @@ static NSArray<MXEventTypeString> *kMXKeyVerificationManagerDMEventTypes;
     {
         // Else only cancel the request
         MXKeyVerificationCancel *cancel = [MXKeyVerificationCancel new];
-        cancel.transactionId = transaction.transactionId;
+        cancel.transactionId = request.requestId;
         cancel.code = cancelCode.value;
         cancel.reason = cancelCode.humanReadable;
         
