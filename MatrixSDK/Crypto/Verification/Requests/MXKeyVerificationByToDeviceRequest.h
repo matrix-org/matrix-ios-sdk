@@ -33,7 +33,10 @@ NS_ASSUME_NONNULL_BEGIN
 // The recipient user id for this request
 @property (nonatomic, readonly) NSString *to;
 
-- (instancetype)initWithEvent:(MXEvent*)event andManager:(MXKeyVerificationManager*)manager to:(NSString*)toUserId;
+// The requested recipient device ids. Note that `otherDevice` is the device id that accepts the request first. Only filled when request is sent bu current user otherwise this array should be empty.
+@property (nonatomic, readonly) NSArray<NSString*> *requestedOtherDeviceIds;
+
+- (instancetype)initWithEvent:(MXEvent*)event andManager:(MXKeyVerificationManager*)manager to:(NSString*)toUserId requestedOtherDeviceIds:(NSArray<NSString*>*)otherDeviceIds;
 
 @end
 

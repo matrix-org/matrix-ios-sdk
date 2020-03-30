@@ -115,7 +115,7 @@ static NSArray<MXEventTypeString> *kMXKeyVerificationManagerDMEventTypes;
                                                   @"type": kMXMessageTypeKeyVerificationRequest,
                                                   @"content": requestJSONModel.JSONDictionary
                                                   }];
-        MXKeyVerificationByToDeviceRequest *request = [[MXKeyVerificationByToDeviceRequest alloc] initWithEvent:event andManager:self to:userId];
+        MXKeyVerificationByToDeviceRequest *request = [[MXKeyVerificationByToDeviceRequest alloc] initWithEvent:event andManager:self to:userId requestedOtherDeviceIds:deviceIds];
         [request updateState:MXKeyVerificationRequestStatePending notifiy:YES];
         [self addPendingRequest:request notify:NO];
         
@@ -448,7 +448,7 @@ static NSArray<MXEventTypeString> *kMXKeyVerificationManagerDMEventTypes;
     
     if (qrCodeTransaction)
     {
-        [self removeQRCodeTransactionWithTransactionId:qrCodeTransaction.transactionId];
+        [self removeTransactionWithTransactionId:qrCodeTransaction.transactionId];
     }
 }
 
@@ -609,7 +609,10 @@ static NSArray<MXEventTypeString> *kMXKeyVerificationManagerDMEventTypes;
             break;
             
         case MXKeyVerificationTransportToDevice:
-            operation = [self sendToDevice:request.otherUser deviceId:request.otherDevice eventType:eventType content:content success:success failure:failure];
+            if (request.otherDevice)
+            {
+                operation = [self sendToDevice:request.otherUser deviceId:request.otherDevice eventType:eventType content:content success:success failure:failure];
+            }
             break;
     }
     
@@ -794,7 +797,7 @@ static NSArray<MXEventTypeString> *kMXKeyVerificationManagerDMEventTypes;
 {
     NSLog(@"[MXKeyVerification] handleToDeviceRequestEvent");
     
-    MXKeyVerificationByToDeviceRequest *keyVerificationRequest = [[MXKeyVerificationByToDeviceRequest alloc] initWithEvent:event andManager:self to:self.crypto.mxSession.myUser.userId];
+    MXKeyVerificationByToDeviceRequest *keyVerificationRequest = [[MXKeyVerificationByToDeviceRequest alloc] initWithEvent:event andManager:self to:self.crypto.mxSession.myUser.userId requestedOtherDeviceIds:@[]];
     
     if (!keyVerificationRequest)
     {
@@ -944,6 +947,19 @@ static NSArray<MXEventTypeString> *kMXKeyVerificationManagerDMEventTypes;
     [self loadDeviceWithDeviceId:keyVerificationStart.fromDevice andUserId:event.sender success:^(MXDeviceInfo *otherDevice) {
         
         MXKeyVerificationTransaction *existingTransaction = [self transactionWithUser:event.sender andDevice:keyVerificationStart.fromDevice];
+        
+        if ([existingTransaction isKindOfClass:MXQRCodeTransaction.class])
+        {
+            MXQRCodeTransaction *existingQRCodeTransaction = (MXQRCodeTransaction*)existingTransaction;
+            
+            if (existingQRCodeTransaction.state == MXQRCodeTransactionStateUnknown)
+            {
+                // Remove fake QR code transaction
+                [self removeQRCodeTransactionWithTransactionId:existingQRCodeTransaction.transactionId];
+                existingTransaction = nil;
+            }
+        }
+
         if (existingTransaction)
         {
             NSLog(@"[MXKeyVerification] handleStartEvent: already existing transaction. Cancel both");
@@ -963,9 +979,7 @@ static NSArray<MXEventTypeString> *kMXKeyVerificationManagerDMEventTypes;
             [self cancelTransactionFromStartEvent:event code:MXTransactionCancelCode.invalidMessage];
             return;
         }
-        
-        
-        // We support only SAS at the moment
+                    
         MXIncomingSASTransaction *transaction = [[MXIncomingSASTransaction alloc] initWithOtherDevice:otherDevice startEvent:event andManager:self];
         if (transaction)
         {

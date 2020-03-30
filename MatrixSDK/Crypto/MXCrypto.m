@@ -52,6 +52,8 @@ NSString *const kMXCryptoRoomKeyRequestNotificationRequestKey = @"kMXCryptoRoomK
 NSString *const kMXCryptoRoomKeyRequestCancellationNotification = @"kMXCryptoRoomKeyRequestCancellationNotification";
 NSString *const kMXCryptoRoomKeyRequestCancellationNotificationRequestKey = @"kMXCryptoRoomKeyRequestCancellationNotificationRequestKey";
 
+NSString *const MXDeviceListDidUpdateUsersDevicesNotification = @"MXDeviceListDidUpdateUsersDevicesNotification";
+
 #ifdef MX_CRYPTO
 
 // Frequency with which to check & upload one-time keys

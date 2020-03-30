@@ -55,6 +55,11 @@ FOUNDATION_EXPORT NSString *const kMXCryptoRoomKeyRequestNotificationRequestKey;
 FOUNDATION_EXPORT NSString *const kMXCryptoRoomKeyRequestCancellationNotification;
 FOUNDATION_EXPORT NSString *const kMXCryptoRoomKeyRequestCancellationNotificationRequestKey;
 
+/**
+ Notification name sent when users devices list are updated. Provides user ids and their corresponding updated devices.
+ Give an associated userInfo dictionary of type NSDictionary<NSString*, NSArray<MXDeviceInfo*>*>.
+ */
+extern NSString *const MXDeviceListDidUpdateUsersDevicesNotification;
 
 /**
  A `MXCrypto` class instance manages the end-to-end crypto for a MXSession instance.

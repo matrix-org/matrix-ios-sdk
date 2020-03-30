@@ -104,6 +104,8 @@
         NSLog(@"[MXDeviceListOperationsPool] doKeyDownloadForUsers(pool: %p) -> DONE. Got keys for %@ users and %@ devices. Got cross-signing keys for %@ users", self, @(keysQueryResponse.deviceKeys.map.count), @(keysQueryResponse.deviceKeys.count), @(keysQueryResponse.crossSigningKeys.count));
 
         self->_httpOperation = nil;
+        
+        NSMutableDictionary<NSString* /* userId */, NSArray<MXDeviceInfo*>*> *usersDevices = [NSMutableDictionary new];
 
         for (NSString *userId in users)
         {
@@ -169,8 +171,13 @@
                 // Update the store
                 // Note that devices which aren't in the response will be removed from the store
                 [self->crypto.store storeDevicesForUser:userId devices:mutabledevices];
+                
+                usersDevices[userId] = mutabledevices.allValues;
             }
         }
+        
+        // Post notification using MXCrypto instance as MXDeviceListOperationsPool is an internal class.
+        [[NSNotificationCenter defaultCenter] postNotificationName:MXDeviceListDidUpdateUsersDevicesNotification object:self->crypto userInfo:usersDevices];
 
         // Delay
         dispatch_async(self->crypto.matrixRestClient.completionQueue, ^{
