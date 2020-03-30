@@ -37,6 +37,8 @@ NS_ASSUME_NONNULL_BEGIN
 - (BOOL)isUserWithCrossSigningKeysVerified:(MXCrossSigningInfo*)crossSigningKeys;
 - (BOOL)isDeviceVerified:(MXDeviceInfo*)device;
 
+- (void)scheduleRequestForPrivateKeys;
+
 @end
 
 
