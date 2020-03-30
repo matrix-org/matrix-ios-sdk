@@ -363,7 +363,8 @@
 // - Create a 2nd device
 // - Check 2nd device cross-signing state
 // -> It should be MXCrossSigningStateCrossSigningExists
-// - Cross-sign the 2nd device from the 1st one
+// - Make each device trust each other
+//   This simulates a self verification and trigger cross-signing behind the shell
 // - Check 2nd device cross-signing state
 // -> It should be MXCrossSigningStateTrustCrossSigning
 - (void)testRefreshState
@@ -386,11 +387,12 @@
                     XCTAssertFalse(newAliceSession.crypto.crossSigning.canTrustCrossSigning);
                     XCTAssertFalse(newAliceSession.crypto.crossSigning.canCrossSign);
                     
-                    // - Cross-sign the 2nd device from the 1st one
-                    // We need to force the 1st session to see the second one (Is it a bug)?
-                    [aliceSession.crypto downloadKeys:@[aliceSession.myUser.userId] forceDownload:YES success:^(MXUsersDevicesMap<MXDeviceInfo *> *usersDevicesInfoMap, NSDictionary<NSString *,MXCrossSigningInfo *> *crossSigningKeysMap) {
+
+                    // - Make each device trust each other
+                    //   This simulates a self verification and trigger cross-signing behind the shell
+                    [newAliceSession.crypto setDeviceVerification:MXDeviceVerified forDevice:aliceSession.matrixRestClient.credentials.deviceId ofUser:aliceSession.matrixRestClient.credentials.userId success:^{
                         
-                        [aliceSession.crypto.crossSigning crossSignDeviceWithDeviceId:newAliceSession.matrixRestClient.credentials.deviceId success:^{
+                        [aliceSession.crypto setDeviceVerification:MXDeviceVerified forDevice:newAliceSession.matrixRestClient.credentials.deviceId ofUser:aliceSession.matrixRestClient.credentials.userId success:^{
                             
                             // - Check 2nd device cross-signing state
                             [newAliceSession.crypto.crossSigning refreshStateWithSuccess:^(BOOL stateUpdated) {
@@ -434,7 +436,8 @@
 //
 // - Bootstrap cross-signing on a 1st device
 // - Create a 2nd devices
-// - Cross-sign the 2nd device from the 1st one
+// - Make each device trust each other
+//   This simulates a self verification and trigger cross-signing behind the shell
 // - The 2nd device requests cross-signing keys from the 1st one
 // -> The 2nd device should be able to cross-sign now
 - (void)testPrivateKeysGossiping
@@ -449,11 +452,11 @@
             // - Create a 2nd device
             [matrixSDKTestsE2EData loginUserOnANewDevice:aliceSession.matrixRestClient.credentials withPassword:MXTESTS_ALICE_PWD onComplete:^(MXSession *newAliceSession) {
                 
-                    // - Cross-sign the 2nd device from the 1st one
-                    // We need to force the 1st session to see the second one (Is it a bug)?
-                    [aliceSession.crypto downloadKeys:@[aliceSession.myUser.userId] forceDownload:YES success:^(MXUsersDevicesMap<MXDeviceInfo *> *usersDevicesInfoMap, NSDictionary<NSString *,MXCrossSigningInfo *> *crossSigningKeysMap) {
-                        
-                        [aliceSession.crypto.crossSigning crossSignDeviceWithDeviceId:newAliceSession.matrixRestClient.credentials.deviceId success:^{
+                // - Make each device trust each other
+                //   This simulates a self verification and trigger cross-signing behind the shell
+                [newAliceSession.crypto setDeviceVerification:MXDeviceVerified forDevice:aliceSession.matrixRestClient.credentials.deviceId ofUser:aliceSession.matrixRestClient.credentials.userId success:^{
+                    
+                    [aliceSession.crypto setDeviceVerification:MXDeviceVerified forDevice:newAliceSession.matrixRestClient.credentials.deviceId ofUser:aliceSession.matrixRestClient.credentials.userId success:^{
                             
                             [newAliceSession.crypto.crossSigning refreshStateWithSuccess:^(BOOL stateUpdated) {
     

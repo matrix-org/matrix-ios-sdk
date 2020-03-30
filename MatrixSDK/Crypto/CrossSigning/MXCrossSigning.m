@@ -346,7 +346,7 @@ NSString *const MXCrossSigningErrorDomain = @"org.matrix.sdk.crosssigning";
     _myUserCrossSigningKeys = [_crypto.store crossSigningKeysForUser:myUserId];
 
     // Refresh user's keys
-    [self.crypto.deviceList downloadKeys:@[myUserId] forceDownload:NO success:^(MXUsersDevicesMap<MXDeviceInfo *> *usersDevicesInfoMap, NSDictionary<NSString *,MXCrossSigningInfo *> *crossSigningKeysMap) {
+    [self.crypto.deviceList downloadKeys:@[myUserId] forceDownload:YES success:^(MXUsersDevicesMap<MXDeviceInfo *> *usersDevicesInfoMap, NSDictionary<NSString *,MXCrossSigningInfo *> *crossSigningKeysMap) {
         
         self.myUserCrossSigningKeys = crossSigningKeysMap[myUserId];
         [self computeState];
@@ -368,14 +368,11 @@ NSString *const MXCrossSigningErrorDomain = @"org.matrix.sdk.crosssigning";
 {
     BOOL isUserVerified = NO;
 
-    // If we're checking our own key, then it's trusted if the master key
-    // and self-signing key match
     NSString *myUserId = _crypto.mxSession.myUser.userId;
-    if ([myUserId isEqualToString:crossSigningKeys.userId]
-        && [self.myUserCrossSigningKeys.masterKeys.keys isEqualToString:crossSigningKeys.masterKeys.keys]
-        && [self.myUserCrossSigningKeys.selfSignedKeys.keys isEqualToString:crossSigningKeys.selfSignedKeys.keys])
+    if ([myUserId isEqualToString:crossSigningKeys.userId])
     {
-        return YES;
+        // Can we trust the current cross-signing setup?
+        return [self isSelfTrusted];
     }
 
     if (!self.myUserCrossSigningKeys.userSignedKeys)
@@ -460,7 +457,7 @@ NSString *const MXCrossSigningErrorDomain = @"org.matrix.sdk.crosssigning";
     {
         state = MXCrossSigningStateCrossSigningExists;
         
-        if (_myUserCrossSigningKeys.trustLevel.isVerified)
+        if ([self isSelfTrusted])
         {
             state = MXCrossSigningStateTrustCrossSigning;
             
@@ -500,6 +497,100 @@ NSString *const MXCrossSigningErrorDomain = @"org.matrix.sdk.crosssigning";
     return pubKey;
 }
 
+/**
+  Check that MSK is trusted by this device.
+  Then, check that USK and SSK are trusted by the MSK.
+ */
+- (BOOL)isSelfTrusted
+{
+    // Is the master key trusted?
+    BOOL isMasterKeyTrusted = NO;
+    MXCrossSigningKey *myMasterKey = _myUserCrossSigningKeys.masterKeys;
+    if (!myMasterKey)
+    {
+        // Cross-signing is not set up
+        NSLog(@"[MXCrossSigning] isSelfTrusted: NO (No MSK)");
+        return NO;
+    }
+    
+    NSString *myUserId = _crypto.mxSession.myUser.userId;
+    
+    // Is it signed by a locally trusted device?
+    NSDictionary<NSString*, NSString*> *myUserSignatures = myMasterKey.signatures.map[myUserId];
+    for (NSString *publicKeyId in myUserSignatures)
+    {
+        MXKey *key = [[MXKey alloc] initWithKeyFullId:publicKeyId value:myUserSignatures[publicKeyId]];
+        if ([key.type isEqualToString:kMXKeyEd25519Type])
+        {
+            MXDeviceInfo *device = [self.crypto.store deviceWithDeviceId:key.keyId forUser:myUserId];
+            if (device && device.trustLevel.isVerified)
+            {
+                // Check signature validity
+                NSError *error;
+                isMasterKeyTrusted = [_crypto.olmDevice verifySignature:device.fingerprint JSON:myMasterKey.signalableJSONDictionary signature:key.value error:&error];
+                
+                if (isMasterKeyTrusted)
+                {
+                    break;
+                }
+            }
+        }
+    }
+    
+    if (!isMasterKeyTrusted)
+    {
+        NSLog(@"[MXCrossSigning] isSelfTrusted: NO (MSK not trusted)");
+        return NO;
+    }
+    
+    // Is USK signed?
+    MXCrossSigningKey *myUserKey = _myUserCrossSigningKeys.userSignedKeys;
+    BOOL isUSKSignatureValid = [self checkSignatureOnKey:myUserKey byKey:myMasterKey userId:myUserId];
+    if (!isUSKSignatureValid)
+    {
+        NSLog(@"[MXCrossSigning] isSelfTrusted: NO (Invalid MSK signature for USK)");
+        return NO;
+    }
+    
+    // Is SSK signed?
+    MXCrossSigningKey *mySelfKey = _myUserCrossSigningKeys.selfSignedKeys;
+    BOOL isSSKSignatureValid = [self checkSignatureOnKey:mySelfKey byKey:myMasterKey userId:myUserId];
+    if (!isSSKSignatureValid)
+    {
+        NSLog(@"[MXCrossSigning] isSelfTrusted: NO (Invalid MSK signature for SSK)");
+        return NO;
+    }
+    
+    return YES;
+}
+
+- (BOOL)checkSignatureOnKey:(nullable MXCrossSigningKey*)key byKey:(MXCrossSigningKey*)signingKey userId:(NSString*)userId
+{
+    if (!key)
+    {
+        NSLog(@"[MXCrossSigning] checkSignatureOnKey: NO (No key)");
+        return NO;
+    }
+    
+    NSString *signingPublicKeyId = [NSString stringWithFormat:@"%@:%@", kMXKeyEd25519Type, signingKey.keys];
+    NSString *signatureMadeBySigningKey = [key.signatures objectForDevice:signingPublicKeyId forUser:userId];
+    if (!signatureMadeBySigningKey)
+    {
+        NSLog(@"[MXCrossSigning] checkSignatureOnKey: NO (Key not signed)");
+        return NO;
+    }
+    
+    NSError *error;
+    BOOL isSignatureValid = [_crypto.olmDevice verifySignature:signingKey.keys JSON:key.signalableJSONDictionary signature:signatureMadeBySigningKey error:&error];
+    if (!isSignatureValid)
+    {
+        NSLog(@"[MXCrossSigning] checkSignatureOnKey: NO (Invalid signature)");
+        return NO;
+    }
+    
+    return YES;
+}
+
 - (void)registerUsersDevicesUpdateNotification
 {
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(usersDevicesDidUpdate:) name:MXDeviceListDidUpdateUsersDevicesNotification object:self.crypto];
@@ -534,6 +625,7 @@ NSString *const MXCrossSigningErrorDomain = @"org.matrix.sdk.crosssigning";
     }
 }
 
+
 #pragma mark - Signing
 
 - (void)signDevice:(MXDeviceInfo*)device
@@ -562,9 +654,7 @@ NSString *const MXCrossSigningErrorDomain = @"org.matrix.sdk.crosssigning";
                                                                        }
                                                              success:^
           {
-              // Refresh data locally before returning
-              // TODO: This network request is suboptimal. We could update data in the store directly
-              [self.crypto.deviceList downloadKeys:@[myUserId] forceDownload:YES success:^(MXUsersDevicesMap<MXDeviceInfo *> *usersDevicesInfoMap, NSDictionary<NSString *,MXCrossSigningInfo *> *crossSigningKeysMap) {
+              [self refreshStateWithSuccess:^(BOOL stateUpdated) {
                   success();
               } failure:failure];
 

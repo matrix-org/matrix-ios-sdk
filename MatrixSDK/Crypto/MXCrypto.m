@@ -771,63 +771,83 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
                       failure:(void (^)(NSError *error))failure
 {
 #ifdef MX_CRYPTO
-    
-    // Note: failure is not currently used but it would make sense the day device
-    // verification will be sync'ed with the hs.
-    MXWeakify(self);
     dispatch_async(_cryptoQueue, ^{
-        MXStrongifyAndReturnIfNil(self);
-
-        MXDeviceInfo *device = [self.store deviceWithDeviceId:deviceId forUser:userId];
-
-        // Sanity check
-        if (!device)
-        {
-            NSLog(@"[MXCrypto] setDeviceVerificationForDevice: Unknown device %@:%@", userId, deviceId);
-
-            if (success)
-            {
-                dispatch_async(dispatch_get_main_queue(), ^{
-                    failure(nil);
-                });
-            }
-            return;
-        }
-
-        if (device.trustLevel.localVerificationStatus != verificationStatus)
-        {
-            MXDeviceTrustLevel *trustLevel = [MXDeviceTrustLevel trustLevelWithLocalVerificationStatus:verificationStatus
-                                                                     crossSigningVerified:device.trustLevel.isCrossSigningVerified];
-            [device updateTrustLevel:trustLevel];
-            [self.store storeDeviceForUser:userId device:device];
-
-            if ([userId isEqualToString:self.mxSession.myUser.userId])
-            {
-                // If one of the user's own devices is being marked as verified / unverified,
-                // check the key backup status, since whether or not we use this depends on
-                // whether it has a signature from a verified device
-                [self.backup checkAndStartKeyBackup];
-            }
-        }
-
-        // Cross-sign our own device
-        if (self.crossSigning.canCrossSign
-            && verificationStatus == MXDeviceVerified
-            && [userId isEqualToString:self.mxSession.myUser.userId])
-        {
-            [self.crossSigning crossSignDeviceWithDeviceId:deviceId success:success failure:failure];
-        }
-        else if (success)
-        {
-            dispatch_async(dispatch_get_main_queue(), ^{
-                success();
-            });
-        }
+        [self setDeviceVerification2:verificationStatus forDevice:deviceId ofUser:userId downloadIfNeeded:YES success:success failure:failure];
     });
 #else
     if (success)
     {
         success();
+    }
+#endif
+}
+
+- (void)setDeviceVerification2:(MXDeviceVerification)verificationStatus forDevice:(NSString*)deviceId ofUser:(NSString*)userId
+              downloadIfNeeded:(BOOL)downloadIfNeeded
+                       success:(void (^)(void))success
+                       failure:(void (^)(NSError *error))failure
+{
+#ifdef MX_CRYPTO
+    MXDeviceInfo *device = [self.store deviceWithDeviceId:deviceId forUser:userId];
+    
+    // Sanity check
+    if (!device)
+    {
+        if (downloadIfNeeded)
+        {
+            NSLog(@"[MXCrypto] setDeviceVerificationForDevice: Unknown device. Try to download user's keys for %@:%@", userId, deviceId);
+            [self.deviceList downloadKeys:@[userId] forceDownload:YES success:^(MXUsersDevicesMap<MXDeviceInfo *> *usersDevicesInfoMap, NSDictionary<NSString *,MXCrossSigningInfo *> *crossSigningKeysMap) {
+                [self setDeviceVerification2:verificationStatus forDevice:deviceId ofUser:userId downloadIfNeeded:NO success:success failure:failure];
+            } failure:^(NSError *error) {
+                if (failure)
+                {
+                    dispatch_async(dispatch_get_main_queue(), ^{
+                        failure(error);
+                    });
+                }
+            }];
+        }
+        else
+        {
+            NSLog(@"[MXCrypto] setDeviceVerificationForDevice: Unknown device %@:%@", userId, deviceId);
+            if (failure)
+            {
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    failure(nil);
+                });
+            }
+        }
+        return;
+    }
+    
+    if (device.trustLevel.localVerificationStatus != verificationStatus)
+    {
+        MXDeviceTrustLevel *trustLevel = [MXDeviceTrustLevel trustLevelWithLocalVerificationStatus:verificationStatus
+                                                                              crossSigningVerified:device.trustLevel.isCrossSigningVerified];
+        [device updateTrustLevel:trustLevel];
+        [self.store storeDeviceForUser:userId device:device];
+        
+        if ([userId isEqualToString:self.mxSession.myUser.userId])
+        {
+            // If one of the user's own devices is being marked as verified / unverified,
+            // check the key backup status, since whether or not we use this depends on
+            // whether it has a signature from a verified device
+            [self.backup checkAndStartKeyBackup];
+        }
+    }
+    
+    // Cross-sign our own device
+    if (self.crossSigning.canCrossSign
+        && verificationStatus == MXDeviceVerified
+        && [userId isEqualToString:self.mxSession.myUser.userId])
+    {
+        [self.crossSigning crossSignDeviceWithDeviceId:deviceId success:success failure:failure];
+    }
+    else if (success)
+    {
+        dispatch_async(dispatch_get_main_queue(), ^{
+            success();
+        });
     }
 #endif
 }
