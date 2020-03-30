@@ -94,7 +94,7 @@
 {
     NSString* otherDeviceId;
     
-    if (self.isFromMyUser)
+    if (self.isFromMyDevice)
     {
         otherDeviceId = self.acceptedData.fromDevice ?: self.requestedOtherDeviceIds.firstObject;
     }
