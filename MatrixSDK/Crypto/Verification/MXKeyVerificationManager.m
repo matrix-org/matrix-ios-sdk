@@ -94,6 +94,51 @@ static NSArray<MXEventTypeString> *kMXKeyVerificationManagerDMEventTypes;
                                         failure:(void(^)(NSError *error))failure
 {
     NSLog(@"[MXKeyVerification] requestVerificationByToDeviceWithUserId: %@. deviceIds: %@", userId, deviceIds);
+    if (deviceIds.count)
+    {
+        [self requestVerificationByToDeviceWithUserId2:userId deviceIds:deviceIds methods:methods success:success failure:failure];
+    }
+    else
+    {
+        [self otherDeviceIdsOfUser:userId success:^(NSArray<NSString *> *otherDeviceIds) {
+            if (otherDeviceIds.count)
+            {
+                [self requestVerificationByToDeviceWithUserId2:userId deviceIds:otherDeviceIds methods:methods success:success failure:failure];
+            }
+            else
+            {
+               // TODO
+            }
+        } failure:failure];
+    }
+}
+
+- (void)otherDeviceIdsOfUser:(NSString*)userId
+                     success:(void(^)(NSArray<NSString*> *deviceIds))success
+                     failure:(void(^)(NSError *error))failure
+{
+    [self.crypto downloadKeys:@[userId] forceDownload:YES success:^(MXUsersDevicesMap<MXDeviceInfo *> *usersDevicesInfoMap, NSDictionary<NSString *,MXCrossSigningInfo *> *crossSigningKeysMap) {
+        
+        
+        NSMutableArray *deviceIds = [[usersDevicesInfoMap deviceIdsForUser:userId] mutableCopy];
+        
+        MXCredentials *myUser = self.crypto.mxSession.matrixRestClient.credentials;
+        if ([userId isEqualToString:myUser.userId])
+        {
+            [deviceIds removeObject:myUser.deviceId];
+        }
+        
+        success(deviceIds);
+    } failure:failure];
+}
+    
+- (void)requestVerificationByToDeviceWithUserId2:(NSString*)userId
+                                       deviceIds:(NSArray<NSString*>*)deviceIds
+                                         methods:(NSArray<NSString*>*)methods
+                                         success:(void(^)(MXKeyVerificationRequest *request))success
+                                         failure:(void(^)(NSError *error))failure
+{
+    NSParameterAssert(deviceIds.count > 0);
     
     MXKeyVerificationRequestByToDeviceJSONModel *requestJSONModel = [MXKeyVerificationRequestByToDeviceJSONModel new];
     requestJSONModel.fromDevice = _crypto.myDevice.deviceId;
@@ -613,8 +658,25 @@ static NSArray<MXEventTypeString> *kMXKeyVerificationManagerDMEventTypes;
             {
                 operation = [self sendToDevice:request.otherUser deviceId:request.otherDevice eventType:eventType content:content success:success failure:failure];
             }
+            else
+            {
+                // This happens when cancelling our own request.
+                // There is no otherDevice in this case. We broadcast to all devices we made the request to.
+                if ([request isKindOfClass:MXKeyVerificationByToDeviceRequest.class])
+                {
+                    MXKeyVerificationByToDeviceRequest *requestByToDevice = (MXKeyVerificationByToDeviceRequest*)request;
+                    if (requestByToDevice.requestedOtherDeviceIds)
+                    {
+                        operation = [self sendToDevices:request.otherUser deviceIds:requestByToDevice.requestedOtherDeviceIds eventType:eventType content:content success:success failure:failure];
+                    }
+                }
+            }
+                
             break;
     }
+    
+    // We should be always able to talk to the other peer
+    NSParameterAssert(operation);
     
     return operation;
 }
@@ -1174,9 +1236,23 @@ static NSArray<MXEventTypeString> *kMXKeyVerificationManagerDMEventTypes;
                          success:(void (^)(void))success
                          failure:(void (^)(NSError *error))failure
 {
-    MXUsersDevicesMap<NSDictionary*> *contentMap = [[MXUsersDevicesMap alloc] init];
-    [contentMap setObject:content forUser:userId andDevice:deviceId];
+    return [self sendToDevices:userId deviceIds:@[deviceId] eventType:eventType content:content success:success failure:failure];
+}
 
+- (MXHTTPOperation*)sendToDevices:(NSString*)userId
+                        deviceIds:(NSArray<NSString*>*)deviceIds
+                        eventType:(NSString*)eventType
+                          content:(NSDictionary*)content
+                          success:(void (^)(void))success
+                          failure:(void (^)(NSError *error))failure
+{
+    MXUsersDevicesMap<NSDictionary*> *contentMap = [[MXUsersDevicesMap alloc] init];
+    
+    for (NSString *deviceId in deviceIds)
+    {
+        [contentMap setObject:content forUser:userId andDevice:deviceId];
+    }
+    
     return [self.crypto.matrixRestClient sendToDevice:eventType contentMap:contentMap txnId:nil success:success failure:failure];
 }
 

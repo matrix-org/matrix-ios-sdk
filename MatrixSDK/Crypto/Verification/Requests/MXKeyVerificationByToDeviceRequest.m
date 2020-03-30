@@ -92,18 +92,7 @@
 
 - (NSString *)otherDevice
 {
-    NSString* otherDeviceId;
-    
-    if (self.isFromMyDevice)
-    {
-        otherDeviceId = self.acceptedData.fromDevice ?: self.requestedOtherDeviceIds.firstObject;
-    }
-    else
-    {
-        otherDeviceId = _request.fromDevice;
-    }
-    
-    return otherDeviceId;
+    return self.isFromMyDevice ? self.acceptedData.fromDevice : _request.fromDevice;
 }
 
 @end

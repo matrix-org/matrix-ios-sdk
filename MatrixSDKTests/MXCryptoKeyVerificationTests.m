@@ -24,6 +24,7 @@
 #import "MXFileStore.h"
 
 #import "MXKeyVerificationRequestByDMJSONModel.h"
+#import "MXKeyVerificationByToDeviceRequest.h"
 
 // Do not bother with retain cycles warnings in tests
 #pragma clang diagnostic push
@@ -111,6 +112,16 @@
         }
     }];
 
+    [observers addObject:observer];
+}
+
+
+- (void)observeKeyVerificationRequestUpdate:(MXKeyVerificationRequest*)request block:(void (^)(void))block
+{
+    id observer = [[NSNotificationCenter defaultCenter] addObserverForName:MXKeyVerificationRequestDidChangeNotification object:request queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *notif) {
+        block();
+    }];
+    
     [observers addObject:observer];
 }
 
@@ -397,6 +408,95 @@
         }];
     }];
 }
+
+
+/**
+ Test self verification request cancellation with 3 devices.
+ - Have Alice with 3 sessions
+ - Alice sends a self verifcation request to her all other devices
+ - -> The other device list should have been computed well
+ - Alice cancels it from device #1
+ -> All other devices should get the cancellation
+ */
+- (void)testVerificationByToDeviceRequestCancellation
+{
+    // - Have Alice with 3 sessions
+    [matrixSDKTestsE2EData doE2ETestWithAliceAndBobInARoom:self cryptedBob:YES warnOnUnknowDevices:YES aliceStore:[[MXMemoryStore alloc] init] bobStore:[[MXMemoryStore alloc] init] readyToTest:^(MXSession *aliceSession1, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
+        
+        [matrixSDKTestsE2EData loginUserOnANewDevice:aliceSession1.matrixRestClient.credentials withPassword:MXTESTS_ALICE_PWD onComplete:^(MXSession *aliceSession2) {
+            
+            [matrixSDKTestsE2EData loginUserOnANewDevice:aliceSession1.matrixRestClient.credentials withPassword:MXTESTS_ALICE_PWD onComplete:^(MXSession *aliceSession3) {
+                
+                NSString *aliceUserId = aliceSession1.matrixRestClient.credentials.userId;
+
+                NSString *aliceSession2DeviceId = aliceSession2.matrixRestClient.credentials.deviceId;
+                NSString *aliceSession3DeviceId = aliceSession3.matrixRestClient.credentials.deviceId;
+                
+                NSArray *methods = @[MXKeyVerificationMethodSAS];
+            
+                // - Alice sends a self verifcation request to her all other devices
+                [aliceSession1.crypto.keyVerificationManager requestVerificationByToDeviceWithUserId:aliceUserId
+                                                                                          deviceIds:nil
+                                                                                            methods:methods
+                                                                                            success:^(MXKeyVerificationRequest *requestFromAliceDevice1POV)
+                 {
+                     // -> The other device list should have been computed well
+                     MXKeyVerificationByToDeviceRequest *toDeviceRequestFromAliceDevice1POV = (MXKeyVerificationByToDeviceRequest*)requestFromAliceDevice1POV;
+                     XCTAssertNotNil(toDeviceRequestFromAliceDevice1POV.requestedOtherDeviceIds);
+                     NSSet *expectedRequestedDevices = [NSSet setWithArray:@[aliceSession2DeviceId, aliceSession3DeviceId]];
+                     NSSet *requestedDevices = [NSSet setWithArray:toDeviceRequestFromAliceDevice1POV.requestedOtherDeviceIds];
+                     XCTAssertEqualObjects(requestedDevices, expectedRequestedDevices);
+                     
+                     
+                     // - Alice cancels it from device #1
+                     dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 1 * NSEC_PER_SEC), dispatch_get_main_queue(), ^{
+                         
+                         [requestFromAliceDevice1POV cancelWithCancelCode:MXTransactionCancelCode.user success:^{
+                             
+                         } failure:^(NSError * _Nonnull error) {
+                             XCTFail(@"The request should not fail - NSError: %@", error);
+                             [expectation fulfill];
+                         }];
+                     });
+                 }
+                                                                                            failure:^(NSError * _Nonnull error)
+                 {
+                     XCTFail(@"The request should not fail - NSError: %@", error);
+                     [expectation fulfill];
+                 }];
+                
+                
+                // -> All other devices should get the cancellation
+                dispatch_group_t cancelledGroup = dispatch_group_create();
+                
+                dispatch_group_enter(cancelledGroup);
+                [self observeKeyVerificationRequestInSession:aliceSession2 block:^(MXKeyVerificationRequest * _Nullable requestFromAliceDevice2POV) {
+                    [self observeKeyVerificationRequestUpdate:requestFromAliceDevice2POV block:^{
+                        if (requestFromAliceDevice2POV.state == MXKeyVerificationRequestStateCancelled)
+                        {
+                            dispatch_group_leave(cancelledGroup);
+                        }
+                    }];
+                }];
+                
+                dispatch_group_enter(cancelledGroup);
+                [self observeKeyVerificationRequestInSession:aliceSession3 block:^(MXKeyVerificationRequest * _Nullable requestFromAliceDevice3POV) {
+                    [self observeKeyVerificationRequestUpdate:requestFromAliceDevice3POV block:^{
+                        if (requestFromAliceDevice3POV.state == MXKeyVerificationRequestStateCancelled)
+                        {
+                            dispatch_group_leave(cancelledGroup);
+                        }
+                    }];
+                }];
+                
+                dispatch_group_notify(cancelledGroup, dispatch_get_main_queue(), ^{
+                    [expectation fulfill];
+                });
+            }];
+        }];
+    }];
+}
+
 
 
 #pragma mark - Verification by to_device (legacy)
