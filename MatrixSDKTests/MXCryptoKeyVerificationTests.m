@@ -413,8 +413,8 @@
 /**
  Test self verification request cancellation with 3 devices.
  - Have Alice with 3 sessions
- - Alice sends a self verifcation request to her all other devices
- - -> The other device list should have been computed well
+ - Alice sends a self verification request to her all other devices
+ -> The other device list should have been computed well
  - Alice cancels it from device #1
  -> All other devices should get the cancellation
  */
@@ -434,7 +434,7 @@
                 
                 NSArray *methods = @[MXKeyVerificationMethodSAS];
             
-                // - Alice sends a self verifcation request to her all other devices
+                // - Alice sends a self verification request to her all other devices
                 [aliceSession1.crypto.keyVerificationManager requestVerificationByToDeviceWithUserId:aliceUserId
                                                                                           deviceIds:nil
                                                                                             methods:methods
@@ -497,6 +497,40 @@
     }];
 }
 
+/**
+ Test self verification request when no other device.
+ - Have Alice with 1 device
+ - Alice sends a self verification request to her all other devices
+ -> The request must fail as she has no other device.
+ */
+- (void)testVerificationByToDeviceRequestWithNoOtherDevice
+{
+    // - Have Alice with 1 device
+    [matrixSDKTestsE2EData doE2ETestWithAliceAndBobInARoom:self cryptedBob:YES warnOnUnknowDevices:YES aliceStore:[[MXMemoryStore alloc] init] bobStore:[[MXMemoryStore alloc] init] readyToTest:^(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
+        
+        NSString *aliceUserId = aliceSession.matrixRestClient.credentials.userId;
+        
+        NSArray *methods = @[MXKeyVerificationMethodSAS];
+        
+        // - Alice sends a self verification request to her all other devices
+        [aliceSession.crypto.keyVerificationManager requestVerificationByToDeviceWithUserId:aliceUserId
+                                                                                  deviceIds:nil
+                                                                                    methods:methods
+                                                                                    success:^(MXKeyVerificationRequest *requestFromAliceDevice1POV)
+         {
+             XCTFail(@"The request should not succeed ");
+             [expectation fulfill];
+         }
+                                                                                    failure:^(NSError * _Nonnull error)
+         {
+             //  -> The request must fail as she has no other device.
+             XCTAssertEqualObjects(error.domain, MXKeyVerificationErrorDomain);
+             XCTAssertEqual(error.code, MXKeyVerificatioNoOtherDeviceCode);
+             
+             [expectation fulfill];
+         }];
+    }];
+}
 
 
 #pragma mark - Verification by to_device (legacy)

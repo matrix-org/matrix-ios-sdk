@@ -107,7 +107,12 @@ static NSArray<MXEventTypeString> *kMXKeyVerificationManagerDMEventTypes;
             }
             else
             {
-               // TODO
+                NSError *error = [NSError errorWithDomain:MXKeyVerificationErrorDomain
+                                                     code:MXKeyVerificatioNoOtherDeviceCode
+                                                 userInfo:@{
+                                                            NSLocalizedDescriptionKey: [NSString stringWithFormat:@"The user has no other device"]
+                                                            }];
+                failure(error);
             }
         } failure:failure];
     }

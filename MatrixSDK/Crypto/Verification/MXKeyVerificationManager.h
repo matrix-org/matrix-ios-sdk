@@ -40,6 +40,7 @@ FOUNDATION_EXPORT NSString *const MXKeyVerificationErrorDomain;
 typedef enum : NSUInteger
 {
     MXKeyVerificationUnknownDeviceCode,
+    MXKeyVerificatioNoOtherDeviceCode,
     MXKeyVerificationUnsupportedMethodCode,
     MXKeyVerificationInvalidStateCode,
     MXKeyVerificationUnknownRoomCode,
