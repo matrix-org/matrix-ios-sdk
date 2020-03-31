@@ -1023,6 +1023,47 @@
         [expectation fulfill];
     }];
 }
+
+// Test that we can detect that MSK has changed
+// - Have Alice with 2 devices (Alice1 and Alice2) and Bob. All trusted via cross-signing
+// - Alice resets cross-signing from Alice1
+// -> Alice1 should not trust anymore Alice2 and Bob
+// -> Alice2 should not trust anymore Alice1 and Bob
+// -> Bob should not trust anymore Alice1 and Alice2
+- (void)testCrossSigningRotation
+{
+    //  - Have Alice with 2 devices (Alice1 and Alice2) and Bob. All trusted via cross-signing
+    [self doTestWithBobAndAliceWithTwoDevicesAllTrusted:self readyToTest:^(MXSession *aliceSession1, MXSession *aliceSession2, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
+        
+        NSString *aliceUserId = aliceSession1.matrixRestClient.credentials.userId;
+        NSString *aliceSession1DeviceId = aliceSession1.matrixRestClient.credentials.deviceId;
+        NSString *aliceSession2DeviceId = aliceSession2.matrixRestClient.credentials.deviceId;
+        
+        NSString *bobUserId = bobSession.matrixRestClient.credentials.userId;
+        NSString *bobDeviceId = bobSession.matrixRestClient.credentials.deviceId;
+        
+        // - Alice resets cross-signing from Alice1
+        [aliceSession1.crypto.crossSigning bootstrapWithPassword:MXTESTS_ALICE_PWD success:^{
+            
+            // -> Alice1 should not trust anymore Alice2 and Bob
+            XCTAssertFalse([aliceSession1.crypto trustLevelForUser:bobUserId].isCrossSigningVerified);
+            XCTAssertFalse([aliceSession1.crypto deviceTrustLevelForDevice:bobDeviceId ofUser:bobUserId].isCrossSigningVerified);
+            XCTAssertFalse([aliceSession1.crypto deviceTrustLevelForDevice:aliceSession2DeviceId ofUser:aliceUserId].isCrossSigningVerified);
+            
+            // but it should still trust itself
+            XCTAssertTrue([aliceSession1.crypto trustLevelForUser:aliceUserId].isCrossSigningVerified);
+            XCTAssertTrue([aliceSession1.crypto deviceTrustLevelForDevice:aliceSession1DeviceId ofUser:aliceUserId].isCrossSigningVerified);
+            
+            // TODO
+
+        } failure:^(NSError *error) {
+            XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+            [expectation fulfill];
+        }];
+    }];
+}
+
+
 @end
 
 #pragma clang diagnostic pop

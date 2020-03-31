@@ -57,6 +57,8 @@ NSString *const MXCrossSigningErrorDomain = @"org.matrix.sdk.crosssigning";
     // Create keys
     NSDictionary<NSString*, NSData*> *privateKeys;
     MXCrossSigningInfo *keys = [self createKeys:&privateKeys];
+    
+    NSLog(@"[MXCrossSigning] Bootstrap on device %@. MSK: %@", myCreds.deviceId, keys.masterKeys.keys);
 
     // Delegate the storage of them
     [self storeCrossSigningKeys:privateKeys success:^{
@@ -82,14 +84,15 @@ NSString *const MXCrossSigningErrorDomain = @"org.matrix.sdk.crosssigning";
                 // Store our user's keys
                 [keys updateTrustLevel:[MXUserTrustLevel trustLevelWithCrossSigningVerified:YES]];
                 [self.crypto.store storeCrossSigningKeys:keys];
-
+                
                 // Cross-signing is bootstrapped
-                self.myUserCrossSigningKeys = keys;
-                [self computeState];
-
-                // Expose this device to other users as signed by me
-                // TODO: Check if it is the right way to do so
-                [self crossSignDeviceWithDeviceId:myCreds.deviceId success:success failure:failure];
+                [self refreshStateWithSuccess:^(BOOL stateUpdated) {
+                    // Expose this device to other users as signed by me
+                    // TODO: Check if it is the right way to do so
+                    [self crossSignDeviceWithDeviceId:myCreds.deviceId success:^{
+                        success();
+                    } failure:failure];
+                } failure:failure];
 
             } failure:failure];
 
