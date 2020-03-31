@@ -40,6 +40,7 @@ FOUNDATION_EXPORT NSString *const MXKeyVerificationErrorDomain;
 typedef enum : NSUInteger
 {
     MXKeyVerificationUnknownDeviceCode,
+    MXKeyVerificatioNoOtherDeviceCode,
     MXKeyVerificationUnsupportedMethodCode,
     MXKeyVerificationInvalidStateCode,
     MXKeyVerificationUnknownRoomCode,
@@ -94,7 +95,7 @@ FOUNDATION_EXPORT NSString *const MXKeyVerificationManagerNotificationTransactio
  Make a key verification request by to_device events.
  
  @param userId the other user id.
- @param deviceIds array of device IDs to send requests to. Use nil for all devices owned by the user
+ @param deviceIds array of device IDs to send requests to. Use nil for all other devices owned by the user
  @param methods Verification methods like MXKeyVerificationMethodSAS.
  @param success a block called when the operation succeeds.
  @param failure a block called when the operation fails.
