@@ -1058,6 +1058,8 @@
             // -> Alice2 should not trust anymore Alice1 and Bob
             // There is no other way than to make this poll
             [aliceSession2.crypto.crossSigning refreshStateWithSuccess:^(BOOL stateUpdated) {
+                
+                XCTAssertEqual(aliceSession2.crypto.crossSigning.state, MXCrossSigningStateTrustCrossSigning);
 
                 XCTAssertFalse([aliceSession2.crypto trustLevelForUser:aliceUserId].isCrossSigningVerified);
                 XCTAssertFalse([aliceSession2.crypto deviceTrustLevelForDevice:aliceSession2DeviceId ofUser:aliceUserId].isCrossSigningVerified);
