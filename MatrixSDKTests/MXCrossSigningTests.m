@@ -1054,7 +1054,41 @@
             XCTAssertTrue([aliceSession1.crypto trustLevelForUser:aliceUserId].isCrossSigningVerified);
             XCTAssertTrue([aliceSession1.crypto deviceTrustLevelForDevice:aliceSession1DeviceId ofUser:aliceUserId].isCrossSigningVerified);
             
-            // TODO
+            
+            // -> Alice2 should not trust anymore Alice1 and Bob
+            // There is no other way than to make this poll
+            [aliceSession2.crypto.crossSigning refreshStateWithSuccess:^(BOOL stateUpdated) {
+
+                XCTAssertFalse([aliceSession2.crypto trustLevelForUser:aliceUserId].isCrossSigningVerified);
+                XCTAssertFalse([aliceSession2.crypto deviceTrustLevelForDevice:aliceSession2DeviceId ofUser:aliceUserId].isCrossSigningVerified);
+
+                XCTAssertFalse([aliceSession2.crypto trustLevelForUser:bobUserId].isCrossSigningVerified);
+                XCTAssertFalse([aliceSession2.crypto deviceTrustLevelForDevice:bobDeviceId ofUser:bobUserId].isCrossSigningVerified);
+                XCTAssertFalse([aliceSession2.crypto deviceTrustLevelForDevice:aliceSession1DeviceId ofUser:aliceUserId].isCrossSigningVerified);
+
+                // -> Bob should not trust anymore Alice1 and Alice2
+                // There is no other way than to make this poll
+                [bobSession.crypto.crossSigning refreshStateWithSuccess:^(BOOL stateUpdated) {
+                    
+                    XCTAssertFalse([bobSession.crypto trustLevelForUser:aliceUserId].isCrossSigningVerified);
+                    XCTAssertFalse([bobSession.crypto deviceTrustLevelForDevice:aliceSession1DeviceId ofUser:aliceUserId].isCrossSigningVerified);
+                    XCTAssertFalse([bobSession.crypto deviceTrustLevelForDevice:aliceSession2DeviceId ofUser:aliceUserId].isCrossSigningVerified);
+                    
+                    // He should still trust himself
+                    XCTAssertTrue([bobSession.crypto trustLevelForUser:bobUserId].isCrossSigningVerified);
+                    XCTAssertTrue([bobSession.crypto deviceTrustLevelForDevice:bobDeviceId ofUser:bobUserId].isCrossSigningVerified);
+                    
+                    [expectation fulfill];
+                    
+                } failure:^(NSError *error) {
+                    XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                    [expectation fulfill];
+                }];
+
+            } failure:^(NSError *error) {
+                XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                [expectation fulfill];
+            }];
 
         } failure:^(NSError *error) {
             XCTFail(@"Cannot set up intial test conditions - error: %@", error);
@@ -1062,7 +1096,6 @@
         }];
     }];
 }
-
 
 @end
 
