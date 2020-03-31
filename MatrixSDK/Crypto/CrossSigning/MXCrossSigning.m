@@ -314,8 +314,11 @@ NSString *const MXCrossSigningErrorDomain = @"org.matrix.sdk.crosssigning";
     
     dispatch_group_notify(onPrivateKeysReceivedGroup, dispatch_get_main_queue(), ^{
         NSLog(@"[MXCrossSigning] requestPrivateKeysToDeviceIds: Got keys");
-        [self computeState];
-        onPrivateKeysReceived();
+        [self refreshStateWithSuccess:^(BOOL stateUpdated) {
+            onPrivateKeysReceived();
+        } failure:^(NSError * _Nonnull error) {
+            onPrivateKeysReceived();
+        }];
     });
 }
 
@@ -340,26 +343,44 @@ NSString *const MXCrossSigningErrorDomain = @"org.matrix.sdk.crosssigning";
 - (void)refreshStateWithSuccess:(nullable void (^)(BOOL stateUpdated))success
                         failure:(nullable void (^)(NSError *error))failure
 {
-    MXCrossSigningState oldState = _state;
+    MXCrossSigningState stateBefore = _state;
+    BOOL canTrustCrossSigningBefore = self.canTrustCrossSigning;
     
     NSString *myUserId = _crypto.mxSession.matrixRestClient.credentials.userId;
     _myUserCrossSigningKeys = [_crypto.store crossSigningKeysForUser:myUserId];
+    
+    NSLog(@"[MXCrossSigning] refreshState for device %@: current state: %@ (%@)", self.crypto.store.deviceId, @(self.state), self.myUserCrossSigningKeys);
 
     // Refresh user's keys
     [self.crypto.deviceList downloadKeys:@[myUserId] forceDownload:YES success:^(MXUsersDevicesMap<MXDeviceInfo *> *usersDevicesInfoMap, NSDictionary<NSString *,MXCrossSigningInfo *> *crossSigningKeysMap) {
         
+        BOOL sameCrossSigningKeys = [self.myUserCrossSigningKeys hasSameKeysAsCrossSigningInfo:crossSigningKeysMap[myUserId]];
         self.myUserCrossSigningKeys = crossSigningKeysMap[myUserId];
+        
         [self computeState];
+        
+        if (!sameCrossSigningKeys
+            || (!canTrustCrossSigningBefore && self.canTrustCrossSigning))
+        {
+            [self resetTrust];
+        }
+        
+        NSLog(@"[MXCrossSigning] refreshState for device %@: updated state: %@ (%@)", self.crypto.store.deviceId, @(self.state), self.myUserCrossSigningKeys);
         
         if (success)
         {
-            success(self.state != oldState);
+            dispatch_async(dispatch_get_main_queue(), ^{
+                success(self.state != stateBefore
+                        || sameCrossSigningKeys);
+            });
         }
     } failure:^(NSError *error) {
         NSLog(@"[MXCrossSigning] refreshStateWithSuccess: Failed to load my user's keys");
         if (failure)
         {
-            failure(error);
+            dispatch_async(dispatch_get_main_queue(), ^{
+                failure(error);
+            });
         }
     }];
 }
@@ -484,6 +505,29 @@ NSString *const MXCrossSigningErrorDomain = @"org.matrix.sdk.crosssigning";
     }
     
     _state = state;
+}
+
+// Recompute cross-signing trust on all users we know
+- (void)resetTrust
+{
+    NSLog(@"[MXCrossSigning] resetTrust for device %@", self.crypto.mxSession.matrixRestClient.credentials.deviceId);
+    
+    for (MXCrossSigningInfo *crossSigningInfo in self.crypto.store.crossSigningKeys)
+    {
+        BOOL isCrossSigningVerified = [self isUserWithCrossSigningKeysVerified:crossSigningInfo];
+        if (crossSigningInfo.trustLevel.isCrossSigningVerified != isCrossSigningVerified)
+        {
+            NSLog(@"[MXCrossSigning] resetTrust: Change trust for %@: %@ -> %@", crossSigningInfo.userId,
+                  @(crossSigningInfo.trustLevel.isCrossSigningVerified),
+                  @(isCrossSigningVerified));
+            
+            [crossSigningInfo updateTrustLevel:[MXUserTrustLevel trustLevelWithCrossSigningVerified:isCrossSigningVerified]];
+            [self.crypto.store storeCrossSigningKeys:crossSigningInfo];
+            
+            // Update trust on associated devices
+            [self checkTrustLevelForDevicesOfUser:crossSigningInfo.userId];
+        }
+    }
 }
 
 - (NSString *)makeSigningKey:(OLMPkSigning * _Nullable *)signing privateKey:(NSData* _Nullable *)privateKey
@@ -732,6 +776,8 @@ NSString *const MXCrossSigningErrorDomain = @"org.matrix.sdk.crosssigning";
 {
     return [self.crypto.store secretWithSecretId:MXSecretId.crossSigningSelfSigning]
     && [self.crypto.store secretWithSecretId:MXSecretId.crossSigningUserSigning];
+    
+    // TODO: Check them with crossSigningKeyWithKeyType
 }
 
 - (void)crossSigningKeyWithKeyType:(NSString*)keyType

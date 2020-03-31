@@ -594,6 +594,18 @@ RLM_ARRAY_TYPE(MXRealmSecret)
     return crossSigningKeys;
 }
 
+- (NSArray<MXCrossSigningInfo *> *)crossSigningKeys
+{
+    NSMutableArray<MXCrossSigningInfo*> *crossSigningKeys = [NSMutableArray array];
+    
+    for (MXRealmCrossSigningInfo *realmCrossSigningKey in [MXRealmCrossSigningInfo allObjectsInRealm:self.realm])
+    {
+        [crossSigningKeys addObject:[NSKeyedUnarchiver unarchiveObjectWithData:realmCrossSigningKey.data]];
+    }
+    
+    return crossSigningKeys;
+}
+
 
 #pragma mark - Message keys
 
