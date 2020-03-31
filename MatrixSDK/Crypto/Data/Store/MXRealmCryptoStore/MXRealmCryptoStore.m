@@ -576,7 +576,12 @@ RLM_ARRAY_TYPE(MXRealmSecret)
         MXRealmCrossSigningInfo *realmCrossSigningKeys = [[MXRealmCrossSigningInfo alloc] initWithValue:@{
                                                                                                     @"data": [NSKeyedArchiver archivedDataWithRootObject:crossSigningInfo]
                                                                                                    }];
-
+        if (realmUser.crossSigningKeys)
+        {
+            // Remove orphan MXRealmCrossSigningInfo objects from the DB
+            [realm deleteObject:realmUser.crossSigningKeys];
+        }
+        
         realmUser.crossSigningKeys = realmCrossSigningKeys;
     }];
 }
