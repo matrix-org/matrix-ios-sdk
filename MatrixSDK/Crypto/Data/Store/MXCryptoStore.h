@@ -189,6 +189,13 @@
  */
 - (MXCrossSigningInfo*)crossSigningKeysForUser:(NSString*)userId;
 
+/**
+ Return all cross-signing keys we know about.
+ 
+ @return all cross signing keys.
+ */
+- (NSArray<MXCrossSigningInfo*> *)crossSigningKeys;
+
 
 #pragma mark - Message keys
 

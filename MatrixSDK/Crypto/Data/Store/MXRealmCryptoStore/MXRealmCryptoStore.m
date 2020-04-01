@@ -576,7 +576,12 @@ RLM_ARRAY_TYPE(MXRealmSecret)
         MXRealmCrossSigningInfo *realmCrossSigningKeys = [[MXRealmCrossSigningInfo alloc] initWithValue:@{
                                                                                                     @"data": [NSKeyedArchiver archivedDataWithRootObject:crossSigningInfo]
                                                                                                    }];
-
+        if (realmUser.crossSigningKeys)
+        {
+            // Remove orphan MXRealmCrossSigningInfo objects from the DB
+            [realm deleteObject:realmUser.crossSigningKeys];
+        }
+        
         realmUser.crossSigningKeys = realmCrossSigningKeys;
     }];
 }
@@ -591,6 +596,18 @@ RLM_ARRAY_TYPE(MXRealmSecret)
         crossSigningKeys = [NSKeyedUnarchiver unarchiveObjectWithData:realmUser.crossSigningKeys.data];
     }
 
+    return crossSigningKeys;
+}
+
+- (NSArray<MXCrossSigningInfo *> *)crossSigningKeys
+{
+    NSMutableArray<MXCrossSigningInfo*> *crossSigningKeys = [NSMutableArray array];
+    
+    for (MXRealmCrossSigningInfo *realmCrossSigningKey in [MXRealmCrossSigningInfo allObjectsInRealm:self.realm])
+    {
+        [crossSigningKeys addObject:[NSKeyedUnarchiver unarchiveObjectWithData:realmCrossSigningKey.data]];
+    }
+    
     return crossSigningKeys;
 }
 

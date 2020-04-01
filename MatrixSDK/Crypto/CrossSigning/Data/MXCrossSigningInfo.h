@@ -46,6 +46,7 @@ extern NSString *const MXCrossSigningInfoTrustLevelDidChangeNotification;
 @property (nonatomic, nullable, readonly) MXCrossSigningKey *selfSignedKeys;
 @property (nonatomic, nullable, readonly) MXCrossSigningKey *userSignedKeys;
 
+- (BOOL)hasSameKeysAsCrossSigningInfo:(MXCrossSigningInfo*)otherCrossSigningInfo;
 
 #pragma mark - Additional information
 
