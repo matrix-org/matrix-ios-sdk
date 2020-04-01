@@ -86,6 +86,7 @@ NSString *const MXCrossSigningErrorDomain = @"org.matrix.sdk.crosssigning";
                 [self.crypto.store storeCrossSigningKeys:keys];
                 
                 // Cross-signing is bootstrapped
+                // Refresh our state so that we can cross-sign
                 [self refreshStateWithSuccess:^(BOOL stateUpdated) {
                     // Expose this device to other users as signed by me
                     // TODO: Check if it is the right way to do so
@@ -348,6 +349,7 @@ NSString *const MXCrossSigningErrorDomain = @"org.matrix.sdk.crosssigning";
 {
     MXCrossSigningState stateBefore = _state;
     BOOL canTrustCrossSigningBefore = self.canTrustCrossSigning;
+    MXCrossSigningInfo *myUserCrossSigningKeysBefore = self.myUserCrossSigningKeys;
     
     NSString *myUserId = _crypto.mxSession.matrixRestClient.credentials.userId;
     _myUserCrossSigningKeys = [_crypto.store crossSigningKeysForUser:myUserId];
@@ -357,11 +359,13 @@ NSString *const MXCrossSigningErrorDomain = @"org.matrix.sdk.crosssigning";
     // Refresh user's keys
     [self.crypto.deviceList downloadKeys:@[myUserId] forceDownload:YES success:^(MXUsersDevicesMap<MXDeviceInfo *> *usersDevicesInfoMap, NSDictionary<NSString *,MXCrossSigningInfo *> *crossSigningKeysMap) {
         
-        BOOL sameCrossSigningKeys = [self.myUserCrossSigningKeys hasSameKeysAsCrossSigningInfo:crossSigningKeysMap[myUserId]];
+        BOOL sameCrossSigningKeys = [myUserCrossSigningKeysBefore hasSameKeysAsCrossSigningInfo:crossSigningKeysMap[myUserId]];
         self.myUserCrossSigningKeys = crossSigningKeysMap[myUserId];
         
         [self computeState];
         
+        // If keys have changed, we need to recompute cross-signing trusts.
+        // Compute cross-signing trusts also if we detect we can now.
         if (!sameCrossSigningKeys
             || (!canTrustCrossSigningBefore && self.canTrustCrossSigning))
         {
@@ -781,7 +785,7 @@ NSString *const MXCrossSigningErrorDomain = @"org.matrix.sdk.crosssigning";
     NSString *sskPrivateKeyBase64 = [self.crypto.store secretWithSecretId:MXSecretId.crossSigningSelfSigning];
     if (uskPrivateKeyBase64 && sskPrivateKeyBase64)
     {
-        // Check they are valid and corresponds to our current cross-signing keys
+        // Check they are valid and they correspond to our current cross-signing keys
         if (_myUserCrossSigningKeys.userSignedKeys
             && _myUserCrossSigningKeys.selfSignedKeys)
         {
