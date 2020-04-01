@@ -982,12 +982,12 @@
 }
 
 
-// Test that we can detect that MSK has changed
+// Test trusts between Bob and Alice with 2 devices.
 // - Have Alice with 2 devices (Alice1 and Alice2) and Bob. All trusted via cross-signing
 // -> Bob should see all users and devices in the party as trusted thanks to cross-signing
 // -> Alice1 should see all users and devices in the party as trusted thanks to cross-signing
 // -> Alice2 should see all users and devices in the party as trusted thanks to cross-signing
-- (void)testCrossSigningBobAndAliceWithTwoDevicesAllTrusted
+- (void)testTrustsBetweenBobAndAliceWithTwoDevices
 {
    //  - Have Alice with 2 devices (Alice1 and Alice2) and Bob. All trusted via cross-signing
     [self doTestWithBobAndAliceWithTwoDevicesAllTrusted:self readyToTest:^(MXSession *aliceSession1, MXSession *aliceSession2, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
@@ -1000,6 +1000,7 @@
         NSString *bobDeviceId = bobSession.matrixRestClient.credentials.deviceId;
         
         // -> Bob should see all devices in the party as trusted thanks to cross-signing
+        XCTAssertEqual(bobSession.crypto.crossSigning.state, MXCrossSigningStateCanCrossSign);
         XCTAssertTrue([bobSession.crypto trustLevelForUser:bobUserId].isCrossSigningVerified);
         XCTAssertTrue([bobSession.crypto deviceTrustLevelForDevice:bobDeviceId ofUser:bobUserId].isCrossSigningVerified);
         XCTAssertTrue([bobSession.crypto trustLevelForUser:aliceUserId].isCrossSigningVerified);
@@ -1007,6 +1008,7 @@
         XCTAssertTrue([bobSession.crypto deviceTrustLevelForDevice:aliceSession2DeviceId ofUser:aliceUserId].isCrossSigningVerified);
         
         // -> Alice1 should see all devices in the party as trusted thanks to cross-signing
+        XCTAssertEqual(aliceSession1.crypto.crossSigning.state, MXCrossSigningStateCanCrossSign);
         XCTAssertTrue([aliceSession1.crypto trustLevelForUser:aliceUserId].isCrossSigningVerified);
         XCTAssertTrue([aliceSession1.crypto deviceTrustLevelForDevice:aliceSession1DeviceId ofUser:aliceUserId].isCrossSigningVerified);
         XCTAssertTrue([aliceSession1.crypto trustLevelForUser:bobUserId].isCrossSigningVerified);
@@ -1014,6 +1016,7 @@
         XCTAssertTrue([aliceSession1.crypto deviceTrustLevelForDevice:aliceSession2DeviceId ofUser:aliceUserId].isCrossSigningVerified);
         
         // -> Alice2 should see all devices in the party as trusted thanks to cross-signing
+        XCTAssertEqual(aliceSession2.crypto.crossSigning.state, MXCrossSigningStateCanCrossSign);
         XCTAssertTrue([aliceSession2.crypto trustLevelForUser:aliceUserId].isCrossSigningVerified);
         XCTAssertTrue([aliceSession2.crypto deviceTrustLevelForDevice:aliceSession2DeviceId ofUser:aliceUserId].isCrossSigningVerified);
         XCTAssertTrue([aliceSession2.crypto trustLevelForUser:bobUserId].isCrossSigningVerified);
@@ -1027,7 +1030,7 @@
 // Test that we can detect that MSK has changed
 // - Have Alice with 2 devices (Alice1 and Alice2) and Bob. All trusted via cross-signing
 // - Alice resets cross-signing from Alice1
-// -> Alice1 should not trust anymore Alice2 and Bob
+// -> Alice1 should not trust anymore Bob
 // -> Alice2 should not trust anymore Alice1 and Bob
 // -> Bob should not trust anymore Alice1 and Alice2
 - (void)testCrossSigningRotation
@@ -1046,6 +1049,7 @@
         [aliceSession1.crypto.crossSigning bootstrapWithPassword:MXTESTS_ALICE_PWD success:^{
             
             // -> Alice1 should not trust anymore Alice2 and Bob
+            XCTAssertEqual(aliceSession1.crypto.crossSigning.state, MXCrossSigningStateCanCrossSign);
             XCTAssertFalse([aliceSession1.crypto trustLevelForUser:bobUserId].isCrossSigningVerified);
             XCTAssertFalse([aliceSession1.crypto deviceTrustLevelForDevice:bobDeviceId ofUser:bobUserId].isCrossSigningVerified);
             XCTAssertFalse([aliceSession1.crypto deviceTrustLevelForDevice:aliceSession2DeviceId ofUser:aliceUserId].isCrossSigningVerified);
@@ -1055,37 +1059,32 @@
             XCTAssertTrue([aliceSession1.crypto deviceTrustLevelForDevice:aliceSession1DeviceId ofUser:aliceUserId].isCrossSigningVerified);
             
             
-            // -> Alice2 should not trust anymore Alice1 and Bob
+            // -> Alice2 should not trust anymore Bob
             // There is no other way than to make this poll
             [aliceSession2.crypto.crossSigning refreshStateWithSuccess:^(BOOL stateUpdated) {
                 
-                XCTAssertEqual(aliceSession2.crypto.crossSigning.state, MXCrossSigningStateTrustCrossSigning);
-
-                XCTAssertFalse([aliceSession2.crypto trustLevelForUser:aliceUserId].isCrossSigningVerified);
                 XCTAssertFalse([aliceSession2.crypto deviceTrustLevelForDevice:aliceSession2DeviceId ofUser:aliceUserId].isCrossSigningVerified);
 
                 XCTAssertFalse([aliceSession2.crypto trustLevelForUser:bobUserId].isCrossSigningVerified);
                 XCTAssertFalse([aliceSession2.crypto deviceTrustLevelForDevice:bobDeviceId ofUser:bobUserId].isCrossSigningVerified);
-                XCTAssertFalse([aliceSession2.crypto deviceTrustLevelForDevice:aliceSession1DeviceId ofUser:aliceUserId].isCrossSigningVerified);
 
+                // aliceSession2 trusts the new cross-signing reset by aliceSession1 because it trusts this device locally
+                // This explains expected results in tests below. They may be arguable but this is the reason
+                XCTAssertEqual(aliceSession2.crypto.crossSigning.state, MXCrossSigningStateTrustCrossSigning);
+                XCTAssertTrue([aliceSession2.crypto trustLevelForUser:aliceUserId].isCrossSigningVerified);
+                XCTAssertTrue([aliceSession2.crypto deviceTrustLevelForDevice:aliceSession1DeviceId ofUser:aliceUserId].isCrossSigningVerified);
+
+                
                 // -> Bob should not trust anymore Alice1 and Alice2
-                // There is no other way than to make this poll
-                [bobSession.crypto.crossSigning refreshStateWithSuccess:^(BOOL stateUpdated) {
-                    
-                    XCTAssertFalse([bobSession.crypto trustLevelForUser:aliceUserId].isCrossSigningVerified);
-                    XCTAssertFalse([bobSession.crypto deviceTrustLevelForDevice:aliceSession1DeviceId ofUser:aliceUserId].isCrossSigningVerified);
-                    XCTAssertFalse([bobSession.crypto deviceTrustLevelForDevice:aliceSession2DeviceId ofUser:aliceUserId].isCrossSigningVerified);
-                    
-                    // He should still trust himself
-                    XCTAssertTrue([bobSession.crypto trustLevelForUser:bobUserId].isCrossSigningVerified);
-                    XCTAssertTrue([bobSession.crypto deviceTrustLevelForDevice:bobDeviceId ofUser:bobUserId].isCrossSigningVerified);
-                    
-                    [expectation fulfill];
-                    
-                } failure:^(NSError *error) {
-                    XCTFail(@"Cannot set up intial test conditions - error: %@", error);
-                    [expectation fulfill];
-                }];
+                XCTAssertEqual(bobSession.crypto.crossSigning.state, MXCrossSigningStateCanCrossSign);
+                XCTAssertFalse([bobSession.crypto trustLevelForUser:aliceUserId].isCrossSigningVerified);
+                XCTAssertFalse([bobSession.crypto deviceTrustLevelForDevice:aliceSession1DeviceId ofUser:aliceUserId].isCrossSigningVerified);
+                XCTAssertFalse([bobSession.crypto deviceTrustLevelForDevice:aliceSession2DeviceId ofUser:aliceUserId].isCrossSigningVerified);
+                // He should still trust himself
+                XCTAssertTrue([bobSession.crypto trustLevelForUser:bobUserId].isCrossSigningVerified);
+                XCTAssertTrue([bobSession.crypto deviceTrustLevelForDevice:bobDeviceId ofUser:bobUserId].isCrossSigningVerified);
+                
+                [expectation fulfill];
 
             } failure:^(NSError *error) {
                 XCTFail(@"Cannot set up intial test conditions - error: %@", error);
