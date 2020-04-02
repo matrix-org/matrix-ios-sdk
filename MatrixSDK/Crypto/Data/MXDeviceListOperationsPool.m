@@ -106,6 +106,7 @@
         self->_httpOperation = nil;
         
         NSMutableDictionary<NSString* /* userId */, NSArray<MXDeviceInfo*>*> *usersDevices = [NSMutableDictionary new];
+        NSMutableDictionary<NSString* /* userId */, NSArray<MXDeviceInfo*>*> *updatedUsersDevices = [NSMutableDictionary new];
 
         for (NSString *userId in users)
         {
@@ -133,11 +134,13 @@
             if (devices)
             {
                 NSMutableDictionary<NSString*, MXDeviceInfo*> *mutabledevices = [NSMutableDictionary dictionaryWithDictionary:devices];
+                
+                NSDictionary<NSString*, MXDeviceInfo*> *storedDevices = [self->crypto.store devicesForUser:userId];
 
                 for (NSString *deviceId in mutabledevices.allKeys)
                 {
                     // Get the potential previously store device keys for this device
-                    MXDeviceInfo *previouslyStoredDeviceKeys = [self->crypto.store deviceWithDeviceId:deviceId forUser:userId];
+                    MXDeviceInfo *previouslyStoredDeviceKeys = storedDevices[deviceId];
 
                     MXDeviceVerification previousLocalState = MXDeviceUnknown;
                     
@@ -168,17 +171,26 @@
                     [mutabledevices[deviceId] updateTrustLevel:trustLevel];
                 }
 
-                // Update the store
-                // Note that devices which aren't in the response will be removed from the store
-                [self->crypto.store storeDevicesForUser:userId devices:mutabledevices];
-                
                 usersDevices[userId] = mutabledevices.allValues;
+                
+                if (![mutabledevices isEqualToDictionary:storedDevices])
+                {
+                    updatedUsersDevices[userId] = usersDevices[userId];
+                    
+                    // Update the store
+                    // Note that devices which aren't in the response will be removed from the store
+                    [self->crypto.store storeDevicesForUser:userId devices:mutabledevices];
+                }
+
             }
         }
         
-        // Post notification using MXCrypto instance as MXDeviceListOperationsPool is an internal class.
-        [[NSNotificationCenter defaultCenter] postNotificationName:MXDeviceListDidUpdateUsersDevicesNotification object:self->crypto userInfo:usersDevices];
-
+        if (updatedUsersDevices.count)
+        {
+            // Post notification using MXCrypto instance as MXDeviceListOperationsPool is an internal class.
+            [[NSNotificationCenter defaultCenter] postNotificationName:MXDeviceListDidUpdateUsersDevicesNotification object:self->crypto userInfo:usersDevices];
+        }
+        
         // Delay
         dispatch_async(self->crypto.matrixRestClient.completionQueue, ^{
             
