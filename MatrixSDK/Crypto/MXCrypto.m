@@ -322,6 +322,9 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
 
         [self.deviceList close];
         self->_deviceList = nil;
+        
+        [self.matrixRestClient close];
+        self->_matrixRestClient = nil;
 
         [self->roomEncryptors removeAllObjects];
         self->roomEncryptors = nil;
