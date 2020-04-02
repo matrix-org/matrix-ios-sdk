@@ -195,6 +195,7 @@ NSString *const MXDeviceInfoTrustLevelDidChangeNotification = @"MXDeviceInfoTrus
         [aCoder encodeObject:_unsignedData forKey:@"unsignedData"];
     }
     [aCoder encodeObject:_trustLevel forKey:@"trustLevel"];
+}
 
 - (BOOL)isEqual:(id)object
 {
