@@ -1562,19 +1562,23 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
         }
 
         NSString *userId = _matrixRestClient.credentials.userId;
-
-        _myDevice = [[MXDeviceInfo alloc] initWithDeviceId:deviceId];
-        _myDevice.userId = userId;
-        _myDevice.keys = @{
-                          [NSString stringWithFormat:@"ed25519:%@", deviceId]: _olmDevice.deviceEd25519Key,
-                          [NSString stringWithFormat:@"curve25519:%@", deviceId]: _olmDevice.deviceCurve25519Key,
-                          };
-        _myDevice.algorithms = [[MXCryptoAlgorithms sharedAlgorithms] supportedAlgorithms];
-        [_myDevice updateTrustLevel:[MXDeviceTrustLevel trustLevelWithLocalVerificationStatus:MXDeviceVerified
-                                                                         crossSigningVerified:NO]];
-
-        // Add our own deviceinfo to the store
-        [_store storeDeviceForUser:userId device:_myDevice];
+        
+        _myDevice = [_store deviceWithDeviceId:deviceId forUser:userId];
+        if (!_myDevice)
+        {
+            _myDevice = [[MXDeviceInfo alloc] initWithDeviceId:deviceId];
+            _myDevice.userId = userId;
+            _myDevice.keys = @{
+                               [NSString stringWithFormat:@"ed25519:%@", deviceId]: _olmDevice.deviceEd25519Key,
+                               [NSString stringWithFormat:@"curve25519:%@", deviceId]: _olmDevice.deviceCurve25519Key,
+                               };
+            _myDevice.algorithms = [[MXCryptoAlgorithms sharedAlgorithms] supportedAlgorithms];
+            [_myDevice updateTrustLevel:[MXDeviceTrustLevel trustLevelWithLocalVerificationStatus:MXDeviceVerified
+                                                                             crossSigningVerified:NO]];
+            
+            // Add our own deviceinfo to the store
+            [_store storeDeviceForUser:userId device:_myDevice];
+        }
 
         oneTimeKeyCount = -1;
 
