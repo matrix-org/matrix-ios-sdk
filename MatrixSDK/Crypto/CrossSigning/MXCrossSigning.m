@@ -357,7 +357,7 @@ NSString *const MXCrossSigningErrorDomain = @"org.matrix.sdk.crosssigning";
     NSString *myUserId = _crypto.mxSession.matrixRestClient.credentials.userId;
     _myUserCrossSigningKeys = [_crypto.store crossSigningKeysForUser:myUserId];
     
-    NSLog(@"[MXCrossSigning] refreshState for device %@: current state: %@ (%@)", self.crypto.store.deviceId, @(self.state), self.myUserCrossSigningKeys);
+    NSLog(@"[MXCrossSigning] refreshState for device %@: Current state: %@", self.crypto.store.deviceId, @(self.state));
 
     // Refresh user's keys
     [self.crypto.deviceList downloadKeys:@[myUserId] forceDownload:YES success:^(MXUsersDevicesMap<MXDeviceInfo *> *usersDevicesInfoMap, NSDictionary<NSString *,MXCrossSigningInfo *> *crossSigningKeysMap) {
@@ -375,7 +375,7 @@ NSString *const MXCrossSigningErrorDomain = @"org.matrix.sdk.crosssigning";
             [self resetTrust];
         }
         
-        NSLog(@"[MXCrossSigning] refreshState for device %@: updated state: %@ (%@)", self.crypto.store.deviceId, @(self.state), self.myUserCrossSigningKeys);
+        NSLog(@"[MXCrossSigning] refreshState for device %@: Updated state: %@", self.crypto.store.deviceId, @(self.state));
         
         if (success)
         {
@@ -515,6 +515,9 @@ NSString *const MXCrossSigningErrorDomain = @"org.matrix.sdk.crosssigning";
     }
     
     _state = state;
+    
+    NSLog(@"[MXCrossSigning] myUserCrossSigningKeys: %@", _myUserCrossSigningKeys);
+    NSLog(@"[MXCrossSigning] state: %@", @(_state));
 }
 
 // Recompute cross-signing trust on all users we know
@@ -606,7 +609,9 @@ NSString *const MXCrossSigningErrorDomain = @"org.matrix.sdk.crosssigning";
     
     if (!isMasterKeyTrusted)
     {
-        NSLog(@"[MXCrossSigning] isSelfTrusted: NO (MSK not trusted)");
+        NSLog(@"[MXCrossSigning] isSelfTrusted: NO (MSK not trusted). MSK: %@", myMasterKey);
+        NSLog(@"[MXCrossSigning] isSelfTrusted: My user devices: %@", [self.crypto.store devicesForUser:myUserId]);
+
         return NO;
     }
     
@@ -615,7 +620,8 @@ NSString *const MXCrossSigningErrorDomain = @"org.matrix.sdk.crosssigning";
     BOOL isUSKSignatureValid = [self checkSignatureOnKey:myUserKey byKey:myMasterKey userId:myUserId];
     if (!isUSKSignatureValid)
     {
-        NSLog(@"[MXCrossSigning] isSelfTrusted: NO (Invalid MSK signature for USK)");
+        NSLog(@"[MXCrossSigning] isSelfTrusted: NO (Invalid MSK signature for USK). USK: %@", myUserKey);
+        NSLog(@"[MXCrossSigning] isSelfTrusted: MSK: %@", myMasterKey);
         return NO;
     }
     
@@ -624,7 +630,8 @@ NSString *const MXCrossSigningErrorDomain = @"org.matrix.sdk.crosssigning";
     BOOL isSSKSignatureValid = [self checkSignatureOnKey:mySelfKey byKey:myMasterKey userId:myUserId];
     if (!isSSKSignatureValid)
     {
-        NSLog(@"[MXCrossSigning] isSelfTrusted: NO (Invalid MSK signature for SSK)");
+        NSLog(@"[MXCrossSigning] isSelfTrusted: NO (Invalid MSK signature for SSK). SSK: %@", mySelfKey);
+        NSLog(@"[MXCrossSigning] isSelfTrusted: MSK: %@", myMasterKey);
         return NO;
     }
     

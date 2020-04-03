@@ -125,4 +125,9 @@ NSString *const MXCrossSigningInfoTrustLevelDidChangeNotification = @"MXCrossSig
     _keys = keys;
 }
 
+- (NSString *)description
+{
+    return [NSString stringWithFormat:@"<MXCrossSigningInfo: %p> Trusted: %@\nMSK: %@\nSSK: %@\nUSK: %@", self, @(self.trustLevel.isCrossSigningVerified), self.masterKeys, self.selfSignedKeys, self.userSignedKeys];
+}
+
 @end
