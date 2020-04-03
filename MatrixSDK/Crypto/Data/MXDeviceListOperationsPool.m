@@ -188,7 +188,7 @@
         if (updatedUsersDevices.count)
         {
             // Post notification using MXCrypto instance as MXDeviceListOperationsPool is an internal class.
-            [[NSNotificationCenter defaultCenter] postNotificationName:MXDeviceListDidUpdateUsersDevicesNotification object:self->crypto userInfo:usersDevices];
+            [[NSNotificationCenter defaultCenter] postNotificationName:MXDeviceListDidUpdateUsersDevicesNotification object:self->crypto userInfo:updatedUsersDevices];
         }
         
         // Delay
