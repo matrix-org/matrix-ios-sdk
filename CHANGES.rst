@@ -1,3 +1,9 @@
+Changes in Matrix iOS SDK in 0.16.3 (2020-xx-xx)
+================================================
+
+Improvements:
+ * Pod: Update AFNetworking version (#793).
+
 Changes in Matrix iOS SDK in 0.16.2 (2020-04-30)
 ================================================
 
