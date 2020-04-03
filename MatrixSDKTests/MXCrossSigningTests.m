@@ -1107,13 +1107,13 @@
     }];
 }
 
-// - Have Alice
+// - Have Alice with cross-signing
 // - Alice logs in on a new device
 // -> The first device must get notified by the new sign-in
 - (void)testMXCrossSigningMyUserDidSignInOnNewDeviceNotification
 {
-    // - Have Alice
-    [matrixSDKTestsE2EData doE2ETestWithAliceInARoom:self readyToTest:^(MXSession *aliceSession, NSString *roomId, XCTestExpectation *expectation) {
+    // - Have Alice with cross-signing
+    [self doTestWithBobAndBootstrappedAlice:self readyToTest:^(MXSession *bobSession, MXSession *aliceSession, NSString *roomId, XCTestExpectation *expectation) {
         
         // - Alice logs in on a new device
         __block NSString *newDeviceId;

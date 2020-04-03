@@ -665,6 +665,12 @@ NSString *const MXCrossSigningErrorDomain = @"org.matrix.sdk.crosssigning";
 
 - (void)usersDevicesDidUpdate:(NSNotification*)notification
 {
+    // If we cannot cross-sign, we cannot self verify new devices of our user
+    if (!self.canCrossSign)
+    {
+        return;
+    }
+    
     NSDictionary *userInfo = notification.userInfo;
     
     MXCredentials *myUser = _crypto.mxSession.matrixRestClient.credentials;
