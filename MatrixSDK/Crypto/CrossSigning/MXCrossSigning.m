@@ -107,8 +107,8 @@ NSString *const MXCrossSigningErrorDomain = @"org.matrix.sdk.crosssigning";
 
 - (MXCrossSigningInfo *)createKeys:(NSDictionary<NSString *,NSData *> *__autoreleasing  _Nonnull *)outPrivateKeys
 {
-    NSString *myUserId = _crypto.mxSession.matrixRestClient.credentials.userId;
-    NSString *myDeviceId = _crypto.mxSession.matrixRestClient.credentials.deviceId;
+    NSString *myUserId = _crypto.mxSession.myUserId;
+    NSString *myDeviceId = _crypto.mxSession.myDeviceId;
 
     MXCrossSigningInfo *crossSigningKeys = [[MXCrossSigningInfo alloc] initWithUserId:myUserId];
 
@@ -338,7 +338,7 @@ NSString *const MXCrossSigningErrorDomain = @"org.matrix.sdk.crosssigning";
         _crypto = crypto;
         _crossSigningTools = [MXCrossSigningTools new];
         
-        NSString *myUserId = _crypto.mxSession.matrixRestClient.credentials.userId;
+        NSString *myUserId = _crypto.mxSession.myUserId;
         _myUserCrossSigningKeys = [_crypto.store crossSigningKeysForUser:myUserId];
         
         [self computeState];
@@ -354,7 +354,7 @@ NSString *const MXCrossSigningErrorDomain = @"org.matrix.sdk.crosssigning";
     BOOL canTrustCrossSigningBefore = self.canTrustCrossSigning;
     MXCrossSigningInfo *myUserCrossSigningKeysBefore = self.myUserCrossSigningKeys;
     
-    NSString *myUserId = _crypto.mxSession.matrixRestClient.credentials.userId;
+    NSString *myUserId = _crypto.mxSession.myUserId;
     _myUserCrossSigningKeys = [_crypto.store crossSigningKeysForUser:myUserId];
     
     NSLog(@"[MXCrossSigning] refreshState for device %@: Current state: %@", self.crypto.store.deviceId, @(self.state));
@@ -583,7 +583,7 @@ NSString *const MXCrossSigningErrorDomain = @"org.matrix.sdk.crosssigning";
         return NO;
     }
     
-    NSString *myUserId = _crypto.mxSession.matrixRestClient.credentials.userId;
+    NSString *myUserId = _crypto.mxSession.myUserId;
     
     // Is it signed by a locally trusted device?
     NSDictionary<NSString*, NSString*> *myUserSignatures = myMasterKey.signatures.map[myUserId];
