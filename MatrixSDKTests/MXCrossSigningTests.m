@@ -42,6 +42,8 @@
 {
     MatrixSDKTestsData *matrixSDKTestsData;
     MatrixSDKTestsE2EData *matrixSDKTestsE2EData;
+    
+    NSMutableArray<id> *observers;
 }
 
 @end
@@ -55,12 +57,19 @@
 
     matrixSDKTestsData = [[MatrixSDKTestsData alloc] init];
     matrixSDKTestsE2EData = [[MatrixSDKTestsE2EData alloc] initWithMatrixSDKTestsData:matrixSDKTestsData];
+    
+    observers = [NSMutableArray array];
 }
 
 - (void)tearDown
 {
     matrixSDKTestsData = nil;
     matrixSDKTestsE2EData = nil;
+    
+    for (id observer in observers)
+    {
+        [[NSNotificationCenter defaultCenter] removeObserver:observer];
+    }
 }
 
 
@@ -1097,6 +1106,40 @@
         }];
     }];
 }
+
+// - Have Alice with cross-signing
+// - Alice logs in on a new device
+// -> The first device must get notified by the new sign-in
+- (void)testMXCrossSigningMyUserDidSignInOnNewDeviceNotification
+{
+    // - Have Alice with cross-signing
+    [self doTestWithBobAndBootstrappedAlice:self readyToTest:^(MXSession *bobSession, MXSession *aliceSession, NSString *roomId, XCTestExpectation *expectation) {
+        
+        // - Alice logs in on a new device
+        __block NSString *newDeviceId;
+        [matrixSDKTestsE2EData loginUserOnANewDevice:aliceSession.matrixRestClient.credentials withPassword:MXTESTS_ALICE_PWD onComplete:^(MXSession *newAliceSession) {
+            newDeviceId = newAliceSession.matrixRestClient.credentials.deviceId;
+        }];
+        
+        // -> The first device must get notified by the new sign-in
+        id observer = [[NSNotificationCenter defaultCenter] addObserverForName:MXCrossSigningMyUserDidSignInOnNewDeviceNotification object:aliceSession.crypto.crossSigning queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *notification) {
+            
+            NSDictionary *userInfo = notification.userInfo;
+            NSArray<NSString*> *myNewDevices = userInfo[MXCrossSigningNotificationDeviceIdsKey];
+            
+            // Wait a bit that the new acount finish to login to get its id
+            dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 1 * NSEC_PER_SEC), dispatch_get_main_queue(), ^{
+                XCTAssertEqual(myNewDevices.count, 1);
+                XCTAssertEqualObjects(myNewDevices.firstObject, newDeviceId);
+                
+                [expectation fulfill];
+            });
+        }];
+        
+        [observers addObject:observer];
+    }];
+}
+
 
 @end
 

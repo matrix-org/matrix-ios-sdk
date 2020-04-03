@@ -197,6 +197,33 @@ NSString *const MXDeviceInfoTrustLevelDidChangeNotification = @"MXDeviceInfoTrus
     [aCoder encodeObject:_trustLevel forKey:@"trustLevel"];
 }
 
+- (BOOL)isEqual:(id)object
+{
+    if (self == object)
+    {
+        return YES;
+    }
+
+    if (![object isKindOfClass:MXDeviceInfo.class])
+    {
+        return NO;
+    }
+    
+    return [self isEqualToDeviceInfo:(MXDeviceInfo *)object];
+}
+
+- (BOOL)isEqualToDeviceInfo:(MXDeviceInfo *)other
+{
+    return
+    [_deviceId isEqualToString:other.deviceId]
+    && [_userId isEqualToString:other.userId]
+    && [_algorithms isEqualToArray:other.algorithms]
+    && [_keys isEqualToDictionary:other.keys]
+    && [_signatures isEqualToDictionary:other.signatures]
+    && [_unsignedData isEqualToDictionary:other.unsignedData]
+    && [_trustLevel isEqual:other.trustLevel];
+}
+
 - (NSString *)description
 {
     return [NSString stringWithFormat:@"%@:%@ - curve25519: %@ (trustLevel: %@)", _userId, _deviceId, self.identityKey, _trustLevel];

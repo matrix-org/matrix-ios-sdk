@@ -2835,6 +2835,31 @@
     }];
 }
 
+// - Have Alice
+// - Alice logs in on a new device
+// -> The first device must get notified by the new sign-in
+- (void)testMXDeviceListDidUpdateUsersDevicesNotification
+{
+    // - Have Alice
+    [matrixSDKTestsE2EData doE2ETestWithAliceInARoom:self readyToTest:^(MXSession *aliceSession, NSString *roomId, XCTestExpectation *expectation) {
+        
+        // - Alice logs in on a new device
+        [matrixSDKTestsE2EData loginUserOnANewDevice:aliceSession.matrixRestClient.credentials withPassword:MXTESTS_ALICE_PWD onComplete:^(MXSession *newAliceSession) {
+        }];
+        
+        // -> The first device must get notified by the new sign-in
+        observer = [[NSNotificationCenter defaultCenter] addObserverForName:MXDeviceListDidUpdateUsersDevicesNotification object:aliceSession.crypto queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *notification) {
+            
+            NSDictionary *userInfo = notification.userInfo;
+            NSArray<MXDeviceInfo*> *myUserDevices = userInfo[aliceSession.myUser.userId];
+            
+            XCTAssertEqual(myUserDevices.count, 2);
+            
+            [expectation fulfill];
+        }];
+    }];
+}
+
 @end
 
 #pragma clang diagnostic pop
