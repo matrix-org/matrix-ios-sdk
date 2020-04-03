@@ -7,6 +7,7 @@ Improvements:
  * Cross-Signing: Add a new module, MXCrossSigning, to handle device cross-signing (vector-im/riot-ios/issues/2890).
  * Verification by DM: Support QR code (vector-im/riot-ios/issues/2921).
  * MXRoom: Add a method to retrieve trusted members count in an encrypted room.
+ * MXSession: Add credentials, myUserId and myDeviceId shorcuts.
  * MXSession: Add createRoomWithParameters with a MXRoomCreationParameters model class.
  * MXRoomCreationParameters: Support the initial_state parameter and allow e2e on room creation (vector-im/riot-ios/issues/2943).
  * MXCrypto: Expose devicesForUser.

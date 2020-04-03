@@ -152,4 +152,9 @@ const struct MXCrossSigningKeyType MXCrossSigningKeyType = {
     [aCoder encodeObject:_signatures forKey:@"signatures"];
 }
 
+- (NSString *)description
+{
+    return [NSString stringWithFormat:@"<MXCrossSigningKey: %p> Keys: %@. Signatures: %@", self, self.keys, self.signatures];
+}
+
 @end

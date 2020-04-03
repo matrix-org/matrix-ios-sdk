@@ -362,6 +362,13 @@ FOUNDATION_EXPORT NSString *const kMXSessionNoRoomTag;
 @interface MXSession : NSObject
 
 /**
+ Shortcuts to the credentials this session is using
+ */
+@property (nonatomic, readonly) MXCredentials *credentials;
+@property (nonatomic, readonly) NSString *myUserId;
+@property (nonatomic, readonly) NSString *myDeviceId;
+
+/**
  The matrix REST Client used to make Matrix API requests.
  */
 @property (nonatomic, readonly) MXRestClient *matrixRestClient;

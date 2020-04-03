@@ -244,7 +244,7 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
             MXStrongifyAndReturnIfNil(self);
 
             NSLog(@"[MXCrypto] start ###########################################################");
-            NSLog(@"[MXCrypto] uploadDeviceKeys done for %@: ", self.mxSession.myUser.userId);
+            NSLog(@"[MXCrypto] uploadDeviceKeys done for %@: ", self.mxSession.myUserId);
 
             NSLog(@"[MXCrypto]    - device id  : %@", self.store.deviceId);
             NSLog(@"[MXCrypto]    - ed25519    : %@", self.olmDevice.deviceEd25519Key);
@@ -830,7 +830,7 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
         [device updateTrustLevel:trustLevel];
         [self.store storeDeviceForUser:userId device:device];
         
-        if ([userId isEqualToString:self.mxSession.myUser.userId])
+        if ([userId isEqualToString:self.mxSession.myUserId])
         {
             // If one of the user's own devices is being marked as verified / unverified,
             // check the key backup status, since whether or not we use this depends on
@@ -840,7 +840,7 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
     }
     
     if (verificationStatus == MXDeviceVerified
-        && [userId isEqualToString:self.mxSession.myUser.userId])
+        && [userId isEqualToString:self.mxSession.myUserId])
     {
         // Manage self-verification
         if (self.crossSigning.canCrossSign)
@@ -2539,7 +2539,7 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
         return;
     }
     
-    if ([sender isEqualToString:_mxSession.myUser.userId]
+    if ([sender isEqualToString:_mxSession.myUserId]
         && [deviceKey isEqualToString:self.olmDevice.deviceCurve25519Key])
     {
         NSLog(@"[MXCrypto] markOlmSessionForUnwedging: Do not unwedge ourselves");
