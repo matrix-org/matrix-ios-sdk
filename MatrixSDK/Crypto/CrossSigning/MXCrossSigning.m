@@ -338,6 +338,9 @@ NSString *const MXCrossSigningErrorDomain = @"org.matrix.sdk.crosssigning";
         _crypto = crypto;
         _crossSigningTools = [MXCrossSigningTools new];
         
+        NSString *myUserId = _crypto.mxSession.matrixRestClient.credentials.userId;
+        _myUserCrossSigningKeys = [_crypto.store crossSigningKeysForUser:myUserId];
+        
         [self computeState];
         [self registerUsersDevicesUpdateNotification];
      }
