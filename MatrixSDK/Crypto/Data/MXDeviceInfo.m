@@ -216,7 +216,7 @@ NSString *const MXDeviceInfoTrustLevelDidChangeNotification = @"MXDeviceInfoTrus
 {
     return
     [_deviceId isEqualToString:other.deviceId]
-    && [_deviceId isEqualToString:other.deviceId]
+    && [_userId isEqualToString:other.userId]
     && [_algorithms isEqualToArray:other.algorithms]
     && [_keys isEqualToDictionary:other.keys]
     && [_signatures isEqualToDictionary:other.signatures]
