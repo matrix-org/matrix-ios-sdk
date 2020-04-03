@@ -223,7 +223,7 @@ NSString * const MXKeyVerificationMethodReciprocate = @"m.reciprocate.v1";
         return;
     }
     
-    NSString *currentUserId = self.manager.crypto.mxSession.myUser.userId;
+    NSString *currentUserId = self.manager.crypto.mxSession.myUserId;
     BOOL isSelfVerification = [currentUserId isEqualToString:self.otherUserId];
     
     // If not me sign his MSK and upload the signature
@@ -263,7 +263,7 @@ NSString * const MXKeyVerificationMethodReciprocate = @"m.reciprocate.v1";
     
     MXQRCodeData *qrCodeData = self.qrCodeData;
     
-    NSString *currentUserId = self.manager.crypto.mxSession.myUser.userId;
+    NSString *currentUserId = self.manager.crypto.mxSession.myUserId;
     BOOL isSelfVerification = [currentUserId isEqualToString:self.otherUserId];
     
     // If not me, sign their MSK and upload the signature
@@ -310,7 +310,7 @@ NSString * const MXKeyVerificationMethodReciprocate = @"m.reciprocate.v1";
 
 - (void)trustOtherDeviceWithId:(NSString*)otherDeviceId
 {
-    NSString *currentUserId = self.manager.crypto.mxSession.myUser.userId;
+    NSString *currentUserId = self.manager.crypto.mxSession.myUserId;
     
     // setDeviceVerification will automatically cross sign the device
     [self.manager.crypto setDeviceVerification:MXDeviceVerified forDevice:otherDeviceId ofUser:currentUserId success:^{

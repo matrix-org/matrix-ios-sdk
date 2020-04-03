@@ -254,6 +254,21 @@ typedef void (^MXOnResumeDone)(void);
     return self;
 }
 
+- (MXCredentials *)credentials
+{
+    return matrixRestClient.credentials;
+}
+
+- (NSString *)myUserId
+{
+    return matrixRestClient.credentials.userId;
+}
+
+- (NSString *)myDeviceId
+{
+    return matrixRestClient.credentials.deviceId;
+}
+
 - (void)setState:(MXSessionState)state
 {
     if (_state != state)

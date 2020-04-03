@@ -169,7 +169,7 @@
     }
     
     MXKeyVerificationRequestState requestState = MXKeyVerificationRequestStatePending;
-    NSString *myUserId = self.mxSession.myUser.userId;
+    NSString *myUserId = self.mxSession.myUserId;
     
     MXEvent *firstEvent = events.firstObject;
     if (firstEvent.eventType == MXEventTypeKeyVerificationCancel)
@@ -251,7 +251,7 @@
     
     for (MXEvent *event in events)
     {
-        NSString *myUserId = self.mxSession.myUser.userId;
+        NSString *myUserId = self.mxSession.myUserId;
         
         switch (event.eventType)
         {

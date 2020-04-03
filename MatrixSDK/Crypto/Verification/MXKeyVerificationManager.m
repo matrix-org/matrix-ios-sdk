@@ -161,7 +161,7 @@ static NSArray<MXEventTypeString> *kMXKeyVerificationManagerDMEventTypes;
     [self.crypto.matrixRestClient sendToDevice:kMXMessageTypeKeyVerificationRequest contentMap:contentMap txnId:nil success:^{
         
         MXEvent *event = [MXEvent modelFromJSON:@{
-                                                  @"sender": self.crypto.mxSession.myUser.userId,
+                                                  @"sender": self.crypto.mxSession.myUserId,
                                                   @"type": kMXMessageTypeKeyVerificationRequest,
                                                   @"content": requestJSONModel.JSONDictionary
                                                   }];
@@ -797,7 +797,7 @@ static NSArray<MXEventTypeString> *kMXKeyVerificationManagerDMEventTypes;
 {
     dispatch_async(cryptoQueue, ^{
 
-        BOOL eventFromMyUser = [event.sender isEqualToString:self.crypto.mxSession.myUser.userId];
+        BOOL eventFromMyUser = [event.sender isEqualToString:self.crypto.mxSession.myUserId];
         BOOL isEventIntendedForMyDevice = isToDeviceEvent || !eventFromMyUser;
 
         NSLog(@"[MXKeyVerification] handleKeyVerificationEvent(from my user: %@, isToDeviceEvent: %@, intendedForMyDevice: %@): eventType: %@ \n%@",
@@ -864,7 +864,7 @@ static NSArray<MXEventTypeString> *kMXKeyVerificationManagerDMEventTypes;
 {
     NSLog(@"[MXKeyVerification] handleToDeviceRequestEvent");
     
-    MXKeyVerificationByToDeviceRequest *keyVerificationRequest = [[MXKeyVerificationByToDeviceRequest alloc] initWithEvent:event andManager:self to:self.crypto.mxSession.myUser.userId requestedOtherDeviceIds:@[]];
+    MXKeyVerificationByToDeviceRequest *keyVerificationRequest = [[MXKeyVerificationByToDeviceRequest alloc] initWithEvent:event andManager:self to:self.crypto.mxSession.myUserId requestedOtherDeviceIds:@[]];
     
     if (!keyVerificationRequest)
     {
@@ -1328,7 +1328,7 @@ static NSArray<MXEventTypeString> *kMXKeyVerificationManagerDMEventTypes;
 {
     NSLog(@"[MXKeyVerification] handleKeyVerificationRequestByDM: %@", request);
 
-    if (![request.request.to isEqualToString:self.crypto.mxSession.myUser.userId])
+    if (![request.request.to isEqualToString:self.crypto.mxSession.myUserId])
     {
         NSLog(@"[MXKeyVerification] handleKeyVerificationRequestByDM: Request for another user: %@", request.request.to);
         return;
@@ -1861,7 +1861,7 @@ static NSArray<MXEventTypeString> *kMXKeyVerificationManagerDMEventTypes;
 {
     MXQRCodeData *qrCodeData;
     
-    NSString *currentUserId = self.crypto.mxSession.myUser.userId;
+    NSString *currentUserId = self.crypto.mxSession.myUserId;
     MXUserTrustLevel *currentUserTrustLevel = [self.crypto trustLevelForUser:currentUserId];
     
     if ([otherUserId isEqualToString:currentUserId])
@@ -1910,7 +1910,7 @@ static NSArray<MXEventTypeString> *kMXKeyVerificationManagerDMEventTypes;
                                                                                                otherDeviceId:(NSString*)otherDeviceId
 {
     MXCrossSigningInfo *myUserCrossSigningKeys = self.crypto.crossSigning.myUserCrossSigningKeys;
-    NSString *currentUserId = self.crypto.mxSession.myUser.userId;
+    NSString *currentUserId = self.crypto.mxSession.myUserId;
     MXDeviceInfo *otherDevice = [self.crypto deviceWithDeviceId:otherDeviceId ofUser:currentUserId];
     
     NSString *userCrossSigningMasterKeyPublic = myUserCrossSigningKeys.masterKeys.keys;
@@ -1948,7 +1948,7 @@ static NSArray<MXEventTypeString> *kMXKeyVerificationManagerDMEventTypes;
 
 - (MXDeviceInfo*)currentDevice
 {
-    NSString *currentUserId = self.crypto.mxSession.myUser.userId;
+    NSString *currentUserId = self.crypto.mxSession.myUserId;
     NSString *currentDeviceId = self.crypto.mxSession.matrixRestClient.credentials.deviceId;
     return [self.crypto deviceWithDeviceId:currentDeviceId ofUser:currentUserId];
 }

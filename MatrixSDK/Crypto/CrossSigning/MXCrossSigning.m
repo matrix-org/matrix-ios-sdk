@@ -175,7 +175,7 @@ NSString *const MXCrossSigningErrorDomain = @"org.matrix.sdk.crosssigning";
 {
     NSLog(@"[MXCrossSigning] crossSignDeviceWithDeviceId: %@", deviceId);
           
-    NSString *myUserId = self.crypto.mxSession.myUser.userId;
+    NSString *myUserId = self.crypto.mxSession.myUserId;
     
     dispatch_async(self.crypto.cryptoQueue, ^{
         
@@ -399,7 +399,7 @@ NSString *const MXCrossSigningErrorDomain = @"org.matrix.sdk.crosssigning";
 {
     BOOL isUserVerified = NO;
 
-    NSString *myUserId = _crypto.mxSession.myUser.userId;
+    NSString *myUserId = _crypto.mxSession.myUserId;
     if ([myUserId isEqualToString:crossSigningKeys.userId])
     {
         // Can we trust the current cross-signing setup?
@@ -580,7 +580,7 @@ NSString *const MXCrossSigningErrorDomain = @"org.matrix.sdk.crosssigning";
         return NO;
     }
     
-    NSString *myUserId = _crypto.mxSession.myUser.userId;
+    NSString *myUserId = _crypto.mxSession.matrixRestClient.credentials.userId;
     
     // Is it signed by a locally trusted device?
     NSDictionary<NSString*, NSString*> *myUserSignatures = myMasterKey.signatures.map[myUserId];
@@ -705,7 +705,7 @@ NSString *const MXCrossSigningErrorDomain = @"org.matrix.sdk.crosssigning";
            success:(void (^)(void))success
            failure:(void (^)(NSError *error))failure
 {
-    NSString *myUserId = _crypto.mxSession.myUser.userId;
+    NSString *myUserId = _crypto.mxSession.myUserId;
 
     NSDictionary *object = @{
                              @"algorithms": device.algorithms,
@@ -770,7 +770,7 @@ NSString *const MXCrossSigningErrorDomain = @"org.matrix.sdk.crosssigning";
 {
     [self crossSigningKeyWithKeyType:keyType success:^(NSString *publicKey, OLMPkSigning *signing) {
 
-        NSString *myUserId = self.crypto.mxSession.myUser.userId;
+        NSString *myUserId = self.crypto.mxSession.myUserId;
 
         NSError *error;
         NSDictionary *signedObject = [self.crossSigningTools pkSignObject:object withPkSigning:signing userId:myUserId publicKey:publicKey error:&error];
