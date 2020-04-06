@@ -16,19 +16,19 @@ PODS:
     - AFNetworking/NSURLSession
   - GZIP (1.2.3)
   - libbase58 (0.1.4)
-  - OHHTTPStubs (6.1.0):
-    - OHHTTPStubs/Default (= 6.1.0)
-  - OHHTTPStubs/Core (6.1.0)
-  - OHHTTPStubs/Default (6.1.0):
+  - OHHTTPStubs (9.0.0):
+    - OHHTTPStubs/Default (= 9.0.0)
+  - OHHTTPStubs/Core (9.0.0)
+  - OHHTTPStubs/Default (9.0.0):
     - OHHTTPStubs/Core
     - OHHTTPStubs/JSON
     - OHHTTPStubs/NSURLSession
     - OHHTTPStubs/OHPathHelpers
-  - OHHTTPStubs/JSON (6.1.0):
+  - OHHTTPStubs/JSON (9.0.0):
     - OHHTTPStubs/Core
-  - OHHTTPStubs/NSURLSession (6.1.0):
+  - OHHTTPStubs/NSURLSession (9.0.0):
     - OHHTTPStubs/Core
-  - OHHTTPStubs/OHPathHelpers (6.1.0)
+  - OHHTTPStubs/OHPathHelpers (9.0.0)
   - OLMKit (3.1.0):
     - OLMKit/olmc (= 3.1.0)
     - OLMKit/olmcpp (= 3.1.0)
@@ -42,7 +42,7 @@ DEPENDENCIES:
   - AFNetworking (~> 4.0.0)
   - GZIP (~> 1.2.2)
   - libbase58 (~> 0.1.4)
-  - OHHTTPStubs (~> 6.1.0)
+  - OHHTTPStubs (~> 9.0.0)
   - OLMKit (~> 3.1.0)
   - Realm (~> 3.17.3)
 
@@ -59,10 +59,10 @@ SPEC CHECKSUMS:
   AFNetworking: d9fdf484a3c723ec3c558a41cc5754c7e845ee77
   GZIP: af5c90ef903776a7e9afe6ebebd794a84a2929d4
   libbase58: 7c040313537b8c44b6e2d15586af8e21f7354efd
-  OHHTTPStubs: 1e21c7d2c084b8153fc53d48400d8919d2d432d0
+  OHHTTPStubs: cb29d2a9d09a828ecb93349a2b0c64f99e0db89f
   OLMKit: 4ee0159d63feeb86d836fdcfefe418e163511639
   Realm: 5a1d9d47bfc101dd597668b1a8af4288a2557f6d
 
-PODFILE CHECKSUM: 7c4f18c087227a14dec1806657b8b2b5a1fc69df
+PODFILE CHECKSUM: 02b5de65abfb35760758f35a057c3532759483b8
 
 COCOAPODS: 1.9.1
