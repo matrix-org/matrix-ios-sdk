@@ -27,7 +27,7 @@ Pod::Spec.new do |s|
 
   s.requires_arc  = true
 
-  s.dependency 'AFNetworking', '~> 3.2.0'
+  s.dependency 'AFNetworking', '~> 4.0.0'
   s.dependency 'GZIP', '~> 1.2.2'
   
   # Requirements for e2e encryption
