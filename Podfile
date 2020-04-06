@@ -16,7 +16,7 @@ abstract_target 'MatrixSDK' do
         
         target 'MatrixSDKTests-iOS' do
             inherit! :search_paths
-            pod 'OHHTTPStubs', '~> 6.1.0'
+            pod 'OHHTTPStubs', '~> 9.0.0'
         end
     end
     
@@ -25,7 +25,7 @@ abstract_target 'MatrixSDK' do
 
         target 'MatrixSDKTests-macOS' do
             inherit! :search_paths
-            pod 'OHHTTPStubs', '~> 6.1.0'
+            pod 'OHHTTPStubs', '~> 9.0.0'
         end
     end
 end
