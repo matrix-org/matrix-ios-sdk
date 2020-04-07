@@ -3053,9 +3053,9 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
                                        failure:failure];
 
         // Wait for the event coming back from the hs
-        id eventBackListener;
+        __block id eventBackListener;
         eventBackListener = [self listenToEventsOfTypes:@[kMXEventTypeStringRoomEncryption] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
-
+            
             [self removeListener:eventBackListener];
 
             // Dispatch to let time to MXCrypto to digest the m.room.encryption event
