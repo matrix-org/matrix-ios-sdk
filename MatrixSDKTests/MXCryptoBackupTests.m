@@ -1404,7 +1404,7 @@
                             XCTAssertTrue(aliceSession2.crypto.backup.hasPrivateKeyInCryptoStore);
                             
                             // -> It must be able to restore the backup using this local key
-                            [aliceSession2.crypto.backup restoreKeyBackupUsingPrivateKeyInCryptoStore:aliceSession2.crypto.backup.keyBackupVersion room:nil session:nil success:^(NSUInteger total, NSUInteger imported) {
+                            [aliceSession2.crypto.backup restoreUsingPrivateKeyKeyBackup:aliceSession2.crypto.backup.keyBackupVersion room:nil session:nil success:^(NSUInteger total, NSUInteger imported) {
                                 
                                 XCTAssertGreaterThan(total, 0);
                                 [expectation fulfill];
@@ -1439,7 +1439,7 @@
  - Restore the backup with a password
  -> We should have now the private key locally
  */
-- (void)testCatchPrivateKeyOn
+- (void)testCatchPrivateKeyOnRecoverWithPassword
 {
     [matrixSDKTestsE2EData doE2ETestWithAliceAndBobInARoomWithCryptedMessages:self cryptedBob:YES readyToTest:^(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
         

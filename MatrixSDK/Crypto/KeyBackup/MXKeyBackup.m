@@ -407,7 +407,7 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
     }
     
     // Do the restore operation in background
-    [self restoreKeyBackupUsingPrivateKeyInCryptoStore:self.keyBackupVersion room:nil session:nil success:^(NSUInteger total, NSUInteger imported) {
+    [self restoreUsingPrivateKeyKeyBackup:self.keyBackupVersion room:nil session:nil success:^(NSUInteger total, NSUInteger imported) {
         
         NSLog(@"[MXKeyBackup] restoreKeyBackupAutomatically: Restored %@ keys out of %@", @(imported), @(total));
         
@@ -833,7 +833,10 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
             MXHTTPOperation *operation2 = [self restoreKeyBackup:keyBackupVersion withPkDecryption:decryption room:roomId session:sessionId success:^(NSUInteger total, NSUInteger imported) {
                 
                 // Catch the private key from the recovery key and store it locally
-                [self storePrivateKeyWithRecoveryKey:recoveryKey];
+                if ([self.keyBackupVersion.version isEqualToString:keyBackupVersion.version])
+                {
+                    [self storePrivateKeyWithRecoveryKey:recoveryKey];
+                }
                 
                 if (success)
                 {
@@ -950,15 +953,15 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
     return operation;
 }
 
-- (MXHTTPOperation*)restoreKeyBackupUsingPrivateKeyInCryptoStore:(MXKeyBackupVersion*)keyBackupVersion
-                                                            room:(nullable NSString*)roomId
-                                                         session:(nullable NSString*)sessionId
-                                                         success:(nullable void (^)(NSUInteger total, NSUInteger imported))success
-                                                         failure:(nullable void (^)(NSError *error))failure
+- (MXHTTPOperation*)restoreUsingPrivateKeyKeyBackup:(MXKeyBackupVersion*)keyBackupVersion
+                                               room:(nullable NSString*)roomId
+                                            session:(nullable NSString*)sessionId
+                                            success:(nullable void (^)(NSUInteger total, NSUInteger imported))success
+                                            failure:(nullable void (^)(NSError *error))failure
 {
     MXHTTPOperation *operation = [MXHTTPOperation new];
     
-    NSLog(@"[MXKeyBackup] restoreKeyBackup using private key: From backup version: %@", keyBackupVersion.version);
+    NSLog(@"[MXKeyBackup] restoreUsingPrivateKeyKeyBackup: From backup version: %@", keyBackupVersion.version);
     
     MXWeakify(self);
     dispatch_async(cryptoQueue, ^{
@@ -967,14 +970,13 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
         // Get the PK decryption instance
         OLMPkDecryption *decryption = [self pkDecryptionFromCryptoStore];
         
-        
         // Validate the local private key
         if (decryption)
         {
             NSString *pKDecryptionPublicKey = [self pkDecrytionPublicKeyFromCryptoStore];
             if (![self checkPkDecryptionPublicKey:pKDecryptionPublicKey forKeyBackupVersion:keyBackupVersion])
             {
-                NSLog(@"[MXKeyBackup] restoreKeyBackup. Error: Invalid private key (%@) for %@", pKDecryptionPublicKey, keyBackupVersion);
+                NSLog(@"[MXKeyBackup] restoreUsingPrivateKeyKeyBackup. Error: Invalid private key (%@) for %@", pKDecryptionPublicKey, keyBackupVersion);
                 decryption = nil;
             }
         }
@@ -987,12 +989,14 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
         }
         else if (failure)
         {
-            NSError *error = [NSError errorWithDomain:MXKeyBackupErrorDomain
-                                                 code:MXKeyBackupErrorInvalidOrMissingLocalPrivateKey
-                                             userInfo:@{
-                                                NSLocalizedDescriptionKey: @"Backup: No valid private key"
-                                             }];
-            failure(error);
+            dispatch_async(dispatch_get_main_queue(), ^{
+                NSError *error = [NSError errorWithDomain:MXKeyBackupErrorDomain
+                                                     code:MXKeyBackupErrorInvalidOrMissingLocalPrivateKey
+                                                 userInfo:@{
+                                                            NSLocalizedDescriptionKey: @"Backup: No valid private key"
+                                                            }];
+                failure(error);
+            });
         }
     });
     

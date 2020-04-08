@@ -286,11 +286,11 @@ FOUNDATION_EXPORT NSString *const kMXKeyBackupDidStateChangeNotification;
 
  @return a MXHTTPOperation instance.
  */
-- (MXHTTPOperation*)restoreKeyBackupUsingPrivateKeyInCryptoStore:(MXKeyBackupVersion*)keyBackupVersion
-                                                             room:(nullable NSString*)roomId
-                                                          session:(nullable NSString*)sessionId
-                                                          success:(nullable void (^)(NSUInteger total, NSUInteger imported))success
-                                                          failure:(nullable void (^)(NSError *error))failure;
+- (MXHTTPOperation*)restoreUsingPrivateKeyKeyBackup:(MXKeyBackupVersion*)keyBackupVersion
+                                               room:(nullable NSString*)roomId
+                                            session:(nullable NSString*)sessionId
+                                            success:(nullable void (^)(NSUInteger total, NSUInteger imported))success
+                                            failure:(nullable void (^)(NSError *error))failure;
 
 /**
  Indicates if we have locally the private key of the current backup version.
