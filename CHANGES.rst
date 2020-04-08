@@ -41,6 +41,7 @@ Bug fix:
  * MXEventType: Fix Swift refinement.
  * MXCrypto: Fix users keys download that can fail in some condition
  * MXCryptoStore does not store device.algorithm (https://github.com/vector-im/riot-ios/issues/2896).
+ * VoiP: Fix remote ice candidates being added before remote description is setup (vector-im/riot-ios/issues/1784)
 
 API break:
  * MXCrypto: Rename MXDeviceVerificationManager to MXKeyVerificationManager.
