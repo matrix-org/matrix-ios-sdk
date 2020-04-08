@@ -966,15 +966,29 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
         
         // Get the PK decryption instance
         OLMPkDecryption *decryption = [self pkDecryptionFromCryptoStore];
+        
+        
+        // Validate the local private key
         if (decryption)
         {
+            NSString *pKDecryptionPublicKey = [self pkDecrytionPublicKeyFromCryptoStore];
+            if (![self checkPkDecryptionPublicKey:pKDecryptionPublicKey forKeyBackupVersion:keyBackupVersion])
+            {
+                NSLog(@"[MXKeyBackup] restoreKeyBackup. Error: Invalid private key (%@) for %@", pKDecryptionPublicKey, keyBackupVersion);
+                decryption = nil;
+            }
+        }
+        
+        if (decryption)
+        {
+            // Launch the restore
             MXHTTPOperation *operation2 = [self restoreKeyBackup:keyBackupVersion withPkDecryption:decryption room:roomId session:sessionId success:success failure:failure];
             [operation mutateTo:operation2];
         }
         else if (failure)
         {
             NSError *error = [NSError errorWithDomain:MXKeyBackupErrorDomain
-                                                 code:MXKeyBackupErrorMissingLocalPrivateKey
+                                                 code:MXKeyBackupErrorInvalidOrMissingLocalPrivateKey
                                              userInfo:@{
                                                 NSLocalizedDescriptionKey: @"Backup: No valid private key"
                                              }];
