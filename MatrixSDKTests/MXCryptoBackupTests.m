@@ -1432,6 +1432,57 @@
     }];
 }
 
+
+/**
+ - Do an e2e backup to the homeserver
+ - Erase local private key locally (that simulates usage of the backup from another device)
+ - Restore the backup with a password
+ -> We should have now the private key locally
+ */
+- (void)testCatchPrivateKeyOn
+{
+    [matrixSDKTestsE2EData doE2ETestWithAliceAndBobInARoomWithCryptedMessages:self cryptedBob:YES readyToTest:^(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
+        
+        // - Do an e2e backup to the homeserver
+        NSString *password = @"qwerty";
+        [aliceSession.crypto.backup prepareKeyBackupVersionWithPassword:password success:^(MXMegolmBackupCreationInfo * _Nonnull keyBackupCreationInfo) {
+            [aliceSession.crypto.backup createKeyBackupVersion:keyBackupCreationInfo success:^(MXKeyBackupVersion * _Nonnull keyBackupVersion) {
+            
+                NSString *backupSecret = [aliceSession.crypto.store secretWithSecretId:MXSecretId.keyBackup];
+                XCTAssertTrue(aliceSession.crypto.backup.hasPrivateKeyInCryptoStore);
+                
+                // - Erase local private key locally (that simulates usage of the backup from another device)
+                [aliceSession.crypto.store deleteSecretWithSecretId:MXSecretId.keyBackup];
+                XCTAssertFalse(aliceSession.crypto.backup.hasPrivateKeyInCryptoStore);
+                
+                // - Restore the backup with a password
+                [aliceSession.crypto.backup restoreKeyBackup:keyBackupVersion withPassword:password room:nil session:nil success:^(NSUInteger total, NSUInteger imported) {
+                    
+                    // -> We should have now the private key locally
+                    XCTAssertTrue(aliceSession.crypto.backup.hasPrivateKeyInCryptoStore);
+                    
+                    NSString *backupSecret2 = [aliceSession.crypto.store secretWithSecretId:MXSecretId.keyBackup];
+                    XCTAssertEqualObjects(backupSecret, backupSecret2);
+                    
+                    [expectation fulfill];
+                    
+                } failure:^(NSError * _Nonnull error) {
+                    XCTFail(@"The request should not fail - NSError: %@", error);
+                    [expectation fulfill];
+                }];
+                
+            } failure:^(NSError * _Nonnull error) {
+                XCTFail(@"The request should not fail - NSError: %@", error);
+                [expectation fulfill];
+            }];
+        } failure:^(NSError * _Nonnull error) {
+            XCTFail(@"The request should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+    }];
+}
+
+
 /**
  - Do an e2e backup to the homeserver
  - Log Alice on a new device

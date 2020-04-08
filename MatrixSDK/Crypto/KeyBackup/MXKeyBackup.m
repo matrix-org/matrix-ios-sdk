@@ -830,7 +830,16 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
         OLMPkDecryption *decryption = [self pkDecryptionFromRecoveryKey:recoveryKey error:&error];
         if (decryption)
         {
-            MXHTTPOperation *operation2 = [self restoreKeyBackup:keyBackupVersion withPkDecryption:decryption room:roomId session:sessionId success:success failure:failure];
+            MXHTTPOperation *operation2 = [self restoreKeyBackup:keyBackupVersion withPkDecryption:decryption room:roomId session:sessionId success:^(NSUInteger total, NSUInteger imported) {
+                
+                // Catch the private key from the recovery key and store it locally
+                [self storePrivateKeyWithRecoveryKey:recoveryKey];
+                
+                if (success)
+                {
+                    success(total, imported);
+                }
+            } failure:failure];
             [operation mutateTo:operation2];
         }
         else if (failure)
