@@ -36,6 +36,7 @@ Improvements:
  * MXLogger: Add a parameter to indicate the number of log files.
  * MXThrottler: Add this tool class to throttle actions.
  * Make enums conform to `Equatable`/`Hashable` where applicable.
+ * MXJingleCallAudioSessionConfigurator: Remove workaround since it is no longer needed
 
 Bug fix:
  * MXEventType: Fix Swift refinement.
