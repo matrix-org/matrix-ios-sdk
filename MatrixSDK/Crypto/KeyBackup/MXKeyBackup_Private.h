@@ -50,6 +50,8 @@ NS_ASSUME_NONNULL_BEGIN
  */
 - (void)maybeSendKeyBackup;
 
+- (void)scheduleRequestForPrivateKey;
+
 @end
 
 NS_ASSUME_NONNULL_END
