@@ -836,25 +836,33 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
             // check the key backup status, since whether or not we use this depends on
             // whether it has a signature from a verified device
             [self.backup checkAndStartKeyBackup];
-        }
-    }
-    
-    if (verificationStatus == MXDeviceVerified
-        && [userId isEqualToString:self.mxSession.myUserId])
-    {
-        // Manage self-verification
-        if (self.crossSigning.canCrossSign)
-        {
-            // Cross-sign our own device
-            NSLog(@"[MXCrypto] setDeviceVerificationForDevice: Mark device %@ as self verified", deviceId);
-            [self.crossSigning crossSignDeviceWithDeviceId:deviceId success:success failure:failure];
-            return;
-        }
-        else if (self.crossSigning.state == MXCrossSigningStateCrossSigningExists)
-        {
-            // This is a good time to request cross-signing private keys
-            NSLog(@"[MXCrypto] setDeviceVerificationForDevice: Request cross-signing private keys for device %@", deviceId);
-            [self.crossSigning scheduleRequestForPrivateKeys];
+            
+            // Manage self-verification
+            if (verificationStatus == MXDeviceVerified)
+            {
+                // Request backup private keys
+                if (!self.backup.hasPrivateKeyInCryptoStore)
+                {
+                    [self.backup scheduleRequestForPrivateKey];
+                }
+                
+                // Check cross-signing
+                if (self.crossSigning.canCrossSign)
+                {
+                    // Cross-sign our own device
+                    NSLog(@"[MXCrypto] setDeviceVerificationForDevice: Mark device %@ as self verified", deviceId);
+                    [self.crossSigning crossSignDeviceWithDeviceId:deviceId success:success failure:failure];
+                    
+                    // Wait the end of cross-sign before returning
+                    return;
+                }
+                else if (self.crossSigning.state == MXCrossSigningStateCrossSigningExists)
+                {
+                    // This is a good time to request cross-signing private keys
+                    NSLog(@"[MXCrypto] setDeviceVerificationForDevice: Request cross-signing private keys for device %@", deviceId);
+                    [self.crossSigning scheduleRequestForPrivateKeys];
+                }
+            }
         }
     }
     
