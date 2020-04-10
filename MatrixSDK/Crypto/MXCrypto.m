@@ -843,10 +843,13 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
                 // Request backup private keys
                 if (!self.backup.hasPrivateKeyInCryptoStore)
                 {
+                    MXWeakify(self);
                     [self.backup scheduleRequestForPrivateKey:^{
+                        MXStrongifyAndReturnIfNil(self);
+                        
                         if (self.enableOutgoingKeyRequestsOnceSelfVerificationDone)
                         {
-                            [self setOutgoingKeyRequestsEnabled:YES onComplete:nil];
+                            [self->outgoingRoomKeyRequestManager setEnabled:YES onComplete:nil];
                         }
                     }];
                 }

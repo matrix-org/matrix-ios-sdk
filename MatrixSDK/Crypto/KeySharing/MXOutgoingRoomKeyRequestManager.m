@@ -94,7 +94,10 @@ NSUInteger const SEND_KEY_REQUESTS_DELAY_MS = 500;
     _enabled = enabled;
     [self startTimer];
     
-    onComplete();
+    if (onComplete)
+    {
+        onComplete();
+    }
 }
 
 

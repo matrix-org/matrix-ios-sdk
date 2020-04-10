@@ -22,6 +22,8 @@
 #import "MXCrypto_Private.h"
 #import "MXCryptoStore.h"
 
+#import <OHHTTPStubs/OHHTTPStubs.h>
+
 // Do not bother with retain cycles warnings in tests
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Warc-retain-cycles"
@@ -47,6 +49,8 @@
 {
     matrixSDKTestsData = nil;
     matrixSDKTestsE2EData = nil;
+    
+    [OHHTTPStubs removeAllStubs];
 
     [super tearDown];
 }
@@ -295,9 +299,7 @@
                                         [expectation fulfill];
                                         
                                     });
-                                    
                                 }];
-                                
                             });
                             
                         } failure:^(NSError *error) {
@@ -315,6 +317,113 @@
                 [expectation fulfill];
             }];
         }];
+    }];
+}
+
+
+/**
+ Tests that we get keys from backup rather than key share requests on a new verified sign-in.
+ This demonstrates what happens on Riot when completing the security of a new sign-in.
+ 
+ - Have Alice and Bob in e2ee room with messages
+ - Alice sets up a backup
+ - Alice signs in on a new device
+ - Disable key share requests on Alice2
+ - Alice2 paginates in the room
+ - Make each Alice device trust each other
+ -> After a bit, Alice2 should have all keys
+ -> key share requests on Alice2 are enabled again
+ -> No m.room_key_request have been made
+ */
+- (void)testNoKeyShareRequestIfThereIsABackup
+{
+    //  - Have Alice and Bob in e2ee room with messages
+    [matrixSDKTestsE2EData doE2ETestWithAliceAndBobInARoomWithCryptedMessages:self cryptedBob:YES readyToTest:^(MXSession *aliceSession1, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
+        
+        // - Alice set up a backup
+        [aliceSession1.crypto.backup prepareKeyBackupVersionWithPassword:nil success:^(MXMegolmBackupCreationInfo * _Nonnull keyBackupCreationInfo) {
+            [aliceSession1.crypto.backup createKeyBackupVersion:keyBackupCreationInfo success:^(MXKeyBackupVersion * _Nonnull keyBackupVersion) {
+                [aliceSession1.crypto.backup backupAllGroupSessions:^{
+                    
+                    
+                    //- Alice signs in on a new device
+                    [matrixSDKTestsE2EData loginUserOnANewDevice:aliceSession1.matrixRestClient.credentials withPassword:MXTESTS_ALICE_PWD onComplete:^(MXSession *aliceSession2) {
+                        
+                        // - Disable key share requests on Alice2
+                        [aliceSession2.crypto setOutgoingKeyRequestsEnabled:NO onComplete:nil];
+                        
+                        
+                        // - Alice2 pagingates in the room
+                        MXRoom *roomFromAlice2POV = [aliceSession2 roomWithRoomId:roomId];
+                        [roomFromAlice2POV liveTimeline:^(MXEventTimeline *liveTimeline) {
+                            [liveTimeline resetPagination];
+                            [liveTimeline paginate:10 direction:MXTimelineDirectionBackwards onlyFromStore:NO complete:^{
+                                
+                                
+                                NSString *aliceUserId = aliceSession1.matrixRestClient.credentials.userId;
+                                NSString *aliceSession1DeviceId = aliceSession1.matrixRestClient.credentials.deviceId;
+                                NSString *aliceSession2DeviceId = aliceSession2.matrixRestClient.credentials.deviceId;
+                                
+                                // - Make each Alice device trust each other
+                                // This simulates a self verification and trigger cross-signing behind the shell
+                                [aliceSession1.crypto setDeviceVerification:MXDeviceVerified forDevice:aliceSession2DeviceId ofUser:aliceUserId success:^{
+                                    [aliceSession2.crypto setDeviceVerification:MXDeviceVerified forDevice:aliceSession1DeviceId ofUser:aliceUserId success:^{
+                                        
+                                        
+                                        // Wait a bit that gossip happens
+                                        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 2 * NSEC_PER_SEC), dispatch_get_main_queue(), ^{
+                                            
+                                            // -> After a bit, Alice2 should have all keys
+                                            XCTAssertEqual(aliceSession2.crypto.store.inboundGroupSessions.count, aliceSession1.crypto.store.inboundGroupSessions.count);
+                                            
+                                            // -> key share requests on Alice2 are enabled again
+                                            XCTAssertTrue(aliceSession2.crypto.isOutgoingKeyRequestsEnabled);
+                                            
+                                            [expectation fulfill];
+                                        });
+                                        
+                                    } failure:^(NSError *error) {
+                                        XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                                        [expectation fulfill];
+                                    }];
+                                } failure:^(NSError *error) {
+                                    XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                                    [expectation fulfill];
+                                }];
+                                
+                                
+                                
+                            } failure:^(NSError *error) {
+                                XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                                [expectation fulfill];
+                            }];
+                        }];
+                    }];
+                    
+
+                    
+                } progress:^(NSProgress * _Nonnull backupProgress) {
+                } failure:^(NSError * _Nonnull error) {
+                    XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                    [expectation fulfill];
+                }];
+            } failure:^(NSError * _Nonnull error) {
+                XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                [expectation fulfill];            }];
+        } failure:^(NSError * _Nonnull error) {
+            XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+            [expectation fulfill];
+        }];
+        
+        
+        // -> No m.room_key_request have been made
+        [OHHTTPStubs stubRequestsPassingTest:^BOOL(NSURLRequest *request) {
+            XCTAssertFalse([request.URL.absoluteString containsString:@"m.room_key_request"]);
+            return NO;
+        } withStubResponse:^OHHTTPStubsResponse*(NSURLRequest *request) {
+            return nil;
+        }];
+        
     }];
 }
 
