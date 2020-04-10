@@ -54,7 +54,7 @@ NSTimeInterval const MXTransactionTimeout = 10 * 60.0;
 // Request timeout in seconds
 NSTimeInterval const MXRequestDefaultTimeout = 5 * 60.0;
 
-static NSArray<MXEventTypeString> *kMXKeyVerificationManagerDMEventTypes;
+static NSArray<MXEventTypeString> *kMXKeyVerificationManagerVerificationEventTypes;
 
 
 @interface MXKeyVerificationManager ()
@@ -563,7 +563,7 @@ static NSArray<MXEventTypeString> *kMXKeyVerificationManagerDMEventTypes;
     {
         keyVerificationId = event.eventId;
     }
-    else if ([self isVerificationByDMEventType:event.type])
+    else if ([self isVerificationEventType:event.type])
     {
         MXKeyVerificationJSONModel *keyVerificationJSONModel;
         MXJSONModelSetMXJSONModel(keyVerificationJSONModel, MXKeyVerificationJSONModel, event.content);
@@ -587,7 +587,8 @@ static NSArray<MXEventTypeString> *kMXKeyVerificationManagerDMEventTypes;
 {
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
-        kMXKeyVerificationManagerDMEventTypes = @[
+        kMXKeyVerificationManagerVerificationEventTypes = @[
+                                                    kMXMessageTypeKeyVerificationRequest,
                                                     kMXEventTypeStringKeyVerificationReady,
                                                     kMXEventTypeStringKeyVerificationStart,
                                                     kMXEventTypeStringKeyVerificationAccept,
@@ -1231,7 +1232,11 @@ static NSArray<MXEventTypeString> *kMXKeyVerificationManagerDMEventTypes;
 - (void)onToDeviceEvent:(NSNotification *)notification
 {
     MXEvent *event = notification.userInfo[kMXSessionNotificationEventKey];
-    [self handleKeyVerificationEvent:event isToDeviceEvent:YES];
+    
+    if ([self isVerificationEventType:event.type])
+    {
+        [self handleKeyVerificationEvent:event isToDeviceEvent:YES];
+    }
 }
 
 - (MXHTTPOperation*)sendToDevice:(NSString*)userId
@@ -1266,7 +1271,7 @@ static NSArray<MXEventTypeString> *kMXKeyVerificationManagerDMEventTypes;
 
 - (void)setupIncomingDMEvents
 {
-    [_crypto.mxSession listenToEventsOfTypes:kMXKeyVerificationManagerDMEventTypes onEvent:^(MXEvent *event, MXTimelineDirection direction, id customObject) {
+    [_crypto.mxSession listenToEventsOfTypes:kMXKeyVerificationManagerVerificationEventTypes onEvent:^(MXEvent *event, MXTimelineDirection direction, id customObject) {
         if (direction == MXTimelineDirectionForwards)
         {
             [self handleKeyVerificationEvent:event isToDeviceEvent:NO];
@@ -1274,9 +1279,9 @@ static NSArray<MXEventTypeString> *kMXKeyVerificationManagerDMEventTypes;
     }];
 }
 
-- (BOOL)isVerificationByDMEventType:(MXEventTypeString)type
+- (BOOL)isVerificationEventType:(MXEventTypeString)type
 {
-    return [kMXKeyVerificationManagerDMEventTypes containsObject:type];
+    return [kMXKeyVerificationManagerVerificationEventTypes containsObject:type];
 }
 
 - (MXHTTPOperation*)sendMessage:(NSString*)userId
