@@ -236,6 +236,89 @@
         }];
     }];
 }
+
+
+/**
+ Same test as testNominalCase but key share requests are disabled, then re-enabled.
+ 
+ - Have Alice and Bob in e2ee room with messages
+ - Alice signs in on a new device
+ - Disable key share requests on Alice2
+ - Make each Alice device trust each other
+ - Alice2 paginates in the room
+ -> Key share requests must be still pending
+ - Enable key share requests on Alice2
+ -> Key share requests should have complete
+ */
+- (void)testDisableKeyShareRequest
+{
+    //  - Have Alice and Bob in e2ee room with messages
+    [matrixSDKTestsE2EData doE2ETestWithAliceAndBobInARoomWithCryptedMessages:self cryptedBob:YES readyToTest:^(MXSession *aliceSession1, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
+        
+        //- Alice signs in on a new device
+        [matrixSDKTestsE2EData loginUserOnANewDevice:aliceSession1.matrixRestClient.credentials withPassword:MXTESTS_ALICE_PWD onComplete:^(MXSession *aliceSession2) {
+            
+            // - Disable key share requests on Alice2
+            [aliceSession2.crypto setOutgoingKeyRequestsEnabled:NO onComplete:nil];
+            
+            NSString *aliceUserId = aliceSession1.matrixRestClient.credentials.userId;
+            
+            NSString *aliceSession1DeviceId = aliceSession1.matrixRestClient.credentials.deviceId;
+            NSString *aliceSession2DeviceId = aliceSession2.matrixRestClient.credentials.deviceId;
+            
+            // - Make each Alice device trust each other
+            // This simulates a self verification and trigger cross-signing behind the shell
+            [aliceSession1.crypto setDeviceVerification:MXDeviceVerified forDevice:aliceSession2DeviceId ofUser:aliceUserId success:^{
+                [aliceSession2.crypto setDeviceVerification:MXDeviceVerified forDevice:aliceSession1DeviceId ofUser:aliceUserId success:^{
+                    
+                    // - Alice2 pagingates in the room
+                    MXRoom *roomFromAlice2POV = [aliceSession2 roomWithRoomId:roomId];
+                    [roomFromAlice2POV liveTimeline:^(MXEventTimeline *liveTimeline) {
+                        [liveTimeline resetPagination];
+                        [liveTimeline paginate:10 direction:MXTimelineDirectionBackwards onlyFromStore:NO complete:^{
+                            
+                            // Wait a bit
+                            dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 1 * NSEC_PER_SEC), dispatch_get_main_queue(), ^{
+                                
+                                // -> Key share requests must be pending
+                                XCTAssertNotNil([aliceSession2.crypto.store outgoingRoomKeyRequestWithState:MXRoomKeyRequestStateUnsent]);
+                                
+                                // - Enable key share requests on Alice2
+                                [aliceSession2.crypto setOutgoingKeyRequestsEnabled:YES onComplete:^{
+                                    
+                                    // Wait a bit
+                                    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 1 * NSEC_PER_SEC), dispatch_get_main_queue(), ^{
+                                        
+                                        // -> Key share requests should have complete
+                                        XCTAssertNil([aliceSession2.crypto.store outgoingRoomKeyRequestWithState:MXRoomKeyRequestStateUnsent]);
+                                        XCTAssertNil([aliceSession2.crypto.store outgoingRoomKeyRequestWithState:MXRoomKeyRequestStateSent]);
+                                        [expectation fulfill];
+                                        
+                                    });
+                                    
+                                }];
+                                
+                            });
+                            
+                        } failure:^(NSError *error) {
+                            XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                            [expectation fulfill];
+                        }];
+                    }];
+                    
+                } failure:^(NSError *error) {
+                    XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                    [expectation fulfill];
+                }];
+            } failure:^(NSError *error) {
+                XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                [expectation fulfill];
+            }];
+        }];
+    }];
+}
+
+
 /**
  Test that a partial shared session does not cancel key share requests.
 

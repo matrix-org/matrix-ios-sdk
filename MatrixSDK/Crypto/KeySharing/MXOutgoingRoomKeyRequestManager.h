@@ -51,6 +51,16 @@
 - (void)start;
 
 /**
+ Enable or disable key share requests.
+ Enabled by default
+ 
+ @param enabled the new enable state.
+ @param onComplete the block called when the operation completes
+ */
+- (void)setEnabled:(BOOL)enabled onComplete:(void (^)(void))onComplete;
+- (BOOL)isEnabled;
+
+/**
  Called when the client is stopped. Stops any running background processes.
  */
 - (void)close;

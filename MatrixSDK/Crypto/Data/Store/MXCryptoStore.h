@@ -320,6 +320,14 @@
 - (MXOutgoingRoomKeyRequest*)outgoingRoomKeyRequestWithState:(MXRoomKeyRequestState)state;
 
 /**
+ Get all outgoing key requests that match the state.
+ 
+ @param state to look for.
+ @return a MXOutgoingRoomKeyRequest matching the request, or nil if not found.
+ */
+- (NSArray<MXOutgoingRoomKeyRequest*> *)allOutgoingRoomKeyRequestsWithState:(MXRoomKeyRequestState)state;
+
+/**
  Store an outgoing room key request.
 
  @param request the room key request to store.

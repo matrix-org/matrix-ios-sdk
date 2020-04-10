@@ -13,6 +13,7 @@ Improvements:
  * MXCrypto: Expose devicesForUser.
  * MXCrypto: Restart broken Olm sessions ([MSC1719](https://github.com/matrix-org/matrix-doc/pull/1719)) (vector-im/riot-ios/issues/2129).
  * MXCrypto: the `setDeviceVerification` method now downloads all user's devices if the device is not yet known.
+ * MXCrypto: Add the option to disable sending key share requests (`[MXCrypto setOutgoingKeyRequestsEnabled:]`).
  * MXRoomSummary: Add the trust property to indicate trust in other users and devices in the room (vector-im/riot-ios/issues/2906).
  * MXStore: Add a method to get related events for a specific event.
  * MXPublicRoom: Add canonical alias property.

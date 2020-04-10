@@ -37,6 +37,9 @@ NSUInteger const SEND_KEY_REQUESTS_DELAY_MS = 500;
     // if the callback has been set, or if it is still running.
     NSTimer *sendOutgoingRoomKeyRequestsTimer;
 }
+
+@property (nonatomic, assign, getter = isEnabled) BOOL enabled;
+
 @end
 
 @implementation MXOutgoingRoomKeyRequestManager
@@ -53,6 +56,7 @@ NSUInteger const SEND_KEY_REQUESTS_DELAY_MS = 500;
         deviceId = theDeviceId;
         cryptoQueue = theCryptoQueue;
         cryptoStore = theCryptoStore;
+        _enabled = YES;
     }
     return self;
 }
@@ -72,6 +76,27 @@ NSUInteger const SEND_KEY_REQUESTS_DELAY_MS = 500;
     [sendOutgoingRoomKeyRequestsTimer invalidate];
     sendOutgoingRoomKeyRequestsTimer = nil;
 }
+
+- (void)setEnabled:(BOOL)enabled onComplete:(void (^)(void))onComplete
+{
+    NSLog(@"[MXOutgoingRoomKeyRequestManager] setEnabled: %@ (old: %@)", @(enabled), @(_enabled));
+    if (enabled == _enabled)
+    {
+        return;
+    }
+    
+    if (enabled)
+    {
+        // Check keys we got while this manager was disabled
+        [self checkAllPendingOutgoingRoomKeyRequests];
+    }
+    
+    _enabled = enabled;
+    [self startTimer];
+    
+    onComplete();
+}
+
 
 - (void)sendRoomKeyRequest:(NSDictionary *)requestBody recipients:(NSArray<NSDictionary<NSString *,NSString *> *> *)recipients
 {
@@ -163,11 +188,6 @@ NSUInteger const SEND_KEY_REQUESTS_DELAY_MS = 500;
     dispatch_async(dispatch_get_main_queue(), ^{
         MXStrongifyAndReturnIfNil(self);
 
-        if (self->sendOutgoingRoomKeyRequestsTimer)
-        {
-            return;
-        }
-
         // Start expiration timer
         self->sendOutgoingRoomKeyRequestsTimer = [[NSTimer alloc] initWithFireDate:[NSDate dateWithTimeIntervalSinceNow:SEND_KEY_REQUESTS_DELAY_MS / 1000.0]
                                                                           interval:0
@@ -179,11 +199,40 @@ NSUInteger const SEND_KEY_REQUESTS_DELAY_MS = 500;
     });
 }
 
+- (void)checkAllPendingOutgoingRoomKeyRequests
+{
+    NSArray<MXOutgoingRoomKeyRequest*> *requests = [self->cryptoStore allOutgoingRoomKeyRequestsWithState:MXRoomKeyRequestStateUnsent];
+    
+    NSLog(@"[MXOutgoingRoomKeyRequestManager] checkAllPendingOutgoingRoomKeyRequests: %@ requests", @(requests.count));
+    
+    NSUInteger deleted = 0;
+    for (MXOutgoingRoomKeyRequest *request in requests)
+    {
+        // Check if we have now a valid key
+        MXOlmInboundGroupSession *inboundGroupSession = [cryptoStore inboundGroupSessionWithId:request.sessionId andSenderKey:request.senderKey];
+        if ([inboundGroupSession.roomId isEqualToString:request.roomId])
+        {
+            [cryptoStore deleteOutgoingRoomKeyRequestWithRequestId:request.requestId];
+            deleted++;
+        }
+    }
+    
+        NSLog(@"[MXOutgoingRoomKeyRequestManager] checkAllPendingOutgoingRoomKeyRequests: Cleared %@ requests", @(deleted));
+}
+
 - (void)sendOutgoingRoomKeyRequests
 {
-    NSLog(@"[MXOutgoingRoomKeyRequestManager] startSendingOutgoingRoomKeyRequests: Looking for queued outgoing room key requests.");
-
+    [sendOutgoingRoomKeyRequestsTimer invalidate];
     sendOutgoingRoomKeyRequestsTimer = nil;
+    
+    // Do not start
+    if (!self.isEnabled)
+    {
+        NSLog(@"[MXOutgoingRoomKeyRequestManager] startSendingOutgoingRoomKeyRequests: Looking for queued outgoing room key requests.");
+        return;
+    }
+    
+    NSLog(@"[MXOutgoingRoomKeyRequestManager] startSendingOutgoingRoomKeyRequests: Looking for queued outgoing room key requests.");
 
     // This method is called on the [NSRunLoop mainRunLoop]. Go to the crypto thread
     MXWeakify(self);

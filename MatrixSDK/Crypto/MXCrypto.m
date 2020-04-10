@@ -1467,6 +1467,31 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
 }
 #endif
 
+
+- (void)setOutgoingKeyRequestsEnabled:(BOOL)enabled onComplete:(void (^)(void))onComplete
+{
+#ifdef MX_CRYPTO
+    MXWeakify(self);
+    dispatch_async(_decryptionQueue, ^{
+        MXStrongifyAndReturnIfNil(self);
+        
+        [self->outgoingRoomKeyRequestManager setEnabled:enabled onComplete:^{
+            if (onComplete)
+            {
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    onComplete();
+                });
+            }
+        }];
+    });
+#endif
+}
+
+- (BOOL)isOutgoingKeyRequestsEnabled
+{
+    return outgoingRoomKeyRequestManager.isEnabled;
+}
+
 - (void)reRequestRoomKeyForEvent:(MXEvent *)event
 {
 #ifdef MX_CRYPTO
