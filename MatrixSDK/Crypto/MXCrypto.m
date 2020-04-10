@@ -843,7 +843,12 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
                 // Request backup private keys
                 if (!self.backup.hasPrivateKeyInCryptoStore)
                 {
-                    [self.backup scheduleRequestForPrivateKey];
+                    [self.backup scheduleRequestForPrivateKey:^{
+                        if (self.enableOutgoingKeyRequestsOnceSelfVerificationDone)
+                        {
+                            [self setOutgoingKeyRequestsEnabled:YES onComplete:nil];
+                        }
+                    }];
                 }
                 
                 // Check cross-signing
@@ -1571,6 +1576,7 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
 
         // Default configuration
         _warnOnUnknowDevices = YES;
+        _enableOutgoingKeyRequestsOnceSelfVerificationDone = YES;
 
         _decryptionQueue = [MXCrypto dispatchQueueForUser:_mxSession.matrixRestClient.credentials.userId];
 

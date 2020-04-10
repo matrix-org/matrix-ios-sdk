@@ -462,6 +462,13 @@ extern NSString *const MXDeviceListDidUpdateUsersDevicesNotification;
 - (BOOL)isOutgoingKeyRequestsEnabled;
 
 /**
+ Automatically re-enable outgoing key share requests once another device has been verified.
+ 
+ Default is YES.
+ */
+@property (nonatomic) BOOL enableOutgoingKeyRequestsOnceSelfVerificationDone;
+
+/**
  Rerequest the encryption keys required to decrypt an event.
 
  @param event the event to decrypt again.
