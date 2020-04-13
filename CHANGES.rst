@@ -15,6 +15,7 @@ Improvements:
  * MXCrypto: the `setDeviceVerification` method now downloads all user's devices if the device is not yet known.
  * MXRoomSummary: Add the trust property to indicate trust in other users and devices in the room (vector-im/riot-ios/issues/2906).
  * MXStore: Add a method to get related events for a specific event.
+ * MXStore: Add a method to remove all the messages sent before a specific timestamp in a room.
  * MXPublicRoom: Add canonical alias property.
  * MXLogger: Add a parameter to indicate the number of log files.
  * MXDeviceList: Post `MXDeviceListDidUpdateUsersDevicesNotification` notification when users devices list are updated.
