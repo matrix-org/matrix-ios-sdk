@@ -190,8 +190,13 @@ NSUInteger const SEND_KEY_REQUESTS_DELAY_MS = 500;
     MXWeakify(self);
     dispatch_async(dispatch_get_main_queue(), ^{
         MXStrongifyAndReturnIfNil(self);
+        
+        if (self->sendOutgoingRoomKeyRequestsTimer)
+        {
+            return;
+        }
 
-        // Start expiration timer
+        // Start timer
         self->sendOutgoingRoomKeyRequestsTimer = [[NSTimer alloc] initWithFireDate:[NSDate dateWithTimeIntervalSinceNow:SEND_KEY_REQUESTS_DELAY_MS / 1000.0]
                                                                           interval:0
                                                                             target:self
@@ -205,9 +210,7 @@ NSUInteger const SEND_KEY_REQUESTS_DELAY_MS = 500;
 - (void)checkAllPendingOutgoingRoomKeyRequests
 {
     NSArray<MXOutgoingRoomKeyRequest*> *requests = [self->cryptoStore allOutgoingRoomKeyRequestsWithState:MXRoomKeyRequestStateUnsent];
-    
-    NSLog(@"[MXOutgoingRoomKeyRequestManager] checkAllPendingOutgoingRoomKeyRequests: %@ requests", @(requests.count));
-    
+        
     NSUInteger deleted = 0;
     for (MXOutgoingRoomKeyRequest *request in requests)
     {
@@ -220,7 +223,7 @@ NSUInteger const SEND_KEY_REQUESTS_DELAY_MS = 500;
         }
     }
     
-        NSLog(@"[MXOutgoingRoomKeyRequestManager] checkAllPendingOutgoingRoomKeyRequests: Cleared %@ requests", @(deleted));
+    NSLog(@"[MXOutgoingRoomKeyRequestManager] checkAllPendingOutgoingRoomKeyRequests: Cleared %@ requests out of %@", @(deleted), @(requests.count));
 }
 
 - (void)sendOutgoingRoomKeyRequests
@@ -231,7 +234,7 @@ NSUInteger const SEND_KEY_REQUESTS_DELAY_MS = 500;
     // Do not start
     if (!self.isEnabled)
     {
-        NSLog(@"[MXOutgoingRoomKeyRequestManager] startSendingOutgoingRoomKeyRequests: Looking for queued outgoing room key requests.");
+        NSLog(@"[MXOutgoingRoomKeyRequestManager] startSendingOutgoingRoomKeyRequests: Disabled.");
         return;
     }
     

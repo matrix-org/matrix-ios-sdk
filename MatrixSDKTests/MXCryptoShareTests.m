@@ -163,6 +163,9 @@
                         // -> Then, they must have been sent
                         XCTAssertNil([aliceSession2.crypto.store outgoingRoomKeyRequestWithState:MXRoomKeyRequestStateUnsent]);
                         XCTAssertNotNil([aliceSession2.crypto.store outgoingRoomKeyRequestWithState:MXRoomKeyRequestStateSent]);
+                        
+                        // -> Alice2 should have received no keys
+                        XCTAssertEqual(aliceSession2.crypto.store.inboundGroupSessions.count, 0);
                         [expectation fulfill];
                     });
                     
@@ -185,6 +188,7 @@
  - Make each Alice device trust each other
  - Alice2 paginates in the room
  -> Key share requests must be pending
+-> After a bit, Alice2 should have received all keys
  -> Key share requests should have complete
  */
 - (void)testNominalCase
@@ -217,9 +221,13 @@
                             // Wait a bit
                             dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 1 * NSEC_PER_SEC), dispatch_get_main_queue(), ^{
                                 
+                                // -> After a bit, Alice2 should have received all keys
+                                XCTAssertEqual(aliceSession2.crypto.store.inboundGroupSessions.count, aliceSession1.crypto.store.inboundGroupSessions.count);
+                                
                                 // -> Key share requests should have complete
                                 XCTAssertNil([aliceSession2.crypto.store outgoingRoomKeyRequestWithState:MXRoomKeyRequestStateUnsent]);
                                 XCTAssertNil([aliceSession2.crypto.store outgoingRoomKeyRequestWithState:MXRoomKeyRequestStateSent]);
+                                
                                 [expectation fulfill];
                             });
                             
@@ -264,6 +272,7 @@
             
             // - Disable key share requests on Alice2
             [aliceSession2.crypto setOutgoingKeyRequestsEnabled:NO onComplete:nil];
+            aliceSession2.crypto.enableOutgoingKeyRequestsOnceSelfVerificationDone = NO;
             
             NSString *aliceUserId = aliceSession1.matrixRestClient.credentials.userId;
             
