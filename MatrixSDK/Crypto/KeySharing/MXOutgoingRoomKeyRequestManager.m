@@ -77,7 +77,7 @@ NSUInteger const SEND_KEY_REQUESTS_DELAY_MS = 500;
     sendOutgoingRoomKeyRequestsTimer = nil;
 }
 
-- (void)setEnabled:(BOOL)enabled onComplete:(void (^)(void))onComplete
+- (void)setEnabled:(BOOL)enabled
 {
     NSLog(@"[MXOutgoingRoomKeyRequestManager] setEnabled: %@ (old: %@)", @(enabled), @(_enabled));
     if (enabled == _enabled)
@@ -93,11 +93,6 @@ NSUInteger const SEND_KEY_REQUESTS_DELAY_MS = 500;
     
     _enabled = enabled;
     [self startTimer];
-    
-    if (onComplete)
-    {
-        onComplete();
-    }
 }
 
 

@@ -55,9 +55,8 @@
  Enabled by default
  
  @param enabled the new enable state.
- @param onComplete the block called when the operation completes
  */
-- (void)setEnabled:(BOOL)enabled onComplete:(void (^)(void))onComplete;
+- (void)setEnabled:(BOOL)enabled;
 - (BOOL)isEnabled;
 
 /**

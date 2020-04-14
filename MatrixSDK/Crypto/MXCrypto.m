@@ -849,7 +849,7 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
                         
                         if (self.enableOutgoingKeyRequestsOnceSelfVerificationDone)
                         {
-                            [self->outgoingRoomKeyRequestManager setEnabled:YES onComplete:nil];
+                            [self->outgoingRoomKeyRequestManager setEnabled:YES];
                         }
                     }];
                 }
@@ -1483,14 +1483,14 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
     dispatch_async(_decryptionQueue, ^{
         MXStrongifyAndReturnIfNil(self);
         
-        [self->outgoingRoomKeyRequestManager setEnabled:enabled onComplete:^{
-            if (onComplete)
-            {
-                dispatch_async(dispatch_get_main_queue(), ^{
-                    onComplete();
-                });
-            }
-        }];
+        [self->outgoingRoomKeyRequestManager setEnabled:enabled];
+        
+        if (onComplete)
+        {
+            dispatch_async(dispatch_get_main_queue(), ^{
+                onComplete();
+            });
+        }
     });
 #endif
 }
