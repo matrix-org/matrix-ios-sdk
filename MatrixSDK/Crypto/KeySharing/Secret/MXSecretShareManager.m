@@ -104,6 +104,8 @@ static NSArray<MXEventTypeString> *kMXSecretShareEventTypes;
         return nil;
     }
     
+    [self->pendingSecretShareRequests removeObjectForKey:requestId];
+    
     MXCredentials *myUser = _crypto.mxSession.matrixRestClient.credentials;
     
     MXSecretShareRequest *request = [MXSecretShareRequest new];
@@ -111,12 +113,7 @@ static NSArray<MXEventTypeString> *kMXSecretShareEventTypes;
     request.requestingDeviceId = myUser.deviceId;
     request.requestId = requestId;
     
-    MXWeakify(self);
     return [self sendMessage:request.JSONDictionary toDeviceIds:pendingRequest.requestedDeviceIds success:^{
-        MXStrongifyAndReturnIfNil(self);
-
-        [self->pendingSecretShareRequests removeObjectForKey:request.requestId];
-        
         dispatch_async(dispatch_get_main_queue(), ^{
             success();
         });
