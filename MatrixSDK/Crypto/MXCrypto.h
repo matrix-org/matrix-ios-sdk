@@ -452,6 +452,23 @@ extern NSString *const MXDeviceListDidUpdateUsersDevicesNotification;
 - (void)ignoreAllPendingKeyRequestsFromUser:(NSString*)userId andDevice:(NSString*)deviceId onComplete:(void (^)(void))onComplete;
 
 /**
+ Enable or disable outgoing key share requests.
+ Enabled by default
+ 
+ @param enabled the new enable state.
+ @param onComplete the block called when the operation completes
+ */
+- (void)setOutgoingKeyRequestsEnabled:(BOOL)enabled onComplete:(void (^)(void))onComplete;
+- (BOOL)isOutgoingKeyRequestsEnabled;
+
+/**
+ Automatically re-enable outgoing key share requests once another device has been verified.
+ 
+ Default is YES.
+ */
+@property (nonatomic) BOOL enableOutgoingKeyRequestsOnceSelfVerificationDone;
+
+/**
  Rerequest the encryption keys required to decrypt an event.
 
  @param event the event to decrypt again.

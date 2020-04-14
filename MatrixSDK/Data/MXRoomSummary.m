@@ -375,10 +375,15 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
                 newOperation = [liveTimeline paginate:messagesToPaginate direction:MXTimelineDirectionBackwards onlyFromStore:NO complete:^{
 
                     // Received messages have been stored in the store. We can make a new loop
-                    [self fetchLastMessage:complete failure:failure
-                        lastEventIdChecked:lastEventIdCheckedInBlock
-                                 operation:(operation ? operation : newOperation)
-                                    commit:commit];
+                    // XXX: This is only true for a permanent storage. Only MXNoStore is not permanent.
+                    // MXNoStore is only used for tests. We can skip it here.
+                    if (self.mxSession.store.isPermanent)
+                    {
+                        [self fetchLastMessage:complete failure:failure
+                            lastEventIdChecked:lastEventIdCheckedInBlock
+                                     operation:(operation ? operation : newOperation)
+                                        commit:commit];
+                    }
 
                 } failure:failure];
 

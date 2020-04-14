@@ -352,7 +352,7 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
     }];
 }
 
-- (void)scheduleRequestForPrivateKey
+- (void)scheduleRequestForPrivateKey:(void (^)(void))onComplete
 {
     NSLog(@"[MXKeyBackup] scheduleRequestForPrivateKeys");
           
@@ -363,15 +363,16 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
         [self requestPrivateKeysToDeviceIds:nil success:^{
         } onPrivateKeysReceived:^{
             
-            [self restoreKeyBackupAutomaticallyWithPrivateKey];
+            [self restoreKeyBackupAutomaticallyWithPrivateKey:onComplete];
 
         } failure:^(NSError * _Nonnull error) {
             NSLog(@"[MXKeyBackup] scheduleRequestForPrivateKeys. Error for requestPrivateKeys: %@", error);
+            onComplete();
         }];
     });
 }
 
-- (void)restoreKeyBackupAutomaticallyWithPrivateKey
+- (void)restoreKeyBackupAutomaticallyWithPrivateKey:(void (^)(void))onComplete
 {
     // Check we have alreaded loaded the backup before going further
     NSLog(@"[MXKeyBackup] restoreKeyBackupAutomatically: Current backup version %@", self.keyBackupVersion);
@@ -382,7 +383,7 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
             if (self.keyBackupVersion)
             {
                 // Try again
-                [self restoreKeyBackupAutomaticallyWithPrivateKey];
+                [self restoreKeyBackupAutomaticallyWithPrivateKey:onComplete];
             }
         } failure:^(NSError * _Nonnull error) {
             NSLog(@"[MXKeyBackup] restoreKeyBackupAutomatically: Cannot fetch backup version. Error: %@", error);
@@ -394,6 +395,7 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
     if (!self.hasPrivateKeyInCryptoStore)
     {
         NSLog(@"[MXKeyBackup] restoreKeyBackupAutomatically. Error: No private key");
+        onComplete();
         return;
     }
     
@@ -403,6 +405,7 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
     {
         NSLog(@"[MXKeyBackup] restoreKeyBackupAutomatically. Error: Invalid private key (%@)", pKDecryptionPublicKey);
         [crypto.store deleteSecretWithSecretId:MXSecretId.keyBackup];
+        onComplete();
         return;
     }
     
@@ -410,9 +413,11 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
     [self restoreUsingPrivateKeyKeyBackup:self.keyBackupVersion room:nil session:nil success:^(NSUInteger total, NSUInteger imported) {
         
         NSLog(@"[MXKeyBackup] restoreKeyBackupAutomatically: Restored %@ keys out of %@", @(imported), @(total));
+        onComplete();
         
     } failure:^(NSError * _Nonnull error) {
         NSLog(@"[MXKeyBackup] restoreKeyBackupAutomatically. Error for restoreKeyBackup: %@", error);
+        onComplete();
     }];
 }
 

@@ -843,7 +843,15 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
                 // Request backup private keys
                 if (!self.backup.hasPrivateKeyInCryptoStore)
                 {
-                    [self.backup scheduleRequestForPrivateKey];
+                    MXWeakify(self);
+                    [self.backup scheduleRequestForPrivateKey:^{
+                        MXStrongifyAndReturnIfNil(self);
+                        
+                        if (self.enableOutgoingKeyRequestsOnceSelfVerificationDone)
+                        {
+                            [self->outgoingRoomKeyRequestManager setEnabled:YES];
+                        }
+                    }];
                 }
                 
                 // Check cross-signing
@@ -1467,6 +1475,31 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
 }
 #endif
 
+
+- (void)setOutgoingKeyRequestsEnabled:(BOOL)enabled onComplete:(void (^)(void))onComplete
+{
+#ifdef MX_CRYPTO
+    MXWeakify(self);
+    dispatch_async(_decryptionQueue, ^{
+        MXStrongifyAndReturnIfNil(self);
+        
+        [self->outgoingRoomKeyRequestManager setEnabled:enabled];
+        
+        if (onComplete)
+        {
+            dispatch_async(dispatch_get_main_queue(), ^{
+                onComplete();
+            });
+        }
+    });
+#endif
+}
+
+- (BOOL)isOutgoingKeyRequestsEnabled
+{
+    return outgoingRoomKeyRequestManager.isEnabled;
+}
+
 - (void)reRequestRoomKeyForEvent:(MXEvent *)event
 {
 #ifdef MX_CRYPTO
@@ -1546,6 +1579,7 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
 
         // Default configuration
         _warnOnUnknowDevices = YES;
+        _enableOutgoingKeyRequestsOnceSelfVerificationDone = YES;
 
         _decryptionQueue = [MXCrypto dispatchQueueForUser:_mxSession.matrixRestClient.credentials.userId];
 
