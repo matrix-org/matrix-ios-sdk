@@ -143,7 +143,7 @@ NSUInteger const SEND_KEY_REQUESTS_DELAY_MS = 500;
             // may have seen it, so we still need to send a cancellation
             // in that case :/
 
-            NSLog(@"[MXOutgoingRoomKeyRequestManager] cancelRoomKeyRequest: deleting unnecessary room key request for %@", requestBody);
+            NSLog(@"[MXOutgoingRoomKeyRequestManager] cancelRoomKeyRequest: deleting unnecessary room key request %@", request.requestId);
 
             [cryptoStore deleteOutgoingRoomKeyRequestWithRequestId:request.requestId];
             break;
