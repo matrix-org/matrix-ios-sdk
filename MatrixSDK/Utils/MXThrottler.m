@@ -16,10 +16,13 @@
 
 #import "MXThrottler.h"
 
+#import "MXTools.h"
+
 @interface MXThrottler ()
 {
     dispatch_block_t workItem;
     NSDate *previousRun;
+    BOOL isTimerArmed;
 }
 @end
 
@@ -39,56 +42,61 @@
     {
         _minimumDelay = minimumDelay;
         _queue = queue;
-        self->previousRun = NSDate.distantPast;
+        isTimerArmed = NO;
+        previousRun = NSDate.distantPast;
     }
     return self;
 }
 
 - (void)cancelAll
 {
-    workItem = NULL;
+    workItem = nil;
 }
+
+NSUInteger count = 0;
 
 - (void)throttle:(dispatch_block_t)block
 {
     // Cancel any existing work item if it has not yet executed
-    workItem = NULL;
-    
-    // Weakify self
-    __weak typeof(self) weakSelf = self;
+    workItem = nil;
     
     // Re-assign workItem with the new block task, resetting the previousRun time when it executes
+    MXWeakify(self);
     workItem = ^(void) {
-        if (weakSelf)
-        {
-            typeof(self) self = weakSelf;
-            self->previousRun = [NSDate new];
-            block();
-        }
+        MXStrongifyAndReturnIfNil(self);
+
+        self->previousRun = [NSDate new];
+        block();
     };
+    
+    if (isTimerArmed)
+    {
+        // A run is scheduled. Do not stack more timers
+        return;
+    }
     
     // If the time since the previous run is more than the required minimum delay
     // => execute the workItem immediately
     // else
     // => delay the workItem execution by the minimum delay time
-    NSTimeInterval delay = [[NSDate new] timeIntervalSinceDate:self->previousRun] > _minimumDelay ? 0 : _minimumDelay;
+    NSTimeInterval delay = [[NSDate new] timeIntervalSinceDate:previousRun] > _minimumDelay ? 0 : _minimumDelay;
     if (delay == 0)
     {
-        if (self->workItem)
+        if (workItem)
         {
-            self->workItem();
+            workItem();
         }
     }
     else
     {
-        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, delay), _queue, ^{
-            if (weakSelf)
+        isTimerArmed = YES;
+        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(delay * NSEC_PER_SEC)), _queue, ^{
+            MXStrongifyAndReturnIfNil(self);
+            self->isTimerArmed = NO;
+            
+            if (self->workItem)
             {
-                typeof(self) self = weakSelf;
-                if (self->workItem)
-                {
-                    self->workItem();
-                }
+                self->workItem();
             }
         });
     }
