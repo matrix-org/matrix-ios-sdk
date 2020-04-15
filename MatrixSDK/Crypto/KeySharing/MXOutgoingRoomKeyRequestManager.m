@@ -291,9 +291,7 @@ NSUInteger const SEND_KEY_REQUESTS_DELAY_MS = 500;
                            success:(void (^)(void))success
                            failure:(void (^)(NSError *error))failure
 {
-    NSLog(@"[MXOutgoingRoomKeyRequestManager] sendOutgoingRoomKeyRequest: Requesting keys for %@ from %@ (id %@)", request.requestBody, request.recipients, request.requestId);
-
-
+    NSLog(@"[MXOutgoingRoomKeyRequestManager] sendOutgoingRoomKeyRequest: Requesting key %@ using request id %@ to %@: %@", request.sessionId, request.requestId, request.recipients, request.requestBody);
 
     NSDictionary *requestMessage = @{
                                      @"action": @"request",
@@ -321,7 +319,7 @@ NSUInteger const SEND_KEY_REQUESTS_DELAY_MS = 500;
                                        success:(void (^)(void))success
                                        failure:(void (^)(NSError *error))failure
 {
-    NSLog(@"[MXOutgoingRoomKeyRequestManager] sendOutgoingRoomKeyRequestCancellation: Sending cancellation for key request for %@ from %@ (cancellation id %@)", request.requestBody, request.recipients, request.cancellationTxnId);
+    NSLog(@"[MXOutgoingRoomKeyRequestManager] sendOutgoingRoomKeyRequestCancellation: Sending cancellation for key request (request id %@) for key %@ (cancellation id %@)", request.requestId, request.sessionId, request.cancellationTxnId);
 
     NSDictionary *requestMessage = @{
                                      @"action": @"request_cancellation",
@@ -386,7 +384,7 @@ NSUInteger const SEND_KEY_REQUESTS_DELAY_MS = 500;
 
     // we got to the end of the list without finding a match
     // - add the new request.
-    NSLog(@"[MXOutgoingRoomKeyRequestManager] getOrAddOutgoingRoomKeyRequest: enqueueing key request for for %@ / %@", requestBody[@"room_id"], requestBody[@"session_id"]);
+    NSLog(@"[MXOutgoingRoomKeyRequestManager] getOrAddOutgoingRoomKeyRequest: enqueueing key request for %@ / %@", requestBody[@"room_id"], requestBody[@"session_id"]);
 
     outgoingRoomKeyRequest = [[MXOutgoingRoomKeyRequest alloc] init];
     outgoingRoomKeyRequest.requestBody = requestBody;
