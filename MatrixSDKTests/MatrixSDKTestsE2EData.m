@@ -324,7 +324,7 @@
 
 - (void)outgoingRoomKeyRequestInSession:(MXSession*)session complete:(void (^)(MXOutgoingRoomKeyRequest*))complete
 {
-    dispatch_async(session.crypto.decryptionQueue, ^{
+    dispatch_async(session.crypto.cryptoQueue, ^{
         MXOutgoingRoomKeyRequest *outgoingRoomKeyRequest = [session.crypto.store outgoingRoomKeyRequestWithState:MXRoomKeyRequestStateUnsent];
         if (!outgoingRoomKeyRequest)
         {

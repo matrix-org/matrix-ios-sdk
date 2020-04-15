@@ -64,7 +64,7 @@ NSString * const MXKeyVerificationTransactionDidChangeNotification = @"MXKeyVeri
 
 - (void)cancelWithCancelCode:(MXTransactionCancelCode *)code
 {
-    dispatch_async(self.manager.crypto.decryptionQueue,^{
+    dispatch_async(self.manager.crypto.cryptoQueue,^{
         [self cancelWithCancelCodeFromCryptoQueue:code];
     });
 }

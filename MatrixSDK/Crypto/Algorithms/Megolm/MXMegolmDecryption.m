@@ -1,6 +1,7 @@
 /*
  Copyright 2016 OpenMarket Ltd
  Copyright 2017 Vector Creations Ltd
+ Copyright 2020 The Matrix.org Foundation C.I.C
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -114,7 +115,10 @@
         }
         else if ([olmError.domain isEqualToString:MXDecryptingErrorDomain] && olmError.code == MXDecryptingErrorUnknownInboundSessionIdCode)
         {
-            [self addEventToPendingList:event inTimeline:timeline];
+            // Do nothing more on the calling thread
+            dispatch_async(crypto.cryptoQueue, ^{
+                [self addEventToPendingList:event inTimeline:timeline];
+            });
         }
 
         if (error)
@@ -375,40 +379,41 @@
                 }
                 else
                 {
+                    // Decrypt on the current thread (Must be MXCrypto.cryptoQueue)
+                    NSError *error;
+                    MXEventDecryptionResult *result = [self decryptEvent:event inTimeline:(timelineId.length ? timelineId : nil) error:&error];
+                    
+                    // And set the result on the main thread to be compatible with other modules
                     dispatch_group_enter(group);
-
-                    // Go back to the main thread to retry to decrypt from the beginning of the chain.
-                    // MXSession will then update MXEvent with clear content if successful
-                    MXWeakify(self);
                     dispatch_async(dispatch_get_main_queue(), ^{
-                        MXStrongifyAndReturnIfNil(self);
-
-                        if (event.clearEvent)
+                        if (result)
                         {
-                            // This can happen when the event is in several timelines
-                            NSLog(@"[MXMegolmDecryption] retryDecryption: %@ already decrypted on main thread", event.eventId);
-                        }
-                        else
-                        {
-                            if ([self->crypto.mxSession decryptEvent:event inTimeline:(timelineId.length ? timelineId : nil)])
+                            if (event.clearEvent)
                             {
-                                NSLog(@"[MXMegolmDecryption] retryDecryption: successful re-decryption of %@", event.eventId);
+                                // This can happen when the event is in several timelines
+                                NSLog(@"[MXMegolmDecryption] retryDecryption: %@ already decrypted on main thread", event.eventId);
                             }
                             else
                             {
-                                NSLog(@"[MXMegolmDecryption] retryDecryption: Still can't decrypt %@. Error: %@", event.eventId, event.decryptionError);
-                                allDecrypted = NO;
+                                [event setClearData:result];
                             }
                         }
-
+                        else if (error)
+                        {
+                            NSLog(@"[MXMegolmDecryption] retryDecryption: Still can't decrypt %@. Error: %@", event.eventId, event.decryptionError);
+                            event.decryptionError = error;
+                            allDecrypted = NO;
+                        }
+                        
                         dispatch_group_leave(group);
                     });
+
                 }
             }
         }
     }
 
-    dispatch_group_notify(group, crypto.decryptionQueue, ^{
+    dispatch_group_notify(group, crypto.cryptoQueue, ^{
         complete(allDecrypted);
     });
 }

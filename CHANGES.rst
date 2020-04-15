@@ -10,6 +10,7 @@ Improvements:
  * MXSession: Add credentials, myUserId and myDeviceId shorcuts.
  * MXSession: Add createRoomWithParameters with a MXRoomCreationParameters model class.
  * MXRoomCreationParameters: Support the initial_state parameter and allow e2e on room creation (vector-im/riot-ios/issues/2943).
+ * MXCrypto: Change the threading model to make [MXCrypto decryptEvent:] less blocking.
  * MXCrypto: Expose devicesForUser.
  * MXCrypto: Restart broken Olm sessions ([MSC1719](https://github.com/matrix-org/matrix-doc/pull/1719)) (vector-im/riot-ios/issues/2129).
  * MXCrypto: the `setDeviceVerification` method now downloads all user's devices if the device is not yet known.
