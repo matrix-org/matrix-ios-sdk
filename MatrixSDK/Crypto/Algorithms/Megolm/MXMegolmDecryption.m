@@ -102,7 +102,10 @@
             // Manage OLMKit error
             if ([olmError.localizedDescription isEqualToString:@"UNKNOWN_MESSAGE_INDEX"])
             {
-                [self addEventToPendingList:event inTimeline:timeline];
+                // Do nothing more on the calling thread
+                dispatch_async(crypto.cryptoQueue, ^{
+                    [self addEventToPendingList:event inTimeline:timeline];
+                });
             }
 
             // Package olm error into MXDecryptingErrorDomain
