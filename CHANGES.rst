@@ -21,6 +21,7 @@ Improvements:
  * MXLogger: Add a parameter to indicate the number of log files.
  * MXDeviceList: Post `MXDeviceListDidUpdateUsersDevicesNotification` notification when users devices list are updated.
  * MXThrottler: Add this tool class to throttle actions.
+ * MXRestClient: Use r0 APIs for crypto endpoints (PR #826).
 
 Bug fix:
  * MXEventType: Fix Swift refinement.
