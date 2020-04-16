@@ -77,13 +77,6 @@ NSString * const MXKeyVerificationTransactionDidChangeNotification = @"MXKeyVeri
     });
 }
 
-- (void)cancelWithCancelCodeFromCryptoQueue:(MXTransactionCancelCode *)code
-                                    success:(void (^)(void))success
-                                    failure:(void (^)(NSError *error))failure
-{
-    [self.manager cancelTransaction:self code:code success:success failure:failure];
-}
-
 - (MXHTTPOperation*)sendToOther:(NSString*)eventType content:(NSDictionary*)content
                         success:(void (^)(void))success
                         failure:(void (^)(NSError *error))failure
