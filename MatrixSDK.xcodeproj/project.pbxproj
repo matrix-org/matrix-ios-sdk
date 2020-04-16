@@ -360,6 +360,10 @@
 		32A9E8241EF4026E0081358A /* MXBackgroundModeHandler.h in Headers */ = {isa = PBXBuildFile; fileRef = 32A9E8211EF4026E0081358A /* MXBackgroundModeHandler.h */; };
 		32A9E8251EF4026E0081358A /* MXUIKitBackgroundModeHandler.h in Headers */ = {isa = PBXBuildFile; fileRef = 32A9E8221EF4026E0081358A /* MXUIKitBackgroundModeHandler.h */; };
 		32A9E8261EF4026E0081358A /* MXUIKitBackgroundModeHandler.m in Sources */ = {isa = PBXBuildFile; fileRef = 32A9E8231EF4026E0081358A /* MXUIKitBackgroundModeHandler.m */; };
+		32A9F8DE244720B10069C65B /* MXThrottler.h in Headers */ = {isa = PBXBuildFile; fileRef = 32A9F8DC244720B10069C65B /* MXThrottler.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		32A9F8DF244720B10069C65B /* MXThrottler.h in Headers */ = {isa = PBXBuildFile; fileRef = 32A9F8DC244720B10069C65B /* MXThrottler.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		32A9F8E0244720B10069C65B /* MXThrottler.m in Sources */ = {isa = PBXBuildFile; fileRef = 32A9F8DD244720B10069C65B /* MXThrottler.m */; };
+		32A9F8E1244720B10069C65B /* MXThrottler.m in Sources */ = {isa = PBXBuildFile; fileRef = 32A9F8DD244720B10069C65B /* MXThrottler.m */; };
 		32AF927D240EA0190008A0FD /* MXSecretShareManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 32AF927B240EA0190008A0FD /* MXSecretShareManager.m */; };
 		32AF927E240EA0190008A0FD /* MXSecretShareManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 32AF927B240EA0190008A0FD /* MXSecretShareManager.m */; };
 		32AF927F240EA0190008A0FD /* MXSecretShareManager.h in Headers */ = {isa = PBXBuildFile; fileRef = 32AF927C240EA0190008A0FD /* MXSecretShareManager.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -1466,6 +1470,8 @@
 		32A9E8211EF4026E0081358A /* MXBackgroundModeHandler.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXBackgroundModeHandler.h; sourceTree = "<group>"; };
 		32A9E8221EF4026E0081358A /* MXUIKitBackgroundModeHandler.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXUIKitBackgroundModeHandler.h; sourceTree = "<group>"; };
 		32A9E8231EF4026E0081358A /* MXUIKitBackgroundModeHandler.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXUIKitBackgroundModeHandler.m; sourceTree = "<group>"; };
+		32A9F8DC244720B10069C65B /* MXThrottler.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MXThrottler.h; sourceTree = "<group>"; };
+		32A9F8DD244720B10069C65B /* MXThrottler.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MXThrottler.m; sourceTree = "<group>"; };
 		32AF927B240EA0190008A0FD /* MXSecretShareManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXSecretShareManager.m; sourceTree = "<group>"; };
 		32AF927C240EA0190008A0FD /* MXSecretShareManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXSecretShareManager.h; sourceTree = "<group>"; };
 		32AF9282240EA2430008A0FD /* MXSecretShareRequest.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MXSecretShareRequest.h; sourceTree = "<group>"; };
@@ -1934,6 +1940,8 @@
 				B17B2BDB2369FC81009D6650 /* MXUIKitBackgroundTask.m */,
 				B1798D0424091A0100308A8F /* MXBase64Tools.h */,
 				B1798D0524091A0100308A8F /* MXBase64Tools.m */,
+				32A9F8DC244720B10069C65B /* MXThrottler.h */,
+				32A9F8DD244720B10069C65B /* MXThrottler.m */,
 			);
 			path = Utils;
 			sourceTree = "<group>";
@@ -3036,6 +3044,7 @@
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				32A9F8DE244720B10069C65B /* MXThrottler.h in Headers */,
 				322A51B61D9AB15900C8536D /* MXCrypto.h in Headers */,
 				324AAC71239913AD00380A66 /* MXKeyVerificationRequestByDMJSONModel.h in Headers */,
 				32114A8F1A262ECB00FF2EC4 /* MXNoStore.h in Headers */,
@@ -3306,6 +3315,7 @@
 				B14EF29F2397E90400758AF0 /* MXAllowedCertificates.h in Headers */,
 				B14EF2A02397E90400758AF0 /* MXRealmAggregationsMapper.h in Headers */,
 				B14EF2A12397E90400758AF0 /* NSObject+sortedKeys.h in Headers */,
+				32A9F8DF244720B10069C65B /* MXThrottler.h in Headers */,
 				B14EF2A22397E90400758AF0 /* MXRoomSummaryUpdater.h in Headers */,
 				B14EF2A32397E90400758AF0 /* MXRoomSummary.h in Headers */,
 				B14EF2A42397E90400758AF0 /* MXRoomCreateContent.h in Headers */,
@@ -3978,6 +3988,7 @@
 				320DFDE119DD99B60068622A /* MXSession.m in Sources */,
 				B17982F62119E4A2001FD722 /* MXRoomTombStoneContent.m in Sources */,
 				C602B58E1F22A8D700B67D87 /* MXImage.swift in Sources */,
+				32A9F8E0244720B10069C65B /* MXThrottler.m in Sources */,
 				3295401A216385F100E300FC /* MXServerNoticeContent.m in Sources */,
 				B19A30A82404257700FB6F35 /* MXSASKeyVerificationStart.m in Sources */,
 				02CAD439217DD12F0074700B /* MXContentScanResult.m in Sources */,
@@ -4332,6 +4343,7 @@
 				B14EF2832397E90400758AF0 /* MXRoomCreateContent.m in Sources */,
 				B14EF2842397E90400758AF0 /* MXUIKitBackgroundModeHandler.m in Sources */,
 				B14EF2852397E90400758AF0 /* (null) in Sources */,
+				32A9F8E1244720B10069C65B /* MXThrottler.m in Sources */,
 				3274538D23FD918800438328 /* MXKeyVerificationByToDeviceRequest.m in Sources */,
 				32CEEF5223B0AB030039BA98 /* MXCrossSigning.m in Sources */,
 				B14EF2862397E90400758AF0 /* MXRealmMediaScanStore.m in Sources */,

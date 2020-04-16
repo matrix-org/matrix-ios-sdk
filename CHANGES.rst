@@ -19,6 +19,7 @@ Improvements:
  * MXPublicRoom: Add canonical alias property.
  * MXLogger: Add a parameter to indicate the number of log files.
  * MXDeviceList: Post `MXDeviceListDidUpdateUsersDevicesNotification` notification when users devices list are updated.
+ * MXThrottler: Add this tool class to throttle actions.
 
 Bug fix:
  * MXEventType: Fix Swift refinement.
