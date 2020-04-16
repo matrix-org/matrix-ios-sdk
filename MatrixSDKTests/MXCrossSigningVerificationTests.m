@@ -604,10 +604,11 @@
  -> 2. Transaction on Alice side must be Unknown
  -  Bob scans Alice QR code
  -> 3. Transaction on Bob side must then move to ScannedOtherQR
- -> 4. Transaction on Bob side must then move to Verified
+ -> 4. Transaction on Bob side must then move to WaitingOtherConfirm, if the start request succeed
  -> 5. Transaction on Alice side must then move to QRScannedByOther
  -  Alice confirms that Bob has scanned her QR code
  -> 6. Transaction on Alice side must then move to Verified
+ -> 7. Transaction on Bob side must then move to Verified
  -> Users must be verified
  -> Transaction must not be listed anymore
  -> Both ends must get a done message
@@ -730,7 +731,7 @@
                                 break;
                                 // -> 5. Transaction on Alice side must then move to QRScannedByOther
                             case MXQRCodeTransactionStateQRScannedByOther:
-                                XCTAssertEqual(qrCodeTransactionFromBobPOV.state, MXQRCodeTransactionStateScannedOtherQR);
+                                XCTAssertEqual(qrCodeTransactionFromBobPOV.state, MXQRCodeTransactionStateWaitingOtherConfirm);
                                 
                                 // Alice confirms that Bob has scanned her QR code
                                 [qrCodeTransactionFromAlicePOV otherUserScannedMyQrCode:YES];
@@ -752,13 +753,17 @@
                         {
                             // -> 1. Transaction on Bob side must be Unknown (Alice is Unknown)
                             case MXQRCodeTransactionStateUnknown:
-                                XCTAssertEqual(qrCodeTransactionFromAlicePOV.state, MXSASTransactionStateOutgoingWaitForPartnerToAccept);
+                                XCTAssertEqual(qrCodeTransactionFromAlicePOV.state, MXQRCodeTransactionStateUnknown);
                                 break;
                             // -> 3. Transaction on Bob side must then move to ScannedOtherQR
                             case MXQRCodeTransactionStateScannedOtherQR:
                                 XCTAssertEqual(qrCodeTransactionFromAlicePOV.state, MXQRCodeTransactionStateUnknown);
                                 break;
-                            // -> 4. Transaction on Bob side must then move to Verified
+                            // -> 4. Transaction on Bob side must then move to WaitingOtherConfirm
+                            case MXQRCodeTransactionStateWaitingOtherConfirm:
+                                XCTAssertEqual(qrCodeTransactionFromAlicePOV.state, MXQRCodeTransactionStateUnknown);
+                                break;
+                            // -> 7. Transaction on Bob side must then move to Verified
                             case MXQRCodeTransactionStateVerified:
                                 checkBothDeviceVerified();
                                 break;

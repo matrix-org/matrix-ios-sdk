@@ -39,6 +39,7 @@ NSString * const MXKeyVerificationMethodReciprocate = @"m.reciprocate.v1";
 @interface MXQRCodeTransaction()
 
 @property (nonatomic, strong) MXQRCodeDataCoder *qrCodeDataCoder;
+@property (nonatomic, strong) MXQRCodeData *scannedOtherQRCodeData;
 
 @end
 
@@ -116,10 +117,12 @@ NSString * const MXKeyVerificationMethodReciprocate = @"m.reciprocate.v1";
         return;
     }
     
+    self.scannedOtherQRCodeData = otherQRCodeData;
+    
     // All checks are correct. Send the shared secret so that sender can trust me.
     // otherQRCodeData.sharedSecret will be used to send the start request
     [self startWithOtherQRCodeSharedSecret:otherQRCodeData.sharedSecret success:^{
-        [self trustOtherWithOtherQRCodeData:otherQRCodeData];
+        self.state = MXQRCodeTransactionStateWaitingOtherConfirm;
     } failure:^(NSError *error) {
         [self cancelWithCancelCode:MXTransactionCancelCode.invalidMessage];
     }];
@@ -131,6 +134,15 @@ NSString * const MXKeyVerificationMethodReciprocate = @"m.reciprocate.v1";
                                                              humanReadable:cancelContent.reason];
     
     self.state = MXQRCodeTransactionStateCancelled;
+}
+
+- (void)cancelWithCancelCode:(MXTransactionCancelCode*)code
+{
+    [self cancelWithCancelCode:code success:^{
+        self.state = MXQRCodeTransactionStateCancelledByMe;
+    } failure:^(NSError * _Nonnull error) {
+        NSLog(@"[MXKeyVerification][MXSASTransaction] Fail to cancel with error: %@", error);
+    }];
 }
 
 #pragma mark - SDK-Private methods -
@@ -171,6 +183,32 @@ NSString * const MXKeyVerificationMethodReciprocate = @"m.reciprocate.v1";
     self.startContent = start;
     self.state = MXQRCodeTransactionStateQRScannedByOther;
 }
+
+- (void)handleDone:(MXKeyVerificationDone*)doneEvent
+{
+    switch (self.state) {
+        case MXQRCodeTransactionStateWaitingOtherConfirm:
+        {
+            if (self.scannedOtherQRCodeData)
+            {
+                [self trustOtherWithOtherQRCodeData:self.scannedOtherQRCodeData];
+            }
+            else
+            {
+                [self cancelWithCancelCode:MXTransactionCancelCode.unexpectedMessage];
+                NSLog(@"[MXQRCodeTransaction]: ERROR: Done event was already retrieved");
+            }
+        }
+            break;
+        case MXQRCodeTransactionStateScannedOtherQR:
+            [self cancelWithCancelCode:MXTransactionCancelCode.unexpectedMessage];
+            NSLog(@"[MXQRCodeTransaction]: ERROR: Unexpected state for done event");
+        default:
+            break;
+    }
+}
+
+#pragma mark - Private
 
 - (void)startWithOtherQRCodeSharedSecret:(NSData*)otherQRCodeSharedSecret success:(dispatch_block_t)success failure:(void (^)(NSError* error))failure;
 {
@@ -218,8 +256,10 @@ NSString * const MXKeyVerificationMethodReciprocate = @"m.reciprocate.v1";
 
 - (void)trustOtherWithOtherQRCodeData:(MXQRCodeData*)otherQRCodeData
 {
-    if (self.state != MXQRCodeTransactionStateScannedOtherQR)
+    if (self.state != MXQRCodeTransactionStateWaitingOtherConfirm)
     {
+        NSLog(@"[MXKeyVerification][MXQRCodeTransaction] trustOtherWithOtherQRCodeData: wrong state: %@", self);
+        [self cancelWithCancelCode:MXTransactionCancelCode.unexpectedMessage];
         return;
     }
     
@@ -253,11 +293,15 @@ NSString * const MXKeyVerificationMethodReciprocate = @"m.reciprocate.v1";
 {
     if (self.state != MXQRCodeTransactionStateQRScannedByOther)
     {
+        NSLog(@"[MXKeyVerification][MXQRCodeTransaction] trustOtherWithMyQRCodeData: wrong state: %@", self);
+        [self cancelWithCancelCode:MXTransactionCancelCode.unexpectedMessage];
         return;
     }
     
     if (!self.qrCodeData)
     {
+        NSLog(@"[MXKeyVerification][MXQRCodeTransaction] start: wrong state: %@", self);
+        [self cancelWithCancelCode:MXTransactionCancelCode.unexpectedMessage];
         return;
     }
     

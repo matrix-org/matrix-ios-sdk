@@ -697,7 +697,7 @@ static NSArray<MXEventTypeString> *kMXKeyVerificationManagerVerificationEventTyp
     MXKeyVerificationTransaction *transaction = [self transactionWithTransactionId:request.requestId];
     if (transaction)
     {
-        [self cancelTransaction:transaction code:cancelCode];
+        [self cancelTransaction:transaction code:cancelCode success:success failure:failure];
     }
     else
     {
@@ -738,8 +738,10 @@ static NSArray<MXEventTypeString> *kMXKeyVerificationManagerVerificationEventTyp
     return operation;
 }
 
-
-- (void)cancelTransaction:(MXKeyVerificationTransaction*)transaction code:(MXTransactionCancelCode*)code
+- (void)cancelTransaction:(MXKeyVerificationTransaction*)transaction
+                     code:(MXTransactionCancelCode*)code
+                  success:(void (^)(void))success
+                  failure:(void (^)(NSError *error))failure
 {
     NSLog(@"[MXKeyVerification] cancelTransaction. code: %@", code.value);
     
@@ -747,12 +749,25 @@ static NSArray<MXEventTypeString> *kMXKeyVerificationManagerVerificationEventTyp
     cancel.transactionId = transaction.transactionId;
     cancel.code = code.value;
     cancel.reason = code.humanReadable;
-
-    [self sendToOtherInTransaction:transaction eventType:kMXEventTypeStringKeyVerificationCancel content:cancel.JSONDictionary success:^{} failure:^(NSError *error) {
-
+    
+    [self sendToOtherInTransaction:transaction eventType:kMXEventTypeStringKeyVerificationCancel content:cancel.JSONDictionary success:^{
+        
+        transaction.reasonCancelCode = code;
+        
+        if (success)
+        {
+            success();
+        }
+        
+    } failure:^(NSError *error) {
+        
         NSLog(@"[MXKeyVerification] cancelTransaction. Error: %@", error);
+        if (failure)
+        {
+            failure(error);
+        }
     }];
-
+    
     [self removeTransactionWithTransactionId:transaction.transactionId];
 }
 
@@ -853,7 +868,12 @@ static NSArray<MXEventTypeString> *kMXKeyVerificationManagerVerificationEventTyp
                     [self handleMacEvent:event];
                 }
                 break;
-
+            case MXEventTypeKeyVerificationDone:
+                if (isEventIntendedForMyDevice)
+                {
+                    [self handleDoneEvent:event];
+                }
+                break;
             default:
                 break;
         }
@@ -1146,6 +1166,29 @@ static NSArray<MXEventTypeString> *kMXKeyVerificationManagerVerificationEventTyp
         else
         {
             NSLog(@"[MXKeyVerification] handleMacEvent. Unknown SAS transaction: %@", event);
+        }
+    }
+    else
+    {
+        NSLog(@"[MXKeyVerification] handleMacEvent. Invalid event: %@", event);
+    }
+}
+
+- (void)handleDoneEvent:(MXEvent*)event
+{
+    MXKeyVerificationDone *doneEvent;
+    MXJSONModelSetMXJSONModel(doneEvent, MXKeyVerificationDone, event.content);
+    
+    if (doneEvent)
+    {
+        MXQRCodeTransaction *qrCodeTransaction = [self qrCodeTransactionWithTransactionId:doneEvent.transactionId];
+        if (qrCodeTransaction)
+        {
+            [qrCodeTransaction handleDone:doneEvent];
+        }
+        else
+        {
+            NSLog(@"[MXKeyVerification] handleDoneEvent. Not handled for SAS transaction: %@", event);
         }
     }
     else
