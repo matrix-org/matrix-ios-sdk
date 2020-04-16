@@ -335,18 +335,12 @@ NSString * const MXKeyVerificationMethodReciprocate = @"m.reciprocate.v1";
 
 - (void)trustOtherUserWithId:(NSString*)otherUserId
 {
-    if (!self.manager.crypto.crossSigning.canCrossSign)
-    {
-        // Cross-signing ability should have been checked before going into this hole
-        NSLog(@"[MXKeyVerification][MXQRCodeTransaction] trustOtherUserWithId: Cannot mark user %@ as verified because this device cannot cross-sign", otherUserId);
-        [self cancelWithCancelCode:MXTransactionCancelCode.mismatchedKeys];
-        return;
-    }
-    
-    // we should trust his master key
-    [self.manager.crypto.crossSigning signUserWithUserId:otherUserId success:^{
-        [self sendVerified];
-    } failure:^(NSError * _Nonnull error) {
+    // Mark user as verified
+    NSLog(@"[MXKeyVerification][MXQRCodeTransaction] trustOtherUserWithId: Mark user %@ as verified", self.otherDevice.userId);
+    [self.manager.crypto setUserVerification:YES forUser:self.otherDevice.userId success:^{
+         [self sendVerified];
+        
+    } failure:^(NSError *error) {
         NSLog(@"[MXKeyVerification][MXQRCodeTransaction] trustOtherWithQRCodeData: Fail to cross sign used with id: %@", self.otherUserId);
         [self cancelWithCancelCode:MXTransactionCancelCode.mismatchedKeys];
     }];

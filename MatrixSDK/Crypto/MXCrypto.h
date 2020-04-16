@@ -253,6 +253,19 @@ extern NSString *const MXDeviceListDidUpdateUsersDevicesNotification;
 - (void)setDevicesKnown:(MXUsersDevicesMap<MXDeviceInfo*>*)devices
                complete:(void (^)(void))complete;
 
+/**
+ Update the verification state of the given user.
+ 
+ @param verificationStatus the new verification status.
+ @param userId the user.
+ 
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+ */
+- (void)setUserVerification:(BOOL)verificationStatus forUser:(NSString*)userId
+                    success:(void (^)(void))success
+                    failure:(void (^)(NSError *error))failure;
+
 
 #pragma mark - Cross-signing trust
 

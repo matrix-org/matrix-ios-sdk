@@ -72,7 +72,7 @@ NSString * const MXKeyVerificationTransactionDidChangeNotification = @"MXKeyVeri
                      success:(void (^)(void))success
                      failure:(void (^)(NSError *error))failure
 {
-    dispatch_async(self.manager.crypto.decryptionQueue,^{
+    dispatch_async(self.manager.crypto.cryptoQueue,^{
         [self.manager cancelTransaction:self code:code success:success failure:failure];
     });
 }
