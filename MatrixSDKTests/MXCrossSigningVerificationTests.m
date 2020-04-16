@@ -171,6 +171,7 @@
  -> 7. Transaction on Bob side must then move to Verified
  -> 7. Transaction on Alice side must then move to Verified
  -> Devices must be really verified
+ -> Users must be really verified
  -> Transaction must not be listed anymore
  -> Both ends must get a done message
  - Then, test MXKeyVerification
@@ -267,7 +268,18 @@
                             MXDeviceInfo *aliceDeviceFromBobPOV = [bobSession.crypto.store deviceWithDeviceId:alice.deviceId forUser:alice.userId];
                             
                             XCTAssertEqual(bobDeviceFromAlicePOV.trustLevel.localVerificationStatus, MXDeviceVerified);
+                            XCTAssertTrue(bobDeviceFromAlicePOV.trustLevel.isCrossSigningVerified);
                             XCTAssertEqual(aliceDeviceFromBobPOV.trustLevel.localVerificationStatus, MXDeviceVerified);
+                            XCTAssertTrue(aliceDeviceFromBobPOV.trustLevel.isCrossSigningVerified);
+
+                            // -> Users must be really verified
+                            MXCrossSigningInfo *bobFromAlicePOV = [aliceSession.crypto.store crossSigningKeysForUser:bob.userId];
+                            MXCrossSigningInfo *aliceFromBobPOV = [bobSession.crypto.store crossSigningKeysForUser:alice.userId];
+                            
+                            XCTAssertTrue(bobFromAlicePOV.trustLevel.isCrossSigningVerified);
+                            XCTAssertTrue(bobFromAlicePOV.trustLevel.isLocallyVerified);
+                            XCTAssertTrue(aliceFromBobPOV.trustLevel.isCrossSigningVerified);
+                            XCTAssertTrue(aliceFromBobPOV.trustLevel.isLocallyVerified);
                             
                             // -> Transaction must not be listed anymore
                             XCTAssertNil([aliceSession.crypto.keyVerificationManager transactionWithTransactionId:sasTransactionFromAlicePOV.transactionId]);
@@ -477,12 +489,23 @@
                         if (qrCodeTransactionFromAlicePOV.state == MXQRCodeTransactionStateVerified
                             && qrCodeTransactionFromBobPOV.state == MXQRCodeTransactionStateVerified)
                         {
-                            // -> Users must be verified
+                            // -> Devices must be really verified
                             MXDeviceInfo *bobDeviceFromAlicePOV = [aliceSession.crypto.store deviceWithDeviceId:bob.deviceId forUser:bob.userId];
                             MXDeviceInfo *aliceDeviceFromBobPOV = [bobSession.crypto.store deviceWithDeviceId:alice.deviceId forUser:alice.userId];
                             
+                            XCTAssertEqual(bobDeviceFromAlicePOV.trustLevel.localVerificationStatus, MXDeviceVerified);
                             XCTAssertTrue(bobDeviceFromAlicePOV.trustLevel.isCrossSigningVerified);
+                            XCTAssertEqual(aliceDeviceFromBobPOV.trustLevel.localVerificationStatus, MXDeviceVerified);
                             XCTAssertTrue(aliceDeviceFromBobPOV.trustLevel.isCrossSigningVerified);
+                            
+                            // -> Users must be really verified
+                            MXCrossSigningInfo *bobFromAlicePOV = [aliceSession.crypto.store crossSigningKeysForUser:bob.userId];
+                            MXCrossSigningInfo *aliceFromBobPOV = [bobSession.crypto.store crossSigningKeysForUser:alice.userId];
+                            
+                            XCTAssertTrue(bobFromAlicePOV.trustLevel.isCrossSigningVerified);
+                            XCTAssertTrue(bobFromAlicePOV.trustLevel.isLocallyVerified);
+                            XCTAssertTrue(aliceFromBobPOV.trustLevel.isCrossSigningVerified);
+                            XCTAssertTrue(aliceFromBobPOV.trustLevel.isLocallyVerified);
                             
                             // -> Transaction must not be listed anymore
                             XCTAssertNil([aliceSession.crypto.keyVerificationManager transactionWithTransactionId:qrCodeTransactionFromAlicePOV.transactionId]);
