@@ -81,9 +81,9 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
             MXUsersTrustLevelSummary *trust = roomFromAlicePOV.summary.trust;
             
             XCTAssertNotNil(trust);
-            XCTAssertEqual(trust.trustedUsersProgress.totalUnitCount, 1);
+            XCTAssertEqual(trust.trustedUsersProgress.totalUnitCount, 2);
             XCTAssertEqual(trust.trustedUsersProgress.completedUnitCount, 0);
-            XCTAssertEqual(trust.trustedDevicesProgress.totalUnitCount, 1);
+            XCTAssertEqual(trust.trustedDevicesProgress.totalUnitCount, 0);
             XCTAssertEqual(trust.trustedDevicesProgress.completedUnitCount, 0);
             
             [expectation fulfill];
