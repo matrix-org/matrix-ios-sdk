@@ -417,6 +417,7 @@
 // - Bootstrap cross-signing on Alice using password
 // -> Cross-signing must be bootstrapped
 // -> Alice must see their device trusted
+// -> Alice must see their cross-signing info trusted
 - (void)testBootstrapWithPassword
 {
     // - Create Alice
@@ -440,6 +441,13 @@
             XCTAssertTrue(aliceDevice1Trust.isVerified);
             XCTAssertEqual(aliceDevice1Trust.localVerificationStatus, MXDeviceVerified);
             XCTAssertTrue(aliceDevice1Trust.isCrossSigningVerified);
+            
+            // -> Alice must see their cross-signing info trusted
+            MXCrossSigningInfo *aliceCrossSigningInfo = [aliceSession.crypto crossSigningKeysForUser:aliceSession.myUserId];
+            XCTAssertNotNil(aliceCrossSigningInfo);
+            XCTAssertTrue(aliceCrossSigningInfo.trustLevel.isVerified);
+            XCTAssertTrue(aliceCrossSigningInfo.trustLevel.isLocallyVerified);
+            XCTAssertTrue(aliceCrossSigningInfo.trustLevel.isCrossSigningVerified);
 
             [expectation fulfill];
 
@@ -719,7 +727,7 @@
         XCTAssertEqualObjects(storedKeys.userSignedKeys.JSONDictionary, keys.userSignedKeys.JSONDictionary);
 
         // - Update keys test
-        [keys updateTrustLevel:[MXUserTrustLevel trustLevelWithCrossSigningVerified:YES]];
+        [keys updateTrustLevel:[MXUserTrustLevel trustLevelWithCrossSigningVerified:YES locallyVerified:NO]];
         [aliceSession.crypto.store storeCrossSigningKeys:keys];
         storedKeys = [aliceSession.crypto.store crossSigningKeysForUser:aliceUserId];
         XCTAssertTrue(storedKeys.trustLevel.isVerified);

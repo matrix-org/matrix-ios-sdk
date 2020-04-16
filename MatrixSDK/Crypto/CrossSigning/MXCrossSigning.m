@@ -82,7 +82,7 @@ NSString *const MXCrossSigningErrorDomain = @"org.matrix.sdk.crosssigning";
             [self.crypto.matrixRestClient uploadDeviceSigningKeys:signingKeys authParams:authParams success:^{
 
                 // Store our user's keys
-                [keys updateTrustLevel:[MXUserTrustLevel trustLevelWithCrossSigningVerified:YES]];
+                [keys updateTrustLevel:[MXUserTrustLevel trustLevelWithCrossSigningVerified:YES locallyVerified:YES]];
                 [self.crypto.store storeCrossSigningKeys:keys];
                 
                 // Cross-signing is bootstrapped
@@ -534,7 +534,8 @@ NSString *const MXCrossSigningErrorDomain = @"org.matrix.sdk.crosssigning";
                   @(crossSigningInfo.trustLevel.isCrossSigningVerified),
                   @(isCrossSigningVerified));
             
-            [crossSigningInfo updateTrustLevel:[MXUserTrustLevel trustLevelWithCrossSigningVerified:isCrossSigningVerified]];
+            MXUserTrustLevel *newTrustLevel = [MXUserTrustLevel trustLevelWithCrossSigningVerified:isCrossSigningVerified locallyVerified:crossSigningInfo.trustLevel.isLocallyVerified];
+            [crossSigningInfo updateTrustLevel:newTrustLevel];
             [self.crypto.store storeCrossSigningKeys:crossSigningInfo];
             
             // Update trust on associated devices

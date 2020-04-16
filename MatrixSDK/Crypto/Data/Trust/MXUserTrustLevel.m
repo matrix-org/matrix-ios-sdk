@@ -24,21 +24,24 @@
     if (self)
     {
         _isCrossSigningVerified = NO;
+        _isLocallyVerified = NO;
     }
     return self;
 }
 
-+ (MXUserTrustLevel *)trustLevelWithCrossSigningVerified:(BOOL)crossSigningVerified
++ (MXUserTrustLevel *)trustLevelWithCrossSigningVerified:(BOOL)crossSigningVerified locallyVerified:(BOOL)locallyVerified
 {
     MXUserTrustLevel *trustLevel = [MXUserTrustLevel new];
     trustLevel->_isCrossSigningVerified = crossSigningVerified;
+    trustLevel->_isLocallyVerified = locallyVerified;
 
     return trustLevel;
 }
 
+
 - (BOOL)isVerified
 {
-    return _isCrossSigningVerified;
+    return _isCrossSigningVerified || _isLocallyVerified;
 }
 
 
@@ -55,6 +58,7 @@
     {
         MXUserTrustLevel *other = object;
         isEqual = other.isCrossSigningVerified == self.isCrossSigningVerified;
+        isEqual &= other.isLocallyVerified == self.isLocallyVerified;
     }
 
     return isEqual;
@@ -69,6 +73,7 @@
     if (self)
     {
         _isCrossSigningVerified = [aDecoder decodeBoolForKey:@"isCrossSigningVerified"];
+        _isLocallyVerified = [aDecoder decodeBoolForKey:@"isLocallyVerified"];
     }
     return self;
 }
@@ -76,6 +81,7 @@
 - (void)encodeWithCoder:(NSCoder *)aCoder
 {
     [aCoder encodeBool:_isCrossSigningVerified forKey:@"isCrossSigningVerified"];
+    [aCoder encodeBool:_isLocallyVerified forKey:@"isLocallyVerified"];
 }
 
 @end
