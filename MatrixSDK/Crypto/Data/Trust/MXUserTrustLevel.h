@@ -30,6 +30,11 @@ NS_ASSUME_NONNULL_BEGIN
  */
 @property (nonatomic, readonly) BOOL isCrossSigningVerified;
 
+/**
+ YES if this user is verified locally.
+ */
+@property (nonatomic, readonly) BOOL isLocallyVerified;
+
 @end
 
 
@@ -37,7 +42,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface MXUserTrustLevel()
 
-+ (MXUserTrustLevel*)trustLevelWithCrossSigningVerified:(BOOL)crossSigningVerified;
++ (MXUserTrustLevel*)trustLevelWithCrossSigningVerified:(BOOL)crossSigningVerified locallyVerified:(BOOL)locallyVerified;
 
 @end
 

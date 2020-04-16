@@ -385,27 +385,18 @@ static NSArray<MXEmojiRepresentation*> *kSasEmojis;
                     if ([key.value isEqualToString:[self macUsingAgreedMethod:otherUserMasterKeys.keys
                                                                          info:[NSString stringWithFormat:@"%@%@", baseInfo, keyFullId]]])
                     {
-                        if (self.manager.crypto.crossSigning.canCrossSign)
-                        {
-                            // Mark user as verified
-                            NSLog(@"[MXKeyVerification][MXSASTransaction] verifyMacs: Mark user %@ as verified", self.otherDevice.userId);
-                            dispatch_group_enter(group);
-                            [self.manager.crypto.crossSigning signUserWithUserId:self.otherDevice.userId success:^{
-                                dispatch_group_leave(group);
-
-                            } failure:^(NSError *error) {
-                                // Should never happen
-                                cancelCode = MXTransactionCancelCode.invalidMessage;
-
-                                dispatch_group_leave(group);
-                            }];
-                        }
-                        else
-                        {
-                            // Cross-signing ability should have been checked before going into this hole
-                            NSLog(@"[MXKeyVerification][MXSASTransaction] verifyMacs: Cannot Mark user %@ as verified because this device cannot cross-sign", self.otherDevice.userId);
-                        }
-
+                        // Mark user as verified
+                        NSLog(@"[MXKeyVerification][MXSASTransaction] verifyMacs: Mark user %@ as verified", self.otherDevice.userId);
+                        dispatch_group_enter(group);
+                        [self.manager.crypto setUserVerification:YES forUser:self.otherDevice.userId success:^{
+                            dispatch_group_leave(group);
+                            
+                        } failure:^(NSError *error) {
+                            // Should never happen
+                            cancelCode = MXTransactionCancelCode.invalidMessage;
+                            
+                            dispatch_group_leave(group);
+                        }];
                     }
                     else
                     {

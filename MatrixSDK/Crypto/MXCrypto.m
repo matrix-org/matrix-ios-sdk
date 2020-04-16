@@ -41,6 +41,7 @@
 
 #import "MXKeyVerificationManager_Private.h"
 #import "MXDeviceInfo_Private.h"
+#import "MXCrossSigningInfo_Private.h"
 #import "MXCrossSigning_Private.h"
 
 /**
@@ -929,6 +930,100 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
     if (complete)
     {
         complete();
+    }
+#endif
+}
+
+- (void)setUserVerification:(BOOL)verificationStatus forUser:(NSString*)userId
+                    success:(void (^)(void))success
+                    failure:(void (^)(NSError *error))failure
+{
+    // We cannot remove cross-signing trust for a user in the matrix spec
+    NSParameterAssert(verificationStatus);
+    
+#ifdef MX_CRYPTO
+    dispatch_async(_cryptoQueue, ^{
+        [self setUserVerification2:verificationStatus forUser:userId downloadIfNeeded:YES success:success failure:failure];
+    });
+#else
+    if (success)
+    {
+        success();
+    }
+#endif
+}
+
+- (void)setUserVerification2:(BOOL)verificationStatus forUser:(NSString*)userId
+            downloadIfNeeded:(BOOL)downloadIfNeeded
+                    success:(void (^)(void))success
+                    failure:(void (^)(NSError *error))failure
+{
+#ifdef MX_CRYPTO
+    MXCrossSigningInfo *crossSigningInfo = [self.store crossSigningKeysForUser:userId];
+    
+    // Sanity check
+    if (!crossSigningInfo)
+    {
+        if (downloadIfNeeded)
+        {
+            NSLog(@"[MXCrypto] setUserVerification: Unknown user. Try to download user's keys for %@", userId);
+            [self.deviceList downloadKeys:@[userId] forceDownload:YES success:^(MXUsersDevicesMap<MXDeviceInfo *> *usersDevicesInfoMap, NSDictionary<NSString *,MXCrossSigningInfo *> *crossSigningKeysMap) {
+                [self setUserVerification2:verificationStatus forUser:userId downloadIfNeeded:NO success:success failure:failure];
+            } failure:^(NSError *error) {
+                if (failure)
+                {
+                    dispatch_async(dispatch_get_main_queue(), ^{
+                        failure(error);
+                    });
+                }
+            }];
+        }
+        else
+        {
+            NSLog(@"[MXCrypto] setUserVerification: Unknown user %@", userId);
+            if (failure)
+            {
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    failure(nil);
+                });
+            }
+        }
+        return;
+    }
+    
+    // Store information locally
+    if (verificationStatus != crossSigningInfo.trustLevel.isLocallyVerified)
+    {
+        MXUserTrustLevel *newTrustLevel = [MXUserTrustLevel trustLevelWithCrossSigningVerified:crossSigningInfo.trustLevel.isCrossSigningVerified
+                                                                               locallyVerified:verificationStatus];;
+        [crossSigningInfo updateTrustLevel:newTrustLevel];
+        [_store storeCrossSigningKeys:crossSigningInfo];
+    }
+    
+    // Cross-sign if possible
+    if (verificationStatus != crossSigningInfo.trustLevel.isCrossSigningVerified)
+    {
+        if (self.crossSigning.canCrossSign)
+        {
+            NSLog(@"[MXCrypto] setUserVerification: Sign user %@ as verified", userId);
+            [self.crossSigning signUserWithUserId:userId success:success failure:failure];
+            
+            // Wait the end of cross-sign before returning
+            return;
+        }
+        else
+        {
+            // Cross-signing ability should have been checked before going into this hole
+            NSLog(@"[MXCrypto] setUserVerification: Cross-signing not enabled. Current state: %@", @(self.crossSigning.state));
+            
+        }
+    }
+    
+    if (success)
+    {
+        dispatch_async(dispatch_get_main_queue(), ^{
+            success();
+        });
     }
 #endif
 }
