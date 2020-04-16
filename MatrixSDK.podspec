@@ -54,7 +54,7 @@ Pod::Spec.new do |s|
     #ss.ios.dependency 'GoogleWebRTC', '~>1.1.21820'
     
     # Use WebRTC framework included in Jitsi Meet SDK
-    ss.ios.dependency 'JitsiMeetSDK', '~> 2.4.1'
+    ss.ios.dependency 'JitsiMeetSDK', '~> 2.5.1'
 
   end
 
