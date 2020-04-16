@@ -105,15 +105,6 @@ static NSArray<MXEmojiRepresentation*> *kSasEmojis;
     }
 }
 
-
-- (void)cancelWithCancelCodeFromCryptoQueue:(MXTransactionCancelCode *)code
-{
-    [super cancelWithCancelCodeFromCryptoQueue:code];
-    
-    self.state = MXSASTransactionStateCancelledByMe;
-    self.reasonCancelCode = code;
-}
-
 #pragma mark - SDK-Private methods -
 
 + (void)initialize
@@ -219,6 +210,14 @@ static NSArray<MXEmojiRepresentation*> *kSasEmojis;
     return macUsingAgreedMethod;
 }
 
+- (void)cancelWithCancelCode:(MXTransactionCancelCode*)code
+{
+    [self cancelWithCancelCode:code success:^{
+        self.state = MXSASTransactionStateCancelledByMe;
+    } failure:^(NSError * _Nonnull error) {
+        NSLog(@"[MXKeyVerification][MXSASTransaction] Fail to cancel with error: %@", error);
+    }];
+}
 
 #pragma mark - Incoming to_device events
 
