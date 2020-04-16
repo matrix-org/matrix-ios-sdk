@@ -4620,7 +4620,7 @@ MXAuthAction;
                                                  failure:(void (^)(NSError *error))failure
 {
     return [self authSessionForRequestWithMethod:@"POST"
-                                            path:[NSString stringWithFormat:@"%@/keys/device_signing/upload", kMXAPIPrefixPathR0]
+                                            path:[NSString stringWithFormat:@"%@/keys/device_signing/upload", kMXAPIPrefixPathUnstable]
                                       parameters:@{}
                                          success:success
                                          failure:failure];
@@ -4636,7 +4636,7 @@ MXAuthAction;
 
     MXWeakify(self);
     return [httpClient requestWithMethod:@"POST"
-                                    path:[NSString stringWithFormat:@"%@/keys/device_signing/upload", kMXAPIPrefixPathR0]
+                                    path:[NSString stringWithFormat:@"%@/keys/device_signing/upload", kMXAPIPrefixPathUnstable]
                               parameters:parameters
                                  success:^(NSDictionary *JSONResponse) {
                                      MXStrongifyAndReturnIfNil(self);
