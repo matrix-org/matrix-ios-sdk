@@ -252,7 +252,7 @@ FOUNDATION_EXPORT NSString *const kMXRoomSummaryDidChangeNotification;
 
 /**
  If the room is E2E encrypted, indicate global trust in other users and devices in the room.
- Nil if not yet computed.
+ Nil if not yet computed or if cross-signing is not set up on the account or not trusted by this device.
  */
 @property (nonatomic) MXUsersTrustLevelSummary *trust;
 

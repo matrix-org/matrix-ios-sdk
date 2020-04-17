@@ -82,6 +82,19 @@
 
 - (void)loginUserOnANewDevice:(MXCredentials*)credentials withPassword:(NSString*)password onComplete:(void (^)(MXSession *newSession))onComplete;
 
+
+#pragma mark - Cross-signing
+
+// Have Alice with 2 devices (Alice1 and Alice2) and Bob. All trusted via cross-signing
+// - Create Alice & Bob accounts
+// - Bootstrap cross-signing x2
+// - Make Alice2 aware of Bob
+// - Make each Alice devices trust each other
+// - Make Alice & Bob trust each other
+- (void)doTestWithBobAndAliceWithTwoDevicesAllTrusted:(XCTestCase*)testCase
+                                          readyToTest:(void (^)(MXSession *bobSession, MXSession *aliceSession1, MXSession *aliceSession2, NSString *roomId, XCTestExpectation *expectation))readyToTest;
+
+
 #pragma mark - Tools
 
 - (void)outgoingRoomKeyRequestInSession:(MXSession*)session complete:(void (^)(MXOutgoingRoomKeyRequest*))complete;
