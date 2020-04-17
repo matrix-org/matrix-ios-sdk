@@ -700,9 +700,9 @@
                             MXDeviceInfo *bobDeviceFromAlicePOV = [aliceSession.crypto.store deviceWithDeviceId:bob.deviceId forUser:bob.userId];
                             MXDeviceInfo *aliceDeviceFromBobPOV = [bobSession.crypto.store deviceWithDeviceId:alice.deviceId forUser:alice.userId];
                             
-                            XCTAssertEqual(bobDeviceFromAlicePOV.trustLevel.localVerificationStatus, MXDeviceVerified);     // This test should pass. The behavior should be similar to SAS
+                            XCTAssertEqual(bobDeviceFromAlicePOV.trustLevel.localVerificationStatus, MXDeviceVerified);
                             XCTAssertTrue(bobDeviceFromAlicePOV.trustLevel.isCrossSigningVerified);
-                            XCTAssertEqual(aliceDeviceFromBobPOV.trustLevel.localVerificationStatus, MXDeviceVerified);     // This test should pass. The behavior should be similar to SAS
+                            XCTAssertEqual(aliceDeviceFromBobPOV.trustLevel.localVerificationStatus, MXDeviceVerified);
                             XCTAssertTrue(aliceDeviceFromBobPOV.trustLevel.isCrossSigningVerified);
                             
                             // -> Users must be really verified
