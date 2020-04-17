@@ -270,7 +270,7 @@ NSString * const MXKeyVerificationMethodReciprocate = @"m.reciprocate.v1";
     if (otherQRCodeData.verificationMode == MXQRCodeVerificationModeVerifyingAnotherUser && !isSelfVerification)
     {
         // we should trust this master key
-        [self trustOtherUserWithId:self.otherUserId];
+        [self trustOtherUserWithId:self.otherUserId andDeviceId:self.otherDeviceId];
     }
     else if (otherQRCodeData.verificationMode == MXQRCodeVerificationModeSelfVerifyingMasterKeyNotTrusted && isSelfVerification)
     {
@@ -279,8 +279,8 @@ NSString * const MXKeyVerificationMethodReciprocate = @"m.reciprocate.v1";
     }
     else if (otherQRCodeData.verificationMode == MXQRCodeVerificationModeSelfVerifyingMasterKeyTrusted && isSelfVerification)
     {
-        // I'm the new device. The other device will sign me
-        [self sendVerified];
+        // I'm the new device. The other device will sign me. Trust the other device locally.
+        [self trustOtherUserWithId:self.otherUserId andDeviceId:self.otherDeviceId];
     }
     else
     {
@@ -314,12 +314,12 @@ NSString * const MXKeyVerificationMethodReciprocate = @"m.reciprocate.v1";
     if (qrCodeData.verificationMode == MXQRCodeVerificationModeVerifyingAnotherUser && !isSelfVerification)
     {
         // we should trust their master key
-        [self trustOtherUserWithId:self.otherUserId];
+        [self trustOtherUserWithId:self.otherUserId andDeviceId:self.otherDeviceId];
     }
     else if (qrCodeData.verificationMode == MXQRCodeVerificationModeSelfVerifyingMasterKeyNotTrusted && isSelfVerification)
     {
-        // I'm the new device. The other device will sign me
-        [self sendVerified];
+        // I'm the new device. The other device will sign me. Trust the other device locally.
+        [self trustOtherUserWithId:self.otherUserId andDeviceId:self.otherDeviceId];
     }
     else if (qrCodeData.verificationMode == MXQRCodeVerificationModeSelfVerifyingMasterKeyTrusted && isSelfVerification)
     {
@@ -333,15 +333,24 @@ NSString * const MXKeyVerificationMethodReciprocate = @"m.reciprocate.v1";
     }
 }
 
-- (void)trustOtherUserWithId:(NSString*)otherUserId
+- (void)trustOtherUserWithId:(NSString*)otherUserId andDeviceId:(NSString*)otherDeviceId
 {
-    // Mark user as verified
-    NSLog(@"[MXKeyVerification][MXQRCodeTransaction] trustOtherUserWithId: Mark user %@ as verified", self.otherDevice.userId);
-    [self.manager.crypto setUserVerification:YES forUser:self.otherDevice.userId success:^{
-         [self sendVerified];
+    NSLog(@"[MXKeyVerification][MXQRCodeTransaction] trustOtherUserWithId: Mark user %@:%@ as verified", otherUserId, otherDeviceId);
+    
+    // Mark the device as locally verified
+    [self.manager.crypto setDeviceVerification:MXDeviceVerified forDevice:otherDeviceId ofUser:otherUserId success:^{
+        
+        // Mark user as verified
+        [self.manager.crypto setUserVerification:YES forUser:otherUserId success:^{
+            [self sendVerified];
+            
+        } failure:^(NSError *error) {
+            NSLog(@"[MXKeyVerification][MXQRCodeTransaction] trustOtherWithQRCodeData: Fail to cross sign user %@", otherUserId);
+            [self cancelWithCancelCode:MXTransactionCancelCode.mismatchedKeys];
+        }];
         
     } failure:^(NSError *error) {
-        NSLog(@"[MXKeyVerification][MXQRCodeTransaction] trustOtherWithQRCodeData: Fail to cross sign used with id: %@", self.otherUserId);
+        NSLog(@"[MXKeyVerification][MXQRCodeTransaction] trustOtherWithQRCodeData: Fail to mark device %@:%@ as locally verified", otherUserId, otherDeviceId);
         [self cancelWithCancelCode:MXTransactionCancelCode.mismatchedKeys];
     }];
 }
