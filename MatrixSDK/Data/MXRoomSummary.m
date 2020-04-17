@@ -472,15 +472,10 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
 - (void)setIsEncrypted:(BOOL)isEncrypted
 {
     _isEncrypted = isEncrypted;
+    
     if (_isEncrypted && [MXSDKOptions sharedInstance].computeE2ERoomSummaryTrust)
     {
-        // Bootstrap trust computation
-        [self registerTrustLevelDidChangeNotifications];
-        
-        if (!self.trust)
-        {
-            [self triggerComputeTrust:YES];
-        }
+        [self bootstrapTrustLevelComputation];
     }
 }
 
@@ -490,6 +485,20 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
     if (_isEncrypted && [MXSDKOptions sharedInstance].computeE2ERoomSummaryTrust)
     {
         [self triggerComputeTrust:YES];
+    }
+}
+
+- (void)bootstrapTrustLevelComputation
+{
+    if (_isEncrypted && [MXSDKOptions sharedInstance].computeE2ERoomSummaryTrust)
+    {
+        // Bootstrap trust computation
+        [self registerTrustLevelDidChangeNotifications];
+        
+        if (!self.trust)
+        {
+            [self triggerComputeTrust:YES];
+        }
     }
 }
 
@@ -795,10 +804,10 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
         
         _hiddenFromUser = [aDecoder decodeBoolForKey:@"hiddenFromUser"];
         
-        if (_isEncrypted && !_trust)
+        if (_isEncrypted && [MXSDKOptions sharedInstance].computeE2ERoomSummaryTrust)
         {
             dispatch_async(dispatch_get_main_queue(), ^{
-                [self triggerComputeTrust:YES];
+                [self bootstrapTrustLevelComputation];
             });
         }
     }
