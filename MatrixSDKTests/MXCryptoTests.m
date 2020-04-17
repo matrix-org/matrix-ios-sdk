@@ -208,7 +208,7 @@
             NSString *deviceCurve25519Key = mxSession2.crypto.olmDevice.deviceCurve25519Key;
             NSString *deviceEd25519Key = mxSession2.crypto.olmDevice.deviceEd25519Key;
 
-            NSArray<MXDeviceInfo *> *myUserDevices = [mxSession2.crypto.deviceList storedDevicesForUser:mxSession.myUser.userId];
+            NSArray<MXDeviceInfo *> *myUserDevices = [mxSession2.crypto.deviceList storedDevicesForUser:mxSession.myUserId];
             XCTAssertEqual(myUserDevices.count, 1);
 
             MXRestClient *bobRestClient = mxSession2.matrixRestClient;
@@ -270,7 +270,7 @@
             }
         };
 
-        MXHTTPOperation *operation1 = [aliceSession.crypto.deviceList downloadKeys:@[bobSession.myUser.userId] forceDownload:NO success:^(MXUsersDevicesMap<MXDeviceInfo *> *usersDevicesInfoMap) {
+        MXHTTPOperation *operation1 = [aliceSession.crypto.deviceList downloadKeys:@[bobSession.myUser.userId] forceDownload:NO success:^(MXUsersDevicesMap<MXDeviceInfo *> *usersDevicesInfoMap, NSDictionary<NSString *,MXCrossSigningInfo *> *crossSigningKeysMap) {
 
             onSuccess();
 
@@ -289,7 +289,7 @@
         
 
         // A parallel operation
-        MXHTTPOperation *operation2 = [aliceSession.crypto.deviceList downloadKeys:@[bobSession.myUser.userId] forceDownload:NO success:^(MXUsersDevicesMap<MXDeviceInfo *> *usersDevicesInfoMap) {
+        MXHTTPOperation *operation2 = [aliceSession.crypto.deviceList downloadKeys:@[bobSession.myUser.userId] forceDownload:NO success:^(MXUsersDevicesMap<MXDeviceInfo *> *usersDevicesInfoMap, NSDictionary<NSString *,MXCrossSigningInfo *> *crossSigningKeysMap) {
 
             onSuccess();
 
@@ -320,7 +320,7 @@
         aliceSessionToClose = aliceSession;
         bobSessionToClose = bobSession;
 
-        [aliceSession.crypto.deviceList downloadKeys:@[bobSession.myUser.userId] forceDownload:NO success:^(MXUsersDevicesMap<MXDeviceInfo *> *usersDevicesInfoMap) {
+        [aliceSession.crypto.deviceList downloadKeys:@[bobSession.myUser.userId] forceDownload:NO success:^(MXUsersDevicesMap<MXDeviceInfo *> *usersDevicesInfoMap, NSDictionary<NSString *,MXCrossSigningInfo *> *crossSigningKeysMap) {
 
             NSArray *bobDevices = [usersDevicesInfoMap deviceIdsForUser:bobSession.myUser.userId];
             XCTAssertNotNil(bobDevices, @"[MXCrypto downloadKeys] should return @[] for Bob to distinguish him from an unknown user");
@@ -351,7 +351,7 @@
 
         // Try to get info from a user on matrix.org.
         // The local hs we use for tests is not federated and is not able to talk with matrix.org
-        [aliceSession.crypto.deviceList downloadKeys:@[bobSession.myUser.userId, @"@auser:matrix.org"] forceDownload:NO success:^(MXUsersDevicesMap<MXDeviceInfo *> *usersDevicesInfoMap) {
+        [aliceSession.crypto.deviceList downloadKeys:@[bobSession.myUser.userId, @"@auser:matrix.org"] forceDownload:NO success:^(MXUsersDevicesMap<MXDeviceInfo *> *usersDevicesInfoMap, NSDictionary<NSString *,MXCrossSigningInfo *> *crossSigningKeysMap) {
 
             // We can get info only for Bob
             XCTAssertEqual(1, usersDevicesInfoMap.map.count);
@@ -1619,9 +1619,23 @@
         
         // We force the room history visibility for JOINED members.
         [aliceSession.matrixRestClient setRoomHistoryVisibility:roomId historyVisibility:kMXRoomHistoryVisibilityJoined success:^{
-            
+
             // Send a first message whereas Bob is invited
-            [roomFromAlicePOV sendTextMessage:messageFromAlice success:nil failure:^(NSError *error) {
+            [roomFromAlicePOV sendTextMessage:messageFromAlice success:^(NSString *eventId) {
+
+                // Make sure Bob joins room after the first message was sent.
+                [bobSession joinRoom:roomId viaServers:nil success:^(MXRoom *room) {
+                    // Send a second message to Bob who just joins the room
+                    [roomFromAlicePOV sendTextMessage:message2FromAlice success:nil failure:^(NSError *error) {
+                        XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                        [expectation fulfill];
+                    }];
+                } failure:^(NSError *error) {
+                    NSAssert(NO, @"Cannot join a room - error: %@", error);
+                    [expectation fulfill];
+                }];
+                
+            } failure:^(NSError *error) {
                 XCTFail(@"Cannot set up intial test conditions - error: %@", error);
                 [expectation fulfill];
             }];
@@ -1635,17 +1649,6 @@
                     [expectation fulfill];
                 }
                 
-            }];
-            
-            [bobSession joinRoom:roomId viaServers:nil success:^(MXRoom *room) {
-                // Send a second message to Bob who just joins the room
-                [roomFromAlicePOV sendTextMessage:message2FromAlice success:nil failure:^(NSError *error) {
-                    XCTFail(@"Cannot set up intial test conditions - error: %@", error);
-                    [expectation fulfill];
-                }];
-            } failure:^(NSError *error) {
-                NSAssert(NO, @"Cannot join a room - error: %@", error);
-                [expectation fulfill];
             }];
             
         } failure:^(NSError *error) {
@@ -1824,6 +1827,135 @@
         [roomFromAlicePOV sendTextMessage:messageFromAlice success:nil failure:^(NSError *error) {
             XCTFail(@"Cannot set up intial test conditions - error: %@", error);
             [expectation fulfill];
+        }];
+    }];
+}
+
+// Test the restart of broken Olm sessions (https://github.com/vector-im/riot-ios/issues/2129)
+// Inspired from https://github.com/poljar/matrix-nio/blob/0.7.1/tests/encryption_test.py#L872
+//
+// - Alice & Bob in a e2e room
+// - Alice sends a 1st message with a 1st megolm session
+// - Store the olm session between A&B devices
+// - Alice sends a 2nd message with a 2nd megolm session
+// - Simulate Alice using a backup of her OS and make her crypto state like after the first message
+// - Alice sends a 3rd message with a 3rd megolm session but a wedged olm session
+//
+// What Bob must see:
+// -> No issue with the 2 first messages
+// -> The third event must fail to decrypt at first because Bob the olm session is wedged
+// -> This is automatically fixed after SDKs restarted the olm session
+- (void)testOlmSessionUnwedging
+{
+    // - Alice & Bob have messages in a room
+    [matrixSDKTestsE2EData doE2ETestWithAliceAndBobInARoom:self cryptedBob:YES warnOnUnknowDevices:NO aliceStore:[[MXFileStore alloc] init] bobStore:[[MXFileStore alloc] init] readyToTest:^(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
+        
+        // - Alice sends a 1st message with a 1st megolm session
+        MXRoom *roomFromAlicePOV = [aliceSession roomWithRoomId:roomId];
+        [roomFromAlicePOV sendTextMessage:@"0" success:^(NSString *eventId) {
+            
+            //  - Store the olm session between A&B devices
+            // Let us pickle our session with bob here so we can later unpickle it
+            // and wedge our session.
+            MXOlmSession *olmSession = [aliceSession.crypto.store sessionsWithDevice:bobSession.crypto.deviceCurve25519Key].firstObject;
+            
+            // Relaunch Alice
+            // This forces her to use a new megolm session for sending message "11"
+            // This will move the olm session ratchet to share this new megolm session
+            MXSession *aliceSession1 = [[MXSession alloc] initWithMatrixRestClient:aliceSession.matrixRestClient];
+            [aliceSession close];
+            [aliceSession1 setStore:[[MXFileStore alloc] init] success:^{
+                [aliceSession1 start:^{
+                    aliceSession1.crypto.warnOnUnknowDevices = NO;
+            
+                    // - Alice sends a 2nd message with a 2nd megolm session
+                    MXRoom *roomFromAlicePOV1 = [aliceSession1 roomWithRoomId:roomId];
+                    [roomFromAlicePOV1 sendTextMessage:@"11" success:^(NSString *eventId) {
+                        
+                        
+                        // - Simulate Alice using a backup of her OS and make her crypto state like after the first message
+                        // Relaunch again alice
+                        MXSession *aliceSession2 = [[MXSession alloc] initWithMatrixRestClient:aliceSession1.matrixRestClient];
+                        [aliceSession1 close];
+                        [aliceSession2 setStore:[[MXFileStore alloc] init] success:^{
+                            [aliceSession2 start:^{
+                                aliceSession2.crypto.warnOnUnknowDevices = NO;
+                                
+                                // Let us wedge the session now. Set crypto state like after the first message
+                                [aliceSession2.crypto.store storeSession:olmSession forDevice:bobSession.crypto.deviceCurve25519Key];
+                                
+                                // - Alice sends a 3rd message with a 3rd megolm session but a wedged olm session
+                                MXRoom *roomFromAlicePOV2 = [aliceSession2 roomWithRoomId:roomId];
+                                [roomFromAlicePOV2 sendTextMessage:@"222" success:nil failure:^(NSError *error) {
+                                    XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                                    [expectation fulfill];
+                                }];
+                            } failure:nil];
+                        } failure:nil];
+                        
+                        
+                        
+                    } failure:^(NSError *error) {
+                        XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                        [expectation fulfill];
+                    }];
+                } failure:nil];
+            } failure:nil];
+            
+        } failure:^(NSError *error) {
+            XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+            [expectation fulfill];
+        }];
+        
+        
+        // What Bob must see:
+        __block NSUInteger messageCount = 0;
+        [bobSession listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage, kMXEventTypeStringRoomEncrypted] onEvent:^(MXEvent *event, MXTimelineDirection direction, id customObject) {
+            
+            switch (messageCount++)
+            {
+                case 0:
+                case 1:
+                {
+                    // -> No issue with the 2 first messages
+                    // The 2 first events can be decrypted. They just use different megolm session
+                    XCTAssertTrue(event.isEncrypted);
+                    XCTAssertNotNil(event.clearEvent);
+                    XCTAssertEqual(event.eventType, MXEventTypeRoomMessage);
+
+                    break;
+                }
+                    
+                case 2:
+                {
+                    // -> The third event must fail to decrypt at first because Bob the olm session is wedged
+                    XCTAssertTrue(event.isEncrypted);
+                    XCTAssertNil(event.clearEvent);
+                    
+                    observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXEventDidDecryptNotification object:event queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
+                        
+                        // -> This is automatically fixed after SDKs restarted the olm session
+                        MXEvent *event2 = note.object;
+                        
+                        XCTAssertTrue(event2.isEncrypted);
+                        XCTAssertNotNil(event2.clearEvent);
+                        XCTAssertEqual(event2.eventType, MXEventTypeRoomMessage);
+                        
+                        [expectation fulfill];
+                    }];
+                    
+                    if (event.clearEvent)
+                    {
+                        XCTAssert(NO, @"The scenario went wrong. Escape now to avoid to wait forever");
+                        [expectation fulfill];
+                    }
+                    
+                    break;
+                }
+                    
+                default:
+                    break;
+            }
         }];
     }];
 }
@@ -2701,6 +2833,31 @@
         // - 1- Alice sends a message in a room
         [roomFromAlicePOV sendTextMessage:message success:nil failure:^(NSError *error) {
             XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+            [expectation fulfill];
+        }];
+    }];
+}
+
+// - Have Alice
+// - Alice logs in on a new device
+// -> The first device must get notified by the new sign-in
+- (void)testMXDeviceListDidUpdateUsersDevicesNotification
+{
+    // - Have Alice
+    [matrixSDKTestsE2EData doE2ETestWithAliceInARoom:self readyToTest:^(MXSession *aliceSession, NSString *roomId, XCTestExpectation *expectation) {
+        
+        // - Alice logs in on a new device
+        [matrixSDKTestsE2EData loginUserOnANewDevice:aliceSession.matrixRestClient.credentials withPassword:MXTESTS_ALICE_PWD onComplete:^(MXSession *newAliceSession) {
+        }];
+        
+        // -> The first device must get notified by the new sign-in
+        observer = [[NSNotificationCenter defaultCenter] addObserverForName:MXDeviceListDidUpdateUsersDevicesNotification object:aliceSession.crypto queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *notification) {
+            
+            NSDictionary *userInfo = notification.userInfo;
+            NSArray<MXDeviceInfo*> *myUserDevices = userInfo[aliceSession.myUser.userId];
+            
+            XCTAssertEqual(myUserDevices.count, 2);
+            
             [expectation fulfill];
         }];
     }];

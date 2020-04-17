@@ -83,13 +83,21 @@
             }];
 
             // - Alice invites Bob in a direct chat
-            [aliceRestClient createRoom:nil visibility:kMXRoomDirectoryVisibilityPrivate roomAlias:nil topic:nil invite:@[bobSession.myUser.userId] invite3PID:nil isDirect:YES preset:kMXRoomPresetPrivateChat success:nil failure:^(NSError *error) {
+            MXRoomCreationParameters *parameters = [MXRoomCreationParameters new];
+            parameters.inviteArray = @[bobSession.myUser.userId];
+            parameters.isDirect = YES;
+            parameters.visibility = kMXRoomDirectoryVisibilityPrivate;
+            [aliceRestClient createRoomWithParameters:parameters success:nil failure:^(NSError *error) {
                 XCTFail(@"The operation should not fail - NSError: %@", error);
                 [expectation fulfill];
             }];
 
             // - Charlie invites Bob in a direct chat
-            [charlieSession createRoom:nil visibility:kMXRoomDirectoryVisibilityPrivate roomAlias:nil topic:nil invite:@[bobSession.myUser.userId] invite3PID:nil isDirect:YES preset:kMXRoomPresetPrivateChat success:nil failure:^(NSError *error) {
+            parameters = [MXRoomCreationParameters new];
+            parameters.inviteArray = @[bobSession.myUser.userId];
+            parameters.isDirect = YES;
+            parameters.visibility = kMXRoomDirectoryVisibilityPrivate;
+            [charlieSession createRoomWithParameters:parameters success:nil failure:^(NSError *error) {
                 XCTFail(@"The operation should not fail - NSError: %@", error);
                 [expectation fulfill];
             }];
@@ -243,8 +251,8 @@
 
 
         // - Alice invites Bob in a direct chat
-        [aliceRestClient createRoom:nil visibility:kMXRoomDirectoryVisibilityPrivate roomAlias:nil topic:nil invite:@[bobSession.myUser.userId] invite3PID:nil isDirect:YES preset:kMXRoomPresetPrivateChat success:nil failure:^(NSError *error) {
-
+        MXRoomCreationParameters *parameters = [MXRoomCreationParameters parametersForDirectRoomWithUser:bobSession.myUser.userId];
+        [aliceRestClient createRoomWithParameters:parameters success:nil failure:^(NSError *error) {
             XCTFail(@"The operation should not fail - NSError: %@", error);
             [expectation fulfill];
         }];

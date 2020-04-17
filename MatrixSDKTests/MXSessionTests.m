@@ -631,7 +631,10 @@
             mxSession = mxSession2;
             
             // Create a random room with no params
-            [mxSession createRoom:nil visibility:nil roomAlias:nil topic:nil invite:@[matrixSDKTestsData.aliceCredentials.userId] invite3PID:nil isDirect:NO preset:nil success:^(MXRoom *room) {
+            MXRoomCreationParameters *parameters = [MXRoomCreationParameters new];
+            parameters.inviteArray = @[matrixSDKTestsData.aliceCredentials.userId];
+
+            [mxSession createRoomWithParameters:parameters success:^(MXRoom *room) {
                 
                 XCTAssertNotNil(room);
                 
@@ -646,13 +649,13 @@
                     MXEvent *roomMemberEvent2 = roomMemberEvents[1];
                     
                     BOOL succeed;
-                    if ([roomMemberEvent1.stateKey isEqualToString:mxSession.myUser.userId])
+                    if ([roomMemberEvent1.stateKey isEqualToString:mxSession.myUserId])
                     {
                         succeed = [roomMemberEvent2.stateKey isEqualToString:matrixSDKTestsData.aliceCredentials.userId];
                     }
                     else if ([roomMemberEvent1.stateKey isEqualToString:matrixSDKTestsData.aliceCredentials.userId])
                     {
-                        succeed = [roomMemberEvent2.stateKey isEqualToString:mxSession.myUser.userId];
+                        succeed = [roomMemberEvent2.stateKey isEqualToString:mxSession.myUserId];
                     }
                     
                     XCTAssertTrue(succeed);
@@ -683,7 +686,8 @@
             mxSession = mxSession2;
             
             // Create a random room with no params
-            [mxSession createRoom:nil visibility:nil roomAlias:nil topic:nil invite:@[matrixSDKTestsData.aliceCredentials.userId] invite3PID:nil isDirect:YES preset:kMXRoomPresetTrustedPrivateChat success:^(MXRoom *room) {
+            MXRoomCreationParameters *parameters = [MXRoomCreationParameters parametersForDirectRoomWithUser:matrixSDKTestsData.aliceCredentials.userId];
+            [mxSession createRoomWithParameters:parameters success:^(MXRoom *room) {
                 
                 XCTAssertNotNil(room);
                 
@@ -698,13 +702,13 @@
                     MXEvent *roomMemberEvent2 = roomMemberEvents[1];
                     
                     BOOL succeed;
-                    if ([roomMemberEvent1.stateKey isEqualToString:mxSession.myUser.userId])
+                    if ([roomMemberEvent1.stateKey isEqualToString:mxSession.myUserId])
                     {
                         succeed = [roomMemberEvent2.stateKey isEqualToString:matrixSDKTestsData.aliceCredentials.userId];
                     }
                     else if ([roomMemberEvent1.stateKey isEqualToString:matrixSDKTestsData.aliceCredentials.userId])
                     {
-                        succeed = [roomMemberEvent2.stateKey isEqualToString:mxSession.myUser.userId];
+                        succeed = [roomMemberEvent2.stateKey isEqualToString:mxSession.myUserId];
                     }
                     
                     XCTAssertTrue(succeed);
@@ -721,7 +725,7 @@
                             MXRoomPowerLevels *roomPowerLevels = roomState.powerLevels;
 
                             XCTAssertNotNil(roomPowerLevels);
-                            NSUInteger powerlLevel1 = [roomPowerLevels powerLevelOfUserWithUserID:mxSession.myUser.userId];
+                            NSUInteger powerlLevel1 = [roomPowerLevels powerLevelOfUserWithUserID:mxSession.myUserId];
                             NSUInteger powerlLevel2 = [roomPowerLevels powerLevelOfUserWithUserID:matrixSDKTestsData.aliceCredentials.userId];
                             XCTAssertEqual(powerlLevel1, powerlLevel2, @"The members must have the same power level");
 
@@ -1294,7 +1298,7 @@
                                          @"device_id": @"AliceDevice",
                                          @"rooms": @[roomId]
                                          }
-                                 } forUser:mxSession.myUser.userId];
+                                 } forUser:mxSession.myUserId];
 
         [aliceRestClient sendToDevice:kMXEventTypeStringRoomKeyRequest contentMap:contentMap txnId:nil success:^{
 
