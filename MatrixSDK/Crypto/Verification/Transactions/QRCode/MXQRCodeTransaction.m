@@ -279,8 +279,8 @@ NSString * const MXKeyVerificationMethodReciprocate = @"m.reciprocate.v1";
     }
     else if (otherQRCodeData.verificationMode == MXQRCodeVerificationModeSelfVerifyingMasterKeyTrusted && isSelfVerification)
     {
-        // I'm the new device. The other device will sign me
-        [self sendVerified];
+        // I'm the new device. The other device will sign me. Trust the other device locally.
+        [self trustOtherUserWithId:self.otherUserId andDeviceId:self.otherDeviceId];
     }
     else
     {
@@ -318,8 +318,8 @@ NSString * const MXKeyVerificationMethodReciprocate = @"m.reciprocate.v1";
     }
     else if (qrCodeData.verificationMode == MXQRCodeVerificationModeSelfVerifyingMasterKeyNotTrusted && isSelfVerification)
     {
-        // I'm the new device. The other device will sign me
-        [self sendVerified];
+        // I'm the new device. The other device will sign me. Trust the other device locally.
+        [self trustOtherUserWithId:self.otherUserId andDeviceId:self.otherDeviceId];
     }
     else if (qrCodeData.verificationMode == MXQRCodeVerificationModeSelfVerifyingMasterKeyTrusted && isSelfVerification)
     {
