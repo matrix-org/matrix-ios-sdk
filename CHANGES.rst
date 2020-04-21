@@ -1,3 +1,12 @@
+Changes in Matrix iOS SDK in 0.16.1 (2020-04-xx)
+================================================
+
+Improvements:
+ * MXCrypto: Make trustLevelSummaryForUserIds async (vector-im/riot-ios/issues/3126).
+
+API break:
+ * MXCrypto: trustLevelSummaryForUserIds: is now async.
+
 Changes in Matrix iOS SDK in 0.16.0 (2020-04-17)
 ================================================
 
