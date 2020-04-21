@@ -535,8 +535,10 @@ NSString *const MXCrossSigningErrorDomain = @"org.matrix.sdk.crosssigning";
                   @(isCrossSigningVerified));
             
             MXUserTrustLevel *newTrustLevel = [MXUserTrustLevel trustLevelWithCrossSigningVerified:isCrossSigningVerified locallyVerified:crossSigningInfo.trustLevel.isLocallyVerified];
-            [crossSigningInfo updateTrustLevel:newTrustLevel];
-            [self.crypto.store storeCrossSigningKeys:crossSigningInfo];
+            if ([crossSigningInfo updateTrustLevel:newTrustLevel])
+            {
+                [self.crypto.store storeCrossSigningKeys:crossSigningInfo];
+            }
             
             // Update trust on associated devices
             [self checkTrustLevelForDevicesOfUser:crossSigningInfo.userId];

@@ -6,6 +6,7 @@ Improvements:
 
 Bug fix:
  * Fix race condition in MXSecretShareManager (vector-im/riot-ios/issues/3123).
+ * Too much MXDeviceInfoTrustLevelDidChangeNotification and MXCrossSigningInfoTrustLevelDidChangeNotification (vector-im/riot-ios/issues/3121).
 
 Changes in Matrix iOS SDK in 0.16.0 (2020-04-17)
 ================================================

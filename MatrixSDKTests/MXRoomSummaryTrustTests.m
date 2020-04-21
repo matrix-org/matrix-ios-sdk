@@ -283,6 +283,48 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
     }];
 }
 
+/**
+ Test that we do not send too much kMXRoomSummaryDidChangeNotification.
+ 
+ Test for https://github.com/vector-im/riot-ios/issues/3121 (Too much MXDeviceInfoTrustLevelDidChangeNotification
+ and MXCrossSigningInfoTrustLevelDidChangeNotification).
+ 
+ - Have Alice with 2 devices (Alice1 and Alice2) and Bob. All trusted via cross-signing
+ - Alice re-download all keys
+ -> Alice must not be notified for more trust changes
+ */
+- (void)testNoExtraTrustLevelDidChangeNotifications
+{
+    // - Have Alice with 2 devices (Alice1 and Alice2) and Bob. All trusted via cross-signing
+    [matrixSDKTestsE2EData doTestWithBobAndAliceWithTwoDevicesAllTrusted:self readyToTest:^(MXSession *aliceSession1, MXSession *aliceSession2, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
+        
+        // - Alice download all keys
+        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, kMXRoomSummaryTrustComputationDelayMs * NSEC_PER_MSEC), dispatch_get_main_queue(), ^{
+            
+            MXRoom *roomFromAlicePOV = [aliceSession1 roomWithRoomId:roomId];
+            
+            // - Alice re-download all keys
+            [aliceSession1.crypto downloadKeys:@[aliceSession1.myUserId, bobSession.myUserId] forceDownload:YES success:^(MXUsersDevicesMap<MXDeviceInfo *> *usersDevicesInfoMap, NSDictionary<NSString *,MXCrossSigningInfo *> *crossSigningKeysMap) {
+                // Wait a bit
+                dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 1 * NSEC_PER_SEC), dispatch_get_main_queue(), ^{
+                    [expectation fulfill];
+                });
+            } failure:^(NSError *error) {
+                XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                [expectation fulfill];
+            }];
+            
+            // -> Alice must not be notified for more trust changes
+            id observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXRoomSummaryDidChangeNotification object:roomFromAlicePOV.summary queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *notif) {
+                
+                XCTFail(@"They must be no more trust changes");
+            }];
+            [observers addObject:observer];
+        });
+    }];
+}
+
+
 @end
 
 #pragma clang diagnostic pop
