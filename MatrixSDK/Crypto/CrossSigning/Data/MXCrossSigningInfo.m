@@ -92,7 +92,12 @@ NSString *const MXCrossSigningInfoTrustLevelDidChangeNotification = @"MXCrossSig
     return self;
 }
 
-- (BOOL)updateTrustLevel:(MXUserTrustLevel*)trustLevel;
+- (void)setTrustLevel:(MXUserTrustLevel*)trustLevel
+{
+    _trustLevel = trustLevel;
+}
+
+- (BOOL)updateTrustLevel:(MXUserTrustLevel*)trustLevel
 {
     BOOL updated = NO;
 
