@@ -1,7 +1,11 @@
 Changes in Matrix iOS SDK in 0.16.1 (2020-04-xx)
 ================================================
 
+Improvements:
+ * MXHTTPClient: Log HTTP requests methods.
+
 Bug fix:
+ * Fix race condition in MXSecretShareManager (vector-im/riot-ios/issues/3123).
  * Too much MXDeviceInfoTrustLevelDidChangeNotification and MXCrossSigningInfoTrustLevelDidChangeNotification (vector-im/riot-ios/issues/3121).
 
 Changes in Matrix iOS SDK in 0.16.0 (2020-04-17)
