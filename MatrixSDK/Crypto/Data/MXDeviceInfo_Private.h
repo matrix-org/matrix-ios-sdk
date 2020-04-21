@@ -21,6 +21,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface MXDeviceInfo ()
 
+- (void)setTrustLevel:(MXDeviceTrustLevel*)trustLevel;
 - (BOOL)updateTrustLevel:(MXDeviceTrustLevel*)trustLevel;
 
 @end
