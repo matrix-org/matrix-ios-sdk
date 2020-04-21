@@ -288,9 +288,9 @@ extern NSString *const MXDeviceListDidUpdateUsersDevicesNotification;
  Get the stored summary of users trust level (trusted users and devices count).
  
  @param userIds The user ids.
- @return the trust summary.
+ @param onComplete the callback called once operation is done.
  */
-- (MXUsersTrustLevelSummary *)trustLevelSummaryForUserIds:(NSArray<NSString*>*)userIds;
+- (void)trustLevelSummaryForUserIds:(NSArray<NSString*>*)userIds onComplete:(void (^)(MXUsersTrustLevelSummary *trustLevelSummary))onComplete;
 
 
 #pragma mark - Users keys
