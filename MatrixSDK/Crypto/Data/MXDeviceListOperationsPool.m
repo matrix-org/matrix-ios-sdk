@@ -186,11 +186,22 @@
                     [mutabledevices[deviceId] updateTrustLevel:trustLevel];
                 }
 
-                usersDevices[userId] = mutabledevices.allValues;
+                NSArray *mutableDevicesValues = mutabledevices.allValues;
+                usersDevices[userId] = mutableDevicesValues;
                 
                 if (![mutabledevices isEqualToDictionary:storedDevices])
                 {
-                    updatedUsersDevices[userId] = usersDevices[userId];
+                    NSArray *storedDevicesValues = storedDevices.allValues;
+                    
+                    // Keep only devices that are not identical to those present in the database
+                    NSArray *updatedUserDevices = [mutableDevicesValues filteredArrayUsingPredicate:[NSPredicate predicateWithBlock:^BOOL(id evaluatedObject, NSDictionary *bindings) {
+                        return ![storedDevicesValues containsObject:evaluatedObject];
+                    }]];
+
+                    if (updatedUserDevices.count)
+                    {
+                        updatedUsersDevices[userId] = updatedUserDevices;
+                    }
                     
                     // Update the store
                     // Note that devices which aren't in the response will be removed from the store
