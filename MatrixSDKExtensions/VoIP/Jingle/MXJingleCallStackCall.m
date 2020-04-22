@@ -60,6 +60,11 @@
      Success block for the async `startCapturingMediaWithVideo` method.
      */
     void (^onStartCapturingMediaWithVideoSuccess)(void);
+
+    /**
+     Ice candidate cache
+     */
+    NSMutableArray<RTCIceCandidate *> *iceCandidateCache;
 }
 
 @property (nonatomic, strong) RTCVideoCapturer *videoCapturer;
@@ -159,7 +164,24 @@
     RTCIceCandidate *iceCandidate = [[RTCIceCandidate alloc] initWithSdp:(NSString *)candidate[@"candidate"]
                                                            sdpMLineIndex:[(NSNumber *)candidate[@"sdpMLineIndex"] intValue]
                                                                   sdpMid:(NSString *)candidate[@"sdpMid"]];
-    [peerConnection addIceCandidate:iceCandidate];
+
+    // Ice candidates have to be added after the remote description has been set
+    if (!peerConnection.remoteDescription)
+    {
+        // Cache ice candidates until remote description is set
+        if (iceCandidateCache == nil)
+        {
+            iceCandidateCache = [NSMutableArray arrayWithObject:iceCandidate];
+        }
+        else
+        {
+            [iceCandidateCache addObject:iceCandidate];
+        }
+    }
+    else
+    {
+        [peerConnection addIceCandidate:iceCandidate];
+    }
 }
 
 
@@ -167,14 +189,23 @@
 - (void)handleOffer:(NSString *)sdpOffer success:(void (^)(void))success failure:(void (^)(NSError *error))failure
 {
     RTCSessionDescription *sessionDescription = [[RTCSessionDescription alloc] initWithType:RTCSdpTypeOffer sdp:sdpOffer];
+    MXWeakify(self);
     [peerConnection setRemoteDescription:sessionDescription completionHandler:^(NSError * _Nullable error) {
         NSLog(@"[MXJingleCallStackCall] setRemoteDescription: error: %@", error);
         
         // Return on main thread
         dispatch_async(dispatch_get_main_queue(), ^{
+            MXStrongifyAndReturnIfNil(self);
             
             if (!error)
             {
+                // Add cached ice candidates
+                for (RTCIceCandidate *iceCandidate in self->iceCandidateCache)
+                {
+                    [self->peerConnection addIceCandidate:iceCandidate];
+                }
+                [self->iceCandidateCache removeAllObjects];
+                
                 success();
             }
             else
