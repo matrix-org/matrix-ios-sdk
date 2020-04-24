@@ -11,6 +11,7 @@ Bug fix:
  * Too much MXDeviceInfoTrustLevelDidChangeNotification and MXCrossSigningInfoTrustLevelDidChangeNotification (vector-im/riot-ios/issues/3121).
  * VoiP: Fix remote ice candidates being added before remote description is setup (vector-im/riot-ios/issues/1784).
  * MXDeviceListOperationsPool: Post MXDeviceListDidUpdateUsersDevicesNotification notification only for new changes never seen before (vector-im/riot-ios/issues/3120).
+ * MXIdentityService: Fix registration by email and all IS services by fixing Open Id token.
 
 API break:
  * MXCrypto: trustLevelSummaryForUserIds: is now async.
