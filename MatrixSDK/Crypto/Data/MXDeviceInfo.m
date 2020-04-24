@@ -58,6 +58,11 @@ NSString *const MXDeviceInfoTrustLevelDidChangeNotification = @"MXDeviceInfoTrus
 
 #pragma mark - SDK-Private methods
 
+- (void)setTrustLevel:(MXDeviceTrustLevel *)trustLevel
+{
+    _trustLevel = trustLevel;
+}
+
 - (BOOL)updateTrustLevel:(MXDeviceTrustLevel*)trustLevel
 {
     BOOL updated = NO;

@@ -115,14 +115,19 @@
             if (crossSigningKeys)
             {
                 NSLog(@"[MXDeviceListOperationsPool] doKeyDownloadForUsers: Got cross-signing keys for %@: %@", userId, crossSigningKeys);
+                
+                MXCrossSigningInfo *storedCrossSigningKeys = [self->crypto.store crossSigningKeysForUser:userId];
+                
+                // Use current trust level
+                MXUserTrustLevel *oldTrustLevel = storedCrossSigningKeys.trustLevel;
+                [crossSigningKeys setTrustLevel:oldTrustLevel];
 
                 // Compute trust on this user
                 // Note this overwrites the previous value
                 BOOL isCrossSigningVerified = [self->crypto.crossSigning isUserWithCrossSigningKeysVerified:crossSigningKeys];
-                
-                BOOL wasLocallyVerified = [self->crypto.store crossSigningKeysForUser:userId].trustLevel.isLocallyVerified;
                 MXUserTrustLevel *newTrustLevel = [MXUserTrustLevel trustLevelWithCrossSigningVerified:isCrossSigningVerified
-                                                                                       locallyVerified:wasLocallyVerified];
+                                                                                       locallyVerified:oldTrustLevel.isLocallyVerified];
+                
                 [crossSigningKeys updateTrustLevel:newTrustLevel];
                 
                 // Note that keys which aren't in the response will be removed from the store
@@ -167,25 +172,41 @@
                         // So, transfer its previous value
                         previousLocalState = previouslyStoredDeviceKeys.trustLevel.localVerificationStatus;
                     }
-
+                    
+                    // Use current trust level
+                    MXDeviceTrustLevel *oldTrustLevel = [MXDeviceTrustLevel trustLevelWithLocalVerificationStatus:previousLocalState
+                                                                                             crossSigningVerified:previouslyStoredDeviceKeys.trustLevel.isCrossSigningVerified];
+                    [mutabledevices[deviceId] setTrustLevel:oldTrustLevel];
+                    
+                    
                     BOOL crossSigningVerified = [self->crypto.crossSigning isDeviceVerified:mutabledevices[deviceId]];
                     MXDeviceTrustLevel *trustLevel = [MXDeviceTrustLevel trustLevelWithLocalVerificationStatus:previousLocalState
                                                                                           crossSigningVerified:crossSigningVerified];
-
+                    
                     [mutabledevices[deviceId] updateTrustLevel:trustLevel];
                 }
 
-                usersDevices[userId] = mutabledevices.allValues;
+                NSArray *mutableDevicesValues = mutabledevices.allValues;
+                usersDevices[userId] = mutableDevicesValues;
                 
                 if (![mutabledevices isEqualToDictionary:storedDevices])
                 {
-                    updatedUsersDevices[userId] = usersDevices[userId];
+                    NSArray *storedDevicesValues = storedDevices.allValues;
+                    
+                    // Keep only devices that are not identical to those present in the database
+                    NSArray *updatedUserDevices = [mutableDevicesValues filteredArrayUsingPredicate:[NSPredicate predicateWithBlock:^BOOL(id evaluatedObject, NSDictionary *bindings) {
+                        return ![storedDevicesValues containsObject:evaluatedObject];
+                    }]];
+
+                    if (updatedUserDevices.count)
+                    {
+                        updatedUsersDevices[userId] = updatedUserDevices;
+                    }
                     
                     // Update the store
                     // Note that devices which aren't in the response will be removed from the store
                     [self->crypto.store storeDevicesForUser:userId devices:mutabledevices];
                 }
-
             }
         }
         

@@ -1049,45 +1049,58 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
         
         // Read data from the store
         // It has been updated in the process of the downloadKeys response
-        success([self trustLevelSummaryForUserIds:userIds]);
+        [self trustLevelSummaryForUserIds:userIds onComplete:^(MXUsersTrustLevelSummary *trustLevelSummary) {
+            success(trustLevelSummary);
+        }];
         
     } failure:failure];
 }
 
-- (MXUsersTrustLevelSummary *)trustLevelSummaryForUserIds:(NSArray<NSString*>*)userIds
+- (void)trustLevelSummaryForUserIds:(NSArray<NSString*>*)userIds onComplete:(void (^)(MXUsersTrustLevelSummary *trustLevelSummary))onComplete;
 {
-    NSUInteger usersCount = 0;
-    NSUInteger trustedUsersCount = 0;
-    NSUInteger devicesCount = 0;
-    NSUInteger trustedDevicesCount = 0;
-    
-    for (NSString *userId in userIds)
-    {
-        usersCount++;
+    // Use cargoQueue for potential huge read requests from the store
+    MXWeakify(self);
+    dispatch_async(cargoQueue, ^{
+        MXStrongifyAndReturnIfNil(self);
         
-        MXUserTrustLevel *userTrustLevel = [self trustLevelForUser:userId];
-        if (userTrustLevel.isVerified)
+        NSUInteger usersCount = 0;
+        NSUInteger trustedUsersCount = 0;
+        NSUInteger devicesCount = 0;
+        NSUInteger trustedDevicesCount = 0;
+        
+        for (NSString *userId in userIds)
         {
-            trustedUsersCount++;
-
-            for (MXDeviceInfo *device in [self.store devicesForUser:userId].allValues)
+            usersCount++;
+            
+            MXUserTrustLevel *userTrustLevel = [self trustLevelForUser:userId];
+            if (userTrustLevel.isVerified)
             {
-                devicesCount++;
-                if (device.trustLevel.isVerified)
+                trustedUsersCount++;
+                
+                for (MXDeviceInfo *device in [self.store devicesForUser:userId].allValues)
                 {
-                    trustedDevicesCount++;
+                    devicesCount++;
+                    if (device.trustLevel.isVerified)
+                    {
+                        trustedDevicesCount++;
+                    }
                 }
             }
         }
-    }
-    
-    NSProgress *trustedUsersProgress = [NSProgress progressWithTotalUnitCount:usersCount];
-    trustedUsersProgress.completedUnitCount = trustedUsersCount;
-    
-    NSProgress *trustedDevicesProgress = [NSProgress progressWithTotalUnitCount:devicesCount];
-    trustedDevicesProgress.completedUnitCount = trustedDevicesCount;
-    
-    return [[MXUsersTrustLevelSummary alloc] initWithTrustedUsersProgress:trustedUsersProgress andTrustedDevicesProgress:trustedDevicesProgress];
+        
+        NSProgress *trustedUsersProgress = [NSProgress progressWithTotalUnitCount:usersCount];
+        trustedUsersProgress.completedUnitCount = trustedUsersCount;
+        
+        NSProgress *trustedDevicesProgress = [NSProgress progressWithTotalUnitCount:devicesCount];
+        trustedDevicesProgress.completedUnitCount = trustedDevicesCount;
+        
+        MXUsersTrustLevelSummary *trustLevelSummary = [[MXUsersTrustLevelSummary alloc] initWithTrustedUsersProgress:trustedUsersProgress
+                                                                                           andTrustedDevicesProgress:trustedDevicesProgress];
+        
+        dispatch_async(dispatch_get_main_queue(), ^{
+            onComplete(trustLevelSummary);
+        });
+    });
 }
 
 #pragma mark - Users keys

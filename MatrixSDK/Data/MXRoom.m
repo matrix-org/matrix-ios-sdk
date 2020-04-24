@@ -3121,7 +3121,9 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
             }
             else
             {
-                success([crypto trustLevelSummaryForUserIds:memberIds]);
+                [crypto trustLevelSummaryForUserIds:memberIds onComplete:^(MXUsersTrustLevelSummary *trustLevelSummary) {
+                    success(trustLevelSummary);
+                }];
             }
             
         } failure:failure];

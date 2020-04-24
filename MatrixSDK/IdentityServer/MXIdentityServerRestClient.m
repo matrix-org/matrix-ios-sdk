@@ -141,7 +141,6 @@ NSString *const MXIdentityServerRestClientErrorDomain = @"org.matrix.sdk.MXIdent
                                           {
                                               __block NSString *token;
                                               [self dispatchProcessing:^{
-                                                  NSString *token;
                                                   MXJSONModelSetString(token, JSONResponse[@"token"]);
 
                                                   // The spec is `token`, but we used `access_token` for a Sydent release :/
