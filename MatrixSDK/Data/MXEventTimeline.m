@@ -357,7 +357,10 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
         }
 
         NSLog(@"[MXEventTimeline] paginate failed");
-        failure(error);
+        if (failure)
+        {
+            failure(error);
+        }
     }];
 
     if (messagesFromStoreCount)
