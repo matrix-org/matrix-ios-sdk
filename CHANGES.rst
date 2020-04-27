@@ -1,3 +1,9 @@
+Changes in Matrix iOS SDK in 0.16.2 (2020-04-xx)
+================================================
+
+Bug fix:
+ * MXEventTimeline: Fix crash in paginate:.
+
 Changes in Matrix iOS SDK in 0.16.1 (2020-04-24)
 ================================================
 
