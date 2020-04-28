@@ -1190,6 +1190,17 @@ static NSArray<MXEventTypeString> *kMXKeyVerificationManagerVerificationEventTyp
         {
             NSLog(@"[MXKeyVerification] handleDoneEvent. Not handled for SAS transaction: %@", event);
         }
+        
+        MXKeyVerificationTransaction *transaction = [self transactionWithTransactionId:doneEvent.transactionId];
+        if (transaction && transaction.otherDeviceId)
+        {
+            BOOL eventFromMyDevice = [transaction.otherDeviceId isEqualToString:self.crypto.mxSession.myDeviceId];
+            if (!eventFromMyDevice)
+            {
+                NSLog(@"[MXKeyVerification] handleDoneEvent: requestAllPrivateKeys");
+                [self.crypto requestAllPrivateKeys];
+            }
+        }
     }
     else
     {

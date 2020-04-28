@@ -852,19 +852,9 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
             // Manage self-verification
             if (verificationStatus == MXDeviceVerified)
             {
-                // Request backup private keys
-                if (!self.backup.hasPrivateKeyInCryptoStore)
-                {
-                    MXWeakify(self);
-                    [self.backup scheduleRequestForPrivateKey:^{
-                        MXStrongifyAndReturnIfNil(self);
-                        
-                        if (self.enableOutgoingKeyRequestsOnceSelfVerificationDone)
-                        {
-                            [self->outgoingRoomKeyRequestManager setEnabled:YES];
-                        }
-                    }];
-                }
+                // This is a good time to request all private keys
+                NSLog(@"[MXCrypto] setDeviceVerificationForDevice: Request all private keys");
+                [self scheduleRequestsForAllPrivateKeys];
                 
                 // Check cross-signing
                 if (self.crossSigning.canCrossSign)
@@ -875,12 +865,6 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
                     
                     // Wait the end of cross-sign before returning
                     return;
-                }
-                else if (self.crossSigning.state == MXCrossSigningStateCrossSigningExists)
-                {
-                    // This is a good time to request cross-signing private keys
-                    NSLog(@"[MXCrypto] setDeviceVerificationForDevice: Request cross-signing private keys for device %@", deviceId);
-                    [self.crossSigning scheduleRequestForPrivateKeys];
                 }
             }
         }
@@ -1234,6 +1218,47 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
 #else
     return nil;
 #endif
+}
+
+
+#pragma mark - Gossipping
+
+- (void)requestAllPrivateKeys
+{
+    NSLog(@"[MXCrypto] requestAllPrivateKeys");
+    
+    // Request backup private keys
+    if (!self.backup.hasPrivateKeyInCryptoStore || !self.backup.enabled)
+    {
+        NSLog(@"[MXCrypto] requestAllPrivateKeys: Request key backup private keys");
+        
+        MXWeakify(self);
+        [self.backup requestPrivateKeys:^{
+            MXStrongifyAndReturnIfNil(self);
+            
+            if (self.enableOutgoingKeyRequestsOnceSelfVerificationDone)
+            {
+                [self->outgoingRoomKeyRequestManager setEnabled:YES];
+            }
+        }];
+    }
+    
+    // Check cross-signing private keys
+    if (self.crossSigning.state == MXCrossSigningStateCrossSigningExists)
+    {
+        NSLog(@"[MXCrypto] requestAllPrivateKeys: Request cross-signing private keys");
+        [self.crossSigning requestPrivateKeys];
+    }
+}
+
+- (void)scheduleRequestsForAllPrivateKeys
+{
+    // For the moment, we have no better solution than waiting a bit before making such request.
+    // This 1.5s delay lets time to the other peer to set our device as trusted
+    // so that it will accept to gossip the keys to our device.
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1.5 * NSEC_PER_SEC)), _cryptoQueue, ^{
+        [self requestAllPrivateKeys];
+    });
 }
 
 
