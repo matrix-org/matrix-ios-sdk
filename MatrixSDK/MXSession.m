@@ -2222,7 +2222,10 @@ typedef void (^MXOnResumeDone)(void);
 - (void)runNextDirectRoomOperation
 {
     // Dequeue the completed operation
-    [directRoomsOperationsQueue removeObjectAtIndex:0];
+    if (directRoomsOperationsQueue.count)
+    {
+        [directRoomsOperationsQueue removeObjectAtIndex:0];
+    }
 
     // And run the next one if any
     if (directRoomsOperationsQueue.firstObject)

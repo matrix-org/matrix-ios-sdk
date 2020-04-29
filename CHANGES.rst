@@ -6,6 +6,7 @@ Improvements:
 
 Bug fix:
  * MXEventTimeline: Fix crash in paginate:.
+ * MXSession: Fix crash in runNextDirectRoomOperation.
 
 Changes in Matrix iOS SDK in 0.16.1 (2020-04-24)
 ================================================
