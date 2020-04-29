@@ -184,10 +184,11 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
 
 - (void)resetKeyBackupData
 {
+    NSLog(@"[MXKeyBackup] resetKeyBackupData");
+    
     [self resetBackupAllGroupSessionsObjects];
 
     self->crypto.store.backupVersion = nil;
-    [self->crypto.store deleteSecretWithSecretId:MXSecretId.keyBackup];
     _backupKey = nil;
 
     // Reset backup markers
