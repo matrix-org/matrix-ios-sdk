@@ -1,3 +1,16 @@
+Changes in Matrix iOS SDK in 0.16.2 (2020-04-30)
+================================================
+
+Improvements:
+* Cross-signing: Make key gossip requests when the other device sent m.key.verification.done (vector-im/riot-ios/issues/3163).
+
+Bug fix:
+ * MXEventTimeline: Fix crash in paginate:.
+ * MXSession: Fix crash in runNextDirectRoomOperation.
+
+Doc fix:
+ * Update the CONTRIBUTING.rst to point to correct file.
+
 Changes in Matrix iOS SDK in 0.16.1 (2020-04-24)
 ================================================
 

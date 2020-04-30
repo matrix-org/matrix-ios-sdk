@@ -184,10 +184,11 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
 
 - (void)resetKeyBackupData
 {
+    NSLog(@"[MXKeyBackup] resetKeyBackupData");
+    
     [self resetBackupAllGroupSessionsObjects];
 
     self->crypto.store.backupVersion = nil;
-    [self->crypto.store deleteSecretWithSecretId:MXSecretId.keyBackup];
     _backupKey = nil;
 
     // Reset backup markers
@@ -352,24 +353,19 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
     }];
 }
 
-- (void)scheduleRequestForPrivateKey:(void (^)(void))onComplete
+- (void)requestPrivateKeys:(void (^)(void))onComplete
 {
-    NSLog(@"[MXKeyBackup] scheduleRequestForPrivateKeys");
+    NSLog(@"[MXKeyBackup] requestPrivateKeys");
           
-    // For the moment, we have no better solution than waiting a bit before making such request.
-    // This 1.5s delay lets time to the other peer to set our device as trusted
-    // so that it will accept to gossip the keys to our device.
-    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1.5 * NSEC_PER_SEC)), crypto.cryptoQueue, ^{
-        [self requestPrivateKeysToDeviceIds:nil success:^{
-        } onPrivateKeysReceived:^{
-            
-            [self restoreKeyBackupAutomaticallyWithPrivateKey:onComplete];
-
-        } failure:^(NSError * _Nonnull error) {
-            NSLog(@"[MXKeyBackup] scheduleRequestForPrivateKeys. Error for requestPrivateKeys: %@", error);
-            onComplete();
-        }];
-    });
+    [self requestPrivateKeysToDeviceIds:nil success:^{
+    } onPrivateKeysReceived:^{
+        
+        [self restoreKeyBackupAutomaticallyWithPrivateKey:onComplete];
+        
+    } failure:^(NSError * _Nonnull error) {
+        NSLog(@"[MXKeyBackup] requestPrivateKeys. Error for requestPrivateKeys: %@", error);
+        onComplete();
+    }];
 }
 
 - (void)restoreKeyBackupAutomaticallyWithPrivateKey:(void (^)(void))onComplete
