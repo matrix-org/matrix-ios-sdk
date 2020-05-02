@@ -18,9 +18,11 @@ import Foundation
 
 
 public enum MXRoomHistoryVisibility: Equatable, Hashable {
+    public typealias Identifier = String
+
     case worldReadable, shared, invited, joined
     
-    public var identifier: String {
+    public var identifier: Identifier {
         switch self {
         case .worldReadable: return kMXRoomHistoryVisibilityWorldReadable
         case .shared: return kMXRoomHistoryVisibilityShared
@@ -28,10 +30,21 @@ public enum MXRoomHistoryVisibility: Equatable, Hashable {
         case .joined: return kMXRoomHistoryVisibilityJoined
         }
     }
-    
-    public init?(identifier: String?) {
-        let historyVisibilities: [MXRoomHistoryVisibility] = [.worldReadable, .shared, .invited, .joined]
-        guard let value = historyVisibilities.first(where: {$0.identifier == identifier}) else { return nil }
+
+    private static let lookupTable: [Identifier: Self] = [
+        kMXRoomHistoryVisibilityWorldReadable: .worldReadable,
+        kMXRoomHistoryVisibilityShared: .shared,
+        kMXRoomHistoryVisibilityInvited: .invited,
+        kMXRoomHistoryVisibilityJoined: .joined,
+    ]
+
+    public init?(identifier: Identifier?) {
+        guard let identifier = identifier else {
+            return nil
+        }
+        guard let value = Self.lookupTable[identifier] else {
+            return nil
+        }
         self = value
     }
 }
@@ -44,7 +57,8 @@ public enum MXRoomHistoryVisibility: Equatable, Hashable {
  The default homeserver value is invite.
  */
 public enum MXRoomJoinRule: Equatable, Hashable {
-    
+    public typealias Identifier = String
+
     /// Anyone can join the room without any prior action
     case `public`
     
@@ -54,7 +68,7 @@ public enum MXRoomJoinRule: Equatable, Hashable {
     /// Reserved keyword which is not implemented by homeservers.
     case `private`, knock
     
-    public var identifier: String {
+    public var identifier: Identifier {
         switch self {
         case .public: return kMXRoomJoinRulePublic
         case .invite: return kMXRoomJoinRuleInvite
@@ -62,10 +76,21 @@ public enum MXRoomJoinRule: Equatable, Hashable {
         case .knock: return kMXRoomJoinRuleKnock
         }
     }
-    
-    public init?(identifier: String?) {
-        let joinRules: [MXRoomJoinRule] = [.public, .invite, .private, .knock]
-        guard let value = joinRules.first(where: { $0.identifier == identifier}) else { return nil }
+
+    private static let lookupTable: [Identifier: Self] = [
+        kMXRoomJoinRulePublic: .public,
+        kMXRoomJoinRuleInvite: .invite,
+        kMXRoomJoinRulePrivate: .private,
+        kMXRoomJoinRuleKnock: .knock,
+    ]
+
+    public init?(identifier: Identifier?) {
+        guard let identifier = identifier else {
+            return nil
+        }
+        guard let value = Self.lookupTable[identifier] else {
+            return nil
+        }
         self = value
     }
 }
@@ -74,7 +99,8 @@ public enum MXRoomJoinRule: Equatable, Hashable {
 
 /// Room guest access. The default homeserver value is forbidden.
 public enum MXRoomGuestAccess: Equatable, Hashable {
-    
+    public typealias Identifier = String
+
     /// Guests can join the room
     case canJoin
     
@@ -88,10 +114,19 @@ public enum MXRoomGuestAccess: Equatable, Hashable {
         case .forbidden: return kMXRoomGuestAccessForbidden
         }
     }
-    
-    public init?(identifier: String?) {
-        let accessRules: [MXRoomGuestAccess] = [.canJoin, .forbidden]
-        guard let value = accessRules.first(where: { $0.identifier == identifier}) else { return nil }
+
+    private static let lookupTable: [Identifier: Self] = [
+        kMXRoomGuestAccessCanJoin: .canJoin,
+        kMXRoomGuestAccessForbidden: .forbidden,
+    ]
+
+    public init?(identifier: Identifier?) {
+        guard let identifier = identifier else {
+            return nil
+        }
+        guard let value = Self.lookupTable[identifier] else {
+            return nil
+        }
         self = value
     }
 }
@@ -103,7 +138,8 @@ public enum MXRoomGuestAccess: Equatable, Hashable {
  The default homeserver value is private.
  */
 public enum MXRoomDirectoryVisibility: Equatable, Hashable {
-    
+    public typealias Identifier = String
+
     /// The room is not listed in the homeserver directory
     case `private`
     
@@ -117,9 +153,18 @@ public enum MXRoomDirectoryVisibility: Equatable, Hashable {
         }
     }
     
-    public init?(identifier: String?) {
-        let visibility: [MXRoomDirectoryVisibility] = [.public, .private]
-        guard let value = visibility.first(where: { $0.identifier == identifier}) else { return nil }
+    private static let lookupTable: [Identifier: Self] = [
+        kMXRoomDirectoryVisibilityPrivate: .private,
+        kMXRoomDirectoryVisibilityPublic: .public,
+    ]
+
+    public init?(identifier: Identifier?) {
+        guard let identifier = identifier else {
+            return nil
+        }
+        guard let value = Self.lookupTable[identifier] else {
+            return nil
+        }
         self = value
     }
 }
@@ -130,7 +175,8 @@ public enum MXRoomDirectoryVisibility: Equatable, Hashable {
 /// Room presets.
 /// Define a set of state events applied during a new room creation.
 public enum MXRoomPreset: Equatable, Hashable {
-    
+    public typealias Identifier = String
+
     /// join_rules is set to invite. history_visibility is set to shared.
     case privateChat
     
@@ -141,17 +187,27 @@ public enum MXRoomPreset: Equatable, Hashable {
     case publicChat
     
     
-    public var identifier: String {
+    public var identifier: Identifier {
         switch self {
         case .privateChat: return kMXRoomPresetPrivateChat
         case .trustedPrivateChat: return kMXRoomPresetTrustedPrivateChat
         case .publicChat: return kMXRoomPresetPublicChat
         }
     }
-    
-    public init?(identifier: String?) {
-        let presets: [MXRoomPreset] = [.privateChat, .trustedPrivateChat, .publicChat]
-        guard let value = presets.first(where: {$0.identifier == identifier }) else { return nil }
+
+    private static let lookupTable: [Identifier: Self] = [
+        kMXRoomPresetPrivateChat: .privateChat,
+        kMXRoomPresetTrustedPrivateChat: .trustedPrivateChat,
+        kMXRoomPresetPublicChat: .publicChat,
+    ]
+
+    public init?(identifier: Identifier?) {
+        guard let identifier = identifier else {
+            return nil
+        }
+        guard let value = Self.lookupTable[identifier] else {
+            return nil
+        }
         self = value
     }
 }
@@ -162,7 +218,8 @@ public enum MXRoomPreset: Equatable, Hashable {
  The direction of an event in the timeline.
  */
 public enum MXTimelineDirection: Equatable, Hashable {
-    
+    public typealias Identifier = __MXTimelineDirection
+
     /// Forwards when the event is added to the end of the timeline.
     /// These events come from the /sync stream or from forwards pagination.
     case forwards
@@ -177,9 +234,25 @@ public enum MXTimelineDirection: Equatable, Hashable {
         case .backwards: return __MXTimelineDirectionBackwards
         }
     }
+
+    private static let lookupTable: [Identifier: Self] = [
+        __MXTimelineDirectionForwards: .forwards,
+        __MXTimelineDirectionBackwards: .backwards,
+    ]
+
+    public init?(identifier: Identifier?) {
+        guard let identifier = identifier else {
+            return nil
+        }
+        guard let value = Self.lookupTable[identifier] else {
+            return nil
+        }
+        self = value
+    }
     
     public init(identifer _identifier: __MXTimelineDirection) {
         self = (_identifier == __MXTimelineDirectionForwards ? .forwards : .backwards)
     }
 }
 
+extension __MXTimelineDirection: Hashable {}

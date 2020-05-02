@@ -28,6 +28,8 @@ import Foundation
  `MXEventTypeString` must be checked.
  */
 public enum MXEventType: Equatable, Hashable {
+    public typealias Identifier = String
+
     case roomName
     case roomTopic
     case roomAvatar
@@ -65,9 +67,9 @@ public enum MXEventType: Equatable, Hashable {
     case keyVerificationCancel
     case keyVerificationDone
 
-    case custom(String)
-    
-    public var identifier: String {
+    case custom(Identifier)
+
+    public var identifier: Identifier {
         switch self {
         case .roomName: return kMXEventTypeStringRoomName
         case .roomTopic: return kMXEventTypeStringRoomTopic
@@ -113,9 +115,50 @@ public enum MXEventType: Equatable, Hashable {
         }
     }
 
-    public init(identifier: String) {
-        let events: [MXEventType] = [.roomName, .roomTopic, .roomAvatar, .roomMember, .roomCreate, .roomJoinRules, .roomPowerLevels, .roomAliases, .roomCanonicalAlias, .roomEncrypted, .roomEncryption, .roomGuestAccess, .roomHistoryVisibility, .roomKey, .roomForwardedKey, .roomKeyRequest, .roomMessage, .roomMessageFeedback, .roomRedaction, .roomThirdPartyInvite, .roomTag, .presence, .typing, .callInvite, .callCandidates, .callAnswer, .callHangup, .receipt, .roomTombStone]
-        self = events.first(where: { $0.identifier == identifier }) ?? .custom(identifier)
+    private static let lookupTable: [Identifier: Self] = [
+        kMXEventTypeStringRoomName: .roomName,
+        kMXEventTypeStringRoomTopic: .roomTopic,
+        kMXEventTypeStringRoomAvatar: .roomAvatar,
+        kMXEventTypeStringRoomMember: .roomMember,
+        kMXEventTypeStringRoomCreate: .roomCreate,
+        kMXEventTypeStringRoomJoinRules: .roomJoinRules,
+        kMXEventTypeStringRoomPowerLevels: .roomPowerLevels,
+        kMXEventTypeStringRoomAliases: .roomAliases,
+        kMXEventTypeStringRoomCanonicalAlias: .roomCanonicalAlias,
+        kMXEventTypeStringRoomEncrypted: .roomEncrypted,
+        kMXEventTypeStringRoomEncryption: .roomEncryption,
+        kMXEventTypeStringRoomGuestAccess: .roomGuestAccess,
+        kMXEventTypeStringRoomHistoryVisibility: .roomHistoryVisibility,
+        kMXEventTypeStringRoomKey: .roomKey,
+        kMXEventTypeStringRoomForwardedKey: .roomForwardedKey,
+        kMXEventTypeStringRoomKeyRequest: .roomKeyRequest,
+        kMXEventTypeStringRoomMessage: .roomMessage,
+        kMXEventTypeStringRoomMessageFeedback: .roomMessageFeedback,
+        kMXEventTypeStringRoomRedaction: .roomRedaction,
+        kMXEventTypeStringRoomThirdPartyInvite: .roomThirdPartyInvite,
+        kMXEventTypeStringRoomTag: .roomTag,
+        kMXEventTypeStringPresence: .presence,
+        kMXEventTypeStringCallInvite: .callInvite,
+        kMXEventTypeStringCallCandidates: .callCandidates,
+        kMXEventTypeStringCallAnswer: .callAnswer,
+        kMXEventTypeStringCallHangup: .callHangup,
+        kMXEventTypeStringReaction: .reaction,
+        kMXEventTypeStringReceipt: .receipt,
+        kMXEventTypeStringRoomTombStone: .roomTombStone,
+        kMXEventTypeStringKeyVerificationStart: .keyVerificationStart,
+        kMXEventTypeStringKeyVerificationAccept: .keyVerificationAccept,
+        kMXEventTypeStringKeyVerificationKey: .keyVerificationKey,
+        kMXEventTypeStringKeyVerificationMac: .keyVerificationMac,
+        kMXEventTypeStringKeyVerificationCancel: .keyVerificationCancel,
+        kMXEventTypeStringKeyVerificationDone: .keyVerificationDone,
+    ]
+
+    public init(identifier: Identifier) {
+        if let value = Self.lookupTable[identifier] {
+            self = value
+        } else {
+            self = .custom(identifier)
+        }
     }
 }
 
@@ -123,10 +166,12 @@ public enum MXEventType: Equatable, Hashable {
 
 /// Types of messages
 public enum MXMessageType: Equatable, Hashable {
+    public typealias Identifier = String
+
     case text, emote, notice, image, audio, video, location, file
-    case custom(String)
-    
-    public var identifier: String {
+    case custom(Identifier)
+
+    public var identifier: Identifier {
         switch self {
         case .text: return kMXMessageTypeText
         case .emote: return kMXMessageTypeEmote
@@ -140,18 +185,35 @@ public enum MXMessageType: Equatable, Hashable {
         }
     }
 
-    public init(identifier: String) {
-        let messages: [MXMessageType] = [.text, .emote, .notice, .image, .audio, .video, .location, .file]
-        self = messages.first(where: { $0.identifier == identifier }) ?? .custom(identifier)
+    private static let lookupTable: [Identifier: Self] = [
+        kMXMessageTypeText: .text,
+        kMXMessageTypeEmote: .emote,
+        kMXMessageTypeNotice: .notice,
+        kMXMessageTypeImage: .image,
+        kMXMessageTypeAudio: .audio,
+        kMXMessageTypeVideo: .video,
+        kMXMessageTypeLocation: .location,
+        kMXMessageTypeFile: .file,
+    ]
+
+    public init(identifier: Identifier) {
+        if let value = Self.lookupTable[identifier] {
+            self = value
+        } else {
+            self = .custom(identifier)
+        }
     }
 }
 
 
+
 /// Membership definitions
 public enum MXMembership: Equatable, Hashable {
+    public typealias Identifier = __MXMembership
+
     case unknown, invite, join, leave, ban
-    
-    public var identifier: __MXMembership {
+
+    public var identifier: Identifier {
         switch self {
         case .unknown: return __MXMembershipUnknown
         case .invite: return __MXMembershipInvite
@@ -160,9 +222,22 @@ public enum MXMembership: Equatable, Hashable {
         case .ban: return __MXMembershipBan
         }
     }
+
+    private static let lookupTable: [Identifier: Self] = [
+        __MXMembershipUnknown: .unknown,
+        __MXMembershipInvite: .invite,
+        __MXMembershipJoin: .join,
+        __MXMembershipLeave: .leave,
+        __MXMembershipBan: .ban,
+    ]
     
-    public init(identifier: __MXMembership) {
-        let possibilities: [MXMembership] = [.unknown, .invite, .join, .leave, .ban]
-        self = possibilities.first(where: { $0.identifier == identifier }) ?? .unknown
+    public init(identifier: Identifier) {
+        if let value = Self.lookupTable[identifier] {
+            self = value
+        } else {
+            self = .unknown
+        }
     }
 }
+
+extension __MXMembership: Hashable {}

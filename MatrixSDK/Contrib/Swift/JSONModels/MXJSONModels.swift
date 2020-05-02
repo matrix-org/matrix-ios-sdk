@@ -19,6 +19,8 @@ import Foundation
 
 /// Represents a login flow
 public enum MXLoginFlowType: Equatable, Hashable {
+    public typealias Identifier = String
+
     case password
     case recaptcha
     case OAuth2
@@ -26,9 +28,9 @@ public enum MXLoginFlowType: Equatable, Hashable {
     case token
     case dummy
     case emailCode
-    case other(String)
+    case other(Identifier)
     
-    public var identifier: String {
+    public var identifier: Identifier {
         switch self {
         case .password: return kMXLoginFlowTypePassword
         case .recaptcha: return kMXLoginFlowTypeRecaptcha
@@ -41,9 +43,22 @@ public enum MXLoginFlowType: Equatable, Hashable {
         }
     }
 
-    public init(identifier: String) {
-        let flowTypess: [MXLoginFlowType] = [.password, .recaptcha, .OAuth2, .emailIdentity, .token, .dummy, .emailCode]
-        self = flowTypess.first(where: { $0.identifier == identifier }) ?? .other(identifier)
+    private static let lookupTable: [Identifier: Self] = [
+        kMXLoginFlowTypePassword: .password,
+        kMXLoginFlowTypeRecaptcha: .recaptcha,
+        kMXLoginFlowTypeOAuth2: .OAuth2,
+        kMXLoginFlowTypeEmailIdentity: .emailIdentity,
+        kMXLoginFlowTypeToken: .token,
+        kMXLoginFlowTypeDummy: .dummy,
+        kMXLoginFlowTypeEmailCode: .emailCode,
+    ]
+    
+    public init(identifier: Identifier) {
+        if let value = Self.lookupTable[identifier] {
+            self = value
+        } else {
+            self = .other(identifier)
+        }
     }
 }
 
@@ -64,6 +79,7 @@ public enum MXPusherKind: Equatable, Hashable {
 }
 
 
+
 /**
  Push rules kind.
  
@@ -72,9 +88,11 @@ public enum MXPusherKind: Equatable, Hashable {
  Some category may define implicit conditions.
  */
 public enum MXPushRuleKind: Equatable, Hashable {
+    public typealias Identifier = __MXPushRuleKind
+
     case override, content, room, sender, underride
     
-    public var identifier: __MXPushRuleKind {
+    public var identifier: Identifier {
         switch self  {
         case .override: return __MXPushRuleKindOverride
         case .content: return __MXPushRuleKindContent
@@ -84,12 +102,26 @@ public enum MXPushRuleKind: Equatable, Hashable {
         }
     }
 
-    public init?(identifier: __MXPushRuleKind?) {
-        let pushRules: [MXPushRuleKind] = [.override, .content, .room, .sender, .underride]
-        guard let pushRule = pushRules.first(where: { $0.identifier == identifier }) else { return nil }
-        self = pushRule
+    private static let lookupTable: [Identifier: Self] = [
+        __MXPushRuleKindOverride: .override,
+        __MXPushRuleKindContent: .content,
+        __MXPushRuleKindRoom: .room,
+        __MXPushRuleKindSender: .sender,
+        __MXPushRuleKindUnderride: .underride,
+    ]
+
+    public init?(identifier: Identifier?) {
+        guard let identifier = identifier else {
+            return nil
+        }
+        guard let value = Self.lookupTable[identifier] else {
+            return nil
+        }
+        self = value
     }
 }
+
+extension __MXPushRuleKind: Hashable {}
 
 
 /**
@@ -98,6 +130,8 @@ public enum MXPushRuleKind: Equatable, Hashable {
  Push rules can be applied globally, or to a spefific device given a `profileTag`
  */
 public enum MXPushRuleScope: Equatable, Hashable {
+    public typealias Identifier = String
+
     case global, device(profileTag: String)
     
     public var identifier: String {
@@ -107,8 +141,15 @@ public enum MXPushRuleScope: Equatable, Hashable {
         }
     }
 
-    public init(identifier: String) {
-        let scopes: [MXPushRuleScope] = [.global]
-        self = scopes.first(where: { $0.identifier == identifier }) ?? .device(profileTag: identifier)
+    private static let lookupTable: [Identifier: Self] = [
+        kMXPushRuleScopeStringGlobal: .global,
+    ]
+
+    public init(identifier: Identifier) {
+        if let value = Self.lookupTable[identifier] {
+            self = value
+        } else {
+            self = .device(profileTag: identifier)
+        }
     }
 }

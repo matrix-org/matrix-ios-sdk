@@ -22,22 +22,28 @@ public struct MX3PID {
     
     /// Types of third-party identifiers.
     public enum Medium: Equatable, Hashable {
+        public typealias Identifier = String
+
         case email
         case msisdn
-        case other(String)
+        case other(Identifier)
         
-        public var identifier: String {
+        public var identifier: Identifier {
             switch self {
             case .email: return kMX3PIDMediumEmail
             case .msisdn: return kMX3PIDMediumMSISDN
             case .other(let value): return value
             }
         }
-        
-        public init(identifier: String) {
-            let possibleOptions: [Medium] = [.email, .msisdn]
-            if let selectedOption = possibleOptions.first(where: { $0.identifier == identifier }) {
-                self = selectedOption
+
+        private static let lookupTable: [Identifier: Self] = [
+            kMX3PIDMediumEmail: .email,
+            kMX3PIDMediumMSISDN: .msisdn,
+        ]
+
+        public init(identifier: Identifier) {
+            if let value = Self.lookupTable[identifier] {
+                self = value
             } else {
                 self = .other(identifier)
             }
@@ -56,7 +62,7 @@ public struct MX3PID {
 }
 
 extension MX3PID : Hashable {
-    
+
     /// Returns a Boolean value indicating whether two values are equal.
     ///
     /// Equality is the inverse of inequality. For any values `a` and `b`,
@@ -68,7 +74,7 @@ extension MX3PID : Hashable {
     public static func ==(lhs: MX3PID, rhs: MX3PID) -> Bool {
         return lhs.medium.identifier == rhs.medium.identifier && lhs.address == rhs.address
     }
-    
+
     public func hash(into hasher: inout Hasher) {
         hasher.combine(medium.identifier)
         hasher.combine(address)
