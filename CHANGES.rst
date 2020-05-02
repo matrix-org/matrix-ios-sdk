@@ -1,3 +1,13 @@
+Changes in Matrix iOS SDK in CURRENT RELEASE
+================================================
+
+Bug fix:
+* MXEventType: Fix `init(identifier:)`, which was erroneously turning `m.reaction` & `m.key.verification.…` events into `.custom(…)`, rather than the proper enum cases.
+* MXEventType: Improve performance of `init(identifier:)` by using a lookup-table (`O(1)`), instead of linear probing (`O(n)`) (tests showed a 32x speedup)
+* MXMessageType: Improve performance of `init(identifier:)` by using a lookup-table (`O(1)`), instead of linear probing (`O(n)`)
+* MXMembership: Improve performance of `init(identifier:)` by using a lookup-table (`O(1)`), instead of linear probing (`O(n)`)
+
+
 Changes in Matrix iOS SDK in 0.16.2 (2020-04-30)
 ================================================
 
