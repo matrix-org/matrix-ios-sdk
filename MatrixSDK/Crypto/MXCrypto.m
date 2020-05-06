@@ -1244,7 +1244,7 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
     }
     
     // Check cross-signing private keys
-    if (self.crossSigning.state == MXCrossSigningStateCrossSigningExists)
+    if (!self.crossSigning.canCrossSign)
     {
         NSLog(@"[MXCrypto] requestAllPrivateKeys: Request cross-signing private keys");
         [self.crossSigning requestPrivateKeys];
