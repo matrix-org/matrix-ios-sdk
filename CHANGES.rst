@@ -1,3 +1,31 @@
+Changes in Matrix iOS SDK in 0.16.4 (2020-05-07)
+================================================
+
+Improvements:
+ * Minimal version for iOS is now 9.0.
+ * Pod: Update AFNetworking version (#793).
+ * Pod: Update Realm and OHTTPStubs.
+
+Changes in Matrix iOS SDK in 0.16.3 (2020-05-07)
+================================================
+
+Improvements:
+ * MXCrypto: Allow to verify a device again to request private keys again from it.
+ * Secrets: Validate received private keys for cross-signing and key backup before using them (vector-im/riot-ios/issues/3201).
+
+Changes in Matrix iOS SDK in 0.16.2 (2020-04-30)
+================================================
+
+Improvements:
+ * Cross-signing: Make key gossip requests when the other device sent m.key.verification.done (vector-im/riot-ios/issues/3163).
+
+Bug fix:
+ * MXEventTimeline: Fix crash in paginate:.
+ * MXSession: Fix crash in runNextDirectRoomOperation.
+
+Doc fix:
+ * Update the CONTRIBUTING.rst to point to correct file.
+
 Changes in Matrix iOS SDK in 0.16.1 (2020-04-24)
 ================================================
 

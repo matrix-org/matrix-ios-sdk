@@ -369,6 +369,14 @@ extern NSString *const MXDeviceListDidUpdateUsersDevicesNotification;
 - (void)deleteStore:(void (^)(void))onComplete;
 
 
+#pragma mark - Gossipping
+
+/**
+ Make requests to get key private keys from other user's devices.
+ */
+- (void)requestAllPrivateKeys;
+
+
 #pragma mark - import/export
 
 /**

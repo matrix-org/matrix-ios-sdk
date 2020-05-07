@@ -184,10 +184,11 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
 
 - (void)resetKeyBackupData
 {
+    NSLog(@"[MXKeyBackup] resetKeyBackupData");
+    
     [self resetBackupAllGroupSessionsObjects];
 
     self->crypto.store.backupVersion = nil;
-    [self->crypto.store deleteSecretWithSecretId:MXSecretId.keyBackup];
     _backupKey = nil;
 
     // Reset backup markers
@@ -352,24 +353,19 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
     }];
 }
 
-- (void)scheduleRequestForPrivateKey:(void (^)(void))onComplete
+- (void)requestPrivateKeys:(void (^)(void))onComplete
 {
-    NSLog(@"[MXKeyBackup] scheduleRequestForPrivateKeys");
+    NSLog(@"[MXKeyBackup] requestPrivateKeys");
           
-    // For the moment, we have no better solution than waiting a bit before making such request.
-    // This 1.5s delay lets time to the other peer to set our device as trusted
-    // so that it will accept to gossip the keys to our device.
-    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1.5 * NSEC_PER_SEC)), crypto.cryptoQueue, ^{
-        [self requestPrivateKeysToDeviceIds:nil success:^{
-        } onPrivateKeysReceived:^{
-            
-            [self restoreKeyBackupAutomaticallyWithPrivateKey:onComplete];
-
-        } failure:^(NSError * _Nonnull error) {
-            NSLog(@"[MXKeyBackup] scheduleRequestForPrivateKeys. Error for requestPrivateKeys: %@", error);
-            onComplete();
-        }];
-    });
+    [self requestPrivateKeysToDeviceIds:nil success:^{
+    } onPrivateKeysReceived:^{
+        
+        [self restoreKeyBackupAutomaticallyWithPrivateKey:onComplete];
+        
+    } failure:^(NSError * _Nonnull error) {
+        NSLog(@"[MXKeyBackup] requestPrivateKeys. Error for requestPrivateKeys: %@", error);
+        onComplete();
+    }];
 }
 
 - (void)restoreKeyBackupAutomaticallyWithPrivateKey:(void (^)(void))onComplete
@@ -1261,6 +1257,8 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
 }
 
 
+#pragma mark - Private keys sharing
+
 - (void)requestPrivateKeysToDeviceIds:(nullable NSArray<NSString*>*)deviceIds
                               success:(void (^)(void))success
                 onPrivateKeysReceived:(void (^)(void))onPrivateKeysReceived
@@ -1270,14 +1268,36 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
 
     MXWeakify(self);
     [crypto.secretShareManager requestSecret:MXSecretId.keyBackup toDeviceIds:deviceIds success:^(NSString * _Nonnull requestId) {
-    } onSecretReceived:^(NSString * _Nonnull secret) {
-        MXStrongifyAndReturnIfNil(self);
+    } onSecretReceived:^BOOL(NSString * _Nonnull secret) {
+        MXStrongifyAndReturnValueIfNil(self, NO);
         
-        NSLog(@"[MXKeyBackup] requestPrivateKeysToDeviceIds: Got key");
-        [self->crypto.store storeSecret:secret withSecretId:MXSecretId.keyBackup];
-        onPrivateKeysReceived();
+        BOOL isSecretValid = !self.keyBackupVersion     // Accept the secret if the backup is not known yet
+        || [self isSecretValid:secret forKeyBackupVersion:self.keyBackupVersion];
+        
+        NSLog(@"[MXKeyBackup] requestPrivateKeysToDeviceIds: Got key. isSecretValid: %@", @(isSecretValid));
+        if (isSecretValid)
+        {
+            [self->crypto.store storeSecret:secret withSecretId:MXSecretId.keyBackup];
+            onPrivateKeysReceived();
+        }
+        return isSecretValid;
     } failure:failure];
 }
+
+- (BOOL)isSecretValid:(NSString*)secret forKeyBackupVersion:(MXKeyBackupVersion*)keyBackupVersion
+{
+    BOOL isSecretValid = NO;
+    
+    NSData *privateKey = [MXBase64Tools dataFromUnpaddedBase64:secret];
+    NSString *pKDecryptionPublicKey = [self pkDecrytionPublicKeyFromPrivateKey:privateKey];
+    if ([self checkPkDecryptionPublicKey:pKDecryptionPublicKey forKeyBackupVersion:keyBackupVersion])
+    {
+        isSecretValid = YES;
+    }
+    
+    return isSecretValid;
+}
+
 
 #pragma mark - Backup state
 
@@ -1437,10 +1457,14 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
 
 - (nullable NSString*)pkDecrytionPublicKeyFromCryptoStore
 {
-    NSString *pkPublicKey;
-
     NSData *privateKey = self.privateKeyFromCryptoStore;
+    return [self pkDecrytionPublicKeyFromPrivateKey:privateKey];
+}
 
+- (nullable NSString*)pkDecrytionPublicKeyFromPrivateKey:(NSData*)privateKey
+{
+    NSString *pkPublicKey;
+    
     // Built the PK decryption with it
     OLMPkDecryption *decryption;
     if (privateKey)
@@ -1451,10 +1475,10 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
         
         if (error)
         {
-            NSLog(@"[MXCrossSigning] pkPublicKeyFromCryptoStore failed. Error: %@", error);
+            NSLog(@"[MXCrossSigning] pkDecrytionPublicKeyFromPrivateKey failed. Error: %@", error);
         }
     }
-
+    
     return pkPublicKey;
 }
 

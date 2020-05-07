@@ -1190,6 +1190,24 @@ static NSArray<MXEventTypeString> *kMXKeyVerificationManagerVerificationEventTyp
         {
             NSLog(@"[MXKeyVerification] handleDoneEvent. Not handled for SAS transaction: %@", event);
         }
+        
+        MXKeyVerificationTransaction *transaction = [self transactionWithTransactionId:doneEvent.transactionId];
+        if (transaction && transaction.otherDeviceId)
+        {
+            BOOL eventFromMyDevice = [transaction.otherDeviceId isEqualToString:self.crypto.mxSession.myDeviceId];
+            if (!eventFromMyDevice)
+            {
+                NSLog(@"[MXKeyVerification] handleDoneEvent: requestAllPrivateKeys");
+                [self.crypto requestAllPrivateKeys];
+            }
+        }
+        else
+        {
+            // The done event from the other can happen long time after.
+            // That means the transaction can be no more in memory. In this case, request private keys with no condition
+            NSLog(@"[MXKeyVerification] handleDoneEvent: requestAllPrivateKeys anyway");
+            [self.crypto requestAllPrivateKeys];
+        }
     }
     else
     {

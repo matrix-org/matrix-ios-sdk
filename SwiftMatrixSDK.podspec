@@ -1,7 +1,7 @@
 Pod::Spec.new do |s|
 
   s.name         = "SwiftMatrixSDK"
-  s.version      = "0.16.1"
+  s.version      = "0.16.4"
   s.summary      = "The iOS SDK to build apps compatible with Matrix (https://www.matrix.org)"
 
   s.description  = <<-DESC
@@ -19,7 +19,7 @@ Pod::Spec.new do |s|
 
   s.swift_version = '5.0'
 
-  s.ios.deployment_target = "8.0"
+  s.ios.deployment_target = "9.0"
   s.osx.deployment_target = "10.10"
 
   s.source       = { :git => "https://github.com/matrix-org/matrix-ios-sdk.git", :tag => "v#{s.version}" }
@@ -27,12 +27,12 @@ Pod::Spec.new do |s|
 
   s.requires_arc  = true
 
-  s.dependency 'AFNetworking', '~> 3.2.0'
+  s.dependency 'AFNetworking', '~> 4.0.0'
   s.dependency 'GZIP', '~> 1.2.2'
   
   # Requirements for e2e encryption
   s.dependency 'OLMKit', '~> 3.1.0'
-  s.dependency 'Realm', '~> 3.17.3'
+  s.dependency 'Realm', '~> 4.4.0'
   s.dependency 'libbase58', '~> 0.1.4'
 
 end

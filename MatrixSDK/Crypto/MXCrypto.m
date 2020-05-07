@@ -835,53 +835,34 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
         return;
     }
     
-    if (device.trustLevel.localVerificationStatus != verificationStatus)
+    MXDeviceTrustLevel *trustLevel = [MXDeviceTrustLevel trustLevelWithLocalVerificationStatus:verificationStatus
+                                                                          crossSigningVerified:device.trustLevel.isCrossSigningVerified];
+    [device updateTrustLevel:trustLevel];
+    [self.store storeDeviceForUser:userId device:device];
+    
+    if ([userId isEqualToString:self.mxSession.myUserId])
     {
-        MXDeviceTrustLevel *trustLevel = [MXDeviceTrustLevel trustLevelWithLocalVerificationStatus:verificationStatus
-                                                                              crossSigningVerified:device.trustLevel.isCrossSigningVerified];
-        [device updateTrustLevel:trustLevel];
-        [self.store storeDeviceForUser:userId device:device];
+        // If one of the user's own devices is being marked as verified / unverified,
+        // check the key backup status, since whether or not we use this depends on
+        // whether it has a signature from a verified device
+        [self.backup checkAndStartKeyBackup];
         
-        if ([userId isEqualToString:self.mxSession.myUserId])
+        // Manage self-verification
+        if (verificationStatus == MXDeviceVerified)
         {
-            // If one of the user's own devices is being marked as verified / unverified,
-            // check the key backup status, since whether or not we use this depends on
-            // whether it has a signature from a verified device
-            [self.backup checkAndStartKeyBackup];
+            // This is a good time to request all private keys
+            NSLog(@"[MXCrypto] setDeviceVerificationForDevice: Request all private keys");
+            [self scheduleRequestsForAllPrivateKeys];
             
-            // Manage self-verification
-            if (verificationStatus == MXDeviceVerified)
+            // Check cross-signing
+            if (self.crossSigning.canCrossSign)
             {
-                // Request backup private keys
-                if (!self.backup.hasPrivateKeyInCryptoStore)
-                {
-                    MXWeakify(self);
-                    [self.backup scheduleRequestForPrivateKey:^{
-                        MXStrongifyAndReturnIfNil(self);
-                        
-                        if (self.enableOutgoingKeyRequestsOnceSelfVerificationDone)
-                        {
-                            [self->outgoingRoomKeyRequestManager setEnabled:YES];
-                        }
-                    }];
-                }
+                // Cross-sign our own device
+                NSLog(@"[MXCrypto] setDeviceVerificationForDevice: Mark device %@ as self verified", deviceId);
+                [self.crossSigning crossSignDeviceWithDeviceId:deviceId success:success failure:failure];
                 
-                // Check cross-signing
-                if (self.crossSigning.canCrossSign)
-                {
-                    // Cross-sign our own device
-                    NSLog(@"[MXCrypto] setDeviceVerificationForDevice: Mark device %@ as self verified", deviceId);
-                    [self.crossSigning crossSignDeviceWithDeviceId:deviceId success:success failure:failure];
-                    
-                    // Wait the end of cross-sign before returning
-                    return;
-                }
-                else if (self.crossSigning.state == MXCrossSigningStateCrossSigningExists)
-                {
-                    // This is a good time to request cross-signing private keys
-                    NSLog(@"[MXCrypto] setDeviceVerificationForDevice: Request cross-signing private keys for device %@", deviceId);
-                    [self.crossSigning scheduleRequestForPrivateKeys];
-                }
+                // Wait the end of cross-sign before returning
+                return;
             }
         }
     }
@@ -1234,6 +1215,47 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
 #else
     return nil;
 #endif
+}
+
+
+#pragma mark - Gossipping
+
+- (void)requestAllPrivateKeys
+{
+    NSLog(@"[MXCrypto] requestAllPrivateKeys");
+    
+    // Request backup private keys
+    if (!self.backup.hasPrivateKeyInCryptoStore || !self.backup.enabled)
+    {
+        NSLog(@"[MXCrypto] requestAllPrivateKeys: Request key backup private keys");
+        
+        MXWeakify(self);
+        [self.backup requestPrivateKeys:^{
+            MXStrongifyAndReturnIfNil(self);
+            
+            if (self.enableOutgoingKeyRequestsOnceSelfVerificationDone)
+            {
+                [self->outgoingRoomKeyRequestManager setEnabled:YES];
+            }
+        }];
+    }
+    
+    // Check cross-signing private keys
+    if (!self.crossSigning.canCrossSign)
+    {
+        NSLog(@"[MXCrypto] requestAllPrivateKeys: Request cross-signing private keys");
+        [self.crossSigning requestPrivateKeys];
+    }
+}
+
+- (void)scheduleRequestsForAllPrivateKeys
+{
+    // For the moment, we have no better solution than waiting a bit before making such request.
+    // This 1.5s delay lets time to the other peer to set our device as trusted
+    // so that it will accept to gossip the keys to our device.
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1.5 * NSEC_PER_SEC)), _cryptoQueue, ^{
+        [self requestAllPrivateKeys];
+    });
 }
 
 
