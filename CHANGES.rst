@@ -2,7 +2,9 @@ Changes in Matrix iOS SDK in 0.16.4 (2020-05-07)
 ================================================
 
 Improvements:
+ * Minimal version for iOS is now 9.0.
  * Pod: Update AFNetworking version (#793).
+ * Pod: Update Realm and OHTTPStubs.
 
 Changes in Matrix iOS SDK in 0.16.3 (2020-05-07)
 ================================================
