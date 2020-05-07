@@ -1,8 +1,15 @@
+Changes in Matrix iOS SDK in 0.16.3 (2020-05-07)
+================================================
+
+Improvements:
+ * MXCrypto: Allow to verify a device again to request private keys again from it.
+ * Secrets: Validate received private keys for cross-signing and key backup before using them (vector-im/riot-ios/issues/3201).
+
 Changes in Matrix iOS SDK in 0.16.2 (2020-04-30)
 ================================================
 
 Improvements:
-* Cross-signing: Make key gossip requests when the other device sent m.key.verification.done (vector-im/riot-ios/issues/3163).
+ * Cross-signing: Make key gossip requests when the other device sent m.key.verification.done (vector-im/riot-ios/issues/3163).
 
 Bug fix:
  * MXEventTimeline: Fix crash in paginate:.
