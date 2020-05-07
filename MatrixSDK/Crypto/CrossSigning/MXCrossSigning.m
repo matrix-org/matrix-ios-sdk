@@ -285,7 +285,19 @@ NSString *const MXCrossSigningErrorDomain = @"org.matrix.sdk.crosssigning";
         uskRequestId = requestId;
         dispatch_group_leave(successGroup);
     } onSecretReceived:^BOOL(NSString * _Nonnull secret) {
-        BOOL isSecretValid = YES;
+        
+        BOOL isSecretValid = NO;
+        if (self.myUserCrossSigningKeys.userSignedKeys.keys)
+        {
+            isSecretValid = (nil != [self pkSigningFromBase64PrivateKey:secret
+                                                  withExpectedPublicKey:self.myUserCrossSigningKeys.userSignedKeys.keys]);
+        }
+        else
+        {
+            // Accept the secret anyway (It should not happen)
+            isSecretValid = YES;
+        }
+        
         NSLog(@"[MXCrossSigning] requestPrivateKeysToDeviceIds: Got USK. isSecretValid: %@", @(isSecretValid));
         if (isSecretValid)
         {
@@ -306,7 +318,19 @@ NSString *const MXCrossSigningErrorDomain = @"org.matrix.sdk.crosssigning";
         sskRequestId = requestId;
         dispatch_group_leave(successGroup);
     } onSecretReceived:^BOOL(NSString * _Nonnull secret) {
-        BOOL isSecretValid = YES;
+        
+        BOOL isSecretValid = NO;
+        if (self.myUserCrossSigningKeys.selfSignedKeys.keys)
+        {
+            isSecretValid = (nil != [self pkSigningFromBase64PrivateKey:secret
+                                                  withExpectedPublicKey:self.myUserCrossSigningKeys.selfSignedKeys.keys]);
+        }
+        else
+        {
+            // Accept the secret anyway (It should not happen)
+            isSecretValid = YES;
+        }
+        
         NSLog(@"[MXCrossSigning] requestPrivateKeysToDeviceIds: Got SSK. isSecretValid: %@", @(isSecretValid));
         if (isSecretValid)
         {
