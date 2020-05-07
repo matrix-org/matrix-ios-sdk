@@ -105,7 +105,7 @@
             // - Alice requests the secret from the new device
             [newAliceSession.crypto.secretShareManager requestSecret:secretId toDeviceIds:nil success:^(NSString * _Nonnull requestId) {
                 XCTAssertNotNil(requestId);
-            } onSecretReceived:^(NSString * _Nonnull sharedSecret) {
+            } onSecretReceived:^BOOL(NSString * _Nonnull sharedSecret) {
                 
                 // -> She gets the secret
                 XCTAssertEqualObjects(sharedSecret, secret);
@@ -168,9 +168,10 @@
                     });
                 }];
                 
-            } onSecretReceived:^(NSString * _Nonnull sharedSecret) {
+            } onSecretReceived:^BOOL(NSString * _Nonnull secret) {
                 XCTFail(@"The operation should never complete");
                 [expectation fulfill];
+                return YES;
             } failure:^(NSError * _Nonnull error) {
                 XCTFail(@"The operation should not fail - NSError: %@", error);
                 [expectation fulfill];
