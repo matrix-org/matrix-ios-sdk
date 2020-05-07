@@ -1266,12 +1266,16 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
 
     MXWeakify(self);
     [crypto.secretShareManager requestSecret:MXSecretId.keyBackup toDeviceIds:deviceIds success:^(NSString * _Nonnull requestId) {
-    } onSecretReceived:^(NSString * _Nonnull secret) {
-        MXStrongifyAndReturnIfNil(self);
-        
-        NSLog(@"[MXKeyBackup] requestPrivateKeysToDeviceIds: Got key");
-        [self->crypto.store storeSecret:secret withSecretId:MXSecretId.keyBackup];
-        onPrivateKeysReceived();
+    } onSecretReceived:^BOOL(NSString * _Nonnull secret) {
+        MXStrongifyAndReturnValueIfNil(self, NO);
+        BOOL isSecretValid = YES;
+        NSLog(@"[MXKeyBackup] requestPrivateKeysToDeviceIds: Got key. isSecretValid: %@", @(isSecretValid));
+        if (isSecretValid)
+        {
+            [self->crypto.store storeSecret:secret withSecretId:MXSecretId.keyBackup];
+            onPrivateKeysReceived();
+        }
+        return isSecretValid;
     } failure:failure];
 }
 
