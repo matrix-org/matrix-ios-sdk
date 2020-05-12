@@ -82,7 +82,7 @@
     BOOL didChange = NO;
     while (index < messages.count)
     {
-        MXEvent *anEvent = [messages objectAtIndex:index];
+        MXEvent *anEvent = messages[index];
         if (anEvent.isState)
         {
             // Keep state event
