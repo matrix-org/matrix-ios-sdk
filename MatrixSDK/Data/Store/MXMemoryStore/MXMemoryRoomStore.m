@@ -86,7 +86,7 @@
         if (anEvent.isState)
         {
             // Keep state event
-            index ++;
+            index++;
         }
         else if (anEvent.originServerTs < limitTs)
         {
