@@ -45,7 +45,7 @@ const struct MXSecretStorageKeyAlgorithm MXSecretStorageKeyAlgorithm = {
     }
     
     MXSecretStorageKeyContent *model;
-    if (algorithm && iv && mac)
+    if (algorithm)
     {
         model = [MXSecretStorageKeyContent new];
         model.name = name;
