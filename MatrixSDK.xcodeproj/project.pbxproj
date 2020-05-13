@@ -153,24 +153,28 @@
 		324BE4691E3FADB1008D99D4 /* MXMegolmExportEncryption.m in Sources */ = {isa = PBXBuildFile; fileRef = 324BE4671E3FADB1008D99D4 /* MXMegolmExportEncryption.m */; };
 		324BE46C1E422766008D99D4 /* MXMegolmSessionData.h in Headers */ = {isa = PBXBuildFile; fileRef = 324BE46A1E422766008D99D4 /* MXMegolmSessionData.h */; };
 		324BE46D1E422766008D99D4 /* MXMegolmSessionData.m in Sources */ = {isa = PBXBuildFile; fileRef = 324BE46B1E422766008D99D4 /* MXMegolmSessionData.m */; };
-		324DD299246AD2B500377005 /* MXSecretStorageManager.h in Headers */ = {isa = PBXBuildFile; fileRef = 324DD297246AD2B500377005 /* MXSecretStorageManager.h */; };
-		324DD29A246AD2B500377005 /* MXSecretStorageManager.h in Headers */ = {isa = PBXBuildFile; fileRef = 324DD297246AD2B500377005 /* MXSecretStorageManager.h */; };
-		324DD29B246AD2B500377005 /* MXSecretStorageManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 324DD298246AD2B500377005 /* MXSecretStorageManager.m */; };
-		324DD29C246AD2B500377005 /* MXSecretStorageManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 324DD298246AD2B500377005 /* MXSecretStorageManager.m */; };
+		324DD299246AD2B500377005 /* MXSecretStorage.h in Headers */ = {isa = PBXBuildFile; fileRef = 324DD297246AD2B500377005 /* MXSecretStorage.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		324DD29A246AD2B500377005 /* MXSecretStorage.h in Headers */ = {isa = PBXBuildFile; fileRef = 324DD297246AD2B500377005 /* MXSecretStorage.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		324DD29B246AD2B500377005 /* MXSecretStorage.m in Sources */ = {isa = PBXBuildFile; fileRef = 324DD298246AD2B500377005 /* MXSecretStorage.m */; };
+		324DD29C246AD2B500377005 /* MXSecretStorage.m in Sources */ = {isa = PBXBuildFile; fileRef = 324DD298246AD2B500377005 /* MXSecretStorage.m */; };
 		324DD2A0246AE1EF00377005 /* MXEncryptedSecretContent.h in Headers */ = {isa = PBXBuildFile; fileRef = 324DD29E246AE1EF00377005 /* MXEncryptedSecretContent.h */; };
 		324DD2A1246AE1EF00377005 /* MXEncryptedSecretContent.h in Headers */ = {isa = PBXBuildFile; fileRef = 324DD29E246AE1EF00377005 /* MXEncryptedSecretContent.h */; };
 		324DD2A2246AE1EF00377005 /* MXEncryptedSecretContent.m in Sources */ = {isa = PBXBuildFile; fileRef = 324DD29F246AE1EF00377005 /* MXEncryptedSecretContent.m */; };
 		324DD2A3246AE1EF00377005 /* MXEncryptedSecretContent.m in Sources */ = {isa = PBXBuildFile; fileRef = 324DD29F246AE1EF00377005 /* MXEncryptedSecretContent.m */; };
-		324DD2A6246AE81300377005 /* MXSecretStorageKeyContent.h in Headers */ = {isa = PBXBuildFile; fileRef = 324DD2A4246AE81300377005 /* MXSecretStorageKeyContent.h */; };
-		324DD2A7246AE81300377005 /* MXSecretStorageKeyContent.h in Headers */ = {isa = PBXBuildFile; fileRef = 324DD2A4246AE81300377005 /* MXSecretStorageKeyContent.h */; };
+		324DD2A6246AE81300377005 /* MXSecretStorageKeyContent.h in Headers */ = {isa = PBXBuildFile; fileRef = 324DD2A4246AE81300377005 /* MXSecretStorageKeyContent.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		324DD2A7246AE81300377005 /* MXSecretStorageKeyContent.h in Headers */ = {isa = PBXBuildFile; fileRef = 324DD2A4246AE81300377005 /* MXSecretStorageKeyContent.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		324DD2A8246AE81300377005 /* MXSecretStorageKeyContent.m in Sources */ = {isa = PBXBuildFile; fileRef = 324DD2A5246AE81300377005 /* MXSecretStorageKeyContent.m */; };
 		324DD2A9246AE81300377005 /* MXSecretStorageKeyContent.m in Sources */ = {isa = PBXBuildFile; fileRef = 324DD2A5246AE81300377005 /* MXSecretStorageKeyContent.m */; };
-		324DD2AC246AEB7B00377005 /* MXSecretStoragePassphrase.h in Headers */ = {isa = PBXBuildFile; fileRef = 324DD2AA246AEB7B00377005 /* MXSecretStoragePassphrase.h */; };
-		324DD2AD246AEB7B00377005 /* MXSecretStoragePassphrase.h in Headers */ = {isa = PBXBuildFile; fileRef = 324DD2AA246AEB7B00377005 /* MXSecretStoragePassphrase.h */; };
+		324DD2AC246AEB7B00377005 /* MXSecretStoragePassphrase.h in Headers */ = {isa = PBXBuildFile; fileRef = 324DD2AA246AEB7B00377005 /* MXSecretStoragePassphrase.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		324DD2AD246AEB7B00377005 /* MXSecretStoragePassphrase.h in Headers */ = {isa = PBXBuildFile; fileRef = 324DD2AA246AEB7B00377005 /* MXSecretStoragePassphrase.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		324DD2AE246AEB7B00377005 /* MXSecretStoragePassphrase.m in Sources */ = {isa = PBXBuildFile; fileRef = 324DD2AB246AEB7B00377005 /* MXSecretStoragePassphrase.m */; };
 		324DD2AF246AEB7B00377005 /* MXSecretStoragePassphrase.m in Sources */ = {isa = PBXBuildFile; fileRef = 324DD2AB246AEB7B00377005 /* MXSecretStoragePassphrase.m */; };
-		324DD2B1246BDC6800377005 /* MXSecretStorageManager_Private.h in Headers */ = {isa = PBXBuildFile; fileRef = 324DD2B0246BDC6800377005 /* MXSecretStorageManager_Private.h */; };
-		324DD2B2246BDC6800377005 /* MXSecretStorageManager_Private.h in Headers */ = {isa = PBXBuildFile; fileRef = 324DD2B0246BDC6800377005 /* MXSecretStorageManager_Private.h */; };
+		324DD2B1246BDC6800377005 /* MXSecretStorage_Private.h in Headers */ = {isa = PBXBuildFile; fileRef = 324DD2B0246BDC6800377005 /* MXSecretStorage_Private.h */; };
+		324DD2B2246BDC6800377005 /* MXSecretStorage_Private.h in Headers */ = {isa = PBXBuildFile; fileRef = 324DD2B0246BDC6800377005 /* MXSecretStorage_Private.h */; };
+		324DD2B6246C21C700377005 /* MXSecretStorageKeyCreationInfo.h in Headers */ = {isa = PBXBuildFile; fileRef = 324DD2B4246C21C700377005 /* MXSecretStorageKeyCreationInfo.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		324DD2B7246C21C700377005 /* MXSecretStorageKeyCreationInfo.h in Headers */ = {isa = PBXBuildFile; fileRef = 324DD2B4246C21C700377005 /* MXSecretStorageKeyCreationInfo.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		324DD2B8246C21C700377005 /* MXSecretStorageKeyCreationInfo.m in Sources */ = {isa = PBXBuildFile; fileRef = 324DD2B5246C21C700377005 /* MXSecretStorageKeyCreationInfo.m */; };
+		324DD2B9246C21C700377005 /* MXSecretStorageKeyCreationInfo.m in Sources */ = {isa = PBXBuildFile; fileRef = 324DD2B5246C21C700377005 /* MXSecretStorageKeyCreationInfo.m */; };
 		3250E7CA220C913900736CB5 /* MXCryptoTools.h in Headers */ = {isa = PBXBuildFile; fileRef = 3250E7C8220C913900736CB5 /* MXCryptoTools.h */; };
 		3250E7CB220C913900736CB5 /* MXCryptoTools.m in Sources */ = {isa = PBXBuildFile; fileRef = 3250E7C9220C913900736CB5 /* MXCryptoTools.m */; };
 		3252DCAE224BE5D40032264F /* MXKeyVerificationManager.h in Headers */ = {isa = PBXBuildFile; fileRef = 3252DCAC224BE5D40032264F /* MXKeyVerificationManager.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -1294,15 +1298,17 @@
 		324BE4671E3FADB1008D99D4 /* MXMegolmExportEncryption.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXMegolmExportEncryption.m; sourceTree = "<group>"; };
 		324BE46A1E422766008D99D4 /* MXMegolmSessionData.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXMegolmSessionData.h; sourceTree = "<group>"; };
 		324BE46B1E422766008D99D4 /* MXMegolmSessionData.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXMegolmSessionData.m; sourceTree = "<group>"; };
-		324DD297246AD2B500377005 /* MXSecretStorageManager.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MXSecretStorageManager.h; sourceTree = "<group>"; };
-		324DD298246AD2B500377005 /* MXSecretStorageManager.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MXSecretStorageManager.m; sourceTree = "<group>"; };
+		324DD297246AD2B500377005 /* MXSecretStorage.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MXSecretStorage.h; sourceTree = "<group>"; };
+		324DD298246AD2B500377005 /* MXSecretStorage.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MXSecretStorage.m; sourceTree = "<group>"; };
 		324DD29E246AE1EF00377005 /* MXEncryptedSecretContent.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MXEncryptedSecretContent.h; sourceTree = "<group>"; };
 		324DD29F246AE1EF00377005 /* MXEncryptedSecretContent.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MXEncryptedSecretContent.m; sourceTree = "<group>"; };
 		324DD2A4246AE81300377005 /* MXSecretStorageKeyContent.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MXSecretStorageKeyContent.h; sourceTree = "<group>"; };
 		324DD2A5246AE81300377005 /* MXSecretStorageKeyContent.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MXSecretStorageKeyContent.m; sourceTree = "<group>"; };
 		324DD2AA246AEB7B00377005 /* MXSecretStoragePassphrase.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MXSecretStoragePassphrase.h; sourceTree = "<group>"; };
 		324DD2AB246AEB7B00377005 /* MXSecretStoragePassphrase.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MXSecretStoragePassphrase.m; sourceTree = "<group>"; };
-		324DD2B0246BDC6800377005 /* MXSecretStorageManager_Private.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MXSecretStorageManager_Private.h; sourceTree = "<group>"; };
+		324DD2B0246BDC6800377005 /* MXSecretStorage_Private.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MXSecretStorage_Private.h; sourceTree = "<group>"; };
+		324DD2B4246C21C700377005 /* MXSecretStorageKeyCreationInfo.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MXSecretStorageKeyCreationInfo.h; sourceTree = "<group>"; };
+		324DD2B5246C21C700377005 /* MXSecretStorageKeyCreationInfo.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MXSecretStorageKeyCreationInfo.m; sourceTree = "<group>"; };
 		3250E7C8220C913900736CB5 /* MXCryptoTools.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MXCryptoTools.h; sourceTree = "<group>"; };
 		3250E7C9220C913900736CB5 /* MXCryptoTools.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MXCryptoTools.m; sourceTree = "<group>"; };
 		3252DCAC224BE5D40032264F /* MXKeyVerificationManager.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MXKeyVerificationManager.h; sourceTree = "<group>"; };
@@ -2125,10 +2131,11 @@
 		324DD296246AD25E00377005 /* SecretStorage */ = {
 			isa = PBXGroup;
 			children = (
+				324DD2B3246C21B000377005 /* Data */,
 				324DD29D246AE1CA00377005 /* JSONModels */,
-				324DD297246AD2B500377005 /* MXSecretStorageManager.h */,
-				324DD2B0246BDC6800377005 /* MXSecretStorageManager_Private.h */,
-				324DD298246AD2B500377005 /* MXSecretStorageManager.m */,
+				324DD297246AD2B500377005 /* MXSecretStorage.h */,
+				324DD2B0246BDC6800377005 /* MXSecretStorage_Private.h */,
+				324DD298246AD2B500377005 /* MXSecretStorage.m */,
 			);
 			path = SecretStorage;
 			sourceTree = "<group>";
@@ -2144,6 +2151,15 @@
 				324DD2AB246AEB7B00377005 /* MXSecretStoragePassphrase.m */,
 			);
 			path = JSONModels;
+			sourceTree = "<group>";
+		};
+		324DD2B3246C21B000377005 /* Data */ = {
+			isa = PBXGroup;
+			children = (
+				324DD2B4246C21C700377005 /* MXSecretStorageKeyCreationInfo.h */,
+				324DD2B5246C21C700377005 /* MXSecretStorageKeyCreationInfo.m */,
+			);
+			path = Data;
 			sourceTree = "<group>";
 		};
 		3252DCAB224BE59E0032264F /* Verification */ = {
@@ -3101,7 +3117,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				32A9F8DE244720B10069C65B /* MXThrottler.h in Headers */,
-				324DD299246AD2B500377005 /* MXSecretStorageManager.h in Headers */,
+				324DD299246AD2B500377005 /* MXSecretStorage.h in Headers */,
 				322A51B61D9AB15900C8536D /* MXCrypto.h in Headers */,
 				324AAC71239913AD00380A66 /* MXKeyVerificationRequestByDMJSONModel.h in Headers */,
 				32114A8F1A262ECB00FF2EC4 /* MXNoStore.h in Headers */,
@@ -3322,6 +3338,7 @@
 				B146D47C21A5958400D8C2C6 /* MXAntivirusScanStatusFormatter.h in Headers */,
 				3220093819EFA4C9008DE41D /* MXEventListener.h in Headers */,
 				327C3E4B23A39D91006183D1 /* MXAggregatedReferencesUpdater.h in Headers */,
+				324DD2B6246C21C700377005 /* MXSecretStorageKeyCreationInfo.h in Headers */,
 				B146D47721A5950800D8C2C6 /* MXMediaScan.h in Headers */,
 				32C235721F827F3800E38FC5 /* MXRoomOperation.h in Headers */,
 				71DE22E11BC7C51200284153 /* MXReceiptData.h in Headers */,
@@ -3332,7 +3349,7 @@
 				9274AFE81EE580240009BEB6 /* MXCallKitAdapter.h in Headers */,
 				321CFDE622525A49004D31DF /* MXSASTransaction.h in Headers */,
 				B19A30CE24042F0800FB6F35 /* MXSelfVerifyingMasterKeyTrustedQRCodeData.h in Headers */,
-				324DD2B1246BDC6800377005 /* MXSecretStorageManager_Private.h in Headers */,
+				324DD2B1246BDC6800377005 /* MXSecretStorage_Private.h in Headers */,
 				32DC15D01A8CF7AE006F9AD3 /* MXNotificationCenter.h in Headers */,
 				3275FD9C21A6B60B00B9C13D /* MXLoginPolicy.h in Headers */,
 				3250E7CA220C913900736CB5 /* MXCryptoTools.h in Headers */,
@@ -3513,6 +3530,7 @@
 				B14EF30D2397E90400758AF0 /* MXEventRelations.h in Headers */,
 				B14EF30E2397E90400758AF0 /* MXPushRuleRoomMemberCountConditionChecker.h in Headers */,
 				32261B8B23C74A230018F1E2 /* MXDeviceTrustLevel.h in Headers */,
+				324DD2B7246C21C700377005 /* MXSecretStorageKeyCreationInfo.h in Headers */,
 				B14EF30F2397E90400758AF0 /* SwiftMatrixSDK.h in Headers */,
 				B14EF3102397E90400758AF0 /* MXEmojiRepresentation.h in Headers */,
 				B14EF3112397E90400758AF0 /* MXMegolmExportEncryption.h in Headers */,
@@ -3535,7 +3553,7 @@
 				B14EF31F2397E90400758AF0 /* MXPusherData.h in Headers */,
 				B14EF3202397E90400758AF0 /* MXKeyBackupPassword.h in Headers */,
 				B14EF3212397E90400758AF0 /* MXRestClient.h in Headers */,
-				324DD2B2246BDC6800377005 /* MXSecretStorageManager_Private.h in Headers */,
+				324DD2B2246BDC6800377005 /* MXSecretStorage_Private.h in Headers */,
 				32B0E33A23A2989A0054FF1A /* MXEventReferenceChunk.h in Headers */,
 				B14EF3222397E90400758AF0 /* MXKeyVerificationManager.h in Headers */,
 				B14EF3232397E90400758AF0 /* MXRoomState.h in Headers */,
@@ -3615,7 +3633,7 @@
 				B19A30C92404268600FB6F35 /* MXQRCodeDataBuilder.h in Headers */,
 				B14EF3612397E90400758AF0 /* MXMegolmBackupAuthData.h in Headers */,
 				B14EF3622397E90400758AF0 /* MXReactionCountChange.h in Headers */,
-				324DD29A246AD2B500377005 /* MXSecretStorageManager.h in Headers */,
+				324DD29A246AD2B500377005 /* MXSecretStorage.h in Headers */,
 				B14EF3632397E90400758AF0 /* MXScanRealmFileProvider.h in Headers */,
 				B14EF3642397E90400758AF0 /* MXRoom.h in Headers */,
 				B14EF3652397E90400758AF0 /* MXServiceTerms.h in Headers */,
@@ -3927,6 +3945,7 @@
 				B1136967230C1E8600E2B2FA /* MXIdentityService.swift in Sources */,
 				32A9770521626E5C00919CC0 /* MXServerNotices.m in Sources */,
 				32D7767E1A27860600FC4AA2 /* MXMemoryStore.m in Sources */,
+				324DD2B8246C21C700377005 /* MXSecretStorageKeyCreationInfo.m in Sources */,
 				327E9AE82285A8C400A98BC1 /* MXAggregationPaginatedResponse.m in Sources */,
 				B10AFB4422A970060092E6AF /* MXEventReplace.m in Sources */,
 				3275FD9421A6B46600B9C13D /* MXLoginTerms.m in Sources */,
@@ -4016,7 +4035,7 @@
 				32CAB10C1A925B41008C5BB9 /* MXHTTPOperation.m in Sources */,
 				32BBAE6C2178E99100D85F46 /* MXKeyBackupData.m in Sources */,
 				32AF928C240EA3880008A0FD /* MXSecretShareSend.m in Sources */,
-				324DD29B246AD2B500377005 /* MXSecretStorageManager.m in Sources */,
+				324DD29B246AD2B500377005 /* MXSecretStorage.m in Sources */,
 				3281E8BA19E42DFE00976E1A /* MXJSONModels.m in Sources */,
 				3245A7531AF7B2930001D8A7 /* MXCallManager.m in Sources */,
 				32E226A71D06AC9F00E6CA54 /* MXPeekingRoom.m in Sources */,
@@ -4342,6 +4361,7 @@
 				B14EF2492397E90400758AF0 /* MXSendReplyEventDefaultStringLocalizations.m in Sources */,
 				B14EF24A2397E90400758AF0 /* NSArray+MatrixSDK.m in Sources */,
 				B19A30A92404257700FB6F35 /* MXSASKeyVerificationStart.m in Sources */,
+				324DD2B9246C21C700377005 /* MXSecretStorageKeyCreationInfo.m in Sources */,
 				B14EF24B2397E90400758AF0 /* MXServiceTermsRestClient.m in Sources */,
 				B14EF24C2397E90400758AF0 /* MXCredentials.m in Sources */,
 				B14EF24D2397E90400758AF0 /* MXOutgoingRoomKeyRequest.m in Sources */,
@@ -4388,7 +4408,7 @@
 				B14EF26C2397E90400758AF0 /* MXRoom.m in Sources */,
 				B14EF26D2397E90400758AF0 /* NSData+MatrixSDK.m in Sources */,
 				B14EF26E2397E90400758AF0 /* MXFileRoomStore.m in Sources */,
-				324DD29C246AD2B500377005 /* MXSecretStorageManager.m in Sources */,
+				324DD29C246AD2B500377005 /* MXSecretStorage.m in Sources */,
 				B14EF26F2397E90400758AF0 /* MXUser.m in Sources */,
 				324AAC772399140D00380A66 /* MXKeyVerificationDone.m in Sources */,
 				B14EF2702397E90400758AF0 /* MXIdentityServerRestClient.swift in Sources */,

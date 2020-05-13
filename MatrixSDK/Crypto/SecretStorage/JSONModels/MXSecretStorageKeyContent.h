@@ -57,10 +57,10 @@ extern const struct MXSecretStorageKeyAlgorithm {
 @property (nonatomic, nullable) MXSecretStoragePassphrase *passphrase;
 
 /**
- aes-hmac-sha2 materials
+ aes-hmac-sha2 materials.
  */
-@property (nonatomic) NSString *iv;
-@property (nonatomic) NSString *mac;
+@property (nonatomic, nullable) NSString *iv;
+@property (nonatomic, nullable) NSString *mac;
 
 @end
 
