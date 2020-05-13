@@ -43,7 +43,7 @@ extern const struct MXSecretStorageKeyAlgorithm {
 @interface MXSecretStorageKeyContent : MXJSONModel
 
 /**
- Key name.
+ A human-readable name.
  */
 @property (nonatomic, nullable) NSString *name;
 
@@ -51,12 +51,6 @@ extern const struct MXSecretStorageKeyAlgorithm {
  The algorithm ("m.secret_storage.v1.aes-hmac-sha2")
  */
 @property (nonatomic) NSString *algorithm;
-
-/**
- Signatures by userId by public key.
- MXUsersDevicesMap is abused here. Public keys replace device ids.
- */
-@property (nonatomic) MXUsersDevicesMap<NSString*> *signatures;
 
 /**
  Passphrase configuration if a passphrase was used.

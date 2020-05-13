@@ -30,12 +30,10 @@ const struct MXSecretStorageKeyAlgorithm MXSecretStorageKeyAlgorithm = {
 + (instancetype)modelFromJSON:(NSDictionary *)JSONDictionary
 {
     NSString *name, *algorithm, *iv, *mac;
-    NSDictionary *signaturesDict;
     MXSecretStoragePassphrase *passphrase;
     
     MXJSONModelSetString(name, JSONDictionary[@"name"]);
     MXJSONModelSetString(algorithm, JSONDictionary[@"algorithm"]);
-    MXJSONModelSetDictionary(signaturesDict, JSONDictionary[@"signatures"]);
     MXJSONModelSetMXJSONModel(passphrase, MXSecretStoragePassphrase.class, JSONDictionary[@"passphrase"]);
     MXJSONModelSetString(iv, JSONDictionary[@"iv"]);
     MXJSONModelSetString(mac, JSONDictionary[@"mac"]);
@@ -55,16 +53,6 @@ const struct MXSecretStorageKeyAlgorithm MXSecretStorageKeyAlgorithm = {
         model.passphrase = passphrase;
         model.iv = iv;
         model.mac = mac;
-        
-        MXJSONModelSetDictionary(signaturesDict, JSONDictionary[@"signatures"]);
-        if (signaturesDict)
-        {
-            model.signatures = [[MXUsersDevicesMap<NSString*> alloc] initWithMap:signaturesDict];
-        }
-        else
-        {
-            model.signatures  = [MXUsersDevicesMap<NSString*> new];
-        }
     }
     
     return model;
