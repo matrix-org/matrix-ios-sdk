@@ -50,4 +50,20 @@
     return model;
 }
 
+- (NSDictionary *)JSONDictionary
+{
+    NSMutableDictionary *JSONDictionary = [@{
+                                             @"algorithm": _algorithm,
+                                             @"iterations": @(_iterations),
+                                             @"salt": _salt,
+                                             } mutableCopy];
+    
+    if (_bits)
+    {
+        JSONDictionary[@"bits"] = @(_bits);
+    }
+    
+    return JSONDictionary;
+}
+
 @end

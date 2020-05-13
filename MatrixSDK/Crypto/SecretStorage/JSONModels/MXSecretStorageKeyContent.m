@@ -26,6 +26,8 @@ const struct MXSecretStorageKeyAlgorithm MXSecretStorageKeyAlgorithm = {
 
 @implementation MXSecretStorageKeyContent
 
+#pragma mark - MXJSONModel
+
 + (instancetype)modelFromJSON:(NSDictionary *)JSONDictionary
 {
     NSString *name, *algorithm, *iv, *mac;
@@ -55,6 +57,32 @@ const struct MXSecretStorageKeyAlgorithm MXSecretStorageKeyAlgorithm = {
     }
     
     return model;
+}
+
+- (NSDictionary *)JSONDictionary
+{
+    NSMutableDictionary *JSONDictionary = [@{
+                                             @"algorithm": _algorithm,
+                                             } mutableCopy];
+    
+    if (_name)
+    {
+        JSONDictionary[@"name"] = _name;
+    }
+    if (_passphrase)
+    {
+        JSONDictionary[@"passphrase"] = _passphrase.JSONDictionary;
+    }
+    if (_iv)
+    {
+        JSONDictionary[@"iv"] = _iv;
+    }
+    if (_mac)
+    {
+        JSONDictionary[@"mac"] = _mac;
+    }
+
+    return JSONDictionary;
 }
 
 @end

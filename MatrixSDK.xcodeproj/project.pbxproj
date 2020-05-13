@@ -175,6 +175,8 @@
 		324DD2B7246C21C700377005 /* MXSecretStorageKeyCreationInfo.h in Headers */ = {isa = PBXBuildFile; fileRef = 324DD2B4246C21C700377005 /* MXSecretStorageKeyCreationInfo.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		324DD2B8246C21C700377005 /* MXSecretStorageKeyCreationInfo.m in Sources */ = {isa = PBXBuildFile; fileRef = 324DD2B5246C21C700377005 /* MXSecretStorageKeyCreationInfo.m */; };
 		324DD2B9246C21C700377005 /* MXSecretStorageKeyCreationInfo.m in Sources */ = {isa = PBXBuildFile; fileRef = 324DD2B5246C21C700377005 /* MXSecretStorageKeyCreationInfo.m */; };
+		324DD2BB246C3ADE00377005 /* MXCryptoSecretStorageTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 324DD2BA246C3ADE00377005 /* MXCryptoSecretStorageTests.m */; };
+		324DD2BC246C3ADE00377005 /* MXCryptoSecretStorageTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 324DD2BA246C3ADE00377005 /* MXCryptoSecretStorageTests.m */; };
 		3250E7CA220C913900736CB5 /* MXCryptoTools.h in Headers */ = {isa = PBXBuildFile; fileRef = 3250E7C8220C913900736CB5 /* MXCryptoTools.h */; };
 		3250E7CB220C913900736CB5 /* MXCryptoTools.m in Sources */ = {isa = PBXBuildFile; fileRef = 3250E7C9220C913900736CB5 /* MXCryptoTools.m */; };
 		3252DCAE224BE5D40032264F /* MXKeyVerificationManager.h in Headers */ = {isa = PBXBuildFile; fileRef = 3252DCAC224BE5D40032264F /* MXKeyVerificationManager.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -1309,6 +1311,7 @@
 		324DD2B0246BDC6800377005 /* MXSecretStorage_Private.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MXSecretStorage_Private.h; sourceTree = "<group>"; };
 		324DD2B4246C21C700377005 /* MXSecretStorageKeyCreationInfo.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MXSecretStorageKeyCreationInfo.h; sourceTree = "<group>"; };
 		324DD2B5246C21C700377005 /* MXSecretStorageKeyCreationInfo.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MXSecretStorageKeyCreationInfo.m; sourceTree = "<group>"; };
+		324DD2BA246C3ADE00377005 /* MXCryptoSecretStorageTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MXCryptoSecretStorageTests.m; sourceTree = "<group>"; };
 		3250E7C8220C913900736CB5 /* MXCryptoTools.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MXCryptoTools.h; sourceTree = "<group>"; };
 		3250E7C9220C913900736CB5 /* MXCryptoTools.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MXCryptoTools.m; sourceTree = "<group>"; };
 		3252DCAC224BE5D40032264F /* MXKeyVerificationManager.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MXKeyVerificationManager.h; sourceTree = "<group>"; };
@@ -2699,6 +2702,7 @@
 		32C6F93919DD814400EA4E9C /* MatrixSDKTests */ = {
 			isa = PBXGroup;
 			children = (
+				324DD2BA246C3ADE00377005 /* MXCryptoSecretStorageTests.m */,
 				B19A30AE240425D000FB6F35 /* MXQRCodeDataTests.m */,
 				32AF9291241112850008A0FD /* MXCryptoSecretShareTests.m */,
 				32C9B71723E81A1C00C6F30A /* MXCrossSigningVerificationTests.m */,
@@ -4169,6 +4173,7 @@
 				32322A481E57264E005DD155 /* MXSelfSignedHomeserverTests.m in Sources */,
 				325653831A2E14ED00CC0423 /* MXStoreTests.m in Sources */,
 				3295719A1B024D2B00ABB3BA /* MXMockCallStackCall.m in Sources */,
+				324DD2BB246C3ADE00377005 /* MXCryptoSecretStorageTests.m in Sources */,
 				B19A30D82404335D00FB6F35 /* MXQRCodeDataTests.m in Sources */,
 				B11BD45C22CB8ABC0064D8B0 /* MXReplyEventParserTests.m in Sources */,
 				32AF9292241112850008A0FD /* MXCryptoSecretShareTests.m in Sources */,
@@ -4485,6 +4490,7 @@
 				B1E09A1E2397FCE90057C069 /* MXCryptoShareTests.m in Sources */,
 				B1E09A422397FD820057C069 /* MXCryptoTests.m in Sources */,
 				B1E09A382397FD7D0057C069 /* MXUserTests.m in Sources */,
+				324DD2BC246C3ADE00377005 /* MXCryptoSecretStorageTests.m in Sources */,
 				B19A30D92404335D00FB6F35 /* MXQRCodeDataTests.m in Sources */,
 				B1E09A212397FCE90057C069 /* DirectRoomTests.m in Sources */,
 				32AF9293241112850008A0FD /* MXCryptoSecretShareTests.m in Sources */,
