@@ -18,6 +18,18 @@
 
 @implementation MXSecretStoragePassphrase
 
+- (instancetype)init
+{
+    self = [super init];
+    if (self)
+    {
+        // The key size that is generated is given by the bits parameter,
+        // or 256 bits if no bits parameter is given.
+        _bits = 256;
+    }
+    return self;
+}
+
 #pragma mark - MXJSONModel
 
 + (instancetype)modelFromJSON:(NSDictionary *)JSONDictionary
@@ -29,13 +41,6 @@
     MXJSONModelSetUInteger(iterations, JSONDictionary[@"iterations"]);
     MXJSONModelSetString(salt, JSONDictionary[@"salt"]);
     MXJSONModelSetUInteger(bits, JSONDictionary[@"bits"]);
-    
-    // The key size that is generated is given by the bits parameter,
-    // or 256 bits if no bits parameter is given.
-    if (bits == 0)
-    {
-        bits = 256;
-    }
 
     MXSecretStoragePassphrase *model;
     if (algorithm && iterations && salt)
@@ -44,7 +49,10 @@
         model.algorithm = algorithm;
         model.iterations = iterations;
         model.salt = salt;
-        model.bits = bits;
+        if (bits != 0)
+        {
+            model.bits = bits;
+        }
     }
     
     return model;
