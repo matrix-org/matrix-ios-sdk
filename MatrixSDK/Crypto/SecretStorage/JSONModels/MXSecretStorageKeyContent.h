@@ -28,7 +28,6 @@ NS_ASSUME_NONNULL_BEGIN
 //! Secret storage key algorithms
 extern const struct MXSecretStorageKeyAlgorithm {
     __unsafe_unretained NSString *aesHmacSha2;
-    __unsafe_unretained NSString *curve25519AesSha2;
 } MXSecretStorageKeyAlgorithm;
 
 

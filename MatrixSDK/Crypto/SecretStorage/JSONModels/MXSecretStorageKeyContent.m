@@ -21,7 +21,6 @@
 
 const struct MXSecretStorageKeyAlgorithm MXSecretStorageKeyAlgorithm = {
     .aesHmacSha2 = @"m.secret_storage.v1.aes-hmac-sha2",
-    .curve25519AesSha2 = @"m.secret_storage.v1.curve25519-aes-sha2",
 };
 
 
