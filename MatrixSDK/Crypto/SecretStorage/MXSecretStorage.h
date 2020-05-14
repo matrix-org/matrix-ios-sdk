@@ -39,7 +39,9 @@ NS_ASSUME_NONNULL_BEGIN
   @param keyId the ID of the key.
   @param keyName a human readable name.
   @param passphrase a passphrase used to generate the key. Nil will generate a key.
-  @param callback Get key creation info
+ 
+  @param success A block object called when the operation succeeds.
+  @param failure A block object called when the operation fails
  */
 - (MXHTTPOperation*)createKeyWithKeyId:(nullable NSString*)keyId
                                keyName:(nullable NSString*)keyName
@@ -85,7 +87,14 @@ NS_ASSUME_NONNULL_BEGIN
  @param secret the secret.
  @param secretId the id of the secret.
  */
-//- (void)storeSecret:(NSString*)secret withSecretId:(NSString*)secretId;
+- (MXHTTPOperation *)storeSecret:(NSString*)secret
+       withSecretId:(nullable NSString*)secretId
+withSecretStorageKeys:(NSDictionary<NSString*, NSData*> *)keys
+            success:(void (^)(void))success
+            failure:(void (^)(NSError *error))failure;
+
+
+- (nullable NSDictionary<NSString*, MXSecretStorageKeyContent*> *)secretStorageKeysUsedForSecretWithSecretId:(NSString*)secretId;
 
 /**
  Retrieve a secret from the server.
@@ -93,7 +102,11 @@ NS_ASSUME_NONNULL_BEGIN
  @param secretId the id of the secret.
  @return the secret. Nil if the secret does not exist.
  */
-//- (NSString*)secretWithSecretId:(NSString*)secretId;
+- (MXHTTPOperation *)secretWithSecretId:(NSString*)secretId
+                 withSecretStorageKeyId:(nullable NSString*)keyId
+                             privateKey:(NSData*)privateKey
+                                success:(void (^)(NSString *secret))success
+                                failure:(void (^)(NSError *error))failure;
 
 
 /**

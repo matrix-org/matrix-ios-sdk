@@ -193,6 +193,55 @@ static NSString* const kSecretStorageKeyIdFormat = @"m.secret_storage.key.%@";
 }
 
 
+#pragma mark - Secret storage
+
+- (MXHTTPOperation *)storeSecret:(NSString*)secret
+                    withSecretId:(nullable NSString*)secretId
+           withSecretStorageKeys:(NSDictionary<NSString*, NSData*> *)keys
+                         success:(void (^)(void))success
+                         failure:(void (^)(NSError *error))failure
+{
+    failure(nil);
+    return nil;
+}
+
+
+- (nullable NSDictionary<NSString*, MXSecretStorageKeyContent*> *)secretStorageKeysUsedForSecretWithSecretId:(NSString*)secretId
+{
+    NSDictionary *accountData = [_mxSession.accountData accountDataForEventType:secretId];
+    if (!accountData)
+    {
+        NSLog(@"[MXSecretStorage] secretStorageKeysUsedForSecretWithSecretId: No Secret for secret id %@", secretId);
+        return nil;
+    }
+    
+    NSDictionary *encryptedContent;
+    MXJSONModelSetDictionary(encryptedContent, accountData[@"encrypted"]);
+    
+    NSMutableDictionary *secretStorageKeys = [NSMutableDictionary dictionary];
+    for (NSString *keyId in encryptedContent)
+    {
+        MXSecretStorageKeyContent *key = [self keyWithKeyId:keyId];
+        if (key)
+        {
+            secretStorageKeys[keyId] = key;
+        }
+    }
+    
+    return secretStorageKeys;
+}
+
+- (MXHTTPOperation *)secretWithSecretId:(NSString*)secretId
+                 withSecretStorageKeyId:(nullable NSString*)keyId
+                             privateKey:(NSData*)privateKey
+                                success:(void (^)(NSString *secret))success
+                                failure:(void (^)(NSError *error))failure
+{
+    failure(nil);
+    return nil;
+}
+
+
 #pragma mark - Private methods -
 
 - (NSString *)storageKeyIdForKey:(NSString*)key

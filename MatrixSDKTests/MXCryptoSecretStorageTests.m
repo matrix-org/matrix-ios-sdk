@@ -17,9 +17,16 @@
 #import <XCTest/XCTest.h>
 
 #import "MXCrypto.h"
+#import "MXRecoveryKey.h"
 
 #import "MatrixSDKTestsData.h"
 #import "MatrixSDKTestsE2EData.h"
+
+
+// Secret for the qkEmh7mHZBySbXqroxiz7fM18fJuXnnt SSSS key
+NSString *jsSDKDataPassphrase = @"ILoveMatrix&Riot";
+NSString *jsSDKDataRecoveryKey = @"EsTj n9MF ajEz Kjno jAEH tSTx Fxnt zGS8 6AFr iruj 1A87 nXJa";
+
 
 @interface MXCryptoSecretStorageTests : XCTestCase
 {
@@ -44,6 +51,101 @@
     matrixSDKTestsData = nil;
     matrixSDKTestsE2EData = nil;
 }
+
+
+// Have Alice with SSSS bootstapped
+- (void)createScenarioWithMatrixJsSDKData:(void (^)(MXSession *aliceSession, NSString *roomId, XCTestExpectation *expectation))readyToTest
+{
+    // - Have Alice with encryption
+    [matrixSDKTestsE2EData doE2ETestWithAliceInARoom:self readyToTest:^(MXSession *aliceSession, NSString *roomId, XCTestExpectation *expectation) {
+        
+        // Feed the session with data built with matrix-js-sdk (extracted from Riot)
+        NSDictionary *defaultKeyContent = @{
+                                            @"key": @"qkEmh7mHZBySbXqroxiz7fM18fJuXnnt"
+                                            };
+        NSDictionary *ssssKeyContent = @{
+                                         @"algorithm": @"m.secret_storage.v1.aes-hmac-sha2",
+                                         @"passphrase": @{
+                                                 @"algorithm": @"m.pbkdf2",
+                                                 @"iterations": @(500000),
+                                                 @"salt": @"Djb0XcHWHu5Mx3GTDar6OfvbkxScBR6N"
+                                                 },
+                                         @"iv": @"5SwqbVexZodcLg+PQcPhHw==",
+                                         @"mac": @"NBJLmrWo6uXoiNHpKUcBA9d4xKcoj0GnB+4F234zNwI=",
+                                         };
+        
+        NSDictionary *MSKContent = @{
+                                     @"encrypted": @{
+                                             @"qkEmh7mHZBySbXqroxiz7fM18fJuXnnt": @{
+                                                     @"iv": @"RS18YsoaFkYcFrKYBC8w9g==",
+                                                     @"ciphertext": @"FCihoO5ztgLKcAzmGxKgoNbcKLYDMKVxuJkj9ElBsmj5+XbmV0vFQjezDH0=",
+                                                     @"mac": @"y3cULM3z/pQBTCDHM8RI+9HnTdDjvRoucr9iV7ZHk3E="
+                                                     }
+                                             }
+                                     };
+        
+        NSDictionary *USKContent = @{
+                                     @"encrypted": @{
+                                             @"qkEmh7mHZBySbXqroxiz7fM18fJuXnnt": @{
+                                                     @"iv": @"fep37xQGPNRv5cR9HWBcEQ==",
+                                                     @"ciphertext": @"bepBSorZceMrAzGjWEiXUOP49BzZozuAODVj4XW9E1I+nhs6RqeYj0anhzQ=",
+                                                     @"mac": @"o3GbngWeB8KLJ2GARo1jaYXFKnPXPWkvdAv4cQtgUB4="
+                                                     }
+                                             }
+                                     };
+    
+        NSDictionary *SSKContent = @{
+                                     @"encrypted": @{
+                                             @"qkEmh7mHZBySbXqroxiz7fM18fJuXnnt": @{
+                                                     @"iv": @"ty18XRmd7VReJDXpCsL3xA==",
+                                                     @"ciphertext": @"b3AVFOjzyHZvhGPu0uddu9DhIDQ2htUfDypTGag+Pweu8dF1pc7wdLoDgYc=",
+                                                     @"mac": @"53SKD7e3GvYWSznLEHudFctc1CSbtloid2EcAyAbxoQ="
+                                                     }
+                                             }
+                                     };
+        
+        NSDictionary *backupKeyContent = @{
+                                           @"encrypted": @{
+                                                   @"qkEmh7mHZBySbXqroxiz7fM18fJuXnnt": @{
+                                                           @"iv": @"AQRau/6+1sAFTlh+pHcraQ==",
+                                                           @"ciphertext": @"q0tVFMeU1XKn/V6oIfP5letoR6qTcTP2cwNrYNIb2lD4fYCGL0LyYmazsgI=",
+                                                           @"mac": @"sB61R0Tzrb0x0PyRZDJRe58DEo9SzTeEfO+1QCNQLzM="
+                                                           }
+                                                   }
+                                           };
+        
+        
+        [aliceSession setAccountData:defaultKeyContent forType:@"m.secret_storage.default_key" success:^{
+            [aliceSession setAccountData:ssssKeyContent forType:@"m.secret_storage.key.qkEmh7mHZBySbXqroxiz7fM18fJuXnnt" success:^{
+                [aliceSession setAccountData:MSKContent forType:@"m.cross_signing.master" success:^{
+                    [aliceSession setAccountData:USKContent forType:@"MXSecretId" success:^{
+                        [aliceSession setAccountData:SSKContent forType:@"m.cross_signing.self_signing" success:^{
+                            [aliceSession setAccountData:backupKeyContent forType:@"m.megolm_backup.v1" success:^{
+                                    readyToTest(aliceSession, roomId, expectation);
+                            } failure:^(NSError *error) {
+                                XCTAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+                            }];
+                        } failure:^(NSError *error) {
+                            XCTAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+                        }];
+                    } failure:^(NSError *error) {
+                        XCTAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+                    }];
+                } failure:^(NSError *error) {
+                    XCTAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+                }];
+            } failure:^(NSError *error) {
+                XCTAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+            }];
+        } failure:^(NSError *error) {
+            XCTAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+        }];
+    }];
+}
+
+
+#pragma mark - Secret Storage Key
+
 
 // - Have Alice with encryption
 // - Create a new secret storage key
@@ -179,6 +281,50 @@
             XCTFail(@"The operation should not fail - NSError: %@", error);
             [expectation fulfill];
         }];
+    }];
+}
+
+
+#pragma mark - Secret storage
+
+
+- (void)testSecretStorageKeysUsedForSecretWithSecretId
+{
+    [self createScenarioWithMatrixJsSDKData:^(MXSession *aliceSession, NSString *roomId, XCTestExpectation *expectation) {
+        
+        MXSecretStorage *secretStorage = aliceSession.crypto.secretStorage;
+        
+        // Test scenarion creation
+        MXSecretStorageKeyContent *defaultKey = secretStorage.defaultKey;
+        XCTAssert(defaultKey);
+        
+        NSDictionary<NSString*, MXSecretStorageKeyContent*> *secretStorageKeys = [secretStorage secretStorageKeysUsedForSecretWithSecretId:MXSecretId.crossSigningMaster];
+        XCTAssertEqual(secretStorageKeys.count, 1);
+        
+        [expectation fulfill];
+    }];
+}
+
+- (void)testGetSecret
+{
+    [self createScenarioWithMatrixJsSDKData:^(MXSession *aliceSession, NSString *roomId, XCTestExpectation *expectation) {
+        
+        MXSecretStorage *secretStorage = aliceSession.crypto.secretStorage;
+        
+        NSError *error;
+        NSData *privateKey = [MXRecoveryKey decode:jsSDKDataRecoveryKey error:&error];
+        XCTAssert(privateKey);
+        
+        [secretStorage secretWithSecretId:MXSecretId.crossSigningMaster withSecretStorageKeyId:nil privateKey:privateKey success:^(NSString * _Nonnull secret) {
+            
+            XCTAssert(secret);
+            [expectation fulfill];
+            
+        } failure:^(NSError * _Nonnull error) {
+            XCTFail(@"The operation should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+
     }];
 }
 
