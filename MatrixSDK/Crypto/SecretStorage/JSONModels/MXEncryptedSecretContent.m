@@ -22,17 +22,15 @@
 
 + (instancetype)modelFromJSON:(NSDictionary *)JSONDictionary
 {
-    NSString *ciphertext, *mac, *ephemeral, *iv;
+    NSString *ciphertext, *mac, *iv;
     
     MXJSONModelSetString(ciphertext, JSONDictionary[@"ciphertext"]);
     MXJSONModelSetString(mac, JSONDictionary[@"mac"]);
-    MXJSONModelSetString(ephemeral, JSONDictionary[@"ephemeral"]);
     MXJSONModelSetString(iv, JSONDictionary[@"iv"]);
     
     MXEncryptedSecretContent *model = [MXEncryptedSecretContent new];
     model.ciphertext = ciphertext;
     model.mac = mac;
-    model.ephemeral = ephemeral;
     model.iv = iv;
     
     return model;
@@ -49,10 +47,6 @@
     if (_mac)
     {
         JSONDictionary[@"mac"] = _mac;
-    }
-    if (_ephemeral)
-    {
-        JSONDictionary[@"ephemeral"] = _ephemeral;
     }
     if (_iv)
     {

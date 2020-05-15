@@ -29,7 +29,6 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, nullable) NSString *ciphertext;
 
 @property (nonatomic, nullable) NSString *mac;
-@property (nonatomic, nullable) NSString *ephemeral;
 @property (nonatomic, nullable) NSString *iv;
 
 @end
