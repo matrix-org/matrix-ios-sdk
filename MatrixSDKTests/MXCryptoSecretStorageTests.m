@@ -345,13 +345,13 @@ UInt8 privateKeyBytes[] = {
         XCTAssertNotNil(privateKey);
         
         // - Get the backup key from SSSS using the default key
-        [secretStorage secretWithSecretId:MXSecretId.keyBackup withSecretStorageKeyId:nil privateKey:privateKey success:^(NSString * _Nonnull secret) {
+        [secretStorage secretWithSecretId:MXSecretId.keyBackup withSecretStorageKeyId:nil privateKey:privateKey success:^(NSString * _Nonnull unpaddedBase64Secret) {
             
             // -> We should get it
-            XCTAssertNotNil(secret);
+            XCTAssertNotNil(unpaddedBase64Secret);
             
             // -> It should be the one created by matrix-js-sdk
-            NSData *key = [MXBase64Tools dataFromUnpaddedBase64:secret];
+            NSData *key = [MXBase64Tools dataFromUnpaddedBase64:unpaddedBase64Secret];
             NSData *jsKey = [NSData dataWithBytes:jsSDKDataBackupKeyBytes length:sizeof(jsSDKDataBackupKeyBytes)];
             
             XCTAssertEqualObjects(key, jsKey);

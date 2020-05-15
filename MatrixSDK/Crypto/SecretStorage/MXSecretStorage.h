@@ -32,8 +32,8 @@ typedef enum : NSUInteger
     MXSecretStorageSecretNotEncryptedCode,
     MXSecretStorageSecretNotEncryptedWithKeyCode,
     MXSecretStorageUnsupportedAlgorithmCode,
-
     MXSecretStorageBadCiphertextCode,
+    MXSecretStorageBadSecretFormatCode,
     MXSecretStorageBadMacCode,
     
 } MXSecretStorageErrorCode;
@@ -118,12 +118,16 @@ withSecretStorageKeys:(NSDictionary<NSString*, NSData*> *)keys
  Retrieve a secret from the server.
  
  @param secretId the id of the secret.
- @return the secret. Nil if the secret does not exist.
+ @param keyId the id of the key to use to decrypt it. Use secretStorageKeysUsedForSecretWithSecretId to get it.
+              Nil will use the default key.
+ @param privateKey the private key for this key.
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
  */
 - (void)secretWithSecretId:(NSString*)secretId
     withSecretStorageKeyId:(nullable NSString*)keyId
                 privateKey:(NSData*)privateKey
-                   success:(void (^)(NSString *secret))success
+                   success:(void (^)(NSString *unpaddedBase64Secret))success
                    failure:(void (^)(NSError *error))failure;
 
 

@@ -240,7 +240,7 @@ static NSString* const kSecretStorageKeyIdFormat = @"m.secret_storage.key.%@";
 - (void)secretWithSecretId:(NSString*)secretId
     withSecretStorageKeyId:(nullable NSString*)keyId
                 privateKey:(NSData*)privateKey
-                   success:(void (^)(NSString *secret))success
+                   success:(void (^)(NSString *unpaddedBase64Secret))success
                    failure:(void (^)(NSError *error))failure
 {
     NSDictionary *accountData = [_mxSession.accountData accountDataForEventType:secretId];
@@ -406,11 +406,19 @@ static NSString* const kSecretStorageKeyIdFormat = @"m.secret_storage.key.%@";
     
     if (*error)
     {
-        NSLog(@"[MXSecretStorage] decryptSecret: ERROR: Decryption failes: %@", *error);
+        NSLog(@"[MXSecretStorage] decryptSecret: Decryption failed. Error: %@", *error);
         return nil;
     }
     
-    return [[NSString alloc] initWithData:decrypted encoding:NSUTF8StringEncoding];
+    NSString *unpaddedBase64Secret = [[NSString alloc] initWithData:decrypted encoding:NSUTF8StringEncoding];
+    if (!unpaddedBase64Secret)
+    {
+        NSLog(@"[MXSecretStorage] decryptSecret: ERROR: Bad secret format. Can't convert to string");
+        *error = [self errorWithCode:MXSecretStorageBadSecretFormatCode reason:@"Bad secret format"];
+        return nil;
+    }
+    
+    return unpaddedBase64Secret;
 }
 
 @end
