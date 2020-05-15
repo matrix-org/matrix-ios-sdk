@@ -23,6 +23,11 @@ NS_ASSUME_NONNULL_BEGIN
 
 #pragma mark - Constants
 
+extern const struct MXSASAgreementProtocols {
+    __unsafe_unretained NSString *v1;
+    __unsafe_unretained NSString *v2;
+} MXSASAgreementProtocols;
+
 FOUNDATION_EXPORT NSArray<NSString*> *kKnownAgreementProtocols;
 FOUNDATION_EXPORT NSArray<NSString*> *kKnownHashes;
 FOUNDATION_EXPORT NSArray<NSString*> *kKnownMacs;
@@ -40,7 +45,9 @@ FOUNDATION_EXPORT NSArray<NSString*> *kKnownShortCodes;
 @property (nonatomic, nullable) MXKeyVerificationMac *theirMac;
 
 - (NSString*)hashUsingAgreedHashMethod:(NSString*)string;
-- (NSData*)generateSasBytesWithTheirPublicKey:(NSString*)theirPublicKey requestingDevice:(MXDeviceInfo*)requestingDevice otherDevice:(MXDeviceInfo*)otherDevice;
+- (NSData*)generateSasBytesWithTheirPublicKey:(NSString*)theirPublicKey
+                             requestingDevice:(MXDeviceInfo*)requestingDevice sasPublicKey:(NSString*)sasPublicKey
+                                  otherDevice:(MXDeviceInfo*)otherDevice otherSasPublicKey:(NSString*)otherSasPublicKey;
 
 @end
 
