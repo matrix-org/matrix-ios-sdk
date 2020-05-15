@@ -482,7 +482,7 @@ static NSString* const kSecretStorageZeroString = @"\0\0\0\0\0\0\0\0\0\0\0\0\0\0
     NSData *aesKey = [pseudoRandomKey subdataWithRange:NSMakeRange(0, 32)];
     NSData *hmacKey = [pseudoRandomKey subdataWithRange:NSMakeRange(32, pseudoRandomKey.length - 32)];
     
-    NSData *iv = [MXAesHmacSha2 iv];
+    iv = iv ?: [MXAesHmacSha2 iv];
     
     NSData *hmac;
     NSData *cipher = [MXAesHmacSha2 encrypt:secret aesKey:aesKey iv:iv hmacKey:hmacKey hmac:&hmac error:error];
@@ -494,8 +494,8 @@ static NSString* const kSecretStorageZeroString = @"\0\0\0\0\0\0\0\0\0\0\0\0\0\0
     
     MXEncryptedSecretContent *secretContent = [MXEncryptedSecretContent new];
     secretContent.ciphertext = [MXBase64Tools unpaddedBase64FromData:cipher];
-    secretContent.mac = [MXBase64Tools unpaddedBase64FromData:hmac];
-    secretContent.iv = [MXBase64Tools unpaddedBase64FromData:iv];
+    secretContent.mac = [MXBase64Tools base64FromData:hmac];
+    secretContent.iv = [MXBase64Tools base64FromData:iv];
     
     return secretContent;
 }
@@ -527,9 +527,9 @@ static NSString* const kSecretStorageZeroString = @"\0\0\0\0\0\0\0\0\0\0\0\0\0\0
     NSData *hmacKey = [pseudoRandomKey subdataWithRange:NSMakeRange(32, pseudoRandomKey.length - 32)];
 
 
-    NSData *iv = secretContent.iv ? [MXBase64Tools dataFromUnpaddedBase64:secretContent.iv] : [NSMutableData dataWithLength:16];
+    NSData *iv = secretContent.iv ? [MXBase64Tools dataFromBase64:secretContent.iv] : [NSMutableData dataWithLength:16];
     
-    NSData *hmac = [MXBase64Tools dataFromUnpaddedBase64:secretContent.mac];
+    NSData *hmac = [MXBase64Tools dataFromBase64:secretContent.mac];
     if (!hmac)
     {
         NSLog(@"[MXSecretStorage] decryptSecret: ERROR: Bad base64 format for MAC: %@", secretContent.mac);
