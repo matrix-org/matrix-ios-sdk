@@ -177,6 +177,14 @@
 		324DD2B9246C21C700377005 /* MXSecretStorageKeyCreationInfo.m in Sources */ = {isa = PBXBuildFile; fileRef = 324DD2B5246C21C700377005 /* MXSecretStorageKeyCreationInfo.m */; };
 		324DD2BB246C3ADE00377005 /* MXCryptoSecretStorageTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 324DD2BA246C3ADE00377005 /* MXCryptoSecretStorageTests.m */; };
 		324DD2BC246C3ADE00377005 /* MXCryptoSecretStorageTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 324DD2BA246C3ADE00377005 /* MXCryptoSecretStorageTests.m */; };
+		324DD2BF246D658500377005 /* MXHkdfSha256.h in Headers */ = {isa = PBXBuildFile; fileRef = 324DD2BD246D658500377005 /* MXHkdfSha256.h */; };
+		324DD2C0246D658500377005 /* MXHkdfSha256.h in Headers */ = {isa = PBXBuildFile; fileRef = 324DD2BD246D658500377005 /* MXHkdfSha256.h */; };
+		324DD2C1246D658500377005 /* MXHkdfSha256.m in Sources */ = {isa = PBXBuildFile; fileRef = 324DD2BE246D658500377005 /* MXHkdfSha256.m */; };
+		324DD2C2246D658500377005 /* MXHkdfSha256.m in Sources */ = {isa = PBXBuildFile; fileRef = 324DD2BE246D658500377005 /* MXHkdfSha256.m */; };
+		324DD2C5246E638B00377005 /* MXAesHmacSha2.h in Headers */ = {isa = PBXBuildFile; fileRef = 324DD2C3246E638B00377005 /* MXAesHmacSha2.h */; };
+		324DD2C6246E638B00377005 /* MXAesHmacSha2.h in Headers */ = {isa = PBXBuildFile; fileRef = 324DD2C3246E638B00377005 /* MXAesHmacSha2.h */; };
+		324DD2C7246E638B00377005 /* MXAesHmacSha2.m in Sources */ = {isa = PBXBuildFile; fileRef = 324DD2C4246E638B00377005 /* MXAesHmacSha2.m */; };
+		324DD2C8246E638B00377005 /* MXAesHmacSha2.m in Sources */ = {isa = PBXBuildFile; fileRef = 324DD2C4246E638B00377005 /* MXAesHmacSha2.m */; };
 		3250E7CA220C913900736CB5 /* MXCryptoTools.h in Headers */ = {isa = PBXBuildFile; fileRef = 3250E7C8220C913900736CB5 /* MXCryptoTools.h */; };
 		3250E7CB220C913900736CB5 /* MXCryptoTools.m in Sources */ = {isa = PBXBuildFile; fileRef = 3250E7C9220C913900736CB5 /* MXCryptoTools.m */; };
 		3252DCAE224BE5D40032264F /* MXKeyVerificationManager.h in Headers */ = {isa = PBXBuildFile; fileRef = 3252DCAC224BE5D40032264F /* MXKeyVerificationManager.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -1312,6 +1320,10 @@
 		324DD2B4246C21C700377005 /* MXSecretStorageKeyCreationInfo.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MXSecretStorageKeyCreationInfo.h; sourceTree = "<group>"; };
 		324DD2B5246C21C700377005 /* MXSecretStorageKeyCreationInfo.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MXSecretStorageKeyCreationInfo.m; sourceTree = "<group>"; };
 		324DD2BA246C3ADE00377005 /* MXCryptoSecretStorageTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MXCryptoSecretStorageTests.m; sourceTree = "<group>"; };
+		324DD2BD246D658500377005 /* MXHkdfSha256.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MXHkdfSha256.h; sourceTree = "<group>"; };
+		324DD2BE246D658500377005 /* MXHkdfSha256.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MXHkdfSha256.m; sourceTree = "<group>"; };
+		324DD2C3246E638B00377005 /* MXAesHmacSha2.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MXAesHmacSha2.h; sourceTree = "<group>"; };
+		324DD2C4246E638B00377005 /* MXAesHmacSha2.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MXAesHmacSha2.m; sourceTree = "<group>"; };
 		3250E7C8220C913900736CB5 /* MXCryptoTools.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MXCryptoTools.h; sourceTree = "<group>"; };
 		3250E7C9220C913900736CB5 /* MXCryptoTools.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MXCryptoTools.m; sourceTree = "<group>"; };
 		3252DCAC224BE5D40032264F /* MXKeyVerificationManager.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MXKeyVerificationManager.h; sourceTree = "<group>"; };
@@ -2127,6 +2139,10 @@
 				3250E7C9220C913900736CB5 /* MXCryptoTools.m */,
 				324BE4661E3FADB1008D99D4 /* MXMegolmExportEncryption.h */,
 				324BE4671E3FADB1008D99D4 /* MXMegolmExportEncryption.m */,
+				324DD2BD246D658500377005 /* MXHkdfSha256.h */,
+				324DD2BE246D658500377005 /* MXHkdfSha256.m */,
+				324DD2C3246E638B00377005 /* MXAesHmacSha2.h */,
+				324DD2C4246E638B00377005 /* MXAesHmacSha2.m */,
 			);
 			path = Utils;
 			sourceTree = "<group>";
@@ -3217,6 +3233,7 @@
 				3245A7501AF7B2930001D8A7 /* MXCall.h in Headers */,
 				02CAD43B217DD12F0074700B /* MXContentScanEncryptedBody.h in Headers */,
 				32D2CC0423422462002BD8CA /* MX3PidAddManager.h in Headers */,
+				324DD2C5246E638B00377005 /* MXAesHmacSha2.h in Headers */,
 				3271877D1DA7CB2F0071C818 /* MXDecrypting.h in Headers */,
 				32114A851A262CE000FF2EC4 /* MXStore.h in Headers */,
 				32BA86AF2152A79E008F277E /* MXRoomNameDefaultStringLocalizations.h in Headers */,
@@ -3247,6 +3264,7 @@
 				325D1C261DFECE0D0070B8BF /* MXCrypto_Private.h in Headers */,
 				B10AFB4322A970060092E6AF /* MXEventReplace.h in Headers */,
 				327A5F4D239805F600ED6329 /* MXKeyVerificationStart.h in Headers */,
+				324DD2BF246D658500377005 /* MXHkdfSha256.h in Headers */,
 				32E402B921C957D2004E87A6 /* MXOlmSession.h in Headers */,
 				32792BD42295A86600F4FC9D /* MXAggregatedReactionsUpdater.h in Headers */,
 				B146D4D621A5A44E00D8C2C6 /* MXScanRealmInMemoryProvider.h in Headers */,
@@ -3457,6 +3475,7 @@
 				B14EF2CF2397E90400758AF0 /* (null) in Headers */,
 				B14EF2D02397E90400758AF0 /* MXWellknownIntegrations.h in Headers */,
 				324AAC832399143400380A66 /* MXKeyVerificationRequestByDMJSONModel.h in Headers */,
+				324DD2C0246D658500377005 /* MXHkdfSha256.h in Headers */,
 				B14EF2D12397E90400758AF0 /* MXEventsEnumeratorOnArray.h in Headers */,
 				B1DDC9D72418098200D208E3 /* MXIncomingSASTransaction_Private.h in Headers */,
 				B14EF2D22397E90400758AF0 /* MXReplyEventParts.h in Headers */,
@@ -3601,6 +3620,7 @@
 				B14EF3422397E90400758AF0 /* MXPeekingRoomSummary.h in Headers */,
 				B14EF3432397E90400758AF0 /* MXEventTimeline.h in Headers */,
 				B14EF3442397E90400758AF0 /* NSArray+MatrixSDK.h in Headers */,
+				324DD2C6246E638B00377005 /* MXAesHmacSha2.h in Headers */,
 				B14EF3452397E90400758AF0 /* MXReplyEventParser.h in Headers */,
 				B14EF3462397E90400758AF0 /* MXIncomingSASTransaction.h in Headers */,
 				B14EF3472397E90400758AF0 /* MXCryptoAlgorithms.h in Headers */,
@@ -4056,7 +4076,9 @@
 				324DD2A8246AE81300377005 /* MXSecretStorageKeyContent.m in Sources */,
 				02CAD43A217DD12F0074700B /* MXContentScanEncryptedBody.m in Sources */,
 				F03EF5091DF071D5009DF592 /* MXEncryptedAttachments.m in Sources */,
+				324DD2C1246D658500377005 /* MXHkdfSha256.m in Sources */,
 				3274538623FD69D600438328 /* MXKeyVerificationRequestByToDeviceJSONModel.m in Sources */,
+				324DD2C7246E638B00377005 /* MXAesHmacSha2.m in Sources */,
 				B172857D2100D4F60052C51E /* MXSendReplyEventDefaultStringLocalizations.m in Sources */,
 				321CFDEF225264C4004D31DF /* NSArray+MatrixSDK.m in Sources */,
 				327A5F52239805F600ED6329 /* MXKeyVerificationStart.m in Sources */,
@@ -4216,6 +4238,7 @@
 				B14EF1CB2397E90400758AF0 /* MXRoomAccountData.m in Sources */,
 				B14EF1CC2397E90400758AF0 /* MXEventAnnotationChunk.m in Sources */,
 				B14EF1CD2397E90400758AF0 /* MXRealmEventScanStore.m in Sources */,
+				324DD2C2246D658500377005 /* MXHkdfSha256.m in Sources */,
 				B14EF1CE2397E90400758AF0 /* MXScanRealmFileProvider.m in Sources */,
 				B14EF1CF2397E90400758AF0 /* MXScanManager.m in Sources */,
 				3291DC8623DF52E20009732F /* MXRoomCreationParameters.m in Sources */,
@@ -4444,6 +4467,7 @@
 				32A9F8E1244720B10069C65B /* MXThrottler.m in Sources */,
 				3274538D23FD918800438328 /* MXKeyVerificationByToDeviceRequest.m in Sources */,
 				32CEEF5223B0AB030039BA98 /* MXCrossSigning.m in Sources */,
+				324DD2C8246E638B00377005 /* MXAesHmacSha2.m in Sources */,
 				B14EF2862397E90400758AF0 /* MXRealmMediaScanStore.m in Sources */,
 				B14EF2872397E90400758AF0 /* MXPusherData.m in Sources */,
 				324DD2A3246AE1EF00377005 /* MXEncryptedSecretContent.m in Sources */,
