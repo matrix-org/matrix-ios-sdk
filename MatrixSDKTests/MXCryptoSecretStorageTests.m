@@ -299,6 +299,35 @@ UInt8 privateKeyBytes[] = {
     }];
 }
 
+// Test MXSecretStorage.checkPrivateKey
+// - Have Alice with SSSS bootstrapped
+// - Check the private key we have match the SSSS key
+// -> It must match
+- (void)testCheckPrivateKey
+{
+    // - Have Alice with SSSS bootstrapped
+    [self createScenarioWithMatrixJsSDKData:^(MXSession *aliceSession, NSString *roomId, XCTestExpectation *expectation) {
+        
+        MXSecretStorage *secretStorage = aliceSession.crypto.secretStorage;
+        
+        NSError *error;
+        NSData *privateKey = [MXRecoveryKey decode:jsSDKDataRecoveryKey error:&error];
+        XCTAssertNotNil(privateKey);
+        
+        MXSecretStorageKeyContent *defaultKey = secretStorage.defaultKey;
+        XCTAssert(defaultKey);
+        
+        // - Check the private key we have match the SSSS key
+        [secretStorage checkPrivateKey:privateKey withKey:defaultKey complete:^(BOOL match) {
+            
+            // -> It must match
+            XCTAssertTrue(match);
+            
+            [expectation fulfill];
+        }];
+    }];
+}
+
 
 #pragma mark - Secret storage
 
@@ -313,7 +342,7 @@ UInt8 privateKeyBytes[] = {
         
         MXSecretStorage *secretStorage = aliceSession.crypto.secretStorage;
         
-        // Test scenarion creation
+        // Test scenario creation
         MXSecretStorageKeyContent *defaultKey = secretStorage.defaultKey;
         XCTAssert(defaultKey);
         

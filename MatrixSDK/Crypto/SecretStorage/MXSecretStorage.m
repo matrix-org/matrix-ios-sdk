@@ -31,6 +31,7 @@
 
 NSString *const MXSecretStorageErrorDomain = @"org.matrix.sdk.MXSecretStorage";
 static NSString* const kSecretStorageKeyIdFormat = @"m.secret_storage.key.%@";
+static NSString* const kSecretStorageZeroString = @"\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0";
 
 
 
@@ -117,13 +118,22 @@ static NSString* const kSecretStorageKeyIdFormat = @"m.secret_storage.key.%@";
             return;
         }
         
+        // Build iv and mac
+        MXEncryptedSecretContent *encryptedZeroString = [self encryptedZeroStringWithPrivateKey:privateKey iv:nil error:&error];
+        if (error)
+        {
+            dispatch_async(dispatch_get_main_queue(), ^{
+                failure(error);
+            });
+            return;
+        }
+        
         MXSecretStorageKeyContent *ssssKeyContent = [MXSecretStorageKeyContent new];
         ssssKeyContent.name = keyName;
         ssssKeyContent.algorithm = MXSecretStorageKeyAlgorithm.aesHmacSha2;
         ssssKeyContent.passphrase = passphraseInfo;
-        // TODO
-        // ssssKeyContent.iv = ...
-        // ssssKeyContent.mac =
+        ssssKeyContent.iv = encryptedZeroString.iv;
+        ssssKeyContent.mac = encryptedZeroString.mac;
         
         NSString *accountDataId = [self storageKeyIdForKey:keyId];
         MXHTTPOperation *operation2 = [self setAccountData:ssssKeyContent.JSONDictionary forType:accountDataId success:^{
@@ -162,6 +172,27 @@ static NSString* const kSecretStorageKeyIdFormat = @"m.secret_storage.key.%@";
     }
     
     return key;
+}
+
+- (void)checkPrivateKey:(NSData *)privateKey withKey:(MXSecretStorageKeyContent *)key complete:(void (^)(BOOL match))complete
+{
+    MXWeakify(self);
+    dispatch_async(processingQueue, ^{
+        MXStrongifyAndReturnIfNil(self);
+        
+        NSData *iv = [MXBase64Tools dataFromUnpaddedBase64:key.iv];
+        
+        // MACs should match
+        NSError *error;
+        MXEncryptedSecretContent *encryptedZeroString = [self encryptedZeroStringWithPrivateKey:privateKey iv:iv error:&error];
+        
+        BOOL match = !key.mac   // If we have no information, we have to assume the key is right
+        || [key.mac isEqualToString:encryptedZeroString.mac];
+        
+        dispatch_async(dispatch_get_main_queue(), ^{
+            complete(match);
+        });
+    });
 }
 
 - (MXHTTPOperation *)setAsDefaultKeyWithKeyId:(NSString*)keyId
@@ -251,7 +282,7 @@ static NSString* const kSecretStorageKeyIdFormat = @"m.secret_storage.key.%@";
             // Encrypt
             NSError *error;
             NSData *privateKey = keys[keyId];
-            MXEncryptedSecretContent *encryptedSecretContent = [self encryptSecret:unpaddedBase64Secret withSecretId:secretId privateKey:privateKey error:&error];
+            MXEncryptedSecretContent *encryptedSecretContent = [self encryptSecret:unpaddedBase64Secret withSecretId:secretId privateKey:privateKey iv:nil error:&error];
             if (error)
             {
                 NSLog(@"[MXSecretStorage] storeSecret: ERROR: Cannot encrypt. Error: %@", error);
@@ -435,7 +466,7 @@ static NSString* const kSecretStorageKeyIdFormat = @"m.secret_storage.key.%@";
 
 #pragma mark - aes-hmac-sha2
 
-- (nullable MXEncryptedSecretContent *)encryptSecret:(NSString*)unpaddedBase64Secret withSecretId:(NSString*)secretId privateKey:(NSData*)privateKey error:(NSError**)error
+- (nullable MXEncryptedSecretContent *)encryptSecret:(NSString*)unpaddedBase64Secret withSecretId:(NSString*)secretId privateKey:(NSData*)privateKey iv:(nullable NSData*)iv error:(NSError**)error
 {
     NSData *secret = [unpaddedBase64Secret dataUsingEncoding:NSUTF8StringEncoding];
     
@@ -468,6 +499,15 @@ static NSString* const kSecretStorageKeyIdFormat = @"m.secret_storage.key.%@";
     
     return secretContent;
 }
+
+- (nullable MXEncryptedSecretContent *)encryptedZeroStringWithPrivateKey:(NSData*)privateKey iv:(nullable NSData*)iv error:(NSError**)error
+{
+    // MSC2472(https://github.com/uhoreg/matrix-doc/blob/symmetric_ssss/proposals/2472-symmetric-ssss.md) says:
+    // Encrypt and MAC a message consisting of 32 bytes of 0 as described above, using the empty string
+    // as the info parameter to the HKDF in step 1.
+    return [self encryptSecret:kSecretStorageZeroString withSecretId:nil privateKey:privateKey iv:iv error:error];
+}
+
 
 - (nullable NSString *)decryptSecretWithSecretId:(NSString*)secretId
                                    secretContent:(MXEncryptedSecretContent*)secretContent

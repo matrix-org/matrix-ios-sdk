@@ -76,6 +76,15 @@ typedef enum : NSUInteger
 - (nullable MXSecretStorageKeyContent *)keyWithKeyId:(NSString*)keyId;
 
 /**
+ Check whether a private key matches what we expect based on the key info.
+ 
+ @param privateKey the private key.
+ @param key the key.
+ @return complete called with a boolean that indicates whether or not the key matches
+ */
+- (void)checkPrivateKey:(NSData*)privateKey withKey:(MXSecretStorageKeyContent*)key complete:(void (^)(BOOL match))complete;
+
+/**
  Mark a key as default in the user's account_data.
 
  The default key will be used to encrypt all secrets that the user would expect to be available on all their clients.
