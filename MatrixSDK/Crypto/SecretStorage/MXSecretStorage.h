@@ -21,6 +21,24 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
+
+#pragma mark - Constants
+
+FOUNDATION_EXPORT NSString *const MXSecretStorageErrorDomain;
+typedef enum : NSUInteger
+{
+    MXSecretStorageUnknownSecretCode,
+    MXSecretStorageUnknownKeyCode,
+    MXSecretStorageSecretNotEncryptedCode,
+    MXSecretStorageSecretNotEncryptedWithKeyCode,
+    MXSecretStorageUnsupportedAlgorithmCode,
+
+    MXSecretStorageBadCiphertextCode,
+    MXSecretStorageBadMacCode,
+    
+} MXSecretStorageErrorCode;
+
+ 
 /**
  Secure Secret Storage Server-side manager.
  
@@ -102,11 +120,11 @@ withSecretStorageKeys:(NSDictionary<NSString*, NSData*> *)keys
  @param secretId the id of the secret.
  @return the secret. Nil if the secret does not exist.
  */
-- (MXHTTPOperation *)secretWithSecretId:(NSString*)secretId
-                 withSecretStorageKeyId:(nullable NSString*)keyId
-                             privateKey:(NSData*)privateKey
-                                success:(void (^)(NSString *secret))success
-                                failure:(void (^)(NSError *error))failure;
+- (void)secretWithSecretId:(NSString*)secretId
+    withSecretStorageKeyId:(nullable NSString*)keyId
+                privateKey:(NSData*)privateKey
+                   success:(void (^)(NSString *secret))success
+                   failure:(void (^)(NSError *error))failure;
 
 
 /**

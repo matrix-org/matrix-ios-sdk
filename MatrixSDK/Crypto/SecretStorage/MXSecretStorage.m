@@ -20,10 +20,16 @@
 #import "MXTools.h"
 #import "MXKeyBackupPassword.h"
 #import "MXRecoveryKey.h"
+#import "MXHkdfSha256.h"
+#import "MXAesHmacSha2.h"
+#import "MXBase64Tools.h"
 #import <OLMKit/OLMKit.h>
+#import "MXEncryptedSecretContent.h"
+
 
 #pragma mark - Constants
 
+NSString *const MXSecretStorageErrorDomain = @"org.matrix.sdk.MXSecretStorage";
 static NSString* const kSecretStorageKeyIdFormat = @"m.secret_storage.key.%@";
 
 
@@ -211,7 +217,7 @@ static NSString* const kSecretStorageKeyIdFormat = @"m.secret_storage.key.%@";
     NSDictionary *accountData = [_mxSession.accountData accountDataForEventType:secretId];
     if (!accountData)
     {
-        NSLog(@"[MXSecretStorage] secretStorageKeysUsedForSecretWithSecretId: No Secret for secret id %@", secretId);
+        NSLog(@"[MXSecretStorage] secretStorageKeysUsedForSecretWithSecretId: ERROR: No Secret for secret id %@", secretId);
         return nil;
     }
     
@@ -231,14 +237,82 @@ static NSString* const kSecretStorageKeyIdFormat = @"m.secret_storage.key.%@";
     return secretStorageKeys;
 }
 
-- (MXHTTPOperation *)secretWithSecretId:(NSString*)secretId
-                 withSecretStorageKeyId:(nullable NSString*)keyId
-                             privateKey:(NSData*)privateKey
-                                success:(void (^)(NSString *secret))success
-                                failure:(void (^)(NSError *error))failure
+- (void)secretWithSecretId:(NSString*)secretId
+    withSecretStorageKeyId:(nullable NSString*)keyId
+                privateKey:(NSData*)privateKey
+                   success:(void (^)(NSString *secret))success
+                   failure:(void (^)(NSError *error))failure
 {
-    failure(nil);
-    return nil;
+    NSDictionary *accountData = [_mxSession.accountData accountDataForEventType:secretId];
+    if (!accountData)
+    {
+        NSLog(@"[MXSecretStorage] secretWithSecretId: ERROR: Unknown secret id %@", secretId);
+        failure([self errorWithCode:MXSecretStorageUnknownSecretCode reason:[NSString stringWithFormat:@"Unknown secret %@", secretId]]);
+        return;
+    }
+    
+    if (!keyId)
+    {
+        keyId = self.defaultKeyId;
+    }
+    if (!keyId)
+    {
+        NSLog(@"[MXSecretStorage] secretWithSecretId: ERROR: No key id provided and no default key id");
+        failure([self errorWithCode:MXSecretStorageUnknownKeyCode reason:@"No key id"]);
+        return;
+    }
+    
+    MXSecretStorageKeyContent *key = [self keyWithKeyId:keyId];
+    if (!key)
+    {
+        NSLog(@"[MXSecretStorage] secretWithSecretId: ERROR: No key for with id %@", secretId);
+        failure([self errorWithCode:MXSecretStorageUnknownKeyCode reason:[NSString stringWithFormat:@"Unknown key %@", keyId]]);
+        return;
+    }
+    
+    NSDictionary *encryptedContent;
+    MXJSONModelSetDictionary(encryptedContent, accountData[@"encrypted"]);
+    if (!encryptedContent)
+    {
+        NSLog(@"[MXSecretStorage] secretWithSecretId: ERROR: No encrypted data for the secret");
+        failure([self errorWithCode:MXSecretStorageSecretNotEncryptedCode reason:[NSString stringWithFormat:@"Missing content for secret %@", secretId]]);
+        return;
+    }
+    
+    MXEncryptedSecretContent *secretContent;
+    MXJSONModelSetMXJSONModel(secretContent, MXEncryptedSecretContent.class, encryptedContent[keyId]);
+    if (!secretContent)
+    {
+        NSLog(@"[MXSecretStorage] secretWithSecretId: ERROR: No content for secret %@ with key %@: %@", secretId, keyId, encryptedContent);
+        failure([self errorWithCode:MXSecretStorageSecretNotEncryptedWithKeyCode reason:[NSString stringWithFormat:@"Missing content for secret %@ with key %@", secretId, keyId]]);
+        return;
+    }
+    
+    if (![key.algorithm isEqualToString:MXSecretStorageKeyAlgorithm.aesHmacSha2])
+    {
+        NSLog(@"[MXSecretStorage] secretWithSecretId: ERROR: Unsupported algorihthm %@", key.algorithm);
+        failure([self errorWithCode:MXSecretStorageUnsupportedAlgorithmCode reason:[NSString stringWithFormat:@"Unknown algorithm %@", key.algorithm]]);
+        return;
+    }
+    
+    MXWeakify(self);
+    dispatch_async(processingQueue, ^{
+        MXStrongifyAndReturnIfNil(self);
+        
+        NSError *error;
+        NSString *secret = [self decryptSecretWithSecretId:secretId secretContent:secretContent withPrivateKey:privateKey error:&error];
+        
+        dispatch_async(dispatch_get_main_queue(), ^{
+            if (error)
+            {
+                failure(error);
+            }
+            else
+            {
+                success(secret);
+            }
+        });
+    });
 }
 
 
@@ -275,6 +349,68 @@ static NSString* const kSecretStorageKeyIdFormat = @"m.secret_storage.key.%@";
     });
     
     return operation;
+}
+
+- (NSError*)errorWithCode:(MXSecretStorageErrorCode)code reason:(NSString*)reason
+{
+    return [NSError errorWithDomain:MXSecretStorageErrorDomain
+                        code:code
+                    userInfo:@{
+                               NSLocalizedDescriptionKey: [NSString stringWithFormat:@"MXSecretStorage: %@", reason]
+                               }];
+}
+
+
+#pragma mark - aes-hmac-sha2
+
+- (nullable NSString *)decryptSecretWithSecretId:(NSString*)secretId
+                                   secretContent:(MXEncryptedSecretContent*)secretContent
+                                  withPrivateKey:(NSData*)privateKey
+                                           error:(NSError**)error
+{
+    NSMutableData *zeroSalt = [NSMutableData dataWithLength:32];
+    [zeroSalt resetBytesInRange:NSMakeRange(0, zeroSalt.length)];
+    
+    NSData *pseudoRandomKey = [MXHkdfSha256 deriveSecret:privateKey
+                                                    salt:zeroSalt
+                                                    info:[secretId dataUsingEncoding:NSUTF8StringEncoding]
+                                            outputLength:64];
+    
+    // The first 32 bytes are used as the AES key, and the next 32 bytes are used as the MAC key
+    NSData *aesKey = [pseudoRandomKey subdataWithRange:NSMakeRange(0, 32)];
+    NSData *hmacKey = [pseudoRandomKey subdataWithRange:NSMakeRange(32, pseudoRandomKey.length - 32)];
+
+
+    NSData *iv = secretContent.iv ? [MXBase64Tools dataFromUnpaddedBase64:secretContent.iv] : [NSMutableData dataWithLength:16];
+    
+    NSData *hmac = [MXBase64Tools dataFromUnpaddedBase64:secretContent.mac];
+    if (!hmac)
+    {
+        NSLog(@"[MXSecretStorage] decryptSecret: ERROR: Bad base64 format for MAC: %@", secretContent.mac);
+        *error = [self errorWithCode:MXSecretStorageBadMacCode reason:[NSString stringWithFormat:@"Bad base64 format for MAC: %@", secretContent.mac]];
+        return nil;
+    }
+
+    NSData *cipher = [MXBase64Tools dataFromUnpaddedBase64:secretContent.ciphertext];
+    if (!cipher)
+    {
+        NSLog(@"[MXSecretStorage] decryptSecret: ERROR: Bad base64 format for ciphertext: %@", secretContent.ciphertext);
+        *error = [self errorWithCode:MXSecretStorageBadCiphertextCode reason:[NSString stringWithFormat:@"Bad base64 format for ciphertext: %@", secretContent.ciphertext]];
+        return nil;
+    }
+    
+    NSData *decrypted = [MXAesHmacSha2 decrypt:cipher
+                                        aesKey:aesKey iv:iv
+                                       hmacKey:hmacKey hmac:hmac
+                                         error:error];
+    
+    if (*error)
+    {
+        NSLog(@"[MXSecretStorage] decryptSecret: ERROR: Decryption failes: %@", *error);
+        return nil;
+    }
+    
+    return [[NSString alloc] initWithData:decrypted encoding:NSUTF8StringEncoding];
 }
 
 @end

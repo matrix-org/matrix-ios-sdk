@@ -18,6 +18,7 @@
 
 #import "MXCrypto.h"
 #import "MXRecoveryKey.h"
+#import "MXBase64Tools.h"
 
 #import "MatrixSDKTestsData.h"
 #import "MatrixSDKTestsE2EData.h"
@@ -27,6 +28,18 @@
 NSString *jsSDKDataPassphrase = @"ILoveMatrix&Riot";
 NSString *jsSDKDataRecoveryKey = @"EsTj n9MF ajEz Kjno jAEH tSTx Fxnt zGS8 6AFr iruj 1A87 nXJa";
 
+// Key backup private key
+UInt8 jsSDKDataBackupKeyBytes[] = {
+    211,96,67,95,190,57,224,96,194,124,120,183,96,57,198,121,249,127,223,73,113,216,27,255,246,25,220,244,88,32,186,123
+};
+
+
+UInt8 privateKeyBytes[] = {
+    0x77, 0x07, 0x6D, 0x0A, 0x73, 0x18, 0xA5, 0x7D,
+    0x3C, 0x16, 0xC1, 0x72, 0x51, 0xB2, 0x66, 0x45,
+    0xDF, 0x4C, 0x2F, 0x87, 0xEB, 0xC0, 0x99, 0x2A,
+    0xB1, 0x77, 0xFB, 0xA5, 0x1D, 0xB9, 0x2C, 0x2A
+};
 
 @interface MXCryptoSecretStorageTests : XCTestCase
 {
@@ -53,7 +66,7 @@ NSString *jsSDKDataRecoveryKey = @"EsTj n9MF ajEz Kjno jAEH tSTx Fxnt zGS8 6AFr 
 }
 
 
-// Have Alice with SSSS bootstapped
+// Have Alice with SSSS bootstrapped with data built by matrix-js-sdk
 - (void)createScenarioWithMatrixJsSDKData:(void (^)(MXSession *aliceSession, NSString *roomId, XCTestExpectation *expectation))readyToTest
 {
     // - Have Alice with encryption
@@ -146,7 +159,7 @@ NSString *jsSDKDataRecoveryKey = @"EsTj n9MF ajEz Kjno jAEH tSTx Fxnt zGS8 6AFr 
 
 #pragma mark - Secret Storage Key
 
-
+// Test MXSecretStorage.createKeyWithKeyId
 // - Have Alice with encryption
 // - Create a new secret storage key
 // -> MXSecretStorageKeyCreationInfo must be filled as expected
@@ -162,17 +175,17 @@ NSString *jsSDKDataRecoveryKey = @"EsTj n9MF ajEz Kjno jAEH tSTx Fxnt zGS8 6AFr 
         [secretStorage createKeyWithKeyId:nil keyName:nil passphrase:nil success:^(MXSecretStorageKeyCreationInfo * _Nonnull keyCreationInfo) {
             
             // -> MXSecretStorageKeyCreationInfo must be filled as expected
-            XCTAssert(keyCreationInfo);
-            XCTAssert(keyCreationInfo.keyId);
-            XCTAssert(keyCreationInfo.privateKey);
-            XCTAssert(keyCreationInfo.recoveryKey);
+            XCTAssertNotNil(keyCreationInfo);
+            XCTAssertNotNil(keyCreationInfo.keyId);
+            XCTAssertNotNil(keyCreationInfo.privateKey);
+            XCTAssertNotNil(keyCreationInfo.recoveryKey);
             
             MXSecretStorageKeyContent *keyContent = keyCreationInfo.content;
-            XCTAssert(keyContent);
+            XCTAssertNotNil(keyContent);
             XCTAssertEqualObjects(keyContent.algorithm, MXSecretStorageKeyAlgorithm.aesHmacSha2);
             XCTAssertNil(keyContent.name);
-            XCTAssert(keyContent.iv);
-            XCTAssert(keyContent.mac);
+            XCTAssertNotNil(keyContent.iv);
+            XCTAssertNotNil(keyContent.mac);
             XCTAssertNil(keyContent.passphrase);
             
 
@@ -180,7 +193,7 @@ NSString *jsSDKDataRecoveryKey = @"EsTj n9MF ajEz Kjno jAEH tSTx Fxnt zGS8 6AFr 
             MXSecretStorageKeyContent *key = [secretStorage keyWithKeyId:keyCreationInfo.keyId];
             
             // -> We must get it with the same value as MXSecretStorageKeyCreationInfo
-            XCTAssert(key);
+            XCTAssertNotNil(key);
             XCTAssertEqualObjects(key.JSONDictionary, keyContent.JSONDictionary);
             
             [expectation fulfill];
@@ -191,6 +204,7 @@ NSString *jsSDKDataRecoveryKey = @"EsTj n9MF ajEz Kjno jAEH tSTx Fxnt zGS8 6AFr 
     }];
 }
 
+// Test MXSecretStorage.createKeyWithKeyId with passphrase
 // - Have Alice with encryption
 // - Create a new secret storage key with a passphrase
 // -> MXSecretStorageKeyCreationInfo must be filled as expected
@@ -211,23 +225,23 @@ NSString *jsSDKDataRecoveryKey = @"EsTj n9MF ajEz Kjno jAEH tSTx Fxnt zGS8 6AFr 
         [secretStorage createKeyWithKeyId:KEY_ID keyName:KEY_NAME passphrase:PASSPHRASE success:^(MXSecretStorageKeyCreationInfo * _Nonnull keyCreationInfo) {
             
             // -> MXSecretStorageKeyCreationInfo must be filled as expected
-            XCTAssert(keyCreationInfo);
+            XCTAssertNotNil(keyCreationInfo);
             XCTAssertEqualObjects(keyCreationInfo.keyId, KEY_ID);
-            XCTAssert(keyCreationInfo.privateKey);
-            XCTAssert(keyCreationInfo.recoveryKey);
+            XCTAssertNotNil(keyCreationInfo.privateKey);
+            XCTAssertNotNil(keyCreationInfo.recoveryKey);
             
             MXSecretStorageKeyContent *keyContent = keyCreationInfo.content;
-            XCTAssert(keyContent);
+            XCTAssertNotNil(keyContent);
             XCTAssertEqualObjects(keyContent.algorithm, MXSecretStorageKeyAlgorithm.aesHmacSha2);
             XCTAssertEqualObjects(keyContent.name, KEY_NAME);
-            XCTAssert(keyContent.iv);
-            XCTAssert(keyContent.mac);
+            XCTAssertNotNil(keyContent.iv);
+            XCTAssertNotNil(keyContent.mac);
             
             MXSecretStoragePassphrase *passphraseInfo = keyContent.passphrase;
-            XCTAssert(passphraseInfo);
+            XCTAssertNotNil(passphraseInfo);
             XCTAssertEqualObjects(passphraseInfo.algorithm, @"m.pbkdf2");
             XCTAssertGreaterThan(passphraseInfo.iterations, 0);
-            XCTAssert(passphraseInfo.salt);
+            XCTAssertNotNil(passphraseInfo.salt);
             XCTAssertEqual(passphraseInfo.bits, 256);
     
             
@@ -235,7 +249,7 @@ NSString *jsSDKDataRecoveryKey = @"EsTj n9MF ajEz Kjno jAEH tSTx Fxnt zGS8 6AFr 
             MXSecretStorageKeyContent *key = [secretStorage keyWithKeyId:keyCreationInfo.keyId];
             
             // -> We must get it with the same value as MXSecretStorageKeyCreationInfo
-            XCTAssert(key);
+            XCTAssertNotNil(key);
             XCTAssertEqualObjects(key.JSONDictionary, keyCreationInfo.content.JSONDictionary);
             
             [expectation fulfill];
@@ -246,6 +260,7 @@ NSString *jsSDKDataRecoveryKey = @"EsTj n9MF ajEz Kjno jAEH tSTx Fxnt zGS8 6AFr 
     }];
 }
 
+// Test MXSecretStorage.defaultKey
 // - Have Alice with encryption
 // - Create a secret storage key
 // - Set it as default
@@ -267,7 +282,7 @@ NSString *jsSDKDataRecoveryKey = @"EsTj n9MF ajEz Kjno jAEH tSTx Fxnt zGS8 6AFr 
                 MXSecretStorageKeyContent *defaultKey = secretStorage.defaultKey;
                 
                 // -> We must get it with the same value as MXSecretStorageKeyCreationInfo
-                XCTAssert(defaultKey);
+                XCTAssertNotNil(defaultKey);
                 XCTAssertEqualObjects(defaultKey.JSONDictionary, keyCreationInfo.content.JSONDictionary);
                 
                 [expectation fulfill];
@@ -287,9 +302,13 @@ NSString *jsSDKDataRecoveryKey = @"EsTj n9MF ajEz Kjno jAEH tSTx Fxnt zGS8 6AFr 
 
 #pragma mark - Secret storage
 
-
+// Test MXSecretStorage.secretStorageKeysUsedForSecretWithSecretId
+// - Have Alice with SSSS bootstrapped
+// - Get keys used for encrypting the MSK
+// -> There should be one, the default key
 - (void)testSecretStorageKeysUsedForSecretWithSecretId
 {
+    // - Have Alice with SSSS bootstrapped
     [self createScenarioWithMatrixJsSDKData:^(MXSession *aliceSession, NSString *roomId, XCTestExpectation *expectation) {
         
         MXSecretStorage *secretStorage = aliceSession.crypto.secretStorage;
@@ -298,26 +317,45 @@ NSString *jsSDKDataRecoveryKey = @"EsTj n9MF ajEz Kjno jAEH tSTx Fxnt zGS8 6AFr 
         MXSecretStorageKeyContent *defaultKey = secretStorage.defaultKey;
         XCTAssert(defaultKey);
         
+        // - Get keys used for encrypting the MSK
         NSDictionary<NSString*, MXSecretStorageKeyContent*> *secretStorageKeys = [secretStorage secretStorageKeysUsedForSecretWithSecretId:MXSecretId.crossSigningMaster];
+        
+        // -> There should be one, the default key
         XCTAssertEqual(secretStorageKeys.count, 1);
+        XCTAssertEqualObjects(secretStorageKeys.allKeys.firstObject, secretStorage.defaultKeyId);
         
         [expectation fulfill];
     }];
 }
 
+// Test MXSecretStorage.secretWithSecretId
+// - Have Alice with SSSS bootstrapped
+// - Get the backup key from SSSS using the default key
+// -> We should get it
+// -> It should be the one created by matrix-js-sdk
 - (void)testGetSecret
 {
+    // - Have Alice with SSSS bootstrapped
     [self createScenarioWithMatrixJsSDKData:^(MXSession *aliceSession, NSString *roomId, XCTestExpectation *expectation) {
         
         MXSecretStorage *secretStorage = aliceSession.crypto.secretStorage;
         
         NSError *error;
         NSData *privateKey = [MXRecoveryKey decode:jsSDKDataRecoveryKey error:&error];
-        XCTAssert(privateKey);
+        XCTAssertNotNil(privateKey);
         
-        [secretStorage secretWithSecretId:MXSecretId.crossSigningMaster withSecretStorageKeyId:nil privateKey:privateKey success:^(NSString * _Nonnull secret) {
+        // - Get the backup key from SSSS using the default key
+        [secretStorage secretWithSecretId:MXSecretId.keyBackup withSecretStorageKeyId:nil privateKey:privateKey success:^(NSString * _Nonnull secret) {
             
-            XCTAssert(secret);
+            // -> We should get it
+            XCTAssertNotNil(secret);
+            
+            // -> It should be the one created by matrix-js-sdk
+            NSData *key = [MXBase64Tools dataFromUnpaddedBase64:secret];
+            NSData *jsKey = [NSData dataWithBytes:jsSDKDataBackupKeyBytes length:sizeof(jsSDKDataBackupKeyBytes)];
+            
+            XCTAssertEqualObjects(key, jsKey);
+            
             [expectation fulfill];
             
         } failure:^(NSError * _Nonnull error) {
