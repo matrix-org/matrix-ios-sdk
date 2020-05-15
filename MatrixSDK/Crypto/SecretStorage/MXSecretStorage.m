@@ -180,7 +180,7 @@ static NSString* const kSecretStorageZeroString = @"\0\0\0\0\0\0\0\0\0\0\0\0\0\0
     dispatch_async(processingQueue, ^{
         MXStrongifyAndReturnIfNil(self);
         
-        NSData *iv = [MXBase64Tools dataFromUnpaddedBase64:key.iv];
+        NSData *iv = [MXBase64Tools dataFromBase64:key.iv];
         
         // MACs should match
         NSError *error;
@@ -493,7 +493,7 @@ static NSString* const kSecretStorageZeroString = @"\0\0\0\0\0\0\0\0\0\0\0\0\0\0
     }
     
     MXEncryptedSecretContent *secretContent = [MXEncryptedSecretContent new];
-    secretContent.ciphertext = [MXBase64Tools unpaddedBase64FromData:cipher];
+    secretContent.ciphertext = [MXBase64Tools base64FromData:cipher];
     secretContent.mac = [MXBase64Tools base64FromData:hmac];
     secretContent.iv = [MXBase64Tools base64FromData:iv];
     
@@ -537,7 +537,7 @@ static NSString* const kSecretStorageZeroString = @"\0\0\0\0\0\0\0\0\0\0\0\0\0\0
         return nil;
     }
 
-    NSData *cipher = [MXBase64Tools dataFromUnpaddedBase64:secretContent.ciphertext];
+    NSData *cipher = [MXBase64Tools dataFromBase64:secretContent.ciphertext];
     if (!cipher)
     {
         NSLog(@"[MXSecretStorage] decryptSecret: ERROR: Bad base64 format for ciphertext: %@", secretContent.ciphertext);
