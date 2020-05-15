@@ -186,8 +186,12 @@ static NSString* const kSecretStorageZeroString = @"\0\0\0\0\0\0\0\0\0\0\0\0\0\0
         NSError *error;
         MXEncryptedSecretContent *encryptedZeroString = [self encryptedZeroStringWithPrivateKey:privateKey iv:iv error:&error];
         
+        // Compare bytes instead of base64 strings to avoid base64 padding issue
+        NSData *keyMac = [MXBase64Tools dataFromBase64:key.mac];
+        NSData *encryptedZeroStringMac = [MXBase64Tools dataFromBase64:encryptedZeroString.mac];
+        
         BOOL match = !key.mac   // If we have no information, we have to assume the key is right
-        || [key.mac isEqualToString:encryptedZeroString.mac];
+        || [keyMac isEqualToData:encryptedZeroStringMac];
         
         dispatch_async(dispatch_get_main_queue(), ^{
             complete(match);
