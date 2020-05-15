@@ -6,6 +6,9 @@ Improvements:
  * Pod: Update AFNetworking version (#793).
  * Pod: Update Realm and OHTTPStubs.
 
+Bug fix:
+ * Fixed cancel reason response for verification request.
+
 Changes in Matrix iOS SDK in 0.16.3 (2020-05-07)
 ================================================
 
