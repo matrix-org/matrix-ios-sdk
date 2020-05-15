@@ -201,14 +201,86 @@ static NSString* const kSecretStorageKeyIdFormat = @"m.secret_storage.key.%@";
 
 #pragma mark - Secret storage
 
-- (MXHTTPOperation *)storeSecret:(NSString*)secret
+- (MXHTTPOperation *)storeSecret:(NSString*)unpaddedBase64Secret
                     withSecretId:(nullable NSString*)secretId
            withSecretStorageKeys:(NSDictionary<NSString*, NSData*> *)keys
-                         success:(void (^)(void))success
+                         success:(void (^)(NSString *secretId))success
                          failure:(void (^)(NSError *error))failure
 {
-    failure(nil);
-    return nil;
+    MXHTTPOperation *operation = [MXHTTPOperation new];
+    
+    secretId = secretId ?: [[NSUUID UUID] UUIDString];
+    
+    MXWeakify(self);
+    dispatch_async(processingQueue, ^{
+        MXStrongifyAndReturnIfNil(self);
+        
+        NSMutableDictionary<NSString*, NSDictionary/*MXEncryptedSecretContent*/ *> *encryptedContents = [NSMutableDictionary dictionary];
+        for (NSString *keyId in keys)
+        {
+            MXSecretStorageKeyContent *key = [self keyWithKeyId:keyId];
+            if (!key)
+            {
+                NSLog(@"[MXSecretStorage] storeSecret: ERROR: No key for with id %@", keyId);
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    failure([self errorWithCode:MXSecretStorageUnknownKeyCode reason:[NSString stringWithFormat:@"Unknown key %@", keyId]]);
+                });
+                return;
+            }
+            
+            if (![key.algorithm isEqualToString:MXSecretStorageKeyAlgorithm.aesHmacSha2])
+            {
+                NSLog(@"[MXSecretStorage] storeSecret: ERROR: Unsupported algorihthm %@", key.algorithm);
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    failure([self errorWithCode:MXSecretStorageUnsupportedAlgorithmCode reason:[NSString stringWithFormat:@"Unknown algorithm %@", key.algorithm]]);
+                });
+                return;
+            }
+            
+            // Check secret input
+            NSData *secret = [MXBase64Tools dataFromUnpaddedBase64:unpaddedBase64Secret];
+            if (!secret)
+            {
+                NSLog(@"[MXSecretStorage] storeSecret: ERROR: The secret string is not in unpadded Base64 format");
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    failure([self errorWithCode:MXSecretStorageBadSecretFormatCode reason:@"Bad secret format"]);
+                });
+                return;
+            }
+            
+            // Encrypt
+            NSError *error;
+            NSData *privateKey = keys[keyId];
+            MXEncryptedSecretContent *encryptedSecretContent = [self encryptSecret:unpaddedBase64Secret withSecretId:secretId privateKey:privateKey error:&error];
+            if (error)
+            {
+                NSLog(@"[MXSecretStorage] storeSecret: ERROR: Cannot encrypt. Error: %@", error);
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    failure(error);
+                });
+                return;
+            }
+            
+            encryptedContents[keyId] = encryptedSecretContent.JSONDictionary;
+        }
+        
+        
+        MXHTTPOperation *operation2 = [self setAccountData:@{
+                                                             @"encrypted": encryptedContents
+                                                             } forType:secretId success:^{
+            dispatch_async(dispatch_get_main_queue(), ^{
+                success(secretId);
+            });
+        } failure:^(NSError *error) {
+            dispatch_async(dispatch_get_main_queue(), ^{
+                failure(error);
+            });
+        }];
+        
+        [operation mutateTo:operation2];
+    });
+    
+    return operation;
 }
 
 
@@ -265,7 +337,7 @@ static NSString* const kSecretStorageKeyIdFormat = @"m.secret_storage.key.%@";
     MXSecretStorageKeyContent *key = [self keyWithKeyId:keyId];
     if (!key)
     {
-        NSLog(@"[MXSecretStorage] secretWithSecretId: ERROR: No key for with id %@", secretId);
+        NSLog(@"[MXSecretStorage] secretWithSecretId: ERROR: No key for with id %@", keyId);
         failure([self errorWithCode:MXSecretStorageUnknownKeyCode reason:[NSString stringWithFormat:@"Unknown key %@", keyId]]);
         return;
     }
@@ -362,6 +434,40 @@ static NSString* const kSecretStorageKeyIdFormat = @"m.secret_storage.key.%@";
 
 
 #pragma mark - aes-hmac-sha2
+
+- (nullable MXEncryptedSecretContent *)encryptSecret:(NSString*)unpaddedBase64Secret withSecretId:(NSString*)secretId privateKey:(NSData*)privateKey error:(NSError**)error
+{
+    NSData *secret = [unpaddedBase64Secret dataUsingEncoding:NSUTF8StringEncoding];
+    
+    NSMutableData *zeroSalt = [NSMutableData dataWithLength:32];
+    [zeroSalt resetBytesInRange:NSMakeRange(0, zeroSalt.length)];
+    
+    NSData *pseudoRandomKey = [MXHkdfSha256 deriveSecret:privateKey
+                                                    salt:zeroSalt
+                                                    info:[secretId dataUsingEncoding:NSUTF8StringEncoding]
+                                            outputLength:64];
+    
+    // The first 32 bytes are used as the AES key, and the next 32 bytes are used as the MAC key
+    NSData *aesKey = [pseudoRandomKey subdataWithRange:NSMakeRange(0, 32)];
+    NSData *hmacKey = [pseudoRandomKey subdataWithRange:NSMakeRange(32, pseudoRandomKey.length - 32)];
+    
+    NSData *iv = [MXAesHmacSha2 iv];
+    
+    NSData *hmac;
+    NSData *cipher = [MXAesHmacSha2 encrypt:secret aesKey:aesKey iv:iv hmacKey:hmacKey hmac:&hmac error:error];
+    if (*error)
+    {
+        NSLog(@"[MXSecretStorage] encryptSecret: Encryption failed. Error: %@", *error);
+        return nil;
+    }
+    
+    MXEncryptedSecretContent *secretContent = [MXEncryptedSecretContent new];
+    secretContent.ciphertext = [MXBase64Tools unpaddedBase64FromData:cipher];
+    secretContent.mac = [MXBase64Tools unpaddedBase64FromData:hmac];
+    secretContent.iv = [MXBase64Tools unpaddedBase64FromData:iv];
+    
+    return secretContent;
+}
 
 - (nullable NSString *)decryptSecretWithSecretId:(NSString*)secretId
                                    secretContent:(MXEncryptedSecretContent*)secretContent

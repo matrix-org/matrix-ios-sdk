@@ -59,7 +59,8 @@ typedef enum : NSUInteger
   @param passphrase a passphrase used to generate the key. Nil will generate a key.
  
   @param success A block object called when the operation succeeds.
-  @param failure A block object called when the operation fails
+  @param failure A block object called when the operation fails.
+  @return a MXHTTPOperation instance.
  */
 - (MXHTTPOperation*)createKeyWithKeyId:(nullable NSString*)keyId
                                keyName:(nullable NSString*)keyName
@@ -79,8 +80,10 @@ typedef enum : NSUInteger
 
  The default key will be used to encrypt all secrets that the user would expect to be available on all their clients.
  
+ @param keyId the id of the key to set as default.
  @param success A block object called when the operation succeeds.
- @param failure A block object called when the operation fails
+ @param failure A block object called when the operation fails.
+ @return a MXHTTPOperation instance.
  */
 - (MXHTTPOperation *)setAsDefaultKeyWithKeyId:(NSString*)keyId
                                       success:(void (^)(void))success
@@ -102,14 +105,18 @@ typedef enum : NSUInteger
 /**
  Store an encrypted secret on the server.
  
- @param secret the secret.
+ @param unpaddedBase64Secret the secret in unpadded Base64 format.
  @param secretId the id of the secret.
+ @param keys the keys to encrypt the secret. A map keyId -> privateKey.
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+ @return a MXHTTPOperation instance.
  */
-- (MXHTTPOperation *)storeSecret:(NSString*)secret
-       withSecretId:(nullable NSString*)secretId
-withSecretStorageKeys:(NSDictionary<NSString*, NSData*> *)keys
-            success:(void (^)(void))success
-            failure:(void (^)(NSError *error))failure;
+- (MXHTTPOperation *)storeSecret:(NSString*)unpaddedBase64Secret
+                    withSecretId:(nullable NSString*)secretId
+           withSecretStorageKeys:(NSDictionary<NSString*, NSData*> *)keys
+                         success:(void (^)(NSString *secretId))success
+                         failure:(void (^)(NSError *error))failure;
 
 
 - (nullable NSDictionary<NSString*, MXSecretStorageKeyContent*> *)secretStorageKeysUsedForSecretWithSecretId:(NSString*)secretId;
@@ -129,27 +136,6 @@ withSecretStorageKeys:(NSDictionary<NSString*, NSData*> *)keys
                 privateKey:(NSData*)privateKey
                    success:(void (^)(NSString *unpaddedBase64Secret))success
                    failure:(void (^)(NSError *error))failure;
-
-
-/**
- Delete a secret from the server.
- 
- @param secretId the id of the secret.
- */
-//- (void)deleteSecretWithSecretId:(NSString*)secretId;
-
-
-/**
- * Check if a secret is stored on the server.
- *
- * @param {string} name the name of the secret
- * @param {boolean} checkKey check if the secret is encrypted by a trusted key
- *
- * @return {object?} map of key name to key info the secret is encrypted
- *     with, or null if it is not present or not encrypted with a trusted
- *     key
- */
-//async isStored(name, checkKey) {
 
 
 @end

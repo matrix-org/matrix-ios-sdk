@@ -25,9 +25,8 @@ NS_ASSUME_NONNULL_BEGIN
  */
 @interface MXEncryptedSecretContent : MXJSONModel
 
-// Unpadded base64-encoded ciphertext
+// Unpadded base64-encoded
 @property (nonatomic, nullable) NSString *ciphertext;
-
 @property (nonatomic, nullable) NSString *mac;
 @property (nonatomic, nullable) NSString *iv;
 

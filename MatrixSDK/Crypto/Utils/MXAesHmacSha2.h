@@ -25,8 +25,9 @@ typedef enum : NSUInteger
 {
     MXAesHmacSha2BadMacCode,
     MXAesHmacSha2CannotInitialiseCryptorCode,
+    MXAesHmacSha2EncryptionFailedCode,
     MXAesHmacSha2DecryptionFailedCode,
-    
+
 } MXAesHmacSha2ErrorCode;
 
 
@@ -34,6 +35,16 @@ typedef enum : NSUInteger
  `MXAesHmacSha2` exposes AES-HMAC primitives used in Matrix.
  */
 @interface MXAesHmacSha2 : NSObject
+
+/**
+ Create a suitable initilisation vector.
+ */
++ (NSData*)iv;
+
++ (nullable NSData*)encrypt:(NSData*)data
+                     aesKey:(NSData*)aesKey iv:(NSData*)iv
+                    hmacKey:(NSData*)hmacKey hmac:(NSData*_Nullable*_Nonnull)hmac
+                      error:(NSError**)error;
 
 + (nullable NSData*)decrypt:(NSData*)cipher
                      aesKey:(NSData*)aesKey iv:(NSData*)iv

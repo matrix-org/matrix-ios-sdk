@@ -366,4 +366,59 @@ UInt8 privateKeyBytes[] = {
     }];
 }
 
+// Test MXSecretStorage.secretWithSecretId
+// - Have Alice with SSSS bootstrapped
+// -> Store a new secret
+// - Get it back
+// -> We should get it and it should be right one
+- (void)testStoreSecret
+{
+    // - Have Alice with SSSS bootstrapped
+    [self createScenarioWithMatrixJsSDKData:^(MXSession *aliceSession, NSString *roomId, XCTestExpectation *expectation) {
+
+        NSString *theSecretText = @"A secret";
+        NSData *theSecret = [theSecretText dataUsingEncoding:kCFStringEncodingUTF8];
+        NSString *theSecretUnpaddedBase64 = [MXBase64Tools unpaddedBase64FromData:theSecret];
+                   
+        NSString *theSecretId = @"theSecretId";
+
+        MXSecretStorage *secretStorage = aliceSession.crypto.secretStorage;
+
+        NSError *error;
+        NSData *privateKey = [MXRecoveryKey decode:jsSDKDataRecoveryKey error:&error];
+        XCTAssertNotNil(privateKey);
+
+        // Build the key
+        NSDictionary<NSString*, NSData*> *keys = @{
+                                                   secretStorage.defaultKeyId: privateKey
+                                                   };
+
+
+        // -> Store a new secret
+        [secretStorage storeSecret:theSecretUnpaddedBase64 withSecretId:theSecretId withSecretStorageKeys:keys success:^(NSString * _Nonnull secretId) {
+
+            XCTAssertEqualObjects(theSecretId, secretId);
+
+            // - Get it back
+            [secretStorage secretWithSecretId:theSecretId withSecretStorageKeyId:nil privateKey:privateKey success:^(NSString * _Nonnull unpaddedBase64Secret) {
+
+                // -> We should get it and it should be right one
+                XCTAssertNotNil(unpaddedBase64Secret);
+                XCTAssertEqualObjects(unpaddedBase64Secret, theSecretUnpaddedBase64);
+
+                [expectation fulfill];
+
+            } failure:^(NSError * _Nonnull error) {
+                XCTFail(@"The operation should not fail - NSError: %@", error);
+                [expectation fulfill];
+            }];
+
+        } failure:^(NSError * _Nonnull error) {
+            XCTFail(@"The operation should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+
+    }];
+}
+
 @end
