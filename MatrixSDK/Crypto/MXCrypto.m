@@ -37,6 +37,7 @@
 #import "MXOutgoingRoomKeyRequestManager.h"
 #import "MXIncomingRoomKeyRequestManager.h"
 
+#import "MXSecretStorage_Private.h"
 #import "MXSecretShareManager_Private.h"
 
 #import "MXKeyVerificationManager_Private.h"
@@ -1786,6 +1787,7 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
 
         _keyVerificationManager = [[MXKeyVerificationManager alloc] initWithCrypto:self];
         
+        _secretStorage = [[MXSecretStorage alloc] initWithMatrixSession:_mxSession processingQueue:_cryptoQueue];
         _secretShareManager = [[MXSecretShareManager alloc] initWithCrypto:self];
 
         _crossSigning = [[MXCrossSigning alloc] initWithCrypto:self];

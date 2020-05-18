@@ -28,6 +28,7 @@
 #import "MXIncomingRoomKeyRequest.h"
 #import "MXIncomingRoomKeyRequestCancellation.h"
 
+#import "MXSecretStorage.h"
 #import "MXSecretShareManager.h"
 
 #import "MXKeyBackup.h"
@@ -97,6 +98,11 @@ extern NSString *const MXDeviceListDidUpdateUsersDevicesNotification;
  The device verification manager.
  */
 @property (nonatomic, readonly) MXKeyVerificationManager *keyVerificationManager;
+
+/**
+ The secret storage on homeserver manager.
+ */
+@property (nonatomic, readonly) MXSecretStorage *secretStorage;
 
 /**
  The secret share manager.

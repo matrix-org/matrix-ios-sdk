@@ -14,31 +14,20 @@
  limitations under the License.
  */
 
-#import <Foundation/Foundation.h>
+#import "MXSecretStorage.h"
+
+@class MXSession;
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface MXBase64Tools : NSObject
+@interface MXSecretStorage ()
 
-#pragma mark - Padding
-
-+ (NSString *)base64ToUnpaddedBase64:(NSString *)base64;
-
-+ (NSString *)padBase64:(NSString *)unpadded;
-
-#pragma mark - URL
-
-+ (NSString *)base64UrlToBase64:(NSString *)base64Url;
-
-+ (NSString *)base64ToBase64Url:(NSString *)base64;
-
-#pragma mark - Data
-
-+ (NSData *)dataFromUnpaddedBase64:(NSString *)unpaddedBase64;
-+ (NSString *)unpaddedBase64FromData:(NSData *)data;
-
-+ (NSData *)dataFromBase64:(NSString *)base64;
-+ (NSString *)base64FromData:(NSData *)data;
+/**
+ Constructor.
+ 
+ @param mxSession the related 'MXSession' instance.
+ */
+- (instancetype)initWithMatrixSession:(MXSession *)mxSession  processingQueue:(dispatch_queue_t)processingQueue;
 
 @end
 

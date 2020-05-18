@@ -16,29 +16,21 @@
 
 #import <Foundation/Foundation.h>
 
+#import "MXSecretStorageKeyContent.h"
+
 NS_ASSUME_NONNULL_BEGIN
 
-@interface MXBase64Tools : NSObject
+/**
+ Data returned by `[MXSecretStorageManager createKeyWithKeyId:]`.
+ */
+@interface MXSecretStorageKeyCreationInfo : NSObject
 
-#pragma mark - Padding
+@property (nonatomic) NSString *keyId;
 
-+ (NSString *)base64ToUnpaddedBase64:(NSString *)base64;
+@property (nonatomic) MXSecretStorageKeyContent *content;
 
-+ (NSString *)padBase64:(NSString *)unpadded;
-
-#pragma mark - URL
-
-+ (NSString *)base64UrlToBase64:(NSString *)base64Url;
-
-+ (NSString *)base64ToBase64Url:(NSString *)base64;
-
-#pragma mark - Data
-
-+ (NSData *)dataFromUnpaddedBase64:(NSString *)unpaddedBase64;
-+ (NSString *)unpaddedBase64FromData:(NSData *)data;
-
-+ (NSData *)dataFromBase64:(NSString *)base64;
-+ (NSString *)base64FromData:(NSData *)data;
+@property (nonatomic) NSData *privateKey;
+@property (nonatomic) NSString *recoveryKey;
 
 @end
 
