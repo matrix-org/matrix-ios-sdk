@@ -1,3 +1,9 @@
+Changes in Matrix iOS SDK in 0.16.5 (2020-05-xx)
+================================================
+
+Improvements:
+ * SAS verification: Support new key agreement.
+
 Changes in Matrix iOS SDK in 0.16.4 (2020-05-07)
 ================================================
 
