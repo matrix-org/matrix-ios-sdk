@@ -169,7 +169,9 @@
 
     if ([self.accepted.commitment isEqualToString:otherCommitment])
     {
-        self.sasBytes = [self generateSasBytesWithTheirPublicKey:keyContent.key requestingDevice:self.manager.crypto.myDevice otherDevice:self.otherDevice];
+        self.sasBytes = [self generateSasBytesWithTheirPublicKey:keyContent.key
+                                                requestingDevice:self.manager.crypto.myDevice sasPublicKey:self.olmSAS.publicKey
+                                                     otherDevice:self.otherDevice otherSasPublicKey:keyContent.key];
 
 //        NSLog(@"[MXKeyVerification][MXOutgoingSASTransaction] handleKey: ALICE CODE: %@", self.sasDecimal);
 //        NSLog(@"[MXKeyVerification][MXOutgoingSASTransaction] handleKey: ALICE EMOJI CODE: %@", self.sasEmoji);

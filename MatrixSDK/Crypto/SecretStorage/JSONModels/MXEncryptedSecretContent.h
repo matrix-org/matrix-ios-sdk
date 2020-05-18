@@ -16,29 +16,19 @@
 
 #import <Foundation/Foundation.h>
 
+#import "MXJSONModel.h"
+
 NS_ASSUME_NONNULL_BEGIN
 
-@interface MXBase64Tools : NSObject
+/**
+ `MXEncryptedSecretContent` describes the content of an encrypted secret in the user's account data.
+ */
+@interface MXEncryptedSecretContent : MXJSONModel
 
-#pragma mark - Padding
-
-+ (NSString *)base64ToUnpaddedBase64:(NSString *)base64;
-
-+ (NSString *)padBase64:(NSString *)unpadded;
-
-#pragma mark - URL
-
-+ (NSString *)base64UrlToBase64:(NSString *)base64Url;
-
-+ (NSString *)base64ToBase64Url:(NSString *)base64;
-
-#pragma mark - Data
-
-+ (NSData *)dataFromUnpaddedBase64:(NSString *)unpaddedBase64;
-+ (NSString *)unpaddedBase64FromData:(NSData *)data;
-
-+ (NSData *)dataFromBase64:(NSString *)base64;
-+ (NSString *)base64FromData:(NSData *)data;
+// Unpadded base64-encoded
+@property (nonatomic, nullable) NSString *ciphertext;
+@property (nonatomic, nullable) NSString *mac;
+@property (nonatomic, nullable) NSString *iv;
 
 @end
 

@@ -18,27 +18,25 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface MXBase64Tools : NSObject
+/**
+ HMAC-based Extract-and-Expand Key Derivation Function (HkdfSha256)
+ [RFC-5869] https://tools.ietf.org/html/rfc5869
+ */
+@interface MXHkdfSha256 : NSObject
 
-#pragma mark - Padding
-
-+ (NSString *)base64ToUnpaddedBase64:(NSString *)base64;
-
-+ (NSString *)padBase64:(NSString *)unpadded;
-
-#pragma mark - URL
-
-+ (NSString *)base64UrlToBase64:(NSString *)base64Url;
-
-+ (NSString *)base64ToBase64Url:(NSString *)base64;
-
-#pragma mark - Data
-
-+ (NSData *)dataFromUnpaddedBase64:(NSString *)unpaddedBase64;
-+ (NSString *)unpaddedBase64FromData:(NSData *)data;
-
-+ (NSData *)dataFromBase64:(NSString *)base64;
-+ (NSString *)base64FromData:(NSData *)data;
+/**
+ Derive a key.
+ 
+ @param secret IKM the input key materiak.
+ @param salt the salt value (a non-secret random value).
+ @param info context and application specific information (can be empty).
+ @param outputLength length of output keying material in bytes.
+ @return OKM the output keying material
+ */
++ (NSData *)deriveSecret:(NSData*)secret
+                    salt:(nullable NSData*)salt
+                    info:(NSData*)info
+            outputLength:(NSUInteger)outputLength;
 
 @end
 

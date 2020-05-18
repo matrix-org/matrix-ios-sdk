@@ -16,29 +16,22 @@
 
 #import <Foundation/Foundation.h>
 
+#import "MXJSONModel.h"
+
 NS_ASSUME_NONNULL_BEGIN
 
-@interface MXBase64Tools : NSObject
+/**
+ `MXSecretStoragePassphrase` describes information about the passphrase used for SSSS.
 
-#pragma mark - Padding
+ https://github.com/uhoreg/matrix-doc/blob/ssss/proposals/1946-secure_server-side_storage.md#passphrase
+ */
+@interface MXSecretStoragePassphrase : MXJSONModel
 
-+ (NSString *)base64ToUnpaddedBase64:(NSString *)base64;
-
-+ (NSString *)padBase64:(NSString *)unpadded;
-
-#pragma mark - URL
-
-+ (NSString *)base64UrlToBase64:(NSString *)base64Url;
-
-+ (NSString *)base64ToBase64Url:(NSString *)base64;
-
-#pragma mark - Data
-
-+ (NSData *)dataFromUnpaddedBase64:(NSString *)unpaddedBase64;
-+ (NSString *)unpaddedBase64FromData:(NSData *)data;
-
-+ (NSData *)dataFromBase64:(NSString *)base64;
-+ (NSString *)base64FromData:(NSData *)data;
+// "m.pbkdf2"
+@property (nonatomic) NSString *algorithm;
+@property (nonatomic) NSUInteger iterations;
+@property (nonatomic) NSString *salt;
+@property (nonatomic) NSUInteger bits;
 
 @end
 

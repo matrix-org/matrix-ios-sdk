@@ -165,7 +165,9 @@
     [self sendToOther:kMXEventTypeStringKeyVerificationKey content:bobKeyContent.JSONDictionary success:^{
         MXStrongifyAndReturnIfNil(self);
 
-        self.sasBytes = [self generateSasBytesWithTheirPublicKey:keyContent.key requestingDevice:self.otherDevice otherDevice:self.manager.crypto.myDevice];
+        self.sasBytes = [self generateSasBytesWithTheirPublicKey:keyContent.key
+                                                requestingDevice:self.otherDevice sasPublicKey:keyContent.key
+                                                     otherDevice:self.manager.crypto.myDevice otherSasPublicKey:self.olmSAS.publicKey];
 
 //        NSLog(@"[MXKeyVerification][MXIncomingSASTransaction] handleKey: BOB CODE: %@", self.sasDecimal);
 //        NSLog(@"[MXKeyVerification][MXIncomingSASTransaction] handleKey: BOB EMOJI CODE: %@", self.sasEmoji);
