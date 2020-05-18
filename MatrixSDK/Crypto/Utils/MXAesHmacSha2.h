@@ -21,14 +21,14 @@ NS_ASSUME_NONNULL_BEGIN
 #pragma mark - Constants
 
 FOUNDATION_EXPORT NSString *const MXAesHmacSha2ErrorDomain;
-typedef enum : NSUInteger
+typedef NS_ENUM(NSUInteger, MXAesHmacSha2ErrorCode)
 {
     MXAesHmacSha2BadMacCode,
     MXAesHmacSha2CannotInitialiseCryptorCode,
     MXAesHmacSha2EncryptionFailedCode,
     MXAesHmacSha2DecryptionFailedCode,
 
-} MXAesHmacSha2ErrorCode;
+};
 
 
 /**

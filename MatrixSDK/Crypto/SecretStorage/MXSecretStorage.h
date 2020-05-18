@@ -25,7 +25,7 @@ NS_ASSUME_NONNULL_BEGIN
 #pragma mark - Constants
 
 FOUNDATION_EXPORT NSString *const MXSecretStorageErrorDomain;
-typedef enum : NSUInteger
+typedef NS_ENUM(NSUInteger, MXSecretStorageErrorCode)
 {
     MXSecretStorageUnknownSecretCode,
     MXSecretStorageUnknownKeyCode,
@@ -35,8 +35,7 @@ typedef enum : NSUInteger
     MXSecretStorageBadCiphertextCode,
     MXSecretStorageBadSecretFormatCode,
     MXSecretStorageBadMacCode,
-    
-} MXSecretStorageErrorCode;
+};
 
  
 /**

@@ -180,15 +180,15 @@ static NSString* const kSecretStorageZeroString = @"\0\0\0\0\0\0\0\0\0\0\0\0\0\0
     dispatch_async(processingQueue, ^{
         MXStrongifyAndReturnIfNil(self);
         
-        NSData *iv = [MXBase64Tools dataFromBase64:key.iv];
+        NSData *iv = key.iv ? [MXBase64Tools dataFromBase64:key.iv] : nil;
         
         // MACs should match
         NSError *error;
         MXEncryptedSecretContent *encryptedZeroString = [self encryptedZeroStringWithPrivateKey:privateKey iv:iv error:&error];
         
         // Compare bytes instead of base64 strings to avoid base64 padding issue
-        NSData *keyMac = [MXBase64Tools dataFromBase64:key.mac];
-        NSData *encryptedZeroStringMac = [MXBase64Tools dataFromBase64:encryptedZeroString.mac];
+        NSData *keyMac = key.mac ? [MXBase64Tools dataFromBase64:key.mac] : nil;
+        NSData *encryptedZeroStringMac = encryptedZeroString.mac ? [MXBase64Tools dataFromBase64:encryptedZeroString.mac] : nil;
         
         BOOL match = !key.mac   // If we have no information, we have to assume the key is right
         || [keyMac isEqualToData:encryptedZeroStringMac];
@@ -533,7 +533,7 @@ static NSString* const kSecretStorageZeroString = @"\0\0\0\0\0\0\0\0\0\0\0\0\0\0
 
     NSData *iv = secretContent.iv ? [MXBase64Tools dataFromBase64:secretContent.iv] : [NSMutableData dataWithLength:16];
     
-    NSData *hmac = [MXBase64Tools dataFromBase64:secretContent.mac];
+    NSData *hmac = secretContent.mac ? [MXBase64Tools dataFromBase64:secretContent.mac] : nil;
     if (!hmac)
     {
         NSLog(@"[MXSecretStorage] decryptSecret: ERROR: Bad base64 format for MAC: %@", secretContent.mac);
@@ -541,7 +541,7 @@ static NSString* const kSecretStorageZeroString = @"\0\0\0\0\0\0\0\0\0\0\0\0\0\0
         return nil;
     }
 
-    NSData *cipher = [MXBase64Tools dataFromBase64:secretContent.ciphertext];
+    NSData *cipher = secretContent.ciphertext ? [MXBase64Tools dataFromBase64:secretContent.ciphertext] : nil;
     if (!cipher)
     {
         NSLog(@"[MXSecretStorage] decryptSecret: ERROR: Bad base64 format for ciphertext: %@", secretContent.ciphertext);
