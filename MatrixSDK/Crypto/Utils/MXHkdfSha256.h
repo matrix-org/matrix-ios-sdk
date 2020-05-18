@@ -16,18 +16,27 @@
 
 #import <Foundation/Foundation.h>
 
-#import "MXSecretShareRequest.h"
-
 NS_ASSUME_NONNULL_BEGIN
 
 /**
- A pending secret share request.
+ HMAC-based Extract-and-Expand Key Derivation Function (HkdfSha256)
+ [RFC-5869] https://tools.ietf.org/html/rfc5869
  */
-@interface MXPendingSecretShareRequest : NSObject
+@interface MXHkdfSha256 : NSObject
 
-@property (nonatomic) MXSecretShareRequest *request;
-@property (nonatomic, nullable) NSArray<NSString *> *requestedDeviceIds;
-@property (nonatomic, copy) BOOL (^onSecretReceivedBlock)(NSString *secret);
+/**
+ Derive a key.
+ 
+ @param secret IKM the input key materiak.
+ @param salt the salt value (a non-secret random value).
+ @param info context and application specific information (can be empty).
+ @param outputLength length of output keying material in bytes.
+ @return OKM the output keying material
+ */
++ (NSData *)deriveSecret:(NSData*)secret
+                    salt:(nullable NSData*)salt
+                    info:(NSData*)info
+            outputLength:(NSUInteger)outputLength;
 
 @end
 

@@ -1,7 +1,7 @@
 Pod::Spec.new do |s|
 
   s.name         = "MatrixSDK"
-  s.version      = "0.16.2"
+  s.version      = "0.16.4"
   s.summary      = "The iOS SDK to build apps compatible with Matrix (https://www.matrix.org)"
 
   s.description  = <<-DESC
@@ -21,12 +21,12 @@ Pod::Spec.new do |s|
   
   s.requires_arc  = true
   
-  s.ios.deployment_target = "8.0"
+  s.ios.deployment_target = "9.0"
   s.osx.deployment_target = "10.10"
   
   s.default_subspec = 'Core'
   s.subspec 'Core' do |ss|
-      ss.ios.deployment_target = "8.0"
+      ss.ios.deployment_target = "9.0"
       ss.osx.deployment_target = "10.10"
       
       ss.source_files = "MatrixSDK", "MatrixSDK/**/*.{h,m}"

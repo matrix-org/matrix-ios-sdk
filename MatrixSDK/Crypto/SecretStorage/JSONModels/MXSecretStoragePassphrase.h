@@ -16,18 +16,22 @@
 
 #import <Foundation/Foundation.h>
 
-#import "MXSecretShareRequest.h"
+#import "MXJSONModel.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
 /**
- A pending secret share request.
- */
-@interface MXPendingSecretShareRequest : NSObject
+ `MXSecretStoragePassphrase` describes information about the passphrase used for SSSS.
 
-@property (nonatomic) MXSecretShareRequest *request;
-@property (nonatomic, nullable) NSArray<NSString *> *requestedDeviceIds;
-@property (nonatomic, copy) BOOL (^onSecretReceivedBlock)(NSString *secret);
+ https://github.com/uhoreg/matrix-doc/blob/ssss/proposals/1946-secure_server-side_storage.md#passphrase
+ */
+@interface MXSecretStoragePassphrase : MXJSONModel
+
+// "m.pbkdf2"
+@property (nonatomic) NSString *algorithm;
+@property (nonatomic) NSUInteger iterations;
+@property (nonatomic) NSString *salt;
+@property (nonatomic) NSUInteger bits;
 
 @end
 

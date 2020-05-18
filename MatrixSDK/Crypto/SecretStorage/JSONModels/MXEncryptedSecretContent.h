@@ -16,18 +16,19 @@
 
 #import <Foundation/Foundation.h>
 
-#import "MXSecretShareRequest.h"
+#import "MXJSONModel.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
 /**
- A pending secret share request.
+ `MXEncryptedSecretContent` describes the content of an encrypted secret in the user's account data.
  */
-@interface MXPendingSecretShareRequest : NSObject
+@interface MXEncryptedSecretContent : MXJSONModel
 
-@property (nonatomic) MXSecretShareRequest *request;
-@property (nonatomic, nullable) NSArray<NSString *> *requestedDeviceIds;
-@property (nonatomic, copy) BOOL (^onSecretReceivedBlock)(NSString *secret);
+// Unpadded base64-encoded
+@property (nonatomic, nullable) NSString *ciphertext;
+@property (nonatomic, nullable) NSString *mac;
+@property (nonatomic, nullable) NSString *iv;
 
 @end
 

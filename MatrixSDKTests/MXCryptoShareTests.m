@@ -22,7 +22,7 @@
 #import "MXCrypto_Private.h"
 #import "MXCryptoStore.h"
 
-#import <OHHTTPStubs/OHHTTPStubs.h>
+#import <OHHTTPStubs/HTTPStubs.h>
 
 // Do not bother with retain cycles warnings in tests
 #pragma clang diagnostic push
@@ -50,7 +50,7 @@
     matrixSDKTestsData = nil;
     matrixSDKTestsE2EData = nil;
     
-    [OHHTTPStubs removeAllStubs];
+    [HTTPStubs removeAllStubs];
 
     [super tearDown];
 }
@@ -426,10 +426,10 @@
         
         
         // -> No m.room_key_request have been made
-        [OHHTTPStubs stubRequestsPassingTest:^BOOL(NSURLRequest *request) {
+        [HTTPStubs stubRequestsPassingTest:^BOOL(NSURLRequest *request) {
             XCTAssertFalse([request.URL.absoluteString containsString:@"m.room_key_request"]);
             return NO;
-        } withStubResponse:^OHHTTPStubsResponse*(NSURLRequest *request) {
+        } withStubResponse:^HTTPStubsResponse*(NSURLRequest *request) {
             return nil;
         }];
         

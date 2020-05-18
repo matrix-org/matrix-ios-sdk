@@ -16,18 +16,21 @@
 
 #import <Foundation/Foundation.h>
 
-#import "MXSecretShareRequest.h"
+#import "MXSecretStorageKeyContent.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
 /**
- A pending secret share request.
+ Data returned by `[MXSecretStorageManager createKeyWithKeyId:]`.
  */
-@interface MXPendingSecretShareRequest : NSObject
+@interface MXSecretStorageKeyCreationInfo : NSObject
 
-@property (nonatomic) MXSecretShareRequest *request;
-@property (nonatomic, nullable) NSArray<NSString *> *requestedDeviceIds;
-@property (nonatomic, copy) BOOL (^onSecretReceivedBlock)(NSString *secret);
+@property (nonatomic) NSString *keyId;
+
+@property (nonatomic) MXSecretStorageKeyContent *content;
+
+@property (nonatomic) NSData *privateKey;
+@property (nonatomic) NSString *recoveryKey;
 
 @end
 

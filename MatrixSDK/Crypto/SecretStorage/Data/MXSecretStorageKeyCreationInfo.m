@@ -14,21 +14,8 @@
  limitations under the License.
  */
 
-#import <Foundation/Foundation.h>
+#import "MXSecretStorageKeyCreationInfo.h"
 
-#import "MXSecretShareRequest.h"
-
-NS_ASSUME_NONNULL_BEGIN
-
-/**
- A pending secret share request.
- */
-@interface MXPendingSecretShareRequest : NSObject
-
-@property (nonatomic) MXSecretShareRequest *request;
-@property (nonatomic, nullable) NSArray<NSString *> *requestedDeviceIds;
-@property (nonatomic, copy) BOOL (^onSecretReceivedBlock)(NSString *secret);
+@implementation MXSecretStorageKeyCreationInfo
 
 @end
-
-NS_ASSUME_NONNULL_END

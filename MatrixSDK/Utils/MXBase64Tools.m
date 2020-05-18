@@ -64,15 +64,21 @@
     return [[NSData alloc] initWithBase64EncodedString:base64String options:NSDataBase64DecodingIgnoreUnknownCharacters];
 }
 
-+ (NSString *)base64FromData:(NSData *)data
-{
-    return [data base64EncodedStringWithOptions:0];
-}
-
 + (NSString *)unpaddedBase64FromData:(NSData *)data
 {
     NSString *base64 = [[self class] base64FromData:data];
     return [[self class] base64ToUnpaddedBase64:base64];
+}
+
+
++ (NSData *)dataFromBase64:(NSString *)base64
+{
+     return [[NSData alloc] initWithBase64EncodedString:base64 options:NSDataBase64DecodingIgnoreUnknownCharacters];
+}
+
++ (NSString *)base64FromData:(NSData *)data
+{
+    return [data base64EncodedStringWithOptions:0];
 }
 
 @end

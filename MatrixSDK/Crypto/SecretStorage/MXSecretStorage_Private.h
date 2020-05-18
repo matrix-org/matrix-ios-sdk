@@ -14,20 +14,20 @@
  limitations under the License.
  */
 
-#import <Foundation/Foundation.h>
+#import "MXSecretStorage.h"
 
-#import "MXSecretShareRequest.h"
+@class MXSession;
 
 NS_ASSUME_NONNULL_BEGIN
 
-/**
- A pending secret share request.
- */
-@interface MXPendingSecretShareRequest : NSObject
+@interface MXSecretStorage ()
 
-@property (nonatomic) MXSecretShareRequest *request;
-@property (nonatomic, nullable) NSArray<NSString *> *requestedDeviceIds;
-@property (nonatomic, copy) BOOL (^onSecretReceivedBlock)(NSString *secret);
+/**
+ Constructor.
+ 
+ @param mxSession the related 'MXSession' instance.
+ */
+- (instancetype)initWithMatrixSession:(MXSession *)mxSession  processingQueue:(dispatch_queue_t)processingQueue;
 
 @end
 
