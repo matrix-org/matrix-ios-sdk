@@ -149,7 +149,213 @@
 }
 
 
-#pragma mark - Verification by DM -
+- (void)observeKeyVerificationRequestInSession:(MXSession*)session block:(void (^)(MXKeyVerificationRequest * _Nullable request))block
+{
+    id observer = [[NSNotificationCenter defaultCenter] addObserverForName:MXKeyVerificationManagerNewRequestNotification object:session.crypto.keyVerificationManager queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *notif) {
+        
+        MXKeyVerificationRequest *request = notif.userInfo[MXKeyVerificationManagerNotificationRequestKey];
+        if ([request isKindOfClass:MXKeyVerificationRequest.class])
+        {
+            block((MXKeyVerificationRequest*)request);
+        }
+        else
+        {
+            XCTFail(@"We support only SAS. transaction: %@", request);
+        }
+    }];
+    
+    [observers addObject:observer];
+}
+
+
+#pragma mark - Self Verification (by to_device) -
+
+// After verifying a signin with cross-signing enabled, check that cross-signing is up on both side.
+// This is the exact same code as testVerificationByToDeviceSelfVerificationFullFlow but we cross-signing on.
+// Check tests in checkBothVerified():
+// -> Devices must be really verified
+// -> My user must be really verified
+- (void)testSelfVerificationWithSAS
+{
+    // - Have Alice
+    [matrixSDKTestsE2EData doE2ETestWithAliceAndBobInARoom:self cryptedBob:YES warnOnUnknowDevices:YES aliceStore:[[MXMemoryStore alloc] init] bobStore:[[MXMemoryStore alloc] init] readyToTest:^(MXSession *aliceSession1, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
+        
+        // - Alice bootstrap cross-signing
+        [self bootstrapCrossSigningOnSession:aliceSession1 password:MXTESTS_ALICE_PWD completion:^{
+          
+            // - Alice has a second sign-in
+            [matrixSDKTestsE2EData loginUserOnANewDevice:aliceSession1.matrixRestClient.credentials withPassword:MXTESTS_ALICE_PWD onComplete:^(MXSession *aliceSession2) {
+                __block NSString *requestId;
+                
+                MXCredentials *alice = aliceSession1.matrixRestClient.credentials;
+                MXCredentials *alice2 = aliceSession2.matrixRestClient.credentials;
+                
+                NSArray *methods = @[MXKeyVerificationMethodSAS, @"toto"];
+                
+                // - Bob requests a verification of Alice in this Room
+                [aliceSession2.crypto.keyVerificationManager requestVerificationByToDeviceWithUserId:alice.userId
+                                                                                        deviceIds:@[alice.deviceId]
+                                                                                          methods:@[MXKeyVerificationMethodSAS, @"toto"]
+                                                                                          success:^(MXKeyVerificationRequest *requestFromBobPOV)
+                 {
+                     requestId = requestFromBobPOV.requestId;
+                     
+                     XCTAssertEqualObjects(requestFromBobPOV.otherUser, alice.userId);
+                     XCTAssertNil(requestFromBobPOV.otherDevice);
+                 }
+                                                                                          failure:^(NSError * _Nonnull error)
+                 {
+                     XCTFail(@"The request should not fail - NSError: %@", error);
+                     [expectation fulfill];
+                 }];
+                
+                
+                __block MXOutgoingSASTransaction *sasTransactionFromAlicePOV;
+                
+                // - Alice gets the requests notification
+                [self observeKeyVerificationRequestInSession:aliceSession1 block:^(MXKeyVerificationRequest * _Nullable requestFromAlicePOV) {
+                    XCTAssertEqualObjects(requestFromAlicePOV.requestId, requestId);
+                    
+                    // Wait a bit
+                    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 1 * NSEC_PER_SEC), dispatch_get_main_queue(), ^{
+                        
+                        XCTAssertEqualObjects(requestFromAlicePOV.methods, methods);
+                        XCTAssertEqualObjects(requestFromAlicePOV.otherMethods, methods);
+                        XCTAssertNil(requestFromAlicePOV.myMethods);
+                        
+                        XCTAssertEqualObjects(requestFromAlicePOV.otherUser, alice2.userId);
+                        XCTAssertEqualObjects(requestFromAlicePOV.otherDevice, alice2.deviceId);
+                        
+                        // - Alice accepts it
+                        [requestFromAlicePOV acceptWithMethods:@[MXKeyVerificationMethodSAS] success:^{
+                            
+                            MXKeyVerificationRequest *requestFromAlicePOV2 = aliceSession1.crypto.keyVerificationManager.pendingRequests.firstObject;
+                            XCTAssertNotNil(requestFromAlicePOV2);
+                            XCTAssertEqualObjects(requestFromAlicePOV2.myMethods, @[MXKeyVerificationMethodSAS]);
+                            
+                            // - Alice begins a SAS verification
+                            [aliceSession1.crypto.keyVerificationManager beginKeyVerificationFromRequest:requestFromAlicePOV2 method:MXKeyVerificationMethodSAS success:^(MXKeyVerificationTransaction * _Nonnull transactionFromAlicePOV) {
+                                
+                                XCTAssertEqualObjects(transactionFromAlicePOV.transactionId, requestFromAlicePOV.requestId);
+                                
+                                XCTAssert(transactionFromAlicePOV);
+                                XCTAssertTrue([transactionFromAlicePOV isKindOfClass:MXOutgoingSASTransaction.class]);
+                                sasTransactionFromAlicePOV = (MXOutgoingSASTransaction*)transactionFromAlicePOV;
+                                
+                            } failure:^(NSError * _Nonnull error) {
+                                XCTFail(@"The request should not fail - NSError: %@", error);
+                                [expectation fulfill];
+                            }];
+                            
+                        } failure:^(NSError * _Nonnull error) {
+                            XCTFail(@"The request should not fail - NSError: %@", error);
+                            [expectation fulfill];
+                        }];
+                    });
+                }];
+                
+                
+                [self observeSASIncomingTransactionInSession:aliceSession2 block:^(MXIncomingSASTransaction * _Nullable transactionFromAlice2POV) {
+                    
+                    // Final checks
+                    void (^checkBothVerified)(void) = ^ void ()
+                    {
+                        if (sasTransactionFromAlicePOV.state == MXSASTransactionStateVerified
+                            && transactionFromAlice2POV.state == MXSASTransactionStateVerified)
+                        {
+                            // -> Devices must be really verified
+                            MXDeviceInfo *aliceDevice2FromAlice1POV = [aliceSession1.crypto.store deviceWithDeviceId:alice2.deviceId forUser:alice2.userId];
+                            MXDeviceInfo *aliceDevice1FromAlice2POV = [aliceSession2.crypto.store deviceWithDeviceId:alice.deviceId forUser:alice.userId];
+                            
+                            XCTAssertEqual(aliceDevice2FromAlice1POV.trustLevel.localVerificationStatus, MXDeviceVerified);
+                            XCTAssertTrue(aliceDevice2FromAlice1POV.trustLevel.isCrossSigningVerified);
+                            XCTAssertEqual(aliceDevice1FromAlice2POV.trustLevel.localVerificationStatus, MXDeviceVerified);
+                            XCTAssertTrue(aliceDevice1FromAlice2POV.trustLevel.isCrossSigningVerified);
+
+                            // -> My user must be really verified
+                            MXCrossSigningInfo *aliceFromAlice1POV = [aliceSession1.crypto.store crossSigningKeysForUser:alice.userId];
+                            MXCrossSigningInfo *aliceFromAlice2POV = [aliceSession2.crypto.store crossSigningKeysForUser:alice.userId];
+
+                            XCTAssertTrue(aliceFromAlice1POV.trustLevel.isCrossSigningVerified);
+                            XCTAssertTrue(aliceFromAlice1POV.trustLevel.isLocallyVerified);
+                            XCTAssertTrue(aliceFromAlice2POV.trustLevel.isCrossSigningVerified);
+                            XCTAssertTrue(aliceFromAlice2POV.trustLevel.isLocallyVerified);
+                            
+                            // -> Transaction must not be listed anymore
+                            XCTAssertNil([aliceSession1.crypto.keyVerificationManager transactionWithTransactionId:sasTransactionFromAlicePOV.transactionId]);
+                            XCTAssertNil([aliceSession2.crypto.keyVerificationManager transactionWithTransactionId:transactionFromAlice2POV.transactionId]);
+                            
+                            [expectation fulfill];
+                        }
+                    };
+                    
+                    // -> Transaction on Alice side must be WaitForPartnerKey, then ShowSAS
+                    [self observeTransactionUpdate:sasTransactionFromAlicePOV block:^{
+                        
+                        switch (sasTransactionFromAlicePOV.state)
+                        {
+                                // -> 2. Transaction on Alice side must then move to WaitForPartnerKey
+                            case MXSASTransactionStateWaitForPartnerKey:
+                                XCTAssertEqual(transactionFromAlice2POV.state, MXSASTransactionStateWaitForPartnerKey);
+                                break;
+                                // -> 4. Transaction on Alice side must then move to ShowSAS
+                            case MXSASTransactionStateShowSAS:
+                                XCTAssertEqual(transactionFromAlice2POV.state, MXSASTransactionStateShowSAS);
+                                
+                                // -> 5. SASs must be the same
+                                XCTAssertEqualObjects(sasTransactionFromAlicePOV.sasBytes, transactionFromAlice2POV.sasBytes);
+                                XCTAssertEqualObjects(sasTransactionFromAlicePOV.sasDecimal, transactionFromAlice2POV.sasDecimal);
+                                XCTAssertEqualObjects(sasTransactionFromAlicePOV.sasEmoji, transactionFromAlice2POV.sasEmoji);
+                                
+                                // -  Alice confirms SAS
+                                [sasTransactionFromAlicePOV confirmSASMatch];
+                                break;
+                                // -> 6. Transaction on Alice side must then move to WaitForPartnerToConfirm
+                            case MXSASTransactionStateWaitForPartnerToConfirm:
+                                // -  Bob confirms SAS
+                                [transactionFromAlice2POV confirmSASMatch];
+                                break;
+                                // -> 7. Transaction on Alice side must then move to Verified
+                            case MXSASTransactionStateVerified:
+                                checkBothVerified();
+                                break;
+                            default:
+                                XCTAssert(NO, @"Unexpected Alice transation state: %@", @(sasTransactionFromAlicePOV.state));
+                                break;
+                        }
+                    }];
+                    
+                    // -> Transaction on Bob side must be WaitForPartnerKey, then ShowSAS
+                    [self observeTransactionUpdate:transactionFromAlice2POV block:^{
+                        
+                        switch (transactionFromAlice2POV.state)
+                        {
+                                // -> 1. Transaction on Bob side must be WaitForPartnerKey (Alice is WaitForPartnerToAccept)
+                            case MXSASTransactionStateWaitForPartnerKey:
+                                XCTAssertEqual(sasTransactionFromAlicePOV.state, MXSASTransactionStateOutgoingWaitForPartnerToAccept);
+                                break;
+                                // -> 3. Transaction on Bob side must then move to ShowSAS
+                            case MXSASTransactionStateShowSAS:
+                                break;
+                            case MXSASTransactionStateWaitForPartnerToConfirm:
+                                break;
+                                // 7. Transaction on Bob side must then move to Verified
+                            case MXSASTransactionStateVerified:
+                                checkBothVerified();
+                                break;
+                            default:
+                                XCTAssert(NO, @"Unexpected Bob transation state: %@", @(sasTransactionFromAlicePOV.state));
+                                break;
+                        }
+                    }];
+                }];
+            }];
+        }];
+    
+    }];
+}
+
+#pragma mark - Verification of others (by DM) -
 
 /**
  Nomical case: The full flow
@@ -171,6 +377,7 @@
  -> 7. Transaction on Bob side must then move to Verified
  -> 7. Transaction on Alice side must then move to Verified
  -> Devices must be really verified
+ -> Users must be really verified
  -> Transaction must not be listed anymore
  -> Both ends must get a done message
  - Then, test MXKeyVerification
@@ -267,7 +474,18 @@
                             MXDeviceInfo *aliceDeviceFromBobPOV = [bobSession.crypto.store deviceWithDeviceId:alice.deviceId forUser:alice.userId];
                             
                             XCTAssertEqual(bobDeviceFromAlicePOV.trustLevel.localVerificationStatus, MXDeviceVerified);
+                            XCTAssertTrue(bobDeviceFromAlicePOV.trustLevel.isCrossSigningVerified);
                             XCTAssertEqual(aliceDeviceFromBobPOV.trustLevel.localVerificationStatus, MXDeviceVerified);
+                            XCTAssertTrue(aliceDeviceFromBobPOV.trustLevel.isCrossSigningVerified);
+
+                            // -> Users must be really verified
+                            MXCrossSigningInfo *bobFromAlicePOV = [aliceSession.crypto.store crossSigningKeysForUser:bob.userId];
+                            MXCrossSigningInfo *aliceFromBobPOV = [bobSession.crypto.store crossSigningKeysForUser:alice.userId];
+                            
+                            XCTAssertTrue(bobFromAlicePOV.trustLevel.isCrossSigningVerified);
+                            XCTAssertTrue(bobFromAlicePOV.trustLevel.isLocallyVerified);
+                            XCTAssertTrue(aliceFromBobPOV.trustLevel.isCrossSigningVerified);
+                            XCTAssertTrue(aliceFromBobPOV.trustLevel.isLocallyVerified);
                             
                             // -> Transaction must not be listed anymore
                             XCTAssertNil([aliceSession.crypto.keyVerificationManager transactionWithTransactionId:sasTransactionFromAlicePOV.transactionId]);
@@ -386,10 +604,11 @@
  -> 2. Transaction on Alice side must be Unknown
  -  Bob scans Alice QR code
  -> 3. Transaction on Bob side must then move to ScannedOtherQR
- -> 4. Transaction on Bob side must then move to Verified
+ -> 4. Transaction on Bob side must then move to WaitingOtherConfirm, if the start request succeed
  -> 5. Transaction on Alice side must then move to QRScannedByOther
  -  Alice confirms that Bob has scanned her QR code
  -> 6. Transaction on Alice side must then move to Verified
+ -> 7. Transaction on Bob side must then move to Verified
  -> Users must be verified
  -> Transaction must not be listed anymore
  -> Both ends must get a done message
@@ -477,12 +696,23 @@
                         if (qrCodeTransactionFromAlicePOV.state == MXQRCodeTransactionStateVerified
                             && qrCodeTransactionFromBobPOV.state == MXQRCodeTransactionStateVerified)
                         {
-                            // -> Users must be verified
+                            // -> Devices must be really verified
                             MXDeviceInfo *bobDeviceFromAlicePOV = [aliceSession.crypto.store deviceWithDeviceId:bob.deviceId forUser:bob.userId];
                             MXDeviceInfo *aliceDeviceFromBobPOV = [bobSession.crypto.store deviceWithDeviceId:alice.deviceId forUser:alice.userId];
                             
+                            XCTAssertEqual(bobDeviceFromAlicePOV.trustLevel.localVerificationStatus, MXDeviceVerified);
                             XCTAssertTrue(bobDeviceFromAlicePOV.trustLevel.isCrossSigningVerified);
+                            XCTAssertEqual(aliceDeviceFromBobPOV.trustLevel.localVerificationStatus, MXDeviceVerified);
                             XCTAssertTrue(aliceDeviceFromBobPOV.trustLevel.isCrossSigningVerified);
+                            
+                            // -> Users must be really verified
+                            MXCrossSigningInfo *bobFromAlicePOV = [aliceSession.crypto.store crossSigningKeysForUser:bob.userId];
+                            MXCrossSigningInfo *aliceFromBobPOV = [bobSession.crypto.store crossSigningKeysForUser:alice.userId];
+                            
+                            XCTAssertTrue(bobFromAlicePOV.trustLevel.isCrossSigningVerified);
+                            XCTAssertTrue(bobFromAlicePOV.trustLevel.isLocallyVerified);
+                            XCTAssertTrue(aliceFromBobPOV.trustLevel.isCrossSigningVerified);
+                            XCTAssertTrue(aliceFromBobPOV.trustLevel.isLocallyVerified);
                             
                             // -> Transaction must not be listed anymore
                             XCTAssertNil([aliceSession.crypto.keyVerificationManager transactionWithTransactionId:qrCodeTransactionFromAlicePOV.transactionId]);
@@ -501,7 +731,7 @@
                                 break;
                                 // -> 5. Transaction on Alice side must then move to QRScannedByOther
                             case MXQRCodeTransactionStateQRScannedByOther:
-                                XCTAssertEqual(qrCodeTransactionFromBobPOV.state, MXQRCodeTransactionStateScannedOtherQR);
+                                XCTAssertEqual(qrCodeTransactionFromBobPOV.state, MXQRCodeTransactionStateWaitingOtherConfirm);
                                 
                                 // Alice confirms that Bob has scanned her QR code
                                 [qrCodeTransactionFromAlicePOV otherUserScannedMyQrCode:YES];
@@ -523,13 +753,17 @@
                         {
                             // -> 1. Transaction on Bob side must be Unknown (Alice is Unknown)
                             case MXQRCodeTransactionStateUnknown:
-                                XCTAssertEqual(qrCodeTransactionFromAlicePOV.state, MXSASTransactionStateOutgoingWaitForPartnerToAccept);
+                                XCTAssertEqual(qrCodeTransactionFromAlicePOV.state, MXQRCodeTransactionStateUnknown);
                                 break;
                             // -> 3. Transaction on Bob side must then move to ScannedOtherQR
                             case MXQRCodeTransactionStateScannedOtherQR:
                                 XCTAssertEqual(qrCodeTransactionFromAlicePOV.state, MXQRCodeTransactionStateUnknown);
                                 break;
-                            // -> 4. Transaction on Bob side must then move to Verified
+                            // -> 4. Transaction on Bob side must then move to WaitingOtherConfirm
+                            case MXQRCodeTransactionStateWaitingOtherConfirm:
+                                XCTAssertEqual(qrCodeTransactionFromAlicePOV.state, MXQRCodeTransactionStateUnknown);
+                                break;
+                            // -> 7. Transaction on Bob side must then move to Verified
                             case MXQRCodeTransactionStateVerified:
                                 checkBothDeviceVerified();
                                 break;

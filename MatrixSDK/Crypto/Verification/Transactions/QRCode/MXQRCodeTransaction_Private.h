@@ -37,6 +37,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)handleStart:(MXQRCodeKeyVerificationStart*)startContent;
 
+- (void)handleDone:(MXKeyVerificationDone*)doneEvent;
+
 @end
 
 NS_ASSUME_NONNULL_END

@@ -19,7 +19,7 @@
 #import "MXAutoDiscovery.h"
 #import "MXTools.h"
 
-#import <OHHTTPStubs/OHHTTPStubs.h>
+#import <OHHTTPStubs/HTTPStubs.h>
 
 #pragma mark - Constant definition
 static NSString *const kWellKnowPath = @".well-known/matrix/client";
@@ -38,19 +38,19 @@ static NSString *const kIdendityServerPingPath = @"_matrix/identity/api/v1";
 
 - (void)tearDown
 {
-    [OHHTTPStubs removeAllStubs];
+    [HTTPStubs removeAllStubs];
 
     [super tearDown];
 }
 
 - (void)stubRequestsContaining:(NSString*)string withResponse:(nullable NSString*)response statusCode:(int)statusCode headers:(nullable NSDictionary*)httpHeaders
 {
-    [OHHTTPStubs stubRequestsPassingTest:^BOOL(NSURLRequest *request) {
+    [HTTPStubs stubRequestsPassingTest:^BOOL(NSURLRequest *request) {
         return [request.URL.absoluteString containsString:string];
-    } withStubResponse:^OHHTTPStubsResponse*(NSURLRequest *request) {
+    } withStubResponse:^HTTPStubsResponse*(NSURLRequest *request) {
 
         NSString *responseString = response ? response : @"";
-        return [OHHTTPStubsResponse responseWithData:[responseString dataUsingEncoding:NSUTF8StringEncoding]
+        return [HTTPStubsResponse responseWithData:[responseString dataUsingEncoding:NSUTF8StringEncoding]
                                           statusCode:statusCode
                                              headers:httpHeaders];
     }];

@@ -43,9 +43,6 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)didUpdateState;
 
-- (void)cancelWithCancelCodeFromCryptoQueue:(MXTransactionCancelCode *)code;
-
-
 #pragma mark - Outgoing to_device events
 - (MXHTTPOperation*)sendToOther:(NSString*)eventType content:(NSDictionary*)content
                         success:(void (^)(void))success

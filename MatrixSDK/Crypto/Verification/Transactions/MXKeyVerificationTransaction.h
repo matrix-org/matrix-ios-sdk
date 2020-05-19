@@ -93,6 +93,17 @@ typedef NS_ENUM(NSInteger, MXKeyVerificationTransport) {
  */
 - (void)cancelWithCancelCode:(MXTransactionCancelCode*)code;
 
+/**
+ Cancel this transaction.
+ 
+ @param code the cancellation reason
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+ */
+- (void)cancelWithCancelCode:(MXTransactionCancelCode *)code
+                     success:(void (^)(void))success
+                     failure:(void (^)(NSError *error))failure;
+
 
 #pragma mark - Transport layer
 #pragma mark Direct message

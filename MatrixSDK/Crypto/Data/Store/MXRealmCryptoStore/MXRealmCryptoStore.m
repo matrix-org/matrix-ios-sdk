@@ -971,6 +971,18 @@ RLM_ARRAY_TYPE(MXRealmSecret)
     return request;
 }
 
+- (NSArray<MXOutgoingRoomKeyRequest*> *)allOutgoingRoomKeyRequestsWithState:(MXRoomKeyRequestState)state
+{
+    NSMutableArray<MXOutgoingRoomKeyRequest*> *allOutgoingRoomKeyRequests = [NSMutableArray array];
+    
+    for (MXRealmOutgoingRoomKeyRequest *realmOutgoingRoomKeyRequest in [MXRealmOutgoingRoomKeyRequest allObjectsInRealm:self.realm])
+    {
+        [allOutgoingRoomKeyRequests addObject:realmOutgoingRoomKeyRequest.outgoingRoomKeyRequest];
+    }
+    
+    return allOutgoingRoomKeyRequests;
+}
+
 - (void)storeOutgoingRoomKeyRequest:(MXOutgoingRoomKeyRequest*)request
 {
     RLMRealm *realm = self.realm;

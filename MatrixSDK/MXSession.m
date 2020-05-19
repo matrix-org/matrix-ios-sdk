@@ -47,7 +47,7 @@
 
 #pragma mark - Constants definitions
 
-const NSString *MatrixSDKVersion = @"0.15.2";
+const NSString *MatrixSDKVersion = @"0.16.5";
 NSString *const kMXSessionStateDidChangeNotification = @"kMXSessionStateDidChangeNotification";
 NSString *const kMXSessionNewRoomNotification = @"kMXSessionNewRoomNotification";
 NSString *const kMXSessionWillLeaveRoomNotification = @"kMXSessionWillLeaveRoomNotification";
@@ -2222,7 +2222,10 @@ typedef void (^MXOnResumeDone)(void);
 - (void)runNextDirectRoomOperation
 {
     // Dequeue the completed operation
-    [directRoomsOperationsQueue removeObjectAtIndex:0];
+    if (directRoomsOperationsQueue.count)
+    {
+        [directRoomsOperationsQueue removeObjectAtIndex:0];
+    }
 
     // And run the next one if any
     if (directRoomsOperationsQueue.firstObject)
@@ -3441,7 +3444,19 @@ typedef void (^MXOnResumeDone)(void);
                            success:(void (^)(void))success
                            failure:(void (^)(NSError *error))failure
 {
-    return [matrixRestClient setAccountData:data forType:type success:success failure:failure];
+    MXWeakify(self);
+    return [matrixRestClient setAccountData:data forType:type success:^{
+        MXStrongifyAndReturnIfNil(self);
+        
+        // Update data in place
+        [self->_accountData updateDataWithType:type data:data];
+        
+        if (success)
+        {
+            success();
+        }
+        
+    } failure:failure];
 }
 
 - (MXHTTPOperation *)setAccountDataIdentityServer:(NSString *)identityServer

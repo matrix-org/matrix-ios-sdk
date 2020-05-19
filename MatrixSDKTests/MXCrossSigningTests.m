@@ -191,90 +191,6 @@
     }];
 }
 
-// Have Alice with 2 devices (Alice1 and Alice2) and Bob. All trusted via cross-signing
-// - Create Alice & Bob accounts
-// - Bootstrap cross-signing x2
-// - Make Alice2 aware of Bob
-// - Make each Alice devices trust each other
-// - Make Alice & Bob trust each other
-- (void)doTestWithBobAndAliceWithTwoDevicesAllTrusted:(XCTestCase*)testCase
-                                          readyToTest:(void (^)(MXSession *bobSession, MXSession *aliceSession1, MXSession *aliceSession2, NSString *roomId, XCTestExpectation *expectation))readyToTest
-{
-    // - Create Alice & Bob accounts
-    [matrixSDKTestsE2EData doE2ETestWithAliceAndBobInARoom:testCase
-                                                cryptedBob:YES
-                                       warnOnUnknowDevices:YES
-                                                aliceStore:[[MXNoStore alloc] init]
-                                                  bobStore:[[MXNoStore alloc] init]
-                                               readyToTest:^(MXSession *aliceSession1, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation)
-     {
-         // - Bootstrap cross-signing x2
-         [aliceSession1.crypto.crossSigning bootstrapWithPassword:MXTESTS_ALICE_PWD success:^{
-             [bobSession.crypto.crossSigning bootstrapWithPassword:MXTESTS_BOB_PWD success:^{
-                 
-                 [matrixSDKTestsE2EData loginUserOnANewDevice:aliceSession1.matrixRestClient.credentials withPassword:MXTESTS_ALICE_PWD onComplete:^(MXSession *aliceSession2) {
-                     
-                     NSString *aliceUserId = aliceSession1.matrixRestClient.credentials.userId;
-                     NSString *bobUserId = bobSession.matrixRestClient.credentials.userId;
-
-                     NSString *aliceSession1DeviceId = aliceSession1.matrixRestClient.credentials.deviceId;
-                     NSString *aliceSession2DeviceId = aliceSession2.matrixRestClient.credentials.deviceId;
-                     
-                     // - Make Alice2 aware of Bob
-                     [aliceSession2.crypto downloadKeys:@[bobUserId] forceDownload:NO success:^(MXUsersDevicesMap<MXDeviceInfo *> *usersDevicesInfoMap, NSDictionary<NSString *,MXCrossSigningInfo *> *crossSigningKeysMap) {
-                         
-                         // - Make each Alice devices trust each other
-                         // This simulates a self verification and trigger cross-signing behind the shell
-                         [aliceSession1.crypto setDeviceVerification:MXDeviceVerified forDevice:aliceSession2DeviceId ofUser:aliceUserId success:^{
-                             [aliceSession2.crypto setDeviceVerification:MXDeviceVerified forDevice:aliceSession1DeviceId ofUser:aliceUserId success:^{
-                                 
-                                 // - Make Alice & Bob trust each other
-                                 [aliceSession1.crypto.crossSigning signUserWithUserId:bobUserId success:^{
-                                     [bobSession.crypto.crossSigning signUserWithUserId:aliceUserId success:^{
-                                         
-                                         // Wait a bit to make background requests for cross-signing happen
-                                         dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 2 * NSEC_PER_SEC), dispatch_get_main_queue(), ^{
-                                             readyToTest(aliceSession1, aliceSession2, bobSession, roomId, expectation);
-                                         });
-                                         
-                                     } failure:^(NSError *error) {
-                                         XCTFail(@"Cannot set up intial test conditions - error: %@", error);
-                                         [expectation fulfill];
-                                     }];
-                                     
-                                 } failure:^(NSError *error) {
-                                     XCTFail(@"Cannot set up intial test conditions - error: %@", error);
-                                     [expectation fulfill];
-                                 }];
-                                 
-                             } failure:^(NSError *error) {
-                                 XCTFail(@"Cannot set up intial test conditions - error: %@", error);
-                                 [expectation fulfill];
-                             }];
-                         } failure:^(NSError *error) {
-                             XCTFail(@"Cannot set up intial test conditions - error: %@", error);
-                             [expectation fulfill];
-                         }];
-                         
-                     } failure:^(NSError *error) {
-                         XCTFail(@"Cannot set up intial test conditions - error: %@", error);
-                         [expectation fulfill];
-                     }];
-                     
-                 }];
-                 
-             } failure:^(NSError *error) {
-                 XCTFail(@"Cannot set up intial test conditions - error: %@", error);
-                 [expectation fulfill];
-             }];
-             
-         } failure:^(NSError *error) {
-             XCTFail(@"Cannot set up intial test conditions - error: %@", error);
-             [expectation fulfill];
-         }];
-     }];
-}
-
 
 #pragma mark - Tests
 
@@ -417,6 +333,7 @@
 // - Bootstrap cross-signing on Alice using password
 // -> Cross-signing must be bootstrapped
 // -> Alice must see their device trusted
+// -> Alice must see their cross-signing info trusted
 - (void)testBootstrapWithPassword
 {
     // - Create Alice
@@ -440,6 +357,13 @@
             XCTAssertTrue(aliceDevice1Trust.isVerified);
             XCTAssertEqual(aliceDevice1Trust.localVerificationStatus, MXDeviceVerified);
             XCTAssertTrue(aliceDevice1Trust.isCrossSigningVerified);
+            
+            // -> Alice must see their cross-signing info trusted
+            MXCrossSigningInfo *aliceCrossSigningInfo = [aliceSession.crypto crossSigningKeysForUser:aliceSession.myUserId];
+            XCTAssertNotNil(aliceCrossSigningInfo);
+            XCTAssertTrue(aliceCrossSigningInfo.trustLevel.isVerified);
+            XCTAssertTrue(aliceCrossSigningInfo.trustLevel.isLocallyVerified);
+            XCTAssertTrue(aliceCrossSigningInfo.trustLevel.isCrossSigningVerified);
 
             [expectation fulfill];
 
@@ -719,7 +643,7 @@
         XCTAssertEqualObjects(storedKeys.userSignedKeys.JSONDictionary, keys.userSignedKeys.JSONDictionary);
 
         // - Update keys test
-        [keys updateTrustLevel:[MXUserTrustLevel trustLevelWithCrossSigningVerified:YES]];
+        [keys updateTrustLevel:[MXUserTrustLevel trustLevelWithCrossSigningVerified:YES locallyVerified:NO]];
         [aliceSession.crypto.store storeCrossSigningKeys:keys];
         storedKeys = [aliceSession.crypto.store crossSigningKeysForUser:aliceUserId];
         XCTAssertTrue(storedKeys.trustLevel.isVerified);
@@ -999,7 +923,7 @@
 - (void)testTrustsBetweenBobAndAliceWithTwoDevices
 {
    //  - Have Alice with 2 devices (Alice1 and Alice2) and Bob. All trusted via cross-signing
-    [self doTestWithBobAndAliceWithTwoDevicesAllTrusted:self readyToTest:^(MXSession *aliceSession1, MXSession *aliceSession2, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
+    [matrixSDKTestsE2EData doTestWithBobAndAliceWithTwoDevicesAllTrusted:self readyToTest:^(MXSession *aliceSession1, MXSession *aliceSession2, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
         
         NSString *aliceUserId = aliceSession1.matrixRestClient.credentials.userId;
         NSString *aliceSession1DeviceId = aliceSession1.matrixRestClient.credentials.deviceId;
@@ -1036,6 +960,87 @@
     }];
 }
 
+// Test the cross-signing state of a device self-verified with a self-verified device.
+// https://github.com/vector-im/riot-ios/issues/3112
+
+// - Have Alice with 2 devices (Alice1 and Alice2) and Bob. All trusted via cross-signing
+// - Alice signs in on a new Device (Alice3)
+// - Alice self-verifies it with Alice2
+// -> Alice3 should see all devices in the party as trusted thanks to cross-signing
+// -> Alice2 should see Alice1 as trusted thanks to cross-signing
+// -> Bob should see Alice3 as trusted thanks to cross-signing
+// -> Alice3 should see Bob as trusted thanks to cross-signing
+- (void)testTrustChain
+{
+    // - Have Alice with 2 devices (Alice1 and Alice2) and Bob. All trusted via cross-signing
+    [matrixSDKTestsE2EData doTestWithBobAndAliceWithTwoDevicesAllTrusted:self readyToTest:^(MXSession *aliceSession1, MXSession *aliceSession2, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
+        
+        // - Alice signs in on a new Device (Alice3)
+        [matrixSDKTestsE2EData loginUserOnANewDevice:aliceSession1.matrixRestClient.credentials withPassword:MXTESTS_ALICE_PWD onComplete:^(MXSession *aliceSession3) {
+            
+            NSString *aliceUserId = aliceSession1.myUserId;
+            NSString *aliceSession1DeviceId = aliceSession1.myDeviceId;
+            NSString *aliceSession2DeviceId = aliceSession2.myDeviceId;
+            NSString *aliceSession3DeviceId = aliceSession3.myDeviceId;
+            
+            NSString *bobUserId = bobSession.myUserId;
+            NSString *bobDeviceId = bobSession.myDeviceId;
+
+            
+            // - Alice self-verifies it with Alice2
+            // This simulates a self verification and trigger cross-signing behind the shell
+            [aliceSession2.crypto setDeviceVerification:MXDeviceVerified forDevice:aliceSession3DeviceId ofUser:aliceUserId success:^{
+                [aliceSession3.crypto setDeviceVerification:MXDeviceVerified forDevice:aliceSession2DeviceId ofUser:aliceUserId success:^{
+                    [aliceSession3.crypto setUserVerification:YES forUser:aliceUserId success:^{
+                        
+                        // Wait a bit to make background requests for cross-signing happen
+                        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 2 * NSEC_PER_SEC), dispatch_get_main_queue(), ^{
+                            
+                            // -> Alice3 should see all devices in the party as trusted thanks to cross-signing
+                            XCTAssertEqual(aliceSession3.crypto.crossSigning.state, MXCrossSigningStateCanCrossSign);
+                            XCTAssertTrue([aliceSession3.crypto trustLevelForUser:aliceUserId].isCrossSigningVerified);
+                            XCTAssertTrue([aliceSession3.crypto deviceTrustLevelForDevice:aliceSession2DeviceId ofUser:aliceUserId].isCrossSigningVerified);
+                            XCTAssertTrue([aliceSession3.crypto deviceTrustLevelForDevice:aliceSession1DeviceId ofUser:aliceUserId].isCrossSigningVerified);
+                            XCTAssertTrue([aliceSession3.crypto deviceTrustLevelForDevice:aliceSession2DeviceId ofUser:aliceUserId].isCrossSigningVerified);
+                            
+                            // -> Alice1 should see Alice3 as trusted thanks to cross-signing
+                            XCTAssertTrue([aliceSession1.crypto deviceTrustLevelForDevice:aliceSession3DeviceId ofUser:aliceUserId].isCrossSigningVerified);
+                            
+                            // -> Bob should see Alice3 as trusted thanks to cross-signing
+                            XCTAssertTrue([bobSession.crypto deviceTrustLevelForDevice:aliceSession3DeviceId ofUser:aliceUserId].isCrossSigningVerified);
+                            
+                            // -> Alice3 should see Bob as trusted thanks to cross-signing
+                            [aliceSession3.crypto downloadKeys:@[bobUserId] forceDownload:NO success:^(MXUsersDevicesMap<MXDeviceInfo *> *usersDevicesInfoMap, NSDictionary<NSString *,MXCrossSigningInfo *> *crossSigningKeysMap) {
+                                
+                                XCTAssertTrue([aliceSession3.crypto trustLevelForUser:bobUserId].isCrossSigningVerified);
+                                XCTAssertTrue([aliceSession3.crypto deviceTrustLevelForDevice:bobDeviceId ofUser:bobUserId].isCrossSigningVerified);
+                                
+                                [expectation fulfill];
+                                
+                            } failure:^(NSError *error) {
+                                XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                                [expectation fulfill];
+                            }];
+                        });
+                        
+                        
+                    } failure:^(NSError *error) {
+                        XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                        [expectation fulfill];
+                    }];
+                } failure:^(NSError *error) {
+                    XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                    [expectation fulfill];
+                }];
+            } failure:^(NSError *error) {
+                XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                [expectation fulfill];
+            }];
+            
+        }];
+    }];
+}
+
 // Test that we can detect that MSK has changed
 // - Have Alice with 2 devices (Alice1 and Alice2) and Bob. All trusted via cross-signing
 // - Alice resets cross-signing from Alice1
@@ -1045,7 +1050,7 @@
 - (void)testCrossSigningRotation
 {
     //  - Have Alice with 2 devices (Alice1 and Alice2) and Bob. All trusted via cross-signing
-    [self doTestWithBobAndAliceWithTwoDevicesAllTrusted:self readyToTest:^(MXSession *aliceSession1, MXSession *aliceSession2, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
+    [matrixSDKTestsE2EData doTestWithBobAndAliceWithTwoDevicesAllTrusted:self readyToTest:^(MXSession *aliceSession1, MXSession *aliceSession2, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
         
         NSString *aliceUserId = aliceSession1.matrixRestClient.credentials.userId;
         NSString *aliceSession1DeviceId = aliceSession1.matrixRestClient.credentials.deviceId;

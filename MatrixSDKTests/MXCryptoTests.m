@@ -1619,9 +1619,23 @@
         
         // We force the room history visibility for JOINED members.
         [aliceSession.matrixRestClient setRoomHistoryVisibility:roomId historyVisibility:kMXRoomHistoryVisibilityJoined success:^{
-            
+
             // Send a first message whereas Bob is invited
-            [roomFromAlicePOV sendTextMessage:messageFromAlice success:nil failure:^(NSError *error) {
+            [roomFromAlicePOV sendTextMessage:messageFromAlice success:^(NSString *eventId) {
+
+                // Make sure Bob joins room after the first message was sent.
+                [bobSession joinRoom:roomId viaServers:nil success:^(MXRoom *room) {
+                    // Send a second message to Bob who just joins the room
+                    [roomFromAlicePOV sendTextMessage:message2FromAlice success:nil failure:^(NSError *error) {
+                        XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                        [expectation fulfill];
+                    }];
+                } failure:^(NSError *error) {
+                    NSAssert(NO, @"Cannot join a room - error: %@", error);
+                    [expectation fulfill];
+                }];
+                
+            } failure:^(NSError *error) {
                 XCTFail(@"Cannot set up intial test conditions - error: %@", error);
                 [expectation fulfill];
             }];
@@ -1635,17 +1649,6 @@
                     [expectation fulfill];
                 }
                 
-            }];
-            
-            [bobSession joinRoom:roomId viaServers:nil success:^(MXRoom *room) {
-                // Send a second message to Bob who just joins the room
-                [roomFromAlicePOV sendTextMessage:message2FromAlice success:nil failure:^(NSError *error) {
-                    XCTFail(@"Cannot set up intial test conditions - error: %@", error);
-                    [expectation fulfill];
-                }];
-            } failure:^(NSError *error) {
-                NSAssert(NO, @"Cannot join a room - error: %@", error);
-                [expectation fulfill];
             }];
             
         } failure:^(NSError *error) {

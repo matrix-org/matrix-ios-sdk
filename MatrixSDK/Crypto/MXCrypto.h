@@ -28,6 +28,7 @@
 #import "MXIncomingRoomKeyRequest.h"
 #import "MXIncomingRoomKeyRequestCancellation.h"
 
+#import "MXSecretStorage.h"
 #import "MXSecretShareManager.h"
 
 #import "MXKeyBackup.h"
@@ -97,6 +98,11 @@ extern NSString *const MXDeviceListDidUpdateUsersDevicesNotification;
  The device verification manager.
  */
 @property (nonatomic, readonly) MXKeyVerificationManager *keyVerificationManager;
+
+/**
+ The secret storage on homeserver manager.
+ */
+@property (nonatomic, readonly) MXSecretStorage *secretStorage;
 
 /**
  The secret share manager.
@@ -253,6 +259,19 @@ extern NSString *const MXDeviceListDidUpdateUsersDevicesNotification;
 - (void)setDevicesKnown:(MXUsersDevicesMap<MXDeviceInfo*>*)devices
                complete:(void (^)(void))complete;
 
+/**
+ Update the verification state of the given user.
+ 
+ @param verificationStatus the new verification status.
+ @param userId the user.
+ 
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+ */
+- (void)setUserVerification:(BOOL)verificationStatus forUser:(NSString*)userId
+                    success:(void (^)(void))success
+                    failure:(void (^)(NSError *error))failure;
+
 
 #pragma mark - Cross-signing trust
 
@@ -275,9 +294,9 @@ extern NSString *const MXDeviceListDidUpdateUsersDevicesNotification;
  Get the stored summary of users trust level (trusted users and devices count).
  
  @param userIds The user ids.
- @return the trust summary.
+ @param onComplete the callback called once operation is done.
  */
-- (MXUsersTrustLevelSummary *)trustLevelSummaryForUserIds:(NSArray<NSString*>*)userIds;
+- (void)trustLevelSummaryForUserIds:(NSArray<NSString*>*)userIds onComplete:(void (^)(MXUsersTrustLevelSummary *trustLevelSummary))onComplete;
 
 
 #pragma mark - Users keys
@@ -354,6 +373,14 @@ extern NSString *const MXDeviceListDidUpdateUsersDevicesNotification;
  @param onComplete the callback called once operation is done.
  */
 - (void)deleteStore:(void (^)(void))onComplete;
+
+
+#pragma mark - Gossipping
+
+/**
+ Make requests to get key private keys from other user's devices.
+ */
+- (void)requestAllPrivateKeys;
 
 
 #pragma mark - import/export
@@ -450,6 +477,23 @@ extern NSString *const MXDeviceListDidUpdateUsersDevicesNotification;
  @param onComplete A block object called when the operation completes.
  */
 - (void)ignoreAllPendingKeyRequestsFromUser:(NSString*)userId andDevice:(NSString*)deviceId onComplete:(void (^)(void))onComplete;
+
+/**
+ Enable or disable outgoing key share requests.
+ Enabled by default
+ 
+ @param enabled the new enable state.
+ @param onComplete the block called when the operation completes
+ */
+- (void)setOutgoingKeyRequestsEnabled:(BOOL)enabled onComplete:(void (^)(void))onComplete;
+- (BOOL)isOutgoingKeyRequestsEnabled;
+
+/**
+ Automatically re-enable outgoing key share requests once another device has been verified.
+ 
+ Default is YES.
+ */
+@property (nonatomic) BOOL enableOutgoingKeyRequestsOnceSelfVerificationDone;
 
 /**
  Rerequest the encryption keys required to decrypt an event.

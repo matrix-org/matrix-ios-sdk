@@ -245,7 +245,7 @@
 
         if (error)
         {
-            NSLog(@"[MXOlmDevice] encryptMessage failed: %@", error);
+            NSLog(@"[MXOlmDevice] encryptMessage failed for session id %@ and sender %@: %@", sessionId, theirDeviceIdentityKey, error);
         }
 
         [store storeSession:mxOlmSession forDevice:theirDeviceIdentityKey];
@@ -272,7 +272,7 @@
 
         if (error)
         {
-            NSLog(@"[MXOlmDevice] decryptMessage failed: %@", error);
+            NSLog(@"[MXOlmDevice] decryptMessage failed for session id %@(%@) and sender %@: %@", sessionId, @(messageType), theirDeviceIdentityKey, error);
         }
 
         [mxOlmSession didReceiveMessage];

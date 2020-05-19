@@ -123,8 +123,13 @@ NS_ASSUME_NONNULL_BEGIN
 
  @param transaction the transaction to cancel.
  @param code the cancellation reason.
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
  */
-- (void)cancelTransaction:(MXKeyVerificationTransaction*)transaction code:(MXTransactionCancelCode*)code;
+- (void)cancelTransaction:(MXKeyVerificationTransaction*)transaction
+                     code:(MXTransactionCancelCode*)code
+                  success:(void (^)(void))success
+                  failure:(void (^)(NSError *error))failure;
 
 /**
  Remove a transaction from the queue.

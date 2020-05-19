@@ -33,6 +33,11 @@ NSString * const MXKeyVerificationSASModeEmoji     = @"emoji";
 NSString * const MXKeyVerificationSASMacSha256         = @"hkdf-hmac-sha256";
 NSString * const MXKeyVerificationSASMacSha256LongKdf  = @"hmac-sha256";
 
+const struct MXSASAgreementProtocols MXSASAgreementProtocols = {
+    .v1 = @"curve25519",
+    .v2 = @"curve25519-hkdf-sha256",
+};
+
 NSArray<NSString*> *kKnownAgreementProtocols;
 NSArray<NSString*> *kKnownHashes;
 NSArray<NSString*> *kKnownMacs;
@@ -105,15 +110,6 @@ static NSArray<MXEmojiRepresentation*> *kSasEmojis;
     }
 }
 
-
-- (void)cancelWithCancelCodeFromCryptoQueue:(MXTransactionCancelCode *)code
-{
-    [super cancelWithCancelCodeFromCryptoQueue:code];
-    
-    self.state = MXSASTransactionStateCancelledByMe;
-    self.reasonCancelCode = code;
-}
-
 #pragma mark - SDK-Private methods -
 
 + (void)initialize
@@ -121,7 +117,7 @@ static NSArray<MXEmojiRepresentation*> *kSasEmojis;
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
 
-        kKnownAgreementProtocols = @[@"curve25519"];
+        kKnownAgreementProtocols = @[MXSASAgreementProtocols.v2, MXSASAgreementProtocols.v1];
         kKnownHashes = @[@"sha256"];
         kKnownMacs = @[MXKeyVerificationSASMacSha256, MXKeyVerificationSASMacSha256LongKdf];
         kKnownShortCodes = @[MXKeyVerificationSASModeEmoji, MXKeyVerificationSASModeDecimal];
@@ -167,27 +163,40 @@ static NSArray<MXEmojiRepresentation*> *kSasEmojis;
     return hashUsingAgreedHashMethod;
 }
 
-- (NSData*)generateSasBytesWithTheirPublicKey:(NSString*)theirPublicKey requestingDevice:(MXDeviceInfo*)requestingDevice otherDevice:(MXDeviceInfo*)otherDevice
+- (NSData*)generateSasBytesWithTheirPublicKey:(NSString*)theirPublicKey
+                             requestingDevice:(MXDeviceInfo*)requestingDevice sasPublicKey:(NSString*)sasPublicKey
+                                  otherDevice:(MXDeviceInfo*)otherDevice otherSasPublicKey:(NSString*)otherSasPublicKey
 {
     // Alice’s and Bob’s devices perform an Elliptic-curve Diffie-Hellman
     // (calculate the point (x,y)=dAQB=dBQA and use x as the result of the ECDH),
     // using the result as the shared secret.
-
     [self.olmSAS setTheirPublicKey:theirPublicKey];
-
-    // (Note: In all of the following HKDF is as defined in RFC 5869, and uses the previously agreed-on hash function as the hash function,
-    // the shared secret as the input keying material, no salt, and with the input parameter set to the concatenation of:
-    // - the string “MATRIX_KEY_VERIFICATION_SAS”,
-    // - the Matrix ID of the user who sent the m.key.verification.start message,
-    // - the device ID of the device that sent the m.key.verification.start message,
-    // - the Matrix ID of the user who sent the m.key.verification.accept message,
-    // - he device ID of the device that sent the m.key.verification.accept message
-    // - the transaction ID.
-    NSString *sasInfo = [NSString stringWithFormat:@"MATRIX_KEY_VERIFICATION_SAS%@%@%@%@%@",
-                         requestingDevice.userId, requestingDevice.deviceId,
-                         otherDevice.userId, otherDevice.deviceId,
-                         self.transactionId];
-
+    
+    NSString *sasInfo;
+    if ([_accepted.keyAgreementProtocol isEqualToString:MXSASAgreementProtocols.v1])
+    {
+        // (Note: In all of the following HKDF is as defined in RFC 5869, and uses the previously agreed-on hash function as the hash function,
+        // the shared secret as the input keying material, no salt, and with the input parameter set to the concatenation of:
+        // - the string “MATRIX_KEY_VERIFICATION_SAS”,
+        // - the Matrix ID of the user who sent the m.key.verification.start message,
+        // - the device ID of the device that sent the m.key.verification.start message,
+        // - the Matrix ID of the user who sent the m.key.verification.accept message,
+        // - he device ID of the device that sent the m.key.verification.accept message
+        // - the transaction ID.
+        sasInfo = [NSString stringWithFormat:@"MATRIX_KEY_VERIFICATION_SAS%@%@%@%@%@",
+                   requestingDevice.userId, requestingDevice.deviceId,
+                   otherDevice.userId, otherDevice.deviceId,
+                   self.transactionId];
+    }
+    else if ([_accepted.keyAgreementProtocol isEqualToString:MXSASAgreementProtocols.v2])
+    {
+        // v2 adds the SAS public key, and separate by `|` to v1
+        sasInfo = [NSString stringWithFormat:@"MATRIX_KEY_VERIFICATION_SAS|%@|%@|%@|%@|%@|%@|%@",
+                   requestingDevice.userId, requestingDevice.deviceId, sasPublicKey,
+                   otherDevice.userId, otherDevice.deviceId, otherSasPublicKey,
+                   self.transactionId];
+    }
+    
     // decimal: generate five bytes by using HKDF
     // emoji: generate six bytes by using HKDF
     return [self.olmSAS generateBytes:sasInfo length:6];
@@ -219,6 +228,14 @@ static NSArray<MXEmojiRepresentation*> *kSasEmojis;
     return macUsingAgreedMethod;
 }
 
+- (void)cancelWithCancelCode:(MXTransactionCancelCode*)code
+{
+    [self cancelWithCancelCode:code success:^{
+        self.state = MXSASTransactionStateCancelledByMe;
+    } failure:^(NSError * _Nonnull error) {
+        NSLog(@"[MXKeyVerification][MXSASTransaction] Fail to cancel with error: %@", error);
+    }];
+}
 
 #pragma mark - Incoming to_device events
 
@@ -385,27 +402,18 @@ static NSArray<MXEmojiRepresentation*> *kSasEmojis;
                     if ([key.value isEqualToString:[self macUsingAgreedMethod:otherUserMasterKeys.keys
                                                                          info:[NSString stringWithFormat:@"%@%@", baseInfo, keyFullId]]])
                     {
-                        if (self.manager.crypto.crossSigning.canCrossSign)
-                        {
-                            // Mark user as verified
-                            NSLog(@"[MXKeyVerification][MXSASTransaction] verifyMacs: Mark user %@ as verified", self.otherDevice.userId);
-                            dispatch_group_enter(group);
-                            [self.manager.crypto.crossSigning signUserWithUserId:self.otherDevice.userId success:^{
-                                dispatch_group_leave(group);
-
-                            } failure:^(NSError *error) {
-                                // Should never happen
-                                cancelCode = MXTransactionCancelCode.invalidMessage;
-
-                                dispatch_group_leave(group);
-                            }];
-                        }
-                        else
-                        {
-                            // Cross-signing ability should have been checked before going into this hole
-                            NSLog(@"[MXKeyVerification][MXSASTransaction] verifyMacs: Cannot Mark user %@ as verified because this device cannot cross-sign", self.otherDevice.userId);
-                        }
-
+                        // Mark user as verified
+                        NSLog(@"[MXKeyVerification][MXSASTransaction] verifyMacs: Mark user %@ as verified", self.otherDevice.userId);
+                        dispatch_group_enter(group);
+                        [self.manager.crypto setUserVerification:YES forUser:self.otherDevice.userId success:^{
+                            dispatch_group_leave(group);
+                            
+                        } failure:^(NSError *error) {
+                            // Should never happen
+                            cancelCode = MXTransactionCancelCode.invalidMessage;
+                            
+                            dispatch_group_leave(group);
+                        }];
                     }
                     else
                     {

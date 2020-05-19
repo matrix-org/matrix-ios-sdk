@@ -3826,7 +3826,7 @@ MXAuthAction;
                        success:(void (^)(MXKeysUploadResponse *keysUploadResponse))success
                        failure:(void (^)(NSError *error))failure
 {
-    NSString *path = [NSString stringWithFormat:@"%@/keys/upload", kMXAPIPrefixPathUnstable];
+    NSString *path = [NSString stringWithFormat:@"%@/keys/upload", kMXAPIPrefixPathR0];
     if (deviceId)
     {
         path = [NSString stringWithFormat:@"%@/%@",
@@ -3873,7 +3873,7 @@ MXAuthAction;
 {
     MXWeakify(self);
     return [httpClient requestWithMethod:@"POST"
-                                    path:[NSString stringWithFormat:@"%@/keys/signatures/upload", kMXAPIPrefixPathUnstable]
+                                    path:[NSString stringWithFormat:@"%@/keys/signatures/upload", kMXAPIPrefixPathR0]
                               parameters:signatures
                                  success:^(NSDictionary *JSONResponse) {
                                      MXStrongifyAndReturnIfNil(self);
@@ -3896,7 +3896,7 @@ MXAuthAction;
                                  success:(void (^)(MXKeysQueryResponse *keysQueryResponse))success
                                  failure:(void (^)(NSError *error))failure
 {
-    NSString *path = [NSString stringWithFormat:@"%@/keys/query", kMXAPIPrefixPathUnstable];
+    NSString *path = [NSString stringWithFormat:@"%@/keys/query", kMXAPIPrefixPathR0];
 
     NSMutableDictionary *downloadQuery = [NSMutableDictionary dictionary];
     for (NSString *userID in userIds)
@@ -3938,7 +3938,7 @@ MXAuthAction;
 
 - (MXHTTPOperation *)claimOneTimeKeysForUsersDevices:(MXUsersDevicesMap<NSString *> *)usersDevicesKeyTypesMap success:(void (^)(MXKeysClaimResponse *))success failure:(void (^)(NSError *))failure
 {
-    NSString *path = [NSString stringWithFormat:@"%@/keys/claim", kMXAPIPrefixPathUnstable];
+    NSString *path = [NSString stringWithFormat:@"%@/keys/claim", kMXAPIPrefixPathR0];
 
     NSDictionary *parameters = @{
                                  @"one_time_keys": usersDevicesKeyTypesMap.map
@@ -3974,7 +3974,7 @@ MXAuthAction;
 {
     MXWeakify(self);
     return [httpClient requestWithMethod:@"GET"
-                                    path:[NSString stringWithFormat:@"%@/keys/changes", kMXAPIPrefixPathUnstable]
+                                    path:[NSString stringWithFormat:@"%@/keys/changes", kMXAPIPrefixPathR0]
                               parameters:@{
                                            @"from": fromToken,
                                            @"to": toToken
@@ -4005,7 +4005,7 @@ MXAuthAction;
 {
     MXWeakify(self);
     return [httpClient requestWithMethod:@"POST"
-                                    path:[NSString stringWithFormat:@"%@/room_keys/version", kMXAPIPrefixPathUnstable]
+                                    path:[NSString stringWithFormat:@"%@/room_keys/version", kMXAPIPrefixPathR0]
                               parameters:keyBackupVersion.JSONDictionary
                                  success:^(NSDictionary *JSONResponse) {
                                      MXStrongifyAndReturnIfNil(self);
@@ -4031,7 +4031,7 @@ MXAuthAction;
 {
     MXWeakify(self);
     return [httpClient requestWithMethod:@"PUT"
-                                    path:[NSString stringWithFormat:@"%@/room_keys/version/%@", kMXAPIPrefixPathUnstable, keyBackupVersion.version]
+                                    path:[NSString stringWithFormat:@"%@/room_keys/version/%@", kMXAPIPrefixPathR0, keyBackupVersion.version]
                               parameters:keyBackupVersion.JSONDictionary
                                  success:^(NSDictionary *JSONResponse) {
                                      MXStrongifyAndReturnIfNil(self);
@@ -4053,7 +4053,7 @@ MXAuthAction;
                                    success:(void (^)(void))success
                                    failure:(void (^)(NSError *error))failure
 {
-    NSMutableString *path = [NSMutableString stringWithFormat:@"%@/room_keys/version", kMXAPIPrefixPathUnstable];
+    NSMutableString *path = [NSMutableString stringWithFormat:@"%@/room_keys/version", kMXAPIPrefixPathR0];
     if (version)
     {
         [path appendFormat:@"/%@", version];
@@ -4083,7 +4083,7 @@ MXAuthAction;
                              success:(void (^)(MXKeyBackupVersion *keyBackupVersion))success
                              failure:(void (^)(NSError *error))failure;
 {
-    NSMutableString *path = [NSMutableString stringWithFormat:@"%@/room_keys/version", kMXAPIPrefixPathUnstable];
+    NSMutableString *path = [NSMutableString stringWithFormat:@"%@/room_keys/version", kMXAPIPrefixPathR0];
     if (version)
     {
         [path appendFormat:@"/%@", version];
@@ -4398,7 +4398,7 @@ MXAuthAction;
         return nil;
     }
 
-    NSMutableString *path = [NSMutableString stringWithFormat:@"%@/room_keys/keys", kMXAPIPrefixPathUnstable];
+    NSMutableString *path = [NSMutableString stringWithFormat:@"%@/room_keys/keys", kMXAPIPrefixPathR0];
 
     if (sessionId)
     {
@@ -4437,7 +4437,7 @@ MXAuthAction;
     }
     
     // Prepare the path by adding a random transaction id (This id is used to prevent duplicated event).
-    NSString *path = [NSString stringWithFormat:@"%@/sendToDevice/%@/%@", kMXAPIPrefixPathUnstable, eventType, txnId];
+    NSString *path = [NSString stringWithFormat:@"%@/sendToDevice/%@/%@", kMXAPIPrefixPathR0, eventType, txnId];
 
     NSDictionary *content = @{
                               @"messages": contentMap.map
@@ -4463,7 +4463,7 @@ MXAuthAction;
 {
     MXWeakify(self);
     return [httpClient requestWithMethod:@"GET"
-                                    path:[NSString stringWithFormat:@"%@/devices", kMXAPIPrefixPathUnstable]
+                                    path:[NSString stringWithFormat:@"%@/devices", kMXAPIPrefixPathR0]
                               parameters:nil
                                  success:^(NSDictionary *JSONResponse) {
                                      MXStrongifyAndReturnIfNil(self);
@@ -4489,7 +4489,7 @@ MXAuthAction;
 {
     MXWeakify(self);
     return [httpClient requestWithMethod:@"GET"
-                                    path:[NSString stringWithFormat:@"%@/devices/%@", kMXAPIPrefixPathUnstable, deviceId]
+                                    path:[NSString stringWithFormat:@"%@/devices/%@", kMXAPIPrefixPathR0, deviceId]
                               parameters:nil
                                  success:^(NSDictionary *JSONResponse) {
                                      MXStrongifyAndReturnIfNil(self);
@@ -4522,7 +4522,7 @@ MXAuthAction;
 
     MXWeakify(self);
     return [httpClient requestWithMethod:@"PUT"
-                                    path:[NSString stringWithFormat:@"%@/devices/%@", kMXAPIPrefixPathUnstable, deviceId]
+                                    path:[NSString stringWithFormat:@"%@/devices/%@", kMXAPIPrefixPathR0, deviceId]
                               parameters:parameters
                                  success:^(NSDictionary *JSONResponse) {
                                      MXStrongifyAndReturnIfNil(self);
@@ -4541,7 +4541,7 @@ MXAuthAction;
     // The request will fail with Unauthorized status code, but the auth session will be available in response data.
     MXWeakify(self);
     return [httpClient requestWithMethod:@"DELETE"
-                                    path:[NSString stringWithFormat:@"%@/devices/%@", kMXAPIPrefixPathUnstable, [MXTools encodeURIComponent:deviceId]]
+                                    path:[NSString stringWithFormat:@"%@/devices/%@", kMXAPIPrefixPathR0, [MXTools encodeURIComponent:deviceId]]
                               parameters:nil
                                  success:^(NSDictionary *JSONResponse) {
                                      MXStrongifyAndReturnIfNil(self);
@@ -4598,7 +4598,7 @@ MXAuthAction;
 
     MXWeakify(self);
     return [httpClient requestWithMethod:@"DELETE"
-                                    path:[NSString stringWithFormat:@"%@/devices/%@", kMXAPIPrefixPathUnstable, [MXTools encodeURIComponent:deviceId]]
+                                    path:[NSString stringWithFormat:@"%@/devices/%@", kMXAPIPrefixPathR0, [MXTools encodeURIComponent:deviceId]]
                               parameters:nil
                                     data:payloadData
                                  headers:@{@"Content-Type": @"application/json"}

@@ -62,16 +62,19 @@ NSString * const MXKeyVerificationTransactionDidChangeNotification = @"MXKeyVeri
     return _otherDevice.deviceId;
 }
 
-- (void)cancelWithCancelCode:(MXTransactionCancelCode *)code
+- (void)cancelWithCancelCode:(MXTransactionCancelCode*)code
 {
-    dispatch_async(self.manager.crypto.decryptionQueue,^{
-        [self cancelWithCancelCodeFromCryptoQueue:code];
-    });
+    // Must be handled by the specific implementation
+    NSAssert(NO, @"%@ does not implement cancelWithCancelCode", self.class);
 }
 
-- (void)cancelWithCancelCodeFromCryptoQueue:(MXTransactionCancelCode *)code
+- (void)cancelWithCancelCode:(MXTransactionCancelCode *)code
+                     success:(void (^)(void))success
+                     failure:(void (^)(NSError *error))failure
 {
-    [self.manager cancelTransaction:self code:code];
+    dispatch_async(self.manager.crypto.cryptoQueue,^{
+        [self.manager cancelTransaction:self code:code success:success failure:failure];
+    });
 }
 
 - (MXHTTPOperation*)sendToOther:(NSString*)eventType content:(NSDictionary*)content

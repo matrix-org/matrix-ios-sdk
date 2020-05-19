@@ -67,118 +67,263 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
 
 /**
  - Alice and Bob are in a room
- -> Alice must see 0% of trust in this room
+ -> No cross-signing, no trust
  */
-- (void)testOtherNotTrusted
+- (void)testNoCrossSigningNoTrust
 {
     // - Alice and Bob are in a room
     [matrixSDKTestsE2EData doE2ETestWithAliceAndBobInARoom:self cryptedBob:YES warnOnUnknowDevices:YES readyToTest:^(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
         
         dispatch_after(dispatch_time(DISPATCH_TIME_NOW, kMXRoomSummaryTrustComputationDelayMs * NSEC_PER_MSEC), dispatch_get_main_queue(), ^{
 
-            // -> Alice must see 0% of trust in this room
+            // -> No cross-signing, no trust
             MXRoom *roomFromAlicePOV = [aliceSession roomWithRoomId:roomId];
             MXUsersTrustLevelSummary *trust = roomFromAlicePOV.summary.trust;
             
             XCTAssertNotNil(trust);
-            XCTAssertEqual(trust.trustedUsersProgress.totalUnitCount, 1);
+            XCTAssertEqual(trust.trustedUsersProgress.totalUnitCount, 2);
             XCTAssertEqual(trust.trustedUsersProgress.completedUnitCount, 0);
-            XCTAssertEqual(trust.trustedDevicesProgress.totalUnitCount, 1);
-            XCTAssertEqual(trust.trustedDevicesProgress.completedUnitCount, 0);
+            XCTAssertEqual(trust.trustedUsersProgress.fractionCompleted, 0);
             
+            XCTAssertEqual(trust.trustedDevicesProgress.totalUnitCount, 0);
+            XCTAssertEqual(trust.trustedDevicesProgress.completedUnitCount, 0);
+            XCTAssertEqual(trust.trustedDevicesProgress.fractionCompleted, 0);
+
             [expectation fulfill];
         });
     }];
 }
 
 /**
- - Alice and Bob are in a room
- - Alice trusts Bob devices locally
- -> Alice must be notified for 100% of trust in this room
+ - Have Alice with 2 devices (Alice1 and Alice2) and Bob. All trusted via cross-signing
+ -> All should be green
  */
-- (void)testTrustLive
+- (void)testAllTrusted
 {
-    //  - Alice and Bob are in a room
-    [matrixSDKTestsE2EData doE2ETestWithAliceAndBobInARoom:self cryptedBob:YES warnOnUnknowDevices:YES readyToTest:^(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
+    // - Have Alice with 2 devices (Alice1 and Alice2) and Bob. All trusted via cross-signing
+    [matrixSDKTestsE2EData doTestWithBobAndAliceWithTwoDevicesAllTrusted:self readyToTest:^(MXSession *aliceSession1, MXSession *aliceSession2, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
         
         dispatch_after(dispatch_time(DISPATCH_TIME_NOW, kMXRoomSummaryTrustComputationDelayMs * NSEC_PER_MSEC), dispatch_get_main_queue(), ^{
-
-            MXRoom *roomFromAlicePOV = [aliceSession roomWithRoomId:roomId];
+            
+            // -> All should be green
+            MXRoom *roomFromAlicePOV = [aliceSession1 roomWithRoomId:roomId];
             MXUsersTrustLevelSummary *trust = roomFromAlicePOV.summary.trust;
             
             XCTAssertNotNil(trust);
-            XCTAssertEqual(trust.trustedDevicesProgress.completedUnitCount, 0);
-            
-            id observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXRoomSummaryDidChangeNotification object:roomFromAlicePOV.summary queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *notif) {
-                
-                // -> Alice must be notified for 100% of trust in this room
-                MXUsersTrustLevelSummary *trust = roomFromAlicePOV.summary.trust;
-                XCTAssertEqual(trust.trustedDevicesProgress.completedUnitCount, 1);
-                [expectation fulfill];
-                
-            }];
-            [observers addObject:observer];
-            
-            // - Alice trusts Bob devices locally
-            MXCredentials *bob = bobSession.matrixRestClient.credentials;
-            [aliceSession.crypto setDeviceVerification:MXDeviceVerified forDevice:bob.deviceId ofUser:bob.userId success:nil failure:^(NSError *error) {
-                XCTFail(@"Cannot set up intial test conditions - error: %@", error);
-                [expectation fulfill];
-            }];
+            XCTAssertEqual(trust.trustedUsersProgress.totalUnitCount, 2);
+            XCTAssertEqual(trust.trustedUsersProgress.completedUnitCount, 2);
+            XCTAssertEqual(trust.trustedUsersProgress.fractionCompleted, 1);
+
+            XCTAssertEqual(trust.trustedDevicesProgress.totalUnitCount, 3);
+            XCTAssertEqual(trust.trustedDevicesProgress.completedUnitCount, 3);
+            XCTAssertEqual(trust.trustedDevicesProgress.fractionCompleted, 1);
+
+            [expectation fulfill];
         });
     }];
 }
 
 /**
- - Alice and Bob are in a room
- - Alice trusts Bob devices locally
+ - Have Alice with 2 devices (Alice1 and Alice2) and Bob. All trusted via cross-signing
  - Bob signs in on a new device
- -> Alice must be notified for no more trust in this room
+ -> Not all must be trusted.
  */
-// TODO: To fix. It sometimes does not pass.
-- (void)testIncomingUntrustedDeviceLive
+- (void)testNotFullyTrusted
 {
-    //  - Alice and Bob are in a room
-    [matrixSDKTestsE2EData doE2ETestWithAliceAndBobInARoom:self cryptedBob:YES warnOnUnknowDevices:YES readyToTest:^(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
+    // - Have Alice with 2 devices (Alice1 and Alice2) and Bob. All trusted via cross-signing
+    [matrixSDKTestsE2EData doTestWithBobAndAliceWithTwoDevicesAllTrusted:self readyToTest:^(MXSession *aliceSession1, MXSession *aliceSession2, MXSession *bobSession1, NSString *roomId, XCTestExpectation *expectation) {
         
-        MXRoom *roomFromAlicePOV = [aliceSession roomWithRoomId:roomId];
-        
-        // - Alice trusts Bob devices locally
-        MXCredentials *bob = bobSession.matrixRestClient.credentials;
-        [aliceSession.crypto setDeviceVerification:MXDeviceVerified forDevice:bob.deviceId ofUser:bob.userId success:^{
+        [matrixSDKTestsE2EData loginUserOnANewDevice:bobSession1.matrixRestClient.credentials withPassword:MXTESTS_BOB_PWD onComplete:^(MXSession *bobSession2) {
             
             dispatch_after(dispatch_time(DISPATCH_TIME_NOW, kMXRoomSummaryTrustComputationDelayMs * NSEC_PER_MSEC), dispatch_get_main_queue(), ^{
-
+                
+                // -> Not all must be trusted
+                MXRoom *roomFromAlicePOV = [aliceSession1 roomWithRoomId:roomId];
                 MXUsersTrustLevelSummary *trust = roomFromAlicePOV.summary.trust;
-                XCTAssertEqual(trust.trustedDevicesProgress.completedUnitCount, 1);
                 
-                // - Bob signs in on a new device
-                [MXSDKOptions sharedInstance].enableCryptoWhenStartingMXSession = YES;
-                [matrixSDKTestsData relogUserSessionWithNewDevice:bobSession withPassword:MXTESTS_BOB_PWD onComplete:^(MXSession *bobSession2) {
-                    [MXSDKOptions sharedInstance].enableCryptoWhenStartingMXSession = NO;
-                }];
+                XCTAssertNotNil(trust);
+                XCTAssertEqual(trust.trustedUsersProgress.totalUnitCount, 2);
+                XCTAssertEqual(trust.trustedUsersProgress.completedUnitCount, 2);
+                XCTAssertEqual(trust.trustedUsersProgress.fractionCompleted, 1);
                 
-                id observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXRoomSummaryDidChangeNotification object:roomFromAlicePOV.summary queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *notif) {
-                    
-                    // -> Alice must be notified for 100% of trust in this room
-                    MXUsersTrustLevelSummary *trust = roomFromAlicePOV.summary.trust;
-                    if (trust.trustedDevicesProgress.totalUnitCount == 2)   // If could take for the SDK to detect the second Bob's device
-                    {
-                        XCTAssertEqual(trust.trustedDevicesProgress.completedUnitCount, 1);
-                        XCTAssertEqual(trust.trustedDevicesProgress.totalUnitCount, 2);
-                        [expectation fulfill];
-                    }
-                }];
-                [observers addObject:observer];
-                
+                XCTAssertEqual(trust.trustedDevicesProgress.totalUnitCount, 4);
+                XCTAssertEqual(trust.trustedDevicesProgress.completedUnitCount, 3);
+                XCTAssertNotEqual(trust.trustedDevicesProgress.fractionCompleted, 1);
+
+                [expectation fulfill];
             });
             
-        } failure:^(NSError *error) {
-            XCTFail(@"Cannot set up intial test conditions - error: %@", error);
-            [expectation fulfill];
         }];
     }];
 }
+
+/**
+ - Have Alice with 2 devices (Alice1 and Alice2) and Bob. All trusted via cross-signing
+ -> All must be trusted.
+ - Bob signs in on a new device
+ -> Alice must be notified there is no more 100% of trust in this room
+ */
+- (void)testTrustChangeAfterUserSignInOnNewDevice
+{
+    // - Have Alice with 2 devices (Alice1 and Alice2) and Bob. All trusted via cross-signing
+    [matrixSDKTestsE2EData doTestWithBobAndAliceWithTwoDevicesAllTrusted:self readyToTest:^(MXSession *aliceSession1, MXSession *aliceSession2, MXSession *bobSession1, NSString *roomId, XCTestExpectation *expectation) {
+        
+        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, kMXRoomSummaryTrustComputationDelayMs * NSEC_PER_MSEC), dispatch_get_main_queue(), ^{
+            
+            // -> All must be trusted
+            MXRoom *roomFromAlicePOV = [aliceSession1 roomWithRoomId:roomId];
+            MXUsersTrustLevelSummary *trust = roomFromAlicePOV.summary.trust;
+            XCTAssertEqual(trust.trustedUsersProgress.fractionCompleted, 1);
+            XCTAssertEqual(trust.trustedDevicesProgress.fractionCompleted, 1);
+            
+            // - Bob signs in on a new device
+            [matrixSDKTestsE2EData loginUserOnANewDevice:bobSession1.matrixRestClient.credentials withPassword:MXTESTS_BOB_PWD onComplete:^(MXSession *bobSession2) {
+            }];
+            
+            // -> Alice must be notified there is no more 100% of trust in this room
+            id observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXRoomSummaryDidChangeNotification object:roomFromAlicePOV.summary queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *notif) {
+                
+                MXUsersTrustLevelSummary *trust = roomFromAlicePOV.summary.trust;
+                XCTAssertEqual(trust.trustedUsersProgress.fractionCompleted, 1);
+                XCTAssertNotEqual(trust.trustedDevicesProgress.fractionCompleted, 1);
+                
+                [expectation fulfill];
+            }];
+            
+            [observers addObject:observer];
+        });
+    }];
+}
+
+/**
+ - Have Alice with 2 devices (Alice1 and Alice2) and Bob. All trusted via cross-signing
+ - Bob signs in on a new device
+ -> Not all must be trusted.
+ - Bob trusts the new device
+ -> Alice must be notified for 100% of trust in this room
+ */
+- (void)testTrustChangeAfterUserCompleteSecurity
+{
+    // - Have Alice with 2 devices (Alice1 and Alice2) and Bob. All trusted via cross-signing
+    [matrixSDKTestsE2EData doTestWithBobAndAliceWithTwoDevicesAllTrusted:self readyToTest:^(MXSession *aliceSession1, MXSession *aliceSession2, MXSession *bobSession1, NSString *roomId, XCTestExpectation *expectation) {
+        
+        [matrixSDKTestsE2EData loginUserOnANewDevice:bobSession1.matrixRestClient.credentials withPassword:MXTESTS_BOB_PWD onComplete:^(MXSession *bobSession2) {
+            
+            dispatch_after(dispatch_time(DISPATCH_TIME_NOW, kMXRoomSummaryTrustComputationDelayMs * NSEC_PER_MSEC), dispatch_get_main_queue(), ^{
+                
+                // -> Not all must be trusted
+                MXRoom *roomFromAlicePOV = [aliceSession1 roomWithRoomId:roomId];
+                MXUsersTrustLevelSummary *trust = roomFromAlicePOV.summary.trust;
+                XCTAssertEqual(trust.trustedUsersProgress.fractionCompleted, 1);
+                XCTAssertNotEqual(trust.trustedDevicesProgress.fractionCompleted, 1);
+                
+                // - Bob trusts the new device
+                [bobSession1.crypto setDeviceVerification:MXDeviceVerified forDevice:bobSession2.myDeviceId ofUser:bobSession2.myUserId success:^{
+                } failure:^(NSError *error) {
+                    XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                    [expectation fulfill];
+                }];
+                
+                // -> Alice must be notified for 100% of trust in this room
+                id observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXRoomSummaryDidChangeNotification object:roomFromAlicePOV.summary queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *notif) {
+                    
+                    MXUsersTrustLevelSummary *trust = roomFromAlicePOV.summary.trust;
+                    if (trust.trustedDevicesProgress.fractionCompleted == 1)   // It could take for the SDK to update the trust right
+                    {
+                        XCTAssertEqual(trust.trustedUsersProgress.fractionCompleted, 1);
+                        XCTAssertEqual(trust.trustedDevicesProgress.fractionCompleted, 1);
+                        [expectation fulfill];
+                    }
+                }];
+
+                [observers addObject:observer];
+            });
+        }];
+    }];
+}
+
+/**
+ - Have Alice with 2 devices (Alice1 and Alice2) and Bob. All trusted via cross-signing
+ -> All must be trusted.
+ - Bob rotates their cross-signing
+ -> Alice must be notified there is no more 100% of trust in this room
+ */
+- (void)testTrustChangeAfterUserRotateMSK
+{
+    // - Have Alice with 2 devices (Alice1 and Alice2) and Bob. All trusted via cross-signing
+    [matrixSDKTestsE2EData doTestWithBobAndAliceWithTwoDevicesAllTrusted:self readyToTest:^(MXSession *aliceSession1, MXSession *aliceSession2, MXSession *bobSession1, NSString *roomId, XCTestExpectation *expectation) {
+        
+        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, kMXRoomSummaryTrustComputationDelayMs * NSEC_PER_MSEC), dispatch_get_main_queue(), ^{
+            
+            // -> All must be trusted
+            MXRoom *roomFromAlicePOV = [aliceSession1 roomWithRoomId:roomId];
+            MXUsersTrustLevelSummary *trust = roomFromAlicePOV.summary.trust;
+            XCTAssertEqual(trust.trustedUsersProgress.fractionCompleted, 1);
+            XCTAssertEqual(trust.trustedDevicesProgress.fractionCompleted, 1);
+            
+            // - Bob rotates their cross-signing
+            [bobSession1.crypto.crossSigning bootstrapWithPassword:MXTESTS_BOB_PWD success:^{
+            } failure:^(NSError *error) {
+                XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                [expectation fulfill];
+            }];
+            
+            // -> Alice must be notified there is no more 100% of trust in this room
+            id observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXRoomSummaryDidChangeNotification object:roomFromAlicePOV.summary queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *notif) {
+                
+                MXUsersTrustLevelSummary *trust = roomFromAlicePOV.summary.trust;
+                XCTAssertNotEqual(trust.trustedUsersProgress.fractionCompleted, 1);
+                XCTAssertEqual(trust.trustedDevicesProgress.fractionCompleted, 1);      // 100% Because all devices of trusted users are verified
+                
+                [expectation fulfill];
+            }];
+            
+            [observers addObject:observer];
+        });
+    }];
+}
+
+/**
+ Test that we do not send too much kMXRoomSummaryDidChangeNotification.
+ 
+ Test for https://github.com/vector-im/riot-ios/issues/3121 (Too much MXDeviceInfoTrustLevelDidChangeNotification
+ and MXCrossSigningInfoTrustLevelDidChangeNotification).
+ 
+ - Have Alice with 2 devices (Alice1 and Alice2) and Bob. All trusted via cross-signing
+ - Alice re-download all keys
+ -> Alice must not be notified for more trust changes
+ */
+- (void)testNoExtraTrustLevelDidChangeNotifications
+{
+    // - Have Alice with 2 devices (Alice1 and Alice2) and Bob. All trusted via cross-signing
+    [matrixSDKTestsE2EData doTestWithBobAndAliceWithTwoDevicesAllTrusted:self readyToTest:^(MXSession *aliceSession1, MXSession *aliceSession2, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
+        
+        // - Alice download all keys
+        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, kMXRoomSummaryTrustComputationDelayMs * NSEC_PER_MSEC), dispatch_get_main_queue(), ^{
+            
+            MXRoom *roomFromAlicePOV = [aliceSession1 roomWithRoomId:roomId];
+            
+            // - Alice re-download all keys
+            [aliceSession1.crypto downloadKeys:@[aliceSession1.myUserId, bobSession.myUserId] forceDownload:YES success:^(MXUsersDevicesMap<MXDeviceInfo *> *usersDevicesInfoMap, NSDictionary<NSString *,MXCrossSigningInfo *> *crossSigningKeysMap) {
+                // Wait a bit
+                dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 1 * NSEC_PER_SEC), dispatch_get_main_queue(), ^{
+                    [expectation fulfill];
+                });
+            } failure:^(NSError *error) {
+                XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                [expectation fulfill];
+            }];
+            
+            // -> Alice must not be notified for more trust changes
+            id observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXRoomSummaryDidChangeNotification object:roomFromAlicePOV.summary queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *notif) {
+                
+                XCTFail(@"They must be no more trust changes");
+            }];
+            [observers addObject:observer];
+        });
+    }];
+}
+
 
 @end
 

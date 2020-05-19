@@ -320,11 +320,97 @@
 }
 
 
+#pragma mark - Cross-signing
+
+// Have Alice with 2 devices (Alice1 and Alice2) and Bob. All trusted via cross-signing
+// - Create Alice & Bob accounts
+// - Bootstrap cross-signing x2
+// - Make Alice2 aware of Bob
+// - Make each Alice devices trust each other
+// - Make Alice & Bob trust each other
+- (void)doTestWithBobAndAliceWithTwoDevicesAllTrusted:(XCTestCase*)testCase
+                                          readyToTest:(void (^)(MXSession *bobSession, MXSession *aliceSession1, MXSession *aliceSession2, NSString *roomId, XCTestExpectation *expectation))readyToTest
+{
+    // - Create Alice & Bob accounts
+    [self doE2ETestWithAliceAndBobInARoom:testCase
+                                                cryptedBob:YES
+                                       warnOnUnknowDevices:YES
+                                                aliceStore:[[MXNoStore alloc] init]
+                                                  bobStore:[[MXNoStore alloc] init]
+                                               readyToTest:^(MXSession *aliceSession1, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation)
+     {
+         // - Bootstrap cross-signing x2
+         [aliceSession1.crypto.crossSigning bootstrapWithPassword:MXTESTS_ALICE_PWD success:^{
+             [bobSession.crypto.crossSigning bootstrapWithPassword:MXTESTS_BOB_PWD success:^{
+                 
+                 [self loginUserOnANewDevice:aliceSession1.matrixRestClient.credentials withPassword:MXTESTS_ALICE_PWD onComplete:^(MXSession *aliceSession2) {
+                     
+                     NSString *aliceUserId = aliceSession1.matrixRestClient.credentials.userId;
+                     NSString *bobUserId = bobSession.matrixRestClient.credentials.userId;
+                     
+                     NSString *aliceSession1DeviceId = aliceSession1.matrixRestClient.credentials.deviceId;
+                     NSString *aliceSession2DeviceId = aliceSession2.matrixRestClient.credentials.deviceId;
+                     
+                     // - Make Alice2 aware of Bob
+                     [aliceSession2.crypto downloadKeys:@[bobUserId] forceDownload:NO success:^(MXUsersDevicesMap<MXDeviceInfo *> *usersDevicesInfoMap, NSDictionary<NSString *,MXCrossSigningInfo *> *crossSigningKeysMap) {
+                         
+                         // - Make each Alice devices trust each other
+                         // This simulates a self verification and trigger cross-signing behind the shell
+                         [aliceSession1.crypto setDeviceVerification:MXDeviceVerified forDevice:aliceSession2DeviceId ofUser:aliceUserId success:^{
+                             [aliceSession2.crypto setDeviceVerification:MXDeviceVerified forDevice:aliceSession1DeviceId ofUser:aliceUserId success:^{
+                                 
+                                 // - Make Alice & Bob trust each other
+                                 [aliceSession1.crypto.crossSigning signUserWithUserId:bobUserId success:^{
+                                     [bobSession.crypto.crossSigning signUserWithUserId:aliceUserId success:^{
+                                         
+                                         // Wait a bit to make background requests for cross-signing happen
+                                         dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 2 * NSEC_PER_SEC), dispatch_get_main_queue(), ^{
+                                             readyToTest(aliceSession1, aliceSession2, bobSession, roomId, expectation);
+                                         });
+                                         
+                                     } failure:^(NSError *error) {
+                                         NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+                                         [expectation fulfill];
+                                     }];
+                                     
+                                 } failure:^(NSError *error) {
+                                     NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+                                     [expectation fulfill];
+                                 }];
+                                 
+                             } failure:^(NSError *error) {
+                                 NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+                                 [expectation fulfill];
+                             }];
+                         } failure:^(NSError *error) {
+                             NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+                             [expectation fulfill];
+                         }];
+                         
+                     } failure:^(NSError *error) {
+                         NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+                         [expectation fulfill];
+                     }];
+                 }];
+                 
+             } failure:^(NSError *error) {
+                 NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+                 [expectation fulfill];
+             }];
+             
+         } failure:^(NSError *error) {
+             NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+             [expectation fulfill];
+         }];
+     }];
+}
+
+
 #pragma mark - Tools
 
 - (void)outgoingRoomKeyRequestInSession:(MXSession*)session complete:(void (^)(MXOutgoingRoomKeyRequest*))complete
 {
-    dispatch_async(session.crypto.decryptionQueue, ^{
+    dispatch_async(session.crypto.cryptoQueue, ^{
         MXOutgoingRoomKeyRequest *outgoingRoomKeyRequest = [session.crypto.store outgoingRoomKeyRequestWithState:MXRoomKeyRequestStateUnsent];
         if (!outgoingRoomKeyRequest)
         {
