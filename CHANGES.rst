@@ -2,6 +2,7 @@ Changes in Matrix iOS SDK in 0.16.6 (2020-05-xx)
 ================================================
 
 Improvements:
+ * MXStore: Add a method to remove all the messages sent before a specific timestamp in a room.
 
 Changes in Matrix iOS SDK in 0.16.5 (2020-05-18)
 ================================================
@@ -77,7 +78,6 @@ Improvements:
  * MXRoomSummary: Add the trust property to indicate trust in other users and devices in the room (vector-im/riot-ios/issues/2906).
  * Aggregations: Implement m.reference aggregations, aka thread ([MSC1849](https://github.com/matrix-org/matrix-doc/blob/matthew/msc1849/proposals/1849-aggregations.md)).
  * MXStore: Add a method to get related events for a specific event.
- * MXStore: Add a method to remove all the messages sent before a specific timestamp in a room.
  * MXPublicRoom: Add canonical alias property.
  * MXLogger: Add a parameter to indicate the number of log files.
  * MXThrottler: Add this tool class to throttle actions.
