@@ -557,6 +557,10 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
                success:(MXOnBackgroundSyncDone)backgroundSyncDone
                failure:(MXOnBackgroundSyncFail)backgroundSyncfails NS_REFINED_FOR_SWIFT;
 
+- (void)initialBackgroundSync:(unsigned int)timeout
+               success:(MXOnBackgroundSyncDone)backgroundSyncDone
+               failure:(MXOnBackgroundSyncFail)backgroundSyncfails NS_REFINED_FOR_SWIFT;
+
 /**
  Restart the session events stream.
  @return YES if the operation succeeds

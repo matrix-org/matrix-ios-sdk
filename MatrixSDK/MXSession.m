@@ -718,6 +718,22 @@ typedef void (^MXOnResumeDone)(void);
     }
 }
 
+- (void)initialBackgroundSync:(unsigned int)timeout success:(MXOnBackgroundSyncDone)backgroundSyncDone failure:(MXOnBackgroundSyncFail)backgroundSyncfails
+{
+    // Check whether no request is already in progress
+    if (!eventStreamRequest)
+    {
+        NSLog(@"[MXSession] start a initial background Sync");
+        [self setState:MXSessionStateBackgroundSyncInProgress];
+        
+        // BackgroundSync from the latest known token
+        onBackgroundSyncDone = backgroundSyncDone;
+        onBackgroundSyncFail = backgroundSyncfails;
+        
+        [self serverSyncWithServerTimeout:0 success:nil failure:nil clientTimeout:timeout setPresence:@"offline"];
+    }
+}
+
 - (BOOL)reconnect
 {
     if (eventStreamRequest)

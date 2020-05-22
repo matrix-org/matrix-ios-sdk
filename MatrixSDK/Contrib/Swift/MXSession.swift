@@ -63,6 +63,11 @@ public extension MXSession {
         __backgroundSync(timeoutMilliseconds, success: currySuccess(completion), failure: curryFailure(completion))
     }
     
+    @nonobjc func initialBackgroundSync(withTimeout timeout: TimeInterval, completion: @escaping (_ response: MXResponse<Void>) -> Void) {
+        let timeoutMilliseconds = UInt32(timeout * 1000)
+        __initialBackgroundSync(timeoutMilliseconds, success: currySuccess(completion), failure: curryFailure(completion))
+    }
+    
     
     
     
