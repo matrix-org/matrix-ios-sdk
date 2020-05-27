@@ -171,11 +171,6 @@ NSString * const kMXCallKitAdapterAudioSessionDidActive = @"kMXCallKitAdapterAud
         }
         
         self.calls[callUUID] = call;
-        
-        // Workaround from https://forums.developer.apple.com/message/169511 suggests configuring audio in the
-        // completion block of the `reportNewIncomingCallWithUUID:update:completion:` method instead of in
-        // `provider:performAnswerCallAction:` per the WWDC examples.
-        [self.audioSessionConfigurator configureAudioSessionForVideoCall:call.isVideoCall];
     }];
     
 }
@@ -238,6 +233,7 @@ NSString * const kMXCallKitAdapterAudioSessionDidActive = @"kMXCallKitAdapterAud
     if (call)
     {
         [call answer];
+        [self.audioSessionConfigurator configureAudioSessionForVideoCall:call.isVideoCall];
     }
     
     [action fulfill];
@@ -250,6 +246,7 @@ NSString * const kMXCallKitAdapterAudioSessionDidActive = @"kMXCallKitAdapterAud
     {
         [call hangup];
         [self.calls removeObjectForKey:action.UUID];
+        [self.audioSessionConfigurator configureAudioSessionAfterCallEnds];
     }
     
     [action fulfill];
