@@ -47,6 +47,11 @@
  */
 - (void)audioSessionDidDeactivate:(AVAudioSession *)audioSession;
 
+/**
+ Performs necessary audio session actions after call ends.
+ */
+- (void)configureAudioSessionAfterCallEnds;
+
 @end
 
 #endif
