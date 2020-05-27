@@ -3,6 +3,9 @@ Changes in Matrix iOS SDK in 0.16.6 (2020-05-xx)
 
 Improvements:
 
+Bug fix:
+ * MXSecretShareManager: Fix crash in cancelRequestWithRequestId (vector-im/riot-ios/issues/3272).
+
 Changes in Matrix iOS SDK in 0.16.5 (2020-05-18)
 ================================================
 

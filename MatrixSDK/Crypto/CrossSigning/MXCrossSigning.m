@@ -307,8 +307,11 @@ NSString *const MXCrossSigningErrorDomain = @"org.matrix.sdk.crosssigning";
         return isSecretValid;
     } failure:^(NSError * _Nonnull error) {
         // Cancel the other request
-        [self.crypto.secretShareManager cancelRequestWithRequestId:sskRequestId success:^{} failure:^(NSError * _Nonnull error) {
-        }];
+        if (sskRequestId)
+        {
+            [self.crypto.secretShareManager cancelRequestWithRequestId:sskRequestId success:^{} failure:^(NSError * _Nonnull error) {
+            }];
+        }
         failure(error);
     }];
     
@@ -340,8 +343,11 @@ NSString *const MXCrossSigningErrorDomain = @"org.matrix.sdk.crosssigning";
         return isSecretValid;
     } failure:^(NSError * _Nonnull error) {
         // Cancel the other request
-        [self.crypto.secretShareManager cancelRequestWithRequestId:uskRequestId success:^{} failure:^(NSError * _Nonnull error) {
-        }];
+        if (uskRequestId)
+        {
+            [self.crypto.secretShareManager cancelRequestWithRequestId:uskRequestId success:^{} failure:^(NSError * _Nonnull error) {
+            }];
+        }
         failure(error);
     }];
     
