@@ -38,6 +38,8 @@
 
 #import "MXDeviceVerificationManager_Private.h"
 
+#import "NSArray+MatrixSDK.h"
+
 /**
  The store to use for crypto.
  */
@@ -47,6 +49,10 @@ NSString *const kMXCryptoRoomKeyRequestNotification = @"kMXCryptoRoomKeyRequestN
 NSString *const kMXCryptoRoomKeyRequestNotificationRequestKey = @"kMXCryptoRoomKeyRequestNotificationRequestKey";
 NSString *const kMXCryptoRoomKeyRequestCancellationNotification = @"kMXCryptoRoomKeyRequestCancellationNotification";
 NSString *const kMXCryptoRoomKeyRequestCancellationNotificationRequestKey = @"kMXCryptoRoomKeyRequestCancellationNotificationRequestKey";
+
+static NSString *const kMXCryptoOneTimeKeyClaimCompleteNotification             = @"kMXCryptoOneTimeKeyClaimCompleteNotification";
+static NSString *const kMXCryptoOneTimeKeyClaimCompleteNotificationDevicesKey   = @"kMXCryptoOneTimeKeyClaimCompleteNotificationDevicesKey";
+static NSString *const kMXCryptoOneTimeKeyClaimCompleteNotificationErrorKey     = @"kMXCryptoOneTimeKeyClaimCompleteNotificationErrorKey";
 
 #ifdef MX_CRYPTO
 
@@ -87,6 +93,10 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
 
     // The manager for incoming room key requests
     MXIncomingRoomKeyRequestManager *incomingRoomKeyRequestManager;
+    
+    // The list of devices (by their identity key) we are establishing
+    // an olm session with.
+    NSMutableArray<NSString*> *ensureOlmSessionsInProgress;
 }
 @end
 
@@ -1370,6 +1380,8 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
         _warnOnUnknowDevices = YES;
 
         _decryptionQueue = [MXCrypto dispatchQueueForUser:_mxSession.matrixRestClient.credentials.userId];
+        
+        ensureOlmSessionsInProgress = [NSMutableArray array];
 
         _olmDevice = [[MXOlmDevice alloc] initWithStore:_store];
 
@@ -1593,6 +1605,7 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
 
     if (devicesWithoutSession.count == 0)
     {
+        NSLog(@"[MXCrypto] ensureOlmSessionsForDevices: Have already sessions for all");
         if (success)
         {
             success(results);
@@ -1600,20 +1613,111 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
         return nil;
     }
 
+    
     NSString *oneTimeKeyAlgorithm = kMXKeySignedCurve25519Type;
-
-    // Prepare the request for claiming one-time keys
+    
+    // Devices for which we will make a /claim request
     MXUsersDevicesMap<NSString*> *usersDevicesToClaim = [[MXUsersDevicesMap<NSString*> alloc] init];
+    // The same but devices are listed by their identity key
+    NSMutableArray<NSString*> *devicesToClaim = [NSMutableArray array];
+    
+    // Devices (by their identity key) that are waiting for a response to /claim request
+    // That can be devices for which we are going to make a /claim request OR devices that
+    // already have a pending requests.
+    // Once we have emptied this array, we can call the success or the failure block. The
+    // operation is complete.
+    NSMutableArray<NSString*> *devicesInProgress = [NSMutableArray array];
+    
+    // Prepare the request for claiming one-time keys
     for (MXDeviceInfo *device in devicesWithoutSession)
     {
-        [usersDevicesToClaim setObject:oneTimeKeyAlgorithm forUser:device.userId andDevice:device.deviceId];
+        NSString *deviceIdentityKey = device.identityKey;
+        
+        // Claim only if a request is not yet pending
+        if (![ensureOlmSessionsInProgress containsObject:deviceIdentityKey])
+        {
+            [usersDevicesToClaim setObject:oneTimeKeyAlgorithm forUser:device.userId andDevice:device.deviceId];
+            [devicesToClaim addObject:deviceIdentityKey];
+            
+            [ensureOlmSessionsInProgress addObject:deviceIdentityKey];
+        }
+        
+        // In both case, we need to wait for the creation of the olm session for this device
+        [devicesInProgress addObject:deviceIdentityKey];
     }
-
-    // TODO: this has a race condition - if we try to send another message
-    // while we are claiming a key, we will end up claiming two and setting up
-    // two sessions.
-    //
-    // That should eventually resolve itself, but it's poor form.
+    
+    NSLog(@"[MXCrypto] ensureOlmSessionsForDevices: %@ out of %@ sessions to claim one time keys", @(usersDevicesToClaim.count), @(devicesWithoutSession.count));
+    
+    
+    // Wait for the result of claim request(s)
+    // Listen to the dedicated notification
+    MXWeakify(self);
+    __block id observer;
+    observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXCryptoOneTimeKeyClaimCompleteNotification object:self queue:nil usingBlock:^(NSNotification * _Nonnull note) {
+        MXStrongifyAndReturnIfNil(self);
+        
+        NSArray<NSString*> *devices = note.userInfo[kMXCryptoOneTimeKeyClaimCompleteNotificationDevicesKey];
+        NSError *error = note.userInfo[kMXCryptoOneTimeKeyClaimCompleteNotificationErrorKey];
+        
+        // Was it a /claim request for us?
+        if ([devicesInProgress mx_intersectArray:devices])
+        {
+            if (error)
+            {
+                NSLog(@"[MXCrypto] ensureOlmSessionsForDevices: Got a notification failure for %@ devices. Fail our current pool of %@ devices", @(devices.count), @(devicesInProgress.count));
+                
+                // Consider the failure for all requests of the current pool
+                [self->ensureOlmSessionsInProgress removeObjectsInArray:devices];
+                [devicesInProgress removeAllObjects];
+                
+                // The game is over for this pool
+                [[NSNotificationCenter defaultCenter] removeObserver:observer];
+                if (failure)
+                {
+                    failure(error);
+                }
+            }
+            else
+            {
+                for (NSString *deviceIdentityKey in devices)
+                {
+                    if ([devicesInProgress containsObject:deviceIdentityKey])
+                    {
+                        MXDeviceInfo *device = [self.store deviceWithIdentityKey:deviceIdentityKey];
+                        NSString *olmSessionId = [self.olmDevice sessionIdForDevice:deviceIdentityKey];
+                        
+                        // Update the result
+                        MXOlmSessionResult *olmSessionResult = [results objectForDevice:device.deviceId forUser:device.userId];
+                        olmSessionResult.sessionId = olmSessionId;
+                        
+                        // This device is no more in progress
+                        [devicesInProgress removeObject:deviceIdentityKey];
+                        [self->ensureOlmSessionsInProgress removeObject:deviceIdentityKey];
+                    }
+                }
+                
+                NSLog(@"[MXCrypto] ensureOlmSessionsForDevices: Got olm sessions for %@ devices. Still missing %@ sessions", @(devices.count), @(devicesInProgress.count));
+                
+                // If the pool is empty, we are done
+                if (!devicesInProgress.count)
+                {
+                    [[NSNotificationCenter defaultCenter] removeObserver:observer];
+                    if (success)
+                    {
+                        success(results);
+                    }
+                }
+            }
+        }
+    }];
+    
+    
+    if (usersDevicesToClaim.count == 0)
+    {
+        NSLog(@"[MXCrypto] ensureOlmSessionsForDevices: All missing sessions are already pending");
+        return nil;
+    }
+    
 
     NSLog(@"[MXCrypto] ensureOlmSessionsForDevices: claimOneTimeKeysForUsersDevices (users: %tu - devices: %tu)",
           usersDevicesToClaim.map.count, usersDevicesToClaim.count);
@@ -1649,27 +1753,29 @@ NSTimeInterval kMXCryptoUploadOneTimeKeysPeriod = 60.0; // one minute
                         continue;
                     }
 
-                    NSString *sid = [self verifyKeyAndStartSession:oneTimeKey userId:userId deviceInfo:deviceInfo];
-
-                    // Update the result for this device in results
-                    olmSessionResult.sessionId = sid;
+                    [self verifyKeyAndStartSession:oneTimeKey userId:userId deviceInfo:deviceInfo];
                 }
             }
         }
-
-        if (success)
-        {
-            success(results);
-        }
+        
+        // Broadcast the /claim request is done
+        [[NSNotificationCenter defaultCenter] postNotificationName:kMXCryptoOneTimeKeyClaimCompleteNotification
+                                                            object:self
+                                                          userInfo: @{
+                                                                      kMXCryptoOneTimeKeyClaimCompleteNotificationDevicesKey: devicesToClaim
+                                                                      }];
 
     } failure:^(NSError *error) {
 
         NSLog(@"[MXCrypto] ensureOlmSessionsForDevices: claimOneTimeKeysForUsersDevices request failed.");
 
-        if (failure)
-        {
-            failure(error);
-        }
+        // Broadcast the /claim request is done
+        [[NSNotificationCenter defaultCenter] postNotificationName:kMXCryptoOneTimeKeyClaimCompleteNotification
+                                                            object:self
+                                                          userInfo: @{
+                                                                      kMXCryptoOneTimeKeyClaimCompleteNotificationDevicesKey: devicesToClaim,
+                                                                      kMXCryptoOneTimeKeyClaimCompleteNotificationErrorKey: error
+                                                                      }];
     }];
 }
 
