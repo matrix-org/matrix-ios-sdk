@@ -2038,7 +2038,7 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
                 NSLog(@"[MXCrypto] ensureOlmSessionsForDevices: Got a notification failure for %@ devices. Fail our current pool of %@ devices", @(devices.count), @(devicesInProgress.count));
                 
                 // Consider the failure for all requests of the current pool
-                [self->ensureOlmSessionsInProgress removeObjectsInArray:devicesInProgress];
+                [self->ensureOlmSessionsInProgress removeObjectsInArray:devices];
                 [devicesInProgress removeAllObjects];
                 
                 // The game is over for this pool
