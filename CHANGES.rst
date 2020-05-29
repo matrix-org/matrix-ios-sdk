@@ -5,6 +5,7 @@ Improvements:
  * MXSession: Update account data as soon as the endpoint returns.
  * MXSecretStorage: Add this class to support SSSS ([MSC1946(]https://github.com/matrix-org/matrix-doc/pull/1946).
  * SAS verification: Support new key agreement.
+ * MXSession: Add ignoreSessionState to backgroundSync method.
 
 Changes in Matrix iOS SDK in 0.16.4 (2020-05-07)
 ================================================
