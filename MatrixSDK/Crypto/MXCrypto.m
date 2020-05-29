@@ -2013,6 +2013,7 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
             [ensureOlmSessionsInProgress addObject:deviceIdentityKey];
         }
         
+        // In both case, we need to wait for the creation of the olm session for this device
         [devicesInProgress addObject:deviceIdentityKey];
     }
     
@@ -2026,7 +2027,7 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
     observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXCryptoOneTimeKeyClaimCompleteNotification object:self queue:nil usingBlock:^(NSNotification * _Nonnull note) {
         MXStrongifyAndReturnIfNil(self);
         
-        NSMutableArray<NSString*> *devices = note.userInfo[kMXCryptoOneTimeKeyClaimCompleteNotificationDevicesKey];
+        NSArray<NSString*> *devices = note.userInfo[kMXCryptoOneTimeKeyClaimCompleteNotificationDevicesKey];
         NSError *error = note.userInfo[kMXCryptoOneTimeKeyClaimCompleteNotificationErrorKey];
         
         // Was it a /claim request for us?
