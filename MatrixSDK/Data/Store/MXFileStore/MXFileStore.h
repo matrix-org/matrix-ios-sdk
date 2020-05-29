@@ -163,7 +163,10 @@ typedef NS_OPTIONS(NSInteger, MXFileStorePreloadOptions)
                        success:(void (^)(MXRoomAccountData * _Nonnull roomAccountData))success
                        failure:(nullable void (^)(NSError * _Nonnull error))failure;
 
-
+/**
+ Load metadata for the store. Sets eventStreamToken.
+ */
+- (void)loadMetaData;
 
 @end
 
