@@ -1,11 +1,26 @@
-Changes in Matrix iOS SDK in 0.16.5 (2020-05-xx)
+Changes in Matrix iOS SDK in 0.16.6 (2020-05-xx)
+================================================
+
+Improvements:
+
+Bug fix:
+ * MXSecretShareManager: Fix crash in cancelRequestWithRequestId (vector-im/riot-ios/issues/3272).
+ * MXIdentityService: Fix crash in handleHTTPClientError (vector-im/riot-ios/issues/3273).
+ * MXSession: Add ignoreSessionState to backgroundSync method.
+
+Changes in Matrix iOS SDK in 0.16.5 (2020-05-18)
 ================================================
 
 Improvements:
  * MXSession: Update account data as soon as the endpoint returns.
  * MXSecretStorage: Add this class to support SSSS ([MSC1946(]https://github.com/matrix-org/matrix-doc/pull/1946).
  * SAS verification: Support new key agreement.
- * MXSession: Add ignoreSessionState to backgroundSync method.
+ * MatrixSDK/JingleCallStack: Update Jitsi Meet dependency to ~> 2.8.1 and upgrade the minimal iOS version to 11.0 because the Jitsi Meet framework requires it.
+ * MXCallAudioSessionConfigurator: Add `configureAudioSessionAfterCallEnds` method.
+ * MXCallKitAdapter: Move incoming audio configuration in `performAnswerCallAction` as recommended. Handle audio session configuration after call ends.
+ 
+ Bug fix:
+ * MXJingleCallAudioSessionConfigurator: Handle RTCAudioSession manually, enable audio when needed. Fix outgoing audio issue after consecutive incoming calls.
 
 Changes in Matrix iOS SDK in 0.16.4 (2020-05-07)
 ================================================

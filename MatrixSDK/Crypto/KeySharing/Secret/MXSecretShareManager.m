@@ -108,6 +108,13 @@ static NSArray<MXEventTypeString> *kMXSecretShareEventTypes;
 {
     NSLog(@"[MXSecretShareManager] cancelRequestWithRequestId: %@", requestId);
     
+    // Sanity check
+    if (!requestId)
+    {
+        NSLog(@"[MXSecretShareManager] cancelRequestWithRequestId: Nil request id");
+        failure(nil);
+    }
+    
     // Create an empty operation that will be mutated later
     MXHTTPOperation *operation = [[MXHTTPOperation alloc] init];
     
@@ -118,8 +125,10 @@ static NSArray<MXEventTypeString> *kMXSecretShareEventTypes;
         MXPendingSecretShareRequest *pendingRequest = self->pendingSecretShareRequests[requestId];
         if (!pendingRequest)
         {
-            NSLog(@"[MXSecretShareManager] cancelRequestWithRequestId: Unknown request: %@", requestId);
-            failure(nil);
+            dispatch_async(dispatch_get_main_queue(), ^{
+                NSLog(@"[MXSecretShareManager] cancelRequestWithRequestId: Unknown request: %@", requestId);
+                failure(nil);
+            });
         }
         
         [self->pendingSecretShareRequests removeObjectForKey:requestId];
