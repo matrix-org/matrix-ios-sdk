@@ -559,7 +559,7 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
                failure:(MXOnBackgroundSyncFail)backgroundSyncfails NS_REFINED_FOR_SWIFT;
 
 /**
- Perform an events stream catchup in background (by keeping user offline). This method does not consider the session state.
+ Perform an events stream catchup in background (by keeping user offline).
  
  @param timeout the max time in milliseconds to perform the catchup
  @param ignoreSessionState ignore session state to be equal to paused
