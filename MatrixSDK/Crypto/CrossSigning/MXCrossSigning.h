@@ -70,14 +70,6 @@ typedef NS_ENUM(NSInteger, MXCrossSigningState)
      It can cross-sign other users or other devices of this account.
      */
     MXCrossSigningStateCanCrossSign,
-    
-    /**
-     Same as MXCrossSigningStateCanCrossSign but private keys can only be used asynchronously.
-     Access to these keys may require UI interaction with the user like passphrase, Face ID, etc.
-     */
-    // TODO: This is unused for the moment but it will come back with the full implemenation of SSSS.
-    // All related code has been removed to remove noise. Check the code in this commit.
-    MXCrossSigningStateCanCrossSignAsynchronously,
 };
 
 
