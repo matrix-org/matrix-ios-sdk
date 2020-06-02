@@ -110,10 +110,6 @@ typedef NS_ENUM(NSInteger, MXCrossSigningErrorCode)
  This creates cross-signing keys. It will use keysStorageDelegate to store
  private parts.
 
- TODO: Support other authentication flows than password.
- TODO: This method will probably change or disappear. It is here mostly for development
- while SSSS is not available.
-
  @param password the account password to upload keys to the HS.
 
  @param success A block object called when the operation succeeds.
@@ -122,6 +118,22 @@ typedef NS_ENUM(NSInteger, MXCrossSigningErrorCode)
 - (void)bootstrapWithPassword:(NSString*)password
                       success:(void (^)(void))success
                       failure:(void (^)(NSError *error))failure;
+
+/**
+ Bootstrap cross-signing on this device.
+ 
+ This creates cross-signing keys. It will use keysStorageDelegate to store
+ private parts.
+ 
+ @param authParams the auth parameters to upload keys to the HS.
+ 
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+ */
+- (void)bootstrapWithAuthParams:(NSDictionary*)authParams
+                        success:(void (^)(void))success
+                        failure:(void (^)(NSError *error))failure;
+
 
 /**
  Cross-sign another device of our user.
