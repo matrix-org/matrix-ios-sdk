@@ -105,12 +105,9 @@ typedef NS_ENUM(NSInteger, MXCrossSigningErrorCode)
                         failure:(nullable void (^)(NSError *error))failure;
 
 /**
- Bootstrap cross-signing on this device.
+ Bootstrap cross-signing with user's password.
 
- This creates cross-signing keys. It will use keysStorageDelegate to store
- private parts.
-
- @param password the account password to upload keys to the HS.
+ @param password the account password to upload cross-signing keys to the HS.
 
  @param success A block object called when the operation succeeds.
  @param failure A block object called when the operation fails.
@@ -120,12 +117,9 @@ typedef NS_ENUM(NSInteger, MXCrossSigningErrorCode)
                       failure:(void (^)(NSError *error))failure;
 
 /**
- Bootstrap cross-signing on this device.
+ Bootstrap cross-signing using authentication parameters.
  
- This creates cross-signing keys. It will use keysStorageDelegate to store
- private parts.
- 
- @param authParams the auth parameters to upload keys to the HS.
+ @param authParams the auth parameters to upload cross-signing keys to the HS.
  
  @param success A block object called when the operation succeeds.
  @param failure A block object called when the operation fails.
@@ -137,9 +131,8 @@ typedef NS_ENUM(NSInteger, MXCrossSigningErrorCode)
 
 /**
  Cross-sign another device of our user.
-
- This method will use keysStorageDelegate get the private part of the Self Signing
- Key (MXCrossSigningKeyType.selfSigning).
+ 
+ The operation requires to have the Self Signing Key in the local secret storage.
 
  @param deviceId the id of the device to cross-sign.
 
@@ -153,9 +146,8 @@ typedef NS_ENUM(NSInteger, MXCrossSigningErrorCode)
 /**
  Trust a user from one of their devices.
 
- This method will use keysStorageDelegate get the private part of the User Signing
- Key (MXCrossSigningKeyType.userSigning).
-
+The operation requires to have the User Signing Key in the local secret storage.
+ 
  @param userId the id of ther user.
 
  @param success A block object called when the operation succeeds.
