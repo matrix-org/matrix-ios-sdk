@@ -146,7 +146,7 @@ typedef NS_ENUM(NSInteger, MXCrossSigningErrorCode)
 /**
  Trust a user from one of their devices.
 
-The operation requires to have the User Signing Key in the local secret storage.
+ The operation requires to have the User Signing Key in the local secret storage.
  
  @param userId the id of ther user.
 

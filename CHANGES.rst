@@ -3,6 +3,7 @@ Changes in Matrix iOS SDK in 0.16.6 (2020-05-xx)
 
 Improvements:
  * MXCrypto: Only create one olm session at a time per device (vector-im/riot-ios/issues/2331).
+ * MXCrossSigning: Add the bootstrapWithAuthParams method.
 
 Bug fix:
  * MXSecretShareManager: Fix crash in cancelRequestWithRequestId (vector-im/riot-ios/issues/3272).
