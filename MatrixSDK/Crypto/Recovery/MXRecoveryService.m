@@ -76,6 +76,7 @@
 - (BOOL)usePassphrase
 {
     MXSecretStorageKeyContent *keyContent = [_secretStorage keyWithKeyId:self.recoveryId];
+    if (!keyContent)
     {
         // No recovery at all
         return NO;
@@ -87,7 +88,7 @@
 
 - (BOOL)hasSecretWithSecretId:(NSString*)secretId
 {
-     return ([_secretStorage keyWithKeyId:secretId] != nil);
+    return [_secretStorage hasSecretWithSecretId:secretId withSecretStorageKeyId:self.recoveryId];
 }
 
 - (NSArray<NSString*>*)storedSecrets
@@ -129,7 +130,7 @@
                              success:(void (^)(MXSecretStorageKeyCreationInfo *keyCreationInfo))success
                              failure:(void (^)(NSError *error))failure
 {
-    if (!self.hasRecovery)
+    if (self.hasRecovery)
     {
         NSLog(@"[MXRecoveryService] createRecovery: Error: A recovery already exists.");
         failure(nil);
@@ -143,45 +144,50 @@
     [_secretStorage createKeyWithKeyId:nil keyName:nil passphrase:passphrase success:^(MXSecretStorageKeyCreationInfo * _Nonnull keyCreationInfo) {
         MXStrongifyAndReturnIfNil(self);
         
-        // Build the key
-        NSDictionary<NSString*, NSData*> *keys = @{
-                                                   keyCreationInfo.keyId: keyCreationInfo.privateKey
-                                                   };
-        
-        dispatch_group_t dispatchGroup = dispatch_group_create();
-        __block NSError *error;
-        
-        for (NSString *secretId in locallyStoredSecrets)
-        {
-            NSString *secret = [self.cryptoStore secretWithSecretId:secretId];
+        // Set this recovery as the default SSSS key id
+        [self.secretStorage setAsDefaultKeyWithKeyId:keyCreationInfo.keyId success:^{
             
-            if (secret)
-            {
-                dispatch_group_enter(dispatchGroup);
-                [self.secretStorage storeSecret:secret withSecretId:secretId withSecretStorageKeys:keys success:^(NSString * _Nonnull secretId) {
-                    dispatch_group_leave(dispatchGroup);
-                } failure:^(NSError * _Nonnull anError) {
-                    NSLog(@"[MXRecoveryService] createRecovery: Failed to store %@. Error: %@", secretId, anError);
-                    
-                    error = anError;
-                    dispatch_group_leave(dispatchGroup);
-                }];
-            }
-        }
-        
-        dispatch_group_notify(dispatchGroup, dispatch_get_main_queue(), ^{
+            // Build the key to encrypt secret
+            NSDictionary<NSString*, NSData*> *keys = @{
+                                                       keyCreationInfo.keyId: keyCreationInfo.privateKey
+                                                       };
             
-            NSLog(@"[MXRecoveryService] createRecovery: Completed");
+            dispatch_group_t dispatchGroup = dispatch_group_create();
+            __block NSError *error;
             
-            if (error)
+            for (NSString *secretId in locallyStoredSecrets)
             {
-                failure(error);
+                NSString *secret = [self.cryptoStore secretWithSecretId:secretId];
+                
+                if (secret)
+                {
+                    dispatch_group_enter(dispatchGroup);
+                    [self.secretStorage storeSecret:secret withSecretId:secretId withSecretStorageKeys:keys success:^(NSString * _Nonnull secretId) {
+                        dispatch_group_leave(dispatchGroup);
+                    } failure:^(NSError * _Nonnull anError) {
+                        NSLog(@"[MXRecoveryService] createRecovery: Failed to store %@. Error: %@", secretId, anError);
+                        
+                        error = anError;
+                        dispatch_group_leave(dispatchGroup);
+                    }];
+                }
             }
-            else
-            {
-                success(keyCreationInfo);
-            }
-        });
+            
+            dispatch_group_notify(dispatchGroup, dispatch_get_main_queue(), ^{
+                
+                NSLog(@"[MXRecoveryService] createRecovery: Completed");
+                
+                if (error)
+                {
+                    failure(error);
+                }
+                else
+                {
+                    success(keyCreationInfo);
+                }
+            });
+            
+        } failure:failure];
         
     } failure:^(NSError * _Nonnull error) {
         NSLog(@"[MXRecoveryService] createRecovery: Failed to create SSSS. Error: %@", error);

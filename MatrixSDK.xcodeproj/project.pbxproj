@@ -72,6 +72,8 @@
 		321CFDFB2254E728004D31DF /* MXTransactionCancelCode.h in Headers */ = {isa = PBXBuildFile; fileRef = 321CFDFA2254E728004D31DF /* MXTransactionCancelCode.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		321CFDFE2254E8C4004D31DF /* MXEmojiRepresentation.m in Sources */ = {isa = PBXBuildFile; fileRef = 321CFDFC2254E8C4004D31DF /* MXEmojiRepresentation.m */; };
 		321CFDFF2254E8C4004D31DF /* MXEmojiRepresentation.h in Headers */ = {isa = PBXBuildFile; fileRef = 321CFDFD2254E8C4004D31DF /* MXEmojiRepresentation.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		321EA11D24893A0400E35B02 /* MXCryptoRecoveryServiceTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 321EA11C24893A0400E35B02 /* MXCryptoRecoveryServiceTests.m */; };
+		321EA11E24893A0400E35B02 /* MXCryptoRecoveryServiceTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 321EA11C24893A0400E35B02 /* MXCryptoRecoveryServiceTests.m */; };
 		3220093819EFA4C9008DE41D /* MXEventListener.h in Headers */ = {isa = PBXBuildFile; fileRef = 3220093619EFA4C9008DE41D /* MXEventListener.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		3220093919EFA4C9008DE41D /* MXEventListener.m in Sources */ = {isa = PBXBuildFile; fileRef = 3220093719EFA4C9008DE41D /* MXEventListener.m */; };
 		3220094519EFBF30008DE41D /* MXSessionEventListener.h in Headers */ = {isa = PBXBuildFile; fileRef = 3220094319EFBF30008DE41D /* MXSessionEventListener.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -1251,6 +1253,7 @@
 		321CFDFA2254E728004D31DF /* MXTransactionCancelCode.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXTransactionCancelCode.h; sourceTree = "<group>"; };
 		321CFDFC2254E8C4004D31DF /* MXEmojiRepresentation.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXEmojiRepresentation.m; sourceTree = "<group>"; };
 		321CFDFD2254E8C4004D31DF /* MXEmojiRepresentation.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXEmojiRepresentation.h; sourceTree = "<group>"; };
+		321EA11C24893A0400E35B02 /* MXCryptoRecoveryServiceTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MXCryptoRecoveryServiceTests.m; sourceTree = "<group>"; };
 		3220093619EFA4C9008DE41D /* MXEventListener.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXEventListener.h; sourceTree = "<group>"; };
 		3220093719EFA4C9008DE41D /* MXEventListener.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXEventListener.m; sourceTree = "<group>"; };
 		3220094319EFBF30008DE41D /* MXSessionEventListener.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXSessionEventListener.h; sourceTree = "<group>"; };
@@ -2728,6 +2731,7 @@
 		32C6F93919DD814400EA4E9C /* MatrixSDKTests */ = {
 			isa = PBXGroup;
 			children = (
+				321EA11C24893A0400E35B02 /* MXCryptoRecoveryServiceTests.m */,
 				324DD2BA246C3ADE00377005 /* MXCryptoSecretStorageTests.m */,
 				B19A30AE240425D000FB6F35 /* MXQRCodeDataTests.m */,
 				32AF9291241112850008A0FD /* MXCryptoSecretShareTests.m */,
@@ -4247,6 +4251,7 @@
 				32C03CB62123076F00D92712 /* DirectRoomTests.m in Sources */,
 				329FB17C1A0A963700A5E88E /* MXRoomMemberTests.m in Sources */,
 				3246BDC51A1A0789000A7D62 /* MXRoomStateDynamicTests.m in Sources */,
+				321EA11D24893A0400E35B02 /* MXCryptoRecoveryServiceTests.m in Sources */,
 				3264DB941CECA72900B99881 /* MXAccountDataTests.m in Sources */,
 				32792BDF2296C59B00F4FC9D /* MXAggregatedReactionTests.m in Sources */,
 				322D01C422492B0700150C68 /* MXCryptoShareTests.m in Sources */,
@@ -4567,6 +4572,7 @@
 				B1E09A2F2397FD750057C069 /* MXErrorTests.m in Sources */,
 				B1E09A2A2397FD680057C069 /* MatrixSDKTestsData.m in Sources */,
 				B1E09A302397FD750057C069 /* MXHTTPClientTests.m in Sources */,
+				321EA11E24893A0400E35B02 /* MXCryptoRecoveryServiceTests.m in Sources */,
 				B1E09A372397FD7D0057C069 /* MXRoomMemberTests.m in Sources */,
 				B1E09A2C2397FD6F0057C069 /* MXFilterTests.m in Sources */,
 				B1E09A252397FCE90057C069 /* MXEventTimelineTests.m in Sources */,
