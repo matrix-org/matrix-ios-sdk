@@ -204,7 +204,6 @@ NSString * const kMXTestsAliceAvatarURL = @"mxc://matrix.org/kciiXusgZFKuNLIfLqm
                               success:^(MXCreateRoomResponse *response) {
 
                                   _thePublicRoomId = response.roomId;
-                                  _thePublicRoomAlias = response.roomAlias;
                                   readyToTest(bobRestClient, response.roomId, expectation);
 
                               } failure:^(NSError *error) {
