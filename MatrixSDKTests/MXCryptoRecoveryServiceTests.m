@@ -16,6 +16,7 @@
 
 #import <XCTest/XCTest.h>
 
+#import "MXCrypto_Private.h"
 #import "MXMemoryStore.h"
 
 #import "MatrixSDKTestsData.h"
@@ -78,10 +79,13 @@
 // -> The recovery must indicate it has a passphrase
 // Recover all secrets
 // -> We should have restored the 3 ones
+// -> Make sure the secret is still correct
 - (void)testRecoveryWithPassphrase
 {
     // - Have Alice with cross-signing bootstrapped
     [self doTestWithBootstrappedAlice:self readyToTest:^(MXSession *aliceSession, NSString *roomId, XCTestExpectation *expectation) {
+        
+        NSString *msk = [aliceSession.crypto.store secretWithSecretId:MXSecretId.crossSigningMaster];
 
         MXRecoveryService *recoveryService = aliceSession.crypto.recoveryService;
         XCTAssertNotNil(recoveryService);
@@ -95,7 +99,7 @@
         
         // Create a recovery with a passphrase
         NSString *passphrase = @"A passphrase";
-        [recoveryService createRecoveryWithPassphrase:passphrase success:^(MXSecretStorageKeyCreationInfo * _Nonnull keyCreationInfo) {
+        [recoveryService createRecoveryForSecrets:nil withPassphrase:passphrase success:^(MXSecretStorageKeyCreationInfo * _Nonnull keyCreationInfo) {
             
             XCTAssertNotNil(keyCreationInfo);
             
@@ -113,6 +117,10 @@
                 // -> We should have restored the 3 ones
                 XCTAssertEqual(validSecrets.count, 3);
                 XCTAssertEqual(invalidSecrets.count, 0);
+                
+                // -> Make sure the secret is still correct
+                NSString *msk2 = [aliceSession.crypto.store secretWithSecretId:MXSecretId.crossSigningMaster];
+                XCTAssertEqualObjects(msk, msk2);
 
                 [expectation fulfill];
             } failure:^(NSError * _Nonnull error) {

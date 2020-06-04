@@ -553,8 +553,6 @@ NSString *const MXCrossSigningErrorDomain = @"org.matrix.sdk.crosssigning";
             {
                 state = MXCrossSigningStateCanCrossSign;
             }
-            
-            // TODO: MXCrossSigningStateCanCrossSignAsynchronously
         }
     }
     

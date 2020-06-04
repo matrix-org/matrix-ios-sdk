@@ -29,6 +29,9 @@ NS_ASSUME_NONNULL_BEGIN
  */
 @interface MXRecoveryService : NSObject
 
+
+#pragma mark - Configuration
+
 /**
  Secrets supported by the service.
  
@@ -39,22 +42,55 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, copy) NSArray<NSString*> *supportedSecrets;
 
 
+#pragma mark - Recovery setup
+
+/**
+ Indicates if a recovery/SSSS is set up on the homeserver.
+ */
 - (BOOL)hasRecovery;
+
+/**
+ The SSSS key id used by this recovery.
+ */
 - (nullable NSString*)recoveryId;
+
+/**
+ Indicates if the existing recovery can be decrypted by a passphrase.
+ */
 - (BOOL)usePassphrase;
 
-// MXSecretId
+
+#pragma mark - Secrets in the recovery
+
+// Specified secret id`s are listed by `MXSecretId.*``
 - (BOOL)hasSecretWithSecretId:(NSString*)secretId;
 - (NSArray<NSString*>*)storedSecrets;
 
+
+#pragma mark - Secrets in local store
 
 - (BOOL)hasSecretLocally:(NSString*)secretId;
 - (NSArray*)locallyStoredSecrets;
 
 
-- (void)createRecoveryWithPassphrase:(nullable NSString*)passphrase
-                             success:(void (^)(MXSecretStorageKeyCreationInfo *keyCreationInfo))success
-                             failure:(void (^)(NSError *error))failure;
+#pragma mark - Backup to recovery
+
+/**
+ Create a recovery and store secrets there.
+ 
+ It will send keys from the local storage to the recovery on the homeserver.
+ Those keys are sent encrypted thanks to SSSS that implements this recovery.
+ 
+ @param secrets the id of secrets to put in the recovery. Nil will try to backup all self.supportedSecrets.
+ @param passphrase a passphrase used to generate the encryption key. Nil will generate a recovery key.
+ 
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+ */
+- (void)createRecoveryForSecrets:(nullable NSArray<NSString*>*)secrets
+                  withPassphrase:(nullable NSString*)passphrase
+                         success:(void (^)(MXSecretStorageKeyCreationInfo *keyCreationInfo))success
+                         failure:(void (^)(NSError *error))failure;
 
 
 //- (void)updateRecoveryForSecretWithSecretId:(NSString*)secretId
@@ -62,6 +98,21 @@ NS_ASSUME_NONNULL_BEGIN
 //                                    ..
 
 
+//- (void)deleteRecovery;
+
+
+#pragma mark - Restore from recovery
+
+/**
+ Restore keys from the recovery stored on the homeserver to the local storage.
+ 
+ 
+ @param secrets the id of secrets to put in the recovery. Nil will try to recover all self.supportedSecrets.
+ @param passphrase the passphrase used on recovery creation.
+ 
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+ */
 - (void)recoverSecrets:(nullable NSArray<NSString*>*)secrets
         withPassphrase:(NSString*)passphrase
                success:(void (^)(NSArray<NSString*> *validSecrets, NSArray<NSString*> *invalidSecrets))success
@@ -72,8 +123,6 @@ NS_ASSUME_NONNULL_BEGIN
 //               success:(void (^)(NSArray<NSString*> *validSecrets, NSArray<NSString*> *invalidSecrets))success
 //               failure:(void (^)(NSError *error))failure;
 
-
-//- (void)deleteRecovery;
  
 @end
 

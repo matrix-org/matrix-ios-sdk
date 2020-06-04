@@ -63,6 +63,8 @@
 
 #pragma mark - Public methods -
 
+#pragma mark - Recovery setup
+
 - (nullable NSString*)recoveryId
 {
     return _secretStorage.defaultKeyId;
@@ -86,6 +88,8 @@
 }
 
 
+#pragma mark - Secrets in the recovery
+
 - (BOOL)hasSecretWithSecretId:(NSString*)secretId
 {
     return [_secretStorage hasSecretWithSecretId:secretId withSecretStorageKeyId:self.recoveryId];
@@ -105,6 +109,8 @@
     return storedSecrets;
 }
 
+
+#pragma mark - Secrets in local store
 
 - (BOOL)hasSecretLocally:(NSString*)secretId
 {
@@ -126,10 +132,18 @@
 }
 
 
-- (void)createRecoveryWithPassphrase:(nullable NSString*)passphrase
-                             success:(void (^)(MXSecretStorageKeyCreationInfo *keyCreationInfo))success
-                             failure:(void (^)(NSError *error))failure
+#pragma mark - Backup to recovery
+
+- (void)createRecoveryForSecrets:(nullable NSArray<NSString*>*)secrets
+                  withPassphrase:(nullable NSString*)passphrase
+                         success:(void (^)(MXSecretStorageKeyCreationInfo *keyCreationInfo))success
+                         failure:(void (^)(NSError *error))failure
 {
+    if (!secrets)
+    {
+        secrets = self.supportedSecrets;
+    }
+    
     if (self.hasRecovery)
     {
         NSLog(@"[MXRecoveryService] createRecovery: Error: A recovery already exists.");
@@ -195,6 +209,8 @@
     }];
 }
 
+
+#pragma mark - Restore from recovery
 
 - (void)recoverSecrets:(nullable NSArray<NSString*>*)secrets
         withPassphrase:(NSString*)passphrase
