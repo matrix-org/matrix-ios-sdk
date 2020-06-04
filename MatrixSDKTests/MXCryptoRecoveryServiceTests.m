@@ -70,6 +70,8 @@
      }];
 }
 
+// Test the recovery creation and its restoration.
+//
 // - Test creation of a recovery
 // - Have Alice with cross-signing bootstrapped
 // -> There should be no recovery on the HS
@@ -110,30 +112,76 @@
             // -> The recovery must indicate it has a passphrase
             XCTAssertTrue(recoveryService.usePassphrase);
             
-            
-            // Recover all secrets
-            [recoveryService recoverSecrets:nil withPassphrase:passphrase success:^(NSArray<NSString *> * _Nonnull validSecrets, NSArray<NSString *> * _Nonnull invalidSecrets) {
-                
-                // -> We should have restored the 3 ones
-                XCTAssertEqual(validSecrets.count, 3);
-                XCTAssertEqual(invalidSecrets.count, 0);
-                
-                // -> Make sure the secret is still correct
-                NSString *msk2 = [aliceSession.crypto.store secretWithSecretId:MXSecretId.crossSigningMaster];
-                XCTAssertEqualObjects(msk, msk2);
 
-                [expectation fulfill];
+            // Recover all secrets
+            [recoveryService privateKeyFromPassphrase:passphrase success:^(NSData * _Nonnull privateKey) {
+                [recoveryService recoverSecrets:nil withPrivateKey:privateKey success:^(NSArray<NSString *> * _Nonnull validSecrets, NSArray<NSString *> * _Nonnull invalidSecrets) {
+                    
+                    // -> We should have restored the 3 ones
+                    XCTAssertEqual(validSecrets.count, 3);
+                    XCTAssertEqual(invalidSecrets.count, 0);
+                    
+                    // -> Make sure the secret is still correct
+                    NSString *msk2 = [aliceSession.crypto.store secretWithSecretId:MXSecretId.crossSigningMaster];
+                    XCTAssertEqualObjects(msk, msk2);
+                    
+                    [expectation fulfill];
+                } failure:^(NSError * _Nonnull error) {
+                    XCTFail(@"The operation should not fail - NSError: %@", error);
+                    [expectation fulfill];
+                }];
+                
             } failure:^(NSError * _Nonnull error) {
                 XCTFail(@"The operation should not fail - NSError: %@", error);
                 [expectation fulfill];
             }];
-            
 
         } failure:^(NSError * _Nonnull error) {
             XCTFail(@"The operation should not fail - NSError: %@", error);
             [expectation fulfill];
         }];
         
+    }];
+}
+
+// Test privateKeyFromRecoveryKey & privateKeyFromPassphrase
+//
+// - Have Alice with cross-signing bootstrapped
+// Create a recovery with a passphrase
+// -> privateKeyFromRecoveryKey must return the same private key
+// -> privateKeyFromPassphrase must return the same private key
+- (void)testPrivateKeyTools
+{
+    // - Have Alice with cross-signing bootstrapped
+    [self doTestWithBootstrappedAlice:self readyToTest:^(MXSession *aliceSession, NSString *roomId, XCTestExpectation *expectation) {
+        
+        MXRecoveryService *recoveryService = aliceSession.crypto.recoveryService;
+        
+        // Create a recovery with a passphrase
+        NSString *passphrase = @"A passphrase";
+        [recoveryService createRecoveryForSecrets:nil withPassphrase:passphrase success:^(MXSecretStorageKeyCreationInfo * _Nonnull keyCreationInfo) {
+            
+            // -> privateKeyFromRecoveryKey must return the same private key
+            NSError *error;
+            NSData *privateKeyFromRecoveryKey = [recoveryService privateKeyFromRecoveryKey:keyCreationInfo.recoveryKey error:&error];
+            XCTAssertNil(error);
+            XCTAssertEqualObjects(privateKeyFromRecoveryKey, keyCreationInfo.privateKey);
+            
+            // -> privateKeyFromPassphrase must return the same private key
+            [recoveryService privateKeyFromPassphrase:passphrase success:^(NSData * _Nonnull privateKey) {
+                
+                XCTAssertEqualObjects(privateKey, keyCreationInfo.privateKey);
+                
+                [expectation fulfill];
+            } failure:^(NSError * _Nonnull error) {
+                XCTFail(@"The operation should not fail - NSError: %@", error);
+                [expectation fulfill];
+            }];
+            
+        } failure:^(NSError * _Nonnull error) {
+            XCTFail(@"The operation should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
     }];
 }
 

@@ -213,20 +213,6 @@
 #pragma mark - Restore from recovery
 
 - (void)recoverSecrets:(nullable NSArray<NSString*>*)secrets
-        withPassphrase:(NSString*)passphrase
-               success:(void (^)(NSArray<NSString*> *validSecrets, NSArray<NSString*> *invalidSecrets))success
-               failure:(void (^)(NSError *error))failure
-{
-    NSLog(@"[MXRecoveryService] recoverSecrets(withPassphrase): %@", secrets);
-    
-    [self recoveryKeyFromPassphrase:passphrase success:^(NSData *privateKey) {
-        
-        [self recoverSecrets:secrets withPrivateKey:privateKey success:success failure:failure];
-        
-    } failure:failure];
-}
-
-- (void)recoverSecrets:(nullable NSArray<NSString*>*)secrets
         withPrivateKey:(NSData*)privateKey
                success:(void (^)(NSArray<NSString*> *validSecrets, NSArray<NSString*> *invalidSecrets))success
                failure:(void (^)(NSError *error))failure
@@ -306,11 +292,16 @@
 }
 
 
-#pragma mark - Private methods -
+#pragma mark - Private key tools
 
-- (void)recoveryKeyFromPassphrase:(NSString*)passphrase
-                          success:(void (^)(NSData *privateKey))success
-                          failure:(void (^)(NSError *error))failure
+- (nullable NSData*)privateKeyFromRecoveryKey:(NSString*)recoveryKey error:(NSError**)error
+{
+    return [MXRecoveryKey decode:recoveryKey error:error];
+}
+
+- (void)privateKeyFromPassphrase:(NSString*)passphrase
+                         success:(void (^)(NSData *privateKey))success
+                         failure:(void (^)(NSError *error))failure
 {
     MXSecretStorageKeyContent *keyContent = [_secretStorage keyWithKeyId:self.recoveryId];
     if (!keyContent.passphrase)
@@ -343,6 +334,9 @@
         });
     });
 }
+
+
+#pragma mark - Private methods -
 
 - (BOOL)checkSecret:(NSString*)secret withSecretId:(NSString*)secretId
 {

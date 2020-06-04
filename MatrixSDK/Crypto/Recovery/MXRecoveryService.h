@@ -106,24 +106,44 @@ NS_ASSUME_NONNULL_BEGIN
 /**
  Restore keys from the recovery stored on the homeserver to the local storage.
  
- 
  @param secrets the id of secrets to put in the recovery. Nil will try to recover all self.supportedSecrets.
- @param passphrase the passphrase used on recovery creation.
+ @param privateKey the recovery private key.
  
  @param success A block object called when the operation succeeds.
  @param failure A block object called when the operation fails.
  */
 - (void)recoverSecrets:(nullable NSArray<NSString*>*)secrets
-        withPassphrase:(NSString*)passphrase
+        withPrivateKey:(NSData*)privateKey
                success:(void (^)(NSArray<NSString*> *validSecrets, NSArray<NSString*> *invalidSecrets))success
                failure:(void (^)(NSError *error))failure;
 
-//- (void)recoverSecrets:(nullable NSArray<NSString*>*)secrets
-//       withRecoveryKey:(NSString*)recoveryKey
-//               success:(void (^)(NSArray<NSString*> *validSecrets, NSArray<NSString*> *invalidSecrets))success
-//               failure:(void (^)(NSError *error))failure;
 
+#pragma mark - Private key tools
+
+/**
+ Convert a recovery key into the private key.
  
+ @param recoveryKey the recovery key.
+ @param error the return error.
+ @return the private key;
+ */
+- (nullable NSData*)privateKeyFromRecoveryKey:(NSString*)recoveryKey error:(NSError**)error;
+
+/**
+ Convert a passphrase into the private key.
+ 
+ This method is supposed to take time to avoid brut force attacks.
+ 
+ @param passphrase the passphrase
+ 
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+ */
+- (void)privateKeyFromPassphrase:(NSString*)passphrase
+                         success:(void (^)(NSData *privateKey))success
+                         failure:(void (^)(NSError *error))failure;
+
+
 @end
 
 NS_ASSUME_NONNULL_END
