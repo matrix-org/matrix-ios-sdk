@@ -501,6 +501,12 @@
 		32E226A91D081CE200E6CA54 /* MXPeekingRoomTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 32E226A81D081CE200E6CA54 /* MXPeekingRoomTests.m */; };
 		32E402B921C957D2004E87A6 /* MXOlmSession.h in Headers */ = {isa = PBXBuildFile; fileRef = 32E402B721C957D2004E87A6 /* MXOlmSession.h */; };
 		32E402BA21C957D2004E87A6 /* MXOlmSession.m in Sources */ = {isa = PBXBuildFile; fileRef = 32E402B821C957D2004E87A6 /* MXOlmSession.m */; };
+		32F00ABB2488E1CD00131741 /* MXRecoveryService.h in Headers */ = {isa = PBXBuildFile; fileRef = 32F00AB92488E1CD00131741 /* MXRecoveryService.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		32F00ABC2488E1CD00131741 /* MXRecoveryService.h in Headers */ = {isa = PBXBuildFile; fileRef = 32F00AB92488E1CD00131741 /* MXRecoveryService.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		32F00ABD2488E1CD00131741 /* MXRecoveryService.m in Sources */ = {isa = PBXBuildFile; fileRef = 32F00ABA2488E1CD00131741 /* MXRecoveryService.m */; };
+		32F00ABE2488E1CD00131741 /* MXRecoveryService.m in Sources */ = {isa = PBXBuildFile; fileRef = 32F00ABA2488E1CD00131741 /* MXRecoveryService.m */; };
+		32F00AC02488FB3600131741 /* MXRecoveryService_Private.h in Headers */ = {isa = PBXBuildFile; fileRef = 32F00ABF2488FB3600131741 /* MXRecoveryService_Private.h */; };
+		32F00AC12488FB3600131741 /* MXRecoveryService_Private.h in Headers */ = {isa = PBXBuildFile; fileRef = 32F00ABF2488FB3600131741 /* MXRecoveryService_Private.h */; };
 		32F634AB1FC5E3480054EF49 /* MXEventDecryptionResult.h in Headers */ = {isa = PBXBuildFile; fileRef = 32F634A91FC5E3470054EF49 /* MXEventDecryptionResult.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		32F634AC1FC5E3480054EF49 /* MXEventDecryptionResult.m in Sources */ = {isa = PBXBuildFile; fileRef = 32F634AA1FC5E3470054EF49 /* MXEventDecryptionResult.m */; };
 		32F945F51FAB83D900622468 /* MXIncomingRoomKeyRequestCancellation.m in Sources */ = {isa = PBXBuildFile; fileRef = 32F945F11FAB83D800622468 /* MXIncomingRoomKeyRequestCancellation.m */; };
@@ -1606,6 +1612,9 @@
 		32E226A81D081CE200E6CA54 /* MXPeekingRoomTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXPeekingRoomTests.m; sourceTree = "<group>"; };
 		32E402B721C957D2004E87A6 /* MXOlmSession.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MXOlmSession.h; sourceTree = "<group>"; };
 		32E402B821C957D2004E87A6 /* MXOlmSession.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MXOlmSession.m; sourceTree = "<group>"; };
+		32F00AB92488E1CD00131741 /* MXRecoveryService.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MXRecoveryService.h; sourceTree = "<group>"; };
+		32F00ABA2488E1CD00131741 /* MXRecoveryService.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MXRecoveryService.m; sourceTree = "<group>"; };
+		32F00ABF2488FB3600131741 /* MXRecoveryService_Private.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MXRecoveryService_Private.h; sourceTree = "<group>"; };
 		32F634A91FC5E3470054EF49 /* MXEventDecryptionResult.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MXEventDecryptionResult.h; sourceTree = "<group>"; };
 		32F634AA1FC5E3470054EF49 /* MXEventDecryptionResult.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MXEventDecryptionResult.m; sourceTree = "<group>"; };
 		32F945F11FAB83D800622468 /* MXIncomingRoomKeyRequestCancellation.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXIncomingRoomKeyRequestCancellation.m; sourceTree = "<group>"; };
@@ -2037,6 +2046,7 @@
 				32A1513B1DAF768D00400192 /* Data */,
 				32BBAE642178E99100D85F46 /* KeyBackup */,
 				32FA10B21FA1C28100E54233 /* KeySharing */,
+				32F00AB82488E14300131741 /* Recovery */,
 				324DD296246AD25E00377005 /* SecretStorage */,
 				324BE4651E3FADB1008D99D4 /* Utils */,
 				3252DCAB224BE59E0032264F /* Verification */,
@@ -2870,6 +2880,16 @@
 			path = Checker;
 			sourceTree = "<group>";
 		};
+		32F00AB82488E14300131741 /* Recovery */ = {
+			isa = PBXGroup;
+			children = (
+				32F00AB92488E1CD00131741 /* MXRecoveryService.h */,
+				32F00ABA2488E1CD00131741 /* MXRecoveryService.m */,
+				32F00ABF2488FB3600131741 /* MXRecoveryService_Private.h */,
+			);
+			path = Recovery;
+			sourceTree = "<group>";
+		};
 		32FA10B21FA1C28100E54233 /* KeySharing */ = {
 			isa = PBXGroup;
 			children = (
@@ -3377,6 +3397,7 @@
 				3250E7CA220C913900736CB5 /* MXCryptoTools.h in Headers */,
 				F0173EAC1FCF0E8900B5F6A3 /* MXGroup.h in Headers */,
 				32D2CC0523422462002BD8CA /* MX3PidAddSession.h in Headers */,
+				32F00AC02488FB3600131741 /* MXRecoveryService_Private.h in Headers */,
 				329FB17F1A0B665800A5E88E /* MXUser.h in Headers */,
 				320DFDE219DD99B60068622A /* MXError.h in Headers */,
 				324DD2A0246AE1EF00377005 /* MXEncryptedSecretContent.h in Headers */,
@@ -3386,6 +3407,7 @@
 				327E37B61A974F75007F026F /* MXLogger.h in Headers */,
 				320A883C217F4E35002EA952 /* MXMegolmBackupCreationInfo.h in Headers */,
 				B19A30AA2404257700FB6F35 /* MXQRCodeKeyVerificationStart.h in Headers */,
+				32F00ABB2488E1CD00131741 /* MXRecoveryService.h in Headers */,
 				3256E3811DCB91EB003C9718 /* MXCryptoConstants.h in Headers */,
 				320DFDE619DD99B60068622A /* MXHTTPClient.h in Headers */,
 				320A8840217F4E3F002EA952 /* MXMegolmBackupAuthData.h in Headers */,
@@ -3580,6 +3602,7 @@
 				32B0E33A23A2989A0054FF1A /* MXEventReferenceChunk.h in Headers */,
 				B14EF3222397E90400758AF0 /* MXKeyVerificationManager.h in Headers */,
 				B14EF3232397E90400758AF0 /* MXRoomState.h in Headers */,
+				32F00ABC2488E1CD00131741 /* MXRecoveryService.h in Headers */,
 				32CEEF4A23B0A8170039BA98 /* MXCrossSigningTools.h in Headers */,
 				B14EF3242397E90400758AF0 /* MXBugReportRestClient.h in Headers */,
 				B14EF3252397E90400758AF0 /* MXRoomPowerLevels.h in Headers */,
@@ -3655,6 +3678,7 @@
 				32AF9285240EA2430008A0FD /* MXSecretShareRequest.h in Headers */,
 				B14EF3602397E90400758AF0 /* MXHTTPClient.h in Headers */,
 				B19A30C92404268600FB6F35 /* MXQRCodeDataBuilder.h in Headers */,
+				32F00AC12488FB3600131741 /* MXRecoveryService_Private.h in Headers */,
 				B14EF3612397E90400758AF0 /* MXMegolmBackupAuthData.h in Headers */,
 				B14EF3622397E90400758AF0 /* MXReactionCountChange.h in Headers */,
 				324DD29A246AD2B500377005 /* MXSecretStorage.h in Headers */,
@@ -3951,6 +3975,7 @@
 				32CAB1081A91EA34008C5BB9 /* MXPushRuleRoomMemberCountConditionChecker.m in Sources */,
 				3245A7511AF7B2930001D8A7 /* MXCall.m in Sources */,
 				32CF439E2371AF9500907C56 /* MXWellknownIntegrations.m in Sources */,
+				32F00ABD2488E1CD00131741 /* MXRecoveryService.m in Sources */,
 				3275FD9D21A6B60B00B9C13D /* MXLoginPolicy.m in Sources */,
 				327F8DB31C6112BA00581CA3 /* MXRoomThirdPartyInvite.m in Sources */,
 				B17982FC2119E4A2001FD722 /* MXRoomPowerLevels.m in Sources */,
@@ -4293,6 +4318,7 @@
 				B14EF1FA2397E90400758AF0 /* MXQueuedEncryption.m in Sources */,
 				32B0E33C23A2989A0054FF1A /* MXEventReferenceChunk.m in Sources */,
 				B1798D0924091A0100308A8F /* MXBase64Tools.m in Sources */,
+				32F00ABE2488E1CD00131741 /* MXRecoveryService.m in Sources */,
 				B14EF1FB2397E90400758AF0 /* MXEnumConstants.swift in Sources */,
 				B14EF1FC2397E90400758AF0 /* MXEventRelations.m in Sources */,
 				324AAC7B2399140D00380A66 /* MXKeyVerificationRequestByDMJSONModel.m in Sources */,

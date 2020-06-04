@@ -30,6 +30,7 @@
 
 #import "MXSecretStorage.h"
 #import "MXSecretShareManager.h"
+#import "MXRecoveryService.h"
 
 #import "MXKeyBackup.h"
 #import "MXKeyVerificationManager.h"
@@ -98,6 +99,11 @@ extern NSString *const MXDeviceListDidUpdateUsersDevicesNotification;
  The device verification manager.
  */
 @property (nonatomic, readonly) MXKeyVerificationManager *keyVerificationManager;
+
+/**
+ Service to manage backup of private keys on the homeserver.
+ */
+@property (nonatomic, readonly) MXRecoveryService *recoveryService;
 
 /**
  The secret storage on homeserver manager.
