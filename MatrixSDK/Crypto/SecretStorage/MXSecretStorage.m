@@ -422,6 +422,25 @@ static NSString* const kSecretStorageZeroString = @"\0\0\0\0\0\0\0\0\0\0\0\0\0\0
     });
 }
 
+- (BOOL)hasSecretWithSecretId:(NSString*)secretId
+       withSecretStorageKeyId:(nullable NSString*)keyId
+{
+    if (!keyId)
+    {
+        keyId = self.defaultKeyId;
+    }
+    if (!keyId)
+    {
+        return NO;
+    }
+    
+    NSDictionary *accountData = [_mxSession.accountData accountDataForEventType:secretId];
+    
+    // Only check key presence. Do not try to parse JSON.
+    return (accountData[@"encrypted"][keyId] != nil);
+}
+
+
 
 #pragma mark - Private methods -
 
