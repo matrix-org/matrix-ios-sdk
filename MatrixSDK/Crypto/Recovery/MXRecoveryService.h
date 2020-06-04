@@ -16,8 +16,8 @@
 
 #import <Foundation/Foundation.h>
 
+#import "MXSecretRecoveryResult.h"
 #import "MXSecretStorageKeyCreationInfo.h"
-#import "MXHTTPOperation.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -114,7 +114,7 @@ NS_ASSUME_NONNULL_BEGIN
  */
 - (void)recoverSecrets:(nullable NSArray<NSString*>*)secrets
         withPrivateKey:(NSData*)privateKey
-               success:(void (^)(NSArray<NSString*> *validSecrets, NSArray<NSString*> *invalidSecrets))success
+               success:(void (^)(MXSecretRecoveryResult *recoveryResult))success
                failure:(void (^)(NSError *error))failure;
 
 

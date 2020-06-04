@@ -115,11 +115,12 @@
 
             // Recover all secrets
             [recoveryService privateKeyFromPassphrase:passphrase success:^(NSData * _Nonnull privateKey) {
-                [recoveryService recoverSecrets:nil withPrivateKey:privateKey success:^(NSArray<NSString *> * _Nonnull validSecrets, NSArray<NSString *> * _Nonnull invalidSecrets) {
+                [recoveryService recoverSecrets:nil withPrivateKey:privateKey success:^(MXSecretRecoveryResult * _Nonnull recoveryResult) {
                     
                     // -> We should have restored the 3 ones
-                    XCTAssertEqual(validSecrets.count, 3);
-                    XCTAssertEqual(invalidSecrets.count, 0);
+                    XCTAssertEqual(recoveryResult.secrets.count, 3);
+                    XCTAssertEqual(recoveryResult.updatedSecrets.count, 0);
+                    XCTAssertEqual(recoveryResult.invalidSecrets.count, 0);
                     
                     // -> Make sure the secret is still correct
                     NSString *msk2 = [aliceSession.crypto.store secretWithSecretId:MXSecretId.crossSigningMaster];

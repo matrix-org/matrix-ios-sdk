@@ -214,7 +214,7 @@
 
 - (void)recoverSecrets:(nullable NSArray<NSString*>*)secrets
         withPrivateKey:(NSData*)privateKey
-               success:(void (^)(NSArray<NSString*> *validSecrets, NSArray<NSString*> *invalidSecrets))success
+               success:(void (^)(MXSecretRecoveryResult *recoveryResult))success
                failure:(void (^)(NSError *error))failure
 {
     if (!secrets)
@@ -225,7 +225,7 @@
     
     NSLog(@"[MXRecoveryService] recoverSecrets: %@", secrets);
     
-    NSMutableArray<NSString*> *validSecrets = [NSMutableArray array];
+    NSMutableArray<NSString*> *updatedSecrets = [NSMutableArray array];
     NSMutableArray<NSString*> *invalidSecrets = [NSMutableArray array];
 
     NSArray<NSString*> *storedSecrets = self.storedSecrets;
@@ -235,9 +235,11 @@
         NSLog(@"[MXRecoveryService] recoverSecrets: No secrets to recover. storedSecrets: %@", storedSecrets);
         
         // No recovery at all
-        success(validSecrets, invalidSecrets);
+        success([MXSecretRecoveryResult new]);
         return;
     }
+    
+    NSLog(@"[MXRecoveryService] recoverSecrets: secretsToRecover: %@", secretsToRecover);
     
     NSString *secretStorageKeyId = self.recoveryId;
     
@@ -252,18 +254,21 @@
             
             NSString *secret = unpaddedBase64Secret;
             
-            // Validate the secret before storing it
-            if ([self checkSecret:secret withSecretId:secretId])
+            if (![secret isEqualToString:[self.cryptoStore secretWithSecretId:secretId]])
             {
-                NSLog(@"[MXRecoveryService] recoverSecrets: Recovered secret %@", secretId);
-                
-                [validSecrets addObject:secretId];
-                [self.cryptoStore storeSecret:secret withSecretId:secretId];
-            }
-            else
-            {
-                NSLog(@"[MXRecoveryService] recoverSecrets: Secret %@ is invalid", secretId);
-                [invalidSecrets addObject:secretId];
+                // Validate the secret before storing it
+                if ([self checkSecret:secret withSecretId:secretId])
+                {
+                    NSLog(@"[MXRecoveryService] recoverSecrets: Recovered secret %@", secretId);
+                    
+                    [updatedSecrets addObject:secretId];
+                    [self.cryptoStore storeSecret:secret withSecretId:secretId];
+                }
+                else
+                {
+                    NSLog(@"[MXRecoveryService] recoverSecrets: Secret %@ is invalid", secretId);
+                    [invalidSecrets addObject:secretId];
+                }
             }
             
             dispatch_group_leave(dispatchGroup);
@@ -285,8 +290,13 @@
         }
         else
         {
-            NSLog(@"[MXRecoveryService] recoverSecrets: Completed. validSecrets: %@. invalidSecrets: %@", validSecrets, invalidSecrets);
-            success(validSecrets, invalidSecrets);
+            MXSecretRecoveryResult *recoveryResult = [MXSecretRecoveryResult new];
+            recoveryResult.secrets = secretsToRecover;
+            recoveryResult.updatedSecrets = updatedSecrets;
+            recoveryResult.invalidSecrets = invalidSecrets;
+            
+            NSLog(@"[MXRecoveryService] recoverSecrets: Completed. updatedSecrets: %@. invalidSecrets: %@", updatedSecrets, invalidSecrets);
+            success(recoveryResult);
         }
     });
 }
