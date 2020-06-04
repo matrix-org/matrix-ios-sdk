@@ -271,7 +271,6 @@ NSString *const kMXLoginIdentifierTypePhone = @"m.id.phone";
     if (createRoomResponse)
     {
         MXJSONModelSetString(createRoomResponse.roomId, JSONDictionary[@"room_id"]);
-        MXJSONModelSetString(createRoomResponse.roomAlias, JSONDictionary[@"room_alias"]);
     }
 
     return createRoomResponse;
