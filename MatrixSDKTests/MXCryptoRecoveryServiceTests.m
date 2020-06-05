@@ -61,7 +61,16 @@
          // - Bootstrap cross-singing on Alice using password
          [aliceSession.crypto.crossSigning bootstrapWithPassword:MXTESTS_ALICE_PWD success:^{
              
-             readyToTest(aliceSession, roomId, expectation);
+             // Send a message to a have megolm key in the store
+             MXRoom *room = [aliceSession roomWithRoomId:roomId];
+             [room sendTextMessage:@"message" success:^(NSString *eventId) {
+                 
+                 readyToTest(aliceSession, roomId, expectation);
+                 
+             } failure:^(NSError *error) {
+                 XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                 [expectation fulfill];
+             }];
              
          } failure:^(NSError *error) {
              XCTFail(@"Cannot set up intial test conditions - error: %@", error);
@@ -181,6 +190,72 @@
             
         } failure:^(NSError * _Nonnull error) {
             XCTFail(@"The operation should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+    }];
+}
+
+
+// Test recovery of services
+//
+// - Create a recovery
+// - Log Alice on a new device
+// - Recover secrets
+// - Recover services
+// -> The new device must have cross-signing fully on
+// -> The new device must be cross-signed
+- (void)testRecoverServicesAssociatedWithSecrets
+{
+    // - Have Alice with cross-signing bootstrapped
+    [self doTestWithBootstrappedAlice:self readyToTest:^(MXSession *aliceSession, NSString *roomId, XCTestExpectation *expectation) {
+      
+        // - Create a recovery
+        [aliceSession.crypto.recoveryService createRecoveryForSecrets:nil withPassphrase:nil success:^(MXSecretStorageKeyCreationInfo * _Nonnull keyCreationInfo) {
+            
+            NSData *recoveryPrivateKey = keyCreationInfo.privateKey;
+            
+            // - Log Alice on a new device
+            [MXSDKOptions sharedInstance].enableCryptoWhenStartingMXSession = YES;
+            [matrixSDKTestsData relogUserSessionWithNewDevice:aliceSession withPassword:MXTESTS_ALICE_PWD onComplete:^(MXSession *aliceSession2) {
+                [MXSDKOptions sharedInstance].enableCryptoWhenStartingMXSession = NO;
+                
+                [aliceSession2.crypto.crossSigning refreshStateWithSuccess:^(BOOL stateUpdated) {
+                    
+                    XCTAssertEqual(aliceSession2.crypto.crossSigning.state, MXCrossSigningStateCrossSigningExists);
+                    
+                    
+                    // - Recover secrets
+                    [aliceSession2.crypto.recoveryService recoverSecrets:nil withPrivateKey:recoveryPrivateKey success:^(MXSecretRecoveryResult * _Nonnull recoveryResult) {
+                        
+                        // - Recover services
+                        [aliceSession2.crypto.recoveryService recoverServicesAssociatedWithSecrets:nil success:^{
+                            
+                            // -> The new device must have cross-signing fully on
+                            XCTAssertEqual(aliceSession2.crypto.crossSigning.state, MXCrossSigningStateCanCrossSign);
+                            
+                            // -> The new device must be cross-signed
+                            MXDeviceTrustLevel *newDeviceTrust = [aliceSession2.crypto deviceTrustLevelForDevice:aliceSession2.myDeviceId ofUser:aliceSession2.myUserId];
+                            XCTAssertTrue(newDeviceTrust.isCrossSigningVerified);
+                            
+                            [expectation fulfill];
+                            
+                        } failure:^(NSError * _Nonnull error) {
+                            XCTFail(@"The operation should not fail - NSError: %@", error);
+                            [expectation fulfill];
+                        }];
+                        
+                    } failure:^(NSError *error) {
+                        XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                        [expectation fulfill];
+                    }];
+                } failure:^(NSError *error) {
+                    XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                    [expectation fulfill];
+                }];
+            }];
+            
+        } failure:^(NSError *error) {
+            XCTFail(@"Cannot set up intial test conditions - error: %@", error);
             [expectation fulfill];
         }];
     }];

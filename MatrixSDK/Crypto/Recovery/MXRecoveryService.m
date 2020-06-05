@@ -327,6 +327,78 @@
 }
 
 
+#pragma mark - Associated services
+
+- (void)recoverServicesAssociatedWithSecrets:(nullable NSArray<NSString*>*)secrets
+                                     success:(void (^)(void))success
+                                     failure:(void (^)(NSError *error))failure
+{
+    NSLog(@"[MXRecoveryService] startServicesAssociatedWithSecrets: %@", secrets);
+    
+    if (!secrets)
+    {
+        secrets = self.supportedSecrets;
+    }
+    
+    // Start services only if we have secrets we have locally
+    NSArray *locallyStoredSecrets = self.locallyStoredSecrets;
+    NSArray<NSString*> *servicesToRecover = [locallyStoredSecrets mx_intersectArray:secrets];
+    
+    NSLog(@"[MXRecoveryService] startServicesAssociatedWithSecrets: servicesToRecover: %@", servicesToRecover);
+    
+    
+    dispatch_group_t dispatchGroup = dispatch_group_create();
+    __block NSError *error;
+    
+    NSArray *crossSigningServiceSecrets = @[
+                                            MXSecretId.crossSigningMaster,
+                                            MXSecretId.crossSigningSelfSigning,
+                                            MXSecretId.crossSigningUserSigning];
+
+    if ([servicesToRecover containsObject:MXSecretId.keyBackup])
+    {
+        //TODO
+    }
+    else if ([servicesToRecover mx_intersectArray:crossSigningServiceSecrets].count)
+    {
+        dispatch_group_enter(dispatchGroup);
+        
+        [self recoverCrossSigningWithSuccess:^{
+            dispatch_group_leave(dispatchGroup);
+        } failure:^(NSError *anError) {
+            NSLog(@"[MXRecoveryService] startServicesAssociatedWithSecrets: Failed to restore cross-signing. Error: %@", anError);
+            
+            error = anError;
+            dispatch_group_leave(dispatchGroup);
+        }];
+    }
+    
+    
+    dispatch_group_notify(dispatchGroup, dispatch_get_main_queue(), ^{
+        
+        if (error)
+        {
+            NSLog(@"[MXRecoveryService] startServicesAssociatedWithSecrets: Completed with error.");
+            failure(error);
+        }
+        else
+        {
+            NSLog(@"[MXRecoveryService] startServicesAssociatedWithSecrets: Completed for secrets: %@", servicesToRecover);
+            success();
+        }
+    });
+}
+
+- (void)recoverCrossSigningWithSuccess:(void (^)(void))success
+                               failure:(void (^)(NSError *error))failure
+{
+    NSLog(@"[MXRecoveryService] recoverCrossSigning");
+    
+    // TODO
+    success();
+}
+
+
 #pragma mark - Private key tools
 
 - (nullable NSData*)privateKeyFromRecoveryKey:(NSString*)recoveryKey error:(NSError**)error

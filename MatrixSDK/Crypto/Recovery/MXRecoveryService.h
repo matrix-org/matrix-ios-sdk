@@ -81,7 +81,7 @@ NS_ASSUME_NONNULL_BEGIN
  It will send keys from the local storage to the recovery on the homeserver.
  Those keys are sent encrypted thanks to SSSS that implements this recovery.
  
- @param secrets the id of secrets to put in the recovery. Nil will try to backup all self.supportedSecrets.
+ @param secrets the id of secrets to store in the recovery. Nil will for all self.supportedSecrets.
  @param passphrase a passphrase used to generate the encryption key. Nil will generate a recovery key.
  
  @param success A block object called when the operation succeeds.
@@ -95,7 +95,7 @@ NS_ASSUME_NONNULL_BEGIN
 /**
  Update secrets to the existing recovery.
  
- @param secrets the id of secrets to put in the recovery. Nil will try to backup all self.supportedSecrets.
+ @param secrets the id of secrets to store in the recovery. Nil for all self.supportedSecrets.
  @param privateKey the recovery private key.
  
  @param success A block object called when the operation succeeds.
@@ -107,6 +107,7 @@ NS_ASSUME_NONNULL_BEGIN
                          failure:(void (^)(NSError *error))failure;
 
 
+// TODO
 //- (void)deleteRecovery;
 
 
@@ -115,7 +116,7 @@ NS_ASSUME_NONNULL_BEGIN
 /**
  Restore keys from the recovery stored on the homeserver to the local storage.
  
- @param secrets the id of secrets to put in the recovery. Nil will try to recover all self.supportedSecrets.
+ @param secrets the id of secrets to put in the recovery. Nil for all self.supportedSecrets.
  @param privateKey the recovery private key.
  
  @param success A block object called when the operation succeeds.
@@ -125,6 +126,25 @@ NS_ASSUME_NONNULL_BEGIN
         withPrivateKey:(NSData*)privateKey
                success:(void (^)(MXSecretRecoveryResult *recoveryResult))success
                failure:(void (^)(NSError *error))failure;
+
+
+#pragma mark - Associated services
+
+/**
+ Start services corresponding to secrets.
+ 
+ After the recovery of secrets, call this method to start associated services.
+ A key backup secret will trigger a key backup restoration.
+ A cross-signing secret will make sure this device is cross-signed.
+ 
+ @param secrets the id of secrets. Nil for all self.supportedSecrets.
+ 
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+ */
+- (void)recoverServicesAssociatedWithSecrets:(nullable NSArray<NSString*>*)secrets
+                                     success:(void (^)(void))success
+                                     failure:(void (^)(NSError *error))failure;
 
 
 #pragma mark - Private key tools
