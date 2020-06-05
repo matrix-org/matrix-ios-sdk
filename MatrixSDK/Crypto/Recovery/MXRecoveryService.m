@@ -239,6 +239,7 @@
 
 - (void)recoverSecrets:(nullable NSArray<NSString*>*)secrets
         withPrivateKey:(NSData*)privateKey
+       recoverServices:(BOOL)recoverServices
                success:(void (^)(MXSecretRecoveryResult *recoveryResult))success
                failure:(void (^)(NSError *error))failure
 {
@@ -321,7 +322,18 @@
             recoveryResult.invalidSecrets = invalidSecrets;
             
             NSLog(@"[MXRecoveryService] recoverSecrets: Completed. secrets: %@. updatedSecrets: %@. invalidSecrets: %@", secretsToRecover, updatedSecrets, invalidSecrets);
-            success(recoveryResult);
+            
+            // Recover services if required
+            if (recoverServices)
+            {
+                [self recoverServicesAssociatedWithSecrets:updatedSecrets success:^{
+                    success(recoveryResult);
+                } failure:failure];
+            }
+            else
+            {
+                success(recoveryResult);
+            }
         }
     });
 }

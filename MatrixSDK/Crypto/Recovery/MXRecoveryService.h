@@ -118,12 +118,14 @@ NS_ASSUME_NONNULL_BEGIN
  
  @param secrets the id of secrets to put in the recovery. Nil for all self.supportedSecrets.
  @param privateKey the recovery private key.
+ @param recoverServices YES to call recoverServicesAssociatedWithSecrets in cascade.
  
  @param success A block object called when the operation succeeds.
  @param failure A block object called when the operation fails.
  */
 - (void)recoverSecrets:(nullable NSArray<NSString*>*)secrets
         withPrivateKey:(NSData*)privateKey
+       recoverServices:(BOOL)recoverServices
                success:(void (^)(MXSecretRecoveryResult *recoveryResult))success
                failure:(void (^)(NSError *error))failure;
 

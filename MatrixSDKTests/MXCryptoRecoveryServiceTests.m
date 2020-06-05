@@ -124,7 +124,7 @@
 
             // Recover all secrets
             [recoveryService privateKeyFromPassphrase:passphrase success:^(NSData * _Nonnull privateKey) {
-                [recoveryService recoverSecrets:nil withPrivateKey:privateKey success:^(MXSecretRecoveryResult * _Nonnull recoveryResult) {
+                [recoveryService recoverSecrets:nil withPrivateKey:privateKey recoverServices:NO success:^(MXSecretRecoveryResult * _Nonnull recoveryResult) {
                     
                     // -> We should have restored the 3 ones
                     XCTAssertEqual(recoveryResult.secrets.count, 3);
@@ -200,8 +200,7 @@
 //
 // - Create a recovery
 // - Log Alice on a new device
-// - Recover secrets
-// - Recover services
+// - Recover secrets and services
 // -> The new device must have cross-signing fully on
 // -> The new device must be cross-signed
 - (void)testRecoverServicesAssociatedWithSecrets
@@ -224,25 +223,17 @@
                     XCTAssertEqual(aliceSession2.crypto.crossSigning.state, MXCrossSigningStateCrossSigningExists);
                     
                     
-                    // - Recover secrets
-                    [aliceSession2.crypto.recoveryService recoverSecrets:nil withPrivateKey:recoveryPrivateKey success:^(MXSecretRecoveryResult * _Nonnull recoveryResult) {
+                    // - Recover secrets and services
+                    [aliceSession2.crypto.recoveryService recoverSecrets:nil withPrivateKey:recoveryPrivateKey recoverServices:YES success:^(MXSecretRecoveryResult * _Nonnull recoveryResult) {
                         
-                        // - Recover services
-                        [aliceSession2.crypto.recoveryService recoverServicesAssociatedWithSecrets:nil success:^{
-                            
-                            // -> The new device must have cross-signing fully on
-                            XCTAssertEqual(aliceSession2.crypto.crossSigning.state, MXCrossSigningStateCanCrossSign);
-                            
-                            // -> The new device must be cross-signed
-                            MXDeviceTrustLevel *newDeviceTrust = [aliceSession2.crypto deviceTrustLevelForDevice:aliceSession2.myDeviceId ofUser:aliceSession2.myUserId];
-                            XCTAssertTrue(newDeviceTrust.isCrossSigningVerified);
-                            
-                            [expectation fulfill];
-                            
-                        } failure:^(NSError * _Nonnull error) {
-                            XCTFail(@"The operation should not fail - NSError: %@", error);
-                            [expectation fulfill];
-                        }];
+                        // -> The new device must have cross-signing fully on
+                        XCTAssertEqual(aliceSession2.crypto.crossSigning.state, MXCrossSigningStateCanCrossSign);
+                        
+                        // -> The new device must be cross-signed
+                        MXDeviceTrustLevel *newDeviceTrust = [aliceSession2.crypto deviceTrustLevelForDevice:aliceSession2.myDeviceId ofUser:aliceSession2.myUserId];
+                        XCTAssertTrue(newDeviceTrust.isCrossSigningVerified);
+                        
+                        [expectation fulfill];
                         
                     } failure:^(NSError *error) {
                         XCTFail(@"Cannot set up intial test conditions - error: %@", error);
