@@ -92,10 +92,19 @@ NS_ASSUME_NONNULL_BEGIN
                          success:(void (^)(MXSecretStorageKeyCreationInfo *keyCreationInfo))success
                          failure:(void (^)(NSError *error))failure;
 
-
-//- (void)updateRecoveryForSecretWithSecretId:(NSString*)secretId
-//                             withPassphrase:(NSString*)passphrase
-//                                    ..
+/**
+ Update secrets to the existing recovery.
+ 
+ @param secrets the id of secrets to put in the recovery. Nil will try to backup all self.supportedSecrets.
+ @param privateKey the recovery private key.
+ 
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+ */
+- (void)updateRecoveryForSecrets:(nullable NSArray<NSString*>*)secrets
+                  withPrivateKey:(NSData*)privateKey
+                         success:(void (^)(void))success
+                         failure:(void (^)(NSError *error))failure;
 
 
 //- (void)deleteRecovery;
