@@ -369,9 +369,19 @@
 
     if ([servicesToRecover containsObject:MXSecretId.keyBackup])
     {
-        //TODO
+        dispatch_group_enter(dispatchGroup);
+        
+        [self recoverKeyBackupWithSuccess:^{
+            dispatch_group_leave(dispatchGroup);
+        } failure:^(NSError *anError) {
+            NSLog(@"[MXRecoveryService] startServicesAssociatedWithSecrets: Failed to restore key backup. Error: %@", anError);
+            
+            error = anError;
+            dispatch_group_leave(dispatchGroup);
+        }];
     }
-    else if ([servicesToRecover mx_intersectArray:crossSigningServiceSecrets].count)
+    
+    if ([servicesToRecover mx_intersectArray:crossSigningServiceSecrets].count)
     {
         dispatch_group_enter(dispatchGroup);
         
@@ -384,7 +394,6 @@
             dispatch_group_leave(dispatchGroup);
         }];
     }
-    
     
     dispatch_group_notify(dispatchGroup, dispatch_get_main_queue(), ^{
         
@@ -401,13 +410,44 @@
     });
 }
 
+
+- (void)recoverKeyBackupWithSuccess:(void (^)(void))success
+                            failure:(void (^)(NSError *error))failure
+{
+    NSLog(@"[MXRecoveryService] recoverKeyBackup");
+    
+    // TODO
+    success();
+}
+
 - (void)recoverCrossSigningWithSuccess:(void (^)(void))success
                                failure:(void (^)(NSError *error))failure
 {
     NSLog(@"[MXRecoveryService] recoverCrossSigning");
     
-    // TODO
-    success();
+    // Mark our user MSK as verified locally
+    [self.crypto setUserVerification:YES forUser:self.crypto.mxSession.myUserId success:^{
+        
+        // Cross sign our current device
+        [self.crypto.crossSigning crossSignDeviceWithDeviceId:self.crypto.mxSession.myDeviceId success:^{
+            
+            // And update the state
+            [self.crypto.crossSigning refreshStateWithSuccess:^(BOOL stateUpdated) {
+                success();
+            } failure:^(NSError *error) {
+                NSLog(@"[MXRecoveryService] recoverCrossSigning: refreshStateWithSuccess failed: %@", error);
+                failure(error);
+            }];
+            
+        } failure:^(NSError * _Nonnull error) {
+            NSLog(@"[MXRecoveryService] recoverCrossSigning: crossSignDeviceWithDeviceId failed: %@", error);
+            failure(error);
+        }];
+        
+    } failure:^(NSError *error) {
+        NSLog(@"[MXRecoveryService] recoverCrossSigning: setUserVerification failed: %@", error);
+        failure(error);
+    }];
 }
 
 
