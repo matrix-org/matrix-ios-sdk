@@ -349,7 +349,7 @@ NSString *const MXRecoveryServiceErrorDomain = @"org.matrix.sdk.recoveryService"
             // Recover services if required
             if (recoverServices)
             {
-                [self recoverServicesAssociatedWithSecrets:updatedSecrets success:^{
+                [self recoverServicesAssociatedWithSecrets:secretsToRecover success:^{
                     success(recoveryResult);
                 } failure:failure];
             }
@@ -445,20 +445,28 @@ NSString *const MXRecoveryServiceErrorDomain = @"org.matrix.sdk.recoveryService"
     if (keyBackupVersion && secret
         && [self.crypto.backup isSecretValid:secret forKeyBackupVersion:keyBackupVersion])
     {
-        // Trust the current backup to start backuping keys to it
-        [self.crypto.backup trustKeyBackupVersion:keyBackupVersion trust:YES success:^{
-            NSLog(@"[MXRecoveryService] recoverKeyBackup: Current backup is now trusted");
-            success();
-        } failure:^(NSError * _Nonnull error) {
-            NSLog(@"[MXRecoveryService] recoverKeyBackup: trustKeyBackupVersion failed: %@", error);
-        }];
-    
         // Restore the backup in background
         // It will take time
         [self.crypto.backup restoreUsingPrivateKeyKeyBackup:keyBackupVersion room:nil session:nil success:^(NSUInteger total, NSUInteger imported) {
             NSLog(@"[MXRecoveryService] recoverKeyBackup: Backup is restored!");
         } failure:^(NSError * _Nonnull error) {
             NSLog(@"[MXRecoveryService] recoverKeyBackup: restoreUsingPrivateKeyKeyBackup failed: %@", error);
+        }];
+        
+        // Check if the service really needs to be started
+        if (self.crypto.backup.enabled)
+        {
+            NSLog(@"[MXRecoveryService] recoverKeyBackup: Key backup is already running");
+            success();
+            return;
+        }
+        
+        // Trust the current backup to start backuping keys to it
+        [self.crypto.backup trustKeyBackupVersion:keyBackupVersion trust:YES success:^{
+            NSLog(@"[MXRecoveryService] recoverKeyBackup: Current backup is now trusted");
+            success();
+        } failure:^(NSError * _Nonnull error) {
+            NSLog(@"[MXRecoveryService] recoverKeyBackup: trustKeyBackupVersion failed: %@", error);
         }];
     }
     else
@@ -473,28 +481,43 @@ NSString *const MXRecoveryServiceErrorDomain = @"org.matrix.sdk.recoveryService"
 {
     NSLog(@"[MXRecoveryService] recoverCrossSigning");
     
-    // Mark our user MSK as verified locally
-    [self.crypto setUserVerification:YES forUser:self.crypto.mxSession.myUserId success:^{
+    [self.crypto.crossSigning refreshStateWithSuccess:^(BOOL stateUpdated) {
         
-        // Cross sign our current device
-        [self.crypto.crossSigning crossSignDeviceWithDeviceId:self.crypto.mxSession.myDeviceId success:^{
+        // Check if the service really needs to be started
+        if (self.crypto.crossSigning.canCrossSign)
+        {
+            NSLog(@"[MXRecoveryService] recoverCrossSigning: Cross-signing is already up");
+            success();
+            return;
+        }
+
+        // Mark our user MSK as verified locally
+        [self.crypto setUserVerification:YES forUser:self.crypto.mxSession.myUserId success:^{
             
-            // And update the state
-            [self.crypto.crossSigning refreshStateWithSuccess:^(BOOL stateUpdated) {
-                NSLog(@"[MXRecoveryService] recoverCrossSigning: Cross-signing is up. State: %@", @(self.crypto.crossSigning.state));
-                success();
-            } failure:^(NSError *error) {
-                NSLog(@"[MXRecoveryService] recoverCrossSigning: refreshStateWithSuccess failed: %@", error);
+            // Cross sign our current device
+            [self.crypto.crossSigning crossSignDeviceWithDeviceId:self.crypto.mxSession.myDeviceId success:^{
+                
+                // And update the state
+                [self.crypto.crossSigning refreshStateWithSuccess:^(BOOL stateUpdated) {
+                    NSLog(@"[MXRecoveryService] recoverCrossSigning: Cross-signing is up. State: %@", @(self.crypto.crossSigning.state));
+                    success();
+                } failure:^(NSError *error) {
+                    NSLog(@"[MXRecoveryService] recoverCrossSigning: refreshStateWithSuccess 2 failed: %@", error);
+                    failure(error);
+                }];
+                
+            } failure:^(NSError * _Nonnull error) {
+                NSLog(@"[MXRecoveryService] recoverCrossSigning: crossSignDeviceWithDeviceId failed: %@", error);
                 failure(error);
             }];
             
-        } failure:^(NSError * _Nonnull error) {
-            NSLog(@"[MXRecoveryService] recoverCrossSigning: crossSignDeviceWithDeviceId failed: %@", error);
+        } failure:^(NSError *error) {
+            NSLog(@"[MXRecoveryService] recoverCrossSigning: setUserVerification failed: %@", error);
             failure(error);
         }];
         
-    } failure:^(NSError *error) {
-        NSLog(@"[MXRecoveryService] recoverCrossSigning: setUserVerification failed: %@", error);
+    } failure:^(NSError * _Nonnull error) {
+        NSLog(@"[MXRecoveryService] recoverCrossSigning: refreshStateWithSuccess 1 failed: %@", error);
         failure(error);
     }];
 }
