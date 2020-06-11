@@ -95,7 +95,7 @@ typedef NS_ENUM(NSInteger, MXRecoveryServiceErrorCode)
  It will send keys from the local storage to the recovery on the homeserver.
  Those keys are sent encrypted thanks to SSSS that implements this recovery.
  
- @param secrets secrets ids to store in the recovery. Nil will for all self.supportedSecrets.
+ @param secrets secrets ids to store in the recovery. Nil for all self.supportedSecrets.
  @param passphrase a passphrase used to generate the recovery key to encrypt keys. Nil will generate it.
  
  @param success A block object called when the operation succeeds.
