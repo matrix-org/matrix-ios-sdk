@@ -39,6 +39,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)requestPrivateKeys;
 
+- (BOOL)isSecretValid:(NSString*)secret forPublicKeys:(NSString*)keys;
+
 @end
 
 

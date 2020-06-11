@@ -18,6 +18,7 @@
 
 
 #import "MXCrypto_Private.h"
+#import "MXCrossSigning_Private.h"
 #import "MXKeyBackupPassword.h"
 #import "MXRecoveryKey.h"
 #import "MXTools.h"
@@ -280,10 +281,10 @@
             
             NSString *secret = unpaddedBase64Secret;
             
-            if (![secret isEqualToString:[self.cryptoStore secretWithSecretId:secretId]])
+            // Validate the secret before storing it
+            if ([self checkSecret:secret withSecretId:secretId])
             {
-                // Validate the secret before storing it
-                if ([self checkSecret:secret withSecretId:secretId])
+                if (![secret isEqualToString:[self.cryptoStore secretWithSecretId:secretId]])
                 {
                     NSLog(@"[MXRecoveryService] recoverSecrets: Recovered secret %@", secretId);
                     
@@ -292,9 +293,13 @@
                 }
                 else
                 {
-                    NSLog(@"[MXRecoveryService] recoverSecrets: Secret %@ is invalid", secretId);
-                    [invalidSecrets addObject:secretId];
+                    NSLog(@"[MXRecoveryService] recoverSecrets: Secret %@ was already known", secretId);
                 }
+            }
+            else
+            {
+                NSLog(@"[MXRecoveryService] recoverSecrets: Secret %@ is invalid", secretId);
+                [invalidSecrets addObject:secretId];
             }
             
             dispatch_group_leave(dispatchGroup);
@@ -525,14 +530,61 @@
 
 - (BOOL)checkSecret:(NSString*)secret withSecretId:(NSString*)secretId
 {
-    // TODO
-//    if ([secretId isEqualToString:MXSecretId.keyBackup])
-//    {
-//
-//    }
+    // Accept secrets by default
+    BOOL valid = YES;
+    
+    if ([secretId isEqualToString:MXSecretId.keyBackup])
+    {
+        MXKeyBackupVersion *keyBackupVersion = self.crypto.backup.keyBackupVersion;
+        if (keyBackupVersion)
+        {
+            valid = [self.crypto.backup isSecretValid:secret forKeyBackupVersion:keyBackupVersion];
+        }
+        else
+        {
+            NSLog(@"[MXRecoveryService] checkSecret: Backup is not enabled yet. Accept the secret by default");
+        }
+    }
+    else if ([secretId isEqualToString:MXSecretId.crossSigningMaster])
+    {
+        MXCrossSigningInfo *crossSigningInfo = self.crypto.crossSigning.myUserCrossSigningKeys;
+        if (crossSigningInfo)
+        {
+            valid = [self.crypto.crossSigning isSecretValid:secret forPublicKeys:crossSigningInfo.masterKeys.keys];
+        }
+        else
+        {
+            NSLog(@"[MXRecoveryService] checkSecret: Cross-signing is not enabled yet. Accept the secret by default");
+        }
+    }
+    else if ([secretId isEqualToString:MXSecretId.crossSigningSelfSigning])
+    {
+        MXCrossSigningInfo *crossSigningInfo = self.crypto.crossSigning.myUserCrossSigningKeys;
+        if (crossSigningInfo)
+        {
+            valid = [self.crypto.crossSigning isSecretValid:secret forPublicKeys:crossSigningInfo.selfSignedKeys.keys];
+        }
+        else
+        {
+            NSLog(@"[MXRecoveryService] checkSecret: Cross-signing is not enabled yet. Accept the secret by default");
+        }
+    }
+    else if ([secretId isEqualToString:MXSecretId.crossSigningUserSigning])
+    {
+        MXCrossSigningInfo *crossSigningInfo = self.crypto.crossSigning.myUserCrossSigningKeys;
+        if (crossSigningInfo)
+        {
+            valid = [self.crypto.crossSigning isSecretValid:secret forPublicKeys:crossSigningInfo.userSignedKeys.keys];
+        }
+        else
+        {
+            NSLog(@"[MXRecoveryService] checkSecret: Cross-signing is not enabled yet. Accept the secret by default");
+        }
+    }
+    
+    NSLog(@"[MXRecoveryService] checkSecret: Secret for %@ is %@", secretId, valid ? @"valid" :  @"invalid");
 
-    // YES by default
-    return YES;
+    return valid;
 }
 
 @end

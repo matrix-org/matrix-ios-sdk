@@ -298,8 +298,7 @@ NSString *const MXCrossSigningErrorDomain = @"org.matrix.sdk.crosssigning";
         BOOL isSecretValid = NO;
         if (self.myUserCrossSigningKeys.userSignedKeys.keys)
         {
-            isSecretValid = (nil != [self pkSigningFromBase64PrivateKey:secret
-                                                  withExpectedPublicKey:self.myUserCrossSigningKeys.userSignedKeys.keys]);
+            isSecretValid = [self isSecretValid:secret forPublicKeys:self.myUserCrossSigningKeys.userSignedKeys.keys];
         }
         else
         {
@@ -334,8 +333,7 @@ NSString *const MXCrossSigningErrorDomain = @"org.matrix.sdk.crosssigning";
         BOOL isSecretValid = NO;
         if (self.myUserCrossSigningKeys.selfSignedKeys.keys)
         {
-            isSecretValid = (nil != [self pkSigningFromBase64PrivateKey:secret
-                                                  withExpectedPublicKey:self.myUserCrossSigningKeys.selfSignedKeys.keys]);
+            isSecretValid = [self isSecretValid:secret forPublicKeys:self.myUserCrossSigningKeys.selfSignedKeys.keys];
         }
         else
         {
@@ -532,6 +530,12 @@ NSString *const MXCrossSigningErrorDomain = @"org.matrix.sdk.crosssigning";
     } onPrivateKeysReceived:^{
     } failure:^(NSError * _Nonnull error) {
     }];
+}
+
+- (BOOL)isSecretValid:(NSString*)secret forPublicKeys:(NSString*)keys
+{
+    return (nil != [self pkSigningFromBase64PrivateKey:secret
+                                 withExpectedPublicKey:keys]);
 }
 
 

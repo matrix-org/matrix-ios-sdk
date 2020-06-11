@@ -118,6 +118,7 @@
 // Create a recovery with a passphrase
 // -> The 3 keys should be in the recovery
 // -> The recovery must indicate it has a passphrase
+// Forget all secrets for the test
 // Recover all secrets
 // -> We should have restored the 3 ones
 // -> Make sure the secret is still correct
@@ -151,6 +152,12 @@
             // -> The recovery must indicate it has a passphrase
             XCTAssertTrue(recoveryService.usePassphrase);
             
+            
+            // Forget all secrets for the test
+            [aliceSession.crypto.store deleteSecretWithSecretId:MXSecretId.crossSigningMaster];
+            [aliceSession.crypto.store deleteSecretWithSecretId:MXSecretId.crossSigningSelfSigning];
+            [aliceSession.crypto.store deleteSecretWithSecretId:MXSecretId.crossSigningUserSigning];
+            
 
             // Recover all secrets
             [recoveryService privateKeyFromPassphrase:passphrase success:^(NSData * _Nonnull privateKey) {
@@ -158,7 +165,7 @@
                     
                     // -> We should have restored the 3 ones
                     XCTAssertEqual(recoveryResult.secrets.count, 3);
-                    XCTAssertEqual(recoveryResult.updatedSecrets.count, 0);
+                    XCTAssertEqual(recoveryResult.updatedSecrets.count, 3);
                     XCTAssertEqual(recoveryResult.invalidSecrets.count, 0);
                     
                     // -> Make sure the secret is still correct
