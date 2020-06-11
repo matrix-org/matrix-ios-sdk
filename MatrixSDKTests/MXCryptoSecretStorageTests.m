@@ -427,6 +427,8 @@ UInt8 privateKeyBytes[] = {
         [secretStorage storeSecret:theSecretUnpaddedBase64 withSecretId:theSecretId withSecretStorageKeys:keys success:^(NSString * _Nonnull secretId) {
 
             XCTAssertEqualObjects(theSecretId, secretId);
+            
+            XCTAssertTrue([secretStorage hasSecretWithSecretId:theSecretId withSecretStorageKeyId:nil]);
 
             // - Get it back
             [secretStorage secretWithSecretId:theSecretId withSecretStorageKeyId:nil privateKey:privateKey success:^(NSString * _Nonnull unpaddedBase64Secret) {
