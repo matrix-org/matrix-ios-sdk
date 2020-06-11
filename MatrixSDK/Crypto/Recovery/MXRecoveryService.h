@@ -21,6 +21,20 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
+
+#pragma mark - Constants
+
+FOUNDATION_EXPORT NSString *const MXRecoveryServiceErrorDomain;
+typedef NS_ENUM(NSInteger, MXRecoveryServiceErrorCode)
+{
+    MXRecoveryServiceSSSSAlreadyExistsErrorCode,
+    MXRecoveryServiceNoSSSSErrorCode,
+    MXRecoveryServiceNotProtectedByPassphraseErrorCode,
+    MXRecoveryServiceBadRecoveryKeyErrorCode,
+    MXRecoveryServiceBadRecoveryKeyFormatErrorCode,
+};
+
+
 /**
  `MXRecoveryService` manage the backup of secrets/keys used by `MXCrypto``.
  

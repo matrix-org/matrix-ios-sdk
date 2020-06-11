@@ -21,8 +21,14 @@
 #import "MXCrossSigning_Private.h"
 #import "MXKeyBackupPassword.h"
 #import "MXRecoveryKey.h"
+#import "MXAesHmacSha2.h"
 #import "MXTools.h"
 #import "NSArray+MatrixSDK.h"
+
+
+#pragma mark - Constants
+
+NSString *const MXRecoveryServiceErrorDomain = @"org.matrix.sdk.recoveryService";
 
 
 @interface MXRecoveryService ()
@@ -145,7 +151,12 @@
     if (self.hasRecovery)
     {
         NSLog(@"[MXRecoveryService] createRecovery: Error: A recovery already exists.");
-        failure(nil);
+        NSError *error = [NSError errorWithDomain:MXCrossSigningErrorDomain
+                                             code:MXRecoveryServiceSSSSAlreadyExistsErrorCode
+                                         userInfo:@{
+                                                    NSLocalizedDescriptionKey: @"MXRecoveryService: A secret storage already exists",
+                                                    }];
+        failure(error);
         return;
     }
     
@@ -178,8 +189,14 @@
     NSString *ssssKeyId = self.recoveryId;
     if (!ssssKeyId)
     {
+        // No recovery
         NSLog(@"[MXRecoveryService] updateRecovery: Error: No existing SSSS");
-        failure(nil);
+        NSError *error = [NSError errorWithDomain:MXCrossSigningErrorDomain
+                                             code:MXRecoveryServiceNoSSSSErrorCode
+                                         userInfo:@{
+                                                    NSLocalizedDescriptionKey: @"MXRecoveryService: The account has no secret storage",
+                                                    }];
+        failure(error);
         return;
     }
     
@@ -307,7 +324,8 @@
         } failure:^(NSError * _Nonnull anError) {
             NSLog(@"[MXRecoveryService] recoverSecrets: Failed to restore %@. Error: %@", secretId, anError);
             
-            error = anError;
+            error = [self domainErrorFromError:anError];
+            
             dispatch_group_leave(dispatchGroup);
         }];
     }
@@ -486,18 +504,42 @@
 
 - (nullable NSData*)privateKeyFromRecoveryKey:(NSString*)recoveryKey error:(NSError**)error
 {
-    return [MXRecoveryKey decode:recoveryKey error:error];
+    NSData *privateKey = [MXRecoveryKey decode:recoveryKey error:error];
+    
+    if (*error)
+    {
+        *error = [self domainErrorFromError:*error];
+    }
+    return privateKey;
 }
 
 - (void)privateKeyFromPassphrase:(NSString*)passphrase
                          success:(void (^)(NSData *privateKey))success
                          failure:(void (^)(NSError *error))failure
 {
+    NSString *recoveryId = self.recoveryId;
+    if (!recoveryId)
+    {
+        // No SSSS
+        NSError *error = [NSError errorWithDomain:MXCrossSigningErrorDomain
+                                             code:MXRecoveryServiceNoSSSSErrorCode
+                                         userInfo:@{
+                                                    NSLocalizedDescriptionKey: @"MXRecoveryService: The account has no secret storage",
+                                                    }];
+        failure(error);
+        return;
+    }
+    
     MXSecretStorageKeyContent *keyContent = [_secretStorage keyWithKeyId:self.recoveryId];
     if (!keyContent.passphrase)
     {
-        // No recovery at all or no passphrase
-        failure(nil);
+        // No passphrase
+        NSError *error = [NSError errorWithDomain:MXCrossSigningErrorDomain
+                                             code:MXRecoveryServiceNotProtectedByPassphraseErrorCode
+                                         userInfo:@{
+                                                    NSLocalizedDescriptionKey: @"MXRecoveryService: Secret storage not protected by a passphrase",
+                                                    }];
+        failure(error);
         return;
     }
     
@@ -507,9 +549,9 @@
         
         NSError *error;
         NSData *privateKey = [MXKeyBackupPassword retrievePrivateKeyWithPassword:passphrase
-                                                                                 salt:keyContent.passphrase.salt
-                                                                           iterations:keyContent.passphrase.iterations
-                                                                                error:&error];
+                                                                            salt:keyContent.passphrase.salt
+                                                                      iterations:keyContent.passphrase.iterations
+                                                                           error:&error];
         
         
         dispatch_async(dispatch_get_main_queue(), ^{
@@ -586,5 +628,33 @@
 
     return valid;
 }
+
+// Try to convert an error from another module to meaningful error for this module
+- (NSError*)domainErrorFromError:(NSError*)error
+{
+    NSError *domainError = error;
+    
+    if ([error.domain isEqualToString:MXAesHmacSha2ErrorDomain])
+    {
+        // Convert such error as wrong recovery key
+        domainError = [NSError errorWithDomain:MXRecoveryServiceErrorDomain
+                                          code:MXRecoveryServiceBadRecoveryKeyErrorCode
+                                      userInfo:@{
+                                                 NSLocalizedDescriptionKey: @"MXRecoveryService: Invalid recovery key"
+                                                 }];
+    }
+    else if ([error.domain isEqualToString:MXRecoveryKeyErrorDomain])
+    {
+        // Convert such error as wrong recovery key format
+        domainError = [NSError errorWithDomain:MXRecoveryServiceErrorDomain
+                                          code:MXRecoveryServiceBadRecoveryKeyFormatErrorCode
+                                      userInfo:@{
+                                                 NSLocalizedDescriptionKey: @"MXRecoveryService: Invalid recovery key format"
+                                                 }];
+    }
+    
+    return domainError;
+}
+
 
 @end
