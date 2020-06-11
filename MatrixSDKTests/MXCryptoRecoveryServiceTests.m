@@ -52,8 +52,8 @@
 
 // - Create Alice
 // - Bootstrap cross-singing on Alice using password
-- (void)doTestWithBootstrappedAlice:(XCTestCase*)testCase
-                              readyToTest:(void (^)(MXSession *aliceSession, NSString *roomId, XCTestExpectation *expectation))readyToTest
+- (void)doTestWithAliceWithCrossSigning:(XCTestCase*)testCase
+                            readyToTest:(void (^)(MXSession *aliceSession, NSString *roomId, XCTestExpectation *expectation))readyToTest
 {
     // - Create Alice
     [matrixSDKTestsE2EData doE2ETestWithAliceInARoom:testCase andStore:[[MXMemoryStore alloc] init] readyToTest:^(MXSession *aliceSession, NSString *roomId, XCTestExpectation *expectation) {
@@ -79,6 +79,36 @@
      }];
 }
 
+// - Create Alice
+// - Bootstrap cross-singing on Alice using password
+// - Setup key backup
+- (void)doTestWithAliceWithCrossSigningAndKeyBackup:(XCTestCase*)testCase
+                                        readyToTest:(void (^)(MXSession *aliceSession, NSString *roomId, XCTestExpectation *expectation))readyToTest
+{
+    [self doTestWithAliceWithCrossSigning:testCase readyToTest:^(MXSession *aliceSession, NSString *roomId, XCTestExpectation *expectation) {
+        
+        // - Setup key backup
+        [aliceSession.crypto.backup prepareKeyBackupVersionWithPassword:nil success:^(MXMegolmBackupCreationInfo * _Nonnull keyBackupCreationInfo) {
+            [aliceSession.crypto.backup createKeyBackupVersion:keyBackupCreationInfo success:^(MXKeyBackupVersion * _Nonnull keyBackupVersion) {
+                [aliceSession.crypto.backup backupAllGroupSessions:^{
+                    
+                    readyToTest(aliceSession, roomId, expectation);
+                    
+                } progress:nil failure:^(NSError * _Nonnull error) {
+                    XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                    [expectation fulfill];
+                }];
+            } failure:^(NSError *error) {
+                XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                [expectation fulfill];
+            }];
+        } failure:^(NSError *error) {
+            XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+            [expectation fulfill];
+        }];
+    }];
+}
+
 // Test the recovery creation and its restoration.
 //
 // - Test creation of a recovery
@@ -94,7 +124,7 @@
 - (void)testRecoveryWithPassphrase
 {
     // - Have Alice with cross-signing bootstrapped
-    [self doTestWithBootstrappedAlice:self readyToTest:^(MXSession *aliceSession, NSString *roomId, XCTestExpectation *expectation) {
+    [self doTestWithAliceWithCrossSigning:self readyToTest:^(MXSession *aliceSession, NSString *roomId, XCTestExpectation *expectation) {
         
         NSString *msk = [aliceSession.crypto.store secretWithSecretId:MXSecretId.crossSigningMaster];
 
@@ -163,7 +193,7 @@
 - (void)testPrivateKeyTools
 {
     // - Have Alice with cross-signing bootstrapped
-    [self doTestWithBootstrappedAlice:self readyToTest:^(MXSession *aliceSession, NSString *roomId, XCTestExpectation *expectation) {
+    [self doTestWithAliceWithCrossSigning:self readyToTest:^(MXSession *aliceSession, NSString *roomId, XCTestExpectation *expectation) {
         
         MXRecoveryService *recoveryService = aliceSession.crypto.recoveryService;
         
@@ -198,15 +228,17 @@
 
 // Test recovery of services
 //
+// - Have Alice with cross-signing and key backup bootstrapped
 // - Create a recovery
 // - Log Alice on a new device
 // - Recover secrets and services
 // -> The new device must have cross-signing fully on
 // -> The new device must be cross-signed
+// -> The new device must trust and send keys to the existing key backup
 - (void)testRecoverServicesAssociatedWithSecrets
 {
-    // - Have Alice with cross-signing bootstrapped
-    [self doTestWithBootstrappedAlice:self readyToTest:^(MXSession *aliceSession, NSString *roomId, XCTestExpectation *expectation) {
+    // - Have Alice with cross-signing and key backup bootstrapped
+    [self doTestWithAliceWithCrossSigningAndKeyBackup:self readyToTest:^(MXSession *aliceSession, NSString *roomId, XCTestExpectation *expectation) {
       
         // - Create a recovery
         [aliceSession.crypto.recoveryService createRecoveryForSecrets:nil withPassphrase:nil success:^(MXSecretStorageKeyCreationInfo * _Nonnull keyCreationInfo) {
@@ -220,7 +252,12 @@
                 
                 [aliceSession2.crypto.crossSigning refreshStateWithSuccess:^(BOOL stateUpdated) {
                     
+                    // Before recover, the device can do nothing with existing cross-signing and key backup
                     XCTAssertEqual(aliceSession2.crypto.crossSigning.state, MXCrossSigningStateCrossSigningExists);
+                    
+                    XCTAssertNotNil(aliceSession2.crypto.backup.keyBackupVersion);
+                    XCTAssertFalse(aliceSession2.crypto.backup.enabled);
+                    XCTAssertEqual(aliceSession2.crypto.store.inboundGroupSessions.count, 0);
                     
                     
                     // - Recover secrets and services
@@ -232,6 +269,15 @@
                         // -> The new device must be cross-signed
                         MXDeviceTrustLevel *newDeviceTrust = [aliceSession2.crypto deviceTrustLevelForDevice:aliceSession2.myDeviceId ofUser:aliceSession2.myUserId];
                         XCTAssertTrue(newDeviceTrust.isCrossSigningVerified);
+                        
+                        
+                        // -> The new device must trust and send keys to the existing key backup
+                        XCTAssertTrue(aliceSession2.crypto.backup.hasPrivateKeyInCryptoStore);
+                        XCTAssertTrue(aliceSession2.crypto.backup.enabled);
+                        
+                        // -> The new device should have restore keys from the backup
+                        XCTAssertEqual(aliceSession2.crypto.store.inboundGroupSessions.count, 1);
+                        
                         
                         [expectation fulfill];
                         

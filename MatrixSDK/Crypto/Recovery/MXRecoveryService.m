@@ -414,10 +414,35 @@
 - (void)recoverKeyBackupWithSuccess:(void (^)(void))success
                             failure:(void (^)(NSError *error))failure
 {
-    NSLog(@"[MXRecoveryService] recoverKeyBackup");
+    NSLog(@"[MXRecoveryService] recoverKeyBackup: %@", self.crypto.backup.keyBackupVersion.version);
     
-    // TODO
-    success();
+    MXKeyBackupVersion *keyBackupVersion = self.crypto.backup.keyBackupVersion;
+    NSString *secret = [self.crypto.store secretWithSecretId:MXSecretId.keyBackup];
+    
+    if (keyBackupVersion && secret
+        && [self.crypto.backup isSecretValid:secret forKeyBackupVersion:keyBackupVersion])
+    {
+        // Trust the current backup to start backuping keys to it
+        [self.crypto.backup trustKeyBackupVersion:keyBackupVersion trust:YES success:^{
+            NSLog(@"[MXRecoveryService] recoverKeyBackup: Current backup is now trusted");
+            success();
+        } failure:^(NSError * _Nonnull error) {
+            NSLog(@"[MXRecoveryService] recoverKeyBackup: trustKeyBackupVersion failed: %@", error);
+        }];
+    
+        // Restore the backup in background
+        // It will take time
+        [self.crypto.backup restoreUsingPrivateKeyKeyBackup:keyBackupVersion room:nil session:nil success:^(NSUInteger total, NSUInteger imported) {
+            NSLog(@"[MXRecoveryService] recoverKeyBackup: Backup is restored!");
+        } failure:^(NSError * _Nonnull error) {
+            NSLog(@"[MXRecoveryService] recoverKeyBackup: restoreUsingPrivateKeyKeyBackup failed: %@", error);
+        }];
+    }
+    else
+    {
+        NSLog(@"[MXRecoveryService] recoverKeyBackup: can't start backup");
+        success();
+    }
 }
 
 - (void)recoverCrossSigningWithSuccess:(void (^)(void))success
@@ -433,6 +458,7 @@
             
             // And update the state
             [self.crypto.crossSigning refreshStateWithSuccess:^(BOOL stateUpdated) {
+                NSLog(@"[MXRecoveryService] recoverCrossSigning: Cross-signing is up. State: %@", @(self.crypto.crossSigning.state));
                 success();
             } failure:^(NSError *error) {
                 NSLog(@"[MXRecoveryService] recoverCrossSigning: refreshStateWithSuccess failed: %@", error);
