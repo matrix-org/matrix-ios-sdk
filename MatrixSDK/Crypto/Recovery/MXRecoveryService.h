@@ -36,7 +36,7 @@ typedef NS_ENUM(NSInteger, MXRecoveryServiceErrorCode)
 
 
 /**
- `MXRecoveryService` manage the backup of secrets/keys used by `MXCrypto``.
+ `MXRecoveryService` manages the backup of secrets/keys used by `MXCrypto``.
  
  It stores secrets stored locally (`MXCryptoStore`) on the homeserver SSSS (`MXSecretStorage`)
  and vice versa.
@@ -78,13 +78,13 @@ typedef NS_ENUM(NSInteger, MXRecoveryServiceErrorCode)
 
 // Specified secret id`s are listed by `MXSecretId.*``
 - (BOOL)hasSecretWithSecretId:(NSString*)secretId;
-- (NSArray<NSString*>*)storedSecrets;
+- (NSArray<NSString*>*)secretsStoredInRecovery;
 
 
 #pragma mark - Secrets in local store
 
 - (BOOL)hasSecretLocally:(NSString*)secretId;
-- (NSArray*)locallyStoredSecrets;
+- (NSArray*)secretsStoredLocally;
 
 
 #pragma mark - Backup to recovery
@@ -95,8 +95,8 @@ typedef NS_ENUM(NSInteger, MXRecoveryServiceErrorCode)
  It will send keys from the local storage to the recovery on the homeserver.
  Those keys are sent encrypted thanks to SSSS that implements this recovery.
  
- @param secrets the id of secrets to store in the recovery. Nil will for all self.supportedSecrets.
- @param passphrase a passphrase used to generate the encryption key. Nil will generate a recovery key.
+ @param secrets secrets ids to store in the recovery. Nil will for all self.supportedSecrets.
+ @param passphrase a passphrase used to generate the recovery key to encrypt keys. Nil will generate it.
  
  @param success A block object called when the operation succeeds.
  @param failure A block object called when the operation fails.
@@ -109,7 +109,7 @@ typedef NS_ENUM(NSInteger, MXRecoveryServiceErrorCode)
 /**
  Update secrets to the existing recovery.
  
- @param secrets the id of secrets to store in the recovery. Nil for all self.supportedSecrets.
+ @param secrets secrets ids to store in the recovery. Nil for all self.supportedSecrets.
  @param privateKey the recovery private key.
  
  @param success A block object called when the operation succeeds.
@@ -121,16 +121,12 @@ typedef NS_ENUM(NSInteger, MXRecoveryServiceErrorCode)
                          failure:(void (^)(NSError *error))failure;
 
 
-// TODO
-//- (void)deleteRecovery;
-
-
 #pragma mark - Restore from recovery
 
 /**
  Restore keys from the recovery stored on the homeserver to the local storage.
  
- @param secrets the id of secrets to put in the recovery. Nil for all self.supportedSecrets.
+ @param secrets secrets ids to put in the recovery. Nil for all self.supportedSecrets.
  @param privateKey the recovery private key.
  @param recoverServices YES to call recoverServicesAssociatedWithSecrets in cascade.
  
@@ -153,7 +149,7 @@ typedef NS_ENUM(NSInteger, MXRecoveryServiceErrorCode)
  A key backup secret will trigger a key backup restoration.
  A cross-signing secret will make sure this device is cross-signed.
  
- @param secrets the id of secrets. Nil for all self.supportedSecrets.
+ @param secrets secrets ids. Nil for all self.supportedSecrets.
  
  @param success A block object called when the operation succeeds.
  @param failure A block object called when the operation fails.

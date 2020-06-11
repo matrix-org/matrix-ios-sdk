@@ -134,10 +134,10 @@
 
         // -> There should be no recovery on the HS
         XCTAssertFalse(recoveryService.hasRecovery);
-        XCTAssertEqual(recoveryService.storedSecrets.count, 0);
+        XCTAssertEqual(recoveryService.secretsStoredInRecovery.count, 0);
         
         // -> The service should see 3 keys to back up (MSK, SSK, USK)
-        XCTAssertEqual(recoveryService.locallyStoredSecrets.count, 3);
+        XCTAssertEqual(recoveryService.secretsStoredLocally.count, 3);
         
         // Create a recovery with a passphrase
         NSString *passphrase = @"A passphrase";
@@ -147,7 +147,7 @@
             
             // -> The 3 keys should be in the recovery
             XCTAssertTrue(recoveryService.hasRecovery);
-            XCTAssertEqual(recoveryService.storedSecrets.count, 3);
+            XCTAssertEqual(recoveryService.secretsStoredInRecovery.count, 3);
             
             // -> The recovery must indicate it has a passphrase
             XCTAssertTrue(recoveryService.usePassphrase);

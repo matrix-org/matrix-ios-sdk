@@ -102,18 +102,18 @@ NSString *const MXRecoveryServiceErrorDomain = @"org.matrix.sdk.recoveryService"
     return [_secretStorage hasSecretWithSecretId:secretId withSecretStorageKeyId:self.recoveryId];
 }
 
-- (NSArray<NSString*>*)storedSecrets
+- (NSArray<NSString*>*)secretsStoredInRecovery
 {
-    NSMutableArray *storedSecrets = [NSMutableArray array];
+    NSMutableArray *secretsStoredInRecovery = [NSMutableArray array];
     for (NSString *secretId in _supportedSecrets)
     {
         if ([self hasSecretWithSecretId:secretId])
         {
-            [storedSecrets addObject:secretId];
+            [secretsStoredInRecovery addObject:secretId];
         }
     }
     
-    return storedSecrets;
+    return secretsStoredInRecovery;
 }
 
 
@@ -124,7 +124,7 @@ NSString *const MXRecoveryServiceErrorDomain = @"org.matrix.sdk.recoveryService"
     return ([_cryptoStore secretWithSecretId:secretId] != nil);
 }
 
-- (NSArray*)locallyStoredSecrets
+- (NSArray*)secretsStoredLocally
 {
     NSMutableArray *locallyStoredSecrets = [NSMutableArray array];
     for (NSString *secretId in _supportedSecrets)
@@ -206,8 +206,8 @@ NSString *const MXRecoveryServiceErrorDomain = @"org.matrix.sdk.recoveryService"
     }
     
     // Backup only secrets we have locally
-    NSArray *locallyStoredSecrets = self.locallyStoredSecrets;
-    NSArray<NSString*> *secretsToStore = [locallyStoredSecrets mx_intersectArray:secrets];
+    NSArray *secretsStoredLocally = self.secretsStoredLocally;
+    NSArray<NSString*> *secretsToStore = [secretsStoredLocally mx_intersectArray:secrets];
     
     NSLog(@"[MXRecoveryService] updateRecovery: Backup secrets: %@", secretsToStore);
     
@@ -272,11 +272,11 @@ NSString *const MXRecoveryServiceErrorDomain = @"org.matrix.sdk.recoveryService"
     NSMutableArray<NSString*> *updatedSecrets = [NSMutableArray array];
     NSMutableArray<NSString*> *invalidSecrets = [NSMutableArray array];
 
-    NSArray<NSString*> *storedSecrets = self.storedSecrets;
-    NSArray<NSString*> *secretsToRecover = [storedSecrets mx_intersectArray:secrets];
+    NSArray<NSString*> *secretsStoredInRecovery = self.secretsStoredInRecovery;
+    NSArray<NSString*> *secretsToRecover = [secretsStoredInRecovery mx_intersectArray:secrets];
     if (!secretsToRecover.count)
     {
-        NSLog(@"[MXRecoveryService] recoverSecrets: No secrets to recover. storedSecrets: %@", storedSecrets);
+        NSLog(@"[MXRecoveryService] recoverSecrets: No secrets to recover. secretsStoredInRecovery: %@", secretsStoredInRecovery);
         
         // No recovery at all
         success([MXSecretRecoveryResult new]);
@@ -376,8 +376,8 @@ NSString *const MXRecoveryServiceErrorDomain = @"org.matrix.sdk.recoveryService"
     }
     
     // Start services only if we have secrets we have locally
-    NSArray *locallyStoredSecrets = self.locallyStoredSecrets;
-    NSArray<NSString*> *servicesToRecover = [locallyStoredSecrets mx_intersectArray:secrets];
+    NSArray *secretsStoredLocally = self.secretsStoredLocally;
+    NSArray<NSString*> *servicesToRecover = [secretsStoredLocally mx_intersectArray:secrets];
     
     NSLog(@"[MXRecoveryService] startServicesAssociatedWithSecrets: servicesToRecover: %@", servicesToRecover);
     
