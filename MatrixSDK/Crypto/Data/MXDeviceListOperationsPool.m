@@ -174,7 +174,8 @@
                     }
                     
                     // Be sure to force previous local state to verified for current device. Our own device il always locally verified.
-                    if ([self->crypto.mxSession.myDeviceId isEqualToString:deviceId])
+                    if ([self->crypto.mxSession.myUserId isEqualToString:userId]
+                        && [self->crypto.mxSession.myDeviceId isEqualToString:deviceId])
                     {
                         previousLocalState = MXDeviceVerified;
                     }
