@@ -10,6 +10,7 @@ Bug fix:
  * MXSecretShareManager: Fix crash in cancelRequestWithRequestId (vector-im/riot-ios/issues/3272).
  * MXIdentityService: Fix crash in handleHTTPClientError (vector-im/riot-ios/issues/3273).
  * MXDeviceList: Fix crash in refreshOutdatedDeviceLists (vector-im/riot-ios/issues/3118).
+ * MXDeviceListOperationsPool: Fix current device verification status put in MXDeviceUnknown instead of MXDeviceVerified (vector-im/riot-ios/issues/3343).
 
 API break:
  * MXCrossSigning: Removed MXCrossSigningStateCanCrossSignAsynchronously.
