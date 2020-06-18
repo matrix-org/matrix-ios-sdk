@@ -94,6 +94,55 @@ NSString *const MXRecoveryServiceErrorDomain = @"org.matrix.sdk.recoveryService"
     return (keyContent.passphrase != nil);
 }
 
+- (void)deleteRecoveryWithSuccess:(void (^)(void))success failure:(void (^)(NSError * _Nonnull))failure
+{
+    NSLog(@"[MXRecoveryService] deleteRecovery");
+    
+    dispatch_group_t dispatchGroup = dispatch_group_create();
+    __block NSError *error;
+    
+    for (NSString *secretId in self.secretsStoredInRecovery)
+    {
+        dispatch_group_enter(dispatchGroup);
+        
+        NSLog(@"[MXRecoveryService] deleteRecovery: Remove secret %@", secretId);
+        
+        [_secretStorage deleteSecretWithSecretId:secretId success:^{
+            dispatch_group_leave(dispatchGroup);
+        } failure:^(NSError * _Nonnull anError) {
+            NSLog(@"[MXRecoveryService] deleteRecovery: Failed to remove %@. Error: %@", secretId, anError);
+            
+            error = anError;
+            dispatch_group_leave(dispatchGroup);
+        }];
+    }
+    
+    dispatch_group_notify(dispatchGroup, dispatch_get_main_queue(), ^{
+        
+        NSLog(@"[MXRecoveryService] deleteRecovery: Completed");
+        
+        if (error)
+        {
+            failure(error);
+        }
+        else
+        {
+            // Delete the associated SSSS
+            NSString *ssssKeyId = self.recoveryId;
+            NSLog(@"[MXRecoveryService] deleteRecovery: Delete SSSS %@", ssssKeyId);
+            
+            if (ssssKeyId)
+            {
+                [self.secretStorage deleteKeyWithKeyId:ssssKeyId success:success failure:failure];
+            }
+            else
+            {
+                success();
+            }
+        }
+    });
+}
+
 
 #pragma mark - Secrets in the recovery
 

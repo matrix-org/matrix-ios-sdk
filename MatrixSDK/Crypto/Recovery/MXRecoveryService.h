@@ -73,6 +73,15 @@ typedef NS_ENUM(NSInteger, MXRecoveryServiceErrorCode)
  */
 - (BOOL)usePassphrase;
 
+/**
+ Delete the current recovery.
+ 
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+ */
+- (void)deleteRecoveryWithSuccess:(void (^)(void))success
+                          failure:(void (^)(NSError *error))failure;
+
 
 #pragma mark - Secrets in the recovery
 
