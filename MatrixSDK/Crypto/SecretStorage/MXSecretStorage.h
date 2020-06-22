@@ -79,7 +79,7 @@ typedef NS_ENUM(NSUInteger, MXSecretStorageErrorCode)
  
  @param privateKey the private key.
  @param key the key.
- @return complete called with a boolean that indicates whether or not the key matches
+ @param complete called with a boolean that indicates whether or not the key matches
  */
 - (void)checkPrivateKey:(NSData*)privateKey withKey:(MXSecretStorageKeyContent*)key complete:(void (^)(BOOL match))complete;
 
@@ -145,6 +145,17 @@ typedef NS_ENUM(NSUInteger, MXSecretStorageErrorCode)
                    success:(void (^)(NSString *unpaddedBase64Secret))success
                    failure:(void (^)(NSError *error))failure;
 
+
+/**
+ Check if a secret is stored on the server.
+ 
+ @param secretId the id of the secret.
+ @param keyId the id of the key to use to decrypt it. Use secretStorageKeysUsedForSecretWithSecretId to get it.
+ Nil will use the default key.
+ @return YES or NO.
+ */
+- (BOOL)hasSecretWithSecretId:(NSString*)secretId
+       withSecretStorageKeyId:(nullable NSString*)keyId;
 
 @end
 
