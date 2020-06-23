@@ -80,33 +80,28 @@
         if (stringValue)
         {
             NSInteger value = [[is substringWithRange:range] integerValue];
-
-            // Check the targeted room member count against value
-            MXRoom *room = [mxSession roomWithRoomId:event.roomId];
+            NSUInteger roomMemberCount = roomState.membersCount.members;
             
-            // sanity checks
-            if (room && room.summary)
+            // Check the targeted room member count against value
+            if (nil == op || [op isEqualToString:@"=="])
             {
-                if (nil == op || [op isEqualToString:@"=="])
-                {
-                    isSatisfied = (value == room.summary.membersCount.members);
-                }
-                else if ([op isEqualToString:@"<"])
-                {
-                    isSatisfied = (value < room.summary.membersCount.members);
-                }
-                else if ([op isEqualToString:@">"])
-                {
-                    isSatisfied = (value > room.summary.membersCount.members);
-                }
-                else if ([op isEqualToString:@">="])
-                {
-                    isSatisfied = (value >= room.summary.membersCount.members);
-                }
-                else if ([op isEqualToString:@"<="])
-                {
-                    isSatisfied = (value <= room.summary.membersCount.members);
-                }
+                isSatisfied = (value == roomMemberCount);
+            }
+            else if ([op isEqualToString:@"<"])
+            {
+                isSatisfied = (value < roomMemberCount);
+            }
+            else if ([op isEqualToString:@">"])
+            {
+                isSatisfied = (value > roomMemberCount);
+            }
+            else if ([op isEqualToString:@">="])
+            {
+                isSatisfied = (value >= roomMemberCount);
+            }
+            else if ([op isEqualToString:@"<="])
+            {
+                isSatisfied = (value <= roomMemberCount);
             }
         }
     }
