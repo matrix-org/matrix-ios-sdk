@@ -11,7 +11,7 @@ Bug fix:
  * MXSession: Add ignoreSessionState to backgroundSync method.
  * MXCreateRoomReponse: Remove undocumented roomAlias property (vector-im/riot-ios/issues/3300).
  * MXDeviceList: Fix crash in refreshOutdatedDeviceLists (vector-im/riot-ios/issues/3118).
- * MXPushRuleSenderNotificationPermissionConditionChecker: Remove redundant room check (vector-im/riot-ios/issues/3354).
+ * MXPushRuleSenderNotificationPermissionConditionChecker & MXPushRuleRoomMemberCountConditionChecker: Remove redundant room check (vector-im/riot-ios/issues/3354).
 
 API break:
  * MXCrossSigning: Removed MXCrossSigningStateCanCrossSignAsynchronously.
