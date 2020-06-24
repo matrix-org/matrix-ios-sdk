@@ -381,4 +381,59 @@
     }];
 }
 
+
+// Test privateKeyFromRecoveryKey & privateKeyFromPassphrase
+//
+// - Have Alice with cross-signing and key backup bootstrapped
+// - Create a recovery
+// - Delete it
+// -> No more recovery
+// -> No more underlying SSSS
+- (void)testDeleteRecovery
+{
+    // - Have Alice with cross-signing and key backup bootstrapped
+    [self doTestWithAliceWithCrossSigningAndKeyBackup:self readyToTest:^(MXSession *aliceSession, NSString *roomId, XCTestExpectation *expectation) {
+        
+        MXRecoveryService *recoveryService = aliceSession.crypto.recoveryService;
+        
+        // - Create a recovery
+        [recoveryService createRecoveryForSecrets:nil withPassphrase:nil success:^(MXSecretStorageKeyCreationInfo * _Nonnull keyCreationInfo) {
+            
+            // Check the test is right
+            XCTAssertTrue(recoveryService.hasRecovery);
+            XCTAssertEqual(recoveryService.secretsStoredInRecovery.count, 4);
+            
+            NSString *ssssKeyId = recoveryService.recoveryId;
+            
+            // - Delete it
+            [recoveryService deleteRecoveryWithSuccess:^{
+                
+                // -> No more recovery
+                XCTAssertFalse(recoveryService.hasRecovery);
+                XCTAssertEqual(recoveryService.secretsStoredInRecovery.count, 0);
+                XCTAssertEqual(recoveryService.secretsStoredLocally.count, 4);
+                
+                // -> No more underlying SSSS
+                MXSecretStorage *secretStorage = aliceSession.crypto.secretStorage;
+                XCTAssertNil(secretStorage.defaultKey);
+                XCTAssertFalse([secretStorage hasSecretWithSecretId:MXSecretId.crossSigningMaster withSecretStorageKeyId:ssssKeyId]);
+                XCTAssertFalse([secretStorage hasSecretWithSecretId:MXSecretId.crossSigningSelfSigning withSecretStorageKeyId:ssssKeyId]);
+                XCTAssertFalse([secretStorage hasSecretWithSecretId:MXSecretId.crossSigningUserSigning withSecretStorageKeyId:ssssKeyId]);
+                XCTAssertFalse([secretStorage hasSecretWithSecretId:MXSecretId.keyBackup withSecretStorageKeyId:ssssKeyId]);
+
+                [expectation fulfill];
+                
+            } failure:^(NSError * _Nonnull error) {
+                XCTFail(@"The operation should not fail - NSError: %@", error);
+                [expectation fulfill];
+            }];
+            
+        } failure:^(NSError * _Nonnull error) {
+            XCTFail(@"The operation should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+    }];
+}
+
+
 @end
