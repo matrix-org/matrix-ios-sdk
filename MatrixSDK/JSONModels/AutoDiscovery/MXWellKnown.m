@@ -16,6 +16,14 @@
 
 #import "MXWellKnown.h"
 
+@interface MXWellKnown()
+{
+    // The original dictionary to store extented data
+    NSDictionary *JSONDictionary;
+}
+
+@end
+
 @implementation MXWellKnown
 
 + (instancetype)modelFromJSON:(NSDictionary *)JSONDictionary
@@ -31,9 +39,15 @@
 
         MXJSONModelSetMXJSONModel(wellknown.identityServer, MXWellKnownBaseConfig, JSONDictionary[@"m.identity_server"]);
         MXJSONModelSetMXJSONModel(wellknown.integrations, MXWellknownIntegrations, JSONDictionary[@"m.integrations"]);
+        wellknown->JSONDictionary = JSONDictionary;
     }
 
     return wellknown;
+}
+
+- (NSDictionary *)JSONDictionary
+{
+    return JSONDictionary;
 }
 
 - (NSString *)description
@@ -52,6 +66,7 @@
         _homeServer = [aDecoder decodeObjectForKey:@"m.homeserver"];
         _identityServer = [aDecoder decodeObjectForKey:@"m.identity_server"];
         _integrations = [aDecoder decodeObjectForKey:@"m.integrations"];
+        JSONDictionary = [aDecoder decodeObjectForKey:@"JSONDictionary"];
     }
     return self;
 }
@@ -61,6 +76,7 @@
     [aCoder encodeObject:_homeServer forKey:@"m.homeserver"];
     [aCoder encodeObject:_identityServer forKey:@"m.identity_server"];
     [aCoder encodeObject:_integrations forKey:@"m.integrations"];
+    [aCoder encodeObject:JSONDictionary forKey:@"JSONDictionary"];
 }
 
 @end

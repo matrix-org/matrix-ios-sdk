@@ -5,6 +5,7 @@ Improvements:
  * MXCrypto: Only create one olm session at a time per device (vector-im/riot-ios/issues/2331).
  * MXCrossSigning: Add the bootstrapWithAuthParams method.
  * MXRecoveryService: Create this service to manage keys we want to store in SSSS.
+ * MXWellKnown: Add JSONDictionary implementation to return original and extended data.
 
 Bug fix:
  * MXSecretShareManager: Fix crash in cancelRequestWithRequestId (vector-im/riot-ios/issues/3272).
