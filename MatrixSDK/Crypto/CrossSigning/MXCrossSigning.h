@@ -94,6 +94,7 @@ typedef NS_ENUM(NSInteger, MXCrossSigningErrorCode)
 @property (nonatomic, readonly) MXCrossSigningState state;
 @property (nonatomic, readonly) BOOL canTrustCrossSigning;
 @property (nonatomic, readonly) BOOL canCrossSign;
+@property (nonatomic, readonly) BOOL hasAllPrivateKeys;
 
 /**
  Check update for this device cross-signing state (self.state).

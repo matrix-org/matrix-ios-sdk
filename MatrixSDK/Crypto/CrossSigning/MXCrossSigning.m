@@ -48,6 +48,15 @@ NSString *const MXCrossSigningErrorDomain = @"org.matrix.sdk.crosssigning";
     return (_state >= MXCrossSigningStateTrustCrossSigning);
 }
 
+- (BOOL)hasAllPrivateKeys
+{
+    id<MXCryptoStore> cryptoStore = self.crypto.store;
+    
+    return ([cryptoStore secretWithSecretId:MXSecretId.crossSigningMaster]
+            && [cryptoStore secretWithSecretId:MXSecretId.crossSigningSelfSigning]
+            && [cryptoStore secretWithSecretId:MXSecretId.crossSigningUserSigning]);
+}
+
 - (void)bootstrapWithPassword:(NSString*)password
                       success:(void (^)(void))success
                       failure:(void (^)(NSError *error))failure
@@ -282,12 +291,51 @@ NSString *const MXCrossSigningErrorDomain = @"org.matrix.sdk.crosssigning";
 {
     NSLog(@"[MXCrossSigning] requestPrivateKeysToDeviceIds: %@", deviceIds);
     
-    // Make a secret share request for USK and SSK
+    // Make a secret share request for MSK, USK and SSK
     dispatch_group_t successGroup = dispatch_group_create();
     dispatch_group_t onPrivateKeysReceivedGroup = dispatch_group_create();
     
-    __block NSString *uskRequestId, *sskRequestId;
+    __block NSString *mskRequestId, *uskRequestId, *sskRequestId;
     
+    
+    // MSK
+    dispatch_group_enter(successGroup);
+    dispatch_group_enter(onPrivateKeysReceivedGroup);
+    [self.crypto.secretShareManager requestSecret:MXSecretId.crossSigningMaster toDeviceIds:deviceIds success:^(NSString * _Nonnull requestId) {
+        mskRequestId = requestId;
+        dispatch_group_leave(successGroup);
+    } onSecretReceived:^BOOL(NSString * _Nonnull secret) {
+        
+        BOOL isSecretValid = NO;
+        if (self.myUserCrossSigningKeys.masterKeys.keys)
+        {
+            isSecretValid = [self isSecretValid:secret forPublicKeys:self.myUserCrossSigningKeys.masterKeys.keys];
+        }
+        else
+        {
+            // Accept the secret anyway (It should not happen)
+            isSecretValid = YES;
+        }
+        
+        NSLog(@"[MXCrossSigning] requestPrivateKeysToDeviceIds: Got MSK. isSecretValid: %@", @(isSecretValid));
+        if (isSecretValid)
+        {
+            [self.crypto.store storeSecret:secret withSecretId:MXSecretId.crossSigningMaster];
+            dispatch_group_leave(onPrivateKeysReceivedGroup);
+        }
+        return isSecretValid;
+    } failure:^(NSError * _Nonnull error) {
+        // Cancel the other request
+        if (mskRequestId)
+        {
+            [self.crypto.secretShareManager cancelRequestWithRequestId:mskRequestId success:^{} failure:^(NSError * _Nonnull error) {
+            }];
+        }
+        failure(error);
+    }];
+    
+    
+    // USK
     dispatch_group_enter(successGroup);
     dispatch_group_enter(onPrivateKeysReceivedGroup);
     [self.crypto.secretShareManager requestSecret:MXSecretId.crossSigningUserSigning toDeviceIds:deviceIds success:^(NSString * _Nonnull requestId) {
@@ -323,6 +371,8 @@ NSString *const MXCrossSigningErrorDomain = @"org.matrix.sdk.crosssigning";
         failure(error);
     }];
     
+    
+    // SSK
     dispatch_group_enter(successGroup);
     dispatch_group_enter(onPrivateKeysReceivedGroup);
     [self.crypto.secretShareManager requestSecret:MXSecretId.crossSigningSelfSigning toDeviceIds:deviceIds success:^(NSString * _Nonnull requestId) {

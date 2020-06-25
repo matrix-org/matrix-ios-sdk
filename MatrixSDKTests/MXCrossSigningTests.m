@@ -470,6 +470,7 @@
 //   This simulates a self verification and trigger cross-signing behind the shell
 // - The 2nd device requests cross-signing keys from the 1st one
 // -> The 2nd device should be able to cross-sign now
+// -> The 2nd device must have all cross-signing private keys
 - (void)testPrivateKeysGossiping
 {
     // - Create Alice
@@ -498,6 +499,9 @@
 
                                     // -> The 2nd device should be able to cross-sign now
                                     XCTAssertEqual(newAliceSession.crypto.crossSigning.state, MXCrossSigningStateCanCrossSign);
+                                    
+                                    // -> The 2nd device must have all cross-signing private keys
+                                    XCTAssertTrue(newAliceSession.crypto.crossSigning.hasAllPrivateKeys);
                                     [expectation fulfill];
 
                                 } failure:^(NSError * _Nonnull error) {
