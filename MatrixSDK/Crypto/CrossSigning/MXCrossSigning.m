@@ -106,10 +106,16 @@ NSString *const MXCrossSigningErrorDomain = @"org.matrix.sdk.crosssigning";
                 } failure:failure];
             } failure:failure];
             
-        } failure:failure];
+        } failure:^(NSError * _Nonnull error) {
+            dispatch_async(dispatch_get_main_queue(), ^{
+                failure(error);
+            });
+        }];
         
     } failure:^(NSError * _Nonnull error) {
-        failure(error);
+        dispatch_async(dispatch_get_main_queue(), ^{
+            failure(error);
+        });
     }];
 }
 
