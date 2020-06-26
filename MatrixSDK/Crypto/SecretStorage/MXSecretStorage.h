@@ -68,6 +68,19 @@ typedef NS_ENUM(NSUInteger, MXSecretStorageErrorCode)
                                failure:(void (^)(NSError *error))failure;
 
 /**
+ Delete a SSSS.
+ 
+ @param keyId the ID of the SSSS key.
+ 
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)deleteKeyWithKeyId:(nullable NSString*)keyId
+                               success:(void (^)(void))success
+                               failure:(void (^)(NSError *error))failure;
+
+/**
  Retrieve a key from the user's account_data.
  
  @return the key.
@@ -79,7 +92,7 @@ typedef NS_ENUM(NSUInteger, MXSecretStorageErrorCode)
  
  @param privateKey the private key.
  @param key the key.
- @return complete called with a boolean that indicates whether or not the key matches
+ @param complete called with a boolean that indicates whether or not the key matches
  */
 - (void)checkPrivateKey:(NSData*)privateKey withKey:(MXSecretStorageKeyContent*)key complete:(void (^)(BOOL match))complete;
 
@@ -88,12 +101,12 @@ typedef NS_ENUM(NSUInteger, MXSecretStorageErrorCode)
 
  The default key will be used to encrypt all secrets that the user would expect to be available on all their clients.
  
- @param keyId the id of the key to set as default.
+ @param keyId the id of the key to set as default. Nil to reset the default key.
  @param success A block object called when the operation succeeds.
  @param failure A block object called when the operation fails.
  @return a MXHTTPOperation instance.
  */
-- (MXHTTPOperation *)setAsDefaultKeyWithKeyId:(NSString*)keyId
+- (MXHTTPOperation *)setAsDefaultKeyWithKeyId:(nullable NSString*)keyId
                                       success:(void (^)(void))success
                                       failure:(void (^)(NSError *error))failure;
 
@@ -145,6 +158,29 @@ typedef NS_ENUM(NSUInteger, MXSecretStorageErrorCode)
                    success:(void (^)(NSString *unpaddedBase64Secret))success
                    failure:(void (^)(NSError *error))failure;
 
+
+/**
+ Check if a secret is stored on the server.
+ 
+ @param secretId the id of the secret.
+ @param keyId the id of the key to use to decrypt it. Use secretStorageKeysUsedForSecretWithSecretId to get it.
+ Nil will use the default key.
+ @return YES or NO.
+ */
+- (BOOL)hasSecretWithSecretId:(NSString*)secretId
+       withSecretStorageKeyId:(nullable NSString*)keyId;
+
+/**
+ Remove a secret from the server.
+ 
+ @param secretId the id of the secret.
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation *)deleteSecretWithSecretId:(NSString*)secretId
+                                      success:(void (^)(void))success
+                                      failure:(void (^)(NSError *error))failure;
 
 @end
 

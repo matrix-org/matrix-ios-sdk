@@ -340,8 +340,8 @@
                                                readyToTest:^(MXSession *aliceSession1, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation)
      {
          // - Bootstrap cross-signing x2
-         [aliceSession1.crypto.crossSigning bootstrapWithPassword:MXTESTS_ALICE_PWD success:^{
-             [bobSession.crypto.crossSigning bootstrapWithPassword:MXTESTS_BOB_PWD success:^{
+         [aliceSession1.crypto.crossSigning setupWithPassword:MXTESTS_ALICE_PWD success:^{
+             [bobSession.crypto.crossSigning setupWithPassword:MXTESTS_BOB_PWD success:^{
                  
                  [self loginUserOnANewDevice:aliceSession1.matrixRestClient.credentials withPassword:MXTESTS_ALICE_PWD onComplete:^(MXSession *aliceSession2) {
                      

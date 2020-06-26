@@ -39,6 +39,7 @@
 
 #import "MXSecretStorage_Private.h"
 #import "MXSecretShareManager_Private.h"
+#import "MXRecoveryService_Private.h"
 
 #import "MXKeyVerificationManager_Private.h"
 #import "MXDeviceInfo_Private.h"
@@ -1803,6 +1804,8 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
         _secretShareManager = [[MXSecretShareManager alloc] initWithCrypto:self];
 
         _crossSigning = [[MXCrossSigning alloc] initWithCrypto:self];
+        
+        _recoveryService = [[MXRecoveryService alloc] initWithCrypto:self];
         
         lastNewSessionForcedDates = [MXUsersDevicesMap new];
         

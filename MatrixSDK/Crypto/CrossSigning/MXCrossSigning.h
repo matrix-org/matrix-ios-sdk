@@ -94,6 +94,7 @@ typedef NS_ENUM(NSInteger, MXCrossSigningErrorCode)
 @property (nonatomic, readonly) MXCrossSigningState state;
 @property (nonatomic, readonly) BOOL canTrustCrossSigning;
 @property (nonatomic, readonly) BOOL canCrossSign;
+@property (nonatomic, readonly) BOOL hasAllPrivateKeys;
 
 /**
  Check update for this device cross-signing state (self.state).
@@ -112,9 +113,9 @@ typedef NS_ENUM(NSInteger, MXCrossSigningErrorCode)
  @param success A block object called when the operation succeeds.
  @param failure A block object called when the operation fails.
  */
-- (void)bootstrapWithPassword:(NSString*)password
-                      success:(void (^)(void))success
-                      failure:(void (^)(NSError *error))failure;
+- (void)setupWithPassword:(NSString*)password
+                  success:(void (^)(void))success
+                  failure:(void (^)(NSError *error))failure;
 
 /**
  Bootstrap cross-signing using authentication parameters.
@@ -124,9 +125,9 @@ typedef NS_ENUM(NSInteger, MXCrossSigningErrorCode)
  @param success A block object called when the operation succeeds.
  @param failure A block object called when the operation fails.
  */
-- (void)bootstrapWithAuthParams:(NSDictionary*)authParams
-                        success:(void (^)(void))success
-                        failure:(void (^)(NSError *error))failure;
+- (void)setupWithAuthParams:(NSDictionary*)authParams
+                    success:(void (^)(void))success
+                    failure:(void (^)(NSError *error))failure;
 
 
 /**
