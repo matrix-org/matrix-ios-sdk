@@ -112,9 +112,9 @@ typedef NS_ENUM(NSInteger, MXCrossSigningErrorCode)
  @param success A block object called when the operation succeeds.
  @param failure A block object called when the operation fails.
  */
-- (void)bootstrapWithPassword:(NSString*)password
-                      success:(void (^)(void))success
-                      failure:(void (^)(NSError *error))failure;
+- (void)setupWithPassword:(NSString*)password
+                  success:(void (^)(void))success
+                  failure:(void (^)(NSError *error))failure;
 
 /**
  Bootstrap cross-signing using authentication parameters.
@@ -124,9 +124,9 @@ typedef NS_ENUM(NSInteger, MXCrossSigningErrorCode)
  @param success A block object called when the operation succeeds.
  @param failure A block object called when the operation fails.
  */
-- (void)bootstrapWithAuthParams:(NSDictionary*)authParams
-                        success:(void (^)(void))success
-                        failure:(void (^)(NSError *error))failure;
+- (void)setupWithAuthParams:(NSDictionary*)authParams
+                    success:(void (^)(void))success
+                    failure:(void (^)(NSError *error))failure;
 
 
 /**

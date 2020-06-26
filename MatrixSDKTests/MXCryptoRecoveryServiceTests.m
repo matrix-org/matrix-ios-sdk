@@ -59,7 +59,7 @@
     [matrixSDKTestsE2EData doE2ETestWithAliceInARoom:testCase andStore:[[MXMemoryStore alloc] init] readyToTest:^(MXSession *aliceSession, NSString *roomId, XCTestExpectation *expectation) {
 
          // - Bootstrap cross-singing on Alice using password
-         [aliceSession.crypto.crossSigning bootstrapWithPassword:MXTESTS_ALICE_PWD success:^{
+         [aliceSession.crypto.crossSigning setupWithPassword:MXTESTS_ALICE_PWD success:^{
              
              // Send a message to a have megolm key in the store
              MXRoom *room = [aliceSession roomWithRoomId:roomId];
