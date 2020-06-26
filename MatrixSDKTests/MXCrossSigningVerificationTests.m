@@ -141,7 +141,7 @@
                               password:(NSString*)password
                               completion:(void (^)(void))completionBlock
 {
-    [session.crypto.crossSigning bootstrapWithPassword:password success:^{
+    [session.crypto.crossSigning setupWithPassword:password success:^{
         completionBlock();
     } failure:^(NSError *error) {
         XCTAssert(NO, @"Cannot set up intial test conditions - error: %@", error);

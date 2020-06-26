@@ -48,9 +48,9 @@ NSString *const MXCrossSigningErrorDomain = @"org.matrix.sdk.crosssigning";
     return (_state >= MXCrossSigningStateTrustCrossSigning);
 }
 
-- (void)bootstrapWithPassword:(NSString*)password
-                      success:(void (^)(void))success
-                      failure:(void (^)(NSError *error))failure
+- (void)setupWithPassword:(NSString*)password
+                  success:(void (^)(void))success
+                  failure:(void (^)(NSError *error))failure
 {
     MXCredentials *myCreds = _crypto.mxSession.matrixRestClient.credentials;
 
@@ -64,14 +64,14 @@ NSString *const MXCrossSigningErrorDomain = @"org.matrix.sdk.crosssigning";
                                      @"type": kMXLoginFlowTypePassword
                                      };
         
-        [self bootstrapWithAuthParams:authParams success:success failure:failure];
+        [self setupWithAuthParams:authParams success:success failure:failure];
         
     } failure:failure];
 }
 
-- (void)bootstrapWithAuthParams:(NSDictionary*)authParams
-                        success:(void (^)(void))success
-                        failure:(void (^)(NSError *error))failure
+- (void)setupWithAuthParams:(NSDictionary*)authParams
+                    success:(void (^)(void))success
+                    failure:(void (^)(NSError *error))failure
 {
     MXCredentials *myCreds = _crypto.mxSession.matrixRestClient.credentials;
     
@@ -79,7 +79,7 @@ NSString *const MXCrossSigningErrorDomain = @"org.matrix.sdk.crosssigning";
     NSDictionary<NSString*, NSData*> *privateKeys;
     MXCrossSigningInfo *keys = [self createKeys:&privateKeys];
     
-    NSLog(@"[MXCrossSigning] Bootstrap on device %@. MSK: %@", myCreds.deviceId, keys.masterKeys.keys);
+    NSLog(@"[MXCrossSigning] setup on device %@. MSK: %@", myCreds.deviceId, keys.masterKeys.keys);
     
     // Delegate the storage of them
     [self storeCrossSigningKeys:privateKeys success:^{
@@ -106,10 +106,16 @@ NSString *const MXCrossSigningErrorDomain = @"org.matrix.sdk.crosssigning";
                 } failure:failure];
             } failure:failure];
             
-        } failure:failure];
+        } failure:^(NSError * _Nonnull error) {
+            dispatch_async(dispatch_get_main_queue(), ^{
+                failure(error);
+            });
+        }];
         
     } failure:^(NSError * _Nonnull error) {
-        failure(error);
+        dispatch_async(dispatch_get_main_queue(), ^{
+            failure(error);
+        });
     }];
 }
 
