@@ -299,6 +299,9 @@ NSString *const MXCrossSigningErrorDomain = @"org.matrix.sdk.crosssigning";
     
     // Make a secret share request for MSK, USK and SSK
     dispatch_group_t successGroup = dispatch_group_create();
+    
+    // Note: this may never resolve because this depends on other user's devices.
+    // We could improve it a bit but we will never fix all cases
     dispatch_group_t onPrivateKeysReceivedGroup = dispatch_group_create();
     
     __block NSString *mskRequestId, *uskRequestId, *sskRequestId;
