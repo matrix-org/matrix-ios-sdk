@@ -9,6 +9,7 @@ Improvements:
  * MXSecretStorage: Add options to remove secrets and SSSS. 
  * MXWellKnown: Add JSONDictionary implementation to return original and extended data.
  * MXCrossSigning: Gossip the master key (vector-im/riot-ios/issues/3346).
+ * MXRestClient: Add authSessionForRequestWithMethod to get an auth session for any requests.
 
 Bug fix:
  * MXSecretShareManager: Fix crash in cancelRequestWithRequestId (vector-im/riot-ios/issues/3272).

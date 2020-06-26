@@ -469,6 +469,27 @@ typedef MXHTTPOperation* (^MXRestClientIdentityServerAccessTokenHandler)(void (^
                                                 failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 
+#pragma mark - Authenticated session
+/**
+ Get an authentication session for a given request.
+
+ @param httpMethod The HTTP method for the request.
+ @param path The request path.
+ @param parameters Request parameters.
+ 
+ @param success A block object called when the operation succeeds. It provides the server response
+                as an MXAuthenticationSession instance.
+ @param failure A block object called when the operation fails.
+ 
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)authSessionForRequestWithMethod:(NSString *)httpMethod
+                                               path:(NSString *)path
+                                         parameters:(NSDictionary*)parameters
+                                            success:(void (^)(MXAuthenticationSession *authSession))success
+                                            failure:(void (^)(NSError *error))failure;
+
+
 #pragma mark - Account data
 /**
  Set some account_data for the client.
@@ -2578,4 +2599,5 @@ typedef MXHTTPOperation* (^MXRestClientIdentityServerAccessTokenHandler)(void (^
                                 limit:(NSUInteger)limit
                               success:(void (^)(MXAggregationPaginatedResponse *paginatedResponse))success
                               failure:(void (^)(NSError *error))failure;
+
 @end
