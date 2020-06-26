@@ -7,6 +7,7 @@ Improvements:
  * MXRecoveryService: Create this service to manage keys we want to store in SSSS.
  * MXRecoveryService: Add deleteRecovery.
  * MXSecretStorage: Add options to remove secrets and SSSS. * MXWellKnown: Add JSONDictionary implementation to return original and extended data.
+ * MXRestClient: Add authSessionForRequestWithMethod to get an auth session for any requests.
 
 Bug fix:
  * MXSecretShareManager: Fix crash in cancelRequestWithRequestId (vector-im/riot-ios/issues/3272).
