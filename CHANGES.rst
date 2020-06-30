@@ -1,4 +1,4 @@
-Changes in Matrix iOS SDK in 0.16.6 (2020-05-xx)
+Changes in Matrix iOS SDK in 0.16.6 (2020-06-30)
 ================================================
 
 Improvements:
