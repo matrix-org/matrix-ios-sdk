@@ -262,7 +262,7 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
             XCTAssertEqual(trust.trustedDevicesProgress.fractionCompleted, 1);
             
             // - Bob rotates their cross-signing
-            [bobSession1.crypto.crossSigning bootstrapWithPassword:MXTESTS_BOB_PWD success:^{
+            [bobSession1.crypto.crossSigning setupWithPassword:MXTESTS_BOB_PWD success:^{
             } failure:^(NSError *error) {
                 XCTFail(@"Cannot set up intial test conditions - error: %@", error);
                 [expectation fulfill];

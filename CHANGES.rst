@@ -1,4 +1,27 @@
-Changes in Matrix iOS SDK in 0.16.5 (2020-05-xx)
+Changes in Matrix iOS SDK in 0.16.6 (2020-06-30)
+================================================
+
+Improvements:
+ * MXCrypto: Only create one olm session at a time per device (vector-im/riot-ios/issues/2331).
+ * MXCrossSigning: Add the bootstrapWithAuthParams method.
+ * MXRecoveryService: Create this service to manage keys we want to store in SSSS.
+ * MXRecoveryService: Add deleteRecovery.
+ * MXRecoveryService: Add options to create and delete key backup automatically (vector-im/riot-ios/issues/3361).
+ * MXSecretStorage: Add options to remove secrets and SSSS. 
+ * MXWellKnown: Add JSONDictionary implementation to return original and extended data.
+ * MXCrossSigning: Gossip the master key (vector-im/riot-ios/issues/3346).
+ * MXRestClient: Add authSessionForRequestWithMethod to get an auth session for any requests.
+
+Bug fix:
+ * MXSecretShareManager: Fix crash in cancelRequestWithRequestId (vector-im/riot-ios/issues/3272).
+ * MXIdentityService: Fix crash in handleHTTPClientError (vector-im/riot-ios/issues/3273).
+ * MXDeviceList: Fix crash in refreshOutdatedDeviceLists (vector-im/riot-ios/issues/3118).
+ * MXDeviceListOperationsPool: Fix current device verification status put in MXDeviceUnknown instead of MXDeviceVerified (vector-im/riot-ios/issues/3343).
+
+API break:
+ * MXCrossSigning: Removed MXCrossSigningStateCanCrossSignAsynchronously.
+
+Changes in Matrix iOS SDK in 0.16.5 (2020-05-18)
 ================================================
 
 Improvements:

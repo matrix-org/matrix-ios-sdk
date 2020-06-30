@@ -160,6 +160,57 @@ static NSString* const kSecretStorageZeroString = @"\0\0\0\0\0\0\0\0\0\0\0\0\0\0
     return operation;
 }
 
+- (MXHTTPOperation*)deleteKeyWithKeyId:(nullable NSString*)keyId
+                               success:(void (^)(void))success
+                               failure:(void (^)(NSError *error))failure
+{
+    MXHTTPOperation *operation = [MXHTTPOperation new];
+    
+    if (!keyId)
+    {
+        keyId = self.defaultKeyId;
+    }
+    if (!keyId)
+    {
+        NSLog(@"[MXSecretStorage] deleteKeyWithKeyId: ERROR: No key id provided and no default key id");
+        failure([self errorWithCode:MXSecretStorageUnknownKeyCode reason:@"No key id"]);
+        return operation;
+    }
+    
+    MXWeakify(self);
+    dispatch_async(processingQueue, ^{
+        MXStrongifyAndReturnIfNil(self);
+        
+        NSString *accountDataId = [self storageKeyIdForKey:keyId];
+        
+        // We can only clear the current content
+        MXWeakify(self);
+        MXHTTPOperation *operation2 = [self setAccountData:@{} forType:accountDataId success:^{
+            MXStrongifyAndReturnIfNil(self);
+            
+            // If this SSSS is the default one, do not advertive like this anymore
+            if ([self.defaultKeyId isEqualToString:keyId])
+            {
+                MXHTTPOperation *operation3 = [self setAsDefaultKeyWithKeyId:nil success:success failure:failure];
+                [operation mutateTo:operation3];
+            }
+            else
+            {
+                success();
+            }
+            
+        } failure:^(NSError *error) {
+            dispatch_async(dispatch_get_main_queue(), ^{
+                failure(error);
+            });
+        }];
+        
+        [operation mutateTo:operation2];
+    });
+    
+    return operation;
+}
+
 - (nullable MXSecretStorageKeyContent *)keyWithKeyId:(NSString*)keyId
 {
     MXSecretStorageKeyContent *key;
@@ -199,13 +250,20 @@ static NSString* const kSecretStorageZeroString = @"\0\0\0\0\0\0\0\0\0\0\0\0\0\0
     });
 }
 
-- (MXHTTPOperation *)setAsDefaultKeyWithKeyId:(NSString*)keyId
+- (MXHTTPOperation *)setAsDefaultKeyWithKeyId:(nullable NSString*)keyId
                                       success:(void (^)(void))success
                                       failure:(void (^)(NSError *error))failure
 {
-    return [self.mxSession setAccountData:@{
-                                            @"key": keyId
-                                            } forType:kMXEventTypeStringSecretStorageDefaultKey
+    NSDictionary *data = @{};
+    
+    if (keyId)
+    {
+        data = @{
+                 @"key": keyId
+                 };
+    }
+    
+    return [self.mxSession setAccountData:data forType:kMXEventTypeStringSecretStorageDefaultKey
                                   success:success failure:failure];
 }
 
@@ -420,6 +478,49 @@ static NSString* const kSecretStorageZeroString = @"\0\0\0\0\0\0\0\0\0\0\0\0\0\0
             }
         });
     });
+}
+
+- (BOOL)hasSecretWithSecretId:(NSString*)secretId
+       withSecretStorageKeyId:(nullable NSString*)keyId
+{
+    if (!keyId)
+    {
+        keyId = self.defaultKeyId;
+    }
+    if (!keyId)
+    {
+        return NO;
+    }
+    
+    NSDictionary *accountData = [_mxSession.accountData accountDataForEventType:secretId];
+    
+    // Only check key presence. Do not try to parse JSON.
+    return (accountData[@"encrypted"][keyId] != nil);
+}
+
+
+- (MXHTTPOperation *)deleteSecretWithSecretId:(NSString*)secretId
+                                      success:(void (^)(void))success
+                                      failure:(void (^)(NSError *error))failure
+{
+    NSDictionary *accountData = [_mxSession.accountData accountDataForEventType:secretId];
+    if (!accountData)
+    {
+        NSLog(@"[MXSecretStorage] removeSecretWithSecretId: ERROR: Unknown secret id %@", secretId);
+        failure([self errorWithCode:MXSecretStorageUnknownSecretCode reason:[NSString stringWithFormat:@"Unknown secret %@", secretId]]);
+        return nil;
+    }
+    
+    // We can only clear the current content
+    return [self setAccountData:@{} forType:secretId success:^{
+        dispatch_async(dispatch_get_main_queue(), ^{
+            success();
+        });
+    } failure:^(NSError *error) {
+        dispatch_async(dispatch_get_main_queue(), ^{
+            failure(error);
+        });
+    }];
 }
 
 

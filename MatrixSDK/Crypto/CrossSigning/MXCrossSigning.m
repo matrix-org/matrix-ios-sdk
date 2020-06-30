@@ -48,60 +48,88 @@ NSString *const MXCrossSigningErrorDomain = @"org.matrix.sdk.crosssigning";
     return (_state >= MXCrossSigningStateTrustCrossSigning);
 }
 
-- (void)bootstrapWithPassword:(NSString*)password
-                      success:(void (^)(void))success
-                      failure:(void (^)(NSError *error))failure
+- (BOOL)hasAllPrivateKeys
+{
+    id<MXCryptoStore> cryptoStore = self.crypto.store;
+    
+    return ([cryptoStore secretWithSecretId:MXSecretId.crossSigningMaster]
+            && [cryptoStore secretWithSecretId:MXSecretId.crossSigningSelfSigning]
+            && [cryptoStore secretWithSecretId:MXSecretId.crossSigningUserSigning]);
+}
+
+- (void)setupWithPassword:(NSString*)password
+                  success:(void (^)(void))success
+                  failure:(void (^)(NSError *error))failure
 {
     MXCredentials *myCreds = _crypto.mxSession.matrixRestClient.credentials;
 
+    // Do the auth dance to upload them to the HS
+    [self.crypto.matrixRestClient authSessionToUploadDeviceSigningKeys:^(MXAuthenticationSession *authSession) {
+        
+        NSDictionary *authParams = @{
+                                     @"session": authSession.session,
+                                     @"user": myCreds.userId,
+                                     @"password": password,
+                                     @"type": kMXLoginFlowTypePassword
+                                     };
+        
+        [self setupWithAuthParams:authParams success:success failure:failure];
+        
+    } failure:failure];
+}
+
+- (void)setupWithAuthParams:(NSDictionary*)authParams
+                    success:(void (^)(void))success
+                    failure:(void (^)(NSError *error))failure
+{
+    MXCredentials *myCreds = _crypto.mxSession.matrixRestClient.credentials;
+    
     // Create keys
     NSDictionary<NSString*, NSData*> *privateKeys;
     MXCrossSigningInfo *keys = [self createKeys:&privateKeys];
     
-    NSLog(@"[MXCrossSigning] Bootstrap on device %@. MSK: %@", myCreds.deviceId, keys.masterKeys.keys);
-
+    NSLog(@"[MXCrossSigning] setup on device %@. MSK: %@", myCreds.deviceId, keys.masterKeys.keys);
+    
+    void (^failureBlock)(NSError *error) = ^void(NSError *error) {
+        
+        // Clean in-flight keys
+        [self.crypto.store deleteSecretWithSecretId:MXSecretId.crossSigningMaster];
+        [self.crypto.store deleteSecretWithSecretId:MXSecretId.crossSigningUserSigning];
+        [self.crypto.store deleteSecretWithSecretId:MXSecretId.crossSigningSelfSigning];
+        
+        dispatch_async(dispatch_get_main_queue(), ^{
+            failure(error);
+        });
+    };
+    
     // Delegate the storage of them
     [self storeCrossSigningKeys:privateKeys success:^{
-
+        
         NSDictionary *signingKeys = @{
                                       @"master_key": keys.masterKeys.JSONDictionary,
                                       @"self_signing_key": keys.selfSignedKeys.JSONDictionary,
                                       @"user_signing_key": keys.userSignedKeys.JSONDictionary,
                                       };
-
-        // Do the auth dance to upload them to the HS
-        [self.crypto.matrixRestClient authSessionToUploadDeviceSigningKeys:^(MXAuthenticationSession *authSession) {
-
-            NSDictionary *authParams = @{
-                                         @"session": authSession.session,
-                                         @"user": myCreds.userId,
-                                         @"password": password,
-                                         @"type": kMXLoginFlowTypePassword
-                                         };
-
-            [self.crypto.matrixRestClient uploadDeviceSigningKeys:signingKeys authParams:authParams success:^{
-
-                // Store our user's keys
-                [keys updateTrustLevel:[MXUserTrustLevel trustLevelWithCrossSigningVerified:YES locallyVerified:YES]];
-                [self.crypto.store storeCrossSigningKeys:keys];
-                
-                // Cross-signing is bootstrapped
-                // Refresh our state so that we can cross-sign
-                [self refreshStateWithSuccess:^(BOOL stateUpdated) {
-                    // Expose this device to other users as signed by me
-                    // TODO: Check if it is the right way to do so
-                    [self crossSignDeviceWithDeviceId:myCreds.deviceId success:^{
-                        success();
-                    } failure:failure];
-                } failure:failure];
-
-            } failure:failure];
-
-        } failure:failure];
         
-    } failure:^(NSError * _Nonnull error) {
-        failure(error);
-    }];
+        
+        [self.crypto.matrixRestClient uploadDeviceSigningKeys:signingKeys authParams:authParams success:^{
+            
+            // Store our user's keys
+            [keys updateTrustLevel:[MXUserTrustLevel trustLevelWithCrossSigningVerified:YES locallyVerified:YES]];
+            [self.crypto.store storeCrossSigningKeys:keys];
+            
+            // Cross-signing is bootstrapped
+            // Refresh our state so that we can cross-sign
+            [self refreshStateWithSuccess:^(BOOL stateUpdated) {
+                // Expose this device to other users as signed by me
+                [self crossSignDeviceWithDeviceId:myCreds.deviceId success:^{
+                    success();
+                } failure:failureBlock];
+            } failure:failureBlock];
+            
+        } failure:failureBlock];
+        
+    } failure:failureBlock];
 }
 
 
@@ -273,12 +301,54 @@ NSString *const MXCrossSigningErrorDomain = @"org.matrix.sdk.crosssigning";
 {
     NSLog(@"[MXCrossSigning] requestPrivateKeysToDeviceIds: %@", deviceIds);
     
-    // Make a secret share request for USK and SSK
+    // Make a secret share request for MSK, USK and SSK
     dispatch_group_t successGroup = dispatch_group_create();
+    
+    // Note: this may never resolve because this depends on other user's devices.
+    // We could improve it a bit but we will never fix all cases
     dispatch_group_t onPrivateKeysReceivedGroup = dispatch_group_create();
     
-    __block NSString *uskRequestId, *sskRequestId;
+    __block NSString *mskRequestId, *uskRequestId, *sskRequestId;
     
+    
+    // MSK
+    dispatch_group_enter(successGroup);
+    dispatch_group_enter(onPrivateKeysReceivedGroup);
+    [self.crypto.secretShareManager requestSecret:MXSecretId.crossSigningMaster toDeviceIds:deviceIds success:^(NSString * _Nonnull requestId) {
+        mskRequestId = requestId;
+        dispatch_group_leave(successGroup);
+    } onSecretReceived:^BOOL(NSString * _Nonnull secret) {
+        
+        BOOL isSecretValid = NO;
+        if (self.myUserCrossSigningKeys.masterKeys.keys)
+        {
+            isSecretValid = [self isSecretValid:secret forPublicKeys:self.myUserCrossSigningKeys.masterKeys.keys];
+        }
+        else
+        {
+            // Accept the secret anyway (It should not happen)
+            isSecretValid = YES;
+        }
+        
+        NSLog(@"[MXCrossSigning] requestPrivateKeysToDeviceIds: Got MSK. isSecretValid: %@", @(isSecretValid));
+        if (isSecretValid)
+        {
+            [self.crypto.store storeSecret:secret withSecretId:MXSecretId.crossSigningMaster];
+            dispatch_group_leave(onPrivateKeysReceivedGroup);
+        }
+        return isSecretValid;
+    } failure:^(NSError * _Nonnull error) {
+        // Cancel the other request
+        if (mskRequestId)
+        {
+            [self.crypto.secretShareManager cancelRequestWithRequestId:mskRequestId success:^{} failure:^(NSError * _Nonnull error) {
+            }];
+        }
+        failure(error);
+    }];
+    
+    
+    // USK
     dispatch_group_enter(successGroup);
     dispatch_group_enter(onPrivateKeysReceivedGroup);
     [self.crypto.secretShareManager requestSecret:MXSecretId.crossSigningUserSigning toDeviceIds:deviceIds success:^(NSString * _Nonnull requestId) {
@@ -289,8 +359,7 @@ NSString *const MXCrossSigningErrorDomain = @"org.matrix.sdk.crosssigning";
         BOOL isSecretValid = NO;
         if (self.myUserCrossSigningKeys.userSignedKeys.keys)
         {
-            isSecretValid = (nil != [self pkSigningFromBase64PrivateKey:secret
-                                                  withExpectedPublicKey:self.myUserCrossSigningKeys.userSignedKeys.keys]);
+            isSecretValid = [self isSecretValid:secret forPublicKeys:self.myUserCrossSigningKeys.userSignedKeys.keys];
         }
         else
         {
@@ -307,11 +376,16 @@ NSString *const MXCrossSigningErrorDomain = @"org.matrix.sdk.crosssigning";
         return isSecretValid;
     } failure:^(NSError * _Nonnull error) {
         // Cancel the other request
-        [self.crypto.secretShareManager cancelRequestWithRequestId:sskRequestId success:^{} failure:^(NSError * _Nonnull error) {
-        }];
+        if (sskRequestId)
+        {
+            [self.crypto.secretShareManager cancelRequestWithRequestId:sskRequestId success:^{} failure:^(NSError * _Nonnull error) {
+            }];
+        }
         failure(error);
     }];
     
+    
+    // SSK
     dispatch_group_enter(successGroup);
     dispatch_group_enter(onPrivateKeysReceivedGroup);
     [self.crypto.secretShareManager requestSecret:MXSecretId.crossSigningSelfSigning toDeviceIds:deviceIds success:^(NSString * _Nonnull requestId) {
@@ -322,8 +396,7 @@ NSString *const MXCrossSigningErrorDomain = @"org.matrix.sdk.crosssigning";
         BOOL isSecretValid = NO;
         if (self.myUserCrossSigningKeys.selfSignedKeys.keys)
         {
-            isSecretValid = (nil != [self pkSigningFromBase64PrivateKey:secret
-                                                  withExpectedPublicKey:self.myUserCrossSigningKeys.selfSignedKeys.keys]);
+            isSecretValid = [self isSecretValid:secret forPublicKeys:self.myUserCrossSigningKeys.selfSignedKeys.keys];
         }
         else
         {
@@ -340,8 +413,11 @@ NSString *const MXCrossSigningErrorDomain = @"org.matrix.sdk.crosssigning";
         return isSecretValid;
     } failure:^(NSError * _Nonnull error) {
         // Cancel the other request
-        [self.crypto.secretShareManager cancelRequestWithRequestId:uskRequestId success:^{} failure:^(NSError * _Nonnull error) {
-        }];
+        if (uskRequestId)
+        {
+            [self.crypto.secretShareManager cancelRequestWithRequestId:uskRequestId success:^{} failure:^(NSError * _Nonnull error) {
+            }];
+        }
         failure(error);
     }];
     
@@ -519,6 +595,12 @@ NSString *const MXCrossSigningErrorDomain = @"org.matrix.sdk.crosssigning";
     }];
 }
 
+- (BOOL)isSecretValid:(NSString*)secret forPublicKeys:(NSString*)keys
+{
+    return (nil != [self pkSigningFromBase64PrivateKey:secret
+                                 withExpectedPublicKey:keys]);
+}
+
 
 #pragma mark - Private methods -
 
@@ -538,8 +620,6 @@ NSString *const MXCrossSigningErrorDomain = @"org.matrix.sdk.crosssigning";
             {
                 state = MXCrossSigningStateCanCrossSign;
             }
-            
-            // TODO: MXCrossSigningStateCanCrossSignAsynchronously
         }
     }
     

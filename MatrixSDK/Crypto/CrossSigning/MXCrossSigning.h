@@ -70,14 +70,6 @@ typedef NS_ENUM(NSInteger, MXCrossSigningState)
      It can cross-sign other users or other devices of this account.
      */
     MXCrossSigningStateCanCrossSign,
-    
-    /**
-     Same as MXCrossSigningStateCanCrossSign but private keys can only be used asynchronously.
-     Access to these keys may require UI interaction with the user like passphrase, Face ID, etc.
-     */
-    // TODO: This is unused for the moment but it will come back with the full implemenation of SSSS.
-    // All related code has been removed to remove noise. Check the code in this commit.
-    MXCrossSigningStateCanCrossSignAsynchronously,
 };
 
 
@@ -102,6 +94,7 @@ typedef NS_ENUM(NSInteger, MXCrossSigningErrorCode)
 @property (nonatomic, readonly) MXCrossSigningState state;
 @property (nonatomic, readonly) BOOL canTrustCrossSigning;
 @property (nonatomic, readonly) BOOL canCrossSign;
+@property (nonatomic, readonly) BOOL hasAllPrivateKeys;
 
 /**
  Check update for this device cross-signing state (self.state).
@@ -113,29 +106,34 @@ typedef NS_ENUM(NSInteger, MXCrossSigningErrorCode)
                         failure:(nullable void (^)(NSError *error))failure;
 
 /**
- Bootstrap cross-signing on this device.
+ Bootstrap cross-signing with user's password.
 
- This creates cross-signing keys. It will use keysStorageDelegate to store
- private parts.
-
- TODO: Support other authentication flows than password.
- TODO: This method will probably change or disappear. It is here mostly for development
- while SSSS is not available.
-
- @param password the account password to upload keys to the HS.
+ @param password the account password to upload cross-signing keys to the HS.
 
  @param success A block object called when the operation succeeds.
  @param failure A block object called when the operation fails.
  */
-- (void)bootstrapWithPassword:(NSString*)password
-                      success:(void (^)(void))success
-                      failure:(void (^)(NSError *error))failure;
+- (void)setupWithPassword:(NSString*)password
+                  success:(void (^)(void))success
+                  failure:(void (^)(NSError *error))failure;
+
+/**
+ Bootstrap cross-signing using authentication parameters.
+ 
+ @param authParams the auth parameters to upload cross-signing keys to the HS.
+ 
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+ */
+- (void)setupWithAuthParams:(NSDictionary*)authParams
+                    success:(void (^)(void))success
+                    failure:(void (^)(NSError *error))failure;
+
 
 /**
  Cross-sign another device of our user.
-
- This method will use keysStorageDelegate get the private part of the Self Signing
- Key (MXCrossSigningKeyType.selfSigning).
+ 
+ The operation requires to have the Self Signing Key in the local secret storage.
 
  @param deviceId the id of the device to cross-sign.
 
@@ -149,9 +147,8 @@ typedef NS_ENUM(NSInteger, MXCrossSigningErrorCode)
 /**
  Trust a user from one of their devices.
 
- This method will use keysStorageDelegate get the private part of the User Signing
- Key (MXCrossSigningKeyType.userSigning).
-
+ The operation requires to have the User Signing Key in the local secret storage.
+ 
  @param userId the id of ther user.
 
  @param success A block object called when the operation succeeds.

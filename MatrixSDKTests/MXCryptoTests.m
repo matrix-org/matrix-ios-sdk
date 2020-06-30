@@ -1660,6 +1660,74 @@
 
 #pragma mark - Edge cases
 
+// Trying to set up several olm sessions in parallel should result in the creation of a single olm session
+//
+// - Have Alice and Bob
+// - Make Alice know Bob's device
+// - Move to the crypto thread (this is an internal technical test)
+// - Create a first olm session
+// -> It must succeed
+// - Create a second olm session in parallel
+// -> It must not create another HTTP request
+// -> It must succeed using the same olm session
+
+- (void)testEnsureSingleOlmSession
+{
+    // - Have Alice and Bob
+    [matrixSDKTestsE2EData doE2ETestWithAliceAndBobInARoom:self cryptedBob:YES warnOnUnknowDevices:NO readyToTest:^(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
+        
+        // - Make Alice know Bob's device
+        [aliceSession.crypto downloadKeys:@[bobSession.myUserId] forceDownload:NO success:^(MXUsersDevicesMap<MXDeviceInfo *> *usersDevicesInfoMap, NSDictionary<NSString *,MXCrossSigningInfo *> *crossSigningKeysMap) {
+        
+            // - Move to the crypto thread (this is an internal technical test)
+            dispatch_async(aliceSession.crypto.cryptoQueue, ^{
+                
+                MXHTTPOperation *operation;
+                __block NSString *olmSessionId;
+                
+                
+                // - Create a first olm session
+                operation = [aliceSession.crypto ensureOlmSessionsForUsers:@[bobSession.myUserId] success:^(MXUsersDevicesMap<MXOlmSessionResult *> *results) {
+ 
+                    // -> It must succeed
+                    olmSessionId = [results objectForDevice:bobSession.myDeviceId forUser:bobSession.myUserId].sessionId;
+                    XCTAssertNotNil(olmSessionId);
+                    
+                } failure:^(NSError *error) {
+                    XCTFail(@"The operation should not fail - NSError: %@", error);
+                    [expectation fulfill];
+                }];
+                
+                XCTAssertNotNil(operation);
+                
+                
+                // - Create a second olm session in parallel
+                operation = [aliceSession.crypto ensureOlmSessionsForUsers:@[bobSession.myUserId] success:^(MXUsersDevicesMap<MXOlmSessionResult *> *results) {
+                    
+                    // -> It must succeed using the same olm session
+                    NSString *olmSessionId2 = [results objectForDevice:bobSession.myDeviceId forUser:bobSession.myUserId].sessionId;
+                    XCTAssertNotNil(olmSessionId2);
+                    XCTAssertEqualObjects(olmSessionId, olmSessionId2);
+                    
+                    [expectation fulfill];
+                    
+                } failure:^(NSError *error) {
+                    XCTFail(@"The operation should not fail - NSError: %@", error);
+                    [expectation fulfill];
+                }];
+                
+                // -> It must not create another HTTP request
+                XCTAssertNil(operation);
+                
+            });
+            
+        } failure:^(NSError *error) {
+            XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+            [expectation fulfill];
+        }];
+    }];
+}
+        
 - (void)testReplayAttack
 {
     [matrixSDKTestsE2EData doE2ETestWithAliceAndBobInARoom:self cryptedBob:YES warnOnUnknowDevices:NO readyToTest:^(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {

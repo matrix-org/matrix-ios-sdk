@@ -260,6 +260,57 @@ UInt8 privateKeyBytes[] = {
     }];
 }
 
+// Test MXSecretStorage.deleteKeyWithKeyId
+// - Have Alice with encryption
+// - Create a new secret storage key
+// - Set it as default
+// - Delete it
+// -> The SSSS must not exist anymore
+// -> There must be a default key anymore
+- (void)testSecretStorageKeyDeletion
+{
+    // - Have Alice with encryption
+    [matrixSDKTestsE2EData doE2ETestWithAliceInARoom:self readyToTest:^(MXSession *aliceSession, NSString *roomId, XCTestExpectation *expectation) {
+        
+        // - Create a new secret storage key
+        MXSecretStorage *secretStorage = aliceSession.crypto.secretStorage;
+        [secretStorage createKeyWithKeyId:nil keyName:nil passphrase:nil success:^(MXSecretStorageKeyCreationInfo * _Nonnull keyCreationInfo) {
+            
+            // - Set it as default
+            [secretStorage setAsDefaultKeyWithKeyId:keyCreationInfo.keyId success:^{
+                
+                // Check the test is right
+                XCTAssertNotNil(secretStorage.defaultKey);
+                
+                // - Delete it
+                [secretStorage deleteKeyWithKeyId:nil success:^{
+                    
+                    // -> The SSSS must not exist anymore
+                    MXSecretStorageKeyContent *key2 = [secretStorage keyWithKeyId:keyCreationInfo.keyId];
+                    XCTAssertNil(key2);
+                    
+                    // -> There must be a default key anymore
+                    XCTAssertNil(secretStorage.defaultKey);
+                    
+                    [expectation fulfill];
+                    
+                } failure:^(NSError * _Nonnull error) {
+                    XCTFail(@"The operation should not fail - NSError: %@", error);
+                    [expectation fulfill];
+                }];
+                
+            } failure:^(NSError * _Nonnull error) {
+                XCTFail(@"The operation should not fail - NSError: %@", error);
+                [expectation fulfill];
+            }];
+            
+        } failure:^(NSError * _Nonnull error) {
+            XCTFail(@"The operation should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+    }];
+}
+
 // Test MXSecretStorage.defaultKey
 // - Have Alice with encryption
 // - Create a secret storage key
@@ -427,6 +478,8 @@ UInt8 privateKeyBytes[] = {
         [secretStorage storeSecret:theSecretUnpaddedBase64 withSecretId:theSecretId withSecretStorageKeys:keys success:^(NSString * _Nonnull secretId) {
 
             XCTAssertEqualObjects(theSecretId, secretId);
+            
+            XCTAssertTrue([secretStorage hasSecretWithSecretId:theSecretId withSecretStorageKeyId:nil]);
 
             // - Get it back
             [secretStorage secretWithSecretId:theSecretId withSecretStorageKeyId:nil privateKey:privateKey success:^(NSString * _Nonnull unpaddedBase64Secret) {
@@ -447,6 +500,62 @@ UInt8 privateKeyBytes[] = {
             [expectation fulfill];
         }];
 
+    }];
+}
+
+
+// Test MXSecretStorage.deleteSecretWithSecretId
+// - Have Alice with SSSS bootstrapped
+// -> Store a new secret
+// -> Delete it
+// -> The secret must have been deleted
+- (void)testDeleteSecret
+{
+    // - Have Alice with SSSS bootstrapped
+    [self createScenarioWithMatrixJsSDKData:^(MXSession *aliceSession, NSString *roomId, XCTestExpectation *expectation) {
+        
+        NSString *theSecretText = @"A secret";
+        NSData *theSecret = [theSecretText dataUsingEncoding:kCFStringEncodingUTF8];
+        NSString *theSecretUnpaddedBase64 = [MXBase64Tools unpaddedBase64FromData:theSecret];
+        
+        NSString *theSecretId = @"theSecretId";
+        
+        MXSecretStorage *secretStorage = aliceSession.crypto.secretStorage;
+        
+        NSError *error;
+        NSData *privateKey = [MXRecoveryKey decode:jsSDKDataRecoveryKey error:&error];
+
+        
+        // Build the key
+        NSDictionary<NSString*, NSData*> *keys = @{
+                                                   secretStorage.defaultKeyId: privateKey
+                                                   };
+        
+        
+        // -> Store a new secret
+        [secretStorage storeSecret:theSecretUnpaddedBase64 withSecretId:theSecretId withSecretStorageKeys:keys success:^(NSString * _Nonnull secretId) {
+            
+            // Check the test is right
+            XCTAssertTrue([secretStorage hasSecretWithSecretId:theSecretId withSecretStorageKeyId:nil]);
+            
+            // - Delete it
+            [secretStorage deleteSecretWithSecretId:theSecretId success:^{
+                
+                // -> The secret must have been deleted
+                XCTAssertFalse([secretStorage hasSecretWithSecretId:theSecretId withSecretStorageKeyId:nil]);
+                
+                [expectation fulfill];
+                
+            } failure:^(NSError * _Nonnull error) {
+                XCTFail(@"The operation should not fail - NSError: %@", error);
+                [expectation fulfill];
+            }];
+            
+        } failure:^(NSError * _Nonnull error) {
+            XCTFail(@"The operation should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+        
     }];
 }
 

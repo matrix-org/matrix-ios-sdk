@@ -315,9 +315,12 @@
 - (void)refreshOutdatedDeviceLists
 {
     NSMutableArray *users = [NSMutableArray array];
-    for (NSString *userId in deviceTrackingStatus)
+    //  copy dictionary in order to avoid mutations when enumerating.
+    //  no need to deep copy
+    NSDictionary<NSString*, NSNumber*> *deviceTrackingStatusCopy = [deviceTrackingStatus copy];
+    for (NSString *userId in deviceTrackingStatusCopy)
     {
-        MXDeviceTrackingStatus trackingStatus = MXDeviceTrackingStatusFromNSNumber(deviceTrackingStatus[userId]);
+        MXDeviceTrackingStatus trackingStatus = MXDeviceTrackingStatusFromNSNumber(deviceTrackingStatusCopy[userId]);
         if (trackingStatus == MXDeviceTrackingStatusPendingDownload)
             // || trackingStatus == MXDeviceTrackingStatusUnreachableServer)  // TODO: It would be nice to retry them sometimes.
                                                                               // At the moment, they are retried after app restart
