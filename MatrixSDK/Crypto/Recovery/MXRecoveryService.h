@@ -28,6 +28,7 @@ FOUNDATION_EXPORT NSString *const MXRecoveryServiceErrorDomain;
 typedef NS_ENUM(NSInteger, MXRecoveryServiceErrorCode)
 {
     MXRecoveryServiceSSSSAlreadyExistsErrorCode,
+    MXRecoveryServiceKeyBackupExistsButNoPrivateKeyErrorCode,
     MXRecoveryServiceNoSSSSErrorCode,
     MXRecoveryServiceNotProtectedByPassphraseErrorCode,
     MXRecoveryServiceBadRecoveryKeyErrorCode,
@@ -73,6 +74,18 @@ typedef NS_ENUM(NSInteger, MXRecoveryServiceErrorCode)
  */
 - (BOOL)usePassphrase;
 
+/**
+ Delete the current recovery.
+ 
+ @param deleteServicesBackups YES to delete backups for associated services. Only keyBackup is supported.
+ 
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+ */
+- (void)deleteRecoveryWithDeleteServicesBackups:(BOOL)deleteServicesBackups
+                                        success:(void (^)(void))success
+                                        failure:(void (^)(NSError *error))failure;
+
 
 #pragma mark - Secrets in the recovery
 
@@ -97,12 +110,14 @@ typedef NS_ENUM(NSInteger, MXRecoveryServiceErrorCode)
  
  @param secrets secrets ids to store in the recovery. Nil for all self.supportedSecrets.
  @param passphrase a passphrase used to generate the recovery key to encrypt keys. Nil will generate it.
+ @param createServicesBackups YES to create backups for associated services. Only keyBackup is supported.
  
  @param success A block object called when the operation succeeds.
  @param failure A block object called when the operation fails.
  */
 - (void)createRecoveryForSecrets:(nullable NSArray<NSString*>*)secrets
                   withPassphrase:(nullable NSString*)passphrase
+           createServicesBackups:(BOOL)createServicesBackups
                          success:(void (^)(MXSecretStorageKeyCreationInfo *keyCreationInfo))success
                          failure:(void (^)(NSError *error))failure;
 
