@@ -165,6 +165,11 @@ NSString *const MXRecoveryServiceErrorDomain = @"org.matrix.sdk.recoveryService"
     NSLog(@"[MXRecoveryService] deleteKeyBackup");
     
     MXKeyBackup *keyBackup = self.crypto.backup;
+    if (!keyBackup)
+    {
+        success();
+        return;
+    }
     
     [keyBackup forceRefresh:^(BOOL usingLastVersion) {
         
@@ -290,6 +295,11 @@ NSString *const MXRecoveryServiceErrorDomain = @"org.matrix.sdk.recoveryService"
     NSLog(@"[MXRecoveryService] createKeyBackup");
     
     MXKeyBackup *keyBackup = self.crypto.backup;
+    if (!keyBackup)
+    {
+        success();
+        return;
+    }
     
     [keyBackup forceRefresh:^(BOOL usingLastVersion) {
         
