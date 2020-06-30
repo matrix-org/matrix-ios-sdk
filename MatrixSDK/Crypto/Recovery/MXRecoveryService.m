@@ -303,8 +303,8 @@ NSString *const MXRecoveryServiceErrorDomain = @"org.matrix.sdk.recoveryService"
     
     [keyBackup forceRefresh:^(BOOL usingLastVersion) {
         
-        // If there is a
-        if (keyBackup.enabled)
+        // If a backup already exists, make sure we have the private key locally
+        if (keyBackup.keyBackupVersion)
         {
             if ([self.cryptoStore secretWithSecretId:MXSecretId.keyBackup])
             {
