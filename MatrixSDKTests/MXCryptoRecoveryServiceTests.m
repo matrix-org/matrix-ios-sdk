@@ -114,10 +114,11 @@
 // - Test creation of a recovery
 // - Have Alice with cross-signing bootstrapped
 // -> There should be no recovery on the HS
-// -> The service should see 3 keys to back up (MSK, SSK, USK)
+// -> The service should see 4 keys to back up (MSK, SSK, USK, Key Backup)
 // Create a recovery with a passphrase
 // -> The 3 keys should be in the recovery
 // -> The recovery must indicate it has a passphrase
+// -> Key backup must be up and running
 // Forget all secrets for the test
 // Recover all secrets
 // -> We should have restored the 3 ones
@@ -141,31 +142,35 @@
         
         // Create a recovery with a passphrase
         NSString *passphrase = @"A passphrase";
-        [recoveryService createRecoveryForSecrets:nil withPassphrase:passphrase success:^(MXSecretStorageKeyCreationInfo * _Nonnull keyCreationInfo) {
+        [recoveryService createRecoveryForSecrets:nil withPassphrase:passphrase createServicesBackups:YES success:^(MXSecretStorageKeyCreationInfo * _Nonnull keyCreationInfo) {
             
             XCTAssertNotNil(keyCreationInfo);
             
             // -> The 3 keys should be in the recovery
             XCTAssertTrue(recoveryService.hasRecovery);
-            XCTAssertEqual(recoveryService.secretsStoredInRecovery.count, 3);
+            XCTAssertEqual(recoveryService.secretsStoredInRecovery.count, 4);
             
             // -> The recovery must indicate it has a passphrase
             XCTAssertTrue(recoveryService.usePassphrase);
+            
+            // -> Key backup must be up and running
+            XCTAssertTrue(aliceSession.crypto.backup.enabled);
             
             
             // Forget all secrets for the test
             [aliceSession.crypto.store deleteSecretWithSecretId:MXSecretId.crossSigningMaster];
             [aliceSession.crypto.store deleteSecretWithSecretId:MXSecretId.crossSigningSelfSigning];
             [aliceSession.crypto.store deleteSecretWithSecretId:MXSecretId.crossSigningUserSigning];
-            
+            [aliceSession.crypto.store deleteSecretWithSecretId:MXSecretId.keyBackup];
+
 
             // Recover all secrets
             [recoveryService privateKeyFromPassphrase:passphrase success:^(NSData * _Nonnull privateKey) {
                 [recoveryService recoverSecrets:nil withPrivateKey:privateKey recoverServices:NO success:^(MXSecretRecoveryResult * _Nonnull recoveryResult) {
                     
                     // -> We should have restored the 3 ones
-                    XCTAssertEqual(recoveryResult.secrets.count, 3);
-                    XCTAssertEqual(recoveryResult.updatedSecrets.count, 3);
+                    XCTAssertEqual(recoveryResult.secrets.count, 4);
+                    XCTAssertEqual(recoveryResult.updatedSecrets.count, 4);
                     XCTAssertEqual(recoveryResult.invalidSecrets.count, 0);
                     
                     // -> Make sure the secret is still correct
@@ -206,7 +211,7 @@
         
         // - Create a recovery with a passphrase
         NSString *passphrase = @"A passphrase";
-        [recoveryService createRecoveryForSecrets:nil withPassphrase:passphrase success:^(MXSecretStorageKeyCreationInfo * _Nonnull keyCreationInfo) {
+        [recoveryService createRecoveryForSecrets:nil withPassphrase:passphrase createServicesBackups:NO  success:^(MXSecretStorageKeyCreationInfo * _Nonnull keyCreationInfo) {
             
             // -> privateKeyFromRecoveryKey must return the same private key
             NSError *error;
@@ -274,7 +279,7 @@
         MXRecoveryService *recoveryService = aliceSession.crypto.recoveryService;
         
         // - Create a recovery with a passphrase
-        [recoveryService createRecoveryForSecrets:nil withPassphrase:@"A passphrase" success:^(MXSecretStorageKeyCreationInfo * _Nonnull keyCreationInfo) {
+        [recoveryService createRecoveryForSecrets:nil withPassphrase:@"A passphrase" createServicesBackups:NO success:^(MXSecretStorageKeyCreationInfo * _Nonnull keyCreationInfo) {
             
             // - Build a bad recovery key from a bad passphrase
             [recoveryService privateKeyFromPassphrase:@"A bad passphrase" success:^(NSData * _Nonnull badPrivateKey) {
@@ -308,10 +313,67 @@
 }
 
 
+// Test createRecoveryForSecrets when there is already a key backup with the private key stored locally
+//
+// - Have Alice with cross-signing and key backup bootstrapped
+// - Create a recovery with createServicesBackup:YES
+// -> The operation must succeed
+// -> The key backup should be the same
+- (void)testCreateRecoveryWithKeyBackupExists
+{
+    // - Have Alice with cross-signing and key backup bootstrapped
+    [self doTestWithAliceWithCrossSigningAndKeyBackup:self readyToTest:^(MXSession *aliceSession, NSString *roomId, XCTestExpectation *expectation) {
+        
+        NSString *keyBackupVersion = aliceSession.crypto.backup.keyBackupVersion.version;
+        
+        // - Create a recovery with createServicesBackup:YES
+        [aliceSession.crypto.recoveryService createRecoveryForSecrets:nil withPassphrase:nil createServicesBackups:YES success:^(MXSecretStorageKeyCreationInfo * _Nonnull keyCreationInfo) {
+            
+            XCTAssertEqualObjects(keyBackupVersion, aliceSession.crypto.backup.keyBackupVersion.version);
+            [expectation fulfill];
+            
+        } failure:^(NSError *error) {
+            XCTFail(@"The operation should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+    }];
+}
+
+
+// Test MXRecoveryServiceKeyBackupExistsButNoPrivateKeyErrorCode
+//
+// - Have Alice with cross-signing and key backup bootstrapped
+// - Forget the key backup private key (this micmics key backup created from another device)
+// - Create a recovery with createServicesBackup:YES
+// -> The operation must fail
+- (void)testKeyBackupExistsButNoPrivateKey
+{
+    // - Have Alice with cross-signing and key backup bootstrapped
+    [self doTestWithAliceWithCrossSigningAndKeyBackup:self readyToTest:^(MXSession *aliceSession, NSString *roomId, XCTestExpectation *expectation) {
+        
+        // - Forget the key backup private key (this micmics key backup created from another device)
+        [aliceSession.crypto.store deleteSecretWithSecretId:MXSecretId.keyBackup];
+        
+        // - Create a recovery with createServicesBackup:YES
+        [aliceSession.crypto.recoveryService createRecoveryForSecrets:nil withPassphrase:nil createServicesBackups:YES success:^(MXSecretStorageKeyCreationInfo * _Nonnull keyCreationInfo) {
+
+            XCTFail(@"The operation must not succeed");
+            [expectation fulfill];
+            
+        } failure:^(NSError *error) {
+            
+            // -> The operation must fail
+            XCTAssertEqualObjects(error.domain, MXRecoveryServiceErrorDomain);
+            XCTAssertEqual(error.code, MXRecoveryServiceKeyBackupExistsButNoPrivateKeyErrorCode);
+            [expectation fulfill];
+        }];
+    }];
+}
+
 
 // Test recovery of services
 //
-// - Have Alice with cross-signing and key backup bootstrapped
+// - Have Alice with cross-signing bootstrapped
 // - Create a recovery
 // - Log Alice on a new device
 // - Recover secrets and services
@@ -320,11 +382,11 @@
 // -> The new device must trust and send keys to the existing key backup
 - (void)testRecoverServicesAssociatedWithSecrets
 {
-    // - Have Alice with cross-signing and key backup bootstrapped
-    [self doTestWithAliceWithCrossSigningAndKeyBackup:self readyToTest:^(MXSession *aliceSession, NSString *roomId, XCTestExpectation *expectation) {
+    // - Have Alice with cross-signing bootstrapped
+    [self doTestWithAliceWithCrossSigning:self readyToTest:^(MXSession *aliceSession, NSString *roomId, XCTestExpectation *expectation) {
       
         // - Create a recovery
-        [aliceSession.crypto.recoveryService createRecoveryForSecrets:nil withPassphrase:nil success:^(MXSecretStorageKeyCreationInfo * _Nonnull keyCreationInfo) {
+        [aliceSession.crypto.recoveryService createRecoveryForSecrets:nil withPassphrase:nil createServicesBackups:YES success:^(MXSecretStorageKeyCreationInfo * _Nonnull keyCreationInfo) {
             
             NSData *recoveryPrivateKey = keyCreationInfo.privateKey;
             
@@ -384,34 +446,36 @@
 
 // Test privateKeyFromRecoveryKey & privateKeyFromPassphrase
 //
-// - Have Alice with cross-signing and key backup bootstrapped
+// - Have Alice with cross-signing bootstrapped
 // - Create a recovery
 // - Delete it
 // -> No more recovery
 // -> No more underlying SSSS
+// -> No more underlying key backup
 - (void)testDeleteRecovery
 {
-    // - Have Alice with cross-signing and key backup bootstrapped
-    [self doTestWithAliceWithCrossSigningAndKeyBackup:self readyToTest:^(MXSession *aliceSession, NSString *roomId, XCTestExpectation *expectation) {
+    // - Have Alice with cross-signing bootstrapped
+    [self doTestWithAliceWithCrossSigning:self readyToTest:^(MXSession *aliceSession, NSString *roomId, XCTestExpectation *expectation) {
         
         MXRecoveryService *recoveryService = aliceSession.crypto.recoveryService;
         
         // - Create a recovery
-        [recoveryService createRecoveryForSecrets:nil withPassphrase:nil success:^(MXSecretStorageKeyCreationInfo * _Nonnull keyCreationInfo) {
+        [recoveryService createRecoveryForSecrets:nil withPassphrase:nil createServicesBackups:YES success:^(MXSecretStorageKeyCreationInfo * _Nonnull keyCreationInfo) {
             
             // Check the test is right
             XCTAssertTrue(recoveryService.hasRecovery);
             XCTAssertEqual(recoveryService.secretsStoredInRecovery.count, 4);
+            XCTAssertTrue(aliceSession.crypto.backup.enabled);
             
             NSString *ssssKeyId = recoveryService.recoveryId;
             
             // - Delete it
-            [recoveryService deleteRecoveryWithSuccess:^{
+            [recoveryService deleteRecoveryWithDeleteServicesBackups:YES success:^{
                 
                 // -> No more recovery
                 XCTAssertFalse(recoveryService.hasRecovery);
                 XCTAssertEqual(recoveryService.secretsStoredInRecovery.count, 0);
-                XCTAssertEqual(recoveryService.secretsStoredLocally.count, 4);
+                XCTAssertEqual(recoveryService.secretsStoredLocally.count, 3);
                 
                 // -> No more underlying SSSS
                 MXSecretStorage *secretStorage = aliceSession.crypto.secretStorage;
@@ -420,6 +484,10 @@
                 XCTAssertFalse([secretStorage hasSecretWithSecretId:MXSecretId.crossSigningSelfSigning withSecretStorageKeyId:ssssKeyId]);
                 XCTAssertFalse([secretStorage hasSecretWithSecretId:MXSecretId.crossSigningUserSigning withSecretStorageKeyId:ssssKeyId]);
                 XCTAssertFalse([secretStorage hasSecretWithSecretId:MXSecretId.keyBackup withSecretStorageKeyId:ssssKeyId]);
+                
+                // -> No more underlying key backup
+                XCTAssertFalse(aliceSession.crypto.backup.enabled);
+                XCTAssertNil(aliceSession.crypto.backup.keyBackupVersion);
 
                 [expectation fulfill];
                 
