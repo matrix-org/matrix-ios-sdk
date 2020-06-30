@@ -6,6 +6,7 @@ Improvements:
  * MXCrossSigning: Add the bootstrapWithAuthParams method.
  * MXRecoveryService: Create this service to manage keys we want to store in SSSS.
  * MXRecoveryService: Add deleteRecovery.
+ * MXRecoveryService: Add options to create and delete key backup automatically (vector-im/riot-ios/issues/3361).
  * MXSecretStorage: Add options to remove secrets and SSSS. 
  * MXWellKnown: Add JSONDictionary implementation to return original and extended data.
  * MXCrossSigning: Gossip the master key (vector-im/riot-ios/issues/3346).
