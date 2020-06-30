@@ -57,6 +57,12 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic) BOOL enableCryptoWhenStartingMXSession;
 
 /**
+ Automatically enable key backup when initializing a new MXCrypto.
+ YES by default.
+ */
+@property (nonatomic) BOOL enableKeyBackupWhenStartingMXCrypto;
+
+/**
  Compute and maintain MXRommSummary.trust value.
  NO by default.
  This requires to load all room members to compute it.
