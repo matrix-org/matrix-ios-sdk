@@ -246,6 +246,10 @@
     return [[MXEventsEnumeratorOnArray alloc] initWithMessages:@[lastMessages[roomId]]];
 }
 
+- (NSArray<MXEvent *> *)relationsForEvent:(NSString *)eventId inRoom:(NSString *)roomId relationType:(NSString *)relationType
+{
+    return @[];
+}
 
 #pragma mark - Matrix users
 - (void)storeUser:(MXUser *)user

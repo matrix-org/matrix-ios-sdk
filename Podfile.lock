@@ -1,50 +1,50 @@
 PODS:
-  - AFNetworking (3.2.1):
-    - AFNetworking/NSURLSession (= 3.2.1)
-    - AFNetworking/Reachability (= 3.2.1)
-    - AFNetworking/Security (= 3.2.1)
-    - AFNetworking/Serialization (= 3.2.1)
-    - AFNetworking/UIKit (= 3.2.1)
-  - AFNetworking/NSURLSession (3.2.1):
+  - AFNetworking (4.0.1):
+    - AFNetworking/NSURLSession (= 4.0.1)
+    - AFNetworking/Reachability (= 4.0.1)
+    - AFNetworking/Security (= 4.0.1)
+    - AFNetworking/Serialization (= 4.0.1)
+    - AFNetworking/UIKit (= 4.0.1)
+  - AFNetworking/NSURLSession (4.0.1):
     - AFNetworking/Reachability
     - AFNetworking/Security
     - AFNetworking/Serialization
-  - AFNetworking/Reachability (3.2.1)
-  - AFNetworking/Security (3.2.1)
-  - AFNetworking/Serialization (3.2.1)
-  - AFNetworking/UIKit (3.2.1):
+  - AFNetworking/Reachability (4.0.1)
+  - AFNetworking/Security (4.0.1)
+  - AFNetworking/Serialization (4.0.1)
+  - AFNetworking/UIKit (4.0.1):
     - AFNetworking/NSURLSession
   - GZIP (1.2.3)
   - libbase58 (0.1.4)
-  - OHHTTPStubs (6.1.0):
-    - OHHTTPStubs/Default (= 6.1.0)
-  - OHHTTPStubs/Core (6.1.0)
-  - OHHTTPStubs/Default (6.1.0):
+  - OHHTTPStubs (9.0.0):
+    - OHHTTPStubs/Default (= 9.0.0)
+  - OHHTTPStubs/Core (9.0.0)
+  - OHHTTPStubs/Default (9.0.0):
     - OHHTTPStubs/Core
     - OHHTTPStubs/JSON
     - OHHTTPStubs/NSURLSession
     - OHHTTPStubs/OHPathHelpers
-  - OHHTTPStubs/JSON (6.1.0):
+  - OHHTTPStubs/JSON (9.0.0):
     - OHHTTPStubs/Core
-  - OHHTTPStubs/NSURLSession (6.1.0):
+  - OHHTTPStubs/NSURLSession (9.0.0):
     - OHHTTPStubs/Core
-  - OHHTTPStubs/OHPathHelpers (6.1.0)
+  - OHHTTPStubs/OHPathHelpers (9.0.0)
   - OLMKit (3.1.0):
     - OLMKit/olmc (= 3.1.0)
     - OLMKit/olmcpp (= 3.1.0)
   - OLMKit/olmc (3.1.0)
   - OLMKit/olmcpp (3.1.0)
-  - Realm (3.17.3):
-    - Realm/Headers (= 3.17.3)
-  - Realm/Headers (3.17.3)
+  - Realm (4.4.1):
+    - Realm/Headers (= 4.4.1)
+  - Realm/Headers (4.4.1)
 
 DEPENDENCIES:
-  - AFNetworking (~> 3.2.0)
+  - AFNetworking (~> 4.0.0)
   - GZIP (~> 1.2.2)
   - libbase58 (~> 0.1.4)
-  - OHHTTPStubs (~> 6.1.0)
+  - OHHTTPStubs (~> 9.0.0)
   - OLMKit (~> 3.1.0)
-  - Realm (~> 3.17.3)
+  - Realm (~> 4.4.0)
 
 SPEC REPOS:
   trunk:
@@ -56,13 +56,13 @@ SPEC REPOS:
     - Realm
 
 SPEC CHECKSUMS:
-  AFNetworking: b6f891fdfaed196b46c7a83cf209e09697b94057
+  AFNetworking: 7864c38297c79aaca1500c33288e429c3451fdce
   GZIP: af5c90ef903776a7e9afe6ebebd794a84a2929d4
   libbase58: 7c040313537b8c44b6e2d15586af8e21f7354efd
-  OHHTTPStubs: 1e21c7d2c084b8153fc53d48400d8919d2d432d0
+  OHHTTPStubs: cb29d2a9d09a828ecb93349a2b0c64f99e0db89f
   OLMKit: 4ee0159d63feeb86d836fdcfefe418e163511639
-  Realm: 5a1d9d47bfc101dd597668b1a8af4288a2557f6d
+  Realm: 4eb04d7487bd43c0581256f40b424eafb711deff
 
-PODFILE CHECKSUM: 4ec0d0bfa4adbb70b7830ee9cfaebc174cc9eba9
+PODFILE CHECKSUM: 90834076de1f858ffa5f2c688b9691b058487781
 
-COCOAPODS: 1.8.4
+COCOAPODS: 1.9.1

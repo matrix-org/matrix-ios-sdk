@@ -1,7 +1,7 @@
 Pod::Spec.new do |s|
 
   s.name         = "MatrixSDK"
-  s.version      = "0.15.2"
+  s.version      = "0.16.5"
   s.summary      = "The iOS SDK to build apps compatible with Matrix (https://www.matrix.org)"
 
   s.description  = <<-DESC
@@ -21,22 +21,23 @@ Pod::Spec.new do |s|
   
   s.requires_arc  = true
   
-  s.ios.deployment_target = "8.0"
+  s.ios.deployment_target = "9.0"
   s.osx.deployment_target = "10.10"
   
   s.default_subspec = 'Core'
   s.subspec 'Core' do |ss|
-      ss.ios.deployment_target = "8.0"
+      ss.ios.deployment_target = "9.0"
       ss.osx.deployment_target = "10.10"
       
       ss.source_files = "MatrixSDK", "MatrixSDK/**/*.{h,m}"
       
-      ss.dependency 'AFNetworking', '~> 3.2.0'
+
+      ss.dependency 'AFNetworking', '~> 4.0.0'
       ss.dependency 'GZIP', '~> 1.2.2'
 
       # Requirements for e2e encryption
       ss.dependency 'OLMKit', '~> 3.1.0'
-      ss.dependency 'Realm', '~> 3.17.3'
+      ss.dependency 'Realm', '~> 4.4.0'
       ss.dependency 'libbase58', '~> 0.1.4'
   end
 

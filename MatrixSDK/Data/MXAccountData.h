@@ -1,6 +1,7 @@
 /*
  Copyright 2016 OpenMarket Ltd
-
+ Copyright 2020 The Matrix.org Foundation C.I.C
+ 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
  You may obtain a copy of the License at
@@ -29,9 +30,21 @@
 /**
  Update the account data with the passed event.
  
+ For internal use only. Use [MXSession setAccountData:] to update account data.
+ 
  @param event one event of the "account_data" field of a `/sync` response.
  */
 - (void)updateWithEvent:(NSDictionary*)event;
+
+/**
+ Update the account data with the passed data.
+ 
+ For internal use only.  Use [MXSession setAccountData:] to update account data.
+ 
+ @param type the event type in the account adata.
+ @param data the data to store.
+ */
+- (void)updateDataWithType:(NSString*)type data:(NSDictionary*)data;
 
 /**
  Get account data event by event type.

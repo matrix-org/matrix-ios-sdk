@@ -1360,6 +1360,200 @@
     }];
 }
 
+
+#pragma mark - Private keys
+
+/**
+ - Do an e2e backup to the homeserver
+ -> We must have the backup private key locally
+ - Restart the session
+ -> The restarted alice session must still have the private key
+ -> It must be able to restore the backup using this local key
+ */
+- (void)testLocalPrivateKey
+{
+    [matrixSDKTestsE2EData doE2ETestWithAliceAndBobInARoomWithCryptedMessages:self cryptedBob:YES readyToTest:^(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
+        
+        // - Do an e2e backup to the homeserver
+        [aliceSession.crypto.backup prepareKeyBackupVersionWithPassword:nil success:^(MXMegolmBackupCreationInfo * _Nonnull keyBackupCreationInfo) {
+            [aliceSession.crypto.backup createKeyBackupVersion:keyBackupCreationInfo success:^(MXKeyBackupVersion * _Nonnull keyBackupVersion) {
+                [aliceSession.crypto.backup backupAllGroupSessions:^{
+                    
+                    // -> We must have the backup private key locally
+                    XCTAssertTrue(aliceSession.crypto.backup.hasPrivateKeyInCryptoStore);
+                    
+                    // - Restart the session
+                    MXSession *aliceSession2 = [[MXSession alloc] initWithMatrixRestClient:aliceSession.matrixRestClient];
+                    [aliceSession close];
+                    [aliceSession2 start:^{
+                        XCTAssertTrue(aliceSession2.crypto.backup.hasPrivateKeyInCryptoStore);
+                    } failure:^(NSError * _Nonnull error) {
+                        XCTFail(@"The request should not fail - NSError: %@", error);
+                        [expectation fulfill];
+                    }];
+                    
+                    // -> The restarted alice session must still have the private key
+                    __block id observer;
+                    observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXKeyBackupDidStateChangeNotification object:aliceSession2.crypto.backup queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *notif) {
+                        
+                        if (observer && aliceSession2.crypto.backup.state == MXKeyBackupStateReadyToBackUp)
+                        {
+                            [[NSNotificationCenter defaultCenter] removeObserver:observer];
+                            observer = nil;
+                            
+                            XCTAssertTrue(aliceSession2.crypto.backup.hasPrivateKeyInCryptoStore);
+                            
+                            // -> It must be able to restore the backup using this local key
+                            [aliceSession2.crypto.backup restoreUsingPrivateKeyKeyBackup:aliceSession2.crypto.backup.keyBackupVersion room:nil session:nil success:^(NSUInteger total, NSUInteger imported) {
+                                
+                                XCTAssertGreaterThan(total, 0);
+                                [expectation fulfill];
+                                
+                            } failure:^(NSError * _Nonnull error) {
+                                XCTFail(@"The request should not fail - NSError: %@", error);
+                                [expectation fulfill];
+                            }];
+                        }
+                    }];
+                
+                } progress:nil failure:^(NSError * _Nonnull error) {
+                    XCTFail(@"The request should not fail - NSError: %@", error);
+                    [expectation fulfill];
+                }];
+                
+            } failure:^(NSError * _Nonnull error) {
+                XCTFail(@"The request should not fail - NSError: %@", error);
+                [expectation fulfill];
+            }];
+        } failure:^(NSError * _Nonnull error) {
+            XCTFail(@"The request should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+    }];
+}
+
+
+/**
+ - Do an e2e backup to the homeserver
+ - Erase local private key locally (that simulates usage of the backup from another device)
+ - Restore the backup with a password
+ -> We should have now the private key locally
+ */
+- (void)testCatchPrivateKeyOnRecoverWithPassword
+{
+    [matrixSDKTestsE2EData doE2ETestWithAliceAndBobInARoomWithCryptedMessages:self cryptedBob:YES readyToTest:^(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
+        
+        // - Do an e2e backup to the homeserver
+        NSString *password = @"qwerty";
+        [aliceSession.crypto.backup prepareKeyBackupVersionWithPassword:password success:^(MXMegolmBackupCreationInfo * _Nonnull keyBackupCreationInfo) {
+            [aliceSession.crypto.backup createKeyBackupVersion:keyBackupCreationInfo success:^(MXKeyBackupVersion * _Nonnull keyBackupVersion) {
+            
+                NSString *backupSecret = [aliceSession.crypto.store secretWithSecretId:MXSecretId.keyBackup];
+                XCTAssertTrue(aliceSession.crypto.backup.hasPrivateKeyInCryptoStore);
+                
+                // - Erase local private key locally (that simulates usage of the backup from another device)
+                [aliceSession.crypto.store deleteSecretWithSecretId:MXSecretId.keyBackup];
+                XCTAssertFalse(aliceSession.crypto.backup.hasPrivateKeyInCryptoStore);
+                
+                // - Restore the backup with a password
+                [aliceSession.crypto.backup restoreKeyBackup:keyBackupVersion withPassword:password room:nil session:nil success:^(NSUInteger total, NSUInteger imported) {
+                    
+                    // -> We should have now the private key locally
+                    XCTAssertTrue(aliceSession.crypto.backup.hasPrivateKeyInCryptoStore);
+                    
+                    NSString *backupSecret2 = [aliceSession.crypto.store secretWithSecretId:MXSecretId.keyBackup];
+                    XCTAssertEqualObjects(backupSecret, backupSecret2);
+                    
+                    [expectation fulfill];
+                    
+                } failure:^(NSError * _Nonnull error) {
+                    XCTFail(@"The request should not fail - NSError: %@", error);
+                    [expectation fulfill];
+                }];
+                
+            } failure:^(NSError * _Nonnull error) {
+                XCTFail(@"The request should not fail - NSError: %@", error);
+                [expectation fulfill];
+            }];
+        } failure:^(NSError * _Nonnull error) {
+            XCTFail(@"The request should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+    }];
+}
+
+
+/**
+ - Do an e2e backup to the homeserver
+ - Log Alice on a new device
+ - Make each Alice device trust each other
+ -> Alice2 should have the private backup key thanks to gossiping
+ -> Alice2 should have all her history decrypted.
+ */
+- (void)testGossipKey
+{
+    [matrixSDKTestsE2EData doE2ETestWithAliceAndBobInARoomWithCryptedMessages:self cryptedBob:YES readyToTest:^(MXSession *aliceSession1, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
+        
+        // - Do an e2e backup to the homeserver
+        [aliceSession1.crypto.backup prepareKeyBackupVersionWithPassword:nil success:^(MXMegolmBackupCreationInfo * _Nonnull keyBackupCreationInfo) {
+            [aliceSession1.crypto.backup createKeyBackupVersion:keyBackupCreationInfo success:^(MXKeyBackupVersion * _Nonnull keyBackupVersion) {
+                [aliceSession1.crypto.backup backupAllGroupSessions:^{
+                    
+                    [matrixSDKTestsE2EData loginUserOnANewDevice:aliceSession1.matrixRestClient.credentials withPassword:MXTESTS_ALICE_PWD onComplete:^(MXSession *aliceSession2) {
+                        
+                        // -> We must have the backup private key locally
+                        XCTAssertFalse(aliceSession2.crypto.backup.hasPrivateKeyInCryptoStore);
+                        
+                        NSString *aliceUserId = aliceSession1.matrixRestClient.credentials.userId;
+                        NSString *aliceSession1DeviceId = aliceSession1.matrixRestClient.credentials.deviceId;
+                        NSString *aliceSession2DeviceId = aliceSession2.matrixRestClient.credentials.deviceId;
+                        
+                        // - Make each Alice device trust each other
+                        // This simulates a self verification and trigger backup restore in background
+                        [aliceSession1.crypto setDeviceVerification:MXDeviceVerified forDevice:aliceSession2DeviceId ofUser:aliceUserId success:^{
+                            [aliceSession2.crypto setDeviceVerification:MXDeviceVerified forDevice:aliceSession1DeviceId ofUser:aliceUserId success:^{
+                                
+                                // Wait a bit to make background requests happen
+                                dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 3 * NSEC_PER_SEC), dispatch_get_main_queue(), ^{
+                                    
+                                    // -> Alice2 should have the private backup key thanks to gossiping
+                                    XCTAssertTrue(aliceSession2.crypto.backup.hasPrivateKeyInCryptoStore);
+                                    
+                                    // -> Alice2 should have all her history decrypted
+                                    NSUInteger inboundGroupSessionsCount = [aliceSession2.crypto.store inboundGroupSessionsCount:NO];
+                                    XCTAssertGreaterThan(inboundGroupSessionsCount, 0);
+                                    XCTAssertEqual(inboundGroupSessionsCount, [aliceSession1.crypto.store inboundGroupSessionsCount:NO]);
+                                    
+                                    [expectation fulfill];
+                                });
+                                
+                            } failure:^(NSError *error) {
+                                XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                                [expectation fulfill];
+                            }];
+                        } failure:^(NSError *error) {
+                            XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                            [expectation fulfill];
+                        }];
+                        
+                    }];
+            
+                } progress:nil failure:^(NSError * _Nonnull error) {
+                    XCTFail(@"The request should not fail - NSError: %@", error);
+                    [expectation fulfill];
+                }];
+            } failure:^(NSError * _Nonnull error) {
+                XCTFail(@"The request should not fail - NSError: %@", error);
+                [expectation fulfill];
+            }];
+        } failure:^(NSError * _Nonnull error) {
+            XCTFail(@"The request should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+    }];
+}
+
+
 @end
 
 #pragma clang diagnostic pop

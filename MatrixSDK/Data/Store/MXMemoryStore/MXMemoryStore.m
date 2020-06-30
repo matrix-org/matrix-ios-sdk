@@ -284,6 +284,12 @@
     homeserverWellknown = wellknown;
 }
 
+- (NSArray<MXEvent*>* _Nonnull)relationsForEvent:(nonnull NSString*)eventId inRoom:(nonnull  NSString*)roomId relationType:(NSString*)relationType
+{
+    MXMemoryRoomStore *roomStore = [self getOrCreateRoomStore:roomId];
+    return [roomStore relationsForEvent:eventId relationType:relationType];
+}
+
 - (BOOL)isPermanent
 {
     return NO;

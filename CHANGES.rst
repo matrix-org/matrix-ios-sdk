@@ -1,6 +1,110 @@
-Changes in Matrix iOS SDK in 0.15.3 (2019-xx-xx)
-===============================================
+Changes in Matrix iOS SDK in 0.16.6 (2020-05-xx)
+================================================
 
+Improvements:
+ * MXCrypto: Only create one olm session at a time per device (vector-im/riot-ios/issues/2331).
+ * MXCrossSigning: Add the bootstrapWithAuthParams method.
+ * MXRecoveryService: Create this service to manage keys we want to store in SSSS.
+
+Bug fix:
+ * MXSecretShareManager: Fix crash in cancelRequestWithRequestId (vector-im/riot-ios/issues/3272).
+ * MXIdentityService: Fix crash in handleHTTPClientError (vector-im/riot-ios/issues/3273).
+ * MXDeviceList: Fix crash in refreshOutdatedDeviceLists (vector-im/riot-ios/issues/3118).
+ * MXDeviceListOperationsPool: Fix current device verification status put in MXDeviceUnknown instead of MXDeviceVerified (vector-im/riot-ios/issues/3343).
+
+API break:
+ * MXCrossSigning: Removed MXCrossSigningStateCanCrossSignAsynchronously.
+
+Changes in Matrix iOS SDK in 0.16.5 (2020-05-18)
+================================================
+
+Improvements:
+ * MXSession: Update account data as soon as the endpoint returns.
+ * MXSecretStorage: Add this class to support SSSS ([MSC1946(]https://github.com/matrix-org/matrix-doc/pull/1946).
+ * SAS verification: Support new key agreement.
+
+Changes in Matrix iOS SDK in 0.16.4 (2020-05-07)
+================================================
+
+Improvements:
+ * Minimal version for iOS is now 9.0.
+ * Pod: Update AFNetworking version (#793).
+ * Pod: Update Realm and OHTTPStubs.
+
+Changes in Matrix iOS SDK in 0.16.3 (2020-05-07)
+================================================
+
+Improvements:
+ * MXCrypto: Allow to verify a device again to request private keys again from it.
+ * Secrets: Validate received private keys for cross-signing and key backup before using them (vector-im/riot-ios/issues/3201).
+
+Changes in Matrix iOS SDK in 0.16.2 (2020-04-30)
+================================================
+
+Improvements:
+ * Cross-signing: Make key gossip requests when the other device sent m.key.verification.done (vector-im/riot-ios/issues/3163).
+
+Bug fix:
+ * MXEventTimeline: Fix crash in paginate:.
+ * MXSession: Fix crash in runNextDirectRoomOperation.
+
+Doc fix:
+ * Update the CONTRIBUTING.rst to point to correct file.
+
+Changes in Matrix iOS SDK in 0.16.1 (2020-04-24)
+================================================
+
+Improvements:
+ * MXHTTPClient: Log HTTP requests methods.
+ * MXCrypto: Make trustLevelSummaryForUserIds async (vector-im/riot-ios/issues/3126).
+ * MXJingleCallAudioSessionConfigurator: Remove workaround since it is no longer needed (PR #815).
+
+Bug fix:
+ * Fix race condition in MXSecretShareManager (vector-im/riot-ios/issues/3123).
+ * Too much MXDeviceInfoTrustLevelDidChangeNotification and MXCrossSigningInfoTrustLevelDidChangeNotification (vector-im/riot-ios/issues/3121).
+ * VoiP: Fix remote ice candidates being added before remote description is setup (vector-im/riot-ios/issues/1784).
+ * MXDeviceListOperationsPool: Post MXDeviceListDidUpdateUsersDevicesNotification notification only for new changes never seen before (vector-im/riot-ios/issues/3120).
+ * MXIdentityService: Fix registration by email and all IS services by fixing Open Id token.
+
+API break:
+ * MXCrypto: trustLevelSummaryForUserIds: is now async.
+
+Changes in Matrix iOS SDK in 0.16.0 (2020-04-17)
+================================================
+
+Improvements:
+ * Cross-Signing: Add a new module, MXCrossSigning, to handle device cross-signing (vector-im/riot-ios/issues/2890).
+ * Verification by DM: Support QR code (vector-im/riot-ios/issues/2921).
+ * MXCrypto: Change the threading model to make [MXCrypto decryptEvent:] less blocking.
+ * MXCrypto: Restart broken Olm sessions ([MSC1719](https://github.com/matrix-org/matrix-doc/pull/1719)) (vector-im/riot-ios/issues/2129).
+ * MXCrypto: Expose devicesForUser.
+ * MXCrypto: the `setDeviceVerification` method now downloads all user's devices if the device is not yet known.
+ * MXCrypto: Add the option to disable sending key share requests (`[MXCrypto setOutgoingKeyRequestsEnabled:]`).
+ * MXRestClient: Use r0 APIs for crypto endpoints (PR #826).
+ * MXDeviceList: Post `MXDeviceListDidUpdateUsersDevicesNotification` notification when users devices list are updated.
+ * MXSession: Add credentials, myUserId and myDeviceId shorcuts.
+ * MXSession: Add createRoomWithParameters with a MXRoomCreationParameters model class.
+ * MXRoom: Add a method to retrieve trusted members count in an encrypted room.
+ * MXRoomCreationParameters: Support the initial_state parameter and allow e2e on room creation (vector-im/riot-ios/issues/2943).
+ * MXRoomSummary: Add the trust property to indicate trust in other users and devices in the room (vector-im/riot-ios/issues/2906).
+ * Aggregations: Implement m.reference aggregations, aka thread ([MSC1849](https://github.com/matrix-org/matrix-doc/blob/matthew/msc1849/proposals/1849-aggregations.md)).
+ * MXStore: Add a method to get related events for a specific event.
+ * MXPublicRoom: Add canonical alias property.
+ * MXLogger: Add a parameter to indicate the number of log files.
+ * MXThrottler: Add this tool class to throttle actions.
+ * Make enums conform to `Equatable`/`Hashable` where applicable.
+
+Bug fix:
+ * MXEventType: Fix Swift refinement.
+ * MXCrypto: Fix users keys download that can fail in some condition
+ * MXCryptoStore does not store device.algorithm (https://github.com/vector-im/riot-ios/issues/2896).
+
+API break:
+ * MXCrypto: Rename MXDeviceVerificationManager to MXKeyVerificationManager.
+ * MXCrypto: the `downloadKeys` method now returns users cross-signing keys.
+ * MXDeviceInfo: the `verified` property has been replaced by `trustLevel`.
+ * MXSession & MXRestClient: the `createRoom` method with a long list of parameters
+   has been replaced by `createRoomWithParameters`.
 
 Changes in Matrix iOS SDK in 0.15.2 (2019-12-05)
 ===============================================

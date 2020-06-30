@@ -454,6 +454,7 @@ NSString *const MXIdentityServiceNotificationAccessTokenKey = @"accessToken";
     NSString *accessToken = self.restClient.accessToken;
     
     if (httpClient
+        && self.identityServer
         && [httpClient.baseURL.absoluteString hasPrefix:self.identityServer]
         && [mxError.errcode isEqualToString:kMXErrCodeStringTermsNotSigned] && accessToken)
     {
