@@ -51,15 +51,11 @@
     MXJSONModelSetString(notifLevelKey, condition.parameters[@"key"]);
     if (notifLevelKey)
     {
-        MXRoom *room = [mxSession roomWithRoomId:event.roomId];
-        if (room)
-        {
-            MXRoomPowerLevels *roomPowerLevels = roomState.powerLevels;
-            NSInteger notifLevel = [roomPowerLevels minimumPowerLevelForNotifications:notifLevelKey defaultPower:50];
-            NSInteger senderPowerLevel = [roomPowerLevels powerLevelOfUserWithUserID:event.sender];
+        MXRoomPowerLevels *roomPowerLevels = roomState.powerLevels;
+        NSInteger notifLevel = [roomPowerLevels minimumPowerLevelForNotifications:notifLevelKey defaultPower:50];
+        NSInteger senderPowerLevel = [roomPowerLevels powerLevelOfUserWithUserID:event.sender];
 
-            isSatisfied = (senderPowerLevel >= notifLevel);
-        }
+        isSatisfied = (senderPowerLevel >= notifLevel);
     }
 
     return isSatisfied;

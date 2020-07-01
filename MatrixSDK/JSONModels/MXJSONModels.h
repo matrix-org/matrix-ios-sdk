@@ -346,11 +346,6 @@ FOUNDATION_EXPORT NSString *const kMXLoginIdentifierTypePhone;
      */
     @property (nonatomic) NSString *roomId;
 
-    /**
-     The alias on this home server.
-     */
-    @property (nonatomic) NSString *roomAlias;
-
 @end
 
 /**

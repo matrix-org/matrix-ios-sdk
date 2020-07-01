@@ -24,6 +24,8 @@
 #import "MXSession.h"
 #import "MXRoomNameDefaultStringLocalizations.h"
 
+#import "NSArray+MatrixSDK.h"
+
 @implementation MXRoomSummaryUpdater
 
 + (instancetype)roomSummaryUpdaterForSession:(MXSession *)mxSession
@@ -114,7 +116,17 @@
                 break;
 
             case MXEventTypeRoomAliases:
-                summary.aliases = roomState.aliases;
+                if (summary.aliases.count == 0)
+                {
+                    //  if no aliases, just set it
+                    summary.aliases = roomState.aliases;
+                }
+                else
+                {
+                    //  We do a union here because can not be sure about the event type order.
+                    //  So a MXEventTypeRoomCanonicalAlias event might be came first and aliases array may contain it, we do not want to lose it.
+                    summary.aliases = [summary.aliases mx_unionArray:roomState.aliases];
+                }
                 updated = YES;
                 break;
 
@@ -124,6 +136,18 @@
                 {
                     summary.displayname = roomState.canonicalAlias;
                     updated = YES;
+                }
+                //  If canonicalAlias is set, add it to the aliases array
+                if (roomState.canonicalAlias && ![summary.aliases containsObject:roomState.canonicalAlias])
+                {
+                    if (summary.aliases.count == 0)
+                    {
+                        summary.aliases = @[roomState.canonicalAlias];
+                    }
+                    else
+                    {
+                        summary.aliases = [summary.aliases arrayByAddingObject:roomState.canonicalAlias];
+                    }
                 }
                 break;
 

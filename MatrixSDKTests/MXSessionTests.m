@@ -78,13 +78,22 @@
             mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
             [mxSession start:^{
 
-                MXRoom *room = [mxSession roomWithAlias:response.roomAlias];
-
+                MXRoom *room = [mxSession roomWithRoomId:response.roomId];
+                
                 XCTAssertNotNil(room);
+                
+                //  fetch room alias from the room
+                NSString *roomAlias = room.summary.aliases.firstObject;
+                XCTAssertNotNil(roomAlias);
+                
+                //  fetch the room by the alias
+                MXRoom *room2 = [mxSession roomWithAlias:roomAlias];
 
-                [room state:^(MXRoomState *roomState) {
+                XCTAssertNotNil(room2);
+                
+                [room2 state:^(MXRoomState *roomState) {
                     XCTAssertEqual(roomState.aliases.count, 1);
-                    XCTAssertEqualObjects(roomState.aliases[0], response.roomAlias);
+                    XCTAssertEqualObjects(roomState.aliases[0], roomAlias);
 
                     [expectation fulfill];
                 }];

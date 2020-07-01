@@ -1714,7 +1714,7 @@
 		B146D50121A5C6D600D8C2C6 /* MXScanManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXScanManager.m; sourceTree = "<group>"; };
 		B14766B523D9D9410091F721 /* MXUsersTrustLevelSummary.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MXUsersTrustLevelSummary.h; sourceTree = "<group>"; };
 		B14766B623D9D9410091F721 /* MXUsersTrustLevelSummary.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MXUsersTrustLevelSummary.m; sourceTree = "<group>"; };
-		B14B17682464419E00C2751E /* MatrixSDK.podspec */ = {isa = PBXFileReference; explicitFileType = text.script.ruby; path = MatrixSDK.podspec; sourceTree = "<group>"; };
+		B14B17682464419E00C2751E /* MatrixSDK.podspec */ = {isa = PBXFileReference; explicitFileType = text.script.ruby; path = MatrixSDK.podspec; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.ruby; };
 		B14B1769246441AF00C2751E /* SwiftMatrixSDK.podspec */ = {isa = PBXFileReference; explicitFileType = text.script.ruby; path = SwiftMatrixSDK.podspec; sourceTree = "<group>"; };
 		B14EF36B2397E90400758AF0 /* MatrixSDK.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = MatrixSDK.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		B17285782100C88A0052C51E /* MXSendReplyEventStringsLocalizable.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = MXSendReplyEventStringsLocalizable.h; path = ../MXSendReplyEventStringsLocalizable.h; sourceTree = "<group>"; };
