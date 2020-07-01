@@ -94,10 +94,26 @@ NSString *const MXRecoveryServiceErrorDomain = @"org.matrix.sdk.recoveryService"
     return (keyContent.passphrase != nil);
 }
 
+- (void)deleteRecoveryWithDeleteServicesBackups:(BOOL)deleteServicesBackups
+                                        success:(void (^)(void))success
+                                        failure:(void (^)(NSError *error))failure
+{
+    NSLog(@"[MXRecoveryService] deleteRecovery: deleteServicesBackups: %@", @(deleteServicesBackups));
+    
+    if (deleteServicesBackups)
+    {
+        [self deleteKeyBackupWithSuccess:^{
+            [self deleteRecoveryWithSuccess:success failure:failure];
+        } failure:failure];
+    }
+    else
+    {
+        [self deleteRecoveryWithSuccess:success failure:failure];
+    }
+}
+
 - (void)deleteRecoveryWithSuccess:(void (^)(void))success failure:(void (^)(NSError * _Nonnull))failure
 {
-    NSLog(@"[MXRecoveryService] deleteRecovery");
-    
     dispatch_group_t dispatchGroup = dispatch_group_create();
     __block NSError *error;
     
@@ -141,6 +157,32 @@ NSString *const MXRecoveryServiceErrorDomain = @"org.matrix.sdk.recoveryService"
             }
         }
     });
+}
+
+- (void)deleteKeyBackupWithSuccess:(void (^)(void))success
+                           failure:(void (^)(NSError *error))failure
+{
+    NSLog(@"[MXRecoveryService] deleteKeyBackup");
+    
+    MXKeyBackup *keyBackup = self.crypto.backup;
+    if (!keyBackup)
+    {
+        success();
+        return;
+    }
+    
+    [keyBackup forceRefresh:^(BOOL usingLastVersion) {
+        
+        if (keyBackup.keyBackupVersion)
+        {
+            [keyBackup deleteKeyBackupVersion:keyBackup.keyBackupVersion.version success:success failure:failure];
+        }
+        else
+        {
+            success();
+        }
+        
+    } failure:failure];
 }
 
 
@@ -192,15 +234,16 @@ NSString *const MXRecoveryServiceErrorDomain = @"org.matrix.sdk.recoveryService"
 
 - (void)createRecoveryForSecrets:(nullable NSArray<NSString*>*)secrets
                   withPassphrase:(nullable NSString*)passphrase
+        createServicesBackups:(BOOL)createServicesBackups
                          success:(void (^)(MXSecretStorageKeyCreationInfo *keyCreationInfo))success
                          failure:(void (^)(NSError *error))failure
 {
-    NSLog(@"[MXRecoveryService] createRecovery: secrets: %@", secrets);
+    NSLog(@"[MXRecoveryService] createRecovery: secrets: %@. createServicesBackups: %@", secrets, @(createServicesBackups));
     
     if (self.hasRecovery)
     {
         NSLog(@"[MXRecoveryService] createRecovery: Error: A recovery already exists.");
-        NSError *error = [NSError errorWithDomain:MXCrossSigningErrorDomain
+        NSError *error = [NSError errorWithDomain:MXRecoveryServiceErrorDomain
                                              code:MXRecoveryServiceSSSSAlreadyExistsErrorCode
                                          userInfo:@{
                                                     NSLocalizedDescriptionKey: @"MXRecoveryService: A secret storage already exists",
@@ -209,6 +252,24 @@ NSString *const MXRecoveryServiceErrorDomain = @"org.matrix.sdk.recoveryService"
         return;
     }
     
+    if (createServicesBackups
+        && (!secrets || [secrets containsObject:MXSecretId.keyBackup]))
+    {
+        [self createKeyBackupWithSuccess:^{
+            [self createRecoveryForSecrets:secrets withPassphrase:passphrase success:success failure:failure];
+        } failure:failure];
+    }
+    else
+    {
+        [self createRecoveryForSecrets:secrets withPassphrase:passphrase success:success failure:failure];
+    }
+}
+
+- (void)createRecoveryForSecrets:(nullable NSArray<NSString*>*)secrets
+                  withPassphrase:(nullable NSString*)passphrase
+                         success:(void (^)(MXSecretStorageKeyCreationInfo *keyCreationInfo))success
+                         failure:(void (^)(NSError *error))failure
+{
     MXWeakify(self);
     [_secretStorage createKeyWithKeyId:nil keyName:nil passphrase:passphrase success:^(MXSecretStorageKeyCreationInfo * _Nonnull keyCreationInfo) {
         MXStrongifyAndReturnIfNil(self);
@@ -228,6 +289,56 @@ NSString *const MXRecoveryServiceErrorDomain = @"org.matrix.sdk.recoveryService"
     }];
 }
 
+- (void)createKeyBackupWithSuccess:(void (^)(void))success
+                           failure:(void (^)(NSError *error))failure
+{
+    NSLog(@"[MXRecoveryService] createKeyBackup");
+    
+    MXKeyBackup *keyBackup = self.crypto.backup;
+    if (!keyBackup)
+    {
+        success();
+        return;
+    }
+    
+    [keyBackup forceRefresh:^(BOOL usingLastVersion) {
+        
+        // If a backup already exists, make sure we have the private key locally
+        if (keyBackup.keyBackupVersion)
+        {
+            if ([self.cryptoStore secretWithSecretId:MXSecretId.keyBackup])
+            {
+                NSLog(@"[MXRecoveryService] createKeyBackup: Reuse private key of existing one");
+                success();
+            }
+            else
+            {
+                NSLog(@"[MXRecoveryService] createKeyBackup: Error: A key backup already exists");
+                NSError *error = [NSError errorWithDomain:MXRecoveryServiceErrorDomain
+                                                     code:MXRecoveryServiceKeyBackupExistsButNoPrivateKeyErrorCode
+                                                 userInfo:@{
+                                                            NSLocalizedDescriptionKey: @"MXRecoveryService: A key backup already exists but the private key is unknown",
+                                                            }];
+                failure(error);
+            }
+            return;
+        }
+        
+        // Setup the key backup
+        [keyBackup prepareKeyBackupVersionWithPassword:nil success:^(MXMegolmBackupCreationInfo * _Nonnull keyBackupCreationInfo) {
+            [keyBackup createKeyBackupVersion:keyBackupCreationInfo success:^(MXKeyBackupVersion * _Nonnull keyBackupVersion) {
+                [keyBackup backupAllGroupSessions:^{
+                    
+                    // The private key is stored as MXSecretId.keyBackup
+                    success();
+                    
+                } progress:nil failure:failure];
+            } failure:failure];
+        } failure:failure];
+        
+    } failure:failure];
+}
+
 - (void)updateRecoveryForSecrets:(nullable NSArray<NSString*>*)secrets
                   withPrivateKey:(NSData*)privateKey
                          success:(void (^)(void))success
@@ -240,7 +351,7 @@ NSString *const MXRecoveryServiceErrorDomain = @"org.matrix.sdk.recoveryService"
     {
         // No recovery
         NSLog(@"[MXRecoveryService] updateRecovery: Error: No existing SSSS");
-        NSError *error = [NSError errorWithDomain:MXCrossSigningErrorDomain
+        NSError *error = [NSError errorWithDomain:MXRecoveryServiceErrorDomain
                                              code:MXRecoveryServiceNoSSSSErrorCode
                                          userInfo:@{
                                                     NSLocalizedDescriptionKey: @"MXRecoveryService: The account has no secret storage",
@@ -593,7 +704,7 @@ NSString *const MXRecoveryServiceErrorDomain = @"org.matrix.sdk.recoveryService"
     if (!recoveryId)
     {
         // No SSSS
-        NSError *error = [NSError errorWithDomain:MXCrossSigningErrorDomain
+        NSError *error = [NSError errorWithDomain:MXRecoveryServiceErrorDomain
                                              code:MXRecoveryServiceNoSSSSErrorCode
                                          userInfo:@{
                                                     NSLocalizedDescriptionKey: @"MXRecoveryService: The account has no secret storage",
@@ -606,7 +717,7 @@ NSString *const MXRecoveryServiceErrorDomain = @"org.matrix.sdk.recoveryService"
     if (!keyContent.passphrase)
     {
         // No passphrase
-        NSError *error = [NSError errorWithDomain:MXCrossSigningErrorDomain
+        NSError *error = [NSError errorWithDomain:MXRecoveryServiceErrorDomain
                                              code:MXRecoveryServiceNotProtectedByPassphraseErrorCode
                                          userInfo:@{
                                                     NSLocalizedDescriptionKey: @"MXRecoveryService: Secret storage not protected by a passphrase",

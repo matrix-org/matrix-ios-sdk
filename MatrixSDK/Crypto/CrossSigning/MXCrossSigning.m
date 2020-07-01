@@ -90,6 +90,18 @@ NSString *const MXCrossSigningErrorDomain = @"org.matrix.sdk.crosssigning";
     
     NSLog(@"[MXCrossSigning] setup on device %@. MSK: %@", myCreds.deviceId, keys.masterKeys.keys);
     
+    void (^failureBlock)(NSError *error) = ^void(NSError *error) {
+        
+        // Clean in-flight keys
+        [self.crypto.store deleteSecretWithSecretId:MXSecretId.crossSigningMaster];
+        [self.crypto.store deleteSecretWithSecretId:MXSecretId.crossSigningUserSigning];
+        [self.crypto.store deleteSecretWithSecretId:MXSecretId.crossSigningSelfSigning];
+        
+        dispatch_async(dispatch_get_main_queue(), ^{
+            failure(error);
+        });
+    };
+    
     // Delegate the storage of them
     [self storeCrossSigningKeys:privateKeys success:^{
         
@@ -112,20 +124,12 @@ NSString *const MXCrossSigningErrorDomain = @"org.matrix.sdk.crosssigning";
                 // Expose this device to other users as signed by me
                 [self crossSignDeviceWithDeviceId:myCreds.deviceId success:^{
                     success();
-                } failure:failure];
-            } failure:failure];
+                } failure:failureBlock];
+            } failure:failureBlock];
             
-        } failure:^(NSError * _Nonnull error) {
-            dispatch_async(dispatch_get_main_queue(), ^{
-                failure(error);
-            });
-        }];
+        } failure:failureBlock];
         
-    } failure:^(NSError * _Nonnull error) {
-        dispatch_async(dispatch_get_main_queue(), ^{
-            failure(error);
-        });
-    }];
+    } failure:failureBlock];
 }
 
 
