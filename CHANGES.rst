@@ -1,3 +1,11 @@
+Changes in Matrix iOS SDK in 0.16.7 (2020-07-13)
+================================================
+
+Bug fix:
+ * MXCreateRoomReponse: Remove undocumented roomAlias property (vector-im/riot-ios/issues/3300).
+ * MXPushRuleSenderNotificationPermissionConditionChecker & MXPushRuleRoomMemberCountConditionChecker: Remove redundant room check (vector-im/riot-ios/issues/3354).
+ * MXSDKOptions: Introduce enableKeyBackupWhenStartingMXCrypto option (vector-im/riot-ios/issues/3371).
+
 Changes in Matrix iOS SDK in 0.16.6 (2020-06-30)
 ================================================
 
@@ -16,11 +24,8 @@ Bug fix:
  * MXSecretShareManager: Fix crash in cancelRequestWithRequestId (vector-im/riot-ios/issues/3272).
  * MXIdentityService: Fix crash in handleHTTPClientError (vector-im/riot-ios/issues/3273).
  * MXSession: Add ignoreSessionState to backgroundSync method.
- * MXCreateRoomReponse: Remove undocumented roomAlias property (vector-im/riot-ios/issues/3300).
  * MXDeviceList: Fix crash in refreshOutdatedDeviceLists (vector-im/riot-ios/issues/3118).
- * MXPushRuleSenderNotificationPermissionConditionChecker & MXPushRuleRoomMemberCountConditionChecker: Remove redundant room check (vector-im/riot-ios/issues/3354).
  * MXDeviceListOperationsPool: Fix current device verification status put in MXDeviceUnknown instead of MXDeviceVerified (vector-im/riot-ios/issues/3343).
- * MXSDKOptions: Introduce enableKeyBackupWhenStartingMXCrypto option (vector-im/riot-ios/issues/3371).
 
 API break:
  * MXCrossSigning: Removed MXCrossSigningStateCanCrossSignAsynchronously.
