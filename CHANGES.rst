@@ -1,3 +1,9 @@
+Changes in Matrix iOS SDK in 0.16.8 (2020-07-)
+================================================
+
+Bug fix:
+ * MXRoom: Reply: Use formatted body only if the message content format is known.
+
 Changes in Matrix iOS SDK in 0.16.7 (2020-07-13)
 ================================================
 

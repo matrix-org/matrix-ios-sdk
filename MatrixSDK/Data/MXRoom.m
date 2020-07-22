@@ -1850,7 +1850,13 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
         || [msgtype isEqualToString:kMXMessageTypeEmote])
     {
         NSString *eventToReplyMessageBody = eventToReply.content[@"body"];
-        NSString *eventToReplyMessageFormattedBody = eventToReply.content[@"formatted_body"];
+        
+        // Use formatted body only if the format is known
+        NSString *eventToReplyMessageFormattedBody;
+        if ([eventToReply.content[@"format"] isEqualToString:kMXRoomMessageFormatHTML])
+        {
+            eventToReplyMessageFormattedBody = eventToReply.content[@"formatted_body"];
+        }
         
         senderMessageBody = eventToReplyMessageBody;
         senderMessageFormattedBody = eventToReplyMessageFormattedBody ?: eventToReplyMessageBody;
