@@ -1850,7 +1850,13 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
         || [msgtype isEqualToString:kMXMessageTypeEmote])
     {
         NSString *eventToReplyMessageBody = eventToReply.content[@"body"];
-        NSString *eventToReplyMessageFormattedBody = eventToReply.content[@"formatted_body"];
+        
+        // Use formatted body only if the format is known
+        NSString *eventToReplyMessageFormattedBody;
+        if ([eventToReply.content[@"format"] isEqualToString:kMXRoomMessageFormatHTML])
+        {
+            eventToReplyMessageFormattedBody = eventToReply.content[@"formatted_body"];
+        }
         
         senderMessageBody = eventToReplyMessageBody;
         senderMessageFormattedBody = eventToReplyMessageFormattedBody ?: eventToReplyMessageBody;
@@ -1895,7 +1901,6 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
         *replyContentFormattedBody = [self replyMessageFormattedBodyFromEventToReply:eventToReply
                                                           senderMessageFormattedBody:senderMessageFormattedBody
                                                               isSenderMessageAnEmote:isSenderMessageAnEmote
-                                                             isSenderMessageAReplyTo:eventToReplyIsAlreadyAReply
                                                                replyFormattedMessage:finalFormattedTextMessage
                                                                  stringLocalizations:stringLocalizations];
     }
@@ -1986,7 +1991,6 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
  @param eventToReply The sender event to reply.
  @param senderMessageFormattedBody The message body of the sender.
  @param isSenderMessageAnEmote Indicate if the sender message is an emote (/me).
- @param isSenderMessageAReplyTo Indicate if the sender message is already a reply to message.
  @param replyFormattedMessage The response for the sender message. HTML formatted string if any otherwise non formatted string as reply formatted body is mandatory.
  @param stringLocalizations string localizations used when building formatted body.
  
@@ -1995,7 +1999,6 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
 - (NSString*)replyMessageFormattedBodyFromEventToReply:(MXEvent*)eventToReply
                             senderMessageFormattedBody:(NSString*)senderMessageFormattedBody
                                 isSenderMessageAnEmote:(BOOL)isSenderMessageAnEmote
-                               isSenderMessageAReplyTo:(BOOL)isSenderMessageAReplyTo
                                  replyFormattedMessage:(NSString*)replyFormattedMessage
                                    stringLocalizations:(id<MXSendReplyEventStringsLocalizable>)stringLocalizations
 {
@@ -2011,24 +2014,21 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
     
     NSString *replySenderMessageFormattedBody;
     
-    // Strip previous reply to, if the event was already a reply
-    if (isSenderMessageAReplyTo)
+    // Strip any previous "reply to"
+    NSError *error = nil;
+    NSRegularExpression *replyRegex = [NSRegularExpression regularExpressionWithPattern:@"<mx-reply>.*</mx-reply>"
+                                                                                options:NSRegularExpressionCaseInsensitive | NSRegularExpressionDotMatchesLineSeparators
+                                                                                  error:&error];
+    NSString *senderMessageFormattedBodyWithoutReply = [replyRegex stringByReplacingMatchesInString:senderMessageFormattedBody options:0 range:NSMakeRange(0, senderMessageFormattedBody.length) withTemplate:@""];
+    
+    if (error)
     {
-        NSError *error = nil;
-        NSRegularExpression *replyRegex = [NSRegularExpression regularExpressionWithPattern:@"^<mx-reply>.*</mx-reply>"
-                                                                                    options:NSRegularExpressionCaseInsensitive | NSRegularExpressionDotMatchesLineSeparators
-                                                                                      error:&error];
-        NSString *senderMessageFormattedBodyWithoutReply = [replyRegex stringByReplacingMatchesInString:senderMessageFormattedBody options:0 range:NSMakeRange(0, senderMessageFormattedBody.length) withTemplate:@""];
-        
-        if (error)
-        {
-            NSLog(@"[MXRoom] Fail to strip previous reply to message");
-        }
-        
-        if (senderMessageFormattedBodyWithoutReply)
-        {
-            replySenderMessageFormattedBody = senderMessageFormattedBodyWithoutReply;
-        }
+        NSLog(@"[MXRoom] Fail to strip previous reply to message");
+    }
+    
+    if (senderMessageFormattedBodyWithoutReply)
+    {
+        replySenderMessageFormattedBody = senderMessageFormattedBodyWithoutReply;
     }
     else
     {

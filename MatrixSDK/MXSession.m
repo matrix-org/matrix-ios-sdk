@@ -955,7 +955,7 @@ typedef void (^MXOnResumeDone)(void);
     _catchingUp = (0 == serverTimeout);
 
     NSString * streamToken = _store.eventStreamToken;
-    NSLog(@"[MXSession] Do a server sync%@: %@", _catchingUp ? @" (catching up)" : @"", streamToken);
+    NSLog(@"[MXSession] Do a server sync%@ from token: %@", _catchingUp ? @" (catching up)" : @"", streamToken);
 
     MXWeakify(self);
     eventStreamRequest = [matrixRestClient syncFromToken:streamToken serverTimeout:serverTimeout clientTimeout:clientTimeout setPresence:setPresence filter:self.syncFilterId success:^(MXSyncResponse *syncResponse) {
@@ -1154,6 +1154,7 @@ typedef void (^MXOnResumeDone)(void);
 
 
             // Update live event stream token
+            NSLog(@"[MXSession] Next sync token: %@", streamToken);
             self.store.eventStreamToken = syncResponse.nextBatch;
 
             // Commit store changes done in [room handleMessages]
