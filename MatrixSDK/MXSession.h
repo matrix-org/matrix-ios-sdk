@@ -547,13 +547,27 @@ typedef void (^MXOnBackgroundSyncDone)(void);
 typedef void (^MXOnBackgroundSyncFail)(NSError *error);
 
 /**
- Perform an events stream catchup in background (by keeping user offline).
+ Perform an events stream catchup in background (by keeping user offline). Considers session state.
+ @see -[MXSession backgroundSync:ignoreSessionState:success:failure]
  
  @param timeout the max time in milliseconds to perform the catchup
  @param backgroundSyncDone A block called when the SDK has been successfully performed a catchup
  @param backgroundSyncfails A block called when the catchup fails.
  */
 - (void)backgroundSync:(unsigned int)timeout
+               success:(MXOnBackgroundSyncDone)backgroundSyncDone
+               failure:(MXOnBackgroundSyncFail)backgroundSyncfails NS_REFINED_FOR_SWIFT;
+
+/**
+ Perform an events stream catchup in background (by keeping user offline).
+ 
+ @param timeout the max time in milliseconds to perform the catchup
+ @param ignoreSessionState ignore session state to be equal to paused
+ @param backgroundSyncDone A block called when the SDK has been successfully performed a catchup
+ @param backgroundSyncfails A block called when the catchup fails.
+ */
+- (void)backgroundSync:(unsigned int)timeout
+    ignoreSessionState:(BOOL)ignoreSessionState
                success:(MXOnBackgroundSyncDone)backgroundSyncDone
                failure:(MXOnBackgroundSyncFail)backgroundSyncfails NS_REFINED_FOR_SWIFT;
 

@@ -47,7 +47,7 @@
 
 #pragma mark - Constants definitions
 
-const NSString *MatrixSDKVersion = @"0.16.6";
+const NSString *MatrixSDKVersion = @"0.16.7";
 NSString *const kMXSessionStateDidChangeNotification = @"kMXSessionStateDidChangeNotification";
 NSString *const kMXSessionNewRoomNotification = @"kMXSessionNewRoomNotification";
 NSString *const kMXSessionWillLeaveRoomNotification = @"kMXSessionWillLeaveRoomNotification";
@@ -694,10 +694,16 @@ typedef void (^MXOnResumeDone)(void);
 
 - (void)backgroundSync:(unsigned int)timeout success:(MXOnBackgroundSyncDone)backgroundSyncDone failure:(MXOnBackgroundSyncFail)backgroundSyncfails
 {
+    //  background sync considering session state
+    [self backgroundSync:timeout ignoreSessionState:NO success:backgroundSyncDone failure:backgroundSyncfails];
+}
+
+- (void)backgroundSync:(unsigned int)timeout ignoreSessionState:(BOOL)ignoreSessionState success:(MXOnBackgroundSyncDone)backgroundSyncDone failure:(MXOnBackgroundSyncFail)backgroundSyncfails
+{
     // Check whether no request is already in progress
     if (!eventStreamRequest)
     {
-        if (MXSessionStatePaused != _state)
+        if (!ignoreSessionState && MXSessionStatePaused != _state)
         {
             NSLog(@"[MXSession] background Sync cannot be done in the current state %tu", _state);
             dispatch_async(dispatch_get_main_queue(), ^{

@@ -1788,7 +1788,10 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
 
         oneTimeKeyCount = -1;
 
-        _backup = [[MXKeyBackup alloc] initWithCrypto:self];
+        if ([MXSDKOptions sharedInstance].enableKeyBackupWhenStartingMXCrypto)
+        {
+            _backup = [[MXKeyBackup alloc] initWithCrypto:self];
+        }
 
         outgoingRoomKeyRequestManager = [[MXOutgoingRoomKeyRequestManager alloc]
                                          initWithMatrixRestClient:_matrixRestClient
