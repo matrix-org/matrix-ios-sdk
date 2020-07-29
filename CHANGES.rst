@@ -1,3 +1,30 @@
+Changes to be released in next version
+=================================================
+
+Features:
+ * 
+
+Improvements:
+ * 
+
+Bugfix:
+ * 
+
+API Change:
+ * 
+
+Translations:
+ * 
+
+Others:
+ * 
+
+Build:
+ * 
+
+Test:
+ * 
+
 Changes in 0.16.8 (2020-07-28)
 ================================================
 
