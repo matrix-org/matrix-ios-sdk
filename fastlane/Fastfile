@@ -24,12 +24,12 @@ platform :ios do
 
   desc "Lint MatrixSDK podspec"
   lane :lint_pod_MatrixSDK do
-    custom_pod_lib_lint(podspec: "../MatrixSDK.podspec", parameters: ["--allow-warnings"])
+    custom_pod_lib_lint(podspec: "../MatrixSDK.podspec", parameters: ["--allow-warnings", "--verbose"])
   end
 
   desc "Lint SwiftMatrixSDK podspec"
   lane :lint_pod_SwiftMatrixSDK do
-    custom_pod_lib_lint(podspec: "../SwiftMatrixSDK.podspec", parameters: ["--allow-warnings"])
+    custom_pod_lib_lint(podspec: "../SwiftMatrixSDK.podspec", parameters: ["--allow-warnings", "--verbose"])
   end
 
   desc "Push all pods"
