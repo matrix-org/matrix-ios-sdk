@@ -1,4 +1,4 @@
-Changes to be released in next version
+Changes in 0.16.9 (2020-07-30)
 =================================================
 
 Features:
