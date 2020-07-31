@@ -78,6 +78,7 @@ platform :ios do
 
   #### Private ####
 
+  desc "Just build the provided :scheme / :destination (without doing any xcarchive)"
   private_lane :build_scheme do |options|
     gym(
       workspace: "MatrixSDK.xcworkspace",
