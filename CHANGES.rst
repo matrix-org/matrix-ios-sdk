@@ -23,7 +23,7 @@ Build:
  * 
 
 Test:
- * 
+ * Make tests crash instantly if no local synapse is running.
 
 Changes in 0.16.8 (2020-07-28)
 ================================================

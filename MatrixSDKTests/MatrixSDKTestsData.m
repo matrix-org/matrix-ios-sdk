@@ -82,7 +82,7 @@ NSString * const kMXTestsAliceAvatarURL = @"mxc://matrix.org/kciiXusgZFKuNLIfLqm
         [self retain:mxRestClient];
 
         // First, try register the user
-        [mxRestClient registerWithLoginType:kMXLoginFlowTypeDummy username:bobUniqueUser password:MXTESTS_BOB_PWD success:^(MXCredentials *credentials) {
+        MXHTTPOperation *operation = [mxRestClient registerWithLoginType:kMXLoginFlowTypeDummy username:bobUniqueUser password:MXTESTS_BOB_PWD success:^(MXCredentials *credentials) {
 
             _bobCredentials = credentials;
             success();
@@ -107,6 +107,7 @@ NSString * const kMXTestsAliceAvatarURL = @"mxc://matrix.org/kciiXusgZFKuNLIfLqm
                 NSAssert(NO, @"Cannot create mxBOB account. Make sure the homeserver at %@ is running", mxRestClient.homeserver);
             }
         }];
+        operation.maxRetriesTime = 1;
     }
 }
 
@@ -463,7 +464,7 @@ NSString * const kMXTestsAliceAvatarURL = @"mxc://matrix.org/kciiXusgZFKuNLIfLqm
         [self retain:mxRestClient];
 
         // First, try register the user
-        [mxRestClient registerWithLoginType:kMXLoginFlowTypeDummy username:aliceUniqueUser password:MXTESTS_ALICE_PWD success:^(MXCredentials *credentials) {
+        MXHTTPOperation *operation = [mxRestClient registerWithLoginType:kMXLoginFlowTypeDummy username:aliceUniqueUser password:MXTESTS_ALICE_PWD success:^(MXCredentials *credentials) {
             
             _aliceCredentials = credentials;
             success();
@@ -488,6 +489,7 @@ NSString * const kMXTestsAliceAvatarURL = @"mxc://matrix.org/kciiXusgZFKuNLIfLqm
                 NSAssert(NO, @"Cannot create mxAlice account");
             }
         }];
+        operation.maxRetriesTime = 1;
     }
 }
 
@@ -696,7 +698,7 @@ NSString * const kMXTestsAliceAvatarURL = @"mxc://matrix.org/kciiXusgZFKuNLIfLqm
 
     // First, register a new random user
     NSString *anUniqueUser = [NSString stringWithFormat:@"%@", [[NSUUID UUID] UUIDString]];
-    [aUserRestClient registerWithLoginType:kMXLoginFlowTypeDummy username:anUniqueUser password:@"123456" success:^(MXCredentials *credentials) {
+    MXHTTPOperation *operation = [aUserRestClient registerWithLoginType:kMXLoginFlowTypeDummy username:anUniqueUser password:@"123456" success:^(MXCredentials *credentials) {
 
         aUserRestClient = [[MXRestClient alloc] initWithCredentials:credentials andOnUnrecognizedCertificateBlock:nil];
         [self retain:aUserRestClient];
@@ -715,6 +717,7 @@ NSString * const kMXTestsAliceAvatarURL = @"mxc://matrix.org/kciiXusgZFKuNLIfLqm
     } failure:^(NSError *error) {
         NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
     }];
+    operation.maxRetriesTime = 1;
 }
 
 
@@ -743,7 +746,7 @@ NSString * const kMXTestsAliceAvatarURL = @"mxc://matrix.org/kciiXusgZFKuNLIfLqm
         [self retain:mxRestClient];
 
         // First, try register the user
-        [mxRestClient registerWithLoginType:kMXLoginFlowTypeDummy username:bobUniqueUser password:MXTESTS_BOB_PWD success:^(MXCredentials *credentials) {
+        MXHTTPOperation *operation = [mxRestClient registerWithLoginType:kMXLoginFlowTypeDummy username:bobUniqueUser password:MXTESTS_BOB_PWD success:^(MXCredentials *credentials) {
 
             _bobCredentials = credentials;
             success();
@@ -768,6 +771,7 @@ NSString * const kMXTestsAliceAvatarURL = @"mxc://matrix.org/kciiXusgZFKuNLIfLqm
                 NSAssert(NO, @"Cannot create mxBOB account. Make sure the homeserver at %@ is running", mxRestClient.homeserver);
             }
         }];
+        operation.maxRetriesTime = 1;
     }
 }
 
