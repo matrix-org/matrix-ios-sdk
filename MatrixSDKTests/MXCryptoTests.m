@@ -675,11 +675,11 @@
                 }];
 
             } failure:^(NSError *error) {
-                NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+                XCTFail(@"Cannot set up intial test conditions - error: %@", error);
             }];
 
         } failure:^(NSError *error) {
-            NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+            XCTFail(@"Cannot set up intial test conditions - error: %@", error);
         }];
 
     }];
@@ -1593,7 +1593,7 @@
             }];
             
             [bobSession joinRoom:roomId viaServers:nil success:nil failure:^(NSError *error) {
-                NSAssert(NO, @"Cannot join a room - error: %@", error);
+                XCTFail(@"Cannot join a room - error: %@", error);
                 [expectation fulfill];
             }];
             
@@ -1631,7 +1631,7 @@
                         [expectation fulfill];
                     }];
                 } failure:^(NSError *error) {
-                    NSAssert(NO, @"Cannot join a room - error: %@", error);
+                    XCTFail(@"Cannot join a room - error: %@", error);
                     [expectation fulfill];
                 }];
                 

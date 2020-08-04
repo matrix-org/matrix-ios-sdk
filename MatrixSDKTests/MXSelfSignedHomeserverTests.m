@@ -67,7 +67,7 @@
     XCTestExpectation *expectation = [self expectationWithDescription:@"asyncTest"];
 
     __block BOOL certificateCheckAsked = NO;
-    [matrixSDKTestsData getHttpsBobCredentials:^{
+    [matrixSDKTestsData getHttpsBobCredentials:self readyToTest:^{
 
         XCTAssert(certificateCheckAsked, @"We must have been asked to check the certificate");
         XCTAssertNotNil(matrixSDKTestsData.bobCredentials);
@@ -90,7 +90,7 @@
 {
     XCTestExpectation *expectation = [self expectationWithDescription:@"asyncTest"];
 
-    [matrixSDKTestsData getHttpsBobCredentials:^{
+    [matrixSDKTestsData getHttpsBobCredentials:self readyToTest:^{
 
         MXRestClient *mxRestClient = [[MXRestClient alloc] initWithCredentials:matrixSDKTestsData.bobCredentials andOnUnrecognizedCertificateBlock:^BOOL(NSData *certificate) {
 

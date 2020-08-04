@@ -24,6 +24,7 @@ Build:
 
 Test:
  * Make tests crash instantly if no local synapse is running.
+ * Do not use anymore NSAssert in tests.
 
 Changes in 0.16.8 (2020-07-28)
 ================================================

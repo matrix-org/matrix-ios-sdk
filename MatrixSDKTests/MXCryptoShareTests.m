@@ -61,7 +61,7 @@
     [session.crypto importMegolmSessionDatas:@[sessionData] backUp:NO success:^(NSUInteger total, NSUInteger imported) {
         complete();
     } failure:^(NSError *error) {
-        NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+        [matrixSDKTestsData breakTestCase:self reason:@"Cannot set up intial test conditions - error: %@", error];
     }];
 }
 
@@ -92,7 +92,7 @@
                 } failure:nil];
             } failure:nil];
         } failure:^(NSError *error) {
-            NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+            [matrixSDKTestsData breakTestCase:self reason:@"Cannot set up intial test conditions - error: %@", error];
         }];
 
 

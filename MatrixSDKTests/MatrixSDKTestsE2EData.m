@@ -97,11 +97,11 @@
                 readyToTest(aliceSession, room.roomId, expectation);
 
             } failure:^(NSError *error) {
-                NSAssert(NO, @"Cannot enable encryption in room - error: %@", error);
+                [matrixSDKTestsData breakTestCase:testCase reason:@"Cannot enable encryption in room - error: %@", error];
             }];
 
         } failure:^(NSError *error) {
-            NSAssert(NO, @"Cannot create a room - error: %@", error);
+            [matrixSDKTestsData breakTestCase:testCase reason:@"Cannot create a room - error: %@", error];
         }];
         
     }];
@@ -145,13 +145,13 @@
                     readyToTest(aliceSession, bobSession, room.roomId, expectation);
 
                 } failure:^(NSError *error) {
-                    NSAssert(NO, @"Cannot join a room - error: %@", error);
+                    [matrixSDKTestsData breakTestCase:testCase reason:@"Cannot join a room - error: %@", error];
                 }];
             }];
 
             [room inviteUser:bobSession.myUser.userId success:nil failure:^(NSError *error) {
                 [[NSNotificationCenter defaultCenter] removeObserver:observer];
-                NSAssert(NO, @"Cannot invite Bob (%@) - error: %@", bobSession.myUser.userId, error);
+                [matrixSDKTestsData breakTestCase:testCase reason:@"Cannot invite Bob (%@) - error: %@", bobSession.myUser.userId, error];
             }];
 
         }];
@@ -190,7 +190,7 @@
             [room inviteUser:bobSession.myUser.userId success:^{
                 readyToTest(aliceSession, bobSession, room.roomId, expectation);
             } failure:^(NSError *error) {
-                NSAssert(NO, @"Cannot invite Bob (%@) - error: %@", bobSession.myUser.userId, error);
+                [matrixSDKTestsData breakTestCase:testCase reason:@"Cannot invite Bob (%@) - error: %@", bobSession.myUser.userId, error];
             }];
             
         }];
@@ -237,7 +237,7 @@
             } failure:nil];
 
         } failure:^(NSError *error) {
-            NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+            [matrixSDKTestsData breakTestCase:testCase reason:@"Cannot set up intial test conditions - error: %@", error];
         }];
 
     }];
@@ -276,13 +276,13 @@
                     readyToTest(aliceSession, bobSession, samSession, room.roomId, expectation);
 
                 } failure:^(NSError *error) {
-                    NSAssert(NO, @"Cannot join a room - error: %@", error);
+                    [matrixSDKTestsData breakTestCase:testCase reason:@"Cannot join a room - error: %@", error];
                 }];
             }];
 
             [room inviteUser:samSession.myUser.userId success:nil failure:^(NSError *error) {
                 [[NSNotificationCenter defaultCenter] removeObserver:observer];
-                NSAssert(NO, @"Cannot invite Alice - error: %@", error);
+                [matrixSDKTestsData breakTestCase:testCase reason:@"Cannot invite Alice - error: %@", error];
             }];
 
         }];
@@ -369,37 +369,37 @@
                                          });
                                          
                                      } failure:^(NSError *error) {
-                                         NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+                                         [matrixSDKTestsData breakTestCase:testCase reason:@"Cannot set up intial test conditions - error: %@", error];
                                          [expectation fulfill];
                                      }];
                                      
                                  } failure:^(NSError *error) {
-                                     NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+                                     [matrixSDKTestsData breakTestCase:testCase reason:@"Cannot set up intial test conditions - error: %@", error];
                                      [expectation fulfill];
                                  }];
                                  
                              } failure:^(NSError *error) {
-                                 NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+                                 [matrixSDKTestsData breakTestCase:testCase reason:@"Cannot set up intial test conditions - error: %@", error];
                                  [expectation fulfill];
                              }];
                          } failure:^(NSError *error) {
-                             NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+                             [matrixSDKTestsData breakTestCase:testCase reason:@"Cannot set up intial test conditions - error: %@", error];
                              [expectation fulfill];
                          }];
                          
                      } failure:^(NSError *error) {
-                         NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+                         [matrixSDKTestsData breakTestCase:testCase reason:@"Cannot set up intial test conditions - error: %@", error];
                          [expectation fulfill];
                      }];
                  }];
                  
              } failure:^(NSError *error) {
-                 NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+                 [matrixSDKTestsData breakTestCase:testCase reason:@"Cannot set up intial test conditions - error: %@", error];
                  [expectation fulfill];
              }];
              
          } failure:^(NSError *error) {
-             NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+             [matrixSDKTestsData breakTestCase:testCase reason:@"Cannot set up intial test conditions - error: %@", error];
              [expectation fulfill];
          }];
      }];
