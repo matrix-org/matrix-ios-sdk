@@ -108,7 +108,7 @@ NSString * const kMXTestsAliceAvatarURL = @"mxc://matrix.org/kciiXusgZFKuNLIfLqm
                 [self breakTestCase:testCase reason:@"Cannot create mxBOB account. Make sure the homeserver at %@ is running", mxRestClient.homeserver];
             }
         }];
-        operation.maxRetriesTime = 1;
+        operation.maxNumberOfTries = 1;
     }
 }
 
@@ -492,7 +492,7 @@ NSString * const kMXTestsAliceAvatarURL = @"mxc://matrix.org/kciiXusgZFKuNLIfLqm
                 [self breakTestCase:testCase reason:@"Cannot create mxAlice account"];
             }
         }];
-        operation.maxRetriesTime = 1;
+        operation.maxNumberOfTries = 1;
     }
 }
 
@@ -721,7 +721,7 @@ NSString * const kMXTestsAliceAvatarURL = @"mxc://matrix.org/kciiXusgZFKuNLIfLqm
     } failure:^(NSError *error) {
         [self breakTestCase:testCase reason:@"Cannot set up intial test conditions - error: %@", error];
     }];
-    operation.maxRetriesTime = 1;
+    operation.maxNumberOfTries = 1;
 }
 
 
@@ -778,7 +778,7 @@ onUnrecognizedCertificateBlock:(MXHTTPClientOnUnrecognizedCertificate)onUnrecogn
                 [self breakTestCase:testCase reason:@"Cannot create mxBOB account. Make sure the homeserver at %@ is running", mxRestClient.homeserver];
             }
         }];
-        operation.maxRetriesTime = 1;
+        operation.maxNumberOfTries = 1;
     }
 }
 

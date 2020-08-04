@@ -76,7 +76,7 @@
             XCTFail(@"Cannot create the test account");
         }
     }];
-    operation.maxRetriesTime = 1;
+    operation.maxNumberOfTries = 1;
 }
 
 - (void)testInit
@@ -186,7 +186,7 @@
         XCTFail(@"The request should not fail - NSError: %@", error);
         [expectation fulfill];
     }];
-    operation.maxRetriesTime = 1;
+    operation.maxNumberOfTries = 1;
 
     [self waitForExpectationsWithTimeout:10 handler:nil];
 }
@@ -214,7 +214,7 @@
 
             [expectation fulfill];
         }];
-        operation.maxRetriesTime = 1;
+        operation.maxNumberOfTries = 1;
     }];
 
     [self waitForExpectationsWithTimeout:10 handler:nil];
@@ -474,7 +474,7 @@
 
     client.completionQueue = dispatch_queue_create("aQueueFromAnotherThread", DISPATCH_QUEUE_SERIAL);
 
-    [client publicRoomsOnServer:nil limit:-1 since:nil filter:nil thirdPartyInstanceId:nil includeAllNetworks:NO success:^(MXPublicRoomsResponse *publicRoomsResponse) {
+    MXHTTPOperation *operation = [client publicRoomsOnServer:nil limit:-1 since:nil filter:nil thirdPartyInstanceId:nil includeAllNetworks:NO success:^(MXPublicRoomsResponse *publicRoomsResponse) {
 
         XCTAssertFalse([[NSThread currentThread] isMainThread]);
         XCTAssertEqual(dispatch_get_current_queue(), client.completionQueue);
@@ -485,6 +485,7 @@
         XCTFail(@"The request should not fail - NSError: %@", error);
         [expectation fulfill];
     }];
+    operation.maxNumberOfTries = 1;
 
     [self waitForExpectationsWithTimeout:10 handler:nil];
 }
