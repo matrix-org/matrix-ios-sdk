@@ -80,8 +80,10 @@ platform :ios do
     begin
       scan(opts)
     ensure
-      xcresult = "../#{opts[:output_directory]}/#{opts[:scheme]}.xcresult"
-      sh("zip", "-r", "#{xcresult}.zip", xcresult)
+      Dir.chdir("../#{opts[:output_directory]}") do
+        xcresult = "#{opts[:scheme]}.xcresult"
+        sh("zip", "-r", "#{xcresult}.zip", xcresult)
+      end
     end
   end
 
