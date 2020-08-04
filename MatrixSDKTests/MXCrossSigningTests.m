@@ -118,7 +118,7 @@
 
         // - Log Alice on a new device
         [MXSDKOptions sharedInstance].enableCryptoWhenStartingMXSession = YES;
-        [self->matrixSDKTestsData relogUserSessionWithNewDevice:alice0Session withPassword:MXTESTS_ALICE_PWD onComplete:^(MXSession *alice1Session) {
+        [self->matrixSDKTestsData relogUserSessionWithNewDevice:self session:alice0Session withPassword:MXTESTS_ALICE_PWD onComplete:^(MXSession *alice1Session) {
             [MXSDKOptions sharedInstance].enableCryptoWhenStartingMXSession = NO;
 
             // - Bootstrap cross-siging from alice1

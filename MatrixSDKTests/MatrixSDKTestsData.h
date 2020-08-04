@@ -148,12 +148,18 @@ onUnrecognizedCertificateBlock:(MXHTTPClientOnUnrecognizedCertificate)onUnrecogn
 - (void)breakTestCase:(XCTestCase*)testCase reason:(NSString *)reason, ...;
 
 // Logout the user on the server and log the user in with a new device
-- (void)relogUserSession:(MXSession*)session withPassword:(NSString*)password onComplete:(void (^)(MXSession *newSession))onComplete;
+- (void)relogUserSession:(XCTestCase*)testCase
+                 session:(MXSession*)session
+            withPassword:(NSString*)password
+              onComplete:(void (^)(MXSession *newSession))onComplete;
 
 // Close the current session by erasing the crypto to store  and log the user in with a new device
-- (void)relogUserSessionWithNewDevice:(MXSession*)session withPassword:(NSString*)password onComplete:(void (^)(MXSession *newSession))onComplete;
+- (void)relogUserSessionWithNewDevice:(XCTestCase*)testCase
+                              session:(MXSession*)session
+                         withPassword:(NSString*)password
+                           onComplete:(void (^)(MXSession *newSession))onComplete;
 
-- (void)for:(MXRestClient *)mxRestClient2 andRoom:(NSString*)roomId sendMessages:(NSUInteger)messagesCount success:(void (^)(void))success;
+- (void)for:(MXRestClient *)mxRestClient2 andRoom:(NSString*)roomId sendMessages:(NSUInteger)messagesCount testCase:(XCTestCase*)testCase success:(void (^)(void))success;
 
 
 #pragma mark Reference keeping

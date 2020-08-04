@@ -260,7 +260,7 @@ NSString * const kMXTestsAliceAvatarURL = @"mxc://matrix.org/kciiXusgZFKuNLIfLqm
                              readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
         
         // Add 5 messages to the room
-        [self for:bobRestClient andRoom:roomId sendMessages:5 success:^{
+        [self for:bobRestClient andRoom:roomId sendMessages:5 testCase:testCase success:^{
             
             readyToTest(bobRestClient, roomId, expectation);
         }];
@@ -280,7 +280,7 @@ NSString * const kMXTestsAliceAvatarURL = @"mxc://matrix.org/kciiXusgZFKuNLIfLqm
     [self getBobMXRestClient:testCase readyToTest:^(MXRestClient *bobRestClient) {
         
         // Fill Bob's account with 5 rooms of 3 messages
-        [self for:bobRestClient createRooms:5 withMessages:3 success:^{
+        [self for:bobRestClient createRooms:5 withMessages:3 testCase:testCase success:^{
             readyToTest(bobRestClient, expectation);
         }];
     }];
@@ -292,7 +292,7 @@ NSString * const kMXTestsAliceAvatarURL = @"mxc://matrix.org/kciiXusgZFKuNLIfLqm
 }
 
 
-- (void)for:(MXRestClient *)mxRestClient2 andRoom:(NSString*)roomId sendMessages:(NSUInteger)messagesCount success:(void (^)(void))success
+- (void)for:(MXRestClient *)mxRestClient2 andRoom:(NSString*)roomId sendMessages:(NSUInteger)messagesCount testCase:(XCTestCase*)testCase success:(void (^)(void))success
 {
     NSLog(@"sendMessages :%tu to %@", messagesCount, roomId);
     if (0 == messagesCount)
@@ -305,16 +305,16 @@ NSString * const kMXTestsAliceAvatarURL = @"mxc://matrix.org/kciiXusgZFKuNLIfLqm
                            success:^(NSString *eventId) {
 
             // Send the next message
-            [self for:mxRestClient2 andRoom:roomId sendMessages:messagesCount - 1 success:success];
+            [self for:mxRestClient2 andRoom:roomId sendMessages:messagesCount - 1 testCase:testCase success:success];
 
         } failure:^(NSError *error) {
             // If the error is M_LIMIT_EXCEEDED, make sure your home server rate limit is high
-            NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+            [self breakTestCase:testCase reason:@"Cannot set up intial test conditions - error: %@", error];
         }];
     }
 }
 
-- (void)for:(MXRestClient *)mxRestClient2 createRooms:(NSUInteger)roomsCount withMessages:(NSUInteger)messagesCount success:(void (^)(void))success
+- (void)for:(MXRestClient *)mxRestClient2 createRooms:(NSUInteger)roomsCount withMessages:(NSUInteger)messagesCount testCase:(XCTestCase*)testCase success:(void (^)(void))success
 {
     if (0 == roomsCount)
     {
@@ -329,14 +329,14 @@ NSString * const kMXTestsAliceAvatarURL = @"mxc://matrix.org/kciiXusgZFKuNLIfLqm
             NSLog(@"Created room %@ in createRooms", response.roomId);
 
             // Fill it with messages
-            [self for:mxRestClient2 andRoom:response.roomId sendMessages:messagesCount success:^{
+            [self for:mxRestClient2 andRoom:response.roomId sendMessages:messagesCount testCase:testCase success:^{
 
                 // Go to the next room
-                [self for:mxRestClient2 createRooms:roomsCount - 1 withMessages:messagesCount success:success];
+                [self for:mxRestClient2 createRooms:roomsCount - 1 withMessages:messagesCount testCase:testCase success:success];
             }];
         } failure:^(NSError *error) {
             // If the error is M_LIMIT_EXCEEDED, make sure your home server rate limit is high
-            NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+            [self breakTestCase:testCase reason:@"Cannot set up intial test conditions - error: %@", error];
         }];
     }
 }
@@ -839,7 +839,10 @@ onUnrecognizedCertificateBlock:(MXHTTPClientOnUnrecognizedCertificate)onUnrecogn
     _XCTPrimitiveFail(testCase, "[MatrixSDKTestsData] breakTestCase: %@", log);
 }
 
-- (void)relogUserSession:(MXSession*)session withPassword:(NSString*)password onComplete:(void (^)(MXSession *newSession))onComplete
+- (void)relogUserSession:(XCTestCase*)testCase
+                 session:(MXSession*)session
+            withPassword:(NSString*)password
+              onComplete:(void (^)(MXSession *newSession))onComplete
 {
     NSString *userId = session.matrixRestClient.credentials.userId;
 
@@ -864,18 +867,21 @@ onUnrecognizedCertificateBlock:(MXHTTPClientOnUnrecognizedCertificate)onUnrecogn
                 onComplete(newSession);
 
             } failure:^(NSError *error) {
-                NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+                [self breakTestCase:testCase reason:@"Cannot set up intial test conditions - error: %@", error];
             }];
 
         } failure:^(NSError *error) {
-            NSAssert(NO, @"Cannot relog %@. Error: %@", userId, error);
+            [self breakTestCase:testCase reason:@"Cannot relog %@. Error: %@", userId, error];
         }];
     } failure:^(NSError *error) {
-        NSAssert(NO, @"Cannot logout %@. Error: %@", userId, error);
+        [self breakTestCase:testCase reason:@"Cannot logout %@. Error: %@", userId, error];
     }];
 }
 
-- (void)relogUserSessionWithNewDevice:(MXSession*)session withPassword:(NSString*)password onComplete:(void (^)(MXSession *newSession))onComplete
+- (void)relogUserSessionWithNewDevice:(XCTestCase*)testCase
+                              session:(MXSession*)session
+                         withPassword:(NSString*)password
+                           onComplete:(void (^)(MXSession *newSession))onComplete
 {
     NSString *userId = session.matrixRestClient.credentials.userId;
 
@@ -900,14 +906,14 @@ onUnrecognizedCertificateBlock:(MXHTTPClientOnUnrecognizedCertificate)onUnrecogn
                 onComplete(newSession);
 
             } failure:^(NSError *error) {
-                NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+                [self breakTestCase:testCase reason:@"Cannot set up intial test conditions - error: %@", error];
             }];
 
         } failure:^(NSError *error) {
-            NSAssert(NO, @"Cannot relog %@. Error: %@", userId, error);
+            [self breakTestCase:testCase reason:@"Cannot relog %@. Error: %@", userId, error];
         }];
     } failure:^(NSError *error) {
-        NSAssert(NO, @"Cannot logout %@. Error: %@", userId, error);
+        [self breakTestCase:testCase reason:@"Cannot logout %@. Error: %@", userId, error];
     }];
 }
 

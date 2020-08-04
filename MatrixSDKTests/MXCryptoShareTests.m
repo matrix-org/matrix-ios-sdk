@@ -119,7 +119,7 @@
 
                     // - Log Alice on a new device
                     [MXSDKOptions sharedInstance].enableCryptoWhenStartingMXSession = YES;
-                    [matrixSDKTestsData relogUserSessionWithNewDevice:aliceSession withPassword:MXTESTS_ALICE_PWD onComplete:^(MXSession *aliceSession2) {
+                    [matrixSDKTestsData relogUserSessionWithNewDevice:self session:aliceSession withPassword:MXTESTS_ALICE_PWD onComplete:^(MXSession *aliceSession2) {
                         [MXSDKOptions sharedInstance].enableCryptoWhenStartingMXSession = NO;
 
                         readyToTest(aliceSession2, roomId, sessionData, partialSessionData, expectation);

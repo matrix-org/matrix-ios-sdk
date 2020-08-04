@@ -115,7 +115,7 @@
 
     [matrixSDKTestsData doMXRestClientTestWithBobAndAliceInARoom:testCase readyToTest:^(MXRestClient *bobRestClient, MXRestClient *aliceRestClient, NSString *roomId, XCTestExpectation *expectation2) {
 
-        [matrixSDKTestsData for:bobRestClient andRoom:roomId sendMessages:5 success:^{
+        [matrixSDKTestsData for:bobRestClient andRoom:roomId sendMessages:5 testCase:testCase success:^{
 
             if (!expectation)
             {
