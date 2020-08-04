@@ -372,7 +372,7 @@
     // - Alice and Bob are in a room
     [matrixSDKTestsE2EData doE2ETestWithAliceAndBobInARoom:self cryptedBob:YES warnOnUnknowDevices:YES aliceStore:[[MXMemoryStore alloc] init] bobStore:[[MXMemoryStore alloc] init] readyToTest:^(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
         
-        [matrixSDKTestsE2EData loginUserOnANewDevice:aliceSession.matrixRestClient.credentials withPassword:MXTESTS_ALICE_PWD onComplete:^(MXSession *newAliceSession) {
+        [matrixSDKTestsE2EData loginUserOnANewDevice:self credentials:aliceSession.matrixRestClient.credentials withPassword:MXTESTS_ALICE_PWD onComplete:^(MXSession *newAliceSession) {
             
             [self checkVerificationByToDeviceFullFlowWithBobSession:bobSession aliceSession:aliceSession roomId:roomId expectation:expectation];
         }];
@@ -387,7 +387,7 @@
     // - Alice and Bob are in a room
     [matrixSDKTestsE2EData doE2ETestWithAliceAndBobInARoom:self cryptedBob:YES warnOnUnknowDevices:YES aliceStore:[[MXMemoryStore alloc] init] bobStore:[[MXMemoryStore alloc] init] readyToTest:^(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
         
-        [matrixSDKTestsE2EData loginUserOnANewDevice:bobSession.matrixRestClient.credentials withPassword:MXTESTS_BOB_PWD onComplete:^(MXSession *newBobSession) {
+        [matrixSDKTestsE2EData loginUserOnANewDevice:self credentials:bobSession.matrixRestClient.credentials withPassword:MXTESTS_BOB_PWD onComplete:^(MXSession *newBobSession) {
             
             [self checkVerificationByToDeviceFullFlowWithBobSession:bobSession aliceSession:aliceSession roomId:roomId expectation:expectation];
         }];
@@ -402,7 +402,7 @@
     // - Alice and Bob are in a room
     [matrixSDKTestsE2EData doE2ETestWithAliceAndBobInARoom:self cryptedBob:YES warnOnUnknowDevices:YES aliceStore:[[MXMemoryStore alloc] init] bobStore:[[MXMemoryStore alloc] init] readyToTest:^(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
         
-        [matrixSDKTestsE2EData loginUserOnANewDevice:aliceSession.matrixRestClient.credentials withPassword:MXTESTS_ALICE_PWD onComplete:^(MXSession *newAliceSession) {
+        [matrixSDKTestsE2EData loginUserOnANewDevice:self credentials:aliceSession.matrixRestClient.credentials withPassword:MXTESTS_ALICE_PWD onComplete:^(MXSession *newAliceSession) {
             
             [self checkVerificationByToDeviceFullFlowWithBobSession:aliceSession aliceSession:newAliceSession roomId:roomId expectation:expectation];
         }];
@@ -423,9 +423,9 @@
     // - Have Alice with 3 sessions
     [matrixSDKTestsE2EData doE2ETestWithAliceAndBobInARoom:self cryptedBob:YES warnOnUnknowDevices:YES aliceStore:[[MXMemoryStore alloc] init] bobStore:[[MXMemoryStore alloc] init] readyToTest:^(MXSession *aliceSession1, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
         
-        [matrixSDKTestsE2EData loginUserOnANewDevice:aliceSession1.matrixRestClient.credentials withPassword:MXTESTS_ALICE_PWD onComplete:^(MXSession *aliceSession2) {
+        [matrixSDKTestsE2EData loginUserOnANewDevice:self credentials:aliceSession1.matrixRestClient.credentials withPassword:MXTESTS_ALICE_PWD onComplete:^(MXSession *aliceSession2) {
             
-            [matrixSDKTestsE2EData loginUserOnANewDevice:aliceSession1.matrixRestClient.credentials withPassword:MXTESTS_ALICE_PWD onComplete:^(MXSession *aliceSession3) {
+            [matrixSDKTestsE2EData loginUserOnANewDevice:self credentials:aliceSession1.matrixRestClient.credentials withPassword:MXTESTS_ALICE_PWD onComplete:^(MXSession *aliceSession3) {
                 
                 NSString *aliceUserId = aliceSession1.matrixRestClient.credentials.userId;
 
@@ -1408,7 +1408,7 @@
     // - Alice and Bob are in a room
     [matrixSDKTestsE2EData doE2ETestWithAliceAndBobInARoom:self cryptedBob:YES warnOnUnknowDevices:YES aliceStore:[[MXMemoryStore alloc] init] bobStore:[[MXMemoryStore alloc] init] readyToTest:^(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
         
-        [matrixSDKTestsE2EData loginUserOnANewDevice:aliceSession.matrixRestClient.credentials withPassword:MXTESTS_ALICE_PWD onComplete:^(MXSession *newAliceSession) {
+        [matrixSDKTestsE2EData loginUserOnANewDevice:self credentials:aliceSession.matrixRestClient.credentials withPassword:MXTESTS_ALICE_PWD onComplete:^(MXSession *newAliceSession) {
             
             [self checkVerificationByDMFullFlowWithAliceSession:aliceSession bobSession:bobSession roomId:roomId expectation:expectation];
         }];
@@ -1423,7 +1423,7 @@
     // - Alice and Bob are in a room
     [matrixSDKTestsE2EData doE2ETestWithAliceAndBobInARoom:self cryptedBob:YES warnOnUnknowDevices:YES aliceStore:[[MXMemoryStore alloc] init] bobStore:[[MXMemoryStore alloc] init] readyToTest:^(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
         
-        [matrixSDKTestsE2EData loginUserOnANewDevice:bobSession.matrixRestClient.credentials withPassword:MXTESTS_BOB_PWD onComplete:^(MXSession *newBobSession) {
+        [matrixSDKTestsE2EData loginUserOnANewDevice:self credentials:bobSession.matrixRestClient.credentials withPassword:MXTESTS_BOB_PWD onComplete:^(MXSession *newBobSession) {
             [self checkVerificationByDMFullFlowWithAliceSession:aliceSession bobSession:bobSession roomId:roomId expectation:expectation];
         }];
     }];

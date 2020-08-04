@@ -289,7 +289,10 @@
     }];
 }
 
-- (void)loginUserOnANewDevice:(MXCredentials*)credentials withPassword:(NSString*)password onComplete:(void (^)(MXSession *newSession))onComplete
+- (void)loginUserOnANewDevice:(XCTestCase*)testCase
+                  credentials:(MXCredentials*)credentials
+                 withPassword:(NSString*)password
+                   onComplete:(void (^)(MXSession *newSession))onComplete
 {
     [MXSDKOptions sharedInstance].enableCryptoWhenStartingMXSession = YES;
     
@@ -311,11 +314,11 @@
             onComplete(newSession);
             
         } failure:^(NSError *error) {
-            NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+            [matrixSDKTestsData breakTestCase:testCase reason:@"Cannot set up intial test conditions - error: %@", error];
         }];
         
     } failure:^(NSError *error) {
-        NSAssert(NO, @"Cannot log %@ in again. Error: %@", credentials.userId , error);
+        [matrixSDKTestsData breakTestCase:testCase reason:@"Cannot log %@ in again. Error: %@", credentials.userId , error];
     }];
 }
 
@@ -343,7 +346,7 @@
          [aliceSession1.crypto.crossSigning setupWithPassword:MXTESTS_ALICE_PWD success:^{
              [bobSession.crypto.crossSigning setupWithPassword:MXTESTS_BOB_PWD success:^{
                  
-                 [self loginUserOnANewDevice:aliceSession1.matrixRestClient.credentials withPassword:MXTESTS_ALICE_PWD onComplete:^(MXSession *aliceSession2) {
+                 [self loginUserOnANewDevice:self credentials:aliceSession1.matrixRestClient.credentials withPassword:MXTESTS_ALICE_PWD onComplete:^(MXSession *aliceSession2) {
                      
                      NSString *aliceUserId = aliceSession1.matrixRestClient.credentials.userId;
                      NSString *bobUserId = bobSession.matrixRestClient.credentials.userId;
