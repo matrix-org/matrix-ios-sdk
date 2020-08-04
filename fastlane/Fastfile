@@ -77,7 +77,12 @@ platform :ios do
       :output_directory => "./build/test",
       :open_report => !is_ci?
     }
-    scan(opts)
+    begin
+      scan(opts)
+    ensure
+      xcresult = "../#{opts[:output_directory]}/#{opts[:scheme]}.xcresult"
+      sh("zip", "-r", "#{xcresult}.zip", xcresult)
+    end
   end
 
   #### Private ####
