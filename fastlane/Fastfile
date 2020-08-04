@@ -68,10 +68,14 @@ platform :ios do
 
     opts = {
       :clean => true,
-      :scheme => "MatrixSDK",
+      :scheme => "MatrixSDK-macOS",
       :workspace => "MatrixSDK.xcworkspace",
       :configuration => "Debug",
       :code_coverage => true,
+      # Test result configuration
+      :result_bundle => true,
+      :output_directory => "./build/test",
+      :open_report => !is_ci?
     }
     scan(opts)
   end
