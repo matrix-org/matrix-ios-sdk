@@ -312,7 +312,7 @@ NSString *uisiString = @"The sender's device has not sent us the keys for this m
         NSString *roomId = room.roomId;
 
         // Add more messages than a single pagination can retrieve
-        [matrixSDKTestsData for:bobRestClient andRoom:roomId sendMessages:80 success:^{
+        [matrixSDKTestsData for:bobRestClient andRoom:roomId sendMessages:80 testCase:self success:^{
 
             MXRoomSummary *summary = [mxSession roomSummaryWithRoomId:roomId];
             XCTAssert(summary);

@@ -133,7 +133,7 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
     // - Have Alice with 2 devices (Alice1 and Alice2) and Bob. All trusted via cross-signing
     [matrixSDKTestsE2EData doTestWithBobAndAliceWithTwoDevicesAllTrusted:self readyToTest:^(MXSession *aliceSession1, MXSession *aliceSession2, MXSession *bobSession1, NSString *roomId, XCTestExpectation *expectation) {
         
-        [matrixSDKTestsE2EData loginUserOnANewDevice:bobSession1.matrixRestClient.credentials withPassword:MXTESTS_BOB_PWD onComplete:^(MXSession *bobSession2) {
+        [matrixSDKTestsE2EData loginUserOnANewDevice:self credentials:bobSession1.matrixRestClient.credentials withPassword:MXTESTS_BOB_PWD onComplete:^(MXSession *bobSession2) {
             
             dispatch_after(dispatch_time(DISPATCH_TIME_NOW, kMXRoomSummaryTrustComputationDelayMs * NSEC_PER_MSEC), dispatch_get_main_queue(), ^{
                 
@@ -177,7 +177,7 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
             XCTAssertEqual(trust.trustedDevicesProgress.fractionCompleted, 1);
             
             // - Bob signs in on a new device
-            [matrixSDKTestsE2EData loginUserOnANewDevice:bobSession1.matrixRestClient.credentials withPassword:MXTESTS_BOB_PWD onComplete:^(MXSession *bobSession2) {
+            [matrixSDKTestsE2EData loginUserOnANewDevice:self credentials:bobSession1.matrixRestClient.credentials withPassword:MXTESTS_BOB_PWD onComplete:^(MXSession *bobSession2) {
             }];
             
             // -> Alice must be notified there is no more 100% of trust in this room
@@ -207,7 +207,7 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
     // - Have Alice with 2 devices (Alice1 and Alice2) and Bob. All trusted via cross-signing
     [matrixSDKTestsE2EData doTestWithBobAndAliceWithTwoDevicesAllTrusted:self readyToTest:^(MXSession *aliceSession1, MXSession *aliceSession2, MXSession *bobSession1, NSString *roomId, XCTestExpectation *expectation) {
         
-        [matrixSDKTestsE2EData loginUserOnANewDevice:bobSession1.matrixRestClient.credentials withPassword:MXTESTS_BOB_PWD onComplete:^(MXSession *bobSession2) {
+        [matrixSDKTestsE2EData loginUserOnANewDevice:self credentials:bobSession1.matrixRestClient.credentials withPassword:MXTESTS_BOB_PWD onComplete:^(MXSession *bobSession2) {
             
             dispatch_after(dispatch_time(DISPATCH_TIME_NOW, kMXRoomSummaryTrustComputationDelayMs * NSEC_PER_MSEC), dispatch_get_main_queue(), ^{
                 

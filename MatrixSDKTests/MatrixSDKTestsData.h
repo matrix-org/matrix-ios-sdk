@@ -45,7 +45,8 @@ FOUNDATION_EXPORT NSString * const kMXTestsAliceAvatarURL;
 
 // Get credentials asynchronously
 // The user will be created if needed
-- (void)getBobCredentials:(void (^)(void))success;
+- (void)getBobCredentials:(XCTestCase*)testCase
+              readyToTest:(void (^)(void))readyToTest;
 
 // Prepare a test with a MXRestClient for mxBob so that we can make test on it
 - (void)doMXRestClientTestWithBob:(XCTestCase*)testCase
@@ -128,8 +129,11 @@ FOUNDATION_EXPORT NSString * const kMXTestsAliceAvatarURL;
 
 
 #pragma mark - HTTPS mxBob
-- (void)getHttpsBobCredentials:(void (^)(void))success;
-- (void)getHttpsBobCredentials:(void (^)(void))success onUnrecognizedCertificateBlock:(MXHTTPClientOnUnrecognizedCertificate)onUnrecognizedCertBlock;
+- (void)getHttpsBobCredentials:(XCTestCase*)testCase
+                   readyToTest:(void (^)(void))readyToTest;
+- (void)getHttpsBobCredentials:(XCTestCase*)testCase
+                   readyToTest:(void (^)(void))readyToTest
+onUnrecognizedCertificateBlock:(MXHTTPClientOnUnrecognizedCertificate)onUnrecognizedCertBlock;
 
 - (void)doHttpsMXRestClientTestWithBob:(XCTestCase*)testCase
                            readyToTest:(void (^)(MXRestClient *bobRestClient, XCTestExpectation *expectation))readyToTest;
@@ -138,13 +142,24 @@ FOUNDATION_EXPORT NSString * const kMXTestsAliceAvatarURL;
 
 
 #pragma mark - tools
+
+// Stop the given test with a failure reason.
+// This method stop the execution of the test.
+- (void)breakTestCase:(XCTestCase*)testCase reason:(NSString *)reason, ...;
+
 // Logout the user on the server and log the user in with a new device
-- (void)relogUserSession:(MXSession*)session withPassword:(NSString*)password onComplete:(void (^)(MXSession *newSession))onComplete;
+- (void)relogUserSession:(XCTestCase*)testCase
+                 session:(MXSession*)session
+            withPassword:(NSString*)password
+              onComplete:(void (^)(MXSession *newSession))onComplete;
 
 // Close the current session by erasing the crypto to store  and log the user in with a new device
-- (void)relogUserSessionWithNewDevice:(MXSession*)session withPassword:(NSString*)password onComplete:(void (^)(MXSession *newSession))onComplete;
+- (void)relogUserSessionWithNewDevice:(XCTestCase*)testCase
+                              session:(MXSession*)session
+                         withPassword:(NSString*)password
+                           onComplete:(void (^)(MXSession *newSession))onComplete;
 
-- (void)for:(MXRestClient *)mxRestClient2 andRoom:(NSString*)roomId sendMessages:(NSUInteger)messagesCount success:(void (^)(void))success;
+- (void)for:(MXRestClient *)mxRestClient2 andRoom:(NSString*)roomId sendMessages:(NSUInteger)messagesCount testCase:(XCTestCase*)testCase success:(void (^)(void))success;
 
 
 #pragma mark Reference keeping
