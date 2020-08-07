@@ -1,3 +1,32 @@
+Changes in 0.16.10 (2020-08-07)
+=================================================
+
+Features:
+ * 
+
+Improvements:
+ * 
+
+Bugfix:
+ * 
+
+API Change:
+ * 
+
+Translations:
+ * 
+
+Others:
+ * 
+
+Build:
+ * 
+
+Test:
+ * Fix "fastlane ios test" and generate html report.
+ * Make tests crash instantly if no local synapse is running.
+ * Do not use anymore NSAssert in tests.
+
 Changes in 0.16.9 (2020-08-05)
 =================================================
 

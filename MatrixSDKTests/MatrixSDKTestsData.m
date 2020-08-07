@@ -65,12 +65,13 @@ NSString * const kMXTestsAliceAvatarURL = @"mxc://matrix.org/kciiXusgZFKuNLIfLqm
     retainedObjects = [NSMutableArray array];
 }
 
-- (void)getBobCredentials:(void (^)(void))success
+- (void)getBobCredentials:(XCTestCase*)testCase
+              readyToTest:(void (^)(void))readyToTest
 {
     if (self.bobCredentials)
     {
         // Credentials are already here, they are ready
-        success();
+        readyToTest();
     }
     else
     {
@@ -82,10 +83,10 @@ NSString * const kMXTestsAliceAvatarURL = @"mxc://matrix.org/kciiXusgZFKuNLIfLqm
         [self retain:mxRestClient];
 
         // First, try register the user
-        [mxRestClient registerWithLoginType:kMXLoginFlowTypeDummy username:bobUniqueUser password:MXTESTS_BOB_PWD success:^(MXCredentials *credentials) {
+        MXHTTPOperation *operation = [mxRestClient registerWithLoginType:kMXLoginFlowTypeDummy username:bobUniqueUser password:MXTESTS_BOB_PWD success:^(MXCredentials *credentials) {
 
             _bobCredentials = credentials;
-            success();
+            readyToTest();
             
         } failure:^(NSError *error) {
             MXError *mxError = [[MXError alloc] initWithNSError:error];
@@ -96,29 +97,31 @@ NSString * const kMXTestsAliceAvatarURL = @"mxc://matrix.org/kciiXusgZFKuNLIfLqm
                 [mxRestClient loginWithLoginType:kMXLoginFlowTypeDummy username:bobUniqueUser password:MXTESTS_BOB_PWD success:^(MXCredentials *credentials) {
                     
                     _bobCredentials = credentials;
-                    success();
+                    readyToTest();
                     
                 } failure:^(NSError *error) {
-                    NSAssert(NO, @"Cannot log mxBOB in");
+                    [self breakTestCase:testCase reason:@"Cannot log mxBOB in"];
                 }];
             }
             else
             {
-                NSAssert(NO, @"Cannot create mxBOB account. Make sure the homeserver at %@ is running", mxRestClient.homeserver);
+                [self breakTestCase:testCase reason:@"Cannot create mxBOB account. Make sure the homeserver at %@ is running", mxRestClient.homeserver];
             }
         }];
+        operation.maxNumberOfTries = 1;
     }
 }
 
-- (void)getBobMXRestClient:(void (^)(MXRestClient *))success
+- (void)getBobMXRestClient:(XCTestCase*)testCase
+               readyToTest:(void (^)(MXRestClient *))readyToTest
 {
-    [self getBobCredentials:^{
-        
+    [self getBobCredentials:testCase readyToTest:^{
+
         MXRestClient *mxRestClient = [[MXRestClient alloc] initWithCredentials:self.bobCredentials
                                            andOnUnrecognizedCertificateBlock:nil];
         [self retain:mxRestClient];
-        
-        success(mxRestClient);
+
+        readyToTest(mxRestClient);
     }];
 }
 
@@ -132,7 +135,7 @@ NSString * const kMXTestsAliceAvatarURL = @"mxc://matrix.org/kciiXusgZFKuNLIfLqm
         expectation = [testCase expectationWithDescription:@"asyncTest"];
     }
 
-    [self getBobCredentials:^{
+    [self getBobCredentials:testCase readyToTest:^{
         
         MXRestClient *mxRestClient = [[MXRestClient alloc] initWithCredentials:self.bobCredentials
                                            andOnUnrecognizedCertificateBlock:nil];
@@ -160,7 +163,7 @@ NSString * const kMXTestsAliceAvatarURL = @"mxc://matrix.org/kciiXusgZFKuNLIfLqm
             readyToTest(bobRestClient, response.roomId, expectation);
             
         } failure:^(NSError *error) {
-            NSAssert(NO, @"Cannot create a room - error: %@", error);
+            [self breakTestCase:testCase reason:@"Cannot create a room - error: %@", error];
         }];
     }];
 }
@@ -178,7 +181,7 @@ NSString * const kMXTestsAliceAvatarURL = @"mxc://matrix.org/kciiXusgZFKuNLIfLqm
                                 readyToTest(bobRestClient, response.roomId, expectation);
                                 
                             } failure:^(NSError *error) {
-                                NSAssert(NO, @"Cannot create a room - error: %@", error);
+                                [self breakTestCase:testCase reason:@"Cannot create a room - error: %@", error];
                             }];
                         }];
 }
@@ -207,7 +210,7 @@ NSString * const kMXTestsAliceAvatarURL = @"mxc://matrix.org/kciiXusgZFKuNLIfLqm
                                   readyToTest(bobRestClient, response.roomId, expectation);
 
                               } failure:^(NSError *error) {
-                                  NSAssert(NO, @"Cannot create the public room - error: %@", error);
+                                  [self breakTestCase:testCase reason:@"Cannot create the public room - error: %@", error];
                               }];
         }
 
@@ -224,7 +227,7 @@ NSString * const kMXTestsAliceAvatarURL = @"mxc://matrix.org/kciiXusgZFKuNLIfLqm
         expectation = [testCase expectationWithDescription:@"asyncTest"];
     }
     
-    [self getBobMXRestClient:^(MXRestClient *bobRestClient) {
+    [self getBobMXRestClient:testCase readyToTest:^(MXRestClient *bobRestClient) {
         // Create a random room to use
         [bobRestClient createRoom:nil visibility:kMXRoomDirectoryVisibilityPrivate roomAlias:nil topic:nil success:^(MXCreateRoomResponse *response) {
 
@@ -236,11 +239,11 @@ NSString * const kMXTestsAliceAvatarURL = @"mxc://matrix.org/kciiXusgZFKuNLIfLqm
                 readyToTest(bobRestClient, response.roomId, eventId, expectation);
                 
             } failure:^(NSError *error) {
-                NSAssert(NO, @"Cannot set up intial test conditions");
+                [self breakTestCase:testCase reason:@"Cannot set up intial test conditions"];
             }];
             
         } failure:^(NSError *error) {
-            NSAssert(NO, @"Cannot create a room - error: %@", error);
+            [self breakTestCase:testCase reason:@"Cannot create a room - error: %@", error];
         }];
     }];
     
@@ -257,7 +260,7 @@ NSString * const kMXTestsAliceAvatarURL = @"mxc://matrix.org/kciiXusgZFKuNLIfLqm
                              readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
         
         // Add 5 messages to the room
-        [self for:bobRestClient andRoom:roomId sendMessages:5 success:^{
+        [self for:bobRestClient andRoom:roomId sendMessages:5 testCase:testCase success:^{
             
             readyToTest(bobRestClient, roomId, expectation);
         }];
@@ -274,10 +277,10 @@ NSString * const kMXTestsAliceAvatarURL = @"mxc://matrix.org/kciiXusgZFKuNLIfLqm
         expectation = [testCase expectationWithDescription:@"asyncTest"];
     }
     
-    [self getBobMXRestClient:^(MXRestClient *bobRestClient) {
+    [self getBobMXRestClient:testCase readyToTest:^(MXRestClient *bobRestClient) {
         
         // Fill Bob's account with 5 rooms of 3 messages
-        [self for:bobRestClient createRooms:5 withMessages:3 success:^{
+        [self for:bobRestClient createRooms:5 withMessages:3 testCase:testCase success:^{
             readyToTest(bobRestClient, expectation);
         }];
     }];
@@ -289,7 +292,7 @@ NSString * const kMXTestsAliceAvatarURL = @"mxc://matrix.org/kciiXusgZFKuNLIfLqm
 }
 
 
-- (void)for:(MXRestClient *)mxRestClient2 andRoom:(NSString*)roomId sendMessages:(NSUInteger)messagesCount success:(void (^)(void))success
+- (void)for:(MXRestClient *)mxRestClient2 andRoom:(NSString*)roomId sendMessages:(NSUInteger)messagesCount testCase:(XCTestCase*)testCase success:(void (^)(void))success
 {
     NSLog(@"sendMessages :%tu to %@", messagesCount, roomId);
     if (0 == messagesCount)
@@ -302,16 +305,16 @@ NSString * const kMXTestsAliceAvatarURL = @"mxc://matrix.org/kciiXusgZFKuNLIfLqm
                            success:^(NSString *eventId) {
 
             // Send the next message
-            [self for:mxRestClient2 andRoom:roomId sendMessages:messagesCount - 1 success:success];
+            [self for:mxRestClient2 andRoom:roomId sendMessages:messagesCount - 1 testCase:testCase success:success];
 
         } failure:^(NSError *error) {
             // If the error is M_LIMIT_EXCEEDED, make sure your home server rate limit is high
-            NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+            [self breakTestCase:testCase reason:@"Cannot set up intial test conditions - error: %@", error];
         }];
     }
 }
 
-- (void)for:(MXRestClient *)mxRestClient2 createRooms:(NSUInteger)roomsCount withMessages:(NSUInteger)messagesCount success:(void (^)(void))success
+- (void)for:(MXRestClient *)mxRestClient2 createRooms:(NSUInteger)roomsCount withMessages:(NSUInteger)messagesCount testCase:(XCTestCase*)testCase success:(void (^)(void))success
 {
     if (0 == roomsCount)
     {
@@ -326,14 +329,14 @@ NSString * const kMXTestsAliceAvatarURL = @"mxc://matrix.org/kciiXusgZFKuNLIfLqm
             NSLog(@"Created room %@ in createRooms", response.roomId);
 
             // Fill it with messages
-            [self for:mxRestClient2 andRoom:response.roomId sendMessages:messagesCount success:^{
+            [self for:mxRestClient2 andRoom:response.roomId sendMessages:messagesCount testCase:testCase success:^{
 
                 // Go to the next room
-                [self for:mxRestClient2 createRooms:roomsCount - 1 withMessages:messagesCount success:success];
+                [self for:mxRestClient2 createRooms:roomsCount - 1 withMessages:messagesCount testCase:testCase success:success];
             }];
         } failure:^(NSError *error) {
             // If the error is M_LIMIT_EXCEEDED, make sure your home server rate limit is high
-            NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+            [self breakTestCase:testCase reason:@"Cannot set up intial test conditions - error: %@", error];
         }];
     }
 }
@@ -350,7 +353,7 @@ NSString * const kMXTestsAliceAvatarURL = @"mxc://matrix.org/kciiXusgZFKuNLIfLqm
             readyToTest(mxSession, expectation);
 
         } failure:^(NSError *error) {
-            NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+            [self breakTestCase:testCase reason:@"Cannot set up intial test conditions - error: %@", error];
         }];
     }];
 }
@@ -370,7 +373,7 @@ NSString * const kMXTestsAliceAvatarURL = @"mxc://matrix.org/kciiXusgZFKuNLIfLqm
             readyToTest(mxSession, room, expectation);
             
         } failure:^(NSError *error) {
-            NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+            [self breakTestCase:testCase reason:@"Cannot set up intial test conditions - error: %@", error];
         }];
     }];
 }
@@ -389,7 +392,7 @@ NSString * const kMXTestsAliceAvatarURL = @"mxc://matrix.org/kciiXusgZFKuNLIfLqm
             readyToTest(mxSession, room, expectation);
             
         } failure:^(NSError *error) {
-            NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+            [self breakTestCase:testCase reason:@"Cannot set up intial test conditions - error: %@", error];
         }];
     }];
 }
@@ -407,10 +410,10 @@ NSString * const kMXTestsAliceAvatarURL = @"mxc://matrix.org/kciiXusgZFKuNLIfLqm
                 readyToTest(mxSession, expectation);
 
             } failure:^(NSError *error) {
-                NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+                [self breakTestCase:testCase reason:@"Cannot set up intial test conditions - error: %@", error];
             }];
         } failure:^(NSError *error) {
-            NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+            [self breakTestCase:testCase reason:@"Cannot set up intial test conditions - error: %@", error];
         }];
     }];
 }
@@ -432,26 +435,27 @@ NSString * const kMXTestsAliceAvatarURL = @"mxc://matrix.org/kciiXusgZFKuNLIfLqm
                     readyToTest(mxSession, room, expectation);
 
                 } failure:^(NSError *error) {
-                    NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+                    [self breakTestCase:testCase reason:@"Cannot set up intial test conditions - error: %@", error];
                 }];
             } failure:^(NSError *error) {
-                NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+                [self breakTestCase:testCase reason:@"Cannot set up intial test conditions - error: %@", error];
             }];
 
         } failure:^(NSError *error) {
-            NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+            [self breakTestCase:testCase reason:@"Cannot set up intial test conditions - error: %@", error];
         }];
     }];
 }
 
 
 #pragma mark - mxAlice
-- (void)getAliceCredentials:(void (^)(void))success
+- (void)getAliceCredentials:(XCTestCase*)testCase
+                readyToTest:(void (^)(void))readyToTest
 {
     if (self.aliceCredentials)
     {
         // Credentials are already here, they are ready
-        success();
+        readyToTest();
     }
     else
     {
@@ -463,10 +467,10 @@ NSString * const kMXTestsAliceAvatarURL = @"mxc://matrix.org/kciiXusgZFKuNLIfLqm
         [self retain:mxRestClient];
 
         // First, try register the user
-        [mxRestClient registerWithLoginType:kMXLoginFlowTypeDummy username:aliceUniqueUser password:MXTESTS_ALICE_PWD success:^(MXCredentials *credentials) {
+        MXHTTPOperation *operation = [mxRestClient registerWithLoginType:kMXLoginFlowTypeDummy username:aliceUniqueUser password:MXTESTS_ALICE_PWD success:^(MXCredentials *credentials) {
             
             _aliceCredentials = credentials;
-            success();
+            readyToTest();
             
         } failure:^(NSError *error) {
             MXError *mxError = [[MXError alloc] initWithNSError:error];
@@ -477,23 +481,25 @@ NSString * const kMXTestsAliceAvatarURL = @"mxc://matrix.org/kciiXusgZFKuNLIfLqm
                 [mxRestClient loginWithLoginType:kMXLoginFlowTypeDummy username:aliceUniqueUser password:MXTESTS_ALICE_PWD success:^(MXCredentials *credentials) {
 
                     _aliceCredentials = credentials;
-                    success();
+                    readyToTest();
                     
                 } failure:^(NSError *error) {
-                    NSAssert(NO, @"Cannot log mxAlice in");
+                    [self breakTestCase:testCase reason:@"Cannot log mxAlice in"];
                 }];
             }
             else
             {
-                NSAssert(NO, @"Cannot create mxAlice account");
+                [self breakTestCase:testCase reason:@"Cannot create mxAlice account"];
             }
         }];
+        operation.maxNumberOfTries = 1;
     }
 }
 
-- (void)getAliceMXRestClient:(void (^)(MXRestClient *aliceRestClient))success
+- (void)getAliceMXRestClient:(XCTestCase*)testCase
+                 readyToTest:(void (^)(MXRestClient *aliceRestClient))readyToTest
 {
-    [self getAliceCredentials:^{
+    [self getAliceCredentials:testCase readyToTest:^{
         
         MXRestClient *aliceRestClient = [[MXRestClient alloc] initWithCredentials:self.aliceCredentials
                                                 andOnUnrecognizedCertificateBlock:nil];
@@ -508,14 +514,14 @@ NSString * const kMXTestsAliceAvatarURL = @"mxc://matrix.org/kciiXusgZFKuNLIfLqm
             
             [aliceRestClient2 setAvatarUrl:kMXTestsAliceAvatarURL success:^{
                 
-                success(aliceRestClient3);
+                readyToTest(aliceRestClient3);
                 
             } failure:^(NSError *error) {
-                NSAssert(NO, @"Cannot set mxAlice avatar");
+                [self breakTestCase:testCase reason:@"Cannot set mxAlice avatar"];
             }];
             
         } failure:^(NSError *error) {
-            NSAssert(NO, @"Cannot set mxAlice displayname");
+            [self breakTestCase:testCase reason:@"Cannot set mxAlice displayname"];
         }];
         
     }];
@@ -531,7 +537,7 @@ NSString * const kMXTestsAliceAvatarURL = @"mxc://matrix.org/kciiXusgZFKuNLIfLqm
         expectation = [testCase expectationWithDescription:@"asyncTest"];
     }
     
-    [self getAliceMXRestClient:^(MXRestClient *aliceRestClient) {
+    [self getAliceMXRestClient:testCase readyToTest:^(MXRestClient *aliceRestClient) {
         readyToTest(aliceRestClient, expectation);
     }];
     
@@ -553,7 +559,7 @@ NSString * const kMXTestsAliceAvatarURL = @"mxc://matrix.org/kciiXusgZFKuNLIfLqm
             readyToTest(aliceSession, expectation);
 
         } failure:^(NSError *error) {
-            NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+            [self breakTestCase:testCase reason:@"Cannot set up intial test conditions - error: %@", error];
         }];
     }];
 }
@@ -571,10 +577,10 @@ NSString * const kMXTestsAliceAvatarURL = @"mxc://matrix.org/kciiXusgZFKuNLIfLqm
                 readyToTest(mxSession, expectation);
 
             } failure:^(NSError *error) {
-                NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+                [self breakTestCase:testCase reason:@"Cannot set up intial test conditions - error: %@", error];
             }];
         } failure:^(NSError *error) {
-            NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+            [self breakTestCase:testCase reason:@"Cannot set up intial test conditions - error: %@", error];
         }];
     }];
 }
@@ -595,11 +601,11 @@ NSString * const kMXTestsAliceAvatarURL = @"mxc://matrix.org/kciiXusgZFKuNLIfLqm
                     readyToTest(bobRestClient, aliceRestClient, roomId, expectation);
                     
                 } failure:^(NSError *error) {
-                    NSAssert(NO, @"mxAlice cannot join room");
+                    [self breakTestCase:testCase reason:@"mxAlice cannot join room"];
                 }];
                 
             } failure:^(NSError *error) {
-                 NSAssert(NO, @"Cannot invite mxAlice");
+                [self breakTestCase:testCase reason:@"Cannot invite mxAlice"];
             }];
         }];
     }];
@@ -618,7 +624,7 @@ NSString * const kMXTestsAliceAvatarURL = @"mxc://matrix.org/kciiXusgZFKuNLIfLqm
             readyToTest(bobSession, aliceRestClient, roomId, expectation);
 
         } failure:^(NSError *error) {
-            NSAssert(NO, @"Cannot create bobSession");
+            [self breakTestCase:testCase reason:@"Cannot create bobSession"];
         }];
 
     }];
@@ -642,11 +648,11 @@ NSString * const kMXTestsAliceAvatarURL = @"mxc://matrix.org/kciiXusgZFKuNLIfLqm
                     readyToTest(bobSession, aliceRestClient, roomId, expectation);
 
                 } failure:^(NSError *error) {
-                    NSAssert(NO, @"mxAlice cannot join room");
+                    [self breakTestCase:testCase reason:@"mxAlice cannot join room"];
                 }];
 
             } failure:^(NSError *error) {
-                NSAssert(NO, @"Cannot invite mxAlice");
+                [self breakTestCase:testCase reason:@"Cannot invite mxAlice"];
             }];
         }];
     }];
@@ -669,10 +675,10 @@ NSString * const kMXTestsAliceAvatarURL = @"mxc://matrix.org/kciiXusgZFKuNLIfLqm
                 readyToTest(aliceSession, bobSession, roomId, expectation);
 
             } failure:^(NSError *error) {
-                NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+                [self breakTestCase:testCase reason:@"Cannot set up intial test conditions - error: %@", error];
             }];
         } failure:^(NSError *error) {
-            NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+            [self breakTestCase:testCase reason:@"Cannot set up intial test conditions - error: %@", error];
         }];
     }];
 }
@@ -696,7 +702,7 @@ NSString * const kMXTestsAliceAvatarURL = @"mxc://matrix.org/kciiXusgZFKuNLIfLqm
 
     // First, register a new random user
     NSString *anUniqueUser = [NSString stringWithFormat:@"%@", [[NSUUID UUID] UUIDString]];
-    [aUserRestClient registerWithLoginType:kMXLoginFlowTypeDummy username:anUniqueUser password:@"123456" success:^(MXCredentials *credentials) {
+    MXHTTPOperation *operation = [aUserRestClient registerWithLoginType:kMXLoginFlowTypeDummy username:anUniqueUser password:@"123456" success:^(MXCredentials *credentials) {
 
         aUserRestClient = [[MXRestClient alloc] initWithCredentials:credentials andOnUnrecognizedCertificateBlock:nil];
         [self retain:aUserRestClient];
@@ -709,29 +715,33 @@ NSString * const kMXTestsAliceAvatarURL = @"mxc://matrix.org/kciiXusgZFKuNLIfLqm
             readyToTest(aUserSession, expectation);
 
         } failure:^(NSError *error) {
-            NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+            [self breakTestCase:testCase reason:@"Cannot set up intial test conditions - error: %@", error];
         }];
 
     } failure:^(NSError *error) {
-        NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+        [self breakTestCase:testCase reason:@"Cannot set up intial test conditions - error: %@", error];
     }];
+    operation.maxNumberOfTries = 1;
 }
 
 
 #pragma mark - HTTPS mxBob
-- (void)getHttpsBobCredentials:(void (^)(void))success
+- (void)getHttpsBobCredentials:(XCTestCase*)testCase
+                   readyToTest:(void (^)(void))readyToTest
 {
-    [self getHttpsBobCredentials:success onUnrecognizedCertificateBlock:^BOOL(NSData *certificate) {
+    [self getHttpsBobCredentials:testCase readyToTest:readyToTest onUnrecognizedCertificateBlock:^BOOL(NSData *certificate) {
         return YES;
     }];
 }
 
-- (void)getHttpsBobCredentials:(void (^)(void))success onUnrecognizedCertificateBlock:(MXHTTPClientOnUnrecognizedCertificate)onUnrecognizedCertBlock
+- (void)getHttpsBobCredentials:(XCTestCase*)testCase
+                   readyToTest:(void (^)(void))readyToTest
+onUnrecognizedCertificateBlock:(MXHTTPClientOnUnrecognizedCertificate)onUnrecognizedCertBlock
 {
     if (self.bobCredentials)
     {
         // Credentials are already here, they are ready
-        success();
+        readyToTest();
     }
     else
     {
@@ -743,10 +753,10 @@ NSString * const kMXTestsAliceAvatarURL = @"mxc://matrix.org/kciiXusgZFKuNLIfLqm
         [self retain:mxRestClient];
 
         // First, try register the user
-        [mxRestClient registerWithLoginType:kMXLoginFlowTypeDummy username:bobUniqueUser password:MXTESTS_BOB_PWD success:^(MXCredentials *credentials) {
+        MXHTTPOperation *operation = [mxRestClient registerWithLoginType:kMXLoginFlowTypeDummy username:bobUniqueUser password:MXTESTS_BOB_PWD success:^(MXCredentials *credentials) {
 
             _bobCredentials = credentials;
-            success();
+            readyToTest();
 
         } failure:^(NSError *error) {
             MXError *mxError = [[MXError alloc] initWithNSError:error];
@@ -757,17 +767,18 @@ NSString * const kMXTestsAliceAvatarURL = @"mxc://matrix.org/kciiXusgZFKuNLIfLqm
                 [mxRestClient loginWithLoginType:kMXLoginFlowTypeDummy username:bobUniqueUser password:MXTESTS_BOB_PWD success:^(MXCredentials *credentials) {
 
                     _bobCredentials = credentials;
-                    success();
+                    readyToTest();
 
                 } failure:^(NSError *error) {
-                    NSAssert(NO, @"Cannot log mxBOB in");
+                     [self breakTestCase:testCase reason:@"Cannot log mxBOB in"];
                 }];
             }
             else
             {
-                NSAssert(NO, @"Cannot create mxBOB account. Make sure the homeserver at %@ is running", mxRestClient.homeserver);
+                [self breakTestCase:testCase reason:@"Cannot create mxBOB account. Make sure the homeserver at %@ is running", mxRestClient.homeserver];
             }
         }];
+        operation.maxNumberOfTries = 1;
     }
 }
 
@@ -780,7 +791,7 @@ NSString * const kMXTestsAliceAvatarURL = @"mxc://matrix.org/kciiXusgZFKuNLIfLqm
         expectation = [testCase expectationWithDescription:@"asyncTest"];
     }
 
-    [self getHttpsBobCredentials:^{
+    [self getHttpsBobCredentials:testCase readyToTest:^{
 
         MXRestClient *restClient = [[MXRestClient alloc] initWithCredentials:self.bobCredentials
                                            andOnUnrecognizedCertificateBlock:^BOOL(NSData *certificate) {
@@ -809,7 +820,7 @@ NSString * const kMXTestsAliceAvatarURL = @"mxc://matrix.org/kciiXusgZFKuNLIfLqm
             readyToTest(mxSession, expectation);
             
         } failure:^(NSError *error) {
-            NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+            [self breakTestCase:testCase reason:@"Cannot set up intial test conditions - error: %@", error];
         }];
     }];
 }
@@ -817,7 +828,21 @@ NSString * const kMXTestsAliceAvatarURL = @"mxc://matrix.org/kciiXusgZFKuNLIfLqm
 
 #pragma mark - tools
 
-- (void)relogUserSession:(MXSession*)session withPassword:(NSString*)password onComplete:(void (^)(MXSession *newSession))onComplete
+- (void)breakTestCase:(XCTestCase*)testCase reason:(NSString *)reason, ...
+{
+    va_list arguments;
+    va_start(arguments, reason);
+    NSString *log = [[NSString alloc] initWithFormat:reason arguments:arguments];
+    va_end(arguments);
+    
+    testCase.continueAfterFailure = NO;
+    _XCTPrimitiveFail(testCase, "[MatrixSDKTestsData] breakTestCase: %@", log);
+}
+
+- (void)relogUserSession:(XCTestCase*)testCase
+                 session:(MXSession*)session
+            withPassword:(NSString*)password
+              onComplete:(void (^)(MXSession *newSession))onComplete
 {
     NSString *userId = session.matrixRestClient.credentials.userId;
 
@@ -842,18 +867,21 @@ NSString * const kMXTestsAliceAvatarURL = @"mxc://matrix.org/kciiXusgZFKuNLIfLqm
                 onComplete(newSession);
 
             } failure:^(NSError *error) {
-                NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+                [self breakTestCase:testCase reason:@"Cannot set up intial test conditions - error: %@", error];
             }];
 
         } failure:^(NSError *error) {
-            NSAssert(NO, @"Cannot relog %@. Error: %@", userId, error);
+            [self breakTestCase:testCase reason:@"Cannot relog %@. Error: %@", userId, error];
         }];
     } failure:^(NSError *error) {
-        NSAssert(NO, @"Cannot logout %@. Error: %@", userId, error);
+        [self breakTestCase:testCase reason:@"Cannot logout %@. Error: %@", userId, error];
     }];
 }
 
-- (void)relogUserSessionWithNewDevice:(MXSession*)session withPassword:(NSString*)password onComplete:(void (^)(MXSession *newSession))onComplete
+- (void)relogUserSessionWithNewDevice:(XCTestCase*)testCase
+                              session:(MXSession*)session
+                         withPassword:(NSString*)password
+                           onComplete:(void (^)(MXSession *newSession))onComplete
 {
     NSString *userId = session.matrixRestClient.credentials.userId;
 
@@ -878,14 +906,14 @@ NSString * const kMXTestsAliceAvatarURL = @"mxc://matrix.org/kciiXusgZFKuNLIfLqm
                 onComplete(newSession);
 
             } failure:^(NSError *error) {
-                NSAssert(NO, @"Cannot set up intial test conditions - error: %@", error);
+                [self breakTestCase:testCase reason:@"Cannot set up intial test conditions - error: %@", error];
             }];
 
         } failure:^(NSError *error) {
-            NSAssert(NO, @"Cannot relog %@. Error: %@", userId, error);
+            [self breakTestCase:testCase reason:@"Cannot relog %@. Error: %@", userId, error];
         }];
     } failure:^(NSError *error) {
-        NSAssert(NO, @"Cannot logout %@. Error: %@", userId, error);
+        [self breakTestCase:testCase reason:@"Cannot logout %@. Error: %@", userId, error];
     }];
 }
 

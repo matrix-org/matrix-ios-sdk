@@ -118,7 +118,7 @@
 
         // - Log Alice on a new device
         [MXSDKOptions sharedInstance].enableCryptoWhenStartingMXSession = YES;
-        [self->matrixSDKTestsData relogUserSessionWithNewDevice:alice0Session withPassword:MXTESTS_ALICE_PWD onComplete:^(MXSession *alice1Session) {
+        [self->matrixSDKTestsData relogUserSessionWithNewDevice:self session:alice0Session withPassword:MXTESTS_ALICE_PWD onComplete:^(MXSession *alice1Session) {
             [MXSDKOptions sharedInstance].enableCryptoWhenStartingMXSession = NO;
 
             // - Bootstrap cross-siging from alice1
@@ -396,7 +396,7 @@
             XCTAssertEqual(aliceSession.crypto.crossSigning.state, MXCrossSigningStateCanCrossSign);
             
             // - Create a 2nd device
-            [matrixSDKTestsE2EData loginUserOnANewDevice:aliceSession.matrixRestClient.credentials withPassword:MXTESTS_ALICE_PWD onComplete:^(MXSession *newAliceSession) {
+            [matrixSDKTestsE2EData loginUserOnANewDevice:self credentials:aliceSession.matrixRestClient.credentials withPassword:MXTESTS_ALICE_PWD onComplete:^(MXSession *newAliceSession) {
                 
                 // - Check 2nd device cross-signing state
                 [newAliceSession.crypto.crossSigning refreshStateWithSuccess:^(BOOL stateUpdated) {
@@ -481,7 +481,7 @@
             XCTAssertEqual(aliceSession.crypto.crossSigning.state, MXCrossSigningStateCanCrossSign);
             
             // - Create a 2nd device
-            [matrixSDKTestsE2EData loginUserOnANewDevice:aliceSession.matrixRestClient.credentials withPassword:MXTESTS_ALICE_PWD onComplete:^(MXSession *newAliceSession) {
+            [matrixSDKTestsE2EData loginUserOnANewDevice:self credentials:aliceSession.matrixRestClient.credentials withPassword:MXTESTS_ALICE_PWD onComplete:^(MXSession *newAliceSession) {
                 
                 // - Make each device trust each other
                 //   This simulates a self verification and trigger cross-signing behind the shell
@@ -980,7 +980,7 @@
     [matrixSDKTestsE2EData doTestWithBobAndAliceWithTwoDevicesAllTrusted:self readyToTest:^(MXSession *aliceSession1, MXSession *aliceSession2, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
         
         // - Alice signs in on a new Device (Alice3)
-        [matrixSDKTestsE2EData loginUserOnANewDevice:aliceSession1.matrixRestClient.credentials withPassword:MXTESTS_ALICE_PWD onComplete:^(MXSession *aliceSession3) {
+        [matrixSDKTestsE2EData loginUserOnANewDevice:self credentials:aliceSession1.matrixRestClient.credentials withPassword:MXTESTS_ALICE_PWD onComplete:^(MXSession *aliceSession3) {
             
             NSString *aliceUserId = aliceSession1.myUserId;
             NSString *aliceSession1DeviceId = aliceSession1.myDeviceId;
@@ -1126,7 +1126,7 @@
         
         // - Alice logs in on a new device
         __block NSString *newDeviceId;
-        [matrixSDKTestsE2EData loginUserOnANewDevice:aliceSession.matrixRestClient.credentials withPassword:MXTESTS_ALICE_PWD onComplete:^(MXSession *newAliceSession) {
+        [matrixSDKTestsE2EData loginUserOnANewDevice:self credentials:aliceSession.matrixRestClient.credentials withPassword:MXTESTS_ALICE_PWD onComplete:^(MXSession *newAliceSession) {
             newDeviceId = newAliceSession.matrixRestClient.credentials.deviceId;
         }];
         

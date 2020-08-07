@@ -60,7 +60,7 @@
 - (void)createTestAccount:(void (^)(void))onReady
 {
     // Register the user
-    [mxRestClient registerWithLoginType:kMXLoginFlowTypeDummy username:MXTESTS_USER password:MXTESTS_PWD success:^(MXCredentials *credentials) {
+    MXHTTPOperation *operation = [mxRestClient registerWithLoginType:kMXLoginFlowTypeDummy username:MXTESTS_USER password:MXTESTS_PWD success:^(MXCredentials *credentials) {
 
         onReady();
 
@@ -76,6 +76,7 @@
             XCTFail(@"Cannot create the test account");
         }
     }];
+    operation.maxNumberOfTries = 1;
 }
 
 - (void)testInit
@@ -172,7 +173,7 @@
     XCTestExpectation *expectation = [self expectationWithDescription:@"asyncTest"];
 
     // Provide nil as username, the HS will provide one for us
-    [mxRestClient registerWithLoginType:kMXLoginFlowTypeDummy username:nil password:MXTESTS_PWD success:^(MXCredentials *credentials) {
+    MXHTTPOperation *operation = [mxRestClient registerWithLoginType:kMXLoginFlowTypeDummy username:nil password:MXTESTS_PWD success:^(MXCredentials *credentials) {
 
         XCTAssertNotNil(credentials);
         XCTAssertNotNil(credentials.homeServer);
@@ -185,6 +186,7 @@
         XCTFail(@"The request should not fail - NSError: %@", error);
         [expectation fulfill];
     }];
+    operation.maxNumberOfTries = 1;
 
     [self waitForExpectationsWithTimeout:10 handler:nil];
 }
@@ -196,7 +198,7 @@
     [self createTestAccount:^{
 
         // Register the same user
-        [mxRestClient registerWithLoginType:kMXLoginFlowTypeDummy username:MXTESTS_USER password:MXTESTS_PWD success:^(MXCredentials *credentials) {
+        MXHTTPOperation *operation = [mxRestClient registerWithLoginType:kMXLoginFlowTypeDummy username:MXTESTS_USER password:MXTESTS_PWD success:^(MXCredentials *credentials) {
 
             XCTFail(@"The request should fail (User already exists)");
 
@@ -212,6 +214,7 @@
 
             [expectation fulfill];
         }];
+        operation.maxNumberOfTries = 1;
     }];
 
     [self waitForExpectationsWithTimeout:10 handler:nil];
@@ -471,7 +474,7 @@
 
     client.completionQueue = dispatch_queue_create("aQueueFromAnotherThread", DISPATCH_QUEUE_SERIAL);
 
-    [client publicRoomsOnServer:nil limit:-1 since:nil filter:nil thirdPartyInstanceId:nil includeAllNetworks:NO success:^(MXPublicRoomsResponse *publicRoomsResponse) {
+    MXHTTPOperation *operation = [client publicRoomsOnServer:nil limit:-1 since:nil filter:nil thirdPartyInstanceId:nil includeAllNetworks:NO success:^(MXPublicRoomsResponse *publicRoomsResponse) {
 
         XCTAssertFalse([[NSThread currentThread] isMainThread]);
         XCTAssertEqual(dispatch_get_current_queue(), client.completionQueue);
@@ -482,6 +485,7 @@
         XCTFail(@"The request should not fail - NSError: %@", error);
         [expectation fulfill];
     }];
+    operation.maxNumberOfTries = 1;
 
     [self waitForExpectationsWithTimeout:10 handler:nil];
 }

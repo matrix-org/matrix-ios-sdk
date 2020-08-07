@@ -86,12 +86,12 @@
 
         // - Add enough messages while the session in background to trigger a gappy sync
         [mxSession pause];
-        [matrixSDKTestsData for:mxSession.matrixRestClient andRoom:room.roomId sendMessages:10 success:^{
+        [matrixSDKTestsData for:mxSession.matrixRestClient andRoom:room.roomId sendMessages:10 testCase:self success:^{
 
             // - Add a reaction in the gap
             [otherSession.aggregations addReaction:@"🙂" forEvent:eventId inRoom:room.roomId success:^() {
 
-                [matrixSDKTestsData for:mxSession.matrixRestClient andRoom:room.roomId sendMessages:20 success:^{
+                [matrixSDKTestsData for:mxSession.matrixRestClient andRoom:room.roomId sendMessages:20 testCase:self success:^{
 
                     [mxSession start:^{
                         readyToTest(mxSession, room, otherSession, expectation, eventId);

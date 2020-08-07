@@ -618,7 +618,7 @@
 
                     // - Log Alice on a new device
                     [MXSDKOptions sharedInstance].enableCryptoWhenStartingMXSession = YES;
-                    [matrixSDKTestsData relogUserSessionWithNewDevice:aliceSession withPassword:MXTESTS_ALICE_PWD onComplete:^(MXSession *aliceSession2) {
+                    [matrixSDKTestsData relogUserSessionWithNewDevice:self session:aliceSession withPassword:MXTESTS_ALICE_PWD onComplete:^(MXSession *aliceSession2) {
                         [MXSDKOptions sharedInstance].enableCryptoWhenStartingMXSession = NO;
 
                         // Test check: aliceSession2 has no keys at login
@@ -991,7 +991,7 @@
 
                     // - Log Alice on a new device
                     [MXSDKOptions sharedInstance].enableCryptoWhenStartingMXSession = YES;
-                    [matrixSDKTestsData relogUserSessionWithNewDevice:aliceSession withPassword:MXTESTS_ALICE_PWD onComplete:^(MXSession *aliceSession2) {
+                    [matrixSDKTestsData relogUserSessionWithNewDevice:self session:aliceSession withPassword:MXTESTS_ALICE_PWD onComplete:^(MXSession *aliceSession2) {
                         [MXSDKOptions sharedInstance].enableCryptoWhenStartingMXSession = NO;
 
                         // - Post a message to have a new megolm session
@@ -1499,7 +1499,7 @@
             [aliceSession1.crypto.backup createKeyBackupVersion:keyBackupCreationInfo success:^(MXKeyBackupVersion * _Nonnull keyBackupVersion) {
                 [aliceSession1.crypto.backup backupAllGroupSessions:^{
                     
-                    [matrixSDKTestsE2EData loginUserOnANewDevice:aliceSession1.matrixRestClient.credentials withPassword:MXTESTS_ALICE_PWD onComplete:^(MXSession *aliceSession2) {
+                    [matrixSDKTestsE2EData loginUserOnANewDevice:self credentials:aliceSession1.matrixRestClient.credentials withPassword:MXTESTS_ALICE_PWD onComplete:^(MXSession *aliceSession2) {
                         
                         // -> We must have the backup private key locally
                         XCTAssertFalse(aliceSession2.crypto.backup.hasPrivateKeyInCryptoStore);
