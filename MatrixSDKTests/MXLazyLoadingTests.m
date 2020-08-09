@@ -98,7 +98,7 @@ Common initial conditions:
                     [roomFromBobPOV inviteUser:@"@dave:localhost:8480" success:^{
 
                         //  - Alice sends 50 messages
-                        [matrixSDKTestsData for:aliceRestClient andRoom:roomId sendMessages:50 success:^{
+                        [matrixSDKTestsData for:aliceRestClient andRoom:roomId sendMessages:50 testCase:self success:^{
 
                             // - Bob sends a message
                             [roomFromBobPOV sendTextMessage:bobMessage success:^(NSString *eventId) {
@@ -106,7 +106,7 @@ Common initial conditions:
                                 bobMessageEventId = eventId;
 
                                 // - Alice sends 50 messages
-                                [matrixSDKTestsData for:aliceRestClient andRoom:roomId sendMessages:50 success:^{
+                                [matrixSDKTestsData for:aliceRestClient andRoom:roomId sendMessages:50 testCase:self success:^{
 
                                     // - Alice makes an initial /sync
                                     MXSession *aliceSession = [[MXSession alloc] initWithMatrixRestClient:aliceRestClient];
@@ -599,7 +599,7 @@ Common initial conditions:
 
 
                                                 // - Eve0 sends 20 messages
-                                                [matrixSDKTestsData for:eve0Session.matrixRestClient andRoom:roomId sendMessages:20 success:^{
+                                                [matrixSDKTestsData for:eve0Session.matrixRestClient andRoom:roomId sendMessages:20 testCase:self success:^{
 
                                                     // - Resume Alice MXSession
                                                     [aliceSession resume:^{
@@ -826,7 +826,7 @@ Common initial conditions:
         [aliceSession.matrixRestClient leaveRoom:roomId success:^{
 
             // - Bob sends 50 messages
-            [matrixSDKTestsData for:bobSession.matrixRestClient andRoom:roomId sendMessages:50 success:^{
+            [matrixSDKTestsData for:bobSession.matrixRestClient andRoom:roomId sendMessages:50 testCase:self success:^{
 
                 // - Resume Alice MXSession
                 [aliceSession resume:^{
@@ -1150,7 +1150,7 @@ Common initial conditions:
         [aliceSession pause];
 
         //  - Bob sends 50 messages
-        [matrixSDKTestsData for:bobSession.matrixRestClient andRoom:roomId sendMessages:50 success:^{
+        [matrixSDKTestsData for:bobSession.matrixRestClient andRoom:roomId sendMessages:50 testCase:self success:^{
 
             // - Alice resumes (there will a limited /sync)
             [aliceSession resume:^{

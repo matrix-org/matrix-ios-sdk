@@ -1426,7 +1426,7 @@
     [matrixSDKTestsData doMXRestClientTestWithBobAndARoom:self readyToTest:^(MXRestClient *bobRestClient, NSString *roomId, XCTestExpectation *expectation) {
         
         // Add 50 messages to the room
-        [matrixSDKTestsData for:bobRestClient andRoom:roomId sendMessages:20 success:^{
+        [matrixSDKTestsData for:bobRestClient andRoom:roomId sendMessages:20 testCase:self success:^{
             
             MXRoomEventFilter *roomEventFilter = [[MXRoomEventFilter alloc] init];
             roomEventFilter.rooms = @[roomId];

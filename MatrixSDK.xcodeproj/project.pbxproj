@@ -322,6 +322,8 @@
 		328BCB3321947BE200A976D3 /* MXKeyBackupVersionTrust.h in Headers */ = {isa = PBXBuildFile; fileRef = 328BCB3121947BE200A976D3 /* MXKeyBackupVersionTrust.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		328BCB3421947BE200A976D3 /* MXKeyBackupVersionTrust.m in Sources */ = {isa = PBXBuildFile; fileRef = 328BCB3221947BE200A976D3 /* MXKeyBackupVersionTrust.m */; };
 		328DDEC11A07E57E008C7DC8 /* MXJSONModelTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 328DDEC01A07E57E008C7DC8 /* MXJSONModelTests.m */; };
+		3290293424CB10D000DA7BB6 /* MatrixSDKVersion.m in Sources */ = {isa = PBXBuildFile; fileRef = 3290293324CB10D000DA7BB6 /* MatrixSDKVersion.m */; };
+		3290293524CB10D000DA7BB6 /* MatrixSDKVersion.m in Sources */ = {isa = PBXBuildFile; fileRef = 3290293324CB10D000DA7BB6 /* MatrixSDKVersion.m */; };
 		3291D4D41A68FFEB00C3BA41 /* MXFileRoomStore.h in Headers */ = {isa = PBXBuildFile; fileRef = 3291D4D21A68FFEB00C3BA41 /* MXFileRoomStore.h */; };
 		3291D4D51A68FFEB00C3BA41 /* MXFileRoomStore.m in Sources */ = {isa = PBXBuildFile; fileRef = 3291D4D31A68FFEB00C3BA41 /* MXFileRoomStore.m */; };
 		3291DC8323DF52E10009732F /* MXRoomCreationParameters.h in Headers */ = {isa = PBXBuildFile; fileRef = 3291DC8123DF52E10009732F /* MXRoomCreationParameters.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -1460,6 +1462,7 @@
 		328BCB3121947BE200A976D3 /* MXKeyBackupVersionTrust.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MXKeyBackupVersionTrust.h; sourceTree = "<group>"; };
 		328BCB3221947BE200A976D3 /* MXKeyBackupVersionTrust.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MXKeyBackupVersionTrust.m; sourceTree = "<group>"; };
 		328DDEC01A07E57E008C7DC8 /* MXJSONModelTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXJSONModelTests.m; sourceTree = "<group>"; };
+		3290293324CB10D000DA7BB6 /* MatrixSDKVersion.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MatrixSDKVersion.m; sourceTree = "<group>"; };
 		3291D4D21A68FFEB00C3BA41 /* MXFileRoomStore.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXFileRoomStore.h; sourceTree = "<group>"; };
 		3291D4D31A68FFEB00C3BA41 /* MXFileRoomStore.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXFileRoomStore.m; sourceTree = "<group>"; };
 		3291DC8123DF52E10009732F /* MXRoomCreationParameters.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MXRoomCreationParameters.h; sourceTree = "<group>"; };
@@ -2719,6 +2722,7 @@
 				C6F935791E5B390D00FC34BF /* Contrib */,
 				B113695D230AC9D900E2B2FA /* IdentityServer */,
 				32C6F93219DD814400EA4E9C /* MatrixSDK.h */,
+				3290293324CB10D000DA7BB6 /* MatrixSDKVersion.m */,
 				C61A4CC31E5F38CB00442158 /* SwiftMatrixSDK.h */,
 				320DFDD419DD99B60068622A /* MXRestClient.h */,
 				320DFDD519DD99B60068622A /* MXRestClient.m */,
@@ -3798,7 +3802,7 @@
 		32C6F92419DD814400EA4E9C /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 0940;
+				LastUpgradeCheck = 1160;
 				ORGANIZATIONNAME = matrix.org;
 				TargetAttributes = {
 					32C6F92C19DD814400EA4E9C = {
@@ -4192,6 +4196,7 @@
 				B17982FB2119E4A2001FD722 /* MXRoomPredecessorInfo.m in Sources */,
 				32AF927D240EA0190008A0FD /* MXSecretShareManager.m in Sources */,
 				3294FD9E22F321B0007F1E60 /* MXServiceTerms.m in Sources */,
+				3290293424CB10D000DA7BB6 /* MatrixSDKVersion.m in Sources */,
 				32DC15D11A8CF7AE006F9AD3 /* MXNotificationCenter.m in Sources */,
 				32637ED51E5B00400011E20D /* MXDeviceList.m in Sources */,
 				327A5F55239805F600ED6329 /* MXKeyVerificationMac.m in Sources */,
@@ -4388,6 +4393,7 @@
 				B14EF21D2397E90400758AF0 /* MXEncryptedContentKey.m in Sources */,
 				B14EF21E2397E90400758AF0 /* MXEventDecryptionResult.m in Sources */,
 				320B393D239FD15E00BE2C06 /* MXKeyVerificationRequest.m in Sources */,
+				3290293524CB10D000DA7BB6 /* MatrixSDKVersion.m in Sources */,
 				B14EF21F2397E90400758AF0 /* MXMyUser.m in Sources */,
 				B14EF2202397E90400758AF0 /* (null) in Sources */,
 				B14EF2212397E90400758AF0 /* MX3PID.swift in Sources */,
@@ -4621,6 +4627,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
 				CLANG_CXX_LIBRARY = "libc++";
 				CLANG_ENABLE_MODULES = YES;
@@ -4681,6 +4688,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
 				CLANG_CXX_LIBRARY = "libc++";
 				CLANG_ENABLE_MODULES = YES;

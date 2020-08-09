@@ -1,3 +1,104 @@
+Changes to be released in next version
+=================================================
+
+Features:
+ * 
+
+Improvements:
+ * 
+
+Bugfix:
+ * 
+
+API Change:
+ * 
+
+Translations:
+ * 
+
+Others:
+ * 
+
+Build:
+ * 
+
+Test:
+ * 
+
+Changes in 0.16.10 (2020-08-07)
+=================================================
+
+Features:
+ * 
+
+Improvements:
+ * 
+
+Bugfix:
+ * 
+
+API Change:
+ * 
+
+Translations:
+ * 
+
+Others:
+ * 
+
+Build:
+ * 
+
+Test:
+ * Fix "fastlane ios test" and generate html report.
+ * Make tests crash instantly if no local synapse is running.
+ * Do not use anymore NSAssert in tests.
+
+Changes in 0.16.9 (2020-08-05)
+=================================================
+
+Features:
+ * 
+
+Improvements:
+ * 
+
+Bugfix:
+ * 
+
+API Change:
+ * 
+
+Translations:
+ * 
+
+Others:
+ * 
+
+Build:
+ * 
+
+Test:
+ * 
+
+Changes in 0.16.8 (2020-07-28)
+================================================
+
+Improvements:
+ * MXSession: Log next sync token.
+ 
+Bug fix:
+ * MXRoom: Reply: Use formatted body only if the message content format is known.
+ * MXRoom: Reply: Avoid nested mx-reply tags.
+
+Changes in Matrix iOS SDK in 0.16.7 (2020-07-13)
+================================================
+
+Bug fix:
+ * MXCreateRoomReponse: Remove undocumented roomAlias property (vector-im/riot-ios/issues/3300).
+ * MXPushRuleSenderNotificationPermissionConditionChecker & MXPushRuleRoomMemberCountConditionChecker: Remove redundant room check (vector-im/riot-ios/issues/3354).
+ * MXSDKOptions: Introduce enableKeyBackupWhenStartingMXCrypto option (vector-im/riot-ios/issues/3371).
+
 Changes in Matrix iOS SDK in 0.16.6 (2020-06-30)
 ================================================
 
@@ -16,11 +117,8 @@ Bug fix:
  * MXSecretShareManager: Fix crash in cancelRequestWithRequestId (vector-im/riot-ios/issues/3272).
  * MXIdentityService: Fix crash in handleHTTPClientError (vector-im/riot-ios/issues/3273).
  * MXSession: Add ignoreSessionState to backgroundSync method.
- * MXCreateRoomReponse: Remove undocumented roomAlias property (vector-im/riot-ios/issues/3300).
  * MXDeviceList: Fix crash in refreshOutdatedDeviceLists (vector-im/riot-ios/issues/3118).
- * MXPushRuleSenderNotificationPermissionConditionChecker & MXPushRuleRoomMemberCountConditionChecker: Remove redundant room check (vector-im/riot-ios/issues/3354).
  * MXDeviceListOperationsPool: Fix current device verification status put in MXDeviceUnknown instead of MXDeviceVerified (vector-im/riot-ios/issues/3343).
- * MXSDKOptions: Introduce enableKeyBackupWhenStartingMXCrypto option (vector-im/riot-ios/issues/3371).
 
 API break:
  * MXCrossSigning: Removed MXCrossSigningStateCanCrossSignAsynchronously.
