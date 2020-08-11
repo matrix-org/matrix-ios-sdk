@@ -40,7 +40,7 @@ NS_ASSUME_NONNULL_BEGIN
  @param onUnrecognizedCertBlock the block called to handle unrecognized certificate (nil if unrecognized certificates are ignored).
  @return an MXPushGatewayRestClient instance.
 */
-- (instancetype)initWithPushGateway:(NSString *)pushGateway
+- (instancetype)initWithPushGateway:(NSString * _Nonnull)pushGateway
   andOnUnrecognizedCertificateBlock:(nullable MXHTTPClientOnUnrecognizedCertificate)onUnrecognizedCertBlock;
 
 #pragma mark - Notify
@@ -52,16 +52,18 @@ NS_ASSUME_NONNULL_BEGIN
  @param eventId event id
  @param roomId room id
  @param eventType event type
+ @param sender sender of the event
  @param success A block object called when the operation succeeds. It provides the user access token for the identity server.
  @param failure A block object called when the operation fails.
  
  @return a MXHTTPOperation instance.
  */
-- (MXHTTPOperation *)notifyAppWithId:(NSString *)appId
-                           pushToken:(NSData *)pushToken
-                             eventId:(NSString *)eventId
-                              roomId:(NSString *)roomId
-                           eventType:(NSString *)eventType
+- (MXHTTPOperation *)notifyAppWithId:(NSString * _Nonnull)appId
+                           pushToken:(NSData * _Nonnull)pushToken
+                             eventId:(nullable NSString *)eventId
+                              roomId:(nullable NSString *)roomId
+                           eventType:(nullable NSString *)eventType
+                              sender:(nullable NSString *)sender
                              success:(void (^)(NSArray<NSString*> * _Nonnull))success
                              failure:(void (^)(NSError * _Nonnull))failure;
 

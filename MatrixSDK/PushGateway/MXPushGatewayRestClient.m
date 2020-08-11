@@ -42,18 +42,16 @@ limitations under the License.
 
 #pragma mark - Setup
 
-- (instancetype)initWithPushGateway:(NSString *)pushGateway
+- (instancetype)initWithPushGateway:(NSString * _Nonnull)pushGateway
   andOnUnrecognizedCertificateBlock:(MXHTTPClientOnUnrecognizedCertificate)onUnrecognizedCertBlock
 {
     self = [super init];
     if (self)
     {
-        MXHTTPClient *httpClient = [[MXHTTPClient alloc] initWithBaseURL:pushGateway
-                                       andOnUnrecognizedCertificateBlock:onUnrecognizedCertBlock];
-        httpClient.requestParametersInJSON = YES;
-
-        self.httpClient = httpClient;
         _pushGateway = pushGateway;
+        self.httpClient = [[MXHTTPClient alloc] initWithBaseURL:pushGateway
+                              andOnUnrecognizedCertificateBlock:onUnrecognizedCertBlock];
+        self.httpClient.requestParametersInJSON = YES;
 
         self.processingQueue = dispatch_queue_create("MXPushGatewayRestClient", DISPATCH_QUEUE_SERIAL);
         self.completionQueue = dispatch_get_main_queue();
@@ -61,13 +59,14 @@ limitations under the License.
     return self;
 }
 
-#pragma makr - Notify
+#pragma mark - Notify
 
-- (MXHTTPOperation *)notifyAppWithId:(NSString *)appId
-                           pushToken:(NSData *)pushToken
-                             eventId:(NSString *)eventId
-                              roomId:(NSString *)roomId
-                           eventType:(NSString *)eventType
+- (MXHTTPOperation *)notifyAppWithId:(NSString * _Nonnull)appId
+                           pushToken:(NSData * _Nonnull)pushToken
+                             eventId:(nullable NSString *)eventId
+                              roomId:(nullable NSString *)roomId
+                           eventType:(nullable NSString *)eventType
+                              sender:(nullable NSString *)sender
                              success:(void (^)(NSArray<NSString*> * _Nonnull))success
                              failure:(void (^)(NSError * _Nonnull))failure
 {
@@ -92,15 +91,21 @@ limitations under the License.
     {
         notification[@"type"] = eventType;
     }
+    if (sender)
+    {
+        notification[@"sender"] = sender;
+    }
     
     NSDictionary *parameters = @{
         @"notification": notification
     };
     
-    return [self.httpClient requestWithMethod:@"POST"
-                                         path:@"/_matrix/push/v1/notify"
-                                   parameters:parameters
-                                      success:^(NSDictionary *JSONResponse) {
+    self.httpClient.acceptableContentTypes = [NSSet setWithObjects:@"text/html", @"application/json", nil];
+    
+    MXHTTPOperation *operation= [self.httpClient requestWithMethod:@"POST"
+                                                              path:@"/_matrix/push/v1/notify"
+                                                        parameters:parameters
+                                                           success:^(NSDictionary *JSONResponse) {
         if (success)
         {
             __block NSArray<NSString*> *rejectedTokens;
@@ -113,6 +118,10 @@ limitations under the License.
     } failure:^(NSError *error) {
         [self dispatchFailure:error inBlock:failure];
     }];
+    
+    operation.maxNumberOfTries = 0;
+    
+    return operation;
 }
 
 #pragma mark - Private methods
