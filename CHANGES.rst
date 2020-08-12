@@ -11,7 +11,7 @@ Bugfix:
  * 
 
 API Change:
- * 
+ * Drop SwiftMatrixSDK (vector-im/element-ios#3518).
 
 Translations:
  * 
