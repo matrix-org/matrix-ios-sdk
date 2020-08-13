@@ -1718,7 +1718,6 @@
 		B14766B523D9D9410091F721 /* MXUsersTrustLevelSummary.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MXUsersTrustLevelSummary.h; sourceTree = "<group>"; };
 		B14766B623D9D9410091F721 /* MXUsersTrustLevelSummary.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MXUsersTrustLevelSummary.m; sourceTree = "<group>"; };
 		B14B17682464419E00C2751E /* MatrixSDK.podspec */ = {isa = PBXFileReference; explicitFileType = text.script.ruby; path = MatrixSDK.podspec; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.ruby; };
-		B14B1769246441AF00C2751E /* SwiftMatrixSDK.podspec */ = {isa = PBXFileReference; explicitFileType = text.script.ruby; path = SwiftMatrixSDK.podspec; sourceTree = "<group>"; };
 		B14EF36B2397E90400758AF0 /* MatrixSDK.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = MatrixSDK.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		B17285782100C88A0052C51E /* MXSendReplyEventStringsLocalizable.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = MXSendReplyEventStringsLocalizable.h; path = ../MXSendReplyEventStringsLocalizable.h; sourceTree = "<group>"; };
 		B172857A2100D4F60052C51E /* MXSendReplyEventDefaultStringLocalizations.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = MXSendReplyEventDefaultStringLocalizations.h; path = ../MXSendReplyEventDefaultStringLocalizations.h; sourceTree = "<group>"; };
@@ -2685,7 +2684,6 @@
 				32C03CB921231C2500D92712 /* CHANGES.rst */,
 				32C03CB721231C2500D92712 /* Podfile */,
 				B14B17682464419E00C2751E /* MatrixSDK.podspec */,
-				B14B1769246441AF00C2751E /* SwiftMatrixSDK.podspec */,
 				32C6F92F19DD814400EA4E9C /* MatrixSDK */,
 				32C6F93919DD814400EA4E9C /* MatrixSDKTests */,
 				32C6F92E19DD814400EA4E9C /* Products */,

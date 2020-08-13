@@ -24,22 +24,18 @@ project is to add the MatrixSDK dependency to your Podfile::
     # Obj-C
     pod 'MatrixSDK'
 
-    # Swift
-    pod 'SwiftMatrixSDK'
-
 If you want to use the develop version of the SDK, use instead:
 
     # Obj-C
     pod 'MatrixSDK', :git => 'https://github.com/matrix-org/matrix-ios-sdk.git',
     :branch => 'develop'
 
-    # Swift
-    pod 'SwiftMatrixSDK', :git => 'https://github.com/matrix-org/matrix-ios-sdk.git',
-    :branch => 'develop'
-
-
 Options
 =======
+If you want also Swift support, add the following pod to you app Podfile::
+
+    pod 'MatrixSDK/SwiftSupport'
+
 If you want to enable VoIP using the http://webrtc.org VoIP stack, add the following pod to you app Podfile::
 
     pod 'MatrixSDK/JingleCallStack'
@@ -99,7 +95,7 @@ One file to import:
 
 **Swift**::
 
-    import SwiftMatrixSDK
+    import MatrixSDK
 
 Use case #1: Get public rooms of an homeserver
 -----------------------------------------------
@@ -475,7 +471,7 @@ The tests in the SDK Xcode project are both unit and integration tests.
 
 Out of the box, the tests use one of the homeservers (located at
 http://localhost:8080) of the "Demo Federation of Homeservers"
-(https://github.com/matrix-org/synapse#running-a-demo-federation-of-synapses). 
+(https://github.com/matrix-org/synapse#running-a-demo-federation-of-synapses).
 
 You first need to follow instructions to set up Synapse in development mode at https://github.com/matrix-org/synapse#synapse-development.
 If you have already installed all dependencies, the steps are::
@@ -502,37 +498,6 @@ CocoaPods may fail to install on OSX 10.8.x with "i18n requires Ruby version
 >= 1.9.3.".  This is a known problem similar to
 https://github.com/CocoaPods/CocoaPods/issues/2458 that needs to be raised with
 the cocoapods team.
-
-### Dynamic Framework: Undefined symbols for architecture
-
-If you are using "MatrixSDK" instead of "SwiftMatrixSDK", you may get a compile-
-time error that looks like this::
-
-    Undefined symbols for architecture x86_64:
-      "_OBJC_CLASS_$_GAIDictionaryBuilder", referenced from:
-          objc-class-ref in MXGoogleAnalytics.o
-      "_OBJC_CLASS_$_GAI", referenced from:
-          objc-class-ref in MXGoogleAnalytics.o
-    ld: symbol(s) not found for architecture x86_64
-    clang: error: linker command failed with exit code 1 (use -v to see invocation)
-
-This happens when both of the following are true:
-
-1. The MatrixSDK was compiled as a framework (i.e. the `use_frameworks!` setting
-is enabled in your podfile)
-2. Your project also uses the Google Analytics pod.
-
-The root cause is that the `MXGoogleAnalytics` class recognizes that the Google
-Analytics pod was included in your project, and attempts to include its headers.
-This type of behavior is allowed in a Static Library, but it is not allowed in a
-Dynamic Framework.
-
-The easiest workaround is to switch to the "SwiftMatrixSDK" pod, even if you
-don't use Swift (for an Obj-C project, the pods are virtually the same). The
-"SwiftMatrixSDK" excludes the `MXGoogleAnalytics` class. If you want to collect
-analytics data about initialization times (and so forth), you can implement your
-own `MXAnalyticsDelegate` and set an instance to `MXSDKOptions.sharedInstance`.
-See `MXAnalyticsDelegate.h` and `MXGoogleAnalytics.h/m` for more information.
 
 Registration
 ------------
