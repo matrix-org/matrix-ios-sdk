@@ -23,7 +23,7 @@ limitations under the License.
 #import "MXTools.h"
 #import "MXBase64Tools.h"
 
-NSString *const kMXPushGatewayRestClientProcessingQueueLabel = @"MXPushGatewayRestClient";
+static const char * const kMXPushGatewayRestClientProcessingQueueLabel = "MXPushGatewayRestClient";
 
 @interface MXPushGatewayRestClient ()
 
