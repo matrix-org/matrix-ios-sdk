@@ -2,7 +2,7 @@ Changes to be released in next version
 =================================================
 
 Features:
- * 
+ * Introduce MXPushGatewayRestClient (part of vector-im/element-ios#3452). 
 
 Improvements:
  * 
