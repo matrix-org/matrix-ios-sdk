@@ -53,7 +53,7 @@ NS_ASSUME_NONNULL_BEGIN
  @param roomId room id
  @param eventType event type
  @param sender sender of the event
- @param success A block object called when the operation succeeds. It provides the user access token for the identity server.
+ @param success A block object called when the operation succeeds. It provides the rejected tokens.
  @param failure A block object called when the operation fails.
  
  @return a MXHTTPOperation instance.

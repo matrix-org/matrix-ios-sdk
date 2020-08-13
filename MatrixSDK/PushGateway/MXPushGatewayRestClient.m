@@ -23,6 +23,8 @@ limitations under the License.
 #import "MXTools.h"
 #import "MXBase64Tools.h"
 
+NSString *const kMXPushGatewayRestClientProcessingQueueLabel = @"MXPushGatewayRestClient";
+
 @interface MXPushGatewayRestClient ()
 
 /**
@@ -53,7 +55,7 @@ limitations under the License.
                               andOnUnrecognizedCertificateBlock:onUnrecognizedCertBlock];
         self.httpClient.requestParametersInJSON = YES;
 
-        self.processingQueue = dispatch_queue_create("MXPushGatewayRestClient", DISPATCH_QUEUE_SERIAL);
+        self.processingQueue = dispatch_queue_create(kMXPushGatewayRestClientProcessingQueueLabel, DISPATCH_QUEUE_SERIAL);
         self.completionQueue = dispatch_get_main_queue();
     }
     return self;
