@@ -1,8 +1,8 @@
-Changes to be released in next version
+Changes in 0.16.11 (2020-08-13)
 =================================================
 
 Features:
- * 
+ * Introduce MXPushGatewayRestClient (part of vector-im/element-ios#3452). 
 
 Improvements:
  * 
@@ -11,7 +11,7 @@ Bugfix:
  * 
 
 API Change:
- * 
+ * Drop SwiftMatrixSDK (vector-im/element-ios#3518).
 
 Translations:
  * 

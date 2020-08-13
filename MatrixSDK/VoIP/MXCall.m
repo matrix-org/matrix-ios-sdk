@@ -187,6 +187,12 @@ NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
             if (![event.sender isEqualToString:_callSignalingRoom.mxSession.myUserId])
             {
                 // Incoming call
+                
+                if (_state >= MXCallStateRinging)
+                {
+                    //  already ringing, do nothing
+                    return;
+                }
 
                 _callId = callInviteEventContent.callId;
                 _callerId = event.sender;

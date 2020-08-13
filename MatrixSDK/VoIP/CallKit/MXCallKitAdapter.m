@@ -148,9 +148,19 @@ NSString * const kMXCallKitAdapterAudioSessionDidActive = @"kMXCallKitAdapterAud
 }
 
 - (void)reportIncomingCall:(MXCall *)call {
+    NSUUID *callUUID = call.callUUID;
+    
+    if (self.calls[callUUID])
+    {
+        //  when using iOS 13 VoIP pushes, we are immediately reporting call to the CallKit. When call goes into MXCallStateRinging state, it'll try to report the same call to the CallKit again. It will cause an error with the error:  CXErrorCodeIncomingCallErrorCallUUIDAlreadyExists (2). So we want to avoid to re-reporting the same call.
+        return;
+    }
+    
+    //  directly store the call. Will be removed if reporting fails.
+    self.calls[callUUID] = call;
+    
     MXSession *mxSession = call.room.mxSession;
     MXUser *caller = [mxSession userWithUserId:call.callerId];
-    NSUUID *callUUID = call.callUUID;
     
     CXHandle *handle = [[CXHandle alloc] initWithType:CXHandleTypeGeneric value:call.room.roomId];
     
@@ -167,10 +177,9 @@ NSString * const kMXCallKitAdapterAudioSessionDidActive = @"kMXCallKitAdapterAud
         if (error)
         {
             [call hangup];
+            [self.calls removeObjectForKey:callUUID];
             return;
         }
-        
-        self.calls[callUUID] = call;
     }];
     
 }
