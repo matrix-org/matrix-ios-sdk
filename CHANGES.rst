@@ -1,3 +1,30 @@
+Changes in 0.16.12 (2020-08-19)
+=================================================
+
+Features:
+ * 
+
+Improvements:
+ * Introduce HTTPAdditionalHeaders in MXSDKOptions.
+
+Bugfix:
+ * 
+
+API Change:
+ * 
+
+Translations:
+ * 
+
+Others:
+ * 
+
+Build:
+ * 
+
+Test:
+ * 
+
 Changes in 0.16.11 (2020-08-13)
 =================================================
 
