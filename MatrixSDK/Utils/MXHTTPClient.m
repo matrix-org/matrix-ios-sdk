@@ -117,10 +117,7 @@ static NSUInteger requestCount = 0;
     self = [super init];
     if (self)
     {
-        NSURLSessionConfiguration *configuration = [NSURLSessionConfiguration defaultSessionConfiguration];
-        configuration.HTTPAdditionalHeaders = MXSDKOptions.sharedInstance.HTTPAdditionalHeaders;
-        httpManager = [[AFHTTPSessionManager alloc] initWithBaseURL:[NSURL URLWithString:baseURL]
-                                               sessionConfiguration:configuration];
+        httpManager = [[AFHTTPSessionManager alloc] initWithBaseURL:[NSURL URLWithString:baseURL]];
 
         [self setDefaultSecurityPolicy];
 
@@ -674,6 +671,11 @@ static NSUInteger requestCount = 0;
     {
         httpManager.requestSerializer = [AFHTTPRequestSerializer serializer];
     }
+    
+    //  Include default HTTP headers again
+    [MXSDKOptions.sharedInstance.HTTPAdditionalHeaders enumerateKeysAndObjectsUsingBlock:^(NSString * _Nonnull key, NSString * _Nonnull value, BOOL * _Nonnull stop) {
+        [httpManager.requestSerializer setValue:value forHTTPHeaderField:key];
+    }];
     
     // Refresh authorization HTTP header field
     [self updateAuthorizationBearHTTPHeaderFieldWithAccessToken:self.accessToken];
