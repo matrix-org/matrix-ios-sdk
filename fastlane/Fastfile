@@ -60,6 +60,20 @@ platform :ios do
     build_scheme(scheme: "MatrixSDK-macOS", destination: "generic/platform=macOS")
   end
 
+  desc "Send code to SonarCloud for analysis"
+  lane :sonarcloud do |options|
+    sonar(
+      project_key: "matrix.ios.sdk",
+      project_name: "Matrix iOS SDK",
+      branch_name: ENV["BUILDKITE_BRANCH"],
+      sonar_organization: "new_vector_ltd_organization",
+      sonar_url: "https://sonarcloud.io",
+      sonar_login: ENV["SONAR_LOGIN"],
+      sources_path: File.expand_path("../MatrixSDK") + "," + File.expand_path("../MatrixSDKExtensions"),
+      sonar_runner_args: "-Dsonar.cfamily.build-wrapper-output=build_wrapper_output -Dsonar.cfamily.threads=4 -Dsonar.cfamily.cache.enabled=true -Dsonar.cfamily.cache.path=sonar_cfamily_cache"
+    )
+  end
+
   #### Tests ####
 
   desc "Run integration tests (Be sure to set up the homeserver before like described here https://github.com/matrix-org/matrix-ios-sdk#tests)"

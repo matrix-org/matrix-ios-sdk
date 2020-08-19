@@ -97,6 +97,21 @@ NS_ASSUME_NONNULL_BEGIN
 */
 @property (nonatomic, nullable) NSString *applicationGroupIdentifier;
 
+/**
+ @brief Specifies additional headers which will be set on outgoing requests.
+ Note that these headers are added to the request only if not already present.
+ Following headers should not be modified:
+ - Authorization
+ - Connection
+ - Host
+ - Proxy-Authenticate
+ - Proxy-Authorization
+ - WWW-Authenticate
+ 
+ @remark Empty dictionary by default.
+*/
+@property (nonatomic, nullable) NSDictionary<NSString *, NSString*> *HTTPAdditionalHeaders;
+
 @end
 
 NS_ASSUME_NONNULL_END
