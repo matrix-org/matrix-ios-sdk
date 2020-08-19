@@ -40,6 +40,7 @@ static MXSDKOptions *sharedOnceInstance = nil;
         _enableKeyBackupWhenStartingMXCrypto = YES;
         _mediaCacheAppVersion = 0;
         _applicationGroupIdentifier = nil;
+        _HTTPAdditionalHeaders = @{};
     }
     
     return self;
