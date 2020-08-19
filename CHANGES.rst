@@ -5,7 +5,7 @@ Features:
  * 
 
 Improvements:
- * 
+ * Introduce HTTPAdditionalHeaders in MXSDKOptions.
 
 Bugfix:
  * 
