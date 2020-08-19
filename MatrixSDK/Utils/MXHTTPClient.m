@@ -117,7 +117,10 @@ static NSUInteger requestCount = 0;
     self = [super init];
     if (self)
     {
-        httpManager = [[AFHTTPSessionManager alloc] initWithBaseURL:[NSURL URLWithString:baseURL]];
+        NSURLSessionConfiguration *configuration = [NSURLSessionConfiguration new];
+        configuration.HTTPAdditionalHeaders = MXSDKOptions.sharedInstance.HTTPAdditionalHeaders;
+        httpManager = [[AFHTTPSessionManager alloc] initWithBaseURL:[NSURL URLWithString:baseURL]
+                                               sessionConfiguration:configuration];
 
         [self setDefaultSecurityPolicy];
 
