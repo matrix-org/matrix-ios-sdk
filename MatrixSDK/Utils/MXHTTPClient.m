@@ -672,6 +672,11 @@ static NSUInteger requestCount = 0;
         httpManager.requestSerializer = [AFHTTPRequestSerializer serializer];
     }
     
+    //  Include default HTTP headers again
+    [MXSDKOptions.sharedInstance.HTTPAdditionalHeaders enumerateKeysAndObjectsUsingBlock:^(NSString * _Nonnull key, NSString * _Nonnull value, BOOL * _Nonnull stop) {
+        [httpManager.requestSerializer setValue:value forHTTPHeaderField:key];
+    }];
+    
     // Refresh authorization HTTP header field
     [self updateAuthorizationBearHTTPHeaderFieldWithAccessToken:self.accessToken];
 }
