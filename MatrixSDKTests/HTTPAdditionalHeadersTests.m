@@ -62,6 +62,8 @@ static NSString *const kUserAgent = @"Dummy-User-Agent";
 {
     [HTTPStubs removeAllStubs];
     
+    [MXSDKOptions sharedInstance].HTTPAdditionalHeaders = @{};
+    
     [super tearDown];
 }
 
