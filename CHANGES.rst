@@ -8,7 +8,7 @@ Improvements:
  * 
 
 Bugfix:
- * 
+ * Some room members count are wrong after clearing the cache
 
 API Change:
  * 
