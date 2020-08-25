@@ -5,7 +5,7 @@ Features:
  * 
 
 Improvements:
- * 
+ * Introduce handleCallEvent on MXCallManager. 
 
 Bugfix:
  * Some room members count are wrong after clearing the cache
