@@ -80,26 +80,7 @@ NSString *const kMXCallManagerConferenceFinished = @"kMXCallManagerConferenceFin
 
             if (MXTimelineDirectionForwards == direction)
             {
-                switch (event.eventType)
-                {
-                    case MXEventTypeCallInvite:
-                        [self handleCallInvite:event];
-                        break;
-
-                    case MXEventTypeCallAnswer:
-                        [self handleCallAnswer:event];
-                        break;
-
-                    case MXEventTypeCallHangup:
-                        [self handleCallHangup:event];
-                        break;
-
-                    case MXEventTypeCallCandidates:
-                        [self handleCallCandidates:event];
-                        break;
-                    default:
-                        break;
-                }
+                [self handleCallEvent:event];
             }
         }];
 
@@ -282,6 +263,26 @@ NSString *const kMXCallManagerConferenceFinished = @"kMXCallManagerConferenceFin
     [calls removeObject:call];
 }
 
+- (void)handleCallEvent:(MXEvent *)event
+{
+    switch (event.eventType)
+    {
+        case MXEventTypeCallInvite:
+            [self handleCallInvite:event];
+            break;
+        case MXEventTypeCallAnswer:
+            [self handleCallAnswer:event];
+            break;
+        case MXEventTypeCallHangup:
+            [self handleCallHangup:event];
+            break;
+        case MXEventTypeCallCandidates:
+            [self handleCallCandidates:event];
+            break;
+        default:
+            break;
+    }
+}
 
 #pragma mark - Private methods
 - (void)refreshTURNServer

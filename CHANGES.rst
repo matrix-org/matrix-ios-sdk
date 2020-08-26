@@ -1,3 +1,30 @@
+Changes in 0.16.13 (2020-08-25)
+=================================================
+
+Features:
+ * 
+
+Improvements:
+ * Introduce handleCallEvent on MXCallManager. 
+
+Bugfix:
+ * Some room members count are wrong after clearing the cache
+
+API Change:
+ * 
+
+Translations:
+ * 
+
+Others:
+ * 
+
+Build:
+ * 
+
+Test:
+ * 
+
 Changes in 0.16.12 (2020-08-19)
 =================================================
 

@@ -25,6 +25,7 @@ NS_ASSUME_NONNULL_BEGIN
 @class MXRoomMember;
 @class MXSession;
 @class MXTurnServerResponse;
+@class MXEvent;
 
 @protocol MXCallStack;
 
@@ -105,6 +106,13 @@ extern NSString *const kMXCallManagerConferenceFinished;
  @param call the `MXCall` instance reference to forget.
  */
 - (void)removeCall:(MXCall *)call;
+
+/**
+ Handle a call event. Ignores other types of events.
+ 
+ @param event The call event.
+ */
+- (void)handleCallEvent:(MXEvent *)event;
 
 /**
  The related matrix session.
