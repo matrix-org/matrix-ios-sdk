@@ -592,7 +592,7 @@
 
     stateCopy->_members = [_members copyWithZone:zone];
 
-    stateCopy->_membersCount = _membersCount;
+    stateCopy->_membersCount = [_membersCount copyWithZone:zone];
     
     stateCopy->roomAliases = [[NSMutableDictionary allocWithZone:zone] initWithDictionary:roomAliases];
 
