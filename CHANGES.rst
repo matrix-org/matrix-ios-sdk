@@ -8,7 +8,7 @@ Improvements:
  * 
 
 Bugfix:
- * 
+ * Try to guess homeserver in credentials when not provided in wellknown (vector-im/element-ios/issues/3448). 
 
 API Change:
  * 
