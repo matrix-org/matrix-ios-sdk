@@ -1,3 +1,30 @@
+Changes in 0.16.14 (2020-08-28)
+=================================================
+
+Features:
+ * 
+
+Improvements:
+ * 
+
+Bugfix:
+ * MXCredentials: Try to guess homeserver in credentials when not provided in wellknown (vector-im/element-ios/issues/3448). 
+
+API Change:
+ * 
+
+Translations:
+ * 
+
+Others:
+ * 
+
+Build:
+ * 
+
+Test:
+ * 
+
 Changes in 0.16.13 (2020-08-25)
 =================================================
 
