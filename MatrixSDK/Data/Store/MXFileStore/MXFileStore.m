@@ -1374,16 +1374,22 @@ static NSUInteger preloadOptions;
 - (void)loadMetaData
 {
     NSString *metaDataFile = [storePath stringByAppendingPathComponent:kMXFileStoreMedaDataFile];
-
+    
     @try
     {
         metaData = [NSKeyedUnarchiver unarchiveObjectWithFile:metaDataFile];
     }
     @catch (NSException *exception)
     {
-        NSLog(@"[MXFileStore] Warning: MXFileStore metadata has been corrupted");
+        NSLog(@"[MXFileStore] loadMetaData: Warning: MXFileStore metadata has been corrupted");
     }
-
+    
+    if (metaData && ![metaData isKindOfClass:MXFileStoreMetaData.class])
+    {
+        NSLog(@"[MXFileStore] loadMetaData: Warning: Bad MXFileStore metadata type: %@", metaData);
+        metaData = nil;
+    }
+    
     if (metaData.eventStreamToken)
     {
         [super setEventStreamToken:metaData.eventStreamToken];
@@ -1391,7 +1397,7 @@ static NSUInteger preloadOptions;
     }
     else
     {
-        NSLog(@"[MXFileStore] event stream token is missing");
+        NSLog(@"[MXFileStore] loadMetaData: event stream token is missing");
         [self deleteAllData];
     }
 }
