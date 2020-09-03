@@ -1395,6 +1395,12 @@ static NSUInteger preloadOptions;
     {
         NSLog(@"[MXFileStore] Warning: MXFileStore metadata has been corrupted");
     }
+    
+    if (metaData && ![metaData isKindOfClass:MXFileStoreMetaData.class])
+    {
+        NSLog(@"[MXFileStore] Warning: MXFileStore wrong metadata type: %@", metaData);
+        metaData = nil;
+    }
 
     if (metaData.eventStreamToken)
     {
