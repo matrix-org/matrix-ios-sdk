@@ -18,6 +18,8 @@
 
 #import "MXJSONModels.h"
 
+#import "MXTools.h"
+
 @implementation MXCredentials
 
 - (instancetype)initWithHomeServer:(NSString *)homeServer userId:(NSString *)userId accessToken:(NSString *)accessToken
@@ -44,12 +46,43 @@
 
         // Use wellknown data first
         _homeServer = loginResponse.wellknown.homeServer.baseUrl;
+        _identityServer = loginResponse.wellknown.identityServer.baseUrl;
 
         if (!_homeServer)
         {
-            // Workaround: HS does not return the right URL in loginResponse.homeserver.
+            // Workaround: HS does not return the right URL in wellknown.
             // Use the passed one instead
             _homeServer = [defaultCredentials.homeServer copy];
+        }
+        
+        if (!_homeServer)
+        {
+            // Attempt to derive homeServer from userId.
+            NSString *serverName = [MXTools serverNameInMatrixIdentifier:_userId];
+            if (serverName)
+            {
+                _homeServer = [NSString stringWithFormat:@"https://%@", serverName];
+            }
+        }
+        
+        if (!_homeServer)
+        {
+            // Attempt to get homeServer from loginResponse.homeServer
+            // Using loginResponse.homeserver as the last option, because it's deprecated
+            NSString *serverName = loginResponse.homeserver;
+            if (serverName)
+            {
+                //  check serverName is a full url
+                NSURL *url = [NSURL URLWithString:serverName];
+                if (url.scheme && url.host)
+                {
+                    _homeServer = serverName;
+                }
+                else
+                {
+                    _homeServer = [NSString stringWithFormat:@"https://%@", serverName];
+                }
+            }
         }
 
         if (!_identityServer)

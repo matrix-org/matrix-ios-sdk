@@ -1,4 +1,32 @@
-Changes to be released in next version
+Changes in 0.16.15 (2020-09-03)
+=================================================
+
+Features:
+ * 
+
+Improvements:
+ * MXPushData: Implement JSONDictionary (vector-im/riot-ios/issues/3577).
+ * MXFileStore: Make loadMetaData more robust.
+
+Bugfix:
+ * 
+
+API Change:
+ * 
+
+Translations:
+ * 
+
+Others:
+ * 
+
+Build:
+ * 
+
+Test:
+ * 
+
+Changes in 0.16.14 (2020-08-28)
 =================================================
 
 Features:
@@ -8,10 +36,91 @@ Improvements:
  * 
 
 Bugfix:
+ * MXCredentials: Try to guess homeserver in credentials when not provided in wellknown (vector-im/element-ios/issues/3448). 
+
+API Change:
+ * 
+
+Translations:
+ * 
+
+Others:
+ * 
+
+Build:
+ * 
+
+Test:
+ * 
+
+Changes in 0.16.13 (2020-08-25)
+=================================================
+
+Features:
+ * 
+
+Improvements:
+ * Introduce handleCallEvent on MXCallManager. 
+
+Bugfix:
+ * Some room members count are wrong after clearing the cache
+
+API Change:
+ * 
+
+Translations:
+ * 
+
+Others:
+ * 
+
+Build:
+ * 
+
+Test:
+ * 
+
+Changes in 0.16.12 (2020-08-19)
+=================================================
+
+Features:
+ * 
+
+Improvements:
+ * Introduce HTTPAdditionalHeaders in MXSDKOptions.
+
+Bugfix:
  * 
 
 API Change:
  * 
+
+Translations:
+ * 
+
+Others:
+ * 
+
+Build:
+ * 
+
+Test:
+ * 
+
+Changes in 0.16.11 (2020-08-13)
+=================================================
+
+Features:
+ * Introduce MXPushGatewayRestClient (part of vector-im/element-ios#3452). 
+
+Improvements:
+ * 
+
+Bugfix:
+ * 
+
+API Change:
+ * Drop SwiftMatrixSDK (vector-im/element-ios#3518).
 
 Translations:
  * 
