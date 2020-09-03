@@ -6,6 +6,7 @@ Features:
 
 Improvements:
  * MXPushData: Implement JSONDictionary (vector-im/riot-ios/issues/3577).
+ * MXFileStore: Make loadMetaData more robust.
 
 Bugfix:
  * 
