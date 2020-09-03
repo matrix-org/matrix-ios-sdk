@@ -1,3 +1,31 @@
+Changes in 0.16.15 (2020-09-03)
+=================================================
+
+Features:
+ * 
+
+Improvements:
+ * MXPushData: Implement JSONDictionary (vector-im/riot-ios/issues/3577).
+ * MXFileStore: Make loadMetaData more robust.
+
+Bugfix:
+ * 
+
+API Change:
+ * 
+
+Translations:
+ * 
+
+Others:
+ * 
+
+Build:
+ * 
+
+Test:
+ * 
+
 Changes in 0.16.14 (2020-08-28)
 =================================================
 
