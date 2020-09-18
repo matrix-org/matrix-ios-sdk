@@ -122,7 +122,7 @@ static NSUInteger const kSharedSecretBytesCount = 8;
 
 - (BOOL)isKeyValid:(NSString*)key
 {
-    NSData *keyData = [MXBase64Tools dataFromUnpaddedBase64:key];
+    NSData *keyData = [MXBase64Tools dataFromBase64:key];
     return keyData.length == kKeyBytesCount;
 }
 

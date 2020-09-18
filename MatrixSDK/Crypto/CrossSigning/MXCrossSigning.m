@@ -1026,7 +1026,7 @@ NSString *const MXCrossSigningErrorDomain = @"org.matrix.sdk.crosssigning";
 {
     OLMPkSigning *pkSigning;
     
-    NSData *privateKey = [MXBase64Tools dataFromUnpaddedBase64:base64PrivateKey];
+    NSData *privateKey = [MXBase64Tools dataFromBase64:base64PrivateKey];
     if (privateKey)
     {
         pkSigning = [self pkSigningFromPrivateKey:privateKey withExpectedPublicKey:expectedPublicKey];
