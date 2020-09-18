@@ -598,9 +598,9 @@ static NSString* const kSecretStorageZeroString = @"\0\0\0\0\0\0\0\0\0\0\0\0\0\0
     }
     
     MXEncryptedSecretContent *secretContent = [MXEncryptedSecretContent new];
-    secretContent.ciphertext = [MXBase64Tools base64FromData:cipher];
-    secretContent.mac = [MXBase64Tools base64FromData:hmac];
-    secretContent.iv = [MXBase64Tools base64FromData:iv];
+    secretContent.ciphertext = [MXBase64Tools unpaddedBase64FromData:cipher];
+    secretContent.mac = [MXBase64Tools unpaddedBase64FromData:hmac];
+    secretContent.iv = [MXBase64Tools unpaddedBase64FromData:iv];
     
     return secretContent;
 }
