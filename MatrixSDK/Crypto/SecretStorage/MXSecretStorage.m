@@ -331,7 +331,7 @@ static NSString* const kSecretStorageZeroString = @"\0\0\0\0\0\0\0\0\0\0\0\0\0\0
             }
             
             // Check secret input
-            NSData *secret = [MXBase64Tools dataFromUnpaddedBase64:unpaddedBase64Secret];
+            NSData *secret = [MXBase64Tools dataFromBase64:unpaddedBase64Secret];
             if (!secret)
             {
                 NSLog(@"[MXSecretStorage] storeSecret: ERROR: The secret string is not in unpadded Base64 format");

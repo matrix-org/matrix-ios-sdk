@@ -171,7 +171,7 @@ NSString * const MXKeyVerificationMethodReciprocate = @"m.reciprocate.v1";
     }
     
     // Verify shared secret
-    NSData *startSharedSecretData = [MXBase64Tools dataFromUnpaddedBase64:start.sharedSecret];
+    NSData *startSharedSecretData = [MXBase64Tools dataFromBase64:start.sharedSecret];
     
     if (![startSharedSecretData isEqualToData:self.qrCodeData.sharedSecret])
     {

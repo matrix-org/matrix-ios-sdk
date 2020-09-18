@@ -90,9 +90,9 @@ UInt8 privateKeyBytes[] = {
         NSDictionary *MSKContent = @{
                                      @"encrypted": @{
                                              @"qkEmh7mHZBySbXqroxiz7fM18fJuXnnt": @{
-                                                     @"iv": @"RS18YsoaFkYcFrKYBC8w9g==",
-                                                     @"ciphertext": @"FCihoO5ztgLKcAzmGxKgoNbcKLYDMKVxuJkj9ElBsmj5+XbmV0vFQjezDH0=",
-                                                     @"mac": @"y3cULM3z/pQBTCDHM8RI+9HnTdDjvRoucr9iV7ZHk3E="
+                                                     @"iv": @"RS18YsoaFkYcFrKYBC8w9g",
+                                                     @"ciphertext": @"FCihoO5ztgLKcAzmGxKgoNbcKLYDMKVxuJkj9ElBsmj5+XbmV0vFQjezDH0",
+                                                     @"mac": @"y3cULM3z/pQBTCDHM8RI+9HnTdDjvRoucr9iV7ZHk3E"
                                                      }
                                              }
                                      };
@@ -101,7 +101,7 @@ UInt8 privateKeyBytes[] = {
                                      @"encrypted": @{
                                              @"qkEmh7mHZBySbXqroxiz7fM18fJuXnnt": @{
                                                      @"iv": @"fep37xQGPNRv5cR9HWBcEQ==",
-                                                     @"ciphertext": @"bepBSorZceMrAzGjWEiXUOP49BzZozuAODVj4XW9E1I+nhs6RqeYj0anhzQ=",
+                                                     @"ciphertext": @"bepBSorZceMrAzGjWEiXUOP49BzZozuAODVj4XW9E1I+nhs6RqeYj0anhzQ",
                                                      @"mac": @"o3GbngWeB8KLJ2GARo1jaYXFKnPXPWkvdAv4cQtgUB4="
                                                      }
                                              }
@@ -110,8 +110,8 @@ UInt8 privateKeyBytes[] = {
         NSDictionary *SSKContent = @{
                                      @"encrypted": @{
                                              @"qkEmh7mHZBySbXqroxiz7fM18fJuXnnt": @{
-                                                     @"iv": @"ty18XRmd7VReJDXpCsL3xA==",
-                                                     @"ciphertext": @"b3AVFOjzyHZvhGPu0uddu9DhIDQ2htUfDypTGag+Pweu8dF1pc7wdLoDgYc=",
+                                                     @"iv": @"ty18XRmd7VReJDXpCsL3xA",
+                                                     @"ciphertext": @"b3AVFOjzyHZvhGPu0uddu9DhIDQ2htUfDypTGag+Pweu8dF1pc7wdLoDgYc",
                                                      @"mac": @"53SKD7e3GvYWSznLEHudFctc1CSbtloid2EcAyAbxoQ="
                                                      }
                                              }
@@ -121,8 +121,8 @@ UInt8 privateKeyBytes[] = {
                                            @"encrypted": @{
                                                    @"qkEmh7mHZBySbXqroxiz7fM18fJuXnnt": @{
                                                            @"iv": @"AQRau/6+1sAFTlh+pHcraQ==",
-                                                           @"ciphertext": @"q0tVFMeU1XKn/V6oIfP5letoR6qTcTP2cwNrYNIb2lD4fYCGL0LyYmazsgI=",
-                                                           @"mac": @"sB61R0Tzrb0x0PyRZDJRe58DEo9SzTeEfO+1QCNQLzM="
+                                                           @"ciphertext": @"q0tVFMeU1XKn/V6oIfP5letoR6qTcTP2cwNrYNIb2lD4fYCGL0LyYmazsgI",
+                                                           @"mac": @"sB61R0Tzrb0x0PyRZDJRe58DEo9SzTeEfO+1QCNQLzM"
                                                            }
                                                    }
                                            };
@@ -431,7 +431,7 @@ UInt8 privateKeyBytes[] = {
             XCTAssertNotNil(unpaddedBase64Secret);
             
             // -> It should be the one created by matrix-js-sdk
-            NSData *key = [MXBase64Tools dataFromUnpaddedBase64:unpaddedBase64Secret];
+            NSData *key = [MXBase64Tools dataFromBase64:unpaddedBase64Secret];
             NSData *jsKey = [NSData dataWithBytes:jsSDKDataBackupKeyBytes length:sizeof(jsSDKDataBackupKeyBytes)];
             
             XCTAssertEqualObjects(key, jsKey);
