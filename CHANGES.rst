@@ -10,6 +10,7 @@ Improvements:
 Bugfix:
  * MXBase64Tools: Make sure the SDK decode padded and unpadded base64 strings like other platforms (vector-im/riot-ios/issues/3667).
  * SSSS: Use unpadded base64 for secrets data (vector-im/riot-ios/issues/3669).
+ * MXSession: Fix `refreshHomeserverWellknown` method not reading Well-Known from the homeserver domain (vector-im/element-ios/issues/3653).
 
 API Change:
  * 
