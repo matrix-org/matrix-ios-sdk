@@ -3555,21 +3555,21 @@ typedef void (^MXOnResumeDone)(void);
     NSLog(@"[MXSession] refreshHomeserverWellknown");
     if (!autoDiscovery)
     {
-        NSString *homeServerDomain;
+        NSString *homeServer;
         
         // Retrieve the domain from the user id as it can be different from the `MXRestClient.homeserver` that uses the client-server API endpoint domain.
         NSString *userDomain = [MXTools serverNameInMatrixIdentifier:self.myUserId];
         
         if (userDomain)
         {
-            homeServerDomain = userDomain;
+            homeServer =  [NSString stringWithFormat:@"https://%@", userDomain];
         }
         else
         {
-            homeServerDomain = matrixRestClient.homeserver;
+            homeServer = matrixRestClient.homeserver;
         }
         
-        autoDiscovery = [[MXAutoDiscovery alloc] initWithUrl:homeServerDomain];
+        autoDiscovery = [[MXAutoDiscovery alloc] initWithUrl:homeServer];
     }
 
     MXWeakify(self);
