@@ -263,11 +263,11 @@ static NSUInteger const kQRCodeFormatMinimumSharedSecretByteCount = 8;
     [qrCodeRawData appendData:transactionIDData];
     
     // the first key, as 32 bytes. The key to use depends on the mode field:
-    NSData *firstKeyData = [MXBase64Tools dataFromUnpaddedBase64:qrCodeDataCodable.firstKey];
+    NSData *firstKeyData = [MXBase64Tools dataFromBase64:qrCodeDataCodable.firstKey];
     [qrCodeRawData appendData:firstKeyData];
 
     // the second key, as 32 bytes. The key to use depends on the mode field:
-    NSData *secondKeyData = [MXBase64Tools dataFromUnpaddedBase64:qrCodeDataCodable.secondKey];
+    NSData *secondKeyData = [MXBase64Tools dataFromBase64:qrCodeDataCodable.secondKey];
     [qrCodeRawData appendData:secondKeyData];
 
     // a random shared secret
