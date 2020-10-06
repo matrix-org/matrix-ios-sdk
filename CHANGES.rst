@@ -6,6 +6,7 @@ Changes to be released in next version
 
 🙌 Improvements
  * Update GZIP to 1.3.0 (vector-im/element-ios/3570).
+ * Update Realm to 5.4.8 (vector-im/element-ios/3570).
 
 🐛 Bugfix
  * 
