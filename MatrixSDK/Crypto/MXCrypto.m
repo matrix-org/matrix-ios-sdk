@@ -479,6 +479,25 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
 #endif
 }
 
+- (BOOL)hasKeysToDecryptEvent:(MXEvent *)event
+{
+    __block BOOL hasKeys = NO;
+    
+#ifdef MX_CRYPTO
+    
+    // We need to go to decryptionQueue only to use getRoomDecryptor
+    // Other subsequent calls are thread safe because of the implementation of MXCryptoStore
+    dispatch_sync(decryptionQueue, ^{
+        id<MXDecrypting> alg = [self getRoomDecryptor:event.roomId algorithm:event.content[@"algorithm"]];
+        
+        hasKeys = [alg hasKeysToDecryptEvent:event];
+    });
+    
+#endif
+    
+    return hasKeys;
+}
+
 - (MXEventDecryptionResult *)decryptEvent:(MXEvent *)event inTimeline:(NSString*)timeline error:(NSError* __autoreleasing * )error
 {
 #ifdef MX_CRYPTO
@@ -2814,8 +2833,7 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
     return [_matrixRestClient uploadKeys:nil oneTimeKeys:oneTimeJson forDevice:_myDevice.deviceId success:^(MXKeysUploadResponse *keysUploadResponse) {
         MXStrongifyAndReturnIfNil(self);
 
-        self->lastPublishedOneTimeKeys = oneTimeKeys;
-        [self.olmDevice markOneTimeKeysAsPublished];
+        self->lastPublishedOneTimeKeys = oneTimeKeys;        [self.olmDevice markOneTimeKeysAsPublished];
         success(keysUploadResponse);
 
     } failure:^(NSError *error) {

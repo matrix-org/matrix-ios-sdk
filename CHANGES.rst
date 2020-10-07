@@ -5,7 +5,7 @@ Changes to be released in next version
  * 
 
 🙌 Improvements
- * 
+ * MXCrypto: Add hasKeysToDecryptEvent method.
 
 🐛 Bugfix
  * 
