@@ -83,10 +83,6 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
     // Listener on memberships changes
     id roomMembershipEventsListener;
 
-    // For dev
-    // @TODO: could be removed
-    NSDictionary *lastPublishedOneTimeKeys;
-
     // The one-time keys count sent by /sync
     // -1 means the information was not sent by the server
     NSUInteger oneTimeKeyCount;
@@ -274,7 +270,6 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
             NSLog(@"[MXCrypto]    - device id  : %@", self.store.deviceId);
             NSLog(@"[MXCrypto]    - ed25519    : %@", self.olmDevice.deviceEd25519Key);
             NSLog(@"[MXCrypto]    - curve25519 : %@", self.olmDevice.deviceCurve25519Key);
-            //NSLog(@"   - oneTimeKeys: %@", lastPublishedOneTimeKeys);
             NSLog(@"[MXCrypto] ");
             NSLog(@"[MXCrypto] Store: %@", self.store);
             NSLog(@"[MXCrypto] ");
@@ -2699,7 +2694,7 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
             // We first find how many keys the server has for us.
             NSUInteger keyCount = [keysUploadResponse oneTimeKeyCountsForAlgorithm:@"signed_curve25519"];
 
-            NSLog(@"[MXCrypto] maybeUploadOneTimeKeys: %tu one-time keys on the homeserver", self->oneTimeKeyCount);
+            NSLog(@"[MXCrypto] maybeUploadOneTimeKeys: %@ one-time keys on the homeserver", @(keyCount));
 
             if ([self generateOneTimeKeys:keyCount])
             {
@@ -2833,7 +2828,6 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
     return [_matrixRestClient uploadKeys:nil oneTimeKeys:oneTimeJson forDevice:_myDevice.deviceId success:^(MXKeysUploadResponse *keysUploadResponse) {
         MXStrongifyAndReturnIfNil(self);
 
-        self->lastPublishedOneTimeKeys = oneTimeKeys;
         [self.olmDevice markOneTimeKeysAsPublished];
         success(keysUploadResponse);
 
