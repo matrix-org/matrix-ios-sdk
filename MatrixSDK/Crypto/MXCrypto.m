@@ -2833,7 +2833,8 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
     return [_matrixRestClient uploadKeys:nil oneTimeKeys:oneTimeJson forDevice:_myDevice.deviceId success:^(MXKeysUploadResponse *keysUploadResponse) {
         MXStrongifyAndReturnIfNil(self);
 
-        self->lastPublishedOneTimeKeys = oneTimeKeys;        [self.olmDevice markOneTimeKeysAsPublished];
+        self->lastPublishedOneTimeKeys = oneTimeKeys;
+        [self.olmDevice markOneTimeKeysAsPublished];
         success(keysUploadResponse);
 
     } failure:^(NSError *error) {
