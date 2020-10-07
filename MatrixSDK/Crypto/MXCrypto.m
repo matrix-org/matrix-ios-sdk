@@ -2639,32 +2639,30 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
         // We already have the current one_time_key count from a /sync response.
         // Use this value instead of asking the server for the current key count.
         NSLog(@"[MXCrypto] maybeUploadOneTimeKeys: there are %tu one-time keys on the homeserver", oneTimeKeyCount);
-
-        if ([self generateOneTimeKeys:oneTimeKeyCount])
-        {
-            MXWeakify(self);
-            uploadOneTimeKeysOperation = [self uploadOneTimeKeys:^(MXKeysUploadResponse *keysUploadResponse) {
-                MXStrongifyAndReturnIfNil(self);
-
-                self->uploadOneTimeKeysOperation = nil;
-                if (success)
-                {
-                    success();
-                }
-
-            } failure:^(NSError *error) {
-                MXStrongifyAndReturnIfNil(self);
-
-                NSLog(@"[MXCrypto] maybeUploadOneTimeKeys: Failed to publish one-time keys. Error: %@", error);
-                self->uploadOneTimeKeysOperation = nil;
-
-                if (failure)
-                {
-                    failure(error);
-                }
-            }];
-        }
-        else if (success)
+        
+        MXWeakify(self);
+        uploadOneTimeKeysOperation = [self generateAndUploadOneTimeKeys:oneTimeKeyCount success:^{
+            MXStrongifyAndReturnIfNil(self);
+            
+            self->uploadOneTimeKeysOperation = nil;
+            if (success)
+            {
+                success();
+            }
+            
+        } failure:^(NSError *error) {
+            MXStrongifyAndReturnIfNil(self);
+            
+            NSLog(@"[MXCrypto] maybeUploadOneTimeKeys: Failed to publish one-time keys. Error: %@", error);
+            self->uploadOneTimeKeysOperation = nil;
+            
+            if (failure)
+            {
+                failure(error);
+            }
+        }];
+        
+        if (!uploadOneTimeKeysOperation && success)
         {
             success();
         }
@@ -2696,32 +2694,31 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
 
             NSLog(@"[MXCrypto] maybeUploadOneTimeKeys: %@ one-time keys on the homeserver", @(keyCount));
 
-            if ([self generateOneTimeKeys:keyCount])
+            MXWeakify(self);
+            MXHTTPOperation *operation2 = [self generateAndUploadOneTimeKeys:keyCount success:^{
+                MXStrongifyAndReturnIfNil(self);
+                
+                self->uploadOneTimeKeysOperation = nil;
+                if (success)
+                {
+                    success();
+                }
+                
+            } failure:^(NSError *error) {
+                MXStrongifyAndReturnIfNil(self);
+                
+                NSLog(@"[MXCrypto] maybeUploadOneTimeKeys: Failed to publish one-time keys. Error: %@", error);
+                self->uploadOneTimeKeysOperation = nil;
+                
+                if (failure)
+                {
+                    failure(error);
+                }
+            }];
+            
+            if (operation2)
             {
-                MXWeakify(self);
-                MXHTTPOperation *operation2 = [self uploadOneTimeKeys:^(MXKeysUploadResponse *keysUploadResponse) {
-                    MXStrongifyAndReturnIfNil(self);
-
-                    self->uploadOneTimeKeysOperation = nil;
-                    if (success)
-                    {
-                        success();
-                    }
-
-                } failure:^(NSError *error) {
-                    MXStrongifyAndReturnIfNil(self);
-
-                    NSLog(@"[MXCrypto] maybeUploadOneTimeKeys: Failed to publish one-time keys. Error: %@", error);
-                    self->uploadOneTimeKeysOperation = nil;
-
-                    if (failure)
-                    {
-                        failure(error);
-                    }
-                }];
-
-                // Mutate MXHTTPOperation so that the user can cancel this new operation
-                [self->uploadOneTimeKeysOperation mutateTo:operation2];                
+                [self->uploadOneTimeKeysOperation mutateTo:operation2];
             }
             else
             {
@@ -2744,6 +2741,23 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
             }
         }];
     }
+}
+
+- (MXHTTPOperation *)generateAndUploadOneTimeKeys:(NSUInteger)keyCount success:(void (^)(void))success failure:(void (^)(NSError *))failure
+{
+    MXHTTPOperation *operation;
+    
+    if ([self generateOneTimeKeys:keyCount])
+    {
+        operation = [self uploadOneTimeKeys:^(MXKeysUploadResponse *keysUploadResponse) {
+            success();
+        } failure:^(NSError *error) {
+            NSLog(@"[MXCrypto] generateAndUploadOneTimeKeys: Failed to publish one-time keys. Error: %@", error);
+            failure(error);
+        }];
+    }
+    
+    return operation;
 }
 
 /**
