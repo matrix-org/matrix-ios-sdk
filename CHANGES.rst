@@ -8,7 +8,7 @@ Changes to be released in next version
  * MXCrypto: Add hasKeysToDecryptEvent method.
 
 🐛 Bugfix
- * 
+ * MXCrypto: Reset OTKs when some IDs are already used (https://github.com/vector-im/element-ios/issues/3721).
 
 ⚠️ API Changes
  * 

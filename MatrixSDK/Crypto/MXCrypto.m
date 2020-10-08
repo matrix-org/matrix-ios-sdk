@@ -2641,7 +2641,7 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
         NSLog(@"[MXCrypto] maybeUploadOneTimeKeys: there are %tu one-time keys on the homeserver", oneTimeKeyCount);
         
         MXWeakify(self);
-        uploadOneTimeKeysOperation = [self generateAndUploadOneTimeKeys:oneTimeKeyCount success:^{
+        uploadOneTimeKeysOperation = [self generateAndUploadOneTimeKeys:oneTimeKeyCount retry:YES success:^{
             MXStrongifyAndReturnIfNil(self);
             
             self->uploadOneTimeKeysOperation = nil;
@@ -2695,7 +2695,7 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
             NSLog(@"[MXCrypto] maybeUploadOneTimeKeys: %@ one-time keys on the homeserver", @(keyCount));
 
             MXWeakify(self);
-            MXHTTPOperation *operation2 = [self generateAndUploadOneTimeKeys:keyCount success:^{
+            MXHTTPOperation *operation2 = [self generateAndUploadOneTimeKeys:keyCount retry:YES success:^{
                 MXStrongifyAndReturnIfNil(self);
                 
                 self->uploadOneTimeKeysOperation = nil;
@@ -2743,7 +2743,7 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
     }
 }
 
-- (MXHTTPOperation *)generateAndUploadOneTimeKeys:(NSUInteger)keyCount success:(void (^)(void))success failure:(void (^)(NSError *))failure
+- (MXHTTPOperation *)generateAndUploadOneTimeKeys:(NSUInteger)keyCount retry:(BOOL)retry success:(void (^)(void))success failure:(void (^)(NSError *))failure
 {
     MXHTTPOperation *operation;
     
@@ -2753,7 +2753,22 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
             success();
         } failure:^(NSError *error) {
             NSLog(@"[MXCrypto] generateAndUploadOneTimeKeys: Failed to publish one-time keys. Error: %@", error);
-            failure(error);
+            
+            if ([MXError isMXError:error] && retry)
+            {
+                // The homeserver explicitly rejected the request.
+                // Reset local OTKs we tried to push and retry
+                // There is no matrix specific error but we really want to detect the error described at
+                // https://github.com/vector-im/element-ios/issues/3721
+                NSLog(@"[MXCrypto] uploadOneTimeKeys: Reset local OTKs because the server does not like them");
+                [self.olmDevice markOneTimeKeysAsPublished];
+                
+                [self generateAndUploadOneTimeKeys:keyCount retry:NO success:success failure:failure];
+            }
+            else
+            {
+                failure(error);
+            }
         }];
     }
     
