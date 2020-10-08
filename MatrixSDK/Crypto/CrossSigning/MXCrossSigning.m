@@ -813,7 +813,8 @@ NSString *const MXCrossSigningErrorDomain = @"org.matrix.sdk.crosssigning";
         
         for (MXDeviceInfo *deviceInfo in myUserDevices)
         {
-            if (deviceInfo.trustLevel.localVerificationStatus == MXDeviceUnknown)
+            if (!deviceInfo.trustLevel.isVerified
+                && deviceInfo.trustLevel.localVerificationStatus == MXDeviceUnknown)
             {
                 [newDeviceIds addObject:deviceInfo.deviceId];
             }
@@ -823,7 +824,9 @@ NSString *const MXCrossSigningErrorDomain = @"org.matrix.sdk.crosssigning";
         {
             NSDictionary *userInfo = @{ MXCrossSigningNotificationDeviceIdsKey: newDeviceIds };
             
-            [[NSNotificationCenter defaultCenter] postNotificationName:MXCrossSigningMyUserDidSignInOnNewDeviceNotification object:self userInfo:userInfo];
+            dispatch_async(dispatch_get_main_queue(), ^{
+                [[NSNotificationCenter defaultCenter] postNotificationName:MXCrossSigningMyUserDidSignInOnNewDeviceNotification object:self userInfo:userInfo];
+            });
         }
     }
 }
