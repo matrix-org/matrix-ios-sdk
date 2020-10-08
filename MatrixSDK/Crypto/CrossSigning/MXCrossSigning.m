@@ -813,7 +813,8 @@ NSString *const MXCrossSigningErrorDomain = @"org.matrix.sdk.crosssigning";
         
         for (MXDeviceInfo *deviceInfo in myUserDevices)
         {
-            if (deviceInfo.trustLevel.localVerificationStatus == MXDeviceUnknown)
+            if (!deviceInfo.trustLevel.isVerified
+                && deviceInfo.trustLevel.localVerificationStatus == MXDeviceUnknown)
             {
                 [newDeviceIds addObject:deviceInfo.deviceId];
             }

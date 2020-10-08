@@ -10,7 +10,8 @@ Changes to be released in next version
 🐛 Bugfix
  * MXCrypto: Reset OTKs when some IDs are already used (https://github.com/vector-im/element-ios/issues/3721).
  * MXCrypto: Send MXCrossSigningMyUserDidSignInOnNewDeviceNotification and MXDeviceListDidUpdateUsersDevicesNotification on the main thread.
-
+ * MXCrossSigning: Do not send MXCrossSigningMyUserDidSignInOnNewDeviceNotification again if the device has been verified from another thread.
+ 
 ⚠️ API Changes
  * 
 
