@@ -1035,6 +1035,20 @@ NSString *const kMXPushRuleScopeStringDevice = @"device";
     return roomSyncState;
 }
 
+- (NSDictionary *)JSONDictionary
+{
+    NSMutableDictionary *JSONDictionary = [NSMutableDictionary dictionary];
+    
+    NSMutableArray *jsonEvents = [NSMutableArray arrayWithCapacity:self.events.count];
+    for (MXEvent *event in self.events)
+    {
+        [jsonEvents addObject:event.JSONDictionary];
+    }
+    JSONDictionary[@"events"] = jsonEvents;
+    
+    return JSONDictionary;
+}
+
 @end
 
 @implementation MXRoomSyncTimeline
@@ -1051,6 +1065,22 @@ NSString *const kMXPushRuleScopeStringDevice = @"device";
     return roomSyncTimeline;
 }
 
+- (NSDictionary *)JSONDictionary
+{
+    NSMutableDictionary *JSONDictionary = [NSMutableDictionary dictionary];
+    
+    NSMutableArray *jsonEvents = [NSMutableArray arrayWithCapacity:self.events.count];
+    for (MXEvent *event in self.events)
+    {
+        [jsonEvents addObject:event.JSONDictionary];
+    }
+    JSONDictionary[@"events"] = jsonEvents;
+    JSONDictionary[@"limited"] = @(self.limited);
+    JSONDictionary[@"prev_batch"] = self.prevBatch;
+    
+    return JSONDictionary;
+}
+
 @end
 
 @implementation MXRoomSyncEphemeral
@@ -1063,6 +1093,20 @@ NSString *const kMXPushRuleScopeStringDevice = @"device";
         MXJSONModelSetMXJSONModelArray(roomSyncEphemeral.events, MXEvent, JSONDictionary[@"events"]);
     }
     return roomSyncEphemeral;
+}
+
+- (NSDictionary *)JSONDictionary
+{
+    NSMutableDictionary *JSONDictionary = [NSMutableDictionary dictionary];
+    
+    NSMutableArray *jsonEvents = [NSMutableArray arrayWithCapacity:self.events.count];
+    for (MXEvent *event in self.events)
+    {
+        [jsonEvents addObject:event.JSONDictionary];
+    }
+    JSONDictionary[@"events"] = jsonEvents;
+    
+    return JSONDictionary;
 }
 
 @end
@@ -1079,6 +1123,20 @@ NSString *const kMXPushRuleScopeStringDevice = @"device";
     return roomSyncAccountData;
 }
 
+- (NSDictionary *)JSONDictionary
+{
+    NSMutableDictionary *JSONDictionary = [NSMutableDictionary dictionary];
+    
+    NSMutableArray *jsonEvents = [NSMutableArray arrayWithCapacity:self.events.count];
+    for (MXEvent *event in self.events)
+    {
+        [jsonEvents addObject:event.JSONDictionary];
+    }
+    JSONDictionary[@"events"] = jsonEvents;
+    
+    return JSONDictionary;
+}
+
 @end
 
 @implementation MXRoomInviteState
@@ -1091,6 +1149,20 @@ NSString *const kMXPushRuleScopeStringDevice = @"device";
         MXJSONModelSetMXJSONModelArray(roomInviteState.events, MXEvent, JSONDictionary[@"events"]);
     }
     return roomInviteState;
+}
+
+- (NSDictionary *)JSONDictionary
+{
+    NSMutableDictionary *JSONDictionary = [NSMutableDictionary dictionary];
+    
+    NSMutableArray *jsonEvents = [NSMutableArray arrayWithCapacity:self.events.count];
+    for (MXEvent *event in self.events)
+    {
+        [jsonEvents addObject:event.JSONDictionary];
+    }
+    JSONDictionary[@"events"] = jsonEvents;
+    
+    return JSONDictionary;
 }
 
 @end
@@ -1106,6 +1178,16 @@ NSString *const kMXPushRuleScopeStringDevice = @"device";
         MXJSONModelSetUInteger(roomSyncUnreadNotifications.highlightCount, JSONDictionary[@"highlight_count"]);
     }
     return roomSyncUnreadNotifications;
+}
+
+- (NSDictionary *)JSONDictionary
+{
+    NSMutableDictionary *JSONDictionary = [NSMutableDictionary dictionary];
+    
+    JSONDictionary[@"notification_count"] = @(self.notificationCount);
+    JSONDictionary[@"highlight_count"] = @(self.highlightCount);
+    
+    return JSONDictionary;
 }
 
 @end
@@ -1140,6 +1222,17 @@ NSString *const kMXPushRuleScopeStringDevice = @"device";
     return roomSyncSummary;
 }
 
+- (NSDictionary *)JSONDictionary
+{
+    NSMutableDictionary *JSONDictionary = [NSMutableDictionary dictionary];
+    
+    JSONDictionary[@"m.heroes"] = self.heroes;
+    JSONDictionary[@"m.joined_member_count"] = @(self.joinedMemberCount);
+    JSONDictionary[@"m.invited_member_count"] = @(self.invitedMemberCount);
+    
+    return JSONDictionary;
+}
+
 @end
 
 
@@ -1160,6 +1253,20 @@ NSString *const kMXPushRuleScopeStringDevice = @"device";
     return roomSync;
 }
 
+- (NSDictionary *)JSONDictionary
+{
+    NSMutableDictionary *JSONDictionary = [NSMutableDictionary dictionary];
+
+    JSONDictionary[@"state"] = self.state.JSONDictionary;
+    JSONDictionary[@"timeline"] = self.timeline.JSONDictionary;
+    JSONDictionary[@"ephemeral"] = self.ephemeral.JSONDictionary;
+    JSONDictionary[@"account_data"] = self.accountData.JSONDictionary;
+    JSONDictionary[@"unread_notifications"] = self.unreadNotifications.JSONDictionary;
+    JSONDictionary[@"summary"] = self.summary.JSONDictionary;
+    
+    return JSONDictionary;
+}
+
 @end
 
 @implementation MXInvitedRoomSync
@@ -1172,6 +1279,15 @@ NSString *const kMXPushRuleScopeStringDevice = @"device";
         MXJSONModelSetMXJSONModel(invitedRoomSync.inviteState, MXRoomInviteState, JSONDictionary[@"invite_state"]);
     }
     return invitedRoomSync;
+}
+
+- (NSDictionary *)JSONDictionary
+{
+    NSMutableDictionary *JSONDictionary = [NSMutableDictionary dictionary];
+    
+    JSONDictionary[@"invite_state"] = self.inviteState.JSONDictionary;
+    
+    return JSONDictionary;
 }
 
 @end
@@ -1193,6 +1309,16 @@ NSString *const kMXPushRuleScopeStringDevice = @"device";
     return groupProfile;
 }
 
+- (NSDictionary *)JSONDictionary
+{
+    NSMutableDictionary *JSONDictionary = [NSMutableDictionary dictionary];
+    
+    JSONDictionary[@"name"] = self.name;
+    JSONDictionary[@"avatar_url"] = self.avatarUrl;
+    
+    return JSONDictionary;
+}
+
 @end
 
 @implementation MXInvitedGroupSync
@@ -1206,6 +1332,16 @@ NSString *const kMXPushRuleScopeStringDevice = @"device";
         MXJSONModelSetMXJSONModel(invitedGroupSync.profile, MXGroupSyncProfile, JSONDictionary[@"profile"]);
     }
     return invitedGroupSync;
+}
+
+- (NSDictionary *)JSONDictionary
+{
+    NSMutableDictionary *JSONDictionary = [NSMutableDictionary dictionary];
+    
+    JSONDictionary[@"inviter"] = self.inviter;
+    JSONDictionary[@"profile"] = self.profile.JSONDictionary;
+    
+    return JSONDictionary;
 }
 
 @end
@@ -1222,6 +1358,20 @@ NSString *const kMXPushRuleScopeStringDevice = @"device";
     return presenceSyncResponse;
 }
 
+- (NSDictionary *)JSONDictionary
+{
+    NSMutableDictionary *JSONDictionary = [NSMutableDictionary dictionary];
+    
+    NSMutableArray *jsonEvents = [NSMutableArray arrayWithCapacity:self.events.count];
+    for (MXEvent *event in self.events)
+    {
+        [jsonEvents addObject:event.JSONDictionary];
+    }
+    JSONDictionary[@"events"] = jsonEvents;
+    
+    return JSONDictionary;
+}
+
 @end
 
 @implementation MXToDeviceSyncResponse
@@ -1234,6 +1384,20 @@ NSString *const kMXPushRuleScopeStringDevice = @"device";
         MXJSONModelSetMXJSONModelArray(toDeviceSyncResponse.events, MXEvent, JSONDictionary[@"events"]);
     }
     return toDeviceSyncResponse;
+}
+
+- (NSDictionary *)JSONDictionary
+{
+    NSMutableDictionary *JSONDictionary = [NSMutableDictionary dictionary];
+    
+    NSMutableArray *jsonEvents = [NSMutableArray arrayWithCapacity:self.events.count];
+    for (MXEvent *event in self.events)
+    {
+        [jsonEvents addObject:event.JSONDictionary];
+    }
+    JSONDictionary[@"events"] = jsonEvents;
+    
+    return JSONDictionary;
 }
 
 @end
@@ -1249,6 +1413,16 @@ NSString *const kMXPushRuleScopeStringDevice = @"device";
         MXJSONModelSetArray(deviceListResponse.left, JSONDictionary[@"left"]);
     }
     return deviceListResponse;
+}
+
+- (NSDictionary *)JSONDictionary
+{
+    NSMutableDictionary *JSONDictionary = [NSMutableDictionary dictionary];
+    
+    JSONDictionary[@"changed"] = self.changed;
+    JSONDictionary[@"left"] = self.left;
+    
+    return JSONDictionary;
 }
 
 @end
@@ -1287,6 +1461,34 @@ NSString *const kMXPushRuleScopeStringDevice = @"device";
     return roomsSync;
 }
 
+- (NSDictionary *)JSONDictionary
+{
+    NSMutableDictionary *JSONDictionary = [NSMutableDictionary dictionary];
+    
+    NSMutableDictionary *jsonJoin = [NSMutableDictionary dictionaryWithCapacity:self.join.count];
+    for (NSString *key in self.join)
+    {
+        jsonJoin[key] = self.join[key].JSONDictionary;
+    }
+    JSONDictionary[@"join"] = jsonJoin;
+    
+    NSMutableDictionary *jsonInvite = [NSMutableDictionary dictionaryWithCapacity:self.invite.count];
+    for (NSString *key in self.invite)
+    {
+        jsonInvite[key] = self.invite[key].JSONDictionary;
+    }
+    JSONDictionary[@"invite"] = jsonInvite;
+    
+    NSMutableDictionary *jsonLeave = [NSMutableDictionary dictionaryWithCapacity:self.leave.count];
+    for (NSString *key in self.leave)
+    {
+        jsonLeave[key] = self.leave[key].JSONDictionary;
+    }
+    JSONDictionary[@"leave"] = jsonLeave;
+    
+    return JSONDictionary;
+}
+
 @end
 
 @implementation MXGroupsSyncResponse
@@ -1319,6 +1521,24 @@ NSString *const kMXPushRuleScopeStringDevice = @"device";
     return groupsSync;
 }
 
+- (NSDictionary *)JSONDictionary
+{
+    NSMutableDictionary *JSONDictionary = [NSMutableDictionary dictionary];
+    
+    JSONDictionary[@"join"] = self.join;
+    
+    NSMutableDictionary *jsonInvite = [NSMutableDictionary dictionaryWithCapacity:self.invite.count];
+    for (NSString *key in self.invite)
+    {
+        jsonInvite[key] = self.invite[key].JSONDictionary;
+    }
+    JSONDictionary[@"invite"] = jsonInvite;
+    
+    JSONDictionary[@"leave"] = self.leave;
+    
+    return JSONDictionary;
+}
+
 @end
 
 @implementation MXSyncResponse
@@ -1339,6 +1559,22 @@ NSString *const kMXPushRuleScopeStringDevice = @"device";
     }
 
     return syncResponse;
+}
+
+- (NSDictionary *)JSONDictionary
+{
+    NSMutableDictionary *JSONDictionary = [NSMutableDictionary dictionary];
+    
+    JSONDictionary[@"account_data"] = self.accountData;
+    JSONDictionary[@"next_batch"] = self.nextBatch;
+    JSONDictionary[@"presence"] = self.presence.JSONDictionary;
+    JSONDictionary[@"to_device"] = self.toDevice.JSONDictionary;
+    JSONDictionary[@"device_lists"] = self.deviceLists.JSONDictionary;
+    JSONDictionary[@"device_one_time_keys_count"] = self.deviceOneTimeKeysCount;
+    JSONDictionary[@"rooms"] = self.rooms.JSONDictionary;
+    JSONDictionary[@"groups"] = self.groups.JSONDictionary;
+    
+    return JSONDictionary;
 }
 
 @end
