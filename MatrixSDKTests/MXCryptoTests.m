@@ -1658,6 +1658,60 @@
     }];
 }
 
+// - Have Alice and Bob in an e2e room
+// - Bob pauses his session
+// - Alice sends a message
+// - Bob can get the message using /event API
+// -> But he does not have keys decrypt it
+// - Bob resumes his session
+// -> He has keys now
+- (void)testHasKeysToDecryptEvent
+{
+    // - Have Alice and Bob in an e2e room
+    [matrixSDKTestsE2EData doE2ETestWithAliceAndBobInARoom:self cryptedBob:YES warnOnUnknowDevices:NO readyToTest:^(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
+        
+        NSString *messageFromAlice = @"Hello I'm Alice!";
+        
+        MXRoom *roomFromAlicePOV = [aliceSession roomWithRoomId:roomId];
+        
+        // - Bob pauses his session
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [bobSession pause];
+            
+            // - Alice sends a message
+            [roomFromAlicePOV sendTextMessage:messageFromAlice success:^(NSString *eventId) {
+                
+                // - Bob can get the message using /event API
+                [bobSession eventWithEventId:eventId inRoom:roomId success:^(MXEvent *event) {
+                    
+                    // -> But he does not have keys decrypt it
+                    BOOL hasKeys = [bobSession.crypto hasKeysToDecryptEvent:event];
+                    XCTAssertFalse(hasKeys);
+                    
+                    // - Bob resumes his session
+                    [bobSession resume:^{
+                        
+                        // -> He has keys now
+                        BOOL hasKeys = [bobSession.crypto hasKeysToDecryptEvent:event];
+                        XCTAssertTrue(hasKeys);
+                        
+                        [expectation fulfill];
+                    }];
+
+                } failure:^(NSError *error) {
+                    XCTFail(@"The operation should not fail - NSError: %@", error);
+                    [expectation fulfill];
+                }];
+                
+            } failure:^(NSError *error) {
+                XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                [expectation fulfill];
+            }];
+        });
+    }];
+}
+
+
 #pragma mark - Edge cases
 
 // Trying to set up several olm sessions in parallel should result in the creation of a single olm session

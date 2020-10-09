@@ -61,6 +61,22 @@
     return self;
 }
 
+- (BOOL)hasKeysToDecryptEvent:(MXEvent *)event
+{
+    BOOL hasKeys = NO;
+    
+    NSString *senderKey, *sessionId;
+    
+    MXJSONModelSetString(senderKey, event.content[@"sender_key"]);
+    MXJSONModelSetString(sessionId, event.content[@"session_id"]);
+    if (senderKey && sessionId)
+    {
+        hasKeys = ([crypto.store inboundGroupSessionWithId:sessionId andSenderKey:senderKey] != nil);
+    }
+    
+    return hasKeys;
+}
+
 - (MXEventDecryptionResult *)decryptEvent:(MXEvent*)event inTimeline:(NSString*)timeline error:(NSError** )error;
 {
     MXEventDecryptionResult *result;
