@@ -402,6 +402,220 @@ typedef void (^MXOnResumeDone)(void);
     }];
 }
 
+- (void)handleSyncResponse:(MXSyncResponse *)syncResponse
+{
+    NSLog(@"[MXSession] handleSyncResponse");
+    
+    NSLog(@"[MXSession] Received %tu joined rooms, %tu invited rooms, %tu left rooms, %tu toDevice events in push extension", syncResponse.rooms.join.count, syncResponse.rooms.invite.count, syncResponse.rooms.leave.count, syncResponse.toDevice.events.count);
+
+    // Check whether this is the initial sync
+    BOOL isInitialSync = !self.isEventStreamInitialised;
+
+    BOOL wasfirstSync = NO;
+    if (!self->firstSyncDone)
+    {
+        wasfirstSync = YES;
+        self->firstSyncDone = YES;
+        [[MXSDKOptions sharedInstance].analyticsDelegate trackStartupSyncDuration:0 isInitial:isInitialSync];
+    }
+
+    // Handle the to device events before the room ones
+    // to ensure to decrypt them properly
+    for (MXEvent *toDeviceEvent in syncResponse.toDevice.events)
+    {
+        [self handleToDeviceEvent:toDeviceEvent];
+    }
+
+    // Handle top-level account data
+    if (syncResponse.accountData)
+    {
+        [self handleAccountData:syncResponse.accountData];
+    }
+
+    // Handle first joined rooms
+    for (NSString *roomId in syncResponse.rooms.join)
+    {
+        MXRoomSync *roomSync = syncResponse.rooms.join[roomId];
+
+        @autoreleasepool {
+
+            // Retrieve existing room or create a new one
+            MXRoom *room = [self getOrCreateRoom:roomId notify:!isInitialSync];
+
+            // Sync room
+            [room liveTimeline:^(MXEventTimeline *liveTimeline) {
+                [room handleJoinedRoomSync:roomSync];
+                [room.summary handleJoinedRoomSync:roomSync];
+            }];
+        }
+    }
+
+    // Handle invited rooms
+    for (NSString *roomId in syncResponse.rooms.invite)
+    {
+        MXInvitedRoomSync *invitedRoomSync = syncResponse.rooms.invite[roomId];
+
+        @autoreleasepool {
+
+            // Retrieve existing room or create a new one
+            MXRoom *room = [self getOrCreateRoom:roomId notify:!isInitialSync];
+
+            // Prepare invited room
+            [room liveTimeline:^(MXEventTimeline *liveTimeline) {
+                [room handleInvitedRoomSync:invitedRoomSync];
+                [room.summary handleInvitedRoomSync:invitedRoomSync];
+            }];
+        }
+    }
+
+    // Handle archived rooms
+    for (NSString *roomId in syncResponse.rooms.leave)
+    {
+        MXRoomSync *leftRoomSync = syncResponse.rooms.leave[roomId];
+
+        @autoreleasepool {
+
+            // Presently we remove the existing room from the rooms list.
+            // FIXME SYNCV2 Archive/Display the left rooms!
+            // For that create 'handleArchivedRoomSync' method
+
+            // Retrieve existing room
+            MXRoom *room = [self roomWithRoomId:roomId];
+            if (room)
+            {
+                // FIXME SYNCV2: While 'handleArchivedRoomSync' is not available,
+                // use 'handleJoinedRoomSync' to pass the last events to the room before leaving it.
+                // The room will then able to notify its listeners.
+                [room liveTimeline:^(MXEventTimeline *liveTimeline) {
+                    [room handleJoinedRoomSync:leftRoomSync];
+                    [room.summary handleJoinedRoomSync:leftRoomSync];
+
+                    // Look for the last room member event
+                    MXEvent *roomMemberEvent;
+                    NSInteger index = leftRoomSync.timeline.events.count;
+                    while (index--)
+                    {
+                        MXEvent *event = leftRoomSync.timeline.events[index];
+
+                        if ([event.type isEqualToString:kMXEventTypeStringRoomMember])
+                        {
+                            roomMemberEvent = event;
+                            break;
+                        }
+                    }
+
+                    // Notify the room is going to disappear
+                    NSMutableDictionary *userInfo = [NSMutableDictionary dictionaryWithObject:room.roomId forKey:kMXSessionNotificationRoomIdKey];
+                    if (roomMemberEvent)
+                    {
+                        userInfo[kMXSessionNotificationEventKey] = roomMemberEvent;
+                    }
+                    [[NSNotificationCenter defaultCenter] postNotificationName:kMXSessionWillLeaveRoomNotification
+                                                                        object:self
+                                                                      userInfo:userInfo];
+                    // Remove the room from the rooms list
+                    [self removeRoom:room.roomId];
+                }];
+            }
+        }
+    }
+
+    // Check the conditions to update summaries direct user ids for retrieved rooms (We have to do it
+    // when we receive some invites to handle correctly a new invite to a direct chat that the user has left).
+    if (isInitialSync || syncResponse.rooms.invite.count)
+    {
+        [self updateSummaryDirectUserIdForRooms:[self directRoomIds]];
+    }
+
+    // Handle invited groups
+    for (NSString *groupId in syncResponse.groups.invite)
+    {
+        // Create a new group for each invite
+        MXInvitedGroupSync *invitedGroupSync = syncResponse.groups.invite[groupId];
+        [self createGroupInviteWithId:groupId profile:invitedGroupSync.profile andInviter:invitedGroupSync.inviter notify:!isInitialSync];
+    }
+
+    // Handle joined groups
+    for (NSString *groupId in syncResponse.groups.join)
+    {
+        // Join an existing group or create a new one
+        [self didJoinGroupWithId:groupId notify:!isInitialSync];
+    }
+
+    // Handle left groups
+    for (NSString *groupId in syncResponse.groups.leave)
+    {
+        // Remove the group from the group list
+        [self removeGroup:groupId];
+    }
+
+    // Handle presence of other users
+    for (MXEvent *presenceEvent in syncResponse.presence.events)
+    {
+        [self handlePresenceEvent:presenceEvent direction:MXTimelineDirectionForwards];
+    }
+
+    // Sync point: wait that all rooms in the /sync response have been loaded
+    // and their /sync response has been processed
+    [self preloadRoomsData:[self roomsInSyncResponse:syncResponse] onComplete:^{
+
+        if (self.crypto)
+        {
+            // Handle device list updates
+            if (syncResponse.deviceLists)
+            {
+                [self.crypto handleDeviceListsChanges:syncResponse.deviceLists];
+            }
+
+            // Handle one_time_keys_count
+            if (syncResponse.deviceOneTimeKeysCount)
+            {
+                [self.crypto handleDeviceOneTimeKeysCount:syncResponse.deviceOneTimeKeysCount];
+            }
+
+            // Tell the crypto module to do its processing
+            [self.crypto onSyncCompleted:self.store.eventStreamToken
+                           nextSyncToken:syncResponse.nextBatch
+                              catchingUp:self.catchingUp];
+        }
+
+
+        // Update live event stream token
+        NSLog(@"[MXSession] Last sync token: %@", self.store.eventStreamToken);
+        self.store.eventStreamToken = syncResponse.nextBatch;
+
+        // Commit store changes done in [room handleMessages]
+        if ([self.store respondsToSelector:@selector(commit)])
+        {
+            [self.store commit];
+        }
+
+        if (self.state != MXSessionStatePauseRequested)
+        {
+            // The event stream is running by now
+            [self setState:MXSessionStateRunning];
+        }
+
+        // Check SDK user did not called [MXSession close] or [MXSession pause] during the session state change notification handling.
+        if (nil == self.myUser || self.state == MXSessionStatePaused)
+        {
+            return;
+        }
+
+        if (wasfirstSync)
+        {
+            [[MXSDKOptions sharedInstance].analyticsDelegate trackRoomCount:self->rooms.count];
+        }
+
+        // Broadcast that a server sync has been processed.
+        [[NSNotificationCenter defaultCenter] postNotificationName:kMXSessionDidSyncNotification
+                                                            object:self
+                                                          userInfo:@{
+                                                                     kMXSessionNotificationSyncResponseKey: syncResponse
+                                                                     }];
+    }];
+}
+
 - (void)setIdentityServer:(NSString *)identityServer andAccessToken:(NSString *)accessToken
 {
     NSLog(@"[MXSession] setIdentityServer: %@", identityServer);

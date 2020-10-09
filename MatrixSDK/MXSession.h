@@ -664,6 +664,8 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
 - (void)setStore:(id<MXStore>)store success:(void (^)(void))onStoreDataReady
          failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
+- (void)handleSyncResponse:(MXSyncResponse *)syncResponse;
+
 /**
  Set a new identity server.
 
