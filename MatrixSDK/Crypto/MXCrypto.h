@@ -169,6 +169,15 @@ extern NSString *const MXDeviceListDidUpdateUsersDevicesNotification;
                                 failure:(void (^)(NSError *error))failure;
 
 /**
+ Check if we have keys to decrypt an event.
+ 
+ @param event the event to decrypt.
+
+ @return YES if keys are present.
+ */
+- (BOOL)hasKeysToDecryptEvent:(MXEvent*)event;
+
+/**
  Decrypt a received event.
  
  In case of success, the event is updated with clear data.

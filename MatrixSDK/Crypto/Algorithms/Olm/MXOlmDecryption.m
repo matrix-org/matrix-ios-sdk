@@ -1,6 +1,7 @@
 /*
  Copyright 2016 OpenMarket Ltd
-
+ Copyright 2020 The Matrix.org Foundation C.I.C
+ 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
  You may obtain a copy of the License at
@@ -51,6 +52,12 @@
         userId = crypto.matrixRestClient.credentials.userId;
     }
     return self;
+}
+
+- (BOOL)hasKeysToDecryptEvent:(MXEvent *)event
+{
+    NSLog(@"[MXOlmDecryption] hasKeysToDecryptEvent: ERROR: Not implemented yet");
+    return NO;
 }
 
 - (MXEventDecryptionResult *)decryptEvent:(MXEvent *)event inTimeline:(NSString *)timeline error:(NSError *__autoreleasing *)error
@@ -320,7 +327,7 @@
     NSString *sessionId = [olmDevice createInboundSession:theirDeviceIdentityKey messageType:messageType cipherText:messageBody payload:&payload];
     if (!sessionId)
     {
-        NSLog(@"[MXOlmDecryption] decryptMessage: Error decrypting non-prekey message with existing sessions");
+        NSLog(@"[MXOlmDecryption] decryptMessage: Cannot create new inbound Olm session. Error decrypting non-prekey message with existing sessions");
         return nil;
     }
 

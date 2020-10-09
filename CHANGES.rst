@@ -1,3 +1,32 @@
+Changes in 0.16.17 (2020-10-09)
+=================================================
+
+✨ Features
+ * 
+
+🙌 Improvements
+ * MXCrypto: Add hasKeysToDecryptEvent method.
+
+🐛 Bugfix
+ * MXCrypto: Reset OTKs when some IDs are already used (https://github.com/vector-im/element-ios/issues/3721).
+ * MXCrypto: Send MXCrossSigningMyUserDidSignInOnNewDeviceNotification and MXDeviceListDidUpdateUsersDevicesNotification on the main thread.
+ * MXCrossSigning: Do not send MXCrossSigningMyUserDidSignInOnNewDeviceNotification again if the device has been verified from another thread.
+ 
+⚠️ API Changes
+ * 
+
+🗣 Translations
+ * 
+    
+🧱 Build
+ * 
+
+Others
+ * 
+
+Improvements:
+
+
 Changes in 0.16.16 (2020-09-30)
 =================================================
 
