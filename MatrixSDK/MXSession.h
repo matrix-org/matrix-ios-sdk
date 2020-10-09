@@ -543,7 +543,7 @@ FOUNDATION_EXPORT NSString *const kMXSessionNoRoomTag;
  */
 - (void)resume:(void (^)(void))resumeDone;
 
-typedef void (^MXOnBackgroundSyncDone)(void);
+typedef void (^MXOnBackgroundSyncDone)(MXSyncResponse *syncResponse);
 typedef void (^MXOnBackgroundSyncFail)(NSError *error);
 
 /**

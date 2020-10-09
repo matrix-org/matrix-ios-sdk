@@ -1176,7 +1176,7 @@ typedef void (^MXOnResumeDone)(void);
                 // Operations on session may occur during this block. For example, [MXSession close] may be triggered.
                 // We run a copy of the block to prevent app from crashing if the block is released by one of these operations.
                 MXOnBackgroundSyncDone onBackgroundSyncDoneCpy = [self->onBackgroundSyncDone copy];
-                onBackgroundSyncDoneCpy();
+                onBackgroundSyncDoneCpy(syncResponse);
                 self->onBackgroundSyncDone = nil;
 
                 // check that the application was not resumed while catching up in background
