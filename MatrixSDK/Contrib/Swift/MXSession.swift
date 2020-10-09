@@ -59,7 +59,7 @@ public extension MXSession {
         - completion: A block called when the SDK has completed a catchup, or times out.
         - response: Indicates whether the sync was successful.
      */
-    @nonobjc func backgroundSync(withTimeout timeout: TimeInterval, ignoreSessionState: Bool = false, completion: @escaping (_ response: MXResponse<Void>) -> Void) {
+    @nonobjc func backgroundSync(withTimeout timeout: TimeInterval, ignoreSessionState: Bool = false, completion: @escaping (_ response: MXResponse<MXSyncResponse>) -> Void) {
         let timeoutMilliseconds = UInt32(timeout * 1000)
         __backgroundSync(timeoutMilliseconds, ignoreSessionState: ignoreSessionState, success: currySuccess(completion), failure: curryFailure(completion))
     }
