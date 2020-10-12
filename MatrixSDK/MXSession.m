@@ -590,12 +590,6 @@ typedef void (^MXOnResumeDone)(void);
             [self.store commit];
         }
 
-        if (self.state != MXSessionStatePauseRequested)
-        {
-            // The event stream is running by now
-            [self setState:MXSessionStateRunning];
-        }
-
         // Check SDK user did not called [MXSession close] or [MXSession pause] during the session state change notification handling.
         if (nil == self.myUser || self.state == MXSessionStatePaused)
         {
