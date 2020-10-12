@@ -5,6 +5,30 @@ Changes to be released in next version
  * 
 
 🙌 Improvements
+ * 
+
+🐛 Bugfix
+ * 
+
+⚠️ API Changes
+ * 
+
+🗣 Translations
+ * 
+    
+🧱 Build
+ * 
+
+Others
+ * 
+
+Changes in 0.16.17 (2020-10-09)
+=================================================
+
+✨ Features
+ * 
+
+🙌 Improvements
  * MXCrypto: Add hasKeysToDecryptEvent method.
 
 🐛 Bugfix
@@ -23,6 +47,9 @@ Changes to be released in next version
 
 Others
  * 
+
+Improvements:
+
 
 Changes in 0.16.16 (2020-09-30)
 =================================================
