@@ -901,10 +901,10 @@ typedef void (^MXOnResumeDone)(void);
 - (void)backgroundSync:(unsigned int)timeout success:(MXOnBackgroundSyncDone)backgroundSyncDone failure:(MXOnBackgroundSyncFail)backgroundSyncfails
 {
     //  background sync considering session state
-    [self backgroundSync:timeout ignoreSessionState:NO success:backgroundSyncDone failure:backgroundSyncfails];
+    [self backgroundSync:timeout serverTimeout:0 ignoreSessionState:NO success:backgroundSyncDone failure:backgroundSyncfails];
 }
 
-- (void)backgroundSync:(unsigned int)timeout ignoreSessionState:(BOOL)ignoreSessionState success:(MXOnBackgroundSyncDone)backgroundSyncDone failure:(MXOnBackgroundSyncFail)backgroundSyncfails
+- (void)backgroundSync:(unsigned int)timeout serverTimeout:(unsigned int)serverTimeout ignoreSessionState:(BOOL)ignoreSessionState success:(MXOnBackgroundSyncDone)backgroundSyncDone failure:(MXOnBackgroundSyncFail)backgroundSyncfails
 {
     // Check whether no request is already in progress
     if (!eventStreamRequest)
@@ -925,7 +925,7 @@ typedef void (^MXOnResumeDone)(void);
             onBackgroundSyncDone = backgroundSyncDone;
             onBackgroundSyncFail = backgroundSyncfails;
 
-            [self serverSyncWithServerTimeout:0 success:nil failure:nil clientTimeout:timeout setPresence:@"offline"];
+            [self serverSyncWithServerTimeout:serverTimeout success:nil failure:nil clientTimeout:timeout setPresence:@"offline"];
         }
     }
 }

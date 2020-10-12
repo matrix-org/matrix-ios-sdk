@@ -54,14 +54,16 @@ public extension MXSession {
      Perform an events stream catchup in background (by keeping user offline).
      
      - parameters:
-        - timeout: the max time to perform the catchup (in seconds)
+        - clientTimeout: the max time to perform the catchup for the client side (in seconds)
+        - serverTimeout: the max time to perform the catchup for the server side (in seconds)
         - ignoreSessionState: set true to force the sync, otherwise considers session state equality to paused. Defaults to false.
         - completion: A block called when the SDK has completed a catchup, or times out.
         - response: Indicates whether the sync was successful.
      */
-    @nonobjc func backgroundSync(withTimeout timeout: TimeInterval, ignoreSessionState: Bool = false, completion: @escaping (_ response: MXResponse<MXSyncResponse>) -> Void) {
-        let timeoutMilliseconds = UInt32(timeout * 1000)
-        __backgroundSync(timeoutMilliseconds, ignoreSessionState: ignoreSessionState, success: currySuccess(completion), failure: curryFailure(completion))
+    @nonobjc func backgroundSync(withTimeout clientTimeout: TimeInterval = 0, serverTimeout: TimeInterval, ignoreSessionState: Bool = false, completion: @escaping (_ response: MXResponse<MXSyncResponse>) -> Void) {
+        let clientTimeoutMilliseconds = UInt32(clientTimeout * 1000)
+        let serverTimeoutMilliseconds = UInt32(serverTimeout * 1000)
+        __backgroundSync(clientTimeoutMilliseconds, serverTimeout: serverTimeoutMilliseconds, ignoreSessionState: ignoreSessionState, success: currySuccess(completion), failure: curryFailure(completion))
     }
     
     
