@@ -8,7 +8,7 @@ Changes to be released in next version
  * 
 
 🐛 Bugfix
- * 
+ * Fix nonstring msgtyped room messages, by removing msgtype from the wire and prev contents. 
 
 ⚠️ API Changes
  * 
