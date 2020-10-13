@@ -8,6 +8,30 @@ Changes to be released in next version
  * 
 
 🐛 Bugfix
+ * 
+
+⚠️ API Changes
+ * 
+
+🗣 Translations
+ * 
+    
+🧱 Build
+ * 
+
+Others
+ * 
+
+Changes in 0.16.18 (2020-10-13)
+=================================================
+
+✨ Features
+ * 
+
+🙌 Improvements
+ * 
+
+🐛 Bugfix
  * Fix nonstring msgtyped room messages, by removing msgtype from the wire and prev contents. 
 
 ⚠️ API Changes
@@ -21,6 +45,9 @@ Changes to be released in next version
 
 Others
  * 
+
+Improvements:
+
 
 Changes in 0.16.17 (2020-10-09)
 =================================================
