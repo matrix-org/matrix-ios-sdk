@@ -5,13 +5,14 @@ Changes to be released in next version
  * 
 
 🙌 Improvements
- * 
+ * MXSession: Introduce handleSyncResponse method to process sync responses from out of the session (vector-im/element-ios/issues/3579).
+ * MXJSONModels: Implement JSONDictionary methods for MXSyncResponse and inner classes (vector-im/element-ios/issues/3579).
 
 🐛 Bugfix
  * 
 
 ⚠️ API Changes
- * 
+ * MXSession: backgroundSync now returns syncResponse on success (vector-im/element-ios/issues/3579). 
 
 🗣 Translations
  * 
