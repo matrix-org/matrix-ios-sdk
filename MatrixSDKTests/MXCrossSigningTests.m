@@ -1150,6 +1150,76 @@
 }
 
 
+// - Have Alice with cross-signing
+// - Alice logs in on a new device
+// - Cross-sign this new device
+// - Reset XS on this new device
+// -> The old device must be notified by the cross-signing keys rotation
+// -> It must not trust itself anymore
+// -> It must not trust the new device anymore
+- (void)testMXCrossSigningResetDetection
+{
+    // - Have Alice with cross-signing
+    [self doTestWithBobAndBootstrappedAlice:self readyToTest:^(MXSession *bobSession, MXSession *aliceSession, NSString *roomId, XCTestExpectation *expectation) {
+
+        // Intermediate check
+        MXDeviceTrustLevel *aliceDevice1Trust = [aliceSession.crypto deviceTrustLevelForDevice:aliceSession.matrixRestClient.credentials.deviceId ofUser:aliceSession.matrixRestClient.credentials.userId];
+        XCTAssertTrue(aliceDevice1Trust.isCrossSigningVerified);
+        
+        // - Alice logs in on a new device
+        __block NSString *newDeviceId;
+        [matrixSDKTestsE2EData loginUserOnANewDevice:self credentials:aliceSession.matrixRestClient.credentials withPassword:MXTESTS_ALICE_PWD onComplete:^(MXSession *newAliceSession) {
+            newDeviceId = newAliceSession.matrixRestClient.credentials.deviceId;
+            
+            // - Cross-sign this new device
+            [aliceSession.crypto.crossSigning crossSignDeviceWithDeviceId:newDeviceId success:^{
+                
+                // Intermediate check
+                MXDeviceTrustLevel *aliceDevice2Trust = [aliceSession.crypto deviceTrustLevelForDevice:newDeviceId ofUser:aliceSession.myUserId];
+                XCTAssertTrue(aliceDevice2Trust.isCrossSigningVerified);
+                
+                
+                // - Reset XS on this new device
+                [newAliceSession.crypto.crossSigning setupWithPassword:MXTESTS_ALICE_PWD success:^{
+                    
+                } failure:^(NSError *error) {
+                    XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                    [expectation fulfill];
+                }];
+                
+                
+                // -> The old device must be notified by the cross-signing keys rotation
+                id observer = [[NSNotificationCenter defaultCenter] addObserverForName:MXCrossSigningDidChangeCrossSigningKeysNotification object:aliceSession.crypto.crossSigning queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *notification) {
+                    
+                    // Wait a bit that cross-signing states update
+                    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 0.5 * NSEC_PER_SEC), dispatch_get_main_queue(), ^{
+                        
+                        XCTAssertEqual(aliceSession.crypto.crossSigning.state, MXCrossSigningStateCrossSigningExists);
+                        XCTAssertEqual(newAliceSession.crypto.crossSigning.state, MXCrossSigningStateCanCrossSign);
+                        
+                        // -> It must not trust itself anymore
+                        MXDeviceTrustLevel *aliceDevice1Trust = [aliceSession.crypto deviceTrustLevelForDevice:aliceSession.matrixRestClient.credentials.deviceId ofUser:aliceSession.matrixRestClient.credentials.userId];
+                        XCTAssertEqual(aliceDevice1Trust.localVerificationStatus, MXDeviceVerified);
+                        XCTAssertFalse(aliceDevice1Trust.isCrossSigningVerified);
+                        
+                        // -> It must not trust the new device anymore
+                        MXDeviceTrustLevel *aliceDevice2Trust = [aliceSession.crypto deviceTrustLevelForDevice:newDeviceId ofUser:aliceSession.myUserId];
+                        XCTAssertFalse(aliceDevice2Trust.isCrossSigningVerified);
+                        
+                        [expectation fulfill];
+                    });
+                }];
+                
+                [observers addObject:observer];
+                
+            } failure:^(NSError * _Nonnull error) {
+                XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                [expectation fulfill];
+            }];
+        }];
+    }];
+}
+
 @end
 
 #pragma clang diagnostic pop

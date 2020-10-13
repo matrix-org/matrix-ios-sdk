@@ -5,10 +5,10 @@ Changes to be released in next version
  * 
 
 🙌 Improvements
- * 
+ * MXCrossSigning: Detect when cross-signing keys have been reset and send MXCrossSigningDidChangeCrossSigningKeysNotification.
 
 🐛 Bugfix
- * 
+ * Tests: Fix testMXDeviceListDidUpdateUsersDevicesNotification.
 
 ⚠️ API Changes
  * 
