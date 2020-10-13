@@ -928,6 +928,13 @@ typedef void (^MXOnResumeDone)(void);
             [self serverSyncWithServerTimeout:serverTimeout success:nil failure:nil clientTimeout:timeout setPresence:@"offline"];
         }
     }
+    else
+    {
+        NSLog(@"[MXSession] background Sync already ongoing");
+        dispatch_async(dispatch_get_main_queue(), ^{
+            backgroundSyncfails(nil);
+        });
+    }
 }
 
 - (BOOL)reconnect
