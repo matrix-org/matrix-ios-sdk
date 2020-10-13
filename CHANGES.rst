@@ -8,7 +8,7 @@ Changes to be released in next version
  * 
 
 🐛 Bugfix
- * 
+ * Tests: Fix testMXDeviceListDidUpdateUsersDevicesNotification.
 
 ⚠️ API Changes
  * 

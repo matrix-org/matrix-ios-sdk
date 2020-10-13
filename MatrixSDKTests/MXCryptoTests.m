@@ -2976,9 +2976,11 @@
         observer = [[NSNotificationCenter defaultCenter] addObserverForName:MXDeviceListDidUpdateUsersDevicesNotification object:aliceSession.crypto queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *notification) {
             
             NSDictionary *userInfo = notification.userInfo;
-            NSArray<MXDeviceInfo*> *myUserDevices = userInfo[aliceSession.myUser.userId];
+            NSArray<MXDeviceInfo*> *updatedDevices = userInfo[aliceSession.myUser.userId];
             
-            XCTAssertEqual(myUserDevices.count, 2);
+            XCTAssertEqual(updatedDevices.count, 1);
+            XCTAssertNotNil(updatedDevices.firstObject.deviceId);
+            XCTAssertNotEqualObjects(updatedDevices.firstObject.deviceId, aliceSession.myDeviceId);
             
             [expectation fulfill];
         }];
