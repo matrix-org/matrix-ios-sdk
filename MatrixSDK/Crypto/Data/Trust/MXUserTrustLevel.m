@@ -64,6 +64,10 @@
     return isEqual;
 }
 
+- (NSString *)description
+{
+    return [NSString stringWithFormat:@"MXUserTrustLevel: local: %@ - cross-signing: %@",  @(_isLocallyVerified), @(_isCrossSigningVerified)];
+}
 
 #pragma mark - NSCoding
 
