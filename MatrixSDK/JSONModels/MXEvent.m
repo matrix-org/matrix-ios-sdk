@@ -193,6 +193,10 @@ NSString *const kMXEventIdentifierKey = @"kMXEventIdentifierKey";
     // Clean JSON data by removing all null values
     _wireContent = [MXJSONModel removeNullValuesInJSON:_wireContent];
     _prevContent = [MXJSONModel removeNullValuesInJSON:_prevContent];
+    
+    // Clean JSON data by removing non-string msgtype values
+    _wireContent = [MXEvent wireContentFixingNonStringMsgtypesIn:_wireContent];
+    _prevContent = [MXEvent wireContentFixingNonStringMsgtypesIn:_prevContent];
 }
 
 - (void)setSentState:(MXEventSentState)sentState
@@ -1019,6 +1023,18 @@ NSString *const kMXEventIdentifierKey = @"kMXEventIdentifierKey";
     return filteredPrevContent;
 }
 
+#pragma mark - Validation
+
++ (NSDictionary *)wireContentFixingNonStringMsgtypesIn:(NSDictionary *)content
+{
+    if (content[@"msgtype"] && ![content[@"msgtype"] isKindOfClass:[NSString class]])
+    {
+        NSMutableDictionary *mutableContent = [NSMutableDictionary dictionaryWithDictionary:content];
+        [mutableContent removeObjectForKey:@"msgtype"];
+        return [NSDictionary dictionaryWithDictionary:mutableContent];
+    }
+    return content;
+}
 
 #pragma mark - NSCoding
 // Overriding MTLModel NSCoding operation makes serialisation going 20% faster
@@ -1032,7 +1048,9 @@ NSString *const kMXEventIdentifierKey = @"kMXEventIdentifierKey";
         _sender = [aDecoder decodeObjectForKey:@"userId"];
         _sentState = (MXEventSentState)[aDecoder decodeIntegerForKey:@"sentState"];
         _wireContent = [aDecoder decodeObjectForKey:@"content"];
+        _wireContent = [MXEvent wireContentFixingNonStringMsgtypesIn:_wireContent];
         _prevContent = [aDecoder decodeObjectForKey:@"prevContent"];
+        _prevContent = [MXEvent wireContentFixingNonStringMsgtypesIn:_prevContent];
         _stateKey = [aDecoder decodeObjectForKey:@"stateKey"];
         _originServerTs = (uint64_t)[aDecoder decodeInt64ForKey:@"originServerTs"];
         _ageLocalTs = (uint64_t)[aDecoder decodeInt64ForKey:@"ageLocalTs"];
