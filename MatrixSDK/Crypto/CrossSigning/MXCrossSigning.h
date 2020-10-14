@@ -32,12 +32,18 @@ NS_ASSUME_NONNULL_BEGIN
  It is sent only if our session can cross-sign the new devices.
  Give an associated userInfo dictionary of type NSDictionary<NSString*, NSArray<NSString*>*> with following key: "deviceIds". Use constants below for convenience.
  */
-extern NSString *const MXCrossSigningMyUserDidSignInOnNewDeviceNotification;
+FOUNDATION_EXPORT NSString *const MXCrossSigningMyUserDidSignInOnNewDeviceNotification;
+
+/**
+ Notification name sent when cross-signing keys has changed.
+ It is sent when cross-signing has been reset from another device.
+ */
+FOUNDATION_EXPORT NSString *const MXCrossSigningDidChangeCrossSigningKeysNotification;
 
 /**
  userInfo dictionary keys used by `MXCrossSigningDidDetectNewSignInNotification`.
  */
-extern NSString *const MXCrossSigningNotificationDeviceIdsKey;
+FOUNDATION_EXPORT NSString *const MXCrossSigningNotificationDeviceIdsKey;
 
 /**
  Cross-signing state of the current acount.

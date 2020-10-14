@@ -5,11 +5,13 @@ Changes to be released in next version
  * 
 
 🙌 Improvements
+ * MXCrossSigning: Detect when cross-signing keys have been reset and send MXCrossSigningDidChangeCrossSigningKeysNotification.
  * MXSession: Introduce handleSyncResponse method to process sync responses from out of the session (vector-im/element-ios/issues/3579).
  * MXJSONModels: Implement JSONDictionary methods for MXSyncResponse and inner classes (vector-im/element-ios/issues/3579).
 
 🐛 Bugfix
- * 
+ * Tests: Fix testMXDeviceListDidUpdateUsersDevicesNotification.
+ * MXCrossSigning: Trust cross-signing because we locally trust the device that created it.
 
 ⚠️ API Changes
  * MXSession: backgroundSync now returns syncResponse on success (vector-im/element-ios/issues/3579). 
