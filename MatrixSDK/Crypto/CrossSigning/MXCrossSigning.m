@@ -729,7 +729,7 @@ NSString *const MXCrossSigningErrorDomain = @"org.matrix.sdk.crosssigning";
             if ([key.type isEqualToString:kMXKeyEd25519Type])
             {
                 MXDeviceInfo *device = [self.crypto.store deviceWithDeviceId:key.keyId forUser:myUserId];
-                if (device && device.trustLevel.isVerified)
+                if (device && device.trustLevel.isLocallyVerified)
                 {
                     // Check signature validity
                     NSError *error;

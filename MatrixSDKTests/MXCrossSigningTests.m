@@ -1220,6 +1220,61 @@
     }];
 }
 
+
+// - Have Alice with cross-signing
+// - Alice logs in on a new device
+// - Stop Alice first device
+// - Reset XS on this new device
+// - Restart Alice first device
+// -> Alice first device must not trust the cross-signing anymore
+- (void)testMXCrossSigningResetDetectionAfterRestart
+{
+    // - Have Alice with cross-signing
+    [self doTestWithBobAndBootstrappedAlice:self readyToTest:^(MXSession *bobSession, MXSession *aliceSession, NSString *roomId, XCTestExpectation *expectation) {
+        
+        // - Alice logs in on a new device
+        __block NSString *newDeviceId;
+        [matrixSDKTestsE2EData loginUserOnANewDevice:self credentials:aliceSession.matrixRestClient.credentials withPassword:MXTESTS_ALICE_PWD onComplete:^(MXSession *newAliceSession) {
+            newDeviceId = newAliceSession.matrixRestClient.credentials.deviceId;
+            
+            // - Stop Alice first device
+            MXSession *aliceSession2 = [[MXSession alloc] initWithMatrixRestClient:aliceSession.matrixRestClient];
+            [aliceSession close];
+            
+            // - Reset XS on this new device
+            [newAliceSession.crypto.crossSigning setupWithPassword:MXTESTS_ALICE_PWD success:^{
+                
+                // - Restart Alice first device
+                [aliceSession2 setStore:[[MXFileStore alloc] init] success:^{
+                    [aliceSession2 start:^{
+                        
+                        // Wait a bit that cross-signing states update
+                        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 0.5 * NSEC_PER_SEC), dispatch_get_main_queue(), ^{
+                            
+                            // -> Alice first device must not trust the cross-signing anymore
+                            XCTAssertEqual(aliceSession2.crypto.crossSigning.state, MXCrossSigningStateCrossSigningExists);
+                            
+                            [expectation fulfill];
+                        });
+                        
+                    } failure:^(NSError *error) {
+                        XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                        [expectation fulfill];
+                    }];
+                    
+                } failure:^(NSError *error) {
+                    XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                    [expectation fulfill];
+                }];
+                
+            } failure:^(NSError *error) {
+                XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                [expectation fulfill];
+            }];
+        }];
+    }];
+}
+
 @end
 
 #pragma clang diagnostic pop

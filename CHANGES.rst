@@ -9,6 +9,7 @@ Changes to be released in next version
 
 🐛 Bugfix
  * Tests: Fix testMXDeviceListDidUpdateUsersDevicesNotification.
+ * MXCrossSigning: Trust cross-signing because we locally trust the device that created it.
 
 ⚠️ API Changes
  * 
