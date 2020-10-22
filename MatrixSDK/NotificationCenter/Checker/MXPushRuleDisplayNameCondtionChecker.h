@@ -27,8 +27,10 @@
  Create the `MXPushRuleDisplayNameCondtionChecker` instance.
 
  @param mxSession the mxSession to the home server.
+ @param currentUserDisplayName the current user's display name. Can be nil if session provided.
  @return the newly created MXPushRuleDisplayNameCondtionChecker instance.
  */
-- (instancetype)initWithMatrixSession:(MXSession*)mxSession;
+- (instancetype _Nonnull)initWithMatrixSession:(MXSession* _Nullable)mxSession
+                        currentUserDisplayName:(NSString* _Nullable)currentUserDisplayName;
 
 @end
