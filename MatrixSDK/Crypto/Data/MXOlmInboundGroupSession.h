@@ -20,7 +20,7 @@
 
 #ifdef MX_CRYPTO
 
-#import <OLMKit/OLMKit.h>
+@class OLMInboundGroupSession;
 
 #import "MXMegolmSessionData.h"
 

@@ -20,7 +20,7 @@
 
 #ifdef MX_CRYPTO
 
-#import <OLMKit/OLMKit.h>
+@class OLMSession;
 
 NS_ASSUME_NONNULL_BEGIN
 

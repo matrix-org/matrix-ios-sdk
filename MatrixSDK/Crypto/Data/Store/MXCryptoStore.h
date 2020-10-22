@@ -24,13 +24,15 @@
 #import "MXJSONModels.h"
 #import "MXCredentials.h"
 
-#import <OLMKit/OLMKit.h>
+
 #import "MXOlmSession.h"
 #import "MXOlmInboundGroupSession.h"
 #import "MXDeviceInfo.h"
 #import "MXCrossSigningInfo.h"
 #import "MXOutgoingRoomKeyRequest.h"
 #import "MXIncomingRoomKeyRequest.h"
+
+@class OLMAccount;
 
 /**
  The `MXCryptoStore` protocol defines an interface that must be implemented in order to store

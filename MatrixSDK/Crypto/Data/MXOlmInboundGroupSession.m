@@ -18,6 +18,7 @@
 
 #ifdef MX_CRYPTO
 
+#import <OLMKit/OLMKit.h>
 #import "MXCryptoConstants.h"
 
 @implementation MXOlmInboundGroupSession
