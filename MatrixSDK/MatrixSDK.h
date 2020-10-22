@@ -98,3 +98,16 @@ FOUNDATION_EXPORT NSString *MatrixSDKVersion;
 
 #import "MXEventScan.h"
 #import "MXMediaScan.h"
+
+//  Bridging to Swift
+#import "MXCryptoStore.h"
+#import "MXRealmCryptoStore.h"
+#import "MXCryptoAlgorithms.h"
+#import "MXOlmDevice.h"
+#import "MXEventDecryptionResult.h"
+#import "MXPushRuleEventMatchConditionChecker.h"
+#import "MXPushRuleDisplayNameCondtionChecker.h"
+#import "MXPushRuleRoomMemberCountConditionChecker.h"
+#import "MXPushRuleSenderNotificationPermissionConditionChecker.h"
+#import "MXMegolmDecryption.h"
+#import "MXOlmDecryption.h"
