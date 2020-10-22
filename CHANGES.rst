@@ -5,6 +5,32 @@ Changes to be released in next version
  * 
 
 🙌 Improvements
+ * Update GZIP to 1.3.0 (vector-im/element-ios/3570).
+ * Update Realm to 5.4.8 (vector-im/element-ios/3570).
+ * Update JitsiMeetSDK to 2.10.0 (vector-im/element-ios/3570).
+
+🐛 Bugfix
+ * 
+
+⚠️ API Changes
+ * 
+
+🗣 Translations
+ * 
+    
+🧱 Build
+ * 
+
+Others
+ * 
+
+Changes in 0.16.19 (2020-10-14)
+=================================================
+
+✨ Features
+ * 
+
+🙌 Improvements
  * MXCrossSigning: Detect when cross-signing keys have been reset and send MXCrossSigningDidChangeCrossSigningKeysNotification.
  * MXSession: Introduce handleSyncResponse method to process sync responses from out of the session (vector-im/element-ios/issues/3579).
  * MXJSONModels: Implement JSONDictionary methods for MXSyncResponse and inner classes (vector-im/element-ios/issues/3579).
@@ -24,6 +50,9 @@ Changes to be released in next version
 
 Others
  * 
+
+Improvements:
+
 
 Changes in 0.16.18 (2020-10-13)
 =================================================
