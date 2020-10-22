@@ -16,13 +16,16 @@
 
 import Foundation
 
+/// Errors can be raised by `MXBackgroundSyncService`.
 public enum MXBackgroundSyncServiceError: Error {
     case unknown
     case unknownAlgorithm
+    case decryptionFailure
 }
 
-@objcMembers
-public class MXBackgroundSyncService: NSObject {
+/// This class can be used to sync in background, keeping the user offline. It does not initiate MXSession or MXCrypto instances.
+/// Sync results are written to a SyncResponseFileStore.
+@objcMembers public class MXBackgroundSyncService: NSObject {
     
     private enum Queues {
         static let processingQueue: DispatchQueue = DispatchQueue(label: "MXBackgroundSyncServiceQueue")
@@ -43,9 +46,11 @@ public class MXBackgroundSyncService: NSObject {
     private let restClient: MXRestClient
     private var pushRulesManager: MXBackgroundPushRulesManager
     
-    /// Cached events. Keys are eventId's
+    /// Cached events. Keys are even identifiers.
     private var cachedEvents: [String: MXEvent] = [:]
     
+    /// Initializer
+    /// - Parameter credentials: account credentials
     public init(withCredentials credentials: MXCredentials) {
         self.credentials = credentials
         syncResponseStore = SyncResponseFileStore()
@@ -63,6 +68,11 @@ public class MXBackgroundSyncService: NSObject {
         super.init()
     }
     
+    /// Fetch event with given event and room identifiers. It performs a sync if the event not found in session store.
+    /// - Parameters:
+    ///   - eventId: The event identifier for the desired event
+    ///   - roomId: The room identifier for the desired event
+    ///   - completion: Completion block to be called. Always called in main thread.
     public func event(withEventId eventId: String,
                       inRoom roomId: String,
                       completion: @escaping (MXResponse<MXEvent>) -> Void) {
@@ -71,6 +81,10 @@ public class MXBackgroundSyncService: NSObject {
         }
     }
     
+    /// Fetch room state for given roomId.
+    /// - Parameters:
+    ///   - roomId: The room identifier for the desired room.
+    ///   - completion: Completion block to be called. Always called in main thread.
     public func roomState(forRoomId roomId: String,
                           completion: @escaping (MXResponse<MXRoomState>) -> Void) {
         MXRoomState.load(from: store,
@@ -88,14 +102,25 @@ public class MXBackgroundSyncService: NSObject {
         }
     }
     
+    /// Check whether the given room is mentions only.
+    /// - Parameter roomId: The room identifier to be checked
+    /// - Returns: If the room is mentions only.
     public func isRoomMentionsOnly(_ roomId: String) -> Bool {
         return pushRulesManager.isRoomMentionsOnly(roomId)
     }
     
+    /// Fetch the summary for the given room identifier.
+    /// - Parameter roomId: The room identifier to fetch.
+    /// - Returns: Summary of room.
     public func roomSummary(forRoomId roomId: String) -> MXRoomSummary? {
         return store.summary?(ofRoom: roomId)
     }
     
+    /// Fetch push rule matching an event.
+    /// - Parameters:
+    ///   - event: The event to be matched.
+    ///   - roomState: Room state.
+    /// - Returns: Push rule matching the event.
     public func pushRule(matching event: MXEvent, roomState: MXRoomState) -> MXPushRule? {
         guard let currentUserId = credentials.userId else { return nil }
         let currentUser = store.user(withUserId: currentUserId)
@@ -118,7 +143,7 @@ public class MXBackgroundSyncService: NSObject {
             } else {
                 NSLog("[MXBackgroundSyncService] fetchEvent: Do not sync anymore.")
                 Queues.dispatchQueue.async {
-                    completion(.failure(error ?? NSError(domain: "", code: 0, userInfo: nil)))
+                    completion(.failure(error ?? MXBackgroundSyncServiceError.decryptionFailure))
                 }
             }
         }
@@ -187,7 +212,7 @@ public class MXBackgroundSyncService: NSObject {
             } else {
                 NSLog("[MXBackgroundSyncService] fetchEvent: We don't have the event in stores. Do not sync anymore.")
                 Queues.dispatchQueue.async {
-                    completion(.failure(NSError(domain: "", code: 0, userInfo: nil)))
+                    completion(.failure(MXBackgroundSyncServiceError.unknown))
                 }
             }
         }
@@ -197,6 +222,9 @@ public class MXBackgroundSyncService: NSObject {
                                       roomId: String,
                                       completion: @escaping (MXResponse<MXEvent>) -> Void) {
         guard let eventStreamToken = store.eventStreamToken else {
+            Queues.dispatchQueue.async {
+                completion(.failure(MXBackgroundSyncServiceError.unknown))
+            }
             return
         }
         
@@ -204,11 +232,14 @@ public class MXBackgroundSyncService: NSObject {
                         serverTimeout: Constants.syncRequestServerTimout,
                         clientTimeout: Constants.syncRequestClientTimout,
                         setPresence: Constants.syncRequestPresence,
-                        filterId: store.syncFilterId!) { [weak self] (response) in
+                        filterId: store.syncFilterId ?? nil) { [weak self] (response) in
             switch response {
             case .success(let syncResponse):
                 guard let self = self else {
-                    NSLog("[MXBackgroundSyncService] launchBackgroundSync: MXSession.initialBackgroundSync returned too late successfully")
+                    NSLog("[MXBackgroundSyncService] launchBackgroundSync: MXRestClient.syncFromToken returned too late successfully")
+                    Queues.dispatchQueue.async {
+                        completion(.failure(MXBackgroundSyncServiceError.unknown))
+                    }
                     return
                 }
 
@@ -227,10 +258,13 @@ public class MXBackgroundSyncService: NSObject {
                 }
             case .failure(let error):
                 guard let _ = self else {
-                    NSLog("[MXBackgroundSyncService] launchBackgroundSync: MXSession.initialBackgroundSync returned too late with error: \(String(describing: error))")
+                    NSLog("[MXBackgroundSyncService] launchBackgroundSync: MXRestClient.syncFromToken returned too late with error: \(String(describing: error))")
+                    Queues.dispatchQueue.async {
+                        completion(.failure(error))
+                    }
                     return
                 }
-                NSLog("[MXBackgroundSyncService] launchBackgroundSync: MXSession.initialBackgroundSync returned with error: \(String(describing: error))")
+                NSLog("[MXBackgroundSyncService] launchBackgroundSync: MXRestClient.syncFromToken returned with error: \(String(describing: error))")
                 Queues.dispatchQueue.async {
                     completion(.failure(error))
                 }
@@ -252,6 +286,10 @@ public class MXBackgroundSyncService: NSObject {
     }
     
     private func decryptEvent(_ event: MXEvent) throws {
+        if !event.isEncrypted {
+            return
+        }
+        
         guard let senderKey = event.content["sender_key"] as? String,
             let algorithm = event.content["algorithm"] as? String else {
                 throw MXBackgroundSyncServiceError.unknown
@@ -280,7 +318,7 @@ public class MXBackgroundSyncService: NSObject {
                 let deviceCurve25519Key = olmDevice.deviceCurve25519Key,
                 let message = ciphertextDict[deviceCurve25519Key] as? [AnyHashable: Any],
                 let payloadString = decryptMessageWithOlm(message: message, theirDeviceIdentityKey: senderKey) else {
-                    throw MXBackgroundSyncServiceError.unknown
+                    throw MXBackgroundSyncServiceError.decryptionFailure
             }
             guard let payloadData = payloadString.data(using: .utf8),
                 let payload = try? JSONSerialization.jsonObject(with: payloadData,
@@ -292,11 +330,11 @@ public class MXBackgroundSyncService: NSObject {
                 ed25519 == olmDevice.deviceEd25519Key,
                 let sender = payload["sender"] as? String,
                 sender == event.sender else {
-                    throw MXBackgroundSyncServiceError.unknown
+                    throw MXBackgroundSyncServiceError.decryptionFailure
             }
             if let roomId = event.roomId {
                 guard payload["room_id"] as? String == roomId else {
-                    throw MXBackgroundSyncServiceError.unknown
+                    throw MXBackgroundSyncServiceError.decryptionFailure
                 }
             }
             
@@ -383,7 +421,6 @@ public class MXBackgroundSyncService: NSObject {
         switch event.eventType {
         case .roomKey:
             keysClaimed = event.keysClaimed as! [String: String]
-            break
         case .roomForwardedKey:
             exportFormat = true
             
@@ -405,7 +442,6 @@ public class MXBackgroundSyncService: NSObject {
             keysClaimed = [
                 "ed25519": ed25519Key
             ]
-            break
         default:
             return
         }

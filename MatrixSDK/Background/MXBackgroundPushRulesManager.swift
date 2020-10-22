@@ -16,8 +16,8 @@
 
 import Foundation
 
-@objcMembers
-public class MXBackgroundPushRulesManager: NSObject {
+/// Background push rules manager. Does work independent from a `MXNotificationCenter`.
+@objcMembers public class MXBackgroundPushRulesManager: NSObject {
     
     private let restClient: MXRestClient
     private var pushRulesResponse: MXPushRulesResponse? {
@@ -50,6 +50,8 @@ public class MXBackgroundPushRulesManager: NSObject {
     private var memberCountConditionChecker: MXPushRuleRoomMemberCountConditionChecker
     private var permissionConditionChecker: MXPushRuleSenderNotificationPermissionConditionChecker
     
+    /// Initializer.
+    /// - Parameter restClient: Rest client to fetch initial push rules.
     public init(withRestClient restClient: MXRestClient) {
         self.restClient = restClient
         eventMatchConditionChecker = MXPushRuleEventMatchConditionChecker()
@@ -66,6 +68,8 @@ public class MXBackgroundPushRulesManager: NSObject {
         }
     }
     
+    /// Handle account data from a sync response.
+    /// - Parameter accountData: The account data to be handled.
     public func handleAccountData(_ accountData: [AnyHashable: Any]) {
         guard let events = accountData["events"] as? [[AnyHashable: Any]] else { return }
         events.forEach { (event) in
@@ -77,6 +81,9 @@ public class MXBackgroundPushRulesManager: NSObject {
         }
     }
     
+    /// Check whether the given room is mentions only.
+    /// - Parameter roomId: The room identifier to be checked
+    /// - Returns: If the room is mentions only.
     public func isRoomMentionsOnly(_ roomId: String) -> Bool {
         // Check push rules at room level
         guard let rule = self.getRoomPushRule(forRoom: roomId) else {
@@ -93,6 +100,12 @@ public class MXBackgroundPushRulesManager: NSObject {
         return false
     }
     
+    /// Fetch push rule matching an event.
+    /// - Parameters:
+    ///   - event: The event to be matched.
+    ///   - roomState: Room state.
+    ///   - currentUserDisplayName: Display name of the current user.
+    /// - Returns: Push rule matching the event.
     public func pushRule(matching event: MXEvent,
                          roomState: MXRoomState,
                          currentUserDisplayName: String?) -> MXPushRule? {
@@ -105,64 +118,59 @@ public class MXBackgroundPushRulesManager: NSObject {
                                                                       currentUserDisplayName: currentUserDisplayName)
         
         let conditionCheckers: [MXPushRuleConditionType: MXPushRuleConditionChecker] = [
-            MXPushRuleConditionTypeEventMatch: eventMatchConditionChecker,
-            MXPushRuleConditionTypeContainsDisplayName: displayNameChecker,
-            MXPushRuleConditionTypeRoomMemberCount: memberCountConditionChecker,
-            MXPushRuleConditionTypeSenderNotificationPermission: permissionConditionChecker
+            .eventMatch: eventMatchConditionChecker,
+            .containsDisplayName: displayNameChecker,
+            .roomMemberCount: memberCountConditionChecker,
+            .senderNotificationPermission: permissionConditionChecker
         ]
         
         let eventDictionary = event.jsonDictionary()
-        
         let equivalentCondition = MXPushRuleCondition()
-        equivalentCondition.kindType = MXPushRuleConditionTypeEventMatch
         
         for rule in flatRules.filter({ $0.enabled }) {
             var conditionsOk: Bool = true
             var runEquivalent: Bool = false
             
-            switch rule.kind {
-            case __MXPushRuleKindOverride, __MXPushRuleKindUnderride:
+            guard let kind = MXPushRuleKind(identifier: rule.kind) else { continue }
+            
+            switch kind {
+            case .override, .underride:
                 conditionsOk = true
                 
                 for condition in rule.conditions {
                     guard let condition = condition as? MXPushRuleCondition else { continue }
-                    if let checker = conditionCheckers[condition.kindType] {
+                    let conditionType = MXPushRuleConditionType(identifier: condition.kind)
+                    if let checker = conditionCheckers[conditionType] {
                         conditionsOk = checker.isCondition(condition,
                                                            satisfiedBy: event,
                                                            roomState: roomState,
                                                            withJsonDict: eventDictionary)
                         if !conditionsOk {
-                            // Do not need to go further
+                            //  Do not need to go further
                             break
                         }
                     } else {
                         conditionsOk = false
                     }
                 }
-                break
-            case __MXPushRuleKindContent:
+            case .content:
                 equivalentCondition.parameters = [
                     "key": "content.body",
                     "pattern": rule.pattern as Any
                 ]
                 runEquivalent = true
-                break
-            case __MXPushRuleKindRoom:
+            case .room:
                 equivalentCondition.parameters = [
                     "key": "room_id",
                     "pattern": rule.ruleId as Any
                 ]
                 runEquivalent = true
-                break
-            case __MXPushRuleKindSender:
+            case .sender:
                 equivalentCondition.parameters = [
                     "key": "user_id",
                     "pattern": rule.ruleId as Any
                 ]
                 runEquivalent = true
-                break
-            default:
-                break
             }
             
             if runEquivalent {
@@ -182,27 +190,12 @@ public class MXBackgroundPushRulesManager: NSObject {
     
     //  MARK: - Private
     
-    private func setupCheckers() {
-        
-    }
-    
     private func getRoomPushRule(forRoom roomId: String) -> MXPushRule? {
-        guard let rules = pushRulesResponse?.global.room else {
+        guard let rules = pushRulesResponse?.global.room as? [MXPushRule] else {
             return nil
         }
         
-        for rule in rules {
-            guard let pushRule = rule as? MXPushRule else { continue }
-            // the rule id is the room Id
-            // it is the server trick to avoid duplicated rule on the same room.
-            if pushRule.ruleId == roomId {
-                return pushRule
-            }
-        }
-
-        return nil
+        return rules.first(where: { roomId == $0.ruleId })
     }
     
 }
-
-extension MXPushRuleConditionType: Hashable {}

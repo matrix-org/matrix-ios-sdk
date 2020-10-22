@@ -17,6 +17,7 @@
 import Foundation
 
 @objcMembers
+/// Sync response storage in a file implementation.
 public class SyncResponseFileStore: NSObject {
     
     private enum SyncResponseFileStoreConstants {
@@ -89,6 +90,8 @@ public class SyncResponseFileStore: NSObject {
     
 }
 
+//  MARK: - SyncResponseStore
+
 extension SyncResponseFileStore: SyncResponseStore {
     
     public func open(withCredentials credentials: MXCredentials) {
@@ -150,6 +153,8 @@ extension SyncResponseFileStore: SyncResponseStore {
     }
     
 }
+
+//  MARK: - Private
 
 private extension Array {
     

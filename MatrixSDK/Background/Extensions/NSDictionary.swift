@@ -16,9 +16,14 @@
 
 import Foundation
 
-extension NSDictionary {
-
-    public static func + (lhs: NSDictionary, rhs: NSDictionary) -> NSDictionary {
+internal extension NSDictionary {
+    
+    /// Merges two dictionaries.
+    /// - Parameters:
+    ///   - lhs: First operand
+    ///   - rhs: Second operand
+    /// - Returns: Merged dictionary.
+    static func + (lhs: NSDictionary, rhs: NSDictionary) -> NSDictionary {
         let dictionary = NSMutableDictionary(dictionary: lhs)
         for (key, valueR) in rhs {
             if let key = key as? NSCopying {
@@ -26,14 +31,12 @@ extension NSDictionary {
                     switch (valueL, valueR) {
                     case (let dictionaryL as NSDictionary, let dictionaryR as NSDictionary):
                         dictionary[key] = dictionaryL + dictionaryR
-                        break
                     case (let arrayL as NSArray, let arrayR as NSArray):
                         dictionary[key] = arrayL + arrayR
                     default:
                         dictionary[key] = valueR
                     }
-                }
-                else {
+                } else {
                     dictionary[key] = valueR
                 }
             }
@@ -43,13 +46,14 @@ extension NSDictionary {
 
 }
 
-//extension NSDictionary: RangeReplaceableCollection {
-//    public typealias SubSequence = 
-//}
-
-extension NSArray {
-
-    public static func + (lhs: NSArray, rhs: NSArray) -> NSArray {
+internal extension NSArray {
+    
+    /// Merges two array.
+    /// - Parameters:
+    ///   - lhs: First operand
+    ///   - rhs: Second operand
+    /// - Returns: Merged array.
+    static func + (lhs: NSArray, rhs: NSArray) -> NSArray {
         let array = NSMutableArray()
         lhs.forEach { array.add($0) }
         rhs.forEach { array.add($0) }
