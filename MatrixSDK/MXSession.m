@@ -44,6 +44,7 @@
 #import "MXScanManager.h"
 
 #import "MXAggregations_Private.h"
+#import "MatrixSDKSwiftHeader.h"
 
 #pragma mark - Constants definitions
 NSString *const kMXSessionStateDidChangeNotification = @"kMXSessionStateDidChangeNotification";
@@ -668,6 +669,8 @@ typedef void (^MXOnResumeDone)(void);
 
 - (void)startWithSyncFilterId:(NSString *)syncFilterId onServerSyncDone:(void (^)(void))onServerSyncDone failure:(void (^)(NSError *))failure
 {
+    [self handleSyncResponseIfRequired];
+    
     if (nil == _store)
     {
         // The user did not set a MXStore, use MXNoStore as default
@@ -869,6 +872,8 @@ typedef void (^MXOnResumeDone)(void);
 - (void)resume:(void (^)(void))resumeDone
 {
     NSLog(@"[MXSession] resume the event stream from state %tu", _state);
+    
+    [self handleSyncResponseIfRequired];
     
     if (self.backgroundTask.isRunning)
     {
@@ -1806,6 +1811,18 @@ typedef void (^MXOnResumeDone)(void);
     return roomsInSyncResponse;
 }
 
+- (void)handleSyncResponseIfRequired
+{
+    NSLog(@"[MXSession] handleSyncResponseIfRequired. state %tu", _state);
+    
+    SyncResponseFileStore *syncResponseStore = [[SyncResponseFileStore alloc] init];
+    [syncResponseStore openWithCredentials:self.credentials];
+    if (syncResponseStore.syncResponse)
+    {
+        [self handleSyncResponse:syncResponseStore.syncResponse];
+        [syncResponseStore deleteData];
+    }
+}
 
 #pragma mark - Options
 - (void)enableVoIPWithCallStack:(id<MXCallStack>)callStack
