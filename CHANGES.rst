@@ -8,12 +8,13 @@ Changes to be released in next version
  * Update GZIP to 1.3.0 (vector-im/element-ios/3570).
  * Update Realm to 5.4.8 (vector-im/element-ios/3570).
  * Update JitsiMeetSDK to 2.10.0 (vector-im/element-ios/3570).
+ * Introduce MXBackgroundSyncService and helper classes (vector-im/element-ios/issues/3579).
 
 🐛 Bugfix
  * 
 
 ⚠️ API Changes
- * 
+ * SwiftSupport subspec removed. Swift is default now.
 
 🗣 Translations
  * 
@@ -40,7 +41,7 @@ Changes in 0.16.19 (2020-10-14)
  * MXCrossSigning: Trust cross-signing because we locally trust the device that created it.
 
 ⚠️ API Changes
- * MXSession: backgroundSync now returns syncResponse on success (vector-im/element-ios/issues/3579). 
+ * 
 
 🗣 Translations
  * 
