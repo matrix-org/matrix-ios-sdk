@@ -20,6 +20,7 @@ Pod::Spec.new do |s|
   s.source       = { :git => "https://github.com/matrix-org/matrix-ios-sdk.git", :tag => "v#{s.version}" }
   
   s.requires_arc  = true
+  s.swift_versions = ['5.1', '5.2']
   
   s.ios.deployment_target = "9.0"
   s.osx.deployment_target = "10.10"
@@ -29,7 +30,7 @@ Pod::Spec.new do |s|
       ss.ios.deployment_target = "9.0"
       ss.osx.deployment_target = "10.10"
       
-      ss.source_files = "MatrixSDK", "MatrixSDK/**/*.{h,m}"
+      ss.source_files = "MatrixSDK", "MatrixSDK/**/*.{h,m}", "MatrixSDK/**/*.{swift}"
       
 
       ss.dependency 'AFNetworking', '~> 4.0.0'
@@ -58,10 +59,10 @@ Pod::Spec.new do |s|
 
   end
 
-  s.subspec 'SwiftSupport' do |ss|    
-    ss.source_files = "MatrixSDK", "MatrixSDK/**/*.{swift}"
-   
-    ss.dependency 'MatrixSDK/Core'      
-  end
+#  s.subspec 'SwiftSupport' do |ss|
+#    ss.source_files = "MatrixSDK", "MatrixSDK/**/*.{swift}"
+#
+#    ss.dependency 'MatrixSDK/Core'
+#  end
 
 end
