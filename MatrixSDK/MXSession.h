@@ -543,7 +543,7 @@ FOUNDATION_EXPORT NSString *const kMXSessionNoRoomTag;
  */
 - (void)resume:(void (^)(void))resumeDone;
 
-typedef void (^MXOnBackgroundSyncDone)(MXSyncResponse *syncResponse);
+typedef void (^MXOnBackgroundSyncDone)(void);
 typedef void (^MXOnBackgroundSyncFail)(NSError *error);
 
 /**
@@ -562,13 +562,11 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
  Perform an events stream catchup in background (by keeping user offline).
  
  @param timeout the max time in milliseconds to perform the catchup in client side
- @param serverTimeout the max time in milliseconds to perform the catchup in server side
  @param ignoreSessionState ignore session state to be equal to paused
  @param backgroundSyncDone A block called when the SDK has been successfully performed a catchup
  @param backgroundSyncfails A block called when the catchup fails.
  */
 - (void)backgroundSync:(unsigned int)timeout
-         serverTimeout:(unsigned int)serverTimeout
     ignoreSessionState:(BOOL)ignoreSessionState
                success:(MXOnBackgroundSyncDone)backgroundSyncDone
                failure:(MXOnBackgroundSyncFail)backgroundSyncfails NS_REFINED_FOR_SWIFT;
