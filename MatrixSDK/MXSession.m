@@ -405,18 +405,11 @@ typedef void (^MXOnResumeDone)(void);
 
 /// Handle a sync response and decide serverTimeout for the next sync request.
 /// @param syncResponse The sync response object
-/// @param isLive Is the sync response coming from a live request or from elsewhere
 /// @param completion Completion block to be called at the end of the process. Will be called on the caller thread.
-///     Returns with a nextServerTimeout, which can be used as server timeout value for future sync requests.
-///     If the value is `NSNotFound`, do not continue to sync requests. If not a live response, do not rely on nextServerTimeout value.
 - (void)handleSyncResponse:(MXSyncResponse *)syncResponse
-                    isLive:(BOOL)isLive
-                completion:(void (^)(NSUInteger nextServerTimeout))completion
+                completion:(void (^)(void))completion
 {
-    // By default, the next sync will be a long polling (with the default server timeout value)
-    NSUInteger nextServerTimeout = SERVER_TIMEOUT_MS;
-    
-    NSLog(@"[MXSession] Received %tu joined rooms, %tu invited rooms, %tu left rooms, %tu toDevice events. isLive: %d", syncResponse.rooms.join.count, syncResponse.rooms.invite.count, syncResponse.rooms.leave.count, syncResponse.toDevice.events.count, isLive);
+    NSLog(@"[MXSession] handleSyncResponse: Received %tu joined rooms, %tu invited rooms, %tu left rooms, %tu toDevice events.", syncResponse.rooms.join.count, syncResponse.rooms.invite.count, syncResponse.rooms.leave.count, syncResponse.toDevice.events.count);
 
     // Check whether this is the initial sync
     BOOL isInitialSync = !self.isEventStreamInitialised;
@@ -436,14 +429,6 @@ typedef void (^MXOnResumeDone)(void);
         [self handleToDeviceEvent:toDeviceEvent];
     }
     
-    if (self.catchingUp && syncResponse.toDevice.events.count)
-    {
-        // We may have not received all to-device events in a single /sync response
-        // Pursue /sync with short timeout
-        NSLog(@"[MXSession] Continue /sync with short timeout to get all to-device events (%@)", self.myUser.userId);
-        nextServerTimeout = 0;
-    }
-
     // Handle top-level account data
     if (syncResponse.accountData)
     {
@@ -608,90 +593,9 @@ typedef void (^MXOnResumeDone)(void);
             [self.store commit];
         }
         
-        if (isLive)
-        {
-            // Do a loop of /syncs until catching up is done
-            if (nextServerTimeout == 0)
-            {
-                if (completion)
-                {
-                    completion(nextServerTimeout);
-                }
-                return;
-            }
-            
-            // there is a pending backgroundSync
-            if (self->onBackgroundSyncDone)
-            {
-                NSLog(@"[MXSession] Events stream background Sync succeeded");
-
-                // Operations on session may occur during this block. For example, [MXSession close] may be triggered.
-                // We run a copy of the block to prevent app from crashing if the block is released by one of these operations.
-                MXOnBackgroundSyncDone onBackgroundSyncDoneCpy = [self->onBackgroundSyncDone copy];
-                onBackgroundSyncDoneCpy();
-                self->onBackgroundSyncDone = nil;
-
-                // check that the application was not resumed while catching up in background
-                if (self.state == MXSessionStateBackgroundSyncInProgress)
-                {
-                    // Check that none required the session to keep running
-                    if (self.preventPauseCount)
-                    {
-                        // Delay the pause by calling the reliable `pause` method.
-                        [self pause];
-                    }
-                    else
-                    {
-                        NSLog(@"[MXSession] go to paused ");
-                        self->eventStreamRequest = nil;
-                        [self setState:MXSessionStatePaused];
-                        return;
-                    }
-                }
-                else
-                {
-                    NSLog(@"[MXSession] resume after a background Sync");
-                }
-            }
-
-            // If we are resuming inform the app that it received the last uptodate data
-            if (self->onResumeDone)
-            {
-                NSLog(@"[MXSession] Events stream resumed");
-
-                // Operations on session may occur during this block. For example, [MXSession close] or [MXSession pause] may be triggered.
-                // We run a copy of the block to prevent app from crashing if the block is released by one of these operations.
-                MXOnResumeDone onResumeDoneCpy = [self->onResumeDone copy];
-                onResumeDoneCpy();
-                self->onResumeDone = nil;
-
-                // Stop here if [MXSession close] or [MXSession pause] has been triggered during onResumeDone block.
-                if (nil == self.myUser || self.state == MXSessionStatePaused)
-                {
-                    return;
-                }
-            }
-
-            if (self.state != MXSessionStatePauseRequested)
-            {
-                // The event stream is running by now
-                [self setState:MXSessionStateRunning];
-            }
-        }
-
-        // Check SDK user did not called [MXSession close] or [MXSession pause] during the session state change notification handling.
-        if (nil == self.myUser || self.state == MXSessionStatePaused)
-        {
-            if (completion)
-            {
-                completion(NSNotFound);
-            }
-            return;
-        }
-        
         if (completion)
         {
-            completion(nextServerTimeout);
+            completion();
         }
         
         if (wasfirstSync)
@@ -1295,20 +1199,97 @@ typedef void (^MXOnResumeDone)(void);
         NSTimeInterval duration = [[NSDate date] timeIntervalSinceDate:startDate];
         NSLog(@"[MXSession] Received sync response in %.0fms", duration * 1000);
         
-        [self handleSyncResponse:syncResponse isLive:YES completion:^(NSUInteger nextServerTimeout) {
-            if (nextServerTimeout == NSNotFound)
+        // By default, the next sync will be a long polling (with the default server timeout value)
+        NSUInteger nextServerTimeout = SERVER_TIMEOUT_MS;
+        
+        if (self.catchingUp && syncResponse.toDevice.events.count)
+        {
+            // We may have not received all to-device events in a single /sync response
+            // Pursue /sync with short timeout
+            NSLog(@"[MXSession] Continue /sync with short timeout to get all to-device events (%@)", self.myUser.userId);
+            nextServerTimeout = 0;
+        }
+        
+        [self handleSyncResponse:syncResponse completion:^{
+            
+            // Do a loop of /syncs until catching up is done
+            if (nextServerTimeout == 0)
+            {
+                // Pursue live events listening
+                [self serverSyncWithServerTimeout:nextServerTimeout success:success failure:failure clientTimeout:CLIENT_TIMEOUT_MS setPresence:nil];
+                return;
+            }
+            
+            // there is a pending backgroundSync
+            if (self->onBackgroundSyncDone)
+            {
+                NSLog(@"[MXSession] Events stream background Sync succeeded");
+
+                // Operations on session may occur during this block. For example, [MXSession close] may be triggered.
+                // We run a copy of the block to prevent app from crashing if the block is released by one of these operations.
+                MXOnBackgroundSyncDone onBackgroundSyncDoneCpy = [self->onBackgroundSyncDone copy];
+                onBackgroundSyncDoneCpy();
+                self->onBackgroundSyncDone = nil;
+
+                // check that the application was not resumed while catching up in background
+                if (self.state == MXSessionStateBackgroundSyncInProgress)
+                {
+                    // Check that none required the session to keep running
+                    if (self.preventPauseCount)
+                    {
+                        // Delay the pause by calling the reliable `pause` method.
+                        [self pause];
+                    }
+                    else
+                    {
+                        NSLog(@"[MXSession] go to paused ");
+                        self->eventStreamRequest = nil;
+                        [self setState:MXSessionStatePaused];
+                        return;
+                    }
+                }
+                else
+                {
+                    NSLog(@"[MXSession] resume after a background Sync");
+                }
+            }
+
+            // If we are resuming inform the app that it received the last uptodate data
+            if (self->onResumeDone)
+            {
+                NSLog(@"[MXSession] Events stream resumed");
+
+                // Operations on session may occur during this block. For example, [MXSession close] or [MXSession pause] may be triggered.
+                // We run a copy of the block to prevent app from crashing if the block is released by one of these operations.
+                MXOnResumeDone onResumeDoneCpy = [self->onResumeDone copy];
+                onResumeDoneCpy();
+                self->onResumeDone = nil;
+
+                // Stop here if [MXSession close] or [MXSession pause] has been triggered during onResumeDone block.
+                if (nil == self.myUser || self.state == MXSessionStatePaused)
+                {
+                    return;
+                }
+            }
+
+            if (self.state != MXSessionStatePauseRequested)
+            {
+                // The event stream is running by now
+                [self setState:MXSessionStateRunning];
+            }
+            
+            // Check SDK user did not called [MXSession close] or [MXSession pause] during the session state change notification handling.
+            if (nil == self.myUser || self.state == MXSessionStatePaused)
             {
                 return;
             }
-            else
+            
+            // Pursue live events listening
+            [self serverSyncWithServerTimeout:nextServerTimeout success:nil failure:nil clientTimeout:CLIENT_TIMEOUT_MS setPresence:nil];
+            
+            if (success)
             {
-                // Pursue live events listening
-                [self serverSyncWithServerTimeout:nextServerTimeout success:nil failure:nil clientTimeout:CLIENT_TIMEOUT_MS setPresence:nil];
-                
-                if (success)
-                {
-                    success();
-                }
+                success();
             }
         }];
     } failure:^(NSError *error) {
@@ -1658,8 +1639,7 @@ typedef void (^MXOnResumeDone)(void);
     if (syncResponseStore.syncResponse)
     {
         [self handleSyncResponse:syncResponseStore.syncResponse
-                          isLive:NO
-                      completion:^(NSUInteger nextServerTimeout) {
+                      completion:^{
             [syncResponseStore deleteData];
             
             if (completion)
