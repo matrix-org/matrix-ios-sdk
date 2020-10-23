@@ -404,6 +404,7 @@ typedef void (^MXOnResumeDone)(void);
 }
 
 - (void)handleSyncResponse:(MXSyncResponse *)syncResponse
+                completion:(void (^)(void))completion
 {
     NSLog(@"[MXSession] handleSyncResponse");
     
@@ -594,6 +595,10 @@ typedef void (^MXOnResumeDone)(void);
         // Check SDK user did not called [MXSession close] or [MXSession pause] during the session state change notification handling.
         if (nil == self.myUser || self.state == MXSessionStatePaused)
         {
+            if (completion)
+            {
+                completion();
+            }
             return;
         }
 
@@ -608,6 +613,11 @@ typedef void (^MXOnResumeDone)(void);
                                                           userInfo:@{
                                                                      kMXSessionNotificationSyncResponseKey: syncResponse
                                                                      }];
+        
+        if (completion)
+        {
+            completion();
+        }
     }];
 }
 
@@ -669,8 +679,13 @@ typedef void (^MXOnResumeDone)(void);
 
 - (void)startWithSyncFilterId:(NSString *)syncFilterId onServerSyncDone:(void (^)(void))onServerSyncDone failure:(void (^)(NSError *))failure
 {
-    [self handleSyncResponseIfRequired];
-    
+    [self handleSyncResponseIfRequiredWithCompletion:^{
+        [self _startWithSyncFilterId:syncFilterId onServerSyncDone:onServerSyncDone failure:failure];
+    }];
+}
+
+- (void)_startWithSyncFilterId:(NSString *)syncFilterId onServerSyncDone:(void (^)(void))onServerSyncDone failure:(void (^)(NSError *))failure
+{
     if (nil == _store)
     {
         // The user did not set a MXStore, use MXNoStore as default
@@ -871,9 +886,14 @@ typedef void (^MXOnResumeDone)(void);
 
 - (void)resume:(void (^)(void))resumeDone
 {
+    [self handleSyncResponseIfRequiredWithCompletion:^{
+        [self _resume:resumeDone];
+    }];
+}
+
+- (void)_resume:(void (^)(void))resumeDone
+{
     NSLog(@"[MXSession] resume the event stream from state %tu", _state);
-    
-    [self handleSyncResponseIfRequired];
     
     if (self.backgroundTask.isRunning)
     {
@@ -1811,7 +1831,7 @@ typedef void (^MXOnResumeDone)(void);
     return roomsInSyncResponse;
 }
 
-- (void)handleSyncResponseIfRequired
+- (void)handleSyncResponseIfRequiredWithCompletion:(void (^)(void))completion
 {
     NSLog(@"[MXSession] handleSyncResponseIfRequired. state %tu", _state);
     
@@ -1819,8 +1839,16 @@ typedef void (^MXOnResumeDone)(void);
     [syncResponseStore openWithCredentials:self.credentials];
     if (syncResponseStore.syncResponse)
     {
-        [self handleSyncResponse:syncResponseStore.syncResponse];
+        [self handleSyncResponse:syncResponseStore.syncResponse
+                      completion:completion];
         [syncResponseStore deleteData];
+    }
+    else
+    {
+        if (completion)
+        {
+            completion();
+        }
     }
 }
 
