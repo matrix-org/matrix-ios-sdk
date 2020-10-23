@@ -31,6 +31,10 @@ import Foundation
     ///   - roomId: Room identifier to be fetched.
     func event(withEventId eventId: String, inRoom roomId: String) -> MXEvent?
     
+    /// Fetch room summary for an invited room. Just uses the data in syncResponse to guess the room display name
+    /// - Parameter roomId: Room identifier to be fetched
+    func roomSummary(forRoomId roomId: String) -> MXRoomSummary?
+    
     /// Update the store data with the new sync response. Current data will be aggregated with the given response.
     /// - Parameter response: The new sync response.
     func update(with response: MXSyncResponse?)

@@ -128,6 +128,38 @@ extension SyncResponseFileStore: SyncResponseStore {
         return result
     }
     
+    public func roomSummary(forRoomId roomId: String) -> MXRoomSummary? {
+        guard let response = syncResponse else {
+            return nil
+        }
+        if let invitedRoomSync = response.rooms.invite[roomId],
+            let stateEvents = invitedRoomSync.inviteState?.events {
+            guard let summary = MXRoomSummary(roomId: roomId, andMatrixSession: nil) else {
+                return nil
+            }
+            for event in stateEvents {
+                switch event.eventType {
+                case .roomName:
+                    summary.displayname = event.content["name"] as? String
+                case .roomCanonicalAlias:
+                    if summary.displayname == nil {
+                        summary.displayname = event.content["alias"] as? String
+                        if summary.displayname == nil {
+                            summary.displayname = (event.content["alt_aliases"] as? [String])?.first
+                        }
+                    }
+                case .roomAliases:
+                    if summary.displayname == nil {
+                        summary.displayname = (event.content["aliases"] as? [String])?.first
+                    }
+                default: break
+                }
+            }
+            return summary
+        }
+        return nil
+    }
+    
     public func update(with response: MXSyncResponse?) {
         guard filePath != nil else {
             return
