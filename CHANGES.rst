@@ -13,7 +13,7 @@ Changes to be released in next version
  * 
 
 ⚠️ API Changes
- * 
+ * Xcode 12 is now mandatory for using the JingleCallStack sub pod.
 
 🗣 Translations
  * 
