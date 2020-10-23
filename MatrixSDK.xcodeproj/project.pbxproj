@@ -1143,6 +1143,8 @@
 		EC383BB72541C518002FBBE6 /* MXBackgroundPushRulesManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC383BB52540E15E002FBBE6 /* MXBackgroundPushRulesManager.swift */; };
 		EC383BB92542DC0D002FBBE6 /* NSArray.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC383BB82542DC0D002FBBE6 /* NSArray.swift */; };
 		EC383BBA2542DC23002FBBE6 /* NSArray.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC383BB82542DC0D002FBBE6 /* NSArray.swift */; };
+		EC383BBF2542F1E3002FBBE6 /* MXBackgroundSyncServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC383BBD2542F141002FBBE6 /* MXBackgroundSyncServiceTests.swift */; };
+		EC383BC02542F1E4002FBBE6 /* MXBackgroundSyncServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC383BBD2542F141002FBBE6 /* MXBackgroundSyncServiceTests.swift */; };
 		EC619D9224DD834B00663A80 /* MXPushGatewayRestClient.m in Sources */ = {isa = PBXBuildFile; fileRef = EC619D9024DD834B00663A80 /* MXPushGatewayRestClient.m */; };
 		EC619D9324DD834B00663A80 /* MXPushGatewayRestClient.h in Headers */ = {isa = PBXBuildFile; fileRef = EC619D9124DD834B00663A80 /* MXPushGatewayRestClient.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		ECAE7AEC24ED75F1002FA813 /* HTTPAdditionalHeadersTests.m in Sources */ = {isa = PBXBuildFile; fileRef = ECAE7AEB24ED75F1002FA813 /* HTTPAdditionalHeadersTests.m */; };
@@ -1801,6 +1803,8 @@
 		EC383BAE254062A7002FBBE6 /* MatrixSDKSwiftHeader.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MatrixSDKSwiftHeader.h; sourceTree = "<group>"; };
 		EC383BB52540E15E002FBBE6 /* MXBackgroundPushRulesManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXBackgroundPushRulesManager.swift; sourceTree = "<group>"; };
 		EC383BB82542DC0D002FBBE6 /* NSArray.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = NSArray.swift; path = Extensions/NSArray.swift; sourceTree = "<group>"; };
+		EC383BBD2542F141002FBBE6 /* MXBackgroundSyncServiceTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MXBackgroundSyncServiceTests.swift; sourceTree = "<group>"; };
+		EC383BC12542F251002FBBE6 /* MatrixSDKTests-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "MatrixSDKTests-Bridging-Header.h"; sourceTree = "<group>"; };
 		EC619D9024DD834B00663A80 /* MXPushGatewayRestClient.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXPushGatewayRestClient.m; sourceTree = "<group>"; };
 		EC619D9124DD834B00663A80 /* MXPushGatewayRestClient.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXPushGatewayRestClient.h; sourceTree = "<group>"; };
 		ECAE7AEB24ED75F1002FA813 /* HTTPAdditionalHeadersTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = HTTPAdditionalHeadersTests.m; sourceTree = "<group>"; };
@@ -2780,6 +2784,7 @@
 				32B0E3E323A384D40054FF1A /* MXAggregatedReferenceTests.m */,
 				327E9ACE2284783E00A98BC1 /* MXEventAnnotationTests.swift */,
 				32B0E3E623A3864C0054FF1A /* MXEventReferenceTests.swift */,
+				EC383BBD2542F141002FBBE6 /* MXBackgroundSyncServiceTests.swift */,
 				329E808E22512DF500A48C3A /* MXCryptoKeyVerificationTests.m */,
 				322D01C322492B0700150C68 /* MXCryptoShareTests.m */,
 				32720DA1222EB5650086FFF5 /* MXAutoDiscoveryTests.m */,
@@ -2828,6 +2833,7 @@
 				B146D4FC21A5C0BC00D8C2C6 /* MXEventScanStoreTests.m */,
 				32CEEF3C23AD134A0039BA98 /* MXCrossSigningTests.m */,
 				ECAE7AEB24ED75F1002FA813 /* HTTPAdditionalHeadersTests.m */,
+				EC383BC12542F251002FBBE6 /* MatrixSDKTests-Bridging-Header.h */,
 			);
 			path = MatrixSDKTests;
 			sourceTree = "<group>";
@@ -4338,6 +4344,7 @@
 				322D01C422492B0700150C68 /* MXCryptoShareTests.m in Sources */,
 				323EF7471C7CB4C7000DC98C /* MXEventTimelineTests.m in Sources */,
 				32E226A91D081CE200E6CA54 /* MXPeekingRoomTests.m in Sources */,
+				EC383BBF2542F1E3002FBBE6 /* MXBackgroundSyncServiceTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -4662,6 +4669,7 @@
 				B1E09A2F2397FD750057C069 /* MXErrorTests.m in Sources */,
 				B1E09A2A2397FD680057C069 /* MatrixSDKTestsData.m in Sources */,
 				B1E09A302397FD750057C069 /* MXHTTPClientTests.m in Sources */,
+				EC383BC02542F1E4002FBBE6 /* MXBackgroundSyncServiceTests.swift in Sources */,
 				321EA11E24893A0400E35B02 /* MXCryptoRecoveryServiceTests.m in Sources */,
 				B1E09A372397FD7D0057C069 /* MXRoomMemberTests.m in Sources */,
 				B1E09A2C2397FD6F0057C069 /* MXFilterTests.m in Sources */,
@@ -4881,7 +4889,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = "org.matrix.$(PRODUCT_NAME:rfc1034identifier)";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
-				SWIFT_OBJC_BRIDGING_HEADER = "";
+				SWIFT_OBJC_BRIDGING_HEADER = "$(SRCROOT)/MatrixSDKTests/MatrixSDKTests-Bridging-Header.h";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
 			};
@@ -4906,7 +4914,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = "org.matrix.$(PRODUCT_NAME:rfc1034identifier)";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
-				SWIFT_OBJC_BRIDGING_HEADER = "";
+				SWIFT_OBJC_BRIDGING_HEADER = "$(SRCROOT)/MatrixSDKTests/MatrixSDKTests-Bridging-Header.h";
 				SWIFT_VERSION = 5.0;
 			};
 			name = Release;
@@ -4996,6 +5004,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = "matrix.org.MatrixSDKTests-macOS";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = macosx;
+				SWIFT_OBJC_BRIDGING_HEADER = "$(SRCROOT)/MatrixSDKTests/MatrixSDKTests-Bridging-Header.h";
 			};
 			name = Debug;
 		};
@@ -5025,6 +5034,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = "matrix.org.MatrixSDKTests-macOS";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = macosx;
+				SWIFT_OBJC_BRIDGING_HEADER = "$(SRCROOT)/MatrixSDKTests/MatrixSDKTests-Bridging-Header.h";
 			};
 			name = Release;
 		};
