@@ -59,10 +59,4 @@ Pod::Spec.new do |s|
 
   end
 
-#  s.subspec 'SwiftSupport' do |ss|
-#    ss.source_files = "MatrixSDK", "MatrixSDK/**/*.{swift}"
-#
-#    ss.dependency 'MatrixSDK/Core'
-#  end
-
 end
