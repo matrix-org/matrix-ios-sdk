@@ -45,19 +45,3 @@ internal extension NSDictionary {
     }
 
 }
-
-internal extension NSArray {
-    
-    /// Merges two array.
-    /// - Parameters:
-    ///   - lhs: First operand
-    ///   - rhs: Second operand
-    /// - Returns: Merged array.
-    static func + (lhs: NSArray, rhs: NSArray) -> NSArray {
-        let array = NSMutableArray()
-        lhs.forEach { array.add($0) }
-        rhs.forEach { array.add($0) }
-        return array
-    }
-
-}

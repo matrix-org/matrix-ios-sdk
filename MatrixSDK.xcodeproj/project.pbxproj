@@ -1141,6 +1141,8 @@
 		EC383BB425406894002FBBE6 /* SyncResponseFileStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC383BA7253DE6EE002FBBE6 /* SyncResponseFileStore.swift */; };
 		EC383BB62540E15E002FBBE6 /* MXBackgroundPushRulesManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC383BB52540E15E002FBBE6 /* MXBackgroundPushRulesManager.swift */; };
 		EC383BB72541C518002FBBE6 /* MXBackgroundPushRulesManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC383BB52540E15E002FBBE6 /* MXBackgroundPushRulesManager.swift */; };
+		EC383BB92542DC0D002FBBE6 /* NSArray.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC383BB82542DC0D002FBBE6 /* NSArray.swift */; };
+		EC383BBA2542DC23002FBBE6 /* NSArray.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC383BB82542DC0D002FBBE6 /* NSArray.swift */; };
 		EC619D9224DD834B00663A80 /* MXPushGatewayRestClient.m in Sources */ = {isa = PBXBuildFile; fileRef = EC619D9024DD834B00663A80 /* MXPushGatewayRestClient.m */; };
 		EC619D9324DD834B00663A80 /* MXPushGatewayRestClient.h in Headers */ = {isa = PBXBuildFile; fileRef = EC619D9124DD834B00663A80 /* MXPushGatewayRestClient.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		ECAE7AEC24ED75F1002FA813 /* HTTPAdditionalHeadersTests.m in Sources */ = {isa = PBXBuildFile; fileRef = ECAE7AEB24ED75F1002FA813 /* HTTPAdditionalHeadersTests.m */; };
@@ -1798,6 +1800,7 @@
 		EC383BAB254030DF002FBBE6 /* MXBackgroundSyncMemoryStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXBackgroundSyncMemoryStore.swift; sourceTree = "<group>"; };
 		EC383BAE254062A7002FBBE6 /* MatrixSDKSwiftHeader.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MatrixSDKSwiftHeader.h; sourceTree = "<group>"; };
 		EC383BB52540E15E002FBBE6 /* MXBackgroundPushRulesManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXBackgroundPushRulesManager.swift; sourceTree = "<group>"; };
+		EC383BB82542DC0D002FBBE6 /* NSArray.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = NSArray.swift; path = Extensions/NSArray.swift; sourceTree = "<group>"; };
 		EC619D9024DD834B00663A80 /* MXPushGatewayRestClient.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXPushGatewayRestClient.m; sourceTree = "<group>"; };
 		EC619D9124DD834B00663A80 /* MXPushGatewayRestClient.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXPushGatewayRestClient.h; sourceTree = "<group>"; };
 		ECAE7AEB24ED75F1002FA813 /* HTTPAdditionalHeadersTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = HTTPAdditionalHeadersTests.m; sourceTree = "<group>"; };
@@ -3173,6 +3176,7 @@
 				EC383BB52540E15E002FBBE6 /* MXBackgroundPushRulesManager.swift */,
 				EC383BAB254030DF002FBBE6 /* MXBackgroundSyncMemoryStore.swift */,
 				EC383BA9253DE733002FBBE6 /* NSDictionary.swift */,
+				EC383BB82542DC0D002FBBE6 /* NSArray.swift */,
 				EC383BA3253DE6C0002FBBE6 /* Store */,
 			);
 			path = Background;
@@ -4022,6 +4026,7 @@
 				B146D4D921A5A44E00D8C2C6 /* MXScanRealmFileProvider.m in Sources */,
 				B146D50321A5C6D700D8C2C6 /* MXScanManager.m in Sources */,
 				F082946E1DB66C3D00CEAB63 /* MXInvite3PID.m in Sources */,
+				EC383BB92542DC0D002FBBE6 /* NSArray.swift in Sources */,
 				322360531A8E610500A3CA81 /* MXPushRuleDisplayNameCondtionChecker.m in Sources */,
 				32A31BC520D3FFB0005916C7 /* MXFilter.m in Sources */,
 				32B76EA520FDE85100B095F6 /* MXRoomMembersCount.m in Sources */,
@@ -4420,6 +4425,7 @@
 				B14EF2062397E90400758AF0 /* MXGroup.m in Sources */,
 				B14EF2072397E90400758AF0 /* MXAutoDiscovery.m in Sources */,
 				3297913123AA126500F7BB9B /* MXKeyVerificationStatusResolver.m in Sources */,
+				EC383BBA2542DC23002FBBE6 /* NSArray.swift in Sources */,
 				B14EF2082397E90400758AF0 /* MX3PidAddManager.m in Sources */,
 				B14EF2092397E90400758AF0 /* MXCallKitConfiguration.m in Sources */,
 				324DD2A9246AE81300377005 /* MXSecretStorageKeyContent.m in Sources */,
