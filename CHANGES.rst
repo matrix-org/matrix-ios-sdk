@@ -1,3 +1,32 @@
+Changes in 0.16.20 (2020-10-27)
+=================================================
+
+✨ Features
+ * 
+
+🙌 Improvements
+ * Update GZIP to 1.3.0 (vector-im/element-ios/3570).
+ * Update Realm to 5.4.8 (vector-im/element-ios/3570).
+ * Update JitsiMeetSDK to 2.10.0 (vector-im/element-ios/3570).
+
+🐛 Bugfix
+ * 
+
+⚠️ API Changes
+ * 
+
+🗣 Translations
+ * 
+    
+🧱 Build
+ * 
+
+Others
+ * 
+
+Improvements:
+
+
 Changes in 0.16.19 (2020-10-14)
 =================================================
 
