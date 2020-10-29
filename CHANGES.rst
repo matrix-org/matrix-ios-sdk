@@ -8,7 +8,7 @@ Changes to be released in next version
  * 
 
 🐛 Bugfix
- * 
+ * MXSession: Fix log for next stream token.
 
 ⚠️ API Changes
  * 
