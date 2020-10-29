@@ -1152,7 +1152,7 @@ typedef void (^MXOnResumeDone)(void);
 
 
             // Update live event stream token
-            NSLog(@"[MXSession] Next sync token: %@", streamToken);
+            NSLog(@"[MXSession] Next sync token: %@", syncResponse.nextBatch);
             self.store.eventStreamToken = syncResponse.nextBatch;
 
             // Commit store changes done in [room handleMessages]
