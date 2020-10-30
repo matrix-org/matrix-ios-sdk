@@ -9,9 +9,10 @@ Changes to be released in next version
 
 🐛 Bugfix
  * MXSession: Fix log for next stream token.
+ * Update JitsiMeetSDK to 2.10.0 (vector-im/element-ios/3712).
 
 ⚠️ API Changes
- * 
+ * Xcode 12 is now mandatory for using the JingleCallStack sub pod.
 
 🗣 Translations
  * 
