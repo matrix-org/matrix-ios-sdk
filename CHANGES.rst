@@ -9,6 +9,7 @@ Changes to be released in next version
 
 🐛 Bugfix
  * MXSession: Fix log for next stream token.
+ * MXThrottler: Dispatch the block on the correct queue. This will prevent unexpected loops (vector-im/element-ios/3778).
  * Update JitsiMeetSDK to 2.10.0 (vector-im/element-ios/3712).
 
 ⚠️ API Changes
