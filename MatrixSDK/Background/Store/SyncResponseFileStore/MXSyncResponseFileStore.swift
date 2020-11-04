@@ -20,7 +20,7 @@ import Foundation
 /// Sync response storage in a file implementation.
 public class MXSyncResponseFileStore: NSObject {
     
-    private enum MXSyncResponseFileStoreConstants {
+    private enum Constants {
         static let folderName = "SyncResponse"
         static let fileName = "syncResponse"
         static let fileEncoding: String.Encoding = .utf8
@@ -42,11 +42,11 @@ public class MXSyncResponseFileStore: NSObject {
         }
         
         filePath = cachePath
-            .appendingPathComponent(MXSyncResponseFileStoreConstants.folderName)
+            .appendingPathComponent(Constants.folderName)
             .appendingPathComponent(userId)
-            .appendingPathComponent(MXSyncResponseFileStoreConstants.fileName)
+            .appendingPathComponent(Constants.fileName)
         
-        MXSyncResponseFileStoreConstants.fileOperationQueue.async {
+        Constants.fileOperationQueue.async {
             try? FileManager.default.createDirectory(at: self.filePath.deletingLastPathComponent(),
                                                 withIntermediateDirectories: true,
                                                 attributes: nil)
@@ -59,9 +59,9 @@ public class MXSyncResponseFileStore: NSObject {
         }
         var fileContents: String?
         
-        MXSyncResponseFileStoreConstants.fileOperationQueue.sync {
+        Constants.fileOperationQueue.sync {
             fileContents = try? String(contentsOf: filePath,
-                                       encoding: MXSyncResponseFileStoreConstants.fileEncoding)
+                                       encoding: Constants.fileEncoding)
         }
         guard let jsonString = fileContents else {
             return nil
@@ -81,10 +81,10 @@ public class MXSyncResponseFileStore: NSObject {
             try? FileManager.default.removeItem(at: filePath)
             return
         }
-        MXSyncResponseFileStoreConstants.fileOperationQueue.async {
+        Constants.fileOperationQueue.async {
             try? syncResponse.jsonString()?.write(to: self.filePath,
                                                   atomically: true,
-                                                  encoding: MXSyncResponseFileStoreConstants.fileEncoding)
+                                                  encoding: Constants.fileEncoding)
         }
     }
     
