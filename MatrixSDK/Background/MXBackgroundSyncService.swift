@@ -24,7 +24,7 @@ public enum MXBackgroundSyncServiceError: Error {
 }
 
 /// This class can be used to sync in background, keeping the user offline. It does not initiate MXSession or MXCrypto instances.
-/// Sync results are written to a SyncResponseFileStore.
+/// Sync results are written to a MXSyncResponseFileStore.
 @objcMembers public class MXBackgroundSyncService: NSObject {
     
     private enum Queues {
@@ -39,7 +39,7 @@ public enum MXBackgroundSyncServiceError: Error {
     }
     
     private let credentials: MXCredentials
-    private let syncResponseStore: SyncResponseStore
+    private let syncResponseStore: MXSyncResponseStore
     private let store: MXStore
     private let cryptoStore: MXCryptoStore
     private let olmDevice: MXOlmDevice
@@ -53,7 +53,7 @@ public enum MXBackgroundSyncServiceError: Error {
     /// - Parameter credentials: account credentials
     public init(withCredentials credentials: MXCredentials) {
         self.credentials = credentials
-        syncResponseStore = SyncResponseFileStore()
+        syncResponseStore = MXSyncResponseFileStore()
         syncResponseStore.open(withCredentials: credentials)
         restClient = MXRestClient(credentials: credentials, unrecognizedCertificateHandler: nil)
         store = MXBackgroundStore(withCredentials: credentials)

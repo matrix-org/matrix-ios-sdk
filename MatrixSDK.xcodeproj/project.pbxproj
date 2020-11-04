@@ -1130,15 +1130,15 @@
 		C6F9358B1E5B3BE600FC34BF /* MXJSONModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = C6F935871E5B3BE600FC34BF /* MXJSONModels.swift */; };
 		C6FE1EF01E65C4F7008587E4 /* MXAnalyticsDelegate.h in Headers */ = {isa = PBXBuildFile; fileRef = C6FE1EEF1E65C4F7008587E4 /* MXAnalyticsDelegate.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		EC383BA2253DE4B1002FBBE6 /* MXBackgroundSyncService.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC383BA1253DE4B1002FBBE6 /* MXBackgroundSyncService.swift */; };
-		EC383BA5253DE6C9002FBBE6 /* SyncResponseStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC383BA4253DE6C9002FBBE6 /* SyncResponseStore.swift */; };
-		EC383BA8253DE6EE002FBBE6 /* SyncResponseFileStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC383BA7253DE6EE002FBBE6 /* SyncResponseFileStore.swift */; };
+		EC383BA5253DE6C9002FBBE6 /* MXSyncResponseStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC383BA4253DE6C9002FBBE6 /* MXSyncResponseStore.swift */; };
+		EC383BA8253DE6EE002FBBE6 /* MXSyncResponseFileStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC383BA7253DE6EE002FBBE6 /* MXSyncResponseFileStore.swift */; };
 		EC383BAA253DE733002FBBE6 /* NSDictionary.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC383BA9253DE733002FBBE6 /* NSDictionary.swift */; };
 		EC383BAC254030DF002FBBE6 /* MXBackgroundStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC383BAB254030DF002FBBE6 /* MXBackgroundStore.swift */; };
 		EC383BB025406887002FBBE6 /* NSDictionary.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC383BA9253DE733002FBBE6 /* NSDictionary.swift */; };
 		EC383BB12540688B002FBBE6 /* MXBackgroundSyncService.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC383BA1253DE4B1002FBBE6 /* MXBackgroundSyncService.swift */; };
 		EC383BB22540688E002FBBE6 /* MXBackgroundStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC383BAB254030DF002FBBE6 /* MXBackgroundStore.swift */; };
-		EC383BB325406892002FBBE6 /* SyncResponseStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC383BA4253DE6C9002FBBE6 /* SyncResponseStore.swift */; };
-		EC383BB425406894002FBBE6 /* SyncResponseFileStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC383BA7253DE6EE002FBBE6 /* SyncResponseFileStore.swift */; };
+		EC383BB325406892002FBBE6 /* MXSyncResponseStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC383BA4253DE6C9002FBBE6 /* MXSyncResponseStore.swift */; };
+		EC383BB425406894002FBBE6 /* MXSyncResponseFileStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC383BA7253DE6EE002FBBE6 /* MXSyncResponseFileStore.swift */; };
 		EC383BB62540E15E002FBBE6 /* MXBackgroundPushRulesManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC383BB52540E15E002FBBE6 /* MXBackgroundPushRulesManager.swift */; };
 		EC383BB72541C518002FBBE6 /* MXBackgroundPushRulesManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC383BB52540E15E002FBBE6 /* MXBackgroundPushRulesManager.swift */; };
 		EC383BB92542DC0D002FBBE6 /* NSArray.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC383BB82542DC0D002FBBE6 /* NSArray.swift */; };
@@ -1796,8 +1796,8 @@
 		DCDFA3ABCED99811646ED8B6 /* Pods-SDK-MatrixSDK-iOS.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-SDK-MatrixSDK-iOS.release.xcconfig"; path = "Target Support Files/Pods-SDK-MatrixSDK-iOS/Pods-SDK-MatrixSDK-iOS.release.xcconfig"; sourceTree = "<group>"; };
 		E9B11A2D50665ADBB4B2F5C5 /* Pods-MatrixSDK-MatrixSDK-iOS.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-MatrixSDK-MatrixSDK-iOS.release.xcconfig"; path = "Target Support Files/Pods-MatrixSDK-MatrixSDK-iOS/Pods-MatrixSDK-MatrixSDK-iOS.release.xcconfig"; sourceTree = "<group>"; };
 		EC383BA1253DE4B1002FBBE6 /* MXBackgroundSyncService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXBackgroundSyncService.swift; sourceTree = "<group>"; };
-		EC383BA4253DE6C9002FBBE6 /* SyncResponseStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncResponseStore.swift; sourceTree = "<group>"; };
-		EC383BA7253DE6EE002FBBE6 /* SyncResponseFileStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncResponseFileStore.swift; sourceTree = "<group>"; };
+		EC383BA4253DE6C9002FBBE6 /* MXSyncResponseStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXSyncResponseStore.swift; sourceTree = "<group>"; };
+		EC383BA7253DE6EE002FBBE6 /* MXSyncResponseFileStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXSyncResponseFileStore.swift; sourceTree = "<group>"; };
 		EC383BA9253DE733002FBBE6 /* NSDictionary.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = NSDictionary.swift; path = Extensions/NSDictionary.swift; sourceTree = "<group>"; };
 		EC383BAB254030DF002FBBE6 /* MXBackgroundStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXBackgroundStore.swift; sourceTree = "<group>"; };
 		EC383BAE254062A7002FBBE6 /* MatrixSDKSwiftHeader.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MatrixSDKSwiftHeader.h; sourceTree = "<group>"; };
@@ -3191,7 +3191,7 @@
 		EC383BA3253DE6C0002FBBE6 /* Store */ = {
 			isa = PBXGroup;
 			children = (
-				EC383BA4253DE6C9002FBBE6 /* SyncResponseStore.swift */,
+				EC383BA4253DE6C9002FBBE6 /* MXSyncResponseStore.swift */,
 				EC383BA6253DE6E7002FBBE6 /* SyncResponseFileStore */,
 			);
 			path = Store;
@@ -3200,7 +3200,7 @@
 		EC383BA6253DE6E7002FBBE6 /* SyncResponseFileStore */ = {
 			isa = PBXGroup;
 			children = (
-				EC383BA7253DE6EE002FBBE6 /* SyncResponseFileStore.swift */,
+				EC383BA7253DE6EE002FBBE6 /* MXSyncResponseFileStore.swift */,
 			);
 			path = SyncResponseFileStore;
 			sourceTree = "<group>";
@@ -4142,7 +4142,7 @@
 				32581DEA23C8C0C900832EAA /* MXUserTrustLevel.m in Sources */,
 				3271878A1DA7DCE50071C818 /* MXOlmEncryption.m in Sources */,
 				327187861DA7D0220071C818 /* MXOlmDecryption.m in Sources */,
-				EC383BA8253DE6EE002FBBE6 /* SyncResponseFileStore.swift in Sources */,
+				EC383BA8253DE6EE002FBBE6 /* MXSyncResponseFileStore.swift in Sources */,
 				32114A901A262ECB00FF2EC4 /* MXNoStore.m in Sources */,
 				B19A30C02404268600FB6F35 /* MXQRCodeDataCoder.m in Sources */,
 				3297913023AA126500F7BB9B /* MXKeyVerificationStatusResolver.m in Sources */,
@@ -4161,7 +4161,7 @@
 				3274538C23FD918800438328 /* MXKeyVerificationByToDeviceRequest.m in Sources */,
 				B19A30A0240424BD00FB6F35 /* MXQRCodeTransaction.m in Sources */,
 				C63E78B01F26588000AC692F /* MXRoomPowerLevels.swift in Sources */,
-				EC383BA5253DE6C9002FBBE6 /* SyncResponseStore.swift in Sources */,
+				EC383BA5253DE6C9002FBBE6 /* MXSyncResponseStore.swift in Sources */,
 				32CEEF4523AD2A6C0039BA98 /* MXCrossSigningKey.m in Sources */,
 				327E9AF02289C61100A98BC1 /* MXAggregations.m in Sources */,
 				3252DCAF224BE5D40032264F /* MXKeyVerificationManager.m in Sources */,
@@ -4463,7 +4463,7 @@
 				B14EF21F2397E90400758AF0 /* MXMyUser.m in Sources */,
 				B14EF2202397E90400758AF0 /* (null) in Sources */,
 				B14EF2212397E90400758AF0 /* MX3PID.swift in Sources */,
-				EC383BB325406892002FBBE6 /* SyncResponseStore.swift in Sources */,
+				EC383BB325406892002FBBE6 /* MXSyncResponseStore.swift in Sources */,
 				B14EF2222397E90400758AF0 /* MXMediaScan.m in Sources */,
 				B14EF2232397E90400758AF0 /* MXEvent.swift in Sources */,
 				B14EF2242397E90400758AF0 /* MXEventScan.m in Sources */,
@@ -4528,7 +4528,7 @@
 				32B0E34223A378320054FF1A /* MXEventReference.m in Sources */,
 				B14EF2552397E90400758AF0 /* MXWellKnownBaseConfig.m in Sources */,
 				B14EF2562397E90400758AF0 /* MXLogger.m in Sources */,
-				EC383BB425406894002FBBE6 /* SyncResponseFileStore.swift in Sources */,
+				EC383BB425406894002FBBE6 /* MXSyncResponseFileStore.swift in Sources */,
 				B14EF2572397E90400758AF0 /* MXMegolmExportEncryption.m in Sources */,
 				B14EF2582397E90400758AF0 /* MXFilterObject.m in Sources */,
 				B14EF2592397E90400758AF0 /* MXHTTPClient.m in Sources */,

@@ -17,7 +17,7 @@
 import Foundation
 
 /// Protocol defining the storage for a sync response.
-@objc public protocol SyncResponseStore: NSObjectProtocol {
+@objc public protocol MXSyncResponseStore: NSObjectProtocol {
     /// Open the store with the given credentials
     /// - Parameter credentials: Credentials
     func open(withCredentials credentials: MXCredentials)

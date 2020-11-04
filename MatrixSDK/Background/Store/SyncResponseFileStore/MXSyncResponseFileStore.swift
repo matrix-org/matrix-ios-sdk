@@ -18,13 +18,13 @@ import Foundation
 
 @objcMembers
 /// Sync response storage in a file implementation.
-public class SyncResponseFileStore: NSObject {
+public class MXSyncResponseFileStore: NSObject {
     
-    private enum SyncResponseFileStoreConstants {
+    private enum MXSyncResponseFileStoreConstants {
         static let folderName = "SyncResponse"
         static let fileName = "syncResponse"
         static let fileEncoding: String.Encoding = .utf8
-        static let fileOperationQueue: DispatchQueue = DispatchQueue(label: "SyncResponseFileStoreQueue")
+        static let fileOperationQueue: DispatchQueue = DispatchQueue(label: "MXSyncResponseFileStoreQueue")
     }
     private var filePath: URL!
     private var credentials: MXCredentials!
@@ -42,11 +42,11 @@ public class SyncResponseFileStore: NSObject {
         }
         
         filePath = cachePath
-            .appendingPathComponent(SyncResponseFileStoreConstants.folderName)
+            .appendingPathComponent(MXSyncResponseFileStoreConstants.folderName)
             .appendingPathComponent(userId)
-            .appendingPathComponent(SyncResponseFileStoreConstants.fileName)
+            .appendingPathComponent(MXSyncResponseFileStoreConstants.fileName)
         
-        SyncResponseFileStoreConstants.fileOperationQueue.async {
+        MXSyncResponseFileStoreConstants.fileOperationQueue.async {
             try? FileManager.default.createDirectory(at: self.filePath.deletingLastPathComponent(),
                                                 withIntermediateDirectories: true,
                                                 attributes: nil)
@@ -59,9 +59,9 @@ public class SyncResponseFileStore: NSObject {
         }
         var fileContents: String?
         
-        SyncResponseFileStoreConstants.fileOperationQueue.sync {
+        MXSyncResponseFileStoreConstants.fileOperationQueue.sync {
             fileContents = try? String(contentsOf: filePath,
-                                       encoding: SyncResponseFileStoreConstants.fileEncoding)
+                                       encoding: MXSyncResponseFileStoreConstants.fileEncoding)
         }
         guard let jsonString = fileContents else {
             return nil
@@ -81,18 +81,18 @@ public class SyncResponseFileStore: NSObject {
             try? FileManager.default.removeItem(at: filePath)
             return
         }
-        SyncResponseFileStoreConstants.fileOperationQueue.async {
+        MXSyncResponseFileStoreConstants.fileOperationQueue.async {
             try? syncResponse.jsonString()?.write(to: self.filePath,
                                                   atomically: true,
-                                                  encoding: SyncResponseFileStoreConstants.fileEncoding)
+                                                  encoding: MXSyncResponseFileStoreConstants.fileEncoding)
         }
     }
     
 }
 
-//  MARK: - SyncResponseStore
+//  MARK: - MXSyncResponseStore
 
-extension SyncResponseFileStore: SyncResponseStore {
+extension MXSyncResponseFileStore: MXSyncResponseStore {
     
     public func open(withCredentials credentials: MXCredentials) {
         self.credentials = credentials

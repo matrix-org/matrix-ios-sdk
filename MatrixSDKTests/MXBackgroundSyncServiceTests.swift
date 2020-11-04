@@ -70,7 +70,7 @@ class MXBackgroundSyncServiceTests: XCTestCase {
                             
                             XCTAssertNil(bobStore.event(withEventId: eventId, inRoom: roomId), "Event should not be in store yet")
                             
-                            let syncResponseStore = SyncResponseFileStore()
+                            let syncResponseStore = MXSyncResponseFileStore()
                             syncResponseStore.open(withCredentials: bobCredentials)
                             XCTAssertNotNil(syncResponseStore.event(withEventId: eventId, inRoom: roomId), "Event should be stored in sync response store")
                             
@@ -134,7 +134,7 @@ class MXBackgroundSyncServiceTests: XCTestCase {
                             
                             XCTAssertNil(bobStore.event(withEventId: eventId, inRoom: roomId), "Event should not be in session store yet")
                             
-                            let syncResponseStore = SyncResponseFileStore()
+                            let syncResponseStore = MXSyncResponseFileStore()
                             syncResponseStore.open(withCredentials: bobCredentials)
                             XCTAssertNotNil(syncResponseStore.event(withEventId: eventId, inRoom: roomId), "Event should be stored in sync response store")
                             

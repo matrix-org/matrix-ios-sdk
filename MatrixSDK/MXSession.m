@@ -1634,7 +1634,7 @@ typedef void (^MXOnResumeDone)(void);
 {
     NSLog(@"[MXSession] handleSyncResponseIfRequired. state %tu", _state);
     
-    SyncResponseFileStore *syncResponseStore = [[SyncResponseFileStore alloc] init];
+    MXSyncResponseFileStore *syncResponseStore = [[MXSyncResponseFileStore alloc] init];
     [syncResponseStore openWithCredentials:self.credentials];
     if (syncResponseStore.syncResponse)
     {
