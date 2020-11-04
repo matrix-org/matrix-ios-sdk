@@ -231,6 +231,8 @@ public enum MXBackgroundSyncServiceError: Error {
             return
         }
         
+        NSLog("[MXBackgroundSyncService] launchBackgroundSync: start")
+        
         restClient.sync(fromToken: eventStreamToken,
                         serverTimeout: Constants.syncRequestServerTimout,
                         clientTimeout: Constants.syncRequestClientTimout,
@@ -248,7 +250,9 @@ public enum MXBackgroundSyncServiceError: Error {
 
                 self.handleSyncResponse(syncResponse)
                 
-                if let event = self.syncResponseStore.event(withEventId: eventId, inRoom: roomId), !self.canDecryptEvent(event) {
+                if let event = self.syncResponseStore.event(withEventId: eventId, inRoom: roomId),
+                    !self.canDecryptEvent(event),
+                    (syncResponse.toDevice?.events ?? []).count > 0 {
                     //  we got the event but not the keys to decrypt it. continue to sync
                     self.launchBackgroundSync(forEventId: eventId, roomId: roomId, completion: completion)
                 } else {
