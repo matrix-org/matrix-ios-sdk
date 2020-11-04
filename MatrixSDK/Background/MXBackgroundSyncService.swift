@@ -222,6 +222,7 @@ public enum MXBackgroundSyncServiceError: Error {
                                       roomId: String,
                                       completion: @escaping (MXResponse<MXEvent>) -> Void) {
         guard let eventStreamToken = store.eventStreamToken else {
+            NSLog("[MXBackgroundSyncService] launchBackgroundSync: Do not sync because event streaming not started yet.")
             Queues.dispatchQueue.async {
                 completion(.failure(MXBackgroundSyncServiceError.unknown))
             }
