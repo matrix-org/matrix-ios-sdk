@@ -386,7 +386,7 @@ public enum MXBackgroundSyncServiceError: Error {
     
     private func handleSyncResponse(_ syncResponse: MXSyncResponse) {
         self.pushRulesManager.handleAccountData(syncResponse.accountData)
-        self.syncResponseStore.update(with: syncResponse)
+        self.updateStore(with: syncResponse)
         
         for event in syncResponse.toDevice?.events ?? [] {
             handleToDeviceEvent(event)
@@ -394,6 +394,18 @@ public enum MXBackgroundSyncServiceError: Error {
         
         //  update event stream token
         self.store.eventStreamToken = syncResponse.nextBatch
+    }
+    
+    private func updateStore(with response: MXSyncResponse) {
+        if let syncResponse = syncResponseStore.syncResponse {
+            //  current sync response exists, merge it with the new response
+            var dictionary = NSDictionary(dictionary: syncResponse.jsonDictionary())
+            dictionary = dictionary + NSDictionary(dictionary: response.jsonDictionary())
+            syncResponseStore.syncResponse = MXSyncResponse(fromJSON: dictionary as? [AnyHashable : Any])
+        } else {
+            //  no current sync response, directly save the new one
+            syncResponseStore.syncResponse = response
+        }
     }
     
     private func handleToDeviceEvent(_ event: MXEvent) {

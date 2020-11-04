@@ -23,7 +23,7 @@ import Foundation
     func open(withCredentials credentials: MXCredentials)
     
     /// Sync response object, currently stored in the store
-    var syncResponse: MXSyncResponse? { get }
+    var syncResponse: MXSyncResponse? { get set }
     
     /// Fetch event in the store
     /// - Parameters:
@@ -34,10 +34,6 @@ import Foundation
     /// Fetch room summary for an invited room. Just uses the data in syncResponse to guess the room display name
     /// - Parameter roomId: Room identifier to be fetched
     func roomSummary(forRoomId roomId: String) -> MXRoomSummary?
-    
-    /// Update the store data with the new sync response. Current data will be aggregated with the given response.
-    /// - Parameter response: The new sync response.
-    func update(with response: MXSyncResponse?)
     
     /// Delete all data in the store
     func deleteData()

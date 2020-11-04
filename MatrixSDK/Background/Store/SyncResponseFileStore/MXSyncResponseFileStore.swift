@@ -113,7 +113,11 @@ extension MXSyncResponseFileStore: MXSyncResponseStore {
     }
     
     public var syncResponse: MXSyncResponse? {
-        return readSyncResponse()
+        get {
+            return readSyncResponse()
+        } set {
+            saveSyncResponse(newValue)
+        }
     }
     
     public func event(withEventId eventId: String, inRoom roomId: String) -> MXEvent? {
@@ -171,26 +175,6 @@ extension MXSyncResponseFileStore: MXSyncResponseStore {
             return summary
         }
         return nil
-    }
-    
-    public func update(with response: MXSyncResponse?) {
-        guard filePath != nil else {
-            return
-        }
-        
-        guard let response = response else {
-            //  Return if no new response
-            return
-        }
-        if let syncResponse = syncResponse {
-            //  current sync response exists, merge it with the new response
-            var dictionary = NSDictionary(dictionary: syncResponse.jsonDictionary())
-            dictionary = dictionary + NSDictionary(dictionary: response.jsonDictionary())
-            saveSyncResponse(MXSyncResponse(fromJSON: dictionary as? [AnyHashable : Any]))
-        } else {
-            //  no current sync response, directly save the new one
-            saveSyncResponse(response)
-        }
     }
     
     public func deleteData() {
