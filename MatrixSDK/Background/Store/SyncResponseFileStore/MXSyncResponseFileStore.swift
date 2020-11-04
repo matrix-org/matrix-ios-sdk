@@ -57,11 +57,15 @@ public class MXSyncResponseFileStore: NSObject {
         guard let filePath = filePath else {
             return nil
         }
+        
+        let stopwatch = Stopwatch()
+        
         var fileContents: String?
         
         Constants.fileOperationQueue.sync {
             fileContents = try? String(contentsOf: filePath,
                                        encoding: Constants.fileEncoding)
+            NSLog("[MXSyncResponseFileStore] readSyncResponse: File read lasted \(stopwatch.readable())")
         }
         guard let jsonString = fileContents else {
             return nil
@@ -77,14 +81,18 @@ public class MXSyncResponseFileStore: NSObject {
             return
         }
         
+        let stopwatch = Stopwatch()
+        
         guard let syncResponse = syncResponse else {
             try? FileManager.default.removeItem(at: filePath)
+            NSLog("[MXSyncResponseFileStore] saveSyncResponse: File remove lasted \(stopwatch.readable())")
             return
         }
         Constants.fileOperationQueue.async {
             try? syncResponse.jsonString()?.write(to: self.filePath,
                                                   atomically: true,
                                                   encoding: Constants.fileEncoding)
+            NSLog("[MXSyncResponseFileStore] saveSyncResponse: File write lasted \(stopwatch.readable())")
         }
     }
     
