@@ -24,10 +24,15 @@ public class MXSyncResponseFileStore: NSObject {
         static let folderName = "SyncResponse"
         static let fileName = "syncResponse"
         static let fileEncoding: String.Encoding = .utf8
-        static let fileOperationQueue: DispatchQueue = DispatchQueue(label: "MXSyncResponseFileStoreQueue")
     }
+    
+    private let fileOperationQueue: DispatchQueue
     private var filePath: URL!
     private var credentials: MXCredentials!
+    
+    public override init() {
+        fileOperationQueue = DispatchQueue(label: "MXSyncResponseFileStore-" + MXTools.generateSecret())
+    }
     
     private func setupFilePath() {
         guard let userId = credentials.userId else {
@@ -46,10 +51,10 @@ public class MXSyncResponseFileStore: NSObject {
             .appendingPathComponent(userId)
             .appendingPathComponent(Constants.fileName)
         
-        Constants.fileOperationQueue.async {
+        fileOperationQueue.async {
             try? FileManager.default.createDirectory(at: self.filePath.deletingLastPathComponent(),
-                                                withIntermediateDirectories: true,
-                                                attributes: nil)
+                                                     withIntermediateDirectories: true,
+                                                     attributes: nil)
         }
     }
     
@@ -62,7 +67,7 @@ public class MXSyncResponseFileStore: NSObject {
         
         var fileContents: String?
         
-        Constants.fileOperationQueue.sync {
+        fileOperationQueue.sync {
             fileContents = try? String(contentsOf: filePath,
                                        encoding: Constants.fileEncoding)
             NSLog("[MXSyncResponseFileStore] readSyncResponse: File read lasted \(stopwatch.readable())")
@@ -88,7 +93,7 @@ public class MXSyncResponseFileStore: NSObject {
             NSLog("[MXSyncResponseFileStore] saveSyncResponse: File remove lasted \(stopwatch.readable())")
             return
         }
-        Constants.fileOperationQueue.async {
+        fileOperationQueue.async {
             try? syncResponse.jsonString()?.write(to: self.filePath,
                                                   atomically: true,
                                                   encoding: Constants.fileEncoding)
