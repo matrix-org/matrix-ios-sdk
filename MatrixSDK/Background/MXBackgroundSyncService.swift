@@ -28,7 +28,6 @@ public enum MXBackgroundSyncServiceError: Error {
 @objcMembers public class MXBackgroundSyncService: NSObject {
     
     private enum Queues {
-        static let processingQueue: DispatchQueue = DispatchQueue(label: "MXBackgroundSyncServiceQueue")
         static let dispatchQueue: DispatchQueue = .main
     }
     
@@ -38,6 +37,7 @@ public enum MXBackgroundSyncServiceError: Error {
         static let syncRequestPresence: String = "offline"
     }
     
+    private let processingQueue: DispatchQueue
     private let credentials: MXCredentials
     private let syncResponseStore: MXSyncResponseStore
     private let store: MXStore
@@ -52,10 +52,12 @@ public enum MXBackgroundSyncServiceError: Error {
     /// Initializer
     /// - Parameter credentials: account credentials
     public init(withCredentials credentials: MXCredentials) {
+        processingQueue = DispatchQueue(label: "MXBackgroundSyncServiceQueue-" + MXTools.generateSecret())
         self.credentials = credentials
         syncResponseStore = MXSyncResponseFileStore()
         syncResponseStore.open(withCredentials: credentials)
         restClient = MXRestClient(credentials: credentials, unrecognizedCertificateHandler: nil)
+        restClient.completionQueue = processingQueue
         store = MXBackgroundStore(withCredentials: credentials)
         store.open(with: credentials, onComplete: nil, failure: nil)
         if MXRealmCryptoStore.hasData(for: credentials) {
@@ -76,7 +78,7 @@ public enum MXBackgroundSyncServiceError: Error {
     public func event(withEventId eventId: String,
                       inRoom roomId: String,
                       completion: @escaping (MXResponse<MXEvent>) -> Void) {
-        Queues.processingQueue.async {
+        processingQueue.async {
             self._event(withEventId: eventId, inRoom: roomId, completion: completion)
         }
     }
@@ -248,14 +250,10 @@ public enum MXBackgroundSyncServiceError: Error {
                 
                 if let event = self.syncResponseStore.event(withEventId: eventId, inRoom: roomId), !self.canDecryptEvent(event) {
                     //  we got the event but not the keys to decrypt it. continue to sync
-                    Queues.processingQueue.async {
-                        self.launchBackgroundSync(forEventId: eventId, roomId: roomId, completion: completion)
-                    }
+                    self.launchBackgroundSync(forEventId: eventId, roomId: roomId, completion: completion)
                 } else {
                     //  do not allow to sync anymore
-                    Queues.processingQueue.async {
-                        self._event(withEventId: eventId, inRoom: roomId, allowSync: false, completion: completion)
-                    }
+                    self._event(withEventId: eventId, inRoom: roomId, allowSync: false, completion: completion)
                 }
             case .failure(let error):
                 guard let _ = self else {
