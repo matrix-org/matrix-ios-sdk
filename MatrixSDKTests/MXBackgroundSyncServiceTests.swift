@@ -74,7 +74,14 @@ class MXBackgroundSyncServiceTests: XCTestCase {
                             syncResponseStore.open(withCredentials: bobCredentials)
                             XCTAssertNotNil(syncResponseStore.event(withEventId: eventId, inRoom: roomId), "Event should be stored in sync response store")
                             
-                            expectation?.fulfill()
+                            let newBobSession = MXSession(matrixRestClient: MXRestClient(credentials: bobCredentials, unrecognizedCertificateHandler: nil))
+                            newBobSession?.setStore(bobStore, completion: { (_) in
+                                newBobSession?.start(withSyncFilterId: bobStore.syncFilterId, completion: { (_) in
+                                    XCTAssertNil(syncResponseStore.event(withEventId: eventId, inRoom: roomId), "Event should not be stored in sync response store anymore")
+                                    XCTAssertNotNil(bobStore.event(withEventId: eventId, inRoom: roomId), "Event should be in session store anymore")
+                                    expectation?.fulfill()
+                                })
+                            })
                         case .failure(let error):
                             XCTFail("Cannot fetch the event from background sync service - error: \(error)")
                             expectation?.fulfill()
@@ -138,7 +145,14 @@ class MXBackgroundSyncServiceTests: XCTestCase {
                             syncResponseStore.open(withCredentials: bobCredentials)
                             XCTAssertNotNil(syncResponseStore.event(withEventId: eventId, inRoom: roomId), "Event should be stored in sync response store")
                             
-                            expectation?.fulfill()
+                            let newBobSession = MXSession(matrixRestClient: MXRestClient(credentials: bobCredentials, unrecognizedCertificateHandler: nil))
+                            newBobSession?.setStore(bobStore, completion: { (_) in
+                                newBobSession?.start(withSyncFilterId: bobStore.syncFilterId, completion: { (_) in
+                                    XCTAssertNil(syncResponseStore.event(withEventId: eventId, inRoom: roomId), "Event should not be stored in sync response store anymore")
+                                    XCTAssertNotNil(bobStore.event(withEventId: eventId, inRoom: roomId), "Event should be in session store anymore")
+                                    expectation?.fulfill()
+                                })
+                            })
                         case .failure(let error):
                             XCTFail("Cannot fetch the event from background sync service - error: \(error)")
                             expectation?.fulfill()
