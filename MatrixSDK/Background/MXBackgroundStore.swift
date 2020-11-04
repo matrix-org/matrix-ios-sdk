@@ -17,15 +17,15 @@
 import Foundation
 
 //  error domain
-let MXBackgroundSyncMemoryStoreErrorDomain: String = "MXBackgroundSyncMemoryStoreErrorDomain"
+let MXBackgroundStoreErrorDomain: String = "MXBackgroundStoreErrorDomain"
 
 //  error codes
-enum MXBackgroundSyncMemoryStoreErrorCode: Int {
+enum MXBackgroundStoreErrorCode: Int {
     case userIDMissing = 1001   // User ID is missing in credentials
 }
 
 /// Fake memory store implementation. Uses some real values from an MXFileStore instance.
-class MXBackgroundSyncMemoryStore: MXMemoryStore {
+class MXBackgroundStore: MXMemoryStore {
 
     //  In-memory value for eventStreamToken. Will be used as eventStreamToken if provided.
     private var lastStoredEventStreamToken: String?
@@ -44,8 +44,8 @@ class MXBackgroundSyncMemoryStore: MXMemoryStore {
     override func open(with credentials: MXCredentials, onComplete: (() -> Void)?, failure: ((Error?) -> Void)? = nil) {
         super.open(with: credentials, onComplete: {
             guard let userId = credentials.userId else {
-                failure?(NSError(domain: MXBackgroundSyncMemoryStoreErrorDomain,
-                                 code: MXBackgroundSyncMemoryStoreErrorCode.userIDMissing.rawValue,
+                failure?(NSError(domain: MXBackgroundStoreErrorDomain,
+                                 code: MXBackgroundStoreErrorCode.userIDMissing.rawValue,
                                  userInfo: nil))
                 return
             }

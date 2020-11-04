@@ -56,7 +56,7 @@ public enum MXBackgroundSyncServiceError: Error {
         syncResponseStore = SyncResponseFileStore()
         syncResponseStore.open(withCredentials: credentials)
         restClient = MXRestClient(credentials: credentials, unrecognizedCertificateHandler: nil)
-        store = MXBackgroundSyncMemoryStore(withCredentials: credentials)
+        store = MXBackgroundStore(withCredentials: credentials)
         store.open(with: credentials, onComplete: nil, failure: nil)
         if MXRealmCryptoStore.hasData(for: credentials) {
             cryptoStore = MXRealmCryptoStore(credentials: credentials)
