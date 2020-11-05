@@ -243,7 +243,9 @@ static NSUInteger preloadOptions;
                 NSTimeInterval duration = [[NSDate date] timeIntervalSinceDate:startDate];
                 NSLog(@"[MXFileStore] Data loaded from files in %.0fms", duration * 1000);
 
-                [[MXSDKOptions sharedInstance].analyticsDelegate trackStartupStorePreloadDuration:duration];
+                [[MXSDKOptions sharedInstance].analyticsDelegate trackDuration:duration
+                                                                      category:kMXAnalyticsStartupCategory
+                                                                          name:kMXAnalyticsStartupStorePreload];
             }
 
             // Else, if credentials is valid, create and store it

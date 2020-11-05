@@ -5,7 +5,7 @@ Changes to be released in next version
  * 
 
 🙌 Improvements
- * 
+ * MXAnalyticsDelegate: Make it fully agnostic on tracked data.
 
 🐛 Bugfix
  * MXSession: Fix log for next stream token.
