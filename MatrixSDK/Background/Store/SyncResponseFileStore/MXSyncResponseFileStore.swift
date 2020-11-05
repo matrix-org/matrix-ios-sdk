@@ -145,36 +145,59 @@ extension MXSyncResponseFileStore: MXSyncResponseStore {
         return result
     }
     
-    public func roomSummary(forRoomId roomId: String) -> MXRoomSummary? {
+    public func roomSummary(forRoomId roomId: String, using summary: MXRoomSummary?) -> MXRoomSummary? {
         guard let response = syncResponse else {
-            return nil
-        }
-        if let invitedRoomSync = response.rooms.invite[roomId],
-            let stateEvents = invitedRoomSync.inviteState?.events {
-            guard let summary = MXRoomSummary(roomId: roomId, andMatrixSession: nil) else {
-                return nil
-            }
-            for event in stateEvents {
-                switch event.eventType {
-                case .roomName:
-                    summary.displayname = event.content["name"] as? String
-                case .roomCanonicalAlias:
-                    if summary.displayname == nil {
-                        summary.displayname = event.content["alias"] as? String
-                        if summary.displayname == nil {
-                            summary.displayname = (event.content["alt_aliases"] as? [String])?.first
-                        }
-                    }
-                case .roomAliases:
-                    if summary.displayname == nil {
-                        summary.displayname = (event.content["aliases"] as? [String])?.first
-                    }
-                default: break
-                }
-            }
             return summary
         }
-        return nil
+        guard let summary = summary ?? MXRoomSummary(roomId: roomId, andMatrixSession: nil) else {
+            return nil
+        }
+        
+        var eventsToProcess: [MXEvent] = []
+        
+        if let invitedRoomSync = response.rooms.invite[roomId],
+            let stateEvents = invitedRoomSync.inviteState?.events {
+            eventsToProcess.append(contentsOf: stateEvents)
+        }
+        
+        if let joinedRoomSync = response.rooms.join[roomId] {
+            if let stateEvents = joinedRoomSync.state?.events {
+                eventsToProcess.append(contentsOf: stateEvents)
+            }
+            if let timelineEvents = joinedRoomSync.timeline?.events {
+                eventsToProcess.append(contentsOf: timelineEvents)
+            }
+        }
+        
+        if let leftRoomSync = response.rooms.leave[roomId] {
+            if let stateEvents = leftRoomSync.state?.events {
+                eventsToProcess.append(contentsOf: stateEvents)
+            }
+            if let timelineEvents = leftRoomSync.timeline?.events {
+                eventsToProcess.append(contentsOf: timelineEvents)
+            }
+        }
+        
+        for event in eventsToProcess {
+            switch event.eventType {
+            case .roomAliases:
+                if summary.displayname == nil {
+                    summary.displayname = (event.content["aliases"] as? [String])?.first
+                }
+            case .roomCanonicalAlias:
+                if summary.displayname == nil {
+                    summary.displayname = event.content["alias"] as? String
+                    if summary.displayname == nil {
+                        summary.displayname = (event.content["alt_aliases"] as? [String])?.first
+                    }
+                }
+            case .roomName:
+                summary.displayname = event.content["name"] as? String
+            default:
+                break
+            }
+        }
+        return summary
     }
     
     public func deleteData() {

@@ -33,7 +33,8 @@ import Foundation
     
     /// Fetch room summary for an invited room. Just uses the data in syncResponse to guess the room display name
     /// - Parameter roomId: Room identifier to be fetched
-    func roomSummary(forRoomId roomId: String) -> MXRoomSummary?
+    /// - Parameter summary: A room summary (if exists) which user had before a sync response
+    func roomSummary(forRoomId roomId: String, using summary: MXRoomSummary?) -> MXRoomSummary?
     
     /// Delete all data in the store
     func deleteData()
