@@ -370,7 +370,9 @@ typedef void (^MXOnResumeDone)(void);
                 NSTimeInterval duration = [[NSDate date] timeIntervalSinceDate:startDate];
                 NSLog(@"[MXSession] Total time to mount SDK data from MXStore: %.0fms", duration * 1000);
 
-                [[MXSDKOptions sharedInstance].analyticsDelegate trackStartupMountDataDuration:duration];
+                [[MXSDKOptions sharedInstance].analyticsDelegate trackDuration:duration
+                                                                      category:kMXAnalyticsStartupCategory
+                                                                          name:kMXAnalyticsStartupMountData];
                 
                 [self setState:MXSessionStateStoreDataReady];
 
@@ -979,7 +981,10 @@ typedef void (^MXOnResumeDone)(void);
         {
             wasfirstSync = YES;
             self->firstSyncDone = YES;
-            [[MXSDKOptions sharedInstance].analyticsDelegate trackStartupSyncDuration:duration isInitial:isInitialSync];
+            
+            [[MXSDKOptions sharedInstance].analyticsDelegate trackDuration:duration
+                                                                  category:kMXAnalyticsStartupCategory
+                                                                      name:isInitialSync ? kMXAnalyticsStartupInititialSync : kMXAnalyticsStartupIncrementalSync];
         }
 
         // Handle the to device events before the room ones
@@ -1237,7 +1242,9 @@ typedef void (^MXOnResumeDone)(void);
 
             if (wasfirstSync)
             {
-                [[MXSDKOptions sharedInstance].analyticsDelegate trackRoomCount:self->rooms.count];
+                [[MXSDKOptions sharedInstance].analyticsDelegate trackValue:@(self->rooms.count)
+                                                                   category:kMXAnalyticsStatsCategory
+                                                                       name:kMXAnalyticsStatsRooms];
             }
 
             // Broadcast that a server sync has been processed.
