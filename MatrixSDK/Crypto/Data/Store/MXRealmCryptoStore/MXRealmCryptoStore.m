@@ -1449,6 +1449,27 @@ RLM_ARRAY_TYPE(MXRealmSecret)
             }
         }
     };
+    
+    config.shouldCompactOnLaunch = ^BOOL(NSUInteger totalBytes, NSUInteger bytesUsed) {
+        // totalBytes refers to the size of the file on disk in bytes (data + free space)
+        // usedBytes refers to the number of bytes used by data in the file
+        
+        static BOOL logDBFileSizeAtLaunch = YES;
+        if (logDBFileSizeAtLaunch)
+        {
+            NSLog(@"[MXRealmCryptoStore] Realm DB file size (in bytes): %lu, used (in bytes): %lu", (unsigned long)totalBytes, (unsigned long)bytesUsed);
+            logDBFileSizeAtLaunch = NO;
+        }
+
+        // Compact if the file is less than 50% 'used'
+        BOOL result = (float)((float)bytesUsed / totalBytes) < 0.5;
+        if (result)
+        {
+            NSLog(@"[MXRealmCryptoStore] Will compact database: File size (in bytes): %lu, used (in bytes): %lu", (unsigned long)totalBytes, (unsigned long)bytesUsed);
+        }
+
+        return result;
+    };
 
     NSError *error;
     RLMRealm *realm = [RLMRealm realmWithConfiguration:config error:&error];

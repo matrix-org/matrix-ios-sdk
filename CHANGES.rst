@@ -6,6 +6,7 @@ Changes to be released in next version
 
 🙌 Improvements
  * MXAnalyticsDelegate: Make it fully agnostic on tracked data.
+ * MXRealmCryptoStore: Compact DB files before getting out of memory error (vector-im/element-ios/3792).
 
 🐛 Bugfix
  * MXSession: Fix log for next stream token.
