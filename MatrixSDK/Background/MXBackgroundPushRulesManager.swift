@@ -19,7 +19,7 @@ import Foundation
 /// Background push rules manager. Does work independent from a `MXNotificationCenter`.
 @objcMembers public class MXBackgroundPushRulesManager: NSObject {
     
-    private let restClient: MXRestClient
+    private let credentials: MXCredentials
     private var pushRulesResponse: MXPushRulesResponse? {
         didSet {
             var tmpRules: [MXPushRule] = []
@@ -52,20 +52,12 @@ import Foundation
     
     /// Initializer.
     /// - Parameter restClient: Rest client to fetch initial push rules.
-    public init(withRestClient restClient: MXRestClient) {
-        self.restClient = restClient
+    public init(withCredentials credentials: MXCredentials) {
+        self.credentials = credentials
         eventMatchConditionChecker = MXPushRuleEventMatchConditionChecker()
         memberCountConditionChecker = MXPushRuleRoomMemberCountConditionChecker(matrixSession: nil)
         permissionConditionChecker = MXPushRuleSenderNotificationPermissionConditionChecker(matrixSession: nil)
         super.init()
-        restClient.pushRules { (response) in
-            switch response {
-            case .success(let response):
-                self.pushRulesResponse = response
-            case .failure:
-                break
-            }
-        }
     }
     
     /// Handle account data from a sync response.
@@ -110,7 +102,7 @@ import Foundation
                          roomState: MXRoomState,
                          currentUserDisplayName: String?) -> MXPushRule? {
         //  return nil if current user's event
-        if event.sender == restClient.credentials.userId {
+        if event.sender == credentials.userId {
             return nil
         }
         
