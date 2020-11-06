@@ -1,5 +1,6 @@
 /*
  Copyright 2017 Avery Pierce
+ Copyright 2020 The Matrix.org Foundation C.I.C
  
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -16,6 +17,8 @@
 
 #import <Foundation/Foundation.h>
 
+NS_ASSUME_NONNULL_BEGIN
+
 /**
  The MXAnalyticsDelegate protocol is used to capture analytics events.
  If you want to capture these analytics events for your own metrics, you
@@ -26,32 +29,32 @@
  MyAnalyticsDelegate *delegate = [[MyAnalyticsDelegate alloc] init];
  [MXSDKOptions shared].analyticsDelegate = delegate;
  @endcode
-
- You can use the sub-pod `MatrixSDK/GoogleAnalytics` to use a default implementation
- based on Google Analytics. It will send timing events in milliseconds.
  */
 @protocol MXAnalyticsDelegate <NSObject>
 
 /**
- Capture an analytics event to track how long it takes for the store to preload.
+ Report the duration of a task.
+ 
+ An example is the time to load data from the local store at startup.
+ 
+ @param seconds the duration in seconds.
+ @param category the category the task belongs to.
+ @param name the name of the task.
  */
-- (void)trackStartupStorePreloadDuration: (NSTimeInterval)seconds;
+- (void)trackDuration:(NSTimeInterval)seconds category:(NSString*)category name:(NSString*)name;
 
 /**
- Capture an analytics event for mount data duration
+ Report a value.
+ 
+ An example is the user's room count.
+ 
+ @param value the number to report.
+ @param category the category the value belongs to.
+ @param name the name of the value.
  */
-- (void)trackStartupMountDataDuration: (NSTimeInterval)seconds;
-
-/**
- Capture an analytics event for the startup sync time.
- */
-- (void)trackStartupSyncDuration: (NSTimeInterval)seconds isInitial: (BOOL)isInitial;
-
-/**
- Capture how many rooms a user is a member of.
- */
-- (void)trackRoomCount: (NSUInteger)roomCount;
+- (void)trackValue:(NSNumber*)value category:(NSString*)category name:(NSString*)name;
 
 @end
 
+NS_ASSUME_NONNULL_END
 

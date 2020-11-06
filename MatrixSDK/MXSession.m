@@ -371,7 +371,9 @@ typedef void (^MXOnResumeDone)(void);
                 NSTimeInterval duration = [[NSDate date] timeIntervalSinceDate:startDate];
                 NSLog(@"[MXSession] Total time to mount SDK data from MXStore: %.0fms", duration * 1000);
 
-                [[MXSDKOptions sharedInstance].analyticsDelegate trackStartupMountDataDuration:duration];
+                [[MXSDKOptions sharedInstance].analyticsDelegate trackDuration:duration
+                                                                      category:kMXAnalyticsStartupCategory
+                                                                          name:kMXAnalyticsStartupMountData];
                 
                 [self setState:MXSessionStateStoreDataReady];
 
@@ -413,14 +415,6 @@ typedef void (^MXOnResumeDone)(void);
 
     // Check whether this is the initial sync
     BOOL isInitialSync = !self.isEventStreamInitialised;
-
-    BOOL wasfirstSync = NO;
-    if (!self->firstSyncDone)
-    {
-        wasfirstSync = YES;
-        self->firstSyncDone = YES;
-        [[MXSDKOptions sharedInstance].analyticsDelegate trackStartupSyncDuration:0 isInitial:isInitialSync];
-    }
 
     // Handle the to device events before the room ones
     // to ensure to decrypt them properly
@@ -598,11 +592,6 @@ typedef void (^MXOnResumeDone)(void);
             completion();
         }
         
-        if (wasfirstSync)
-        {
-            [[MXSDKOptions sharedInstance].analyticsDelegate trackRoomCount:self->rooms.count];
-        }
-
         // Broadcast that a server sync has been processed.
         [[NSNotificationCenter defaultCenter] postNotificationName:kMXSessionDidSyncNotification
                                                             object:self
@@ -1199,9 +1188,21 @@ typedef void (^MXOnResumeDone)(void);
         NSTimeInterval duration = [[NSDate date] timeIntervalSinceDate:startDate];
         NSLog(@"[MXSession] Received sync response in %.0fms", duration * 1000);
         
+        BOOL wasfirstSync = NO;
+        if (!self->firstSyncDone)
+        {
+            wasfirstSync = YES;
+            self->firstSyncDone = YES;
+            
+            NSString *taskName = self.isEventStreamInitialised ? kMXAnalyticsStartupIncrementalSync : kMXAnalyticsStartupInititialSync;
+            [[MXSDKOptions sharedInstance].analyticsDelegate trackDuration:duration
+                                                                  category:kMXAnalyticsStartupCategory
+                                                                      name:taskName];
+        }
+        
         // By default, the next sync will be a long polling (with the default server timeout value)
         NSUInteger nextServerTimeout = SERVER_TIMEOUT_MS;
-        
+
         if (self.catchingUp && syncResponse.toDevice.events.count)
         {
             // We may have not received all to-device events in a single /sync response
@@ -1211,6 +1212,13 @@ typedef void (^MXOnResumeDone)(void);
         }
         
         [self handleSyncResponse:syncResponse completion:^{
+            
+            if (wasfirstSync)
+            {
+                [[MXSDKOptions sharedInstance].analyticsDelegate trackValue:@(self->rooms.count)
+                                                                   category:kMXAnalyticsStatsCategory
+                                                                       name:kMXAnalyticsStatsRooms];
+            }
             
             // Do a loop of /syncs until catching up is done
             if (nextServerTimeout == 0)
