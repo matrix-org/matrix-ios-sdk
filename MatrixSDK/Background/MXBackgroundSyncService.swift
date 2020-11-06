@@ -204,7 +204,7 @@ public enum MXBackgroundSyncServiceError: Error {
             handleEncryption(forEvent: cachedEvent)
         } else {
             //  do not call the /event api and just check if the event exists in the store
-            let event = store.event(withEventId: eventId, inRoom: roomId) ?? syncResponseStore.event(withEventId: eventId, inRoom: roomId)
+            let event = syncResponseStore.event(withEventId: eventId, inRoom: roomId) ?? store.event(withEventId: eventId, inRoom: roomId)
             
             if let event = event {
                 NSLog("[MXBackgroundSyncService] fetchEvent: We have the event in stores.")
@@ -405,15 +405,47 @@ public enum MXBackgroundSyncServiceError: Error {
         self.store.eventStreamToken = syncResponse.nextBatch
     }
     
-    private func updateStore(with response: MXSyncResponse) {
-        if let syncResponse = syncResponseStore.syncResponse {
+    private func updateStore(with newResponse: MXSyncResponse) {
+        if let oldResponse = syncResponseStore.syncResponse {
             //  current sync response exists, merge it with the new response
-            var dictionary = NSDictionary(dictionary: syncResponse.jsonDictionary())
-            dictionary = dictionary + NSDictionary(dictionary: response.jsonDictionary())
+            
+            //  handle new limited timelines
+            newResponse.rooms.join.filter({ $1.timeline?.limited == true }).forEach { (roomId, _) in
+                if let joinedRoomSync = oldResponse.rooms.join[roomId] {
+                    //  remove old events
+                    joinedRoomSync.timeline?.events = []
+                    //  mark old timeline as limited too
+                    joinedRoomSync.timeline?.limited = true
+                }
+            }
+            newResponse.rooms.leave.filter({ $1.timeline?.limited == true }).forEach { (roomId, _) in
+                if let leftRoomSync = oldResponse.rooms.leave[roomId] {
+                    //  remove old events
+                    leftRoomSync.timeline?.events = []
+                    //  mark old timeline as limited too
+                    leftRoomSync.timeline?.limited = true
+                }
+            }
+            
+            //  handle old limited timelines
+            oldResponse.rooms.join.filter({ $1.timeline?.limited == true }).forEach { (roomId, _) in
+                if let joinedRoomSync = newResponse.rooms.join[roomId] {
+                    //  mark new timeline as limited too, to avoid losing value of limited
+                    joinedRoomSync.timeline?.limited = true
+                }
+            }
+            oldResponse.rooms.leave.filter({ $1.timeline?.limited == true }).forEach { (roomId, _) in
+                if let leftRoomSync = newResponse.rooms.leave[roomId] {
+                    //  mark new timeline as limited too, to avoid losing value of limited
+                    leftRoomSync.timeline?.limited = true
+                }
+            }
+            var dictionary = NSDictionary(dictionary: oldResponse.jsonDictionary())
+            dictionary = dictionary + NSDictionary(dictionary: newResponse.jsonDictionary())
             syncResponseStore.syncResponse = MXSyncResponse(fromJSON: dictionary as? [AnyHashable : Any])
         } else {
             //  no current sync response, directly save the new one
-            syncResponseStore.syncResponse = response
+            syncResponseStore.syncResponse = newResponse
         }
     }
     
