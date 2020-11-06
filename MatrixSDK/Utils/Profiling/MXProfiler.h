@@ -46,6 +46,13 @@ NS_ASSUME_NONNULL_BEGIN
  */
 - (nullable MXTaskProfile*)taskProfileWithName:(NSString*)name category:(NSString*)category;
 
+/**
+ Cancel a task profiling.
+ 
+ @param taskProfile the task.
+ */
+- (void)cancelTaskProfile:(MXTaskProfile *)taskProfile;
+
 
 /**
  Call this pause method when the process is going to be suspended.

@@ -74,6 +74,15 @@
     }
 }
 
+- (void)cancelTaskProfile:(MXTaskProfile *)taskProfile;
+{
+    @synchronized (taskProfiles)
+    {
+        [taskProfiles removeObject:taskProfile];
+    }
+}
+
+
 - (void)pause
 {
     @synchronized (taskProfiles)
