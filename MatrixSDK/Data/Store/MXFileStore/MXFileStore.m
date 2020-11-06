@@ -219,8 +219,9 @@ static NSUInteger preloadOptions;
 
             // If metaData is still defined, we can load rooms data
             if (self->metaData)
-            {
-                NSDate *startDate = [NSDate date];
+            {                
+                MXTaskProfile *taskProfile = [MXSDKOptions.sharedInstance.profiler startMeasuringTaskWithName:kMXAnalyticsStartupStorePreload category:kMXAnalyticsStartupCategory];
+                
                 NSLog(@"[MXFileStore] Start data loading from files");
 
                 [self loadRoomsMessages];
@@ -240,12 +241,9 @@ static NSUInteger preloadOptions;
                 [self loadUsers];
                 [self loadGroups];
 
-                NSTimeInterval duration = [[NSDate date] timeIntervalSinceDate:startDate];
-                NSLog(@"[MXFileStore] Data loaded from files in %.0fms", duration * 1000);
-
-                [[MXSDKOptions sharedInstance].analyticsDelegate trackDuration:duration
-                                                                      category:kMXAnalyticsStartupCategory
-                                                                          name:kMXAnalyticsStartupStorePreload];
+                taskProfile.units = self->roomStores.count;
+                [MXSDKOptions.sharedInstance.profiler stopMeasuringTaskWithProfile:taskProfile];
+                NSLog(@"[MXFileStore] Data loaded from files in %.0fms", taskProfile.duration * 1000);
             }
 
             // Else, if credentials is valid, create and store it
