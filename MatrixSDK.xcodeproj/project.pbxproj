@@ -1129,6 +1129,7 @@
 		C6F9358A1E5B3BE600FC34BF /* MXEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = C6F935861E5B3BE600FC34BF /* MXEvent.swift */; };
 		C6F9358B1E5B3BE600FC34BF /* MXJSONModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = C6F935871E5B3BE600FC34BF /* MXJSONModels.swift */; };
 		C6FE1EF01E65C4F7008587E4 /* MXAnalyticsDelegate.h in Headers */ = {isa = PBXBuildFile; fileRef = C6FE1EEF1E65C4F7008587E4 /* MXAnalyticsDelegate.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		EC0C51752559388C00F2CC66 /* Stopwatch.swift in Sources */ = {isa = PBXBuildFile; fileRef = ECB5D98B2552C9B4000AD89C /* Stopwatch.swift */; };
 		EC383BA2253DE4B1002FBBE6 /* MXBackgroundSyncService.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC383BA1253DE4B1002FBBE6 /* MXBackgroundSyncService.swift */; };
 		EC383BA5253DE6C9002FBBE6 /* MXSyncResponseStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC383BA4253DE6C9002FBBE6 /* MXSyncResponseStore.swift */; };
 		EC383BA8253DE6EE002FBBE6 /* MXSyncResponseFileStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC383BA7253DE6EE002FBBE6 /* MXSyncResponseFileStore.swift */; };
@@ -4432,6 +4433,7 @@
 				B14EF2032397E90400758AF0 /* MXMegolmEncryption.m in Sources */,
 				B14EF2042397E90400758AF0 /* MXIncomingRoomKeyRequest.m in Sources */,
 				32581DEB23C8C0C900832EAA /* MXUserTrustLevel.m in Sources */,
+				EC0C51752559388C00F2CC66 /* Stopwatch.swift in Sources */,
 				B14EF2052397E90400758AF0 /* MX3PidAddManager.swift in Sources */,
 				B14EF2062397E90400758AF0 /* MXGroup.m in Sources */,
 				B14EF2072397E90400758AF0 /* MXAutoDiscovery.m in Sources */,
