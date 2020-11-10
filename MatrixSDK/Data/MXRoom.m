@@ -3104,6 +3104,8 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
     
     if (crypto && self.summary.isEncrypted)
     {
+        NSString *myUserId = mxSession.myUserId;
+        
         [self members:^(MXRoomMembers *roomMembers) {
             
             NSArray<MXRoomMember*> *members = roomMembers.members;
@@ -3112,6 +3114,11 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
             
             for (MXRoomMember *member in members)
             {
+                if ((self.isDirect || members.count <= 2) && [member.userId isEqualToString:myUserId])
+                {
+                    //  if direct or a group DM, ignore my user
+                    continue;
+                }
                 [memberIds addObject:member.userId];
             }
             
