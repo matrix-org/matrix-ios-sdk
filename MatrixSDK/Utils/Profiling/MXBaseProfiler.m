@@ -58,7 +58,7 @@
           taskProfile.category,
           taskProfile.name,
           @(taskProfile.units),
-          taskProfile.duration,
+          taskProfile.duration * 1000,
           taskProfile.paused ? @" (but it was paused)" : @"");
           
     // Do not send a task that was paused to analytics. Data is often not valid
