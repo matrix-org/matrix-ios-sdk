@@ -24,9 +24,12 @@
 #import "MXSession.h"
 #import "MXTools.h"
 
+#import "MXCallInviteEventContent.h"
+#import "MXCallAnswerEventContent.h"
+#import "MXCallCandidatesEventContent.h"
+
 #pragma mark - Constants definitions
 NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
-NSString *const kMXCallVersion = @"1";
 
 @interface MXCall ()
 {

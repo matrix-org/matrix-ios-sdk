@@ -25,6 +25,11 @@
 #import "MXSession.h"
 #import "MXTools.h"
 
+#import "MXCallInviteEventContent.h"
+#import "MXCallAnswerEventContent.h"
+#import "MXCallHangupEventContent.h"
+#import "MXCallCandidatesEventContent.h"
+
 #pragma mark - Constants definitions
 NSString *const kMXCallManagerNewCall            = @"kMXCallManagerNewCall";
 NSString *const kMXCallManagerConferenceStarted  = @"kMXCallManagerConferenceStarted";

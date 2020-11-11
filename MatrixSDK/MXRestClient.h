@@ -40,6 +40,7 @@
 #import "MXAggregationPaginatedResponse.h"
 #import "MXPusher.h"
 #import "MXRoomCreationParameters.h"
+#import "MXTurnServerResponse.h"
 
 #pragma mark - Constants definitions
 /**
