@@ -41,6 +41,11 @@
 @property (nonatomic) NSUInteger lifetime;
 
 /**
+ Target user id of the invite. Can be nil. Invites without an invitee defined to be intended for any member of the room (other than the sender).
+ */
+@property (nonatomic, copy) NSString *invitee;
+
+/**
  Indicate whether the invitation is for a video call.
  */
 - (BOOL)isVideoCall;

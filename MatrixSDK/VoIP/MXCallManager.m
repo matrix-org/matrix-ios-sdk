@@ -330,6 +330,12 @@ NSString *const kMXCallManagerConferenceFinished = @"kMXCallManagerConferenceFin
 - (void)handleCallInvite:(MXEvent *)event
 {
     MXCallInviteEventContent *content = [MXCallInviteEventContent modelFromJSON:event.content];
+    
+    if (content.invitee && ![_mxSession.myUserId isEqualToString:content.invitee])
+    {
+        //  this call invite targeted someone, and it's not me, ignore
+        return;
+    }
 
     // Check expiration (usefull filter when receiving load of events when resuming the event stream)
     if (event.age < content.lifetime)

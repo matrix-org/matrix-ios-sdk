@@ -97,7 +97,8 @@
                                           @"sdp": @"A SDP"
                                           },
                                   @"version": kMXCallVersion,
-                                  @"lifetime": @(30 * 1000)
+                                  @"lifetime": @(30 * 1000),
+                                  @"invitee": bobSession.myUserId
                                   };
 
 

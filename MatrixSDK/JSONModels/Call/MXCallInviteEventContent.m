@@ -28,6 +28,7 @@
         MXJSONModelSetNumber(callInviteEventContent.versionNumber, JSONDictionary[@"version"]);
         MXJSONModelSetString(callInviteEventContent.versionString, JSONDictionary[@"version"]);
         MXJSONModelSetUInteger(callInviteEventContent.lifetime, JSONDictionary[@"lifetime"]);
+        MXJSONModelSetString(callInviteEventContent.invitee, JSONDictionary[@"invitee"]);
     }
 
     return callInviteEventContent;

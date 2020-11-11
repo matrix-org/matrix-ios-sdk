@@ -342,15 +342,22 @@ NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
             NSLog(@"[MXCall] callWithVideo:%@ - Offer created: %@", (video ? @"YES" : @"NO"), sdp);
 
             // The call invite can sent to the HS
-            NSDictionary *content = @{
-                                      @"call_id": self.callId,
-                                      @"offer": @{
-                                              @"type": @"offer",
-                                              @"sdp": sdp
-                                              },
-                                      @"version": kMXCallVersion,
-                                      @"lifetime": @(self->callManager.inviteLifetime)
-                                      };
+            NSMutableDictionary *content = [@{
+                @"call_id": self.callId,
+                @"offer": @{
+                        @"type": @"offer",
+                        @"sdp": sdp
+                },
+                @"version": kMXCallVersion,
+                @"lifetime": @(self->callManager.inviteLifetime)
+            } mutableCopy];
+            
+            NSString *directUserId = self.room.directUserId;
+            if (directUserId)
+            {
+                content[@"invitee"] = directUserId;
+            }
+            
             [self.callSignalingRoom sendEventOfType:kMXEventTypeStringCallInvite content:content localEcho:nil success:^(NSString *eventId) {
 
                 [self setState:MXCallStateInviteSent reason:nil];
