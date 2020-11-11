@@ -83,6 +83,8 @@ NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
 
 @implementation MXCall
 
+@synthesize partyId = _partyId;
+
 - (instancetype)initWithRoomId:(NSString *)roomId andCallManager:(MXCallManager *)theCallManager
 {
     // For 1:1 call, use the room as the call signaling room
@@ -149,6 +151,15 @@ NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
     return self;
 }
 
+- (NSString *)partyId
+{
+    if (_partyId == nil)
+    {
+        _partyId = callManager.mxSession.myDeviceId;
+    }
+    return _partyId;
+}
+
 - (void)calleeId:(void (^)(NSString * _Nonnull))onComplete
 {
     if (calleeId)
@@ -182,13 +193,15 @@ NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
 
 - (void)handleCallEvent:(MXEvent *)event
 {
+    BOOL isMyEvent = [self isMyEvent:event];
+    
     switch (event.eventType)
     {
         case MXEventTypeCallInvite:
         {
             callInviteEventContent = [MXCallInviteEventContent modelFromJSON:event.content];
 
-            if (![event.sender isEqualToString:_callSignalingRoom.mxSession.myUserId])
+            if (!isMyEvent)
             {
                 // Incoming call
                 
@@ -296,7 +309,7 @@ NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
 
         case MXEventTypeCallCandidates:
         {
-            if (NO == [event.sender isEqualToString:_callSignalingRoom.mxSession.myUserId])
+            if (!isMyEvent)
             {
                 MXCallCandidatesEventContent *content = [MXCallCandidatesEventContent modelFromJSON:event.content];
 
@@ -349,7 +362,8 @@ NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
                         @"sdp": sdp
                 },
                 @"version": kMXCallVersion,
-                @"lifetime": @(self->callManager.inviteLifetime)
+                @"lifetime": @(self->callManager.inviteLifetime),
+                @"party_id": self.partyId
             } mutableCopy];
             
             NSString *directUserId = self.room.directUserId;
@@ -418,6 +432,7 @@ NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
                                                   @"sdp": sdpAnswer
                                                   },
                                           @"version": kMXCallVersion,
+                                          @"party_id": self.partyId
                                           };
                 [self.callSignalingRoom sendEventOfType:kMXEventTypeStringCallAnswer content:content localEcho:nil success:nil failure:^(NSError *error) {
                     NSLog(@"[MXCall] answer: ERROR: Cannot send m.call.answer event.");
@@ -462,7 +477,8 @@ NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
         // Send the hangup event
         NSDictionary *content = @{
                                   @"call_id": _callId,
-                                  @"version": kMXCallVersion
+                                  @"version": kMXCallVersion,
+                                  @"party_id": self.partyId
                                   };
         [_callSignalingRoom sendEventOfType:kMXEventTypeStringCallHangup content:content localEcho:nil success:nil failure:^(NSError *error) {
             NSLog(@"[MXCall] hangup: ERROR: Cannot send m.call.hangup event.");
@@ -649,7 +665,8 @@ NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
         NSDictionary *content = @{
                                   @"version": kMXCallVersion,
                                   @"call_id": _callId,
-                                  @"candidates": localICECandidates
+                                  @"candidates": localICECandidates,
+                                  @"party_id": self.partyId
                                   };
 
         [_callSignalingRoom sendEventOfType:kMXEventTypeStringCallCandidates content:content localEcho:nil success:nil failure:^(NSError *error) {
@@ -675,6 +692,17 @@ NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
 
 
 #pragma mark - Private methods
+
+- (BOOL)isMyEvent:(MXEvent *)event
+{
+    if ([event.sender isEqualToString:_callSignalingRoom.mxSession.myUserId])
+    {
+        MXCallEventContent *content = [MXCallEventContent modelFromJSON:event.content];
+        return [content.partyId isEqualToString:_callSignalingRoom.mxSession.myDeviceId];
+    }
+    return NO;
+}
+
 - (NSString *)description
 {
     return [NSString stringWithFormat:@"<MXCall: %p> id: %@ - isVideoCall: %@ - isIncoming: %@ - state: %@", self, _callId, @(_isVideoCall), @(_isIncoming), @(_state)];

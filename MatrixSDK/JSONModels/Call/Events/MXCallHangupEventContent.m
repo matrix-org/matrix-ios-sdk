@@ -14,22 +14,20 @@
 // limitations under the License.
 //
 
-#import "MXCallAnswerEventContent.h"
+#import "MXCallHangupEventContent.h"
 
-@implementation MXCallAnswerEventContent
+@implementation MXCallHangupEventContent
 
 + (id)modelFromJSON:(NSDictionary *)JSONDictionary
 {
-    MXCallAnswerEventContent *callAnswerEventContent = [[MXCallAnswerEventContent alloc] init];
-    if (callAnswerEventContent)
+    MXCallHangupEventContent *callHangupEventContent = [[MXCallHangupEventContent alloc] init];
+    if (callHangupEventContent)
     {
-        MXJSONModelSetString(callAnswerEventContent.callId, JSONDictionary[@"call_id"]);
-        MXJSONModelSetNumber(callAnswerEventContent.versionNumber, JSONDictionary[@"version"]);
-        MXJSONModelSetString(callAnswerEventContent.versionString, JSONDictionary[@"version"]);
-        MXJSONModelSetMXJSONModel(callAnswerEventContent.answer, MXCallSessionDescription, JSONDictionary[@"answer"]);
+        [callHangupEventContent parseJSON:JSONDictionary];
+        MXJSONModelSetString(callHangupEventContent.callId, JSONDictionary[@"call_id"]);
     }
 
-    return callAnswerEventContent;
+    return callHangupEventContent;
 }
 
 @end

@@ -33,6 +33,25 @@ static NSArray<NSString *> *kAcceptedCallVersions = nil;
     });
 }
 
+- (void)parseJSON:(NSDictionary *)JSONDictionary
+{
+    MXJSONModelSetNumber(self.versionNumber, JSONDictionary[@"version"]);
+    MXJSONModelSetString(self.versionString, JSONDictionary[@"version"]);
+    MXJSONModelSetString(self.partyId, JSONDictionary[@"party_id"]);
+}
+
++ (id)modelFromJSON:(NSDictionary *)JSONDictionary
+{
+    MXCallEventContent *callEventContent = [[MXCallEventContent alloc] init];
+    
+    if (callEventContent)
+    {
+        [callEventContent parseJSON:JSONDictionary];
+    }
+
+    return callEventContent;
+}
+
 - (NSString *)version
 {
     NSString *_version;

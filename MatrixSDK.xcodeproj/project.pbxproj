@@ -3218,6 +3218,20 @@
 		EC976538255BFE46000C36EF /* Call */ = {
 			isa = PBXGroup;
 			children = (
+				EC9765C1255C2F39000C36EF /* Events */,
+				EC97656F255C00D5000C36EF /* MXCallSessionDescription.h */,
+				EC976570255C00D5000C36EF /* MXCallSessionDescription.m */,
+				EC976579255C0101000C36EF /* MXCallCandidate.h */,
+				EC97657A255C0101000C36EF /* MXCallCandidate.m */,
+				EC976583255C0127000C36EF /* MXTurnServerResponse.h */,
+				EC976584255C0127000C36EF /* MXTurnServerResponse.m */,
+			);
+			path = Call;
+			sourceTree = "<group>";
+		};
+		EC9765C1255C2F39000C36EF /* Events */ = {
+			isa = PBXGroup;
+			children = (
 				EC976539255BFED4000C36EF /* MXCallEventContent.h */,
 				EC97653A255BFED4000C36EF /* MXCallEventContent.m */,
 				EC976547255BFF35000C36EF /* MXCallInviteEventContent.h */,
@@ -3228,14 +3242,8 @@
 				EC97655C255C002A000C36EF /* MXCallAnswerEventContent.m */,
 				EC976565255C0062000C36EF /* MXCallHangupEventContent.h */,
 				EC976566255C0062000C36EF /* MXCallHangupEventContent.m */,
-				EC97656F255C00D5000C36EF /* MXCallSessionDescription.h */,
-				EC976570255C00D5000C36EF /* MXCallSessionDescription.m */,
-				EC976579255C0101000C36EF /* MXCallCandidate.h */,
-				EC97657A255C0101000C36EF /* MXCallCandidate.m */,
-				EC976583255C0127000C36EF /* MXTurnServerResponse.h */,
-				EC976584255C0127000C36EF /* MXTurnServerResponse.m */,
 			);
-			path = Call;
+			path = Events;
 			sourceTree = "<group>";
 		};
 		F03EF4F91DF014D9009DF592 /* Media */ = {

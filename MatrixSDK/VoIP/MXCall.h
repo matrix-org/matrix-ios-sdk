@@ -184,6 +184,11 @@ extern NSString *const kMXCallStateDidChange;
 @property (readonly, nonatomic) NSString *callerId;
 
 /**
+ The party id for this call. Will be generated on first access.
+ */
+@property (readonly, nonatomic, copy) NSString *partyId;
+
+/**
  The user id of the callee. Nil for conference calls
  */
 - (void)calleeId:(void (^)(NSString *calleeId))onComplete;

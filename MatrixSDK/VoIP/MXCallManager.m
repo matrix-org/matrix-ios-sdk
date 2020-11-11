@@ -333,34 +333,39 @@ NSString *const kMXCallManagerConferenceFinished = @"kMXCallManagerConferenceFin
     
     if (content.invitee && ![_mxSession.myUserId isEqualToString:content.invitee])
     {
-        //  this call invite targeted someone, and it's not me, ignore
+        //  this call invite has a specific target, and it's not me, ignore
         return;
     }
 
     // Check expiration (usefull filter when receiving load of events when resuming the event stream)
     if (event.age < content.lifetime)
     {
-        // If it is an invite from the peer, we need to create the MXCall
-        if (![event.sender isEqualToString:_mxSession.myUserId])
+        if ([event.sender isEqualToString:_mxSession.myUserId] &&
+            [content.partyId isEqualToString:_mxSession.myDeviceId])
         {
-            MXCall *call = [self callWithCallId:content.callId];
-            if (!call)
+            //  this is a remote echo, ignore
+            return;
+        }
+        
+        // If it is an invite from the peer, we need to create the MXCall
+        
+        MXCall *call = [self callWithCallId:content.callId];
+        if (!call)
+        {
+            call = [[MXCall alloc] initWithRoomId:event.roomId andCallManager:self];
+            if (call)
             {
-                call = [[MXCall alloc] initWithRoomId:event.roomId andCallManager:self];
-                if (call)
-                {
-                    [calls addObject:call];
+                [calls addObject:call];
 
-                    [call handleCallEvent:event];
-
-                    // Broadcast the incoming call
-                    [self notifyCallInvite:call.callId];
-                }
-            }
-            else
-            {
                 [call handleCallEvent:event];
+
+                // Broadcast the incoming call
+                [self notifyCallInvite:call.callId];
             }
+        }
+        else
+        {
+            [call handleCallEvent:event];
         }
     }
 }

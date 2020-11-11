@@ -98,7 +98,8 @@
                                           },
                                   @"version": kMXCallVersion,
                                   @"lifetime": @(30 * 1000),
-                                  @"invitee": bobSession.myUserId
+                                  @"invitee": bobSession.myUserId,
+                                  @"party_id": bobSession.myDeviceId
                                   };
 
 

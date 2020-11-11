@@ -14,21 +14,21 @@
 // limitations under the License.
 //
 
-#import "MXCallHangupEventContent.h"
+#import "MXCallCandidatesEventContent.h"
 
-@implementation MXCallHangupEventContent
+@implementation MXCallCandidatesEventContent
 
 + (id)modelFromJSON:(NSDictionary *)JSONDictionary
 {
-    MXCallHangupEventContent *callHangupEventContent = [[MXCallHangupEventContent alloc] init];
-    if (callHangupEventContent)
+    MXCallCandidatesEventContent *callCandidatesEventContent = [[MXCallCandidatesEventContent alloc] init];
+    if (callCandidatesEventContent)
     {
-        MXJSONModelSetString(callHangupEventContent.callId, JSONDictionary[@"call_id"]);
-        MXJSONModelSetNumber(callHangupEventContent.versionNumber, JSONDictionary[@"version"]);
-        MXJSONModelSetString(callHangupEventContent.versionString, JSONDictionary[@"version"]);
+        [callCandidatesEventContent parseJSON:JSONDictionary];
+        MXJSONModelSetString(callCandidatesEventContent.callId, JSONDictionary[@"call_id"]);
+        MXJSONModelSetMXJSONModelArray(callCandidatesEventContent.candidates, MXCallCandidate, JSONDictionary[@"candidates"]);
     }
 
-    return callHangupEventContent;
+    return callCandidatesEventContent;
 }
 
 @end

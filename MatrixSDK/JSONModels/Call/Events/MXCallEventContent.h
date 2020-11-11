@@ -35,6 +35,15 @@ extern NSString *const kMXCallVersion;
  */
 @property (nonatomic, copy) NSString *versionString;
 
+/**
+ The party id for the call event.
+ */
+@property (nonatomic, copy) NSString *partyId;
+
+/// Parse base fields from the JSON
+/// @param JSONDictionary The JSON to be parsed
+- (void)parseJSON:(NSDictionary *)JSONDictionary;
+
 /// Derived value from versionNumber or versionString
 - (NSString *)version;
 
