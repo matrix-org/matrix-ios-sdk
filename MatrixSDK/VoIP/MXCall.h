@@ -72,6 +72,11 @@ typedef NS_ENUM(NSInteger, MXCallEndReason)
  */
 extern NSString *const kMXCallStateDidChange;
 
+/**
+ Call version
+ */
+extern NSString *const kMXCallVersion;
+
 @protocol MXCallDelegate;
 
 /**

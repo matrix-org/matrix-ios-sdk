@@ -26,6 +26,7 @@
 
 #pragma mark - Constants definitions
 NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
+NSString *const kMXCallVersion = @"1";
 
 @interface MXCall ()
 {
@@ -344,7 +345,7 @@ NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
                                               @"type": @"offer",
                                               @"sdp": sdp
                                               },
-                                      @"version": @(0),
+                                      @"version": kMXCallVersion,
                                       @"lifetime": @(self->callManager.inviteLifetime)
                                       };
             [self.callSignalingRoom sendEventOfType:kMXEventTypeStringCallInvite content:content localEcho:nil success:^(NSString *eventId) {
@@ -406,7 +407,7 @@ NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
                                                   @"type": @"answer",
                                                   @"sdp": sdpAnswer
                                                   },
-                                          @"version": @(0),
+                                          @"version": kMXCallVersion,
                                           };
                 [self.callSignalingRoom sendEventOfType:kMXEventTypeStringCallAnswer content:content localEcho:nil success:nil failure:^(NSError *error) {
                     NSLog(@"[MXCall] answer: ERROR: Cannot send m.call.answer event.");
@@ -451,7 +452,7 @@ NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
         // Send the hangup event
         NSDictionary *content = @{
                                   @"call_id": _callId,
-                                  @"version": @(0)
+                                  @"version": kMXCallVersion
                                   };
         [_callSignalingRoom sendEventOfType:kMXEventTypeStringCallHangup content:content localEcho:nil success:nil failure:^(NSError *error) {
             NSLog(@"[MXCall] hangup: ERROR: Cannot send m.call.hangup event.");
@@ -636,7 +637,7 @@ NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
         NSLog(@"MXCall] onICECandidate: Send %tu candidates", localICECandidates.count);
 
         NSDictionary *content = @{
-                                  @"version": @(0),
+                                  @"version": kMXCallVersion,
                                   @"call_id": _callId,
                                   @"candidates": localICECandidates
                                   };

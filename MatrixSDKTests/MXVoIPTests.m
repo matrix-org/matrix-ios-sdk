@@ -96,7 +96,7 @@
                                           @"type": @"offer",
                                           @"sdp": @"A SDP"
                                           },
-                                  @"version": @(0),
+                                  @"version": kMXCallVersion,
                                   @"lifetime": @(30 * 1000)
                                   };
 
