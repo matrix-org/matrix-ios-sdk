@@ -26,6 +26,7 @@
 
 #import "MXCallInviteEventContent.h"
 #import "MXCallAnswerEventContent.h"
+#import "MXCallSelectAnswerEventContent.h"
 #import "MXCallCandidatesEventContent.h"
 
 #pragma mark - Constants definitions
@@ -77,6 +78,11 @@ NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
      Cache for self.calleeId.
      */
     NSString *calleeId;
+    
+    /**
+     Selected answer for this call. Only exists for outgoing calls and after an answer (an accept or reject) received.
+     */
+    MXCallEventContent *selectedAnswer;
 }
 
 @end
@@ -270,6 +276,12 @@ NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
             // Listen to answer event only for call we are making, not receiving
             if (!_isIncoming)
             {
+                if (selectedAnswer)
+                {
+                    //  there is already a selected answer, ignore this one
+                    return;
+                }
+                
                 // MXCall receives this event only when it placed a call
                 MXCallAnswerEventContent *content = [MXCallAnswerEventContent modelFromJSON:event.content];
 
@@ -279,21 +291,72 @@ NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
                     [inviteExpirationTimer invalidate];
                     inviteExpirationTimer = nil;
                 }
-
-                // Let's the stack finalise the connection
-                [self setState:MXCallStateConnecting reason:event];
-                [callStackCall handleAnswer:content.answer.sdp
-                                    success:^{}
-                                    failure:^(NSError *error) {
-                                        NSLog(@"[MXCall] handleCallEvent: ERROR: Cannot send handle answer. Error: %@\nEvent: %@", error, event);
-                                        [self didEncounterError:error];
-                                    }];
+                
+                //  mark this as the selected one
+                selectedAnswer = content;
+                
+                void(^continueBlock)(void) = ^{
+                    // Let's the stack finalise the connection
+                    [self setState:MXCallStateConnecting reason:event];
+                    [self->callStackCall handleAnswer:content.answer.sdp
+                                        success:^{}
+                                        failure:^(NSError *error) {
+                        NSLog(@"[MXCall] handleCallEvent: ERROR: Cannot send handle answer. Error: %@\nEvent: %@", error, event);
+                        self->selectedAnswer = nil;
+                        [self didEncounterError:error];
+                    }];
+                };
+                
+                if ([content.version isEqualToString:kMXCallVersion])
+                {
+                    NSDictionary *selectAnswerContent = @{
+                        @"call_id": self.callId,
+                        @"version": kMXCallVersion,
+                        @"party_id": self.partyId,
+                        @"selected_party_id": content.partyId
+                    };
+                    
+                    [self.callSignalingRoom sendEventOfType:kMXEventTypeStringCallSelectAnswer
+                                                    content:selectAnswerContent
+                                                  localEcho:nil
+                                                    success:^(NSString *eventId) {
+                        
+                        continueBlock();
+                        
+                    } failure:^(NSError *error) {
+                        NSLog(@"[MXCall] callWithVideo: ERROR: Cannot send m.call.select_answer event. Error: %@\n", error);
+                        self->selectedAnswer = nil;
+                        [self didEncounterError:error];
+                    }];
+                }
+                else
+                {
+                    continueBlock();
+                }
             }
             else if (_state == MXCallStateRinging)
             {
                 // Else this event means that the call has been answered by the user from
                 // another device
                 [self onCallAnsweredElsewhere];
+            }
+            break;
+        }
+
+        case MXEventTypeCallSelectAnswer:
+        {
+            if (!isMyEvent)
+            {
+                if (_isIncoming)
+                {
+                    MXCallSelectAnswerEventContent *content = [MXCallSelectAnswerEventContent modelFromJSON:event.content];
+                    if (![content.selectedPartyId isEqualToString:self.partyId])
+                    {
+                        // Else this event means that the call has been answered by the user from
+                        // another device
+                        [self onCallAnsweredElsewhere];
+                    }
+                }
             }
             break;
         }

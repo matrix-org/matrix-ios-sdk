@@ -1173,6 +1173,10 @@
 		EC976586255C0127000C36EF /* MXTurnServerResponse.h in Headers */ = {isa = PBXBuildFile; fileRef = EC976583255C0127000C36EF /* MXTurnServerResponse.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		EC976587255C0127000C36EF /* MXTurnServerResponse.m in Sources */ = {isa = PBXBuildFile; fileRef = EC976584255C0127000C36EF /* MXTurnServerResponse.m */; };
 		EC976588255C0127000C36EF /* MXTurnServerResponse.m in Sources */ = {isa = PBXBuildFile; fileRef = EC976584255C0127000C36EF /* MXTurnServerResponse.m */; };
+		EC9765C7255C9F8A000C36EF /* MXCallSelectAnswerEventContent.h in Headers */ = {isa = PBXBuildFile; fileRef = EC9765C6255C9F8A000C36EF /* MXCallSelectAnswerEventContent.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		EC9765C8255C9F8A000C36EF /* MXCallSelectAnswerEventContent.h in Headers */ = {isa = PBXBuildFile; fileRef = EC9765C6255C9F8A000C36EF /* MXCallSelectAnswerEventContent.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		EC9765DE255C9F94000C36EF /* MXCallSelectAnswerEventContent.m in Sources */ = {isa = PBXBuildFile; fileRef = EC9765DD255C9F94000C36EF /* MXCallSelectAnswerEventContent.m */; };
+		EC9765DF255C9F94000C36EF /* MXCallSelectAnswerEventContent.m in Sources */ = {isa = PBXBuildFile; fileRef = EC9765DD255C9F94000C36EF /* MXCallSelectAnswerEventContent.m */; };
 		ECAE7AEC24ED75F1002FA813 /* HTTPAdditionalHeadersTests.m in Sources */ = {isa = PBXBuildFile; fileRef = ECAE7AEB24ED75F1002FA813 /* HTTPAdditionalHeadersTests.m */; };
 		F0173EAC1FCF0E8900B5F6A3 /* MXGroup.h in Headers */ = {isa = PBXBuildFile; fileRef = F0173EAA1FCF0E8800B5F6A3 /* MXGroup.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		F0173EAD1FCF0E8900B5F6A3 /* MXGroup.m in Sources */ = {isa = PBXBuildFile; fileRef = F0173EAB1FCF0E8900B5F6A3 /* MXGroup.m */; };
@@ -1840,6 +1844,8 @@
 		EC97657A255C0101000C36EF /* MXCallCandidate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MXCallCandidate.m; sourceTree = "<group>"; };
 		EC976583255C0127000C36EF /* MXTurnServerResponse.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MXTurnServerResponse.h; sourceTree = "<group>"; };
 		EC976584255C0127000C36EF /* MXTurnServerResponse.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MXTurnServerResponse.m; sourceTree = "<group>"; };
+		EC9765C6255C9F8A000C36EF /* MXCallSelectAnswerEventContent.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXCallSelectAnswerEventContent.h; sourceTree = "<group>"; };
+		EC9765DD255C9F94000C36EF /* MXCallSelectAnswerEventContent.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXCallSelectAnswerEventContent.m; sourceTree = "<group>"; };
 		ECAE7AEB24ED75F1002FA813 /* HTTPAdditionalHeadersTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = HTTPAdditionalHeadersTests.m; sourceTree = "<group>"; };
 		ED2F344856EFFCA383E37B22 /* Pods-SDK-MatrixSDK.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-SDK-MatrixSDK.release.xcconfig"; path = "Target Support Files/Pods-SDK-MatrixSDK/Pods-SDK-MatrixSDK.release.xcconfig"; sourceTree = "<group>"; };
 		EDC74874AB2D86EFEE912B04 /* Pods-MatrixSDK-MatrixSDK-macOS.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-MatrixSDK-MatrixSDK-macOS.debug.xcconfig"; path = "Target Support Files/Pods-MatrixSDK-MatrixSDK-macOS/Pods-MatrixSDK-MatrixSDK-macOS.debug.xcconfig"; sourceTree = "<group>"; };
@@ -3240,6 +3246,8 @@
 				EC976552255BFFCB000C36EF /* MXCallCandidatesEventContent.m */,
 				EC97655B255C002A000C36EF /* MXCallAnswerEventContent.h */,
 				EC97655C255C002A000C36EF /* MXCallAnswerEventContent.m */,
+				EC9765C6255C9F8A000C36EF /* MXCallSelectAnswerEventContent.h */,
+				EC9765DD255C9F94000C36EF /* MXCallSelectAnswerEventContent.m */,
 				EC976565255C0062000C36EF /* MXCallHangupEventContent.h */,
 				EC976566255C0062000C36EF /* MXCallHangupEventContent.m */,
 			);
@@ -3383,6 +3391,7 @@
 				B172857C2100D4F60052C51E /* MXSendReplyEventDefaultStringLocalizations.h in Headers */,
 				329FB1791A0A74B100A5E88E /* MXTools.h in Headers */,
 				322691321E5EF77D00966A6E /* MXDeviceListOperation.h in Headers */,
+				EC9765C7255C9F8A000C36EF /* MXCallSelectAnswerEventContent.h in Headers */,
 				32481A841C03572900782AD3 /* MXRoomAccountData.h in Headers */,
 				327E9AE12285497100A98BC1 /* MXEventContentRelatesTo.h in Headers */,
 				32133025228BFA800070BA9B /* MXReactionCountChangeListener.h in Headers */,
@@ -3775,6 +3784,7 @@
 				B14EF33E2397E90400758AF0 /* MXOlmInboundGroupSession.h in Headers */,
 				B14EF33F2397E90400758AF0 /* (null) in Headers */,
 				B14EF3402397E90400758AF0 /* MXKeyBackupVersionTrust.h in Headers */,
+				EC9765C8255C9F8A000C36EF /* MXCallSelectAnswerEventContent.h in Headers */,
 				EC97654A255BFF35000C36EF /* MXCallInviteEventContent.h in Headers */,
 				320B3935239FA56900BE2C06 /* MXKeyVerificationByDMRequest.h in Headers */,
 				B14EF3412397E90400758AF0 /* MXOutgoingRoomKeyRequestManager.h in Headers */,
@@ -4284,6 +4294,7 @@
 				32A151491DAF7C0C00400192 /* MXKey.m in Sources */,
 				324DD2AE246AEB7B00377005 /* MXSecretStoragePassphrase.m in Sources */,
 				B1136964230AC9D900E2B2FA /* MXIdentityServerRestClient.m in Sources */,
+				EC9765DE255C9F94000C36EF /* MXCallSelectAnswerEventContent.m in Sources */,
 				F0C34CBB1C18C93700C36F09 /* MXSDKOptions.m in Sources */,
 				320BBF441D6C81550079890E /* MXEventsEnumeratorOnArray.m in Sources */,
 				32618E7220ED2DF500E1D2EA /* MXFilterJSONModel.m in Sources */,
@@ -4546,6 +4557,7 @@
 				327C3E4E23A39D91006183D1 /* MXAggregatedReferencesUpdater.m in Sources */,
 				B14EF2352397E90400758AF0 /* MXRoomPowerLevels.swift in Sources */,
 				32AF9287240EA2430008A0FD /* MXSecretShareRequest.m in Sources */,
+				EC9765DF255C9F94000C36EF /* MXCallSelectAnswerEventContent.m in Sources */,
 				B14EF2362397E90400758AF0 /* MXAggregations.m in Sources */,
 				B14EF2372397E90400758AF0 /* MXKeyVerificationManager.m in Sources */,
 				B14EF2382397E90400758AF0 /* MXEvent.m in Sources */,

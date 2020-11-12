@@ -27,6 +27,7 @@
 
 #import "MXCallInviteEventContent.h"
 #import "MXCallAnswerEventContent.h"
+#import "MXCallSelectAnswerEventContent.h"
 #import "MXCallHangupEventContent.h"
 #import "MXCallCandidatesEventContent.h"
 
@@ -278,6 +279,9 @@ NSString *const kMXCallManagerConferenceFinished = @"kMXCallManagerConferenceFin
         case MXEventTypeCallAnswer:
             [self handleCallAnswer:event];
             break;
+        case MXEventTypeCallSelectAnswer:
+            [self handleCallSelectAnswer:event];
+            break;
         case MXEventTypeCallHangup:
             [self handleCallHangup:event];
             break;
@@ -400,6 +404,17 @@ NSString *const kMXCallManagerConferenceFinished = @"kMXCallManagerConferenceFin
 - (void)handleCallAnswer:(MXEvent *)event
 {
     MXCallAnswerEventContent *content = [MXCallAnswerEventContent modelFromJSON:event.content];
+
+    MXCall *call = [self callWithCallId:content.callId];
+    if (call)
+    {
+        [call handleCallEvent:event];
+    }
+}
+
+- (void)handleCallSelectAnswer:(MXEvent *)event
+{
+    MXCallSelectAnswerEventContent *content = [MXCallSelectAnswerEventContent modelFromJSON:event.content];
 
     MXCall *call = [self callWithCallId:content.callId];
     if (call)
