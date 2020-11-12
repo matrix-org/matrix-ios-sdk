@@ -81,7 +81,9 @@ NSString *const kMXCallManagerConferenceFinished = @"kMXCallManagerConferenceFin
                                                                 kMXEventTypeStringCallInvite,
                                                                 kMXEventTypeStringCallCandidates,
                                                                 kMXEventTypeStringCallAnswer,
-                                                                kMXEventTypeStringCallHangup
+                                                                kMXEventTypeStringCallSelectAnswer,
+                                                                kMXEventTypeStringCallHangup,
+                                                                kMXEventTypeStringCallReject
                                                                 ]
                                                       onEvent:^(MXEvent *event, MXTimelineDirection direction, id customObject) {
 

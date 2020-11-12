@@ -589,13 +589,18 @@ NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
                                   @"version": kMXCallVersion,
                                   @"party_id": self.partyId
                                   };
-        MXEvent *localEcho;
-        [_callSignalingRoom sendEventOfType:kMXEventTypeStringCallReject content:content localEcho:&localEcho success:nil failure:^(NSError *error) {
+        MXEvent *fakeEvent = [MXEvent modelFromJSON:@{
+            @"type": kMXEventTypeStringCallReject,
+            @"content": content
+        }];
+        [_callSignalingRoom sendEventOfType:kMXEventTypeStringCallReject content:content localEcho:nil success:^(NSString *eventId) {
+            
+        } failure:^(NSError *error) {
             NSLog(@"[MXCall] hangup: ERROR: Cannot send m.call.reject event.");
             [self didEncounterError:error];
         }];
         
-        [self terminateWithReason:localEcho];
+        [self terminateWithReason:fakeEvent];
         return;
     }
 
