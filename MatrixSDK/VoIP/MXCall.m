@@ -28,6 +28,7 @@
 #import "MXCallAnswerEventContent.h"
 #import "MXCallSelectAnswerEventContent.h"
 #import "MXCallCandidatesEventContent.h"
+#import "MXCallRejectEventContent.h"
 
 #pragma mark - Constants definitions
 NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
@@ -352,8 +353,7 @@ NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
                     MXCallSelectAnswerEventContent *content = [MXCallSelectAnswerEventContent modelFromJSON:event.content];
                     if (![content.selectedPartyId isEqualToString:self.partyId])
                     {
-                        // Else this event means that the call has been answered by the user from
-                        // another device
+                        // Else this event means that the call has been answered (accepted/rejected) by another user/device
                         [self onCallAnsweredElsewhere];
                     }
                 }
@@ -382,6 +382,54 @@ NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
                     [callStackCall handleRemoteCandidate:canditate.JSONDictionary];
                 }
             }
+            break;
+        }
+
+        case MXEventTypeCallReject:
+        {
+            // Listen to answer event only for call we are making, not receiving
+            if (!_isIncoming)
+            {
+                if (selectedAnswer)
+                {
+                    //  there is already a selected answer, ignore this one
+                    return;
+                }
+                
+                // The peer rejected our outgoing call
+                if (inviteExpirationTimer)
+                {
+                    [inviteExpirationTimer invalidate];
+                    inviteExpirationTimer = nil;
+                }
+                
+                if (_state != MXCallStateEnded)
+                {
+                    MXCallRejectEventContent *content = [MXCallRejectEventContent modelFromJSON:event.content];
+                    selectedAnswer = content;
+                    
+                    NSDictionary *selectAnswerContent = @{
+                        @"call_id": self.callId,
+                        @"version": kMXCallVersion,
+                        @"party_id": self.partyId,
+                        @"selected_party_id": content.partyId
+                    };
+                    
+                    [self.callSignalingRoom sendEventOfType:kMXEventTypeStringCallSelectAnswer
+                                                    content:selectAnswerContent
+                                                  localEcho:nil
+                                                    success:^(NSString *eventId) {
+                        
+                        [self terminateWithReason:event];
+                        
+                    } failure:^(NSError *error) {
+                        NSLog(@"[MXCall] callWithVideo: ERROR: Cannot send m.call.select_answer event. Error: %@\n", error);
+                        self->selectedAnswer = nil;
+                        [self didEncounterError:error];
+                    }];
+                }
+            }
+            
             break;
         }
 
@@ -532,6 +580,24 @@ NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
 - (void)hangup
 {
     NSLog(@"[MXCall] hangup");
+    
+    if (self.state == MXCallStateRinging && [callInviteEventContent.version isEqualToString:kMXCallVersion])
+    {
+        // Send the reject event for new call invites
+        NSDictionary *content = @{
+                                  @"call_id": _callId,
+                                  @"version": kMXCallVersion,
+                                  @"party_id": self.partyId
+                                  };
+        MXEvent *localEcho;
+        [_callSignalingRoom sendEventOfType:kMXEventTypeStringCallReject content:content localEcho:&localEcho success:nil failure:^(NSError *error) {
+            NSLog(@"[MXCall] hangup: ERROR: Cannot send m.call.reject event.");
+            [self didEncounterError:error];
+        }];
+        
+        [self terminateWithReason:localEcho];
+        return;
+    }
 
     if (self.state != MXCallStateEnded)
     {
@@ -789,12 +855,35 @@ NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
     // Determine call end reason
     if (event)
     {
-        if ([event.sender isEqualToString:callManager.mxSession.myUserId])
-            _endReason = MXCallEndReasonHangupElsewhere;
-        else if (!self.isEstablished && !self.isIncoming)
-            _endReason = MXCallEndReasonBusy;
-        else
-            _endReason = MXCallEndReasonRemoteHangup;
+        switch (event.eventType)
+        {
+            case MXEventTypeCallHangup:
+            {
+                if ([event.sender isEqualToString:callManager.mxSession.myUserId])
+                {
+                    _endReason = MXCallEndReasonHangupElsewhere;
+                }
+                else if (!self.isEstablished && !self.isIncoming)
+                {
+                    _endReason = MXCallEndReasonBusy;
+                }
+                else
+                {
+                    _endReason = MXCallEndReasonRemoteHangup;
+                }
+                break;
+            }
+            case MXEventTypeCallReject:
+            {
+                _endReason = MXCallEndReasonRejected;
+                break;
+            }
+            default:
+            {
+                _endReason = MXCallEndReasonHangup;
+                break;
+            }
+        }
     }
     else
     {

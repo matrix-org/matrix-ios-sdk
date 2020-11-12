@@ -30,6 +30,7 @@
 #import "MXCallSelectAnswerEventContent.h"
 #import "MXCallHangupEventContent.h"
 #import "MXCallCandidatesEventContent.h"
+#import "MXCallRejectEventContent.h"
 
 #pragma mark - Constants definitions
 NSString *const kMXCallManagerNewCall            = @"kMXCallManagerNewCall";
@@ -288,6 +289,9 @@ NSString *const kMXCallManagerConferenceFinished = @"kMXCallManagerConferenceFin
         case MXEventTypeCallCandidates:
             [self handleCallCandidates:event];
             break;
+        case MXEventTypeCallReject:
+            [self handleCallReject:event];
+            break;
         default:
             break;
     }
@@ -441,6 +445,18 @@ NSString *const kMXCallManagerConferenceFinished = @"kMXCallManagerConferenceFin
 - (void)handleCallCandidates:(MXEvent *)event
 {
     MXCallCandidatesEventContent *content = [MXCallCandidatesEventContent modelFromJSON:event.content];
+
+    // Forward the event to the MXCall object
+    MXCall *call = [self callWithCallId:content.callId];
+    if (call)
+    {
+        [call handleCallEvent:event];
+    }
+}
+
+- (void)handleCallReject:(MXEvent *)event
+{
+    MXCallRejectEventContent *content = [MXCallRejectEventContent modelFromJSON:event.content];
 
     // Forward the event to the MXCall object
     MXCall *call = [self callWithCallId:content.callId];

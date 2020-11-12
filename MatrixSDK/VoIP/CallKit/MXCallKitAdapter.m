@@ -140,6 +140,7 @@ NSString * const kMXCallKitAdapterAudioSessionDidActive = @"kMXCallKitAdapterAud
         switch (endReason)
         {
             case MXCallEndReasonRemoteHangup:
+            case MXCallEndReasonRejected:
                 reason = CXCallEndedReasonRemoteEnded;
                 break;
             case MXCallEndReasonHangupElsewhere:
