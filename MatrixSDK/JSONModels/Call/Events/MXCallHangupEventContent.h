@@ -17,6 +17,25 @@
 #import <Foundation/Foundation.h>
 #import "MXCallEventContent.h"
 
+typedef NS_ENUM(NSInteger, MXCallHangupReason)
+{
+    MXCallHangupReasonUserHangup,
+    MXCallHangupReasonIceFailed,
+    MXCallHangupReasonInviteTimeout,
+    MXCallHangupReasonIceTimeout,
+    MXCallHangupReasonUserMediaFailed,
+    MXCallHangupReasonUnknownError
+} NS_REFINED_FOR_SWIFT;
+
+typedef NSString * MXCallHangupReasonString NS_REFINED_FOR_SWIFT;
+
+FOUNDATION_EXPORT NSString *const kMXCallHangupReasonUserHangup;
+FOUNDATION_EXPORT NSString *const kMXCallHangupReasonIceFailed;
+FOUNDATION_EXPORT NSString *const kMXCallHangupReasonInviteTimeout;
+FOUNDATION_EXPORT NSString *const kMXCallHangupReasonIceTimeout;
+FOUNDATION_EXPORT NSString *const kMXCallHangupReasonUserMediaFailed;
+FOUNDATION_EXPORT NSString *const kMXCallHangupReasonUnknownError;
+
 /**
  `MXCallHangupEventContent` represents the content of a m.call.hangup event.
  */
@@ -25,6 +44,17 @@
 /**
  A unique identifier for the call.
  */
-@property (nonatomic) NSString *callId;
+@property (nonatomic, copy) NSString *callId;
+
+/**
+ The reason of the hangup event. Can be mapped to a MXCallHangupReason enum.
+ @seealso reasonType
+ */
+@property (nonatomic, copy) MXCallHangupReasonString reason;
+
+/**
+ Mapped reason of the hangup event.
+ */
+@property (nonatomic, assign) MXCallHangupReason reasonType;
 
 @end

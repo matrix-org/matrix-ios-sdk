@@ -23,6 +23,7 @@
 #endif
 
 #import "MXCallStackCall.h"
+#import "MXCallHangupEventContent.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -61,8 +62,7 @@ typedef NS_ENUM(NSInteger, MXCallEndReason)
     MXCallEndReasonHangup, // The call was ended by the local side
     MXCallEndReasonHangupElsewhere, // The call was ended on another device
     MXCallEndReasonRemoteHangup, // The call was ended by the remote side
-    MXCallEndReasonRejected,  //  The call was explicitly rejected
-    MXCallEndReasonBusy, // The call was declined by the remote side before it was being established. Only for outgoing calls
+    MXCallEndReasonBusy, // The call was declined by the local/remote side before it was being established.
     MXCallEndReasonMissed, // The call wasn't established in a given period of time
     MXCallEndReasonAnsweredElseWhere // The call was answered on another device
 };
@@ -125,6 +125,10 @@ extern NSString *const kMXCallStateDidChange;
  */
 - (void)hangup;
 
+/**
+ Hang up a call with a reason in progress.
+ */
+- (void)hangupWithReason:(MXCallHangupReason)reason;
 
 #pragma mark - Properties
 /**
@@ -279,8 +283,9 @@ extern NSString *const kMXCallStateDidChange;
 
  @param call the instance that changes.
  @param error the error.
+ @param reason The hangup reason, which would be sent if this method was not implemented.
  */
-- (void)call:(MXCall *)call didEncounterError:(NSError *)error;
+- (void)call:(MXCall *)call didEncounterError:(NSError *)error reason:(MXCallHangupReason)reason;
 
 @end
 

@@ -248,11 +248,11 @@ NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
                                        }
                                        failure:^(NSError * _Nonnull error) {
                                            NSLog(@"[MXCall] handleOffer: ERROR: Couldn't handle offer. Error: %@", error);
-                                           [self didEncounterError:error];
+                                           [self didEncounterError:error reason:MXCallHangupReasonIceFailed];
                                        }];
                 } failure:^(NSError *error) {
                     NSLog(@"[MXCall] startCapturingMediaWithVideo: ERROR: Couldn't start capturing. Error: %@", error);
-                    [self didEncounterError:error];
+                    [self didEncounterError:error reason:MXCallHangupReasonUserMediaFailed];
                 }];
             }
             else
@@ -304,7 +304,7 @@ NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
                                         failure:^(NSError *error) {
                         NSLog(@"[MXCall] handleCallEvent: ERROR: Cannot send handle answer. Error: %@\nEvent: %@", error, event);
                         self->selectedAnswer = nil;
-                        [self didEncounterError:error];
+                        [self didEncounterError:error reason:MXCallHangupReasonIceFailed];
                     }];
                 };
                 
@@ -327,7 +327,7 @@ NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
                     } failure:^(NSError *error) {
                         NSLog(@"[MXCall] callWithVideo: ERROR: Cannot send m.call.select_answer event. Error: %@\n", error);
                         self->selectedAnswer = nil;
-                        [self didEncounterError:error];
+                        [self didEncounterError:error reason:MXCallHangupReasonUnknownError];
                     }];
                 }
                 else
@@ -425,7 +425,7 @@ NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
                     } failure:^(NSError *error) {
                         NSLog(@"[MXCall] callWithVideo: ERROR: Cannot send m.call.select_answer event. Error: %@\n", error);
                         self->selectedAnswer = nil;
-                        [self didEncounterError:error];
+                        [self didEncounterError:error reason:MXCallHangupReasonUnknownError];
                     }];
                 }
             }
@@ -489,16 +489,16 @@ NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
 
             } failure:^(NSError *error) {
                 NSLog(@"[MXCall] callWithVideo: ERROR: Cannot send m.call.invite event.");
-                [self didEncounterError:error];
+                [self didEncounterError:error reason:MXCallHangupReasonUnknownError];
             }];
 
         } failure:^(NSError *error) {
             NSLog(@"[MXCall] callWithVideo: ERROR: Cannot create offer. Error: %@", error);
-            [self didEncounterError:error];
+            [self didEncounterError:error reason:MXCallHangupReasonIceFailed];
         }];
     } failure:^(NSError *error) {
         NSLog(@"[MXCall] callWithVideo: ERROR: Cannot start capturing media. Error: %@", error);
-        [self didEncounterError:error];
+        [self didEncounterError:error reason:MXCallHangupReasonUserMediaFailed];
     }];
 }
 
@@ -547,12 +547,12 @@ NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
                                           };
                 [self.callSignalingRoom sendEventOfType:kMXEventTypeStringCallAnswer content:content localEcho:nil success:nil failure:^(NSError *error) {
                     NSLog(@"[MXCall] answer: ERROR: Cannot send m.call.answer event.");
-                    [self didEncounterError:error];
+                    [self didEncounterError:error reason:MXCallHangupReasonUnknownError];
                 }];
 
             } failure:^(NSError *error) {
                 NSLog(@"[MXCall] answer: ERROR: Cannot create offer. Error: %@", error);
-                [self didEncounterError:error];
+                [self didEncounterError:error reason:MXCallHangupReasonIceFailed];
             }];
             
             self->callInviteEventContent = nil;
@@ -567,7 +567,7 @@ NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
             NSLog(@"[MXCall] answer: ensuring encryption is ready to use ...");
             [callManager.mxSession.crypto ensureEncryptionInRoom:_callSignalingRoom.roomId success:answer failure:^(NSError *error) {
                 NSLog(@"[MXCall] answer: ERROR: [MXCrypto ensureEncryptionInRoom] failed. Error: %@", error);
-                [self didEncounterError:error];
+                [self didEncounterError:error reason:MXCallHangupReasonUnknownError];
             }];
         }
         else
@@ -589,38 +589,53 @@ NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
                                   @"version": kMXCallVersion,
                                   @"party_id": self.partyId
                                   };
+        
+        [_callSignalingRoom sendEventOfType:kMXEventTypeStringCallReject content:content localEcho:nil success:nil failure:^(NSError *error) {
+            NSLog(@"[MXCall] hangup: ERROR: Cannot send m.call.reject event.");
+            [self didEncounterError:error reason:MXCallHangupReasonUnknownError];
+        }];
+        
+        //  terminate with a fake reject event
         MXEvent *fakeEvent = [MXEvent modelFromJSON:@{
             @"type": kMXEventTypeStringCallReject,
             @"content": content
         }];
-        [_callSignalingRoom sendEventOfType:kMXEventTypeStringCallReject content:content localEcho:nil success:^(NSString *eventId) {
-            
-        } failure:^(NSError *error) {
-            NSLog(@"[MXCall] hangup: ERROR: Cannot send m.call.reject event.");
-            [self didEncounterError:error];
-        }];
-        
+        fakeEvent.sender = callManager.mxSession.myUserId;
         [self terminateWithReason:fakeEvent];
         return;
     }
 
+    //  hangup with the default reason
+    [self hangupWithReason:MXCallHangupReasonUserHangup];
+}
+
+- (void)hangupWithReason:(MXCallHangupReason)reason
+{
+    NSLog(@"[MXCall] hangupWithReason: %ld", (long)reason);
+    
     if (self.state != MXCallStateEnded)
     {
-        [self terminateWithReason:nil];
-
         // Send the hangup event
         NSDictionary *content = @{
                                   @"call_id": _callId,
                                   @"version": kMXCallVersion,
-                                  @"party_id": self.partyId
+                                  @"party_id": self.partyId,
+                                  @"reason": [MXTools callHangupReasonString:reason]
                                   };
         [_callSignalingRoom sendEventOfType:kMXEventTypeStringCallHangup content:content localEcho:nil success:nil failure:^(NSError *error) {
             NSLog(@"[MXCall] hangup: ERROR: Cannot send m.call.hangup event.");
-            [self didEncounterError:error];
+            [self didEncounterError:error reason:MXCallHangupReasonUnknownError];
         }];
+        
+        //  terminate with a fake hangup event
+        MXEvent *fakeEvent = [MXEvent modelFromJSON:@{
+            @"type": kMXEventTypeStringCallHangup,
+            @"content": content
+        }];
+        fakeEvent.sender = callManager.mxSession.myUserId;
+        [self terminateWithReason:fakeEvent];
     }
 }
-
 
 #pragma marl - Properties
 - (void)setState:(MXCallState)state reason:(MXEvent *)event
@@ -805,7 +820,7 @@ NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
 
         [_callSignalingRoom sendEventOfType:kMXEventTypeStringCallCandidates content:content localEcho:nil success:nil failure:^(NSError *error) {
             NSLog(@"[MXCall] onICECandidate: Warning: Cannot send m.call.candidates event.");
-            [self didEncounterError:error];
+            [self didEncounterError:error reason:MXCallHangupReasonUnknownError];
         }];
 
         [localICECandidates removeAllObjects];
@@ -815,13 +830,23 @@ NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
 - (void)callStackCall:(id<MXCallStackCall>)callStackCall onError:(NSError *)error
 {
     NSLog(@"[MXCall] callStackCall didEncounterError: %@", error);
-    [self didEncounterError:error];
+    
+    if (self.isEstablished)
+    {
+        [self didEncounterError:error reason:MXCallHangupReasonIceTimeout];
+    }
+    else
+    {
+        [self didEncounterError:error reason:MXCallHangupReasonIceFailed];
+    }
 }
 
 - (void)callStackCallDidConnect:(id<MXCallStackCall>)callStackCall
 {
     if (self.state == MXCallStateConnecting)
+    {
         [self setState:MXCallStateConnected reason:nil];
+    }
 }
 
 
@@ -864,23 +889,46 @@ NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
         {
             case MXEventTypeCallHangup:
             {
-                if ([event.sender isEqualToString:callManager.mxSession.myUserId])
-                {
-                    _endReason = MXCallEndReasonHangupElsewhere;
-                }
-                else if (!self.isEstablished && !self.isIncoming)
-                {
-                    _endReason = MXCallEndReasonBusy;
-                }
-                else
-                {
-                    _endReason = MXCallEndReasonRemoteHangup;
+                MXCallHangupEventContent *content = [MXCallHangupEventContent modelFromJSON:event.content];
+                MXCallHangupReason reason = content.reasonType;
+                
+                switch (reason) {
+                    case MXCallHangupReasonUserHangup:
+                        if ([event.sender isEqualToString:callManager.mxSession.myUserId])
+                        {
+                            if ([content.partyId isEqualToString:self.partyId])
+                            {
+                                _endReason = MXCallEndReasonHangup;
+                            }
+                            else
+                            {
+                                _endReason = MXCallEndReasonHangupElsewhere;
+                            }
+                        }
+                        else if (!self.isEstablished && !self.isIncoming)
+                        {
+                            _endReason = MXCallEndReasonBusy;
+                        }
+                        else
+                        {
+                            _endReason = MXCallEndReasonRemoteHangup;
+                        }
+                        break;
+                    case MXCallHangupReasonIceFailed:
+                    case MXCallHangupReasonIceTimeout:
+                    case MXCallHangupReasonUserMediaFailed:
+                    case MXCallHangupReasonUnknownError:
+                        _endReason = MXCallEndReasonUnknown;
+                        break;
+                    case MXCallHangupReasonInviteTimeout:
+                        _endReason = MXCallEndReasonMissed;
+                        break;
                 }
                 break;
             }
             case MXEventTypeCallReject:
             {
-                _endReason = MXCallEndReasonRejected;
+                _endReason = MXCallEndReasonBusy;
                 break;
             }
             default:
@@ -894,19 +942,21 @@ NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
     {
         _endReason = MXCallEndReasonHangup;
     }
+    
+    NSLog(@"[MXCall] terminateWithReason: %@, endReason: %ld", event, (long)_endReason);
 
     [self setState:MXCallStateEnded reason:event];
 }
 
-- (void)didEncounterError:(NSError *)error
+- (void)didEncounterError:(NSError *)error reason:(MXCallHangupReason)reason
 {
-    if ([_delegate respondsToSelector:@selector(call:didEncounterError:)])
+    if ([_delegate respondsToSelector:@selector(call:didEncounterError:reason:)])
     {
-        [_delegate call:self didEncounterError:error];
+        [_delegate call:self didEncounterError:error reason:reason];
     }
     else
     {
-        [self hangup];
+        [self hangupWithReason:reason];
     }
 }
 

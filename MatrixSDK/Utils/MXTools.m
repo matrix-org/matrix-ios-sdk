@@ -277,6 +277,68 @@ NSCharacterSet *uriComponentCharset;
     return presenceString;
 }
 
++ (MXCallHangupReason)callHangupReason:(MXCallHangupReasonString)reasonString
+{
+    MXCallHangupReason reason = MXCallHangupReasonUserHangup;
+    
+    if ([reasonString isEqualToString:kMXCallHangupReasonUserHangup])
+    {
+        reason = MXCallHangupReasonUserHangup;
+    }
+    else if ([reasonString isEqualToString:kMXCallHangupReasonIceFailed])
+    {
+        reason = MXCallHangupReasonIceFailed;
+    }
+    else if ([reasonString isEqualToString:kMXCallHangupReasonInviteTimeout])
+    {
+        reason = MXCallHangupReasonInviteTimeout;
+    }
+    else if ([reasonString isEqualToString:kMXCallHangupReasonIceTimeout])
+    {
+        reason = MXCallHangupReasonIceTimeout;
+    }
+    else if ([reasonString isEqualToString:kMXCallHangupReasonUserMediaFailed])
+    {
+        reason = MXCallHangupReasonUserMediaFailed;
+    }
+    else if ([reasonString isEqualToString:kMXCallHangupReasonUnknownError])
+    {
+        reason = MXCallHangupReasonUnknownError;
+    }
+    
+    return reason;
+}
+
++ (MXCallHangupReasonString)callHangupReasonString:(MXCallHangupReason)reason
+{
+    MXCallHangupReasonString string;
+    
+    switch (reason) {
+        case MXCallHangupReasonUserHangup:
+            string = kMXCallHangupReasonUserHangup;
+            break;
+        case MXCallHangupReasonIceFailed:
+            string = kMXCallHangupReasonIceFailed;
+            break;
+        case MXCallHangupReasonInviteTimeout:
+            string = kMXCallHangupReasonInviteTimeout;
+            break;
+        case MXCallHangupReasonIceTimeout:
+            string = kMXCallHangupReasonIceTimeout;
+            break;
+        case MXCallHangupReasonUserMediaFailed:
+            string = kMXCallHangupReasonUserMediaFailed;
+            break;
+        case MXCallHangupReasonUnknownError:
+            string = kMXCallHangupReasonUnknownError;
+            break;
+        default:
+            break;
+    }
+    
+    return string;
+}
+
 + (NSString *)generateSecret
 {
     return [[NSProcessInfo processInfo] globallyUniqueString];

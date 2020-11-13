@@ -29,6 +29,7 @@ NS_ASSUME_NONNULL_BEGIN
  */
 extern NSString * const kMXCallKitAdapterAudioSessionDidActive;
 
+API_AVAILABLE(ios(10.0))
 @interface MXCallKitAdapter : NSObject
 
 /**

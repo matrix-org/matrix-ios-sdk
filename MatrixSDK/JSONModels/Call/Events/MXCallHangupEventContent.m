@@ -15,6 +15,14 @@
 //
 
 #import "MXCallHangupEventContent.h"
+#import "MXTools.h"
+
+NSString *const kMXCallHangupReasonUserHangup = @"user_hangup";
+NSString *const kMXCallHangupReasonIceFailed = @"ice_failed";
+NSString *const kMXCallHangupReasonInviteTimeout = @"invite_timeout";
+NSString *const kMXCallHangupReasonIceTimeout = @"ice_timeout";
+NSString *const kMXCallHangupReasonUserMediaFailed = @"user_media_failed";
+NSString *const kMXCallHangupReasonUnknownError = @"unknown_error";
 
 @implementation MXCallHangupEventContent
 
@@ -25,9 +33,24 @@
     {
         [callHangupEventContent parseJSON:JSONDictionary];
         MXJSONModelSetString(callHangupEventContent.callId, JSONDictionary[@"call_id"]);
+        MXJSONModelSetString(callHangupEventContent.reason, JSONDictionary[@"reason"]);
+        if (!callHangupEventContent.reason)
+        {
+            callHangupEventContent.reason =  kMXCallHangupReasonUserHangup;
+        }
     }
 
     return callHangupEventContent;
+}
+
+- (MXCallHangupReason)reasonType
+{
+    return [MXTools callHangupReason:self.reason];
+}
+
+- (void)setReasonType:(MXCallHangupReason)reasonType
+{
+    self.reason = [MXTools callHangupReasonString:reasonType];
 }
 
 @end

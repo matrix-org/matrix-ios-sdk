@@ -140,13 +140,12 @@ NSString * const kMXCallKitAdapterAudioSessionDidActive = @"kMXCallKitAdapterAud
         switch (endReason)
         {
             case MXCallEndReasonRemoteHangup:
-            case MXCallEndReasonRejected:
+            case MXCallEndReasonBusy:
                 reason = CXCallEndedReasonRemoteEnded;
                 break;
             case MXCallEndReasonHangupElsewhere:
                 reason = CXCallEndedReasonDeclinedElsewhere;
                 break;
-            case MXCallEndReasonBusy:
             case MXCallEndReasonMissed:
                 reason = CXCallEndedReasonUnanswered;
                 break;
@@ -203,7 +202,7 @@ NSString * const kMXCallKitAdapterAudioSessionDidActive = @"kMXCallKitAdapterAud
     [self.provider reportNewIncomingCallWithUUID:callUUID update:update completion:^(NSError * _Nullable error) {
         if (error)
         {
-            [call hangup];
+            [call hangupWithReason:MXCallHangupReasonUnknownError];
             [self.calls removeObjectForKey:callUUID];
             return;
         }
@@ -223,14 +222,14 @@ NSString * const kMXCallKitAdapterAudioSessionDidActive = @"kMXCallKitAdapterAud
 
 + (BOOL)callKitAvailable
 {
-	if (@available(iOS 10.0, *)) {
-		// CallKit currently illegal in China
-		// https://github.com/vector-im/riot-ios/issues/1941
+#if TARGET_IPHONE_SIMULATOR
+    return NO;
+#endif
+    
+    // CallKit currently illegal in China
+    // https://github.com/vector-im/riot-ios/issues/1941
 
-		return ![NSLocale.currentLocale.countryCode isEqual: @"CN"];
-	}
-
-	return NO;
+    return ![NSLocale.currentLocale.countryCode isEqualToString:@"CN"];
 }
 
 #pragma mark - CXProviderDelegate

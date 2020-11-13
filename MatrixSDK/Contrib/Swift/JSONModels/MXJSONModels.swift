@@ -112,3 +112,36 @@ public enum MXPushRuleScope: Equatable, Hashable {
         self = scopes.first(where: { $0.identifier == identifier }) ?? .device(profileTag: identifier)
     }
 }
+
+/// Hangup reason definitions
+public enum MXCallHangupReason: Equatable, Hashable {
+    case userHangup
+    case iceFailed
+    case inviteTimeout
+    case iceTimeout
+    case userMediaFailed
+    case unknownError
+
+    public var identifier: String {
+        switch self {
+        case .userHangup:
+            return kMXCallHangupReasonUserHangup
+        case .iceFailed:
+            return kMXCallHangupReasonIceFailed
+        case .inviteTimeout:
+            return kMXCallHangupReasonInviteTimeout
+        case .iceTimeout:
+            return kMXCallHangupReasonIceTimeout
+        case .userMediaFailed:
+            return kMXCallHangupReasonUserMediaFailed
+        case .unknownError:
+            return kMXCallHangupReasonUnknownError
+        }
+    }
+
+    public init(identifier: String) {
+        let reasons: [MXCallHangupReason] = [.userHangup, .iceFailed, .inviteTimeout, .iceTimeout, .userMediaFailed, .unknownError]
+        self = reasons.first(where: { $0.identifier == identifier }) ?? .userHangup
+    }
+
+}
