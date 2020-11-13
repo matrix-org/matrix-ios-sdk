@@ -49,7 +49,7 @@
     {
         duration = [_endDate timeIntervalSinceDate:_startDate];
     }
-    return duration;;
+    return duration;
 }
 
 @end

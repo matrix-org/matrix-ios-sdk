@@ -20,13 +20,18 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface MXTaskProfile : NSObject
 
+// Task name
 @property (nonatomic, readonly) NSString *name;
+
+// Category to group related tasks
 @property (nonatomic, readonly) NSString *category;
 
+// Task timing
 @property (nonatomic, readonly) NSDate *startDate;
 @property (nonatomic, readonly, nullable) NSDate *endDate;
 @property (nonatomic, readonly) NSTimeInterval duration;
 
+// Number of items managed by the task
 @property (nonatomic) NSUInteger units;
 
 // YES, if the task was interrupted by a pause
