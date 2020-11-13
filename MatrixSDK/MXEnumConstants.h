@@ -241,6 +241,11 @@ FOUNDATION_EXPORT NSString *const kMXAnalyticsStartupMountData;
 // Duration of the the display of the app launch screen
 FOUNDATION_EXPORT NSString *const kMXAnalyticsStartupLaunchScreen;
 
+// Metrics related to the initial sync request
+FOUNDATION_EXPORT NSString *const kMXAnalyticsInitialSyncCategory;
+FOUNDATION_EXPORT NSString *const kMXAnalyticsInitialSyncRequest;
+FOUNDATION_EXPORT NSString *const kMXAnalyticsInitialSyncParsing;
+
 /**
  Overall stats category.
  */
