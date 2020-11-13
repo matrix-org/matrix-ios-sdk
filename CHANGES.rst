@@ -1,3 +1,34 @@
+Changes in 0.17.0 (2020-11-13)
+=================================================
+
+✨ Features
+ * 
+
+🙌 Improvements
+ * MXAnalyticsDelegate: Make it fully agnostic on tracked data.
+ * MXRealmCryptoStore: Compact DB files before getting out of memory error (vector-im/element-ios/3792).
+ * Tools: Add MXProfiler to track some performance.
+
+🐛 Bugfix
+ * MXSession: Fix log for next stream token.
+ * MXThrottler: Dispatch the block on the correct queue. This will prevent unexpected loops (vector-im/element-ios/3778).
+ * Update JitsiMeetSDK to 2.10.0 (vector-im/element-ios/3712).
+
+⚠️ API Changes
+ * Xcode 12 is now mandatory for using the JingleCallStack sub pod.
+
+🗣 Translations
+ * 
+    
+🧱 Build
+ * 
+
+Others
+ * 
+
+Improvements:
+
+
 Changes in 0.16.20 (2020-10-27)
 =================================================
 
