@@ -12,10 +12,12 @@ Changes to be released in next version
 🐛 Bugfix
  * MXSession: Fix log for next stream token.
  * MXThrottler: Dispatch the block on the correct queue. This will prevent unexpected loops (vector-im/element-ios/3778).
- * Update JitsiMeetSDK to 2.10.0 (vector-im/element-ios/3712).
+ * Update JitsiMeetSDK to 2.10.2 (vector-im/element-ios/3712).
 
 ⚠️ API Changes
  * Xcode 12 is now mandatory for using the JingleCallStack sub pod.
+ * Update Realm to 10.2.1 and CocoaPods to 1.10.0.
+ * CocoaPods 1.10.0 is mandatory.
 
 🗣 Translations
  * 
