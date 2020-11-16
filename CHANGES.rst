@@ -17,6 +17,7 @@ Changes to be released in next version
 ⚠️ API Changes
  * Xcode 12 is now mandatory for using the JingleCallStack sub pod.
  * Update Realm to 10.2.1 and CocoaPods to 1.10.0.
+ * CocoaPods 1.10.0 is mandatory.
 
 🗣 Translations
  * 
