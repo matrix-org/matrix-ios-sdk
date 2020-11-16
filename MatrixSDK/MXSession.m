@@ -234,6 +234,7 @@ typedef void (^MXOnResumeDone)(void);
                                       kMXEventTypeStringCallSelectAnswer,
                                       kMXEventTypeStringCallHangup,
                                       kMXEventTypeStringCallReject,
+                                      kMXEventTypeStringCallNegotiate,
                                       kMXEventTypeStringSticker
                                       ];
 
