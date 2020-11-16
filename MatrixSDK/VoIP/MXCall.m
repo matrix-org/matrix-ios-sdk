@@ -29,6 +29,7 @@
 #import "MXCallSelectAnswerEventContent.h"
 #import "MXCallCandidatesEventContent.h"
 #import "MXCallRejectEventContent.h"
+#import "MXCallNegotiateEventContent.h"
 
 #pragma mark - Constants definitions
 NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
@@ -83,7 +84,7 @@ NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
     /**
      Selected answer for this call. Only exists for outgoing calls and after an answer (an accept or reject) received.
      */
-    MXCallEventContent *selectedAnswer;
+    MXEvent *selectedAnswer;
 }
 
 @end
@@ -294,7 +295,7 @@ NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
                 }
                 
                 //  mark this as the selected one
-                selectedAnswer = content;
+                selectedAnswer = event;
                 
                 void(^continueBlock)(void) = ^{
                     // Let's the stack finalise the connection
@@ -406,7 +407,7 @@ NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
                 if (_state != MXCallStateEnded)
                 {
                     MXCallRejectEventContent *content = [MXCallRejectEventContent modelFromJSON:event.content];
-                    selectedAnswer = content;
+                    selectedAnswer = event;
                     
                     NSDictionary *selectAnswerContent = @{
                         @"call_id": self.callId,
@@ -433,6 +434,23 @@ NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
             break;
         }
 
+        case MXEventTypeCallNegotiate:
+        {
+            if (!isMyEvent)
+            {
+                if (selectedAnswer && [selectedAnswer.sender isEqualToString:event.sender])
+                {
+                    MXCallEventContent *selectedAnswerContent = [MXCallEventContent modelFromJSON:selectedAnswer.content];
+                    MXCallNegotiateEventContent *content = [MXCallNegotiateEventContent modelFromJSON:event.content];
+                    
+                    if ([selectedAnswerContent.partyId isEqualToString:content.partyId])
+                    {
+                        //  user-id and party-id matches
+                    }
+                }
+            }
+            break;
+        }
         default:
             break;
     }

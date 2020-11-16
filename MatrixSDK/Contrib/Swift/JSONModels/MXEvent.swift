@@ -57,6 +57,7 @@ public enum MXEventType: Equatable, Hashable {
     case callSelectAnswer
     case callHangup
     case callReject
+    case callNegotiate
     case reaction
     case receipt
     case roomTombStone
@@ -99,6 +100,7 @@ public enum MXEventType: Equatable, Hashable {
         case .callSelectAnswer: return kMXEventTypeStringCallSelectAnswer
         case .callHangup: return kMXEventTypeStringCallHangup
         case .callReject: return kMXEventTypeStringCallReject
+        case .callNegotiate: return kMXEventTypeStringCallNegotiate
         case .reaction: return kMXEventTypeStringReaction
         case .receipt: return kMXEventTypeStringReceipt
         case .roomTombStone: return kMXEventTypeStringRoomTombStone
@@ -118,7 +120,7 @@ public enum MXEventType: Equatable, Hashable {
     }
 
     public init(identifier: String) {
-        let events: [MXEventType] = [.roomName, .roomTopic, .roomAvatar, .roomMember, .roomCreate, .roomJoinRules, .roomPowerLevels, .roomAliases, .roomCanonicalAlias, .roomEncrypted, .roomEncryption, .roomGuestAccess, .roomHistoryVisibility, .roomKey, .roomForwardedKey, .roomKeyRequest, .roomMessage, .roomMessageFeedback, .roomRedaction, .roomThirdPartyInvite, .roomTag, .presence, .typing, .callInvite, .callCandidates, .callAnswer, .callSelectAnswer, .callHangup, .callReject, .receipt, .roomTombStone]
+        let events: [MXEventType] = [.roomName, .roomTopic, .roomAvatar, .roomMember, .roomCreate, .roomJoinRules, .roomPowerLevels, .roomAliases, .roomCanonicalAlias, .roomEncrypted, .roomEncryption, .roomGuestAccess, .roomHistoryVisibility, .roomKey, .roomForwardedKey, .roomKeyRequest, .roomMessage, .roomMessageFeedback, .roomRedaction, .roomThirdPartyInvite, .roomTag, .presence, .typing, .callInvite, .callCandidates, .callAnswer, .callSelectAnswer, .callHangup, .callReject, .callNegotiate, .receipt, .roomTombStone]
         self = events.first(where: { $0.identifier == identifier }) ?? .custom(identifier)
     }
 }

@@ -1177,11 +1177,15 @@
 		EC9765C8255C9F8A000C36EF /* MXCallSelectAnswerEventContent.h in Headers */ = {isa = PBXBuildFile; fileRef = EC9765C6255C9F8A000C36EF /* MXCallSelectAnswerEventContent.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		EC9765DE255C9F94000C36EF /* MXCallSelectAnswerEventContent.m in Sources */ = {isa = PBXBuildFile; fileRef = EC9765DD255C9F94000C36EF /* MXCallSelectAnswerEventContent.m */; };
 		EC9765DF255C9F94000C36EF /* MXCallSelectAnswerEventContent.m in Sources */ = {isa = PBXBuildFile; fileRef = EC9765DD255C9F94000C36EF /* MXCallSelectAnswerEventContent.m */; };
-		EC976605255D496D000C36EF /* MXCallRejectEventContent.h in Headers */ = {isa = PBXBuildFile; fileRef = EC976604255D496C000C36EF /* MXCallRejectEventContent.h */; };
-		EC976606255D496D000C36EF /* MXCallRejectEventContent.h in Headers */ = {isa = PBXBuildFile; fileRef = EC976604255D496C000C36EF /* MXCallRejectEventContent.h */; };
+		EC976605255D496D000C36EF /* MXCallRejectEventContent.h in Headers */ = {isa = PBXBuildFile; fileRef = EC976604255D496C000C36EF /* MXCallRejectEventContent.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		EC976606255D496D000C36EF /* MXCallRejectEventContent.h in Headers */ = {isa = PBXBuildFile; fileRef = EC976604255D496C000C36EF /* MXCallRejectEventContent.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		EC976610255D4988000C36EF /* MXCallRejectEventContent.m in Sources */ = {isa = PBXBuildFile; fileRef = EC97660F255D4988000C36EF /* MXCallRejectEventContent.m */; };
 		EC976611255D4988000C36EF /* MXCallRejectEventContent.m in Sources */ = {isa = PBXBuildFile; fileRef = EC97660F255D4988000C36EF /* MXCallRejectEventContent.m */; };
 		ECAE7AEC24ED75F1002FA813 /* HTTPAdditionalHeadersTests.m in Sources */ = {isa = PBXBuildFile; fileRef = ECAE7AEB24ED75F1002FA813 /* HTTPAdditionalHeadersTests.m */; };
+		ECFFA970255ED32700706454 /* MXCallNegotiateEventContent.h in Headers */ = {isa = PBXBuildFile; fileRef = ECFFA96F255ED32700706454 /* MXCallNegotiateEventContent.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		ECFFA971255ED32700706454 /* MXCallNegotiateEventContent.h in Headers */ = {isa = PBXBuildFile; fileRef = ECFFA96F255ED32700706454 /* MXCallNegotiateEventContent.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		ECFFA977255ED34500706454 /* MXCallNegotiateEventContent.m in Sources */ = {isa = PBXBuildFile; fileRef = ECFFA976255ED34500706454 /* MXCallNegotiateEventContent.m */; };
+		ECFFA978255ED34500706454 /* MXCallNegotiateEventContent.m in Sources */ = {isa = PBXBuildFile; fileRef = ECFFA976255ED34500706454 /* MXCallNegotiateEventContent.m */; };
 		F0173EAC1FCF0E8900B5F6A3 /* MXGroup.h in Headers */ = {isa = PBXBuildFile; fileRef = F0173EAA1FCF0E8800B5F6A3 /* MXGroup.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		F0173EAD1FCF0E8900B5F6A3 /* MXGroup.m in Sources */ = {isa = PBXBuildFile; fileRef = F0173EAB1FCF0E8900B5F6A3 /* MXGroup.m */; };
 		F03EF4FE1DF014D9009DF592 /* MXMediaLoader.h in Headers */ = {isa = PBXBuildFile; fileRef = F03EF4FA1DF014D9009DF592 /* MXMediaLoader.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -1853,6 +1857,8 @@
 		EC976604255D496C000C36EF /* MXCallRejectEventContent.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXCallRejectEventContent.h; sourceTree = "<group>"; };
 		EC97660F255D4988000C36EF /* MXCallRejectEventContent.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXCallRejectEventContent.m; sourceTree = "<group>"; };
 		ECAE7AEB24ED75F1002FA813 /* HTTPAdditionalHeadersTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = HTTPAdditionalHeadersTests.m; sourceTree = "<group>"; };
+		ECFFA96F255ED32700706454 /* MXCallNegotiateEventContent.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXCallNegotiateEventContent.h; sourceTree = "<group>"; };
+		ECFFA976255ED34500706454 /* MXCallNegotiateEventContent.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXCallNegotiateEventContent.m; sourceTree = "<group>"; };
 		ED2F344856EFFCA383E37B22 /* Pods-SDK-MatrixSDK.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-SDK-MatrixSDK.release.xcconfig"; path = "Target Support Files/Pods-SDK-MatrixSDK/Pods-SDK-MatrixSDK.release.xcconfig"; sourceTree = "<group>"; };
 		EDC74874AB2D86EFEE912B04 /* Pods-MatrixSDK-MatrixSDK-macOS.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-MatrixSDK-MatrixSDK-macOS.debug.xcconfig"; path = "Target Support Files/Pods-MatrixSDK-MatrixSDK-macOS/Pods-MatrixSDK-MatrixSDK-macOS.debug.xcconfig"; sourceTree = "<group>"; };
 		F0173EAA1FCF0E8800B5F6A3 /* MXGroup.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXGroup.h; sourceTree = "<group>"; };
@@ -3258,6 +3264,8 @@
 				EC976566255C0062000C36EF /* MXCallHangupEventContent.m */,
 				EC976604255D496C000C36EF /* MXCallRejectEventContent.h */,
 				EC97660F255D4988000C36EF /* MXCallRejectEventContent.m */,
+				ECFFA96F255ED32700706454 /* MXCallNegotiateEventContent.h */,
+				ECFFA976255ED34500706454 /* MXCallNegotiateEventContent.m */,
 			);
 			path = Events;
 			sourceTree = "<group>";
@@ -3388,6 +3396,7 @@
 				320BBF3C1D6C7D9D0079890E /* MXEventsEnumerator.h in Headers */,
 				32637ED41E5B00400011E20D /* MXDeviceList.h in Headers */,
 				32F9FA7D1DBA0CF0009D98A6 /* MXDecryptionResult.h in Headers */,
+				ECFFA970255ED32700706454 /* MXCallNegotiateEventContent.h in Headers */,
 				3245A7501AF7B2930001D8A7 /* MXCall.h in Headers */,
 				02CAD43B217DD12F0074700B /* MXContentScanEncryptedBody.h in Headers */,
 				32D2CC0423422462002BD8CA /* MX3PidAddManager.h in Headers */,
@@ -3726,6 +3735,7 @@
 				B14EF30C2397E90400758AF0 /* MXDeviceInfo.h in Headers */,
 				32B0E34023A378320054FF1A /* MXEventReference.h in Headers */,
 				EC97655E255C002A000C36EF /* MXCallAnswerEventContent.h in Headers */,
+				ECFFA971255ED32700706454 /* MXCallNegotiateEventContent.h in Headers */,
 				324AAC802399143400380A66 /* MXKeyVerificationJSONModel.h in Headers */,
 				B14EF30D2397E90400758AF0 /* MXEventRelations.h in Headers */,
 				B14EF30E2397E90400758AF0 /* MXPushRuleRoomMemberCountConditionChecker.h in Headers */,
@@ -4116,6 +4126,7 @@
 				32CEEF4B23B0A8170039BA98 /* MXCrossSigningTools.m in Sources */,
 				320B3936239FA56900BE2C06 /* MXKeyVerificationByDMRequest.m in Sources */,
 				B146D47121A5939100D8C2C6 /* MXRealmHelper.m in Sources */,
+				ECFFA977255ED34500706454 /* MXCallNegotiateEventContent.m in Sources */,
 				32261B8C23C74A230018F1E2 /* MXDeviceTrustLevel.m in Sources */,
 				327E9AD82284803100A98BC1 /* MXEventAnnotation.m in Sources */,
 				32999DE022DCD183004FF987 /* MXPusher.m in Sources */,
@@ -4598,6 +4609,7 @@
 				B14EF24B2397E90400758AF0 /* MXServiceTermsRestClient.m in Sources */,
 				B14EF24C2397E90400758AF0 /* MXCredentials.m in Sources */,
 				B14EF24D2397E90400758AF0 /* MXOutgoingRoomKeyRequest.m in Sources */,
+				ECFFA978255ED34500706454 /* MXCallNegotiateEventContent.m in Sources */,
 				B14EF24E2397E90400758AF0 /* MXAllowedCertificates.m in Sources */,
 				B14EF24F2397E90400758AF0 /* MXLRUCache.m in Sources */,
 				EC97657E255C0101000C36EF /* MXCallCandidate.m in Sources */,

@@ -31,6 +31,7 @@
 #import "MXCallHangupEventContent.h"
 #import "MXCallCandidatesEventContent.h"
 #import "MXCallRejectEventContent.h"
+#import "MXCallNegotiateEventContent.h"
 
 #pragma mark - Constants definitions
 NSString *const kMXCallManagerNewCall            = @"kMXCallManagerNewCall";
@@ -83,7 +84,8 @@ NSString *const kMXCallManagerConferenceFinished = @"kMXCallManagerConferenceFin
                                                                 kMXEventTypeStringCallAnswer,
                                                                 kMXEventTypeStringCallSelectAnswer,
                                                                 kMXEventTypeStringCallHangup,
-                                                                kMXEventTypeStringCallReject
+                                                                kMXEventTypeStringCallReject,
+                                                                kMXEventTypeStringCallNegotiate
                                                                 ]
                                                       onEvent:^(MXEvent *event, MXTimelineDirection direction, id customObject) {
 
@@ -294,6 +296,9 @@ NSString *const kMXCallManagerConferenceFinished = @"kMXCallManagerConferenceFin
         case MXEventTypeCallReject:
             [self handleCallReject:event];
             break;
+        case MXEventTypeCallNegotiate:
+            [self handleCallNegotiate:event];
+            break;
         default:
             break;
     }
@@ -465,6 +470,28 @@ NSString *const kMXCallManagerConferenceFinished = @"kMXCallManagerConferenceFin
     if (call)
     {
         [call handleCallEvent:event];
+    }
+}
+
+- (void)handleCallNegotiate:(MXEvent *)event
+{
+    MXCallNegotiateEventContent *content = [MXCallNegotiateEventContent modelFromJSON:event.content];
+
+    // Check expiration (usefull filter when receiving load of events when resuming the event stream)
+    if (event.age < content.lifetime)
+    {
+        if ([event.sender isEqualToString:_mxSession.myUserId] &&
+            [content.partyId isEqualToString:_mxSession.myDeviceId])
+        {
+            //  this is a remote echo, ignore
+            return;
+        }
+        
+        MXCall *call = [self callWithCallId:content.callId];
+        if (call)
+        {
+            [call handleCallEvent:event];
+        }
     }
 }
 
