@@ -5,13 +5,14 @@ Changes to be released in next version
  * 
 
 🙌 Improvements
- * 
+ * Add MXRoomMembershipStateDataSource: That stores and notify room membership change state.
+ * MXSession: Add a method to retrieve room membership change state.
 
 🐛 Bugfix
  * 
 
 ⚠️ API Changes
- * 
+ * The MatrixSDK in now a mixed Swift & Objective-C framework by default. `SwiftSupport` subspec has been removed.
 
 🗣 Translations
  * 
