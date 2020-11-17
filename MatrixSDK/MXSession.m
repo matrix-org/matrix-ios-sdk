@@ -19,6 +19,7 @@
 
 #import "MXSession.h"
 #import "MatrixSDK.h"
+#import <MatrixSDK/MatrixSDK-Swift.h>
 
 #import <AFNetworking/AFNetworking.h>
 
@@ -181,6 +182,8 @@ typedef void (^MXOnResumeDone)(void);
  the app goes in background.
  */
 @property (nonatomic, strong) id<MXBackgroundTask> backgroundTask;
+
+@property (nonatomic, strong) MXRoomMembershipStateDataSource *roomMembershipStateDataSource;
 
 @end
 
@@ -1904,14 +1907,40 @@ typedef void (^MXOnResumeDone)(void);
 
 - (MXHTTPOperation*)joinRoom:(NSString*)roomIdOrAlias
                   viaServers:(NSArray<NSString*>*)viaServers
+        withThirdPartySigned:(NSDictionary*)thirdPartySigned
+                     success:(void (^)(MXRoom *room))success
+                     failure:(void (^)(NSError *error))failure {
+    
+    [self.roomMembershipStateDataSource updateStateFor:roomIdOrAlias with:MXMembershipChangeStateJoining];
+    
+    return [matrixRestClient joinRoom:roomIdOrAlias viaServers:viaServers withThirdPartySigned:nil success:^(NSString *theRoomId) {
+        [self onJoinedRoom:theRoomId success:^(MXRoom *room) {
+            
+            [self.roomMembershipStateDataSource updateStateFor:roomIdOrAlias with:MXMembershipChangeStateJoined];
+            
+            if (success)
+            {
+                success(room);
+            }
+        }];
+
+    } failure:^(NSError *error) {
+        
+        [self.roomMembershipStateDataSource updateStateFor:roomIdOrAlias with:MXMembershipChangeStateFailedJoining];
+            
+        if (failure)
+        {
+            failure(error);
+        }
+    }];
+}
+
+- (MXHTTPOperation*)joinRoom:(NSString*)roomIdOrAlias
+                  viaServers:(NSArray<NSString*>*)viaServers
                      success:(void (^)(MXRoom *room))success
                      failure:(void (^)(NSError *error))failure
 {
-    return [matrixRestClient joinRoom:roomIdOrAlias viaServers:viaServers withThirdPartySigned:nil success:^(NSString *theRoomId) {
-
-        [self onJoinedRoom:theRoomId success:success];
-
-    } failure:failure];
+    return [self joinRoom:roomIdOrAlias viaServers:viaServers withThirdPartySigned:nil success:success failure:failure];
 }
 
 - (MXHTTPOperation*)joinRoom:(NSString*)roomIdOrAlias
@@ -1935,11 +1964,7 @@ typedef void (^MXOnResumeDone)(void);
     httpOperation = [self.identityService signUrl:signUrl success:^(NSDictionary *thirdPartySigned) {
         MXStrongifyAndReturnIfNil(self);
         
-        MXHTTPOperation *httpOperation2 = [self->matrixRestClient joinRoom:roomIdOrAlias viaServers:viaServers withThirdPartySigned:thirdPartySigned success:^(NSString *theRoomId) {
-            
-            [self onJoinedRoom:theRoomId success:success];
-            
-        } failure:failure];
+        MXHTTPOperation *httpOperation2 = [self joinRoom:roomIdOrAlias viaServers:viaServers withThirdPartySigned:thirdPartySigned success:success failure:failure];
         
         // Transfer the new AFHTTPRequestOperation to the returned MXHTTPOperation
         // So that user has hand on it
@@ -1957,18 +1982,25 @@ typedef void (^MXOnResumeDone)(void);
                       success:(void (^)(void))success
                       failure:(void (^)(NSError *error))failure
 {
+    [self.roomMembershipStateDataSource updateStateFor:roomId with:MXMembershipChangeStateLeaving];
+    
     return [matrixRestClient leaveRoom:roomId success:^{
 
         // Check the room has been removed before calling the success callback
         // This is automatically done when the homeserver sends the MXMembershipLeave event.
         if ([self roomWithRoomId:roomId])
         {
+            MXWeakify(self);
             // The room is stil here, wait for the MXMembershipLeave event
             __block __weak id observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXSessionDidLeaveRoomNotification object:nil queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
 
                 if ([roomId isEqualToString:note.userInfo[kMXSessionNotificationRoomIdKey]])
                 {
                     [[NSNotificationCenter defaultCenter] removeObserver:observer];
+                    
+                    MXStrongifyAndReturnIfNil(self);
+                    [self.roomMembershipStateDataSource updateStateFor:roomId with:MXMembershipChangeStateLeft];
+                                        
                     if (success)
                     {
                         success();
@@ -1978,13 +2010,22 @@ typedef void (^MXOnResumeDone)(void);
         }
         else
         {
+            [self.roomMembershipStateDataSource updateStateFor:roomId with:MXMembershipChangeStateLeft];
             if (success)
             {
                 success();
             }
         }
 
-    } failure:failure];
+    } failure:^(NSError *error) {
+        
+        [self.roomMembershipStateDataSource updateStateFor:roomId with:MXMembershipChangeStateFailedLeaving];
+        
+        if (failure)
+        {
+            failure(error);
+        }
+    }];
 }
 
 - (MXHTTPOperation*)canEnableE2EByDefaultInNewRoomWithUsers:(NSArray<NSString*>*)userIds
@@ -2010,6 +2051,10 @@ typedef void (^MXOnResumeDone)(void);
     } failure:failure];
 }
 
+- (MXMembershipChangeState)getRoomMembershipChangeStateWithRoomId:(NSString*)roomId
+{
+    return [self.roomMembershipStateDataSource getStateFor:roomId];
+}
 
 #pragma mark - The user's rooms
 - (BOOL)hasRoomWithRoomId:(NSString*)roomId
