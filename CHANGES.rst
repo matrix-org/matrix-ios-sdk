@@ -8,7 +8,8 @@ Changes to be released in next version
  * 
 
 🐛 Bugfix
- * 
+ * Podspec: Fix arm64 simulator issue with JitsiMeetSDK.
+ * Realm: Stick on 10.1.2 because the CI cannot build.
 
 ⚠️ API Changes
  * 

@@ -37,7 +37,7 @@ Pod::Spec.new do |s|
 
       # Requirements for e2e encryption
       ss.dependency 'OLMKit', '~> 3.1.0'
-      ss.dependency 'Realm', '~> 10.1.2'
+      ss.dependency 'Realm', '10.1.2'
       ss.dependency 'libbase58', '~> 0.1.4'
   end
 
@@ -56,6 +56,9 @@ Pod::Spec.new do |s|
     # Use WebRTC framework included in Jitsi Meet SDK
     ss.ios.dependency 'JitsiMeetSDK', ' 2.10.2'
 
+    # JitsiMeetSDK has not yet binaries for arm64 simulator
+    ss.pod_target_xcconfig = { 'EXCLUDED_ARCHS[sdk=iphonesimulator*]' => 'arm64' }
+    ss.user_target_xcconfig = { 'EXCLUDED_ARCHS[sdk=iphonesimulator*]' => 'arm64' }
   end
 
   s.subspec 'SwiftSupport' do |ss|    
