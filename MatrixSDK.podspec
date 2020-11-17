@@ -56,6 +56,9 @@ Pod::Spec.new do |s|
     # Use WebRTC framework included in Jitsi Meet SDK
     ss.ios.dependency 'JitsiMeetSDK', ' 2.10.2'
 
+    # JitsiMeetSDK has not yet binaries for arm64 simulator
+    ss.pod_target_xcconfig = { 'EXCLUDED_ARCHS[sdk=iphonesimulator*]' => 'arm64' }
+    ss.user_target_xcconfig = { 'EXCLUDED_ARCHS[sdk=iphonesimulator*]' => 'arm64' }
   end
 
   s.subspec 'SwiftSupport' do |ss|    

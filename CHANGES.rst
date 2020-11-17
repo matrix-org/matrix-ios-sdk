@@ -8,7 +8,7 @@ Changes to be released in next version
  * 
 
 🐛 Bugfix
- * 
+ * Podspec: Fix arm64 simulator issue with JitsiMeetSDK.
 
 ⚠️ API Changes
  * 
