@@ -1,4 +1,30 @@
-Changes in 0.17.0 (2020-11-13)
+Changes to be released in next version
+=================================================
+
+✨ Features
+ * 
+
+🙌 Improvements
+ * 
+
+🐛 Bugfix
+ * 
+
+⚠️ API Changes
+ * Update Realm to 10.2.1 and CocoaPods to 1.10.0.
+ * CocoaPods 1.10.0 is mandatory.
+
+🗣 Translations
+ * 
+    
+🧱 Build
+ * 
+
+Others
+ * 
+
+ 
+ Changes in 0.17.0 (2020-11-13)
 =================================================
 
 ✨ Features
@@ -16,8 +42,6 @@ Changes in 0.17.0 (2020-11-13)
 
 ⚠️ API Changes
  * Xcode 12 is now mandatory for using the JingleCallStack sub pod.
- * Update Realm to 10.2.1 and CocoaPods to 1.10.0.
- * CocoaPods 1.10.0 is mandatory.
 
 🗣 Translations
  * 
@@ -27,8 +51,6 @@ Changes in 0.17.0 (2020-11-13)
 
 Others
  * 
-
-Improvements:
 
 
 Changes in 0.16.20 (2020-10-27)
