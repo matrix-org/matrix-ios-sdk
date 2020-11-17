@@ -1,4 +1,33 @@
-Changes in 0.17.0 (2020-11-13)
+Changes in 0.17.1 (2020-11-17)
+=================================================
+
+✨ Features
+ * 
+
+🙌 Improvements
+ * 
+
+🐛 Bugfix
+ * 
+
+⚠️ API Changes
+ * Update Realm to 10.2.1 and CocoaPods to 1.10.0.
+ * CocoaPods 1.10.0 is mandatory.
+
+🗣 Translations
+ * 
+    
+🧱 Build
+ * 
+
+Others
+ * 
+
+ 
+Improvements:
+
+
+ Changes in 0.17.0 (2020-11-13)
 =================================================
 
 ✨ Features
@@ -12,7 +41,7 @@ Changes in 0.17.0 (2020-11-13)
 🐛 Bugfix
  * MXSession: Fix log for next stream token.
  * MXThrottler: Dispatch the block on the correct queue. This will prevent unexpected loops (vector-im/element-ios/3778).
- * Update JitsiMeetSDK to 2.10.0 (vector-im/element-ios/3712).
+ * Update JitsiMeetSDK to 2.10.2 (vector-im/element-ios/3712).
 
 ⚠️ API Changes
  * Xcode 12 is now mandatory for using the JingleCallStack sub pod.
@@ -25,8 +54,6 @@ Changes in 0.17.0 (2020-11-13)
 
 Others
  * 
-
-Improvements:
 
 
 Changes in 0.16.20 (2020-10-27)
