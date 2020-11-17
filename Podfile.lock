@@ -44,7 +44,7 @@ DEPENDENCIES:
   - libbase58 (~> 0.1.4)
   - OHHTTPStubs (~> 9.0.0)
   - OLMKit (~> 3.1.0)
-  - Realm (~> 10.1.2)
+  - Realm (= 10.1.2)
 
 SPEC REPOS:
   trunk:
@@ -63,6 +63,6 @@ SPEC CHECKSUMS:
   OLMKit: 4ee0159d63feeb86d836fdcfefe418e163511639
   Realm: 031fdd4be7094d01b43af1a5e49766ab644bb800
 
-PODFILE CHECKSUM: 0cfd720a37593162ffaf1195b92c369673639b45
+PODFILE CHECKSUM: bafcfe1874b5534acdc9d6c00d60eb962dfcb647
 
 COCOAPODS: 1.10.0

@@ -1,3 +1,31 @@
+Changes in 0.17.2 (2020-11-17)
+=================================================
+
+✨ Features
+ * 
+
+🙌 Improvements
+ * 
+
+🐛 Bugfix
+ * Podspec: Fix arm64 simulator issue with JitsiMeetSDK.
+ * Realm: Stick on 10.1.2 because the CI cannot build.
+
+⚠️ API Changes
+ * 
+
+🗣 Translations
+ * 
+    
+🧱 Build
+ * 
+
+Others
+ * 
+
+Improvements:
+
+
 Changes in 0.17.1 (2020-11-17)
 =================================================
 
