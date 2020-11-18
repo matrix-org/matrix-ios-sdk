@@ -197,82 +197,67 @@ class MXBackgroundSyncServiceTests: XCTestCase {
                 return
             }
             bobSession?.close()
-            
+
             aliceSession?.close()
-            let newAliceSession = MXSession(matrixRestClient: aliceRestClient)
-            newAliceSession?.setStore(aliceStore, completion: { (response) in
-                switch response {
-                case .success:
-                    newAliceSession?.start(completion: { (response) in
-                        switch response {
-                        case .success:
-                            guard let room = newAliceSession?.room(withRoomId: roomId) else {
+            self.e2eTestData.loginUser(onANewDevice: self, credentials: aliceRestClient.credentials, withPassword: MXTESTS_ALICE_PWD) { newAliceSession in
+                
+                guard let room = newAliceSession?.room(withRoomId: roomId) else {
+                    XCTFail("Cannot set up initial test conditions - error: room cannot be retrieved")
+                    expectation?.fulfill()
+                    return
+                }
+                
+                newAliceSession?.crypto.warnOnUnknowDevices = warnOnUnknownDevices
+                
+                var localEcho: MXEvent?
+                room.sendTextMessage(Constants.messageText, localEcho: &localEcho) { (response) in
+                    switch response {
+                        case .success(let eventId):
+                            
+                            guard let eventId = eventId else {
                                 XCTFail("Cannot set up initial test conditions - error: room cannot be retrieved")
                                 expectation?.fulfill()
                                 return
                             }
                             
-                            newAliceSession?.crypto.warnOnUnknowDevices = warnOnUnknownDevices
+                            self.bgSyncService = MXBackgroundSyncService(withCredentials: bobCredentials)
                             
-                            var localEcho: MXEvent?
-                            room.sendTextMessage(Constants.messageText, localEcho: &localEcho) { (response) in
+                            self.bgSyncService?.event(withEventId: eventId, inRoom: roomId) { (response) in
                                 switch response {
-                                case .success(let eventId):
-                                    
-                                    guard let eventId = eventId else {
-                                        XCTFail("Cannot set up initial test conditions - error: room cannot be retrieved")
-                                        expectation?.fulfill()
-                                        return
-                                    }
-                                    
-                                    self.bgSyncService = MXBackgroundSyncService(withCredentials: bobCredentials)
-                                    
-                                    self.bgSyncService?.event(withEventId: eventId, inRoom: roomId) { (response) in
-                                        switch response {
-                                        case .success(let event):
-                                            XCTAssertTrue(event.isEncrypted, "Event should be encrypted")
-                                            XCTAssertNotNil(event.clear, "Event should be decrypted successfully")
-                                            
-                                            let text = event.content["body"] as? String
-                                            XCTAssertEqual(text, Constants.messageText, "Event content should match")
-                                            
-                                            XCTAssertNil(bobStore.event(withEventId: eventId, inRoom: roomId), "Event should not be in session store yet")
-                                            
-                                            let syncResponseStore = MXSyncResponseFileStore()
-                                            syncResponseStore.open(withCredentials: bobCredentials)
-                                            XCTAssertNotNil(syncResponseStore.event(withEventId: eventId, inRoom: roomId), "Event should be stored in sync response store")
-                                            
-                                            let newBobSession = MXSession(matrixRestClient: MXRestClient(credentials: bobCredentials, unrecognizedCertificateHandler: nil))
-                                            newBobSession?.setStore(bobStore, completion: { (_) in
-                                                newBobSession?.start(withSyncFilterId: bobStore.syncFilterId, completion: { (_) in
-                                                    XCTAssertNil(syncResponseStore.event(withEventId: eventId, inRoom: roomId), "Event should not be stored in sync response store anymore")
-                                                    XCTAssertNotNil(bobStore.event(withEventId: eventId, inRoom: roomId), "Event should be in session store anymore")
-                                                    expectation?.fulfill()
-                                                })
+                                    case .success(let event):
+                                        XCTAssertTrue(event.isEncrypted, "Event should be encrypted")
+                                        XCTAssertNotNil(event.clear, "Event should be decrypted successfully")
+                                        
+                                        let text = event.content["body"] as? String
+                                        XCTAssertEqual(text, Constants.messageText, "Event content should match")
+                                        
+                                        XCTAssertNil(bobStore.event(withEventId: eventId, inRoom: roomId), "Event should not be in session store yet")
+                                        
+                                        let syncResponseStore = MXSyncResponseFileStore()
+                                        syncResponseStore.open(withCredentials: bobCredentials)
+                                        XCTAssertNotNil(syncResponseStore.event(withEventId: eventId, inRoom: roomId), "Event should be stored in sync response store")
+                                        
+                                        let newBobSession = MXSession(matrixRestClient: MXRestClient(credentials: bobCredentials, unrecognizedCertificateHandler: nil))
+                                        newBobSession?.setStore(bobStore, completion: { (_) in
+                                            newBobSession?.start(withSyncFilterId: bobStore.syncFilterId, completion: { (_) in
+                                                XCTAssertNil(syncResponseStore.event(withEventId: eventId, inRoom: roomId), "Event should not be stored in sync response store anymore")
+                                                XCTAssertNotNil(bobStore.event(withEventId: eventId, inRoom: roomId), "Event should be in session store anymore")
+                                                expectation?.fulfill()
                                             })
-                                        case .failure(let error):
-                                            XCTFail("Cannot fetch the event from background sync service - error: \(error)")
-                                            expectation?.fulfill()
-                                        }
-                                    }
-                                case .failure(let error):
-                                    XCTFail("Cannot set up initial test conditions - error: \(error)")
-                                    expectation?.fulfill()
+                                        })
+                                    case .failure(let error):
+                                        XCTFail("Cannot fetch the event from background sync service - error: \(error)")
+                                        expectation?.fulfill()
                                 }
                             }
-                            
                         case .failure(let error):
                             XCTFail("Cannot set up initial test conditions - error: \(error)")
                             expectation?.fulfill()
-                        }
-                    })
-                case .failure(let error):
-                    XCTFail("Cannot set up initial test conditions - error: \(error)")
-                    expectation?.fulfill()
+                    }
                 }
-            })
+                
+            }
         }
-        
     }
     
     func testRoomSummary() {
