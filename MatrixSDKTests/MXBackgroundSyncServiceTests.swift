@@ -38,9 +38,18 @@ class MXBackgroundSyncServiceTests: XCTestCase {
         e2eTestData = nil
         bgSyncService = nil
     }
-
+    
+    // Nonimal test: Get an event from the background service
+    // - Alice and Bob are in a room
+    // - Bob stops their app
+    // - Alice sends a message
+    // - Bob uses the MXBackgroundSyncService to fetch it
+    // -> The message can be read from MXBackgroundSyncService
+    // - Bob restarts their MXSession
+    // -> The message is available from MXSession and no more from MXBackgroundSyncService
     func testWithPlainEvent() {
         
+        // - Alice and Bob are in a room
         let aliceStore = MXMemoryStore()
         let bobStore = MXFileStore()
         testData.doTestWithAliceAndBob(inARoom: self, aliceStore: aliceStore, bobStore: bobStore) { (aliceSession, bobSession, roomId, expectation) in
@@ -56,8 +65,11 @@ class MXBackgroundSyncServiceTests: XCTestCase {
                 expectation?.fulfill()
                 return
             }
+            
+            // - Bob stops their app
             bobSession?.close()
 
+            // - Alice sends a message
             var localEcho: MXEvent?
             room.sendTextMessage(Constants.messageText, localEcho: &localEcho) { (response) in
                 switch response {
@@ -69,11 +81,14 @@ class MXBackgroundSyncServiceTests: XCTestCase {
                         return
                     }
 
+                    // - Bob uses the MXBackgroundSyncService to fetch it
                     self.bgSyncService = MXBackgroundSyncService(withCredentials: bobCredentials)
 
                     self.bgSyncService?.event(withEventId: eventId, inRoom: roomId) { (response) in
                         switch response {
                         case .success(let event):
+                            
+                            // -> The message can be read from MXBackgroundSyncService
                             let text = event.content["body"] as? String
                             XCTAssertEqual(text, Constants.messageText, "Event content should match")
 
@@ -83,11 +98,14 @@ class MXBackgroundSyncServiceTests: XCTestCase {
                             syncResponseStore.open(withCredentials: bobCredentials)
                             XCTAssertNotNil(syncResponseStore.event(withEventId: eventId, inRoom: roomId), "Event should be stored in sync response store")
 
+                            // - Bob restarts their MXSession
                             let newBobSession = MXSession(matrixRestClient: MXRestClient(credentials: bobCredentials, unrecognizedCertificateHandler: nil))
                             newBobSession?.setStore(bobStore, completion: { (_) in
                                 newBobSession?.start(withSyncFilterId: bobStore.syncFilterId, completion: { (_) in
+                                    
+                                    // -> The message is available from MXSession and no more from MXBackgroundSyncService
                                     XCTAssertNil(syncResponseStore.event(withEventId: eventId, inRoom: roomId), "Event should not be stored in sync response store anymore")
-                                    XCTAssertNotNil(bobStore.event(withEventId: eventId, inRoom: roomId), "Event should be in session store anymore")
+                                    XCTAssertNotNil(bobStore.event(withEventId: eventId, inRoom: roomId), "Event should be in session store now")
                                     expectation?.fulfill()
                                 })
                             })
@@ -107,8 +125,17 @@ class MXBackgroundSyncServiceTests: XCTestCase {
         
     }
     
+    // Nonimal test with encryption: Get and decrypt an event from the background service
+    // - Alice and Bob are in an encrypted room
+    // - Bob stops their app
+    // - Alice sends a message
+    // - Bob uses the MXBackgroundSyncService to fetch it
+    // -> The message can be read and decypted from MXBackgroundSyncService
+    // - Bob restarts their MXSession
+    // -> The message is available from MXSession and no more from MXBackgroundSyncService
     func testWithEncryptedEvent() {
         
+        // - Alice and Bob are in an encrypted room
         let aliceStore = MXMemoryStore()
         let bobStore = MXFileStore()
         e2eTestData.doE2ETestWithAliceAndBob(inARoom: self, cryptedBob: true, warnOnUnknowDevices: false, aliceStore: aliceStore, bobStore: bobStore) { (aliceSession, bobSession, roomId, expectation) in
@@ -124,8 +151,11 @@ class MXBackgroundSyncServiceTests: XCTestCase {
                 expectation?.fulfill()
                 return
             }
+            
+            // - Bob stops their app
             bobSession?.close()
             
+            // - Alice sends a message
             var localEcho: MXEvent?
             room.sendTextMessage(Constants.messageText, localEcho: &localEcho) { (response) in
                 switch response {
@@ -137,11 +167,14 @@ class MXBackgroundSyncServiceTests: XCTestCase {
                         return
                     }
                     
+                    // - Bob uses the MXBackgroundSyncService to fetch it
                     self.bgSyncService = MXBackgroundSyncService(withCredentials: bobCredentials)
                     
                     self.bgSyncService?.event(withEventId: eventId, inRoom: roomId) { (response) in
                         switch response {
                         case .success(let event):
+                            
+                            // -> The message can be read and decypted from MXBackgroundSyncService
                             XCTAssertTrue(event.isEncrypted, "Event should be encrypted")
                             XCTAssertNotNil(event.clear, "Event should be decrypted successfully")
                             
@@ -154,11 +187,14 @@ class MXBackgroundSyncServiceTests: XCTestCase {
                             syncResponseStore.open(withCredentials: bobCredentials)
                             XCTAssertNotNil(syncResponseStore.event(withEventId: eventId, inRoom: roomId), "Event should be stored in sync response store")
                             
+                            // - Bob restarts their MXSession
                             let newBobSession = MXSession(matrixRestClient: MXRestClient(credentials: bobCredentials, unrecognizedCertificateHandler: nil))
                             newBobSession?.setStore(bobStore, completion: { (_) in
                                 newBobSession?.start(withSyncFilterId: bobStore.syncFilterId, completion: { (_) in
+                                    
+                                    // -> The message is available from MXSession and no more from MXBackgroundSyncService
                                     XCTAssertNil(syncResponseStore.event(withEventId: eventId, inRoom: roomId), "Event should not be stored in sync response store anymore")
-                                    XCTAssertNotNil(bobStore.event(withEventId: eventId, inRoom: roomId), "Event should be in session store anymore")
+                                    XCTAssertNotNil(bobStore.event(withEventId: eventId, inRoom: roomId), "Event should be in session store now")
                                     expectation?.fulfill()
                                 })
                             })
