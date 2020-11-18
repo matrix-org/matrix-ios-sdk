@@ -142,6 +142,8 @@ public enum MXBackgroundSyncServiceError: Error {
                         inRoom roomId: String,
                         allowSync: Bool = true,
                         completion: @escaping (MXResponse<MXEvent>) -> Void) {
+        NSLog("[MXBackgroundSyncService] fetchEvent: \(eventId). allowSync: \(allowSync)")
+        
         /// Inline function to handle decryption failure
         func handleDecryptionFailure(withError error: Error?) {
             if allowSync {
@@ -236,7 +238,7 @@ public enum MXBackgroundSyncServiceError: Error {
             return
         }
         
-        NSLog("[MXBackgroundSyncService] launchBackgroundSync: start")
+        NSLog("[MXBackgroundSyncService] launchBackgroundSync: start from token \(eventStreamToken)")
         
         restClient.sync(fromToken: eventStreamToken,
                         serverTimeout: Constants.syncRequestServerTimout,
@@ -394,6 +396,12 @@ public enum MXBackgroundSyncServiceError: Error {
     }
     
     private func handleSyncResponse(_ syncResponse: MXSyncResponse) {
+        NSLog("[MXBackgroundSyncService] handleSyncResponse: Received %tu joined rooms, %tu invited rooms, %tu left rooms, %tu toDevice events.",
+              syncResponse.rooms.join.count,
+              syncResponse.rooms.invite.count,
+              syncResponse.rooms.leave.count,
+              syncResponse.toDevice.events?.count ?? 0)
+        
         self.pushRulesManager.handleAccountData(syncResponse.accountData)
         self.updateStore(with: syncResponse)
         
@@ -402,6 +410,7 @@ public enum MXBackgroundSyncServiceError: Error {
         }
         
         //  update event stream token
+        NSLog("[MXBackgroundSyncService] handleSyncResponse: Next sync token: \(syncResponse.nextBatch ?? "nil")")
         self.store.eventStreamToken = syncResponse.nextBatch
     }
     
@@ -463,6 +472,7 @@ public enum MXBackgroundSyncServiceError: Error {
             let sessionId = event.content["session_id"] as? String,
             let sessionKey = event.content["session_key"] as? String,
             var senderKey = event.senderKey else {
+            NSLog("[MXBackgroundSyncService] handleToDeviceEvent: ERROR: incomplete event: \(String(describing: event.jsonDictionary()))")
             return
         }
         
@@ -495,6 +505,7 @@ public enum MXBackgroundSyncServiceError: Error {
                 "ed25519": ed25519Key
             ]
         default:
+            NSLog("[MXBackgroundSyncService] handleToDeviceEvent: ERROR: Not supported type: \(event.eventType)")
             return
         }
         
