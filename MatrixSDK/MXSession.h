@@ -37,7 +37,7 @@
 #import "MXAggregations.h"
 #import "MXIdentityService.h"
 #import "MX3PidAddManager.h"
-#import "MXMembershipChangeState.h"
+#import "MXMembershipTransitionState.h"
 
 /**
  `MXSessionState` represents the states in the life cycle of a MXSession instance.
@@ -848,7 +848,7 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
  Get the room membership change state
  @param roomId The room id
 */
-- (MXMembershipChangeState)getRoomMembershipChangeStateWithRoomId:(NSString*)roomId;
+- (MXMembershipTransitionState)getRoomMembershipChangeStateWithRoomId:(NSString*)roomId;
 
 #pragma mark - The user's rooms
 /**

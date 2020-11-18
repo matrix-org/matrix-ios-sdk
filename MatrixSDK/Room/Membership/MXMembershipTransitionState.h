@@ -15,15 +15,15 @@
 //
 
 /**
- `MXRoomMembershipState` is an ephemeral state that represents the transitivity between the membership (MXMembership) states.
+ `MXMembershipTransitionState` is an ephemeral state that represents the transitivity between the membership (MXMembership) states.
  */
-typedef NS_ENUM(NSInteger, MXMembershipChangeState) {
-    MXMembershipChangeStateUnknown,
-    MXMembershipChangeStatePending,
-    MXMembershipChangeStateJoining,
-    MXMembershipChangeStateFailedJoining,
-    MXMembershipChangeStateJoined,
-    MXMembershipChangeStateLeaving,
-    MXMembershipChangeStateFailedLeaving,
-    MXMembershipChangeStateLeft
+typedef NS_ENUM(NSInteger, MXMembershipTransitionState) {
+    MXMembershipTransitionStateUnknown,
+    MXMembershipTransitionStatePending,
+    MXMembershipTransitionStateJoining,
+    MXMembershipTransitionStateFailedJoining,
+    MXMembershipTransitionStateJoined,
+    MXMembershipTransitionStateLeaving,
+    MXMembershipTransitionStateFailedLeaving,
+    MXMembershipTransitionStateLeft
 };
