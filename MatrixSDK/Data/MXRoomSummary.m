@@ -160,6 +160,17 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
     return [_mxSession roomWithRoomId:_roomId];
 }
 
+- (void)setMembership:(MXMembership)membership
+{
+    if (_membership != membership)
+    {
+        _membership = membership;
+        
+        MXMembershipTransitionState membershipTransitionState = [MXRoomSummary membershipTransitionStateForMembership:membership];
+        
+        [self updateMemberhsipTransitionState:membershipTransitionState notifyUpdate:NO];
+    }
+}
 
 #pragma mark - Data related to room state
 
@@ -628,6 +639,46 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
     [[NSNotificationCenter defaultCenter] postNotificationName:kMXRoomSummaryDidChangeNotification object:self userInfo:nil];
 }
 
+- (void)updateMembershipTransitionState:(MXMembershipTransitionState)membershipTransitionState
+{
+    [self updateMembershipTransitionState:membershipTransitionState];
+}
+
+- (void)updateMemberhsipTransitionState:(MXMembershipTransitionState)membershipTransitionState notifyUpdate:(BOOL)notifyUpdate
+{
+    if (_membershipTransitionState != membershipTransitionState)
+    {
+        _membershipTransitionState = membershipTransitionState;
+        
+        if (notifyUpdate)
+        {
+            [self save:YES];
+        }
+    }
+}
+
++ (MXMembershipTransitionState)membershipTransitionStateForMembership:(MXMembership)membership
+{
+    MXMembershipTransitionState membershipTransitionState;
+    
+    switch (membership) {
+        case MXMembershipInvite:
+            membershipTransitionState = MXMembershipTransitionStatePending;
+            break;
+        case MXMembershipJoin:
+            membershipTransitionState = MXMembershipTransitionStateJoined;
+            break;
+        case MXMembershipLeave:
+            membershipTransitionState = MXMembershipTransitionStateLeft;
+            break;
+        default:
+            membershipTransitionState = MXMembershipTransitionStateUnknown;
+            break;
+    }
+    
+    return membershipTransitionState;
+}
+
 #pragma mark - Server sync
 - (void)handleStateEvents:(NSArray<MXEvent *> *)stateEvents
 {
@@ -773,6 +824,7 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
         _topic = [aDecoder decodeObjectForKey:@"topic"];
         _aliases = [aDecoder decodeObjectForKey:@"aliases"];
         _membership = (MXMembership)[aDecoder decodeIntegerForKey:@"membership"];
+        _membershipTransitionState = [MXRoomSummary membershipTransitionStateForMembership:_membership];
         _membersCount = [aDecoder decodeObjectForKey:@"membersCount"];
         _isConferenceUserRoom = [(NSNumber*)[aDecoder decodeObjectForKey:@"isConferenceUserRoom"] boolValue];
 

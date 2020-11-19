@@ -23,6 +23,7 @@
 #import "MXRoomMembersCount.h"
 #import "MXEnumConstants.h"
 #import "MXUsersTrustLevelSummary.h"
+#import "MXMembershipTransitionState.h"
 
 @class MXSession, MXRoom, MXRoomState, MXEvent;
 @protocol MXStore;
@@ -162,6 +163,11 @@ FOUNDATION_EXPORT NSString *const kMXRoomSummaryDidChangeNotification;
 @property (nonatomic) MXMembership membership NS_REFINED_FOR_SWIFT;
 
 /**
+ The membership transition state of the logged in user for this room.
+ */
+@property (nonatomic, readonly) MXMembershipTransitionState membershipTransitionState;
+
+/**
  Room members counts.
  */
 @property (nonatomic) MXRoomMembersCount *membersCount;
@@ -296,6 +302,10 @@ FOUNDATION_EXPORT NSString *const kMXRoomSummaryDidChangeNotification;
  Mark all messages as read.
  */
 - (void)markAllAsRead;
+
+/// Update membership transition state and notify update if needed
+/// @param membershipTransitionState The new membership transition state value
+- (void)updateMembershipTransitionState:(MXMembershipTransitionState)membershipTransitionState;
 
 #pragma mark - Server sync
 
