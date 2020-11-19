@@ -110,7 +110,7 @@
  when the block retuns,
  The implementation must call the block before returning. It must be multi-thread and multi-process safe.
  
- @param block the block where olm operations can be safely called.
+ @param block the block where olm operations can be safely made.
  */
 - (void)performAccountOperationWithBlock:(void (^)(OLMAccount *olmAccount))block;
 
@@ -230,7 +230,7 @@
 - (NSString*)algorithmForRoom:(NSString*)roomId;
 
 /**
- Store a session between the logged-in user and another device.
+ Store a session between this device and another device.
 
  @param deviceKey the public key of the other device.
  @param session the end-to-end session.
@@ -238,16 +238,28 @@
 - (void)storeSession:(MXOlmSession*)session forDevice:(NSString*)deviceKey;
 
 /**
- Retrieve an end-to-end session between the logged-in user and another
- device.
+ Retrieve an end-to-end session between this device and another device.
 
  @param deviceKey the public key of the other device.
- @return a array of end-to-end sessions sorted by the last updated first.
+ @param sessionId the session id.
+ 
+ @return the end-to-end session.
  */
 - (MXOlmSession*)sessionWithDevice:(NSString*)deviceKey andSessionId:(NSString*)sessionId;
 
 /**
- Retrieve all end-to-end sessions between the logged-in user and another
+ Perform an action that will advance the passed end-to-end session.
+ 
+ See performAccountOperationWithBlock for more details.
+ 
+ @param deviceKey the public key of the other device.
+ @param sessionId the session id.
+ @param block the block where olm session operations can be safely made.
+ */
+- (void)performSessionOperationWithDevice:(NSString*)deviceKey andSessionId:(NSString*)sessionId block:(void (^)(MXOlmSession *mxOlmSession))block;
+
+/**
+ Retrieve all end-to-end sessions between this device and another
  device sorted by `lastReceivedMessageTs`, the most recent(higest value) first.
 
  @param deviceKey the public key of the other device.

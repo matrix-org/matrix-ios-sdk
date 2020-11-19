@@ -229,24 +229,23 @@
 
 - (NSDictionary *)encryptMessage:(NSString *)theirDeviceIdentityKey sessionId:(NSString *)sessionId payloadString:(NSString *)payloadString
 {
-    NSError *error;
-    OLMMessage *olmMessage;
-
-    MXOlmSession *mxOlmSession = [self sessionForDevice:theirDeviceIdentityKey andSessionId:sessionId];
+    __block OLMMessage *olmMessage;
 
     NSLog(@"[MXOlmDevice] encryptMessage: Olm Session id %@ to %@", sessionId, theirDeviceIdentityKey);
-
-    if (mxOlmSession.session)
-    {
-        olmMessage = [mxOlmSession.session encryptMessage:payloadString error:&error];
-
-        if (error)
+    
+    [store performSessionOperationWithDevice:theirDeviceIdentityKey andSessionId:sessionId block:^(MXOlmSession *mxOlmSession) {
+        
+        if (mxOlmSession.session)
         {
-            NSLog(@"[MXOlmDevice] encryptMessage failed for session id %@ and sender %@: %@", sessionId, theirDeviceIdentityKey, error);
+            NSError *error;
+            olmMessage = [mxOlmSession.session encryptMessage:payloadString error:&error];
+            
+            if (error)
+            {
+                NSLog(@"[MXOlmDevice] encryptMessage failed for session id %@ and sender %@: %@", sessionId, theirDeviceIdentityKey, error);
+            }
         }
-
-        [store storeSession:mxOlmSession forDevice:theirDeviceIdentityKey];
-    }
+    }];
 
     return @{
              @"body": olmMessage.ciphertext,
@@ -256,24 +255,24 @@
 
 - (NSString*)decryptMessage:(NSString*)ciphertext withType:(NSUInteger)messageType sessionId:(NSString*)sessionId theirDeviceIdentityKey:(NSString*)theirDeviceIdentityKey
 {
-    NSError *error;
-    NSString *payloadString;
+    __block NSString *payloadString;
     
     NSLog(@"[MXOlmDevice] decryptMessage: Olm Session id %@(%@) from %@" ,sessionId, @(messageType), theirDeviceIdentityKey);
-
-    MXOlmSession *mxOlmSession = [self sessionForDevice:theirDeviceIdentityKey andSessionId:sessionId];
-    if (mxOlmSession)
-    {
-        payloadString = [mxOlmSession.session decryptMessage:[[OLMMessage alloc] initWithCiphertext:ciphertext type:messageType] error:&error];
-
-        if (error)
+    
+    [store performSessionOperationWithDevice:theirDeviceIdentityKey andSessionId:sessionId block:^(MXOlmSession *mxOlmSession) {
+        if (mxOlmSession)
         {
-            NSLog(@"[MXOlmDevice] decryptMessage. Error: %@", error);
+            NSError *error;
+            payloadString = [mxOlmSession.session decryptMessage:[[OLMMessage alloc] initWithCiphertext:ciphertext type:messageType] error:&error];
+            
+            if (error)
+            {
+                NSLog(@"[MXOlmDevice] decryptMessage. Error: %@", error);
+            }
+            
+            [mxOlmSession didReceiveMessage];
         }
-
-        [mxOlmSession didReceiveMessage];
-        [store storeSession:mxOlmSession forDevice:theirDeviceIdentityKey];
-    }
+    }];
 
     return payloadString;
 }
@@ -285,7 +284,7 @@
         return NO;
     }
 
-    MXOlmSession *mxOlmSession = [self sessionForDevice:theirDeviceIdentityKey andSessionId:sessionId];
+    MXOlmSession *mxOlmSession = [store sessionWithDevice:theirDeviceIdentityKey andSessionId:sessionId];
     return [mxOlmSession.session matchesInboundSession:ciphertext];
 }
 
@@ -589,13 +588,6 @@
 - (NSString *)sha256:(NSString *)message
 {
     return [olmUtility sha256:[message dataUsingEncoding:NSUTF8StringEncoding]];
-}
-
-
-#pragma mark - Private methods
-- (MXOlmSession*)sessionForDevice:(NSString *)theirDeviceIdentityKey andSessionId:(NSString*)sessionId
-{
-    return [store sessionWithDevice:theirDeviceIdentityKey andSessionId:sessionId];
 }
 
 @end

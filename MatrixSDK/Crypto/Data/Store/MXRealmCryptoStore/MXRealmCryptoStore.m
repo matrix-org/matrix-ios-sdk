@@ -430,11 +430,13 @@ RLM_ARRAY_TYPE(MXRealmSecret)
         else
         {
             NSLog(@"[MXRealmCryptoStore] performAccountOperationWithBlock. Error: Cannot build OLMAccount");
+            block(nil);
         }
     }
     else
     {
         NSLog(@"[MXRealmCryptoStore] performAccountOperationWithBlock. Error: No OLMAccount yet");
+        block(nil);
     }
     
     NSLog(@"[MXRealmCryptoStore] performAccountOperationWithBlock done in %.0fms", [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
@@ -765,6 +767,38 @@ RLM_ARRAY_TYPE(MXRealmSecret)
     }
 
     return mxOlmSession;
+}
+
+- (void)performSessionOperationWithDevice:(NSString*)deviceKey andSessionId:(NSString*)sessionId block:(void (^)(MXOlmSession *olmSession))block
+{
+    NSDate *startDate = [NSDate date];
+    
+    RLMRealm *realm = self.realm;
+    
+    [realm beginWriteTransaction];
+        
+    MXRealmOlmSession *realmOlmSession = [MXRealmOlmSession objectsInRealm:self.realm
+                                                                     where:@"sessionId = %@ AND deviceKey = %@", sessionId, deviceKey].firstObject;
+    if (realmOlmSession.olmSessionData)
+    {
+        OLMSession *olmSession = [NSKeyedUnarchiver unarchiveObjectWithData:realmOlmSession.olmSessionData];
+        
+        MXOlmSession *mxOlmSession = [[MXOlmSession alloc] initWithOlmSession:olmSession];
+        mxOlmSession.lastReceivedMessageTs = realmOlmSession.lastReceivedMessageTs;
+        
+        block(mxOlmSession);
+        
+        realmOlmSession.olmSessionData = [NSKeyedArchiver archivedDataWithRootObject:mxOlmSession.session];
+    }
+    else
+    {
+        NSLog(@"[MXRealmCryptoStore] performSessionOperationWithDevice. Error: olm session not found");
+        block(nil);
+    }
+    
+    [realm commitWriteTransaction];
+    
+    NSLog(@"[MXRealmCryptoStore] performSessionOperationWithDevice done in %.0fms", [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
 }
 
 - (NSArray<MXOlmSession*>*)sessionsWithDevice:(NSString*)deviceKey;
