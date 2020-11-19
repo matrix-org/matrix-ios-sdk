@@ -22,13 +22,11 @@
 
 #import <OLMKit/OLMKit.h>
 
+#import "MXTools.h"
 #import "MXCryptoTools.h"
 
 @interface MXOlmDevice ()
 {
-    // The OLMKit account instance.
-    OLMAccount *olmAccount;
-
     // The OLMKit utility instance.
     OLMUtility *olmUtility;
 
@@ -71,7 +69,7 @@
         store = theStore;
 
         // Retrieve the account from the store
-        olmAccount = [store account];
+        OLMAccount *olmAccount = store.account;
         if (!olmAccount)
         {
             NSLog(@"[MXOlmDevice] initWithStore: Create new OLMAccount");
@@ -104,7 +102,7 @@
 
 - (NSString *)signMessage:(NSData*)message
 {
-    return [olmAccount signMessage:message];
+    return [store.account signMessage:message];
 }
 
 - (NSString *)signJSON:(NSDictionary *)JSONDictinary
@@ -114,37 +112,37 @@
 
 - (NSDictionary *)oneTimeKeys
 {
-    return olmAccount.oneTimeKeys;
+    return store.account.oneTimeKeys;
 }
 
 - (NSUInteger)maxNumberOfOneTimeKeys
 {
-    return olmAccount.maxOneTimeKeys;
+    return store.account.maxOneTimeKeys;
 }
 
 - (void)markOneTimeKeysAsPublished
 {
-    [olmAccount markOneTimeKeysAsPublished];
-
-    [store storeAccount:olmAccount];
+    [store performAccountOperationWithBlock:^(OLMAccount *olmAccount) {
+        [olmAccount markOneTimeKeysAsPublished];
+    }];
 }
 
 - (void)generateOneTimeKeys:(NSUInteger)numKeys
 {
-    [olmAccount generateOneTimeKeys:numKeys];
-
-    [store storeAccount:olmAccount];
+    [store performAccountOperationWithBlock:^(OLMAccount *olmAccount) {
+        [olmAccount generateOneTimeKeys:numKeys];
+    }];
 }
 
 - (NSString *)createOutboundSession:(NSString *)theirIdentityKey theirOneTimeKey:(NSString *)theirOneTimeKey
 {
     NSError *error;
 
-//    NSLog(@">>>> createOutboundSession: theirIdentityKey: %@ theirOneTimeKey: %@", theirIdentityKey, theirOneTimeKey);
+    NSLog(@"[MXOlmDevice] createOutboundSession: theirIdentityKey: %@. theirOneTimeKey: %@", theirIdentityKey, theirOneTimeKey);
 
-    OLMSession *olmSession = [[OLMSession alloc] initOutboundSessionWithAccount:olmAccount theirIdentityKey:theirIdentityKey theirOneTimeKey:theirOneTimeKey error:&error];
+    OLMSession *olmSession = [[OLMSession alloc] initOutboundSessionWithAccount:store.account theirIdentityKey:theirIdentityKey theirOneTimeKey:theirOneTimeKey error:&error];
 
-//    NSLog(@">>>> olmSession.sessionIdentifier: %@", olmSession.sessionIdentifier);
+    NSLog(@"[MXOlmDevice] createOutboundSession: Olm Session id: %@", olmSession.sessionIdentifier);
 
     if (olmSession)
     {
@@ -168,45 +166,45 @@
 
 - (NSString*)createInboundSession:(NSString*)theirDeviceIdentityKey messageType:(NSUInteger)messageType cipherText:(NSString*)ciphertext payload:(NSString**)payload
 {
-    NSError *error;
+    NSLog(@"[MXOlmDevice] createInboundSession: theirIdentityKey: %@", theirDeviceIdentityKey);
 
-//    NSLog(@"<<< createInboundSession: theirIdentityKey: %@", theirDeviceIdentityKey);
-
-    OLMSession *olmSession = [[OLMSession alloc] initInboundSessionWithAccount:olmAccount theirIdentityKey:theirDeviceIdentityKey oneTimeKeyMessage:ciphertext error:&error];
-
-//    NSLog(@"<<< olmSession.sessionIdentifier: %@", olmSession.sessionIdentifier);
-
+    __block OLMSession *olmSession;
+    
+    [store performAccountOperationWithBlock:^(OLMAccount *olmAccount) {
+        NSError *error;
+        olmSession = [[OLMSession alloc] initInboundSessionWithAccount:olmAccount theirIdentityKey:theirDeviceIdentityKey oneTimeKeyMessage:ciphertext error:&error];
+        
+        NSLog(@"[MXOlmDevice] createInboundSession: Olm Session id: %@", olmSession.sessionIdentifier);
+        
+        if (olmSession)
+        {
+            [olmAccount removeOneTimeKeysForSession:olmSession];
+        }
+        else if (error)
+        {
+            NSLog(@"[MXOlmDevice] createInboundSession. Error: %@", error);
+        }
+    }];
+    
     if (olmSession)
     {
-        [olmAccount removeOneTimeKeysForSession:olmSession];
-        [store storeAccount:olmAccount];
-
-//        NSLog(@"<<< ciphertext: %@", ciphertext);
-//        NSLog(@"<<< ciphertext: SHA256: %@", [olmUtility sha256:[ciphertext dataUsingEncoding:NSUTF8StringEncoding]]);
-
+        NSError *error;
         *payload = [olmSession decryptMessage:[[OLMMessage alloc] initWithCiphertext:ciphertext type:messageType] error:&error];
-
         if (error)
         {
             NSLog(@"[MXOlmDevice] createInboundSession. decryptMessage error: %@", error);
         }
-
+        
         MXOlmSession *mxOlmSession = [[MXOlmSession alloc] initWithOlmSession:olmSession];
-
+        
         // This counts as a received message: set last received message time
         // to now
         [mxOlmSession didReceiveMessage];
-
+        
         [store storeSession:mxOlmSession forDevice:theirDeviceIdentityKey];
-
-        return olmSession.sessionIdentifier;
-    }
-    else if (error)
-    {
-        NSLog(@"[MXOlmDevice] createInboundSession. Error: %@", error);
     }
 
-    return nil;
+    return olmSession.sessionIdentifier;
 }
 
 - (NSArray<NSString *> *)sessionIdsForDevice:(NSString *)theirDeviceIdentityKey
@@ -236,8 +234,7 @@
 
     MXOlmSession *mxOlmSession = [self sessionForDevice:theirDeviceIdentityKey andSessionId:sessionId];
 
-//    NSLog(@">>>> encryptMessage: olmSession.sessionIdentifier: %@", olmSession.sessionIdentifier);
-//    NSLog(@">>>> payloadString: %@", payloadString);
+    NSLog(@"[MXOlmDevice] encryptMessage: Olm Session id %@ to %@", sessionId, theirDeviceIdentityKey);
 
     if (mxOlmSession.session)
     {
@@ -251,9 +248,6 @@
         [store storeSession:mxOlmSession forDevice:theirDeviceIdentityKey];
     }
 
-    //NSLog(@">>>> ciphertext: %@", olmMessage.ciphertext);
-    //NSLog(@">>>> ciphertext: SHA256: %@", [olmUtility sha256:[olmMessage.ciphertext dataUsingEncoding:NSUTF8StringEncoding]]);
-
     return @{
              @"body": olmMessage.ciphertext,
              @"type": @(olmMessage.type)
@@ -264,6 +258,8 @@
 {
     NSError *error;
     NSString *payloadString;
+    
+    NSLog(@"[MXOlmDevice] decryptMessage: Olm Session id %@(%@) from %@" ,sessionId, @(messageType), theirDeviceIdentityKey);
 
     MXOlmSession *mxOlmSession = [self sessionForDevice:theirDeviceIdentityKey andSessionId:sessionId];
     if (mxOlmSession)
@@ -272,7 +268,7 @@
 
         if (error)
         {
-            NSLog(@"[MXOlmDevice] decryptMessage failed for session id %@(%@) and sender %@: %@", sessionId, @(messageType), theirDeviceIdentityKey, error);
+            NSLog(@"[MXOlmDevice] decryptMessage. Error: %@", error);
         }
 
         [mxOlmSession didReceiveMessage];

@@ -89,14 +89,30 @@
 - (NSString*)deviceId;
 
 /**
- Store the end to end account for the logged-in user.
+ Store the user olm account for this device.
+ 
+ This method MUST be used only on setup to store a new olm account.
  */
 - (void)storeAccount:(OLMAccount*)account;
 
 /**
- * Load the end to end account for the logged-in user.
+ The user olm account for this device.
+ 
+ This is safe to use the returned for read-only olm operation.
  */
 - (OLMAccount*)account;
+
+/**
+ Perform an action that will advance the olm account state.
+ 
+ Some cryptographic operations update the internal state of the olm account. They must be executed
+ into this method to make those operations atomic. This method stores the new olm account state
+ when the block retuns,
+ The implementation must call the block before returning. It must be multi-thread and multi-process safe.
+ 
+ @param block the block where olm operations can be safely called.
+ */
+- (void)performAccountOperationWithBlock:(void (^)(OLMAccount *olmAccount))block;
 
 /**
  Store the sync token corresponding to the device list.

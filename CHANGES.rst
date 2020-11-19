@@ -8,7 +8,7 @@ Changes to be released in next version
  * 
 
 🐛 Bugfix
- * 
+ * MXOlmDevice: Make use of OLMAccount atomic (vector-im/element-ios/3817).
 
 ⚠️ API Changes
  * 

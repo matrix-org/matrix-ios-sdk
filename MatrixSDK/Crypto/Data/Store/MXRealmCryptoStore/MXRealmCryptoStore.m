@@ -408,6 +408,38 @@ RLM_ARRAY_TYPE(MXRealmSecret)
     return nil;
 }
 
+- (void)performAccountOperationWithBlock:(void (^)(OLMAccount *))block
+{
+    NSDate *startDate = [NSDate date];
+    
+    MXRealmOlmAccount *account = self.accountInCurrentThread;
+    if (account.olmAccountData)
+    {
+        OLMAccount *olmAccount = [NSKeyedUnarchiver unarchiveObjectWithData:account.olmAccountData];
+        if (olmAccount)
+        {
+            // Use beginWriteTransaction instead of transactionWithBlock because the doc
+            // explicitely says this method is blocking
+            [account.realm beginWriteTransaction];
+            
+            block(olmAccount);
+            account.olmAccountData = [NSKeyedArchiver archivedDataWithRootObject:olmAccount];
+            
+            [account.realm commitWriteTransaction];
+        }
+        else
+        {
+            NSLog(@"[MXRealmCryptoStore] performAccountOperationWithBlock. Error: Cannot build OLMAccount");
+        }
+    }
+    else
+    {
+        NSLog(@"[MXRealmCryptoStore] performAccountOperationWithBlock. Error: No OLMAccount yet");
+    }
+    
+    NSLog(@"[MXRealmCryptoStore] performAccountOperationWithBlock done in %.0fms", [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
+}
+
 - (void)storeDeviceSyncToken:(NSString*)deviceSyncToken
 {
     MXRealmOlmAccount *account = self.accountInCurrentThread;
