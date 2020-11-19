@@ -641,7 +641,7 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
 
 - (void)updateMembershipTransitionState:(MXMembershipTransitionState)membershipTransitionState
 {
-    [self updateMembershipTransitionState:membershipTransitionState];
+    [self updateMemberhsipTransitionState:membershipTransitionState notifyUpdate:YES];
 }
 
 - (void)updateMemberhsipTransitionState:(MXMembershipTransitionState)membershipTransitionState notifyUpdate:(BOOL)notifyUpdate
