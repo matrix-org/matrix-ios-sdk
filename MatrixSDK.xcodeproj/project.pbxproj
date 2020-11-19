@@ -572,8 +572,6 @@
 		B11BD45922CB58850064D8B0 /* MXReplyEventFormattedBodyParts.h in Headers */ = {isa = PBXBuildFile; fileRef = B11BD45722CB58850064D8B0 /* MXReplyEventFormattedBodyParts.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		B11BD45A22CB58850064D8B0 /* MXReplyEventFormattedBodyParts.m in Sources */ = {isa = PBXBuildFile; fileRef = B11BD45822CB58850064D8B0 /* MXReplyEventFormattedBodyParts.m */; };
 		B11BD45C22CB8ABC0064D8B0 /* MXReplyEventParserTests.m in Sources */ = {isa = PBXBuildFile; fileRef = B11BD45B22CB8ABC0064D8B0 /* MXReplyEventParserTests.m */; };
-		B124BBCA256453C90028996D /* MXMembershipTransitionStateDataSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = B124BBC8256453C90028996D /* MXMembershipTransitionStateDataSource.swift */; };
-		B124BBCB256453C90028996D /* MXMembershipTransitionStateDataSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = B124BBC8256453C90028996D /* MXMembershipTransitionStateDataSource.swift */; };
 		B124BBCC256453C90028996D /* MXMembershipTransitionState.h in Headers */ = {isa = PBXBuildFile; fileRef = B124BBC9256453C90028996D /* MXMembershipTransitionState.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		B124BBCD256453C90028996D /* MXMembershipTransitionState.h in Headers */ = {isa = PBXBuildFile; fileRef = B124BBC9256453C90028996D /* MXMembershipTransitionState.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		B146D47121A5939100D8C2C6 /* MXRealmHelper.m in Sources */ = {isa = PBXBuildFile; fileRef = B146D46F21A5939000D8C2C6 /* MXRealmHelper.m */; };
@@ -1706,7 +1704,6 @@
 		B11BD45722CB58850064D8B0 /* MXReplyEventFormattedBodyParts.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MXReplyEventFormattedBodyParts.h; sourceTree = "<group>"; };
 		B11BD45822CB58850064D8B0 /* MXReplyEventFormattedBodyParts.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MXReplyEventFormattedBodyParts.m; sourceTree = "<group>"; };
 		B11BD45B22CB8ABC0064D8B0 /* MXReplyEventParserTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MXReplyEventParserTests.m; sourceTree = "<group>"; };
-		B124BBC8256453C90028996D /* MXMembershipTransitionStateDataSource.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MXMembershipTransitionStateDataSource.swift; sourceTree = "<group>"; };
 		B124BBC9256453C90028996D /* MXMembershipTransitionState.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXMembershipTransitionState.h; sourceTree = "<group>"; };
 		B146D46F21A5939000D8C2C6 /* MXRealmHelper.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXRealmHelper.m; sourceTree = "<group>"; };
 		B146D47021A5939000D8C2C6 /* MXRealmHelper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXRealmHelper.h; sourceTree = "<group>"; };
@@ -3054,7 +3051,6 @@
 		B124BBC7256453C90028996D /* Membership */ = {
 			isa = PBXGroup;
 			children = (
-				B124BBC8256453C90028996D /* MXMembershipTransitionStateDataSource.swift */,
 				B124BBC9256453C90028996D /* MXMembershipTransitionState.h */,
 			);
 			path = Membership;
@@ -4106,7 +4102,6 @@
 				32D7767E1A27860600FC4AA2 /* MXMemoryStore.m in Sources */,
 				324DD2B8246C21C700377005 /* MXSecretStorageKeyCreationInfo.m in Sources */,
 				327E9AE82285A8C400A98BC1 /* MXAggregationPaginatedResponse.m in Sources */,
-				B124BBCA256453C90028996D /* MXMembershipTransitionStateDataSource.swift in Sources */,
 				B10AFB4422A970060092E6AF /* MXEventReplace.m in Sources */,
 				3275FD9421A6B46600B9C13D /* MXLoginTerms.m in Sources */,
 				B11BD44D22CB56E80064D8B0 /* MXReplyEventParts.m in Sources */,
@@ -4381,7 +4376,6 @@
 				B14EF1CD2397E90400758AF0 /* MXRealmEventScanStore.m in Sources */,
 				324DD2C2246D658500377005 /* MXHkdfSha256.m in Sources */,
 				B14EF1CE2397E90400758AF0 /* MXScanRealmFileProvider.m in Sources */,
-				B124BBCB256453C90028996D /* MXMembershipTransitionStateDataSource.swift in Sources */,
 				B14EF1CF2397E90400758AF0 /* MXScanManager.m in Sources */,
 				3291DC8623DF52E20009732F /* MXRoomCreationParameters.m in Sources */,
 				B14EF1D02397E90400758AF0 /* MXInvite3PID.m in Sources */,
