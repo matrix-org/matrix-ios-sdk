@@ -891,6 +891,44 @@ RLM_ARRAY_TYPE(MXRealmSecret)
     return session;
 }
 
+- (void)performSessionOperationWithGroupSessionWithId:(NSString*)sessionId senderKey:(NSString*)senderKey block:(void (^)(MXOlmInboundGroupSession *inboundGroupSession))block
+{
+    NSDate *startDate = [NSDate date];
+    
+    RLMRealm *realm = self.realm;
+    
+    [realm beginWriteTransaction];
+    
+    NSString *sessionIdSenderKey = [MXRealmOlmInboundGroupSession primaryKeyWithSessionId:sessionId
+                                                                                senderKey:senderKey];
+    MXRealmOlmInboundGroupSession *realmSession = [MXRealmOlmInboundGroupSession objectsInRealm:self.realm where:@"sessionIdSenderKey = %@", sessionIdSenderKey].firstObject;
+    
+    if (realmSession.olmInboundGroupSessionData)
+    {
+        MXOlmInboundGroupSession *session = [NSKeyedUnarchiver unarchiveObjectWithData:realmSession.olmInboundGroupSessionData];
+        
+        if (session)
+        {
+            block(session);
+            
+            realmSession.olmInboundGroupSessionData = [NSKeyedArchiver archivedDataWithRootObject:session];
+        }
+        else
+        {
+            NSLog(@"[MXRealmCryptoStore] performSessionOperationWithGroupSessionWithId. Error: Cannot build MXOlmInboundGroupSession");
+            block(nil);
+        }    }
+    else
+    {
+        NSLog(@"[MXRealmCryptoStore] performSessionOperationWithGroupSessionWithId. Error: megolm session not found");
+        block(nil);
+    }
+    
+    [realm commitWriteTransaction];
+    
+    NSLog(@"[MXRealmCryptoStore] performSessionOperationWithGroupSessionWithId done in %.0fms", [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
+}
+
 - (NSArray<MXOlmInboundGroupSession *> *)inboundGroupSessions
 {
     NSMutableArray *sessions = [NSMutableArray array];

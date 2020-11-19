@@ -285,6 +285,17 @@
 - (MXOlmInboundGroupSession*)inboundGroupSessionWithId:(NSString*)sessionId andSenderKey:(NSString*)senderKey;
 
 /**
+ Perform an action that will advance the passed end-to-end group session.
+ 
+ See performAccountOperationWithBlock for more details.
+ 
+ @param sessionId the session identifier.
+ @param senderKey the base64-encoded curve25519 key of the sender.
+ @param block the block where olm session operations can be safely made.
+ */
+- (void)performSessionOperationWithGroupSessionWithId:(NSString*)sessionId senderKey:(NSString*)senderKey block:(void (^)(MXOlmInboundGroupSession *inboundGroupSession))block;
+
+/**
  Retrieve all inbound group sessions.
  
  @return the list of all inbound group sessions.

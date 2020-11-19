@@ -322,8 +322,6 @@
                    keysClaimed:(NSDictionary<NSString*, NSString*>*)keysClaimed
                   exportFormat:(BOOL)exportFormat
 {
-    NSError *error;
-
     MXOlmInboundGroupSession *session;
     if (exportFormat)
     {
@@ -334,7 +332,12 @@
         session = [[MXOlmInboundGroupSession alloc] initWithSessionKey:sessionKey];
     }
 
-    MXOlmInboundGroupSession *existingSession = [self inboundGroupSessionWithId:sessionId senderKey:senderKey roomId:roomId error:&error];
+    MXOlmInboundGroupSession *existingSession = [store inboundGroupSessionWithId:sessionId andSenderKey:senderKey];
+    if ([self checkInboundGroupSession:existingSession roomId:roomId])
+    {
+        existingSession = nil;
+    }
+    
     if (existingSession)
     {
         // If we already have this session, consider updating it
@@ -380,8 +383,12 @@
 
         MXOlmInboundGroupSession *session = [[MXOlmInboundGroupSession alloc] initWithImportedSessionData:sessionData];
 
-        NSError *error;
-        MXOlmInboundGroupSession *existingSession = [self inboundGroupSessionWithId:sessionData.sessionId senderKey:sessionData.senderKey roomId:sessionData.roomId error:&error];
+        MXOlmInboundGroupSession *existingSession = [store inboundGroupSessionWithId:sessionData.sessionId andSenderKey:sessionData.senderKey];
+        if ([self checkInboundGroupSession:existingSession roomId:sessionData.roomId])
+        {
+            existingSession = nil;
+        }
+        
         if (existingSession)
         {
             // If we already have this session, consider updating it
@@ -408,57 +415,65 @@
                                   sessionId:(NSString *)sessionId senderKey:(NSString *)senderKey
                                       error:(NSError *__autoreleasing *)error
 {
+    __block NSUInteger messageIndex;
+    __block NSString *payloadString;
+    __block NSDictionary *keysClaimed;
+    __block NSArray<NSString *> *forwardingCurve25519KeyChain;
+    
     MXDecryptionResult *result;
-
-    MXOlmInboundGroupSession *session = [self inboundGroupSessionWithId:sessionId senderKey:senderKey roomId:roomId error:error];
-    if (session)
-    {
-        NSUInteger messageIndex;
-        NSString *payloadString = [session.session decryptMessage:body messageIndex:&messageIndex error:error];
-
-        [store storeInboundGroupSessions:@[session]];
-
-        if (payloadString)
+    
+    [store performSessionOperationWithGroupSessionWithId:sessionId senderKey:senderKey block:^(MXOlmInboundGroupSession *session) {
+        
+        *error = [self checkInboundGroupSession:session roomId:roomId];
+        if (*error)
         {
-            // Check if we have seen this message index before to detect replay attacks.
-            if (timeline)
-            {
-                if (!inboundGroupSessionMessageIndexes[timeline])
-                {
-                    inboundGroupSessionMessageIndexes[timeline] = [NSMutableDictionary dictionary];
-                }
-
-                NSString *messageIndexKey = [NSString stringWithFormat:@"%@|%@|%tu", senderKey, sessionId, messageIndex];
-                if (inboundGroupSessionMessageIndexes[timeline][messageIndexKey])
-                {
-                    NSLog(@"[MXOlmDevice] decryptGroupMessage: Warning: Possible replay attack %@", messageIndexKey);
-
-                    if (error)
-                    {
-                        *error = [NSError errorWithDomain:MXDecryptingErrorDomain
-                                                     code:MXDecryptingErrorDuplicateMessageIndexCode
-                                                 userInfo:@{
-                                                            NSLocalizedDescriptionKey: [NSString stringWithFormat:MXDecryptingErrorDuplicateMessageIndexReason, messageIndexKey]
-                                                            }];
-                    }
-
-                    return nil;
-                }
-
-                inboundGroupSessionMessageIndexes[timeline][messageIndexKey] = @(YES);
-            }
-
-            result = [[MXDecryptionResult alloc] init];
-            result.payload = [NSJSONSerialization JSONObjectWithData:[payloadString dataUsingEncoding:NSUTF8StringEncoding] options:0 error:nil];
-            result.keysClaimed = session.keysClaimed;
-            result.senderKey = senderKey;
-            result.forwardingCurve25519KeyChain = session.forwardingCurve25519KeyChain;
+            NSLog(@"[MXOlmDevice] decryptGroupMessage: Cannot decrypt in room %@ with session %@|%@. Error: %@", roomId, senderKey, sessionId, *error);
+            session = nil;
         }
-    }
+        else
+        {
+            payloadString = [session.session decryptMessage:body messageIndex:&messageIndex error:error];
+            keysClaimed = session.keysClaimed;
+            forwardingCurve25519KeyChain = session.forwardingCurve25519KeyChain;
+        }
+        
+    }];
 
-    if (*error)
+    if (payloadString)
     {
-        NSLog(@"[MXOlmDevice] decryptGroupMessage: Cannot decrypt in room %@ with session %@|%@. Error: %@", roomId, senderKey, sessionId, *error);
+        // Check if we have seen this message index before to detect replay attacks.
+        if (timeline)
+        {
+            if (!inboundGroupSessionMessageIndexes[timeline])
+            {
+                inboundGroupSessionMessageIndexes[timeline] = [NSMutableDictionary dictionary];
+            }
+            
+            NSString *messageIndexKey = [NSString stringWithFormat:@"%@|%@|%tu", senderKey, sessionId, messageIndex];
+            if (inboundGroupSessionMessageIndexes[timeline][messageIndexKey])
+            {
+                NSLog(@"[MXOlmDevice] decryptGroupMessage: Warning: Possible replay attack %@", messageIndexKey);
+                
+                if (error)
+                {
+                    *error = [NSError errorWithDomain:MXDecryptingErrorDomain
+                                                 code:MXDecryptingErrorDuplicateMessageIndexCode
+                                             userInfo:@{
+                                                 NSLocalizedDescriptionKey: [NSString stringWithFormat:MXDecryptingErrorDuplicateMessageIndexReason, messageIndexKey]
+                                             }];
+                }
+                
+                return nil;
+            }
+            
+            inboundGroupSessionMessageIndexes[timeline][messageIndexKey] = @(YES);
+        }
+        
+        result = [[MXDecryptionResult alloc] init];
+        result.payload = [NSJSONSerialization JSONObjectWithData:[payloadString dataUsingEncoding:NSUTF8StringEncoding] options:0 error:nil];
+        result.keysClaimed = keysClaimed;
+        result.senderKey = senderKey;
+        result.forwardingCurve25519KeyChain = forwardingCurve25519KeyChain;
     }
 
     return result;
@@ -470,20 +485,15 @@
 }
 
 /**
- Extract an InboundGroupSession from the session store and do some check.
+ Check an InboundGroupSession
 
+ @paral session the session to check.
  @param roomId the room where the sesion is used.
- @param sessionId the session identifier.
- @param senderKey the base64-encoded curve25519 key of the sender.
- @param error the result error if there is an issue.
- @return the inbound group session.
+ @return an error if there is an issue.
  */
-- (MXOlmInboundGroupSession *)inboundGroupSessionWithId:(NSString *)sessionId senderKey:(NSString *)senderKey
-                                                 roomId:(NSString *)roomId
-                                                  error:(NSError *__autoreleasing *)error
+- (NSError *)checkInboundGroupSession:(MXOlmInboundGroupSession *)session roomId:(NSString *)roomId
 {
-    MXOlmInboundGroupSession *session = [store inboundGroupSessionWithId:sessionId andSenderKey:senderKey];
-
+    NSError *error;
     if (session)
     {
         // Check that the room id matches the original one for the session. This stops
@@ -494,28 +504,22 @@
 
             NSString *errorDescription = [NSString stringWithFormat:MXDecryptingErrorInboundSessionMismatchRoomIdReason, roomId, session.roomId];
 
-            if (error)
-            {
-                *error = [NSError errorWithDomain:MXDecryptingErrorDomain
+            error = [NSError errorWithDomain:MXDecryptingErrorDomain
                                              code:MXDecryptingErrorUnknownInboundSessionIdCode
                                          userInfo:@{
                                                     NSLocalizedDescriptionKey: errorDescription
                                                     }];
-            }
         }
     }
     else
     {
-        if (error)
-        {
-            *error = [NSError errorWithDomain:MXDecryptingErrorDomain
+        error = [NSError errorWithDomain:MXDecryptingErrorDomain
                                          code:MXDecryptingErrorUnknownInboundSessionIdCode
                                      userInfo:@{
                                                 NSLocalizedDescriptionKey: MXDecryptingErrorUnknownInboundSessionIdReason
                                                 }];
-        }
     }
-    return session;
+    return error;
 }
 
 - (BOOL)hasInboundSessionKeys:(NSString*)roomId senderKey:(NSString*)senderKey sessionId:(NSString*)sessionId
@@ -540,9 +544,15 @@
 - (NSDictionary*)getInboundGroupSessionKey:(NSString*)roomId senderKey:(NSString*)senderKey sessionId:(NSString*)sessionId chainIndex:(NSNumber*)chainIndex
 {
     NSDictionary *inboundGroupSessionKey;
-
-    NSError *error;
-    MXOlmInboundGroupSession *session = [self inboundGroupSessionWithId:sessionId senderKey:senderKey roomId:roomId error:&error];
+    
+    MXOlmInboundGroupSession *session = [store inboundGroupSessionWithId:sessionId andSenderKey:senderKey];
+    NSError *error = [self checkInboundGroupSession:session roomId:roomId];
+    if (error)
+    {
+        NSLog(@"[MXOlmDevice] getInboundGroupSessionKey in room %@ with session %@|%@. Error: %@", roomId, senderKey, sessionId, error);
+        session = nil;
+    }
+    
     if (session)
     {
         NSNumber *messageIndex = chainIndex;
@@ -563,11 +573,6 @@
                                    @"forwarding_curve25519_key_chain": forwardingCurve25519KeyChain ? forwardingCurve25519KeyChain : @[],
                                    @"sender_claimed_ed25519_key": senderEd25519Key ? senderEd25519Key : [NSNull null]
                                    };
-    }
-
-    if (error)
-    {
-        NSLog(@"[MXOlmDevice] getInboundGroupSessionKey in room %@ with session %@|%@. Error: %@", roomId, senderKey, sessionId, error);
     }
 
     return inboundGroupSessionKey;
