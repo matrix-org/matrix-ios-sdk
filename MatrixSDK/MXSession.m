@@ -19,7 +19,6 @@
 
 #import "MXSession.h"
 #import "MatrixSDK.h"
-#import <MatrixSDK/MatrixSDK-Swift.h>
 
 #import <AFNetworking/AFNetworking.h>
 
