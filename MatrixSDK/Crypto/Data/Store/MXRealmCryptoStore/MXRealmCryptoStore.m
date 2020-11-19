@@ -395,7 +395,7 @@ RLM_ARRAY_TYPE(MXRealmSecret)
         account.olmAccountData = [NSKeyedArchiver archivedDataWithRootObject:olmAccount];
     }];
 
-    NSLog(@"[MXRealmCryptoStore] storeAccount in %.0fms", [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
+    NSLog(@"[MXRealmCryptoStore] storeAccount in %.3fms", [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
 }
 
 - (OLMAccount*)account
@@ -439,7 +439,7 @@ RLM_ARRAY_TYPE(MXRealmSecret)
         block(nil);
     }
     
-    NSLog(@"[MXRealmCryptoStore] performAccountOperationWithBlock done in %.0fms", [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
+    NSLog(@"[MXRealmCryptoStore] performAccountOperationWithBlock done in %.3fms", [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
 }
 
 - (void)storeDeviceSyncToken:(NSString*)deviceSyncToken
@@ -491,7 +491,7 @@ RLM_ARRAY_TYPE(MXRealmSecret)
 
     }];
 
-    NSLog(@"[MXRealmCryptoStore] storeDeviceForUser in %.0fms", [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
+    NSLog(@"[MXRealmCryptoStore] storeDeviceForUser in %.3fms", [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
 }
 
 - (MXDeviceInfo*)deviceWithDeviceId:(NSString*)deviceId forUser:(NSString*)userID
@@ -552,7 +552,7 @@ RLM_ARRAY_TYPE(MXRealmSecret)
         }
     }];
 
-    NSLog(@"[MXRealmCryptoStore] storeDevicesForUser (count: %tu) in %.0fms", devices.count, [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
+    NSLog(@"[MXRealmCryptoStore] storeDevicesForUser (count: %tu) in %.3fms", devices.count, [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
 }
 
 - (NSDictionary<NSString*, MXDeviceInfo*>*)devicesForUser:(NSString*)userID
@@ -673,7 +673,7 @@ RLM_ARRAY_TYPE(MXRealmSecret)
         }
     }];
 
-    NSLog(@"[MXRealmCryptoStore] storeAlgorithmForRoom (%@) in %.0fms", (isNew?@"NEW":@"UPDATE"), [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
+    NSLog(@"[MXRealmCryptoStore] storeAlgorithmForRoom (%@) in %.3fms", (isNew?@"NEW":@"UPDATE"), [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
 }
 
 - (NSString*)algorithmForRoom:(NSString*)roomId
@@ -706,7 +706,7 @@ RLM_ARRAY_TYPE(MXRealmSecret)
         }
     }];
 
-    NSLog(@"[MXRealmCryptoStore] storeBlacklistUnverifiedDevicesInRoom (%@) in %.0fms", (isNew?@"NEW":@"UPDATE"), [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
+    NSLog(@"[MXRealmCryptoStore] storeBlacklistUnverifiedDevicesInRoom (%@) in %.3fms", (isNew?@"NEW":@"UPDATE"), [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
 }
 
 - (BOOL)blacklistUnverifiedDevicesInRoom:(NSString *)roomId
@@ -749,7 +749,7 @@ RLM_ARRAY_TYPE(MXRealmSecret)
         }
     }];
 
-    NSLog(@"[MXRealmCryptoStore] storeSession (%@) in %.0fms", (isNew?@"NEW":@"UPDATE"), [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
+    NSLog(@"[MXRealmCryptoStore] storeSession (%@) in %.3fms", (isNew?@"NEW":@"UPDATE"), [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
 }
 
 - (MXOlmSession*)sessionWithDevice:(NSString*)deviceKey andSessionId:(NSString*)sessionId
@@ -792,13 +792,13 @@ RLM_ARRAY_TYPE(MXRealmSecret)
     }
     else
     {
-        NSLog(@"[MXRealmCryptoStore] performSessionOperationWithDevice. Error: olm session not found");
+        NSLog(@"[MXRealmCryptoStore] performSessionOperationWithDevice. Error: olm session %@ not found", sessionId);
         block(nil);
     }
     
     [realm commitWriteTransaction];
     
-    NSLog(@"[MXRealmCryptoStore] performSessionOperationWithDevice done in %.0fms", [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
+    NSLog(@"[MXRealmCryptoStore] performSessionOperationWithDevice done in %.3fms", [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
 }
 
 - (NSArray<MXOlmSession*>*)sessionsWithDevice:(NSString*)deviceKey;
@@ -866,7 +866,7 @@ RLM_ARRAY_TYPE(MXRealmSecret)
     }];
 
 
-    NSLog(@"[MXRealmCryptoStore] storeInboundGroupSessions: store %@ keys (%@ new) in %.0fms", @(sessions.count), @(newCount), [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
+    NSLog(@"[MXRealmCryptoStore] storeInboundGroupSessions: store %@ keys (%@ new) in %.3fms", @(sessions.count), @(newCount), [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
 }
 
 - (MXOlmInboundGroupSession*)inboundGroupSessionWithId:(NSString*)sessionId andSenderKey:(NSString*)senderKey
@@ -915,18 +915,18 @@ RLM_ARRAY_TYPE(MXRealmSecret)
         }
         else
         {
-            NSLog(@"[MXRealmCryptoStore] performSessionOperationWithGroupSessionWithId. Error: Cannot build MXOlmInboundGroupSession");
+            NSLog(@"[MXRealmCryptoStore] performSessionOperationWithGroupSessionWithId. Error: Cannot build MXOlmInboundGroupSession for megolm session %@", sessionId);
             block(nil);
         }    }
     else
     {
-        NSLog(@"[MXRealmCryptoStore] performSessionOperationWithGroupSessionWithId. Error: megolm session not found");
+        NSLog(@"[MXRealmCryptoStore] performSessionOperationWithGroupSessionWithId. Error: megolm session %@ not found", sessionId);
         block(nil);
     }
     
     [realm commitWriteTransaction];
     
-    NSLog(@"[MXRealmCryptoStore] performSessionOperationWithGroupSessionWithId done in %.0fms", [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
+    NSLog(@"[MXRealmCryptoStore] performSessionOperationWithGroupSessionWithId done in %.3fms", [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
 }
 
 - (NSArray<MXOlmInboundGroupSession *> *)inboundGroupSessions
