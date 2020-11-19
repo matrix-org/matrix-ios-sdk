@@ -844,12 +844,6 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
                                                     success:(void (^)(BOOL canEnableE2E))success
                                                     failure:(void (^)(NSError *error))failure;
 
-/**
- Get the room membership change state
- @param roomId The room id
-*/
-- (MXMembershipTransitionState)getRoomMembershipChangeStateWithRoomId:(NSString*)roomId;
-
 #pragma mark - The user's rooms
 /**
  Check if the user is in a room

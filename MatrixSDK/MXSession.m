@@ -183,8 +183,6 @@ typedef void (^MXOnResumeDone)(void);
  */
 @property (nonatomic, strong) id<MXBackgroundTask> backgroundTask;
 
-@property (nonatomic, strong) MXMembershipTransitionStateDataSource *membershipTransitionStateDataSource;
-
 @end
 
 @implementation MXSession
@@ -208,7 +206,6 @@ typedef void (^MXOnResumeDone)(void);
         _preventPauseCount = 0;
         directRoomsOperationsQueue = [NSMutableArray array];
         publicisedGroupsByUserId = [[NSMutableDictionary alloc] init];
-        _membershipTransitionStateDataSource = [MXMembershipTransitionStateDataSource new];
 
         [self setIdentityServer:mxRestClient.identityServer andAccessToken:mxRestClient.credentials.identityServerAccessToken];
         
@@ -1912,12 +1909,12 @@ typedef void (^MXOnResumeDone)(void);
                      success:(void (^)(MXRoom *room))success
                      failure:(void (^)(NSError *error))failure {
     
-    [self.membershipTransitionStateDataSource updateStateFor:roomIdOrAlias with:MXMembershipTransitionStateJoining];
+    [self updateRoomSummaryWithRoomId:roomIdOrAlias withMembershipState:MXMembershipTransitionStateJoining];
     
     return [matrixRestClient joinRoom:roomIdOrAlias viaServers:viaServers withThirdPartySigned:nil success:^(NSString *theRoomId) {
         [self onJoinedRoom:theRoomId success:^(MXRoom *room) {
             
-            [self.membershipTransitionStateDataSource updateStateFor:roomIdOrAlias with:MXMembershipTransitionStateJoined];
+            [self updateRoomSummaryWithRoomId:roomIdOrAlias withMembershipState:MXMembershipTransitionStateJoined];
             
             if (success)
             {
@@ -1927,7 +1924,7 @@ typedef void (^MXOnResumeDone)(void);
 
     } failure:^(NSError *error) {
         
-        [self.membershipTransitionStateDataSource updateStateFor:roomIdOrAlias with:MXMembershipTransitionStateFailedJoining];
+        [self updateRoomSummaryWithRoomId:roomIdOrAlias withMembershipState:MXMembershipTransitionStateFailedJoining];
             
         if (failure)
         {
@@ -1983,7 +1980,7 @@ typedef void (^MXOnResumeDone)(void);
                       success:(void (^)(void))success
                       failure:(void (^)(NSError *error))failure
 {
-    [self.membershipTransitionStateDataSource updateStateFor:roomId with:MXMembershipTransitionStateLeaving];
+    [self updateRoomSummaryWithRoomId:roomId withMembershipState:MXMembershipTransitionStateLeaving];
     
     return [matrixRestClient leaveRoom:roomId success:^{
 
@@ -2000,7 +1997,7 @@ typedef void (^MXOnResumeDone)(void);
                     [[NSNotificationCenter defaultCenter] removeObserver:observer];
                     
                     MXStrongifyAndReturnIfNil(self);
-                    [self.membershipTransitionStateDataSource updateStateFor:roomId with:MXMembershipTransitionStateLeft];
+                    [self updateRoomSummaryWithRoomId:roomId withMembershipState:MXMembershipTransitionStateLeft];
                                         
                     if (success)
                     {
@@ -2011,7 +2008,8 @@ typedef void (^MXOnResumeDone)(void);
         }
         else
         {
-            [self.membershipTransitionStateDataSource updateStateFor:roomId with:MXMembershipTransitionStateLeft];
+            [self updateRoomSummaryWithRoomId:roomId withMembershipState:MXMembershipTransitionStateLeft];
+            
             if (success)
             {
                 success();
@@ -2020,7 +2018,7 @@ typedef void (^MXOnResumeDone)(void);
 
     } failure:^(NSError *error) {
         
-        [self.membershipTransitionStateDataSource updateStateFor:roomId with:MXMembershipTransitionStateFailedLeaving];
+        [self updateRoomSummaryWithRoomId:roomId withMembershipState:MXMembershipTransitionStateFailedLeaving];
         
         if (failure)
         {
@@ -2050,11 +2048,6 @@ typedef void (^MXOnResumeDone)(void);
         success(allUsersHaveDeviceKeys);
         
     } failure:failure];
-}
-
-- (MXMembershipTransitionState)getRoomMembershipChangeStateWithRoomId:(NSString*)roomId
-{
-    return [self.membershipTransitionStateDataSource getStateFor:roomId];
 }
 
 #pragma mark - The user's rooms
@@ -2516,6 +2509,20 @@ typedef void (^MXOnResumeDone)(void);
     if ([_store respondsToSelector:@selector(commit)])
     {
         [_store commit];
+    }
+}
+
+- (void)updateRoomSummaryWithRoomId:(NSString*)roomId withMembershipState:(MXMembershipTransitionState)membershipTransitionState
+{
+    MXRoomSummary *roomSummary = [self roomSummaryWithRoomId:roomId];
+    
+    if (roomSummary)
+    {
+        [roomSummary updateMembershipTransitionState:membershipTransitionState];
+    }
+    else
+    {
+        NSLog(@"[MXSession] updateRoomSummaryWitRoomId:withMembershipState: Failed to find roomSummary with roomId: %@ roomId and update membership transition state: %ld", roomId, (long)membershipTransitionState);
     }
 }
 
