@@ -385,7 +385,7 @@ RLM_ARRAY_TYPE(MXRealmSecret)
     return account.deviceId;
 }
 
-- (void)storeAccount:(OLMAccount*)olmAccount
+- (void)setAccount:(OLMAccount*)olmAccount
 {
     NSDate *startDate = [NSDate date];
 

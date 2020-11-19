@@ -77,7 +77,7 @@
             // Else, create it
             olmAccount = [[OLMAccount alloc] initNewAccount];
 
-            [store storeAccount:olmAccount];
+            [store setAccount:olmAccount];
         }
         else
         {

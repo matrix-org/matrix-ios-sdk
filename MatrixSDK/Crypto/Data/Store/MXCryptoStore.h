@@ -93,7 +93,7 @@
  
  This method MUST be used only on setup to store a new olm account.
  */
-- (void)storeAccount:(OLMAccount*)account;
+- (void)setAccount:(OLMAccount*)account;
 
 /**
  The user olm account for this device.
