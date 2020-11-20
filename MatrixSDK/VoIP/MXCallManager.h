@@ -139,6 +139,12 @@ extern NSString *const kMXCallManagerConferenceFinished;
 @property (nonatomic) NSUInteger inviteLifetime;
 
 /**
+ The time in milliseconds that an incoming or outgoing call negotiate is valid for.
+ Default is 30s.
+ */
+@property (nonatomic) NSUInteger negotiateLifetime;
+
+/**
  The list of TURN/STUN servers advertised by the user's homeserver.
  Can be nil. In this case, use `fallbackSTUNServer`.
  */

@@ -47,6 +47,8 @@ typedef NS_ENUM(NSUInteger, MXCallState)
     MXCallStateConnecting,
 
     MXCallStateConnected,
+    MXCallStateHolded,
+    MXCallStateRemoteHolded,
     MXCallStateEnded,
 
     MXCallStateInviteExpired,
@@ -119,6 +121,10 @@ extern NSString *const kMXCallStateDidChange;
  Answer to an incoming call.
  */
 - (void)answer;
+
+@property (nonatomic, readonly) BOOL supportsHolding;
+
+- (void)hold:(BOOL)hold;
 
 /**
  Hang up a call in progress or reject an incoming call.

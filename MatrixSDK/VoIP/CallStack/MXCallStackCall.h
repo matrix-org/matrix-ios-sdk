@@ -47,6 +47,19 @@ NS_ASSUME_NONNULL_BEGIN
                              failure:(void (^)(NSError *error))failure;
 
 /**
+ Hold/resume the call. Creates an offer.
+
+ The created sdp will be sent to the Matrix room in a m.call.negotiate event.
+
+ @param success A block object called when the operation succeeds. It provides a description
+                of the offer.
+ @param failure A block object called when the operation fails.
+ */
+- (void)hold:(BOOL)hold
+     success:(void (^)(NSString *sdp))success
+     failure:(void (^)(NSError *))failure;
+
+/**
  Terminate the call.
  */
 - (void)end;
@@ -100,7 +113,6 @@ NS_ASSUME_NONNULL_BEGIN
  */
 - (void)createAnswer:(void (^)(NSString *sdpAnswer))success
              failure:(void (^)(NSError *error))failure;
-
 
 #pragma mark - Outgoing call
 /**
@@ -217,6 +229,13 @@ NS_ASSUME_NONNULL_BEGIN
  @param callStackCall the corresponding instance.
  */
 - (void)callStackCallDidConnect:(id<MXCallStackCall>)callStackCall;
+
+/**
+ Tells the delegate that connection was holded
+ 
+ @param callStackCall the corresponding instance.
+ */
+- (void)callStackCallDidHold:(id<MXCallStackCall>)callStackCall;
 
 @end
 
