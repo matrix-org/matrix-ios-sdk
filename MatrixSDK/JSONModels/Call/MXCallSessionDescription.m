@@ -15,6 +15,12 @@
 //
 
 #import "MXCallSessionDescription.h"
+#import "MXTools.h"
+
+NSString *const kMXCallSessionDescriptionTypeOffer = @"offer";
+NSString *const kMXCallSessionDescriptionTypePrAnswer = @"pranswer";
+NSString *const kMXCallSessionDescriptionTypeAnswer = @"answer";
+NSString *const kMXCallSessionDescriptionTypeRollback = @"rollback";
 
 @implementation MXCallSessionDescription
 
@@ -23,11 +29,21 @@
     MXCallSessionDescription *callSessionDescription = [[MXCallSessionDescription alloc] init];
     if (callSessionDescription)
     {
-        MXJSONModelSetString(callSessionDescription.type, JSONDictionary[@"type"]);
+        MXJSONModelSetString(callSessionDescription.typeString, JSONDictionary[@"type"]);
         MXJSONModelSetString(callSessionDescription.sdp, JSONDictionary[@"sdp"]);
     }
 
     return callSessionDescription;
+}
+
+- (MXCallSessionDescriptionType)type
+{
+    return [MXTools callSessionDescriptionType:self.typeString];
+}
+
+- (void)setType:(MXCallSessionDescriptionType)type
+{
+    self.typeString = [MXTools callSessionDescriptionTypeString:type];
 }
 
 @end

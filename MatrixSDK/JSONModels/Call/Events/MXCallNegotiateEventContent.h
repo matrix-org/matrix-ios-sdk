@@ -31,7 +31,7 @@
 /**
  The session description.
  */
-@property (nonatomic) MXCallSessionDescription *offer;
+@property (nonatomic) MXCallSessionDescription *sessionDescription;
 
 /**
  The time in milliseconds that the invite is valid for.

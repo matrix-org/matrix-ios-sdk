@@ -340,6 +340,52 @@ NSCharacterSet *uriComponentCharset;
     return string;
 }
 
++ (MXCallSessionDescriptionType)callSessionDescriptionType:(MXCallSessionDescriptionTypeString)typeString
+{
+    MXCallSessionDescriptionType type = MXCallSessionDescriptionTypeOffer;
+    
+    if ([typeString isEqualToString:kMXCallSessionDescriptionTypeOffer])
+    {
+        type = MXCallSessionDescriptionTypeOffer;
+    }
+    else if ([typeString isEqualToString:kMXCallSessionDescriptionTypePrAnswer])
+    {
+        type = MXCallSessionDescriptionTypePrAnswer;
+    }
+    else if ([typeString isEqualToString:kMXCallSessionDescriptionTypeAnswer])
+    {
+        type = MXCallSessionDescriptionTypeAnswer;
+    }
+    else if ([typeString isEqualToString:kMXCallSessionDescriptionTypeRollback])
+    {
+        type = MXCallSessionDescriptionTypeRollback;
+    }
+    
+    return type;
+}
+
++ (MXCallSessionDescriptionTypeString)callSessionDescriptionTypeString:(MXCallSessionDescriptionType)type
+{
+    MXCallSessionDescriptionTypeString string;
+    
+    switch (type) {
+        case MXCallSessionDescriptionTypeOffer:
+            string = kMXCallSessionDescriptionTypeOffer;
+            break;
+        case MXCallSessionDescriptionTypePrAnswer:
+            string = kMXCallSessionDescriptionTypePrAnswer;
+            break;
+        case MXCallSessionDescriptionTypeAnswer:
+            string = kMXCallSessionDescriptionTypeAnswer;
+            break;
+        case MXCallSessionDescriptionTypeRollback:
+            string = kMXCallSessionDescriptionTypeRollback;
+            break;
+    }
+    
+    return string;
+}
+
 + (NSString *)generateSecret
 {
     return [[NSProcessInfo processInfo] globallyUniqueString];

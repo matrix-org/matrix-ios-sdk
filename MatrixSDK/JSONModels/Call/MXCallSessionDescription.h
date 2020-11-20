@@ -17,19 +17,41 @@
 #import <Foundation/Foundation.h>
 #import "MXJSONModel.h"
 
+typedef NSString * MXCallSessionDescriptionTypeString;
+FOUNDATION_EXPORT NSString *const kMXCallSessionDescriptionTypeOffer;
+FOUNDATION_EXPORT NSString *const kMXCallSessionDescriptionTypePrAnswer;
+FOUNDATION_EXPORT NSString *const kMXCallSessionDescriptionTypeAnswer;
+FOUNDATION_EXPORT NSString *const kMXCallSessionDescriptionTypeRollback;
+
+/**
+ MXCallSessionDescription types
+ */
+typedef enum : NSUInteger
+{
+    MXCallSessionDescriptionTypeOffer,
+    MXCallSessionDescriptionTypePrAnswer,
+    MXCallSessionDescriptionTypeAnswer,
+    MXCallSessionDescriptionTypeRollback
+} MXCallSessionDescriptionType NS_REFINED_FOR_SWIFT;
+
 /**
  `MXCallOffer` represents a call session description.
  */
 @interface MXCallSessionDescription : MXJSONModel
 
 /**
- The type of session description. Can be 'offer' or 'answer'.
+ The type of session description (as string).
  */
-@property (nonatomic) NSString *type;
+@property (nonatomic) MXCallSessionDescriptionTypeString typeString;
 
 /**
  The SDP text of the session description.
  */
 @property (nonatomic) NSString *sdp;
+
+/**
+ The mapped enum type of session description.
+ */
+@property (nonatomic) MXCallSessionDescriptionType type;
 
 @end

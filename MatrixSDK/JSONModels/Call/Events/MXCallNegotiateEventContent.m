@@ -25,7 +25,7 @@
     {
         [callNegotiateEventContent parseJSON:JSONDictionary];
         MXJSONModelSetString(callNegotiateEventContent.callId, JSONDictionary[@"call_id"]);
-        MXJSONModelSetMXJSONModel(callNegotiateEventContent.offer, MXCallSessionDescription, JSONDictionary[@"description"]);
+        MXJSONModelSetMXJSONModel(callNegotiateEventContent.sessionDescription, MXCallSessionDescription, JSONDictionary[@"description"]);
         MXJSONModelSetUInteger(callNegotiateEventContent.lifetime, JSONDictionary[@"lifetime"]);
     }
 
@@ -34,7 +34,7 @@
 
 - (BOOL)isVideoCall
 {
-    return (NSNotFound != [self.offer.sdp rangeOfString:@"m=video"].location);
+    return (NSNotFound != [self.sessionDescription.sdp rangeOfString:@"m=video"].location);
 }
 
 @end
