@@ -1141,7 +1141,7 @@
 		C6F9358A1E5B3BE600FC34BF /* MXEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = C6F935861E5B3BE600FC34BF /* MXEvent.swift */; };
 		C6F9358B1E5B3BE600FC34BF /* MXJSONModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = C6F935871E5B3BE600FC34BF /* MXJSONModels.swift */; };
 		C6FE1EF01E65C4F7008587E4 /* MXAnalyticsDelegate.h in Headers */ = {isa = PBXBuildFile; fileRef = C6FE1EEF1E65C4F7008587E4 /* MXAnalyticsDelegate.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		EC0C51752559388C00F2CC66 /* Stopwatch.swift in Sources */ = {isa = PBXBuildFile; fileRef = ECB5D98B2552C9B4000AD89C /* Stopwatch.swift */; };
+		EC0C51752559388C00F2CC66 /* MXStopwatch.swift in Sources */ = {isa = PBXBuildFile; fileRef = ECB5D98B2552C9B4000AD89C /* MXStopwatch.swift */; };
 		EC383BA2253DE4B1002FBBE6 /* MXBackgroundSyncService.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC383BA1253DE4B1002FBBE6 /* MXBackgroundSyncService.swift */; };
 		EC383BA5253DE6C9002FBBE6 /* MXSyncResponseStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC383BA4253DE6C9002FBBE6 /* MXSyncResponseStore.swift */; };
 		EC383BA8253DE6EE002FBBE6 /* MXSyncResponseFileStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC383BA7253DE6EE002FBBE6 /* MXSyncResponseFileStore.swift */; };
@@ -1161,7 +1161,7 @@
 		EC619D9224DD834B00663A80 /* MXPushGatewayRestClient.m in Sources */ = {isa = PBXBuildFile; fileRef = EC619D9024DD834B00663A80 /* MXPushGatewayRestClient.m */; };
 		EC619D9324DD834B00663A80 /* MXPushGatewayRestClient.h in Headers */ = {isa = PBXBuildFile; fileRef = EC619D9124DD834B00663A80 /* MXPushGatewayRestClient.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		ECAE7AEC24ED75F1002FA813 /* HTTPAdditionalHeadersTests.m in Sources */ = {isa = PBXBuildFile; fileRef = ECAE7AEB24ED75F1002FA813 /* HTTPAdditionalHeadersTests.m */; };
-		ECB5D98C2552C9B4000AD89C /* Stopwatch.swift in Sources */ = {isa = PBXBuildFile; fileRef = ECB5D98B2552C9B4000AD89C /* Stopwatch.swift */; };
+		ECB5D98C2552C9B4000AD89C /* MXStopwatch.swift in Sources */ = {isa = PBXBuildFile; fileRef = ECB5D98B2552C9B4000AD89C /* MXStopwatch.swift */; };
 		F0173EAC1FCF0E8900B5F6A3 /* MXGroup.h in Headers */ = {isa = PBXBuildFile; fileRef = F0173EAA1FCF0E8800B5F6A3 /* MXGroup.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		F0173EAD1FCF0E8900B5F6A3 /* MXGroup.m in Sources */ = {isa = PBXBuildFile; fileRef = F0173EAB1FCF0E8900B5F6A3 /* MXGroup.m */; };
 		F03EF4FE1DF014D9009DF592 /* MXMediaLoader.h in Headers */ = {isa = PBXBuildFile; fileRef = F03EF4FA1DF014D9009DF592 /* MXMediaLoader.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -1828,7 +1828,7 @@
 		EC619D9024DD834B00663A80 /* MXPushGatewayRestClient.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXPushGatewayRestClient.m; sourceTree = "<group>"; };
 		EC619D9124DD834B00663A80 /* MXPushGatewayRestClient.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXPushGatewayRestClient.h; sourceTree = "<group>"; };
 		ECAE7AEB24ED75F1002FA813 /* HTTPAdditionalHeadersTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = HTTPAdditionalHeadersTests.m; sourceTree = "<group>"; };
-		ECB5D98B2552C9B4000AD89C /* Stopwatch.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Stopwatch.swift; sourceTree = "<group>"; };
+		ECB5D98B2552C9B4000AD89C /* MXStopwatch.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXStopwatch.swift; sourceTree = "<group>"; };
 		ED2F344856EFFCA383E37B22 /* Pods-SDK-MatrixSDK.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-SDK-MatrixSDK.release.xcconfig"; path = "Target Support Files/Pods-SDK-MatrixSDK/Pods-SDK-MatrixSDK.release.xcconfig"; sourceTree = "<group>"; };
 		EDC74874AB2D86EFEE912B04 /* Pods-MatrixSDK-MatrixSDK-macOS.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-MatrixSDK-MatrixSDK-macOS.debug.xcconfig"; path = "Target Support Files/Pods-MatrixSDK-MatrixSDK-macOS/Pods-MatrixSDK-MatrixSDK-macOS.debug.xcconfig"; sourceTree = "<group>"; };
 		F0173EAA1FCF0E8800B5F6A3 /* MXGroup.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXGroup.h; sourceTree = "<group>"; };
@@ -3219,7 +3219,7 @@
 				EC383BA9253DE733002FBBE6 /* NSDictionary.swift */,
 				EC383BB82542DC0D002FBBE6 /* NSArray.swift */,
 				EC383BA3253DE6C0002FBBE6 /* Store */,
-				ECB5D98B2552C9B4000AD89C /* Stopwatch.swift */,
+				ECB5D98B2552C9B4000AD89C /* MXStopwatch.swift */,
 			);
 			path = Background;
 			sourceTree = "<group>";
@@ -4271,7 +4271,7 @@
 				32133022228BF7BC0070BA9B /* MXReactionCountChange.m in Sources */,
 				32A151491DAF7C0C00400192 /* MXKey.m in Sources */,
 				324DD2AE246AEB7B00377005 /* MXSecretStoragePassphrase.m in Sources */,
-				ECB5D98C2552C9B4000AD89C /* Stopwatch.swift in Sources */,
+				ECB5D98C2552C9B4000AD89C /* MXStopwatch.swift in Sources */,
 				B1136964230AC9D900E2B2FA /* MXIdentityServerRestClient.m in Sources */,
 				F0C34CBB1C18C93700C36F09 /* MXSDKOptions.m in Sources */,
 				320BBF441D6C81550079890E /* MXEventsEnumeratorOnArray.m in Sources */,
@@ -4475,7 +4475,7 @@
 				B14EF2032397E90400758AF0 /* MXMegolmEncryption.m in Sources */,
 				B14EF2042397E90400758AF0 /* MXIncomingRoomKeyRequest.m in Sources */,
 				32581DEB23C8C0C900832EAA /* MXUserTrustLevel.m in Sources */,
-				EC0C51752559388C00F2CC66 /* Stopwatch.swift in Sources */,
+				EC0C51752559388C00F2CC66 /* MXStopwatch.swift in Sources */,
 				B14EF2052397E90400758AF0 /* MX3PidAddManager.swift in Sources */,
 				B14EF2062397E90400758AF0 /* MXGroup.m in Sources */,
 				B14EF2072397E90400758AF0 /* MXAutoDiscovery.m in Sources */,

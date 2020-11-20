@@ -63,7 +63,7 @@ public class MXSyncResponseFileStore: NSObject {
             return nil
         }
         
-        let stopwatch = Stopwatch()
+        let stopwatch = MXStopwatch()
         
         var fileContents: String?
         
@@ -86,7 +86,7 @@ public class MXSyncResponseFileStore: NSObject {
             return
         }
         
-        let stopwatch = Stopwatch()
+        let stopwatch = MXStopwatch()
         
         guard let syncResponse = syncResponse else {
             try? FileManager.default.removeItem(at: filePath)
