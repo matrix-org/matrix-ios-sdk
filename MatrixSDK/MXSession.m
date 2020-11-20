@@ -303,6 +303,7 @@ typedef void (^MXOnResumeDone)(void);
     }
 
     NSDate *startDate = [NSDate date];
+    MXTaskProfile *taskProfile = [MXSDKOptions.sharedInstance.profiler startMeasuringTaskWithName:kMXAnalyticsStartupMountData category:kMXAnalyticsStartupCategory];
 
     MXWeakify(self);
     [_store openWithCredentials:matrixRestClient.credentials onComplete:^{
@@ -366,14 +367,12 @@ typedef void (^MXOnResumeDone)(void);
                     [self loadRoom:roomId];
                 }
 
-                NSLog(@"[MXSession] Built %lu MXRooms in %.0fms", (unsigned long)self->rooms.allKeys.count, [[NSDate date] timeIntervalSinceDate:startDate3] * 1000);
+                NSLog(@"[MXSession] Built %lu MXRooms in %.0fms", (unsigned long)self->rooms.count, [[NSDate date] timeIntervalSinceDate:startDate3] * 1000);
 
-                NSTimeInterval duration = [[NSDate date] timeIntervalSinceDate:startDate];
-                NSLog(@"[MXSession] Total time to mount SDK data from MXStore: %.0fms", duration * 1000);
-
-                [[MXSDKOptions sharedInstance].analyticsDelegate trackDuration:duration
-                                                                      category:kMXAnalyticsStartupCategory
-                                                                          name:kMXAnalyticsStartupMountData];
+                taskProfile.units = self->rooms.count;
+                [MXSDKOptions.sharedInstance.profiler stopMeasuringTaskWithProfile:taskProfile];
+                
+                NSLog(@"[MXSession] Total time to mount SDK data from MXStore: %.0fms", taskProfile.duration * 1000);
                 
                 [self setState:MXSessionStateStoreDataReady];
 
@@ -1168,6 +1167,14 @@ typedef void (^MXOnResumeDone)(void);
                         setPresence:(NSString*)setPresence
 {
     NSDate *startDate = [NSDate date];
+    
+    MXTaskProfile *syncTaskProfile;
+    if (!self->firstSyncDone)
+    {
+        BOOL isInitialSync = !self.isEventStreamInitialised;
+        syncTaskProfile = [MXSDKOptions.sharedInstance.profiler startMeasuringTaskWithName:isInitialSync ? kMXAnalyticsStartupInititialSync : kMXAnalyticsStartupIncrementalSync
+                                                        category:kMXAnalyticsStartupCategory];
+    }
 
     // Determine if we are catching up
     _catchingUp = (0 == serverTimeout);
@@ -1189,15 +1196,15 @@ typedef void (^MXOnResumeDone)(void);
         NSLog(@"[MXSession] Received sync response in %.0fms", duration * 1000);
         
         BOOL wasfirstSync = NO;
-        if (!self->firstSyncDone)
+        if (!self->firstSyncDone && syncTaskProfile)
         {
             wasfirstSync = YES;
             self->firstSyncDone = YES;
             
-            NSString *taskName = self.isEventStreamInitialised ? kMXAnalyticsStartupIncrementalSync : kMXAnalyticsStartupInititialSync;
-            [[MXSDKOptions sharedInstance].analyticsDelegate trackDuration:duration
-                                                                  category:kMXAnalyticsStartupCategory
-                                                                      name:taskName];
+            // Contextualise the profiling with the amount of received information
+            syncTaskProfile.units = syncResponse.rooms.join.count + syncResponse.rooms.invite.count + syncResponse.rooms.leave.count;
+            
+            [MXSDKOptions.sharedInstance.profiler stopMeasuringTaskWithProfile:syncTaskProfile];
         }
         
         // By default, the next sync will be a long polling (with the default server timeout value)
