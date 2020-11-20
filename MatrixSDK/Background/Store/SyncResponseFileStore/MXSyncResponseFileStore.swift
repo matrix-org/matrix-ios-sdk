@@ -58,7 +58,7 @@ public class MXSyncResponseFileStore: NSObject {
         }
     }
     
-    private func readSyncResponse() -> MXSyncResponse? {
+    private func readData() -> MXSyncResponseStoreModel? {
         guard let filePath = filePath else {
             return nil
         }
@@ -70,7 +70,7 @@ public class MXSyncResponseFileStore: NSObject {
         fileOperationQueue.sync {
             fileContents = try? String(contentsOf: filePath,
                                        encoding: Constants.fileEncoding)
-            NSLog("[MXSyncResponseFileStore] readSyncResponse: File read lasted \(stopwatch.readable())")
+            NSLog("[MXSyncResponseFileStore] readData: File read lasted \(stopwatch.readable())")
         }
         guard let jsonString = fileContents else {
             return nil
@@ -78,26 +78,26 @@ public class MXSyncResponseFileStore: NSObject {
         guard let json = MXTools.deserialiseJSONString(jsonString) as? [AnyHashable: Any] else {
             return nil
         }
-        return MXSyncResponse(fromJSON: json)
+        return MXSyncResponseStoreModel(fromJSON: json)
     }
     
-    private func saveSyncResponse(_ syncResponse: MXSyncResponse?) {
+    private func saveData(_ data: MXSyncResponseStoreModel?) {
         guard let filePath = filePath else {
             return
         }
         
         let stopwatch = MXStopwatch()
         
-        guard let syncResponse = syncResponse else {
+        guard let data = data else {
             try? FileManager.default.removeItem(at: filePath)
-            NSLog("[MXSyncResponseFileStore] saveSyncResponse: File remove lasted \(stopwatch.readable())")
+            NSLog("[MXSyncResponseFileStore] saveData: File remove lasted \(stopwatch.readable())")
             return
         }
         fileOperationQueue.async {
-            try? syncResponse.jsonString()?.write(to: self.filePath,
-                                                  atomically: true,
-                                                  encoding: Constants.fileEncoding)
-            NSLog("[MXSyncResponseFileStore] saveSyncResponse: File write lasted \(stopwatch.readable())")
+            try? data.jsonString()?.write(to: self.filePath,
+                                          atomically: true,
+                                          encoding: Constants.fileEncoding)
+            NSLog("[MXSyncResponseFileStore] saveData: File write lasted \(stopwatch.readable())")
         }
     }
     
@@ -112,11 +112,23 @@ extension MXSyncResponseFileStore: MXSyncResponseStore {
         self.setupFilePath()
     }
     
+    public var prevBatch: String? {
+        get {
+            return readData()?.prevBatch
+        } set {
+            let data = readData() ?? MXSyncResponseStoreModel()
+            data.prevBatch = newValue
+            saveData(data)
+        }
+    }
+    
     public var syncResponse: MXSyncResponse? {
         get {
-            return readSyncResponse()
+            return readData()?.syncResponse
         } set {
-            saveSyncResponse(newValue)
+            let data = readData() ?? MXSyncResponseStoreModel()
+            data.syncResponse = newValue
+            saveData(data)
         }
     }
     
@@ -201,7 +213,7 @@ extension MXSyncResponseFileStore: MXSyncResponseStore {
     }
     
     public func deleteData() {
-        saveSyncResponse(nil)
+        saveData(nil)
     }
     
 }

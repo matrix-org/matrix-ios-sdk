@@ -1653,15 +1653,33 @@ typedef void (^MXOnResumeDone)(void);
     [syncResponseStore openWithCredentials:self.credentials];
     if (syncResponseStore.syncResponse)
     {
-        [self handleSyncResponse:syncResponseStore.syncResponse
-                      completion:^{
+        if ([syncResponseStore.prevBatch isEqualToString:_store.eventStreamToken])
+        {
+            NSLog(@"[MXSession] handleSyncResponseIfRequired. Handle sync response");
+            
+            //  sync response really continues from where the session left
+            [self handleSyncResponse:syncResponseStore.syncResponse
+                          completion:^{
+                [syncResponseStore deleteData];
+                
+                if (completion)
+                {
+                    completion();
+                }
+            }];
+        }
+        else
+        {
+            NSLog(@"[MXSession] handleSyncResponseIfRequired. Ignore sync response");
+            
+            //  this sync response will break the continuity in session, ignore & remove it
             [syncResponseStore deleteData];
             
             if (completion)
             {
                 completion();
             }
-        }];
+        }
     }
     else
     {

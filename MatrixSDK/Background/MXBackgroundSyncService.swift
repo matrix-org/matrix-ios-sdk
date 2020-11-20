@@ -238,6 +238,12 @@ public enum MXBackgroundSyncServiceError: Error {
             return
         }
         
+        //  save the token for the start of the sync response
+        if (syncResponseStore.prevBatch == nil)
+        {
+            syncResponseStore.prevBatch = eventStreamToken
+        }
+        
         NSLog("[MXBackgroundSyncService] launchBackgroundSync: start from token \(eventStreamToken)")
         
         restClient.sync(fromToken: eventStreamToken,

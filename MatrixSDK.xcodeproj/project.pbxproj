@@ -1142,6 +1142,10 @@
 		C6F9358B1E5B3BE600FC34BF /* MXJSONModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = C6F935871E5B3BE600FC34BF /* MXJSONModels.swift */; };
 		C6FE1EF01E65C4F7008587E4 /* MXAnalyticsDelegate.h in Headers */ = {isa = PBXBuildFile; fileRef = C6FE1EEF1E65C4F7008587E4 /* MXAnalyticsDelegate.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		EC0C51752559388C00F2CC66 /* MXStopwatch.swift in Sources */ = {isa = PBXBuildFile; fileRef = ECB5D98B2552C9B4000AD89C /* MXStopwatch.swift */; };
+		EC1EFA312567F6570089C01D /* MXSyncResponseStoreModel.h in Headers */ = {isa = PBXBuildFile; fileRef = EC1EFA2F2567F6570089C01D /* MXSyncResponseStoreModel.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		EC1EFA322567F6570089C01D /* MXSyncResponseStoreModel.h in Headers */ = {isa = PBXBuildFile; fileRef = EC1EFA2F2567F6570089C01D /* MXSyncResponseStoreModel.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		EC1EFA332567F6570089C01D /* MXSyncResponseStoreModel.m in Sources */ = {isa = PBXBuildFile; fileRef = EC1EFA302567F6570089C01D /* MXSyncResponseStoreModel.m */; };
+		EC1EFA342567F6570089C01D /* MXSyncResponseStoreModel.m in Sources */ = {isa = PBXBuildFile; fileRef = EC1EFA302567F6570089C01D /* MXSyncResponseStoreModel.m */; };
 		EC383BA2253DE4B1002FBBE6 /* MXBackgroundSyncService.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC383BA1253DE4B1002FBBE6 /* MXBackgroundSyncService.swift */; };
 		EC383BA5253DE6C9002FBBE6 /* MXSyncResponseStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC383BA4253DE6C9002FBBE6 /* MXSyncResponseStore.swift */; };
 		EC383BA8253DE6EE002FBBE6 /* MXSyncResponseFileStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC383BA7253DE6EE002FBBE6 /* MXSyncResponseFileStore.swift */; };
@@ -1815,6 +1819,8 @@
 		D507DA07A90048BDE70C6795 /* Pods-MatrixSDKTests-iOS.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-MatrixSDKTests-iOS.debug.xcconfig"; path = "Target Support Files/Pods-MatrixSDKTests-iOS/Pods-MatrixSDKTests-iOS.debug.xcconfig"; sourceTree = "<group>"; };
 		DCDFA3ABCED99811646ED8B6 /* Pods-SDK-MatrixSDK-iOS.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-SDK-MatrixSDK-iOS.release.xcconfig"; path = "Target Support Files/Pods-SDK-MatrixSDK-iOS/Pods-SDK-MatrixSDK-iOS.release.xcconfig"; sourceTree = "<group>"; };
 		E9B11A2D50665ADBB4B2F5C5 /* Pods-MatrixSDK-MatrixSDK-iOS.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-MatrixSDK-MatrixSDK-iOS.release.xcconfig"; path = "Target Support Files/Pods-MatrixSDK-MatrixSDK-iOS/Pods-MatrixSDK-MatrixSDK-iOS.release.xcconfig"; sourceTree = "<group>"; };
+		EC1EFA2F2567F6570089C01D /* MXSyncResponseStoreModel.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MXSyncResponseStoreModel.h; sourceTree = "<group>"; };
+		EC1EFA302567F6570089C01D /* MXSyncResponseStoreModel.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MXSyncResponseStoreModel.m; sourceTree = "<group>"; };
 		EC383BA1253DE4B1002FBBE6 /* MXBackgroundSyncService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXBackgroundSyncService.swift; sourceTree = "<group>"; };
 		EC383BA4253DE6C9002FBBE6 /* MXSyncResponseStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXSyncResponseStore.swift; sourceTree = "<group>"; };
 		EC383BA7253DE6EE002FBBE6 /* MXSyncResponseFileStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXSyncResponseFileStore.swift; sourceTree = "<group>"; };
@@ -3210,6 +3216,15 @@
 			path = JSONModels;
 			sourceTree = "<group>";
 		};
+		EC1EFA2E2567F6430089C01D /* Model */ = {
+			isa = PBXGroup;
+			children = (
+				EC1EFA2F2567F6570089C01D /* MXSyncResponseStoreModel.h */,
+				EC1EFA302567F6570089C01D /* MXSyncResponseStoreModel.m */,
+			);
+			path = Model;
+			sourceTree = "<group>";
+		};
 		EC383BA0253DE49B002FBBE6 /* Background */ = {
 			isa = PBXGroup;
 			children = (
@@ -3227,6 +3242,7 @@
 		EC383BA3253DE6C0002FBBE6 /* Store */ = {
 			isa = PBXGroup;
 			children = (
+				EC1EFA2E2567F6430089C01D /* Model */,
 				EC383BA4253DE6C9002FBBE6 /* MXSyncResponseStore.swift */,
 				EC383BA6253DE6E7002FBBE6 /* SyncResponseFileStore */,
 			);
@@ -3283,6 +3299,7 @@
 				3271877D1DA7CB2F0071C818 /* MXDecrypting.h in Headers */,
 				324BE46C1E422766008D99D4 /* MXMegolmSessionData.h in Headers */,
 				32FA10CE1FA1C9F700E54233 /* MXOutgoingRoomKeyRequest.h in Headers */,
+				EC1EFA312567F6570089C01D /* MXSyncResponseStoreModel.h in Headers */,
 				32A1513E1DAF768D00400192 /* MXOlmInboundGroupSession.h in Headers */,
 				3271877B1DA7CAA60071C818 /* MXEncrypting.h in Headers */,
 				32A9F8DE244720B10069C65B /* MXThrottler.h in Headers */,
@@ -3809,6 +3826,7 @@
 				B14EF3632397E90400758AF0 /* MXScanRealmFileProvider.h in Headers */,
 				B14EF3642397E90400758AF0 /* MXRoom.h in Headers */,
 				B14EF3652397E90400758AF0 /* MXServiceTerms.h in Headers */,
+				EC1EFA322567F6570089C01D /* MXSyncResponseStoreModel.h in Headers */,
 				324DD2AD246AEB7B00377005 /* MXSecretStoragePassphrase.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -4187,6 +4205,7 @@
 				329E808D224E2E1B00A48C3A /* MXOutgoingSASTransaction.m in Sources */,
 				32581DEA23C8C0C900832EAA /* MXUserTrustLevel.m in Sources */,
 				3271878A1DA7DCE50071C818 /* MXOlmEncryption.m in Sources */,
+				EC1EFA332567F6570089C01D /* MXSyncResponseStoreModel.m in Sources */,
 				327187861DA7D0220071C818 /* MXOlmDecryption.m in Sources */,
 				EC383BA8253DE6EE002FBBE6 /* MXSyncResponseFileStore.swift in Sources */,
 				32114A901A262ECB00FF2EC4 /* MXNoStore.m in Sources */,
@@ -4661,6 +4680,7 @@
 				325AF3E424897D9400EF937D /* MXSecretRecoveryResult.m in Sources */,
 				B14EF2912397E90400758AF0 /* MXOutgoingRoomKeyRequestManager.m in Sources */,
 				B14EF2922397E90400758AF0 /* MXWellKnown.m in Sources */,
+				EC1EFA342567F6570089C01D /* MXSyncResponseStoreModel.m in Sources */,
 				B14EF2932397E90400758AF0 /* MXRestClient.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
