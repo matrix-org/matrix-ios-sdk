@@ -2187,17 +2187,17 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
 
         if (sessionId)
         {
-            NSLog(@"[MXCrypto] Started new sessionid %@ for device %@ (theirOneTimeKey: %@)", sessionId, deviceInfo, oneTimeKey.value);
+            NSLog(@"[MXCrypto] verifyKeyAndStartSession: Started new olm session id %@ for device %@ (theirOneTimeKey: %@)", sessionId, deviceInfo, oneTimeKey.value);
         }
         else
         {
             // Possibly a bad key
-            NSLog(@"[MXCrypto] Error starting session with device %@:%@", userId, deviceId);
+            NSLog(@"[MXCrypto] verifyKeyAndStartSession: Error starting olm session with device %@:%@", userId, deviceId);
         }
     }
     else
     {
-        NSLog(@"[MXCrypto] Unable to verify signature on one-time key for device %@:%@. Error: %@", userId, deviceId, error.localizedFailureReason);
+        NSLog(@"[MXCrypto] verifyKeyAndStartSession: Unable to verify signature on one-time key for device %@:%@. Error: %@", userId, deviceId, error.localizedFailureReason);
     }
 
     return sessionId;

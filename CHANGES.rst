@@ -8,7 +8,7 @@ Changes to be released in next version
  * 
 
 🐛 Bugfix
- * 
+ * MXOlmDevice: Make usage of libolm data process-safe (vector-im/element-ios/3817).
 
 ⚠️ API Changes
  * 
