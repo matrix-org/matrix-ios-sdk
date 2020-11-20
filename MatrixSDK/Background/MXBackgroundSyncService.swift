@@ -415,9 +415,7 @@ public enum MXBackgroundSyncServiceError: Error {
             handleToDeviceEvent(event)
         }
         
-        //  update event stream token
         NSLog("[MXBackgroundSyncService] handleSyncResponse: Next sync token: \(syncResponse.nextBatch ?? "nil")")
-        self.store.eventStreamToken = syncResponse.nextBatch
     }
     
     private func updateStore(with newResponse: MXSyncResponse) {
