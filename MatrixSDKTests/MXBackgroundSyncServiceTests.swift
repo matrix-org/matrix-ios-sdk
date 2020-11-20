@@ -214,6 +214,15 @@ class MXBackgroundSyncServiceTests: XCTestCase {
         
     }
     
+    // Nonimal test with encryption: Get and decrypt an event from the background service
+    // - Alice and Bob are in an encrypted room
+    // - Bob stops their app
+    // - Alice relogins with a new device and creates new megolm keys
+    // - Alice sends a message
+    // - Bob uses the MXBackgroundSyncService to fetch it
+    // -> The message can be read and decypted from MXBackgroundSyncService
+    // - Bob restarts their MXSession
+    // -> The message is available from MXSession and no more from MXBackgroundSyncService
     func testWithEncryptedEventRollingKeys() {
         
         let aliceStore = MXFileStore()
@@ -296,6 +305,13 @@ class MXBackgroundSyncServiceTests: XCTestCase {
         }
     }
     
+    // Nonimal test with room summary: Get the room summary from the background service
+    // - Alice and Bob are in an encrypted room
+    // - Bob stops their app
+    // - Alice sends a message
+    // - Alice changes the room name
+    // - Bob uses the MXBackgroundSyncService to fetch the event and the room summary
+    // -> The room name in the summary is the one set newly by Alice
     func testRoomSummary() {
         let aliceStore = MXMemoryStore()
         let bobStore = MXFileStore()
@@ -357,6 +373,17 @@ class MXBackgroundSyncServiceTests: XCTestCase {
         }
     }
     
+    // Nonimal test: A single event sent after a limited timeline does not change the limited timeline flag in the MXSyncResponseStore
+    // - Alice and Bob are in a room
+    // - Bob stops their app
+    // - Alice sends a lot of messages (enough for a sync response timeline to be limited)
+    // - Bob uses the MXBackgroundSyncService to fetch the last event
+    // -> The message (last) can be read from MXBackgroundSyncService
+    // -> The first message is not present in MXSyncResponseStore
+    // -> The sync response in the MXSyncResponseStore has a limited timeline
+    // - Alice send another single message
+    // - Bob uses the MXBackgroundSyncService to fetch the event
+    // -> The sync response in the MXSyncResponseStore has still a limited timeline
     func testWithPlainEventAfterLimitedTimeline() {
         let aliceStore = MXMemoryStore()
         let bobStore = MXFileStore()
@@ -448,6 +475,19 @@ class MXBackgroundSyncServiceTests: XCTestCase {
         }
     }
     
+    // Nonimal test: A limited timeline in a sync response causes old messages in the MXSyncResponseStore to be deleted
+    // - Alice and Bob are in a room
+    // - Bob stops their app
+    // - Alice send a single message (call it A)
+    // - Bob uses the MXBackgroundSyncService to fetch the event
+    // -> The sync response in the MXSyncResponseStore doesn't have a limited timeline
+    // -> The message (event A) is present in MXSyncResponseStore
+    // - Alice sends a lot of messages (enough for a sync response timeline to be limited)
+    // - Bob uses the MXBackgroundSyncService to fetch the last event
+    // -> The message (last) can be read from MXBackgroundSyncService
+    // -> The old message (event A) is not present in MXSyncResponseStore anymore
+    // -> The first message is not present in MXSyncResponseStore
+    // -> The sync response in the MXSyncResponseStore has a limited timeline
     func testWithPlainEventBeforeLimitedTimeline() {
         let aliceStore = MXMemoryStore()
         let bobStore = MXFileStore()
@@ -487,6 +527,7 @@ class MXBackgroundSyncServiceTests: XCTestCase {
                             
                             var syncResponse = syncResponseStore.syncResponse
                             XCTAssertNotNil(syncResponse, "Sync response should be present")
+                            XCTAssertNotNil(syncResponseStore.event(withEventId: eventId, inRoom: roomId), "Event should be present in sync response store")
                             XCTAssertFalse(syncResponse!.rooms.join[roomId]!.timeline.limited, "Room timeline should not be limited")
                             
                             //  then send a lot of messages
@@ -539,73 +580,6 @@ class MXBackgroundSyncServiceTests: XCTestCase {
                     expectation?.fulfill()
                 }
             }
-            
-            let messages = (1...Constants.numberOfMessagesForLimitedTest).map({ "\(Constants.messageText) - \($0)" })
-            room.sendTextMessages(messages: messages) { (response) in
-                switch response {
-                case .success(let eventIDs):
-                    
-                    guard let firstEventId = eventIDs.first, let lastEventId = eventIDs.last else {
-                        XCTFail("Cannot set up initial test conditions - error: room cannot be retrieved")
-                        expectation?.fulfill()
-                        return
-                    }
-                    
-                    self.bgSyncService = MXBackgroundSyncService(withCredentials: bobCredentials)
-
-                    self.bgSyncService?.event(withEventId: lastEventId, inRoom: roomId) { (response) in
-                        switch response {
-                        case .success(let event):
-                            let text = event.content["body"] as? String
-                            XCTAssertEqual(text, "\(Constants.messageText) - \(Constants.numberOfMessagesForLimitedTest)", "Event content should match")
-
-                            let syncResponseStore = MXSyncResponseFileStore()
-                            syncResponseStore.open(withCredentials: bobCredentials)
-                            XCTAssertNil(syncResponseStore.event(withEventId: firstEventId, inRoom: roomId), "First event should not be present in sync response store")
-                            XCTAssertNotNil(syncResponseStore.event(withEventId: lastEventId, inRoom: roomId), "Last event should be present in sync response store")
-                            
-                            let syncResponse = syncResponseStore.syncResponse
-                            XCTAssertNotNil(syncResponse, "Sync response should be present")
-                            XCTAssertTrue(syncResponse!.rooms.join[roomId]!.timeline.limited, "Room timeline should be limited")
-                            
-                            var localEcho: MXEvent?
-                            room.sendTextMessage(Constants.messageText, localEcho: &localEcho) { (response2) in
-                                switch response2 {
-                                case .success(let eventId):
-                                    guard let eventId = eventId else {
-                                        XCTFail("Cannot set up initial test conditions - error: room cannot be retrieved")
-                                        expectation?.fulfill()
-                                        return
-                                    }
-                                    
-                                    self.bgSyncService = MXBackgroundSyncService(withCredentials: bobCredentials)
-
-                                    self.bgSyncService?.event(withEventId: eventId, inRoom: roomId) { (response) in
-                                        switch response {
-                                        case .success:
-                                            XCTAssertTrue(syncResponse!.rooms.join[roomId]!.timeline.limited, "Room timeline should still be limited")
-                                        case .failure(let error):
-                                            XCTFail("Cannot fetch the event from background sync service - error: \(error)")
-                                            expectation?.fulfill()
-                                        }
-                                    }
-                                    
-                                case .failure(let error):
-                                    XCTFail("Cannot set up initial test conditions - error: \(error)")
-                                    expectation?.fulfill()
-                                }
-                            }
-
-                        case .failure(let error):
-                            XCTFail("Cannot fetch the event from background sync service - error: \(error)")
-                            expectation?.fulfill()
-                        }
-                    }
-                case .failure(let error):
-                    XCTFail("Cannot set up initial test conditions - error: \(error)")
-                    expectation?.fulfill()
-                }
-            }
 
         }
     }
@@ -614,6 +588,10 @@ class MXBackgroundSyncServiceTests: XCTestCase {
 
 private extension MXRoom {
     
+    /// Send multiple text messages. If any of sending operations is failed, returns immediately with the error. Otherwise waits for all messages to be sent before calling the completion handler.
+    /// - Parameters:
+    ///   - messages: Messages to be sent
+    ///   - completion: Completion block
     func sendTextMessages(messages: [String], completion: @escaping (MXResponse<[String]>) -> Void) {
         let dispatchGroup = DispatchGroup()
         var eventIDs: [String] = []
