@@ -55,7 +55,6 @@ public extension MXSession {
      
      - parameters:
         - clientTimeout: the max time to perform the catchup for the client side (in seconds)
-        - serverTimeout: the max time to perform the catchup for the server side (in seconds)
         - ignoreSessionState: set true to force the sync, otherwise considers session state equality to paused. Defaults to false.
         - completion: A block called when the SDK has completed a catchup, or times out.
         - response: Indicates whether the sync was successful.
