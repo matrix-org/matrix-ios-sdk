@@ -1,4 +1,4 @@
-Changes to be released in next version
+Changes in 0.17.3 (2020-11-24)
 =================================================
 
 ✨ Features
@@ -22,6 +22,9 @@ Changes to be released in next version
 
 Others
  * 
+
+Improvements:
+
 
 Changes in 0.17.2 (2020-11-17)
 =================================================
