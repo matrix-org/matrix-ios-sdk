@@ -68,8 +68,9 @@
     // - Have Alice
     [matrixSDKTestsE2EData doE2ETestWithBobAndAlice:self readyToTest:^(MXSession *bobSession, MXSession *aliceSession, XCTestExpectation *expectation) {
         
-        // -> There is no need to migrate on a fresh login
         MXCryptoMigration *cryptoMigration = [[MXCryptoMigration alloc] initWithCrypto:aliceSession.crypto];
+
+        // -> There is no need to migrate on a fresh login
         XCTAssertFalse([cryptoMigration shouldMigrate]);
         
         [expectation fulfill];
@@ -77,12 +78,12 @@
 }
 
 /**
- Test migration to testMigrationToMXCryptoVersion2 which purges all one time keys
+ Test migration to MXCryptoVersion2, which purges all published one time keys.
  
  - Alice and Bob are in a room
- - Consume some one time keys to check later that the migration actually completes after having uploading 50 OTKs
+ - Consume some one time keys to check later that the migration actually completes after having uploading the fresh 50 OTKs
  - Bob does a migration
- -> Bob must have 50 OTKs available
+ -> Bob must have 50 OTKs available again
  - Alice sends a message (it will use an olm session based one of those new OTKs)
  -> Bob must be able to decrypt the message
  */
@@ -93,14 +94,14 @@
         
         MXCryptoMigration *bobCryptoMigration = [[MXCryptoMigration alloc] initWithCrypto:bobSession.crypto];
         
-        // - Consume some one time keys to check later that the migration actually completes after having uploading 50 OTKs
+        // - Consume some one time keys to check later that the migration actually completes after having uploading the fresh 50 OTKs
         [bobCryptoMigration claimOwnOneTimeKeys:3 success:^(NSUInteger keyClaimed) {
             XCTAssertEqual(keyClaimed, 3);
             
             // - Bob does a migration
             [bobCryptoMigration migrateToCryptoVersion2:^{
                 
-                // -> Bob must have 50 OTKs available
+                // -> Bob must have 50 OTKs available again
                 [bobSession.crypto publishedOneTimeKeysCount:^(NSUInteger publishedKeyCount) {
                     
                     XCTAssertEqual(publishedKeyCount, 50);

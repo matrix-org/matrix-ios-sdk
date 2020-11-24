@@ -505,7 +505,7 @@
 /**
  The version of the crypto module implementation.
  
- It is used to hanle logical migration between crypto module updates.
+ It is used to handle logical migration between crypto module updates.
  Must return MXCryptoVersionUndefined if not defined yet.
  */
 @property (nonatomic) MXCryptoVersion cryptoVersion;

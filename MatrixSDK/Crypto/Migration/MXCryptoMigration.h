@@ -45,7 +45,7 @@ typedef NS_ENUM(NSInteger, MXCryptoMigrationErrorCode)
 - (BOOL)shouldMigrate;
 
 /**
- Migrate the data to the latest version of the implmentation (MXCryptoVersionLast).
+ Migrate the data to the latest version of the implementation (MXCryptoVersionLast).
  
  @param success A block object called when the operation succeeds.
  @param failure A block object called when the operation fails.

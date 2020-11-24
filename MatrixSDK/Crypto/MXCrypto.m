@@ -264,7 +264,7 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
             MXStrongifyAndReturnIfNil(self);
             
             // We have no mandatory migration for now
-            // We can try again at the next MXCrypto start up
+            // We can try again at the next MXCrypto startup
             NSLog(@"[MXCrypto] start. Migration failed. Ignore it for now");
             self->cryptoMigration = nil;
             [self start:success failure:failure];

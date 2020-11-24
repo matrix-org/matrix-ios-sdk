@@ -38,7 +38,6 @@ NSUInteger const kMXCryptoMigrationKeyPurgeRetryCountLimit = 10;
 @interface MXCryptoMigration ()
 {
     MXCrypto *crypto;
-    
     NSUInteger keyPurgeRetryCount;
 }
 
@@ -128,9 +127,9 @@ NSUInteger const kMXCryptoMigrationKeyPurgeRetryCountLimit = 10;
     }];
 }
 
-// Purge one time keys uploaded by this device
-// We purge them by claiming them.
-// A one time key can be used and claimed only one. Claiming one time key removes it from
+// Purge one time keys uploaded by this device. We purge them by claiming them.
+//
+// A one time key can be used and claimed only once. Claiming one time key removes it from
 // the published list of OTKs.
 - (void)purgePublishedOneTimeKeys:(void (^)(void))success failure:(void (^)(NSError *))failure
 {
@@ -210,6 +209,5 @@ NSUInteger const kMXCryptoMigrationKeyPurgeRetryCountLimit = 10;
         success(keyClaimed);
     });
 }
-
 
 @end
