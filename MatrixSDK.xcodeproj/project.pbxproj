@@ -480,6 +480,8 @@
 		32C78B6B256CFC4D008130B1 /* MXCryptoMigration.m in Sources */ = {isa = PBXBuildFile; fileRef = 32C78B66256CFC4D008130B1 /* MXCryptoMigration.m */; };
 		32C78B6C256CFC4D008130B1 /* MXCryptoMigration.h in Headers */ = {isa = PBXBuildFile; fileRef = 32C78B67256CFC4D008130B1 /* MXCryptoMigration.h */; };
 		32C78B6D256CFC4D008130B1 /* MXCryptoMigration.h in Headers */ = {isa = PBXBuildFile; fileRef = 32C78B67256CFC4D008130B1 /* MXCryptoMigration.h */; };
+		32C78BA7256D227D008130B1 /* MXCryptoMigrationTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 32C78BA6256D227D008130B1 /* MXCryptoMigrationTests.m */; };
+		32C78BA8256D227D008130B1 /* MXCryptoMigrationTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 32C78BA6256D227D008130B1 /* MXCryptoMigrationTests.m */; };
 		32C9B71823E81A1C00C6F30A /* MXCrossSigningVerificationTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 32C9B71723E81A1C00C6F30A /* MXCrossSigningVerificationTests.m */; };
 		32C9B71923E81A1C00C6F30A /* MXCrossSigningVerificationTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 32C9B71723E81A1C00C6F30A /* MXCrossSigningVerificationTests.m */; };
 		32CAB1071A91EA34008C5BB9 /* MXPushRuleRoomMemberCountConditionChecker.h in Headers */ = {isa = PBXBuildFile; fileRef = 32CAB1051A91EA34008C5BB9 /* MXPushRuleRoomMemberCountConditionChecker.h */; };
@@ -1615,6 +1617,7 @@
 		32C78B65256CFC4D008130B1 /* MXCryptoVersion.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXCryptoVersion.h; sourceTree = "<group>"; };
 		32C78B66256CFC4D008130B1 /* MXCryptoMigration.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXCryptoMigration.m; sourceTree = "<group>"; };
 		32C78B67256CFC4D008130B1 /* MXCryptoMigration.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXCryptoMigration.h; sourceTree = "<group>"; };
+		32C78BA6256D227D008130B1 /* MXCryptoMigrationTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MXCryptoMigrationTests.m; sourceTree = "<group>"; };
 		32C9B71723E81A1C00C6F30A /* MXCrossSigningVerificationTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MXCrossSigningVerificationTests.m; sourceTree = "<group>"; };
 		32CAB1051A91EA34008C5BB9 /* MXPushRuleRoomMemberCountConditionChecker.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXPushRuleRoomMemberCountConditionChecker.h; sourceTree = "<group>"; };
 		32CAB1061A91EA34008C5BB9 /* MXPushRuleRoomMemberCountConditionChecker.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXPushRuleRoomMemberCountConditionChecker.m; sourceTree = "<group>"; };
@@ -2797,6 +2800,7 @@
 		32C6F93919DD814400EA4E9C /* MatrixSDKTests */ = {
 			isa = PBXGroup;
 			children = (
+				32C78BA6256D227D008130B1 /* MXCryptoMigrationTests.m */,
 				321EA11C24893A0400E35B02 /* MXCryptoRecoveryServiceTests.m */,
 				324DD2BA246C3ADE00377005 /* MXCryptoSecretStorageTests.m */,
 				B19A30AE240425D000FB6F35 /* MXQRCodeDataTests.m */,
@@ -4357,6 +4361,7 @@
 				32A27D1F19EC335300BAFADE /* MXRoomTests.m in Sources */,
 				32D8CAC219DEE6ED002AF8A0 /* MXRestClientNoAuthAPITests.m in Sources */,
 				32FCAB4D19E578860049C555 /* MXRestClientTests.m in Sources */,
+				32C78BA7256D227D008130B1 /* MXCryptoMigrationTests.m in Sources */,
 				32C03CB62123076F00D92712 /* DirectRoomTests.m in Sources */,
 				329FB17C1A0A963700A5E88E /* MXRoomMemberTests.m in Sources */,
 				3246BDC51A1A0789000A7D62 /* MXRoomStateDynamicTests.m in Sources */,
@@ -4683,6 +4688,7 @@
 				B1E09A352397FD7D0057C069 /* MXEventTests.m in Sources */,
 				B1E09A312397FD750057C069 /* MXSessionTests.m in Sources */,
 				B1E09A322397FD750057C069 /* MXRoomTests.m in Sources */,
+				32C78BA8256D227D008130B1 /* MXCryptoMigrationTests.m in Sources */,
 				B1E09A2F2397FD750057C069 /* MXErrorTests.m in Sources */,
 				B1E09A2A2397FD680057C069 /* MatrixSDKTestsData.m in Sources */,
 				B1E09A302397FD750057C069 /* MXHTTPClientTests.m in Sources */,
