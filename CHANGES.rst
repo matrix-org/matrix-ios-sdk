@@ -5,10 +5,11 @@ Changes to be released in next version
  * 
 
 🙌 Improvements
- * MXCrypto: Introduce MXCryptoVersion to track changes between MXCrypto module updates.
+ * MXCrypto: Introduce MXCryptoVersion and MXCryptoMigration to manage logical migration between MXCrypto module updates.
 
 🐛 Bugfix
  * MXOlmDevice: Make usage of libolm data process-safe (vector-im/element-ios/3817).
+ * MXCrypto: Use MXCryptoMigration to purge all one time keys because some may be bad (vector-im/element-ios/3818).
 
 ⚠️ API Changes
  * 
