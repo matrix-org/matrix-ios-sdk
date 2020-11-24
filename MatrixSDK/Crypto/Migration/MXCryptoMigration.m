@@ -105,7 +105,10 @@ NSUInteger const kMXCryptoMigrationKeyPurgeRetryCountLimit = 10;
     [self purgePublishedOneTimeKeys:^{
         MXStrongifyAndReturnIfNil(self);
         
-        // 2- Upload fresh and valid OTKs
+        // 2- Reset any pending local one time keys to start from a fresh set of OTKs
+        [self->crypto.olmDevice markOneTimeKeysAsPublished];
+        
+        // 3- Upload fresh and valid OTKs
         [self->crypto generateAndUploadOneTimeKeys:0 retry:YES success:^{
             
             // Migration is done
