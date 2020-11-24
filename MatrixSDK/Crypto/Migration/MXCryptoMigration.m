@@ -23,16 +23,23 @@
 
 #pragma mark - Constants definitions
 
-// The number of keys to purge (claim)
+NSString *const MXCryptoMigrationErrorDomain = @"org.matrix.sdk.crypto.migration";
+
+// The number of keys to purge (claim) in a batch
 NSUInteger const kMXCryptoMigrationKeyPurgeStepCount = 5;
 
 // In case of error, time to wait before processing the next purge batch
 NSTimeInterval const kMXCryptoMigrationKeyPurgeBatchPeriod = 0.5;
 
+// Number of times we can retry if API requests fail
+NSUInteger const kMXCryptoMigrationKeyPurgeRetryCountLimit = 10;
+
 
 @interface MXCryptoMigration ()
 {
     MXCrypto *crypto;
+    
+    NSUInteger keyPurgeRetryCount;
 }
 
 @end
@@ -46,6 +53,7 @@ NSTimeInterval const kMXCryptoMigrationKeyPurgeBatchPeriod = 0.5;
     if (self)
     {
         crypto = theCrypto;
+        keyPurgeRetryCount = 0;
     }
     return self;
 }
@@ -106,9 +114,15 @@ NSTimeInterval const kMXCryptoMigrationKeyPurgeBatchPeriod = 0.5;
             
             success();
             
-        } failure:failure];
+        } failure:^(NSError *error) {
+            NSLog(@"[MXCryptoMigration] migrateToCryptoVersion2: generateAndUploadOneTimeKeys failed. Error: %@", error);
+            failure(error);
+        }];
         
-    } failure:failure];
+    } failure:^(NSError *error) {
+        NSLog(@"[MXCryptoMigration] migrateToCryptoVersion2: purgePublishedOneTimeKeys failed. Error: %@", error);
+        failure(error);
+    }];
 }
 
 // Purge one time keys uploaded by this device
@@ -126,6 +140,7 @@ NSTimeInterval const kMXCryptoMigrationKeyPurgeBatchPeriod = 0.5;
         [self claimOwnOneTimeKeys:keysToClaim success:^(NSUInteger keyClaimed) {
             
             NSLog(@"[MXCryptoMigration] purgePublishedOneTimeKeys: %@ out of %@ purged", @(keyClaimed), @(publishedKeyCount));
+            
             if (keyClaimed == publishedKeyCount)
             {
                 NSLog(@"[MXCryptoMigration] purgePublishedOneTimeKeys: completed");
@@ -133,10 +148,24 @@ NSTimeInterval const kMXCryptoMigrationKeyPurgeBatchPeriod = 0.5;
             }
             else if (keyClaimed < keysToClaim)
             {
-                NSLog(@"[MXCryptoMigration] purgePublishedOneTimeKeys: Delay the next batch because this batch was not 100%% successful");
-                dispatch_after(dispatch_time(DISPATCH_TIME_NOW, kMXCryptoMigrationKeyPurgeBatchPeriod * NSEC_PER_SEC), dispatch_get_main_queue(), ^{
-                    [self purgePublishedOneTimeKeys:success failure:failure];
-                });
+                if (self->keyPurgeRetryCount++ < kMXCryptoMigrationKeyPurgeRetryCountLimit)
+                {
+                    NSLog(@"[MXCryptoMigration] purgePublishedOneTimeKeys: Delay the next batch because this batch was not 100%% successful");
+                    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, kMXCryptoMigrationKeyPurgeBatchPeriod * NSEC_PER_SEC), dispatch_get_main_queue(), ^{
+                        [self purgePublishedOneTimeKeys:success failure:failure];
+                    });
+                }
+                else
+                {
+                    NSLog(@"[MXCryptoMigration] purgePublishedOneTimeKeys: Failed to purge all one time keys after %@ tries. Give up.", @(self->keyPurgeRetryCount));
+                    NSError *error = [NSError errorWithDomain:MXCryptoMigrationErrorDomain
+                                                         code:MXCryptoMigrationCannotPurgeAllOneTimeKeysErrorCode
+                                                     userInfo:@{
+                                                         NSLocalizedDescriptionKey: @"Failed to purge all one time keys",
+                                                     }];
+                    failure(error);
+                    
+                }
             }
             else
             {

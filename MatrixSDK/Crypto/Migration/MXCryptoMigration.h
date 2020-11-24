@@ -20,6 +20,14 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
+
+FOUNDATION_EXPORT NSString *const MXCryptoMigrationErrorDomain;
+typedef NS_ENUM(NSInteger, MXCryptoMigrationErrorCode)
+{
+    MXCryptoMigrationCannotPurgeAllOneTimeKeysErrorCode,
+};
+
+
 /**
  The `MXCryptoMigration` class handles the migration logic between breaking changes in the implementation
  of the MXCrypto module.
