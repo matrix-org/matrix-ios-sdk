@@ -25,6 +25,7 @@
 #import "MXCredentials.h"
 
 #import <OLMKit/OLMKit.h>
+#import "MXCryptoVersion.h"
 #import "MXOlmSession.h"
 #import "MXOlmInboundGroupSession.h"
 #import "MXDeviceInfo.h"
@@ -89,14 +90,30 @@
 - (NSString*)deviceId;
 
 /**
- Store the end to end account for the logged-in user.
+ Store the user olm account for this device.
+ 
+ This method MUST be used only on setup to store a new olm account.
  */
-- (void)storeAccount:(OLMAccount*)account;
+- (void)setAccount:(OLMAccount*)account;
 
 /**
- * Load the end to end account for the logged-in user.
+ The user olm account for this device.
+ 
+ This is safe to use the returned for read-only olm operation.
  */
 - (OLMAccount*)account;
+
+/**
+ Perform an action that will advance the olm account state.
+ 
+ Some cryptographic operations update the internal state of the olm account. They must be executed
+ into this method to make those operations atomic. This method stores the new olm account state
+ when the block retuns,
+ The implementation must call the block before returning. It must be multi-thread and multi-process safe.
+ 
+ @param block the block where olm operations can be safely made.
+ */
+- (void)performAccountOperationWithBlock:(void (^)(OLMAccount *olmAccount))block;
 
 /**
  Store the sync token corresponding to the device list.
@@ -214,7 +231,7 @@
 - (NSString*)algorithmForRoom:(NSString*)roomId;
 
 /**
- Store a session between the logged-in user and another device.
+ Store a session between this device and another device.
 
  @param deviceKey the public key of the other device.
  @param session the end-to-end session.
@@ -222,16 +239,28 @@
 - (void)storeSession:(MXOlmSession*)session forDevice:(NSString*)deviceKey;
 
 /**
- Retrieve an end-to-end session between the logged-in user and another
- device.
+ Retrieve an end-to-end session between this device and another device.
 
  @param deviceKey the public key of the other device.
- @return a array of end-to-end sessions sorted by the last updated first.
+ @param sessionId the session id.
+ 
+ @return the end-to-end session.
  */
 - (MXOlmSession*)sessionWithDevice:(NSString*)deviceKey andSessionId:(NSString*)sessionId;
 
 /**
- Retrieve all end-to-end sessions between the logged-in user and another
+ Perform an action that will advance the passed end-to-end session.
+ 
+ See performAccountOperationWithBlock for more details.
+ 
+ @param deviceKey the public key of the other device.
+ @param sessionId the session id.
+ @param block the block where olm session operations can be safely made.
+ */
+- (void)performSessionOperationWithDevice:(NSString*)deviceKey andSessionId:(NSString*)sessionId block:(void (^)(MXOlmSession *mxOlmSession))block;
+
+/**
+ Retrieve all end-to-end sessions between this device and another
  device sorted by `lastReceivedMessageTs`, the most recent(higest value) first.
 
  @param deviceKey the public key of the other device.
@@ -255,6 +284,17 @@
  @return an inbound group session.
  */
 - (MXOlmInboundGroupSession*)inboundGroupSessionWithId:(NSString*)sessionId andSenderKey:(NSString*)senderKey;
+
+/**
+ Perform an action that will advance the passed end-to-end group session.
+ 
+ See performAccountOperationWithBlock for more details.
+ 
+ @param sessionId the session identifier.
+ @param senderKey the base64-encoded curve25519 key of the sender.
+ @param block the block where olm session operations can be safely made.
+ */
+- (void)performSessionOperationWithGroupSessionWithId:(NSString*)sessionId senderKey:(NSString*)senderKey block:(void (^)(MXOlmInboundGroupSession *inboundGroupSession))block;
 
 /**
  Retrieve all inbound group sessions.
@@ -458,6 +498,17 @@
  @param senderKey the base64-encoded curve25519 key of the sender.
  */
 - (void)removeInboundGroupSessionWithId:(NSString*)sessionId andSenderKey:(NSString*)senderKey;
+
+
+#pragma mark - Versioning
+
+/**
+ The version of the crypto module implementation.
+ 
+ It is used to handle logical migration between crypto module updates.
+ Must return MXCryptoVersionUndefined if not defined yet.
+ */
+@property (nonatomic) MXCryptoVersion cryptoVersion;
 
 @end
 

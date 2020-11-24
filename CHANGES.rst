@@ -1,3 +1,31 @@
+Changes in 0.17.3 (2020-11-24)
+=================================================
+
+✨ Features
+ * 
+
+🙌 Improvements
+ * MXCrypto: Introduce MXCryptoVersion and MXCryptoMigration to manage logical migration between MXCrypto module updates.
+
+🐛 Bugfix
+ * MXOlmDevice: Make usage of libolm data process-safe (vector-im/element-ios/3817).
+ * MXCrypto: Use MXCryptoMigration to purge all one time keys because some may be bad (vector-im/element-ios/3818).
+
+⚠️ API Changes
+ * 
+
+🗣 Translations
+ * 
+    
+🧱 Build
+ * 
+
+Others
+ * 
+
+Improvements:
+
+
 Changes in 0.17.2 (2020-11-17)
 =================================================
 
