@@ -23,8 +23,7 @@
 
 #import "MXJSONModels.h"
 #import "MXCredentials.h"
-
-
+#import "MXCryptoVersion.h"
 #import "MXOlmSession.h"
 #import "MXOlmInboundGroupSession.h"
 #import "MXDeviceInfo.h"
@@ -499,6 +498,17 @@
  @param senderKey the base64-encoded curve25519 key of the sender.
  */
 - (void)removeInboundGroupSessionWithId:(NSString*)sessionId andSenderKey:(NSString*)senderKey;
+
+
+#pragma mark - Versioning
+
+/**
+ The version of the crypto module implementation.
+ 
+ It is used to handle logical migration between crypto module updates.
+ Must return MXCryptoVersionUndefined if not defined yet.
+ */
+@property (nonatomic) MXCryptoVersion cryptoVersion;
 
 @end
 

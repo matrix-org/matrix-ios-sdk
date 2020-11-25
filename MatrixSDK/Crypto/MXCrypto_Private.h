@@ -161,6 +161,32 @@
 - (NSDictionary*)signObject:(NSDictionary*)object;
 
 
+#pragma mark - One Time keys
+
+/**
+ Retrieve the number of one time keys published on the homeserver.
+
+ @param success A block object called when the operation succeeds.
+                It provides the number of OTKs.
+ @param failure A block object called when the operation fails.
+ */
+- (MXHTTPOperation *)publishedOneTimeKeysCount:(void (^)(NSUInteger publishedKeyCount))success
+                                       failure:(void (^)(NSError *))failure;
+
+/**
+ Generate and publish enough one time keys on the homeserver.
+ 
+ @param keyCount the number of keys currently available on the homeserver.
+ @param retry YES to retry in case of server error.
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+ */
+- (MXHTTPOperation *)generateAndUploadOneTimeKeys:(NSUInteger)keyCount
+                                            retry:(BOOL)retry
+                                          success:(void (^)(void))success
+                                          failure:(void (^)(NSError *))failure;
+
+
 #pragma mark - import/export
 
 /**

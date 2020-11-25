@@ -25,7 +25,7 @@
 #import "MXTools.h"
 #import "MXCryptoTools.h"
 
-NSUInteger const kMXRealmCryptoStoreVersion = 12;
+NSUInteger const kMXRealmCryptoStoreVersion = 13;
 
 static NSString *const kMXRealmCryptoStoreFolder = @"MXRealmCryptoStore";
 
@@ -142,6 +142,11 @@ RLM_ARRAY_TYPE(MXRealmOlmInboundGroupSession)
  The device id.
  */
 @property (nonatomic) NSString *deviceId;
+
+/**
+ The version of the crypto module implementation.
+ */
+@property (nonatomic) MXCryptoVersion cryptoVersion;
 
 /**
  The pickled OLMAccount object.
@@ -1250,6 +1255,24 @@ RLM_ARRAY_TYPE(MXRealmSecret)
     }];
 }
 
+
+#pragma mark - Versioning
+
+- (MXCryptoVersion)cryptoVersion
+{
+    MXRealmOlmAccount *account = self.accountInCurrentThread;
+    return account.cryptoVersion;
+}
+
+-(void)setCryptoVersion:(MXCryptoVersion)cryptoVersion
+{
+    MXRealmOlmAccount *account = self.accountInCurrentThread;
+    [account.realm transactionWithBlock:^{
+        account.cryptoVersion = cryptoVersion;
+    }];
+}
+
+
 #pragma mark - Private methods
 + (RLMRealm*)realmForUser:(NSString*)userId andDevice:(NSString*)deviceId
 {
@@ -1549,6 +1572,19 @@ RLM_ARRAY_TYPE(MXRealmSecret)
                                                   ];
                         }
                         newObject[@"deviceInfoData"] = [NSKeyedArchiver archivedDataWithRootObject:device];
+                    }];
+                }
+                    
+                case 12:
+                {
+                    NSLog(@"[MXRealmCryptoStore] Migration from schema #12 -> #13");
+                    
+                    // Ìntroduction of MXCryptoStore.cryptoVersion
+                    // Set the default value
+                    NSLog(@"[MXRealmCryptoStore]    Add new MXRealmOlmAccount.cryptoVersion. Set it to MXCryptoVersion1");
+                    
+                    [migration enumerateObjects:MXRealmOlmAccount.className block:^(RLMObject *oldObject, RLMObject *newObject) {
+                        newObject[@"cryptoVersion"] = @(MXCryptoVersion1);
                     }];
                 }
             }
