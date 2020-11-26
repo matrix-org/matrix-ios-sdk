@@ -663,7 +663,7 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
     
     switch (membership) {
         case MXMembershipInvite:
-            membershipTransitionState = MXMembershipTransitionStatePending;
+            membershipTransitionState = MXMembershipTransitionStateInvited;
             break;
         case MXMembershipJoin:
             membershipTransitionState = MXMembershipTransitionStateJoined;

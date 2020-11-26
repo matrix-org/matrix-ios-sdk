@@ -19,7 +19,7 @@
  */
 typedef NS_ENUM(NSInteger, MXMembershipTransitionState) {
     MXMembershipTransitionStateUnknown,
-    MXMembershipTransitionStatePending,
+    MXMembershipTransitionStateInvited,
     MXMembershipTransitionStateJoining,
     MXMembershipTransitionStateFailedJoining,
     MXMembershipTransitionStateJoined,
