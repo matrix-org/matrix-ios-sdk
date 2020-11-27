@@ -5,13 +5,13 @@ Changes to be released in next version
  * 
 
 🙌 Improvements
- * 
+ *
 
 🐛 Bugfix
  * 
 
 ⚠️ API Changes
- * 
+ * MXRoomSummary: Add a property to indicate room membership transition state.
 
 🗣 Translations
  * 
@@ -26,7 +26,7 @@ Changes in 0.17.3 (2020-11-24)
 =================================================
 
 ✨ Features
- * 
+ * Added MXAes encryption helper class (vector-im/element-ios/issues/3833).
 
 🙌 Improvements
  * MXCrypto: Introduce MXCryptoVersion and MXCryptoMigration to manage logical migration between MXCrypto module updates.

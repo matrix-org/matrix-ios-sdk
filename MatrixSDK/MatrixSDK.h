@@ -67,6 +67,8 @@ FOUNDATION_EXPORT NSString *MatrixSDKVersion;
 #import "MXSASKeyVerificationStart.h"
 #import "MXQRCodeKeyVerificationStart.h"
 
+#import "MXAes.h"
+
 #import "MXQRCodeDataCodable.h"
 #import "MXQRCodeDataBuilder.h"
 #import "MXQRCodeDataCoder.h"

@@ -15,6 +15,7 @@
  */
 
 #import "MXAesHmacSha2.h"
+#import "MXAes.h"
 
 #import <CommonCrypto/CommonKeyDerivation.h>
 #import <CommonCrypto/CommonCryptor.h>
@@ -31,21 +32,7 @@ const CCHmacAlgorithm kMXAesHmacSha2HashAlgorithm = kCCHmacAlgSHA256;
 
 + (NSData *)iv
 {
-    NSUInteger ivLength = 16;
-    NSMutableData *iv = [NSMutableData dataWithLength:ivLength];
-    int result = SecRandomCopyBytes(kSecRandomDefault, ivLength, iv.mutableBytes);
-    if (result != 0)
-    {
-        NSLog(@"[MXAesHmacSha2] iv failed. result: %@", @(result));
-    }
-    
-    // Clear bit 63 of the IV to stop us hitting the 64-bit counter boundary
-    // (which would mean we wouldn't be able to decrypt on Android). The loss
-    // of a single bit of iv is a price we have to pay.
-    uint8_t *ivBytes = (uint8_t*)iv.mutableBytes;
-    ivBytes[9] &= 0x7f;
-    
-    return [iv copy];
+    return [MXAes iv];
 }
 
 + (nullable NSData*)encrypt:(NSData*)data
@@ -53,43 +40,11 @@ const CCHmacAlgorithm kMXAesHmacSha2HashAlgorithm = kCCHmacAlgSHA256;
                     hmacKey:(NSData*)hmacKey hmac:(NSData*_Nullable*_Nonnull)hmac
                       error:(NSError**)error
 {
-    // Encrypt
-    CCCryptorRef cryptor;
-    CCCryptorStatus status;
-    
-    status = CCCryptorCreateWithMode(kCCEncrypt, kCCModeCTR, kCCAlgorithmAES,
-                                     ccNoPadding, iv.bytes, aesKey.bytes, kCCKeySizeAES256,
-                                     NULL, 0, 0, kCCModeOptionCTR_BE, &cryptor);
-    if (status != kCCSuccess)
-    {
-        *error = [NSError errorWithDomain:MXAesHmacSha2ErrorDomain
-                                     code:MXAesHmacSha2CannotInitialiseCryptorCode
-                                 userInfo:@{
-                                            NSLocalizedDescriptionKey: @"MXAesHmacSha2: Cannot initialise decryptor",
-                                            }];
-        return nil;
-    }
-    
-    size_t bufferLength = CCCryptorGetOutputLength(cryptor, data.length, false);
-    NSMutableData *cipher = [NSMutableData dataWithLength:bufferLength];
-    
-    size_t outLength;
-    status |= CCCryptorUpdate(cryptor,
-                              data.bytes,
-                              data.length,
-                              [cipher mutableBytes],
-                              [cipher length],
-                              &outLength);
-    
-    status |= CCCryptorRelease(cryptor);
-    
-    if (status != kCCSuccess)
-    {
-        *error = [NSError errorWithDomain:MXAesHmacSha2ErrorDomain
-                                     code:MXAesHmacSha2EncryptionFailedCode
-                                 userInfo:@{
-                                            NSLocalizedDescriptionKey: [NSString stringWithFormat:@"MXAesHmacSha2: Decryption failed: %@", @(status)]
-                                            }];
+    NSError *aesError = nil;
+    NSData *cipher = [MXAes encrypt:data aesKey:aesKey iv:iv error:&aesError];
+
+    if (aesError) {
+        *error = [self errorWithAesError:aesError];
         return nil;
     }
     
@@ -97,7 +52,7 @@ const CCHmacAlgorithm kMXAesHmacSha2HashAlgorithm = kCCHmacAlgSHA256;
     NSMutableData *mac = [NSMutableData dataWithLength:kMXAesHmacSha2HashLength ];
     CCHmac(kCCHmacAlgSHA256, hmacKey.bytes, hmacKey.length, cipher.bytes, cipher.length, mac.mutableBytes);
     *hmac = [mac copy];
-    
+
     return cipher;
 }
 
@@ -120,48 +75,40 @@ const CCHmacAlgorithm kMXAesHmacSha2HashAlgorithm = kCCHmacAlgSHA256;
         return nil;
     }
     
+    NSError *aesError = nil;
+    NSData *data = [MXAes decrypt:cipher aesKey:aesKey iv:iv error:&aesError];
     
-    // Decryption
-    CCCryptorRef cryptor;
-    CCCryptorStatus status;
-    
-    status = CCCryptorCreateWithMode(kCCDecrypt, kCCModeCTR, kCCAlgorithmAES,
-                                     ccNoPadding, iv.bytes, aesKey.bytes, kCCKeySizeAES256,
-                                     NULL, 0, 0, kCCModeOptionCTR_BE, &cryptor);
-    if (status != kCCSuccess)
-    {
-        *error = [NSError errorWithDomain:MXAesHmacSha2ErrorDomain
-                                     code:MXAesHmacSha2CannotInitialiseCryptorCode
-                                 userInfo:@{
-                                            NSLocalizedDescriptionKey: @"MXAesHmacSha2: Cannot initialise decryptor",
-                                            }];
-        return nil;
+    if (aesError) {
+        *error = [self errorWithAesError:aesError];
     }
-    
-    size_t bufferLength = CCCryptorGetOutputLength(cryptor, cipher.length, false);
-    NSMutableData *buffer = [NSMutableData dataWithLength:bufferLength];
-    
-    size_t outLength;
-    status |= CCCryptorUpdate(cryptor,
-                              cipher.bytes,
-                              cipher.length,
-                              [buffer mutableBytes],
-                              [buffer length],
-                              &outLength);
-    
-    status |= CCCryptorRelease(cryptor);
-    
-    if (status != kCCSuccess)
-    {
-        *error = [NSError errorWithDomain:MXAesHmacSha2ErrorDomain
-                                     code:MXAesHmacSha2DecryptionFailedCode
-                                 userInfo:@{
-                                            NSLocalizedDescriptionKey: [NSString stringWithFormat:@"MXAesHmacSha2: Decryption failed: %@", @(status)]
-                                            }];
-        return nil;
+
+    return data;
+}
+
+#pragma mark - Private methods
+
++ (NSError*) errorWithAesError:(NSError*)error {
+    NSInteger code = 0;
+    NSDictionary *userInfo = @{
+        NSLocalizedDescriptionKey: [error.localizedDescription stringByReplacingOccurrencesOfString:@"MXAes:" withString:@"MXAesHmacSha2:"],
+    };
+    switch (error.code) {
+        case MXAesCannotInitialiseCryptorCode:
+            code = MXAesHmacSha2CannotInitialiseCryptorCode;
+            break;
+            
+        case MXAesDecryptionFailedCode:
+            code = MXAesHmacSha2DecryptionFailedCode;
+            break;
+            
+        case MXAesEncryptionFailedCode:
+            code = MXAesHmacSha2EncryptionFailedCode;
+            break;
+            
+        default:
+            break;
     }
-    
-    return buffer;
+    return [NSError errorWithDomain:MXAesHmacSha2ErrorDomain code:code userInfo:userInfo];
 }
 
 @end
