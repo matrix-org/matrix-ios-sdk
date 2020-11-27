@@ -272,6 +272,8 @@ typedef void (^MXOnResumeDone)(void);
 {
     if (_state != state)
     {
+        NSLog(@"[MXSession] setState: %@ (was %@)", @(state), @(_state));
+        
         _state = state;
 
         if (_state != MXSessionStateSyncError)
@@ -658,7 +660,7 @@ typedef void (^MXOnResumeDone)(void);
 
 - (void)startWithSyncFilterId:(NSString *)syncFilterId onServerSyncDone:(void (^)(void))onServerSyncDone failure:(void (^)(NSError *))failure
 {
-    [self handleSyncResponseIfRequiredWithCompletion:^{
+    [self handleBackgroundSyncCacheIfRequiredWithCompletion:^{
         [self _startWithSyncFilterId:syncFilterId onServerSyncDone:onServerSyncDone failure:failure];
     }];
 }
@@ -865,14 +867,14 @@ typedef void (^MXOnResumeDone)(void);
 
 - (void)resume:(void (^)(void))resumeDone
 {
-    [self handleSyncResponseIfRequiredWithCompletion:^{
+    [self handleBackgroundSyncCacheIfRequiredWithCompletion:^{
         [self _resume:resumeDone];
     }];
 }
 
 - (void)_resume:(void (^)(void))resumeDone
 {
-    NSLog(@"[MXSession] resume the event stream from state %tu", _state);
+    NSLog(@"[MXSession] _resume: resume the event stream from state %tu", _state);
     
     if (self.backgroundTask.isRunning)
     {
@@ -899,6 +901,12 @@ typedef void (^MXOnResumeDone)(void);
     for (MXPeekingRoom *peekingRoom in peekingRooms)
     {
         [peekingRoom resume];
+    }
+    
+    if (!onResumeDone && resumeDone)
+    {
+        NSLog(@"[MXSession] _resume: the event stream is already running. Nothing to resume");
+        resumeDone();
     }
 }
 
@@ -1287,7 +1295,7 @@ typedef void (^MXOnResumeDone)(void);
                 }
             }
 
-            if (self.state != MXSessionStatePauseRequested)
+            if (self.state != MXSessionStatePauseRequested && self.state != MXSessionStatePaused)
             {
                 // The event stream is running by now
                 [self setState:MXSessionStateRunning];
@@ -1645,17 +1653,19 @@ typedef void (^MXOnResumeDone)(void);
     return roomsInSyncResponse;
 }
 
-- (void)handleSyncResponseIfRequiredWithCompletion:(void (^)(void))completion
+- (void)handleBackgroundSyncCacheIfRequiredWithCompletion:(void (^)(void))completion
 {
-    NSLog(@"[MXSession] handleSyncResponseIfRequired. state %tu", _state);
+    NSLog(@"[MXSession] handleBackgroundSyncCacheIfRequired: state %tu", _state);
     
     MXSyncResponseFileStore *syncResponseStore = [[MXSyncResponseFileStore alloc] init];
     [syncResponseStore openWithCredentials:self.credentials];
     if (syncResponseStore.syncResponse)
     {
-        if ([syncResponseStore.prevBatch isEqualToString:_store.eventStreamToken])
+        NSString *syncResponseStorePrevBatch = syncResponseStore.prevBatch;
+        NSString *eventStreamToken = _store.eventStreamToken;
+        if ([syncResponseStorePrevBatch isEqualToString:eventStreamToken])
         {
-            NSLog(@"[MXSession] handleSyncResponseIfRequired. Handle sync response");
+            NSLog(@"[MXSession] handleBackgroundSyncCacheIfRequired: Handle cache from stream token %@", eventStreamToken);
             
             //  sync response really continues from where the session left
             [self handleSyncResponse:syncResponseStore.syncResponse
@@ -1670,7 +1680,7 @@ typedef void (^MXOnResumeDone)(void);
         }
         else
         {
-            NSLog(@"[MXSession] handleSyncResponseIfRequired. Ignore sync response");
+            NSLog(@"[MXSession] handleBackgroundSyncCacheIfRequired: Ignore cache: MXSession stream token: %@. MXBackgroundSyncService cache stream token: %@", eventStreamToken, syncResponseStorePrevBatch);
             
             //  this sync response will break the continuity in session, ignore & remove it
             [syncResponseStore deleteData];
