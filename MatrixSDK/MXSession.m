@@ -1661,9 +1661,11 @@ typedef void (^MXOnResumeDone)(void);
     [syncResponseStore openWithCredentials:self.credentials];
     if (syncResponseStore.syncResponse)
     {
-        if ([syncResponseStore.prevBatch isEqualToString:_store.eventStreamToken])
+        NSString *syncResponseStorePrevBatch = syncResponseStore.prevBatch;
+        NSString *eventStreamToken = _store.eventStreamToken;
+        if ([syncResponseStorePrevBatch isEqualToString:eventStreamToken])
         {
-            NSLog(@"[MXSession] handleSyncResponseIfRequired. Handle sync response");
+            NSLog(@"[MXSession] handleSyncResponseIfRequired. Handle sync response from stream token %@", eventStreamToken);
             
             //  sync response really continues from where the session left
             [self handleSyncResponse:syncResponseStore.syncResponse
@@ -1678,7 +1680,7 @@ typedef void (^MXOnResumeDone)(void);
         }
         else
         {
-            NSLog(@"[MXSession] handleSyncResponseIfRequired. Ignore sync response");
+            NSLog(@"[MXSession] handleSyncResponseIfRequired. Ignore sync response: MXSession stream token: %@. MXBackgroundSyncService stream token: %@", eventStreamToken, syncResponseStorePrevBatch);
             
             //  this sync response will break the continuity in session, ignore & remove it
             [syncResponseStore deleteData];
