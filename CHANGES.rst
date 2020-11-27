@@ -5,13 +5,13 @@ Changes to be released in next version
  * 
 
 🙌 Improvements
- * 
+ *
 
 🐛 Bugfix
  * 
 
 ⚠️ API Changes
- * 
+ * MXRoomSummary: Add a property to indicate room membership transition state.
 
 🗣 Translations
  * 
