@@ -47,7 +47,7 @@ typedef NS_ENUM(NSUInteger, MXAesErrorCode)
  
  @param data data to be encrypted.
  @param aesKey key used for encryption
- @param iv initialization vector used for encryptio
+ @param iv initialization vector used for encryption
  @param error set an error object if error occured
  
  @return encrypted data if no error occured, nil otherwise.
@@ -61,7 +61,7 @@ typedef NS_ENUM(NSUInteger, MXAesErrorCode)
  
  @param data data to be decrypted.
  @param aesKey key used for encryption
- @param iv initialization vector used for encryptio
+ @param iv initialization vector used for encryption
  @param error set an error object if error occured
  
  @return decrypted data if no error occured, nil otherwise.
