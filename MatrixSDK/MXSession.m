@@ -660,7 +660,7 @@ typedef void (^MXOnResumeDone)(void);
 
 - (void)startWithSyncFilterId:(NSString *)syncFilterId onServerSyncDone:(void (^)(void))onServerSyncDone failure:(void (^)(NSError *))failure
 {
-    [self handleSyncResponseIfRequiredWithCompletion:^{
+    [self handleBackgroundSyncCacheIfRequiredWithCompletion:^{
         [self _startWithSyncFilterId:syncFilterId onServerSyncDone:onServerSyncDone failure:failure];
     }];
 }
@@ -867,7 +867,7 @@ typedef void (^MXOnResumeDone)(void);
 
 - (void)resume:(void (^)(void))resumeDone
 {
-    [self handleSyncResponseIfRequiredWithCompletion:^{
+    [self handleBackgroundSyncCacheIfRequiredWithCompletion:^{
         [self _resume:resumeDone];
     }];
 }
@@ -1653,9 +1653,9 @@ typedef void (^MXOnResumeDone)(void);
     return roomsInSyncResponse;
 }
 
-- (void)handleSyncResponseIfRequiredWithCompletion:(void (^)(void))completion
+- (void)handleBackgroundSyncCacheIfRequiredWithCompletion:(void (^)(void))completion
 {
-    NSLog(@"[MXSession] handleSyncResponseIfRequired. state %tu", _state);
+    NSLog(@"[MXSession] handleBackgroundSyncCacheIfRequired: state %tu", _state);
     
     MXSyncResponseFileStore *syncResponseStore = [[MXSyncResponseFileStore alloc] init];
     [syncResponseStore openWithCredentials:self.credentials];
@@ -1665,7 +1665,7 @@ typedef void (^MXOnResumeDone)(void);
         NSString *eventStreamToken = _store.eventStreamToken;
         if ([syncResponseStorePrevBatch isEqualToString:eventStreamToken])
         {
-            NSLog(@"[MXSession] handleSyncResponseIfRequired. Handle sync response from stream token %@", eventStreamToken);
+            NSLog(@"[MXSession] handleBackgroundSyncCacheIfRequired: Handle cache from stream token %@", eventStreamToken);
             
             //  sync response really continues from where the session left
             [self handleSyncResponse:syncResponseStore.syncResponse
@@ -1680,7 +1680,7 @@ typedef void (^MXOnResumeDone)(void);
         }
         else
         {
-            NSLog(@"[MXSession] handleSyncResponseIfRequired. Ignore sync response: MXSession stream token: %@. MXBackgroundSyncService stream token: %@", eventStreamToken, syncResponseStorePrevBatch);
+            NSLog(@"[MXSession] handleBackgroundSyncCacheIfRequired: Ignore cache: MXSession stream token: %@. MXBackgroundSyncService cache stream token: %@", eventStreamToken, syncResponseStorePrevBatch);
             
             //  this sync response will break the continuity in session, ignore & remove it
             [syncResponseStore deleteData];
