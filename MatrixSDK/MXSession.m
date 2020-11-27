@@ -272,6 +272,8 @@ typedef void (^MXOnResumeDone)(void);
 {
     if (_state != state)
     {
+        NSLog(@"[MXSession] setState: %@ (was %@)", @(state), @(_state));
+        
         _state = state;
 
         if (_state != MXSessionStateSyncError)
@@ -872,7 +874,7 @@ typedef void (^MXOnResumeDone)(void);
 
 - (void)_resume:(void (^)(void))resumeDone
 {
-    NSLog(@"[MXSession] resume the event stream from state %tu", _state);
+    NSLog(@"[MXSession] _resume: resume the event stream from state %tu", _state);
     
     if (self.backgroundTask.isRunning)
     {
@@ -899,6 +901,12 @@ typedef void (^MXOnResumeDone)(void);
     for (MXPeekingRoom *peekingRoom in peekingRooms)
     {
         [peekingRoom resume];
+    }
+    
+    if (!onResumeDone && resumeDone)
+    {
+        NSLog(@"[MXSession] _resume: the event stream is already running. Nothing to resume");
+        resumeDone();
     }
 }
 
@@ -1287,7 +1295,7 @@ typedef void (^MXOnResumeDone)(void);
                 }
             }
 
-            if (self.state != MXSessionStatePauseRequested)
+            if (self.state != MXSessionStatePauseRequested && self.state != MXSessionStatePaused)
             {
                 // The event stream is running by now
                 [self setState:MXSessionStateRunning];

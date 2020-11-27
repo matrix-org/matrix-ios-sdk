@@ -8,7 +8,8 @@ Changes to be released in next version
  *
 
 🐛 Bugfix
- * 
+ * MXSession: Fix a race conditions that prevented MXSession from actually being paused.
+ * MXSession: Make sure the resume method call its completion callback.
 
 ⚠️ API Changes
  * MXRoomSummary: Add a property to indicate room membership transition state.
