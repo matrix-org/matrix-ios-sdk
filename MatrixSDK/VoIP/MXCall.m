@@ -445,7 +445,7 @@ NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
             }
 
         } failure:^(NSError *error) {
-            NSLog(@"[MXCall] callWithVideo: ERROR: Cannot send m.call.negotiate event.");
+            NSLog(@"[MXCall] hold: ERROR: Cannot send m.call.negotiate event.");
             [self didEncounterError:error reason:MXCallHangupReasonUnknownError];
         }];
         
