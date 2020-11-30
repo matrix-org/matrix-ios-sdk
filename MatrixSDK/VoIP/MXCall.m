@@ -1015,7 +1015,7 @@ NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
             [self->callStackCall createAnswer:^(NSString * _Nonnull sdpAnswer) {
                 MXStrongifyAndReturnIfNil(self);
                 
-                NSLog(@"[MXCall] answer negotiation - Created SDP:\n%@", sdpAnswer);
+                NSLog(@"[MXCall] handleCallNegotiate: answer negotiation - Created SDP:\n%@", sdpAnswer);
                 
                 NSDictionary *content = @{
                     @"call_id": self.callId,
