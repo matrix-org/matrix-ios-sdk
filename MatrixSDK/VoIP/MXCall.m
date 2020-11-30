@@ -1046,7 +1046,7 @@ NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
         [self->callStackCall handleAnswer:content.sessionDescription.sdp
                             success:^{}
                             failure:^(NSError *error) {
-            NSLog(@"[MXCall] handleCallEvent: ERROR: Cannot send handle negotiate answer. Error: %@\nEvent: %@", error, event);
+            NSLog(@"[MXCall] handleCallNegotiate: ERROR: Cannot send handle negotiate answer. Error: %@\nEvent: %@", error, event);
             [self didEncounterError:error reason:MXCallHangupReasonIceFailed];
         }];
     }
