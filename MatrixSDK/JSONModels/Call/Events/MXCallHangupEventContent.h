@@ -29,6 +29,8 @@ typedef NS_ENUM(NSInteger, MXCallHangupReason)
 
 typedef NSString * MXCallHangupReasonString NS_REFINED_FOR_SWIFT;
 
+NS_ASSUME_NONNULL_BEGIN
+
 FOUNDATION_EXPORT NSString *const kMXCallHangupReasonUserHangup;
 FOUNDATION_EXPORT NSString *const kMXCallHangupReasonIceFailed;
 FOUNDATION_EXPORT NSString *const kMXCallHangupReasonInviteTimeout;
@@ -47,10 +49,10 @@ FOUNDATION_EXPORT NSString *const kMXCallHangupReasonUnknownError;
 @property (nonatomic, copy) NSString *callId;
 
 /**
- The reason of the hangup event. Can be mapped to a MXCallHangupReason enum.
+ The reason of the hangup event. Can be mapped to a MXCallHangupReason enum. Can be nil for older call versions.
  @seealso reasonType
  */
-@property (nonatomic, copy) MXCallHangupReasonString reason;
+@property (nonatomic, copy, nullable) MXCallHangupReasonString reason;
 
 /**
  Mapped reason of the hangup event.
@@ -58,3 +60,5 @@ FOUNDATION_EXPORT NSString *const kMXCallHangupReasonUnknownError;
 @property (nonatomic, assign) MXCallHangupReason reasonType;
 
 @end
+
+NS_ASSUME_NONNULL_END

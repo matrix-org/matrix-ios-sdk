@@ -18,6 +18,8 @@
 #import "MXCallEventContent.h"
 #import "MXCallSessionDescription.h"
 
+NS_ASSUME_NONNULL_BEGIN
+
 /**
  `MXCallInviteEventContent` represents the content of a m.call.invite event.
  */
@@ -43,7 +45,7 @@
 /**
  Target user id of the invite. Can be nil. Invites without an invitee defined to be intended for any member of the room (other than the sender).
  */
-@property (nonatomic, copy) NSString *invitee;
+@property (nonatomic, copy, nullable) NSString *invitee;
 
 /**
  Indicate whether the invitation is for a video call.
@@ -51,3 +53,5 @@
 - (BOOL)isVideoCall;
 
 @end
+
+NS_ASSUME_NONNULL_END

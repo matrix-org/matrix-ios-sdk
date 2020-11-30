@@ -17,6 +17,8 @@
 #import <Foundation/Foundation.h>
 #import "MXCallEventContent.h"
 
+NS_ASSUME_NONNULL_BEGIN
+
 /**
  `MXCallRejectEventContent` represents the content of a m.call.reject event.
  */
@@ -28,3 +30,5 @@
 @property (nonatomic) NSString *callId;
 
 @end
+
+NS_ASSUME_NONNULL_END

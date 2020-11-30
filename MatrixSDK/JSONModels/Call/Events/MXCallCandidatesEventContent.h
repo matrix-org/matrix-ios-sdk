@@ -18,6 +18,8 @@
 #import "MXCallEventContent.h"
 #import "MXCallCandidate.h"
 
+NS_ASSUME_NONNULL_BEGIN
+
 /**
  `MXCallCandidatesEventContent` represents the content of a m.call.candidates event.
  */
@@ -34,3 +36,5 @@
 @property (nonatomic) NSArray<MXCallCandidate *> *candidates;
 
 @end
+
+NS_ASSUME_NONNULL_END

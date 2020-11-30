@@ -18,6 +18,8 @@
 #import "MXCallEventContent.h"
 #import "MXCallSessionDescription.h"
 
+NS_ASSUME_NONNULL_BEGIN
+
 /**
  `MXCallAnswerEventContent` represents the content of a m.call.answer event.
  */
@@ -34,3 +36,5 @@
 @property (nonatomic) MXCallSessionDescription *answer;
 
 @end
+
+NS_ASSUME_NONNULL_END

@@ -17,6 +17,8 @@
 #import <Foundation/Foundation.h>
 #import "MXJSONModel.h"
 
+NS_ASSUME_NONNULL_BEGIN
+
 /**
  Call version
  */
@@ -28,17 +30,17 @@ extern NSString *const kMXCallVersion;
 /**
  The version of the VoIP specification this message adheres to. Can be nil. @see `version`.
  */
-@property (nonatomic, copy) NSNumber *versionNumber;
+@property (nonatomic, copy, nullable) NSNumber *versionNumber;
 
 /**
  The version of the VoIP specification this message adheres to. Can be nil. @see `version`.
  */
-@property (nonatomic, copy) NSString *versionString;
+@property (nonatomic, copy, nullable) NSString *versionString;
 
 /**
- The party id for the call event.
+ The party id for the call event. When a client participates in a new call, it generates a party_id for itself to use for the rest of the call. Parties in the call are identified by (user_id, party_id) tuple. Can be nil for older call versions.
  */
-@property (nonatomic, copy) NSString *partyId;
+@property (nonatomic, copy, nullable) NSString *partyId;
 
 /// Parse base fields from the JSON
 /// @param JSONDictionary The JSON to be parsed
@@ -48,3 +50,5 @@ extern NSString *const kMXCallVersion;
 - (NSString *)version;
 
 @end
+
+NS_ASSUME_NONNULL_END

@@ -17,6 +17,8 @@
 #import <Foundation/Foundation.h>
 #import "MXCallEventContent.h"
 
+NS_ASSUME_NONNULL_BEGIN
+
 /**
  `MXCallSelectAnswerEventContent` represents the content of a m.call.select_answer event.
  */
@@ -33,3 +35,5 @@
 @property (nonatomic) NSString *selectedPartyId;
 
 @end
+
+NS_ASSUME_NONNULL_END

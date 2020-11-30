@@ -18,6 +18,8 @@
 #import "MXCallEventContent.h"
 #import "MXCallSessionDescription.h"
 
+NS_ASSUME_NONNULL_BEGIN
+
 /**
  `MXCallNegotiateEventContent` represents the content of a m.call.negotiate event.
  */
@@ -46,3 +48,5 @@
 - (BOOL)isVideoCall;
 
 @end
+
+NS_ASSUME_NONNULL_END
