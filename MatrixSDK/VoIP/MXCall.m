@@ -419,7 +419,7 @@ NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
     [callStackCall hold:hold success:^(NSString * _Nonnull sdp) {
         MXStrongifyAndReturnIfNil(self);
         
-        NSLog(@"[MXCall] %@ offer created: %@", (hold ? @"Hold" : @"Resume"), sdp);
+        NSLog(@"[MXCall] hold: %@ offer created: %@", (hold ? @"Hold" : @"Resume"), sdp);
 
         // The call hold offer can sent to the HS
         NSMutableDictionary *content = [@{
@@ -445,7 +445,7 @@ NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
             }
 
         } failure:^(NSError *error) {
-            NSLog(@"[MXCall] callWithVideo: ERROR: Cannot send m.call.negotiate event.");
+            NSLog(@"[MXCall] hold: ERROR: Cannot send m.call.negotiate event.");
             [self didEncounterError:error reason:MXCallHangupReasonUnknownError];
         }];
         
@@ -786,11 +786,11 @@ NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
                                }
                            }
                            failure:^(NSError * _Nonnull error) {
-                               NSLog(@"[MXCall] handleOffer: ERROR: Couldn't handle offer. Error: %@", error);
+                               NSLog(@"[MXCall] handleCallInvite: ERROR: Couldn't handle offer. Error: %@", error);
                                [self didEncounterError:error reason:MXCallHangupReasonIceFailed];
                            }];
     } failure:^(NSError *error) {
-        NSLog(@"[MXCall] startCapturingMediaWithVideo: ERROR: Couldn't start capturing. Error: %@", error);
+        NSLog(@"[MXCall] handleCallInvite: startCapturingMediaWithVideo : ERROR: Couldn't start capturing. Error: %@", error);
         [self didEncounterError:error reason:MXCallHangupReasonUserMediaFailed];
     }];
 
@@ -839,7 +839,7 @@ NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
             [self->callStackCall handleAnswer:content.answer.sdp
                                 success:^{}
                                 failure:^(NSError *error) {
-                NSLog(@"[MXCall] handleCallEvent: ERROR: Cannot send handle answer. Error: %@\nEvent: %@", error, event);
+                NSLog(@"[MXCall] handleCallAnswer: ERROR: Cannot send handle answer. Error: %@\nEvent: %@", error, event);
                 self->selectedAnswer = nil;
                 [self didEncounterError:error reason:MXCallHangupReasonIceFailed];
             }];
@@ -862,7 +862,7 @@ NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
                 continueBlock();
                 
             } failure:^(NSError *error) {
-                NSLog(@"[MXCall] callWithVideo: ERROR: Cannot send m.call.select_answer event. Error: %@\n", error);
+                NSLog(@"[MXCall] handleCallAnswer: ERROR: Cannot send m.call.select_answer event. Error: %@\n", error);
                 self->selectedAnswer = nil;
                 [self didEncounterError:error reason:MXCallHangupReasonUnknownError];
             }];
@@ -975,7 +975,7 @@ NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
                 [self terminateWithReason:event];
                 
             } failure:^(NSError *error) {
-                NSLog(@"[MXCall] callWithVideo: ERROR: Cannot send m.call.select_answer event. Error: %@\n", error);
+                NSLog(@"[MXCall] handleCallReject: ERROR: Cannot send m.call.select_answer event. Error: %@\n", error);
                 self->selectedAnswer = nil;
                 [self didEncounterError:error reason:MXCallHangupReasonUnknownError];
             }];
@@ -1010,12 +1010,12 @@ NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
                                  success:^{
             MXStrongifyAndReturnIfNil(self);
             
-            //  TODO: Get offer type from handleOffer and decide auto-acppet it or not
+            //  TODO: Get offer type from handleOffer and decide auto-accept it or not
             //  auto-accept negotiations for now
             [self->callStackCall createAnswer:^(NSString * _Nonnull sdpAnswer) {
                 MXStrongifyAndReturnIfNil(self);
                 
-                NSLog(@"[MXCall] answer negotiation - Created SDP:\n%@", sdpAnswer);
+                NSLog(@"[MXCall] handleCallNegotiate: answer negotiation - Created SDP:\n%@", sdpAnswer);
                 
                 NSDictionary *content = @{
                     @"call_id": self.callId,
@@ -1028,16 +1028,16 @@ NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
                     @"lifetime": @(self->callManager.negotiateLifetime)
                 };
                 [self.callSignalingRoom sendEventOfType:kMXEventTypeStringCallNegotiate content:content localEcho:nil success:nil failure:^(NSError *error) {
-                    NSLog(@"[MXCall] negotiate answer: ERROR: Cannot send m.call.negotiate event.");
+                    NSLog(@"[MXCall] handleCallNegotiate: negotiate answer: ERROR: Cannot send m.call.negotiate event.");
                     [self didEncounterError:error reason:MXCallHangupReasonUnknownError];
                 }];
             } failure:^(NSError * _Nonnull error) {
-                NSLog(@"[MXCall] negotiate answer: ERROR: Cannot create negotiate answer. Error: %@", error);
+                NSLog(@"[MXCall] handleCallNegotiate: negotiate answer: ERROR: Cannot create negotiate answer. Error: %@", error);
                 [self didEncounterError:error reason:MXCallHangupReasonIceFailed];
             }];
         }
                                  failure:^(NSError * _Nonnull error) {
-            NSLog(@"[MXCall] handleOffer: ERROR: Couldn't handle negotiate offer. Error: %@", error);
+            NSLog(@"[MXCall] handleCallNegotiate: ERROR: Couldn't handle negotiate offer. Error: %@", error);
             [self didEncounterError:error reason:MXCallHangupReasonIceFailed];
         }];
     }
@@ -1046,7 +1046,7 @@ NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
         [self->callStackCall handleAnswer:content.sessionDescription.sdp
                             success:^{}
                             failure:^(NSError *error) {
-            NSLog(@"[MXCall] handleCallEvent: ERROR: Cannot send handle negotiate answer. Error: %@\nEvent: %@", error, event);
+            NSLog(@"[MXCall] handleCallNegotiate: ERROR: Cannot send handle negotiate answer. Error: %@\nEvent: %@", error, event);
             [self didEncounterError:error reason:MXCallHangupReasonIceFailed];
         }];
     }
@@ -1114,7 +1114,8 @@ NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
                 MXCallHangupEventContent *content = [MXCallHangupEventContent modelFromJSON:event.content];
                 MXCallHangupReason reason = content.reasonType;
                 
-                switch (reason) {
+                switch (reason) 
+                {
                     case MXCallHangupReasonUserHangup:
                         if ([event.sender isEqualToString:callManager.mxSession.myUserId])
                         {

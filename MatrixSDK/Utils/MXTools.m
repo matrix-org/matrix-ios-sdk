@@ -314,7 +314,8 @@ NSCharacterSet *uriComponentCharset;
 {
     MXCallHangupReasonString string;
     
-    switch (reason) {
+    switch (reason) 
+    {
         case MXCallHangupReasonUserHangup:
             string = kMXCallHangupReasonUserHangup;
             break;
@@ -368,7 +369,8 @@ NSCharacterSet *uriComponentCharset;
 {
     MXCallSessionDescriptionTypeString string;
     
-    switch (type) {
+    switch (type)
+    {
         case MXCallSessionDescriptionTypeOffer:
             string = kMXCallSessionDescriptionTypeOffer;
             break;
