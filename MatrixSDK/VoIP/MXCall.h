@@ -122,8 +122,15 @@ extern NSString *const kMXCallStateDidChange;
  */
 - (void)answer;
 
+/**
+ Flag to indicate that the call can be holded.
+ */
 @property (nonatomic, readonly) BOOL supportsHolding;
 
+/**
+ Hold/unhold the call. The call must be connected to hold and must be already holded to unhold the call.
+ Please note that also remotely holded calls cannot be unholded.
+ */
 - (void)hold:(BOOL)hold;
 
 /**

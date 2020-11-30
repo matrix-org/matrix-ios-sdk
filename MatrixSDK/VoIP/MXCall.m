@@ -450,7 +450,7 @@ NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
         }];
         
     } failure:^(NSError * _Nonnull error) {
-        NSLog(@"[MXCall] callWithVideo: ERROR: Cannot create %@ offer. Error: %@", (hold ? @"Hold" : @"Resume"), error);
+        NSLog(@"[MXCall] hold: ERROR: Cannot create %@ offer. Error: %@", (hold ? @"Hold" : @"Resume"), error);
         [self didEncounterError:error reason:MXCallHangupReasonIceFailed];
     }];
 }
@@ -501,7 +501,7 @@ NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
                                   @"reason": [MXTools callHangupReasonString:reason]
                                   };
         [_callSignalingRoom sendEventOfType:kMXEventTypeStringCallHangup content:content localEcho:nil success:nil failure:^(NSError *error) {
-            NSLog(@"[MXCall] hangup: ERROR: Cannot send m.call.hangup event.");
+            NSLog(@"[MXCall] hangupWithReason: ERROR: Cannot send m.call.hangup event.");
             [self didEncounterError:error reason:MXCallHangupReasonUnknownError];
         }];
         
