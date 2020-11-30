@@ -419,7 +419,7 @@ NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
     [callStackCall hold:hold success:^(NSString * _Nonnull sdp) {
         MXStrongifyAndReturnIfNil(self);
         
-        NSLog(@"[MXCall] %@ offer created: %@", (hold ? @"Hold" : @"Resume"), sdp);
+        NSLog(@"[MXCall] hold: %@ offer created: %@", (hold ? @"Hold" : @"Resume"), sdp);
 
         // The call hold offer can sent to the HS
         NSMutableDictionary *content = [@{
