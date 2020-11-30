@@ -1037,7 +1037,7 @@ NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
             }];
         }
                                  failure:^(NSError * _Nonnull error) {
-            NSLog(@"[MXCall] handleOffer: ERROR: Couldn't handle negotiate offer. Error: %@", error);
+            NSLog(@"[MXCall] handleCallNegotiate: ERROR: Couldn't handle negotiate offer. Error: %@", error);
             [self didEncounterError:error reason:MXCallHangupReasonIceFailed];
         }];
     }
