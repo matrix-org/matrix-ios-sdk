@@ -1028,7 +1028,7 @@ NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
                     @"lifetime": @(self->callManager.negotiateLifetime)
                 };
                 [self.callSignalingRoom sendEventOfType:kMXEventTypeStringCallNegotiate content:content localEcho:nil success:nil failure:^(NSError *error) {
-                    NSLog(@"[MXCall] negotiate answer: ERROR: Cannot send m.call.negotiate event.");
+                    NSLog(@"[MXCall] handleCallNegotiate: negotiate answer: ERROR: Cannot send m.call.negotiate event.");
                     [self didEncounterError:error reason:MXCallHangupReasonUnknownError];
                 }];
             } failure:^(NSError * _Nonnull error) {
