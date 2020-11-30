@@ -338,7 +338,7 @@ NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
                                           };
                 [self.callSignalingRoom sendEventOfType:kMXEventTypeStringCallAnswer content:content localEcho:nil success:^(NSString *eventId){
                     //  assume for now, this is the selected answer
-                    selectedAnswer = [MXEvent modelFromJSON:@{
+                    self->selectedAnswer = [MXEvent modelFromJSON:@{
                         @"event_id": eventId,
                         @"sender": self.callSignalingRoom.mxSession.myUserId,
                         @"room_id": self.callSignalingRoom.roomId,
