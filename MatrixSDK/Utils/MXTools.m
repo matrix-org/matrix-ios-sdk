@@ -314,7 +314,8 @@ NSCharacterSet *uriComponentCharset;
 {
     MXCallHangupReasonString string;
     
-    switch (reason) {
+    switch (reason) 
+    {
         case MXCallHangupReasonUserHangup:
             string = kMXCallHangupReasonUserHangup;
             break;
