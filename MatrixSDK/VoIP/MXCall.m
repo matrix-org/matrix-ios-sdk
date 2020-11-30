@@ -790,7 +790,7 @@ NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
                                [self didEncounterError:error reason:MXCallHangupReasonIceFailed];
                            }];
     } failure:^(NSError *error) {
-        NSLog(@"[MXCall] startCapturingMediaWithVideo: ERROR: Couldn't start capturing. Error: %@", error);
+        NSLog(@"[MXCall] handleCallInvite: startCapturingMediaWithVideo : ERROR: Couldn't start capturing. Error: %@", error);
         [self didEncounterError:error reason:MXCallHangupReasonUserMediaFailed];
     }];
 
