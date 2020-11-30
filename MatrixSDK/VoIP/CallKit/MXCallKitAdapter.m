@@ -112,7 +112,7 @@ NSString * const kMXCallKitAdapterAudioSessionDidActive = @"kMXCallKitAdapterAud
             update.remoteHandle = handle;
             update.localizedCallerName = contactIdentifier;
             update.hasVideo = call.isVideoCall;
-            update.supportsHolding = YES;
+            update.supportsHolding = NO;
             update.supportsGrouping = NO;
             update.supportsUngrouping = NO;
             update.supportsDTMF = NO;
@@ -194,7 +194,7 @@ NSString * const kMXCallKitAdapterAudioSessionDidActive = @"kMXCallKitAdapterAud
     update.remoteHandle = handle;
     update.localizedCallerName = caller.displayname;
     update.hasVideo = call.isVideoCall;
-    update.supportsHolding = YES;
+    update.supportsHolding = NO;
     update.supportsGrouping = NO;
     update.supportsUngrouping = NO;
     update.supportsDTMF = NO;
@@ -298,16 +298,6 @@ NSString * const kMXCallKitAdapterAudioSessionDidActive = @"kMXCallKitAdapterAud
     [action fulfill];
 }
 
-- (void)provider:(CXProvider *)provider performSetHeldCallAction:(CXSetHeldCallAction *)action
-{
-    MXCall *call = self.calls[action.callUUID];
-    if (call)
-    {
-        [call hold:action.onHold];
-    }
-
-    [action fulfill];
-}
 
 #pragma mark - Private methods
 
