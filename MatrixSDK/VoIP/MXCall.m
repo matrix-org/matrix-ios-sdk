@@ -1032,7 +1032,7 @@ NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
                     [self didEncounterError:error reason:MXCallHangupReasonUnknownError];
                 }];
             } failure:^(NSError * _Nonnull error) {
-                NSLog(@"[MXCall] negotiate answer: ERROR: Cannot create negotiate answer. Error: %@", error);
+                NSLog(@"[MXCall] handleCallNegotiate: negotiate answer: ERROR: Cannot create negotiate answer. Error: %@", error);
                 [self didEncounterError:error reason:MXCallHangupReasonIceFailed];
             }];
         }
