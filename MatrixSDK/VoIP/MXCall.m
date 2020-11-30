@@ -975,7 +975,7 @@ NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
                 [self terminateWithReason:event];
                 
             } failure:^(NSError *error) {
-                NSLog(@"[MXCall] callWithVideo: ERROR: Cannot send m.call.select_answer event. Error: %@\n", error);
+                NSLog(@"[MXCall] handleCallReject: ERROR: Cannot send m.call.select_answer event. Error: %@\n", error);
                 self->selectedAnswer = nil;
                 [self didEncounterError:error reason:MXCallHangupReasonUnknownError];
             }];
