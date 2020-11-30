@@ -369,7 +369,8 @@ NSCharacterSet *uriComponentCharset;
 {
     MXCallSessionDescriptionTypeString string;
     
-    switch (type) {
+    switch (type)
+    {
         case MXCallSessionDescriptionTypeOffer:
             string = kMXCallSessionDescriptionTypeOffer;
             break;
