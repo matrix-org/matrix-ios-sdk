@@ -380,7 +380,7 @@ NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
     if (callInviteEventContent && selectedAnswer && [callInviteEventContent.version isEqualToString:kMXCallVersion])
     {
         MXCallAnswerEventContent *content = [MXCallAnswerEventContent modelFromJSON:selectedAnswer.content];
-        return [content.version isEqualToString:kMXCallVersion] || [content.version isEqualToString:@"0"];
+        return [content.version isEqualToString:kMXCallVersion];
     }
     return NO;
 }
