@@ -839,7 +839,7 @@ NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
             [self->callStackCall handleAnswer:content.answer.sdp
                                 success:^{}
                                 failure:^(NSError *error) {
-                NSLog(@"[MXCall] handleCallEvent: ERROR: Cannot send handle answer. Error: %@\nEvent: %@", error, event);
+                NSLog(@"[MXCall] handleCallAnswer: ERROR: Cannot send handle answer. Error: %@\nEvent: %@", error, event);
                 self->selectedAnswer = nil;
                 [self didEncounterError:error reason:MXCallHangupReasonIceFailed];
             }];
