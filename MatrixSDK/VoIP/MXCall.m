@@ -1114,7 +1114,8 @@ NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
                 MXCallHangupEventContent *content = [MXCallHangupEventContent modelFromJSON:event.content];
                 MXCallHangupReason reason = content.reasonType;
                 
-                switch (reason) {
+                switch (reason) 
+                {
                     case MXCallHangupReasonUserHangup:
                         if ([event.sender isEqualToString:callManager.mxSession.myUserId])
                         {
