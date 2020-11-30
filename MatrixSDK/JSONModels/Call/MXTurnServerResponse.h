@@ -38,7 +38,7 @@
  The URI scheme obeys to http://tools.ietf.org/html/rfc7064#section-3.1
  and http://tools.ietf.org/html/rfc7065#section-3.1
  */
-@property (nonatomic) NSArray *uris;
+@property (nonatomic) NSArray<NSString *> *uris;
 
 /**
  Time To Live. The time is seconds this data is still valid.
