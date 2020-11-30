@@ -1010,7 +1010,7 @@ NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
                                  success:^{
             MXStrongifyAndReturnIfNil(self);
             
-            //  TODO: Get offer type from handleOffer and decide auto-acppet it or not
+            //  TODO: Get offer type from handleOffer and decide auto-accept it or not
             //  auto-accept negotiations for now
             [self->callStackCall createAnswer:^(NSString * _Nonnull sdpAnswer) {
                 MXStrongifyAndReturnIfNil(self);
