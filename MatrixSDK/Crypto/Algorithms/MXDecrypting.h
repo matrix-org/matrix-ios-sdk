@@ -1,5 +1,6 @@
 /*
  Copyright 2016 OpenMarket Ltd
+ Copyright 2020 The Matrix.org Foundation C.I.C
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -33,6 +34,15 @@
  @param crypto the related 'MXCrypto'.
 */
 - (instancetype)initWithCrypto:(MXCrypto*)crypto;
+
+/**
+ Check if we have keys to decrypt an event.
+ 
+ @param event the event to decrypt.
+ 
+ @return YES if keys are present.
+ */
+- (BOOL)hasKeysToDecryptEvent:(MXEvent*)event;
 
 /**
  Decrypt a message.

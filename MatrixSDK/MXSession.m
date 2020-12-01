@@ -302,6 +302,7 @@ typedef void (^MXOnResumeDone)(void);
     }
 
     NSDate *startDate = [NSDate date];
+    MXTaskProfile *taskProfile = [MXSDKOptions.sharedInstance.profiler startMeasuringTaskWithName:kMXAnalyticsStartupMountData category:kMXAnalyticsStartupCategory];
 
     MXWeakify(self);
     [_store openWithCredentials:matrixRestClient.credentials onComplete:^{
@@ -365,12 +366,12 @@ typedef void (^MXOnResumeDone)(void);
                     [self loadRoom:roomId];
                 }
 
-                NSLog(@"[MXSession] Built %lu MXRooms in %.0fms", (unsigned long)self->rooms.allKeys.count, [[NSDate date] timeIntervalSinceDate:startDate3] * 1000);
+                NSLog(@"[MXSession] Built %lu MXRooms in %.0fms", (unsigned long)self->rooms.count, [[NSDate date] timeIntervalSinceDate:startDate3] * 1000);
 
-                NSTimeInterval duration = [[NSDate date] timeIntervalSinceDate:startDate];
-                NSLog(@"[MXSession] Total time to mount SDK data from MXStore: %.0fms", duration * 1000);
-
-                [[MXSDKOptions sharedInstance].analyticsDelegate trackStartupMountDataDuration:duration];
+                taskProfile.units = self->rooms.count;
+                [MXSDKOptions.sharedInstance.profiler stopMeasuringTaskWithProfile:taskProfile];
+                
+                NSLog(@"[MXSession] Total time to mount SDK data from MXStore: %.0fms", taskProfile.duration * 1000);
                 
                 [self setState:MXSessionStateStoreDataReady];
 
@@ -948,6 +949,14 @@ typedef void (^MXOnResumeDone)(void);
                         setPresence:(NSString*)setPresence
 {
     NSDate *startDate = [NSDate date];
+    
+    MXTaskProfile *syncTaskProfile;
+    if (!self->firstSyncDone)
+    {
+        BOOL isInitialSync = !self.isEventStreamInitialised;
+        syncTaskProfile = [MXSDKOptions.sharedInstance.profiler startMeasuringTaskWithName:isInitialSync ? kMXAnalyticsStartupInititialSync : kMXAnalyticsStartupIncrementalSync
+                                                        category:kMXAnalyticsStartupCategory];
+    }
 
     // Determine if we are catching up
     _catchingUp = (0 == serverTimeout);
@@ -975,11 +984,15 @@ typedef void (^MXOnResumeDone)(void);
         BOOL isInitialSync = !self.isEventStreamInitialised;
 
         BOOL wasfirstSync = NO;
-        if (!self->firstSyncDone)
+        if (!self->firstSyncDone && syncTaskProfile)
         {
             wasfirstSync = YES;
             self->firstSyncDone = YES;
-            [[MXSDKOptions sharedInstance].analyticsDelegate trackStartupSyncDuration:duration isInitial:isInitialSync];
+            
+            // Contextualise the profiling with the amount of received information
+            syncTaskProfile.units = syncResponse.rooms.join.count + syncResponse.rooms.invite.count + syncResponse.rooms.leave.count;
+            
+            [MXSDKOptions.sharedInstance.profiler stopMeasuringTaskWithProfile:syncTaskProfile];
         }
 
         // Handle the to device events before the room ones
@@ -1152,7 +1165,7 @@ typedef void (^MXOnResumeDone)(void);
 
 
             // Update live event stream token
-            NSLog(@"[MXSession] Next sync token: %@", streamToken);
+            NSLog(@"[MXSession] Next sync token: %@", syncResponse.nextBatch);
             self.store.eventStreamToken = syncResponse.nextBatch;
 
             // Commit store changes done in [room handleMessages]
@@ -1237,7 +1250,9 @@ typedef void (^MXOnResumeDone)(void);
 
             if (wasfirstSync)
             {
-                [[MXSDKOptions sharedInstance].analyticsDelegate trackRoomCount:self->rooms.count];
+                [[MXSDKOptions sharedInstance].analyticsDelegate trackValue:@(self->rooms.count)
+                                                                   category:kMXAnalyticsStatsCategory
+                                                                       name:kMXAnalyticsStatsRooms];
             }
 
             // Broadcast that a server sync has been processed.
@@ -1889,14 +1904,40 @@ typedef void (^MXOnResumeDone)(void);
 
 - (MXHTTPOperation*)joinRoom:(NSString*)roomIdOrAlias
                   viaServers:(NSArray<NSString*>*)viaServers
+        withThirdPartySigned:(NSDictionary*)thirdPartySigned
+                     success:(void (^)(MXRoom *room))success
+                     failure:(void (^)(NSError *error))failure {
+    
+    [self updateRoomSummaryWithRoomId:roomIdOrAlias withMembershipState:MXMembershipTransitionStateJoining];
+    
+    return [matrixRestClient joinRoom:roomIdOrAlias viaServers:viaServers withThirdPartySigned:nil success:^(NSString *theRoomId) {
+        [self onJoinedRoom:theRoomId success:^(MXRoom *room) {
+            
+            [self updateRoomSummaryWithRoomId:roomIdOrAlias withMembershipState:MXMembershipTransitionStateJoined];
+            
+            if (success)
+            {
+                success(room);
+            }
+        }];
+
+    } failure:^(NSError *error) {
+        
+        [self updateRoomSummaryWithRoomId:roomIdOrAlias withMembershipState:MXMembershipTransitionStateFailedJoining];
+            
+        if (failure)
+        {
+            failure(error);
+        }
+    }];
+}
+
+- (MXHTTPOperation*)joinRoom:(NSString*)roomIdOrAlias
+                  viaServers:(NSArray<NSString*>*)viaServers
                      success:(void (^)(MXRoom *room))success
                      failure:(void (^)(NSError *error))failure
 {
-    return [matrixRestClient joinRoom:roomIdOrAlias viaServers:viaServers withThirdPartySigned:nil success:^(NSString *theRoomId) {
-
-        [self onJoinedRoom:theRoomId success:success];
-
-    } failure:failure];
+    return [self joinRoom:roomIdOrAlias viaServers:viaServers withThirdPartySigned:nil success:success failure:failure];
 }
 
 - (MXHTTPOperation*)joinRoom:(NSString*)roomIdOrAlias
@@ -1920,11 +1961,7 @@ typedef void (^MXOnResumeDone)(void);
     httpOperation = [self.identityService signUrl:signUrl success:^(NSDictionary *thirdPartySigned) {
         MXStrongifyAndReturnIfNil(self);
         
-        MXHTTPOperation *httpOperation2 = [self->matrixRestClient joinRoom:roomIdOrAlias viaServers:viaServers withThirdPartySigned:thirdPartySigned success:^(NSString *theRoomId) {
-            
-            [self onJoinedRoom:theRoomId success:success];
-            
-        } failure:failure];
+        MXHTTPOperation *httpOperation2 = [self joinRoom:roomIdOrAlias viaServers:viaServers withThirdPartySigned:thirdPartySigned success:success failure:failure];
         
         // Transfer the new AFHTTPRequestOperation to the returned MXHTTPOperation
         // So that user has hand on it
@@ -1942,18 +1979,25 @@ typedef void (^MXOnResumeDone)(void);
                       success:(void (^)(void))success
                       failure:(void (^)(NSError *error))failure
 {
+    [self updateRoomSummaryWithRoomId:roomId withMembershipState:MXMembershipTransitionStateLeaving];
+    
     return [matrixRestClient leaveRoom:roomId success:^{
 
         // Check the room has been removed before calling the success callback
         // This is automatically done when the homeserver sends the MXMembershipLeave event.
         if ([self roomWithRoomId:roomId])
         {
+            MXWeakify(self);
             // The room is stil here, wait for the MXMembershipLeave event
             __block __weak id observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXSessionDidLeaveRoomNotification object:nil queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
 
                 if ([roomId isEqualToString:note.userInfo[kMXSessionNotificationRoomIdKey]])
                 {
                     [[NSNotificationCenter defaultCenter] removeObserver:observer];
+                    
+                    MXStrongifyAndReturnIfNil(self);
+                    [self updateRoomSummaryWithRoomId:roomId withMembershipState:MXMembershipTransitionStateLeft];
+                                        
                     if (success)
                     {
                         success();
@@ -1963,13 +2007,23 @@ typedef void (^MXOnResumeDone)(void);
         }
         else
         {
+            [self updateRoomSummaryWithRoomId:roomId withMembershipState:MXMembershipTransitionStateLeft];
+            
             if (success)
             {
                 success();
             }
         }
 
-    } failure:failure];
+    } failure:^(NSError *error) {
+        
+        [self updateRoomSummaryWithRoomId:roomId withMembershipState:MXMembershipTransitionStateFailedLeaving];
+        
+        if (failure)
+        {
+            failure(error);
+        }
+    }];
 }
 
 - (MXHTTPOperation*)canEnableE2EByDefaultInNewRoomWithUsers:(NSArray<NSString*>*)userIds
@@ -1994,7 +2048,6 @@ typedef void (^MXOnResumeDone)(void);
         
     } failure:failure];
 }
-
 
 #pragma mark - The user's rooms
 - (BOOL)hasRoomWithRoomId:(NSString*)roomId
@@ -2455,6 +2508,20 @@ typedef void (^MXOnResumeDone)(void);
     if ([_store respondsToSelector:@selector(commit)])
     {
         [_store commit];
+    }
+}
+
+- (void)updateRoomSummaryWithRoomId:(NSString*)roomId withMembershipState:(MXMembershipTransitionState)membershipTransitionState
+{
+    MXRoomSummary *roomSummary = [self roomSummaryWithRoomId:roomId];
+    
+    if (roomSummary)
+    {
+        [roomSummary updateMembershipTransitionState:membershipTransitionState];
+    }
+    else
+    {
+        NSLog(@"[MXSession] updateRoomSummaryWitRoomId:withMembershipState: Failed to find roomSummary with roomId: %@ roomId and update membership transition state: %ld", roomId, (long)membershipTransitionState);
     }
 }
 
@@ -3555,7 +3622,21 @@ typedef void (^MXOnResumeDone)(void);
     NSLog(@"[MXSession] refreshHomeserverWellknown");
     if (!autoDiscovery)
     {
-        autoDiscovery = [[MXAutoDiscovery alloc] initWithUrl:matrixRestClient.homeserver];
+        NSString *homeServer;
+        
+        // Retrieve the domain from the user id as it can be different from the `MXRestClient.homeserver` that uses the client-server API endpoint domain.
+        NSString *userDomain = [MXTools serverNameInMatrixIdentifier:self.myUserId];
+        
+        if (userDomain)
+        {
+            homeServer =  [NSString stringWithFormat:@"https://%@", userDomain];
+        }
+        else
+        {
+            homeServer = matrixRestClient.homeserver;
+        }
+        
+        autoDiscovery = [[MXAutoDiscovery alloc] initWithUrl:homeServer];
     }
 
     MXWeakify(self);

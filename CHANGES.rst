@@ -1,8 +1,397 @@
 Changes to be released in next version
 =================================================
 
+✨ Features
+ * Added MXAes encryption helper class (vector-im/element-ios/issues/3833).
+
+🙌 Improvements
+ *
+
+🐛 Bugfix
+ * 
+
+⚠️ API Changes
+ * MXRoomSummary: Add a property to indicate room membership transition state.
+
+🗣 Translations
+ * 
+    
+🧱 Build
+ * 
+
+Others
+ * 
+
+Changes in 0.17.3 (2020-11-24)
+=================================================
+
+✨ Features
+ * 
+
+🙌 Improvements
+ * MXCrypto: Introduce MXCryptoVersion and MXCryptoMigration to manage logical migration between MXCrypto module updates.
+
+🐛 Bugfix
+ * MXOlmDevice: Make usage of libolm data process-safe (vector-im/element-ios/3817).
+ * MXCrypto: Use MXCryptoMigration to purge all one time keys because some may be bad (vector-im/element-ios/3818).
+
+⚠️ API Changes
+ * 
+
+🗣 Translations
+ * 
+    
+🧱 Build
+ * 
+
+Others
+ * 
+
+Improvements:
+
+
+Changes in 0.17.2 (2020-11-17)
+=================================================
+
+✨ Features
+ * 
+
+🙌 Improvements
+ * 
+
+🐛 Bugfix
+ * Podspec: Fix arm64 simulator issue with JitsiMeetSDK.
+ * Realm: Stick on 10.1.2 because the CI cannot build.
+
+⚠️ API Changes
+ * 
+
+🗣 Translations
+ * 
+    
+🧱 Build
+ * 
+
+Others
+ * 
+
+Improvements:
+
+
+Changes in 0.17.1 (2020-11-17)
+=================================================
+
+✨ Features
+ * 
+
+🙌 Improvements
+ * 
+
+🐛 Bugfix
+ * 
+
+⚠️ API Changes
+ * Update Realm to 10.2.1 and CocoaPods to 1.10.0.
+ * CocoaPods 1.10.0 is mandatory.
+
+🗣 Translations
+ * 
+    
+🧱 Build
+ * 
+
+Others
+ * 
+
+ 
+Improvements:
+
+
+ Changes in 0.17.0 (2020-11-13)
+=================================================
+
+✨ Features
+ * 
+
+🙌 Improvements
+ * MXAnalyticsDelegate: Make it fully agnostic on tracked data.
+ * MXRealmCryptoStore: Compact DB files before getting out of memory error (vector-im/element-ios/3792).
+ * Tools: Add MXProfiler to track some performance.
+
+🐛 Bugfix
+ * MXSession: Fix log for next stream token.
+ * MXThrottler: Dispatch the block on the correct queue. This will prevent unexpected loops (vector-im/element-ios/3778).
+ * Update JitsiMeetSDK to 2.10.2 (vector-im/element-ios/3712).
+
+⚠️ API Changes
+ * Xcode 12 is now mandatory for using the JingleCallStack sub pod.
+
+🗣 Translations
+ * 
+    
+🧱 Build
+ * 
+
+Others
+ * 
+
+
+Changes in 0.16.20 (2020-10-27)
+=================================================
+
+✨ Features
+ * 
+
+🙌 Improvements
+ * Update GZIP to 1.3.0 (vector-im/element-ios/3570).
+ * Update Realm to 5.4.8 (vector-im/element-ios/3570).
+ * Update JitsiMeetSDK to 2.10.0 (vector-im/element-ios/3570).
+
+🐛 Bugfix
+ * 
+
+⚠️ API Changes
+ * 
+
+🗣 Translations
+ * 
+    
+🧱 Build
+ * 
+
+Others
+ * 
+
+Improvements:
+
+
+Changes in 0.16.19 (2020-10-14)
+=================================================
+
+✨ Features
+ * 
+
+🙌 Improvements
+ * MXCrossSigning: Detect when cross-signing keys have been reset and send MXCrossSigningDidChangeCrossSigningKeysNotification.
+
+🐛 Bugfix
+ * Tests: Fix testMXDeviceListDidUpdateUsersDevicesNotification.
+ * MXCrossSigning: Trust cross-signing because we locally trust the device that created it.
+
+⚠️ API Changes
+ * 
+
+🗣 Translations
+ * 
+    
+🧱 Build
+ * 
+
+Others
+ * 
+
+Improvements:
+
+
+Changes in 0.16.18 (2020-10-13)
+=================================================
+
+✨ Features
+ * 
+
+🙌 Improvements
+ * 
+
+🐛 Bugfix
+ * Fix nonstring msgtyped room messages, by removing msgtype from the wire and prev contents. 
+
+⚠️ API Changes
+ * 
+
+🗣 Translations
+ * 
+    
+🧱 Build
+ * 
+
+Others
+ * 
+
+Improvements:
+
+
+Changes in 0.16.17 (2020-10-09)
+=================================================
+
+✨ Features
+ * 
+
+🙌 Improvements
+ * MXCrypto: Add hasKeysToDecryptEvent method.
+
+🐛 Bugfix
+ * MXCrypto: Reset OTKs when some IDs are already used (https://github.com/vector-im/element-ios/issues/3721).
+ * MXCrypto: Send MXCrossSigningMyUserDidSignInOnNewDeviceNotification and MXDeviceListDidUpdateUsersDevicesNotification on the main thread.
+ * MXCrossSigning: Do not send MXCrossSigningMyUserDidSignInOnNewDeviceNotification again if the device has been verified from another thread.
+ 
+⚠️ API Changes
+ * 
+
+🗣 Translations
+ * 
+    
+🧱 Build
+ * 
+
+Others
+ * 
+
+Improvements:
+
+
+Changes in 0.16.16 (2020-09-30)
+=================================================
+
 Features:
  * 
+
+Improvements:
+ * 
+
+Bugfix:
+ * MXBase64Tools: Make sure the SDK decode padded and unpadded base64 strings like other platforms (vector-im/riot-ios/issues/3667).
+ * SSSS: Use unpadded base64 for secrets data (vector-im/riot-ios/issues/3669).
+ * MXSession: Fix `refreshHomeserverWellknown` method not reading Well-Known from the homeserver domain (vector-im/element-ios/issues/3653).
+
+API Change:
+ * 
+
+Translations:
+ * 
+
+Others:
+ * 
+
+Build:
+ * 
+
+Test:
+ * 
+
+Changes in 0.16.15 (2020-09-03)
+=================================================
+
+Features:
+ * 
+
+Improvements:
+ * MXPushData: Implement JSONDictionary (vector-im/riot-ios/issues/3577).
+ * MXFileStore: Make loadMetaData more robust.
+
+Bugfix:
+ * 
+
+API Change:
+ * 
+
+Translations:
+ * 
+
+Others:
+ * 
+
+Build:
+ * 
+
+Test:
+ * 
+
+Changes in 0.16.14 (2020-08-28)
+=================================================
+
+Features:
+ * 
+
+Improvements:
+ * 
+
+Bugfix:
+ * MXCredentials: Try to guess homeserver in credentials when not provided in wellknown (vector-im/element-ios/issues/3448). 
+
+API Change:
+ * 
+
+Translations:
+ * 
+
+Others:
+ * 
+
+Build:
+ * 
+
+Test:
+ * 
+
+Changes in 0.16.13 (2020-08-25)
+=================================================
+
+Features:
+ * 
+
+Improvements:
+ * Introduce handleCallEvent on MXCallManager. 
+
+Bugfix:
+ * Some room members count are wrong after clearing the cache
+
+API Change:
+ * 
+
+Translations:
+ * 
+
+Others:
+ * 
+
+Build:
+ * 
+
+Test:
+ * 
+
+Changes in 0.16.12 (2020-08-19)
+=================================================
+
+Features:
+ * 
+
+Improvements:
+ * Introduce HTTPAdditionalHeaders in MXSDKOptions.
+
+Bugfix:
+ * 
+
+API Change:
+ * 
+
+Translations:
+ * 
+
+Others:
+ * 
+
+Build:
+ * 
+
+Test:
+ * 
+
+Changes in 0.16.11 (2020-08-13)
+=================================================
+
+Features:
+ * Introduce MXPushGatewayRestClient (part of vector-im/element-ios#3452). 
 
 Improvements:
  * 
@@ -11,7 +400,7 @@ Bugfix:
  * 
 
 API Change:
- * 
+ * Drop SwiftMatrixSDK (vector-im/element-ios#3518).
 
 Translations:
  * 

@@ -14,7 +14,7 @@ PODS:
   - AFNetworking/Serialization (4.0.1)
   - AFNetworking/UIKit (4.0.1):
     - AFNetworking/NSURLSession
-  - GZIP (1.2.3)
+  - GZIP (1.3.0)
   - libbase58 (0.1.4)
   - OHHTTPStubs (9.0.0):
     - OHHTTPStubs/Default (= 9.0.0)
@@ -34,17 +34,17 @@ PODS:
     - OLMKit/olmcpp (= 3.1.0)
   - OLMKit/olmc (3.1.0)
   - OLMKit/olmcpp (3.1.0)
-  - Realm (4.4.1):
-    - Realm/Headers (= 4.4.1)
-  - Realm/Headers (4.4.1)
+  - Realm (10.1.2):
+    - Realm/Headers (= 10.1.2)
+  - Realm/Headers (10.1.2)
 
 DEPENDENCIES:
   - AFNetworking (~> 4.0.0)
-  - GZIP (~> 1.2.2)
+  - GZIP (~> 1.3.0)
   - libbase58 (~> 0.1.4)
   - OHHTTPStubs (~> 9.0.0)
   - OLMKit (~> 3.1.0)
-  - Realm (~> 4.4.0)
+  - Realm (= 10.1.2)
 
 SPEC REPOS:
   trunk:
@@ -57,12 +57,12 @@ SPEC REPOS:
 
 SPEC CHECKSUMS:
   AFNetworking: 7864c38297c79aaca1500c33288e429c3451fdce
-  GZIP: af5c90ef903776a7e9afe6ebebd794a84a2929d4
+  GZIP: 416858efbe66b41b206895ac6dfd5493200d95b3
   libbase58: 7c040313537b8c44b6e2d15586af8e21f7354efd
   OHHTTPStubs: cb29d2a9d09a828ecb93349a2b0c64f99e0db89f
   OLMKit: 4ee0159d63feeb86d836fdcfefe418e163511639
-  Realm: 4eb04d7487bd43c0581256f40b424eafb711deff
+  Realm: 031fdd4be7094d01b43af1a5e49766ab644bb800
 
-PODFILE CHECKSUM: 90834076de1f858ffa5f2c688b9691b058487781
+PODFILE CHECKSUM: bafcfe1874b5534acdc9d6c00d60eb962dfcb647
 
-COCOAPODS: 1.9.3
+COCOAPODS: 1.10.0

@@ -107,6 +107,8 @@
         
         NSMutableDictionary<NSString* /* userId */, NSArray<MXDeviceInfo*>*> *usersDevices = [NSMutableDictionary new];
         NSMutableDictionary<NSString* /* userId */, NSArray<MXDeviceInfo*>*> *updatedUsersDevices = [NSMutableDictionary new];
+        
+        BOOL myUserCrossSigningKeysChanged = NO;
 
         for (NSString *userId in users)
         {
@@ -115,11 +117,27 @@
             if (crossSigningKeys)
             {
                 NSLog(@"[MXDeviceListOperationsPool] doKeyDownloadForUsers: Got cross-signing keys for %@: %@", userId, crossSigningKeys);
-                
+             
                 MXCrossSigningInfo *storedCrossSigningKeys = [self->crypto.store crossSigningKeysForUser:userId];
+
+                // Detect rotation in my user cross-signing keys
+                if (storedCrossSigningKeys
+                    && [self->crypto.mxSession.myUserId isEqualToString:userId]
+                    && ![storedCrossSigningKeys hasSameKeysAsCrossSigningInfo:crossSigningKeys])
+                {
+                    // Cross-signing keys have been reset from another device
+                    NSLog(@"[MXDeviceListOperationsPool] doKeyDownloadForUsers: Detected cross-signing keys rotation");
+                    myUserCrossSigningKeysChanged = YES;
+                }
                 
                 // Use current trust level
                 MXUserTrustLevel *oldTrustLevel = storedCrossSigningKeys.trustLevel;
+                if (myUserCrossSigningKeysChanged)
+                {
+                    // Except if we cannot trust it anymore
+                    oldTrustLevel = [MXUserTrustLevel new];
+                }
+                
                 [crossSigningKeys setTrustLevel:oldTrustLevel];
 
                 // Compute trust on this user
@@ -173,7 +191,7 @@
                         previousLocalState = previouslyStoredDeviceKeys.trustLevel.localVerificationStatus;
                     }
                     
-                    // Be sure to force previous local state to verified for current device. Our own device il always locally verified.
+                    // Be sure to force previous local state to verified for current device. Our own device is always locally verified.
                     if ([self->crypto.mxSession.myUserId isEqualToString:userId]
                         && [self->crypto.mxSession.myDeviceId isEqualToString:deviceId])
                     {
@@ -219,8 +237,16 @@
         
         if (updatedUsersDevices.count)
         {
-            // Post notification using MXCrypto instance as MXDeviceListOperationsPool is an internal class.
-            [[NSNotificationCenter defaultCenter] postNotificationName:MXDeviceListDidUpdateUsersDevicesNotification object:self->crypto userInfo:updatedUsersDevices];
+            dispatch_async(dispatch_get_main_queue(), ^{
+                // Post notification using MXCrypto instance as MXDeviceListOperationsPool is an internal class.
+                [[NSNotificationCenter defaultCenter] postNotificationName:MXDeviceListDidUpdateUsersDevicesNotification object:self->crypto userInfo:updatedUsersDevices];
+            });
+        }
+        
+        if (myUserCrossSigningKeysChanged)
+        {
+            NSLog(@"[MXDeviceListOperationsPool] doKeyDownloadForUsers: Reset cross-signing state.");
+            [self->crypto.crossSigning refreshStateWithSuccess:nil failure:nil];
         }
         
         // Delay

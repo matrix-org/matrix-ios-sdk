@@ -26,6 +26,7 @@
 #pragma mark - Constants
 
 NSString *const MXCrossSigningMyUserDidSignInOnNewDeviceNotification = @"MXCrossSigningMyUserDidSignInOnNewDeviceNotification";
+NSString *const MXCrossSigningDidChangeCrossSigningKeysNotification = @"MXCrossSigningDidChangeCrossSigningKeydNotification";
 NSString *const MXCrossSigningNotificationDeviceIdsKey = @"deviceIds";
 
 NSString *const MXCrossSigningErrorDomain = @"org.matrix.sdk.crosssigning";
@@ -474,6 +475,11 @@ NSString *const MXCrossSigningErrorDomain = @"org.matrix.sdk.crosssigning";
         
         BOOL sameCrossSigningKeys = [myUserCrossSigningKeysBefore hasSameKeysAsCrossSigningInfo:crossSigningKeysMap[myUserId]];
         self.myUserCrossSigningKeys = crossSigningKeysMap[myUserId];
+        if (self.myUserCrossSigningKeys)
+        {
+            // Store it. computeState checks what is in the store
+            [self.crypto.store storeCrossSigningKeys:self.myUserCrossSigningKeys];
+        }
         
         [self computeState];
         
@@ -608,6 +614,8 @@ NSString *const MXCrossSigningErrorDomain = @"org.matrix.sdk.crosssigning";
 {
     MXCrossSigningState state = MXCrossSigningStateNotBootstrapped;
     
+    BOOL didTrustCrossSigning = self.canTrustCrossSigning;
+    
     if (_myUserCrossSigningKeys)
     {
         state = MXCrossSigningStateCrossSigningExists;
@@ -623,10 +631,18 @@ NSString *const MXCrossSigningErrorDomain = @"org.matrix.sdk.crosssigning";
         }
     }
     
+    NSLog(@"[MXCrossSigning] computeState: myUserCrossSigningKeys: %@", _myUserCrossSigningKeys);
+    NSLog(@"[MXCrossSigning] computeState: state: %@ (was %@)", @(state), @(_state));
+    
     _state = state;
     
-    NSLog(@"[MXCrossSigning] myUserCrossSigningKeys: %@", _myUserCrossSigningKeys);
-    NSLog(@"[MXCrossSigning] state: %@", @(_state));
+    if (didTrustCrossSigning && !self.canTrustCrossSigning)
+    {
+        NSLog(@"[MXCrossSigning] computeState: Detected new cross-signing keys");
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [[NSNotificationCenter defaultCenter] postNotificationName:MXCrossSigningDidChangeCrossSigningKeysNotification object:self userInfo:nil];
+        });
+    }
 }
 
 // Recompute cross-signing trust on all users we know
@@ -713,7 +729,7 @@ NSString *const MXCrossSigningErrorDomain = @"org.matrix.sdk.crosssigning";
             if ([key.type isEqualToString:kMXKeyEd25519Type])
             {
                 MXDeviceInfo *device = [self.crypto.store deviceWithDeviceId:key.keyId forUser:myUserId];
-                if (device && device.trustLevel.isVerified)
+                if (device && device.trustLevel.isLocallyVerified)
                 {
                     // Check signature validity
                     NSError *error;
@@ -813,7 +829,8 @@ NSString *const MXCrossSigningErrorDomain = @"org.matrix.sdk.crosssigning";
         
         for (MXDeviceInfo *deviceInfo in myUserDevices)
         {
-            if (deviceInfo.trustLevel.localVerificationStatus == MXDeviceUnknown)
+            if (!deviceInfo.trustLevel.isVerified
+                && deviceInfo.trustLevel.localVerificationStatus == MXDeviceUnknown)
             {
                 [newDeviceIds addObject:deviceInfo.deviceId];
             }
@@ -823,7 +840,9 @@ NSString *const MXCrossSigningErrorDomain = @"org.matrix.sdk.crosssigning";
         {
             NSDictionary *userInfo = @{ MXCrossSigningNotificationDeviceIdsKey: newDeviceIds };
             
-            [[NSNotificationCenter defaultCenter] postNotificationName:MXCrossSigningMyUserDidSignInOnNewDeviceNotification object:self userInfo:userInfo];
+            dispatch_async(dispatch_get_main_queue(), ^{
+                [[NSNotificationCenter defaultCenter] postNotificationName:MXCrossSigningMyUserDidSignInOnNewDeviceNotification object:self userInfo:userInfo];
+            });
         }
     }
 }
@@ -1026,7 +1045,7 @@ NSString *const MXCrossSigningErrorDomain = @"org.matrix.sdk.crosssigning";
 {
     OLMPkSigning *pkSigning;
     
-    NSData *privateKey = [MXBase64Tools dataFromUnpaddedBase64:base64PrivateKey];
+    NSData *privateKey = [MXBase64Tools dataFromBase64:base64PrivateKey];
     if (privateKey)
     {
         pkSigning = [self pkSigningFromPrivateKey:privateKey withExpectedPublicKey:expectedPublicKey];

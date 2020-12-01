@@ -25,7 +25,7 @@
 #import "MXSDKOptions.h"
 #import "MXTools.h"
 
-static NSUInteger const kMXFileVersion = 66;
+static NSUInteger const kMXFileVersion = 67;
 
 static NSString *const kMXFileStoreFolder = @"MXFileStore";
 static NSString *const kMXFileStoreMedaDataFile = @"MXFileStore";
@@ -219,8 +219,9 @@ static NSUInteger preloadOptions;
 
             // If metaData is still defined, we can load rooms data
             if (self->metaData)
-            {
-                NSDate *startDate = [NSDate date];
+            {                
+                MXTaskProfile *taskProfile = [MXSDKOptions.sharedInstance.profiler startMeasuringTaskWithName:kMXAnalyticsStartupStorePreload category:kMXAnalyticsStartupCategory];
+                
                 NSLog(@"[MXFileStore] Start data loading from files");
 
                 [self loadRoomsMessages];
@@ -240,10 +241,9 @@ static NSUInteger preloadOptions;
                 [self loadUsers];
                 [self loadGroups];
 
-                NSTimeInterval duration = [[NSDate date] timeIntervalSinceDate:startDate];
-                NSLog(@"[MXFileStore] Data loaded from files in %.0fms", duration * 1000);
-
-                [[MXSDKOptions sharedInstance].analyticsDelegate trackStartupStorePreloadDuration:duration];
+                taskProfile.units = self->roomStores.count;
+                [MXSDKOptions.sharedInstance.profiler stopMeasuringTaskWithProfile:taskProfile];
+                NSLog(@"[MXFileStore] Data loaded from files in %.0fms", taskProfile.duration * 1000);
             }
 
             // Else, if credentials is valid, create and store it
@@ -1386,22 +1386,22 @@ static NSUInteger preloadOptions;
 - (void)loadMetaData
 {
     NSString *metaDataFile = [storePath stringByAppendingPathComponent:kMXFileStoreMedaDataFile];
-
+    
     @try
     {
         metaData = [NSKeyedUnarchiver unarchiveObjectWithFile:metaDataFile];
     }
     @catch (NSException *exception)
     {
-        NSLog(@"[MXFileStore] Warning: MXFileStore metadata has been corrupted");
+        NSLog(@"[MXFileStore] loadMetaData: Warning: MXFileStore metadata has been corrupted");
     }
     
     if (metaData && ![metaData isKindOfClass:MXFileStoreMetaData.class])
     {
-        NSLog(@"[MXFileStore] Warning: MXFileStore wrong metadata type: %@", metaData);
+        NSLog(@"[MXFileStore] loadMetaData: Warning: Bad MXFileStore metadata type: %@", metaData);
         metaData = nil;
     }
-
+    
     if (metaData.eventStreamToken)
     {
         [super setEventStreamToken:metaData.eventStreamToken];
@@ -1409,7 +1409,7 @@ static NSUInteger preloadOptions;
     }
     else
     {
-        NSLog(@"[MXFileStore] event stream token is missing");
+        NSLog(@"[MXFileStore] loadMetaData: event stream token is missing");
         [self deleteAllData];
     }
 }
