@@ -2725,6 +2725,86 @@ MXAuthAction;
                                  }];
 }
 
+#pragma mark - Room account data operations
+- (MXHTTPOperation*) updateTaggedEvents:(NSString*)roomId
+                            withContent:(MXTaggedEvents *)content
+                                success:(void (^)(void))success
+                                failure:(void (^)(NSError *error))failure
+{
+    return [self setRoomAccountData:roomId
+                          eventType:kMXEventTypeStringTaggedEvents
+                     withParameters:content.JSONDictionary
+                            success:success
+                            failure:failure];
+}
+
+- (MXHTTPOperation*) getTaggedEvents:(NSString*)roomId
+                             success:(void (^)(MXTaggedEvents *taggedEvents))success
+                             failure:(void (^)(NSError *error))failure
+{
+    return [self getRoomAccountData:roomId
+                          eventType:kMXEventTypeStringTaggedEvents
+                            success:^(NSDictionary *JSONResponse) {
+                                if (success)
+                                {
+                                    __block MXTaggedEvents *taggedEvents;
+                                    [self dispatchProcessing:^{
+                                        MXJSONModelSetMXJSONModel(taggedEvents, MXTaggedEvents, JSONResponse)
+                                    } andCompletion:^{
+                                        success(taggedEvents);
+                                    }];
+                                }
+                            } failure:failure];
+}
+
+- (MXHTTPOperation*) setRoomAccountData:(NSString*)roomId
+                              eventType:(MXEventTypeString)eventTypeString
+                         withParameters:(NSDictionary*)content
+                                success:(void (^)(void))success
+                                failure:(void (^)(NSError *error))failure
+{
+    NSString *path = [NSString stringWithFormat:@"%@/user/%@/rooms/%@/account_data/%@", apiPathPrefix, credentials.userId, roomId, eventTypeString];
+
+    MXWeakify(self);
+    return [httpClient requestWithMethod:@"PUT"
+                                    path:path
+                              parameters:content
+                                 success:^(NSDictionary *JSONResponse) {
+                                     MXStrongifyAndReturnIfNil(self);
+                                     [self dispatchSuccess:success];
+                                 }
+                                 failure:^(NSError *error) {
+                                     MXStrongifyAndReturnIfNil(self);
+                                     [self dispatchFailure:error inBlock:failure];
+                                 }];
+}
+
+- (MXHTTPOperation*) getRoomAccountData:(NSString*)roomId
+                              eventType:(MXEventTypeString)eventTypeString
+                                success:(void (^)(NSDictionary *JSONResponse))success
+                                failure:(void (^)(NSError *error))failure
+{
+    NSString *path = [NSString stringWithFormat:@"%@/user/%@/rooms/%@/account_data/%@", apiPathPrefix, credentials.userId, roomId, eventTypeString];
+
+    MXWeakify(self);
+    return [httpClient requestWithMethod:@"GET"
+                                    path:path
+                              parameters:nil
+                                 success:^(NSDictionary *JSONResponse) {
+                                     MXStrongifyAndReturnIfNil(self);
+
+                                     if (success)
+                                     {
+                                         [self dispatchProcessing:nil andCompletion:^{
+                                             success(JSONResponse);
+                                         }];
+                                     }
+                                 }
+                                 failure:^(NSError *error) {
+                                     MXStrongifyAndReturnIfNil(self);
+                                     [self dispatchFailure:error inBlock:failure];
+                                 }];
+}
 
 #pragma mark - Profile operations
 - (MXHTTPOperation*)setDisplayName:(NSString*)displayname
