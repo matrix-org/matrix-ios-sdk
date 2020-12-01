@@ -5,7 +5,7 @@ Changes to be released in next version
  * Added MXAes encryption helper class (vector-im/element-ios/issues/3833).
 
 🙌 Improvements
- *
+ * Pods: Update JitsiMeetSDK to 2.11.0 to be able to build using Xcode 12.2 (vector-im/element-ios/issues/3808).
 
 🐛 Bugfix
  * 
