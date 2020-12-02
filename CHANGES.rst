@@ -2,10 +2,35 @@ Changes to be released in next version
 =================================================
 
 ✨ Features
+ * 
+
+🙌 Improvements
+ * 
+
+🐛 Bugfix
+ * 
+
+⚠️ API Changes
+ * 
+
+🗣 Translations
+ * 
+    
+🧱 Build
+ * 
+
+Others
+ * 
+
+Changes in 0.17.4 (2020-12-02)
+=================================================
+
+✨ Features
  * Added MXAes encryption helper class (vector-im/element-ios/issues/3833).
 
 🙌 Improvements
  * Pods: Update JitsiMeetSDK to 2.11.0 to be able to build using Xcode 12.2 (vector-im/element-ios/issues/3808).
+ * Pods: Update Realm to 10.1.4 to be able to `pod lib lint` using Xcode 12.2 (vector-im/element-ios/issues/3808).
 
 🐛 Bugfix
  * MXSession: Fix a race conditions that prevented MXSession from actually being paused.
@@ -22,6 +47,9 @@ Changes to be released in next version
 
 Others
  * 
+
+Improvements:
+
 
 Changes in 0.17.3 (2020-11-24)
 =================================================
