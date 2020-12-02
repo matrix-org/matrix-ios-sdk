@@ -43,6 +43,12 @@ NSString *const kMXTaggedEventHidden = @"m.hidden";
 
 - (void)tagEvent:(NSString *)eventId taggedEventInfo:(MXTaggedEventInfo *)info tag:(NSString *)tag
 {
+    NSMutableDictionary<NSString*, NSDictionary<NSString*, NSDictionary*>* > *updatedTags = [_tags mutableCopy];
+    if (!updatedTags)
+    {
+        updatedTags = [NSMutableDictionary dictionary];
+    }
+    
     NSMutableDictionary<NSString*, NSDictionary*> *tagDict = [_tags[tag] mutableCopy];
     if (!tagDict)
     {
@@ -50,11 +56,6 @@ NSString *const kMXTaggedEventHidden = @"m.hidden";
     }
     tagDict[eventId] = info.JSONDictionary;
     
-    NSMutableDictionary<NSString*, NSDictionary<NSString*, NSDictionary*>* > *updatedTags = [_tags mutableCopy];
-    if (!updatedTags)
-    {
-        updatedTags = [NSMutableDictionary dictionary];
-    }
     updatedTags[tag] = tagDict;
     
     _tags = updatedTags;
@@ -62,24 +63,29 @@ NSString *const kMXTaggedEventHidden = @"m.hidden";
 
 - (void)untagEvent:(NSString *)eventId tag:(NSString *)tag
 {
-    NSMutableDictionary<NSString*, NSDictionary*> *tagDict = [_tags[tag] mutableCopy];
-    if (!tagDict)
-    {
-        tagDict = [NSMutableDictionary dictionary];
-    }
-    else
-    {
-        [tagDict removeObjectForKey:eventId];
-    }
-    
-    
     NSMutableDictionary<NSString*, NSDictionary<NSString*, NSDictionary*>* > *updatedTags = [_tags mutableCopy];
     if (!updatedTags)
     {
         updatedTags = [NSMutableDictionary dictionary];
     }
-    updatedTags[tag] = tagDict;
-    
+    else
+    {
+        NSMutableDictionary<NSString*, NSDictionary*> *tagDict = [_tags[tag] mutableCopy];
+        if (tagDict)
+        {
+            [tagDict removeObjectForKey:eventId];
+            
+            if (tagDict.count == 0)
+            {
+                [updatedTags removeObjectForKey:tag];
+            }
+            else
+            {
+                updatedTags[tag] = tagDict;
+            }
+        }
+    }
+
     _tags = updatedTags;
 }
 
