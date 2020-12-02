@@ -1,7 +1,7 @@
 Pod::Spec.new do |s|
 
   s.name         = "MatrixSDK"
-  s.version      = "0.17.3"
+  s.version      = "0.17.4"
   s.summary      = "The iOS SDK to build apps compatible with Matrix (https://www.matrix.org)"
 
   s.description  = <<-DESC
@@ -37,7 +37,7 @@ Pod::Spec.new do |s|
 
       # Requirements for e2e encryption
       ss.dependency 'OLMKit', '~> 3.1.0'
-      ss.dependency 'Realm', '10.1.2'
+      ss.dependency 'Realm', '10.1.4'
       ss.dependency 'libbase58', '~> 0.1.4'
   end
 
@@ -54,7 +54,7 @@ Pod::Spec.new do |s|
     #ss.ios.dependency 'GoogleWebRTC', '~>1.1.21820'
     
     # Use WebRTC framework included in Jitsi Meet SDK
-    ss.ios.dependency 'JitsiMeetSDK', ' 2.10.2'
+    ss.ios.dependency 'JitsiMeetSDK', ' 2.11.0'
 
     # JitsiMeetSDK has not yet binaries for arm64 simulator
     ss.pod_target_xcconfig = { 'EXCLUDED_ARCHS[sdk=iphonesimulator*]' => 'arm64' }
