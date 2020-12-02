@@ -33,6 +33,7 @@
 
 #pragma mark - Constants definitions
 NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
+NSString *const kMXCallSupportsHoldingStatusDidChange = @"kMXCallSupportsHoldingStatusDidChange";
 
 @interface MXCall ()
 {
@@ -80,12 +81,12 @@ NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
      Cache for self.calleeId.
      */
     NSString *calleeId;
-    
-    /**
-     Selected answer for this call. Only exists for outgoing calls and after an answer (an accept or reject) received.
-     */
-    MXEvent *selectedAnswer;
 }
+
+/**
+ Selected answer for this call. Can be nil.
+ */
+@property (nonatomic, strong) MXEvent *selectedAnswer;
 
 @end
 
@@ -338,7 +339,7 @@ NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
                                           };
                 [self.callSignalingRoom sendEventOfType:kMXEventTypeStringCallAnswer content:content localEcho:nil success:^(NSString *eventId){
                     //  assume for now, this is the selected answer
-                    self->selectedAnswer = [MXEvent modelFromJSON:@{
+                    self.selectedAnswer = [MXEvent modelFromJSON:@{
                         @"event_id": eventId,
                         @"sender": self.callSignalingRoom.mxSession.myUserId,
                         @"room_id": self.callSignalingRoom.roomId,
@@ -377,9 +378,9 @@ NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
 
 - (BOOL)supportsHolding
 {
-    if (callInviteEventContent && selectedAnswer && [callInviteEventContent.version isEqualToString:kMXCallVersion])
+    if (callInviteEventContent && _selectedAnswer && [callInviteEventContent.version isEqualToString:kMXCallVersion])
     {
-        MXCallAnswerEventContent *content = [MXCallAnswerEventContent modelFromJSON:selectedAnswer.content];
+        MXCallAnswerEventContent *content = [MXCallAnswerEventContent modelFromJSON:_selectedAnswer.content];
         return [content.version isEqualToString:kMXCallVersion];
     }
     return NO;
@@ -395,7 +396,7 @@ NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
     
     if (hold)
     {
-        if (_state == MXCallStateHolded || _state == MXCallStateRemoteHolded)
+        if (_state == MXCallStateOnHold || _state == MXCallStateRemotelyOnHold)
         {
             //  already holded
             return;
@@ -403,7 +404,7 @@ NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
     }
     else
     {
-        if (_state == MXCallStateRemoteHolded)
+        if (_state == MXCallStateRemotelyOnHold)
         {
             //  remotely holded calls cannot be unholded
             return;
@@ -437,7 +438,7 @@ NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
 
             if (hold)
             {
-                [self setState:MXCallStateHolded reason:nil];
+                [self setState:MXCallStateOnHold reason:nil];
             }
             else
             {
@@ -453,6 +454,11 @@ NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
         NSLog(@"[MXCall] hold: ERROR: Cannot create %@ offer. Error: %@", (hold ? @"Hold" : @"Resume"), error);
         [self didEncounterError:error reason:MXCallHangupReasonIceFailed];
     }];
+}
+
+- (BOOL)isOnHold
+{
+    return _state == MXCallStateOnHold || _state == MXCallStateRemotelyOnHold;
 }
 
 - (void)hangup
@@ -515,7 +521,29 @@ NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
     }
 }
 
-#pragma marl - Properties
+#pragma mark - Properties
+
+- (void)setSelectedAnswer:(MXEvent *)selectedAnswer
+{
+    if (_selectedAnswer == selectedAnswer)
+    {
+        //  already the same, ignore it
+        return;
+    }
+    
+    _selectedAnswer = selectedAnswer;
+    
+    if ([_delegate respondsToSelector:@selector(callSupportsHoldingStatusDidChange:)])
+    {
+        [_delegate callSupportsHoldingStatusDidChange:self];
+    }
+    
+    // Broadcast the new call status
+    [[NSNotificationCenter defaultCenter] postNotificationName:kMXCallSupportsHoldingStatusDidChange
+                                                        object:self
+                                                      userInfo:nil];
+}
+
 - (void)setState:(MXCallState)state reason:(MXEvent *)event
 {
     NSLog(@"[MXCall] setState. old: %@. New: %@", @(_state), @(state));
@@ -523,7 +551,7 @@ NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
     // Manage call duration
     if (MXCallStateConnected == state)
     {
-        if (_state != MXCallStateHolded && _state != MXCallStateRemoteHolded)
+        if (_state != MXCallStateOnHold && _state != MXCallStateRemotelyOnHold)
         {
             // Set the start point
             callConnectedDate = [NSDate date];
@@ -712,7 +740,7 @@ NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
 {
     if (self.state == MXCallStateConnected)
     {
-        [self setState:MXCallStateRemoteHolded reason:nil];
+        [self setState:MXCallStateRemotelyOnHold reason:nil];
     }
 }
 
@@ -732,7 +760,7 @@ NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
 
 - (void)callStackCallDidConnect:(id<MXCallStackCall>)callStackCall
 {
-    if (self.state == MXCallStateConnecting || self.state == MXCallStateRemoteHolded)
+    if (self.state == MXCallStateConnecting || self.state == MXCallStateRemotelyOnHold)
     {
         [self setState:MXCallStateConnected reason:nil];
     }
@@ -814,7 +842,7 @@ NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
     // Listen to answer event only for call we are making, not receiving
     if (!_isIncoming)
     {
-        if (selectedAnswer)
+        if (_selectedAnswer)
         {
             //  there is already a selected answer, ignore this one
             return;
@@ -831,7 +859,7 @@ NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
         }
         
         //  mark this as the selected one
-        selectedAnswer = event;
+        self.selectedAnswer = event;
         
         void(^continueBlock)(void) = ^{
             // Let's the stack finalise the connection
@@ -840,7 +868,7 @@ NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
                                 success:^{}
                                 failure:^(NSError *error) {
                 NSLog(@"[MXCall] handleCallAnswer: ERROR: Cannot send handle answer. Error: %@\nEvent: %@", error, event);
-                self->selectedAnswer = nil;
+                self.selectedAnswer = nil;
                 [self didEncounterError:error reason:MXCallHangupReasonIceFailed];
             }];
         };
@@ -863,7 +891,7 @@ NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
                 
             } failure:^(NSError *error) {
                 NSLog(@"[MXCall] handleCallAnswer: ERROR: Cannot send m.call.select_answer event. Error: %@\n", error);
-                self->selectedAnswer = nil;
+                self.selectedAnswer = nil;
                 [self didEncounterError:error reason:MXCallHangupReasonUnknownError];
             }];
         }
@@ -890,19 +918,12 @@ NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
     if (_isIncoming)
     {
         MXCallSelectAnswerEventContent *content = [MXCallSelectAnswerEventContent modelFromJSON:event.content];
-        if (selectedAnswer)
-        {
-            //  check assumed selectedAnswer is really the selected one
-            MXCallAnswerEventContent *selectedAnswerContent = [MXCallAnswerEventContent modelFromJSON:selectedAnswer.content];
-            if (![selectedAnswerContent.partyId isEqualToString:content.selectedPartyId])
-            {
-                //  a different answer is selected
-                selectedAnswer = nil;
-            }
-        }
         if (![content.selectedPartyId isEqualToString:self.partyId])
         {
-            // Else this event means that the call has been answered (accepted/rejected) by another user/device
+            //  a different answer is selected, also our assumption was wrong
+            self.selectedAnswer = nil;
+            
+            // This means that the call has been answered (accepted/rejected) by another user/device
             [self onCallAnsweredElsewhere];
         }
     }
@@ -942,7 +963,7 @@ NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
     // Listen to answer event only for call we are making, not receiving
     if (!_isIncoming)
     {
-        if (selectedAnswer)
+        if (_selectedAnswer)
         {
             //  there is already a selected answer, ignore this one
             return;
@@ -958,7 +979,7 @@ NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
         if (_state != MXCallStateEnded)
         {
             MXCallRejectEventContent *content = [MXCallRejectEventContent modelFromJSON:event.content];
-            selectedAnswer = event;
+            self.selectedAnswer = event;
             
             NSDictionary *selectAnswerContent = @{
                 @"call_id": self.callId,
@@ -976,7 +997,7 @@ NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
                 
             } failure:^(NSError *error) {
                 NSLog(@"[MXCall] handleCallReject: ERROR: Cannot send m.call.select_answer event. Error: %@\n", error);
-                self->selectedAnswer = nil;
+                self.selectedAnswer = nil;
                 [self didEncounterError:error reason:MXCallHangupReasonUnknownError];
             }];
         }
@@ -1062,9 +1083,9 @@ NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
     }
     
     //  outgoing call, check the event coming from the same user with the selected answer
-    if (selectedAnswer && [selectedAnswer.sender isEqualToString:event.sender])
+    if (_selectedAnswer && [_selectedAnswer.sender isEqualToString:event.sender])
     {
-        MXCallEventContent *selectedAnswerContent = [MXCallEventContent modelFromJSON:selectedAnswer.content];
+        MXCallEventContent *selectedAnswerContent = [MXCallEventContent modelFromJSON:_selectedAnswer.content];
         MXCallNegotiateEventContent *content = [MXCallNegotiateEventContent modelFromJSON:event.content];
         
         //  return if user-id and party-id matches

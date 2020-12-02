@@ -102,6 +102,11 @@ NSString *const kMXCallManagerConferenceFinished = @"kMXCallManagerConferenceFin
                                                      name:kMXCallStateDidChange
                                                    object:nil];
         
+        [[NSNotificationCenter defaultCenter] addObserver:self
+                                                 selector:@selector(handleCallSupportHoldingStatusDidChange:)
+                                                     name:kMXCallSupportsHoldingStatusDidChange
+                                                   object:nil];
+        
         [self refreshTURNServer];
     }
     return self;
@@ -523,12 +528,24 @@ NSString *const kMXCallManagerConferenceFinished = @"kMXCallManagerConferenceFin
 #endif
 }
 
+- (void)handleCallSupportHoldingStatusDidChange:(NSNotification *)notification
+{
+#if TARGET_OS_IPHONE
+    MXCall *call = notification.object;
+    
+    [self.callKitAdapter updateSupportsHoldingForCall:call];
+#endif
+}
+
 - (void)unregisterFromNotifications
 {
     NSNotificationCenter *notificationCenter = [NSNotificationCenter defaultCenter];
     
     // Do not handle any call state change notifications
     [notificationCenter removeObserver:self name:kMXCallStateDidChange object:nil];
+    
+    // Do not handle any call supports holding status change notifications
+    [notificationCenter removeObserver:self name:kMXCallSupportsHoldingStatusDidChange object:nil];
     
     // Don't track MXSession's state
     if (sessionStateObserver)

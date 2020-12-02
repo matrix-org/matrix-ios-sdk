@@ -220,6 +220,27 @@ NSString * const kMXCallKitAdapterAudioSessionDidActive = @"kMXCallKitAdapterAud
     [self.provider reportOutgoingCallWithUUID:call.callUUID connectedAtDate:date];
 }
 
+- (void)updateSupportsHoldingForCall:(MXCall *)call
+{
+    NSUUID *callUUID = call.callUUID;
+    
+    if (!self.calls[callUUID])
+    {
+        //  This call is not managed by the CallKit, ignore.
+        return;
+    }
+    
+    BOOL supportsHolding = call.supportsHolding;
+    
+    CXCallUpdate *update = [[CXCallUpdate alloc] init];
+    //  Doc says "Any property that is not set will be ignored" for CXCallUpdate.
+    //  So we don't have to set other properties for the update.
+    update.supportsHolding = supportsHolding;
+    
+    [self.provider reportCallWithUUID:callUUID updated:update];
+    NSLog(@"[MXCallKitAdapter] updateSupportsHoldingForCall, call(%@) updated to: %u", call.callId, supportsHolding);
+}
+
 + (BOOL)callKitAvailable
 {
 #if TARGET_IPHONE_SIMULATOR
@@ -271,6 +292,17 @@ NSString * const kMXCallKitAdapterAudioSessionDidActive = @"kMXCallKitAdapterAud
         [self.audioSessionConfigurator configureAudioSessionForVideoCall:call.isVideoCall];
     }
     
+    [action fulfill];
+}
+
+- (void)provider:(CXProvider *)provider performSetHeldCallAction:(CXSetHeldCallAction *)action
+{
+    MXCall *call = self.calls[action.callUUID];
+    if (call)
+    {
+        [call hold:action.onHold];
+    }
+
     [action fulfill];
 }
 
