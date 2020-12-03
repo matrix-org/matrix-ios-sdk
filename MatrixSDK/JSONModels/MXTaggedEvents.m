@@ -64,11 +64,7 @@ NSString *const kMXTaggedEventHidden = @"m.hidden";
 - (void)untagEvent:(NSString *)eventId tag:(NSString *)tag
 {
     NSMutableDictionary<NSString*, NSDictionary<NSString*, NSDictionary*>* > *updatedTags = [_tags mutableCopy];
-    if (!updatedTags)
-    {
-        updatedTags = [NSMutableDictionary dictionary];
-    }
-    else
+    if (updatedTags)
     {
         NSMutableDictionary<NSString*, NSDictionary*> *tagDict = [_tags[tag] mutableCopy];
         if (tagDict)
@@ -83,10 +79,10 @@ NSString *const kMXTaggedEventHidden = @"m.hidden";
             {
                 updatedTags[tag] = tagDict;
             }
+            
+            _tags = updatedTags;
         }
     }
-
-    _tags = updatedTags;
 }
 
 - (instancetype)initWithCoder:(NSCoder *)aDecoder

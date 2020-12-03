@@ -15,6 +15,7 @@
 //
 
 #import "MXTaggedEventInfo.h"
+#import "MXEvent.h"
 
 #pragma mark - Defines & Constants
 
@@ -23,6 +24,17 @@ static NSString* const kTaggedEventInfoOriginServerTsJSONKey = @"origin_server_t
 static NSString* const kTaggedEventInfoTaggedAtJSONKey = @"tagged_at";
 
 @implementation MXTaggedEventInfo
+
+-(instancetype)init
+{
+    self = [super init];
+    if (self)
+    {
+        _taggedAt = kMXUndefinedTimestamp;
+        _originServerTs = kMXUndefinedTimestamp;
+    }
+    return self;
+}
 
 +(id)modelFromJSON:(NSDictionary *)JSONDictionary
 {
@@ -41,10 +53,21 @@ static NSString* const kTaggedEventInfoTaggedAtJSONKey = @"tagged_at";
 {
     NSMutableDictionary *jsonDictionary = [NSMutableDictionary dictionary];
     
-    jsonDictionary[kTaggedEventInfoKewordsJSONKey] = _keywords;
-    jsonDictionary[kTaggedEventInfoOriginServerTsJSONKey] = @(_originServerTs);
-    jsonDictionary[kTaggedEventInfoTaggedAtJSONKey] = @(_taggedAt);
+    if (_keywords)
+    {
+        jsonDictionary[kTaggedEventInfoKewordsJSONKey] = _keywords;
+    }
     
+    if (_originServerTs != kMXUndefinedTimestamp)
+    {
+        jsonDictionary[kTaggedEventInfoOriginServerTsJSONKey] = @(_originServerTs);
+    }
+    
+    if (_taggedAt != kMXUndefinedTimestamp)
+    {
+        jsonDictionary[kTaggedEventInfoTaggedAtJSONKey] = @(_taggedAt);
+    }
+
     return jsonDictionary;
 }
 
