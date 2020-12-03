@@ -87,5 +87,9 @@ NSString *const kMXAnalyticsStartupStorePreload = @"storePreload";
 NSString *const kMXAnalyticsStartupMountData = @"mountData";
 NSString *const kMXAnalyticsStartupLaunchScreen = @"launchScreen";
 
+NSString *const kMXAnalyticsInitialSyncCategory = @"initialSync";
+NSString *const kMXAnalyticsInitialSyncRequest = @"request";
+NSString *const kMXAnalyticsInitialSyncParsing = @"parsing";
+
 NSString *const kMXAnalyticsStatsCategory = @"stats";
 NSString *const kMXAnalyticsStatsRooms = @"rooms";

@@ -19,6 +19,7 @@
 
 #import "MXRestClient.h"
 
+#import "MXSDKOptions.h"
 #import "MXJSONModel.h"
 #import "MXTools.h"
 #import "MXError.h"
@@ -3254,28 +3255,71 @@ MXAuthAction;
         // cancel the current request and notify the client so that it can retry with a new request.
         clientTimeoutInSeconds = clientTimeoutInSeconds / 1000;
     }
-
+    
+    id<MXProfiler> profiler = MXSDKOptions.sharedInstance.profiler;
+    MXTaskProfile *initialSyncRequestTaskProfile;
+    if (!token)
+    {
+        initialSyncRequestTaskProfile = [profiler startMeasuringTaskWithName:kMXAnalyticsInitialSyncRequest
+                                                                    category:kMXAnalyticsInitialSyncCategory];
+    }
+    
     MXWeakify(self);
     MXHTTPOperation *operation = [httpClient requestWithMethod:@"GET"
                                                           path:[NSString stringWithFormat:@"%@/sync", apiPathPrefix]
                                                     parameters:parameters timeout:clientTimeoutInSeconds
                                                        success:^(NSDictionary *JSONResponse) {
-                                                           MXStrongifyAndReturnIfNil(self);
-
-                                                           if (success)
-                                                           {
-                                                               __block MXSyncResponse *syncResponse;
-                                                               [self dispatchProcessing:^{
-                                                                   MXJSONModelSetMXJSONModel(syncResponse, MXSyncResponse, JSONResponse);
-                                                               } andCompletion:^{
-                                                                   success(syncResponse);
-                                                               }];
-                                                           }
-                                                       }
-                                                       failure:^(NSError *error) {
-                                                           MXStrongifyAndReturnIfNil(self);
-                                                           [self dispatchFailure:error inBlock:failure];
-                                                       }];
+        MXStrongifyAndReturnIfNil(self);
+        
+        if (initialSyncRequestTaskProfile)
+        {
+            // Guess the amout of data
+            NSDictionary *rooms, *join, *invite, *leave;
+            MXJSONModelSetDictionary(rooms, JSONResponse[@"rooms"]);
+            MXJSONModelSetDictionary(join, rooms[@"join"]);
+            MXJSONModelSetDictionary(invite, rooms[@"invite"]);
+            MXJSONModelSetDictionary(leave, rooms[@"leave"]);
+            initialSyncRequestTaskProfile.units = join.count + invite.count + leave.count;
+            
+            [profiler stopMeasuringTaskWithProfile:initialSyncRequestTaskProfile];
+        }
+        
+        if (success)
+        {
+            __block MXSyncResponse *syncResponse;
+            [self dispatchProcessing:^{
+                
+                MXTaskProfile *initialSyncParsingTaskProfile;
+                if (!token)
+                {
+                    initialSyncParsingTaskProfile = [profiler startMeasuringTaskWithName:kMXAnalyticsInitialSyncParsing
+                                                                                category:kMXAnalyticsInitialSyncCategory];
+                }
+                
+                MXJSONModelSetMXJSONModel(syncResponse, MXSyncResponse, JSONResponse);
+                
+                if (initialSyncParsingTaskProfile)
+                {
+                    // Contextualise the profiling with the amount of received information
+                    initialSyncParsingTaskProfile.units = syncResponse.rooms.join.count + syncResponse.rooms.invite.count + syncResponse.rooms.leave.count;
+                    
+                    [profiler stopMeasuringTaskWithProfile:initialSyncParsingTaskProfile];
+                }
+                
+            } andCompletion:^{
+                success(syncResponse);
+            }];
+        }
+    } failure:^(NSError *error) {
+        MXStrongifyAndReturnIfNil(self);
+        
+        if (initialSyncRequestTaskProfile)
+        {
+            [profiler cancelTaskProfile:initialSyncRequestTaskProfile];
+        }
+        
+        [self dispatchFailure:error inBlock:failure];
+    }];
     
     // Disable retry because it interferes with clientTimeout
     // Let the client manage retries on events streams
