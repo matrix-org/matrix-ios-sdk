@@ -59,7 +59,6 @@ public enum MXBackgroundSyncServiceError: Error {
         restClient = MXRestClient(credentials: credentials, unrecognizedCertificateHandler: nil)
         restClient.completionQueue = processingQueue
         store = MXBackgroundStore(withCredentials: credentials)
-        store.open(with: credentials, onComplete: nil, failure: nil)
         if MXRealmCryptoStore.hasData(for: credentials) {
             cryptoStore = MXRealmCryptoStore(credentials: credentials)
         } else {
@@ -206,7 +205,8 @@ public enum MXBackgroundSyncServiceError: Error {
             handleEncryption(forEvent: cachedEvent)
         } else {
             //  do not call the /event api and just check if the event exists in the store
-            let event = syncResponseStore.event(withEventId: eventId, inRoom: roomId) ?? store.event(withEventId: eventId, inRoom: roomId)
+            let event = syncResponseStore.event(withEventId: eventId, inRoom: roomId)
+                ?? store.event(withEventId: eventId, inRoom: roomId)    // TODO: MXBackgroundStore does not support it
             
             if let event = event {
                 NSLog("[MXBackgroundSyncService] fetchEvent: We have the event in stores.")
