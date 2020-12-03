@@ -5,13 +5,14 @@ Changes to be released in next version
  * 
 
 🙌 Improvements
- * 
+ * Login flow: Add MXLoginSSOFlow to support multiple SSO Identity Providers ([MSC2858](https://github.com/matrix-org/matrix-doc/pull/2858)) (vector-im/element-ios/issues/3846).
 
 🐛 Bugfix
  * 
 
 ⚠️ API Changes
- * 
+ * Add MXLoginSSOFlow which represents a SSO login flow and offers multiple SSO Identity Providers through MXLoginSSOIdentityProvider class.
+ * MXAuthenticationSession: `flows` property which represents all supported login flows now handles MXLoginFlow and MXLoginSSOFlow classes.
 
 🗣 Translations
  * 
