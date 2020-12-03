@@ -1,6 +1,7 @@
 /*
  Copyright 2015 OpenMarket Ltd
  Copyright 2017 Vector Creations Ltd
+ Copyright 2020 The Matrix.org Foundation C.I.C
  
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -16,7 +17,9 @@
  */
 
 #import <Foundation/Foundation.h>
+
 #import "MXAnalyticsDelegate.h"
+#import "MXProfiler.h"
 
 
 #pragma mark - Build time options
@@ -75,6 +78,13 @@ NS_ASSUME_NONNULL_BEGIN
  By default, nil.
  */
 @property (nonatomic, nullable) id<MXAnalyticsDelegate> analyticsDelegate;
+
+/**
+ The profiler.
+ 
+ By default, MXBaseProfiler.
+ */
+@property (nonatomic, nullable) id<MXProfiler> profiler;
 
 /**
  The version of the media cache at the application level.

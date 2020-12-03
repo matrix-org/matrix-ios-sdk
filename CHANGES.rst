@@ -5,13 +5,151 @@ Changes to be released in next version
  * 
 
 🙌 Improvements
+ * 
+
+🐛 Bugfix
+ * 
+
+⚠️ API Changes
+ * 
+
+🗣 Translations
+ * 
+    
+🧱 Build
+ * 
+
+Others
+ * 
+
+Changes in 0.17.4 (2020-12-02)
+=================================================
+
+✨ Features
+ * Added MXAes encryption helper class (vector-im/element-ios/issues/3833).
+
+🙌 Improvements
+ * Pods: Update JitsiMeetSDK to 2.11.0 to be able to build using Xcode 12.2 (vector-im/element-ios/issues/3808).
+ * Pods: Update Realm to 10.1.4 to be able to `pod lib lint` using Xcode 12.2 (vector-im/element-ios/issues/3808).
+
+🐛 Bugfix
+ * 
+
+⚠️ API Changes
+ * MXRoomSummary: Add a property to indicate room membership transition state.
+
+🗣 Translations
+ * 
+    
+🧱 Build
+ * 
+
+Others
+ * 
+
+Improvements:
+
+
+Changes in 0.17.3 (2020-11-24)
+=================================================
+
+✨ Features
+ * 
+
+🙌 Improvements
+ * MXCrypto: Introduce MXCryptoVersion and MXCryptoMigration to manage logical migration between MXCrypto module updates.
+
+🐛 Bugfix
+ * MXOlmDevice: Make usage of libolm data process-safe (vector-im/element-ios/3817).
+ * MXCrypto: Use MXCryptoMigration to purge all one time keys because some may be bad (vector-im/element-ios/3818).
+
+⚠️ API Changes
+ * 
+
+🗣 Translations
+ * 
+    
+🧱 Build
+ * 
+
+Others
+ * 
+
+Improvements:
+
+
+Changes in 0.17.2 (2020-11-17)
+=================================================
+
+✨ Features
+ * 
+
+🙌 Improvements
+ * 
+
+🐛 Bugfix
+ * Podspec: Fix arm64 simulator issue with JitsiMeetSDK.
+ * Realm: Stick on 10.1.2 because the CI cannot build.
+
+⚠️ API Changes
+ * 
+
+🗣 Translations
+ * 
+    
+🧱 Build
+ * 
+
+Others
+ * 
+
+Improvements:
+
+
+Changes in 0.17.1 (2020-11-17)
+=================================================
+
+✨ Features
+ * 
+
+🙌 Improvements
+ * 
+
+🐛 Bugfix
+ * 
+
+⚠️ API Changes
+ * Update Realm to 10.2.1 and CocoaPods to 1.10.0.
+ * CocoaPods 1.10.0 is mandatory.
+
+🗣 Translations
+ * 
+    
+🧱 Build
+ * 
+
+Others
+ * 
+
+ 
+Improvements:
+
+
+ Changes in 0.17.0 (2020-11-13)
+=================================================
+
+✨ Features
+ * 
+
+🙌 Improvements
  * MXAnalyticsDelegate: Make it fully agnostic on tracked data.
  * MXRealmCryptoStore: Compact DB files before getting out of memory error (vector-im/element-ios/3792).
+ * Tools: Add MXProfiler to track some performance.
 
 🐛 Bugfix
  * MXSession: Fix log for next stream token.
  * MXThrottler: Dispatch the block on the correct queue. This will prevent unexpected loops (vector-im/element-ios/3778).
- * Update JitsiMeetSDK to 2.10.0 (vector-im/element-ios/3712).
+ * Update JitsiMeetSDK to 2.10.2 (vector-im/element-ios/3712).
 
 ⚠️ API Changes
  * Xcode 12 is now mandatory for using the JingleCallStack sub pod.
@@ -24,6 +162,7 @@ Changes to be released in next version
 
 Others
  * 
+
 
 Changes in 0.16.20 (2020-10-27)
 =================================================

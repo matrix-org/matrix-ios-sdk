@@ -405,9 +405,8 @@
                     // message because of the lack of keys, but there's not
                     // much point in that really; it will mostly serve to clog
                     // up to_device inboxes.
-                    //
-                    // ensureOlmSessionsForUsers has already done the logging,
-                    // so just skip it.
+                    
+                    NSLog(@"[MXMegolmEncryption] shareKey: Cannot share key with device %@:%@. No one time key", userId, deviceID);
                     continue;
                 }
 
