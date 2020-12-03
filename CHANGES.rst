@@ -5,7 +5,7 @@ Changes to be released in next version
  * 
 
 🙌 Improvements
- * 
+ * Add hold support for CallKit calls (vector-im/element-ios/issues/3834).
 
 🐛 Bugfix
  * 
