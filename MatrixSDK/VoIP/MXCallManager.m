@@ -519,6 +519,9 @@ NSString *const kMXCallManagerConferenceFinished = @"kMXCallManagerConferenceFin
         case MXCallStateConnected:
             [self.callKitAdapter reportCall:call connectedAtDate:nil];
             break;
+        case MXCallStateOnHold:
+            [self.callKitAdapter reportCall:call onHold:YES];
+            break;
         case MXCallStateEnded:
             [self.callKitAdapter endCall:call];
             break;

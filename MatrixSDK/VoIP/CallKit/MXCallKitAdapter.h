@@ -46,6 +46,7 @@ API_AVAILABLE(ios(10.0))
 
 - (void)reportCall:(MXCall *)call startedConnectingAtDate:(nullable NSDate *)date;
 - (void)reportCall:(MXCall *)call connectedAtDate:(nullable NSDate *)date;
+- (void)reportCall:(MXCall *)call onHold:(BOOL)onHold;
 
 /// Update hold support for the given call.
 /// @param call The call

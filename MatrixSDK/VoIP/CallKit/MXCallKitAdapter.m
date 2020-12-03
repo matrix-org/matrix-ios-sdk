@@ -218,6 +218,25 @@ NSString * const kMXCallKitAdapterAudioSessionDidActive = @"kMXCallKitAdapterAud
 - (void)reportCall:(MXCall *)call connectedAtDate:(nullable NSDate *)date
 {
     [self.provider reportOutgoingCallWithUUID:call.callUUID connectedAtDate:date];
+    [self reportCall:call onHold:NO];
+}
+
+- (void)reportCall:(MXCall *)call onHold:(BOOL)onHold
+{
+    NSUUID *callUUID = call.callUUID;
+    
+    if (!self.calls[callUUID])
+    {
+        //  This call is not managed by the CallKit, ignore.
+        return;
+    }
+    
+    CXSetHeldCallAction *holdCallAction = [[CXSetHeldCallAction alloc] initWithCallUUID:callUUID onHold:onHold];
+    CXTransaction *transaction = [[CXTransaction alloc] initWithAction:holdCallAction];
+
+    [self.callController requestTransaction:transaction completion:^(NSError *error) {
+        
+    }];
 }
 
 - (void)updateSupportsHoldingForCall:(MXCall *)call
