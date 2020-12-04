@@ -11,8 +11,7 @@ Changes to be released in next version
  * 
 
 ⚠️ API Changes
- * Add MXLoginSSOFlow which represents a SSO login flow and offers multiple SSO Identity Providers through MXLoginSSOIdentityProvider class.
- * MXAuthenticationSession: `flows` property which represents all supported login flows now handles MXLoginFlow and MXLoginSSOFlow classes.
+ *
 
 🗣 Translations
  * 
