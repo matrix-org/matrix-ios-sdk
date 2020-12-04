@@ -85,6 +85,7 @@ typedef NS_ENUM(NSInteger, MXEventType)
     MXEventTypeSecretRequest,
     MXEventTypeSecretSend,
     MXEventTypeSecretStorageDefaultKey,
+    MXEventTypeTaggedEvents,
 
     // The event is a custom event. Refer to its `MXEventTypeString` version
     MXEventTypeCustom = 1000
@@ -135,6 +136,7 @@ FOUNDATION_EXPORT NSString *const kMXEventTypeStringCallReject;
 FOUNDATION_EXPORT NSString *const kMXEventTypeStringCallNegotiate;
 FOUNDATION_EXPORT NSString *const kMXEventTypeStringSticker;
 FOUNDATION_EXPORT NSString *const kMXEventTypeStringRoomTombStone;
+FOUNDATION_EXPORT NSString *const kMXEventTypeStringTaggedEvents;
 
 // Interactive key verification
 FOUNDATION_EXPORT NSString *const kMXEventTypeStringKeyVerificationRequest;

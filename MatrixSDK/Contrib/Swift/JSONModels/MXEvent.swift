@@ -67,6 +67,7 @@ public enum MXEventType: Equatable, Hashable {
     case keyVerificationMac
     case keyVerificationCancel
     case keyVerificationDone
+    case taggedEvents
 
     case custom(String)
     
@@ -110,6 +111,7 @@ public enum MXEventType: Equatable, Hashable {
         case .keyVerificationMac: return kMXEventTypeStringKeyVerificationMac
         case .keyVerificationCancel: return kMXEventTypeStringKeyVerificationCancel
         case .keyVerificationDone: return kMXEventTypeStringKeyVerificationDone
+        case .taggedEvents: return kMXEventTypeStringTaggedEvents
             
         // Swift converts any constant with the suffix "Notification" as the type `Notification.Name`
         // The original value can be reached using the `rawValue` property.
@@ -120,7 +122,7 @@ public enum MXEventType: Equatable, Hashable {
     }
 
     public init(identifier: String) {
-        let events: [MXEventType] = [.roomName, .roomTopic, .roomAvatar, .roomMember, .roomCreate, .roomJoinRules, .roomPowerLevels, .roomAliases, .roomCanonicalAlias, .roomEncrypted, .roomEncryption, .roomGuestAccess, .roomHistoryVisibility, .roomKey, .roomForwardedKey, .roomKeyRequest, .roomMessage, .roomMessageFeedback, .roomRedaction, .roomThirdPartyInvite, .roomTag, .presence, .typing, .callInvite, .callCandidates, .callAnswer, .callSelectAnswer, .callHangup, .callReject, .callNegotiate, .receipt, .roomTombStone]
+        let events: [MXEventType] = [.roomName, .roomTopic, .roomAvatar, .roomMember, .roomCreate, .roomJoinRules, .roomPowerLevels, .roomAliases, .roomCanonicalAlias, .roomEncrypted, .roomEncryption, .roomGuestAccess, .roomHistoryVisibility, .roomKey, .roomForwardedKey, .roomKeyRequest, .roomMessage, .roomMessageFeedback, .roomRedaction, .roomThirdPartyInvite, .roomTag, .presence, .typing, .callInvite, .callCandidates, .callAnswer, .callSelectAnswer, .callHangup, .callReject, .callNegotiate, .receipt, .roomTombStone, .taggedEvents]
         self = events.first(where: { $0.identifier == identifier }) ?? .custom(identifier)
     }
 }
