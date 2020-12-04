@@ -26,7 +26,7 @@
 
 @implementation MXLoginSSOIdentityProvider
 
-+ (id)modelFromJSON:(NSDictionary *)JSONDictionary
++ (instancetype)modelFromJSON:(NSDictionary *)JSONDictionary
 {
     NSString *identifier;
     NSString *name;
@@ -34,10 +34,12 @@
     MXJSONModelSetString(identifier, JSONDictionary[@"id"]);
     MXJSONModelSetString(name, JSONDictionary[@"name"]);
     
-    MXLoginSSOIdentityProvider *identityProvider = [MXLoginSSOIdentityProvider new];
+    MXLoginSSOIdentityProvider *identityProvider;
     
-    if (identityProvider && identifier && name)
+    if (identifier && name)
     {
+        identityProvider = [MXLoginSSOIdentityProvider new];
+        
         identityProvider.identifier = identifier;
         identityProvider.name = name;
         MXJSONModelSetString(identityProvider.icon, JSONDictionary[@"icon"]);
