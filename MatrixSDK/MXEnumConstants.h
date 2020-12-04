@@ -254,3 +254,17 @@ FOUNDATION_EXPORT NSString *const kMXAnalyticsStatsCategory;
 // The number of room the user is in
 FOUNDATION_EXPORT NSString *const kMXAnalyticsStatsRooms;
 
+//  VoIP
+
+/**
+ Overall VoIP category.
+ */
+FOUNDATION_EXPORT NSString *const kMXAnalyticsVoipCategory;
+
+//  VoIP event names
+FOUNDATION_EXPORT NSString *const kMXAnalyticsVoipNameCallError;
+FOUNDATION_EXPORT NSString *const kMXAnalyticsVoipNameCallHangup;
+FOUNDATION_EXPORT NSString *const kMXAnalyticsVoipNameCallEnded;
+FOUNDATION_EXPORT NSString *const kMXAnalyticsVoipNamePlaceCall;
+FOUNDATION_EXPORT NSString *const kMXAnalyticsVoipNamePlaceConferenceCall;
+FOUNDATION_EXPORT NSString *const kMXAnalyticsVoipNameReceiveCall;

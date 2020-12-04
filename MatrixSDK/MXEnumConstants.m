@@ -93,3 +93,13 @@ NSString *const kMXAnalyticsInitialSyncParsing = @"parsing";
 
 NSString *const kMXAnalyticsStatsCategory = @"stats";
 NSString *const kMXAnalyticsStatsRooms = @"rooms";
+
+//  VoIP
+NSString *const kMXAnalyticsVoipCategory = @"voip";
+
+NSString *const kMXAnalyticsVoipNameCallError = @"callError";
+NSString *const kMXAnalyticsVoipNameCallHangup = @"callHangup";
+NSString *const kMXAnalyticsVoipNameCallEnded = @"callEnded";
+NSString *const kMXAnalyticsVoipNamePlaceCall = @"placeCall";
+NSString *const kMXAnalyticsVoipNamePlaceConferenceCall = @"placeConferenceCall";
+NSString *const kMXAnalyticsVoipNameReceiveCall = @"receiveCall";

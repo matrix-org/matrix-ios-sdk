@@ -5,7 +5,7 @@ Changes to be released in next version
  * 
 
 🙌 Improvements
- * 
+ * Send VoIP analytics events (vector-im/element-ios/issues/3855).
 
 🐛 Bugfix
  * 
