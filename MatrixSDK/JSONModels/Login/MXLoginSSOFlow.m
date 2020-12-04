@@ -26,14 +26,12 @@ NSString *const MXLoginSSOFlowIdentityProvidersKey = @"identity_providers";
 
 @implementation MXLoginSSOFlow
 
-+ (id)modelFromJSON:(NSDictionary *)JSONDictionary
++ (instancetype)modelFromJSON:(NSDictionary *)JSONDictionary
 {
-    MXLoginSSOFlow *loginFlow = [MXLoginSSOFlow new];
+    MXLoginSSOFlow *loginFlow = [super modelFromJSON:JSONDictionary];
+    
     if (loginFlow)
     {
-        MXJSONModelSetString(loginFlow.type, JSONDictionary[@"type"]);
-        MXJSONModelSetArray(loginFlow.stages, JSONDictionary[@"stages"]);
-        
         NSArray *jsonIdentityProdivers;
         
         MXJSONModelSetArray(jsonIdentityProdivers, JSONDictionary[MXLoginSSOFlowIdentityProvidersKey]);

@@ -26,6 +26,12 @@
 #import "MXKey.h"
 #import "MXLoginSSOFlow.h"
 
+#pragma mark - Local constants
+
+static NSString* const kMXLoginFlowTypeKey = @"type";
+
+#pragma mark - Implementation
+
 @implementation MXPublicRoom
 
 + (id)modelFromJSON:(NSDictionary *)JSONDictionary
@@ -173,12 +179,12 @@ NSString *const kMXLoginIdentifierTypePhone = @"m.id.phone";
 
 @implementation MXLoginFlow
 
-+ (id)modelFromJSON:(NSDictionary *)JSONDictionary
++ (instancetype)modelFromJSON:(NSDictionary *)JSONDictionary
 {
-    MXLoginFlow *loginFlow = [[MXLoginFlow alloc] init];
+    MXLoginFlow *loginFlow = [self new];    
     if (loginFlow)
     {
-        MXJSONModelSetString(loginFlow.type, JSONDictionary[@"type"]);
+        MXJSONModelSetString(loginFlow.type, JSONDictionary[kMXLoginFlowTypeKey]);
         MXJSONModelSetArray(loginFlow.stages, JSONDictionary[@"stages"]);
     }
     
@@ -217,7 +223,7 @@ NSString *const kMXLoginIdentifierTypePhone = @"m.id.phone";
         
         NSString *type;
         
-        MXJSONModelSetString(type, JSONDictionary[@"type"]);
+        MXJSONModelSetString(type, JSONDictionary[kMXLoginFlowTypeKey]);
         
         if ([type isEqualToString:kMXLoginFlowTypeSSO] || [type isEqualToString:kMXLoginFlowTypeCAS])
         {
