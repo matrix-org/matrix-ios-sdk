@@ -8,7 +8,7 @@ abstract_target 'MatrixSDK' do
     pod 'OLMKit', '~> 3.1.0', :inhibit_warnings => true
     #pod 'OLMKit', :path => '../olm/OLMKit.podspec'
     
-    pod 'Realm', '10.1.2'
+    pod 'Realm', '10.1.4'
     pod 'libbase58', '~> 0.1.4'
     
     target 'MatrixSDK-iOS' do
