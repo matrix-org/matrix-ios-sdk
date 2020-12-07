@@ -76,6 +76,7 @@ NSString *const kMXEventTypeStringKeyVerificationDone   = @"m.key.verification.d
 NSString *const kMXEventTypeStringSecretRequest         = @"m.secret.request";
 NSString *const kMXEventTypeStringSecretSend            = @"m.secret.send";
 NSString *const kMXEventTypeStringSecretStorageDefaultKey   = @"m.secret_storage.default_key";
+NSString *const kMXEventTypeStringTaggedEvents          = @"m.tagged_events";
 
 NSString *const kMXMessageTypeText          = @"m.text";
 NSString *const kMXMessageTypeEmote         = @"m.emote";

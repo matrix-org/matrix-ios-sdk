@@ -23,6 +23,8 @@
 #import "MXEvent.h"
 #import "MXSession.h"
 #import "MXTools.h"
+#import "MXSDKOptions.h"
+#import "MXEnumConstants.h"
 
 #import "MXCallInviteEventContent.h"
 #import "MXCallAnswerEventContent.h"
@@ -243,6 +245,12 @@ NSString *const kMXCallSupportsHoldingStatusDidChange = @"kMXCallSupportsHolding
     callStackCall.audioToSpeaker = _isVideoCall;
     
     [self setState:MXCallStateWaitLocalMedia reason:nil];
+    
+    NSString *eventName = _isConferenceCall ? kMXAnalyticsVoipNamePlaceConferenceCall : kMXAnalyticsVoipNamePlaceCall;
+    
+    [[MXSDKOptions sharedInstance].analyticsDelegate trackValue:@(video)
+                                                       category:kMXAnalyticsVoipCategory
+                                                           name:eventName];
 
     MXWeakify(self);
     [callStackCall startCapturingMediaWithVideo:video success:^() {
@@ -506,7 +514,11 @@ NSString *const kMXCallSupportsHoldingStatusDidChange = @"kMXCallSupportsHolding
                                   @"party_id": self.partyId,
                                   @"reason": [MXTools callHangupReasonString:reason]
                                   };
-        [_callSignalingRoom sendEventOfType:kMXEventTypeStringCallHangup content:content localEcho:nil success:nil failure:^(NSError *error) {
+        [_callSignalingRoom sendEventOfType:kMXEventTypeStringCallHangup content:content localEcho:nil success:^(NSString *eventId) {
+            [[MXSDKOptions sharedInstance].analyticsDelegate trackValue:@(reason)
+                                                               category:kMXAnalyticsVoipCategory
+                                                                   name:kMXAnalyticsVoipNameCallHangup];
+        } failure:^(NSError *error) {
             NSLog(@"[MXCall] hangupWithReason: ERROR: Cannot send m.call.hangup event.");
             [self didEncounterError:error reason:MXCallHangupReasonUnknownError];
         }];
@@ -567,6 +579,10 @@ NSString *const kMXCallSupportsHoldingStatusDidChange = @"kMXCallSupportsHolding
 
         // Store the total duration
         totalCallDuration = self.duration;
+        
+        [[MXSDKOptions sharedInstance].analyticsDelegate trackValue:@(_endReason)
+                                                           category:kMXAnalyticsVoipCategory
+                                                               name:kMXAnalyticsVoipNameCallEnded];
     }
     else if (MXCallStateInviteSent == state)
     {
@@ -792,6 +808,10 @@ NSString *const kMXCallSupportsHoldingStatusDidChange = @"kMXCallSupportsHolding
 
     // Store if it is voice or video call
     _isVideoCall = callInviteEventContent.isVideoCall;
+    
+    [[MXSDKOptions sharedInstance].analyticsDelegate trackValue:@(_isVideoCall)
+                                                       category:kMXAnalyticsVoipCategory
+                                                           name:kMXAnalyticsVoipNameReceiveCall];
 
     // Set up the default audio route
     callStackCall.audioToSpeaker = _isVideoCall;
@@ -1197,6 +1217,10 @@ NSString *const kMXCallSupportsHoldingStatusDidChange = @"kMXCallSupportsHolding
     if ([_delegate respondsToSelector:@selector(call:didEncounterError:reason:)])
     {
         [_delegate call:self didEncounterError:error reason:reason];
+        
+        [[MXSDKOptions sharedInstance].analyticsDelegate trackValue:@(reason)
+                                                           category:kMXAnalyticsVoipCategory
+                                                               name:kMXAnalyticsVoipNameCallError];
     }
     else
     {

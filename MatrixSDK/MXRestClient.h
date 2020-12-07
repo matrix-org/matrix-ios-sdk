@@ -1511,6 +1511,70 @@ typedef MXHTTPOperation* (^MXRestClientIdentityServerAccessTokenHandler)(void (^
                       success:(void (^)(void))success
                       failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
+#pragma mark - Room account data operations
+/**
+ Update the tagged events
+ 
+ @param roomId the id of the room.
+ @param content  the new tagged events content
+ 
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+ 
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*) updateTaggedEvents:(NSString*)roomId
+                            withContent:(MXTaggedEvents*)content
+                                success:(void (^)(void))success
+                                failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
+
+/**
+ Get the tagged events
+ 
+ @param roomId the id of the room.
+ 
+ @param success A block object called when the operation succeeds. It provides a MXTaggedEvents object.
+ @param failure A block object called when the operation fails.
+ 
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*) getTaggedEvents:(NSString*)roomId
+                             success:(void (^)(MXTaggedEvents *taggedEvents))success
+                             failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
+
+/**
+ Set a dedicated room account data field
+ 
+ @param roomId the id of the room.
+ @param eventTypeString  the type of the event. @see MXEventType.
+ @param content the event content
+ 
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+ 
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*) setRoomAccountData:(NSString*)roomId
+                              eventType:(MXEventTypeString)eventTypeString
+                         withParameters:(NSDictionary*)content
+                                success:(void (^)(void))success
+                                failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
+
+/**
+ Get the room account data field
+ 
+ @param roomId the id of the room.
+ @param eventTypeString  the type of the event. @see MXEventType.
+ 
+ @param success A block object called when the operation succeeds. It provides the raw JSON response.
+ @param failure A block object called when the operation fails.
+ 
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*) getRoomAccountData:(NSString*)roomId
+                              eventType:(MXEventTypeString)eventTypeString
+                                success:(void (^)(NSDictionary *JSONResponse))success
+                                failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 #pragma mark - Profile operations
 /**
