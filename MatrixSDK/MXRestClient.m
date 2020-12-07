@@ -4025,7 +4025,7 @@ MXAuthAction;
     NSMutableDictionary *downloadQuery = [NSMutableDictionary dictionary];
     for (NSString *userID in userIds)
     {
-        downloadQuery[userID] = @{};
+        downloadQuery[userID] = @[];
     }
 
     NSMutableDictionary *parameters = [NSMutableDictionary dictionaryWithDictionary:@{
