@@ -47,8 +47,8 @@ typedef NS_ENUM(NSUInteger, MXCallState)
     MXCallStateConnecting,
 
     MXCallStateConnected,
-    MXCallStateHolded,
-    MXCallStateRemoteHolded,
+    MXCallStateOnHold,
+    MXCallStateRemotelyOnHold,
     MXCallStateEnded,
 
     MXCallStateInviteExpired,
@@ -74,6 +74,12 @@ typedef NS_ENUM(NSInteger, MXCallEndReason)
  The notification object is the `MXKCall` object representing the call.
  */
 extern NSString *const kMXCallStateDidChange;
+
+/**
+ Posted when a `MXCall` object has changed its status to support holding.
+ The notification object is the `MXKCall` object representing the call.
+ */
+extern NSString *const kMXCallSupportsHoldingStatusDidChange;
 
 @protocol MXCallDelegate;
 
@@ -132,6 +138,11 @@ extern NSString *const kMXCallStateDidChange;
  Please note that also remotely holded calls cannot be unholded.
  */
 - (void)hold:(BOOL)hold;
+
+/**
+ Call is on hold, locally or remotely.
+ */
+@property (nonatomic, readonly) BOOL isOnHold;
 
 /**
  Hang up a call in progress or reject an incoming call.
@@ -289,6 +300,12 @@ extern NSString *const kMXCallStateDidChange;
 - (void)call:(MXCall *)call stateDidChange:(MXCallState)state reason:(nullable MXEvent *)event;
 
 @optional
+
+/**
+ Tells the delegate that status of the call to support holding has changed.
+ @param call the instance that changes,
+ */
+- (void)callSupportsHoldingStatusDidChange:(MXCall *)call;
 
 /**
  Tells the delegate an error occured.

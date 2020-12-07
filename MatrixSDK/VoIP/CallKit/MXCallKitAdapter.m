@@ -218,6 +218,46 @@ NSString * const kMXCallKitAdapterAudioSessionDidActive = @"kMXCallKitAdapterAud
 - (void)reportCall:(MXCall *)call connectedAtDate:(nullable NSDate *)date
 {
     [self.provider reportOutgoingCallWithUUID:call.callUUID connectedAtDate:date];
+    [self reportCall:call onHold:NO];
+}
+
+- (void)reportCall:(MXCall *)call onHold:(BOOL)onHold
+{
+    NSUUID *callUUID = call.callUUID;
+    
+    if (!self.calls[callUUID])
+    {
+        //  This call is not managed by the CallKit, ignore.
+        return;
+    }
+    
+    CXSetHeldCallAction *holdCallAction = [[CXSetHeldCallAction alloc] initWithCallUUID:callUUID onHold:onHold];
+    CXTransaction *transaction = [[CXTransaction alloc] initWithAction:holdCallAction];
+
+    [self.callController requestTransaction:transaction completion:^(NSError *error) {
+        
+    }];
+}
+
+- (void)updateSupportsHoldingForCall:(MXCall *)call
+{
+    NSUUID *callUUID = call.callUUID;
+    
+    if (!self.calls[callUUID])
+    {
+        //  This call is not managed by the CallKit, ignore.
+        return;
+    }
+    
+    BOOL supportsHolding = call.supportsHolding;
+    
+    CXCallUpdate *update = [[CXCallUpdate alloc] init];
+    //  Doc says "Any property that is not set will be ignored" for CXCallUpdate.
+    //  So we don't have to set other properties for the update.
+    update.supportsHolding = supportsHolding;
+    
+    [self.provider reportCallWithUUID:callUUID updated:update];
+    NSLog(@"[MXCallKitAdapter] updateSupportsHoldingForCall, call(%@) updated to: %u", call.callId, supportsHolding);
 }
 
 + (BOOL)callKitAvailable
@@ -271,6 +311,17 @@ NSString * const kMXCallKitAdapterAudioSessionDidActive = @"kMXCallKitAdapterAud
         [self.audioSessionConfigurator configureAudioSessionForVideoCall:call.isVideoCall];
     }
     
+    [action fulfill];
+}
+
+- (void)provider:(CXProvider *)provider performSetHeldCallAction:(CXSetHeldCallAction *)action
+{
+    MXCall *call = self.calls[action.callUUID];
+    if (call)
+    {
+        [call hold:action.onHold];
+    }
+
     [action fulfill];
 }
 
