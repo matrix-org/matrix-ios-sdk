@@ -30,6 +30,9 @@ class MXBackgroundStore: NSObject, MXStore {
     //  real store
     private var fileStore: MXFileStore
     
+    // Room stores cache
+    private var roomsStore: [String: MXFileRoomStore] = [:]
+    
     init(withCredentials credentials: MXCredentials) {
         fileStore = MXFileStore(credentials: credentials)
         //  load real eventStreamToken
@@ -88,10 +91,31 @@ class MXBackgroundStore: NSObject, MXStore {
     }
     
     func event(withEventId eventId: String, inRoom roomId: String) -> MXEvent? {
-        // TODO
+        guard let roomStore = roomStore(forRoom: roomId) else {
+            return nil
+        }
         
-        NSLog("[MXBackgroundStore] eventWithEventId: \(eventId): TODO")
-        return nil
+        let event = roomStore.event(withEventId: eventId)
+        
+        NSLog("[MXBackgroundStore] eventWithEventId: \(eventId) \(event == nil ? "not " : "" )found")
+        return event
+    }
+    
+    
+    //  MARK: - Private
+    private func roomStore(forRoom roomId: String) -> MXFileRoomStore? {
+        // Use the cached instance if available
+        if let roomStore = roomsStore[roomId] {
+            return roomStore
+        }
+        
+        guard let roomStore = fileStore.roomStore(forRoom: roomId) else {
+            NSLog("[MXBackgroundStore] roomStore: Unknown room id: \(roomId)")
+            return nil
+        }
+        
+        roomsStore[roomId] = roomStore
+        return roomStore
     }
     
     

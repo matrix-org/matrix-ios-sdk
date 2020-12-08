@@ -1,5 +1,5 @@
 /*
- Copyright 2019 New Vector Ltd
+ Copyright 2020 The Matrix.org Foundation C.I.C
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -660,6 +660,74 @@ class MXBackgroundSyncServiceTests: XCTestCase {
                                     XCTAssertNotEqual(bobSessionStartEventStreamToken2, syncResponseStore.prevBatch)
 
                                     expectation?.fulfill()
+                                }
+                            }
+                        }
+                        
+                        break
+                    case .failure(let error):
+                        XCTFail("Cannot set up initial test conditions - error: \(error)")
+                        expectation?.fulfill()
+                }
+            }
+        }
+    }
+    
+    // MXBackgroundSyncService must be able to return an event already fetched by MXSession
+    // - Alice and Bob are in an encrypted room
+    // - Alice sends a message
+    // - Let Bob MXSession get it
+    // - Bob uses the MXBackgroundSyncService to fetch it
+    // -> MXBackgroundSyncService must return the event
+    func testWithEventAlreadyFetchedByMXSession() {
+        
+        // - Alice and Bob are in an encrypted room
+        let aliceStore = MXMemoryStore()
+        let bobStore = MXFileStore()
+        e2eTestData.doE2ETestWithAliceAndBob(inARoom: self, cryptedBob: true, warnOnUnknowDevices: false, aliceStore: aliceStore, bobStore: bobStore) { (aliceSession, bobSession, roomId, expectation) in
+            
+            guard let roomId = roomId, let room = aliceSession?.room(withRoomId: roomId) else {
+                XCTFail("Cannot set up initial test conditions - error: room cannot be retrieved")
+                expectation?.fulfill()
+                return
+            }
+            
+            guard let bobCredentials = bobSession?.credentials else {
+                XCTFail("Cannot set up initial test conditions - error: Bob's credentials cannot be retrieved")
+                expectation?.fulfill()
+                return
+            }
+            
+            // - Alice sends a message
+            var localEcho: MXEvent?
+            room.sendTextMessage(Constants.messageText, localEcho: &localEcho) { (response) in
+                switch response {
+                    case .success(let eventId):
+                        
+                        guard let eventId = eventId else {
+                            XCTFail("Cannot set up initial test conditions - error: room cannot be retrieved")
+                            expectation?.fulfill()
+                            return
+                        }
+                        
+                        // - Let Bob MXSession get it
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                            // - Bob uses the MXBackgroundSyncService to fetch it
+                            self.bgSyncService = MXBackgroundSyncService(withCredentials: bobCredentials)
+                            self.bgSyncService?.event(withEventId: eventId, inRoom: roomId) { response in
+                                
+                                switch response {
+                                    case .success(let event):
+                                        
+                                        // -> MXBackgroundSyncService must return the event
+                                        let text = event.content["body"] as? String
+                                        XCTAssertEqual(text, Constants.messageText, "Event content should match")
+                                        
+                                        expectation?.fulfill()
+                                        
+                                    case .failure(let error):
+                                        XCTFail("Cannot fetch the event from background sync service - error: \(error)")
+                                        expectation?.fulfill()
                                 }
                             }
                         }
