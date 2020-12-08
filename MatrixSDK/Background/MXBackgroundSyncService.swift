@@ -538,7 +538,7 @@ public enum MXBackgroundSyncServiceError: Error {
         if (eventStreamToken != upToDateEventStreamToken) {
             // MXSession continued to work in parallel with the background sync service
             // MXSession has updated its stream token. We need to use t
-            NSLog("[MXBackgroundSyncService] resetBackgroundServiceStoresIfNeeded: Update MXBackgroundStore. Its event stream token (\(String(describing: eventStreamToken))) does not match current MXStore.eventStreamToken (\(String(describing: upToDateEventStreamToken)))")
+            NSLog("[MXBackgroundSyncService] updateBackgroundServiceStoresIfNeeded: Update MXBackgroundStore. Its event stream token (\(String(describing: eventStreamToken))) does not match current MXStore.eventStreamToken (\(String(describing: upToDateEventStreamToken)))")
             store = upToDateStore
             
             // syncResponseStore has obsolete data. Reset it
