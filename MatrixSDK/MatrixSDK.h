@@ -100,3 +100,5 @@ FOUNDATION_EXPORT NSString *MatrixSDKVersion;
 
 #import "MXEventScan.h"
 #import "MXMediaScan.h"
+
+#import "MXLoginSSOFlow.h"

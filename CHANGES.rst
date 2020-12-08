@@ -6,12 +6,13 @@ Changes to be released in next version
 
 🙌 Improvements
  * MXTaggedEvents: Expose "m.tagged_events" according to [MSC2437](https://github.com/matrix-org/matrix-doc/pull/2437).
+ * Login flow: Add MXLoginSSOFlow to support multiple SSO Identity Providers ([MSC2858](https://github.com/matrix-org/matrix-doc/pull/2858)) (vector-im/element-ios/issues/3846).
 
 🐛 Bugfix
  * 
 
 ⚠️ API Changes
- * 
+ *
 
 🗣 Translations
  * 

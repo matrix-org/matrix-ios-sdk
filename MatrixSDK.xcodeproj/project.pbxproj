@@ -634,6 +634,16 @@
 		B14766B823D9D9410091F721 /* MXUsersTrustLevelSummary.h in Headers */ = {isa = PBXBuildFile; fileRef = B14766B523D9D9410091F721 /* MXUsersTrustLevelSummary.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		B14766B923D9D9420091F721 /* MXUsersTrustLevelSummary.m in Sources */ = {isa = PBXBuildFile; fileRef = B14766B623D9D9410091F721 /* MXUsersTrustLevelSummary.m */; };
 		B14766BA23D9D9420091F721 /* MXUsersTrustLevelSummary.m in Sources */ = {isa = PBXBuildFile; fileRef = B14766B623D9D9410091F721 /* MXUsersTrustLevelSummary.m */; };
+		B14EECD72577DE7A00448735 /* MXLoginSSOIdentityProvider.h in Headers */ = {isa = PBXBuildFile; fileRef = B14EECD52577DE7A00448735 /* MXLoginSSOIdentityProvider.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		B14EECD82577DE7A00448735 /* MXLoginSSOIdentityProvider.h in Headers */ = {isa = PBXBuildFile; fileRef = B14EECD52577DE7A00448735 /* MXLoginSSOIdentityProvider.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		B14EECD92577DE7A00448735 /* MXLoginSSOIdentityProvider.m in Sources */ = {isa = PBXBuildFile; fileRef = B14EECD62577DE7A00448735 /* MXLoginSSOIdentityProvider.m */; };
+		B14EECDA2577DE7B00448735 /* MXLoginSSOIdentityProvider.m in Sources */ = {isa = PBXBuildFile; fileRef = B14EECD62577DE7A00448735 /* MXLoginSSOIdentityProvider.m */; };
+		B14EECE52577F76100448735 /* MXLoginSSOFlow.h in Headers */ = {isa = PBXBuildFile; fileRef = B14EECE32577F76100448735 /* MXLoginSSOFlow.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		B14EECE62577F76100448735 /* MXLoginSSOFlow.h in Headers */ = {isa = PBXBuildFile; fileRef = B14EECE32577F76100448735 /* MXLoginSSOFlow.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		B14EECE72577F76100448735 /* MXLoginSSOFlow.m in Sources */ = {isa = PBXBuildFile; fileRef = B14EECE42577F76100448735 /* MXLoginSSOFlow.m */; };
+		B14EECE82577F76100448735 /* MXLoginSSOFlow.m in Sources */ = {isa = PBXBuildFile; fileRef = B14EECE42577F76100448735 /* MXLoginSSOFlow.m */; };
+		B14EECEE2578FE3F00448735 /* MXAuthenticationSessionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B14EECED2578FE3F00448735 /* MXAuthenticationSessionTests.swift */; };
+		B14EECEF2578FE3F00448735 /* MXAuthenticationSessionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B14EECED2578FE3F00448735 /* MXAuthenticationSessionTests.swift */; };
 		B14EF1CA2397E90400758AF0 /* MXOlmInboundGroupSession.m in Sources */ = {isa = PBXBuildFile; fileRef = 32A1513D1DAF768D00400192 /* MXOlmInboundGroupSession.m */; };
 		B14EF1CB2397E90400758AF0 /* MXRoomAccountData.m in Sources */ = {isa = PBXBuildFile; fileRef = 32481A831C03572900782AD3 /* MXRoomAccountData.m */; };
 		B14EF1CC2397E90400758AF0 /* MXEventAnnotationChunk.m in Sources */ = {isa = PBXBuildFile; fileRef = 327E9AD52284803100A98BC1 /* MXEventAnnotationChunk.m */; };
@@ -1775,6 +1785,11 @@
 		B14766B523D9D9410091F721 /* MXUsersTrustLevelSummary.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MXUsersTrustLevelSummary.h; sourceTree = "<group>"; };
 		B14766B623D9D9410091F721 /* MXUsersTrustLevelSummary.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MXUsersTrustLevelSummary.m; sourceTree = "<group>"; };
 		B14B17682464419E00C2751E /* MatrixSDK.podspec */ = {isa = PBXFileReference; explicitFileType = text.script.ruby; path = MatrixSDK.podspec; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.ruby; };
+		B14EECD52577DE7A00448735 /* MXLoginSSOIdentityProvider.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MXLoginSSOIdentityProvider.h; sourceTree = "<group>"; };
+		B14EECD62577DE7A00448735 /* MXLoginSSOIdentityProvider.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MXLoginSSOIdentityProvider.m; sourceTree = "<group>"; };
+		B14EECE32577F76100448735 /* MXLoginSSOFlow.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MXLoginSSOFlow.h; sourceTree = "<group>"; };
+		B14EECE42577F76100448735 /* MXLoginSSOFlow.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MXLoginSSOFlow.m; sourceTree = "<group>"; };
+		B14EECED2578FE3F00448735 /* MXAuthenticationSessionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXAuthenticationSessionTests.swift; sourceTree = "<group>"; };
 		B14EF36B2397E90400758AF0 /* MatrixSDK.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = MatrixSDK.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		B17285782100C88A0052C51E /* MXSendReplyEventStringsLocalizable.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = MXSendReplyEventStringsLocalizable.h; path = ../MXSendReplyEventStringsLocalizable.h; sourceTree = "<group>"; };
 		B172857A2100D4F60052C51E /* MXSendReplyEventDefaultStringLocalizations.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = MXSendReplyEventDefaultStringLocalizations.h; path = ../MXSendReplyEventDefaultStringLocalizations.h; sourceTree = "<group>"; };
@@ -2552,6 +2567,7 @@
 				327E9AB9228451E500A98BC1 /* Event */,
 				32999DDC22DCD139004FF987 /* Push */,
 				B182B08423167A1C0057972E /* IdentityServer */,
+				B14EECD42577DE4400448735 /* Login */,
 				3281E8B319E42DFE00976E1A /* MXJSONModel.h */,
 				3281E8B419E42DFE00976E1A /* MXJSONModel.m */,
 				3281E8B519E42DFE00976E1A /* MXJSONModels.h */,
@@ -2894,6 +2910,7 @@
 				32CEEF3C23AD134A0039BA98 /* MXCrossSigningTests.m */,
 				ECAE7AEB24ED75F1002FA813 /* HTTPAdditionalHeadersTests.m */,
 				3AE97790256FC190003883EF /* MXAesTests.m */,
+				B14EECED2578FE3F00448735 /* MXAuthenticationSessionTests.swift */,
 			);
 			path = MatrixSDKTests;
 			sourceTree = "<group>";
@@ -3192,6 +3209,17 @@
 			path = Event;
 			sourceTree = "<group>";
 		};
+		B14EECD42577DE4400448735 /* Login */ = {
+			isa = PBXGroup;
+			children = (
+				B14EECD52577DE7A00448735 /* MXLoginSSOIdentityProvider.h */,
+				B14EECD62577DE7A00448735 /* MXLoginSSOIdentityProvider.m */,
+				B14EECE32577F76100448735 /* MXLoginSSOFlow.h */,
+				B14EECE42577F76100448735 /* MXLoginSSOFlow.m */,
+			);
+			path = Login;
+			sourceTree = "<group>";
+		};
 		B182B08423167A1C0057972E /* IdentityServer */ = {
 			isa = PBXGroup;
 			children = (
@@ -3311,6 +3339,7 @@
 				B146D4EF21A5AF7F00D8C2C6 /* MXRealmEventScan.h in Headers */,
 				B146D49C21A5A04300D8C2C6 /* MXMediaScanStoreDelegate.h in Headers */,
 				32322A4B1E575F65005DD155 /* MXAllowedCertificates.h in Headers */,
+				B14EECD72577DE7A00448735 /* MXLoginSSOIdentityProvider.h in Headers */,
 				3213301D228B190F0070BA9B /* MXRealmAggregationsMapper.h in Headers */,
 				32A1515B1DB525DA00400192 /* NSObject+sortedKeys.h in Headers */,
 				329D3E621E251027002E2F1E /* MXRoomSummaryUpdater.h in Headers */,
@@ -3330,6 +3359,7 @@
 				323547D52226D3F500F15F94 /* MXWellKnown.h in Headers */,
 				32FFB4F0217E146A00C96002 /* MXRecoveryKey.h in Headers */,
 				32AF928A240EA3880008A0FD /* MXSecretShareSend.h in Headers */,
+				B14EECE52577F76100448735 /* MXLoginSSOFlow.h in Headers */,
 				B1798D0624091A0100308A8F /* MXBase64Tools.h in Headers */,
 				32133015228AF4EF0070BA9B /* MXRealmAggregationsStore.h in Headers */,
 				32CE6FB81A409B1F00317F1E /* MXFileStoreMetaData.h in Headers */,
@@ -3598,6 +3628,7 @@
 				B14EF2A32397E90400758AF0 /* MXRoomSummary.h in Headers */,
 				B14EF2A42397E90400758AF0 /* MXRoomCreateContent.h in Headers */,
 				B14EF2A52397E90400758AF0 /* MXAggregatedEditsUpdater.h in Headers */,
+				B14EECE62577F76100448735 /* MXLoginSSOFlow.h in Headers */,
 				327C3E4C23A39D91006183D1 /* MXAggregatedReferencesUpdater.h in Headers */,
 				B14EF2A62397E90400758AF0 /* MXAggregations.h in Headers */,
 				8EC511052568216B00EC4E5B /* MXTaggedEventInfo.h in Headers */,
@@ -3705,6 +3736,7 @@
 				B14EF2F32397E90400758AF0 /* MXRealmMediaScanMapper.h in Headers */,
 				B14EF2F42397E90400758AF0 /* NSData+MatrixSDK.h in Headers */,
 				B14EF2F52397E90400758AF0 /* MXSDKOptions.h in Headers */,
+				B14EECD82577DE7A00448735 /* MXLoginSSOIdentityProvider.h in Headers */,
 				B14EF2F62397E90400758AF0 /* MXJSONModels.h in Headers */,
 				B14EF2F72397E90400758AF0 /* MXRoomEventFilter.h in Headers */,
 				B14EF2F82397E90400758AF0 /* MXUIKitBackgroundModeHandler.h in Headers */,
@@ -4111,6 +4143,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				32A1513F1DAF768D00400192 /* MXOlmInboundGroupSession.m in Sources */,
+				B14EECE72577F76100448735 /* MXLoginSSOFlow.m in Sources */,
 				32481A851C03572900782AD3 /* MXRoomAccountData.m in Sources */,
 				327E9AD92284803100A98BC1 /* MXEventAnnotationChunk.m in Sources */,
 				327A5F56239805F600ED6329 /* MXKeyVerificationCancel.m in Sources */,
@@ -4327,6 +4360,7 @@
 				321CFDE722525A49004D31DF /* MXSASTransaction.m in Sources */,
 				32720D9D222EAA6F0086FFF5 /* MXDiscoveredClientConfig.m in Sources */,
 				B146D4F321A5AF7F00D8C2C6 /* MXRealmEventScan.m in Sources */,
+				B14EECD92577DE7A00448735 /* MXLoginSSOIdentityProvider.m in Sources */,
 				322691371E5EFF8700966A6E /* MXDeviceListOperationsPool.m in Sources */,
 				C6F935801E5B3ACA00FC34BF /* MXResponse.swift in Sources */,
 				32BA86B02152A79E008F277E /* MXRoomNameDefaultStringLocalizations.m in Sources */,
@@ -4382,6 +4416,7 @@
 				3AE97791256FC190003883EF /* MXAesTests.m in Sources */,
 				B146D4FE21A5C0BD00D8C2C6 /* MXEventScanStoreTests.m in Sources */,
 				32684CB821085F770046D2F9 /* MXLazyLoadingTests.m in Sources */,
+				B14EECEE2578FE3F00448735 /* MXAuthenticationSessionTests.swift in Sources */,
 				32832B5D1BCC048300241108 /* MXStoreMemoryStoreTests.m in Sources */,
 				32114A7F1A24E15500FF2EC4 /* MXMyUserTests.m in Sources */,
 				32832B5E1BCC048300241108 /* MXStoreNoStoreTests.m in Sources */,
@@ -4511,6 +4546,7 @@
 				B14EF2022397E90400758AF0 /* MXEventUnsignedData.m in Sources */,
 				324AAC792399140D00380A66 /* MXKeyVerificationKey.m in Sources */,
 				B14EF2032397E90400758AF0 /* MXMegolmEncryption.m in Sources */,
+				B14EECDA2577DE7B00448735 /* MXLoginSSOIdentityProvider.m in Sources */,
 				B14EF2042397E90400758AF0 /* MXIncomingRoomKeyRequest.m in Sources */,
 				32581DEB23C8C0C900832EAA /* MXUserTrustLevel.m in Sources */,
 				B14EF2052397E90400758AF0 /* MX3PidAddManager.swift in Sources */,
@@ -4590,6 +4626,7 @@
 				B14EF2432397E90400758AF0 /* MXIncomingSASTransaction.m in Sources */,
 				B14EF2442397E90400758AF0 /* NSObject+sortedKeys.m in Sources */,
 				B14EF2452397E90400758AF0 /* MXAggregatedReactionsUpdater.m in Sources */,
+				B14EECE82577F76100448735 /* MXLoginSSOFlow.m in Sources */,
 				B14EF2462397E90400758AF0 /* MXRoomMembers.m in Sources */,
 				32AF927E240EA0190008A0FD /* MXSecretShareManager.m in Sources */,
 				B14EF2472397E90400758AF0 /* MXContentScanEncryptedBody.m in Sources */,
@@ -4742,6 +4779,7 @@
 				B1E09A3A2397FD820057C069 /* MXStoreTests.m in Sources */,
 				B1E09A342397FD750057C069 /* MXRoomStateDynamicTests.m in Sources */,
 				B1E09A272397FD010057C069 /* MXMockCallStack.m in Sources */,
+				B14EECEF2578FE3F00448735 /* MXAuthenticationSessionTests.swift in Sources */,
 				B1E09A432397FD820057C069 /* MXMegolmExportEncryptionTest.m in Sources */,
 				32B0E3E823A3864C0054FF1A /* MXEventReferenceTests.swift in Sources */,
 				B1E09A402397FD820057C069 /* MXVoIPTests.m in Sources */,
