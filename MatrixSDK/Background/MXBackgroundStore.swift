@@ -57,7 +57,6 @@ class MXBackgroundStore: NSObject, MXStore {
         }
     }
     
-    //  This store should act like as a permanent one
     var isPermanent: Bool {
         return false
     }
