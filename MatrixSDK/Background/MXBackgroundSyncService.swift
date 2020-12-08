@@ -129,10 +129,9 @@ public enum MXBackgroundSyncServiceError: Error {
     /// - Returns: Push rule matching the event.
     public func pushRule(matching event: MXEvent, roomState: MXRoomState) -> MXPushRule? {
         guard let currentUserId = credentials.userId else { return nil }
-        let currentUser = store.user(withUserId: currentUserId)
         return pushRulesManager.pushRule(matching: event,
                                          roomState: roomState,
-                                         currentUserDisplayName: currentUser?.displayname)
+                                         currentUserDisplayName:  roomState.members.member(withUserId: currentUserId)?.displayname)
     }
     
     //  MARK: - Private
