@@ -592,7 +592,6 @@ class MXBackgroundSyncServiceTests: XCTestCase {
     // - Bob uses the MXBackgroundSyncService again
     // -> MXBackgroundSyncService should have detected that the MXSession ran in parallel.
     //    It must have reset its cache. syncResponseStore.prevBatch must not be the same
-    // -> MXSyncResponseFileStore must be in sync with MXSession store
     func testWithMXSessionRunningInParallel() {
         
         // - Alice and Bob are in an encrypted room
@@ -632,8 +631,6 @@ class MXBackgroundSyncServiceTests: XCTestCase {
                             syncResponseStore.open(withCredentials: bobCredentials)
                             let syncResponseStorePrevBatch = syncResponseStore.prevBatch
                             
-                            let bobSessionStartEventStreamToken2 = bobSession!.store.eventStreamToken
-                            
                             // - Alice sends a message. This make bob MXSession update its sync token
                             room.sendTextMessage(Constants.messageText, localEcho: &localEcho) { _ in }
                             
@@ -649,9 +646,6 @@ class MXBackgroundSyncServiceTests: XCTestCase {
                                     syncResponseStore.open(withCredentials: bobCredentials)
                                     
                                     XCTAssertNotEqual(syncResponseStorePrevBatch, syncResponseStore.prevBatch)
-                                    
-                                    // -> MXSyncResponseFileStore must be in sync with MXSession store
-                                    XCTAssertNotEqual(bobSessionStartEventStreamToken2, syncResponseStore.prevBatch)
 
                                     expectation?.fulfill()
                                 }
