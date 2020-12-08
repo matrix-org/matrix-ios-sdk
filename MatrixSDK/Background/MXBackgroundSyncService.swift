@@ -211,7 +211,7 @@ public enum MXBackgroundSyncServiceError: Error {
         } else {
             //  do not call the /event api and just check if the event exists in the store
             let event = syncResponseStore.event(withEventId: eventId, inRoom: roomId)
-                ?? store.event(withEventId: eventId, inRoom: roomId)    // TODO: MXBackgroundStore does not support it
+                ?? store.event(withEventId: eventId, inRoom: roomId)
             
             if let event = event {
                 NSLog("[MXBackgroundSyncService] fetchEvent: We have the event in stores.")

@@ -154,6 +154,9 @@ extension MXSyncResponseFileStore: MXSyncResponseStore {
         
         let result = allEvents.first(where: { eventId == $0.eventId })
         result?.roomId = roomId
+        
+        NSLog("[MXSyncResponseFileStore] eventWithEventId: \(eventId) \(result == nil ? "not " : "" )found")
+        
         return result
     }
     

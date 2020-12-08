@@ -87,6 +87,13 @@ class MXBackgroundStore: NSObject, MXStore {
         }
     }
     
+    func event(withEventId eventId: String, inRoom roomId: String) -> MXEvent? {
+        // TODO
+        
+        NSLog("[MXBackgroundStore] eventWithEventId: \(eventId): TODO")
+        return nil
+    }
+    
     
     //  MARK: - Stubs
     
@@ -103,10 +110,6 @@ class MXBackgroundStore: NSObject, MXStore {
     
     func eventExists(withEventId eventId: String, inRoom roomId: String) -> Bool {
         return false
-    }
-    
-    func event(withEventId eventId: String, inRoom roomId: String) -> MXEvent? {
-        return nil
     }
     
     func deleteAllMessages(inRoom roomId: String) {
