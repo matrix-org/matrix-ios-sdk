@@ -380,7 +380,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
         }
 
         // Handle account data events (if any)
-        [self handleAccounDataEvents:roomSync.accountData.events liveTimeline:theLiveTimeline direction:MXTimelineDirectionForwards];
+        [self handleAccountDataEvents:roomSync.accountData.events liveTimeline:theLiveTimeline direction:MXTimelineDirectionForwards];
     }];
 }
 
@@ -428,12 +428,12 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
 /**
  Handle private user data events.
 
- @param accounDataEvents the events to handle.
+ @param accountDataEvents the events to handle.
  @param direction the process direction: MXTimelineDirectionSync or MXTimelineDirectionForwards. MXTimelineDirectionBackwards is not applicable here.
  */
-- (void)handleAccounDataEvents:(NSArray<MXEvent*>*)accounDataEvents liveTimeline:(MXEventTimeline*)theLiveTimeline direction:(MXTimelineDirection)direction
+- (void)handleAccountDataEvents:(NSArray<MXEvent*>*)accountDataEvents liveTimeline:(MXEventTimeline*)theLiveTimeline direction:(MXTimelineDirection)direction
 {
-    for (MXEvent *event in accounDataEvents)
+    for (MXEvent *event in accountDataEvents)
     {
         [_accountData handleEvent:event];
 
@@ -2559,6 +2559,40 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
     return operation;
 }
 
+#pragma mark - Room account data operations
+
+- (MXHTTPOperation*)tagEvent:(MXEvent*)event
+                     withTag:(NSString*)tag
+                 andKeywords:(NSArray*)keywords
+                     success:(void (^)(void))success
+                     failure:(void (^)(NSError *error))failure
+{
+    MXTaggedEvents *taggedEvents = _accountData.taggedEvents;
+    
+    if(!taggedEvents)
+    {
+        taggedEvents = [[MXTaggedEvents alloc] init];
+    }
+    
+    MXTaggedEventInfo *taggedEventInfo = [[MXTaggedEventInfo alloc] init];
+    taggedEventInfo.keywords = keywords;
+    taggedEventInfo.originServerTs = event.originServerTs;
+    taggedEventInfo.taggedAt = [NSDate date].timeIntervalSince1970 * 1000;
+    
+    [taggedEvents tagEvent:event.eventId taggedEventInfo:taggedEventInfo tag:tag];
+
+    return [mxSession.matrixRestClient updateTaggedEvents:_roomId withContent:taggedEvents success:success failure:failure];
+}
+
+- (MXHTTPOperation*)untagEvent:(MXEvent*)event
+                       withTag:(NSString*)tag
+                       success:(void (^)(void))success
+                       failure:(void (^)(NSError *error))failure
+{
+    [_accountData.taggedEvents untagEvent:event.eventId tag:tag];
+    
+    return [mxSession.matrixRestClient updateTaggedEvents:_roomId withContent:_accountData.taggedEvents success:success failure:failure];
+}
 
 #pragma mark - Voice over IP
 - (void)placeCallWithVideo:(BOOL)video
