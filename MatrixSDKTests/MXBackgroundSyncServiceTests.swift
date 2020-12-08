@@ -612,8 +612,6 @@ class MXBackgroundSyncServiceTests: XCTestCase {
                 return
             }
             
-            let bobSessionStartEventStreamToken1 = bobSession!.store.eventStreamToken
-                
             // - Alice sends a message
             var localEcho: MXEvent?
             room.sendTextMessage(Constants.messageText, localEcho: &localEcho) { (response) in
@@ -633,10 +631,6 @@ class MXBackgroundSyncServiceTests: XCTestCase {
                             let syncResponseStore = MXSyncResponseFileStore()
                             syncResponseStore.open(withCredentials: bobCredentials)
                             let syncResponseStorePrevBatch = syncResponseStore.prevBatch
-                            
-                            // Test check
-                            // MXSyncResponseFileStore should point to the same sync token as MXSession store
-                            XCTAssertNotEqual(bobSessionStartEventStreamToken1, syncResponseStorePrevBatch)
                             
                             let bobSessionStartEventStreamToken2 = bobSession!.store.eventStreamToken
                             
