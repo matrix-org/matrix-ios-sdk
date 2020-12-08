@@ -40,7 +40,7 @@ public enum MXBackgroundSyncServiceError: Error {
     private let processingQueue: DispatchQueue
     private let credentials: MXCredentials
     private let syncResponseStore: MXSyncResponseStore
-    private let store: MXStore
+    private var store: MXStore
     private let cryptoStore: MXCryptoStore
     private let olmDevice: MXOlmDevice
     private let restClient: MXRestClient
@@ -142,6 +142,11 @@ public enum MXBackgroundSyncServiceError: Error {
                         allowSync: Bool = true,
                         completion: @escaping (MXResponse<MXEvent>) -> Void) {
         NSLog("[MXBackgroundSyncService] fetchEvent: \(eventId). allowSync: \(allowSync)")
+        
+        // Check local stores on every request so that we use up-to-data data from the MXSession store
+        if allowSync {
+            updateBackgroundServiceStoresIfNeeded()
+        }
         
         /// Inline function to handle decryption failure
         func handleDecryptionFailure(withError error: Error?) {
@@ -520,6 +525,26 @@ public enum MXBackgroundSyncServiceError: Error {
                                          forwardingCurve25519KeyChain: forwardingKeyChain,
                                          keysClaimed: keysClaimed,
                                          exportFormat: exportFormat)
+    }
+    
+    private func updateBackgroundServiceStoresIfNeeded() {
+        // Check self.store data is in-sync with MXSession store data
+        // by checking that the event stream token we have in memory is the same that in the last version of MXSession store
+        let eventStreamToken = store.eventStreamToken
+ 
+        let upToDateStore = MXBackgroundStore(withCredentials: credentials)
+        let upToDateEventStreamToken = upToDateStore.eventStreamToken
+
+        if (eventStreamToken != upToDateEventStreamToken) {
+            // MXSession continued to work in parallel with the background sync service
+            // MXSession has updated its stream token. We need to use t
+            NSLog("[MXBackgroundSyncService] resetBackgroundServiceStoresIfNeeded: Update MXBackgroundStore. Its event stream token (\(String(describing: eventStreamToken))) does not match current MXStore.eventStreamToken (\(String(describing: upToDateEventStreamToken)))")
+            store = upToDateStore
+            
+            // syncResponseStore has obsolete data. Reset it
+            NSLog("[MXBackgroundSyncService] resetBackgroundServiceStoresIfNeeded: Reset MXSyncResponseStore. Its prevBatch was token \(String(describing: syncResponseStore.prevBatch))")
+            syncResponseStore.deleteData()
+        }
     }
     
 }
