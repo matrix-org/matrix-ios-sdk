@@ -313,7 +313,7 @@ NSString *const kMXJingleCallWebRTCMainStreamID = @"userMedia";
                 });
                 
                 //  check we can consider this call as held, after setting local description
-                [self checkTheCallIsOnHold];
+                [self checkTheCallIsRemotelyOnHold];
                 
             }];
         }
@@ -599,7 +599,7 @@ didRemoveIceCandidates:(NSArray<RTCIceCandidate *> *)candidates;
 
 #pragma mark - Private methods
 
-- (void)checkTheCallIsOnHold
+- (void)checkTheCallIsRemotelyOnHold
 {
     NSArray<RTC_OBJC_TYPE(RTCRtpTransceiver) *> *activeReceivers = [self->peerConnection.transceivers filteredArrayUsingPredicate:[NSPredicate predicateWithBlock:^BOOL(RTC_OBJC_TYPE(RTCRtpTransceiver) *transceiver, NSDictionary<NSString *,id> * _Nullable bindings) {
         
