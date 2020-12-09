@@ -22,8 +22,8 @@
 
 @interface MXRoomMembers ()
 {
-    MXSession *mxSession;
-    MXRoomState *state;
+    __weak MXSession *mxSession;
+    __weak MXRoomState *state;
 
     /**
      Members ordered by userId.
