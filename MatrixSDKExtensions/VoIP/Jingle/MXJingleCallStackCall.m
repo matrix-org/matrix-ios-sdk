@@ -607,7 +607,7 @@ didRemoveIceCandidates:(NSArray<RTCIceCandidate *> *)candidates;
         if ([transceiver currentDirection:&direction])
         {
             if (direction == RTCRtpTransceiverDirectionInactive ||
-                direction == RTCRtpTransceiverDirectionSendOnly ||
+                direction == RTCRtpTransceiverDirectionRecvOnly ||  //  remote party can set a hold tone with 'sendonly'
                 direction == RTCRtpTransceiverDirectionStopped)
             {
                 return NO;
@@ -619,7 +619,7 @@ didRemoveIceCandidates:(NSArray<RTCIceCandidate *> *)candidates;
     
     if (activeReceivers.count == 0)
     {
-        //  if there is no active receivers left, we can say this call is holded
+        //  if there is no active receivers (on the other party) left, we can say this call is holded
         dispatch_async(dispatch_get_main_queue(), ^{
             [self.delegate callStackCallDidRemotelyHold:self];
         });
