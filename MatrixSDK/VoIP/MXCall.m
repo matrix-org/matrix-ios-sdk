@@ -752,7 +752,7 @@ NSString *const kMXCallSupportsHoldingStatusDidChange = @"kMXCallSupportsHolding
     }
 }
 
-- (void)callStackCallDidHold:(id<MXCallStackCall>)callStackCall
+- (void)callStackCallDidRemotelyHold:(id<MXCallStackCall>)callStackCall
 {
     if (self.state == MXCallStateConnected)
     {

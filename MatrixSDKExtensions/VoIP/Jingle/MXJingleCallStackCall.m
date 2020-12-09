@@ -617,11 +617,11 @@ didRemoveIceCandidates:(NSArray<RTCIceCandidate *> *)candidates;
         return YES;
     }]];
     
-    //  if there is no active receivers left, we can say this call is holded
     if (activeReceivers.count == 0)
     {
+        //  if there is no active receivers left, we can say this call is holded
         dispatch_async(dispatch_get_main_queue(), ^{
-            [self.delegate callStackCallDidHold:self];
+            [self.delegate callStackCallDidRemotelyHold:self];
         });
     }
 }
