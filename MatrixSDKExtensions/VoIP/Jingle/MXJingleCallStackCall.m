@@ -27,7 +27,7 @@
 #import "MXJingleCameraCaptureController.h"
 #import <WebRTC/WebRTC.h>
 
-NSString *const kMXJingleCallWebRTCMainStreamID = @"ARDAMS";
+NSString *const kMXJingleCallWebRTCMainStreamID = @"userMedia";
 
 @interface MXJingleCallStackCall () <RTCPeerConnectionDelegate>
 {
