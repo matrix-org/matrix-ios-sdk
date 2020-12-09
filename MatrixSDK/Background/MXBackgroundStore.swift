@@ -24,57 +24,32 @@ enum MXBackgroundStoreErrorCode: Int {
     case userIDMissing = 1001   // User ID is missing in credentials
 }
 
-/// Fake memory store implementation. Uses some real values from an MXFileStore instance.
-class MXBackgroundStore: MXMemoryStore {
+/// Minimalist MXStore implementation. It uses some real values from an MXFileStore instance.
+class MXBackgroundStore: NSObject, MXStore {
 
-    //  In-memory value for eventStreamToken. Will be used as eventStreamToken if provided.
-    private var lastStoredEventStreamToken: String?
-    private var credentials: MXCredentials
     //  real store
     private var fileStore: MXFileStore
-    private var myUser: MXUser?
+    
+    // Room stores cache
+    private var roomsStore: [String: MXFileRoomStore] = [:]
     
     init(withCredentials credentials: MXCredentials) {
-        self.credentials = credentials
         fileStore = MXFileStore(credentials: credentials)
         //  load real eventStreamToken
         fileStore.loadMetaData()
     }
     
-    override func open(with credentials: MXCredentials, onComplete: (() -> Void)?, failure: ((Error?) -> Void)? = nil) {
-        super.open(with: credentials, onComplete: {
-            guard let userId = credentials.userId else {
-                failure?(NSError(domain: MXBackgroundStoreErrorDomain,
-                                 code: MXBackgroundStoreErrorCode.userIDMissing.rawValue,
-                                 userInfo: nil))
-                return
-            }
-            //  load session user before calling onComplete
-            self.fileStore.asyncUsers(withUserIds: [userId], success: { (users) in
-                if let user = users.first {
-                    self.myUser = user
-                }
-                onComplete?()
-            }, failure: failure)
-        }, failure: failure)
-    }
-    
     //  Return real eventStreamToken, to be able to launch a meaningful background sync
-    override var eventStreamToken: String? {
+    var eventStreamToken: String? {
         get {
-            //  if more up-to-date token exists, use it
-            if let token = lastStoredEventStreamToken {
-                return token
-            }
             return fileStore.eventStreamToken
         } set {
-            //  store new token values in memory, and return these values in future reads
-            lastStoredEventStreamToken = newValue
+            //  no-op
         }
     }
     
     //  Return real userAccountData, to be able to use push rules
-    override var userAccountData: [AnyHashable : Any]? {
+    var userAccountData: [AnyHashable : Any]? {
         get {
             return fileStore.userAccountData
         } set {
@@ -82,46 +57,177 @@ class MXBackgroundStore: MXMemoryStore {
         }
     }
     
-    //  This store should act like as a permanent one
-    override var isPermanent: Bool {
-        return true
+    var isPermanent: Bool {
+        return false
     }
     
     //  Some mandatory methods to implement to be permanent
-    override func storeState(forRoom roomId: String, stateEvents: [MXEvent]) {
+    func storeState(forRoom roomId: String, stateEvents: [MXEvent]) {
         //  no-op
     }
     
     //  Fetch real room state
-    override func state(ofRoom roomId: String, success: @escaping ([MXEvent]) -> Void, failure: ((Error) -> Void)? = nil) {
+    func state(ofRoom roomId: String, success: @escaping ([MXEvent]) -> Void, failure: ((Error) -> Void)? = nil) {
         fileStore.state(ofRoom: roomId, success: success, failure: failure)
     }
     
     //  Fetch real soom summary
-    override func summary(ofRoom roomId: String) -> MXRoomSummary? {
+    func summary(ofRoom roomId: String) -> MXRoomSummary? {
         return fileStore.summary(ofRoom: roomId)
     }
     
     //  Fetch real room account data
-    override func accountData(ofRoom roomId: String) -> MXRoomAccountData? {
+    func accountData(ofRoom roomId: String) -> MXRoomAccountData? {
         return fileStore.accountData(ofRoom: roomId)
     }
     
-    //  Override and return a user to be stored on session.myUser
-    override func user(withUserId userId: String) -> MXUser? {
-        if userId == credentials.userId, let myUser = myUser {
-            //  if asking for session user and myUser is set, return that
-            return myUser
-        }
-        return MXUser(userId: userId)
-    }
-    
-    override var syncFilterId: String? {
+    var syncFilterId: String? {
         get {
             return fileStore.syncFilterId
         } set {
             //  no-op
         }
+    }
+    
+    func event(withEventId eventId: String, inRoom roomId: String) -> MXEvent? {
+        guard let roomStore = roomStore(forRoom: roomId) else {
+            return nil
+        }
+        
+        let event = roomStore.event(withEventId: eventId)
+        
+        NSLog("[MXBackgroundStore] eventWithEventId: \(eventId) \(event == nil ? "not " : "" )found")
+        return event
+    }
+    
+    
+    //  MARK: - Private
+    private func roomStore(forRoom roomId: String) -> MXFileRoomStore? {
+        // Use the cached instance if available
+        if let roomStore = roomsStore[roomId] {
+            return roomStore
+        }
+        
+        guard let roomStore = fileStore.roomStore(forRoom: roomId) else {
+            NSLog("[MXBackgroundStore] roomStore: Unknown room id: \(roomId)")
+            return nil
+        }
+        
+        roomsStore[roomId] = roomStore
+        return roomStore
+    }
+    
+    
+    //  MARK: - Stubs
+    
+    /// Following operations should be not required
+    
+    func open(with credentials: MXCredentials, onComplete: (() -> Void)?, failure: ((Error?) -> Void)? = nil) {
+    }
+    
+    func storeEvent(forRoom roomId: String, event: MXEvent, direction: __MXTimelineDirection) {
+    }
+    
+    func replace(_ event: MXEvent, inRoom roomId: String) {
+    }
+    
+    func eventExists(withEventId eventId: String, inRoom roomId: String) -> Bool {
+        return false
+    }
+    
+    func deleteAllMessages(inRoom roomId: String) {
+    }
+    
+    func deleteRoom(_ roomId: String) {
+    }
+    
+    func deleteAllData() {
+    }
+    
+    func storePaginationToken(ofRoom roomId: String, andToken token: String) {
+    }
+    
+    func paginationToken(ofRoom roomId: String) -> String? {
+        return nil
+    }
+    
+    func storeHasReachedHomeServerPaginationEnd(forRoom roomId: String, andValue value: Bool) {
+    }
+    
+    func hasReachedHomeServerPaginationEnd(forRoom roomId: String) -> Bool {
+        return true
+    }
+    
+    func storeHasLoadedAllRoomMembers(forRoom roomId: String, andValue value: Bool) {
+    }
+    
+    func hasLoadedAllRoomMembers(forRoom roomId: String) -> Bool {
+        return false
+    }
+    
+    func messagesEnumerator(forRoom roomId: String) -> MXEventsEnumerator {
+        return MXEventsEnumeratorOnArray(messages: [])
+    }
+    
+    func messagesEnumerator(forRoom roomId: String, withTypeIn types: [Any]?) -> MXEventsEnumerator {
+        return MXEventsEnumeratorOnArray(messages: [])
+    }
+    
+    func relations(forEvent eventId: String, inRoom roomId: String, relationType: String) -> [MXEvent] {
+        return []
+    }
+    
+    func store(_ user: MXUser) {
+    }
+    
+    func users() -> [MXUser]? {
+        return nil
+    }
+    
+    func user(withUserId userId: String) -> MXUser? {
+        return nil
+    }
+    
+    func store(_ group: MXGroup) {
+    }
+    
+    func groups() -> [MXGroup]? {
+        return nil
+    }
+    
+    func group(withGroupId groupId: String) -> MXGroup? {
+        return nil
+    }
+    
+    func deleteGroup(_ groupId: String) {
+    }
+    
+    func storePartialTextMessage(forRoom roomId: String, partialTextMessage: String) {
+    }
+    
+    func partialTextMessage(ofRoom roomId: String) -> String? {
+        return nil
+    }
+    
+    func getEventReceipts(_ roomId: String, eventId: String, sorted sort: Bool) -> [MXReceiptData]? {
+        return nil
+    }
+    
+    func storeReceipt(_ receipt: MXReceiptData, inRoom roomId: String) -> Bool {
+        return false
+    }
+    
+    func getReceiptInRoom(_ roomId: String, forUserId userId: String) -> MXReceiptData? {
+        return nil
+    }
+    
+    func localUnreadEventCount(_ roomId: String, withTypeIn types: [Any]?) -> UInt {
+        return 0
+    }
+    
+    var homeserverWellknown: MXWellKnown?
+    
+    func storeHomeserverWellknown(_ homeserverWellknown: MXWellKnown) {
     }
     
 }

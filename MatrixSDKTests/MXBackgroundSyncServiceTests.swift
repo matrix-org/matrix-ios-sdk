@@ -1,5 +1,5 @@
 /*
- Copyright 2019 New Vector Ltd
+ Copyright 2020 The Matrix.org Foundation C.I.C
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -584,6 +584,151 @@ class MXBackgroundSyncServiceTests: XCTestCase {
         }
     }
     
+    // Test when MXSession and MXBackgroundSyncService are running in parallel
+    // - Alice and Bob are in an encrypted room
+    // - Alice sends a message
+    // - Bob uses the MXBackgroundSyncService to fetch it
+    // - Alice sends a message. This make bob MXSession update its sync token
+    // - Bob uses the MXBackgroundSyncService again
+    // -> MXBackgroundSyncService should have detected that the MXSession ran in parallel.
+    //    It must have reset its cache. syncResponseStore.prevBatch must not be the same
+    func testWithMXSessionRunningInParallel() {
+        
+        // - Alice and Bob are in an encrypted room
+        let aliceStore = MXMemoryStore()
+        let bobStore = MXFileStore()
+        e2eTestData.doE2ETestWithAliceAndBob(inARoom: self, cryptedBob: true, warnOnUnknowDevices: false, aliceStore: aliceStore, bobStore: bobStore) { (aliceSession, bobSession, roomId, expectation) in
+            
+            guard let roomId = roomId, let room = aliceSession?.room(withRoomId: roomId) else {
+                XCTFail("Cannot set up initial test conditions - error: room cannot be retrieved")
+                expectation?.fulfill()
+                return
+            }
+            
+            guard let bobCredentials = bobSession?.credentials else {
+                XCTFail("Cannot set up initial test conditions - error: Bob's credentials cannot be retrieved")
+                expectation?.fulfill()
+                return
+            }
+            
+            // - Alice sends a message
+            var localEcho: MXEvent?
+            room.sendTextMessage(Constants.messageText, localEcho: &localEcho) { (response) in
+                switch response {
+                    case .success(let eventId):
+                        
+                        guard let eventId = eventId else {
+                            XCTFail("Cannot set up initial test conditions - error: room cannot be retrieved")
+                            expectation?.fulfill()
+                            return
+                        }
+                        
+                        // - Bob uses the MXBackgroundSyncService to fetch it
+                        self.bgSyncService = MXBackgroundSyncService(withCredentials: bobCredentials)
+                        self.bgSyncService?.event(withEventId: eventId, inRoom: roomId) { _ in
+                            
+                            let syncResponseStore = MXSyncResponseFileStore()
+                            syncResponseStore.open(withCredentials: bobCredentials)
+                            let syncResponseStorePrevBatch = syncResponseStore.prevBatch
+                            
+                            // - Alice sends a message. This make bob MXSession update its sync token
+                            room.sendTextMessage(Constants.messageText, localEcho: &localEcho) { _ in }
+                            
+                            // Wait a bit that bob MXSession updates its sync token
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                                
+                                // - Bob uses the MXBackgroundSyncService again
+                                self.bgSyncService?.event(withEventId: "aRandomEventId", inRoom: roomId) { _ in
+                                    
+                                    // -> MXBackgroundSyncService should have detected that the MXSession ran in parallel.
+                                    //    It must have reset its cache. syncResponseStore.prevBatch must not be the same
+                                    let syncResponseStore = MXSyncResponseFileStore()
+                                    syncResponseStore.open(withCredentials: bobCredentials)
+                                    
+                                    XCTAssertNotEqual(syncResponseStorePrevBatch, syncResponseStore.prevBatch)
+
+                                    expectation?.fulfill()
+                                }
+                            }
+                        }
+                        
+                        break
+                    case .failure(let error):
+                        XCTFail("Cannot set up initial test conditions - error: \(error)")
+                        expectation?.fulfill()
+                }
+            }
+        }
+    }
+    
+    // MXBackgroundSyncService must be able to return an event already fetched by MXSession
+    // - Alice and Bob are in an encrypted room
+    // - Alice sends a message
+    // - Let Bob MXSession get it
+    // - Bob uses the MXBackgroundSyncService to fetch it
+    // -> MXBackgroundSyncService must return the event
+    func testWithEventAlreadyFetchedByMXSession() {
+        
+        // - Alice and Bob are in an encrypted room
+        let aliceStore = MXMemoryStore()
+        let bobStore = MXFileStore()
+        e2eTestData.doE2ETestWithAliceAndBob(inARoom: self, cryptedBob: true, warnOnUnknowDevices: false, aliceStore: aliceStore, bobStore: bobStore) { (aliceSession, bobSession, roomId, expectation) in
+            
+            guard let roomId = roomId, let room = aliceSession?.room(withRoomId: roomId) else {
+                XCTFail("Cannot set up initial test conditions - error: room cannot be retrieved")
+                expectation?.fulfill()
+                return
+            }
+            
+            guard let bobCredentials = bobSession?.credentials else {
+                XCTFail("Cannot set up initial test conditions - error: Bob's credentials cannot be retrieved")
+                expectation?.fulfill()
+                return
+            }
+            
+            // - Alice sends a message
+            var localEcho: MXEvent?
+            room.sendTextMessage(Constants.messageText, localEcho: &localEcho) { (response) in
+                switch response {
+                    case .success(let eventId):
+                        
+                        guard let eventId = eventId else {
+                            XCTFail("Cannot set up initial test conditions - error: room cannot be retrieved")
+                            expectation?.fulfill()
+                            return
+                        }
+                        
+                        // - Let Bob MXSession get it
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                            // - Bob uses the MXBackgroundSyncService to fetch it
+                            self.bgSyncService = MXBackgroundSyncService(withCredentials: bobCredentials)
+                            self.bgSyncService?.event(withEventId: eventId, inRoom: roomId) { response in
+                                
+                                switch response {
+                                    case .success(let event):
+                                        
+                                        // -> MXBackgroundSyncService must return the event
+                                        let text = event.content["body"] as? String
+                                        XCTAssertEqual(text, Constants.messageText, "Event content should match")
+                                        
+                                        expectation?.fulfill()
+                                        
+                                    case .failure(let error):
+                                        XCTFail("Cannot fetch the event from background sync service - error: \(error)")
+                                        expectation?.fulfill()
+                                }
+                            }
+                        }
+                        
+                        break
+                    case .failure(let error):
+                        XCTFail("Cannot set up initial test conditions - error: \(error)")
+                        expectation?.fulfill()
+                }
+            }
+        }
+    }
+
 }
 
 private extension MXRoom {
