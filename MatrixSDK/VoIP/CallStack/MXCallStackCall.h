@@ -231,11 +231,11 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)callStackCallDidConnect:(id<MXCallStackCall>)callStackCall;
 
 /**
- Tells the delegate that connection was holded
+ Tells the delegate that connection was held by the remote peer
  
  @param callStackCall the corresponding instance.
  */
-- (void)callStackCallDidHold:(id<MXCallStackCall>)callStackCall;
+- (void)callStackCallDidRemotelyHold:(id<MXCallStackCall>)callStackCall;
 
 @end
 

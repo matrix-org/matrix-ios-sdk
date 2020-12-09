@@ -8,6 +8,7 @@ Changes to be released in next version
  * MXTaggedEvents: Expose "m.tagged_events" according to [MSC2437](https://github.com/matrix-org/matrix-doc/pull/2437).
  * Send VoIP analytics events (vector-im/element-ios/issues/3855).
  * Add hold support for CallKit calls (vector-im/element-ios/issues/3834).
+ * Fix video call with web (vector-im/element-ios/issues/3862).
 
 🐛 Bugfix
  * 
