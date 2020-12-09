@@ -407,10 +407,6 @@ NSString *const kMXJingleCallWebRTCMainStreamID = @"userMedia";
           didAddStream:(RTCMediaStream *)stream
 {
     NSLog(@"[MXJingleCallStackCall] didAddStream");
-    
-    dispatch_async(dispatch_get_main_queue(), ^{
-        [self.delegate callStackCallDidConnect:self];
-    });
 }
 
 // Triggered when a remote peer close a stream.
@@ -622,6 +618,13 @@ didRemoveIceCandidates:(NSArray<RTCIceCandidate *> *)candidates;
         //  if there is no active receivers (on the other party) left, we can say this call is holded
         dispatch_async(dispatch_get_main_queue(), ^{
             [self.delegate callStackCallDidRemotelyHold:self];
+        });
+    }
+    else
+    {
+        //  otherwise we can say this call resumed after a remote hold
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [self.delegate callStackCallDidConnect:self];
         });
     }
 }
