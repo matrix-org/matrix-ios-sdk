@@ -226,9 +226,32 @@ public enum MXBackgroundSyncServiceError: Error {
                 NSLog("[MXBackgroundSyncService] fetchEvent: We don't have the event in stores. Launch a background sync to fetch it.")
                 self.launchBackgroundSync(forEventId: eventId, roomId: roomId, completion: completion)
             } else {
-                NSLog("[MXBackgroundSyncService] fetchEvent: We don't have the event in stores. Do not sync anymore.")
-                Queues.dispatchQueue.async {
-                    completion(.failure(MXBackgroundSyncServiceError.unknown))
+                // Final fallback, try with /event API
+                NSLog("[MXBackgroundSyncService] fetchEvent: We still don't have the event in stores. Try with /event API")
+                
+                restClient.event(withEventId: eventId, inRoom: roomId) { [weak self] (response) in
+                    
+                    guard let self = self else {
+                        NSLog("[NotificationService] fetchEvent: /event API returned too late successfully.")
+                        return
+                    }
+                    
+                    switch response {
+                        case .success(let event):
+                            NSLog("[MXBackgroundSyncService] fetchEvent: We got the event from /event API")
+                            
+                            //  cache this event
+                            self.cachedEvents[eventId] = event
+                            
+                            //  handle encryption for this event
+                            handleEncryption(forEvent: event)
+                            
+                        case .failure(_):
+                            NSLog("[MXBackgroundSyncService] fetchEvent: Failed to fetch event \(eventId)")
+                            Queues.dispatchQueue.async {
+                                completion(.failure(MXBackgroundSyncServiceError.unknown))
+                            }
+                    }
                 }
             }
         }
