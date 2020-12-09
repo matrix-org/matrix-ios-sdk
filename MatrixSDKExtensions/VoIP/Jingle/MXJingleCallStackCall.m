@@ -312,6 +312,9 @@ NSString *const kMXJingleCallWebRTCMainStreamID = @"userMedia";
                     
                 });
                 
+                //  check we can consider this call as held, after setting local description
+                [self checkTheCallIsOnHold];
+                
             }];
         }
         else
@@ -415,12 +418,6 @@ NSString *const kMXJingleCallWebRTCMainStreamID = @"userMedia";
        didRemoveStream:(RTCMediaStream *)stream
 {
     NSLog(@"[MXJingleCallStackCall] didRemoveStream");
-    
-    //  TODO: Check this stream has the main stream ID (kMXJingleCallWebRTCMainStreamID) after all platforms decided to use the same stream id.
-    
-    dispatch_async(dispatch_get_main_queue(), ^{
-        [self.delegate callStackCallDidHold:self];
-    });
 }
 
 - (void)peerConnection:(RTCPeerConnection *)peerConnection didAddReceiver:(RTCRtpReceiver *)rtpReceiver streams:(NSArray<RTCMediaStream *> *)mediaStreams
@@ -602,7 +599,34 @@ didRemoveIceCandidates:(NSArray<RTCIceCandidate *> *)candidates;
 
 #pragma mark - Private methods
 
-//  Not used for now, will be in future
+- (void)checkTheCallIsOnHold
+{
+    NSArray<RTC_OBJC_TYPE(RTCRtpTransceiver) *> *activeReceivers = [self->peerConnection.transceivers filteredArrayUsingPredicate:[NSPredicate predicateWithBlock:^BOOL(RTC_OBJC_TYPE(RTCRtpTransceiver) *transceiver, NSDictionary<NSString *,id> * _Nullable bindings) {
+        
+        RTCRtpTransceiverDirection direction = RTCRtpTransceiverDirectionStopped;
+        if ([transceiver currentDirection:&direction])
+        {
+            if (direction == RTCRtpTransceiverDirectionInactive ||
+                direction == RTCRtpTransceiverDirectionSendOnly ||
+                direction == RTCRtpTransceiverDirectionStopped)
+            {
+                return NO;
+            }
+        }
+        
+        return YES;
+    }]];
+    
+    //  if there is no active receivers left, we can say this call is holded
+    if (activeReceivers.count == 0)
+    {
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [self.delegate callStackCallDidHold:self];
+        });
+    }
+}
+
+//  Not used for now, may be in future
 - (BOOL)isHoldOffer:(NSString *)sdpOffer
 {
     NSUInteger numberOfAudioTracks = [self numberOfMatchesOfKeyword:@"m=audio" inString:sdpOffer];
