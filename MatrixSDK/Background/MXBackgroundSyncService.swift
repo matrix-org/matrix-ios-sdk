@@ -246,10 +246,10 @@ public enum MXBackgroundSyncServiceError: Error {
                             //  handle encryption for this event
                             handleEncryption(forEvent: event)
                             
-                        case .failure(_):
+                        case .failure(let error):
                             NSLog("[MXBackgroundSyncService] fetchEvent: Failed to fetch event \(eventId)")
                             Queues.dispatchQueue.async {
-                                completion(.failure(MXBackgroundSyncServiceError.unknown))
+                                completion(.failure(error))
                             }
                     }
                 }
