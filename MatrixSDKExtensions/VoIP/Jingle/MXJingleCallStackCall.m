@@ -27,6 +27,8 @@
 #import "MXJingleCameraCaptureController.h"
 #import <WebRTC/WebRTC.h>
 
+NSString *const kMXJingleCallWebRTCMainStreamID = @"ARDAMS";
+
 @interface MXJingleCallStackCall () <RTCPeerConnectionDelegate>
 {
     /**
@@ -302,14 +304,6 @@
                     if (!error)
                     {
                         success(sdp.sdp);
-                        if ([self isHoldOffer:sdp.sdp])
-                        {
-                            [self.delegate callStackCallDidHold:self];
-                        }
-                        else
-                        {
-                            [self.delegate callStackCallDidConnect:self];
-                        }
                     }
                     else
                     {
@@ -396,7 +390,7 @@
     }];
 }
 
-#pragma mark - RTCPeerConnectionDelegate delegate
+#pragma mark - RTCPeerConnectionDelegate
 
 // Triggered when the SignalingState changed.
 - (void)peerConnection:(RTCPeerConnection *)peerConnection
@@ -411,21 +405,9 @@
 {
     NSLog(@"[MXJingleCallStackCall] didAddStream");
     
-    // This is mandatory to keep a reference on the video track
-    // Else the video does not display in self.remoteVideoView
-    remoteVideoTrack = stream.videoTracks.lastObject;
-
-    if (remoteVideoTrack)
-    {
-        MXWeakify(self);
-        dispatch_async(dispatch_get_main_queue(), ^{
-            MXStrongifyAndReturnIfNil(self);
-
-            // Use self.remoteVideoView as a container of a RTCEAGLVideoView
-            self->remoteJingleVideoView = [[MXJingleVideoView alloc] initWithContainerView:self.remoteVideoView];
-            [self->remoteVideoTrack addRenderer:self->remoteJingleVideoView];
-        });
-    }
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [self.delegate callStackCallDidConnect:self];
+    });
 }
 
 // Triggered when a remote peer close a stream.
@@ -433,6 +415,8 @@
        didRemoveStream:(RTCMediaStream *)stream
 {
     NSLog(@"[MXJingleCallStackCall] didRemoveStream");
+    
+    //  TODO: Check this stream has the main stream ID (kMXJingleCallWebRTCMainStreamID) after all platforms decided to use the same stream id.
     
     dispatch_async(dispatch_get_main_queue(), ^{
         [self.delegate callStackCallDidHold:self];
@@ -463,13 +447,6 @@
 - (void)peerConnection:(RTCPeerConnection *)peerConnection didRemoveReceiver:(RTCRtpReceiver *)rtpReceiver
 {
     NSLog(@"[MXJingleCallStackCall] didRemoveReceiver");
-    
-    if ([rtpReceiver.track.kind isEqualToString:kRTCMediaStreamTrackKindAudio])
-    {
-        dispatch_async(dispatch_get_main_queue(), ^{
-            [self.delegate callStackCallDidHold:self];
-        });
-    }
 }
 
 // Triggered when renegotiation is needed, for example the ICE has restarted.
@@ -625,36 +602,32 @@ didRemoveIceCandidates:(NSArray<RTCIceCandidate *> *)candidates;
 
 #pragma mark - Private methods
 
+//  Not used for now, will be in future
 - (BOOL)isHoldOffer:(NSString *)sdpOffer
 {
-    NSString *keyword = @"m=audio";
-    NSError *error = NULL;
-    NSRegularExpression *regex = [NSRegularExpression regularExpressionWithPattern:keyword
-                                                                           options:NSRegularExpressionCaseInsensitive
-                                                                             error:&error];
-    NSUInteger numberOfAudioTracks = [regex numberOfMatchesInString:sdpOffer options:0 range:NSMakeRange(0, [sdpOffer length])];
-    
-    keyword = @"m=video";
-    error = NULL;
-    regex = [NSRegularExpression regularExpressionWithPattern:keyword
-                                                      options:NSRegularExpressionCaseInsensitive
-                                                        error:&error];
-    NSUInteger numberOfVideoTracks = [regex numberOfMatchesInString:sdpOffer options:0 range:NSMakeRange(0, [sdpOffer length])];
-    
+    NSUInteger numberOfAudioTracks = [self numberOfMatchesOfKeyword:@"m=audio" inString:sdpOffer];
+    NSUInteger numberOfVideoTracks = [self numberOfMatchesOfKeyword:@"m=video" inString:sdpOffer];
+
     if (numberOfAudioTracks == 0 && numberOfVideoTracks == 0)
     {
         //  no audio or video tracks
         return YES;
     }
-    
-    keyword = @"a=inactive";
-    error = NULL;
-    regex = [NSRegularExpression regularExpressionWithPattern:keyword
-                                                      options:NSRegularExpressionCaseInsensitive
-                                                        error:&error];
-    NSUInteger numberOfInactiveTracks = [regex numberOfMatchesInString:sdpOffer options:0 range:NSMakeRange(0, [sdpOffer length])];
+
+    NSUInteger numberOfInactiveTracks = [self numberOfMatchesOfKeyword:@"a=inactive" inString:sdpOffer];
     
     return (numberOfAudioTracks + numberOfVideoTracks) == numberOfInactiveTracks;
+}
+
+- (NSUInteger)numberOfMatchesOfKeyword:(NSString *)keyword inString:(NSString *)string
+{
+    NSError *error = NULL;
+    NSRegularExpression *regex = [NSRegularExpression regularExpressionWithPattern:keyword
+                                                      options:NSRegularExpressionCaseInsensitive
+                                                        error:&error];
+    return [regex numberOfMatchesInString:string
+                                  options:0
+                                    range:NSMakeRange(0, [string length])];
 }
 
 - (RTCMediaConstraints *)mediaConstraints
@@ -680,11 +653,7 @@ didRemoveIceCandidates:(NSArray<RTCIceCandidate *> *)candidates;
     // Set up audio
     localAudioTrack = [self createLocalAudioTrack];
     
-    RTCRtpTransceiverInit *transceiverInit = [[RTCRtpTransceiverInit alloc] init];
-    transceiverInit.direction = RTCRtpTransceiverDirectionSendRecv;
-    transceiverInit.streamIds = @[@"ARDAMS"];
-    
-    [peerConnection addTransceiverWithTrack:localAudioTrack init:transceiverInit];
+    [peerConnection addTrack:localAudioTrack streamIds:@[kMXJingleCallWebRTCMainStreamID]];
     
     // And video
     if (isVideoCall)
@@ -693,7 +662,7 @@ didRemoveIceCandidates:(NSArray<RTCIceCandidate *> *)candidates;
         // Create a video track and add it to the media stream
         if (localVideoTrack)
         {
-            [peerConnection addTransceiverWithTrack:localVideoTrack init:transceiverInit];
+            [peerConnection addTrack:localVideoTrack streamIds:@[kMXJingleCallWebRTCMainStreamID]];
             
             // Display the self view
             // Use selfVideoView as a container of a RTCEAGLVideoView
@@ -716,7 +685,8 @@ didRemoveIceCandidates:(NSArray<RTCIceCandidate *> *)candidates;
 {
     RTCMediaConstraints *mediaConstraints = [[RTCMediaConstraints alloc] initWithMandatoryConstraints:nil optionalConstraints:nil];
     RTCAudioSource *localAudioSource = [peerConnectionFactory audioSourceWithConstraints:mediaConstraints];
-    return [peerConnectionFactory audioTrackWithSource:localAudioSource trackId:@"ARDAMSa0"];
+    NSString *trackId = [NSString stringWithFormat:@"%@a0", kMXJingleCallWebRTCMainStreamID];
+    return [peerConnectionFactory audioTrackWithSource:localAudioSource trackId:trackId];
 }
 
 - (RTCVideoTrack*)createLocalVideoTrack
@@ -725,7 +695,8 @@ didRemoveIceCandidates:(NSArray<RTCIceCandidate *> *)candidates;
     
     self.videoCapturer = [self createVideoCapturerWithVideoSource:localVideoSource];
     
-    return [peerConnectionFactory videoTrackWithSource:localVideoSource trackId:@"ARDAMSv0"];
+    NSString *trackId = [NSString stringWithFormat:@"%@v0", kMXJingleCallWebRTCMainStreamID];
+    return [peerConnectionFactory videoTrackWithSource:localVideoSource trackId:trackId];
 }
 
 - (RTCVideoCapturer*)createVideoCapturerWithVideoSource:(RTCVideoSource*)videoSource
