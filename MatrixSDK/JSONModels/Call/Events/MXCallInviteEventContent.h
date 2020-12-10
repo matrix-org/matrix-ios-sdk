@@ -21,14 +21,9 @@
 NS_ASSUME_NONNULL_BEGIN
 
 /**
- `MXCallInviteEventContent` represents the content of a m.call.invite event.
+ `MXCallInviteEventContent` represents the content of an `m.call.invite` event.
  */
 @interface MXCallInviteEventContent : MXCallEventContent
-
-/**
- A unique identifier for the call.
- */
-@property (nonatomic) NSString *callId;
 
 /**
  The session description.

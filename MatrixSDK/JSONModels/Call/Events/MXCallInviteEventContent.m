@@ -24,7 +24,6 @@
     if (callInviteEventContent)
     {
         [callInviteEventContent parseJSON:JSONDictionary];
-        MXJSONModelSetString(callInviteEventContent.callId, JSONDictionary[@"call_id"]);
         MXJSONModelSetMXJSONModel(callInviteEventContent.offer, MXCallSessionDescription, JSONDictionary[@"offer"]);
         MXJSONModelSetUInteger(callInviteEventContent.lifetime, JSONDictionary[@"lifetime"]);
         MXJSONModelSetString(callInviteEventContent.invitee, JSONDictionary[@"invitee"]);

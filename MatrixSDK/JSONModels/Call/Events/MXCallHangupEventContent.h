@@ -31,22 +31,17 @@ typedef NSString * MXCallHangupReasonString NS_REFINED_FOR_SWIFT;
 
 NS_ASSUME_NONNULL_BEGIN
 
-FOUNDATION_EXPORT NSString *const kMXCallHangupReasonUserHangup;
-FOUNDATION_EXPORT NSString *const kMXCallHangupReasonIceFailed;
-FOUNDATION_EXPORT NSString *const kMXCallHangupReasonInviteTimeout;
-FOUNDATION_EXPORT NSString *const kMXCallHangupReasonIceTimeout;
-FOUNDATION_EXPORT NSString *const kMXCallHangupReasonUserMediaFailed;
-FOUNDATION_EXPORT NSString *const kMXCallHangupReasonUnknownError;
+FOUNDATION_EXPORT NSString *const kMXCallHangupReasonStringUserHangup;
+FOUNDATION_EXPORT NSString *const kMXCallHangupReasonStringIceFailed;
+FOUNDATION_EXPORT NSString *const kMXCallHangupReasonStringInviteTimeout;
+FOUNDATION_EXPORT NSString *const kMXCallHangupReasonStringIceTimeout;
+FOUNDATION_EXPORT NSString *const kMXCallHangupReasonStringUserMediaFailed;
+FOUNDATION_EXPORT NSString *const kMXCallHangupReasonStringUnknownError;
 
 /**
- `MXCallHangupEventContent` represents the content of a m.call.hangup event.
+ `MXCallHangupEventContent` represents the content of an `m.call.hangup` event.
  */
 @interface MXCallHangupEventContent : MXCallEventContent
-
-/**
- A unique identifier for the call.
- */
-@property (nonatomic, copy) NSString *callId;
 
 /**
  The reason of the hangup event. Can be mapped to a MXCallHangupReason enum. Can be nil for older call versions.

@@ -21,14 +21,9 @@
 NS_ASSUME_NONNULL_BEGIN
 
 /**
- `MXCallNegotiateEventContent` represents the content of a m.call.negotiate event.
+ `MXCallNegotiateEventContent` represents the content of an `m.call.negotiate` event.
  */
 @interface MXCallNegotiateEventContent : MXCallEventContent
-
-/**
- A unique identifier for the call.
- */
-@property (nonatomic) NSString *callId;
 
 /**
  The session description.

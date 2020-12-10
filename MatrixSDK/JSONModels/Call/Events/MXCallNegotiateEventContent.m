@@ -24,7 +24,6 @@
     if (callNegotiateEventContent)
     {
         [callNegotiateEventContent parseJSON:JSONDictionary];
-        MXJSONModelSetString(callNegotiateEventContent.callId, JSONDictionary[@"call_id"]);
         MXJSONModelSetMXJSONModel(callNegotiateEventContent.sessionDescription, MXCallSessionDescription, JSONDictionary[@"description"]);
         MXJSONModelSetUInteger(callNegotiateEventContent.lifetime, JSONDictionary[@"lifetime"]);
     }

@@ -14,20 +14,31 @@
 // limitations under the License.
 //
 
-#import "MXCallSelectAnswerEventContent.h"
+#import "MXJSONModel.h"
 
-@implementation MXCallSelectAnswerEventContent
+NS_ASSUME_NONNULL_BEGIN
 
-+ (id)modelFromJSON:(NSDictionary *)JSONDictionary
-{
-    MXCallSelectAnswerEventContent *callSelectAnswerEventContent = [[MXCallSelectAnswerEventContent alloc] init];
-    if (callSelectAnswerEventContent)
-    {
-        [callSelectAnswerEventContent parseJSON:JSONDictionary];
-        MXJSONModelSetString(callSelectAnswerEventContent.selectedPartyId, JSONDictionary[@"selected_party_id"]);
-    }
+/**
+ `MXUserModel` represents the target user of an `m.call.replaces` event.
+ @see MXCallReplacesEventContent
+ */
+@interface MXUserModel : MXJSONModel
 
-    return callSelectAnswerEventContent;
-}
+/**
+ The user id.
+ */
+@property (nonatomic) NSString *userId;
+
+/**
+ The user display name.
+ */
+@property (nonatomic, nullable) NSString *displayname;
+
+/**
+ The url of the user of the avatar.
+ */
+@property (nonatomic, nullable) NSString *avatarUrl;
 
 @end
+
+NS_ASSUME_NONNULL_END

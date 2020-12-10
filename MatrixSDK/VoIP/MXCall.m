@@ -268,7 +268,7 @@ NSString *const kMXCallSupportsHoldingStatusDidChange = @"kMXCallSupportsHolding
             NSMutableDictionary *content = [@{
                 @"call_id": self.callId,
                 @"offer": @{
-                        @"type": kMXCallSessionDescriptionTypeOffer,
+                        @"type": kMXCallSessionDescriptionTypeStringOffer,
                         @"sdp": sdp
                 },
                 @"version": kMXCallVersion,
@@ -339,7 +339,7 @@ NSString *const kMXCallSupportsHoldingStatusDidChange = @"kMXCallSupportsHolding
                 NSDictionary *content = @{
                                           @"call_id": self.callId,
                                           @"answer": @{
-                                                  @"type": kMXCallSessionDescriptionTypeAnswer,
+                                                  @"type": kMXCallSessionDescriptionTypeStringAnswer,
                                                   @"sdp": sdpAnswer
                                                   },
                                           @"version": kMXCallVersion,
@@ -434,7 +434,7 @@ NSString *const kMXCallSupportsHoldingStatusDidChange = @"kMXCallSupportsHolding
         NSMutableDictionary *content = [@{
             @"call_id": self.callId,
             @"description": @{
-                    @"type": kMXCallSessionDescriptionTypeOffer,
+                    @"type": kMXCallSessionDescriptionTypeStringOffer,
                     @"sdp": sdp
             },
             @"version": kMXCallVersion,
@@ -1061,7 +1061,7 @@ NSString *const kMXCallSupportsHoldingStatusDidChange = @"kMXCallSupportsHolding
                 NSDictionary *content = @{
                     @"call_id": self.callId,
                     @"description": @{
-                            @"type": kMXCallSessionDescriptionTypeAnswer,
+                            @"type": kMXCallSessionDescriptionTypeStringAnswer,
                             @"sdp": sdpAnswer
                     },
                     @"version": kMXCallVersion,

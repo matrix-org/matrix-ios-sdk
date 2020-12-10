@@ -21,14 +21,9 @@
 NS_ASSUME_NONNULL_BEGIN
 
 /**
- `MXCallAnswerEventContent` represents the content of a m.call.answer event.
+ `MXCallAnswerEventContent` represents the content of an `m.call.answer` event.
  */
 @interface MXCallAnswerEventContent : MXCallEventContent
-
-/**
- A unique identifier for the call.
- */
-@property (nonatomic) NSString *callId;
 
 /**
  The session description.

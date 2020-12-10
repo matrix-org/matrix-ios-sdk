@@ -17,12 +17,12 @@
 #import "MXCallHangupEventContent.h"
 #import "MXTools.h"
 
-NSString *const kMXCallHangupReasonUserHangup = @"user_hangup";
-NSString *const kMXCallHangupReasonIceFailed = @"ice_failed";
-NSString *const kMXCallHangupReasonInviteTimeout = @"invite_timeout";
-NSString *const kMXCallHangupReasonIceTimeout = @"ice_timeout";
-NSString *const kMXCallHangupReasonUserMediaFailed = @"user_media_failed";
-NSString *const kMXCallHangupReasonUnknownError = @"unknown_error";
+NSString *const kMXCallHangupReasonStringUserHangup = @"user_hangup";
+NSString *const kMXCallHangupReasonStringIceFailed = @"ice_failed";
+NSString *const kMXCallHangupReasonStringInviteTimeout = @"invite_timeout";
+NSString *const kMXCallHangupReasonStringIceTimeout = @"ice_timeout";
+NSString *const kMXCallHangupReasonStringUserMediaFailed = @"user_media_failed";
+NSString *const kMXCallHangupReasonStringUnknownError = @"unknown_error";
 
 @implementation MXCallHangupEventContent
 
@@ -32,11 +32,10 @@ NSString *const kMXCallHangupReasonUnknownError = @"unknown_error";
     if (callHangupEventContent)
     {
         [callHangupEventContent parseJSON:JSONDictionary];
-        MXJSONModelSetString(callHangupEventContent.callId, JSONDictionary[@"call_id"]);
         MXJSONModelSetString(callHangupEventContent.reason, JSONDictionary[@"reason"]);
         if (!callHangupEventContent.reason)
         {
-            callHangupEventContent.reason =  kMXCallHangupReasonUserHangup;
+            callHangupEventContent.reason =  kMXCallHangupReasonStringUserHangup;
         }
     }
 

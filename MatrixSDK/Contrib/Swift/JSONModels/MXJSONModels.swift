@@ -125,23 +125,50 @@ public enum MXCallHangupReason: Equatable, Hashable {
     public var identifier: String {
         switch self {
         case .userHangup:
-            return kMXCallHangupReasonUserHangup
+            return kMXCallHangupReasonStringUserHangup
         case .iceFailed:
-            return kMXCallHangupReasonIceFailed
+            return kMXCallHangupReasonStringIceFailed
         case .inviteTimeout:
-            return kMXCallHangupReasonInviteTimeout
+            return kMXCallHangupReasonStringInviteTimeout
         case .iceTimeout:
-            return kMXCallHangupReasonIceTimeout
+            return kMXCallHangupReasonStringIceTimeout
         case .userMediaFailed:
-            return kMXCallHangupReasonUserMediaFailed
+            return kMXCallHangupReasonStringUserMediaFailed
         case .unknownError:
-            return kMXCallHangupReasonUnknownError
+            return kMXCallHangupReasonStringUnknownError
         }
     }
 
     public init(identifier: String) {
         let reasons: [MXCallHangupReason] = [.userHangup, .iceFailed, .inviteTimeout, .iceTimeout, .userMediaFailed, .unknownError]
         self = reasons.first(where: { $0.identifier == identifier }) ?? .userHangup
+    }
+
+}
+
+/// Call reject replacement reason
+public enum MXCallRejectReplacementReason: Equatable, Hashable {
+    case declined
+    case failedRoomInvite
+    case failedCallInvite
+    case failedCall
+
+    public var identifier: String {
+        switch self {
+        case .declined:
+            return kMXCallRejectReplacementReasonStringDeclined
+        case .failedRoomInvite:
+            return kMXCallRejectReplacementReasonStringFailedRoomInvite
+        case .failedCallInvite:
+            return kMXCallRejectReplacementReasonStringFailedCallInvite
+        case .failedCall:
+            return kMXCallRejectReplacementReasonStringFailedCall
+        }
+    }
+
+    public init(identifier: String) {
+        let reasons: [MXCallRejectReplacementReason] = [.declined, .failedRoomInvite, .failedCallInvite, .failedCall]
+        self = reasons.first(where: { $0.identifier == identifier }) ?? .declined
     }
 
 }

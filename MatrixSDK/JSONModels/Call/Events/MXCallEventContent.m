@@ -35,6 +35,7 @@ static NSArray<NSString *> *kAcceptedCallVersions = nil;
 
 - (void)parseJSON:(NSDictionary *)JSONDictionary
 {
+    MXJSONModelSetString(self.callId, JSONDictionary[@"call_id"]);
     MXJSONModelSetNumber(self.versionNumber, JSONDictionary[@"version"]);
     MXJSONModelSetString(self.versionString, JSONDictionary[@"version"]);
     MXJSONModelSetString(self.partyId, JSONDictionary[@"party_id"]);

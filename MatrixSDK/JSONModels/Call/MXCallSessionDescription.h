@@ -18,10 +18,10 @@
 #import "MXJSONModel.h"
 
 typedef NSString * MXCallSessionDescriptionTypeString;
-FOUNDATION_EXPORT NSString *const kMXCallSessionDescriptionTypeOffer;
-FOUNDATION_EXPORT NSString *const kMXCallSessionDescriptionTypePrAnswer;
-FOUNDATION_EXPORT NSString *const kMXCallSessionDescriptionTypeAnswer;
-FOUNDATION_EXPORT NSString *const kMXCallSessionDescriptionTypeRollback;
+FOUNDATION_EXPORT NSString *const kMXCallSessionDescriptionTypeStringOffer;
+FOUNDATION_EXPORT NSString *const kMXCallSessionDescriptionTypeStringPrAnswer;
+FOUNDATION_EXPORT NSString *const kMXCallSessionDescriptionTypeStringAnswer;
+FOUNDATION_EXPORT NSString *const kMXCallSessionDescriptionTypeStringRollback;
 
 /**
  MXCallSessionDescription types

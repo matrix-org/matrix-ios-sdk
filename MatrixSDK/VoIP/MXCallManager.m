@@ -32,6 +32,8 @@
 #import "MXCallCandidatesEventContent.h"
 #import "MXCallRejectEventContent.h"
 #import "MXCallNegotiateEventContent.h"
+#import "MXCallReplacesEventContent.h"
+#import "MXCallRejectReplacementEventContent.h"
 
 #pragma mark - Constants definitions
 NSString *const kMXCallManagerNewCall            = @"kMXCallManagerNewCall";
@@ -86,7 +88,9 @@ NSString *const kMXCallManagerConferenceFinished = @"kMXCallManagerConferenceFin
                                                                 kMXEventTypeStringCallSelectAnswer,
                                                                 kMXEventTypeStringCallHangup,
                                                                 kMXEventTypeStringCallReject,
-                                                                kMXEventTypeStringCallNegotiate
+                                                                kMXEventTypeStringCallNegotiate,
+                                                                kMXEventTypeStringCallReplaces,
+                                                                kMXEventTypeStringCallRejectReplacement
                                                                 ]
                                                       onEvent:^(MXEvent *event, MXTimelineDirection direction, id customObject) {
 
@@ -305,6 +309,12 @@ NSString *const kMXCallManagerConferenceFinished = @"kMXCallManagerConferenceFin
         case MXEventTypeCallNegotiate:
             [self handleCallNegotiate:event];
             break;
+        case MXEventTypeCallReplaces:
+            [self handleCallReplaces:event];
+            break;
+        case MXEventTypeCallRejectReplacement:
+            [self handleCallRejectReplacement:event];
+            break;
         default:
             break;
     }
@@ -499,6 +509,16 @@ NSString *const kMXCallManagerConferenceFinished = @"kMXCallManagerConferenceFin
             [call handleCallEvent:event];
         }
     }
+}
+
+- (void)handleCallReplaces:(MXEvent *)event
+{
+//    MXCallReplacesEventContent *content = [MXCallReplacesEventContent modelFromJSON:event.content];
+}
+
+- (void)handleCallRejectReplacement:(MXEvent *)event
+{
+//    MXCallRejectReplacementEventContent *content = [MXCallRejectReplacementEventContent modelFromJSON:event.content];
 }
 
 - (void)handleCallStateDidChangeNotification:(NSNotification *)notification

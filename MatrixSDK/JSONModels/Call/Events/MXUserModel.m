@@ -14,20 +14,22 @@
 // limitations under the License.
 //
 
-#import "MXCallSelectAnswerEventContent.h"
+#import "MXUserModel.h"
 
-@implementation MXCallSelectAnswerEventContent
+@implementation MXUserModel
 
 + (id)modelFromJSON:(NSDictionary *)JSONDictionary
 {
-    MXCallSelectAnswerEventContent *callSelectAnswerEventContent = [[MXCallSelectAnswerEventContent alloc] init];
-    if (callSelectAnswerEventContent)
+    MXUserModel *userModel = [[MXUserModel alloc] init];
+    
+    if (userModel)
     {
-        [callSelectAnswerEventContent parseJSON:JSONDictionary];
-        MXJSONModelSetString(callSelectAnswerEventContent.selectedPartyId, JSONDictionary[@"selected_party_id"]);
+        MXJSONModelSetString(userModel.userId, JSONDictionary[@"id"]);
+        MXJSONModelSetString(userModel.displayname, JSONDictionary[@"display_name"]);
+        MXJSONModelSetString(userModel.avatarUrl, JSONDictionary[@"avatar_url"]);
     }
 
-    return callSelectAnswerEventContent;
+    return userModel;
 }
 
 @end

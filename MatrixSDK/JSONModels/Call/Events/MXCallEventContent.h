@@ -28,6 +28,11 @@ extern NSString *const kMXCallVersion;
 @interface MXCallEventContent : MXJSONModel
 
 /**
+ A unique identifier for the call.
+ */
+@property (nonatomic) NSString *callId;
+
+/**
  The version of the VoIP specification this message adheres to. Can be nil. @see `version`.
  */
 @property (nonatomic, copy, nullable) NSNumber *versionNumber;
