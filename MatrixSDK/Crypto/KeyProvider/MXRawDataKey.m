@@ -24,11 +24,13 @@
 
 @implementation MXRawDataKey
 
-+ (MXRawDataKey *) dataWithKey: (NSData *)key {
++ (MXRawDataKey *) dataWithKey: (NSData *)key
+{
     return [[MXRawDataKey alloc] initWithKey: key];
 }
 
-- (instancetype) initWithKey: (NSData *)key {
+- (instancetype) initWithKey: (NSData *)key
+{
     self = [super init];
     
     if (self)
@@ -39,7 +41,8 @@
     return self;
 }
 
-- (MXKeyType)type {
+- (MXKeyType)type
+{
     return kRawData;
 }
 

@@ -18,14 +18,33 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
+/// Data class for AES keys
 @interface MXAesKeyData : MXKeyData
 
+/// Initialisation Vector data (can be generated using MXAes::iv)
 @property (nonatomic, readonly, nonnull) NSData *iv;
 
+/// Basically the AES Key
 @property (nonatomic, readonly, nonnull) NSData *key;
 
+/**
+ Convenience constructor
+ 
+ @param iv Initialisation Vector data (can be generated using MXAes::iv)
+ @param key the AES Key
+ 
+ @return a new instance of MXAesKeyData initialised with the given IV and key
+ */
 + (instancetype) dataWithIv: (NSData *)iv key: (NSData *)key;
 
+/**
+ default initialiser
+ 
+ @param iv Initialisation Vector data (can be generated using MXAes::iv)
+ @param key the AES Key
+ 
+ @return the instance of MXAesKeyData initialised with the given IV and key
+ */
 - (instancetype) initWithIv: (NSData *)iv key: (NSData *)key;
 
 @end

@@ -16,15 +16,21 @@
 
 #import <Foundation/Foundation.h>
 
-typedef NS_ENUM(NSUInteger, MXKeyType) {
+/// Different type of Key Data
+typedef NS_ENUM(NSUInteger, MXKeyType)
+{
+    /// Key is based on a single raw data
     kRawData = 1,
+    /// AES Key based on an IV and a KEY
     kAes
 };
 
 NS_ASSUME_NONNULL_BEGIN
 
+/// Base class for Key Data returned by the MXKeyProviderDelegate.
 @interface MXKeyData : NSObject
 
+/// Type of the key
 @property (nonatomic, readonly) MXKeyType type;
 
 @end

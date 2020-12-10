@@ -19,36 +19,114 @@
 #ifndef KeyProvider_h
 #define KeyProvider_h
 
-typedef NS_ENUM(NSUInteger, MXDataType) {
-    kContactsType = 1,
-    kAccountType
-};
-
+/// This delegate will be in charged to effectively give the encryption keys configured in the application
 @protocol MXKeyProviderDelegate <NSObject>
 
-/// check if data of specific type can be encrypted
-- (BOOL)enableEncryptionForDataOfType:(MXDataType)dataType;
+/**
+ check if data of specific type can be encrypted
+ 
+ @param dataType type of the data to be encrypted
+ 
+ @return YES if encryption should be enabled. No otherwise
+ */
+- (BOOL)isEncryptionAvailableForDataOfType:(nonnull NSString *)dataType;
 
-/// check if the delegate is ready to give the ecryption keys
-- (BOOL)hasKeyForDataOfType:(MXDataType)dataType;
+/**
+ check if the delegate is ready to give the ecryption keys
+ 
+ @param dataType type of the data to be encrypted
 
-- (nullable MXKeyData *)keyDataForDataOfType:(MXDataType)dataType;
+ @return YES a encryption key is ready. NO otherwise
+ */
+- (BOOL)hasKeyForDataOfType:(nonnull NSString *)dataType;
+
+/**
+ return the key data for a dedicated type of data
+ 
+ @param dataType type of the data to be encrypted
+
+ @return the encryption data if ready. Nil otherwise
+ */
+- (nullable MXKeyData *)keyDataForDataOfType:(nonnull NSString *)dataType;
 
 @end
 
+/**
+ Provider of all keys needed by a client of the SDK
+ 
+ This class is used by the Matrix SDK and the Matrix Kit to retrieve encryption keyx initialised by the client application.
+ The encryption becomes effective by setting the delegate of the MXKeyProvider::sharedInstance. The delegate will
+ be in charge to enable / disable encryption and provide the requested keys accordingly.
+ */
 @interface MXKeyProvider : NSObject
 
+/// Shared instance of the provider
 + (nonnull instancetype)sharedInstance;
 
+/// Set the delegate if you want to enable encryption and provide encryption keys
 @property (nonatomic, strong, nullable) id<MXKeyProviderDelegate> delegate;
 
-- (nullable MXKeyData *)requestKeyForDataOfType:(MXDataType)dataType;
+/**
+ @brief return a key if encryption is needed and key is available.
+ 
+ basically:
+ @code
+     if ([self isEncryptionAvailableForDataOfType:dataType] && [self hasKeyForDataOfType:dataType isMandatory:isMandatory]) {
+         return [self keyDataForDataOfType:dataType isMandatory:isMandatory expectedKeyType:keyType];
+     }
+     return nil;
+ @endcode
+ 
+ @param dataType user defined type of the data to be encrypted
+ @param isMandatory set it to YES if you want excpetion to be raised if the key is not available with delegate set and encryption available.
+ @param expectedKeyType expected type of the key. Exception if types don't match.
+ 
+ @see isEncryptionAvailableForDataOfType:
+ 
+ @return the encryption data if needed and ready. Nil otherwise
+ 
+ @throw exception if data is mandatory and the delegate is not ready or if the type of the key is not valid
+ */
+- (nullable MXKeyData *)requestKeyForDataOfType:(nonnull NSString *)dataType
+                                    isMandatory:(BOOL)isMandatory
+                                expectedKeyType:(MXKeyType)keyType;
 
-- (BOOL)isEncryptionAvailableForDataOfType:(MXDataType)dataType;
+/**
+ check if data of specific type can be encrypted
+ 
+ @param dataType type of the data to be encrypted
+ 
+ @return YES if encryption should be enabled. No otherwise
+ */
+- (BOOL)isEncryptionAvailableForDataOfType:(nonnull NSString *)dataType;
 
-- (BOOL)hasKeyForDataOfType:(MXDataType)dataType;
+/**
+ check if the delegate is ready to give the ecryption keys
+ 
+ @param dataType type of the data to be encrypted
+ @param isMandatory set it to YES if you want excpetion to be raised if the key is not available with delegate set and encryption available.
 
-- (nonnull MXKeyData *)keyDataForDataOfType:(MXDataType)dataType;
+ @return YES a encryption key is ready. NO otherwise
+ 
+ @throw exception if data is mandatory and the delegate is not ready
+ */
+- (BOOL)hasKeyForDataOfType:(nonnull NSString *)dataType
+                isMandatory:(BOOL)isMandatory;
+
+/**
+ return the key data for a dedicated type of data
+ 
+ @param dataType type of the data to be encrypted
+ @param isMandatory set it to YES if you want excpetion to be raised if the key is not available with delegate set and encryption available.
+ @param expectedKeyType expected type of the key. Exception if types don't match.
+
+ @return the encryption data if ready. Nil otherwise
+ 
+ @throw exception if data is mandatory and the delegate is not ready or if the type of the key is not valid
+  */
+- (nonnull MXKeyData *)keyDataForDataOfType:(nonnull NSString *)dataType
+                                isMandatory:(BOOL)isMandatory
+                            expectedKeyType:(MXKeyType)keyType;
 
 @end
 

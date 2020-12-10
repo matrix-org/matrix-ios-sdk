@@ -26,14 +26,17 @@
 
 @implementation MXAesKeyData
 
-+ (MXAesKeyData *) dataWithIv: (NSData *)iv key: (NSData *)key {
++ (MXAesKeyData *) dataWithIv: (NSData *)iv key: (NSData *)key
+{
     return [[MXAesKeyData alloc] initWithIv:iv key:key];
 }
 
-- (instancetype) initWithIv: (NSData *)iv key: (NSData *)key {
+- (instancetype) initWithIv: (NSData *)iv key: (NSData *)key
+{
     self = [super init];
     
-    if (self) {
+    if (self)
+    {
         self.iv = iv;
         self.key = key;
     }
@@ -41,7 +44,8 @@
     return self;
 }
 
-- (MXKeyType)type {
+- (MXKeyType)type
+{
     return kAes;
 }
 

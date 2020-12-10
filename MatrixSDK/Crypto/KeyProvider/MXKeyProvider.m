@@ -17,19 +17,6 @@
 #import "MXKeyProvider.h"
 
 static MXKeyProvider *sharedInstance = nil;
-static NSDictionary* configurationsForDataType = nil;
-
-@interface MXKeyConfig: NSObject
-
-+ (instancetype) configWithMandatory: (BOOL)isMandatory keyType: (MXKeyType)keyType;
-
-- (instancetype) initWithMandatory: (BOOL)isMandatory keyType: (MXKeyType)keyType;
-
-@property (nonatomic) BOOL isMandatory;
-
-@property (nonatomic) MXKeyType keyType;
-
-@end
 
 
 @implementation MXKeyProvider
@@ -39,97 +26,58 @@ static NSDictionary* configurationsForDataType = nil;
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
         sharedInstance = [[self alloc] init];
-        
-        configurationsForDataType =
-        @{
-            @(kContactsType) : [MXKeyConfig configWithMandatory:NO keyType:kAes],
-            @(kAccountType) : [MXKeyConfig configWithMandatory:YES keyType:kAes],
-        };
-        
     });
     return sharedInstance;
 }
 
-- (nullable MXKeyData *)requestKeyForDataOfType:(MXDataType)dataType {
+- (nullable MXKeyData *)requestKeyForDataOfType:(nonnull NSString *)dataType
+                                    isMandatory:(BOOL)isMandatory
+                                expectedKeyType:(MXKeyType)keyType
+{
     if ([self isEncryptionAvailableForDataOfType:dataType]
-        && [self hasKeyForDataOfType:dataType])
+        && [self hasKeyForDataOfType:dataType isMandatory:isMandatory])
     {
-        return [self keyDataForDataOfType:dataType];
+        return [self keyDataForDataOfType:dataType isMandatory:isMandatory expectedKeyType:keyType];
     }
     
     return nil;
 }
 
-- (BOOL)isEncryptionAvailableForDataOfType:(MXDataType)dataType
+- (BOOL)isEncryptionAvailableForDataOfType:(nonnull NSString *)dataType
 {
-    return self.delegate && [self.delegate enableEncryptionForDataOfType:dataType];
+    return self.delegate && [self.delegate isEncryptionAvailableForDataOfType:dataType];
 }
 
-- (BOOL)hasKeyForDataOfType:(MXDataType)dataType
+- (BOOL)hasKeyForDataOfType:(nonnull NSString *)dataType
+                isMandatory:(BOOL)isMandatory
 {
     BOOL keyAvailable = [self.delegate hasKeyForDataOfType:dataType];
     
-    MXKeyConfig *config = [self configForDataOfType:dataType];
-    
-    if (!keyAvailable && config.isMandatory)
+    if (!keyAvailable && isMandatory)
     {
-        [NSException raise:@"MandatoryKey" format:@"Mandatory Key not available for data of type %lu", dataType];
+        [NSException raise:@"MandatoryKey" format:@"Mandatory Key not available for data of type %@", dataType];
     }
     
     return keyAvailable;
 }
 
-- (nonnull MXKeyData *)keyDataForDataOfType:(MXDataType)dataType
+- (nonnull MXKeyData *)keyDataForDataOfType:(NSString *)dataType
+                                isMandatory:(BOOL)isMandatory
+                            expectedKeyType:(MXKeyType)keyType
 {
     MXKeyData *keyData = [self.delegate keyDataForDataOfType:dataType];
-    MXKeyConfig *config = [configurationsForDataType objectForKey:@(dataType)];
     
-    if (!keyData && config.isMandatory)
+    if (!keyData && isMandatory)
     {
-        [NSException raise:@"MandatoryKey" format:@"No key value for mandatory Key (date type : %lu)", dataType];
+        [NSException raise:@"MandatoryKey" format:@"No key value for mandatory Key (data type : %@)", dataType];
     }
 
-    if (keyData.type != config.keyType)
+    if (keyData.type != keyType)
     {
-        [NSException raise:@"KeyType" format:@"Wrong key type (%lu expected %lu) for data of type : %lu", keyData.type, config.keyType, dataType];
+        [NSException raise:@"KeyType" format:@"Wrong key type (%lu expected %lu) for data of type : %@", keyData.type, keyType, dataType];
     }
 
     return keyData;
-}
-
-#pragma mark private methods
-
-- (MXKeyConfig *) configForDataOfType:(MXDataType)dataType
-{
-    MXKeyConfig *config = [configurationsForDataType objectForKey:@(dataType)];
-    
-    if (!config)
-    {
-        [NSException raise:@"MissingConfigurationForDataType" format:@"Missing configuration for data of type %lu", dataType];
-    }
-    
-    return config;
-}
-
-@end
-
-@implementation MXKeyConfig
-
-+ (instancetype)configWithMandatory:(BOOL)isMandatory keyType: (MXKeyType)keyType
-{
-    return [[MXKeyConfig alloc] initWithMandatory:isMandatory keyType:keyType];
-}
-
-- (instancetype)initWithMandatory:(BOOL)isMandatory keyType: (MXKeyType)keyType
-{
-    self = [super init];
-    
-    if (self) {
-        self.isMandatory = isMandatory;
-        self.keyType = keyType;
-    }
-    
-    return self;
 }
 
 @end
