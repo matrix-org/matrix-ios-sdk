@@ -24,6 +24,13 @@
 #import "MXDeviceInfo.h"
 #import "MXCrossSigningInfo_Private.h"
 #import "MXKey.h"
+#import "MXLoginSSOFlow.h"
+
+#pragma mark - Local constants
+
+static NSString* const kMXLoginFlowTypeKey = @"type";
+
+#pragma mark - Implementation
 
 @implementation MXPublicRoom
 
@@ -172,12 +179,12 @@ NSString *const kMXLoginIdentifierTypePhone = @"m.id.phone";
 
 @implementation MXLoginFlow
 
-+ (id)modelFromJSON:(NSDictionary *)JSONDictionary
++ (instancetype)modelFromJSON:(NSDictionary *)JSONDictionary
 {
-    MXLoginFlow *loginFlow = [[MXLoginFlow alloc] init];
+    MXLoginFlow *loginFlow = [self new];    
     if (loginFlow)
     {
-        MXJSONModelSetString(loginFlow.type, JSONDictionary[@"type"]);
+        MXJSONModelSetString(loginFlow.type, JSONDictionary[kMXLoginFlowTypeKey]);
         MXJSONModelSetArray(loginFlow.stages, JSONDictionary[@"stages"]);
     }
     
@@ -196,11 +203,49 @@ NSString *const kMXLoginIdentifierTypePhone = @"m.id.phone";
         MXJSONModelSetArray(authSession.completed, JSONDictionary[@"completed"]);
         MXJSONModelSetString(authSession.session, JSONDictionary[@"session"]);
         MXJSONModelSetDictionary(authSession.params, JSONDictionary[@"params"]);
+                                
+        NSArray *flows;
+        MXJSONModelSetArray(flows, JSONDictionary[@"flows"]);
         
-        authSession.flows = [MXLoginFlow modelsFromJSON:JSONDictionary[@"flows"]];
+        authSession.flows = [self loginFlowsFromJSON:flows];
     }
     
     return authSession;
+}
+
++ (NSArray<MXLoginFlow*>*)loginFlowsFromJSON:(NSArray *)JSONDictionaries
+{
+    NSMutableArray *loginFlows;
+    
+    for (NSDictionary *JSONDictionary in JSONDictionaries)
+    {
+        MXLoginFlow *loginFlow;
+        
+        NSString *type;
+        
+        MXJSONModelSetString(type, JSONDictionary[kMXLoginFlowTypeKey]);
+        
+        if ([type isEqualToString:kMXLoginFlowTypeSSO] || [type isEqualToString:kMXLoginFlowTypeCAS])
+        {
+            loginFlow = [MXLoginSSOFlow modelFromJSON:JSONDictionary];
+        }
+        else
+        {
+            loginFlow = [MXLoginFlow modelFromJSON:JSONDictionary];
+        }
+        
+        if (loginFlow)
+        {
+            if (nil == loginFlows)
+            {
+                loginFlows = [NSMutableArray array];
+            }
+            
+            [loginFlows addObject:loginFlow];
+        }
+    }
+    
+    return loginFlows;
 }
 
 @end

@@ -101,6 +101,8 @@ FOUNDATION_EXPORT NSString *MatrixSDKVersion;
 #import "MXEventScan.h"
 #import "MXMediaScan.h"
 
+#import "MXLoginSSOFlow.h"
+
 //  Bridging to Swift
 #import "MXCryptoStore.h"
 #import "MXRealmCryptoStore.h"
