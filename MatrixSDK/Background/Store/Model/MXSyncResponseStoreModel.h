@@ -14,10 +14,22 @@
 // limitations under the License.
 //
 
-#ifndef MatrixSDKTests_Bridging_Header_h
-#define MatrixSDKTests_Bridging_Header_h
+#import <Foundation/Foundation.h>
+#import "MXJSONModel.h"
 
-#import "MatrixSDKTestsData.h"
-#import "MatrixSDKTestsE2EData.h"
+@class MXSyncResponse;
 
-#endif /* MatrixSDKTests_Bridging_Header_h */
+/// MXSyncResponseStore model class
+@interface MXSyncResponseStoreModel : MXJSONModel
+
+/**
+ The opaque token for the start of the sync response.
+ */
+@property (nonatomic) NSString *prevBatch;
+
+/**
+ The sync response starting from the prevBatch.
+ */
+@property (nonatomic) MXSyncResponse *syncResponse;
+
+@end

@@ -14,10 +14,13 @@
 // limitations under the License.
 //
 
-#ifndef MatrixSDKTests_Bridging_Header_h
-#define MatrixSDKTests_Bridging_Header_h
+#ifndef MatrixSDKSwiftHeader_h
+#define MatrixSDKSwiftHeader_h
 
-#import "MatrixSDKTestsData.h"
-#import "MatrixSDKTestsE2EData.h"
+#if __has_include(<MatrixSDK/MatrixSDK-Swift.h>)
+    #import <MatrixSDK/MatrixSDK-Swift.h>
+#elif __has_include("MatrixSDK-Swift.h")
+    #import "MatrixSDK-Swift.h"
+#endif
 
-#endif /* MatrixSDKTests_Bridging_Header_h */
+#endif /* MatrixSDKSwiftHeader_h */

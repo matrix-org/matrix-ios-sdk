@@ -67,7 +67,7 @@ public enum MXPusherKind: Equatable, Hashable {
 /**
  Push rules kind.
  
- Push rules are separated into different kinds of rules. These categories have a priority order: verride rules
+ Push rules are separated into different kinds of rules. These categories have a priority order: override rules
  have the highest priority.
  Some category may define implicit conditions.
  */
@@ -88,6 +88,43 @@ public enum MXPushRuleKind: Equatable, Hashable {
         let pushRules: [MXPushRuleKind] = [.override, .content, .room, .sender, .underride]
         guard let pushRule = pushRules.first(where: { $0.identifier == identifier }) else { return nil }
         self = pushRule
+    }
+}
+
+/// Push rules conditions type.
+///
+/// Condition kinds are exchanged as strings with the home server. The kinds of conditions
+/// specified by Matrix are listed here as an enum in order to ease
+/// their handling.
+///
+/// Custom condition kind, out of the specification, may exist. In this case,
+/// `MXPushRuleConditionString` must be checked.
+public enum MXPushRuleConditionType: Equatable, Hashable {
+    case eventMatch
+    case profileTag
+    case containsDisplayName
+    case roomMemberCount
+    case senderNotificationPermission
+    case custom(String)
+    
+    public var identifier: String {
+        switch self  {
+        case .eventMatch: return kMXPushRuleConditionStringEventMatch
+        case .profileTag: return kMXPushRuleConditionStringProfileTag
+        case .containsDisplayName: return kMXPushRuleConditionStringContainsDisplayName
+        case .roomMemberCount: return kMXPushRuleConditionStringRoomMemberCount
+        case .senderNotificationPermission: return kMXPushRuleConditionStringSenderNotificationPermission
+        case .custom(let value): return value
+        }
+    }
+
+    public init(identifier: String) {
+        let pushRules: [MXPushRuleConditionType] = [.eventMatch, .profileTag, .containsDisplayName, .roomMemberCount, .senderNotificationPermission]
+        if let pushRule = pushRules.first(where: { $0.identifier == identifier }) {
+            self = pushRule
+        } else {
+            self = .custom(identifier)
+        }
     }
 }
 
