@@ -2,6 +2,7 @@
  Copyright 2014 OpenMarket Ltd
  Copyright 2017 Vector Creations Ltd
  Copyright 2018 New Vector Ltd
+ Copyright 2020 The Matrix.org Foundation C.I.C
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -17,6 +18,8 @@
  */
 
 #import "MXMemoryStore.h"
+
+#import "MXFileRoomStore.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -163,10 +166,21 @@ typedef NS_OPTIONS(NSInteger, MXFileStorePreloadOptions)
                        success:(void (^)(MXRoomAccountData * _Nonnull roomAccountData))success
                        failure:(nullable void (^)(NSError * _Nonnull error))failure;
 
+
+#pragma mark - Sync API (Do not use them on the main thread)
+
 /**
  Load metadata for the store. Sets eventStreamToken.
  */
 - (void)loadMetaData;
+
+/**
+ Get the room store for a given room.
+ 
+ @param roomId the room id.
+ @return the store.
+ */
+- (nullable MXFileRoomStore *)roomStoreForRoom:(NSString*)roomId;
 
 @end
 

@@ -14,10 +14,19 @@
 // limitations under the License.
 //
 
-#ifndef MatrixSDKTests_Bridging_Header_h
-#define MatrixSDKTests_Bridging_Header_h
+import Foundation
 
-#import "MatrixSDKTestsData.h"
-#import "MatrixSDKTestsE2EData.h"
+internal extension NSArray {
+    
+    /// Merges two array.
+    /// - Parameters:
+    ///   - lhs: First operand
+    ///   - rhs: Second operand
+    /// - Returns: Merged array.
+    static func + (lhs: NSArray, rhs: NSArray) -> NSArray {
+        let array = NSMutableArray(array: lhs)
+        rhs.forEach { array.add($0) }
+        return array
+    }
 
-#endif /* MatrixSDKTests_Bridging_Header_h */
+}
