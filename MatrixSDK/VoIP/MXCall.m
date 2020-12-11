@@ -32,6 +32,9 @@
 #import "MXCallCandidatesEventContent.h"
 #import "MXCallRejectEventContent.h"
 #import "MXCallNegotiateEventContent.h"
+#import "MXCallReplacesEventContent.h"
+#import "MXCallRejectReplacementEventContent.h"
+#import "MXUserModel.h"
 
 #pragma mark - Constants definitions
 NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
@@ -227,6 +230,12 @@ NSString *const kMXCallSupportsHoldingStatusDidChange = @"kMXCallSupportsHolding
         case MXEventTypeCallNegotiate:
             [self handleCallNegotiate:event];
             break;
+        case MXEventTypeCallReplaces:
+            [self handleCallReplaces:event];
+            break;
+        case MXEventTypeCallRejectReplacement:
+            [self handleCallRejectReplacement:event];
+            break;
         default:
             break;
     }
@@ -384,6 +393,72 @@ NSString *const kMXCallSupportsHoldingStatusDidChange = @"kMXCallSupportsHolding
     }
 }
 
+- (void)hangup
+{
+    NSLog(@"[MXCall] hangup");
+    
+    if (self.state == MXCallStateRinging && [callInviteEventContent.version isEqualToString:kMXCallVersion])
+    {
+        // Send the reject event for new call invites
+        NSDictionary *content = @{
+                                  @"call_id": _callId,
+                                  @"version": kMXCallVersion,
+                                  @"party_id": self.partyId
+                                  };
+        
+        [_callSignalingRoom sendEventOfType:kMXEventTypeStringCallReject content:content localEcho:nil success:nil failure:^(NSError *error) {
+            NSLog(@"[MXCall] hangup: ERROR: Cannot send m.call.reject event.");
+            [self didEncounterError:error reason:MXCallHangupReasonUnknownError];
+        }];
+        
+        //  terminate with a fake reject event
+        MXEvent *fakeEvent = [MXEvent modelFromJSON:@{
+            @"type": kMXEventTypeStringCallReject,
+            @"content": content
+        }];
+        fakeEvent.sender = callManager.mxSession.myUserId;
+        [self terminateWithReason:fakeEvent];
+        return;
+    }
+
+    //  hangup with the default reason
+    [self hangupWithReason:MXCallHangupReasonUserHangup];
+}
+
+- (void)hangupWithReason:(MXCallHangupReason)reason
+{
+    NSLog(@"[MXCall] hangupWithReason: %ld", (long)reason);
+    
+    if (self.state != MXCallStateEnded)
+    {
+        // Send the hangup event
+        NSDictionary *content = @{
+                                  @"call_id": _callId,
+                                  @"version": kMXCallVersion,
+                                  @"party_id": self.partyId,
+                                  @"reason": [MXTools callHangupReasonString:reason]
+                                  };
+        [_callSignalingRoom sendEventOfType:kMXEventTypeStringCallHangup content:content localEcho:nil success:^(NSString *eventId) {
+            [[MXSDKOptions sharedInstance].analyticsDelegate trackValue:@(reason)
+                                                               category:kMXAnalyticsVoipCategory
+                                                                   name:kMXAnalyticsVoipNameCallHangup];
+        } failure:^(NSError *error) {
+            NSLog(@"[MXCall] hangupWithReason: ERROR: Cannot send m.call.hangup event.");
+            [self didEncounterError:error reason:MXCallHangupReasonUnknownError];
+        }];
+        
+        //  terminate with a fake hangup event
+        MXEvent *fakeEvent = [MXEvent modelFromJSON:@{
+            @"type": kMXEventTypeStringCallHangup,
+            @"content": content
+        }];
+        fakeEvent.sender = callManager.mxSession.myUserId;
+        [self terminateWithReason:fakeEvent];
+    }
+}
+
+#pragma mark - Hold
+
 - (BOOL)supportsHolding
 {
     if (callInviteEventContent && _selectedAnswer && [callInviteEventContent.version isEqualToString:kMXCallVersion])
@@ -469,68 +544,60 @@ NSString *const kMXCallSupportsHoldingStatusDidChange = @"kMXCallSupportsHolding
     return _state == MXCallStateOnHold || _state == MXCallStateRemotelyOnHold;
 }
 
-- (void)hangup
-{
-    NSLog(@"[MXCall] hangup");
-    
-    if (self.state == MXCallStateRinging && [callInviteEventContent.version isEqualToString:kMXCallVersion])
-    {
-        // Send the reject event for new call invites
-        NSDictionary *content = @{
-                                  @"call_id": _callId,
-                                  @"version": kMXCallVersion,
-                                  @"party_id": self.partyId
-                                  };
-        
-        [_callSignalingRoom sendEventOfType:kMXEventTypeStringCallReject content:content localEcho:nil success:nil failure:^(NSError *error) {
-            NSLog(@"[MXCall] hangup: ERROR: Cannot send m.call.reject event.");
-            [self didEncounterError:error reason:MXCallHangupReasonUnknownError];
-        }];
-        
-        //  terminate with a fake reject event
-        MXEvent *fakeEvent = [MXEvent modelFromJSON:@{
-            @"type": kMXEventTypeStringCallReject,
-            @"content": content
-        }];
-        fakeEvent.sender = callManager.mxSession.myUserId;
-        [self terminateWithReason:fakeEvent];
-        return;
-    }
+#pragma mark - Transfer
 
-    //  hangup with the default reason
-    [self hangupWithReason:MXCallHangupReasonUserHangup];
+- (BOOL)supportsTransferring
+{
+    //  same conditions to support holding
+    return self.supportsHolding;
 }
 
-- (void)hangupWithReason:(MXCallHangupReason)reason
+- (void)transferToRoom:(NSString * _Nullable)targetRoomId
+                  user:(MXUserModel * _Nullable)targetUser
+            createCall:(NSString * _Nullable)createCallId
+             awaitCall:(NSString * _Nullable)awaitCallId
+               success:(void (^)(NSString * _Nonnull eventId))success
+               failure:(void (^)(NSError * _Nullable error))failure
 {
-    NSLog(@"[MXCall] hangupWithReason: %ld", (long)reason);
+    MXCallReplacesEventContent *content = [[MXCallReplacesEventContent alloc] init];
     
-    if (self.state != MXCallStateEnded)
+    //  base fields
+    content.callId = self.callId;
+    content.versionString = kMXCallVersion;
+    content.partyId = self.partyId;
+    
+    //  other fields
+    content.replacementId = [[NSUUID UUID] UUIDString];
+    content.lifetime = self->callManager.transferLifetime;
+    
+    if (targetRoomId)
     {
-        // Send the hangup event
-        NSDictionary *content = @{
-                                  @"call_id": _callId,
-                                  @"version": kMXCallVersion,
-                                  @"party_id": self.partyId,
-                                  @"reason": [MXTools callHangupReasonString:reason]
-                                  };
-        [_callSignalingRoom sendEventOfType:kMXEventTypeStringCallHangup content:content localEcho:nil success:^(NSString *eventId) {
-            [[MXSDKOptions sharedInstance].analyticsDelegate trackValue:@(reason)
-                                                               category:kMXAnalyticsVoipCategory
-                                                                   name:kMXAnalyticsVoipNameCallHangup];
-        } failure:^(NSError *error) {
-            NSLog(@"[MXCall] hangupWithReason: ERROR: Cannot send m.call.hangup event.");
-            [self didEncounterError:error reason:MXCallHangupReasonUnknownError];
-        }];
-        
-        //  terminate with a fake hangup event
-        MXEvent *fakeEvent = [MXEvent modelFromJSON:@{
-            @"type": kMXEventTypeStringCallHangup,
-            @"content": content
-        }];
-        fakeEvent.sender = callManager.mxSession.myUserId;
-        [self terminateWithReason:fakeEvent];
+        content.targetRoomId = targetRoomId;
     }
+    if (targetUser)
+    {
+        content.targetUser = targetUser;
+    }
+    if (createCallId)
+    {
+        content.createCallId = createCallId;
+    }
+    if (awaitCallId)
+    {
+        content.awaitCallId = awaitCallId;
+    }
+    
+    [self.callSignalingRoom sendEventOfType:kMXEventTypeStringCallReplaces
+                                    content:content.JSONDictionary
+                                  localEcho:nil
+                                    success:success
+                                    failure:^(NSError *error) {
+        NSLog(@"[MXCall] transferToRoom: ERROR: Cannot send m.call.replaces event.");
+        if (failure)
+        {
+            failure(error);
+        }
+    }];
 }
 
 #pragma mark - Properties
@@ -1091,6 +1158,16 @@ NSString *const kMXCallSupportsHoldingStatusDidChange = @"kMXCallSupportsHolding
             [self didEncounterError:error reason:MXCallHangupReasonIceFailed];
         }];
     }
+}
+
+- (void)handleCallReplaces:(MXEvent *)event
+{
+    //  TODO: Implement
+}
+
+- (void)handleCallRejectReplacement:(MXEvent *)event
+{
+    //  TODO: Implement
 }
 
 #pragma mark - Private methods

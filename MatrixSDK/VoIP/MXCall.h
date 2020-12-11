@@ -30,6 +30,7 @@ NS_ASSUME_NONNULL_BEGIN
 @class MXCallManager;
 @class MXEvent;
 @class MXRoom;
+@class MXUserModel;
 
 /**
  Call states.
@@ -129,6 +130,18 @@ extern NSString *const kMXCallSupportsHoldingStatusDidChange;
 - (void)answer;
 
 /**
+ Hang up a call in progress or reject an incoming call.
+ */
+- (void)hangup;
+
+/**
+ Hang up a call with a reason in progress.
+ */
+- (void)hangupWithReason:(MXCallHangupReason)reason;
+
+#pragma mark - Hold
+
+/**
  Flag to indicate that the call can be holded.
  */
 @property (nonatomic, readonly) BOOL supportsHolding;
@@ -144,15 +157,26 @@ extern NSString *const kMXCallSupportsHoldingStatusDidChange;
  */
 @property (nonatomic, readonly) BOOL isOnHold;
 
-/**
- Hang up a call in progress or reject an incoming call.
- */
-- (void)hangup;
+#pragma mark - Transfer
 
 /**
- Hang up a call with a reason in progress.
+ Flag to indicate that the call can be transferred.
  */
-- (void)hangupWithReason:(MXCallHangupReason)reason;
+@property (nonatomic, readonly) BOOL supportsTransferring;
+
+/// Attempts to send an `m.call.replaces` event to the signaling room for this call.
+/// @param targetRoomId Tells other party about the transfer target room. Optional. If specified, the transferee waits for an invite to this room and after join continues the transfer in this room. Otherwise, the transferee contacts the user given in the `targetUser` field in a room of its choosing.
+/// @param targetUser Tells other party about the target user of the call transfer. Optional for the calls to the transfer target.
+/// @param createCallId Tells other party to create a new call with this identifier. Mutually exclusive with `awaitCallId`.
+/// @param awaitCallId Tells other party to wait for a call with this identifier. Mutually exclusive with `createCallId`.
+/// @param success Success block. Returns event identifier for the event
+/// @param failure Failure block. Returns error
+- (void)transferToRoom:(NSString * _Nullable)targetRoomId
+                  user:(MXUserModel * _Nullable)targetUser
+            createCall:(NSString * _Nullable)createCallId
+             awaitCall:(NSString * _Nullable)awaitCallId
+               success:(void (^)(NSString * _Nonnull eventId))success
+               failure:(void (^)(NSError * _Nullable error))failure;
 
 #pragma mark - Properties
 /**
