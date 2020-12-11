@@ -494,7 +494,7 @@ NSString *const kMXCallManagerConferenceFinished = @"kMXCallManagerConferenceFin
 {
     MXCallNegotiateEventContent *content = [MXCallNegotiateEventContent modelFromJSON:event.content];
 
-    // Check expiration (usefull filter when receiving load of events when resuming the event stream)
+    // Check expiration (useful filter when receiving load of events when resuming the event stream)
     if (event.age < content.lifetime)
     {
         if ([event.sender isEqualToString:_mxSession.myUserId] &&
