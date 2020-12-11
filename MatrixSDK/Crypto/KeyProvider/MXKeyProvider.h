@@ -19,6 +19,8 @@
 #ifndef KeyProvider_h
 #define KeyProvider_h
 
+NS_ASSUME_NONNULL_BEGIN
+
 /// This delegate will be in charged to effectively give the encryption keys configured in the application
 @protocol MXKeyProviderDelegate <NSObject>
 
@@ -29,7 +31,7 @@
  
  @return YES if encryption should be enabled. No otherwise
  */
-- (BOOL)isEncryptionAvailableForDataOfType:(nonnull NSString *)dataType;
+- (BOOL)isEncryptionAvailableForDataOfType:(NSString *)dataType;
 
 /**
  check if the delegate is ready to give the ecryption keys
@@ -38,7 +40,7 @@
 
  @return YES a encryption key is ready. NO otherwise
  */
-- (BOOL)hasKeyForDataOfType:(nonnull NSString *)dataType;
+- (BOOL)hasKeyForDataOfType:(NSString *)dataType;
 
 /**
  return the key data for a dedicated type of data
@@ -47,7 +49,7 @@
 
  @return the encryption data if ready. Nil otherwise
  */
-- (nullable MXKeyData *)keyDataForDataOfType:(nonnull NSString *)dataType;
+- (nullable MXKeyData *)keyDataForDataOfType:(NSString *)dataType;
 
 @end
 
@@ -61,7 +63,7 @@
 @interface MXKeyProvider : NSObject
 
 /// Shared instance of the provider
-+ (nonnull instancetype)sharedInstance;
++ (instancetype)sharedInstance;
 
 /// Set the delegate if you want to enable encryption and provide encryption keys
 @property (nonatomic, strong, nullable) id<MXKeyProviderDelegate> delegate;
@@ -87,7 +89,7 @@
  
  @throw exception if data is mandatory and the delegate is not ready or if the type of the key is not valid
  */
-- (nullable MXKeyData *)requestKeyForDataOfType:(nonnull NSString *)dataType
+- (nullable MXKeyData *)requestKeyForDataOfType:(NSString *)dataType
                                     isMandatory:(BOOL)isMandatory
                                 expectedKeyType:(MXKeyType)keyType;
 
@@ -98,7 +100,7 @@
  
  @return YES if encryption should be enabled. No otherwise
  */
-- (BOOL)isEncryptionAvailableForDataOfType:(nonnull NSString *)dataType;
+- (BOOL)isEncryptionAvailableForDataOfType:(NSString *)dataType;
 
 /**
  check if the delegate is ready to give the ecryption keys
@@ -110,7 +112,7 @@
  
  @throw exception if data is mandatory and the delegate is not ready
  */
-- (BOOL)hasKeyForDataOfType:(nonnull NSString *)dataType
+- (BOOL)hasKeyForDataOfType:(NSString *)dataType
                 isMandatory:(BOOL)isMandatory;
 
 /**
@@ -124,10 +126,12 @@
  
  @throw exception if data is mandatory and the delegate is not ready or if the type of the key is not valid
   */
-- (nonnull MXKeyData *)keyDataForDataOfType:(nonnull NSString *)dataType
-                                isMandatory:(BOOL)isMandatory
-                            expectedKeyType:(MXKeyType)keyType;
+- (MXKeyData *)keyDataForDataOfType:(NSString *)dataType
+                        isMandatory:(BOOL)isMandatory
+                    expectedKeyType:(MXKeyType)keyType;
 
 @end
+
+NS_ASSUME_NONNULL_END
 
 #endif /* KeyProvider_h */
