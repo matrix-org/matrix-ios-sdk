@@ -77,6 +77,7 @@ NSString *const kMXCallManagerConferenceFinished = @"kMXCallManagerConferenceFin
         calls = [NSMutableArray array];
         _inviteLifetime = 30000;
         _negotiateLifetime = 30000;
+        _transferLifetime = 30000;
 
         _callStack = callstack;
         

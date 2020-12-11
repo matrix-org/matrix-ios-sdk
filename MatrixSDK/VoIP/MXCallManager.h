@@ -145,6 +145,12 @@ extern NSString *const kMXCallManagerConferenceFinished;
 @property (nonatomic) NSUInteger negotiateLifetime;
 
 /**
+ The time in milliseconds that an transfer call request is valid for.
+ Default is 30s.
+ */
+@property (nonatomic) NSUInteger transferLifetime;
+
+/**
  The list of TURN/STUN servers advertised by the user's homeserver.
  Can be nil. In this case, use `fallbackSTUNServer`.
  */
