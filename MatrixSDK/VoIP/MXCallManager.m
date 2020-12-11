@@ -514,12 +514,36 @@ NSString *const kMXCallManagerConferenceFinished = @"kMXCallManagerConferenceFin
 
 - (void)handleCallReplaces:(MXEvent *)event
 {
-//    MXCallReplacesEventContent *content = [MXCallReplacesEventContent modelFromJSON:event.content];
+    MXCallReplacesEventContent *content = [MXCallReplacesEventContent modelFromJSON:event.content];
+    
+    // Check expiration (useful filter when receiving load of events when resuming the event stream)
+    if (event.age < content.lifetime)
+    {
+        if ([event.sender isEqualToString:_mxSession.myUserId] &&
+            [content.partyId isEqualToString:_mxSession.myDeviceId])
+        {
+            //  this is a remote echo, ignore
+            return;
+        }
+        
+        MXCall *call = [self callWithCallId:content.callId];
+        if (call)
+        {
+            [call handleCallEvent:event];
+        }
+    }
 }
 
 - (void)handleCallRejectReplacement:(MXEvent *)event
 {
-//    MXCallRejectReplacementEventContent *content = [MXCallRejectReplacementEventContent modelFromJSON:event.content];
+    MXCallRejectReplacementEventContent *content = [MXCallRejectReplacementEventContent modelFromJSON:event.content];
+    
+    // Forward the event to the MXCall object
+    MXCall *call = [self callWithCallId:content.callId];
+    if (call)
+    {
+        [call handleCallEvent:event];
+    }
 }
 
 - (void)handleCallStateDidChangeNotification:(NSNotification *)notification
@@ -577,6 +601,322 @@ NSString *const kMXCallManagerConferenceFinished = @"kMXCallManagerConferenceFin
         [notificationCenter removeObserver:sessionStateObserver name:kMXSessionStateDidChangeNotification object:_mxSession];
         sessionStateObserver = nil;
     }
+}
+
+#pragma mark - Transfer
+
+- (void)transferCall:(MXCall *)callWithTransferee
+                  to:(MXUserModel *)target
+      withTransferee:(MXUserModel *)transferee
+        consultFirst:(BOOL)consultFirst
+             success:(void (^)(NSString * _Nonnull newCallId))success
+             failure:(void (^)(NSError * _Nullable error))failure
+{
+    if (callWithTransferee.isConferenceCall)
+    {
+        //  it's not intended to transfer conference calls
+        if (failure)
+        {
+            failure(nil);
+        }
+        return;
+    }
+    
+    MXWeakify(self);
+    
+    //  find the call with target
+    
+    [self callWithUser:target.userId completion:^(MXCall * _Nullable call) {
+        
+        MXStrongifyAndReturnIfNil(self);
+        
+        //  define continue block
+        void(^continueBlock)(MXCall *) = ^(MXCall *callWithTarget) {
+            
+            //  find a suitable room (which only consists three users: self, the transferee and the target)
+            
+            MXWeakify(self);
+            
+            [self callTransferRoomWithUsers:@[target.userId, transferee.userId] completion:^(MXRoom * _Nullable transferRoom, BOOL isNewRoom) {
+                
+                MXStrongifyAndReturnIfNil(self);
+                
+                if (!transferRoom)
+                {
+                    //  A room cannot be found/created
+                    if (failure)
+                    {
+                        failure(nil);
+                    }
+                    return;
+                }
+                
+                //  generate a new call id
+                NSString *newCallId = [[NSUUID UUID] UUIDString];
+                
+                //  first, send replaces event to the call with the transferee, send info about target
+                //  to make transferee start a new call
+                [callWithTransferee transferToRoom:transferRoom.roomId
+                                              user:target
+                                        createCall:newCallId
+                                         awaitCall:nil
+                                           success:^(NSString * _Nonnull eventId) {
+                    
+                    //  define block to be called after replaces events are sent
+                    void(^afterReplacesEventsBlock)(void) = ^{
+                        if (isNewRoom)
+                        {
+                            //  if was a newly created room, send invites after replaces events
+                            [transferRoom inviteUser:target.userId success:nil failure:failure];
+                            [transferRoom inviteUser:transferee.userId success:nil failure:failure];
+                        }
+                        
+                        //  do not end the calls, wait for other parties to end it
+                        
+                        //  TODO: Observe the call with the newCallId
+                        
+                        if (success)
+                        {
+                            success(newCallId);
+                        }
+                    };
+                    
+                    if (callWithTarget)
+                    {
+                        //  then, send replaces event to the call with the target, send info about transferee
+                        //  to make target await a call
+                        [callWithTarget transferToRoom:transferRoom.roomId
+                                                  user:transferee
+                                            createCall:nil
+                                             awaitCall:newCallId
+                                               success:^(NSString * _Nonnull eventId) {
+                            
+                            if (consultFirst)
+                            {
+                                //  hold the callWithTransferee
+                                [callWithTransferee hold:YES];
+                                
+                                //  consult with the target
+                                [callWithTarget hold:NO];
+                                
+                                //  TODO: Make a state change on callWithTransferee here, like `onHoldForConsulting` and provide target details, to complete the transfer after
+                            }
+                            else
+                            {
+                                //  no need to consult
+                                
+                                afterReplacesEventsBlock();
+                            }
+                            
+                        } failure:failure];
+                    }
+                    else
+                    {
+                        //  being here means no need to consult, otherwise would fail before
+                        
+                        afterReplacesEventsBlock();
+                    }
+                    
+                } failure:failure];
+            }];
+        };
+        
+        if (call)
+        {
+            continueBlock(call);
+        }
+        else
+        {
+            //  we're not in a call with target
+            
+            if (consultFirst)
+            {
+                MXWeakify(self);
+                
+                [self directCallableRoomWithUser:target.userId completion:^(MXRoom * _Nullable room, NSError * _Nullable error) {
+                    
+                    MXStrongifyAndReturnIfNil(self);
+                    
+                    if (room == nil)
+                    {
+                        //  could not find/create a direct room with target
+                        if (failure)
+                        {
+                            failure(nil);
+                        }
+                        return;
+                    }
+                    
+                    MXWeakify(self);
+                    
+                    //  hold the transferee call before starting the new call
+                    [callWithTransferee hold:YES];
+                    
+                    //  place a new call to the target
+                    [self placeCallInRoom:room.roomId withVideo:callWithTransferee.isVideoCall success:^(MXCall * _Nonnull call) {
+                        
+                        MXStrongifyAndReturnIfNil(self);
+                        
+                        continueBlock(call);
+                    } failure:^(NSError * _Nullable error) {
+                        NSLog(@"[MXCallManager] transferCall: couldn't call the target: %@", error);
+                    }];
+                    
+                }];
+            }
+            else
+            {
+                //  we don't need to consult, so we can continue without an active call with the target
+                continueBlock(nil);
+            }
+        }
+    }];
+}
+
+/// Attempts to find a room with the given users only. If not found, tries to create. If fails, completion will be called with a nil room.
+/// @param userIds User IDs array to look for
+/// @param completion Completion block
+- (void)callTransferRoomWithUsers:(NSArray<NSString *> *)userIds
+                       completion:(void (^ _Nonnull)(MXRoom * _Nullable room, BOOL isNewRoom))completion
+{
+    __block MXRoom *resultRoom = nil;
+    
+    dispatch_group_t roomGroup = dispatch_group_create();
+    
+    for (MXRoom *room in self.mxSession.rooms)
+    {
+        dispatch_group_enter(roomGroup);
+        
+        [room state:^(MXRoomState *roomState) {
+            
+            NSArray<NSString *> *roomUserIds = [roomState.members.joinedMembers valueForKey:@"userId"];
+            if (roomState.membersCount.joined == 3) //  ignore other rooms (which might have these users but some extra ones too)
+            {
+                NSSet *roomUserIdSet = [NSSet setWithArray:roomUserIds];
+                NSSet *desiredUserIdSet = [NSSet setWithArray:userIds];
+                if ([desiredUserIdSet isSubsetOfSet:roomUserIdSet])    //  if all userIds exist in roomUserIds
+                {
+                    resultRoom = room;
+                }
+            }
+            
+            dispatch_group_leave(roomGroup);
+        }];
+    }
+    
+    dispatch_group_notify(roomGroup, dispatch_get_main_queue(), ^{
+        if (resultRoom)
+        {
+            completion(resultRoom, NO);
+        }
+        else
+        {
+            //  no room found, create a new one
+            
+            [self.mxSession canEnableE2EByDefaultInNewRoomWithUsers:userIds success:^(BOOL canEnableE2E) {
+                
+                MXRoomCreationParameters *roomCreationParameters = [MXRoomCreationParameters new];
+                roomCreationParameters.visibility = kMXRoomDirectoryVisibilityPrivate;
+                roomCreationParameters.preset = kMXRoomPresetTrustedPrivateChat;
+                roomCreationParameters.inviteArray = nil;   //  intentionally do not invite yet users
+
+                if (canEnableE2E)
+                {
+                    roomCreationParameters.initialStateEvents = @[
+                                                                  [MXRoomCreationParameters initialStateEventForEncryptionWithAlgorithm:kMXCryptoMegolmAlgorithm
+                                                                  ]];
+                }
+
+                [self.mxSession createRoomWithParameters:roomCreationParameters success:^(MXRoom *room) {
+                    completion(room, YES);
+                } failure:^(NSError *error) {
+                    completion(nil, NO);
+                }];
+
+            } failure:^(NSError *error) {
+                completion(nil, NO);
+            }];
+        }
+    });
+}
+
+/// Tries to find a direct & callable room with the given user. If not such a room found, tries to create it and then waits for the other party to join.
+/// @param userId The user id to check.
+/// @param completion Completion block.
+- (void)directCallableRoomWithUser:(NSString * _Nonnull)userId
+                        completion:(void (^_Nonnull)(MXRoom* _Nullable room, NSError * _Nullable error))completion
+{
+    MXRoom *room = [self.mxSession directJoinedRoomWithUserId:userId];
+    if (room)
+    {
+        //  TODO: Having a room probably does not mean it's callable (both party joined). Fix this.
+        completion(room, nil);
+    }
+    else
+    {
+        //  we're not in a direct room with target, create it
+        [self.mxSession canEnableE2EByDefaultInNewRoomWithUsers:@[userId] success:^(BOOL canEnableE2E) {
+            
+            MXRoomCreationParameters *roomCreationParameters = [MXRoomCreationParameters parametersForDirectRoomWithUser:userId];
+            roomCreationParameters.visibility = kMXRoomDirectoryVisibilityPrivate;
+
+            if (canEnableE2E)
+            {
+                roomCreationParameters.initialStateEvents = @[
+                                                              [MXRoomCreationParameters initialStateEventForEncryptionWithAlgorithm:kMXCryptoMegolmAlgorithm
+                                                              ]];
+            }
+
+            [self.mxSession createRoomWithParameters:roomCreationParameters success:^(MXRoom *room) {
+                //  TODO: Wait for other party to join before returning the room
+                
+                completion(room, nil);
+            } failure:^(NSError *error) {
+                completion(nil, error);
+            }];
+
+        } failure:^(NSError *error) {
+            completion(nil, error);
+        }];
+    }
+}
+
+/// Tries to find the call to a given user. If fails, completion will be called with a nil call.
+/// @param userId The user id to check.
+/// @param completion Completion block.
+- (void)callWithUser:(NSString * _Nonnull)userId
+          completion:(void (^_Nonnull)(MXCall* _Nullable call))completion
+{
+    __block MXCall *resultCall = nil;
+    
+    dispatch_group_t callGroup = dispatch_group_create();
+    
+    for (MXCall *call in calls)
+    {
+        if (call.isConferenceCall)
+        {
+            continue;
+        }
+        if ([call.callerId isEqualToString:userId])
+        {
+            resultCall = call;
+            break;
+        }
+        
+        dispatch_group_enter(callGroup);
+        
+        [call calleeId:^(NSString * _Nonnull calleeId) {
+            if ([calleeId isEqualToString:userId])
+            {
+                resultCall = call;
+            }
+            dispatch_group_leave(callGroup);
+        }];
+    }
+    
+    dispatch_group_notify(callGroup, dispatch_get_main_queue(), ^{
+        completion(resultCall);
+    });
 }
 
 #pragma mark - Conference call
