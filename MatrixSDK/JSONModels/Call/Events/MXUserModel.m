@@ -15,6 +15,7 @@
 //
 
 #import "MXUserModel.h"
+#import "MXUser.h"
 
 @implementation MXUserModel
 
@@ -46,6 +47,26 @@
     }
 
     return jsonDictionary;
+}
+
+- (id)initWithUserId:(NSString * _Nonnull)userId
+         displayname:(NSString * _Nullable)displayname
+           avatarUrl:(NSString * _Nullable)avatarUrl
+{
+    if (self = [super init])
+    {
+        self.userId = userId;
+        self.displayname = displayname;
+        self.avatarUrl = avatarUrl;
+    }
+    return self;
+}
+
+- (id)initWithUser:(MXUser *)user
+{
+    return [self initWithUserId:user.userId
+                    displayname:user.displayname
+                      avatarUrl:user.avatarUrl];
 }
 
 @end

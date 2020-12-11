@@ -18,6 +18,8 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
+@class MXUser;
+
 /**
  `MXUserModel` represents the target user of an `m.call.replaces` event.
  @see MXCallReplacesEventContent
@@ -38,6 +40,18 @@ NS_ASSUME_NONNULL_BEGIN
  The url of the user of the avatar.
  */
 @property (nonatomic, nullable) NSString *avatarUrl;
+
+/**
+ Initialize model object with params.
+ */
+- (id)initWithUserId:(NSString * _Nonnull)userId
+         displayname:(NSString * _Nullable)displayname
+           avatarUrl:(NSString * _Nullable)avatarUrl;
+
+/**
+ Initialize model object with a user.
+ */
+- (id)initWithUser:(MXUser *)user;
 
 @end
 
