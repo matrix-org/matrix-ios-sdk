@@ -53,6 +53,25 @@ static NSArray<NSString *> *kAcceptedCallVersions = nil;
     return callEventContent;
 }
 
+- (NSDictionary *)JSONDictionary
+{
+    NSMutableDictionary *jsonDictionary = [NSMutableDictionary dictionaryWithDictionary:@{
+        @"call_id": self.callId,
+        @"party_id": self.partyId
+    }];
+
+    if (self.versionNumber)
+    {
+        jsonDictionary[@"version"] = self.versionNumber;
+    }
+    else if (self.versionString)
+    {
+        jsonDictionary[@"version"] = self.versionString;
+    }
+
+    return jsonDictionary;
+}
+
 - (NSString *)version
 {
     NSString *_version;

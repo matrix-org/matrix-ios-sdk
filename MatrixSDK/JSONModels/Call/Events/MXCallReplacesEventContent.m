@@ -36,4 +36,30 @@
     return content;
 }
 
+- (NSDictionary *)JSONDictionary
+{
+    NSMutableDictionary *jsonDictionary = [super.JSONDictionary mutableCopy];
+    
+    jsonDictionary[@"replacement_id"] = self.replacementId;
+    jsonDictionary[@"lifetime"] = @(self.lifetime);
+    if (self.targetRoomId)
+    {
+        jsonDictionary[@"target_room"] = self.targetRoomId;
+    }
+    if (self.targetUser)
+    {
+        jsonDictionary[@"target_user"] = self.targetUser.JSONDictionary;
+    }
+    if (self.createCallId)
+    {
+        jsonDictionary[@"create_call"] = self.createCallId;
+    }
+    if (self.awaitCallId)
+    {
+        jsonDictionary[@"await_call"] = self.awaitCallId;
+    }
+    
+    return jsonDictionary;
+}
+
 @end

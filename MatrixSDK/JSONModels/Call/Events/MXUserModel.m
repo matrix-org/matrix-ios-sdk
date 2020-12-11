@@ -32,4 +32,20 @@
     return userModel;
 }
 
+- (NSDictionary *)JSONDictionary
+{
+    NSMutableDictionary *jsonDictionary = [NSMutableDictionary dictionaryWithObject:self.userId forKey:@"id"];
+
+    if (self.displayname)
+    {
+        jsonDictionary[@"display_name"] = self.displayname;
+    }
+    if (self.avatarUrl)
+    {
+        jsonDictionary[@"avatar_url"] = self.avatarUrl;
+    }
+
+    return jsonDictionary;
+}
+
 @end
