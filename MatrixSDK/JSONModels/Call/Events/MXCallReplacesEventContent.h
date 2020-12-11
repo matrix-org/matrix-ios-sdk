@@ -30,6 +30,12 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic) NSString *replacementId;
 
 /**
+ The time in milliseconds that the transfer request is valid for.
+ Once the request age exceeds this value, clients should discard it.
+ */
+@property (nonatomic) NSUInteger lifetime;
+
+/**
  Optional. If specified, the transferee client waits for an invite to this room and joins it and then continues the transfer in this room. If absent, the transferee contacts the Matrix User ID given in the `targetUser` field in a room of its choosing.
  */
 @property (nonatomic, nullable) NSString *targetRoomId;

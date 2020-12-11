@@ -26,6 +26,7 @@
     {
         [content parseJSON:JSONDictionary];
         MXJSONModelSetString(content.replacementId, JSONDictionary[@"replacement_id"]);
+        MXJSONModelSetUInteger(content.lifetime, JSONDictionary[@"lifetime"]);
         MXJSONModelSetString(content.targetRoomId, JSONDictionary[@"target_room"]);
         MXJSONModelSetMXJSONModel(content.targetUser, MXUserModel, JSONDictionary[@"target_user"]);
         MXJSONModelSetString(content.createCallId, JSONDictionary[@"create_call"]);
