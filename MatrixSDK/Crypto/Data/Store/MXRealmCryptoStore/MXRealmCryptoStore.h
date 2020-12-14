@@ -22,6 +22,11 @@
 
 #import "MXCryptoStore.h"
 
+/**
+ Used to identify the type of data when requesting MXKeyProvider
+ */
+extern NSString * _Nonnull const kMXRealmCryptoStoreDataType;
+
 @interface MXRealmCryptoStore : NSObject <MXCryptoStore>
 
 @end

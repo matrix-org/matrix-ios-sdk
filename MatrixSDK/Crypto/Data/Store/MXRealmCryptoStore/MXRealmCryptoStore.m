@@ -24,11 +24,16 @@
 #import "MXSession.h"
 #import "MXTools.h"
 #import "MXCryptoTools.h"
+#import "MXKeyProvider.h"
+#import "MXRawDataKey.h"
 
 NSUInteger const kMXRealmCryptoStoreVersion = 13;
 
-static NSString *const kMXRealmCryptoStoreFolder = @"MXRealmCryptoStore";
+NSString *const kMXRealmCryptoStoreDataType = @"org.matrix.kit.MXRealmCryptoStoreDataType";
 
+static NSString *const kMXRealmCryptoStoreCipheredFileExt = @"ciphered";
+
+static NSString *const kMXRealmCryptoStoreFolder = @"MXRealmCryptoStore";
 
 #pragma mark - Realm objects that encapsulate existing ones
 
@@ -1276,13 +1281,15 @@ RLM_ARRAY_TYPE(MXRealmSecret)
 #pragma mark - Private methods
 + (RLMRealm*)realmForUser:(NSString*)userId andDevice:(NSString*)deviceId
 {
+    NSDate *startDate = [NSDate date];
+    NSLog(@"[MXRealmCryptoStore] realmForUser: start");
     // Each user has its own db file.
     // Else, it can lead to issue with primary keys.
     // Ex: if 2 users are is the same encrypted room, [self storeAlgorithmForRoom]
     // will be called twice for the same room id which breaks the uniqueness of the
     // primary key (roomId) for this table.
     RLMRealmConfiguration *config = [RLMRealmConfiguration defaultConfiguration];
-
+    
     NSURL *defaultRealmPathURL = config.fileURL.URLByDeletingLastPathComponent;
 
 #if TARGET_OS_SIMULATOR
@@ -1301,65 +1308,42 @@ RLM_ARRAY_TYPE(MXRealmSecret)
 #endif
     
     // Default db file URL: use the default directory, but replace the filename with the userId.
-    NSString *realmFile = userId;
-    if (MXTools.isRunningUnitTests)
-    {
-        // Append the device id for unit tests so that we can run e2e tests 
-        // with users with several devices
-        realmFile = [NSString stringWithFormat:@"%@-%@", userId, deviceId];
-    }
+    NSString *clearRealmFile = [self realmFileNameWithUserId:userId deviceId:deviceId];
+    NSString *cipheredFileName = [NSString stringWithFormat:@"%@-%@", clearRealmFile, kMXRealmCryptoStoreCipheredFileExt];
+    NSString *realmFile = clearRealmFile;
 
-    NSURL *defaultRealmFileURL = [[defaultRealmPathURL URLByAppendingPathComponent:realmFile]
-                              URLByAppendingPathExtension:@"realm"];
-    
     // Check for a potential application group id.
     NSString *applicationGroupIdentifier = [MXSDKOptions sharedInstance].applicationGroupIdentifier;
+    BOOL moveToEncryptedFile = [self shouldMoveToEncryptedDBWithEncryptedFilename:cipheredFileName applicationGroupIdentifier:applicationGroupIdentifier defaultRealmPathURL:defaultRealmPathURL];
+    // encryption is ready only if encryption is available and the the DB doesn't need to be moved to an encrypted one
+    BOOL encryptionReady = !moveToEncryptedFile && [[MXKeyProvider sharedInstance] isEncryptionAvailableForDataOfType:kMXRealmCryptoStoreDataType];
+    
+    if (encryptionReady)
+    {
+        realmFile = cipheredFileName;
+        config.encryptionKey = [self encryptionKey].key;
+    }
+    
+    NSURL *defaultRealmFileURL = [[defaultRealmPathURL URLByAppendingPathComponent:realmFile]
+                              URLByAppendingPathExtension:@"realm"];
+
     if (applicationGroupIdentifier)
     {
         // Use the shared db file URL.
-        NSURL *sharedContainerURL = [[NSFileManager defaultManager] containerURLForSecurityApplicationGroupIdentifier:applicationGroupIdentifier];
-        NSURL *realmFileFolderURL = [sharedContainerURL URLByAppendingPathComponent:kMXRealmCryptoStoreFolder];
-        NSURL *realmFileURL = [[realmFileFolderURL URLByAppendingPathComponent:userId] URLByAppendingPathExtension:@"realm"];
+        NSURL *sharedFileURL = [self sharedFileURLWithApplicationGroupIdentifier:applicationGroupIdentifier FileName:realmFile];
         
-        config.fileURL = realmFileURL;
+        config.fileURL = sharedFileURL;
         
         // Check whether an existing db file has to be be moved from the default folder to the shared container.
-        if ([NSFileManager.defaultManager fileExistsAtPath:[defaultRealmFileURL path]])
+        NSError *error = nil;
+        
+        [self moveToShareContainerFrom:defaultRealmFileURL to:sharedFileURL error:&error];
+
+        if (error)
         {
-            if (![NSFileManager.defaultManager fileExistsAtPath:[realmFileURL path]])
-            {
-                // Move this db file in the container directory associated with the application group identifier.
-                NSLog(@"[MXRealmCryptoStore] Move the db file to the application group container");
-                
-                if (![NSFileManager.defaultManager fileExistsAtPath:realmFileFolderURL.path])
-                {
-                    [[NSFileManager defaultManager] createDirectoryAtPath:realmFileFolderURL.path withIntermediateDirectories:YES attributes:nil error:nil];
-                }
-                
-                NSError *fileManagerError = nil;
-                
-                [NSFileManager.defaultManager moveItemAtURL:defaultRealmFileURL toURL:realmFileURL error:&fileManagerError];
-                
-                if (fileManagerError)
-                {
-                    NSLog(@"[MXRealmCryptoStore] Move db file failed (%@)", fileManagerError);
-                    // Keep using the old file
-                    config.fileURL = defaultRealmFileURL;
-                }
-            }
-            else
-            {
-                // Remove the residual db file.
-                [NSFileManager.defaultManager removeItemAtURL:defaultRealmFileURL error:nil];
-            }
-        }
-        else
-        {
-            // Make sure the full exists before giving it to Realm 
-            if (![NSFileManager.defaultManager fileExistsAtPath:realmFileFolderURL.path])
-            {
-                [[NSFileManager defaultManager] createDirectoryAtPath:realmFileFolderURL.path withIntermediateDirectories:YES attributes:nil error:nil];
-            }
+            NSLog(@"[MXRealmCryptoStore] Move db file failed (%@)", error);
+            // Keep using the old file
+            config.fileURL = defaultRealmFileURL;
         }
     }
     else
@@ -1368,7 +1352,7 @@ RLM_ARRAY_TYPE(MXRealmSecret)
         config.fileURL = defaultRealmFileURL;
     }
 
-    // Manage only our objects in this realm 
+    // Manage only our objects in this realm
     config.objectClasses = @[
                              MXRealmDeviceInfo.class,
                              MXRealmCrossSigningInfo.class,
@@ -1389,208 +1373,179 @@ RLM_ARRAY_TYPE(MXRealmSecret)
     // Set the block which will be called automatically when opening a Realm with a
     // schema version lower than the one set above
     config.migrationBlock = ^(RLMMigration *migration, uint64_t oldSchemaVersion) {
-
-        // Note: There is nothing to do most of the time
-        // Realm will automatically detect new properties and removed properties
-        // And will update the schema on disk automatically
-
-        if (oldSchemaVersion < kMXRealmCryptoStoreVersion)
-        {
-            NSLog(@"[MXRealmCryptoStore] Required migration detected. oldSchemaVersion: %llu - current: %tu", oldSchemaVersion, kMXRealmCryptoStoreVersion);
-
-            switch (oldSchemaVersion)
-            {
-                case 1:
-                {
-                    // There was a bug in schema version #1 where inbound group sessions
-                    // and olm sessions were duplicated:
-                    // https://github.com/matrix-org/matrix-ios-sdk/issues/227
-
-                    NSLog(@"[MXRealmCryptoStore] Migration from schema #1 -> #2");
-
-                    // We need to update the db because a sessionId property has been added MXRealmOlmSession
-                    // to ensure uniqueness
-                    NSLog(@"[MXRealmCryptoStore]    Add sessionId field to all MXRealmOlmSession objects");
-                    [migration enumerateObjects:MXRealmOlmSession.className block:^(RLMObject *oldObject, RLMObject *newObject) {
-
-                        OLMSession *olmSession =  [NSKeyedUnarchiver unarchiveObjectWithData:oldObject[@"olmSessionData"]];
-
-                        newObject[@"sessionId"] = olmSession.sessionIdentifier;
-                    }];
-
-                    // We need to clean the db from duplicated MXRealmOlmSessions
-                    NSLog(@"[MXRealmCryptoStore]    Make MXRealmOlmSession objects unique for the (sessionId, deviceKey) pair");
-                    __block NSUInteger deleteCount = 0;
-                    NSMutableArray<NSString*> *olmSessionUniquePairs = [NSMutableArray array];
-                    [migration enumerateObjects:MXRealmOlmSession.className block:^(RLMObject *oldObject, RLMObject *newObject) {
-
-                        NSString *olmSessionUniquePair = [NSString stringWithFormat:@"%@ - %@", newObject[@"sessionId"], newObject[@"deviceKey"]];
-
-                        if (NSNotFound == [olmSessionUniquePairs indexOfObject:olmSessionUniquePair])
-                        {
-                            [olmSessionUniquePairs addObject:olmSessionUniquePair];
-                        }
-                        else
-                        {
-                            NSLog(@"[MXRealmCryptoStore]        - delete MXRealmOlmSession: %@", olmSessionUniquePair);
-                            [migration deleteObject:newObject];
-                            deleteCount++;
-                        }
-                    }];
-
-                    NSLog(@"[MXRealmCryptoStore]    -> deleted %tu duplicated MXRealmOlmSession objects", deleteCount);
-
-                    // And from duplicated MXRealmOlmInboundGroupSessions
-                    NSLog(@"[MXRealmCryptoStore]    Make MXRealmOlmInboundGroupSession objects unique for the (sessionId, senderKey) pair");
-                    deleteCount = 0;
-                    NSMutableArray<NSString*> *olmInboundGroupSessionUniquePairs = [NSMutableArray array];
-                    [migration enumerateObjects:MXRealmOlmInboundGroupSession.className block:^(RLMObject *oldObject, RLMObject *newObject) {
-
-                        NSString *olmInboundGroupSessionUniquePair = [NSString stringWithFormat:@"%@ - %@", newObject[@"sessionId"], newObject[@"senderKey"]];
-
-                        if (NSNotFound == [olmInboundGroupSessionUniquePairs indexOfObject:olmInboundGroupSessionUniquePair])
-                        {
-                            [olmInboundGroupSessionUniquePairs addObject:olmInboundGroupSessionUniquePair];
-                        }
-                        else
-                        {
-                            NSLog(@"[MXRealmCryptoStore]        - delete MXRealmOlmInboundGroupSession: %@", olmInboundGroupSessionUniquePair);
-                            [migration deleteObject:newObject];
-                            deleteCount++;
-                        }
-                    }];
-
-                    NSLog(@"[MXRealmCryptoStore]    -> deleted %tu duplicated MXRealmOlmInboundGroupSession objects", deleteCount);
-
-                    NSLog(@"[MXRealmCryptoStore] Migration from schema #1 -> #2 completed");
-                }
-
-                case 2:
-                    NSLog(@"[MXRealmCryptoStore] Migration from schema #2 -> #3: Nothing to do (add MXRealmOlmAccount.deviceSyncToken)");
-
-                case 3:
-                    NSLog(@"[MXRealmCryptoStore] Migration from schema #3 -> #4: Nothing to do (add MXRealmOlmAccount.globalBlacklistUnverifiedDevices & MXRealmRoomAlgortithm.blacklistUnverifiedDevices)");
-
-                case 4:
-                    NSLog(@"[MXRealmCryptoStore] Migration from schema #4 -> #5: Nothing to do (add deviceTrackingStatusData)");
-
-                case 5:
-                    NSLog(@"[MXRealmCryptoStore] Migration from schema #5 -> #6: Nothing to do (remove MXRealmOlmAccount.deviceAnnounced)");
-
-                case 6:
-                {
-                    NSLog(@"[MXRealmCryptoStore] Migration from schema #6 -> #7");
-
-                    // We need to update the db because a sessionId property has been added to MXRealmOlmInboundGroupSession
-                    // to ensure uniqueness
-                    NSLog(@"[MXRealmCryptoStore]    Add sessionIdSenderKey, a combined primary key, to all MXRealmOlmInboundGroupSession objects");
-                    [migration enumerateObjects:MXRealmOlmInboundGroupSession.className block:^(RLMObject *oldObject, RLMObject *newObject) {
-
-                        newObject[@"sessionIdSenderKey"] = [MXRealmOlmInboundGroupSession primaryKeyWithSessionId:oldObject[@"sessionId"]
-                                                                                                        senderKey:oldObject[@"senderKey"]];
-                    }];
-
-                    // We need to update the db because a identityKey property has been added to MXRealmDeviceInfo
-                    NSLog(@"[MXRealmCryptoStore]    Add identityKey to all MXRealmDeviceInfo objects");
-                    [migration enumerateObjects:MXRealmDeviceInfo.className block:^(RLMObject *oldObject, RLMObject *newObject) {
-
-                        MXDeviceInfo *device = [NSKeyedUnarchiver unarchiveObjectWithData:oldObject[@"deviceInfoData"]];
-                        NSString *identityKey = device.identityKey;
-                        if (identityKey)
-                        {
-                            newObject[@"identityKey"] = identityKey;
-                        }
-                    }];
-
-                    NSLog(@"[MXRealmCryptoStore] Migration from schema #6 -> #7 completed");
-                }
-
-                case 7:
-                {
-                    NSLog(@"[MXRealmCryptoStore] Migration from schema #7 -> #8");
-
-                    // This schema update is only for cleaning duplicated devices.
-                    // With the Realm Obj-C SDK, the realm instance is not public. We cannot
-                    // make queries. So, the cleaning will be done afterwards.
-                    cleanDuplicatedDevices = YES;
-                }
-
-                case 8:
-                {
-                    // MXRealmOlmSession.lastReceivedMessageTs has been added to implement:
-                    // Use the last olm session that got a message
-                    // https://github.com/vector-im/riot-ios/issues/2128
-
-                    NSLog(@"[MXRealmCryptoStore] Migration from schema #8 -> #9");
-
-                    NSLog(@"[MXRealmCryptoStore]    Add lastReceivedMessageTs = 0 to all MXRealmOlmSession objects");
-                    [migration enumerateObjects:MXRealmOlmSession.className block:^(RLMObject *oldObject, RLMObject *newObject) {
-
-                        newObject[@"lastReceivedMessageTs"] = @(0);
-                    }];
-
-                    NSLog(@"[MXRealmCryptoStore] Migration from schema #8 -> #9 completed");
-                }
-
-                case 9:
-                {
-                    NSLog(@"[MXRealmCryptoStore] Migration from schema #9 -> #10");
-
-                    NSLog(@"[MXRealmCryptoStore]    Add requestBodyHash to all MXRealmOutgoingRoomKeyRequest objects");
-                    [migration enumerateObjects:MXRealmOutgoingRoomKeyRequest.className block:^(RLMObject *oldObject, RLMObject *newObject) {
-
-                        NSDictionary *requestBody = [MXTools deserialiseJSONString:oldObject[@"requestBodyString"]];
-                        if (requestBody)
-                        {
-                            newObject[@"requestBodyHash"] = [MXCryptoTools canonicalJSONStringForJSON:requestBody];
-                        }
-                    }];
-
-                    // This schema update needs a fix of cleanDuplicatedDevicesInRealm introduced in schema #8.
-                    cleanDuplicatedDevices = YES;
-                }
-
-                case 10:
-                    NSLog(@"[MXRealmCryptoStore] Migration from schema #10 -> #11: Nothing to do (added optional MXRealmUser.crossSigningKeys)");
-
-                case 11:
-                {
-                    NSLog(@"[MXRealmCryptoStore] Migration from schema #10 -> #11");
-
-                    // Because of https://github.com/vector-im/riot-ios/issues/2896, algorithms were not stored
-                    // Fix it by defaulting to usual values
-                    NSLog(@"[MXRealmCryptoStore]    Fix missing algorithms to all MXRealmDeviceInfo objects");
-
-                    [migration enumerateObjects:MXRealmDeviceInfo.className block:^(RLMObject *oldObject, RLMObject *newObject) {
-
-                        MXDeviceInfo *device = [NSKeyedUnarchiver unarchiveObjectWithData:oldObject[@"deviceInfoData"]];
-                        if (!device.algorithms)
-                        {
-                            device.algorithms = @[
-                                                  kMXCryptoOlmAlgorithm,
-                                                  kMXCryptoMegolmAlgorithm
-                                                  ];
-                        }
-                        newObject[@"deviceInfoData"] = [NSKeyedArchiver archivedDataWithRootObject:device];
-                    }];
-                }
-                    
-                case 12:
-                {
-                    NSLog(@"[MXRealmCryptoStore] Migration from schema #12 -> #13");
-                    
-                    // Ìntroduction of MXCryptoStore.cryptoVersion
-                    // Set the default value
-                    NSLog(@"[MXRealmCryptoStore]    Add new MXRealmOlmAccount.cryptoVersion. Set it to MXCryptoVersion1");
-                    
-                    [migration enumerateObjects:MXRealmOlmAccount.className block:^(RLMObject *oldObject, RLMObject *newObject) {
-                        newObject[@"cryptoVersion"] = @(MXCryptoVersion1);
-                    }];
-                }
-            }
-        }
+        cleanDuplicatedDevices = [self finaliseMigrationWith:migration oldSchemaVersion:oldSchemaVersion];
     };
     
+    [self setupShouldCompactOnLaunch:config];
+
+    NSError *error;
+    RLMRealm *realm;
+    
+    @autoreleasepool
+    {
+        realm = [RLMRealm realmWithConfiguration:config error:&error];
+        if (error)
+        {
+            NSLog(@"[MXRealmCryptoStore] realmForUser gets error: %@", error);
+
+            // Remove the db file
+            NSError *error;
+            [[NSFileManager defaultManager] removeItemAtPath:config.fileURL.path error:&error];
+            NSLog(@"[MXRealmCryptoStore] removeItemAtPath error result: %@", error);
+
+            // And try again
+            realm = [RLMRealm realmWithConfiguration:config error:&error];
+            if (!realm)
+            {
+                NSLog(@"[MXRealmCryptoStore] realmForUser still gets after reset. Error: %@", error);
+            }
+
+            // Report this db reset to higher modules
+            // A user logout and in is anyway required to make crypto work reliably again
+            dispatch_async(dispatch_get_main_queue(),^{
+                [[NSNotificationCenter defaultCenter] postNotificationName:kMXSessionCryptoDidCorruptDataNotification
+                                                                    object:userId
+                                                                  userInfo:nil];
+            });
+        }
+    }
+
+    if (cleanDuplicatedDevices)
+    {
+        NSLog(@"[MXRealmCryptoStore] Do cleaning for duplicating devices");
+
+        NSUInteger before = [MXRealmDeviceInfo allObjectsInRealm:realm].count;
+        [self cleanDuplicatedDevicesInRealm:realm];
+        NSUInteger after = [MXRealmDeviceInfo allObjectsInRealm:realm].count;
+
+        NSLog(@"[MXRealmCryptoStore] Cleaning for duplicating devices completed. There are now %@ devices. There were %@ before. %@ devices have been removed.", @(after), @(before), @(before - after));
+    }
+
+    // Wait for completion of other operations on this realm launched from other threads
+    [realm refresh];
+    
+    if (moveToEncryptedFile)
+    {
+        NSLog(@"[MXRealmCryptoStore] migrating to encrypted DB");
+        
+        NSURL *targetURL = applicationGroupIdentifier ? [self sharedFileURLWithApplicationGroupIdentifier:applicationGroupIdentifier FileName:cipheredFileName] :
+        [[defaultRealmPathURL URLByAppendingPathComponent:cipheredFileName] URLByAppendingPathExtension:@"realm"];
+        
+        NSError *error = nil;
+        [realm writeCopyToURL:targetURL encryptionKey:[self encryptionKey].key error:&error];
+        
+        if (error)
+        {
+            NSLog(@"[MXRealmCryptoStore] migration to encrypted DB failed: %@", error);
+        }
+        else
+        {
+            @autoreleasepool
+            {
+                // Need to force releasing previous RLMRealm instance so we can delete old DB file at a glance
+                realm = [self realmForUser:userId andDevice:deviceId];
+            }
+
+            NSLog(@"[MXRealmCryptoStore] deleting previous DB");
+            [RLMRealm deleteFilesForConfiguration:config error:&error];
+            if (error)
+            {
+                NSLog(@"[MXRealmCryptoStore] failed to delete previous DB: %@", error);
+            }
+        }
+    }
+    
+    NSLog(@"[MXRealmCryptoStore] realmForUser: end after %fs", [[NSDate date] timeIntervalSinceDate:startDate]);
+
+    return realm;
+}
+
+/**
+ Gives the URL of a given file to the Realm shared folder
+ 
+ @param applicationGroupIdentifier the Application Group Identifier (see https://developer.apple.com/documentation/bundleresources/entitlements/com_apple_security_application-groups)
+ @param fileName name of the file
+ 
+ @return the URL of a given file to the Realm shared folder
+ */
++ (NSURL *)sharedFileURLWithApplicationGroupIdentifier:(nonnull NSString *)applicationGroupIdentifier FileName:(nonnull NSString *)fileName {
+    NSURL *sharedContainerURL = [[NSFileManager defaultManager] containerURLForSecurityApplicationGroupIdentifier:applicationGroupIdentifier];
+    NSURL *realmFileFolderURL = [sharedContainerURL URLByAppendingPathComponent:kMXRealmCryptoStoreFolder];
+    return [[realmFileFolderURL URLByAppendingPathComponent:fileName] URLByAppendingPathExtension:@"realm"];
+}
+
+/**
+ Gives the ecryption key if encryption is needed
+ 
+ @return the encryption key if encryption is needed. Nil otherwise.
+ 
+ @throw exception if encryption is available but KeyProvider is not ready
+ */
++ (MXRawDataKey *)encryptionKey
+{
+    // We intentionnally let the exception as the key MUST be provided if the encryption is available
+    MXKeyData * keyData =  [[MXKeyProvider sharedInstance] keyDataForDataOfType:kMXRealmCryptoStoreDataType isMandatory:YES expectedKeyType:kRawData];
+    if (keyData && [keyData isKindOfClass:[MXRawDataKey class]])
+    {
+        return (MXRawDataKey *)keyData;
+    }
+    return nil;
+}
+
+/**
+ Gives the file name of the Realm file
+ 
+ @param userId ID of the current user
+ @param deviceId ID of the current device (used for unit tests)
+ 
+ @return the file name of the Realm file according to the given user and device IDs.
+ */
++ (NSString *)realmFileNameWithUserId:(NSString *)userId deviceId:deviceId
+{
+    if (MXTools.isRunningUnitTests)
+    {
+        // Append the device id for unit tests so that we can run e2e tests
+        // with users with several devices
+        return [NSString stringWithFormat:@"%@-%@", userId, deviceId];
+    }
+    
+    return userId;
+}
+
+/**
+ Allow to know if the current DB is not encrypted and should be moved to an encrypted one.
+ 
+ @param fileName file name of the current DB file
+ @param applicationGroupIdentifier the Application Group Identifier if set. Nil otherwise.
+ @param defaultRealmPathURL default path of the Realm DB
+ 
+ @return YES if the DB should be moved to a encrypted DB. NO otherwise.
+ */
++ (BOOL)shouldMoveToEncryptedDBWithEncryptedFilename:(NSString *)fileName applicationGroupIdentifier:(NSString *)applicationGroupIdentifier defaultRealmPathURL:(NSURL *)defaultRealmPathURL
+{
+    if ([[MXKeyProvider sharedInstance] isEncryptionAvailableForDataOfType:kMXRealmCryptoStoreDataType])
+    {
+        NSURL *defaultRealmFileURL = [[defaultRealmPathURL URLByAppendingPathComponent:fileName]
+                                  URLByAppendingPathExtension:@"realm"];
+        
+        NSURL *sharedContainerURL = [[NSFileManager defaultManager] containerURLForSecurityApplicationGroupIdentifier:applicationGroupIdentifier];
+        NSURL *sharedRealmFileFolderURL = [sharedContainerURL URLByAppendingPathComponent:kMXRealmCryptoStoreFolder];
+        NSURL *sharedRealmFileURL = [[sharedRealmFileFolderURL URLByAppendingPathComponent:fileName] URLByAppendingPathExtension:@"realm"];
+        
+        NSFileManager *fileManager = [NSFileManager defaultManager];
+        // should move to encrypted DB if encryption is available and unciphered DB file exists
+        return ![fileManager fileExistsAtPath:defaultRealmFileURL.path] && ![fileManager fileExistsAtPath:sharedRealmFileURL.path];
+    }
+    
+    return NO;
+}
+
+/**
+ Set the shouldCompactOnLaunch block to the given RLMRealmConfiguration instance.
+ 
+ @param config RLMRealmConfiguration instance to be set up.
+ */
++ (void)setupShouldCompactOnLaunch:(RLMRealmConfiguration *)config {
     config.shouldCompactOnLaunch = ^BOOL(NSUInteger totalBytes, NSUInteger bytesUsed) {
         // totalBytes refers to the size of the file on disk in bytes (data + free space)
         // usedBytes refers to the number of bytes used by data in the file
@@ -1611,49 +1566,263 @@ RLM_ARRAY_TYPE(MXRealmSecret)
 
         return result;
     };
+}
 
-    NSError *error;
-    RLMRealm *realm = [RLMRealm realmWithConfiguration:config error:&error];
-    if (error)
+/**
+ Move the DB file from the application document directory into the shared document directory
+ 
+ @param currentFileURL path of the current DB file.
+ @param targetFileURL path of the target file
+ @param error output param: set to the error value of error occures.
+ */
++ (void)moveToShareContainerFrom:(NSURL *)currentFileURL to:(NSURL *)targetFileURL error:(NSError **)error {
+    NSURL *targetFolderURL = [targetFileURL URLByDeletingLastPathComponent];
+    if ([NSFileManager.defaultManager fileExistsAtPath:[currentFileURL path]])
     {
-        NSLog(@"[MXRealmCryptoStore] realmForUser gets error: %@", error);
-
-        // Remove the db file
-        NSError *error;
-        [[NSFileManager defaultManager] removeItemAtPath:config.fileURL.path error:&error];
-        NSLog(@"[MXRealmCryptoStore] removeItemAtPath error result: %@", error);
-
-        // And try again
-        realm = [RLMRealm realmWithConfiguration:config error:&error];
-        if (!realm)
+        if (![NSFileManager.defaultManager fileExistsAtPath:[targetFileURL path]])
         {
-            NSLog(@"[MXRealmCryptoStore] realmForUser still gets after reset. Error: %@", error);
+            // Move this db file in the container directory associated with the application group identifier.
+            NSLog(@"[MXRealmCryptoStore] Move the db file to the application group container");
+            
+            if (![NSFileManager.defaultManager fileExistsAtPath:targetFolderURL.path])
+            {
+                [[NSFileManager defaultManager] createDirectoryAtPath:targetFolderURL.path withIntermediateDirectories:YES attributes:nil error:nil];
+            }
+            
+            [NSFileManager.defaultManager moveItemAtURL:currentFileURL toURL:targetFileURL error:error];
         }
-
-        // Report this db reset to higher modules
-        // A user logout and in is anyway required to make crypto work reliably again
-        dispatch_async(dispatch_get_main_queue(),^{
-            [[NSNotificationCenter defaultCenter] postNotificationName:kMXSessionCryptoDidCorruptDataNotification
-                                                                object:userId
-                                                              userInfo:nil];
-        });
+        else
+        {
+            // Remove the residual db file.
+            [NSFileManager.defaultManager removeItemAtURL:currentFileURL error:nil];
+        }
     }
-
-    if (cleanDuplicatedDevices)
+    else
     {
-        NSLog(@"[MXRealmCryptoStore] Do cleaning for duplicating devices");
-
-        NSUInteger before = [MXRealmDeviceInfo allObjectsInRealm:realm].count;
-        [self cleanDuplicatedDevicesInRealm:realm];
-        NSUInteger after = [MXRealmDeviceInfo allObjectsInRealm:realm].count;
-
-        NSLog(@"[MXRealmCryptoStore] Cleaning for duplicating devices completed. There are now %@ devices. There were %@ before. %@ devices have been removed.", @(after), @(before), @(before - after));
+        // Make sure the full exists before giving it to Realm
+        if (![NSFileManager.defaultManager fileExistsAtPath:targetFolderURL.path])
+        {
+            [[NSFileManager defaultManager] createDirectoryAtPath:targetFolderURL.path withIntermediateDirectories:YES attributes:nil error:nil];
+        }
     }
+}
 
-    // Wait for completion of other operations on this realm launched from other threads
-    [realm refresh];
+/**
+ Finalise migration performed by Realm.
+ 
+ Basically fixes migration glitches between some versions of schema.
 
-    return realm;
+ @param migration   A `RLMMigration` object used to perform the migration. The
+                    migration object allows you to enumerate and alter any
+                    existing objects which require migration.
+
+ @param oldSchemaVersion    The schema version of the Realm being migrated.
+ 
+ @return YES if a clean up of duplicated devices should be performed. NO otherwise.
+ */
++ (BOOL)finaliseMigrationWith:(RLMMigration *)migration oldSchemaVersion:(uint64_t)oldSchemaVersion {
+    BOOL cleanDuplicatedDevices = NO;
+
+    // Note: There is nothing to do most of the time
+    // Realm will automatically detect new properties and removed properties
+    // And will update the schema on disk automatically
+    if (oldSchemaVersion < kMXRealmCryptoStoreVersion)
+    {
+        NSLog(@"[MXRealmCryptoStore] Required migration detected. oldSchemaVersion: %llu - current: %tu", oldSchemaVersion, kMXRealmCryptoStoreVersion);
+
+        switch (oldSchemaVersion)
+        {
+            case 1:
+            {
+                // There was a bug in schema version #1 where inbound group sessions
+                // and olm sessions were duplicated:
+                // https://github.com/matrix-org/matrix-ios-sdk/issues/227
+
+                NSLog(@"[MXRealmCryptoStore] Migration from schema #1 -> #2");
+
+                // We need to update the db because a sessionId property has been added MXRealmOlmSession
+                // to ensure uniqueness
+                NSLog(@"[MXRealmCryptoStore]    Add sessionId field to all MXRealmOlmSession objects");
+                [migration enumerateObjects:MXRealmOlmSession.className block:^(RLMObject *oldObject, RLMObject *newObject) {
+
+                    OLMSession *olmSession =  [NSKeyedUnarchiver unarchiveObjectWithData:oldObject[@"olmSessionData"]];
+
+                    newObject[@"sessionId"] = olmSession.sessionIdentifier;
+                }];
+
+                // We need to clean the db from duplicated MXRealmOlmSessions
+                NSLog(@"[MXRealmCryptoStore]    Make MXRealmOlmSession objects unique for the (sessionId, deviceKey) pair");
+                __block NSUInteger deleteCount = 0;
+                NSMutableArray<NSString*> *olmSessionUniquePairs = [NSMutableArray array];
+                [migration enumerateObjects:MXRealmOlmSession.className block:^(RLMObject *oldObject, RLMObject *newObject) {
+
+                    NSString *olmSessionUniquePair = [NSString stringWithFormat:@"%@ - %@", newObject[@"sessionId"], newObject[@"deviceKey"]];
+
+                    if (NSNotFound == [olmSessionUniquePairs indexOfObject:olmSessionUniquePair])
+                    {
+                        [olmSessionUniquePairs addObject:olmSessionUniquePair];
+                    }
+                    else
+                    {
+                        NSLog(@"[MXRealmCryptoStore]        - delete MXRealmOlmSession: %@", olmSessionUniquePair);
+                        [migration deleteObject:newObject];
+                        deleteCount++;
+                    }
+                }];
+
+                NSLog(@"[MXRealmCryptoStore]    -> deleted %tu duplicated MXRealmOlmSession objects", deleteCount);
+
+                // And from duplicated MXRealmOlmInboundGroupSessions
+                NSLog(@"[MXRealmCryptoStore]    Make MXRealmOlmInboundGroupSession objects unique for the (sessionId, senderKey) pair");
+                deleteCount = 0;
+                NSMutableArray<NSString*> *olmInboundGroupSessionUniquePairs = [NSMutableArray array];
+                [migration enumerateObjects:MXRealmOlmInboundGroupSession.className block:^(RLMObject *oldObject, RLMObject *newObject) {
+
+                    NSString *olmInboundGroupSessionUniquePair = [NSString stringWithFormat:@"%@ - %@", newObject[@"sessionId"], newObject[@"senderKey"]];
+
+                    if (NSNotFound == [olmInboundGroupSessionUniquePairs indexOfObject:olmInboundGroupSessionUniquePair])
+                    {
+                        [olmInboundGroupSessionUniquePairs addObject:olmInboundGroupSessionUniquePair];
+                    }
+                    else
+                    {
+                        NSLog(@"[MXRealmCryptoStore]        - delete MXRealmOlmInboundGroupSession: %@", olmInboundGroupSessionUniquePair);
+                        [migration deleteObject:newObject];
+                        deleteCount++;
+                    }
+                }];
+
+                NSLog(@"[MXRealmCryptoStore]    -> deleted %tu duplicated MXRealmOlmInboundGroupSession objects", deleteCount);
+
+                NSLog(@"[MXRealmCryptoStore] Migration from schema #1 -> #2 completed");
+            }
+
+            case 2:
+                NSLog(@"[MXRealmCryptoStore] Migration from schema #2 -> #3: Nothing to do (add MXRealmOlmAccount.deviceSyncToken)");
+
+            case 3:
+                NSLog(@"[MXRealmCryptoStore] Migration from schema #3 -> #4: Nothing to do (add MXRealmOlmAccount.globalBlacklistUnverifiedDevices & MXRealmRoomAlgortithm.blacklistUnverifiedDevices)");
+
+            case 4:
+                NSLog(@"[MXRealmCryptoStore] Migration from schema #4 -> #5: Nothing to do (add deviceTrackingStatusData)");
+
+            case 5:
+                NSLog(@"[MXRealmCryptoStore] Migration from schema #5 -> #6: Nothing to do (remove MXRealmOlmAccount.deviceAnnounced)");
+
+            case 6:
+            {
+                NSLog(@"[MXRealmCryptoStore] Migration from schema #6 -> #7");
+
+                // We need to update the db because a sessionId property has been added to MXRealmOlmInboundGroupSession
+                // to ensure uniqueness
+                NSLog(@"[MXRealmCryptoStore]    Add sessionIdSenderKey, a combined primary key, to all MXRealmOlmInboundGroupSession objects");
+                [migration enumerateObjects:MXRealmOlmInboundGroupSession.className block:^(RLMObject *oldObject, RLMObject *newObject) {
+
+                    newObject[@"sessionIdSenderKey"] = [MXRealmOlmInboundGroupSession primaryKeyWithSessionId:oldObject[@"sessionId"]
+                                                                                                    senderKey:oldObject[@"senderKey"]];
+                }];
+
+                // We need to update the db because a identityKey property has been added to MXRealmDeviceInfo
+                NSLog(@"[MXRealmCryptoStore]    Add identityKey to all MXRealmDeviceInfo objects");
+                [migration enumerateObjects:MXRealmDeviceInfo.className block:^(RLMObject *oldObject, RLMObject *newObject) {
+
+                    MXDeviceInfo *device = [NSKeyedUnarchiver unarchiveObjectWithData:oldObject[@"deviceInfoData"]];
+                    NSString *identityKey = device.identityKey;
+                    if (identityKey)
+                    {
+                        newObject[@"identityKey"] = identityKey;
+                    }
+                }];
+
+                NSLog(@"[MXRealmCryptoStore] Migration from schema #6 -> #7 completed");
+            }
+
+            case 7:
+            {
+                NSLog(@"[MXRealmCryptoStore] Migration from schema #7 -> #8");
+
+                // This schema update is only for cleaning duplicated devices.
+                // With the Realm Obj-C SDK, the realm instance is not public. We cannot
+                // make queries. So, the cleaning will be done afterwards.
+                cleanDuplicatedDevices = YES;
+            }
+
+            case 8:
+            {
+                // MXRealmOlmSession.lastReceivedMessageTs has been added to implement:
+                // Use the last olm session that got a message
+                // https://github.com/vector-im/riot-ios/issues/2128
+
+                NSLog(@"[MXRealmCryptoStore] Migration from schema #8 -> #9");
+
+                NSLog(@"[MXRealmCryptoStore]    Add lastReceivedMessageTs = 0 to all MXRealmOlmSession objects");
+                [migration enumerateObjects:MXRealmOlmSession.className block:^(RLMObject *oldObject, RLMObject *newObject) {
+
+                    newObject[@"lastReceivedMessageTs"] = @(0);
+                }];
+
+                NSLog(@"[MXRealmCryptoStore] Migration from schema #8 -> #9 completed");
+            }
+
+            case 9:
+            {
+                NSLog(@"[MXRealmCryptoStore] Migration from schema #9 -> #10");
+
+                NSLog(@"[MXRealmCryptoStore]    Add requestBodyHash to all MXRealmOutgoingRoomKeyRequest objects");
+                [migration enumerateObjects:MXRealmOutgoingRoomKeyRequest.className block:^(RLMObject *oldObject, RLMObject *newObject) {
+
+                    NSDictionary *requestBody = [MXTools deserialiseJSONString:oldObject[@"requestBodyString"]];
+                    if (requestBody)
+                    {
+                        newObject[@"requestBodyHash"] = [MXCryptoTools canonicalJSONStringForJSON:requestBody];
+                    }
+                }];
+
+                // This schema update needs a fix of cleanDuplicatedDevicesInRealm introduced in schema #8.
+                cleanDuplicatedDevices = YES;
+            }
+
+            case 10:
+                NSLog(@"[MXRealmCryptoStore] Migration from schema #10 -> #11: Nothing to do (added optional MXRealmUser.crossSigningKeys)");
+
+            case 11:
+            {
+                NSLog(@"[MXRealmCryptoStore] Migration from schema #10 -> #11");
+
+                // Because of https://github.com/vector-im/riot-ios/issues/2896, algorithms were not stored
+                // Fix it by defaulting to usual values
+                NSLog(@"[MXRealmCryptoStore]    Fix missing algorithms to all MXRealmDeviceInfo objects");
+
+                [migration enumerateObjects:MXRealmDeviceInfo.className block:^(RLMObject *oldObject, RLMObject *newObject) {
+
+                    MXDeviceInfo *device = [NSKeyedUnarchiver unarchiveObjectWithData:oldObject[@"deviceInfoData"]];
+                    if (!device.algorithms)
+                    {
+                        device.algorithms = @[
+                                              kMXCryptoOlmAlgorithm,
+                                              kMXCryptoMegolmAlgorithm
+                                              ];
+                    }
+                    newObject[@"deviceInfoData"] = [NSKeyedArchiver archivedDataWithRootObject:device];
+                }];
+            }
+                
+            case 12:
+            {
+                NSLog(@"[MXRealmCryptoStore] Migration from schema #12 -> #13");
+                
+                // Ìntroduction of MXCryptoStore.cryptoVersion
+                // Set the default value
+                NSLog(@"[MXRealmCryptoStore]    Add new MXRealmOlmAccount.cryptoVersion. Set it to MXCryptoVersion1");
+                
+                [migration enumerateObjects:MXRealmOlmAccount.className block:^(RLMObject *oldObject, RLMObject *newObject) {
+                    newObject[@"cryptoVersion"] = @(MXCryptoVersion1);
+                }];
+            }
+        }
+    }
+    
+    return cleanDuplicatedDevices;
 }
 
 /**
