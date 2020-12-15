@@ -1455,7 +1455,7 @@ RLM_ARRAY_TYPE(MXRealmSecret)
         }
     }
     
-    NSLog(@"[MXRealmCryptoStore] realmForUser: end after %fs", [[NSDate date] timeIntervalSinceDate:startDate]);
+    NSLog(@"[MXRealmCryptoStore] realmForUser: end after %.3fms", [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
 
     return realm;
 }
