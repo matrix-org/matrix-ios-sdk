@@ -1575,7 +1575,7 @@ RLM_ARRAY_TYPE(MXRealmSecret)
  @param targetFileURL path of the target file
  @param error output param: set to the error value of error occures.
  */
-+ (void)moveToShareContainerFrom:(NSURL *)currentFileURL to:(NSURL *)targetFileURL error:(NSError **)error {
++ (void)moveToSharedContainerFrom:(NSURL *)currentFileURL to:(NSURL *)targetFileURL error:(NSError **)error {
     NSURL *targetFolderURL = [targetFileURL URLByDeletingLastPathComponent];
     if ([NSFileManager.defaultManager fileExistsAtPath:[currentFileURL path]])
     {
