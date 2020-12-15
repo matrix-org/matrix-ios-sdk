@@ -1468,7 +1468,7 @@ RLM_ARRAY_TYPE(MXRealmSecret)
  
  @return the URL of a given file to the Realm shared folder
  */
-+ (NSURL *)sharedFileURLWithApplicationGroupIdentifier:(nonnull NSString *)applicationGroupIdentifier FileName:(nonnull NSString *)fileName {
++ (NSURL *)sharedFileURLWithApplicationGroupIdentifier:(nonnull NSString *)applicationGroupIdentifier fileName:(nonnull NSString *)fileName {
     NSURL *sharedContainerURL = [[NSFileManager defaultManager] containerURLForSecurityApplicationGroupIdentifier:applicationGroupIdentifier];
     NSURL *realmFileFolderURL = [sharedContainerURL URLByAppendingPathComponent:kMXRealmCryptoStoreFolder];
     return [[realmFileFolderURL URLByAppendingPathComponent:fileName] URLByAppendingPathExtension:@"realm"];
