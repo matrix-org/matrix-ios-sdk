@@ -1527,13 +1527,22 @@ RLM_ARRAY_TYPE(MXRealmSecret)
     {
         NSURL *defaultRealmFileURL = [[defaultRealmFolderURL URLByAppendingPathComponent:fileName]
                                   URLByAppendingPathExtension:@"realm"];
+        if ([fileManager fileExistsAtPath:defaultRealmFileURL.path])
+        {
+            return NO;
+        }
         
-        NSURL *sharedContainerURL = [[NSFileManager defaultManager] containerURLForSecurityApplicationGroupIdentifier:applicationGroupIdentifier];
-        NSURL *sharedRealmFileFolderURL = [sharedContainerURL URLByAppendingPathComponent:kMXRealmCryptoStoreFolder];
-        NSURL *sharedRealmFileURL = [[sharedRealmFileFolderURL URLByAppendingPathComponent:fileName] URLByAppendingPathExtension:@"realm"];
+        if (applicationGroupIdentifier)
+        {
+            NSURL *sharedContainerURL = [[NSFileManager defaultManager] containerURLForSecurityApplicationGroupIdentifier:applicationGroupIdentifier];
+            NSURL *sharedRealmFileFolderURL = [sharedContainerURL URLByAppendingPathComponent:kMXRealmCryptoStoreFolder];
+            NSURL *sharedRealmFileURL = [[sharedRealmFileFolderURL URLByAppendingPathComponent:fileName] URLByAppendingPathExtension:@"realm"];
+            
+            NSFileManager *fileManager = [NSFileManager defaultManager];
+            return ![fileManager fileExistsAtPath:sharedRealmFileURL.path];
+        }
         
-        NSFileManager *fileManager = [NSFileManager defaultManager];
-        return ![fileManager fileExistsAtPath:defaultRealmFileURL.path] && ![fileManager fileExistsAtPath:sharedRealmFileURL.path];
+        return YES;
     }
     
     return NO;
