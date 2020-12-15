@@ -29,7 +29,7 @@
 
 NSUInteger const kMXRealmCryptoStoreVersion = 13;
 
-NSString *const kMXRealmCryptoStoreDataType = @"org.matrix.kit.MXRealmCryptoStoreDataType";
+NSString *const kMXRealmCryptoStoreDataType = @"org.matrix.sdk.MXRealmCryptoStoreDataType";
 
 static NSString *const kMXRealmCryptoStoreCipheredFileExt = @"ciphered";
 
