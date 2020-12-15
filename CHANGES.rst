@@ -3,7 +3,7 @@ Changes to be released in next version
 
 ✨ Features
  * Added MXKeyProvider to enable data encryption using keys given by client application (#3866)
- * Added encryption for MXRealmCryptoStore (#3866)
+ * Added encryption for MXRealmCryptoStore (vector-im/element-ios/issues/3867).
 
 🙌 Improvements
  * MXTaggedEvents: Expose "m.tagged_events" according to [MSC2437](https://github.com/matrix-org/matrix-doc/pull/2437).
