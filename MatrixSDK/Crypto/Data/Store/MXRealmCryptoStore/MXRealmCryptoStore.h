@@ -25,7 +25,7 @@
 /**
  Used to identify the type of data when requesting MXKeyProvider
  */
-extern NSString * _Nonnull const kMXRealmCryptoStoreDataType;
+extern NSString * _Nonnull const MXRealmCryptoStoreDataType;
 
 @interface MXRealmCryptoStore : NSObject <MXCryptoStore>
 

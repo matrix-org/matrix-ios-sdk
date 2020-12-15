@@ -29,7 +29,7 @@
 
 NSUInteger const kMXRealmCryptoStoreVersion = 13;
 
-NSString *const kMXRealmCryptoStoreDataType = @"org.matrix.sdk.MXRealmCryptoStoreDataType";
+NSString *const MXRealmCryptoStoreDataType = @"org.matrix.sdk.MXRealmCryptoStoreDataType";
 
 static NSString *const kMXRealmCryptoStoreCipheredFileExt = @"ciphered";
 
@@ -1290,16 +1290,16 @@ RLM_ARRAY_TYPE(MXRealmSecret)
     // primary key (roomId) for this table.
     RLMRealmConfiguration *config = [RLMRealmConfiguration defaultConfiguration];
     
-    NSURL *defaultRealmPathURL = config.fileURL.URLByDeletingLastPathComponent;
+    NSURL *defaultRealmFolderURL = config.fileURL.URLByDeletingLastPathComponent;
 
 #if TARGET_OS_SIMULATOR
     // On simulator from iOS 11, the Documents folder used by Realm by default
     // can be missing. Create it if required
     // https://stackoverflow.com/a/50817364
-    if (![NSFileManager.defaultManager fileExistsAtPath:defaultRealmPathURL.path])
+    if (![NSFileManager.defaultManager fileExistsAtPath:defaultRealmFolderURL.path])
     {
         NSError *error;
-        [[NSFileManager defaultManager] createDirectoryAtPath:defaultRealmPathURL.path
+        [[NSFileManager defaultManager] createDirectoryAtPath:defaultRealmFolderURL.path
                                   withIntermediateDirectories:YES
                                                    attributes:nil
                                                         error:&error];
@@ -1314,9 +1314,9 @@ RLM_ARRAY_TYPE(MXRealmSecret)
 
     // Check for a potential application group id.
     NSString *applicationGroupIdentifier = [MXSDKOptions sharedInstance].applicationGroupIdentifier;
-    BOOL moveToEncryptedFile = [self shouldMoveToEncryptedDBWithEncryptedFilename:cipheredFileName applicationGroupIdentifier:applicationGroupIdentifier defaultRealmPathURL:defaultRealmPathURL];
-    // encryption is ready only if encryption is available and the the DB doesn't need to be moved to an encrypted one
-    BOOL encryptionReady = !moveToEncryptedFile && [[MXKeyProvider sharedInstance] isEncryptionAvailableForDataOfType:kMXRealmCryptoStoreDataType];
+    BOOL moveToEncryptedFile = [self shouldMoveToEncryptedDBWithEncryptedFilename:cipheredFileName applicationGroupIdentifier:applicationGroupIdentifier defaultRealmFolderURL:defaultRealmFolderURL];
+    // encryption is ready only if encryption is available and the DB doesn't need to be moved to an encrypted one
+    BOOL encryptionReady = !moveToEncryptedFile && [[MXKeyProvider sharedInstance] isEncryptionAvailableForDataOfType:MXRealmCryptoStoreDataType];
     
     if (encryptionReady)
     {
@@ -1324,20 +1324,20 @@ RLM_ARRAY_TYPE(MXRealmSecret)
         config.encryptionKey = [self encryptionKey].key;
     }
     
-    NSURL *defaultRealmFileURL = [[defaultRealmPathURL URLByAppendingPathComponent:realmFile]
+    NSURL *defaultRealmFileURL = [[defaultRealmFolderURL URLByAppendingPathComponent:realmFile]
                               URLByAppendingPathExtension:@"realm"];
 
     if (applicationGroupIdentifier)
     {
         // Use the shared db file URL.
-        NSURL *sharedFileURL = [self sharedFileURLWithApplicationGroupIdentifier:applicationGroupIdentifier FileName:realmFile];
+        NSURL *sharedFileURL = [self sharedFileURLWithApplicationGroupIdentifier:applicationGroupIdentifier fileName:realmFile];
         
         config.fileURL = sharedFileURL;
         
         // Check whether an existing db file has to be be moved from the default folder to the shared container.
         NSError *error = nil;
         
-        [self moveToShareContainerFrom:defaultRealmFileURL to:sharedFileURL error:&error];
+        [self moveToSharedContainerFrom:defaultRealmFileURL to:sharedFileURL error:&error];
 
         if (error)
         {
@@ -1428,8 +1428,8 @@ RLM_ARRAY_TYPE(MXRealmSecret)
     {
         NSLog(@"[MXRealmCryptoStore] migrating to encrypted DB");
         
-        NSURL *targetURL = applicationGroupIdentifier ? [self sharedFileURLWithApplicationGroupIdentifier:applicationGroupIdentifier FileName:cipheredFileName] :
-        [[defaultRealmPathURL URLByAppendingPathComponent:cipheredFileName] URLByAppendingPathExtension:@"realm"];
+        NSURL *targetURL = applicationGroupIdentifier ? [self sharedFileURLWithApplicationGroupIdentifier:applicationGroupIdentifier fileName:cipheredFileName] :
+        [[defaultRealmFolderURL URLByAppendingPathComponent:cipheredFileName] URLByAppendingPathExtension:@"realm"];
         
         NSError *error = nil;
         [realm writeCopyToURL:targetURL encryptionKey:[self encryptionKey].key error:&error];
@@ -1484,7 +1484,7 @@ RLM_ARRAY_TYPE(MXRealmSecret)
 + (MXRawDataKey *)encryptionKey
 {
     // We intentionnally let the exception as the key MUST be provided if the encryption is available
-    MXKeyData * keyData =  [[MXKeyProvider sharedInstance] keyDataForDataOfType:kMXRealmCryptoStoreDataType isMandatory:YES expectedKeyType:kRawData];
+    MXKeyData * keyData =  [[MXKeyProvider sharedInstance] keyDataForDataOfType:MXRealmCryptoStoreDataType isMandatory:YES expectedKeyType:kRawData];
     if (keyData && [keyData isKindOfClass:[MXRawDataKey class]])
     {
         return (MXRawDataKey *)keyData;
@@ -1517,15 +1517,15 @@ RLM_ARRAY_TYPE(MXRealmSecret)
  
  @param fileName file name of the current DB file
  @param applicationGroupIdentifier the Application Group Identifier if set. Nil otherwise.
- @param defaultRealmPathURL default path of the Realm DB
+ @param defaultRealmFolderURL default path of the Realm DB
  
  @return YES if the DB should be moved to a encrypted DB. NO otherwise.
  */
-+ (BOOL)shouldMoveToEncryptedDBWithEncryptedFilename:(NSString *)fileName applicationGroupIdentifier:(NSString * _Nullable)applicationGroupIdentifier defaultRealmPathURL:(NSURL *)defaultRealmPathURL
++ (BOOL)shouldMoveToEncryptedDBWithEncryptedFilename:(NSString *)fileName applicationGroupIdentifier:(NSString * _Nullable)applicationGroupIdentifier defaultRealmFolderURL:(NSURL *)defaultRealmFolderURL
 {
-    if ([[MXKeyProvider sharedInstance] isEncryptionAvailableForDataOfType:kMXRealmCryptoStoreDataType])
+    if ([[MXKeyProvider sharedInstance] isEncryptionAvailableForDataOfType:MXRealmCryptoStoreDataType])
     {
-        NSURL *defaultRealmFileURL = [[defaultRealmPathURL URLByAppendingPathComponent:fileName]
+        NSURL *defaultRealmFileURL = [[defaultRealmFolderURL URLByAppendingPathComponent:fileName]
                                   URLByAppendingPathExtension:@"realm"];
         
         NSURL *sharedContainerURL = [[NSFileManager defaultManager] containerURLForSecurityApplicationGroupIdentifier:applicationGroupIdentifier];
@@ -1533,7 +1533,6 @@ RLM_ARRAY_TYPE(MXRealmSecret)
         NSURL *sharedRealmFileURL = [[sharedRealmFileFolderURL URLByAppendingPathComponent:fileName] URLByAppendingPathExtension:@"realm"];
         
         NSFileManager *fileManager = [NSFileManager defaultManager];
-        // should move to encrypted DB if encryption is available and unciphered DB file exists
         return ![fileManager fileExistsAtPath:defaultRealmFileURL.path] && ![fileManager fileExistsAtPath:sharedRealmFileURL.path];
     }
     
@@ -1576,34 +1575,34 @@ RLM_ARRAY_TYPE(MXRealmSecret)
  @param error output param: set to the error value of error occures.
  */
 + (void)moveToSharedContainerFrom:(NSURL *)currentFileURL to:(NSURL *)targetFileURL error:(NSError **)error {
-    NSURL *targetFolderURL = [targetFileURL URLByDeletingLastPathComponent];
-    if ([NSFileManager.defaultManager fileExistsAtPath:[currentFileURL path]])
+    if ([NSFileManager.defaultManager fileExistsAtPath:targetFileURL.path])
     {
-        if (![NSFileManager.defaultManager fileExistsAtPath:[targetFileURL path]])
+        // If target file already exists, we just need to remove any residual source file.
+        [NSFileManager.defaultManager removeItemAtURL:currentFileURL error:nil];
+        return;
+    }
+    
+    // The idea here is to create the target folder even if source file doesn't exist.
+    // This way, we ensure that Realm will be able to create its DB anyway.
+    NSURL *targetFolderURL = [targetFileURL URLByDeletingLastPathComponent];
+    if (![NSFileManager.defaultManager fileExistsAtPath:targetFolderURL.path])
+    {
+        NSLog(@"[MXRealmCryptoStore] Create target folder %@", targetFolderURL.path);
+        [[NSFileManager defaultManager] createDirectoryAtPath:targetFolderURL.path withIntermediateDirectories:YES attributes:nil error:error];
+        if (*error)
         {
-            // Move this db file in the container directory associated with the application group identifier.
-            NSLog(@"[MXRealmCryptoStore] Move the db file to the application group container");
-            
-            if (![NSFileManager.defaultManager fileExistsAtPath:targetFolderURL.path])
-            {
-                [[NSFileManager defaultManager] createDirectoryAtPath:targetFolderURL.path withIntermediateDirectories:YES attributes:nil error:nil];
-            }
-            
-            [NSFileManager.defaultManager moveItemAtURL:currentFileURL toURL:targetFileURL error:error];
-        }
-        else
-        {
-            // Remove the residual db file.
-            [NSFileManager.defaultManager removeItemAtURL:currentFileURL error:nil];
+            NSLog(@"[MXRealmCryptoStore] Failed to create target folder: %@", *error);
+            return;
         }
     }
-    else
+    
+    // Source file exists but not target file -> Move source to target
+    if ([NSFileManager.defaultManager fileExistsAtPath:[currentFileURL path]])
     {
-        // Make sure the full exists before giving it to Realm
-        if (![NSFileManager.defaultManager fileExistsAtPath:targetFolderURL.path])
-        {
-            [[NSFileManager defaultManager] createDirectoryAtPath:targetFolderURL.path withIntermediateDirectories:YES attributes:nil error:nil];
-        }
+        // Move this db file in the container directory associated with the application group identifier.
+        NSLog(@"[MXRealmCryptoStore] Move the db file to the application group container");
+        
+        [NSFileManager.defaultManager moveItemAtURL:currentFileURL toURL:targetFileURL error:error];
     }
 }
 
