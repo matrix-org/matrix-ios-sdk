@@ -15,9 +15,10 @@
 //
 
 #import "MXCallEventContent.h"
-#import "MXUserModel.h"
 
 NS_ASSUME_NONNULL_BEGIN
+
+@class MXUserModel;
 
 /**
  `MXCallReplacesEventContent` represents the content of an `m.call.replaces` event.

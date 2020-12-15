@@ -111,3 +111,5 @@ FOUNDATION_EXPORT NSString *MatrixSDKVersion;
 #import "MXCallRejectEventContent.h"
 #import "MXCallNegotiateEventContent.h"
 #import "MXCallReplacesEventContent.h"
+#import "MXUserModel.h"
+#import "MXCallCapabilitiesModel.h"

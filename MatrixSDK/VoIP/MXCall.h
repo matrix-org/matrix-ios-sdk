@@ -82,6 +82,12 @@ extern NSString *const kMXCallStateDidChange;
  */
 extern NSString *const kMXCallSupportsHoldingStatusDidChange;
 
+/**
+ Posted when a `MXCall` object has changed its status to support transferring.
+ The notification object is the `MXKCall` object representing the call.
+ */
+extern NSString *const kMXCallSupportsTransferringStatusDidChange;
+
 @protocol MXCallDelegate;
 
 /**
@@ -327,9 +333,15 @@ extern NSString *const kMXCallSupportsHoldingStatusDidChange;
 
 /**
  Tells the delegate that status of the call to support holding has changed.
- @param call the instance that changes,
+ @param call the instance that changes
  */
 - (void)callSupportsHoldingStatusDidChange:(MXCall *)call;
+
+/**
+ Tells the delegate that status of the call to support transferring has changed.
+ @param call the instance that changes
+ */
+- (void)callSupportsTransferringStatusDidChange:(MXCall *)call;
 
 /**
  Tells the delegate an error occured.

@@ -15,6 +15,7 @@
 //
 
 #import "MXCallNegotiateEventContent.h"
+#import "MXCallSessionDescription.h"
 
 @implementation MXCallNegotiateEventContent
 

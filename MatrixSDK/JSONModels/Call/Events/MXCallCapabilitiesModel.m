@@ -14,29 +14,20 @@
 // limitations under the License.
 //
 
-#import <Foundation/Foundation.h>
-#import "MXCallEventContent.h"
+#import "MXCallCapabilitiesModel.h"
 
-NS_ASSUME_NONNULL_BEGIN
+@implementation MXCallCapabilitiesModel
 
-@class MXCallSessionDescription;
-@class MXCallCapabilitiesModel;
++ (id)modelFromJSON:(NSDictionary *)JSONDictionary
+{
+    MXCallCapabilitiesModel *capabilitiesModel = [[MXCallCapabilitiesModel alloc] init];
+    
+    if (capabilitiesModel)
+    {
+        MXJSONModelSetBoolean(capabilitiesModel.transferee, JSONDictionary[@"m.call.transferee"]);
+    }
 
-/**
- `MXCallAnswerEventContent` represents the content of an `m.call.answer` event.
- */
-@interface MXCallAnswerEventContent : MXCallEventContent
-
-/**
- The session description.
- */
-@property (nonatomic) MXCallSessionDescription *answer;
-
-/**
- Capabilities for this call.
- */
-@property (nonatomic, nullable) MXCallCapabilitiesModel *capabilities;
+    return capabilitiesModel;
+}
 
 @end
-
-NS_ASSUME_NONNULL_END

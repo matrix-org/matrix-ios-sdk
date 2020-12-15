@@ -34,6 +34,7 @@
 #import "MXCallNegotiateEventContent.h"
 #import "MXCallReplacesEventContent.h"
 #import "MXCallRejectReplacementEventContent.h"
+#import "MXUserModel.h"
 
 #pragma mark - Constants definitions
 NSString *const kMXCallManagerNewCall            = @"kMXCallManagerNewCall";
@@ -635,11 +636,9 @@ NSString *const kMXCallManagerConferenceFinished = @"kMXCallManagerConferenceFin
             
             //  find a suitable room (which only consists three users: self, the transferee and the target)
             
-            MXWeakify(self);
+            MXStrongifyAndReturnIfNil(self);
             
             [self callTransferRoomWithUsers:@[target.userId, transferee.userId] completion:^(MXRoom * _Nullable transferRoom, BOOL isNewRoom) {
-                
-                MXStrongifyAndReturnIfNil(self);
                 
                 if (!transferRoom)
                 {
@@ -747,15 +746,11 @@ NSString *const kMXCallManagerConferenceFinished = @"kMXCallManagerConferenceFin
                         return;
                     }
                     
-                    MXWeakify(self);
-                    
                     //  hold the transferee call before starting the new call
                     [callWithTransferee hold:YES];
                     
                     //  place a new call to the target
                     [self placeCallInRoom:room.roomId withVideo:callWithTransferee.isVideoCall success:^(MXCall * _Nonnull call) {
-                        
-                        MXStrongifyAndReturnIfNil(self);
                         
                         continueBlock(call);
                     } failure:^(NSError * _Nullable error) {

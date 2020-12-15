@@ -16,9 +16,10 @@
 
 #import <Foundation/Foundation.h>
 #import "MXCallEventContent.h"
-#import "MXCallSessionDescription.h"
 
 NS_ASSUME_NONNULL_BEGIN
+
+@class MXCallSessionDescription;
 
 /**
  `MXCallNegotiateEventContent` represents the content of an `m.call.negotiate` event.

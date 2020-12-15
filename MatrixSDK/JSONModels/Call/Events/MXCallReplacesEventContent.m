@@ -15,6 +15,7 @@
 //
 
 #import "MXCallReplacesEventContent.h"
+#import "MXUserModel.h"
 
 @implementation MXCallReplacesEventContent
 

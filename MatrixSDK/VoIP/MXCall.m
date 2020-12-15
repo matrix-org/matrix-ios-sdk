@@ -35,10 +35,12 @@
 #import "MXCallReplacesEventContent.h"
 #import "MXCallRejectReplacementEventContent.h"
 #import "MXUserModel.h"
+#import "MXCallCapabilitiesModel.h"
 
 #pragma mark - Constants definitions
 NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
 NSString *const kMXCallSupportsHoldingStatusDidChange = @"kMXCallSupportsHoldingStatusDidChange";
+NSString *const kMXCallSupportsTransferringStatusDidChange = @"kMXCallSupportsTransferringStatusDidChange";
 
 @interface MXCall ()
 {
@@ -548,8 +550,12 @@ NSString *const kMXCallSupportsHoldingStatusDidChange = @"kMXCallSupportsHolding
 
 - (BOOL)supportsTransferring
 {
-    //  same conditions to support holding
-    return self.supportsHolding;
+    if (callInviteEventContent && _selectedAnswer)
+    {
+        MXCallAnswerEventContent *content = [MXCallAnswerEventContent modelFromJSON:_selectedAnswer.content];
+        return callInviteEventContent.capabilities.transferee && content.capabilities.transferee;
+    }
+    return NO;
 }
 
 - (void)transferToRoom:(NSString * _Nullable)targetRoomId
@@ -617,8 +623,18 @@ NSString *const kMXCallSupportsHoldingStatusDidChange = @"kMXCallSupportsHolding
         [_delegate callSupportsHoldingStatusDidChange:self];
     }
     
-    // Broadcast the new call status
+    if ([_delegate respondsToSelector:@selector(callSupportsTransferringStatusDidChange:)])
+    {
+        [_delegate callSupportsTransferringStatusDidChange:self];
+    }
+    
+    // Broadcast the new call statuses
+    
     [[NSNotificationCenter defaultCenter] postNotificationName:kMXCallSupportsHoldingStatusDidChange
+                                                        object:self
+                                                      userInfo:nil];
+    
+    [[NSNotificationCenter defaultCenter] postNotificationName:kMXCallSupportsTransferringStatusDidChange
                                                         object:self
                                                       userInfo:nil];
 }
