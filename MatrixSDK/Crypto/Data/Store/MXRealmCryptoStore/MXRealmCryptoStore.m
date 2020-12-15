@@ -1521,7 +1521,7 @@ RLM_ARRAY_TYPE(MXRealmSecret)
  
  @return YES if the DB should be moved to a encrypted DB. NO otherwise.
  */
-+ (BOOL)shouldMoveToEncryptedDBWithEncryptedFilename:(NSString *)fileName applicationGroupIdentifier:(NSString *)applicationGroupIdentifier defaultRealmPathURL:(NSURL *)defaultRealmPathURL
++ (BOOL)shouldMoveToEncryptedDBWithEncryptedFilename:(NSString *)fileName applicationGroupIdentifier:(NSString * _Nullable)applicationGroupIdentifier defaultRealmPathURL:(NSURL *)defaultRealmPathURL
 {
     if ([[MXKeyProvider sharedInstance] isEncryptionAvailableForDataOfType:kMXRealmCryptoStoreDataType])
     {
