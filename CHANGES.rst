@@ -10,6 +10,7 @@ Changes to be released in next version
 
 🐛 Bugfix
  * MXRestClient: Fix the format of the request body when querying device keys for users (vector-im/element-ios#3539).
+ * MXRoomSummary: Fix crash when decoding lastMessageData (vector-im/element-ios/issues/3879).
 
 ⚠️ API Changes
  *
