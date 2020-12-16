@@ -2638,7 +2638,7 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
 
     // For now, we set the device id explicitly, as we may not be using the
     // same one as used in login.
-    return [_matrixRestClient uploadKeys:_myDevice.JSONDictionary oneTimeKeys:nil forDevice:_myDevice.deviceId success:success failure:failure];
+    return [_matrixRestClient uploadKeys:_myDevice.JSONDictionary oneTimeKeys:nil success:success failure:failure];
 }
 
 /**
@@ -2883,7 +2883,7 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
     // For now, we set the device id explicitly, as we may not be using the
     // same one as used in login.
     MXWeakify(self);
-    return [_matrixRestClient uploadKeys:nil oneTimeKeys:oneTimeJson forDevice:_myDevice.deviceId success:^(MXKeysUploadResponse *keysUploadResponse) {
+    return [_matrixRestClient uploadKeys:nil oneTimeKeys:oneTimeJson success:^(MXKeysUploadResponse *keysUploadResponse) {
         MXStrongifyAndReturnIfNil(self);
 
         [self.olmDevice markOneTimeKeysAsPublished];
@@ -2898,7 +2898,7 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
 // Ask the server how many keys we have
 - (MXHTTPOperation *)publishedOneTimeKeysCount:(void (^)(NSUInteger publishedKeyCount))success failure:(void (^)(NSError *))failure
 {
-    return [_matrixRestClient uploadKeys:_myDevice.JSONDictionary oneTimeKeys:nil forDevice:_myDevice.deviceId success:^(MXKeysUploadResponse *keysUploadResponse) {
+    return [_matrixRestClient uploadKeys:_myDevice.JSONDictionary oneTimeKeys:nil success:^(MXKeysUploadResponse *keysUploadResponse) {
         
         NSUInteger publishedkeyCount = [keysUploadResponse oneTimeKeyCountsForAlgorithm:@"signed_curve25519"];
         
