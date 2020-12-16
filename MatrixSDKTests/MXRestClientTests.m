@@ -1577,7 +1577,7 @@
                               };
 
         // Upload the device keys
-        [bobRestClient uploadKeys:nil oneTimeKeys:otks forDevice:@"dev1" success:^(MXKeysUploadResponse *keysUploadResponse) {
+        [bobRestClient uploadKeys:nil oneTimeKeys:otks success:^(MXKeysUploadResponse *keysUploadResponse) {
 
             XCTAssert(keysUploadResponse.oneTimeKeyCounts);
             XCTAssertEqual(keysUploadResponse.oneTimeKeyCounts.count, 1, @"There is no yet one-time keys");
@@ -1618,18 +1618,18 @@
                                };
 
         // Upload the device keys
-        [bobRestClient uploadKeys:nil oneTimeKeys:otks forDevice:@"dev1" success:^(MXKeysUploadResponse *keysUploadResponse) {
+        [bobRestClient uploadKeys:nil oneTimeKeys:otks success:^(MXKeysUploadResponse *keysUploadResponse) {
 
             [matrixSDKTestsData doMXRestClientTestWithAlice:nil readyToTest:^(MXRestClient *aliceRestClient, XCTestExpectation *expectation2) {
 
                 MXUsersDevicesMap<NSString *> *usersDevicesKeyTypesMap = [[MXUsersDevicesMap alloc] init];
-                [usersDevicesKeyTypesMap setObject:@"curve25519" forUser:bobRestClient.credentials.userId andDevice:@"dev1"];
+                [usersDevicesKeyTypesMap setObject:@"curve25519" forUser:bobRestClient.credentials.userId andDevice:bobRestClient.credentials.deviceId];
 
                 [aliceRestClient claimOneTimeKeysForUsersDevices:usersDevicesKeyTypesMap success:^(MXKeysClaimResponse *keysClaimResponse) {
 
                     XCTAssertEqual(keysClaimResponse.oneTimeKeys.map.count, 1);
 
-                    MXKey *bobOtk = [keysClaimResponse.oneTimeKeys objectForDevice:@"dev1" forUser:bobRestClient.credentials.userId];
+                    MXKey *bobOtk = [keysClaimResponse.oneTimeKeys objectForDevice:bobRestClient.credentials.deviceId forUser:bobRestClient.credentials.userId];
                     XCTAssert(bobOtk);
 
                     // Test MXKey

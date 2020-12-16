@@ -983,6 +983,41 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidFlushDataNotification;
                        success:(void (^)(void))success
                        failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
+#pragma mark - Room account data operations
+
+/**
+ Tag an event of the room
+ 
+ @param event the event to tag
+ @param tag the wanted tag
+ @param keywords the potential keywords
+ 
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)tagEvent:(MXEvent*)event
+                     withTag:(NSString*)tag
+                 andKeywords:(NSArray*)keywords
+                     success:(void (^)(void))success
+                     failure:(void (^)(NSError *error))failure;
+
+/**
+Remove a tag applied on an event of the room
+
+@param event the event to untag
+@param tag the wanted tag
+
+@param success A block object called when the operation succeeds.
+@param failure A block object called when the operation fails.
+
+@return a MXHTTPOperation instance.
+*/
+- (MXHTTPOperation*)untagEvent:(MXEvent*)event
+                       withTag:(NSString*)tag
+                       success:(void (^)(void))success
+                       failure:(void (^)(NSError *error))failure;
 
 #pragma mark - Voice over IP
 
