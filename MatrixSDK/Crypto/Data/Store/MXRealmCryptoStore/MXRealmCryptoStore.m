@@ -1525,6 +1525,7 @@ RLM_ARRAY_TYPE(MXRealmSecret)
 {
     if ([[MXKeyProvider sharedInstance] isEncryptionAvailableForDataOfType:MXRealmCryptoStoreDataType])
     {
+        NSFileManager *fileManager = [NSFileManager defaultManager];
         NSURL *defaultRealmFileURL = [[defaultRealmFolderURL URLByAppendingPathComponent:fileName]
                                   URLByAppendingPathExtension:@"realm"];
         if ([fileManager fileExistsAtPath:defaultRealmFileURL.path])
@@ -1538,7 +1539,6 @@ RLM_ARRAY_TYPE(MXRealmSecret)
             NSURL *sharedRealmFileFolderURL = [sharedContainerURL URLByAppendingPathComponent:kMXRealmCryptoStoreFolder];
             NSURL *sharedRealmFileURL = [[sharedRealmFileFolderURL URLByAppendingPathComponent:fileName] URLByAppendingPathExtension:@"realm"];
             
-            NSFileManager *fileManager = [NSFileManager defaultManager];
             return ![fileManager fileExistsAtPath:sharedRealmFileURL.path];
         }
         
