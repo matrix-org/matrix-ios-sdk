@@ -1248,10 +1248,68 @@ public extension MXRestClient {
         return __removeTag(tag, fromRoom: roomId, success: currySuccess(completion), failure: curryFailure(completion))
     }
     
+    // MARK: -  Room account data operations
     
+    /**
+     Update the tagged events
+     
+     - parameters:
+        - roomId: the id of the room.
+        - content: the new tagged events content.
+        - completion: A block object called when the operation completes.
+        - response: Indicates whether the operation was successful.
+     
+     - returns: a `MXHTTPOperation` instance.
+     */
+    @nonobjc @discardableResult func updateTaggedEvents(_ roomId: String, withContent content: MXTaggedEvents, completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation {
+        return __updateTaggedEvents(roomId, withContent: content, success: currySuccess(completion), failure: curryFailure(completion))
+    }
     
+    /**
+     Get the tagged events of a room
+     
+     - parameters:
+        - roomId: the id of the room.
+        - completion: A block object called when the operation completes.
+        - response: Provides a `MXTaggedEvents` object on success.
+     
+     - returns: a `MXHTTPOperation` instance.
+     */
+    @nonobjc @discardableResult func getTaggedEvents(_ roomId: String, completion: @escaping (_ response: MXResponse<MXTaggedEvents>) -> Void) -> MXHTTPOperation {
+        return __getTaggedEvents(roomId, success: currySuccess(completion), failure: curryFailure(completion))
+    }
+
+    /**
+     Set a dedicated room account data field
+     
+     - parameters:
+        - roomId: the id of the room.
+        - eventTypeString: the type of the event. @see MXEventType.
+        - content: the event content.
+        - completion: A block object called when the operation completes.
+        - response: Indicates whether the operation was successful.
+     
+     - returns: a `MXHTTPOperation` instance.
+     */
+    @nonobjc @discardableResult func setRoomAccountData(_ roomId: String, eventType eventTypeString: String, withParameters content: [String: Any], completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation {
+        return __setRoomAccountData(roomId, eventType: eventTypeString, withParameters: content, success: currySuccess(completion), failure: curryFailure(completion))
+    }
     
-    
+    /**
+     Get the room account data field
+     
+     - parameters:
+        - roomId: the id of the room.
+        - eventTypeString: the type of the event. @see MXEventType.
+        - completion: A block object called when the operation completes.
+        - response: Provides the raw JSON response from the server.
+     
+     - returns: a `MXHTTPOperation` instance.
+     */
+    @nonobjc @discardableResult func getRoomAccountData(_ roomId: String, eventType eventTypeString: String, completion: @escaping (_ response: MXResponse<[String: Any]>) -> Void) -> MXHTTPOperation {
+        return __getRoomAccountData(roomId, eventType: eventTypeString, success: currySuccess(completion), failure: curryFailure(completion))
+    }
+
     // MARK: - Profile operations
     
     /**
@@ -1669,14 +1727,13 @@ public extension MXRestClient {
      - parameters:
         - deviceKeys: the device keys to send.
         - oneTimeKeys: the one-time keys to send.
-        - deviceId: the explicit device_id to use for upload (pass `nil` to use the same as that used during auth).
         - completion: A block object called when the operation completes.
         - response: Provides information about the keys on success.
      
      - returns: a `MXHTTPOperation` instance.
      */
     @nonobjc @discardableResult func uploadKeys(_ deviceKeys: [String: Any], oneTimeKeys: [String: Any], forDevice deviceId: String? = nil, completion: @escaping (_ response: MXResponse<MXKeysUploadResponse>) -> Void) -> MXHTTPOperation {
-        return __uploadKeys(deviceKeys, oneTimeKeys: oneTimeKeys, forDevice: deviceId, success: currySuccess(completion), failure: curryFailure(completion))
+        return __uploadKeys(deviceKeys, oneTimeKeys: oneTimeKeys, success: currySuccess(completion), failure: curryFailure(completion))
     }
     
     /**

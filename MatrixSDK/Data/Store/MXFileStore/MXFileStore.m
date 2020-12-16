@@ -2,6 +2,7 @@
  Copyright 2014 OpenMarket Ltd
  Copyright 2017 Vector Creations Ltd
  Copyright 2018 New Vector Ltd
+ Copyright 2020 The Matrix.org Foundation C.I.C
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -1950,6 +1951,27 @@ static NSUInteger preloadOptions;
         });
     });
 }
+
+
+#pragma mark - Sync API (Do not use them on the main thread)
+
+- (MXFileRoomStore *)roomStoreForRoom:(NSString*)roomId
+{
+    NSString *roomFile = [self messagesFileForRoom:roomId forBackup:NO];
+    
+    MXFileRoomStore *roomStore;
+    @try
+    {
+        roomStore = [NSKeyedUnarchiver unarchiveObjectWithFile:roomFile];
+    }
+    @catch (NSException *exception)
+    {
+        NSLog(@"[MXFileStore] roomStoreForRoom = Warning: MXFileRoomStore file for room %@ seems corrupted", roomId);
+    }
+    
+    return roomStore;
+}
+
 
 #pragma mark - Tools
 /**

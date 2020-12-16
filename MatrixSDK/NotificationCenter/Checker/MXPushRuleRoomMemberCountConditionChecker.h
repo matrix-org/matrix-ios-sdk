@@ -29,6 +29,6 @@
  @param mxSession the mxSession to the home server.
  @return the newly created MXPushRuleRoomMemberCountConditionChecker instance.
  */
-- (instancetype)initWithMatrixSession:(MXSession*)mxSession;
+- (instancetype _Nonnull)initWithMatrixSession:(MXSession* _Nullable)mxSession;
 
 @end
