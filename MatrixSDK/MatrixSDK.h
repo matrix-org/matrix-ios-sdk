@@ -103,6 +103,10 @@ FOUNDATION_EXPORT NSString *MatrixSDKVersion;
 
 #import "MXLoginSSOFlow.h"
 
+#import "MXKeyProvider.h"
+#import "MXAesKeyData.h"
+#import "MXRawDataKey.h"
+
 //  Bridging to Swift
 #import "MXCryptoStore.h"
 #import "MXRealmCryptoStore.h"

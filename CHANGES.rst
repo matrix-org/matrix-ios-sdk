@@ -2,7 +2,7 @@ Changes to be released in next version
 =================================================
 
 ✨ Features
- * 
+ * Added MXKeyProvider to enable data encryption using keys given by client application (#3866)
 
 🙌 Improvements
  * MXTaggedEvents: Expose "m.tagged_events" according to [MSC2437](https://github.com/matrix-org/matrix-doc/pull/2437).
@@ -10,6 +10,7 @@ Changes to be released in next version
 
 🐛 Bugfix
  * MXRestClient: Fix the format of the request body when querying device keys for users (vector-im/element-ios#3539).
+ * MXRoomSummary: Fix crash when decoding lastMessageData (vector-im/element-ios/issues/3879).
 
 ⚠️ API Changes
  *
