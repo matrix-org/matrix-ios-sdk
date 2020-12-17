@@ -8,7 +8,7 @@ Changes to be released in next version
  * 
 
 🐛 Bugfix
- * 
+ * MXUIKitBackgroundTask: Handle invalid identifier case, introduce a threshold for background time remaining, set expiration handler in initAndStart.
 
 ⚠️ API Changes
  * 
