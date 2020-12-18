@@ -11,7 +11,7 @@ Changes to be released in next version
  * 
 
 ⚠️ API Changes
- * 
+ * MXLoginSSOFlow: Use unstable identity providers field while the MSC2858 is not approved.
 
 🗣 Translations
  * 
