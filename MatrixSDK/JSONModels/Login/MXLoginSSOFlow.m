@@ -16,7 +16,7 @@
 
 #import "MXLoginSSOFlow.h"
 
-NSString *const MXLoginSSOFlowIdentityProvidersKey = @"identity_providers";
+NSString *const MXLoginSSOFlowIdentityProvidersKey = @"org.matrix.msc2858.identity_providers";
 
 @interface MXLoginSSOFlow()
 
