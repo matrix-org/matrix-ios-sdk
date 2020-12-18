@@ -8,7 +8,7 @@ Changes to be released in next version
  * 
 
 🐛 Bugfix
- * Fix `m.buddy` to-device event crashes (vector-im/element-ios/issues/3889).
+ * MXBackgroundSyncService: Fix `m.buddy` to-device event crashes (vector-im/element-ios/issues/3889).
 
 ⚠️ API Changes
  * 
