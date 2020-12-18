@@ -686,7 +686,7 @@ static NSUInteger preloadOptions;
             {
                 backgroundTaskStartDate = startDate;
                 
-                self.commitBackgroundTask = [handler startBackgroundTaskWithName:@"[MXStore] commit" expirationHandler:^{
+                self.commitBackgroundTask = [handler startBackgroundTaskWithName:@"[MXFileStore commit]" expirationHandler:^{
                     MXStrongifyAndReturnIfNil(self);
                     
                     NSLog(@"[MXFileStore commit] Background task %@ is going to expire - ending it. pendingCommits: %tu", self.commitBackgroundTask, self->pendingCommits);
