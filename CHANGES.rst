@@ -8,7 +8,7 @@ Changes to be released in next version
  * 
 
 🐛 Bugfix
- * 
+ * MXBackgroundSyncService: Fix `m.buddy` to-device event crashes (vector-im/element-ios/issues/3889).
 
 ⚠️ API Changes
  * MXLoginSSOFlow: Use unstable identity providers field while the MSC2858 is not approved.
