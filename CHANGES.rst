@@ -17,7 +17,7 @@ Changes to be released in next version
  * 
     
 🧱 Build
- * 
+ * MatrixSDKTests-macOS: Remove tests from macOS profile and archive builds to match iOS.
 
 Others
  * 
