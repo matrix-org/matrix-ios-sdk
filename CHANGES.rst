@@ -17,7 +17,7 @@ Changes to be released in next version
  * 
     
 🧱 Build
- * 
+ * build.sh: Add xcframework argument to build a universal MatrixSDK.xcframework
 
 Others
  * 
