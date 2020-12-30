@@ -3,7 +3,7 @@ name: Swift
 on:
   push:
     tags:
-      - '*'
+      - 'v*'
 
 jobs:
   build:
@@ -28,11 +28,8 @@ jobs:
     - name: Make xcframework
       run: xcodebuild -create-xcframework -framework build/MatrixSDK-iOS.xcarchive/Products/Library/Frameworks/MatrixSDK.framework -framework build/MatrixSDK-iOSSimulator.xcarchive/Products/Library/Frameworks/MatrixSDK.framework -framework build/MatrixSDK-MacCatalyst.xcarchive/Products/Library/Frameworks/MatrixSDK.framework -output build/MatrixSDK.xcframework
       
-    - name: Zip xcframework
-      run: cd build && zip -r MatrixSDK.zip MatrixSDK.xcframework
-      
     - name: Upload MatrixSDK.zip
       uses: actions/upload-artifact@v2
       with:
         name: MatrixSDK
-        path: build/MatrixSDK.zip
+        path: build/MatrixSDK.xcframework
