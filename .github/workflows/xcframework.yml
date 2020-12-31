@@ -13,6 +13,17 @@ jobs:
     steps:
     - uses: actions/checkout@v2
       
+    - name: Create Release
+      id: create-release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ github.ref }}
+        release_name: ${{ github.ref }}
+        draft: false
+        prerelease: false
+      
     - name: Install Pods
       run: pod install
       
@@ -30,9 +41,13 @@ jobs:
       
     - name: Zip XCFramework
       run: cd build && zip -ry MatrixSDK.xcframework.zip MatrixSDK.xcframework
-      
-    - name: Upload Artifacts
-      uses: actions/upload-artifact@v2
+
+    - name: Upload Release Asset
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        name: Artifacts
-        path: build/MatrixSDK.xcframework.zip
+        upload_url: ${{ steps.create-release.outputs.upload_url }}
+        asset_path: build/MatrixSDK.xcframework.zip
+        asset_name: MatrixSDK.xcframework.zip
+        asset_content_type: application/zip
