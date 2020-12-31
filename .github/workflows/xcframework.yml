@@ -1,4 +1,4 @@
-name: Swift
+name: XCFramework
 
 on:
   push:
@@ -25,14 +25,14 @@ jobs:
     - name: Build for Catalyst
       run: xcodebuild archive -workspace MatrixSDK.xcworkspace -scheme MatrixSDK-iOS -destination "generic/platform=macOS,variant=Mac Catalyst" -archivePath ./build/MatrixSDK-MacCatalyst SKIP_INSTALL=NO BUILD_LIBRARY_FOR_DISTRIBUTION=YES IPHONEOS_DEPLOYMENT_TARGET=13.0 GCC_WARN_ABOUT_DEPRECATED_FUNCTIONS=NO
       
-    - name: Make xcframework
+    - name: Make XCFramework
       run: xcodebuild -create-xcframework -framework build/MatrixSDK-iOS.xcarchive/Products/Library/Frameworks/MatrixSDK.framework -framework build/MatrixSDK-iOSSimulator.xcarchive/Products/Library/Frameworks/MatrixSDK.framework -framework build/MatrixSDK-MacCatalyst.xcarchive/Products/Library/Frameworks/MatrixSDK.framework -output build/MatrixSDK.xcframework
       
-    - name: Zip xcframework
+    - name: Zip XCFramework
       run: cd build && zip -ry MatrixSDK.xcframework.zip MatrixSDK.xcframework
       
-    - name: Upload MatrixSDK.zip
+    - name: Upload Artifacts
       uses: actions/upload-artifact@v2
       with:
-        name: MatrixSDK
+        name: Artifacts
         path: build/MatrixSDK.xcframework.zip
