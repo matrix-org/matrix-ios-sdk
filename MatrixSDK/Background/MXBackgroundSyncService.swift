@@ -41,7 +41,7 @@ public enum MXBackgroundSyncServiceError: Error {
     private let credentials: MXCredentials
     private let syncResponseStore: MXSyncResponseStore
     private var store: MXStore
-    private let cryptoStore: MXCryptoStore
+    private let cryptoStore: MXBackgroundCryptoStore
     private let olmDevice: MXOlmDevice
     private let restClient: MXRestClient
     private var pushRulesManager: MXBackgroundPushRulesManager
@@ -60,9 +60,9 @@ public enum MXBackgroundSyncServiceError: Error {
         restClient.completionQueue = processingQueue
         store = MXBackgroundStore(withCredentials: credentials)
         if MXRealmCryptoStore.hasData(for: credentials) {
-            cryptoStore = MXRealmCryptoStore(credentials: credentials)
+            cryptoStore = MXBackgroundCryptoStore(credentials: credentials)
         } else {
-            cryptoStore = MXRealmCryptoStore.createStore(with: credentials)
+            cryptoStore = MXBackgroundCryptoStore.createStore(with: credentials)
         }
         olmDevice = MXOlmDevice(store: cryptoStore)
         pushRulesManager = MXBackgroundPushRulesManager(withCredentials: credentials)
