@@ -1,5 +1,6 @@
 /*
  Copyright 2019 New Vector Ltd
+ Copyright 2021 The Matrix.org Foundation C.I.C
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -96,6 +97,25 @@
 - (NSString *)homeServerName
 {
     return [NSURL URLWithString:_homeServer].host;
+}
+
+
+#pragma mark - NSCopying
+
+- (id)copyWithZone:(NSZone *)zone
+{
+    MXCredentials *credentials = [[[self class] allocWithZone:zone] init];
+    
+    credentials.userId = [_userId copyWithZone:zone];
+    credentials.homeServer = [_homeServer copyWithZone:zone];
+    credentials.accessToken = [_accessToken copyWithZone:zone];
+    credentials.identityServer = [_identityServer copyWithZone:zone];
+    credentials.identityServerAccessToken = [_identityServerAccessToken copyWithZone:zone];
+    credentials.deviceId = [_deviceId copyWithZone:zone];
+    credentials.allowedCertificate = [_allowedCertificate copyWithZone:zone];
+    credentials.ignoredCertificate = [_ignoredCertificate copyWithZone:zone];
+
+    return credentials;
 }
 
 @end

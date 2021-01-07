@@ -1,5 +1,6 @@
 /*
  Copyright 2019 New Vector Ltd
+ Copyright 2021 The Matrix.org Foundation C.I.C
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -24,7 +25,7 @@ NS_ASSUME_NONNULL_BEGIN
  The `MXCredentials` class contains credentials to communicate with the Matrix
  Client-Server API.
  */
-@interface MXCredentials : NSObject
+@interface MXCredentials : NSObject <NSCopying>
 
 /**
  The homeserver url (ex: "https://matrix.org").
