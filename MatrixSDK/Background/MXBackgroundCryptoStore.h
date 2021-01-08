@@ -28,6 +28,11 @@ NS_ASSUME_NONNULL_BEGIN
  */
 @interface MXBackgroundCryptoStore : NSObject <MXCryptoStore>
 
+/**
+ Reset the intermediate store.
+ */
+- (void)reset;
+
 @end
 
 NS_ASSUME_NONNULL_END

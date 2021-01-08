@@ -24,6 +24,8 @@ NSString *const MXBackgroundCryptoStoreUserIdSuffix = @":bgCryptoStore";
 
 @interface MXBackgroundCryptoStore()
 {
+    MXCredentials *credentials;
+    
     // The MXRealmCryptoStore used by the app process
     // It is used in a read-only way.
     MXRealmCryptoStore *cryptoStore;
@@ -36,11 +38,13 @@ NSString *const MXBackgroundCryptoStoreUserIdSuffix = @":bgCryptoStore";
 
 @implementation MXBackgroundCryptoStore
 
-- (instancetype)initWithCredentials:(MXCredentials *)credentials
+- (instancetype)initWithCredentials:(MXCredentials *)theCredentials
 {
     self = [super init];
     if (self)
     {
+        credentials = theCredentials;
+        
         cryptoStore = [[MXRealmCryptoStore alloc] initWithCredentials:credentials];
         
         MXCredentials *bgCredentials = [MXBackgroundCryptoStore credentialForBgCryptoStoreWithCredentials:credentials];
@@ -55,6 +59,16 @@ NSString *const MXBackgroundCryptoStoreUserIdSuffix = @":bgCryptoStore";
         }
     }
     return self;
+}
+
+- (void)reset
+{
+    if (bgCryptoStore)
+    {
+        MXCredentials *bgCredentials = [MXBackgroundCryptoStore credentialForBgCryptoStoreWithCredentials:credentials];
+        [MXRealmCryptoStore deleteStoreWithCredentials:bgCredentials];
+        bgCryptoStore = [MXRealmCryptoStore createStoreWithCredentials:bgCredentials];
+    }
 }
 
 - (void)open:(void (^)(void))onComplete failure:(void (^)(NSError *error))failure

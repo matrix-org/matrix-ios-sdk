@@ -578,6 +578,9 @@ public enum MXBackgroundSyncServiceError: Error {
             // syncResponseStore has obsolete data. Reset it
             NSLog("[MXBackgroundSyncService] updateBackgroundServiceStoresIfNeeded: Reset MXSyncResponseStore. Its prevBatch was token \(String(describing: syncResponseStore.prevBatch))")
             syncResponseStore.deleteData()
+            
+            NSLog("[MXBackgroundSyncService] updateBackgroundServiceStoresIfNeeded: Reset MXBackgroundCryptoStore")
+            cryptoStore.reset()
         }
     }
     
