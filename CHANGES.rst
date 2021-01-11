@@ -5,7 +5,7 @@ Changes to be released in next version
  * 
 
 🙌 Improvements
- * 
+ * Store megolm outbound session to improve send time of first message after app launch. (#3904)
 
 🐛 Bugfix
  * MXBackgroundSyncService: Fix `m.buddy` to-device event crashes (vector-im/element-ios/issues/3889).

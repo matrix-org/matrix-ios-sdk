@@ -26,12 +26,14 @@
 #import "MXCryptoVersion.h"
 #import "MXOlmSession.h"
 #import "MXOlmInboundGroupSession.h"
+#import "MXOlmOutboundGroupSession.h"
 #import "MXDeviceInfo.h"
 #import "MXCrossSigningInfo.h"
 #import "MXOutgoingRoomKeyRequest.h"
 #import "MXIncomingRoomKeyRequest.h"
 
 @class OLMAccount;
+@class OLMOutboundGroupSession;
 
 /**
  The `MXCryptoStore` protocol defines an interface that must be implemented in order to store
@@ -302,6 +304,37 @@
  @return the list of all inbound group sessions.
  */
 - (NSArray<MXOlmInboundGroupSession*> *)inboundGroupSessions;
+
+
+/**
+ Store outbound group session.
+
+ @param session outbound group session.
+ @param roomId related room ID
+ */
+- (void)storeOutboundGroupSession:(OLMOutboundGroupSession *)session withRoomId:(NSString *)roomId;
+
+/**
+ Retrieve an outbound group session for a specific room.
+
+ @param roomId the room identifier.
+ @return an outbound group session if found. Nil otherwise
+ */
+- (MXOlmOutboundGroupSession *)outboundGroupSessionWithRoomId:(NSString*)roomId;
+
+/**
+ Retrieve all outbound group sessions.
+ 
+ @return the list of all stored outbound group sessions.
+ */
+- (NSArray<OLMOutboundGroupSession *> *)outboundGroupSessions;
+
+/**
+ Remove stored outbound group session for a specific room.
+
+ @param roomId the room identifier.
+ */
+- (void)removeOutboundGroupSessionWithRoomId:(NSString*)roomId;
 
 
 #pragma mark - Key backup

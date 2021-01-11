@@ -24,6 +24,8 @@
 
 #import "MXTools.h"
 #import "MXCryptoTools.h"
+#import "MXRealmCryptoStore.h"
+#import "MXOutboundSessionInfo.h"
 
 @interface MXOlmDevice ()
 {
@@ -290,12 +292,54 @@
 
 
 #pragma mark - Outbound group session
-- (NSString *)createOutboundGroupSession
+- (NSString *)createOutboundGroupSessionForRoomWithId:(NSString *)roomId
 {
     OLMOutboundGroupSession *session = [[OLMOutboundGroupSession alloc] initOutboundGroupSession];
     outboundGroupSessionStore[session.sessionIdentifier] = session;
+    
+    [store storeOutboundGroupSession:session withRoomId:roomId];
 
     return session.sessionIdentifier;
+}
+
+- (void)storeOutboundGroupSessionForRoomWithId:(NSString *)roomId withSessionId:(NSString *)sessionId
+{
+    OLMOutboundGroupSession *session = outboundGroupSessionStore[sessionId];
+    
+    if (session)
+    {
+        NSLog(@"[MXOlmDevice] storing Outbound Group Session %@ For Room With ID %@", roomId, sessionId);
+        [store storeOutboundGroupSession:session withRoomId:roomId];
+    }
+    else
+    {
+        NSLog(@"[MXOlmDevice] storeOutboundGroupSessionForRoomWithId: No session found with ID %@", sessionId);
+    }
+}
+
+- (MXOutboundSessionInfo *)restoreOutboundGroupSessionForRoom:(NSString *)roomId
+{
+    MXOlmOutboundGroupSession *restoredOutboundGroupSession = [store outboundGroupSessionWithRoomId:roomId];
+    
+    if (restoredOutboundGroupSession)
+    {
+        NSString *sessionId = restoredOutboundGroupSession.sessionId;
+        outboundGroupSessionStore[sessionId] = restoredOutboundGroupSession.session;
+        NSDate *creationTime = [NSDate dateWithTimeIntervalSince1970:restoredOutboundGroupSession.creationTime];
+        return [[MXOutboundSessionInfo alloc] initWithSessionID:sessionId creationTime:creationTime];
+    }
+    
+    return nil;
+}
+
+- (void)discardOutboundGroupSessionForRoom:(NSString *)roomId
+{
+    MXOlmOutboundGroupSession *session = [store outboundGroupSessionWithRoomId:roomId];
+    if (session)
+    {
+        [outboundGroupSessionStore removeObjectForKey:session.session.sessionIdentifier];
+        [store removeOutboundGroupSessionWithRoomId:roomId];
+    }
 }
 
 - (NSString *)sessionKeyForOutboundGroupSession:(NSString *)sessionId

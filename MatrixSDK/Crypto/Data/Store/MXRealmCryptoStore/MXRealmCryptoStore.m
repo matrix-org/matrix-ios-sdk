@@ -25,7 +25,7 @@
 #import "MXTools.h"
 #import "MXCryptoTools.h"
 
-NSUInteger const kMXRealmCryptoStoreVersion = 13;
+NSUInteger const kMXRealmCryptoStoreVersion = 14;
 
 static NSString *const kMXRealmCryptoStoreFolder = @"MXRealmCryptoStore";
 
@@ -130,6 +130,21 @@ RLM_ARRAY_TYPE(MXRealmOlmSession)
 @end
 RLM_ARRAY_TYPE(MXRealmOlmInboundGroupSession)
 
+
+@interface MXRealmOlmOutboundGroupSession : RLMObject
+@property NSString *roomId;
+@property NSString *sessionId;
+@property NSTimeInterval creationTime;
+@property NSData *sessionData;
+@end
+
+@implementation MXRealmOlmOutboundGroupSession
++ (NSString *)primaryKey
+{
+    return @"roomId";
+}
+@end
+RLM_ARRAY_TYPE(MXRealmOlmOutboundGroupSession)
 
 @interface MXRealmOlmAccount : RLMObject
 
@@ -835,6 +850,8 @@ RLM_ARRAY_TYPE(MXRealmSecret)
     return sessionsWithDevice;
 }
 
+#pragma mark - MXRealmOlmInboundGroupSession
+
 - (void)storeInboundGroupSessions:(NSArray<MXOlmInboundGroupSession *>*)sessions
 {
     __block NSUInteger newCount = 0;
@@ -958,6 +975,96 @@ RLM_ARRAY_TYPE(MXRealmSecret)
     }];
 }
 
+
+#pragma mark - MXRealmOlmOutboundGroupSession
+
+- (void)storeOutboundGroupSession:(OLMOutboundGroupSession *)session withRoomId:(NSString *)roomId
+{
+    __block NSUInteger newCount = 0;
+    NSDate *startDate = [NSDate date];
+    
+    RLMRealm *realm = self.realm;
+    [realm transactionWithBlock:^{
+        
+        MXRealmOlmOutboundGroupSession *realmSession = [MXRealmOlmOutboundGroupSession objectsInRealm:realm where:@"roomId = %@", roomId].firstObject;
+        if (realmSession && [realmSession.sessionId isEqual:session.sessionIdentifier])
+        {
+            // Update the existing one
+            realmSession.sessionData = [NSKeyedArchiver archivedDataWithRootObject:session];
+        }
+        else
+        {
+            if (realmSession)
+            {
+                // outbound group session exists but session Identifier has changed -> delete previously stored session
+                [realm deleteObject:realmSession];
+            }
+            
+            // Create it
+            newCount++;
+            realmSession = [[MXRealmOlmOutboundGroupSession alloc] initWithValue: @{
+                @"roomId": roomId,
+                @"sessionId": session.sessionIdentifier,
+                @"sessionData": [NSKeyedArchiver archivedDataWithRootObject:session]
+            }];
+            realmSession.creationTime = [[NSDate date] timeIntervalSince1970];
+
+            [realm addObject:realmSession];
+        }
+    }];
+
+
+    NSLog(@"[MXRealmCryptoStore] storeOutboundGroupSession: store 1 key (%lu new) in %.3fms", newCount, [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
+}
+
+- (MXOlmOutboundGroupSession *)outboundGroupSessionWithRoomId:(NSString*)roomId
+{
+    OLMOutboundGroupSession *session;
+    MXRealmOlmOutboundGroupSession *realmSession = [MXRealmOlmOutboundGroupSession objectsInRealm:self.realm where:@"roomId = %@", roomId].firstObject;
+
+    NSLog(@"[MXRealmCryptoStore] outboundGroupSessionWithRoomId: %@ -> %@", roomId, realmSession ? @"found" : @"not found");
+
+    if (realmSession)
+    {
+        session = [NSKeyedUnarchiver unarchiveObjectWithData:realmSession.sessionData];
+
+        if (!session)
+        {
+            NSLog(@"[MXRealmCryptoStore] outboundGroupSessionWithRoomId: ERROR: Failed to create OLMOutboundGroupSession object");
+        }
+    }
+
+    if (session)
+    {
+        return [[MXOlmOutboundGroupSession alloc] initWithSession:session roomId:roomId creationTime:realmSession.creationTime];
+    }
+    
+    return nil;
+}
+
+- (NSArray<OLMOutboundGroupSession *> *)outboundGroupSessions
+{
+    NSMutableArray *sessions = [NSMutableArray array];
+
+    for (MXRealmOlmOutboundGroupSession *realmSession in [MXRealmOlmOutboundGroupSession allObjectsInRealm:self.realm])
+    {
+        [sessions addObject:[NSKeyedUnarchiver unarchiveObjectWithData:realmSession.sessionData]];
+    }
+
+    NSLog(@"[MXRealmCryptoStore] outboundGroupSessions: found %lu entries", sessions.count);
+    return sessions;
+}
+
+- (void)removeOutboundGroupSessionWithRoomId:(NSString*)roomId
+{
+    RLMRealm *realm = self.realm;
+    [realm transactionWithBlock:^{
+        RLMResults<MXRealmOlmOutboundGroupSession *> *realmSessions = [MXRealmOlmOutboundGroupSession objectsInRealm:realm where:@"roomId = %@", roomId];
+
+        [realm deleteObjects:realmSessions];
+        NSLog(@"[MXRealmCryptoStore] removeOutboundGroupSessionWithRoomId%@: removed %lu entries", roomId, realmSessions.count);
+    }];
+}
 
 #pragma mark - Key backup
 
@@ -1380,6 +1487,7 @@ RLM_ARRAY_TYPE(MXRealmSecret)
                              MXRealmOutgoingRoomKeyRequest.class,
                              MXRealmIncomingRoomKeyRequest.class,
                              MXRealmSecret.class,
+                             MXRealmOlmOutboundGroupSession.class
                              ];
 
     config.schemaVersion = kMXRealmCryptoStoreVersion;
@@ -1586,6 +1694,11 @@ RLM_ARRAY_TYPE(MXRealmSecret)
                     [migration enumerateObjects:MXRealmOlmAccount.className block:^(RLMObject *oldObject, RLMObject *newObject) {
                         newObject[@"cryptoVersion"] = @(MXCryptoVersion1);
                     }];
+                }
+                    
+                case 13:
+                {
+                    NSLog(@"[MXRealmCryptoStore] Migration from schema #13 -> #14: Nothing to do (added MXRealmOlmOutboundGroupSession)");
                 }
             }
         }
