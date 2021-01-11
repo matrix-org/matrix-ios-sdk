@@ -16,6 +16,8 @@
 
 #import "MXBackgroundCryptoStore.h"
 
+#import <OLMKit/OLMKit.h>
+
 #import "MXRealmCryptoStore.h"
 #import "MXTools.h"
 
@@ -90,6 +92,8 @@ NSString *const MXBackgroundCryptoStoreUserIdSuffix = @":bgCryptoStore";
 + (instancetype)createStoreWithCredentials:(MXCredentials*)credentials
 {
     // Should never happen
+    NSLog(@"[MXBackgroundCryptoStore] createStoreWithCredentials: %@:%@", credentials.userId, credentials.deviceId);
+    
     MXRealmCryptoStore *cryptoStore = [MXRealmCryptoStore createStoreWithCredentials:credentials];
     
     MXCredentials *bgCredentials = [MXBackgroundCryptoStore credentialForBgCryptoStoreWithCredentials:credentials];
@@ -113,6 +117,8 @@ NSString *const MXBackgroundCryptoStoreUserIdSuffix = @":bgCryptoStore";
 - (void)setAccount:(OLMAccount*)account
 {
     // Should never happen
+    NSLog(@"[MXBackgroundCryptoStore] setAccount: identityKeys: %@", account.identityKeys);
+    
     [cryptoStore setAccount:account];
     [bgCryptoStore setAccount:account];
 }
@@ -162,7 +168,14 @@ NSString *const MXBackgroundCryptoStoreUserIdSuffix = @":bgCryptoStore";
 
 - (NSArray<MXOlmSession*>*)sessionsWithDevice:(NSString*)deviceKey
 {
-    return [[cryptoStore sessionsWithDevice:deviceKey] arrayByAddingObjectsFromArray:[bgCryptoStore sessionsWithDevice:deviceKey]];
+    NSArray<MXOlmSession*> *bgSessions = [bgCryptoStore sessionsWithDevice:deviceKey] ?: @[];
+    NSArray<MXOlmSession*> *appSessions = [cryptoStore sessionsWithDevice:deviceKey] ?: @[];
+
+    NSMutableArray<MXOlmSession*> *sessions = [NSMutableArray array];
+    [sessions addObjectsFromArray:bgSessions];
+    [sessions addObjectsFromArray:appSessions];
+
+    return sessions;
 }
 
 - (void)storeSession:(MXOlmSession*)session forDevice:(NSString*)deviceKey
