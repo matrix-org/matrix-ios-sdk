@@ -40,6 +40,10 @@
 NSString *const kMXCallManagerNewCall            = @"kMXCallManagerNewCall";
 NSString *const kMXCallManagerConferenceStarted  = @"kMXCallManagerConferenceStarted";
 NSString *const kMXCallManagerConferenceFinished = @"kMXCallManagerConferenceFinished";
+NSString *const kMXCallManagerPSTNSupportUpdated = @"kMXCallManagerPSTNSupportUpdated";
+
+NSString *const kMXProtocolVectorPSTN = @"im.vector.protocol.pstn";
+NSString *const kMXProtocolPSTN = @"m.protocol.pstn";
 
 
 @interface MXCallManager ()
@@ -64,6 +68,9 @@ NSString *const kMXCallManagerConferenceFinished = @"kMXCallManagerConferenceFin
      */
     id sessionStateObserver;
 }
+
+@property (nonatomic, copy) MXThirdPartyProtocol *pstnProtocol;
+
 @end
 
 
@@ -114,6 +121,7 @@ NSString *const kMXCallManagerConferenceFinished = @"kMXCallManagerConferenceFin
                                                    object:nil];
         
         [self refreshTURNServer];
+        [self checkPSTNSupport];
     }
     return self;
 }
@@ -1082,6 +1090,41 @@ NSString *const kMXCallManagerConferenceUserDomain  = @"matrix.org";
                                          } failure:failure];
         }
     });
+}
+
+#pragma mark - PSTN
+
+- (void)setPstnProtocol:(MXThirdPartyProtocol *)pstnProtocol
+{
+    _pstnProtocol = pstnProtocol;
+    
+    self.supportsPSTN = _pstnProtocol != nil;
+}
+
+- (void)setSupportsPSTN:(BOOL)supportsPSTN
+{
+    _supportsPSTN = supportsPSTN;
+    
+    [[NSNotificationCenter defaultCenter] postNotificationName:kMXCallManagerPSTNSupportUpdated object:self];
+}
+
+- (void)checkPSTNSupport
+{
+    [_mxSession.matrixRestClient thirdpartyProtocols:^(MXThirdpartyProtocolsResponse *thirdpartyProtocolsResponse) {
+        
+        MXThirdPartyProtocol *protocol = thirdpartyProtocolsResponse.protocols[kMXProtocolVectorPSTN];
+        
+        if (!protocol)
+        {
+            protocol = thirdpartyProtocolsResponse.protocols[kMXProtocolPSTN];
+        }
+        
+        self.pstnProtocol = protocol;
+        
+    } failure:^(NSError *error) {
+        NSLog(@"Failed to check for pstn protocol support with error: %@", error);
+        self.pstnProtocol = nil;
+    }];
 }
 
 @end
