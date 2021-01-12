@@ -310,7 +310,7 @@
  Store outbound group session.
 
  @param session outbound group session.
- @param roomId related room ID
+ @param roomId related room ID.
  */
 - (void)storeOutboundGroupSession:(OLMOutboundGroupSession *)session withRoomId:(NSString *)roomId;
 
