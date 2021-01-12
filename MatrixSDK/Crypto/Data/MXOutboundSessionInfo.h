@@ -58,7 +58,7 @@
 @property (nonatomic) NSUInteger useCount;
 
 /**
- If a share operation is in progress, the corresping http request
+ If a share operation is in progress, the corresponding http request
  */
 @property (nonatomic) MXHTTPOperation* shareOperation;
 
