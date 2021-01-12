@@ -309,7 +309,7 @@
 
 - (MXOutboundSessionInfo*)prepareNewSession
 {
-    NSString *sessionId = [crypto.olmDevice createOutboundGroupSessionForRoomWithId:self->roomId];
+    NSString *sessionId = [crypto.olmDevice createOutboundGroupSessionForRoomWithId:roomId];
 
     [crypto.olmDevice addInboundGroupSession:sessionId
                                   sessionKey:[crypto.olmDevice sessionKeyForOutboundGroupSession:sessionId]
