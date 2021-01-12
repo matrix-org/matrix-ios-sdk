@@ -1110,7 +1110,9 @@ NSString *const kMXCallManagerConferenceUserDomain  = @"matrix.org";
 
 - (void)checkPSTNSupport
 {
+    MXWeakify(self);
     [_mxSession.matrixRestClient thirdpartyProtocols:^(MXThirdpartyProtocolsResponse *thirdpartyProtocolsResponse) {
+        MXStrongifyAndReturnIfNil(self);
         
         MXThirdPartyProtocol *protocol = thirdpartyProtocolsResponse.protocols[kMXProtocolVectorPSTN];
         
