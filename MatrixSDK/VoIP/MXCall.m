@@ -32,10 +32,15 @@
 #import "MXCallCandidatesEventContent.h"
 #import "MXCallRejectEventContent.h"
 #import "MXCallNegotiateEventContent.h"
+#import "MXCallReplacesEventContent.h"
+#import "MXCallRejectReplacementEventContent.h"
+#import "MXUserModel.h"
+#import "MXCallCapabilitiesModel.h"
 
 #pragma mark - Constants definitions
 NSString *const kMXCallStateDidChange = @"kMXCallStateDidChange";
 NSString *const kMXCallSupportsHoldingStatusDidChange = @"kMXCallSupportsHoldingStatusDidChange";
+NSString *const kMXCallSupportsTransferringStatusDidChange = @"kMXCallSupportsTransferringStatusDidChange";
 
 @interface MXCall ()
 {
@@ -227,6 +232,12 @@ NSString *const kMXCallSupportsHoldingStatusDidChange = @"kMXCallSupportsHolding
         case MXEventTypeCallNegotiate:
             [self handleCallNegotiate:event];
             break;
+        case MXEventTypeCallReplaces:
+            [self handleCallReplaces:event];
+            break;
+        case MXEventTypeCallRejectReplacement:
+            [self handleCallRejectReplacement:event];
+            break;
         default:
             break;
     }
@@ -268,11 +279,12 @@ NSString *const kMXCallSupportsHoldingStatusDidChange = @"kMXCallSupportsHolding
             NSMutableDictionary *content = [@{
                 @"call_id": self.callId,
                 @"offer": @{
-                        @"type": kMXCallSessionDescriptionTypeOffer,
+                        @"type": kMXCallSessionDescriptionTypeStringOffer,
                         @"sdp": sdp
                 },
                 @"version": kMXCallVersion,
                 @"lifetime": @(self->callManager.inviteLifetime),
+                @"capabilities": @{@"m.call.transferee": @(NO)},    //  transferring will be disabled until we have a test bridge
                 @"party_id": self.partyId
             } mutableCopy];
             
@@ -339,9 +351,10 @@ NSString *const kMXCallSupportsHoldingStatusDidChange = @"kMXCallSupportsHolding
                 NSDictionary *content = @{
                                           @"call_id": self.callId,
                                           @"answer": @{
-                                                  @"type": kMXCallSessionDescriptionTypeAnswer,
+                                                  @"type": kMXCallSessionDescriptionTypeStringAnswer,
                                                   @"sdp": sdpAnswer
                                                   },
+                                          @"capabilities": @{@"m.call.transferee": @(NO)},  //  transferring will be disabled until we have a test bridge
                                           @"version": kMXCallVersion,
                                           @"party_id": self.partyId
                                           };
@@ -382,91 +395,6 @@ NSString *const kMXCallSupportsHoldingStatusDidChange = @"kMXCallSupportsHolding
             answer();
         }
     }
-}
-
-- (BOOL)supportsHolding
-{
-    if (callInviteEventContent && _selectedAnswer && [callInviteEventContent.version isEqualToString:kMXCallVersion])
-    {
-        MXCallAnswerEventContent *content = [MXCallAnswerEventContent modelFromJSON:_selectedAnswer.content];
-        return [content.version isEqualToString:kMXCallVersion];
-    }
-    return NO;
-}
-
-- (void)hold:(BOOL)hold
-{
-    if (_state < MXCallStateConnected)
-    {
-        //  call not connected yet, cannot be holded/unholded
-        return;
-    }
-    
-    if (hold)
-    {
-        if (_state == MXCallStateOnHold || _state == MXCallStateRemotelyOnHold)
-        {
-            //  already holded
-            return;
-        }
-    }
-    else
-    {
-        if (_state == MXCallStateRemotelyOnHold)
-        {
-            //  remotely holded calls cannot be unholded
-            return;
-        }
-        if (_state == MXCallStateConnected)
-        {
-            //  already connected
-            return;
-        }
-    }
-    
-    MXWeakify(self);
-    [callStackCall hold:hold success:^(NSString * _Nonnull sdp) {
-        MXStrongifyAndReturnIfNil(self);
-        
-        NSLog(@"[MXCall] hold: %@ offer created: %@", (hold ? @"Hold" : @"Resume"), sdp);
-
-        // The call hold offer can sent to the HS
-        NSMutableDictionary *content = [@{
-            @"call_id": self.callId,
-            @"description": @{
-                    @"type": kMXCallSessionDescriptionTypeOffer,
-                    @"sdp": sdp
-            },
-            @"version": kMXCallVersion,
-            @"lifetime": @(self->callManager.negotiateLifetime),
-            @"party_id": self.partyId
-        } mutableCopy];
-        
-        [self.callSignalingRoom sendEventOfType:kMXEventTypeStringCallNegotiate content:content localEcho:nil success:^(NSString *eventId) {
-
-            if (hold)
-            {
-                [self setState:MXCallStateOnHold reason:nil];
-            }
-            else
-            {
-                [self setState:MXCallStateConnected reason:nil];
-            }
-
-        } failure:^(NSError *error) {
-            NSLog(@"[MXCall] hold: ERROR: Cannot send m.call.negotiate event.");
-            [self didEncounterError:error reason:MXCallHangupReasonUnknownError];
-        }];
-        
-    } failure:^(NSError * _Nonnull error) {
-        NSLog(@"[MXCall] hold: ERROR: Cannot create %@ offer. Error: %@", (hold ? @"Hold" : @"Resume"), error);
-        [self didEncounterError:error reason:MXCallHangupReasonIceFailed];
-    }];
-}
-
-- (BOOL)isOnHold
-{
-    return _state == MXCallStateOnHold || _state == MXCallStateRemotelyOnHold;
 }
 
 - (void)hangup
@@ -533,6 +461,153 @@ NSString *const kMXCallSupportsHoldingStatusDidChange = @"kMXCallSupportsHolding
     }
 }
 
+#pragma mark - Hold
+
+- (BOOL)supportsHolding
+{
+    if (callInviteEventContent && _selectedAnswer && [callInviteEventContent.version isEqualToString:kMXCallVersion])
+    {
+        MXCallAnswerEventContent *content = [MXCallAnswerEventContent modelFromJSON:_selectedAnswer.content];
+        return [content.version isEqualToString:kMXCallVersion];
+    }
+    return NO;
+}
+
+- (void)hold:(BOOL)hold
+{
+    if (_state < MXCallStateConnected)
+    {
+        //  call not connected yet, cannot be holded/unholded
+        return;
+    }
+    
+    if (hold)
+    {
+        if (_state == MXCallStateOnHold || _state == MXCallStateRemotelyOnHold)
+        {
+            //  already holded
+            return;
+        }
+    }
+    else
+    {
+        if (_state == MXCallStateRemotelyOnHold)
+        {
+            //  remotely holded calls cannot be unholded
+            return;
+        }
+        if (_state == MXCallStateConnected)
+        {
+            //  already connected
+            return;
+        }
+    }
+    
+    MXWeakify(self);
+    [callStackCall hold:hold success:^(NSString * _Nonnull sdp) {
+        MXStrongifyAndReturnIfNil(self);
+        
+        NSLog(@"[MXCall] hold: %@ offer created: %@", (hold ? @"Hold" : @"Resume"), sdp);
+
+        // The call hold offer can sent to the HS
+        NSMutableDictionary *content = [@{
+            @"call_id": self.callId,
+            @"description": @{
+                    @"type": kMXCallSessionDescriptionTypeStringOffer,
+                    @"sdp": sdp
+            },
+            @"version": kMXCallVersion,
+            @"lifetime": @(self->callManager.negotiateLifetime),
+            @"party_id": self.partyId
+        } mutableCopy];
+        
+        [self.callSignalingRoom sendEventOfType:kMXEventTypeStringCallNegotiate content:content localEcho:nil success:^(NSString *eventId) {
+
+            if (hold)
+            {
+                [self setState:MXCallStateOnHold reason:nil];
+            }
+            else
+            {
+                [self setState:MXCallStateConnected reason:nil];
+            }
+
+        } failure:^(NSError *error) {
+            NSLog(@"[MXCall] hold: ERROR: Cannot send m.call.negotiate event.");
+            [self didEncounterError:error reason:MXCallHangupReasonUnknownError];
+        }];
+        
+    } failure:^(NSError * _Nonnull error) {
+        NSLog(@"[MXCall] hold: ERROR: Cannot create %@ offer. Error: %@", (hold ? @"Hold" : @"Resume"), error);
+        [self didEncounterError:error reason:MXCallHangupReasonIceFailed];
+    }];
+}
+
+- (BOOL)isOnHold
+{
+    return _state == MXCallStateOnHold || _state == MXCallStateRemotelyOnHold;
+}
+
+#pragma mark - Transfer
+
+- (BOOL)supportsTransferring
+{
+    if (callInviteEventContent && _selectedAnswer)
+    {
+        MXCallAnswerEventContent *content = [MXCallAnswerEventContent modelFromJSON:_selectedAnswer.content];
+        return callInviteEventContent.capabilities.transferee && content.capabilities.transferee;
+    }
+    return NO;
+}
+
+- (void)transferToRoom:(NSString * _Nullable)targetRoomId
+                  user:(MXUserModel * _Nullable)targetUser
+            createCall:(NSString * _Nullable)createCallId
+             awaitCall:(NSString * _Nullable)awaitCallId
+               success:(void (^)(NSString * _Nonnull eventId))success
+               failure:(void (^)(NSError * _Nullable error))failure
+{
+    MXCallReplacesEventContent *content = [[MXCallReplacesEventContent alloc] init];
+    
+    //  base fields
+    content.callId = self.callId;
+    content.versionString = kMXCallVersion;
+    content.partyId = self.partyId;
+    
+    //  other fields
+    content.replacementId = [[NSUUID UUID] UUIDString];
+    content.lifetime = self->callManager.transferLifetime;
+    
+    if (targetRoomId)
+    {
+        content.targetRoomId = targetRoomId;
+    }
+    if (targetUser)
+    {
+        content.targetUser = targetUser;
+    }
+    if (createCallId)
+    {
+        content.createCallId = createCallId;
+    }
+    if (awaitCallId)
+    {
+        content.awaitCallId = awaitCallId;
+    }
+    
+    [self.callSignalingRoom sendEventOfType:kMXEventTypeStringCallReplaces
+                                    content:content.JSONDictionary
+                                  localEcho:nil
+                                    success:success
+                                    failure:^(NSError *error) {
+        NSLog(@"[MXCall] transferToRoom: ERROR: Cannot send m.call.replaces event.");
+        if (failure)
+        {
+            failure(error);
+        }
+    }];
+}
+
 #pragma mark - Properties
 
 - (void)setSelectedAnswer:(MXEvent *)selectedAnswer
@@ -550,8 +625,18 @@ NSString *const kMXCallSupportsHoldingStatusDidChange = @"kMXCallSupportsHolding
         [_delegate callSupportsHoldingStatusDidChange:self];
     }
     
-    // Broadcast the new call status
+    if ([_delegate respondsToSelector:@selector(callSupportsTransferringStatusDidChange:)])
+    {
+        [_delegate callSupportsTransferringStatusDidChange:self];
+    }
+    
+    // Broadcast the new call statuses
+    
     [[NSNotificationCenter defaultCenter] postNotificationName:kMXCallSupportsHoldingStatusDidChange
+                                                        object:self
+                                                      userInfo:nil];
+    
+    [[NSNotificationCenter defaultCenter] postNotificationName:kMXCallSupportsTransferringStatusDidChange
                                                         object:self
                                                       userInfo:nil];
 }
@@ -1061,7 +1146,7 @@ NSString *const kMXCallSupportsHoldingStatusDidChange = @"kMXCallSupportsHolding
                 NSDictionary *content = @{
                     @"call_id": self.callId,
                     @"description": @{
-                            @"type": kMXCallSessionDescriptionTypeAnswer,
+                            @"type": kMXCallSessionDescriptionTypeStringAnswer,
                             @"sdp": sdpAnswer
                     },
                     @"version": kMXCallVersion,
@@ -1091,6 +1176,16 @@ NSString *const kMXCallSupportsHoldingStatusDidChange = @"kMXCallSupportsHolding
             [self didEncounterError:error reason:MXCallHangupReasonIceFailed];
         }];
     }
+}
+
+- (void)handleCallReplaces:(MXEvent *)event
+{
+    //  TODO: Implement
+}
+
+- (void)handleCallRejectReplacement:(MXEvent *)event
+{
+    //  TODO: Implement
 }
 
 #pragma mark - Private methods

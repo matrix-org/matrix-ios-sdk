@@ -100,3 +100,16 @@ FOUNDATION_EXPORT NSString *MatrixSDKVersion;
 
 #import "MXEventScan.h"
 #import "MXMediaScan.h"
+
+#import "MXBase64Tools.h"
+#import "MXBaseProfiler.h"
+
+#import "MXCallInviteEventContent.h"
+#import "MXCallAnswerEventContent.h"
+#import "MXCallSelectAnswerEventContent.h"
+#import "MXCallCandidatesEventContent.h"
+#import "MXCallRejectEventContent.h"
+#import "MXCallNegotiateEventContent.h"
+#import "MXCallReplacesEventContent.h"
+#import "MXUserModel.h"
+#import "MXCallCapabilitiesModel.h"

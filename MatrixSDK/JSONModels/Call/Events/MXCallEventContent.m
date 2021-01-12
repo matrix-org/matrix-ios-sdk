@@ -35,6 +35,7 @@ static NSArray<NSString *> *kAcceptedCallVersions = nil;
 
 - (void)parseJSON:(NSDictionary *)JSONDictionary
 {
+    MXJSONModelSetString(self.callId, JSONDictionary[@"call_id"]);
     MXJSONModelSetNumber(self.versionNumber, JSONDictionary[@"version"]);
     MXJSONModelSetString(self.versionString, JSONDictionary[@"version"]);
     MXJSONModelSetString(self.partyId, JSONDictionary[@"party_id"]);
@@ -50,6 +51,25 @@ static NSArray<NSString *> *kAcceptedCallVersions = nil;
     }
 
     return callEventContent;
+}
+
+- (NSDictionary *)JSONDictionary
+{
+    NSMutableDictionary *jsonDictionary = [NSMutableDictionary dictionaryWithDictionary:@{
+        @"call_id": self.callId,
+        @"party_id": self.partyId
+    }];
+
+    if (self.versionNumber)
+    {
+        jsonDictionary[@"version"] = self.versionNumber;
+    }
+    else if (self.versionString)
+    {
+        jsonDictionary[@"version"] = self.versionString;
+    }
+
+    return jsonDictionary;
 }
 
 - (NSString *)version

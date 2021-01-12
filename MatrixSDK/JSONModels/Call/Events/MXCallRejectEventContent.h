@@ -20,14 +20,9 @@
 NS_ASSUME_NONNULL_BEGIN
 
 /**
- `MXCallRejectEventContent` represents the content of a m.call.reject event.
+ `MXCallRejectEventContent` represents the content of an `m.call.reject` event.
  */
 @interface MXCallRejectEventContent : MXCallEventContent
-
-/**
- A unique identifier for the call.
- */
-@property (nonatomic) NSString *callId;
 
 @end
 

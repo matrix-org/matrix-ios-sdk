@@ -26,6 +26,7 @@ NS_ASSUME_NONNULL_BEGIN
 @class MXSession;
 @class MXTurnServerResponse;
 @class MXEvent;
+@class MXUserModel;
 
 @protocol MXCallStack;
 
@@ -145,6 +146,12 @@ extern NSString *const kMXCallManagerConferenceFinished;
 @property (nonatomic) NSUInteger negotiateLifetime;
 
 /**
+ The time in milliseconds that an transfer call request is valid for.
+ Default is 30s.
+ */
+@property (nonatomic) NSUInteger transferLifetime;
+
+/**
  The list of TURN/STUN servers advertised by the user's homeserver.
  Can be nil. In this case, use `fallbackSTUNServer`.
  */
@@ -155,6 +162,21 @@ extern NSString *const kMXCallManagerConferenceFinished;
  */
 @property (nonatomic) NSString *fallbackSTUNServer;
 
+#pragma mark - Transfer
+
+/// Attempts to transfer the given call to a new call between the transferee and the target
+/// @param callWithTransferee Call to be transferred
+/// @param target Target user for the transfer
+/// @param transferee Transferee user of the transfer
+/// @param consultFirst Flag to indicate if we want to consult the transfer to the target user first. If set, creates a DM call to the target (if we don't have already one). Even would create a new DM if we don't have one already to call the target.
+/// @param success Success block. Returns the new call id
+/// @param failure Failure block
+- (void)transferCall:(MXCall *)callWithTransferee
+                  to:(MXUserModel *)target
+      withTransferee:(MXUserModel *)transferee
+        consultFirst:(BOOL)consultFirst
+             success:(void (^)(NSString * _Nonnull newCallId))success
+             failure:(void (^)(NSError * _Nullable error))failure;
 
 #pragma mark - Conference call
 

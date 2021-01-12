@@ -20,14 +20,9 @@
 NS_ASSUME_NONNULL_BEGIN
 
 /**
- `MXCallSelectAnswerEventContent` represents the content of a m.call.select_answer event.
+ `MXCallSelectAnswerEventContent` represents the content of an `m.call.select_answer` event.
  */
 @interface MXCallSelectAnswerEventContent : MXCallEventContent
-
-/**
- A unique identifier for the call.
- */
-@property (nonatomic) NSString *callId;
 
 /**
  The selected party id.

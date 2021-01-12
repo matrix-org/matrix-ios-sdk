@@ -24,7 +24,6 @@
     if (callRejectEventContent)
     {
         [callRejectEventContent parseJSON:JSONDictionary];
-        MXJSONModelSetString(callRejectEventContent.callId, JSONDictionary[@"call_id"]);
     }
 
     return callRejectEventContent;

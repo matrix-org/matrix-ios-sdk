@@ -9,6 +9,7 @@ Changes to be released in next version
  * Send VoIP analytics events (vector-im/element-ios/issues/3855).
  * Add hold support for CallKit calls (vector-im/element-ios/issues/3834).
  * Fix video call with web (vector-im/element-ios/issues/3862).
+ * VoIP: Call transfers initiation (vector-im/element-ios/issues/3872).
 
 🐛 Bugfix
  * 

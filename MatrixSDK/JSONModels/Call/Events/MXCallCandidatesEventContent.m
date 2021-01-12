@@ -24,7 +24,6 @@
     if (callCandidatesEventContent)
     {
         [callCandidatesEventContent parseJSON:JSONDictionary];
-        MXJSONModelSetString(callCandidatesEventContent.callId, JSONDictionary[@"call_id"]);
         MXJSONModelSetMXJSONModelArray(callCandidatesEventContent.candidates, MXCallCandidate, JSONDictionary[@"candidates"]);
     }
 

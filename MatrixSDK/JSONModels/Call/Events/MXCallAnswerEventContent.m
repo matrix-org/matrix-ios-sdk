@@ -15,6 +15,8 @@
 //
 
 #import "MXCallAnswerEventContent.h"
+#import "MXCallSessionDescription.h"
+#import "MXCallCapabilitiesModel.h"
 
 @implementation MXCallAnswerEventContent
 
@@ -24,8 +26,8 @@
     if (callAnswerEventContent)
     {
         [callAnswerEventContent parseJSON:JSONDictionary];
-        MXJSONModelSetString(callAnswerEventContent.callId, JSONDictionary[@"call_id"]);
         MXJSONModelSetMXJSONModel(callAnswerEventContent.answer, MXCallSessionDescription, JSONDictionary[@"answer"]);
+        MXJSONModelSetMXJSONModel(callAnswerEventContent.capabilities, MXCallCapabilitiesModel, JSONDictionary[@"capabilities"]);
     }
 
     return callAnswerEventContent;

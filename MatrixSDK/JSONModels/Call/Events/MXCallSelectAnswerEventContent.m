@@ -24,7 +24,6 @@
     if (callSelectAnswerEventContent)
     {
         [callSelectAnswerEventContent parseJSON:JSONDictionary];
-        MXJSONModelSetString(callSelectAnswerEventContent.callId, JSONDictionary[@"call_id"]);
         MXJSONModelSetString(callSelectAnswerEventContent.selectedPartyId, JSONDictionary[@"selected_party_id"]);
     }
 

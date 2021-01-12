@@ -21,14 +21,9 @@
 NS_ASSUME_NONNULL_BEGIN
 
 /**
- `MXCallCandidatesEventContent` represents the content of a m.call.candidates event.
+ `MXCallCandidatesEventContent` represents the content of an `m.call.candidates` event.
  */
 @interface MXCallCandidatesEventContent : MXCallEventContent
-
-/**
- The ID of the call this event relates to.
- */
-@property (nonatomic) NSString *callId;
 
 /**
  Array of object describing the candidates (@see MXCallCandidate).

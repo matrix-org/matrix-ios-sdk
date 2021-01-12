@@ -17,10 +17,10 @@
 #import "MXCallSessionDescription.h"
 #import "MXTools.h"
 
-NSString *const kMXCallSessionDescriptionTypeOffer = @"offer";
-NSString *const kMXCallSessionDescriptionTypePrAnswer = @"pranswer";
-NSString *const kMXCallSessionDescriptionTypeAnswer = @"answer";
-NSString *const kMXCallSessionDescriptionTypeRollback = @"rollback";
+NSString *const kMXCallSessionDescriptionTypeStringOffer = @"offer";
+NSString *const kMXCallSessionDescriptionTypeStringPrAnswer = @"pranswer";
+NSString *const kMXCallSessionDescriptionTypeStringAnswer = @"answer";
+NSString *const kMXCallSessionDescriptionTypeStringRollback = @"rollback";
 
 @implementation MXCallSessionDescription
 

@@ -58,6 +58,8 @@ public enum MXEventType: Equatable, Hashable {
     case callHangup
     case callReject
     case callNegotiate
+    case callReplaces
+    case callRejectReplacement
     case reaction
     case receipt
     case roomTombStone
@@ -102,6 +104,8 @@ public enum MXEventType: Equatable, Hashable {
         case .callHangup: return kMXEventTypeStringCallHangup
         case .callReject: return kMXEventTypeStringCallReject
         case .callNegotiate: return kMXEventTypeStringCallNegotiate
+        case .callReplaces: return kMXEventTypeStringCallReplaces
+        case .callRejectReplacement: return kMXEventTypeStringCallRejectReplacement
         case .reaction: return kMXEventTypeStringReaction
         case .receipt: return kMXEventTypeStringReceipt
         case .roomTombStone: return kMXEventTypeStringRoomTombStone
@@ -122,7 +126,7 @@ public enum MXEventType: Equatable, Hashable {
     }
 
     public init(identifier: String) {
-        let events: [MXEventType] = [.roomName, .roomTopic, .roomAvatar, .roomMember, .roomCreate, .roomJoinRules, .roomPowerLevels, .roomAliases, .roomCanonicalAlias, .roomEncrypted, .roomEncryption, .roomGuestAccess, .roomHistoryVisibility, .roomKey, .roomForwardedKey, .roomKeyRequest, .roomMessage, .roomMessageFeedback, .roomRedaction, .roomThirdPartyInvite, .roomTag, .presence, .typing, .callInvite, .callCandidates, .callAnswer, .callSelectAnswer, .callHangup, .callReject, .callNegotiate, .receipt, .roomTombStone, .taggedEvents]
+        let events: [MXEventType] = [.roomName, .roomTopic, .roomAvatar, .roomMember, .roomCreate, .roomJoinRules, .roomPowerLevels, .roomAliases, .roomCanonicalAlias, .roomEncrypted, .roomEncryption, .roomGuestAccess, .roomHistoryVisibility, .roomKey, .roomForwardedKey, .roomKeyRequest, .roomMessage, .roomMessageFeedback, .roomRedaction, .roomThirdPartyInvite, .roomTag, .presence, .typing, .callInvite, .callCandidates, .callAnswer, .callSelectAnswer, .callHangup, .callReject, .callNegotiate, .callReplaces, .callRejectReplacement, .receipt, .roomTombStone, .taggedEvents]
         self = events.first(where: { $0.identifier == identifier }) ?? .custom(identifier)
     }
 }

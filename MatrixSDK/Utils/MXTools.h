@@ -28,6 +28,7 @@
 #import "MXEnumConstants.h"
 #import "MXCallHangupEventContent.h"
 #import "MXCallSessionDescription.h"
+#import "MXCallRejectReplacementEventContent.h"
 
 @interface MXTools : NSObject
 
@@ -45,6 +46,9 @@
 
 + (MXCallSessionDescriptionType)callSessionDescriptionType:(MXCallSessionDescriptionTypeString)typeString;
 + (MXCallSessionDescriptionTypeString)callSessionDescriptionTypeString:(MXCallSessionDescriptionType)type;
+
++ (MXCallRejectReplacementReason)callRejectReplacementReason:(MXCallRejectReplacementReasonString)reasonString;
++ (MXCallRejectReplacementReasonString)callRejectReplacementReasonString:(MXCallRejectReplacementReason)reason;
 
 /**
  Generate a random secret key.

@@ -14,34 +14,44 @@
 // limitations under the License.
 //
 
-#import <Foundation/Foundation.h>
-#import "MXCallEventContent.h"
+#import "MXJSONModel.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
-@class MXCallSessionDescription;
+@class MXUser;
 
 /**
- `MXCallNegotiateEventContent` represents the content of an `m.call.negotiate` event.
+ `MXUserModel` represents the target user of an `m.call.replaces` event.
+ @see MXCallReplacesEventContent
  */
-@interface MXCallNegotiateEventContent : MXCallEventContent
+@interface MXUserModel : MXJSONModel
 
 /**
- The session description.
+ The user id.
  */
-@property (nonatomic) MXCallSessionDescription *sessionDescription;
+@property (nonatomic) NSString *userId;
 
 /**
- The time in milliseconds that the invite is valid for.
- Once the invite age exceeds this value, clients should discard it.
- They should also no longer show the call as awaiting an answer in the UI.
+ The user display name.
  */
-@property (nonatomic) NSUInteger lifetime;
+@property (nonatomic, nullable) NSString *displayname;
 
 /**
- Indicate whether the negotiation is for a video call.
+ The url of the user of the avatar.
  */
-- (BOOL)isVideoCall;
+@property (nonatomic, nullable) NSString *avatarUrl;
+
+/**
+ Initialize model object with params.
+ */
+- (id)initWithUserId:(NSString * _Nonnull)userId
+         displayname:(NSString * _Nullable)displayname
+           avatarUrl:(NSString * _Nullable)avatarUrl;
+
+/**
+ Initialize model object with a user.
+ */
+- (id)initWithUser:(MXUser *)user;
 
 @end
 

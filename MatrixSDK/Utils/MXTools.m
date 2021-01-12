@@ -283,27 +283,27 @@ NSCharacterSet *uriComponentCharset;
 {
     MXCallHangupReason reason = MXCallHangupReasonUserHangup;
     
-    if ([reasonString isEqualToString:kMXCallHangupReasonUserHangup])
+    if ([reasonString isEqualToString:kMXCallHangupReasonStringUserHangup])
     {
         reason = MXCallHangupReasonUserHangup;
     }
-    else if ([reasonString isEqualToString:kMXCallHangupReasonIceFailed])
+    else if ([reasonString isEqualToString:kMXCallHangupReasonStringIceFailed])
     {
         reason = MXCallHangupReasonIceFailed;
     }
-    else if ([reasonString isEqualToString:kMXCallHangupReasonInviteTimeout])
+    else if ([reasonString isEqualToString:kMXCallHangupReasonStringInviteTimeout])
     {
         reason = MXCallHangupReasonInviteTimeout;
     }
-    else if ([reasonString isEqualToString:kMXCallHangupReasonIceTimeout])
+    else if ([reasonString isEqualToString:kMXCallHangupReasonStringIceTimeout])
     {
         reason = MXCallHangupReasonIceTimeout;
     }
-    else if ([reasonString isEqualToString:kMXCallHangupReasonUserMediaFailed])
+    else if ([reasonString isEqualToString:kMXCallHangupReasonStringUserMediaFailed])
     {
         reason = MXCallHangupReasonUserMediaFailed;
     }
-    else if ([reasonString isEqualToString:kMXCallHangupReasonUnknownError])
+    else if ([reasonString isEqualToString:kMXCallHangupReasonStringUnknownError])
     {
         reason = MXCallHangupReasonUnknownError;
     }
@@ -318,22 +318,22 @@ NSCharacterSet *uriComponentCharset;
     switch (reason) 
     {
         case MXCallHangupReasonUserHangup:
-            string = kMXCallHangupReasonUserHangup;
+            string = kMXCallHangupReasonStringUserHangup;
             break;
         case MXCallHangupReasonIceFailed:
-            string = kMXCallHangupReasonIceFailed;
+            string = kMXCallHangupReasonStringIceFailed;
             break;
         case MXCallHangupReasonInviteTimeout:
-            string = kMXCallHangupReasonInviteTimeout;
+            string = kMXCallHangupReasonStringInviteTimeout;
             break;
         case MXCallHangupReasonIceTimeout:
-            string = kMXCallHangupReasonIceTimeout;
+            string = kMXCallHangupReasonStringIceTimeout;
             break;
         case MXCallHangupReasonUserMediaFailed:
-            string = kMXCallHangupReasonUserMediaFailed;
+            string = kMXCallHangupReasonStringUserMediaFailed;
             break;
         case MXCallHangupReasonUnknownError:
-            string = kMXCallHangupReasonUnknownError;
+            string = kMXCallHangupReasonStringUnknownError;
             break;
         default:
             break;
@@ -346,19 +346,19 @@ NSCharacterSet *uriComponentCharset;
 {
     MXCallSessionDescriptionType type = MXCallSessionDescriptionTypeOffer;
     
-    if ([typeString isEqualToString:kMXCallSessionDescriptionTypeOffer])
+    if ([typeString isEqualToString:kMXCallSessionDescriptionTypeStringOffer])
     {
         type = MXCallSessionDescriptionTypeOffer;
     }
-    else if ([typeString isEqualToString:kMXCallSessionDescriptionTypePrAnswer])
+    else if ([typeString isEqualToString:kMXCallSessionDescriptionTypeStringPrAnswer])
     {
         type = MXCallSessionDescriptionTypePrAnswer;
     }
-    else if ([typeString isEqualToString:kMXCallSessionDescriptionTypeAnswer])
+    else if ([typeString isEqualToString:kMXCallSessionDescriptionTypeStringAnswer])
     {
         type = MXCallSessionDescriptionTypeAnswer;
     }
-    else if ([typeString isEqualToString:kMXCallSessionDescriptionTypeRollback])
+    else if ([typeString isEqualToString:kMXCallSessionDescriptionTypeStringRollback])
     {
         type = MXCallSessionDescriptionTypeRollback;
     }
@@ -373,16 +373,63 @@ NSCharacterSet *uriComponentCharset;
     switch (type)
     {
         case MXCallSessionDescriptionTypeOffer:
-            string = kMXCallSessionDescriptionTypeOffer;
+            string = kMXCallSessionDescriptionTypeStringOffer;
             break;
         case MXCallSessionDescriptionTypePrAnswer:
-            string = kMXCallSessionDescriptionTypePrAnswer;
+            string = kMXCallSessionDescriptionTypeStringPrAnswer;
             break;
         case MXCallSessionDescriptionTypeAnswer:
-            string = kMXCallSessionDescriptionTypeAnswer;
+            string = kMXCallSessionDescriptionTypeStringAnswer;
             break;
         case MXCallSessionDescriptionTypeRollback:
-            string = kMXCallSessionDescriptionTypeRollback;
+            string = kMXCallSessionDescriptionTypeStringRollback;
+            break;
+    }
+    
+    return string;
+}
+
++ (MXCallRejectReplacementReason)callRejectReplacementReason:(MXCallRejectReplacementReasonString)reasonString
+{
+    MXCallRejectReplacementReason type = MXCallRejectReplacementReasonDeclined;
+    
+    if ([reasonString isEqualToString:kMXCallRejectReplacementReasonStringDeclined])
+    {
+        type = MXCallRejectReplacementReasonDeclined;
+    }
+    else if ([reasonString isEqualToString:kMXCallRejectReplacementReasonStringFailedRoomInvite])
+    {
+        type = MXCallRejectReplacementReasonFailedRoomInvite;
+    }
+    else if ([reasonString isEqualToString:kMXCallRejectReplacementReasonStringFailedCallInvite])
+    {
+        type = MXCallRejectReplacementReasonFailedCallInvite;
+    }
+    else if ([reasonString isEqualToString:kMXCallRejectReplacementReasonStringFailedCall])
+    {
+        type = MXCallRejectReplacementReasonFailedCall;
+    }
+    
+    return type;
+}
+
++ (MXCallRejectReplacementReasonString)callRejectReplacementReasonString:(MXCallRejectReplacementReason)reason
+{
+    MXCallRejectReplacementReasonString string;
+    
+    switch (reason)
+    {
+        case MXCallRejectReplacementReasonDeclined:
+            string = kMXCallRejectReplacementReasonStringDeclined;
+            break;
+        case MXCallRejectReplacementReasonFailedRoomInvite:
+            string = kMXCallRejectReplacementReasonStringFailedRoomInvite;
+            break;
+        case MXCallRejectReplacementReasonFailedCallInvite:
+            string = kMXCallRejectReplacementReasonStringFailedCallInvite;
+            break;
+        case MXCallRejectReplacementReasonFailedCall:
+            string = kMXCallRejectReplacementReasonStringFailedCall;
             break;
     }
     

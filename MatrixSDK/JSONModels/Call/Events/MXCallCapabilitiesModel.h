@@ -14,28 +14,19 @@
 // limitations under the License.
 //
 
-#import <Foundation/Foundation.h>
-#import "MXCallEventContent.h"
+#import <MatrixSDK/MatrixSDK.h>
 
 NS_ASSUME_NONNULL_BEGIN
 
-@class MXCallSessionDescription;
-@class MXCallCapabilitiesModel;
+/**
+ `MXCallCapabilitiesModel` represents capabilities in `m.call.invite` and `m.call.answer` events.
+ */
+@interface MXCallCapabilitiesModel : MXJSONModel
 
 /**
- `MXCallAnswerEventContent` represents the content of an `m.call.answer` event.
+ Capability defined by `m.call.transferee`.
  */
-@interface MXCallAnswerEventContent : MXCallEventContent
-
-/**
- The session description.
- */
-@property (nonatomic) MXCallSessionDescription *answer;
-
-/**
- Capabilities for this call.
- */
-@property (nonatomic, nullable) MXCallCapabilitiesModel *capabilities;
+@property (nonatomic) BOOL transferee;
 
 @end
 
