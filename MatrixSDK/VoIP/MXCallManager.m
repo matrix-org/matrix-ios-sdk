@@ -38,6 +38,8 @@
 
 #import "MXThirdPartyProtocol.h"
 #import "MXThirdpartyProtocolsResponse.h"
+#import "MXThirdPartyUsersResponse.h"
+#import "MXThirdPartyUserInstance.h"
 
 #pragma mark - Constants definitions
 NSString *const kMXCallManagerNewCall            = @"kMXCallManagerNewCall";
@@ -45,6 +47,7 @@ NSString *const kMXCallManagerConferenceStarted  = @"kMXCallManagerConferenceSta
 NSString *const kMXCallManagerConferenceFinished = @"kMXCallManagerConferenceFinished";
 NSString *const kMXCallManagerPSTNSupportUpdated = @"kMXCallManagerPSTNSupportUpdated";
 
+// TODO: Replace usages of this with `kMXProtocolPSTN` when MSC completed
 NSString *const kMXProtocolVectorPSTN = @"im.vector.protocol.pstn";
 NSString *const kMXProtocolPSTN = @"m.protocol.pstn";
 
@@ -1129,6 +1132,50 @@ NSString *const kMXCallManagerConferenceUserDomain  = @"matrix.org";
     } failure:^(NSError *error) {
         NSLog(@"Failed to check for pstn protocol support with error: %@", error);
         self.pstnProtocol = nil;
+    }];
+}
+
+- (void)placeCallAgainst:(NSString *)phoneNumber
+               withVideo:(BOOL)video
+                 success:(void (^)(MXCall * _Nonnull))success
+                 failure:(void (^)(NSError * _Nullable))failure
+{
+    [_mxSession.matrixRestClient thirdpartyUsers:kMXProtocolVectorPSTN
+                                          fields:@{
+                                              kMXLoginIdentifierTypePhone: phoneNumber
+                                          }
+                                         success:^(MXThirdPartyUsersResponse *thirdpartyUsersResponse) {
+        
+        MXThirdPartyUserInstance * user = [thirdpartyUsersResponse.users firstObject];
+        
+        NSLog(@"Succeeded to look up the phone number: %@", user.userId);
+        
+        //  try to find a direct room with this user
+        [self directCallableRoomWithUser:user.userId completion:^(MXRoom * _Nullable room, NSError * _Nullable error) {
+            if (room)
+            {
+                //  room found, place the call in this room
+                [self placeCallInRoom:room.roomId
+                            withVideo:video
+                              success:success
+                              failure:failure];
+            }
+            else
+            {
+                //  no room found
+                NSLog(@"Failed to find a room for call with error: %@", error);
+                if (failure)
+                {
+                    failure(error);
+                }
+            }
+        }];
+    } failure:^(NSError *error) {
+        NSLog(@"Failed to look up the phone number with error: %@", error);
+        if (failure)
+        {
+            failure(error);
+        }
     }];
 }
 

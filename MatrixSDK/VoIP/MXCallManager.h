@@ -229,6 +229,19 @@ extern NSString *const kMXCallManagerPSTNSupportUpdated;
  */
 @property (nonatomic) BOOL supportsPSTN;
 
+/**
+ Place a voice or a video call into a room.
+ 
+ @param phoneNumber the phone number against to place the call.
+ @param video YES to make a video call.
+ @param success A block object called when the operation succeeds. It provides the created MXCall instance.
+ @param failure A block object called when the operation fails.
+ */
+- (void)placeCallAgainst:(NSString *)phoneNumber
+               withVideo:(BOOL)video
+                success:(void (^)(MXCall *call))success
+                failure:(void (^)(NSError * _Nullable error))failure;
+
 @end
 
 NS_ASSUME_NONNULL_END
