@@ -47,7 +47,7 @@
 
     if (_useCount >= rotationPeriodMsgs || sessionLifetime >= rotationPeriodMs)
     {
-        NSLog(@"[MXMegolmEncryption] Rotating megolm session after %tu messages, %tu ms", _useCount, sessionLifetime);
+        NSLog(@"[MXOutboundSessionInfo] Rotating megolm session after %tu messages, %tu ms", _useCount, sessionLifetime);
         needsRotation = YES;
     }
 
