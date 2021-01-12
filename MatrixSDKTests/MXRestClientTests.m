@@ -22,7 +22,7 @@
 #import "MatrixSDKTestsData.h"
 #import "MXRoomMember.h"
 #import "MXKey.h"
-
+#import "MXThirdpartyProtocolsResponse.h"
 
 // Do not bother with retain cycles warnings in tests
 #pragma clang diagnostic push

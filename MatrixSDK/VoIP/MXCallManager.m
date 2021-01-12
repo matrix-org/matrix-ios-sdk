@@ -36,6 +36,9 @@
 #import "MXCallRejectReplacementEventContent.h"
 #import "MXUserModel.h"
 
+#import "MXThirdPartyProtocol.h"
+#import "MXThirdpartyProtocolsResponse.h"
+
 #pragma mark - Constants definitions
 NSString *const kMXCallManagerNewCall            = @"kMXCallManagerNewCall";
 NSString *const kMXCallManagerConferenceStarted  = @"kMXCallManagerConferenceStarted";
