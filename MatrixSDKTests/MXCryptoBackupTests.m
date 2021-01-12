@@ -1578,7 +1578,7 @@
             MXOlmOutboundGroupSession *outboundSession = [aliceSession2.crypto.store outboundGroupSessionWithRoomId:roomId];
             XCTAssertNotNil(outboundSession);
             NSString *sessionKey2 = outboundSession.session.sessionKey;
-            XCTAssert([sessionKey isEqualToString:sessionKey2], @"%@ != %@", sessionKey, sessionKey2);
+            XCTAssertEqualObjects(sessionKey, sessionKey2);
             [expectation fulfill];
         } failure:^(NSError * _Nonnull error) {
             XCTFail(@"The request should not fail - NSError: %@", error);
