@@ -445,8 +445,11 @@ public enum MXBackgroundSyncServiceError: Error {
         self.pushRulesManager.handleAccountData(syncResponse.accountData)
         self.updateStore(with: syncResponse)
         
-        for event in syncResponse.toDevice?.events ?? [] {
-            handleToDeviceEvent(event)
+        // Make a deep copy of events array to avoid random nil swift exception in
+        // handleToDeviceEvent method. https://github.com/vector-im/element-ios/issues/3916
+        let events = syncResponse.toDevice?.events?.map { $0.copy() as! MXEvent} ?? []
+        for event in events {
+            handleToDeviceEvent(event.copy() as! MXEvent)
         }
         
         NSLog("[MXBackgroundSyncService] handleSyncResponse: Next sync token: \(syncResponse.nextBatch ?? "nil")")
@@ -499,6 +502,7 @@ public enum MXBackgroundSyncServiceError: Error {
     private func handleToDeviceEvent(_ event: MXEvent) {
         if event.isEncrypted {
             do {
+                NSLog("[MXBackgroundSyncService] handleToDeviceEvent: decrypting event")
                 try decryptEvent(event)
             } catch let error {
                 NSLog("[MXBackgroundSyncService] handleToDeviceEvent: Could not decrypt to-device event: \(error)")
@@ -506,6 +510,7 @@ public enum MXBackgroundSyncServiceError: Error {
             }
         }
         
+        NSLog("[MXBackgroundSyncService] handleToDeviceEvent: check event content")
         guard let content = event.content else {
             NSLog("[MXBackgroundSyncService] handleToDeviceEvent: ERROR: incomplete event content: \(String(describing: event.jsonDictionary()))")
             return
