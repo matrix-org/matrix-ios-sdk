@@ -313,7 +313,7 @@
     OLMOutboundGroupSession *session = [crypto.olmDevice createOutboundGroupSessionForRoomWithId:roomId];
 
     [crypto.olmDevice addInboundGroupSession:session.sessionIdentifier
-                                  sessionKey:session.sessionKey//[crypto.olmDevice sessionKeyForOutboundGroupForRoom:roomId]
+                                  sessionKey:session.sessionKey
                                       roomId:roomId
                                    senderKey:crypto.olmDevice.deviceCurve25519Key
                 forwardingCurve25519KeyChain:@[]
@@ -334,8 +334,8 @@
                         failure:(void (^)(NSError *))failure
 
 {
-    NSString *sessionKey = session.session.sessionKey;// [crypto.olmDevice sessionKeyForOutboundGroupForRoom:roomId];
-    NSUInteger chainIndex = session.session.messageIndex; //[crypto.olmDevice messageIndexForOutboundGroupForRoom:roomId];
+    NSString *sessionKey = session.session.sessionKey;
+    NSUInteger chainIndex = session.session.messageIndex;
 
     NSDictionary *payload = @{
                               @"type": kMXEventTypeStringRoomKey,
