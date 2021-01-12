@@ -449,7 +449,7 @@ public enum MXBackgroundSyncServiceError: Error {
         // handleToDeviceEvent method. https://github.com/vector-im/element-ios/issues/3916
         let events = syncResponse.toDevice?.events?.map { $0.copy() as! MXEvent} ?? []
         for event in events {
-            handleToDeviceEvent(event.copy() as! MXEvent)
+            handleToDeviceEvent(event)
         }
         
         NSLog("[MXBackgroundSyncService] handleSyncResponse: Next sync token: \(syncResponse.nextBatch ?? "nil")")
