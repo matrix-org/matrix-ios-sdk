@@ -68,7 +68,7 @@
         {
             if (! [devicesInRoom objectForDevice:deviceId forUser:userId])
             {
-                NSLog(@"[MXMegolmEncryption] Starting new session because we shared with %@:%@", userId, deviceId);
+                NSLog(@"[MXOutboundSessionInfo] Starting new session because we shared with %@:%@", userId, deviceId);
                 return YES;
             }
         }
