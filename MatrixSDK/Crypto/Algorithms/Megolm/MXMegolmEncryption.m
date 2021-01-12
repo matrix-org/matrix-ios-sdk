@@ -542,7 +542,7 @@
 
             session.useCount++;
             
-            // We have to store the session in the DB est time a message is encrypted to save the session useCount
+            // We have to store the session in the DB every time a message is encrypted to save the session useCount
             [crypto.olmDevice storeOutboundGroupSessionForRoomWithId:roomId withSessionId:session.sessionId];
         }
     }
