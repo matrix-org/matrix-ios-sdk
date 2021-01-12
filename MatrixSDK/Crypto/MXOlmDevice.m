@@ -32,12 +32,6 @@
     // The OLMKit utility instance.
     OLMUtility *olmUtility;
 
-    // The outbound group session.
-    // They are not stored in 'store' to avoid to remember to which devices we sent the session key.
-    // Plus, in cryptography, it is good to refresh sessions from time to time.
-    // The key is the session id, the value the outbound group session.
-    NSMutableDictionary<NSString*, OLMOutboundGroupSession*> *outboundGroupSessionStore;
-
     // Store a set of decrypted message indexes for each group session.
     // This partially mitigates a replay attack where a MITM resends a group
     // message into the room.
@@ -88,7 +82,6 @@
 
         olmUtility = [[OLMUtility alloc] init];
 
-        outboundGroupSessionStore = [NSMutableDictionary dictionary];
         inboundGroupSessionMessageIndexes = [NSMutableDictionary dictionary];
 
         _deviceCurve25519Key = olmAccount.identityKeys[@"curve25519"];
@@ -292,41 +285,29 @@
 
 
 #pragma mark - Outbound group session
-- (NSString *)createOutboundGroupSessionForRoomWithId:(NSString *)roomId
+
+- (OLMOutboundGroupSession *)createOutboundGroupSessionForRoomWithId:(NSString *)roomId
 {
     OLMOutboundGroupSession *session = [[OLMOutboundGroupSession alloc] initOutboundGroupSession];
-    outboundGroupSessionStore[session.sessionIdentifier] = session;
-    
     [store storeOutboundGroupSession:session withRoomId:roomId];
 
-    return session.sessionIdentifier;
+    return session;
 }
 
-- (void)storeOutboundGroupSessionForRoomWithId:(NSString *)roomId withSessionId:(NSString *)sessionId
+- (void)storeOutboundGroupSession:(OLMOutboundGroupSession *)session forRoomWithId:(NSString *)roomId
 {
-    OLMOutboundGroupSession *session = outboundGroupSessionStore[sessionId];
-    
-    if (session)
-    {
-        NSLog(@"[MXOlmDevice] storing Outbound Group Session %@ For Room With ID %@", roomId, sessionId);
-        [store storeOutboundGroupSession:session withRoomId:roomId];
-    }
-    else
-    {
-        NSLog(@"[MXOlmDevice] storeOutboundGroupSessionForRoomWithId: No session found with ID %@", sessionId);
-    }
+    NSLog(@"[MXOlmDevice] storing Outbound Group Session For Room With ID %@", roomId);
+    [store storeOutboundGroupSession:session withRoomId:roomId];
 }
 
-- (MXOutboundSessionInfo *)restoreOutboundGroupSessionForRoom:(NSString *)roomId
+- (MXOutboundSessionInfo *)outboundGroupSessionInfoForRoom:(NSString *)roomId
 {
     MXOlmOutboundGroupSession *restoredOutboundGroupSession = [store outboundGroupSessionWithRoomId:roomId];
     
     if (restoredOutboundGroupSession)
     {
-        NSString *sessionId = restoredOutboundGroupSession.sessionId;
-        outboundGroupSessionStore[sessionId] = restoredOutboundGroupSession.session;
         NSDate *creationTime = [NSDate dateWithTimeIntervalSince1970:restoredOutboundGroupSession.creationTime];
-        return [[MXOutboundSessionInfo alloc] initWithSessionID:sessionId creationTime:creationTime];
+        return [[MXOutboundSessionInfo alloc] initWithSession:restoredOutboundGroupSession.session creationTime:creationTime];
     }
     
     return nil;
@@ -334,27 +315,7 @@
 
 - (void)discardOutboundGroupSessionForRoom:(NSString *)roomId
 {
-    MXOlmOutboundGroupSession *session = [store outboundGroupSessionWithRoomId:roomId];
-    if (session)
-    {
-        [outboundGroupSessionStore removeObjectForKey:session.session.sessionIdentifier];
-        [store removeOutboundGroupSessionWithRoomId:roomId];
-    }
-}
-
-- (NSString *)sessionKeyForOutboundGroupSession:(NSString *)sessionId
-{
-    return outboundGroupSessionStore[sessionId].sessionKey;
-}
-
-- (NSUInteger)messageIndexForOutboundGroupSession:(NSString *)sessionId
-{
-    return outboundGroupSessionStore[sessionId].messageIndex;
-}
-
-- (NSString *)encryptGroupMessage:(NSString *)sessionId payloadString:(NSString *)payloadString
-{
-    return [outboundGroupSessionStore[sessionId] encryptMessage:payloadString error:nil];
+    [store removeOutboundGroupSessionWithRoomId:roomId];
 }
 
 

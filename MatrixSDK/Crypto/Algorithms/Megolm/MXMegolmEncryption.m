@@ -27,6 +27,7 @@
 #import "MXQueuedEncryption.h"
 #import "MXTools.h"
 #import "MXOutboundSessionInfo.h"
+#import <OLMKit/OLMKit.h>
 
 
 @interface MXMegolmEncryption ()
@@ -85,7 +86,7 @@
         sessionRotationPeriodMs = 7 * 24 * 3600 * 1000;
         
         // restore last saved outbound session for this room
-        outboundSession = [crypto.olmDevice restoreOutboundGroupSessionForRoom:roomId];
+        outboundSession = [crypto.olmDevice outboundGroupSessionInfoForRoom:roomId];
         if (outboundSession)
         {
             outboundSessions[outboundSession.sessionId] = outboundSession;
@@ -309,10 +310,10 @@
 
 - (MXOutboundSessionInfo*)prepareNewSession
 {
-    NSString *sessionId = [crypto.olmDevice createOutboundGroupSessionForRoomWithId:roomId];
+    OLMOutboundGroupSession *session = [crypto.olmDevice createOutboundGroupSessionForRoomWithId:roomId];
 
-    [crypto.olmDevice addInboundGroupSession:sessionId
-                                  sessionKey:[crypto.olmDevice sessionKeyForOutboundGroupSession:sessionId]
+    [crypto.olmDevice addInboundGroupSession:session.sessionIdentifier
+                                  sessionKey:session.sessionKey//[crypto.olmDevice sessionKeyForOutboundGroupForRoom:roomId]
                                       roomId:roomId
                                    senderKey:crypto.olmDevice.deviceCurve25519Key
                 forwardingCurve25519KeyChain:@[]
@@ -324,7 +325,7 @@
 
     [crypto.backup maybeSendKeyBackup];
 
-    return [[MXOutboundSessionInfo alloc] initWithSessionID:sessionId];
+    return [[MXOutboundSessionInfo alloc] initWithSession:session];
 }
 
 - (MXHTTPOperation*)shareKey:(MXOutboundSessionInfo*)session
@@ -333,8 +334,8 @@
                         failure:(void (^)(NSError *))failure
 
 {
-    NSString *sessionKey = [crypto.olmDevice sessionKeyForOutboundGroupSession:session.sessionId];
-    NSUInteger chainIndex = [crypto.olmDevice messageIndexForOutboundGroupSession:session.sessionId];
+    NSString *sessionKey = session.session.sessionKey;// [crypto.olmDevice sessionKeyForOutboundGroupForRoom:roomId];
+    NSUInteger chainIndex = session.session.messageIndex; //[crypto.olmDevice messageIndexForOutboundGroupForRoom:roomId];
 
     NSDictionary *payload = @{
                               @"type": kMXEventTypeStringRoomKey,
@@ -527,7 +528,13 @@
             NSData *payloadData = [NSJSONSerialization  dataWithJSONObject:payloadJson options:0 error:nil];
             NSString *payloadString = [[NSString alloc] initWithData:payloadData encoding:NSUTF8StringEncoding];
 
-            NSString *ciphertext = [crypto.olmDevice encryptGroupMessage:session.sessionId payloadString:payloadString];
+            NSError *error = nil;
+            NSString *ciphertext = [session.session encryptMessage:payloadString error:&error];
+            
+            if (error)
+            {
+                NSLog(@"[MXMegolmEncryption] processPendingEncryptionsInSession: failed to encrypt text: %@", error);
+            }
 
             queuedEncryption.success(@{
                       @"algorithm": kMXCryptoMegolmAlgorithm,
@@ -543,7 +550,7 @@
             session.useCount++;
             
             // We have to store the session in the DB every time a message is encrypted to save the session useCount
-            [crypto.olmDevice storeOutboundGroupSessionForRoomWithId:roomId withSessionId:session.sessionId];
+            [crypto.olmDevice storeOutboundGroupSession:session.session forRoomWithId:roomId];
         }
     }
     else

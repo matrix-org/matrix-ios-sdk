@@ -15,24 +15,26 @@
 //
 
 #import "MXOutboundSessionInfo.h"
+#import <OLMKit/OLMKit.h>
 
 @implementation MXOutboundSessionInfo
 
-- (instancetype)initWithSessionID:(NSString *)sessionId
+- (instancetype)initWithSession:(OLMOutboundGroupSession *)session
 {
     self = [super init];
     if (self)
     {
-        _sessionId = sessionId;
+        _sessionId = session.sessionIdentifier;
+        _session = session;
         _sharedWithDevices = [[MXUsersDevicesMap alloc] init];
         creationTime = [NSDate date];
     }
     return self;
 }
 
-- (instancetype)initWithSessionID:(NSString*)sessionId creationTime:(NSDate *)creationTime
+- (instancetype)initWithSession:(OLMOutboundGroupSession *)session creationTime:(NSDate *)creationTime
 {
-    self = [self initWithSessionID:sessionId];
+    self = [self initWithSession:session];
     if (self)
     {
         self->creationTime = creationTime;

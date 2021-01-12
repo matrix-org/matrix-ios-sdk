@@ -29,6 +29,8 @@
 #import "MXSDKOptions.h"
 #import "MXTools.h"
 #import "MXSendReplyEventDefaultStringLocalizations.h"
+#import "MXOutboundSessionInfo.h"
+#import <OLMKit/OLMKit.h>
 
 #if 1 // MX_CRYPTO autamatic definiton does not work well for tests so force it
 //#ifdef MX_CRYPTO
@@ -1855,10 +1857,12 @@
                 // Reinject a modified version of the received room_key event from Alice.
                 // From Bob pov, that mimics Alice resharing her keys but with an advanced outbound group session.
                 XCTAssert(toDeviceEvent);
-                NSString *sessionId = toDeviceEvent.content[@"session_id"];
+                
+                MXOutboundSessionInfo *sessionInfo = [aliceSession.crypto.olmDevice outboundGroupSessionInfoForRoom:roomId];
+                XCTAssertNotNil(sessionInfo);
 
                 NSMutableDictionary *newContent = [NSMutableDictionary dictionaryWithDictionary:toDeviceEvent.content];
-                newContent[@"session_key"] = [aliceSession.crypto.olmDevice sessionKeyForOutboundGroupSession:sessionId];
+                newContent[@"session_key"] = sessionInfo.session.sessionKey;
                 toDeviceEvent.clearEvent.wireContent = newContent;
 
                 [[NSNotificationCenter defaultCenter] postNotificationName:kMXSessionOnToDeviceEventNotification

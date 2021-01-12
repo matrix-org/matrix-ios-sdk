@@ -221,21 +221,21 @@ NSString *const MXBackgroundCryptoStoreUserIdSuffix = @":bgCryptoStore";
 #pragma mark - MXRealmOlmOutboundGroupSession
 
 - (MXOlmOutboundGroupSession *)outboundGroupSessionWithRoomId:(NSString *)roomId {
-    NSLog(@"[MXBackgroundCryptoStore] outboundGroupSessionWithRoomId: return no stored object");
+    NSAssert(NO, @"This method should be useless in the context of MXBackgroundCryptoStore");
     return nil;
 }
 
 - (void)storeOutboundGroupSession:(OLMOutboundGroupSession *)session withRoomId:(NSString *)roomId {
-    NSLog(@"[MXBackgroundCryptoStore] storeOutboundGroupSession: nothing to do here");
+    NSAssert(NO, @"This method should be useless in the context of MXBackgroundCryptoStore");
 }
 
 - (NSArray<OLMOutboundGroupSession *> *)outboundGroupSessions {
-    NSLog(@"[MXBackgroundCryptoStore] outboundGroupSessions: returns empty array");
+    NSAssert(NO, @"This method should be useless in the context of MXBackgroundCryptoStore");
     return @[];
 }
 
 - (void)removeOutboundGroupSessionWithRoomId:(NSString *)roomId {
-    NSLog(@"[MXBackgroundCryptoStore] removeOutboundGroupSessionWithRoomId: nothing to do here");
+    NSAssert(NO, @"This method should be useless in the context of MXBackgroundCryptoStore");
 }
 
 

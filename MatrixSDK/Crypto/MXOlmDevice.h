@@ -181,25 +181,24 @@ Determine if an incoming messages is a prekey message matching an existing sessi
  Generate a new outbound group session.
 
  @param roomId Identifer of the room.
- @return the session id for the outbound session.
+ @return the newly created outbound group session.
  */
-- (NSString *)createOutboundGroupSessionForRoomWithId:(NSString *)roomId;
+- (OLMOutboundGroupSession *)createOutboundGroupSessionForRoomWithId:(NSString *)roomId;
 
 /**
  Store a outbound group session with session ID for room with ID.
 
  @param roomId Identifer of the room.
- @param sessionId Identifier of the session.
  */
-- (void)storeOutboundGroupSessionForRoomWithId:(NSString *)roomId withSessionId:(NSString *)sessionId;
+- (void)storeOutboundGroupSession:(OLMOutboundGroupSession *)session forRoomWithId:(NSString *)roomId;
 
 /**
- Restore a outbound group session for a specific room.
+ Retrieve a outbound group session Info for a specific room.
 
  @param roomId Identifer of the room.
  @return the session info instance for the outbound session. Nil if not found in store.
  */
-- (MXOutboundSessionInfo *)restoreOutboundGroupSessionForRoom:(NSString *)roomId;
+- (MXOutboundSessionInfo *)outboundGroupSessionInfoForRoom:(NSString *)roomId;
 
 /**
  Remove the outbound group session for a specific room from the cache and store.
@@ -207,32 +206,6 @@ Determine if an incoming messages is a prekey message matching an existing sessi
  @param roomId Identifer of the room.
  */
 - (void)discardOutboundGroupSessionForRoom:(NSString *)roomId;
-
-/**
- Get the current session key of  an outbound group session.
-
- @param sessionId the id of the outbound group session.
- @return the base64-encoded secret key.
- */
-- (NSString*)sessionKeyForOutboundGroupSession:(NSString*)sessionId;
-
-/**
- Get the current message index of an outbound group session.
-
- @param sessionId the id of the outbound group session.
- @return the current chain index.
- */
-- (NSUInteger)messageIndexForOutboundGroupSession:(NSString*)sessionId;
-
-/**
- Encrypt an outgoing message with an outbound group session.
-
- @param sessionId the id of the outbound group session.
- @param payloadString the payload to be encrypted and sent.
- @return ciphertext
- */
-- (NSString*)encryptGroupMessage:(NSString*)sessionId payloadString:(NSString*)payloadString;
-
 
 #pragma mark - Inbound group session
 /**

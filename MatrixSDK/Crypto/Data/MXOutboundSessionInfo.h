@@ -25,9 +25,9 @@
     NSDate  *creationTime;
 }
 
-- (instancetype)initWithSessionID:(NSString*)sessionId;
+- (instancetype)initWithSession:(OLMOutboundGroupSession *)session;
 
-- (instancetype)initWithSessionID:(NSString*)sessionId creationTime:(NSDate *)creationTime;
+- (instancetype)initWithSession:(OLMOutboundGroupSession *)session creationTime:(NSDate *)creationTime;
 
 /**
  Check if it's time to rotate the session.
@@ -51,6 +51,11 @@
  The id of the session
  */
 @property (nonatomic, readonly) NSString *sessionId;
+
+/**
+ The related session
+ */
+@property (nonatomic, readonly) OLMOutboundGroupSession *session;
 
 /**
  Number of times this session has been used
