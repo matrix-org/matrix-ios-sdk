@@ -218,6 +218,31 @@ NSString *const MXBackgroundCryptoStoreUserIdSuffix = @":bgCryptoStore";
     [bgCryptoStore performSessionOperationWithGroupSessionWithId:sessionId senderKey:senderKey block:block];
 }
 
+#pragma mark - MXRealmOlmOutboundGroupSession
+
+- (MXOlmOutboundGroupSession *)outboundGroupSessionWithRoomId:(NSString *)roomId
+{
+    NSAssert(NO, @"This method should be useless in the context of MXBackgroundCryptoStore");
+    return nil;
+}
+
+- (MXOlmOutboundGroupSession *)storeOutboundGroupSession:(OLMOutboundGroupSession *)session withRoomId:(NSString *)roomId
+{
+    NSAssert(NO, @"This method should be useless in the context of MXBackgroundCryptoStore");
+    return nil;
+}
+
+- (NSArray<MXOlmOutboundGroupSession *> *)outboundGroupSessions
+{
+    NSAssert(NO, @"This method should be useless in the context of MXBackgroundCryptoStore");
+    return @[];
+}
+
+- (void)removeOutboundGroupSessionWithRoomId:(NSString *)roomId
+{
+    NSAssert(NO, @"This method should be useless in the context of MXBackgroundCryptoStore");
+}
+
 
 #pragma mark - Private Methods
 
@@ -435,7 +460,8 @@ NSString *const MXBackgroundCryptoStoreUserIdSuffix = @":bgCryptoStore";
     NSAssert(NO, @"This method should be useless in the context of MXBackgroundCryptoStore");
 }
 
-- (BOOL)globalBlacklistUnverifiedDevices{
+- (BOOL)globalBlacklistUnverifiedDevices
+{
     NSAssert(NO, @"This method should be useless in the context of MXBackgroundCryptoStore");
     return NO;
 }
