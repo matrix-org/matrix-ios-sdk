@@ -311,8 +311,10 @@
 
  @param session outbound group session.
  @param roomId related room ID.
+ 
+ @return the related stored outbound group session.
  */
-- (void)storeOutboundGroupSession:(OLMOutboundGroupSession *)session withRoomId:(NSString *)roomId;
+- (MXOlmOutboundGroupSession *)storeOutboundGroupSession:(OLMOutboundGroupSession *)session withRoomId:(NSString *)roomId;
 
 /**
  Retrieve an outbound group session for a specific room.
@@ -327,7 +329,7 @@
  
  @return the list of all stored outbound group sessions.
  */
-- (NSArray<OLMOutboundGroupSession *> *)outboundGroupSessions;
+- (NSArray<MXOlmOutboundGroupSession *> *)outboundGroupSessions;
 
 /**
  Remove stored outbound group session for a specific room.

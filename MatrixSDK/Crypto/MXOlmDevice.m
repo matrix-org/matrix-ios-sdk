@@ -25,7 +25,6 @@
 #import "MXTools.h"
 #import "MXCryptoTools.h"
 #import "MXRealmCryptoStore.h"
-#import "MXOutboundSessionInfo.h"
 
 @interface MXOlmDevice ()
 {
@@ -286,34 +285,24 @@
 
 #pragma mark - Outbound group session
 
-- (OLMOutboundGroupSession *)createOutboundGroupSessionForRoomWithId:(NSString *)roomId
+- (MXOlmOutboundGroupSession *)createOutboundGroupSessionForRoomWithRoomId:(NSString *)roomId
 {
     OLMOutboundGroupSession *session = [[OLMOutboundGroupSession alloc] initOutboundGroupSession];
-    [store storeOutboundGroupSession:session withRoomId:roomId];
-
-    return session;
+    return [store storeOutboundGroupSession:session withRoomId:roomId];
 }
 
-- (void)storeOutboundGroupSession:(OLMOutboundGroupSession *)session forRoomWithId:(NSString *)roomId
+- (void)storeOutboundGroupSession:(MXOlmOutboundGroupSession *)session
 {
-    NSLog(@"[MXOlmDevice] storing Outbound Group Session For Room With ID %@", roomId);
-    [store storeOutboundGroupSession:session withRoomId:roomId];
+    NSLog(@"[MXOlmDevice] storing Outbound Group Session For Room With ID %@", session.roomId);
+    [store storeOutboundGroupSession:session.session withRoomId:session.roomId];
 }
 
-- (MXOutboundSessionInfo *)outboundGroupSessionInfoForRoom:(NSString *)roomId
+- (MXOlmOutboundGroupSession *)outboundGroupSessionForRoomWithRoomId:(NSString *)roomId
 {
-    MXOlmOutboundGroupSession *restoredOutboundGroupSession = [store outboundGroupSessionWithRoomId:roomId];
-    
-    if (restoredOutboundGroupSession)
-    {
-        NSDate *creationTime = [NSDate dateWithTimeIntervalSince1970:restoredOutboundGroupSession.creationTime];
-        return [[MXOutboundSessionInfo alloc] initWithSession:restoredOutboundGroupSession.session creationTime:creationTime];
-    }
-    
-    return nil;
+    return [store outboundGroupSessionWithRoomId:roomId];
 }
 
-- (void)discardOutboundGroupSessionForRoom:(NSString *)roomId
+- (void)discardOutboundGroupSessionForRoomWithRoomId:(NSString *)roomId
 {
     [store removeOutboundGroupSessionWithRoomId:roomId];
 }

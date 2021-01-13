@@ -226,12 +226,13 @@ NSString *const MXBackgroundCryptoStoreUserIdSuffix = @":bgCryptoStore";
     return nil;
 }
 
-- (void)storeOutboundGroupSession:(OLMOutboundGroupSession *)session withRoomId:(NSString *)roomId
+- (MXOlmOutboundGroupSession *)storeOutboundGroupSession:(OLMOutboundGroupSession *)session withRoomId:(NSString *)roomId
 {
     NSAssert(NO, @"This method should be useless in the context of MXBackgroundCryptoStore");
+    return nil;
 }
 
-- (NSArray<OLMOutboundGroupSession *> *)outboundGroupSessions
+- (NSArray<MXOlmOutboundGroupSession *> *)outboundGroupSessions
 {
     NSAssert(NO, @"This method should be useless in the context of MXBackgroundCryptoStore");
     return @[];

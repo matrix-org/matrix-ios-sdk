@@ -15,29 +15,19 @@
 //
 
 #import "MXOutboundSessionInfo.h"
-#import <OLMKit/OLMKit.h>
+#import "MXOlmOutboundGroupSession.h"
 
 @implementation MXOutboundSessionInfo
 
-- (instancetype)initWithSession:(OLMOutboundGroupSession *)session
+- (instancetype)initWithSession:(MXOlmOutboundGroupSession *)session
 {
     self = [super init];
     if (self)
     {
-        _sessionId = session.sessionIdentifier;
+        _sessionId = session.sessionId;
         _session = session;
+        creationTime = session.creationDate;
         _sharedWithDevices = [[MXUsersDevicesMap alloc] init];
-        creationTime = [NSDate date];
-    }
-    return self;
-}
-
-- (instancetype)initWithSession:(OLMOutboundGroupSession *)session creationTime:(NSDate *)creationTime
-{
-    self = [self initWithSession:session];
-    if (self)
-    {
-        self->creationTime = creationTime;
     }
     return self;
 }

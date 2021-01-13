@@ -23,8 +23,6 @@
 #import "MXCryptoStore.h"
 #import "MXDecrypting.h"
 
-@class MXOutboundSessionInfo;
-
 /**
  An instance of MXOlmDevice manages the olm cryptography functions.
 
@@ -181,16 +179,16 @@ Determine if an incoming messages is a prekey message matching an existing sessi
  Generate a new outbound group session.
 
  @param roomId Identifer of the room.
- @return the newly created outbound group session.
+ @return the newly created and stored outbound group session.
  */
-- (OLMOutboundGroupSession *)createOutboundGroupSessionForRoomWithId:(NSString *)roomId;
+- (MXOlmOutboundGroupSession *)createOutboundGroupSessionForRoomWithRoomId:(NSString *)roomId;
 
 /**
- Store a outbound group session with session ID for room with ID.
+ Store a outbound group session with session ID and room with ID.
 
- @param roomId Identifer of the room.
+ @param session outbound group session to be stored.
  */
-- (void)storeOutboundGroupSession:(OLMOutboundGroupSession *)session forRoomWithId:(NSString *)roomId;
+- (void)storeOutboundGroupSession:(MXOlmOutboundGroupSession *)session;
 
 /**
  Retrieve a outbound group session Info for a specific room.
@@ -198,14 +196,14 @@ Determine if an incoming messages is a prekey message matching an existing sessi
  @param roomId Identifer of the room.
  @return the session info instance for the outbound session. Nil if not found in store.
  */
-- (MXOutboundSessionInfo *)outboundGroupSessionInfoForRoom:(NSString *)roomId;
+- (MXOlmOutboundGroupSession *)outboundGroupSessionForRoomWithRoomId:(NSString *)roomId;
 
 /**
- Remove the outbound group session for a specific room from the cache and store.
+ Remove the outbound group session for a specific room.
  
  @param roomId Identifer of the room.
  */
-- (void)discardOutboundGroupSessionForRoom:(NSString *)roomId;
+- (void)discardOutboundGroupSessionForRoomWithRoomId:(NSString *)roomId;
 
 #pragma mark - Inbound group session
 /**

@@ -25,9 +25,7 @@
     NSDate  *creationTime;
 }
 
-- (instancetype)initWithSession:(OLMOutboundGroupSession *)session;
-
-- (instancetype)initWithSession:(OLMOutboundGroupSession *)session creationTime:(NSDate *)creationTime;
+- (instancetype)initWithSession:(MXOlmOutboundGroupSession *)session;
 
 /**
  Check if it's time to rotate the session.
@@ -48,14 +46,14 @@
 - (BOOL)sharedWithTooManyDevices:(MXUsersDevicesMap<MXDeviceInfo *> *)devicesInRoom;
 
 /**
+ The related session
+ */
+@property (nonatomic, readonly) MXOlmOutboundGroupSession *session;
+
+/**
  The id of the session
  */
 @property (nonatomic, readonly) NSString *sessionId;
-
-/**
- The related session
- */
-@property (nonatomic, readonly) OLMOutboundGroupSession *session;
 
 /**
  Number of times this session has been used

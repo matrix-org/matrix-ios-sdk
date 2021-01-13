@@ -86,9 +86,11 @@
         sessionRotationPeriodMs = 7 * 24 * 3600 * 1000;
         
         // restore last saved outbound session for this room
-        outboundSession = [crypto.olmDevice outboundGroupSessionInfoForRoom:roomId];
-        if (outboundSession)
+        MXOlmOutboundGroupSession *restoredOutboundGroupSession = [crypto.olmDevice outboundGroupSessionForRoomWithRoomId:roomId];
+        
+        if (restoredOutboundGroupSession)
         {
+            outboundSession = [[MXOutboundSessionInfo alloc] initWithSession:restoredOutboundGroupSession];
             outboundSessions[outboundSession.sessionId] = outboundSession;
         }
     }
@@ -246,7 +248,7 @@
     // Need to make a brand new session?
     if (session && [session needsRotation:sessionRotationPeriodMsgs rotationPeriodMs:sessionRotationPeriodMs])
     {
-        [crypto.olmDevice discardOutboundGroupSessionForRoom:roomId];
+        [crypto.olmDevice discardOutboundGroupSessionForRoomWithRoomId:roomId];
         [outboundSessions removeObjectForKey:session.sessionId];
         outboundSession = nil;
         session = nil;
@@ -255,7 +257,7 @@
     // Determine if we have shared with anyone we shouldn't have
     if (session && [session sharedWithTooManyDevices:devicesInRoom])
     {
-        [crypto.olmDevice discardOutboundGroupSessionForRoom:roomId];
+        [crypto.olmDevice discardOutboundGroupSessionForRoomWithRoomId:roomId];
         [outboundSessions removeObjectForKey:session.sessionId];
         outboundSession = nil;
         session = nil;
@@ -310,9 +312,9 @@
 
 - (MXOutboundSessionInfo*)prepareNewSession
 {
-    OLMOutboundGroupSession *session = [crypto.olmDevice createOutboundGroupSessionForRoomWithId:roomId];
+    MXOlmOutboundGroupSession *session = [crypto.olmDevice createOutboundGroupSessionForRoomWithRoomId:roomId];
 
-    [crypto.olmDevice addInboundGroupSession:session.sessionIdentifier
+    [crypto.olmDevice addInboundGroupSession:session.sessionId
                                   sessionKey:session.sessionKey
                                       roomId:roomId
                                    senderKey:crypto.olmDevice.deviceCurve25519Key
@@ -550,7 +552,7 @@
             session.useCount++;
             
             // We have to store the session in the DB every time a message is encrypted to save the session useCount
-            [crypto.olmDevice storeOutboundGroupSession:session.session forRoomWithId:roomId];
+            [crypto.olmDevice storeOutboundGroupSession:session.session];
         }
     }
     else

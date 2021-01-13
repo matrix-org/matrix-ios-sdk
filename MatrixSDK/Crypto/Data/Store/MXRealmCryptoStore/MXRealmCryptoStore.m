@@ -978,10 +978,12 @@ RLM_ARRAY_TYPE(MXRealmSecret)
 
 #pragma mark - MXRealmOlmOutboundGroupSession
 
-- (void)storeOutboundGroupSession:(OLMOutboundGroupSession *)session withRoomId:(NSString *)roomId
+- (MXOlmOutboundGroupSession *)storeOutboundGroupSession:(OLMOutboundGroupSession *)session withRoomId:(NSString *)roomId
 {
     __block NSUInteger newCount = 0;
     NSDate *startDate = [NSDate date];
+    
+    __block MXOlmOutboundGroupSession *storedSession = nil;
     
     RLMRealm *realm = self.realm;
     [realm transactionWithBlock:^{
@@ -1011,10 +1013,14 @@ RLM_ARRAY_TYPE(MXRealmSecret)
 
             [realm addObject:realmSession];
         }
+        
+        storedSession = [[MXOlmOutboundGroupSession alloc] initWithSession:session roomId:roomId creationTime:realmSession.creationTime];
     }];
 
 
     NSLog(@"[MXRealmCryptoStore] storeOutboundGroupSession: store 1 key (%lu new) in %.3fms", newCount, [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
+    
+    return storedSession;
 }
 
 - (MXOlmOutboundGroupSession *)outboundGroupSessionWithRoomId:(NSString*)roomId
@@ -1042,13 +1048,17 @@ RLM_ARRAY_TYPE(MXRealmSecret)
     return nil;
 }
 
-- (NSArray<OLMOutboundGroupSession *> *)outboundGroupSessions
+- (NSArray<MXOlmOutboundGroupSession *> *)outboundGroupSessions
 {
     NSMutableArray *sessions = [NSMutableArray array];
 
     for (MXRealmOlmOutboundGroupSession *realmSession in [MXRealmOlmOutboundGroupSession allObjectsInRealm:self.realm])
     {
-        [sessions addObject:[NSKeyedUnarchiver unarchiveObjectWithData:realmSession.sessionData]];
+        MXOlmOutboundGroupSession * session = [[MXOlmOutboundGroupSession alloc]
+                                               initWithSession:[NSKeyedUnarchiver unarchiveObjectWithData:realmSession.sessionData]
+                                               roomId:realmSession.roomId
+                                               creationTime:realmSession.creationTime];
+        [sessions addObject:session];
     }
 
     NSLog(@"[MXRealmCryptoStore] outboundGroupSessions: found %lu entries", sessions.count);

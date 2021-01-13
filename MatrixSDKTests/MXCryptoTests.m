@@ -1858,8 +1858,10 @@
                 // From Bob pov, that mimics Alice resharing her keys but with an advanced outbound group session.
                 XCTAssert(toDeviceEvent);
                 
-                MXOutboundSessionInfo *sessionInfo = [aliceSession.crypto.olmDevice outboundGroupSessionInfoForRoom:roomId];
-                XCTAssertNotNil(sessionInfo);
+                MXOlmOutboundGroupSession *session = [aliceSession.crypto.olmDevice outboundGroupSessionForRoomWithRoomId:roomId];
+                XCTAssertNotNil(session);
+                
+                MXOutboundSessionInfo *sessionInfo = [[MXOutboundSessionInfo alloc] initWithSession: session];
 
                 NSMutableDictionary *newContent = [NSMutableDictionary dictionaryWithDictionary:toDeviceEvent.content];
                 newContent[@"session_key"] = sessionInfo.session.sessionKey;
@@ -3039,7 +3041,7 @@
         
         NSString *sessionKey = outboundSession.session.sessionKey;
         
-        [aliceSession.crypto.olmDevice discardOutboundGroupSessionForRoom:roomId];
+        [aliceSession.crypto.olmDevice discardOutboundGroupSessionForRoomWithRoomId:roomId];
 
         // - Restart the session
         MXSession *aliceSession2 = [[MXSession alloc] initWithMatrixRestClient:aliceSession.matrixRestClient];
@@ -3047,7 +3049,7 @@
         [aliceSession2 start:^{
             MXOlmOutboundGroupSession *outboundSession = [aliceSession2.crypto.store outboundGroupSessionWithRoomId:roomId];
             XCTAssertNil(outboundSession);
-            XCTAssertNotNil([aliceSession2.crypto.olmDevice createOutboundGroupSessionForRoomWithId:roomId]);
+            XCTAssertNotNil([aliceSession2.crypto.olmDevice createOutboundGroupSessionForRoomWithRoomId:roomId]);
             outboundSession = [aliceSession2.crypto.store outboundGroupSessionWithRoomId:roomId];
             XCTAssertNotNil(outboundSession);
             NSString *sessionKey2 = outboundSession.session.sessionKey;
