@@ -99,9 +99,15 @@ public class MXUIKitApplicationStateService: NSObject {
     
     private var sharedApplication: UIApplication? {
         get {
+            let selector = NSSelectorFromString("sharedApplication")
+            
             // We cannot use UIApplication.shared from app extensions
             // TODO: Move UIKit related code to a dedicated cocoapod sub spec
-            UIApplication.perform(NSSelectorFromString("sharedApplication")).takeUnretainedValue() as? UIApplication
+            guard UIApplication.responds(to: selector) else {
+                return nil
+            }
+            
+            return UIApplication.perform(selector)?.takeUnretainedValue() as? UIApplication
         }
     }
     
