@@ -23,6 +23,7 @@
 #import "MXCryptoStore.h"
 #import "MXRecoveryKey.h"
 #import "MXKeybackupPassword.h"
+#import "MXOutboundSessionInfo.h"
 
 @interface MXKeyBackup (Testing)
 
@@ -1552,7 +1553,6 @@
         }];
     }];
 }
-
 
 @end
 

@@ -1,3 +1,33 @@
+Changes in 0.17.7 (2021-01-14)
+=================================================
+
+✨ Features
+ * 
+
+🙌 Improvements
+ * MXCrypto: Store megolm outbound session to improve send time of first message after app launch (vector-im/element-ios/issues/#3904).
+ * MXUIKitApplicationStateService: Add this service to track UIKit application state.
+
+🐛 Bugfix
+ * MXBackgroundSyncService: Fix `m.buddy` to-device event crashes (vector-im/element-ios/issues/3889).
+ * MXBackgroundSyncService: Fix app deadlock created between the app process and the notification service extension process (vector-im/element-ios/issues/3906).
+ * MXUIKitBackgroundTask: Avoid thread switching when creating a background task to keep threading model (vector-im/element-ios/issues/3917).
+
+⚠️ API Changes
+ * MXLoginSSOFlow: Use unstable identity providers field while the MSC2858 is not approved.
+
+🗣 Translations
+ * 
+    
+🧱 Build
+ * 
+
+Others
+ * 
+
+Improvements:
+
+
 Changes in 0.17.6 (2020-12-18)
 =================================================
 

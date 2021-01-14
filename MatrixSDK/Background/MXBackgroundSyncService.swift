@@ -41,7 +41,7 @@ public enum MXBackgroundSyncServiceError: Error {
     private let credentials: MXCredentials
     private let syncResponseStore: MXSyncResponseStore
     private var store: MXStore
-    private let cryptoStore: MXCryptoStore
+    private let cryptoStore: MXBackgroundCryptoStore
     private let olmDevice: MXOlmDevice
     private let restClient: MXRestClient
     private var pushRulesManager: MXBackgroundPushRulesManager
@@ -60,9 +60,9 @@ public enum MXBackgroundSyncServiceError: Error {
         restClient.completionQueue = processingQueue
         store = MXBackgroundStore(withCredentials: credentials)
         if MXRealmCryptoStore.hasData(for: credentials) {
-            cryptoStore = MXRealmCryptoStore(credentials: credentials)
+            cryptoStore = MXBackgroundCryptoStore(credentials: credentials)
         } else {
-            cryptoStore = MXRealmCryptoStore.createStore(with: credentials)
+            cryptoStore = MXBackgroundCryptoStore.createStore(with: credentials)
         }
         olmDevice = MXOlmDevice(store: cryptoStore)
         pushRulesManager = MXBackgroundPushRulesManager(withCredentials: credentials)
@@ -506,9 +506,14 @@ public enum MXBackgroundSyncServiceError: Error {
             }
         }
         
-        guard let roomId = event.content["room_id"] as? String,
-            let sessionId = event.content["session_id"] as? String,
-            let sessionKey = event.content["session_key"] as? String,
+        guard let content = event.content else {
+            NSLog("[MXBackgroundSyncService] handleToDeviceEvent: ERROR: incomplete event content: \(String(describing: event.jsonDictionary()))")
+            return
+        }
+        
+        guard let roomId = content["room_id"] as? String,
+            let sessionId = content["session_id"] as? String,
+            let sessionKey = content["session_key"] as? String,
             var senderKey = event.senderKey else {
             NSLog("[MXBackgroundSyncService] handleToDeviceEvent: ERROR: incomplete event: \(String(describing: event.jsonDictionary()))")
             return
@@ -524,12 +529,12 @@ public enum MXBackgroundSyncServiceError: Error {
         case .roomForwardedKey:
             exportFormat = true
             
-            if let array = event.content["forwarding_curve25519_key_chain"] as? [String] {
+            if let array = content["forwarding_curve25519_key_chain"] as? [String] {
                 forwardingKeyChain = array
             }
             forwardingKeyChain.append(senderKey)
             
-            if let senderKeyInContent = event.content["sender_key"] as? String {
+            if let senderKeyInContent = content["sender_key"] as? String {
                 senderKey = senderKeyInContent
             } else {
                 return
@@ -573,6 +578,9 @@ public enum MXBackgroundSyncServiceError: Error {
             // syncResponseStore has obsolete data. Reset it
             NSLog("[MXBackgroundSyncService] updateBackgroundServiceStoresIfNeeded: Reset MXSyncResponseStore. Its prevBatch was token \(String(describing: syncResponseStore.prevBatch))")
             syncResponseStore.deleteData()
+            
+            NSLog("[MXBackgroundSyncService] updateBackgroundServiceStoresIfNeeded: Reset MXBackgroundCryptoStore")
+            cryptoStore.reset()
         }
     }
     
