@@ -1,9 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<plist version="1.0">
-<dict>
-    <key>FILEHEADER</key>
-    <string> 
+// 
 // Copyright 2021 The Matrix.org Foundation C.I.C
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,6 +12,27 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-//</string>
-</dict>
-</plist>
+//
+
+#import <Foundation/Foundation.h>
+
+#import "MXCryptoStore.h"
+
+NS_ASSUME_NONNULL_BEGIN
+
+/**
+ The `MXBackgroundCryptoStore` implements a minimal set of the `MXCryptoStore` protocol for `MXBackgroundSyncService`
+ needs.
+ It ensures that DB write operations required by `MXBackgroundSyncService` are made on a separate DB.
+ This avoids to have deadlocks between the app process and an iOS notification extension service.
+ */
+@interface MXBackgroundCryptoStore : NSObject <MXCryptoStore>
+
+/**
+ Reset the intermediate store.
+ */
+- (void)reset;
+
+@end
+
+NS_ASSUME_NONNULL_END

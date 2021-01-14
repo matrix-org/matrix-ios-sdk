@@ -21,12 +21,6 @@
 #import <UIKit/UIKit.h>
 #import "MXTools.h"
 
-/**
- Time threshold to be able to start a background task. So, if application's `backgroundTimeRemaining` returns less than this value, the task won't be started at all and expirationHandler will be called immediately.
- @note This value only considered if the application is in background state.
- @see -[UIApplication backgroundTimeRemaining]
- */
-static const NSTimeInterval BackgroundTimeRemainingThresholdToStartTasks = 5.0;
 
 @interface MXUIKitBackgroundTask ()
 
@@ -54,8 +48,8 @@ static const NSTimeInterval BackgroundTimeRemainingThresholdToStartTasks = 5.0;
     return self;
 }
 
-- (instancetype)initAndStartWithName:(NSString*)name
-                   expirationHandler:(MXBackgroundTaskExpirationHandler)expirationHandler
+- (nullable instancetype)initAndStartWithName:(NSString*)name
+                            expirationHandler:(MXBackgroundTaskExpirationHandler)expirationHandler
 {
     self = [self initWithName:name expirationHandler:expirationHandler];
     if (self)
@@ -63,71 +57,52 @@ static const NSTimeInterval BackgroundTimeRemainingThresholdToStartTasks = 5.0;
         UIApplication *sharedApplication = [self sharedApplication];
         if (sharedApplication)
         {
+            //  we assume this task can start now
+            self.startDate = [NSDate date];
+            
             MXWeakify(self);
             
-            // Note: -[UIApplication applicationState] must be used from main thread only
-            dispatch_async(dispatch_get_main_queue(), ^{
+            self.identifier = [sharedApplication beginBackgroundTaskWithName:self.name expirationHandler:^{
+                
                 MXStrongifyAndReturnIfNil(self);
                 
-                //  application is in background and not enough time to start this task
-                if (sharedApplication.applicationState == UIApplicationStateBackground &&
-                    sharedApplication.backgroundTimeRemaining < BackgroundTimeRemainingThresholdToStartTasks)
+                NSLog(@"[MXBackgroundTask] Background task expired #%lu - %@ after %.0fms", (unsigned long)self.identifier, self.name, self.elapsedTime);
+                
+                //  call expiration handler immediately
+                if (self.expirationHandler)
                 {
-                    NSLog(@"[MXBackgroundTask] Do not start background task - %@, as not enough time exists", self.name);
-                    
-                    //  call expiration handler immediately
-                    if (self.expirationHandler)
-                    {
-                        self.expirationHandler();
-                    }
-                    return;
+                    self.expirationHandler();
                 }
                 
-                //  we assume this task can start now
-                self.startDate = [NSDate date];
+                //  be sure to call endBackgroundTask
+                [self stop];
+            }];
+            
+            //  our assumption is wrong, OS declined it
+            if (self.identifier == UIBackgroundTaskInvalid)
+            {
+                NSLog(@"[MXBackgroundTask] Do not start background task - %@, as OS declined", self.name);
                 
-                MXWeakify(self);
-                
-                self.identifier = [sharedApplication beginBackgroundTaskWithName:self.name expirationHandler:^{
-                    
-                    MXStrongifyAndReturnIfNil(self);
-                    
-                    NSLog(@"[MXBackgroundTask] Background task expired #%lu - %@ after %.0fms", (unsigned long)self.identifier, self.name, self.elapsedTime);
-                    
-                    //  call expiration handler immediately
-                    if (self.expirationHandler)
-                    {
-                        self.expirationHandler();
-                    }
-                    
-                    //  be sure to call endBackgroundTask
-                    [self stop];
-                }];
-                
-                //  our assumption is wrong, OS declined it
-                if (self.identifier == UIBackgroundTaskInvalid)
+                //  call expiration handler immediately
+                if (self.expirationHandler)
                 {
-                    NSLog(@"[MXBackgroundTask] Do not start background task - %@, as OS declined", self.name);
-                    
-                    //  call expiration handler immediately
-                    if (self.expirationHandler)
-                    {
-                        self.expirationHandler();
-                    }
-                    return;
+                    self.expirationHandler();
                 }
-                
-                NSLog(@"[MXBackgroundTask] Start background task #%lu - %@", (unsigned long)self.identifier, self.name);
-                
-                NSString *readableAppState = [[self class] readableApplicationState:sharedApplication.applicationState];
-                NSString *readableBackgroundTimeRemaining = [[self class] readableEstimatedBackgroundTimeRemaining:sharedApplication.backgroundTimeRemaining];
-                
-                NSLog(@"[MXBackgroundTask] Background task #%lu - %@ started with app state: %@ and estimated background time remaining: %@", (unsigned long)self.identifier, self.name, readableAppState, readableBackgroundTimeRemaining);
-            });
+                return nil;
+            }
+            
+            NSLog(@"[MXBackgroundTask] Start background task #%lu - %@", (unsigned long)self.identifier, self.name);
         }
         else
         {
-            self.identifier = UIBackgroundTaskInvalid;
+            NSLog(@"[MXBackgroundTask] Background task creation failed. UIApplication.shared is nil");
+
+            // call expiration handler immediately
+            if (self.expirationHandler)
+            {
+                self.expirationHandler();
+            }
+            return nil;
         }
     }
     return self;
@@ -182,44 +157,6 @@ static const NSTimeInterval BackgroundTimeRemainingThresholdToStartTasks = 5.0;
 - (UIApplication*)sharedApplication
 {
     return [UIApplication performSelector:@selector(sharedApplication)];
-}
-
-+ (NSString*)readableEstimatedBackgroundTimeRemaining:(NSTimeInterval)backgroundTimeRemaining
-{
-    NSString *backgroundTimeRemainingValueString;
-    
-    if (backgroundTimeRemaining == DBL_MAX)
-    {
-        backgroundTimeRemainingValueString = @"undetermined";
-    }
-    else
-    {
-        backgroundTimeRemainingValueString = [NSString stringWithFormat:@"%.0f seconds", backgroundTimeRemaining];
-    }
-    
-    return backgroundTimeRemainingValueString;
-}
-
-+ (NSString*)readableApplicationState:(UIApplicationState)applicationState
-{
-    NSString *applicationStateDescription;
-    
-    switch (applicationState) {
-        case UIApplicationStateActive:
-            applicationStateDescription = @"active";
-            break;
-        case UIApplicationStateInactive:
-            applicationStateDescription = @"inactive";
-            break;
-        case UIApplicationStateBackground:
-            applicationStateDescription = @"background";
-            break;
-        default:
-            applicationStateDescription = @"unknown";
-            break;
-    }
-    
-    return applicationStateDescription;
 }
 
 @end

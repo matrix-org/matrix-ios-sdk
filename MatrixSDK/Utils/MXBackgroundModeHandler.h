@@ -31,7 +31,8 @@ NS_ASSUME_NONNULL_BEGIN
  */
 @protocol MXBackgroundModeHandler <NSObject>
 
-- (id<MXBackgroundTask>)startBackgroundTaskWithName:(NSString *)name expirationHandler:(nullable MXBackgroundTaskExpirationHandler)expirationHandler;
+- (nullable id<MXBackgroundTask>)startBackgroundTaskWithName:(NSString *)name
+                                           expirationHandler:(nullable MXBackgroundTaskExpirationHandler)expirationHandler;
 
 @end
 

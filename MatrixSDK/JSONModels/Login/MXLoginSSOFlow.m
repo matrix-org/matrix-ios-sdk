@@ -17,6 +17,7 @@
 #import "MXLoginSSOFlow.h"
 
 NSString *const MXLoginSSOFlowIdentityProvidersKey = @"identity_providers";
+NSString *const MXLoginSSOFlowMSC2858IdentityProvidersKey = @"org.matrix.msc2858.identity_providers";
 
 @interface MXLoginSSOFlow()
 
@@ -34,7 +35,8 @@ NSString *const MXLoginSSOFlowIdentityProvidersKey = @"identity_providers";
     {
         NSArray *jsonIdentityProdivers;
         
-        MXJSONModelSetArray(jsonIdentityProdivers, JSONDictionary[MXLoginSSOFlowIdentityProvidersKey]);
+        // Use unstable MSC2858 field while MSC is not finalized
+        MXJSONModelSetArray(jsonIdentityProdivers, JSONDictionary[MXLoginSSOFlowMSC2858IdentityProvidersKey]);
         
         NSArray<MXLoginSSOIdentityProvider*> *identityProviders;
         

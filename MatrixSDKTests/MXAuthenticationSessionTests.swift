@@ -39,7 +39,7 @@ class MXAuthenticationSessionTests: XCTestCase {
                 ],
                 ["type": "m.login.sso",
                  "stages": [],
-                 "identity_providers": [
+                 MXLoginSSOFlowMSC2858IdentityProvidersKey: [
                     ["id": "gitlab",
                      "name": "GitLab"
                     ],
