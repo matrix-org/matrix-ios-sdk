@@ -42,6 +42,9 @@
 #import "MXRoomCreationParameters.h"
 #import "MXTurnServerResponse.h"
 
+@class MXThirdpartyProtocolsResponse;
+@class MXThirdPartyUsersResponse;
+
 #pragma mark - Constants definitions
 /**
  A constant representing the URI path for release 0 of the Client-Server HTTP API.
@@ -1878,6 +1881,21 @@ typedef MXHTTPOperation* (^MXRestClientIdentityServerAccessTokenHandler)(void (^
  */
 - (MXHTTPOperation*)thirdpartyProtocols:(void (^)(MXThirdpartyProtocolsResponse *thirdpartyProtocolsResponse))success
                                 failure:(void (^)(NSError *error))failure;
+
+/**
+ Retrieve a Matrix User ID linked to a user on the third party service, given a set of user parameters.
+ 
+ @param protocol Required. The name of the protocol.
+ @param fields One or more custom fields that are passed to the AS to help identify the user.
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+ 
+ @return an MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)thirdpartyUsers:(NSString *)protocol
+                             fields:(NSDictionary<NSString*, NSString*> *)fields
+                            success:(void (^)(MXThirdPartyUsersResponse *thirdpartyUsersResponse))success
+                            failure:(void (^)(NSError *error))failure;
 
 
 #pragma mark - Media Repository API

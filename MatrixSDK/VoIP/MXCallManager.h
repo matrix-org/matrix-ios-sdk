@@ -50,6 +50,12 @@ extern NSString *const kMXCallManagerConferenceStarted;
 extern NSString *const kMXCallManagerConferenceFinished;
 
 /**
+ Posted when PSTN support has been updated.
+ The notification object will be the call manager instance.
+ */
+extern NSString *const kMXCallManagerPSTNSupportUpdated;
+
+/**
  The `MXCallManager` object manages calls for a given Matrix session.
  It manages call signaling over Matrix (@see http://matrix.org/docs/spec/#id9) and then opens
  a stream between peers devices using a third party VoIP library.
@@ -215,6 +221,26 @@ extern NSString *const kMXCallManagerConferenceFinished;
  @return YES if the user can.
  */
 + (BOOL)canPlaceConferenceCallInRoom:(MXRoom *)room  roomState:(MXRoomState *)roomState;
+
+#pragma mark - PSTN
+
+/**
+ Flag to indicate whether PSTN protocol is supported or not.
+ */
+@property (nonatomic) BOOL supportsPSTN;
+
+/**
+ Place a voice or a video call into a room.
+ 
+ @param phoneNumber the phone number against to place the call.
+ @param video YES to make a video call.
+ @param success A block object called when the operation succeeds. It provides the created MXCall instance.
+ @param failure A block object called when the operation fails.
+ */
+- (void)placeCallAgainst:(NSString *)phoneNumber
+               withVideo:(BOOL)video
+                success:(void (^)(MXCall *call))success
+                failure:(void (^)(NSError * _Nullable error))failure;
 
 @end
 

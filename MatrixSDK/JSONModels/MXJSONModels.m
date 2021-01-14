@@ -91,69 +91,6 @@
 }
 @end
 
-
-@implementation MXThirdPartyProtocolInstance
-
-+ (id)modelFromJSON:(NSDictionary *)JSONDictionary
-{
-    MXThirdPartyProtocolInstance *thirdpartyProtocolInstance = [[MXThirdPartyProtocolInstance alloc] init];
-    if (thirdpartyProtocolInstance)
-    {
-        MXJSONModelSetString(thirdpartyProtocolInstance.networkId, JSONDictionary[@"network_id"]);
-        MXJSONModelSetDictionary(thirdpartyProtocolInstance.fields, JSONDictionary[@"fields"]);
-        MXJSONModelSetString(thirdpartyProtocolInstance.instanceId, JSONDictionary[@"instance_id"]);
-        MXJSONModelSetString(thirdpartyProtocolInstance.desc, JSONDictionary[@"desc"]);
-        MXJSONModelSetString(thirdpartyProtocolInstance.botUserId, JSONDictionary[@"bot_user_id"]);
-        MXJSONModelSetString(thirdpartyProtocolInstance.icon, JSONDictionary[@"icon"]);
-    }
-
-    return thirdpartyProtocolInstance;
-}
-
-@end
-
-
-@implementation MXThirdPartyProtocol
-
-+ (id)modelFromJSON:(NSDictionary *)JSONDictionary
-{
-    MXThirdPartyProtocol *thirdpartyProtocol = [[MXThirdPartyProtocol alloc] init];
-    if (thirdpartyProtocol)
-    {
-        MXJSONModelSetArray(thirdpartyProtocol.userFields, JSONDictionary[@"user_fields"]);
-        MXJSONModelSetArray(thirdpartyProtocol.locationFields, JSONDictionary[@"location_fields"]);
-        MXJSONModelSetDictionary(thirdpartyProtocol.fieldTypes, JSONDictionary[@"field_types"]);
-        MXJSONModelSetMXJSONModelArray(thirdpartyProtocol.instances, MXThirdPartyProtocolInstance, JSONDictionary[@"instances"])
-    }
-
-    return thirdpartyProtocol;
-}
-
-@end
-
-
-@implementation MXThirdpartyProtocolsResponse
-
-+ (id)modelFromJSON:(NSDictionary *)JSONDictionary
-{
-    MXThirdpartyProtocolsResponse *thirdpartyProtocolsResponse = [[MXThirdpartyProtocolsResponse alloc] init];
-    if (thirdpartyProtocolsResponse)
-    {
-        NSMutableDictionary *protocols = [NSMutableDictionary dictionary];
-        for (NSString *protocolName in JSONDictionary)
-        {
-            MXJSONModelSetMXJSONModel(protocols[protocolName], MXThirdPartyProtocol, JSONDictionary[protocolName]);
-        }
-
-        thirdpartyProtocolsResponse.protocols = protocols;
-    }
-
-    return thirdpartyProtocolsResponse;
-}
-
-@end
-
-
 NSString *const kMXLoginFlowTypePassword = @"m.login.password";
 NSString *const kMXLoginFlowTypeRecaptcha = @"m.login.recaptcha";
 NSString *const kMXLoginFlowTypeOAuth2 = @"m.login.oauth2";

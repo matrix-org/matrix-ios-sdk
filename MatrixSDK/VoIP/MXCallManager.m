@@ -36,10 +36,20 @@
 #import "MXCallRejectReplacementEventContent.h"
 #import "MXUserModel.h"
 
+#import "MXThirdPartyProtocol.h"
+#import "MXThirdpartyProtocolsResponse.h"
+#import "MXThirdPartyUsersResponse.h"
+#import "MXThirdPartyUserInstance.h"
+
 #pragma mark - Constants definitions
 NSString *const kMXCallManagerNewCall            = @"kMXCallManagerNewCall";
 NSString *const kMXCallManagerConferenceStarted  = @"kMXCallManagerConferenceStarted";
 NSString *const kMXCallManagerConferenceFinished = @"kMXCallManagerConferenceFinished";
+NSString *const kMXCallManagerPSTNSupportUpdated = @"kMXCallManagerPSTNSupportUpdated";
+
+// TODO: Replace usages of this with `kMXProtocolPSTN` when MSC completed
+NSString *const kMXProtocolVectorPSTN = @"im.vector.protocol.pstn";
+NSString *const kMXProtocolPSTN = @"m.protocol.pstn";
 
 
 @interface MXCallManager ()
@@ -64,6 +74,9 @@ NSString *const kMXCallManagerConferenceFinished = @"kMXCallManagerConferenceFin
      */
     id sessionStateObserver;
 }
+
+@property (nonatomic, copy) MXThirdPartyProtocol *pstnProtocol;
+
 @end
 
 
@@ -114,6 +127,7 @@ NSString *const kMXCallManagerConferenceFinished = @"kMXCallManagerConferenceFin
                                                    object:nil];
         
         [self refreshTURNServer];
+        [self checkPSTNSupport];
     }
     return self;
 }
@@ -1082,6 +1096,96 @@ NSString *const kMXCallManagerConferenceUserDomain  = @"matrix.org";
                                          } failure:failure];
         }
     });
+}
+
+#pragma mark - PSTN
+
+- (void)setPstnProtocol:(MXThirdPartyProtocol *)pstnProtocol
+{
+    _pstnProtocol = pstnProtocol;
+    
+    self.supportsPSTN = _pstnProtocol != nil;
+}
+
+- (void)setSupportsPSTN:(BOOL)supportsPSTN
+{
+    _supportsPSTN = supportsPSTN;
+    
+    [[NSNotificationCenter defaultCenter] postNotificationName:kMXCallManagerPSTNSupportUpdated object:self];
+}
+
+- (void)checkPSTNSupport
+{
+    MXWeakify(self);
+    [_mxSession.matrixRestClient thirdpartyProtocols:^(MXThirdpartyProtocolsResponse *thirdpartyProtocolsResponse) {
+        MXStrongifyAndReturnIfNil(self);
+        
+        MXThirdPartyProtocol *protocol = thirdpartyProtocolsResponse.protocols[kMXProtocolVectorPSTN];
+        
+        if (!protocol)
+        {
+            protocol = thirdpartyProtocolsResponse.protocols[kMXProtocolPSTN];
+        }
+        
+        self.pstnProtocol = protocol;
+        
+    } failure:^(NSError *error) {
+        NSLog(@"Failed to check for pstn protocol support with error: %@", error);
+        self.pstnProtocol = nil;
+    }];
+}
+
+- (void)placeCallAgainst:(NSString *)phoneNumber
+               withVideo:(BOOL)video
+                 success:(void (^)(MXCall * _Nonnull))success
+                 failure:(void (^)(NSError * _Nullable))failure
+{
+    [_mxSession.matrixRestClient thirdpartyUsers:kMXProtocolVectorPSTN
+                                          fields:@{
+                                              kMXLoginIdentifierTypePhone: phoneNumber
+                                          }
+                                         success:^(MXThirdPartyUsersResponse *thirdpartyUsersResponse) {
+        
+        MXThirdPartyUserInstance * user = [thirdpartyUsersResponse.users firstObject];
+        
+        NSLog(@"Succeeded to look up the phone number: %@", user.userId);
+        
+        if (user == nil)
+        {
+            if (failure)
+            {
+                failure(nil);
+            }
+            return;
+        }
+        
+        //  try to find a direct room with this user
+        [self directCallableRoomWithUser:user.userId completion:^(MXRoom * _Nullable room, NSError * _Nullable error) {
+            if (room)
+            {
+                //  room found, place the call in this room
+                [self placeCallInRoom:room.roomId
+                            withVideo:video
+                              success:success
+                              failure:failure];
+            }
+            else
+            {
+                //  no room found
+                NSLog(@"Failed to find a room for call with error: %@", error);
+                if (failure)
+                {
+                    failure(error);
+                }
+            }
+        }];
+    } failure:^(NSError *error) {
+        NSLog(@"Failed to look up the phone number with error: %@", error);
+        if (failure)
+        {
+            failure(error);
+        }
+    }];
 }
 
 @end
