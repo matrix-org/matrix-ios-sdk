@@ -1150,6 +1150,15 @@ NSString *const kMXCallManagerConferenceUserDomain  = @"matrix.org";
         
         NSLog(@"Succeeded to look up the phone number: %@", user.userId);
         
+        if (user == nil)
+        {
+            if (failure)
+            {
+                failure(nil);
+            }
+            return;
+        }
+        
         //  try to find a direct room with this user
         [self directCallableRoomWithUser:user.userId completion:^(MXRoom * _Nullable room, NSError * _Nullable error) {
             if (room)
