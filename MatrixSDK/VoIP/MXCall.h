@@ -184,6 +184,41 @@ extern NSString *const kMXCallSupportsTransferringStatusDidChange;
                success:(void (^)(NSString * _Nonnull eventId))success
                failure:(void (^)(NSError * _Nullable error))failure;
 
+#pragma mark - DTMF
+
+/**
+ Indicates whether this call can send DTMF tones.
+ This property will be false if the call is not connected yet.
+ */
+@property (nonatomic, readonly) BOOL supportsDTMF;
+
+/**
+ * Queues a task that sends the DTMF tones. The tones parameter is treated
+ * as a series of characters. The characters 0 through 9, A through D, #, and *
+ * generate the associated DTMF tones. The characters a to d are equivalent
+ * to A to D. The character ',' indicates a delay of 2 seconds before
+ * processing the next character in the tones parameter.
+ *
+ * Unrecognized characters are ignored.
+ *
+ * @param duration The parameter indicates the duration to use for each
+ * character passed in the tones parameter  (in milliseconds). The duration cannot be more
+ * than 6000 or less than 70 ms. If given value is outside of these limits, it'll be limited to these values.
+ * Pass 0 to use default value or last used value.
+ *
+ * @param interToneGap The parameter indicates the gap between tones (in milliseconds).
+ * This parameter must be at least 50 ms but should be as short as
+ * possible. If given value is lower than 50 ms, it'll be ignored.
+ * Pass 0 to use default value or last used value.
+ *
+ * If InsertDtmf is called on the same object while an existing task for this
+ * object to generate DTMF is still running, the previous task is canceled.
+ * Returns true on success and false on failure.
+ */
+- (BOOL)sendDTMF:(NSString * _Nonnull)tones
+        duration:(NSTimeInterval)duration
+    interToneGap:(NSTimeInterval)interToneGap;
+
 #pragma mark - Properties
 /**
  The room where the call is placed.
