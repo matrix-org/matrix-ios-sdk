@@ -202,6 +202,8 @@
 		324DD2C7246E638B00377005 /* MXAesHmacSha2.m in Sources */ = {isa = PBXBuildFile; fileRef = 324DD2C4246E638B00377005 /* MXAesHmacSha2.m */; };
 		324DD2C8246E638B00377005 /* MXAesHmacSha2.m in Sources */ = {isa = PBXBuildFile; fileRef = 324DD2C4246E638B00377005 /* MXAesHmacSha2.m */; };
 		3250E7CB220C913900736CB5 /* MXCryptoTools.m in Sources */ = {isa = PBXBuildFile; fileRef = 3250E7C9220C913900736CB5 /* MXCryptoTools.m */; };
+		3251D41F25AF01D7001E6E77 /* MXUIKitApplicationStateService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3251D41E25AF01D7001E6E77 /* MXUIKitApplicationStateService.swift */; };
+		3251D42025AF01D7001E6E77 /* MXUIKitApplicationStateService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3251D41E25AF01D7001E6E77 /* MXUIKitApplicationStateService.swift */; };
 		3252DCAE224BE5D40032264F /* MXKeyVerificationManager.h in Headers */ = {isa = PBXBuildFile; fileRef = 3252DCAC224BE5D40032264F /* MXKeyVerificationManager.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		3252DCAF224BE5D40032264F /* MXKeyVerificationManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 3252DCAD224BE5D40032264F /* MXKeyVerificationManager.m */; };
 		3252DCB6224BEA610032264F /* MXKeyVerificationTransaction.h in Headers */ = {isa = PBXBuildFile; fileRef = 3252DCB5224BEA610032264F /* MXKeyVerificationTransaction.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -1439,6 +1441,7 @@
 		324DD2C4246E638B00377005 /* MXAesHmacSha2.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MXAesHmacSha2.m; sourceTree = "<group>"; };
 		3250E7C8220C913900736CB5 /* MXCryptoTools.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MXCryptoTools.h; sourceTree = "<group>"; };
 		3250E7C9220C913900736CB5 /* MXCryptoTools.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MXCryptoTools.m; sourceTree = "<group>"; };
+		3251D41E25AF01D7001E6E77 /* MXUIKitApplicationStateService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXUIKitApplicationStateService.swift; sourceTree = "<group>"; };
 		3252DCAC224BE5D40032264F /* MXKeyVerificationManager.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MXKeyVerificationManager.h; sourceTree = "<group>"; };
 		3252DCAD224BE5D40032264F /* MXKeyVerificationManager.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MXKeyVerificationManager.m; sourceTree = "<group>"; };
 		3252DCB5224BEA610032264F /* MXKeyVerificationTransaction.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXKeyVerificationTransaction.h; sourceTree = "<group>"; };
@@ -2147,6 +2150,7 @@
 				32A9E8211EF4026E0081358A /* MXBackgroundModeHandler.h */,
 				32A9E8221EF4026E0081358A /* MXUIKitBackgroundModeHandler.h */,
 				32A9E8231EF4026E0081358A /* MXUIKitBackgroundModeHandler.m */,
+				3251D41E25AF01D7001E6E77 /* MXUIKitApplicationStateService.swift */,
 				32A9770221626E5C00919CC0 /* MXServerNotices.h */,
 				32A9770321626E5C00919CC0 /* MXServerNotices.m */,
 				B11976FD236B27220001EC86 /* MXBackgroundTask.h */,
@@ -4333,6 +4337,7 @@
 				B182B08823167A640057972E /* MXIdentityServerHashDetails.m in Sources */,
 				324DD2A2246AE1EF00377005 /* MXEncryptedSecretContent.m in Sources */,
 				329FB1761A0A3A1600A5E88E /* MXRoomMember.m in Sources */,
+				3251D41F25AF01D7001E6E77 /* MXUIKitApplicationStateService.swift in Sources */,
 				B1136965230AC9D900E2B2FA /* MXIdentityService.m in Sources */,
 				B11BD44922CB56790064D8B0 /* MXReplyEventParser.m in Sources */,
 				323360701A403A0D0071A488 /* MXFileStore.m in Sources */,
@@ -4824,6 +4829,7 @@
 				B14EF2582397E90400758AF0 /* MXFilterObject.m in Sources */,
 				8EC511072568216B00EC4E5B /* MXTaggedEventInfo.m in Sources */,
 				B14EF2592397E90400758AF0 /* MXHTTPClient.m in Sources */,
+				3251D42025AF01D7001E6E77 /* MXUIKitApplicationStateService.swift in Sources */,
 				B19A30A72404257700FB6F35 /* MXQRCodeKeyVerificationStart.m in Sources */,
 				B14EF25A2397E90400758AF0 /* MXEnumConstants.m in Sources */,
 				B14EF25B2397E90400758AF0 /* MXSession.m in Sources */,
