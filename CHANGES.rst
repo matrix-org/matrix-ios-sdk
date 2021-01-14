@@ -5,6 +5,7 @@ Changes to be released in next version
  * 
 
 🙌 Improvements
+ * MXCrypto: Store megolm outbound session to improve send time of first message after app launch (vector-im/element-ios/issues/#3904).
  * MXUIKitApplicationStateService: Add this service to track UIKit application state.
 
 🐛 Bugfix
