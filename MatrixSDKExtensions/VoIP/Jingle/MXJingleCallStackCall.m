@@ -424,15 +424,13 @@ NSString *const kMXJingleCallWebRTCMainStreamID = @"userMedia";
         //  use default or last used value
         duration = dtmfSender.duration;
     }
-    else if (duration < 70)
+    else
     {
         //  limit lower bound
-        duration = 70;
-    }
-    else if (duration > 6000)
-    {
+        duration = MAX(duration, 70);
+        
         //  limit upper bound
-        duration = 6000;
+        duration = MIN(duration, 6000);
     }
     
     if (interToneGap == 0)
@@ -440,10 +438,10 @@ NSString *const kMXJingleCallWebRTCMainStreamID = @"userMedia";
         //  use default or last used value
         interToneGap = dtmfSender.interToneGap;
     }
-    else if (interToneGap < 50)
+    else
     {
         //  limit lower bound
-        interToneGap = 50;
+        interToneGap = MAX(interToneGap, 50);
     }
     
     return [dtmfSender insertDtmf:tones duration:duration interToneGap:interToneGap];
