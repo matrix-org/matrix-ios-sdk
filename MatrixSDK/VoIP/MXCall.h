@@ -192,20 +192,22 @@ extern NSString *const kMXCallSupportsTransferringStatusDidChange;
  */
 @property (nonatomic, readonly) BOOL supportsDTMF;
 
-/// Creates a task to send given DTMF tones in the call. If there is a task already running, it'll be canceled.
-/// @param tones DTMF tones to be sent. Allowed characters: [0-9], [A-D], '#', `*`. Case insensitive. Comma (',') will cause a 2 seconds delay before sending next character.
-/// @param duration Duration for each character of tones (in milliseconds).
-/// Allowed interval is from 70 ms to 6000 ms inclusively.
-/// If given value is outside of these limits, it'll be limited to them.
-/// Pass 0 to use default value or last used value.
-/// @param interToneGap Duration for gap between each character of tones (in milliseconds).
-/// Must be at least 50 ms.
-/// If given value is lower than 50 ms, it'll be limited to that value.
-/// Pass 0 to use default value or last used value.
-/// @returns Whether the operation succeeded or not.
+/**
+ Creates a task to send given DTMF tones in the call. If there is a task already running, it'll be canceled.
+ @param tones DTMF tones to be sent. Allowed characters: [0-9], [A-D], '#', `*`. Case insensitive. Comma (',') will cause a 2 seconds delay before sending next character.
+ @param duration Duration for each character of tones (in milliseconds).
+    Allowed interval is from 70 ms to 6000 ms inclusively.
+    If given value is outside of these limits, it'll be limited to them.
+    Pass 0 to use default value or last used value.
+ @param interToneGap Duration for gap between each character of tones (in milliseconds).
+    Must be at least 50 ms.
+    If given value is lower than 50 ms, it'll be limited to that value.
+    Pass 0 to use default value or last used value.
+ @returns Whether the operation succeeded or not.
+ */
 - (BOOL)sendDTMF:(NSString * _Nonnull)tones
-        duration:(NSTimeInterval)duration
-    interToneGap:(NSTimeInterval)interToneGap;
+        duration:(NSUInteger)duration
+    interToneGap:(NSUInteger)interToneGap;
 
 #pragma mark - Properties
 /**

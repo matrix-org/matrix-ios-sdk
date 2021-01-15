@@ -408,8 +408,8 @@ NSString *const kMXJingleCallWebRTCMainStreamID = @"userMedia";
 }
 
 - (BOOL)sendDTMF:(NSString *)tones
-        duration:(NSTimeInterval)duration
-    interToneGap:(NSTimeInterval)interToneGap;
+        duration:(NSUInteger)duration
+    interToneGap:(NSUInteger)interToneGap;
 {
     if (!self.canSendDTMF)
     {
