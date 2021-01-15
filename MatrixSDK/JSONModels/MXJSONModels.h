@@ -649,7 +649,7 @@ typedef enum : NSUInteger
 
     // The condition is a custom condition. Refer to its `MXPushRuleConditionString` version
     MXPushRuleConditionTypeCustom = 1000
-} MXPushRuleConditionType;
+} MXPushRuleConditionType NS_REFINED_FOR_SWIFT;
 
 /**
  Push rule condition kind definitions - String version

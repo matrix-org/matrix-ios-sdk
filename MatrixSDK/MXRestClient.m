@@ -3981,17 +3981,10 @@ MXAuthAction;
 
 #pragma mark - Crypto
 - (MXHTTPOperation*)uploadKeys:(NSDictionary*)deviceKeys oneTimeKeys:(NSDictionary*)oneTimeKeys
-                     forDevice:(NSString*)deviceId
                        success:(void (^)(MXKeysUploadResponse *keysUploadResponse))success
                        failure:(void (^)(NSError *error))failure
 {
     NSString *path = [NSString stringWithFormat:@"%@/keys/upload", kMXAPIPrefixPathR0];
-    if (deviceId)
-    {
-        path = [NSString stringWithFormat:@"%@/%@",
-                path,
-                [MXTools encodeURIComponent:deviceId]];
-    }
 
     NSMutableDictionary *parameters = [NSMutableDictionary dictionary];
     if (deviceKeys)
@@ -4060,7 +4053,7 @@ MXAuthAction;
     NSMutableDictionary *downloadQuery = [NSMutableDictionary dictionary];
     for (NSString *userID in userIds)
     {
-        downloadQuery[userID] = @{};
+        downloadQuery[userID] = @[];
     }
 
     NSMutableDictionary *parameters = [NSMutableDictionary dictionaryWithDictionary:@{

@@ -844,7 +844,12 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
         {
             NSData *lastMessageEncryptedData = [aDecoder decodeObjectForKey:@"lastMessageEncryptedData"];
             NSData *lastMessageDataData = [self decrypt:lastMessageEncryptedData];
-            lastMessageData = [NSKeyedUnarchiver unarchiveObjectWithData:lastMessageDataData];
+            
+            //  Sanity check. If `decrypt` fails, returns nil and causes NSKeyedUnarchiver raise an exception.
+            if (lastMessageDataData)
+            {
+                lastMessageData = [NSKeyedUnarchiver unarchiveObjectWithData:lastMessageDataData];
+            }
         }
         else
         {

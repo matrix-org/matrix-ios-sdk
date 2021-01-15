@@ -117,3 +117,25 @@ FOUNDATION_EXPORT NSString *MatrixSDKVersion;
 #import "MXThirdPartyProtocolInstance.h"
 #import "MXThirdPartyProtocol.h"
 #import "MXThirdpartyProtocolsResponse.h"
+
+#import "MXLoginSSOFlow.h"
+
+#import "MXKeyProvider.h"
+#import "MXAesKeyData.h"
+#import "MXRawDataKey.h"
+
+//  Bridging to Swift
+#import "MXCryptoStore.h"
+#import "MXRealmCryptoStore.h"
+#import "MXCryptoAlgorithms.h"
+#import "MXOlmDevice.h"
+#import "MXEventDecryptionResult.h"
+#import "MXPushRuleEventMatchConditionChecker.h"
+#import "MXPushRuleDisplayNameCondtionChecker.h"
+#import "MXPushRuleRoomMemberCountConditionChecker.h"
+#import "MXPushRuleSenderNotificationPermissionConditionChecker.h"
+#import "MXMegolmDecryption.h"
+#import "MXOlmDecryption.h"
+#import "MXSyncResponseStoreModel.h"
+#import "MXBackgroundCryptoStore.h"
+

@@ -1727,14 +1727,13 @@ public extension MXRestClient {
      - parameters:
         - deviceKeys: the device keys to send.
         - oneTimeKeys: the one-time keys to send.
-        - deviceId: the explicit device_id to use for upload (pass `nil` to use the same as that used during auth).
         - completion: A block object called when the operation completes.
         - response: Provides information about the keys on success.
      
      - returns: a `MXHTTPOperation` instance.
      */
     @nonobjc @discardableResult func uploadKeys(_ deviceKeys: [String: Any], oneTimeKeys: [String: Any], forDevice deviceId: String? = nil, completion: @escaping (_ response: MXResponse<MXKeysUploadResponse>) -> Void) -> MXHTTPOperation {
-        return __uploadKeys(deviceKeys, oneTimeKeys: oneTimeKeys, forDevice: deviceId, success: currySuccess(completion), failure: curryFailure(completion))
+        return __uploadKeys(deviceKeys, oneTimeKeys: oneTimeKeys, success: currySuccess(completion), failure: curryFailure(completion))
     }
     
     /**

@@ -5,7 +5,6 @@ Changes to be released in next version
  * 
 
 🙌 Improvements
- * MXTaggedEvents: Expose "m.tagged_events" according to [MSC2437](https://github.com/matrix-org/matrix-doc/pull/2437).
  * Send VoIP analytics events (vector-im/element-ios/issues/3855).
  * Add hold support for CallKit calls (vector-im/element-ios/issues/3834).
  * Fix video call with web (vector-im/element-ios/issues/3862).
@@ -27,6 +26,92 @@ Changes to be released in next version
 Others
  * 
 
+Changes in 0.17.7 (2021-01-14)
+=================================================
+
+✨ Features
+ * 
+
+🙌 Improvements
+ * MXCrypto: Store megolm outbound session to improve send time of first message after app launch (vector-im/element-ios/issues/#3904).
+ * MXUIKitApplicationStateService: Add this service to track UIKit application state.
+
+🐛 Bugfix
+ * MXBackgroundSyncService: Fix `m.buddy` to-device event crashes (vector-im/element-ios/issues/3889).
+ * MXBackgroundSyncService: Fix app deadlock created between the app process and the notification service extension process (vector-im/element-ios/issues/3906).
+ * MXUIKitBackgroundTask: Avoid thread switching when creating a background task to keep threading model (vector-im/element-ios/issues/3917).
+
+⚠️ API Changes
+ * MXLoginSSOFlow: Use unstable identity providers field while the MSC2858 is not approved.
+
+🗣 Translations
+ * 
+    
+🧱 Build
+ * 
+
+Others
+ * 
+
+Improvements:
+
+
+Changes in 0.17.6 (2020-12-18)
+=================================================
+
+✨ Features
+ * 
+
+🙌 Improvements
+ * 
+
+🐛 Bugfix
+ * MXUIKitBackgroundTask: Handle invalid identifier case, introduce a threshold for background time remaining, set expiration handler in initAndStart.
+
+⚠️ API Changes
+ * 
+
+🗣 Translations
+ * 
+    
+🧱 Build
+ * 
+
+Others
+ * 
+
+Improvements:
+
+
+Changes in 0.17.5 (2020-12-16)
+=================================================
+
+✨ Features
+ * Added MXKeyProvider to enable data encryption using keys given by client application (#3866)
+
+🙌 Improvements
+ * MXTaggedEvents: Expose "m.tagged_events" according to [MSC2437](https://github.com/matrix-org/matrix-doc/pull/2437).
+ * Login flow: Add MXLoginSSOFlow to support multiple SSO Identity Providers ([MSC2858](https://github.com/matrix-org/matrix-doc/pull/2858)) (vector-im/element-ios/issues/3846).
+
+🐛 Bugfix
+ * MXRestClient: Fix the format of the request body when querying device keys for users (vector-im/element-ios#3539).
+ * MXRoomSummary: Fix crash when decoding lastMessageData (vector-im/element-ios/issues/3879).
+
+⚠️ API Changes
+ *
+
+🗣 Translations
+ * 
+    
+🧱 Build
+ * 
+
+Others
+ * 
+
+Improvements:
+
+
 Changes in 0.17.4 (2020-12-02)
 =================================================
 
@@ -38,7 +123,8 @@ Changes in 0.17.4 (2020-12-02)
  * Pods: Update Realm to 10.1.4 to be able to `pod lib lint` using Xcode 12.2 (vector-im/element-ios/issues/3808).
 
 🐛 Bugfix
- * 
+ * MXSession: Fix a race conditions that prevented MXSession from actually being paused.
+ * MXSession: Make sure the resume method call its completion callback.
 
 ⚠️ API Changes
  * MXRoomSummary: Add a property to indicate room membership transition state.
@@ -179,12 +265,13 @@ Changes in 0.16.20 (2020-10-27)
  * Update GZIP to 1.3.0 (vector-im/element-ios/3570).
  * Update Realm to 5.4.8 (vector-im/element-ios/3570).
  * Update JitsiMeetSDK to 2.10.0 (vector-im/element-ios/3570).
+ * Introduce MXBackgroundSyncService and helper classes (vector-im/element-ios/issues/3579).
 
 🐛 Bugfix
  * 
 
 ⚠️ API Changes
- * 
+ * SwiftSupport subspec removed. Swift is default now.
 
 🗣 Translations
  * 
@@ -206,6 +293,8 @@ Changes in 0.16.19 (2020-10-14)
 
 🙌 Improvements
  * MXCrossSigning: Detect when cross-signing keys have been reset and send MXCrossSigningDidChangeCrossSigningKeysNotification.
+ * MXSession: Introduce handleSyncResponse method to process sync responses from out of the session (vector-im/element-ios/issues/3579).
+ * MXJSONModels: Implement JSONDictionary methods for MXSyncResponse and inner classes (vector-im/element-ios/issues/3579).
 
 🐛 Bugfix
  * Tests: Fix testMXDeviceListDidUpdateUsersDevicesNotification.

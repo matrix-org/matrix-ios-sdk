@@ -2107,8 +2107,6 @@ typedef MXHTTPOperation* (^MXRestClientIdentityServerAccessTokenHandler)(void (^
 
  @param deviceKeys the device keys to send.
  @param oneTimeKeys the one-time keys to send.
- @param deviceId the explicit device_id to use for upload
-        (default is to use the same as that used during auth).
 
  @param success A block object called when the operation succeeds.
  @param failure A block object called when the operation fails.
@@ -2116,7 +2114,6 @@ typedef MXHTTPOperation* (^MXRestClientIdentityServerAccessTokenHandler)(void (^
  @return a MXHTTPOperation instance.
  */
 - (MXHTTPOperation*)uploadKeys:(NSDictionary*)deviceKeys oneTimeKeys:(NSDictionary*)oneTimeKeys
-                     forDevice:(NSString*)deviceId
                        success:(void (^)(MXKeysUploadResponse *keysUploadResponse))success
                        failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 

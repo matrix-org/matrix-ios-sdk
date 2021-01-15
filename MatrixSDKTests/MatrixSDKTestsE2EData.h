@@ -15,6 +15,7 @@
  */
 
 #import <Foundation/Foundation.h>
+#import <OLMKit/OLMKit.h>
 
 #import "MXSDKOptions.h"
 

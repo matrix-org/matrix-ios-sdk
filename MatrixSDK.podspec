@@ -1,7 +1,7 @@
 Pod::Spec.new do |s|
 
   s.name         = "MatrixSDK"
-  s.version      = "0.17.4"
+  s.version      = "0.17.7"
   s.summary      = "The iOS SDK to build apps compatible with Matrix (https://www.matrix.org)"
 
   s.description  = <<-DESC
@@ -20,6 +20,7 @@ Pod::Spec.new do |s|
   s.source       = { :git => "https://github.com/matrix-org/matrix-ios-sdk.git", :tag => "v#{s.version}" }
   
   s.requires_arc  = true
+  s.swift_versions = ['5.1', '5.2']
   
   s.ios.deployment_target = "9.0"
   s.osx.deployment_target = "10.10"
@@ -29,7 +30,7 @@ Pod::Spec.new do |s|
       ss.ios.deployment_target = "9.0"
       ss.osx.deployment_target = "10.10"
       
-      ss.source_files = "MatrixSDK", "MatrixSDK/**/*.{h,m}"
+      ss.source_files = "MatrixSDK", "MatrixSDK/**/*.{h,m}", "MatrixSDK/**/*.{swift}"
       
 
       ss.dependency 'AFNetworking', '~> 4.0.0'
@@ -59,12 +60,6 @@ Pod::Spec.new do |s|
     # JitsiMeetSDK has not yet binaries for arm64 simulator
     ss.pod_target_xcconfig = { 'EXCLUDED_ARCHS[sdk=iphonesimulator*]' => 'arm64' }
     ss.user_target_xcconfig = { 'EXCLUDED_ARCHS[sdk=iphonesimulator*]' => 'arm64' }
-  end
-
-  s.subspec 'SwiftSupport' do |ss|    
-    ss.source_files = "MatrixSDK", "MatrixSDK/**/*.{swift}"
-   
-    ss.dependency 'MatrixSDK/Core'      
   end
 
 end
