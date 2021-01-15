@@ -8,7 +8,7 @@ Changes to be released in next version
  * 
 
 🐛 Bugfix
- * 
+ * Avoid calling background task expiration handlers in app extensions (vector-im/element-ios/issues/3935).
 
 ⚠️ API Changes
  * 
