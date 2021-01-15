@@ -10,6 +10,7 @@ Changes to be released in next version
  * Add hold support for CallKit calls (vector-im/element-ios/issues/3834).
  * Fix video call with web (vector-im/element-ios/issues/3862).
  * VoIP: Call transfers initiation (vector-im/element-ios/issues/3872).
+ * VoIP: DTMF support in calls (vector-im/element-ios/issues/3929).
 
 🐛 Bugfix
  * 

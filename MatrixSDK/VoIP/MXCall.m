@@ -608,6 +608,20 @@ NSString *const kMXCallSupportsTransferringStatusDidChange = @"kMXCallSupportsTr
     }];
 }
 
+#pragma mark - DTMF
+
+- (BOOL)supportsDTMF
+{
+    return [callStackCall canSendDTMF];
+}
+
+- (BOOL)sendDTMF:(NSString * _Nonnull)tones
+        duration:(NSUInteger)duration
+    interToneGap:(NSUInteger)interToneGap
+{
+    return [callStackCall sendDTMF:tones duration:duration interToneGap:interToneGap];
+}
+
 #pragma mark - Properties
 
 - (void)setSelectedAnswer:(MXEvent *)selectedAnswer

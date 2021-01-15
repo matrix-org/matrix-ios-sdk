@@ -393,6 +393,60 @@ NSString *const kMXJingleCallWebRTCMainStreamID = @"userMedia";
     }];
 }
 
+#pragma mark - DTMF
+
+- (BOOL)canSendDTMF
+{
+    id<RTCDtmfSender> dtmfSender = peerConnection.senders.firstObject.dtmfSender;
+    
+    if (dtmfSender == nil)
+    {
+        return NO;
+    }
+    
+    return dtmfSender.canInsertDtmf;
+}
+
+- (BOOL)sendDTMF:(NSString *)tones
+        duration:(NSUInteger)duration
+    interToneGap:(NSUInteger)interToneGap;
+{
+    if (!self.canSendDTMF)
+    {
+        //  cannot send DTMF
+        return NO;
+    }
+    
+    id<RTCDtmfSender> dtmfSender = peerConnection.senders.firstObject.dtmfSender;
+    
+    if (duration == 0)
+    {
+        //  use default or last used value
+        duration = dtmfSender.duration;
+    }
+    else
+    {
+        //  limit lower bound
+        duration = MAX(duration, 70);
+        
+        //  limit upper bound
+        duration = MIN(duration, 6000);
+    }
+    
+    if (interToneGap == 0)
+    {
+        //  use default or last used value
+        interToneGap = dtmfSender.interToneGap;
+    }
+    else
+    {
+        //  limit lower bound
+        interToneGap = MAX(interToneGap, 50);
+    }
+    
+    return [dtmfSender insertDtmf:tones duration:duration interToneGap:interToneGap];
+}
+
 #pragma mark - RTCPeerConnectionDelegate
 
 // Triggered when the SignalingState changed.
