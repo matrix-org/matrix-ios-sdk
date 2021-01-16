@@ -8,7 +8,7 @@ Changes to be released in next version
  * MXTaggedEvents: Expose "m.tagged_events" according to [MSC2437](https://github.com/matrix-org/matrix-doc/pull/2437).
 
 🐛 Bugfix
- * 
+ * MXRoomSummary: directUserId may be missing (null) for a direct chat if it was joined on another device.
 
 ⚠️ API Changes
  * 
