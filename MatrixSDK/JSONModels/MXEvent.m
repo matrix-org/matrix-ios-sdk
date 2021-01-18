@@ -854,7 +854,7 @@ NSString *const kMXEventIdentifierKey = @"kMXEventIdentifierKey";
 
         NSDictionary *decryptionClearEventJSON;
         NSDictionary *encryptedContentRelatesToJSON;
-        MXJSONModelSetDictionary(clearEventJSONContent, _wireContent[@"m.relates_to"]);
+        MXJSONModelSetDictionary(encryptedContentRelatesToJSON, _wireContent[@"m.relates_to"]);
         
         // Add "m.relates_to" data from e2e event to the unencrypted content event
         if (encryptedContentRelatesToJSON)
