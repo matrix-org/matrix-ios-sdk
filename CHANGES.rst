@@ -8,7 +8,7 @@ Changes to be released in next version
  * 
 
 🐛 Bugfix
- * 
+ * MXEvent: Fix a regression on edits and replies in e2ee rooms (vector-im/element-ios/issues/3944).
 
 ⚠️ API Changes
  * 
