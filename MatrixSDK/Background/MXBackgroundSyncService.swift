@@ -258,9 +258,6 @@ public enum MXBackgroundSyncServiceError: Error {
     private func launchBackgroundSync(forEventId eventId: String,
                                       roomId: String,
                                       completion: @escaping (MXResponse<MXEvent>) -> Void) {
-        
-        // Check local stores on every request so that we use up-to-data data from the MXSession store
-        updateBackgroundServiceStoresIfNeeded()
             
         guard let eventStreamToken = syncResponseStore.syncResponse?.nextBatch ?? store.eventStreamToken else {
             NSLog("[MXBackgroundSyncService] launchBackgroundSync: Do not sync because event streaming not started yet.")
