@@ -1732,7 +1732,7 @@ RLM_ARRAY_TYPE(MXRealmSecret)
         // Use the shared db file URL.
         NSURL *sharedContainerURL = [[NSFileManager defaultManager] containerURLForSecurityApplicationGroupIdentifier:applicationGroupIdentifier];
         NSURL *realmFileFolderURL = [sharedContainerURL URLByAppendingPathComponent:kMXRealmCryptoStoreFolder];
-        realmFileURL = [[realmFileFolderURL URLByAppendingPathComponent:userId] URLByAppendingPathExtension:@"realm"];
+        realmFileURL = [[realmFileFolderURL URLByAppendingPathComponent:realmFile] URLByAppendingPathExtension:@"realm"];
     }
     else
     {
