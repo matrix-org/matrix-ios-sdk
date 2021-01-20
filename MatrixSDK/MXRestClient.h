@@ -1886,7 +1886,7 @@ typedef MXHTTPOperation* (^MXRestClientIdentityServerAccessTokenHandler)(void (^
  Retrieve a Matrix User ID linked to a user on the third party service, given a set of user parameters.
  
  @param protocol Required. The name of the protocol.
- @param fields One or more custom fields that are passed to the AS to help identify the user.
+ @param fields One or more custom fields that are passed to the AS to help identify the user. Not optional.
  @param success A block object called when the operation succeeds.
  @param failure A block object called when the operation fails.
  

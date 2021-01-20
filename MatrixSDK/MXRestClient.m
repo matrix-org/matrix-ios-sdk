@@ -3602,17 +3602,10 @@ MXAuthAction;
 
 - (MXHTTPOperation *)thirdpartyUsers:(NSString *)protocol fields:(NSDictionary<NSString *,NSString *> *)fields success:(void (^)(MXThirdPartyUsersResponse *))success failure:(void (^)(NSError *))failure
 {
-    NSMutableDictionary *params = [NSMutableDictionary dictionaryWithCapacity:1];
-    
-    if (fields)
-    {
-        params[@"fields"] = fields;
-    }
-    
     MXWeakify(self);
     return [httpClient requestWithMethod:@"GET"
                                     path:[NSString stringWithFormat:@"%@/thirdparty/user/%@", kMXAPIPrefixPathUnstable, protocol]
-                              parameters:params
+                              parameters:fields
                                  success:^(NSDictionary *JSONResponse) {
                                      MXStrongifyAndReturnIfNil(self);
 
