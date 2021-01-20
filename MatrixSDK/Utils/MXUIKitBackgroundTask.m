@@ -96,12 +96,14 @@
         else
         {
             NSLog(@"[MXBackgroundTask] Background task creation failed. UIApplication.shared is nil");
-
-            // call expiration handler immediately
-            if (self.expirationHandler)
-            {
-                self.expirationHandler();
-            }
+            
+            //  we're probably in an app extension here.
+            //  Do not call expiration handler as it'll cause some network requests to be cancelled,
+            //  either before starting or in the middle of the process.
+            //  We could also use -[NSProcessInfo performExpiringActivityWithReason:usingBlock:] method here
+            //  to achieve the same behaviour, but it requires changes in total API, as it'll accept the
+            //  execution block instead of expiration block.
+            
             return nil;
         }
     }
