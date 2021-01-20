@@ -47,7 +47,16 @@ NSString *const MXBackgroundCryptoStoreUserIdSuffix = @":bgCryptoStore";
     {
         credentials = theCredentials;
         
-        cryptoStore = [[MXRealmCryptoStore alloc] initWithCredentials:credentials];
+        if ([MXRealmCryptoStore hasDataForCredentials:credentials])
+        {
+            cryptoStore = [[MXRealmCryptoStore alloc] initWithCredentials:credentials];
+        }
+        else
+        {
+            // Should never happen
+            NSLog(@"[MXBackgroundCryptoStore] initWithCredentials: Warning: createStoreWithCredentials: %@:%@", credentials.userId, credentials.deviceId);
+            cryptoStore = [MXRealmCryptoStore createStoreWithCredentials:credentials];
+        }
         
         MXCredentials *bgCredentials = [MXBackgroundCryptoStore credentialForBgCryptoStoreWithCredentials:credentials];
         if ([MXRealmCryptoStore hasDataForCredentials:bgCredentials])
@@ -85,25 +94,14 @@ NSString *const MXBackgroundCryptoStoreUserIdSuffix = @":bgCryptoStore";
 
 + (BOOL)hasDataForCredentials:(MXCredentials*)credentials
 {
-    // Should be always YES
-    return [MXRealmCryptoStore hasDataForCredentials:credentials];
+    NSAssert(NO, @"This method should be useless in the context of MXBackgroundCryptoStore");
+    return NO;
 }
 
 + (instancetype)createStoreWithCredentials:(MXCredentials*)credentials
 {
-    // Should never happen
-    NSLog(@"[MXBackgroundCryptoStore] createStoreWithCredentials: %@:%@", credentials.userId, credentials.deviceId);
-    
-    MXRealmCryptoStore *cryptoStore = [MXRealmCryptoStore createStoreWithCredentials:credentials];
-    
-    MXCredentials *bgCredentials = [MXBackgroundCryptoStore credentialForBgCryptoStoreWithCredentials:credentials];
-    MXRealmCryptoStore *bgCryptoStore = [MXRealmCryptoStore createStoreWithCredentials:bgCredentials];
-    
-    MXBackgroundCryptoStore *store = [MXBackgroundCryptoStore new];
-    store->cryptoStore = cryptoStore;
-    store->bgCryptoStore = bgCryptoStore;
-    
-    return store;
+    NSAssert(NO, @"This method should be useless in the context of MXBackgroundCryptoStore");
+    return nil;
 }
 
 

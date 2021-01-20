@@ -59,11 +59,7 @@ public enum MXBackgroundSyncServiceError: Error {
         restClient = MXRestClient(credentials: credentials, unrecognizedCertificateHandler: nil)
         restClient.completionQueue = processingQueue
         store = MXBackgroundStore(withCredentials: credentials)
-        if MXRealmCryptoStore.hasData(for: credentials) {
-            cryptoStore = MXBackgroundCryptoStore(credentials: credentials)
-        } else {
-            cryptoStore = MXBackgroundCryptoStore.createStore(with: credentials)
-        }
+        cryptoStore = MXBackgroundCryptoStore(credentials: credentials)
         olmDevice = MXOlmDevice(store: cryptoStore)
         pushRulesManager = MXBackgroundPushRulesManager(withCredentials: credentials)
         if let accountData = syncResponseStore.syncResponse?.accountData {
