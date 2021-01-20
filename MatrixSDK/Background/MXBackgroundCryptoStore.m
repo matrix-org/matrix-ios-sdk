@@ -40,7 +40,7 @@ NSString *const MXBackgroundCryptoStoreUserIdSuffix = @":bgCryptoStore";
 
 @implementation MXBackgroundCryptoStore
 
-- (instancetype)initWithCredentials:(MXCredentials *)theCredentials
+- (instancetype)initWithCredentials:(MXCredentials *)theCredentials resetBackgroundCryptoStore:(BOOL)resetBackgroundCryptoStore
 {
     self = [super init];
     if (self)
@@ -59,8 +59,16 @@ NSString *const MXBackgroundCryptoStoreUserIdSuffix = @":bgCryptoStore";
         }
         
         MXCredentials *bgCredentials = [MXBackgroundCryptoStore credentialForBgCryptoStoreWithCredentials:credentials];
+        
+        if (resetBackgroundCryptoStore)
+        {
+            NSLog(@"[MXBackgroundCryptoStore] initWithCredentials: Delete existing bgCryptoStore if any");
+            [MXRealmCryptoStore deleteStoreWithCredentials:bgCredentials];
+        }
+        
         if ([MXRealmCryptoStore hasDataForCredentials:bgCredentials])
         {
+            NSLog(@"[MXBackgroundCryptoStore] initWithCredentials: Reuse existing bgCryptoStore");
             bgCryptoStore = [[MXRealmCryptoStore alloc] initWithCredentials:bgCredentials];
         }
         else
@@ -90,6 +98,12 @@ NSString *const MXBackgroundCryptoStoreUserIdSuffix = @":bgCryptoStore";
         
         [self->bgCryptoStore open:onComplete failure:failure];
     } failure:failure];
+}
+
+- (instancetype)initWithCredentials:(MXCredentials *)theCredentials
+{
+    NSAssert(NO, @"This method should be useless in the context of MXBackgroundCryptoStore");
+    return nil;
 }
 
 + (BOOL)hasDataForCredentials:(MXCredentials*)credentials
