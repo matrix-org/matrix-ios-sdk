@@ -334,14 +334,16 @@ RLM_ARRAY_TYPE(MXRealmSecret)
 }
 
 + (void)deleteStoreWithCredentials:(MXCredentials*)credentials
-{
+{    
     NSLog(@"[MXRealmCryptoStore] deleteStore for %@:%@", credentials.userId, credentials.deviceId);
+    NSURL *realmFileURL = [self realmFileURLForUserWithUserId:credentials.userId andDevice:credentials.deviceId];
 
-    RLMRealm *realm = [MXRealmCryptoStore realmForUser:credentials.userId andDevice:credentials.deviceId];
-
-    [realm transactionWithBlock:^{
-        [realm deleteAllObjects];
-    }];
+    NSError *error;
+    [[NSFileManager defaultManager] removeItemAtPath:realmFileURL.path error:&error];
+    if (error)
+    {
+        NSLog(@"[MXRealmCryptoStore] deleteStore: Error: %@", error);
+    }
 }
 
 - (instancetype)initWithCredentials:(MXCredentials *)credentials
