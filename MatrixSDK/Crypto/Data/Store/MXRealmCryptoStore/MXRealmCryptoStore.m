@@ -1440,43 +1440,10 @@ RLM_ARRAY_TYPE(MXRealmSecret)
         
         config.fileURL = realmFileURL;
         
-        // Check whether an existing db file has to be be moved from the default folder to the shared container.
-        if ([NSFileManager.defaultManager fileExistsAtPath:[defaultRealmFileURL path]])
+        // Make sure the full path exists before giving it to Realm
+        if (![NSFileManager.defaultManager fileExistsAtPath:realmFileFolderURL.path])
         {
-            if (![NSFileManager.defaultManager fileExistsAtPath:[realmFileURL path]])
-            {
-                // Move this db file in the container directory associated with the application group identifier.
-                NSLog(@"[MXRealmCryptoStore] Move the db file to the application group container");
-                
-                if (![NSFileManager.defaultManager fileExistsAtPath:realmFileFolderURL.path])
-                {
-                    [[NSFileManager defaultManager] createDirectoryAtPath:realmFileFolderURL.path withIntermediateDirectories:YES attributes:nil error:nil];
-                }
-                
-                NSError *fileManagerError = nil;
-                
-                [NSFileManager.defaultManager moveItemAtURL:defaultRealmFileURL toURL:realmFileURL error:&fileManagerError];
-                
-                if (fileManagerError)
-                {
-                    NSLog(@"[MXRealmCryptoStore] Move db file failed (%@)", fileManagerError);
-                    // Keep using the old file
-                    config.fileURL = defaultRealmFileURL;
-                }
-            }
-            else
-            {
-                // Remove the residual db file.
-                [NSFileManager.defaultManager removeItemAtURL:defaultRealmFileURL error:nil];
-            }
-        }
-        else
-        {
-            // Make sure the full exists before giving it to Realm 
-            if (![NSFileManager.defaultManager fileExistsAtPath:realmFileFolderURL.path])
-            {
-                [[NSFileManager defaultManager] createDirectoryAtPath:realmFileFolderURL.path withIntermediateDirectories:YES attributes:nil error:nil];
-            }
+            [[NSFileManager defaultManager] createDirectoryAtPath:realmFileFolderURL.path withIntermediateDirectories:YES attributes:nil error:nil];
         }
     }
     else
