@@ -337,15 +337,38 @@ RLM_ARRAY_TYPE(MXRealmSecret)
 {
     NSLog(@"[MXRealmCryptoStore] deleteStore for %@:%@", credentials.userId, credentials.deviceId);
 
+    // Delete db file directly
+    // So that we can even delete corrupted realm db
     RLMRealmConfiguration *config = [RLMRealmConfiguration defaultConfiguration];
     NSURL *realmFileURL = [self realmFileURLForUserWithUserId:credentials.userId andDevice:credentials.deviceId];
     config.fileURL = realmFileURL;
+    
+    if (![RLMRealm fileExistsForConfiguration:config])
+    {
+        NSLog(@"[MXRealmCryptoStore] deleteStore: Realm db does not exist");
+    }
     
     NSError *error;
     [RLMRealm deleteFilesForConfiguration:config error:&error];
     if (error)
     {
         NSLog(@"[MXRealmCryptoStore] deleteStore: Error: %@", error);
+        
+        // The db is probably still opened elsewhere (RLMErrorAlreadyOpen), which means it is valid.
+        // Use the old method to clear the db
+        error = nil;
+        RLMRealm *realm = [MXRealmCryptoStore realmForUser:credentials.userId andDevice:credentials.deviceId];
+        if (!error)
+        {
+            NSLog(@"[MXRealmCryptoStore] deleteStore: Delete at least its content");
+            [realm transactionWithBlock:^{
+                [realm deleteAllObjects];
+            }];
+        }
+        else
+        {
+            NSLog(@"[MXRealmCryptoStore] deleteStore: Cannot open realm. Error: %@", error);
+        }
     }
 }
 
