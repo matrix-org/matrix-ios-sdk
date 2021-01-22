@@ -346,6 +346,7 @@ RLM_ARRAY_TYPE(MXRealmSecret)
     if (![RLMRealm fileExistsForConfiguration:config])
     {
         NSLog(@"[MXRealmCryptoStore] deleteStore: Realm db does not exist");
+        return;
     }
     
     NSError *error;
