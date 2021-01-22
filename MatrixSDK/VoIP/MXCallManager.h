@@ -28,6 +28,7 @@ NS_ASSUME_NONNULL_BEGIN
 @class MXEvent;
 @class MXUserModel;
 @class MXThirdPartyUserInstance;
+@class MXUser;
 
 @protocol MXCallStack;
 
@@ -253,6 +254,19 @@ extern NSString *const kMXCallManagerPSTNSupportUpdated;
                withVideo:(BOOL)video
                 success:(void (^)(MXCall *call))success
                 failure:(void (^)(NSError * _Nullable error))failure;
+
+#pragma mark - Recent
+
+/**
+ Get recent contacts with whom a call was present, either incoming or outgoing.
+ Result will be descending order according to the call time.
+ So most recent call's contact will be at the beginning of the result.
+ 
+ @param maxNumberOfUsers Maximum number of desired users. Please note that return value could be less than this.
+ @param ignoredUserIds Ignored user ids for desired users.
+ */
+- (NSArray<MXUser *> * _Nonnull)getRecentCalledUsers:(NSUInteger)maxNumberOfUsers
+                                      ignoredUserIds:(NSArray<NSString*> * _Nullable)ignoredUserIds;
 
 @end
 

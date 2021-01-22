@@ -1205,4 +1205,67 @@ NSString *const kMXCallManagerConferenceUserDomain  = @"matrix.org";
     } failure:failure];
 }
 
+#pragma mark - Recent
+
+- (NSArray<MXUser *> * _Nonnull)getRecentCalledUsers:(NSUInteger)maxNumberOfUsers
+                                      ignoredUserIds:(NSArray<NSString*> * _Nullable)ignoredUserIds
+{
+    if (maxNumberOfUsers == 0)
+    {
+        return NSArray.array;
+    }
+    
+    NSArray<MXRoom *> *rooms = _mxSession.rooms;
+    
+    if (rooms.count == 0)
+    {
+        return NSArray.array;
+    }
+    
+    NSMutableArray *callEvents = [NSMutableArray arrayWithCapacity:rooms.count];
+    
+    for (MXRoom *room in rooms) {
+        id<MXEventsEnumerator> enumerator = [room enumeratorForStoredMessagesWithTypeIn:@[kMXEventTypeStringCallInvite]];
+        MXEvent *callEvent = enumerator.nextEvent;
+        if (callEvent)
+        {
+            [callEvents addObject:callEvent];
+        }
+    }
+    
+    [callEvents sortUsingComparator:^NSComparisonResult(MXEvent * _Nonnull event1, MXEvent * _Nonnull event2) {
+        return [@(event1.age) compare:@(event2.age)];
+    }];
+    
+    NSMutableArray *users = [NSMutableArray arrayWithCapacity:callEvents.count];
+    
+    for (MXEvent *event in callEvents) {
+        NSString *userId = nil;
+        if ([event.sender isEqualToString:_mxSession.myUserId])
+        {
+            userId = [_mxSession directUserIdInRoom:event.roomId];
+        }
+        else
+        {
+            userId = event.sender;
+        }
+        
+        if (userId && ![ignoredUserIds containsObject:userId])
+        {
+            MXUser *user = [_mxSession userWithUserId:userId];
+            if (user)
+            {
+                [users addObject:user];
+            }
+        }
+    }
+    
+    if (users.count > maxNumberOfUsers)
+    {
+        users = [[users subarrayWithRange:NSMakeRange(0, maxNumberOfUsers)] mutableCopy];
+    }
+    
+    return users;
+}
+
 @end
