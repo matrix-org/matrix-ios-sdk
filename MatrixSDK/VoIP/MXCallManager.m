@@ -1135,10 +1135,9 @@ NSString *const kMXCallManagerConferenceUserDomain  = @"matrix.org";
     }];
 }
 
-- (void)placeCallAgainst:(NSString *)phoneNumber
-               withVideo:(BOOL)video
-                 success:(void (^)(MXCall * _Nonnull))success
-                 failure:(void (^)(NSError * _Nullable))failure
+- (void)getThirdPartyUserFrom:(NSString *)phoneNumber
+                      success:(void (^)(MXThirdPartyUserInstance * _Nonnull))success
+                      failure:(void (^)(NSError * _Nullable))failure
 {
     [_mxSession.matrixRestClient thirdpartyUsers:kMXProtocolVectorPSTN
                                           fields:@{
@@ -1150,14 +1149,37 @@ NSString *const kMXCallManagerConferenceUserDomain  = @"matrix.org";
         
         NSLog(@"Succeeded to look up the phone number: %@", user.userId);
         
-        if (user == nil)
+        if (user)
+        {
+            if (success)
+            {
+                success(user);
+            }
+        }
+        else
         {
             if (failure)
             {
                 failure(nil);
             }
-            return;
         }
+    } failure:^(NSError *error) {
+        NSLog(@"Failed to look up the phone number with error: %@", error);
+        if (failure)
+        {
+            failure(error);
+        }
+    }];
+}
+
+- (void)placeCallAgainst:(NSString *)phoneNumber
+               withVideo:(BOOL)video
+                 success:(void (^)(MXCall * _Nonnull))success
+                 failure:(void (^)(NSError * _Nullable))failure
+{
+    MXWeakify(self);
+    [self getThirdPartyUserFrom:phoneNumber success:^(MXThirdPartyUserInstance *_Nonnull user) {
+        MXStrongifyAndReturnIfNil(self);
         
         //  try to find a direct room with this user
         [self directCallableRoomWithUser:user.userId completion:^(MXRoom * _Nullable room, NSError * _Nullable error) {
@@ -1179,13 +1201,8 @@ NSString *const kMXCallManagerConferenceUserDomain  = @"matrix.org";
                 }
             }
         }];
-    } failure:^(NSError *error) {
-        NSLog(@"Failed to look up the phone number with error: %@", error);
-        if (failure)
-        {
-            failure(error);
-        }
-    }];
+        
+    } failure:failure];
 }
 
 @end

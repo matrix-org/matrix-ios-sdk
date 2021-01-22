@@ -27,6 +27,7 @@ NS_ASSUME_NONNULL_BEGIN
 @class MXTurnServerResponse;
 @class MXEvent;
 @class MXUserModel;
+@class MXThirdPartyUserInstance;
 
 @protocol MXCallStack;
 
@@ -228,6 +229,17 @@ extern NSString *const kMXCallManagerPSTNSupportUpdated;
  Flag to indicate whether PSTN protocol is supported or not.
  */
 @property (nonatomic) BOOL supportsPSTN;
+
+/**
+ Get thirdparty user from a phone number.
+ 
+ @param phoneNumber the phone number against to place the call.
+ @param success A block object called when the operation succeeds. It provides the user.
+ @param failure A block object called when the operation fails.
+ */
+- (void)getThirdPartyUserFrom:(NSString *)phoneNumber
+                      success:(void (^)(MXThirdPartyUserInstance * _Nonnull))success
+                      failure:(void (^)(NSError * _Nullable))failure;
 
 /**
  Place a voice or a video call into a room.
