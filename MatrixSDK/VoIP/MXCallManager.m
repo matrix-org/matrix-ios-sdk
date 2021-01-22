@@ -1256,13 +1256,13 @@ NSString *const kMXCallManagerConferenceUserDomain  = @"matrix.org";
             if (user)
             {
                 [users addObject:user];
+                if (users.count == maxNumberOfUsers)
+                {
+                    //  no need to go further
+                    break;
+                }
             }
         }
-    }
-    
-    if (users.count > maxNumberOfUsers)
-    {
-        users = [[users subarrayWithRange:NSMakeRange(0, maxNumberOfUsers)] mutableCopy];
     }
     
     return users;
