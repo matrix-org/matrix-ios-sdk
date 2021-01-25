@@ -456,7 +456,10 @@
     if (!deviceInfo)
     {
         NSLog(@"[MXMegolmEncryption] reshareKey: ERROR: Unknown device");
-        failure(nil);
+        NSError *error = [NSError errorWithDomain:MXEncryptingErrorDomain
+                                             code:MXEncryptingErrorUnknownDeviceCode
+                                         userInfo:nil];
+        failure(error);
         return nil;
     }
     
@@ -465,8 +468,11 @@
     NSNumber *chainIndex = [obSessionInfo.sharedWithDevices objectForDevice:deviceId forUser:userId];
     if (!chainIndex)
     {
-        NSLog(@"[MXMegolmEncryption] reshareKey: ERROR: Never share megolm with this device");
-        failure(nil);
+        NSLog(@"[MXMegolmEncryption] reshareKey: ERROR: Never shared megolm key with this device");
+        NSError *error = [NSError errorWithDomain:MXEncryptingErrorDomain
+                                             code:MXEncryptingErrorReshareNotAllowedCode
+                                         userInfo:nil];
+        failure(error);
         return nil;
     }
 
