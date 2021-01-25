@@ -214,6 +214,8 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
           lazyLoadedMembers:(void (^)(MXRoomMembers *lazyLoadedMembers))lazyLoadedMembers
                     failure:(void (^)(NSError *error))failure
 {
+    NSLog(@"[MXRoom] members: roomId: %@", _roomId);
+          
     // Create an empty operation that will be mutated later
     MXHTTPOperation *operation = [[MXHTTPOperation alloc] init];
 
@@ -224,13 +226,19 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
         // Return directly liveTimeline.state.members if we have already all of them
         if ([self.mxSession.store hasLoadedAllRoomMembersForRoom:self.roomId])
         {
+            NSLog(@"[MXRoom] members: All members are known. Return %@ joined, %@ invited",
+                  @(liveTimeline.state.membersCount.joined), @(liveTimeline.state.membersCount.invited));
             success(liveTimeline.state.members);
         }
         else
         {
+            NSLog(@"[MXRoom] members: Currently known members: %@ joined, %@ invited",
+                  @(liveTimeline.state.membersCount.joined), @(liveTimeline.state.membersCount.invited));
+            
             // Return already lazy-loaded room members if requested
             if (lazyLoadedMembers)
             {
+                NSLog(@"[MXRoom] members: Call lazyLoadedMembers");
                 lazyLoadedMembers(liveTimeline.state.members);
             }
 
@@ -249,6 +257,8 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
                                    kMXMembersOfRoomParametersNotMembership: kMXMembershipStringLeave
                                    };
                 }
+                
+                NSLog(@"[MXRoom] members: Call /members with parameters: %@", parameters);
 
                 MXWeakify(self);
                 MXHTTPOperation *operation2 = [self.mxSession.matrixRestClient membersOfRoom:self.roomId
@@ -256,6 +266,8 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
                                                                                      success:^(NSArray *roomMemberEvents)
                 {
                     MXStrongifyAndReturnIfNil(self);
+                    
+                    NSLog(@"[MXRoom] members: roomId: %@. /members returned %@ members", self.roomId, @(roomMemberEvents.count));
 
                     // Manage the possible race condition where we could have received
                     // update of members from the events stream (/sync) while the /members
@@ -289,6 +301,10 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
                         }
                     }
 
+                    NSLog(@"[MXRoom] members: roomId: %@. /members succeeded. Pending requesters: %@. Members: %@ joined, %@ invited ",
+                          self.roomId, @(self->pendingMembersRequesters.count),
+                          @(liveTimeline.state.membersCount.joined), @(liveTimeline.state.membersCount.invited));
+                    
                     // Provide the members to pending requesters
                     NSArray<void (^)(MXRoomMembers *)> *pendingMembersRequesters = [self->pendingMembersRequesters copy];
                     self->pendingMembersRequesters = nil;
@@ -298,9 +314,12 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
                     {
                         onRequesterComplete(liveTimeline.state.members);
                     }
-                    NSLog(@"[MXRoom] members loaded. Pending requesters: %@", @(pendingMembersRequesters.count));
 
                 } failure:^(NSError *error) {
+                    MXStrongifyAndReturnIfNil(self);
+                    
+                    NSLog(@"[MXRoom] members: roomId: %@. /members failed. Pending requesters: %@", self.roomId, @(self->pendingMembersFailureBlocks.count));
+                    
                     // Notify the failure to the pending requesters
                     NSArray<void (^)(NSError *)> *pendingRequesters = [self->pendingMembersFailureBlocks copy];
                     self->pendingMembersRequesters = nil;
@@ -310,10 +329,13 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
                     {
                         onFailure(error);
                     }
-                    NSLog(@"[MXRoom] get members failed. Pending requesters: %@", @(pendingRequesters.count));
                 }];
 
                 [operation mutateTo:operation2];
+            }
+            else
+            {
+                NSLog(@"[MXRoom] members: Request already pending for %@ requesters", @(self->pendingMembersRequesters.count));
             }
 
             if (success)
