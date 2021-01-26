@@ -10,6 +10,7 @@ Changes to be released in next version
 🐛 Bugfix
  * MXBackgroundSyncService: Clear the bg sync crypto db if needed (vector-im/element-ios/issues/3956).
  * MXCrypto: Add a workaround when the megolm key is not shared to all members (vector-im/element-ios/issues/3907).
+ * MX3PidAddManager: Use a non empty client_secret to discover /account/3pid/add flows (vector-im/element-ios/issues/3966).
 
 ⚠️ API Changes
  * 
