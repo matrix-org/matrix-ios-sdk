@@ -6,6 +6,7 @@ Changes to be released in next version
 
 🙌 Improvements
  * MXRealmCryptoStore: New implementation of deleteStoreWithCredentials that does not need to open the realm DB.
+ * MXRealmCryptoStore: store chain index of shared outbound group sessions to improve re-share session keys
 
 🐛 Bugfix
  * MXBackgroundSyncService: Clear the bg sync crypto db if needed (vector-im/element-ios/issues/3956).
