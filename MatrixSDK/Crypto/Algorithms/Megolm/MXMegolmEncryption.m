@@ -92,6 +92,7 @@
         {
             outboundSession = [[MXOutboundSessionInfo alloc] initWithSession:restoredOutboundGroupSession];
             outboundSessions[outboundSession.sessionId] = outboundSession;
+            outboundSession.sharedWithDevices = [crypto.store sharedDevicesForOutboundGroupSessionInRoomWithId:roomId sessionId:outboundSession.sessionId];
         }
     }
     return self;
@@ -243,7 +244,7 @@
                                    success:(void (^)(MXOutboundSessionInfo *session))success
                                    failure:(void (^)(NSError *))failure
 {
-    MXOutboundSessionInfo *session = outboundSession;
+    __block MXOutboundSessionInfo *session = outboundSession;
 
     // Need to make a brand new session?
     if (session && [session needsRotation:sessionRotationPeriodMsgs rotationPeriodMs:sessionRotationPeriodMs])
@@ -299,6 +300,21 @@
     session.shareOperation = [self shareKey:session withDevices:shareMap success:^{
 
         session.shareOperation = nil;
+        if (shareMap.count)
+        {
+            // store chain index for devices the session has been shared with
+            MXUsersDevicesMap<NSNumber *> *sharedWithDevices = [MXUsersDevicesMap new];
+            for (NSString *userId in shareMap.allKeys)
+            {
+                for (MXDeviceInfo *device in shareMap[userId])
+                {
+                    [sharedWithDevices setObject:@(session.session.messageIndex) forUser:userId andDevice:device.deviceId];
+                }
+            }
+            
+            [self->crypto.store storeSharedDevices:sharedWithDevices messageIndex:session.session.messageIndex forOutboundGroupSessionInRoomWithId:self->roomId sessionId:session.session.sessionId];
+        }
+
         success(session);
 
     } failure:^(NSError *error) {
@@ -412,13 +428,23 @@
                 // attempted to share with) rather than the contentMap (those we did
                 // share with), because we don't want to try to claim a one-time-key
                 // for dead devices on every message.
+                
+                // store chain index for devices the session has been shared with
+                MXUsersDevicesMap<NSNumber *> *sharedWithDevices = [MXUsersDevicesMap new];
+
                 for (NSString *userId in devicesByUser)
                 {
                     NSArray *devicesToShareWith = devicesByUser[userId];
                     for (MXDeviceInfo *deviceInfo in devicesToShareWith)
                     {
                         [session.sharedWithDevices setObject:@(chainIndex) forUser:userId andDevice:deviceInfo.deviceId];
+                        [sharedWithDevices setObject:@(session.session.messageIndex) forUser:userId andDevice:deviceInfo.deviceId];
                     }
+                }
+                
+                if (sharedWithDevices.count)
+                {
+                    [self->crypto.store storeSharedDevices:sharedWithDevices messageIndex:chainIndex forOutboundGroupSessionInRoomWithId:self->roomId sessionId:session.session.sessionId];
                 }
 
                 success();
@@ -464,8 +490,7 @@
     }
     
     // Get the chain index of the key we previously sent this device
-    MXOutboundSessionInfo *obSessionInfo = outboundSessions[sessionId];
-    NSNumber *chainIndex = [obSessionInfo.sharedWithDevices objectForDevice:deviceId forUser:userId];
+    NSNumber *chainIndex = [crypto.store messageIndexForSharedDeviceInRoomWithId:roomId sessionId:sessionId userId:userId deviceId:deviceId];
     if (!chainIndex)
     {
         NSLog(@"[MXMegolmEncryption] reshareKey: ERROR: Never shared megolm key with this device");

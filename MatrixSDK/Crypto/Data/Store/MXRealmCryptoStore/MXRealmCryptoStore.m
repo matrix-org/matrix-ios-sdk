@@ -25,7 +25,7 @@
 #import "MXTools.h"
 #import "MXCryptoTools.h"
 
-NSUInteger const kMXRealmCryptoStoreVersion = 14;
+NSUInteger const kMXRealmCryptoStoreVersion = 15;
 
 static NSString *const kMXRealmCryptoStoreFolder = @"MXRealmCryptoStore";
 
@@ -145,6 +145,47 @@ RLM_ARRAY_TYPE(MXRealmOlmInboundGroupSession)
 }
 @end
 RLM_ARRAY_TYPE(MXRealmOlmOutboundGroupSession)
+
+@interface MXRealmSharedOutboundSession : RLMObject
+
+@property NSString *uniqueKey;
+@property NSNumber<RLMInt> *messageIndex;
+
+@end
+
+@implementation MXRealmSharedOutboundSession
++ (NSString *)primaryKey
+{
+    return @"uniqueKey";
+}
+
++(NSString *)uniqueKeyWithRoomId:(NSString *)roomId sessionId:(NSString *)sessionId userId:(NSString *)userId deviceId:(NSString *)deviceId
+{
+    return [NSString stringWithFormat:@"%@|%@|%@|%@", roomId, sessionId, userId, deviceId];
+}
+
+-(NSString *)roomId
+{
+    return [self.uniqueKey componentsSeparatedByString:@"|"][0];
+}
+
+-(NSString *)sessionId
+{
+    return [self.uniqueKey componentsSeparatedByString:@"|"][1];
+}
+
+-(NSString *)userId
+{
+    return [self.uniqueKey componentsSeparatedByString:@"|"][2];
+}
+
+-(NSString *)deviceId
+{
+    return [self.uniqueKey componentsSeparatedByString:@"|"][3];
+}
+
+@end
+RLM_ARRAY_TYPE(MXRealmSharedOutboundSession)
 
 @interface MXRealmOlmAccount : RLMObject
 
@@ -1046,7 +1087,6 @@ RLM_ARRAY_TYPE(MXRealmSecret)
         storedSession = [[MXOlmOutboundGroupSession alloc] initWithSession:session roomId:roomId creationTime:realmSession.creationTime];
     }];
 
-
     NSLog(@"[MXRealmCryptoStore] storeOutboundGroupSession: store 1 key (%lu new) in %.3fms", newCount, [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
     
     return storedSession;
@@ -1103,6 +1143,64 @@ RLM_ARRAY_TYPE(MXRealmSecret)
         [realm deleteObjects:realmSessions];
         NSLog(@"[MXRealmCryptoStore] removeOutboundGroupSessionWithRoomId%@: removed %lu entries", roomId, realmSessions.count);
     }];
+}
+
+- (void)storeSharedDevices:(MXUsersDevicesMap<NSNumber *> *)devices messageIndex:(NSUInteger) messageIndex forOutboundGroupSessionInRoomWithId:(NSString *)roomId sessionId:(NSString *)sessionId
+{
+    NSDate *startDate = [NSDate date];
+
+    RLMRealm *realm = self.realm;
+
+    [realm transactionWithBlock:^{
+        
+        for (NSString *userId in [devices userIds])
+        {
+            for (NSString *deviceId in [devices deviceIdsForUser:userId])
+            {
+                NSString *uniqueKey = [MXRealmSharedOutboundSession uniqueKeyWithRoomId:roomId sessionId:sessionId userId:userId deviceId:deviceId];
+                MXRealmSharedOutboundSession *sharedInfo = [[MXRealmSharedOutboundSession alloc] initWithValue: @{
+                    @"uniqueKey": uniqueKey,
+                    @"messageIndex": @(messageIndex)
+                }];
+                [realm addOrUpdateObject:sharedInfo];
+            }
+        }
+    }];
+
+    NSLog(@"[MXRealmCryptoStore] storeDevicesForOutboundGroupSession (count: %tu) in %.3fms", devices.count, [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
+}
+
+- (MXUsersDevicesMap<NSNumber *> *)sharedDevicesForOutboundGroupSessionInRoomWithId:(NSString *)roomId sessionId:(NSString *)sessionId
+{
+    MXUsersDevicesMap<NSNumber *> *devices = [MXUsersDevicesMap new];
+
+    RLMRealm *realm = self.realm;
+    
+    [realm transactionWithBlock:^{
+        NSString *keyPrefix = [NSString stringWithFormat:@"%@|%@", roomId, sessionId];
+        RLMResults<MXRealmSharedOutboundSession *> *results = [MXRealmSharedOutboundSession objectsInRealm:realm where:@"uniqueKey BEGINSWITH %@", keyPrefix];
+        
+        for (MXRealmSharedOutboundSession *sharedInfo in results)
+        {
+            [devices setObject:sharedInfo.messageIndex forUser:sharedInfo.userId andDevice:sharedInfo.deviceId];
+        }
+    }];
+    
+    return devices;
+}
+
+- (NSNumber *)messageIndexForSharedDeviceInRoomWithId:(NSString *)roomId sessionId:(NSString *)sessionId userId:(NSString *)userId deviceId:(NSString *)deviceId
+{
+    __block NSNumber *messageIndex = nil;
+    RLMRealm *realm = self.realm;
+    
+    [realm transactionWithBlock:^{
+        NSString *uniqueKey = [MXRealmSharedOutboundSession uniqueKeyWithRoomId:roomId sessionId:sessionId userId:userId deviceId:deviceId];
+        MXRealmSharedOutboundSession *sharedSession = [MXRealmSharedOutboundSession objectsInRealm:realm where:@"uniqueKey = %@", uniqueKey].firstObject;
+        messageIndex = sharedSession.messageIndex;
+    }];
+    
+    return messageIndex;
 }
 
 #pragma mark - Key backup
@@ -1445,7 +1543,8 @@ RLM_ARRAY_TYPE(MXRealmSecret)
                              MXRealmOutgoingRoomKeyRequest.class,
                              MXRealmIncomingRoomKeyRequest.class,
                              MXRealmSecret.class,
-                             MXRealmOlmOutboundGroupSession.class
+                             MXRealmOlmOutboundGroupSession.class,
+                             MXRealmSharedOutboundSession.class
                              ];
 
     config.schemaVersion = kMXRealmCryptoStoreVersion;
@@ -1657,6 +1756,11 @@ RLM_ARRAY_TYPE(MXRealmSecret)
                 case 13:
                 {
                     NSLog(@"[MXRealmCryptoStore] Migration from schema #13 -> #14: Nothing to do (added MXRealmOlmOutboundGroupSession)");
+                }
+                    
+                case 14:
+                {
+                    NSLog(@"[MXRealmCryptoStore] Migration from schema #14 -> #15: Nothing to do (added MXRealmSharedOutboundSession)");
                 }
             }
         }
