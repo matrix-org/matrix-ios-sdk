@@ -5,6 +5,30 @@ Changes to be released in next version
  * 
 
 🙌 Improvements
+ * 
+
+🐛 Bugfix
+ * 
+
+⚠️ API Changes
+ * 
+
+🗣 Translations
+ * 
+    
+🧱 Build
+ * 
+
+Others
+ * 
+
+Changes in 0.17.10 (2021-01-27)
+=================================================
+
+✨ Features
+ * 
+
+🙌 Improvements
  * MXRealmCryptoStore: New implementation of deleteStoreWithCredentials that does not need to open the realm DB.
  * MXRealmCryptoStore: store chain index of shared outbound group sessions to improve re-share session keys
 
@@ -23,6 +47,9 @@ Changes to be released in next version
 
 Others
  * 
+
+Improvements:
+
 
 Changes in 0.17.9 (2021-01-18)
 =================================================
