@@ -149,6 +149,9 @@ RLM_ARRAY_TYPE(MXRealmOlmOutboundGroupSession)
 @interface MXRealmSharedOutboundSession : RLMObject
 
 @property NSString *uniqueKey;
+@property NSString *roomId;
+@property NSString *sessionId;
+@property MXRealmDeviceInfo *device;
 @property NSNumber<RLMInt> *messageIndex;
 
 @end
@@ -159,29 +162,9 @@ RLM_ARRAY_TYPE(MXRealmOlmOutboundGroupSession)
     return @"uniqueKey";
 }
 
-+(NSString *)uniqueKeyWithRoomId:(NSString *)roomId sessionId:(NSString *)sessionId userId:(NSString *)userId deviceId:(NSString *)deviceId
++(NSString *)generateUniqueKey
 {
-    return [NSString stringWithFormat:@"%@|%@|%@|%@", roomId, sessionId, userId, deviceId];
-}
-
--(NSString *)roomId
-{
-    return [self.uniqueKey componentsSeparatedByString:@"|"][0];
-}
-
--(NSString *)sessionId
-{
-    return [self.uniqueKey componentsSeparatedByString:@"|"][1];
-}
-
--(NSString *)userId
-{
-    return [self.uniqueKey componentsSeparatedByString:@"|"][2];
-}
-
--(NSString *)deviceId
-{
-    return [self.uniqueKey componentsSeparatedByString:@"|"][3];
+    return [[NSUUID UUID] UUIDString];
 }
 
 @end
@@ -1157,17 +1140,33 @@ RLM_ARRAY_TYPE(MXRealmSecret)
         {
             for (NSString *deviceId in [devices deviceIdsForUser:userId])
             {
-                NSString *uniqueKey = [MXRealmSharedOutboundSession uniqueKeyWithRoomId:roomId sessionId:sessionId userId:userId deviceId:deviceId];
+                MXRealmUser *realmUser = [MXRealmUser objectsInRealm:realm where:@"userId = %@", userId].firstObject;
+                if (!realmUser)
+                {
+                    NSLog(@"[MXRealmCryptoStore] storeSharedDevices cannot find user with the ID %@", userId);
+                    continue;
+                }
+
+                MXRealmDeviceInfo *realmDevice = [[realmUser.devices objectsWhere:@"deviceId = %@", deviceId] firstObject];
+                if (!realmDevice)
+                {
+                    NSLog(@"[MXRealmCryptoStore] storeSharedDevices cannot find device with the ID %@", deviceId);
+                    continue;
+                }
+
                 MXRealmSharedOutboundSession *sharedInfo = [[MXRealmSharedOutboundSession alloc] initWithValue: @{
-                    @"uniqueKey": uniqueKey,
+                    @"uniqueKey": [MXRealmSharedOutboundSession generateUniqueKey],
+                    @"roomId": roomId,
+                    @"sessionId": sessionId,
+                    @"device": realmDevice,
                     @"messageIndex": @(messageIndex)
                 }];
-                [realm addOrUpdateObject:sharedInfo];
+                [realm addObject:sharedInfo];
             }
         }
     }];
 
-    NSLog(@"[MXRealmCryptoStore] storeDevicesForOutboundGroupSession (count: %tu) in %.3fms", devices.count, [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
+    NSLog(@"[MXRealmCryptoStore] storeSharedDevices (count: %tu) in %.3fms", devices.count, [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
 }
 
 - (MXUsersDevicesMap<NSNumber *> *)sharedDevicesForOutboundGroupSessionInRoomWithId:(NSString *)roomId sessionId:(NSString *)sessionId
@@ -1177,12 +1176,17 @@ RLM_ARRAY_TYPE(MXRealmSecret)
     RLMRealm *realm = self.realm;
     
     [realm transactionWithBlock:^{
-        NSString *keyPrefix = [NSString stringWithFormat:@"%@|%@", roomId, sessionId];
-        RLMResults<MXRealmSharedOutboundSession *> *results = [MXRealmSharedOutboundSession objectsInRealm:realm where:@"uniqueKey BEGINSWITH %@", keyPrefix];
+        RLMResults<MXRealmSharedOutboundSession *> *results = [MXRealmSharedOutboundSession objectsInRealm:realm where:@"roomId = %@ AND sessionId = %@", roomId, sessionId];
         
         for (MXRealmSharedOutboundSession *sharedInfo in results)
         {
-            [devices setObject:sharedInfo.messageIndex forUser:sharedInfo.userId andDevice:sharedInfo.deviceId];
+            MXDeviceInfo *deviceInfo = [NSKeyedUnarchiver unarchiveObjectWithData:sharedInfo.device.deviceInfoData];
+            if (!deviceInfo)
+            {
+                NSLog(@"[MXRealmCryptoStore] sharedDevicesForOutboundGroupSessionInRoomWithId cannot unarchive deviceInfo");
+                continue;
+            }
+            [devices setObject:sharedInfo.messageIndex forUser:deviceInfo.userId andDevice:deviceInfo.deviceId];
         }
     }];
     
@@ -1195,9 +1199,16 @@ RLM_ARRAY_TYPE(MXRealmSecret)
     RLMRealm *realm = self.realm;
     
     [realm transactionWithBlock:^{
-        NSString *uniqueKey = [MXRealmSharedOutboundSession uniqueKeyWithRoomId:roomId sessionId:sessionId userId:userId deviceId:deviceId];
-        MXRealmSharedOutboundSession *sharedSession = [MXRealmSharedOutboundSession objectsInRealm:realm where:@"uniqueKey = %@", uniqueKey].firstObject;
-        messageIndex = sharedSession.messageIndex;
+        RLMResults<MXRealmSharedOutboundSession *> *sessions = [MXRealmSharedOutboundSession objectsInRealm:realm where:@"roomId = %@ AND sessionId = %@ AND device.deviceId = %@", roomId, sessionId, deviceId];
+        for (MXRealmSharedOutboundSession *session in sessions)
+        {
+            MXDeviceInfo *deviceInfo = [NSKeyedUnarchiver unarchiveObjectWithData:session.device.deviceInfoData];
+            if ([deviceInfo.userId isEqualToString:userId])
+            {
+                messageIndex = session.messageIndex;
+                break;
+            }
+        }
     }];
     
     return messageIndex;
