@@ -66,6 +66,24 @@ public class MXMemory: NSObject {
         return "\(formattedStr) MB"
     }
     
+    public static func memoryAvailable() -> UInt {
+        // We need some ObjC to get the value
+        return MXTools.memoryAvailable()
+    }
+    
+    public static func formattedMemoryAvailable() -> String {
+        guard #available(iOS 13.0, *) else {
+            return "Unknown MB"
+        }
+        
+        let freeBytes = MXTools.memoryAvailable()
+        let freeMB = Double(freeBytes) / 1024 / 1024
+        guard let formattedStr = numberFormatter.string(from: NSNumber(value: freeMB)) else {
+            return ""
+        }
+        return "\(formattedStr) MB"
+    }
+    
     /// Allocates some memory
     /// - Parameter numberOfBytes: Amount of memory to be allocated, in number of bytes
     public static func allocateMemoryOfSize(numberOfBytes: Int) {
