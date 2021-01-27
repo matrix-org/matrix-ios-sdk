@@ -255,7 +255,8 @@ NSString *const MXBackgroundCryptoStoreUserIdSuffix = @":bgCryptoStore";
     NSAssert(NO, @"This method should be useless in the context of MXBackgroundCryptoStore");
 }
 
-- (NSNumber *)messageIndexForSharedDeviceInRoomWithId:(NSString *)roomId sessionId:(NSString *)sessionId userId:(NSString *)userId deviceId:(NSString *)deviceId {
+- (NSNumber *)messageIndexForSharedDeviceInRoomWithId:(NSString *)roomId sessionId:(NSString *)sessionId userId:(NSString *)userId deviceId:(NSString *)deviceId 
+{
     NSAssert(NO, @"This method should be useless in the context of MXBackgroundCryptoStore");
     return nil;
 }
