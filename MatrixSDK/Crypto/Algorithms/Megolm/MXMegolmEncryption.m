@@ -44,10 +44,6 @@
     // case outboundSession.shareOperation will be non-nill.)
     MXOutboundSessionInfo *outboundSession;
     
-    // Map of outbound sessions by sessions ID. Used if we need a particular
-    // session.
-    NSMutableDictionary<NSString*, MXOutboundSessionInfo*> *outboundSessions;
-
     NSMutableArray<MXQueuedEncryption*> *pendingEncryptions;
 
     // Session rotation periods
@@ -77,7 +73,6 @@
         roomId = theRoomId;
         deviceId = crypto.store.deviceId;
 
-        outboundSessions = [NSMutableDictionary dictionary];
         pendingEncryptions = [NSMutableArray array];
 
         // Default rotation periods
@@ -91,7 +86,6 @@
         if (restoredOutboundGroupSession)
         {
             outboundSession = [[MXOutboundSessionInfo alloc] initWithSession:restoredOutboundGroupSession];
-            outboundSessions[outboundSession.sessionId] = outboundSession;
             outboundSession.sharedWithDevices = [crypto.store sharedDevicesForOutboundGroupSessionInRoomWithId:roomId sessionId:outboundSession.sessionId];
         }
     }
@@ -250,7 +244,6 @@
     if (session && [session needsRotation:sessionRotationPeriodMsgs rotationPeriodMs:sessionRotationPeriodMs])
     {
         [crypto.olmDevice discardOutboundGroupSessionForRoomWithRoomId:roomId];
-        [outboundSessions removeObjectForKey:session.sessionId];
         outboundSession = nil;
         session = nil;
     }
@@ -259,7 +252,6 @@
     if (session && [session sharedWithTooManyDevices:devicesInRoom])
     {
         [crypto.olmDevice discardOutboundGroupSessionForRoomWithRoomId:roomId];
-        [outboundSessions removeObjectForKey:session.sessionId];
         outboundSession = nil;
         session = nil;
     }
@@ -267,7 +259,6 @@
     if (!session)
     {
         outboundSession = session = [self prepareNewSession];
-        outboundSessions[outboundSession.sessionId] = outboundSession;
     }
 
     if (session.shareOperation)
