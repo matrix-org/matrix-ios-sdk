@@ -29,6 +29,15 @@ NS_ASSUME_NONNULL_BEGIN
 @interface MXBackgroundCryptoStore : NSObject <MXCryptoStore>
 
 /**
+ Create the store for the passed credentials.
+ 
+ @param credentials the credentials of the account.
+ @param resetBackgroundCryptoStore if YES, clear the separate DB.
+ @return the store.
+ */
+- (instancetype)initWithCredentials:(MXCredentials *)theCredentials resetBackgroundCryptoStore:(BOOL)resetBackgroundCryptoStore;
+
+/**
  Reset the intermediate store.
  */
 - (void)reset;
