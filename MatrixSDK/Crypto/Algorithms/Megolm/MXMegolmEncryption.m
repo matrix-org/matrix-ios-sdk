@@ -438,7 +438,7 @@
                     for (MXDeviceInfo *deviceInfo in devicesToShareWith)
                     {
                         [session.sharedWithDevices setObject:@(chainIndex) forUser:userId andDevice:deviceInfo.deviceId];
-                        [sharedWithDevices setObject:@(session.session.messageIndex) forUser:userId andDevice:deviceInfo.deviceId];
+                        [sharedWithDevices setObject:@(chainIndex) forUser:userId andDevice:deviceInfo.deviceId];
                     }
                 }
                 
