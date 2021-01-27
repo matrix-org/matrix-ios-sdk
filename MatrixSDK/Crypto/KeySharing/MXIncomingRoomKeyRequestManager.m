@@ -22,6 +22,10 @@
 
 #ifdef MX_CRYPTO
 
+
+NSTimeInterval kFixMissingUserInRoomRateLimit = 3600;
+
+
 @interface MXIncomingRoomKeyRequestManager ()
 {
     __weak MXCrypto *crypto;
@@ -30,6 +34,10 @@
     // we received in the current sync.
     NSMutableArray<MXIncomingRoomKeyRequest*> *receivedRoomKeyRequests;
     NSMutableArray<MXIncomingRoomKeyRequestCancellation*> *receivedRoomKeyRequestCancellations;
+    
+    // The list of rooms we fixed in the fixMissingUser:inRoom: method
+    // roomId -> Date of the last fix
+    NSMutableDictionary<NSString*, NSDate*> *roomsFixedForMissingUser;
 }
 
 @end
@@ -47,6 +55,8 @@
         // we received in the current sync.
         receivedRoomKeyRequests = [NSMutableArray array];
         receivedRoomKeyRequestCancellations = [NSMutableArray array];
+        
+        roomsFixedForMissingUser = [NSMutableDictionary dictionary];
     }
     return self;
 }
@@ -150,7 +160,14 @@
         [encryptor reshareKey:sessionId withUser:userId andDevice:deviceId senderKey:senderKey success:^{
             
         } failure:^(NSError *error) {
+            NSLog(@"[MXIncomingRoomKeyRequestManager] reshareKey failed. Error: %@", error);
             
+            if ([error.domain isEqualToString:MXEncryptingErrorDomain]
+                && (error.code == MXEncryptingErrorUnknownDeviceCode
+                    || error.code == MXEncryptingErrorReshareNotAllowedCode))
+            {
+                [self fixMissingUser:userId inRoom:roomId];
+            }
         }];
         return;
     }
@@ -249,6 +266,45 @@
 - (MXUsersDevicesMap<NSArray<MXIncomingRoomKeyRequest *> *> *)pendingKeyRequests
 {
     return [crypto.store incomingRoomKeyRequests];
+}
+
+/**
+ Reset the flag that indicates that all room members in a room have been loaded.
+ 
+ @param userId the if of the user that failed to get the key.
+ @param roomid the room id.
+ */
+- (void)fixMissingUser:(NSString *)userId inRoom:(NSString *)roomId
+{
+    // TODO: Remove this method once the root issue is fixed
+    
+    // This is a workaround for https://github.com/vector-im/element-ios/issues/3807
+    // where the SDK seems to have a bad view of current members in a room. This make it "forget" to send
+    // the megolm key to all other users.
+    
+    // If a user has this issue, their app will send a re-share request.
+    // The request will be rejected but this is the good time to attempt to reset the flag that indicates
+    // that all room members in the room have been loaded.
+    
+    // On the next message encryption, the SDK will fetch all members again from the server and will share better the key.
+    // Next message should be decryptable for others.
+    
+    // Rate limit the reset to 1h or one life cycle
+    NSDate *lastFixDate = roomsFixedForMissingUser[roomId];
+    if (lastFixDate
+        && [[NSDate date] timeIntervalSinceDate:lastFixDate] < kFixMissingUserInRoomRateLimit)
+    {
+        // To early to retry
+        NSLog(@"[MXIncomingRoomKeyRequestManager] fixMissingUser: %@ inRoom: %@ already requested at %@", userId, roomId, lastFixDate);
+        return;
+    }
+    
+    NSLog(@"[MXIncomingRoomKeyRequestManager] fixMissingUser: %@ inRoom: %@", userId, roomId);
+    roomsFixedForMissingUser[roomId] = [NSDate date];
+    
+    // Reset the flag
+    // This is ugly. We need to remove this workaround as soon as possible
+    [crypto.mxSession.store storeHasLoadedAllRoomMembersForRoom:roomId andValue:NO];
 }
 
 @end

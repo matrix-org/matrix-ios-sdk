@@ -337,11 +337,40 @@ RLM_ARRAY_TYPE(MXRealmSecret)
 {
     NSLog(@"[MXRealmCryptoStore] deleteStore for %@:%@", credentials.userId, credentials.deviceId);
 
-    RLMRealm *realm = [MXRealmCryptoStore realmForUser:credentials.userId andDevice:credentials.deviceId];
-
-    [realm transactionWithBlock:^{
-        [realm deleteAllObjects];
-    }];
+    // Delete db file directly
+    // So that we can even delete corrupted realm db
+    RLMRealmConfiguration *config = [RLMRealmConfiguration defaultConfiguration];
+    NSURL *realmFileURL = [self realmFileURLForUserWithUserId:credentials.userId andDevice:credentials.deviceId];
+    config.fileURL = realmFileURL;
+    
+    if (![RLMRealm fileExistsForConfiguration:config])
+    {
+        NSLog(@"[MXRealmCryptoStore] deleteStore: Realm db does not exist");
+        return;
+    }
+    
+    NSError *error;
+    [RLMRealm deleteFilesForConfiguration:config error:&error];
+    if (error)
+    {
+        NSLog(@"[MXRealmCryptoStore] deleteStore: Error: %@", error);
+        
+        // The db is probably still opened elsewhere (RLMErrorAlreadyOpen), which means it is valid.
+        // Use the old method to clear the db
+        error = nil;
+        RLMRealm *realm = [MXRealmCryptoStore realmForUser:credentials.userId andDevice:credentials.deviceId];
+        if (!error)
+        {
+            NSLog(@"[MXRealmCryptoStore] deleteStore: Delete at least its content");
+            [realm transactionWithBlock:^{
+                [realm deleteAllObjects];
+            }];
+        }
+        else
+        {
+            NSLog(@"[MXRealmCryptoStore] deleteStore: Cannot open realm. Error: %@", error);
+        }
+    }
 }
 
 - (instancetype)initWithCredentials:(MXCredentials *)credentials
@@ -1393,97 +1422,16 @@ RLM_ARRAY_TYPE(MXRealmSecret)
 #pragma mark - Private methods
 + (RLMRealm*)realmForUser:(NSString*)userId andDevice:(NSString*)deviceId
 {
+    RLMRealmConfiguration *config = [RLMRealmConfiguration defaultConfiguration];
+
     // Each user has its own db file.
     // Else, it can lead to issue with primary keys.
     // Ex: if 2 users are is the same encrypted room, [self storeAlgorithmForRoom]
     // will be called twice for the same room id which breaks the uniqueness of the
     // primary key (roomId) for this table.
-    RLMRealmConfiguration *config = [RLMRealmConfiguration defaultConfiguration];
-
-    NSURL *defaultRealmPathURL = config.fileURL.URLByDeletingLastPathComponent;
-
-#if TARGET_OS_SIMULATOR
-    // On simulator from iOS 11, the Documents folder used by Realm by default
-    // can be missing. Create it if required
-    // https://stackoverflow.com/a/50817364
-    if (![NSFileManager.defaultManager fileExistsAtPath:defaultRealmPathURL.path])
-    {
-        NSError *error;
-        [[NSFileManager defaultManager] createDirectoryAtPath:defaultRealmPathURL.path
-                                  withIntermediateDirectories:YES
-                                                   attributes:nil
-                                                        error:&error];
-        NSLog(@"[MXRealmCryptoStore] On simulator, create the file tree used by Realm. Error: %@", error);
-    }
-#endif
-    
-    // Default db file URL: use the default directory, but replace the filename with the userId.
-    NSString *realmFile = userId;
-    if (MXTools.isRunningUnitTests)
-    {
-        // Append the device id for unit tests so that we can run e2e tests 
-        // with users with several devices
-        realmFile = [NSString stringWithFormat:@"%@-%@", userId, deviceId];
-    }
-
-    NSURL *defaultRealmFileURL = [[defaultRealmPathURL URLByAppendingPathComponent:realmFile]
-                              URLByAppendingPathExtension:@"realm"];
-    
-    // Check for a potential application group id.
-    NSString *applicationGroupIdentifier = [MXSDKOptions sharedInstance].applicationGroupIdentifier;
-    if (applicationGroupIdentifier)
-    {
-        // Use the shared db file URL.
-        NSURL *sharedContainerURL = [[NSFileManager defaultManager] containerURLForSecurityApplicationGroupIdentifier:applicationGroupIdentifier];
-        NSURL *realmFileFolderURL = [sharedContainerURL URLByAppendingPathComponent:kMXRealmCryptoStoreFolder];
-        NSURL *realmFileURL = [[realmFileFolderURL URLByAppendingPathComponent:userId] URLByAppendingPathExtension:@"realm"];
-        
-        config.fileURL = realmFileURL;
-        
-        // Check whether an existing db file has to be be moved from the default folder to the shared container.
-        if ([NSFileManager.defaultManager fileExistsAtPath:[defaultRealmFileURL path]])
-        {
-            if (![NSFileManager.defaultManager fileExistsAtPath:[realmFileURL path]])
-            {
-                // Move this db file in the container directory associated with the application group identifier.
-                NSLog(@"[MXRealmCryptoStore] Move the db file to the application group container");
-                
-                if (![NSFileManager.defaultManager fileExistsAtPath:realmFileFolderURL.path])
-                {
-                    [[NSFileManager defaultManager] createDirectoryAtPath:realmFileFolderURL.path withIntermediateDirectories:YES attributes:nil error:nil];
-                }
-                
-                NSError *fileManagerError = nil;
-                
-                [NSFileManager.defaultManager moveItemAtURL:defaultRealmFileURL toURL:realmFileURL error:&fileManagerError];
-                
-                if (fileManagerError)
-                {
-                    NSLog(@"[MXRealmCryptoStore] Move db file failed (%@)", fileManagerError);
-                    // Keep using the old file
-                    config.fileURL = defaultRealmFileURL;
-                }
-            }
-            else
-            {
-                // Remove the residual db file.
-                [NSFileManager.defaultManager removeItemAtURL:defaultRealmFileURL error:nil];
-            }
-        }
-        else
-        {
-            // Make sure the full exists before giving it to Realm 
-            if (![NSFileManager.defaultManager fileExistsAtPath:realmFileFolderURL.path])
-            {
-                [[NSFileManager defaultManager] createDirectoryAtPath:realmFileFolderURL.path withIntermediateDirectories:YES attributes:nil error:nil];
-            }
-        }
-    }
-    else
-    {
-        // Use the default URL
-        config.fileURL = defaultRealmFileURL;
-    }
+    NSURL *realmFileURL = [self realmFileURLForUserWithUserId:userId andDevice:deviceId];
+    [self ensurePathExistenceForFileAtFileURL:realmFileURL];
+    config.fileURL = realmFileURL;
 
     // Manage only our objects in this realm 
     config.objectClasses = @[
@@ -1777,6 +1725,57 @@ RLM_ARRAY_TYPE(MXRealmSecret)
     [realm refresh];
 
     return realm;
+}
+
+// Return the realm db file to use for a given user and device
++ (NSURL*)realmFileURLForUserWithUserId:(NSString*)userId andDevice:(NSString*)deviceId
+{
+    NSURL *realmFileURL;
+    
+    RLMRealmConfiguration *config = [RLMRealmConfiguration defaultConfiguration];
+    
+    NSURL *defaultRealmPathURL = config.fileURL.URLByDeletingLastPathComponent;
+    
+    // Default db file URL: use the default directory, but replace the filename with the userId.
+    NSString *realmFile = userId;
+    
+    if (MXTools.isRunningUnitTests)
+    {
+        // Append the device id for unit tests so that we can run e2e tests
+        // with users with several devices
+        realmFile = [NSString stringWithFormat:@"%@-%@", userId, deviceId];
+    }
+    
+    NSURL *defaultRealmFileURL = [[defaultRealmPathURL URLByAppendingPathComponent:realmFile]
+                                  URLByAppendingPathExtension:@"realm"];
+    
+    // Check for a potential application group id.
+    NSString *applicationGroupIdentifier = [MXSDKOptions sharedInstance].applicationGroupIdentifier;
+    if (applicationGroupIdentifier)
+    {
+        // Use the shared db file URL.
+        NSURL *sharedContainerURL = [[NSFileManager defaultManager] containerURLForSecurityApplicationGroupIdentifier:applicationGroupIdentifier];
+        NSURL *realmFileFolderURL = [sharedContainerURL URLByAppendingPathComponent:kMXRealmCryptoStoreFolder];
+        realmFileURL = [[realmFileFolderURL URLByAppendingPathComponent:realmFile] URLByAppendingPathExtension:@"realm"];
+    }
+    else
+    {
+        // Use the default URL
+        realmFileURL = defaultRealmFileURL;
+    }
+    
+    return realmFileURL;
+}
+
+// Make sure the full path exists before giving it to Realm
++ (void)ensurePathExistenceForFileAtFileURL:(NSURL*)fileURL
+{
+    NSURL *fileFolderURL = fileURL.URLByDeletingLastPathComponent;
+    if (![NSFileManager.defaultManager fileExistsAtPath:fileFolderURL.path])
+    {
+        NSLog(@"[MXRealmCryptoStore] ensurePathExistenceForFileAtFileURL: Create full path hierarchy for %@", fileURL);
+        [[NSFileManager defaultManager] createDirectoryAtPath:fileFolderURL.path withIntermediateDirectories:YES attributes:nil error:nil];
+    }
 }
 
 /**

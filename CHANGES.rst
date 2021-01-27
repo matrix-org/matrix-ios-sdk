@@ -1,3 +1,31 @@
+Changes in 0.17.10 (2021-01-27)
+=================================================
+
+✨ Features
+ * 
+
+🙌 Improvements
+ * MXRealmCryptoStore: New implementation of deleteStoreWithCredentials that does not need to open the realm DB.
+
+🐛 Bugfix
+ * MXBackgroundSyncService: Clear the bg sync crypto db if needed (vector-im/element-ios/issues/3956).
+ * MXCrypto: Add a workaround when the megolm key is not shared to all members (vector-im/element-ios/issues/3907).
+
+⚠️ API Changes
+ * 
+
+🗣 Translations
+ * 
+    
+🧱 Build
+ * 
+
+Others
+ * 
+
+Improvements:
+
+
 Changes in 0.17.9 (2021-01-18)
 =================================================
 
