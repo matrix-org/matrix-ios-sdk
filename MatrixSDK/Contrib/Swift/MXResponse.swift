@@ -46,9 +46,10 @@ import Foundation
      }
  
  */
-public enum MXResponse<T> {
+@frozen public enum MXResponse<T> {
     case success(T)
     case failure(Error)
+    // Note: Additional cases break binary compatibility
     
     /// Indicates whether the API call was successful
     public var isSuccess: Bool {
