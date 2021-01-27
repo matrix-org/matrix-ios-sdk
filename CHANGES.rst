@@ -34,7 +34,7 @@ Changes in 0.17.10 (2021-01-27)
 
 🐛 Bugfix
  * MXBackgroundSyncService: Clear the bg sync crypto db if needed (vector-im/element-ios/issues/3956).
- * MXCrypto: Add a workaround when the megolm key is not shared to all members (vector-im/element-ios/issues/3907).
+ * MXCrypto: Add a workaround when the megolm key is not shared to all members (vector-im/element-ios/issues/3807).
 
 ⚠️ API Changes
  * 
