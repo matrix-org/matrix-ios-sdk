@@ -300,21 +300,6 @@
     session.shareOperation = [self shareKey:session withDevices:shareMap success:^{
 
         session.shareOperation = nil;
-        if (shareMap.count)
-        {
-            // store chain index for devices the session has been shared with
-            MXUsersDevicesMap<NSNumber *> *sharedWithDevices = [MXUsersDevicesMap new];
-            for (NSString *userId in shareMap.allKeys)
-            {
-                for (MXDeviceInfo *device in shareMap[userId])
-                {
-                    [sharedWithDevices setObject:@(session.session.messageIndex) forUser:userId andDevice:device.deviceId];
-                }
-            }
-            
-            [self->crypto.store storeSharedDevices:sharedWithDevices messageIndex:session.session.messageIndex forOutboundGroupSessionInRoomWithId:self->roomId sessionId:session.session.sessionId];
-        }
-
         success(session);
 
     } failure:^(NSError *error) {

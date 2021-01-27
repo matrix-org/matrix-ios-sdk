@@ -148,7 +148,6 @@ RLM_ARRAY_TYPE(MXRealmOlmOutboundGroupSession)
 
 @interface MXRealmSharedOutboundSession : RLMObject
 
-@property NSString *uniqueKey;
 @property NSString *roomId;
 @property NSString *sessionId;
 @property MXRealmDeviceInfo *device;
@@ -157,16 +156,6 @@ RLM_ARRAY_TYPE(MXRealmOlmOutboundGroupSession)
 @end
 
 @implementation MXRealmSharedOutboundSession
-+ (NSString *)primaryKey
-{
-    return @"uniqueKey";
-}
-
-+(NSString *)generateUniqueKey
-{
-    return [[NSUUID UUID] UUIDString];
-}
-
 @end
 RLM_ARRAY_TYPE(MXRealmSharedOutboundSession)
 
@@ -1155,7 +1144,6 @@ RLM_ARRAY_TYPE(MXRealmSecret)
                 }
 
                 MXRealmSharedOutboundSession *sharedInfo = [[MXRealmSharedOutboundSession alloc] initWithValue: @{
-                    @"uniqueKey": [MXRealmSharedOutboundSession generateUniqueKey],
                     @"roomId": roomId,
                     @"sessionId": sessionId,
                     @"device": realmDevice,
@@ -1171,46 +1159,46 @@ RLM_ARRAY_TYPE(MXRealmSecret)
 
 - (MXUsersDevicesMap<NSNumber *> *)sharedDevicesForOutboundGroupSessionInRoomWithId:(NSString *)roomId sessionId:(NSString *)sessionId
 {
+    NSDate *startDate = [NSDate date];
+
     MXUsersDevicesMap<NSNumber *> *devices = [MXUsersDevicesMap new];
 
     RLMRealm *realm = self.realm;
     
-    [realm transactionWithBlock:^{
-        RLMResults<MXRealmSharedOutboundSession *> *results = [MXRealmSharedOutboundSession objectsInRealm:realm where:@"roomId = %@ AND sessionId = %@", roomId, sessionId];
-        
-        for (MXRealmSharedOutboundSession *sharedInfo in results)
-        {
-            MXDeviceInfo *deviceInfo = [NSKeyedUnarchiver unarchiveObjectWithData:sharedInfo.device.deviceInfoData];
-            if (!deviceInfo)
-            {
-                NSLog(@"[MXRealmCryptoStore] sharedDevicesForOutboundGroupSessionInRoomWithId cannot unarchive deviceInfo");
-                continue;
-            }
-            [devices setObject:sharedInfo.messageIndex forUser:deviceInfo.userId andDevice:deviceInfo.deviceId];
-        }
-    }];
+    RLMResults<MXRealmSharedOutboundSession *> *results = [MXRealmSharedOutboundSession objectsInRealm:realm where:@"roomId = %@ AND sessionId = %@", roomId, sessionId];
     
+    for (MXRealmSharedOutboundSession *sharedInfo in results)
+    {
+        MXDeviceInfo *deviceInfo = [NSKeyedUnarchiver unarchiveObjectWithData:sharedInfo.device.deviceInfoData];
+        if (!deviceInfo)
+        {
+            NSLog(@"[MXRealmCryptoStore] sharedDevicesForOutboundGroupSessionInRoomWithId cannot unarchive deviceInfo");
+            continue;
+        }
+        [devices setObject:sharedInfo.messageIndex forUser:deviceInfo.userId andDevice:deviceInfo.deviceId];
+    }
+
+    NSLog(@"[MXRealmCryptoStore] sharedDevicesForOutboundGroupSessionInRoomWithId (count: %tu) in %.3fms", results.count, [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
+
     return devices;
 }
 
 - (NSNumber *)messageIndexForSharedDeviceInRoomWithId:(NSString *)roomId sessionId:(NSString *)sessionId userId:(NSString *)userId deviceId:(NSString *)deviceId
 {
-    __block NSNumber *messageIndex = nil;
+    NSNumber *messageIndex = nil;
     RLMRealm *realm = self.realm;
     
-    [realm transactionWithBlock:^{
-        RLMResults<MXRealmSharedOutboundSession *> *sessions = [MXRealmSharedOutboundSession objectsInRealm:realm where:@"roomId = %@ AND sessionId = %@ AND device.deviceId = %@", roomId, sessionId, deviceId];
-        for (MXRealmSharedOutboundSession *session in sessions)
+    RLMResults<MXRealmSharedOutboundSession *> *sessions = [MXRealmSharedOutboundSession objectsInRealm:realm where:@"roomId = %@ AND sessionId = %@ AND device.deviceId = %@", roomId, sessionId, deviceId];
+    for (MXRealmSharedOutboundSession *session in sessions)
+    {
+        MXDeviceInfo *deviceInfo = [NSKeyedUnarchiver unarchiveObjectWithData:session.device.deviceInfoData];
+        if ([deviceInfo.userId isEqualToString:userId])
         {
-            MXDeviceInfo *deviceInfo = [NSKeyedUnarchiver unarchiveObjectWithData:session.device.deviceInfoData];
-            if ([deviceInfo.userId isEqualToString:userId])
-            {
-                messageIndex = session.messageIndex;
-                break;
-            }
+            messageIndex = session.messageIndex;
+            break;
         }
-    }];
-    
+    }
+
     return messageIndex;
 }
 
