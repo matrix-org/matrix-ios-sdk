@@ -18,7 +18,7 @@ import Foundation
 
 /// Util class to log memory footprint and allocate memory for debugging purposes.
 @objcMembers
-class MXMemory: NSObject {
+public class MXMemory: NSObject {
     
     /// Memory formatter, uses exact 2 fraction digits and no grouping
     private static var numberFormatter: NumberFormatter {
@@ -57,7 +57,7 @@ class MXMemory: NSObject {
     
     /// Formatted memory footprint for debugging purposes
     /// - Returns: Memory footprint in MBs as a readable string
-    static func formattedMemoryFootprint() -> String {
+    public static func formattedMemoryFootprint() -> String {
         let usedBytes = UInt64(self.memoryFootprint() ?? 0)
         let usedMB = Double(usedBytes) / 1024 / 1024
         guard let formattedStr = numberFormatter.string(from: NSNumber(value: usedMB)) else {
@@ -68,7 +68,7 @@ class MXMemory: NSObject {
     
     /// Allocates some memory
     /// - Parameter numberOfBytes: Amount of memory to be allocated, in number of bytes
-    static func allocateMemoryOfSize(numberOfBytes: Int) {
+    public static func allocateMemoryOfSize(numberOfBytes: Int) {
         var buffer = [UInt8](repeating: 0, count: numberOfBytes)
         for i in 0 ..< numberOfBytes {
             buffer[i] = UInt8(i % 7)
