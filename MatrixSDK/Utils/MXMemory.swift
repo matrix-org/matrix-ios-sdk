@@ -73,10 +73,10 @@ public class MXMemory: NSObject {
     
     public static func formattedMemoryAvailable() -> String {
         guard #available(iOS 13.0, *) else {
-            return "Unknown MB"
+            return "Unsupported on this OS"
         }
         
-        let freeBytes = MXTools.memoryAvailable()
+        let freeBytes = self.memoryAvailable()
         let freeMB = Double(freeBytes) / 1024 / 1024
         guard let formattedStr = numberFormatter.string(from: NSNumber(value: freeMB)) else {
             return ""
