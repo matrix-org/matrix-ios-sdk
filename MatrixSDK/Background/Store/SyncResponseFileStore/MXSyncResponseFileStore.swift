@@ -137,7 +137,9 @@ extension MXSyncResponseFileStore: MXSyncResponseStore {
     
     public var syncResponse: MXSyncResponse? {
         get {
-            return readData()?.syncResponse
+            autoreleasepool {
+                return readData()?.syncResponse
+            }
         } set {
             autoreleasepool {
                 let data = readData() ?? MXSyncResponseStoreModel()
