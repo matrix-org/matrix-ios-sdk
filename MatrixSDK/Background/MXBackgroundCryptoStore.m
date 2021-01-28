@@ -255,6 +255,25 @@ NSString *const MXBackgroundCryptoStoreUserIdSuffix = @":bgCryptoStore";
     NSAssert(NO, @"This method should be useless in the context of MXBackgroundCryptoStore");
 }
 
+- (NSNumber *)messageIndexForSharedDeviceInRoomWithId:(NSString *)roomId sessionId:(NSString *)sessionId userId:(NSString *)userId deviceId:(NSString *)deviceId 
+{
+    NSAssert(NO, @"This method should be useless in the context of MXBackgroundCryptoStore");
+    return nil;
+}
+
+
+- (MXUsersDevicesMap<NSNumber *> *)sharedDevicesForOutboundGroupSessionInRoomWithId:(NSString *)roomId sessionId:(NSString *)sessionId 
+{
+    NSAssert(NO, @"This method should be useless in the context of MXBackgroundCryptoStore");
+    return [MXUsersDevicesMap new];
+}
+
+
+- (void)storeSharedDevices:(MXUsersDevicesMap<NSNumber *> *)devices messageIndex:(NSUInteger)messageIndex forOutboundGroupSessionInRoomWithId:(NSString *)roomId sessionId:(NSString *)sessionId 
+{
+    NSAssert(NO, @"This method should be useless in the context of MXBackgroundCryptoStore");
+}
+
 
 #pragma mark - Private Methods
 
