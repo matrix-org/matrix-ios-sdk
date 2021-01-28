@@ -5,10 +5,10 @@ Changes to be released in next version
  * 
 
 🙌 Improvements
- * 
+ * MXMemory: New utility class to track memory usage.
 
 🐛 Bugfix
- * 
+ * Background Sync: Use autoreleasepool to limit RAM usage (vector-im/element-ios/issues/3957).
 
 ⚠️ API Changes
  * 
@@ -30,7 +30,6 @@ Changes in 0.17.10 (2021-01-27)
 
 🙌 Improvements
  * MXRealmCryptoStore: New implementation of deleteStoreWithCredentials that does not need to open the realm DB.
- * MXMemory: New utility class to track memory usage.
 
 🐛 Bugfix
  * MXBackgroundSyncService: Clear the bg sync crypto db if needed (vector-im/element-ios/issues/3956).
