@@ -5,10 +5,13 @@ Changes to be released in next version
  * 
 
 🙌 Improvements
+ * MXMemory: New utility class to track memory usage.
+ * MXRealmCryptoStore: Compact Realm DB only once, at the first usage.
  * MXLoginSSOIdentityProvider: Add new `brand` field as described in MSC2858 (vector-im/element-ios/issues/3980).
 
 🐛 Bugfix
- * 
+ * Background Sync: Use autoreleasepool to limit RAM usage (vector-im/element-ios/issues/3957).
+ * Background Sync: Do not compact Realm DB from background process.
 
 ⚠️ API Changes
  * 
@@ -34,7 +37,7 @@ Changes in 0.17.10 (2021-01-27)
 
 🐛 Bugfix
  * MXBackgroundSyncService: Clear the bg sync crypto db if needed (vector-im/element-ios/issues/3956).
- * MXCrypto: Add a workaround when the megolm key is not shared to all members (vector-im/element-ios/issues/3907).
+ * MXCrypto: Add a workaround when the megolm key is not shared to all members (vector-im/element-ios/issues/3807).
 
 ⚠️ API Changes
  * 
