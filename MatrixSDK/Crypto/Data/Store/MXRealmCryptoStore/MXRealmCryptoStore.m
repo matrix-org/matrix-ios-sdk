@@ -1765,6 +1765,7 @@ RLM_ARRAY_TYPE(MXRealmSecret)
         }
     };
     
+    config.shouldCompactOnLaunch = nil;
     if ([self shouldCompactReamDBForUserWithUserId:userId andDevice:deviceId])
     {
         config.shouldCompactOnLaunch = ^BOOL(NSUInteger totalBytes, NSUInteger bytesUsed) {
@@ -1920,6 +1921,7 @@ static BOOL shouldCompactOnLaunch = YES;
 
 + (void)setShouldCompactOnLaunch:(BOOL)theShouldCompactOnLaunch
 {
+    NSLog(@"[MXRealmCryptoStore] setShouldCompactOnLaunch: %@", theShouldCompactOnLaunch ? @"YES" : @"NO");
     shouldCompactOnLaunch = theShouldCompactOnLaunch;
 }
 
