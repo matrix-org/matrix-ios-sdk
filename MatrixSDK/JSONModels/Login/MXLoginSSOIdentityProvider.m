@@ -21,6 +21,7 @@
 @property (nonatomic, readwrite) NSString *identifier;
 @property (nonatomic, readwrite) NSString *name;
 @property (nonatomic, readwrite, nullable) NSString *icon;
+@property (nonatomic, readwrite, nullable) NSString *brand;
 
 @end
 
@@ -43,6 +44,7 @@
         identityProvider.identifier = identifier;
         identityProvider.name = name;
         MXJSONModelSetString(identityProvider.icon, JSONDictionary[@"icon"]);
+        MXJSONModelSetString(identityProvider.brand, JSONDictionary[@"brand"]);
     }
     
     return identityProvider;

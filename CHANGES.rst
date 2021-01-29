@@ -7,6 +7,7 @@ Changes to be released in next version
 🙌 Improvements
  * MXMemory: New utility class to track memory usage.
  * MXRealmCryptoStore: Compact Realm DB only once, at the first usage.
+ * MXLoginSSOIdentityProvider: Add new `brand` field as described in MSC2858 (vector-im/element-ios/issues/3980).
 
 🐛 Bugfix
  * Background Sync: Use autoreleasepool to limit RAM usage (vector-im/element-ios/issues/3957).
