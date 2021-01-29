@@ -762,7 +762,9 @@ static NSMutableDictionary *fileExtensionByContentType = nil;
 + (NSUInteger)memoryAvailable
 {
 #if defined(__IPHONE_13_0) && __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_13_0
-    return os_proc_available_memory();
+    if (__builtin_available(iOS 13.0, *)) {
+        return os_proc_available_memory();
+    }
 #endif
     return 0;
 }
