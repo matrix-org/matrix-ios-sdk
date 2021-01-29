@@ -6,9 +6,11 @@ Changes to be released in next version
 
 🙌 Improvements
  * MXMemory: New utility class to track memory usage.
+ * MXRealmCryptoStore: Compact Realm DB only once, at the first usage.
 
 🐛 Bugfix
  * Background Sync: Use autoreleasepool to limit RAM usage (vector-im/element-ios/issues/3957).
+ * Background Sync: Do not compact Realm DB from background process.
 
 ⚠️ API Changes
  * 
