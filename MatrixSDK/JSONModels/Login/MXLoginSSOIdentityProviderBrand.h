@@ -17,7 +17,7 @@
 /// MXLoginSSOIdentityProviderBrand identifies known identity provider brands as described in MSC2858 (see https://github.com/matrix-org/matrix-doc/pull/2858).
 /// Server implementations are free to add additional brands, though they should be mindful of clients which do not recognise any given brand.
 /// Clients are free to implement any set of brands they wish, including all or any of the bellow, but are expected to apply a sensible unbranded fallback for any brand they do not recognise/support.
-typedef NSString * MXLoginSSOIdentityProviderBrand NS_STRING_ENUM;
+typedef NSString *const MXLoginSSOIdentityProviderBrand NS_TYPED_EXTENSIBLE_ENUM;
 
 static MXLoginSSOIdentityProviderBrand const MXLoginSSOIdentityProviderBrandGitlab = @"org.matrix.gitlab";
 static MXLoginSSOIdentityProviderBrand const MXLoginSSOIdentityProviderBrandGithub = @"org.matrix.github";
