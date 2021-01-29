@@ -47,6 +47,10 @@ NSString *const MXBackgroundCryptoStoreUserIdSuffix = @":bgCryptoStore";
     {
         credentials = theCredentials;
         
+        // Do not compact Realm DBs from the backgrounc sync process to avoid race conditions on self.cryptoStore with the app process.
+        // self.bgCryptoStore should not become so big that it needs compaction. It will be reset before.
+        MXRealmCryptoStore.shouldCompactOnLaunch = NO;
+        
         if ([MXRealmCryptoStore hasDataForCredentials:credentials])
         {
             cryptoStore = [[MXRealmCryptoStore alloc] initWithCredentials:credentials];

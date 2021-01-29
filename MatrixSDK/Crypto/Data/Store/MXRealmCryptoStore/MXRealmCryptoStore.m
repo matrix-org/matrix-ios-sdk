@@ -1912,9 +1912,25 @@ RLM_ARRAY_TYPE(MXRealmSecret)
 
 #pragma mark - shouldCompactOnLaunch
 
+static BOOL shouldCompactOnLaunch = YES;
++ (BOOL)shouldCompactOnLaunch
+{
+    return shouldCompactOnLaunch;
+}
+
++ (void)setShouldCompactOnLaunch:(BOOL)theShouldCompactOnLaunch
+{
+    shouldCompactOnLaunch = theShouldCompactOnLaunch;
+}
+
 // Ensure we compact the DB only once
 + (BOOL)shouldCompactReamDBForUserWithUserId:userId andDevice:(NSString*)deviceId
 {
+    if (!self.shouldCompactOnLaunch)
+    {
+        return NO;
+    }
+    
     static NSMutableDictionary<NSString*, NSNumber*> *compactedDB;
     if (!compactedDB)
     {

@@ -10,6 +10,7 @@ Changes to be released in next version
 
 🐛 Bugfix
  * Background Sync: Use autoreleasepool to limit RAM usage (vector-im/element-ios/issues/3957).
+ * Background Sync: Do not compact Realm DB from background process.
 
 ⚠️ API Changes
  * 
