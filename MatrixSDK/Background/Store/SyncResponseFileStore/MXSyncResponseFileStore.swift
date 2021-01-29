@@ -59,26 +59,35 @@ public class MXSyncResponseFileStore: NSObject {
     }
     
     private func readData() -> MXSyncResponseStoreModel? {
-        guard let filePath = filePath else {
-            return nil
+        autoreleasepool {
+            guard let filePath = filePath else {
+                return nil
+            }
+            
+            let stopwatch = MXStopwatch()
+            
+            var fileContents: String?
+            
+            fileOperationQueue.sync {
+                fileContents = try? String(contentsOf: filePath,
+                                           encoding: Constants.fileEncoding)
+                NSLog("[MXSyncResponseFileStore] readData: File read of \(fileContents?.count ?? 0) bytes lasted \(stopwatch.readable()). Free memory: \(MXMemory.formattedMemoryAvailable())")
+                
+            }
+            
+            stopwatch.reset()
+            guard let jsonString = fileContents else {
+                return nil
+            }
+            guard let json = MXTools.deserialiseJSONString(jsonString) as? [AnyHashable: Any] else {
+                return nil
+            }
+            
+            let model = MXSyncResponseStoreModel(fromJSON: json)
+            
+            NSLog("[MXSyncResponseFileStore] readData: Consersion to model lasted \(stopwatch.readable()). Free memory: \(MXMemory.formattedMemoryAvailable())")
+            return model
         }
-        
-        let stopwatch = MXStopwatch()
-        
-        var fileContents: String?
-        
-        fileOperationQueue.sync {
-            fileContents = try? String(contentsOf: filePath,
-                                       encoding: Constants.fileEncoding)
-            NSLog("[MXSyncResponseFileStore] readData: File read lasted \(stopwatch.readable())")
-        }
-        guard let jsonString = fileContents else {
-            return nil
-        }
-        guard let json = MXTools.deserialiseJSONString(jsonString) as? [AnyHashable: Any] else {
-            return nil
-        }
-        return MXSyncResponseStoreModel(fromJSON: json)
     }
     
     private func saveData(_ data: MXSyncResponseStoreModel?) {
@@ -97,7 +106,7 @@ public class MXSyncResponseFileStore: NSObject {
             try? data.jsonString()?.write(to: self.filePath,
                                           atomically: true,
                                           encoding: Constants.fileEncoding)
-            NSLog("[MXSyncResponseFileStore] saveData: File write lasted \(stopwatch.readable())")
+            NSLog("[MXSyncResponseFileStore] saveData: File write lasted \(stopwatch.readable()). Free memory: \(MXMemory.formattedMemoryAvailable())")
         }
     }
     
@@ -114,21 +123,29 @@ extension MXSyncResponseFileStore: MXSyncResponseStore {
     
     public var prevBatch: String? {
         get {
-            return readData()?.prevBatch
+            autoreleasepool {
+                return readData()?.prevBatch
+            }
         } set {
-            let data = readData() ?? MXSyncResponseStoreModel()
-            data.prevBatch = newValue
-            saveData(data)
+            autoreleasepool {
+                let data = readData() ?? MXSyncResponseStoreModel()
+                data.prevBatch = newValue
+                saveData(data)
+            }
         }
     }
     
     public var syncResponse: MXSyncResponse? {
         get {
-            return readData()?.syncResponse
+            autoreleasepool {
+                return readData()?.syncResponse
+            }
         } set {
-            let data = readData() ?? MXSyncResponseStoreModel()
-            data.syncResponse = newValue
-            saveData(data)
+            autoreleasepool {
+                let data = readData() ?? MXSyncResponseStoreModel()
+                data.syncResponse = newValue
+                saveData(data)
+            }
         }
     }
     
