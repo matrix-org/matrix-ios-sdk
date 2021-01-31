@@ -426,6 +426,7 @@ static void cleanup_id(void *ptr) {
 
 - (RLMRealm *)realm
 {
+    // Cache the store for this thread in a pthread_specific. Release it in the cleanup.
     static pthread_key_t realmKey;
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
