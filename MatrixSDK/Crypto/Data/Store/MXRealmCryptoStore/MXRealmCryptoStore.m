@@ -20,6 +20,7 @@
 #ifdef MX_CRYPTO
 
 #import <OLMKit/OLMKit.h>
+#import <pthread/pthread.h>
 #import <Realm/Realm.h>
 #import "MXSession.h"
 #import "MXTools.h"
@@ -417,9 +418,27 @@ RLM_ARRAY_TYPE(MXRealmSecret)
     return self;
 }
 
+static void cleanup_id(void *ptr) {
+    if (ptr) {
+        CFRelease(ptr);
+    }
+}
+
 - (RLMRealm *)realm
 {
-    return [MXRealmCryptoStore realmForUser:userId andDevice:deviceId];
+    static pthread_key_t realmKey;
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        __unused int res = pthread_key_create(&realmKey, &cleanup_id);
+        NSAssert(noErr == res, @"Error creating realm pthread key: %s", strerror(res));
+    });
+
+    CFTypeRef cfRealm = pthread_getspecific(realmKey);
+    if (!cfRealm) {
+        cfRealm = (__bridge_retained CFTypeRef)[MXRealmCryptoStore realmForUser:userId andDevice:deviceId];
+        pthread_setspecific(realmKey, cfRealm);
+    }
+    return (__bridge RLMRealm *)cfRealm;
 }
 
 - (MXRealmOlmAccount*)accountInCurrentThread
