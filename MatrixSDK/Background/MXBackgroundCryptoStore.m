@@ -47,6 +47,10 @@ NSString *const MXBackgroundCryptoStoreUserIdSuffix = @":bgCryptoStore";
     {
         credentials = theCredentials;
         
+        // Do not compact Realm DBs from the backgrounc sync process to avoid race conditions on self.cryptoStore with the app process.
+        // self.bgCryptoStore should not become so big that it needs compaction. It will be reset before.
+        MXRealmCryptoStore.shouldCompactOnLaunch = NO;
+        
         if ([MXRealmCryptoStore hasDataForCredentials:credentials])
         {
             cryptoStore = [[MXRealmCryptoStore alloc] initWithCredentials:credentials];
@@ -251,6 +255,25 @@ NSString *const MXBackgroundCryptoStoreUserIdSuffix = @":bgCryptoStore";
 }
 
 - (void)removeOutboundGroupSessionWithRoomId:(NSString *)roomId
+{
+    NSAssert(NO, @"This method should be useless in the context of MXBackgroundCryptoStore");
+}
+
+- (NSNumber *)messageIndexForSharedDeviceInRoomWithId:(NSString *)roomId sessionId:(NSString *)sessionId userId:(NSString *)userId deviceId:(NSString *)deviceId 
+{
+    NSAssert(NO, @"This method should be useless in the context of MXBackgroundCryptoStore");
+    return nil;
+}
+
+
+- (MXUsersDevicesMap<NSNumber *> *)sharedDevicesForOutboundGroupSessionInRoomWithId:(NSString *)roomId sessionId:(NSString *)sessionId 
+{
+    NSAssert(NO, @"This method should be useless in the context of MXBackgroundCryptoStore");
+    return [MXUsersDevicesMap new];
+}
+
+
+- (void)storeSharedDevices:(MXUsersDevicesMap<NSNumber *> *)devices messageIndex:(NSUInteger)messageIndex forOutboundGroupSessionInRoomWithId:(NSString *)roomId sessionId:(NSString *)sessionId 
 {
     NSAssert(NO, @"This method should be useless in the context of MXBackgroundCryptoStore");
 }

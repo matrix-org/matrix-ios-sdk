@@ -25,7 +25,7 @@
 #import "MXTools.h"
 #import "MXCryptoTools.h"
 
-NSUInteger const kMXRealmCryptoStoreVersion = 14;
+NSUInteger const kMXRealmCryptoStoreVersion = 15;
 
 static NSString *const kMXRealmCryptoStoreFolder = @"MXRealmCryptoStore";
 
@@ -145,6 +145,19 @@ RLM_ARRAY_TYPE(MXRealmOlmInboundGroupSession)
 }
 @end
 RLM_ARRAY_TYPE(MXRealmOlmOutboundGroupSession)
+
+@interface MXRealmSharedOutboundSession : RLMObject
+
+@property NSString *roomId;
+@property NSString *sessionId;
+@property MXRealmDeviceInfo *device;
+@property NSNumber<RLMInt> *messageIndex;
+
+@end
+
+@implementation MXRealmSharedOutboundSession
+@end
+RLM_ARRAY_TYPE(MXRealmSharedOutboundSession)
 
 @interface MXRealmOlmAccount : RLMObject
 
@@ -1046,7 +1059,6 @@ RLM_ARRAY_TYPE(MXRealmSecret)
         storedSession = [[MXOlmOutboundGroupSession alloc] initWithSession:session roomId:roomId creationTime:realmSession.creationTime];
     }];
 
-
     NSLog(@"[MXRealmCryptoStore] storeOutboundGroupSession: store 1 key (%lu new) in %.3fms", newCount, [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
     
     return storedSession;
@@ -1103,6 +1115,91 @@ RLM_ARRAY_TYPE(MXRealmSecret)
         [realm deleteObjects:realmSessions];
         NSLog(@"[MXRealmCryptoStore] removeOutboundGroupSessionWithRoomId%@: removed %lu entries", roomId, realmSessions.count);
     }];
+}
+
+- (void)storeSharedDevices:(MXUsersDevicesMap<NSNumber *> *)devices messageIndex:(NSUInteger) messageIndex forOutboundGroupSessionInRoomWithId:(NSString *)roomId sessionId:(NSString *)sessionId
+{
+    NSDate *startDate = [NSDate date];
+
+    RLMRealm *realm = self.realm;
+
+    [realm transactionWithBlock:^{
+        
+        for (NSString *userId in [devices userIds])
+        {
+            for (NSString *deviceId in [devices deviceIdsForUser:userId])
+            {
+                MXRealmUser *realmUser = [MXRealmUser objectsInRealm:realm where:@"userId = %@", userId].firstObject;
+                if (!realmUser)
+                {
+                    NSLog(@"[MXRealmCryptoStore] storeSharedDevices cannot find user with the ID %@", userId);
+                    continue;
+                }
+
+                MXRealmDeviceInfo *realmDevice = [[realmUser.devices objectsWhere:@"deviceId = %@", deviceId] firstObject];
+                if (!realmDevice)
+                {
+                    NSLog(@"[MXRealmCryptoStore] storeSharedDevices cannot find device with the ID %@", deviceId);
+                    continue;
+                }
+
+                MXRealmSharedOutboundSession *sharedInfo = [[MXRealmSharedOutboundSession alloc] initWithValue: @{
+                    @"roomId": roomId,
+                    @"sessionId": sessionId,
+                    @"device": realmDevice,
+                    @"messageIndex": @(messageIndex)
+                }];
+                [realm addObject:sharedInfo];
+            }
+        }
+    }];
+
+    NSLog(@"[MXRealmCryptoStore] storeSharedDevices (count: %tu) in %.3fms", devices.count, [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
+}
+
+- (MXUsersDevicesMap<NSNumber *> *)sharedDevicesForOutboundGroupSessionInRoomWithId:(NSString *)roomId sessionId:(NSString *)sessionId
+{
+    NSDate *startDate = [NSDate date];
+
+    MXUsersDevicesMap<NSNumber *> *devices = [MXUsersDevicesMap new];
+
+    RLMRealm *realm = self.realm;
+    
+    RLMResults<MXRealmSharedOutboundSession *> *results = [MXRealmSharedOutboundSession objectsInRealm:realm where:@"roomId = %@ AND sessionId = %@", roomId, sessionId];
+    
+    for (MXRealmSharedOutboundSession *sharedInfo in results)
+    {
+        MXDeviceInfo *deviceInfo = [NSKeyedUnarchiver unarchiveObjectWithData:sharedInfo.device.deviceInfoData];
+        if (!deviceInfo)
+        {
+            NSLog(@"[MXRealmCryptoStore] sharedDevicesForOutboundGroupSessionInRoomWithId cannot unarchive deviceInfo");
+            continue;
+        }
+        [devices setObject:sharedInfo.messageIndex forUser:deviceInfo.userId andDevice:deviceInfo.deviceId];
+    }
+
+    NSLog(@"[MXRealmCryptoStore] sharedDevicesForOutboundGroupSessionInRoomWithId (count: %tu) in %.3fms", results.count, [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
+
+    return devices;
+}
+
+- (NSNumber *)messageIndexForSharedDeviceInRoomWithId:(NSString *)roomId sessionId:(NSString *)sessionId userId:(NSString *)userId deviceId:(NSString *)deviceId
+{
+    NSNumber *messageIndex = nil;
+    RLMRealm *realm = self.realm;
+    
+    RLMResults<MXRealmSharedOutboundSession *> *sessions = [MXRealmSharedOutboundSession objectsInRealm:realm where:@"roomId = %@ AND sessionId = %@ AND device.deviceId = %@", roomId, sessionId, deviceId];
+    for (MXRealmSharedOutboundSession *session in sessions)
+    {
+        MXDeviceInfo *deviceInfo = [NSKeyedUnarchiver unarchiveObjectWithData:session.device.deviceInfoData];
+        if ([deviceInfo.userId isEqualToString:userId])
+        {
+            messageIndex = session.messageIndex;
+            break;
+        }
+    }
+
+    return messageIndex;
 }
 
 #pragma mark - Key backup
@@ -1445,7 +1542,8 @@ RLM_ARRAY_TYPE(MXRealmSecret)
                              MXRealmOutgoingRoomKeyRequest.class,
                              MXRealmIncomingRoomKeyRequest.class,
                              MXRealmSecret.class,
-                             MXRealmOlmOutboundGroupSession.class
+                             MXRealmOlmOutboundGroupSession.class,
+                             MXRealmSharedOutboundSession.class
                              ];
 
     config.schemaVersion = kMXRealmCryptoStoreVersion;
@@ -1658,30 +1756,33 @@ RLM_ARRAY_TYPE(MXRealmSecret)
                 {
                     NSLog(@"[MXRealmCryptoStore] Migration from schema #13 -> #14: Nothing to do (added MXRealmOlmOutboundGroupSession)");
                 }
+                    
+                case 14:
+                {
+                    NSLog(@"[MXRealmCryptoStore] Migration from schema #14 -> #15: Nothing to do (added MXRealmSharedOutboundSession)");
+                }
             }
         }
     };
     
-    config.shouldCompactOnLaunch = ^BOOL(NSUInteger totalBytes, NSUInteger bytesUsed) {
-        // totalBytes refers to the size of the file on disk in bytes (data + free space)
-        // usedBytes refers to the number of bytes used by data in the file
-        
-        static BOOL logDBFileSizeAtLaunch = YES;
-        if (logDBFileSizeAtLaunch)
-        {
+    config.shouldCompactOnLaunch = nil;
+    if ([self shouldCompactReamDBForUserWithUserId:userId andDevice:deviceId])
+    {
+        config.shouldCompactOnLaunch = ^BOOL(NSUInteger totalBytes, NSUInteger bytesUsed) {
+            // totalBytes refers to the size of the file on disk in bytes (data + free space)
+            // usedBytes refers to the number of bytes used by data in the file
             NSLog(@"[MXRealmCryptoStore] Realm DB file size (in bytes): %lu, used (in bytes): %lu", (unsigned long)totalBytes, (unsigned long)bytesUsed);
-            logDBFileSizeAtLaunch = NO;
-        }
-
-        // Compact if the file is less than 50% 'used'
-        BOOL result = (float)((float)bytesUsed / totalBytes) < 0.5;
-        if (result)
-        {
-            NSLog(@"[MXRealmCryptoStore] Will compact database: File size (in bytes): %lu, used (in bytes): %lu", (unsigned long)totalBytes, (unsigned long)bytesUsed);
-        }
-
-        return result;
-    };
+            
+            // Compact if the file is less than 50% 'used'
+            BOOL result = (float)((float)bytesUsed / totalBytes) < 0.5;
+            if (result)
+            {
+                NSLog(@"[MXRealmCryptoStore] Will compact database: File size (in bytes): %lu, used (in bytes): %lu", (unsigned long)totalBytes, (unsigned long)bytesUsed);
+            }
+            
+            return result;
+        };
+    }
 
     NSError *error;
     RLMRealm *realm = [RLMRealm realmWithConfiguration:config error:&error];
@@ -1807,6 +1908,46 @@ RLM_ARRAY_TYPE(MXRealmSecret)
             }
         }
     }];
+}
+
+
+#pragma mark - shouldCompactOnLaunch
+
+static BOOL shouldCompactOnLaunch = YES;
++ (BOOL)shouldCompactOnLaunch
+{
+    return shouldCompactOnLaunch;
+}
+
++ (void)setShouldCompactOnLaunch:(BOOL)theShouldCompactOnLaunch
+{
+    NSLog(@"[MXRealmCryptoStore] setShouldCompactOnLaunch: %@", theShouldCompactOnLaunch ? @"YES" : @"NO");
+    shouldCompactOnLaunch = theShouldCompactOnLaunch;
+}
+
+// Ensure we compact the DB only once
++ (BOOL)shouldCompactReamDBForUserWithUserId:userId andDevice:(NSString*)deviceId
+{
+    if (!self.shouldCompactOnLaunch)
+    {
+        return NO;
+    }
+    
+    static NSMutableDictionary<NSString*, NSNumber*> *compactedDB;
+    if (!compactedDB)
+    {
+        compactedDB = [NSMutableDictionary dictionary];
+    }
+    
+    NSString *userDeviceId = [NSString stringWithFormat:@"%@-%@", userId, deviceId];
+    if (compactedDB[userDeviceId])
+    {
+        return NO;
+    }
+    
+    compactedDB[userDeviceId] = @(YES);
+    
+    return YES;
 }
 
 @end

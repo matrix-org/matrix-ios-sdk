@@ -35,6 +35,11 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, readonly) NSString *name;
 
 /**
+ The brand field is optional. It allows the client to style the login button to suit a particular brand.
+ */
+@property (nonatomic, readonly, nullable) NSString *brand;
+
+/**
  The icon field is an optional field that points to an icon representing the identity provider. If present then it must be an HTTPS URL to an image resource.
  */
 @property (nonatomic, readonly, nullable) NSString *icon;
