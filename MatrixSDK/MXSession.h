@@ -573,6 +573,13 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
                failure:(MXOnBackgroundSyncFail)backgroundSyncfails NS_REFINED_FOR_SWIFT;
 
 /**
+ Handles sync response retrieved by the background sync service, if the cache is valid. Clears the cache after processing.
+ 
+ @param completion Completion block called when the session has been processed the cache, or when no valid cache exists.
+ */
+- (void)handleBackgroundSyncCacheIfRequiredWithCompletion:(void (^)(void))completion;
+
+/**
  Restart the session events stream.
  @return YES if the operation succeeds
  */
