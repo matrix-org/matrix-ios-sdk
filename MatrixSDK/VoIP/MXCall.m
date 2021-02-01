@@ -682,6 +682,9 @@ NSString *const kMXCallSupportsTransferringStatusDidChange = @"kMXCallSupportsTr
         [[MXSDKOptions sharedInstance].analyticsDelegate trackValue:@(_endReason)
                                                            category:kMXAnalyticsVoipCategory
                                                                name:kMXAnalyticsVoipNameCallEnded];
+        
+        // Terminate the call at the stack level
+        [callStackCall end];
     }
     else if (MXCallStateInviteSent == state)
     {
