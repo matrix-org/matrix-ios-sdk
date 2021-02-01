@@ -12,7 +12,7 @@ Changes to be released in next version
  * VoIP: DTMF support in calls (vector-im/element-ios/issues/3929).
 
 🐛 Bugfix
- * 
+ * VoIP: Fix camera indicator when video call answered elsewhere (vector-im/element-ios/issues/3971).
 
 ⚠️ API Changes
  * 
