@@ -301,7 +301,6 @@ RLM_ARRAY_TYPE(MXRealmSecret)
 
 @interface MXRealmCryptoStore ()
 {
-    NSCache<NSThread *, RLMRealm *> *cachedRealms;
     NSString *userId;
     NSString *deviceId;
 }
@@ -420,10 +419,17 @@ RLM_ARRAY_TYPE(MXRealmSecret)
 
 - (RLMRealm *)realm
 {
-    RLMRealm *realm = [cachedRealms objectForKey:NSThread.currentThread];
-    if (!realm) {
+    static NSString *const kRealmKey = @"MXRealmCryptoStore-Realm";
+    static NSString *const kUserIdKey = @"MXRealmCryptoStore-UserID";
+    static NSString *const kDeviceIdKey = @"MXRealmCryptoStore-DeviceID";
+
+    NSMutableDictionary *dict = NSThread.currentThread.threadDictionary;
+    RLMRealm *realm = dict[kRealmKey];
+    if (!realm || ![userId isEqualToString:dict[kUserIdKey]] || ![deviceId isEqualToString:dict[kDeviceIdKey]]) {
         realm = [MXRealmCryptoStore realmForUser:userId andDevice:deviceId];
-        [cachedRealms setObject:realm forKey:NSThread.currentThread];
+        dict[kRealmKey] = realm;
+        dict[kUserIdKey] = userId;
+        dict[kDeviceIdKey] = deviceId;
     }
     return realm;
 }
