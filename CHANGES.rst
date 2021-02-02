@@ -5,6 +5,10 @@ Changes to be released in next version
  * 
 
 🙌 Improvements
+ * MXMemory: New utility class to track memory usage.
+ * MXRealmCryptoStore: Compact Realm DB only once, at the first usage.
+ * MXLoginSSOIdentityProvider: Add new `brand` field as described in MSC2858 (vector-im/element-ios/issues/3980).
+ * MXSession: Make `handleBackgroundSyncCacheIfRequiredWithCompletion` method public (vector-im/element-ios/issues/3986).
  * Send VoIP analytics events (vector-im/element-ios/issues/3855).
  * Add hold support for CallKit calls (vector-im/element-ios/issues/3834).
  * Fix video call with web (vector-im/element-ios/issues/3862).
@@ -12,6 +16,9 @@ Changes to be released in next version
  * VoIP: DTMF support in calls (vector-im/element-ios/issues/3929).
 
 🐛 Bugfix
+ * Background Sync: Use autoreleasepool to limit RAM usage (vector-im/element-ios/issues/3957).
+ * Background Sync: Do not compact Realm DB from background process.
+ * MX3PidAddManager: Use a non empty client_secret to discover /account/3pid/add flows (vector-im/element-ios/issues/3966).
  * VoIP: Fix camera indicator when video call answered elsewhere (vector-im/element-ios/issues/3971).
 
 ⚠️ API Changes
@@ -25,6 +32,35 @@ Changes to be released in next version
 
 Others
  * 
+
+Changes in 0.17.10 (2021-01-27)
+=================================================
+
+✨ Features
+ * 
+
+🙌 Improvements
+ * MXRealmCryptoStore: New implementation of deleteStoreWithCredentials that does not need to open the realm DB.
+ * MXRealmCryptoStore: store chain index of shared outbound group sessions to improve re-share session keys
+
+🐛 Bugfix
+ * MXBackgroundSyncService: Clear the bg sync crypto db if needed (vector-im/element-ios/issues/3956).
+ * MXCrypto: Add a workaround when the megolm key is not shared to all members (vector-im/element-ios/issues/3807).
+
+⚠️ API Changes
+ * 
+
+🗣 Translations
+ * 
+    
+🧱 Build
+ * 
+
+Others
+ * 
+
+Improvements:
+
 
 Changes in 0.17.9 (2021-01-18)
 =================================================

@@ -25,7 +25,7 @@
 #import "MXTools.h"
 #import "MXCryptoTools.h"
 
-NSUInteger const kMXRealmCryptoStoreVersion = 14;
+NSUInteger const kMXRealmCryptoStoreVersion = 15;
 
 static NSString *const kMXRealmCryptoStoreFolder = @"MXRealmCryptoStore";
 
@@ -145,6 +145,19 @@ RLM_ARRAY_TYPE(MXRealmOlmInboundGroupSession)
 }
 @end
 RLM_ARRAY_TYPE(MXRealmOlmOutboundGroupSession)
+
+@interface MXRealmSharedOutboundSession : RLMObject
+
+@property NSString *roomId;
+@property NSString *sessionId;
+@property MXRealmDeviceInfo *device;
+@property NSNumber<RLMInt> *messageIndex;
+
+@end
+
+@implementation MXRealmSharedOutboundSession
+@end
+RLM_ARRAY_TYPE(MXRealmSharedOutboundSession)
 
 @interface MXRealmOlmAccount : RLMObject
 
@@ -337,11 +350,40 @@ RLM_ARRAY_TYPE(MXRealmSecret)
 {
     NSLog(@"[MXRealmCryptoStore] deleteStore for %@:%@", credentials.userId, credentials.deviceId);
 
-    RLMRealm *realm = [MXRealmCryptoStore realmForUser:credentials.userId andDevice:credentials.deviceId];
-
-    [realm transactionWithBlock:^{
-        [realm deleteAllObjects];
-    }];
+    // Delete db file directly
+    // So that we can even delete corrupted realm db
+    RLMRealmConfiguration *config = [RLMRealmConfiguration defaultConfiguration];
+    NSURL *realmFileURL = [self realmFileURLForUserWithUserId:credentials.userId andDevice:credentials.deviceId];
+    config.fileURL = realmFileURL;
+    
+    if (![RLMRealm fileExistsForConfiguration:config])
+    {
+        NSLog(@"[MXRealmCryptoStore] deleteStore: Realm db does not exist");
+        return;
+    }
+    
+    NSError *error;
+    [RLMRealm deleteFilesForConfiguration:config error:&error];
+    if (error)
+    {
+        NSLog(@"[MXRealmCryptoStore] deleteStore: Error: %@", error);
+        
+        // The db is probably still opened elsewhere (RLMErrorAlreadyOpen), which means it is valid.
+        // Use the old method to clear the db
+        error = nil;
+        RLMRealm *realm = [MXRealmCryptoStore realmForUser:credentials.userId andDevice:credentials.deviceId];
+        if (!error)
+        {
+            NSLog(@"[MXRealmCryptoStore] deleteStore: Delete at least its content");
+            [realm transactionWithBlock:^{
+                [realm deleteAllObjects];
+            }];
+        }
+        else
+        {
+            NSLog(@"[MXRealmCryptoStore] deleteStore: Cannot open realm. Error: %@", error);
+        }
+    }
 }
 
 - (instancetype)initWithCredentials:(MXCredentials *)credentials
@@ -1017,7 +1059,6 @@ RLM_ARRAY_TYPE(MXRealmSecret)
         storedSession = [[MXOlmOutboundGroupSession alloc] initWithSession:session roomId:roomId creationTime:realmSession.creationTime];
     }];
 
-
     NSLog(@"[MXRealmCryptoStore] storeOutboundGroupSession: store 1 key (%lu new) in %.3fms", newCount, [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
     
     return storedSession;
@@ -1074,6 +1115,91 @@ RLM_ARRAY_TYPE(MXRealmSecret)
         [realm deleteObjects:realmSessions];
         NSLog(@"[MXRealmCryptoStore] removeOutboundGroupSessionWithRoomId%@: removed %lu entries", roomId, realmSessions.count);
     }];
+}
+
+- (void)storeSharedDevices:(MXUsersDevicesMap<NSNumber *> *)devices messageIndex:(NSUInteger) messageIndex forOutboundGroupSessionInRoomWithId:(NSString *)roomId sessionId:(NSString *)sessionId
+{
+    NSDate *startDate = [NSDate date];
+
+    RLMRealm *realm = self.realm;
+
+    [realm transactionWithBlock:^{
+        
+        for (NSString *userId in [devices userIds])
+        {
+            for (NSString *deviceId in [devices deviceIdsForUser:userId])
+            {
+                MXRealmUser *realmUser = [MXRealmUser objectsInRealm:realm where:@"userId = %@", userId].firstObject;
+                if (!realmUser)
+                {
+                    NSLog(@"[MXRealmCryptoStore] storeSharedDevices cannot find user with the ID %@", userId);
+                    continue;
+                }
+
+                MXRealmDeviceInfo *realmDevice = [[realmUser.devices objectsWhere:@"deviceId = %@", deviceId] firstObject];
+                if (!realmDevice)
+                {
+                    NSLog(@"[MXRealmCryptoStore] storeSharedDevices cannot find device with the ID %@", deviceId);
+                    continue;
+                }
+
+                MXRealmSharedOutboundSession *sharedInfo = [[MXRealmSharedOutboundSession alloc] initWithValue: @{
+                    @"roomId": roomId,
+                    @"sessionId": sessionId,
+                    @"device": realmDevice,
+                    @"messageIndex": @(messageIndex)
+                }];
+                [realm addObject:sharedInfo];
+            }
+        }
+    }];
+
+    NSLog(@"[MXRealmCryptoStore] storeSharedDevices (count: %tu) in %.3fms", devices.count, [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
+}
+
+- (MXUsersDevicesMap<NSNumber *> *)sharedDevicesForOutboundGroupSessionInRoomWithId:(NSString *)roomId sessionId:(NSString *)sessionId
+{
+    NSDate *startDate = [NSDate date];
+
+    MXUsersDevicesMap<NSNumber *> *devices = [MXUsersDevicesMap new];
+
+    RLMRealm *realm = self.realm;
+    
+    RLMResults<MXRealmSharedOutboundSession *> *results = [MXRealmSharedOutboundSession objectsInRealm:realm where:@"roomId = %@ AND sessionId = %@", roomId, sessionId];
+    
+    for (MXRealmSharedOutboundSession *sharedInfo in results)
+    {
+        MXDeviceInfo *deviceInfo = [NSKeyedUnarchiver unarchiveObjectWithData:sharedInfo.device.deviceInfoData];
+        if (!deviceInfo)
+        {
+            NSLog(@"[MXRealmCryptoStore] sharedDevicesForOutboundGroupSessionInRoomWithId cannot unarchive deviceInfo");
+            continue;
+        }
+        [devices setObject:sharedInfo.messageIndex forUser:deviceInfo.userId andDevice:deviceInfo.deviceId];
+    }
+
+    NSLog(@"[MXRealmCryptoStore] sharedDevicesForOutboundGroupSessionInRoomWithId (count: %tu) in %.3fms", results.count, [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
+
+    return devices;
+}
+
+- (NSNumber *)messageIndexForSharedDeviceInRoomWithId:(NSString *)roomId sessionId:(NSString *)sessionId userId:(NSString *)userId deviceId:(NSString *)deviceId
+{
+    NSNumber *messageIndex = nil;
+    RLMRealm *realm = self.realm;
+    
+    RLMResults<MXRealmSharedOutboundSession *> *sessions = [MXRealmSharedOutboundSession objectsInRealm:realm where:@"roomId = %@ AND sessionId = %@ AND device.deviceId = %@", roomId, sessionId, deviceId];
+    for (MXRealmSharedOutboundSession *session in sessions)
+    {
+        MXDeviceInfo *deviceInfo = [NSKeyedUnarchiver unarchiveObjectWithData:session.device.deviceInfoData];
+        if ([deviceInfo.userId isEqualToString:userId])
+        {
+            messageIndex = session.messageIndex;
+            break;
+        }
+    }
+
+    return messageIndex;
 }
 
 #pragma mark - Key backup
@@ -1393,97 +1519,16 @@ RLM_ARRAY_TYPE(MXRealmSecret)
 #pragma mark - Private methods
 + (RLMRealm*)realmForUser:(NSString*)userId andDevice:(NSString*)deviceId
 {
+    RLMRealmConfiguration *config = [RLMRealmConfiguration defaultConfiguration];
+
     // Each user has its own db file.
     // Else, it can lead to issue with primary keys.
     // Ex: if 2 users are is the same encrypted room, [self storeAlgorithmForRoom]
     // will be called twice for the same room id which breaks the uniqueness of the
     // primary key (roomId) for this table.
-    RLMRealmConfiguration *config = [RLMRealmConfiguration defaultConfiguration];
-
-    NSURL *defaultRealmPathURL = config.fileURL.URLByDeletingLastPathComponent;
-
-#if TARGET_OS_SIMULATOR
-    // On simulator from iOS 11, the Documents folder used by Realm by default
-    // can be missing. Create it if required
-    // https://stackoverflow.com/a/50817364
-    if (![NSFileManager.defaultManager fileExistsAtPath:defaultRealmPathURL.path])
-    {
-        NSError *error;
-        [[NSFileManager defaultManager] createDirectoryAtPath:defaultRealmPathURL.path
-                                  withIntermediateDirectories:YES
-                                                   attributes:nil
-                                                        error:&error];
-        NSLog(@"[MXRealmCryptoStore] On simulator, create the file tree used by Realm. Error: %@", error);
-    }
-#endif
-    
-    // Default db file URL: use the default directory, but replace the filename with the userId.
-    NSString *realmFile = userId;
-    if (MXTools.isRunningUnitTests)
-    {
-        // Append the device id for unit tests so that we can run e2e tests 
-        // with users with several devices
-        realmFile = [NSString stringWithFormat:@"%@-%@", userId, deviceId];
-    }
-
-    NSURL *defaultRealmFileURL = [[defaultRealmPathURL URLByAppendingPathComponent:realmFile]
-                              URLByAppendingPathExtension:@"realm"];
-    
-    // Check for a potential application group id.
-    NSString *applicationGroupIdentifier = [MXSDKOptions sharedInstance].applicationGroupIdentifier;
-    if (applicationGroupIdentifier)
-    {
-        // Use the shared db file URL.
-        NSURL *sharedContainerURL = [[NSFileManager defaultManager] containerURLForSecurityApplicationGroupIdentifier:applicationGroupIdentifier];
-        NSURL *realmFileFolderURL = [sharedContainerURL URLByAppendingPathComponent:kMXRealmCryptoStoreFolder];
-        NSURL *realmFileURL = [[realmFileFolderURL URLByAppendingPathComponent:userId] URLByAppendingPathExtension:@"realm"];
-        
-        config.fileURL = realmFileURL;
-        
-        // Check whether an existing db file has to be be moved from the default folder to the shared container.
-        if ([NSFileManager.defaultManager fileExistsAtPath:[defaultRealmFileURL path]])
-        {
-            if (![NSFileManager.defaultManager fileExistsAtPath:[realmFileURL path]])
-            {
-                // Move this db file in the container directory associated with the application group identifier.
-                NSLog(@"[MXRealmCryptoStore] Move the db file to the application group container");
-                
-                if (![NSFileManager.defaultManager fileExistsAtPath:realmFileFolderURL.path])
-                {
-                    [[NSFileManager defaultManager] createDirectoryAtPath:realmFileFolderURL.path withIntermediateDirectories:YES attributes:nil error:nil];
-                }
-                
-                NSError *fileManagerError = nil;
-                
-                [NSFileManager.defaultManager moveItemAtURL:defaultRealmFileURL toURL:realmFileURL error:&fileManagerError];
-                
-                if (fileManagerError)
-                {
-                    NSLog(@"[MXRealmCryptoStore] Move db file failed (%@)", fileManagerError);
-                    // Keep using the old file
-                    config.fileURL = defaultRealmFileURL;
-                }
-            }
-            else
-            {
-                // Remove the residual db file.
-                [NSFileManager.defaultManager removeItemAtURL:defaultRealmFileURL error:nil];
-            }
-        }
-        else
-        {
-            // Make sure the full exists before giving it to Realm 
-            if (![NSFileManager.defaultManager fileExistsAtPath:realmFileFolderURL.path])
-            {
-                [[NSFileManager defaultManager] createDirectoryAtPath:realmFileFolderURL.path withIntermediateDirectories:YES attributes:nil error:nil];
-            }
-        }
-    }
-    else
-    {
-        // Use the default URL
-        config.fileURL = defaultRealmFileURL;
-    }
+    NSURL *realmFileURL = [self realmFileURLForUserWithUserId:userId andDevice:deviceId];
+    [self ensurePathExistenceForFileAtFileURL:realmFileURL];
+    config.fileURL = realmFileURL;
 
     // Manage only our objects in this realm 
     config.objectClasses = @[
@@ -1497,7 +1542,8 @@ RLM_ARRAY_TYPE(MXRealmSecret)
                              MXRealmOutgoingRoomKeyRequest.class,
                              MXRealmIncomingRoomKeyRequest.class,
                              MXRealmSecret.class,
-                             MXRealmOlmOutboundGroupSession.class
+                             MXRealmOlmOutboundGroupSession.class,
+                             MXRealmSharedOutboundSession.class
                              ];
 
     config.schemaVersion = kMXRealmCryptoStoreVersion;
@@ -1710,30 +1756,33 @@ RLM_ARRAY_TYPE(MXRealmSecret)
                 {
                     NSLog(@"[MXRealmCryptoStore] Migration from schema #13 -> #14: Nothing to do (added MXRealmOlmOutboundGroupSession)");
                 }
+                    
+                case 14:
+                {
+                    NSLog(@"[MXRealmCryptoStore] Migration from schema #14 -> #15: Nothing to do (added MXRealmSharedOutboundSession)");
+                }
             }
         }
     };
     
-    config.shouldCompactOnLaunch = ^BOOL(NSUInteger totalBytes, NSUInteger bytesUsed) {
-        // totalBytes refers to the size of the file on disk in bytes (data + free space)
-        // usedBytes refers to the number of bytes used by data in the file
-        
-        static BOOL logDBFileSizeAtLaunch = YES;
-        if (logDBFileSizeAtLaunch)
-        {
+    config.shouldCompactOnLaunch = nil;
+    if ([self shouldCompactReamDBForUserWithUserId:userId andDevice:deviceId])
+    {
+        config.shouldCompactOnLaunch = ^BOOL(NSUInteger totalBytes, NSUInteger bytesUsed) {
+            // totalBytes refers to the size of the file on disk in bytes (data + free space)
+            // usedBytes refers to the number of bytes used by data in the file
             NSLog(@"[MXRealmCryptoStore] Realm DB file size (in bytes): %lu, used (in bytes): %lu", (unsigned long)totalBytes, (unsigned long)bytesUsed);
-            logDBFileSizeAtLaunch = NO;
-        }
-
-        // Compact if the file is less than 50% 'used'
-        BOOL result = (float)((float)bytesUsed / totalBytes) < 0.5;
-        if (result)
-        {
-            NSLog(@"[MXRealmCryptoStore] Will compact database: File size (in bytes): %lu, used (in bytes): %lu", (unsigned long)totalBytes, (unsigned long)bytesUsed);
-        }
-
-        return result;
-    };
+            
+            // Compact if the file is less than 50% 'used'
+            BOOL result = (float)((float)bytesUsed / totalBytes) < 0.5;
+            if (result)
+            {
+                NSLog(@"[MXRealmCryptoStore] Will compact database: File size (in bytes): %lu, used (in bytes): %lu", (unsigned long)totalBytes, (unsigned long)bytesUsed);
+            }
+            
+            return result;
+        };
+    }
 
     NSError *error;
     RLMRealm *realm = [RLMRealm realmWithConfiguration:config error:&error];
@@ -1779,6 +1828,57 @@ RLM_ARRAY_TYPE(MXRealmSecret)
     return realm;
 }
 
+// Return the realm db file to use for a given user and device
++ (NSURL*)realmFileURLForUserWithUserId:(NSString*)userId andDevice:(NSString*)deviceId
+{
+    NSURL *realmFileURL;
+    
+    RLMRealmConfiguration *config = [RLMRealmConfiguration defaultConfiguration];
+    
+    NSURL *defaultRealmPathURL = config.fileURL.URLByDeletingLastPathComponent;
+    
+    // Default db file URL: use the default directory, but replace the filename with the userId.
+    NSString *realmFile = userId;
+    
+    if (MXTools.isRunningUnitTests)
+    {
+        // Append the device id for unit tests so that we can run e2e tests
+        // with users with several devices
+        realmFile = [NSString stringWithFormat:@"%@-%@", userId, deviceId];
+    }
+    
+    NSURL *defaultRealmFileURL = [[defaultRealmPathURL URLByAppendingPathComponent:realmFile]
+                                  URLByAppendingPathExtension:@"realm"];
+    
+    // Check for a potential application group id.
+    NSString *applicationGroupIdentifier = [MXSDKOptions sharedInstance].applicationGroupIdentifier;
+    if (applicationGroupIdentifier)
+    {
+        // Use the shared db file URL.
+        NSURL *sharedContainerURL = [[NSFileManager defaultManager] containerURLForSecurityApplicationGroupIdentifier:applicationGroupIdentifier];
+        NSURL *realmFileFolderURL = [sharedContainerURL URLByAppendingPathComponent:kMXRealmCryptoStoreFolder];
+        realmFileURL = [[realmFileFolderURL URLByAppendingPathComponent:realmFile] URLByAppendingPathExtension:@"realm"];
+    }
+    else
+    {
+        // Use the default URL
+        realmFileURL = defaultRealmFileURL;
+    }
+    
+    return realmFileURL;
+}
+
+// Make sure the full path exists before giving it to Realm
++ (void)ensurePathExistenceForFileAtFileURL:(NSURL*)fileURL
+{
+    NSURL *fileFolderURL = fileURL.URLByDeletingLastPathComponent;
+    if (![NSFileManager.defaultManager fileExistsAtPath:fileFolderURL.path])
+    {
+        NSLog(@"[MXRealmCryptoStore] ensurePathExistenceForFileAtFileURL: Create full path hierarchy for %@", fileURL);
+        [[NSFileManager defaultManager] createDirectoryAtPath:fileFolderURL.path withIntermediateDirectories:YES attributes:nil error:nil];
+    }
+}
+
 /**
  Clean duplicated & orphan devices.
 
@@ -1808,6 +1908,46 @@ RLM_ARRAY_TYPE(MXRealmSecret)
             }
         }
     }];
+}
+
+
+#pragma mark - shouldCompactOnLaunch
+
+static BOOL shouldCompactOnLaunch = YES;
++ (BOOL)shouldCompactOnLaunch
+{
+    return shouldCompactOnLaunch;
+}
+
++ (void)setShouldCompactOnLaunch:(BOOL)theShouldCompactOnLaunch
+{
+    NSLog(@"[MXRealmCryptoStore] setShouldCompactOnLaunch: %@", theShouldCompactOnLaunch ? @"YES" : @"NO");
+    shouldCompactOnLaunch = theShouldCompactOnLaunch;
+}
+
+// Ensure we compact the DB only once
++ (BOOL)shouldCompactReamDBForUserWithUserId:userId andDevice:(NSString*)deviceId
+{
+    if (!self.shouldCompactOnLaunch)
+    {
+        return NO;
+    }
+    
+    static NSMutableDictionary<NSString*, NSNumber*> *compactedDB;
+    if (!compactedDB)
+    {
+        compactedDB = [NSMutableDictionary dictionary];
+    }
+    
+    NSString *userDeviceId = [NSString stringWithFormat:@"%@-%@", userId, deviceId];
+    if (compactedDB[userDeviceId])
+    {
+        return NO;
+    }
+    
+    compactedDB[userDeviceId] = @(YES);
+    
+    return YES;
 }
 
 @end

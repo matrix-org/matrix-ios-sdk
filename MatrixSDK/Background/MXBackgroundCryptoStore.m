@@ -40,18 +40,39 @@ NSString *const MXBackgroundCryptoStoreUserIdSuffix = @":bgCryptoStore";
 
 @implementation MXBackgroundCryptoStore
 
-- (instancetype)initWithCredentials:(MXCredentials *)theCredentials
+- (instancetype)initWithCredentials:(MXCredentials *)theCredentials resetBackgroundCryptoStore:(BOOL)resetBackgroundCryptoStore
 {
     self = [super init];
     if (self)
     {
         credentials = theCredentials;
         
-        cryptoStore = [[MXRealmCryptoStore alloc] initWithCredentials:credentials];
+        // Do not compact Realm DBs from the backgrounc sync process to avoid race conditions on self.cryptoStore with the app process.
+        // self.bgCryptoStore should not become so big that it needs compaction. It will be reset before.
+        MXRealmCryptoStore.shouldCompactOnLaunch = NO;
+        
+        if ([MXRealmCryptoStore hasDataForCredentials:credentials])
+        {
+            cryptoStore = [[MXRealmCryptoStore alloc] initWithCredentials:credentials];
+        }
+        else
+        {
+            // Should never happen
+            NSLog(@"[MXBackgroundCryptoStore] initWithCredentials: Warning: createStoreWithCredentials: %@:%@", credentials.userId, credentials.deviceId);
+            cryptoStore = [MXRealmCryptoStore createStoreWithCredentials:credentials];
+        }
         
         MXCredentials *bgCredentials = [MXBackgroundCryptoStore credentialForBgCryptoStoreWithCredentials:credentials];
+        
+        if (resetBackgroundCryptoStore)
+        {
+            NSLog(@"[MXBackgroundCryptoStore] initWithCredentials: Delete existing bgCryptoStore if any");
+            [MXRealmCryptoStore deleteStoreWithCredentials:bgCredentials];
+        }
+        
         if ([MXRealmCryptoStore hasDataForCredentials:bgCredentials])
         {
+            NSLog(@"[MXBackgroundCryptoStore] initWithCredentials: Reuse existing bgCryptoStore");
             bgCryptoStore = [[MXRealmCryptoStore alloc] initWithCredentials:bgCredentials];
         }
         else
@@ -83,27 +104,22 @@ NSString *const MXBackgroundCryptoStoreUserIdSuffix = @":bgCryptoStore";
     } failure:failure];
 }
 
+- (instancetype)initWithCredentials:(MXCredentials *)theCredentials
+{
+    NSAssert(NO, @"This method should be useless in the context of MXBackgroundCryptoStore");
+    return nil;
+}
+
 + (BOOL)hasDataForCredentials:(MXCredentials*)credentials
 {
-    // Should be always YES
-    return [MXRealmCryptoStore hasDataForCredentials:credentials];
+    NSAssert(NO, @"This method should be useless in the context of MXBackgroundCryptoStore");
+    return NO;
 }
 
 + (instancetype)createStoreWithCredentials:(MXCredentials*)credentials
 {
-    // Should never happen
-    NSLog(@"[MXBackgroundCryptoStore] createStoreWithCredentials: %@:%@", credentials.userId, credentials.deviceId);
-    
-    MXRealmCryptoStore *cryptoStore = [MXRealmCryptoStore createStoreWithCredentials:credentials];
-    
-    MXCredentials *bgCredentials = [MXBackgroundCryptoStore credentialForBgCryptoStoreWithCredentials:credentials];
-    MXRealmCryptoStore *bgCryptoStore = [MXRealmCryptoStore createStoreWithCredentials:bgCredentials];
-    
-    MXBackgroundCryptoStore *store = [MXBackgroundCryptoStore new];
-    store->cryptoStore = cryptoStore;
-    store->bgCryptoStore = bgCryptoStore;
-    
-    return store;
+    NSAssert(NO, @"This method should be useless in the context of MXBackgroundCryptoStore");
+    return nil;
 }
 
 
@@ -239,6 +255,25 @@ NSString *const MXBackgroundCryptoStoreUserIdSuffix = @":bgCryptoStore";
 }
 
 - (void)removeOutboundGroupSessionWithRoomId:(NSString *)roomId
+{
+    NSAssert(NO, @"This method should be useless in the context of MXBackgroundCryptoStore");
+}
+
+- (NSNumber *)messageIndexForSharedDeviceInRoomWithId:(NSString *)roomId sessionId:(NSString *)sessionId userId:(NSString *)userId deviceId:(NSString *)deviceId 
+{
+    NSAssert(NO, @"This method should be useless in the context of MXBackgroundCryptoStore");
+    return nil;
+}
+
+
+- (MXUsersDevicesMap<NSNumber *> *)sharedDevicesForOutboundGroupSessionInRoomWithId:(NSString *)roomId sessionId:(NSString *)sessionId 
+{
+    NSAssert(NO, @"This method should be useless in the context of MXBackgroundCryptoStore");
+    return [MXUsersDevicesMap new];
+}
+
+
+- (void)storeSharedDevices:(MXUsersDevicesMap<NSNumber *> *)devices messageIndex:(NSUInteger)messageIndex forOutboundGroupSessionInRoomWithId:(NSString *)roomId sessionId:(NSString *)sessionId 
 {
     NSAssert(NO, @"This method should be useless in the context of MXBackgroundCryptoStore");
 }

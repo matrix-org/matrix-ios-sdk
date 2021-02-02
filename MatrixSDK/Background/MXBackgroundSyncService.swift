@@ -59,11 +59,9 @@ public enum MXBackgroundSyncServiceError: Error {
         restClient = MXRestClient(credentials: credentials, unrecognizedCertificateHandler: nil)
         restClient.completionQueue = processingQueue
         store = MXBackgroundStore(withCredentials: credentials)
-        if MXRealmCryptoStore.hasData(for: credentials) {
-            cryptoStore = MXBackgroundCryptoStore(credentials: credentials)
-        } else {
-            cryptoStore = MXBackgroundCryptoStore.createStore(with: credentials)
-        }
+        // We can flush any crypto data if our sync response store is empty
+        let resetBackgroundCryptoStore = syncResponseStore.syncResponse == nil
+        cryptoStore = MXBackgroundCryptoStore(credentials: credentials, resetBackgroundCryptoStore: resetBackgroundCryptoStore)
         olmDevice = MXOlmDevice(store: cryptoStore)
         pushRulesManager = MXBackgroundPushRulesManager(withCredentials: credentials)
         if let accountData = syncResponseStore.syncResponse?.accountData {
@@ -260,9 +258,6 @@ public enum MXBackgroundSyncServiceError: Error {
     private func launchBackgroundSync(forEventId eventId: String,
                                       roomId: String,
                                       completion: @escaping (MXResponse<MXEvent>) -> Void) {
-        
-        // Check local stores on every request so that we use up-to-data data from the MXSession store
-        updateBackgroundServiceStoresIfNeeded()
             
         guard let eventStreamToken = syncResponseStore.syncResponse?.nextBatch ?? store.eventStreamToken else {
             NSLog("[MXBackgroundSyncService] launchBackgroundSync: Do not sync because event streaming not started yet.")

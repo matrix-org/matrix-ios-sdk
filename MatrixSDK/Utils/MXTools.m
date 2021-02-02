@@ -23,6 +23,10 @@
 #import <MobileCoreServices/MobileCoreServices.h>
 #endif
 
+#if defined(__IPHONE_13_0) && __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_13_0
+#import <os/proc.h>
+#endif
+
 #pragma mark - Constant definition
 NSString *const kMXToolsRegexStringForEmailAddress              = @"[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,}";
 
@@ -911,6 +915,20 @@ static NSMutableDictionary *fileExtensionByContentType = nil;
     NSData *jsonData = [jsonString dataUsingEncoding:NSUTF8StringEncoding];
     return [NSJSONSerialization JSONObjectWithData:jsonData options:0 error:nil];
 }
+
+
+#pragma mark - OS
+
++ (NSUInteger)memoryAvailable
+{
+#if defined(__IPHONE_13_0) && __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_13_0
+    if (__builtin_available(iOS 13.0, *)) {
+        return os_proc_available_memory();
+    }
+#endif
+    return 0;
+}
+
 
 + (BOOL)isRunningUnitTests
 {
