@@ -301,7 +301,7 @@ RLM_ARRAY_TYPE(MXRealmSecret)
 
 @interface MXRealmCryptoStore ()
 {
-    NSCache<NSThread *, RLMRealm*> *cachedRealms;
+    NSCache<NSThread *, RLMRealm *> *cachedRealms;
     NSString *userId;
     NSString *deviceId;
 }
