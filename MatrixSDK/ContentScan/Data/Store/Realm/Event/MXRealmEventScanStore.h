@@ -14,7 +14,7 @@
  limitations under the License.
  */
 
-@import Foundation;
+#import <Foundation/Foundation.h>;
 #import "MXEventScanStore.h"
 #import "MXScanRealmProvider.h"
 

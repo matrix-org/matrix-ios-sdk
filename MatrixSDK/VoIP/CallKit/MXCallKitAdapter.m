@@ -18,9 +18,9 @@
 
 #import "MXCallKitAdapter.h"
 
-@import AVFoundation;
-@import CallKit;
-@import UIKit;
+#import <AVFoundation/AVFoundation.h>
+#import <CallKit/CallKit.h>
+#import <UIKit/UIKit.h>
 
 #import "MXCall.h"
 #import "MXCallAudioSessionConfigurator.h"

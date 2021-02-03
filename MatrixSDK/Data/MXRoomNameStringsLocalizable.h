@@ -14,7 +14,7 @@
  limitations under the License.
  */
 
-@import Foundation;
+#import <Foundation/Foundation.h>;
 
 /**
  The `MXRoomNameStringsLocalizable` protocol defines an interface that must be implemented

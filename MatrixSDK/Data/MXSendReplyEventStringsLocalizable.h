@@ -14,7 +14,7 @@
  limitations under the License.
  */
 
-@import Foundation;
+#import <Foundation/Foundation.h>;
 
 /**
  The `MXSendReplyEventStringsLocalizable` protocol defines an interface that must be implemented
