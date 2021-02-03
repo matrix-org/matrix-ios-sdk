@@ -338,6 +338,37 @@
  */
 - (void)removeOutboundGroupSessionWithRoomId:(NSString*)roomId;
 
+/**
+ Store the message index shared with a list of devices in dedicated room
+
+ @param devices list of devices the message index has been shared with
+ @param messageIndex the current message index of the outbound group session
+ @param roomId ID of the room of the outbound group session
+ @param sessionId ID of the session of the outbound group session
+ */
+- (void)storeSharedDevices:(MXUsersDevicesMap<NSNumber *> *)devices messageIndex:(NSUInteger) messageIndex forOutboundGroupSessionInRoomWithId:(NSString *)roomId sessionId:(NSString *)sessionId;
+
+/**
+ Retrieves all the devices the outbound group session has been shared with
+
+ @param roomId ID of the room of the outbound group session
+ @param sessionId ID of the session of the outbound group session
+ 
+ @return MXUsersDevicesMap of the message indexes
+ */
+- (MXUsersDevicesMap<NSNumber *> *)sharedDevicesForOutboundGroupSessionInRoomWithId:(NSString *)roomId sessionId:(NSString *)sessionId;
+
+/**
+ Retrieves the message index of the outbound session when it has been shared with a given device.
+
+ @param roomId ID of the room of the outbound group session
+ @param sessionId ID of the session of the outbound group session
+ @param userId user ID of the device
+ @param deviceId ID of the device
+
+ @return the NSNumber of the message index of the outbound session when it has been shared with a given device. Nil if the session has not been shared with the given device.
+ */
+- (NSNumber *)messageIndexForSharedDeviceInRoomWithId:(NSString *)roomId sessionId:(NSString *)sessionId userId:(NSString *)userId deviceId:(NSString *)deviceId;
 
 #pragma mark - Key backup
 

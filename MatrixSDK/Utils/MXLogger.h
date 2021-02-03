@@ -48,6 +48,15 @@
 + (void)redirectNSLogToFiles:(BOOL)redirectNSLogToFiles numberOfFiles:(NSUInteger)numberOfFiles;
 
 /**
+ Redirect NSLog output to MXLogger files.
+ 
+ @param redirectNSLogToFiles YES to enable the redirection.
+ @param numberOfFiles number of files to keep (default is 10).
+ @param sizeLimit size limit of log files in bytes. 0 means no limitation, the default value for other methods
+ */
++ (void)redirectNSLogToFiles:(BOOL)redirectNSLogToFiles numberOfFiles:(NSUInteger)numberOfFiles sizeLimit:(NSUInteger)sizeLimit;
+
+/**
  Delete all log files.
  */
 + (void)deleteLogFiles;

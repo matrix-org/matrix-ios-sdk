@@ -291,6 +291,19 @@ FOUNDATION_EXPORT NSString *const kMXToolsRegexStringForMatrixGroupIdentifier;
     typeof(var) var = weak##var
 
 
+#pragma mark - OS
+
+/**
+ Return the available memory.
+ 
+ @discussion
+ Available only for iOS from iOS13.
+ 
+ @return free memory in bytes.
+ */
++ (NSUInteger)memoryAvailable;
+
+
 #pragma mark - Unit testing
 
 /**
