@@ -1,3 +1,38 @@
+Changes in 0.17.11 (2021-02-03)
+=================================================
+
+✨ Features
+ * 
+
+🙌 Improvements
+ * MXMemory: New utility class to track memory usage.
+ * MXRealmCryptoStore: Compact Realm DB only once, at the first usage.
+ * MXLoginSSOIdentityProvider: Add new `brand` field as described in MSC2858 (vector-im/element-ios/issues/3980).
+ * MXSession: Make `handleBackgroundSyncCacheIfRequiredWithCompletion` method public (vector-im/element-ios/issues/3986).
+ * MXLogger: Remove log files that are no more part of the rotation.
+ * MXLogger: Add an option to limit logs size (vector-im/element-ios/issues/#3903).
+ * MXRestClient: Handle grace period in `authSessionForRequestWithMethod`.
+
+🐛 Bugfix
+ * Background Sync: Use autoreleasepool to limit RAM usage (vector-im/element-ios/issues/3957).
+ * Background Sync: Do not compact Realm DB from background process.
+ * MX3PidAddManager: Use a non empty client_secret to discover /account/3pid/add flows (vector-im/element-ios/issues/3966).
+
+⚠️ API Changes
+ * 
+
+🗣 Translations
+ * 
+    
+🧱 Build
+ * 
+
+Others
+ * 
+
+Improvements:
+
+
 Changes in 0.17.10 (2021-01-27)
 =================================================
 
@@ -6,10 +41,11 @@ Changes in 0.17.10 (2021-01-27)
 
 🙌 Improvements
  * MXRealmCryptoStore: New implementation of deleteStoreWithCredentials that does not need to open the realm DB.
+ * MXRealmCryptoStore: store chain index of shared outbound group sessions to improve re-share session keys
 
 🐛 Bugfix
  * MXBackgroundSyncService: Clear the bg sync crypto db if needed (vector-im/element-ios/issues/3956).
- * MXCrypto: Add a workaround when the megolm key is not shared to all members (vector-im/element-ios/issues/3907).
+ * MXCrypto: Add a workaround when the megolm key is not shared to all members (vector-im/element-ios/issues/3807).
 
 ⚠️ API Changes
  * 
