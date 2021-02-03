@@ -9,6 +9,8 @@ Changes to be released in next version
  * MXRealmCryptoStore: Compact Realm DB only once, at the first usage.
  * MXLoginSSOIdentityProvider: Add new `brand` field as described in MSC2858 (vector-im/element-ios/issues/3980).
  * MXSession: Make `handleBackgroundSyncCacheIfRequiredWithCompletion` method public (vector-im/element-ios/issues/3986).
+ * MXLogger: Remove log files that are no more part of the rotation.
+ * MXLogger: Add an option to limit logs size (vector-im/element-ios/issues/#3903).
 
 🐛 Bugfix
  * Background Sync: Use autoreleasepool to limit RAM usage (vector-im/element-ios/issues/3957).
