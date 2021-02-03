@@ -37,6 +37,11 @@ static NSString *subLogName;
 
 + (void)redirectNSLogToFiles:(BOOL)redirectNSLogToFiles numberOfFiles:(NSUInteger)numberOfFiles
 {
+    [self redirectNSLogToFiles:redirectNSLogToFiles numberOfFiles:numberOfFiles sizeLimit:0];
+}
+
++ (void)redirectNSLogToFiles:(BOOL)redirectNSLogToFiles numberOfFiles:(NSUInteger)numberOfFiles sizeLimit:(NSUInteger)sizeLimit
+{
     if (redirectNSLogToFiles)
     {
         NSMutableString *log = [NSMutableString string];
@@ -112,6 +117,11 @@ static NSString *subLogName;
         }
         
         [self removeExtraFilesFromCount:numberOfFiles];
+        
+        if (sizeLimit > 0)
+        {
+            [self removeFilesAfterSizeLimit:sizeLimit];
+        }
     }
     else if (stderrSave)
     {
@@ -333,6 +343,52 @@ static NSString* crashLogPath(void)
     while (index++);
 }
 
++ (void)removeFilesAfterSizeLimit:(NSUInteger)sizeLimit
+{
+    NSUInteger logSize = 0;
+    BOOL removeFiles = NO;
+    NSFileManager *fileManager = [NSFileManager defaultManager];
+    NSString *logsFolderPath = [MXLogger logsFolderPath];
+    
+    // Start from console.1.log. Do not consider console.log. It should be almost empty
+    NSUInteger index = 0;
+    while (++index)
+    {
+        NSString *fileName = [NSString stringWithFormat:@"console%@.%tu.log", subLogName, index];
+        NSString *logFile = [logsFolderPath stringByAppendingPathComponent:fileName];
+        
+        if ([fileManager fileExistsAtPath:logFile])
+        {
+            logSize += [fileManager attributesOfItemAtPath:logFile error:nil].fileSize;
+            
+            if (logSize >= sizeLimit)
+            {
+                removeFiles = YES;
+                break;
+            }
+        }
+        else
+        {
+            break;
+        }
+    }
+    
+    if (removeFiles)
+    {
+        NSLog(@"[MXLogger] removeFilesAfterSizeLimit: Remove files from index %@ because logs are too large (%@ for a limit of %@)\n",
+              @(index),
+              [NSByteCountFormatter stringFromByteCount:logSize countStyle:NSByteCountFormatterCountStyleBinary],
+              [NSByteCountFormatter stringFromByteCount:sizeLimit countStyle:NSByteCountFormatterCountStyleBinary]);
+        [self removeExtraFilesFromCount:index];
+    }
+    else
+    {
+        NSLog(@"[MXLogger] removeFilesAfterSizeLimit: No need: %@ for a limit of %@\n",
+              [NSByteCountFormatter stringFromByteCount:logSize countStyle:NSByteCountFormatterCountStyleBinary],
+              [NSByteCountFormatter stringFromByteCount:sizeLimit countStyle:NSByteCountFormatterCountStyleBinary]);
+    }
+    
+}
 @end
 
 
