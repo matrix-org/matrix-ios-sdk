@@ -51,6 +51,8 @@ NSString *const kMXCallManagerPSTNSupportUpdated = @"kMXCallManagerPSTNSupportUp
 NSString *const kMXProtocolVectorPSTN = @"im.vector.protocol.pstn";
 NSString *const kMXProtocolPSTN = @"m.protocol.pstn";
 
+NSTimeInterval const kMXCallDirectRoomJoinTimeout = 30;
+
 
 @interface MXCallManager ()
 {
@@ -746,7 +748,7 @@ NSString *const kMXProtocolPSTN = @"m.protocol.pstn";
             {
                 MXWeakify(self);
                 
-                [self directCallableRoomWithUser:target.userId completion:^(MXRoom * _Nullable room, NSError * _Nullable error) {
+                [self directCallableRoomWithUser:target.userId timeout:kMXCallDirectRoomJoinTimeout completion:^(MXRoom * _Nullable room, NSError * _Nullable error) {
                     
                     MXStrongifyAndReturnIfNil(self);
                     
@@ -851,15 +853,57 @@ NSString *const kMXProtocolPSTN = @"m.protocol.pstn";
 
 /// Tries to find a direct & callable room with the given user. If not such a room found, tries to create it and then waits for the other party to join.
 /// @param userId The user id to check.
+/// @param timeout The timeout for the invited user to join the room, in case of the room is newly created (in seconds).
 /// @param completion Completion block.
 - (void)directCallableRoomWithUser:(NSString * _Nonnull)userId
+                           timeout:(NSTimeInterval)timeout
                         completion:(void (^_Nonnull)(MXRoom* _Nullable room, NSError * _Nullable error))completion
 {
     MXRoom *room = [self.mxSession directJoinedRoomWithUserId:userId];
     if (room)
     {
-        //  TODO: Having a room probably does not mean it's callable (both party joined). Fix this.
-        completion(room, nil);
+        [room state:^(MXRoomState *roomState) {
+            MXMembership membership = [roomState.members memberWithUserId:userId].membership;
+            
+            if (membership == MXMembershipJoin)
+            {
+                //  other party already joined, return the room
+                completion(room, nil);
+            }
+            else if (membership == MXMembershipInvite)
+            {
+                //  Wait for other party to join before returning the room
+                __block BOOL joined = NO;
+                
+                __block id listener = [room listenToEventsOfTypes:@[kMXEventTypeStringRoomMember] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
+                    if ([event.sender isEqualToString:userId])
+                    {
+                        MXRoomMemberEventContent *content = [MXRoomMemberEventContent modelFromJSON:event.content];
+                        if (content.membership == kMXMembershipStringJoin)
+                        {
+                            joined = YES;
+                            [room removeListener:listener];
+                            dispatch_async(dispatch_get_main_queue(), ^{
+                                completion(room, nil);
+                            });
+                        }
+                    }
+                }];
+                
+                //  implement the timeout
+                dispatch_after(dispatch_time(DISPATCH_TIME_NOW, timeout * NSEC_PER_SEC), dispatch_get_main_queue(), ^{
+                    if (!joined)
+                    {
+                        //  user failed to join within the given time
+                        completion(nil, nil);
+                    }
+                });
+            }
+            else
+            {
+                completion(nil, nil);
+            }
+        }];
     }
     else
     {
@@ -877,9 +921,8 @@ NSString *const kMXProtocolPSTN = @"m.protocol.pstn";
             }
 
             [self.mxSession createRoomWithParameters:roomCreationParameters success:^(MXRoom *room) {
-                //  TODO: Wait for other party to join before returning the room
-                
-                completion(room, nil);
+                //  wait for other party to join
+                return [self directCallableRoomWithUser:userId timeout:timeout completion:completion];
             } failure:^(NSError *error) {
                 completion(nil, error);
             }];
@@ -1182,7 +1225,7 @@ NSString *const kMXCallManagerConferenceUserDomain  = @"matrix.org";
         MXStrongifyAndReturnIfNil(self);
         
         //  try to find a direct room with this user
-        [self directCallableRoomWithUser:user.userId completion:^(MXRoom * _Nullable room, NSError * _Nullable error) {
+        [self directCallableRoomWithUser:user.userId timeout:kMXCallDirectRoomJoinTimeout completion:^(MXRoom * _Nullable room, NSError * _Nullable error) {
             if (room)
             {
                 //  room found, place the call in this room
