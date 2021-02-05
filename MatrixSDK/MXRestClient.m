@@ -5126,7 +5126,7 @@ MXAuthAction;
                               parameters:parameters
                                  success:^(NSDictionary *JSONResponse) {
 
-                                     NSLog(@"[MXRestClient] authSessionForRequestWithMethod: Warning: get an authentication session failed");
+                                     NSLog(@"[MXRestClient] authSessionForRequestWithMethod: No authentication is needed");
                                      if (success)
                                      {
                                          [self dispatchProcessing:nil
@@ -5137,8 +5137,18 @@ MXAuthAction;
                                  }
                                  failure:^(NSError *error) {
                                      __block MXAuthenticationSession *authSession;
+                                     __block BOOL isAuthenticationNeeded = YES;
                                      [self dispatchProcessing:^{
-                                         if (error.userInfo[MXHTTPClientErrorResponseDataKey])
+                                         
+                                         MXError *matrixError = [[MXError alloc] initWithNSError: error];
+                                         
+                                         // If a grace period is active or the endpoint do not requires authentication and waiting for parameters do not fail and give a nil auth session.
+                                         if (matrixError && matrixError.httpResponse.statusCode == 400)
+                                         {
+                                             NSLog(@"[MXRestClient] authSessionForRequestWithMethod: No authentication is needed. Ignore invalid parameters error");
+                                             isAuthenticationNeeded = NO;
+                                         }
+                                         else if (error.userInfo[MXHTTPClientErrorResponseDataKey])
                                          {
                                              // The auth session should be available in response data in case of unauthorized request.
                                              NSDictionary *JSONResponse = error.userInfo[MXHTTPClientErrorResponseDataKey];
@@ -5148,7 +5158,7 @@ MXAuthAction;
                                              }
                                          }
                                      } andCompletion:^{
-                                         if (authSession)
+                                         if (!isAuthenticationNeeded || authSession)
                                          {
                                              if (success)
                                              {
