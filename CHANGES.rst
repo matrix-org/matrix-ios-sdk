@@ -5,15 +5,44 @@ Changes to be released in next version
  * 
 
 🙌 Improvements
- * MXMemory: New utility class to track memory usage.
- * MXRealmCryptoStore: Compact Realm DB only once, at the first usage.
- * MXLoginSSOIdentityProvider: Add new `brand` field as described in MSC2858 (vector-im/element-ios/issues/3980).
- * MXSession: Make `handleBackgroundSyncCacheIfRequiredWithCompletion` method public (vector-im/element-ios/issues/3986).
  * Send VoIP analytics events (vector-im/element-ios/issues/3855).
  * Add hold support for CallKit calls (vector-im/element-ios/issues/3834).
  * Fix video call with web (vector-im/element-ios/issues/3862).
  * VoIP: Call transfers initiation (vector-im/element-ios/issues/3872).
  * VoIP: DTMF support in calls (vector-im/element-ios/issues/3929).
+
+🐛 Bugfix
+ * 
+
+⚠️ API Changes
+ * 
+
+🗣 Translations
+ * 
+    
+🧱 Build
+ * 
+
+Others
+ * 
+
+Improvements:
+
+
+Changes in 0.17.11 (2021-02-03)
+=================================================
+
+✨ Features
+ * 
+
+🙌 Improvements
+ * MXMemory: New utility class to track memory usage.
+ * MXRealmCryptoStore: Compact Realm DB only once, at the first usage.
+ * MXLoginSSOIdentityProvider: Add new `brand` field as described in MSC2858 (vector-im/element-ios/issues/3980).
+ * MXSession: Make `handleBackgroundSyncCacheIfRequiredWithCompletion` method public (vector-im/element-ios/issues/3986).
+ * MXLogger: Remove log files that are no more part of the rotation.
+ * MXLogger: Add an option to limit logs size (vector-im/element-ios/issues/#3903).
+ * MXRestClient: Handle grace period in `authSessionForRequestWithMethod`.
 
 🐛 Bugfix
  * Background Sync: Use autoreleasepool to limit RAM usage (vector-im/element-ios/issues/3957).
@@ -32,6 +61,9 @@ Changes to be released in next version
 
 Others
  * 
+
+Improvements:
+
 
 Changes in 0.17.10 (2021-01-27)
 =================================================
