@@ -20,7 +20,7 @@ Changes to be released in next version
  * 
 
 Others
- * 
+ * README: Fix a couple of typos and improve consistency of the README.
 
 Changes in 0.17.11 (2021-02-03)
 =================================================

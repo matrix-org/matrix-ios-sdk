@@ -32,11 +32,11 @@ If you want to use the develop version of the SDK, use instead:
 
 Options
 =======
-If you want also Swift support, add the following pod to you app Podfile::
+If you want also Swift support, add the following pod to your app Podfile::
 
     pod 'MatrixSDK/SwiftSupport'
 
-If you want to enable VoIP using the http://webrtc.org VoIP stack, add the following pod to you app Podfile::
+If you want to enable VoIP using the http://webrtc.org VoIP stack, add the following pod to your app Podfile::
 
     pod 'MatrixSDK/JingleCallStack'
 
@@ -77,7 +77,7 @@ They contain logic to maintain consistent chat room data.
 :``MXUser``:
      This is a user known by the current user, outside of the context of a
      room. MXSession exposes and maintains the list of MXUsers. It provides
-     the user id, displayname and the current presence state
+     the user id, displayname and the current presence state.
 
 Usage
 =====
@@ -497,7 +497,7 @@ Known issues
 CocoaPods may fail to install on OSX 10.8.x with "i18n requires Ruby version
 >= 1.9.3.".  This is a known problem similar to
 https://github.com/CocoaPods/CocoaPods/issues/2458 that needs to be raised with
-the cocoapods team.
+the CocoaPods team.
 
 Registration
 ------------
