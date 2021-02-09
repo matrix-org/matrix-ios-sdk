@@ -373,7 +373,11 @@ NSString *const kMXJingleCallWebRTCMainStreamID = @"userMedia";
 - (void)handleAnswer:(NSString *)sdp success:(void (^)(void))success failure:(void (^)(NSError *))failure
 {
     RTCSessionDescription *sessionDescription = [[RTCSessionDescription alloc] initWithType:RTCSdpTypeAnswer sdp:sdp];
+    
+    MXWeakify(self);
     [peerConnection setRemoteDescription:sessionDescription completionHandler:^(NSError * _Nullable error) {
+        MXStrongifyAndReturnIfNil(self);
+        
         NSLog(@"[MXJingleCallStackCall] handleAnswer: setRemoteDescription: error: %@", error);
         
         // Return on main thread
@@ -389,6 +393,9 @@ NSString *const kMXJingleCallWebRTCMainStreamID = @"userMedia";
             }
             
         });
+        
+        //  check we can consider this call as held, after handling the remote's answer
+        [self checkTheCallIsRemotelyOnHold];
         
     }];
 }
