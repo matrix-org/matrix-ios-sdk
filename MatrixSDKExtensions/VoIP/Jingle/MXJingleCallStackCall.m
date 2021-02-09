@@ -116,7 +116,7 @@ NSString *const kMXJingleCallWebRTCMainStreamID = @"userMedia";
     [peerConnection.transceivers enumerateObjectsUsingBlock:^(RTCRtpTransceiver * _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
         obj.sender.track.isEnabled = !hold;
         obj.receiver.track.isEnabled = !hold;
-        obj.direction = hold ? RTCRtpTransceiverDirectionInactive : RTCRtpTransceiverDirectionSendRecv;
+        [obj setDirection:hold ? RTCRtpTransceiverDirectionInactive : RTCRtpTransceiverDirectionSendRecv error:NULL];
     }];
     
     RTCMediaConstraints *mediaConstraints;
