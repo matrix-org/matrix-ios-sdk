@@ -5,7 +5,7 @@ Changes to be released in next version
  * 
 
 🙌 Improvements
- * 
+ * Pods: Update JitsiMeetSDK to 3.1.0.
 
 🐛 Bugfix
  * 
