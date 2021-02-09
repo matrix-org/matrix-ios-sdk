@@ -433,7 +433,7 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
                 NSString *algorithm;
                 id<MXEncrypting> alg = self->roomEncryptors[room.roomId];
 
-                NSLog(@"[MXCrypto] encryptEventContent: with %@", roomState.encryptionAlgorithm);
+                NSLog(@"[MXCrypto] encryptEventContent: with %@ for %@ users", roomState.encryptionAlgorithm, @(userIds.count));
 
                 if (!alg)
                 {

@@ -37,6 +37,11 @@ static NSString *subLogName;
 
 + (void)redirectNSLogToFiles:(BOOL)redirectNSLogToFiles numberOfFiles:(NSUInteger)numberOfFiles
 {
+    [self redirectNSLogToFiles:redirectNSLogToFiles numberOfFiles:numberOfFiles sizeLimit:0];
+}
+
++ (void)redirectNSLogToFiles:(BOOL)redirectNSLogToFiles numberOfFiles:(NSUInteger)numberOfFiles sizeLimit:(NSUInteger)sizeLimit
+{
     if (redirectNSLogToFiles)
     {
         NSMutableString *log = [NSMutableString string];
@@ -76,24 +81,24 @@ static NSString *subLogName;
                 if ([fileManager fileExistsAtPath:nsLogPathOlder])
                 {
                     // Temp log
-                    [log appendFormat:@"[NSLog] redirectNSLogToFiles: removeItemAtPath: %@\n", nsLogPathOlder];
+                    [log appendFormat:@"[MXLogger] redirectNSLogToFiles: removeItemAtPath: %@\n", nsLogPathOlder];
 
                     NSError *error;
                     [fileManager removeItemAtPath:nsLogPathOlder error:&error];
                     if (error)
                     {
-                        [log appendFormat:@"[NSLog] ERROR: removeItemAtPath: %@. Error: %@\n", nsLogPathOlder, error];
+                        [log appendFormat:@"[MXLogger] ERROR: removeItemAtPath: %@. Error: %@\n", nsLogPathOlder, error];
                     }
                 }
 
                 // Temp log
-                [log appendFormat:@"[NSLog] redirectNSLogToFiles: moveItemAtPath: %@ toPath: %@\n", nsLogPathCurrent, nsLogPathOlder];
+                [log appendFormat:@"[MXLogger] redirectNSLogToFiles: moveItemAtPath: %@ toPath: %@\n", nsLogPathCurrent, nsLogPathOlder];
 
                 NSError *error;
                 [fileManager moveItemAtPath:nsLogPathCurrent toPath:nsLogPathOlder error:&error];
                 if (error)
                 {
-                    [log appendFormat:@"[NSLog] ERROR: moveItemAtPath: %@ toPath: %@. Error: %@\n", nsLogPathCurrent, nsLogPathOlder, error];
+                    [log appendFormat:@"[MXLogger] ERROR: moveItemAtPath: %@ toPath: %@. Error: %@\n", nsLogPathCurrent, nsLogPathOlder, error];
                 }
             }
         }
@@ -104,11 +109,18 @@ static NSString *subLogName;
         NSString *nsLogPath = [logsFolderPath stringByAppendingPathComponent:[NSString stringWithFormat:@"console%@.log", subLogName]];
         freopen([nsLogPath fileSystemRepresentation], "w+", stderr);
 
-        NSLog(@"[NSLog] redirectNSLogToFiles: YES");
+        NSLog(@"[MXLogger] redirectNSLogToFiles: YES");
         if (log.length)
         {
             // We can now log into files
             NSLog(@"%@", log);
+        }
+        
+        [self removeExtraFilesFromCount:numberOfFiles];
+        
+        if (sizeLimit > 0)
+        {
+            [self removeFilesAfterSizeLimit:sizeLimit];
         }
     }
     else if (stderrSave)
@@ -151,7 +163,7 @@ static NSString *subLogName;
         }
     }
 
-    NSLog(@"[NSLog] logFiles: %@", logFiles);
+    NSLog(@"[MXLogger] logFiles: %@", logFiles);
 
     return logFiles;
 }
@@ -305,6 +317,78 @@ static NSString* crashLogPath(void)
     return logsFolderPath;
 }
 
+
+// If [self redirectNSLogToFiles: numberOfFiles:] is called with a lower numberOfFiles we need to do some cleanup
++ (void)removeExtraFilesFromCount:(NSUInteger)count
+{
+    NSFileManager *fileManager = [NSFileManager defaultManager];
+    NSString *logsFolderPath = [MXLogger logsFolderPath];
+    
+    NSUInteger index = count;
+    do
+    {
+        NSString *fileName = [NSString stringWithFormat:@"console%@.%tu.log", subLogName, index];
+        NSString *logFile = [logsFolderPath stringByAppendingPathComponent:fileName];
+        
+        if ([fileManager fileExistsAtPath:logFile])
+        {
+            [fileManager removeItemAtPath:logFile error:nil];
+            NSLog(@"[MXLogger] removeExtraFilesFromCount: %@. removeItemAtPath: %@\n", @(count), logFile);
+        }
+        else
+        {
+            break;
+        }
+    }
+    while (index++);
+}
+
++ (void)removeFilesAfterSizeLimit:(NSUInteger)sizeLimit
+{
+    NSUInteger logSize = 0;
+    BOOL removeFiles = NO;
+    NSFileManager *fileManager = [NSFileManager defaultManager];
+    NSString *logsFolderPath = [MXLogger logsFolderPath];
+    
+    // Start from console.1.log. Do not consider console.log. It should be almost empty
+    NSUInteger index = 0;
+    while (++index)
+    {
+        NSString *fileName = [NSString stringWithFormat:@"console%@.%tu.log", subLogName, index];
+        NSString *logFile = [logsFolderPath stringByAppendingPathComponent:fileName];
+        
+        if ([fileManager fileExistsAtPath:logFile])
+        {
+            logSize += [fileManager attributesOfItemAtPath:logFile error:nil].fileSize;
+            
+            if (logSize >= sizeLimit)
+            {
+                removeFiles = YES;
+                break;
+            }
+        }
+        else
+        {
+            break;
+        }
+    }
+    
+    if (removeFiles)
+    {
+        NSLog(@"[MXLogger] removeFilesAfterSizeLimit: Remove files from index %@ because logs are too large (%@ for a limit of %@)\n",
+              @(index),
+              [NSByteCountFormatter stringFromByteCount:logSize countStyle:NSByteCountFormatterCountStyleBinary],
+              [NSByteCountFormatter stringFromByteCount:sizeLimit countStyle:NSByteCountFormatterCountStyleBinary]);
+        [self removeExtraFilesFromCount:index];
+    }
+    else
+    {
+        NSLog(@"[MXLogger] removeFilesAfterSizeLimit: No need: %@ for a limit of %@\n",
+              [NSByteCountFormatter stringFromByteCount:logSize countStyle:NSByteCountFormatterCountStyleBinary],
+              [NSByteCountFormatter stringFromByteCount:sizeLimit countStyle:NSByteCountFormatterCountStyleBinary]);
+    }
+    
+}
 @end
 
 

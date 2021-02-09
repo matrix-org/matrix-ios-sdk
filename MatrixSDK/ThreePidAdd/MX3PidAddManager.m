@@ -59,7 +59,7 @@ NSString *const MX3PidAddManagerErrorDomain = @"org.matrix.sdk.MX3PidAddManagerE
 {
     // Trigger a random request to the API
     // If authentication is required, it will provide the flow in the error response
-    return [self->mxSession.matrixRestClient add3PIDOnlyWithSessionId:@"" clientSecret:@"" authParams:nil success:^{
+    return [self->mxSession.matrixRestClient add3PIDOnlyWithSessionId:@"" clientSecret:[MXTools generateSecret] authParams:nil success:^{
         // This should not happen
         success(nil);
     } failure:^(NSError *error) {
