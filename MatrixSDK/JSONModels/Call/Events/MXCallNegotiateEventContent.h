@@ -35,6 +35,7 @@ NS_ASSUME_NONNULL_BEGIN
  The time in milliseconds that the invite is valid for.
  Once the invite age exceeds this value, clients should discard it.
  They should also no longer show the call as awaiting an answer in the UI.
+ 0 means no lifetime provided. For instance, it's an answer, no need for a lifetime.
  */
 @property (nonatomic) NSUInteger lifetime;
 

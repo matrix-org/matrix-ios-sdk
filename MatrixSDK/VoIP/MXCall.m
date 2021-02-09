@@ -1167,8 +1167,7 @@ NSString *const kMXCallSupportsTransferringStatusDidChange = @"kMXCallSupportsTr
                             @"sdp": sdpAnswer
                     },
                     @"version": kMXCallVersion,
-                    @"party_id": self.partyId,
-                    @"lifetime": @(self->callManager.negotiateLifetime)
+                    @"party_id": self.partyId
                 };
                 [self.callSignalingRoom sendEventOfType:kMXEventTypeStringCallNegotiate content:content localEcho:nil success:nil failure:^(NSError *error) {
                     NSLog(@"[MXCall] handleCallNegotiate: negotiate answer: ERROR: Cannot send m.call.negotiate event.");
