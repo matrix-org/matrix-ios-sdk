@@ -8,7 +8,7 @@ Changes to be released in next version
  * Pods: Update JitsiMeetSDK to 3.1.0.
 
 🐛 Bugfix
- * 
+ * MXRoomSummary: directUserId may be missing (null) for a direct chat if it was joined on another device.
 
 ⚠️ API Changes
  * 
