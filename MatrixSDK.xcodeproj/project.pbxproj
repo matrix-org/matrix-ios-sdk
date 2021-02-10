@@ -1314,6 +1314,7 @@
 		EC8A53E925B1BCC6004E0802 /* MXThirdpartyProtocolsResponse.h in Headers */ = {isa = PBXBuildFile; fileRef = EC8A53D525B1BCC6004E0802 /* MXThirdpartyProtocolsResponse.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		ECAE7AEC24ED75F1002FA813 /* HTTPAdditionalHeadersTests.m in Sources */ = {isa = PBXBuildFile; fileRef = ECAE7AEB24ED75F1002FA813 /* HTTPAdditionalHeadersTests.m */; };
 		ECB5D98C2552C9B4000AD89C /* MXStopwatch.swift in Sources */ = {isa = PBXBuildFile; fileRef = ECB5D98B2552C9B4000AD89C /* MXStopwatch.swift */; };
+		ECD623FF25D3DCC900DC0A0B /* MXOlmDecryption.h in Headers */ = {isa = PBXBuildFile; fileRef = 327187831DA7D0220071C818 /* MXOlmDecryption.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		F0173EAC1FCF0E8900B5F6A3 /* MXGroup.h in Headers */ = {isa = PBXBuildFile; fileRef = F0173EAA1FCF0E8800B5F6A3 /* MXGroup.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		F0173EAD1FCF0E8900B5F6A3 /* MXGroup.m in Sources */ = {isa = PBXBuildFile; fileRef = F0173EAB1FCF0E8900B5F6A3 /* MXGroup.m */; };
 		F03EF4FE1DF014D9009DF592 /* MXMediaLoader.h in Headers */ = {isa = PBXBuildFile; fileRef = F03EF4FA1DF014D9009DF592 /* MXMediaLoader.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -4094,6 +4095,7 @@
 				B14EF2E82397E90400758AF0 /* MXSendReplyEventDefaultStringLocalizations.h in Headers */,
 				B14EF2E92397E90400758AF0 /* MXTools.h in Headers */,
 				B14EF2EA2397E90400758AF0 /* MXDeviceListOperation.h in Headers */,
+				ECD623FF25D3DCC900DC0A0B /* MXOlmDecryption.h in Headers */,
 				B14EF2EB2397E90400758AF0 /* MXRoomAccountData.h in Headers */,
 				B14EF2EC2397E90400758AF0 /* MXEventContentRelatesTo.h in Headers */,
 				B19A30BF2404268600FB6F35 /* MXQRCodeData.h in Headers */,

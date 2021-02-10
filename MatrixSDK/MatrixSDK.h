@@ -117,6 +117,8 @@ FOUNDATION_EXPORT NSString *MatrixSDKVersion;
 #import "MXThirdPartyProtocolInstance.h"
 #import "MXThirdPartyProtocol.h"
 #import "MXThirdpartyProtocolsResponse.h"
+#import "MXThirdPartyUserInstance.h"
+#import "MXThirdPartyUsersResponse.h"
 
 #import "MXLoginSSOFlow.h"
 
