@@ -1,4 +1,4 @@
-Changes to be released in next version
+Changes in 0.18.0 (2021-02-11)
 =================================================
 
 ✨ Features
