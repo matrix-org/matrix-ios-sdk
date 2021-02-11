@@ -22,7 +22,7 @@
 #import "MatrixSDKTestsData.h"
 #import "MXRoomMember.h"
 #import "MXKey.h"
-
+#import "MXThirdpartyProtocolsResponse.h"
 
 // Do not bother with retain cycles warnings in tests
 #pragma clang diagnostic push
@@ -1532,7 +1532,7 @@
                           };
 
         // Upload the device keys
-        [bobRestClient uploadKeys:bobDevice.JSONDictionary oneTimeKeys:nil forDevice:@"dev1" success:^(MXKeysUploadResponse *keysUploadResponse) {
+        [bobRestClient uploadKeys:bobDevice.JSONDictionary oneTimeKeys:nil success:^(MXKeysUploadResponse *keysUploadResponse) {
 
             XCTAssert(keysUploadResponse.oneTimeKeyCounts);
             XCTAssertEqual(keysUploadResponse.oneTimeKeyCounts.count, 0, @"There is no yet one-time keys");
@@ -1547,7 +1547,7 @@
                 XCTAssertEqual(keysQueryResponse.deviceKeys.userIds.count, 1);
                 XCTAssertEqual([keysQueryResponse.deviceKeys deviceIdsForUser:bobRestClient.credentials.userId].count, 1);
 
-                MXDeviceInfo *bobDevice2 = [keysQueryResponse.deviceKeys objectForDevice:@"dev1" forUser:bobRestClient.credentials.userId];
+                MXDeviceInfo *bobDevice2 = [keysQueryResponse.deviceKeys objectForDevice:bobRestClient.credentials.deviceId forUser:bobRestClient.credentials.userId];
                 XCTAssert(bobDevice2);
                 XCTAssertEqualObjects(bobDevice2.deviceId, @"dev1");
                 XCTAssertEqualObjects(bobDevice2.userId, bobRestClient.credentials.userId);

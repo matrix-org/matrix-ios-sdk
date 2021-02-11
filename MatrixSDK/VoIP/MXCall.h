@@ -23,12 +23,14 @@
 #endif
 
 #import "MXCallStackCall.h"
+#import "MXCallHangupEventContent.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
 @class MXCallManager;
 @class MXEvent;
 @class MXRoom;
+@class MXUserModel;
 
 /**
  Call states.
@@ -46,6 +48,8 @@ typedef NS_ENUM(NSUInteger, MXCallState)
     MXCallStateConnecting,
 
     MXCallStateConnected,
+    MXCallStateOnHold,
+    MXCallStateRemotelyOnHold,
     MXCallStateEnded,
 
     MXCallStateInviteExpired,
@@ -61,7 +65,7 @@ typedef NS_ENUM(NSInteger, MXCallEndReason)
     MXCallEndReasonHangup, // The call was ended by the local side
     MXCallEndReasonHangupElsewhere, // The call was ended on another device
     MXCallEndReasonRemoteHangup, // The call was ended by the remote side
-    MXCallEndReasonBusy, // The call was declined by the remote side before it was being established. Only for outgoing calls
+    MXCallEndReasonBusy, // The call was declined by the local/remote side before it was being established.
     MXCallEndReasonMissed, // The call wasn't established in a given period of time
     MXCallEndReasonAnsweredElseWhere // The call was answered on another device
 };
@@ -71,6 +75,18 @@ typedef NS_ENUM(NSInteger, MXCallEndReason)
  The notification object is the `MXKCall` object representing the call.
  */
 extern NSString *const kMXCallStateDidChange;
+
+/**
+ Posted when a `MXCall` object has changed its status to support holding.
+ The notification object is the `MXKCall` object representing the call.
+ */
+extern NSString *const kMXCallSupportsHoldingStatusDidChange;
+
+/**
+ Posted when a `MXCall` object has changed its status to support transferring.
+ The notification object is the `MXKCall` object representing the call.
+ */
+extern NSString *const kMXCallSupportsTransferringStatusDidChange;
 
 @protocol MXCallDelegate;
 
@@ -124,6 +140,74 @@ extern NSString *const kMXCallStateDidChange;
  */
 - (void)hangup;
 
+/**
+ Hang up a call with a reason in progress.
+ */
+- (void)hangupWithReason:(MXCallHangupReason)reason;
+
+#pragma mark - Hold
+
+/**
+ Flag to indicate that the call can be holded.
+ */
+@property (nonatomic, readonly) BOOL supportsHolding;
+
+/**
+ Hold/unhold the call. The call must be connected to hold and must be already holded to unhold the call.
+ Please note that also remotely holded calls cannot be unholded.
+ */
+- (void)hold:(BOOL)hold;
+
+/**
+ Call is on hold, locally or remotely.
+ */
+@property (nonatomic, readonly) BOOL isOnHold;
+
+#pragma mark - Transfer
+
+/**
+ Flag to indicate that the call can be transferred.
+ */
+@property (nonatomic, readonly) BOOL supportsTransferring;
+
+/// Attempts to send an `m.call.replaces` event to the signaling room for this call.
+/// @param targetRoomId Tells other party about the transfer target room. Optional. If specified, the transferee waits for an invite to this room and after join continues the transfer in this room. Otherwise, the transferee contacts the user given in the `targetUser` field in a room of its choosing.
+/// @param targetUser Tells other party about the target user of the call transfer. Optional for the calls to the transfer target.
+/// @param createCallId Tells other party to create a new call with this identifier. Mutually exclusive with `awaitCallId`.
+/// @param awaitCallId Tells other party to wait for a call with this identifier. Mutually exclusive with `createCallId`.
+/// @param success Success block. Returns event identifier for the event
+/// @param failure Failure block. Returns error
+- (void)transferToRoom:(NSString * _Nullable)targetRoomId
+                  user:(MXUserModel * _Nullable)targetUser
+            createCall:(NSString * _Nullable)createCallId
+             awaitCall:(NSString * _Nullable)awaitCallId
+               success:(void (^)(NSString * _Nonnull eventId))success
+               failure:(void (^)(NSError * _Nullable error))failure;
+
+#pragma mark - DTMF
+
+/**
+ Indicates whether this call can send DTMF tones.
+ This property will be false if the call is not connected yet.
+ */
+@property (nonatomic, readonly) BOOL supportsDTMF;
+
+/**
+ Creates a task to send given DTMF tones in the call. If there is a task already running, it'll be canceled.
+ @param tones DTMF tones to be sent. Allowed characters: [0-9], [A-D], '#', `*`. Case insensitive. Comma (',') will cause a 2 seconds delay before sending next character.
+ @param duration Duration for each character of tones (in milliseconds).
+    Allowed interval is from 70 ms to 6000 ms inclusively.
+    If given value is outside of these limits, it'll be limited to them.
+    Pass 0 to use default value or last used value.
+ @param interToneGap Duration for gap between each character of tones (in milliseconds).
+    Must be at least 50 ms.
+    If given value is lower than 50 ms, it'll be limited to that value.
+    Pass 0 to use default value or last used value.
+ @returns Whether the operation succeeded or not.
+ */
+- (BOOL)sendDTMF:(NSString * _Nonnull)tones
+        duration:(NSUInteger)duration
+    interToneGap:(NSUInteger)interToneGap;
 
 #pragma mark - Properties
 /**
@@ -182,6 +266,11 @@ extern NSString *const kMXCallStateDidChange;
  The user id of the caller.
  */
 @property (readonly, nonatomic) NSString *callerId;
+
+/**
+ The party id for this call. Will be generated on first access.
+ */
+@property (readonly, nonatomic, copy) NSString *partyId;
 
 /**
  The user id of the callee. Nil for conference calls
@@ -268,13 +357,26 @@ extern NSString *const kMXCallStateDidChange;
 @optional
 
 /**
+ Tells the delegate that status of the call to support holding has changed.
+ @param call the instance that changes
+ */
+- (void)callSupportsHoldingStatusDidChange:(MXCall *)call;
+
+/**
+ Tells the delegate that status of the call to support transferring has changed.
+ @param call the instance that changes
+ */
+- (void)callSupportsTransferringStatusDidChange:(MXCall *)call;
+
+/**
  Tells the delegate an error occured.
  The call cannot be established.
 
  @param call the instance that changes.
  @param error the error.
+ @param reason The hangup reason, which would be sent if this method was not implemented.
  */
-- (void)call:(MXCall *)call didEncounterError:(NSError *)error;
+- (void)call:(MXCall *)call didEncounterError:(NSError *)error reason:(MXCallHangupReason)reason;
 
 @end
 

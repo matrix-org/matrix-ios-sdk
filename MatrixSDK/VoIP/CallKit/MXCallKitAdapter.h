@@ -29,6 +29,7 @@ NS_ASSUME_NONNULL_BEGIN
  */
 extern NSString * const kMXCallKitAdapterAudioSessionDidActive;
 
+API_AVAILABLE(ios(10.0))
 @interface MXCallKitAdapter : NSObject
 
 /**
@@ -45,6 +46,11 @@ extern NSString * const kMXCallKitAdapterAudioSessionDidActive;
 
 - (void)reportCall:(MXCall *)call startedConnectingAtDate:(nullable NSDate *)date;
 - (void)reportCall:(MXCall *)call connectedAtDate:(nullable NSDate *)date;
+- (void)reportCall:(MXCall *)call onHold:(BOOL)onHold;
+
+/// Update hold support for the given call.
+/// @param call The call
+- (void)updateSupportsHoldingForCall:(MXCall *)call;
 
 /**
  Tell about support of CallKit by the OS
