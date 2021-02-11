@@ -6,6 +6,11 @@ Changes to be released in next version
 
 🙌 Improvements
  * Pods: Update JitsiMeetSDK to 3.1.0.
+ * Send VoIP analytics events (vector-im/element-ios/issues/3855).
+ * Add hold support for CallKit calls (vector-im/element-ios/issues/3834).
+ * Fix video call with web (vector-im/element-ios/issues/3862).
+ * VoIP: Call transfers initiation (vector-im/element-ios/issues/3872).
+ * VoIP: DTMF support in calls (vector-im/element-ios/issues/3929).
 
 🐛 Bugfix
  * MXRoomSummary: directUserId may be missing (null) for a direct chat if it was joined on another device.
@@ -21,6 +26,9 @@ Changes to be released in next version
 
 Others
  * 
+
+Improvements:
+
 
 Changes in 0.17.11 (2021-02-03)
 =================================================
@@ -41,6 +49,7 @@ Changes in 0.17.11 (2021-02-03)
  * Background Sync: Use autoreleasepool to limit RAM usage (vector-im/element-ios/issues/3957).
  * Background Sync: Do not compact Realm DB from background process.
  * MX3PidAddManager: Use a non empty client_secret to discover /account/3pid/add flows (vector-im/element-ios/issues/3966).
+ * VoIP: Fix camera indicator when video call answered elsewhere (vector-im/element-ios/issues/3971).
 
 ⚠️ API Changes
  * 

@@ -26,6 +26,9 @@
 
 #import "MXAllowedCertificates.h"
 
+#import "MXThirdpartyProtocolsResponse.h"
+#import "MXThirdPartyUsersResponse.h"
+
 #pragma mark - Constants definitions
 /**
  Prefix used in path of home server API requests.
@@ -3588,6 +3591,31 @@ MXAuthAction;
                                              MXJSONModelSetMXJSONModel(thirdpartyProtocolsResponse, MXThirdpartyProtocolsResponse, JSONResponse);
                                          } andCompletion:^{
                                              success(thirdpartyProtocolsResponse);
+                                         }];
+                                     }
+                                 }
+                                 failure:^(NSError *error) {
+                                     MXStrongifyAndReturnIfNil(self);
+                                     [self dispatchFailure:error inBlock:failure];
+                                 }];
+}
+
+- (MXHTTPOperation *)thirdpartyUsers:(NSString *)protocol fields:(NSDictionary<NSString *,NSString *> *)fields success:(void (^)(MXThirdPartyUsersResponse *))success failure:(void (^)(NSError *))failure
+{
+    MXWeakify(self);
+    return [httpClient requestWithMethod:@"GET"
+                                    path:[NSString stringWithFormat:@"%@/thirdparty/user/%@", kMXAPIPrefixPathUnstable, protocol]
+                              parameters:fields
+                                 success:^(NSDictionary *JSONResponse) {
+                                     MXStrongifyAndReturnIfNil(self);
+
+                                     if (success)
+                                     {
+                                         __block MXThirdPartyUsersResponse *thirdpartyUsersResponse;
+                                         [self dispatchProcessing:^{
+                                             thirdpartyUsersResponse = [MXThirdPartyUsersResponse modelFromJSON:JSONResponse];
+                                         } andCompletion:^{
+                                             success(thirdpartyUsersResponse);
                                          }];
                                      }
                                  }

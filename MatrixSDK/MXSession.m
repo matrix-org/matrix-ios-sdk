@@ -232,7 +232,10 @@ typedef void (^MXOnResumeDone)(void);
                                       kMXEventTypeStringCallInvite,
                                       kMXEventTypeStringCallCandidates,
                                       kMXEventTypeStringCallAnswer,
+                                      kMXEventTypeStringCallSelectAnswer,
                                       kMXEventTypeStringCallHangup,
+                                      kMXEventTypeStringCallReject,
+                                      kMXEventTypeStringCallNegotiate,
                                       kMXEventTypeStringSticker
                                       ];
 
