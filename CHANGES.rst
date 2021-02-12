@@ -9,6 +9,7 @@ Changes to be released in next version
 
 🐛 Bugfix
  * Support VP8/VP9 codecs in video calls (vector-im/element-ios/issues/4026).
+ * Handle call rejects from other devices (vector-im/element-ios/issues/4030).
 
 ⚠️ API Changes
  * 
