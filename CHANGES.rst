@@ -1,3 +1,31 @@
+Changes in 0.18.1 (2021-02-12)
+=================================================
+
+✨ Features
+ * 
+
+🙌 Improvements
+ * MXCredentials: Expose additional server login response data (vector-im/element-ios/issues/4024).
+
+🐛 Bugfix
+ * Support VP8/VP9 codecs in video calls (vector-im/element-ios/issues/4026).
+ * Handle call rejects from other devices (vector-im/element-ios/issues/4030).
+
+⚠️ API Changes
+ * 
+
+🗣 Translations
+ * 
+    
+🧱 Build
+ * 
+
+Others
+ * 
+
+Improvements:
+
+
 Changes in 0.18.0 (2021-02-11)
 =================================================
 

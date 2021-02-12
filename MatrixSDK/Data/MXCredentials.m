@@ -44,6 +44,7 @@
         _userId = loginResponse.userId;
         _accessToken = loginResponse.accessToken;
         _deviceId = loginResponse.deviceId;
+        _loginOthers = loginResponse.others;
 
         // Use wellknown data first
         _homeServer = loginResponse.wellknown.homeServer.baseUrl;
