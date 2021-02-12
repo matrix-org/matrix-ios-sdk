@@ -5,7 +5,7 @@ Changes to be released in next version
  * 
 
 🙌 Improvements
- * Expose additional server login response data (vector-im/element-ios/issues/4024)
+ * MXCredentials: Expose additional server login response data (vector-im/element-ios/issues/4024).
 
 🐛 Bugfix
  * 
