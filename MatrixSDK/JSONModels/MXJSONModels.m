@@ -187,6 +187,12 @@ NSString *const kMXLoginIdentifierTypePhone = @"m.id.phone";
 
 @end
 
+@interface MXLoginResponse()
+
+@property(nonatomic) NSDictionary *others;
+
+@end
+
 @implementation MXLoginResponse
 
 + (id)modelFromJSON:(NSDictionary *)JSONDictionary
@@ -199,6 +205,14 @@ NSString *const kMXLoginIdentifierTypePhone = @"m.id.phone";
         MXJSONModelSetString(loginResponse.accessToken, JSONDictionary[@"access_token"]);
         MXJSONModelSetString(loginResponse.deviceId, JSONDictionary[@"device_id"]);
         MXJSONModelSetMXJSONModel(loginResponse.wellknown, MXWellKnown, JSONDictionary[@"well_known"]);
+        
+        // populating others dictionary
+        NSMutableDictionary *others = [NSMutableDictionary dictionaryWithDictionary:JSONDictionary];
+        [others removeObjectsForKeys:@[@"home_server", @"user_id", @"access_token", @"device_id", @"well_known"]];
+        if (others.count)
+        {
+            loginResponse.others = others;
+        }
     }
 
     return loginResponse;
