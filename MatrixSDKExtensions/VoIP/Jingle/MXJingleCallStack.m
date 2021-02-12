@@ -35,7 +35,10 @@
     self = [super init];
     if (self)
     {
+        //  Use RTCDefaultVideoEncoderFactory as it's enabling all codecs in WebRTC
         id<RTCVideoEncoderFactory> encoderFactory = [[RTCDefaultVideoEncoderFactory alloc] init];
+        
+        //  Use RTCDefaultVideoDecoderFactory as it's enabling all codecs in WebRTC
         id<RTCVideoDecoderFactory> decoderFactory = [[RTCDefaultVideoDecoderFactory alloc] init];
         peerConnectionFactory = [[RTCPeerConnectionFactory alloc] initWithEncoderFactory:encoderFactory
                                                                           decoderFactory:decoderFactory];
