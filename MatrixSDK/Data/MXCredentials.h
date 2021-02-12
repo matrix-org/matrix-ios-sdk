@@ -72,6 +72,11 @@ NS_ASSUME_NONNULL_BEGIN
  */
 @property (nonatomic, nullable) NSData *ignoredCertificate;
 
+/**
+ Additonal data received during login process
+ */
+@property (nonatomic, nullable) NSDictionary *loginOthers;
+
 
 /**
  Simple MXCredentials construtor
