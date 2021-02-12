@@ -1124,6 +1124,10 @@ NSString *const kMXCallSupportsTransferringStatusDidChange = @"kMXCallSupportsTr
             }];
         }
     }
+    else
+    {
+        [self onCallDeclinedElsewhere];
+    }
 }
 
 - (void)handleCallNegotiate:(MXEvent *)event
@@ -1372,6 +1376,21 @@ NSString *const kMXCallSupportsTransferringStatusDidChange = @"kMXCallSupportsTr
     
     // Set appropriate call end reason
     _endReason = MXCallEndReasonAnsweredElseWhere;
+
+    // And set the final state: MXCallStateEnded
+    [self setState:MXCallStateEnded reason:nil];
+
+    // The call manager can now ignore this call
+    [callManager removeCall:self];
+}
+
+- (void)onCallDeclinedElsewhere
+{
+    // Send the notif that the call has been answered from another device to the app
+    [self setState:MXCallStateAnsweredElseWhere reason:nil];
+    
+    // Set appropriate call end reason
+    _endReason = MXCallEndReasonHangupElsewhere;
 
     // And set the final state: MXCallStateEnded
     [self setState:MXCallStateEnded reason:nil];
