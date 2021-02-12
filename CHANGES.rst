@@ -8,7 +8,7 @@ Changes to be released in next version
  * MXCredentials: Expose additional server login response data (vector-im/element-ios/issues/4024).
 
 🐛 Bugfix
- * 
+ * Support VP8/VP9 codecs in video calls (vector-im/element-ios/issues/4026).
 
 ⚠️ API Changes
  * 
