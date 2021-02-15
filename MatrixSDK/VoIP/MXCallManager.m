@@ -389,10 +389,9 @@ NSTimeInterval const kMXCallDirectRoomJoinTimeout = 30;
     // Check expiration (usefull filter when receiving load of events when resuming the event stream)
     if (event.age < content.lifetime)
     {
-        if ([event.sender isEqualToString:_mxSession.myUserId] &&
-            [content.partyId isEqualToString:_mxSession.myDeviceId])
+        if ([event.sender isEqualToString:_mxSession.myUserId])
         {
-            //  this is a remote echo, ignore
+            //  this is my event, ignore
             return;
         }
         
