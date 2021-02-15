@@ -5,7 +5,8 @@ Changes to be released in next version
  * 
 
 🙌 Improvements
- * 
+ * MXRoomState: Add creator user id property.
+ * MXRoomSummary: Add creator user id property.
 
 🐛 Bugfix
  * 
