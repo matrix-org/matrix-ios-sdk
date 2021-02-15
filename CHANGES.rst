@@ -5,7 +5,8 @@ Changes to be released in next version
  * 
 
 🙌 Improvements
- * 
+ * MXRoomState: Add creator user id property.
+ * MXRoomSummary: Add creator user id property.
 
 🐛 Bugfix
  * Fix calls from my own users (vector-im/element-ios/issues/4031).

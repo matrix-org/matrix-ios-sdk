@@ -153,6 +153,11 @@ FOUNDATION_EXPORT NSString *const kMXRoomSummaryDidChangeNotification;
 @property (nonatomic) NSString *topic;
 
 /**
+ The room creator user id.
+ */
+@property (nonatomic) NSString *creatorUserId;
+
+/**
  The aliases of this room.
  */
 @property (nonatomic) NSArray<NSString *> *aliases;
