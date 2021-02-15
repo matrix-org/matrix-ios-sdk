@@ -8,7 +8,7 @@ Changes to be released in next version
  * 
 
 🐛 Bugfix
- * 
+ * Fix calls from my own users (vector-im/element-ios/issues/4031).
 
 ⚠️ API Changes
  * 
