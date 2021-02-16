@@ -401,7 +401,7 @@ NSString *const kMXCallSupportsTransferringStatusDidChange = @"kMXCallSupportsTr
         }
                                  failure:^(NSError * _Nonnull error) {
             NSLog(@"[MXCall] handleCallInvite: ERROR: Couldn't handle offer. Error: %@", error);
-            [self didEncounterError:error reason:MXCallHangupReasonIceFailed];
+            [self didEncounterError:error reason:MXCallHangupReasonUnknownError];
         }];
 
         
