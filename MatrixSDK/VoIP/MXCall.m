@@ -377,23 +377,34 @@ NSString *const kMXCallSupportsTransferringStatusDidChange = @"kMXCallSupportsTr
                 [self didEncounterError:error reason:MXCallHangupReasonIceFailed];
             }];
         };
+        
+        [self->callStackCall handleOffer:self->callInviteEventContent.offer.sdp
+                                 success:^{
+            MXStrongifyAndReturnIfNil(self);
+            
+            // If the room is encrypted, we need to check that encryption is set up
+            // in the room before actually answering.
+            // That will allow MXCall to send ICE candidates events without encryption errors like
+            // MXEncryptingErrorUnknownDeviceReason.
+            if (self.callSignalingRoom.summary.isEncrypted)
+            {
+                NSLog(@"[MXCall] answer: ensuring encryption is ready to use ...");
+                [self->callManager.mxSession.crypto ensureEncryptionInRoom:self.callSignalingRoom.roomId success:answer failure:^(NSError *error) {
+                    NSLog(@"[MXCall] answer: ERROR: [MXCrypto ensureEncryptionInRoom] failed. Error: %@", error);
+                    [self didEncounterError:error reason:MXCallHangupReasonUnknownError];
+                }];
+            }
+            else
+            {
+                answer();
+            }
+        }
+                                 failure:^(NSError * _Nonnull error) {
+            NSLog(@"[MXCall] handleCallInvite: ERROR: Couldn't handle offer. Error: %@", error);
+            [self didEncounterError:error reason:MXCallHangupReasonIceFailed];
+        }];
 
-        // If the room is encrypted, we need to check that encryption is set up
-        // in the room before actually answering.
-        // That will allow MXCall to send ICE candidates events without encryption errors like
-        // MXEncryptingErrorUnknownDeviceReason.
-        if (_callSignalingRoom.summary.isEncrypted)
-        {
-            NSLog(@"[MXCall] answer: ensuring encryption is ready to use ...");
-            [callManager.mxSession.crypto ensureEncryptionInRoom:_callSignalingRoom.roomId success:answer failure:^(NSError *error) {
-                NSLog(@"[MXCall] answer: ERROR: [MXCrypto ensureEncryptionInRoom] failed. Error: %@", error);
-                [self didEncounterError:error reason:MXCallHangupReasonUnknownError];
-            }];
-        }
-        else
-        {
-            answer();
-        }
+        
     }
 }
 
@@ -923,22 +934,12 @@ NSString *const kMXCallSupportsTransferringStatusDidChange = @"kMXCallSupportsTr
     MXWeakify(self);
     [callStackCall startCapturingMediaWithVideo:self.isVideoCall success:^{
         MXStrongifyAndReturnIfNil(self);
-
-        MXWeakify(self);
-        [self->callStackCall handleOffer:self->callInviteEventContent.offer.sdp
-                           success:^{
-                               MXStrongifyAndReturnIfNil(self);
-
-                               // Check whether the call has not been ended.
-                               if (self.state != MXCallStateEnded)
-                               {
-                                   [self setState:MXCallStateRinging reason:event];
-                               }
-                           }
-                           failure:^(NSError * _Nonnull error) {
-                               NSLog(@"[MXCall] handleCallInvite: ERROR: Couldn't handle offer. Error: %@", error);
-                               [self didEncounterError:error reason:MXCallHangupReasonIceFailed];
-                           }];
+        
+        // Check whether the call has not been ended.
+        if (self.state != MXCallStateEnded)
+        {
+            [self setState:MXCallStateRinging reason:event];
+        }
     } failure:^(NSError *error) {
         NSLog(@"[MXCall] handleCallInvite: startCapturingMediaWithVideo : ERROR: Couldn't start capturing. Error: %@", error);
         [self didEncounterError:error reason:MXCallHangupReasonUserMediaFailed];
