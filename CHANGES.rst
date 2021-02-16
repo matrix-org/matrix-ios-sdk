@@ -1,4 +1,4 @@
-Changes to be released in next version
+Changes in 0.18.2 (2021-02-16)
 =================================================
 
 ✨ Features
@@ -22,6 +22,9 @@ Changes to be released in next version
 
 Others
  * 
+
+Improvements:
+
 
 Changes in 0.18.1 (2021-02-12)
 =================================================
