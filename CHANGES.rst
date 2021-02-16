@@ -78,7 +78,7 @@ Changes in 0.18.0 (2021-02-11)
  * 
 
 Others
- * 
+ * README: Fix a couple of typos and improve consistency of the README.
 
 Improvements:
 
