@@ -224,7 +224,7 @@ Changes in 0.17.7 (2021-01-14)
  * 
     
 🧱 Build
- * 
+ * build.sh: Add xcframework argument to build a universal MatrixSDK.xcframework
 
 Others
  * 
