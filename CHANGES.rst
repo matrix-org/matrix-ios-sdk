@@ -18,7 +18,8 @@ Changes to be released in next version
  * 
     
 🧱 Build
- * 
+ * build.sh: Add xcframework argument to build a universal MatrixSDK.xcframework
+ * MatrixSDKTests-macOS: Remove tests from macOS profile and archive builds to match iOS.
 
 Others
  * 
@@ -224,7 +225,7 @@ Changes in 0.17.7 (2021-01-14)
  * 
     
 🧱 Build
- * build.sh: Add xcframework argument to build a universal MatrixSDK.xcframework
+ * 
 
 Others
  * 
