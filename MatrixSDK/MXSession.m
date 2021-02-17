@@ -232,7 +232,10 @@ typedef void (^MXOnResumeDone)(void);
                                       kMXEventTypeStringCallInvite,
                                       kMXEventTypeStringCallCandidates,
                                       kMXEventTypeStringCallAnswer,
+                                      kMXEventTypeStringCallSelectAnswer,
                                       kMXEventTypeStringCallHangup,
+                                      kMXEventTypeStringCallReject,
+                                      kMXEventTypeStringCallNegotiate,
                                       kMXEventTypeStringSticker
                                       ];
 
@@ -2420,6 +2423,14 @@ typedef void (^MXOnResumeDone)(void);
     {
         summary = [[MXRoomSummary alloc] initWithRoomId:room.roomId andMatrixSession:self];
         roomsSummaries[room.roomId] = summary;
+
+        // Update the summary if necessary
+        NSString *directUserId = [self directUserIdInRoom:room.roomId];
+        if (directUserId)
+        {
+            summary.directUserId = directUserId;
+            [summary save:YES];
+        }
     }
 
     if (notify)

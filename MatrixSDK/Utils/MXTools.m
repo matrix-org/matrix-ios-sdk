@@ -23,6 +23,10 @@
 #import <MobileCoreServices/MobileCoreServices.h>
 #endif
 
+#if defined(__IPHONE_13_0) && __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_13_0
+#import <os/proc.h>
+#endif
+
 #pragma mark - Constant definition
 NSString *const kMXToolsRegexStringForEmailAddress              = @"[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,}";
 
@@ -102,7 +106,12 @@ NSCharacterSet *uriComponentCharset;
                                 kMXEventTypeStringCallInvite,
                                 kMXEventTypeStringCallCandidates,
                                 kMXEventTypeStringCallAnswer,
+                                kMXEventTypeStringCallSelectAnswer,
                                 kMXEventTypeStringCallHangup,
+                                kMXEventTypeStringCallReject,
+                                kMXEventTypeStringCallNegotiate,
+                                kMXEventTypeStringCallReplaces,
+                                kMXEventTypeStringCallRejectReplacement,
                                 kMXEventTypeStringSticker,
                                 kMXEventTypeStringRoomTombStone,
                                 kMXEventTypeStringKeyVerificationRequest,
@@ -274,6 +283,163 @@ NSCharacterSet *uriComponentCharset;
     }
     
     return presenceString;
+}
+
++ (MXCallHangupReason)callHangupReason:(MXCallHangupReasonString)reasonString
+{
+    MXCallHangupReason reason = MXCallHangupReasonUserHangup;
+    
+    if ([reasonString isEqualToString:kMXCallHangupReasonStringUserHangup])
+    {
+        reason = MXCallHangupReasonUserHangup;
+    }
+    else if ([reasonString isEqualToString:kMXCallHangupReasonStringIceFailed])
+    {
+        reason = MXCallHangupReasonIceFailed;
+    }
+    else if ([reasonString isEqualToString:kMXCallHangupReasonStringInviteTimeout])
+    {
+        reason = MXCallHangupReasonInviteTimeout;
+    }
+    else if ([reasonString isEqualToString:kMXCallHangupReasonStringIceTimeout])
+    {
+        reason = MXCallHangupReasonIceTimeout;
+    }
+    else if ([reasonString isEqualToString:kMXCallHangupReasonStringUserMediaFailed])
+    {
+        reason = MXCallHangupReasonUserMediaFailed;
+    }
+    else if ([reasonString isEqualToString:kMXCallHangupReasonStringUnknownError])
+    {
+        reason = MXCallHangupReasonUnknownError;
+    }
+    
+    return reason;
+}
+
++ (MXCallHangupReasonString)callHangupReasonString:(MXCallHangupReason)reason
+{
+    MXCallHangupReasonString string;
+    
+    switch (reason) 
+    {
+        case MXCallHangupReasonUserHangup:
+            string = kMXCallHangupReasonStringUserHangup;
+            break;
+        case MXCallHangupReasonIceFailed:
+            string = kMXCallHangupReasonStringIceFailed;
+            break;
+        case MXCallHangupReasonInviteTimeout:
+            string = kMXCallHangupReasonStringInviteTimeout;
+            break;
+        case MXCallHangupReasonIceTimeout:
+            string = kMXCallHangupReasonStringIceTimeout;
+            break;
+        case MXCallHangupReasonUserMediaFailed:
+            string = kMXCallHangupReasonStringUserMediaFailed;
+            break;
+        case MXCallHangupReasonUnknownError:
+            string = kMXCallHangupReasonStringUnknownError;
+            break;
+        default:
+            break;
+    }
+    
+    return string;
+}
+
++ (MXCallSessionDescriptionType)callSessionDescriptionType:(MXCallSessionDescriptionTypeString)typeString
+{
+    MXCallSessionDescriptionType type = MXCallSessionDescriptionTypeOffer;
+    
+    if ([typeString isEqualToString:kMXCallSessionDescriptionTypeStringOffer])
+    {
+        type = MXCallSessionDescriptionTypeOffer;
+    }
+    else if ([typeString isEqualToString:kMXCallSessionDescriptionTypeStringPrAnswer])
+    {
+        type = MXCallSessionDescriptionTypePrAnswer;
+    }
+    else if ([typeString isEqualToString:kMXCallSessionDescriptionTypeStringAnswer])
+    {
+        type = MXCallSessionDescriptionTypeAnswer;
+    }
+    else if ([typeString isEqualToString:kMXCallSessionDescriptionTypeStringRollback])
+    {
+        type = MXCallSessionDescriptionTypeRollback;
+    }
+    
+    return type;
+}
+
++ (MXCallSessionDescriptionTypeString)callSessionDescriptionTypeString:(MXCallSessionDescriptionType)type
+{
+    MXCallSessionDescriptionTypeString string;
+    
+    switch (type)
+    {
+        case MXCallSessionDescriptionTypeOffer:
+            string = kMXCallSessionDescriptionTypeStringOffer;
+            break;
+        case MXCallSessionDescriptionTypePrAnswer:
+            string = kMXCallSessionDescriptionTypeStringPrAnswer;
+            break;
+        case MXCallSessionDescriptionTypeAnswer:
+            string = kMXCallSessionDescriptionTypeStringAnswer;
+            break;
+        case MXCallSessionDescriptionTypeRollback:
+            string = kMXCallSessionDescriptionTypeStringRollback;
+            break;
+    }
+    
+    return string;
+}
+
++ (MXCallRejectReplacementReason)callRejectReplacementReason:(MXCallRejectReplacementReasonString)reasonString
+{
+    MXCallRejectReplacementReason type = MXCallRejectReplacementReasonDeclined;
+    
+    if ([reasonString isEqualToString:kMXCallRejectReplacementReasonStringDeclined])
+    {
+        type = MXCallRejectReplacementReasonDeclined;
+    }
+    else if ([reasonString isEqualToString:kMXCallRejectReplacementReasonStringFailedRoomInvite])
+    {
+        type = MXCallRejectReplacementReasonFailedRoomInvite;
+    }
+    else if ([reasonString isEqualToString:kMXCallRejectReplacementReasonStringFailedCallInvite])
+    {
+        type = MXCallRejectReplacementReasonFailedCallInvite;
+    }
+    else if ([reasonString isEqualToString:kMXCallRejectReplacementReasonStringFailedCall])
+    {
+        type = MXCallRejectReplacementReasonFailedCall;
+    }
+    
+    return type;
+}
+
++ (MXCallRejectReplacementReasonString)callRejectReplacementReasonString:(MXCallRejectReplacementReason)reason
+{
+    MXCallRejectReplacementReasonString string;
+    
+    switch (reason)
+    {
+        case MXCallRejectReplacementReasonDeclined:
+            string = kMXCallRejectReplacementReasonStringDeclined;
+            break;
+        case MXCallRejectReplacementReasonFailedRoomInvite:
+            string = kMXCallRejectReplacementReasonStringFailedRoomInvite;
+            break;
+        case MXCallRejectReplacementReasonFailedCallInvite:
+            string = kMXCallRejectReplacementReasonStringFailedCallInvite;
+            break;
+        case MXCallRejectReplacementReasonFailedCall:
+            string = kMXCallRejectReplacementReasonStringFailedCall;
+            break;
+    }
+    
+    return string;
 }
 
 + (NSString *)generateSecret
@@ -751,6 +917,20 @@ static NSMutableDictionary *fileExtensionByContentType = nil;
     NSData *jsonData = [jsonString dataUsingEncoding:NSUTF8StringEncoding];
     return [NSJSONSerialization JSONObjectWithData:jsonData options:0 error:nil];
 }
+
+
+#pragma mark - OS
+
++ (NSUInteger)memoryAvailable
+{
+#if defined(__IPHONE_13_0) && __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_13_0
+    if (__builtin_available(iOS 13.0, *)) {
+        return os_proc_available_memory();
+    }
+#endif
+    return 0;
+}
+
 
 + (BOOL)isRunningUnitTests
 {

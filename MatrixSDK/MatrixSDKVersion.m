@@ -16,4 +16,4 @@
 
 #import <Foundation/Foundation.h>
 
-NSString *const MatrixSDKVersion = @"0.17.6";
+NSString *const MatrixSDKVersion = @"0.18.1";

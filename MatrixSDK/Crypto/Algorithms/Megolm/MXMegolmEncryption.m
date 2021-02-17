@@ -26,47 +26,8 @@
 #import "MXCrypto_Private.h"
 #import "MXQueuedEncryption.h"
 #import "MXTools.h"
-
-@interface MXOutboundSessionInfo : NSObject
-{
-    // When the session was created
-    NSDate  *creationTime;
-}
-
-- (instancetype)initWithSessionID:(NSString*)sessionId;
-
-/**
- Check if it's time to rotate the session.
-
- @param rotationPeriodMsgs the max number of encryptions before rotating.
- @param rotationPeriodMs the max duration of an encryption session before rotating.
- @return YES if rotation is needed.
- */
-- (BOOL)needsRotation:(NSUInteger)rotationPeriodMsgs rotationPeriodMs:(NSUInteger)rotationPeriodMs;
-
-/**
- Determine if this session has been shared with devices which it shouldn't
- have been.
-
- @param devicesInRoom userId -> {deviceId -> object} devices we should shared the session with.
- @return YES if we have shared the session with devices which aren't in devicesInRoom.
- */
-- (BOOL)sharedWithTooManyDevices:(MXUsersDevicesMap<MXDeviceInfo *> *)devicesInRoom;
-
-// The id of the session
-@property (nonatomic, readonly) NSString *sessionId;
-
-// Number of times this session has been used
-@property (nonatomic) NSUInteger useCount;
-
-// If a share operation is in progress, the corresping http request
-@property (nonatomic) MXHTTPOperation* shareOperation;
-
-// Devices with which we have shared the session key
-// userId -> {deviceId -> msgindex}
-@property (nonatomic) MXUsersDevicesMap<NSNumber*> *sharedWithDevices;
-
-@end
+#import "MXOutboundSessionInfo.h"
+#import <OLMKit/OLMKit.h>
 
 
 @interface MXMegolmEncryption ()
@@ -83,10 +44,6 @@
     // case outboundSession.shareOperation will be non-nill.)
     MXOutboundSessionInfo *outboundSession;
     
-    // Map of outbound sessions by sessions ID. Used if we need a particular
-    // session.
-    NSMutableDictionary<NSString*, MXOutboundSessionInfo*> *outboundSessions;
-
     NSMutableArray<MXQueuedEncryption*> *pendingEncryptions;
 
     // Session rotation periods
@@ -116,13 +73,21 @@
         roomId = theRoomId;
         deviceId = crypto.store.deviceId;
 
-        outboundSessions = [NSMutableDictionary dictionary];
         pendingEncryptions = [NSMutableArray array];
 
         // Default rotation periods
         // TODO: Make it configurable via parameters
         sessionRotationPeriodMsgs = 100;
         sessionRotationPeriodMs = 7 * 24 * 3600 * 1000;
+        
+        // restore last saved outbound session for this room
+        MXOlmOutboundGroupSession *restoredOutboundGroupSession = [crypto.olmDevice outboundGroupSessionForRoomWithRoomId:roomId];
+        
+        if (restoredOutboundGroupSession)
+        {
+            outboundSession = [[MXOutboundSessionInfo alloc] initWithSession:restoredOutboundGroupSession];
+            outboundSession.sharedWithDevices = [crypto.store sharedDevicesForOutboundGroupSessionInRoomWithId:roomId sessionId:outboundSession.sessionId];
+        }
     }
     return self;
 }
@@ -273,24 +238,27 @@
                                    success:(void (^)(MXOutboundSessionInfo *session))success
                                    failure:(void (^)(NSError *))failure
 {
-    MXOutboundSessionInfo *session = outboundSession;
+    __block MXOutboundSessionInfo *session = outboundSession;
 
     // Need to make a brand new session?
     if (session && [session needsRotation:sessionRotationPeriodMsgs rotationPeriodMs:sessionRotationPeriodMs])
     {
+        [crypto.olmDevice discardOutboundGroupSessionForRoomWithRoomId:roomId];
+        outboundSession = nil;
         session = nil;
     }
 
     // Determine if we have shared with anyone we shouldn't have
     if (session && [session sharedWithTooManyDevices:devicesInRoom])
     {
+        [crypto.olmDevice discardOutboundGroupSessionForRoomWithRoomId:roomId];
+        outboundSession = nil;
         session = nil;
     }
 
     if (!session)
     {
         outboundSession = session = [self prepareNewSession];
-        outboundSessions[outboundSession.sessionId] = outboundSession;
     }
 
     if (session.shareOperation)
@@ -336,10 +304,10 @@
 
 - (MXOutboundSessionInfo*)prepareNewSession
 {
-    NSString *sessionId = [crypto.olmDevice createOutboundGroupSession];
+    MXOlmOutboundGroupSession *session = [crypto.olmDevice createOutboundGroupSessionForRoomWithRoomId:roomId];
 
-    [crypto.olmDevice addInboundGroupSession:sessionId
-                                  sessionKey:[crypto.olmDevice sessionKeyForOutboundGroupSession:sessionId]
+    [crypto.olmDevice addInboundGroupSession:session.sessionId
+                                  sessionKey:session.sessionKey
                                       roomId:roomId
                                    senderKey:crypto.olmDevice.deviceCurve25519Key
                 forwardingCurve25519KeyChain:@[]
@@ -351,7 +319,7 @@
 
     [crypto.backup maybeSendKeyBackup];
 
-    return [[MXOutboundSessionInfo alloc] initWithSessionID:sessionId];
+    return [[MXOutboundSessionInfo alloc] initWithSession:session];
 }
 
 - (MXHTTPOperation*)shareKey:(MXOutboundSessionInfo*)session
@@ -360,8 +328,8 @@
                         failure:(void (^)(NSError *))failure
 
 {
-    NSString *sessionKey = [crypto.olmDevice sessionKeyForOutboundGroupSession:session.sessionId];
-    NSUInteger chainIndex = [crypto.olmDevice messageIndexForOutboundGroupSession:session.sessionId];
+    NSString *sessionKey = session.session.sessionKey;
+    NSUInteger chainIndex = session.session.messageIndex;
 
     NSDictionary *payload = @{
                               @"type": kMXEventTypeStringRoomKey,
@@ -436,13 +404,23 @@
                 // attempted to share with) rather than the contentMap (those we did
                 // share with), because we don't want to try to claim a one-time-key
                 // for dead devices on every message.
+                
+                // store chain index for devices the session has been shared with
+                MXUsersDevicesMap<NSNumber *> *sharedWithDevices = [MXUsersDevicesMap new];
+
                 for (NSString *userId in devicesByUser)
                 {
                     NSArray *devicesToShareWith = devicesByUser[userId];
                     for (MXDeviceInfo *deviceInfo in devicesToShareWith)
                     {
                         [session.sharedWithDevices setObject:@(chainIndex) forUser:userId andDevice:deviceInfo.deviceId];
+                        [sharedWithDevices setObject:@(chainIndex) forUser:userId andDevice:deviceInfo.deviceId];
                     }
+                }
+                
+                if (sharedWithDevices.count)
+                {
+                    [self->crypto.store storeSharedDevices:sharedWithDevices messageIndex:chainIndex forOutboundGroupSessionInRoomWithId:self->roomId sessionId:session.session.sessionId];
                 }
 
                 success();
@@ -480,17 +458,22 @@
     if (!deviceInfo)
     {
         NSLog(@"[MXMegolmEncryption] reshareKey: ERROR: Unknown device");
-        failure(nil);
+        NSError *error = [NSError errorWithDomain:MXEncryptingErrorDomain
+                                             code:MXEncryptingErrorUnknownDeviceCode
+                                         userInfo:nil];
+        failure(error);
         return nil;
     }
     
     // Get the chain index of the key we previously sent this device
-    MXOutboundSessionInfo *obSessionInfo = outboundSessions[sessionId];
-    NSNumber *chainIndex = [obSessionInfo.sharedWithDevices objectForDevice:deviceId forUser:userId];
+    NSNumber *chainIndex = [crypto.store messageIndexForSharedDeviceInRoomWithId:roomId sessionId:sessionId userId:userId deviceId:deviceId];
     if (!chainIndex)
     {
-        NSLog(@"[MXMegolmEncryption] reshareKey: ERROR: Never share megolm with this device");
-        failure(nil);
+        NSLog(@"[MXMegolmEncryption] reshareKey: ERROR: Never shared megolm key with this device");
+        NSError *error = [NSError errorWithDomain:MXEncryptingErrorDomain
+                                             code:MXEncryptingErrorReshareNotAllowedCode
+                                         userInfo:nil];
+        failure(error);
         return nil;
     }
 
@@ -554,7 +537,13 @@
             NSData *payloadData = [NSJSONSerialization  dataWithJSONObject:payloadJson options:0 error:nil];
             NSString *payloadString = [[NSString alloc] initWithData:payloadData encoding:NSUTF8StringEncoding];
 
-            NSString *ciphertext = [crypto.olmDevice encryptGroupMessage:session.sessionId payloadString:payloadString];
+            NSError *error = nil;
+            NSString *ciphertext = [session.session encryptMessage:payloadString error:&error];
+            
+            if (error)
+            {
+                NSLog(@"[MXMegolmEncryption] processPendingEncryptionsInSession: failed to encrypt text: %@", error);
+            }
 
             queuedEncryption.success(@{
                       @"algorithm": kMXCryptoMegolmAlgorithm,
@@ -568,6 +557,9 @@
                       });
 
             session.useCount++;
+            
+            // We have to store the session in the DB every time a message is encrypted to save the session useCount
+            [crypto.olmDevice storeOutboundGroupSession:session.session];
         }
     }
     else
@@ -579,62 +571,6 @@
     }
 
     [pendingEncryptions removeAllObjects];
-}
-
-@end
-
-
-#pragma mark - MXOutboundSessionInfo
-
-@implementation MXOutboundSessionInfo
-
-- (instancetype)initWithSessionID:(NSString *)sessionId
-{
-    self = [super init];
-    if (self)
-    {
-        _sessionId = sessionId;
-        _sharedWithDevices = [[MXUsersDevicesMap alloc] init];
-        creationTime = [NSDate date];
-    }
-    return self;
-}
-
-- (BOOL)needsRotation:(NSUInteger)rotationPeriodMsgs rotationPeriodMs:(NSUInteger)rotationPeriodMs
-{
-    BOOL needsRotation = NO;
-    NSUInteger sessionLifetime = [[NSDate date] timeIntervalSinceDate:creationTime] * 1000;
-
-    if (_useCount >= rotationPeriodMsgs || sessionLifetime >= rotationPeriodMs)
-    {
-        NSLog(@"[MXMegolmEncryption] Rotating megolm session after %tu messages, %tu ms", _useCount, sessionLifetime);
-        needsRotation = YES;
-    }
-
-    return needsRotation;
-}
-
-- (BOOL)sharedWithTooManyDevices:(MXUsersDevicesMap<MXDeviceInfo *> *)devicesInRoom
-{
-    for (NSString *userId in _sharedWithDevices.userIds)
-    {
-        if (![devicesInRoom deviceIdsForUser:userId])
-        {
-            NSLog(@"[MXMegolmEncryption] Starting new session because we shared with %@",  userId);
-            return YES;
-        }
-
-        for (NSString *deviceId in [_sharedWithDevices deviceIdsForUser:userId])
-        {
-            if (! [devicesInRoom objectForDevice:deviceId forUser:userId])
-            {
-                NSLog(@"[MXMegolmEncryption] Starting new session because we shared with %@:%@", userId, deviceId);
-                return YES;
-            }
-        }
-    }
-
-    return NO;
 }
 
 @end

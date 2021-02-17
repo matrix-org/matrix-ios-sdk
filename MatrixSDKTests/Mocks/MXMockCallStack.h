@@ -17,7 +17,7 @@
 #import <Foundation/Foundation.h>
 
 #import "MXCallStack.h"
-
+#import "MXCallEventContent.h"
 
 /**
  `MXMockCallStack` is a mock implementation of the `MXOpenWebRTCCall` protocol.

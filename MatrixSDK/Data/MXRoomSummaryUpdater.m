@@ -170,6 +170,8 @@
             }
                 
             case MXEventTypeRoomCreate:
+                summary.creatorUserId = roomState.creatorUserId;
+                updated = YES;                
                 [self checkRoomCreateStateEventPredecessorAndUpdateObsoleteRoomSummaryIfNeededWithCreateEvent:event summary:summary session:session roomState:roomState];
                 break;
                 

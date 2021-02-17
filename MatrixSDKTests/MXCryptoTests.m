@@ -29,6 +29,8 @@
 #import "MXSDKOptions.h"
 #import "MXTools.h"
 #import "MXSendReplyEventDefaultStringLocalizations.h"
+#import "MXOutboundSessionInfo.h"
+#import <OLMKit/OLMKit.h>
 
 #if 1 // MX_CRYPTO autamatic definiton does not work well for tests so force it
 //#ifdef MX_CRYPTO
@@ -1855,10 +1857,14 @@
                 // Reinject a modified version of the received room_key event from Alice.
                 // From Bob pov, that mimics Alice resharing her keys but with an advanced outbound group session.
                 XCTAssert(toDeviceEvent);
-                NSString *sessionId = toDeviceEvent.content[@"session_id"];
+                
+                MXOlmOutboundGroupSession *session = [aliceSession.crypto.olmDevice outboundGroupSessionForRoomWithRoomId:roomId];
+                XCTAssertNotNil(session);
+                
+                MXOutboundSessionInfo *sessionInfo = [[MXOutboundSessionInfo alloc] initWithSession: session];
 
                 NSMutableDictionary *newContent = [NSMutableDictionary dictionaryWithDictionary:toDeviceEvent.content];
-                newContent[@"session_key"] = [aliceSession.crypto.olmDevice sessionKeyForOutboundGroupSession:sessionId];
+                newContent[@"session_key"] = sessionInfo.session.sessionKey;
                 toDeviceEvent.clearEvent.wireContent = newContent;
 
                 [[NSNotificationCenter defaultCenter] postNotificationName:kMXSessionOnToDeviceEventNotification
@@ -2982,6 +2988,75 @@
             XCTAssertNotNil(updatedDevices.firstObject.deviceId);
             XCTAssertNotEqualObjects(updatedDevices.firstObject.deviceId, aliceSession.myDeviceId);
             
+            [expectation fulfill];
+        }];
+    }];
+}
+
+#pragma mark - Outbound Group Session
+
+/**
+ - From doE2ETestWithAliceAndBobInARoomWithCryptedMessages, we should have an outbound group session for the current room
+ - Restore the outbound group session for the current room and check it exists
+ - close current session and open a new session
+ - Restore the outbound group session for the current room and check it exists and contains the same key as before
+*/
+- (void)testRestoreOlmOutboundKey
+{
+    [matrixSDKTestsE2EData doE2ETestWithAliceAndBobInARoomWithCryptedMessages:self cryptedBob:YES readyToTest:^(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
+        
+        MXOlmOutboundGroupSession *outboundSession = [aliceSession.crypto.store outboundGroupSessionWithRoomId:roomId];
+        XCTAssertNotNil(outboundSession);
+        
+        NSString *sessionKey = outboundSession.session.sessionKey;
+
+        // - Restart the session
+        MXSession *aliceSession2 = [[MXSession alloc] initWithMatrixRestClient:aliceSession.matrixRestClient];
+        [aliceSession close];
+        [aliceSession2 start:^{
+            MXOlmOutboundGroupSession *outboundSession = [aliceSession2.crypto.store outboundGroupSessionWithRoomId:roomId];
+            XCTAssertNotNil(outboundSession);
+            NSString *sessionKey2 = outboundSession.session.sessionKey;
+            XCTAssertEqualObjects(sessionKey, sessionKey2);
+            [expectation fulfill];
+        } failure:^(NSError * _Nonnull error) {
+            XCTFail(@"The request should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+    }];
+}
+
+/**
+ - From doE2ETestWithAliceAndBobInARoomWithCryptedMessages, we should have an outbound group session for the current room
+ - Restore the outbound group session for the current room and check it exists
+ - discard current outbound group session
+ - close current session and open a new session
+ - Restore the outbound group session for the current room and check it exists and contains the new key
+*/
+- (void)testDiscardAndRestoreOlmOutboundKey
+{
+    [matrixSDKTestsE2EData doE2ETestWithAliceAndBobInARoomWithCryptedMessages:self cryptedBob:YES readyToTest:^(MXSession *aliceSession, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
+        MXOlmOutboundGroupSession *outboundSession = [aliceSession.crypto.store outboundGroupSessionWithRoomId:roomId];
+        XCTAssertNotNil(outboundSession);
+        
+        NSString *sessionKey = outboundSession.session.sessionKey;
+        
+        [aliceSession.crypto.olmDevice discardOutboundGroupSessionForRoomWithRoomId:roomId];
+
+        // - Restart the session
+        MXSession *aliceSession2 = [[MXSession alloc] initWithMatrixRestClient:aliceSession.matrixRestClient];
+        [aliceSession close];
+        [aliceSession2 start:^{
+            MXOlmOutboundGroupSession *outboundSession = [aliceSession2.crypto.store outboundGroupSessionWithRoomId:roomId];
+            XCTAssertNil(outboundSession);
+            XCTAssertNotNil([aliceSession2.crypto.olmDevice createOutboundGroupSessionForRoomWithRoomId:roomId]);
+            outboundSession = [aliceSession2.crypto.store outboundGroupSessionWithRoomId:roomId];
+            XCTAssertNotNil(outboundSession);
+            NSString *sessionKey2 = outboundSession.session.sessionKey;
+            XCTAssertNotEqualObjects(sessionKey, sessionKey2, @"%@ == %@", sessionKey, sessionKey2);
+            [expectation fulfill];
+        } failure:^(NSError * _Nonnull error) {
+            XCTFail(@"The request should not fail - NSError: %@", error);
             [expectation fulfill];
         }];
     }];

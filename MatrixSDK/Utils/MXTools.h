@@ -26,6 +26,9 @@
 #import "MXEvent.h"
 #import "MXJSONModels.h"
 #import "MXEnumConstants.h"
+#import "MXCallHangupEventContent.h"
+#import "MXCallSessionDescription.h"
+#import "MXCallRejectReplacementEventContent.h"
 
 @interface MXTools : NSObject
 
@@ -37,6 +40,15 @@
 
 + (MXPresence)presence:(MXPresenceString)presenceString;
 + (MXPresenceString)presenceString:(MXPresence)presence;
+
++ (MXCallHangupReason)callHangupReason:(MXCallHangupReasonString)reasonString;
++ (MXCallHangupReasonString)callHangupReasonString:(MXCallHangupReason)reason;
+
++ (MXCallSessionDescriptionType)callSessionDescriptionType:(MXCallSessionDescriptionTypeString)typeString;
++ (MXCallSessionDescriptionTypeString)callSessionDescriptionTypeString:(MXCallSessionDescriptionType)type;
+
++ (MXCallRejectReplacementReason)callRejectReplacementReason:(MXCallRejectReplacementReasonString)reasonString;
++ (MXCallRejectReplacementReasonString)callRejectReplacementReasonString:(MXCallRejectReplacementReason)reason;
 
 /**
  Generate a random secret key.
@@ -289,6 +301,19 @@ FOUNDATION_EXPORT NSString *const kMXToolsRegexStringForMatrixGroupIdentifier;
         return value; \
     } \
     typeof(var) var = weak##var
+
+
+#pragma mark - OS
+
+/**
+ Return the available memory.
+ 
+ @discussion
+ Available only for iOS from iOS13.
+ 
+ @return free memory in bytes.
+ */
++ (NSUInteger)memoryAvailable;
 
 
 #pragma mark - Unit testing

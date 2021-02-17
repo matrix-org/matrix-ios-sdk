@@ -18,6 +18,8 @@
 
 #import "MXJingleCallStackCall.h"
 #import <WebRTC/RTCPeerConnectionFactory.h>
+#import <WebRTC/RTCDefaultVideoEncoderFactory.h>
+#import <WebRTC/RTCDefaultVideoDecoderFactory.h>
 
 @interface MXJingleCallStack ()
 {
@@ -33,7 +35,14 @@
     self = [super init];
     if (self)
     {
-        peerConnectionFactory = [[RTCPeerConnectionFactory alloc] init];
+        //  Use RTCDefaultVideoEncoderFactory as it's enabling all codecs in WebRTC
+        id<RTCVideoEncoderFactory> encoderFactory = [[RTCDefaultVideoEncoderFactory alloc] init];
+        
+        //  Use RTCDefaultVideoDecoderFactory as it's enabling all codecs in WebRTC
+        id<RTCVideoDecoderFactory> decoderFactory = [[RTCDefaultVideoDecoderFactory alloc] init];
+        peerConnectionFactory = [[RTCPeerConnectionFactory alloc] initWithEncoderFactory:encoderFactory
+                                                                          decoderFactory:decoderFactory];
+
     }
     return self;
 }

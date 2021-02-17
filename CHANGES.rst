@@ -5,10 +5,218 @@ Changes to be released in next version
  * 
 
 🙌 Improvements
+ * MXRoomState: Add creator user id property.
+ * MXRoomSummary: Add creator user id property.
+
+🐛 Bugfix
+ * Fix calls from my own users (vector-im/element-ios/issues/4031).
+
+⚠️ API Changes
+ * 
+
+🗣 Translations
+ * 
+    
+🧱 Build
+ * build.sh: Add xcframework argument to build a universal MatrixSDK.xcframework
+ * MatrixSDKTests-macOS: Remove tests from macOS profile and archive builds to match iOS.
+
+Others
+ * 
+
+Changes in 0.18.1 (2021-02-12)
+=================================================
+
+✨ Features
+ * 
+
+🙌 Improvements
+ * MXCredentials: Expose additional server login response data (vector-im/element-ios/issues/4024).
+
+🐛 Bugfix
+ * Support VP8/VP9 codecs in video calls (vector-im/element-ios/issues/4026).
+ * Handle call rejects from other devices (vector-im/element-ios/issues/4030).
+
+⚠️ API Changes
+ * 
+
+🗣 Translations
+ * 
+    
+🧱 Build
+ * 
+
+Others
+ * 
+
+Improvements:
+
+
+Changes in 0.18.0 (2021-02-11)
+=================================================
+
+✨ Features
+ * 
+
+🙌 Improvements
+ * Pods: Update JitsiMeetSDK to 3.1.0.
+ * Send VoIP analytics events (vector-im/element-ios/issues/3855).
+ * Add hold support for CallKit calls (vector-im/element-ios/issues/3834).
+ * Fix video call with web (vector-im/element-ios/issues/3862).
+ * VoIP: Call transfers initiation (vector-im/element-ios/issues/3872).
+ * VoIP: DTMF support in calls (vector-im/element-ios/issues/3929).
+
+🐛 Bugfix
+ * MXRoomSummary: directUserId may be missing (null) for a direct chat if it was joined on another device.
+
+⚠️ API Changes
+ * 
+
+🗣 Translations
+ * 
+    
+🧱 Build
+ * 
+
+Others
+ * README: Fix a couple of typos and improve consistency of the README.
+
+Improvements:
+
+
+Changes in 0.17.11 (2021-02-03)
+=================================================
+
+✨ Features
+ * 
+
+🙌 Improvements
+ * MXMemory: New utility class to track memory usage.
+ * MXRealmCryptoStore: Compact Realm DB only once, at the first usage.
+ * MXLoginSSOIdentityProvider: Add new `brand` field as described in MSC2858 (vector-im/element-ios/issues/3980).
+ * MXSession: Make `handleBackgroundSyncCacheIfRequiredWithCompletion` method public (vector-im/element-ios/issues/3986).
+ * MXLogger: Remove log files that are no more part of the rotation.
+ * MXLogger: Add an option to limit logs size (vector-im/element-ios/issues/#3903).
+ * MXRestClient: Handle grace period in `authSessionForRequestWithMethod`.
+
+🐛 Bugfix
+ * Background Sync: Use autoreleasepool to limit RAM usage (vector-im/element-ios/issues/3957).
+ * Background Sync: Do not compact Realm DB from background process.
+ * MX3PidAddManager: Use a non empty client_secret to discover /account/3pid/add flows (vector-im/element-ios/issues/3966).
+ * VoIP: Fix camera indicator when video call answered elsewhere (vector-im/element-ios/issues/3971).
+
+⚠️ API Changes
+ * 
+
+🗣 Translations
+ * 
+    
+🧱 Build
+ * 
+
+Others
+ * 
+
+Improvements:
+
+
+Changes in 0.17.10 (2021-01-27)
+=================================================
+
+✨ Features
+ * 
+
+🙌 Improvements
+ * MXRealmCryptoStore: New implementation of deleteStoreWithCredentials that does not need to open the realm DB.
+ * MXRealmCryptoStore: store chain index of shared outbound group sessions to improve re-share session keys
+
+🐛 Bugfix
+ * MXBackgroundSyncService: Clear the bg sync crypto db if needed (vector-im/element-ios/issues/3956).
+ * MXCrypto: Add a workaround when the megolm key is not shared to all members (vector-im/element-ios/issues/3807).
+
+⚠️ API Changes
+ * 
+
+🗣 Translations
+ * 
+    
+🧱 Build
+ * 
+
+Others
+ * 
+
+Improvements:
+
+
+Changes in 0.17.9 (2021-01-18)
+=================================================
+
+✨ Features
+ * 
+
+🙌 Improvements
  * 
 
 🐛 Bugfix
+ * MXEvent: Fix a regression on edits and replies in e2ee rooms (vector-im/element-ios/issues/3944).
+
+⚠️ API Changes
+ * 
+
+🗣 Translations
+ * 
+    
+🧱 Build
+ * 
+
+Others
+ * 
+
+Improvements:
+
+
+Changes in 0.17.8 (2021-01-15)
+=================================================
+
+✨ Features
+ * 
+
+🙌 Improvements
+ * 
+
+🐛 Bugfix
+ * Avoid calling background task expiration handlers in app extensions (vector-im/element-ios/issues/3935).
+
+⚠️ API Changes
+ * 
+
+🗣 Translations
+ * 
+    
+🧱 Build
+ * 
+
+Others
+ * 
+
+Improvements:
+
+
+Changes in 0.17.7 (2021-01-14)
+=================================================
+
+✨ Features
+ * 
+
+🙌 Improvements
+ * MXCrypto: Store megolm outbound session to improve send time of first message after app launch (vector-im/element-ios/issues/#3904).
+ * MXUIKitApplicationStateService: Add this service to track UIKit application state.
+
+🐛 Bugfix
  * MXBackgroundSyncService: Fix `m.buddy` to-device event crashes (vector-im/element-ios/issues/3889).
+ * MXBackgroundSyncService: Fix app deadlock created between the app process and the notification service extension process (vector-im/element-ios/issues/3906).
+ * MXUIKitBackgroundTask: Avoid thread switching when creating a background task to keep threading model (vector-im/element-ios/issues/3917).
 
 ⚠️ API Changes
  * MXLoginSSOFlow: Use unstable identity providers field while the MSC2858 is not approved.
@@ -17,10 +225,13 @@ Changes to be released in next version
  * 
     
 🧱 Build
- * MatrixSDKTests-macOS: Remove tests from macOS profile and archive builds to match iOS.
+ * 
 
 Others
  * 
+
+Improvements:
+
 
 Changes in 0.17.6 (2020-12-18)
 =================================================

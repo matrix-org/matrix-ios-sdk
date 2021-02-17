@@ -26,12 +26,14 @@
 #import "MXCryptoVersion.h"
 #import "MXOlmSession.h"
 #import "MXOlmInboundGroupSession.h"
+#import "MXOlmOutboundGroupSession.h"
 #import "MXDeviceInfo.h"
 #import "MXCrossSigningInfo.h"
 #import "MXOutgoingRoomKeyRequest.h"
 #import "MXIncomingRoomKeyRequest.h"
 
 @class OLMAccount;
+@class OLMOutboundGroupSession;
 
 /**
  The `MXCryptoStore` protocol defines an interface that must be implemented in order to store
@@ -303,6 +305,70 @@
  */
 - (NSArray<MXOlmInboundGroupSession*> *)inboundGroupSessions;
 
+
+/**
+ Store outbound group session.
+
+ @param session outbound group session.
+ @param roomId related room ID.
+ 
+ @return the related stored outbound group session.
+ */
+- (MXOlmOutboundGroupSession *)storeOutboundGroupSession:(OLMOutboundGroupSession *)session withRoomId:(NSString *)roomId;
+
+/**
+ Retrieve an outbound group session for a specific room.
+
+ @param roomId the room identifier.
+ @return an outbound group session if found. Nil otherwise
+ */
+- (MXOlmOutboundGroupSession *)outboundGroupSessionWithRoomId:(NSString*)roomId;
+
+/**
+ Retrieve all outbound group sessions.
+ 
+ @return the list of all stored outbound group sessions.
+ */
+- (NSArray<MXOlmOutboundGroupSession *> *)outboundGroupSessions;
+
+/**
+ Remove stored outbound group session for a specific room.
+
+ @param roomId the room identifier.
+ */
+- (void)removeOutboundGroupSessionWithRoomId:(NSString*)roomId;
+
+/**
+ Store the message index shared with a list of devices in dedicated room
+
+ @param devices list of devices the message index has been shared with
+ @param messageIndex the current message index of the outbound group session
+ @param roomId ID of the room of the outbound group session
+ @param sessionId ID of the session of the outbound group session
+ */
+- (void)storeSharedDevices:(MXUsersDevicesMap<NSNumber *> *)devices messageIndex:(NSUInteger) messageIndex forOutboundGroupSessionInRoomWithId:(NSString *)roomId sessionId:(NSString *)sessionId;
+
+/**
+ Retrieves all the devices the outbound group session has been shared with
+
+ @param roomId ID of the room of the outbound group session
+ @param sessionId ID of the session of the outbound group session
+ 
+ @return MXUsersDevicesMap of the message indexes
+ */
+- (MXUsersDevicesMap<NSNumber *> *)sharedDevicesForOutboundGroupSessionInRoomWithId:(NSString *)roomId sessionId:(NSString *)sessionId;
+
+/**
+ Retrieves the message index of the outbound session when it has been shared with a given device.
+
+ @param roomId ID of the room of the outbound group session
+ @param sessionId ID of the session of the outbound group session
+ @param userId user ID of the device
+ @param deviceId ID of the device
+
+ @return the NSNumber of the message index of the outbound session when it has been shared with a given device. Nil if the session has not been shared with the given device.
+ */
+- (NSNumber *)messageIndexForSharedDeviceInRoomWithId:(NSString *)roomId sessionId:(NSString *)sessionId userId:(NSString *)userId deviceId:(NSString *)deviceId;
 
 #pragma mark - Key backup
 
