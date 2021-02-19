@@ -20,6 +20,7 @@ Changes to be released in next version
 🧱 Build
  * build.sh: Add xcframework argument to build a universal MatrixSDK.xcframework
  * MatrixSDKTests-macOS: Remove tests from macOS profile and archive builds to match iOS.
+ * Support adding DISABLE_CALLKIT preprocessor macro to disable compilation of CallKit.
 
 Others
  * 
