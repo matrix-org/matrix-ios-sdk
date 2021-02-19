@@ -24,8 +24,12 @@
 #import "MXSession.h"
 #import "MXTools.h"
 #import "MXCryptoTools.h"
+#import "MXKeyProvider.h"
+#import "MXRawDataKey.h"
+#import "MXAes.h"
 
-NSUInteger const kMXRealmCryptoStoreVersion = 15;
+
+NSUInteger const kMXRealmCryptoStoreVersion = 16;
 
 static NSString *const kMXRealmCryptoStoreFolder = @"MXRealmCryptoStore";
 
@@ -285,6 +289,9 @@ RLM_ARRAY_TYPE(MXRealmSharedOutboundSession)
 @interface MXRealmSecret : RLMObject
 @property NSString *secretId;
 @property NSString *secret;
+
+@property NSData *encryptedSecret;
+@property NSData *iv;
 @end
 
 @implementation MXRealmSecret
@@ -342,14 +349,14 @@ RLM_ARRAY_TYPE(MXRealmSecret)
     [realm beginWriteTransaction];
     [realm addObject:account];
     [realm commitWriteTransaction];
-
+    
     return [[MXRealmCryptoStore alloc] initWithCredentials:credentials];
 }
 
 + (void)deleteStoreWithCredentials:(MXCredentials*)credentials
 {
     NSLog(@"[MXRealmCryptoStore] deleteStore for %@:%@", credentials.userId, credentials.deviceId);
-
+    
     // Delete db file directly
     // So that we can even delete corrupted realm db
     RLMRealmConfiguration *config = [RLMRealmConfiguration defaultConfiguration];
@@ -898,7 +905,7 @@ RLM_ARRAY_TYPE(MXRealmSecret)
 {
     __block NSUInteger newCount = 0;
     NSDate *startDate = [NSDate date];
-
+    
     RLMRealm *realm = self.realm;
     [realm transactionWithBlock:^{
         
@@ -1052,13 +1059,13 @@ RLM_ARRAY_TYPE(MXRealmSecret)
                 @"sessionData": [NSKeyedArchiver archivedDataWithRootObject:session]
             }];
             realmSession.creationTime = [[NSDate date] timeIntervalSince1970];
-
+            
             [realm addObject:realmSession];
         }
         
         storedSession = [[MXOlmOutboundGroupSession alloc] initWithSession:session roomId:roomId creationTime:realmSession.creationTime];
     }];
-
+    
     NSLog(@"[MXRealmCryptoStore] storeOutboundGroupSession: store 1 key (%lu new) in %.3fms", newCount, [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
     
     return storedSession;
@@ -1068,19 +1075,19 @@ RLM_ARRAY_TYPE(MXRealmSecret)
 {
     OLMOutboundGroupSession *session;
     MXRealmOlmOutboundGroupSession *realmSession = [MXRealmOlmOutboundGroupSession objectsInRealm:self.realm where:@"roomId = %@", roomId].firstObject;
-
+    
     NSLog(@"[MXRealmCryptoStore] outboundGroupSessionWithRoomId: %@ -> %@", roomId, realmSession ? @"found" : @"not found");
-
+    
     if (realmSession)
     {
         session = [NSKeyedUnarchiver unarchiveObjectWithData:realmSession.sessionData];
-
+        
         if (!session)
         {
             NSLog(@"[MXRealmCryptoStore] outboundGroupSessionWithRoomId: ERROR: Failed to create OLMOutboundGroupSession object");
         }
     }
-
+    
     if (session)
     {
         return [[MXOlmOutboundGroupSession alloc] initWithSession:session roomId:roomId creationTime:realmSession.creationTime];
@@ -1092,7 +1099,7 @@ RLM_ARRAY_TYPE(MXRealmSecret)
 - (NSArray<MXOlmOutboundGroupSession *> *)outboundGroupSessions
 {
     NSMutableArray *sessions = [NSMutableArray array];
-
+    
     for (MXRealmOlmOutboundGroupSession *realmSession in [MXRealmOlmOutboundGroupSession allObjectsInRealm:self.realm])
     {
         MXOlmOutboundGroupSession * session = [[MXOlmOutboundGroupSession alloc]
@@ -1101,7 +1108,7 @@ RLM_ARRAY_TYPE(MXRealmSecret)
                                                creationTime:realmSession.creationTime];
         [sessions addObject:session];
     }
-
+    
     NSLog(@"[MXRealmCryptoStore] outboundGroupSessions: found %lu entries", sessions.count);
     return sessions;
 }
@@ -1111,7 +1118,7 @@ RLM_ARRAY_TYPE(MXRealmSecret)
     RLMRealm *realm = self.realm;
     [realm transactionWithBlock:^{
         RLMResults<MXRealmOlmOutboundGroupSession *> *realmSessions = [MXRealmOlmOutboundGroupSession objectsInRealm:realm where:@"roomId = %@", roomId];
-
+        
         [realm deleteObjects:realmSessions];
         NSLog(@"[MXRealmCryptoStore] removeOutboundGroupSessionWithRoomId%@: removed %lu entries", roomId, realmSessions.count);
     }];
@@ -1120,9 +1127,9 @@ RLM_ARRAY_TYPE(MXRealmSecret)
 - (void)storeSharedDevices:(MXUsersDevicesMap<NSNumber *> *)devices messageIndex:(NSUInteger) messageIndex forOutboundGroupSessionInRoomWithId:(NSString *)roomId sessionId:(NSString *)sessionId
 {
     NSDate *startDate = [NSDate date];
-
+    
     RLMRealm *realm = self.realm;
-
+    
     [realm transactionWithBlock:^{
         
         for (NSString *userId in [devices userIds])
@@ -1135,14 +1142,14 @@ RLM_ARRAY_TYPE(MXRealmSecret)
                     NSLog(@"[MXRealmCryptoStore] storeSharedDevices cannot find user with the ID %@", userId);
                     continue;
                 }
-
+                
                 MXRealmDeviceInfo *realmDevice = [[realmUser.devices objectsWhere:@"deviceId = %@", deviceId] firstObject];
                 if (!realmDevice)
                 {
                     NSLog(@"[MXRealmCryptoStore] storeSharedDevices cannot find device with the ID %@", deviceId);
                     continue;
                 }
-
+                
                 MXRealmSharedOutboundSession *sharedInfo = [[MXRealmSharedOutboundSession alloc] initWithValue: @{
                     @"roomId": roomId,
                     @"sessionId": sessionId,
@@ -1153,16 +1160,16 @@ RLM_ARRAY_TYPE(MXRealmSecret)
             }
         }
     }];
-
+    
     NSLog(@"[MXRealmCryptoStore] storeSharedDevices (count: %tu) in %.3fms", devices.count, [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
 }
 
 - (MXUsersDevicesMap<NSNumber *> *)sharedDevicesForOutboundGroupSessionInRoomWithId:(NSString *)roomId sessionId:(NSString *)sessionId
 {
     NSDate *startDate = [NSDate date];
-
+    
     MXUsersDevicesMap<NSNumber *> *devices = [MXUsersDevicesMap new];
-
+    
     RLMRealm *realm = self.realm;
     
     RLMResults<MXRealmSharedOutboundSession *> *results = [MXRealmSharedOutboundSession objectsInRealm:realm where:@"roomId = %@ AND sessionId = %@", roomId, sessionId];
@@ -1177,9 +1184,9 @@ RLM_ARRAY_TYPE(MXRealmSecret)
         }
         [devices setObject:sharedInfo.messageIndex forUser:deviceInfo.userId andDevice:deviceInfo.deviceId];
     }
-
+    
     NSLog(@"[MXRealmCryptoStore] sharedDevicesForOutboundGroupSessionInRoomWithId (count: %tu) in %.3fms", results.count, [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
-
+    
     return devices;
 }
 
@@ -1198,7 +1205,7 @@ RLM_ARRAY_TYPE(MXRealmSecret)
             break;
         }
     }
-
+    
     return messageIndex;
 }
 
@@ -1458,19 +1465,77 @@ RLM_ARRAY_TYPE(MXRealmSecret)
     RLMRealm *realm = self.realm;
     [realm transactionWithBlock:^{
         
-        MXRealmSecret *realmSecret =
-        [[MXRealmSecret alloc] initWithValue:@{
-            @"secretId": secretId,
-            @"secret": secret,
-        }];
+        MXRealmSecret *realmSecret;
+        
+        // Encrypt if enabled
+        NSData *key = self.encryptionKey;
+        if (key)
+        {
+            NSData *secretData = [secret dataUsingEncoding:NSUTF8StringEncoding];
+            NSData *iv = [MXAes iv];
+            
+            NSError *error;
+            NSData *encryptedSecret = [MXAes encrypt:secretData aesKey:key iv:iv error:&error];
+            if (error)
+            {
+                NSLog(@"[MXRealmCryptoStore] storeSecret: Encryption failed for secret %@. Error: %@", secretId, error);
+                return;
+            }
+            
+            realmSecret = [[MXRealmSecret alloc] initWithValue:@{
+                @"secretId": secretId,
+                @"encryptedSecret": encryptedSecret,
+                @"iv": iv
+            }];
+        }
+        else
+        {
+            realmSecret = [[MXRealmSecret alloc] initWithValue:@{
+                @"secretId": secretId,
+                @"secret": secret,
+            }];
+        }
+        
         [realm addOrUpdateObject:realmSecret];
     }];
 }
 
 - (NSString*)secretWithSecretId:(NSString*)secretId
 {
-    RLMResults<MXRealmSecret *> *realmSecrets = [MXRealmSecret objectsInRealm:self.realm where:@"secretId = %@", secretId];
-    return realmSecrets.firstObject.secret;
+    MXRealmSecret *realmSecret = [MXRealmSecret objectsInRealm:self.realm where:@"secretId = %@", secretId].firstObject;
+    NSString *secret;
+    
+    if (realmSecret.encryptedSecret)
+    {
+        NSData *key = self.encryptionKey;
+        if (!key)
+        {
+            NSLog(@"[MXRealmCryptoStore] secretWithSecretId: ERROR: Key to decrypt secret %@ is unavailable", secretId);
+            return nil;
+        }
+        
+        NSData *iv = realmSecret.iv;
+        if (!iv)
+        {
+            NSLog(@"[MXRealmCryptoStore] secretWithSecretId: ERROR: IV for %@ is unavailable", secretId);
+            return nil;
+        }
+        
+        NSError *error;
+        NSData *secretData = [MXAes decrypt:realmSecret.encryptedSecret aesKey:key iv:iv error:&error];
+        if (error || !secretData)
+        {
+            NSLog(@"[MXRealmCryptoStore] secretWithSecretId: Decryption failed for secret %@. Error: %@", secretId, error);
+            return nil;
+        }
+        
+        secret = [[NSString alloc] initWithData:secretData encoding:NSUTF8StringEncoding];
+    }
+    else
+    {
+        secret = realmSecret.secret;
+    }
+    return secret;
 }
 
 - (void)deleteSecretWithSecretId:(NSString*)secretId
@@ -1520,7 +1585,7 @@ RLM_ARRAY_TYPE(MXRealmSecret)
 + (RLMRealm*)realmForUser:(NSString*)userId andDevice:(NSString*)deviceId
 {
     RLMRealmConfiguration *config = [RLMRealmConfiguration defaultConfiguration];
-
+    
     // Each user has its own db file.
     // Else, it can lead to issue with primary keys.
     // Ex: if 2 users are is the same encrypted room, [self storeAlgorithmForRoom]
@@ -1529,23 +1594,23 @@ RLM_ARRAY_TYPE(MXRealmSecret)
     NSURL *realmFileURL = [self realmFileURLForUserWithUserId:userId andDevice:deviceId];
     [self ensurePathExistenceForFileAtFileURL:realmFileURL];
     config.fileURL = realmFileURL;
-
-    // Manage only our objects in this realm 
+    
+    // Manage only our objects in this realm
     config.objectClasses = @[
-                             MXRealmDeviceInfo.class,
-                             MXRealmCrossSigningInfo.class,
+        MXRealmDeviceInfo.class,
+        MXRealmCrossSigningInfo.class,
         MXRealmUser.class,
         MXRealmRoomAlgorithm.class,
         MXRealmOlmSession.class,
-                             MXRealmOlmInboundGroupSession.class,   
-                             MXRealmOlmAccount.class,
-                             MXRealmOutgoingRoomKeyRequest.class,
-                             MXRealmIncomingRoomKeyRequest.class,
-                             MXRealmSecret.class,
-                             MXRealmOlmOutboundGroupSession.class,
-                             MXRealmSharedOutboundSession.class
-                             ];
-
+        MXRealmOlmInboundGroupSession.class,
+        MXRealmOlmAccount.class,
+        MXRealmOutgoingRoomKeyRequest.class,
+        MXRealmIncomingRoomKeyRequest.class,
+        MXRealmSecret.class,
+        MXRealmOlmOutboundGroupSession.class,
+        MXRealmSharedOutboundSession.class
+    ];
+    
     config.schemaVersion = kMXRealmCryptoStoreVersion;
     
     __block BOOL cleanDuplicatedDevices = NO;
@@ -1670,6 +1735,23 @@ RLM_ARRAY_TYPE(MXRealmSecret)
     }
 }
 
+/**
+ Gives the encryption key if encryption is needed
+ 
+ @return the encryption key if encryption is needed. Nil otherwise.
+ */
+- (NSData *)encryptionKey
+{
+    // It is up to the app to provide a key for additional encryption
+    MXKeyData * keyData =  [[MXKeyProvider sharedInstance] keyDataForDataOfType:MXCryptoOlmPickleKeyDataType isMandatory:NO expectedKeyType:kRawData];
+    if (keyData && [keyData isKindOfClass:[MXRawDataKey class]])
+    {
+        return ((MXRawDataKey *)keyData).key;
+    }
+    
+    return nil;
+}
+
 
 #pragma mark - shouldCompactOnLaunch
 
@@ -1765,11 +1847,11 @@ static BOOL shouldCompactOnLaunch = YES;
     BOOL cleanDuplicatedDevices = NO;
     
     // Note: There is nothing to do most of the time
-        // Realm will automatically detect new properties and removed properties
-        // And will update the schema on disk automatically
-
-        if (oldSchemaVersion < kMXRealmCryptoStoreVersion)
-        {
+    // Realm will automatically detect new properties and removed properties
+    // And will update the schema on disk automatically
+    
+    if (oldSchemaVersion < kMXRealmCryptoStoreVersion)
+    {
         NSLog(@"[MXRealmCryptoStore] Required migration detected. oldSchemaVersion: %llu - current: %tu", oldSchemaVersion, kMXRealmCryptoStoreVersion);
         
         switch (oldSchemaVersion)
@@ -1958,20 +2040,19 @@ static BOOL shouldCompactOnLaunch = YES;
                 NSLog(@"[MXRealmCryptoStore]    Add new MXRealmOlmAccount.cryptoVersion. Set it to MXCryptoVersion1");
                 
                 [migration enumerateObjects:MXRealmOlmAccount.className block:^(RLMObject *oldObject, RLMObject *newObject) {
-                        newObject[@"cryptoVersion"] = @(MXCryptoVersion1);
-                    }];
-                }
-                    
-                case 13:
-                {
-                    NSLog(@"[MXRealmCryptoStore] Migration from schema #13 -> #14: Nothing to do (added MXRealmOlmOutboundGroupSession)");
-                }
-                    
-                case 14:
-                {
-                    NSLog(@"[MXRealmCryptoStore] Migration from schema #14 -> #15: Nothing to do (added MXRealmSharedOutboundSession)");
-                }
+                    newObject[@"cryptoVersion"] = @(MXCryptoVersion1);
+                }];
             }
+                
+            case 13:
+                NSLog(@"[MXRealmCryptoStore] Migration from schema #13 -> #14: Nothing to do (added MXRealmOlmOutboundGroupSession)");
+                
+            case 14:
+                NSLog(@"[MXRealmCryptoStore] Migration from schema #14 -> #15: Nothing to do (added MXRealmSharedOutboundSession)");
+                
+            case 15:
+                NSLog(@"[MXRealmCryptoStore] Migration from schema #15 -> #16: Nothing to do (added optional MXRealmSecret.encryptedSecret)");
+        }
     }
     
     return cleanDuplicatedDevices;
