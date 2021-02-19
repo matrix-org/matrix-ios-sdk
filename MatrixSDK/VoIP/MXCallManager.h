@@ -20,7 +20,10 @@
 NS_ASSUME_NONNULL_BEGIN
 
 @class MXCall;
+#ifndef DISABLE_CALLKIT
 @class MXCallKitAdapter;
+#endif
+
 @class MXRoom, MXRoomState;
 @class MXRoomMember;
 @class MXSession;
@@ -137,8 +140,10 @@ extern NSString *const kMXCallManagerPSTNSupportUpdated;
  The CallKit adapter.
  Provide it if you want to add CallKit support.
  */
+#ifndef DISABLE_CALLKIT
 #if TARGET_OS_IPHONE
 @property (nonatomic, nullable) MXCallKitAdapter *callKitAdapter;
+#endif
 #endif
 
 /**
