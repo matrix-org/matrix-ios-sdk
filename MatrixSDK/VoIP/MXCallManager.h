@@ -58,6 +58,12 @@ extern NSString *const kMXCallManagerConferenceFinished;
 extern NSString *const kMXCallManagerPSTNSupportUpdated;
 
 /**
+ Posted when a new turn servers response is received from the homeserver.
+ The notification object will be the call manager instance.
+ */
+extern NSString *const kMXCallManagerTurnServersReceived;
+
+/**
  The `MXCallManager` object manages calls for a given Matrix session.
  It manages call signaling over Matrix (@see http://matrix.org/docs/spec/#id9) and then opens
  a stream between peers devices using a third party VoIP library.
@@ -164,6 +170,11 @@ extern NSString *const kMXCallManagerPSTNSupportUpdated;
  Can be nil. In this case, use `fallbackSTUNServer`.
  */
 @property (nonatomic, nullable, readonly) MXTurnServerResponse *turnServers;
+
+/**
+ Flag to indicate whether a turn servers response is received from the home server yet.
+ */
+@property (nonatomic, readonly) BOOL turnServersReceived;
 
 /**
  STUN server used if the homeserver does not provide TURN/STUN servers.
