@@ -26,7 +26,10 @@
 #import "MXCryptoTools.h"
 #import "MXRealmCryptoStore.h"
 
-@interface MXOlmDevice ()
+#import "MXKeyProvider.h"
+#import "MXRawDataKey.h"
+
+@interface MXOlmDevice () <OLMKitPickleKeyDelegate>
 {
     // The OLMKit utility instance.
     OLMUtility *olmUtility;
@@ -62,6 +65,15 @@
     if (self)
     {
         store = theStore;
+        
+        // It is up to the app to provide an encryption key that it safely manages.
+        // If provided, this key will be used as a global pickle key for all olm pickes.
+        // Else, libolm will create pickle keys internally.
+        if ([MXKeyProvider.sharedInstance hasKeyForDataOfType:MXCryptoOlmPickleKeyDataType isMandatory:NO])
+        {
+            NSLog(@"[MXOlmDevice] initWithStore: Use a global pickle key for libolm");
+            OLMKit.sharedInstance.pickleKeyDelegate = self;
+        }
 
         // Retrieve the account from the store
         OLMAccount *olmAccount = store.account;
@@ -570,6 +582,21 @@
     }
 
     return inboundGroupSessionKey;
+}
+
+
+#pragma mark - OLMKitPickleKeyDelegate
+
+- (NSData *)pickleKey
+{
+    // If this delegate is called, we must have a key to provide
+    MXKeyData *keyData = [[MXKeyProvider sharedInstance] keyDataForDataOfType:MXCryptoOlmPickleKeyDataType isMandatory:YES expectedKeyType:kRawData];
+    if (keyData && [keyData isKindOfClass:[MXRawDataKey class]])
+    {
+        return ((MXRawDataKey *)keyData).key;
+    }
+    
+    return nil;
 }
 
 
