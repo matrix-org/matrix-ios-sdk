@@ -20,6 +20,7 @@
 #import <WebRTC/RTCPeerConnectionFactory.h>
 #import <WebRTC/RTCDefaultVideoEncoderFactory.h>
 #import <WebRTC/RTCDefaultVideoDecoderFactory.h>
+#import <WebRTC/RTCCallbackLogger.h>
 
 @interface MXJingleCallStack ()
 {
@@ -29,6 +30,23 @@
 @end
 
 @implementation MXJingleCallStack
+
++ (void)load
+{
+    static RTC_OBJC_TYPE(RTCCallbackLogger) *CallBackLogger;
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        CallBackLogger = [[RTC_OBJC_TYPE(RTCCallbackLogger) alloc] init];
+#if DEBUG
+        CallBackLogger.severity = RTCLoggingSeverityInfo;
+#else
+        CallBackLogger.severity = RTCLoggingSeverityError;
+#endif
+        [CallBackLogger start:^(NSString * _Nonnull message) {
+            NSLog(@"[WebRTC] %@", message);
+        }];
+    });
+}
 
 - (instancetype)init
 {
