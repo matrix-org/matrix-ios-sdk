@@ -5,7 +5,7 @@ abstract_target 'MatrixSDK' do
     pod 'AFNetworking', '~> 4.0.0'
     pod 'GZIP', '~> 1.3.0'
     
-    pod 'OLMKit', '~> 3.1.0', :inhibit_warnings => true
+    pod 'OLMKit', '~> 3.2.2', :inhibit_warnings => true
     #pod 'OLMKit', :path => '../olm/OLMKit.podspec'
     
     pod 'Realm', '10.1.4'
