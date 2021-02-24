@@ -679,19 +679,22 @@ didRemoveIceCandidates:(NSArray<RTCIceCandidate *> *)candidates;
         return YES;
     }]];
     
-    if (activeReceivers.count == 0)
+    if (peerConnection.iceConnectionState == RTCIceConnectionStateConnected)
     {
-        //  if there is no active receivers (on the other party) left, we can say this call is holded
-        dispatch_async(dispatch_get_main_queue(), ^{
-            [self.delegate callStackCallDidRemotelyHold:self];
-        });
-    }
-    else
-    {
-        //  otherwise we can say this call resumed after a remote hold
-        dispatch_async(dispatch_get_main_queue(), ^{
-            [self.delegate callStackCallDidConnect:self];
-        });
+        if (activeReceivers.count == 0)
+        {
+            //  if there is no active receivers (on the other party) left, we can say this call is holded
+            dispatch_async(dispatch_get_main_queue(), ^{
+                [self.delegate callStackCallDidRemotelyHold:self];
+            });
+        }
+        else
+        {
+            //  otherwise we can say this call resumed after a remote hold
+            dispatch_async(dispatch_get_main_queue(), ^{
+                [self.delegate callStackCallDidConnect:self];
+            });
+        }
     }
 }
 
