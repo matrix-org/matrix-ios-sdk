@@ -456,6 +456,11 @@ NSString *const kMXJingleCallWebRTCMainStreamID = @"userMedia";
 
 #pragma mark - RTCPeerConnectionDelegate
 
+- (void)peerConnection:(RTCPeerConnection *)peerConnection didChangeConnectionState:(RTCPeerConnectionState)newState
+{
+    NSLog(@"[MXJingleCallStackCall] didChangeConnectionState: %tu", newState);
+}
+
 // Triggered when the SignalingState changed.
 - (void)peerConnection:(RTCPeerConnection *)peerConnection
  didChangeSignalingState:(RTCSignalingState)stateChanged
