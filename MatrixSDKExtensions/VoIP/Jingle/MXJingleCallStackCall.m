@@ -674,7 +674,7 @@ didRemoveIceCandidates:(NSArray<RTCIceCandidate *> *)candidates;
         return YES;
     }]];
     
-    if (peerConnection.iceConnectionState == RTCIceConnectionStateConnected)
+    if (peerConnection.iceConnectionState == RTCIceConnectionStateConnected || peerConnection.iceConnectionState == RTCIceConnectionStateCompleted)
     {
         if (activeReceivers.count == 0)
         {
