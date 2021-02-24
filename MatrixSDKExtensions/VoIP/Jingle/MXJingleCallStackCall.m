@@ -84,6 +84,7 @@ NSString *const kMXJingleCallWebRTCMainStreamID = @"userMedia";
     {
         peerConnectionFactory = factory;
         cameraPosition = AVCaptureDevicePositionFront;
+        iceCandidateCache = [NSMutableArray array];
         
         [[NSNotificationCenter defaultCenter] addObserver:self
                                                  selector:@selector(handleRouteChangeNotification:)
@@ -235,14 +236,7 @@ NSString *const kMXJingleCallWebRTCMainStreamID = @"userMedia";
     if (!peerConnection.remoteDescription)
     {
         // Cache ice candidates until remote description is set
-        if (iceCandidateCache == nil)
-        {
-            iceCandidateCache = [NSMutableArray arrayWithObject:iceCandidate];
-        }
-        else
-        {
-            [iceCandidateCache addObject:iceCandidate];
-        }
+        [iceCandidateCache addObject:iceCandidate];
     }
     else
     {
