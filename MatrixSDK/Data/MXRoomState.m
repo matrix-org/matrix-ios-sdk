@@ -292,6 +292,23 @@
     return avatar;
 }
 
+- (NSString *)creatorUserId
+{
+    NSString *creatorUserId;
+    
+    // Check it from the state events
+    MXEvent *event = [stateEvents objectForKey:kMXEventTypeStringRoomCreate].lastObject;
+    
+    NSDictionary<NSString *, id> *eventContent = [self contentOfEvent:event];
+    
+    if (event && eventContent)
+    {
+        MXJSONModelSetString(creatorUserId, eventContent[@"creator"]);
+        creatorUserId = [creatorUserId copy];
+    }
+    return creatorUserId;
+}
+
 - (MXRoomHistoryVisibility)historyVisibility
 {
     MXRoomHistoryVisibility historyVisibility = kMXRoomHistoryVisibilityShared;

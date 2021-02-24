@@ -115,6 +115,11 @@ Use MXRoomSummary.displayname to get a computed room display name.
 @property (nonatomic, readonly) NSString *avatar;
 
 /**
+ The room creator user id.
+ */
+@property (nonatomic, readonly) NSString *creatorUserId;
+
+/**
  The history visibility of the room.
  */
 @property (nonatomic, readonly) MXRoomHistoryVisibility historyVisibility NS_REFINED_FOR_SWIFT;
