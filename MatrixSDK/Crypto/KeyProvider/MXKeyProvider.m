@@ -72,7 +72,7 @@ static MXKeyProvider *sharedInstance = nil;
         [NSException raise:@"MandatoryKey" format:@"No key value for mandatory Key (data type : %@)", dataType];
     }
 
-    if (keyData.type != keyType)
+    if (keyData && keyData.type != keyType)
     {
         [NSException raise:@"KeyType" format:@"Wrong key type (%lu expected %lu) for data of type : %@", keyData.type, keyType, dataType];
     }
