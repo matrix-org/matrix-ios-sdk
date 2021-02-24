@@ -283,43 +283,43 @@ NSString *const kMXJingleCallWebRTCMainStreamID = @"userMedia";
     [peerConnection answerForConstraints:self.mediaConstraints completionHandler:^(RTCSessionDescription * _Nullable sdp, NSError * _Nullable error) {
         MXStrongifyAndReturnIfNil(self);
 
-        if (!error)
-        {
-            MXWeakify(self);
-            // Report this sdp back to libjingle
-            [self->peerConnection setLocalDescription:sdp completionHandler:^(NSError * _Nullable error) {
-                MXStrongifyAndReturnIfNil(self);
-                
-                NSLog(@"[MXJingleCallStackCall] createAnswer: setLocalDescription: error: %@", error);
-                
-                // Return on main thread
-                dispatch_async(dispatch_get_main_queue(), ^{
+        // Return on main thread
+        dispatch_async(dispatch_get_main_queue(), ^{
+            
+            if (!error)
+            {
+                MXWeakify(self);
+                // Report this sdp back to libjingle
+                [self->peerConnection setLocalDescription:sdp completionHandler:^(NSError * _Nullable error) {
+                    MXStrongifyAndReturnIfNil(self);
                     
-                    if (!error)
-                    {
-                        success(sdp.sdp);
-                    }
-                    else
-                    {
-                        failure(error);
-                    }
+                    NSLog(@"[MXJingleCallStackCall] createAnswer: setLocalDescription: error: %@", error);
                     
-                });
-                
-                //  check we can consider this call as held, after setting local description
-                [self checkTheCallIsRemotelyOnHold];
-                
-            }];
-        }
-        else
-        {
-            // Return on main thread
-            dispatch_async(dispatch_get_main_queue(), ^{
-                
+                    // Return on main thread
+                    dispatch_async(dispatch_get_main_queue(), ^{
+                        
+                        if (!error)
+                        {
+                            success(sdp.sdp);
+                        }
+                        else
+                        {
+                            failure(error);
+                        }
+                        
+                    });
+                    
+                    //  check we can consider this call as held, after setting local description
+                    [self checkTheCallIsRemotelyOnHold];
+                    
+                }];
+            }
+            else
+            {
                 failure(error);
-                
-            });
-        }
+            }
+            
+        });
     }];
 }
 
@@ -331,36 +331,37 @@ NSString *const kMXJingleCallWebRTCMainStreamID = @"userMedia";
     [peerConnection offerForConstraints:self.mediaConstraints completionHandler:^(RTCSessionDescription * _Nullable sdp, NSError * _Nullable error) {
         MXStrongifyAndReturnIfNil(self);
 
-        if (!error)
-        {
-            // Report this sdp back to libjingle
-            [self->peerConnection setLocalDescription:sdp completionHandler:^(NSError * _Nullable error) {
-                NSLog(@"[MXJingleCallStackCall] createOffer: setLocalDescription: error: %@", error);
-                
-                // Return on main thread
-                dispatch_async(dispatch_get_main_queue(), ^{
+        // Return on main thread
+        dispatch_async(dispatch_get_main_queue(), ^{
+            
+            if (!error)
+            {
+                // Report this sdp back to libjingle
+                [self->peerConnection setLocalDescription:sdp completionHandler:^(NSError * _Nullable error) {
+                    NSLog(@"[MXJingleCallStackCall] createOffer: setLocalDescription: error: %@", error);
                     
-                    if (!error)
-                    {
-                        success(sdp.sdp);
-                    }
-                    else
-                    {
-                        failure(error);
-                    }
-                    
-                });
-            }];
-        }
-        else
-        {
-            // Return on main thread
-            dispatch_async(dispatch_get_main_queue(), ^{
-                
+                    // Return on main thread
+                    dispatch_async(dispatch_get_main_queue(), ^{
+                        
+                        if (!error)
+                        {
+                            success(sdp.sdp);
+                        }
+                        else
+                        {
+                            failure(error);
+                        }
+                        
+                    });
+                }];
+            }
+            else
+            {
                 failure(error);
-                
-            });
-        }
+            }
+            
+        });
+        
     }];
 }
 
