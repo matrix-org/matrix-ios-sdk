@@ -454,6 +454,30 @@ NSString *const kMXJingleCallWebRTCMainStreamID = @"userMedia";
 - (void)peerConnection:(RTCPeerConnection *)peerConnection didChangeConnectionState:(RTCPeerConnectionState)newState
 {
     NSLog(@"[MXJingleCallStackCall] didChangeConnectionState: %tu", newState);
+    
+    switch (newState)
+    {
+        case RTCPeerConnectionStateConnected:
+        {
+            dispatch_async(dispatch_get_main_queue(), ^{
+                [self.delegate callStackCallDidConnect:self];
+            });
+            break;
+        }
+        case RTCPeerConnectionStateFailed:
+        {
+            // ICE discovery has failed or the connection has dropped
+            dispatch_async(dispatch_get_main_queue(), ^{
+
+                [self.delegate callStackCall:self onError:nil];
+                
+            });
+            break;
+        }
+
+        default:
+            break;
+    }
 }
 
 // Triggered when the SignalingState changed.
@@ -514,34 +538,6 @@ NSString *const kMXJingleCallWebRTCMainStreamID = @"userMedia";
 didChangeIceConnectionState:(RTCIceConnectionState)newState
 {
     NSLog(@"[MXJingleCallStackCall] didChangeIceConnectionState: %@", @(newState));
-
-    switch (newState)
-    {
-        case RTCIceConnectionStateConnected:
-        {
-            // WebRTC has the given sequence of state changes for outgoing calls
-            // RTCIceConnectionStateConnected -> RTCIceConnectionStateCompleted -> RTCIceConnectionStateConnected
-            // Make sure you handle this situation right. For example check if the call is in the connecting state
-            // before starting react on this message
-            dispatch_async(dispatch_get_main_queue(), ^{
-                [self.delegate callStackCallDidConnect:self];
-            });
-            break;
-        }
-        case RTCIceConnectionStateFailed:
-        {
-            // ICE discovery has failed or the connection has dropped
-            dispatch_async(dispatch_get_main_queue(), ^{
-
-                [self.delegate callStackCall:self onError:nil];
-                
-            });
-            break;
-        }
-
-        default:
-            break;
-    }
 }
 
 // Called any time the ICEGatheringState changes.
@@ -674,7 +670,7 @@ didRemoveIceCandidates:(NSArray<RTCIceCandidate *> *)candidates;
         return YES;
     }]];
     
-    if (peerConnection.iceConnectionState == RTCIceConnectionStateConnected || peerConnection.iceConnectionState == RTCIceConnectionStateCompleted)
+    if (peerConnection.connectionState == RTCPeerConnectionStateConnected)
     {
         if (activeReceivers.count == 0)
         {
