@@ -400,6 +400,13 @@ NSString *const kMXJingleCallWebRTCMainStreamID = @"userMedia";
             
             if (!error)
             {
+                // Add cached ice candidates
+                for (RTCIceCandidate *iceCandidate in self->iceCandidateCache)
+                {
+                    [self->peerConnection addIceCandidate:iceCandidate];
+                }
+                [self->iceCandidateCache removeAllObjects];
+                
                 success();
             }
             else
