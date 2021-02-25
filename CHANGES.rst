@@ -5,8 +5,34 @@ Changes to be released in next version
  * 
 
 🙌 Improvements
+ * 
+
+🐛 Bugfix
+ * 
+
+⚠️ API Changes
+ * 
+
+🗣 Translations
+ * 
+    
+🧱 Build
+ * 
+
+Others
+ * 
+
+Changes in 0.18.2 (2021-02-24)
+=================================================
+
+✨ Features
+ * 
+
+🙌 Improvements
  * MXRoomState: Add creator user id property.
  * MXRoomSummary: Add creator user id property.
+ * MXCrypto: Encrypt cached e2ee data using an external pickle key (vector-im/element-ios#3867).
+ * Crypto: Upgrade OLMKit(3.2.2).
 
 🐛 Bugfix
  * Fix calls from my own users (vector-im/element-ios/issues/4031).
@@ -23,6 +49,9 @@ Changes to be released in next version
 
 Others
  * 
+
+Improvements:
+
 
 Changes in 0.18.1 (2021-02-12)
 =================================================
