@@ -279,7 +279,7 @@ NSString *const kMXJingleCallWebRTCMainStreamID = @"userMedia";
             
             if (!error)
             {
-                // Add cached ice candidates
+                // Add cached ice candidates after setting remote description
                 for (RTCIceCandidate *iceCandidate in self->cachedRemoteIceCandidates)
                 {
                     [self->peerConnection addIceCandidate:iceCandidate];
@@ -400,7 +400,7 @@ NSString *const kMXJingleCallWebRTCMainStreamID = @"userMedia";
             
             if (!error)
             {
-                // Add cached ice candidates
+                // Add cached ice candidates after setting remote description
                 for (RTCIceCandidate *iceCandidate in self->cachedRemoteIceCandidates)
                 {
                     [self->peerConnection addIceCandidate:iceCandidate];
