@@ -64,9 +64,9 @@ NSString *const kMXJingleCallWebRTCMainStreamID = @"userMedia";
     void (^onStartCapturingMediaWithVideoSuccess)(void);
 
     /**
-     Ice candidate cache
+     Remote ice candidates received before setting remote description for the peer connection.
      */
-    NSMutableArray<RTCIceCandidate *> *iceCandidateCache;
+    NSMutableArray<RTCIceCandidate *> *cachedRemoteIceCandidates;
     
 #if DEBUG
     /**
@@ -91,7 +91,7 @@ NSString *const kMXJingleCallWebRTCMainStreamID = @"userMedia";
     {
         peerConnectionFactory = factory;
         cameraPosition = AVCaptureDevicePositionFront;
-        iceCandidateCache = [NSMutableArray array];
+        cachedRemoteIceCandidates = [NSMutableArray array];
         
         [[NSNotificationCenter defaultCenter] addObserver:self
                                                  selector:@selector(handleRouteChangeNotification:)
@@ -256,7 +256,7 @@ NSString *const kMXJingleCallWebRTCMainStreamID = @"userMedia";
     if (!peerConnection.remoteDescription)
     {
         // Cache ice candidates until remote description is set
-        [iceCandidateCache addObject:iceCandidate];
+        [cachedRemoteIceCandidates addObject:iceCandidate];
     }
     else
     {
@@ -280,11 +280,11 @@ NSString *const kMXJingleCallWebRTCMainStreamID = @"userMedia";
             if (!error)
             {
                 // Add cached ice candidates
-                for (RTCIceCandidate *iceCandidate in self->iceCandidateCache)
+                for (RTCIceCandidate *iceCandidate in self->cachedRemoteIceCandidates)
                 {
                     [self->peerConnection addIceCandidate:iceCandidate];
                 }
-                [self->iceCandidateCache removeAllObjects];
+                [self->cachedRemoteIceCandidates removeAllObjects];
                 
                 success();
             }
@@ -401,11 +401,11 @@ NSString *const kMXJingleCallWebRTCMainStreamID = @"userMedia";
             if (!error)
             {
                 // Add cached ice candidates
-                for (RTCIceCandidate *iceCandidate in self->iceCandidateCache)
+                for (RTCIceCandidate *iceCandidate in self->cachedRemoteIceCandidates)
                 {
                     [self->peerConnection addIceCandidate:iceCandidate];
                 }
-                [self->iceCandidateCache removeAllObjects];
+                [self->cachedRemoteIceCandidates removeAllObjects];
                 
                 success();
             }
