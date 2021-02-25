@@ -67,6 +67,13 @@ NSString *const kMXJingleCallWebRTCMainStreamID = @"userMedia";
      Ice candidate cache
      */
     NSMutableArray<RTCIceCandidate *> *iceCandidateCache;
+    
+#if DEBUG
+    /**
+     Timer for getting stats for the peer connection.
+     */
+    NSTimer *statsTimer;
+#endif
 }
 
 @property (nonatomic, strong) RTCVideoCapturer *videoCapturer;
@@ -190,6 +197,11 @@ NSString *const kMXJingleCallWebRTCMainStreamID = @"userMedia";
     self.selfVideoView = nil;
     self.remoteVideoView = nil;
     
+#if DEBUG
+    [statsTimer invalidate];
+    statsTimer = nil;
+#endif
+    
     [[NSNotificationCenter defaultCenter] removeObserver:self];
 }
 
@@ -224,6 +236,14 @@ NSString *const kMXJingleCallWebRTCMainStreamID = @"userMedia";
 
     // The libjingle call object can now be created
     peerConnection = [peerConnectionFactory peerConnectionWithConfiguration:configuration constraints:constraints delegate:self];
+    
+#if DEBUG
+    statsTimer = [NSTimer scheduledTimerWithTimeInterval:1.0 repeats:YES block:^(NSTimer * _Nonnull timer) {
+        [self->peerConnection statisticsWithCompletionHandler:^(RTCStatisticsReport * _Nonnull statistics) {
+            NSLog(@"[MXJingleCallStackCall] peerConnection.statistics: %@", statistics);
+        }];
+    }];
+#endif
 }
 
 - (void)handleRemoteCandidate:(NSDictionary<NSString *, NSObject *> *)candidate
