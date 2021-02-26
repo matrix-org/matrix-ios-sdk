@@ -42,10 +42,11 @@
 #import "MXThirdPartyUserInstance.h"
 
 #pragma mark - Constants definitions
-NSString *const kMXCallManagerNewCall            = @"kMXCallManagerNewCall";
-NSString *const kMXCallManagerConferenceStarted  = @"kMXCallManagerConferenceStarted";
-NSString *const kMXCallManagerConferenceFinished = @"kMXCallManagerConferenceFinished";
-NSString *const kMXCallManagerPSTNSupportUpdated = @"kMXCallManagerPSTNSupportUpdated";
+NSString *const kMXCallManagerNewCall               = @"kMXCallManagerNewCall";
+NSString *const kMXCallManagerConferenceStarted     = @"kMXCallManagerConferenceStarted";
+NSString *const kMXCallManagerConferenceFinished    = @"kMXCallManagerConferenceFinished";
+NSString *const kMXCallManagerPSTNSupportUpdated    = @"kMXCallManagerPSTNSupportUpdated";
+NSString *const kMXCallManagerTurnServersReceived   = @"kMXCallManagerTurnServersReceived";
 
 // TODO: Replace usages of this with `kMXProtocolPSTN` when MSC completed
 NSString *const kMXProtocolVectorPSTN = @"im.vector.protocol.pstn";
@@ -78,6 +79,8 @@ NSTimeInterval const kMXCallDirectRoomJoinTimeout = 30;
 }
 
 @property (nonatomic, copy) MXThirdPartyProtocol *pstnProtocol;
+@property (nonatomic, nullable, readwrite) MXTurnServerResponse *turnServers;
+@property (nonatomic, readwrite) BOOL turnServersReceived;
 
 @end
 
@@ -349,7 +352,7 @@ NSTimeInterval const kMXCallDirectRoomJoinTimeout = 30;
 
         if (turnServerResponse.uris)
         {
-            self->_turnServers = turnServerResponse;
+            self.turnServers = turnServerResponse;
 
             // Re-new when we're about to reach the TTL
             self->refreshTURNServerTimer = [[NSTimer alloc] initWithFireDate:[NSDate dateWithTimeIntervalSinceNow:turnServerResponse.ttl * 0.9]
@@ -363,7 +366,7 @@ NSTimeInterval const kMXCallDirectRoomJoinTimeout = 30;
         else
         {
             NSLog(@"No TURN server: using fallback STUN server: %@", self->_fallbackSTUNServer);
-            self->_turnServers = nil;
+            self.turnServers = nil;
         }
 
     } failure:^(NSError *error) {
@@ -616,6 +619,23 @@ NSTimeInterval const kMXCallDirectRoomJoinTimeout = 30;
     {
         [notificationCenter removeObserver:sessionStateObserver name:kMXSessionStateDidChangeNotification object:_mxSession];
         sessionStateObserver = nil;
+    }
+}
+
+- (void)setTurnServers:(MXTurnServerResponse *)turnServers
+{
+    _turnServers = turnServers;
+    
+    self.turnServersReceived = YES;
+}
+
+- (void)setTurnServersReceived:(BOOL)turnServersReceived
+{
+    _turnServersReceived = turnServersReceived;
+    
+    if (_turnServersReceived)
+    {
+        [[NSNotificationCenter defaultCenter] postNotificationName:kMXCallManagerTurnServersReceived object:self];
     }
 }
 

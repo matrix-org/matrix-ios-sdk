@@ -64,9 +64,16 @@ NSString *const kMXJingleCallWebRTCMainStreamID = @"userMedia";
     void (^onStartCapturingMediaWithVideoSuccess)(void);
 
     /**
-     Ice candidate cache
+     Remote ice candidates received before setting remote description for the peer connection.
      */
-    NSMutableArray<RTCIceCandidate *> *iceCandidateCache;
+    NSMutableArray<RTCIceCandidate *> *cachedRemoteIceCandidates;
+    
+#if DEBUG
+    /**
+     Timer for getting stats for the peer connection.
+     */
+    NSTimer *statsTimer;
+#endif
 }
 
 @property (nonatomic, strong) RTCVideoCapturer *videoCapturer;
@@ -84,6 +91,7 @@ NSString *const kMXJingleCallWebRTCMainStreamID = @"userMedia";
     {
         peerConnectionFactory = factory;
         cameraPosition = AVCaptureDevicePositionFront;
+        cachedRemoteIceCandidates = [NSMutableArray array];
         
         [[NSNotificationCenter defaultCenter] addObserver:self
                                                  selector:@selector(handleRouteChangeNotification:)
@@ -189,6 +197,11 @@ NSString *const kMXJingleCallWebRTCMainStreamID = @"userMedia";
     self.selfVideoView = nil;
     self.remoteVideoView = nil;
     
+#if DEBUG
+    [statsTimer invalidate];
+    statsTimer = nil;
+#endif
+    
     [[NSNotificationCenter defaultCenter] removeObserver:self];
 }
 
@@ -223,6 +236,14 @@ NSString *const kMXJingleCallWebRTCMainStreamID = @"userMedia";
 
     // The libjingle call object can now be created
     peerConnection = [peerConnectionFactory peerConnectionWithConfiguration:configuration constraints:constraints delegate:self];
+    
+#if DEBUG
+    statsTimer = [NSTimer scheduledTimerWithTimeInterval:1.0 repeats:YES block:^(NSTimer * _Nonnull timer) {
+        [self->peerConnection statisticsWithCompletionHandler:^(RTCStatisticsReport * _Nonnull statistics) {
+            NSLog(@"[MXJingleCallStackCall] peerConnection.statistics: %@", statistics);
+        }];
+    }];
+#endif
 }
 
 - (void)handleRemoteCandidate:(NSDictionary<NSString *, NSObject *> *)candidate
@@ -235,14 +256,7 @@ NSString *const kMXJingleCallWebRTCMainStreamID = @"userMedia";
     if (!peerConnection.remoteDescription)
     {
         // Cache ice candidates until remote description is set
-        if (iceCandidateCache == nil)
-        {
-            iceCandidateCache = [NSMutableArray arrayWithObject:iceCandidate];
-        }
-        else
-        {
-            [iceCandidateCache addObject:iceCandidate];
-        }
+        [cachedRemoteIceCandidates addObject:iceCandidate];
     }
     else
     {
@@ -265,12 +279,12 @@ NSString *const kMXJingleCallWebRTCMainStreamID = @"userMedia";
             
             if (!error)
             {
-                // Add cached ice candidates
-                for (RTCIceCandidate *iceCandidate in self->iceCandidateCache)
+                // Add cached ice candidates after setting remote description
+                for (RTCIceCandidate *iceCandidate in self->cachedRemoteIceCandidates)
                 {
                     [self->peerConnection addIceCandidate:iceCandidate];
                 }
-                [self->iceCandidateCache removeAllObjects];
+                [self->cachedRemoteIceCandidates removeAllObjects];
                 
                 success();
             }
@@ -289,43 +303,43 @@ NSString *const kMXJingleCallWebRTCMainStreamID = @"userMedia";
     [peerConnection answerForConstraints:self.mediaConstraints completionHandler:^(RTCSessionDescription * _Nullable sdp, NSError * _Nullable error) {
         MXStrongifyAndReturnIfNil(self);
 
-        if (!error)
-        {
-            MXWeakify(self);
-            // Report this sdp back to libjingle
-            [self->peerConnection setLocalDescription:sdp completionHandler:^(NSError * _Nullable error) {
-                MXStrongifyAndReturnIfNil(self);
-                
-                NSLog(@"[MXJingleCallStackCall] createAnswer: setLocalDescription: error: %@", error);
-                
-                // Return on main thread
-                dispatch_async(dispatch_get_main_queue(), ^{
+        // Return on main thread
+        dispatch_async(dispatch_get_main_queue(), ^{
+            
+            if (!error)
+            {
+                MXWeakify(self);
+                // Report this sdp back to libjingle
+                [self->peerConnection setLocalDescription:sdp completionHandler:^(NSError * _Nullable error) {
+                    MXStrongifyAndReturnIfNil(self);
                     
-                    if (!error)
-                    {
-                        success(sdp.sdp);
-                    }
-                    else
-                    {
-                        failure(error);
-                    }
+                    NSLog(@"[MXJingleCallStackCall] createAnswer: setLocalDescription: error: %@", error);
                     
-                });
-                
-                //  check we can consider this call as held, after setting local description
-                [self checkTheCallIsRemotelyOnHold];
-                
-            }];
-        }
-        else
-        {
-            // Return on main thread
-            dispatch_async(dispatch_get_main_queue(), ^{
-                
+                    // Return on main thread
+                    dispatch_async(dispatch_get_main_queue(), ^{
+                        
+                        if (!error)
+                        {
+                            success(sdp.sdp);
+                        }
+                        else
+                        {
+                            failure(error);
+                        }
+                        
+                    });
+                    
+                    //  check we can consider this call as held, after setting local description
+                    [self checkTheCallIsRemotelyOnHold];
+                    
+                }];
+            }
+            else
+            {
                 failure(error);
-                
-            });
-        }
+            }
+            
+        });
     }];
 }
 
@@ -337,36 +351,37 @@ NSString *const kMXJingleCallWebRTCMainStreamID = @"userMedia";
     [peerConnection offerForConstraints:self.mediaConstraints completionHandler:^(RTCSessionDescription * _Nullable sdp, NSError * _Nullable error) {
         MXStrongifyAndReturnIfNil(self);
 
-        if (!error)
-        {
-            // Report this sdp back to libjingle
-            [self->peerConnection setLocalDescription:sdp completionHandler:^(NSError * _Nullable error) {
-                NSLog(@"[MXJingleCallStackCall] createOffer: setLocalDescription: error: %@", error);
-                
-                // Return on main thread
-                dispatch_async(dispatch_get_main_queue(), ^{
+        // Return on main thread
+        dispatch_async(dispatch_get_main_queue(), ^{
+            
+            if (!error)
+            {
+                // Report this sdp back to libjingle
+                [self->peerConnection setLocalDescription:sdp completionHandler:^(NSError * _Nullable error) {
+                    NSLog(@"[MXJingleCallStackCall] createOffer: setLocalDescription: error: %@", error);
                     
-                    if (!error)
-                    {
-                        success(sdp.sdp);
-                    }
-                    else
-                    {
-                        failure(error);
-                    }
-                    
-                });
-            }];
-        }
-        else
-        {
-            // Return on main thread
-            dispatch_async(dispatch_get_main_queue(), ^{
-                
+                    // Return on main thread
+                    dispatch_async(dispatch_get_main_queue(), ^{
+                        
+                        if (!error)
+                        {
+                            success(sdp.sdp);
+                        }
+                        else
+                        {
+                            failure(error);
+                        }
+                        
+                    });
+                }];
+            }
+            else
+            {
                 failure(error);
-                
-            });
-        }
+            }
+            
+        });
+        
     }];
 }
 
@@ -385,6 +400,13 @@ NSString *const kMXJingleCallWebRTCMainStreamID = @"userMedia";
             
             if (!error)
             {
+                // Add cached ice candidates after setting remote description
+                for (RTCIceCandidate *iceCandidate in self->cachedRemoteIceCandidates)
+                {
+                    [self->peerConnection addIceCandidate:iceCandidate];
+                }
+                [self->cachedRemoteIceCandidates removeAllObjects];
+                
                 success();
             }
             else
@@ -456,6 +478,35 @@ NSString *const kMXJingleCallWebRTCMainStreamID = @"userMedia";
 
 #pragma mark - RTCPeerConnectionDelegate
 
+- (void)peerConnection:(RTCPeerConnection *)peerConnection didChangeConnectionState:(RTCPeerConnectionState)newState
+{
+    NSLog(@"[MXJingleCallStackCall] didChangeConnectionState: %tu", newState);
+    
+    switch (newState)
+    {
+        case RTCPeerConnectionStateConnected:
+        {
+            dispatch_async(dispatch_get_main_queue(), ^{
+                [self.delegate callStackCallDidConnect:self];
+            });
+            break;
+        }
+        case RTCPeerConnectionStateFailed:
+        {
+            // ICE discovery has failed or the connection has dropped
+            dispatch_async(dispatch_get_main_queue(), ^{
+
+                [self.delegate callStackCall:self onError:nil];
+                
+            });
+            break;
+        }
+
+        default:
+            break;
+    }
+}
+
 // Triggered when the SignalingState changed.
 - (void)peerConnection:(RTCPeerConnection *)peerConnection
  didChangeSignalingState:(RTCSignalingState)stateChanged
@@ -514,34 +565,6 @@ NSString *const kMXJingleCallWebRTCMainStreamID = @"userMedia";
 didChangeIceConnectionState:(RTCIceConnectionState)newState
 {
     NSLog(@"[MXJingleCallStackCall] didChangeIceConnectionState: %@", @(newState));
-
-    switch (newState)
-    {
-        case RTCIceConnectionStateConnected:
-        {
-            // WebRTC has the given sequence of state changes for outgoing calls
-            // RTCIceConnectionStateConnected -> RTCIceConnectionStateCompleted -> RTCIceConnectionStateConnected
-            // Make sure you handle this situation right. For example check if the call is in the connecting state
-            // before starting react on this message
-            dispatch_async(dispatch_get_main_queue(), ^{
-                [self.delegate callStackCallDidConnect:self];
-            });
-            break;
-        }
-        case RTCIceConnectionStateFailed:
-        {
-            // ICE discovery has failed or the connection has dropped
-            dispatch_async(dispatch_get_main_queue(), ^{
-
-                [self.delegate callStackCall:self onError:nil];
-                
-            });
-            break;
-        }
-
-        default:
-            break;
-    }
 }
 
 // Called any time the ICEGatheringState changes.
@@ -674,19 +697,22 @@ didRemoveIceCandidates:(NSArray<RTCIceCandidate *> *)candidates;
         return YES;
     }]];
     
-    if (activeReceivers.count == 0)
+    if (peerConnection.connectionState == RTCPeerConnectionStateConnected)
     {
-        //  if there is no active receivers (on the other party) left, we can say this call is holded
-        dispatch_async(dispatch_get_main_queue(), ^{
-            [self.delegate callStackCallDidRemotelyHold:self];
-        });
-    }
-    else
-    {
-        //  otherwise we can say this call resumed after a remote hold
-        dispatch_async(dispatch_get_main_queue(), ^{
-            [self.delegate callStackCallDidConnect:self];
-        });
+        if (activeReceivers.count == 0)
+        {
+            //  if there is no active receivers (on the other party) left, we can say this call is holded
+            dispatch_async(dispatch_get_main_queue(), ^{
+                [self.delegate callStackCallDidRemotelyHold:self];
+            });
+        }
+        else
+        {
+            //  otherwise we can say this call resumed after a remote hold
+            dispatch_async(dispatch_get_main_queue(), ^{
+                [self.delegate callStackCallDidConnect:self];
+            });
+        }
     }
 }
 

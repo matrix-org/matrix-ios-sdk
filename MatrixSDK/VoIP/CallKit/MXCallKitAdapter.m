@@ -157,6 +157,7 @@ NSString * const kMXCallKitAdapterAudioSessionDidActive = @"kMXCallKitAdapterAud
         }
         
         [self.provider reportCallWithUUID:call.callUUID endedAtDate:nil reason:reason];
+        [self.audioSessionConfigurator configureAudioSessionAfterCallEnds];
     }
 }
 
