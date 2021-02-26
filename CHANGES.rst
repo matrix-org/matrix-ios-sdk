@@ -1,3 +1,30 @@
+Changes in 0.18.3 (2021-02-26)
+=================================================
+
+✨ Features
+ * 
+
+🙌 Improvements
+ * 
+
+🐛 Bugfix
+ * Fix connection state & ice connection failures (vector-im/element-ios/issues/4039).
+
+⚠️ API Changes
+ * 
+
+🗣 Translations
+ * 
+    
+🧱 Build
+ * 
+
+Others
+ * 
+
+Improvements:
+
+
 Changes in 0.18.2 (2021-02-24)
 =================================================
 
