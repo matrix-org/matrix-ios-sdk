@@ -8,7 +8,7 @@ Changes to be released in next version
  * 
 
 🐛 Bugfix
- * 
+ * Fix connection state & ice connection failures (vector-im/element-ios/issues/4039).
 
 ⚠️ API Changes
  * 
