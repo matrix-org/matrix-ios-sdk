@@ -41,4 +41,14 @@
  */
 @property (nonatomic, readonly) BOOL isFederated;
 
+/**
+ Flag to indicate whether the room is a virtual room.
+ */
+@property (nonatomic, readonly) BOOL isVirtual;
+
+/**
+ Native room id if the room is virtual. Only available if `isVirtual` is YES.
+ */
+@property (nonatomic, readonly, nullable) NSString *nativeRoomId;
+
 @end
