@@ -173,6 +173,7 @@
                 summary.creatorUserId = roomState.creatorUserId;
                 updated = YES;                
                 [self checkRoomCreateStateEventPredecessorAndUpdateObsoleteRoomSummaryIfNeededWithCreateEvent:event summary:summary session:session roomState:roomState];
+                [self checkRoomIsVirtualWithCreateEvent:event summary:summary];
                 break;
                 
             default:
@@ -263,6 +264,13 @@
             [obsoleteRoomSummary save:YES];
         }
     }
+}
+
+- (void)checkRoomIsVirtualWithCreateEvent:(MXEvent*)createEvent summary:(MXRoomSummary*)summary
+{
+    MXRoomCreateContent *createContent = [MXRoomCreateContent modelFromJSON:createEvent.content];
+    
+    summary.hiddenFromUser = createContent.isVirtual && [summary.creatorUserId isEqualToString:createEvent.sender];
 }
 
 - (BOOL)session:(MXSession *)session updateRoomSummary:(MXRoomSummary *)summary withServerRoomSummary:(MXRoomSyncSummary *)serverRoomSummary roomState:(MXRoomState *)roomState
