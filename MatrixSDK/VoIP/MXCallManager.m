@@ -42,15 +42,19 @@
 #import "MXThirdPartyUserInstance.h"
 
 #pragma mark - Constants definitions
-NSString *const kMXCallManagerNewCall               = @"kMXCallManagerNewCall";
-NSString *const kMXCallManagerConferenceStarted     = @"kMXCallManagerConferenceStarted";
-NSString *const kMXCallManagerConferenceFinished    = @"kMXCallManagerConferenceFinished";
-NSString *const kMXCallManagerPSTNSupportUpdated    = @"kMXCallManagerPSTNSupportUpdated";
-NSString *const kMXCallManagerTurnServersReceived   = @"kMXCallManagerTurnServersReceived";
+NSString *const kMXCallManagerNewCall                       = @"kMXCallManagerNewCall";
+NSString *const kMXCallManagerConferenceStarted             = @"kMXCallManagerConferenceStarted";
+NSString *const kMXCallManagerConferenceFinished            = @"kMXCallManagerConferenceFinished";
+NSString *const kMXCallManagerPSTNSupportUpdated            = @"kMXCallManagerPSTNSupportUpdated";
+NSString *const kMXCallManagerVirtualRoomsSupportUpdated    = @"kMXCallManagerVirtualRoomsSupportUpdated";
+NSString *const kMXCallManagerTurnServersReceived           = @"kMXCallManagerTurnServersReceived";
 
 // TODO: Replace usages of this with `kMXProtocolPSTN` when MSC completed
 NSString *const kMXProtocolVectorPSTN = @"im.vector.protocol.pstn";
 NSString *const kMXProtocolPSTN = @"m.protocol.pstn";
+
+NSString *const kMXProtocolVectorSipNative = @"im.vector.protocol.sip_native";
+NSString *const kMXProtocolVectorSipVirtual = @"im.vector.protocol.sip_virtual";
 
 NSTimeInterval const kMXCallDirectRoomJoinTimeout = 30;
 
@@ -79,8 +83,10 @@ NSTimeInterval const kMXCallDirectRoomJoinTimeout = 30;
 }
 
 @property (nonatomic, copy) MXThirdPartyProtocol *pstnProtocol;
+@property (nonatomic, assign, readwrite) BOOL supportsPSTN;
 @property (nonatomic, nullable, readwrite) MXTurnServerResponse *turnServers;
 @property (nonatomic, readwrite) BOOL turnServersReceived;
+@property (nonatomic, assign, readwrite) BOOL virtualRoomsSupported;
 
 @end
 
@@ -132,7 +138,7 @@ NSTimeInterval const kMXCallDirectRoomJoinTimeout = 30;
                                                    object:nil];
         
         [self refreshTURNServer];
-        [self checkPSTNSupport];
+        [self checkThirdPartyProtocols];
     }
     return self;
 }
@@ -1176,23 +1182,28 @@ NSString *const kMXCallManagerConferenceUserDomain  = @"matrix.org";
     [[NSNotificationCenter defaultCenter] postNotificationName:kMXCallManagerPSTNSupportUpdated object:self];
 }
 
-- (void)checkPSTNSupport
+- (void)checkThirdPartyProtocols
 {
     MXWeakify(self);
-    [_mxSession.matrixRestClient thirdpartyProtocols:^(MXThirdpartyProtocolsResponse *thirdpartyProtocolsResponse) {
+    [_mxSession.matrixRestClient thirdpartyProtocols:^(MXThirdpartyProtocolsResponse *response) {
         MXStrongifyAndReturnIfNil(self);
         
-        MXThirdPartyProtocol *protocol = thirdpartyProtocolsResponse.protocols[kMXProtocolVectorPSTN];
+        MXThirdPartyProtocol *protocol = response.protocols[kMXProtocolVectorPSTN];
         
         if (!protocol)
         {
-            protocol = thirdpartyProtocolsResponse.protocols[kMXProtocolPSTN];
+            protocol = response.protocols[kMXProtocolPSTN];
         }
         
         self.pstnProtocol = protocol;
         
+        MXThirdPartyProtocol *sipNativeProtocol = response.protocols[kMXProtocolVectorSipNative];
+        MXThirdPartyProtocol *sipVirtualProtocol = response.protocols[kMXProtocolVectorSipVirtual];
+        
+        self.virtualRoomsSupported = (sipNativeProtocol && sipVirtualProtocol);
+        
     } failure:^(NSError *error) {
-        NSLog(@"Failed to check for pstn protocol support with error: %@", error);
+        NSLog(@"Failed to check for third party protocols with error: %@", error);
         self.pstnProtocol = nil;
     }];
 }
@@ -1265,6 +1276,16 @@ NSString *const kMXCallManagerConferenceUserDomain  = @"matrix.org";
         }];
         
     } failure:failure];
+}
+
+#pragma mark - Virtual Rooms
+
+- (void)setVirtualRoomsSupported:(BOOL)virtualRoomsSupported
+{
+    _virtualRoomsSupported = virtualRoomsSupported;
+    
+    [[NSNotificationCenter defaultCenter] postNotificationName:kMXCallManagerVirtualRoomsSupportUpdated
+                                                        object:self];
 }
 
 #pragma mark - Recent

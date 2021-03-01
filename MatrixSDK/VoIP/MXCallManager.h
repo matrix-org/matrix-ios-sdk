@@ -58,6 +58,12 @@ extern NSString *const kMXCallManagerConferenceFinished;
 extern NSString *const kMXCallManagerPSTNSupportUpdated;
 
 /**
+ Posted when virtual rooms support has been updated.
+ The notification object will be the call manager instance.
+ */
+extern NSString *const kMXCallManagerVirtualRoomsSupportUpdated;
+
+/**
  Posted when a new turn servers response is received from the homeserver.
  The notification object will be the call manager instance.
  */
@@ -240,7 +246,7 @@ extern NSString *const kMXCallManagerTurnServersReceived;
 /**
  Flag to indicate whether PSTN protocol is supported or not.
  */
-@property (nonatomic) BOOL supportsPSTN;
+@property (nonatomic, assign, readonly) BOOL supportsPSTN;
 
 /**
  Get thirdparty user from a phone number.
@@ -265,6 +271,10 @@ extern NSString *const kMXCallManagerTurnServersReceived;
                withVideo:(BOOL)video
                 success:(void (^)(MXCall *call))success
                 failure:(void (^)(NSError * _Nullable error))failure;
+
+#pragma mark - Virtual Rooms
+
+@property (nonatomic, readonly, getter=isVirtualRoomsSupported) BOOL virtualRoomsSupported;
 
 #pragma mark - Recent
 
