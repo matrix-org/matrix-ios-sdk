@@ -116,7 +116,8 @@ NSTimeInterval const kMXCallDirectRoomJoinTimeout = 30;
                                                                 kMXEventTypeStringCallReject,
                                                                 kMXEventTypeStringCallNegotiate,
                                                                 kMXEventTypeStringCallReplaces,
-                                                                kMXEventTypeStringCallRejectReplacement
+                                                                kMXEventTypeStringCallRejectReplacement,
+                                                                kMXEventTypeStringRoomMember
                                                                 ]
                                                       onEvent:^(MXEvent *event, MXTimelineDirection direction, id customObject) {
 
@@ -393,6 +394,9 @@ NSTimeInterval const kMXCallDirectRoomJoinTimeout = 30;
         case MXEventTypeCallRejectReplacement:
             [self handleCallRejectReplacement:event];
             break;
+        case MXEventTypeRoomMember:
+            [self handleRoomMember:event];
+            break;
         default:
             break;
     }
@@ -626,6 +630,42 @@ NSTimeInterval const kMXCallDirectRoomJoinTimeout = 30;
     if (call)
     {
         [call handleCallEvent:event];
+    }
+}
+
+- (void)handleRoomMember:(MXEvent *)event
+{
+    MXRoomMemberEventContent *content = [MXRoomMemberEventContent modelFromJSON:event.content];
+    
+    if ([MXTools membership:content.membership] == MXMembershipInvite)
+    {
+        //  a room invite
+        MXRoom *room = [_mxSession roomWithRoomId:event.roomId];
+        NSString *directUserId = room.directUserId;
+        
+        if (directUserId)
+        {
+            [self getNativeUserFrom:directUserId success:^(MXThirdPartyUserInstance * _Nonnull user) {
+                MXRoom *nativeRoom = [self.mxSession directJoinedRoomWithUserId:user.userId];
+                if (nativeRoom)
+                {
+                    //  auto-accept this invite from the virtual room, if a direct room with the native user found
+                    [room join:^{
+                        NSLog(@"[MXCallManager] handleRoomMember: auto-joined on virtual room successfully.");
+                        
+                        [room setAccountData:@{
+                            kRoomNativeRoomIdJSONKey: nativeRoom.roomId
+                        } forType:kRoomIsVirtualJSONKey success:^{
+                            NSLog(@"[MXCallManager] handleRoomMember: auto-joined room's account data updated successfully.");
+                        } failure:^(NSError *error) {
+                            NSLog(@"[MXCallManager] handleRoomMember: auto-joined room's account data update failed with error: %@", error);
+                        }];
+                    } failure:^(NSError *error) {
+                        NSLog(@"[MXCallManager] handleRoomMember: auto-join on virtual room failed with error: %@", error);
+                    }];
+                }
+            } failure:nil];
+        }
     }
 }
 
