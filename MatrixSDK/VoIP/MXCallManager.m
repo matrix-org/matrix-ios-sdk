@@ -234,28 +234,79 @@ NSTimeInterval const kMXCallDirectRoomJoinTimeout = 30;
     {
         if (2 == room.summary.membersCount.joined)
         {
-            // Do a peer to peer, one to one call
-            MXCall *call = [[MXCall alloc] initWithRoomId:roomId andCallManager:self];
-            if (call)
-            {
-                [calls addObject:call];
-
-                [call callWithVideo:video];
-
-                // Broadcast the new outgoing call
-                [[NSNotificationCenter defaultCenter] postNotificationName:kMXCallManagerNewCall object:call userInfo:nil];
-
-                if (success)
+            void (^initCall)(NSString *) = ^(NSString *callSignalingRoomId){
+                // Do a peer to peer, one to one call
+                MXCall *call = [[MXCall alloc] initWithRoomId:roomId callSignalingRoomId:callSignalingRoomId andCallManager:self];
+                if (call)
                 {
-                    success(call);
+                    [self->calls addObject:call];
+
+                    [call callWithVideo:video];
+
+                    // Broadcast the new outgoing call
+                    [[NSNotificationCenter defaultCenter] postNotificationName:kMXCallManagerNewCall object:call userInfo:nil];
+
+                    if (success)
+                    {
+                        success(call);
+                    }
+                }
+                else
+                {
+                    if (failure)
+                    {
+                        failure(nil);
+                    }
+                }
+            };
+            
+            if (self.isVirtualRoomsSupported)
+            {
+                NSString *directUserId = room.directUserId;
+                
+                if (directUserId)
+                {
+                    [self getVirtualUserFrom:directUserId success:^(MXThirdPartyUserInstance * _Nonnull user) {
+                        [self directCallableRoomWithVirtualUser:user.userId
+                                                   nativeRoomId:roomId
+                                                        timeout:kMXCallDirectRoomJoinTimeout
+                                                     completion:^(MXRoom * _Nullable roomWithVirtualUser, NSError * _Nullable error) {
+                            if (error)
+                            {
+                                if (failure)
+                                {
+                                    failure(error);
+                                }
+                            }
+                            else
+                            {
+                                initCall(roomWithVirtualUser.roomId);
+                            }
+                        }];
+                    } failure:^(NSError * _Nullable error) {
+                        if (error)
+                        {
+                            //  there is a real error
+                            if (failure)
+                            {
+                                failure(nil);
+                            }
+                        }
+                        else
+                        {
+                            //  no virtual user, continue with normal flow
+                            initCall(roomId);
+                        }
+                    }];
+                }
+                else
+                {
+                    initCall(roomId);
                 }
             }
             else
             {
-                if (failure)
-                {
-                    failure(nil);
-                }
+                initCall(roomId);
             }
         }
         else
