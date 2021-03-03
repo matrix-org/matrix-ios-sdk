@@ -17,6 +17,13 @@
 #import "MXRoomAccountData.h"
 
 #import "MXEvent.h"
+#import "MXRoomCreateContent.h"
+
+@interface MXRoomAccountData ()
+
+@property (nonatomic, copy) NSDictionary<NSString *, id> *virtualRoomInfo;
+
+@end
 
 @implementation MXRoomAccountData
 
@@ -37,6 +44,14 @@
             MXJSONModelSetMXJSONModel(_taggedEvents, MXTaggedEvents, event.content);
             break;
         }
+        case MXEventTypeCustom:
+        {
+            if ([event.type isEqualToString:kRoomIsVirtualJSONKey])
+            {
+                self.virtualRoomInfo = event.content;
+            }
+            break;
+        }
 
         default:
             break;
@@ -54,6 +69,20 @@
 - (NSArray<NSString *> *)getTaggedEventsIds:(NSString*)tag
 {
     return _taggedEvents.tags[tag].allKeys;
+}
+
+- (BOOL)isVirtual
+{
+    return self.virtualRoomInfo != nil;
+}
+
+- (NSString *)nativeRoomId
+{
+    if (self.isVirtual)
+    {
+        return self.virtualRoomInfo[kRoomNativeRoomIdJSONKey];
+    }
+    return nil;
 }
 
 #pragma mark - NSCoding

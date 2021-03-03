@@ -67,4 +67,14 @@
  */
 - (NSArray<NSString *> *)getTaggedEventsIds:(NSString*)tag;
 
+/**
+ Flag to indicate whether the room is a virtual room.
+ */
+@property (nonatomic, readonly) BOOL isVirtual;
+
+/**
+ Native room id if the room is virtual. Only available if `isVirtual` is YES, otherwise nil.
+ */
+@property (nonatomic, readonly) NSString *nativeRoomId;
+
 @end
