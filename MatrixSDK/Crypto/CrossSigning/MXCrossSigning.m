@@ -67,12 +67,22 @@ NSString *const MXCrossSigningErrorDomain = @"org.matrix.sdk.crosssigning";
     // Do the auth dance to upload them to the HS
     [self.crypto.matrixRestClient authSessionToUploadDeviceSigningKeys:^(MXAuthenticationSession *authSession) {
         
-        NSDictionary *authParams = @{
-                                     @"session": authSession.session,
-                                     @"user": myCreds.userId,
-                                     @"password": password,
-                                     @"type": kMXLoginFlowTypePassword
-                                     };
+        NSDictionary *authParams;
+        
+        if (authSession)
+        {
+            authParams= @{
+                @"session": authSession.session,
+                @"user": myCreds.userId,
+                @"password": password,
+                @"type": kMXLoginFlowTypePassword
+            };
+        }
+        else
+        {
+            // Try to setup cross-signing without authentication parameters in case if a grace period is enabled
+            authParams = @{};
+        }
         
         [self setupWithAuthParams:authParams success:success failure:failure];
         
