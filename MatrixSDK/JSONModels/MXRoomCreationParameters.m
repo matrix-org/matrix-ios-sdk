@@ -16,6 +16,7 @@
 
 
 #import "MXRoomCreationParameters.h"
+#import "MXRoomCreateContent.h"
 
 @implementation MXRoomCreationParameters
 
@@ -79,6 +80,10 @@
     {
         dictionary[@"initial_state"] = _initialStateEvents;
     }
+    if (_creationContent)
+    {
+        dictionary[@"creation_content"] = _creationContent;
+    }
 
     return dictionary;
 }
@@ -105,6 +110,15 @@
                      @"algorithm": algorithm
                      }
              };
+}
+
++ (NSDictionary *)creationContentForVirtualRoomWithNativeRoomId:(NSString *)roomId
+{
+    return @{
+        kRoomIsVirtualJSONKey: @{
+                kRoomNativeRoomIdJSONKey : roomId
+        }
+    };
 }
 
 @end
