@@ -1288,6 +1288,171 @@ NSString *const kMXCallManagerConferenceUserDomain  = @"matrix.org";
                                                         object:self];
 }
 
+- (void)getVirtualUserFrom:(NSString *)userId
+                   success:(void (^)(MXThirdPartyUserInstance * _Nonnull))success
+                   failure:(void (^)(NSError * _Nullable))failure
+{
+    [_mxSession.matrixRestClient thirdpartyUsers:kMXProtocolVectorSipVirtual
+                                          fields:@{
+                                              @"user": userId
+                                          }
+                                         success:^(MXThirdPartyUsersResponse *thirdpartyUsersResponse) {
+        
+        MXThirdPartyUserInstance * user = [thirdpartyUsersResponse.users firstObject];
+        
+        NSLog(@"Succeeded to look up the virtual user: %@", user.userId);
+        
+        if (user)
+        {
+            if (success)
+            {
+                success(user);
+            }
+        }
+        else
+        {
+            if (failure)
+            {
+                failure(nil);
+            }
+        }
+    } failure:^(NSError *error) {
+        NSLog(@"Failed to look up the virtual user with error: %@", error);
+        if (failure)
+        {
+            failure(error);
+        }
+    }];
+}
+
+- (void)getNativeUserFrom:(NSString *)userId
+                  success:(void (^)(MXThirdPartyUserInstance * _Nonnull))success
+                  failure:(void (^)(NSError * _Nullable))failure
+{
+    [_mxSession.matrixRestClient thirdpartyUsers:kMXProtocolVectorSipNative
+                                          fields:@{
+                                              @"user": userId
+                                          }
+                                         success:^(MXThirdPartyUsersResponse *thirdpartyUsersResponse) {
+        
+        MXThirdPartyUserInstance * user = [thirdpartyUsersResponse.users firstObject];
+        
+        NSLog(@"Succeeded to look up the native user: %@", user.userId);
+        
+        if (user)
+        {
+            if (success)
+            {
+                success(user);
+            }
+        }
+        else
+        {
+            if (failure)
+            {
+                failure(nil);
+            }
+        }
+    } failure:^(NSError *error) {
+        NSLog(@"Failed to look up the native user with error: %@", error);
+        if (failure)
+        {
+            failure(error);
+        }
+    }];
+}
+
+/// Tries to find a direct & callable room with the given virtual user. If not such a room found, tries to create it as a virtual room and then waits for the other party to join.
+/// @param userId The virtual user id to check.
+/// @param timeout The timeout for the invited user to join the room, in case of the room is newly created (in seconds).
+/// @param completion Completion block.
+- (void)directCallableRoomWithVirtualUser:(NSString * _Nonnull)userId
+                             nativeRoomId:(NSString * _Nonnull)nativeRoomId
+                                  timeout:(NSTimeInterval)timeout
+                               completion:(void (^_Nonnull)(MXRoom* _Nullable room, NSError * _Nullable error))completion
+{
+    MXRoom *room = [self.mxSession directJoinedRoomWithUserId:userId];
+    if (room)
+    {
+        [room state:^(MXRoomState *roomState) {
+            MXMembership membership = [roomState.members memberWithUserId:userId].membership;
+            
+            if (membership == MXMembershipJoin)
+            {
+                //  other party already joined, return the room
+                completion(room, nil);
+            }
+            else if (membership == MXMembershipInvite)
+            {
+                //  Wait for other party to join before returning the room
+                __block BOOL joined = NO;
+                
+                __block id listener = [room listenToEventsOfTypes:@[kMXEventTypeStringRoomMember] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
+                    if ([event.sender isEqualToString:userId])
+                    {
+                        MXRoomMemberEventContent *content = [MXRoomMemberEventContent modelFromJSON:event.content];
+                        if (content.membership == kMXMembershipStringJoin)
+                        {
+                            joined = YES;
+                            [room removeListener:listener];
+                            dispatch_async(dispatch_get_main_queue(), ^{
+                                completion(room, nil);
+                            });
+                        }
+                    }
+                }];
+                
+                //  implement the timeout
+                dispatch_after(dispatch_time(DISPATCH_TIME_NOW, timeout * NSEC_PER_SEC), dispatch_get_main_queue(), ^{
+                    if (!joined)
+                    {
+                        //  user failed to join within the given time
+                        completion(nil, nil);
+                    }
+                });
+            }
+            else
+            {
+                completion(nil, nil);
+            }
+        }];
+    }
+    else
+    {
+        //  we're not in a direct room with target, create it
+        [self.mxSession canEnableE2EByDefaultInNewRoomWithUsers:@[userId] success:^(BOOL canEnableE2E) {
+            
+            MXRoomCreationParameters *roomCreationParameters = [MXRoomCreationParameters parametersForDirectRoomWithUser:userId];
+            roomCreationParameters.visibility = kMXRoomDirectoryVisibilityPrivate;
+            roomCreationParameters.creationContent = [MXRoomCreationParameters creationContentForVirtualRoomWithNativeRoomId:nativeRoomId];
+            
+            if (canEnableE2E)
+            {
+                roomCreationParameters.initialStateEvents = @[
+                    [MXRoomCreationParameters initialStateEventForEncryptionWithAlgorithm:kMXCryptoMegolmAlgorithm]
+                ];
+            }
+
+            [self.mxSession createRoomWithParameters:roomCreationParameters success:^(MXRoom *room) {
+                //  set account data on the room
+                [room setAccountData:@{
+                    kRoomNativeRoomIdJSONKey: nativeRoomId
+                } forType:kRoomIsVirtualJSONKey success:^{
+                    //  wait for other party to join
+                    return [self directCallableRoomWithUser:userId timeout:timeout completion:completion];
+                } failure:^(NSError *error) {
+                    completion(nil, error);
+                }];
+            } failure:^(NSError *error) {
+                completion(nil, error);
+            }];
+
+        } failure:^(NSError *error) {
+            completion(nil, error);
+        }];
+    }
+}
+
 #pragma mark - Recent
 
 - (NSArray<MXUser *> * _Nonnull)getRecentCalledUsers:(NSUInteger)maxNumberOfUsers
