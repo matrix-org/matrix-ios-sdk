@@ -270,7 +270,23 @@
 {
     MXRoomCreateContent *createContent = [MXRoomCreateContent modelFromJSON:createEvent.content];
     
-    summary.hiddenFromUser = createContent.isVirtual && [summary.creatorUserId isEqualToString:createEvent.sender];
+    if (createContent.isVirtual && [summary.creatorUserId isEqualToString:createEvent.sender])
+    {
+        summary.hiddenFromUser = YES;
+        
+        //  TODO: Below operation can move to a class like 'MXRoomAccountDataUpdater' in future.
+        if (!summary.room.accountData.isVirtual)
+        {
+            //  room is virtual, but does not have proper room account data event for virtuality
+            //  set account data on the room
+            [summary.room setAccountData:@{
+                kRoomNativeRoomIdJSONKey: summary.roomId
+            }
+                                 forType:kRoomIsVirtualJSONKey
+                                 success:nil
+                                 failure:nil];
+        }
+    }
 }
 
 - (BOOL)session:(MXSession *)session updateRoomSummary:(MXRoomSummary *)summary withServerRoomSummary:(MXRoomSyncSummary *)serverRoomSummary roomState:(MXRoomState *)roomState
