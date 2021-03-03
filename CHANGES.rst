@@ -1,3 +1,30 @@
+Changes in 0.18.4 (2021-03-03)
+=================================================
+
+✨ Features
+ * 
+
+🙌 Improvements
+ * 
+
+🐛 Bugfix
+ * MXCrossSigning: Fix setupWithPassword method crash when a grace period is enabled (Fix vector-im/element-ios#4099).
+
+⚠️ API Changes
+ * 
+
+🗣 Translations
+ * 
+    
+🧱 Build
+ * 
+
+Others
+ * 
+
+Improvements:
+
+
 Changes in 0.18.3 (2021-02-26)
 =================================================
 
