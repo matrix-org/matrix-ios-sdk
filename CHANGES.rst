@@ -1,4 +1,4 @@
-Changes in 0.18.4 (2021-03-03)
+Changes to be released in next version
 =================================================
 
 ✨ Features
