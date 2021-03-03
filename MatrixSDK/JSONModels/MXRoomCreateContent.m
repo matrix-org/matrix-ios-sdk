@@ -22,8 +22,9 @@ static NSString* const kRoomCreateContentUserIdJSONKey = @"creator";
 static NSString* const kRoomCreateContentPredecessorInfoJSONKey = @"predecessor";
 static NSString* const kRoomCreateContentRoomVersionJSONKey = @"room_version";
 static NSString* const kRoomCreateContentFederateJSONKey = @"m.federate";
-static NSString* const kRoomCreateContentIsVirtualRoomJSONKey = @"im.vector.is_virtual_room";
-static NSString* const kRoomCreateContentNativeRoomJSONKey = @"native_room";
+
+NSString* const kRoomIsVirtualJSONKey = @"im.vector.is_virtual_room";
+NSString* const kRoomNativeRoomIdJSONKey = @"native_room";
 
 #pragma mark - Private Interface
 
@@ -51,7 +52,7 @@ static NSString* const kRoomCreateContentNativeRoomJSONKey = @"native_room";
         MXJSONModelSetMXJSONModel(roomCreateContent.roomPredecessorInfo, MXRoomPredecessorInfo, jsonDictionary[kRoomCreateContentPredecessorInfoJSONKey]);
         MXJSONModelSetString(roomCreateContent.roomVersion, jsonDictionary[kRoomCreateContentRoomVersionJSONKey]);
         MXJSONModelSetBoolean(roomCreateContent.isFederated, jsonDictionary[kRoomCreateContentFederateJSONKey]);
-        MXJSONModelSetDictionary(roomCreateContent.virtualRoomInfo, jsonDictionary[kRoomCreateContentIsVirtualRoomJSONKey]);
+        MXJSONModelSetDictionary(roomCreateContent.virtualRoomInfo, jsonDictionary[kRoomIsVirtualJSONKey]);
     }
     
     return roomCreateContent;
@@ -90,7 +91,7 @@ static NSString* const kRoomCreateContentNativeRoomJSONKey = @"native_room";
 {
     if (self.isVirtual)
     {
-        return self.virtualRoomInfo[kRoomCreateContentNativeRoomJSONKey];
+        return self.virtualRoomInfo[kRoomNativeRoomIdJSONKey];
     }
     return nil;
 }

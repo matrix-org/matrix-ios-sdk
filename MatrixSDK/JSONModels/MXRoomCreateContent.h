@@ -16,6 +16,9 @@
 
 #import "MXRoomPredecessorInfo.h"
 
+extern NSString* _Nonnull const kRoomIsVirtualJSONKey;
+extern NSString* _Nonnull const kRoomNativeRoomIdJSONKey;
+
 /**
  A `MXRoomCreateContent` instance represents the content of a `m.room.create` event type.
  */
