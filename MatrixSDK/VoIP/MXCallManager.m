@@ -460,7 +460,14 @@ NSTimeInterval const kMXCallDirectRoomJoinTimeout = 30;
         MXCall *call = [self callWithCallId:content.callId];
         if (!call)
         {
-            call = [[MXCall alloc] initWithRoomId:event.roomId andCallManager:self];
+            //  TODO: Check below logic is correct (and necessary)
+            NSString *nativeRoomId = event.roomId;
+            MXRoom *room = [_mxSession roomWithRoomId:event.roomId];
+            if (room.accountData.isVirtual)
+            {
+                nativeRoomId = room.accountData.nativeRoomId;
+            }
+            call = [[MXCall alloc] initWithRoomId:nativeRoomId callSignalingRoomId:event.roomId andCallManager:self];
             if (call)
             {
                 [calls addObject:call];
