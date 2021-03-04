@@ -1142,6 +1142,8 @@
 		B19A30D724042F2700FB6F35 /* MXSelfVerifyingMasterKeyNotTrustedQRCodeData.m in Sources */ = {isa = PBXBuildFile; fileRef = B19A30D324042F2700FB6F35 /* MXSelfVerifyingMasterKeyNotTrustedQRCodeData.m */; };
 		B19A30D82404335D00FB6F35 /* MXQRCodeDataTests.m in Sources */ = {isa = PBXBuildFile; fileRef = B19A30AE240425D000FB6F35 /* MXQRCodeDataTests.m */; };
 		B19A30D92404335D00FB6F35 /* MXQRCodeDataTests.m in Sources */ = {isa = PBXBuildFile; fileRef = B19A30AE240425D000FB6F35 /* MXQRCodeDataTests.m */; };
+		B1C854EE25E7B497005867D0 /* MXRoomType.h in Headers */ = {isa = PBXBuildFile; fileRef = B1C854ED25E7B492005867D0 /* MXRoomType.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		B1C854EF25E7B498005867D0 /* MXRoomType.h in Headers */ = {isa = PBXBuildFile; fileRef = B1C854ED25E7B492005867D0 /* MXRoomType.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		B1DDC9D62418098200D208E3 /* MXIncomingSASTransaction_Private.h in Headers */ = {isa = PBXBuildFile; fileRef = B1DDC9D52418098200D208E3 /* MXIncomingSASTransaction_Private.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		B1DDC9D72418098200D208E3 /* MXIncomingSASTransaction_Private.h in Headers */ = {isa = PBXBuildFile; fileRef = B1DDC9D52418098200D208E3 /* MXIncomingSASTransaction_Private.h */; };
 		B1E09A132397FA950057C069 /* MatrixSDK.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B14EF36B2397E90400758AF0 /* MatrixSDK.framework */; };
@@ -1977,6 +1979,7 @@
 		B19A30CD24042F0800FB6F35 /* MXSelfVerifyingMasterKeyTrustedQRCodeData.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MXSelfVerifyingMasterKeyTrustedQRCodeData.m; sourceTree = "<group>"; };
 		B19A30D224042F2700FB6F35 /* MXSelfVerifyingMasterKeyNotTrustedQRCodeData.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MXSelfVerifyingMasterKeyNotTrustedQRCodeData.h; sourceTree = "<group>"; };
 		B19A30D324042F2700FB6F35 /* MXSelfVerifyingMasterKeyNotTrustedQRCodeData.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MXSelfVerifyingMasterKeyNotTrustedQRCodeData.m; sourceTree = "<group>"; };
+		B1C854ED25E7B492005867D0 /* MXRoomType.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MXRoomType.h; sourceTree = "<group>"; };
 		B1DDC9D52418098200D208E3 /* MXIncomingSASTransaction_Private.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MXIncomingSASTransaction_Private.h; sourceTree = "<group>"; };
 		B1E09A0E2397FA950057C069 /* MatrixSDKTests-macOS.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "MatrixSDKTests-macOS.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 		B57EF0A39A7649D55CA1208A /* libPods-MatrixSDK-MatrixSDK-iOS.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-MatrixSDK-MatrixSDK-iOS.a"; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -2205,6 +2208,7 @@
 				323547DB2226FC5700F15F94 /* MXCredentials.m */,
 				F0173EAA1FCF0E8800B5F6A3 /* MXGroup.h */,
 				F0173EAB1FCF0E8900B5F6A3 /* MXGroup.m */,
+				B1C854ED25E7B492005867D0 /* MXRoomType.h */,
 				320DFDCA19DD99B60068622A /* MXRoom.h */,
 				320DFDCB19DD99B60068622A /* MXRoom.m */,
 				32C235701F827F3800E38FC5 /* MXRoomOperation.h */,
@@ -3816,6 +3820,7 @@
 				32792BD42295A86600F4FC9D /* MXAggregatedReactionsUpdater.h in Headers */,
 				B146D4D621A5A44E00D8C2C6 /* MXScanRealmInMemoryProvider.h in Headers */,
 				B19A30C42404268600FB6F35 /* MXVerifyingAnotherUserQRCodeData.h in Headers */,
+				B1C854EE25E7B497005867D0 /* MXRoomType.h in Headers */,
 				B11BD45422CB583E0064D8B0 /* MXReplyEventBodyParts.h in Headers */,
 				32549AF923F2E2790002576B /* MXKeyVerificationReady.h in Headers */,
 				B17285792100C8EA0052C51E /* MXSendReplyEventStringsLocalizable.h in Headers */,
@@ -4071,6 +4076,7 @@
 				B14EF2D42397E90400758AF0 /* MatrixSDK.h in Headers */,
 				B14EF2D52397E90400758AF0 /* MXReactionOperation.h in Headers */,
 				B19A30D524042F2700FB6F35 /* MXSelfVerifyingMasterKeyNotTrustedQRCodeData.h in Headers */,
+				B1C854EF25E7B498005867D0 /* MXRoomType.h in Headers */,
 				B124BBCD256453C90028996D /* MXMembershipTransitionState.h in Headers */,
 				B14EF2D72397E90400758AF0 /* MXAggregationsStore.h in Headers */,
 				B14EF2D82397E90400758AF0 /* MXCredentials.h in Headers */,
