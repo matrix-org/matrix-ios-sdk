@@ -22,6 +22,8 @@ static NSString* const kRoomCreateContentUserIdJSONKey = @"creator";
 static NSString* const kRoomCreateContentPredecessorInfoJSONKey = @"predecessor";
 static NSString* const kRoomCreateContentRoomVersionJSONKey = @"room_version";
 static NSString* const kRoomCreateContentFederateJSONKey = @"m.federate";
+static NSString* const kRoomCreateContentRoomTypeJSONKey = @"m.room.type";
+static NSString* const kRoomCreateContentRoomTypeMSC1772JSONKey = @"org.matrix.msc1772.type";
 
 #pragma mark - Private Interface
 
@@ -31,6 +33,7 @@ static NSString* const kRoomCreateContentFederateJSONKey = @"m.federate";
 @property (nonatomic, strong, readwrite, nullable) MXRoomPredecessorInfo *roomPredecessorInfo;
 @property (nonatomic, copy, readwrite, nullable) NSString *roomVersion;
 @property (nonatomic, readwrite) BOOL isFederated;
+@property (nonatomic, readwrite, nullable) NSString *roomType;
 
 @end
 
@@ -48,6 +51,12 @@ static NSString* const kRoomCreateContentFederateJSONKey = @"m.federate";
         MXJSONModelSetMXJSONModel(roomCreateContent.roomPredecessorInfo, MXRoomPredecessorInfo, jsonDictionary[kRoomCreateContentPredecessorInfoJSONKey]);
         MXJSONModelSetString(roomCreateContent.roomVersion, jsonDictionary[kRoomCreateContentRoomVersionJSONKey]);
         MXJSONModelSetBoolean(roomCreateContent.isFederated, jsonDictionary[kRoomCreateContentFederateJSONKey])
+        
+        NSString *roomType;
+        
+        MXJSONModelSetString(roomType, jsonDictionary[kRoomCreateContentRoomTypeMSC1772JSONKey]);
+        
+        roomCreateContent.roomType = roomType;
     }
     
     return roomCreateContent;
@@ -73,6 +82,11 @@ static NSString* const kRoomCreateContentFederateJSONKey = @"m.federate";
     }
     
     jsonDictionary[kRoomCreateContentFederateJSONKey] = @(self.isFederated);
+    
+    if (self.roomType)
+    {
+        jsonDictionary[kRoomCreateContentRoomTypeMSC1772JSONKey] = self.roomType;
+    }
     
     return jsonDictionary;
 }
