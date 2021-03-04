@@ -20,7 +20,7 @@ Changes to be released in next version
  * 
 
 Others
- * 
+ * Ignore event editors other than the original sender.
 
 Changes in 0.18.4 (2021-03-03)
 =================================================
