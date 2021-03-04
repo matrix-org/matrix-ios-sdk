@@ -1392,7 +1392,7 @@ NSString *const kMXCallManagerConferenceUserDomain  = @"matrix.org";
 {
     [_mxSession.matrixRestClient thirdpartyUsers:kMXProtocolVectorSipVirtual
                                           fields:@{
-                                              @"user": userId
+                                              @"native_mxid": userId
                                           }
                                          success:^(MXThirdPartyUsersResponse *thirdpartyUsersResponse) {
         
@@ -1429,7 +1429,7 @@ NSString *const kMXCallManagerConferenceUserDomain  = @"matrix.org";
 {
     [_mxSession.matrixRestClient thirdpartyUsers:kMXProtocolVectorSipNative
                                           fields:@{
-                                              @"user": userId
+                                              @"virtual_mxid": userId
                                           }
                                          success:^(MXThirdPartyUsersResponse *thirdpartyUsersResponse) {
         
