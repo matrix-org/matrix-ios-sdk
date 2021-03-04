@@ -170,9 +170,13 @@
             }
                 
             case MXEventTypeRoomCreate:
+            {
+                MXRoomCreateContent *createContent = [MXRoomCreateContent modelFromJSON:event.content];
                 summary.creatorUserId = roomState.creatorUserId;
-                updated = YES;                
-                [self checkRoomCreateStateEventPredecessorAndUpdateObsoleteRoomSummaryIfNeededWithCreateEvent:event summary:summary session:session roomState:roomState];
+                summary.roomType = createContent.roomType;
+                updated = YES;
+                [self checkRoomCreateStateEventPredecessorAndUpdateObsoleteRoomSummaryIfNeededWithCreateContent:createContent summary:summary session:session roomState:roomState];
+            }
                 break;
                 
             default:
@@ -247,10 +251,8 @@
 // Hide tombstoned room predecessor from user only if the user joined the current room
 // Important: Room predecessor summary could not be present in memory when making this process,
 // in this case it should be processed when checking the room predecessor in `checkForTombStoneStateEventAndUpdateRoomSummaryIfNeeded:session:room:`.
-- (void)checkRoomCreateStateEventPredecessorAndUpdateObsoleteRoomSummaryIfNeededWithCreateEvent:(MXEvent*)createEvent summary:(MXRoomSummary*)summary session:(MXSession*)session roomState:(MXRoomState*)roomState
+- (void)checkRoomCreateStateEventPredecessorAndUpdateObsoleteRoomSummaryIfNeededWithCreateContent:(MXRoomCreateContent*)createContent summary:(MXRoomSummary*)summary session:(MXSession*)session roomState:(MXRoomState*)roomState
 {
-    MXRoomCreateContent *createContent = [MXRoomCreateContent modelFromJSON:createEvent.content];
-    
     if (createContent.roomPredecessorInfo)
     {
         MXRoomSummary *obsoleteRoomSummary = [session roomSummaryWithRoomId:createContent.roomPredecessorInfo.roomId];

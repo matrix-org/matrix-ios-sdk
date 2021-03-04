@@ -92,6 +92,11 @@ FOUNDATION_EXPORT NSString *const kMXRoomSummaryDidChangeNotification;
 @property (nonatomic, readonly) MXRoom *room;
 
 /**
+ Shortcut to the corresponding room type.
+ */
+@property (nonatomic) NSString *roomType;
+
+/**
  Create a `MXRoomSummary` instance.
 
  @param roomId the id of the room.
