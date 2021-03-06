@@ -17,7 +17,8 @@ Changes to be released in next version
  * 
     
 🧱 Build
- * 
+ * Support passing CFBundleShortVersionString and CFBundleVersion as arguments to ./build xcframework.
+ * When running ./build xcframework, zip the binary ready for distribution.
 
 Others
  * Ignore event editors other than the original sender.
