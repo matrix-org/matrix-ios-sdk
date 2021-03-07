@@ -8,7 +8,7 @@ Changes to be released in next version
  * 
 
 🐛 Bugfix
- * 
+ * MXRoomState/MXRoomMembers: Fix memory leak and copying.
 
 ⚠️ API Changes
  * 
