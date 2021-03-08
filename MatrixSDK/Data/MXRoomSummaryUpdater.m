@@ -173,7 +173,7 @@
                 summary.creatorUserId = roomState.creatorUserId;
                 updated = YES;                
                 [self checkRoomCreateStateEventPredecessorAndUpdateObsoleteRoomSummaryIfNeededWithCreateEvent:event summary:summary session:session roomState:roomState];
-                [self checkRoomIsVirtualWithCreateEvent:event summary:summary];
+                [self checkRoomIsVirtualWithCreateEvent:event summary:summary session:session];
                 break;
                 
             default:
@@ -266,7 +266,7 @@
     }
 }
 
-- (void)checkRoomIsVirtualWithCreateEvent:(MXEvent*)createEvent summary:(MXRoomSummary*)summary
+- (void)checkRoomIsVirtualWithCreateEvent:(MXEvent*)createEvent summary:(MXRoomSummary*)summary session:(MXSession *)session
 {
     MXRoomCreateContent *createContent = [MXRoomCreateContent modelFromJSON:createEvent.content];
     
@@ -280,10 +280,12 @@
             //  room is virtual, but does not have proper room account data event for virtuality
             //  set account data on the room
             [summary.room setAccountData:@{
-                kRoomNativeRoomIdJSONKey: summary.roomId
+                kRoomNativeRoomIdJSONKey: createContent.nativeRoomId
             }
                                  forType:kRoomIsVirtualJSONKey
-                                 success:nil
+                                 success:^{
+                [session setVirtualRoom:summary.roomId forNativeRoom:createContent.nativeRoomId];
+            }
                                  failure:nil];
         }
     }
