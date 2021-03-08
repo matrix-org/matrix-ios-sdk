@@ -8,7 +8,7 @@ Changes to be released in next version
  * 
 
 🐛 Bugfix
- * 
+ * MXDeviceListOperation: Fix memory leak.
 
 ⚠️ API Changes
  * 
