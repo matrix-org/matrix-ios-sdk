@@ -56,6 +56,7 @@ NSString *const kMXSessionInvitedRoomsDidChangeNotification = @"kMXSessionInvite
 NSString *const kMXSessionOnToDeviceEventNotification = @"kMXSessionOnToDeviceEventNotification";
 NSString *const kMXSessionIgnoredUsersDidChangeNotification = @"kMXSessionIgnoredUsersDidChangeNotification";
 NSString *const kMXSessionDirectRoomsDidChangeNotification = @"kMXSessionDirectRoomsDidChangeNotification";
+NSString *const kMXSessionVirtualRoomsDidChangeNotification = @"kMXSessionVirtualRoomsDidChangeNotification";
 NSString *const kMXSessionAccountDataDidChangeNotification = @"kMXSessionAccountDataDidChangeNotification";
 NSString *const kMXSessionAccountDataDidChangeIdentityServerNotification = @"kMXSessionAccountDataDidChangeIdentityServerNotification";
 NSString *const kMXSessionDidCorruptDataNotification = @"kMXSessionDidCorruptDataNotification";
@@ -168,6 +169,12 @@ typedef void (^MXOnResumeDone)(void);
      The list of users for who a publicised groups list is available but outdated.
      */
     NSMutableArray <NSString*> *userIdsWithOutdatedPublicisedGroups;
+    
+    /**
+     Native -> virtual rooms ids map.
+     Each key is a native room id. Each value is the virtual room id.
+     */
+    NSMutableDictionary<NSString*, NSString*> *nativeToVirtualRoomIds;
 }
 
 /**
@@ -206,6 +213,7 @@ typedef void (^MXOnResumeDone)(void);
         _preventPauseCount = 0;
         directRoomsOperationsQueue = [NSMutableArray array];
         publicisedGroupsByUserId = [[NSMutableDictionary alloc] init];
+        nativeToVirtualRoomIds = [NSMutableDictionary dictionary];
 
         [self setIdentityServer:mxRestClient.identityServer andAccessToken:mxRestClient.credentials.identityServerAccessToken];
         
@@ -448,6 +456,16 @@ typedef void (^MXOnResumeDone)(void);
                 [room handleJoinedRoomSync:roomSync];
                 [room.summary handleJoinedRoomSync:roomSync];
             }];
+            
+            for (MXEvent *event in roomSync.accountData.events)
+            {
+                if ([event.type isEqualToString:kRoomIsVirtualJSONKey])
+                {
+                    //  cache this info
+                    NSString *nativeRoomId = event.content[kRoomNativeRoomIdJSONKey];
+                    [self setVirtualRoom:room.roomId forNativeRoom:nativeRoomId];
+                }
+            }
         }
     }
 
@@ -1039,6 +1057,7 @@ typedef void (^MXOnResumeDone)(void);
     
     publicisedGroupsByUserId = nil;
     userIdsWithOutdatedPublicisedGroups = nil;
+    nativeToVirtualRoomIds = nil;
 
     // Stop background task
     if (self.backgroundTask.isRunning)
@@ -2431,6 +2450,12 @@ typedef void (^MXOnResumeDone)(void);
             summary.directUserId = directUserId;
             [summary save:YES];
         }
+    }
+    
+    if (room.accountData.isVirtual)
+    {
+        //  cache this info
+        [self setVirtualRoom:room.roomId forNativeRoom:room.accountData.nativeRoomId];
     }
 
     if (notify)
@@ -4070,6 +4095,30 @@ typedef void (^MXOnResumeDone)(void);
     }
     
     return publicisedGroups;
+}
+
+#pragma mark - Virtual Rooms
+
+- (void)setVirtualRoom:(NSString *)virtualRoomId forNativeRoom:(NSString *)nativeRoomId
+{
+    if (virtualRoomId)
+    {
+        nativeToVirtualRoomIds[nativeRoomId] = virtualRoomId;
+    }
+    else
+    {
+        [nativeToVirtualRoomIds removeObjectForKey:nativeRoomId];
+    }
+    
+    //  post an update of the virtual rooms.
+    [[NSNotificationCenter defaultCenter] postNotificationName:kMXSessionVirtualRoomsDidChangeNotification
+                                                        object:self
+                                                      userInfo:nil];
+}
+
+- (NSString *)virtualRoomOf:(NSString *)nativeRoomId
+{
+    return nativeToVirtualRoomIds[nativeRoomId];
 }
 
 @end

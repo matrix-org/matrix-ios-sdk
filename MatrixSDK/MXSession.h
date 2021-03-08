@@ -215,6 +215,13 @@ FOUNDATION_EXPORT NSString *const kMXSessionIgnoredUsersDidChangeNotification;
 FOUNDATION_EXPORT NSString *const kMXSessionDirectRoomsDidChangeNotification;
 
 /**
+ Posted when the virtual rooms are updated, either from the store or from the homeserver.
+ 
+ The notification object is the concerned session (MXSession instance).
+ */
+FOUNDATION_EXPORT NSString *const kMXSessionVirtualRoomsDidChangeNotification;
+
+/**
  Posted when the matrix account data are updated from homeserver.
  
  The notification object is the concerned session (MXSession instance).
@@ -1502,5 +1509,24 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
  @return the current publicised groups for the provided user.
  */
 - (NSArray<NSString *> *)publicisedGroupsForUser:(NSString*)userId;
+
+#pragma mark - Virtual Rooms
+
+/**
+ Cache the virtual room of a native room.
+ 
+ @param virtualRoomId nirtual room identifier
+ @param nativeRoomId native room identifier.
+ */
+- (void)setVirtualRoom:(NSString *)virtualRoomId
+         forNativeRoom:(NSString *)nativeRoomId;
+
+/**
+ Get virtual room identifier for a given native room identifier.
+ 
+ @param nativeRoomId native room identifier to look for the virtual room.
+ @return the virtual room identifier for the given native room. May be nil.
+ */
+- (NSString *)virtualRoomOf:(NSString *)nativeRoomId;
 
 @end
