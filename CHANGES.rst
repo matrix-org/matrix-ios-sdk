@@ -8,7 +8,7 @@ Changes to be released in next version
  * 
 
 🐛 Bugfix
- * 
+ * Crypto: Duplicate message index after using the share extension (vector-im/element-ios#4104)
 
 ⚠️ API Changes
  * 
