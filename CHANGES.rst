@@ -8,7 +8,7 @@ Changes to be released in next version
  * 
 
 🐛 Bugfix
- * 
+ * VoIP: Fix too quick call answer failure (vector-im/element-ios/issues/4109).
 
 ⚠️ API Changes
  * 
