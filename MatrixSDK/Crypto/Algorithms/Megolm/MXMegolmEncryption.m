@@ -39,11 +39,6 @@
 
     NSString *deviceId;
 
-    // OutboundSessionInfo. Null if we haven't yet started setting one up. Note
-    // that even if this is non-null, it may not be ready for use (in which
-    // case outboundSession.shareOperation will be non-nill.)
-    MXOutboundSessionInfo *outboundSession;
-    
     NSMutableArray<MXQueuedEncryption*> *pendingEncryptions;
 
     // Session rotation periods
@@ -79,15 +74,6 @@
         // TODO: Make it configurable via parameters
         sessionRotationPeriodMsgs = 100;
         sessionRotationPeriodMs = 7 * 24 * 3600 * 1000;
-        
-        // restore last saved outbound session for this room
-        MXOlmOutboundGroupSession *restoredOutboundGroupSession = [crypto.olmDevice outboundGroupSessionForRoomWithRoomId:roomId];
-        
-        if (restoredOutboundGroupSession)
-        {
-            outboundSession = [[MXOutboundSessionInfo alloc] initWithSession:restoredOutboundGroupSession];
-            outboundSession.sharedWithDevices = [crypto.store sharedDevicesForOutboundGroupSessionInRoomWithId:roomId sessionId:outboundSession.sessionId];
-        }
     }
     return self;
 }
@@ -145,6 +131,21 @@
 
 
 #pragma mark - Private methods
+
+- (MXOutboundSessionInfo *)outboundSession
+{
+    // restore last saved outbound session for this room
+    MXOlmOutboundGroupSession *restoredOutboundGroupSession = [crypto.olmDevice outboundGroupSessionForRoomWithRoomId:roomId];
+    
+    MXOutboundSessionInfo *outboundSession;
+    if (restoredOutboundGroupSession)
+    {
+        outboundSession = [[MXOutboundSessionInfo alloc] initWithSession:restoredOutboundGroupSession];
+        outboundSession.sharedWithDevices = [crypto.store sharedDevicesForOutboundGroupSessionInRoomWithId:roomId sessionId:outboundSession.sessionId];
+    }
+    
+    return outboundSession;
+}
 
 /*
  Get the list of devices which can encrypt data to.
@@ -238,13 +239,12 @@
                                    success:(void (^)(MXOutboundSessionInfo *session))success
                                    failure:(void (^)(NSError *))failure
 {
-    __block MXOutboundSessionInfo *session = outboundSession;
+    __block MXOutboundSessionInfo *session = self.outboundSession;
 
     // Need to make a brand new session?
     if (session && [session needsRotation:sessionRotationPeriodMsgs rotationPeriodMs:sessionRotationPeriodMs])
     {
         [crypto.olmDevice discardOutboundGroupSessionForRoomWithRoomId:roomId];
-        outboundSession = nil;
         session = nil;
     }
 
@@ -252,13 +252,12 @@
     if (session && [session sharedWithTooManyDevices:devicesInRoom])
     {
         [crypto.olmDevice discardOutboundGroupSessionForRoomWithRoomId:roomId];
-        outboundSession = nil;
         session = nil;
     }
 
     if (!session)
     {
-        outboundSession = session = [self prepareNewSession];
+        session = [self prepareNewSession];
     }
 
     if (session.shareOperation)
