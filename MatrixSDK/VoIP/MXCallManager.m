@@ -1403,7 +1403,7 @@ NSString *const kMXCallManagerConferenceUserDomain  = @"matrix.org";
         
         NSLog(@"Succeeded to look up the virtual user: %@", user.userId);
         
-        if (user)
+        if (user && user.userId.length > 0)
         {
             if (success)
             {
@@ -1440,7 +1440,7 @@ NSString *const kMXCallManagerConferenceUserDomain  = @"matrix.org";
         
         NSLog(@"Succeeded to look up the native user: %@", user.userId);
         
-        if (user)
+        if (user && user.userId.length > 0)
         {
             if (success)
             {
