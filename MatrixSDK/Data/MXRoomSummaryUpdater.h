@@ -66,4 +66,26 @@
  */
 @property id<MXRoomNameStringsLocalizable> roomNameStringLocalizations;
 
+/**
+ Indicate YES to handle room types with nil or empty value.
+ If YES `defaultRoomType` will be used to define the default room type to use in this case.
+ 
+ YES by default.
+*/
+@property (nonatomic) BOOL supportNilOrEmptyRoomType;
+
+/**
+ Room type used when the room type of a room is not defined (null or empty).
+ 
+ MXRoomTypeRoom by default.
+*/
+@property (nonatomic) MXRoomType defaultRoomType;
+
+/**
+ List of supported room type strings. Unsupported room types will be hidden (see MXRoomSummary.hiddenFromUser). It's not necessary to add empty or nil values, this case is handled by `supportNilOrEmptyRoomType` property.
+ 
+ Nil by default.
+*/
+@property (nonatomic) NSArray<NSString *> *supportedRoomTypeStrings;
+
 @end

@@ -26,7 +26,17 @@
 
 #import "NSArray+MatrixSDK.h"
 
+#import "MatrixSDKSwiftHeader.h"
+
+@interface MXRoomSummaryUpdater()
+
+@property (nonatomic) MXRoomTypeMapper *roomTypeMapper;
+
+@end
+
 @implementation MXRoomSummaryUpdater
+
+#pragma mark - Setup
 
 + (instancetype)roomSummaryUpdaterForSession:(MXSession *)mxSession
 {
@@ -47,6 +57,29 @@
     return updater;
 }
 
+- (instancetype)init
+{
+    self = [super init];
+    if (self)
+    {
+        _supportNilOrEmptyRoomType = YES;
+        _defaultRoomType = MXRoomTypeRoom;
+        _roomTypeMapper = [[MXRoomTypeMapper alloc] initWithDefaultRoomType:_defaultRoomType];
+    }
+    return self;
+}
+
+#pragma mark - Properties
+
+- (void)setDefaultRoomType:(MXRoomType)defaultRoomType
+{
+    if (_defaultRoomType != defaultRoomType)
+    {
+        _defaultRoomType = defaultRoomType;
+        
+        self.roomTypeMapper.defaultRoomType = defaultRoomType;
+    }
+}
 
 #pragma mark - MXRoomSummaryUpdating
 
@@ -173,7 +206,13 @@
             {
                 MXRoomCreateContent *createContent = [MXRoomCreateContent modelFromJSON:event.content];
                 summary.creatorUserId = roomState.creatorUserId;
-                summary.roomType = createContent.roomType;
+                                
+                NSString *roomTypeString = [createContent.roomType stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
+                
+                summary.roomTypeString = createContent.roomType;
+                summary.roomType = [self.roomTypeMapper roomTypeFrom:roomTypeString];
+                summary.hiddenFromUser = [self shouldHideRoomWithRoomTypeString:roomTypeString];
+                
                 updated = YES;
                 [self checkRoomCreateStateEventPredecessorAndUpdateObsoleteRoomSummaryIfNeededWithCreateContent:createContent summary:summary session:session roomState:roomState];
             }
@@ -566,5 +605,26 @@
 
     return otherMembers;
 }
+
+- (BOOL)shouldHideRoomWithRoomTypeString:(NSString*)roomTypeString
+{
+    BOOL hiddenFromUser = NO;
+    
+    if (!roomTypeString.length)
+    {
+        hiddenFromUser = !self.supportNilOrEmptyRoomType;
+    }
+    else if (self.supportedRoomTypeStrings.count)
+    {
+        hiddenFromUser = NO == [self.supportedRoomTypeStrings containsObject:roomTypeString];
+    }
+    else
+    {
+        hiddenFromUser = YES;
+    }
+    
+    return hiddenFromUser;
+}
+
 
 @end
