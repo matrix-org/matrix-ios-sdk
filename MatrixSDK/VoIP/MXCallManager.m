@@ -657,6 +657,9 @@ NSTimeInterval const kMXCallDirectRoomJoinTimeout = 30;
                     [room join:^{
                         NSLog(@"[MXCallManager] handleRoomMember: auto-joined on virtual room successfully.");
                         
+                        room.summary.hiddenFromUser = YES;
+                        [room.summary save:YES];
+                        
                         //  set account data for the virtual room
                         MXWeakify(room);
                         [room setAccountData:@{
