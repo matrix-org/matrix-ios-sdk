@@ -1,4 +1,4 @@
-Changes to be released in next version
+Changes in 0.18.5 (2021-03-11)
 =================================================
 
 ✨ Features
@@ -22,6 +22,9 @@ Changes to be released in next version
 
 Others
  * Ignore event editors other than the original sender.
+
+Improvements:
+
 
 Changes in 0.18.4 (2021-03-03)
 =================================================
