@@ -62,7 +62,7 @@
     self = [super init];
     if (self)
     {
-        _supportNilOrEmptyRoomType = YES;
+        _showNilOrEmptyRoomType = YES;
         _defaultRoomType = MXRoomTypeRoom;
         _roomTypeMapper = [[MXRoomTypeMapper alloc] initWithDefaultRoomType:_defaultRoomType];
     }
@@ -612,11 +612,11 @@
     
     if (!roomTypeString.length)
     {
-        hiddenFromUser = !self.supportNilOrEmptyRoomType;
+        hiddenFromUser = !self.showNilOrEmptyRoomType;
     }
-    else if (self.supportedRoomTypeStrings.count)
+    else if (self.showRoomTypeStrings.count)
     {
-        hiddenFromUser = NO == [self.supportedRoomTypeStrings containsObject:roomTypeString];
+        hiddenFromUser = NO == [self.showRoomTypeStrings containsObject:roomTypeString];
     }
     else
     {

@@ -139,12 +139,12 @@ FOUNDATION_EXPORT NSString *const kMXRoomSummaryDidChangeNotification;
 #pragma mark - Data related to room state
 
 /**
- The room type string value. Can be nil.
+ The room type string value as provided by the server. Can be nil.
  */
 @property (nonatomic) NSString *roomTypeString;
 
 /**
- The computed room type.
+ The locally computed room type derivated from `roomTypeString`.
  */
 @property (nonatomic) MXRoomType roomType;
 

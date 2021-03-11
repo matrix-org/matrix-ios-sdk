@@ -72,7 +72,7 @@
  
  YES by default.
 */
-@property (nonatomic) BOOL supportNilOrEmptyRoomType;
+@property (nonatomic) BOOL showNilOrEmptyRoomType;
 
 /**
  Room type used when the room type of a room is not defined (null or empty).
@@ -82,10 +82,10 @@
 @property (nonatomic) MXRoomType defaultRoomType;
 
 /**
- List of supported room type strings. Unsupported room types will be hidden (see MXRoomSummary.hiddenFromUser). It's not necessary to add empty or nil values, this case is handled by `supportNilOrEmptyRoomType` property.
+ List of supported room type strings to show to the user. Other room types will be hidden (see MXRoomSummary.hiddenFromUser). It's not necessary to add empty or nil values, this case is handled by `showNilOrEmptyRoomType` property.
  
  Nil by default.
 */
-@property (nonatomic) NSArray<NSString *> *supportedRoomTypeStrings;
+@property (nonatomic) NSArray<NSString *> *showRoomTypeStrings;
 
 @end
