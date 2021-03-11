@@ -413,6 +413,19 @@ NSString *const kMXCallSupportsTransferringStatusDidChange = @"kMXCallSupportsTr
             
             
         }
+        else
+        {
+            //  Since we're queueing the operations until we receive turn servers from the HS,
+            //  if user answers the call too quickly (before we receive turn servers from HS), then
+            //  we immediately continue on the operation queue, which causes the call state is not ringing yet,
+            //  because the operations are asynchronous. On this situation we cannot really answer the call.
+            //  So, retry this operation in a short future.
+            MXWeakify(self);
+            dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 0.5 * NSEC_PER_SEC), dispatch_get_main_queue(), ^{
+                MXStrongifyAndReturnIfNil(self);
+                [self answer];
+            });
+        }
     }];
 }
 

@@ -230,6 +230,12 @@
 
     if (event)
     {
+        if (![event.sender isEqualToString:replaceEvent.sender])
+        {
+            //  not coming from the original sender, ignore
+            NSLog(@"[MXAggregations] handleReplace: Edit event not coming from the original sender, ignoring.");
+            return;
+        }
         if (![event.unsignedData.relations.replace.eventId isEqualToString:replaceEvent.eventId])
         {
             MXEvent *editedEvent = [event editedEventFromReplacementEvent:replaceEvent];
