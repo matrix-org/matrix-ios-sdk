@@ -820,6 +820,7 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
         _roomId = [aDecoder decodeObjectForKey:@"roomId"];
 
         _roomTypeString = [aDecoder decodeObjectForKey:@"roomTypeString"];
+        _roomType = (MXRoomType)[aDecoder decodeObjectForKey:@"roomType"];
         _avatar = [aDecoder decodeObjectForKey:@"avatar"];
         _displayname = [aDecoder decodeObjectForKey:@"displayname"];
         _topic = [aDecoder decodeObjectForKey:@"topic"];
@@ -878,6 +879,7 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
     [aCoder encodeObject:_roomId forKey:@"roomId"];
 
     [aCoder encodeObject:_roomTypeString forKey:@"roomTypeString"];
+    [aCoder encodeInteger:_roomType forKey:@"roomType"];
     [aCoder encodeObject:_avatar forKey:@"avatar"];
     [aCoder encodeObject:_displayname forKey:@"displayname"];
     [aCoder encodeObject:_topic forKey:@"topic"];

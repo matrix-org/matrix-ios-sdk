@@ -15,7 +15,7 @@
 //
 
 /// MXRoomType identifies the type of room as decribed in MSC1840 (see https://github.com/matrix-org/matrix-doc/pull/1840).
-typedef NS_ENUM(NSUInteger, MXRoomType) {
+typedef NS_ENUM(NSInteger, MXRoomType) {
     // The MXRoomTypeNone can be used when the value of the room type is nil or empty and you do not want to associate a room type for this case (See MXRoomSummaryUpdater.defaultRoomType).
     MXRoomTypeNone,
     MXRoomTypeRoom,
