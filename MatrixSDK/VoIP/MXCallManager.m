@@ -642,6 +642,11 @@ NSTimeInterval const kMXCallDirectRoomJoinTimeout = 30;
         MXRoom *room = [_mxSession roomWithRoomId:event.roomId];
         NSString *directUserId = room.directUserId;
         
+        if (!directUserId && content.isDirect)
+        {
+            directUserId = event.sender;
+        }
+        
         if (directUserId)
         {
             [self getNativeUserFrom:directUserId success:^(MXThirdPartyUserInstance * _Nonnull user) {
