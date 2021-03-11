@@ -1,3 +1,31 @@
+Changes in 0.18.5 (2021-03-11)
+=================================================
+
+✨ Features
+ * 
+
+🙌 Improvements
+ * 
+
+🐛 Bugfix
+ * VoIP: Fix too quick call answer failure (vector-im/element-ios/issues/4109).
+ * Crypto: Duplicate message index after using the share extension (vector-im/element-ios#4104)
+
+⚠️ API Changes
+ * 
+
+🗣 Translations
+ * 
+    
+🧱 Build
+ * 
+
+Others
+ * Ignore event editors other than the original sender.
+
+Improvements:
+
+
 Changes in 0.18.4 (2021-03-03)
 =================================================
 
