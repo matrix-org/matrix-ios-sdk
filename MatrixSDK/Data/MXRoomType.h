@@ -15,9 +15,17 @@
 //
 
 /// MXRoomType identifies the type of room as decribed in MSC1840 (see https://github.com/matrix-org/matrix-doc/pull/1840).
-typedef NSString *const MXRoomType NS_TYPED_EXTENSIBLE_ENUM;
+typedef NS_ENUM(NSUInteger, MXRoomType) {
+    MXRoomTypeRoom,
+    MXRoomTypeSpace,
+    // The room type is custom. Refer to the room type string version.
+    MXRoomTypeCustom
+};
 
-static MXRoomType const MXRoomTypeRoomMSC1840 = @"org.matrix.msc1840.messaging";
-static MXRoomType const MXRoomTypeRoom = @"m.message";
-static MXRoomType const MXRoomTypeSpaceMSC1772 = @"org.matrix.msc1772.space";
-static MXRoomType const MXRoomTypeSpace = @"m.space";
+/// MXRoomTypeString identifies the known room type string values
+typedef NSString *const MXRoomTypeString NS_TYPED_EXTENSIBLE_ENUM;
+
+static MXRoomTypeString const MXRoomTypeStringRoomMSC1840 = @"org.matrix.msc1840.messaging";
+static MXRoomTypeString const MXRoomTypeStringRoom = @"m.message";
+static MXRoomTypeString const MXRoomTypeStringSpaceMSC1772 = @"org.matrix.msc1772.space";
+static MXRoomTypeString const MXRoomTypeStringSpace = @"m.space";
