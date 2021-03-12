@@ -207,7 +207,7 @@
                 MXRoomCreateContent *createContent = [MXRoomCreateContent modelFromJSON:event.content];
                 summary.creatorUserId = roomState.creatorUserId;
                                 
-                NSString *roomTypeString = [createContent.roomType stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
+                NSString *roomTypeString = createContent.roomType; 
                 
                 summary.roomTypeString = createContent.roomType;
                 summary.roomType = [self.roomTypeMapper roomTypeFrom:roomTypeString];
