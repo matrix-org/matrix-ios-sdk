@@ -24,6 +24,7 @@
 #import "MXEnumConstants.h"
 #import "MXUsersTrustLevelSummary.h"
 #import "MXMembershipTransitionState.h"
+#import "MXRoomType.h"
 
 @class MXSession, MXRoom, MXRoomState, MXEvent;
 @protocol MXStore;
@@ -136,6 +137,16 @@ FOUNDATION_EXPORT NSString *const kMXRoomSummaryDidChangeNotification;
 - (void)save:(BOOL)commit;
 
 #pragma mark - Data related to room state
+
+/**
+ The room type string value as provided by the server. Can be nil.
+ */
+@property (nonatomic) NSString *roomTypeString;
+
+/**
+ The locally computed room type derivated from `roomTypeString`.
+ */
+@property (nonatomic) MXRoomType roomType;
 
 /**
  The Matrix content URI of the room avatar.
