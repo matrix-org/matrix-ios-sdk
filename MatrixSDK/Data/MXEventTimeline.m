@@ -793,6 +793,11 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
         // Update summary with this state events update
         [room.summary handleStateEvents:stateEvents];
 
+        // Update room account data with this state events update
+        [room.mxSession.roomAccountDataUpdateDelegate updateAccountDataForRoom:room
+                                                               withStateEvents:stateEvents
+                                                                    completion:nil];
+
         if (!room.mxSession.syncWithLazyLoadOfRoomMembers && ![store hasLoadedAllRoomMembersForRoom:room.roomId])
         {
             // If there is no lazy loading of room members, consider we have fetched
