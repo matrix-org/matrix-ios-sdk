@@ -54,4 +54,9 @@ extern NSString* _Nonnull const kRoomNativeRoomIdJSONKey;
  */
 @property (nonatomic, readonly, nullable) NSString *nativeRoomId;
 
+/**
+ The room type as described in MSC1840 (https://github.com/matrix-org/matrix-doc/pull/1840).
+ */
+@property (nonatomic, readonly, nullable) NSString *roomType;
+
 @end

@@ -5,7 +5,32 @@ Changes to be released in next version
  * 
 
 🙌 Improvements
+ * Support room type as described in MSC1840 (vector-im/element-ios/issues/4050).
  * VoIP: Virtual rooms implementation.
+
+🐛 Bugfix
+ * 
+
+⚠️ API Changes
+ * 
+
+🗣 Translations
+ * 
+    
+🧱 Build
+ * 
+
+Others
+ * 
+
+Changes in 0.18.5 (2021-03-11)
+=================================================
+
+✨ Features
+ * 
+
+🙌 Improvements
+ * 
 
 🐛 Bugfix
  * VoIP: Fix too quick call answer failure (vector-im/element-ios/issues/4109).
@@ -22,6 +47,9 @@ Changes to be released in next version
 
 Others
  * Ignore event editors other than the original sender.
+
+Improvements:
+
 
 Changes in 0.18.4 (2021-03-03)
 =================================================
