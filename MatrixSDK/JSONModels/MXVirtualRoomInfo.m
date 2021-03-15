@@ -32,7 +32,7 @@ NSString* const kRoomNativeRoomIdJSONKey = @"native_room";
     MXVirtualRoomInfo *info = [MXVirtualRoomInfo new];
     if (info)
     {
-        MXJSONModelSetDictionary(info.nativeRoomId, jsonDictionary[kRoomNativeRoomIdJSONKey]);
+        MXJSONModelSetString(info.nativeRoomId, jsonDictionary[kRoomNativeRoomIdJSONKey]);
     }
     
     return info;
