@@ -1566,7 +1566,7 @@ NSString *const kMXCallManagerConferenceUserDomain  = @"matrix.org";
                     //  wait for other party to join
                     MXStrongifyAndReturnIfNil(room);
                     [self.mxSession setVirtualRoom:room.roomId forNativeRoom:nativeRoomId];
-                    return [self directCallableRoomWithUser:userId timeout:timeout completion:completion];
+                    [self directCallableRoomWithUser:userId timeout:timeout completion:completion];
                 } failure:^(NSError *error) {
                     completion(nil, error);
                 }];
