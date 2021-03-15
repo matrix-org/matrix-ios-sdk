@@ -38,6 +38,18 @@ NSString* const kRoomNativeRoomIdJSONKey = @"native_room";
     return info;
 }
 
+- (NSDictionary *)JSONDictionary
+{
+    NSMutableDictionary *jsonDictionary = [NSMutableDictionary dictionary];
+    
+    if (self.nativeRoomId)
+    {
+        jsonDictionary[kRoomNativeRoomIdJSONKey] = self.nativeRoomId;
+    }
+    
+    return jsonDictionary;
+}
+
 - (BOOL)isVirtual
 {
     return self.nativeRoomId != nil;

@@ -316,7 +316,7 @@
         summary.hiddenFromUser = YES;
         
         //  TODO: Below operation can move to a class like 'MXRoomAccountDataUpdater' in future.
-        if (!summary.room.accountData.isVirtual)
+        if (!summary.room.accountData.virtualRoomInfo.isVirtual)
         {
             //  room is virtual, but does not have proper room account data event for virtuality
             //  set account data on the room

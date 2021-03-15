@@ -21,7 +21,7 @@
 
 @interface MXRoomAccountData ()
 
-@property (nonatomic, copy) NSDictionary<NSString *, id> *virtualRoomInfo;
+@property (nonatomic, readwrite) MXVirtualRoomInfo *virtualRoomInfo;
 
 @end
 
@@ -48,7 +48,7 @@
         {
             if ([event.type isEqualToString:kRoomIsVirtualJSONKey])
             {
-                self.virtualRoomInfo = event.content;
+                self.virtualRoomInfo = [MXVirtualRoomInfo modelFromJSON:event.content];
             }
             break;
         }
@@ -71,20 +71,6 @@
     return _taggedEvents.tags[tag].allKeys;
 }
 
-- (BOOL)isVirtual
-{
-    return self.virtualRoomInfo != nil;
-}
-
-- (NSString *)nativeRoomId
-{
-    if (self.isVirtual)
-    {
-        return self.virtualRoomInfo[kRoomNativeRoomIdJSONKey];
-    }
-    return nil;
-}
-
 #pragma mark - NSCoding
 - (instancetype)initWithCoder:(NSCoder *)aDecoder
 {
@@ -94,7 +80,7 @@
         _tags = [aDecoder decodeObjectForKey:@"tags"];
         _readMarkerEventId = [aDecoder decodeObjectForKey:@"readMarkerEventId"];
         _taggedEvents = [aDecoder decodeObjectForKey:@"taggedEvents"];
-        _virtualRoomInfo = [aDecoder decodeObjectForKey:@"virtualRoomInfo"];
+        _virtualRoomInfo = [MXVirtualRoomInfo modelFromJSON:[aDecoder decodeObjectForKey:@"virtualRoomInfo"]];
     }
     return self;
 }
@@ -104,7 +90,7 @@
     [aCoder encodeObject:_tags forKey:@"tags"];
     [aCoder encodeObject:_readMarkerEventId forKey:@"readMarkerEventId"];
     [aCoder encodeObject:_taggedEvents forKey:@"taggedEvents"];
-    [aCoder encodeObject:_virtualRoomInfo forKey:@"virtualRoomInfo"];
+    [aCoder encodeObject:_virtualRoomInfo.JSONDictionary forKey:@"virtualRoomInfo"];
 }
 
 @end

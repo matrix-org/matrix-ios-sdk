@@ -20,6 +20,7 @@
 #import "MXJSONModels.h"
 #import "MXTaggedEvents.h"
 #import "MXEvent.h"
+#import "MXVirtualRoomInfo.h"
 
 /**
  `MXRoomAccountData` represents private data that the user has defined for a room.
@@ -41,6 +42,11 @@
  The events the user has marked in this room.
  */
 @property (nonatomic, readonly) MXTaggedEvents *taggedEvents;
+
+/**
+ Virtual room info for the room.
+ */
+@property (nonatomic, readonly) MXVirtualRoomInfo *virtualRoomInfo;
 
 /**
  Process an event that modifies room account data (like m.tag event).
@@ -66,15 +72,5 @@
  @return the list of the identifiers of the events.
  */
 - (NSArray<NSString *> *)getTaggedEventsIds:(NSString*)tag;
-
-/**
- Flag to indicate whether the room is a virtual room.
- */
-@property (nonatomic, readonly) BOOL isVirtual;
-
-/**
- Native room id if the room is virtual. Only available if `isVirtual` is YES, otherwise nil.
- */
-@property (nonatomic, readonly) NSString *nativeRoomId;
 
 @end

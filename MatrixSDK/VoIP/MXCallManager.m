@@ -466,9 +466,9 @@ NSTimeInterval const kMXCallDirectRoomJoinTimeout = 30;
         {
             NSString *nativeRoomId = event.roomId;
             MXRoom *room = [_mxSession roomWithRoomId:event.roomId];
-            if (room.accountData.isVirtual)
+            if (room.accountData.virtualRoomInfo.isVirtual)
             {
-                nativeRoomId = room.accountData.nativeRoomId;
+                nativeRoomId = room.accountData.virtualRoomInfo.nativeRoomId;
             }
             call = [[MXCall alloc] initWithRoomId:nativeRoomId callSignalingRoomId:event.roomId andCallManager:self];
             if (call)
@@ -1492,7 +1492,7 @@ NSString *const kMXCallManagerConferenceUserDomain  = @"matrix.org";
                 
                 //  set account data on the room, if required
                 //  room may be created earlier for a different native room which was left. So check the native room id.
-                if (![room.accountData.nativeRoomId isEqualToString:nativeRoomId])
+                if (![room.accountData.virtualRoomInfo.nativeRoomId isEqualToString:nativeRoomId])
                 {
                     MXWeakify(room);
                     [room setAccountData:@{

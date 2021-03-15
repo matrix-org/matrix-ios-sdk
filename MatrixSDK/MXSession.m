@@ -2452,10 +2452,10 @@ typedef void (^MXOnResumeDone)(void);
         }
     }
     
-    if (room.accountData.isVirtual)
+    if (room.accountData.virtualRoomInfo.isVirtual)
     {
         //  cache this info
-        [self setVirtualRoom:room.roomId forNativeRoom:room.accountData.nativeRoomId];
+        [self setVirtualRoom:room.roomId forNativeRoom:room.accountData.virtualRoomInfo.nativeRoomId];
     }
 
     if (notify)
