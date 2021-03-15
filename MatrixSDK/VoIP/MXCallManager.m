@@ -1488,6 +1488,8 @@ NSString *const kMXCallManagerConferenceUserDomain  = @"matrix.org";
             
             if (membership == MXMembershipJoin)
             {
+                //  other party already joined
+                
                 //  set account data on the room, if required
                 //  room may be created earlier for a different native room which was left. So check the native room id.
                 if (![room.accountData.nativeRoomId isEqualToString:nativeRoomId])
@@ -1498,13 +1500,16 @@ NSString *const kMXCallManagerConferenceUserDomain  = @"matrix.org";
                     } forType:kRoomIsVirtualJSONKey success:^{
                         MXStrongifyAndReturnIfNil(room);
                         [self.mxSession setVirtualRoom:room.roomId forNativeRoom:nativeRoomId];
+                        completion(room, nil);
                     } failure:^(NSError *error) {
                         completion(nil, error);
                     }];
                 }
-                
-                //  other party already joined, return the room
-                completion(room, nil);
+                else
+                {
+                    //  no need to set account data
+                    completion(room, nil);
+                }
             }
             else if (membership == MXMembershipInvite)
             {
