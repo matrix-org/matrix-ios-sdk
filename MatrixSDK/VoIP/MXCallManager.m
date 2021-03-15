@@ -1409,7 +1409,7 @@ NSString *const kMXCallManagerConferenceUserDomain  = @"matrix.org";
         
         MXThirdPartyUserInstance * user = [thirdpartyUsersResponse.users firstObject];
         
-        NSLog(@"Succeeded to look up the virtual user: %@", user.userId);
+        NSLog(@"[MXCallManager] getVirtualUserFrom: Succeeded to look up the virtual user: %@", user.userId);
         
         if (user && user.userId.length > 0)
         {
@@ -1426,7 +1426,7 @@ NSString *const kMXCallManagerConferenceUserDomain  = @"matrix.org";
             }
         }
     } failure:^(NSError *error) {
-        NSLog(@"Failed to look up the virtual user with error: %@", error);
+        NSLog(@"[MXCallManager] getVirtualUserFrom: Failed to look up the virtual user with error: %@", error);
         if (failure)
         {
             failure(error);
@@ -1446,7 +1446,7 @@ NSString *const kMXCallManagerConferenceUserDomain  = @"matrix.org";
         
         MXThirdPartyUserInstance * user = [thirdpartyUsersResponse.users firstObject];
         
-        NSLog(@"Succeeded to look up the native user: %@", user.userId);
+        NSLog(@"[MXCallManager] getNativeUserFrom: Succeeded to look up the native user: %@", user.userId);
         
         if (user && user.userId.length > 0)
         {
@@ -1463,7 +1463,7 @@ NSString *const kMXCallManagerConferenceUserDomain  = @"matrix.org";
             }
         }
     } failure:^(NSError *error) {
-        NSLog(@"Failed to look up the native user with error: %@", error);
+        NSLog(@"[MXCallManager] getNativeUserFrom: Failed to look up the native user with error: %@", error);
         if (failure)
         {
             failure(error);
