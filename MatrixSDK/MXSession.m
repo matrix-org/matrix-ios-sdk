@@ -38,6 +38,7 @@
 #import "MXBackgroundModeHandler.h"
 
 #import "MXRoomSummaryUpdater.h"
+#import "MXRoomAccountDataUpdater.h"
 
 #import "MXRoomFilter.h"
 
@@ -206,6 +207,7 @@ typedef void (^MXOnResumeDone)(void);
         rooms = [NSMutableDictionary dictionary];
         roomsSummaries = [NSMutableDictionary dictionary];
         _roomSummaryUpdateDelegate = [MXRoomSummaryUpdater roomSummaryUpdaterForSession:self];
+        _roomAccountDataUpdateDelegate = [MXRoomAccountDataUpdater roomAccountDataUpdaterForSession:self];
         globalEventListeners = [NSMutableArray array];
         _notificationCenter = [[MXNotificationCenter alloc] initWithMatrixSession:self];
         _accountData = [[MXAccountData alloc] init];
@@ -461,9 +463,14 @@ typedef void (^MXOnResumeDone)(void);
             {
                 if ([event.type isEqualToString:kRoomIsVirtualJSONKey])
                 {
-                    //  cache this info
-                    NSString *nativeRoomId = event.content[kRoomNativeRoomIdJSONKey];
-                    [self setVirtualRoom:room.roomId forNativeRoom:nativeRoomId];
+                    MXVirtualRoomInfo *virtualRoomInfo = [MXVirtualRoomInfo modelFromJSON:event.content];
+                    if (virtualRoomInfo.isVirtual)
+                    {
+                        //  cache this info
+                        [self.roomAccountDataUpdateDelegate updateAccountDataIfRequiredForRoom:room
+                                                                              withNativeRoomId:virtualRoomInfo.nativeRoomId
+                                                                                    completion:nil];
+                    }
                 }
             }
         }

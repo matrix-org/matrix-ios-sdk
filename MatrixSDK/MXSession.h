@@ -1027,6 +1027,12 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
  */
 @property id<MXRoomSummaryUpdating> roomSummaryUpdateDelegate;
 
+/**
+ Delegate for updating room account data.
+ By default, it is the one returned by [MXRoomAccountDataUpdater roomAccountDataUpdaterForSession:].
+ */
+@property id<MXRoomAccountDataUpdating> roomAccountDataUpdateDelegate;
+
 #pragma mark - The user's groups
 /**
  Get the MXGroup instance of a user's group.
