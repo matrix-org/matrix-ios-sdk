@@ -25,9 +25,6 @@ static NSString* const kRoomCreateContentFederateJSONKey = @"m.federate";
 static NSString* const kRoomCreateContentRoomTypeJSONKey = @"m.room.type";
 static NSString* const kRoomCreateContentRoomTypeMSC1772JSONKey = @"org.matrix.msc1772.type";
 
-NSString* const kRoomIsVirtualJSONKey = @"im.vector.is_virtual_room";
-NSString* const kRoomNativeRoomIdJSONKey = @"native_room";
-
 #pragma mark - Private Interface
 
 @interface MXRoomCreateContent()
@@ -36,7 +33,7 @@ NSString* const kRoomNativeRoomIdJSONKey = @"native_room";
 @property (nonatomic, strong, readwrite, nullable) MXRoomPredecessorInfo *roomPredecessorInfo;
 @property (nonatomic, copy, readwrite, nullable) NSString *roomVersion;
 @property (nonatomic, readwrite) BOOL isFederated;
-@property (nonatomic, copy) NSDictionary *virtualRoomInfo;
+@property (nonatomic, readwrite, nonnull) MXVirtualRoomInfo *virtualRoomInfo;
 @property (nonatomic, readwrite, nullable) NSString *roomType;
 
 @end
@@ -55,7 +52,7 @@ NSString* const kRoomNativeRoomIdJSONKey = @"native_room";
         MXJSONModelSetMXJSONModel(roomCreateContent.roomPredecessorInfo, MXRoomPredecessorInfo, jsonDictionary[kRoomCreateContentPredecessorInfoJSONKey]);
         MXJSONModelSetString(roomCreateContent.roomVersion, jsonDictionary[kRoomCreateContentRoomVersionJSONKey]);
         MXJSONModelSetBoolean(roomCreateContent.isFederated, jsonDictionary[kRoomCreateContentFederateJSONKey]);
-        MXJSONModelSetDictionary(roomCreateContent.virtualRoomInfo, jsonDictionary[kRoomIsVirtualJSONKey]);
+        MXJSONModelSetMXJSONModel(roomCreateContent.virtualRoomInfo, MXVirtualRoomInfo, jsonDictionary[kRoomIsVirtualJSONKey]);
         
         NSString *roomType;
         
@@ -88,26 +85,17 @@ NSString* const kRoomNativeRoomIdJSONKey = @"native_room";
     
     jsonDictionary[kRoomCreateContentFederateJSONKey] = @(self.isFederated);
     
+    if (self.virtualRoomInfo)
+    {
+        jsonDictionary[kRoomIsVirtualJSONKey] = self.virtualRoomInfo;
+    }
+    
     if (self.roomType)
     {
         jsonDictionary[kRoomCreateContentRoomTypeMSC1772JSONKey] = self.roomType;
     }
     
     return jsonDictionary;
-}
-
-- (BOOL)isVirtual
-{
-    return self.virtualRoomInfo != nil;
-}
-
-- (NSString *)nativeRoomId
-{
-    if (self.isVirtual)
-    {
-        return self.virtualRoomInfo[kRoomNativeRoomIdJSONKey];
-    }
-    return nil;
 }
 
 @end

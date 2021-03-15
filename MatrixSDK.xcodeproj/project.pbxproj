@@ -1213,6 +1213,10 @@
 		C6F9358A1E5B3BE600FC34BF /* MXEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = C6F935861E5B3BE600FC34BF /* MXEvent.swift */; };
 		C6F9358B1E5B3BE600FC34BF /* MXJSONModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = C6F935871E5B3BE600FC34BF /* MXJSONModels.swift */; };
 		C6FE1EF01E65C4F7008587E4 /* MXAnalyticsDelegate.h in Headers */ = {isa = PBXBuildFile; fileRef = C6FE1EEF1E65C4F7008587E4 /* MXAnalyticsDelegate.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		EC05473425FF8A3C0047ECD7 /* MXVirtualRoomInfo.h in Headers */ = {isa = PBXBuildFile; fileRef = EC05473225FF8A3C0047ECD7 /* MXVirtualRoomInfo.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		EC05473525FF8A3C0047ECD7 /* MXVirtualRoomInfo.h in Headers */ = {isa = PBXBuildFile; fileRef = EC05473225FF8A3C0047ECD7 /* MXVirtualRoomInfo.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		EC05473625FF8A3C0047ECD7 /* MXVirtualRoomInfo.m in Sources */ = {isa = PBXBuildFile; fileRef = EC05473325FF8A3C0047ECD7 /* MXVirtualRoomInfo.m */; };
+		EC05473725FF8A3C0047ECD7 /* MXVirtualRoomInfo.m in Sources */ = {isa = PBXBuildFile; fileRef = EC05473325FF8A3C0047ECD7 /* MXVirtualRoomInfo.m */; };
 		EC0C51752559388C00F2CC66 /* MXStopwatch.swift in Sources */ = {isa = PBXBuildFile; fileRef = ECB5D98B2552C9B4000AD89C /* MXStopwatch.swift */; };
 		EC1EFA312567F6570089C01D /* MXSyncResponseStoreModel.h in Headers */ = {isa = PBXBuildFile; fileRef = EC1EFA2F2567F6570089C01D /* MXSyncResponseStoreModel.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		EC1EFA322567F6570089C01D /* MXSyncResponseStoreModel.h in Headers */ = {isa = PBXBuildFile; fileRef = EC1EFA2F2567F6570089C01D /* MXSyncResponseStoreModel.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -2009,6 +2013,8 @@
 		D507DA07A90048BDE70C6795 /* Pods-MatrixSDKTests-iOS.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-MatrixSDKTests-iOS.debug.xcconfig"; path = "Target Support Files/Pods-MatrixSDKTests-iOS/Pods-MatrixSDKTests-iOS.debug.xcconfig"; sourceTree = "<group>"; };
 		DCDFA3ABCED99811646ED8B6 /* Pods-SDK-MatrixSDK-iOS.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-SDK-MatrixSDK-iOS.release.xcconfig"; path = "Target Support Files/Pods-SDK-MatrixSDK-iOS/Pods-SDK-MatrixSDK-iOS.release.xcconfig"; sourceTree = "<group>"; };
 		E9B11A2D50665ADBB4B2F5C5 /* Pods-MatrixSDK-MatrixSDK-iOS.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-MatrixSDK-MatrixSDK-iOS.release.xcconfig"; path = "Target Support Files/Pods-MatrixSDK-MatrixSDK-iOS/Pods-MatrixSDK-MatrixSDK-iOS.release.xcconfig"; sourceTree = "<group>"; };
+		EC05473225FF8A3C0047ECD7 /* MXVirtualRoomInfo.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MXVirtualRoomInfo.h; sourceTree = "<group>"; };
+		EC05473325FF8A3C0047ECD7 /* MXVirtualRoomInfo.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MXVirtualRoomInfo.m; sourceTree = "<group>"; };
 		EC1EFA2F2567F6570089C01D /* MXSyncResponseStoreModel.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MXSyncResponseStoreModel.h; sourceTree = "<group>"; };
 		EC1EFA302567F6570089C01D /* MXSyncResponseStoreModel.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MXSyncResponseStoreModel.m; sourceTree = "<group>"; };
 		EC383BA1253DE4B1002FBBE6 /* MXBackgroundSyncService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXBackgroundSyncService.swift; sourceTree = "<group>"; };
@@ -2802,6 +2808,8 @@
 				8EC511032568216B00EC4E5B /* MXTaggedEventInfo.m */,
 				8EC51108256822B400EC4E5B /* MXTaggedEvents.h */,
 				8EC51109256822B400EC4E5B /* MXTaggedEvents.m */,
+				EC05473225FF8A3C0047ECD7 /* MXVirtualRoomInfo.h */,
+				EC05473325FF8A3C0047ECD7 /* MXVirtualRoomInfo.m */,
 			);
 			path = JSONModels;
 			sourceTree = "<group>";
@@ -3948,6 +3956,7 @@
 				B19A30CE24042F0800FB6F35 /* MXSelfVerifyingMasterKeyTrustedQRCodeData.h in Headers */,
 				32DC15D01A8CF7AE006F9AD3 /* MXNotificationCenter.h in Headers */,
 				3275FD9C21A6B60B00B9C13D /* MXLoginPolicy.h in Headers */,
+				EC05473425FF8A3C0047ECD7 /* MXVirtualRoomInfo.h in Headers */,
 				F0173EAC1FCF0E8900B5F6A3 /* MXGroup.h in Headers */,
 				32D2CC0523422462002BD8CA /* MX3PidAddSession.h in Headers */,
 				329FB17F1A0B665800A5E88E /* MXUser.h in Headers */,
@@ -4086,6 +4095,7 @@
 				B14EF2D82397E90400758AF0 /* MXCredentials.h in Headers */,
 				B14EF2D92397E90400758AF0 /* MXEncryptedContentKey.h in Headers */,
 				B14EF2DB2397E90400758AF0 /* MXOlmEncryption.h in Headers */,
+				EC05473525FF8A3C0047ECD7 /* MXVirtualRoomInfo.h in Headers */,
 				B14EF2DC2397E90400758AF0 /* MXOlmSessionResult.h in Headers */,
 				3274538523FD69D600438328 /* MXKeyVerificationRequestByToDeviceJSONModel.h in Headers */,
 				B14EF2DD2397E90400758AF0 /* MXEventsEnumerator.h in Headers */,
@@ -4733,6 +4743,7 @@
 				3A23A73F256D322C00B9D00F /* MXAes.m in Sources */,
 				323547DD2226FC5700F15F94 /* MXCredentials.m in Sources */,
 				32FA10CF1FA1C9F700E54233 /* MXOutgoingRoomKeyRequest.m in Sources */,
+				EC05473625FF8A3C0047ECD7 /* MXVirtualRoomInfo.m in Sources */,
 				32322A4C1E575F65005DD155 /* MXAllowedCertificates.m in Sources */,
 				F03EF5051DF01596009DF592 /* MXLRUCache.m in Sources */,
 				EC8A53AF25B1BC77004E0802 /* MXCallAnswerEventContent.m in Sources */,
@@ -5023,6 +5034,7 @@
 				B14EF21D2397E90400758AF0 /* MXEncryptedContentKey.m in Sources */,
 				B14EF21E2397E90400758AF0 /* MXEventDecryptionResult.m in Sources */,
 				320B393D239FD15E00BE2C06 /* MXKeyVerificationRequest.m in Sources */,
+				EC05473725FF8A3C0047ECD7 /* MXVirtualRoomInfo.m in Sources */,
 				3290293524CB10D000DA7BB6 /* MatrixSDKVersion.m in Sources */,
 				B14EF21F2397E90400758AF0 /* MXMyUser.m in Sources */,
 				B14EF2202397E90400758AF0 /* (null) in Sources */,

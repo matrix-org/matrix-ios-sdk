@@ -311,7 +311,7 @@
 {
     MXRoomCreateContent *createContent = [MXRoomCreateContent modelFromJSON:createEvent.content];
     
-    if (createContent.isVirtual && [summary.creatorUserId isEqualToString:createEvent.sender])
+    if (createContent.virtualRoomInfo.isVirtual && [summary.creatorUserId isEqualToString:createEvent.sender])
     {
         summary.hiddenFromUser = YES;
         
@@ -321,11 +321,11 @@
             //  room is virtual, but does not have proper room account data event for virtuality
             //  set account data on the room
             [summary.room setAccountData:@{
-                kRoomNativeRoomIdJSONKey: createContent.nativeRoomId
+                kRoomNativeRoomIdJSONKey: createContent.virtualRoomInfo.nativeRoomId
             }
                                  forType:kRoomIsVirtualJSONKey
                                  success:^{
-                [session setVirtualRoom:summary.roomId forNativeRoom:createContent.nativeRoomId];
+                [session setVirtualRoom:summary.roomId forNativeRoom:createContent.virtualRoomInfo.nativeRoomId];
             }
                                  failure:nil];
         }

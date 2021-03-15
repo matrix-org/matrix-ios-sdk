@@ -15,6 +15,7 @@
  */
 
 #import "MXRoomPredecessorInfo.h"
+#import "MXVirtualRoomInfo.h"
 
 extern NSString* _Nonnull const kRoomIsVirtualJSONKey;
 extern NSString* _Nonnull const kRoomNativeRoomIdJSONKey;
@@ -45,14 +46,9 @@ extern NSString* _Nonnull const kRoomNativeRoomIdJSONKey;
 @property (nonatomic, readonly) BOOL isFederated;
 
 /**
- Flag to indicate whether the room is a virtual room.
+ Virtual room info for the room.
  */
-@property (nonatomic, readonly) BOOL isVirtual;
-
-/**
- Native room id if the room is virtual. Only available if `isVirtual` is YES.
- */
-@property (nonatomic, readonly, nullable) NSString *nativeRoomId;
+@property (nonatomic, readonly, nonnull) MXVirtualRoomInfo *virtualRoomInfo;
 
 /**
  The room type as described in MSC1840 (https://github.com/matrix-org/matrix-doc/pull/1840).
