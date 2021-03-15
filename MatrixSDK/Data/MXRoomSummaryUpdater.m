@@ -120,6 +120,15 @@
             updated = YES;
         }
     }
+    else if ([event.type isEqualToString:kRoomIsVirtualJSONKey])
+    {
+        MXVirtualRoomInfo *virtualRoomInfo = [MXVirtualRoomInfo modelFromJSON:event.content];
+        if (virtualRoomInfo.isVirtual)
+        {
+            summary.hiddenFromUser = YES;
+            updated = YES;
+        }
+    }
 
     return updated;
 }
