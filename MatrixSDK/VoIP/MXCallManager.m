@@ -657,20 +657,10 @@ NSTimeInterval const kMXCallDirectRoomJoinTimeout = 30;
                     [room join:^{
                         NSLog(@"[MXCallManager] handleRoomMember: auto-joined on virtual room successfully.");
                         
-                        room.summary.hiddenFromUser = YES;
-                        [room.summary save:YES];
-                        
-                        //  set account data for the virtual room
-                        MXWeakify(room);
-                        [room setAccountData:@{
-                            kRoomNativeRoomIdJSONKey: nativeRoom.roomId
-                        } forType:kRoomIsVirtualJSONKey success:^{
-                            MXStrongifyAndReturnIfNil(room);
-                            NSLog(@"[MXCallManager] handleRoomMember: auto-joined room's account data updated successfully.");
-                            [self.mxSession setVirtualRoom:room.roomId forNativeRoom:nativeRoom.roomId];
-                        } failure:^(NSError *error) {
-                            NSLog(@"[MXCallManager] handleRoomMember: auto-joined room's account data update failed with error: %@", error);
-                        }];
+                        //  set account data on the room, if required
+                        [self.mxSession.roomAccountDataUpdateDelegate updateAccountDataIfRequiredForRoom:room
+                                                                                        withNativeRoomId:nativeRoom.roomId
+                                                                                              completion:nil];
                     } failure:^(NSError *error) {
                         NSLog(@"[MXCallManager] handleRoomMember: auto-join on virtual room failed with error: %@", error);
                     }];
@@ -1491,25 +1481,18 @@ NSString *const kMXCallManagerConferenceUserDomain  = @"matrix.org";
                 //  other party already joined
                 
                 //  set account data on the room, if required
-                //  room may be created earlier for a different native room which was left. So check the native room id.
-                if (![room.accountData.virtualRoomInfo.nativeRoomId isEqualToString:nativeRoomId])
-                {
-                    MXWeakify(room);
-                    [room setAccountData:@{
-                        kRoomNativeRoomIdJSONKey: nativeRoomId
-                    } forType:kRoomIsVirtualJSONKey success:^{
-                        MXStrongifyAndReturnIfNil(room);
-                        [self.mxSession setVirtualRoom:room.roomId forNativeRoom:nativeRoomId];
+                [self.mxSession.roomAccountDataUpdateDelegate updateAccountDataIfRequiredForRoom:room
+                                                                                withNativeRoomId:nativeRoomId
+                                                                                      completion:^(BOOL updated, NSError *error) {
+                    if (updated)
+                    {
                         completion(room, nil);
-                    } failure:^(NSError *error) {
+                    }
+                    else
+                    {
                         completion(nil, error);
-                    }];
-                }
-                else
-                {
-                    //  no need to set account data
-                    completion(room, nil);
-                }
+                    }
+                }];
             }
             else if (membership == MXMembershipInvite)
             {
@@ -1563,17 +1546,20 @@ NSString *const kMXCallManagerConferenceUserDomain  = @"matrix.org";
             }
 
             [self.mxSession createRoomWithParameters:roomCreationParameters success:^(MXRoom *room) {
-                //  set account data on the room
-                MXWeakify(room);
-                [room setAccountData:@{
-                    kRoomNativeRoomIdJSONKey: nativeRoomId
-                } forType:kRoomIsVirtualJSONKey success:^{
-                    //  wait for other party to join
-                    MXStrongifyAndReturnIfNil(room);
-                    [self.mxSession setVirtualRoom:room.roomId forNativeRoom:nativeRoomId];
-                    [self directCallableRoomWithUser:userId timeout:timeout completion:completion];
-                } failure:^(NSError *error) {
-                    completion(nil, error);
+                //  set account data on the room, if required
+                MXWeakify(self);
+                [self.mxSession.roomAccountDataUpdateDelegate updateAccountDataIfRequiredForRoom:room
+                                                                                withNativeRoomId:nativeRoomId
+                                                                                      completion:^(BOOL updated, NSError *error) {
+                    MXStrongifyAndReturnIfNil(self);
+                    if (updated)
+                    {
+                        [self directCallableRoomWithUser:userId timeout:timeout completion:completion];
+                    }
+                    else
+                    {
+                        completion(nil, error);
+                    }
                 }];
             } failure:^(NSError *error) {
                 completion(nil, error);
