@@ -5,10 +5,38 @@ Changes to be released in next version
  * 
 
 🙌 Improvements
- * 
+ * Support room type as described in MSC1840 (vector-im/element-ios/issues/4050).
+ * Pods: Update JitsiMeetSDK, OHHTTPStubs, Realm (vector-im/element-ios/issues/4120).
 
 🐛 Bugfix
  * MXDeviceListOperation: Fix memory leak.
+ * MXRoomState/MXRoomMembers: Fix memory leak and copying.
+
+⚠️ API Changes
+ * 
+
+🗣 Translations
+ * 
+    
+🧱 Build
+ * build.sh: Support passing CFBundleShortVersionString and CFBundleVersion when building an xcframework.
+ * build.sh: When building an xcframework, zip the binary ready for distribution.
+
+Others
+ * 
+
+Changes in 0.18.5 (2021-03-11)
+=================================================
+
+✨ Features
+ * 
+
+🙌 Improvements
+ * 
+
+🐛 Bugfix
+ * VoIP: Fix too quick call answer failure (vector-im/element-ios/issues/4109).
+ * Crypto: Duplicate message index after using the share extension (vector-im/element-ios#4104)
 
 ⚠️ API Changes
  * 
@@ -21,6 +49,9 @@ Changes to be released in next version
 
 Others
  * Ignore event editors other than the original sender.
+
+Improvements:
+
 
 Changes in 0.18.4 (2021-03-03)
 =================================================
