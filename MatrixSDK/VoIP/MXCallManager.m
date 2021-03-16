@@ -290,7 +290,7 @@ NSTimeInterval const kMXCallDirectRoomJoinTimeout = 30;
                             //  there is a real error
                             if (failure)
                             {
-                                failure(nil);
+                                failure(error);
                             }
                         }
                         else
