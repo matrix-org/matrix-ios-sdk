@@ -2462,7 +2462,9 @@ typedef void (^MXOnResumeDone)(void);
     if (room.accountData.virtualRoomInfo.isVirtual)
     {
         //  cache this info
-        [self setVirtualRoom:room.roomId forNativeRoom:room.accountData.virtualRoomInfo.nativeRoomId];
+        [self setVirtualRoom:room.roomId
+               forNativeRoom:room.accountData.virtualRoomInfo.nativeRoomId
+                      notify:notify];
     }
 
     if (notify)
@@ -4107,6 +4109,11 @@ typedef void (^MXOnResumeDone)(void);
 #pragma mark - Virtual Rooms
 
 - (void)setVirtualRoom:(NSString *)virtualRoomId forNativeRoom:(NSString *)nativeRoomId
+{
+    [self setVirtualRoom:virtualRoomId forNativeRoom:nativeRoomId notify:YES];
+}
+
+- (void)setVirtualRoom:(NSString *)virtualRoomId forNativeRoom:(NSString *)nativeRoomId notify:(BOOL)notify
 {
     if (virtualRoomId)
     {
