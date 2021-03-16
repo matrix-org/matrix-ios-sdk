@@ -82,21 +82,22 @@
     }
     else
     {
-        //  trigger a room summary update
-        MXEvent *event = [MXEvent modelFromJSON:@{
-            @"type": kRoomIsVirtualJSONKey,
-            @"content": @{
-                    kRoomNativeRoomIdJSONKey: nativeRoomId
-            }
-        }];
-        [room.summary handleEvent:event];
-        
         //  we need to set the account data
         MXWeakify(room);
         [room setAccountData:@{
             kRoomNativeRoomIdJSONKey: nativeRoomId
         } forType:kRoomIsVirtualJSONKey success:^{
             MXStrongifyAndReturnIfNil(room);
+            
+            //  trigger a room summary update
+            MXEvent *event = [MXEvent modelFromJSON:@{
+                @"type": kRoomIsVirtualJSONKey,
+                @"content": @{
+                        kRoomNativeRoomIdJSONKey: nativeRoomId
+                }
+            }];
+            [room.summary handleEvent:event];
+            
             [room.mxSession setVirtualRoom:room.roomId forNativeRoom:nativeRoomId];
             if (completion)
             {
