@@ -1,0 +1,19 @@
+name: Cocoapods lib lint
+
+on:
+  push:
+    branches: [ $default-branch ]
+  pull_request:
+
+jobs:
+  lint:
+    name: Pod Lint
+    runs-on: macos-latest
+    steps:
+      - 
+        name: Checkout
+        uses: actions/checkout@v2
+      -
+        name: Lint MatrixSDK.podspec
+#        run: bundle exec fastlane lint_pods
+        run: bundle exec pod lib lint --allow_warnings --fail_fast MatrixSDK.podspec
