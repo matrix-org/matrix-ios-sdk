@@ -43,7 +43,7 @@
 
 #pragma mark - MXRoomAccountDataUpdating
 
-- (void)updateAccountDataForRoom:(MXRoom *)room withStateEvents:(NSArray<MXEvent *> *)stateEvents completion:(void (^)(BOOL))completion
+- (void)updateAccountDataForRoom:(MXRoom *)room withStateEvents:(NSArray<MXEvent *> *)stateEvents
 {
     for (MXEvent *event in stateEvents)
     {
@@ -57,12 +57,7 @@
                 {
                     [self updateAccountDataIfRequiredForRoom:room
                                             withNativeRoomId:createContent.virtualRoomInfo.nativeRoomId
-                                                  completion:^(BOOL updated, NSError *error) {
-                        if (completion)
-                        {
-                            completion(updated);
-                        }
-                    }];
+                                                  completion:nil];
                 }
             }
                 break;

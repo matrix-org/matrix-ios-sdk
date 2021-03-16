@@ -795,8 +795,7 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
 
         // Update room account data with this state events update
         [room.mxSession.roomAccountDataUpdateDelegate updateAccountDataForRoom:room
-                                                               withStateEvents:stateEvents
-                                                                    completion:nil];
+                                                               withStateEvents:stateEvents];
 
         if (!room.mxSession.syncWithLazyLoadOfRoomMembers && ![store hasLoadedAllRoomMembersForRoom:room.roomId])
         {

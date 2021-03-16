@@ -29,11 +29,9 @@
 
  @param room the room of whom account data should be updated.
  @param stateEvents state events that may change the room account data.
- @param completion Block will be called at the end of the process. With a flag whether the room account data has been updated.
  */
 - (void)updateAccountDataForRoom:(MXRoom *)room
-                 withStateEvents:(NSArray<MXEvent*> *)stateEvents
-                      completion:(void(^)(BOOL updated))completion;
+                 withStateEvents:(NSArray<MXEvent*> *)stateEvents;
 
 /**
  Called to update the room account data if required in need of virtual rooms.
