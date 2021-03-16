@@ -9,6 +9,7 @@ Changes to be released in next version
  * Pods: Update JitsiMeetSDK, OHHTTPStubs, Realm (vector-im/element-ios/issues/4120).
 
 🐛 Bugfix
+ * MXDeviceList: Fix memory leak.
  * MXDeviceListOperation: Fix memory leak.
  * MXRoomState/MXRoomMembers: Fix memory leak and copying.
 

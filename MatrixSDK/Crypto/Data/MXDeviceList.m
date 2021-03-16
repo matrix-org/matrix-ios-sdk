@@ -126,7 +126,7 @@
         }
     }
 
-    __block MXDeviceListOperation *operation;
+    MXDeviceListOperation *operation;
 
     if (usersToDownload.count)
     {
@@ -141,8 +141,10 @@
         [self persistDeviceTrackingStatus];
 
         MXWeakify(self);
-        operation = [[MXDeviceListOperation alloc] initWithUserIds:usersToDownload success:^(NSArray<NSString *> *succeededUserIds, NSArray<NSString *> *failedUserIds) {
+        __block MXWeakify(operation);
+        weakoperation = operation = [[MXDeviceListOperation alloc] initWithUserIds:usersToDownload success:^(NSArray<NSString *> *succeededUserIds, NSArray<NSString *> *failedUserIds) {
             MXStrongifyAndReturnIfNil(self);
+            MXStrongifyAndReturnIfNil(operation);
 
             NSLog(@"[MXDeviceList] downloadKeys (operation: %p) -> DONE", operation);
 
