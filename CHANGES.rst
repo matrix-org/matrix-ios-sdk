@@ -10,7 +10,9 @@ Changes to be released in next version
  * VoIP: Virtual rooms implementation.
 
 🐛 Bugfix
- * 
+ * MXDeviceList: Fix memory leak.
+ * MXDeviceListOperation: Fix memory leak.
+ * MXRoomState/MXRoomMembers: Fix memory leak and copying.
 
 ⚠️ API Changes
  * 
@@ -19,7 +21,8 @@ Changes to be released in next version
  * 
     
 🧱 Build
- * 
+ * build.sh: Support passing CFBundleShortVersionString and CFBundleVersion when building an xcframework.
+ * build.sh: When building an xcframework, zip the binary ready for distribution.
 
 Others
  * 
