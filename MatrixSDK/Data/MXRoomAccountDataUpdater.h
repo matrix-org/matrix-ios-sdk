@@ -16,7 +16,9 @@
 
 #import <Foundation/Foundation.h>
 
-#import "MXRoomAccountData.h"
+#import "MXRoomAccountDataUpdating.h"
+
+@class MXSession;
 
 NS_ASSUME_NONNULL_BEGIN
 
