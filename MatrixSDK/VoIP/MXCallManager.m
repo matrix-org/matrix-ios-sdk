@@ -1381,10 +1381,13 @@ NSString *const kMXCallManagerConferenceUserDomain  = @"matrix.org";
 
 - (void)setVirtualRoomsSupported:(BOOL)virtualRoomsSupported
 {
-    _virtualRoomsSupported = virtualRoomsSupported;
-    
-    [[NSNotificationCenter defaultCenter] postNotificationName:kMXCallManagerVirtualRoomsSupportUpdated
-                                                        object:self];
+    if (_virtualRoomsSupported != virtualRoomsSupported)
+    {
+        _virtualRoomsSupported = virtualRoomsSupported;
+        
+        [[NSNotificationCenter defaultCenter] postNotificationName:kMXCallManagerVirtualRoomsSupportUpdated
+                                                            object:self];
+    }
 }
 
 - (void)getVirtualUserFrom:(NSString *)userId
