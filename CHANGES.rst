@@ -18,7 +18,8 @@ Changes to be released in next version
  * 
     
 🧱 Build
- * 
+ * build.sh: Support passing CFBundleShortVersionString and CFBundleVersion when building an xcframework.
+ * build.sh: When building an xcframework, zip the binary ready for distribution.
 
 Others
  * 
