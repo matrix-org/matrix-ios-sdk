@@ -23,7 +23,7 @@
 @interface MXRoomMembers ()
 {
     MXSession *mxSession;
-    MXRoomState *state;
+    __weak MXRoomState *state;
 
     /**
      Members ordered by userId.
@@ -53,6 +53,11 @@
         membersNamesInUse = [NSMutableDictionary dictionary];
     }
     return self;
+}
+
+- (MXRoomState *)roomState
+{
+    return state;
 }
 
 - (NSArray<MXRoomMember *> *)members
@@ -308,6 +313,13 @@
 }
 
 #pragma mark - NSCopying
+
+- (id)copyWithZone:(NSZone *)zone andState:(MXRoomState *)state {
+    MXRoomMembers *copy = [self copyWithZone:zone];
+    copy->state = state;
+    return copy;
+}
+
 - (id)copyWithZone:(NSZone *)zone
 {
     MXRoomMembers *membersCopy = [[MXRoomMembers allocWithZone:zone] init];

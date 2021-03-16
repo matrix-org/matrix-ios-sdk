@@ -8,7 +8,7 @@ abstract_target 'MatrixSDK' do
     pod 'OLMKit', '~> 3.2.2', :inhibit_warnings => true
     #pod 'OLMKit', :path => '../olm/OLMKit.podspec'
     
-    pod 'Realm', '10.1.4'
+    pod 'Realm', '10.7.2'
     pod 'libbase58', '~> 0.1.4'
     
     target 'MatrixSDK-iOS' do
@@ -16,7 +16,7 @@ abstract_target 'MatrixSDK' do
         
         target 'MatrixSDKTests-iOS' do
             inherit! :search_paths
-            pod 'OHHTTPStubs', '~> 9.0.0'
+            pod 'OHHTTPStubs', '~> 9.1.0'
         end
     end
     
@@ -25,7 +25,7 @@ abstract_target 'MatrixSDK' do
 
         target 'MatrixSDKTests-macOS' do
             inherit! :search_paths
-            pod 'OHHTTPStubs', '~> 9.0.0'
+            pod 'OHHTTPStubs', '~> 9.1.0'
         end
     end
 end
