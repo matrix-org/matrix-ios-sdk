@@ -493,7 +493,9 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
 - (void)setMembersCount:(MXRoomMembersCount *)membersCount
 {
     _membersCount = membersCount;
-    if (_isEncrypted && [MXSDKOptions sharedInstance].computeE2ERoomSummaryTrust)
+    
+    // Update trust if we computed it
+    if (_trust)
     {
         [self triggerComputeTrust:YES];
     }
@@ -501,15 +503,12 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
 
 - (void)bootstrapTrustLevelComputation
 {
-    if (_isEncrypted && [MXSDKOptions sharedInstance].computeE2ERoomSummaryTrust)
+    // Bootstrap trust computation
+    [self registerTrustLevelDidChangeNotifications];
+    
+    if (!self.trust)
     {
-        // Bootstrap trust computation
-        [self registerTrustLevelDidChangeNotifications];
-        
-        if (!self.trust)
-        {
-            [self triggerComputeTrust:YES];
-        }
+        [self triggerComputeTrust:YES];
     }
 }
 
@@ -559,11 +558,6 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
 
 - (void)triggerComputeTrust:(BOOL)forceDownload
 {
-    if (!_isEncrypted || ![MXSDKOptions sharedInstance].computeE2ERoomSummaryTrust)
-    {
-        return;
-    }
-    
     // Decide what to do
     if (nextTrustComputation == MXRoomSummaryNextTrustComputationNone)
     {
