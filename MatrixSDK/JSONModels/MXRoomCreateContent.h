@@ -15,6 +15,7 @@
  */
 
 #import "MXRoomPredecessorInfo.h"
+#import "MXVirtualRoomInfo.h"
 
 /**
  A `MXRoomCreateContent` instance represents the content of a `m.room.create` event type.
@@ -40,6 +41,11 @@
  Whether users on other servers can join this room.
  */
 @property (nonatomic, readonly) BOOL isFederated;
+
+/**
+ Virtual room info for the room.
+ */
+@property (nonatomic, readonly, nonnull) MXVirtualRoomInfo *virtualRoomInfo;
 
 /**
  The room type as described in MSC1840 (https://github.com/matrix-org/matrix-doc/pull/1840).

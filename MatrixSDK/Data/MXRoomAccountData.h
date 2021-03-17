@@ -20,6 +20,7 @@
 #import "MXJSONModels.h"
 #import "MXTaggedEvents.h"
 #import "MXEvent.h"
+#import "MXVirtualRoomInfo.h"
 
 /**
  `MXRoomAccountData` represents private data that the user has defined for a room.
@@ -41,6 +42,11 @@
  The events the user has marked in this room.
  */
 @property (nonatomic, readonly) MXTaggedEvents *taggedEvents;
+
+/**
+ Virtual room info for the room.
+ */
+@property (nonatomic, readonly) MXVirtualRoomInfo *virtualRoomInfo;
 
 /**
  Process an event that modifies room account data (like m.tag event).

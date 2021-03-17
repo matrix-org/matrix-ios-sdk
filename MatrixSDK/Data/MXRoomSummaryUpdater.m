@@ -120,6 +120,15 @@
             updated = YES;
         }
     }
+    else if ([event.type isEqualToString:kRoomIsVirtualJSONKey])
+    {
+        MXVirtualRoomInfo *virtualRoomInfo = [MXVirtualRoomInfo modelFromJSON:event.content];
+        if (virtualRoomInfo.isVirtual)
+        {
+            summary.hiddenFromUser = YES;
+            updated = YES;
+        }
+    }
 
     return updated;
 }
@@ -206,7 +215,7 @@
             {
                 MXRoomCreateContent *createContent = [MXRoomCreateContent modelFromJSON:event.content];
                 summary.creatorUserId = roomState.creatorUserId;
-                                
+
                 NSString *roomTypeString = createContent.roomType;
                 
                 summary.roomTypeString = createContent.roomType;
@@ -215,6 +224,7 @@
                 
                 updated = YES;
                 [self checkRoomCreateStateEventPredecessorAndUpdateObsoleteRoomSummaryIfNeededWithCreateContent:createContent summary:summary session:session roomState:roomState];
+                [self checkRoomIsVirtualWithCreateEvent:event summary:summary session:session];
             }
                 break;
                 
@@ -303,6 +313,16 @@
         {
             [obsoleteRoomSummary save:YES];
         }
+    }
+}
+
+- (void)checkRoomIsVirtualWithCreateEvent:(MXEvent*)createEvent summary:(MXRoomSummary*)summary session:(MXSession *)session
+{
+    MXRoomCreateContent *createContent = [MXRoomCreateContent modelFromJSON:createEvent.content];
+    
+    if (createContent.virtualRoomInfo.isVirtual && [summary.creatorUserId isEqualToString:createEvent.sender])
+    {
+        summary.hiddenFromUser = YES;
     }
 }
 

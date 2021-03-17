@@ -954,6 +954,22 @@ NSString *const kMXCallSupportsTransferringStatusDidChange = @"kMXCallSupportsTr
 
     _callId = callInviteEventContent.callId;
     _callerId = event.sender;
+    _callerName = [callManager.mxSession userWithUserId:_callerId].displayname;
+    MXRoom *signalingRoom = [callManager.mxSession roomWithRoomId:event.roomId];
+    //  for virtual signaling rooms, use the real room's info instead
+    if (signalingRoom.accountData.virtualRoomInfo.isVirtual)
+    {
+        MXRoom *nativeRoom = [callManager.mxSession roomWithRoomId:signalingRoom.accountData.virtualRoomInfo.nativeRoomId];
+        if (nativeRoom.isDirect)
+        {
+            _callerId = nativeRoom.directUserId;
+            _callerName = [callManager.mxSession userWithUserId:_callerId].displayname;
+        }
+        else
+        {
+            _callerName = nativeRoom.summary.displayname;
+        }
+    }
     calleeId = callManager.mxSession.myUserId;
     _isIncoming = YES;
 
