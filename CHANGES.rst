@@ -8,6 +8,7 @@ Changes to be released in next version
  * Support room type as described in MSC1840 (vector-im/element-ios/issues/4050).
  * Pods: Update JitsiMeetSDK, OHHTTPStubs, Realm (vector-im/element-ios/issues/4120).
  * MXCrypto: Do not load room members in e2e rooms after an initial sync.
+ * MXRoomSummary: Add enableTrustTracking() to compute and maintain trust value for the given room (vector-im/element-ios/issues/4115).
 
 🐛 Bugfix
  * 
