@@ -4124,10 +4124,13 @@ typedef void (^MXOnResumeDone)(void);
         [nativeToVirtualRoomIds removeObjectForKey:nativeRoomId];
     }
     
-    //  post an update of the virtual rooms.
-    [[NSNotificationCenter defaultCenter] postNotificationName:kMXSessionVirtualRoomsDidChangeNotification
-                                                        object:self
-                                                      userInfo:nil];
+    if (notify)
+    {
+        //  post an update of the virtual rooms.
+        [[NSNotificationCenter defaultCenter] postNotificationName:kMXSessionVirtualRoomsDidChangeNotification
+                                                            object:self
+                                                          userInfo:nil];
+    }
 }
 
 - (NSString *)virtualRoomOf:(NSString *)nativeRoomId
