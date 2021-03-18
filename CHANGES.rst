@@ -8,6 +8,7 @@ Changes to be released in next version
  * Support room type as described in MSC1840 (vector-im/element-ios/issues/4050).
  * Pods: Update JitsiMeetSDK, OHHTTPStubs, Realm (vector-im/element-ios/issues/4120).
  * VoIP: Virtual rooms implementation.
+ * MXCrypto: Split network request `/keys/query` into smaller requests (250 users max) (vector-im/element-ios/issues/4123).
 
 🐛 Bugfix
  * MXDeviceList: Fix memory leak.
