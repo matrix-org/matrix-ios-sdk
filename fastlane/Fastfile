@@ -24,7 +24,8 @@ platform :ios do
 
   desc "Lint MatrixSDK podspec"
   lane :lint_pod_MatrixSDK do
-    custom_pod_lib_lint(podspec: "../MatrixSDK.podspec", parameters: ["--allow-warnings", "--verbose"])
+    # Use Release config to divide build time by 2
+    custom_pod_lib_lint(podspec: "../MatrixSDK.podspec", parameters: ["--allow-warnings", "--fail-fast", "--configuration=Release"])
   end
 
   desc "Lint SwiftMatrixSDK podspec"

@@ -24,7 +24,7 @@ Changes to be released in next version
  * build.sh: When building an xcframework, zip the binary ready for distribution.
 
 Others
- * 
+ * GitHub Actions: Run pod lib lint
 
 Changes in 0.18.5 (2021-03-11)
 =================================================
