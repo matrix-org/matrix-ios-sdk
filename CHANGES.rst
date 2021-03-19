@@ -9,9 +9,12 @@ Changes to be released in next version
  * Pods: Update JitsiMeetSDK, OHHTTPStubs, Realm (vector-im/element-ios/issues/4120).
  * MXCrypto: Do not load room members in e2e rooms after an initial sync.
  * MXRoomSummary: Add enableTrustTracking() to compute and maintain trust value for the given room (vector-im/element-ios/issues/4115).
+ * VoIP: Virtual rooms implementation.
 
 🐛 Bugfix
- * 
+ * MXDeviceList: Fix memory leak.
+ * MXDeviceListOperation: Fix memory leak.
+ * MXRoomState/MXRoomMembers: Fix memory leak and copying.
 
 ⚠️ API Changes
  * 
@@ -20,7 +23,8 @@ Changes to be released in next version
  * 
     
 🧱 Build
- * 
+ * build.sh: Support passing CFBundleShortVersionString and CFBundleVersion when building an xcframework.
+ * build.sh: When building an xcframework, zip the binary ready for distribution.
 
 Others
  * 

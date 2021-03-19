@@ -313,6 +313,11 @@ NSString *const kMXLoginIdentifierTypePhone = @"m.id.phone";
         MXJSONModelSetString(roomMemberEventContent.displayname, JSONDictionary[@"displayname"]);
         MXJSONModelSetString(roomMemberEventContent.avatarUrl, JSONDictionary[@"avatar_url"]);
         MXJSONModelSetString(roomMemberEventContent.membership, JSONDictionary[@"membership"]);
+        
+        if ([roomMemberEventContent.membership isEqualToString:kMXMembershipStringInvite])
+        {
+            MXJSONModelSetBoolean(roomMemberEventContent.isDirect, JSONDictionary[@"is_direct"]);
+        }
 
         if (JSONDictionary[@"third_party_invite"] && JSONDictionary[@"third_party_invite"][@"signed"])
         {

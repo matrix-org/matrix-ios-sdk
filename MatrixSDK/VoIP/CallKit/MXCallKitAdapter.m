@@ -173,9 +173,6 @@ NSString * const kMXCallKitAdapterAudioSessionDidActive = @"kMXCallKitAdapterAud
     //  directly store the call. Will be removed if reporting fails.
     self.calls[callUUID] = call;
     
-    MXSession *mxSession = call.room.mxSession;
-    MXUser *caller = [mxSession userWithUserId:call.callerId];
-    
     NSString *handleValue;
     if (call.room.roomId)
     {
@@ -193,7 +190,7 @@ NSString * const kMXCallKitAdapterAudioSessionDidActive = @"kMXCallKitAdapterAud
     
     CXCallUpdate *update = [[CXCallUpdate alloc] init];
     update.remoteHandle = handle;
-    update.localizedCallerName = caller.displayname;
+    update.localizedCallerName = call.callerName;
     update.hasVideo = call.isVideoCall;
     update.supportsHolding = NO;
     update.supportsGrouping = NO;
