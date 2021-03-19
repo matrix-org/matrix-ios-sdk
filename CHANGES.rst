@@ -10,6 +10,7 @@ Changes to be released in next version
  * MXCrypto: Do not load room members in e2e rooms after an initial sync.
  * MXRoomSummary: Add enableTrustTracking() to compute and maintain trust value for the given room (vector-im/element-ios/issues/4115).
  * VoIP: Virtual rooms implementation.
+ * MXCrypto: Split network request `/keys/query` into smaller requests (250 users max) (vector-im/element-ios/issues/4123).
 
 🐛 Bugfix
  * MXDeviceList: Fix memory leak.
