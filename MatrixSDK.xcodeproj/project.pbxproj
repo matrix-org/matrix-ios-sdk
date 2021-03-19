@@ -546,6 +546,8 @@
 		32E226A91D081CE200E6CA54 /* MXPeekingRoomTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 32E226A81D081CE200E6CA54 /* MXPeekingRoomTests.m */; };
 		32E402B921C957D2004E87A6 /* MXOlmSession.h in Headers */ = {isa = PBXBuildFile; fileRef = 32E402B721C957D2004E87A6 /* MXOlmSession.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		32E402BA21C957D2004E87A6 /* MXOlmSession.m in Sources */ = {isa = PBXBuildFile; fileRef = 32E402B821C957D2004E87A6 /* MXOlmSession.m */; };
+		32EEA83F2603CA140041425B /* MXRestClientExtensionsTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 32EEA83E2603CA140041425B /* MXRestClientExtensionsTests.m */; };
+		32EEA8402603CA140041425B /* MXRestClientExtensionsTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 32EEA83E2603CA140041425B /* MXRestClientExtensionsTests.m */; };
 		32F00ABB2488E1CD00131741 /* MXRecoveryService.h in Headers */ = {isa = PBXBuildFile; fileRef = 32F00AB92488E1CD00131741 /* MXRecoveryService.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		32F00ABC2488E1CD00131741 /* MXRecoveryService.h in Headers */ = {isa = PBXBuildFile; fileRef = 32F00AB92488E1CD00131741 /* MXRecoveryService.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		32F00ABD2488E1CD00131741 /* MXRecoveryService.m in Sources */ = {isa = PBXBuildFile; fileRef = 32F00ABA2488E1CD00131741 /* MXRecoveryService.m */; };
@@ -1844,6 +1846,7 @@
 		32E226A81D081CE200E6CA54 /* MXPeekingRoomTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXPeekingRoomTests.m; sourceTree = "<group>"; };
 		32E402B721C957D2004E87A6 /* MXOlmSession.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MXOlmSession.h; sourceTree = "<group>"; };
 		32E402B821C957D2004E87A6 /* MXOlmSession.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MXOlmSession.m; sourceTree = "<group>"; };
+		32EEA83E2603CA140041425B /* MXRestClientExtensionsTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MXRestClientExtensionsTests.m; sourceTree = "<group>"; };
 		32F00AB92488E1CD00131741 /* MXRecoveryService.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MXRecoveryService.h; sourceTree = "<group>"; };
 		32F00ABA2488E1CD00131741 /* MXRecoveryService.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MXRecoveryService.m; sourceTree = "<group>"; };
 		32F00ABF2488FB3600131741 /* MXRecoveryService_Private.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MXRecoveryService_Private.h; sourceTree = "<group>"; };
@@ -3117,6 +3120,7 @@
 		32C6F93919DD814400EA4E9C /* MatrixSDKTests */ = {
 			isa = PBXGroup;
 			children = (
+				32EEA83E2603CA140041425B /* MXRestClientExtensionsTests.m */,
 				32C78BA6256D227D008130B1 /* MXCryptoMigrationTests.m */,
 				321EA11C24893A0400E35B02 /* MXCryptoRecoveryServiceTests.m */,
 				324DD2BA246C3ADE00377005 /* MXCryptoSecretStorageTests.m */,
@@ -4956,6 +4960,7 @@
 				32D8CAC219DEE6ED002AF8A0 /* MXRestClientNoAuthAPITests.m in Sources */,
 				32FCAB4D19E578860049C555 /* MXRestClientTests.m in Sources */,
 				32C78BA7256D227D008130B1 /* MXCryptoMigrationTests.m in Sources */,
+				32EEA83F2603CA140041425B /* MXRestClientExtensionsTests.m in Sources */,
 				32C03CB62123076F00D92712 /* DirectRoomTests.m in Sources */,
 				329FB17C1A0A963700A5E88E /* MXRoomMemberTests.m in Sources */,
 				3246BDC51A1A0789000A7D62 /* MXRoomStateDynamicTests.m in Sources */,
@@ -5303,6 +5308,7 @@
 				B1E09A472397FD990057C069 /* MXEventScanStoreTests.m in Sources */,
 				B1E09A3D2397FD820057C069 /* MXStoreFileStoreTests.m in Sources */,
 				32CEEF3E23AD134A0039BA98 /* MXCrossSigningTests.m in Sources */,
+				32EEA8402603CA140041425B /* MXRestClientExtensionsTests.m in Sources */,
 				B1E09A2B2397FD6B0057C069 /* MatrixSDKTestsE2EData.m in Sources */,
 				B1E09A3C2397FD820057C069 /* MXStoreMemoryStoreTests.m in Sources */,
 				B1E09A3E2397FD820057C069 /* MXToolsTests.m in Sources */,
