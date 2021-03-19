@@ -480,30 +480,6 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
 
 #pragma mark - Trust management
 
-- (void)enableTrustTracking:(BOOL)enable
-{
-    if (enable)
-    {
-        if (!_isEncrypted || _trust)
-        {
-            // Not applicable or already enabled
-            return;
-        }
-        
-        NSLog(@"[MXRoomSummary] enableTrustTracking: YES");
-        
-        // Bootstrap trust computation
-        [self registerTrustLevelDidChangeNotifications];
-        [self triggerComputeTrust:YES];
-    }
-    else
-    {
-        NSLog(@"[MXRoomSummary] enableTrustTracking: NO");
-        [self unregisterTrustLevelDidChangeNotifications];
-        _trust = nil;
-    }
-}
-
 - (void)setIsEncrypted:(BOOL)isEncrypted
 {
     _isEncrypted = isEncrypted;
@@ -517,9 +493,7 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
 - (void)setMembersCount:(MXRoomMembersCount *)membersCount
 {
     _membersCount = membersCount;
-    
-    // Update trust if we computed it
-    if (_trust)
+    if (_isEncrypted && [MXSDKOptions sharedInstance].computeE2ERoomSummaryTrust)
     {
         [self triggerComputeTrust:YES];
     }
@@ -527,12 +501,15 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
 
 - (void)bootstrapTrustLevelComputation
 {
-    // Bootstrap trust computation
-    [self registerTrustLevelDidChangeNotifications];
-    
-    if (!self.trust)
+    if (_isEncrypted && [MXSDKOptions sharedInstance].computeE2ERoomSummaryTrust)
     {
-        [self triggerComputeTrust:YES];
+        // Bootstrap trust computation
+        [self registerTrustLevelDidChangeNotifications];
+        
+        if (!self.trust)
+        {
+            [self triggerComputeTrust:YES];
+        }
     }
 }
 
@@ -540,12 +517,6 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
 {
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(deviceInfoTrustLevelDidChange:) name:MXDeviceInfoTrustLevelDidChangeNotification object:nil];
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(crossSigningInfoTrustLevelDidChange:) name:MXCrossSigningInfoTrustLevelDidChangeNotification object:nil];
-}
-
-- (void)unregisterTrustLevelDidChangeNotifications
-{
-    [[NSNotificationCenter defaultCenter] removeObserver:self name:MXDeviceInfoTrustLevelDidChangeNotification object:nil];
-    [[NSNotificationCenter defaultCenter] removeObserver:self name:MXCrossSigningInfoTrustLevelDidChangeNotification object:nil];
 }
 
 - (void)deviceInfoTrustLevelDidChange:(NSNotification*)notification
@@ -588,6 +559,11 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
 
 - (void)triggerComputeTrust:(BOOL)forceDownload
 {
+    if (!_isEncrypted || ![MXSDKOptions sharedInstance].computeE2ERoomSummaryTrust)
+    {
+        return;
+    }
+    
     // Decide what to do
     if (nextTrustComputation == MXRoomSummaryNextTrustComputationNone)
     {
@@ -888,11 +864,7 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
         
         _hiddenFromUser = [aDecoder decodeBoolForKey:@"hiddenFromUser"];
         
-        // Compute the trust if asked to do it automatically
-        // or maintain its computation it has been already calcutated
-        if (_isEncrypted
-            && ([MXSDKOptions sharedInstance].computeE2ERoomSummaryTrust
-                || _trust))
+        if (_isEncrypted && [MXSDKOptions sharedInstance].computeE2ERoomSummaryTrust)
         {
             dispatch_async(dispatch_get_main_queue(), ^{
                 [self bootstrapTrustLevelComputation];

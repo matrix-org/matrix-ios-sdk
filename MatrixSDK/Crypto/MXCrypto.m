@@ -2533,27 +2533,33 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
 {
     MXRoom *room = [_mxSession roomWithRoomId:event.roomId];
 
-    MXWeakify(self);    
-    [room state:^(MXRoomState *roomState) {
+    MXWeakify(self);
+    void (^success)(MXRoomMembers *roomMembers, MXRoomState *roomState) = ^void(MXRoomMembers *roomMembers, MXRoomState *roomState)
+    {
         MXStrongifyAndReturnIfNil(self);
-        
-        // We can start tracking only lazy loaded room members
-        // All room members will be loaded when necessary, ie when encrypting in the room
-        MXRoomMembers *roomMembers = roomState.members;
-        
+
         NSMutableArray *members = [NSMutableArray array];
         NSArray<MXRoomMember *> *encryptionTargetMembers = [roomMembers encryptionTargetMembers:roomState.historyVisibility];
         for (MXRoomMember *roomMember in encryptionTargetMembers)
         {
             [members addObject:roomMember.userId];
         }
-        
+
         if (self.cryptoQueue)
         {
             dispatch_async(self.cryptoQueue, ^{
                 [self setEncryptionInRoom:event.roomId withMembers:members algorithm:event.content[@"algorithm"] inhibitDeviceQuery:YES];
             });
         }
+    };
+    
+    [room state:^(MXRoomState *roomState) {
+        [room members:^(MXRoomMembers *roomMembers) {
+            success(roomMembers, roomState);
+        } failure:^(NSError *error) {
+            NSLog(@"[MXCrypto] onCryptoEvent: Warning: Unable to get all members from the HS. Fallback by using lazy-loaded members");
+            success(roomState.members, roomState);
+        }];
     }];
 }
 

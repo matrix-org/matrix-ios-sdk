@@ -323,18 +323,6 @@ FOUNDATION_EXPORT NSString *const kMXRoomSummaryDidChangeNotification;
 /// @param membershipTransitionState The new membership transition state value
 - (void)updateMembershipTransitionState:(MXMembershipTransitionState)membershipTransitionState;
 
-
-/**
- Start computing and maintaining the trust value of this room.
- 
- `MXSDKOptions.computeE2ERoomSummaryTrust` allows to compute trusts for all rooms automatically but it comsumes
- resources.
- 
- @param enable YES to enable trust computation.
- */
-- (void)enableTrustTracking:(BOOL)enable;
-
-
 #pragma mark - Server sync
 
 /**

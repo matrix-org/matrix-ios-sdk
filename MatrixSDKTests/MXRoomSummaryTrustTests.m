@@ -324,47 +324,6 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
     }];
 }
 
-/**
- Test MXRoomSummary.enableTrustTracking(enable:)
- 
- - Disable computeE2ERoomSummaryTrust
- - Have Alice with 2 devices (Alice1 and Alice2) and Bob. All trusted via cross-signing
- -> Trust must not be automatically computed
- - Enable trust computation
- -> Trust be available and everything should be green
- */
-- (void)testEnableTrustTracking
-{
-    // - Disable computeE2ERoomSummaryTrust
-    [MXSDKOptions sharedInstance].computeE2ERoomSummaryTrust = NO;
-    
-    // - Have Alice with 2 devices (Alice1 and Alice2) and Bob. All trusted via cross-signing
-    [matrixSDKTestsE2EData doTestWithBobAndAliceWithTwoDevicesAllTrusted:self readyToTest:^(MXSession *aliceSession1, MXSession *aliceSession2, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
-        
-        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, kMXRoomSummaryTrustComputationDelayMs * NSEC_PER_MSEC), dispatch_get_main_queue(), ^{
-            
-            // -> Trust must not be automatically computed
-            MXRoomSummary *roomSummaryFromAlicePOV = [aliceSession1 roomWithRoomId:roomId].summary;
-            MXUsersTrustLevelSummary *trust = roomSummaryFromAlicePOV.trust;
-            XCTAssertNil(trust);
-
-            // - Enable trust computation
-            [roomSummaryFromAlicePOV enableTrustTracking:YES];
-            
-            id observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXRoomSummaryDidChangeNotification object:roomSummaryFromAlicePOV queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *notif) {
-                
-                // -> Trust be available and everything should be green
-                MXUsersTrustLevelSummary *trust = roomSummaryFromAlicePOV.trust;
-                XCTAssertEqual(trust.trustedUsersProgress.fractionCompleted, 1);
-                XCTAssertEqual(trust.trustedDevicesProgress.fractionCompleted, 1);
-                
-                [expectation fulfill];
-            }];
-            
-            [observers addObject:observer];
-        });
-    }];
-}
 
 @end
 
