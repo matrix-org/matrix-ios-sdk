@@ -16,6 +16,6 @@
 
 import Foundation
 
-protocol MXSummable {
+public protocol MXSummable {
     static func +(lhs: Self, rhs: Self) -> Self
 }

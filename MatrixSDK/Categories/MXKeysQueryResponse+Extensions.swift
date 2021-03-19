@@ -19,7 +19,7 @@ import Foundation
 
 extension MXKeysQueryResponse : MXSummable {
     
-    static func +(lhs: MXKeysQueryResponse, rhs: MXKeysQueryResponse) -> Self {
+    public static func +(lhs: MXKeysQueryResponse, rhs: MXKeysQueryResponse) -> Self {
         let keysQueryResponse = MXKeysQueryResponse()
         
         // Casts to original objc NSDictionary are annoying

@@ -130,7 +130,7 @@ private extension MXResponse {
 
 
 
-extension MXResponse where T: MXSummable {
+public extension MXResponse where T: MXSummable {
     static func +(lhs: MXResponse<T>, rhs: MXResponse<T>) -> MXResponse<T> {
         
         // Once there is an error, the result will be an error
