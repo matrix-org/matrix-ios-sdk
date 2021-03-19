@@ -120,7 +120,6 @@
     }];
 }
 
-
 /**
  Test downloadKeysByChunkForUsers with small chunks
  
@@ -169,6 +168,39 @@
             XCTFail(@"Cannot set up intial test conditions - error: %@", error);
             [expectation fulfill];
         }];
+    }];
+}
+
+/**
+ Test cancel on downloadKeysByChunkForUsers
+ 
+ - Have 3 people in an e2e room
+ - Get users keys in the normal way
+ - Get them from a big chunk request
+ -> Result must be the same
+ */
+- (void)testDownloadKeysForUsersCancel
+{
+    // - Have 3 people in an e2e room
+    [self createScenario:^(MXSession *aliceSession, MXSession *bobSession, MXSession *samSession, NSString *roomId, XCTestExpectation *expectation) {
+        
+        NSArray *userIds = @[aliceSession.myUserId, bobSession.myUserId, samSession.myUserId];
+        
+        
+        // - Get them from a big chunk request
+        MXHTTPOperation *operation = [aliceSession.matrixRestClient downloadKeysByChunkForUsers:userIds token:nil chunkSize:1 success:^(MXKeysQueryResponse * _Nonnull chunkedKeysQueryResponse) {
+            XCTFail(@"Operation was cancelled. Completions block must not be called");
+            [expectation fulfill];
+            
+        } failure:^(NSError *error) {
+            [expectation fulfill];
+        }];
+        
+        [operation cancel];
+        
+        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 1 * NSEC_PER_SEC), dispatch_get_main_queue(), ^{
+            [expectation fulfill];
+        });
     }];
 }
 
