@@ -25,7 +25,7 @@
 /**
  The opaque token for the start of the sync response.
  */
-@property (nonatomic) NSString *prevBatch;
+@property (nonatomic) NSString *syncToken;
 
 /**
  The sync response starting from the prevBatch.

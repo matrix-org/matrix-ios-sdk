@@ -1690,9 +1690,9 @@ typedef void (^MXOnResumeDone)(void);
     [syncResponseStore openWithCredentials:self.credentials];
     if (syncResponseStore.syncResponse)
     {
-        NSString *syncResponseStorePrevBatch = syncResponseStore.prevBatch;
+        NSString *syncResponseStoreSyncToken = syncResponseStore.syncToken;
         NSString *eventStreamToken = _store.eventStreamToken;
-        if ([syncResponseStorePrevBatch isEqualToString:eventStreamToken])
+        if ([syncResponseStoreSyncToken isEqualToString:eventStreamToken])
         {
             NSLog(@"[MXSession] handleBackgroundSyncCacheIfRequired: Handle cache from stream token %@", eventStreamToken);
             
@@ -1709,7 +1709,7 @@ typedef void (^MXOnResumeDone)(void);
         }
         else
         {
-            NSLog(@"[MXSession] handleBackgroundSyncCacheIfRequired: Ignore cache: MXSession stream token: %@. MXBackgroundSyncService cache stream token: %@", eventStreamToken, syncResponseStorePrevBatch);
+            NSLog(@"[MXSession] handleBackgroundSyncCacheIfRequired: Ignore cache: MXSession stream token: %@. MXBackgroundSyncService cache stream token: %@", eventStreamToken, syncResponseStoreSyncToken);
             
             //  this sync response will break the continuity in session, ignore & remove it
             [syncResponseStore deleteData];

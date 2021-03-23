@@ -663,7 +663,7 @@ class MXBackgroundSyncServiceTests: XCTestCase {
                             
                             let syncResponseStore = MXSyncResponseFileStore()
                             syncResponseStore.open(withCredentials: bobCredentials)
-                            let syncResponseStorePrevBatch = syncResponseStore.prevBatch
+                            let syncResponseStoreSyncToken = syncResponseStore.syncToken
                             
                             // - Alice sends a message. This make bob MXSession update its sync token
                             room.sendTextMessage(Constants.messageText, localEcho: &localEcho) { _ in }
@@ -679,7 +679,7 @@ class MXBackgroundSyncServiceTests: XCTestCase {
                                     let syncResponseStore = MXSyncResponseFileStore()
                                     syncResponseStore.open(withCredentials: bobCredentials)
                                     
-                                    XCTAssertNotEqual(syncResponseStorePrevBatch, syncResponseStore.prevBatch)
+                                    XCTAssertNotEqual(syncResponseStoreSyncToken, syncResponseStore.syncToken)
 
                                     expectation?.fulfill()
                                 }

@@ -121,15 +121,15 @@ extension MXSyncResponseFileStore: MXSyncResponseStore {
         self.setupFilePath()
     }
     
-    public var prevBatch: String? {
+    public var syncToken: String? {
         get {
             autoreleasepool {
-                return readData()?.prevBatch
+                return readData()?.syncToken
             }
         } set {
             autoreleasepool {
                 let data = readData() ?? MXSyncResponseStoreModel()
-                data.prevBatch = newValue
+                data.syncToken = newValue
                 saveData(data)
             }
         }

@@ -25,7 +25,7 @@
     
     if (syncResponseModel)
     {
-        MXJSONModelSetString(syncResponseModel.prevBatch, JSONDictionary[@"prev_batch"]);
+        MXJSONModelSetString(syncResponseModel.syncToken, JSONDictionary[@"sync_token"]);
         MXJSONModelSetMXJSONModel(syncResponseModel.syncResponse, MXSyncResponse, JSONDictionary[@"sync_response"]);
     }
 
@@ -36,9 +36,9 @@
 {
     NSMutableDictionary *JSONDictionary = [NSMutableDictionary dictionary];
     
-    if (self.prevBatch)
+    if (self.syncToken)
     {
-        JSONDictionary[@"prev_batch"] = self.prevBatch;
+        JSONDictionary[@"sync_token"] = self.syncToken;
     }
     if (self.syncResponse)
     {
