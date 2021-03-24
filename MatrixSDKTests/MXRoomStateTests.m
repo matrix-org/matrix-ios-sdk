@@ -1248,6 +1248,33 @@
     }];
 }
 
+- (void)testDeallocation
+{
+    __weak __block MXRoomState *weakState;
+    [matrixSDKTestsData doMXSessionTestWithBobAndThePublicRoom:self readyToTest:^(MXSession *mxSession2, MXRoom *room, XCTestExpectation *expectation) {
+        mxSession = mxSession2;
+        [room state:^(MXRoomState *roomState) {
+            weakState = roomState;
+            XCTAssertNotNil(weakState);
+            [expectation fulfill];
+        }];
+        [mxSession2 close]; // Force room deallocation
+    }];
+    XCTAssertNil(weakState);
+}
+
+- (void)testCopying
+{
+    [matrixSDKTestsData doMXSessionTestWithBobAndThePublicRoom:self readyToTest:^(MXSession *mxSession2, MXRoom *room, XCTestExpectation *expectation) {
+        mxSession = mxSession2;
+        [room state:^(MXRoomState *roomState) {
+            MXRoomState *roomStateCopy = [roomState copy];
+            XCTAssertEqual(roomStateCopy.members.roomState, roomStateCopy);
+            [expectation fulfill];
+        }];
+    }];
+}
+
 #pragma clang diagnostic pop
 
 @end

@@ -42,15 +42,19 @@
 #import "MXThirdPartyUserInstance.h"
 
 #pragma mark - Constants definitions
-NSString *const kMXCallManagerNewCall               = @"kMXCallManagerNewCall";
-NSString *const kMXCallManagerConferenceStarted     = @"kMXCallManagerConferenceStarted";
-NSString *const kMXCallManagerConferenceFinished    = @"kMXCallManagerConferenceFinished";
-NSString *const kMXCallManagerPSTNSupportUpdated    = @"kMXCallManagerPSTNSupportUpdated";
-NSString *const kMXCallManagerTurnServersReceived   = @"kMXCallManagerTurnServersReceived";
+NSString *const kMXCallManagerNewCall                       = @"kMXCallManagerNewCall";
+NSString *const kMXCallManagerConferenceStarted             = @"kMXCallManagerConferenceStarted";
+NSString *const kMXCallManagerConferenceFinished            = @"kMXCallManagerConferenceFinished";
+NSString *const kMXCallManagerPSTNSupportUpdated            = @"kMXCallManagerPSTNSupportUpdated";
+NSString *const kMXCallManagerVirtualRoomsSupportUpdated    = @"kMXCallManagerVirtualRoomsSupportUpdated";
+NSString *const kMXCallManagerTurnServersReceived           = @"kMXCallManagerTurnServersReceived";
 
 // TODO: Replace usages of this with `kMXProtocolPSTN` when MSC completed
 NSString *const kMXProtocolVectorPSTN = @"im.vector.protocol.pstn";
 NSString *const kMXProtocolPSTN = @"m.protocol.pstn";
+
+NSString *const kMXProtocolVectorSipNative = @"im.vector.protocol.sip_native";
+NSString *const kMXProtocolVectorSipVirtual = @"im.vector.protocol.sip_virtual";
 
 NSTimeInterval const kMXCallDirectRoomJoinTimeout = 30;
 
@@ -79,8 +83,10 @@ NSTimeInterval const kMXCallDirectRoomJoinTimeout = 30;
 }
 
 @property (nonatomic, copy) MXThirdPartyProtocol *pstnProtocol;
+@property (nonatomic, assign, readwrite) BOOL supportsPSTN;
 @property (nonatomic, nullable, readwrite) MXTurnServerResponse *turnServers;
 @property (nonatomic, readwrite) BOOL turnServersReceived;
+@property (nonatomic, assign, readwrite) BOOL virtualRoomsSupported;
 
 @end
 
@@ -110,7 +116,8 @@ NSTimeInterval const kMXCallDirectRoomJoinTimeout = 30;
                                                                 kMXEventTypeStringCallReject,
                                                                 kMXEventTypeStringCallNegotiate,
                                                                 kMXEventTypeStringCallReplaces,
-                                                                kMXEventTypeStringCallRejectReplacement
+                                                                kMXEventTypeStringCallRejectReplacement,
+                                                                kMXEventTypeStringRoomMember
                                                                 ]
                                                       onEvent:^(MXEvent *event, MXTimelineDirection direction, id customObject) {
 
@@ -132,7 +139,7 @@ NSTimeInterval const kMXCallDirectRoomJoinTimeout = 30;
                                                    object:nil];
         
         [self refreshTURNServer];
-        [self checkPSTNSupport];
+        [self checkThirdPartyProtocols];
     }
     return self;
 }
@@ -228,28 +235,79 @@ NSTimeInterval const kMXCallDirectRoomJoinTimeout = 30;
     {
         if (2 == room.summary.membersCount.joined)
         {
-            // Do a peer to peer, one to one call
-            MXCall *call = [[MXCall alloc] initWithRoomId:roomId andCallManager:self];
-            if (call)
-            {
-                [calls addObject:call];
-
-                [call callWithVideo:video];
-
-                // Broadcast the new outgoing call
-                [[NSNotificationCenter defaultCenter] postNotificationName:kMXCallManagerNewCall object:call userInfo:nil];
-
-                if (success)
+            void (^initCall)(NSString *) = ^(NSString *callSignalingRoomId){
+                // Do a peer to peer, one to one call
+                MXCall *call = [[MXCall alloc] initWithRoomId:roomId callSignalingRoomId:callSignalingRoomId andCallManager:self];
+                if (call)
                 {
-                    success(call);
+                    [self->calls addObject:call];
+
+                    [call callWithVideo:video];
+
+                    // Broadcast the new outgoing call
+                    [[NSNotificationCenter defaultCenter] postNotificationName:kMXCallManagerNewCall object:call userInfo:nil];
+
+                    if (success)
+                    {
+                        success(call);
+                    }
+                }
+                else
+                {
+                    if (failure)
+                    {
+                        failure(nil);
+                    }
+                }
+            };
+            
+            if (self.isVirtualRoomsSupported)
+            {
+                NSString *directUserId = room.directUserId;
+                
+                if (directUserId)
+                {
+                    [self getVirtualUserFrom:directUserId success:^(MXThirdPartyUserInstance * _Nonnull user) {
+                        [self directCallableRoomWithVirtualUser:user.userId
+                                                   nativeRoomId:roomId
+                                                        timeout:kMXCallDirectRoomJoinTimeout
+                                                     completion:^(MXRoom * _Nullable roomWithVirtualUser, NSError * _Nullable error) {
+                            if (error)
+                            {
+                                if (failure)
+                                {
+                                    failure(error);
+                                }
+                            }
+                            else
+                            {
+                                initCall(roomWithVirtualUser.roomId);
+                            }
+                        }];
+                    } failure:^(NSError * _Nullable error) {
+                        if (error)
+                        {
+                            //  there is a real error
+                            if (failure)
+                            {
+                                failure(error);
+                            }
+                        }
+                        else
+                        {
+                            //  no virtual user, continue with normal flow
+                            initCall(roomId);
+                        }
+                    }];
+                }
+                else
+                {
+                    initCall(roomId);
                 }
             }
             else
             {
-                if (failure)
-                {
-                    failure(nil);
-                }
+                initCall(roomId);
             }
         }
         else
@@ -336,6 +394,9 @@ NSTimeInterval const kMXCallDirectRoomJoinTimeout = 30;
         case MXEventTypeCallRejectReplacement:
             [self handleCallRejectReplacement:event];
             break;
+        case MXEventTypeRoomMember:
+            [self handleRoomMember:event];
+            break;
         default:
             break;
     }
@@ -403,7 +464,13 @@ NSTimeInterval const kMXCallDirectRoomJoinTimeout = 30;
         MXCall *call = [self callWithCallId:content.callId];
         if (!call)
         {
-            call = [[MXCall alloc] initWithRoomId:event.roomId andCallManager:self];
+            NSString *nativeRoomId = event.roomId;
+            MXRoom *room = [_mxSession roomWithRoomId:event.roomId];
+            if (room.accountData.virtualRoomInfo.isVirtual)
+            {
+                nativeRoomId = room.accountData.virtualRoomInfo.nativeRoomId;
+            }
+            call = [[MXCall alloc] initWithRoomId:nativeRoomId callSignalingRoomId:event.roomId andCallManager:self];
             if (call)
             {
                 [calls addObject:call];
@@ -562,6 +629,44 @@ NSTimeInterval const kMXCallDirectRoomJoinTimeout = 30;
     if (call)
     {
         [call handleCallEvent:event];
+    }
+}
+
+- (void)handleRoomMember:(MXEvent *)event
+{
+    MXRoomMemberEventContent *content = [MXRoomMemberEventContent modelFromJSON:event.content];
+    
+    if ([MXTools membership:content.membership] == MXMembershipInvite)
+    {
+        //  a room invite
+        MXRoom *room = [_mxSession roomWithRoomId:event.roomId];
+        NSString *directUserId = room.directUserId;
+        
+        if (!directUserId && content.isDirect)
+        {
+            directUserId = event.sender;
+        }
+        
+        if (directUserId)
+        {
+            [self getNativeUserFrom:directUserId success:^(MXThirdPartyUserInstance * _Nonnull user) {
+                MXRoom *nativeRoom = [self.mxSession directJoinedRoomWithUserId:user.userId];
+                if (nativeRoom)
+                {
+                    //  auto-accept this invite from the virtual room, if a direct room with the native user found
+                    [room join:^{
+                        NSLog(@"[MXCallManager] handleRoomMember: auto-joined on virtual room successfully.");
+                        
+                        //  set account data on the room, if required
+                        [self.mxSession.roomAccountDataUpdateDelegate updateAccountDataIfRequiredForRoom:room
+                                                                                        withNativeRoomId:nativeRoom.roomId
+                                                                                              completion:nil];
+                    } failure:^(NSError *error) {
+                        NSLog(@"[MXCallManager] handleRoomMember: auto-join on virtual room failed with error: %@", error);
+                    }];
+                }
+            } failure:nil];
+        }
     }
 }
 
@@ -1176,23 +1281,28 @@ NSString *const kMXCallManagerConferenceUserDomain  = @"matrix.org";
     [[NSNotificationCenter defaultCenter] postNotificationName:kMXCallManagerPSTNSupportUpdated object:self];
 }
 
-- (void)checkPSTNSupport
+- (void)checkThirdPartyProtocols
 {
     MXWeakify(self);
-    [_mxSession.matrixRestClient thirdpartyProtocols:^(MXThirdpartyProtocolsResponse *thirdpartyProtocolsResponse) {
+    [_mxSession.matrixRestClient thirdpartyProtocols:^(MXThirdpartyProtocolsResponse *response) {
         MXStrongifyAndReturnIfNil(self);
         
-        MXThirdPartyProtocol *protocol = thirdpartyProtocolsResponse.protocols[kMXProtocolVectorPSTN];
+        MXThirdPartyProtocol *protocol = response.protocols[kMXProtocolVectorPSTN];
         
         if (!protocol)
         {
-            protocol = thirdpartyProtocolsResponse.protocols[kMXProtocolPSTN];
+            protocol = response.protocols[kMXProtocolPSTN];
         }
         
         self.pstnProtocol = protocol;
         
+        MXThirdPartyProtocol *sipNativeProtocol = response.protocols[kMXProtocolVectorSipNative];
+        MXThirdPartyProtocol *sipVirtualProtocol = response.protocols[kMXProtocolVectorSipVirtual];
+        
+        self.virtualRoomsSupported = (sipNativeProtocol && sipVirtualProtocol);
+        
     } failure:^(NSError *error) {
-        NSLog(@"Failed to check for pstn protocol support with error: %@", error);
+        NSLog(@"Failed to check for third party protocols with error: %@", error);
         self.pstnProtocol = nil;
     }];
 }
@@ -1265,6 +1375,203 @@ NSString *const kMXCallManagerConferenceUserDomain  = @"matrix.org";
         }];
         
     } failure:failure];
+}
+
+#pragma mark - Virtual Rooms
+
+- (void)setVirtualRoomsSupported:(BOOL)virtualRoomsSupported
+{
+    if (_virtualRoomsSupported != virtualRoomsSupported)
+    {
+        _virtualRoomsSupported = virtualRoomsSupported;
+        
+        [[NSNotificationCenter defaultCenter] postNotificationName:kMXCallManagerVirtualRoomsSupportUpdated
+                                                            object:self];
+    }
+}
+
+- (void)getVirtualUserFrom:(NSString *)userId
+                   success:(void (^)(MXThirdPartyUserInstance * _Nonnull))success
+                   failure:(void (^)(NSError * _Nullable))failure
+{
+    [_mxSession.matrixRestClient thirdpartyUsers:kMXProtocolVectorSipVirtual
+                                          fields:@{
+                                              @"native_mxid": userId
+                                          }
+                                         success:^(MXThirdPartyUsersResponse *thirdpartyUsersResponse) {
+        
+        MXThirdPartyUserInstance * user = [thirdpartyUsersResponse.users firstObject];
+        
+        NSLog(@"[MXCallManager] getVirtualUserFrom: Succeeded to look up the virtual user: %@", user.userId);
+        
+        if (user && user.userId.length > 0)
+        {
+            if (success)
+            {
+                success(user);
+            }
+        }
+        else
+        {
+            if (failure)
+            {
+                failure(nil);
+            }
+        }
+    } failure:^(NSError *error) {
+        NSLog(@"[MXCallManager] getVirtualUserFrom: Failed to look up the virtual user with error: %@", error);
+        if (failure)
+        {
+            failure(error);
+        }
+    }];
+}
+
+- (void)getNativeUserFrom:(NSString *)userId
+                  success:(void (^)(MXThirdPartyUserInstance * _Nonnull))success
+                  failure:(void (^)(NSError * _Nullable))failure
+{
+    [_mxSession.matrixRestClient thirdpartyUsers:kMXProtocolVectorSipNative
+                                          fields:@{
+                                              @"virtual_mxid": userId
+                                          }
+                                         success:^(MXThirdPartyUsersResponse *thirdpartyUsersResponse) {
+        
+        MXThirdPartyUserInstance * user = [thirdpartyUsersResponse.users firstObject];
+        
+        NSLog(@"[MXCallManager] getNativeUserFrom: Succeeded to look up the native user: %@", user.userId);
+        
+        if (user && user.userId.length > 0)
+        {
+            if (success)
+            {
+                success(user);
+            }
+        }
+        else
+        {
+            if (failure)
+            {
+                failure(nil);
+            }
+        }
+    } failure:^(NSError *error) {
+        NSLog(@"[MXCallManager] getNativeUserFrom: Failed to look up the native user with error: %@", error);
+        if (failure)
+        {
+            failure(error);
+        }
+    }];
+}
+
+/// Tries to find a direct & callable room with the given virtual user. If not such a room found, tries to create it as a virtual room and then waits for the other party to join.
+/// @param userId The virtual user id to check.
+/// @param timeout The timeout for the invited user to join the room, in case of the room is newly created (in seconds).
+/// @param completion Completion block.
+- (void)directCallableRoomWithVirtualUser:(NSString * _Nonnull)userId
+                             nativeRoomId:(NSString * _Nonnull)nativeRoomId
+                                  timeout:(NSTimeInterval)timeout
+                               completion:(void (^_Nonnull)(MXRoom* _Nullable room, NSError * _Nullable error))completion
+{
+    MXRoom *room = [self.mxSession directJoinedRoomWithUserId:userId];
+    if (room)
+    {
+        [room state:^(MXRoomState *roomState) {
+            MXMembership membership = [roomState.members memberWithUserId:userId].membership;
+            
+            if (membership == MXMembershipJoin)
+            {
+                //  other party already joined
+                
+                //  set account data on the room, if required
+                [self.mxSession.roomAccountDataUpdateDelegate updateAccountDataIfRequiredForRoom:room
+                                                                                withNativeRoomId:nativeRoomId
+                                                                                      completion:^(BOOL updated, NSError *error) {
+                    if (updated)
+                    {
+                        completion(room, nil);
+                    }
+                    else
+                    {
+                        completion(nil, error);
+                    }
+                }];
+            }
+            else if (membership == MXMembershipInvite)
+            {
+                //  Wait for other party to join before returning the room
+                __block BOOL joined = NO;
+                
+                __block id listener = [room listenToEventsOfTypes:@[kMXEventTypeStringRoomMember] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
+                    if ([event.sender isEqualToString:userId])
+                    {
+                        MXRoomMemberEventContent *content = [MXRoomMemberEventContent modelFromJSON:event.content];
+                        if (content.membership == kMXMembershipStringJoin)
+                        {
+                            joined = YES;
+                            [room removeListener:listener];
+                            dispatch_async(dispatch_get_main_queue(), ^{
+                                completion(room, nil);
+                            });
+                        }
+                    }
+                }];
+                
+                //  implement the timeout
+                dispatch_after(dispatch_time(DISPATCH_TIME_NOW, timeout * NSEC_PER_SEC), dispatch_get_main_queue(), ^{
+                    if (!joined)
+                    {
+                        //  user failed to join within the given time
+                        completion(nil, nil);
+                    }
+                });
+            }
+            else
+            {
+                completion(nil, nil);
+            }
+        }];
+    }
+    else
+    {
+        //  we're not in a direct room with target, create it
+        [self.mxSession canEnableE2EByDefaultInNewRoomWithUsers:@[userId] success:^(BOOL canEnableE2E) {
+            
+            MXRoomCreationParameters *roomCreationParameters = [MXRoomCreationParameters parametersForDirectRoomWithUser:userId];
+            roomCreationParameters.visibility = kMXRoomDirectoryVisibilityPrivate;
+            roomCreationParameters.creationContent = [MXRoomCreationParameters creationContentForVirtualRoomWithNativeRoomId:nativeRoomId];
+            
+            if (canEnableE2E)
+            {
+                roomCreationParameters.initialStateEvents = @[
+                    [MXRoomCreationParameters initialStateEventForEncryptionWithAlgorithm:kMXCryptoMegolmAlgorithm]
+                ];
+            }
+
+            [self.mxSession createRoomWithParameters:roomCreationParameters success:^(MXRoom *room) {
+                //  set account data on the room, if required
+                MXWeakify(self);
+                [self.mxSession.roomAccountDataUpdateDelegate updateAccountDataIfRequiredForRoom:room
+                                                                                withNativeRoomId:nativeRoomId
+                                                                                      completion:^(BOOL updated, NSError *error) {
+                    MXStrongifyAndReturnIfNil(self);
+                    if (updated)
+                    {
+                        [self directCallableRoomWithUser:userId timeout:timeout completion:completion];
+                    }
+                    else
+                    {
+                        completion(nil, error);
+                    }
+                }];
+            } failure:^(NSError *error) {
+                completion(nil, error);
+            }];
+
+        } failure:^(NSError *error) {
+            completion(nil, error);
+        }];
+    }
 }
 
 #pragma mark - Recent

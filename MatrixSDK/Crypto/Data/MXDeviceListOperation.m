@@ -22,7 +22,7 @@
 
 @interface MXDeviceListOperation ()
 {
-    MXDeviceListOperationsPool *pool;
+    __weak MXDeviceListOperationsPool *pool;
 }
 
 @end

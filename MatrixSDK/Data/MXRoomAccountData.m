@@ -17,6 +17,13 @@
 #import "MXRoomAccountData.h"
 
 #import "MXEvent.h"
+#import "MXRoomCreateContent.h"
+
+@interface MXRoomAccountData ()
+
+@property (nonatomic, readwrite) MXVirtualRoomInfo *virtualRoomInfo;
+
+@end
 
 @implementation MXRoomAccountData
 
@@ -35,6 +42,14 @@
         case MXEventTypeTaggedEvents:
         {
             MXJSONModelSetMXJSONModel(_taggedEvents, MXTaggedEvents, event.content);
+            break;
+        }
+        case MXEventTypeCustom:
+        {
+            if ([event.type isEqualToString:kRoomIsVirtualJSONKey])
+            {
+                self.virtualRoomInfo = [MXVirtualRoomInfo modelFromJSON:event.content];
+            }
             break;
         }
 
@@ -65,6 +80,7 @@
         _tags = [aDecoder decodeObjectForKey:@"tags"];
         _readMarkerEventId = [aDecoder decodeObjectForKey:@"readMarkerEventId"];
         _taggedEvents = [aDecoder decodeObjectForKey:@"taggedEvents"];
+        _virtualRoomInfo = [MXVirtualRoomInfo modelFromJSON:[aDecoder decodeObjectForKey:@"virtualRoomInfo"]];
     }
     return self;
 }
@@ -74,6 +90,7 @@
     [aCoder encodeObject:_tags forKey:@"tags"];
     [aCoder encodeObject:_readMarkerEventId forKey:@"readMarkerEventId"];
     [aCoder encodeObject:_taggedEvents forKey:@"taggedEvents"];
+    [aCoder encodeObject:_virtualRoomInfo.JSONDictionary forKey:@"virtualRoomInfo"];
 }
 
 @end

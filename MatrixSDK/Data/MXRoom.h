@@ -131,6 +131,21 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidFlushDataNotification;
 @property (nonatomic, readonly) MXRoomAccountData *accountData;
 
 /**
+ Sets a custom account data content for a given type.
+ 
+ @param content Content of the account data. Required
+ @param type Type of the account data. Required
+ @param success A block object called when the operation succeeds. Optional
+ @param failure A block object called when the operation fails. Optional
+ 
+ @return an MXHTTPOperation instance
+ */
+- (MXHTTPOperation *)setAccountData:(NSDictionary *)content
+                            forType:(NSString *)type
+                            success:(void (^)(void))success
+                            failure:(void (^)(NSError *))failure NS_REFINED_FOR_SWIFT;
+
+/**
  The text message partially typed by the user but not yet sent.
  The value is stored by the session store. Thus, it can be retrieved
  when the application restarts.

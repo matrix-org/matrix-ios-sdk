@@ -323,6 +323,11 @@ FOUNDATION_EXPORT NSString *const kMXLoginIdentifierTypePhone;
      */
     @property (nonatomic) NSString *thirdPartyInviteToken;
 
+    /**
+     Flag to indicate whether it's a direct room. Only applicable if the membership is `invite`.
+     */
+    @property (nonatomic) BOOL isDirect;
+
 @end
 
 

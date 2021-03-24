@@ -23,6 +23,14 @@
 #import "MXDeviceInfo_Private.h"
 #import "MXCrossSigningInfo_Private.h"
 #import "MXTools.h"
+#import "MatrixSDKSwiftHeader.h"
+
+
+#pragma mark - Constants definitions
+
+// Max number of user to request in /keys/query requests
+static NSUInteger const kMXDeviceListOperationsPoolKeyQueryLimit = 250;
+
 
 @interface MXDeviceListOperationsPool ()
 {
@@ -98,7 +106,7 @@
 
     // Download
     MXWeakify(self);
-    _httpOperation = [crypto.matrixRestClient downloadKeysForUsers:users token:token success:^(MXKeysQueryResponse *keysQueryResponse) {
+    _httpOperation = [crypto.matrixRestClient downloadKeysByChunkForUsers:users token:token chunkSize:kMXDeviceListOperationsPoolKeyQueryLimit success:^(MXKeysQueryResponse *keysQueryResponse) {
         MXStrongifyAndReturnIfNil(self);
 
         NSLog(@"[MXDeviceListOperationsPool] doKeyDownloadForUsers(pool: %p) -> DONE. Got keys for %@ users and %@ devices. Got cross-signing keys for %@ users", self, @(keysQueryResponse.deviceKeys.map.count), @(keysQueryResponse.deviceKeys.count), @(keysQueryResponse.crossSigningKeys.count));

@@ -26,7 +26,17 @@
 
 #import "NSArray+MatrixSDK.h"
 
+#import "MatrixSDKSwiftHeader.h"
+
+@interface MXRoomSummaryUpdater()
+
+@property (nonatomic) MXRoomTypeMapper *roomTypeMapper;
+
+@end
+
 @implementation MXRoomSummaryUpdater
+
+#pragma mark - Setup
 
 + (instancetype)roomSummaryUpdaterForSession:(MXSession *)mxSession
 {
@@ -47,6 +57,29 @@
     return updater;
 }
 
+- (instancetype)init
+{
+    self = [super init];
+    if (self)
+    {
+        _showNilOrEmptyRoomType = YES;
+        _defaultRoomType = MXRoomTypeRoom;
+        _roomTypeMapper = [[MXRoomTypeMapper alloc] initWithDefaultRoomType:_defaultRoomType];
+    }
+    return self;
+}
+
+#pragma mark - Properties
+
+- (void)setDefaultRoomType:(MXRoomType)defaultRoomType
+{
+    if (_defaultRoomType != defaultRoomType)
+    {
+        _defaultRoomType = defaultRoomType;
+        
+        self.roomTypeMapper.defaultRoomType = defaultRoomType;
+    }
+}
 
 #pragma mark - MXRoomSummaryUpdating
 
@@ -84,6 +117,15 @@
         if (!_ignoreMemberProfileChanges || !event.isUserProfileChange)
         {
             summary.lastMessageEvent = event;
+            updated = YES;
+        }
+    }
+    else if ([event.type isEqualToString:kRoomIsVirtualJSONKey])
+    {
+        MXVirtualRoomInfo *virtualRoomInfo = [MXVirtualRoomInfo modelFromJSON:event.content];
+        if (virtualRoomInfo.isVirtual)
+        {
+            summary.hiddenFromUser = YES;
             updated = YES;
         }
     }
@@ -170,9 +212,20 @@
             }
                 
             case MXEventTypeRoomCreate:
+            {
+                MXRoomCreateContent *createContent = [MXRoomCreateContent modelFromJSON:event.content];
                 summary.creatorUserId = roomState.creatorUserId;
-                updated = YES;                
-                [self checkRoomCreateStateEventPredecessorAndUpdateObsoleteRoomSummaryIfNeededWithCreateEvent:event summary:summary session:session roomState:roomState];
+
+                NSString *roomTypeString = createContent.roomType;
+                
+                summary.roomTypeString = createContent.roomType;
+                summary.roomType = [self.roomTypeMapper roomTypeFrom:roomTypeString];
+                summary.hiddenFromUser = [self shouldHideRoomWithRoomTypeString:roomTypeString];
+                
+                updated = YES;
+                [self checkRoomCreateStateEventPredecessorAndUpdateObsoleteRoomSummaryIfNeededWithCreateContent:createContent summary:summary session:session roomState:roomState];
+                [self checkRoomIsVirtualWithCreateEvent:event summary:summary session:session];
+            }
                 break;
                 
             default:
@@ -247,10 +300,8 @@
 // Hide tombstoned room predecessor from user only if the user joined the current room
 // Important: Room predecessor summary could not be present in memory when making this process,
 // in this case it should be processed when checking the room predecessor in `checkForTombStoneStateEventAndUpdateRoomSummaryIfNeeded:session:room:`.
-- (void)checkRoomCreateStateEventPredecessorAndUpdateObsoleteRoomSummaryIfNeededWithCreateEvent:(MXEvent*)createEvent summary:(MXRoomSummary*)summary session:(MXSession*)session roomState:(MXRoomState*)roomState
+- (void)checkRoomCreateStateEventPredecessorAndUpdateObsoleteRoomSummaryIfNeededWithCreateContent:(MXRoomCreateContent*)createContent summary:(MXRoomSummary*)summary session:(MXSession*)session roomState:(MXRoomState*)roomState
 {
-    MXRoomCreateContent *createContent = [MXRoomCreateContent modelFromJSON:createEvent.content];
-    
     if (createContent.roomPredecessorInfo)
     {
         MXRoomSummary *obsoleteRoomSummary = [session roomSummaryWithRoomId:createContent.roomPredecessorInfo.roomId];
@@ -262,6 +313,16 @@
         {
             [obsoleteRoomSummary save:YES];
         }
+    }
+}
+
+- (void)checkRoomIsVirtualWithCreateEvent:(MXEvent*)createEvent summary:(MXRoomSummary*)summary session:(MXSession *)session
+{
+    MXRoomCreateContent *createContent = [MXRoomCreateContent modelFromJSON:createEvent.content];
+    
+    if (createContent.virtualRoomInfo.isVirtual && [summary.creatorUserId isEqualToString:createEvent.sender])
+    {
+        summary.hiddenFromUser = YES;
     }
 }
 
@@ -564,5 +625,26 @@
 
     return otherMembers;
 }
+
+- (BOOL)shouldHideRoomWithRoomTypeString:(NSString*)roomTypeString
+{
+    BOOL hiddenFromUser = NO;
+    
+    if (!roomTypeString.length)
+    {
+        hiddenFromUser = !self.showNilOrEmptyRoomType;
+    }
+    else if (self.showRoomTypeStrings.count)
+    {
+        hiddenFromUser = NO == [self.showRoomTypeStrings containsObject:roomTypeString];
+    }
+    else
+    {
+        hiddenFromUser = YES;
+    }
+    
+    return hiddenFromUser;
+}
+
 
 @end

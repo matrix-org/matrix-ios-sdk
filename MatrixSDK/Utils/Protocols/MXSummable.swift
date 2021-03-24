@@ -1,5 +1,5 @@
 // 
-// Copyright 2020 The Matrix.org Foundation C.I.C
+// Copyright 2021 The Matrix.org Foundation C.I.C
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,11 +14,8 @@
 // limitations under the License.
 //
 
-#ifndef MatrixSDKTests_Bridging_Header_h
-#define MatrixSDKTests_Bridging_Header_h
+import Foundation
 
-#import "MatrixSDKTestsData.h"
-#import "MatrixSDKTestsE2EData.h"
-#import "MXDeviceListOperationsPool.h"
-
-#endif /* MatrixSDKTests_Bridging_Header_h */
+public protocol MXSummable {
+    static func +(lhs: Self, rhs: Self) -> Self
+}
