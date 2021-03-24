@@ -102,4 +102,12 @@
     XCTAssertEqualObjects([MXTools encodeURIComponent:string], @"%2Bmatrix%3Amatrix.org");
 }
 
+
+#pragma mark - File extensions
+
+- (void)testFileExtensionFromImageJPEGContentType
+{
+    XCTAssertEqualObjects([MXTools fileExtensionFromContentType:@"image/jpeg"], @".jpeg");
+}
+
 @end

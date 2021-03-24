@@ -17,6 +17,7 @@ Changes to be released in next version
  * MXDeviceListOperation: Fix memory leak.
  * MXRoomState/MXRoomMembers: Fix memory leak and copying.
  * MXKeyBackup: Add sanity checks to avoid crashes (vector-im/element-ios/issues/4113).
+ * MXTools: Avoid releasing null pointer to fix crash on M1 simulator (vector-im/element-ios/issues/4140)
 
 ⚠️ API Changes
  * 
