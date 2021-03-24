@@ -275,11 +275,14 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
     {
         MXKeyBackupData *keyBackupData = [self encryptGroupSession:session];
 
-        if (!roomsKeyBackup[session.roomId])
+        if (keyBackupData)
         {
-            roomsKeyBackup[session.roomId] = [NSMutableDictionary dictionary];
+            if (!roomsKeyBackup[session.roomId])
+            {
+                roomsKeyBackup[session.roomId] = [NSMutableDictionary dictionary];
+            }
+            roomsKeyBackup[session.roomId][session.session.sessionIdentifier] = keyBackupData;
         }
-        roomsKeyBackup[session.roomId][session.session.sessionIdentifier] = keyBackupData;
     }
 
     NSLog(@"[MXKeyBackup] sendKeyBackup: 3 - Finalising data to send");
@@ -1526,10 +1529,21 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
 {
     // Gather information for each key
     MXDeviceInfo *device = [crypto.deviceList deviceWithIdentityKey:session.senderKey andAlgorithm:kMXCryptoMegolmAlgorithm];
+    if (!device)
+    {
+        NSLog(@"[MXKeyBackup] encryptGroupSession: Error: Cannot find device for %@", session.senderKey);
+        return nil;
+    }
 
     // Build the m.megolm_backup.v1.curve25519-aes-sha2 data as defined at
     // https://github.com/uhoreg/matrix-doc/blob/e2e_backup/proposals/1219-storing-megolm-keys-serverside.md#mmegolm_backupv1curve25519-aes-sha2-key-format
     MXMegolmSessionData *sessionData = session.exportSessionData;
+    if (![self checkMXMegolmSessionData:sessionData])
+    {
+        NSLog(@"[MXKeyBackup] encryptGroupSession: Error: Invalid MXMegolmSessionData for %@", session.senderKey);
+        return nil;
+    }
+    
     NSDictionary *sessionBackupData = @{
                                         @"algorithm": sessionData.algorithm,
                                         @"sender_key": sessionData.senderKey,
@@ -1538,6 +1552,11 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
                                         @"session_key": sessionData.sessionKey
                                         };
     OLMPkMessage *encryptedSessionBackupData = [_backupKey encryptMessage:[MXTools serialiseJSONObject:sessionBackupData] error:nil];
+    if (![self checkOLMPkMessage:encryptedSessionBackupData])
+    {
+        NSLog(@"[MXKeyBackup] encryptGroupSession: Error: Invalid OLMPkMessage for %@", session.senderKey);
+        return nil;
+    }
 
     // Build backup data for that key
     MXKeyBackupData *keyBackupData = [MXKeyBackupData new];
@@ -1551,6 +1570,55 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
                                   };
 
     return keyBackupData;
+}
+
+// Sanity checks on MXMegolmSessionData
+- (BOOL)checkMXMegolmSessionData:(MXMegolmSessionData*)sessionData
+{
+    if (!sessionData.algorithm)
+    {
+        NSLog(@"[MXKeyBackup] checkMXMegolmSessionData: missing algorithm");
+        return NO;
+    }
+    if (!sessionData.senderKey)
+    {
+        NSLog(@"[MXKeyBackup] checkMXMegolmSessionData: missing senderKey");
+        return NO;
+    }
+    if (!sessionData.senderClaimedKeys)
+    {
+        NSLog(@"[MXKeyBackup] checkMXMegolmSessionData: missing senderClaimedKeys");
+        return NO;
+    }
+    if (!sessionData.sessionKey)
+    {
+        NSLog(@"[MXKeyBackup] checkMXMegolmSessionData: missing sessionKey");
+        return NO;
+    }
+    
+    return YES;
+}
+
+// Sanity checks on OLMPkMessage
+- (BOOL)checkOLMPkMessage:(OLMPkMessage*)message
+{
+    if (!message.ciphertext)
+    {
+        NSLog(@"[MXKeyBackup] checkOLMPkMessage: missing ciphertext");
+        return NO;
+    }
+    if (!message.mac)
+    {
+        NSLog(@"[MXKeyBackup] checkOLMPkMessage: missing mac");
+        return NO;
+    }
+    if (!message.ephemeralKey)
+    {
+        NSLog(@"[MXKeyBackup] checkOLMPkMessage: missing ephemeralKey");
+        return NO;
+    }
+
+    return YES;
 }
 
 - (MXMegolmSessionData*)decryptKeyBackupData:(MXKeyBackupData*)keyBackupData forSession:(NSString*)sessionId inRoom:(NSString*)roomId withPkDecryption:(OLMPkDecryption*)decryption

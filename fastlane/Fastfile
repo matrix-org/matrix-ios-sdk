@@ -19,33 +19,22 @@ platform :ios do
   desc "Lint all podspecs"
   lane :lint_pods do
     lint_pod_MatrixSDK
-    lint_pod_SwiftMatrixSDK
   end
 
   desc "Lint MatrixSDK podspec"
   lane :lint_pod_MatrixSDK do
-    custom_pod_lib_lint(podspec: "../MatrixSDK.podspec", parameters: ["--allow-warnings", "--verbose"])
-  end
-
-  desc "Lint SwiftMatrixSDK podspec"
-  lane :lint_pod_SwiftMatrixSDK do
-    custom_pod_lib_lint(podspec: "../SwiftMatrixSDK.podspec", parameters: ["--allow-warnings", "--verbose"])
+    # Use Debug config to divide build time by 3
+    custom_pod_lib_lint(podspec: "../MatrixSDK.podspec", parameters: ["--allow-warnings", "--fail-fast", "--configuration=Debug"])
   end
 
   desc "Push all pods"
   lane :push_pods do
     push_pod_MatrixSDK
-    push_pod_SwiftMatrixSDK
   end
 
   desc "Push MatrixSDK pod"
   lane :push_pod_MatrixSDK do
     pod_push(path: "MatrixSDK.podspec", allow_warnings: true)
-  end
-
-  desc "Push SwiftMatrixSDK pod"
-  lane :push_pod_SwiftMatrixSDK do
-    pod_push(path: "SwiftMatrixSDK.podspec", allow_warnings: true)
   end
 
   #### Build ####

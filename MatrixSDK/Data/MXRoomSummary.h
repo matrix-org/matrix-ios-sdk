@@ -24,6 +24,7 @@
 #import "MXEnumConstants.h"
 #import "MXUsersTrustLevelSummary.h"
 #import "MXMembershipTransitionState.h"
+#import "MXRoomType.h"
 
 @class MXSession, MXRoom, MXRoomState, MXEvent;
 @protocol MXStore;
@@ -136,6 +137,16 @@ FOUNDATION_EXPORT NSString *const kMXRoomSummaryDidChangeNotification;
 - (void)save:(BOOL)commit;
 
 #pragma mark - Data related to room state
+
+/**
+ The room type string value as provided by the server. Can be nil.
+ */
+@property (nonatomic) NSString *roomTypeString;
+
+/**
+ The locally computed room type derivated from `roomTypeString`.
+ */
+@property (nonatomic) MXRoomType roomType;
 
 /**
  The Matrix content URI of the room avatar.
@@ -311,6 +322,18 @@ FOUNDATION_EXPORT NSString *const kMXRoomSummaryDidChangeNotification;
 /// Update membership transition state and notify update if needed
 /// @param membershipTransitionState The new membership transition state value
 - (void)updateMembershipTransitionState:(MXMembershipTransitionState)membershipTransitionState;
+
+
+/**
+ Start computing and maintaining the trust value of this room.
+ 
+ `MXSDKOptions.computeE2ERoomSummaryTrust` allows to compute trusts for all rooms automatically but it comsumes
+ resources.
+ 
+ @param enable YES to enable trust computation.
+ */
+- (void)enableTrustTracking:(BOOL)enable;
+
 
 #pragma mark - Server sync
 

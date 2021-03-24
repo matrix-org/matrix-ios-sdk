@@ -57,6 +57,9 @@ NS_ASSUME_NONNULL_BEGIN
 // A list of state events to set in the new room.
 @property (nonatomic, nullable) NSArray<NSDictionary*> *initialStateEvents;
 
+// Extra keys to be added to the content of `m.room.create` event
+@property (nonatomic, nullable) NSDictionary<NSString*, NSString*> *creationContent;
+
 
 /**
  Return the data as a JSON dictionary.
@@ -75,6 +78,8 @@ NS_ASSUME_NONNULL_BEGIN
 + (instancetype)parametersForDirectRoomWithUser:(NSString*)userId;
 
 + (NSDictionary*)initialStateEventForEncryptionWithAlgorithm:(NSString*)algorithm;
+
++ (NSDictionary *)creationContentForVirtualRoomWithNativeRoomId:(NSString *)roomId;
 
 @end
 

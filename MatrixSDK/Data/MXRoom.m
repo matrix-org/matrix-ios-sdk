@@ -2616,6 +2616,18 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
     return [mxSession.matrixRestClient updateTaggedEvents:_roomId withContent:_accountData.taggedEvents success:success failure:failure];
 }
 
+- (MXHTTPOperation *)setAccountData:(NSDictionary *)content
+                            forType:(NSString *)type
+                            success:(void (^)(void))success
+                            failure:(void (^)(NSError *))failure
+{
+    return [mxSession.matrixRestClient setRoomAccountData:_roomId
+                                                eventType:type
+                                           withParameters:content
+                                                  success:success
+                                                  failure:failure];
+}
+
 #pragma mark - Voice over IP
 - (void)placeCallWithVideo:(BOOL)video
                    success:(void (^)(MXCall *call))success

@@ -1,3 +1,40 @@
+Changes in 0.18.6 (2021-03-24)
+=================================================
+
+✨ Features
+ * 
+
+🙌 Improvements
+ * Support room type as described in MSC1840 (vector-im/element-ios/issues/4050).
+ * Pods: Update JitsiMeetSDK, OHHTTPStubs, Realm (vector-im/element-ios/issues/4120).
+ * MXCrypto: Do not load room members in e2e rooms after an initial sync.
+ * MXRoomSummary: Add enableTrustTracking() to compute and maintain trust value for the given room (vector-im/element-ios/issues/4115).
+ * VoIP: Virtual rooms implementation.
+ * MXCrypto: Split network request `/keys/query` into smaller requests (250 users max) (vector-im/element-ios/issues/4123).
+
+🐛 Bugfix
+ * MXDeviceList: Fix memory leak.
+ * MXDeviceListOperation: Fix memory leak.
+ * MXRoomState/MXRoomMembers: Fix memory leak and copying.
+ * MXKeyBackup: Add sanity checks to avoid crashes (vector-im/element-ios/issues/4113).
+ * MXTools: Avoid releasing null pointer to fix crash on M1 simulator (vector-im/element-ios/issues/4140)
+
+⚠️ API Changes
+ * 
+
+🗣 Translations
+ * 
+    
+🧱 Build
+ * build.sh: Support passing CFBundleShortVersionString and CFBundleVersion when building an xcframework.
+ * build.sh: When building an xcframework, zip the binary ready for distribution.
+
+Others
+ * GitHub Actions: Run pod lib lint
+
+Improvements:
+
+
 Changes in 0.18.5 (2021-03-11)
 =================================================
 
