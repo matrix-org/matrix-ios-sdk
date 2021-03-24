@@ -785,13 +785,15 @@ static NSMutableDictionary *fileExtensionByContentType = nil;
             CFStringRef mimeType = (__bridge CFStringRef)contentType;
             CFStringRef uti = UTTypeCreatePreferredIdentifierForTag(kUTTagClassMIMEType, mimeType, NULL);
             
-            NSString* extension = (__bridge_transfer NSString *)UTTypeCopyPreferredTagWithClass(uti, kUTTagClassFilenameExtension);
+            if (uti) {
+                NSString* extension = (__bridge_transfer NSString *)UTTypeCopyPreferredTagWithClass(uti, kUTTagClassFilenameExtension);
             
-            CFRelease(uti);
+                CFRelease(uti);
             
-            if (extension)
-            {
-                fileExt = [NSString stringWithFormat:@".%@", extension];
+                if (extension)
+                {
+                    fileExt = [NSString stringWithFormat:@".%@", extension];
+                }
             }
         }
         
