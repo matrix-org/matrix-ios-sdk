@@ -1,4 +1,4 @@
-Changes to be released in next version
+Changes in 0.18.6 (2021-03-24)
 =================================================
 
 ✨ Features
@@ -31,6 +31,9 @@ Changes to be released in next version
 
 Others
  * GitHub Actions: Run pod lib lint
+
+Improvements:
+
 
 Changes in 0.18.5 (2021-03-11)
 =================================================
