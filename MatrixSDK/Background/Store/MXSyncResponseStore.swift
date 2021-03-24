@@ -28,6 +28,9 @@ import Foundation
     /// Sync response object, currently stored in the store
     var syncResponse: MXSyncResponse? { get set }
     
+    /// User account data
+    var accountData: [AnyHashable : Any]? { get set }
+    
     /// Fetch event in the store
     /// - Parameters:
     ///   - eventId: Event identifier to be fetched.
@@ -38,6 +41,15 @@ import Foundation
     /// - Parameter roomId: Room identifier to be fetched
     /// - Parameter summary: A room summary (if exists) which user had before a sync response
     func roomSummary(forRoomId roomId: String, using summary: MXRoomSummary?) -> MXRoomSummary?
+    
+    
+    //    var syncResponsesByPrevBatch: [String] { get }
+    //
+    //    func markSyncResponseAsObsolete()
+    //    var obsoleteSyncResponseIds: [String] { get }
+    //
+    //    func syncResponse(withId id: String) -> MXSyncResponse
+    
     
     /// Delete all data in the store
     func deleteData()

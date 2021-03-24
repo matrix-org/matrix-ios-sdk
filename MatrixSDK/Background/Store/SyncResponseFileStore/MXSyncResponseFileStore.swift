@@ -23,11 +23,13 @@ public class MXSyncResponseFileStore: NSObject {
     private enum Constants {
         static let folderName = "SyncResponse"
         static let fileName = "syncResponse"
+        static let metadataFileName = "syncResponseMetadata"
         static let fileEncoding: String.Encoding = .utf8
     }
     
     private let fileOperationQueue: DispatchQueue
     private var filePath: URL!
+    private var metadataFilePath: URL!
     private var credentials: MXCredentials!
     
     public override init() {
@@ -50,6 +52,11 @@ public class MXSyncResponseFileStore: NSObject {
             .appendingPathComponent(Constants.folderName)
             .appendingPathComponent(userId)
             .appendingPathComponent(Constants.fileName)
+        
+        metadataFilePath = cachePath
+            .appendingPathComponent(Constants.folderName)
+            .appendingPathComponent(userId)
+            .appendingPathComponent(Constants.metadataFileName)
         
         fileOperationQueue.async {
             try? FileManager.default.createDirectory(at: self.filePath.deletingLastPathComponent(),
@@ -110,6 +117,44 @@ public class MXSyncResponseFileStore: NSObject {
         }
     }
     
+    private func readMetaData() -> MXSyncResponseStoreMetaDataModel? {
+        guard let metadataFilePath = metadataFilePath else {
+            return nil
+        }
+        
+        guard let data = NSKeyedUnarchiver.unarchiveObject(withFile: metadataFilePath.path) as? Data else {
+            NSLog("[MXSyncResponseFileStore] readMetaData: Failed to read file")
+            return nil
+        }
+        
+        do {
+            let metadata = try PropertyListDecoder().decode(MXSyncResponseStoreMetaDataModel.self, from: data)
+            return metadata
+        } catch let error {
+            NSLog("[MXSyncResponseFileStore] readMetaData: Failed to decode. Error: \(error)")
+            return nil
+        }
+    }
+    
+    private func saveMetaData(_ metadata: MXSyncResponseStoreMetaDataModel?) {
+        guard let metadataFilePath = metadataFilePath else {
+            return
+        }
+        
+        guard let metadata = metadata else {
+            try? FileManager.default.removeItem(at: metadataFilePath)
+            NSLog("[MXSyncResponseFileStore] saveMetaData: Remove file")
+            return
+        }
+        fileOperationQueue.async {
+            do {
+                let data = try PropertyListEncoder().encode(metadata)
+                NSKeyedArchiver.archiveRootObject(data, toFile:metadataFilePath.path)
+            } catch let error {
+                NSLog("[MXSyncResponseFileStore] saveMetaData: Failed to store. Error: \(error)")
+            }
+        }
+    }
 }
 
 //  MARK: - MXSyncResponseStore
@@ -146,6 +191,17 @@ extension MXSyncResponseFileStore: MXSyncResponseStore {
                 data.syncResponse = newValue
                 saveData(data)
             }
+        }
+    }
+    
+    public var accountData: [AnyHashable : Any]? {
+        get {
+            return readMetaData()?.accountData
+        }
+        set {
+            var metadata = readMetaData() ?? MXSyncResponseStoreMetaDataModel()
+            metadata.accountData = newValue
+            saveMetaData(metadata)
         }
     }
     

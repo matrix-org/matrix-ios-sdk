@@ -45,6 +45,8 @@
 		320DFDE619DD99B60068622A /* MXHTTPClient.h in Headers */ = {isa = PBXBuildFile; fileRef = 320DFDD719DD99B60068622A /* MXHTTPClient.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		320DFDE719DD99B60068622A /* MXHTTPClient.m in Sources */ = {isa = PBXBuildFile; fileRef = 320DFDD819DD99B60068622A /* MXHTTPClient.m */; };
 		320E1BC11E0AD674009635F5 /* MXRoomSummaryTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 320E1BC01E0AD674009635F5 /* MXRoomSummaryTests.m */; };
+		320F7D2C260A8E3B00EF8608 /* MXSyncResponseStoreMetaDataModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 320F7D2B260A8E3B00EF8608 /* MXSyncResponseStoreMetaDataModel.swift */; };
+		320F7D2D260A8E3B00EF8608 /* MXSyncResponseStoreMetaDataModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 320F7D2B260A8E3B00EF8608 /* MXSyncResponseStoreMetaDataModel.swift */; };
 		32114A7F1A24E15500FF2EC4 /* MXMyUserTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 32114A7E1A24E15500FF2EC4 /* MXMyUserTests.m */; };
 		32114A851A262CE000FF2EC4 /* MXStore.h in Headers */ = {isa = PBXBuildFile; fileRef = 32114A841A262CE000FF2EC4 /* MXStore.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		32114A8F1A262ECB00FF2EC4 /* MXNoStore.h in Headers */ = {isa = PBXBuildFile; fileRef = 32114A8D1A262ECB00FF2EC4 /* MXNoStore.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -1434,6 +1436,7 @@
 		320DFDD719DD99B60068622A /* MXHTTPClient.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXHTTPClient.h; sourceTree = "<group>"; };
 		320DFDD819DD99B60068622A /* MXHTTPClient.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXHTTPClient.m; sourceTree = "<group>"; };
 		320E1BC01E0AD674009635F5 /* MXRoomSummaryTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXRoomSummaryTests.m; sourceTree = "<group>"; };
+		320F7D2B260A8E3B00EF8608 /* MXSyncResponseStoreMetaDataModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXSyncResponseStoreMetaDataModel.swift; sourceTree = "<group>"; };
 		32114A7E1A24E15500FF2EC4 /* MXMyUserTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXMyUserTests.m; sourceTree = "<group>"; };
 		32114A841A262CE000FF2EC4 /* MXStore.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXStore.h; sourceTree = "<group>"; };
 		32114A8D1A262ECB00FF2EC4 /* MXNoStore.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXNoStore.h; sourceTree = "<group>"; };
@@ -3591,6 +3594,7 @@
 			children = (
 				EC1EFA2F2567F6570089C01D /* MXSyncResponseStoreModel.h */,
 				EC1EFA302567F6570089C01D /* MXSyncResponseStoreModel.m */,
+				320F7D2B260A8E3B00EF8608 /* MXSyncResponseStoreMetaDataModel.swift */,
 			);
 			path = Model;
 			sourceTree = "<group>";
@@ -4779,6 +4783,7 @@
 				3281E8BA19E42DFE00976E1A /* MXJSONModels.m in Sources */,
 				3245A7531AF7B2930001D8A7 /* MXCallManager.m in Sources */,
 				32E226A71D06AC9F00E6CA54 /* MXPeekingRoom.m in Sources */,
+				320F7D2C260A8E3B00EF8608 /* MXSyncResponseStoreMetaDataModel.swift in Sources */,
 				021AFBA72179E91900742B2C /* MXEncryptedContentFile.m in Sources */,
 				3220094619EFBF30008DE41D /* MXSessionEventListener.m in Sources */,
 				320B393C239FD15E00BE2C06 /* MXKeyVerificationRequest.m in Sources */,
@@ -5267,6 +5272,7 @@
 				32CEEF5223B0AB030039BA98 /* MXCrossSigning.m in Sources */,
 				324DD2C8246E638B00377005 /* MXAesHmacSha2.m in Sources */,
 				B14EF2862397E90400758AF0 /* MXRealmMediaScanStore.m in Sources */,
+				320F7D2D260A8E3B00EF8608 /* MXSyncResponseStoreMetaDataModel.swift in Sources */,
 				B14EF2872397E90400758AF0 /* MXPusherData.m in Sources */,
 				324DD2A3246AE1EF00377005 /* MXEncryptedSecretContent.m in Sources */,
 				EC8A53B625B1BC77004E0802 /* MXCallHangupEventContent.m in Sources */,

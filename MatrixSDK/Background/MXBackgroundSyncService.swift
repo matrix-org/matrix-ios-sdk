@@ -62,9 +62,10 @@ public enum MXBackgroundSyncServiceError: Error {
         // We can flush any crypto data if our sync response store is empty
         let resetBackgroundCryptoStore = syncResponseStore.syncResponse == nil
         cryptoStore = MXBackgroundCryptoStore(credentials: credentials, resetBackgroundCryptoStore: resetBackgroundCryptoStore)
+        
         olmDevice = MXOlmDevice(store: cryptoStore)
         pushRulesManager = MXBackgroundPushRulesManager(withCredentials: credentials)
-        if let accountData = syncResponseStore.syncResponse?.accountData {
+        if let accountData = syncResponseStore.accountData {
             pushRulesManager.handleAccountData(accountData)
         } else if let accountData = store.userAccountData ?? nil {
             pushRulesManager.handleAccountData(accountData)
@@ -488,6 +489,10 @@ public enum MXBackgroundSyncServiceError: Error {
         } else {
             //  no current sync response, directly save the new one
             syncResponseStore.syncResponse = newResponse
+        }
+        
+        if let accountData = newResponse.accountData {
+            syncResponseStore.accountData = accountData
         }
     }
     
