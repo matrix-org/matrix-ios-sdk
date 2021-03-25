@@ -122,7 +122,7 @@ public enum MXBackgroundSyncServiceError: Error {
     /// - Parameter roomId: The room identifier to fetch.
     /// - Returns: Summary of room.
     public func roomSummary(forRoomId roomId: String) -> MXRoomSummary? {
-        return syncResponseStore.roomSummary(forRoomId: roomId, using: store.summary?(ofRoom: roomId))
+        return syncResponseStoreManager.roomSummary(forRoomId: roomId, using: store.summary?(ofRoom: roomId))
     }
     
     /// Fetch push rule matching an event.
@@ -212,7 +212,7 @@ public enum MXBackgroundSyncServiceError: Error {
             handleEncryption(forEvent: cachedEvent)
         } else {
             //  do not call the /event api and just check if the event exists in the store
-            let event = syncResponseStore.event(withEventId: eventId, inRoom: roomId)
+            let event = syncResponseStoreManager.event(withEventId: eventId, inRoom: roomId)
                 // Disable read access to MXSession store because it consumes too much RAM
                 // and RAM is limited when running an app extension
                 // TODO: Find a way to reuse MXSession store data
@@ -291,7 +291,7 @@ public enum MXBackgroundSyncServiceError: Error {
 
                 self.handleSyncResponse(syncResponse, syncToken: eventStreamToken)
                 
-                if let event = self.syncResponseStore.event(withEventId: eventId, inRoom: roomId),
+                if let event = self.syncResponseStoreManager.event(withEventId: eventId, inRoom: roomId),
                     !self.canDecryptEvent(event),
                     (syncResponse.toDevice?.events ?? []).count > 0 {
                     //  we got the event but not the keys to decrypt it. continue to sync

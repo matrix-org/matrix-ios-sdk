@@ -84,4 +84,107 @@ public class MXSyncResponseStoreManager: NSObject {
             syncResponseStore.accountData = accountData
         }
     }
+    
+    /// Fetch event in the store
+    /// - Parameters:
+    ///   - eventId: Event identifier to be fetched.
+    ///   - roomId: Room identifier to be fetched.
+    public func event(withEventId eventId: String, inRoom roomId: String) -> MXEvent? {
+        guard let response = syncResponseStore.syncResponse else {
+            return nil
+        }
+        
+        var allEvents: [MXEvent] = []
+        if let joinedRoomSync = response.syncResponse.rooms.join[roomId] {
+            allEvents.appendIfNotNil(contentsOf: joinedRoomSync.state?.events)
+            allEvents.appendIfNotNil(contentsOf: joinedRoomSync.timeline?.events)
+            allEvents.appendIfNotNil(contentsOf: joinedRoomSync.accountData?.events)
+        }
+        if let invitedRoomSync = response.syncResponse.rooms.invite[roomId] {
+            allEvents.appendIfNotNil(contentsOf: invitedRoomSync.inviteState?.events)
+        }
+        if let leftRoomSync = response.syncResponse.rooms.leave[roomId] {
+            allEvents.appendIfNotNil(contentsOf: leftRoomSync.state?.events)
+            allEvents.appendIfNotNil(contentsOf: leftRoomSync.timeline?.events)
+            allEvents.appendIfNotNil(contentsOf: leftRoomSync.accountData?.events)
+        }
+        
+        let result = allEvents.first(where: { eventId == $0.eventId })
+        result?.roomId = roomId
+        
+        NSLog("[MXSyncResponseStoreManager] eventWithEventId: \(eventId) \(result == nil ? "not " : "" )found")
+        
+        return result
+    }
+    
+    /// Fetch room summary for an invited room. Just uses the data in syncResponse to guess the room display name
+    /// - Parameter roomId: Room identifier to be fetched
+    /// - Parameter summary: A room summary (if exists) which user had before a sync response
+    public func roomSummary(forRoomId roomId: String, using summary: MXRoomSummary?) -> MXRoomSummary? {
+        guard let response = syncResponseStore.syncResponse else {
+            return summary
+        }
+        guard let summary = summary ?? MXRoomSummary(roomId: roomId, andMatrixSession: nil) else {
+            return nil
+        }
+        
+        var eventsToProcess: [MXEvent] = []
+        
+        if let invitedRoomSync = response.syncResponse.rooms.invite[roomId],
+           let stateEvents = invitedRoomSync.inviteState?.events {
+            eventsToProcess.append(contentsOf: stateEvents)
+        }
+        
+        if let joinedRoomSync = response.syncResponse.rooms.join[roomId] {
+            if let stateEvents = joinedRoomSync.state?.events {
+                eventsToProcess.append(contentsOf: stateEvents)
+            }
+            if let timelineEvents = joinedRoomSync.timeline?.events {
+                eventsToProcess.append(contentsOf: timelineEvents)
+            }
+        }
+        
+        if let leftRoomSync = response.syncResponse.rooms.leave[roomId] {
+            if let stateEvents = leftRoomSync.state?.events {
+                eventsToProcess.append(contentsOf: stateEvents)
+            }
+            if let timelineEvents = leftRoomSync.timeline?.events {
+                eventsToProcess.append(contentsOf: timelineEvents)
+            }
+        }
+        
+        for event in eventsToProcess {
+            switch event.eventType {
+                case .roomAliases:
+                    if summary.displayname == nil {
+                        summary.displayname = (event.content["aliases"] as? [String])?.first
+                    }
+                case .roomCanonicalAlias:
+                    if summary.displayname == nil {
+                        summary.displayname = event.content["alias"] as? String
+                        if summary.displayname == nil {
+                            summary.displayname = (event.content["alt_aliases"] as? [String])?.first
+                        }
+                    }
+                case .roomName:
+                    summary.displayname = event.content["name"] as? String
+                default:
+                    break
+            }
+        }
+        return summary
+    }
+}
+
+
+//  MARK: - Private
+
+private extension Array {
+    
+    mutating func appendIfNotNil(contentsOf array: Array?) {
+        if let array = array {
+            append(contentsOf: array)
+        }
+    }
+    
 }

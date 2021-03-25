@@ -28,26 +28,6 @@ import Foundation
     /// User account data
     var accountData: [AnyHashable : Any]? { get set }
     
-    /// Fetch event in the store
-    /// - Parameters:
-    ///   - eventId: Event identifier to be fetched.
-    ///   - roomId: Room identifier to be fetched.
-    func event(withEventId eventId: String, inRoom roomId: String) -> MXEvent?
-    
-    /// Fetch room summary for an invited room. Just uses the data in syncResponse to guess the room display name
-    /// - Parameter roomId: Room identifier to be fetched
-    /// - Parameter summary: A room summary (if exists) which user had before a sync response
-    func roomSummary(forRoomId roomId: String, using summary: MXRoomSummary?) -> MXRoomSummary?
-    
-    
-    //    var syncResponsesByPrevBatch: [String] { get }
-    //
-    //    func markSyncResponseAsObsolete()
-    //    var obsoleteSyncResponseIds: [String] { get }
-    //
-    //    func syncResponse(withId id: String) -> MXSyncResponse
-    
-    
     /// Delete all data in the store
     func deleteData()
 }
