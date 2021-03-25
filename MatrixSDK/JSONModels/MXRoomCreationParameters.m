@@ -36,6 +36,20 @@
                                          @"is_direct": [NSNumber numberWithBool:_isDirect]
                                          } mutableCopy];
 
+    NSMutableDictionary *createContentDictionary;
+    
+    if (_creationContent)
+    {
+        createContentDictionary = [_creationContent mutableCopy];
+    }
+    else
+    {
+        createContentDictionary = [NSMutableDictionary new];
+    }    
+    if (_roomType)
+    {
+        createContentDictionary[MXRoomCreateContentRoomTypeMSC1772JSONKey] = _roomType;
+    }
     if (_name)
     {
         dictionary[@"name"] = _name;
@@ -80,11 +94,15 @@
     {
         dictionary[@"initial_state"] = _initialStateEvents;
     }
-    if (_creationContent)
+    if (createContentDictionary.count)
     {
-        dictionary[@"creation_content"] = _creationContent;
+        dictionary[@"creation_content"] = createContentDictionary;
     }
-
+    if (_powerLevelContentOverride)
+    {
+        dictionary[@"power_level_content_override"] = [_powerLevelContentOverride JSONDictionary];
+    }
+    
     return dictionary;
 }
 
