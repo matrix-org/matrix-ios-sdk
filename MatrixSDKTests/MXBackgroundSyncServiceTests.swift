@@ -465,7 +465,7 @@ class MXBackgroundSyncServiceTests: XCTestCase {
                             XCTAssertNil(syncResponseStoreManager.event(withEventId: firstEventId, inRoom: roomId), "First event should not be present in sync response store")
                             XCTAssertNotNil(syncResponseStoreManager.event(withEventId: lastEventId, inRoom: roomId), "Last event should be present in sync response store")
                             
-                            var syncResponse = syncResponseStore.syncResponse?.syncResponse
+                            var syncResponse = syncResponseStoreManager.lastSyncResponse()?.syncResponse
                             XCTAssertNotNil(syncResponse, "Sync response should be present")
                             XCTAssertTrue(syncResponse!.rooms.join[roomId]!.timeline.limited, "Room timeline should be limited")
                             
@@ -484,7 +484,7 @@ class MXBackgroundSyncServiceTests: XCTestCase {
                                         switch response {
                                         case .success:
                                             //  read sync response again
-                                            syncResponse = syncResponseStore.syncResponse?.syncResponse
+                                            syncResponse = syncResponseStoreManager.lastSyncResponse()?.syncResponse
                                             XCTAssertTrue(syncResponse!.rooms.join[roomId]!.timeline.limited, "Room timeline should still be limited")
                                             expectation?.fulfill()
                                         case .failure(let error):
@@ -564,7 +564,7 @@ class MXBackgroundSyncServiceTests: XCTestCase {
                             syncResponseStore.open(withCredentials: bobCredentials)
                             let syncResponseStoreManager = MXSyncResponseStoreManager(syncResponseStore: syncResponseStore)
                             
-                            var syncResponse = syncResponseStore.syncResponse?.syncResponse
+                            var syncResponse = syncResponseStoreManager.lastSyncResponse()?.syncResponse
                             XCTAssertNotNil(syncResponse, "Sync response should be present")
                             XCTAssertNotNil(syncResponseStoreManager.event(withEventId: eventId, inRoom: roomId), "Event should be present in sync response store")
                             XCTAssertFalse(syncResponse!.rooms.join[roomId]!.timeline.limited, "Room timeline should not be limited")
@@ -592,7 +592,7 @@ class MXBackgroundSyncServiceTests: XCTestCase {
                                             XCTAssertNotNil(syncResponseStoreManager.event(withEventId: lastEventId, inRoom: roomId), "Last event should be present in sync response store")
                                             
                                             //  read sync response again
-                                            syncResponse = syncResponseStore.syncResponse?.syncResponse
+                                            syncResponse = syncResponseStoreManager.lastSyncResponse()?.syncResponse
                                             XCTAssertTrue(syncResponse!.rooms.join[roomId]!.timeline.limited, "Room timeline should be limited")
                                             
                                             expectation?.fulfill()

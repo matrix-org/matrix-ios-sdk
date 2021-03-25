@@ -16,14 +16,29 @@
 
 import Foundation
 
+
+public enum MXSyncResponseStoreError: Error {
+    case unknownId
+}
+
+
 /// Protocol defining the storage for a sync response.
 @objc public protocol MXSyncResponseStore: NSObjectProtocol {
+    
     /// Open the store with the given credentials
     /// - Parameter credentials: Credentials
     func open(withCredentials credentials: MXCredentials)
     
-    /// Cached sync response
-    var syncResponse: MXCachedSyncResponse? { get set }
+    /// CRUD interface for cached sync responses
+    func addSyncResponse(syncResponse: MXCachedSyncResponse) -> String
+    func syncResponse(withId id: String) throws -> MXCachedSyncResponse
+    func updateSyncResponse(withId id: String, syncResponse: MXCachedSyncResponse)
+    func deleteSyncResponse(withId id: String)
+    
+    // All ids of stored sync responses.
+    // Sync responses are stored in chunks to save RAM when processing it
+    // The array order is chronological
+    var syncResponseIds: [String] { get }
     
     /// User account data
     var accountData: [AnyHashable : Any]? { get set }

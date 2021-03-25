@@ -166,7 +166,8 @@ extension MXSyncResponseFileStore: MXSyncResponseStore {
         self.setupFilePath()
     }
     
-    public var syncResponse: MXCachedSyncResponse? {
+    // TODO: To remove
+    var syncResponse: MXCachedSyncResponse? {
         get {
             autoreleasepool {
                 return readData()
@@ -177,6 +178,35 @@ extension MXSyncResponseFileStore: MXSyncResponseStore {
             }
         }
     }
+    
+    
+    public func addSyncResponse(syncResponse: MXCachedSyncResponse) -> String {
+        self.syncResponse = syncResponse
+        return "blabla"
+    }
+    
+    public func syncResponse(withId id: String) throws -> MXCachedSyncResponse {
+        guard let syncResponse = self.syncResponse else {
+            throw MXSyncResponseStoreError.unknownId
+        }
+        return syncResponse
+    }
+    
+    public func updateSyncResponse(withId id: String, syncResponse: MXCachedSyncResponse) {
+        self.syncResponse = syncResponse
+    }
+    
+    public func deleteSyncResponse(withId id: String) {
+        
+    }
+    
+    public var syncResponseIds: [String] {
+        guard let syncResponse = self.syncResponse else {
+            return []
+        }
+        return [syncResponse.syncToken]
+    }
+    
     
     public var accountData: [AnyHashable : Any]? {
         get {
@@ -193,5 +223,4 @@ extension MXSyncResponseFileStore: MXSyncResponseStore {
         saveData(nil)
         saveMetaData(nil)
     }
-    
 }

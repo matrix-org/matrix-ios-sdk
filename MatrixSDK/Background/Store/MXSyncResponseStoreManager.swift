@@ -28,21 +28,46 @@ public class MXSyncResponseStoreManager: NSObject {
     /// The sync token that is the origin of the stored sync response.
     /// - Returns: the original sync token.
     public func syncToken() -> String? {
-        self.syncResponseStore.syncResponse?.syncToken
+        self.firstSyncResponse()?.syncToken
     }
     
     /// The sync token to use for the next /sync requests
     /// - Returns: the next sync token
     public func nextSyncToken() -> String? {
-        self.syncResponseStore.syncResponse?.syncResponse.nextBatch
+        self.lastSyncResponse()?.syncResponse.nextBatch
     }
+    
+    public func firstSyncResponse() ->  MXCachedSyncResponse? {
+        guard let id = syncResponseStore.syncResponseIds.first else {
+            return nil
+        }
+        guard let syncResponse = try? syncResponseStore.syncResponse(withId: id) else {
+            NSLog("[MXSyncResponseStoreManager] firstSyncResponse: invalid id")
+            return nil
+        }
+        return syncResponse
+    }
+    
+    public func lastSyncResponse() -> MXCachedSyncResponse? {
+        guard let id = syncResponseStore.syncResponseIds.last else {
+            return nil
+        }
+        guard let syncResponse = try? syncResponseStore.syncResponse(withId: id) else {
+            NSLog("[MXSyncResponseStoreManager] lastSyncResponse: invalid id")
+            return nil
+        }
+        return syncResponse
+    }
+    
     
     /// Cache a sync response.
     /// - Parameters:
     ///   - newSyncResponse: the sync response to store
     ///   - syncToken: the sync token that generated this sync response.
     public func updateStore(with newSyncResponse: MXSyncResponse, syncToken: String) {
-        if let cachedSyncResponse = syncResponseStore.syncResponse {
+        if let id = syncResponseStore.syncResponseIds.last,
+           let cachedSyncResponse = try? syncResponseStore.syncResponse(withId: id) {
+
             //  current sync response exists, merge it with the new response
             
             //  handle new limited timelines
@@ -83,12 +108,16 @@ public class MXSyncResponseStoreManager: NSObject {
             
             // And update it to the store.
             // Note we we care only about the cached sync token. syncToken is now useless
-            syncResponseStore.syncResponse = MXCachedSyncResponse(syncToken: cachedSyncResponse.syncToken,
-                                                                  syncResponse: MXSyncResponse(fromJSON: dictionary as? [AnyHashable : Any]))
+            let updatedCachedSyncResponse = MXCachedSyncResponse(syncToken: cachedSyncResponse.syncToken,
+                                                                 syncResponse: MXSyncResponse(fromJSON: dictionary as? [AnyHashable : Any]))
+            syncResponseStore.updateSyncResponse(withId: id, syncResponse: updatedCachedSyncResponse)
+            
+            
         } else {
             //  no current sync response, directly save the new one
-            syncResponseStore.syncResponse = MXCachedSyncResponse(syncToken: syncToken,
-                                                                  syncResponse: newSyncResponse)
+            let cachedSyncResponse = MXCachedSyncResponse(syncToken: syncToken,
+                                                         syncResponse: newSyncResponse)
+            _ = syncResponseStore.addSyncResponse(syncResponse: cachedSyncResponse)
         }
         
         // Manage user account data
@@ -96,16 +125,31 @@ public class MXSyncResponseStoreManager: NSObject {
             syncResponseStore.accountData = accountData
         }
     }
-    
+
     /// Fetch event in the store
     /// - Parameters:
     ///   - eventId: Event identifier to be fetched.
     ///   - roomId: Room identifier to be fetched.
     public func event(withEventId eventId: String, inRoom roomId: String) -> MXEvent? {
-        guard let response = syncResponseStore.syncResponse else {
-            return nil
+        for id in  syncResponseStore.syncResponseIds.reversed() {
+            let event = autoreleasepool { () -> MXEvent? in
+                guard let response = try? syncResponseStore.syncResponse(withId: id) else {
+                    return nil
+                }
+                
+                return self.event(withEventId: eventId, inRoom: roomId, inSyncResponse: response)
+            }
+            
+            if let event = event {
+                return event
+            }
         }
         
+        NSLog("[MXSyncResponseStoreManager] event: Not found event \(eventId) in room \(roomId)")
+        return nil
+    }
+    
+    func event(withEventId eventId: String, inRoom roomId: String, inSyncResponse response: MXCachedSyncResponse) -> MXEvent? {
         var allEvents: [MXEvent] = []
         if let joinedRoomSync = response.syncResponse.rooms.join[roomId] {
             allEvents.appendIfNotNil(contentsOf: joinedRoomSync.state?.events)
@@ -128,18 +172,35 @@ public class MXSyncResponseStoreManager: NSObject {
         
         return result
     }
-    
+
     /// Fetch room summary for an invited room. Just uses the data in syncResponse to guess the room display name
     /// - Parameter roomId: Room identifier to be fetched
     /// - Parameter summary: A room summary (if exists) which user had before a sync response
     public func roomSummary(forRoomId roomId: String, using summary: MXRoomSummary?) -> MXRoomSummary? {
-        guard let response = syncResponseStore.syncResponse else {
-            return summary
-        }
         guard let summary = summary ?? MXRoomSummary(roomId: roomId, andMatrixSession: nil) else {
             return nil
         }
         
+        for id in syncResponseStore.syncResponseIds.reversed() {
+            let summary = autoreleasepool { () -> MXRoomSummary? in
+                guard let response = try? syncResponseStore.syncResponse(withId: id) else {
+                    return nil
+                }
+                
+                return roomSummary(forRoomId: roomId, using: summary, inSyncResponse: response)
+            }
+            
+            if let summary = summary {
+                return summary
+            }
+        }
+        
+        NSLog("[MXSyncResponseStoreManager] roomSummary: Not found for room \(roomId)")
+        
+        return nil
+    }
+    
+    func roomSummary(forRoomId roomId: String, using summary: MXRoomSummary, inSyncResponse response: MXCachedSyncResponse) -> MXRoomSummary? {
         var eventsToProcess: [MXEvent] = []
         
         if let invitedRoomSync = response.syncResponse.rooms.invite[roomId],

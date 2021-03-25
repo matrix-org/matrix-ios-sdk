@@ -19,6 +19,9 @@
 
 @class MXSyncResponse;
 
+
+NS_ASSUME_NONNULL_BEGIN
+
 /// A cached MXSyncResponse
 @interface MXCachedSyncResponse : MXJSONModel
 
@@ -38,3 +41,5 @@
 - (instancetype)initWithSyncToken:(NSString*)syncToken syncResponse:(MXSyncResponse*)syncResponse;
 
 @end
+
+NS_ASSUME_NONNULL_END

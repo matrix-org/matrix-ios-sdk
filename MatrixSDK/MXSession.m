@@ -1696,20 +1696,35 @@ typedef void (^MXOnResumeDone)(void);
         NSString *eventStreamToken = _store.eventStreamToken;
         if ([syncResponseStoreSyncToken isEqualToString:eventStreamToken])
         {
-            NSLog(@"[MXSession] handleBackgroundSyncCacheIfRequired: Handle cache from stream token %@", eventStreamToken);
-            
-            MXCachedSyncResponse *cachedSyncResponse = syncResponseStore.syncResponse;
-            
             //  sync response really continues from where the session left
-            [self handleSyncResponse:cachedSyncResponse.syncResponse
-                          completion:^{
+            NSArray<NSString *> *syncResponseIds = syncResponseStore.syncResponseIds;
+            NSLog(@"[MXSession] handleBackgroundSyncCacheIfRequired: Handle %@ caches from stream token %@", @(syncResponseIds.count), eventStreamToken);
+            
+            dispatch_group_t dispatchGroup = dispatch_group_create();
+            
+            for (NSString *syncResponseId in syncResponseIds)
+            {
+                @autoreleasepool {
+                    MXCachedSyncResponse *cachedSyncResponse = [syncResponseStore syncResponseWithId:syncResponseId error:nil];
+                    if (cachedSyncResponse)
+                    {
+                        dispatch_group_enter(dispatchGroup);
+                        [self handleSyncResponse:cachedSyncResponse.syncResponse
+                                      completion:^{
+                            dispatch_group_leave(dispatchGroup);
+                        }];
+                    }
+                }
+            }
+            
+            dispatch_group_notify(dispatchGroup, dispatch_get_main_queue(), ^{
                 [syncResponseStore deleteData];
                 
                 if (completion)
                 {
                     completion();
                 }
-            }];
+            });
         }
         else
         {
