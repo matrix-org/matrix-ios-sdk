@@ -199,8 +199,8 @@ internal func curryFailure<T>(_ completion: @escaping (MXResponse<T>) -> Void) -
 /// Call success and failure closures from a MXResponse, useful to expose Swift function to Objective-C
 internal func uncurryResponse<T>(_ response: MXResponse<T>, success: @escaping (T) -> Void, failure: @escaping (Error) -> Void) {
     switch response {
-    case .success(let space):
-        success(space)
+    case .success(let object):
+        success(object)
     case .failure(let error):
         failure(error)
     }
