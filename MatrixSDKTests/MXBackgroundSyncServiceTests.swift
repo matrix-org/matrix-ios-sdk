@@ -461,7 +461,7 @@ class MXBackgroundSyncServiceTests: XCTestCase {
                             XCTAssertNil(syncResponseStore.event(withEventId: firstEventId, inRoom: roomId), "First event should not be present in sync response store")
                             XCTAssertNotNil(syncResponseStore.event(withEventId: lastEventId, inRoom: roomId), "Last event should be present in sync response store")
                             
-                            var syncResponse = syncResponseStore.syncResponse
+                            var syncResponse = syncResponseStore.syncResponse?.syncResponse
                             XCTAssertNotNil(syncResponse, "Sync response should be present")
                             XCTAssertTrue(syncResponse!.rooms.join[roomId]!.timeline.limited, "Room timeline should be limited")
                             
@@ -480,7 +480,7 @@ class MXBackgroundSyncServiceTests: XCTestCase {
                                         switch response {
                                         case .success:
                                             //  read sync response again
-                                            syncResponse = syncResponseStore.syncResponse
+                                            syncResponse = syncResponseStore.syncResponse?.syncResponse
                                             XCTAssertTrue(syncResponse!.rooms.join[roomId]!.timeline.limited, "Room timeline should still be limited")
                                             expectation?.fulfill()
                                         case .failure(let error):
@@ -559,7 +559,7 @@ class MXBackgroundSyncServiceTests: XCTestCase {
                             let syncResponseStore = MXSyncResponseFileStore()
                             syncResponseStore.open(withCredentials: bobCredentials)
                             
-                            var syncResponse = syncResponseStore.syncResponse
+                            var syncResponse = syncResponseStore.syncResponse?.syncResponse
                             XCTAssertNotNil(syncResponse, "Sync response should be present")
                             XCTAssertNotNil(syncResponseStore.event(withEventId: eventId, inRoom: roomId), "Event should be present in sync response store")
                             XCTAssertFalse(syncResponse!.rooms.join[roomId]!.timeline.limited, "Room timeline should not be limited")
@@ -587,7 +587,7 @@ class MXBackgroundSyncServiceTests: XCTestCase {
                                             XCTAssertNotNil(syncResponseStore.event(withEventId: lastEventId, inRoom: roomId), "Last event should be present in sync response store")
                                             
                                             //  read sync response again
-                                            syncResponse = syncResponseStore.syncResponse
+                                            syncResponse = syncResponseStore.syncResponse?.syncResponse
                                             XCTAssertTrue(syncResponse!.rooms.join[roomId]!.timeline.limited, "Room timeline should be limited")
                                             
                                             expectation?.fulfill()
@@ -663,7 +663,7 @@ class MXBackgroundSyncServiceTests: XCTestCase {
                             
                             let syncResponseStore = MXSyncResponseFileStore()
                             syncResponseStore.open(withCredentials: bobCredentials)
-                            let syncResponseStoreSyncToken = syncResponseStore.syncToken
+                            let syncResponseStoreSyncToken = syncResponseStore.syncResponse?.syncToken
                             
                             // - Alice sends a message. This make bob MXSession update its sync token
                             room.sendTextMessage(Constants.messageText, localEcho: &localEcho) { _ in }
@@ -679,7 +679,7 @@ class MXBackgroundSyncServiceTests: XCTestCase {
                                     let syncResponseStore = MXSyncResponseFileStore()
                                     syncResponseStore.open(withCredentials: bobCredentials)
                                     
-                                    XCTAssertNotEqual(syncResponseStoreSyncToken, syncResponseStore.syncToken)
+                                    XCTAssertNotEqual(syncResponseStoreSyncToken, syncResponseStore.syncResponse?.syncToken)
 
                                     expectation?.fulfill()
                                 }

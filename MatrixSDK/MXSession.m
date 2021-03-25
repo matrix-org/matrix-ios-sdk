@@ -1690,14 +1690,15 @@ typedef void (^MXOnResumeDone)(void);
     [syncResponseStore openWithCredentials:self.credentials];
     if (syncResponseStore.syncResponse)
     {
-        NSString *syncResponseStoreSyncToken = syncResponseStore.syncToken;
+        MXSyncResponseStoreModel *cachedSyncResponse = syncResponseStore.syncResponse;
+        NSString *syncResponseStoreSyncToken = cachedSyncResponse.syncToken;
         NSString *eventStreamToken = _store.eventStreamToken;
         if ([syncResponseStoreSyncToken isEqualToString:eventStreamToken])
         {
             NSLog(@"[MXSession] handleBackgroundSyncCacheIfRequired: Handle cache from stream token %@", eventStreamToken);
             
             //  sync response really continues from where the session left
-            [self handleSyncResponse:syncResponseStore.syncResponse
+            [self handleSyncResponse:cachedSyncResponse.syncResponse
                           completion:^{
                 [syncResponseStore deleteData];
                 

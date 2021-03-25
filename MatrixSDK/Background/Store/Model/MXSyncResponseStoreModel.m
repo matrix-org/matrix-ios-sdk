@@ -19,14 +19,29 @@
 
 @implementation MXSyncResponseStoreModel
 
+- (instancetype)initWithSyncToken:(NSString *)syncToken syncResponse:(MXSyncResponse *)syncResponse
+{
+    self = [super init];
+    if (self)
+    {
+        _syncToken = syncToken;
+        _syncResponse = syncResponse;
+    }
+    return self;
+}
+
 + (instancetype)modelFromJSON:(NSDictionary *)JSONDictionary
 {
-    MXSyncResponseStoreModel *syncResponseModel = [[MXSyncResponseStoreModel alloc] init];
+    MXSyncResponseStoreModel *syncResponseModel;
     
-    if (syncResponseModel)
+    NSString *syncToken;
+    MXSyncResponse *syncResponse;
+    MXJSONModelSetString(syncToken, JSONDictionary[@"sync_token"]);
+    MXJSONModelSetMXJSONModel(syncResponse, MXSyncResponse, JSONDictionary[@"sync_response"]);
+    
+    if (syncToken && syncResponse)
     {
-        MXJSONModelSetString(syncResponseModel.syncToken, JSONDictionary[@"sync_token"]);
-        MXJSONModelSetMXJSONModel(syncResponseModel.syncResponse, MXSyncResponse, JSONDictionary[@"sync_response"]);
+        syncResponseModel = [[MXSyncResponseStoreModel alloc] initWithSyncToken:syncToken syncResponse:syncResponse];
     }
 
     return syncResponseModel;

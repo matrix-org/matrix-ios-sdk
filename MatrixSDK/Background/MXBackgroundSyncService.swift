@@ -260,18 +260,12 @@ public enum MXBackgroundSyncServiceError: Error {
                                       roomId: String,
                                       completion: @escaping (MXResponse<MXEvent>) -> Void) {
             
-        guard let eventStreamToken = syncResponseStore.syncResponse?.nextBatch ?? store.eventStreamToken else {
+        guard let eventStreamToken = syncResponseStore.syncResponse?.syncResponse.nextBatch ?? store.eventStreamToken else {
             NSLog("[MXBackgroundSyncService] launchBackgroundSync: Do not sync because event streaming not started yet.")
             Queues.dispatchQueue.async {
                 completion(.failure(MXBackgroundSyncServiceError.unknown))
             }
             return
-        }
-        
-        //  save the token for the start of the sync response
-        if (syncResponseStore.syncToken == nil)
-        {
-            syncResponseStore.syncToken = eventStreamToken
         }
         
         NSLog("[MXBackgroundSyncService] launchBackgroundSync: start from token \(eventStreamToken)")
@@ -291,7 +285,7 @@ public enum MXBackgroundSyncServiceError: Error {
                     return
                 }
 
-                self.handleSyncResponse(syncResponse)
+                self.handleSyncResponse(syncResponse, syncToken: eventStreamToken)
                 
                 if let event = self.syncResponseStore.event(withEventId: eventId, inRoom: roomId),
                     !self.canDecryptEvent(event),
@@ -431,7 +425,7 @@ public enum MXBackgroundSyncServiceError: Error {
         return payload as String?
     }
     
-    private func handleSyncResponse(_ syncResponse: MXSyncResponse) {
+    private func handleSyncResponse(_ syncResponse: MXSyncResponse, syncToken: String) {
         NSLog("[MXBackgroundSyncService] handleSyncResponse: Received %tu joined rooms, %tu invited rooms, %tu left rooms, %tu toDevice events.",
               syncResponse.rooms.join.count,
               syncResponse.rooms.invite.count,
@@ -439,7 +433,7 @@ public enum MXBackgroundSyncServiceError: Error {
               syncResponse.toDevice.events?.count ?? 0)
         
         self.pushRulesManager.handleAccountData(syncResponse.accountData)
-        self.updateStore(with: syncResponse)
+        self.updateStore(with: syncResponse, syncToken: syncToken)
         
         for event in syncResponse.toDevice?.events ?? [] {
             handleToDeviceEvent(event)
@@ -448,13 +442,13 @@ public enum MXBackgroundSyncServiceError: Error {
         NSLog("[MXBackgroundSyncService] handleSyncResponse: Next sync token: \(syncResponse.nextBatch ?? "nil")")
     }
     
-    private func updateStore(with newResponse: MXSyncResponse) {
+    private func updateStore(with newResponse: MXSyncResponse, syncToken: String) {
         if let oldResponse = syncResponseStore.syncResponse {
             //  current sync response exists, merge it with the new response
             
             //  handle new limited timelines
             newResponse.rooms.join.filter({ $1.timeline?.limited == true }).forEach { (roomId, _) in
-                if let joinedRoomSync = oldResponse.rooms.join[roomId] {
+                if let joinedRoomSync = oldResponse.syncResponse.rooms.join[roomId] {
                     //  remove old events
                     joinedRoomSync.timeline?.events = []
                     //  mark old timeline as limited too
@@ -462,7 +456,7 @@ public enum MXBackgroundSyncServiceError: Error {
                 }
             }
             newResponse.rooms.leave.filter({ $1.timeline?.limited == true }).forEach { (roomId, _) in
-                if let leftRoomSync = oldResponse.rooms.leave[roomId] {
+                if let leftRoomSync = oldResponse.syncResponse.rooms.leave[roomId] {
                     //  remove old events
                     leftRoomSync.timeline?.events = []
                     //  mark old timeline as limited too
@@ -471,13 +465,13 @@ public enum MXBackgroundSyncServiceError: Error {
             }
             
             //  handle old limited timelines
-            oldResponse.rooms.join.filter({ $1.timeline?.limited == true }).forEach { (roomId, _) in
+            oldResponse.syncResponse.rooms.join.filter({ $1.timeline?.limited == true }).forEach { (roomId, _) in
                 if let joinedRoomSync = newResponse.rooms.join[roomId] {
                     //  mark new timeline as limited too, to avoid losing value of limited
                     joinedRoomSync.timeline?.limited = true
                 }
             }
-            oldResponse.rooms.leave.filter({ $1.timeline?.limited == true }).forEach { (roomId, _) in
+            oldResponse.syncResponse.rooms.leave.filter({ $1.timeline?.limited == true }).forEach { (roomId, _) in
                 if let leftRoomSync = newResponse.rooms.leave[roomId] {
                     //  mark new timeline as limited too, to avoid losing value of limited
                     leftRoomSync.timeline?.limited = true
@@ -485,10 +479,13 @@ public enum MXBackgroundSyncServiceError: Error {
             }
             var dictionary = NSDictionary(dictionary: oldResponse.jsonDictionary())
             dictionary = dictionary + NSDictionary(dictionary: newResponse.jsonDictionary())
-            syncResponseStore.syncResponse = MXSyncResponse(fromJSON: dictionary as? [AnyHashable : Any])
+            syncResponseStore.syncResponse = MXSyncResponseStoreModel(syncToken: oldResponse.syncToken,
+                                                                      syncResponse: MXSyncResponse(fromJSON: dictionary as? [AnyHashable : Any]))
+                
         } else {
             //  no current sync response, directly save the new one
-            syncResponseStore.syncResponse = newResponse
+            syncResponseStore.syncResponse = MXSyncResponseStoreModel(syncToken: syncToken,
+                                                                      syncResponse: newResponse)
         }
         
         if let accountData = newResponse.accountData {
@@ -576,7 +573,7 @@ public enum MXBackgroundSyncServiceError: Error {
             store = upToDateStore
             
             // syncResponseStore has obsolete data. Reset it
-            NSLog("[MXBackgroundSyncService] updateBackgroundServiceStoresIfNeeded: Reset MXSyncResponseStore. Its prevBatch was token \(String(describing: syncResponseStore.syncToken))")
+            NSLog("[MXBackgroundSyncService] updateBackgroundServiceStoresIfNeeded: Reset MXSyncResponseStore. Its prevBatch was token \(String(describing: syncResponseStore.syncResponse?.syncToken))")
             syncResponseStore.deleteData()
             
             NSLog("[MXBackgroundSyncService] updateBackgroundServiceStoresIfNeeded: Reset MXBackgroundCryptoStore")

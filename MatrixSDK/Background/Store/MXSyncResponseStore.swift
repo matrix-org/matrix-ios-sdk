@@ -22,11 +22,8 @@ import Foundation
     /// - Parameter credentials: Credentials
     func open(withCredentials credentials: MXCredentials)
     
-    /// The sync token that generated the currenly stored `syncResponse`.
-    var syncToken: String? { get set }
-    
-    /// Sync response object, currently stored in the store
-    var syncResponse: MXSyncResponse? { get set }
+    /// Cached sync response
+    var syncResponse: MXSyncResponseStoreModel? { get set }
     
     /// User account data
     var accountData: [AnyHashable : Any]? { get set }

@@ -166,30 +166,14 @@ extension MXSyncResponseFileStore: MXSyncResponseStore {
         self.setupFilePath()
     }
     
-    public var syncToken: String? {
+    public var syncResponse: MXSyncResponseStoreModel? {
         get {
             autoreleasepool {
-                return readData()?.syncToken
+                return readData()
             }
         } set {
             autoreleasepool {
-                let data = readData() ?? MXSyncResponseStoreModel()
-                data.syncToken = newValue
-                saveData(data)
-            }
-        }
-    }
-    
-    public var syncResponse: MXSyncResponse? {
-        get {
-            autoreleasepool {
-                return readData()?.syncResponse
-            }
-        } set {
-            autoreleasepool {
-                let data = readData() ?? MXSyncResponseStoreModel()
-                data.syncResponse = newValue
-                saveData(data)
+                saveData(newValue)
             }
         }
     }
@@ -211,15 +195,15 @@ extension MXSyncResponseFileStore: MXSyncResponseStore {
         }
         
         var allEvents: [MXEvent] = []
-        if let joinedRoomSync = response.rooms.join[roomId] {
+        if let joinedRoomSync = response.syncResponse.rooms.join[roomId] {
             allEvents.appendIfNotNil(contentsOf: joinedRoomSync.state?.events)
             allEvents.appendIfNotNil(contentsOf: joinedRoomSync.timeline?.events)
             allEvents.appendIfNotNil(contentsOf: joinedRoomSync.accountData?.events)
         }
-        if let invitedRoomSync = response.rooms.invite[roomId] {
+        if let invitedRoomSync = response.syncResponse.rooms.invite[roomId] {
             allEvents.appendIfNotNil(contentsOf: invitedRoomSync.inviteState?.events)
         }
-        if let leftRoomSync = response.rooms.leave[roomId] {
+        if let leftRoomSync = response.syncResponse.rooms.leave[roomId] {
             allEvents.appendIfNotNil(contentsOf: leftRoomSync.state?.events)
             allEvents.appendIfNotNil(contentsOf: leftRoomSync.timeline?.events)
             allEvents.appendIfNotNil(contentsOf: leftRoomSync.accountData?.events)
@@ -243,12 +227,12 @@ extension MXSyncResponseFileStore: MXSyncResponseStore {
         
         var eventsToProcess: [MXEvent] = []
         
-        if let invitedRoomSync = response.rooms.invite[roomId],
+        if let invitedRoomSync = response.syncResponse.rooms.invite[roomId],
             let stateEvents = invitedRoomSync.inviteState?.events {
             eventsToProcess.append(contentsOf: stateEvents)
         }
         
-        if let joinedRoomSync = response.rooms.join[roomId] {
+        if let joinedRoomSync = response.syncResponse.rooms.join[roomId] {
             if let stateEvents = joinedRoomSync.state?.events {
                 eventsToProcess.append(contentsOf: stateEvents)
             }
@@ -257,7 +241,7 @@ extension MXSyncResponseFileStore: MXSyncResponseStore {
             }
         }
         
-        if let leftRoomSync = response.rooms.leave[roomId] {
+        if let leftRoomSync = response.syncResponse.rooms.leave[roomId] {
             if let stateEvents = leftRoomSync.state?.events {
                 eventsToProcess.append(contentsOf: stateEvents)
             }
@@ -290,6 +274,7 @@ extension MXSyncResponseFileStore: MXSyncResponseStore {
     
     public func deleteData() {
         saveData(nil)
+        saveMetaData(nil)
     }
     
 }
