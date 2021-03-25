@@ -40,6 +40,7 @@ public enum MXBackgroundSyncServiceError: Error {
     private let processingQueue: DispatchQueue
     private let credentials: MXCredentials
     private let syncResponseStore: MXSyncResponseStore
+    private let syncResponseStoreManager: MXSyncResponseStoreManager
     private var store: MXStore
     private let cryptoStore: MXBackgroundCryptoStore
     private let olmDevice: MXOlmDevice
@@ -54,8 +55,11 @@ public enum MXBackgroundSyncServiceError: Error {
     public init(withCredentials credentials: MXCredentials) {
         processingQueue = DispatchQueue(label: "MXBackgroundSyncServiceQueue-" + MXTools.generateSecret())
         self.credentials = credentials
+        
         syncResponseStore = MXSyncResponseFileStore()
         syncResponseStore.open(withCredentials: credentials)
+        syncResponseStoreManager = MXSyncResponseStoreManager(syncResponseStore: syncResponseStore)
+        
         restClient = MXRestClient(credentials: credentials, unrecognizedCertificateHandler: nil)
         restClient.completionQueue = processingQueue
         store = MXBackgroundStore(withCredentials: credentials)
@@ -432,64 +436,14 @@ public enum MXBackgroundSyncServiceError: Error {
               syncResponse.rooms.leave.count,
               syncResponse.toDevice.events?.count ?? 0)
         
-        self.pushRulesManager.handleAccountData(syncResponse.accountData)
-        self.updateStore(with: syncResponse, syncToken: syncToken)
+        pushRulesManager.handleAccountData(syncResponse.accountData)
+        syncResponseStoreManager.updateStore(with: syncResponse, syncToken: syncToken)
         
         for event in syncResponse.toDevice?.events ?? [] {
             handleToDeviceEvent(event)
         }
         
         NSLog("[MXBackgroundSyncService] handleSyncResponse: Next sync token: \(syncResponse.nextBatch ?? "nil")")
-    }
-    
-    private func updateStore(with newResponse: MXSyncResponse, syncToken: String) {
-        if let cachedSyncResponse = syncResponseStore.syncResponse {
-            //  current sync response exists, merge it with the new response
-            
-            //  handle new limited timelines
-            newResponse.rooms.join.filter({ $1.timeline?.limited == true }).forEach { (roomId, _) in
-                if let joinedRoomSync = cachedSyncResponse.syncResponse.rooms.join[roomId] {
-                    //  remove old events
-                    joinedRoomSync.timeline?.events = []
-                    //  mark old timeline as limited too
-                    joinedRoomSync.timeline?.limited = true
-                }
-            }
-            newResponse.rooms.leave.filter({ $1.timeline?.limited == true }).forEach { (roomId, _) in
-                if let leftRoomSync = cachedSyncResponse.syncResponse.rooms.leave[roomId] {
-                    //  remove old events
-                    leftRoomSync.timeline?.events = []
-                    //  mark old timeline as limited too
-                    leftRoomSync.timeline?.limited = true
-                }
-            }
-            
-            //  handle old limited timelines
-            cachedSyncResponse.syncResponse.rooms.join.filter({ $1.timeline?.limited == true }).forEach { (roomId, _) in
-                if let joinedRoomSync = newResponse.rooms.join[roomId] {
-                    //  mark new timeline as limited too, to avoid losing value of limited
-                    joinedRoomSync.timeline?.limited = true
-                }
-            }
-            cachedSyncResponse.syncResponse.rooms.leave.filter({ $1.timeline?.limited == true }).forEach { (roomId, _) in
-                if let leftRoomSync = newResponse.rooms.leave[roomId] {
-                    //  mark new timeline as limited too, to avoid losing value of limited
-                    leftRoomSync.timeline?.limited = true
-                }
-            }
-            var dictionary = NSDictionary(dictionary: cachedSyncResponse.jsonDictionary())
-            dictionary = dictionary + NSDictionary(dictionary: newResponse.jsonDictionary())
-            syncResponseStore.syncResponse = MXCachedSyncResponse(syncToken: cachedSyncResponse.syncToken,
-                                                                  syncResponse: MXSyncResponse(fromJSON: dictionary as? [AnyHashable : Any]))
-        } else {
-            //  no current sync response, directly save the new one
-            syncResponseStore.syncResponse = MXCachedSyncResponse(syncToken: syncToken,
-                                                                      syncResponse: newResponse)
-        }
-        
-        if let accountData = newResponse.accountData {
-            syncResponseStore.accountData = accountData
-        }
     }
     
     private func handleToDeviceEvent(_ event: MXEvent) {

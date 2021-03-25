@@ -106,6 +106,8 @@
 		322AB585260CD5690017E964 /* MXCachedSyncResponse.h in Headers */ = {isa = PBXBuildFile; fileRef = 322AB582260CD5690017E964 /* MXCachedSyncResponse.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		322AB586260CD5690017E964 /* MXCachedSyncResponse.m in Sources */ = {isa = PBXBuildFile; fileRef = 322AB583260CD5690017E964 /* MXCachedSyncResponse.m */; };
 		322AB587260CD5690017E964 /* MXCachedSyncResponse.m in Sources */ = {isa = PBXBuildFile; fileRef = 322AB583260CD5690017E964 /* MXCachedSyncResponse.m */; };
+		322AB591260CDBC10017E964 /* MXSyncResponseStoreManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 322AB590260CDBC10017E964 /* MXSyncResponseStoreManager.swift */; };
+		322AB592260CDBC10017E964 /* MXSyncResponseStoreManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 322AB590260CDBC10017E964 /* MXSyncResponseStoreManager.swift */; };
 		322D01C422492B0700150C68 /* MXCryptoShareTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 322D01C322492B0700150C68 /* MXCryptoShareTests.m */; };
 		32322A481E57264E005DD155 /* MXSelfSignedHomeserverTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 32322A471E57264E005DD155 /* MXSelfSignedHomeserverTests.m */; };
 		32322A4B1E575F65005DD155 /* MXAllowedCertificates.h in Headers */ = {isa = PBXBuildFile; fileRef = 32322A491E575F65005DD155 /* MXAllowedCertificates.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -1490,6 +1492,7 @@
 		322A51D71D9E846800C8536D /* MXCryptoTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXCryptoTests.m; sourceTree = "<group>"; };
 		322AB582260CD5690017E964 /* MXCachedSyncResponse.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXCachedSyncResponse.h; sourceTree = "<group>"; };
 		322AB583260CD5690017E964 /* MXCachedSyncResponse.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXCachedSyncResponse.m; sourceTree = "<group>"; };
+		322AB590260CDBC10017E964 /* MXSyncResponseStoreManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXSyncResponseStoreManager.swift; sourceTree = "<group>"; };
 		322D01C322492B0700150C68 /* MXCryptoShareTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MXCryptoShareTests.m; sourceTree = "<group>"; };
 		322DB456212EB8E600F4EFE9 /* MXHTTPClient_Private.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MXHTTPClient_Private.h; sourceTree = "<group>"; };
 		32322A471E57264E005DD155 /* MXSelfSignedHomeserverTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXSelfSignedHomeserverTests.m; sourceTree = "<group>"; };
@@ -3618,6 +3621,7 @@
 			children = (
 				EC1EFA2E2567F6430089C01D /* Model */,
 				EC383BA4253DE6C9002FBBE6 /* MXSyncResponseStore.swift */,
+				322AB590260CDBC10017E964 /* MXSyncResponseStoreManager.swift */,
 				EC383BA6253DE6E7002FBBE6 /* SyncResponseFileStore */,
 			);
 			path = Store;
@@ -4758,6 +4762,7 @@
 				3264DB921CEC528D00B99881 /* MXAccountData.m in Sources */,
 				3229535325A5F7220012FCF0 /* MXBackgroundCryptoStore.m in Sources */,
 				3213301A228B010C0070BA9B /* MXRealmReactionCount.m in Sources */,
+				322AB591260CDBC10017E964 /* MXSyncResponseStoreManager.swift in Sources */,
 				3250E7CB220C913900736CB5 /* MXCryptoTools.m in Sources */,
 				322691331E5EF77D00966A6E /* MXDeviceListOperation.m in Sources */,
 				32D2CC0323422462002BD8CA /* MX3PidAddSession.m in Sources */,
@@ -5060,6 +5065,7 @@
 				EC8A53E325B1BCC6004E0802 /* MXThirdPartyUserInstance.m in Sources */,
 				EC383BB12540688B002FBBE6 /* MXBackgroundSyncService.swift in Sources */,
 				322AB587260CD5690017E964 /* MXCachedSyncResponse.m in Sources */,
+				322AB592260CDBC10017E964 /* MXSyncResponseStoreManager.swift in Sources */,
 				324AAC7B2399140D00380A66 /* MXKeyVerificationRequestByDMJSONModel.m in Sources */,
 				B14EF1FD2397E90400758AF0 /* MXReactionOperation.m in Sources */,
 				B14EF1FE2397E90400758AF0 /* MXCryptoConstants.m in Sources */,
