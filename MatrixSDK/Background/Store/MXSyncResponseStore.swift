@@ -22,7 +22,7 @@ import Foundation
     /// - Parameter credentials: Credentials
     func open(withCredentials credentials: MXCredentials)
     
-    /// The opaque token for the start of the sync response, currenly stored in the store
+    /// The sync token that generated the currenly stored `syncResponse`.
     var syncToken: String? { get set }
     
     /// Sync response object, currently stored in the store

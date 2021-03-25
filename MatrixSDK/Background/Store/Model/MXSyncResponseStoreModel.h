@@ -23,7 +23,9 @@
 @interface MXSyncResponseStoreModel : MXJSONModel
 
 /**
- The opaque token for the start of the sync response.
+ The sync token that generated `syncResponse`.
+ 
+ It is different from syncResponse.nextBatch which represents the next sync token to use for the next /sync request.
  */
 @property (nonatomic) NSString *syncToken;
 
