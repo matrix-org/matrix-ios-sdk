@@ -25,11 +25,23 @@ public class MXSyncResponseStoreManager: NSObject {
         self.syncResponseStore = syncResponseStore
     }
     
+    /// The sync token that is the origin of the stored sync response.
+    /// - Returns: the original sync token.
+    public func syncToken() -> String? {
+        self.syncResponseStore.syncResponse?.syncToken
+    }
+    
+    /// The sync token to use for the next /sync requests
+    /// - Returns: the next sync token
+    public func nextSyncToken() -> String? {
+        self.syncResponseStore.syncResponse?.syncResponse.nextBatch
+    }
+    
     /// Cache a sync response.
     /// - Parameters:
     ///   - newSyncResponse: the sync response to store
     ///   - syncToken: the sync token that generated this sync response.
-    func updateStore(with newSyncResponse: MXSyncResponse, syncToken: String) {
+    public func updateStore(with newSyncResponse: MXSyncResponse, syncToken: String) {
         if let cachedSyncResponse = syncResponseStore.syncResponse {
             //  current sync response exists, merge it with the new response
             

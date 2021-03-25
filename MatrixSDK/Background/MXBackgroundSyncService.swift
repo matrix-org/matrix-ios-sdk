@@ -264,7 +264,7 @@ public enum MXBackgroundSyncServiceError: Error {
                                       roomId: String,
                                       completion: @escaping (MXResponse<MXEvent>) -> Void) {
             
-        guard let eventStreamToken = syncResponseStore.syncResponse?.syncResponse.nextBatch ?? store.eventStreamToken else {
+        guard let eventStreamToken = syncResponseStoreManager.nextSyncToken() ?? store.eventStreamToken else {
             NSLog("[MXBackgroundSyncService] launchBackgroundSync: Do not sync because event streaming not started yet.")
             Queues.dispatchQueue.async {
                 completion(.failure(MXBackgroundSyncServiceError.unknown))
@@ -526,7 +526,7 @@ public enum MXBackgroundSyncServiceError: Error {
             store = upToDateStore
             
             // syncResponseStore has obsolete data. Reset it
-            NSLog("[MXBackgroundSyncService] updateBackgroundServiceStoresIfNeeded: Reset MXSyncResponseStore. Its prevBatch was token \(String(describing: syncResponseStore.syncResponse?.syncToken))")
+            NSLog("[MXBackgroundSyncService] updateBackgroundServiceStoresIfNeeded: Reset MXSyncResponseStore. Its sync token was \(String(describing: syncResponseStoreManager.syncToken))")
             syncResponseStore.deleteData()
             
             NSLog("[MXBackgroundSyncService] updateBackgroundServiceStoresIfNeeded: Reset MXBackgroundCryptoStore")
