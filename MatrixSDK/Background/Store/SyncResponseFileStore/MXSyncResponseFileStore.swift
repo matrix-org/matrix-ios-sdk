@@ -65,7 +65,7 @@ public class MXSyncResponseFileStore: NSObject {
         }
     }
     
-    private func readData() -> MXSyncResponseStoreModel? {
+    private func readData() -> MXCachedSyncResponse? {
         autoreleasepool {
             guard let filePath = filePath else {
                 return nil
@@ -90,14 +90,14 @@ public class MXSyncResponseFileStore: NSObject {
                 return nil
             }
             
-            let model = MXSyncResponseStoreModel(fromJSON: json)
+            let data = MXCachedSyncResponse(fromJSON: json)
             
             NSLog("[MXSyncResponseFileStore] readData: Consersion to model lasted \(stopwatch.readable()). Free memory: \(MXMemory.formattedMemoryAvailable())")
-            return model
+            return data
         }
     }
     
-    private func saveData(_ data: MXSyncResponseStoreModel?) {
+    private func saveData(_ data: MXCachedSyncResponse?) {
         guard let filePath = filePath else {
             return
         }
@@ -166,7 +166,7 @@ extension MXSyncResponseFileStore: MXSyncResponseStore {
         self.setupFilePath()
     }
     
-    public var syncResponse: MXSyncResponseStoreModel? {
+    public var syncResponse: MXCachedSyncResponse? {
         get {
             autoreleasepool {
                 return readData()

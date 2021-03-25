@@ -14,10 +14,10 @@
 // limitations under the License.
 //
 
-#import "MXSyncResponseStoreModel.h"
+#import "MXCachedSyncResponse.h"
 #import "MXJSONModels.h"
 
-@implementation MXSyncResponseStoreModel
+@implementation MXCachedSyncResponse
 
 - (instancetype)initWithSyncToken:(NSString *)syncToken syncResponse:(MXSyncResponse *)syncResponse
 {
@@ -32,7 +32,7 @@
 
 + (instancetype)modelFromJSON:(NSDictionary *)JSONDictionary
 {
-    MXSyncResponseStoreModel *syncResponseModel;
+    MXCachedSyncResponse *cachedSyncResponse;
     
     NSString *syncToken;
     MXSyncResponse *syncResponse;
@@ -41,10 +41,10 @@
     
     if (syncToken && syncResponse)
     {
-        syncResponseModel = [[MXSyncResponseStoreModel alloc] initWithSyncToken:syncToken syncResponse:syncResponse];
+        cachedSyncResponse = [[MXCachedSyncResponse alloc] initWithSyncToken:syncToken syncResponse:syncResponse];
     }
 
-    return syncResponseModel;
+    return cachedSyncResponse;
 }
 
 - (NSDictionary *)JSONDictionary

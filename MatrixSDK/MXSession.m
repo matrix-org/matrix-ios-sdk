@@ -1690,7 +1690,7 @@ typedef void (^MXOnResumeDone)(void);
     [syncResponseStore openWithCredentials:self.credentials];
     if (syncResponseStore.syncResponse)
     {
-        MXSyncResponseStoreModel *cachedSyncResponse = syncResponseStore.syncResponse;
+        MXCachedSyncResponse *cachedSyncResponse = syncResponseStore.syncResponse;
         NSString *syncResponseStoreSyncToken = cachedSyncResponse.syncToken;
         NSString *eventStreamToken = _store.eventStreamToken;
         if ([syncResponseStoreSyncToken isEqualToString:eventStreamToken])

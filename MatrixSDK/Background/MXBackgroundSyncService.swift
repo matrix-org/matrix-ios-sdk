@@ -443,12 +443,12 @@ public enum MXBackgroundSyncServiceError: Error {
     }
     
     private func updateStore(with newResponse: MXSyncResponse, syncToken: String) {
-        if let oldResponse = syncResponseStore.syncResponse {
+        if let cachedSyncResponse = syncResponseStore.syncResponse {
             //  current sync response exists, merge it with the new response
             
             //  handle new limited timelines
             newResponse.rooms.join.filter({ $1.timeline?.limited == true }).forEach { (roomId, _) in
-                if let joinedRoomSync = oldResponse.syncResponse.rooms.join[roomId] {
+                if let joinedRoomSync = cachedSyncResponse.syncResponse.rooms.join[roomId] {
                     //  remove old events
                     joinedRoomSync.timeline?.events = []
                     //  mark old timeline as limited too
@@ -456,7 +456,7 @@ public enum MXBackgroundSyncServiceError: Error {
                 }
             }
             newResponse.rooms.leave.filter({ $1.timeline?.limited == true }).forEach { (roomId, _) in
-                if let leftRoomSync = oldResponse.syncResponse.rooms.leave[roomId] {
+                if let leftRoomSync = cachedSyncResponse.syncResponse.rooms.leave[roomId] {
                     //  remove old events
                     leftRoomSync.timeline?.events = []
                     //  mark old timeline as limited too
@@ -465,26 +465,25 @@ public enum MXBackgroundSyncServiceError: Error {
             }
             
             //  handle old limited timelines
-            oldResponse.syncResponse.rooms.join.filter({ $1.timeline?.limited == true }).forEach { (roomId, _) in
+            cachedSyncResponse.syncResponse.rooms.join.filter({ $1.timeline?.limited == true }).forEach { (roomId, _) in
                 if let joinedRoomSync = newResponse.rooms.join[roomId] {
                     //  mark new timeline as limited too, to avoid losing value of limited
                     joinedRoomSync.timeline?.limited = true
                 }
             }
-            oldResponse.syncResponse.rooms.leave.filter({ $1.timeline?.limited == true }).forEach { (roomId, _) in
+            cachedSyncResponse.syncResponse.rooms.leave.filter({ $1.timeline?.limited == true }).forEach { (roomId, _) in
                 if let leftRoomSync = newResponse.rooms.leave[roomId] {
                     //  mark new timeline as limited too, to avoid losing value of limited
                     leftRoomSync.timeline?.limited = true
                 }
             }
-            var dictionary = NSDictionary(dictionary: oldResponse.jsonDictionary())
+            var dictionary = NSDictionary(dictionary: cachedSyncResponse.jsonDictionary())
             dictionary = dictionary + NSDictionary(dictionary: newResponse.jsonDictionary())
-            syncResponseStore.syncResponse = MXSyncResponseStoreModel(syncToken: oldResponse.syncToken,
-                                                                      syncResponse: MXSyncResponse(fromJSON: dictionary as? [AnyHashable : Any]))
-                
+            syncResponseStore.syncResponse = MXCachedSyncResponse(syncToken: cachedSyncResponse.syncToken,
+                                                                  syncResponse: MXSyncResponse(fromJSON: dictionary as? [AnyHashable : Any]))
         } else {
             //  no current sync response, directly save the new one
-            syncResponseStore.syncResponse = MXSyncResponseStoreModel(syncToken: syncToken,
+            syncResponseStore.syncResponse = MXCachedSyncResponse(syncToken: syncToken,
                                                                       syncResponse: newResponse)
         }
         

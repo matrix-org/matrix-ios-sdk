@@ -19,8 +19,8 @@
 
 @class MXSyncResponse;
 
-/// MXSyncResponseStore model class
-@interface MXSyncResponseStoreModel : MXJSONModel
+/// A cached MXSyncResponse
+@interface MXCachedSyncResponse : MXJSONModel
 
 /**
  The sync token that generated `syncResponse`.

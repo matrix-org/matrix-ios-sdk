@@ -23,7 +23,7 @@ import Foundation
     func open(withCredentials credentials: MXCredentials)
     
     /// Cached sync response
-    var syncResponse: MXSyncResponseStoreModel? { get set }
+    var syncResponse: MXCachedSyncResponse? { get set }
     
     /// User account data
     var accountData: [AnyHashable : Any]? { get set }
