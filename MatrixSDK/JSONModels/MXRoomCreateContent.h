@@ -18,6 +18,16 @@
 #import "MXVirtualRoomInfo.h"
 
 /**
+`MXRoomCreateContentRoomTypeJSONKey` is the JSON key used to define the room type.
+ */
+extern NSString* _Nonnull const MXRoomCreateContentRoomTypeJSONKey;
+
+/**
+ `MXRoomCreateContentRoomTypeMSC1772JSONKey` is the JSON key used to define the room type before MSC1772 finalisation.
+ */
+extern NSString* _Nonnull const MXRoomCreateContentRoomTypeMSC1772JSONKey;
+
+/**
  A `MXRoomCreateContent` instance represents the content of a `m.room.create` event type.
  */
 @interface MXRoomCreateContent : MXJSONModel
