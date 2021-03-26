@@ -18,18 +18,30 @@ import Foundation
 
 @objcMembers
 /// Sync response storage in a file implementation.
+///
+/// File structure is the following:
+/// + NSCachesDirectory or shared group id folder
+///     + SyncResponse
+///         + Matrix user id (one folder per account)
+///             + SyncResponses
+///                 L syncResponse-xxx
+///                 L syncResponse-yyy
+///                 L ...
+///             L metadata
+///
 public class MXSyncResponseFileStore: NSObject {
     
     private enum Constants {
         static let folderName = "SyncResponse"
-        static let fileName = "syncResponse"
-        static let metadataFileName = "syncResponseMetadata"
+        static let metadataFileName = "metadata"
+        static let syncResponsesFolderName = "SyncResponses"
+        static let syncResponseFileNameTemplate = "syncResponse-%@"
         static let fileEncoding: String.Encoding = .utf8
     }
     
     private let fileOperationQueue: DispatchQueue
-    private var filePath: URL!
     private var metadataFilePath: URL!
+    private var syncResponsesFolderPath: URL!
     private var credentials: MXCredentials!
     
     public override init() {
@@ -48,35 +60,36 @@ public class MXSyncResponseFileStore: NSObject {
             cachePath = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first
         }
         
-        filePath = cachePath
-            .appendingPathComponent(Constants.folderName)
-            .appendingPathComponent(userId)
-            .appendingPathComponent(Constants.fileName)
-        
         metadataFilePath = cachePath
             .appendingPathComponent(Constants.folderName)
             .appendingPathComponent(userId)
             .appendingPathComponent(Constants.metadataFileName)
         
+        syncResponsesFolderPath = cachePath
+            .appendingPathComponent(Constants.folderName)
+            .appendingPathComponent(userId)
+            .appendingPathComponent(Constants.syncResponsesFolderName)
+        
         fileOperationQueue.async {
-            try? FileManager.default.createDirectory(at: self.filePath.deletingLastPathComponent(),
+            try? FileManager.default.createDirectory(at: self.syncResponsesFolderPath,
                                                      withIntermediateDirectories: true,
                                                      attributes: nil)
         }
     }
     
-    private func readData() -> MXCachedSyncResponse? {
+    private func syncResponsePath(withId id: String) -> URL {
+        let fileName = String(format: Constants.syncResponseFileNameTemplate, id)
+        return syncResponsesFolderPath.appendingPathComponent(fileName)
+    }
+    
+    private func readSyncResponse(path: URL) -> MXCachedSyncResponse? {
         autoreleasepool {
-            guard let filePath = filePath else {
-                return nil
-            }
-            
             let stopwatch = MXStopwatch()
             
             var fileContents: String?
             
             fileOperationQueue.sync {
-                fileContents = try? String(contentsOf: filePath,
+                fileContents = try? String(contentsOf: path,
                                            encoding: Constants.fileEncoding)
                 NSLog("[MXSyncResponseFileStore] readData: File read of \(fileContents?.count ?? 0) bytes lasted \(stopwatch.readable()). Free memory: \(MXMemory.formattedMemoryAvailable())")
                 
@@ -90,29 +103,26 @@ public class MXSyncResponseFileStore: NSObject {
                 return nil
             }
             
-            let data = MXCachedSyncResponse(fromJSON: json)
+            let syncResponse = MXCachedSyncResponse(fromJSON: json)
             
             NSLog("[MXSyncResponseFileStore] readData: Consersion to model lasted \(stopwatch.readable()). Free memory: \(MXMemory.formattedMemoryAvailable())")
-            return data
+            return syncResponse
         }
     }
     
-    private func saveData(_ data: MXCachedSyncResponse?) {
-        guard let filePath = filePath else {
-            return
-        }
-        
+    private func saveSyncResponse(path: URL, syncResponse: MXCachedSyncResponse?) {
         let stopwatch = MXStopwatch()
         
-        guard let data = data else {
-            try? FileManager.default.removeItem(at: filePath)
-            NSLog("[MXSyncResponseFileStore] saveData: File remove lasted \(stopwatch.readable())")
-            return
-        }
         fileOperationQueue.async {
-            try? data.jsonString()?.write(to: self.filePath,
-                                          atomically: true,
-                                          encoding: Constants.fileEncoding)
+            guard let syncResponse = syncResponse else {
+                try? FileManager.default.removeItem(at: path)
+                NSLog("[MXSyncResponseFileStore] saveData: File remove lasted \(stopwatch.readable())")
+                return
+            }
+            
+            try? syncResponse.jsonString()?.write(to: path,
+                                                  atomically: true,
+                                                  encoding: Constants.fileEncoding)
             NSLog("[MXSyncResponseFileStore] saveData: File write lasted \(stopwatch.readable()). Free memory: \(MXMemory.formattedMemoryAvailable())")
         }
     }
@@ -161,6 +171,22 @@ public class MXSyncResponseFileStore: NSObject {
             }
         }
     }
+    
+    private func addSyncResponseId(id: String) {
+        var metadata = readMetaData() ?? MXSyncResponseStoreMetaDataModel()
+        var syncResponseIds = metadata.syncResponseIds
+        syncResponseIds.append(id)
+        metadata.syncResponseIds = syncResponseIds
+        saveMetaData(metadata)
+    }
+    
+    private func deleteSyncResponseId(id: String) {
+        var metadata = readMetaData() ?? MXSyncResponseStoreMetaDataModel()
+        var syncResponseIds = metadata.syncResponseIds
+        syncResponseIds.removeAll(where: { $0 == id })
+        metadata.syncResponseIds = syncResponseIds
+        saveMetaData(metadata)
+    }
 }
 
 //  MARK: - MXSyncResponseStore
@@ -172,45 +198,31 @@ extension MXSyncResponseFileStore: MXSyncResponseStore {
         self.setupFilePath()
     }
     
-    // TODO: To remove
-    var syncResponse: MXCachedSyncResponse? {
-        get {
-            autoreleasepool {
-                return readData()
-            }
-        } set {
-            autoreleasepool {
-                saveData(newValue)
-            }
-        }
-    }
-    
-    
     public func addSyncResponse(syncResponse: MXCachedSyncResponse) -> String {
-        self.syncResponse = syncResponse
-        return "blabla"
+        let id = UUID().uuidString
+        saveSyncResponse(path: syncResponsePath(withId: id), syncResponse: syncResponse)
+        addSyncResponseId(id: id)
+        return id
     }
     
     public func syncResponse(withId id: String) throws -> MXCachedSyncResponse {
-        guard let syncResponse = self.syncResponse else {
+        guard let syncResponse = readSyncResponse(path: syncResponsePath(withId: id)) else {
             throw MXSyncResponseStoreError.unknownId
         }
         return syncResponse
     }
     
     public func updateSyncResponse(withId id: String, syncResponse: MXCachedSyncResponse) {
-        self.syncResponse = syncResponse
+        saveSyncResponse(path: syncResponsePath(withId: id), syncResponse: syncResponse)
     }
     
     public func deleteSyncResponse(withId id: String) {
-        
+        saveSyncResponse(path: syncResponsePath(withId: id), syncResponse: nil)
+        deleteSyncResponseId(id: id)
     }
     
     public var syncResponseIds: [String] {
-        guard let syncResponse = self.syncResponse else {
-            return []
-        }
-        return [syncResponse.syncToken]
+        readMetaData()?.syncResponseIds ?? []
     }
     
     
@@ -226,7 +238,10 @@ extension MXSyncResponseFileStore: MXSyncResponseStore {
     }
     
     public func deleteData() {
-        saveData(nil)
+        let syncResponseIds = self.syncResponseIds
+        syncResponseIds.forEach { id in
+            deleteSyncResponse(withId: id)
+        }
         saveMetaData(nil)
     }
 }
