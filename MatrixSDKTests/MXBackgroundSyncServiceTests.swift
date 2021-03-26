@@ -103,8 +103,7 @@ class MXBackgroundSyncServiceTests: XCTestCase {
 
                             XCTAssertNil(bobStore.event(withEventId: eventId, inRoom: roomId), "Event should not be in store yet")
 
-                            let syncResponseStore = MXSyncResponseFileStore()
-                            syncResponseStore.open(withCredentials: bobCredentials)
+                            let syncResponseStore = MXSyncResponseFileStore(withCredentials: bobCredentials)
                             let syncResponseStoreManager = MXSyncResponseStoreManager(syncResponseStore: syncResponseStore)
                             XCTAssertNotNil(syncResponseStoreManager.event(withEventId: eventId, inRoom: roomId), "Event should be stored in sync response store")
 
@@ -193,8 +192,7 @@ class MXBackgroundSyncServiceTests: XCTestCase {
                             
                             XCTAssertNil(bobStore.event(withEventId: eventId, inRoom: roomId), "Event should not be in session store yet")
                             
-                            let syncResponseStore = MXSyncResponseFileStore()
-                            syncResponseStore.open(withCredentials: bobCredentials)
+                            let syncResponseStore = MXSyncResponseFileStore(withCredentials: bobCredentials)
                             let syncResponseStoreManager = MXSyncResponseStoreManager(syncResponseStore: syncResponseStore)
                             XCTAssertNotNil(syncResponseStoreManager.event(withEventId: eventId, inRoom: roomId), "Event should be stored in sync response store")
                             
@@ -294,8 +292,7 @@ class MXBackgroundSyncServiceTests: XCTestCase {
                                         
                                         XCTAssertNil(bobStore.event(withEventId: eventId, inRoom: roomId), "Event should not be in session store yet")
                                         
-                                        let syncResponseStore = MXSyncResponseFileStore()
-                                        syncResponseStore.open(withCredentials: bobCredentials)
+                                        let syncResponseStore = MXSyncResponseFileStore(withCredentials: bobCredentials)
                                         let syncResponseStoreManager = MXSyncResponseStoreManager(syncResponseStore: syncResponseStore)
                                         XCTAssertNotNil(syncResponseStoreManager.event(withEventId: eventId, inRoom: roomId), "Event should be stored in sync response store")
                                         
@@ -459,8 +456,7 @@ class MXBackgroundSyncServiceTests: XCTestCase {
                             let text = event.content["body"] as? String
                             XCTAssertEqual(text, "\(Constants.messageText) - \(Constants.numberOfMessagesForLimitedTest)", "Event content should match")
 
-                            let syncResponseStore = MXSyncResponseFileStore()
-                            syncResponseStore.open(withCredentials: bobCredentials)
+                            let syncResponseStore = MXSyncResponseFileStore(withCredentials: bobCredentials)
                             let syncResponseStoreManager = MXSyncResponseStoreManager(syncResponseStore: syncResponseStore)
                             XCTAssertNil(syncResponseStoreManager.event(withEventId: firstEventId, inRoom: roomId), "First event should not be present in sync response store")
                             XCTAssertNotNil(syncResponseStoreManager.event(withEventId: lastEventId, inRoom: roomId), "Last event should be present in sync response store")
@@ -560,8 +556,7 @@ class MXBackgroundSyncServiceTests: XCTestCase {
                     self.bgSyncService?.event(withEventId: eventId, inRoom: roomId) { (response) in
                         switch response {
                         case .success:
-                            let syncResponseStore = MXSyncResponseFileStore()
-                            syncResponseStore.open(withCredentials: bobCredentials)
+                            let syncResponseStore = MXSyncResponseFileStore(withCredentials: bobCredentials)
                             let syncResponseStoreManager = MXSyncResponseStoreManager(syncResponseStore: syncResponseStore)
                             
                             var syncResponse = syncResponseStoreManager.lastSyncResponse()?.syncResponse
@@ -666,8 +661,7 @@ class MXBackgroundSyncServiceTests: XCTestCase {
                         self.bgSyncService = MXBackgroundSyncService(withCredentials: bobCredentials)
                         self.bgSyncService?.event(withEventId: eventId, inRoom: roomId) { _ in
                             
-                            let syncResponseStore = MXSyncResponseFileStore()
-                            syncResponseStore.open(withCredentials: bobCredentials)
+                            let syncResponseStore = MXSyncResponseFileStore(withCredentials: bobCredentials)
                             let syncResponseStoreManager = MXSyncResponseStoreManager(syncResponseStore: syncResponseStore)
                             let syncResponseStoreSyncToken = syncResponseStoreManager.syncToken()
                             
@@ -681,10 +675,7 @@ class MXBackgroundSyncServiceTests: XCTestCase {
                                 self.bgSyncService?.event(withEventId: "aRandomEventId", inRoom: roomId) { _ in
                                     
                                     // -> MXBackgroundSyncService should have detected that the MXSession ran in parallel.
-                                    //    It must have reset its cache. syncResponseStore.prevBatch must not be the same
-                                    let syncResponseStore = MXSyncResponseFileStore()
-                                    syncResponseStore.open(withCredentials: bobCredentials)
-                                    
+                                    //    It must have reset its cache. syncResponseStore.prevBatch must not be the same                                    
                                     XCTAssertNotEqual(syncResponseStoreSyncToken, syncResponseStoreManager.syncToken())
 
                                     expectation?.fulfill()

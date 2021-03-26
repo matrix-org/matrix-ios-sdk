@@ -40,15 +40,10 @@ public class MXSyncResponseFileStore: NSObject {
     }
     
     private let fileOperationQueue: DispatchQueue
-    private var metadataFilePath: URL!
-    private var syncResponsesFolderPath: URL!
-    private var credentials: MXCredentials!
+    private var metadataFilePath: URL
+    private var syncResponsesFolderPath: URL
     
-    public override init() {
-        fileOperationQueue = DispatchQueue(label: "MXSyncResponseFileStore-" + MXTools.generateSecret())
-    }
-    
-    private func setupFilePath() {
+    public init(withCredentials credentials: MXCredentials) {
         guard let userId = credentials.userId else {
             fatalError("Credentials must provide a user identifier")
         }
@@ -65,13 +60,16 @@ public class MXSyncResponseFileStore: NSObject {
             .appendingPathComponent(userId)
             .appendingPathComponent(Constants.metadataFileName)
         
-        syncResponsesFolderPath = cachePath
+        let syncResponsesFolderPath = cachePath
             .appendingPathComponent(Constants.folderName)
             .appendingPathComponent(userId)
             .appendingPathComponent(Constants.syncResponsesFolderName)
+        self.syncResponsesFolderPath = syncResponsesFolderPath
         
+        fileOperationQueue = DispatchQueue(label: "MXSyncResponseFileStore-" + MXTools.generateSecret())
+
         fileOperationQueue.async {
-            try? FileManager.default.createDirectory(at: self.syncResponsesFolderPath,
+            try? FileManager.default.createDirectory(at: syncResponsesFolderPath,
                                                      withIntermediateDirectories: true,
                                                      attributes: nil)
         }
@@ -127,11 +125,7 @@ public class MXSyncResponseFileStore: NSObject {
         }
     }
     
-    private func readMetaData() -> MXSyncResponseStoreMetaDataModel? {
-        guard let metadataFilePath = metadataFilePath else {
-            return nil
-        }
-        
+    private func readMetaData() -> MXSyncResponseStoreMetaDataModel {
         var fileData: Data?
         fileOperationQueue.sync {
             fileData = try? Data(contentsOf: metadataFilePath)
@@ -139,7 +133,7 @@ public class MXSyncResponseFileStore: NSObject {
         
         guard let data = fileData else {
             NSLog("[MXSyncResponseFileStore] readMetaData: File does not exist")
-            return nil
+            return MXSyncResponseStoreMetaDataModel()
         }
         
         do {
@@ -147,25 +141,21 @@ public class MXSyncResponseFileStore: NSObject {
             return metadata
         } catch let error {
             NSLog("[MXSyncResponseFileStore] readMetaData: Failed to decode. Error: \(error)")
-            return nil
+            return MXSyncResponseStoreMetaDataModel()
         }
     }
     
     private func saveMetaData(_ metadata: MXSyncResponseStoreMetaDataModel?) {
-        guard let metadataFilePath = metadataFilePath else {
-            return
-        }
-        
         fileOperationQueue.async {
             guard let metadata = metadata else {
-                try? FileManager.default.removeItem(at: metadataFilePath)
+                try? FileManager.default.removeItem(at: self.metadataFilePath)
                 NSLog("[MXSyncResponseFileStore] saveMetaData: Remove file")
                 return
             }
             
             do {
                 let data = try PropertyListEncoder().encode(metadata)
-                try data.write(to: metadataFilePath)
+                try data.write(to: self.metadataFilePath)
             } catch let error {
                 NSLog("[MXSyncResponseFileStore] saveMetaData: Failed to store. Error: \(error)")
             }
@@ -173,17 +163,21 @@ public class MXSyncResponseFileStore: NSObject {
     }
     
     private func addSyncResponseId(id: String) {
-        var metadata = readMetaData() ?? MXSyncResponseStoreMetaDataModel()
+        var metadata = readMetaData()
+        
         var syncResponseIds = metadata.syncResponseIds
         syncResponseIds.append(id)
+        
         metadata.syncResponseIds = syncResponseIds
         saveMetaData(metadata)
     }
     
     private func deleteSyncResponseId(id: String) {
-        var metadata = readMetaData() ?? MXSyncResponseStoreMetaDataModel()
+        var metadata = readMetaData()
+        
         var syncResponseIds = metadata.syncResponseIds
         syncResponseIds.removeAll(where: { $0 == id })
+        
         metadata.syncResponseIds = syncResponseIds
         saveMetaData(metadata)
     }
@@ -192,11 +186,6 @@ public class MXSyncResponseFileStore: NSObject {
 //  MARK: - MXSyncResponseStore
 
 extension MXSyncResponseFileStore: MXSyncResponseStore {
-    
-    public func open(withCredentials credentials: MXCredentials) {
-        self.credentials = credentials
-        self.setupFilePath()
-    }
     
     public func addSyncResponse(syncResponse: MXCachedSyncResponse) -> String {
         let id = UUID().uuidString
@@ -222,20 +211,21 @@ extension MXSyncResponseFileStore: MXSyncResponseStore {
     }
     
     public var syncResponseIds: [String] {
-        readMetaData()?.syncResponseIds ?? []
+        readMetaData().syncResponseIds
     }
     
     
     public var accountData: [AnyHashable : Any]? {
         get {
-            return readMetaData()?.accountData
+            return readMetaData().accountData
         }
         set {
-            var metadata = readMetaData() ?? MXSyncResponseStoreMetaDataModel()
+            var metadata = readMetaData()
             metadata.accountData = newValue
             saveMetaData(metadata)
         }
     }
+    
     
     public func deleteData() {
         let syncResponseIds = self.syncResponseIds

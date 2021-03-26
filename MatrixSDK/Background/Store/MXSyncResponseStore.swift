@@ -25,10 +25,6 @@ public enum MXSyncResponseStoreError: Error {
 /// Protocol defining the storage for a sync response.
 @objc public protocol MXSyncResponseStore: NSObjectProtocol {
     
-    /// Open the store with the given credentials
-    /// - Parameter credentials: Credentials
-    func open(withCredentials credentials: MXCredentials)
-    
     /// CRUD interface for cached sync responses
     func addSyncResponse(syncResponse: MXCachedSyncResponse) -> String
     func syncResponse(withId id: String) throws -> MXCachedSyncResponse

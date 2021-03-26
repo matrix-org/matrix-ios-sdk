@@ -56,8 +56,7 @@ public enum MXBackgroundSyncServiceError: Error {
         processingQueue = DispatchQueue(label: "MXBackgroundSyncServiceQueue-" + MXTools.generateSecret())
         self.credentials = credentials
         
-        syncResponseStore = MXSyncResponseFileStore()
-        syncResponseStore.open(withCredentials: credentials)
+        syncResponseStore = MXSyncResponseFileStore(withCredentials: credentials)
         syncResponseStoreManager = MXSyncResponseStoreManager(syncResponseStore: syncResponseStore)
         
         restClient = MXRestClient(credentials: credentials, unrecognizedCertificateHandler: nil)

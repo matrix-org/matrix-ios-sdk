@@ -1686,8 +1686,7 @@ typedef void (^MXOnResumeDone)(void);
 {
     NSLog(@"[MXSession] handleBackgroundSyncCacheIfRequired: state %tu", _state);
     
-    MXSyncResponseFileStore *syncResponseStore = [[MXSyncResponseFileStore alloc] init];
-    [syncResponseStore openWithCredentials:self.credentials];
+    MXSyncResponseFileStore *syncResponseStore = [[MXSyncResponseFileStore alloc] initWithCredentials:self.credentials];
     MXSyncResponseStoreManager *syncResponseStoreManager = [[MXSyncResponseStoreManager alloc] initWithSyncResponseStore:syncResponseStore];
     
     NSString *syncResponseStoreSyncToken = syncResponseStoreManager.syncToken;
