@@ -63,7 +63,7 @@ public enum MXBackgroundSyncServiceError: Error {
         restClient.completionQueue = processingQueue
         store = MXBackgroundStore(withCredentials: credentials)
         // We can flush any crypto data if our sync response store is empty
-        let resetBackgroundCryptoStore = syncResponseStore.syncResponse == nil
+        let resetBackgroundCryptoStore = syncResponseStoreManager.syncToken() == nil
         cryptoStore = MXBackgroundCryptoStore(credentials: credentials, resetBackgroundCryptoStore: resetBackgroundCryptoStore)
         
         olmDevice = MXOlmDevice(store: cryptoStore)
