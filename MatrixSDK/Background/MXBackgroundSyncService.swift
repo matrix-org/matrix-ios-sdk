@@ -39,7 +39,6 @@ public enum MXBackgroundSyncServiceError: Error {
     
     private let processingQueue: DispatchQueue
     private let credentials: MXCredentials
-    private let syncResponseStore: MXSyncResponseStore
     private let syncResponseStoreManager: MXSyncResponseStoreManager
     private var store: MXStore
     private let cryptoStore: MXBackgroundCryptoStore
@@ -56,7 +55,7 @@ public enum MXBackgroundSyncServiceError: Error {
         processingQueue = DispatchQueue(label: "MXBackgroundSyncServiceQueue-" + MXTools.generateSecret())
         self.credentials = credentials
         
-        syncResponseStore = MXSyncResponseFileStore(withCredentials: credentials)
+        let syncResponseStore = MXSyncResponseFileStore(withCredentials: credentials)
         syncResponseStoreManager = MXSyncResponseStoreManager(syncResponseStore: syncResponseStore)
         
         restClient = MXRestClient(credentials: credentials, unrecognizedCertificateHandler: nil)
@@ -68,7 +67,7 @@ public enum MXBackgroundSyncServiceError: Error {
         
         olmDevice = MXOlmDevice(store: cryptoStore)
         pushRulesManager = MXBackgroundPushRulesManager(withCredentials: credentials)
-        if let accountData = syncResponseStore.accountData {
+        if let accountData = syncResponseStoreManager.syncResponseStore.accountData {
             pushRulesManager.handleAccountData(accountData)
         } else if let accountData = store.userAccountData ?? nil {
             pushRulesManager.handleAccountData(accountData)
@@ -525,8 +524,8 @@ public enum MXBackgroundSyncServiceError: Error {
             store = upToDateStore
             
             // syncResponseStore has obsolete data. Reset it
-            NSLog("[MXBackgroundSyncService] updateBackgroundServiceStoresIfNeeded: Reset MXSyncResponseStore. Its sync token was \(String(describing: syncResponseStoreManager.syncToken))")
-            syncResponseStore.deleteData()
+            NSLog("[MXBackgroundSyncService] updateBackgroundServiceStoresIfNeeded: Reset MXSyncResponseStoreManager. Its sync token was \(String(describing: syncResponseStoreManager.syncToken))")
+            syncResponseStoreManager.resetData()
             
             NSLog("[MXBackgroundSyncService] updateBackgroundServiceStoresIfNeeded: Reset MXBackgroundCryptoStore")
             cryptoStore.reset()

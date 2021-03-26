@@ -65,7 +65,16 @@ public class MXSyncResponseStoreManager: NSObject {
         return syncResponse
     }
     
+    public func resetData() {
+        NSLog("[MXSyncResponseStoreManager] resetData. The sync token was \(String(describing: syncToken))")
+        
+        // Delete all the store
+        // TODO: Don't do that. We loose ephemeral data we will never received again in /sync requests like e2ee keys.
+        // It will be fixed in https://github.com/vector-im/element-ios/issues/4074
+        syncResponseStore.deleteData()
+    }
     
+
     /// Cache a sync response.
     /// - Parameters:
     ///   - newSyncResponse: the sync response to store
