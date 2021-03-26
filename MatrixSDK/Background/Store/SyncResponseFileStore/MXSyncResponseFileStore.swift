@@ -122,8 +122,13 @@ public class MXSyncResponseFileStore: NSObject {
             return nil
         }
         
-        guard let data = NSKeyedUnarchiver.unarchiveObject(withFile: metadataFilePath.path) as? Data else {
-            NSLog("[MXSyncResponseFileStore] readMetaData: Failed to read file")
+        var fileData: Data?
+        fileOperationQueue.sync {
+            fileData = try? Data(contentsOf: metadataFilePath)
+        }
+        
+        guard let data = fileData else {
+            NSLog("[MXSyncResponseFileStore] readMetaData: File does not exist")
             return nil
         }
         
@@ -141,15 +146,16 @@ public class MXSyncResponseFileStore: NSObject {
             return
         }
         
-        guard let metadata = metadata else {
-            try? FileManager.default.removeItem(at: metadataFilePath)
-            NSLog("[MXSyncResponseFileStore] saveMetaData: Remove file")
-            return
-        }
         fileOperationQueue.async {
+            guard let metadata = metadata else {
+                try? FileManager.default.removeItem(at: metadataFilePath)
+                NSLog("[MXSyncResponseFileStore] saveMetaData: Remove file")
+                return
+            }
+            
             do {
                 let data = try PropertyListEncoder().encode(metadata)
-                NSKeyedArchiver.archiveRootObject(data, toFile:metadataFilePath.path)
+                try data.write(to: metadataFilePath)
             } catch let error {
                 NSLog("[MXSyncResponseFileStore] saveMetaData: Failed to store. Error: \(error)")
             }
