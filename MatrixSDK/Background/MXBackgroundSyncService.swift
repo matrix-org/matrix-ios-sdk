@@ -46,6 +46,10 @@ public enum MXBackgroundSyncServiceError: Error {
     private let restClient: MXRestClient
     private var pushRulesManager: MXBackgroundPushRulesManager
     
+    // Mechanism to process a call of event() at a time
+    private let eventDispatchGroup: DispatchGroup
+    private let eventDispatchQueue: DispatchQueue
+    
     /// Cached events. Keys are even identifiers.
     private var cachedEvents: [String: MXEvent] = [:]
     
@@ -54,6 +58,9 @@ public enum MXBackgroundSyncServiceError: Error {
     public init(withCredentials credentials: MXCredentials) {
         processingQueue = DispatchQueue(label: "MXBackgroundSyncServiceQueue-" + MXTools.generateSecret())
         self.credentials = credentials
+        
+        eventDispatchGroup = DispatchGroup()
+        eventDispatchQueue = DispatchQueue(label: "MXBackgroundSyncServiceQueueEventSerialQueue-" + MXTools.generateSecret())
         
         let syncResponseStore = MXSyncResponseFileStore(withCredentials: credentials)
         syncResponseStoreManager = MXSyncResponseStoreManager(syncResponseStore: syncResponseStore)
@@ -83,8 +90,21 @@ public enum MXBackgroundSyncServiceError: Error {
     public func event(withEventId eventId: String,
                       inRoom roomId: String,
                       completion: @escaping (MXResponse<MXEvent>) -> Void) {
-        processingQueue.async {
-            self._event(withEventId: eventId, inRoom: roomId, completion: completion)
+        // Process one request at a time
+        let stopwatch = MXStopwatch()
+        eventDispatchQueue.async {
+            self.eventDispatchGroup.wait()
+            self.eventDispatchGroup.enter()
+            
+            self.processingQueue.async {
+                
+                NSLog("[MXBackgroundSyncService] event: Start processing \(eventId)c after waiting for \(stopwatch.readable())")
+                
+                self._event(withEventId: eventId, inRoom: roomId) { response in
+                    completion(response)
+                    self.eventDispatchGroup.leave()
+                }
+            }
         }
     }
     
