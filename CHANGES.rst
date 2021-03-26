@@ -5,6 +5,30 @@ Changes to be released in next version
  * 
 
 🙌 Improvements
+ * 
+
+🐛 Bugfix
+ * 
+
+⚠️ API Changes
+ * 
+
+🗣 Translations
+ * 
+    
+🧱 Build
+ * 
+
+Others
+ * 
+
+Changes in 0.18.6 (2021-03-24)
+=================================================
+
+✨ Features
+ * 
+
+🙌 Improvements
  * Support room type as described in MSC1840 (vector-im/element-ios/issues/4050).
  * Pods: Update JitsiMeetSDK, OHHTTPStubs, Realm (vector-im/element-ios/issues/4120).
  * MXCrypto: Do not load room members in e2e rooms after an initial sync.
@@ -16,6 +40,8 @@ Changes to be released in next version
  * MXDeviceList: Fix memory leak.
  * MXDeviceListOperation: Fix memory leak.
  * MXRoomState/MXRoomMembers: Fix memory leak and copying.
+ * MXKeyBackup: Add sanity checks to avoid crashes (vector-im/element-ios/issues/4113).
+ * MXTools: Avoid releasing null pointer to fix crash on M1 simulator (vector-im/element-ios/issues/4140)
 
 ⚠️ API Changes
  * 
@@ -29,6 +55,9 @@ Changes to be released in next version
 
 Others
  * GitHub Actions: Run pod lib lint
+
+Improvements:
+
 
 Changes in 0.18.5 (2021-03-11)
 =================================================
