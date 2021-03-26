@@ -201,6 +201,14 @@ extension MXSyncResponseFileStore: MXSyncResponseStore {
         return syncResponse
     }
     
+    public func syncResponseSize(withId id: String) -> Int {
+        guard let attributes = try? FileManager.default.attributesOfItem(atPath: syncResponsePath(withId: id).path),
+              let size = attributes[FileAttributeKey.size] as? Int else {
+            return 0
+        }
+        return size
+    }
+    
     public func updateSyncResponse(withId id: String, syncResponse: MXCachedSyncResponse) {
         saveSyncResponse(path: syncResponsePath(withId: id), syncResponse: syncResponse)
     }

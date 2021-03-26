@@ -1697,7 +1697,7 @@ typedef void (^MXOnResumeDone)(void);
         {
             //  sync response really continues from where the session left
             NSArray<NSString *> *syncResponseIds = syncResponseStore.syncResponseIds;
-            NSLog(@"[MXSession] handleBackgroundSyncCacheIfRequired: Handle %@ caches from stream token %@", @(syncResponseIds.count), eventStreamToken);
+            NSLog(@"[MXSession] handleBackgroundSyncCacheIfRequired: Handle %@ cached sync responses from stream token %@", @(syncResponseIds.count), eventStreamToken);
             
             dispatch_group_t dispatchGroup = dispatch_group_create();
             

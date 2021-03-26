@@ -19,6 +19,12 @@ import Foundation
 /// Sync response storage in a file implementation.
 @objcMembers
 public class MXSyncResponseStoreManager: NSObject {
+    
+    /// Maximum data size for sync responses cached in MXSyncResponseStore
+    /// Under this value, we merge sync sync reponses between them
+    var syncResponseSizeLimt: Int = 1024 * 1024
+    
+    /// The actual store
     let syncResponseStore: MXSyncResponseStore
     
     public init(syncResponseStore: MXSyncResponseStore) {
@@ -65,56 +71,69 @@ public class MXSyncResponseStoreManager: NSObject {
     ///   - newSyncResponse: the sync response to store
     ///   - syncToken: the sync token that generated this sync response.
     public func updateStore(with newSyncResponse: MXSyncResponse, syncToken: String) {
-        if let id = syncResponseStore.syncResponseIds.last,
-           let cachedSyncResponse = try? syncResponseStore.syncResponse(withId: id) {
-
-            //  current sync response exists, merge it with the new response
+        if let id = syncResponseStore.syncResponseIds.last {
             
-            //  handle new limited timelines
-            newSyncResponse.rooms.join.filter({ $1.timeline?.limited == true }).forEach { (roomId, _) in
-                if let joinedRoomSync = cachedSyncResponse.syncResponse.rooms.join[roomId] {
-                    //  remove old events
-                    joinedRoomSync.timeline?.events = []
-                    //  mark old timeline as limited too
-                    joinedRoomSync.timeline?.limited = true
+            // Check if we can merge the new sync response to the last one
+            // Store it as a new chunk if the previous chunk is too big
+            let cachedSyncResponseSize = syncResponseStore.syncResponseSize(withId: id)
+            if  cachedSyncResponseSize < syncResponseSizeLimt,
+                let cachedSyncResponse = try? syncResponseStore.syncResponse(withId: id) {
+                
+                NSLog("[MXSyncResponseStoreManager] updateStore: Merge new sync response to the previous one")
+                
+                //  handle new limited timelines
+                newSyncResponse.rooms.join.filter({ $1.timeline?.limited == true }).forEach { (roomId, _) in
+                    if let joinedRoomSync = cachedSyncResponse.syncResponse.rooms.join[roomId] {
+                        //  remove old events
+                        joinedRoomSync.timeline?.events = []
+                        //  mark old timeline as limited too
+                        joinedRoomSync.timeline?.limited = true
+                    }
                 }
-            }
-            newSyncResponse.rooms.leave.filter({ $1.timeline?.limited == true }).forEach { (roomId, _) in
-                if let leftRoomSync = cachedSyncResponse.syncResponse.rooms.leave[roomId] {
-                    //  remove old events
-                    leftRoomSync.timeline?.events = []
-                    //  mark old timeline as limited too
-                    leftRoomSync.timeline?.limited = true
+                newSyncResponse.rooms.leave.filter({ $1.timeline?.limited == true }).forEach { (roomId, _) in
+                    if let leftRoomSync = cachedSyncResponse.syncResponse.rooms.leave[roomId] {
+                        //  remove old events
+                        leftRoomSync.timeline?.events = []
+                        //  mark old timeline as limited too
+                        leftRoomSync.timeline?.limited = true
+                    }
                 }
-            }
-            
-            //  handle old limited timelines
-            cachedSyncResponse.syncResponse.rooms.join.filter({ $1.timeline?.limited == true }).forEach { (roomId, _) in
-                if let joinedRoomSync = newSyncResponse.rooms.join[roomId] {
-                    //  mark new timeline as limited too, to avoid losing value of limited
-                    joinedRoomSync.timeline?.limited = true
+                
+                //  handle old limited timelines
+                cachedSyncResponse.syncResponse.rooms.join.filter({ $1.timeline?.limited == true }).forEach { (roomId, _) in
+                    if let joinedRoomSync = newSyncResponse.rooms.join[roomId] {
+                        //  mark new timeline as limited too, to avoid losing value of limited
+                        joinedRoomSync.timeline?.limited = true
+                    }
                 }
-            }
-            cachedSyncResponse.syncResponse.rooms.leave.filter({ $1.timeline?.limited == true }).forEach { (roomId, _) in
-                if let leftRoomSync = newSyncResponse.rooms.leave[roomId] {
-                    //  mark new timeline as limited too, to avoid losing value of limited
-                    leftRoomSync.timeline?.limited = true
+                cachedSyncResponse.syncResponse.rooms.leave.filter({ $1.timeline?.limited == true }).forEach { (roomId, _) in
+                    if let leftRoomSync = newSyncResponse.rooms.leave[roomId] {
+                        //  mark new timeline as limited too, to avoid losing value of limited
+                        leftRoomSync.timeline?.limited = true
+                    }
                 }
+                
+                // Merge the new sync response to the old one
+                var dictionary = NSDictionary(dictionary: cachedSyncResponse.jsonDictionary())
+                dictionary = dictionary + NSDictionary(dictionary: newSyncResponse.jsonDictionary())
+                
+                // And update it to the store.
+                // Note we we care only about the cached sync token. syncToken is now useless
+                let updatedCachedSyncResponse = MXCachedSyncResponse(syncToken: cachedSyncResponse.syncToken,
+                                                                     syncResponse: MXSyncResponse(fromJSON: dictionary as? [AnyHashable : Any]))
+                syncResponseStore.updateSyncResponse(withId: id, syncResponse: updatedCachedSyncResponse)
+                
+                
+            } else {
+                // Use a new chunk
+                NSLog("[MXSyncResponseStoreManager] updateStore: Create a new chunk to store the new sync response. Previous chunk size: \(cachedSyncResponseSize)")
+                let cachedSyncResponse = MXCachedSyncResponse(syncToken: syncToken,
+                                                              syncResponse: newSyncResponse)
+                _ = syncResponseStore.addSyncResponse(syncResponse: cachedSyncResponse)
             }
-            
-            // Merge the new sync response to the old one
-            var dictionary = NSDictionary(dictionary: cachedSyncResponse.jsonDictionary())
-            dictionary = dictionary + NSDictionary(dictionary: newSyncResponse.jsonDictionary())
-            
-            // And update it to the store.
-            // Note we we care only about the cached sync token. syncToken is now useless
-            let updatedCachedSyncResponse = MXCachedSyncResponse(syncToken: cachedSyncResponse.syncToken,
-                                                                 syncResponse: MXSyncResponse(fromJSON: dictionary as? [AnyHashable : Any]))
-            syncResponseStore.updateSyncResponse(withId: id, syncResponse: updatedCachedSyncResponse)
-            
-            
         } else {
             //  no current sync response, directly save the new one
+            NSLog("[MXSyncResponseStoreManager] updateStore: Start storing sync response")
             let cachedSyncResponse = MXCachedSyncResponse(syncToken: syncToken,
                                                          syncResponse: newSyncResponse)
             _ = syncResponseStore.addSyncResponse(syncResponse: cachedSyncResponse)
