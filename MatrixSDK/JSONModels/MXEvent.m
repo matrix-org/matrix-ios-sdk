@@ -84,6 +84,7 @@ NSString *const kMXEventTypeStringTaggedEvents          = @"m.tagged_events";
 //NSString *const kMXEventTypeStringSpaceChild            = @"m.space.child";
 // Use temporary event type until the MSC approval
 NSString *const kMXEventTypeStringSpaceChild            = @"org.matrix.msc1772.space.child";
+NSString *const kMXEventTypeStringRoomRetention         = @"m.room.retention";
 
 NSString *const kMXMessageTypeText                   = @"m.text";
 NSString *const kMXMessageTypeEmote                  = @"m.emote";
