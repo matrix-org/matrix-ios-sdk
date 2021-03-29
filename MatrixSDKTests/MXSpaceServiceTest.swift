@@ -73,6 +73,11 @@ class MXSpaceServiceTest: XCTestCase {
     
     // MARK: - Tests
     
+    /// - Create Bob
+    /// - Setup Bob session
+    /// - Create a space with default space creation parameters
+    ///
+    /// -> Bob must see the created space with default parameters set
     func testCreateSpace() throws {
         
         self.doSpaceServiceTestWithBob(testCase: self) { (spaceService, _, expectation) in
@@ -95,6 +100,7 @@ class MXSpaceServiceTest: XCTestCase {
                     XCTAssertTrue(summary.roomType == .space)
                     XCTAssert(summary.membersCount.members == 1, "Bob must be the only one")
                     
+                    // Check if room state match space creation parameters
                     space.room.state { (roomState) in
                         guard let roomState = roomState else {
                             XCTFail("Room should have a room state")
@@ -113,6 +119,11 @@ class MXSpaceServiceTest: XCTestCase {
         }
     }
     
+    /// - Create Bob
+    /// - Setup Bob session
+    /// - Create a public space with a name a topic
+    ///
+    /// -> Bob must see the created space with name and topic set
     func testCreatePublicSpace() throws {
         self.doSpaceServiceTestWithBob(testCase: self) { (spaceService, _, expectation) in
             
@@ -135,6 +146,7 @@ class MXSpaceServiceTest: XCTestCase {
                         XCTAssertTrue(summary.displayname == expectedSpaceName)
                         XCTAssertTrue(summary.topic == expectedSpaceTopic)
                                             
+                        // Check if room state match space creation parameters
                         space.room.state { (roomState) in
                             guard let roomState = roomState else {
                                 XCTFail("Room should have a room state")
