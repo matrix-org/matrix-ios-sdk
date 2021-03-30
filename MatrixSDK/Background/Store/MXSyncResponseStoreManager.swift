@@ -123,7 +123,7 @@ public class MXSyncResponseStoreManager: NSObject {
                 }
                 
                 // Merge the new sync response to the old one
-                var dictionary = NSDictionary(dictionary: cachedSyncResponse.jsonDictionary())
+                var dictionary = NSDictionary(dictionary: cachedSyncResponse.syncResponse.jsonDictionary())
                 dictionary = dictionary + NSDictionary(dictionary: newSyncResponse.jsonDictionary())
                 
                 // And update it to the store.
