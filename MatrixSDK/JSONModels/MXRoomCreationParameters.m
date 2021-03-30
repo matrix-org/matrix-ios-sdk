@@ -17,6 +17,7 @@
 
 #import "MXRoomCreationParameters.h"
 #import "MXRoomCreateContent.h"
+#import "MatrixSDKSwiftHeader.h"
 
 @implementation MXRoomCreationParameters
 
@@ -106,6 +107,49 @@
     return dictionary;
 }
 
+- (void)addOrUpdateInitialStateEvent:(NSDictionary*)stateEvent
+{
+    if (!self.initialStateEvents)
+    {
+        self.initialStateEvents = @[];
+    }
+    
+    NSString *stateEventTypeString = stateEvent[@"type"];
+    
+    if (!stateEventTypeString)
+    {
+        return;
+    }
+    
+    NSInteger existingStateEventIndex = [self indexForStateEventTypeString:stateEventTypeString];
+    
+    NSMutableArray *initialStateEvents = [self.initialStateEvents mutableCopy];
+    
+    if (existingStateEventIndex != NSNotFound)
+    {
+        initialStateEvents[existingStateEventIndex] = stateEvent;
+    }
+    else
+    {
+        [initialStateEvents addObject:stateEvent];
+    }
+    
+    self.initialStateEvents = initialStateEvents;
+}
+
+#pragma mark - Private
+
+- (NSInteger)indexForStateEventTypeString:(NSString*)eventTypeString
+{
+    return [self.initialStateEvents indexOfObjectPassingTest:^BOOL(NSDictionary * _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
+        if ([obj[@"type"] isEqualToString:eventTypeString])
+        {
+            *stop = YES;
+            return YES;
+        }
+        return NO;
+    }];
+}
 
 #pragma mark - Factory
 
@@ -121,13 +165,9 @@
 
 + (NSDictionary *)initialStateEventForEncryptionWithAlgorithm:(NSString *)algorithm
 {
-    return @{
-             @"type": @"m.room.encryption",
-             @"state_key": @"",
-             @"content": @{
-                     @"algorithm": algorithm
-                     }
-             };
+    // Do not break the API for the moment
+    MXRoomStateEventBuilder *stateEventBuilder = [MXRoomStateEventBuilder new];
+    return [stateEventBuilder buildAlgorithmEventWithAlgorithm:algorithm];
 }
 
 + (NSDictionary *)creationContentForVirtualRoomWithNativeRoomId:(NSString *)roomId
