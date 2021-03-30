@@ -1170,6 +1170,8 @@
 		B19A30D724042F2700FB6F35 /* MXSelfVerifyingMasterKeyNotTrustedQRCodeData.m in Sources */ = {isa = PBXBuildFile; fileRef = B19A30D324042F2700FB6F35 /* MXSelfVerifyingMasterKeyNotTrustedQRCodeData.m */; };
 		B19A30D82404335D00FB6F35 /* MXQRCodeDataTests.m in Sources */ = {isa = PBXBuildFile; fileRef = B19A30AE240425D000FB6F35 /* MXQRCodeDataTests.m */; };
 		B19A30D92404335D00FB6F35 /* MXQRCodeDataTests.m in Sources */ = {isa = PBXBuildFile; fileRef = B19A30AE240425D000FB6F35 /* MXQRCodeDataTests.m */; };
+		B19EC8A2260E134A00543BEC /* MXRoomStateEventBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = B19EC8A1260E134A00543BEC /* MXRoomStateEventBuilder.swift */; };
+		B19EC8A3260E134A00543BEC /* MXRoomStateEventBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = B19EC8A1260E134A00543BEC /* MXRoomStateEventBuilder.swift */; };
 		B1C854EE25E7B497005867D0 /* MXRoomType.h in Headers */ = {isa = PBXBuildFile; fileRef = B1C854ED25E7B492005867D0 /* MXRoomType.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		B1C854EF25E7B498005867D0 /* MXRoomType.h in Headers */ = {isa = PBXBuildFile; fileRef = B1C854ED25E7B492005867D0 /* MXRoomType.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		B1DDC9D62418098200D208E3 /* MXIncomingSASTransaction_Private.h in Headers */ = {isa = PBXBuildFile; fileRef = B1DDC9D52418098200D208E3 /* MXIncomingSASTransaction_Private.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -2027,6 +2029,7 @@
 		B19A30CD24042F0800FB6F35 /* MXSelfVerifyingMasterKeyTrustedQRCodeData.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MXSelfVerifyingMasterKeyTrustedQRCodeData.m; sourceTree = "<group>"; };
 		B19A30D224042F2700FB6F35 /* MXSelfVerifyingMasterKeyNotTrustedQRCodeData.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MXSelfVerifyingMasterKeyNotTrustedQRCodeData.h; sourceTree = "<group>"; };
 		B19A30D324042F2700FB6F35 /* MXSelfVerifyingMasterKeyNotTrustedQRCodeData.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MXSelfVerifyingMasterKeyNotTrustedQRCodeData.m; sourceTree = "<group>"; };
+		B19EC8A1260E134A00543BEC /* MXRoomStateEventBuilder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXRoomStateEventBuilder.swift; sourceTree = "<group>"; };
 		B1C854ED25E7B492005867D0 /* MXRoomType.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MXRoomType.h; sourceTree = "<group>"; };
 		B1DDC9D52418098200D208E3 /* MXIncomingSASTransaction_Private.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MXIncomingSASTransaction_Private.h; sourceTree = "<group>"; };
 		B1E09A0E2397FA950057C069 /* MatrixSDKTests-macOS.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "MatrixSDKTests-macOS.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -3422,6 +3425,7 @@
 		B124BBC6256453C90028996D /* Room */ = {
 			isa = PBXGroup;
 			children = (
+				B18F3A112612333C000C8CD8 /* State */,
 				B124BBC7256453C90028996D /* Membership */,
 			);
 			path = Room;
@@ -3549,6 +3553,14 @@
 				B18B0E4925FB783B00E32151 /* MXSpaceCreationParameters.swift */,
 			);
 			path = Space;
+			sourceTree = "<group>";
+		};
+		B18F3A112612333C000C8CD8 /* State */ = {
+			isa = PBXGroup;
+			children = (
+				B19EC8A1260E134A00543BEC /* MXRoomStateEventBuilder.swift */,
+			);
+			path = State;
 			sourceTree = "<group>";
 		};
 		B19A3098240424BD00FB6F35 /* QRCode */ = {
@@ -4702,6 +4714,7 @@
 				324AAC70239913AD00380A66 /* MXKeyVerificationJSONModel.m in Sources */,
 				C6D5D60A1E4FA74000706C0F /* MXEnumConstants.swift in Sources */,
 				327E9ADD2284804500A98BC1 /* MXEventRelations.m in Sources */,
+				B19EC8A2260E134A00543BEC /* MXRoomStateEventBuilder.swift in Sources */,
 				32C474C222AF7A2D00CFBCD2 /* MXReactionOperation.m in Sources */,
 				3256E3821DCB91EB003C9718 /* MXCryptoConstants.m in Sources */,
 				EC8A53B525B1BC77004E0802 /* MXCallHangupEventContent.m in Sources */,
@@ -5011,6 +5024,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				B19EC8A3260E134A00543BEC /* MXRoomStateEventBuilder.swift in Sources */,
 				B14EF1CA2397E90400758AF0 /* MXOlmInboundGroupSession.m in Sources */,
 				B14EF1CB2397E90400758AF0 /* MXRoomAccountData.m in Sources */,
 				B14EF1CC2397E90400758AF0 /* MXEventAnnotationChunk.m in Sources */,
