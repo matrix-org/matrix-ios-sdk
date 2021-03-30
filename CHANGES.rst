@@ -8,7 +8,7 @@ Changes to be released in next version
  * 
 
 🐛 Bugfix
- * 
+ * Notifications: Fix background sync out of memory (vector-im/element-ios#3957).
 
 ⚠️ API Changes
  * 
