@@ -8,7 +8,7 @@ Changes to be released in next version
  * 
 
 🐛 Bugfix
- * 
+ * Remove padding from base64 encoded `iv` value (vector-im/element-ios/issues/4172).
 
 ⚠️ API Changes
  * 
