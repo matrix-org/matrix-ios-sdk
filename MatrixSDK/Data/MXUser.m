@@ -66,8 +66,14 @@
     if ((NO == [_displayname isEqualToString:roomMember.displayname]
             || NO == [_avatarUrl isEqualToString:roomMember.avatarUrl]))
     {
-        self.displayname = [roomMember.displayname copy];
-        self.avatarUrl = [roomMember.avatarUrl copy];
+        if (roomMember.displayname)
+        {
+            self.displayname = [roomMember.displayname copy];
+        }
+        if (roomMember.avatarUrl)
+        {
+            self.avatarUrl = [roomMember.avatarUrl copy];
+        }
         
         // Handle here the case where the user has no defined avatar.
         if (nil == self.avatarUrl && ![MXSDKOptions sharedInstance].disableIdenticonUseForUserAvatar)
