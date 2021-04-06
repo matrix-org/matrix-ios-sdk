@@ -170,7 +170,7 @@ NSString *const MXEncryptedAttachmentsErrorDomain = @"MXEncryptedAttachmentsErro
         encryptedContentFile.url = url;
         encryptedContentFile.mimetype = mimeType;
         encryptedContentFile.key = encryptedContentKey;
-        encryptedContentFile.iv = [iv base64EncodedStringWithOptions:0];
+        encryptedContentFile.iv = [MXBase64Tools base64ToUnpaddedBase64:[iv base64EncodedStringWithOptions:0]];
         encryptedContentFile.hashes = @{
                                         @"sha256": [MXBase64Tools base64ToUnpaddedBase64:[computedSha256 base64EncodedStringWithOptions:0]],
                                         };
