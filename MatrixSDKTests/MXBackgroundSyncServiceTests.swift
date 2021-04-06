@@ -25,7 +25,7 @@ class MXBackgroundSyncServiceTests: XCTestCase {
     
     private enum Constants {
         static let messageText: String = "Hello there!"
-        static let numberOfMessagesForLimitedTest: UInt = 50
+        static let numberOfMessagesForLimitedTest: Int = 11    // Any value higher than the default 10 will create a gap
     }
 
     override func setUp() {
@@ -957,7 +957,7 @@ class MXBackgroundSyncServiceTests: XCTestCase {
     // -> The background service cache must be reset after session resume
     func testStoreWithMergedGappyCachedSyncResponse() {
         // - Have Bob background service cache filled with a merged gappy sync response
-        self.createStoreScenario(messageCountChunks: [5, 11]) { (bobSession, roomId, eventIdsChunks, expectation) in
+        self.createStoreScenario(messageCountChunks: [5, Constants.numberOfMessagesForLimitedTest]) { (bobSession, roomId, eventIdsChunks, expectation) in
             
             guard let firstEventId = eventIdsChunks.first?.first,
                   let lastEventId = eventIdsChunks.last?.last
@@ -1024,7 +1024,7 @@ class MXBackgroundSyncServiceTests: XCTestCase {
     // -> The background service cache must be reset after session resume
     func testStoreWithGappySyncAndLimitedCacheSize() {
         // - Have Bob background service cache filled with 2 gappy sync responses
-        self.createStoreScenario(messageCountChunks: [5, 11], syncResponseCacheSizeLimit: 0) { (bobSession, roomId, eventIdsChunks, expectation) in
+        self.createStoreScenario(messageCountChunks: [5, Constants.numberOfMessagesForLimitedTest], syncResponseCacheSizeLimit: 0) { (bobSession, roomId, eventIdsChunks, expectation) in
             
             guard let firstEventId = eventIdsChunks.first?.first,
                   let lastEventId = eventIdsChunks.last?.last
