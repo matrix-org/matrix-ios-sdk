@@ -760,6 +760,403 @@ class MXBackgroundSyncServiceTests: XCTestCase {
         }
     }
 
+    
+    // MARK: - Cache tests
+    
+    /// Create a test scenario with the background sync store filled with data.
+    /// - Parameters:
+    ///   - messageCountChunks: number of messages between each MXBackgroundService.event() call.
+    ///   - syncResponseCacheSizeLimit: value for MXBackgroundSyncService.syncResponseCacheSizeLimit.
+    ///   - completion: The completion block.
+    func createStoreScenario(messageCountChunks: [Int], syncResponseCacheSizeLimit: Int = 512 * 1024,
+                                              completion: @escaping (_ bobSession: MXSession, _ roomId: String, _ eventIdsChunks: [[String]], _ expectation: XCTestExpectation) -> Void) {
+        // - Alice and Bob in an encrypted room
+        let aliceStore = MXMemoryStore()
+        let bobStore = MXFileStore()
+        e2eTestData.doE2ETestWithAliceAndBob(inARoom: self, cryptedBob: true, warnOnUnknowDevices: false, aliceStore: aliceStore, bobStore: bobStore) { (aliceSession, bobSession, roomId, expectation) in
+            guard let expectation = expectation else {
+                return
+            }
+
+            guard let roomId = roomId, let room = aliceSession?.room(withRoomId: roomId),
+                  let bobSession = bobSession, let bobCredentials = bobSession.credentials  else {
+                XCTFail("Cannot set up initial test conditions")
+                expectation.fulfill()
+                return
+            }
+            
+            // - Pause Bob session
+            bobSession.pause()
+            
+            // - Limit size for every sync response cache in background service
+            let bgSyncService = MXBackgroundSyncService(withCredentials: bobCredentials)
+            bgSyncService.syncResponseCacheSizeLimit = syncResponseCacheSizeLimit
+            
+            // - Fill messageCountChunks.count times the background service store
+            self.fillStore(of: bgSyncService, room: room, messageCountChunks: messageCountChunks) { (response) in
+                guard let eventIdsChunks = response.value else {
+                    XCTFail("Cannot set up initial test conditions")
+                    expectation.fulfill()
+                    return
+                }
+                
+                completion(bobSession, roomId, eventIdsChunks, expectation)
+            }
+        }
+    }
+    
+    // Test when there are several sync responses are merged in cache
+    //
+    // - Have Bob background service cache merged from 3 continuous sync responses
+    // -> There must be a single cached sync response
+    // -> The cached response must know both events
+    // -> The store manager must know both events
+    // - Resume Bob session
+    // -> Both events should be in the session store
+    // -> Bob session must have the key to decrypt the first message
+    // -> The background service cache must be reset after session resume
+    func testStoreWithMergedCachedSyncResponse() {
+        // - Have Bob background service cache merged from 3 continuous sync responses
+        self.createStoreScenario(messageCountChunks: [5, 2, 10]) { (bobSession, roomId, eventIdsChunks, expectation) in
+            
+            guard let firstEventId = eventIdsChunks.first?.first,
+                  let lastEventId = eventIdsChunks.last?.last
+            else {
+                XCTFail("Cannot set up initial test conditions")
+                expectation.fulfill()
+                return
+            }
+            
+            let syncResponseStore = MXSyncResponseFileStore(withCredentials: bobSession.credentials)
+            let syncResponseStoreManager = MXSyncResponseStoreManager(syncResponseStore: syncResponseStore)
+            
+            // -> There must be a single cached sync response
+            XCTAssertEqual(syncResponseStore.syncResponseIds.count, 1)
+            
+            guard let cachedSyncResponse = syncResponseStoreManager.firstSyncResponse() else {
+                XCTFail("Cannot set up initial test conditions")
+                expectation.fulfill()
+                return
+            }
+            
+            // -> The cached response must know both events
+            XCTAssertTrue(cachedSyncResponse.syncResponse.jsonString().contains(firstEventId))
+            XCTAssertTrue(cachedSyncResponse.syncResponse.jsonString().contains(lastEventId))
+            
+            // -> The store manager must know both events
+            XCTAssertNotNil(syncResponseStoreManager.event(withEventId: firstEventId, inRoom: roomId))
+            XCTAssertNotNil(syncResponseStoreManager.event(withEventId: lastEventId, inRoom: roomId))
+            XCTAssertNil(syncResponseStoreManager.event(withEventId: "ARandomEventId", inRoom: roomId))
+            
+            
+            // - Resume Bob session
+            bobSession.resume({
+                // -> Both events should be in the session store
+                // Note: In case of bug, the server will send a gappy sync in this room. The first event will not be available
+                XCTAssertNotNil(bobSession.store.event(withEventId: firstEventId, inRoom: roomId))
+                XCTAssertNotNil(bobSession.store.event(withEventId: lastEventId, inRoom: roomId))
+                
+                // -> Bob session must have the key to decrypt the first message
+                bobSession.event(withEventId: firstEventId, inRoom: roomId) { (event) in
+                    bobSession.decryptEvent(event, inTimeline: nil)
+                    XCTAssertNotNil(event?.clear)
+                    
+                    // -> The background service cache must be reset after session resume
+                    XCTAssertEqual(syncResponseStore.syncResponseIds.count, 0)
+                    expectation.fulfill()
+                } failure: { (error) in
+                    XCTFail("The request should not fail - Error: \(String(describing: error))");
+                    expectation.fulfill()
+                }
+            })
+        }
+    }
+
+    // Test when there are several sync response files in cache
+    // Almost the same test as testStoreWithMergedCachedSyncResponse.
+    //
+    // - Have Bob background service cache filled with 3 continuous sync responses
+    // -> There must be 3 cached sync responses
+    // -> The first cached response must know only the first event
+    // -> The last cached response must know only the last event
+    // -> The store manager must know both events
+    // - Resume Bob session
+    // -> Both events should be in the session store
+    // -> Bob session must have the key to decrypt the first message
+    // -> The background service cache must be reset after session resume
+    func testStoreWithLimitedCacheSize() {
+        // - Have Bob background service cache filled with 3 continuous sync responses
+        self.createStoreScenario(messageCountChunks: [5, 2, 10], syncResponseCacheSizeLimit: 0) { (bobSession, roomId, eventIdsChunks, expectation) in
+            
+            guard let firstEventId = eventIdsChunks.first?.first,
+                  let lastEventId = eventIdsChunks.last?.last
+            else {
+                XCTFail("Cannot set up initial test conditions")
+                expectation.fulfill()
+                return
+            }
+            
+            let syncResponseStore = MXSyncResponseFileStore(withCredentials: bobSession.credentials)
+            let syncResponseStoreManager = MXSyncResponseStoreManager(syncResponseStore: syncResponseStore)
+
+            // -> There must be 3 cached sync responses
+            XCTAssertEqual(syncResponseStore.syncResponseIds.count, 3)
+                        
+            guard let firstCachedSyncResponse = syncResponseStoreManager.firstSyncResponse(),
+                  let lastCachedSyncResponse = syncResponseStoreManager.lastSyncResponse() else {
+                XCTFail("Cannot set up initial test conditions")
+                expectation.fulfill()
+                return
+            }
+            
+            // -> The first cached response must know only the first event
+            XCTAssertTrue(firstCachedSyncResponse.syncResponse.jsonString().contains(firstEventId))
+            XCTAssertFalse(firstCachedSyncResponse.syncResponse.jsonString().contains(lastEventId))
+            // -> The last cached response must know only the last event
+            XCTAssertTrue(lastCachedSyncResponse.syncResponse.jsonString().contains(lastEventId))
+            XCTAssertFalse(lastCachedSyncResponse.syncResponse.jsonString().contains(firstEventId))
+            
+            // -> The store manager must know both events
+            XCTAssertNotNil(syncResponseStoreManager.event(withEventId: firstEventId, inRoom: roomId))
+            XCTAssertNotNil(syncResponseStoreManager.event(withEventId: lastEventId, inRoom: roomId))
+            
+            
+            // - Resume Bob session
+            bobSession.resume({
+                // -> Both events should be in the session store
+                // Note: In case of bug, the server will send a gappy sync in this room. The first event will not be available
+                XCTAssertNotNil(bobSession.store.event(withEventId: firstEventId, inRoom: roomId))
+                XCTAssertNotNil(bobSession.store.event(withEventId: lastEventId, inRoom: roomId))
+                
+                // -> Bob session must have the key to decrypt the first message
+                bobSession.event(withEventId: firstEventId, inRoom: roomId) { (event) in
+                    bobSession.decryptEvent(event, inTimeline: nil)
+                    XCTAssertNotNil(event?.clear)
+                    
+                    // -> The background service cache must be reset after session resume
+                    XCTAssertEqual(syncResponseStore.syncResponseIds.count, 0)
+                    expectation.fulfill()
+                } failure: { (error) in
+                    XCTFail("The request should not fail - Error: \(String(describing: error))");
+                    expectation.fulfill()
+                }
+            })
+        }
+    }
+    
+    
+    // Test when there are several gappy sync responses are merged in cache
+    //
+    // - Have Bob background service cache filled with a merged gappy sync responses
+    // -> There must be a single cached sync response
+    // -> The cached response can only know the last event
+    // -> The store manager can only know the last event
+    // - Resume Bob session
+    // -> Only the last event should be in the session store
+    // -> Bob session must have the key to decrypt the first message
+    // -> The background service cache must be reset after session resume
+    func testStoreWithMergedGappyCachedSyncResponse() {
+        // - Have Bob background service cache filled with a merged gappy sync response
+        self.createStoreScenario(messageCountChunks: [5, 11]) { (bobSession, roomId, eventIdsChunks, expectation) in
+            
+            guard let firstEventId = eventIdsChunks.first?.first,
+                  let lastEventId = eventIdsChunks.last?.last
+            else {
+                XCTFail("Cannot set up initial test conditions")
+                expectation.fulfill()
+                return
+            }
+            
+            let syncResponseStore = MXSyncResponseFileStore(withCredentials: bobSession.credentials)
+            let syncResponseStoreManager = MXSyncResponseStoreManager(syncResponseStore: syncResponseStore)
+            
+            // -> There must be a single cached sync response
+            XCTAssertEqual(syncResponseStore.syncResponseIds.count, 1)
+            
+            guard let cachedSyncResponse = syncResponseStoreManager.firstSyncResponse() else {
+                XCTFail("Cannot set up initial test conditions")
+                expectation.fulfill()
+                return
+            }
+            
+            // -> The cached response can know only the last event
+            XCTAssertFalse(cachedSyncResponse.syncResponse.jsonString().contains(firstEventId))
+            XCTAssertTrue(cachedSyncResponse.syncResponse.jsonString().contains(lastEventId))
+            
+            // -> The store manager can only know the last event
+            XCTAssertNil(syncResponseStoreManager.event(withEventId: firstEventId, inRoom: roomId))
+            XCTAssertNotNil(syncResponseStoreManager.event(withEventId: lastEventId, inRoom: roomId))
+            
+            
+            // - Resume Bob session
+            bobSession.resume({
+                // -> Only the last event should be in the session store
+                XCTAssertNil(bobSession.store.event(withEventId: firstEventId, inRoom: roomId))
+                XCTAssertNotNil(bobSession.store.event(withEventId: lastEventId, inRoom: roomId))
+                
+                // -> Bob session must have the key to decrypt the first message
+                bobSession.event(withEventId: firstEventId, inRoom: roomId) { (event) in
+                    bobSession.decryptEvent(event, inTimeline: nil)
+                    XCTAssertNotNil(event?.clear)
+                    
+                    // -> The background service cache must be reset after session resume
+                    XCTAssertEqual(syncResponseStore.syncResponseIds.count, 0)
+                    expectation.fulfill()
+                } failure: { (error) in
+                    XCTFail("The request should not fail - Error: \(String(describing: error))");
+                    expectation.fulfill()
+                }
+            })
+        }
+    }
+    
+    // Test when there are several gappy sync response files in cache
+    // Almost the same test as testStoreWithMergedGappyCachedSyncResponse.
+    //
+    // - Have Bob background service cache filled with 2 gappy sync responses
+    // -> There must be 2 cached sync responses
+    // -> The first cached response must know only the first event
+    // -> The last cached response must know only the last event
+    // -> The store manager must know both events because of test conditions
+    // - Resume Bob session
+    // -> Only the last event should be in the session store
+    // -> Bob session must have the key to decrypt the first message
+    // -> The background service cache must be reset after session resume
+    func testStoreWithGappySyncAndLimitedCacheSize() {
+        // - Have Bob background service cache filled with 2 gappy sync responses
+        self.createStoreScenario(messageCountChunks: [5, 11], syncResponseCacheSizeLimit: 0) { (bobSession, roomId, eventIdsChunks, expectation) in
+            
+            guard let firstEventId = eventIdsChunks.first?.first,
+                  let lastEventId = eventIdsChunks.last?.last
+            else {
+                XCTFail("Cannot set up initial test conditions")
+                expectation.fulfill()
+                return
+            }
+            
+            let syncResponseStore = MXSyncResponseFileStore(withCredentials: bobSession.credentials)
+            let syncResponseStoreManager = MXSyncResponseStoreManager(syncResponseStore: syncResponseStore)
+            
+            // -> There must be 2 cached sync responses
+            XCTAssertEqual(syncResponseStore.syncResponseIds.count, 2)
+            
+            guard let firstCachedSyncResponse = syncResponseStoreManager.firstSyncResponse(),
+                  let lastCachedSyncResponse = syncResponseStoreManager.lastSyncResponse() else {
+                XCTFail("Cannot set up initial test conditions")
+                expectation.fulfill()
+                return
+            }
+            
+            // -> The first cached response must know only the first event
+            XCTAssertTrue(firstCachedSyncResponse.syncResponse.jsonString().contains(firstEventId))
+            XCTAssertFalse(firstCachedSyncResponse.syncResponse.jsonString().contains(lastEventId))
+            // -> The last cached response must know only the last event
+            XCTAssertTrue(lastCachedSyncResponse.syncResponse.jsonString().contains(lastEventId))
+            XCTAssertFalse(lastCachedSyncResponse.syncResponse.jsonString().contains(firstEventId))
+            
+            // -> The store manager must know both events because of test conditions
+            XCTAssertNotNil(syncResponseStoreManager.event(withEventId: firstEventId, inRoom: roomId))
+            XCTAssertNotNil(syncResponseStoreManager.event(withEventId: lastEventId, inRoom: roomId))
+            
+            
+            // - Resume Bob session
+            bobSession.resume({
+                // -> Only the last event should be in the session store
+                XCTAssertNil(bobSession.store.event(withEventId: firstEventId, inRoom: roomId))
+                XCTAssertNotNil(bobSession.store.event(withEventId: lastEventId, inRoom: roomId))
+                
+                // -> Bob session must have the key to decrypt the first message
+                bobSession.event(withEventId: firstEventId, inRoom: roomId) { (event) in
+                    bobSession.decryptEvent(event, inTimeline: nil)
+                    XCTAssertNotNil(event?.clear)
+                    
+                    // -> The background service cache must be reset after session resume
+                    XCTAssertEqual(syncResponseStore.syncResponseIds.count, 0)
+                    expectation.fulfill()
+                } failure: { (error) in
+                    XCTFail("The request should not fail - Error: \(String(describing: error))");
+                    expectation.fulfill()
+                }
+            })
+        }
+    }
+}
+
+
+extension MXBackgroundSyncServiceTests {
+    
+    // Fill the background service store from a number of posted messages.
+    func fillStore(of backgroundSyncService: MXBackgroundSyncService, room: MXRoom,
+                   messageText: String = Constants.messageText, messageCount: Int,
+                   completion: @escaping (MXResponse<[String]>) -> Void) {
+        // Post messages
+        let messages = (1...messageCount).map({ "\(messageText) - \($0)" })
+        room.sendTextMessages(messages: messages) { response in
+            switch response {
+                case .success(let eventIds):
+                    // And run the background service to fill its cache
+                    guard let eventId = eventIds.last else {
+                        completion(.failure(MXBackgroundSyncServiceError.unknown))
+                        return;
+                    }
+
+                    backgroundSyncService.event(withEventId: eventId, inRoom: room.roomId) { response in
+                        XCTAssertTrue(response.isSuccess)
+                        completion(.success(eventIds))
+                    }
+                    
+                case .failure(let error):
+                    completion(.failure(error))
+            }
+        }
+    }
+    
+    // Fill several times the background service store.
+    // It will be filled by chunks of different message counts.
+    // Note if a chunk messages count is more than 10, there will be gappy sycn response.
+    func fillStore(of backgroundSyncService: MXBackgroundSyncService, room: MXRoom,
+                                    messageText: String = Constants.messageText, messageCountChunks: [Int],
+                                    completion: @escaping (MXResponse<[[String]]>) -> Void) {
+        let dispatchQueue = DispatchQueue(label:"queue")
+        let dispatchGroup = DispatchGroup()
+        
+        var eventIds: [[String]] = []
+        var error: Error?
+        
+        for (index, messageCount) in messageCountChunks.enumerated() {
+            
+            // Call fillBackgroundServiceStore one after the other
+            dispatchQueue.async {
+                dispatchGroup.wait()
+                dispatchGroup.enter()
+                
+                DispatchQueue.main.async {
+                    let messageText = "\(messageText) - \(index)"
+                    self.fillStore(of: backgroundSyncService, room: room, messageText: messageText, messageCount: messageCount) { (response) in
+                        switch response {
+                            case .success(let events):
+                                eventIds.append(events)
+                            case .failure(let theError):
+                                error = theError
+                        }
+                        dispatchGroup.leave()
+                    }
+                }
+            }
+        }
+        
+        dispatchQueue.async {
+            dispatchGroup.wait()
+            
+            DispatchQueue.main.async {
+                if let error = error {
+                    completion(.failure(error))
+                } else {
+                    completion(.success(eventIds))
+                }
+            }
+        }
+    }
 }
 
 private extension MXRoom {
