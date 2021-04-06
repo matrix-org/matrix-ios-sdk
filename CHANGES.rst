@@ -5,7 +5,7 @@ Changes to be released in next version
  * 
 
 🙌 Improvements
- * 
+ * Create secret storage with a given private key (vector-im/element-ios/issues/4189).
 
 🐛 Bugfix
  * Remove padding from base64 encoded `iv` value (vector-im/element-ios/issues/4172).
