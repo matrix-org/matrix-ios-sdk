@@ -356,6 +356,7 @@ FOUNDATION_EXPORT NSString *const kMXSessionNotificationUserIdsArrayKey;
  */
 FOUNDATION_EXPORT NSString *const kMXSessionNoRoomTag;
 
+@class MXSpaceService;
 
 #pragma mark - MXSession
 /**
@@ -475,6 +476,11 @@ FOUNDATION_EXPORT NSString *const kMXSessionNoRoomTag;
  The module that manages aggregations (reactions, edition, ...).
  */
 @property (nonatomic, readonly) MXAggregations *aggregations;
+
+/**
+ The module that manages spaces.
+ */
+@property (nonatomic, readonly) MXSpaceService *spaceService;
 
 #pragma mark - Class methods
 

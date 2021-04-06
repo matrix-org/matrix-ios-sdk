@@ -2,10 +2,12 @@ Changes to be released in next version
 =================================================
 
 ✨ Features
- * 
+ * Spaces: Support Space room type (vector-im/element-ios/issues/4069).
 
 🙌 Improvements
- * 
+ * MXRoomPowerLevels: Handle undefined values and add init with default spec values.
+ * MXRoomCreationParameters: Add roomType and powerLevelContentOverride properties.
+ * MXResponse: Add convenient uncurry method to convert a Swift method into Objective-C.
 
 🐛 Bugfix
  * 
