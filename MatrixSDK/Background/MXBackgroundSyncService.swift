@@ -53,6 +53,15 @@ public enum MXBackgroundSyncServiceError: Error {
     /// Cached events. Keys are even identifiers.
     private var cachedEvents: [String: MXEvent] = [:]
     
+    /// See MXSyncResponseStoreManager.syncResponseCacheSizeLimit
+    public var syncResponseCacheSizeLimit: Int {
+        get {
+            syncResponseStoreManager.syncResponseCacheSizeLimit
+        } set {
+            syncResponseStoreManager.syncResponseCacheSizeLimit = newValue
+        }
+    }
+    
     /// Initializer
     /// - Parameter credentials: account credentials
     public init(withCredentials credentials: MXCredentials) {

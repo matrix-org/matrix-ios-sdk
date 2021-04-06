@@ -20,9 +20,10 @@ import Foundation
 @objcMembers
 public class MXSyncResponseStoreManager: NSObject {
     
-    /// Maximum data size for sync responses cached in MXSyncResponseStore
-    /// Under this value, we merge sync sync reponses between them
-    var syncResponseSizeLimt: Int = 1024 * 1024
+    /// Maximum data size for each sync response cached in MXSyncResponseStore.
+    /// Under this value, sync reponses are merged. This limit allows to work on several smaller sync responses to limit RAM usage.
+    /// Default is 512kB.
+    var syncResponseCacheSizeLimit: Int = 512 * 1024
     
     /// The actual store
     let syncResponseStore: MXSyncResponseStore
@@ -85,7 +86,7 @@ public class MXSyncResponseStoreManager: NSObject {
             // Check if we can merge the new sync response to the last one
             // Store it as a new chunk if the previous chunk is too big
             let cachedSyncResponseSize = syncResponseStore.syncResponseSize(withId: id)
-            if  cachedSyncResponseSize < syncResponseSizeLimt,
+            if  cachedSyncResponseSize < syncResponseCacheSizeLimit,
                 let cachedSyncResponse = try? syncResponseStore.syncResponse(withId: id) {
                 
                 NSLog("[MXSyncResponseStoreManager] updateStore: Merge new sync response to the previous one")
