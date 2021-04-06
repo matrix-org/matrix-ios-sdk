@@ -8,7 +8,7 @@ Changes to be released in next version
  * 
 
 🐛 Bugfix
- * 
+ * Check for null before changing a user's displayname or avatar URL based on an m.room.member event.
 
 ⚠️ API Changes
  * 
