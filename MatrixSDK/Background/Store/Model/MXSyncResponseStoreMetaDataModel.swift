@@ -17,13 +17,25 @@
 import Foundation
 
 struct MXSyncResponseStoreMetaDataModel {
+    /// Store versions
+    enum Versions: Int, Codable {
+        case v1 = 1
+    }
+    
+    /// Version of the store
+    var version: Versions = .v1
+    
+    /// User account data
     var accountData: [AnyHashable : Any]?
+    
+    /// All cached sync responses, chronologically ordered
     var syncResponseIds: [String] = []
 }
 
 
 extension MXSyncResponseStoreMetaDataModel: Codable {
     enum CodingKeys: String, CodingKey {
+        case version
         case accountData
         case syncResponseIds
     }
@@ -31,6 +43,7 @@ extension MXSyncResponseStoreMetaDataModel: Codable {
     init(from decoder: Decoder) throws {
         let values = try decoder.container(keyedBy: CodingKeys.self)
         
+        version = try values.decode(Versions.self, forKey: .version)
         if let data = try values.decodeIfPresent(Data.self, forKey: .accountData) {
             accountData =  try JSONSerialization.jsonObject(with: data, options: []) as? [AnyHashable: Any]
         }
@@ -39,6 +52,8 @@ extension MXSyncResponseStoreMetaDataModel: Codable {
     
     func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
+        
+        try container.encode(version, forKey: .version)
         if let accountData = accountData {
             let data = try JSONSerialization.data(withJSONObject: accountData)
             try container.encodeIfPresent(data, forKey: .accountData)
