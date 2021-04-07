@@ -166,7 +166,7 @@
 + (NSDictionary *)initialStateEventForEncryptionWithAlgorithm:(NSString *)algorithm
 {
     // Do not break the API for the moment
-    MXRoomStateEventBuilder *stateEventBuilder = [MXRoomStateEventBuilder new];
+    MXRoomInitialStateEventBuilder *stateEventBuilder = [MXRoomInitialStateEventBuilder new];
     return [stateEventBuilder buildAlgorithmEventWithAlgorithm:algorithm];
 }
 

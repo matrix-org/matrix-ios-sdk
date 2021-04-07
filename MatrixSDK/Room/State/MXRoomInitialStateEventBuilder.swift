@@ -35,9 +35,9 @@ struct InitialStateEvent {
 
 // MARK: - Public
 
-/// MXRoomStateEventBuilder enables to build initial state events
+/// MXRoomInitialStateEventBuilder enables to build initial state events
 @objcMembers
-public class MXRoomStateEventBuilder: NSObject {
+public class MXRoomInitialStateEventBuilder: NSObject {
     
     /// Build avatar state event
     /// - Parameter avatarURL: The mxc url of the avatar

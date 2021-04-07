@@ -24,8 +24,8 @@ public class MXSpaceService: NSObject {
     
     private unowned let session: MXSession
     
-    private lazy var stateEventBuilder: MXRoomStateEventBuilder = {
-        return MXRoomStateEventBuilder()
+    private lazy var stateEventBuilder: MXRoomInitialStateEventBuilder = {
+        return MXRoomInitialStateEventBuilder()
     }()
     
     // MARK: - Setup
