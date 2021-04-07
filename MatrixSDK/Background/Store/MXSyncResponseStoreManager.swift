@@ -178,7 +178,7 @@ public class MXSyncResponseStoreManager: NSObject {
         return nil
     }
     
-    func event(withEventId eventId: String, inRoom roomId: String, inSyncResponse response: MXCachedSyncResponse) -> MXEvent? {
+    private func event(withEventId eventId: String, inRoom roomId: String, inSyncResponse response: MXCachedSyncResponse) -> MXEvent? {
         var allEvents: [MXEvent] = []
         if let joinedRoomSync = response.syncResponse.rooms.join[roomId] {
             allEvents.appendIfNotNil(contentsOf: joinedRoomSync.state?.events)
