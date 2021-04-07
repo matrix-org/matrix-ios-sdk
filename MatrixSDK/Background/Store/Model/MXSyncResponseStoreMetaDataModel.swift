@@ -26,7 +26,7 @@ struct MXSyncResponseStoreMetaDataModel {
     var version: Versions = .v1
     
     /// User account data
-    var accountData: [AnyHashable : Any]?
+    var accountData: [String : Any]?
     
     /// All cached sync responses, chronologically ordered
     var syncResponseIds: [String] = []
@@ -45,7 +45,7 @@ extension MXSyncResponseStoreMetaDataModel: Codable {
         
         version = try values.decode(Versions.self, forKey: .version)
         if let data = try values.decodeIfPresent(Data.self, forKey: .accountData) {
-            accountData =  try JSONSerialization.jsonObject(with: data, options: []) as? [AnyHashable: Any]
+            accountData =  try JSONSerialization.jsonObject(with: data, options: []) as? [String: Any]
         }
         syncResponseIds = try values.decode([String].self, forKey: .syncResponseIds)
     }

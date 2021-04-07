@@ -38,7 +38,7 @@ public enum MXSyncResponseStoreError: Error {
     var syncResponseIds: [String] { get }
     
     /// User account data
-    var accountData: [AnyHashable : Any]? { get set }
+    var accountData: [String : Any]? { get set }
     
     /// Delete all data in the store
     func deleteData()

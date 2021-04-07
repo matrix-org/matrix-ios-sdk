@@ -232,7 +232,7 @@ extension MXSyncResponseFileStore: MXSyncResponseStore {
     }
     
     
-    public var accountData: [AnyHashable : Any]? {
+    public var accountData: [String : Any]? {
         get {
             return readMetaData().accountData
         }
