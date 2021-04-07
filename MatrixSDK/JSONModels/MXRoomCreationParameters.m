@@ -114,7 +114,9 @@
         self.initialStateEvents = @[];
     }
     
-    NSString *stateEventTypeString = stateEvent[@"type"];
+    NSString *stateEventTypeString;
+    
+    MXJSONModelSetString(stateEventTypeString, stateEvent[@"type"]);
     
     if (!stateEventTypeString)
     {
