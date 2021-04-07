@@ -5,14 +5,14 @@ Changes to be released in next version
  * Spaces: Support Space room type (vector-im/element-ios/issues/4069).
 
 🙌 Improvements
+ * Create secret storage with a given private key (vector-im/element-ios/issues/4189).
  * MXRoomPowerLevels: Handle undefined values and add init with default spec values.
  * MXRoomCreationParameters: Add roomType and powerLevelContentOverride properties. Add initial state events update method.
-
  * MXResponse: Add convenient uncurry method to convert a Swift method into Objective-C.
  * Add MXRoomInitialStateEventBuilder that enables to build initial state events.
 
 🐛 Bugfix
- * 
+ * Remove padding from base64 encoded `iv` value (vector-im/element-ios/issues/4172).
 
 ⚠️ API Changes
  * 
