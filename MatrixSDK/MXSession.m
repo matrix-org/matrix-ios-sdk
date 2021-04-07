@@ -1686,30 +1686,48 @@ typedef void (^MXOnResumeDone)(void);
 {
     NSLog(@"[MXSession] handleBackgroundSyncCacheIfRequired: state %tu", _state);
     
-    MXSyncResponseFileStore *syncResponseStore = [[MXSyncResponseFileStore alloc] init];
-    [syncResponseStore openWithCredentials:self.credentials];
-    if (syncResponseStore.syncResponse)
+    MXSyncResponseFileStore *syncResponseStore = [[MXSyncResponseFileStore alloc] initWithCredentials:self.credentials];
+    MXSyncResponseStoreManager *syncResponseStoreManager = [[MXSyncResponseStoreManager alloc] initWithSyncResponseStore:syncResponseStore];
+    
+    NSString *syncResponseStoreSyncToken = syncResponseStoreManager.syncToken;
+    if (syncResponseStoreSyncToken)
     {
-        NSString *syncResponseStorePrevBatch = syncResponseStore.prevBatch;
         NSString *eventStreamToken = _store.eventStreamToken;
-        if ([syncResponseStorePrevBatch isEqualToString:eventStreamToken])
+        if ([syncResponseStoreSyncToken isEqualToString:eventStreamToken])
         {
-            NSLog(@"[MXSession] handleBackgroundSyncCacheIfRequired: Handle cache from stream token %@", eventStreamToken);
-            
             //  sync response really continues from where the session left
-            [self handleSyncResponse:syncResponseStore.syncResponse
-                          completion:^{
+            NSArray<NSString *> *syncResponseIds = syncResponseStore.syncResponseIds;
+            NSLog(@"[MXSession] handleBackgroundSyncCacheIfRequired: Handle %@ cached sync responses from stream token %@", @(syncResponseIds.count), eventStreamToken);
+            
+            dispatch_group_t dispatchGroup = dispatch_group_create();
+            
+            for (NSString *syncResponseId in syncResponseIds)
+            {
+                @autoreleasepool {
+                    MXCachedSyncResponse *cachedSyncResponse = [syncResponseStore syncResponseWithId:syncResponseId error:nil];
+                    if (cachedSyncResponse)
+                    {
+                        dispatch_group_enter(dispatchGroup);
+                        [self handleSyncResponse:cachedSyncResponse.syncResponse
+                                      completion:^{
+                            dispatch_group_leave(dispatchGroup);
+                        }];
+                    }
+                }
+            }
+            
+            dispatch_group_notify(dispatchGroup, dispatch_get_main_queue(), ^{
                 [syncResponseStore deleteData];
                 
                 if (completion)
                 {
                     completion();
                 }
-            }];
+            });
         }
         else
         {
-            NSLog(@"[MXSession] handleBackgroundSyncCacheIfRequired: Ignore cache: MXSession stream token: %@. MXBackgroundSyncService cache stream token: %@", eventStreamToken, syncResponseStorePrevBatch);
+            NSLog(@"[MXSession] handleBackgroundSyncCacheIfRequired: Ignore cache: MXSession stream token: %@. MXBackgroundSyncService cache stream token: %@", eventStreamToken, syncResponseStoreSyncToken);
             
             //  this sync response will break the continuity in session, ignore & remove it
             [syncResponseStore deleteData];

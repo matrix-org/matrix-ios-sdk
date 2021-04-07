@@ -1345,7 +1345,7 @@ FOUNDATION_EXPORT NSString *const kMXPushRuleScopeStringDevice;
     /**
      The user private data.
      */
-    @property (nonatomic) NSDictionary *accountData;
+    @property (nonatomic) NSDictionary<NSString*, id> *accountData;
 
     /**
      The opaque token for the end.

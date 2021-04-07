@@ -28,6 +28,13 @@
 @interface MXAccountData : NSObject
 
 /**
+ Contructor from the dictionary provided in the /sync response.
+ 
+ @param accountData as sent by the homeserver. Same format as self.accountData.
+ */
+- (instancetype)initWithAccountData:(NSDictionary<NSString *, id> *)accountData;
+
+/**
  Update the account data with the passed event.
  
  For internal use only. Use [MXSession setAccountData:] to update account data.

@@ -18,23 +18,33 @@ import Foundation
 
 @objcMembers
 /// Sync response storage in a file implementation.
+///
+/// File structure is the following:
+/// + NSCachesDirectory or shared group id folder
+///     + SyncResponse
+///         + Matrix user id (one folder per account)
+///             + SyncResponses
+///                 L syncResponse-xxx
+///                 L syncResponse-yyy
+///                 L ...
+///             L metadata
+///
 public class MXSyncResponseFileStore: NSObject {
     
     private enum Constants {
         static let folderName = "SyncResponse"
-        static let fileName = "syncResponse"
+        static let metadataFileName = "metadata"
+        static let syncResponsesFolderName = "SyncResponses"
+        static let syncResponseFileNameTemplate = "syncResponse-%@"
         static let fileEncoding: String.Encoding = .utf8
+        static let v0FileName = "syncResponse"                          // Unique file used before storing multiple sync reponse
     }
     
     private let fileOperationQueue: DispatchQueue
-    private var filePath: URL!
-    private var credentials: MXCredentials!
+    private var metadataFilePath: URL
+    private var syncResponsesFolderPath: URL
     
-    public override init() {
-        fileOperationQueue = DispatchQueue(label: "MXSyncResponseFileStore-" + MXTools.generateSecret())
-    }
-    
-    private func setupFilePath() {
+    public init(withCredentials credentials: MXCredentials) {
         guard let userId = credentials.userId else {
             fatalError("Credentials must provide a user identifier")
         }
@@ -46,30 +56,47 @@ public class MXSyncResponseFileStore: NSObject {
             cachePath = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first
         }
         
-        filePath = cachePath
+        metadataFilePath = cachePath
             .appendingPathComponent(Constants.folderName)
             .appendingPathComponent(userId)
-            .appendingPathComponent(Constants.fileName)
+            .appendingPathComponent(Constants.metadataFileName)
         
+        let syncResponsesFolderPath = cachePath
+            .appendingPathComponent(Constants.folderName)
+            .appendingPathComponent(userId)
+            .appendingPathComponent(Constants.syncResponsesFolderName)
+        self.syncResponsesFolderPath = syncResponsesFolderPath
+        
+        fileOperationQueue = DispatchQueue(label: "MXSyncResponseFileStore-" + MXTools.generateSecret())
+
         fileOperationQueue.async {
-            try? FileManager.default.createDirectory(at: self.filePath.deletingLastPathComponent(),
+            try? FileManager.default.createDirectory(at: syncResponsesFolderPath,
                                                      withIntermediateDirectories: true,
                                                      attributes: nil)
+            
+            // Clean the single cache file used for "v0"
+            // TODO: Remove it at some point
+            let v0filePath = cachePath
+                .appendingPathComponent(Constants.folderName)
+                .appendingPathComponent(userId)
+                .appendingPathComponent(Constants.v0FileName)
+            try? FileManager.default.removeItem(at: v0filePath)
         }
     }
     
-    private func readData() -> MXSyncResponseStoreModel? {
+    private func syncResponsePath(withId id: String) -> URL {
+        let fileName = String(format: Constants.syncResponseFileNameTemplate, id)
+        return syncResponsesFolderPath.appendingPathComponent(fileName)
+    }
+    
+    private func readSyncResponse(path: URL) -> MXCachedSyncResponse? {
         autoreleasepool {
-            guard let filePath = filePath else {
-                return nil
-            }
-            
             let stopwatch = MXStopwatch()
             
             var fileContents: String?
             
             fileOperationQueue.sync {
-                fileContents = try? String(contentsOf: filePath,
+                fileContents = try? String(contentsOf: path,
                                            encoding: Constants.fileEncoding)
                 NSLog("[MXSyncResponseFileStore] readData: File read of \(fileContents?.count ?? 0) bytes lasted \(stopwatch.readable()). Free memory: \(MXMemory.formattedMemoryAvailable())")
                 
@@ -83,169 +110,145 @@ public class MXSyncResponseFileStore: NSObject {
                 return nil
             }
             
-            let model = MXSyncResponseStoreModel(fromJSON: json)
+            let syncResponse = MXCachedSyncResponse(fromJSON: json)
             
             NSLog("[MXSyncResponseFileStore] readData: Consersion to model lasted \(stopwatch.readable()). Free memory: \(MXMemory.formattedMemoryAvailable())")
-            return model
+            return syncResponse
         }
     }
     
-    private func saveData(_ data: MXSyncResponseStoreModel?) {
-        guard let filePath = filePath else {
-            return
-        }
-        
+    private func saveSyncResponse(path: URL, syncResponse: MXCachedSyncResponse?) {
         let stopwatch = MXStopwatch()
         
-        guard let data = data else {
-            try? FileManager.default.removeItem(at: filePath)
-            NSLog("[MXSyncResponseFileStore] saveData: File remove lasted \(stopwatch.readable())")
-            return
-        }
         fileOperationQueue.async {
-            try? data.jsonString()?.write(to: self.filePath,
-                                          atomically: true,
-                                          encoding: Constants.fileEncoding)
+            guard let syncResponse = syncResponse else {
+                try? FileManager.default.removeItem(at: path)
+                NSLog("[MXSyncResponseFileStore] saveData: File remove lasted \(stopwatch.readable())")
+                return
+            }
+            
+            try? syncResponse.jsonString()?.write(to: path,
+                                                  atomically: true,
+                                                  encoding: Constants.fileEncoding)
             NSLog("[MXSyncResponseFileStore] saveData: File write lasted \(stopwatch.readable()). Free memory: \(MXMemory.formattedMemoryAvailable())")
         }
     }
     
+    private func readMetaData() -> MXSyncResponseStoreMetaDataModel {
+        var fileData: Data?
+        fileOperationQueue.sync {
+            fileData = try? Data(contentsOf: metadataFilePath)
+        }
+        
+        guard let data = fileData else {
+            NSLog("[MXSyncResponseFileStore] readMetaData: File does not exist")
+            return MXSyncResponseStoreMetaDataModel()
+        }
+        
+        do {
+            let metadata = try PropertyListDecoder().decode(MXSyncResponseStoreMetaDataModel.self, from: data)
+            return metadata
+        } catch let error {
+            NSLog("[MXSyncResponseFileStore] readMetaData: Failed to decode. Error: \(error)")
+            return MXSyncResponseStoreMetaDataModel()
+        }
+    }
+    
+    private func saveMetaData(_ metadata: MXSyncResponseStoreMetaDataModel?) {
+        fileOperationQueue.async {
+            guard let metadata = metadata else {
+                try? FileManager.default.removeItem(at: self.metadataFilePath)
+                NSLog("[MXSyncResponseFileStore] saveMetaData: Remove file")
+                return
+            }
+            
+            do {
+                let data = try PropertyListEncoder().encode(metadata)
+                try data.write(to: self.metadataFilePath)
+            } catch let error {
+                NSLog("[MXSyncResponseFileStore] saveMetaData: Failed to store. Error: \(error)")
+            }
+        }
+    }
+    
+    private func addSyncResponseId(id: String) {
+        var metadata = readMetaData()
+        
+        var syncResponseIds = metadata.syncResponseIds
+        syncResponseIds.append(id)
+        
+        metadata.syncResponseIds = syncResponseIds
+        saveMetaData(metadata)
+    }
+    
+    private func deleteSyncResponseId(id: String) {
+        var metadata = readMetaData()
+        
+        var syncResponseIds = metadata.syncResponseIds
+        syncResponseIds.removeAll(where: { $0 == id })
+        
+        metadata.syncResponseIds = syncResponseIds
+        saveMetaData(metadata)
+    }
 }
 
 //  MARK: - MXSyncResponseStore
 
 extension MXSyncResponseFileStore: MXSyncResponseStore {
     
-    public func open(withCredentials credentials: MXCredentials) {
-        self.credentials = credentials
-        self.setupFilePath()
+    public func addSyncResponse(syncResponse: MXCachedSyncResponse) -> String {
+        let id = UUID().uuidString
+        saveSyncResponse(path: syncResponsePath(withId: id), syncResponse: syncResponse)
+        addSyncResponseId(id: id)
+        return id
     }
     
-    public var prevBatch: String? {
+    public func syncResponse(withId id: String) throws -> MXCachedSyncResponse {
+        guard let syncResponse = readSyncResponse(path: syncResponsePath(withId: id)) else {
+            throw MXSyncResponseStoreError.unknownId
+        }
+        return syncResponse
+    }
+    
+    public func syncResponseSize(withId id: String) -> Int {
+        guard let attributes = try? FileManager.default.attributesOfItem(atPath: syncResponsePath(withId: id).path),
+              let size = attributes[FileAttributeKey.size] as? Int else {
+            return 0
+        }
+        return size
+    }
+    
+    public func updateSyncResponse(withId id: String, syncResponse: MXCachedSyncResponse) {
+        saveSyncResponse(path: syncResponsePath(withId: id), syncResponse: syncResponse)
+    }
+    
+    public func deleteSyncResponse(withId id: String) {
+        saveSyncResponse(path: syncResponsePath(withId: id), syncResponse: nil)
+        deleteSyncResponseId(id: id)
+    }
+    
+    public var syncResponseIds: [String] {
+        readMetaData().syncResponseIds
+    }
+    
+    
+    public var accountData: [String : Any]? {
         get {
-            autoreleasepool {
-                return readData()?.prevBatch
-            }
-        } set {
-            autoreleasepool {
-                let data = readData() ?? MXSyncResponseStoreModel()
-                data.prevBatch = newValue
-                saveData(data)
-            }
+            return readMetaData().accountData
+        }
+        set {
+            var metadata = readMetaData()
+            metadata.accountData = newValue
+            saveMetaData(metadata)
         }
     }
     
-    public var syncResponse: MXSyncResponse? {
-        get {
-            autoreleasepool {
-                return readData()?.syncResponse
-            }
-        } set {
-            autoreleasepool {
-                let data = readData() ?? MXSyncResponseStoreModel()
-                data.syncResponse = newValue
-                saveData(data)
-            }
-        }
-    }
-    
-    public func event(withEventId eventId: String, inRoom roomId: String) -> MXEvent? {
-        guard let response = syncResponse else {
-            return nil
-        }
-        
-        var allEvents: [MXEvent] = []
-        if let joinedRoomSync = response.rooms.join[roomId] {
-            allEvents.appendIfNotNil(contentsOf: joinedRoomSync.state?.events)
-            allEvents.appendIfNotNil(contentsOf: joinedRoomSync.timeline?.events)
-            allEvents.appendIfNotNil(contentsOf: joinedRoomSync.accountData?.events)
-        }
-        if let invitedRoomSync = response.rooms.invite[roomId] {
-            allEvents.appendIfNotNil(contentsOf: invitedRoomSync.inviteState?.events)
-        }
-        if let leftRoomSync = response.rooms.leave[roomId] {
-            allEvents.appendIfNotNil(contentsOf: leftRoomSync.state?.events)
-            allEvents.appendIfNotNil(contentsOf: leftRoomSync.timeline?.events)
-            allEvents.appendIfNotNil(contentsOf: leftRoomSync.accountData?.events)
-        }
-        
-        let result = allEvents.first(where: { eventId == $0.eventId })
-        result?.roomId = roomId
-        
-        NSLog("[MXSyncResponseFileStore] eventWithEventId: \(eventId) \(result == nil ? "not " : "" )found")
-        
-        return result
-    }
-    
-    public func roomSummary(forRoomId roomId: String, using summary: MXRoomSummary?) -> MXRoomSummary? {
-        guard let response = syncResponse else {
-            return summary
-        }
-        guard let summary = summary ?? MXRoomSummary(roomId: roomId, andMatrixSession: nil) else {
-            return nil
-        }
-        
-        var eventsToProcess: [MXEvent] = []
-        
-        if let invitedRoomSync = response.rooms.invite[roomId],
-            let stateEvents = invitedRoomSync.inviteState?.events {
-            eventsToProcess.append(contentsOf: stateEvents)
-        }
-        
-        if let joinedRoomSync = response.rooms.join[roomId] {
-            if let stateEvents = joinedRoomSync.state?.events {
-                eventsToProcess.append(contentsOf: stateEvents)
-            }
-            if let timelineEvents = joinedRoomSync.timeline?.events {
-                eventsToProcess.append(contentsOf: timelineEvents)
-            }
-        }
-        
-        if let leftRoomSync = response.rooms.leave[roomId] {
-            if let stateEvents = leftRoomSync.state?.events {
-                eventsToProcess.append(contentsOf: stateEvents)
-            }
-            if let timelineEvents = leftRoomSync.timeline?.events {
-                eventsToProcess.append(contentsOf: timelineEvents)
-            }
-        }
-        
-        for event in eventsToProcess {
-            switch event.eventType {
-            case .roomAliases:
-                if summary.displayname == nil {
-                    summary.displayname = (event.content["aliases"] as? [String])?.first
-                }
-            case .roomCanonicalAlias:
-                if summary.displayname == nil {
-                    summary.displayname = event.content["alias"] as? String
-                    if summary.displayname == nil {
-                        summary.displayname = (event.content["alt_aliases"] as? [String])?.first
-                    }
-                }
-            case .roomName:
-                summary.displayname = event.content["name"] as? String
-            default:
-                break
-            }
-        }
-        return summary
-    }
     
     public func deleteData() {
-        saveData(nil)
-    }
-    
-}
-
-//  MARK: - Private
-
-private extension Array {
-    
-    mutating func appendIfNotNil(contentsOf array: Array?) {
-        if let array = array {
-            append(contentsOf: array)
+        let syncResponseIds = self.syncResponseIds
+        syncResponseIds.forEach { id in
+            deleteSyncResponse(withId: id)
         }
+        saveMetaData(nil)
     }
-    
 }

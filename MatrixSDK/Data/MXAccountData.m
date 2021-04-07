@@ -17,6 +17,8 @@
 
 #import "MXAccountData.h"
 
+#import "MXJSONModel.h"
+
 @interface MXAccountData ()
 {
     /**
@@ -34,6 +36,22 @@
     if (self)
     {
         accountDataDict = [NSMutableDictionary dictionary];
+    }
+    return self;
+}
+
+- (instancetype)initWithAccountData:(NSDictionary<NSString *,id> *)accountData
+{
+    self = [self init];
+    if (self)
+    {
+        NSArray<NSDictionary<NSString *, id> *> *events;
+        MXJSONModelSetArray(events, accountData[@"events"]);
+        
+        for (NSDictionary<NSString *, id> *event in events)
+        {
+            [self updateWithEvent:event];
+        }
     }
     return self;
 }

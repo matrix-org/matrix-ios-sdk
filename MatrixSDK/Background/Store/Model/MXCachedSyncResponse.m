@@ -14,31 +14,46 @@
 // limitations under the License.
 //
 
-#import "MXSyncResponseStoreModel.h"
+#import "MXCachedSyncResponse.h"
 #import "MXJSONModels.h"
 
-@implementation MXSyncResponseStoreModel
+@implementation MXCachedSyncResponse
+
+- (instancetype)initWithSyncToken:(NSString *)syncToken syncResponse:(MXSyncResponse *)syncResponse
+{
+    self = [super init];
+    if (self)
+    {
+        _syncToken = syncToken;
+        _syncResponse = syncResponse;
+    }
+    return self;
+}
 
 + (instancetype)modelFromJSON:(NSDictionary *)JSONDictionary
 {
-    MXSyncResponseStoreModel *syncResponseModel = [[MXSyncResponseStoreModel alloc] init];
+    MXCachedSyncResponse *cachedSyncResponse;
     
-    if (syncResponseModel)
+    NSString *syncToken;
+    MXSyncResponse *syncResponse;
+    MXJSONModelSetString(syncToken, JSONDictionary[@"sync_token"]);
+    MXJSONModelSetMXJSONModel(syncResponse, MXSyncResponse, JSONDictionary[@"sync_response"]);
+    
+    if (syncToken && syncResponse)
     {
-        MXJSONModelSetString(syncResponseModel.prevBatch, JSONDictionary[@"prev_batch"]);
-        MXJSONModelSetMXJSONModel(syncResponseModel.syncResponse, MXSyncResponse, JSONDictionary[@"sync_response"]);
+        cachedSyncResponse = [[MXCachedSyncResponse alloc] initWithSyncToken:syncToken syncResponse:syncResponse];
     }
 
-    return syncResponseModel;
+    return cachedSyncResponse;
 }
 
 - (NSDictionary *)JSONDictionary
 {
     NSMutableDictionary *JSONDictionary = [NSMutableDictionary dictionary];
     
-    if (self.prevBatch)
+    if (self.syncToken)
     {
-        JSONDictionary[@"prev_batch"] = self.prevBatch;
+        JSONDictionary[@"sync_token"] = self.syncToken;
     }
     if (self.syncResponse)
     {
