@@ -9,6 +9,7 @@ Changes to be released in next version
 
 🐛 Bugfix
  * Remove padding from base64 encoded `iv` value (vector-im/element-ios/issues/4172).
+ * Check for null before changing a user's displayname or avatar URL based on an m.room.member event.
 
 ⚠️ API Changes
  * 
