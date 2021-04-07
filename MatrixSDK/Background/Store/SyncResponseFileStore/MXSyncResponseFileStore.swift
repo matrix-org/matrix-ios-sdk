@@ -37,6 +37,7 @@ public class MXSyncResponseFileStore: NSObject {
         static let syncResponsesFolderName = "SyncResponses"
         static let syncResponseFileNameTemplate = "syncResponse-%@"
         static let fileEncoding: String.Encoding = .utf8
+        static let v0FileName = "syncResponse"                          // Unique file used before storing multiple sync reponse
     }
     
     private let fileOperationQueue: DispatchQueue
@@ -72,6 +73,14 @@ public class MXSyncResponseFileStore: NSObject {
             try? FileManager.default.createDirectory(at: syncResponsesFolderPath,
                                                      withIntermediateDirectories: true,
                                                      attributes: nil)
+            
+            // Clean the single cache file used for "v0"
+            // TODO: Remove it at some point
+            let v0filePath = cachePath
+                .appendingPathComponent(Constants.folderName)
+                .appendingPathComponent(userId)
+                .appendingPathComponent(Constants.v0FileName)
+            try? FileManager.default.removeItem(at: v0filePath)
         }
     }
     
