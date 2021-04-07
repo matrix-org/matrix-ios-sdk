@@ -5,10 +5,12 @@ Changes to be released in next version
  * 
 
 🙌 Improvements
- * 
+ * Create secret storage with a given private key (vector-im/element-ios/issues/4189).
 
 🐛 Bugfix
  * Notifications: Fix background sync out of memory (vector-im/element-ios#3957).
+ * Remove padding from base64 encoded `iv` value (vector-im/element-ios/issues/4172).
+ * Check for null before changing a user's displayname or avatar URL based on an m.room.member event.
 
 ⚠️ API Changes
  * 
