@@ -17,7 +17,7 @@
 import Foundation
 
 struct MXSyncResponseStoreMetaDataModel {
-    var accountData: [AnyHashable : Any]? = nil
+    var accountData: [AnyHashable : Any]?
     var syncResponseIds: [String] = []
 }
 
