@@ -1080,6 +1080,123 @@ class MXBackgroundSyncServiceTests: XCTestCase {
             })
         }
     }
+    
+    // Check that the cached account data correctly updates
+    //
+    // - Alice and Bob are in a room
+    // - Bob pauses their app
+    //
+    // - Bob sets a first account data
+    // - Alice sends a message
+    // - Bob uses the MXBackgroundSyncService to fetch it
+    //
+    // - Bob sets a second account data
+    // - Alice sends another message
+    // - Bob uses the MXBackgroundSyncService to fetch it
+    //
+    // -> Account data must be cached in the background service cache
+    //
+    // - Bob restarts their app
+    // -> Background service cache must be reset
+    func testStoreAccountDataUpdate() {
+        
+        let accountDataTestEvent1 = (
+            type: "type1",
+            content: ["a": "1", "b": "2"]
+        )
+        
+        let accountDataTestEvent2 = (
+            type: "type2",
+            content: ["a": 1, "b": 2]
+        )
+        
+        // - Alice and Bob are in a room
+        let aliceStore = MXMemoryStore()
+        let bobStore = MXFileStore()
+        testData.doTestWithAliceAndBob(inARoom: self, aliceStore: aliceStore, bobStore: bobStore) { (aliceSession, bobSession, roomId, expectation) in
+            
+            guard let expectation = expectation else {
+                return
+            }
+            guard let roomId = roomId, let room = aliceSession?.room(withRoomId: roomId),
+                  let bobSession = bobSession, let bobCredentials = bobSession.credentials  else {
+                XCTFail("Cannot set up initial test conditions")
+                expectation.fulfill()
+                return
+            }
+            
+            // - Bob pause their app
+            bobSession.pause()
+            
+            let bgSyncService = MXBackgroundSyncService(withCredentials: bobCredentials)
+            
+            // - Bob sets a first account data
+            bobSession.setAccountData(accountDataTestEvent1.content, forType: accountDataTestEvent1.type) {
+                
+                // - Alice sends a message
+                var localEcho: MXEvent?
+                room.sendTextMessage(Constants.messageText, localEcho: &localEcho) { (response) in
+                    guard let eventId1 = response.value as? String else {
+                        XCTFail("Cannot set up initial test conditions")
+                        expectation.fulfill()
+                        return
+                    }
+                    
+                    // - Bob uses the MXBackgroundSyncService to fetch it
+                    bgSyncService.event(withEventId: eventId1, inRoom: roomId) { _ in
+                        
+                        // - Bob sets a second account data
+                        bobSession.setAccountData(accountDataTestEvent2.content, forType: accountDataTestEvent2.type) {
+                            
+                            // - Alice sends another message
+                            room.sendTextMessage(Constants.messageText, localEcho: &localEcho) { (response) in
+                                guard let eventId2 = response.value as? String else {
+                                    XCTFail("Cannot set up initial test conditions")
+                                    expectation.fulfill()
+                                    return
+                                }
+                                
+                                // - Bob uses the MXBackgroundSyncService to fetch it
+                                bgSyncService.event(withEventId: eventId2, inRoom: roomId) { _ in
+                                    
+                                    let syncResponseStore = MXSyncResponseFileStore(withCredentials: bobCredentials)
+                                    
+                                    guard let cachedAccountData = syncResponseStore.accountData,
+                                          let accountData = MXAccountData(accountData: cachedAccountData) else {
+                                        XCTFail()
+                                        expectation.fulfill()
+                                        return
+                                    }
+                                    
+                                    // -> Account data must be cached in the background service cache
+                                    let testEvent1Content = accountData.accountData(forEventType: accountDataTestEvent1.type)
+                                    XCTAssertEqual(testEvent1Content as! [String : String], accountDataTestEvent1.content)
+                                    
+                                    let testEvent2Content = accountData.accountData(forEventType: accountDataTestEvent2.type)
+                                    XCTAssertEqual(testEvent2Content as! [String : Int], accountDataTestEvent2.content)
+                                    
+                                    
+                                    // - Bob restarts their app
+                                    bobSession.resume {
+                                        // -> Background service cache must be reset
+                                        let cachedAccountData = syncResponseStore.accountData
+                                        XCTAssertNil(cachedAccountData)
+                                        
+                                        expectation.fulfill()
+                                    }
+                                }
+                            }
+                            
+                        } failure: { _ in
+                            XCTFail("Cannot set up initial test conditions")
+                        }
+                    }
+                }
+            } failure: { _ in
+                XCTFail("Cannot set up initial test conditions")
+            }
+        }
+    }
 }
 
 

@@ -150,8 +150,18 @@ public class MXSyncResponseStoreManager: NSObject {
         }
         
         // Manage user account data
-        if let accountData = newSyncResponse.accountData {
-            syncResponseStore.accountData = accountData
+        if let newAccountData = newSyncResponse.accountData,
+           let newAccountDataEvents = newAccountData["events"] as? [[String: Any]], newAccountDataEvents.count > 0 {
+            let cachedAccountData = syncResponseStore.accountData ?? [:]
+            guard let accountData = MXAccountData(accountData: cachedAccountData) else {
+                return
+            }
+            
+            newAccountDataEvents.forEach {
+                accountData.update(withEvent: $0)
+            }
+            
+            syncResponseStore.accountData = accountData.accountData
         }
     }
 
