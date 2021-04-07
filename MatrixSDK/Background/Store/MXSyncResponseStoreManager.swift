@@ -229,7 +229,7 @@ public class MXSyncResponseStoreManager: NSObject {
         return nil
     }
     
-    func roomSummary(forRoomId roomId: String, using summary: MXRoomSummary, inSyncResponse response: MXCachedSyncResponse) -> MXRoomSummary? {
+    private func roomSummary(forRoomId roomId: String, using summary: MXRoomSummary, inSyncResponse response: MXCachedSyncResponse) -> MXRoomSummary? {
         var eventsToProcess: [MXEvent] = []
         
         if let invitedRoomSync = response.syncResponse.rooms.invite[roomId],
