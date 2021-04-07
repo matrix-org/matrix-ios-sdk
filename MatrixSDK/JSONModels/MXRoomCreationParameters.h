@@ -74,6 +74,10 @@ NS_ASSUME_NONNULL_BEGIN
  */
 - (NSDictionary*)JSONDictionary;
 
+/// Add or update an initial state event
+/// @param stateEvent The state event to add or update
+- (void)addOrUpdateInitialStateEvent:(NSDictionary*)stateEvent;
+
 @end
 
 

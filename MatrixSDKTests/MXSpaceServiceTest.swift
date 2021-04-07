@@ -155,9 +155,10 @@ class MXSpaceServiceTest: XCTestCase {
                             
                             XCTAssert(roomState.powerLevels.eventsDefault == 100)
                             XCTAssertTrue(roomState.name == expectedSpaceName)
-                            
                             XCTAssertTrue(roomState.isJoinRulePublic)
-                                                    
+                            XCTAssert(roomState.guestAccess == .canJoin)
+                            XCTAssert(roomState.historyVisibility == .worldReadable)
+                            
                             expectation.fulfill()
                         }
                     }

@@ -22,7 +22,11 @@ public class MXSpaceService: NSObject {
     
     // MARK: - Properties
     
-    unowned let session: MXSession
+    private unowned let session: MXSession
+    
+    private lazy var stateEventBuilder: MXRoomInitialStateEventBuilder = {
+        return MXRoomInitialStateEventBuilder()
+    }()
     
     // MARK: - Setup
     
@@ -63,6 +67,16 @@ public class MXSpaceService: NSObject {
         parameters.name = name
         parameters.topic = topic
         parameters.preset = isPublic ? kMXRoomPresetPublicChat : kMXRoomPresetPrivateChat
+        
+        if isPublic {
+            let guestAccessStateEvent = self.stateEventBuilder.buildGuestAccessEvent(withAccess: .canJoin)
+                                    
+            let historyVisibilityStateEvent = self.stateEventBuilder.buildHistoryVisibilityEvent(withVisibility: .worldReadable)
+            
+            parameters.addOrUpdateInitialStateEvent(guestAccessStateEvent)
+            parameters.addOrUpdateInitialStateEvent(historyVisibilityStateEvent)
+        }
+        
         return self.createSpace(with: parameters, completion: completion)
     }
     

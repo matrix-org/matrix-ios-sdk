@@ -6,8 +6,10 @@ Changes to be released in next version
 
 🙌 Improvements
  * MXRoomPowerLevels: Handle undefined values and add init with default spec values.
- * MXRoomCreationParameters: Add roomType and powerLevelContentOverride properties.
+ * MXRoomCreationParameters: Add roomType and powerLevelContentOverride properties. Add initial state events update method.
+
  * MXResponse: Add convenient uncurry method to convert a Swift method into Objective-C.
+ * Add MXRoomInitialStateEventBuilder that enables to build initial state events.
 
 🐛 Bugfix
  * 
