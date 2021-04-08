@@ -539,21 +539,32 @@ public enum MXBackgroundSyncServiceError: Error {
     }
     
     private func updateBackgroundServiceStoresIfNeeded() {
+        var outdatedStore = false
+        
         // Check self.store data is in-sync with MXSession store data
         // by checking that the event stream token we have in memory is the same that in the last version of MXSession store
         let eventStreamToken = store.eventStreamToken
  
         let upToDateStore = MXBackgroundStore(withCredentials: credentials)
         let upToDateEventStreamToken = upToDateStore.eventStreamToken
-
-        if (eventStreamToken != upToDateEventStreamToken) {
+        if eventStreamToken != upToDateEventStreamToken {
             // MXSession continued to work in parallel with the background sync service
-            // MXSession has updated its stream token. We need to use t
-            NSLog("[MXBackgroundSyncService] updateBackgroundServiceStoresIfNeeded: Update MXBackgroundStore. Its event stream token (\(String(describing: eventStreamToken))) does not match current MXStore.eventStreamToken (\(String(describing: upToDateEventStreamToken)))")
+            // MXSession has updated its stream token. We need to use it
+            NSLog("[MXBackgroundSyncService] updateBackgroundServiceStoresIfNeeded: Update MXBackgroundStore. Wrong sync token: \(String(describing: eventStreamToken)) instead of \(String(describing: upToDateEventStreamToken))")
             store = upToDateStore
-            
+            outdatedStore = true
+        }
+        
+        let cachedSyncResponseSyncToken = syncResponseStoreManager.syncToken()
+        if let cachedSyncResponseSyncToken = cachedSyncResponseSyncToken, upToDateEventStreamToken != cachedSyncResponseSyncToken {
             // syncResponseStore has obsolete data. Reset it
-            NSLog("[MXBackgroundSyncService] updateBackgroundServiceStoresIfNeeded: Reset MXSyncResponseStoreManager. Its sync token was \(String(describing: syncResponseStoreManager.syncToken))")
+            NSLog("[MXBackgroundSyncService] updateBackgroundServiceStoresIfNeeded: Update MXSyncResponseStoreManager. Wrong sync token: \(String(describing: cachedSyncResponseSyncToken)) instead of \(String(describing: upToDateEventStreamToken))")
+            outdatedStore = true
+        }
+            
+        if outdatedStore {
+            // TODO: Do not clear data. We will lose e2ee keys
+            NSLog("[MXBackgroundSyncService] updateBackgroundServiceStoresIfNeeded: Reset MXSyncResponseStoreManager. Its sync token was \(String(describing: cachedSyncResponseSyncToken))")
             syncResponseStoreManager.resetData()
             
             NSLog("[MXBackgroundSyncService] updateBackgroundServiceStoresIfNeeded: Reset MXBackgroundCryptoStore")
