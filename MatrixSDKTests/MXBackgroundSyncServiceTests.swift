@@ -769,7 +769,7 @@ class MXBackgroundSyncServiceTests: XCTestCase {
     ///   - syncResponseCacheSizeLimit: value for MXBackgroundSyncService.syncResponseCacheSizeLimit.
     ///   - completion: The completion block.
     func createStoreScenario(messageCountChunks: [Int], syncResponseCacheSizeLimit: Int = 512 * 1024,
-                                              completion: @escaping (_ bobSession: MXSession, _ roomId: String, _ eventIdsChunks: [[String]], _ expectation: XCTestExpectation) -> Void) {
+                                              completion: @escaping (_ aliceSession: MXSession,_ bobSession: MXSession, _ roomId: String, _ eventIdsChunks: [[String]], _ expectation: XCTestExpectation) -> Void) {
         // - Alice and Bob in an encrypted room
         let aliceStore = MXMemoryStore()
         let bobStore = MXFileStore()
@@ -778,14 +778,16 @@ class MXBackgroundSyncServiceTests: XCTestCase {
                 return
             }
 
-            guard let roomId = roomId, let room = aliceSession?.room(withRoomId: roomId),
+            guard let roomId = roomId,
+                  let aliceSession = aliceSession, let room = aliceSession.room(withRoomId: roomId),
                   let bobSession = bobSession, let bobCredentials = bobSession.credentials  else {
                 XCTFail("Cannot set up initial test conditions")
                 expectation.fulfill()
                 return
             }
             
-            // - Pause Bob session
+            // Pause sessions to avoid noise with /sync requests and to avoid key reshare mechanism that fix e2ee issues
+            aliceSession.pause()
             bobSession.pause()
             
             // - Limit size for every sync response cache in background service
@@ -800,14 +802,14 @@ class MXBackgroundSyncServiceTests: XCTestCase {
                     return
                 }
                 
-                completion(bobSession, roomId, eventIdsChunks, expectation)
+                completion(aliceSession, bobSession, roomId, eventIdsChunks, expectation)
             }
         }
     }
     
-    // Test when there are several sync responses are merged in cache
+    // Test when several sync responses are merged in a single cached response.
     //
-    // - Have Bob background service cache merged from 3 continuous sync responses
+    // - Have Bob background service store filled with 3 continuous sync responses
     // -> There must be a single cached sync response
     // -> The cached response must know both events
     // -> The store manager must know both events
@@ -816,8 +818,8 @@ class MXBackgroundSyncServiceTests: XCTestCase {
     // -> Bob session must have the key to decrypt the first message
     // -> The background service cache must be reset after session resume
     func testStoreWithMergedCachedSyncResponse() {
-        // - Have Bob background service cache merged from 3 continuous sync responses
-        self.createStoreScenario(messageCountChunks: [5, 2, 10]) { (bobSession, roomId, eventIdsChunks, expectation) in
+        // - Have Bob background service store filled with 3 continuous sync responses
+        self.createStoreScenario(messageCountChunks: [5, 2, 10]) { (_, bobSession, roomId, eventIdsChunks, expectation) in
             
             guard let firstEventId = eventIdsChunks.first?.first,
                   let lastEventId = eventIdsChunks.last?.last
@@ -872,10 +874,10 @@ class MXBackgroundSyncServiceTests: XCTestCase {
         }
     }
 
-    // Test when there are several sync response files in cache
-    // Almost the same test as testStoreWithMergedCachedSyncResponse.
+    // Test when several sync responses are stored in several cached responses.
+    // Almost the same test as testStoreWithMergedCachedSyncResponse except that cache size is limited.
     //
-    // - Have Bob background service cache filled with 3 continuous sync responses
+    // - Have Bob background service store filled with 3 continuous sync responses but with a cache size limit
     // -> There must be 3 cached sync responses
     // -> The first cached response must know only the first event
     // -> The last cached response must know only the last event
@@ -885,8 +887,8 @@ class MXBackgroundSyncServiceTests: XCTestCase {
     // -> Bob session must have the key to decrypt the first message
     // -> The background service cache must be reset after session resume
     func testStoreWithLimitedCacheSize() {
-        // - Have Bob background service cache filled with 3 continuous sync responses
-        self.createStoreScenario(messageCountChunks: [5, 2, 10], syncResponseCacheSizeLimit: 0) { (bobSession, roomId, eventIdsChunks, expectation) in
+        // - Have Bob background service store filled with 3 continuous sync responses but with a cache size limit
+        self.createStoreScenario(messageCountChunks: [5, 2, 10], syncResponseCacheSizeLimit: 0) { (_, bobSession, roomId, eventIdsChunks, expectation) in
             
             guard let firstEventId = eventIdsChunks.first?.first,
                   let lastEventId = eventIdsChunks.last?.last
@@ -945,9 +947,9 @@ class MXBackgroundSyncServiceTests: XCTestCase {
     }
     
     
-    // Test when there are several gappy sync responses are merged in cache
+    // Test when gappy sync responses are merged in a single cached response.
     //
-    // - Have Bob background service cache filled with a merged gappy sync responses
+    // - Have Bob background service with 3 sync responses with limited timeline
     // -> There must be a single cached sync response
     // -> The cached response can only know the last event
     // -> The store manager can only know the last event
@@ -956,8 +958,8 @@ class MXBackgroundSyncServiceTests: XCTestCase {
     // -> Bob session must have the key to decrypt the first message
     // -> The background service cache must be reset after session resume
     func testStoreWithMergedGappyCachedSyncResponse() {
-        // - Have Bob background service cache filled with a merged gappy sync response
-        self.createStoreScenario(messageCountChunks: [5, Constants.numberOfMessagesForLimitedTest]) { (bobSession, roomId, eventIdsChunks, expectation) in
+        // - Have Bob background service with 3 sync responses with limited timeline
+        self.createStoreScenario(messageCountChunks: [5, Constants.numberOfMessagesForLimitedTest, 1]) { (_, bobSession, roomId, eventIdsChunks, expectation) in
             
             guard let firstEventId = eventIdsChunks.first?.first,
                   let lastEventId = eventIdsChunks.last?.last
@@ -1010,10 +1012,11 @@ class MXBackgroundSyncServiceTests: XCTestCase {
         }
     }
     
-    // Test when there are several gappy sync response files in cache
-    // Almost the same test as testStoreWithMergedGappyCachedSyncResponse.
+    
+    // Test when gappy sync responses are stored in several cached responses.
+    // Almost the same test as testStoreWithMergedGappyCachedSyncResponse except that cache size is limited.
     //
-    // - Have Bob background service cache filled with 2 gappy sync responses
+    // - Have Bob background service cache filled with 2 gappy sync responses but with a cache size limit
     // -> There must be 2 cached sync responses
     // -> The first cached response must know only the first event
     // -> The last cached response must know only the last event
@@ -1023,8 +1026,8 @@ class MXBackgroundSyncServiceTests: XCTestCase {
     // -> Bob session must have the key to decrypt the first message
     // -> The background service cache must be reset after session resume
     func testStoreWithGappySyncAndLimitedCacheSize() {
-        // - Have Bob background service cache filled with 2 gappy sync responses
-        self.createStoreScenario(messageCountChunks: [5, Constants.numberOfMessagesForLimitedTest], syncResponseCacheSizeLimit: 0) { (bobSession, roomId, eventIdsChunks, expectation) in
+        // - Have Bob background service cache filled with 2 gappy sync responses but with a cache size limit
+        self.createStoreScenario(messageCountChunks: [5, Constants.numberOfMessagesForLimitedTest], syncResponseCacheSizeLimit: 0) { (_, bobSession, roomId, eventIdsChunks, expectation) in
             
             guard let firstEventId = eventIdsChunks.first?.first,
                   let lastEventId = eventIdsChunks.last?.last
