@@ -1200,6 +1200,150 @@ class MXBackgroundSyncServiceTests: XCTestCase {
             }
         }
     }
+    
+    
+    // MARK: - E2EE race condition tests
+    
+    // Check MXSession can use keys received by the background sync service even after the bg service detected it has a wrong sync token.
+    // This can happen when MXSession and MXBackgroundSyncService continue to run in parallel.
+    //
+    // - Have Bob background service with 4 sync responses
+    // - Hack the cached background sync token to mimic a race between MXSession and MXBackgroundSyncService
+    // - Do a random roundtrip with the background service to make it detect the race
+    // - Resume Bob session
+    // -> Bob session must have the key to decrypt the first and the last message
+    // -> The background service cache must be reset after session restart
+    func testMXSessionDecryptionAfterInvalidBgSyncServiceSyncToken() {
+        // - Have Bob background service with 4 sync responses
+        self.createStoreScenario(messageCountChunks: [5, Constants.numberOfMessagesForLimitedTest, 1, 10], syncResponseCacheSizeLimit: 0) { (aliceSession, bobSession, roomId, eventIdsChunks, expectation) in
+            
+            // Because of a synapse bug, we need to send another to_device so that the homeserver does not
+            // resend the to_device containing the e2ee key
+            let bgSyncService = MXBackgroundSyncService(withCredentials: bobSession.credentials)
+            self.addToDeviceEventToStore(of: bgSyncService, otherSession: aliceSession, roomId: roomId) { _ in
+                
+                guard let bobCredentials = bobSession.credentials,
+                      let firstEventId = eventIdsChunks.first?.first,
+                      let lastEventId = eventIdsChunks.last?.last  else {
+                    XCTFail("Cannot set up initial test conditions")
+                    expectation.fulfill()
+                    return
+                }
+                
+                // - Hack the cached background sync token to mimic a race between MXSession and MXBackgroundSyncService
+                let syncResponseStore = MXSyncResponseFileStore(withCredentials: bobCredentials)
+                guard let firstSyncResponseId = syncResponseStore.syncResponseIds.first,
+                      let firstSyncResponse = try? syncResponseStore.syncResponse(withId: firstSyncResponseId) else {
+                    XCTFail("Cannot set up initial test conditions")
+                    expectation.fulfill()
+                    return
+                }
+                
+                let newFirstSyncResponse = MXCachedSyncResponse(syncToken: "A_BAD_SYNC_TOKEN", syncResponse: firstSyncResponse.syncResponse)
+                syncResponseStore.updateSyncResponse(withId: firstSyncResponseId, syncResponse: newFirstSyncResponse)
+                
+                // - Do a random roundtrip with the background service to make it detect the race
+                let bgSyncService = MXBackgroundSyncService(withCredentials: bobCredentials)
+                bgSyncService.event(withEventId: "anyId", inRoom: roomId) { (_) in
+
+                    // - Resume Bob session
+                    bobSession.resume {
+                        
+                        // -> Bob session must have the key to decrypt the first and the last message
+                        bobSession.event(withEventId: firstEventId, inRoom: roomId) { (firstEvent) in
+                            bobSession.event(withEventId: lastEventId, inRoom: roomId) { (lastEvent) in
+                                
+                                bobSession.decryptEvent(firstEvent, inTimeline: nil)
+                                XCTAssertNotNil(firstEvent?.clear)
+                                bobSession.decryptEvent(lastEvent, inTimeline: nil)
+                                XCTAssertNotNil(lastEvent?.clear)
+                                
+                                // -> The background service cache must be reset after session restart
+                                XCTAssertEqual(syncResponseStore.syncResponseIds.count, 0)
+                                expectation.fulfill()
+                                
+                            } failure: { (error) in
+                                XCTFail("The request should not fail - Error: \(String(describing: error))");
+                                expectation.fulfill()
+                            }
+                        } failure: { (error) in
+                            XCTFail("The request should not fail - Error: \(String(describing: error))");
+                            expectation.fulfill()
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    // Check MXSession can use keys received by the background sync sevice even after a MXSession cache clear.
+    // This clear cache simulates different things that could have gone badly like:
+    //     - MXSession store corruption
+    //     - A detection by MXSession of different current sync tokens between MXSession and MXBackgroundSyncService
+    //
+    // - Have Bob background service with 3 sync responses
+    // - Clear MXSession cache to simulate a problem between MXSession and MXBackgroundSyncService caches
+    // - Restart Bob session
+    // -> Bob session must have the key to decrypt the first and the last message
+    // -> The background service cache must be reset after session restart
+    func testMXSessionDecryptionAfterClearCache() {
+        // - Have Bob background service with 3 sync responses
+        self.createStoreScenario(messageCountChunks: [5, Constants.numberOfMessagesForLimitedTest, 1]) { (aliceSession, bobSession, roomId, eventIdsChunks, expectation) in
+            
+            // Because of a synapse bug, we need to send another to_device so that the homeserver does not
+            // resend the to_device containing the e2ee key on the initial sync made after the clear cache.
+            let bgSyncService = MXBackgroundSyncService(withCredentials: bobSession.credentials)
+            self.addToDeviceEventToStore(of: bgSyncService, otherSession: aliceSession, roomId: roomId) { _ in
+                
+                guard let bobCredentials = bobSession.credentials,
+                      let firstEventId = eventIdsChunks.first?.first,
+                      let lastEventId = eventIdsChunks.last?.last  else {
+                    XCTFail("Cannot set up initial test conditions")
+                    expectation.fulfill()
+                    return
+                }
+          
+                // - Clear MXSession cache to simulate a problem between MXSession and MXBackgroundSyncService caches
+                bobSession.store.deleteAllData()
+                bobSession.close()
+                
+                // - Restart Bob session
+                let restClient = MXRestClient(credentials: bobCredentials, unrecognizedCertificateHandler: nil)
+                guard let bobSession2 = MXSession(matrixRestClient: restClient) else {
+                    XCTFail("The request should not fail");
+                    expectation.fulfill()
+                    return
+                }
+                bobSession2.setStore(MXFileStore(), completion: { _ in
+                    bobSession2.start(completion: { (_) in
+                        
+                        // -> Bob session must have the key to decrypt the first and the last message
+                        bobSession2.event(withEventId: firstEventId, inRoom: roomId) { (firstEvent) in
+                            bobSession2.event(withEventId: lastEventId, inRoom: roomId) { (lastEvent) in
+                                
+                                bobSession2.decryptEvent(firstEvent, inTimeline: nil)
+                                XCTAssertNotNil(firstEvent?.clear)
+                                bobSession2.decryptEvent(lastEvent, inTimeline: nil)
+                                XCTAssertNotNil(lastEvent?.clear)
+                                
+                                // -> The background service cache must be reset after session restart
+                                let syncResponseStore = MXSyncResponseFileStore(withCredentials: bobCredentials)
+                                XCTAssertEqual(syncResponseStore.syncResponseIds.count, 0)
+                                expectation.fulfill()
+                                
+                            } failure: { (error) in
+                                XCTFail("The request should not fail - Error: \(String(describing: error))");
+                                expectation.fulfill()
+                            }
+                        } failure: { (error) in
+                            XCTFail("The request should not fail - Error: \(String(describing: error))");
+                            expectation.fulfill()
+                        }
+                    })
+                })
+            }
+        }
+    }
 }
 
 
@@ -1274,6 +1418,27 @@ extension MXBackgroundSyncServiceTests {
                 } else {
                     completion(.success(eventIds))
                 }
+            }
+        }
+    }
+    
+    // Fill background service store with a new to_device event
+    func addToDeviceEventToStore(of backgroundSyncService: MXBackgroundSyncService,
+                                 otherSession: MXSession, roomId: String,
+                                 completion: @escaping (MXResponse<String>) -> Void) {
+        // Use a way to send a new to_device event to bob
+        // Do it here with a new megolm key
+        otherSession.crypto.discardOutboundGroupSessionForRoom(withRoomId: roomId) {
+            otherSession.crypto.ensureEncryption(inRoom: roomId) {
+                
+                // Do a random roundtrip with the background service to fetch it
+                backgroundSyncService.event(withEventId: "anyId", inRoom: roomId) { (res) in
+                    completion(.success(roomId))
+                }
+
+            } failure: { (error) in
+                XCTFail("Cannot set up initial test conditions")
+                completion(.failure(error ?? MXBackgroundSyncServiceError.unknown))
             }
         }
     }
