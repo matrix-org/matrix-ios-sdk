@@ -684,6 +684,24 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
     return operation;
 }
 
+- (void)discardOutboundGroupSessionForRoomWithRoomId:(NSString*)roomId onComplete:(void (^)(void))onComplete
+{
+#ifdef MX_CRYPTO
+    MXWeakify(self);
+    dispatch_async(self.cryptoQueue, ^{
+        MXStrongifyAndReturnIfNil(self);
+        
+        [self.olmDevice discardOutboundGroupSessionForRoomWithRoomId:roomId];
+        
+        dispatch_async(dispatch_get_main_queue(), ^{
+            onComplete();
+        });
+    });
+#else
+    onComplete();
+#endif
+}
+
 - (void)handleDeviceListsChanges:(MXDeviceListResponse*)deviceLists
 {
 #ifdef MX_CRYPTO
