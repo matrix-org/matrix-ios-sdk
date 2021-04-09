@@ -19,17 +19,27 @@
 
 @class MXSyncResponse;
 
-/// MXSyncResponseStore model class
-@interface MXSyncResponseStoreModel : MXJSONModel
+
+NS_ASSUME_NONNULL_BEGIN
+
+/// A cached MXSyncResponse
+@interface MXCachedSyncResponse : MXJSONModel
 
 /**
- The opaque token for the start of the sync response.
+ The sync token that generated `syncResponse`.
+ 
+ It is different from syncResponse.nextBatch which represents the next sync token to use for the next /sync request.
  */
-@property (nonatomic) NSString *prevBatch;
+@property (nonatomic, readonly) NSString *syncToken;
 
 /**
  The sync response starting from the prevBatch.
  */
-@property (nonatomic) MXSyncResponse *syncResponse;
+@property (nonatomic, readonly) MXSyncResponse *syncResponse;
+
+
+- (instancetype)initWithSyncToken:(NSString*)syncToken syncResponse:(MXSyncResponse*)syncResponse;
 
 @end
+
+NS_ASSUME_NONNULL_END

@@ -1,3 +1,35 @@
+Changes in 0.18.7 (2021-04-09)
+=================================================
+
+✨ Features
+ * 
+
+🙌 Improvements
+ * Create secret storage with a given private key (vector-im/element-ios/issues/4189).
+ * MXAsyncTaskQueue: New tool to run asynchronous tasks one at a time.
+ * MXRestClient: Add the dehydratedDevice() method to get the dehydrated device data (vector-im/element-ios/issues/4194).
+
+🐛 Bugfix
+ * Notifications: Fix background sync out of memory (vector-im/element-ios#3957).
+ * Notifications: MXBackgroundService: Keep all cached sync responses until there are processed by MXSession (vector-im/element-ios#4074).
+ * Remove padding from base64 encoded `iv` value (vector-im/element-ios/issues/4172).
+ * Check for null before changing a user's displayname or avatar URL based on an m.room.member event.
+
+⚠️ API Changes
+ * 
+
+🗣 Translations
+ * 
+    
+🧱 Build
+ * 
+
+Others
+ * 
+
+Improvements:
+
+
 Changes in 0.18.6 (2021-03-24)
 =================================================
 

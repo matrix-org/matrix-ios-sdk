@@ -1345,7 +1345,7 @@ FOUNDATION_EXPORT NSString *const kMXPushRuleScopeStringDevice;
     /**
      The user private data.
      */
-    @property (nonatomic) NSDictionary *accountData;
+    @property (nonatomic) NSDictionary<NSString*, id> *accountData;
 
     /**
      The opaque token for the end.
@@ -1697,3 +1697,33 @@ FOUNDATION_EXPORT NSString *const kMXPushRuleScopeStringDevice;
     @property (nonatomic) NSArray<MXGroupUser*> *chunk;
 
 @end
+
+#pragma mark - Dehydration
+
+/**
+ `MXDehydratedDevice` represents the dehydrated device of the current user.
+ */
+@interface MXDehydratedDevice : MXJSONModel
+
+    /**
+     A unique identifier of the device.
+     */
+    @property (nonatomic) NSString *deviceId;
+
+    /**
+     The encrypted account data of the dehydrated device (libolm's pickle format)
+     */
+    @property (nonatomic) NSString *account;
+
+    /**
+     The algorithm used for encrypting the account data
+     */
+    @property (nonatomic) NSString *algorithm;
+
+    /**
+     The passphrase used for encrypting the account data (optional)
+     */
+    @property (nonatomic) NSString *passphrase;
+
+@end
+
