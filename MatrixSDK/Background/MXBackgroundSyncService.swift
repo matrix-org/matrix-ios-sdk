@@ -548,18 +548,23 @@ public enum MXBackgroundSyncServiceError: Error {
             outdatedStore = true
         }
         
-        let cachedSyncResponseSyncToken = syncResponseStoreManager.syncToken()
-        if let cachedSyncResponseSyncToken = cachedSyncResponseSyncToken, upToDateEventStreamToken != cachedSyncResponseSyncToken {
-            // syncResponseStore has obsolete data. Reset it
-            NSLog("[MXBackgroundSyncService] updateBackgroundServiceStoresIfNeeded: Update MXSyncResponseStoreManager. Wrong sync token: \(String(describing: cachedSyncResponseSyncToken)) instead of \(String(describing: upToDateEventStreamToken))")
-            outdatedStore = true
+        if let cachedSyncResponseSyncToken = syncResponseStoreManager.syncToken() {
+            if upToDateEventStreamToken != cachedSyncResponseSyncToken {
+                // syncResponseStore has obsolete data. Reset it
+                NSLog("[MXBackgroundSyncService] updateBackgroundServiceStoresIfNeeded: Update MXSyncResponseStoreManager. Wrong sync token: \(String(describing: cachedSyncResponseSyncToken)) instead of \(String(describing: upToDateEventStreamToken))")
+                outdatedStore = true
+            }
+            
+            if outdatedStore {
+                NSLog("[MXBackgroundSyncService] updateBackgroundServiceStoresIfNeeded: Mark MXSyncResponseStoreManager data as outdated. Its sync token was \(String(describing: cachedSyncResponseSyncToken))")
+                syncResponseStoreManager.markDataOutdated()
+            }
         }
-            
-        if outdatedStore {
-            // TODO: Do not clear data. We will lose e2ee keys
-            NSLog("[MXBackgroundSyncService] updateBackgroundServiceStoresIfNeeded: Reset MXSyncResponseStoreManager. Its sync token was \(String(describing: cachedSyncResponseSyncToken))")
-            syncResponseStoreManager.resetData()
-            
+        
+        if syncResponseStoreManager.syncResponseStore.syncResponseIds.count == 0 {
+            // To avoid dead lock between processes, we write to the cryptoStore only from only one process.
+            // If there is no cached sync responses, it means they have been consumed by MXSession. Now is the
+            // right time to clean the cryptoStore.
             NSLog("[MXBackgroundSyncService] updateBackgroundServiceStoresIfNeeded: Reset MXBackgroundCryptoStore")
             cryptoStore.reset()
         }

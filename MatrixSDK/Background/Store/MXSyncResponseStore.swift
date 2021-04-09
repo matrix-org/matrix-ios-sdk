@@ -32,14 +32,25 @@ public enum MXSyncResponseStoreError: Error {
     func updateSyncResponse(withId id: String, syncResponse: MXCachedSyncResponse)
     func deleteSyncResponse(withId id: String)
     
-    // All ids of stored sync responses.
-    // Sync responses are stored in chunks to save RAM when processing it
-    // The array order is chronological
+    /// All ids of valid stored sync responses.
+    /// Sync responses are stored in chunks to save RAM when processing it
+    /// The array order is chronological
     var syncResponseIds: [String] { get }
+    
+    /// Mark as outdated some stored sync responses
+    func markOutdated(syncResponseIds: [String])
+    /// All outdated sync responses
+    var outdatedSyncResponseIds: [String] { get }
     
     /// User account data
     var accountData: [String : Any]? { get set }
     
     /// Delete all data in the store
     func deleteData()
+}
+
+extension MXSyncResponseStore {
+    var allSyncResponseIds : [String] {
+        outdatedSyncResponseIds + syncResponseIds
+    }
 }
