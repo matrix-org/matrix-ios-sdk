@@ -2590,3 +2590,48 @@ NSString *const kMXPushRuleScopeStringDevice = @"device";
 }
 
 @end
+
+#pragma mark - Dehydration
+
+@implementation MXDehydratedDevice
+
++ (id)modelFromJSON:(NSDictionary *)JSONDictionary
+{
+    MXDehydratedDevice *device = [[MXDehydratedDevice alloc] init];
+    if (device)
+    {
+        MXJSONModelSetString(device.deviceId, JSONDictionary[@"device_id"]);
+        MXJSONModelSetString(device.account, JSONDictionary[@"device_data"][@"account"]);
+        MXJSONModelSetString(device.algorithm, JSONDictionary[@"device_data"][@"algorithm"]);
+        MXJSONModelSetString(device.passphrase, JSONDictionary[@"device_data"][@"passphrase"]);
+    }
+    
+    return device;
+}
+
+- (instancetype)initWithCoder:(NSCoder *)aDecoder
+{
+    self = [super init];
+    if (self)
+    {
+        _deviceId = [aDecoder decodeObjectForKey:@"device_id"];
+        _account = [aDecoder decodeObjectForKey:@"account"];
+        _algorithm = [aDecoder decodeObjectForKey:@"algorithm"];
+        _passphrase = [aDecoder decodeObjectForKey:@"passphrase"];
+    }
+    return self;
+}
+
+- (void)encodeWithCoder:(NSCoder *)aCoder
+{
+    [aCoder encodeObject:_deviceId forKey:@"device_id"];
+    [aCoder encodeObject:_account forKey:@"account"];
+    [aCoder encodeObject:_algorithm forKey:@"algorithm"];
+    if (_passphrase)
+    {
+        [aCoder encodeObject:_passphrase forKey:@"passphrase"];
+    }
+}
+
+@end
+

@@ -2680,4 +2680,17 @@ typedef MXHTTPOperation* (^MXRestClientIdentityServerAccessTokenHandler)(void (^
                               success:(void (^)(MXAggregationPaginatedResponse *paginatedResponse))success
                               failure:(void (^)(NSError *error))failure;
 
+#pragma mark - Dehydration
+
+/**
+ Get the dehydrated device of the current account.
+
+ @param success A block object called when the operation succeeds. It provides a `MXDehydratedDevice` instance of the current account.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)dehydratedDeviceWithSuccess:(void (^)(MXDehydratedDevice *device))success
+                                        failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
+
 @end

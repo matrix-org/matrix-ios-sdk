@@ -5332,4 +5332,27 @@ MXAuthAction;
                                  }];
 }
 
+#pragma mark - Dehydration
+
+- (MXHTTPOperation*)dehydratedDeviceWithSuccess:(void (^)(MXDehydratedDevice *device))success
+                                          failure:(void (^)(NSError *error))failure
+{
+    MXWeakify(self);
+    return [httpClient requestWithMethod:@"GET"
+                                    path:[NSString stringWithFormat:@"%@/_matrix/client/unstable/org.matrix.msc2697.v2/dehydrated_device", credentials.homeServer]
+                              parameters:@{}
+                                 success:^(NSDictionary *JSONResponse) {
+                                    __block MXDehydratedDevice *device;
+                                    [self dispatchProcessing:^{
+                                        MXJSONModelSetMXJSONModel(device, MXDehydratedDevice, JSONResponse);
+                                    } andCompletion:^{
+                                        success(device);
+                                    }];
+                                 }
+                                 failure:^(NSError *error) {
+                                    MXStrongifyAndReturnIfNil(self);
+                                    [self dispatchFailure:error inBlock:failure];
+                                 }];
+}
+
 @end

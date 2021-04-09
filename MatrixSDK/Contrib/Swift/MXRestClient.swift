@@ -1862,4 +1862,15 @@ public extension MXRestClient {
         return __deleteDevice(byDeviceId: deviceId, authParams: authParameters, success: currySuccess(completion), failure: curryFailure(completion))
     }
     
+    /**
+     Get the dehydrated device of the current account.
+
+     - parameters:
+        - response: Indicates whether the operation was successful or failed. In case of success, return the `MXDehydratedDevice` instance of the current account.
+     
+     - returns: a `MXHTTPOperation` instance.
+     */
+    @nonobjc @discardableResult func dehydratedDevice(completion: @escaping (_ response: MXResponse<MXDehydratedDevice>) -> Void) -> MXHTTPOperation {
+        return __dehydratedDevice(success: currySuccess(completion), failure: curryFailure(completion))
+    }
 }
