@@ -10,6 +10,7 @@ Changes to be released in next version
 
 🐛 Bugfix
  * Notifications: Fix background sync out of memory (vector-im/element-ios#3957).
+ * Notifications: MXBackgroundService: Keep all cached sync responses until there are processed by MXSession (vector-im/element-ios#4074).
  * Remove padding from base64 encoded `iv` value (vector-im/element-ios/issues/4172).
  * Check for null before changing a user's displayname or avatar URL based on an m.room.member event.
 

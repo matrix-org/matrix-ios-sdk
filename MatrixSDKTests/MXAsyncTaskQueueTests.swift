@@ -39,7 +39,7 @@ class MXAsyncTaskQueueTests: XCTestCase {
             taskCompleted()
         }
         asyncTaskQueue.async { taskCompleted in
-            // Pure async call
+            // True async task
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
                 result = result + "2"
                 taskCompleted()

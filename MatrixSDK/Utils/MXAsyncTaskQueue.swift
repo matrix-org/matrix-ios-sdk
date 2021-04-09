@@ -16,12 +16,12 @@
 
 import Foundation
 
-/// Scheduler to run run one asynchronous or synchronous task at a time.
+/// Scheduler to run one asynchronous or synchronous task at a time.
 @objcMembers public class MXAsyncTaskQueue: NSObject {
     
     /// Serial queue where tasks are stacked
     private let dispatchGroupQueue: DispatchQueue
-    ///Mechanism to run one task at a time
+    /// Mechanism to run one task at a time
     private let dispatchGroup: DispatchGroup
 
     /// Queue from where tasks are executed
@@ -36,6 +36,7 @@ import Foundation
     /// Schedule a new task.
     ///
     /// Call the passed `taskCompleted` block when the task is done.
+    /// 
     /// - Parameter block: the task to execute
     public func async(execute block: @escaping (_ completion: @escaping() -> Void) -> Void) {
         dispatchGroupQueue.async {
