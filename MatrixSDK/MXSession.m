@@ -176,6 +176,11 @@ typedef void (^MXOnResumeDone)(void);
      Each key is a native room id. Each value is the virtual room id.
      */
     NSMutableDictionary<NSString*, NSString*> *nativeToVirtualRoomIds;
+    
+    /**
+     Async queue to run a single task at a time.
+     */
+    MXAsyncTaskQueue *asyncTaskQueue;
 }
 
 /**
@@ -216,6 +221,7 @@ typedef void (^MXOnResumeDone)(void);
         directRoomsOperationsQueue = [NSMutableArray array];
         publicisedGroupsByUserId = [[NSMutableDictionary alloc] init];
         nativeToVirtualRoomIds = [NSMutableDictionary dictionary];
+        asyncTaskQueue = [[MXAsyncTaskQueue alloc] initWithDispatchQueue:dispatch_get_main_queue() label:@"MXAsyncTaskQueue-MXSession"];
 
         [self setIdentityServer:mxRestClient.identityServer andAccessToken:mxRestClient.credentials.identityServerAccessToken];
         
@@ -1711,8 +1717,6 @@ typedef void (^MXOnResumeDone)(void);
         }
         return;
     }
-    
-    MXAsyncTaskQueue *asyncTaskQueue = [[MXAsyncTaskQueue alloc] initWithDispatchQueue:dispatch_get_main_queue() label:@"MXAsyncTaskQueue-MXSession"];
     
     for (NSString *syncResponseId in outdatedSyncResponseIds)
     {
