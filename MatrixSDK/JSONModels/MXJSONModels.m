@@ -2601,9 +2601,11 @@ NSString *const kMXPushRuleScopeStringDevice = @"device";
     if (device)
     {
         MXJSONModelSetString(device.deviceId, JSONDictionary[@"device_id"]);
-        MXJSONModelSetString(device.account, JSONDictionary[@"device_data"][@"account"]);
-        MXJSONModelSetString(device.algorithm, JSONDictionary[@"device_data"][@"algorithm"]);
-        MXJSONModelSetString(device.passphrase, JSONDictionary[@"device_data"][@"passphrase"]);
+        NSDictionary *deviceData = nil;
+        MXJSONModelSetDictionary(deviceData, JSONDictionary[@"device_data"]);
+        MXJSONModelSetString(device.account, deviceData[@"account"]);
+        MXJSONModelSetString(device.algorithm, deviceData[@"algorithm"]);
+        MXJSONModelSetString(device.passphrase, deviceData[@"passphrase"]);
     }
     
     return device;
