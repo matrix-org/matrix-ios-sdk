@@ -173,21 +173,14 @@ public class MXSyncResponseFileStore: NSObject {
     
     private func addSyncResponseId(id: String) {
         var metadata = readMetaData()
-        
-        var syncResponseIds = metadata.syncResponseIds
-        syncResponseIds.append(id)
-        
-        metadata.syncResponseIds = syncResponseIds
+        metadata.syncResponseIds.append(id)
         saveMetaData(metadata)
     }
     
     private func deleteSyncResponseId(id: String) {
         var metadata = readMetaData()
-        
-        var syncResponseIds = metadata.syncResponseIds
-        syncResponseIds.removeAll(where: { $0 == id })
-        
-        metadata.syncResponseIds = syncResponseIds
+        metadata.syncResponseIds.removeAll(where: { $0 == id })
+        metadata.outdatedSyncResponseIds.removeAll(where: { $0 == id })
         saveMetaData(metadata)
     }
 }
@@ -231,6 +224,21 @@ extension MXSyncResponseFileStore: MXSyncResponseStore {
         readMetaData().syncResponseIds
     }
     
+    public var outdatedSyncResponseIds: [String] {
+        readMetaData().outdatedSyncResponseIds
+    }
+    
+    public func markOutdated(syncResponseIds: [String]) {
+        var metadata = readMetaData()
+        syncResponseIds.forEach { syncResponseId in
+            if let index = metadata.syncResponseIds.firstIndex(of: syncResponseId) {
+                metadata.syncResponseIds.remove(at: index)
+                metadata.outdatedSyncResponseIds.append(syncResponseId)
+            }
+        }
+        saveMetaData(metadata)
+    }
+    
     
     public var accountData: [String : Any]? {
         get {
@@ -245,7 +253,7 @@ extension MXSyncResponseFileStore: MXSyncResponseStore {
     
     
     public func deleteData() {
-        let syncResponseIds = self.syncResponseIds
+        let syncResponseIds = self.allSyncResponseIds
         syncResponseIds.forEach { id in
             deleteSyncResponse(withId: id)
         }

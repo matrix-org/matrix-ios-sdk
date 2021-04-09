@@ -28,8 +28,11 @@ struct MXSyncResponseStoreMetaDataModel {
     /// User account data
     var accountData: [String : Any]?
     
-    /// All cached sync responses, chronologically ordered
+    /// All valid cached sync responses, chronologically ordered
     var syncResponseIds: [String] = []
+    
+    /// All obsolote cached sync responses, chronologically ordered
+    var outdatedSyncResponseIds: [String] = []
 }
 
 
@@ -38,6 +41,7 @@ extension MXSyncResponseStoreMetaDataModel: Codable {
         case version
         case accountData
         case syncResponseIds
+        case outdatedSyncResponseIds
     }
     
     init(from decoder: Decoder) throws {
@@ -48,6 +52,7 @@ extension MXSyncResponseStoreMetaDataModel: Codable {
             accountData =  try JSONSerialization.jsonObject(with: data, options: []) as? [String: Any]
         }
         syncResponseIds = try values.decode([String].self, forKey: .syncResponseIds)
+        outdatedSyncResponseIds = try values.decode([String].self, forKey: .outdatedSyncResponseIds)
     }
     
     func encode(to encoder: Encoder) throws {
@@ -59,5 +64,6 @@ extension MXSyncResponseStoreMetaDataModel: Codable {
             try container.encodeIfPresent(data, forKey: .accountData)
         }
         try container.encode(syncResponseIds, forKey: .syncResponseIds)
+        try container.encode(outdatedSyncResponseIds, forKey: .outdatedSyncResponseIds)
     }
 }

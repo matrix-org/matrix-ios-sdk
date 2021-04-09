@@ -46,9 +46,8 @@ public enum MXBackgroundSyncServiceError: Error {
     private let restClient: MXRestClient
     private var pushRulesManager: MXBackgroundPushRulesManager
     
-    // Mechanism to process a call of event() at a time
-    private let eventDispatchGroup: DispatchGroup
-    private let eventDispatchQueue: DispatchQueue
+    // Mechanism to process one call of event() at a time
+    private let asyncTaskQueue: MXAsyncTaskQueue
     
     /// Cached events. Keys are even identifiers.
     private var cachedEvents: [String: MXEvent] = [:]
@@ -68,8 +67,8 @@ public enum MXBackgroundSyncServiceError: Error {
         processingQueue = DispatchQueue(label: "MXBackgroundSyncServiceQueue-" + MXTools.generateSecret())
         self.credentials = credentials
         
-        eventDispatchGroup = DispatchGroup()
-        eventDispatchQueue = DispatchQueue(label: "MXBackgroundSyncServiceQueueEventSerialQueue-" + MXTools.generateSecret())
+        asyncTaskQueue = MXAsyncTaskQueue(dispatchQueue: processingQueue,
+                                          label: "MXBackgroundSyncServiceQueueEventSerialQueue-" + MXTools.generateSecret())
         
         let syncResponseStore = MXSyncResponseFileStore(withCredentials: credentials)
         syncResponseStoreManager = MXSyncResponseStoreManager(syncResponseStore: syncResponseStore)
@@ -101,18 +100,12 @@ public enum MXBackgroundSyncServiceError: Error {
                       completion: @escaping (MXResponse<MXEvent>) -> Void) {
         // Process one request at a time
         let stopwatch = MXStopwatch()
-        eventDispatchQueue.async {
-            self.eventDispatchGroup.wait()
-            self.eventDispatchGroup.enter()
+        asyncTaskQueue.async { (taskCompleted) in
+            NSLog("[MXBackgroundSyncService] event: Start processing \(eventId) after waiting for \(stopwatch.readable())")
             
-            self.processingQueue.async {
-                
-                NSLog("[MXBackgroundSyncService] event: Start processing \(eventId)c after waiting for \(stopwatch.readable())")
-                
-                self._event(withEventId: eventId, inRoom: roomId) { response in
-                    completion(response)
-                    self.eventDispatchGroup.leave()
-                }
+            self._event(withEventId: eventId, inRoom: roomId) { response in
+                completion(response)
+                taskCompleted()
             }
         }
     }
@@ -539,23 +532,39 @@ public enum MXBackgroundSyncServiceError: Error {
     }
     
     private func updateBackgroundServiceStoresIfNeeded() {
+        var outdatedStore = false
+        
         // Check self.store data is in-sync with MXSession store data
         // by checking that the event stream token we have in memory is the same that in the last version of MXSession store
         let eventStreamToken = store.eventStreamToken
  
         let upToDateStore = MXBackgroundStore(withCredentials: credentials)
         let upToDateEventStreamToken = upToDateStore.eventStreamToken
-
-        if (eventStreamToken != upToDateEventStreamToken) {
+        if eventStreamToken != upToDateEventStreamToken {
             // MXSession continued to work in parallel with the background sync service
-            // MXSession has updated its stream token. We need to use t
-            NSLog("[MXBackgroundSyncService] updateBackgroundServiceStoresIfNeeded: Update MXBackgroundStore. Its event stream token (\(String(describing: eventStreamToken))) does not match current MXStore.eventStreamToken (\(String(describing: upToDateEventStreamToken)))")
+            // MXSession has updated its stream token. We need to use it
+            NSLog("[MXBackgroundSyncService] updateBackgroundServiceStoresIfNeeded: Update MXBackgroundStore. Wrong sync token: \(String(describing: eventStreamToken)) instead of \(String(describing: upToDateEventStreamToken))")
             store = upToDateStore
+            outdatedStore = true
+        }
+        
+        if let cachedSyncResponseSyncToken = syncResponseStoreManager.syncToken() {
+            if upToDateEventStreamToken != cachedSyncResponseSyncToken {
+                // syncResponseStore has obsolete data. Reset it
+                NSLog("[MXBackgroundSyncService] updateBackgroundServiceStoresIfNeeded: Update MXSyncResponseStoreManager. Wrong sync token: \(String(describing: cachedSyncResponseSyncToken)) instead of \(String(describing: upToDateEventStreamToken))")
+                outdatedStore = true
+            }
             
-            // syncResponseStore has obsolete data. Reset it
-            NSLog("[MXBackgroundSyncService] updateBackgroundServiceStoresIfNeeded: Reset MXSyncResponseStoreManager. Its sync token was \(String(describing: syncResponseStoreManager.syncToken))")
-            syncResponseStoreManager.resetData()
-            
+            if outdatedStore {
+                NSLog("[MXBackgroundSyncService] updateBackgroundServiceStoresIfNeeded: Mark MXSyncResponseStoreManager data as outdated. Its sync token was \(String(describing: cachedSyncResponseSyncToken))")
+                syncResponseStoreManager.markDataOutdated()
+            }
+        }
+        
+        if syncResponseStoreManager.syncResponseStore.syncResponseIds.count == 0 {
+            // To avoid dead lock between processes, we write to the cryptoStore only from only one process.
+            // If there is no cached sync responses, it means they have been consumed by MXSession. Now is the
+            // right time to clean the cryptoStore.
             NSLog("[MXBackgroundSyncService] updateBackgroundServiceStoresIfNeeded: Reset MXBackgroundCryptoStore")
             cryptoStore.reset()
         }

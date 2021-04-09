@@ -66,13 +66,14 @@ public class MXSyncResponseStoreManager: NSObject {
         return syncResponse
     }
     
-    public func resetData() {
-        NSLog("[MXSyncResponseStoreManager] resetData. The sync token was \(String(describing: syncToken))")
+    public func markDataOutdated() {
+        let syncResponseIds = syncResponseStore.syncResponseIds
+        if syncResponseIds.count == 0 {
+            return
+        }
         
-        // Delete all the store
-        // TODO: Don't do that. We loose ephemeral data we will never received again in /sync requests like e2ee keys.
-        // It will be fixed in https://github.com/vector-im/element-ios/issues/4074
-        syncResponseStore.deleteData()
+        NSLog("[MXSyncResponseStoreManager] markDataOutdated \(syncResponseIds.count) cached sync responses. The sync token was \(String(describing: syncToken()))")
+        syncResponseStore.markOutdated(syncResponseIds: syncResponseIds)
     }
     
 
