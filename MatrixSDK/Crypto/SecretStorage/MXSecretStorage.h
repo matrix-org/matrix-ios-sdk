@@ -55,6 +55,26 @@ typedef NS_ENUM(NSUInteger, MXSecretStorageErrorCode)
  
   @param keyId the ID of the key.
   @param keyName a human readable name.
+  @param privateKey a privateKey used to generate the key. Nil will generate a key.
+ 
+  @param success A block object called when the operation succeeds.
+  @param failure A block object called when the operation fails.
+  @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)createKeyWithKeyId:(nullable NSString*)keyId
+                               keyName:(nullable NSString*)keyName
+                            privateKey:(NSData*)privateKey
+                               success:(void (^)(MXSecretStorageKeyCreationInfo *keyCreationInfo))success
+                               failure:(void (^)(NSError *error))failure;
+
+/**
+  Create a SSSS key for encrypting secrets.
+ 
+  Use the `MXSecretStorageKeyCreationInfo` object returned by the callback to get more information about
+  the created passphrase key (private key, recovery key, ...).
+ 
+  @param keyId the ID of the key.
+  @param keyName a human readable name.
   @param passphrase a passphrase used to generate the key. Nil will generate a key.
  
   @param success A block object called when the operation succeeds.

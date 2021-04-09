@@ -39,32 +39,50 @@ public enum MXBackgroundSyncServiceError: Error {
     
     private let processingQueue: DispatchQueue
     private let credentials: MXCredentials
-    private let syncResponseStore: MXSyncResponseStore
+    private let syncResponseStoreManager: MXSyncResponseStoreManager
     private var store: MXStore
     private let cryptoStore: MXBackgroundCryptoStore
     private let olmDevice: MXOlmDevice
     private let restClient: MXRestClient
     private var pushRulesManager: MXBackgroundPushRulesManager
     
+    // Mechanism to process one call of event() at a time
+    private let asyncTaskQueue: MXAsyncTaskQueue
+    
     /// Cached events. Keys are even identifiers.
     private var cachedEvents: [String: MXEvent] = [:]
+    
+    /// See MXSyncResponseStoreManager.syncResponseCacheSizeLimit
+    public var syncResponseCacheSizeLimit: Int {
+        get {
+            syncResponseStoreManager.syncResponseCacheSizeLimit
+        } set {
+            syncResponseStoreManager.syncResponseCacheSizeLimit = newValue
+        }
+    }
     
     /// Initializer
     /// - Parameter credentials: account credentials
     public init(withCredentials credentials: MXCredentials) {
         processingQueue = DispatchQueue(label: "MXBackgroundSyncServiceQueue-" + MXTools.generateSecret())
         self.credentials = credentials
-        syncResponseStore = MXSyncResponseFileStore()
-        syncResponseStore.open(withCredentials: credentials)
+        
+        asyncTaskQueue = MXAsyncTaskQueue(dispatchQueue: processingQueue,
+                                          label: "MXBackgroundSyncServiceQueueEventSerialQueue-" + MXTools.generateSecret())
+        
+        let syncResponseStore = MXSyncResponseFileStore(withCredentials: credentials)
+        syncResponseStoreManager = MXSyncResponseStoreManager(syncResponseStore: syncResponseStore)
+        
         restClient = MXRestClient(credentials: credentials, unrecognizedCertificateHandler: nil)
         restClient.completionQueue = processingQueue
         store = MXBackgroundStore(withCredentials: credentials)
         // We can flush any crypto data if our sync response store is empty
-        let resetBackgroundCryptoStore = syncResponseStore.syncResponse == nil
+        let resetBackgroundCryptoStore = syncResponseStoreManager.syncToken() == nil
         cryptoStore = MXBackgroundCryptoStore(credentials: credentials, resetBackgroundCryptoStore: resetBackgroundCryptoStore)
+        
         olmDevice = MXOlmDevice(store: cryptoStore)
         pushRulesManager = MXBackgroundPushRulesManager(withCredentials: credentials)
-        if let accountData = syncResponseStore.syncResponse?.accountData {
+        if let accountData = syncResponseStoreManager.syncResponseStore.accountData {
             pushRulesManager.handleAccountData(accountData)
         } else if let accountData = store.userAccountData ?? nil {
             pushRulesManager.handleAccountData(accountData)
@@ -80,8 +98,15 @@ public enum MXBackgroundSyncServiceError: Error {
     public func event(withEventId eventId: String,
                       inRoom roomId: String,
                       completion: @escaping (MXResponse<MXEvent>) -> Void) {
-        processingQueue.async {
-            self._event(withEventId: eventId, inRoom: roomId, completion: completion)
+        // Process one request at a time
+        let stopwatch = MXStopwatch()
+        asyncTaskQueue.async { (taskCompleted) in
+            NSLog("[MXBackgroundSyncService] event: Start processing \(eventId) after waiting for \(stopwatch.readable())")
+            
+            self._event(withEventId: eventId, inRoom: roomId) { response in
+                completion(response)
+                taskCompleted()
+            }
         }
     }
     
@@ -117,7 +142,7 @@ public enum MXBackgroundSyncServiceError: Error {
     /// - Parameter roomId: The room identifier to fetch.
     /// - Returns: Summary of room.
     public func roomSummary(forRoomId roomId: String) -> MXRoomSummary? {
-        return syncResponseStore.roomSummary(forRoomId: roomId, using: store.summary?(ofRoom: roomId))
+        return syncResponseStoreManager.roomSummary(forRoomId: roomId, using: store.summary?(ofRoom: roomId))
     }
     
     /// Fetch push rule matching an event.
@@ -207,7 +232,7 @@ public enum MXBackgroundSyncServiceError: Error {
             handleEncryption(forEvent: cachedEvent)
         } else {
             //  do not call the /event api and just check if the event exists in the store
-            let event = syncResponseStore.event(withEventId: eventId, inRoom: roomId)
+            let event = syncResponseStoreManager.event(withEventId: eventId, inRoom: roomId)
                 // Disable read access to MXSession store because it consumes too much RAM
                 // and RAM is limited when running an app extension
                 // TODO: Find a way to reuse MXSession store data
@@ -259,18 +284,12 @@ public enum MXBackgroundSyncServiceError: Error {
                                       roomId: String,
                                       completion: @escaping (MXResponse<MXEvent>) -> Void) {
             
-        guard let eventStreamToken = syncResponseStore.syncResponse?.nextBatch ?? store.eventStreamToken else {
+        guard let eventStreamToken = syncResponseStoreManager.nextSyncToken() ?? store.eventStreamToken else {
             NSLog("[MXBackgroundSyncService] launchBackgroundSync: Do not sync because event streaming not started yet.")
             Queues.dispatchQueue.async {
                 completion(.failure(MXBackgroundSyncServiceError.unknown))
             }
             return
-        }
-        
-        //  save the token for the start of the sync response
-        if (syncResponseStore.prevBatch == nil)
-        {
-            syncResponseStore.prevBatch = eventStreamToken
         }
         
         NSLog("[MXBackgroundSyncService] launchBackgroundSync: start from token \(eventStreamToken)")
@@ -290,9 +309,9 @@ public enum MXBackgroundSyncServiceError: Error {
                     return
                 }
 
-                self.handleSyncResponse(syncResponse)
+                self.handleSyncResponse(syncResponse, syncToken: eventStreamToken)
                 
-                if let event = self.syncResponseStore.event(withEventId: eventId, inRoom: roomId),
+                if let event = self.syncResponseStoreManager.event(withEventId: eventId, inRoom: roomId),
                     !self.canDecryptEvent(event),
                     (syncResponse.toDevice?.events ?? []).count > 0 {
                     //  we got the event but not the keys to decrypt it. continue to sync
@@ -430,65 +449,21 @@ public enum MXBackgroundSyncServiceError: Error {
         return payload as String?
     }
     
-    private func handleSyncResponse(_ syncResponse: MXSyncResponse) {
+    private func handleSyncResponse(_ syncResponse: MXSyncResponse, syncToken: String) {
         NSLog("[MXBackgroundSyncService] handleSyncResponse: Received %tu joined rooms, %tu invited rooms, %tu left rooms, %tu toDevice events.",
               syncResponse.rooms.join.count,
               syncResponse.rooms.invite.count,
               syncResponse.rooms.leave.count,
               syncResponse.toDevice.events?.count ?? 0)
         
-        self.pushRulesManager.handleAccountData(syncResponse.accountData)
-        self.updateStore(with: syncResponse)
+        pushRulesManager.handleAccountData(syncResponse.accountData)
+        syncResponseStoreManager.updateStore(with: syncResponse, syncToken: syncToken)
         
         for event in syncResponse.toDevice?.events ?? [] {
             handleToDeviceEvent(event)
         }
         
         NSLog("[MXBackgroundSyncService] handleSyncResponse: Next sync token: \(syncResponse.nextBatch ?? "nil")")
-    }
-    
-    private func updateStore(with newResponse: MXSyncResponse) {
-        if let oldResponse = syncResponseStore.syncResponse {
-            //  current sync response exists, merge it with the new response
-            
-            //  handle new limited timelines
-            newResponse.rooms.join.filter({ $1.timeline?.limited == true }).forEach { (roomId, _) in
-                if let joinedRoomSync = oldResponse.rooms.join[roomId] {
-                    //  remove old events
-                    joinedRoomSync.timeline?.events = []
-                    //  mark old timeline as limited too
-                    joinedRoomSync.timeline?.limited = true
-                }
-            }
-            newResponse.rooms.leave.filter({ $1.timeline?.limited == true }).forEach { (roomId, _) in
-                if let leftRoomSync = oldResponse.rooms.leave[roomId] {
-                    //  remove old events
-                    leftRoomSync.timeline?.events = []
-                    //  mark old timeline as limited too
-                    leftRoomSync.timeline?.limited = true
-                }
-            }
-            
-            //  handle old limited timelines
-            oldResponse.rooms.join.filter({ $1.timeline?.limited == true }).forEach { (roomId, _) in
-                if let joinedRoomSync = newResponse.rooms.join[roomId] {
-                    //  mark new timeline as limited too, to avoid losing value of limited
-                    joinedRoomSync.timeline?.limited = true
-                }
-            }
-            oldResponse.rooms.leave.filter({ $1.timeline?.limited == true }).forEach { (roomId, _) in
-                if let leftRoomSync = newResponse.rooms.leave[roomId] {
-                    //  mark new timeline as limited too, to avoid losing value of limited
-                    leftRoomSync.timeline?.limited = true
-                }
-            }
-            var dictionary = NSDictionary(dictionary: oldResponse.jsonDictionary())
-            dictionary = dictionary + NSDictionary(dictionary: newResponse.jsonDictionary())
-            syncResponseStore.syncResponse = MXSyncResponse(fromJSON: dictionary as? [AnyHashable : Any])
-        } else {
-            //  no current sync response, directly save the new one
-            syncResponseStore.syncResponse = newResponse
-        }
     }
     
     private func handleToDeviceEvent(_ event: MXEvent) {
@@ -557,23 +532,39 @@ public enum MXBackgroundSyncServiceError: Error {
     }
     
     private func updateBackgroundServiceStoresIfNeeded() {
+        var outdatedStore = false
+        
         // Check self.store data is in-sync with MXSession store data
         // by checking that the event stream token we have in memory is the same that in the last version of MXSession store
         let eventStreamToken = store.eventStreamToken
  
         let upToDateStore = MXBackgroundStore(withCredentials: credentials)
         let upToDateEventStreamToken = upToDateStore.eventStreamToken
-
-        if (eventStreamToken != upToDateEventStreamToken) {
+        if eventStreamToken != upToDateEventStreamToken {
             // MXSession continued to work in parallel with the background sync service
-            // MXSession has updated its stream token. We need to use t
-            NSLog("[MXBackgroundSyncService] updateBackgroundServiceStoresIfNeeded: Update MXBackgroundStore. Its event stream token (\(String(describing: eventStreamToken))) does not match current MXStore.eventStreamToken (\(String(describing: upToDateEventStreamToken)))")
+            // MXSession has updated its stream token. We need to use it
+            NSLog("[MXBackgroundSyncService] updateBackgroundServiceStoresIfNeeded: Update MXBackgroundStore. Wrong sync token: \(String(describing: eventStreamToken)) instead of \(String(describing: upToDateEventStreamToken))")
             store = upToDateStore
+            outdatedStore = true
+        }
+        
+        if let cachedSyncResponseSyncToken = syncResponseStoreManager.syncToken() {
+            if upToDateEventStreamToken != cachedSyncResponseSyncToken {
+                // syncResponseStore has obsolete data. Reset it
+                NSLog("[MXBackgroundSyncService] updateBackgroundServiceStoresIfNeeded: Update MXSyncResponseStoreManager. Wrong sync token: \(String(describing: cachedSyncResponseSyncToken)) instead of \(String(describing: upToDateEventStreamToken))")
+                outdatedStore = true
+            }
             
-            // syncResponseStore has obsolete data. Reset it
-            NSLog("[MXBackgroundSyncService] updateBackgroundServiceStoresIfNeeded: Reset MXSyncResponseStore. Its prevBatch was token \(String(describing: syncResponseStore.prevBatch))")
-            syncResponseStore.deleteData()
-            
+            if outdatedStore {
+                NSLog("[MXBackgroundSyncService] updateBackgroundServiceStoresIfNeeded: Mark MXSyncResponseStoreManager data as outdated. Its sync token was \(String(describing: cachedSyncResponseSyncToken))")
+                syncResponseStoreManager.markDataOutdated()
+            }
+        }
+        
+        if syncResponseStoreManager.syncResponseStore.syncResponseIds.count == 0 {
+            // To avoid dead lock between processes, we write to the cryptoStore only from only one process.
+            // If there is no cached sync responses, it means they have been consumed by MXSession. Now is the
+            // right time to clean the cryptoStore.
             NSLog("[MXBackgroundSyncService] updateBackgroundServiceStoresIfNeeded: Reset MXBackgroundCryptoStore")
             cryptoStore.reset()
         }

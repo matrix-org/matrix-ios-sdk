@@ -16,29 +16,41 @@
 
 import Foundation
 
+
+public enum MXSyncResponseStoreError: Error {
+    case unknownId
+}
+
+
 /// Protocol defining the storage for a sync response.
 @objc public protocol MXSyncResponseStore: NSObjectProtocol {
-    /// Open the store with the given credentials
-    /// - Parameter credentials: Credentials
-    func open(withCredentials credentials: MXCredentials)
     
-    /// The opaque token for the start of the sync response, currenly stored in the store
-    var prevBatch: String? { get set }
+    /// CRUD interface for cached sync responses
+    func addSyncResponse(syncResponse: MXCachedSyncResponse) -> String
+    func syncResponse(withId id: String) throws -> MXCachedSyncResponse
+    func syncResponseSize(withId id: String) -> Int
+    func updateSyncResponse(withId id: String, syncResponse: MXCachedSyncResponse)
+    func deleteSyncResponse(withId id: String)
     
-    /// Sync response object, currently stored in the store
-    var syncResponse: MXSyncResponse? { get set }
+    /// All ids of valid stored sync responses.
+    /// Sync responses are stored in chunks to save RAM when processing it
+    /// The array order is chronological
+    var syncResponseIds: [String] { get }
     
-    /// Fetch event in the store
-    /// - Parameters:
-    ///   - eventId: Event identifier to be fetched.
-    ///   - roomId: Room identifier to be fetched.
-    func event(withEventId eventId: String, inRoom roomId: String) -> MXEvent?
+    /// Mark as outdated some stored sync responses
+    func markOutdated(syncResponseIds: [String])
+    /// All outdated sync responses
+    var outdatedSyncResponseIds: [String] { get }
     
-    /// Fetch room summary for an invited room. Just uses the data in syncResponse to guess the room display name
-    /// - Parameter roomId: Room identifier to be fetched
-    /// - Parameter summary: A room summary (if exists) which user had before a sync response
-    func roomSummary(forRoomId roomId: String, using summary: MXRoomSummary?) -> MXRoomSummary?
+    /// User account data
+    var accountData: [String : Any]? { get set }
     
     /// Delete all data in the store
     func deleteData()
+}
+
+extension MXSyncResponseStore {
+    var allSyncResponseIds : [String] {
+        outdatedSyncResponseIds + syncResponseIds
+    }
 }
