@@ -6,6 +6,7 @@ Changes to be released in next version
 
 🙌 Improvements
  * Create secret storage with a given private key (vector-im/element-ios/issues/4189).
+ * MXAsyncTaskQueue: New tool to run asynchronous tasks one at a time.
 
 🐛 Bugfix
  * Notifications: Fix background sync out of memory (vector-im/element-ios#3957).

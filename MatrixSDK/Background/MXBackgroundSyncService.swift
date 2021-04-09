@@ -46,9 +46,8 @@ public enum MXBackgroundSyncServiceError: Error {
     private let restClient: MXRestClient
     private var pushRulesManager: MXBackgroundPushRulesManager
     
-    // Mechanism to process a call of event() at a time
-    private let eventDispatchGroup: DispatchGroup
-    private let eventDispatchQueue: DispatchQueue
+    // Mechanism to process one call of event() at a time
+    private let asyncTaskQueue: MXAsyncTaskQueue
     
     /// Cached events. Keys are even identifiers.
     private var cachedEvents: [String: MXEvent] = [:]
@@ -68,8 +67,8 @@ public enum MXBackgroundSyncServiceError: Error {
         processingQueue = DispatchQueue(label: "MXBackgroundSyncServiceQueue-" + MXTools.generateSecret())
         self.credentials = credentials
         
-        eventDispatchGroup = DispatchGroup()
-        eventDispatchQueue = DispatchQueue(label: "MXBackgroundSyncServiceQueueEventSerialQueue-" + MXTools.generateSecret())
+        asyncTaskQueue = MXAsyncTaskQueue(dispatchQueue: processingQueue,
+                                          label: "MXBackgroundSyncServiceQueueEventSerialQueue-" + MXTools.generateSecret())
         
         let syncResponseStore = MXSyncResponseFileStore(withCredentials: credentials)
         syncResponseStoreManager = MXSyncResponseStoreManager(syncResponseStore: syncResponseStore)
@@ -101,18 +100,12 @@ public enum MXBackgroundSyncServiceError: Error {
                       completion: @escaping (MXResponse<MXEvent>) -> Void) {
         // Process one request at a time
         let stopwatch = MXStopwatch()
-        eventDispatchQueue.async {
-            self.eventDispatchGroup.wait()
-            self.eventDispatchGroup.enter()
+        asyncTaskQueue.async { (taskCompleted) in
+            NSLog("[MXBackgroundSyncService] event: Start processing \(eventId) after waiting for \(stopwatch.readable())")
             
-            self.processingQueue.async {
-                
-                NSLog("[MXBackgroundSyncService] event: Start processing \(eventId)c after waiting for \(stopwatch.readable())")
-                
-                self._event(withEventId: eventId, inRoom: roomId) { response in
-                    completion(response)
-                    self.eventDispatchGroup.leave()
-                }
+            self._event(withEventId: eventId, inRoom: roomId) { response in
+                completion(response)
+                taskCompleted()
             }
         }
     }

@@ -1381,8 +1381,7 @@ extension MXBackgroundSyncServiceTests {
     func fillStore(of backgroundSyncService: MXBackgroundSyncService, room: MXRoom,
                                     messageText: String = Constants.messageText, messageCountChunks: [Int],
                                     completion: @escaping (MXResponse<[[String]]>) -> Void) {
-        let dispatchQueue = DispatchQueue(label:"queue")
-        let dispatchGroup = DispatchGroup()
+        let asyncTaskQueue = MXAsyncTaskQueue()
         
         var eventIds: [[String]] = []
         var error: Error?
@@ -1390,35 +1389,28 @@ extension MXBackgroundSyncServiceTests {
         for (index, messageCount) in messageCountChunks.enumerated() {
             
             // Call fillBackgroundServiceStore one after the other
-            dispatchQueue.async {
-                dispatchGroup.wait()
-                dispatchGroup.enter()
-                
-                DispatchQueue.main.async {
-                    let messageText = "\(messageText) - \(index)"
-                    self.fillStore(of: backgroundSyncService, room: room, messageText: messageText, messageCount: messageCount) { (response) in
-                        switch response {
-                            case .success(let events):
-                                eventIds.append(events)
-                            case .failure(let theError):
-                                error = theError
-                        }
-                        dispatchGroup.leave()
+            asyncTaskQueue.async { (taskCompleted) in
+                let messageText = "\(messageText) - \(index)"
+                self.fillStore(of: backgroundSyncService, room: room, messageText: messageText, messageCount: messageCount) { (response) in
+                    switch response {
+                        case .success(let events):
+                            eventIds.append(events)
+                        case .failure(let theError):
+                            error = theError
                     }
+                    taskCompleted()
                 }
             }
         }
         
-        dispatchQueue.async {
-            dispatchGroup.wait()
-            
-            DispatchQueue.main.async {
-                if let error = error {
-                    completion(.failure(error))
-                } else {
-                    completion(.success(eventIds))
-                }
+        asyncTaskQueue.async { (taskCompleted) in
+            if let error = error {
+                completion(.failure(error))
+            } else {
+                completion(.success(eventIds))
             }
+            
+            taskCompleted()
         }
     }
     
