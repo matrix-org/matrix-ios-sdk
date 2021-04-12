@@ -215,7 +215,19 @@ NSString * const kMXCallKitAdapterAudioSessionDidActive = @"kMXCallKitAdapterAud
 
 - (void)reportCall:(MXCall *)call connectedAtDate:(nullable NSDate *)date
 {
-    [self.provider reportOutgoingCallWithUUID:call.callUUID connectedAtDate:date];
+    if (call.isIncoming)
+    {
+        CXAnswerCallAction *answerCallAction = [[CXAnswerCallAction alloc] initWithCallUUID:call.callUUID];
+        CXTransaction *transaction = [[CXTransaction alloc] initWithAction:answerCallAction];
+        
+        [self.callController requestTransaction:transaction completion:^(NSError * _Nullable error) {
+            
+        }];
+    }
+    else
+    {
+        [self.provider reportOutgoingCallWithUUID:call.callUUID connectedAtDate:date];
+    }
     [self reportCall:call onHold:NO];
 }
 
