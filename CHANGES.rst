@@ -5,7 +5,7 @@ Changes to be released in next version
  * 
 
 🙌 Improvements
- * 
+ * MXCallKitAdapter: Update incoming calls if answered from application UI.
 
 🐛 Bugfix
  * 
