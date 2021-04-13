@@ -8,7 +8,7 @@ Changes to be released in next version
  * 
 
 🐛 Bugfix
- * 
+ * MXSession: Fix deadlock regression in resume() (vector-im/element-ios/issues/4202).
 
 ⚠️ API Changes
  * 
