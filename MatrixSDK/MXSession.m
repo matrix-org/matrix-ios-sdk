@@ -1757,6 +1757,8 @@ typedef void (^MXOnResumeDone)(void);
         {
             completion();
         }
+        
+        taskCompleted();
     }];
 }
 

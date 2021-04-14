@@ -607,7 +607,7 @@
         stateCopy->stateEvents[key] = [[NSMutableArray allocWithZone:zone] initWithArray:stateEvents[key]];
     }
 
-    stateCopy->_members = [_members copyWithZone:zone andState:stateCopy];
+    stateCopy->_members = [_members copyWithZone:zone];
 
     stateCopy->_membersCount = [_membersCount copyWithZone:zone];
     

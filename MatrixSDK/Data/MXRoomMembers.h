@@ -38,12 +38,6 @@
  @return The newly-initialized MXRoomMembers.
  */
 - (instancetype)initWithRoomState:(MXRoomState*)state andMatrixSession:(MXSession*)matrixSession;
-
-/**
- The room state belonging to this object.
- */
-@property (nonatomic, readonly) MXRoomState *roomState;
-
 /**
  A copy of the list of room members.
  */
@@ -114,17 +108,5 @@
  @return YES if there was a change in MXRoomMembers.
  */
 - (BOOL)handleStateEvents:(NSArray<MXEvent *> *)stateEvents;
-
-#pragma mark - NSCopying
-
-/**
- Copy the receiver and update the room state reference. This is useful when the copying happens
- as part of copying an MXRoomState object.
-
- @param zone a memory zone.
- @param state the new/copied room state.
- @return a copy of the receiver.
- */
-- (id)copyWithZone:(NSZone *)zone andState:(MXRoomState *)state;
 
 @end

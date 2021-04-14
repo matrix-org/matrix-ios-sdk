@@ -1,3 +1,31 @@
+Changes in 0.18.8 (2021-04-14)
+=================================================
+
+✨ Features
+ * 
+
+🙌 Improvements
+ * 
+
+🐛 Bugfix
+ * MXSession: Fix deadlock regression in resume() (vector-im/element-ios/issues/4202).
+ * MXRoomMembers: Fix wrong view of room members when paginating (vector-im/element-ios/issues/4204).
+
+⚠️ API Changes
+ * 
+
+🗣 Translations
+ * 
+    
+🧱 Build
+ * 
+
+Others
+ * 
+
+Improvements:
+
+
 Changes in 0.18.7 (2021-04-09)
 =================================================
 

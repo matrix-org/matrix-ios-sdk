@@ -1269,7 +1269,7 @@
         mxSession = mxSession2;
         [room state:^(MXRoomState *roomState) {
             MXRoomState *roomStateCopy = [roomState copy];
-            XCTAssertEqual(roomStateCopy.members.roomState, roomStateCopy);
+            XCTAssertEqual(roomStateCopy.members.members.count, roomState.members.members.count);
             [expectation fulfill];
         }];
     }];
