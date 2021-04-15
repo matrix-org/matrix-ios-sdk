@@ -90,7 +90,7 @@ static NSString* const kOrderTextRegexPattern = @"[ -~]+";
         return NO;
     }
     
-    __block NSPredicate *predicate;
+    static NSPredicate *predicate;
     
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
