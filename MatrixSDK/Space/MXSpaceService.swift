@@ -16,6 +16,24 @@
 
 import Foundation
 
+/// MXSpaceService error
+public enum MXSpaceServiceError: Int, Error {
+    case spaceNotFound
+    case unknown
+}
+
+extension MXSpaceServiceError: CustomNSError {
+    public static let errorDomain = "org.matrix.sdk.spaceService"
+
+    public var errorCode: Int {
+        return Int(rawValue)
+    }
+
+    public var errorUserInfo: [String: Any] {
+        return [:]
+    }
+}
+
 /// MXSpaceService enables to handle spaces.
 @objcMembers
 public class MXSpaceService: NSObject {
@@ -28,10 +46,13 @@ public class MXSpaceService: NSObject {
         return MXRoomInitialStateEventBuilder()
     }()
     
+    private let roomTypeMapper: MXRoomTypeMapper
+    
     // MARK: - Setup
     
     public init(session: MXSession) {
         self.session = session
+        self.roomTypeMapper = MXRoomTypeMapper(defaultRoomType: .room)
     }
     
     // MARK: - Public
@@ -62,7 +83,7 @@ public class MXSpaceService: NSObject {
     ///   - completion: A closure called when the operation completes.
     /// - Returns: a `MXHTTPOperation` instance.
     @discardableResult
-    public func createSpace(withName name: String, topic: String, isPublic: Bool, completion: @escaping (MXResponse<MXSpace>) -> Void) -> MXHTTPOperation {
+    public func createSpace(withName name: String, topic: String?, isPublic: Bool, completion: @escaping (MXResponse<MXSpace>) -> Void) -> MXHTTPOperation {
         let parameters = MXSpaceCreationParameters()
         parameters.name = name
         parameters.topic = topic
@@ -86,6 +107,114 @@ public class MXSpaceService: NSObject {
     public func getSpace(withId spaceId: String) -> MXSpace? {
         let room = self.session.room(withRoomId: spaceId)
         return room?.toSpace()
+    }
+        
+    /// Get the space children informations of a given space from the server.
+    /// - Parameters:
+    ///   - spaceId: The room id of the queried space.
+    ///   - parameters: Space children request parameters.
+    ///   - completion: A closure called when the operation completes.
+    /// - Returns: a `MXHTTPOperation` instance.
+    @discardableResult
+    public func getSpaceChildrenForSpace(withId spaceId: String,
+                                         parameters: MXSpaceChildrenRequestParameters?,
+                                         completion: @escaping (MXResponse<MXSpaceChildrenSummary>) -> Void) -> MXHTTPOperation {
+        return self.session.matrixRestClient.getSpaceChildrenForSpace(withId: spaceId, parameters: parameters) { (response) in
+            switch response {
+            case .success(let spaceChildrenResponse):
+                guard let rooms = spaceChildrenResponse.rooms else {
+                    // We should have at least one room for the requested space
+                    completion(.failure(MXSpaceServiceError.spaceNotFound))
+                    return
+                }
+
+                guard let rootSpaceChildSummaryResponse = rooms.first(where: { spaceResponse -> Bool in
+                    return spaceResponse.roomId == spaceId
+                }) else {
+                    // Fail to find root child. We should have at least one room for the requested space
+                    completion(.failure(MXSpaceServiceError.spaceNotFound))
+                    return
+                }
+
+                // Build the queried space summary
+                let spaceSummary = self.createRoomSummary(with: rootSpaceChildSummaryResponse)
+
+                // Build the child summaries of the queried space
+                let childInfos = self.spaceChildInfos(from: spaceChildrenResponse, excludedSpaceId: spaceId)
+
+                let spaceChildrenSummary = MXSpaceChildrenSummary(spaceSummary: spaceSummary, childInfos: childInfos)
+
+                completion(.success(spaceChildrenSummary))
+            case .failure(let error):
+                completion(.failure(error))
+            }
+        }
+    }
+    
+    // MARK: - Private
+    
+    private func createRoomSummary(with spaceChildSummaryResponse: MXSpaceChildSummaryResponse) -> MXRoomSummary {
+        
+        let roomId = spaceChildSummaryResponse.roomId
+        let roomTypeString = spaceChildSummaryResponse.roomType
+                
+        let roomSummary: MXRoomSummary = MXRoomSummary(roomId: roomId, andMatrixSession: nil)
+        roomSummary.roomTypeString = roomTypeString
+        roomSummary.roomType = self.roomTypeMapper.roomType(from: roomTypeString)
+        
+        let membersCount = MXRoomMembersCount()
+        membersCount.joined = UInt(spaceChildSummaryResponse.numJoinedMembers)
+        roomSummary.membersCount = membersCount
+        roomSummary.displayname = spaceChildSummaryResponse.name
+        roomSummary.topic = spaceChildSummaryResponse.topic
+        roomSummary.avatar = spaceChildSummaryResponse.avatarUrl
+        roomSummary.isEncrypted = false
+                                
+        return roomSummary
+    }
+    
+    private func spaceChildInfos(from spaceChildrenResponse: MXSpaceChildrenResponse, excludedSpaceId: String) -> [MXSpaceChildInfo] {
+        guard let spaceChildSummaries = spaceChildrenResponse.rooms else {
+            return []
+        }
+        
+        let childInfos: [MXSpaceChildInfo] = spaceChildSummaries.compactMap { (spaceChildSummaryResponse) -> MXSpaceChildInfo? in
+            
+            let spaceId = spaceChildSummaryResponse.roomId
+            
+            guard spaceId != excludedSpaceId else {
+                return nil
+            }
+            
+            let childStateEvent = spaceChildrenResponse.events?.first(where: { (event) -> Bool in
+                return event.stateKey == spaceId && event.eventType == .spaceChild
+            })
+                        
+            return self.createSpaceChildInfo(with: spaceChildSummaryResponse, and: childStateEvent)
+        }
+        
+        return childInfos
+    }
+    
+    private func createSpaceChildInfo(with spaceChildSummaryResponse: MXSpaceChildSummaryResponse, and spaceChildStateEvent: MXEvent?) -> MXSpaceChildInfo {
+        
+        var spaceChildContent: MXSpaceChildContent?
+        
+        if let stateEventContent = spaceChildStateEvent?.content {
+            spaceChildContent = MXSpaceChildContent(fromJSON: stateEventContent)
+        }
+        
+        return MXSpaceChildInfo(childRoomId: spaceChildSummaryResponse.roomId,
+                         isKnown: true,
+                         roomType: spaceChildSummaryResponse.roomType,
+                         name: spaceChildSummaryResponse.name,
+                         topic: spaceChildSummaryResponse.topic,
+                         avatarUrl: spaceChildSummaryResponse.avatarUrl,
+                         order: spaceChildContent?.order,
+                         activeMemberCount: spaceChildSummaryResponse.numJoinedMembers,
+                         autoJoin: spaceChildContent?.autoJoin ?? false,
+                         viaServers: spaceChildContent?.via ?? [],
+                         parentRoomId: spaceChildStateEvent?.roomId)
     }
 }
 
@@ -113,8 +242,23 @@ extension MXSpaceService {
     ///   - failure: A closure called  when the operation fails.
     /// - Returns: a `MXHTTPOperation` instance.
     @discardableResult
-    public func createSpace(withName name: String, topic: String, isPublic: Bool, success: @escaping (MXSpace) -> Void, failure: @escaping (Error) -> Void) -> MXHTTPOperation {
+    public func createSpace(withName name: String, topic: String?, isPublic: Bool, success: @escaping (MXSpace) -> Void, failure: @escaping (Error) -> Void) -> MXHTTPOperation {
         return self.createSpace(withName: name, topic: topic, isPublic: isPublic) { (response) in
+            uncurryResponse(response, success: success, failure: failure)
+        }
+    }
+    
+    /// Get the space children informations of a given space from the server.
+    /// - Parameters:
+    ///   - spaceId: The room id of the queried space.
+    ///   - parameters: Space children request parameters.
+    ///   - completion: A closure called when the operation completes.
+    /// - Returns: a `MXHTTPOperation` instance.
+    @discardableResult
+    public func getSpaceChildrenForSpace(withId spaceId: String,
+                                         parameters: MXSpaceChildrenRequestParameters?,
+                                         success: @escaping (MXSpaceChildrenSummary) -> Void, failure: @escaping (Error) -> Void) -> MXHTTPOperation {
+        return self.getSpaceChildrenForSpace(withId: spaceId, parameters: parameters) { (response) in
             uncurryResponse(response, success: success, failure: failure)
         }
     }
