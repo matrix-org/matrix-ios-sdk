@@ -48,6 +48,39 @@ class MXSpaceServiceTest: XCTestCase {
         }
     }
     
+    private func createSpaces(with spaceService: MXSpaceService, spaceNames: [String], completion: @escaping (_ spaces: MXResponse<[MXSpace]>) -> Void) {
+        
+        let dispatchGroup = DispatchGroup()
+                                                            
+        var spaces: [MXSpace] = []
+                        
+        for spaceName in spaceNames {
+            
+            dispatchGroup.enter()
+            
+            spaceService.createSpace(withName: spaceName, topic: nil, isPublic: true) { (response) in
+                                
+                switch response {
+                case .success(let space):
+                    spaces.append(space)
+                case .failure(let error):
+                    XCTFail("Fail to create space named: \(spaceName) with  error: \(error)")
+                }
+
+                dispatchGroup.leave()
+            }
+        }
+        
+        dispatchGroup.notify(queue: .main) {
+            
+            if spaces.count == spaceNames.count {
+                completion(.success(spaces))
+            } else {
+                XCTFail("Fail to create spaces")
+            }
+        }
+    }
+    
     private func waitRoomSummaryUpdate(for roomId: String, completion: @escaping ((MXRoomSummary) -> Void)) {
         
         var token: NSObjectProtocol?
@@ -169,4 +202,179 @@ class MXSpaceServiceTest: XCTestCase {
             }
         }
     }
+    
+    /// - Create Bob
+    /// - Setup Bob session
+    /// - Create root public space A
+    /// - Create a child space B with space A as parent
+    ///
+    /// -> Bob must see the child space state event of space B
+    func testAddChildSpace() throws {
+        self.doSpaceServiceTestWithBob(testCase: self) { (spaceService, session, expectation) in
+            
+            let expectedRootSpaceName = "Space A"
+            let expectedChildSpaceName = "Space B"
+            
+            self.createSpaces(with: spaceService, spaceNames: [
+                expectedRootSpaceName,
+                expectedChildSpaceName
+            ]) { (response) in
+                switch response {
+                case .success(let spaces):
+                    let rootSpace = spaces[0]
+                    let childSpace = spaces[1]
+                    
+                    let viaServers = [session.credentials.homeServerName()!]
+                    
+                    rootSpace.addChild(spaceId: childSpace.spaceId, viaServers: viaServers, order: nil, autoJoin: false, suggested: false) { (response) in
+                        switch response {
+                        case .success:
+                            
+                            // Make an initial sync and and get
+                            session.start { (response) in
+                                switch response {
+                                case .success:
+                                    
+                                    guard let foundRootSpace = spaceService.getSpace(withId: rootSpace.spaceId) else {
+                                        XCTFail("Fail to found the root space")
+                                        return
+                                    }
+                                    
+                                    foundRootSpace.room.state({ (roomState) in
+                                        
+                                        let stateEvent = roomState?.stateEvents(with: .spaceChild)?.first
+                                        
+                                        XCTAssert(stateEvent?.stateKey == childSpace.spaceId)
+                                        
+                                        expectation.fulfill()
+                                    })
+                                case .failure(let error):
+                                    XCTFail("Sync failed with error\(error)")
+                                }
+                            }
+                            
+                        case .failure(let error):
+                            XCTFail("Add child space failed with error \(error)")
+                        }
+                    }
+                case .failure(let error):
+                    XCTFail("Create spaces failed with error \(error)")
+                    expectation.fulfill()
+                }
+            }
+        }
+    }
+    
+    /// - Create Bob
+    /// - Setup Bob session
+    /// - Create spaces: A, B, C, D
+    /// - Add B as child of A, C and D as child of B
+    /// - Call space API with space B identifier
+    ///
+    /// -> Bob must see the child space summary of the space B with informations of his children C and D
+    func testGetSpaceChildren() throws {
+        self.doSpaceServiceTestWithBob(testCase: self) { (spaceService, session, expectation) in
+            
+            let expectedSpaceAName = "Space A"
+            let expectedSpaceBName = "Space B"
+            let expectedSpaceCName = "Space C"
+            let expectedSpaceDName = "Space D"
+            
+            self.createSpaces(with: spaceService, spaceNames: [
+                expectedSpaceAName,
+                expectedSpaceBName,
+                expectedSpaceCName,
+                expectedSpaceDName
+            ]) { (response) in
+                switch response {
+                case .success(let spaces):
+                    let spaceA = spaces[0]
+                    let spaceB = spaces[1]
+                    let spaceC = spaces[2]
+                    let spaceD = spaces[3]
+                    
+                    let viaServers = [session.credentials.homeServerName()!]
+                    
+                    let dispatchGroup = DispatchGroup()
+                    
+                    dispatchGroup.enter()
+                    
+                    // Add B as child of A
+                    spaceA.addChild(spaceId: spaceB.spaceId, viaServers: viaServers, order: nil, autoJoin: false, suggested: false) { (response) in
+                        switch response {
+                        case .success:
+                            break
+                        case .failure(let error):
+                            XCTFail("Add child space failed with error \(error)")
+                        }
+                        
+                        dispatchGroup.leave()
+                    }
+                    
+                    dispatchGroup.enter()
+                    
+                    // Add C as child of B
+                    spaceB.addChild(spaceId: spaceC.spaceId, viaServers: viaServers, order: nil, autoJoin: false, suggested: false) { (response) in
+                        switch response {
+                        case .success:
+                            break
+                        case .failure(let error):
+                            XCTFail("Add child space failed with error \(error)")
+                        }
+                        
+                        dispatchGroup.leave()
+                    }
+                    
+                    dispatchGroup.enter()
+                    
+                    // Add D as child of B
+                    spaceB.addChild(spaceId: spaceD.spaceId, viaServers: viaServers, order: nil, autoJoin: false, suggested: false) { (response) in
+                        switch response {
+                        case .success:
+                            break
+                        case .failure(let error):
+                            XCTFail("Add child space failed with error \(error)")
+                        }
+                        
+                        dispatchGroup.leave()
+                    }
+                    
+                    dispatchGroup.notify(queue: .main) {
+                                                                        
+                        // Get space children of B node
+                        spaceService.getSpaceChildrenForSpace(withId: spaceB.spaceId, parameters: nil) { (response) in
+                            switch response {
+                            case .success(let spaceChildrenSummary):
+
+                                XCTAssert(spaceChildrenSummary.spaceSummary.displayname == spaceB.summary?.displayname)
+
+                                let childInfos = spaceChildrenSummary.childInfos
+
+                                XCTAssert(childInfos.count == 2)
+
+                                let childInfoSpaceC = childInfos.first { (childInfo) -> Bool in
+                                    childInfo.name == spaceC.summary?.displayname
+                                }
+
+                                let childInfoSpaceD = childInfos.first { (childInfo) -> Bool in
+                                    childInfo.name == spaceD.summary?.displayname
+                                }
+
+                                XCTAssertNotNil(childInfoSpaceC)
+                                XCTAssertNotNil(childInfoSpaceD)
+
+                                expectation.fulfill()
+                            case .failure(let error):
+                                XCTFail("Get space children failed with error \(error)")
+                            }
+                        }
+                    }
+                    
+                case .failure(let error):
+                    XCTFail("Create spaces failed with error \(error)")
+                    expectation.fulfill()
+                }
+            }
+        }
+    }    
 }
