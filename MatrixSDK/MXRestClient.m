@@ -5347,7 +5347,7 @@ MXAuthAction;
     MXWeakify(self);
     return [httpClient requestWithMethod:@"POST"
                                     path:path                              
-                              parameters:[parameters jsonDictionary]
+                              parameters:[parameters jsonDictionary] ?: @{}
                                  success:^(NSDictionary *JSONResponse) {
                                      MXStrongifyAndReturnIfNil(self);
 
