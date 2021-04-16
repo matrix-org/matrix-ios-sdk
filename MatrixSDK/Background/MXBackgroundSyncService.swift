@@ -52,6 +52,9 @@ public enum MXBackgroundSyncServiceError: Error {
     /// Cached events. Keys are even identifiers.
     private var cachedEvents: [String: MXEvent] = [:]
     
+    /// Cached profiles. UserId -> (displayName, avatarUrl)
+    private var cachedProfiles: [String: (String?, String?)] = [:]
+    
     /// See MXSyncResponseStoreManager.syncResponseCacheSizeLimit
     public var syncResponseCacheSizeLimit: Int {
         get {
@@ -128,6 +131,38 @@ public enum MXBackgroundSyncServiceError: Error {
                             Queues.dispatchQueue.async {
                                 completion(.success(roomState))
                             }
+        }
+    }
+    
+    /// Get the profile of a room member.
+    ///
+    /// This method must be called when the member is not visible in the room state. It happens in case of
+    /// lazy loading of room members, not all members are known yet.
+    ///
+    /// - Parameters:
+    ///   - userId: The user id.
+    ///   - roomId: The room id.
+    ///   - completion: Completion block to be called. Always called in main thread.
+    public func profile(ofMember userId: String, inRoom roomId: String, completion: @escaping (MXResponse<(String?, String?)>) -> Void) {
+        
+        // There is no CS API to get a single member in a room. /members will be expensive in a room with thousands of users.
+        // So, use the simplest possible HS API to get the data, the profile API.
+        // It will not take into account customised name into the room but that will be better than a Matrix id.
+        
+        // Check cache first
+        if let (displayName, avatarUrl) = cachedProfiles[userId] {
+            completion(.success((displayName, avatarUrl)))
+            return
+        }
+        
+        // Else make a request
+        restClient.profile(forUser: userId) { (response) in
+            Queues.dispatchQueue.async {
+                if let (displayName, avatarUrl) = response.value {
+                    self.cachedProfiles[userId] = (displayName, avatarUrl)
+                }
+                completion(response)
+            }
         }
     }
     

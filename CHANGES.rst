@@ -8,7 +8,7 @@ Changes to be released in next version
  * 
 
 🐛 Bugfix
- * 
+* Notifications: Fix sender display name that can miss (vector-im/element-ios/issues/#4222). 
 
 ⚠️ API Changes
  * 
