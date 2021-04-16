@@ -62,6 +62,7 @@
     _maxNumberOfTries = 0;
     _maxRetriesTime = 0;
     _canceled = YES;
+    _httpResponse = nil;
     [_operation cancel];
 }
 
@@ -83,6 +84,7 @@
     _numberOfTries = operation.numberOfTries;
     _maxNumberOfTries = operation.maxRetriesTime;
     _maxRetriesTime = operation.maxRetriesTime;
+    _httpResponse = operation.httpResponse;
 
     // If the current operation was canceled, cancel the new one to avoid
     // that the chained operations ends up with a successful operation

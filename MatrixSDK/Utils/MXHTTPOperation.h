@@ -61,6 +61,11 @@
 @property (nonatomic, readonly, getter=isCancelled) BOOL canceled;
 
 /**
+ The HTTP response.
+ */
+@property (nonatomic, nullable) NSHTTPURLResponse *httpResponse;
+
+/**
  Cancel the HTTP request.
  */
 - (void)cancel;
