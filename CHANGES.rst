@@ -1,3 +1,30 @@
+Changes in 0.18.9 (2021-04-16)
+=================================================
+
+✨ Features
+ * 
+
+🙌 Improvements
+ * 
+
+🐛 Bugfix
+* Notifications: Fix sender display name that can miss (vector-im/element-ios/issues/#4222). 
+
+⚠️ API Changes
+ * 
+
+🗣 Translations
+ * 
+    
+🧱 Build
+ * 
+
+Others
+ * 
+
+Improvements:
+
+
 Changes in 0.18.8 (2021-04-14)
 =================================================
 
