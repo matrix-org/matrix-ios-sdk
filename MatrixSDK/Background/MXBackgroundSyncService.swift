@@ -152,7 +152,7 @@ public enum MXBackgroundSyncServiceError: Error {
         // Check cache first
         if let (displayName, avatarUrl) = cachedProfiles[userId] {
             Queues.dispatchQueue.async {
-                   completion(.success((displayName, avatarUrl)))
+                completion(.success((displayName, avatarUrl)))
             }
             return
         }
