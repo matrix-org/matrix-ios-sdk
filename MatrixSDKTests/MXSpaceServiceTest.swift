@@ -224,9 +224,7 @@ class MXSpaceServiceTest: XCTestCase {
                     let rootSpace = spaces[0]
                     let childSpace = spaces[1]
                     
-                    let viaServers = [session.credentials.homeServerName()!]
-                    
-                    rootSpace.addChild(spaceId: childSpace.spaceId, viaServers: viaServers, order: nil, autoJoin: false, suggested: false) { (response) in
+                    rootSpace.addChild(spaceId: childSpace.spaceId, viaServers: nil, order: nil, autoJoin: false, suggested: false) { (response) in
                         switch response {
                         case .success:
                             
@@ -250,11 +248,13 @@ class MXSpaceServiceTest: XCTestCase {
                                     })
                                 case .failure(let error):
                                     XCTFail("Sync failed with error\(error)")
+                                    expectation.fulfill()
                                 }
                             }
                             
                         case .failure(let error):
                             XCTFail("Add child space failed with error \(error)")
+                            expectation.fulfill()
                         }
                     }
                 case .failure(let error):
@@ -293,14 +293,12 @@ class MXSpaceServiceTest: XCTestCase {
                     let spaceC = spaces[2]
                     let spaceD = spaces[3]
                     
-                    let viaServers = [session.credentials.homeServerName()!]
-                    
                     let dispatchGroup = DispatchGroup()
                     
                     dispatchGroup.enter()
                     
                     // Add B as child of A
-                    spaceA.addChild(spaceId: spaceB.spaceId, viaServers: viaServers, order: nil, autoJoin: false, suggested: false) { (response) in
+                    spaceA.addChild(spaceId: spaceB.spaceId, viaServers: nil, order: nil, autoJoin: false, suggested: false) { (response) in
                         switch response {
                         case .success:
                             break
@@ -314,7 +312,7 @@ class MXSpaceServiceTest: XCTestCase {
                     dispatchGroup.enter()
                     
                     // Add C as child of B
-                    spaceB.addChild(spaceId: spaceC.spaceId, viaServers: viaServers, order: nil, autoJoin: false, suggested: false) { (response) in
+                    spaceB.addChild(spaceId: spaceC.spaceId, viaServers: nil, order: nil, autoJoin: false, suggested: false) { (response) in
                         switch response {
                         case .success:
                             break
@@ -328,7 +326,7 @@ class MXSpaceServiceTest: XCTestCase {
                     dispatchGroup.enter()
                     
                     // Add D as child of B
-                    spaceB.addChild(spaceId: spaceD.spaceId, viaServers: viaServers, order: nil, autoJoin: false, suggested: false) { (response) in
+                    spaceB.addChild(spaceId: spaceD.spaceId, viaServers: nil, order: nil, autoJoin: false, suggested: false) { (response) in
                         switch response {
                         case .success:
                             break
@@ -366,6 +364,7 @@ class MXSpaceServiceTest: XCTestCase {
                                 expectation.fulfill()
                             case .failure(let error):
                                 XCTFail("Get space children failed with error \(error)")
+                                expectation.fulfill()
                             }
                         }
                     }
