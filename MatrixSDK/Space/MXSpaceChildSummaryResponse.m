@@ -18,13 +18,18 @@
 
 @implementation MXSpaceChildSummaryResponse
 
-+ (id)modelFromJSON:(NSDictionary *)JSONDictionary
++ (instancetype)modelFromJSON:(NSDictionary *)JSONDictionary
 {
     MXSpaceChildSummaryResponse *spaceChildSummaryResponse = [MXSpaceChildSummaryResponse new];
+        
+    NSString *roomId;
     
-    if (spaceChildSummaryResponse)
+    MXJSONModelSetString(roomId, JSONDictionary[@"room_id"]);
+    
+    if (spaceChildSummaryResponse && roomId)
     {
-        MXJSONModelSetString(spaceChildSummaryResponse.roomId, JSONDictionary[@"room_id"]);
+        spaceChildSummaryResponse.roomId = roomId;
+
         MXJSONModelSetString(spaceChildSummaryResponse.roomType, JSONDictionary[@"room_type"]);
         MXJSONModelSetString(spaceChildSummaryResponse.name, JSONDictionary[@"name"]);
         MXJSONModelSetString(spaceChildSummaryResponse.topic, JSONDictionary[@"topic"]);
