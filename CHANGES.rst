@@ -5,7 +5,7 @@ Changes to be released in next version
  * 
 
 🙌 Improvements
- * SDK: Expose the HTTP response in MXHTTPOperation (vector-im/element-ios/issues/4206).
+ * MXHTTPOperation: Expose the HTTP response (vector-im/element-ios/issues/4206).
 
 🐛 Bugfix
  * 
