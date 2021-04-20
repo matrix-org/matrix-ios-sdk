@@ -18,6 +18,10 @@ import XCTest
 
 import MatrixSDK
 
+enum MXSpaceServiceTestError: Error {
+    case spaceCreationFailed
+}
+
 class MXSpaceServiceTest: XCTestCase {
     
     // MARK: - Properties
@@ -76,7 +80,7 @@ class MXSpaceServiceTest: XCTestCase {
             if spaces.count == spaceNames.count {
                 completion(.success(spaces))
             } else {
-                XCTFail("Fail to create spaces")
+                completion(.failure(MXSpaceServiceTestError.spaceCreationFailed))
             }
         }
     }
@@ -113,10 +117,12 @@ class MXSpaceServiceTest: XCTestCase {
     /// -> Bob must see the created space with default parameters set
     func testCreateSpace() throws {
         
+        // Create Bob and setup Bob session
         self.doSpaceServiceTestWithBob(testCase: self) { (spaceService, _, expectation) in
             
             let creationParameters = MXSpaceCreationParameters()
             
+            // Create space with default parameters
             spaceService.createSpace(with: creationParameters) { (response) in
                 switch response {
                 case .success(let space):
@@ -158,11 +164,14 @@ class MXSpaceServiceTest: XCTestCase {
     ///
     /// -> Bob must see the created space with name and topic set
     func testCreatePublicSpace() throws {
+        
+        // Create Bob and setup Bob session
         self.doSpaceServiceTestWithBob(testCase: self) { (spaceService, _, expectation) in
             
             let expectedSpaceName = "Space name"
             let expectedSpaceTopic = "Space topic"
             
+            // Create a public space
             spaceService.createSpace(withName: expectedSpaceName, topic: expectedSpaceTopic, isPublic: true) { (response) in
                 switch response {
                 case .success(let space):
@@ -210,11 +219,14 @@ class MXSpaceServiceTest: XCTestCase {
     ///
     /// -> Bob must see the child space state event of space B
     func testAddChildSpace() throws {
+        
+        // Create Bob and setup Bob session
         self.doSpaceServiceTestWithBob(testCase: self) { (spaceService, session, expectation) in
             
             let expectedRootSpaceName = "Space A"
             let expectedChildSpaceName = "Space B"
             
+            // Create two spaces
             self.createSpaces(with: spaceService, spaceNames: [
                 expectedRootSpaceName,
                 expectedChildSpaceName
@@ -224,11 +236,12 @@ class MXSpaceServiceTest: XCTestCase {
                     let rootSpace = spaces[0]
                     let childSpace = spaces[1]
                     
+                    // Add space A as child of space B
                     rootSpace.addChild(roomId: childSpace.spaceId, viaServers: nil, order: nil, autoJoin: false, suggested: false) { (response) in
                         switch response {
                         case .success:
                             
-                            // Make an initial sync and and get
+                            // Make an initial sync and and get the root space A
                             session.start { (response) in
                                 switch response {
                                 case .success:
@@ -238,6 +251,7 @@ class MXSpaceServiceTest: XCTestCase {
                                         return
                                     }
                                     
+                                    // Check if space A contains the space child state event for space B
                                     foundRootSpace.room.state({ (roomState) in
                                         
                                         let stateEvent = roomState?.stateEvents(with: .spaceChild)?.first
@@ -273,6 +287,8 @@ class MXSpaceServiceTest: XCTestCase {
     ///
     /// -> Bob must see the child space summary of the space B with informations of his children C and D
     func testGetSpaceChildren() throws {
+        
+        // Create Bob and setup Bob session
         self.doSpaceServiceTestWithBob(testCase: self) { (spaceService, session, expectation) in
             
             let expectedSpaceAName = "Space A"
@@ -280,6 +296,7 @@ class MXSpaceServiceTest: XCTestCase {
             let expectedSpaceCName = "Space C"
             let expectedSpaceDName = "Space D"
             
+            // Create 4 spaces
             self.createSpaces(with: spaceService, spaceNames: [
                 expectedSpaceAName,
                 expectedSpaceBName,
@@ -337,6 +354,7 @@ class MXSpaceServiceTest: XCTestCase {
                         dispatchGroup.leave()
                     }
                     
+                    // wait for space children being added to their parents
                     dispatchGroup.notify(queue: .main) {
                                                                         
                         // Get space children of B node
