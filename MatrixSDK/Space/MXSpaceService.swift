@@ -48,11 +48,16 @@ public class MXSpaceService: NSObject {
     
     private let roomTypeMapper: MXRoomTypeMapper
     
+    private let processingQueue: DispatchQueue
+    private let completionQueue: DispatchQueue
+    
     // MARK: - Setup
     
     public init(session: MXSession) {
         self.session = session
         self.roomTypeMapper = MXRoomTypeMapper(defaultRoomType: .room)
+        self.processingQueue = DispatchQueue(label: "org.matrix.sdk.MXSpaceService.processingQueue", attributes: .concurrent)
+        self.completionQueue = DispatchQueue.main
     }
     
     // MARK: - Public
@@ -122,29 +127,41 @@ public class MXSpaceService: NSObject {
         return self.session.matrixRestClient.getSpaceChildrenForSpace(withId: spaceId, parameters: parameters) { (response) in
             switch response {
             case .success(let spaceChildrenResponse):
-                guard let rooms = spaceChildrenResponse.rooms else {
-                    // We should have at least one room for the requested space
-                    completion(.failure(MXSpaceServiceError.spaceNotFound))
-                    return
+                self.processingQueue.async { [weak self] in
+                    guard let self = self else {
+                        return
+                    }
+                    
+                    guard let rooms = spaceChildrenResponse.rooms else {
+                        // We should have at least one room for the requested space
+                        self.completionQueue.async {
+                            completion(.failure(MXSpaceServiceError.spaceNotFound))
+                        }
+                        return
+                    }
+
+                    guard let rootSpaceChildSummaryResponse = rooms.first(where: { spaceResponse -> Bool in
+                        return spaceResponse.roomId == spaceId
+                    }) else {
+                        // Fail to find root child. We should have at least one room for the requested space
+                        self.completionQueue.async {
+                            completion(.failure(MXSpaceServiceError.spaceNotFound))
+                        }
+                        return
+                    }
+
+                    // Build the queried space summary
+                    let spaceSummary = self.createRoomSummary(with: rootSpaceChildSummaryResponse)
+
+                    // Build the child summaries of the queried space
+                    let childInfos = self.spaceChildInfos(from: spaceChildrenResponse, excludedSpaceId: spaceId)
+
+                    let spaceChildrenSummary = MXSpaceChildrenSummary(spaceSummary: spaceSummary, childInfos: childInfos)
+
+                    self.completionQueue.async {
+                        completion(.success(spaceChildrenSummary))
+                    }
                 }
-
-                guard let rootSpaceChildSummaryResponse = rooms.first(where: { spaceResponse -> Bool in
-                    return spaceResponse.roomId == spaceId
-                }) else {
-                    // Fail to find root child. We should have at least one room for the requested space
-                    completion(.failure(MXSpaceServiceError.spaceNotFound))
-                    return
-                }
-
-                // Build the queried space summary
-                let spaceSummary = self.createRoomSummary(with: rootSpaceChildSummaryResponse)
-
-                // Build the child summaries of the queried space
-                let childInfos = self.spaceChildInfos(from: spaceChildrenResponse, excludedSpaceId: spaceId)
-
-                let spaceChildrenSummary = MXSpaceChildrenSummary(spaceSummary: spaceSummary, childInfos: childInfos)
-
-                completion(.success(spaceChildrenSummary))
             case .failure(let error):
                 completion(.failure(error))
             }

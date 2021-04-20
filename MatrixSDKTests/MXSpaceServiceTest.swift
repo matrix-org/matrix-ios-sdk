@@ -341,6 +341,9 @@ class MXSpaceServiceTest: XCTestCase {
                                                                         
                         // Get space children of B node
                         spaceService.getSpaceChildrenForSpace(withId: spaceB.spaceId, parameters: nil) { (response) in
+                            
+                            XCTAssertTrue(Thread.isMainThread)
+                            
                             switch response {
                             case .success(let spaceChildrenSummary):
 
