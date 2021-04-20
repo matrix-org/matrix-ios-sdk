@@ -61,9 +61,9 @@ public class MXSpace: NSObject {
     
     // MARK: - Public
         
-    /// Add child space to the current space.
+    /// Add child space or child room to the current space.
     /// - Parameters:
-    ///   - spaceId: The room id of the child space.
+    ///   - roomId: The room id of the child space or child room.
     ///   - viaServers: List of candidate servers that can be used to join the space. Children where via is not present are ignored.
     ///   If nil value is set current homeserver will be used as via server.
     ///   - order: Is a string which is used to provide a default ordering of siblings in the room list. Orders should be a string of ascii characters in the range \x20 (space) to \x7F (~), and should be less or equal 50 characters.
@@ -72,7 +72,7 @@ public class MXSpace: NSObject {
     ///   - completion: A closure called when the operation completes. Provides the event id of the event generated on the home server on success.
     /// - Returns: a `MXHTTPOperation` instance.
     @discardableResult
-    public func addChild(spaceId: String,
+    public func addChild(roomId: String,
                          viaServers: [String]?,
                          order: String?,
                          autoJoin: Bool,
@@ -104,7 +104,7 @@ public class MXSpace: NSObject {
         
         return self.room.sendStateEvent(.spaceChild,
                                  content: stateEventContent,
-                                 stateKey: spaceId,
+                                 stateKey: roomId,
                                  completion: completion)
     }
 }
@@ -112,10 +112,11 @@ public class MXSpace: NSObject {
 // MARK: - Objective-C
 extension MXSpace {
     
-    /// Add child space to the current space.
+    /// Add child space or child room to the current space.
     /// - Parameters:
-    ///   - spaceId: The room id of the child space.
+    ///   - roomId: The room id of the child space or child room.
     ///   - viaServers: List of candidate servers that can be used to join the space. Children where via is not present are ignored.
+    ///   If nil value is set current homeserver will be used as via server.
     ///   - order: Is a string which is used to provide a default ordering of siblings in the room list. Orders should be a string of ascii characters in the range \x20 (space) to \x7F (~), and should be less or equal 50 characters.
     ///   - autoJoin: Allows a space admin to list the sub-spaces and rooms in that space which should be automatically joined by members of that space.
     ///   - suggested: Indicates that the child should be advertised to members of the space by the client. This could be done by showing them eagerly in the room list.
@@ -123,14 +124,14 @@ extension MXSpace {
     ///   - failure: A closure called  when the operation fails.
     /// - Returns: a `MXHTTPOperation` instance.
     @discardableResult
-    public func addChild(spaceId: String,
+    public func addChild(roomId: String,
                          viaServers: [String],
                          order: String?,
                          autoJoin: Bool,
                          suggested: Bool,
                          success: @escaping (String?) -> Void,
                          failure: @escaping (Error) -> Void) -> MXHTTPOperation? {
-        return self.addChild(spaceId: spaceId, viaServers: viaServers, order: order, autoJoin: autoJoin, suggested: suggested) { (response) in
+        return self.addChild(roomId: roomId, viaServers: viaServers, order: order, autoJoin: autoJoin, suggested: suggested) { (response) in
             uncurryResponse(response, success: success, failure: failure)
         }
     }

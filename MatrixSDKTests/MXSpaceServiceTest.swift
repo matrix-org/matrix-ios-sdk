@@ -224,7 +224,7 @@ class MXSpaceServiceTest: XCTestCase {
                     let rootSpace = spaces[0]
                     let childSpace = spaces[1]
                     
-                    rootSpace.addChild(spaceId: childSpace.spaceId, viaServers: nil, order: nil, autoJoin: false, suggested: false) { (response) in
+                    rootSpace.addChild(roomId: childSpace.spaceId, viaServers: nil, order: nil, autoJoin: false, suggested: false) { (response) in
                         switch response {
                         case .success:
                             
@@ -298,7 +298,7 @@ class MXSpaceServiceTest: XCTestCase {
                     dispatchGroup.enter()
                     
                     // Add B as child of A
-                    spaceA.addChild(spaceId: spaceB.spaceId, viaServers: nil, order: nil, autoJoin: false, suggested: false) { (response) in
+                    spaceA.addChild(roomId: spaceB.spaceId, viaServers: nil, order: nil, autoJoin: false, suggested: false) { (response) in
                         switch response {
                         case .success:
                             break
@@ -312,7 +312,7 @@ class MXSpaceServiceTest: XCTestCase {
                     dispatchGroup.enter()
                     
                     // Add C as child of B
-                    spaceB.addChild(spaceId: spaceC.spaceId, viaServers: nil, order: nil, autoJoin: false, suggested: false) { (response) in
+                    spaceB.addChild(roomId: spaceC.spaceId, viaServers: nil, order: nil, autoJoin: false, suggested: false) { (response) in
                         switch response {
                         case .success:
                             break
@@ -326,7 +326,7 @@ class MXSpaceServiceTest: XCTestCase {
                     dispatchGroup.enter()
                     
                     // Add D as child of B
-                    spaceB.addChild(spaceId: spaceD.spaceId, viaServers: nil, order: nil, autoJoin: false, suggested: false) { (response) in
+                    spaceB.addChild(roomId: spaceD.spaceId, viaServers: nil, order: nil, autoJoin: false, suggested: false) { (response) in
                         switch response {
                         case .success:
                             break
