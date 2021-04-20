@@ -179,8 +179,12 @@ public class MXSpaceService: NSObject {
         roomSummary.roomTypeString = roomTypeString
         roomSummary.roomType = self.roomTypeMapper.roomType(from: roomTypeString)
         
+        let joinedMembersCount = UInt(spaceChildSummaryResponse.numJoinedMembers)
+        
         let membersCount = MXRoomMembersCount()
-        membersCount.joined = UInt(spaceChildSummaryResponse.numJoinedMembers)
+        membersCount.joined = joinedMembersCount
+        membersCount.members = joinedMembersCount
+        
         roomSummary.membersCount = membersCount
         roomSummary.displayname = spaceChildSummaryResponse.name
         roomSummary.topic = spaceChildSummaryResponse.topic
