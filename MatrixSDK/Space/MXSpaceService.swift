@@ -225,9 +225,13 @@ public class MXSpaceService: NSObject {
             spaceChildContent = MXSpaceChildContent(fromJSON: stateEventContent)
         }
         
+        let roomTypeString = spaceChildSummaryResponse.roomType
+        let roomType = self.roomTypeMapper.roomType(from: roomTypeString)
+        
         return MXSpaceChildInfo(childRoomId: spaceChildSummaryResponse.roomId,
                          isKnown: true,
-                         roomType: spaceChildSummaryResponse.roomType,
+                         roomTypeString: roomTypeString,
+                         roomType: roomType,
                          name: spaceChildSummaryResponse.name,
                          topic: spaceChildSummaryResponse.topic,
                          avatarUrl: spaceChildSummaryResponse.avatarUrl,

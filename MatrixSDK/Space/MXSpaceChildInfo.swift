@@ -28,9 +28,12 @@ public class MXSpaceChildInfo: NSObject {
     /// True to indicate that the space is known.
     /// We might not know this child at all, i.e we just know it exists but no info on type/name/etc..
     public let isKnown: Bool
-    
+            
     /// The room type string value as provided by the server. Can be nil.
-    public let roomType: String?
+    public let roomTypeString: String?
+    
+    /// The locally computed room type derivated from `roomTypeString`.
+    public let roomType: MXRoomType
     
     /// The space name.
     public let name: String?
@@ -61,7 +64,8 @@ public class MXSpaceChildInfo: NSObject {
     
     public init(childRoomId: String,
                 isKnown: Bool,
-                roomType: String?,
+                roomTypeString: String?,
+                roomType: MXRoomType,
                 name: String?,
                 topic: String?,
                 avatarUrl: String?,
@@ -72,6 +76,7 @@ public class MXSpaceChildInfo: NSObject {
                 parentRoomId: String?) {
         self.childRoomId = childRoomId
         self.isKnown = isKnown
+        self.roomTypeString = roomTypeString
         self.roomType = roomType
         self.name = name
         self.topic = topic
