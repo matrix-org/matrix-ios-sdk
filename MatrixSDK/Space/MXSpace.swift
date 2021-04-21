@@ -73,10 +73,10 @@ public class MXSpace: NSObject {
     /// - Returns: a `MXHTTPOperation` instance.
     @discardableResult
     public func addChild(roomId: String,
-                         viaServers: [String]?,
-                         order: String?,
-                         autoJoin: Bool,
-                         suggested: Bool,
+                         viaServers: [String]? = nil,
+                         order: String? = nil,
+                         autoJoin: Bool = false,
+                         suggested: Bool = false,
                          completion: @escaping (_ response: MXResponse<String?>) -> Void) -> MXHTTPOperation? {
         
         let finalViaServers: [String]
@@ -125,7 +125,7 @@ extension MXSpace {
     /// - Returns: a `MXHTTPOperation` instance.
     @discardableResult
     public func addChild(roomId: String,
-                         viaServers: [String],
+                         viaServers: [String]?,
                          order: String?,
                          autoJoin: Bool,
                          suggested: Bool,
