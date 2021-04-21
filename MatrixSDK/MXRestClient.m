@@ -29,6 +29,8 @@
 #import "MXThirdpartyProtocolsResponse.h"
 #import "MXThirdPartyUsersResponse.h"
 
+#import "MatrixSDKSwiftHeader.h"
+
 #pragma mark - Constants definitions
 /**
  Prefix used in path of home server API requests.
@@ -5323,6 +5325,39 @@ MXAuthAction;
                                              MXJSONModelSetMXJSONModel(paginatedResponse, MXAggregationPaginatedResponse, JSONResponse);
                                          } andCompletion:^{
                                              success(paginatedResponse);
+                                         }];
+                                     }
+                                 }
+                                 failure:^(NSError *error) {
+                                     MXStrongifyAndReturnIfNil(self);
+                                     [self dispatchFailure:error inBlock:failure];
+                                 }];
+}
+
+#pragma mark - Spaces
+
+- (MXHTTPOperation*)getSpaceChildrenForSpaceWithId:(NSString*)spaceId
+                                        parameters:(MXSpaceChildrenRequestParameters*)parameters
+                                          success:(void (^)(MXSpaceChildrenResponse *spaceChildrenResponse))success
+                                          failure:(void (^)(NSError *error))failure
+{
+    NSString *path = [NSString stringWithFormat:@"%@/org.matrix.msc2946/rooms/%@/spaces",
+                             kMXAPIPrefixPathUnstable, spaceId];
+    
+    MXWeakify(self);
+    return [httpClient requestWithMethod:@"POST"
+                                    path:path                              
+                              parameters:[parameters jsonDictionary] ?: @{}
+                                 success:^(NSDictionary *JSONResponse) {
+                                     MXStrongifyAndReturnIfNil(self);
+
+                                     if (success)
+                                     {
+                                         __block MXSpaceChildrenResponse *spaceChildrenResponse;
+                                         [self dispatchProcessing:^{
+                                             MXJSONModelSetMXJSONModel(spaceChildrenResponse, MXSpaceChildrenResponse, JSONResponse);
+                                         } andCompletion:^{
+                                             success(spaceChildrenResponse);
                                          }];
                                      }
                                  }

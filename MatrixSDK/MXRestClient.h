@@ -41,9 +41,11 @@
 #import "MXPusher.h"
 #import "MXRoomCreationParameters.h"
 #import "MXTurnServerResponse.h"
+#import "MXSpaceChildrenResponse.h"
 
 @class MXThirdpartyProtocolsResponse;
 @class MXThirdPartyUsersResponse;
+@class MXSpaceChildrenRequestParameters;
 
 #pragma mark - Constants definitions
 /**
@@ -2679,5 +2681,18 @@ typedef MXHTTPOperation* (^MXRestClientIdentityServerAccessTokenHandler)(void (^
                                 limit:(NSUInteger)limit
                               success:(void (^)(MXAggregationPaginatedResponse *paginatedResponse))success
                               failure:(void (^)(NSError *error))failure;
+
+#pragma mark - Spaces
+
+/// Get the space children of a given space.
+/// @param spaceId The room id of the queried space.
+/// @param parameters Space children request parameters.
+/// @param success A block object called when the operation succeeds. It provides a `MXSpaceChildrenResponse` object.
+/// @param failure A block object called when the operation fails.
+/// @return a MXHTTPOperation instance.
+- (MXHTTPOperation*)getSpaceChildrenForSpaceWithId:(NSString*)spaceId
+                                        parameters:(MXSpaceChildrenRequestParameters*)parameters
+                                          success:(void (^)(MXSpaceChildrenResponse *spaceChildrenResponse))success
+                                          failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 @end
