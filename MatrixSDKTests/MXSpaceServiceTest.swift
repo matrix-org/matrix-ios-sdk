@@ -237,7 +237,7 @@ class MXSpaceServiceTest: XCTestCase {
                     let childSpace = spaces[1]
                     
                     // Add space A as child of space B
-                    rootSpace.addChild(roomId: childSpace.spaceId, viaServers: nil, order: nil, autoJoin: false, suggested: false) { (response) in
+                    rootSpace.addChild(roomId: childSpace.spaceId) { (response) in
                         switch response {
                         case .success:
                             
@@ -315,7 +315,7 @@ class MXSpaceServiceTest: XCTestCase {
                     dispatchGroup.enter()
                     
                     // Add B as child of A
-                    spaceA.addChild(roomId: spaceB.spaceId, viaServers: nil, order: nil, autoJoin: false, suggested: false) { (response) in
+                    spaceA.addChild(roomId: spaceB.spaceId) { (response) in
                         switch response {
                         case .success:
                             break
@@ -329,7 +329,7 @@ class MXSpaceServiceTest: XCTestCase {
                     dispatchGroup.enter()
                     
                     // Add C as child of B
-                    spaceB.addChild(roomId: spaceC.spaceId, viaServers: nil, order: nil, autoJoin: false, suggested: false) { (response) in
+                    spaceB.addChild(roomId: spaceC.spaceId) { (response) in
                         switch response {
                         case .success:
                             break
@@ -343,7 +343,7 @@ class MXSpaceServiceTest: XCTestCase {
                     dispatchGroup.enter()
                     
                     // Add D as child of B
-                    spaceB.addChild(roomId: spaceD.spaceId, viaServers: nil, order: nil, autoJoin: false, suggested: false) { (response) in
+                    spaceB.addChild(roomId: spaceD.spaceId) { (response) in
                         switch response {
                         case .success:
                             break
