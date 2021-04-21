@@ -20,13 +20,19 @@
 
 + (instancetype)modelFromJSON:(NSDictionary *)JSONDictionary
 {
-    MXSpaceChildSummaryResponse *spaceChildSummaryResponse = [MXSpaceChildSummaryResponse new];
-        
     NSString *roomId;
     
     MXJSONModelSetString(roomId, JSONDictionary[@"room_id"]);
     
-    if (spaceChildSummaryResponse && roomId)
+    // roomId is mandatory
+    if (!roomId)
+    {
+        return nil;
+    }
+    
+    MXSpaceChildSummaryResponse *spaceChildSummaryResponse = [MXSpaceChildSummaryResponse new];
+    
+    if (spaceChildSummaryResponse)
     {
         spaceChildSummaryResponse.roomId = roomId;
 
