@@ -1,0 +1,1 @@
+Check for null before updating a user's displayname or avatar URL based on an m.room.member event.  Contributed by Charles Wright.

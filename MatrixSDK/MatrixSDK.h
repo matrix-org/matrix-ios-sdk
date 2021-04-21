@@ -140,6 +140,6 @@ FOUNDATION_EXPORT NSString *MatrixSDKVersion;
 #import "MXPushRuleSenderNotificationPermissionConditionChecker.h"
 #import "MXMegolmDecryption.h"
 #import "MXOlmDecryption.h"
-#import "MXSyncResponseStoreModel.h"
+#import "MXCachedSyncResponse.h"
 #import "MXBackgroundCryptoStore.h"
 

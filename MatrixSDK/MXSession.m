@@ -176,6 +176,11 @@ typedef void (^MXOnResumeDone)(void);
      Each key is a native room id. Each value is the virtual room id.
      */
     NSMutableDictionary<NSString*, NSString*> *nativeToVirtualRoomIds;
+    
+    /**
+     Async queue to run a single task at a time.
+     */
+    MXAsyncTaskQueue *asyncTaskQueue;
 }
 
 /**
@@ -216,6 +221,7 @@ typedef void (^MXOnResumeDone)(void);
         directRoomsOperationsQueue = [NSMutableArray array];
         publicisedGroupsByUserId = [[NSMutableDictionary alloc] init];
         nativeToVirtualRoomIds = [NSMutableDictionary dictionary];
+        asyncTaskQueue = [[MXAsyncTaskQueue alloc] initWithDispatchQueue:dispatch_get_main_queue() label:@"MXAsyncTaskQueue-MXSession"];
         _spaceService = [[MXSpaceService alloc] initWithSession:self];
 
         [self setIdentityServer:mxRestClient.identityServer andAccessToken:mxRestClient.credentials.identityServerAccessToken];
@@ -1685,50 +1691,92 @@ typedef void (^MXOnResumeDone)(void);
 
 - (void)handleBackgroundSyncCacheIfRequiredWithCompletion:(void (^)(void))completion
 {
-    NSLog(@"[MXSession] handleBackgroundSyncCacheIfRequired: state %tu", _state);
+    MXSyncResponseFileStore *syncResponseStore = [[MXSyncResponseFileStore alloc] initWithCredentials:self.credentials];
+    MXSyncResponseStoreManager *syncResponseStoreManager = [[MXSyncResponseStoreManager alloc] initWithSyncResponseStore:syncResponseStore];
     
-    MXSyncResponseFileStore *syncResponseStore = [[MXSyncResponseFileStore alloc] init];
-    [syncResponseStore openWithCredentials:self.credentials];
-    if (syncResponseStore.syncResponse)
+    NSString *syncResponseStoreSyncToken = syncResponseStoreManager.syncToken;
+    NSString *eventStreamToken = _store.eventStreamToken;
+
+    NSMutableArray<NSString *> *outdatedSyncResponseIds = [syncResponseStore.outdatedSyncResponseIds mutableCopy];
+    NSArray<NSString *> *syncResponseIds = syncResponseStore.syncResponseIds;
+
+    NSLog(@"[MXSession] handleBackgroundSyncCacheIfRequired: state %tu. outdatedSyncResponseIds: %@. syncResponseIds: %@. syncResponseStoreSyncToken: %@",
+          _state, @(outdatedSyncResponseIds.count), @(syncResponseIds.count) , syncResponseStoreSyncToken);
+    
+    if (![syncResponseStoreSyncToken isEqualToString:eventStreamToken])
     {
-        NSString *syncResponseStorePrevBatch = syncResponseStore.prevBatch;
-        NSString *eventStreamToken = _store.eventStreamToken;
-        if ([syncResponseStorePrevBatch isEqualToString:eventStreamToken])
-        {
-            NSLog(@"[MXSession] handleBackgroundSyncCacheIfRequired: Handle cache from stream token %@", eventStreamToken);
-            
-            //  sync response really continues from where the session left
-            [self handleSyncResponse:syncResponseStore.syncResponse
-                          completion:^{
-                [syncResponseStore deleteData];
-                
-                if (completion)
-                {
-                    completion();
-                }
-            }];
-        }
-        else
-        {
-            NSLog(@"[MXSession] handleBackgroundSyncCacheIfRequired: Ignore cache: MXSession stream token: %@. MXBackgroundSyncService cache stream token: %@", eventStreamToken, syncResponseStorePrevBatch);
-            
-            //  this sync response will break the continuity in session, ignore & remove it
-            [syncResponseStore deleteData];
-            
-            if (completion)
-            {
-                completion();
-            }
-        }
+        NSLog(@"[MXSession] handleBackgroundSyncCacheIfRequired: ");
+        [outdatedSyncResponseIds addObjectsFromArray:syncResponseIds];
+        syncResponseIds = @[];
     }
-    else
+    
+    if (outdatedSyncResponseIds.count == 0 && syncResponseIds.count == 0)
     {
         if (completion)
         {
             completion();
         }
+        return;
     }
+    
+    for (NSString *syncResponseId in outdatedSyncResponseIds)
+    {
+        @autoreleasepool {
+            MXCachedSyncResponse *cachedSyncResponse = [syncResponseStore syncResponseWithId:syncResponseId error:nil];
+            if (cachedSyncResponse)
+            {
+                [asyncTaskQueue asyncWithExecute:^(void (^ taskCompleted)(void)) {
+                    [self handleOutdatedSyncResponse:cachedSyncResponse.syncResponse
+                                  completion:^{
+                        taskCompleted();
+                    }];
+                }];
+            }
+        }
+    }
+    
+    for (NSString *syncResponseId in syncResponseIds)
+    {
+        @autoreleasepool {
+            MXCachedSyncResponse *cachedSyncResponse = [syncResponseStore syncResponseWithId:syncResponseId error:nil];
+            if (cachedSyncResponse)
+            {
+                [asyncTaskQueue asyncWithExecute:^(void (^ taskCompleted)(void)) {
+                    [self handleSyncResponse:cachedSyncResponse.syncResponse
+                                  completion:^{
+                        taskCompleted();
+                    }];
+                }];
+            }
+        }
+    }
+    
+    [asyncTaskQueue asyncWithExecute:^(void (^ taskCompleted)(void)) {
+        [syncResponseStore deleteData];
+        
+        if (completion)
+        {
+            completion();
+        }
+        
+        taskCompleted();
+    }];
 }
+
+- (void)handleOutdatedSyncResponse:(MXSyncResponse *)syncResponse
+                        completion:(void (^)(void))completion
+{
+    NSLog(@"[MXSession] handleOutdatedSyncResponse: %tu joined rooms, %tu invited rooms, %tu left rooms, %tu toDevice events.", syncResponse.rooms.join.count, syncResponse.rooms.invite.count, syncResponse.rooms.leave.count, syncResponse.toDevice.events.count);
+    
+    // Handle only to_device events. They are sent only once by the homeserver
+    for (MXEvent *toDeviceEvent in syncResponse.toDevice.events)
+    {
+        [self handleToDeviceEvent:toDeviceEvent];
+    }
+    
+    completion();
+}
+
 
 #pragma mark - Options
 - (void)enableVoIPWithCallStack:(id<MXCallStack>)callStack

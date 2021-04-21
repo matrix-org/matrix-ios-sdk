@@ -5,14 +5,14 @@ Changes to be released in next version
  * Spaces: Support Space room type (vector-im/element-ios/issues/4069).
 
 🙌 Improvements
- * Create secret storage with a given private key (vector-im/element-ios/issues/4189).
+ * MXHTTPOperation: Expose the HTTP response (vector-im/element-ios/issues/4206).
  * MXRoomPowerLevels: Handle undefined values and add init with default spec values.
  * MXRoomCreationParameters: Add roomType and powerLevelContentOverride properties. Add initial state events update method.
  * MXResponse: Add convenient uncurry method to convert a Swift method into Objective-C.
  * Add MXRoomInitialStateEventBuilder that enables to build initial state events.
 
 🐛 Bugfix
- * Remove padding from base64 encoded `iv` value (vector-im/element-ios/issues/4172).
+ * 
 
 ⚠️ API Changes
  * 
@@ -25,6 +25,93 @@ Changes to be released in next version
 
 Others
  * 
+
+Changes in 0.18.9 (2021-04-16)
+=================================================
+
+✨ Features
+ * 
+
+🙌 Improvements
+ * 
+
+🐛 Bugfix
+* Notifications: Fix sender display name that can miss (vector-im/element-ios/issues/#4222). 
+
+⚠️ API Changes
+ * 
+
+🗣 Translations
+ * 
+    
+🧱 Build
+ * 
+
+Others
+ * 
+
+Improvements:
+
+
+Changes in 0.18.8 (2021-04-14)
+=================================================
+
+✨ Features
+ * 
+
+🙌 Improvements
+ * 
+
+🐛 Bugfix
+ * MXSession: Fix deadlock regression in resume() (vector-im/element-ios/issues/4202).
+ * MXRoomMembers: Fix wrong view of room members when paginating (vector-im/element-ios/issues/4204).
+
+⚠️ API Changes
+ * 
+
+🗣 Translations
+ * 
+    
+🧱 Build
+ * 
+
+Others
+ * 
+
+Improvements:
+
+
+Changes in 0.18.7 (2021-04-09)
+=================================================
+
+✨ Features
+ * 
+
+🙌 Improvements
+ * Create secret storage with a given private key (vector-im/element-ios/issues/4189).
+ * MXAsyncTaskQueue: New tool to run asynchronous tasks one at a time.
+ * MXRestClient: Add the dehydratedDevice() method to get the dehydrated device data (vector-im/element-ios/issues/4194).
+
+🐛 Bugfix
+ * Notifications: Fix background sync out of memory (vector-im/element-ios#3957).
+ * Notifications: MXBackgroundService: Keep all cached sync responses until there are processed by MXSession (vector-im/element-ios#4074).
+ * Remove padding from base64 encoded `iv` value (vector-im/element-ios/issues/4172).
+ * Check for null before changing a user's displayname or avatar URL based on an m.room.member event.
+
+⚠️ API Changes
+ * 
+
+🗣 Translations
+ * 
+    
+🧱 Build
+ * 
+
+Others
+ * 
+
+Improvements:
+
 
 Changes in 0.18.6 (2021-03-24)
 =================================================

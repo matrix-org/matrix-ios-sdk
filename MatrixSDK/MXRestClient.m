@@ -4145,6 +4145,30 @@ MXAuthAction;
 }
 
 
+#pragma mark - Crypto: Dehydration
+
+- (MXHTTPOperation*)dehydratedDeviceWithSuccess:(void (^)(MXDehydratedDevice *device))success
+                                          failure:(void (^)(NSError *error))failure
+{
+    MXWeakify(self);
+    return [httpClient requestWithMethod:@"GET"
+                                    path:[NSString stringWithFormat:@"%@/%@/org.matrix.msc2697.v2/dehydrated_device", credentials.homeServer, kMXAPIPrefixPathUnstable]
+                              parameters:@{}
+                                 success:^(NSDictionary *JSONResponse) {
+                                    __block MXDehydratedDevice *device;
+                                    [self dispatchProcessing:^{
+                                        MXJSONModelSetMXJSONModel(device, MXDehydratedDevice, JSONResponse);
+                                    } andCompletion:^{
+                                        success(device);
+                                    }];
+                                 }
+                                 failure:^(NSError *error) {
+                                    MXStrongifyAndReturnIfNil(self);
+                                    [self dispatchFailure:error inBlock:failure];
+                                 }];
+}
+
+
 #pragma mark - Crypto: e2e keys backup
 - (MXHTTPOperation*)createKeyBackupVersion:(MXKeyBackupVersion*)keyBackupVersion
                                    success:(void (^)(NSString *version))success

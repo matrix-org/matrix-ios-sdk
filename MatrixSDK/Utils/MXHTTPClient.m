@@ -374,6 +374,7 @@ static NSUInteger requestCount = 0;
         
     } downloadProgress:nil completionHandler:^(NSURLResponse * _Nonnull theResponse, NSDictionary *JSONResponse, NSError * _Nullable error) {
         NSHTTPURLResponse *response = (NSHTTPURLResponse*)theResponse;
+        mxHTTPOperation.httpResponse = response;
 
         NSLog(@"[MXHTTPClient] #%@ - %@ %@ completed in %.0fms" ,@(requestNumber), httpMethod, path, [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
 

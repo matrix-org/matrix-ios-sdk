@@ -212,6 +212,14 @@ extern NSString *const MXDeviceListDidUpdateUsersDevicesNotification;
                                    failure:(void (^)(NSError *error))failure;
 
 /**
+ Discard the current outbound group session for a specific room.
+ 
+ @param roomId Identifer of the room.
+ @param onComplete the callback called once operation is done.
+ */
+- (void)discardOutboundGroupSessionForRoomWithRoomId:(NSString*)roomId onComplete:(void (^)(void))onComplete;
+
+/**
  Handle list of changed users provided in the /sync response.
 
  @param deviceLists the list of users who have a change in their devices.
