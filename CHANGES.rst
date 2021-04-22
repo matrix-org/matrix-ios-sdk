@@ -1,3 +1,30 @@
+Changes in 0.18.10 (2021-04-22)
+=================================================
+
+✨ Features
+ * 
+
+🙌 Improvements
+ * MXHTTPOperation: Expose the HTTP response (vector-im/element-ios/issues/4206).
+
+🐛 Bugfix
+ * MXCrypto: Disable optimisation on room members list to make sure we share keys to all (vector-im/element-ios/issues/3807).
+
+⚠️ API Changes
+ * 
+
+🗣 Translations
+ * 
+    
+🧱 Build
+ * 
+
+Others
+ * 
+
+Improvements:
+
+
 Changes in 0.18.9 (2021-04-16)
 =================================================
 

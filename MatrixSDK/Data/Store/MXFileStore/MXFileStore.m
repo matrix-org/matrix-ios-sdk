@@ -26,7 +26,7 @@
 #import "MXSDKOptions.h"
 #import "MXTools.h"
 
-static NSUInteger const kMXFileVersion = 69;
+static NSUInteger const kMXFileVersion = 70;
 
 static NSString *const kMXFileStoreFolder = @"MXFileStore";
 static NSString *const kMXFileStoreMedaDataFile = @"MXFileStore";
@@ -401,6 +401,9 @@ static NSUInteger preloadOptions;
 
 - (void)storeHasLoadedAllRoomMembersForRoom:(NSString *)roomId andValue:(BOOL)value
 {
+    // XXX: To remove once https://github.com/vector-im/element-ios/issues/3807 is fixed
+    NSLog(@"[MXFileStore] storeHasLoadedAllRoomMembersForRoom: %@ value: %@", roomId, @(value));
+          
     [super storeHasLoadedAllRoomMembersForRoom:roomId andValue:value];
 
     if (NSNotFound == [roomsToCommitForMessages indexOfObject:roomId])
