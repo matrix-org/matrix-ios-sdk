@@ -2193,6 +2193,19 @@ typedef MXHTTPOperation* (^MXRestClientIdentityServerAccessTokenHandler)(void (^
 - (MXHTTPOperation*)dehydratedDeviceWithSuccess:(void (^)(MXDehydratedDevice *device))success
                                         failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
+/**
+ Claim the dehydrated device of the current account.
+
+ @param deviceId ID of the dehydrated to be claimed.
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)claimDehydratedDeviceWithId:(NSString*)deviceId
+                                        Success:(void (^)(BOOL success))success
+                                        failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
+
 #pragma mark - Crypto: e2e keys backup
 
 /**

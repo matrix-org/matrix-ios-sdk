@@ -4166,6 +4166,28 @@ MXAuthAction;
                                  }];
 }
 
+- (MXHTTPOperation*)claimDehydratedDeviceWithId:(NSString*)deviceId
+                                        Success:(void (^)(BOOL success))success
+                                        failure:(void (^)(NSError *error))failure
+{
+    MXWeakify(self);
+    return [httpClient requestWithMethod:@"POST"
+                                    path:[NSString stringWithFormat:@"%@/%@/org.matrix.msc2697.v2/dehydrated_device/claim", credentials.homeServer, kMXAPIPrefixPathUnstable]
+                              parameters:@{@"device_id": deviceId}
+                                 success:^(NSDictionary *JSONResponse) {
+                                    __block BOOL successValue;
+                                    [self dispatchProcessing:^{
+                                        successValue = [JSONResponse[@"success"] boolValue];
+                                    } andCompletion:^{
+                                        success(successValue);
+                                    }];
+                                 }
+                                 failure:^(NSError *error) {
+                                    MXStrongifyAndReturnIfNil(self);
+                                    [self dispatchFailure:error inBlock:failure];
+                                 }];
+}
+
 
 #pragma mark - Crypto: e2e keys backup
 - (MXHTTPOperation*)createKeyBackupVersion:(MXKeyBackupVersion*)keyBackupVersion

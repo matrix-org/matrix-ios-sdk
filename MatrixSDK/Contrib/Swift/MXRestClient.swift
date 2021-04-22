@@ -1781,7 +1781,10 @@ public extension MXRestClient {
         return __dehydratedDevice(success: currySuccess(completion), failure: curryFailure(completion))
     }
 
-    
+    @nonobjc @discardableResult func claimDehydratedDevice(withId deviceId:String, completion: @escaping (_ response: MXResponse<Bool>) -> Void) -> MXHTTPOperation {
+        return __claimDehydratedDevice(withId: deviceId, success: currySuccess(completion), failure: curryFailure(completion))
+    }
+
     // MARK: - Direct-to-device messaging
     
     /**
