@@ -8,7 +8,7 @@ Changes to be released in next version
  * MXHTTPOperation: Expose the HTTP response (vector-im/element-ios/issues/4206).
 
 🐛 Bugfix
- * 
+ * MXCrypto: Disable optimisation on room members list to make sure we share keys to all (vector-im/element-ios/issues/3807).
 
 ⚠️ API Changes
  * 

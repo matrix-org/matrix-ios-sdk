@@ -801,7 +801,12 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
         {
             // If there is no lazy loading of room members, consider we have fetched
             // all of them
-            [store storeHasLoadedAllRoomMembersForRoom:room.roomId andValue:YES];
+            NSLog(@"[MXEventTimeline] handleStateEvents: syncWithLazyLoadOfRoomMembers disabled. Mark all room members loaded for room %@",  room.roomId);
+            
+            // XXX: Optimisation removed because of https://github.com/vector-im/element-ios/issues/3807
+            // There can be a race on mxSession.syncWithLazyLoadOfRoomMembers. Its value may be not set yet.
+            // LL should be always enabled now. So, we should never come here.
+            //[store storeHasLoadedAllRoomMembersForRoom:room.roomId andValue:YES];
         }
     }
 }
