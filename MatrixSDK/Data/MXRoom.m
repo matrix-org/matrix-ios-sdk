@@ -1185,7 +1185,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
             msgContent[@"info"][@"mimetype"] = mimetype;
             msgContent[@"info"][@"w"] = @(size.width);
             msgContent[@"info"][@"h"] = @(size.height);
-            msgContent[@"info"][@"duration"] = @(durationInMs);
+            msgContent[@"info"][@"duration"] = @((int)floor(durationInMs));
 
             if (self.mxSession.crypto && self.summary.isEncrypted)
             {
