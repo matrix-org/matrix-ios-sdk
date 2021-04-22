@@ -748,6 +748,7 @@ typedef void (^MXOnResumeDone)(void);
 
             if (filter.room.state.lazyLoadMembers)
             {
+                NSLog(@"[MXSession] Set syncWithLazyLoadOfRoomMembers to YES");
                 self->_syncWithLazyLoadOfRoomMembers = YES;
             }
         } failure:nil];
