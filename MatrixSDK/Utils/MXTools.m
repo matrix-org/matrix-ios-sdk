@@ -31,10 +31,10 @@
 NSString *const kMXToolsRegexStringForEmailAddress              = @"[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,}";
 
 // The HS domain part in Matrix identifiers
-#define MATRIX_HOMESERVER_DOMAIN_REGEX                        @"[A-Z0-9.-]+(\\.[A-Z]{2,})?+(\\:[0-9]{2,})?"
+#define MATRIX_HOMESERVER_DOMAIN_REGEX                        @"[A-Z0-9.-]+(?:\\.+\\w+)+(:[0-9]{2,5})?"
 
 NSString *const kMXToolsRegexStringForMatrixUserIdentifier      = @"@[\\x21-\\x39\\x3B-\\x7F]+:" MATRIX_HOMESERVER_DOMAIN_REGEX;
-NSString *const kMXToolsRegexStringForMatrixRoomAlias           = @"#[A-Z0-9._%#@+-]+:" MATRIX_HOMESERVER_DOMAIN_REGEX;
+NSString *const kMXToolsRegexStringForMatrixRoomAlias           = @"#[A-Z0-9._%#@=+-]+:" MATRIX_HOMESERVER_DOMAIN_REGEX;
 NSString *const kMXToolsRegexStringForMatrixRoomIdentifier      = @"![A-Z0-9]+:" MATRIX_HOMESERVER_DOMAIN_REGEX;
 NSString *const kMXToolsRegexStringForMatrixEventIdentifier     = @"\\$[A-Z0-9]+:" MATRIX_HOMESERVER_DOMAIN_REGEX;
 NSString *const kMXToolsRegexStringForMatrixEventIdentifierV3   = @"\\$[A-Z0-9\\/+]+";

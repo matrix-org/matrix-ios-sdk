@@ -8,7 +8,7 @@ Changes to be released in next version
  * MXCallKitAdapter: Update incoming calls if answered from application UI.
 
 🐛 Bugfix
- * 
+ * MXTools: Fix bad linkification of matrix alias and URL (vector-im/element-ios/issues/4258).
 
 ⚠️ API Changes
  * 
