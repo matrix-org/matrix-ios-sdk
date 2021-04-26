@@ -5,7 +5,6 @@ Changes to be released in next version
  * 
 
 🙌 Improvements
- * MXHTTPOperation: Expose the HTTP response (vector-im/element-ios/issues/4206).
  * MXCallKitAdapter: Update incoming calls if answered from application UI.
 
 🐛 Bugfix
