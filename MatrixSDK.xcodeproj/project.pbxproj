@@ -479,6 +479,14 @@
 		32B0E3E523A384D40054FF1A /* MXAggregatedReferenceTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 32B0E3E323A384D40054FF1A /* MXAggregatedReferenceTests.m */; };
 		32B0E3E723A3864C0054FF1A /* MXEventReferenceUnitTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 32B0E3E623A3864C0054FF1A /* MXEventReferenceUnitTests.swift */; };
 		32B0E3E823A3864C0054FF1A /* MXEventReferenceUnitTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 32B0E3E623A3864C0054FF1A /* MXEventReferenceUnitTests.swift */; };
+		32B477822638133C00EA5800 /* MXFilterUnitTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 32B477432638128700EA5800 /* MXFilterUnitTests.m */; };
+		32B477832638133C00EA5800 /* MXJSONModelUnitTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 32B477452638128700EA5800 /* MXJSONModelUnitTests.m */; };
+		32B477842638133C00EA5800 /* MXAggregatedReferenceUnitTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 32B477442638128700EA5800 /* MXAggregatedReferenceUnitTests.m */; };
+		32B477852638133C00EA5800 /* MXAggregatedEditsUnitTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 32B477422638128700EA5800 /* MXAggregatedEditsUnitTests.m */; };
+		32B4778E2638133D00EA5800 /* MXFilterUnitTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 32B477432638128700EA5800 /* MXFilterUnitTests.m */; };
+		32B4778F2638133D00EA5800 /* MXJSONModelUnitTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 32B477452638128700EA5800 /* MXJSONModelUnitTests.m */; };
+		32B477902638133D00EA5800 /* MXAggregatedReferenceUnitTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 32B477442638128700EA5800 /* MXAggregatedReferenceUnitTests.m */; };
+		32B477912638133D00EA5800 /* MXAggregatedEditsUnitTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 32B477422638128700EA5800 /* MXAggregatedEditsUnitTests.m */; };
 		32B76EA320FDE2BE00B095F6 /* MXRoomMembersCount.h in Headers */ = {isa = PBXBuildFile; fileRef = 32B76EA220FDE2BE00B095F6 /* MXRoomMembersCount.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		32B76EA520FDE85100B095F6 /* MXRoomMembersCount.m in Sources */ = {isa = PBXBuildFile; fileRef = 32B76EA420FDE85100B095F6 /* MXRoomMembersCount.m */; };
 		32B94E01228EDEBC00716A26 /* MXReactionRelation.h in Headers */ = {isa = PBXBuildFile; fileRef = 32B94DFF228EDEBC00716A26 /* MXReactionRelation.h */; };
@@ -1794,6 +1802,10 @@
 		32B0E33E23A378310054FF1A /* MXEventReference.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MXEventReference.m; sourceTree = "<group>"; };
 		32B0E3E323A384D40054FF1A /* MXAggregatedReferenceTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXAggregatedReferenceTests.m; sourceTree = "<group>"; };
 		32B0E3E623A3864C0054FF1A /* MXEventReferenceUnitTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MXEventReferenceUnitTests.swift; sourceTree = "<group>"; };
+		32B477422638128700EA5800 /* MXAggregatedEditsUnitTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXAggregatedEditsUnitTests.m; sourceTree = "<group>"; };
+		32B477432638128700EA5800 /* MXFilterUnitTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXFilterUnitTests.m; sourceTree = "<group>"; };
+		32B477442638128700EA5800 /* MXAggregatedReferenceUnitTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXAggregatedReferenceUnitTests.m; sourceTree = "<group>"; };
+		32B477452638128700EA5800 /* MXJSONModelUnitTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXJSONModelUnitTests.m; sourceTree = "<group>"; };
 		32B76EA220FDE2BE00B095F6 /* MXRoomMembersCount.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MXRoomMembersCount.h; sourceTree = "<group>"; };
 		32B76EA420FDE85100B095F6 /* MXRoomMembersCount.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MXRoomMembersCount.m; sourceTree = "<group>"; };
 		32B94DFF228EDEBC00716A26 /* MXReactionRelation.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = MXReactionRelation.h; path = MatrixSDK/Aggregations/Data/MXReactionRelation.h; sourceTree = SOURCE_ROOT; };
@@ -3152,6 +3164,10 @@
 			isa = PBXGroup;
 			children = (
 				3298ABD42637FA3100E40B06 /* TestPlans */,
+				32B477422638128700EA5800 /* MXAggregatedEditsUnitTests.m */,
+				32B477442638128700EA5800 /* MXAggregatedReferenceUnitTests.m */,
+				32B477432638128700EA5800 /* MXFilterUnitTests.m */,
+				32B477452638128700EA5800 /* MXJSONModelUnitTests.m */,
 				32B090FC26201C8D002924AA /* MXAsyncTaskQueueUnitTests.swift */,
 				32EEA8492603FDD60041425B /* MXResponseUnitTests.swift */,
 				32EEA83E2603CA140041425B /* MXRestClientExtensionsTests.m */,
@@ -4951,6 +4967,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				329E808F22512DF500A48C3A /* MXCryptoKeyVerificationTests.m in Sources */,
+				32B477822638133C00EA5800 /* MXFilterUnitTests.m in Sources */,
 				32DC15D71A8DFF0D006F9AD3 /* MXNotificationCenterTests.m in Sources */,
 				329571991B024D2B00ABB3BA /* MXMockCallStack.m in Sources */,
 				3281E8A819E41A2000976E1A /* MatrixSDKTestsData.m in Sources */,
@@ -4980,6 +4997,7 @@
 				3295719A1B024D2B00ABB3BA /* MXMockCallStackCall.m in Sources */,
 				324DD2BB246C3ADE00377005 /* MXCryptoSecretStorageTests.m in Sources */,
 				B19A30D82404335D00FB6F35 /* MXQRCodeDataUnitTests.m in Sources */,
+				32B477852638133C00EA5800 /* MXAggregatedEditsUnitTests.m in Sources */,
 				3A108E6725826F52005EEBE9 /* MXKeyProviderTests.m in Sources */,
 				B11BD45C22CB8ABC0064D8B0 /* MXReplyEventParserUnitTests.m in Sources */,
 				ECAE7AEC24ED75F1002FA813 /* HTTPAdditionalHeadersTests.m in Sources */,
@@ -4987,6 +5005,7 @@
 				3281E8A019E2CC1200976E1A /* MXHTTPClientTests.m in Sources */,
 				321809B919EEBF3000377451 /* MXEventTests.m in Sources */,
 				32A31BC120D3F4C4005916C7 /* MXFilterTests.m in Sources */,
+				32B477842638133C00EA5800 /* MXAggregatedReferenceUnitTests.m in Sources */,
 				32B0E3E423A384D40054FF1A /* MXAggregatedReferenceTests.m in Sources */,
 				32D5D16323E400A600E3E37C /* MXRoomSummaryTrustTests.m in Sources */,
 				C61A4AF41E5DD88400442158 /* Dummy.swift in Sources */,
@@ -5009,6 +5028,7 @@
 				32C03CB62123076F00D92712 /* DirectRoomTests.m in Sources */,
 				329FB17C1A0A963700A5E88E /* MXRoomMemberTests.m in Sources */,
 				3246BDC51A1A0789000A7D62 /* MXRoomStateDynamicTests.m in Sources */,
+				32B477832638133C00EA5800 /* MXJSONModelUnitTests.m in Sources */,
 				321EA11D24893A0400E35B02 /* MXCryptoRecoveryServiceTests.m in Sources */,
 				3264DB941CECA72900B99881 /* MXAccountDataTests.m in Sources */,
 				32792BDF2296C59B00F4FC9D /* MXAggregatedReactionTests.m in Sources */,
@@ -5343,6 +5363,7 @@
 				B1E09A392397FD7D0057C069 /* MXMyUserTests.m in Sources */,
 				B1E09A202397FCE90057C069 /* MXCryptoBackupTests.m in Sources */,
 				B1E09A3B2397FD820057C069 /* MXStoreNoStoreTests.m in Sources */,
+				32B4778E2638133D00EA5800 /* MXFilterUnitTests.m in Sources */,
 				32B090FE26201C8D002924AA /* MXAsyncTaskQueueUnitTests.swift in Sources */,
 				B1E09A242397FCE90057C069 /* MXPeekingRoomTests.m in Sources */,
 				B1E09A452397FD990057C069 /* MXLazyLoadingTests.m in Sources */,
@@ -5361,6 +5382,7 @@
 				B1E09A2B2397FD6B0057C069 /* MatrixSDKTestsE2EData.m in Sources */,
 				B1E09A3C2397FD820057C069 /* MXStoreMemoryStoreTests.m in Sources */,
 				B1E09A3E2397FD820057C069 /* MXToolsUnitTests.m in Sources */,
+				32B477912638133D00EA5800 /* MXAggregatedEditsUnitTests.m in Sources */,
 				B1E09A1E2397FCE90057C069 /* MXCryptoShareTests.m in Sources */,
 				B1E09A422397FD820057C069 /* MXCryptoTests.m in Sources */,
 				B1E09A382397FD7D0057C069 /* MXUserTests.m in Sources */,
@@ -5384,12 +5406,14 @@
 				32EEA84B2603FDD60041425B /* MXResponseUnitTests.swift in Sources */,
 				32B0E3E823A3864C0054FF1A /* MXEventReferenceUnitTests.swift in Sources */,
 				B1E09A402397FD820057C069 /* MXVoIPTests.m in Sources */,
+				32B4778F2638133D00EA5800 /* MXJSONModelUnitTests.m in Sources */,
 				B1E09A412397FD820057C069 /* MXAccountDataTests.m in Sources */,
 				B1E09A2D2397FD750057C069 /* MXRestClientNoAuthAPITests.m in Sources */,
 				B1E09A332397FD750057C069 /* MXRoomStateTests.m in Sources */,
 				B1E09A352397FD7D0057C069 /* MXEventTests.m in Sources */,
 				A816248525F60D0300A46F05 /* MXDeviceListOperationsPoolTests.swift in Sources */,
 				B1E09A312397FD750057C069 /* MXSessionTests.m in Sources */,
+				32B477902638133D00EA5800 /* MXAggregatedReferenceUnitTests.m in Sources */,
 				B1E09A322397FD750057C069 /* MXRoomTests.m in Sources */,
 				32C78BA8256D227D008130B1 /* MXCryptoMigrationTests.m in Sources */,
 				B1E09A2F2397FD750057C069 /* MXErrorUnitTests.m in Sources */,

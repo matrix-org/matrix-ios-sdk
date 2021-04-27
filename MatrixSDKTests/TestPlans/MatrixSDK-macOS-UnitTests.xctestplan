@@ -20,12 +20,16 @@
     {
       "selectedTests" : [
         "MXAesUnitTests",
+        "MXAggregatedEditsUnitTests",
+        "MXAggregatedReferenceUnitTests",
         "MXAsyncTaskQueueUnitTests",
         "MXAuthenticationSessionUnitTests",
         "MXErrorUnitTests",
         "MXEventAnnotationUnitTests",
         "MXEventReferenceUnitTests",
         "MXEventScanStoreUnitTests",
+        "MXFilterUnitTests",
+        "MXJSONModelUnitTests",
         "MXLoggerUnitTests",
         "MXMediaScanStoreUnitTests",
         "MXMegolmExportEncryptionUnitTests",
