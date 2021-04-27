@@ -65,15 +65,17 @@ platform :ios do
 
   #### Tests ####
 
-  desc "Run integration tests (Be sure to set up the homeserver before like described here https://github.com/matrix-org/matrix-ios-sdk#tests)"
-  lane :test do
+  desc "Run tests. By default, it runs all tests. Most are integration tests. Be sure to set up the homeserver before like described here https://github.com/matrix-org/matrix-ios-sdk#tests"
+  desc "Use 'testplan:MatrixSDK-macOS-UnitTests' to run only unit tests"
+  lane :test do |options|
     cocoapods
 
     opts = {
-      :clean => true,
-      :scheme => "MatrixSDK-macOS",
       :workspace => "MatrixSDK.xcworkspace",
+      :scheme => "MatrixSDK-macOS",
+      :testplan => options[:testplan],
       :configuration => "Debug",
+      :clean => true,
       :code_coverage => true,
       # Test result configuration
       :result_bundle => true,
@@ -89,6 +91,7 @@ platform :ios do
       end
     end
   end
+
 
   #### Private ####
 
