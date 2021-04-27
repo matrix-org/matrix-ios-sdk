@@ -18,11 +18,11 @@
 
 #import "MXTools.h"
 
-@interface MXToolsTests : XCTestCase
+@interface MXToolsUnitTests : XCTestCase
 
 @end
 
-@implementation MXToolsTests
+@implementation MXToolsUnitTests
 
 - (void)setUp
 {

@@ -19,20 +19,21 @@
   "testTargets" : [
     {
       "selectedTests" : [
-        "MXAesTests",
-        "MXAsyncTaskQueueTests",
-        "MXAuthenticationSessionTests",
-        "MXErrorTests",
-        "MXEventAnnotationTests",
-        "MXEventReferenceTests",
-        "MXEventScanStoreTests",
-        "MXLoggerTests",
-        "MXMediaScanStoreTests",
-        "MXMegolmExportEncryptionTest",
-        "MXPushRuleTests",
-        "MXQRCodeDataTests",
-        "MXResponseTest",
-        "MXToolsTests"
+        "MXAesUnitTests",
+        "MXAsyncTaskQueueUnitTests",
+        "MXAuthenticationSessionUnitTests",
+        "MXErrorUnitTests",
+        "MXEventAnnotationUnitTests",
+        "MXEventReferenceUnitTests",
+        "MXEventScanStoreUnitTests",
+        "MXLoggerUnitTests",
+        "MXMediaScanStoreUnitTests",
+        "MXMegolmExportEncryptionUnitTests",
+        "MXPushRuleUnitTests",
+        "MXQRCodeDataUnitTests",
+        "MXReplyEventParserUnitTests",
+        "MXResponseUnitTests",
+        "MXToolsUnitTests"
       ],
       "target" : {
         "containerPath" : "container:MatrixSDK.xcodeproj",

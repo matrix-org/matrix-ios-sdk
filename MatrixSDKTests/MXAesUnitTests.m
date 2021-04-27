@@ -17,7 +17,7 @@
 #import <XCTest/XCTest.h>
 #import "MXAes.h"
 
-@interface MXAesTests : XCTestCase
+@interface MXAesUnitTests : XCTestCase
 
 @property(nonatomic, strong) NSData *data;
 @property(nonatomic, strong) NSData *data2;
@@ -28,7 +28,7 @@
 
 @end
 
-@implementation MXAesTests
+@implementation MXAesUnitTests
 
 - (void)setUp
 {
