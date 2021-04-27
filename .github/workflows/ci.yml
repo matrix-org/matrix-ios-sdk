@@ -43,6 +43,12 @@ jobs:
       - name: Unit tests
         run: bundle exec fastlane test testplan:MatrixSDK-macOS-UnitTests
 
+      - name: Archive output
+        uses: actions/upload-artifact@v2
+        with:
+          name: tests
+          path: build/test/
+
 
   lint:
     name: pod lib lint
