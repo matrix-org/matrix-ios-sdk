@@ -55,6 +55,9 @@
             reference = "container:MatrixSDKTests/TestPlans/MatrixSDK-macOS-All.xctestplan"
             default = "YES">
          </TestPlanReference>
+         <TestPlanReference
+            reference = "container:MatrixSDKTests/TestPlans/MatrixSDK-macOS-UnitTests.xctestplan">
+         </TestPlanReference>
       </TestPlans>
       <Testables>
          <TestableReference

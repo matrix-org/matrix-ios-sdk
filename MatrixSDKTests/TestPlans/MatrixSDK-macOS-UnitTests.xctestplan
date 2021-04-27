@@ -1,0 +1,77 @@
+{
+  "configurations" : [
+    {
+      "id" : "1FA4678B-FC03-4484-997A-D8629931F24B",
+      "name" : "Configuration 1",
+      "options" : {
+
+      }
+    }
+  ],
+  "defaultOptions" : {
+    "codeCoverage" : false,
+    "targetForVariableExpansion" : {
+      "containerPath" : "container:MatrixSDK.xcodeproj",
+      "identifier" : "B14EF1C72397E90400758AF0",
+      "name" : "MatrixSDK-macOS"
+    }
+  },
+  "testTargets" : [
+    {
+      "selectedTests" : [
+        "MXAesTests\/testEcryptionReversibility",
+        "MXAesTests\/testEcryptionSecurity",
+        "MXAesTests\/testEncryption",
+        "MXAesTests\/testEncryptionConsistency",
+        "MXAesTests\/testEncryptionUniqueness",
+        "MXAesTests\/testIvGeneration",
+        "MXAesTests\/testIvUniqueness",
+        "MXAsyncTaskQueueTests\/test()",
+        "MXAuthenticationSessionTests\/testParsing()",
+        "MXErrorTests\/testInit",
+        "MXErrorTests\/testNSError",
+        "MXErrorTests\/testNonMatrixNSError",
+        "MXEventAnnotationTests\/testJSONDictionary()",
+        "MXEventAnnotationTests\/testModelFromJSON()",
+        "MXEventAnnotationTests\/testNSCoding()",
+        "MXEventReferenceTests\/testJSONDictionary()",
+        "MXEventReferenceTests\/testModelFromJSON()",
+        "MXEventReferenceTests\/testNSCoding()",
+        "MXEventScanStoreTests\/testCreateEventScan",
+        "MXEventScanStoreTests\/testCreateEventScanTwice",
+        "MXEventScanStoreTests\/testFindEventScan",
+        "MXEventScanStoreTests\/testUpdateEventMediaScans",
+        "MXLoggerTests\/testDeleteLogFiles",
+        "MXLoggerTests\/testMXLogger",
+        "MXMediaScanStoreTests\/testCreateMediaScan",
+        "MXMediaScanStoreTests\/testCreateMediaScanWithDefaultValue",
+        "MXMediaScanStoreTests\/testCreateSameMediaScanTwice",
+        "MXMediaScanStoreTests\/testFindMediaScan",
+        "MXMediaScanStoreTests\/testUpdateMediaScan",
+        "MXMegolmExportEncryptionTest\/testDecrypt",
+        "MXMegolmExportEncryptionTest\/testDecryptFailure",
+        "MXMegolmExportEncryptionTest\/testEncrypt",
+        "MXMegolmExportEncryptionTest\/testEncryptFailure",
+        "MXPushRuleTests\/testEventContentMatchFoo",
+        "MXPushRuleTests\/testEventContentMatchFooStar",
+        "MXPushRuleTests\/testEventContentMatchStarFooStar",
+        "MXQRCodeDataTests\/testDecode",
+        "MXResponseTest\/testMXSummable()",
+        "MXToolsTests\/testEventIdEscaping",
+        "MXToolsTests\/testFileExtensionFromImageJPEGContentType",
+        "MXToolsTests\/testGenerateSecret",
+        "MXToolsTests\/testGroupIdEscaping",
+        "MXToolsTests\/testMatrixIdentifiers",
+        "MXToolsTests\/testRoomAliasEscaping",
+        "MXToolsTests\/testRoomIdEscaping",
+        "MXToolsTests\/testV3EventIdEscaping"
+      ],
+      "target" : {
+        "containerPath" : "container:MatrixSDK.xcodeproj",
+        "identifier" : "B1E09A0D2397FA950057C069",
+        "name" : "MatrixSDKTests-macOS"
+      }
+    }
+  ],
+  "version" : 1
+}
