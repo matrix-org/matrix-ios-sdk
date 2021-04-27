@@ -33,7 +33,6 @@
         "MXHTTPAdditionalHeadersUnitTests",
         "MXJSONModelUnitTests",
         "MXKeyProviderUnitTests",
-        "MXLoggerUnitTests",
         "MXMediaScanStoreUnitTests",
         "MXMegolmExportEncryptionUnitTests",
         "MXPushRuleUnitTests",
