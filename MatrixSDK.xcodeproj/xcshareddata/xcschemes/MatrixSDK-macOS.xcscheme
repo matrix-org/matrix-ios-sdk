@@ -52,7 +52,7 @@
       </MacroExpansion>
       <TestPlans>
          <TestPlanReference
-            reference = "container:MatrixSDKTests/MatrixSDK-macOS-All.xctestplan"
+            reference = "container:MatrixSDKTests/TestPlans/MatrixSDK-macOS-All.xctestplan"
             default = "YES">
          </TestPlanReference>
       </TestPlans>
