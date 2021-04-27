@@ -24,6 +24,7 @@
         "MXAggregatedReferenceUnitTests",
         "MXAsyncTaskQueueUnitTests",
         "MXAuthenticationSessionUnitTests",
+        "MXDeviceListOperationsPoolUnitTests",
         "MXErrorUnitTests",
         "MXEventAnnotationUnitTests",
         "MXEventReferenceUnitTests",

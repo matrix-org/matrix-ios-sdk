@@ -644,8 +644,8 @@
 		9274AFE81EE580240009BEB6 /* MXCallKitAdapter.h in Headers */ = {isa = PBXBuildFile; fileRef = 9274AFE61EE580240009BEB6 /* MXCallKitAdapter.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		9274AFE91EE580240009BEB6 /* MXCallKitAdapter.m in Sources */ = {isa = PBXBuildFile; fileRef = 9274AFE71EE580240009BEB6 /* MXCallKitAdapter.m */; };
 		9CC8EFC1457B94FB58DFF1F7 /* libPods-MatrixSDK-MatrixSDK-macOS.a in Frameworks */ = {isa = PBXBuildFile; fileRef = FA84A2BE7767F3645CAEC2AF /* libPods-MatrixSDK-MatrixSDK-macOS.a */; };
-		A816247C25F60C7700A46F05 /* MXDeviceListOperationsPoolTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A816247B25F60C7700A46F05 /* MXDeviceListOperationsPoolTests.swift */; };
-		A816248525F60D0300A46F05 /* MXDeviceListOperationsPoolTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A816247B25F60C7700A46F05 /* MXDeviceListOperationsPoolTests.swift */; };
+		A816247C25F60C7700A46F05 /* MXDeviceListOperationsPoolUnitTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A816247B25F60C7700A46F05 /* MXDeviceListOperationsPoolUnitTests.swift */; };
+		A816248525F60D0300A46F05 /* MXDeviceListOperationsPoolUnitTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A816247B25F60C7700A46F05 /* MXDeviceListOperationsPoolUnitTests.swift */; };
 		B10AFB4322A970060092E6AF /* MXEventReplace.h in Headers */ = {isa = PBXBuildFile; fileRef = B10AFB4122A970060092E6AF /* MXEventReplace.h */; };
 		B10AFB4422A970060092E6AF /* MXEventReplace.m in Sources */ = {isa = PBXBuildFile; fileRef = B10AFB4222A970060092E6AF /* MXEventReplace.m */; };
 		B10AFB4722AA8A8E0092E6AF /* MXEventEditsListener.h in Headers */ = {isa = PBXBuildFile; fileRef = B10AFB4522AA8A8D0092E6AF /* MXEventEditsListener.h */; };
@@ -1939,7 +1939,7 @@
 		92634B811EF2E3C400DB9F60 /* MXCallKitConfiguration.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXCallKitConfiguration.m; sourceTree = "<group>"; };
 		9274AFE61EE580240009BEB6 /* MXCallKitAdapter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXCallKitAdapter.h; sourceTree = "<group>"; };
 		9274AFE71EE580240009BEB6 /* MXCallKitAdapter.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXCallKitAdapter.m; sourceTree = "<group>"; };
-		A816247B25F60C7700A46F05 /* MXDeviceListOperationsPoolTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXDeviceListOperationsPoolTests.swift; sourceTree = "<group>"; };
+		A816247B25F60C7700A46F05 /* MXDeviceListOperationsPoolUnitTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXDeviceListOperationsPoolUnitTests.swift; sourceTree = "<group>"; };
 		B10AFB4122A970060092E6AF /* MXEventReplace.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MXEventReplace.h; sourceTree = "<group>"; };
 		B10AFB4222A970060092E6AF /* MXEventReplace.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MXEventReplace.m; sourceTree = "<group>"; };
 		B10AFB4522AA8A8D0092E6AF /* MXEventEditsListener.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MXEventEditsListener.h; sourceTree = "<group>"; };
@@ -3236,7 +3236,7 @@
 				3AE97790256FC190003883EF /* MXAesUnitTests.m */,
 				3A108E6625826F52005EEBE9 /* MXKeyProviderTests.m */,
 				B14EECED2578FE3F00448735 /* MXAuthenticationSessionUnitTests.swift */,
-				A816247B25F60C7700A46F05 /* MXDeviceListOperationsPoolTests.swift */,
+				A816247B25F60C7700A46F05 /* MXDeviceListOperationsPoolUnitTests.swift */,
 				EC383BC12542F251002FBBE6 /* MatrixSDKTests-Bridging-Header.h */,
 			);
 			path = MatrixSDKTests;
@@ -4982,7 +4982,7 @@
 				32832B5D1BCC048300241108 /* MXStoreMemoryStoreTests.m in Sources */,
 				32114A7F1A24E15500FF2EC4 /* MXMyUserTests.m in Sources */,
 				32832B5E1BCC048300241108 /* MXStoreNoStoreTests.m in Sources */,
-				A816247C25F60C7700A46F05 /* MXDeviceListOperationsPoolTests.swift in Sources */,
+				A816247C25F60C7700A46F05 /* MXDeviceListOperationsPoolUnitTests.swift in Sources */,
 				32C9B71823E81A1C00C6F30A /* MXCrossSigningVerificationTests.m in Sources */,
 				323C5A081A70E53500FB0549 /* MXToolsUnitTests.m in Sources */,
 				3281E89E19E299C000976E1A /* MXErrorUnitTests.m in Sources */,
@@ -5411,7 +5411,7 @@
 				B1E09A2D2397FD750057C069 /* MXRestClientNoAuthAPITests.m in Sources */,
 				B1E09A332397FD750057C069 /* MXRoomStateTests.m in Sources */,
 				B1E09A352397FD7D0057C069 /* MXEventTests.m in Sources */,
-				A816248525F60D0300A46F05 /* MXDeviceListOperationsPoolTests.swift in Sources */,
+				A816248525F60D0300A46F05 /* MXDeviceListOperationsPoolUnitTests.swift in Sources */,
 				B1E09A312397FD750057C069 /* MXSessionTests.m in Sources */,
 				32B477902638133D00EA5800 /* MXAggregatedReferenceUnitTests.m in Sources */,
 				B1E09A322397FD750057C069 /* MXRoomTests.m in Sources */,
