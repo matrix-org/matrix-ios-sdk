@@ -1,0 +1,65 @@
+name: Nightly checks
+
+on:
+  schedule:
+    - cron:  '0 3 * * *'
+
+  workflow_dispatch:
+
+jobs:
+  integration-tests:
+    name: Integration Tests (Synapse)
+    runs-on: macos-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      # Cache for python env for Synapse
+      - name: Set up Python 3.8
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.8
+      - name: Cache pip
+        uses: actions/cache@v2
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip
+          restore-keys: |
+            ${{ runner.os }}-pip-
+            ${{ runner.os }}-
+
+      # Cache for Xcode env
+      - uses: actions/cache@v2
+        with:
+          path: Pods
+          key: ${{ runner.os }}-pods-${{ hashFiles('**/Podfile.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-pods-
+      - uses: actions/cache@v2
+        with:
+          path: vendor/bundle
+          key: ${{ runner.os }}-gems-${{ hashFiles('**/Gemfile.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-gems-
+
+      - name: Start synapse server
+        run: |
+          python3 -m venv .synapse
+          source .synapse/bin/activate
+          pip install synapse matrix-synapse
+          curl -sL https://raw.githubusercontent.com/matrix-org/synapse/develop/demo/start.sh \
+            | sed s/127.0.0.1/0.0.0.0/g | bash
+
+      - name: Bundle install
+        run: |
+          bundle config path vendor/bundle
+          bundle install --jobs 4 --retry 3
+
+      - name: Integration tests
+        run: bundle exec fastlane test
+
+      - name: Archive output
+        uses: actions/upload-artifact@v2
+        with:
+          name: tests
+          path: build/test/
