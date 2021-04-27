@@ -4,6 +4,9 @@ on:
   schedule:
     - cron:  '0 3 * * *'
 
+  # For GH tests
+  pull_request: { }
+
   workflow_dispatch:
 
 jobs:

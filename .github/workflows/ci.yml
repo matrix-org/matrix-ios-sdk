@@ -1,4 +1,4 @@
-name: Cocoapods
+name: CI
 
 on:
   # Triggers the workflow on any pull request and push to develop
