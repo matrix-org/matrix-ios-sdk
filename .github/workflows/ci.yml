@@ -43,11 +43,19 @@ jobs:
       - name: Unit tests
         run: bundle exec fastlane test testplan:MatrixSDK-macOS-UnitTests
 
-      - name: Archive output
-        uses: actions/upload-artifact@v2
+      # Store artifacts
+      - uses: actions/upload-artifact@v2
         with:
-          name: tests
-          path: build/test/
+          name: report.html
+          path: build/test/report.html
+      - uses: actions/upload-artifact@v2
+        with:
+          name: report.junit
+          path: build/test/report.junit
+      - uses: actions/upload-artifact@v2
+        with:
+          name: MatrixSDK-macOS.xcresult
+          path: build/test/MatrixSDK-macOS.xcresult/
 
 
   lint:
