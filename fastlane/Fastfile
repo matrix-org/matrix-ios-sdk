@@ -66,7 +66,7 @@ platform :ios do
   #### Tests ####
 
   desc "Run tests. By default, it runs all tests. Most are integration tests. Be sure to set up the homeserver before like described here https://github.com/matrix-org/matrix-ios-sdk#tests"
-  desc "Use 'testplan:MatrixSDK-macOS-UnitTests' to run only unit tests"
+  desc "Use 'testplan:UnitTests' to run only unit tests"
   lane :test do |options|
     cocoapods
 

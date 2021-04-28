@@ -385,10 +385,10 @@
 		3297912F23AA126500F7BB9B /* MXKeyVerificationStatusResolver.h in Headers */ = {isa = PBXBuildFile; fileRef = 3297912C23AA126400F7BB9B /* MXKeyVerificationStatusResolver.h */; };
 		3297913023AA126500F7BB9B /* MXKeyVerificationStatusResolver.m in Sources */ = {isa = PBXBuildFile; fileRef = 3297912D23AA126400F7BB9B /* MXKeyVerificationStatusResolver.m */; };
 		3297913123AA126500F7BB9B /* MXKeyVerificationStatusResolver.m in Sources */ = {isa = PBXBuildFile; fileRef = 3297912D23AA126400F7BB9B /* MXKeyVerificationStatusResolver.m */; };
-		3298ABD62637FA3100E40B06 /* MatrixSDK-macOS-AllTests.xctestplan in Resources */ = {isa = PBXBuildFile; fileRef = 3298ABD52637FA3100E40B06 /* MatrixSDK-macOS-AllTests.xctestplan */; };
-		3298ABD72637FA3100E40B06 /* MatrixSDK-macOS-AllTests.xctestplan in Resources */ = {isa = PBXBuildFile; fileRef = 3298ABD52637FA3100E40B06 /* MatrixSDK-macOS-AllTests.xctestplan */; };
-		3298ABDD2637FB1900E40B06 /* MatrixSDK-macOS-UnitTests.xctestplan in Resources */ = {isa = PBXBuildFile; fileRef = 3298ABDC2637FB1900E40B06 /* MatrixSDK-macOS-UnitTests.xctestplan */; };
-		3298ABDE2637FB1900E40B06 /* MatrixSDK-macOS-UnitTests.xctestplan in Resources */ = {isa = PBXBuildFile; fileRef = 3298ABDC2637FB1900E40B06 /* MatrixSDK-macOS-UnitTests.xctestplan */; };
+		3298ABD62637FA3100E40B06 /* AllTests.xctestplan in Resources */ = {isa = PBXBuildFile; fileRef = 3298ABD52637FA3100E40B06 /* AllTests.xctestplan */; };
+		3298ABD72637FA3100E40B06 /* AllTests.xctestplan in Resources */ = {isa = PBXBuildFile; fileRef = 3298ABD52637FA3100E40B06 /* AllTests.xctestplan */; };
+		3298ABDD2637FB1900E40B06 /* UnitTests.xctestplan in Resources */ = {isa = PBXBuildFile; fileRef = 3298ABDC2637FB1900E40B06 /* UnitTests.xctestplan */; };
+		3298ABDE2637FB1900E40B06 /* UnitTests.xctestplan in Resources */ = {isa = PBXBuildFile; fileRef = 3298ABDC2637FB1900E40B06 /* UnitTests.xctestplan */; };
 		32999DDF22DCD183004FF987 /* MXPusher.h in Headers */ = {isa = PBXBuildFile; fileRef = 32999DDD22DCD183004FF987 /* MXPusher.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		32999DE022DCD183004FF987 /* MXPusher.m in Sources */ = {isa = PBXBuildFile; fileRef = 32999DDE22DCD183004FF987 /* MXPusher.m */; };
 		32999DE322DCD1AD004FF987 /* MXPusherData.h in Headers */ = {isa = PBXBuildFile; fileRef = 32999DE122DCD1AD004FF987 /* MXPusherData.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -1731,8 +1731,8 @@
 		3297912623A93D4B00F7BB9B /* MXKeyVerification.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MXKeyVerification.m; sourceTree = "<group>"; };
 		3297912C23AA126400F7BB9B /* MXKeyVerificationStatusResolver.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MXKeyVerificationStatusResolver.h; sourceTree = "<group>"; };
 		3297912D23AA126400F7BB9B /* MXKeyVerificationStatusResolver.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MXKeyVerificationStatusResolver.m; sourceTree = "<group>"; };
-		3298ABD52637FA3100E40B06 /* MatrixSDK-macOS-AllTests.xctestplan */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = "MatrixSDK-macOS-AllTests.xctestplan"; sourceTree = "<group>"; };
-		3298ABDC2637FB1900E40B06 /* MatrixSDK-macOS-UnitTests.xctestplan */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = "MatrixSDK-macOS-UnitTests.xctestplan"; sourceTree = "<group>"; };
+		3298ABD52637FA3100E40B06 /* AllTests.xctestplan */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = AllTests.xctestplan; sourceTree = "<group>"; };
+		3298ABDC2637FB1900E40B06 /* UnitTests.xctestplan */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = UnitTests.xctestplan; sourceTree = "<group>"; };
 		32999DDD22DCD183004FF987 /* MXPusher.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MXPusher.h; sourceTree = "<group>"; };
 		32999DDE22DCD183004FF987 /* MXPusher.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MXPusher.m; sourceTree = "<group>"; };
 		32999DE122DCD1AD004FF987 /* MXPusherData.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MXPusherData.h; sourceTree = "<group>"; };
@@ -2944,8 +2944,8 @@
 		3298ABD42637FA3100E40B06 /* TestPlans */ = {
 			isa = PBXGroup;
 			children = (
-				3298ABDC2637FB1900E40B06 /* MatrixSDK-macOS-UnitTests.xctestplan */,
-				3298ABD52637FA3100E40B06 /* MatrixSDK-macOS-AllTests.xctestplan */,
+				3298ABDC2637FB1900E40B06 /* UnitTests.xctestplan */,
+				3298ABD52637FA3100E40B06 /* AllTests.xctestplan */,
 			);
 			path = TestPlans;
 			sourceTree = "<group>";
@@ -4527,8 +4527,8 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				3298ABD62637FA3100E40B06 /* MatrixSDK-macOS-AllTests.xctestplan in Resources */,
-				3298ABDD2637FB1900E40B06 /* MatrixSDK-macOS-UnitTests.xctestplan in Resources */,
+				3298ABD62637FA3100E40B06 /* AllTests.xctestplan in Resources */,
+				3298ABDD2637FB1900E40B06 /* UnitTests.xctestplan in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -4546,8 +4546,8 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				3298ABD72637FA3100E40B06 /* MatrixSDK-macOS-AllTests.xctestplan in Resources */,
-				3298ABDE2637FB1900E40B06 /* MatrixSDK-macOS-UnitTests.xctestplan in Resources */,
+				3298ABD72637FA3100E40B06 /* AllTests.xctestplan in Resources */,
+				3298ABDE2637FB1900E40B06 /* UnitTests.xctestplan in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

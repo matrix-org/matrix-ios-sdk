@@ -41,7 +41,7 @@ jobs:
 
       # Main step
       - name: Unit tests
-        run: bundle exec fastlane test testplan:MatrixSDK-macOS-UnitTests
+        run: bundle exec fastlane test testplan:UnitTests
 
       # Store artifacts
       - uses: actions/upload-artifact@v2
