@@ -10,8 +10,8 @@ on:
   workflow_dispatch:
 
 jobs:
-  tests:
-    name: Tests
+  unit-tests:
+    name: Unit Tests
     runs-on: macos-latest
 
     steps:
