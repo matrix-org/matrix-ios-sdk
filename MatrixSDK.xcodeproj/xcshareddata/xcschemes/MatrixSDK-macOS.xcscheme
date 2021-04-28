@@ -58,6 +58,12 @@
          <TestPlanReference
             reference = "container:MatrixSDKTests/TestPlans/UnitTests.xctestplan">
          </TestPlanReference>
+         <TestPlanReference
+            reference = "container:MatrixSDKTests/TestPlans/AllTestsWithSanitizers.xctestplan">
+         </TestPlanReference>
+         <TestPlanReference
+            reference = "container:MatrixSDKTests/TestPlans/UnitTestsWithSanitizers.xctestplan">
+         </TestPlanReference>
       </TestPlans>
       <Testables>
          <TestableReference

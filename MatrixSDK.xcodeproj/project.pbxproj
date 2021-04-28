@@ -17,6 +17,10 @@
 		02CAD43B217DD12F0074700B /* MXContentScanEncryptedBody.h in Headers */ = {isa = PBXBuildFile; fileRef = 02CAD437217DD12F0074700B /* MXContentScanEncryptedBody.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		0696FFB36962606A28BEC38E /* libPods-MatrixSDK-MatrixSDK-iOS.a in Frameworks */ = {isa = PBXBuildFile; fileRef = B57EF0A39A7649D55CA1208A /* libPods-MatrixSDK-MatrixSDK-iOS.a */; };
 		15C934E526232442DE7A79DE /* libPods-MatrixSDKTests-iOS.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 7290AD6ED063E2E323E9485C /* libPods-MatrixSDKTests-iOS.a */; };
+		3209683126396385005D64ED /* AllTestsWithSanitizers.xctestplan in Resources */ = {isa = PBXBuildFile; fileRef = 3209682F26396385005D64ED /* AllTestsWithSanitizers.xctestplan */; };
+		3209683226396385005D64ED /* AllTestsWithSanitizers.xctestplan in Resources */ = {isa = PBXBuildFile; fileRef = 3209682F26396385005D64ED /* AllTestsWithSanitizers.xctestplan */; };
+		3209683326396385005D64ED /* UnitTestsWithSanitizers.xctestplan in Resources */ = {isa = PBXBuildFile; fileRef = 3209683026396385005D64ED /* UnitTestsWithSanitizers.xctestplan */; };
+		3209683426396385005D64ED /* UnitTestsWithSanitizers.xctestplan in Resources */ = {isa = PBXBuildFile; fileRef = 3209683026396385005D64ED /* UnitTestsWithSanitizers.xctestplan */; };
 		320A883C217F4E35002EA952 /* MXMegolmBackupCreationInfo.h in Headers */ = {isa = PBXBuildFile; fileRef = 320A883A217F4E35002EA952 /* MXMegolmBackupCreationInfo.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		320A883D217F4E35002EA952 /* MXMegolmBackupCreationInfo.m in Sources */ = {isa = PBXBuildFile; fileRef = 320A883B217F4E35002EA952 /* MXMegolmBackupCreationInfo.m */; };
 		320A8840217F4E3F002EA952 /* MXMegolmBackupAuthData.h in Headers */ = {isa = PBXBuildFile; fileRef = 320A883E217F4E3E002EA952 /* MXMegolmBackupAuthData.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -1431,6 +1435,8 @@
 		02CAD437217DD12F0074700B /* MXContentScanEncryptedBody.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXContentScanEncryptedBody.h; sourceTree = "<group>"; };
 		15D7F292D95EB58AEE801C4E /* libPods-MatrixSDKTests-macOS.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-MatrixSDKTests-macOS.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		19B6947FC794531CEEDCFA7F /* Pods-MatrixSDKTests-macOS.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-MatrixSDKTests-macOS.release.xcconfig"; path = "Target Support Files/Pods-MatrixSDKTests-macOS/Pods-MatrixSDKTests-macOS.release.xcconfig"; sourceTree = "<group>"; };
+		3209682F26396385005D64ED /* AllTestsWithSanitizers.xctestplan */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = AllTestsWithSanitizers.xctestplan; sourceTree = "<group>"; };
+		3209683026396385005D64ED /* UnitTestsWithSanitizers.xctestplan */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = UnitTestsWithSanitizers.xctestplan; sourceTree = "<group>"; };
 		320A883A217F4E35002EA952 /* MXMegolmBackupCreationInfo.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MXMegolmBackupCreationInfo.h; sourceTree = "<group>"; };
 		320A883B217F4E35002EA952 /* MXMegolmBackupCreationInfo.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MXMegolmBackupCreationInfo.m; sourceTree = "<group>"; };
 		320A883E217F4E3E002EA952 /* MXMegolmBackupAuthData.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXMegolmBackupAuthData.h; sourceTree = "<group>"; };
@@ -2944,8 +2950,10 @@
 		3298ABD42637FA3100E40B06 /* TestPlans */ = {
 			isa = PBXGroup;
 			children = (
-				3298ABDC2637FB1900E40B06 /* UnitTests.xctestplan */,
 				3298ABD52637FA3100E40B06 /* AllTests.xctestplan */,
+				3209682F26396385005D64ED /* AllTestsWithSanitizers.xctestplan */,
+				3298ABDC2637FB1900E40B06 /* UnitTests.xctestplan */,
+				3209683026396385005D64ED /* UnitTestsWithSanitizers.xctestplan */,
 			);
 			path = TestPlans;
 			sourceTree = "<group>";
@@ -4528,7 +4536,9 @@
 			buildActionMask = 2147483647;
 			files = (
 				3298ABD62637FA3100E40B06 /* AllTests.xctestplan in Resources */,
+				3209683326396385005D64ED /* UnitTestsWithSanitizers.xctestplan in Resources */,
 				3298ABDD2637FB1900E40B06 /* UnitTests.xctestplan in Resources */,
+				3209683126396385005D64ED /* AllTestsWithSanitizers.xctestplan in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -4547,7 +4557,9 @@
 			buildActionMask = 2147483647;
 			files = (
 				3298ABD72637FA3100E40B06 /* AllTests.xctestplan in Resources */,
+				3209683426396385005D64ED /* UnitTestsWithSanitizers.xctestplan in Resources */,
 				3298ABDE2637FB1900E40B06 /* UnitTests.xctestplan in Resources */,
+				3209683226396385005D64ED /* AllTestsWithSanitizers.xctestplan in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
