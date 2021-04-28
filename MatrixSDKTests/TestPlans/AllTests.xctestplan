@@ -9,12 +9,22 @@
     }
   ],
   "defaultOptions" : {
-    "codeCoverage" : false,
+    "codeCoverage" : {
+      "targets" : [
+        {
+          "containerPath" : "container:MatrixSDK.xcodeproj",
+          "identifier" : "B14EF1C72397E90400758AF0",
+          "name" : "MatrixSDK-macOS"
+        }
+      ]
+    },
     "targetForVariableExpansion" : {
       "containerPath" : "container:MatrixSDK.xcodeproj",
       "identifier" : "B14EF1C72397E90400758AF0",
       "name" : "MatrixSDK-macOS"
-    }
+    },
+    "uiTestingScreenshotsLifetime" : "keepNever",
+    "userAttachmentLifetime" : "keepNever"
   },
   "testTargets" : [
     {
