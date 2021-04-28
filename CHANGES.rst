@@ -18,7 +18,11 @@ Changes to be released in next version
  * 
     
 🧱 Build
- * 
+ * Tests: Use UnitTests suffix for unit tests classes.
+ * Tests: Cut some existing tests to separate unit tests and integration tests.
+ * Tests: Create 4 test plans for the macOS target: AllTests, AllTestsWithSanitizers, UnitTests and UnitTestsWithSanitizers.
+ * GH Actions: Run unit tests on every PR and develop branch update.
+ * GH Actions: Run integration tests nightly on develop using last Synapse release.
 
 Others
  * 

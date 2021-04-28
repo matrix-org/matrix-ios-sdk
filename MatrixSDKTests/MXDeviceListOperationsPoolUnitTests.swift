@@ -18,7 +18,6 @@ import XCTest
 
 import MatrixSDK
 
-// TODO
 class MXDeviceListOperationsPoolUnitTests: XCTestCase {
 
     func testDeallocate() {
