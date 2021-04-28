@@ -2,10 +2,7 @@ name: Nightly checks
 
 on:
   schedule:
-    - cron:  '0 3 * * *'
-
-  # For GH tests
-  pull_request: { }
+    - cron:  '0 3 * * 1-5'
 
   workflow_dispatch:
 
@@ -58,11 +55,20 @@ jobs:
           bundle config path vendor/bundle
           bundle install --jobs 4 --retry 3
 
+      # Main step
       - name: Integration tests
         run: bundle exec fastlane test
 
-      - name: Archive output
-        uses: actions/upload-artifact@v2
+      # Store artifacts
+      - uses: actions/upload-artifact@v2
         with:
-          name: tests
-          path: build/test/
+          name: report.html
+          path: build/test/report.html
+      - uses: actions/upload-artifact@v2
+        with:
+          name: report.junit
+          path: build/test/report.junit
+      - uses: actions/upload-artifact@v2
+        with:
+          name: MatrixSDK-macOS.xcresult
+          path: build/test/MatrixSDK-macOS.xcresult/
