@@ -810,9 +810,8 @@ NSTimeInterval const kMXCallDirectRoomJoinTimeout = 30;
                             [transferRoom inviteUser:transferee.userId success:nil failure:failure];
                         }
                         
-                        //  do not end the calls, wait for other parties to end it
-                        
-                        //  TODO: Observe the call with the newCallId
+                        //  end the call with transferee
+                        [callWithTransferee hangup];
                         
                         if (success)
                         {
