@@ -293,6 +293,27 @@ static NSUInteger preloadOptions;
     });
 }
 
+- (void)logFiles
+{
+    NSLog(@"[MXFileStore] logFiles: Files in %@:", self->storePath);
+    NSArray *contents = [[NSFileManager defaultManager] subpathsOfDirectoryAtPath:self->storePath error:nil];
+    NSEnumerator *contentsEnumurator = [contents objectEnumerator];
+    
+    NSUInteger fileCount = 0, diskUsage = 0;
+
+    NSString *file;
+    while (file = [contentsEnumurator nextObject])
+    {
+        NSDictionary *fileAttributes = [[NSFileManager defaultManager] attributesOfItemAtPath:[self->storePath stringByAppendingPathComponent:file] error:nil];
+        NSUInteger fileSize = [[fileAttributes objectForKey:NSFileSize] intValue];
+        
+        NSLog(@"[MXFileStore] logFiles:     - %@: %@", file, [NSByteCountFormatter stringFromByteCount:fileSize countStyle:NSByteCountFormatterCountStyleFile]);
+        diskUsage += fileSize;
+        fileCount++;
+    }
+    
+    NSLog(@"[MXFileStore] logFiles:  %@ files: %@", @(fileCount), [NSByteCountFormatter stringFromByteCount:diskUsage countStyle:NSByteCountFormatterCountStyleFile]);
+}
 
 + (void)setPreloadOptions:(MXFileStorePreloadOptions)thePreloadOptions
 {
@@ -1021,6 +1042,7 @@ static NSUInteger preloadOptions;
         if (!checkStorageValidity)
         {
             NSLog(@"[MXFileStore] Restore data: Cannot restore previous data. Reset the store");
+            [self logFiles];
             [self deleteAllData];
         }
     }
@@ -1049,11 +1071,11 @@ static NSUInteger preloadOptions;
         MXFileRoomStore *roomStore;
         @try
         {
-            roomStore =[NSKeyedUnarchiver unarchiveObjectWithFile:roomFile];
+            roomStore = [NSKeyedUnarchiver unarchiveObjectWithFile:roomFile];
         }
         @catch (NSException *exception)
         {
-            NSLog(@"[MXFileStore] Warning: MXFileRoomStore file for room %@ has been corrupted", roomId);
+            NSLog(@"[MXFileStore] Warning: MXFileRoomStore file for room %@ has been corrupted. Exception: %@", roomId, exception);
         }
 
         if (roomStore)
@@ -1063,7 +1085,10 @@ static NSUInteger preloadOptions;
         }
         else
         {
-            NSLog(@"[MXFileStore] Warning: MXFileStore has been reset due to room file corruption. Room id: %@", roomId);
+            NSLog(@"[MXFileStore] Warning: MXFileStore has been reset due to room file corruption. Room id: %@. File path: %@",
+                  roomId, roomFile);
+            
+            [self logFiles];
             [self deleteAllData];
             break;
         }
@@ -1402,6 +1427,7 @@ static NSUInteger preloadOptions;
     else
     {
         NSLog(@"[MXFileStore] loadMetaData: event stream token is missing");
+        [self logFiles];
         [self deleteAllData];
     }
 }
