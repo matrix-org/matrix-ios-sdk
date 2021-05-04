@@ -6,9 +6,12 @@ Changes to be released in next version
 
 🙌 Improvements
  * MXCallKitAdapter: Update incoming calls if answered from application UI.
+ * MXFileStore: Logs all files when a data corruption is detected (to track vector-im/element-ios/issues/4921).
+ * MXCallManager: Fix call transfers flow for all types of transfers.
 
 🐛 Bugfix
  * MXTools: Fix bad linkification of matrix alias and URL (vector-im/element-ios/issues/4258).
+ * MXRoomSummary: Fix roomType property deserialization issue.
 
 ⚠️ API Changes
  * 
@@ -17,7 +20,11 @@ Changes to be released in next version
  * 
     
 🧱 Build
- * 
+ * Tests: Use UnitTests suffix for unit tests classes.
+ * Tests: Cut some existing tests to separate unit tests and integration tests.
+ * Tests: Create 4 test plans for the macOS target: AllTests, AllTestsWithSanitizers, UnitTests and UnitTestsWithSanitizers.
+ * GH Actions: Run unit tests on every PR and develop branch update.
+ * GH Actions: Run integration tests nightly on develop using last Synapse release.
 
 Others
  * 

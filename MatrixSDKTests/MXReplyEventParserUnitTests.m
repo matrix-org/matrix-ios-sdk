@@ -18,11 +18,11 @@
 
 #import "MXReplyEventParser.h"
 
-@interface MXReplyEventParserTests : XCTestCase
+@interface MXReplyEventParserUnitTests : XCTestCase
 
 @end
 
-@implementation MXReplyEventParserTests
+@implementation MXReplyEventParserUnitTests
 
 - (void)setUp {
     // Put setup code here. This method is called before the invocation of each test method in the class.

@@ -20,7 +20,7 @@
 #import "MXRealmMediaScanStore.h"
 #import "MXMediaScanStore.h"
 
-@interface MXMediaScanStoreTests : XCTestCase
+@interface MXMediaScanStoreUnitTests : XCTestCase
 
 @property (nonatomic, strong) id<MXScanRealmProvider> realmProvider;
 @property (nonatomic, strong) id<MXMediaScanStore> mediaScanStore;
@@ -29,7 +29,7 @@
 
 static NSString* const kDefaultAntivirusServerDomain = @"matrix.org";
 
-@implementation MXMediaScanStoreTests
+@implementation MXMediaScanStoreUnitTests
 
 - (void)setUp
 {

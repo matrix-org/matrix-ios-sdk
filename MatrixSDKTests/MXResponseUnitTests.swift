@@ -33,7 +33,7 @@ struct FooBar: MXSummable, Equatable {
 }
 
 
-class MXResponseTest: XCTestCase {
+class MXResponseUnitTests: XCTestCase {
 
     func testMXSummable() throws {
         let a: MXResponse<FooBar> = .success(FooBar(value: "a"))

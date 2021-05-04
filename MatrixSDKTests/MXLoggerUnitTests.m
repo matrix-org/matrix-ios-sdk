@@ -18,11 +18,11 @@
 
 #import "MXLogger.h"
 
-@interface MXLoggerTests : XCTestCase
+@interface MXLoggerUnitTests : XCTestCase
 
 @end
 
-@implementation MXLoggerTests
+@implementation MXLoggerUnitTests
 
 - (void)testMXLogger
 {
