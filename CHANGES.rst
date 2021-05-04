@@ -7,6 +7,7 @@ Changes to be released in next version
 🙌 Improvements
  * MXCallKitAdapter: Update incoming calls if answered from application UI.
  * MXFileStore: Logs all files when a data corruption is detected (to track vector-im/element-ios/issues/4921).
+ * MXCallManager: Fix call transfers flow for all types of transfers.
 
 🐛 Bugfix
  * MXTools: Fix bad linkification of matrix alias and URL (vector-im/element-ios/issues/4258).
