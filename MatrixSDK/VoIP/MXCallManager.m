@@ -750,7 +750,7 @@ NSTimeInterval const kMXCallDirectRoomJoinTimeout = 30;
                   to:(MXUserModel *)target
       withTransferee:(MXUserModel *)transferee
         consultFirst:(BOOL)consultFirst
-             success:(void (^)(NSString * _Nonnull newCallId))success
+             success:(void (^)(NSString * _Nullable newCallId))success
              failure:(void (^)(NSError * _Nullable error))failure
 {
     if (callWithTransferee.isConferenceCall)
@@ -790,19 +790,56 @@ NSTimeInterval const kMXCallDirectRoomJoinTimeout = 30;
                     return;
                 }
                 
-                //  generate a new call id
-                NSString *newCallId = [[NSUUID UUID] UUIDString];
-                
-                //  first, send replaces event to the call with the transferee, send info about target
-                //  to make transferee start a new call
-                [callWithTransferee transferToRoom:transferRoom.roomId
-                                              user:target
-                                        createCall:newCallId
-                                         awaitCall:nil
-                                           success:^(NSString * _Nonnull eventId) {
+                if (consultFirst)
+                {
+                    //  consult with the target
+                    if (callWithTarget.isOnHold)
+                    {
+                        [callWithTarget hold:NO];
+                    }
                     
-                    //  define block to be called after replaces events are sent
-                    void(^afterReplacesEventsBlock)(void) = ^{
+                    if (success)
+                    {
+                        success(nil);
+                    }
+                }
+                else
+                {
+                    //  generate a new call id
+                    NSString *newCallId = [[NSUUID UUID] UUIDString];
+                    
+                    dispatch_group_t dispatchGroupReplaces = dispatch_group_create();
+                    
+                    if (callWithTarget)
+                    {
+                        [callWithTarget hangup];
+                        
+                        //  send replaces event to target
+                        dispatch_group_enter(dispatchGroupReplaces);
+                        [callWithTarget transferToRoom:transferRoom.roomId
+                                                  user:transferee
+                                            createCall:nil
+                                             awaitCall:newCallId
+                                               success:^(NSString * _Nonnull eventId) {
+                            dispatch_group_leave(dispatchGroupReplaces);
+                        } failure:failure];
+                    }
+                    
+                    dispatch_group_enter(dispatchGroupReplaces);
+                    if (callWithTransferee.isOnHold)
+                    {
+                        [callWithTransferee hold:NO];
+                    }
+                    //  send replaces event to transferee
+                    [callWithTransferee transferToRoom:transferRoom.roomId
+                                                  user:target
+                                            createCall:newCallId
+                                             awaitCall:nil
+                                               success:^(NSString * _Nonnull eventId) {
+                        dispatch_group_leave(dispatchGroupReplaces);
+                    } failure:failure];
+                    
+                    dispatch_group_notify(dispatchGroupReplaces, dispatch_get_main_queue(), ^{
                         if (isNewRoom)
                         {
                             //  if was a newly created room, send invites after replaces events
@@ -810,57 +847,25 @@ NSTimeInterval const kMXCallDirectRoomJoinTimeout = 30;
                             [transferRoom inviteUser:transferee.userId success:nil failure:failure];
                         }
                         
-                        //  end the call with transferee
-                        [callWithTransferee hangup];
-                        
                         if (success)
                         {
                             success(newCallId);
                         }
-                    };
-                    
-                    if (callWithTarget)
-                    {
-                        //  then, send replaces event to the call with the target, send info about transferee
-                        //  to make target await a call
-                        [callWithTarget transferToRoom:transferRoom.roomId
-                                                  user:transferee
-                                            createCall:nil
-                                             awaitCall:newCallId
-                                               success:^(NSString * _Nonnull eventId) {
-                            
-                            if (consultFirst)
-                            {
-                                //  hold the callWithTransferee
-                                [callWithTransferee hold:YES];
-                                
-                                //  consult with the target
-                                [callWithTarget hold:NO];
-                                
-                                //  TODO: Make a state change on callWithTransferee here, like `onHoldForConsulting` and provide target details, to complete the transfer after
-                            }
-                            else
-                            {
-                                //  no need to consult
-                                
-                                afterReplacesEventsBlock();
-                            }
-                            
-                        } failure:failure];
-                    }
-                    else
-                    {
-                        //  being here means no need to consult, otherwise would fail before
-                        
-                        afterReplacesEventsBlock();
-                    }
-                    
-                } failure:failure];
+                    });
+                }
+                
             }];
         };
         
         if (call)
         {
+            if (consultFirst)
+            {
+                call.callWithTransferee = callWithTransferee;
+                call.transferee = transferee;
+                call.transferTarget = target;
+                call.consulting = YES;
+            }
             continueBlock(call);
         }
         else
@@ -885,15 +890,22 @@ NSTimeInterval const kMXCallDirectRoomJoinTimeout = 30;
                         return;
                     }
                     
-                    //  hold the transferee call before starting the new call
-                    [callWithTransferee hold:YES];
-                    
-                    //  place a new call to the target
-                    [self placeCallInRoom:room.roomId withVideo:callWithTransferee.isVideoCall success:^(MXCall * _Nonnull call) {
+                    //  place a new audio call to the target to consult the transfer
+                    [self placeCallInRoom:room.roomId withVideo:NO success:^(MXCall * _Nonnull call) {
+                        
+                        //  mark the call with target & transferee as consulting
+                        call.callWithTransferee = callWithTransferee;
+                        call.transferee = transferee;
+                        call.transferTarget = target;
+                        call.consulting = YES;
                         
                         continueBlock(call);
                     } failure:^(NSError * _Nullable error) {
                         NSLog(@"[MXCallManager] transferCall: couldn't call the target: %@", error);
+                        if (failure)
+                        {
+                            failure(error);
+                        }
                     }];
                     
                 }];
