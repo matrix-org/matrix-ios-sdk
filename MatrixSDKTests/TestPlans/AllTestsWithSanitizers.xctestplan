@@ -1,0 +1,49 @@
+{
+  "configurations" : [
+    {
+      "id" : "1FA4678B-FC03-4484-997A-D8629931F24B",
+      "name" : "ASan + UBSan",
+      "options" : {
+        "addressSanitizer" : {
+          "enabled" : true
+        }
+      }
+    },
+    {
+      "id" : "B433D897-24E8-4A8B-BAD3-325FC30F62CE",
+      "name" : "TSan + UBSan",
+      "options" : {
+        "threadSanitizerEnabled" : true
+      }
+    }
+  ],
+  "defaultOptions" : {
+    "codeCoverage" : {
+      "targets" : [
+        {
+          "containerPath" : "container:MatrixSDK.xcodeproj",
+          "identifier" : "B14EF1C72397E90400758AF0",
+          "name" : "MatrixSDK-macOS"
+        }
+      ]
+    },
+    "targetForVariableExpansion" : {
+      "containerPath" : "container:MatrixSDK.xcodeproj",
+      "identifier" : "B14EF1C72397E90400758AF0",
+      "name" : "MatrixSDK-macOS"
+    },
+    "uiTestingScreenshotsLifetime" : "keepNever",
+    "undefinedBehaviorSanitizerEnabled" : true,
+    "userAttachmentLifetime" : "keepNever"
+  },
+  "testTargets" : [
+    {
+      "target" : {
+        "containerPath" : "container:MatrixSDK.xcodeproj",
+        "identifier" : "B1E09A0D2397FA950057C069",
+        "name" : "MatrixSDKTests-macOS"
+      }
+    }
+  ],
+  "version" : 1
+}
