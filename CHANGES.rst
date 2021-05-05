@@ -12,6 +12,7 @@ Changes to be released in next version
 🐛 Bugfix
  * MXTools: Fix bad linkification of matrix alias and URL (vector-im/element-ios/issues/4258).
  * MXRoomSummary: Fix roomType property deserialization issue.
+ * MXCall: Disable call transferee capability & fix call transfer feature check.
 
 ⚠️ API Changes
  * 
