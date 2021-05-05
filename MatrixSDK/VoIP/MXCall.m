@@ -589,10 +589,14 @@ NSString *const kMXCallSupportsTransferringStatusDidChange = @"kMXCallSupportsTr
 
 - (BOOL)supportsTransferring
 {
-    if (callInviteEventContent && _selectedAnswer)
+    if (self.isIncoming)
+    {
+        return callInviteEventContent.capabilities.transferee;
+    }
+    else if (_selectedAnswer)
     {
         MXCallAnswerEventContent *content = [MXCallAnswerEventContent modelFromJSON:_selectedAnswer.content];
-        return callInviteEventContent.capabilities.transferee && content.capabilities.transferee;
+        return content.capabilities.transferee;
     }
     return NO;
 }
