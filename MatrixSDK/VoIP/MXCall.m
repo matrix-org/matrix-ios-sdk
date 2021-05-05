@@ -294,7 +294,7 @@ NSString *const kMXCallSupportsTransferringStatusDidChange = @"kMXCallSupportsTr
                     },
                     @"version": kMXCallVersion,
                     @"lifetime": @(self->callManager.inviteLifetime),
-                    @"capabilities": @{@"m.call.transferee": @(YES)},
+                    @"capabilities": @{@"m.call.transferee": @(NO)},
                     @"party_id": self.partyId
                 } mutableCopy];
                 
@@ -370,7 +370,7 @@ NSString *const kMXCallSupportsTransferringStatusDidChange = @"kMXCallSupportsTr
                                                       @"type": kMXCallSessionDescriptionTypeStringAnswer,
                                                       @"sdp": sdpAnswer
                                                       },
-                                              @"capabilities": @{@"m.call.transferee": @(YES)},
+                                              @"capabilities": @{@"m.call.transferee": @(NO)},
                                               @"version": kMXCallVersion,
                                               @"party_id": self.partyId
                                               };
