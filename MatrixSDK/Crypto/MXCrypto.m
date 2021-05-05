@@ -526,7 +526,7 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
     return hasKeys;
 }
 
-- (MXEventDecryptionResult *)decryptEvent:(MXEvent *)event inTimeline:(NSString*)timeline error:(NSError* __autoreleasing * )error
+- (MXEventDecryptionResult *)decryptEvent:(MXEvent *)event inTimeline:(NSString*)timeline
 {
 #ifdef MX_CRYPTO
 
@@ -550,25 +550,23 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
         {
             NSLog(@"[MXCrypto] decryptEvent: Unable to decrypt %@ with algorithm %@. Event: %@", event.eventId, event.content[@"algorithm"], event.JSONDictionary);
 
-            if (error)
-            {
-                *error = [NSError errorWithDomain:MXDecryptingErrorDomain
-                                             code:MXDecryptingErrorUnableToDecryptCode
-                                         userInfo:@{
-                                                    NSLocalizedDescriptionKey: MXDecryptingErrorUnableToDecrypt,
-                                                    NSLocalizedFailureReasonErrorKey: [NSString stringWithFormat:MXDecryptingErrorUnableToDecryptReason, event, event.content[@"algorithm"]]
-                                                    }];
-            }
+            result = [MXEventDecryptionResult new];
+            result.error = [NSError errorWithDomain:MXDecryptingErrorDomain
+                                               code:MXDecryptingErrorUnableToDecryptCode
+                                           userInfo:@{
+                                               NSLocalizedDescriptionKey: MXDecryptingErrorUnableToDecrypt,
+                                               NSLocalizedFailureReasonErrorKey: [NSString stringWithFormat:MXDecryptingErrorUnableToDecryptReason, event, event.content[@"algorithm"]]
+                                           }];
         }
         else
         {
-            result = [alg decryptEvent:event inTimeline:timeline error:error];
-            if (error && *error)
+            result = [alg decryptEvent:event inTimeline:timeline];
+            if (result.error)
             {
-                NSLog(@"[MXCrypto] decryptEvent: Error for %@: %@\nEvent: %@", event.eventId, *error, event.JSONDictionary);
+                NSLog(@"[MXCrypto] decryptEvent: Error for %@: %@\nEvent: %@", event.eventId, result.error, event.JSONDictionary);
                 
-                if ([(*error).domain isEqualToString:MXDecryptingErrorDomain]
-                    && (*error).code == MXDecryptingErrorBadEncryptedMessageCode)
+                if ([result.error.domain isEqualToString:MXDecryptingErrorDomain]
+                    && result.error.code == MXDecryptingErrorBadEncryptedMessageCode)
                 {
                     dispatch_async(self.cryptoQueue, ^{
                         [self markOlmSessionForUnwedgingInEvent:event];

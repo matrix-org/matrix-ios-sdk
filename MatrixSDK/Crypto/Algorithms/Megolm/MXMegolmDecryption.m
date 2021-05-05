@@ -78,7 +78,7 @@
     return hasKeys;
 }
 
-- (MXEventDecryptionResult *)decryptEvent:(MXEvent*)event inTimeline:(NSString*)timeline error:(NSError** )error;
+- (MXEventDecryptionResult *)decryptEvent:(MXEvent*)event inTimeline:(NSString*)timeline
 {
     MXEventDecryptionResult *result;
     NSString *senderKey, *ciphertext, *sessionId;
@@ -89,24 +89,21 @@
 
     if (!senderKey || !sessionId || !ciphertext)
     {
-        if (error)
-        {
-            *error = [NSError errorWithDomain:MXDecryptingErrorDomain
+        result = [MXEventDecryptionResult new];
+        result.error = [NSError errorWithDomain:MXDecryptingErrorDomain
                                          code:MXDecryptingErrorMissingFieldsCode
                                      userInfo:@{
                                                 NSLocalizedDescriptionKey: MXDecryptingErrorMissingFieldsReason
                                                 }];
-        }
-        return nil;
+        return result;
     }
 
     NSError *olmError;
     MXDecryptionResult *olmResult = [olmDevice decryptGroupMessage:ciphertext roomId:event.roomId inTimeline:timeline sessionId:sessionId senderKey:senderKey error:&olmError];
 
+    result = [MXEventDecryptionResult new];
     if (olmResult)
     {
-        result = [[MXEventDecryptionResult alloc] init];
-
         result.clearEvent = olmResult.payload;
         result.senderCurve25519Key = olmResult.senderKey;
         result.claimedEd25519Key = olmResult.keysClaimed[@"ed25519"];
@@ -141,10 +138,7 @@
             });
         }
 
-        if (error)
-        {
-            *error = olmError;
-        }
+        result.error = olmError;
     }
 
     return result;
@@ -400,29 +394,25 @@
                 else
                 {
                     // Decrypt on the current thread (Must be MXCrypto.cryptoQueue)
-                    NSError *error;
-                    MXEventDecryptionResult *result = [self decryptEvent:event inTimeline:(timelineId.length ? timelineId : nil) error:&error];
+                    MXEventDecryptionResult *result = [self decryptEvent:event inTimeline:(timelineId.length ? timelineId : nil)];
                     
                     // And set the result on the main thread to be compatible with other modules
                     dispatch_group_enter(group);
                     dispatch_async(dispatch_get_main_queue(), ^{
-                        if (result)
+                        if (result.error)
                         {
-                            if (event.clearEvent)
-                            {
-                                // This can happen when the event is in several timelines
-                                NSLog(@"[MXMegolmDecryption] retryDecryption: %@ already decrypted on main thread", event.eventId);
-                            }
-                            else
-                            {
-                                [event setClearData:result];
-                            }
-                        }
-                        else if (error)
-                        {
-                            NSLog(@"[MXMegolmDecryption] retryDecryption: Still can't decrypt %@. Error: %@", event.eventId, event.decryptionError);
-                            event.decryptionError = error;
+                            NSLog(@"[MXMegolmDecryption] retryDecryption: Still can't decrypt %@. Error: %@", event.eventId, result.error);
                             allDecrypted = NO;
+                        }
+
+                        if (event.clearEvent)
+                        {
+                            // This can happen when the event is in several timelines
+                            NSLog(@"[MXMegolmDecryption] retryDecryption: %@ already decrypted on main thread", event.eventId);
+                        }
+                        else
+                        {
+                            [event setClearData:result];
                         }
                         
                         dispatch_group_leave(group);

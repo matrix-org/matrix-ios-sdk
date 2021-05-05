@@ -4020,33 +4020,26 @@ typedef void (^MXOnResumeDone)(void);
     MXEventDecryptionResult *result;
     if (event.eventType == MXEventTypeRoomEncrypted)
     {
-        NSError *error;
         if (_crypto)
         {
             // TODO: One day, this method will be async
-            result = [_crypto decryptEvent:event inTimeline:timeline error:&error];
-            if (result)
-            {
-                [event setClearData:result];
-            }
+            result = [_crypto decryptEvent:event inTimeline:timeline];
         }
         else
         {
             // Encryption not enabled
-            error = [NSError errorWithDomain:MXDecryptingErrorDomain
-                                        code:MXDecryptingErrorEncryptionNotEnabledCode
-                                    userInfo:@{
+            result = [MXEventDecryptionResult new];
+            result.error = [NSError errorWithDomain:MXDecryptingErrorDomain
+                                               code:MXDecryptingErrorEncryptionNotEnabledCode
+                                           userInfo:@{
                                                NSLocalizedDescriptionKey: MXDecryptingErrorEncryptionNotEnabledReason
-                                               }];
+                                           }];
         }
-
-        if (error)
-        {
-            event.decryptionError = error;
-        }
+        
+        [event setClearData:result];
     }
-
-    return (result != nil);
+    
+    return (result.error == nil);
 }
 
 - (void)resetReplayAttackCheckInTimeline:(NSString*)timeline

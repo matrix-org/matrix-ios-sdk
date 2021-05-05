@@ -179,19 +179,14 @@ extern NSString *const MXDeviceListDidUpdateUsersDevicesNotification;
 
 /**
  Decrypt a received event.
- 
- In case of success, the event is updated with clear data.
- In case of failure, event.decryptionError contains the error.
 
  @param event the raw event.
  @param timeline the id of the timeline where the event is decrypted. It is used
                  to prevent replay attack.
  
- @param error the result error if there is a problem decrypting the event.
-
- @return The decryption result. Nil if it failed.
+ @return The decryption result.
  */
-- (MXEventDecryptionResult *)decryptEvent:(MXEvent*)event inTimeline:(NSString*)timeline error:(NSError** )error;
+- (MXEventDecryptionResult *)decryptEvent:(MXEvent*)event inTimeline:(NSString*)timeline;
 
 /**
  Ensure that the outbound session is ready to encrypt events.

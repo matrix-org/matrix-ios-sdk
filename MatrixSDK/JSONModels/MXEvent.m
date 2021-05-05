@@ -837,6 +837,13 @@ NSString *const kMXEventIdentifierKey = @"kMXEventIdentifierKey";
 - (void)setClearData:(MXEventDecryptionResult *)decryptionResult
 {
     _clearEvent = nil;
+    
+    if (decryptionResult.error)
+    {
+        _decryptionError = decryptionResult.error;
+        return;
+    }
+    
     if (decryptionResult.clearEvent)
     {
         NSDictionary *clearEventJSON, *clearEventJSONContent;
