@@ -399,15 +399,13 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
     {
         room.summary.membership = MXMembershipJoin;
     }
+    
+    // Report the room id in the event as it is skipped in /sync response
+    [self fixRoomIdInEvents:roomSync.state.events];
+    [self fixRoomIdInEvents:roomSync.timeline.events];
 
     // Build/Update first the room state corresponding to the 'start' of the timeline.
     // Note: We consider it is not required to clone the existing room state here, because no notification is posted for these events.
-    for (MXEvent *event in roomSync.state.events)
-    {
-        // Report the room id in the event as it is skipped in /sync response
-        event.roomId = _state.roomId;
-    }
-
     [self handleStateEvents:roomSync.state.events direction:MXTimelineDirectionForwards];
 
     // Handle now timeline.events, the room state is updated during this step too (Note: timeline events are in chronological order)
@@ -415,9 +413,6 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
     {
         for (MXEvent *event in roomSync.timeline.events)
         {
-            // Report the room id in the event as it is skipped in /sync response
-            event.roomId = _state.roomId;
-
             // Add the event to the end of the timeline
             [self addEvent:event direction:MXTimelineDirectionForwards fromStore:NO isRoomInitialSync:isRoomInitialSync];
         }
@@ -439,9 +434,6 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
 
         for (MXEvent *event in roomSync.timeline.events)
         {
-            // Report the room id in the event as it is skipped in /sync response
-            event.roomId = _state.roomId;
-
             // Add the event to the end of the timeline
             [self addEvent:event direction:MXTimelineDirectionForwards fromStore:NO isRoomInitialSync:isRoomInitialSync];
         }
@@ -482,6 +474,8 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
     {
         room.summary.membership = MXMembershipInvite;
     }
+    
+    [self fixRoomIdInEvents:invitedRoomSync.inviteState.events];
 
     // Handle the state events forwardly (the room state will be updated, and the listeners (if any) will be notified).
     for (MXEvent *event in invitedRoomSync.inviteState.events)
@@ -491,9 +485,6 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
         {
             event.eventId = [NSString stringWithFormat:@"%@%@", kMXRoomInviteStateEventIdPrefix, [[NSProcessInfo processInfo] globallyUniqueString]];
         }
-
-        // Report the room id in the event as it is skipped in /sync response
-        event.roomId = _state.roomId;
 
         [self addEvent:event direction:MXTimelineDirectionForwards fromStore:NO isRoomInitialSync:YES];
     }
@@ -884,6 +875,18 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
                 [room removePendingLocalEcho:localEcho.eventId];
             }
         }
+    }
+}
+
+
+#pragma mark - Events processing
+
+// Make sure that events have a room id. They are skipped in some server responses
+- (void)fixRoomIdInEvents:(NSArray<MXEvent*>*)events
+{
+    for (MXEvent *event in events)
+    {
+        event.roomId = _state.roomId;
     }
 }
 
