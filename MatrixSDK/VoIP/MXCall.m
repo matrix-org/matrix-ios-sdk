@@ -294,7 +294,7 @@ NSString *const kMXCallSupportsTransferringStatusDidChange = @"kMXCallSupportsTr
                     },
                     @"version": kMXCallVersion,
                     @"lifetime": @(self->callManager.inviteLifetime),
-                    @"capabilities": @{@"m.call.transferee": @(NO)},    //  transferring will be disabled until we have a test bridge
+                    @"capabilities": @{@"m.call.transferee": @(YES)},
                     @"party_id": self.partyId
                 } mutableCopy];
                 
@@ -370,7 +370,7 @@ NSString *const kMXCallSupportsTransferringStatusDidChange = @"kMXCallSupportsTr
                                                       @"type": kMXCallSessionDescriptionTypeStringAnswer,
                                                       @"sdp": sdpAnswer
                                                       },
-                                              @"capabilities": @{@"m.call.transferee": @(NO)},  //  transferring will be disabled until we have a test bridge
+                                              @"capabilities": @{@"m.call.transferee": @(YES)},
                                               @"version": kMXCallVersion,
                                               @"party_id": self.partyId
                                               };
@@ -635,7 +635,9 @@ NSString *const kMXCallSupportsTransferringStatusDidChange = @"kMXCallSupportsTr
     [self.callSignalingRoom sendEventOfType:kMXEventTypeStringCallReplaces
                                     content:content.JSONDictionary
                                   localEcho:nil
-                                    success:success
+                                    success:^(NSString *eventId) {
+        [self terminateWithReason:nil];
+    }
                                     failure:^(NSError *error) {
         NSLog(@"[MXCall] transferToRoom: ERROR: Cannot send m.call.replaces event.");
         if (failure)
@@ -859,6 +861,18 @@ NSString *const kMXCallSupportsTransferringStatusDidChange = @"kMXCallSupportsTr
     return duration;
 }
 
+- (void)setConsulting:(BOOL)consulting
+{
+    if (_consulting != consulting)
+    {
+        _consulting = consulting;
+        
+        if ([_delegate respondsToSelector:@selector(callConsultingStatusDidChange:)])
+        {
+            [_delegate callConsultingStatusDidChange:self];
+        }
+    }
+}
 
 #pragma mark - MXCallStackCallDelegate
 - (void)callStackCall:(id<MXCallStackCall>)callStackCall onICECandidateWithSdpMid:(NSString *)sdpMid sdpMLineIndex:(NSInteger)sdpMLineIndex candidate:(NSString *)candidate

@@ -17,7 +17,7 @@ import XCTest
 
 import MatrixSDK
 
-class MXEventReferenceTests: XCTestCase {
+class MXEventAnnotationUnitTests: XCTestCase {
 
     let eventJSON: [String : Any] = [
         "event_id": "$eventId",
@@ -25,19 +25,20 @@ class MXEventReferenceTests: XCTestCase {
         "origin_server_ts": 0,
         "unsigned": [
             "m.relations": [
-                "m.reference": [
+                "m.annotation": [
                     "chunk": [
                         [
-                            "type": "m.room.message",
-                            "event_id": "$some_event_id"
+                            "type": "m.reaction",
+                            "key": "👍",
+                            "count": 3
                         ]
                     ],
                     "limited": false,
                     "count": 1
-                ]
+                ],
             ]
         ]
-    ]
+        ]
 
     override func setUp() {
     }
@@ -48,14 +49,14 @@ class MXEventReferenceTests: XCTestCase {
     func testModelFromJSON() {
         let event = MXEvent(fromJSON: eventJSON)
 
-        XCTAssertNotNil(event?.unsignedData.relations?.reference)
-        XCTAssertEqual(event?.unsignedData.relations?.reference?.chunk.count, 1)
-        XCTAssertEqual(event?.unsignedData.relations?.reference?.limited, false)
-        XCTAssertEqual(event?.unsignedData.relations?.reference?.count, 1)
+        XCTAssertEqual(event?.unsignedData.relations?.annotation?.chunk.count, 1)
+        XCTAssertEqual(event?.unsignedData.relations?.annotation?.limited, false)
+        XCTAssertEqual(event?.unsignedData.relations?.annotation?.count, 1)
 
-        if let reference = event?.unsignedData.relations?.reference?.chunk[0] {
-            XCTAssertEqual(reference.eventId, "$some_event_id")
-            XCTAssertEqual(reference.type, kMXEventTypeStringRoomMessage)
+        if let annotation = event?.unsignedData.relations?.annotation?.chunk[0] {
+            XCTAssertEqual(annotation.type, MXEventAnnotationReaction)
+            XCTAssertEqual(annotation.key, "👍")
+            XCTAssertEqual(annotation.count, 3)
         }
     }
 
