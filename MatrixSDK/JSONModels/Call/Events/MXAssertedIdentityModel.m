@@ -73,6 +73,33 @@
                       avatarUrl:user.avatarUrl];
 }
 
+- (BOOL)isEqual:(id)other
+{
+    if (other == self)
+        return YES;
+
+    if (![other isKindOfClass:MXAssertedIdentityModel.class])
+        return NO;
+
+    MXAssertedIdentityModel *otherModel = (MXAssertedIdentityModel *)other;
+
+    return [_userId isEqualToString:otherModel.userId]
+        && [_displayname isEqualToString:otherModel.displayname]
+        && [_avatarUrl isEqualToString:otherModel.avatarUrl];
+}
+
+- (NSUInteger)hash
+{
+    NSUInteger prime = 31;
+    NSUInteger result = 1;
+
+    result = prime * result + [_userId hash];
+    result = prime * result + [_displayname hash];
+    result = prime * result + [_avatarUrl hash];
+
+    return result;
+}
+
 #pragma mark - NSCopying
 
 - (id)copyWithZone:(NSZone *)zone
