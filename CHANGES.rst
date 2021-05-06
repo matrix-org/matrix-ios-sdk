@@ -15,7 +15,7 @@ Changes to be released in next version
  * MXCall: Disable call transferee capability & fix call transfer feature check.
 
 ⚠️ API Changes
- * 
+ * Spaces and room type: Remove all MSC1772 JSON key prefixes and use stable ones.
 
 🗣 Translations
  * 
