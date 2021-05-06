@@ -113,6 +113,7 @@ NSCharacterSet *uriComponentCharset;
                                 kMXEventTypeStringCallReplaces,
                                 kMXEventTypeStringCallRejectReplacement,
                                 kMXEventTypeStringCallAssertedIdentity,
+                                kMXEventTypeStringCallAssertedIdentityUnstable,
                                 kMXEventTypeStringSticker,
                                 kMXEventTypeStringRoomTombStone,
                                 kMXEventTypeStringKeyVerificationRequest,

@@ -118,6 +118,7 @@ NSTimeInterval const kMXCallDirectRoomJoinTimeout = 30;
                                                                 kMXEventTypeStringCallReplaces,
                                                                 kMXEventTypeStringCallRejectReplacement,
                                                                 kMXEventTypeStringCallAssertedIdentity,
+                                                                kMXEventTypeStringCallAssertedIdentityUnstable,
                                                                 kMXEventTypeStringRoomMember
                                                                 ]
                                                       onEvent:^(MXEvent *event, MXTimelineDirection direction, id customObject) {
@@ -396,6 +397,7 @@ NSTimeInterval const kMXCallDirectRoomJoinTimeout = 30;
             [self handleCallRejectReplacement:event];
             break;
         case MXEventTypeCallAssertedIdentity:
+        case MXEventTypeCallAssertedIdentityUnstable:
             [self handleCallAssertedIdentity:event];
             break;
         case MXEventTypeRoomMember:
