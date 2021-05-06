@@ -640,13 +640,50 @@ NSTimeInterval const kMXCallDirectRoomJoinTimeout = 30;
 
 - (void)handleCallAssertedIdentity:(MXEvent *)event
 {
+    //  check handling allowed
+    if (![MXSDKOptions sharedInstance].handleCallAssertedIdentityEvents)
+    {
+        return;
+    }
+    
     MXCallAssertedIdentityEventContent *content = [MXCallAssertedIdentityEventContent modelFromJSON:event.content];
     
     // Forward the event to the MXCall object
     MXCall *call = [self callWithCallId:content.callId];
     if (call)
     {
-        [call handleCallEvent:event];
+        if (content.assertedIdentity.userId)
+        {
+            //  do a native lookup first
+            
+            MXWeakify(self);
+            
+            [self getNativeUserFrom:content.assertedIdentity.userId success:^(MXThirdPartyUserInstance * _Nonnull user) {
+                MXStrongifyAndReturnIfNil(self);
+                
+                MXAssertedIdentityModel *assertedIdentity = content.assertedIdentity;
+                
+                //  fetch the native user
+                MXUser *mxUser = [self.mxSession userWithUserId:user.userId];
+                
+                if (mxUser)
+                {
+                    assertedIdentity = [[MXAssertedIdentityModel alloc] initWithUser:mxUser];
+                }
+                else
+                {
+                    assertedIdentity.userId = user.userId;
+                }
+                
+                //  use the updated asserted identity
+                call.assertedIdentity = assertedIdentity;
+            } failure:nil];
+        }
+        else
+        {
+            //  no need to a native lookup, directly pass the identity
+            call.assertedIdentity = content.assertedIdentity;
+        }
     }
 }
 
