@@ -294,7 +294,7 @@ NSString *const kMXCallSupportsTransferringStatusDidChange = @"kMXCallSupportsTr
                     },
                     @"version": kMXCallVersion,
                     @"lifetime": @(self->callManager.inviteLifetime),
-                    @"capabilities": @{@"m.call.transferee": @(YES)},
+                    @"capabilities": @{@"m.call.transferee": @(NO)},
                     @"party_id": self.partyId
                 } mutableCopy];
                 
@@ -370,7 +370,7 @@ NSString *const kMXCallSupportsTransferringStatusDidChange = @"kMXCallSupportsTr
                                                       @"type": kMXCallSessionDescriptionTypeStringAnswer,
                                                       @"sdp": sdpAnswer
                                                       },
-                                              @"capabilities": @{@"m.call.transferee": @(YES)},
+                                              @"capabilities": @{@"m.call.transferee": @(NO)},
                                               @"version": kMXCallVersion,
                                               @"party_id": self.partyId
                                               };
@@ -589,10 +589,14 @@ NSString *const kMXCallSupportsTransferringStatusDidChange = @"kMXCallSupportsTr
 
 - (BOOL)supportsTransferring
 {
-    if (callInviteEventContent && _selectedAnswer)
+    if (self.isIncoming)
+    {
+        return callInviteEventContent.capabilities.transferee;
+    }
+    else if (_selectedAnswer)
     {
         MXCallAnswerEventContent *content = [MXCallAnswerEventContent modelFromJSON:_selectedAnswer.content];
-        return callInviteEventContent.capabilities.transferee && content.capabilities.transferee;
+        return content.capabilities.transferee;
     }
     return NO;
 }
