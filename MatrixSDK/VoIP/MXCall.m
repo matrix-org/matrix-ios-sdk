@@ -244,6 +244,9 @@ NSString *const kMXCallSupportsTransferringStatusDidChange = @"kMXCallSupportsTr
         case MXEventTypeCallRejectReplacement:
             [self handleCallRejectReplacement:event];
             break;
+        case MXEventTypeCallAssertedIdentity:
+            [self handleCallAssertedIdentity:event];
+            break;
         default:
             break;
     }
@@ -1295,12 +1298,29 @@ NSString *const kMXCallSupportsTransferringStatusDidChange = @"kMXCallSupportsTr
 
 - (void)handleCallReplaces:(MXEvent *)event
 {
-    //  TODO: Implement
+    
 }
 
 - (void)handleCallRejectReplacement:(MXEvent *)event
 {
-    //  TODO: Implement
+    
+}
+
+- (void)handleCallAssertedIdentity:(MXEvent *)event
+{
+    if (![MXSDKOptions sharedInstance].handleCallAssertedIdentityEvents)
+    {
+        return;
+    }
+    
+    MXCallAssertedIdentityEventContent *content = [MXCallAssertedIdentityEventContent modelFromJSON:event.content];
+    
+    _assertedIdentity = content.assertedIdentity;
+    
+    if ([_delegate respondsToSelector:@selector(callAssertedIdentityDidChange:)])
+    {
+        [_delegate callAssertedIdentityDidChange:self];
+    }
 }
 
 #pragma mark - Private methods
