@@ -117,6 +117,7 @@ NSTimeInterval const kMXCallDirectRoomJoinTimeout = 30;
                                                                 kMXEventTypeStringCallNegotiate,
                                                                 kMXEventTypeStringCallReplaces,
                                                                 kMXEventTypeStringCallRejectReplacement,
+                                                                kMXEventTypeStringCallAssertedIdentity,
                                                                 kMXEventTypeStringRoomMember
                                                                 ]
                                                       onEvent:^(MXEvent *event, MXTimelineDirection direction, id customObject) {
@@ -394,6 +395,9 @@ NSTimeInterval const kMXCallDirectRoomJoinTimeout = 30;
         case MXEventTypeCallRejectReplacement:
             [self handleCallRejectReplacement:event];
             break;
+        case MXEventTypeCallAssertedIdentity:
+            [self handleCallAssertedIdentity:event];
+            break;
         case MXEventTypeRoomMember:
             [self handleRoomMember:event];
             break;
@@ -623,6 +627,18 @@ NSTimeInterval const kMXCallDirectRoomJoinTimeout = 30;
 - (void)handleCallRejectReplacement:(MXEvent *)event
 {
     MXCallRejectReplacementEventContent *content = [MXCallRejectReplacementEventContent modelFromJSON:event.content];
+    
+    // Forward the event to the MXCall object
+    MXCall *call = [self callWithCallId:content.callId];
+    if (call)
+    {
+        [call handleCallEvent:event];
+    }
+}
+
+- (void)handleCallAssertedIdentity:(MXEvent *)event
+{
+    MXCallAssertedIdentityEventContent *content = [MXCallAssertedIdentityEventContent modelFromJSON:event.content];
     
     // Forward the event to the MXCall object
     MXCall *call = [self callWithCallId:content.callId];
