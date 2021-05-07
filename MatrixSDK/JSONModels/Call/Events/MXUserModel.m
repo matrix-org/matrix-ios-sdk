@@ -69,4 +69,17 @@
                       avatarUrl:user.avatarUrl];
 }
 
+#pragma mark - NSCopying
+
+- (id)copyWithZone:(NSZone *)zone
+{
+    MXUserModel *model = [[[self class] allocWithZone:zone] init];
+    
+    model.userId = [_userId copyWithZone:zone];
+    model.displayname = [_displayname copyWithZone:zone];
+    model.avatarUrl = [_avatarUrl copyWithZone:zone];
+    
+    return model;
+}
+
 @end

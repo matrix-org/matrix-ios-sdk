@@ -19,11 +19,11 @@
 
 #import "MXMegolmExportEncryption.h"
 
-@interface MXMegolmExportEncryptionTest : XCTestCase
+@interface MXMegolmExportEncryptionUnitTests : XCTestCase
 
 @end
 
-@implementation MXMegolmExportEncryptionTest
+@implementation MXMegolmExportEncryptionUnitTests
 
 - (void)setUp
 {

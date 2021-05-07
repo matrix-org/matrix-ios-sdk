@@ -218,7 +218,7 @@
 
                 NSString *roomTypeString = createContent.roomType;
                 
-                summary.roomTypeString = createContent.roomType;
+                summary.roomTypeString = roomTypeString;
                 summary.roomType = [self.roomTypeMapper roomTypeFrom:roomTypeString];
                 summary.hiddenFromUser = [self shouldHideRoomWithRoomTypeString:roomTypeString];
                 

@@ -1,3 +1,38 @@
+Changes in 0.18.11 (2021-05-07)
+=================================================
+
+✨ Features
+ * 
+
+🙌 Improvements
+ * MXCallKitAdapter: Update incoming calls if answered from application UI.
+ * MXFileStore: Logs all files when a data corruption is detected (to track vector-im/element-ios/issues/4921).
+ * MXCallManager: Fix call transfers flow for all types of transfers.
+
+🐛 Bugfix
+ * MXTools: Fix bad linkification of matrix alias and URL (vector-im/element-ios/issues/4258).
+ * MXRoomSummary: Fix roomType property deserialization issue.
+ * MXCall: Disable call transferee capability & fix call transfer feature check.
+
+⚠️ API Changes
+ * Spaces and room type: Remove all MSC1772 JSON key prefixes and use stable ones.
+
+🗣 Translations
+ * 
+    
+🧱 Build
+ * Tests: Use UnitTests suffix for unit tests classes.
+ * Tests: Cut some existing tests to separate unit tests and integration tests.
+ * Tests: Create 4 test plans for the macOS target: AllTests, AllTestsWithSanitizers, UnitTests and UnitTestsWithSanitizers.
+ * GH Actions: Run unit tests on every PR and develop branch update.
+ * GH Actions: Run integration tests nightly on develop using last Synapse release.
+
+Others
+ * 
+
+Improvements:
+
+
 Changes in 0.18.10 (2021-04-22)
 =================================================
 
