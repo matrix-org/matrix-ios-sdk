@@ -5,6 +5,30 @@ Changes to be released in next version
  * 
 
 🙌 Improvements
+ * 
+
+🐛 Bugfix
+ * 
+
+⚠️ API Changes
+ * 
+
+🗣 Translations
+ * 
+    
+🧱 Build
+ * 
+
+Others
+ * 
+
+Changes in 0.18.11 (2021-05-07)
+=================================================
+
+✨ Features
+ * 
+
+🙌 Improvements
  * MXCallKitAdapter: Update incoming calls if answered from application UI.
  * MXFileStore: Logs all files when a data corruption is detected (to track vector-im/element-ios/issues/4921).
  * MXCallManager: Fix call transfers flow for all types of transfers.
@@ -15,7 +39,7 @@ Changes to be released in next version
  * MXCall: Disable call transferee capability & fix call transfer feature check.
 
 ⚠️ API Changes
- * 
+ * Spaces and room type: Remove all MSC1772 JSON key prefixes and use stable ones.
 
 🗣 Translations
  * 
@@ -29,6 +53,9 @@ Changes to be released in next version
 
 Others
  * 
+
+Improvements:
+
 
 Changes in 0.18.10 (2021-04-22)
 =================================================
