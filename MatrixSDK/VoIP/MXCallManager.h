@@ -194,14 +194,14 @@ extern NSString *const kMXCallManagerTurnServersReceived;
 /// @param target Target user for the transfer
 /// @param transferee Transferee user of the transfer
 /// @param consultFirst Flag to indicate if we want to consult the transfer to the target user first. If set, creates a DM call to the target (if we don't have already one). Even would create a new DM if we don't have one already to call the target.
-/// @param success Success block. Returns the new call id
+/// @param success Success block. Returns the new call id immediately if consulting option is disabled.
 /// @param failure Failure block
 - (void)transferCall:(MXCall *)callWithTransferee
                   to:(MXUserModel *)target
       withTransferee:(MXUserModel *)transferee
         consultFirst:(BOOL)consultFirst
-             success:(void (^)(NSString * _Nonnull newCallId))success
-             failure:(void (^)(NSError * _Nullable error))failure;
+             success:(nullable void (^)(NSString * _Nullable newCallId))success
+             failure:(nullable void (^)(NSError * _Nullable error))failure;
 
 #pragma mark - Conference call
 

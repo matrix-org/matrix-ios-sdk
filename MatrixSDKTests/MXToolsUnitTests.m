@@ -18,11 +18,11 @@
 
 #import "MXTools.h"
 
-@interface MXToolsTests : XCTestCase
+@interface MXToolsUnitTests : XCTestCase
 
 @end
 
-@implementation MXToolsTests
+@implementation MXToolsUnitTests
 
 - (void)setUp
 {
@@ -46,14 +46,21 @@
     // Tests on homeserver domain (https://matrix.org/docs/spec/legacy/#users)
     XCTAssertTrue([MXTools isMatrixUserIdentifier:@"@bob:matrix.org"]);
     XCTAssertTrue([MXTools isMatrixUserIdentifier:@"@bob:chat1234.matrix.org"]);
+    XCTAssertTrue([MXTools isMatrixUserIdentifier:@"@bob:chat-1234.matrix.org"]);
+    XCTAssertTrue([MXTools isMatrixUserIdentifier:@"@bob:chat-1234.aa.bbbb.matrix.org"]);
     XCTAssertTrue([MXTools isMatrixUserIdentifier:@"@bob:matrix.org:8480"]);
     XCTAssertTrue([MXTools isMatrixUserIdentifier:@"@bob:localhost"]);
     XCTAssertTrue([MXTools isMatrixUserIdentifier:@"@bob:localhost:8480"]);
     XCTAssertTrue([MXTools isMatrixUserIdentifier:@"@bob:127.0.0.1"]);
     XCTAssertTrue([MXTools isMatrixUserIdentifier:@"@bob:127.0.0.1:8480"]);
+    
     XCTAssertFalse([MXTools isMatrixUserIdentifier:@"@bob:matrix+25.org"]);
     XCTAssertFalse([MXTools isMatrixUserIdentifier:@"@bob:matrix[].org"]);
-
+    XCTAssertFalse([MXTools isMatrixUserIdentifier:@"@bob:matrix.org."]);
+    XCTAssertFalse([MXTools isMatrixUserIdentifier:@"@bob:matrix.org-"]);
+    XCTAssertFalse([MXTools isMatrixUserIdentifier:@"@bob:matrix-.org"]);
+    XCTAssertFalse([MXTools isMatrixUserIdentifier:@"@bob:matrix.&aaz.org"]);
+    
     XCTAssertTrue([MXTools isMatrixUserIdentifier:@"@Bob:matrix.org"]);
     XCTAssertTrue([MXTools isMatrixUserIdentifier:@"@bob1234:matrix.org"]);
     XCTAssertTrue([MXTools isMatrixUserIdentifier:@"@+33012:matrix.org"]);
@@ -64,6 +71,7 @@
     XCTAssertTrue([MXTools isMatrixRoomIdentifier:@"!an1234Room:matrix.org"]);
 
     XCTAssertTrue([MXTools isMatrixRoomAlias:@"#matrix:matrix.org"]);
+    XCTAssertTrue([MXTools isMatrixRoomAlias:@"#matrix:matrix.org:1234"]);
 
     XCTAssertTrue([MXTools isMatrixGroupIdentifier:@"+matrix:matrix.org"]);
 }
