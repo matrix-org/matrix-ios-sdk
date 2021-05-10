@@ -886,12 +886,6 @@ NSString *const kMXEventIdentifierKey = @"kMXEventIdentifierKey";
         _clearEvent->senderCurve25519Key = decryptionResult.senderCurve25519Key;
         _clearEvent->claimedEd25519Key = decryptionResult.claimedEd25519Key;
         _clearEvent->forwardingCurve25519KeyChain = decryptionResult.forwardingCurve25519KeyChain ? decryptionResult.forwardingCurve25519KeyChain : @[];
-        
-        //  Keep some original data on the clear event
-        _clearEvent->_eventId = _eventId;
-        _clearEvent->_originServerTs = _originServerTs;
-        _clearEvent->_sender = _sender;
-        _clearEvent->_roomId = _roomId;
     }
 
     // Notify only for events that are lately decrypted
