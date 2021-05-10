@@ -223,16 +223,18 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidFlushDataNotification;
 /**
  Update room data according to the provided sync response.
  
- @param roomSync information to sync the room with the home server data
+ @param roomSync information to sync the room with the home server data.
+ @param onComplete the block called when the operation completes.
  */
-- (void)handleJoinedRoomSync:(MXRoomSync*)roomSync;
+- (void)handleJoinedRoomSync:(MXRoomSync*)roomSync onComplete:(void (^)(void))onComplete;
 
 /**
  Update the invited room state according to the provided data.
  
  @param invitedRoomSync information to update the room state.
+ @param onComplete the block called when the operation completes.
  */
-- (void)handleInvitedRoomSync:(MXInvitedRoomSync *)invitedRoomSync;
+- (void)handleInvitedRoomSync:(MXInvitedRoomSync *)invitedRoomSync onComplete:(void (^)(void))onComplete;
 
 
 #pragma mark - Stored messages enumerator

@@ -205,16 +205,18 @@ typedef void (^MXOnRoomEvent)(MXEvent *event, MXTimelineDirection direction, MXR
 /**
  For live timeline, update data according to the received /sync response.
 
- @param roomSync information to sync the room with the home server data
+ @param roomSync information to sync the room with the home server data.
+ @param onComplete the block called when the operation completes.
  */
-- (void)handleJoinedRoomSync:(MXRoomSync*)roomSync;
+- (void)handleJoinedRoomSync:(MXRoomSync*)roomSync onComplete:(void (^)(void))onComplete;
 
 /**
  For live timeline, update invited room state according to the received /sync response.
 
  @param invitedRoomSync information to update the room state.
+ @param onComplete the block called when the operation completes.
  */
-- (void)handleInvitedRoomSync:(MXInvitedRoomSync *)invitedRoomSync;
+- (void)handleInvitedRoomSync:(MXInvitedRoomSync *)invitedRoomSync onComplete:(void (^)(void))onComplete;
 
 /**
  For live timeline, enrich lazy loaded state events with more state events.

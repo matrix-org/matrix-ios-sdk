@@ -370,51 +370,55 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
 
 
 #pragma mark - Sync
-- (void)handleJoinedRoomSync:(MXRoomSync *)roomSync
+- (void)handleJoinedRoomSync:(MXRoomSync *)roomSync onComplete:(void (^)(void))onComplete
 {
     MXWeakify(self);
     [self liveTimeline:^(MXEventTimeline *theLiveTimeline) {
         MXStrongifyAndReturnIfNil(self);
 
         // Let the live timeline handle live events
-        [theLiveTimeline handleJoinedRoomSync:roomSync];
-
-        // Handle here ephemeral events (if any)
-        for (MXEvent *event in roomSync.ephemeral.events)
-        {
-            // Report the room id in the event as it is skipped in /sync response
-            event.roomId = self.roomId;
-
-            // Handle first typing notifications
-            if (event.eventType == MXEventTypeTypingNotification)
+        [theLiveTimeline handleJoinedRoomSync:roomSync onComplete:^{
+            // Handle here ephemeral events (if any)
+            for (MXEvent *event in roomSync.ephemeral.events)
             {
-                // Typing notifications events are not room messages nor room state events
-                // They are just volatile information
-                MXJSONModelSetArray(self->_typingUsers, event.content[@"user_ids"]);
-
-                // Notify listeners
-                [theLiveTimeline notifyListeners:event direction:MXTimelineDirectionForwards];
+                // Report the room id in the event as it is skipped in /sync response
+                event.roomId = self.roomId;
+                
+                // Handle first typing notifications
+                if (event.eventType == MXEventTypeTypingNotification)
+                {
+                    // Typing notifications events are not room messages nor room state events
+                    // They are just volatile information
+                    MXJSONModelSetArray(self->_typingUsers, event.content[@"user_ids"]);
+                    
+                    // Notify listeners
+                    [theLiveTimeline notifyListeners:event direction:MXTimelineDirectionForwards];
+                }
+                else if (event.eventType == MXEventTypeReceipt)
+                {
+                    [self handleReceiptEvent:event direction:MXTimelineDirectionForwards];
+                }
             }
-            else if (event.eventType == MXEventTypeReceipt)
-            {
-                [self handleReceiptEvent:event direction:MXTimelineDirectionForwards];
-            }
-        }
-
-        // Handle account data events (if any)
-        [self handleAccountDataEvents:roomSync.accountData.events liveTimeline:theLiveTimeline direction:MXTimelineDirectionForwards];
+            
+            // Handle account data events (if any)
+            [self handleAccountDataEvents:roomSync.accountData.events liveTimeline:theLiveTimeline direction:MXTimelineDirectionForwards];
+            
+            onComplete();
+        }];
     }];
 }
 
-- (void)handleInvitedRoomSync:(MXInvitedRoomSync *)invitedRoomSync
+- (void)handleInvitedRoomSync:(MXInvitedRoomSync *)invitedRoomSync onComplete:(void (^)(void))onComplete
 {
     [self liveTimeline:^(MXEventTimeline *theLiveTimeline) {
 
         // Let the live timeline handle live events
-        [theLiveTimeline handleInvitedRoomSync:invitedRoomSync];
-
-        // Handle direct flag to decide if it is direct or not
-        [self handleInviteDirectFlag];
+        [theLiveTimeline handleInvitedRoomSync:invitedRoomSync onComplete:^{
+            // Handle direct flag to decide if it is direct or not
+            [self handleInviteDirectFlag];
+            
+            onComplete();
+        }];
     }];
 }
 

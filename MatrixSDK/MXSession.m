@@ -439,6 +439,8 @@ typedef void (^MXOnResumeDone)(void);
 {
     NSLog(@"[MXSession] handleSyncResponse: Received %tu joined rooms, %tu invited rooms, %tu left rooms, %tu toDevice events.", syncResponse.rooms.join.count, syncResponse.rooms.invite.count, syncResponse.rooms.leave.count, syncResponse.toDevice.events.count);
 
+    dispatch_group_t dispatchGroup = dispatch_group_create();
+    
     // Check whether this is the initial sync
     BOOL isInitialSync = !self.isEventStreamInitialised;
 
@@ -466,9 +468,12 @@ typedef void (^MXOnResumeDone)(void);
             MXRoom *room = [self getOrCreateRoom:roomId notify:!isInitialSync];
 
             // Sync room
+            dispatch_group_enter(dispatchGroup);
             [room liveTimeline:^(MXEventTimeline *liveTimeline) {
-                [room handleJoinedRoomSync:roomSync];
-                [room.summary handleJoinedRoomSync:roomSync];
+                [room handleJoinedRoomSync:roomSync onComplete:^{
+                    [room.summary handleJoinedRoomSync:roomSync];
+                    dispatch_group_leave(dispatchGroup);
+                }];
             }];
             
             for (MXEvent *event in roomSync.accountData.events)
@@ -499,9 +504,12 @@ typedef void (^MXOnResumeDone)(void);
             MXRoom *room = [self getOrCreateRoom:roomId notify:!isInitialSync];
 
             // Prepare invited room
+            dispatch_group_enter(dispatchGroup);
             [room liveTimeline:^(MXEventTimeline *liveTimeline) {
-                [room handleInvitedRoomSync:invitedRoomSync];
-                [room.summary handleInvitedRoomSync:invitedRoomSync];
+                [room handleInvitedRoomSync:invitedRoomSync onComplete:^{
+                    [room.summary handleInvitedRoomSync:invitedRoomSync];
+                    dispatch_group_leave(dispatchGroup);
+                }];
             }];
         }
     }
@@ -524,35 +532,39 @@ typedef void (^MXOnResumeDone)(void);
                 // FIXME SYNCV2: While 'handleArchivedRoomSync' is not available,
                 // use 'handleJoinedRoomSync' to pass the last events to the room before leaving it.
                 // The room will then able to notify its listeners.
+                dispatch_group_enter(dispatchGroup);
                 [room liveTimeline:^(MXEventTimeline *liveTimeline) {
-                    [room handleJoinedRoomSync:leftRoomSync];
-                    [room.summary handleJoinedRoomSync:leftRoomSync];
-
-                    // Look for the last room member event
-                    MXEvent *roomMemberEvent;
-                    NSInteger index = leftRoomSync.timeline.events.count;
-                    while (index--)
-                    {
-                        MXEvent *event = leftRoomSync.timeline.events[index];
-
-                        if ([event.type isEqualToString:kMXEventTypeStringRoomMember])
+                    [room handleJoinedRoomSync:leftRoomSync onComplete:^{
+                        [room.summary handleJoinedRoomSync:leftRoomSync];
+                        
+                        // Look for the last room member event
+                        MXEvent *roomMemberEvent;
+                        NSInteger index = leftRoomSync.timeline.events.count;
+                        while (index--)
                         {
-                            roomMemberEvent = event;
-                            break;
+                            MXEvent *event = leftRoomSync.timeline.events[index];
+                            
+                            if ([event.type isEqualToString:kMXEventTypeStringRoomMember])
+                            {
+                                roomMemberEvent = event;
+                                break;
+                            }
                         }
-                    }
-
-                    // Notify the room is going to disappear
-                    NSMutableDictionary *userInfo = [NSMutableDictionary dictionaryWithObject:room.roomId forKey:kMXSessionNotificationRoomIdKey];
-                    if (roomMemberEvent)
-                    {
-                        userInfo[kMXSessionNotificationEventKey] = roomMemberEvent;
-                    }
-                    [[NSNotificationCenter defaultCenter] postNotificationName:kMXSessionWillLeaveRoomNotification
-                                                                        object:self
-                                                                      userInfo:userInfo];
-                    // Remove the room from the rooms list
-                    [self removeRoom:room.roomId];
+                        
+                        // Notify the room is going to disappear
+                        NSMutableDictionary *userInfo = [NSMutableDictionary dictionaryWithObject:room.roomId forKey:kMXSessionNotificationRoomIdKey];
+                        if (roomMemberEvent)
+                        {
+                            userInfo[kMXSessionNotificationEventKey] = roomMemberEvent;
+                        }
+                        [[NSNotificationCenter defaultCenter] postNotificationName:kMXSessionWillLeaveRoomNotification
+                                                                            object:self
+                                                                          userInfo:userInfo];
+                        // Remove the room from the rooms list
+                        [self removeRoom:room.roomId];
+                        
+                        dispatch_group_leave(dispatchGroup);
+                    }];
                 }];
             }
         }
@@ -595,7 +607,7 @@ typedef void (^MXOnResumeDone)(void);
 
     // Sync point: wait that all rooms in the /sync response have been loaded
     // and their /sync response has been processed
-    [self preloadRoomsData:[self roomsInSyncResponse:syncResponse] onComplete:^{
+    dispatch_group_notify(dispatchGroup, dispatch_get_main_queue(), ^{
 
         if (self.crypto)
         {
@@ -843,7 +855,7 @@ typedef void (^MXOnResumeDone)(void);
     // Get wellknown data only at the login time
     if (!self.homeserverWellknown)
     {
-        [self refreshHomeserverWellknown:nil failure:nil];
+//        [self refreshHomeserverWellknown:nil failure:nil];
     }
 }
 

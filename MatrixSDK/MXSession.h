@@ -1462,7 +1462,7 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
  
  @param events the events to decrypt.
  @param timeline the id of the timeline where the events are decrypted. It is used
- to prevent replay attack.
+        to prevent replay attack.
  @return a dictionary {EventId -> NSError} with encountered errors. 
  */
 - (void)decryptEvents:(NSArray<MXEvent*> *)events

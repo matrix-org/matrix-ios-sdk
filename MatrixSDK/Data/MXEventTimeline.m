@@ -209,22 +209,30 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
         // Reset pagination state from here
         [self resetPagination];
 
-        [self addEvent:eventContext.event direction:MXTimelineDirectionForwards fromStore:NO isRoomInitialSync:NO];
+        NSMutableArray *events = [NSMutableArray array];
+        [events addObject:eventContext.event];
+        [events addObjectsFromArray:eventContext.eventsBefore];
+        [events addObjectsFromArray:eventContext.eventsAfter];
 
-        for (MXEvent *event in eventContext.eventsBefore)
-        {
-            [self addEvent:event direction:MXTimelineDirectionBackwards fromStore:NO isRoomInitialSync:NO];
-        }
+        [self decryptEvents:events onComplete:^{
+            [self addEvent:eventContext.event direction:MXTimelineDirectionForwards fromStore:NO isRoomInitialSync:NO];
+            
+            for (MXEvent *event in eventContext.eventsBefore)
+            {
+                [self addEvent:event direction:MXTimelineDirectionBackwards fromStore:NO isRoomInitialSync:NO];
+            }
+            
+            for (MXEvent *event in eventContext.eventsAfter)
+            {
+                [self addEvent:event direction:MXTimelineDirectionForwards fromStore:NO isRoomInitialSync:NO];
+            }
+            
+            [self->store storePaginationTokenOfRoom:self->room.roomId andToken:eventContext.start];
+            self->forwardsPaginationToken = eventContext.end;
+            
+            success();
+        }];
 
-        for (MXEvent *event in eventContext.eventsAfter)
-        {
-            [self addEvent:event direction:MXTimelineDirectionForwards fromStore:NO isRoomInitialSync:NO];
-        }
-
-        [self->store storePaginationTokenOfRoom:self->room.roomId andToken:eventContext.start];
-        self->forwardsPaginationToken = eventContext.end;
-
-        success();
     } failure:failure];
 }
 
@@ -255,6 +263,7 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
         {
             @autoreleasepool
             {
+                // @TODO: Decrypt async
                 // messagesFromStore are in chronological order
                 // Handle events from the most recent
                 for (NSInteger i = messagesFromStoreCount - 1; i >= 0; i--)
@@ -324,13 +333,20 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
         if ([self->room.mxSession hasRoomWithRoomId:self->room.roomId]
             || [self->room.mxSession isPeekingInRoomWithRoomId:self->room.roomId])
         {
-            [self handlePaginationResponse:paginatedResponse direction:direction];
+            [self handlePaginationResponse:paginatedResponse direction:direction onComplete:^{
+                // Inform the method caller
+                complete();
+                
+                NSLog(@"[MXEventTimeline] paginate: is done");
+            }];
         }
-
-        // Inform the method caller
-        complete();
-
-        NSLog(@"[MXEventTimeline] paginate: is done");
+        else
+        {
+            // Inform the method caller
+            complete();
+            
+            NSLog(@"[MXEventTimeline] paginate: is done");
+        }
 
     } failure:^(NSError *error) {
         MXStrongifyAndReturnIfNil(self);
@@ -380,7 +396,7 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
 
 
 #pragma mark - Homeserver responses handling
-- (void)handleJoinedRoomSync:(MXRoomSync *)roomSync
+- (void)handleJoinedRoomSync:(MXRoomSync *)roomSync onComplete:(void (^)(void))onComplete
 {
     // Is it an initial sync for this room?
     BOOL isRoomInitialSync = (room.summary.membership == MXMembershipUnknown || room.summary.membership == MXMembershipInvite);
@@ -407,66 +423,73 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
     // Build/Update first the room state corresponding to the 'start' of the timeline.
     // Note: We consider it is not required to clone the existing room state here, because no notification is posted for these events.
     [self handleStateEvents:roomSync.state.events direction:MXTimelineDirectionForwards];
-
-    // Handle now timeline.events, the room state is updated during this step too (Note: timeline events are in chronological order)
-    if (isRoomInitialSync)
-    {
-        for (MXEvent *event in roomSync.timeline.events)
+    
+    MXWeakify(self);
+    [self decryptEvents:roomSync.timeline.events onComplete:^{
+        MXStrongifyAndReturnIfNil(self);
+        
+        // Handle now timeline.events, the room state is updated during this step too (Note: timeline events are in chronological order)
+        if (isRoomInitialSync)
         {
-            // Add the event to the end of the timeline
-            [self addEvent:event direction:MXTimelineDirectionForwards fromStore:NO isRoomInitialSync:isRoomInitialSync];
+            for (MXEvent *event in roomSync.timeline.events)
+            {
+                // Add the event to the end of the timeline
+                [self addEvent:event direction:MXTimelineDirectionForwards fromStore:NO isRoomInitialSync:isRoomInitialSync];
+            }
+            
+            // Check whether we got all history from the home server
+            if (!roomSync.timeline.limited)
+            {
+                [self->store storeHasReachedHomeServerPaginationEndForRoom:self.state.roomId andValue:YES];
+            }
         }
-
-        // Check whether we got all history from the home server
-        if (!roomSync.timeline.limited)
+        else
         {
-            [store storeHasReachedHomeServerPaginationEndForRoom:self.state.roomId andValue:YES];
+            // Check whether some events have not been received from server.
+            if (roomSync.timeline.limited)
+            {
+                // Flush the existing messages for this room by keeping state events.
+                [self->store deleteAllMessagesInRoom:self.state.roomId];
+            }
+            
+            for (MXEvent *event in roomSync.timeline.events)
+            {
+                // Add the event to the end of the timeline
+                [self addEvent:event direction:MXTimelineDirectionForwards fromStore:NO isRoomInitialSync:isRoomInitialSync];
+            }
         }
-    }
-    else
-    {
-        // Check whether some events have not been received from server.
+        
+        // In case of limited timeline, update token where to start back pagination
         if (roomSync.timeline.limited)
         {
-            // Flush the existing messages for this room by keeping state events.
-            [store deleteAllMessagesInRoom:_state.roomId];
+            [self->store storePaginationTokenOfRoom:self.state.roomId andToken:roomSync.timeline.prevBatch];
         }
-
-        for (MXEvent *event in roomSync.timeline.events)
+        
+        // Finalize initial sync
+        if (isRoomInitialSync)
         {
-            // Add the event to the end of the timeline
-            [self addEvent:event direction:MXTimelineDirectionForwards fromStore:NO isRoomInitialSync:isRoomInitialSync];
+            // Notify that room has been sync'ed
+            // Delay it so that MXRoom.summary is computed before sending it
+            dispatch_async(dispatch_get_main_queue(), ^{
+                
+                [[NSNotificationCenter defaultCenter] postNotificationName:kMXRoomInitialSyncNotification
+                                                                    object:self->room
+                                                                  userInfo:nil];
+            });
         }
-    }
-
-    // In case of limited timeline, update token where to start back pagination
-    if (roomSync.timeline.limited)
-    {
-        [store storePaginationTokenOfRoom:_state.roomId andToken:roomSync.timeline.prevBatch];
-    }
-
-    // Finalize initial sync
-    if (isRoomInitialSync)
-    {
-        // Notify that room has been sync'ed
-        // Delay it so that MXRoom.summary is computed before sending it
-        dispatch_async(dispatch_get_main_queue(), ^{
-
-            [[NSNotificationCenter defaultCenter] postNotificationName:kMXRoomInitialSyncNotification
-                                                            object:self->room
-                                                          userInfo:nil];
-        });
-    }
-    else if (roomSync.timeline.limited)
-    {
-        // The room has been resync with a limited timeline - Post notification
-        [[NSNotificationCenter defaultCenter] postNotificationName:kMXRoomDidFlushDataNotification
-                                                            object:room
-                                                          userInfo:nil];
-    }
+        else if (roomSync.timeline.limited)
+        {
+            // The room has been resync with a limited timeline - Post notification
+            [[NSNotificationCenter defaultCenter] postNotificationName:kMXRoomDidFlushDataNotification
+                                                                object:self->room
+                                                              userInfo:nil];
+        }
+        
+        onComplete();
+    }];
 }
 
-- (void)handleInvitedRoomSync:(MXInvitedRoomSync *)invitedRoomSync
+- (void)handleInvitedRoomSync:(MXInvitedRoomSync *)invitedRoomSync onComplete:(void (^)(void))onComplete
 {
     // In case of lazy-loading, we may not have the membership event for our user.
     // If handleInvitedRoomSync is called, the user is an invited member.
@@ -475,19 +498,23 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
         room.summary.membership = MXMembershipInvite;
     }
     
-    [self fixRoomIdInEvents:invitedRoomSync.inviteState.events];
-
-    // Handle the state events forwardly (the room state will be updated, and the listeners (if any) will be notified).
-    for (MXEvent *event in invitedRoomSync.inviteState.events)
-    {
-        // Add a fake event id if none in order to be able to store the event
-        if (!event.eventId)
+    NSArray<MXEvent*> *events = invitedRoomSync.inviteState.events;
+    [self fixRoomIdInEvents:events];
+    [self decryptEvents:events onComplete:^{
+        // Handle the state events forwardly (the room state will be updated, and the listeners (if any) will be notified).
+        for (MXEvent *event in events)
         {
-            event.eventId = [NSString stringWithFormat:@"%@%@", kMXRoomInviteStateEventIdPrefix, [[NSProcessInfo processInfo] globallyUniqueString]];
+            // Add a fake event id if none in order to be able to store the event
+            if (!event.eventId)
+            {
+                event.eventId = [NSString stringWithFormat:@"%@%@", kMXRoomInviteStateEventIdPrefix, [[NSProcessInfo processInfo] globallyUniqueString]];
+            }
+            
+            [self addEvent:event direction:MXTimelineDirectionForwards fromStore:NO isRoomInitialSync:YES];
         }
-
-        [self addEvent:event direction:MXTimelineDirectionForwards fromStore:NO isRoomInitialSync:YES];
-    }
+        
+        onComplete();
+    }];
 }
 
 - (void)handleLazyLoadedStateEvents:(NSArray<MXEvent *> *)stateEvents
@@ -495,7 +522,7 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
     [self handleStateEvents:stateEvents direction:MXTimelineDirectionForwards];
 }
 
-- (void)handlePaginationResponse:(MXPaginationResponse*)paginatedResponse direction:(MXTimelineDirection)direction
+- (void)handlePaginationResponse:(MXPaginationResponse*)paginatedResponse direction:(MXTimelineDirection)direction onComplete:(void (^)(void))onComplete
 {
     // Check pagination end - @see SPEC-319 ticket
     if (paginatedResponse.chunk.count == 0 && [paginatedResponse.start isEqualToString:paginatedResponse.end])
@@ -537,29 +564,36 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
         // Enrich intermediate room state while paginating
         [self handleStateEvents:paginatedResponse.state  direction:direction];
     }
-
-    // Process received events
-    for (MXEvent *event in paginatedResponse.chunk)
-    {
-        // Make sure we have not processed this event yet
-		[self addEvent:event direction:direction fromStore:NO isRoomInitialSync:NO];
-    }
-
-    // And update pagination tokens
-    if (direction == MXTimelineDirectionBackwards)
-    {
-        [store storePaginationTokenOfRoom:_state.roomId andToken:paginatedResponse.end];
-    }
-    else
-    {
-        forwardsPaginationToken = paginatedResponse.end;
-    }
-
-    // Commit store changes
-    if ([store respondsToSelector:@selector(commit)])
-    {
-        [store commit];
-    }
+    
+    MXWeakify(self);
+    [self decryptEvents:paginatedResponse.chunk onComplete:^{
+        MXStrongifyAndReturnIfNil(self);
+        
+        // Process received events
+        for (MXEvent *event in paginatedResponse.chunk)
+        {
+            // Make sure we have not processed this event yet
+            [self addEvent:event direction:direction fromStore:NO isRoomInitialSync:NO];
+        }
+        
+        // And update pagination tokens
+        if (direction == MXTimelineDirectionBackwards)
+        {
+            [self->store storePaginationTokenOfRoom:self.state.roomId andToken:paginatedResponse.end];
+        }
+        else
+        {
+            self->forwardsPaginationToken = paginatedResponse.end;
+        }
+        
+        // Commit store changes
+        if ([self->store respondsToSelector:@selector(commit)])
+        {
+            [self->store commit];
+        }
+        
+        onComplete();
+    }];
 }
 
 
@@ -587,26 +621,6 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
         [self cloneState:direction];
 
         [self handleStateEvents:@[event] direction:direction];
-    }
-
-    // Decrypt event if necessary
-    if (event.eventType == MXEventTypeRoomEncrypted)
-    {
-
-        NSString *timelineId = _timelineId;
-        if (event.unsignedData.relations.replace)
-        {
-            // Do not track duplicate decryption (MXDecryptingErrorDuplicateMessageIndexCode)
-            // for content of replace event because the content is decrypted later too with
-            // the edited event
-            // TODO: Remove this with the coming update of MSC1849.
-            timelineId = nil;
-        }
-
-        if (![room.mxSession decryptEvent:event inTimeline:timelineId])
-        {
-            NSLog(@"[MXTimeline] addEvent: Warning: Unable to decrypt event %@\nError: %@", event.eventId, event.decryptionError);
-        }
     }
 
     // Events going forwards on the live timeline come from /sync.
@@ -888,6 +902,32 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
     {
         event.roomId = _state.roomId;
     }
+}
+
+- (void)decryptEvents:(NSArray<MXEvent*>*)events onComplete:(void (^)(void))onComplete
+{
+    NSMutableArray *eventsToDecrypt = [NSMutableArray array];
+    for (MXEvent *event in events)
+    {
+        if (event.eventType == MXEventTypeRoomEncrypted)
+        {
+            [eventsToDecrypt addObject:event];
+        }
+        else if (event.eventType ==  MXEventTypeRoomEncryption)
+        {
+            [_state handleStateEvents:@[event]];
+        }
+    }
+    
+    if (eventsToDecrypt.count == 0)
+    {
+        onComplete();
+        return;
+    }
+    
+    [room.mxSession decryptEvents:eventsToDecrypt inTimeline:_timelineId onComplete:^(NSDictionary<NSString *,NSError *> *errors) {
+        onComplete();
+    }];
 }
 
 @end
