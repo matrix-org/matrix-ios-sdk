@@ -60,6 +60,8 @@ public enum MXEventType: Equatable, Hashable {
     case callNegotiate
     case callReplaces
     case callRejectReplacement
+    case callAssertedIdentity
+    case callAssertedIdentityUnstable
     case reaction
     case receipt
     case roomTombStone
@@ -106,6 +108,8 @@ public enum MXEventType: Equatable, Hashable {
         case .callNegotiate: return kMXEventTypeStringCallNegotiate
         case .callReplaces: return kMXEventTypeStringCallReplaces
         case .callRejectReplacement: return kMXEventTypeStringCallRejectReplacement
+        case .callAssertedIdentity: return kMXEventTypeStringCallAssertedIdentity
+        case .callAssertedIdentityUnstable: return kMXEventTypeStringCallAssertedIdentityUnstable
         case .reaction: return kMXEventTypeStringReaction
         case .receipt: return kMXEventTypeStringReceipt
         case .roomTombStone: return kMXEventTypeStringRoomTombStone
@@ -126,7 +130,7 @@ public enum MXEventType: Equatable, Hashable {
     }
 
     public init(identifier: String) {
-        let events: [MXEventType] = [.roomName, .roomTopic, .roomAvatar, .roomMember, .roomCreate, .roomJoinRules, .roomPowerLevels, .roomAliases, .roomCanonicalAlias, .roomEncrypted, .roomEncryption, .roomGuestAccess, .roomHistoryVisibility, .roomKey, .roomForwardedKey, .roomKeyRequest, .roomMessage, .roomMessageFeedback, .roomRedaction, .roomThirdPartyInvite, .roomTag, .presence, .typing, .callInvite, .callCandidates, .callAnswer, .callSelectAnswer, .callHangup, .callReject, .callNegotiate, .callReplaces, .callRejectReplacement, .receipt, .roomTombStone, .taggedEvents]
+        let events: [MXEventType] = [.roomName, .roomTopic, .roomAvatar, .roomMember, .roomCreate, .roomJoinRules, .roomPowerLevels, .roomAliases, .roomCanonicalAlias, .roomEncrypted, .roomEncryption, .roomGuestAccess, .roomHistoryVisibility, .roomKey, .roomForwardedKey, .roomKeyRequest, .roomMessage, .roomMessageFeedback, .roomRedaction, .roomThirdPartyInvite, .roomTag, .presence, .typing, .callInvite, .callCandidates, .callAnswer, .callSelectAnswer, .callHangup, .callReject, .callNegotiate, .callReplaces, .callRejectReplacement, .callAssertedIdentity, .callAssertedIdentityUnstable, .receipt, .roomTombStone, .taggedEvents]
         self = events.first(where: { $0.identifier == identifier }) ?? .custom(identifier)
     }
 }

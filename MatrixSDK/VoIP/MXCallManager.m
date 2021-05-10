@@ -117,6 +117,8 @@ NSTimeInterval const kMXCallDirectRoomJoinTimeout = 30;
                                                                 kMXEventTypeStringCallNegotiate,
                                                                 kMXEventTypeStringCallReplaces,
                                                                 kMXEventTypeStringCallRejectReplacement,
+                                                                kMXEventTypeStringCallAssertedIdentity,
+                                                                kMXEventTypeStringCallAssertedIdentityUnstable,
                                                                 kMXEventTypeStringRoomMember
                                                                 ]
                                                       onEvent:^(MXEvent *event, MXTimelineDirection direction, id customObject) {
@@ -394,6 +396,10 @@ NSTimeInterval const kMXCallDirectRoomJoinTimeout = 30;
         case MXEventTypeCallRejectReplacement:
             [self handleCallRejectReplacement:event];
             break;
+        case MXEventTypeCallAssertedIdentity:
+        case MXEventTypeCallAssertedIdentityUnstable:
+            [self handleCallAssertedIdentity:event];
+            break;
         case MXEventTypeRoomMember:
             [self handleRoomMember:event];
             break;
@@ -629,6 +635,55 @@ NSTimeInterval const kMXCallDirectRoomJoinTimeout = 30;
     if (call)
     {
         [call handleCallEvent:event];
+    }
+}
+
+- (void)handleCallAssertedIdentity:(MXEvent *)event
+{
+    //  check handling allowed
+    if (![MXSDKOptions sharedInstance].handleCallAssertedIdentityEvents)
+    {
+        return;
+    }
+    
+    MXCallAssertedIdentityEventContent *content = [MXCallAssertedIdentityEventContent modelFromJSON:event.content];
+    
+    // Forward the event to the MXCall object
+    MXCall *call = [self callWithCallId:content.callId];
+    if (call)
+    {
+        if (content.assertedIdentity.userId)
+        {
+            //  do a native lookup first
+            
+            MXWeakify(self);
+            
+            [self getNativeUserFrom:content.assertedIdentity.userId success:^(MXThirdPartyUserInstance * _Nonnull user) {
+                MXStrongifyAndReturnIfNil(self);
+                
+                MXAssertedIdentityModel *assertedIdentity = content.assertedIdentity;
+                
+                //  fetch the native user
+                MXUser *mxUser = [self.mxSession userWithUserId:user.userId];
+                
+                if (mxUser)
+                {
+                    assertedIdentity = [[MXAssertedIdentityModel alloc] initWithUser:mxUser];
+                }
+                else
+                {
+                    assertedIdentity.userId = user.userId;
+                }
+                
+                //  use the updated asserted identity
+                call.assertedIdentity = assertedIdentity;
+            } failure:nil];
+        }
+        else
+        {
+            //  no need to a native lookup, directly pass the identity
+            call.assertedIdentity = content.assertedIdentity;
+        }
     }
 }
 
