@@ -189,6 +189,18 @@ extern NSString *const MXDeviceListDidUpdateUsersDevicesNotification;
 - (MXEventDecryptionResult *)decryptEvent:(MXEvent*)event inTimeline:(NSString*)timeline;
 
 /**
+ Decrypt events asynchronously.
+ 
+ @param events the events to decrypt.
+ @param timeline the id of the timeline where the events are decrypted. It is used
+        to prevent replay attack.
+ @return a dictionary {EventId -> MXEventDecryptionResult} with decryption results.
+ */
+- (void)decryptEvents:(NSArray<MXEvent*> *)events
+           inTimeline:(NSString*)timeline
+           onComplete:(void (^)(NSDictionary<NSString *, MXEventDecryptionResult *>*))onComplete;
+
+/**
  Ensure that the outbound session is ready to encrypt events.
  
  Thus, the next [MXCrypto encryptEvent] should be encrypted without any HTTP requests.

@@ -536,44 +536,7 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
     // At the moment, we lock the main thread while decrypting events.
     // Fortunately, decrypting is far quicker that encrypting.
     dispatch_sync(decryptionQueue, ^{
-
-        if (!event.content.count)
-        {
-            NSLog(@"[MXCrypto] decryptEvent: No content to decrypt in event %@ (isRedacted: %@). Event: %@", event.eventId, @(event.isRedactedEvent), event.JSONDictionary);
-            result = [[MXEventDecryptionResult alloc] init];
-            result.clearEvent = event.content;
-            return;
-        }
-
-        id<MXDecrypting> alg = [self getRoomDecryptor:event.roomId algorithm:event.content[@"algorithm"]];
-        if (!alg)
-        {
-            NSLog(@"[MXCrypto] decryptEvent: Unable to decrypt %@ with algorithm %@. Event: %@", event.eventId, event.content[@"algorithm"], event.JSONDictionary);
-
-            result = [MXEventDecryptionResult new];
-            result.error = [NSError errorWithDomain:MXDecryptingErrorDomain
-                                               code:MXDecryptingErrorUnableToDecryptCode
-                                           userInfo:@{
-                                               NSLocalizedDescriptionKey: MXDecryptingErrorUnableToDecrypt,
-                                               NSLocalizedFailureReasonErrorKey: [NSString stringWithFormat:MXDecryptingErrorUnableToDecryptReason, event, event.content[@"algorithm"]]
-                                           }];
-        }
-        else
-        {
-            result = [alg decryptEvent:event inTimeline:timeline];
-            if (result.error)
-            {
-                NSLog(@"[MXCrypto] decryptEvent: Error for %@: %@\nEvent: %@", event.eventId, result.error, event.JSONDictionary);
-                
-                if ([result.error.domain isEqualToString:MXDecryptingErrorDomain]
-                    && result.error.code == MXDecryptingErrorBadEncryptedMessageCode)
-                {
-                    dispatch_async(self.cryptoQueue, ^{
-                        [self markOlmSessionForUnwedgingInEvent:event];
-                    });
-                }
-            }
-        }
+        result = [self decryptEvent2:event inTimeline:timeline];
     });
 
     return result;
@@ -581,6 +544,71 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
 #else
     return nil;
 #endif
+}
+
+- (MXEventDecryptionResult *)decryptEvent2:(MXEvent *)event inTimeline:(NSString*)timeline
+{
+    MXEventDecryptionResult *result;
+    
+    if (!event.content.count)
+    {
+        NSLog(@"[MXCrypto] decryptEvent: No content to decrypt in event %@ (isRedacted: %@). Event: %@", event.eventId, @(event.isRedactedEvent), event.JSONDictionary);
+        result = [[MXEventDecryptionResult alloc] init];
+        result.clearEvent = event.content;
+        return result;
+    }
+    
+    id<MXDecrypting> alg = [self getRoomDecryptor:event.roomId algorithm:event.content[@"algorithm"]];
+    if (!alg)
+    {
+        NSLog(@"[MXCrypto] decryptEvent: Unable to decrypt %@ with algorithm %@. Event: %@", event.eventId, event.content[@"algorithm"], event.JSONDictionary);
+        
+        result = [MXEventDecryptionResult new];
+        result.error = [NSError errorWithDomain:MXDecryptingErrorDomain
+                                           code:MXDecryptingErrorUnableToDecryptCode
+                                       userInfo:@{
+                                           NSLocalizedDescriptionKey: MXDecryptingErrorUnableToDecrypt,
+                                           NSLocalizedFailureReasonErrorKey: [NSString stringWithFormat:MXDecryptingErrorUnableToDecryptReason, event, event.content[@"algorithm"]]
+                                       }];
+    }
+    else
+    {
+        result = [alg decryptEvent:event inTimeline:timeline];
+        if (result.error)
+        {
+            NSLog(@"[MXCrypto] decryptEvent: Error for %@: %@\nEvent: %@", event.eventId, result.error, event.JSONDictionary);
+            
+            if ([result.error.domain isEqualToString:MXDecryptingErrorDomain]
+                && result.error.code == MXDecryptingErrorBadEncryptedMessageCode)
+            {
+                dispatch_async(self.cryptoQueue, ^{
+                    [self markOlmSessionForUnwedgingInEvent:event];
+                });
+            }
+        }
+    }
+    
+    return result;
+}
+
+- (void)decryptEvents:(NSArray<MXEvent*> *)events
+           inTimeline:(NSString*)timeline
+           onComplete:(void (^)(NSDictionary<NSString *, MXEventDecryptionResult *>*))onComplete
+{
+    dispatch_async(decryptionQueue, ^{
+        NSMutableDictionary<NSString *, MXEventDecryptionResult *> *results = [NSMutableDictionary dictionaryWithCapacity:events.count];
+        
+        // TODO: Implement bulk decrypt to speed up the process.
+        //
+        for (MXEvent *event in events)
+        {
+            results[event.eventId] = [self decryptEvent2:event inTimeline:timeline];
+        }
+        
+        dispatch_async(dispatch_get_main_queue(), ^{
+            onComplete(results);
+        });
+    });
 }
 
 - (MXHTTPOperation*)ensureEncryptionInRoom:(NSString*)roomId

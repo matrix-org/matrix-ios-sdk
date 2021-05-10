@@ -4042,6 +4042,50 @@ typedef void (^MXOnResumeDone)(void);
     return (result.error == nil);
 }
 
+- (void)decryptEvents:(NSArray<MXEvent*> *)events
+           inTimeline:(NSString*)timeline
+           onComplete:(void (^)(NSDictionary<NSString *, NSError *>*))onComplete
+{
+    if (_crypto)
+    {
+        [_crypto decryptEvents:events inTimeline:timeline onComplete:^(NSDictionary<NSString *,MXEventDecryptionResult *> *results) {
+            NSMutableDictionary<NSString *, NSError *> *errors = [NSMutableDictionary dictionary];
+            for (MXEvent *event in events)
+            {
+                NSString *eventId = event.eventId;
+                MXEventDecryptionResult *result = results[eventId];
+                [event setClearData:result];
+                
+                if (result.error)
+                {
+                    errors[eventId] = result.error;
+                }
+            }
+            
+            onComplete(errors);
+        }];
+    }
+    else
+    {
+        NSMutableDictionary<NSString *, NSError *> *errors = [NSMutableDictionary dictionary];
+        
+        // Encryption not enabled
+        MXEventDecryptionResult *result = [MXEventDecryptionResult new];
+        result.error = [NSError errorWithDomain:MXDecryptingErrorDomain
+                                           code:MXDecryptingErrorEncryptionNotEnabledCode
+                                       userInfo:@{
+                                           NSLocalizedDescriptionKey: MXDecryptingErrorEncryptionNotEnabledReason
+                                       }];
+        
+        for (MXEvent *event in events)
+        {
+            [event setClearData:result];
+            errors[event.eventId] = result.error;
+        }
+        onComplete(errors);
+    }
+}
+
 - (void)resetReplayAttackCheckInTimeline:(NSString*)timeline
 {
     if (_crypto)
