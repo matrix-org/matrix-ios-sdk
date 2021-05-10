@@ -21,7 +21,7 @@ NS_ASSUME_NONNULL_BEGIN
 @class MXUser;
 
 /**
- `MXUserModel` represents the asserted identity of an `m.call.asserted_identity` event.
+ `MXAssertedIdentityModel` represents the asserted identity of an `m.call.asserted_identity` event.
  @see MXCallAssertedIdentityEventContent
  */
 @interface MXAssertedIdentityModel : MXJSONModel
