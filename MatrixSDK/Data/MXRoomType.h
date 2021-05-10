@@ -29,5 +29,4 @@ typedef NSString *const MXRoomTypeString NS_TYPED_EXTENSIBLE_ENUM;
 
 static MXRoomTypeString const MXRoomTypeStringRoomMSC1840 = @"org.matrix.msc1840.messaging";
 static MXRoomTypeString const MXRoomTypeStringRoom = @"m.message";
-static MXRoomTypeString const MXRoomTypeStringSpaceMSC1772 = @"org.matrix.msc1772.space";
 static MXRoomTypeString const MXRoomTypeStringSpace = @"m.space";
