@@ -196,6 +196,8 @@ typedef void (^MXOnResumeDone)(void);
  */
 @property (nonatomic, strong) id<MXBackgroundTask> backgroundTask;
 
+@property (nonatomic, strong) id<MXSyncResponseStore> initialSyncResponseCache;
+
 @end
 
 @implementation MXSession
@@ -264,6 +266,7 @@ typedef void (^MXOnResumeDone)(void);
                               ];
 
         _catchingUp = NO;
+        _initialSyncResponseCache = [[MXSyncResponseFileStore alloc] initWithCredentials:mxRestClient.credentials];
 
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(onDidDecryptEvent:) name:kMXEventDidDecryptNotification object:nil];
 
