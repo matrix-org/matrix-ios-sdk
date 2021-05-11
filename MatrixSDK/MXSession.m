@@ -1286,7 +1286,11 @@ typedef void (^MXOnResumeDone)(void);
             syncTaskProfile.units = syncResponse.rooms.join.count + syncResponse.rooms.invite.count + syncResponse.rooms.leave.count;
             
             [MXSDKOptions.sharedInstance.profiler stopMeasuringTaskWithProfile:syncTaskProfile];
-            
+        }
+        
+        BOOL isInitialSync = !self.isEventStreamInitialised;
+        if (isInitialSync)
+        {
             //  cache initial sync response
             MXCachedSyncResponse *response = [[MXCachedSyncResponse alloc] initWithSyncToken:nil
                                                                                 syncResponse:syncResponse];
