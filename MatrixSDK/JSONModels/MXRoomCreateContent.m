@@ -22,7 +22,7 @@ static NSString* const kRoomCreateContentUserIdJSONKey = @"creator";
 static NSString* const kRoomCreateContentPredecessorInfoJSONKey = @"predecessor";
 static NSString* const kRoomCreateContentRoomVersionJSONKey = @"room_version";
 static NSString* const kRoomCreateContentFederateJSONKey = @"m.federate";
-static NSString* const kRoomCreateContentRoomTypeJSONKey = @"m.room.type";
+static NSString* const kRoomCreateContentRoomTypeJSONKey = @"type";
 
 #pragma mark - Private Interface
 
