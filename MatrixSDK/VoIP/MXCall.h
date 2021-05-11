@@ -31,6 +31,7 @@ NS_ASSUME_NONNULL_BEGIN
 @class MXEvent;
 @class MXRoom;
 @class MXUserModel;
+@class MXAssertedIdentityModel;
 
 /**
  Call states.
@@ -356,6 +357,11 @@ extern NSString *const kMXCallSupportsTransferringStatusDidChange;
 @property (nonatomic, readonly) NSUInteger duration;
 
 /**
+ The asserted identity for the call. May be nil.
+ */
+@property (nonatomic, copy, nullable) MXAssertedIdentityModel *assertedIdentity;
+
+/**
  The delegate.
  */
 @property (nonatomic, weak) id<MXCallDelegate> delegate;
@@ -398,6 +404,12 @@ extern NSString *const kMXCallSupportsTransferringStatusDidChange;
  @param call the instance that changes
  */
 - (void)callConsultingStatusDidChange:(MXCall *)call;
+
+/**
+ Tells the delegate that `assertedIdentity` property of the call has changed.
+ @param call the instance that changes
+ */
+- (void)callAssertedIdentityDidChange:(MXCall *)call;
 
 /**
  Tells the delegate an error occured.
