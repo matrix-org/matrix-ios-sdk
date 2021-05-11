@@ -1944,11 +1944,7 @@
                 }];
 
                 // Reinject the m.room_key event. This mimics a room_key event that arrives after message events.
-                [[NSNotificationCenter defaultCenter] postNotificationName:kMXSessionOnToDeviceEventNotification
-                                                                    object:bobSession
-                                                                  userInfo:@{
-                                                                             kMXSessionNotificationEventKey: toDeviceEvent
-                                                                             }];
+                [bobSession.crypto handleRoomKeyEvent:toDeviceEvent onComplete:^{}];
             }];
         }];
 

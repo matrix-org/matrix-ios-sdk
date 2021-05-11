@@ -763,6 +763,18 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
 #endif
 }
 
+- (void)handleRoomKeyEvent:(MXEvent*)event onComplete:(void (^)(void))onComplete
+{
+    // Use decryptionQueue as synchronisation because decryptions require room keys
+    dispatch_async(decryptionQueue, ^{
+        [self onRoomKeyEvent:event];
+        
+        dispatch_async(dispatch_get_main_queue(), ^{
+            onComplete();
+        });
+    });
+}
+
 - (void)handleDeviceOneTimeKeysCount:(NSDictionary<NSString *, NSNumber*>*)deviceOneTimeKeysCount
 {
 #ifdef MX_CRYPTO
@@ -2518,7 +2530,6 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
         MXWeakify(self);
         switch (event.eventType)
         {
-            case MXEventTypeRoomKey:
             case MXEventTypeRoomForwardedKey:
             {
                 dispatch_async(_cryptoQueue, ^{

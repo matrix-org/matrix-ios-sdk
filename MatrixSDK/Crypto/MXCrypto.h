@@ -241,6 +241,14 @@ extern NSString *const MXDeviceListDidUpdateUsersDevicesNotification;
 - (void)handleDeviceOneTimeKeysCount:(NSDictionary<NSString *, NSNumber*>*)deviceOneTimeKeysCount;
 
 /**
+ Handle a room key event.
+ 
+ @param event the room key event.
+ @param onComplete the block called when the operation completes.
+ */
+- (void)handleRoomKeyEvent:(MXEvent*)event onComplete:(void (^)(void))onComplete;
+
+/**
  Handle the completion of a /sync.
 
  This is called after the processing of each successful /sync response.
