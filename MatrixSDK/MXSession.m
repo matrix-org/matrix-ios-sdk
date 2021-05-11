@@ -1213,35 +1213,69 @@ typedef void (^MXOnResumeDone)(void);
                       clientTimeout:(NSUInteger)clientTimeout
                         setPresence:(NSString*)setPresence
 {
-    NSDate *startDate = [NSDate date];
+    dispatch_group_t initialSyncDispatchGroup = dispatch_group_create();
     
-    MXTaskProfile *syncTaskProfile;
-    if (!self->firstSyncDone)
+    __block MXTaskProfile *syncTaskProfile;
+    __block MXSyncResponse *syncResponse;
+
+    if (!self.isEventStreamInitialised && self.initialSyncResponseCache.outdatedSyncResponseIds.count > 0)
     {
-        BOOL isInitialSync = !self.isEventStreamInitialised;
-        syncTaskProfile = [MXSDKOptions.sharedInstance.profiler startMeasuringTaskWithName:isInitialSync ? kMXAnalyticsStartupInititialSync : kMXAnalyticsStartupIncrementalSync
-                                                        category:kMXAnalyticsStartupCategory];
-    }
-
-    // Determine if we are catching up
-    _catchingUp = (0 == serverTimeout);
-
-    NSString * streamToken = _store.eventStreamToken;
-    NSLog(@"[MXSession] Do a server sync%@ from token: %@", _catchingUp ? @" (catching up)" : @"", streamToken);
-
-    MXWeakify(self);
-    eventStreamRequest = [matrixRestClient syncFromToken:streamToken serverTimeout:serverTimeout clientTimeout:clientTimeout setPresence:setPresence filter:self.syncFilterId success:^(MXSyncResponse *syncResponse) {
-        MXStrongifyAndReturnIfNil(self);
+        //  use the sync response from the cache
+        dispatch_group_enter(initialSyncDispatchGroup);
         
-        // Make sure [MXSession close] or [MXSession pause] has not been called before the server response
-        if (!self->eventStreamRequest)
+        NSString *responseId = self.initialSyncResponseCache.outdatedSyncResponseIds.lastObject;
+        MXCachedSyncResponse *cachedResponse = [self.initialSyncResponseCache syncResponseWithId:responseId
+                                                                                           error:nil];
+        
+        syncResponse = cachedResponse.syncResponse;
+        
+        NSLog(@"[MXSession] serverSync: Use cached initial sync response");
+        
+        dispatch_group_leave(initialSyncDispatchGroup);
+    }
+    else
+    {
+        //  do a network request
+        dispatch_group_enter(initialSyncDispatchGroup);
+        
+        NSDate *startDate = [NSDate date];
+        
+        if (!self->firstSyncDone)
         {
-            return;
+            BOOL isInitialSync = !self.isEventStreamInitialised;
+            syncTaskProfile = [MXSDKOptions.sharedInstance.profiler startMeasuringTaskWithName:isInitialSync ? kMXAnalyticsStartupInititialSync : kMXAnalyticsStartupIncrementalSync
+                                                            category:kMXAnalyticsStartupCategory];
         }
         
-        NSTimeInterval duration = [[NSDate date] timeIntervalSinceDate:startDate];
-        NSLog(@"[MXSession] Received sync response in %.0fms", duration * 1000);
+        NSString * streamToken = _store.eventStreamToken;
         
+        // Determine if we are catching up
+        _catchingUp = (0 == serverTimeout);
+        
+        NSLog(@"[MXSession] Do a server sync%@ from token: %@", _catchingUp ? @" (catching up)" : @"", streamToken);
+        
+        MXWeakify(self);
+        eventStreamRequest = [matrixRestClient syncFromToken:streamToken serverTimeout:serverTimeout clientTimeout:clientTimeout setPresence:setPresence filter:self.syncFilterId success:^(MXSyncResponse *liveResponse) {
+            MXStrongifyAndReturnIfNil(self);
+            
+            // Make sure [MXSession close] or [MXSession pause] has not been called before the server response
+            if (!self->eventStreamRequest)
+            {
+                return;
+            }
+            
+            NSTimeInterval duration = [[NSDate date] timeIntervalSinceDate:startDate];
+            NSLog(@"[MXSession] Received sync response in %.0fms", duration * 1000);
+            
+            syncResponse = liveResponse;
+            
+            dispatch_group_leave(initialSyncDispatchGroup);
+        } failure:^(NSError *error) {
+            [self handleServerSyncError:error forRequestWithServerTimeout:serverTimeout success:success failure:failure];
+        }];
+    }
+    
+    dispatch_group_notify(initialSyncDispatchGroup, dispatch_get_main_queue(), ^{
         BOOL wasfirstSync = NO;
         if (!self->firstSyncDone && syncTaskProfile)
         {
@@ -1252,6 +1286,12 @@ typedef void (^MXOnResumeDone)(void);
             syncTaskProfile.units = syncResponse.rooms.join.count + syncResponse.rooms.invite.count + syncResponse.rooms.leave.count;
             
             [MXSDKOptions.sharedInstance.profiler stopMeasuringTaskWithProfile:syncTaskProfile];
+            
+            //  cache initial sync response
+            MXCachedSyncResponse *response = [[MXCachedSyncResponse alloc] initWithSyncToken:nil
+                                                                                syncResponse:syncResponse];
+            NSString *cacheId = [self.initialSyncResponseCache addSyncResponseWithSyncResponse:response];
+            [self.initialSyncResponseCache markOutdatedWithSyncResponseIds:@[cacheId]];
         }
         
         // By default, the next sync will be a long polling (with the default server timeout value)
@@ -1346,6 +1386,12 @@ typedef void (^MXOnResumeDone)(void);
                 return;
             }
             
+            //  clear initial sync cache after handling sync response
+            for (NSString *responseId in self.initialSyncResponseCache.outdatedSyncResponseIds)
+            {
+                [self.initialSyncResponseCache deleteSyncResponseWithId:responseId];
+            }
+            
             // Pursue live events listening
             [self serverSyncWithServerTimeout:nextServerTimeout success:nil failure:nil clientTimeout:CLIENT_TIMEOUT_MS setPresence:nil];
             
@@ -1354,9 +1400,7 @@ typedef void (^MXOnResumeDone)(void);
                 success();
             }
         }];
-    } failure:^(NSError *error) {
-        [self handleServerSyncError:error forRequestWithServerTimeout:serverTimeout success:success failure:failure];
-    }];
+    });
 }
 
 - (void)handleServerSyncError:(NSError*)error forRequestWithServerTimeout:(NSUInteger)serverTimeout success:(void (^)(void))success failure:(void (^)(NSError *error))failure
