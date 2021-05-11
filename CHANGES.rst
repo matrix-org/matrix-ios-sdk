@@ -5,7 +5,7 @@ Changes to be released in next version
  * 
 
 🙌 Improvements
- * 
+ * MXSession: Cache initial sync response until it is fully handled (vector-im/element-ios/issues/4317).
 
 🐛 Bugfix
  * 
