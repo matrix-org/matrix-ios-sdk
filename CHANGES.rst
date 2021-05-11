@@ -6,7 +6,6 @@ Changes to be released in next version
 
 🙌 Improvements
  * MXPushGatewayRestClient: Add timeout param to the HTTP method.
- * MXEvent: Pass some original fields to the clear event.
 
 🐛 Bugfix
  * 
