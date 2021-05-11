@@ -593,16 +593,16 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
 
 - (void)decryptEvents:(NSArray<MXEvent*> *)events
            inTimeline:(NSString*)timeline
-           onComplete:(void (^)(NSDictionary<NSString *, MXEventDecryptionResult *>*))onComplete
+           onComplete:(void (^)(NSArray<MXEventDecryptionResult *>*))onComplete
 {
     dispatch_async(decryptionQueue, ^{
-        NSMutableDictionary<NSString *, MXEventDecryptionResult *> *results = [NSMutableDictionary dictionaryWithCapacity:events.count];
+        NSMutableArray<MXEventDecryptionResult *> *results = [NSMutableArray arrayWithCapacity:events.count];
         
         // TODO: Implement bulk decrypt to speed up the process.
         //
         for (MXEvent *event in events)
         {
-            results[event.eventId] = [self decryptEvent2:event inTimeline:timeline];
+            [results addObject:[self decryptEvent2:event inTimeline:timeline]];
         }
         
         dispatch_async(dispatch_get_main_queue(), ^{

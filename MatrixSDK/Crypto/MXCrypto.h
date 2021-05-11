@@ -194,11 +194,11 @@ extern NSString *const MXDeviceListDidUpdateUsersDevicesNotification;
  @param events the events to decrypt.
  @param timeline the id of the timeline where the events are decrypted. It is used
         to prevent replay attack.
- @return a dictionary {EventId -> MXEventDecryptionResult} with decryption results.
+ @param onComplete the block called when the operations completes. It returns the decryption result for every event.
  */
 - (void)decryptEvents:(NSArray<MXEvent*> *)events
            inTimeline:(NSString*)timeline
-           onComplete:(void (^)(NSDictionary<NSString *, MXEventDecryptionResult *>*))onComplete;
+           onComplete:(void (^)(NSArray<MXEventDecryptionResult *>*))onComplete;
 
 /**
  Ensure that the outbound session is ready to encrypt events.

@@ -939,7 +939,7 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
         return;
     }
     
-    [room.mxSession decryptEvents:eventsToDecrypt inTimeline:_timelineId onComplete:^(NSDictionary<NSString *,NSError *> *errors) {
+    [room.mxSession decryptEvents:eventsToDecrypt inTimeline:_timelineId onComplete:^(NSArray<MXEvent *> *failedEvents) {
         onComplete();
     }];
 }

@@ -4056,31 +4056,30 @@ typedef void (^MXOnResumeDone)(void);
 
 - (void)decryptEvents:(NSArray<MXEvent*> *)events
            inTimeline:(NSString*)timeline
-           onComplete:(void (^)(NSDictionary<NSString *, NSError *>*))onComplete
+           onComplete:(void (^)(NSArray<MXEvent*> *failedEvents))onComplete
 {
     if (_crypto)
     {
-        [_crypto decryptEvents:events inTimeline:timeline onComplete:^(NSDictionary<NSString *,MXEventDecryptionResult *> *results) {
-            NSMutableDictionary<NSString *, NSError *> *errors = [NSMutableDictionary dictionary];
-            for (MXEvent *event in events)
+        [_crypto decryptEvents:events inTimeline:timeline onComplete:^(NSArray<MXEventDecryptionResult *> *results) {
+            NSMutableArray<MXEvent *> *failedEvents = [NSMutableArray array];
+            for (NSUInteger index = 0; index < events.count; index++)
             {
-                NSString *eventId = event.eventId;
-                MXEventDecryptionResult *result = results[eventId];
+                MXEvent *event = events[index];
+                MXEventDecryptionResult *result = results[index];
+                
                 [event setClearData:result];
                 
                 if (result.error)
                 {
-                    errors[eventId] = result.error;
+                    [failedEvents addObject:event];
                 }
             }
             
-            onComplete(errors);
+            onComplete(failedEvents);
         }];
     }
     else
     {
-        NSMutableDictionary<NSString *, NSError *> *errors = [NSMutableDictionary dictionary];
-        
         // Encryption not enabled
         MXEventDecryptionResult *result = [MXEventDecryptionResult new];
         result.error = [NSError errorWithDomain:MXDecryptingErrorDomain
@@ -4092,9 +4091,8 @@ typedef void (^MXOnResumeDone)(void);
         for (MXEvent *event in events)
         {
             [event setClearData:result];
-            errors[event.eventId] = result.error;
         }
-        onComplete(errors);
+        onComplete(events);
     }
 }
 
