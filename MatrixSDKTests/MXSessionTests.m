@@ -22,6 +22,7 @@
 #import "MXSession.h"
 
 #import "MXMemoryStore.h"
+#import "MatrixSDKSwiftHeader.h"
 
 // Do not bother with retain cycles warnings in tests
 #pragma clang diagnostic push
@@ -65,6 +66,71 @@
     [super tearDown];
 }
 
+// Check MXSession clears initial sync cache after handling sync response.
+//
+// - Have Bob start a new session
+// - Run initial sync on Bob's session
+// -> The initial sync cache must be used
+- (void)testInitialSyncSuccess
+{
+    [matrixSDKTestsData doMXSessionTestWithBob:self readyToTest:^(MXSession *mxSession, XCTestExpectation *expectation) {
+
+        id<MXSyncResponseStore> cache = [[MXSyncResponseFileStore alloc] initWithCredentials:matrixSDKTestsData.bobCredentials];
+        XCTAssertEqual(cache.outdatedSyncResponseIds.count, 0, @"Initial sync cache must be reset after successful initialization");
+
+        [expectation fulfill];
+    }];
+}
+
+// Check MXSession updates initial sync cache when an error occurs handling the sync response.
+//
+// - Have Bob start a new session
+// - Run initial sync on Bob's session
+// - In the middle of the process, pause the session
+// -> The initial sync cache must be updated
+// - Resume the session
+// -> The initial sync cache must be used
+- (void)testInitialSyncFailure
+{
+    [matrixSDKTestsData doMXRestClientTestWithBob:self readyToTest:^(MXRestClient *bobRestClient, XCTestExpectation *expectation) {
+
+        id<MXSyncResponseStore> cache = [[MXSyncResponseFileStore alloc] initWithCredentials:matrixSDKTestsData.bobCredentials];
+        mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
+        
+        //  listen for session state change notification
+        __block id observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXSessionStateDidChangeNotification object:nil queue:nil usingBlock:^(NSNotification * _Nonnull note) {
+            
+            if (mxSession.state == MXSessionStateRunning)
+            {
+                //  stop observing
+                [[NSNotificationCenter defaultCenter] removeObserver:observer];
+                
+                //  pause session
+                [mxSession pause];
+                
+                XCTAssertGreaterThan(cache.outdatedSyncResponseIds.count,
+                               0,
+                               @"Initial sync cache must cache sync responses in case of a failure");
+                
+                [mxSession resume:^{
+                    XCTAssertEqual(cache.outdatedSyncResponseIds.count,
+                                   0,
+                                   @"Initial sync cache must use the cached sync response after successful resume");
+
+                    [expectation fulfill];
+                }];
+            }
+        }];
+        
+        [mxSession start:^{
+
+        } failure:^(NSError *error) {
+            XCTFail(@"The request should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+        
+    }];
+}
 
 - (void)testRoomWithAlias
 {
