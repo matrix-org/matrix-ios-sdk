@@ -104,8 +104,6 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
 
 - (void)destroy
 {
-    NSLog(@"[MXKRoomSummary] Destroy %p - room id: %@", self, _roomId);
-
     [[NSNotificationCenter defaultCenter] removeObserver:self name:kMXEventDidChangeSentStateNotification object:nil];
     [[NSNotificationCenter defaultCenter] removeObserver:self name:kMXEventDidChangeIdentifierNotification object:nil];
     [[NSNotificationCenter defaultCenter] removeObserver:self name:kMXRoomDidFlushDataNotification object:nil];
