@@ -30,7 +30,7 @@ NS_ASSUME_NONNULL_BEGIN
  
  It is different from syncResponse.nextBatch which represents the next sync token to use for the next /sync request.
  */
-@property (nonatomic, readonly) NSString *syncToken;
+@property (nonatomic, nullable, readonly) NSString *syncToken;
 
 /**
  The sync response starting from the prevBatch.
@@ -38,7 +38,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, readonly) MXSyncResponse *syncResponse;
 
 
-- (instancetype)initWithSyncToken:(NSString*)syncToken syncResponse:(MXSyncResponse*)syncResponse;
+- (instancetype)initWithSyncToken:(nullable NSString*)syncToken syncResponse:(MXSyncResponse*)syncResponse;
 
 @end
 

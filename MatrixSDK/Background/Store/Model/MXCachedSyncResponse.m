@@ -39,7 +39,7 @@
     MXJSONModelSetString(syncToken, JSONDictionary[@"sync_token"]);
     MXJSONModelSetMXJSONModel(syncResponse, MXSyncResponse, JSONDictionary[@"sync_response"]);
     
-    if (syncToken && syncResponse)
+    if (syncResponse)
     {
         cachedSyncResponse = [[MXCachedSyncResponse alloc] initWithSyncToken:syncToken syncResponse:syncResponse];
     }
