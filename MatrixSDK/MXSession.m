@@ -4058,13 +4058,28 @@ typedef void (^MXOnResumeDone)(void);
            inTimeline:(NSString*)timeline
            onComplete:(void (^)(NSArray<MXEvent*> *failedEvents))onComplete
 {
+    NSMutableArray *eventsToDecrypt = [NSMutableArray array];
+    for (MXEvent *event in events)
+    {
+        if (event.eventType == MXEventTypeRoomEncrypted)
+        {
+            [eventsToDecrypt addObject:event];
+        }
+    }
+    
+    if (eventsToDecrypt.count == 0)
+    {
+        onComplete(nil);
+        return;
+    }
+    
     if (_crypto)
     {
-        [_crypto decryptEvents:events inTimeline:timeline onComplete:^(NSArray<MXEventDecryptionResult *> *results) {
+        [_crypto decryptEvents:eventsToDecrypt inTimeline:timeline onComplete:^(NSArray<MXEventDecryptionResult *> *results) {
             NSMutableArray<MXEvent *> *failedEvents = [NSMutableArray array];
-            for (NSUInteger index = 0; index < events.count; index++)
+            for (NSUInteger index = 0; index < eventsToDecrypt.count; index++)
             {
-                MXEvent *event = events[index];
+                MXEvent *event = eventsToDecrypt[index];
                 MXEventDecryptionResult *result = results[index];
                 
                 [event setClearData:result];
@@ -4088,11 +4103,11 @@ typedef void (^MXOnResumeDone)(void);
                                            NSLocalizedDescriptionKey: MXDecryptingErrorEncryptionNotEnabledReason
                                        }];
         
-        for (MXEvent *event in events)
+        for (MXEvent *event in eventsToDecrypt)
         {
             [event setClearData:result];
         }
-        onComplete(events);
+        onComplete(eventsToDecrypt);
     }
 }
 

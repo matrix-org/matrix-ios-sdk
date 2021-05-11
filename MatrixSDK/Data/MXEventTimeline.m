@@ -920,26 +920,17 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
 
 - (void)decryptEvents:(NSArray<MXEvent*>*)events onComplete:(void (^)(void))onComplete
 {
-    NSMutableArray *eventsToDecrypt = [NSMutableArray array];
+    // The state event providing the encrytion algorithm can be part of the timeline.
+    // Extract if before starting decrypting.
     for (MXEvent *event in events)
     {
-        if (event.eventType == MXEventTypeRoomEncrypted)
-        {
-            [eventsToDecrypt addObject:event];
-        }
-        else if (event.eventType ==  MXEventTypeRoomEncryption)
+        if (event.eventType == MXEventTypeRoomEncryption)
         {
             [_state handleStateEvents:@[event]];
         }
     }
     
-    if (eventsToDecrypt.count == 0)
-    {
-        onComplete();
-        return;
-    }
-    
-    [room.mxSession decryptEvents:eventsToDecrypt inTimeline:_timelineId onComplete:^(NSArray<MXEvent *> *failedEvents) {
+    [room.mxSession decryptEvents:events inTimeline:_timelineId onComplete:^(NSArray<MXEvent *> *failedEvents) {
         onComplete();
     }];
 }
