@@ -73,6 +73,12 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic) BOOL computeE2ERoomSummaryTrust;
 
 /**
+ Handle `m.call.asserted_identity` events for the calls.
+ NO by default.
+ */
+@property (nonatomic) BOOL handleCallAssertedIdentityEvents;
+
+/**
  The delegate object to receive analytics events
  
  By default, nil.

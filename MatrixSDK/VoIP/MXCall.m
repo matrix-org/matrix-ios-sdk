@@ -878,6 +878,25 @@ NSString *const kMXCallSupportsTransferringStatusDidChange = @"kMXCallSupportsTr
     }
 }
 
+- (void)setAssertedIdentity:(MXAssertedIdentityModel *)assertedIdentity
+{
+    if (![_assertedIdentity isEqual:assertedIdentity])
+    {
+        _assertedIdentity = assertedIdentity;
+        
+        if (self.isEstablished && _state != MXCallStateEnded)
+        {
+            //  reset call connected date
+            callConnectedDate = [NSDate date];
+        }
+        
+        if ([_delegate respondsToSelector:@selector(callAssertedIdentityDidChange:)])
+        {
+            [_delegate callAssertedIdentityDidChange:self];
+        }
+    }
+}
+
 #pragma mark - MXCallStackCallDelegate
 - (void)callStackCall:(id<MXCallStackCall>)callStackCall onICECandidateWithSdpMid:(NSString *)sdpMid sdpMLineIndex:(NSInteger)sdpMLineIndex candidate:(NSString *)candidate
 {
@@ -1299,12 +1318,12 @@ NSString *const kMXCallSupportsTransferringStatusDidChange = @"kMXCallSupportsTr
 
 - (void)handleCallReplaces:(MXEvent *)event
 {
-    //  TODO: Implement
+    
 }
 
 - (void)handleCallRejectReplacement:(MXEvent *)event
 {
-    //  TODO: Implement
+    
 }
 
 #pragma mark - Private methods

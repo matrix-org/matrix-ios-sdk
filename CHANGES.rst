@@ -1,3 +1,30 @@
+Changes in 0.18.12 (2021-05-12)
+=================================================
+
+✨ Features
+ * 
+
+🙌 Improvements
+ * MXPushGatewayRestClient: Add timeout param to the HTTP method.
+
+🐛 Bugfix
+ * MXRoomCreateContent: Fix room type JSON key.
+
+⚠️ API Changes
+ * 
+
+🗣 Translations
+ * 
+    
+🧱 Build
+ * 
+
+Others
+ * 
+
+Improvements:
+
+
 Changes in 0.18.11 (2021-05-07)
 =================================================
 
@@ -8,6 +35,7 @@ Changes in 0.18.11 (2021-05-07)
  * MXCallKitAdapter: Update incoming calls if answered from application UI.
  * MXFileStore: Logs all files when a data corruption is detected (to track vector-im/element-ios/issues/4921).
  * MXCallManager: Fix call transfers flow for all types of transfers.
+ * VoIP: Implement asserted identity for calls: MSC3086 (matrix-org/matrix-doc/pull/3086).
 
 🐛 Bugfix
  * MXTools: Fix bad linkification of matrix alias and URL (vector-im/element-ios/issues/4258).
