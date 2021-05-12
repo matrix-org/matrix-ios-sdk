@@ -432,8 +432,10 @@ typedef void (^MXOnResumeDone)(void);
 /// Handle a sync response and decide serverTimeout for the next sync request.
 /// @param syncResponse The sync response object
 /// @param completion Completion block to be called at the end of the process. Will be called on the caller thread.
+/// @param storeCompletion Completion block to be called when the process completed at store level, i.e sync response is stored. Will be called on main thread.
 - (void)handleSyncResponse:(MXSyncResponse *)syncResponse
                 completion:(void (^)(void))completion
+           storeCompletion:(void (^)(void))storeCompletion
 {
     NSLog(@"[MXSession] handleSyncResponse: Received %tu joined rooms, %tu invited rooms, %tu left rooms, %tu toDevice events.", syncResponse.rooms.join.count, syncResponse.rooms.invite.count, syncResponse.rooms.leave.count, syncResponse.toDevice.events.count);
 
@@ -615,34 +617,26 @@ typedef void (^MXOnResumeDone)(void);
                               catchingUp:self.catchingUp];
         }
 
-
         // Update live event stream token
         NSLog(@"[MXSession] Next sync token: %@", syncResponse.nextBatch);
         self.store.eventStreamToken = syncResponse.nextBatch;
         
-        //  complete completion block to be called at the end of the process
-        void (^completionBlock)(void) = ^{
-            if (completion)
-            {
-                completion();
-            }
-            
-            // Broadcast that a server sync has been processed.
-            [[NSNotificationCenter defaultCenter] postNotificationName:kMXSessionDidSyncNotification
-                                                                object:self
-                                                              userInfo:@{
-                                                                  kMXSessionNotificationSyncResponseKey: syncResponse
-                                                              }];
-        };
+        if (completion)
+        {
+            completion();
+        }
+        
+        // Broadcast that a server sync has been processed.
+        [[NSNotificationCenter defaultCenter] postNotificationName:kMXSessionDidSyncNotification
+                                                            object:self
+                                                          userInfo:@{
+                                                              kMXSessionNotificationSyncResponseKey: syncResponse
+                                                          }];
 
         // Commit store changes
         if ([self.store respondsToSelector:@selector(commitWithCompletion:)])
         {
-            [self.store commitWithCompletion:completionBlock];
-        }
-        else
-        {
-            completionBlock();
+            [self.store commitWithCompletion:storeCompletion];
         }
     }];
 }
@@ -1400,9 +1394,6 @@ typedef void (^MXOnResumeDone)(void);
                 return;
             }
             
-            //  clear initial sync cache after handling sync response
-            [self.initialSyncResponseCache deleteData];
-            
             // Pursue live events listening
             [self serverSyncWithServerTimeout:nextServerTimeout success:nil failure:nil clientTimeout:CLIENT_TIMEOUT_MS setPresence:nil];
             
@@ -1410,6 +1401,9 @@ typedef void (^MXOnResumeDone)(void);
             {
                 success();
             }
+        } storeCompletion:^{
+            //  clear initial sync cache after handling sync response
+            [self.initialSyncResponseCache deleteData];
         }];
     });
 }
@@ -1803,7 +1797,7 @@ typedef void (^MXOnResumeDone)(void);
                     [self handleSyncResponse:cachedSyncResponse.syncResponse
                                   completion:^{
                         taskCompleted();
-                    }];
+                    } storeCompletion:nil];
                 }];
             }
         }
