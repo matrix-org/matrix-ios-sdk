@@ -5,6 +5,30 @@ Changes to be released in next version
  * 
 
 🙌 Improvements
+ * 
+
+🐛 Bugfix
+ * 
+
+⚠️ API Changes
+ * 
+
+🗣 Translations
+ * 
+    
+🧱 Build
+ * 
+
+Others
+ * 
+
+Changes in 0.18.12 (2021-05-12)
+=================================================
+
+✨ Features
+ * 
+
+🙌 Improvements
  * MXPushGatewayRestClient: Add timeout param to the HTTP method.
  * MXSession: Cache initial sync response until it is fully handled (vector-im/element-ios/issues/4317).
  * MXStore: New commit method accepting a completion block.
@@ -23,6 +47,9 @@ Changes to be released in next version
 
 Others
  * 
+
+Improvements:
+
 
 Changes in 0.18.11 (2021-05-07)
 =================================================
