@@ -53,6 +53,7 @@ NS_ASSUME_NONNULL_BEGIN
  @param roomId room id
  @param eventType event type
  @param sender sender of the event
+ @param timeout client timeout for the operation. In seconds. Pass -1 to use the default value
  @param success A block object called when the operation succeeds. It provides the rejected tokens.
  @param failure A block object called when the operation fails.
  
@@ -64,6 +65,7 @@ NS_ASSUME_NONNULL_BEGIN
                               roomId:(nullable NSString *)roomId
                            eventType:(nullable NSString *)eventType
                               sender:(nullable NSString *)sender
+                             timeout:(NSTimeInterval)timeout
                              success:(void (^)(NSArray<NSString*> * _Nonnull))success
                              failure:(void (^)(NSError * _Nonnull))failure;
 

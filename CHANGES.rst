@@ -5,7 +5,7 @@ Changes to be released in next version
  * 
 
 🙌 Improvements
- * 
+ * MXPushGatewayRestClient: Add timeout param to the HTTP method.
 
 🐛 Bugfix
  * MXRoomCreateContent: Fix room type JSON key.
