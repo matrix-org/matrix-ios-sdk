@@ -8,7 +8,7 @@ Changes to be released in next version
  * 
 
 🐛 Bugfix
- * 
+ * MXRoomCreateContent: Fix room type JSON key.
 
 ⚠️ API Changes
  * 
