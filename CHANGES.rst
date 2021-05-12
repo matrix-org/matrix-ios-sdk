@@ -7,6 +7,7 @@ Changes to be released in next version
 🙌 Improvements
  * MXPushGatewayRestClient: Add timeout param to the HTTP method.
  * MXSession: Cache initial sync response until it is fully handled (vector-im/element-ios/issues/4317).
+ * MXStore: New commit method accepting a completion block.
 
 🐛 Bugfix
  * MXRoomCreateContent: Fix room type JSON key.
