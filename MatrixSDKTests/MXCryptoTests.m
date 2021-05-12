@@ -1867,11 +1867,7 @@
                 newContent[@"session_key"] = sessionInfo.session.sessionKey;
                 toDeviceEvent.clearEvent.wireContent = newContent;
 
-                [[NSNotificationCenter defaultCenter] postNotificationName:kMXSessionOnToDeviceEventNotification
-                                                                    object:bobSession
-                                                                  userInfo:@{
-                                                                             kMXSessionNotificationEventKey: toDeviceEvent
-                                                                             }];
+                [bobSession.crypto handleRoomKeyEvent:toDeviceEvent onComplete:^{}];
 
                 // We still must be able to decrypt the event
                 // ie, the implementation must have ignored the new room key with the advanced outbound group

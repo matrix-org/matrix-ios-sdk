@@ -1246,11 +1246,7 @@ NSString *uisiString = @"The sender's device has not sent us the keys for this m
                     XCTAssertNil(event.clearEvent);
 
                     // Reinject the m.room_key event. This mimics a room_key event that arrives after message events.
-                    [[NSNotificationCenter defaultCenter] postNotificationName:kMXSessionOnToDeviceEventNotification
-                                                                        object:bobSession
-                                                                      userInfo:@{
-                                                                                 kMXSessionNotificationEventKey: toDeviceEvent
-                                                                                 }];
+                    [bobSession.crypto handleRoomKeyEvent:toDeviceEvent onComplete:^{}];
                     break;
                 }
 
