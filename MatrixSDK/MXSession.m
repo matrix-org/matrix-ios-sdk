@@ -266,7 +266,8 @@ typedef void (^MXOnResumeDone)(void);
                               ];
 
         _catchingUp = NO;
-        _initialSyncResponseCache = [[MXSyncResponseFileStore alloc] initWithCredentials:mxRestClient.credentials];
+        MXCredentials *initialSyncCredentials = [MXCredentials initialSyncCacheCredentialsFrom:mxRestClient.credentials];
+        _initialSyncResponseCache = [[MXSyncResponseFileStore alloc] initWithCredentials:initialSyncCredentials];
 
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(onDidDecryptEvent:) name:kMXEventDidDecryptNotification object:nil];
 
@@ -1304,8 +1305,7 @@ typedef void (^MXOnResumeDone)(void);
             //  cache initial sync response
             MXCachedSyncResponse *response = [[MXCachedSyncResponse alloc] initWithSyncToken:nil
                                                                                 syncResponse:syncResponse];
-            NSString *cacheId = [self.initialSyncResponseCache addSyncResponseWithSyncResponse:response];
-            [self.initialSyncResponseCache markOutdatedWithSyncResponseIds:@[cacheId]];
+            [self.initialSyncResponseCache addSyncResponseWithSyncResponse:response];
         }
         
         // By default, the next sync will be a long polling (with the default server timeout value)
@@ -1401,10 +1401,7 @@ typedef void (^MXOnResumeDone)(void);
             }
             
             //  clear initial sync cache after handling sync response
-            for (NSString *responseId in self.initialSyncResponseCache.outdatedSyncResponseIds)
-            {
-                [self.initialSyncResponseCache deleteSyncResponseWithId:responseId];
-            }
+            [self.initialSyncResponseCache deleteData];
             
             // Pursue live events listening
             [self serverSyncWithServerTimeout:nextServerTimeout success:nil failure:nil clientTimeout:CLIENT_TIMEOUT_MS setPresence:nil];

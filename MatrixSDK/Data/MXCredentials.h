@@ -100,6 +100,13 @@ NS_ASSUME_NONNULL_BEGIN
 - (instancetype)initWithLoginResponse:(MXLoginResponse*)loginResponse
                 andDefaultCredentials:(nullable MXCredentials*)defaultCredentials;
 
+/**
+ Returns suitable credentials for initial sync cache.
+ 
+ @param credentials original credentials of a user
+ */
++ (instancetype)initialSyncCacheCredentialsFrom:(MXCredentials *)credentials;
+
 @end
 
 NS_ASSUME_NONNULL_END

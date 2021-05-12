@@ -75,8 +75,9 @@
 {
     [matrixSDKTestsData doMXSessionTestWithBob:self readyToTest:^(MXSession *mxSession, XCTestExpectation *expectation) {
 
-        id<MXSyncResponseStore> cache = [[MXSyncResponseFileStore alloc] initWithCredentials:matrixSDKTestsData.bobCredentials];
-        XCTAssertEqual(cache.outdatedSyncResponseIds.count, 0, @"Initial sync cache must be reset after successful initialization");
+        MXCredentials *credentials = [MXCredentials initialSyncCacheCredentialsFrom:matrixSDKTestsData.bobCredentials];
+        id<MXSyncResponseStore> cache = [[MXSyncResponseFileStore alloc] initWithCredentials:credentials];
+        XCTAssertEqual(cache.syncResponseIds.count, 0, @"Initial sync cache must be reset after successful initialization");
 
         [expectation fulfill];
     }];
@@ -94,7 +95,8 @@
 {
     [matrixSDKTestsData doMXRestClientTestWithBob:self readyToTest:^(MXRestClient *bobRestClient, XCTestExpectation *expectation) {
 
-        id<MXSyncResponseStore> cache = [[MXSyncResponseFileStore alloc] initWithCredentials:matrixSDKTestsData.bobCredentials];
+        MXCredentials *credentials = [MXCredentials initialSyncCacheCredentialsFrom:matrixSDKTestsData.bobCredentials];
+        id<MXSyncResponseStore> cache = [[MXSyncResponseFileStore alloc] initWithCredentials:credentials];
         mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
         
         //  listen for session state change notification
@@ -109,7 +111,7 @@
                 [mxSession close];
                 mxSession = nil;
                 
-                XCTAssertGreaterThan(cache.outdatedSyncResponseIds.count,
+                XCTAssertGreaterThan(cache.syncResponseIds.count,
                                      0,
                                      @"Session must cache initial sync responses in case of a failure");
                 
@@ -117,7 +119,7 @@
                 mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
                 
                 [mxSession start:^{
-                    XCTAssertEqual(cache.outdatedSyncResponseIds.count,
+                    XCTAssertEqual(cache.syncResponseIds.count,
                                    0,
                                    @"Initial sync cache must be used after successful restart");
 
