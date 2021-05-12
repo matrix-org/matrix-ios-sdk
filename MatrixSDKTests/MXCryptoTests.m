@@ -1838,22 +1838,23 @@
 
                 // Try to decrypt the event again
                 [event setClearData:nil];
-                BOOL b = [bobSession decryptEvent:event inTimeline:liveTimeline.timelineId];
-
-                // It must fail
-                XCTAssertFalse(b);
-                XCTAssert(event.decryptionError);
-                XCTAssertEqual(event.decryptionError.code, MXDecryptingErrorDuplicateMessageIndexCode);
-                XCTAssertNil(event.clearEvent);
-
-                // Decrypting it with no replay attack mitigation must still work
-                b = [bobSession decryptEvent:event inTimeline:nil];
-                XCTAssert(b);
-                XCTAssertEqual(0, [self checkEncryptedEvent:event roomId:roomId clearMessage:messageFromAlice senderSession:aliceSession]);
-
-                [expectation fulfill];
+                [bobSession decryptEvents:@[event] inTimeline:liveTimeline.timelineId onComplete:^(NSArray<MXEvent *> *failedEvents) {
+                    
+                    // It must fail
+                    XCTAssertEqual(failedEvents.count, 1);
+                    XCTAssert(event.decryptionError);
+                    XCTAssertEqual(event.decryptionError.code, MXDecryptingErrorDuplicateMessageIndexCode);
+                    XCTAssertNil(event.clearEvent);
+                    
+                    // Decrypting it with no replay attack mitigation must still work
+                    [bobSession decryptEvents:@[event] inTimeline:nil onComplete:^(NSArray<MXEvent *> *failedEvents) {
+                        XCTAssertEqual(failedEvents.count, 0);
+                        XCTAssertEqual(0, [self checkEncryptedEvent:event roomId:roomId clearMessage:messageFromAlice senderSession:aliceSession]);
+                        
+                        [expectation fulfill];
+                    }];
+                }];
             }];
-
         }];
 
         [roomFromAlicePOV sendTextMessage:messageFromAlice success:nil failure:^(NSError *error) {
@@ -1907,13 +1908,13 @@
                 // ie, the implementation must have ignored the new room key with the advanced outbound group
                 // session key
                 [event setClearData:nil];
-                BOOL b = [bobSession decryptEvent:event inTimeline:nil];
+                [bobSession decryptEvents:@[event] inTimeline:nil onComplete:^(NSArray<MXEvent *> *failedEvents) {
+                    
+                    XCTAssertEqual(failedEvents.count, 0);
+                    XCTAssertEqual(0, [self checkEncryptedEvent:event roomId:roomId clearMessage:messageFromAlice senderSession:aliceSession]);
 
-                XCTAssert(b);
-                XCTAssertEqual(0, [self checkEncryptedEvent:event roomId:roomId clearMessage:messageFromAlice senderSession:aliceSession]);
-
-
-                [expectation fulfill];
+                    [expectation fulfill];
+                }];
             }];
         }];
 
@@ -1957,24 +1958,25 @@
 
                 // So that we cannot decrypt it anymore right now
                 [event setClearData:nil];
-                BOOL b = [bobSession decryptEvent:event inTimeline:nil];
-
-                XCTAssertFalse(b);
-                XCTAssertEqual(event.decryptionError.code, MXDecryptingErrorUnknownInboundSessionIdCode);
-
-                // The event must be decrypted once we reinject the m.room_key event
-                __block __weak id observer2 = [[NSNotificationCenter defaultCenter] addObserverForName:kMXEventDidDecryptNotification object:event queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
-
-                    XCTAssert([NSThread currentThread].isMainThread);
-
-                    [[NSNotificationCenter defaultCenter] removeObserver:observer2];
-
-                    XCTAssertEqual(0, [self checkEncryptedEvent:event roomId:roomId clearMessage:messageFromAlice senderSession:aliceSession]);
-                    [expectation fulfill];
+                [bobSession decryptEvents:@[event] inTimeline:nil onComplete:^(NSArray<MXEvent *> *failedEvents) {
+                    
+                    XCTAssertEqual(failedEvents.count, 1);
+                    XCTAssertEqual(event.decryptionError.code, MXDecryptingErrorUnknownInboundSessionIdCode);
+                    
+                    // The event must be decrypted once we reinject the m.room_key event
+                    __block __weak id observer2 = [[NSNotificationCenter defaultCenter] addObserverForName:kMXEventDidDecryptNotification object:event queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
+                        
+                        XCTAssert([NSThread currentThread].isMainThread);
+                        
+                        [[NSNotificationCenter defaultCenter] removeObserver:observer2];
+                        
+                        XCTAssertEqual(0, [self checkEncryptedEvent:event roomId:roomId clearMessage:messageFromAlice senderSession:aliceSession]);
+                        [expectation fulfill];
+                    }];
+                    
+                    // Reinject the m.room_key event. This mimics a room_key event that arrives after message events.
+                    [bobSession.crypto handleRoomKeyEvent:toDeviceEvent onComplete:^{}];
                 }];
-
-                // Reinject the m.room_key event. This mimics a room_key event that arrives after message events.
-                [bobSession.crypto handleRoomKeyEvent:toDeviceEvent onComplete:^{}];
             }];
         }];
 

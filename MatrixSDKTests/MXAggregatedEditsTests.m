@@ -661,17 +661,19 @@ static NSString* const kEditedMarkdownMessageFormattedText = @"<strong>I meant H
             XCTAssertNotNil(event);
 
             XCTAssertTrue(event.isEncrypted);
-            XCTAssertTrue([mxSession decryptEvent:event inTimeline:nil], @"Decryption error: %@", event.decryptionError);
-
-            // TODO: Synapse does not support aggregation for e2e rooms yet
-            XCTAssertTrue(event.contentHasBeenEdited);
-            XCTAssertEqualObjects(event.unsignedData.relations.replace.eventId, editEventId);
-            XCTAssertEqualObjects(event.content[@"body"], kEditedMessageText);
-
-            XCTAssertEqualObjects(event.content, localEditedEvent.content);
-            XCTAssertEqualObjects(event.JSONDictionary[@"unsigned"][@"relations"], localEditedEvent.JSONDictionary[@"unsigned"][@"relations"]);
-
-            [expectation fulfill];
+            [mxSession decryptEvents:@[event] inTimeline:nil onComplete:^(NSArray<MXEvent *> *failedEvents) {
+                XCTAssertEqual(failedEvents.count, 0, @"Decryption error: %@", event.decryptionError);
+                
+                // TODO: Synapse does not support aggregation for e2e rooms yet
+                XCTAssertTrue(event.contentHasBeenEdited);
+                XCTAssertEqualObjects(event.unsignedData.relations.replace.eventId, editEventId);
+                XCTAssertEqualObjects(event.content[@"body"], kEditedMessageText);
+                
+                XCTAssertEqualObjects(event.content, localEditedEvent.content);
+                XCTAssertEqualObjects(event.JSONDictionary[@"unsigned"][@"relations"], localEditedEvent.JSONDictionary[@"unsigned"][@"relations"]);
+                
+                [expectation fulfill];
+            }];
 
         } failure:^(NSError *error) {
             XCTFail(@"Cannot set up intial test conditions - error: %@", error);

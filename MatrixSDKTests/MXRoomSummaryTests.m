@@ -1221,9 +1221,9 @@ NSString *uisiString = @"The sender's device has not sent us the keys for this m
 
                 // So that we cannot decrypt it anymore right now
                 [event setClearData:nil];
-                BOOL b = [bobSession decryptEvent:event inTimeline:nil];
-
-                XCTAssertFalse(b, @"Failed to set up test condition");
+                [bobSession decryptEvents:@[event] inTimeline:nil onComplete:^(NSArray<MXEvent *> *failedEvents) {
+                    XCTAssertEqual(failedEvents.count, 1, @"Failed to set up test condition");
+                }];
             }];
         }];
 
