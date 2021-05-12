@@ -86,9 +86,9 @@
 //
 // - Have Bob start a new session
 // - Run initial sync on Bob's session
-// - In the middle of the process, pause the session
+// - In the middle of the process, close the session to simulate a crash
 // -> The initial sync cache must be updated
-// - Resume the session
+// - Restart the session
 // -> The initial sync cache must be used
 - (void)testInitialSyncFailure
 {
@@ -105,23 +105,31 @@
                 //  stop observing
                 [[NSNotificationCenter defaultCenter] removeObserver:observer];
                 
-                //  pause session
-                [mxSession pause];
+                //  2. simulate an unexpected session close (like a crash)
+                [mxSession close];
+                mxSession = nil;
                 
                 XCTAssertGreaterThan(cache.outdatedSyncResponseIds.count,
-                               0,
-                               @"Initial sync cache must cache sync responses in case of a failure");
+                                     0,
+                                     @"Session must cache initial sync responses in case of a failure");
                 
-                [mxSession resume:^{
+                //  3. recreate the session
+                mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
+                
+                [mxSession start:^{
                     XCTAssertEqual(cache.outdatedSyncResponseIds.count,
                                    0,
-                                   @"Initial sync cache must use the cached sync response after successful resume");
+                                   @"Initial sync cache must be used after successful restart");
 
+                    [expectation fulfill];
+                } failure:^(NSError *error) {
+                    XCTFail(@"The request should not fail - NSError: %@", error);
                     [expectation fulfill];
                 }];
             }
         }];
         
+        //  1. start the session
         [mxSession start:^{
 
         } failure:^(NSError *error) {
