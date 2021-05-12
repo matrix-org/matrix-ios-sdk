@@ -1038,7 +1038,7 @@ NSString *uisiString = @"The sender's device has not sent us the keys for this m
             XCTAssert(summary.isEncrypted);
 
             // Use dispatch_async for not closing the session in the middle of stg
-            dispatch_async(dispatch_get_main_queue(), ^{
+            dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 0.1 * NSEC_PER_SEC), dispatch_get_main_queue(), ^{
 
                 // Close the session
                 MXRestClient *aliceRestClient = aliceSession.matrixRestClient;
@@ -1051,10 +1051,11 @@ NSString *uisiString = @"The sender's device has not sent us the keys for this m
                     // A hack to directly read the file built by MXFileStore
                     NSString *roomSummaryFile = [store performSelector:@selector(summaryFileForRoom:forBackup:) withObject:roomId withObject:NSNull.null];
                     XCTAssert(roomSummaryFile.length);
+                    XCTAssertGreaterThan(roomSummaryFile.length, 0);
                     [store close];
 
                     NSData *roomSummaryFileData = [[NSData alloc] initWithContentsOfFile:roomSummaryFile];
-                    XCTAssert(roomSummaryFileData.length);
+                    XCTAssertGreaterThan(roomSummaryFileData.length, 0);
 
                     NSData *pattern = [lastMessageEventId dataUsingEncoding:NSUTF8StringEncoding];
                     NSRange range = [roomSummaryFileData rangeOfData:pattern options:0 range:NSMakeRange(0, roomSummaryFileData.length)];
@@ -1135,7 +1136,7 @@ NSString *uisiString = @"The sender's device has not sent us the keys for this m
             XCTAssertEqualObjects(event.content[@"body"], message);
 
             // Use dispatch_async for not closing the session in the middle of stg
-            dispatch_async(dispatch_get_main_queue(), ^{
+            dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 0.1 * NSEC_PER_SEC), dispatch_get_main_queue(), ^{
 
                 // Close the session
                 MXRestClient *aliceRestClient = aliceSession.matrixRestClient;
@@ -1234,6 +1235,8 @@ NSString *uisiString = @"The sender's device has not sent us the keys for this m
 
         id summaryObserver;
         summaryObserver = [[NSNotificationCenter defaultCenter] addObserverForName:kMXRoomSummaryDidChangeNotification object:roomSummaryFromBobPOV queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
+            
+            NSLog(@"WWWWWW %@", roomSummaryFromBobPOV.lastMessageString);
 
             switch (notifCount++)
             {
