@@ -22,6 +22,7 @@
 #import "MXSession.h"
 
 #import "MXMemoryStore.h"
+#import "MXFileStore.h"
 #import "MatrixSDKSwiftHeader.h"
 
 // Do not bother with retain cycles warnings in tests
@@ -73,13 +74,22 @@
 // -> The initial sync cache must be used
 - (void)testInitialSyncSuccess
 {
-    [matrixSDKTestsData doMXSessionTestWithBob:self readyToTest:^(MXSession *mxSession, XCTestExpectation *expectation) {
-
+    id<MXStore> store = [[MXFileStore alloc] init];
+    [matrixSDKTestsData doMXSessionTestWithBob:self andStore:store readyToTest:^(MXSession *mxSession, XCTestExpectation *expectation) {
         MXCredentials *credentials = [MXCredentials initialSyncCacheCredentialsFrom:matrixSDKTestsData.bobCredentials];
         id<MXSyncResponseStore> cache = [[MXSyncResponseFileStore alloc] initWithCredentials:credentials];
-        XCTAssertEqual(cache.syncResponseIds.count, 0, @"Initial sync cache must be reset after successful initialization");
+        
+        dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+            
+            [NSThread sleepForTimeInterval:1.0];
+            
+            XCTAssertEqual(cache.syncResponseIds.count,
+                           0,
+                           @"Initial sync cache must be reset after successful initialization");
 
-        [expectation fulfill];
+            [expectation fulfill];
+            [store deleteAllData];
+        });
     }];
 }
 
@@ -93,6 +103,8 @@
 // -> The initial sync cache must be used
 - (void)testInitialSyncFailure
 {
+    id<MXStore> store = [[MXFileStore alloc] init];
+    
     [matrixSDKTestsData doMXRestClientTestWithBob:self readyToTest:^(MXRestClient *bobRestClient, XCTestExpectation *expectation) {
 
         MXCredentials *credentials = [MXCredentials initialSyncCacheCredentialsFrom:matrixSDKTestsData.bobCredentials];
@@ -117,13 +129,24 @@
                 
                 //  3. recreate the session
                 mxSession = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
-                
-                [mxSession start:^{
-                    XCTAssertEqual(cache.syncResponseIds.count,
-                                   0,
-                                   @"Initial sync cache must be used after successful restart");
 
-                    [expectation fulfill];
+                [mxSession setStore:store success:^{
+                    [mxSession start:^{
+                        dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+
+                            [NSThread sleepForTimeInterval:1.0];
+
+                            XCTAssertEqual(cache.syncResponseIds.count,
+                                           0,
+                                           @"Initial sync cache must be used after successful restart");
+
+                            [expectation fulfill];
+                            [store deleteAllData];
+                        });
+                    } failure:^(NSError *error) {
+                        XCTFail(@"The request should not fail - NSError: %@", error);
+                        [expectation fulfill];
+                    }];
                 } failure:^(NSError *error) {
                     XCTFail(@"The request should not fail - NSError: %@", error);
                     [expectation fulfill];
@@ -131,14 +154,21 @@
             }
         }];
         
-        //  1. start the session
-        [mxSession start:^{
+        [mxSession setStore:store success:^{
+            //  start with a fresh store
+            [store deleteAllData];
+            
+            //  1. start the session
+            [mxSession start:^{
 
+            } failure:^(NSError *error) {
+                XCTFail(@"The request should not fail - NSError: %@", error);
+                [expectation fulfill];
+            }];
         } failure:^(NSError *error) {
             XCTFail(@"The request should not fail - NSError: %@", error);
             [expectation fulfill];
         }];
-        
     }];
 }
 
