@@ -257,25 +257,30 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
     _lastMessageAttributedString = nil;
     [_lastMessageOthers removeAllObjects];
 
-    return [self fetchLastMessage:complete failure:failure lastEventIdChecked:nil operation:nil commit:commit];
+    return [self fetchLastMessage:complete failure:failure liveTimeline:nil onlyFromStore:YES operation:nil commit:commit];
 }
 
 /**
- Find the event to be used as last message.
+ Find recursively the event to be used as last message.
 
  @param complete A block object called when the operation completes.
  @param failure A block object called when the operation fails.
- @param lastEventIdChecked the id of the last candidate event checked to be the last message.
-        Nil means we will start checking from the last event in the store.
+ @param liveTimeline the timeline to use to paginate and get more events.
+ @param onlyFromStore YES for the first call. For quickness, we want to avoid any HTTP requests at first.
  @param operation the current http operation if any.
         The method may need several requests before fetching the right last message.
         If it happens, the first one is mutated to the others with [MXHTTPOperation mutateTo:].
  @param commit tell whether the updated room summary must be committed to the store. Use NO when a more
- global [MXStore commit] will happen. This optimises IO.
+        global [MXStore commit] will happen. This optimises IO.
  @return a MXHTTPOperation
  */
-- (MXHTTPOperation *)fetchLastMessage:(void (^)(void))complete failure:(void (^)(NSError *))failure lastEventIdChecked:(NSString*)lastEventIdChecked operation:(MXHTTPOperation *)operation commit:(BOOL)commit
+- (MXHTTPOperation *)fetchLastMessage:(void (^)(void))complete
+                              failure:(void (^)(NSError *))failure
+                         liveTimeline:(MXEventTimeline *)liveTimeline
+                        onlyFromStore:(BOOL)onlyFromStore
+                            operation:(MXHTTPOperation *)operation commit:(BOOL)commit
 {
+    // Sanity checks
     MXRoom *room = self.room;
     if (!room)
     {
@@ -291,126 +296,59 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
         // Create an empty operation that will be mutated later
         operation = [[MXHTTPOperation alloc] init];
     }
-
-    MXWeakify(self);
-    [self.room state:^(MXRoomState *roomState) {
-        MXStrongifyAndReturnIfNil(self);
-
-        // Start by checking events we have in the store
-        MXRoomState *state = roomState;
-        id<MXEventsEnumerator> messagesEnumerator = room.enumeratorForStoredMessages;
-        NSUInteger messagesInStore = messagesEnumerator.remaining;
-        MXEvent *event = messagesEnumerator.nextEvent;
-        NSString *lastEventIdCheckedInBlock = lastEventIdChecked;
-
-        // 1.1 Find where we stopped at the previous call in the fetchLastMessage calls loop
-        BOOL firstIteration = YES;
-        if (lastEventIdCheckedInBlock)
-        {
-            firstIteration = NO;
-            while (event)
-            {
-                NSString *eventId = event.eventId;
-
-                event = messagesEnumerator.nextEvent;
-
-                if ([eventId isEqualToString:lastEventIdCheckedInBlock])
-                {
-                    break;
-                }
-            }
-        }
-
-        // 1.2 Check events one by one until finding the right last message for the room
-        BOOL lastMessageUpdated = NO;
-        while (event)
-        {
-            // Decrypt the event if necessary
-            if (event.eventType == MXEventTypeRoomEncrypted)
-            {
-                if (![self.mxSession decryptEvent:event inTimeline:nil])
-                {
-                    NSLog(@"[MXRoomSummary] fetchLastMessage: Warning: Unable to decrypt event: %@\nError: %@", event.content[@"body"], event.decryptionError);
-                }
-            }
-
-            if (event.isState)
-            {
-                // Need to go backward in the state to provide it as it was when the event occured
-                if (state.isLive)
-                {
-                    state = [state copy];
-                    state.isLive = NO;
-                }
-
-                [state handleStateEvents:@[event]];
-            }
-
-            lastEventIdCheckedInBlock = event.eventId;
-
-            // Propose the event as last message
-            lastMessageUpdated = [self.mxSession.roomSummaryUpdateDelegate session:self.mxSession updateRoomSummary:self withLastEvent:event eventState:state roomState:roomState];
-            if (lastMessageUpdated)
-            {
-                // The event is accepted. We have our last message
-                // The roomSummaryUpdateDelegate has stored the _lastMessageEventId
-                break;
-            }
-
-            event = messagesEnumerator.nextEvent;
-        }
-
-        // 2.1 If lastMessageEventId is still nil, fetch events from the homeserver
-        MXWeakify(self);
+    
+    // Get the room timeline
+    if (!liveTimeline)
+    {
         [room liveTimeline:^(MXEventTimeline *liveTimeline) {
-            MXStrongifyAndReturnIfNil(self);
-
-            if (!self->_lastMessageEventId && [liveTimeline canPaginate:MXTimelineDirectionBackwards])
-            {
-                NSUInteger messagesToPaginate = 30;
-
-                // Reset pagination the first time
-                if (firstIteration)
-                {
-                    [liveTimeline resetPagination];
-
-                    // Make sure we paginate more than the events we have already in the store
-                    messagesToPaginate += messagesInStore;
-                }
-
-                // Paginate events from the homeserver
-                // XXX: Pagination on the timeline may conflict with request from the app
-                __block MXHTTPOperation *newOperation;
-                newOperation = [liveTimeline paginate:messagesToPaginate direction:MXTimelineDirectionBackwards onlyFromStore:NO complete:^{
-
-                    // Received messages have been stored in the store. We can make a new loop
-                    // XXX: This is only true for a permanent storage. Only MXNoStore is not permanent.
-                    // MXNoStore is only used for tests. We can skip it here.
-                    if (self.mxSession.store.isPermanent)
-                    {
-                        [self fetchLastMessage:complete failure:failure
-                            lastEventIdChecked:lastEventIdCheckedInBlock
-                                     operation:(operation ? operation : newOperation)
-                                        commit:commit];
-                    }
-
-                } failure:failure];
-
-                // Update the current HTTP operation
-                [operation mutateTo:newOperation];
-            }
-            else
-            {
-                if (complete)
-                {
-                    complete();
-                }
-
-                [self save:commit];
-            }
+            [liveTimeline resetPagination];
+            [self fetchLastMessage:complete failure:failure liveTimeline:liveTimeline onlyFromStore:onlyFromStore operation:operation commit:commit];
         }];
+        return operation;
+    }
+    
+    // Make sure we can still paginate
+    if (![liveTimeline canPaginate:MXTimelineDirectionBackwards])
+    {
+        if (complete)
+        {
+            complete();
+        }
+        return operation;
+    }
+    
+    // Process every message received by back pagination
+    __block BOOL lastMessageUpdated = NO;
+    [liveTimeline listenToEvents:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *eventState) {
+        if (direction == MXTimelineDirectionBackwards
+            && !lastMessageUpdated)
+        {
+            lastMessageUpdated = [self.mxSession.roomSummaryUpdateDelegate session:self.mxSession updateRoomSummary:self withLastEvent:event eventState:eventState roomState:liveTimeline.state];
+        }
     }];
-
+    
+    // Back paginate. First only from the store. Then, allow pagination requests to the homeserver
+    MXHTTPOperation *newOperation = [liveTimeline paginate:30 direction:MXTimelineDirectionBackwards onlyFromStore:onlyFromStore complete:^{
+        if (lastMessageUpdated)
+        {
+            // We are done
+            [self save:commit];
+            
+            if (complete)
+            {
+                complete();
+            }
+        }
+        else
+        {
+            // Need more message
+            [self fetchLastMessage:complete failure:failure liveTimeline:liveTimeline onlyFromStore:NO operation:operation commit:commit];
+        }
+        
+    } failure:failure];
+    
+    [operation mutateTo:newOperation];
+    
     return operation;
 }
 
