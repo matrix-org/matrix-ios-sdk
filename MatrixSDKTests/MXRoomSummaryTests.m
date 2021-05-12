@@ -1211,19 +1211,19 @@ NSString *uisiString = @"The sender's device has not sent us the keys for this m
             
             [liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
 
-                // Make crypto forget the inbound group session now
-                // MXRoomSummary will not be able to decrypt it
-                XCTAssert(toDeviceEvent);
-                NSString *sessionId = toDeviceEvent.content[@"session_id"];
-
-                id<MXCryptoStore> bobCryptoStore = (id<MXCryptoStore>)[bobSession.crypto.olmDevice valueForKey:@"store"];
-                [bobCryptoStore removeInboundGroupSessionWithId:sessionId andSenderKey:toDeviceEvent.senderKey];
-
-                // So that we cannot decrypt it anymore right now
-                [event setClearData:nil];
-                [bobSession decryptEvents:@[event] inTimeline:nil onComplete:^(NSArray<MXEvent *> *failedEvents) {
-                    XCTAssertEqual(failedEvents.count, 1, @"Failed to set up test condition");
-                }];
+                if (direction == MXTimelineDirectionForwards)
+                {
+                    // Make crypto forget the inbound group session now
+                    // MXRoomSummary will not be able to decrypt it
+                    XCTAssert(toDeviceEvent);
+                    NSString *sessionId = toDeviceEvent.content[@"session_id"];
+                    
+                    id<MXCryptoStore> bobCryptoStore = (id<MXCryptoStore>)[bobSession.crypto.olmDevice valueForKey:@"store"];
+                    [bobCryptoStore removeInboundGroupSessionWithId:sessionId andSenderKey:toDeviceEvent.senderKey];
+                    
+                    // So that we cannot decrypt it anymore right now
+                    [event setClearData:nil];
+                }
             }];
         }];
 
