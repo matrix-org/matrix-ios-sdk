@@ -683,6 +683,11 @@ NSString *const kMXEventIdentifierKey = @"kMXEventIdentifierKey";
 
     newEvent = [MXEvent modelFromJSON:newEventDict];
     
+    if (self.isEncrypted)
+    {
+        [newEvent setClearData:[self decryptionResult]];
+    }
+    
     return newEvent;
 }
 
