@@ -618,24 +618,31 @@ typedef void (^MXOnResumeDone)(void);
         // Update live event stream token
         NSLog(@"[MXSession] Next sync token: %@", syncResponse.nextBatch);
         self.store.eventStreamToken = syncResponse.nextBatch;
+        
+        //  complete completion block to be called at the end of the process
+        void (^completionBlock)(void) = ^{
+            if (completion)
+            {
+                completion();
+            }
+            
+            // Broadcast that a server sync has been processed.
+            [[NSNotificationCenter defaultCenter] postNotificationName:kMXSessionDidSyncNotification
+                                                                object:self
+                                                              userInfo:@{
+                                                                  kMXSessionNotificationSyncResponseKey: syncResponse
+                                                              }];
+        };
 
-        // Commit store changes done in [room handleMessages]
-        if ([self.store respondsToSelector:@selector(commit)])
+        // Commit store changes
+        if ([self.store respondsToSelector:@selector(commitWithCompletion:)])
         {
-            [self.store commit];
+            [self.store commitWithCompletion:completionBlock];
         }
-        
-        if (completion)
+        else
         {
-            completion();
+            completionBlock();
         }
-        
-        // Broadcast that a server sync has been processed.
-        [[NSNotificationCenter defaultCenter] postNotificationName:kMXSessionDidSyncNotification
-                                                            object:self
-                                                          userInfo:@{
-                                                                     kMXSessionNotificationSyncResponseKey: syncResponse
-                                                                     }];
     }];
 }
 
