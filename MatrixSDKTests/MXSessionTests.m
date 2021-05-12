@@ -88,7 +88,6 @@
                            @"Initial sync cache must be reset after successful initialization");
 
             [expectation fulfill];
-            [store deleteAllData];
         });
     }];
 }
@@ -141,7 +140,6 @@
                                            @"Initial sync cache must be used after successful restart");
 
                             [expectation fulfill];
-                            [store deleteAllData];
                         });
                     } failure:^(NSError *error) {
                         XCTFail(@"The request should not fail - NSError: %@", error);
