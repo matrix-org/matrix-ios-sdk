@@ -1224,6 +1224,7 @@ typedef void (^MXOnResumeDone)(void);
     
     __block MXTaskProfile *syncTaskProfile;
     __block MXSyncResponse *syncResponse;
+    __block BOOL useLiveResponse = YES;
 
     if (!self.isEventStreamInitialised && self.initialSyncResponseCache.outdatedSyncResponseIds.count > 0)
     {
@@ -1235,6 +1236,7 @@ typedef void (^MXOnResumeDone)(void);
                                                                                            error:nil];
         
         syncResponse = cachedResponse.syncResponse;
+        useLiveResponse = NO;
         
         NSLog(@"[MXSession] serverSync: Use cached initial sync response");
         
@@ -1275,6 +1277,7 @@ typedef void (^MXOnResumeDone)(void);
             NSLog(@"[MXSession] Received sync response in %.0fms", duration * 1000);
             
             syncResponse = liveResponse;
+            useLiveResponse = YES;
             
             dispatch_group_leave(initialSyncDispatchGroup);
         } failure:^(NSError *error) {
@@ -1296,7 +1299,7 @@ typedef void (^MXOnResumeDone)(void);
         }
         
         BOOL isInitialSync = !self.isEventStreamInitialised;
-        if (isInitialSync)
+        if (isInitialSync && useLiveResponse)
         {
             //  cache initial sync response
             MXCachedSyncResponse *response = [[MXCachedSyncResponse alloc] initWithSyncToken:nil
