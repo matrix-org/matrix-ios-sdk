@@ -9,7 +9,7 @@ Changes to be released in next version
  * MXStore: New commit method accepting a completion block.
 
 🐛 Bugfix
- * 
+ * MXRoomSummary: Fix decryption of the last message when it is edited (vector-im/element-ios/issues/4322).
 
 ⚠️ API Changes
  * 

@@ -243,13 +243,6 @@
             if (editedEvent)
             {
                 [self.matrixStore replaceEvent:editedEvent inRoom:roomId];
-
-                if (editedEvent.isEncrypted && !editedEvent.clearEvent)
-                {
-                    [self.mxSession decryptEvent:editedEvent inTimeline:nil];
-                }
-
-
                 [self notifyEventEditsListenersOfRoom:roomId replaceEvent:replaceEvent];
             }
         }
