@@ -2706,6 +2706,15 @@ typedef void (^MXOnResumeDone)(void);
 {
     MXHTTPOperation *operation;
 
+    void (^decryptIfNeeded)(MXEvent *event) = ^(MXEvent *event) {
+        [self decryptEvents:@[event] inTimeline:nil onComplete:^(NSArray<MXEvent *> *failedEvents) {
+            if (success)
+            {
+                success(event);
+            }
+        }];
+    };
+    
     if (roomId)
     {
         // Try to find it from the store first
@@ -2714,19 +2723,16 @@ typedef void (^MXOnResumeDone)(void);
 
         if (event)
         {
-            if (success)
-            {
-                success(event);
-            }
+            decryptIfNeeded(event);
         }
         else
         {
-            operation = [matrixRestClient eventWithEventId:eventId inRoom:roomId success:success failure:failure];
+            operation = [matrixRestClient eventWithEventId:eventId inRoom:roomId success:decryptIfNeeded failure:failure];
         }
     }
     else
     {
-        operation = [matrixRestClient eventWithEventId:eventId success:success failure:failure];
+        operation = [matrixRestClient eventWithEventId:eventId success:decryptIfNeeded failure:failure];
     }
 
     return operation;

@@ -372,6 +372,40 @@
 }
 
 
+#pragma mark - MXSession
+
+// Test MXSession.event(withEventId:)
+// - Have Alice with an encrypted message
+// - Get the event content using MXSession.event(withEventId:)
+// -> The event must be decrypted
+- (void)testMXSessionEventWithEventId
+{
+    NSString *message = @"Hello myself!";
+    
+    // - Have Alice with an encrypted message
+    [matrixSDKTestsE2EData doE2ETestWithAliceInARoom:self readyToTest:^(MXSession *aliceSession, NSString *roomId, XCTestExpectation *expectation) {
+        MXRoom *roomFromAlicePOV = [aliceSession roomWithRoomId:roomId];
+        [roomFromAlicePOV sendTextMessage:message success:^(NSString *eventId) {
+
+            // - Get the event content using MXSession.event(withEventId:)
+            [aliceSession eventWithEventId:eventId inRoom:nil success:^(MXEvent *event) {
+                
+                // -> The event must be decrypted
+                XCTAssertEqual(0, [self checkEncryptedEvent:event roomId:roomId clearMessage:message senderSession:aliceSession]);
+                [expectation fulfill];
+                
+            } failure:^(NSError *error) {
+                XCTFail(@"The request should not fail - NSError: %@", error);
+                [expectation fulfill];
+            }];
+        } failure:^(NSError *error) {
+            XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+            [expectation fulfill];
+        }];
+    }];
+}
+
+
 #pragma mark - MXRoom
 - (void)testRoomIsEncrypted
 {

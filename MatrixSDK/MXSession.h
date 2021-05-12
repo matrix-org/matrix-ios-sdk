@@ -974,6 +974,7 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
 #pragma mark - Matrix Events
 /**
  Retrieve an event from its event id.
+ It will be decrypted if needed.
 
  @param eventId the id of the event to retrieve.
  @param roomId (optional) the id of the room.
