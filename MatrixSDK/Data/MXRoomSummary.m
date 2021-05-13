@@ -30,6 +30,8 @@
 #import <Security/Security.h>
 #import <CommonCrypto/CommonCryptor.h>
 
+#import "MatrixSDKSwiftHeader.h"
+
 /**
  RoomEncryptionTrustLevel represents the room members trust level in an encrypted room.
  */
@@ -834,6 +836,71 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
     }
 }
 
+#pragma mark - CoreData Model
+
+- (instancetype)initWithCoreDataModel:(MXRoomSummaryModel *)model
+{
+    if (self = [super init])
+    {
+        _roomId = model.identifier;
+        
+        _roomTypeString = model.typeString;
+        _roomType = model.typeInt;
+        _avatar = model.avatar;
+        _displayname = model.displayName;
+        _topic = model.topic;
+        _creatorUserId = model.creatorUserId;
+        _aliases = model.aliases;
+        _membership = model.membershipInt;
+        _membershipTransitionState = model.membershipTransitionStateInt;
+        _membersCount = [[MXRoomMembersCount alloc] initWithCoreDataModel:model.membersCount];
+        _isConferenceUserRoom = model.isConferenceUserRoom;
+        
+        _others = [NSKeyedUnarchiver unarchiveObjectWithData:model.others];
+        _isEncrypted = model.isEncrypted;
+        _trust = [[MXUsersTrustLevelSummary alloc] initWithCoreDataModel:model.trust];
+        _notificationCount = model.notificationCount;
+        _highlightCount = model.highlightCount;
+        _directUserId = model.directUserId;
+        
+        _lastMessageEventId = model.lastMessageEventId;
+        _lastMessageOriginServerTs = [model.lastMessageDate timeIntervalSince1970];
+        _isLastMessageEncrypted = model.isLastMessageEncrypted;
+        
+        NSDictionary *lastMessageData;
+        if (_isLastMessageEncrypted)
+        {
+            NSData *lastMessageEncryptedData = model.lastMessageData;
+            NSData *lastMessageRawData = [self decrypt:lastMessageEncryptedData];
+            
+            if (lastMessageRawData)
+            {
+                lastMessageData = [NSKeyedUnarchiver unarchiveObjectWithData:lastMessageRawData];
+            }
+        }
+        else
+        {
+            lastMessageData = [NSKeyedUnarchiver unarchiveObjectWithData:model.lastMessageData];
+        }
+        _lastMessageString = lastMessageData[@"lastMessageString"];
+        _lastMessageAttributedString = lastMessageData[@"lastMessageAttributedString"];
+        _lastMessageOthers = lastMessageData[@"lastMessageOthers"];
+        
+        _hiddenFromUser = model.hiddenFromUser;
+        
+        // Compute the trust if asked to do it automatically
+        // or maintain its computation it has been already calcutated
+        if (_isEncrypted
+            && ([MXSDKOptions sharedInstance].computeE2ERoomSummaryTrust
+                || _trust))
+        {
+            dispatch_async(dispatch_get_main_queue(), ^{
+                [self bootstrapTrustLevelComputation];
+            });
+        }
+    }
+    return self;
+}
 
 #pragma mark - NSCoding
 - (instancetype)initWithCoder:(NSCoder *)aDecoder

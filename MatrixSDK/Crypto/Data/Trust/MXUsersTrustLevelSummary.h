@@ -16,6 +16,8 @@
 
 #import <Foundation/Foundation.h>
 
+@class MXUsersTrustLevelSummaryModel;
+
 NS_ASSUME_NONNULL_BEGIN
 
 /**
@@ -30,6 +32,10 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, strong, readonly) NSProgress *trustedDevicesProgress;
 
 - (instancetype)initWithTrustedUsersProgress:(NSProgress*)trustedUsersProgress andTrustedDevicesProgress:(NSProgress*)trustedDevicesProgress;
+
+#pragma mark - CoreData Model
+
+- (instancetype)initWithCoreDataModel:(MXUsersTrustLevelSummaryModel *)model;
 
 @end
 

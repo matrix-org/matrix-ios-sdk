@@ -16,6 +16,8 @@
 
 #import "MXUsersTrustLevelSummary.h"
 
+#import "MatrixSDKSwiftHeader.h"
+
 @interface MXUsersTrustLevelSummary()
 
 @property (nonatomic, strong, readwrite) NSProgress *trustedUsersProgress;
@@ -36,6 +38,20 @@
     return self;
 }
 
+#pragma mark - CoreData Model
+
+- (instancetype)initWithCoreDataModel:(MXUsersTrustLevelSummaryModel *)model
+{
+    if (self = [super init])
+    {
+        self.trustedUsersProgress = [NSProgress progressWithTotalUnitCount:model.usersCount];
+        self.trustedUsersProgress.completedUnitCount = model.trustedUsersCount;
+        
+        self.trustedDevicesProgress = [NSProgress progressWithTotalUnitCount:model.devicesCount];
+        self.trustedDevicesProgress.completedUnitCount = model.trustedDevicesCount;
+    }
+    return self;
+}
 
 #pragma mark - NSCoding
 

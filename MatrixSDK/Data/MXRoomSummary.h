@@ -27,6 +27,7 @@
 #import "MXRoomType.h"
 
 @class MXSession, MXRoom, MXRoomState, MXEvent;
+@class MXRoomSummaryModel;
 @protocol MXStore;
 
 
@@ -135,6 +136,10 @@ FOUNDATION_EXPORT NSString *const kMXRoomSummaryDidChangeNotification;
                 global [MXStore commit] will happen. This optimises IO.
  */
 - (void)save:(BOOL)commit;
+
+#pragma mark - CoreData Model
+
+- (instancetype)initWithCoreDataModel:(MXRoomSummaryModel *)model;
 
 #pragma mark - Data related to room state
 
