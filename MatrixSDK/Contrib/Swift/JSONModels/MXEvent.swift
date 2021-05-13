@@ -164,7 +164,7 @@ public enum MXMessageType: Equatable, Hashable {
 
 
 /// Membership definitions
-public enum MXMembership: Equatable, Hashable {
+public enum MXMembership: UInt {
     case unknown, invite, join, leave, ban
     
     public var identifier: __MXMembership {
