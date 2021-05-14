@@ -265,6 +265,12 @@ FOUNDATION_EXPORT NSString *const kMXRoomSummaryDidChangeNotification;
  */
 - (MXHTTPOperation*)resetLastMessage:(void (^)(void))complete failure:(void (^)(NSError *))failure commit:(BOOL)commit;
 
+/**
+ Encrypt given last message data.
+ 
+ @param data Last message data to encrypt.
+ */
+- (NSData *)encrypt:(NSData *)data;
 
 #pragma mark - Data related to business logic
 // @TODO(summary): paginationToken, hasReachedHomeServerPaginationEnd, etc
