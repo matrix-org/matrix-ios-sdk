@@ -4,9 +4,10 @@
         <attribute name="invited" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="joined" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="members" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <relationship name="ofRoom" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="MXRoomSummaryModel" inverseName="membersCount" inverseEntity="MXRoomSummaryModel"/>
     </entity>
     <entity name="MXRoomSummaryModel" representedClassName="MXRoomSummaryModel" syncable="YES">
-        <attribute name="aliases" attributeType="Transformable" customClassName="[String]"/>
+        <attribute name="aliases" optional="YES" attributeType="Transformable" valueTransformerName="NSSecureUnarchiveFromData" customClassName="[String]"/>
         <attribute name="avatar" optional="YES" attributeType="String"/>
         <attribute name="creatorUserId" optional="YES" attributeType="String"/>
         <attribute name="directUserId" optional="YES" attributeType="String"/>
@@ -27,18 +28,19 @@
         <attribute name="topic" optional="YES" attributeType="String"/>
         <attribute name="typeInt" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="typeString" optional="YES" attributeType="String"/>
-        <relationship name="membersCount" optional="YES" maxCount="1" deletionRule="Cascade" destinationEntity="MXRoomMembersCountModel"/>
-        <relationship name="trust" optional="YES" maxCount="1" deletionRule="Cascade" destinationEntity="MXUsersTrustLevelSummaryModel"/>
+        <relationship name="membersCount" optional="YES" maxCount="1" deletionRule="Cascade" destinationEntity="MXRoomMembersCountModel" inverseName="ofRoom" inverseEntity="MXRoomMembersCountModel"/>
+        <relationship name="trust" optional="YES" maxCount="1" deletionRule="Cascade" destinationEntity="MXUsersTrustLevelSummaryModel" inverseName="ofRoom" inverseEntity="MXUsersTrustLevelSummaryModel"/>
     </entity>
     <entity name="MXUsersTrustLevelSummaryModel" representedClassName="MXUsersTrustLevelSummaryModel" syncable="YES">
         <attribute name="devicesCount" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="trustedDevicesCount" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="trustedUsersCount" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="usersCount" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <relationship name="ofRoom" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="MXRoomSummaryModel" inverseName="trust" inverseEntity="MXRoomSummaryModel"/>
     </entity>
     <elements>
-        <element name="MXRoomMembersCountModel" positionX="297.1484375" positionY="-66.14453125" width="128" height="88"/>
+        <element name="MXRoomMembersCountModel" positionX="297.1484375" positionY="-66.14453125" width="128" height="103"/>
         <element name="MXRoomSummaryModel" positionX="-63" positionY="-18" width="128" height="388"/>
-        <element name="MXUsersTrustLevelSummaryModel" positionX="236.4921875" positionY="519.4296875" width="128" height="103"/>
+        <element name="MXUsersTrustLevelSummaryModel" positionX="236.4921875" positionY="519.4296875" width="128" height="118"/>
     </elements>
 </model>
