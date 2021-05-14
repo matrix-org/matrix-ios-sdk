@@ -434,6 +434,23 @@ typedef void (^MXOnResumeDone)(void);
     }];
 }
 
+// Load the last event for all room summaries.
+-(void)loadRoomSummaryLastEvents:(void (^)(void))onComplete
+{
+    dispatch_group_t dispatchGroup = dispatch_group_create();
+    for (MXRoomSummary *roomSummary in self.roomsSummaries)
+    {
+        dispatch_group_enter(dispatchGroup);
+        [roomSummary loadLastEvent:^{
+            dispatch_group_leave(dispatchGroup);
+        }];
+    }
+    
+    dispatch_group_notify(dispatchGroup, dispatch_get_main_queue(), ^{
+        onComplete();
+    });
+}
+
 /// Handle a sync response and decide serverTimeout for the next sync request.
 /// @param syncResponse The sync response object
 /// @param completion Completion block to be called at the end of the process. Will be called on the caller thread.
