@@ -206,37 +206,36 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
 
 #pragma mark - Data related to the last message
 
-- (MXEvent *)lastMessageEvent
+-(void)loadLastEvent:(void (^)(void))onComplete
 {
-    if (!lastMessageEvent)
+    // The storage of the event depends if it is a true matrix event or a local echo
+    if (![_lastMessageEventId hasPrefix:kMXEventLocalEventIdPrefix])
     {
-        // The storage of the event depends if it is a true matrix event or a local echo
-        if (![_lastMessageEventId hasPrefix:kMXEventLocalEventIdPrefix])
+        lastMessageEvent = [store eventWithEventId:_lastMessageEventId inRoom:_roomId];
+    }
+    else
+    {
+        for (MXEvent *event in [store outgoingMessagesInRoom:_roomId])
         {
-            lastMessageEvent = [store eventWithEventId:_lastMessageEventId inRoom:_roomId];
-        }
-        else
-        {
-            for (MXEvent *event in [store outgoingMessagesInRoom:_roomId])
+            if ([event.eventId isEqualToString:_lastMessageEventId])
             {
-                if ([event.eventId isEqualToString:_lastMessageEventId])
-                {
-                    lastMessageEvent = event;
-                    break;
-                }
+                lastMessageEvent = event;
+                break;
             }
         }
     }
-
-    // Decrypt event if necessary
-    if (lastMessageEvent.eventType == MXEventTypeRoomEncrypted)
-    {
-        if (![_mxSession decryptEvent:lastMessageEvent inTimeline:nil])
+    
+    [_mxSession decryptEvents:@[lastMessageEvent] inTimeline:nil onComplete:^(NSArray<MXEvent *> *failedEvents) {
+        if (failedEvents.count)
         {
-            NSLog(@"[MXRoomSummary] lastMessageEvent: Warning: Unable to decrypt event. Error: %@", lastMessageEvent.decryptionError);
+            NSLog(@"[MXRoomSummary] lastMessageEvent: Warning: Unable to decrypt event. Error: %@", self.lastMessageEvent.decryptionError);
         }
-    }
+        onComplete();
+    }];
+}
 
+- (MXEvent *)lastMessageEvent
+{
     return lastMessageEvent;
 }
 

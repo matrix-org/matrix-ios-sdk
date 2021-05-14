@@ -1235,9 +1235,6 @@ NSString *uisiString = @"The sender's device has not sent us the keys for this m
 
         id summaryObserver;
         summaryObserver = [[NSNotificationCenter defaultCenter] addObserverForName:kMXRoomSummaryDidChangeNotification object:roomSummaryFromBobPOV queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
-            
-            NSLog(@"WWWWWW %@", roomSummaryFromBobPOV.lastMessageString);
-
             switch (notifCount++)
             {
                 case 0:
@@ -1247,9 +1244,13 @@ NSString *uisiString = @"The sender's device has not sent us the keys for this m
 
                     MXEvent *event = roomSummaryFromBobPOV.lastMessageEvent;
                     XCTAssertNil(event.clearEvent);
+                    
+                    // Attempt a new decryption
+                    [bobSession decryptEvents:@[event] inTimeline:nil onComplete:^(NSArray<MXEvent *> *failedEvents) {
+                        // Reinject the m.room_key event. This mimics a room_key event that arrives after message events.
+                        [bobSession.crypto handleRoomKeyEvent:toDeviceEvent onComplete:^{}];
+                    }];
 
-                    // Reinject the m.room_key event. This mimics a room_key event that arrives after message events.
-                    [bobSession.crypto handleRoomKeyEvent:toDeviceEvent onComplete:^{}];
                     break;
                 }
 
