@@ -20,8 +20,12 @@ import CoreData
 @objc(MXRoomSummaryModel)
 public class MXRoomSummaryModel: NSManagedObject {
     
-    @nonobjc public class func fetchRequest() -> NSFetchRequest<MXRoomSummaryModel> {
-        return NSFetchRequest<MXRoomSummaryModel>(entityName: "MXRoomSummaryModel")
+    private enum Constants {
+        static let entityName: String = "MXRoomSummaryModel"
+    }
+    
+    internal static func typedFetchRequest() -> NSFetchRequest<MXRoomSummaryModel> {
+        return NSFetchRequest<MXRoomSummaryModel>(entityName: Constants.entityName)
     }
 
     @NSManaged public var identifier: String
@@ -31,7 +35,7 @@ public class MXRoomSummaryModel: NSManagedObject {
     @NSManaged public var displayName: String?
     @NSManaged public var topic: String?
     @NSManaged public var creatorUserId: String?
-    @NSManaged public var aliases: [String]
+    @NSManaged public var aliases: [String]?
     @NSManaged public var membershipInt: Int16
     @NSManaged public var membershipTransitionStateInt: Int16
     @NSManaged public var isConferenceUserRoom: Bool
@@ -48,49 +52,70 @@ public class MXRoomSummaryModel: NSManagedObject {
     @NSManaged public var membersCount: MXRoomMembersCountModel?
     @NSManaged public var trust: MXUsersTrustLevelSummaryModel?
     
-    internal static func from(roomSummary summary: MXRoomSummary) -> MXRoomSummaryModel {
-        let model = MXRoomSummaryModel()
-        
-        model.identifier = summary.roomId
-        model.typeString = summary.roomTypeString
-        model.typeInt = Int16(summary.roomType.rawValue)
-        model.avatar = summary.avatar
-        model.displayName = summary.displayname
-        model.topic = summary.topic
-        model.creatorUserId = summary.creatorUserId
-        model.aliases = summary.aliases
-        model.membershipInt = Int16(summary.membership.rawValue)
-        model.membershipTransitionStateInt = Int16(summary.membershipTransitionState.rawValue)
-        model.isConferenceUserRoom = summary.isConferenceUserRoom
-        if let others = summary.others {
-            model.others = NSKeyedArchiver.archivedData(withRootObject: others)
+    internal static func from(roomSummary summary: MXRoomSummary,
+                              in managedObjectContext: NSManagedObjectContext) -> MXRoomSummaryModel {
+        guard let model = NSEntityDescription.insertNewObject(forEntityName: Constants.entityName,
+                                                              into: managedObjectContext) as? MXRoomSummaryModel else {
+            fatalError("[MXRoomSummaryModel] from: could not initialize new model")
         }
-        model.isEncrypted = summary.isEncrypted
-        model.notificationCount = Int16(summary.notificationCount)
-        model.highlightCount = Int16(summary.highlightCount)
-        model.directUserId = summary.directUserId
-        model.lastMessageEventId = summary.lastMessageEventId
-        model.lastMessageDate = Date(timeIntervalSince1970: TimeInterval(summary.lastMessageOriginServerTs))
-        model.isLastMessageEncrypted = summary.isLastMessageEncrypted
-        model.hiddenFromUser = summary.hiddenFromUser
+        
+        model.update(withRoomSummary: summary, in: managedObjectContext)
+        
+        return model
+    }
+    
+    internal func update(withRoomSummary summary: MXRoomSummary,
+                         in managedObjectContext: NSManagedObjectContext) {
+        identifier = summary.roomId
+        typeString = summary.roomTypeString
+        typeInt = Int16(summary.roomType.rawValue)
+        avatar = summary.avatar
+        displayName = summary.displayname
+        topic = summary.topic
+        creatorUserId = summary.creatorUserId
+        aliases = summary.aliases
+        membershipInt = Int16(summary.membership.rawValue)
+        membershipTransitionStateInt = Int16(summary.membershipTransitionState.rawValue)
+        isConferenceUserRoom = summary.isConferenceUserRoom
+        if let others = summary.others {
+            self.others = NSKeyedArchiver.archivedData(withRootObject: others)
+        } else {
+            self.others = nil
+        }
+        isEncrypted = summary.isEncrypted
+        notificationCount = Int16(summary.notificationCount)
+        highlightCount = Int16(summary.highlightCount)
+        directUserId = summary.directUserId
+        lastMessageEventId = summary.lastMessageEventId
+        lastMessageDate = Date(timeIntervalSince1970: TimeInterval(summary.lastMessageOriginServerTs))
+        isLastMessageEncrypted = summary.isLastMessageEncrypted
+        hiddenFromUser = summary.hiddenFromUser
         
         var lastMessageData: [String: Any] = [:]
         lastMessageData["lastMessageString"] = summary.lastMessageString
         lastMessageData["lastMessageAttributedString"] = summary.lastMessageAttributedString
         lastMessageData["lastMessageOthers"] = summary.lastMessageOthers
         
-        if model.isLastMessageEncrypted {
+        if isLastMessageEncrypted {
             let data = NSKeyedArchiver.archivedData(withRootObject: lastMessageData)
-            // TODO: encrypt data
-            model.lastMessageData = data
+            self.lastMessageData = summary.encrypt(data)
         } else {
-            model.lastMessageData = NSKeyedArchiver.archivedData(withRootObject: lastMessageData)
+            self.lastMessageData = NSKeyedArchiver.archivedData(withRootObject: lastMessageData)
         }
         
-        model.membersCount = MXRoomMembersCountModel.from(roomMembersCount: summary.membersCount)
-        model.trust = MXUsersTrustLevelSummaryModel.from(roomUsersTrustLevelSummary: summary.trust)
+        if let membersCount = summary.membersCount {
+            self.membersCount = MXRoomMembersCountModel.from(roomMembersCount: membersCount,
+                                                        in: managedObjectContext)
+        } else {
+            membersCount = nil
+        }
+        if let trust = summary.trust {
+            self.trust = MXUsersTrustLevelSummaryModel.from(roomUsersTrustLevelSummary: trust,
+                                                            in: managedObjectContext)
+        } else {
+            trust = nil
+        }
         
-        return model
     }
     
 }

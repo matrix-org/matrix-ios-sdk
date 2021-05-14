@@ -856,7 +856,10 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
         _membersCount = [[MXRoomMembersCount alloc] initWithCoreDataModel:model.membersCount];
         _isConferenceUserRoom = model.isConferenceUserRoom;
         
-        _others = [NSKeyedUnarchiver unarchiveObjectWithData:model.others];
+        if (model.others)
+        {
+            _others = [NSKeyedUnarchiver unarchiveObjectWithData:model.others];
+        }
         _isEncrypted = model.isEncrypted;
         _trust = [[MXUsersTrustLevelSummary alloc] initWithCoreDataModel:model.trust];
         _notificationCount = model.notificationCount;

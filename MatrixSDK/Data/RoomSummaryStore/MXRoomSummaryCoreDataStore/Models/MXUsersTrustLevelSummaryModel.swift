@@ -20,8 +20,12 @@ import CoreData
 @objc(MXUsersTrustLevelSummaryModel)
 public class MXUsersTrustLevelSummaryModel: NSManagedObject {
 
-    @nonobjc public class func fetchRequest() -> NSFetchRequest<MXUsersTrustLevelSummaryModel> {
-        return NSFetchRequest<MXUsersTrustLevelSummaryModel>(entityName: "MXUsersTrustLevelSummaryModel")
+    private enum Constants {
+        static let entityName: String = "MXUsersTrustLevelSummaryModel"
+    }
+    
+    internal static func typedFetchRequest() -> NSFetchRequest<MXUsersTrustLevelSummaryModel> {
+        return NSFetchRequest<MXUsersTrustLevelSummaryModel>(entityName: Constants.entityName)
     }
 
     @NSManaged public var usersCount: Int16
@@ -29,8 +33,12 @@ public class MXUsersTrustLevelSummaryModel: NSManagedObject {
     @NSManaged public var devicesCount: Int16
     @NSManaged public var trustedDevicesCount: Int16
     
-    internal static func from(roomUsersTrustLevelSummary usersTrustLevelSummary: MXUsersTrustLevelSummary) -> MXUsersTrustLevelSummaryModel {
-        let model = MXUsersTrustLevelSummaryModel()
+    internal static func from(roomUsersTrustLevelSummary usersTrustLevelSummary: MXUsersTrustLevelSummary,
+                              in managedObjectContext: NSManagedObjectContext) -> MXUsersTrustLevelSummaryModel {
+        guard let model = NSEntityDescription.insertNewObject(forEntityName: Constants.entityName,
+                                                              into: managedObjectContext) as? MXUsersTrustLevelSummaryModel else {
+            fatalError("[MXUsersTrustLevelSummaryModel] from: could not initialize new model")
+        }
         
         model.usersCount = Int16(usersTrustLevelSummary.trustedUsersProgress.totalUnitCount)
         model.trustedUsersCount = Int16(usersTrustLevelSummary.trustedUsersProgress.completedUnitCount)
