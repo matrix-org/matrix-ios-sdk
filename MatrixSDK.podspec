@@ -31,7 +31,8 @@ Pod::Spec.new do |s|
       ss.osx.deployment_target = "10.10"
       
       ss.source_files = "MatrixSDK", "MatrixSDK/**/*.{h,m}", "MatrixSDK/**/*.{swift}"
-      
+      ss.resources = "MatrixSDK/**/*.{xcdatamodeld}"
+      ss.frameworks = "CoreData"
 
       ss.dependency 'AFNetworking', '~> 4.0.0'
       ss.dependency 'GZIP', '~> 1.3.0'
