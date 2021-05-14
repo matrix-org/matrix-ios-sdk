@@ -142,4 +142,4 @@ FOUNDATION_EXPORT NSString *MatrixSDKVersion;
 #import "MXOlmDecryption.h"
 #import "MXCachedSyncResponse.h"
 #import "MXBackgroundCryptoStore.h"
-
+#import "MXRoomSummaryStore.h"

@@ -294,6 +294,17 @@
     return roomStores.allKeys;
 }
 
+#pragma mark - MXRoomSummaryStore
+
+- (void)storeSummaryForRoom:(NSString *)roomId summary:(MXRoomSummary *)summary
+{
+    
+}
+
+- (MXRoomSummary *)summaryOfRoom:(NSString *)roomId
+{
+    return nil;
+}
 
 #pragma mark - Matrix users
 - (void)storeUser:(MXUser *)user

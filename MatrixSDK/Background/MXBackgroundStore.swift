@@ -125,6 +125,10 @@ class MXBackgroundStore: NSObject, MXStore {
     func open(with credentials: MXCredentials, onComplete: (() -> Void)?, failure: ((Error?) -> Void)? = nil) {
     }
     
+    func storeSummary(forRoom roomId: String, summary: MXRoomSummary) {
+        
+    }
+    
     func storeEvent(forRoom roomId: String, event: MXEvent, direction: __MXTimelineDirection) {
     }
     

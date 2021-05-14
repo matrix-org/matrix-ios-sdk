@@ -26,14 +26,14 @@
 #import "MXRoomAccountData.h"
 #import "MXGroup.h"
 #import "MXFilterJSONModel.h"
-
+#import "MXRoomSummaryStore.h"
 #import "MXEventsEnumerator.h"
 
 /**
  The `MXStore` protocol defines an interface that must be implemented in order to store
  Matrix data handled during a `MXSession`.
  */
-@protocol MXStore <NSObject>
+@protocol MXStore <MXRoomSummaryStore>
 
 #pragma mark - Room data
 
@@ -361,27 +361,7 @@
             failure:(nullable void (^)(NSError * _Nonnull error))failure;
 
 
-#pragma mark - Room summary
 
-/**
- Store the summary for a room.
-
- Note: this method is required in permanent storage implementation.
-
- @param roomId the id of the room.
- @param summary the room summary.
- */
-- (void)storeSummaryForRoom:(nonnull NSString*)roomId summary:(nonnull MXRoomSummary*)summary;
-
-/**
- Get the summary a room.
-
- Note: this method is required in permanent storage implementation.
-
- @param roomId the id of the room.
- @return the user private data for this room.
- */
-- (MXRoomSummary* _Nullable)summaryOfRoom:(nonnull NSString*)roomId;
 
 
 #pragma mark - Room user data
