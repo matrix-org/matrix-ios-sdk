@@ -598,8 +598,8 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
     dispatch_async(decryptionQueue, ^{
         NSMutableArray<MXEventDecryptionResult *> *results = [NSMutableArray arrayWithCapacity:events.count];
         
-        // TODO: Implement bulk decrypt to speed up the process.
-        //
+        // TODO: Implement bulk decryption to speed up the process.
+        // We need a [MXDecrypting decryptEvents:] method to limit the number of back and forth with olm/megolm module.
         for (MXEvent *event in events)
         {
             [results addObject:[self decryptEvent2:event inTimeline:timeline]];

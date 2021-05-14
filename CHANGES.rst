@@ -7,7 +7,9 @@ Changes to be released in next version
 🙌 Improvements
  * MXSession: Cache initial sync response until it is fully handled (vector-im/element-ios/issues/4317).
  * MXStore: New commit method accepting a completion block.
- * MXSession: eventWithEventId: Decrypt the event if needed.
+ * MXCrypto: Decrypt events asynchronously and no more on the main thread )(vector-im/element-ios/issues/4306).
+ * MXSession: Add the decryptEvents method to decypt a bunch of events asynchronously.
+ * MXSession: Make the eventWithEventId method decrypt the event if needed.
 
 🐛 Bugfix
  * MXRoomSummary: Fix decryption of the last message when it is edited (vector-im/element-ios/issues/4322).
