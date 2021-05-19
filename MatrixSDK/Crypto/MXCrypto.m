@@ -875,17 +875,10 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
 
     if (event.isEncrypted)
     {
-        // Use decryptionQueue because this is a simple read in the db
-        // AND we do it synchronously
-        // @TODO: dispatch_async
-        MXWeakify(self);
-        dispatch_sync(decryptionQueue, ^{
-            MXStrongifyAndReturnIfNil(self);
-
-            NSString *algorithm = event.wireContent[@"algorithm"];
-            device = [self.deviceList deviceWithIdentityKey:event.senderKey andAlgorithm:algorithm];
-
-        });
+        // This is a simple read in the db which is thread safe.
+        // Return synchronously
+        NSString *algorithm = event.wireContent[@"algorithm"];
+        device = [self.deviceList deviceWithIdentityKey:event.senderKey andAlgorithm:algorithm];
     }
 
 #endif

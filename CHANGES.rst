@@ -11,6 +11,7 @@ Changes to be released in next version
  * MXSession: Add the decryptEvents method to decypt a bunch of events asynchronously.
  * MXSession: Make the eventWithEventId method decrypt the event if needed.
  * MXEventTimeline: Add NSCopying implementation so that another pagination can be done on the same set of data.
+ * MXCrypto: eventDeviceInfo: Do not synchronise anymore the operation with the decryption queue.
 
 🐛 Bugfix
  * MXRoomSummary: Fix decryption of the last message when it is edited (vector-im/element-ios/issues/4322).
