@@ -481,7 +481,7 @@ NSString *const MXCrossSigningErrorDomain = @"org.matrix.sdk.crosssigning";
     NSLog(@"[MXCrossSigning] refreshState for device %@: Current state: %@", self.crypto.store.deviceId, @(self.state));
 
     // Refresh user's keys
-    [self.crypto.deviceList downloadKeys:@[myUserId] forceDownload:YES success:^(MXUsersDevicesMap<MXDeviceInfo *> *usersDevicesInfoMap, NSDictionary<NSString *,MXCrossSigningInfo *> *crossSigningKeysMap) {
+    [self.crypto downloadKeys:@[myUserId] forceDownload:YES success:^(MXUsersDevicesMap<MXDeviceInfo *> *usersDevicesInfoMap, NSDictionary<NSString *,MXCrossSigningInfo *> *crossSigningKeysMap) {
         
         BOOL sameCrossSigningKeys = [myUserCrossSigningKeysBefore hasSameKeysAsCrossSigningInfo:crossSigningKeysMap[myUserId]];
         self.myUserCrossSigningKeys = crossSigningKeysMap[myUserId];
