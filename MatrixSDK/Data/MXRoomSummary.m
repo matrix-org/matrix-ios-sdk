@@ -225,10 +225,17 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
         }
     }
     
+    if (!lastMessageEvent)
+    {
+        NSLog(@"[MXRoomSummary] loadLastEvent: Cannot find event %@ in store", _lastMessageEventId);
+        onComplete();
+        return;
+    }
+    
     [_mxSession decryptEvents:@[lastMessageEvent] inTimeline:nil onComplete:^(NSArray<MXEvent *> *failedEvents) {
         if (failedEvents.count)
         {
-            NSLog(@"[MXRoomSummary] lastMessageEvent: Warning: Unable to decrypt event. Error: %@", self.lastMessageEvent.decryptionError);
+            NSLog(@"[MXRoomSummary] loadLastEvent: Warning: Unable to decrypt event. Error: %@", self.lastMessageEvent.decryptionError);
         }
         onComplete();
     }];
