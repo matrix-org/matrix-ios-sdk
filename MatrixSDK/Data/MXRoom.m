@@ -2377,19 +2377,6 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
     if ([mxSession.store respondsToSelector:@selector(outgoingMessagesInRoom:)])
     {
         NSArray<MXEvent*> *outgoingMessages = [mxSession.store outgoingMessagesInRoom:self.roomId];
-        
-        for (MXEvent *event in outgoingMessages)
-        {
-            // Decrypt event if necessary
-            if (event.eventType == MXEventTypeRoomEncrypted)
-            {
-                if (![self.mxSession decryptEvent:event inTimeline:nil])
-                {
-                    NSLog(@"[MXRoom] outgoingMessages: Warning: Unable to decrypt outgoing event: %@", event.decryptionError);
-                }
-            }
-        }
-        
         return outgoingMessages;
     }
     else

@@ -16,7 +16,7 @@ Changes to be released in next version
  * MXRoomSummary: Fix decryption of the last message when it is edited (vector-im/element-ios/issues/4322).
 
 ⚠️ API Changes
- * 
+ * MXRoom: MXRoom.outgoingMessages does not decrypt messages anymore. Use MXSession.decryptEvents to get decrypted events.
 
 🗣 Translations
  * 
