@@ -516,7 +516,8 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
     // We need to go to decryptionQueue only to use getRoomDecryptor
     // Other subsequent calls are thread safe because of the implementation of MXCryptoStore
     dispatch_sync(decryptionQueue, ^{
-        id<MXDecrypting> alg = [self getRoomDecryptor:event.roomId algorithm:event.content[@"algorithm"]];
+        NSString *algorithm = event.wireContent[@"algorithm"];
+        id<MXDecrypting> alg = [self getRoomDecryptor:event.roomId algorithm:algorithm];
         
         hasKeys = [alg hasKeysToDecryptEvent:event];
     });
@@ -558,17 +559,18 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
         return result;
     }
     
-    id<MXDecrypting> alg = [self getRoomDecryptor:event.roomId algorithm:event.content[@"algorithm"]];
+    NSString *algorithm = event.wireContent[@"algorithm"];
+    id<MXDecrypting> alg = [self getRoomDecryptor:event.roomId algorithm:algorithm];
     if (!alg)
     {
-        NSLog(@"[MXCrypto] decryptEvent: Unable to decrypt %@ with algorithm %@. Event: %@", event.eventId, event.content[@"algorithm"], event.JSONDictionary);
+        NSLog(@"[MXCrypto] decryptEvent: Unable to decrypt %@ with algorithm %@. Event: %@", event.eventId, algorithm, event.JSONDictionary);
         
         result = [MXEventDecryptionResult new];
         result.error = [NSError errorWithDomain:MXDecryptingErrorDomain
                                            code:MXDecryptingErrorUnableToDecryptCode
                                        userInfo:@{
                                            NSLocalizedDescriptionKey: MXDecryptingErrorUnableToDecrypt,
-                                           NSLocalizedFailureReasonErrorKey: [NSString stringWithFormat:MXDecryptingErrorUnableToDecryptReason, event, event.content[@"algorithm"]]
+                                           NSLocalizedFailureReasonErrorKey: [NSString stringWithFormat:MXDecryptingErrorUnableToDecryptReason, event, algorithm]
                                        }];
     }
     else
