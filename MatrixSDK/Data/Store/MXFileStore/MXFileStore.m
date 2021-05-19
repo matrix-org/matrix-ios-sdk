@@ -676,8 +676,12 @@ static NSUInteger preloadOptions;
     }
 }
 
-
 - (void)commit
+{
+    [self commitWithCompletion:nil];
+}
+
+- (void)commitWithCompletion:(void (^)(void))completion
 {
     // Save data only if metaData exists
     if (metaData)
@@ -742,6 +746,11 @@ static NSUInteger preloadOptions;
                 else if (self.commitBackgroundTask.isRunning)
                 {
                     NSLog(@"[MXFileStore commit] Background task %@ is kept - running since %.0fms", self.commitBackgroundTask, [[NSDate date] timeIntervalSinceDate:self->backgroundTaskStartDate] * 1000);
+                }
+                
+                if (completion)
+                {
+                    completion();
                 }
             });
         });

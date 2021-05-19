@@ -301,11 +301,20 @@
 
 /**
  Save changes in the store.
+ 
+ Implementations may call `commitWithCompletion:` with a nil block.
+ */
+- (void)commit;
+
+/**
+ Save changes in the store.
 
  If the store uses permanent storage like database or file, it is the optimised time
  to commit the last changes.
+ 
+ @param completion Completion block to be called when operation completed. Will be called on main thread.
  */
-- (void)commit;
+- (void)commitWithCompletion:(void (^_Nullable)(void))completion;
 
 /**
  Close the store.

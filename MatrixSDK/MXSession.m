@@ -196,6 +196,8 @@ typedef void (^MXOnResumeDone)(void);
  */
 @property (nonatomic, strong) id<MXBackgroundTask> backgroundTask;
 
+@property (nonatomic, strong) id<MXSyncResponseStore> initialSyncResponseCache;
+
 @end
 
 @implementation MXSession
@@ -264,6 +266,8 @@ typedef void (^MXOnResumeDone)(void);
                               ];
 
         _catchingUp = NO;
+        MXCredentials *initialSyncCredentials = [MXCredentials initialSyncCacheCredentialsFrom:mxRestClient.credentials];
+        _initialSyncResponseCache = [[MXSyncResponseFileStore alloc] initWithCredentials:initialSyncCredentials];
 
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(onDidDecryptEvent:) name:kMXEventDidDecryptNotification object:nil];
 
@@ -428,8 +432,10 @@ typedef void (^MXOnResumeDone)(void);
 /// Handle a sync response and decide serverTimeout for the next sync request.
 /// @param syncResponse The sync response object
 /// @param completion Completion block to be called at the end of the process. Will be called on the caller thread.
+/// @param storeCompletion Completion block to be called when the process completed at store level, i.e sync response is stored. Will be called on main thread.
 - (void)handleSyncResponse:(MXSyncResponse *)syncResponse
                 completion:(void (^)(void))completion
+           storeCompletion:(void (^)(void))storeCompletion
 {
     NSLog(@"[MXSession] handleSyncResponse: Received %tu joined rooms, %tu invited rooms, %tu left rooms, %tu toDevice events.", syncResponse.rooms.join.count, syncResponse.rooms.invite.count, syncResponse.rooms.leave.count, syncResponse.toDevice.events.count);
 
@@ -611,16 +617,9 @@ typedef void (^MXOnResumeDone)(void);
                               catchingUp:self.catchingUp];
         }
 
-
         // Update live event stream token
         NSLog(@"[MXSession] Next sync token: %@", syncResponse.nextBatch);
         self.store.eventStreamToken = syncResponse.nextBatch;
-
-        // Commit store changes done in [room handleMessages]
-        if ([self.store respondsToSelector:@selector(commit)])
-        {
-            [self.store commit];
-        }
         
         if (completion)
         {
@@ -631,8 +630,14 @@ typedef void (^MXOnResumeDone)(void);
         [[NSNotificationCenter defaultCenter] postNotificationName:kMXSessionDidSyncNotification
                                                             object:self
                                                           userInfo:@{
-                                                                     kMXSessionNotificationSyncResponseKey: syncResponse
-                                                                     }];
+                                                              kMXSessionNotificationSyncResponseKey: syncResponse
+                                                          }];
+
+        // Commit store changes
+        if ([self.store respondsToSelector:@selector(commitWithCompletion:)])
+        {
+            [self.store commitWithCompletion:storeCompletion];
+        }
     }];
 }
 
@@ -1210,35 +1215,72 @@ typedef void (^MXOnResumeDone)(void);
                       clientTimeout:(NSUInteger)clientTimeout
                         setPresence:(NSString*)setPresence
 {
-    NSDate *startDate = [NSDate date];
+    dispatch_group_t initialSyncDispatchGroup = dispatch_group_create();
     
-    MXTaskProfile *syncTaskProfile;
-    if (!self->firstSyncDone)
+    __block MXTaskProfile *syncTaskProfile;
+    __block MXSyncResponse *syncResponse;
+    __block BOOL useLiveResponse = YES;
+
+    if (!self.isEventStreamInitialised && self.initialSyncResponseCache.outdatedSyncResponseIds.count > 0)
     {
-        BOOL isInitialSync = !self.isEventStreamInitialised;
-        syncTaskProfile = [MXSDKOptions.sharedInstance.profiler startMeasuringTaskWithName:isInitialSync ? kMXAnalyticsStartupInititialSync : kMXAnalyticsStartupIncrementalSync
-                                                        category:kMXAnalyticsStartupCategory];
-    }
-
-    // Determine if we are catching up
-    _catchingUp = (0 == serverTimeout);
-
-    NSString * streamToken = _store.eventStreamToken;
-    NSLog(@"[MXSession] Do a server sync%@ from token: %@", _catchingUp ? @" (catching up)" : @"", streamToken);
-
-    MXWeakify(self);
-    eventStreamRequest = [matrixRestClient syncFromToken:streamToken serverTimeout:serverTimeout clientTimeout:clientTimeout setPresence:setPresence filter:self.syncFilterId success:^(MXSyncResponse *syncResponse) {
-        MXStrongifyAndReturnIfNil(self);
+        //  use the sync response from the cache
+        dispatch_group_enter(initialSyncDispatchGroup);
         
-        // Make sure [MXSession close] or [MXSession pause] has not been called before the server response
-        if (!self->eventStreamRequest)
+        NSString *responseId = self.initialSyncResponseCache.outdatedSyncResponseIds.lastObject;
+        MXCachedSyncResponse *cachedResponse = [self.initialSyncResponseCache syncResponseWithId:responseId
+                                                                                           error:nil];
+        
+        syncResponse = cachedResponse.syncResponse;
+        useLiveResponse = NO;
+        
+        NSLog(@"[MXSession] serverSync: Use cached initial sync response");
+        
+        dispatch_group_leave(initialSyncDispatchGroup);
+    }
+    else
+    {
+        //  do a network request
+        dispatch_group_enter(initialSyncDispatchGroup);
+        
+        NSDate *startDate = [NSDate date];
+        
+        if (!self->firstSyncDone)
         {
-            return;
+            BOOL isInitialSync = !self.isEventStreamInitialised;
+            syncTaskProfile = [MXSDKOptions.sharedInstance.profiler startMeasuringTaskWithName:isInitialSync ? kMXAnalyticsStartupInititialSync : kMXAnalyticsStartupIncrementalSync
+                                                            category:kMXAnalyticsStartupCategory];
         }
         
-        NSTimeInterval duration = [[NSDate date] timeIntervalSinceDate:startDate];
-        NSLog(@"[MXSession] Received sync response in %.0fms", duration * 1000);
+        NSString * streamToken = _store.eventStreamToken;
         
+        // Determine if we are catching up
+        _catchingUp = (0 == serverTimeout);
+        
+        NSLog(@"[MXSession] Do a server sync%@ from token: %@", _catchingUp ? @" (catching up)" : @"", streamToken);
+        
+        MXWeakify(self);
+        eventStreamRequest = [matrixRestClient syncFromToken:streamToken serverTimeout:serverTimeout clientTimeout:clientTimeout setPresence:setPresence filter:self.syncFilterId success:^(MXSyncResponse *liveResponse) {
+            MXStrongifyAndReturnIfNil(self);
+            
+            // Make sure [MXSession close] or [MXSession pause] has not been called before the server response
+            if (!self->eventStreamRequest)
+            {
+                return;
+            }
+            
+            NSTimeInterval duration = [[NSDate date] timeIntervalSinceDate:startDate];
+            NSLog(@"[MXSession] Received sync response in %.0fms", duration * 1000);
+            
+            syncResponse = liveResponse;
+            useLiveResponse = YES;
+            
+            dispatch_group_leave(initialSyncDispatchGroup);
+        } failure:^(NSError *error) {
+            [self handleServerSyncError:error forRequestWithServerTimeout:serverTimeout success:success failure:failure];
+        }];
+    }
+    
+    dispatch_group_notify(initialSyncDispatchGroup, dispatch_get_main_queue(), ^{
         BOOL wasfirstSync = NO;
         if (!self->firstSyncDone && syncTaskProfile)
         {
@@ -1249,6 +1291,15 @@ typedef void (^MXOnResumeDone)(void);
             syncTaskProfile.units = syncResponse.rooms.join.count + syncResponse.rooms.invite.count + syncResponse.rooms.leave.count;
             
             [MXSDKOptions.sharedInstance.profiler stopMeasuringTaskWithProfile:syncTaskProfile];
+        }
+        
+        BOOL isInitialSync = !self.isEventStreamInitialised;
+        if (isInitialSync && useLiveResponse)
+        {
+            //  cache initial sync response
+            MXCachedSyncResponse *response = [[MXCachedSyncResponse alloc] initWithSyncToken:nil
+                                                                                syncResponse:syncResponse];
+            [self.initialSyncResponseCache addSyncResponseWithSyncResponse:response];
         }
         
         // By default, the next sync will be a long polling (with the default server timeout value)
@@ -1350,10 +1401,11 @@ typedef void (^MXOnResumeDone)(void);
             {
                 success();
             }
+        } storeCompletion:^{
+            //  clear initial sync cache after handling sync response
+            [self.initialSyncResponseCache deleteData];
         }];
-    } failure:^(NSError *error) {
-        [self handleServerSyncError:error forRequestWithServerTimeout:serverTimeout success:success failure:failure];
-    }];
+    });
 }
 
 - (void)handleServerSyncError:(NSError*)error forRequestWithServerTimeout:(NSUInteger)serverTimeout success:(void (^)(void))success failure:(void (^)(NSError *error))failure
@@ -1745,7 +1797,7 @@ typedef void (^MXOnResumeDone)(void);
                     [self handleSyncResponse:cachedSyncResponse.syncResponse
                                   completion:^{
                         taskCompleted();
-                    }];
+                    } storeCompletion:nil];
                 }];
             }
         }
