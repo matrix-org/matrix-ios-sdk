@@ -173,9 +173,10 @@ extern NSString *const MXDeviceListDidUpdateUsersDevicesNotification;
  
  @param event the event to decrypt.
 
- @return YES if keys are present.
+ @param onComplete the block called when the operations completes. It returns the result
  */
-- (BOOL)hasKeysToDecryptEvent:(MXEvent*)event;
+- (void)hasKeysToDecryptEvent:(MXEvent*)event
+                   onComplete:(void (^)(BOOL))onComplete;
 
 /**
  Decrypt a received event.

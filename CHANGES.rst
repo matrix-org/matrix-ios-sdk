@@ -19,6 +19,7 @@ Changes to be released in next version
  * MXRoom: MXRoom.outgoingMessages does not decrypt messages anymore. Use MXSession.decryptEvents to get decrypted events.
  * MXSession: [MXSession decryptEvent:inTimeline:] is deprecated, use [MXSession decryptEvents:inTimeline:onComplete:] instead.
  * MXCrypto: [MXCrypto decryptEvent:inTimeline:] is deprecated, use [MXCrypto decryptEvents:inTimeline:onComplete:] instead.
+ * MXCrypto: [MXCrypto hasKeysToDecryptEvent:] is now asynchronous.
 
 🗣 Translations
  * 
