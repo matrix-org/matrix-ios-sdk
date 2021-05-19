@@ -69,6 +69,18 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
 @implementation MXEventTimeline
 
 #pragma mark - Initialisation
+
+- (id)init
+{
+    self = [super init];
+    if (self)
+    {
+        _timelineId = [[NSUUID UUID] UUIDString];
+        eventListeners = [NSMutableArray array];
+    }
+    return self;
+}
+
 - (id)initWithRoom:(MXRoom*)theRoom andInitialEventId:(NSString*)initialEventId
 {
     // Is it a past or live timeline?
@@ -90,14 +102,12 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
 
 - (id)initWithRoom:(MXRoom*)theRoom initialEventId:(NSString*)initialEventId andStore:(id<MXStore>)theStore
 {
-    self = [super init];
+    self = [self init];
     if (self)
     {
-        _timelineId = [[NSUUID UUID] UUIDString];
         _initialEventId = initialEventId;
         room = theRoom;
         store = theStore;
-        eventListeners = [NSMutableArray array];
 
         if (!initialEventId)
         {
@@ -933,6 +943,24 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
     [room.mxSession decryptEvents:events inTimeline:_timelineId onComplete:^(NSArray<MXEvent *> *failedEvents) {
         onComplete();
     }];
+}
+
+
+#pragma mark - NSCopying
+
+- (nonnull id)copyWithZone:(nullable NSZone *)zone
+{
+    MXEventTimeline *timeline = [[MXEventTimeline allocWithZone:zone] init];
+    timeline->_initialEventId = _initialEventId;
+    timeline->_roomEventFilter = _roomEventFilter;
+    timeline->_state = [_state copyWithZone:zone];
+    timeline->room = room;
+    timeline->store = store;
+    
+    // There can be only a single live timeline
+    timeline->_isLiveTimeline = NO;
+    
+    return timeline;
 }
 
 @end

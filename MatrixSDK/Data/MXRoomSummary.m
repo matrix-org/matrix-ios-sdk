@@ -256,7 +256,7 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
     _lastMessageAttributedString = nil;
     [_lastMessageOthers removeAllObjects];
 
-    return [self fetchLastMessage:complete failure:failure liveTimeline:nil onlyFromStore:YES operation:nil commit:commit];
+    return [self fetchLastMessage:complete failure:failure timeline:nil onlyFromStore:YES operation:nil commit:commit];
 }
 
 /**
@@ -275,7 +275,7 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
  */
 - (MXHTTPOperation *)fetchLastMessage:(void (^)(void))complete
                               failure:(void (^)(NSError *))failure
-                         liveTimeline:(MXEventTimeline *)liveTimeline
+                             timeline:(MXEventTimeline *)timeline
                         onlyFromStore:(BOOL)onlyFromStore
                             operation:(MXHTTPOperation *)operation commit:(BOOL)commit
 {
@@ -297,17 +297,19 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
     }
     
     // Get the room timeline
-    if (!liveTimeline)
+    if (!timeline)
     {
         [room liveTimeline:^(MXEventTimeline *liveTimeline) {
-            [liveTimeline resetPagination];
-            [self fetchLastMessage:complete failure:failure liveTimeline:liveTimeline onlyFromStore:onlyFromStore operation:operation commit:commit];
+            // Use a copy of the live timeline to avoid any conflicts with listeners to the unique live timeline
+            MXEventTimeline *timeline = [liveTimeline copy];
+            [timeline resetPagination];
+            [self fetchLastMessage:complete failure:failure timeline:timeline onlyFromStore:onlyFromStore operation:operation commit:commit];
         }];
         return operation;
     }
     
     // Make sure we can still paginate
-    if (![liveTimeline canPaginate:MXTimelineDirectionBackwards])
+    if (![timeline canPaginate:MXTimelineDirectionBackwards])
     {
         if (complete)
         {
@@ -318,16 +320,16 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
     
     // Process every message received by back pagination
     __block BOOL lastMessageUpdated = NO;
-    [liveTimeline listenToEvents:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *eventState) {
+    [timeline listenToEvents:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *eventState) {
         if (direction == MXTimelineDirectionBackwards
             && !lastMessageUpdated)
         {
-            lastMessageUpdated = [self.mxSession.roomSummaryUpdateDelegate session:self.mxSession updateRoomSummary:self withLastEvent:event eventState:eventState roomState:liveTimeline.state];
+            lastMessageUpdated = [self.mxSession.roomSummaryUpdateDelegate session:self.mxSession updateRoomSummary:self withLastEvent:event eventState:eventState roomState:timeline.state];
         }
     }];
     
     // Back paginate. First only from the store. Then, allow pagination requests to the homeserver
-    MXHTTPOperation *newOperation = [liveTimeline paginate:30 direction:MXTimelineDirectionBackwards onlyFromStore:onlyFromStore complete:^{
+    MXHTTPOperation *newOperation = [timeline paginate:30 direction:MXTimelineDirectionBackwards onlyFromStore:onlyFromStore complete:^{
         if (lastMessageUpdated)
         {
             // We are done
@@ -341,7 +343,7 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
         else
         {
             // Need more message
-            [self fetchLastMessage:complete failure:failure liveTimeline:liveTimeline onlyFromStore:NO operation:operation commit:commit];
+            [self fetchLastMessage:complete failure:failure timeline:timeline onlyFromStore:NO operation:operation commit:commit];
         }
         
     } failure:failure];
