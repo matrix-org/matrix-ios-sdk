@@ -299,18 +299,22 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
                 
             if (onlyFromStore && eventsFromStoreCount)
             {
-                complete();
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    NSLog(@"[MXEventTimeline] paginate : is done from the store");
+                    complete();
+                });
 
-                NSLog(@"[MXEventTimeline] paginate : is done from the store");
                 return;
             }
 
             if (0 == remainingNumItems || YES == [self->store hasReachedHomeServerPaginationEndForRoom:self.state.roomId])
             {
-                // Nothing more to do
-                complete();
-
-                NSLog(@"[MXEventTimeline] paginate: is done");
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    // Nothing more to do
+                    NSLog(@"[MXEventTimeline] paginate: is done");
+                    complete();
+                });
+                
                 return;
             }
         }
@@ -318,10 +322,12 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
         // Do not try to paginate forward if end has been reached
         if (direction == MXTimelineDirectionForwards && YES == self->hasReachedHomeServerForwardsPaginationEnd)
         {
-            // Nothing more to do
-            complete();
+            dispatch_async(dispatch_get_main_queue(), ^{
+                // Nothing more to do
+                NSLog(@"[MXEventTimeline] paginate: is done");
+                complete();
+            });
 
-            NSLog(@"[MXEventTimeline] paginate: is done");
             return;
         }
 
@@ -355,18 +361,17 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
                 || [self->room.mxSession isPeekingInRoomWithRoomId:self->room.roomId])
             {
                 [self handlePaginationResponse:paginatedResponse direction:direction onComplete:^{
+                    NSLog(@"[MXEventTimeline] paginate: is done");
+                    
                     // Inform the method caller
                     complete();
-
-                    NSLog(@"[MXEventTimeline] paginate: is done");
                 }];
             }
             else
             {
+                NSLog(@"[MXEventTimeline] paginate: is done");
                 // Inform the method caller
                 complete();
-
-                NSLog(@"[MXEventTimeline] paginate: is done");
             }
 
         } failure:^(NSError *error) {
