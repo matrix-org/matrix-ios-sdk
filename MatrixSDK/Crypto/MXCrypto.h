@@ -180,13 +180,15 @@ extern NSString *const MXDeviceListDidUpdateUsersDevicesNotification;
 /**
  Decrypt a received event.
 
+ @warning This method is deprecated, use -[MXCrypto decryptEvents:inTimeline:onComplete:] instead.
+ 
  @param event the raw event.
  @param timeline the id of the timeline where the event is decrypted. It is used
                  to prevent replay attack.
  
  @return The decryption result.
  */
-- (MXEventDecryptionResult *)decryptEvent:(MXEvent*)event inTimeline:(NSString*)timeline;
+- (MXEventDecryptionResult *)decryptEvent:(MXEvent*)event inTimeline:(NSString*)timeline __attribute__((deprecated("use -[MXCrypto decryptEvents:inTimeline:onComplete:] instead")));
 
 /**
  Decrypt events asynchronously.
