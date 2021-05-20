@@ -81,7 +81,7 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
     return self;
 }
 
-- (id)initWithRoom:(MXRoom*)theRoom andInitialEventId:(NSString*)initialEventId
+- (instancetype)initWithRoom:(MXRoom*)theRoom andInitialEventId:(NSString*)initialEventId
 {
     // Is it a past or live timeline?
     if (initialEventId)
@@ -100,7 +100,7 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
     return self;
 }
 
-- (id)initWithRoom:(MXRoom*)theRoom initialEventId:(NSString*)initialEventId andStore:(id<MXStore>)theStore
+- (instancetype)initWithRoom:(MXRoom*)theRoom initialEventId:(NSString*)initialEventId andStore:(id<MXStore>)theStore
 {
     self = [self init];
     if (self)
