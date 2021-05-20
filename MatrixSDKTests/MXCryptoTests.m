@@ -1721,17 +1721,19 @@
                 [bobSession eventWithEventId:eventId inRoom:roomId success:^(MXEvent *event) {
                     
                     // -> But he does not have keys decrypt it
-                    BOOL hasKeys = [bobSession.crypto hasKeysToDecryptEvent:event];
-                    XCTAssertFalse(hasKeys);
-                    
-                    // - Bob resumes his session
-                    [bobSession resume:^{
+                    [bobSession.crypto hasKeysToDecryptEvent:event onComplete:^(BOOL hasKeys) {
+                        XCTAssertFalse(hasKeys);
                         
-                        // -> He has keys now
-                        BOOL hasKeys = [bobSession.crypto hasKeysToDecryptEvent:event];
-                        XCTAssertTrue(hasKeys);
-                        
-                        [expectation fulfill];
+                        // - Bob resumes his session
+                        [bobSession resume:^{
+                            
+                            // -> He has keys now
+                            [bobSession.crypto hasKeysToDecryptEvent:event onComplete:^(BOOL hasKeys) {
+                                XCTAssertTrue(hasKeys);
+                                
+                                [expectation fulfill];
+                            }];
+                        }];
                     }];
 
                 } failure:^(NSError *error) {

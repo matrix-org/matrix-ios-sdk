@@ -68,8 +68,8 @@
     
     NSString *senderKey, *sessionId;
     
-    MXJSONModelSetString(senderKey, event.content[@"sender_key"]);
-    MXJSONModelSetString(sessionId, event.content[@"session_id"]);
+    MXJSONModelSetString(senderKey, event.wireContent[@"sender_key"]);
+    MXJSONModelSetString(sessionId, event.wireContent[@"session_id"]);
     if (senderKey && sessionId)
     {
         hasKeys = ([crypto.store inboundGroupSessionWithId:sessionId andSenderKey:senderKey] != nil);
@@ -83,9 +83,9 @@
     MXEventDecryptionResult *result;
     NSString *senderKey, *ciphertext, *sessionId;
 
-    MXJSONModelSetString(senderKey, event.content[@"sender_key"]);
-    MXJSONModelSetString(ciphertext, event.content[@"ciphertext"]);
-    MXJSONModelSetString(sessionId, event.content[@"session_id"]);
+    MXJSONModelSetString(senderKey, event.wireContent[@"sender_key"]);
+    MXJSONModelSetString(ciphertext, event.wireContent[@"ciphertext"]);
+    MXJSONModelSetString(sessionId, event.wireContent[@"session_id"]);
 
     if (!senderKey || !sessionId || !ciphertext)
     {

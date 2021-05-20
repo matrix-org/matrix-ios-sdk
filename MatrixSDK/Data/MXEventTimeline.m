@@ -69,7 +69,19 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
 @implementation MXEventTimeline
 
 #pragma mark - Initialisation
-- (id)initWithRoom:(MXRoom*)theRoom andInitialEventId:(NSString*)initialEventId
+
+- (instancetype)init
+{
+    self = [super init];
+    if (self)
+    {
+        _timelineId = [[NSUUID UUID] UUIDString];
+        eventListeners = [NSMutableArray array];
+    }
+    return self;
+}
+
+- (instancetype)initWithRoom:(MXRoom*)theRoom andInitialEventId:(NSString*)initialEventId
 {
     // Is it a past or live timeline?
     if (initialEventId)
@@ -88,16 +100,14 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
     return self;
 }
 
-- (id)initWithRoom:(MXRoom*)theRoom initialEventId:(NSString*)initialEventId andStore:(id<MXStore>)theStore
+- (instancetype)initWithRoom:(MXRoom*)theRoom initialEventId:(NSString*)initialEventId andStore:(id<MXStore>)theStore
 {
-    self = [super init];
+    self = [self init];
     if (self)
     {
-        _timelineId = [[NSUUID UUID] UUIDString];
         _initialEventId = initialEventId;
         room = theRoom;
         store = theStore;
-        eventListeners = [NSMutableArray array];
 
         if (!initialEventId)
         {
@@ -289,18 +299,22 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
                 
             if (onlyFromStore && eventsFromStoreCount)
             {
-                complete();
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    NSLog(@"[MXEventTimeline] paginate : is done from the store");
+                    complete();
+                });
 
-                NSLog(@"[MXEventTimeline] paginate : is done from the store");
                 return;
             }
 
             if (0 == remainingNumItems || YES == [self->store hasReachedHomeServerPaginationEndForRoom:self.state.roomId])
             {
-                // Nothing more to do
-                complete();
-
-                NSLog(@"[MXEventTimeline] paginate: is done");
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    // Nothing more to do
+                    NSLog(@"[MXEventTimeline] paginate: is done");
+                    complete();
+                });
+                
                 return;
             }
         }
@@ -308,10 +322,12 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
         // Do not try to paginate forward if end has been reached
         if (direction == MXTimelineDirectionForwards && YES == self->hasReachedHomeServerForwardsPaginationEnd)
         {
-            // Nothing more to do
-            complete();
+            dispatch_async(dispatch_get_main_queue(), ^{
+                // Nothing more to do
+                NSLog(@"[MXEventTimeline] paginate: is done");
+                complete();
+            });
 
-            NSLog(@"[MXEventTimeline] paginate: is done");
             return;
         }
 
@@ -345,18 +361,17 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
                 || [self->room.mxSession isPeekingInRoomWithRoomId:self->room.roomId])
             {
                 [self handlePaginationResponse:paginatedResponse direction:direction onComplete:^{
+                    NSLog(@"[MXEventTimeline] paginate: is done");
+                    
                     // Inform the method caller
                     complete();
-
-                    NSLog(@"[MXEventTimeline] paginate: is done");
                 }];
             }
             else
             {
+                NSLog(@"[MXEventTimeline] paginate: is done");
                 // Inform the method caller
                 complete();
-
-                NSLog(@"[MXEventTimeline] paginate: is done");
             }
 
         } failure:^(NSError *error) {
@@ -933,6 +948,24 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
     [room.mxSession decryptEvents:events inTimeline:_timelineId onComplete:^(NSArray<MXEvent *> *failedEvents) {
         onComplete();
     }];
+}
+
+
+#pragma mark - NSCopying
+
+- (nonnull id)copyWithZone:(nullable NSZone *)zone
+{
+    MXEventTimeline *timeline = [[self class] allocWithZone:zone];
+    timeline->_initialEventId = _initialEventId;
+    timeline->_roomEventFilter = _roomEventFilter;
+    timeline->_state = [_state copyWithZone:zone];
+    timeline->room = room;
+    timeline->store = store;
+    
+    // There can be only a single live timeline
+    timeline->_isLiveTimeline = NO;
+    
+    return timeline;
 }
 
 @end

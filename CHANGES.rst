@@ -10,12 +10,17 @@ Changes to be released in next version
  * MXCrypto: Decrypt events asynchronously and no more on the main thread )(vector-im/element-ios/issues/4306).
  * MXSession: Add the decryptEvents method to decypt a bunch of events asynchronously.
  * MXSession: Make the eventWithEventId method decrypt the event if needed.
+ * MXEventTimeline: Add NSCopying implementation so that another pagination can be done on the same set of data.
+ * MXCrypto: eventDeviceInfo: Do not synchronise anymore the operation with the decryption queue.
 
 🐛 Bugfix
  * MXRoomSummary: Fix decryption of the last message when it is edited (vector-im/element-ios/issues/4322).
 
 ⚠️ API Changes
- * 
+ * MXRoom: MXRoom.outgoingMessages does not decrypt messages anymore. Use MXSession.decryptEvents to get decrypted events.
+ * MXSession: [MXSession decryptEvent:inTimeline:] is deprecated, use [MXSession decryptEvents:inTimeline:onComplete:] instead.
+ * MXCrypto: [MXCrypto decryptEvent:inTimeline:] is deprecated, use [MXCrypto decryptEvents:inTimeline:onComplete:] instead.
+ * MXCrypto: [MXCrypto hasKeysToDecryptEvent:] is now asynchronous.
 
 🗣 Translations
  * 

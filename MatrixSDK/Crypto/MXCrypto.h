@@ -173,20 +173,23 @@ extern NSString *const MXDeviceListDidUpdateUsersDevicesNotification;
  
  @param event the event to decrypt.
 
- @return YES if keys are present.
+ @param onComplete the block called when the operations completes. It returns the result
  */
-- (BOOL)hasKeysToDecryptEvent:(MXEvent*)event;
+- (void)hasKeysToDecryptEvent:(MXEvent*)event
+                   onComplete:(void (^)(BOOL))onComplete;
 
 /**
  Decrypt a received event.
 
+ @warning This method is deprecated, use -[MXCrypto decryptEvents:inTimeline:onComplete:] instead.
+ 
  @param event the raw event.
  @param timeline the id of the timeline where the event is decrypted. It is used
                  to prevent replay attack.
  
  @return The decryption result.
  */
-- (MXEventDecryptionResult *)decryptEvent:(MXEvent*)event inTimeline:(NSString*)timeline;
+- (MXEventDecryptionResult *)decryptEvent:(MXEvent*)event inTimeline:(NSString*)timeline __attribute__((deprecated("use -[MXCrypto decryptEvents:inTimeline:onComplete:] instead")));
 
 /**
  Decrypt events asynchronously.

@@ -55,7 +55,7 @@ typedef void (^MXOnRoomEvent)(MXEvent *event, MXTimelineDirection direction, MXR
       with events on calls of [MXEventTimeline paginate] in backwards or forwards direction.
       Events are stored in a in-memory store (MXMemoryStore) (@TODO: To be confirmed once they will be implemented). So, they are not permanent.
  */
-@interface MXEventTimeline : NSObject
+@interface MXEventTimeline : NSObject <NSCopying>
 
 /**
  The id of this timeline.
@@ -100,7 +100,7 @@ typedef void (^MXOnRoomEvent)(MXEvent *event, MXTimelineDirection direction, MXR
  @param initialEventId the initial event for the timeline. A nil value will create a live timeline.
  @return a MXEventTimeline instance.
  */
-- (id)initWithRoom:(MXRoom*)room andInitialEventId:(NSString*)initialEventId;
+- (instancetype)initWithRoom:(MXRoom*)room andInitialEventId:(NSString*)initialEventId;
 
 /**
  Create a timeline instance for a room and force it to use the given MXStore to store events.
@@ -110,7 +110,7 @@ typedef void (^MXOnRoomEvent)(MXEvent *event, MXTimelineDirection direction, MXR
  @param store the store to use to store timeline events.
  @return a MXEventTimeline instance.
  */
-- (id)initWithRoom:(MXRoom*)room initialEventId:(NSString*)initialEventId andStore:(id<MXStore>)store;
+- (instancetype)initWithRoom:(MXRoom*)room initialEventId:(NSString*)initialEventId andStore:(id<MXStore>)store;
 
 /**
  Initialise the room evenTimeline state.

@@ -65,8 +65,8 @@
     NSString *deviceKey;
     NSDictionary *ciphertext;
 
-    MXJSONModelSetString(deviceKey, event.content[@"sender_key"]);
-    MXJSONModelSetDictionary(ciphertext, event.content[@"ciphertext"]);
+    MXJSONModelSetString(deviceKey, event.wireContent[@"sender_key"]);
+    MXJSONModelSetDictionary(ciphertext, event.wireContent[@"ciphertext"]);
 
     if (!ciphertext)
     {
