@@ -955,7 +955,7 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
 
 - (nonnull id)copyWithZone:(nullable NSZone *)zone
 {
-    MXEventTimeline *timeline = [[MXEventTimeline allocWithZone:zone] init];
+    MXEventTimeline *timeline = [[self class] allocWithZone:zone];
     timeline->_initialEventId = _initialEventId;
     timeline->_roomEventFilter = _roomEventFilter;
     timeline->_state = [_state copyWithZone:zone];
