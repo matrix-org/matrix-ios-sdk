@@ -70,7 +70,7 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
 
 #pragma mark - Initialisation
 
-- (id)init
+- (instancetype)init
 {
     self = [super init];
     if (self)
