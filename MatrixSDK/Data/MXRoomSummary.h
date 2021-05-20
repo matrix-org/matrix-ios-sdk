@@ -247,6 +247,13 @@ FOUNDATION_EXPORT NSString *const kMXRoomSummaryDidChangeNotification;
 @property (nonatomic) MXEvent *lastMessageEvent;
 
 /**
+ Intenal SDK method to load and decrypt the MXEvent of the last message.
+ 
+ @param onComplete the callback called once operation is done.
+ */
+-(void)loadLastEvent:(void (^)(void))onComplete;
+
+/**
  Reset the last message.
  
  The operation is asynchronous as it may require pagination from the homeserver.

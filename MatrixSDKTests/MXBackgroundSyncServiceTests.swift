@@ -866,7 +866,6 @@ class MXBackgroundSyncServiceTests: XCTestCase {
                 
                 // -> Bob session must have the key to decrypt the first message
                 bobSession.event(withEventId: firstEventId, inRoom: roomId) { (event) in
-                    bobSession.decryptEvent(event, inTimeline: nil)
                     XCTAssertNotNil(event?.clear)
                     
                     // -> The background service cache must be reset after session resume
@@ -938,7 +937,6 @@ class MXBackgroundSyncServiceTests: XCTestCase {
                 
                 // -> Bob session must have the key to decrypt the first message
                 bobSession.event(withEventId: firstEventId, inRoom: roomId) { (event) in
-                    bobSession.decryptEvent(event, inTimeline: nil)
                     XCTAssertNotNil(event?.clear)
                     
                     // -> The background service cache must be reset after session resume
@@ -1004,7 +1002,6 @@ class MXBackgroundSyncServiceTests: XCTestCase {
                 
                 // -> Bob session must have the key to decrypt the first message
                 bobSession.event(withEventId: firstEventId, inRoom: roomId) { (event) in
-                    bobSession.decryptEvent(event, inTimeline: nil)
                     XCTAssertNotNil(event?.clear)
                     
                     // -> The background service cache must be reset after session resume
@@ -1076,7 +1073,6 @@ class MXBackgroundSyncServiceTests: XCTestCase {
                 
                 // -> Bob session must have the key to decrypt the first message
                 bobSession.event(withEventId: firstEventId, inRoom: roomId) { (event) in
-                    bobSession.decryptEvent(event, inTimeline: nil)
                     XCTAssertNotNil(event?.clear)
                     
                     // -> The background service cache must be reset after session resume
@@ -1261,10 +1257,7 @@ class MXBackgroundSyncServiceTests: XCTestCase {
                         // -> Bob session must have the key to decrypt the first and the last message
                         bobSession.event(withEventId: firstEventId, inRoom: roomId) { (firstEvent) in
                             bobSession.event(withEventId: lastEventId, inRoom: roomId) { (lastEvent) in
-                                
-                                bobSession.decryptEvent(firstEvent, inTimeline: nil)
                                 XCTAssertNotNil(firstEvent?.clear)
-                                bobSession.decryptEvent(lastEvent, inTimeline: nil)
                                 XCTAssertNotNil(lastEvent?.clear)
                                 
                                 // -> The background service cache must be reset after session restart
@@ -1328,10 +1321,7 @@ class MXBackgroundSyncServiceTests: XCTestCase {
                         // -> Bob session must have the key to decrypt the first and the last message
                         bobSession2.event(withEventId: firstEventId, inRoom: roomId) { (firstEvent) in
                             bobSession2.event(withEventId: lastEventId, inRoom: roomId) { (lastEvent) in
-                                
-                                bobSession2.decryptEvent(firstEvent, inTimeline: nil)
                                 XCTAssertNotNil(firstEvent?.clear)
-                                bobSession2.decryptEvent(lastEvent, inTimeline: nil)
                                 XCTAssertNotNil(lastEvent?.clear)
                                 
                                 // -> The background service cache must be reset after session restart
