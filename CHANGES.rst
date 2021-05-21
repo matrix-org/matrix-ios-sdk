@@ -13,6 +13,7 @@ Changes to be released in next version
  * MXEventTimeline: Add NSCopying implementation so that another pagination can be done on the same set of data.
  * MXCrypto: eventDeviceInfo: Do not synchronise anymore the operation with the decryption queue.
  * MXRoomSummary: Improve reset resetLastMessage to avoid pagination loop and to limit number of decryptions.
+ * MXSession: Limit the number of decryptions when processing an initial sync (vector-im/element-ios/issues/4307).
 
 🐛 Bugfix
  * MXRoomSummary: Fix decryption of the last message when it is edited (vector-im/element-ios/issues/4322).
