@@ -373,39 +373,46 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
 - (void)handleJoinedRoomSync:(MXRoomSync *)roomSync onComplete:(void (^)(void))onComplete
 {
     MXWeakify(self);
-    [self liveTimeline:^(MXEventTimeline *theLiveTimeline) {
+    [self liveTimeline:^(MXEventTimeline *liveTimeline) {
         MXStrongifyAndReturnIfNil(self);
 
+        // Start with ephemeral events
+        // Knowing RRs are useful to process timeline events in roomSync
+        [self handleEphemeralEvents:roomSync.ephemeral.events inLiveTimeline:liveTimeline];
+
         // Let the live timeline handle live events
-        [theLiveTimeline handleJoinedRoomSync:roomSync onComplete:^{
-            // Handle here ephemeral events (if any)
-            for (MXEvent *event in roomSync.ephemeral.events)
-            {
-                // Report the room id in the event as it is skipped in /sync response
-                event.roomId = self.roomId;
-                
-                // Handle first typing notifications
-                if (event.eventType == MXEventTypeTypingNotification)
-                {
-                    // Typing notifications events are not room messages nor room state events
-                    // They are just volatile information
-                    MXJSONModelSetArray(self->_typingUsers, event.content[@"user_ids"]);
-                    
-                    // Notify listeners
-                    [theLiveTimeline notifyListeners:event direction:MXTimelineDirectionForwards];
-                }
-                else if (event.eventType == MXEventTypeReceipt)
-                {
-                    [self handleReceiptEvent:event direction:MXTimelineDirectionForwards];
-                }
-            }
-            
-            // Handle account data events (if any)
-            [self handleAccountDataEvents:roomSync.accountData.events liveTimeline:theLiveTimeline direction:MXTimelineDirectionForwards];
+        [liveTimeline handleJoinedRoomSync:roomSync onComplete:^{
+
+            // Handle account data events
+            [self handleAccountDataEvents:roomSync.accountData.events liveTimeline:liveTimeline direction:MXTimelineDirectionForwards];
             
             onComplete();
         }];
     }];
+}
+
+- (void)handleEphemeralEvents:(NSArray<MXEvent*>*)events inLiveTimeline:(MXEventTimeline *)liveTimeline
+{
+    for (MXEvent *event in events)
+    {
+        // Report the room id in the event as it is skipped in /sync response
+        event.roomId = self.roomId;
+        
+        // Handle first typing notifications
+        if (event.eventType == MXEventTypeTypingNotification)
+        {
+            // Typing notifications events are not room messages nor room state events
+            // They are just volatile information
+            MXJSONModelSetArray(self->_typingUsers, event.content[@"user_ids"]);
+            
+            // Notify listeners
+            [liveTimeline notifyListeners:event direction:MXTimelineDirectionForwards];
+        }
+        else if (event.eventType == MXEventTypeReceipt)
+        {
+            [self handleReceiptEvent:event inLiveTimeline:liveTimeline direction:MXTimelineDirectionForwards];
+        }
+    }
 }
 
 - (void)handleInvitedRoomSync:(MXInvitedRoomSync *)invitedRoomSync onComplete:(void (^)(void))onComplete
@@ -2636,7 +2643,14 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
 
 #pragma mark - Read receipts management
 
-- (BOOL)handleReceiptEvent:(MXEvent *)event direction:(MXTimelineDirection)direction
+/**
+ Handle a receipt event.
+ 
+ @param event the event to handle.
+ @param liveTimeline the live timeline of this room.
+ @param direction the timeline direction.
+ */
+- (BOOL)handleReceiptEvent:(MXEvent *)event inLiveTimeline:(MXEventTimeline *)liveTimeline direction:(MXTimelineDirection)direction
 {
     BOOL managedEvents = false;
     
@@ -2672,9 +2686,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
     if (managedEvents)
     {
         // Notify listeners
-        [self liveTimeline:^(MXEventTimeline *theLiveTimeline) {
-            [theLiveTimeline notifyListeners:event direction:direction];
-        }];
+        [liveTimeline notifyListeners:event direction:direction];
     }
     
     return managedEvents;

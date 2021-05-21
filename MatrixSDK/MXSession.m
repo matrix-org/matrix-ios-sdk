@@ -489,8 +489,25 @@ typedef void (^MXOnResumeDone)(void);
                 dispatch_group_enter(dispatchGroup);
                 [room liveTimeline:^(MXEventTimeline *liveTimeline) {
                     [room handleJoinedRoomSync:roomSync onComplete:^{
-                        [room.summary handleJoinedRoomSync:roomSync];
-                        dispatch_group_leave(dispatchGroup);
+                        [room.summary handleJoinedRoomSync:roomSync onComplete:^{
+                            
+                            // Make sure the last message has been decrypted
+                            // In case of an initial sync, we save decryptions to save time. Only unread messages are decrypted.
+                            // We need to decrypt already read last message.
+                            if (isInitialSync
+                                && room.summary.lastMessageEvent.eventType == MXEventTypeRoomEncrypted)
+                            {
+                                [room.summary resetLastMessage:^{
+                                    dispatch_group_leave(dispatchGroup);
+                                } failure:^(NSError *error) {
+                                    dispatch_group_leave(dispatchGroup);
+                                } commit:NO];
+                            }
+                            else
+                            {
+                                dispatch_group_leave(dispatchGroup);
+                            }
+                        }];
                     }];
                 }];
                 
@@ -553,35 +570,35 @@ typedef void (^MXOnResumeDone)(void);
                     dispatch_group_enter(dispatchGroup);
                     [room liveTimeline:^(MXEventTimeline *liveTimeline) {
                         [room handleJoinedRoomSync:leftRoomSync onComplete:^{
-                            [room.summary handleJoinedRoomSync:leftRoomSync];
-                            
-                            // Look for the last room member event
-                            MXEvent *roomMemberEvent;
-                            NSInteger index = leftRoomSync.timeline.events.count;
-                            while (index--)
-                            {
-                                MXEvent *event = leftRoomSync.timeline.events[index];
-                                
-                                if ([event.type isEqualToString:kMXEventTypeStringRoomMember])
+                            [room.summary handleJoinedRoomSync:leftRoomSync onComplete:^{
+                                // Look for the last room member event
+                                MXEvent *roomMemberEvent;
+                                NSInteger index = leftRoomSync.timeline.events.count;
+                                while (index--)
                                 {
-                                    roomMemberEvent = event;
-                                    break;
+                                    MXEvent *event = leftRoomSync.timeline.events[index];
+                                    
+                                    if ([event.type isEqualToString:kMXEventTypeStringRoomMember])
+                                    {
+                                        roomMemberEvent = event;
+                                        break;
+                                    }
                                 }
-                            }
-                            
-                            // Notify the room is going to disappear
-                            NSMutableDictionary *userInfo = [NSMutableDictionary dictionaryWithObject:room.roomId forKey:kMXSessionNotificationRoomIdKey];
-                            if (roomMemberEvent)
-                            {
-                                userInfo[kMXSessionNotificationEventKey] = roomMemberEvent;
-                            }
-                            [[NSNotificationCenter defaultCenter] postNotificationName:kMXSessionWillLeaveRoomNotification
-                                                                                object:self
-                                                                              userInfo:userInfo];
-                            // Remove the room from the rooms list
-                            [self removeRoom:room.roomId];
-                            
-                            dispatch_group_leave(dispatchGroup);
+                                
+                                // Notify the room is going to disappear
+                                NSMutableDictionary *userInfo = [NSMutableDictionary dictionaryWithObject:room.roomId forKey:kMXSessionNotificationRoomIdKey];
+                                if (roomMemberEvent)
+                                {
+                                    userInfo[kMXSessionNotificationEventKey] = roomMemberEvent;
+                                }
+                                [[NSNotificationCenter defaultCenter] postNotificationName:kMXSessionWillLeaveRoomNotification
+                                                                                    object:self
+                                                                                  userInfo:userInfo];
+                                // Remove the room from the rooms list
+                                [self removeRoom:room.roomId];
+                                
+                                dispatch_group_leave(dispatchGroup);
+                            }];
                         }];
                     }];
                 }

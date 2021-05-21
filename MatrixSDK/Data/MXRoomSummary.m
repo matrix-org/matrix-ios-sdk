@@ -661,7 +661,7 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
     }
 }
 
-- (void)handleJoinedRoomSync:(MXRoomSync*)roomSync
+- (void)handleJoinedRoomSync:(MXRoomSync*)roomSync onComplete:(void (^)(void))onComplete
 {
     MXWeakify(self);
     [self.room state:^(MXRoomState *roomState) {
@@ -732,7 +732,8 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
         {
             [self save:NO];
         }
-
+        
+        onComplete();
     }];
 }
 

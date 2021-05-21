@@ -453,8 +453,21 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
     // Note: We consider it is not required to clone the existing room state here, because no notification is posted for these events.
     [self handleStateEvents:roomSync.state.events direction:MXTimelineDirectionForwards];
     
+    // On an initial sync, this is useless to decrypt all events. It takes CPU time which delays the processing completion.
+    // But we need to decrypt enough events to compute notifications correctly.
+    // So decrypt only events that have not been read yet.
+    uint64_t timestamp = 0;
+    if (isRoomInitialSync && !_initialEventId)
+    {
+        MXReceiptData *lastUserReadReceipt = [store getReceiptInRoom:_state.roomId forUserId:room.mxSession.myUserId];
+        if (lastUserReadReceipt)
+        {
+            timestamp = lastUserReadReceipt.ts;
+        }
+    }
+    
     MXWeakify(self);
-    [self decryptEvents:roomSync.timeline.events onComplete:^{
+    [self decryptEvents:roomSync.timeline.events ifNewerThanTimestamp:timestamp onComplete:^{
         MXStrongifyAndReturnIfNil(self);
         
         // Handle now timeline.events, the room state is updated during this step too (Note: timeline events are in chronological order)
@@ -935,6 +948,13 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
 
 - (void)decryptEvents:(NSArray<MXEvent*>*)events onComplete:(void (^)(void))onComplete
 {
+    [self decryptEvents:events ifNewerThanTimestamp:0 onComplete:onComplete];
+}
+
+- (void)decryptEvents:(NSArray<MXEvent*>*)events ifNewerThanTimestamp:(uint64_t)timestamp onComplete:(void (^)(void))onComplete
+{
+    NSMutableArray<MXEvent*> *eventsToDecrypt = [NSMutableArray arrayWithCapacity:(NSUInteger)events.count];
+    
     // The state event providing the encrytion algorithm can be part of the timeline.
     // Extract if before starting decrypting.
     for (MXEvent *event in events)
@@ -943,9 +963,21 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
         {
             [_state handleStateEvents:@[event]];
         }
+        
+        if (event.eventType == MXEventTypeRoomEncrypted
+            && event.originServerTs >= timestamp)
+        {
+            [eventsToDecrypt addObject:event];
+        }
     }
     
-    [room.mxSession decryptEvents:events inTimeline:_timelineId onComplete:^(NSArray<MXEvent *> *failedEvents) {
+    if (eventsToDecrypt.count == 0)
+    {
+        onComplete();
+        return;
+    }
+    
+    [room.mxSession decryptEvents:eventsToDecrypt inTimeline:_timelineId onComplete:^(NSArray<MXEvent *> *failedEvents) {
         onComplete();
     }];
 }

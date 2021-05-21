@@ -1458,7 +1458,7 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
         to prevent replay attack.
  @return YES if decryption is successful.
  */
-- (BOOL)decryptEvent:(MXEvent*)event inTimeline:(NSString*)timeline  __attribute__((deprecated("use -[MXSession decryptEvents:inTimeline:onComplete:] instead")));
+- (BOOL)decryptEvent:(MXEvent*)event inTimeline:(NSString*)timeline __attribute__((deprecated("use -[MXSession decryptEvents:inTimeline:onComplete:] instead")));
 
 /**
  Decrypt events asynchronously and update their data.

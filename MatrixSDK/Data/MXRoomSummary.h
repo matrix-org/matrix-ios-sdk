@@ -357,8 +357,9 @@ FOUNDATION_EXPORT NSString *const kMXRoomSummaryDidChangeNotification;
  Note: state events have been previously sent to `handleStateEvents`.
 
  @param roomSync information to sync the room with the home server data.
+ @param onComplete the block called when the operation completes.
  */
-- (void)handleJoinedRoomSync:(MXRoomSync*)roomSync;
+- (void)handleJoinedRoomSync:(MXRoomSync*)roomSync onComplete:(void (^)(void))onComplete;
 
 /**
  Update the invited room state according to the provided data.
