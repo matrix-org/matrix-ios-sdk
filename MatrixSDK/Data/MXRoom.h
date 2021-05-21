@@ -1049,15 +1049,7 @@ Remove a tag applied on an event of the room
                    success:(void (^)(MXCall *call))success
                    failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
-#pragma mark - Read receipts management
-
-/**
- Handle a receipt event.
- 
- @param event the event to handle.
- @param direction the timeline direction.
- */
-- (BOOL)handleReceiptEvent:(MXEvent *)event direction:(MXTimelineDirection)direction;
+#pragma mark - Read receipts
 
 /**
  If the event was not acknowledged yet, this method acknowlegdes it by sending a receipt event.
