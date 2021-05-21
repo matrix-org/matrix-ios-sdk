@@ -43,6 +43,8 @@
  */
 FOUNDATION_EXPORT NSString *const kMXRoomSummaryDidChangeNotification;
 
+/// Number of events retrieved when doing pagination from the homeserver.
+FOUNDATION_EXPORT NSUInteger const MXRoomSummaryPaginationChunkSize;
 
 /**
  `MXRoomSummary` exposes and caches data for a room.
@@ -254,18 +256,32 @@ FOUNDATION_EXPORT NSString *const kMXRoomSummaryDidChangeNotification;
 -(void)loadLastEvent:(void (^)(void))onComplete;
 
 /**
- Reset the last message.
+ Reset the last message from data in the store.
  
- The operation is asynchronous as it may require pagination from the homeserver.
- 
- @param complete A block object called when the operation completes.
+ @param onComplete A block object called when the operation completes.
  @param failure A block object called when the operation fails.
  @param commit  Tell whether the updated room summary must be committed to the store. Use NO when a more
  global [MXStore commit] will happen. This optimises IO.
 
  @return a MXHTTPOperation instance.
  */
-- (MXHTTPOperation*)resetLastMessage:(void (^)(void))complete failure:(void (^)(NSError *))failure commit:(BOOL)commit;
+- (MXHTTPOperation*)resetLastMessage:(void (^)(void))onComplete failure:(void (^)(NSError *))failure commit:(BOOL)commit;
+
+/**
+ Reset the last message by paginating messages from the homeserver if needed.
+ 
+ @param maxServerPaginationCount The max number of messages to retrieve from the server.
+ @param onComplete A block object called when the operation completes.
+ @param failure A block object called when the operation fails.
+ @param commit  Tell whether the updated room summary must be committed to the store. Use NO when a more
+ global [MXStore commit] will happen. This optimises IO.
+ 
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation *)resetLastMessageWithMaxServerPaginationCount:(NSUInteger)maxServerPaginationCount
+                                                       onComplete:(void (^)(void))onComplete
+                                                          failure:(void (^)(NSError *))failure
+                                                           commit:(BOOL)commit;
 
 
 #pragma mark - Data related to business logic

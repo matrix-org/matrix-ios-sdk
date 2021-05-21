@@ -283,7 +283,7 @@ NSString *uisiString = @"The sender's device has not sent us the keys for this m
                 }];
 
                 // Force the summary to fetch events from the homeserver to get the last one
-                MXHTTPOperation *operation = [summary2 resetLastMessage:nil failure:^(NSError *error) {
+                MXHTTPOperation *operation = [summary2 resetLastMessageWithMaxServerPaginationCount:100 onComplete:nil failure:^(NSError *error) {
 
                     XCTFail(@"The operation should not fail - NSError: %@", error);
                     [expectation fulfill];
@@ -337,7 +337,7 @@ NSString *uisiString = @"The sender's device has not sent us the keys for this m
 
 
                     // Force the summary to fetch events from the homeserver to get the last one
-                    MXHTTPOperation *operation = [summary2 resetLastMessage:nil failure:^(NSError *error) {
+                    MXHTTPOperation *operation = [summary2 resetLastMessageWithMaxServerPaginationCount:1000 onComplete:nil failure:^(NSError *error) {
 
                         XCTFail(@"The operation should not fail - NSError: %@", error);
                         [expectation fulfill];

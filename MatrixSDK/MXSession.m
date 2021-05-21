@@ -2816,18 +2816,23 @@ typedef void (^MXOnResumeDone)(void);
 
 - (void)fixRoomsSummariesLastMessage
 {
+    [self fixRoomsSummariesLastMessageWithMaxServerPaginationCount:MXRoomSummaryPaginationChunkSize];
+}
+
+- (void)fixRoomsSummariesLastMessageWithMaxServerPaginationCount:(NSUInteger)maxServerPaginationCount
+{
     for (MXRoomSummary *summary in self.roomsSummaries)
     {
         if (!summary.lastMessageEventId)
         {
-            NSLog(@"[MXSession] Fixing last message for room %@", summary.roomId);
+            NSLog(@"[MXSession] fixRoomsSummariesLastMessage: Fixing last message for room %@", summary.roomId);
             
-            [summary resetLastMessage:^{
-                NSLog(@"[MXSession] Fixing last message operation for room %@ has complete. lastMessageEventId: %@", summary.roomId, summary.lastMessageEventId);
+            [summary resetLastMessageWithMaxServerPaginationCount:maxServerPaginationCount onComplete:^{
+                NSLog(@"[MXSession] fixRoomsSummariesLastMessage:Fixing last message operation for room %@ has complete. lastMessageEventId: %@", summary.roomId, summary.lastMessageEventId);
             } failure:^(NSError *error) {
-                NSLog(@"[MXSession] Cannot fix last message for room %@", summary.roomId);
+                NSLog(@"[MXSession] fixRoomsSummariesLastMessage: Cannot fix last message for room %@ with maxServerPaginationCount: %@", summary.roomId, @(maxServerPaginationCount));
             }
-                               commit:NO];
+                                                           commit:NO];
         }
     }
     

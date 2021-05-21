@@ -1020,8 +1020,11 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
  
  This may lead to pagination requests to the homeserver. Updated room summaries will be 
  notified by `kMXRoomSummaryDidChangeNotification`.
+ 
+ @param maxServerPaginationCount the maximal number of messages to paginate from the homeserver. Default is 50.
  */
 - (void)fixRoomsSummariesLastMessage;
+- (void)fixRoomsSummariesLastMessageWithMaxServerPaginationCount:(NSUInteger)maxServerPaginationCount;
 
 /**
  Delegate for updating room summaries.
