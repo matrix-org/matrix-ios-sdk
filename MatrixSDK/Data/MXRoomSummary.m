@@ -41,6 +41,7 @@ typedef NS_ENUM(NSUInteger, MXRoomSummaryNextTrustComputation) {
 
 
 NSString *const kMXRoomSummaryDidChangeNotification = @"kMXRoomSummaryDidChangeNotification";
+NSUInteger const MXRoomSummaryPaginationChunkSize = 50;
 
 /**
  Time to wait before refreshing trust when a change has been detected.
@@ -254,7 +255,12 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
     _isLastMessageEncrypted = event.isEncrypted;
 }
 
-- (MXHTTPOperation *)resetLastMessage:(void (^)(void))complete failure:(void (^)(NSError *))failure commit:(BOOL)commit
+- (MXHTTPOperation *)resetLastMessage:(void (^)(void))onComplete failure:(void (^)(NSError *))failure commit:(BOOL)commit
+{
+    return [self resetLastMessageWithMaxServerPaginationCount:0 onComplete:onComplete failure:failure commit:commit];
+}
+
+- (MXHTTPOperation *)resetLastMessageWithMaxServerPaginationCount:(NSUInteger)maxServerPaginationCount onComplete:(void (^)(void))onComplete failure:(void (^)(NSError *))failure commit:(BOOL)commit
 {
     lastMessageEvent = nil;
     _lastMessageEventId = nil;
@@ -263,16 +269,21 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
     _lastMessageAttributedString = nil;
     [_lastMessageOthers removeAllObjects];
 
-    return [self fetchLastMessage:complete failure:failure timeline:nil onlyFromStore:YES operation:nil commit:commit];
+    return [self fetchLastMessageWithMaxServerPaginationCount:maxServerPaginationCount onComplete:^{
+        if (onComplete)
+        {
+            onComplete();
+        }
+    } failure:failure timeline:nil operation:nil commit:commit];
 }
 
 /**
  Find recursively the event to be used as last message.
 
- @param complete A block object called when the operation completes.
+ @param maxServerPaginationCount The max number of messages to retrieve from the server.
+ @param onComplete A block object called when the operation completes.
  @param failure A block object called when the operation fails.
- @param liveTimeline the timeline to use to paginate and get more events.
- @param onlyFromStore YES for the first call. For quickness, we want to avoid any HTTP requests at first.
+ @param timeline the timeline to use to paginate and get more events.
  @param operation the current http operation if any.
         The method may need several requests before fetching the right last message.
         If it happens, the first one is mutated to the others with [MXHTTPOperation mutateTo:].
@@ -280,11 +291,11 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
         global [MXStore commit] will happen. This optimises IO.
  @return a MXHTTPOperation
  */
-- (MXHTTPOperation *)fetchLastMessage:(void (^)(void))complete
-                              failure:(void (^)(NSError *))failure
-                             timeline:(MXEventTimeline *)timeline
-                        onlyFromStore:(BOOL)onlyFromStore
-                            operation:(MXHTTPOperation *)operation commit:(BOOL)commit
+- (MXHTTPOperation *)fetchLastMessageWithMaxServerPaginationCount:(NSUInteger)maxServerPaginationCount
+                                                       onComplete:(void (^)(void))onComplete
+                                                          failure:(void (^)(NSError *))failure
+                                                         timeline:(MXEventTimeline *)timeline
+                                                        operation:(MXHTTPOperation *)operation commit:(BOOL)commit
 {
     // Sanity checks
     MXRoom *room = self.room;
@@ -310,7 +321,7 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
             // Use a copy of the live timeline to avoid any conflicts with listeners to the unique live timeline
             MXEventTimeline *timeline = [liveTimeline copy];
             [timeline resetPagination];
-            [self fetchLastMessage:complete failure:failure timeline:timeline onlyFromStore:onlyFromStore operation:operation commit:commit];
+            [self fetchLastMessageWithMaxServerPaginationCount:maxServerPaginationCount onComplete:onComplete failure:failure timeline:timeline operation:operation commit:commit];
         }];
         return operation;
     }
@@ -318,10 +329,7 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
     // Make sure we can still paginate
     if (![timeline canPaginate:MXTimelineDirectionBackwards])
     {
-        if (complete)
-        {
-            complete();
-        }
+        onComplete();
         return operation;
     }
     
@@ -335,27 +343,63 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
         }
     }];
     
-    // Back paginate. First only from the store. Then, allow pagination requests to the homeserver
-    MXHTTPOperation *newOperation = [timeline paginate:30 direction:MXTimelineDirectionBackwards onlyFromStore:onlyFromStore complete:^{
-        if (lastMessageUpdated)
-        {
-            // We are done
-            [self save:commit];
-            
-            if (complete)
+   
+    if (timeline.remainingMessagesForBackPaginationInStore)
+    {
+        // First, for performance reason, read messages only from the store
+        // Do it one by one to decrypt the minimal number of events.
+        MXHTTPOperation *newOperation = [timeline paginate:1 direction:MXTimelineDirectionBackwards onlyFromStore:YES complete:^{
+            if (lastMessageUpdated)
             {
-                complete();
+                // We are done
+                [self save:commit];
+                onComplete();
             }
-        }
-        else
-        {
-            // Need more message
-            [self fetchLastMessage:complete failure:failure timeline:timeline onlyFromStore:NO operation:operation commit:commit];
-        }
+            else
+            {
+                // Need more messages
+                [self fetchLastMessageWithMaxServerPaginationCount:maxServerPaginationCount onComplete:onComplete failure:failure timeline:timeline operation:operation commit:commit];
+            }
+            
+        } failure:failure];
         
-    } failure:failure];
-    
-    [operation mutateTo:newOperation];
+        [operation mutateTo:newOperation];
+    }
+    else if (maxServerPaginationCount)
+    {
+        // If requested, get messages from the homeserver
+        // Fetch them by batch of 50 messages
+        NSUInteger paginationCount = MIN(maxServerPaginationCount, MXRoomSummaryPaginationChunkSize);
+        NSLog(@"[MXRoomSummary] fetchLastMessage: paginate %@ (%@) messages from the server in %@", @(paginationCount), @(maxServerPaginationCount), _roomId);
+        
+        MXHTTPOperation *newOperation = [timeline paginate:paginationCount direction:MXTimelineDirectionBackwards onlyFromStore:NO complete:^{
+            if (lastMessageUpdated)
+            {
+                // We are done
+                [self save:commit];
+                onComplete();
+            }
+            else if (maxServerPaginationCount > MXRoomSummaryPaginationChunkSize)
+            {
+                NSLog(@"[MXRoomSummary] fetchLastMessage: Failed to find last message in %@. Paginate more...", self.roomId);
+                NSUInteger newMaxServerPaginationCount = maxServerPaginationCount - MXRoomSummaryPaginationChunkSize;
+                [self fetchLastMessageWithMaxServerPaginationCount:newMaxServerPaginationCount onComplete:onComplete failure:failure timeline:timeline operation:operation commit:commit];
+            }
+            else
+            {
+                NSLog(@"[MXRoomSummary] fetchLastMessage: Failed to find last message in %@. Stop paginating.", self.roomId);
+                onComplete();
+            }
+            
+        } failure:failure];
+        
+        [operation mutateTo:newOperation];
+    }
+    else
+    {
+        NSLog(@"[MXRoomSummary] fetchLastMessage: Failed to find last message in %@.", self.roomId);
+        onComplete();
+    }
     
     return operation;
 }
@@ -661,7 +705,7 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
     }
 }
 
-- (void)handleJoinedRoomSync:(MXRoomSync*)roomSync
+- (void)handleJoinedRoomSync:(MXRoomSync*)roomSync onComplete:(void (^)(void))onComplete
 {
     MXWeakify(self);
     [self.room state:^(MXRoomState *roomState) {
@@ -732,7 +776,8 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
         {
             [self save:NO];
         }
-
+        
+        onComplete();
     }];
 }
 
