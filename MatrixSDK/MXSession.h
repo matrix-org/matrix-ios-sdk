@@ -974,6 +974,7 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
 #pragma mark - Matrix Events
 /**
  Retrieve an event from its event id.
+ It will be decrypted if needed.
 
  @param eventId the id of the event to retrieve.
  @param roomId (optional) the id of the room.
@@ -1019,8 +1020,11 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
  
  This may lead to pagination requests to the homeserver. Updated room summaries will be 
  notified by `kMXRoomSummaryDidChangeNotification`.
+ 
+ @param maxServerPaginationCount the maximal number of messages to paginate from the homeserver. Default is 50.
  */
 - (void)fixRoomsSummariesLastMessage;
+- (void)fixRoomsSummariesLastMessageWithMaxServerPaginationCount:(NSUInteger)maxServerPaginationCount;
 
 /**
  Delegate for updating room summaries.
@@ -1450,12 +1454,26 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
 /**
  Decrypt an event and update its data.
 
+ @warning This method is deprecated, use -[MXSession decryptEvents:inTimeline:onComplete:] instead.
+ 
  @param event the event to decrypt.
  @param timeline the id of the timeline where the event is decrypted. It is used
         to prevent replay attack.
  @return YES if decryption is successful.
  */
-- (BOOL)decryptEvent:(MXEvent*)event inTimeline:(NSString*)timeline;
+- (BOOL)decryptEvent:(MXEvent*)event inTimeline:(NSString*)timeline __attribute__((deprecated("use -[MXSession decryptEvents:inTimeline:onComplete:] instead")));
+
+/**
+ Decrypt events asynchronously and update their data.
+ 
+ @param events the events to decrypt.
+ @param timeline the id of the timeline where the events are decrypted. It is used
+        to prevent replay attack.
+ @param onComplete the block called when the operations completes. It returns events that failed to decrypt.
+ */
+- (void)decryptEvents:(NSArray<MXEvent*> *)events
+           inTimeline:(NSString*)timeline
+           onComplete:(void (^)(NSArray<MXEvent*> *failedEvents))onComplete;
 
 /**
  Reset replay attack data for the given timeline.

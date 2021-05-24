@@ -60,42 +60,38 @@
     return NO;
 }
 
-- (MXEventDecryptionResult *)decryptEvent:(MXEvent *)event inTimeline:(NSString *)timeline error:(NSError *__autoreleasing *)error
+- (MXEventDecryptionResult *)decryptEvent:(MXEvent *)event inTimeline:(NSString *)timeline
 {
     NSString *deviceKey;
     NSDictionary *ciphertext;
 
-    MXJSONModelSetString(deviceKey, event.content[@"sender_key"]);
-    MXJSONModelSetDictionary(ciphertext, event.content[@"ciphertext"]);
+    MXJSONModelSetString(deviceKey, event.wireContent[@"sender_key"]);
+    MXJSONModelSetDictionary(ciphertext, event.wireContent[@"ciphertext"]);
 
     if (!ciphertext)
     {
         NSLog(@"[MXOlmDecryption] decryptEvent: Error: Missing ciphertext");
-
-        if (error)
-        {
-            *error = [NSError errorWithDomain:MXDecryptingErrorDomain
-                                         code:MXDecryptingErrorMissingCiphertextCode
-                                     userInfo:@{
-                                                NSLocalizedDescriptionKey: MXDecryptingErrorMissingCiphertextReason
-                                                }];
-        }
-        return nil;
+        
+        MXEventDecryptionResult *result = [MXEventDecryptionResult new];
+        result.error = [NSError errorWithDomain:MXDecryptingErrorDomain
+                                           code:MXDecryptingErrorMissingCiphertextCode
+                                       userInfo:@{
+                                           NSLocalizedDescriptionKey: MXDecryptingErrorMissingCiphertextReason
+                                       }];
+        return result;
     }
 
     if (!ciphertext[olmDevice.deviceCurve25519Key])
     {
         NSLog(@"[MXOlmDecryption] decryptEvent: Error: our device %@ is not included in recipients. Event: %@", olmDevice.deviceCurve25519Key, event.JSONDictionary);
-
-        if (error)
-        {
-            *error = [NSError errorWithDomain:MXDecryptingErrorDomain
-                                         code:MXDecryptingErrorNotIncludedInRecipientsCode
-                                     userInfo:@{
-                                                NSLocalizedDescriptionKey: MXDecryptingErrorNotIncludedInRecipientsReason
-                                                }];
-        }
-        return nil;
+        
+        MXEventDecryptionResult *result = [MXEventDecryptionResult new];
+        result.error = [NSError errorWithDomain:MXDecryptingErrorDomain
+                                           code:MXDecryptingErrorNotIncludedInRecipientsCode
+                                       userInfo:@{
+                                           NSLocalizedDescriptionKey: MXDecryptingErrorNotIncludedInRecipientsReason
+                                       }];
+        return result;
     }
 
     // The message for myUser
@@ -105,16 +101,14 @@
     if (!payloadString)
     {
         NSLog(@"[MXOlmDecryption] decryptEvent: Failed to decrypt Olm event (id= %@) from %@", event.eventId, deviceKey);
-
-        if (error)
-        {
-            *error = [NSError errorWithDomain:MXDecryptingErrorDomain
-                                         code:MXDecryptingErrorBadEncryptedMessageCode
-                                     userInfo:@{
-                                                NSLocalizedDescriptionKey: MXDecryptingErrorBadEncryptedMessageReason
-                                                }];
-        }
-        return nil;
+        
+        MXEventDecryptionResult *result = [MXEventDecryptionResult new];
+        result.error = [NSError errorWithDomain:MXDecryptingErrorDomain
+                                           code:MXDecryptingErrorBadEncryptedMessageCode
+                                       userInfo:@{
+                                           NSLocalizedDescriptionKey: MXDecryptingErrorBadEncryptedMessageReason
+                                       }];
+        return result;
     }
 
     NSDictionary *payload = [NSJSONSerialization JSONObjectWithData:[payloadString dataUsingEncoding:NSUTF8StringEncoding] options:0 error:nil];
@@ -124,59 +118,51 @@
     if (!payload[@"recipient"])
     {
         NSLog(@"[MXOlmDecryption] decryptEvent: Olm event (id=%@) contains no 'recipient' property; cannot prevent unknown-key attack", event.eventId);
-
-        if (error)
-        {
-            *error = [NSError errorWithDomain:MXDecryptingErrorDomain
-                                         code:MXDecryptingErrorMissingPropertyCode
-                                     userInfo:@{
-                                                NSLocalizedDescriptionKey: [NSString stringWithFormat:MXDecryptingErrorMissingPropertyReason, @"recipient"]
-                                                }];
-        }
-        return nil;
+        
+        MXEventDecryptionResult *result = [MXEventDecryptionResult new];
+        result.error = [NSError errorWithDomain:MXDecryptingErrorDomain
+                                           code:MXDecryptingErrorMissingPropertyCode
+                                       userInfo:@{
+                                           NSLocalizedDescriptionKey: [NSString stringWithFormat:MXDecryptingErrorMissingPropertyReason, @"recipient"]
+                                       }];
+        return result;
     }
     else if (![payload[@"recipient"] isEqualToString:userId])
     {
         NSLog(@"[MXOlmDecryption] decryptEvent: Event %@: Intended recipient %@ does not match our id %@", event.eventId, payload[@"recipient"], userId);
 
-        if (error)
-        {
-            *error = [NSError errorWithDomain:MXDecryptingErrorDomain
+        MXEventDecryptionResult *result = [MXEventDecryptionResult new];
+        result.error = [NSError errorWithDomain:MXDecryptingErrorDomain
                                          code:MXDecryptingErrorBadRecipientCode
                                      userInfo:@{
                                                 NSLocalizedDescriptionKey: [NSString stringWithFormat:MXDecryptingErrorBadRecipientReason, payload[@"recipient"]]
                                                 }];
-        }
-        return nil;
+        return result;
     }
 
     if (!payload[@"recipient_keys"])
     {
         NSLog(@"[MXOlmDecryption] decryptEvent: Olm event (id=%@) contains no 'recipient_keys' property; cannot prevent unknown-key attack", event.eventId);
 
-        if (error)
-        {
-            *error =  [NSError errorWithDomain:MXDecryptingErrorDomain
+        MXEventDecryptionResult *result = [MXEventDecryptionResult new];
+        result.error = [NSError errorWithDomain:MXDecryptingErrorDomain
                                           code:MXDecryptingErrorMissingPropertyCode
                                       userInfo:@{
                                                  NSLocalizedDescriptionKey: [NSString stringWithFormat:MXDecryptingErrorMissingPropertyReason, @"recipient_keys"]
                                                  }];
-        }
-        return nil;
+        return result;
     }
     else if (![payload[@"recipient_keys"][@"ed25519"] isEqualToString:olmDevice.deviceEd25519Key])
     {
         NSLog(@"[MXOlmDecryption] decryptEvent: Event %@: Intended recipient ed25519 key %@ does not match ours", event.eventId, payload[@"recipient_keys"][@"ed25519"]);
 
-        if (error)
-        {
-            *error =  [NSError errorWithDomain:MXDecryptingErrorDomain
+        MXEventDecryptionResult *result = [MXEventDecryptionResult new];
+        result.error = [NSError errorWithDomain:MXDecryptingErrorDomain
                                           code:MXDecryptingErrorBadRecipientKeyCode
                                       userInfo:@{
                                                  NSLocalizedDescriptionKey: MXDecryptingErrorBadRecipientKeyReason
                                                  }];
-        }
-        return nil;
+        return result;
     }
 
     // Check that the original sender matches what the homeserver told us, to
@@ -187,29 +173,25 @@
     {
         NSLog(@"[MXOlmDecryption] decryptEvent: Olm event (id=%@) contains no 'sender' property; cannot prevent unknown-key attack", event.eventId);
 
-        if (error)
-        {
-            *error =  [NSError errorWithDomain:MXDecryptingErrorDomain
+        MXEventDecryptionResult *result = [MXEventDecryptionResult new];
+        result.error = [NSError errorWithDomain:MXDecryptingErrorDomain
                                           code:MXDecryptingErrorMissingPropertyCode
                                       userInfo:@{
                                                  NSLocalizedDescriptionKey: [NSString stringWithFormat:MXDecryptingErrorMissingPropertyReason, @"sender"]
                                                  }];
-        }
-        return nil;
+        return result;
     }
     else if (![payload[@"sender"] isEqualToString:event.sender])
     {
         NSLog(@"[MXOlmDecryption] decryptEvent: Event %@: original sender %@ does not match reported sender %@", event.eventId, payload[@"sender"], event.sender);
 
-        if (error)
-        {
-            *error =  [NSError errorWithDomain:MXDecryptingErrorDomain
+        MXEventDecryptionResult *result = [MXEventDecryptionResult new];
+        result.error = [NSError errorWithDomain:MXDecryptingErrorDomain
                                           code:MXDecryptingErrorForwardedMessageCode
                                       userInfo:@{
                                                  NSLocalizedDescriptionKey: [NSString stringWithFormat:MXDecryptingErrorForwardedMessageReason, payload[@"sender"]]
                                                  }];
-        }
-        return nil;
+        return result;
     }
 
     // Olm events intended for a room have a room_id.
@@ -217,15 +199,13 @@
     {
         NSLog(@"[MXOlmDecryption] decryptEvent: Event %@: original room %@ does not match reported room %@", event.eventId, payload[@"room_id"], event.roomId);
 
-        if (error)
-        {
-            *error =  [NSError errorWithDomain:MXDecryptingErrorDomain
+        MXEventDecryptionResult *result = [MXEventDecryptionResult new];
+        result.error = [NSError errorWithDomain:MXDecryptingErrorDomain
                                           code:MXDecryptingErrorBadRoomCode
                                       userInfo:@{
                                                  NSLocalizedDescriptionKey: [NSString stringWithFormat:MXDecryptingErrorBadRoomReason, payload[@"room_id"]]
                                                  }];
-        }
-        return nil;
+        return result;
     }
 
     NSDictionary *claimedKeys = payload[@"keys"];
