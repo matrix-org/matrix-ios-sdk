@@ -49,6 +49,8 @@
 
 #import "NSArray+MatrixSDK.h"
 
+#import "MXDeviceListResponse.h"
+
 /**
  The store to use for crypto.
  */

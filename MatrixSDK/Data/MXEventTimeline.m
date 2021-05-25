@@ -29,6 +29,8 @@
 
 #import "MXEventsEnumeratorOnArray.h"
 
+#import "MXRoomSync.h"
+
 NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
 
 @interface MXEventTimeline ()

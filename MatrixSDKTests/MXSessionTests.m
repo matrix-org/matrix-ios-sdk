@@ -24,6 +24,7 @@
 #import "MXMemoryStore.h"
 #import "MXFileStore.h"
 #import "MatrixSDKSwiftHeader.h"
+#import "MXSyncResponse.h"
 
 // Do not bother with retain cycles warnings in tests
 #pragma clang diagnostic push
