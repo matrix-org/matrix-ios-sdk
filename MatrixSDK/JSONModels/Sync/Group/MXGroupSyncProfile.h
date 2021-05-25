@@ -24,12 +24,12 @@ NS_ASSUME_NONNULL_BEGIN
 @interface MXGroupSyncProfile : MXJSONModel
 
 /**
- The name of the group, if any. May be nil.
+ The name of the group.
  */
 @property (nonatomic) NSString *name;
 
 /**
- The URL for the group's avatar. May be nil.
+ The URL for the group's avatar.
  */
 @property (nonatomic) NSString *avatarUrl;
 
