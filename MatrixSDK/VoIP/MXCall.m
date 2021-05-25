@@ -1103,7 +1103,8 @@ NSString *const kMXCallSupportsTransferringStatusDidChange = @"kMXCallSupportsTr
             }];
         };
         
-        if ([content.version isEqualToString:kMXCallVersion])
+        //  The content doesn't have to have a partyId, as `content.version` fallbacks to `kMXCallVersion` if not provided.
+        if ([content.version isEqualToString:kMXCallVersion] && content.partyId)
         {
             NSDictionary *selectAnswerContent = @{
                 @"call_id": self.callId,
