@@ -736,6 +736,44 @@
     }];
 }
 
+// Check sync response does not contain empty objects.
+//
+// - Have Bob start a new session
+// - Run initial sync on Bob's session
+// - Run another sync on Bob's session
+// -> Check latter sync response does not contain anything but the event stream token
+- (void)testEmptySyncResponse
+{
+    [matrixSDKTestsData doMXSessionTestWithBob:self readyToTest:^(MXSession *mxSession2, XCTestExpectation *expectation) {
+        mxSession = mxSession2;
+        
+        __block BOOL isFirst = YES;
+
+        observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXSessionDidSyncNotification object:mxSession queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *notif) {
+
+            if (isFirst)
+            {
+                isFirst = NO;
+                //  wait for another sync response, which should be completely empty
+                return;
+            }
+            MXSyncResponse *syncResponse = (MXSyncResponse*)notif.userInfo[kMXSessionNotificationSyncResponseKey];
+
+            XCTAssert([syncResponse isKindOfClass:MXSyncResponse.class]);
+            XCTAssertNil(syncResponse.accountData, @"Account data should be nil");
+            XCTAssertNotNil(syncResponse.nextBatch, @"Event stream token must be provided");
+            XCTAssertNil(syncResponse.presence, @"Presence should be nil");
+            XCTAssertNil(syncResponse.toDevice, @"To device events should be nil");
+            XCTAssertNil(syncResponse.deviceLists, @"Device lists should be nil");
+            XCTAssertNil(syncResponse.deviceOneTimeKeysCount, @"Device one time keys count should be nil");
+            XCTAssertNil(syncResponse.rooms, @"Rooms should be nil");
+            XCTAssertNil(syncResponse.groups, @"Groups should be nil");
+
+            [expectation fulfill];
+        }];
+    }];
+}
+
 - (void)testCreateRoomWithInvite
 {
     [matrixSDKTestsData doMXSessionTestWithBob:self readyToTest:^(MXSession *mxSession2, XCTestExpectation *expectation) {
