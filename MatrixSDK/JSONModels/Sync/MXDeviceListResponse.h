@@ -26,12 +26,12 @@ NS_ASSUME_NONNULL_BEGIN
 /**
  List of user ids whose devices have changed (new, removed).
  */
-@property (nonatomic) NSArray<NSString*> *changed;
+@property (nonatomic, nullable) NSArray<NSString*> *changed;
 
 /**
  List of user ids who are no more tracked.
  */
-@property (nonatomic) NSArray<NSString*> *left;
+@property (nonatomic, nullable) NSArray<NSString*> *left;
 
 @end
 

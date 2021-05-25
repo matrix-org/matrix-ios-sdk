@@ -31,12 +31,15 @@
             groupsSync.join = [NSArray arrayWithArray:((NSDictionary*)joinedGroups).allKeys];
         }
         
-        NSMutableDictionary *mxInvite = [NSMutableDictionary dictionary];
-        for (NSString *groupId in JSONDictionary[@"invite"])
+        if (JSONDictionary[@"invite"])
         {
-            MXJSONModelSetMXJSONModel(mxInvite[groupId], MXInvitedGroupSync, JSONDictionary[@"invite"][groupId]);
+            NSMutableDictionary *mxInvite = [NSMutableDictionary dictionary];
+            for (NSString *groupId in JSONDictionary[@"invite"])
+            {
+                MXJSONModelSetMXJSONModel(mxInvite[groupId], MXInvitedGroupSync, JSONDictionary[@"invite"][groupId]);
+            }
+            groupsSync.invite = mxInvite;
         }
-        groupsSync.invite = mxInvite;
         
         NSObject *leftGroups = JSONDictionary[@"leave"];
         if ([leftGroups isKindOfClass:[NSDictionary class]])
@@ -52,16 +55,25 @@
 {
     NSMutableDictionary *JSONDictionary = [NSMutableDictionary dictionary];
     
-    JSONDictionary[@"join"] = self.join;
-    
-    NSMutableDictionary *jsonInvite = [NSMutableDictionary dictionaryWithCapacity:self.invite.count];
-    for (NSString *key in self.invite)
+    if (self.join)
     {
-        jsonInvite[key] = self.invite[key].JSONDictionary;
+        JSONDictionary[@"join"] = self.join;
     }
-    JSONDictionary[@"invite"] = jsonInvite;
     
-    JSONDictionary[@"leave"] = self.leave;
+    if (self.invite)
+    {
+        NSMutableDictionary *jsonInvite = [NSMutableDictionary dictionaryWithCapacity:self.invite.count];
+        for (NSString *key in self.invite)
+        {
+            jsonInvite[key] = self.invite[key].JSONDictionary;
+        }
+        JSONDictionary[@"invite"] = jsonInvite;
+    }
+    
+    if (self.leave)
+    {
+        JSONDictionary[@"leave"] = self.leave;
+    }
     
     return JSONDictionary;
 }

@@ -38,7 +38,7 @@
         MXJSONModelSetMXJSONModel(syncResponse.rooms, MXRoomsSyncResponse, JSONDictionary[@"rooms"]);
         MXJSONModelSetMXJSONModel(syncResponse.groups, MXGroupsSyncResponse, JSONDictionary[@"groups"]);
     }
-
+    
     return syncResponse;
 }
 
@@ -46,14 +46,35 @@
 {
     NSMutableDictionary *JSONDictionary = [NSMutableDictionary dictionary];
     
-    JSONDictionary[@"account_data"] = self.accountData;
+    if (self.accountData)
+    {
+        JSONDictionary[@"account_data"] = self.accountData;
+    }
     JSONDictionary[@"next_batch"] = self.nextBatch;
-    JSONDictionary[@"presence"] = self.presence.JSONDictionary;
-    JSONDictionary[@"to_device"] = self.toDevice.JSONDictionary;
-    JSONDictionary[@"device_lists"] = self.deviceLists.JSONDictionary;
-    JSONDictionary[@"device_one_time_keys_count"] = self.deviceOneTimeKeysCount;
-    JSONDictionary[@"rooms"] = self.rooms.JSONDictionary;
-    JSONDictionary[@"groups"] = self.groups.JSONDictionary;
+    if (self.presence)
+    {
+        JSONDictionary[@"presence"] = self.presence.JSONDictionary;
+    }
+    if (self.toDevice)
+    {
+        JSONDictionary[@"to_device"] = self.toDevice.JSONDictionary;
+    }
+    if (self.deviceLists)
+    {
+        JSONDictionary[@"device_lists"] = self.deviceLists.JSONDictionary;
+    }
+    if (self.deviceOneTimeKeysCount)
+    {
+        JSONDictionary[@"device_one_time_keys_count"] = self.deviceOneTimeKeysCount;
+    }
+    if (self.rooms)
+    {
+        JSONDictionary[@"rooms"] = self.rooms.JSONDictionary;
+    }
+    if (self.groups)
+    {
+        JSONDictionary[@"groups"] = self.groups.JSONDictionary;
+    }
     
     return JSONDictionary;
 }

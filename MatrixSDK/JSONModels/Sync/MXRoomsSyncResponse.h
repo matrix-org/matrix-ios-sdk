@@ -29,17 +29,17 @@ NS_ASSUME_NONNULL_BEGIN
 /**
  Joined rooms: keys are rooms ids.
  */
-@property (nonatomic) NSDictionary<NSString*, MXRoomSync*> *join;
+@property (nonatomic, nullable) NSDictionary<NSString*, MXRoomSync*> *join;
 
 /**
  Invitations. The rooms that the user has been invited to: keys are rooms ids.
  */
-@property (nonatomic) NSDictionary<NSString*, MXInvitedRoomSync*> *invite;
+@property (nonatomic, nullable) NSDictionary<NSString*, MXInvitedRoomSync*> *invite;
 
 /**
  Left rooms. The rooms that the user has left or been banned from: keys are rooms ids.
  */
-@property (nonatomic) NSDictionary<NSString*, MXRoomSync*> *leave;
+@property (nonatomic, nullable) NSDictionary<NSString*, MXRoomSync*> *leave;
 
 @end
 

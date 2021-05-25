@@ -33,8 +33,14 @@
 {
     NSMutableDictionary *JSONDictionary = [NSMutableDictionary dictionary];
     
-    JSONDictionary[@"changed"] = self.changed;
-    JSONDictionary[@"left"] = self.left;
+    if (self.changed)
+    {
+        JSONDictionary[@"changed"] = self.changed;
+    }
+    if (self.left)
+    {
+        JSONDictionary[@"left"] = self.left;
+    }
     
     return JSONDictionary;
 }

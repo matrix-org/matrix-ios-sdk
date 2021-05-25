@@ -28,17 +28,17 @@ NS_ASSUME_NONNULL_BEGIN
 /**
  Joined groups: An array of groups ids.
  */
-@property (nonatomic) NSArray<NSString*> *join;
+@property (nonatomic, nullable) NSArray<NSString*> *join;
 
 /**
  Invitations. The groups that the user has been invited to: keys are groups ids.
  */
-@property (nonatomic) NSDictionary<NSString*, MXInvitedGroupSync*> *invite;
+@property (nonatomic, nullable) NSDictionary<NSString*, MXInvitedGroupSync*> *invite;
 
 /**
  Left groups. An array of groups ids: the groups that the user has left or been banned from.
  */
-@property (nonatomic) NSArray<NSString*> *leave;
+@property (nonatomic, nullable) NSArray<NSString*> *leave;
 
 @end
 

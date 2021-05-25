@@ -32,7 +32,7 @@ NS_ASSUME_NONNULL_BEGIN
 /**
  The user private data.
  */
-@property (nonatomic) NSDictionary<NSString*, id> *accountData;
+@property (nonatomic, nullable) NSDictionary<NSString*, id> *accountData;
 
 /**
  The opaque token for the end.
@@ -42,33 +42,33 @@ NS_ASSUME_NONNULL_BEGIN
 /**
  The updates to the presence status of other users.
  */
-@property (nonatomic) MXPresenceSyncResponse *presence;
+@property (nonatomic, nullable) MXPresenceSyncResponse *presence;
 
 /**
  Data directly sent to one of user's devices.
  */
-@property (nonatomic) MXToDeviceSyncResponse *toDevice;
+@property (nonatomic, nullable) MXToDeviceSyncResponse *toDevice;
 
 /**
  Devices list update.
  */
-@property (nonatomic) MXDeviceListResponse *deviceLists;
+@property (nonatomic, nullable) MXDeviceListResponse *deviceLists;
 
 /**
  The number of one time keys the server has for our device.
  algorithm -> number of keys for that algorithm.
  */
-@property (nonatomic) NSDictionary<NSString *, NSNumber*> *deviceOneTimeKeysCount;
+@property (nonatomic, nullable) NSDictionary<NSString *, NSNumber*> *deviceOneTimeKeysCount;
 
 /**
  List of rooms.
  */
-@property (nonatomic) MXRoomsSyncResponse *rooms;
+@property (nonatomic, nullable) MXRoomsSyncResponse *rooms;
 
 /**
  List of groups.
  */
-@property (nonatomic) MXGroupsSyncResponse *groups;
+@property (nonatomic, nullable) MXGroupsSyncResponse *groups;
 
 @end
 

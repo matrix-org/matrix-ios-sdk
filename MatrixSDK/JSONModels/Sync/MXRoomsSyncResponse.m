@@ -28,26 +28,35 @@
     MXRoomsSyncResponse *roomsSync = [[MXRoomsSyncResponse alloc] init];
     if (roomsSync)
     {
-        NSMutableDictionary *mxJoin = [NSMutableDictionary dictionary];
-        for (NSString *roomId in JSONDictionary[@"join"])
+        if (JSONDictionary[@"join"])
         {
-            MXJSONModelSetMXJSONModel(mxJoin[roomId], MXRoomSync, JSONDictionary[@"join"][roomId]);
+            NSMutableDictionary *mxJoin = [NSMutableDictionary dictionary];
+            for (NSString *roomId in JSONDictionary[@"join"])
+            {
+                MXJSONModelSetMXJSONModel(mxJoin[roomId], MXRoomSync, JSONDictionary[@"join"][roomId]);
+            }
+            roomsSync.join = mxJoin;
         }
-        roomsSync.join = mxJoin;
         
-        NSMutableDictionary *mxInvite = [NSMutableDictionary dictionary];
-        for (NSString *roomId in JSONDictionary[@"invite"])
+        if (JSONDictionary[@"invite"])
         {
-            MXJSONModelSetMXJSONModel(mxInvite[roomId], MXInvitedRoomSync, JSONDictionary[@"invite"][roomId]);
+            NSMutableDictionary *mxInvite = [NSMutableDictionary dictionary];
+            for (NSString *roomId in JSONDictionary[@"invite"])
+            {
+                MXJSONModelSetMXJSONModel(mxInvite[roomId], MXInvitedRoomSync, JSONDictionary[@"invite"][roomId]);
+            }
+            roomsSync.invite = mxInvite;
         }
-        roomsSync.invite = mxInvite;
         
-        NSMutableDictionary *mxLeave = [NSMutableDictionary dictionary];
-        for (NSString *roomId in JSONDictionary[@"leave"])
+        if (JSONDictionary[@"leave"])
         {
-            MXJSONModelSetMXJSONModel(mxLeave[roomId], MXRoomSync, JSONDictionary[@"leave"][roomId]);
+            NSMutableDictionary *mxLeave = [NSMutableDictionary dictionary];
+            for (NSString *roomId in JSONDictionary[@"leave"])
+            {
+                MXJSONModelSetMXJSONModel(mxLeave[roomId], MXRoomSync, JSONDictionary[@"leave"][roomId]);
+            }
+            roomsSync.leave = mxLeave;
         }
-        roomsSync.leave = mxLeave;
     }
     
     return roomsSync;
@@ -57,26 +66,35 @@
 {
     NSMutableDictionary *JSONDictionary = [NSMutableDictionary dictionary];
     
-    NSMutableDictionary *jsonJoin = [NSMutableDictionary dictionaryWithCapacity:self.join.count];
-    for (NSString *key in self.join)
+    if (self.join)
     {
-        jsonJoin[key] = self.join[key].JSONDictionary;
+        NSMutableDictionary *jsonJoin = [NSMutableDictionary dictionaryWithCapacity:self.join.count];
+        for (NSString *key in self.join)
+        {
+            jsonJoin[key] = self.join[key].JSONDictionary;
+        }
+        JSONDictionary[@"join"] = jsonJoin;
     }
-    JSONDictionary[@"join"] = jsonJoin;
     
-    NSMutableDictionary *jsonInvite = [NSMutableDictionary dictionaryWithCapacity:self.invite.count];
-    for (NSString *key in self.invite)
+    if (self.invite)
     {
-        jsonInvite[key] = self.invite[key].JSONDictionary;
+        NSMutableDictionary *jsonInvite = [NSMutableDictionary dictionaryWithCapacity:self.invite.count];
+        for (NSString *key in self.invite)
+        {
+            jsonInvite[key] = self.invite[key].JSONDictionary;
+        }
+        JSONDictionary[@"invite"] = jsonInvite;
     }
-    JSONDictionary[@"invite"] = jsonInvite;
     
-    NSMutableDictionary *jsonLeave = [NSMutableDictionary dictionaryWithCapacity:self.leave.count];
-    for (NSString *key in self.leave)
+    if (self.leave)
     {
-        jsonLeave[key] = self.leave[key].JSONDictionary;
+        NSMutableDictionary *jsonLeave = [NSMutableDictionary dictionaryWithCapacity:self.leave.count];
+        for (NSString *key in self.leave)
+        {
+            jsonLeave[key] = self.leave[key].JSONDictionary;
+        }
+        JSONDictionary[@"leave"] = jsonLeave;
     }
-    JSONDictionary[@"leave"] = jsonLeave;
     
     return JSONDictionary;
 }
