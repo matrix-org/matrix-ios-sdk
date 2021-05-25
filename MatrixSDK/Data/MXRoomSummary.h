@@ -27,6 +27,9 @@
 #import "MXRoomType.h"
 
 @class MXSession, MXRoom, MXRoomState, MXEvent;
+@class MXRoomSync;
+@class MXInvitedRoomSync;
+@class MXRoomSyncSummary;
 @protocol MXStore;
 
 
