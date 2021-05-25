@@ -23,7 +23,7 @@ public class MXSpaceCreationParameters: MXRoomCreationParameters {
         super.init()
         
         // Space-rooms are distinguished from regular messaging rooms by the m.room.type of m.space
-        self.roomType = MXRoomTypeString.spaceMSC1772.rawValue;
+        self.roomType = MXRoomTypeString.space.rawValue;
         
         // Space-rooms should be created with a power level for events_default of 100,
         // to prevent the rooms accidentally/maliciously clogging up with messages from random members of the space.

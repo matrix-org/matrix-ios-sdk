@@ -49,7 +49,7 @@
     }    
     if (_roomType)
     {
-        createContentDictionary[MXRoomCreateContentRoomTypeMSC1772JSONKey] = _roomType;
+        createContentDictionary[MXRoomCreateContentRoomTypeJSONKey] = _roomType;
     }
     if (_name)
     {

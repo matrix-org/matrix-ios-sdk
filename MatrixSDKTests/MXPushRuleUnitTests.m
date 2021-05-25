@@ -37,7 +37,7 @@
 @end
 
 
-@interface MXPushRuleTests : XCTestCase
+@interface MXPushRuleUnitTests : XCTestCase
 {
 }
 
@@ -45,7 +45,7 @@
 
 
 #pragma mark - MXPushRuleTests helper methods
-@implementation MXPushRuleTests
+@implementation MXPushRuleUnitTests
 
 - (void)setUp
 {

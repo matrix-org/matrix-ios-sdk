@@ -19,14 +19,14 @@
 #import "MXAesKeyData.h"
 #import "MXRawDataKey.h"
 
-@interface MXKeyProviderTests : XCTestCase <MXKeyProviderDelegate>
+@interface MXKeyProviderUnitTests : XCTestCase <MXKeyProviderDelegate>
 
 @property (nonatomic) BOOL isEncryptionAvailable;
 @property (nonatomic, strong, nullable) MXKeyData *currentKey;
 
 @end
 
-@implementation MXKeyProviderTests
+@implementation MXKeyProviderUnitTests
 
 - (void)setUp {
     self.isEncryptionAvailable = YES;

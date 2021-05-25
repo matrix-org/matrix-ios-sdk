@@ -23,14 +23,14 @@
 
 static NSString* const kDefaultAntivirusServerDomain = @"matrix.org";
 
-@interface MXEventScanStoreTests : XCTestCase
+@interface MXEventScanStoreUnitTests : XCTestCase
 
 @property (nonatomic, strong) id<MXScanRealmProvider> realmProvider;
 @property (nonatomic, strong) id<MXEventScanStore> eventScanStore;
 
 @end
 
-@implementation MXEventScanStoreTests
+@implementation MXEventScanStoreUnitTests
 
 - (void)setUp
 {

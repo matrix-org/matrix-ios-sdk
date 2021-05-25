@@ -44,7 +44,7 @@ public class MXRoomTypeMapper: NSObject {
         switch roomTypeString {
         case MXRoomTypeString.room.rawValue, MXRoomTypeString.roomMSC1840.rawValue:
             roomType = .room
-        case MXRoomTypeString.space.rawValue, MXRoomTypeString.spaceMSC1772.rawValue:
+        case MXRoomTypeString.space.rawValue:
             roomType = .space
         case "":
             // Use default room type when the value is empty

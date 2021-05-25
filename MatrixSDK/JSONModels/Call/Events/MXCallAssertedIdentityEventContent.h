@@ -14,31 +14,22 @@
 // limitations under the License.
 //
 
-#import <Foundation/Foundation.h>
-#import "MXJSONModel.h"
-
-@class MXSyncResponse;
-
+#import "MXCallEventContent.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
-/// A cached MXSyncResponse
-@interface MXCachedSyncResponse : MXJSONModel
+@class MXAssertedIdentityModel;
 
 /**
- The sync token that generated `syncResponse`.
- 
- It is different from syncResponse.nextBatch which represents the next sync token to use for the next /sync request.
+ `MXCallAssertedIdentityEventContent` represents the content of an `m.call.asserted_identity` event.
  */
-@property (nonatomic, nullable, readonly) NSString *syncToken;
+@interface MXCallAssertedIdentityEventContent : MXCallEventContent
 
 /**
- The sync response starting from the prevBatch.
+ An object giving information about the transfer target.
  */
-@property (nonatomic, readonly) MXSyncResponse *syncResponse;
+@property (nonatomic, nullable) MXAssertedIdentityModel *assertedIdentity;
 
-
-- (instancetype)initWithSyncToken:(nullable NSString*)syncToken syncResponse:(MXSyncResponse*)syncResponse;
 
 @end
 

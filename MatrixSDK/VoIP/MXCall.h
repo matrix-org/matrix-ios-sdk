@@ -31,6 +31,7 @@ NS_ASSUME_NONNULL_BEGIN
 @class MXEvent;
 @class MXRoom;
 @class MXUserModel;
+@class MXAssertedIdentityModel;
 
 /**
  Call states.
@@ -184,6 +185,26 @@ extern NSString *const kMXCallSupportsTransferringStatusDidChange;
                success:(void (^)(NSString * _Nonnull eventId))success
                failure:(void (^)(NSError * _Nullable error))failure;
 
+/**
+ Flag to indicate that the call is a call to consult a transfer.
+ */
+@property (nonatomic, assign, getter=isConsulting) BOOL consulting;
+
+/**
+ Transferee of the transfer. Should be provided when `consulting` is YES.
+ */
+@property (nonatomic, strong) MXCall *callWithTransferee;
+
+/**
+ Transferee of the transfer. Should be provided when `consulting` is YES.
+ */
+@property (nonatomic, copy) MXUserModel *transferee;
+
+/**
+ Target of the transfer. Should be provided when `consulting` is YES.
+ */
+@property (nonatomic, copy) MXUserModel *transferTarget;
+
 #pragma mark - DTMF
 
 /**
@@ -336,6 +357,11 @@ extern NSString *const kMXCallSupportsTransferringStatusDidChange;
 @property (nonatomic, readonly) NSUInteger duration;
 
 /**
+ The asserted identity for the call. May be nil.
+ */
+@property (nonatomic, copy, nullable) MXAssertedIdentityModel *assertedIdentity;
+
+/**
  The delegate.
  */
 @property (nonatomic, weak) id<MXCallDelegate> delegate;
@@ -372,6 +398,18 @@ extern NSString *const kMXCallSupportsTransferringStatusDidChange;
  @param call the instance that changes
  */
 - (void)callSupportsTransferringStatusDidChange:(MXCall *)call;
+
+/**
+ Tells the delegate that `isConsulting` property of the call has changed.
+ @param call the instance that changes
+ */
+- (void)callConsultingStatusDidChange:(MXCall *)call;
+
+/**
+ Tells the delegate that `assertedIdentity` property of the call has changed.
+ @param call the instance that changes
+ */
+- (void)callAssertedIdentityDidChange:(MXCall *)call;
 
 /**
  Tells the delegate an error occured.

@@ -26,7 +26,7 @@
 #import "MXSDKOptions.h"
 #import "MXTools.h"
 
-static NSUInteger const kMXFileVersion = 69;
+static NSUInteger const kMXFileVersion = 72;
 
 static NSString *const kMXFileStoreFolder = @"MXFileStore";
 static NSString *const kMXFileStoreMedaDataFile = @"MXFileStore";
@@ -293,6 +293,27 @@ static NSUInteger preloadOptions;
     });
 }
 
+- (void)logFiles
+{
+    NSLog(@"[MXFileStore] logFiles: Files in %@:", self->storePath);
+    NSArray *contents = [[NSFileManager defaultManager] subpathsOfDirectoryAtPath:self->storePath error:nil];
+    NSEnumerator *contentsEnumurator = [contents objectEnumerator];
+    
+    NSUInteger fileCount = 0, diskUsage = 0;
+
+    NSString *file;
+    while (file = [contentsEnumurator nextObject])
+    {
+        NSDictionary *fileAttributes = [[NSFileManager defaultManager] attributesOfItemAtPath:[self->storePath stringByAppendingPathComponent:file] error:nil];
+        NSUInteger fileSize = [[fileAttributes objectForKey:NSFileSize] intValue];
+        
+        NSLog(@"[MXFileStore] logFiles:     - %@: %@", file, [NSByteCountFormatter stringFromByteCount:fileSize countStyle:NSByteCountFormatterCountStyleFile]);
+        diskUsage += fileSize;
+        fileCount++;
+    }
+    
+    NSLog(@"[MXFileStore] logFiles:  %@ files: %@", @(fileCount), [NSByteCountFormatter stringFromByteCount:diskUsage countStyle:NSByteCountFormatterCountStyleFile]);
+}
 
 + (void)setPreloadOptions:(MXFileStorePreloadOptions)thePreloadOptions
 {
@@ -401,6 +422,9 @@ static NSUInteger preloadOptions;
 
 - (void)storeHasLoadedAllRoomMembersForRoom:(NSString *)roomId andValue:(BOOL)value
 {
+    // XXX: To remove once https://github.com/vector-im/element-ios/issues/3807 is fixed
+    NSLog(@"[MXFileStore] storeHasLoadedAllRoomMembersForRoom: %@ value: %@", roomId, @(value));
+          
     [super storeHasLoadedAllRoomMembersForRoom:roomId andValue:value];
 
     if (NSNotFound == [roomsToCommitForMessages indexOfObject:roomId])
@@ -652,8 +676,12 @@ static NSUInteger preloadOptions;
     }
 }
 
-
 - (void)commit
+{
+    [self commitWithCompletion:nil];
+}
+
+- (void)commitWithCompletion:(void (^)(void))completion
 {
     // Save data only if metaData exists
     if (metaData)
@@ -718,6 +746,11 @@ static NSUInteger preloadOptions;
                 else if (self.commitBackgroundTask.isRunning)
                 {
                     NSLog(@"[MXFileStore commit] Background task %@ is kept - running since %.0fms", self.commitBackgroundTask, [[NSDate date] timeIntervalSinceDate:self->backgroundTaskStartDate] * 1000);
+                }
+                
+                if (completion)
+                {
+                    completion();
                 }
             });
         });
@@ -1018,6 +1051,7 @@ static NSUInteger preloadOptions;
         if (!checkStorageValidity)
         {
             NSLog(@"[MXFileStore] Restore data: Cannot restore previous data. Reset the store");
+            [self logFiles];
             [self deleteAllData];
         }
     }
@@ -1046,11 +1080,11 @@ static NSUInteger preloadOptions;
         MXFileRoomStore *roomStore;
         @try
         {
-            roomStore =[NSKeyedUnarchiver unarchiveObjectWithFile:roomFile];
+            roomStore = [NSKeyedUnarchiver unarchiveObjectWithFile:roomFile];
         }
         @catch (NSException *exception)
         {
-            NSLog(@"[MXFileStore] Warning: MXFileRoomStore file for room %@ has been corrupted", roomId);
+            NSLog(@"[MXFileStore] Warning: MXFileRoomStore file for room %@ has been corrupted. Exception: %@", roomId, exception);
         }
 
         if (roomStore)
@@ -1060,7 +1094,10 @@ static NSUInteger preloadOptions;
         }
         else
         {
-            NSLog(@"[MXFileStore] Warning: MXFileStore has been reset due to room file corruption. Room id: %@", roomId);
+            NSLog(@"[MXFileStore] Warning: MXFileStore has been reset due to room file corruption. Room id: %@. File path: %@",
+                  roomId, roomFile);
+            
+            [self logFiles];
             [self deleteAllData];
             break;
         }
@@ -1399,6 +1436,7 @@ static NSUInteger preloadOptions;
     else
     {
         NSLog(@"[MXFileStore] loadMetaData: event stream token is missing");
+        [self logFiles];
         [self deleteAllData];
     }
 }

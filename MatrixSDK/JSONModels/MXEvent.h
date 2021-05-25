@@ -74,6 +74,8 @@ typedef NS_ENUM(NSInteger, MXEventType)
     MXEventTypeCallNegotiate,
     MXEventTypeCallReplaces,
     MXEventTypeCallRejectReplacement,
+    MXEventTypeCallAssertedIdentity,
+    MXEventTypeCallAssertedIdentityUnstable,
     MXEventTypeSticker,
     MXEventTypeRoomTombStone,
     MXEventTypeKeyVerificationRequest,
@@ -139,6 +141,8 @@ FOUNDATION_EXPORT NSString *const kMXEventTypeStringCallReject;
 FOUNDATION_EXPORT NSString *const kMXEventTypeStringCallNegotiate;
 FOUNDATION_EXPORT NSString *const kMXEventTypeStringCallReplaces;
 FOUNDATION_EXPORT NSString *const kMXEventTypeStringCallRejectReplacement;
+FOUNDATION_EXPORT NSString *const kMXEventTypeStringCallAssertedIdentity;
+FOUNDATION_EXPORT NSString *const kMXEventTypeStringCallAssertedIdentityUnstable;
 FOUNDATION_EXPORT NSString *const kMXEventTypeStringSticker;
 FOUNDATION_EXPORT NSString *const kMXEventTypeStringRoomTombStone;
 FOUNDATION_EXPORT NSString *const kMXEventTypeStringTaggedEvents;

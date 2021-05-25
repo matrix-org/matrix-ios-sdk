@@ -20,11 +20,11 @@
 #import "MXQRCodeDataBuilder.h"
 #import "MXVerifyingAnotherUserQRCodeData.h"
 
-@interface MXQRCodeDataTests : XCTestCase
+@interface MXQRCodeDataUnitTests : XCTestCase
 
 @end
 
-@implementation MXQRCodeDataTests
+@implementation MXQRCodeDataUnitTests
 
 - (void)setUp
 {

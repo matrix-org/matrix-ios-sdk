@@ -17,7 +17,7 @@ import XCTest
 
 import MatrixSDK
 
-class MXEventAnnotationTests: XCTestCase {
+class MXEventReferenceUnitTests: XCTestCase {
 
     let eventJSON: [String : Any] = [
         "event_id": "$eventId",
@@ -25,20 +25,19 @@ class MXEventAnnotationTests: XCTestCase {
         "origin_server_ts": 0,
         "unsigned": [
             "m.relations": [
-                "m.annotation": [
+                "m.reference": [
                     "chunk": [
                         [
-                            "type": "m.reaction",
-                            "key": "👍",
-                            "count": 3
+                            "type": "m.room.message",
+                            "event_id": "$some_event_id"
                         ]
                     ],
                     "limited": false,
                     "count": 1
-                ],
+                ]
             ]
         ]
-        ]
+    ]
 
     override func setUp() {
     }
@@ -49,14 +48,14 @@ class MXEventAnnotationTests: XCTestCase {
     func testModelFromJSON() {
         let event = MXEvent(fromJSON: eventJSON)
 
-        XCTAssertEqual(event?.unsignedData.relations?.annotation?.chunk.count, 1)
-        XCTAssertEqual(event?.unsignedData.relations?.annotation?.limited, false)
-        XCTAssertEqual(event?.unsignedData.relations?.annotation?.count, 1)
+        XCTAssertNotNil(event?.unsignedData.relations?.reference)
+        XCTAssertEqual(event?.unsignedData.relations?.reference?.chunk.count, 1)
+        XCTAssertEqual(event?.unsignedData.relations?.reference?.limited, false)
+        XCTAssertEqual(event?.unsignedData.relations?.reference?.count, 1)
 
-        if let annotation = event?.unsignedData.relations?.annotation?.chunk[0] {
-            XCTAssertEqual(annotation.type, MXEventAnnotationReaction)
-            XCTAssertEqual(annotation.key, "👍")
-            XCTAssertEqual(annotation.count, 3)
+        if let reference = event?.unsignedData.relations?.reference?.chunk[0] {
+            XCTAssertEqual(reference.eventId, "$some_event_id")
+            XCTAssertEqual(reference.type, kMXEventTypeStringRoomMessage)
         }
     }
 

@@ -467,7 +467,9 @@ Then, open ``MatrixSDK.xcworkspace``.
 
 Tests
 =====
-The tests in the SDK Xcode project are both unit and integration tests.
+The tests in the SDK Xcode project are both unit and integration tests. 
+
+Unit tests classes use the suffix "UnitTests" to differentiate them. A unit test is a test that does not make any HTTP requests or uses mocked HTTP requests.
 
 Out of the box, the tests use one of the homeservers (located at
 http://localhost:8080) of the "Demo Federation of Homeservers"
@@ -490,6 +492,22 @@ Every time you want to launch these test homeservers, type::
 
 You can now run tests from the Xcode Test navigator tab or select the
 MatrixSDKTests scheme and click on the "Test" action.
+
+Test Plans
+----------
+We have test plans for the macOS target to run tests separately or with different configurations.
+
+AllTests
+  Default test plan to run all tests.
+
+AllTestsWithSanitizers
+  Run all tests with 2 configurations: "ASan + UBSan" and "TSan + UBSan". "UBSan" for Unexpected Behavior Sanitizer. "ASan" for Address Sanitizier. "Tsan" for Thread Sanitizer. This setup was advised at WWDC2019 (https://developer.apple.com/videos/play/wwdc2019/413?time=2270). This test plan requires 2 builds and 2 test runs.
+
+UnitTests
+  Test plan for all unit tests.
+
+UnitTestsWithSanitizers
+  All unit tests with the 2 configurations described above: "ASan + UBSan" and "TSan + UBSan".
 
 Known issues
 ============

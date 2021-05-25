@@ -14,14 +14,14 @@
 // limitations under the License.
 //
 
-#import "MXUserModel.h"
+#import "MXAssertedIdentityModel.h"
 #import "MXUser.h"
 
-@implementation MXUserModel
+@implementation MXAssertedIdentityModel
 
 + (id)modelFromJSON:(NSDictionary *)JSONDictionary
 {
-    MXUserModel *userModel = [[MXUserModel alloc] init];
+    MXAssertedIdentityModel *userModel = [[MXAssertedIdentityModel alloc] init];
     
     if (userModel)
     {
@@ -35,8 +35,12 @@
 
 - (NSDictionary *)JSONDictionary
 {
-    NSMutableDictionary *jsonDictionary = [NSMutableDictionary dictionaryWithObject:self.userId forKey:@"id"];
+    NSMutableDictionary *jsonDictionary = [NSMutableDictionary dictionaryWithCapacity:3];
 
+    if (self.userId)
+    {
+        jsonDictionary[@"id"] = self.userId;
+    }
     if (self.displayname)
     {
         jsonDictionary[@"display_name"] = self.displayname;
@@ -49,7 +53,7 @@
     return jsonDictionary;
 }
 
-- (id)initWithUserId:(NSString * _Nonnull)userId
+- (id)initWithUserId:(NSString * _Nullable)userId
          displayname:(NSString * _Nullable)displayname
            avatarUrl:(NSString * _Nullable)avatarUrl
 {
@@ -69,11 +73,38 @@
                       avatarUrl:user.avatarUrl];
 }
 
+- (BOOL)isEqual:(id)other
+{
+    if (other == self)
+        return YES;
+
+    if (![other isKindOfClass:MXAssertedIdentityModel.class])
+        return NO;
+
+    MXAssertedIdentityModel *otherModel = (MXAssertedIdentityModel *)other;
+
+    return [_userId isEqualToString:otherModel.userId]
+        && [_displayname isEqualToString:otherModel.displayname]
+        && [_avatarUrl isEqualToString:otherModel.avatarUrl];
+}
+
+- (NSUInteger)hash
+{
+    NSUInteger prime = 31;
+    NSUInteger result = 1;
+
+    result = prime * result + [_userId hash];
+    result = prime * result + [_displayname hash];
+    result = prime * result + [_avatarUrl hash];
+
+    return result;
+}
+
 #pragma mark - NSCopying
 
 - (id)copyWithZone:(NSZone *)zone
 {
-    MXUserModel *model = [[[self class] allocWithZone:zone] init];
+    MXAssertedIdentityModel *model = [[[self class] allocWithZone:zone] init];
     
     model.userId = [_userId copyWithZone:zone];
     model.displayname = [_displayname copyWithZone:zone];

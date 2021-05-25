@@ -22,13 +22,13 @@ NSString *const myErrCode = @"MY_MATRIX_ERR_CODE";
 NSString *const myError = @"This is detailed information about this fake error";
 
 
-@interface MXErrorTests : XCTestCase
+@interface MXErrorUnitTests : XCTestCase
 {
     MXError *mxError;
 }
 @end
 
-@implementation MXErrorTests
+@implementation MXErrorUnitTests
 
 - (void)setUp
 {

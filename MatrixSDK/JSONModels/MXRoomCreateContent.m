@@ -20,8 +20,7 @@
 
 // Public
 
-NSString* const MXRoomCreateContentRoomTypeJSONKey = @"m.room.type";
-NSString* const MXRoomCreateContentRoomTypeMSC1772JSONKey = @"org.matrix.msc1772.type";
+NSString* const MXRoomCreateContentRoomTypeJSONKey = @"type";
 
 // Private
 
@@ -58,12 +57,7 @@ static NSString* const kRoomCreateContentFederateJSONKey = @"m.federate";
         MXJSONModelSetString(roomCreateContent.roomVersion, jsonDictionary[kRoomCreateContentRoomVersionJSONKey]);
         MXJSONModelSetBoolean(roomCreateContent.isFederated, jsonDictionary[kRoomCreateContentFederateJSONKey]);
         MXJSONModelSetMXJSONModel(roomCreateContent.virtualRoomInfo, MXVirtualRoomInfo, jsonDictionary[kRoomIsVirtualJSONKey]);
-        
-        NSString *roomType;
-        
-        MXJSONModelSetString(roomType, jsonDictionary[MXRoomCreateContentRoomTypeMSC1772JSONKey]);
-        
-        roomCreateContent.roomType = roomType;
+        MXJSONModelSetString(roomCreateContent.roomType, jsonDictionary[MXRoomCreateContentRoomTypeJSONKey]);
     }
     
     return roomCreateContent;
@@ -97,7 +91,7 @@ static NSString* const kRoomCreateContentFederateJSONKey = @"m.federate";
     
     if (self.roomType)
     {
-        jsonDictionary[MXRoomCreateContentRoomTypeMSC1772JSONKey] = self.roomType;
+        jsonDictionary[MXRoomCreateContentRoomTypeJSONKey] = self.roomType;
     }
     
     return jsonDictionary;

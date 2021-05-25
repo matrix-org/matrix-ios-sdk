@@ -69,6 +69,7 @@ static const char * const kMXPushGatewayRestClientProcessingQueueLabel = "MXPush
                               roomId:(nullable NSString *)roomId
                            eventType:(nullable NSString *)eventType
                               sender:(nullable NSString *)sender
+                             timeout:(NSTimeInterval)timeout
                              success:(void (^)(NSArray<NSString*> * _Nonnull))success
                              failure:(void (^)(NSError * _Nonnull))failure
 {
@@ -107,6 +108,7 @@ static const char * const kMXPushGatewayRestClientProcessingQueueLabel = "MXPush
     MXHTTPOperation *operation= [self.httpClient requestWithMethod:@"POST"
                                                               path:@"/_matrix/push/v1/notify"
                                                         parameters:parameters
+                                                           timeout:timeout
                                                            success:^(NSDictionary *JSONResponse) {
         if (success)
         {

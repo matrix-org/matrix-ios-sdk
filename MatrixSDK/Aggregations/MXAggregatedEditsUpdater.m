@@ -70,17 +70,6 @@
         failure(nil);
         return nil;
     }
-
-    // If it is not already done, decrypt the event to build the new content
-    if (event.isEncrypted && !event.clearEvent)
-    {
-        if (![self.mxSession decryptEvent:event inTimeline:nil])
-        {
-            NSLog(@"[MXAggregations] replaceTextMessageEvent: Fail to decrypt original event: %@", event.eventId);
-            failure(nil);
-            return nil;
-        }
-    }
     
     NSString *messageType = event.content[@"msgtype"];
     
@@ -243,13 +232,6 @@
             if (editedEvent)
             {
                 [self.matrixStore replaceEvent:editedEvent inRoom:roomId];
-
-                if (editedEvent.isEncrypted && !editedEvent.clearEvent)
-                {
-                    [self.mxSession decryptEvent:editedEvent inTimeline:nil];
-                }
-
-
                 [self notifyEventEditsListenersOfRoom:roomId replaceEvent:replaceEvent];
             }
         }
