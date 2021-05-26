@@ -19,6 +19,7 @@ Changes to be released in next version
 🐛 Bugfix
  * MXRoomSummary: Fix decryption of the last message when it is edited (vector-im/element-ios/issues/4322).
  * MXCall: Check remote partyId for select_answer events (vector-im/element-ios/issues/4337).
+ * MXSession: Fix used initial sync cache.
 
 ⚠️ API Changes
  * MXRoom: MXRoom.outgoingMessages does not decrypt messages anymore. Use MXSession.decryptEvents to get decrypted events.
