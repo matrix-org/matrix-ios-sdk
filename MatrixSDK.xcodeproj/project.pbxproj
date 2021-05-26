@@ -17,6 +17,10 @@
 		02CAD43B217DD12F0074700B /* MXContentScanEncryptedBody.h in Headers */ = {isa = PBXBuildFile; fileRef = 02CAD437217DD12F0074700B /* MXContentScanEncryptedBody.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		0696FFB36962606A28BEC38E /* libPods-MatrixSDK-MatrixSDK-iOS.a in Frameworks */ = {isa = PBXBuildFile; fileRef = B57EF0A39A7649D55CA1208A /* libPods-MatrixSDK-MatrixSDK-iOS.a */; };
 		15C934E526232442DE7A79DE /* libPods-MatrixSDKTests-iOS.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 7290AD6ED063E2E323E9485C /* libPods-MatrixSDKTests-iOS.a */; };
+		189CC081265E361C00BE1FD8 /* MXLog.h in Headers */ = {isa = PBXBuildFile; fileRef = 189CC07F265E361500BE1FD8 /* MXLog.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		189CC082265E361D00BE1FD8 /* MXLog.h in Headers */ = {isa = PBXBuildFile; fileRef = 189CC07F265E361500BE1FD8 /* MXLog.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		189CC083265E362600BE1FD8 /* MXLog.swift in Sources */ = {isa = PBXBuildFile; fileRef = 189CC080265E361500BE1FD8 /* MXLog.swift */; };
+		189CC084265E362700BE1FD8 /* MXLog.swift in Sources */ = {isa = PBXBuildFile; fileRef = 189CC080265E361500BE1FD8 /* MXLog.swift */; };
 		3209683126396385005D64ED /* AllTestsWithSanitizers.xctestplan in Resources */ = {isa = PBXBuildFile; fileRef = 3209682F26396385005D64ED /* AllTestsWithSanitizers.xctestplan */; };
 		3209683226396385005D64ED /* AllTestsWithSanitizers.xctestplan in Resources */ = {isa = PBXBuildFile; fileRef = 3209682F26396385005D64ED /* AllTestsWithSanitizers.xctestplan */; };
 		3209683326396385005D64ED /* UnitTestsWithSanitizers.xctestplan in Resources */ = {isa = PBXBuildFile; fileRef = 3209683026396385005D64ED /* UnitTestsWithSanitizers.xctestplan */; };
@@ -1540,6 +1544,8 @@
 		02CAD436217DD12F0074700B /* MXContentScanEncryptedBody.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXContentScanEncryptedBody.m; sourceTree = "<group>"; };
 		02CAD437217DD12F0074700B /* MXContentScanEncryptedBody.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXContentScanEncryptedBody.h; sourceTree = "<group>"; };
 		15D7F292D95EB58AEE801C4E /* libPods-MatrixSDKTests-macOS.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-MatrixSDKTests-macOS.a"; sourceTree = BUILT_PRODUCTS_DIR; };
+		189CC07F265E361500BE1FD8 /* MXLog.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MXLog.h; sourceTree = "<group>"; };
+		189CC080265E361500BE1FD8 /* MXLog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MXLog.swift; sourceTree = "<group>"; };
 		19B6947FC794531CEEDCFA7F /* Pods-MatrixSDKTests-macOS.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-MatrixSDKTests-macOS.release.xcconfig"; path = "Target Support Files/Pods-MatrixSDKTests-macOS/Pods-MatrixSDKTests-macOS.release.xcconfig"; sourceTree = "<group>"; };
 		3209682F26396385005D64ED /* AllTestsWithSanitizers.xctestplan */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = AllTestsWithSanitizers.xctestplan; sourceTree = "<group>"; };
 		3209683026396385005D64ED /* UnitTestsWithSanitizers.xctestplan */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = UnitTestsWithSanitizers.xctestplan; sourceTree = "<group>"; };
@@ -2497,42 +2503,44 @@
 		320DFDD619DD99B60068622A /* Utils */ = {
 			isa = PBXGroup;
 			children = (
-				3259D00E2603722A00C365DB /* Protocols */,
-				323F87712554607A009E9E67 /* Profiling */,
 				F08B8D591E014711006171A8 /* Categories */,
 				F03EF4F91DF014D9009DF592 /* Media */,
+				323F87712554607A009E9E67 /* Profiling */,
+				3259D00E2603722A00C365DB /* Protocols */,
 				B146D46E21A5939000D8C2C6 /* Realm */,
-				32B090E1261F709B002924AA /* MXAsyncTaskQueue.swift */,
-				F03EF5021DF01596009DF592 /* MXLRUCache.h */,
-				F03EF5031DF01596009DF592 /* MXLRUCache.m */,
-				320DFDD719DD99B60068622A /* MXHTTPClient.h */,
-				322DB456212EB8E600F4EFE9 /* MXHTTPClient_Private.h */,
-				320DFDD819DD99B60068622A /* MXHTTPClient.m */,
-				32CAB1091A925B41008C5BB9 /* MXHTTPOperation.h */,
-				32CAB10A1A925B41008C5BB9 /* MXHTTPOperation.m */,
-				329FB1771A0A74B100A5E88E /* MXTools.h */,
-				329FB1781A0A74B100A5E88E /* MXTools.m */,
-				327E37B41A974F75007F026F /* MXLogger.h */,
-				327E37B51A974F75007F026F /* MXLogger.m */,
-				324676EB25C15F4600EA855B /* MXMemory.swift */,
 				32322A491E575F65005DD155 /* MXAllowedCertificates.h */,
 				32322A4A1E575F65005DD155 /* MXAllowedCertificates.m */,
 				C6FE1EEF1E65C4F7008587E4 /* MXAnalyticsDelegate.h */,
-				3283F7761EAF30F700C1688C /* MXBugReportRestClient.h */,
-				3283F7771EAF30F700C1688C /* MXBugReportRestClient.m */,
+				32B090E1261F709B002924AA /* MXAsyncTaskQueue.swift */,
 				32A9E8211EF4026E0081358A /* MXBackgroundModeHandler.h */,
-				32A9E8221EF4026E0081358A /* MXUIKitBackgroundModeHandler.h */,
-				32A9E8231EF4026E0081358A /* MXUIKitBackgroundModeHandler.m */,
-				3251D41E25AF01D7001E6E77 /* MXUIKitApplicationStateService.swift */,
-				32A9770221626E5C00919CC0 /* MXServerNotices.h */,
-				32A9770321626E5C00919CC0 /* MXServerNotices.m */,
 				B11976FD236B27220001EC86 /* MXBackgroundTask.h */,
-				B17B2BDA2369FC81009D6650 /* MXUIKitBackgroundTask.h */,
-				B17B2BDB2369FC81009D6650 /* MXUIKitBackgroundTask.m */,
 				B1798D0424091A0100308A8F /* MXBase64Tools.h */,
 				B1798D0524091A0100308A8F /* MXBase64Tools.m */,
+				3283F7761EAF30F700C1688C /* MXBugReportRestClient.h */,
+				3283F7771EAF30F700C1688C /* MXBugReportRestClient.m */,
+				322DB456212EB8E600F4EFE9 /* MXHTTPClient_Private.h */,
+				320DFDD719DD99B60068622A /* MXHTTPClient.h */,
+				320DFDD819DD99B60068622A /* MXHTTPClient.m */,
+				32CAB1091A925B41008C5BB9 /* MXHTTPOperation.h */,
+				32CAB10A1A925B41008C5BB9 /* MXHTTPOperation.m */,
+				327E37B41A974F75007F026F /* MXLogger.h */,
+				327E37B51A974F75007F026F /* MXLogger.m */,
+				189CC07F265E361500BE1FD8 /* MXLog.h */,
+				189CC080265E361500BE1FD8 /* MXLog.swift */,
+				F03EF5021DF01596009DF592 /* MXLRUCache.h */,
+				F03EF5031DF01596009DF592 /* MXLRUCache.m */,
+				324676EB25C15F4600EA855B /* MXMemory.swift */,
+				32A9770221626E5C00919CC0 /* MXServerNotices.h */,
+				32A9770321626E5C00919CC0 /* MXServerNotices.m */,
 				32A9F8DC244720B10069C65B /* MXThrottler.h */,
 				32A9F8DD244720B10069C65B /* MXThrottler.m */,
+				329FB1771A0A74B100A5E88E /* MXTools.h */,
+				329FB1781A0A74B100A5E88E /* MXTools.m */,
+				3251D41E25AF01D7001E6E77 /* MXUIKitApplicationStateService.swift */,
+				32A9E8221EF4026E0081358A /* MXUIKitBackgroundModeHandler.h */,
+				32A9E8231EF4026E0081358A /* MXUIKitBackgroundModeHandler.m */,
+				B17B2BDA2369FC81009D6650 /* MXUIKitBackgroundTask.h */,
+				B17B2BDB2369FC81009D6650 /* MXUIKitBackgroundTask.m */,
 			);
 			path = Utils;
 			sourceTree = "<group>";
@@ -4059,6 +4067,7 @@
 				B146D4E621A5AEF200D8C2C6 /* MXRealmMediaScan.h in Headers */,
 				32581DE823C8C0C900832EAA /* MXUserTrustLevel.h in Headers */,
 				B146D4EF21A5AF7F00D8C2C6 /* MXRealmEventScan.h in Headers */,
+				189CC081265E361C00BE1FD8 /* MXLog.h in Headers */,
 				B146D49C21A5A04300D8C2C6 /* MXMediaScanStoreDelegate.h in Headers */,
 				32322A4B1E575F65005DD155 /* MXAllowedCertificates.h in Headers */,
 				B14EECD72577DE7A00448735 /* MXLoginSSOIdentityProvider.h in Headers */,
@@ -4637,6 +4646,7 @@
 				B14EF33A2397E90400758AF0 /* MXLoginPolicyData.h in Headers */,
 				B14EF33B2397E90400758AF0 /* MXInvite3PID.h in Headers */,
 				B14EF33C2397E90400758AF0 /* MXFileStore.h in Headers */,
+				189CC082265E361D00BE1FD8 /* MXLog.h in Headers */,
 				B14EF33D2397E90400758AF0 /* MXRealmMediaScanStore.h in Headers */,
 				B14EF3402397E90400758AF0 /* MXKeyBackupVersionTrust.h in Headers */,
 				320B3935239FA56900BE2C06 /* MXKeyVerificationByDMRequest.h in Headers */,
@@ -5212,6 +5222,7 @@
 				C602B58E1F22A8D700B67D87 /* MXImage.swift in Sources */,
 				B105CD9D261E0B70006EB204 /* MXSpaceChildrenSummary.swift in Sources */,
 				32A9F8E0244720B10069C65B /* MXThrottler.m in Sources */,
+				189CC083265E362600BE1FD8 /* MXLog.swift in Sources */,
 				EC8A53E425B1BCC6004E0802 /* MXThirdPartyUsersResponse.m in Sources */,
 				3295401A216385F100E300FC /* MXServerNoticeContent.m in Sources */,
 				B19A30A82404257700FB6F35 /* MXSASKeyVerificationStart.m in Sources */,
@@ -5699,6 +5710,7 @@
 				B14EF2872397E90400758AF0 /* MXPusherData.m in Sources */,
 				324DD2A3246AE1EF00377005 /* MXEncryptedSecretContent.m in Sources */,
 				EC8A53B625B1BC77004E0802 /* MXCallHangupEventContent.m in Sources */,
+				189CC084265E362700BE1FD8 /* MXLog.swift in Sources */,
 				B14EF2882397E90400758AF0 /* MXOlmDevice.m in Sources */,
 				B14766BA23D9D9420091F721 /* MXUsersTrustLevelSummary.m in Sources */,
 				B14EF2892397E90400758AF0 /* MXKeyBackupPassword.m in Sources */,
@@ -5868,7 +5880,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
 				MACOSX_DEPLOYMENT_TARGET = 10.10;
 				MTL_ENABLE_DEBUG_INFO = YES;
 				ONLY_ACTIVE_ARCH = YES;
@@ -5923,7 +5935,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
 				MACOSX_DEPLOYMENT_TARGET = 10.10;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				SDKROOT = "";
@@ -5948,11 +5960,9 @@
 				DYLIB_CURRENT_VERSION = 1;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
 				GCC_PREPROCESSOR_DEFINITIONS = "$(inherited)";
-				GCC_TREAT_WARNINGS_AS_ERRORS = YES;
 				HEADER_SEARCH_PATHS = "$(inherited)";
 				INFOPLIST_FILE = MatrixSDK/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
-				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
 				LIBRARY_SEARCH_PATHS = "$(inherited)";
 				OTHER_LDFLAGS = "$(inherited)";
@@ -5976,11 +5986,9 @@
 				DYLIB_CURRENT_VERSION = 1;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
 				GCC_PREPROCESSOR_DEFINITIONS = "$(inherited)";
-				GCC_TREAT_WARNINGS_AS_ERRORS = YES;
 				HEADER_SEARCH_PATHS = "$(inherited)";
 				INFOPLIST_FILE = MatrixSDK/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
-				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
 				LIBRARY_SEARCH_PATHS = "$(inherited)";
 				OTHER_LDFLAGS = "$(inherited)";
@@ -6055,14 +6063,11 @@
 				DYLIB_CURRENT_VERSION = 1;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
 				GCC_PREPROCESSOR_DEFINITIONS = "$(inherited)";
-				GCC_TREAT_WARNINGS_AS_ERRORS = YES;
 				HEADER_SEARCH_PATHS = "$(inherited)";
 				INFOPLIST_FILE = "$(SRCROOT)/MatrixSDK/Info.plist";
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
-				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
 				LIBRARY_SEARCH_PATHS = "$(inherited)";
-				MACOSX_DEPLOYMENT_TARGET = 10.10;
 				OTHER_LDFLAGS = "$(inherited)";
 				PRODUCT_BUNDLE_IDENTIFIER = org.matrix.MatrixSDK;
 				PRODUCT_NAME = MatrixSDK;
@@ -6085,14 +6090,11 @@
 				DYLIB_CURRENT_VERSION = 1;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
 				GCC_PREPROCESSOR_DEFINITIONS = "$(inherited)";
-				GCC_TREAT_WARNINGS_AS_ERRORS = YES;
 				HEADER_SEARCH_PATHS = "$(inherited)";
 				INFOPLIST_FILE = "$(SRCROOT)/MatrixSDK/Info.plist";
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
-				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
 				LIBRARY_SEARCH_PATHS = "$(inherited)";
-				MACOSX_DEPLOYMENT_TARGET = 10.10;
 				OTHER_LDFLAGS = "$(inherited)";
 				PRODUCT_BUNDLE_IDENTIFIER = org.matrix.MatrixSDK;
 				PRODUCT_NAME = MatrixSDK;
@@ -6123,7 +6125,6 @@
 				INFOPLIST_FILE = MatrixSDKTests/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/../Frameworks";
 				LIBRARY_SEARCH_PATHS = "$(inherited)";
-				MACOSX_DEPLOYMENT_TARGET = 10.10;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				PRODUCT_BUNDLE_IDENTIFIER = "matrix.org.MatrixSDKTests-macOS";
@@ -6154,7 +6155,6 @@
 				INFOPLIST_FILE = MatrixSDKTests/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/../Frameworks";
 				LIBRARY_SEARCH_PATHS = "$(inherited)";
-				MACOSX_DEPLOYMENT_TARGET = 10.10;
 				MTL_FAST_MATH = YES;
 				PRODUCT_BUNDLE_IDENTIFIER = "matrix.org.MatrixSDKTests-macOS";
 				PRODUCT_NAME = "$(TARGET_NAME)";
