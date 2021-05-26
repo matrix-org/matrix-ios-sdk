@@ -15,7 +15,7 @@
 //
 
 #import "MXCachedSyncResponse.h"
-#import "MXJSONModels.h"
+#import "MXSyncResponse.h"
 
 @implementation MXCachedSyncResponse
 

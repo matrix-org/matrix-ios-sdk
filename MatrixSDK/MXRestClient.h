@@ -44,6 +44,8 @@
 
 @class MXThirdpartyProtocolsResponse;
 @class MXThirdPartyUsersResponse;
+@class MXSyncResponse;
+@class MXDeviceListResponse;
 
 #pragma mark - Constants definitions
 /**
