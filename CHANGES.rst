@@ -14,10 +14,12 @@ Changes to be released in next version
  * MXCrypto: eventDeviceInfo: Do not synchronise anymore the operation with the decryption queue.
  * MXRoomSummary: Improve reset resetLastMessage to avoid pagination loop and to limit number of decryptions.
  * MXSession: Limit the number of decryptions when processing an initial sync (vector-im/element-ios/issues/4307).
+ * Adapt sync response models to new sync API (vector-im/element-ios/issues/4309).
 
 🐛 Bugfix
  * MXRoomSummary: Fix decryption of the last message when it is edited (vector-im/element-ios/issues/4322).
  * MXCall: Check remote partyId for select_answer events (vector-im/element-ios/issues/4337).
+ * MXSession: Fix used initial sync cache.
 
 ⚠️ API Changes
  * MXRoom: MXRoom.outgoingMessages does not decrypt messages anymore. Use MXSession.decryptEvents to get decrypted events.

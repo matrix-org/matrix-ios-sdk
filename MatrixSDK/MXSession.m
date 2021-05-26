@@ -1270,12 +1270,12 @@ typedef void (^MXOnResumeDone)(void);
     __block MXSyncResponse *syncResponse;
     __block BOOL useLiveResponse = YES;
 
-    if (!self.isEventStreamInitialised && self.initialSyncResponseCache.outdatedSyncResponseIds.count > 0)
+    if (!self.isEventStreamInitialised && self.initialSyncResponseCache.syncResponseIds.count > 0)
     {
         //  use the sync response from the cache
         dispatch_group_enter(initialSyncDispatchGroup);
         
-        NSString *responseId = self.initialSyncResponseCache.outdatedSyncResponseIds.lastObject;
+        NSString *responseId = self.initialSyncResponseCache.syncResponseIds.lastObject;
         MXCachedSyncResponse *cachedResponse = [self.initialSyncResponseCache syncResponseWithId:responseId
                                                                                            error:nil];
         

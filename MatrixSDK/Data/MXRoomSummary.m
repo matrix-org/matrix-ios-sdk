@@ -27,6 +27,8 @@
 #import "MXEventRelations.h"
 #import "MXEventReplace.h"
 
+#import "MXRoomSync.h"
+
 #import <Security/Security.h>
 #import <CommonCrypto/CommonCryptor.h>
 

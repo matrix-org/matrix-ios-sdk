@@ -33,6 +33,8 @@
 
 #import "MXError.h"
 
+#import "MXRoomSync.h"
+
 NSString *const kMXRoomDidFlushDataNotification = @"kMXRoomDidFlushDataNotification";
 NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotification";
 

@@ -488,19 +488,21 @@ public enum MXBackgroundSyncServiceError: Error {
     
     private func handleSyncResponse(_ syncResponse: MXSyncResponse, syncToken: String) {
         NSLog("[MXBackgroundSyncService] handleSyncResponse: Received %tu joined rooms, %tu invited rooms, %tu left rooms, %tu toDevice events.",
-              syncResponse.rooms.join.count,
-              syncResponse.rooms.invite.count,
-              syncResponse.rooms.leave.count,
-              syncResponse.toDevice.events?.count ?? 0)
+              syncResponse.rooms?.join?.count ?? 0,
+              syncResponse.rooms?.invite?.count ?? 0,
+              syncResponse.rooms?.leave?.count ?? 0,
+              syncResponse.toDevice?.events.count ?? 0)
         
-        pushRulesManager.handleAccountData(syncResponse.accountData)
+        if let accountData = syncResponse.accountData {
+            pushRulesManager.handleAccountData(accountData)
+        }
         syncResponseStoreManager.updateStore(with: syncResponse, syncToken: syncToken)
         
         for event in syncResponse.toDevice?.events ?? [] {
             handleToDeviceEvent(event)
         }
         
-        NSLog("[MXBackgroundSyncService] handleSyncResponse: Next sync token: \(syncResponse.nextBatch ?? "nil")")
+        NSLog("[MXBackgroundSyncService] handleSyncResponse: Next sync token: \(syncResponse.nextBatch)")
     }
     
     private func handleToDeviceEvent(_ event: MXEvent) {
