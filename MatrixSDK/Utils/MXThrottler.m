@@ -60,7 +60,7 @@ NSUInteger count = 0;
     // Cancel any existing work item if it has not yet executed
     if (workItem)
     {
-        NSLog(@"[MXThrottler] throttle: Cancel previous block");
+        MXLogDebug(@"[MXThrottler] throttle: Cancel previous block");
         workItem = nil;
     }
     
@@ -98,7 +98,7 @@ NSUInteger count = 0;
     }
     else
     {
-        NSLog(@"[MXThrottler] throttle: Delay block by %@s", @(delay));
+        MXLogDebug(@"[MXThrottler] throttle: Delay block by %@s", @(delay));
         
         isTimerArmed = YES;
         dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(delay * NSEC_PER_SEC)), _queue, ^{

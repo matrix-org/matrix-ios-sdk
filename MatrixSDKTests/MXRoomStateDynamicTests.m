@@ -395,7 +395,7 @@
                 __block NSUInteger eventCount = 0;
                 [room listenToEventsOfTypes:nil onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
 
-                    NSLog(@"eventCount: %tu - %@", eventCount, event);
+                    MXLogDebug(@"eventCount: %tu - %@", eventCount, event);
                     
                     MXRoomMember *beforeEventAliceMember = [roomstate.members memberWithUserId:aliceRestClient.credentials.userId];
                     MXRoomMember *aliceMember = [room.state.members memberWithUserId:aliceRestClient.credentials.userId];

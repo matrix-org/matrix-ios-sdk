@@ -18,6 +18,8 @@
 
 #import "MXTaskProfile_Private.h"
 
+#import "MXLog.h"
+
 @interface MXBaseProfiler ()
 {
     NSMutableArray<MXTaskProfile *> *taskProfiles;
@@ -54,7 +56,7 @@
 {
     [taskProfile markAsCompleted];
     
-    NSLog(@"[MXBaseProfiler] Task %@ - %@ for %@ units completed in %.3fms%@",
+    MXLogDebug(@"[MXBaseProfiler] Task %@ - %@ for %@ units completed in %.3fms%@",
           taskProfile.category,
           taskProfile.name,
           @(taskProfile.units),

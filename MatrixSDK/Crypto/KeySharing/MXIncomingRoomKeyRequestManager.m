@@ -77,7 +77,7 @@ NSTimeInterval kFixMissingUserInRoomRateLimit = 3600;
     NSString *action;
     MXJSONModelSetString(action, event.content[@"action"]);
 
-    NSLog(@"[MXIncomingRoomKeyRequestManager] onRoomKeyRequestEvent: action: %@ (id %@)", action, event.content[@"request_id"]);
+    MXLogDebug(@"[MXIncomingRoomKeyRequestManager] onRoomKeyRequestEvent: action: %@ (id %@)", action, event.content[@"request_id"]);
 
     if ([action isEqualToString:@"request"])
     {
@@ -137,7 +137,7 @@ NSTimeInterval kFixMissingUserInRoomRateLimit = 3600;
     MXJSONModelSetString(roomId, body[@"room_id"]);
     MXJSONModelSetString(alg, body[@"algorithm"]);
 
-    NSLog(@"[MXIncomingRoomKeyRequestManager] processReceivedRoomKeyRequest: m.room_key_request from %@:%@ for %@ / %@ (id %@)", userId, deviceId, roomId, body[@"session_id"], req.requestId);
+    MXLogDebug(@"[MXIncomingRoomKeyRequestManager] processReceivedRoomKeyRequest: m.room_key_request from %@:%@ for %@ / %@ (id %@)", userId, deviceId, roomId, body[@"session_id"], req.requestId);
 
     if (![userId isEqualToString:crypto.matrixRestClient.credentials.userId])
     {
@@ -153,14 +153,14 @@ NSTimeInterval kFixMissingUserInRoomRateLimit = 3600;
         id<MXEncrypting> encryptor = [crypto getRoomEncryptor:roomId algorithm:alg];
         if (!encryptor)
         {
-            NSLog(@"[MXIncomingRoomKeyRequestManager] room key request for unknown alg %@ in room %@", alg, roomId);
+            MXLogDebug(@"[MXIncomingRoomKeyRequestManager] room key request for unknown alg %@ in room %@", alg, roomId);
             return;
         }
         
         [encryptor reshareKey:sessionId withUser:userId andDevice:deviceId senderKey:senderKey success:^{
             
         } failure:^(NSError *error) {
-            NSLog(@"[MXIncomingRoomKeyRequestManager] reshareKey failed. Error: %@", error);
+            MXLogDebug(@"[MXIncomingRoomKeyRequestManager] reshareKey failed. Error: %@", error);
             
             if ([error.domain isEqualToString:MXEncryptingErrorDomain]
                 && (error.code == MXEncryptingErrorUnknownDeviceCode
@@ -180,13 +180,13 @@ NSTimeInterval kFixMissingUserInRoomRateLimit = 3600;
     id<MXDecrypting> decryptor = [crypto getRoomDecryptor:roomId algorithm:alg];
     if (!decryptor)
     {
-        NSLog(@"[MXIncomingRoomKeyRequestManager] room key request for unknown alg %@ in room %@", alg, roomId);
+        MXLogDebug(@"[MXIncomingRoomKeyRequestManager] room key request for unknown alg %@ in room %@", alg, roomId);
         return;
     }
 
     if (![decryptor hasKeysForKeyRequest:req])
     {
-        NSLog(@"[MXIncomingRoomKeyRequestManager] room key request for unknown session %@ / %@", roomId, body[@"session_id"]);
+        MXLogDebug(@"[MXIncomingRoomKeyRequestManager] room key request for unknown session %@ / %@", roomId, body[@"session_id"]);
         return;
     }
 
@@ -194,7 +194,7 @@ NSTimeInterval kFixMissingUserInRoomRateLimit = 3600;
     MXDeviceInfo *device = [crypto.store deviceWithDeviceId:deviceId forUser:userId];
     if (device && device.trustLevel.isVerified)
     {
-        NSLog(@"[MXIncomingRoomKeyRequestManager] device is already verified: sharing keys");
+        MXLogDebug(@"[MXIncomingRoomKeyRequestManager] device is already verified: sharing keys");
         [decryptor shareKeysWithDevice:req success:nil failure:nil];
         return;
     }
@@ -202,7 +202,7 @@ NSTimeInterval kFixMissingUserInRoomRateLimit = 3600;
     // check if we already have this request
     if ([crypto.store incomingRoomKeyRequestWithRequestId:requestId fromUser:userId andDevice:deviceId])
     {
-        NSLog(@"[MXIncomingRoomKeyRequestManager] Already have this key request, ignoring");
+        MXLogDebug(@"[MXIncomingRoomKeyRequestManager] Already have this key request, ignoring");
         return;
     }
     
@@ -233,16 +233,16 @@ NSTimeInterval kFixMissingUserInRoomRateLimit = 3600;
     NSString *deviceId = cancellation.deviceId;
     NSString *requestId = cancellation.requestId;
 
-    NSLog(@"[MXIncomingRoomKeyRequestManager] processReceivedRoomKeyRequestCancellation: m.room_key_request cancellation for %@:%@ (id %@)", userId, deviceId, requestId);
+    MXLogDebug(@"[MXIncomingRoomKeyRequestManager] processReceivedRoomKeyRequestCancellation: m.room_key_request cancellation for %@:%@ (id %@)", userId, deviceId, requestId);
 
     if (![crypto.store incomingRoomKeyRequestWithRequestId:requestId fromUser:userId andDevice:deviceId])
     {
         // Do not notify cancellations already notified
-        NSLog(@"[MXIncomingRoomKeyRequestManager] handleKeyRequest: Already cancelled this key request, ignoring");
+        MXLogDebug(@"[MXIncomingRoomKeyRequestManager] handleKeyRequest: Already cancelled this key request, ignoring");
         return;
     }
 
-    NSLog(@"[MXIncomingRoomKeyRequestManager] Forgetting room key request");
+    MXLogDebug(@"[MXIncomingRoomKeyRequestManager] Forgetting room key request");
     [self removePendingKeyRequest:requestId fromUser:userId andDevice:deviceId];
 
     // Broadcast the room key request cancelation
@@ -295,11 +295,11 @@ NSTimeInterval kFixMissingUserInRoomRateLimit = 3600;
         && [[NSDate date] timeIntervalSinceDate:lastFixDate] < kFixMissingUserInRoomRateLimit)
     {
         // To early to retry
-        NSLog(@"[MXIncomingRoomKeyRequestManager] fixMissingUser: %@ inRoom: %@ already requested at %@", userId, roomId, lastFixDate);
+        MXLogDebug(@"[MXIncomingRoomKeyRequestManager] fixMissingUser: %@ inRoom: %@ already requested at %@", userId, roomId, lastFixDate);
         return;
     }
     
-    NSLog(@"[MXIncomingRoomKeyRequestManager] fixMissingUser: %@ inRoom: %@", userId, roomId);
+    MXLogDebug(@"[MXIncomingRoomKeyRequestManager] fixMissingUser: %@ inRoom: %@", userId, roomId);
     roomsFixedForMissingUser[roomId] = [NSDate date];
     
     // Reset the flag

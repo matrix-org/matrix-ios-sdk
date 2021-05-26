@@ -281,7 +281,7 @@ FOUNDATION_EXPORT NSString *const kMXToolsRegexStringForMatrixGroupIdentifier;
 #define MXStrongifyAndReturnIfNil(var) \
     if (!weak##var) \
     { \
-        NSLog(@"[MXStrongifyAndReturnIfNil] Released reference at %@:%d", @(__FILE__).lastPathComponent, __LINE__); \
+        MXLogWarning(@"[MXStrongifyAndReturnIfNil] Released reference at %@:%d", @(__FILE__).lastPathComponent, __LINE__); \
         return; \
     } \
     typeof(var) var = weak##var
@@ -297,7 +297,7 @@ FOUNDATION_EXPORT NSString *const kMXToolsRegexStringForMatrixGroupIdentifier;
 #define MXStrongifyAndReturnValueIfNil(var, value) \
     if (!weak##var) \
     { \
-        NSLog(@"[MXStrongifyAndReturnIfNil] Released reference at %@:%d", @(__FILE__).lastPathComponent, __LINE__); \
+        MXLogWarning(@"[MXStrongifyAndReturnIfNil] Released reference at %@:%d", @(__FILE__).lastPathComponent, __LINE__); \
         return value; \
     } \
     typeof(var) var = weak##var

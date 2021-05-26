@@ -68,7 +68,7 @@ static NSString* const kMXLoginFlowTypeKey = @"type";
         }
         else
         {
-            NSLog(@"[MXPublicRoom] Warning: room id leak for %@", self.roomId);
+            MXLogDebug(@"[MXPublicRoom] Warning: room id leak for %@", self.roomId);
             displayname = self.roomId;
         }
     }
@@ -375,7 +375,7 @@ NSString *const kMXRoomTagServerNotice = @"m.server_notice";
             // Do some cleaning if the order is a number (and do nothing if the order is a string)
             if ([order isKindOfClass:NSNumber.class])
             {
-                NSLog(@"[MXRoomTag] Warning: the room tag order is an number value not a string in this event: %@", event);
+                MXLogDebug(@"[MXRoomTag] Warning: the room tag order is an number value not a string in this event: %@", event);
 
                 NSNumberFormatter *formatter = [[NSNumberFormatter alloc] init];
                 [formatter setMaximumFractionDigits:16];

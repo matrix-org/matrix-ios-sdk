@@ -41,7 +41,7 @@ const struct MXSecretStorageKeyAlgorithm MXSecretStorageKeyAlgorithm = {
     
     if (![algorithm isEqualToString:MXSecretStorageKeyAlgorithm.aesHmacSha2])
     {
-        NSLog(@"[MXSecretStorageKeyContent] modelFromJSON: ERROR: Unsupported algorithm: %@", JSONDictionary);
+        MXLogDebug(@"[MXSecretStorageKeyContent] modelFromJSON: ERROR: Unsupported algorithm: %@", JSONDictionary);
         return nil;
     }
     

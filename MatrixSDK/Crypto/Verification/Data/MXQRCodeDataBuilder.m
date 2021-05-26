@@ -18,6 +18,8 @@
 
 #import "MXBase64Tools.h"
 
+#import "MXLog.h"
+
 static NSUInteger const kKeyBytesCount = 32;
 static NSUInteger const kSharedSecretBytesCount = 8;
 
@@ -33,19 +35,19 @@ static NSUInteger const kSharedSecretBytesCount = 8;
 {
     if (![self isKeyValid:firstKey])
     {
-        NSLog(@"[MXQRCodeDataBuilder] buildQRCodeDataWithVerificationMode, First key is invalid");
+        MXLogDebug(@"[MXQRCodeDataBuilder] buildQRCodeDataWithVerificationMode, First key is invalid");
         return nil;
     }
     
     if (![self isKeyValid:secondKey])
     {
-        NSLog(@"[MXQRCodeDataBuilder] buildQRCodeDataWithVerificationMode, Second key is invalid");
+        MXLogDebug(@"[MXQRCodeDataBuilder] buildQRCodeDataWithVerificationMode, Second key is invalid");
         return nil;
     }
     
     if (![self isSharedSecretValid:sharedSecret])
     {
-        NSLog(@"[MXQRCodeDataBuilder] buildQRCodeDataWithVerificationMode, Shared secret is invalid");
+        MXLogDebug(@"[MXQRCodeDataBuilder] buildQRCodeDataWithVerificationMode, Shared secret is invalid");
         return nil;
     }
     

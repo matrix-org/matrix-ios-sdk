@@ -438,7 +438,7 @@
                     [room2LiveTimeline paginate:5 direction:MXTimelineDirectionBackwards onlyFromStore:NO complete:^() {
 
                         // Log room2 to keep a ref on it up to here
-                        NSLog(@"%@", room2);
+                        MXLogDebug(@"%@", room2);
 
                         [room2LiveTimeline paginate:100 direction:MXTimelineDirectionBackwards onlyFromStore:NO complete:^() {
 
@@ -538,7 +538,7 @@
                         [room2liveTimeline paginate:5 direction:MXTimelineDirectionBackwards onlyFromStore:NO complete:^() {
 
                             // Log room2 to keep a ref on it up to here
-                            NSLog(@"%@", room2);
+                            MXLogDebug(@"%@", room2);
                             
                             [room2liveTimeline paginate:100 direction:MXTimelineDirectionBackwards onlyFromStore:NO complete:^() {
 

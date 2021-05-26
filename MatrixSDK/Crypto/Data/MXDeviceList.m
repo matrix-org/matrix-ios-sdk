@@ -93,7 +93,7 @@
                                            NSDictionary<NSString* /* userId*/, MXCrossSigningInfo*> *crossSigningKeysMap))success
                          failure:(void (^)(NSError *error))failure
 {
-    NSLog(@"[MXDeviceList] downloadKeys(forceDownload: %d) for %tu users", forceDownload, userIds.count);
+    MXLogDebug(@"[MXDeviceList] downloadKeys(forceDownload: %d) for %tu users", forceDownload, userIds.count);
 
     NSMutableArray *usersToDownload = [NSMutableArray array];
     BOOL doANewQuery = NO;
@@ -102,7 +102,7 @@
     {
         if (![MXTools isMatrixUserIdentifier:userId])
         {
-            NSLog(@"[MXDeviceList] downloadKeys: ERROR: Ignore malformed user id: %@", userId);
+            MXLogDebug(@"[MXDeviceList] downloadKeys: ERROR: Ignore malformed user id: %@", userId);
             continue;
         }
 
@@ -122,7 +122,7 @@
         }
         else
         {
-            NSLog(@"[MXDeviceList] downloadKeys: Skip user %@. trackingStatus: %@", userId, @(trackingStatus));
+            MXLogDebug(@"[MXDeviceList] downloadKeys: Skip user %@. trackingStatus: %@", userId, @(trackingStatus));
         }
     }
 
@@ -130,7 +130,7 @@
 
     if (usersToDownload.count)
     {
-        NSLog(@"[MXDeviceList] downloadKeys for actually %tu users: %@", usersToDownload.count, usersToDownload);
+        MXLogDebug(@"[MXDeviceList] downloadKeys for actually %tu users: %@", usersToDownload.count, usersToDownload);
 
         for (NSString *userId in usersToDownload)
         {
@@ -146,7 +146,7 @@
             MXStrongifyAndReturnIfNil(self);
             MXStrongifyAndReturnIfNil(operation);
 
-            NSLog(@"[MXDeviceList] downloadKeys (operation: %p) -> DONE", operation);
+            MXLogDebug(@"[MXDeviceList] downloadKeys (operation: %p) -> DONE", operation);
 
             for (NSString *userId in succeededUserIds)
             {
@@ -155,7 +155,7 @@
                 // ignore the completion of the first one.
                 if (self->keyDownloadsInProgressByUser[userId] != operation)
                 {
-                    NSLog(@"[MXDeviceList] downloadKeys: Another update (operation: %p) in the queue for %@ - not marking up-to-date", self->keyDownloadsInProgressByUser[userId], userId);
+                    MXLogDebug(@"[MXDeviceList] downloadKeys: Another update (operation: %p) in the queue for %@ - not marking up-to-date", self->keyDownloadsInProgressByUser[userId], userId);
                     continue;
                 }
                 [self->keyDownloadsInProgressByUser removeObjectForKey:userId];
@@ -171,7 +171,7 @@
 
             if (failedUserIds.count)
             {
-                NSLog(@"[MXDeviceList] downloadKeys. Error updating device keys for users %@", failedUserIds);
+                MXLogDebug(@"[MXDeviceList] downloadKeys. Error updating device keys for users %@", failedUserIds);
 
                 for (NSString *userId in failedUserIds)
                 {
@@ -213,19 +213,19 @@
 
         if (doANewQuery || !currentQueryPool)
         {
-            NSLog(@"[MXDeviceList] downloadKeys: waiting for next key query. Operation: %p", operation);
+            MXLogDebug(@"[MXDeviceList] downloadKeys: waiting for next key query. Operation: %p", operation);
 
             [self startOrQueueDeviceQuery:operation];
         }
         else
         {
-            NSLog(@"[MXDeviceList] downloadKeys: waiting for in-flight query to complete. Operation: %p", operation);
+            MXLogDebug(@"[MXDeviceList] downloadKeys: waiting for in-flight query to complete. Operation: %p", operation);
             [operation addToPool:currentQueryPool];
         }
     }
     else
     {
-        NSLog(@"[MXDeviceList] downloadKeys: already have all necessary keys");
+        MXLogDebug(@"[MXDeviceList] downloadKeys: already have all necessary keys");
         if (success)
         {
             success([self devicesForUsers:userIds],
@@ -262,7 +262,7 @@
 {
     if (![MXTools isMatrixUserIdentifier:userId])
     {
-        NSLog(@"[MXDeviceList] startTrackingDeviceList: ERROR: Ignore malformed user id: %@", userId);
+        MXLogDebug(@"[MXDeviceList] startTrackingDeviceList: ERROR: Ignore malformed user id: %@", userId);
         return;
     }
 
@@ -270,7 +270,7 @@
 
     if (!trackingStatus)
     {
-        NSLog(@"[MXDeviceList] Now tracking device list for %@", userId);
+        MXLogDebug(@"[MXDeviceList] Now tracking device list for %@", userId);
         deviceTrackingStatus[userId] = @(MXDeviceTrackingStatusPendingDownload);
     }
     // we don't yet persist the tracking status, since there may be a lot
@@ -284,7 +284,7 @@
 
     if (trackingStatus)
     {
-        NSLog(@"[MXDeviceList] No longer tracking device list for %@", userId);
+        MXLogDebug(@"[MXDeviceList] No longer tracking device list for %@", userId);
         deviceTrackingStatus[userId] = @(MXDeviceTrackingStatusNotTracked);
     }
     // we don't yet persist the tracking status, since there may be a lot
@@ -298,7 +298,7 @@
 
     if (trackingStatus)
     {
-        NSLog(@"[MXDeviceList] Marking device list outdated for %@", userId);
+        MXLogDebug(@"[MXDeviceList] Marking device list outdated for %@", userId);
         deviceTrackingStatus[userId] = @(MXDeviceTrackingStatusPendingDownload);
     }
     // we don't yet persist the tracking status, since there may be a lot
@@ -334,9 +334,9 @@
     if (users.count)
     {
         [self downloadKeys:users forceDownload:NO success:^(MXUsersDevicesMap<MXDeviceInfo *> *usersDevicesInfoMap, NSDictionary<NSString *,MXCrossSigningInfo *> *crossSigningKeysMap) {
-            NSLog(@"[MXDeviceList] refreshOutdatedDeviceLists (users: %tu): %@", usersDevicesInfoMap.userIds.count, usersDevicesInfoMap.userIds);
+            MXLogDebug(@"[MXDeviceList] refreshOutdatedDeviceLists (users: %tu): %@", usersDevicesInfoMap.userIds.count, usersDevicesInfoMap.userIds);
         } failure:^(NSError *error) {
-            NSLog(@"[MXDeviceList] refreshOutdatedDeviceLists: ERROR updating device keys for users %@", users);
+            MXLogDebug(@"[MXDeviceList] refreshOutdatedDeviceLists: ERROR updating device keys for users %@", users);
         }];
     }
 }
@@ -366,7 +366,7 @@
         }
     }
 
-    NSLog(@"[MXDeviceList] devicesForUsers: %@", usersDevicesInfoMap);
+    MXLogDebug(@"[MXDeviceList] devicesForUsers: %@", usersDevicesInfoMap);
 
     return usersDevicesInfoMap;
 }
@@ -428,7 +428,7 @@
 
 - (void)startCurrentPoolQuery
 {
-    NSLog(@"[MXDeviceList] startCurrentPoolQuery(pool: %p) (users: %tu): %@", currentQueryPool, currentQueryPool.userIds.count, currentQueryPool.userIds);
+    MXLogDebug(@"[MXDeviceList] startCurrentPoolQuery(pool: %p) (users: %tu): %@", currentQueryPool, currentQueryPool.userIds.count, currentQueryPool.userIds);
 
     if (currentQueryPool.userIds)
     {
@@ -439,7 +439,7 @@
         [currentQueryPool downloadKeys:token complete:^(NSDictionary<NSString *,NSDictionary *> *failedUserIds) {
             MXStrongifyAndReturnIfNil(self);
 
-            NSLog(@"[MXDeviceList] startCurrentPoolQuery(pool: %p) -> DONE. failedUserIds (users: %tu): %@", self->currentQueryPool, failedUserIds.count, failedUserIds);
+            MXLogDebug(@"[MXDeviceList] startCurrentPoolQuery(pool: %p) -> DONE. failedUserIds (users: %tu): %@", self->currentQueryPool, failedUserIds.count, failedUserIds);
 
             if (token)
             {

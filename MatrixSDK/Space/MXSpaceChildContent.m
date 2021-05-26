@@ -60,7 +60,7 @@ static NSString* const kOrderTextRegexPattern = @"[ -~]+";
     }
     else
     {
-        NSLog(@"[MXSpaceChildContent] JSONDictionary: order is not valid");
+        MXLogDebug(@"[MXSpaceChildContent] JSONDictionary: order is not valid");
     }
     
     if (self.via)

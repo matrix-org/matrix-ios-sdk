@@ -91,7 +91,7 @@
         if ([event.redacts isEqualToString:summary.lastMessageEventId])
         {
             [summary resetLastMessage:nil failure:^(NSError *error) {
-                NSLog(@"[MXRoomSummaryUpdater] updateRoomSummary: Cannot reset last message after redaction. Room: %@", summary.roomId);
+                MXLogDebug(@"[MXRoomSummaryUpdater] updateRoomSummary: Cannot reset last message after redaction. Room: %@", summary.roomId);
             } commit:YES];
         }
         return NO;
@@ -437,7 +437,7 @@
             && (!displayname || [displayname isEqualToString:_roomNameStringLocalizations.emptyRoom]))
         {
             // Data are missing to compute the display name
-            NSLog(@"[MXRoomSummaryUpdater] updateSummaryDisplayname: Warning: Computed an unexpected \"Empty Room\" name. memberCount: %@", @(memberCount));
+            MXLogDebug(@"[MXRoomSummaryUpdater] updateSummaryDisplayname: Warning: Computed an unexpected \"Empty Room\" name. memberCount: %@", @(memberCount));
             displayname = [self fixUnexpectedEmptyRoomDisplayname:memberCount session:session roomState:roomState];
         }
     }
@@ -477,24 +477,24 @@
         }
     }
 
-    NSLog(@"[MXRoomSummaryUpdater] fixUnexpectedEmptyRoomDisplayname: Found %@ loaded members for %@ known other members", @(otherMembers.count), @(memberCount - 1));
+    MXLogDebug(@"[MXRoomSummaryUpdater] fixUnexpectedEmptyRoomDisplayname: Found %@ loaded members for %@ known other members", @(otherMembers.count), @(memberCount - 1));
 
     switch (memberNames.count)
     {
         case 0:
-            NSLog(@"[MXRoomSummaryUpdater] fixUnexpectedEmptyRoomDisplayname: No luck");
+            MXLogDebug(@"[MXRoomSummaryUpdater] fixUnexpectedEmptyRoomDisplayname: No luck");
             displayname = _roomNameStringLocalizations.emptyRoom;
             break;
 
         case 1:
             if (memberCount == 2)
             {
-                NSLog(@"[MXRoomSummaryUpdater] fixUnexpectedEmptyRoomDisplayname: Fixed 1");
+                MXLogDebug(@"[MXRoomSummaryUpdater] fixUnexpectedEmptyRoomDisplayname: Fixed 1");
                 displayname = memberNames[0];
             }
             else
             {
-                NSLog(@"[MXRoomSummaryUpdater] fixUnexpectedEmptyRoomDisplayname: Half fixed 1");
+                MXLogDebug(@"[MXRoomSummaryUpdater] fixUnexpectedEmptyRoomDisplayname: Half fixed 1");
                 displayname = [NSString stringWithFormat:_roomNameStringLocalizations.moreThanTwoMembers,
                                memberNames[0],
                                @(memberCount - 1)];
@@ -504,14 +504,14 @@
         case 2:
             if (memberCount == 3)
             {
-                NSLog(@"[MXRoomSummaryUpdater] fixUnexpectedEmptyRoomDisplayname: Fixed 2");
+                MXLogDebug(@"[MXRoomSummaryUpdater] fixUnexpectedEmptyRoomDisplayname: Fixed 2");
                 displayname = [NSString stringWithFormat:_roomNameStringLocalizations.twoMembers,
                                memberNames[0],
                                memberNames[1]];
             }
             else
             {
-                NSLog(@"[MXRoomSummaryUpdater] fixUnexpectedEmptyRoomDisplayname: Half fixed 2");
+                MXLogDebug(@"[MXRoomSummaryUpdater] fixUnexpectedEmptyRoomDisplayname: Half fixed 2");
                 displayname = [NSString stringWithFormat:_roomNameStringLocalizations.moreThanTwoMembers,
                                memberNames[0],
                                @(memberCount - 2)];
@@ -519,7 +519,7 @@
             break;
 
         default:
-            NSLog(@"[MXRoomSummaryUpdater] fixUnexpectedEmptyRoomDisplayname: Fixed 3");
+            MXLogDebug(@"[MXRoomSummaryUpdater] fixUnexpectedEmptyRoomDisplayname: Fixed 3");
             displayname = [NSString stringWithFormat:_roomNameStringLocalizations.moreThanTwoMembers,
                            memberNames[0],
                            @(memberCount - 2)];

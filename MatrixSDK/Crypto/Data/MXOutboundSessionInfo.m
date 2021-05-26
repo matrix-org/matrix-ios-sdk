@@ -39,7 +39,7 @@
 
     if (_useCount >= rotationPeriodMsgs || sessionLifetime >= rotationPeriodMs)
     {
-        NSLog(@"[MXOutboundSessionInfo] Rotating megolm session after %tu messages, %tu ms", _useCount, sessionLifetime);
+        MXLogDebug(@"[MXOutboundSessionInfo] Rotating megolm session after %tu messages, %tu ms", _useCount, sessionLifetime);
         needsRotation = YES;
     }
 
@@ -52,7 +52,7 @@
     {
         if (![devicesInRoom deviceIdsForUser:userId])
         {
-            NSLog(@"[MXOutboundSessionInfo] Starting new session because we shared with %@",  userId);
+            MXLogDebug(@"[MXOutboundSessionInfo] Starting new session because we shared with %@",  userId);
             return YES;
         }
 
@@ -60,7 +60,7 @@
         {
             if (! [devicesInRoom objectForDevice:deviceId forUser:userId])
             {
-                NSLog(@"[MXOutboundSessionInfo] Starting new session because we shared with %@:%@", userId, deviceId);
+                MXLogDebug(@"[MXOutboundSessionInfo] Starting new session because we shared with %@:%@", userId, deviceId);
                 return YES;
             }
         }

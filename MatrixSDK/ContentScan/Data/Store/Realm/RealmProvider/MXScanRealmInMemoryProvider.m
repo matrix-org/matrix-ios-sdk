@@ -19,6 +19,8 @@
 #import "MXRealmEventScan.h"
 #import "MXRealmMediaScan.h"
 
+#import "MXLog.h"
+
 @interface MXScanRealmInMemoryProvider()
 
 @property (nonatomic, strong) RLMRealmConfiguration *realmConfiguration;
@@ -50,7 +52,7 @@
     
     if (error)
     {
-        NSLog(@"[MXScanRealmInMemoryProvider] realmForUser gets error: %@", error);
+        MXLogDebug(@"[MXScanRealmInMemoryProvider] realmForUser gets error: %@", error);
     }
     
     return realm;

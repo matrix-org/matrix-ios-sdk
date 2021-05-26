@@ -104,7 +104,7 @@ public enum MXBackgroundSyncServiceError: Error {
         // Process one request at a time
         let stopwatch = MXStopwatch()
         asyncTaskQueue.async { (taskCompleted) in
-            NSLog("[MXBackgroundSyncService] event: Start processing \(eventId) after waiting for \(stopwatch.readable())")
+            MXLog.debug("[MXBackgroundSyncService] event: Start processing \(eventId) after waiting for \(stopwatch.readable())")
             
             self._event(withEventId: eventId, inRoom: roomId) { response in
                 completion(response)
@@ -200,7 +200,7 @@ public enum MXBackgroundSyncServiceError: Error {
                         inRoom roomId: String,
                         allowSync: Bool = true,
                         completion: @escaping (MXResponse<MXEvent>) -> Void) {
-        NSLog("[MXBackgroundSyncService] fetchEvent: \(eventId). allowSync: \(allowSync)")
+        MXLog.debug("[MXBackgroundSyncService] fetchEvent: \(eventId). allowSync: \(allowSync)")
         
         // Check local stores on every request so that we use up-to-data data from the MXSession store
         if allowSync {
@@ -210,10 +210,10 @@ public enum MXBackgroundSyncServiceError: Error {
         /// Inline function to handle decryption failure
         func handleDecryptionFailure(withError error: Error?) {
             if allowSync {
-                NSLog("[MXBackgroundSyncService] fetchEvent: Launch a background sync.")
+                MXLog.debug("[MXBackgroundSyncService] fetchEvent: Launch a background sync.")
                 self.launchBackgroundSync(forEventId: eventId, roomId: roomId, completion: completion)
             } else {
-                NSLog("[MXBackgroundSyncService] fetchEvent: Do not sync anymore.")
+                MXLog.debug("[MXBackgroundSyncService] fetchEvent: Do not sync anymore.")
                 Queues.dispatchQueue.async {
                     completion(.failure(error ?? MXBackgroundSyncServiceError.decryptionFailure))
                 }
@@ -225,7 +225,7 @@ public enum MXBackgroundSyncServiceError: Error {
         func handleEncryption(forEvent event: MXEvent) {
             if !event.isEncrypted {
                 //  not encrypted, go on processing
-                NSLog("[MXBackgroundSyncService] fetchEvent: Event not encrypted.")
+                MXLog.debug("[MXBackgroundSyncService] fetchEvent: Event not encrypted.")
                 Queues.dispatchQueue.async {
                     completion(.success(event))
                 }
@@ -235,7 +235,7 @@ public enum MXBackgroundSyncServiceError: Error {
             //  encrypted
             if event.clear != nil {
                 //  already decrypted
-                NSLog("[MXBackgroundSyncService] fetchEvent: Event already decrypted.")
+                MXLog.debug("[MXBackgroundSyncService] fetchEvent: Event already decrypted.")
                 Queues.dispatchQueue.async {
                     completion(.success(event))
                 }
@@ -245,7 +245,7 @@ public enum MXBackgroundSyncServiceError: Error {
             //  should decrypt it first
             if canDecryptEvent(event) {
                 //  we have keys to decrypt the event
-                NSLog("[MXBackgroundSyncService] fetchEvent: Event needs to be decrpyted, and we have the keys to decrypt it.")
+                MXLog.debug("[MXBackgroundSyncService] fetchEvent: Event needs to be decrpyted, and we have the keys to decrypt it.")
                 
                 do {
                     try decryptEvent(event)
@@ -253,12 +253,12 @@ public enum MXBackgroundSyncServiceError: Error {
                         completion(.success(event))
                     }
                 } catch let error {
-                    NSLog("[MXBackgroundSyncService] fetchEvent: Decryption failed even crypto claimed it has the keys.")
+                    MXLog.debug("[MXBackgroundSyncService] fetchEvent: Decryption failed even crypto claimed it has the keys.")
                     handleDecryptionFailure(withError: error)
                 }
             } else {
                 //  we don't have keys to decrypt the event
-                NSLog("[MXBackgroundSyncService] fetchEvent: Event needs to be decrpyted, but we don't have the keys to decrypt it.")
+                MXLog.debug("[MXBackgroundSyncService] fetchEvent: Event needs to be decrpyted, but we don't have the keys to decrypt it.")
                 handleDecryptionFailure(withError: nil)
             }
         }
@@ -276,29 +276,29 @@ public enum MXBackgroundSyncServiceError: Error {
                 //?? store.event(withEventId: eventId, inRoom: roomId)
             
             if let event = event {
-                NSLog("[MXBackgroundSyncService] fetchEvent: We have the event in stores.")
+                MXLog.debug("[MXBackgroundSyncService] fetchEvent: We have the event in stores.")
                 //  cache this event
                 self.cachedEvents[eventId] = event
                 
                 //  handle encryption for this event
                 handleEncryption(forEvent: event)
             } else if allowSync {
-                NSLog("[MXBackgroundSyncService] fetchEvent: We don't have the event in stores. Launch a background sync to fetch it.")
+                MXLog.debug("[MXBackgroundSyncService] fetchEvent: We don't have the event in stores. Launch a background sync to fetch it.")
                 self.launchBackgroundSync(forEventId: eventId, roomId: roomId, completion: completion)
             } else {
                 // Final fallback, try with /event API
-                NSLog("[MXBackgroundSyncService] fetchEvent: We still don't have the event in stores. Try with /event API")
+                MXLog.debug("[MXBackgroundSyncService] fetchEvent: We still don't have the event in stores. Try with /event API")
                 
                 restClient.event(withEventId: eventId, inRoom: roomId) { [weak self] (response) in
                     
                     guard let self = self else {
-                        NSLog("[NotificationService] fetchEvent: /event API returned too late successfully.")
+                        MXLog.debug("[NotificationService] fetchEvent: /event API returned too late successfully.")
                         return
                     }
                     
                     switch response {
                         case .success(let event):
-                            NSLog("[MXBackgroundSyncService] fetchEvent: We got the event from /event API")
+                            MXLog.debug("[MXBackgroundSyncService] fetchEvent: We got the event from /event API")
                             
                             //  cache this event
                             self.cachedEvents[eventId] = event
@@ -307,7 +307,7 @@ public enum MXBackgroundSyncServiceError: Error {
                             handleEncryption(forEvent: event)
                             
                         case .failure(let error):
-                            NSLog("[MXBackgroundSyncService] fetchEvent: Failed to fetch event \(eventId)")
+                            MXLog.debug("[MXBackgroundSyncService] fetchEvent: Failed to fetch event \(eventId)")
                             Queues.dispatchQueue.async {
                                 completion(.failure(error))
                             }
@@ -322,14 +322,14 @@ public enum MXBackgroundSyncServiceError: Error {
                                       completion: @escaping (MXResponse<MXEvent>) -> Void) {
             
         guard let eventStreamToken = syncResponseStoreManager.nextSyncToken() ?? store.eventStreamToken else {
-            NSLog("[MXBackgroundSyncService] launchBackgroundSync: Do not sync because event streaming not started yet.")
+            MXLog.debug("[MXBackgroundSyncService] launchBackgroundSync: Do not sync because event streaming not started yet.")
             Queues.dispatchQueue.async {
                 completion(.failure(MXBackgroundSyncServiceError.unknown))
             }
             return
         }
         
-        NSLog("[MXBackgroundSyncService] launchBackgroundSync: start from token \(eventStreamToken)")
+        MXLog.debug("[MXBackgroundSyncService] launchBackgroundSync: start from token \(eventStreamToken)")
         
         restClient.sync(fromToken: eventStreamToken,
                         serverTimeout: Constants.syncRequestServerTimout,
@@ -339,7 +339,7 @@ public enum MXBackgroundSyncServiceError: Error {
             switch response {
             case .success(let syncResponse):
                 guard let self = self else {
-                    NSLog("[MXBackgroundSyncService] launchBackgroundSync: MXRestClient.syncFromToken returned too late successfully")
+                    MXLog.debug("[MXBackgroundSyncService] launchBackgroundSync: MXRestClient.syncFromToken returned too late successfully")
                     Queues.dispatchQueue.async {
                         completion(.failure(MXBackgroundSyncServiceError.unknown))
                     }
@@ -359,13 +359,13 @@ public enum MXBackgroundSyncServiceError: Error {
                 }
             case .failure(let error):
                 guard let _ = self else {
-                    NSLog("[MXBackgroundSyncService] launchBackgroundSync: MXRestClient.syncFromToken returned too late with error: \(String(describing: error))")
+                    MXLog.debug("[MXBackgroundSyncService] launchBackgroundSync: MXRestClient.syncFromToken returned too late with error: \(String(describing: error))")
                     Queues.dispatchQueue.async {
                         completion(.failure(error))
                     }
                     return
                 }
-                NSLog("[MXBackgroundSyncService] launchBackgroundSync: MXRestClient.syncFromToken returned with error: \(String(describing: error))")
+                MXLog.debug("[MXBackgroundSyncService] launchBackgroundSync: MXRestClient.syncFromToken returned with error: \(String(describing: error))")
                 Queues.dispatchQueue.async {
                     completion(.failure(error))
                 }
@@ -487,11 +487,13 @@ public enum MXBackgroundSyncServiceError: Error {
     }
     
     private func handleSyncResponse(_ syncResponse: MXSyncResponse, syncToken: String) {
-        NSLog("[MXBackgroundSyncService] handleSyncResponse: Received %tu joined rooms, %tu invited rooms, %tu left rooms, %tu toDevice events.",
-              syncResponse.rooms?.join?.count ?? 0,
-              syncResponse.rooms?.invite?.count ?? 0,
-              syncResponse.rooms?.leave?.count ?? 0,
-              syncResponse.toDevice?.events.count ?? 0)
+        MXLog.debug("""
+            [MXBackgroundSyncService] handleSyncResponse: \
+            Received \(syncResponse.rooms?.join?.count ?? 0) joined rooms, \
+            \(syncResponse.rooms?.invite?.count ?? 0) invited rooms, \
+            \(syncResponse.rooms?.leave?.count ?? 0) left rooms, \
+            \(syncResponse.toDevice?.events.count ?? 0) toDevice events.
+            """)
         
         if let accountData = syncResponse.accountData {
             pushRulesManager.handleAccountData(accountData)
@@ -502,7 +504,7 @@ public enum MXBackgroundSyncServiceError: Error {
             handleToDeviceEvent(event)
         }
         
-        NSLog("[MXBackgroundSyncService] handleSyncResponse: Next sync token: \(syncResponse.nextBatch)")
+        MXLog.debug("[MXBackgroundSyncService] handleSyncResponse: Next sync token: \(syncResponse.nextBatch)")
     }
     
     private func handleToDeviceEvent(_ event: MXEvent) {
@@ -510,13 +512,13 @@ public enum MXBackgroundSyncServiceError: Error {
             do {
                 try decryptEvent(event)
             } catch let error {
-                NSLog("[MXBackgroundSyncService] handleToDeviceEvent: Could not decrypt to-device event: \(error)")
+                MXLog.debug("[MXBackgroundSyncService] handleToDeviceEvent: Could not decrypt to-device event: \(error)")
                 return
             }
         }
         
         guard let content = event.content else {
-            NSLog("[MXBackgroundSyncService] handleToDeviceEvent: ERROR: incomplete event content: \(String(describing: event.jsonDictionary()))")
+            MXLog.debug("[MXBackgroundSyncService] handleToDeviceEvent: ERROR: incomplete event content: \(String(describing: event.jsonDictionary()))")
             return
         }
         
@@ -524,7 +526,7 @@ public enum MXBackgroundSyncServiceError: Error {
             let sessionId = content["session_id"] as? String,
             let sessionKey = content["session_key"] as? String,
             var senderKey = event.senderKey else {
-            NSLog("[MXBackgroundSyncService] handleToDeviceEvent: ERROR: incomplete event: \(String(describing: event.jsonDictionary()))")
+            MXLog.debug("[MXBackgroundSyncService] handleToDeviceEvent: ERROR: incomplete event: \(String(describing: event.jsonDictionary()))")
             return
         }
         
@@ -557,7 +559,7 @@ public enum MXBackgroundSyncServiceError: Error {
                 "ed25519": ed25519Key
             ]
         default:
-            NSLog("[MXBackgroundSyncService] handleToDeviceEvent: ERROR: Not supported type: \(event.eventType)")
+            MXLog.debug("[MXBackgroundSyncService] handleToDeviceEvent: ERROR: Not supported type: \(event.eventType)")
             return
         }
         
@@ -582,7 +584,7 @@ public enum MXBackgroundSyncServiceError: Error {
         if eventStreamToken != upToDateEventStreamToken {
             // MXSession continued to work in parallel with the background sync service
             // MXSession has updated its stream token. We need to use it
-            NSLog("[MXBackgroundSyncService] updateBackgroundServiceStoresIfNeeded: Update MXBackgroundStore. Wrong sync token: \(String(describing: eventStreamToken)) instead of \(String(describing: upToDateEventStreamToken))")
+            MXLog.debug("[MXBackgroundSyncService] updateBackgroundServiceStoresIfNeeded: Update MXBackgroundStore. Wrong sync token: \(String(describing: eventStreamToken)) instead of \(String(describing: upToDateEventStreamToken))")
             store = upToDateStore
             outdatedStore = true
         }
@@ -590,12 +592,12 @@ public enum MXBackgroundSyncServiceError: Error {
         if let cachedSyncResponseSyncToken = syncResponseStoreManager.syncToken() {
             if upToDateEventStreamToken != cachedSyncResponseSyncToken {
                 // syncResponseStore has obsolete data. Reset it
-                NSLog("[MXBackgroundSyncService] updateBackgroundServiceStoresIfNeeded: Update MXSyncResponseStoreManager. Wrong sync token: \(String(describing: cachedSyncResponseSyncToken)) instead of \(String(describing: upToDateEventStreamToken))")
+                MXLog.debug("[MXBackgroundSyncService] updateBackgroundServiceStoresIfNeeded: Update MXSyncResponseStoreManager. Wrong sync token: \(String(describing: cachedSyncResponseSyncToken)) instead of \(String(describing: upToDateEventStreamToken))")
                 outdatedStore = true
             }
             
             if outdatedStore {
-                NSLog("[MXBackgroundSyncService] updateBackgroundServiceStoresIfNeeded: Mark MXSyncResponseStoreManager data as outdated. Its sync token was \(String(describing: cachedSyncResponseSyncToken))")
+                MXLog.debug("[MXBackgroundSyncService] updateBackgroundServiceStoresIfNeeded: Mark MXSyncResponseStoreManager data as outdated. Its sync token was \(String(describing: cachedSyncResponseSyncToken))")
                 syncResponseStoreManager.markDataOutdated()
             }
         }
@@ -604,7 +606,7 @@ public enum MXBackgroundSyncServiceError: Error {
             // To avoid dead lock between processes, we write to the cryptoStore only from only one process.
             // If there is no cached sync responses, it means they have been consumed by MXSession. Now is the
             // right time to clean the cryptoStore.
-            NSLog("[MXBackgroundSyncService] updateBackgroundServiceStoresIfNeeded: Reset MXBackgroundCryptoStore")
+            MXLog.debug("[MXBackgroundSyncService] updateBackgroundServiceStoresIfNeeded: Reset MXBackgroundCryptoStore")
             cryptoStore.reset()
         }
     }

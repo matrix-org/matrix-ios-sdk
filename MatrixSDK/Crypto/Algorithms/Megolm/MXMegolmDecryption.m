@@ -172,7 +172,7 @@
     
     if (!pendingEvents[k][timelineId][event.eventId])
     {
-        NSLog(@"[MXMegolmDecryption] addEventToPendingList: %@ in %@ for %@", event.eventId, event.roomId, k);
+        MXLogDebug(@"[MXMegolmDecryption] addEventToPendingList: %@ in %@ for %@", event.eventId, event.roomId, k);
         pendingEvents[k][timelineId][event.eventId] = event;
         
         [self requestKeysForEvent:event];
@@ -190,14 +190,14 @@
 
     if (!roomId || !sessionId || !sessionKey)
     {
-        NSLog(@"[MXMegolmDecryption] onRoomKeyEvent: ERROR: Key event is missing fields");
+        MXLogDebug(@"[MXMegolmDecryption] onRoomKeyEvent: ERROR: Key event is missing fields");
         return;
     }
 
     NSString *senderKey = event.senderKey;
     if (!senderKey)
     {
-        NSLog(@"[MXMegolmDecryption] onRoomKeyEvent: ERROR: Key event has no sender key (not encrypted?)");
+        MXLogDebug(@"[MXMegolmDecryption] onRoomKeyEvent: ERROR: Key event has no sender key (not encrypted?)");
         return;
     }
 
@@ -223,7 +223,7 @@
         MXJSONModelSetString(senderKey, content[@"sender_key"]);
         if (!senderKey)
         {
-            NSLog(@"[MXMegolmDecryption] onRoomKeyEvent: ERROR: forwarded_room_key event is missing sender_key field");
+            MXLogDebug(@"[MXMegolmDecryption] onRoomKeyEvent: ERROR: forwarded_room_key event is missing sender_key field");
             return;
         }
 
@@ -231,7 +231,7 @@
         MXJSONModelSetString(ed25519Key, content[@"sender_claimed_ed25519_key"]);
         if (!ed25519Key)
         {
-            NSLog(@"[MXMegolmDecryption] onRoomKeyEvent: ERROR: forwarded_room_key_event is missing sender_claimed_ed25519_key field");
+            MXLogDebug(@"[MXMegolmDecryption] onRoomKeyEvent: ERROR: forwarded_room_key_event is missing sender_claimed_ed25519_key field");
             return;
         }
 
@@ -244,7 +244,7 @@
         keysClaimed = event.keysClaimed;
     }
 
-    NSLog(@"[MXMegolmDecryption] onRoomKeyEvent: Adding key for megolm session %@|%@ from %@ event", senderKey, sessionId, event.type);
+    MXLogDebug(@"[MXMegolmDecryption] onRoomKeyEvent: Adding key for megolm session %@|%@ from %@ event", senderKey, sessionId, event.type);
 
     [olmDevice addInboundGroupSession:sessionId sessionKey:sessionKey roomId:roomId senderKey:senderKey forwardingCurve25519KeyChain:forwardingKeyChain keysClaimed:keysClaimed exportFormat:exportFormat];
 
@@ -343,7 +343,7 @@
          MXJSONModelSetString(senderKey, body[@"sender_key"]);
          MXJSONModelSetString(sessionId, body[@"session_id"]);
 
-         NSLog(@"[MXMegolmDecryption] shareKeysWithDevice: sharing keys for session %@|%@ with device %@:%@", senderKey, sessionId, userId, deviceId);
+        MXLogDebug(@"[MXMegolmDecryption] shareKeysWithDevice: sharing keys for session %@|%@ with device %@:%@", senderKey, sessionId, userId, deviceId);
 
          NSDictionary *payload = [self->crypto buildMegolmKeyForwardingMessage:roomId senderKey:senderKey sessionId:sessionId chainIndex:nil];
 
@@ -389,7 +389,7 @@
                 if (event.clearEvent)
                 {
                     // This can happen when the event is in several timelines
-                    NSLog(@"[MXMegolmDecryption] retryDecryption: %@ already decrypted", event.eventId);
+                    MXLogDebug(@"[MXMegolmDecryption] retryDecryption: %@ already decrypted", event.eventId);
                 }
                 else
                 {
@@ -401,14 +401,14 @@
                     dispatch_async(dispatch_get_main_queue(), ^{
                         if (result.error)
                         {
-                            NSLog(@"[MXMegolmDecryption] retryDecryption: Still can't decrypt %@. Error: %@", event.eventId, result.error);
+                            MXLogDebug(@"[MXMegolmDecryption] retryDecryption: Still can't decrypt %@. Error: %@", event.eventId, result.error);
                             allDecrypted = NO;
                         }
 
                         if (event.clearEvent)
                         {
                             // This can happen when the event is in several timelines
-                            NSLog(@"[MXMegolmDecryption] retryDecryption: %@ already decrypted on main thread", event.eventId);
+                            MXLogDebug(@"[MXMegolmDecryption] retryDecryption: %@ already decrypted on main thread", event.eventId);
                         }
                         else
                         {
@@ -457,7 +457,7 @@
         }
         else
         {
-            NSLog(@"[MXMegolmDecryption] requestKeysForEvent: ERROR: missing fields for recipients in event %@", event);
+            MXLogDebug(@"[MXMegolmDecryption] requestKeysForEvent: ERROR: missing fields for recipients in event %@", event);
         }
     }
 
@@ -478,7 +478,7 @@
     }
     else
     {
-        NSLog(@"[MXMegolmDecryption] requestKeysForEvent: ERROR: missing fields in event %@", event);
+        MXLogDebug(@"[MXMegolmDecryption] requestKeysForEvent: ERROR: missing fields in event %@", event);
     }
 }
 

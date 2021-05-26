@@ -18,6 +18,10 @@
 
 #import "MXLogger.h"
 
+#import "MXLog.h"
+
+#import "MatrixSDKSwiftHeader.h"
+
 @interface MXLoggerUnitTests : XCTestCase
 
 @end
@@ -26,12 +30,17 @@
 
 - (void)testMXLogger
 {
-    [MXLogger redirectNSLogToFiles:YES];
+    MXLogConfiguration *configuration = [[MXLogConfiguration alloc] init];
+    configuration.asynchronous = NO;
+    configuration.redirectLogsToFiles = YES;
+    
+    [MXLog configure:configuration];
 
-    NSString *log = [NSString stringWithFormat:@"testLogFileContent: %@", [NSDate date]];
-    NSLog(@"%@", log);
-
-    [MXLogger redirectNSLogToFiles:NO];
+    NSString *log = @"Lorem ipsum dolor sit amet";
+    MXLogDebug(@"%@", log);
+    
+    configuration.redirectLogsToFiles = NO;
+    [MXLog configure:configuration];
 
     NSArray *logFiles = [MXLogger logFiles];
     XCTAssertGreaterThanOrEqual(logFiles.count, 1);
@@ -52,7 +61,7 @@
     [MXLogger redirectNSLogToFiles:YES];
 
     NSString *log = [NSString stringWithFormat:@"testLogFileContent: %@", [NSDate date]];
-    NSLog(@"%@", log);
+    MXLogDebug(@"%@", log);
 
     [MXLogger redirectNSLogToFiles:NO];
 

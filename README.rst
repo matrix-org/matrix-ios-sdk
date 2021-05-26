@@ -108,7 +108,7 @@ instantiated with initWithHomeServer does the job:
     [mxRestClient publicRooms:^(NSArray *rooms) {
 
         // rooms is an array of MXPublicRoom objects containing information like room id
-        NSLog(@"The public rooms are: %@", rooms);
+        MXLogDebug(@"The public rooms are: %@", rooms);
 
     } failure:^(MXError *error) {
     }];

@@ -109,11 +109,11 @@ static NSString *subLogName;
         NSString *nsLogPath = [logsFolderPath stringByAppendingPathComponent:[NSString stringWithFormat:@"console%@.log", subLogName]];
         freopen([nsLogPath fileSystemRepresentation], "w+", stderr);
 
-        NSLog(@"[MXLogger] redirectNSLogToFiles: YES");
+        MXLogDebug(@"[MXLogger] redirectNSLogToFiles: YES");
         if (log.length)
         {
             // We can now log into files
-            NSLog(@"%@", log);
+            MXLogDebug(@"%@", log);
         }
         
         [self removeExtraFilesFromCount:numberOfFiles];
@@ -163,7 +163,7 @@ static NSString *subLogName;
         }
     }
 
-    NSLog(@"[MXLogger] logFiles: %@", logFiles);
+    MXLogDebug(@"[MXLogger] logFiles: %@", logFiles);
 
     return logFiles;
 }
@@ -221,7 +221,7 @@ static void handleUncaughtException(NSException *exception)
                     encoding:NSStringEncodingConversionAllowLossy
                        error:nil];
 
-    NSLog(@"[MXLogger] handleUncaughtException:\n%@", description);
+    MXLogDebug(@"[MXLogger] handleUncaughtException:\n%@", description);
 }
 
 // Signals emitted by the app are handled here
@@ -333,7 +333,7 @@ static NSString* crashLogPath(void)
         if ([fileManager fileExistsAtPath:logFile])
         {
             [fileManager removeItemAtPath:logFile error:nil];
-            NSLog(@"[MXLogger] removeExtraFilesFromCount: %@. removeItemAtPath: %@\n", @(count), logFile);
+            MXLogDebug(@"[MXLogger] removeExtraFilesFromCount: %@. removeItemAtPath: %@\n", @(count), logFile);
         }
         else
         {
@@ -375,7 +375,7 @@ static NSString* crashLogPath(void)
     
     if (removeFiles)
     {
-        NSLog(@"[MXLogger] removeFilesAfterSizeLimit: Remove files from index %@ because logs are too large (%@ for a limit of %@)\n",
+        MXLogDebug(@"[MXLogger] removeFilesAfterSizeLimit: Remove files from index %@ because logs are too large (%@ for a limit of %@)\n",
               @(index),
               [NSByteCountFormatter stringFromByteCount:logSize countStyle:NSByteCountFormatterCountStyleBinary],
               [NSByteCountFormatter stringFromByteCount:sizeLimit countStyle:NSByteCountFormatterCountStyleBinary]);
@@ -383,7 +383,7 @@ static NSString* crashLogPath(void)
     }
     else
     {
-        NSLog(@"[MXLogger] removeFilesAfterSizeLimit: No need: %@ for a limit of %@\n",
+        MXLogDebug(@"[MXLogger] removeFilesAfterSizeLimit: No need: %@ for a limit of %@\n",
               [NSByteCountFormatter stringFromByteCount:logSize countStyle:NSByteCountFormatterCountStyleBinary],
               [NSByteCountFormatter stringFromByteCount:sizeLimit countStyle:NSByteCountFormatterCountStyleBinary]);
     }
