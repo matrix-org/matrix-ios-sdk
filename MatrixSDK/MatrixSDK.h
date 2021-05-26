@@ -128,6 +128,8 @@ FOUNDATION_EXPORT NSString *MatrixSDKVersion;
 #import "MXAesKeyData.h"
 #import "MXRawDataKey.h"
 
+#import "MXSpaceChildContent.h"
+
 //  Bridging to Swift
 #import "MXCryptoStore.h"
 #import "MXRealmCryptoStore.h"

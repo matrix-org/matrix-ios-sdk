@@ -2,7 +2,7 @@ Changes to be released in next version
 =================================================
 
 ✨ Features
- * 
+ * Spaces: Support Space room type (vector-im/element-ios/issues/4069).
 
 🙌 Improvements
  * MXSession: Cache initial sync response until it is fully handled (vector-im/element-ios/issues/4317).
@@ -107,6 +107,10 @@ Changes in 0.18.10 (2021-04-22)
 
 🙌 Improvements
  * MXHTTPOperation: Expose the HTTP response (vector-im/element-ios/issues/4206).
+ * MXRoomPowerLevels: Handle undefined values and add init with default spec values.
+ * MXRoomCreationParameters: Add roomType and powerLevelContentOverride properties. Add initial state events update method.
+ * MXResponse: Add convenient uncurry method to convert a Swift method into Objective-C.
+ * Add MXRoomInitialStateEventBuilder that enables to build initial state events.
 
 🐛 Bugfix
  * MXCrypto: Disable optimisation on room members list to make sure we share keys to all (vector-im/element-ios/issues/3807).
