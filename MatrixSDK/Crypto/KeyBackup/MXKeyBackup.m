@@ -634,6 +634,21 @@ NSUInteger const kMXKeyBackupSendKeysMaxCount = 100;
 - (MXHTTPOperation*)forceRefresh:(nullable void (^)(BOOL valid))success
                          failure:(nullable void (^)(NSError *error))failure
 {
+    if (_state == MXKeyBackupStateUnknown || _state == MXKeyBackupStateCheckingBackUpOnHomeserver)
+    {
+        NSLog(@"[MXKeyBackup] forceRefresh: Invalid state (%@) to force the refresh", @(_state));
+        if (failure)
+        {
+            NSError *error = [NSError errorWithDomain:MXKeyBackupErrorDomain
+                                                 code:MXKeyBackupErrorInvalidStateCode
+                                             userInfo:@{
+                                                 NSLocalizedDescriptionKey: [NSString stringWithFormat:@"Invalid state (%@) to force the refresh of the backup", @(_state)]
+                                             }];
+            failure(error);
+        }
+        return nil;
+    }
+    
     // Fetch the last backup version on the server, compare it to the backup version
     // currently used. If versions are not the same, the current backup is forgotten and
     // checkAndStartKeyBackup is called in order to restart on the last version on the HS.

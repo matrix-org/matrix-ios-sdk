@@ -15,6 +15,7 @@ Changes to be released in next version
  * MXRoomSummary: Improve reset resetLastMessage to avoid pagination loop and to limit number of decryptions.
  * MXSession: Limit the number of decryptions when processing an initial sync (vector-im/element-ios/issues/4307).
  * Adapt sync response models to new sync API (vector-im/element-ios/issues/4309).
+ * MXKeyBackup: Do not reset the backup if forceRefresh() is called too early.
 
 🐛 Bugfix
  * MXRoomSummary: Fix decryption of the last message when it is edited (vector-im/element-ios/issues/4322).
