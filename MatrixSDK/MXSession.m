@@ -781,8 +781,7 @@ typedef void (^MXOnResumeDone)(void);
     [self setState:MXSessionStateSyncInProgress];
 
     // Check update of the filter used for /sync requests
-    if (_store.syncFilterId != syncFilterId
-        && ![_store.syncFilterId isEqualToString:syncFilterId])
+    if (![_store.syncFilterId isEqualToString:syncFilterId])
     {
         if (_store.eventStreamToken)
         {
