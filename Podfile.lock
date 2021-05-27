@@ -34,9 +34,9 @@ PODS:
     - OLMKit/olmcpp (= 3.2.2)
   - OLMKit/olmc (3.2.2)
   - OLMKit/olmcpp (3.2.2)
-  - Realm (10.7.2):
-    - Realm/Headers (= 10.7.2)
-  - Realm/Headers (10.7.2)
+  - Realm (10.7.6):
+    - Realm/Headers (= 10.7.6)
+  - Realm/Headers (10.7.6)
 
 DEPENDENCIES:
   - AFNetworking (~> 4.0.0)
@@ -44,7 +44,7 @@ DEPENDENCIES:
   - libbase58 (~> 0.1.4)
   - OHHTTPStubs (~> 9.1.0)
   - OLMKit (~> 3.2.2)
-  - Realm (= 10.7.2)
+  - Realm (= 10.7.6)
 
 SPEC REPOS:
   trunk:
@@ -61,8 +61,8 @@ SPEC CHECKSUMS:
   libbase58: 7c040313537b8c44b6e2d15586af8e21f7354efd
   OHHTTPStubs: 90eac6d8f2c18317baeca36698523dc67c513831
   OLMKit: 20d1c564033a1ae7148f8f599378d4c798363905
-  Realm: e523da9ade306c5ae87e85dc09fdef148d3e1cc1
+  Realm: ed860452717c8db8f4bf832b6807f7f2ce708839
 
-PODFILE CHECKSUM: 1b99113acef4f0ff99e478c800e9f465b013a083
+PODFILE CHECKSUM: 2dcb37ef834ab283bce675f4ee6849ece6682f6e
 
 COCOAPODS: 1.10.1
