@@ -58,11 +58,6 @@
         {
             [self.matrixStore replaceEvent:newEvent inRoom:roomId];
 
-            if (newEvent.isEncrypted && !newEvent.clearEvent)
-            {
-                [self.mxSession decryptEvent:newEvent inTimeline:nil];
-            }
-
             // TODO or not?
             //[self notifyEventEditsListenersOfRoom:roomId replaceEvent:replaceEvent];
         }

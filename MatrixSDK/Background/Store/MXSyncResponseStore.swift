@@ -26,7 +26,7 @@ public enum MXSyncResponseStoreError: Error {
 @objc public protocol MXSyncResponseStore: NSObjectProtocol {
     
     /// CRUD interface for cached sync responses
-    func addSyncResponse(syncResponse: MXCachedSyncResponse) -> String
+    @discardableResult func addSyncResponse(syncResponse: MXCachedSyncResponse) -> String
     func syncResponse(withId id: String) throws -> MXCachedSyncResponse
     func syncResponseSize(withId id: String) -> Int
     func updateSyncResponse(withId id: String, syncResponse: MXCachedSyncResponse)

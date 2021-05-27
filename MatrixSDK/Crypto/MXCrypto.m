@@ -49,6 +49,8 @@
 
 #import "NSArray+MatrixSDK.h"
 
+#import "MXDeviceListResponse.h"
+
 /**
  The store to use for crypto.
  */
@@ -507,26 +509,24 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
 #endif
 }
 
-- (BOOL)hasKeysToDecryptEvent:(MXEvent *)event
+- (void)hasKeysToDecryptEvent:(MXEvent *)event onComplete:(void (^)(BOOL))onComplete
 {
-    __block BOOL hasKeys = NO;
-    
 #ifdef MX_CRYPTO
     
     // We need to go to decryptionQueue only to use getRoomDecryptor
     // Other subsequent calls are thread safe because of the implementation of MXCryptoStore
-    dispatch_sync(decryptionQueue, ^{
-        id<MXDecrypting> alg = [self getRoomDecryptor:event.roomId algorithm:event.content[@"algorithm"]];
+    dispatch_async(decryptionQueue, ^{
+        NSString *algorithm = event.wireContent[@"algorithm"];
+        id<MXDecrypting> alg = [self getRoomDecryptor:event.roomId algorithm:algorithm];
         
-        hasKeys = [alg hasKeysToDecryptEvent:event];
+        BOOL hasKeys = [alg hasKeysToDecryptEvent:event];
+        onComplete(hasKeys);
     });
     
 #endif
-    
-    return hasKeys;
 }
 
-- (MXEventDecryptionResult *)decryptEvent:(MXEvent *)event inTimeline:(NSString*)timeline error:(NSError* __autoreleasing * )error
+- (MXEventDecryptionResult *)decryptEvent:(MXEvent *)event inTimeline:(NSString*)timeline
 {
 #ifdef MX_CRYPTO
 
@@ -536,46 +536,7 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
     // At the moment, we lock the main thread while decrypting events.
     // Fortunately, decrypting is far quicker that encrypting.
     dispatch_sync(decryptionQueue, ^{
-
-        if (!event.content.count)
-        {
-            NSLog(@"[MXCrypto] decryptEvent: No content to decrypt in event %@ (isRedacted: %@). Event: %@", event.eventId, @(event.isRedactedEvent), event.JSONDictionary);
-            result = [[MXEventDecryptionResult alloc] init];
-            result.clearEvent = event.content;
-            return;
-        }
-
-        id<MXDecrypting> alg = [self getRoomDecryptor:event.roomId algorithm:event.content[@"algorithm"]];
-        if (!alg)
-        {
-            NSLog(@"[MXCrypto] decryptEvent: Unable to decrypt %@ with algorithm %@. Event: %@", event.eventId, event.content[@"algorithm"], event.JSONDictionary);
-
-            if (error)
-            {
-                *error = [NSError errorWithDomain:MXDecryptingErrorDomain
-                                             code:MXDecryptingErrorUnableToDecryptCode
-                                         userInfo:@{
-                                                    NSLocalizedDescriptionKey: MXDecryptingErrorUnableToDecrypt,
-                                                    NSLocalizedFailureReasonErrorKey: [NSString stringWithFormat:MXDecryptingErrorUnableToDecryptReason, event, event.content[@"algorithm"]]
-                                                    }];
-            }
-        }
-        else
-        {
-            result = [alg decryptEvent:event inTimeline:timeline error:error];
-            if (error && *error)
-            {
-                NSLog(@"[MXCrypto] decryptEvent: Error for %@: %@\nEvent: %@", event.eventId, *error, event.JSONDictionary);
-                
-                if ([(*error).domain isEqualToString:MXDecryptingErrorDomain]
-                    && (*error).code == MXDecryptingErrorBadEncryptedMessageCode)
-                {
-                    dispatch_async(self.cryptoQueue, ^{
-                        [self markOlmSessionForUnwedgingInEvent:event];
-                    });
-                }
-            }
-        }
+        result = [self decryptEvent2:event inTimeline:timeline];
     });
 
     return result;
@@ -583,6 +544,72 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
 #else
     return nil;
 #endif
+}
+
+- (MXEventDecryptionResult *)decryptEvent2:(MXEvent *)event inTimeline:(NSString*)timeline
+{
+    MXEventDecryptionResult *result;
+    
+    if (!event.content.count)
+    {
+        NSLog(@"[MXCrypto] decryptEvent: No content to decrypt in event %@ (isRedacted: %@). Event: %@", event.eventId, @(event.isRedactedEvent), event.JSONDictionary);
+        result = [[MXEventDecryptionResult alloc] init];
+        result.clearEvent = event.content;
+        return result;
+    }
+    
+    NSString *algorithm = event.wireContent[@"algorithm"];
+    id<MXDecrypting> alg = [self getRoomDecryptor:event.roomId algorithm:algorithm];
+    if (!alg)
+    {
+        NSLog(@"[MXCrypto] decryptEvent: Unable to decrypt %@ with algorithm %@. Event: %@", event.eventId, algorithm, event.JSONDictionary);
+        
+        result = [MXEventDecryptionResult new];
+        result.error = [NSError errorWithDomain:MXDecryptingErrorDomain
+                                           code:MXDecryptingErrorUnableToDecryptCode
+                                       userInfo:@{
+                                           NSLocalizedDescriptionKey: MXDecryptingErrorUnableToDecrypt,
+                                           NSLocalizedFailureReasonErrorKey: [NSString stringWithFormat:MXDecryptingErrorUnableToDecryptReason, event, algorithm]
+                                       }];
+    }
+    else
+    {
+        result = [alg decryptEvent:event inTimeline:timeline];
+        if (result.error)
+        {
+            NSLog(@"[MXCrypto] decryptEvent: Error for %@: %@\nEvent: %@", event.eventId, result.error, event.JSONDictionary);
+            
+            if ([result.error.domain isEqualToString:MXDecryptingErrorDomain]
+                && result.error.code == MXDecryptingErrorBadEncryptedMessageCode)
+            {
+                dispatch_async(self.cryptoQueue, ^{
+                    [self markOlmSessionForUnwedgingInEvent:event];
+                });
+            }
+        }
+    }
+    
+    return result;
+}
+
+- (void)decryptEvents:(NSArray<MXEvent*> *)events
+           inTimeline:(NSString*)timeline
+           onComplete:(void (^)(NSArray<MXEventDecryptionResult *>*))onComplete
+{
+    dispatch_async(decryptionQueue, ^{
+        NSMutableArray<MXEventDecryptionResult *> *results = [NSMutableArray arrayWithCapacity:events.count];
+        
+        // TODO: Implement bulk decryption to speed up the process.
+        // We need a [MXDecrypting decryptEvents:] method to limit the number of back and forth with olm/megolm module.
+        for (MXEvent *event in events)
+        {
+            [results addObject:[self decryptEvent2:event inTimeline:timeline]];
+        }
+        
+        dispatch_async(dispatch_get_main_queue(), ^{
+            onComplete(results);
+        });
+    });
 }
 
 - (MXHTTPOperation*)ensureEncryptionInRoom:(NSString*)roomId
@@ -737,6 +764,18 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
 #endif
 }
 
+- (void)handleRoomKeyEvent:(MXEvent*)event onComplete:(void (^)(void))onComplete
+{
+    // Use decryptionQueue as synchronisation because decryptions require room keys
+    dispatch_async(decryptionQueue, ^{
+        [self onRoomKeyEvent:event];
+        
+        dispatch_async(dispatch_get_main_queue(), ^{
+            onComplete();
+        });
+    });
+}
+
 - (void)handleDeviceOneTimeKeysCount:(NSDictionary<NSString *, NSNumber*>*)deviceOneTimeKeysCount
 {
 #ifdef MX_CRYPTO
@@ -838,17 +877,10 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
 
     if (event.isEncrypted)
     {
-        // Use decryptionQueue because this is a simple read in the db
-        // AND we do it synchronously
-        // @TODO: dispatch_async
-        MXWeakify(self);
-        dispatch_sync(decryptionQueue, ^{
-            MXStrongifyAndReturnIfNil(self);
-
-            NSString *algorithm = event.wireContent[@"algorithm"];
-            device = [self.deviceList deviceWithIdentityKey:event.senderKey andAlgorithm:algorithm];
-
-        });
+        // This is a simple read in the db which is thread safe.
+        // Return synchronously
+        NSString *algorithm = event.wireContent[@"algorithm"];
+        device = [self.deviceList deviceWithIdentityKey:event.senderKey andAlgorithm:algorithm];
     }
 
 #endif
@@ -2492,7 +2524,6 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
         MXWeakify(self);
         switch (event.eventType)
         {
-            case MXEventTypeRoomKey:
             case MXEventTypeRoomForwardedKey:
             {
                 dispatch_async(_cryptoQueue, ^{

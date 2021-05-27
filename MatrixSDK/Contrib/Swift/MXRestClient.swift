@@ -1878,4 +1878,16 @@ public extension MXRestClient {
     @nonobjc @discardableResult func deleteDevice(_ deviceId: String, authParameters: [String: Any], completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation {
         return __deleteDevice(byDeviceId: deviceId, authParams: authParameters, success: currySuccess(completion), failure: curryFailure(completion))
     }
+    
+    // MARK: - Spaces
+    
+    /// Get the space children of a given space.
+    /// - Parameters:
+    ///   - spaceId: The room id of the queried space.
+    ///   - parameters: Space children request parameters.
+    ///   - completion: A closure called when the operation completes.
+    /// - Returns: a `MXHTTPOperation` instance.
+    @nonobjc @discardableResult func getSpaceChildrenForSpace(withId spaceId: String, parameters: MXSpaceChildrenRequestParameters?, completion: @escaping (_ response: MXResponse<MXSpaceChildrenResponse>) -> Void) -> MXHTTPOperation {
+        return __getSpaceChildrenForSpace(withId: spaceId, parameters: parameters, success: currySuccess(completion), failure: curryFailure(completion))
+    }
 }

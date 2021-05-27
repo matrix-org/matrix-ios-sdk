@@ -95,6 +95,13 @@
     return self;
 }
 
++ (instancetype)initialSyncCacheCredentialsFrom:(MXCredentials *)credentials
+{
+    MXCredentials *result = [credentials copy];
+    result.userId = [result.userId stringByAppendingString:@"-initial"];
+    return result;
+}
+
 - (NSString *)homeServerName
 {
     return [NSURL URLWithString:_homeServer].host;

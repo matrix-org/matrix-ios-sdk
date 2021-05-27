@@ -18,11 +18,16 @@
 
 #pragma mark - Defines & Constants
 
+// Public
+
+NSString* const MXRoomCreateContentRoomTypeJSONKey = @"type";
+
+// Private
+
 static NSString* const kRoomCreateContentUserIdJSONKey = @"creator";
 static NSString* const kRoomCreateContentPredecessorInfoJSONKey = @"predecessor";
 static NSString* const kRoomCreateContentRoomVersionJSONKey = @"room_version";
 static NSString* const kRoomCreateContentFederateJSONKey = @"m.federate";
-static NSString* const kRoomCreateContentRoomTypeJSONKey = @"m.room.type";
 
 #pragma mark - Private Interface
 
@@ -52,7 +57,7 @@ static NSString* const kRoomCreateContentRoomTypeJSONKey = @"m.room.type";
         MXJSONModelSetString(roomCreateContent.roomVersion, jsonDictionary[kRoomCreateContentRoomVersionJSONKey]);
         MXJSONModelSetBoolean(roomCreateContent.isFederated, jsonDictionary[kRoomCreateContentFederateJSONKey]);
         MXJSONModelSetMXJSONModel(roomCreateContent.virtualRoomInfo, MXVirtualRoomInfo, jsonDictionary[kRoomIsVirtualJSONKey]);
-        MXJSONModelSetString(roomCreateContent.roomType, jsonDictionary[kRoomCreateContentRoomTypeJSONKey]);
+        MXJSONModelSetString(roomCreateContent.roomType, jsonDictionary[MXRoomCreateContentRoomTypeJSONKey]);
     }
     
     return roomCreateContent;
@@ -86,7 +91,7 @@ static NSString* const kRoomCreateContentRoomTypeJSONKey = @"m.room.type";
     
     if (self.roomType)
     {
-        jsonDictionary[kRoomCreateContentRoomTypeJSONKey] = self.roomType;
+        jsonDictionary[MXRoomCreateContentRoomTypeJSONKey] = self.roomType;
     }
     
     return jsonDictionary;

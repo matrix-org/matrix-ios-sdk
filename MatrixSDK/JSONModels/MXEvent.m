@@ -81,6 +81,9 @@ NSString *const kMXEventTypeStringSecretRequest         = @"m.secret.request";
 NSString *const kMXEventTypeStringSecretSend            = @"m.secret.send";
 NSString *const kMXEventTypeStringSecretStorageDefaultKey   = @"m.secret_storage.default_key";
 NSString *const kMXEventTypeStringTaggedEvents          = @"m.tagged_events";
+//NSString *const kMXEventTypeStringSpaceChild            = @"m.space.child";
+// Use temporary event type until the MSC approval
+NSString *const kMXEventTypeStringSpaceChild            = @"org.matrix.msc1772.space.child";
 
 NSString *const kMXMessageTypeText          = @"m.text";
 NSString *const kMXMessageTypeEmote         = @"m.emote";
@@ -582,6 +585,8 @@ NSString *const kMXEventIdentifierKey = @"kMXEventIdentifierKey";
     MXEvent *event = self;
     NSDictionary *newContentDict;
     MXJSONModelSetDictionary(newContentDict, replaceEvent.content[@"m.new_content"])
+    
+    MXEventDecryptionResult *replaceEventDecryptionResult;
 
     NSMutableDictionary *editedEventDict;
     if (replaceEvent.isEncrypted)
@@ -591,6 +596,9 @@ NSString *const kMXEventIdentifierKey = @"kMXEventIdentifierKey";
         NSMutableDictionary *editedEventContentDict = [replaceEvent.wireContent mutableCopy];
         [editedEventContentDict removeObjectForKey:@"m.relates_to"];
         editedEventDict[@"content"] = editedEventContentDict;
+        
+        // Reuse its decryption data
+        replaceEventDecryptionResult = [replaceEvent decryptionResult];
     }
     else if (event.content[@"body"] && newContentDict && [newContentDict[@"msgtype"] isEqualToString:event.content[@"msgtype"]])
     {
@@ -630,6 +638,11 @@ NSString *const kMXEventIdentifierKey = @"kMXEventIdentifierKey";
         }
         
         editedEvent = [MXEvent modelFromJSON:editedEventDict];
+        
+        if (replaceEventDecryptionResult)
+        {
+            [editedEvent setClearData:replaceEventDecryptionResult];
+        }
     }
     
     return editedEvent;
@@ -672,6 +685,11 @@ NSString *const kMXEventIdentifierKey = @"kMXEventIdentifierKey";
     }
 
     newEvent = [MXEvent modelFromJSON:newEventDict];
+    
+    if (self.isEncrypted)
+    {
+        [newEvent setClearData:[self decryptionResult]];
+    }
     
     return newEvent;
 }
@@ -837,6 +855,13 @@ NSString *const kMXEventIdentifierKey = @"kMXEventIdentifierKey";
 - (void)setClearData:(MXEventDecryptionResult *)decryptionResult
 {
     _clearEvent = nil;
+    
+    if (decryptionResult.error)
+    {
+        _decryptionError = decryptionResult.error;
+        return;
+    }
+    
     if (decryptionResult.clearEvent)
     {
         NSDictionary *clearEventJSON, *clearEventJSONContent;
@@ -992,6 +1017,24 @@ NSString *const kMXEventIdentifierKey = @"kMXEventIdentifierKey";
     }
     
     return encryptedContentFiles;
+}
+
+// Extract the decryption result that allowed to decrypt the event.
+- (MXEventDecryptionResult*)decryptionResult
+{
+    MXEventDecryptionResult *decryptionResult = [MXEventDecryptionResult new];
+    
+    if (_clearEvent)
+    {
+        decryptionResult.clearEvent = _clearEvent.JSONDictionary;
+        decryptionResult.senderCurve25519Key = _clearEvent->senderCurve25519Key;
+        decryptionResult.claimedEd25519Key = _clearEvent->claimedEd25519Key;
+        decryptionResult.forwardingCurve25519KeyChain = _clearEvent->forwardingCurve25519KeyChain;
+    }
+    
+    decryptionResult.error = _decryptionError;
+    
+    return decryptionResult;
 }
 
 #pragma mark - private
