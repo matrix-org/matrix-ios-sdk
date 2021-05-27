@@ -20,6 +20,7 @@
 #import "MXFilter.h"
 #import "MXRoomEventFilter.h"
 #import "MXRoomFilter.h"
+#import "MXFilterJSONModel.h"
 
 @interface MXFilterUnitTests : XCTestCase
 @end
@@ -202,6 +203,31 @@
                                  };
 
     XCTAssertTrue([filter.dictionary isEqualToDictionary:dictionary], @"%@/%@", filter.dictionary, dictionary);
+}
+
+- (void)testFilterEquality
+{
+    MXFilterJSONModel *filter1 = [MXFilterJSONModel new];
+    filter1.eventFields = @[@"content"];
+    filter1.eventFormat = @"client";
+    filter1.presence = [[MXFilter alloc] initWithDictionary:@{@"some_key_1": @"some_value_1"}];
+    filter1.accountData = [[MXFilter alloc] initWithDictionary:@{@"some_key_2": @"some_value_2"}];
+    filter1.room = [[MXRoomFilter alloc] initWithDictionary:@{
+        @"state": @{@"lazy_load_members": @(YES)},
+        @"timeline": @{@"limit": @(20)}
+    }];
+    
+    MXFilterJSONModel *filter2 = [MXFilterJSONModel new];
+    filter2.eventFields = @[@"content"];
+    filter2.eventFormat = @"client";
+    filter2.presence = [[MXFilter alloc] initWithDictionary:@{@"some_key_1": @"some_value_1"}];
+    filter2.accountData = [[MXFilter alloc] initWithDictionary:@{@"some_key_2": @"some_value_2"}];
+    filter2.room = [[MXRoomFilter alloc] initWithDictionary:@{
+        @"state": @{@"lazy_load_members": @(YES)},
+        @"timeline": @{@"limit": @(20)}
+    }];
+
+    XCTAssertTrue([filter1 isEqual:filter2]);
 }
 
 @end
