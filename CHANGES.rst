@@ -17,6 +17,7 @@ Changes to be released in next version
  * Adapt sync response models to new sync API (vector-im/element-ios/issues/4309).
  * MXKeyBackup: Do not reset the backup if forceRefresh() is called too early.
  * Pod: Update Realm to 10.7.6.
+ * Pod: Update Jitsi to 3.5.0.
 
 🐛 Bugfix
  * MXRoomSummary: Fix decryption of the last message when it is edited (vector-im/element-ios/issues/4322).
