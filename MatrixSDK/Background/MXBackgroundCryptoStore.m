@@ -92,6 +92,7 @@ NSString *const MXBackgroundCryptoStoreUserIdSuffix = @":bgCryptoStore";
     {
         MXCredentials *bgCredentials = [MXBackgroundCryptoStore credentialForBgCryptoStoreWithCredentials:credentials];
         [MXRealmCryptoStore deleteStoreWithCredentials:bgCredentials];
+        MXRealmCryptoStore.copyReadonlyDBNextTime = YES;
         bgCryptoStore = [MXRealmCryptoStore createStoreWithCredentials:bgCredentials];
     }
 }
