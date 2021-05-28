@@ -54,12 +54,14 @@ NSString *const MXBackgroundCryptoStoreUserIdSuffix = @":bgCryptoStore";
         if ([MXRealmCryptoStore hasDataForCredentials:credentials])
         {
             cryptoStore = [[MXRealmCryptoStore alloc] initWithCredentials:credentials];
+            cryptoStore.readOnly = YES;
         }
         else
         {
             // Should never happen
             NSLog(@"[MXBackgroundCryptoStore] initWithCredentials: Warning: createStoreWithCredentials: %@:%@", credentials.userId, credentials.deviceId);
             cryptoStore = [MXRealmCryptoStore createStoreWithCredentials:credentials];
+            cryptoStore.readOnly = YES;
         }
         
         MXCredentials *bgCredentials = [MXBackgroundCryptoStore credentialForBgCryptoStoreWithCredentials:credentials];
