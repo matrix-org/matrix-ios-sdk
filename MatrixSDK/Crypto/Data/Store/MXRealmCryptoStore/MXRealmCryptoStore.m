@@ -1876,6 +1876,17 @@ static BOOL shouldCompactOnLaunch = YES;
 }
 
 static BOOL copyReadonlyDBNextTime = YES;
++ (BOOL)copyReadonlyDBNextTime
+{
+    return copyReadonlyDBNextTime;
+}
+
++ (void)setCopyReadonlyDBNextTime:(BOOL)copyReadonlyDBNextTimeFlag
+{
+    NSLog(@"[MXRealmCryptoStore] setcopyReadonlyDBNextTime: %@", copyReadonlyDBNextTimeFlag ? @"YES" : @"NO");
+    copyReadonlyDBNextTime = copyReadonlyDBNextTimeFlag;
+}
+
 + (NSURL *)readonlyURLFrom:(NSURL *)realmFileURL
 {
     return [[[realmFileURL URLByDeletingPathExtension] URLByAppendingPathExtension:MXRealmCryptoStoreReadonlySuffix] URLByAppendingPathExtension:[MXRealmHelper realmFileExtension]];
