@@ -444,6 +444,7 @@ Changes in 0.17.11 (2021-02-03)
  * MXLogger: Remove log files that are no more part of the rotation.
  * MXLogger: Add an option to limit logs size (vector-im/element-ios/issues/#3903).
  * MXRestClient: Handle grace period in `authSessionForRequestWithMethod`.
+ * MXRealmCryptoStore: Cache the Realm for the current thread.
 
 🐛 Bugfix
  * Background Sync: Use autoreleasepool to limit RAM usage (vector-im/element-ios/issues/3957).

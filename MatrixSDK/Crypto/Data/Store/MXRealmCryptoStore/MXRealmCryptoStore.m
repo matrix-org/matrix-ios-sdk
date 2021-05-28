@@ -426,7 +426,19 @@ RLM_ARRAY_TYPE(MXRealmSecret)
 
 - (RLMRealm *)realm
 {
-    return [MXRealmCryptoStore realmForUser:userId andDevice:deviceId];
+    static NSString *const kRealmKey = @"MXRealmCryptoStore-Realm";
+    static NSString *const kUserIdKey = @"MXRealmCryptoStore-UserID";
+    static NSString *const kDeviceIdKey = @"MXRealmCryptoStore-DeviceID";
+
+    NSMutableDictionary *dict = NSThread.currentThread.threadDictionary;
+    RLMRealm *realm = dict[kRealmKey];
+    if (!realm || ![userId isEqualToString:dict[kUserIdKey]] || ![deviceId isEqualToString:dict[kDeviceIdKey]]) {
+        realm = [MXRealmCryptoStore realmForUser:userId andDevice:deviceId];
+        dict[kRealmKey] = realm;
+        dict[kUserIdKey] = userId;
+        dict[kDeviceIdKey] = deviceId;
+    }
+    return realm;
 }
 
 - (MXRealmOlmAccount*)accountInCurrentThread
