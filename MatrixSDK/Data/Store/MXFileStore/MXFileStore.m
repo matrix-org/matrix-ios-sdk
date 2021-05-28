@@ -613,9 +613,12 @@ static NSUInteger preloadOptions;
 #pragma mark - Matrix filters
 - (void)setSyncFilterId:(NSString *)syncFilterId
 {
+    NSLog(@"[MXFileStore] setSyncFilterId: syncFilterId: %@", syncFilterId);
+    
     [super setSyncFilterId:syncFilterId];
     if (metaData)
     {
+        NSLog(@"[MXFileStore] setSyncFilterId: metaData exists");
         metaData.syncFilterId = syncFilterId;
         metaDataHasChanged = YES;
     }
@@ -628,6 +631,8 @@ static NSUInteger preloadOptions;
 
 - (void)storeFilter:(nonnull MXFilterJSONModel*)filter withFilterId:(nonnull NSString*)filterId
 {
+    NSLog(@"[MXFileStore] storeFilter: filter: %@ with id: %@", filter.JSONDictionary, filterId);
+    
     [super storeFilter:filter withFilterId:filterId];
     filtersHasChanged = YES;
 }
@@ -638,6 +643,7 @@ static NSUInteger preloadOptions;
 {
     if (filters)
     {
+        NSLog(@"[MXFileStore] filterWithFilterId: filters: %@", filters);
         [super filterWithFilterId:filterId success:success failure:failure];
     }
     else
@@ -660,6 +666,7 @@ static NSUInteger preloadOptions;
 {
     if (filters)
     {
+        NSLog(@"[MXFileStore] filterIdForFilter: filters: %@", filters);
         [super filterIdForFilter:filter success:success failure:failure];
     }
     else
