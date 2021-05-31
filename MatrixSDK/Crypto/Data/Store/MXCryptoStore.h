@@ -56,7 +56,7 @@
 + (instancetype)createStoreWithCredentials:(MXCredentials*)credentials;
 
 /**
- Delete the crypto store for the passed credentials.
+ Delete the crypto store for the passed credentials. Implementation should also attempt to delete read-only store.
 
  @param credentials the credentials of the account.
  */
