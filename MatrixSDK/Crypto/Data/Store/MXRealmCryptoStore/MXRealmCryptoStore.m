@@ -364,13 +364,32 @@ NSString *const MXRealmCryptoStoreReadonlySuffix = @"readonly";
 
 + (void)deleteStoreWithCredentials:(MXCredentials*)credentials
 {
-    NSLog(@"[MXRealmCryptoStore] deleteStore for %@:%@", credentials.userId, credentials.deviceId);
+    //  Delete both stores
+    [self _deleteStoreWithCredentials:credentials readOnly:NO];
+    [self _deleteStoreWithCredentials:credentials readOnly:YES];
+}
+
++ (void)deleteReadonlyStoreWithCredentials:(MXCredentials *)credentials
+{
+    [self _deleteStoreWithCredentials:credentials readOnly:YES];
+}
+
++ (void)_deleteStoreWithCredentials:(MXCredentials*)credentials readOnly:(BOOL)readOnly
+{
+    NSLog(@"[MXRealmCryptoStore] deleteStore for %@:%@, readOnly: %@", credentials.userId, credentials.deviceId, readOnly ? @"YES" : @"NO");
     
     // Delete db file directly
     // So that we can even delete corrupted realm db
     RLMRealmConfiguration *config = [RLMRealmConfiguration defaultConfiguration];
     NSURL *realmFileURL = [self realmFileURLForUserWithUserId:credentials.userId andDevice:credentials.deviceId];
-    config.fileURL = realmFileURL;
+    if (readOnly)
+    {
+        config.fileURL = [self readonlyURLFrom:realmFileURL];
+    }
+    else
+    {
+        config.fileURL = realmFileURL;
+    }
     
     if (![RLMRealm fileExistsForConfiguration:config])
     {
@@ -384,32 +403,25 @@ NSString *const MXRealmCryptoStoreReadonlySuffix = @"readonly";
     {
         NSLog(@"[MXRealmCryptoStore] deleteStore: Error: %@", error);
         
-        // The db is probably still opened elsewhere (RLMErrorAlreadyOpen), which means it is valid.
-        // Use the old method to clear the db
-        error = nil;
-        RLMRealm *realm = [MXRealmCryptoStore realmForUser:credentials.userId andDevice:credentials.deviceId readOnly:NO];
-        if (!error)
+        if (!readOnly)
         {
-            NSLog(@"[MXRealmCryptoStore] deleteStore: Delete at least its content");
-            [realm transactionWithBlock:^{
-                [realm deleteAllObjects];
-            }];
-        }
-        else
-        {
-            NSLog(@"[MXRealmCryptoStore] deleteStore: Cannot open realm. Error: %@", error);
+            // The db is probably still opened elsewhere (RLMErrorAlreadyOpen), which means it is valid.
+            // Use the old method to clear the db
+            error = nil;
+            RLMRealm *realm = [MXRealmCryptoStore realmForUser:credentials.userId andDevice:credentials.deviceId readOnly:readOnly];
+            if (!error)
+            {
+                NSLog(@"[MXRealmCryptoStore] deleteStore: Delete at least its content");
+                [realm transactionWithBlock:^{
+                    [realm deleteAllObjects];
+                }];
+            }
+            else
+            {
+                NSLog(@"[MXRealmCryptoStore] deleteStore: Cannot open realm. Error: %@", error);
+            }
         }
     }
-    
-    //  delete also the read-only instance
-    config.fileURL = [self readonlyURLFrom:config.fileURL];
-    if (![RLMRealm fileExistsForConfiguration:config])
-    {
-        NSLog(@"[MXRealmCryptoStore] deleteStore: Readonly Realm db does not exist");
-        return;
-    }
-    
-    [RLMRealm deleteFilesForConfiguration:config error:nil];
 }
 
 - (instancetype)initWithCredentials:(MXCredentials *)credentials
@@ -1651,7 +1663,9 @@ NSString *const MXRealmCryptoStoreReadonlySuffix = @"readonly";
     if (readOnly)
     {
         NSURL *readOnlyURL = [self readonlyURLFrom:config.fileURL];
-        if (copyReadonlyDBNextTime && [[NSFileManager defaultManager] fileExistsAtPath:config.fileURL.path])
+        //  copy to read-only file if needed
+        if ([[NSFileManager defaultManager] fileExistsAtPath:config.fileURL.path] &&
+            ![[NSFileManager defaultManager] fileExistsAtPath:readOnlyURL.path])
         {
             NSError *error;
             NSDictionary *fileAttributes = [[NSFileManager defaultManager] attributesOfItemAtPath:config.fileURL.path error:nil];
@@ -1666,8 +1680,6 @@ NSString *const MXRealmCryptoStoreReadonlySuffix = @"readonly";
             else
             {
                 NSLog(@"[MXRealmCryptoStore] realmForUser: readonly copy file lasted %@, fileSize: %@", [stopwatch readableIn:MXStopwatchMeasurementUnitMilliseconds], [MXTools fileSizeToString:fileSize round:NO]);
-                //  file successfully copied, do not attempt to copy again
-                copyReadonlyDBNextTime = NO;
             }
         }
         
@@ -1903,18 +1915,6 @@ static BOOL shouldCompactOnLaunch = YES;
 {
     NSLog(@"[MXRealmCryptoStore] setReadOnly: %@", readOnly ? @"YES" : @"NO");
     _readOnly = readOnly;
-}
-
-static BOOL copyReadonlyDBNextTime = YES;
-+ (BOOL)copyReadonlyDBNextTime
-{
-    return copyReadonlyDBNextTime;
-}
-
-+ (void)setCopyReadonlyDBNextTime:(BOOL)copyReadonlyDBNextTimeFlag
-{
-    NSLog(@"[MXRealmCryptoStore] setCopyReadonlyDBNextTime: %@", copyReadonlyDBNextTimeFlag ? @"YES" : @"NO");
-    copyReadonlyDBNextTime = copyReadonlyDBNextTimeFlag;
 }
 
 + (NSURL *)readonlyURLFrom:(NSURL *)realmFileURL

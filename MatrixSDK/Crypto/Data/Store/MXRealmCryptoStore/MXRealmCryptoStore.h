@@ -40,12 +40,6 @@
  */
 @property (nonatomic, assign) BOOL readOnly;
 
-/**
- Flag to indicate whether readonly database will be copied when building a Realm instance.
- Default is YES for the first time a process started, either an app or an app extension. Then switched to NO after the file is copied one time.
- */
-@property (class) BOOL copyReadonlyDBNextTime;
-
 @end
 
 #endif

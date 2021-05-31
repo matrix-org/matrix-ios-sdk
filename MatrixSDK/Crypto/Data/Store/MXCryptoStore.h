@@ -63,6 +63,13 @@
 + (void)deleteStoreWithCredentials:(MXCredentials*)credentials;
 
 /**
+ Delete the read-only crypto store for the passed credentials.
+
+ @param credentials the credentials of the account.
+ */
++ (void)deleteReadonlyStoreWithCredentials:(MXCredentials*)credentials;
+
+/**
  Create a crypto store for the passed credentials.
 
  @param credentials the credentials of the account.

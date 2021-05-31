@@ -92,7 +92,7 @@ NSString *const MXBackgroundCryptoStoreUserIdSuffix = @":bgCryptoStore";
     {
         MXCredentials *bgCredentials = [MXBackgroundCryptoStore credentialForBgCryptoStoreWithCredentials:credentials];
         [MXRealmCryptoStore deleteStoreWithCredentials:bgCredentials];
-        MXRealmCryptoStore.copyReadonlyDBNextTime = YES;
+        [MXRealmCryptoStore deleteReadonlyStoreWithCredentials:credentials];
         bgCryptoStore = [MXRealmCryptoStore createStoreWithCredentials:bgCredentials];
     }
 }
@@ -296,6 +296,11 @@ NSString *const MXBackgroundCryptoStoreUserIdSuffix = @":bgCryptoStore";
 #pragma mark - No-op
 
 + (void)deleteStoreWithCredentials:(MXCredentials*)credentials
+{
+    NSAssert(NO, @"This method should be useless in the context of MXBackgroundCryptoStore");
+}
+
++ (void)deleteReadonlyStoreWithCredentials:(MXCredentials*)credentials
 {
     NSAssert(NO, @"This method should be useless in the context of MXBackgroundCryptoStore");
 }
