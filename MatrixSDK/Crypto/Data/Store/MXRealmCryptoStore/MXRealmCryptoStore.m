@@ -336,6 +336,11 @@ NSString *const MXRealmCryptoStoreReadonlySuffix = @"readonly";
 + (BOOL)hasDataForCredentials:(MXCredentials*)credentials
 {
     RLMRealm *realm = [MXRealmCryptoStore realmForUser:credentials.userId andDevice:credentials.deviceId readOnly:YES];
+    if (realm == nil)
+    {
+        //  there is no Realm with this config
+        return NO;
+    }
     return (nil != [MXRealmOlmAccount objectsInRealm:realm where:@"userId = %@", credentials.userId].firstObject);
 }
 
@@ -1596,7 +1601,15 @@ NSString *const MXRealmCryptoStoreReadonlySuffix = @"readonly";
 
 
 #pragma mark - Private methods
-+ (RLMRealm*)realmForUser:(NSString*)userId andDevice:(NSString*)deviceId readOnly:(BOOL)readOnly
+/**
+ Get Realm instance for the given user and device.
+ 
+ @param userId User id for the Realm
+ @param deviceId Device id for the Realm
+ @param readOnly Flag to indicate whether Realm should be a read-only one.
+ @returns Desired Realm instance for the given parameters, or nil if cannot create such a Realm instance. For instance: if desired a read-only Realm but no real store exists.
+ */
++ (nullable RLMRealm*)realmForUser:(NSString*)userId andDevice:(NSString*)deviceId readOnly:(BOOL)readOnly
 {
     RLMRealmConfiguration *config = [RLMRealmConfiguration defaultConfiguration];
     
@@ -1637,23 +1650,34 @@ NSString *const MXRealmCryptoStoreReadonlySuffix = @"readonly";
     
     if (readOnly)
     {
+        NSURL *readOnlyURL = [self readonlyURLFrom:config.fileURL];
         if (copyReadonlyDBNextTime && [[NSFileManager defaultManager] fileExistsAtPath:config.fileURL.path])
         {
-            NSURL *readOnlyURL = [self readonlyURLFrom:config.fileURL];
             NSError *error;
             NSDictionary *fileAttributes = [[NSFileManager defaultManager] attributesOfItemAtPath:config.fileURL.path error:nil];
             unsigned long long fileSize = [[fileAttributes objectForKey:NSFileSize] unsignedLongLongValue];
             MXStopwatch *stopwatch = [MXStopwatch new];
             [[NSFileManager defaultManager] removeItemAtURL:readOnlyURL error:nil];
             [[NSFileManager defaultManager] copyItemAtURL:config.fileURL toURL:readOnlyURL error:&error];
-            NSLog(@"[MXRealmCryptoStore] realmForUser: readonly copy file lasted %@, fileSize: %@", [stopwatch readableIn:MXStopwatchMeasurementUnitMilliseconds], [MXTools fileSizeToString:fileSize round:NO]);
-            if (!error)
+            if (error)
             {
-                config.fileURL = readOnlyURL;
-                config.readOnly = YES;
+                NSLog(@"[MXRealmCryptoStore] realmForUser: readonly copy file error: %@", error);
+            }
+            else
+            {
+                NSLog(@"[MXRealmCryptoStore] realmForUser: readonly copy file lasted %@, fileSize: %@", [stopwatch readableIn:MXStopwatchMeasurementUnitMilliseconds], [MXTools fileSizeToString:fileSize round:NO]);
+                //  file successfully copied, do not attempt to copy again
                 copyReadonlyDBNextTime = NO;
             }
         }
+        
+        if (![[NSFileManager defaultManager] fileExistsAtPath:readOnlyURL.path])
+        {
+            NSLog(@"[MXRealmCryptoStore] realmForUser: cannot create a read-only Realm for non-existent file.");
+            return nil;
+        }
+        config.fileURL = readOnlyURL;
+        config.readOnly = YES;
     }
     else
     {
@@ -1674,6 +1698,12 @@ NSString *const MXRealmCryptoStoreReadonlySuffix = @"readonly";
             NSError *error;
             [[NSFileManager defaultManager] removeItemAtPath:config.fileURL.path error:&error];
             NSLog(@"[MXRealmCryptoStore] removeItemAtPath error result: %@", error);
+            
+            if (config.readOnly)
+            {
+                NSLog(@"[MXRealmCryptoStore] realmForUser: returning nil for read-only Realm");
+                return nil;
+            }
             
             // And try again
             realm = [RLMRealm realmWithConfiguration:config error:&error];
@@ -1883,7 +1913,7 @@ static BOOL copyReadonlyDBNextTime = YES;
 
 + (void)setCopyReadonlyDBNextTime:(BOOL)copyReadonlyDBNextTimeFlag
 {
-    NSLog(@"[MXRealmCryptoStore] setcopyReadonlyDBNextTime: %@", copyReadonlyDBNextTimeFlag ? @"YES" : @"NO");
+    NSLog(@"[MXRealmCryptoStore] setCopyReadonlyDBNextTime: %@", copyReadonlyDBNextTimeFlag ? @"YES" : @"NO");
     copyReadonlyDBNextTime = copyReadonlyDBNextTimeFlag;
 }
 
