@@ -140,9 +140,9 @@ private var logger: SwiftyBeaver.Type = {
         consoleDestination.useNSLog = true
         consoleDestination.asynchronously = configuration.asynchronous
         consoleDestination.format = "$C $M"
-        consoleDestination.levelColor.verbose = " "
-        consoleDestination.levelColor.debug = " "
-        consoleDestination.levelColor.info = " "
+        consoleDestination.levelColor.verbose = ""
+        consoleDestination.levelColor.debug = ""
+        consoleDestination.levelColor.info = ""
         consoleDestination.levelColor.warning = "⚠️"
         consoleDestination.levelColor.error = "🚨"
         
