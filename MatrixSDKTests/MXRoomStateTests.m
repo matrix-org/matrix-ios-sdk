@@ -1002,7 +1002,7 @@
                         
                         XCTAssertEqual(newRoom.summary.membership, MXMembershipJoin);
 
-                        XCTAssertNotNil(newRoom.summary.lastMessageEventId);
+                        XCTAssertNotNil(newRoom.summary.lastMessage.eventId);
                         XCTAssertNotNil(newRoom.summary.lastMessageEvent);
                         
                         XCTAssertEqual(newRoom.summary.lastMessageEvent.eventType, MXEventTypeRoomMember, @"The last should be a m.room.member event indicating Alice joining the room");

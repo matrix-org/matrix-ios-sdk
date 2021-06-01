@@ -88,7 +88,7 @@
     // Do not show redaction events
     if (event.eventType == MXEventTypeRoomRedaction)
     {
-        if ([event.redacts isEqualToString:summary.lastMessageEventId])
+        if ([event.redacts isEqualToString:summary.lastMessage.eventId])
         {
             [summary resetLastMessage:nil failure:^(NSError *error) {
                 NSLog(@"[MXRoomSummaryUpdater] updateRoomSummary: Cannot reset last message after redaction. Room: %@", summary.roomId);

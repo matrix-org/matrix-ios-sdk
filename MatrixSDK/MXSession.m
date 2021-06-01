@@ -2823,12 +2823,12 @@ typedef void (^MXOnResumeDone)(void);
 {
     for (MXRoomSummary *summary in self.roomsSummaries)
     {
-        if (!summary.lastMessageEventId)
+        if (!summary.lastMessage.eventId)
         {
             NSLog(@"[MXSession] fixRoomsSummariesLastMessage: Fixing last message for room %@", summary.roomId);
             
             [summary resetLastMessageWithMaxServerPaginationCount:maxServerPaginationCount onComplete:^{
-                NSLog(@"[MXSession] fixRoomsSummariesLastMessage:Fixing last message operation for room %@ has complete. lastMessageEventId: %@", summary.roomId, summary.lastMessageEventId);
+                NSLog(@"[MXSession] fixRoomsSummariesLastMessage:Fixing last message operation for room %@ has complete. lastMessageEventId: %@", summary.roomId, summary.lastMessage.eventId);
             } failure:^(NSError *error) {
                 NSLog(@"[MXSession] fixRoomsSummariesLastMessage: Cannot fix last message for room %@ with maxServerPaginationCount: %@", summary.roomId, @(maxServerPaginationCount));
             }

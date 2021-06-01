@@ -1240,7 +1240,7 @@ Common initial conditions:
         MXRoomSummary *summary = [aliceSession roomSummaryWithRoomId:roomId];
         MXRoom *room = [aliceSession roomWithRoomId:roomId];
 
-        MXEventTimeline *eventTimeline = [room timelineOnEvent:summary.lastMessageEventId];
+        MXEventTimeline *eventTimeline = [room timelineOnEvent:summary.lastMessage.eventId];
 
         [eventTimeline resetPaginationAroundInitialEventWithLimit:10 success:^{
 
@@ -1298,7 +1298,7 @@ Common initial conditions:
         MXRoomSummary *summary = [aliceSession roomSummaryWithRoomId:roomId];
         MXRoom *room = [aliceSession roomWithRoomId:roomId];
 
-        MXEventTimeline *eventTimeline = [room timelineOnEvent:summary.lastMessageEventId];
+        MXEventTimeline *eventTimeline = [room timelineOnEvent:summary.lastMessage.eventId];
 
         __block NSUInteger messageCount = 0;
         [eventTimeline listenToEvents:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
