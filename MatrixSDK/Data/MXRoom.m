@@ -2339,11 +2339,13 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
     }
 
     // If required, update the last message
-    MXEvent *lastMessageEvent = self.summary.lastMessageEvent;
-    if (lastMessageEvent.sentState != MXEventSentStateSent)
-    {
-        [self.summary resetLastMessage:nil failure:nil commit:YES];
-    }
+    [self.summary loadLastEvent:^{
+        MXEvent *lastMessageEvent = self.summary.lastMessageEvent;
+        if (lastMessageEvent.sentState != MXEventSentStateSent)
+        {
+            [self.summary resetLastMessage:nil failure:nil commit:YES];
+        }
+    }];
 }
 
 - (void)removeOutgoingMessage:(NSString*)outgoingMessageEventId
