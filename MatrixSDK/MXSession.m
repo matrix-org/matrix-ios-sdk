@@ -2801,7 +2801,7 @@ typedef void (^MXOnResumeDone)(void);
 {
     for (MXRoomSummary *summary in self.roomsSummaries)
     {
-        if (!summary.lastMessage.eventId)
+        if (!summary.lastMessage)
         {
             NSLog(@"[MXSession] fixRoomsSummariesLastMessage: Fixing last message for room %@", summary.roomId);
             
