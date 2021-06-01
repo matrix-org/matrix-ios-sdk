@@ -18,6 +18,7 @@ Changes to be released in next version
  * MXKeyBackup: Do not reset the backup if forceRefresh() is called too early.
  * Pod: Update Realm to 10.7.6.
  * Pod: Update Jitsi to 3.5.0.
+ * MXRealmCryptoStore: Use Realm instances as read-only in background store (vector-im/element-ios/issues/4352).
 
 🐛 Bugfix
  * MXRoomSummary: Fix decryption of the last message when it is edited (vector-im/element-ios/issues/4322).
