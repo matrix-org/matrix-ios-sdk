@@ -395,20 +395,15 @@ typedef void (^MXOnResumeDone)(void);
 
                 NSLog(@"[MXSession] Built %lu MXRooms in %.0fms", (unsigned long)self->rooms.count, [[NSDate date] timeIntervalSinceDate:startDate3] * 1000);
                 
-                NSDate *startDate4 = [NSDate date];
-                [self loadRoomSummaryLastEvents:^{
-                    NSLog(@"[MXSession] Loaded %lu MXRoomSummaries last events in  in %.0fms", (unsigned long)self->roomsSummaries.count, [[NSDate date] timeIntervalSinceDate:startDate4] * 1000);
-                    
-                    taskProfile.units = self->rooms.count;
-                    [MXSDKOptions.sharedInstance.profiler stopMeasuringTaskWithProfile:taskProfile];
-                    
-                    NSLog(@"[MXSession] Total time to mount SDK data from MXStore: %.0fms", taskProfile.duration * 1000);
-                    
-                    [self setState:MXSessionStateStoreDataReady];
-                    
-                    // The SDK client can use this data
-                    onStoreDataReady();
-                }];
+                taskProfile.units = self->rooms.count;
+                [MXSDKOptions.sharedInstance.profiler stopMeasuringTaskWithProfile:taskProfile];
+                
+                NSLog(@"[MXSession] Total time to mount SDK data from MXStore: %.0fms", taskProfile.duration * 1000);
+                
+                [self setState:MXSessionStateStoreDataReady];
+                
+                // The SDK client can use this data
+                onStoreDataReady();
             }
             else
             {
@@ -433,23 +428,6 @@ typedef void (^MXOnResumeDone)(void);
             failure(error);
         }
     }];
-}
-
-// Load the last event for all room summaries.
--(void)loadRoomSummaryLastEvents:(void (^)(void))onComplete
-{
-    dispatch_group_t dispatchGroup = dispatch_group_create();
-    for (MXRoomSummary *roomSummary in self.roomsSummaries)
-    {
-        dispatch_group_enter(dispatchGroup);
-        [roomSummary loadLastEvent:^{
-            dispatch_group_leave(dispatchGroup);
-        }];
-    }
-    
-    dispatch_group_notify(dispatchGroup, dispatch_get_main_queue(), ^{
-        onComplete();
-    });
 }
 
 /// Handle a sync response and decide serverTimeout for the next sync request.
