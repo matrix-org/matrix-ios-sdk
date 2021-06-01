@@ -18,10 +18,19 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
+/**
+ `MXRoomLastMessage` is a model class to store some lastMessage properties for room summary objects.
+ */
 @interface MXRoomLastMessage : NSObject <NSCoding>
 
+/**
+ Event identifier of the last message.
+ */
 @property (nonatomic, copy, readonly) NSString *eventId;
 
+/**
+ Timestamp of the last message.
+ */
 @property (nonatomic, assign, readonly) uint64_t originServerTs;
 
 - (instancetype)initWithEventId:(NSString *)eventId originServerTs:(uint64_t)originServerTs;

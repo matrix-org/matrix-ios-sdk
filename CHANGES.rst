@@ -30,6 +30,9 @@ Changes to be released in next version
  * MXSession: [MXSession decryptEvent:inTimeline:] is deprecated, use [MXSession decryptEvents:inTimeline:onComplete:] instead.
  * MXCrypto: [MXCrypto decryptEvent:inTimeline:] is deprecated, use [MXCrypto decryptEvents:inTimeline:onComplete:] instead.
  * MXCrypto: [MXCrypto hasKeysToDecryptEvent:] is now asynchronous.
+ * MXRoomSummary: lastMessageEventId, lastMessageOriginServerTs, isLastMessageEncrypted, lastMessageString, lastMessageAttributedString, lastMessageOthers properties removed.
+ * MXRoomSummary: lastMessageEventId, lastMessageOriginServerTs are moved into lastMessage property.
+ * MXSession: Does not compute anymore last events for every room summaries by default. Use -[MXRoomSummary loadLastEvent:] to load the last event for a room summary.
 
 🗣 Translations
  * 

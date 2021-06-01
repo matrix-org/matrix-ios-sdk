@@ -39,6 +39,11 @@ NSString *const kCodingKeyOriginServerTs = @"originServerTs";
     return self;
 }
 
+- (NSString*)description
+{
+    return [NSString stringWithFormat:@"%@: %@ - %llu", super.description, self.eventId, self.originServerTs];
+}
+
 #pragma mark - NSCoding
 
 - (instancetype)initWithCoder:(NSCoder *)coder
