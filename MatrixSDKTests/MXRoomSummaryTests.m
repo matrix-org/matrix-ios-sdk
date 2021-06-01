@@ -1296,10 +1296,11 @@ NSString *uisiString = @"The sender's device has not sent us the keys for this m
         MXRoomSummary *summary = room.summary;
 
         NSUInteger notificationCount = room.summary.notificationCount;
+        __block NSString *lastMessageEventId = nil;
 
         self->observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXRoomSummaryDidChangeNotification object:summary queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
 
-            if (room.summary.lastMessage)
+            if ([room.summary.lastMessage.eventId isEqualToString:lastMessageEventId])
             {
                 // 3 -> From Bob's POV, the room notification count must increase
                 XCTAssertEqual(room.summary.notificationCount, notificationCount + 1);
@@ -1310,7 +1311,9 @@ NSString *uisiString = @"The sender's device has not sent us the keys for this m
 
         // 2 - Alice sends a message
         NSString *message = [NSString stringWithFormat:@"%@: Hello", bobSession.myUser.userId];
-        [aliceRestClient sendTextMessageToRoom:roomId text:message success:nil failure:^(NSError *error) {
+        [aliceRestClient sendTextMessageToRoom:roomId text:message success:^(NSString *eventId) {
+            lastMessageEventId = eventId;
+        } failure:^(NSError *error) {
             XCTFail(@"Cannot set up intial test conditions - error: %@", error);
             [expectation fulfill];
         }];
