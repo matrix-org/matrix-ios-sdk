@@ -230,10 +230,18 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
     
     if (!lastMessageEvent)
     {
-        NSLog(@"[MXRoomSummary] loadLastEvent: Cannot find event %@ in store", _lastMessage.eventId);
-        dispatch_async(dispatch_get_main_queue(), ^{
-            onComplete();
-        });
+        NSLog(@"[MXRoomSummary] loadLastEvent: Attempt to fetch event %@", _lastMessage.eventId);
+        MXWeakify(self);
+        [_mxSession eventWithEventId:_lastMessage.eventId inRoom:_roomId success:^(MXEvent *event) {
+            MXStrongifyAndReturnIfNil(self);
+            self.lastMessageEvent = event;
+            dispatch_async(dispatch_get_main_queue(), ^{
+                onComplete();
+            });
+        } failure:^(NSError *error) {
+            MXStrongifyAndReturnIfNil(self);
+            NSLog(@"[MXRoomSummary] loadLastEvent: Cannot fetch event %@, error: %@", self.lastMessage.eventId, error);
+        }];
         return;
     }
     
