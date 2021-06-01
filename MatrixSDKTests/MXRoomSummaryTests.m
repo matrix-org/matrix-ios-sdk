@@ -95,10 +95,9 @@ NSString *uisiString = @"The sender's device has not sent us the keys for this m
         MXRoomSummaryUpdater *updater = [MXRoomSummaryUpdater roomSummaryUpdaterForSession:session];
         updated = [updater session:session updateRoomSummary:summary withLastEvent:event eventState:eventState roomState:roomState];
 
-        summary.lastMessageString = testDelegateLastMessageString;
-
         XCTAssert(updated);
-        XCTAssertEqualObjects(summary.lastMessageEventId, event.eventId);
+        XCTAssertEqualObjects(summary.lastMessage.eventId, event.eventId);
+        XCTAssertEqual(summary.lastMessage.originServerTs, event.originServerTs);
 
         testDelegate = YES;
     }
@@ -136,23 +135,12 @@ NSString *uisiString = @"The sender's device has not sent us the keys for this m
         // Do a classic update
         MXRoomSummaryUpdater *updater = [MXRoomSummaryUpdater roomSummaryUpdaterForSession:session];
         updated = [updater session:session updateRoomSummary:summary withLastEvent:event eventState:eventState roomState:roomState];
-
-        summary.lastMessageString = event.content[@"body"];
     }
     else if ([self.description containsString:@"testLateRoomKey"])
     {
         // Do a classic update
         MXRoomSummaryUpdater *updater = [MXRoomSummaryUpdater roomSummaryUpdaterForSession:session];
         updated = [updater session:session updateRoomSummary:summary withLastEvent:event eventState:eventState roomState:roomState];
-
-        if (event.eventType == MXEventTypeRoomEncrypted)
-        {
-            summary.lastMessageString = uisiString;
-        }
-        else
-        {
-            summary.lastMessageString = event.content[@"body"];
-        }
     }
     else
     {
@@ -200,13 +188,19 @@ NSString *uisiString = @"The sender's device has not sent us the keys for this m
 
         __block NSString *lastMessageEventId;
 
-        observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXRoomSummaryDidChangeNotification object:summary queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
+        self->observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXRoomSummaryDidChangeNotification object:summary queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
 
-            XCTAssert(testDelegate);
-            XCTAssertEqualObjects(summary.lastMessageEventId, lastMessageEventId);
-            XCTAssertEqualObjects(summary.lastMessageString, testDelegateLastMessageString);
-
-            [expectation fulfill];
+            XCTAssert(self->testDelegate);
+            XCTAssertEqualObjects(summary.lastMessage.eventId, lastMessageEventId);
+            
+            [summary loadLastEvent:^{
+                XCTAssertTrue(NSThread.isMainThread);
+                MXEvent *event = summary.lastMessageEvent;
+                
+                XCTAssertNotNil(event);
+                
+                [expectation fulfill];
+            }];
         }];
 
         [room sendTextMessage:@"new message" success:^(NSString *eventId) {
@@ -228,9 +222,9 @@ NSString *uisiString = @"The sender's device has not sent us the keys for this m
 
         MXEvent *lastMessageEvent = summary.lastMessageEvent;
 
-        observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXRoomSummaryDidChangeNotification object:summary queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
+        self->observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXRoomSummaryDidChangeNotification object:summary queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
 
-            XCTAssert(testNoChangeDelegate);
+            XCTAssert(self->testNoChangeDelegate);
             XCTAssertEqualObjects(summary.lastMessageEvent.eventId, lastMessageEvent.eventId);
 
             [expectation fulfill];
@@ -266,13 +260,17 @@ NSString *uisiString = @"The sender's device has not sent us the keys for this m
                 MXRoomSummary *summary2 = [mxSession2 roomSummaryWithRoomId:roomId];
 
                 XCTAssert(summary2);
-                XCTAssertNil(summary2.lastMessageEventId, @"We asked for loading 0 message. So, we cannot know the last message yet");
+                XCTAssertNil(summary2.lastMessage, @"We asked for loading 0 message. So, we cannot know the last message yet");
 
-                observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXRoomSummaryDidChangeNotification object:summary2 queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
+                self->observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXRoomSummaryDidChangeNotification object:summary2 queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
 
                     XCTAssert(summary2);
-                    XCTAssert(summary2.lastMessageEventId, @"We must have an event now");
-                    XCTAssertFalse(summary.isLastMessageEncrypted);
+                    XCTAssert(summary2.lastMessage.eventId, @"We must have an event now");
+                    
+                    [summary2 loadLastEvent:^{
+                        XCTAssertNotNil(summary2.lastMessageEvent);
+                        XCTAssertFalse(summary2.lastMessageEvent.isEncrypted);
+                    }];
 
                     MXEvent *event2 = summary2.lastMessageEvent;
 
@@ -333,7 +331,7 @@ NSString *uisiString = @"The sender's device has not sent us the keys for this m
                     MXRoomSummary *summary2 = [mxSession2 roomSummaryWithRoomId:roomId];
 
                     XCTAssert(summary2);
-                    XCTAssertNil(summary2.lastMessage.eventId, @"We asked for loading 0 message. So, we cannot know the last message yet");
+                    XCTAssertNil(summary2.lastMessage, @"We asked for loading 0 message. So, we cannot know the last message yet");
 
 
                     // Force the summary to fetch events from the homeserver to get the last one
@@ -352,7 +350,7 @@ NSString *uisiString = @"The sender's device has not sent us the keys for this m
                     self->observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXRoomSummaryDidChangeNotification object:summary2 queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
 
                         XCTAssert(summary2);
-                        XCTAssert(summary2.lastMessage.eventId, @"We must have an event now");
+                        XCTAssert(summary2.lastMessage, @"We must have an event now");
 
                         MXEvent *event2 = summary2.lastMessageEvent;
                         XCTAssert(event2);
@@ -393,12 +391,12 @@ NSString *uisiString = @"The sender's device has not sent us the keys for this m
         [mxSession2 setStore:[[MXMemoryStore alloc] init] success:^{
 
             // Start a new session by loading no message
-            [mxSession2 startWithSyncFilter:[MXFilterJSONModel syncFilterWithMessageLimit:0] onServerSyncDone:^{
+            [mxSession2 startWithSyncFilter:[MXFilterJSONModel syncFilterWithMessageLimit:1] onServerSyncDone:^{
 
                 MXRoomSummary *summary2 = [mxSession2 roomSummaryWithRoomId:roomId];
 
                 XCTAssert(summary2);
-                XCTAssertNil(summary2.lastMessage.eventId, @"We asked for loading 0 message. So, we cannot know the last message yet");
+                XCTAssertNil(summary2.lastMessage, @"We asked for loading 0 message. So, we cannot know the last message yet");
 
                 self->observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXRoomSummaryDidChangeNotification object:summary2 queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
 
@@ -435,7 +433,7 @@ NSString *uisiString = @"The sender's device has not sent us the keys for this m
 
         NSString *displayName = @"A room";
 
-        observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXRoomSummaryDidChangeNotification object:summary queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
+        self->observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXRoomSummaryDidChangeNotification object:summary queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
 
              XCTAssertEqualObjects(summary.displayname, displayName, @"Room summary must be updated");
 
@@ -488,7 +486,7 @@ NSString *uisiString = @"The sender's device has not sent us the keys for this m
         XCTAssertEqual(room.summary.membersCount.joined, 1);
         XCTAssertEqual(room.summary.membersCount.invited, 0);
 
-        [matrixSDKTestsData doMXSessionTestWithAlice:nil readyToTest:^(MXSession *aliceSession, XCTestExpectation *expectation2) {
+        [self->matrixSDKTestsData doMXSessionTestWithAlice:nil readyToTest:^(MXSession *aliceSession, XCTestExpectation *expectation2) {
 
             [room liveTimeline:^(MXEventTimeline *liveTimeline) {
                 [liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMember] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
@@ -552,7 +550,7 @@ NSString *uisiString = @"The sender's device has not sent us the keys for this m
 
         NSString *userDisplayName = @"NewBob";
 
-        observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXRoomSummaryDidChangeNotification object:summary queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
+        self->observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXRoomSummaryDidChangeNotification object:summary queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
 
             MXEvent *event = summary.lastMessageEvent;
 
@@ -582,7 +580,7 @@ NSString *uisiString = @"The sender's device has not sent us the keys for this m
 
         NSString *userDisplayName = @"NewBob";
 
-        observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXRoomSummaryDidChangeNotification object:summary queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
+        self->observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXRoomSummaryDidChangeNotification object:summary queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
 
             XCTFail(@"The last message should not change if ignoreMemberProfileChanges == YES");
             [expectation fulfill];
@@ -619,7 +617,7 @@ NSString *uisiString = @"The sender's device has not sent us the keys for this m
         MXEvent *localEcho;
 
         __block NSUInteger notifCount = 0;
-        observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXRoomSummaryDidChangeNotification object:summary queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
+        self->observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXRoomSummaryDidChangeNotification object:summary queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
 
             MXEvent *event = summary.lastMessageEvent;
 
@@ -685,7 +683,7 @@ NSString *uisiString = @"The sender's device has not sent us the keys for this m
         MXEvent *localEcho;
 
         __block NSUInteger notifCount = 0;
-        observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXRoomSummaryDidChangeNotification object:summary queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
+        self->observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXRoomSummaryDidChangeNotification object:summary queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
 
             MXEvent *event = summary.lastMessageEvent;
 
@@ -782,12 +780,12 @@ NSString *uisiString = @"The sender's device has not sent us the keys for this m
         MXRoomSummary *summary = room.summary;
 
         __block NSString *newEventId;
-        NSString *lastMessageEventId = summary.lastMessageEventId;
+        NSString *lastMessageEventId = summary.lastMessage.eventId;
 
         XCTAssert(lastMessageEventId);
 
         __block NSUInteger notifCount = 0;
-        observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXRoomSummaryDidChangeNotification object:summary queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
+        self->observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXRoomSummaryDidChangeNotification object:summary queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
 
             switch (notifCount++)
             {
@@ -982,7 +980,7 @@ NSString *uisiString = @"The sender's device has not sent us the keys for this m
 
         NSString *displayName = @"A room";
 
-        observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXRoomSummaryDidChangeNotification object:summary queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
+        self->observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXRoomSummaryDidChangeNotification object:summary queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
 
             [room state:^(MXRoomState *roomState) {
 
@@ -1020,7 +1018,7 @@ NSString *uisiString = @"The sender's device has not sent us the keys for this m
         __block NSString *lastMessageEventId;
         MXEvent *localEcho;
 
-        observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXRoomSummaryDidChangeNotification object:summary queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
+        self->observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXRoomSummaryDidChangeNotification object:summary queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
 
             MXEvent *event = summary.lastMessageEvent;
 
@@ -1030,10 +1028,9 @@ NSString *uisiString = @"The sender's device has not sent us the keys for this m
 
             XCTAssert(event.isEncrypted);
 
-            XCTAssertEqualObjects(summary.lastMessageEventId, lastMessageEventId);
-            XCTAssertEqualObjects(summary.lastMessageString, message);
-            XCTAssert(summary.isLastMessageEncrypted);
-
+            XCTAssertEqualObjects(summary.lastMessage.eventId, lastMessageEventId);
+            XCTAssert(summary.lastMessageEvent.isEncrypted);
+            
             XCTAssert(event.isEncrypted);
             XCTAssert(summary.isEncrypted);
 
@@ -1075,14 +1072,13 @@ NSString *uisiString = @"The sender's device has not sent us the keys for this m
                             MXRoomSummary *summary2 = [aliceSession2.store summaryOfRoom:roomId];
 
                             XCTAssert(summary2.isEncrypted);
-                            XCTAssertEqualObjects(summary2.lastMessageEventId, lastMessageEventId);
-                            XCTAssert(summary.isLastMessageEncrypted);
-                            XCTAssertEqualObjects(summary2.lastMessageString, message, @"Once the session is started, the message should be decrypted (in memory)");
-
-                            XCTAssertNil(summary2.lastMessageAttributedString, @"We did not stored an attributed string");
-                            XCTAssertEqual(summary2.lastMessageOthers.count, 0, @"We did not stored any others");
-
-                            [expectation fulfill];
+                            XCTAssertEqualObjects(summary2.lastMessage.eventId, lastMessageEventId);
+                            
+                            [summary loadLastEvent:^{
+                                XCTAssert(summary.lastMessageEvent.isEncrypted);
+                                
+                                [expectation fulfill];
+                            }];
 
                         } failure:^(NSError *error) {
                             XCTFail(@"Cannot set up intial test conditions - error: %@", error);
@@ -1125,7 +1121,7 @@ NSString *uisiString = @"The sender's device has not sent us the keys for this m
         __block NSString *lastMessageEventId;
         MXEvent *localEcho;
 
-        observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXRoomSummaryDidChangeNotification object:summary queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
+        self->observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXRoomSummaryDidChangeNotification object:summary queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
 
             MXEvent *event = summary.lastMessageEvent;
 
@@ -1151,16 +1147,17 @@ NSString *uisiString = @"The sender's device has not sent us the keys for this m
                         MXRoomSummary *summary2 = [aliceSession2 roomSummaryWithRoomId:roomId];
 
                         XCTAssert(summary2.isEncrypted);
-                        XCTAssertEqualObjects(summary2.lastMessageString, message, @"Once the session is started, the message should be decrypted (in memory)");
 
-                        MXEvent *event2 = summary2.lastMessageEvent;
-                        XCTAssert(event2);
-                        XCTAssertEqualObjects(event2.eventId, lastMessageEventId);
-                        XCTAssert(event2.clearEvent, @"The event must have been decrypted by MXRoomSummary.lastMessageEvent");
-                        XCTAssertEqual(event2.eventType, MXEventTypeRoomMessage);
-                        XCTAssertEqualObjects(event2.content[@"body"], message);
-
-                        [expectation fulfill];
+                        [summary2 loadLastEvent:^{
+                            MXEvent *event2 = summary2.lastMessageEvent;
+                            XCTAssert(event2);
+                            XCTAssertEqualObjects(event2.eventId, lastMessageEventId);
+                            XCTAssert(event2.clearEvent, @"The event must have been decrypted by MXRoomSummary.lastMessageEvent");
+                            XCTAssertEqual(event2.eventType, MXEventTypeRoomMessage);
+                            XCTAssertEqualObjects(event2.content[@"body"], message);
+                            
+                            [expectation fulfill];
+                        }];
 
                     } failure:^(NSError *error) {
                         XCTFail(@"Cannot set up intial test conditions - error: %@", error);
@@ -1203,7 +1200,7 @@ NSString *uisiString = @"The sender's device has not sent us the keys for this m
         // Some hack to set up test conditions
         __block MXEvent *toDeviceEvent;
 
-        observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXSessionOnToDeviceEventNotification object:bobSession queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *notif) {
+        self->observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXSessionOnToDeviceEventNotification object:bobSession queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *notif) {
 
             toDeviceEvent = notif.userInfo[kMXSessionNotificationEventKey];
         }];
@@ -1239,8 +1236,8 @@ NSString *uisiString = @"The sender's device has not sent us the keys for this m
             {
                 case 0:
                 {
-                    XCTAssertEqualObjects(roomSummaryFromBobPOV.lastMessageEventId, lastMessageEventId);
-                    XCTAssertEqualObjects(roomSummaryFromBobPOV.lastMessageString, uisiString, @"Without the key, we have a UISI");
+                    XCTAssertEqualObjects(roomSummaryFromBobPOV.lastMessage.eventId, lastMessageEventId);
+//                    XCTAssertEqualObjects(roomSummaryFromBobPOV.lastMessageString, uisiString, @"Without the key, we have a UISI");
 
                     MXEvent *event = roomSummaryFromBobPOV.lastMessageEvent;
                     XCTAssertNil(event.clearEvent);
@@ -1257,8 +1254,7 @@ NSString *uisiString = @"The sender's device has not sent us the keys for this m
                 case 1:
                 {
                     // The last message must be decrypted now
-                    XCTAssertEqualObjects(roomSummaryFromBobPOV.lastMessageEventId, lastMessageEventId);
-                    XCTAssertEqualObjects(roomSummaryFromBobPOV.lastMessageString, messageFromAlice, @"The message must be now decrypted");
+                    XCTAssertEqualObjects(roomSummaryFromBobPOV.lastMessage.eventId, lastMessageEventId);
 
                     MXEvent *event = roomSummaryFromBobPOV.lastMessageEvent;
                     XCTAssert(event.clearEvent);
@@ -1303,7 +1299,7 @@ NSString *uisiString = @"The sender's device has not sent us the keys for this m
 
         self->observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXRoomSummaryDidChangeNotification object:summary queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
 
-            if (room.summary.lastMessage.eventId)
+            if (room.summary.lastMessage)
             {
                 // 3 -> From Bob's POV, the room notification count must increase
                 XCTAssertEqual(room.summary.notificationCount, notificationCount + 1);
