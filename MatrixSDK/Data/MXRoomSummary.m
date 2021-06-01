@@ -28,6 +28,7 @@
 #import "MXEventReplace.h"
 
 #import "MXRoomSync.h"
+#import "MatrixSDKSwiftHeader.h"
 
 #import <Security/Security.h>
 #import <CommonCrypto/CommonCryptor.h>
@@ -95,7 +96,6 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
     if (self)
     {
         _roomId = roomId;
-        _lastMessageOthers = [NSMutableDictionary dictionary];
         _others = [NSMutableDictionary dictionary];
         store = theStore;
 
@@ -212,15 +212,15 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
 -(void)loadLastEvent:(void (^)(void))onComplete
 {
     // The storage of the event depends if it is a true matrix event or a local echo
-    if (![_lastMessageEventId hasPrefix:kMXEventLocalEventIdPrefix])
+    if (![_lastMessage.eventId hasPrefix:kMXEventLocalEventIdPrefix])
     {
-        lastMessageEvent = [store eventWithEventId:_lastMessageEventId inRoom:_roomId];
+        lastMessageEvent = [store eventWithEventId:_lastMessage.eventId inRoom:_roomId];
     }
     else
     {
         for (MXEvent *event in [store outgoingMessagesInRoom:_roomId])
         {
-            if ([event.eventId isEqualToString:_lastMessageEventId])
+            if ([event.eventId isEqualToString:_lastMessage.eventId])
             {
                 lastMessageEvent = event;
                 break;
@@ -230,8 +230,10 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
     
     if (!lastMessageEvent)
     {
-        NSLog(@"[MXRoomSummary] loadLastEvent: Cannot find event %@ in store", _lastMessageEventId);
-        onComplete();
+        NSLog(@"[MXRoomSummary] loadLastEvent: Cannot find event %@ in store", _lastMessage.eventId);
+        dispatch_async(dispatch_get_main_queue(), ^{
+            onComplete();
+        });
         return;
     }
     
@@ -240,7 +242,9 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
         {
             NSLog(@"[MXRoomSummary] loadLastEvent: Warning: Unable to decrypt event. Error: %@", self.lastMessageEvent.decryptionError);
         }
-        onComplete();
+        dispatch_async(dispatch_get_main_queue(), ^{
+            onComplete();
+        });
     }];
 }
 
@@ -252,9 +256,15 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
 - (void)setLastMessageEvent:(MXEvent *)event
 {
     lastMessageEvent = event;
-    _lastMessageEventId = lastMessageEvent.eventId;
-    _lastMessageOriginServerTs = lastMessageEvent.originServerTs;
-    _isLastMessageEncrypted = event.isEncrypted;
+    if (event)
+    {
+        _lastMessage = [[MXRoomLastMessage alloc] initWithEventId:lastMessageEvent.eventId
+                                                   originServerTs:lastMessageEvent.originServerTs];
+    }
+    else
+    {
+        _lastMessage = nil;
+    }
 }
 
 - (MXHTTPOperation *)resetLastMessage:(void (^)(void))onComplete failure:(void (^)(NSError *))failure commit:(BOOL)commit
@@ -264,12 +274,7 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
 
 - (MXHTTPOperation *)resetLastMessageWithMaxServerPaginationCount:(NSUInteger)maxServerPaginationCount onComplete:(void (^)(void))onComplete failure:(void (^)(NSError *))failure commit:(BOOL)commit
 {
-    lastMessageEvent = nil;
-    _lastMessageEventId = nil;
-    _lastMessageOriginServerTs = -1;
-    _lastMessageString = nil;
-    _lastMessageAttributedString = nil;
-    [_lastMessageOthers removeAllObjects];
+    self.lastMessageEvent = nil;
 
     return [self fetchLastMessageWithMaxServerPaginationCount:maxServerPaginationCount onComplete:^{
         if (onComplete)
@@ -413,7 +418,7 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
     // If the last message is a local echo, update it.
     // Do nothing when its sentState becomes sent. In this case, the last message will be
     // updated by the true event coming back from the homeserver.
-    if (event.sentState != MXEventSentStateSent && [event.eventId isEqualToString:_lastMessageEventId])
+    if (event.sentState != MXEventSentStateSent && [event.eventId isEqualToString:_lastMessage.eventId])
     {
         [self handleEvent:event];
     }
@@ -424,7 +429,7 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
     MXEvent *event = notif.object;
     NSString *previousId = notif.userInfo[kMXEventIdentifierKey];
 
-    if ([_lastMessageEventId isEqualToString:previousId])
+    if ([_lastMessage.eventId isEqualToString:previousId])
     {
         [self handleEvent:event];
     }
@@ -450,7 +455,7 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
         MXStrongifyAndReturnIfNil(self);
 
         // Update the last event if it has been edited
-        if ([replaceEvent.relatesTo.eventId isEqualToString:self.lastMessageEventId])
+        if ([replaceEvent.relatesTo.eventId isEqualToString:self.lastMessage.eventId])
         {
             MXEvent *editedEvent = [self.lastMessageEvent editedEventFromReplacementEvent:replaceEvent];
             [self handleEvent:editedEvent];
@@ -853,29 +858,7 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
         _highlightCount = (NSUInteger)[aDecoder decodeIntegerForKey:@"highlightCount"];
         _directUserId = [aDecoder decodeObjectForKey:@"directUserId"];
 
-        _lastMessageEventId = [aDecoder decodeObjectForKey:@"lastMessageEventId"];
-        _lastMessageOriginServerTs = [aDecoder decodeInt64ForKey:@"lastMessageOriginServerTs"];
-        _isLastMessageEncrypted = [aDecoder decodeBoolForKey:@"isLastMessageEncrypted"];
-
-        NSDictionary *lastMessageData;
-        if (_isLastMessageEncrypted)
-        {
-            NSData *lastMessageEncryptedData = [aDecoder decodeObjectForKey:@"lastMessageEncryptedData"];
-            NSData *lastMessageDataData = [self decrypt:lastMessageEncryptedData];
-            
-            //  Sanity check. If `decrypt` fails, returns nil and causes NSKeyedUnarchiver raise an exception.
-            if (lastMessageDataData)
-            {
-                lastMessageData = [NSKeyedUnarchiver unarchiveObjectWithData:lastMessageDataData];
-            }
-        }
-        else
-        {
-            lastMessageData = [aDecoder decodeObjectForKey:@"lastMessageData"];
-        }
-        _lastMessageString = lastMessageData[@"lastMessageString"];
-        _lastMessageAttributedString = lastMessageData[@"lastMessageAttributedString"];
-        _lastMessageOthers = lastMessageData[@"lastMessageOthers"];
+        _lastMessage = [aDecoder decodeObjectForKey:@"lastMessage"];
         
         _hiddenFromUser = [aDecoder decodeBoolForKey:@"hiddenFromUser"];
         
@@ -919,39 +902,9 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
     [aCoder encodeObject:_directUserId forKey:@"directUserId"];
 
     // Store last message metadata
-    [aCoder encodeObject:_lastMessageEventId forKey:@"lastMessageEventId"];
-    [aCoder encodeInt64:_lastMessageOriginServerTs forKey:@"lastMessageOriginServerTs"];
-    [aCoder encodeBool:_isLastMessageEncrypted forKey:@"isLastMessageEncrypted"];
-
-    // Build last message sensitive data
-    NSMutableDictionary *lastMessageData = [NSMutableDictionary dictionary];
-    if (_lastMessageString)
+    if (_lastMessage)
     {
-        lastMessageData[@"lastMessageString"] = _lastMessageString;
-    }
-    if (_lastMessageAttributedString)
-    {
-        lastMessageData[@"lastMessageAttributedString"] = _lastMessageAttributedString;
-    }
-    if (_lastMessageOthers)
-    {
-        lastMessageData[@"lastMessageOthers"] = _lastMessageOthers;
-    }
-
-    // And encrypt it if necessary
-    if (_isLastMessageEncrypted)
-    {
-        NSData *lastMessageDataData = [NSKeyedArchiver archivedDataWithRootObject:lastMessageData];
-        NSData *lastMessageEncryptedData = [self encrypt:lastMessageDataData];
-
-        if (lastMessageEncryptedData)
-        {
-            [aCoder encodeObject:lastMessageEncryptedData forKey:@"lastMessageEncryptedData"];
-        }
-    }
-    else
-    {
-        [aCoder encodeObject:lastMessageData forKey:@"lastMessageData"];
+        [aCoder encodeObject:_lastMessage forKey:@"lastMessage"];
     }
     
     [aCoder encodeBool:_hiddenFromUser forKey:@"hiddenFromUser"];
@@ -1116,7 +1069,7 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
 
 - (NSString *)description
 {
-    return [NSString stringWithFormat:@"%@ %@: %@ - %@", super.description, _roomId, _displayname, _lastMessageString];
+    return [NSString stringWithFormat:@"%@ %@: %@ - %@", super.description, _roomId, _displayname, _lastMessage.eventId];
 }
 
 @end

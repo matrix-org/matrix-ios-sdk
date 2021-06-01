@@ -25,6 +25,7 @@
 #import "MXUsersTrustLevelSummary.h"
 #import "MXMembershipTransitionState.h"
 #import "MXRoomType.h"
+#import "MXRoomLastMessage.h"
 
 @class MXSession, MXRoom, MXRoomState, MXEvent;
 @class MXRoomSync;
@@ -216,35 +217,9 @@ FOUNDATION_EXPORT NSUInteger const MXRoomSummaryPaginationChunkSize;
 #pragma mark - Data related to the last message
 
 /**
- The last message event id.
+ The last message of the room summary.
  */
-@property (nonatomic, readonly) NSString *lastMessageEventId;
-
-/**
- The last message server timestamp.
- */
-@property (nonatomic, readonly) uint64_t lastMessageOriginServerTs;
-
-/**
- Indicates if the last message is encrypted.
- 
- @discussion
- An unencrypted message can be sent to an encrypted room.
- When the last message is encrypted, its summary data (lastMessageString, lastMessageAttributedString,
- lastMessageOthers) is stored encrypted in the room summary cache.
- */
-@property (nonatomic, readonly) BOOL isLastMessageEncrypted;
-
-/**
- String representation of this last message.
- */
-@property (nonatomic) NSString *lastMessageString;
-@property (nonatomic) NSAttributedString *lastMessageAttributedString;
-
-/**
- Placeholder to store more information about the last message.
- */
-@property (nonatomic) NSMutableDictionary<NSString*, id<NSCoding>> *lastMessageOthers;
+@property (nonatomic, readonly) MXRoomLastMessage *lastMessage;
 
 /**
  The shortcut to the last message event.
