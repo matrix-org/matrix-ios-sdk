@@ -54,12 +54,14 @@ NSString *const MXBackgroundCryptoStoreUserIdSuffix = @":bgCryptoStore";
         if ([MXRealmCryptoStore hasDataForCredentials:credentials])
         {
             cryptoStore = [[MXRealmCryptoStore alloc] initWithCredentials:credentials];
+            cryptoStore.readOnly = YES;
         }
         else
         {
             // Should never happen
             NSLog(@"[MXBackgroundCryptoStore] initWithCredentials: Warning: createStoreWithCredentials: %@:%@", credentials.userId, credentials.deviceId);
             cryptoStore = [MXRealmCryptoStore createStoreWithCredentials:credentials];
+            cryptoStore.readOnly = YES;
         }
         
         MXCredentials *bgCredentials = [MXBackgroundCryptoStore credentialForBgCryptoStoreWithCredentials:credentials];
@@ -90,6 +92,7 @@ NSString *const MXBackgroundCryptoStoreUserIdSuffix = @":bgCryptoStore";
     {
         MXCredentials *bgCredentials = [MXBackgroundCryptoStore credentialForBgCryptoStoreWithCredentials:credentials];
         [MXRealmCryptoStore deleteStoreWithCredentials:bgCredentials];
+        [MXRealmCryptoStore deleteReadonlyStoreWithCredentials:credentials];
         bgCryptoStore = [MXRealmCryptoStore createStoreWithCredentials:bgCredentials];
     }
 }
@@ -293,6 +296,11 @@ NSString *const MXBackgroundCryptoStoreUserIdSuffix = @":bgCryptoStore";
 #pragma mark - No-op
 
 + (void)deleteStoreWithCredentials:(MXCredentials*)credentials
+{
+    NSAssert(NO, @"This method should be useless in the context of MXBackgroundCryptoStore");
+}
+
++ (void)deleteReadonlyStoreWithCredentials:(MXCredentials*)credentials
 {
     NSAssert(NO, @"This method should be useless in the context of MXBackgroundCryptoStore");
 }

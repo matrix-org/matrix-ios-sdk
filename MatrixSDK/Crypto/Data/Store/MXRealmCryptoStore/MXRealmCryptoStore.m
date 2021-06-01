@@ -27,6 +27,8 @@
 #import "MXKeyProvider.h"
 #import "MXRawDataKey.h"
 #import "MXAes.h"
+#import "MatrixSDKSwiftHeader.h"
+#import "MXRealmHelper.h"
 
 
 NSUInteger const kMXRealmCryptoStoreVersion = 16;
@@ -306,6 +308,8 @@ RLM_ARRAY_TYPE(MXRealmSecret)
 
 #pragma mark - MXRealmCryptoStore
 
+NSString *const MXRealmCryptoStoreReadonlySuffix = @"readonly";
+
 @interface MXRealmCryptoStore ()
 {
     NSString *userId;
@@ -331,7 +335,12 @@ RLM_ARRAY_TYPE(MXRealmSecret)
 
 + (BOOL)hasDataForCredentials:(MXCredentials*)credentials
 {
-    RLMRealm *realm = [MXRealmCryptoStore realmForUser:credentials.userId andDevice:credentials.deviceId];
+    RLMRealm *realm = [MXRealmCryptoStore realmForUser:credentials.userId andDevice:credentials.deviceId readOnly:YES];
+    if (realm == nil)
+    {
+        //  there is no Realm with this config
+        return NO;
+    }
     return (nil != [MXRealmOlmAccount objectsInRealm:realm where:@"userId = %@", credentials.userId].firstObject);
 }
 
@@ -339,7 +348,7 @@ RLM_ARRAY_TYPE(MXRealmSecret)
 {
     NSLog(@"[MXRealmCryptoStore] createStore for %@:%@", credentials.userId, credentials.deviceId);
     
-    RLMRealm *realm = [MXRealmCryptoStore realmForUser:credentials.userId andDevice:credentials.deviceId];
+    RLMRealm *realm = [MXRealmCryptoStore realmForUser:credentials.userId andDevice:credentials.deviceId readOnly:NO];
     
     MXRealmOlmAccount *account = [[MXRealmOlmAccount alloc] initWithValue:@{
         @"userId" : credentials.userId,
@@ -355,13 +364,32 @@ RLM_ARRAY_TYPE(MXRealmSecret)
 
 + (void)deleteStoreWithCredentials:(MXCredentials*)credentials
 {
-    NSLog(@"[MXRealmCryptoStore] deleteStore for %@:%@", credentials.userId, credentials.deviceId);
+    //  Delete both stores
+    [self _deleteStoreWithCredentials:credentials readOnly:NO];
+    [self _deleteStoreWithCredentials:credentials readOnly:YES];
+}
+
++ (void)deleteReadonlyStoreWithCredentials:(MXCredentials *)credentials
+{
+    [self _deleteStoreWithCredentials:credentials readOnly:YES];
+}
+
++ (void)_deleteStoreWithCredentials:(MXCredentials*)credentials readOnly:(BOOL)readOnly
+{
+    NSLog(@"[MXRealmCryptoStore] deleteStore for %@:%@, readOnly: %@", credentials.userId, credentials.deviceId, readOnly ? @"YES" : @"NO");
     
     // Delete db file directly
     // So that we can even delete corrupted realm db
     RLMRealmConfiguration *config = [RLMRealmConfiguration defaultConfiguration];
     NSURL *realmFileURL = [self realmFileURLForUserWithUserId:credentials.userId andDevice:credentials.deviceId];
-    config.fileURL = realmFileURL;
+    if (readOnly)
+    {
+        config.fileURL = [self readonlyURLFrom:realmFileURL];
+    }
+    else
+    {
+        config.fileURL = realmFileURL;
+    }
     
     if (![RLMRealm fileExistsForConfiguration:config])
     {
@@ -375,20 +403,23 @@ RLM_ARRAY_TYPE(MXRealmSecret)
     {
         NSLog(@"[MXRealmCryptoStore] deleteStore: Error: %@", error);
         
-        // The db is probably still opened elsewhere (RLMErrorAlreadyOpen), which means it is valid.
-        // Use the old method to clear the db
-        error = nil;
-        RLMRealm *realm = [MXRealmCryptoStore realmForUser:credentials.userId andDevice:credentials.deviceId];
-        if (!error)
+        if (!readOnly)
         {
-            NSLog(@"[MXRealmCryptoStore] deleteStore: Delete at least its content");
-            [realm transactionWithBlock:^{
-                [realm deleteAllObjects];
-            }];
-        }
-        else
-        {
-            NSLog(@"[MXRealmCryptoStore] deleteStore: Cannot open realm. Error: %@", error);
+            // The db is probably still opened elsewhere (RLMErrorAlreadyOpen), which means it is valid.
+            // Use the old method to clear the db
+            error = nil;
+            RLMRealm *realm = [MXRealmCryptoStore realmForUser:credentials.userId andDevice:credentials.deviceId readOnly:readOnly];
+            if (!error)
+            {
+                NSLog(@"[MXRealmCryptoStore] deleteStore: Delete at least its content");
+                [realm transactionWithBlock:^{
+                    [realm deleteAllObjects];
+                }];
+            }
+            else
+            {
+                NSLog(@"[MXRealmCryptoStore] deleteStore: Cannot open realm. Error: %@", error);
+            }
         }
     }
 }
@@ -426,7 +457,7 @@ RLM_ARRAY_TYPE(MXRealmSecret)
 
 - (RLMRealm *)realm
 {
-    return [MXRealmCryptoStore realmForUser:userId andDevice:deviceId];
+    return [MXRealmCryptoStore realmForUser:userId andDevice:deviceId readOnly:_readOnly];
 }
 
 - (MXRealmOlmAccount*)accountInCurrentThread
@@ -1582,7 +1613,15 @@ RLM_ARRAY_TYPE(MXRealmSecret)
 
 
 #pragma mark - Private methods
-+ (RLMRealm*)realmForUser:(NSString*)userId andDevice:(NSString*)deviceId
+/**
+ Get Realm instance for the given user and device.
+ 
+ @param userId User id for the Realm
+ @param deviceId Device id for the Realm
+ @param readOnly Flag to indicate whether Realm should be a read-only one.
+ @returns Desired Realm instance for the given parameters, or nil if cannot create such a Realm instance. For instance: if desired a read-only Realm but no real store exists.
+ */
++ (nullable RLMRealm*)realmForUser:(NSString*)userId andDevice:(NSString*)deviceId readOnly:(BOOL)readOnly
 {
     RLMRealmConfiguration *config = [RLMRealmConfiguration defaultConfiguration];
     
@@ -1621,7 +1660,41 @@ RLM_ARRAY_TYPE(MXRealmSecret)
         cleanDuplicatedDevices = [self finaliseMigrationWith:migration oldSchemaVersion:oldSchemaVersion];
     };
     
-    [self setupShouldCompactOnLaunch:config userId:userId deviceId:deviceId];
+    if (readOnly)
+    {
+        NSURL *readOnlyURL = [self readonlyURLFrom:config.fileURL];
+        //  copy to read-only file if needed
+        if ([[NSFileManager defaultManager] fileExistsAtPath:config.fileURL.path] &&
+            ![[NSFileManager defaultManager] fileExistsAtPath:readOnlyURL.path])
+        {
+            NSError *error;
+            NSDictionary *fileAttributes = [[NSFileManager defaultManager] attributesOfItemAtPath:config.fileURL.path error:nil];
+            unsigned long long fileSize = [[fileAttributes objectForKey:NSFileSize] unsignedLongLongValue];
+            MXStopwatch *stopwatch = [MXStopwatch new];
+            [[NSFileManager defaultManager] removeItemAtURL:readOnlyURL error:nil];
+            [[NSFileManager defaultManager] copyItemAtURL:config.fileURL toURL:readOnlyURL error:&error];
+            if (error)
+            {
+                NSLog(@"[MXRealmCryptoStore] realmForUser: readonly copy file error: %@", error);
+            }
+            else
+            {
+                NSLog(@"[MXRealmCryptoStore] realmForUser: readonly copy file lasted %@, fileSize: %@", [stopwatch readableIn:MXStopwatchMeasurementUnitMilliseconds], [MXTools fileSizeToString:fileSize round:NO]);
+            }
+        }
+        
+        if (![[NSFileManager defaultManager] fileExistsAtPath:readOnlyURL.path])
+        {
+            NSLog(@"[MXRealmCryptoStore] realmForUser: cannot create a read-only Realm for non-existent file.");
+            return nil;
+        }
+        config.fileURL = readOnlyURL;
+        config.readOnly = YES;
+    }
+    else
+    {
+        [self setupShouldCompactOnLaunch:config userId:userId deviceId:deviceId];
+    }
     
     NSError *error;
     RLMRealm *realm;
@@ -1637,6 +1710,12 @@ RLM_ARRAY_TYPE(MXRealmSecret)
             NSError *error;
             [[NSFileManager defaultManager] removeItemAtPath:config.fileURL.path error:&error];
             NSLog(@"[MXRealmCryptoStore] removeItemAtPath error result: %@", error);
+            
+            if (config.readOnly)
+            {
+                NSLog(@"[MXRealmCryptoStore] realmForUser: returning nil for read-only Realm");
+                return nil;
+            }
             
             // And try again
             realm = [RLMRealm realmWithConfiguration:config error:&error];
@@ -1655,19 +1734,22 @@ RLM_ARRAY_TYPE(MXRealmSecret)
         }
     }
     
-    if (cleanDuplicatedDevices)
+    if (!readOnly)
     {
-        NSLog(@"[MXRealmCryptoStore] Do cleaning for duplicating devices");
+        if (cleanDuplicatedDevices)
+        {
+            NSLog(@"[MXRealmCryptoStore] Do cleaning for duplicating devices");
+            
+            NSUInteger before = [MXRealmDeviceInfo allObjectsInRealm:realm].count;
+            [self cleanDuplicatedDevicesInRealm:realm];
+            NSUInteger after = [MXRealmDeviceInfo allObjectsInRealm:realm].count;
+            
+            NSLog(@"[MXRealmCryptoStore] Cleaning for duplicating devices completed. There are now %@ devices. There were %@ before. %@ devices have been removed.", @(after), @(before), @(before - after));
+        }
         
-        NSUInteger before = [MXRealmDeviceInfo allObjectsInRealm:realm].count;
-        [self cleanDuplicatedDevicesInRealm:realm];
-        NSUInteger after = [MXRealmDeviceInfo allObjectsInRealm:realm].count;
-        
-        NSLog(@"[MXRealmCryptoStore] Cleaning for duplicating devices completed. There are now %@ devices. There were %@ before. %@ devices have been removed.", @(after), @(before), @(before - after));
+        // Wait for completion of other operations on this realm launched from other threads
+        [realm refresh];
     }
-    
-    // Wait for completion of other operations on this realm launched from other threads
-    [realm refresh];
     
     return realm;
 }
@@ -1827,6 +1909,18 @@ static BOOL shouldCompactOnLaunch = YES;
     return YES;
 }
 
+#pragma mark - readOnly
+
+- (void)setReadOnly:(BOOL)readOnly
+{
+    NSLog(@"[MXRealmCryptoStore] setReadOnly: %@", readOnly ? @"YES" : @"NO");
+    _readOnly = readOnly;
+}
+
++ (NSURL *)readonlyURLFrom:(NSURL *)realmFileURL
+{
+    return [[[realmFileURL URLByDeletingPathExtension] URLByAppendingPathExtension:MXRealmCryptoStoreReadonlySuffix] URLByAppendingPathExtension:[MXRealmHelper realmFileExtension]];
+}
 
 #pragma mark - Schema migration
 /**

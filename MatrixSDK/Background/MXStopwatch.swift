@@ -17,17 +17,17 @@
 import Foundation
 
 /// Measurement unit for Stopwatch.
-@objc enum MXStopwatchMeasurementUnit: UInt {
+@objc public enum MXStopwatchMeasurementUnit: UInt {
     case seconds
     case milliseconds
 }
 
-@objcMembers class MXStopwatch: NSObject {
+@objcMembers public class MXStopwatch: NSObject {
     
     private var startDate: Date
     
     /// Initializer.
-    override init() {
+    public override init() {
         startDate = Date()
         super.init()
     }
@@ -37,7 +37,7 @@ import Foundation
     /// Measure time since last init/reset.
     /// - Parameter type: Unit of measurement. See `StopwatchMeasurementUnit`.
     /// - Returns: Measured time in desired type.
-    func measure(in type: MXStopwatchMeasurementUnit = .milliseconds) -> TimeInterval {
+    public func measure(in type: MXStopwatchMeasurementUnit = .milliseconds) -> TimeInterval {
         switch type {
         case .seconds:
             return measuredTimeInSeconds
@@ -49,7 +49,7 @@ import Foundation
     /// Measure time since last init/reset and convert it into a readable string in the desired unit. Does not make convertions between units.
     /// - Parameter type: Unit of measurement. See `StopwatchMeasurementUnit`.
     /// - Returns: User readable string with measured time.
-    func readable(in type: MXStopwatchMeasurementUnit = .milliseconds) -> String {
+    public func readable(in type: MXStopwatchMeasurementUnit = .milliseconds) -> String {
         switch type {
         case .seconds:
             return String(format: "%.0fs", measuredTimeInSeconds)
@@ -59,7 +59,7 @@ import Foundation
     }
     
     /// Reset the stopwatch.
-    func reset() {
+    public func reset() {
         startDate = Date()
     }
     

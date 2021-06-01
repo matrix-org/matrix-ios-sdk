@@ -34,6 +34,12 @@
  */
 @property (class) BOOL shouldCompactOnLaunch;
 
+/**
+ Flag to control if Realm DB will be opened in read-only mode.
+ Default is NO.
+ */
+@property (nonatomic, assign) BOOL readOnly;
+
 @end
 
 #endif
