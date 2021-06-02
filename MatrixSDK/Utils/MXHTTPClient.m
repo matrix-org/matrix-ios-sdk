@@ -142,7 +142,7 @@ static NSUInteger requestCount = 0;
         // Track potential expected session invalidation (seen on iOS10 beta)
         MXWeakify(self);
         [httpManager setSessionDidBecomeInvalidBlock:^(NSURLSession * _Nonnull session, NSError * _Nonnull error) {
-            NSLog(@"[MXHTTPClient] SessionDidBecomeInvalid: %@: %@", session, error);
+            MXLogDebug(@"[MXHTTPClient] SessionDidBecomeInvalid: %@: %@", session, error);
 
             MXStrongifyAndReturnIfNil(self);
             self->invalidatedSession = YES;
@@ -330,7 +330,7 @@ static NSUInteger requestCount = 0;
     if (invalidatedSession)
     {
         // This 
-    	NSLog(@"[MXHTTPClient] tryRequest: ignore the request as the NSURLSession has been invalidated");
+    	MXLogDebug(@"[MXHTTPClient] tryRequest: ignore the request as the NSURLSession has been invalidated");
         return;
     }
 
@@ -359,7 +359,7 @@ static NSUInteger requestCount = 0;
     NSDate *startDate = [NSDate date];
     NSUInteger requestNumber = requestCount++;
 
-    NSLog(@"[MXHTTPClient] #%@ - %@ %@", @(requestNumber), httpMethod, path);
+    MXLogDebug(@"[MXHTTPClient] #%@ - %@ %@", @(requestNumber), httpMethod, path);
 
     mxHTTPOperation.numberOfTries++;
     mxHTTPOperation.operation = [httpManager dataTaskWithRequest:request uploadProgress:^(NSProgress * _Nonnull theUploadProgress) {
@@ -376,7 +376,7 @@ static NSUInteger requestCount = 0;
         NSHTTPURLResponse *response = (NSHTTPURLResponse*)theResponse;
         mxHTTPOperation.httpResponse = response;
 
-        NSLog(@"[MXHTTPClient] #%@ - %@ %@ completed in %.0fms" ,@(requestNumber), httpMethod, path, [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
+        MXLogDebug(@"[MXHTTPClient] #%@ - %@ %@ completed in %.0fms" ,@(requestNumber), httpMethod, path, [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
 
         if (!weakself)
         {
@@ -392,7 +392,7 @@ static NSUInteger requestCount = 0;
             NSUInteger responseDelayMS = [MXHTTPClient delayForRequest:request];
             if (responseDelayMS)
             {
-                NSLog(@"[MXHTTPClient] Delay call of success for request %p", mxHTTPOperation);
+                MXLogDebug(@"[MXHTTPClient] Delay call of success for request %p", mxHTTPOperation);
                 dispatch_after(dispatch_time(DISPATCH_TIME_NOW, responseDelayMS * USEC_PER_SEC), dispatch_get_main_queue(), ^{
                     success(JSONResponse);
                 });
@@ -413,7 +413,7 @@ static NSUInteger requestCount = 0;
                 // When neither 'errcode' nor 'error' are present, the received data are reported in NSError userInfo thanks to 'MXHTTPClientErrorResponseDataKey' key.
                 if (JSONResponse)
                 {
-                    NSLog(@"[MXHTTPClient] Error JSONResponse: %@", JSONResponse);
+                    MXLogDebug(@"[MXHTTPClient] Error JSONResponse: %@", JSONResponse);
 
                     if (JSONResponse[kMXErrorCodeKey] || JSONResponse[kMXErrorMessageKey])
                     {
@@ -441,16 +441,16 @@ static NSUInteger requestCount = 0;
                                     {
                                         error = nil;
                                         
-                                        NSLog(@"[MXHTTPClient] Request %p reached rate limiting. Wait for %@ ms", mxHTTPOperation, retryAfterMsString);
+                                        MXLogDebug(@"[MXHTTPClient] Request %p reached rate limiting. Wait for %@ ms", mxHTTPOperation, retryAfterMsString);
                                         
                                         // Wait for the time provided by the server before retrying
                                         dispatch_after(dispatch_time(DISPATCH_TIME_NOW, delay * USEC_PER_SEC), dispatch_get_main_queue(), ^{
                                             
-                                            NSLog(@"[MXHTTPClient] Retry rate limited request %p", mxHTTPOperation);
+                                            MXLogDebug(@"[MXHTTPClient] Retry rate limited request %p", mxHTTPOperation);
                                             
                                             [self tryRequest:mxHTTPOperation method:httpMethod path:path parameters:parameters data:data headers:headers timeout:timeoutInSeconds uploadProgress:uploadProgress success:^(NSDictionary *JSONResponse) {
                                                 
-                                                NSLog(@"[MXHTTPClient] Success of rate limited request %p after %tu tries", mxHTTPOperation, mxHTTPOperation.numberOfTries);
+                                                MXLogDebug(@"[MXHTTPClient] Success of rate limited request %p after %tu tries", mxHTTPOperation, mxHTTPOperation.numberOfTries);
                                                 
                                                 success(JSONResponse);
                                                 
@@ -461,13 +461,13 @@ static NSUInteger requestCount = 0;
                                     }
                                     else
                                     {
-                                        NSLog(@"[MXHTTPClient] Giving up rate limited request %p (may retry after %@ ms).", mxHTTPOperation, retryAfterMsString);
+                                        MXLogDebug(@"[MXHTTPClient] Giving up rate limited request %p (may retry after %@ ms).", mxHTTPOperation, retryAfterMsString);
                                     }
                                 }
                             }
                             else
                             {
-                                NSLog(@"[MXHTTPClient] Giving up rate limited request %p: spent too long retrying.", mxHTTPOperation);
+                                MXLogDebug(@"[MXHTTPClient] Giving up rate limited request %p: spent too long retrying.", mxHTTPOperation);
                             }
                         }
                         else if ([mxError.errcode isEqualToString:kMXErrCodeStringConsentNotGiven])
@@ -476,7 +476,7 @@ static NSUInteger requestCount = 0;
 
                             if (consentURI.length > 0)
                             {
-                                NSLog(@"[MXHTTPClient] User did not consent to GDPR");
+                                MXLogDebug(@"[MXHTTPClient] User did not consent to GDPR");
 
                                 // Send a notification if user did not consent to GDPR
                                 [[NSNotificationCenter defaultCenter] postNotificationName:kMXHTTPClientUserConsentNotGivenErrorNotification
@@ -485,7 +485,7 @@ static NSUInteger requestCount = 0;
                             }
                             else
                             {
-                                NSLog(@"[MXHTTPClient] User did not consent to GDPR but fail to retrieve consent uri");
+                                MXLogDebug(@"[MXHTTPClient] User did not consent to GDPR but fail to retrieve consent uri");
                             }
 
                             error = [mxError createNSError];
@@ -525,7 +525,7 @@ static NSUInteger requestCount = 0;
             {
                 // Check if it is a network connectivity issue
                 AFNetworkReachabilityManager *networkReachabilityManager = [AFNetworkReachabilityManager sharedManager];
-                NSLog(@"[MXHTTPClient] request %p. Network reachability: %d", mxHTTPOperation, networkReachabilityManager.isReachable);
+                MXLogDebug(@"[MXHTTPClient] request %p. Network reachability: %d", mxHTTPOperation, networkReachabilityManager.isReachable);
 
                 if (networkReachabilityManager.isReachable)
                 {
@@ -534,11 +534,11 @@ static NSUInteger requestCount = 0;
                     dispatch_after(dispatch_time(DISPATCH_TIME_NOW, [MXHTTPClient timeForRetry:mxHTTPOperation] * NSEC_PER_MSEC), dispatch_get_main_queue(), ^{
                         MXStrongifyAndReturnIfNil(self);
 
-                        NSLog(@"[MXHTTPClient] Retry request %p. Try #%tu/%tu. Age: %tums. Max retries time: %tums", mxHTTPOperation, mxHTTPOperation.numberOfTries + 1, mxHTTPOperation.maxNumberOfTries, mxHTTPOperation.age, mxHTTPOperation.maxRetriesTime);
+                        MXLogDebug(@"[MXHTTPClient] Retry request %p. Try #%tu/%tu. Age: %tums. Max retries time: %tums", mxHTTPOperation, mxHTTPOperation.numberOfTries + 1, mxHTTPOperation.maxNumberOfTries, mxHTTPOperation.age, mxHTTPOperation.maxRetriesTime);
 
                         [self tryRequest:mxHTTPOperation method:httpMethod path:path parameters:parameters data:data headers:headers timeout:timeoutInSeconds uploadProgress:uploadProgress success:^(NSDictionary *JSONResponse) {
 
-                            NSLog(@"[MXHTTPClient] Request %p finally succeeded after %tu tries and %tums", mxHTTPOperation, mxHTTPOperation.numberOfTries, mxHTTPOperation.age);
+                            MXLogDebug(@"[MXHTTPClient] Request %p finally succeeded after %tu tries and %tums", mxHTTPOperation, mxHTTPOperation.numberOfTries, mxHTTPOperation.age);
 
                             success(JSONResponse);
 
@@ -557,7 +557,7 @@ static NSUInteger requestCount = 0;
                     id networkComeBackObserver = [self addObserverForNetworkComeBack:^{
                         MXStrongifyAndReturnIfNil(self);
 
-                        NSLog(@"[MXHTTPClient] Network is back for request %p", mxHTTPOperation);
+                        MXLogDebug(@"[MXHTTPClient] Network is back for request %p", mxHTTPOperation);
 
                         // Flag this request as retried
                         lastError = nil;
@@ -565,13 +565,13 @@ static NSUInteger requestCount = 0;
                         // Check whether the pending operation was not cancelled.
                         if (mxHTTPOperation.maxNumberOfTries)
                         {
-                            NSLog(@"[MXHTTPClient] Retry request %p. Try #%tu/%tu. Age: %tums. Max retries time: %tums", mxHTTPOperation, mxHTTPOperation.numberOfTries + 1, mxHTTPOperation.maxNumberOfTries, mxHTTPOperation.age, mxHTTPOperation.maxRetriesTime);
+                            MXLogDebug(@"[MXHTTPClient] Retry request %p. Try #%tu/%tu. Age: %tums. Max retries time: %tums", mxHTTPOperation, mxHTTPOperation.numberOfTries + 1, mxHTTPOperation.maxNumberOfTries, mxHTTPOperation.age, mxHTTPOperation.maxRetriesTime);
 
                             MXWeakify(self);
                             [self tryRequest:mxHTTPOperation method:httpMethod path:path parameters:parameters data:data headers:headers timeout:timeoutInSeconds uploadProgress:uploadProgress success:^(NSDictionary *JSONResponse) {
                                 MXStrongifyAndReturnIfNil(self);
 
-                                NSLog(@"[MXHTTPClient] Request %p finally succeeded after %tu tries and %tums", mxHTTPOperation, mxHTTPOperation.numberOfTries, mxHTTPOperation.age);
+                                MXLogDebug(@"[MXHTTPClient] Request %p finally succeeded after %tu tries and %tums", mxHTTPOperation, mxHTTPOperation.numberOfTries, mxHTTPOperation.age);
 
                                 success(JSONResponse);
 
@@ -589,7 +589,7 @@ static NSUInteger requestCount = 0;
                         }
                         else
                         {
-                            NSLog(@"[MXHTTPClient] The request %p has been cancelled", mxHTTPOperation);
+                            MXLogDebug(@"[MXHTTPClient] The request %p has been cancelled", mxHTTPOperation);
 
                             // The request is complete, managed the next one
                             [self wakeUpNextReachabilityServer];
@@ -603,7 +603,7 @@ static NSUInteger requestCount = 0;
                         // If the request has not been retried yet, consider we are in error
                         if (lastError)
                         {
-                            NSLog(@"[MXHTTPClient] Give up retry for request %p. Time expired.", mxHTTPOperation);
+                            MXLogDebug(@"[MXHTTPClient] Give up retry for request %p. Time expired.", mxHTTPOperation);
 
                             [self removeObserverForNetworkComeBack:networkComeBackObserver];
                             failure(lastError);
@@ -619,7 +619,7 @@ static NSUInteger requestCount = 0;
             NSUInteger responseDelayMS = [MXHTTPClient delayForRequest:request];
             if (responseDelayMS)
             {
-                NSLog(@"[MXHTTPClient] Delay call of failure for request %p", mxHTTPOperation);
+                MXLogDebug(@"[MXHTTPClient] Delay call of failure for request %p", mxHTTPOperation);
                 dispatch_after(dispatch_time(DISPATCH_TIME_NOW, responseDelayMS * USEC_PER_SEC), dispatch_get_main_queue(), ^{
                     failure(error);
                 });
@@ -722,7 +722,7 @@ static NSUInteger requestCount = 0;
  */
 - (void)cleanupBackgroundTask
 {
-    NSLog(@"[MXHTTPClient] cleanupBackgroundTask");
+    MXLogDebug(@"[MXHTTPClient] cleanupBackgroundTask");
     
     @synchronized(self)
     {
@@ -783,7 +783,7 @@ static NSUInteger requestCount = 0;
 #pragma mark - Private methods
 - (void)cancel
 {
-    NSLog(@"[MXHTTPClient] cancel");
+    MXLogDebug(@"[MXHTTPClient] cancel");
     [httpManager invalidateSessionCancelingTasks:YES resetSession:YES];
 }
 
@@ -803,7 +803,7 @@ static NSUInteger requestCount = 0;
         if (networkReachabilityManager.isReachable && self->reachabilityObservers.count)
         {
             // Start retrying request one by one to keep messages order
-            NSLog(@"[MXHTTPClient] Network is back. Wake up %tu observers.", self->reachabilityObservers.count);
+            MXLogDebug(@"[MXHTTPClient] Network is back. Wake up %tu observers.", self->reachabilityObservers.count);
             [self wakeUpNextReachabilityServer];
         }
     }];
@@ -855,7 +855,7 @@ static NSUInteger requestCount = 0;
             }
             else
             {
-                NSLog(@"[MXHTTPClient] Shall we trust %@?", protectionSpace.host);
+                MXLogDebug(@"[MXHTTPClient] Shall we trust %@?", protectionSpace.host);
 
                 if (self->onUnrecognizedCertificateBlock)
                 {
@@ -869,7 +869,7 @@ static NSUInteger requestCount = 0;
                         NSData *certifData = (__bridge NSData*)SecCertificateCopyData(certif);
                         if (self->onUnrecognizedCertificateBlock(certifData))
                         {
-                            NSLog(@"[MXHTTPClient] Yes, the user trusts its certificate");
+                            MXLogDebug(@"[MXHTTPClient] Yes, the user trusts its certificate");
 
                             self->_allowedCertificate = certifData;
 
@@ -889,14 +889,14 @@ static NSUInteger requestCount = 0;
                             }
 
                             // Here pin certificate failed
-                            NSLog(@"[MXHTTPClient] Failed to pin certificate for %@", protectionSpace.host);
+                            MXLogDebug(@"[MXHTTPClient] Failed to pin certificate for %@", protectionSpace.host);
                             return NSURLSessionAuthChallengePerformDefaultHandling;
                         }
                     }
                 }
 
                 // Here we don't trust the certificate
-                NSLog(@"[MXHTTPClient] No, the user doesn't trust it");
+                MXLogDebug(@"[MXHTTPClient] No, the user doesn't trust it");
                 return NSURLSessionAuthChallengeCancelAuthenticationChallenge;
             }
         }
@@ -955,7 +955,7 @@ static NSUInteger requestCount = 0;
                statusCode:(NSUInteger)statusCode
                     error:(NSError*)error
 {
-    NSLog(@"[MXHTTPClient] Request %p failed for path: %@ - HTTP code: %@. Error: %@", mxHTTPOperation, path, @(statusCode), error);
+    MXLogDebug(@"[MXHTTPClient] Request %p failed for path: %@ - HTTP code: %@. Error: %@", mxHTTPOperation, path, @(statusCode), error);
 }
 
 

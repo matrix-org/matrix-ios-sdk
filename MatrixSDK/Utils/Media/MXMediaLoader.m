@@ -64,7 +64,7 @@ NSString *const kMXMediaUploadIdPrefix = @"upload-";
     // Cancel potential connection
     if (downloadConnection)
     {
-        NSLog(@"[MXMediaLoader] Media download has been cancelled (%@)", self.downloadMediaURL);
+        MXLogDebug(@"[MXMediaLoader] Media download has been cancelled (%@)", self.downloadMediaURL);
         if (onError){
             onError(nil);
         }
@@ -81,7 +81,7 @@ NSString *const kMXMediaUploadIdPrefix = @"upload-";
         if (operation && operation.operation
             && operation.operation.state != NSURLSessionTaskStateCanceling && operation.operation.state != NSURLSessionTaskStateCompleted)
         {
-            NSLog(@"[MXMediaLoader] Media upload has been cancelled");
+            MXLogDebug(@"[MXMediaLoader] Media upload has been cancelled");
             [operation cancel];
             operation = nil;
         }
@@ -157,7 +157,7 @@ NSString *const kMXMediaUploadIdPrefix = @"upload-";
 
 - (void)connection:(NSURLConnection *)connection didFailWithError:(NSError *)error
 {
-    NSLog(@"[MXMediaLoader] Failed to download media (%@): %@", self.downloadMediaURL, error);
+    MXLogDebug(@"[MXMediaLoader] Failed to download media (%@): %@", self.downloadMediaURL, error);
     // send the latest known download info
     [self progressCheckTimeout:nil];
     statisticsDict = nil;
@@ -244,7 +244,7 @@ NSString *const kMXMediaUploadIdPrefix = @"upload-";
         }
         else
         {
-            NSLog(@"[MXMediaLoader] Failed to write file: %@", self.downloadMediaURL);
+            MXLogDebug(@"[MXMediaLoader] Failed to write file: %@", self.downloadMediaURL);
             if (onError){
                 onError(nil);
             }
@@ -254,7 +254,7 @@ NSString *const kMXMediaUploadIdPrefix = @"upload-";
     }
     else
     {
-        NSLog(@"[MXMediaLoader] Failed to download media: %@", self.downloadMediaURL);
+        MXLogDebug(@"[MXMediaLoader] Failed to download media: %@", self.downloadMediaURL);
         if (onError){
             onError(nil);
         }
@@ -343,7 +343,7 @@ NSString *const kMXMediaUploadIdPrefix = @"upload-";
                     }
                     else
                     {
-                        NSLog(@"[MXMediaLoader] Certificate check failed for %@", protectionSpace);
+                        MXLogDebug(@"[MXMediaLoader] Certificate check failed for %@", protectionSpace);
                         [connection cancel];
 
                         // Generate same kind of error as AFNetworking

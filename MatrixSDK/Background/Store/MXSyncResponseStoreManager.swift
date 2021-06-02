@@ -49,7 +49,7 @@ public class MXSyncResponseStoreManager: NSObject {
             return nil
         }
         guard let syncResponse = try? syncResponseStore.syncResponse(withId: id) else {
-            NSLog("[MXSyncResponseStoreManager] firstSyncResponse: invalid id")
+            MXLog.debug("[MXSyncResponseStoreManager] firstSyncResponse: invalid id")
             return nil
         }
         return syncResponse
@@ -60,7 +60,7 @@ public class MXSyncResponseStoreManager: NSObject {
             return nil
         }
         guard let syncResponse = try? syncResponseStore.syncResponse(withId: id) else {
-            NSLog("[MXSyncResponseStoreManager] lastSyncResponse: invalid id")
+            MXLog.debug("[MXSyncResponseStoreManager] lastSyncResponse: invalid id")
             return nil
         }
         return syncResponse
@@ -72,7 +72,7 @@ public class MXSyncResponseStoreManager: NSObject {
             return
         }
         
-        NSLog("[MXSyncResponseStoreManager] markDataOutdated \(syncResponseIds.count) cached sync responses. The sync token was \(String(describing: syncToken()))")
+        MXLog.debug("[MXSyncResponseStoreManager] markDataOutdated \(syncResponseIds.count) cached sync responses. The sync token was \(String(describing: syncToken()))")
         syncResponseStore.markOutdated(syncResponseIds: syncResponseIds)
     }
     
@@ -90,37 +90,37 @@ public class MXSyncResponseStoreManager: NSObject {
             if  cachedSyncResponseSize < syncResponseCacheSizeLimit,
                 let cachedSyncResponse = try? syncResponseStore.syncResponse(withId: id) {
                 
-                NSLog("[MXSyncResponseStoreManager] updateStore: Merge new sync response to the previous one")
+                MXLog.debug("[MXSyncResponseStoreManager] updateStore: Merge new sync response to the previous one")
                 
                 //  handle new limited timelines
-                newSyncResponse.rooms.join.filter({ $1.timeline?.limited == true }).forEach { (roomId, _) in
-                    if let joinedRoomSync = cachedSyncResponse.syncResponse.rooms.join[roomId] {
+                newSyncResponse.rooms?.join?.filter({ $1.timeline.limited == true }).forEach { (roomId, _) in
+                    if let joinedRoomSync = cachedSyncResponse.syncResponse.rooms?.join?[roomId] {
                         //  remove old events
-                        joinedRoomSync.timeline?.events = []
+                        joinedRoomSync.timeline.events = []
                         //  mark old timeline as limited too
-                        joinedRoomSync.timeline?.limited = true
+                        joinedRoomSync.timeline.limited = true
                     }
                 }
-                newSyncResponse.rooms.leave.filter({ $1.timeline?.limited == true }).forEach { (roomId, _) in
-                    if let leftRoomSync = cachedSyncResponse.syncResponse.rooms.leave[roomId] {
+                newSyncResponse.rooms?.leave?.filter({ $1.timeline.limited == true }).forEach { (roomId, _) in
+                    if let leftRoomSync = cachedSyncResponse.syncResponse.rooms?.leave?[roomId] {
                         //  remove old events
-                        leftRoomSync.timeline?.events = []
+                        leftRoomSync.timeline.events = []
                         //  mark old timeline as limited too
-                        leftRoomSync.timeline?.limited = true
+                        leftRoomSync.timeline.limited = true
                     }
                 }
                 
                 //  handle old limited timelines
-                cachedSyncResponse.syncResponse.rooms.join.filter({ $1.timeline?.limited == true }).forEach { (roomId, _) in
-                    if let joinedRoomSync = newSyncResponse.rooms.join[roomId] {
+                cachedSyncResponse.syncResponse.rooms?.join?.filter({ $1.timeline.limited == true }).forEach { (roomId, _) in
+                    if let joinedRoomSync = newSyncResponse.rooms?.join?[roomId] {
                         //  mark new timeline as limited too, to avoid losing value of limited
-                        joinedRoomSync.timeline?.limited = true
+                        joinedRoomSync.timeline.limited = true
                     }
                 }
-                cachedSyncResponse.syncResponse.rooms.leave.filter({ $1.timeline?.limited == true }).forEach { (roomId, _) in
-                    if let leftRoomSync = newSyncResponse.rooms.leave[roomId] {
+                cachedSyncResponse.syncResponse.rooms?.leave?.filter({ $1.timeline.limited == true }).forEach { (roomId, _) in
+                    if let leftRoomSync = newSyncResponse.rooms?.leave?[roomId] {
                         //  mark new timeline as limited too, to avoid losing value of limited
-                        leftRoomSync.timeline?.limited = true
+                        leftRoomSync.timeline.limited = true
                     }
                 }
                 
@@ -137,14 +137,14 @@ public class MXSyncResponseStoreManager: NSObject {
                 
             } else {
                 // Use a new chunk
-                NSLog("[MXSyncResponseStoreManager] updateStore: Create a new chunk to store the new sync response. Previous chunk size: \(cachedSyncResponseSize)")
+                MXLog.debug("[MXSyncResponseStoreManager] updateStore: Create a new chunk to store the new sync response. Previous chunk size: \(cachedSyncResponseSize)")
                 let cachedSyncResponse = MXCachedSyncResponse(syncToken: syncToken,
                                                               syncResponse: newSyncResponse)
                 _ = syncResponseStore.addSyncResponse(syncResponse: cachedSyncResponse)
             }
         } else {
             //  no current sync response, directly save the new one
-            NSLog("[MXSyncResponseStoreManager] updateStore: Start storing sync response")
+            MXLog.debug("[MXSyncResponseStoreManager] updateStore: Start storing sync response")
             let cachedSyncResponse = MXCachedSyncResponse(syncToken: syncToken,
                                                          syncResponse: newSyncResponse)
             _ = syncResponseStore.addSyncResponse(syncResponse: cachedSyncResponse)
@@ -185,30 +185,30 @@ public class MXSyncResponseStoreManager: NSObject {
             }
         }
         
-        NSLog("[MXSyncResponseStoreManager] event: Not found event \(eventId) in room \(roomId)")
+        MXLog.debug("[MXSyncResponseStoreManager] event: Not found event \(eventId) in room \(roomId)")
         return nil
     }
     
     private func event(withEventId eventId: String, inRoom roomId: String, inSyncResponse response: MXCachedSyncResponse) -> MXEvent? {
         var allEvents: [MXEvent] = []
-        if let joinedRoomSync = response.syncResponse.rooms.join[roomId] {
-            allEvents.appendIfNotNil(contentsOf: joinedRoomSync.state?.events)
-            allEvents.appendIfNotNil(contentsOf: joinedRoomSync.timeline?.events)
-            allEvents.appendIfNotNil(contentsOf: joinedRoomSync.accountData?.events)
+        if let joinedRoomSync = response.syncResponse.rooms?.join?[roomId] {
+            allEvents.appendIfNotNil(contentsOf: joinedRoomSync.state.events)
+            allEvents.appendIfNotNil(contentsOf: joinedRoomSync.timeline.events)
+            allEvents.appendIfNotNil(contentsOf: joinedRoomSync.accountData.events)
         }
-        if let invitedRoomSync = response.syncResponse.rooms.invite[roomId] {
-            allEvents.appendIfNotNil(contentsOf: invitedRoomSync.inviteState?.events)
+        if let invitedRoomSync = response.syncResponse.rooms?.invite?[roomId] {
+            allEvents.appendIfNotNil(contentsOf: invitedRoomSync.inviteState.events)
         }
-        if let leftRoomSync = response.syncResponse.rooms.leave[roomId] {
-            allEvents.appendIfNotNil(contentsOf: leftRoomSync.state?.events)
-            allEvents.appendIfNotNil(contentsOf: leftRoomSync.timeline?.events)
-            allEvents.appendIfNotNil(contentsOf: leftRoomSync.accountData?.events)
+        if let leftRoomSync = response.syncResponse.rooms?.leave?[roomId] {
+            allEvents.appendIfNotNil(contentsOf: leftRoomSync.state.events)
+            allEvents.appendIfNotNil(contentsOf: leftRoomSync.timeline.events)
+            allEvents.appendIfNotNil(contentsOf: leftRoomSync.accountData.events)
         }
         
         let result = allEvents.first(where: { eventId == $0.eventId })
         result?.roomId = roomId
         
-        NSLog("[MXSyncResponseStoreManager] eventWithEventId: \(eventId) \(result == nil ? "not " : "" )found")
+        MXLog.debug("[MXSyncResponseStoreManager] eventWithEventId: \(eventId) \(result == nil ? "not " : "" )found")
         
         return result
     }
@@ -235,7 +235,7 @@ public class MXSyncResponseStoreManager: NSObject {
             }
         }
         
-        NSLog("[MXSyncResponseStoreManager] roomSummary: Not found for room \(roomId)")
+        MXLog.debug("[MXSyncResponseStoreManager] roomSummary: Not found for room \(roomId)")
         
         return nil
     }
@@ -243,27 +243,18 @@ public class MXSyncResponseStoreManager: NSObject {
     private func roomSummary(forRoomId roomId: String, using summary: MXRoomSummary, inSyncResponse response: MXCachedSyncResponse) -> MXRoomSummary? {
         var eventsToProcess: [MXEvent] = []
         
-        if let invitedRoomSync = response.syncResponse.rooms.invite[roomId],
-           let stateEvents = invitedRoomSync.inviteState?.events {
-            eventsToProcess.append(contentsOf: stateEvents)
+        if let invitedRoomSync = response.syncResponse.rooms?.invite?[roomId] {
+            eventsToProcess.append(contentsOf: invitedRoomSync.inviteState.events)
         }
         
-        if let joinedRoomSync = response.syncResponse.rooms.join[roomId] {
-            if let stateEvents = joinedRoomSync.state?.events {
-                eventsToProcess.append(contentsOf: stateEvents)
-            }
-            if let timelineEvents = joinedRoomSync.timeline?.events {
-                eventsToProcess.append(contentsOf: timelineEvents)
-            }
+        if let joinedRoomSync = response.syncResponse.rooms?.join?[roomId] {
+            eventsToProcess.append(contentsOf: joinedRoomSync.state.events)
+            eventsToProcess.append(contentsOf: joinedRoomSync.timeline.events)
         }
         
-        if let leftRoomSync = response.syncResponse.rooms.leave[roomId] {
-            if let stateEvents = leftRoomSync.state?.events {
-                eventsToProcess.append(contentsOf: stateEvents)
-            }
-            if let timelineEvents = leftRoomSync.timeline?.events {
-                eventsToProcess.append(contentsOf: timelineEvents)
-            }
+        if let leftRoomSync = response.syncResponse.rooms?.leave?[roomId] {
+            eventsToProcess.append(contentsOf: leftRoomSync.state.events)
+            eventsToProcess.append(contentsOf: leftRoomSync.timeline.events)
         }
         
         for event in eventsToProcess {

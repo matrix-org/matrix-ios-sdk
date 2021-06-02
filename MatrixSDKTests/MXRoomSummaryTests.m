@@ -283,7 +283,7 @@ NSString *uisiString = @"The sender's device has not sent us the keys for this m
                 }];
 
                 // Force the summary to fetch events from the homeserver to get the last one
-                MXHTTPOperation *operation = [summary2 resetLastMessage:nil failure:^(NSError *error) {
+                MXHTTPOperation *operation = [summary2 resetLastMessageWithMaxServerPaginationCount:100 onComplete:nil failure:^(NSError *error) {
 
                     XCTFail(@"The operation should not fail - NSError: %@", error);
                     [expectation fulfill];
@@ -337,7 +337,7 @@ NSString *uisiString = @"The sender's device has not sent us the keys for this m
 
 
                     // Force the summary to fetch events from the homeserver to get the last one
-                    MXHTTPOperation *operation = [summary2 resetLastMessage:nil failure:^(NSError *error) {
+                    MXHTTPOperation *operation = [summary2 resetLastMessageWithMaxServerPaginationCount:1000 onComplete:nil failure:^(NSError *error) {
 
                         XCTFail(@"The operation should not fail - NSError: %@", error);
                         [expectation fulfill];
@@ -736,7 +736,7 @@ NSString *uisiString = @"The sender's device has not sent us the keys for this m
         NSString *newRoomTopic = @"An interesting topic";
 
         // Required to make kMXSessionInvitedRoomsDidChangeNotification work
-        NSLog(@"%@", bobSession.invitedRooms);
+        MXLogDebug(@"%@", bobSession.invitedRooms);
 
         [[NSNotificationCenter defaultCenter] addObserverForName:kMXSessionInvitedRoomsDidChangeNotification object:bobSession queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
 
@@ -1038,7 +1038,7 @@ NSString *uisiString = @"The sender's device has not sent us the keys for this m
             XCTAssert(summary.isEncrypted);
 
             // Use dispatch_async for not closing the session in the middle of stg
-            dispatch_async(dispatch_get_main_queue(), ^{
+            dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 0.1 * NSEC_PER_SEC), dispatch_get_main_queue(), ^{
 
                 // Close the session
                 MXRestClient *aliceRestClient = aliceSession.matrixRestClient;
@@ -1051,10 +1051,11 @@ NSString *uisiString = @"The sender's device has not sent us the keys for this m
                     // A hack to directly read the file built by MXFileStore
                     NSString *roomSummaryFile = [store performSelector:@selector(summaryFileForRoom:forBackup:) withObject:roomId withObject:NSNull.null];
                     XCTAssert(roomSummaryFile.length);
+                    XCTAssertGreaterThan(roomSummaryFile.length, 0);
                     [store close];
 
                     NSData *roomSummaryFileData = [[NSData alloc] initWithContentsOfFile:roomSummaryFile];
-                    XCTAssert(roomSummaryFileData.length);
+                    XCTAssertGreaterThan(roomSummaryFileData.length, 0);
 
                     NSData *pattern = [lastMessageEventId dataUsingEncoding:NSUTF8StringEncoding];
                     NSRange range = [roomSummaryFileData rangeOfData:pattern options:0 range:NSMakeRange(0, roomSummaryFileData.length)];
@@ -1135,7 +1136,7 @@ NSString *uisiString = @"The sender's device has not sent us the keys for this m
             XCTAssertEqualObjects(event.content[@"body"], message);
 
             // Use dispatch_async for not closing the session in the middle of stg
-            dispatch_async(dispatch_get_main_queue(), ^{
+            dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 0.1 * NSEC_PER_SEC), dispatch_get_main_queue(), ^{
 
                 // Close the session
                 MXRestClient *aliceRestClient = aliceSession.matrixRestClient;
@@ -1211,19 +1212,19 @@ NSString *uisiString = @"The sender's device has not sent us the keys for this m
             
             [liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
 
-                // Make crypto forget the inbound group session now
-                // MXRoomSummary will not be able to decrypt it
-                XCTAssert(toDeviceEvent);
-                NSString *sessionId = toDeviceEvent.content[@"session_id"];
-
-                id<MXCryptoStore> bobCryptoStore = (id<MXCryptoStore>)[bobSession.crypto.olmDevice valueForKey:@"store"];
-                [bobCryptoStore removeInboundGroupSessionWithId:sessionId andSenderKey:toDeviceEvent.senderKey];
-
-                // So that we cannot decrypt it anymore right now
-                [event setClearData:nil];
-                BOOL b = [bobSession decryptEvent:event inTimeline:nil];
-
-                XCTAssertFalse(b, @"Failed to set up test condition");
+                if (direction == MXTimelineDirectionForwards)
+                {
+                    // Make crypto forget the inbound group session now
+                    // MXRoomSummary will not be able to decrypt it
+                    XCTAssert(toDeviceEvent);
+                    NSString *sessionId = toDeviceEvent.content[@"session_id"];
+                    
+                    id<MXCryptoStore> bobCryptoStore = (id<MXCryptoStore>)[bobSession.crypto.olmDevice valueForKey:@"store"];
+                    [bobCryptoStore removeInboundGroupSessionWithId:sessionId andSenderKey:toDeviceEvent.senderKey];
+                    
+                    // So that we cannot decrypt it anymore right now
+                    [event setClearData:nil];
+                }
             }];
         }];
 
@@ -1234,7 +1235,6 @@ NSString *uisiString = @"The sender's device has not sent us the keys for this m
 
         id summaryObserver;
         summaryObserver = [[NSNotificationCenter defaultCenter] addObserverForName:kMXRoomSummaryDidChangeNotification object:roomSummaryFromBobPOV queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
-
             switch (notifCount++)
             {
                 case 0:
@@ -1244,13 +1244,13 @@ NSString *uisiString = @"The sender's device has not sent us the keys for this m
 
                     MXEvent *event = roomSummaryFromBobPOV.lastMessageEvent;
                     XCTAssertNil(event.clearEvent);
+                    
+                    // Attempt a new decryption
+                    [bobSession decryptEvents:@[event] inTimeline:nil onComplete:^(NSArray<MXEvent *> *failedEvents) {
+                        // Reinject the m.room_key event. This mimics a room_key event that arrives after message events.
+                        [bobSession.crypto handleRoomKeyEvent:toDeviceEvent onComplete:^{}];
+                    }];
 
-                    // Reinject the m.room_key event. This mimics a room_key event that arrives after message events.
-                    [[NSNotificationCenter defaultCenter] postNotificationName:kMXSessionOnToDeviceEventNotification
-                                                                        object:bobSession
-                                                                      userInfo:@{
-                                                                                 kMXSessionNotificationEventKey: toDeviceEvent
-                                                                                 }];
                     break;
                 }
 

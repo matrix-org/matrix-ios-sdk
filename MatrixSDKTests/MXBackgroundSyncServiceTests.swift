@@ -463,7 +463,7 @@ class MXBackgroundSyncServiceTests: XCTestCase {
                             
                             var syncResponse = syncResponseStoreManager.lastSyncResponse()?.syncResponse
                             XCTAssertNotNil(syncResponse, "Sync response should be present")
-                            XCTAssertTrue(syncResponse!.rooms.join[roomId]!.timeline.limited, "Room timeline should be limited")
+                            XCTAssertTrue(syncResponse!.rooms!.join![roomId]!.timeline.limited, "Room timeline should be limited")
                             
                             //  then send a single message
                             var localEcho: MXEvent?
@@ -481,7 +481,7 @@ class MXBackgroundSyncServiceTests: XCTestCase {
                                         case .success:
                                             //  read sync response again
                                             syncResponse = syncResponseStoreManager.lastSyncResponse()?.syncResponse
-                                            XCTAssertTrue(syncResponse!.rooms.join[roomId]!.timeline.limited, "Room timeline should still be limited")
+                                            XCTAssertTrue(syncResponse!.rooms!.join![roomId]!.timeline.limited, "Room timeline should still be limited")
                                             expectation?.fulfill()
                                         case .failure(let error):
                                             XCTFail("Cannot fetch the event from background sync service - error: \(error)")
@@ -562,7 +562,7 @@ class MXBackgroundSyncServiceTests: XCTestCase {
                             var syncResponse = syncResponseStoreManager.lastSyncResponse()?.syncResponse
                             XCTAssertNotNil(syncResponse, "Sync response should be present")
                             XCTAssertNotNil(syncResponseStoreManager.event(withEventId: eventId, inRoom: roomId), "Event should be present in sync response store")
-                            XCTAssertFalse(syncResponse!.rooms.join[roomId]!.timeline.limited, "Room timeline should not be limited")
+                            XCTAssertFalse(syncResponse!.rooms!.join![roomId]!.timeline.limited, "Room timeline should not be limited")
                             
                             //  then send a lot of messages
                             let messages = (1...Constants.numberOfMessagesForLimitedTest).map({ "\(Constants.messageText) - \($0)" })
@@ -588,7 +588,7 @@ class MXBackgroundSyncServiceTests: XCTestCase {
                                             
                                             //  read sync response again
                                             syncResponse = syncResponseStoreManager.lastSyncResponse()?.syncResponse
-                                            XCTAssertTrue(syncResponse!.rooms.join[roomId]!.timeline.limited, "Room timeline should be limited")
+                                            XCTAssertTrue(syncResponse!.rooms!.join![roomId]!.timeline.limited, "Room timeline should be limited")
                                             
                                             expectation?.fulfill()
 
@@ -866,7 +866,6 @@ class MXBackgroundSyncServiceTests: XCTestCase {
                 
                 // -> Bob session must have the key to decrypt the first message
                 bobSession.event(withEventId: firstEventId, inRoom: roomId) { (event) in
-                    bobSession.decryptEvent(event, inTimeline: nil)
                     XCTAssertNotNil(event?.clear)
                     
                     // -> The background service cache must be reset after session resume
@@ -938,7 +937,6 @@ class MXBackgroundSyncServiceTests: XCTestCase {
                 
                 // -> Bob session must have the key to decrypt the first message
                 bobSession.event(withEventId: firstEventId, inRoom: roomId) { (event) in
-                    bobSession.decryptEvent(event, inTimeline: nil)
                     XCTAssertNotNil(event?.clear)
                     
                     // -> The background service cache must be reset after session resume
@@ -1004,7 +1002,6 @@ class MXBackgroundSyncServiceTests: XCTestCase {
                 
                 // -> Bob session must have the key to decrypt the first message
                 bobSession.event(withEventId: firstEventId, inRoom: roomId) { (event) in
-                    bobSession.decryptEvent(event, inTimeline: nil)
                     XCTAssertNotNil(event?.clear)
                     
                     // -> The background service cache must be reset after session resume
@@ -1076,7 +1073,6 @@ class MXBackgroundSyncServiceTests: XCTestCase {
                 
                 // -> Bob session must have the key to decrypt the first message
                 bobSession.event(withEventId: firstEventId, inRoom: roomId) { (event) in
-                    bobSession.decryptEvent(event, inTimeline: nil)
                     XCTAssertNotNil(event?.clear)
                     
                     // -> The background service cache must be reset after session resume
@@ -1261,10 +1257,7 @@ class MXBackgroundSyncServiceTests: XCTestCase {
                         // -> Bob session must have the key to decrypt the first and the last message
                         bobSession.event(withEventId: firstEventId, inRoom: roomId) { (firstEvent) in
                             bobSession.event(withEventId: lastEventId, inRoom: roomId) { (lastEvent) in
-                                
-                                bobSession.decryptEvent(firstEvent, inTimeline: nil)
                                 XCTAssertNotNil(firstEvent?.clear)
-                                bobSession.decryptEvent(lastEvent, inTimeline: nil)
                                 XCTAssertNotNil(lastEvent?.clear)
                                 
                                 // -> The background service cache must be reset after session restart
@@ -1328,10 +1321,7 @@ class MXBackgroundSyncServiceTests: XCTestCase {
                         // -> Bob session must have the key to decrypt the first and the last message
                         bobSession2.event(withEventId: firstEventId, inRoom: roomId) { (firstEvent) in
                             bobSession2.event(withEventId: lastEventId, inRoom: roomId) { (lastEvent) in
-                                
-                                bobSession2.decryptEvent(firstEvent, inTimeline: nil)
                                 XCTAssertNotNil(firstEvent?.clear)
-                                bobSession2.decryptEvent(lastEvent, inTimeline: nil)
                                 XCTAssertNotNil(lastEvent?.clear)
                                 
                                 // -> The background service cache must be reset after session restart

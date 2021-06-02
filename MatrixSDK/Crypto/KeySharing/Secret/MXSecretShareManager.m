@@ -55,7 +55,7 @@ static NSArray<MXEventTypeString> *kMXSecretShareEventTypes;
                   onSecretReceived:(BOOL (^)(NSString *secret))onSecretReceived
                            failure:(void (^)(NSError *error))failure
 {
-    NSLog(@"[MXSecretShareManager] requestSecret: %@ to %@", secretId, deviceIds);
+    MXLogDebug(@"[MXSecretShareManager] requestSecret: %@ to %@", secretId, deviceIds);
     
     // Create an empty operation that will be mutated later
     MXHTTPOperation *operation = [[MXHTTPOperation alloc] init];
@@ -106,12 +106,12 @@ static NSArray<MXEventTypeString> *kMXSecretShareEventTypes;
                                         success:(void (^)(void))success
                                         failure:(void (^)(NSError *error))failure
 {
-    NSLog(@"[MXSecretShareManager] cancelRequestWithRequestId: %@", requestId);
+    MXLogDebug(@"[MXSecretShareManager] cancelRequestWithRequestId: %@", requestId);
     
     // Sanity check
     if (!requestId)
     {
-        NSLog(@"[MXSecretShareManager] cancelRequestWithRequestId: Nil request id");
+        MXLogDebug(@"[MXSecretShareManager] cancelRequestWithRequestId: Nil request id");
         failure(nil);
     }
     
@@ -126,7 +126,7 @@ static NSArray<MXEventTypeString> *kMXSecretShareEventTypes;
         if (!pendingRequest)
         {
             dispatch_async(dispatch_get_main_queue(), ^{
-                NSLog(@"[MXSecretShareManager] cancelRequestWithRequestId: Unknown request: %@", requestId);
+                MXLogDebug(@"[MXSecretShareManager] cancelRequestWithRequestId: Unknown request: %@", requestId);
                 failure(nil);
             });
         }
@@ -235,7 +235,7 @@ static NSArray<MXEventTypeString> *kMXSecretShareEventTypes;
 
 - (void)handleSecretShareEvent:(MXEvent*)event
 {
-    NSLog(@"[MXSecretShareManager] handleSecretShareEvent: eventType: %@", event.type);
+    MXLogDebug(@"[MXSecretShareManager] handleSecretShareEvent: eventType: %@", event.type);
     
     dispatch_async(_crypto.cryptoQueue, ^{
         switch (event.eventType)
@@ -267,7 +267,7 @@ static NSArray<MXEventTypeString> *kMXSecretShareEventTypes;
     MXJSONModelSetMXJSONModel(request, MXSecretShareRequest, event.content);
     if (!request)
     {
-        NSLog(@"[MXSecretShareManager] handleSecretRequestEvent: Bad content format: %@", event.JSONDictionary);
+        MXLogDebug(@"[MXSecretShareManager] handleSecretRequestEvent: Bad content format: %@", event.JSONDictionary);
         return;
     }
     
@@ -287,7 +287,7 @@ static NSArray<MXEventTypeString> *kMXSecretShareEventTypes;
     }
     else
     {
-        NSLog(@"[MXSecretShareManager] handleSecretRequestEvent. Unsupported action: %@. Event: %@", request.action, event.JSONDictionary);
+        MXLogDebug(@"[MXSecretShareManager] handleSecretRequestEvent. Unsupported action: %@. Event: %@", request.action, event.JSONDictionary);
     }
 }
 
@@ -312,7 +312,7 @@ static NSArray<MXEventTypeString> *kMXSecretShareEventTypes;
 {
     if ([cancelledRequestIds containsObject:request.requestId])
     {
-        NSLog(@"[MXSecretShareManager] handleSecretRequestEvent: Ignored cancelled request: %@", request.requestId);
+        MXLogDebug(@"[MXSecretShareManager] handleSecretRequestEvent: Ignored cancelled request: %@", request.requestId);
         [cancelledRequestIds removeObject:request.requestId];
         return;
     }
@@ -322,7 +322,7 @@ static NSArray<MXEventTypeString> *kMXSecretShareEventTypes;
     MXDeviceInfo *otherDevice = [_crypto.store deviceWithDeviceId:request.requestingDeviceId forUser:myUser.userId];
     if (!otherDevice.trustLevel.isVerified)
     {
-        NSLog(@"[MXSecretShareManager] handleSecretRequestEvent: Ignore secret share request from untrusted device: %@", otherDevice);
+        MXLogDebug(@"[MXSecretShareManager] handleSecretRequestEvent: Ignore secret share request from untrusted device: %@", otherDevice);
         return;
     }
     
@@ -333,7 +333,7 @@ static NSArray<MXEventTypeString> *kMXSecretShareEventTypes;
     NSString *secret = [_crypto.store secretWithSecretId:request.name];
     if (!secret)
     {
-        NSLog(@"[MXSecretShareManager] handleSecretRequestEvent: Unknown secret id: %@", request.name);
+        MXLogDebug(@"[MXSecretShareManager] handleSecretRequestEvent: Unknown secret id: %@", request.name);
         return;
     }
     
@@ -342,7 +342,7 @@ static NSArray<MXEventTypeString> *kMXSecretShareEventTypes;
 
 - (void)handleSecretRequestCancellation:(MXSecretShareRequest*)request
 {
-    NSLog(@"[MXSecretShareManager] handleSecretRequestCancellation: %@ from device %@", request.name, request.requestingDeviceId);
+    MXLogDebug(@"[MXSecretShareManager] handleSecretRequestCancellation: %@ from device %@", request.name, request.requestingDeviceId);
     
     // Store cancelled requests
     // Those requests will be ignored at the end of the sync processing
@@ -355,14 +355,14 @@ static NSArray<MXEventTypeString> *kMXSecretShareEventTypes;
 
 - (void)shareSecret:(NSString*)secret toRequest:(MXSecretShareRequest*)request
 {
-    NSLog(@"[MXSecretShareManager] shareSecret: %@ to device %@", request.name, request.requestingDeviceId);
+    MXLogDebug(@"[MXSecretShareManager] shareSecret: %@ to device %@", request.name, request.requestingDeviceId);
     
     MXCredentials *myUser = _crypto.mxSession.matrixRestClient.credentials;
     
     MXDeviceInfo *device = [_crypto.store deviceWithDeviceId:request.requestingDeviceId forUser:myUser.userId];
     if (!device)
     {
-        NSLog(@"[MXSecretShareManager] shareSecret: ERROR: Unknown device: %@", request.requestingDeviceId);
+        MXLogDebug(@"[MXSecretShareManager] shareSecret: ERROR: Unknown device: %@", request.requestingDeviceId);
         return;
     }
     
@@ -391,11 +391,11 @@ static NSArray<MXEventTypeString> *kMXSecretShareEventTypes;
         [contentMap setObject:encryptedContent forUser:myUser.userId andDevice:device.deviceId];
         
         [self.crypto.matrixRestClient sendToDevice:kMXEventTypeStringRoomEncrypted contentMap:contentMap txnId:nil success:nil failure:^(NSError *error) {
-            NSLog(@"[MXSecretShareManager] shareSecret: ERROR for sendToDevice: %@", error);
+            MXLogDebug(@"[MXSecretShareManager] shareSecret: ERROR for sendToDevice: %@", error);
         }];
         
     } failure:^(NSError *error) {
-        NSLog(@"[MXSecretShareManager] shareSecret: ERROR for ensureOlmSessionsForDevices: %@", error);
+        MXLogDebug(@"[MXSecretShareManager] shareSecret: ERROR for ensureOlmSessionsForDevices: %@", error);
     }];
 }
 
@@ -406,25 +406,25 @@ static NSArray<MXEventTypeString> *kMXSecretShareEventTypes;
     MXJSONModelSetMXJSONModel(shareSend, MXSecretShareSend, event.content);
     if (!shareSend)
     {
-        NSLog(@"[MXSecretShareManager] handleSecretSendEvent: Bad content format: %@", event.JSONDictionary);
+        MXLogDebug(@"[MXSecretShareManager] handleSecretSendEvent: Bad content format: %@", event.JSONDictionary);
         return;
     }
     
     MXPendingSecretShareRequest *pendingRequest = pendingSecretShareRequests[shareSend.requestId];
     if (!pendingRequest)
     {
-        NSLog(@"[MXSecretShareManager] handleSecretSendEvent: Unexpected response to request: %@", shareSend.requestId);
+        MXLogDebug(@"[MXSecretShareManager] handleSecretSendEvent: Unexpected response to request: %@", shareSend.requestId);
         return;
     }
     
     if (pendingRequest.onSecretReceivedBlock(shareSend.secret))
     {
-        NSLog(@"[MXSecretShareManager] handleSecretSendEvent: Secret has been validated. Cancel the request %@", shareSend.requestId);
+        MXLogDebug(@"[MXSecretShareManager] handleSecretSendEvent: Secret has been validated. Cancel the request %@", shareSend.requestId);
         [self cancelRequestWithRequestId:shareSend.requestId success:^{} failure:^(NSError * _Nonnull error) {}];
     }
     else
     {
-        NSLog(@"[MXSecretShareManager] handleSecretSendEvent: Not valid secret. Keep request %@ on", shareSend.requestId);
+        MXLogDebug(@"[MXSecretShareManager] handleSecretSendEvent: Not valid secret. Keep request %@ on", shareSend.requestId);
     }
 }
 

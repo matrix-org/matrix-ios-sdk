@@ -29,22 +29,24 @@ PODS:
   - OHHTTPStubs/NSURLSession (9.1.0):
     - OHHTTPStubs/Core
   - OHHTTPStubs/OHPathHelpers (9.1.0)
-  - OLMKit (3.2.2):
-    - OLMKit/olmc (= 3.2.2)
-    - OLMKit/olmcpp (= 3.2.2)
-  - OLMKit/olmc (3.2.2)
-  - OLMKit/olmcpp (3.2.2)
-  - Realm (10.7.2):
-    - Realm/Headers (= 10.7.2)
-  - Realm/Headers (10.7.2)
+  - OLMKit (3.2.4):
+    - OLMKit/olmc (= 3.2.4)
+    - OLMKit/olmcpp (= 3.2.4)
+  - OLMKit/olmc (3.2.4)
+  - OLMKit/olmcpp (3.2.4)
+  - Realm (10.7.6):
+    - Realm/Headers (= 10.7.6)
+  - Realm/Headers (10.7.6)
+  - SwiftyBeaver (1.9.5)
 
 DEPENDENCIES:
   - AFNetworking (~> 4.0.0)
   - GZIP (~> 1.3.0)
   - libbase58 (~> 0.1.4)
   - OHHTTPStubs (~> 9.1.0)
-  - OLMKit (~> 3.2.2)
-  - Realm (= 10.7.2)
+  - OLMKit (~> 3.2.4)
+  - Realm (= 10.7.6)
+  - SwiftyBeaver (= 1.9.5)
 
 SPEC REPOS:
   trunk:
@@ -54,15 +56,17 @@ SPEC REPOS:
     - OHHTTPStubs
     - OLMKit
     - Realm
+    - SwiftyBeaver
 
 SPEC CHECKSUMS:
   AFNetworking: 7864c38297c79aaca1500c33288e429c3451fdce
   GZIP: 416858efbe66b41b206895ac6dfd5493200d95b3
   libbase58: 7c040313537b8c44b6e2d15586af8e21f7354efd
   OHHTTPStubs: 90eac6d8f2c18317baeca36698523dc67c513831
-  OLMKit: 20d1c564033a1ae7148f8f599378d4c798363905
-  Realm: e523da9ade306c5ae87e85dc09fdef148d3e1cc1
+  OLMKit: 2d73cd67d149b5c3e3a8eb8ecae93d0b429d8a02
+  Realm: ed860452717c8db8f4bf832b6807f7f2ce708839
+  SwiftyBeaver: 84069991dd5dca07d7069100985badaca7f0ce82
 
-PODFILE CHECKSUM: 1b99113acef4f0ff99e478c800e9f465b013a083
+PODFILE CHECKSUM: b0507b1015a54cf1383ca163c439a86ace34824e
 
-COCOAPODS: 1.10.0
+COCOAPODS: 1.10.1
