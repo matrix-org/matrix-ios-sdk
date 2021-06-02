@@ -2749,6 +2749,20 @@ typedef void (^MXOnResumeDone)(void);
         // Try to find it from the store first
         // (this operation requires a roomId for the moment)
         MXEvent *event = [_store eventWithEventId:eventId inRoom:roomId];
+        
+        //  also search in local event
+        if (!event)
+        {
+            NSArray<MXEvent *> *outgoingMessages = [_store outgoingMessagesInRoom:roomId];
+            for (MXEvent *localEvent in outgoingMessages)
+            {
+                if ([localEvent.eventId isEqualToString:eventId])
+                {
+                    event = localEvent;
+                    break;
+                }
+            }
+        }
 
         if (event)
         {
