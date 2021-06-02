@@ -16,6 +16,8 @@
 
 #import <Foundation/Foundation.h>
 
+@class MXEvent;
+
 NS_ASSUME_NONNULL_BEGIN
 
 /**
@@ -33,7 +35,28 @@ NS_ASSUME_NONNULL_BEGIN
  */
 @property (nonatomic, assign, readonly) uint64_t originServerTs;
 
-- (instancetype)initWithEventId:(NSString *)eventId originServerTs:(uint64_t)originServerTs;
+/**
+ Indicates if the last message is encrypted.
+ 
+ @discussion
+ An unencrypted message can be sent to an encrypted room.
+ When the last message is encrypted, its summary data (lastMessageString, lastMessageAttributedString,
+ lastMessageOthers) is stored encrypted in the room summary cache.
+ */
+@property (nonatomic, readonly) BOOL isEncrypted;
+
+/**
+ String representation of this last message.
+ */
+@property (nonatomic, copy, nullable) NSString *text;
+@property (nonatomic, copy, nullable) NSAttributedString *attributedText;
+
+/**
+ Placeholder to store more information about the last message.
+ */
+@property (nonatomic, copy, nullable) NSMutableDictionary<NSString*, id<NSCoding>> *others;
+
+- (instancetype)initWithEvent:(MXEvent *)event;
 
 @end
 
