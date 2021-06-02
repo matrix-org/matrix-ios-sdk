@@ -61,7 +61,7 @@ static const NSTimeInterval BackgroundTimeRemainingThresholdToStartTasks = 5.0;
     if (applicationStateService.applicationState == UIApplicationStateBackground &&
         applicationStateService.backgroundTimeRemaining < BackgroundTimeRemainingThresholdToStartTasks)
     {
-        NSLog(@"[MXBackgroundTask] Do not start background task - %@, as not enough time exists", name);
+        MXLogDebug(@"[MXBackgroundTask] Do not start background task - %@, as not enough time exists", name);
         
         //  call expiration handler immediately
         if (expirationHandler)
@@ -78,7 +78,7 @@ static const NSTimeInterval BackgroundTimeRemainingThresholdToStartTasks = 5.0;
         NSString *readableAppState = [MXUIKitApplicationStateService readableApplicationStateWithApplicationState:applicationStateService.applicationState];
         NSString *readableBackgroundTimeRemaining = [MXUIKitApplicationStateService readableEstimatedBackgroundTimeRemainingWithBackgroundTimeRemaining:applicationStateService.backgroundTimeRemaining];
         
-        NSLog(@"[MXBackgroundTask] Background task %@ started with app state: %@ and estimated background time remaining: %@", backgroundTask.name, readableAppState, readableBackgroundTimeRemaining);
+        MXLogDebug(@"[MXBackgroundTask] Background task %@ started with app state: %@ and estimated background time remaining: %@", backgroundTask.name, readableAppState, readableBackgroundTimeRemaining);
     }
 
     return backgroundTask;

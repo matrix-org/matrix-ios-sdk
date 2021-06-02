@@ -64,7 +64,7 @@
     }
     else
     {
-        NSLog(@"[MXAggregations] handleReference: Unknown event id: %@", relation.eventId);
+        MXLogDebug(@"[MXAggregations] handleReference: Unknown event id: %@", relation.eventId);
     }
 }
 

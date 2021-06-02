@@ -296,7 +296,7 @@ typedef void (^MXOnResumeDone)(void);
 {
     if (_state != state)
     {
-        NSLog(@"[MXSession] setState: %@ (was %@)", @(state), @(_state));
+        MXLogDebug(@"[MXSession] setState: %@ (was %@)", @(state), @(_state));
         
         _state = state;
 
@@ -360,7 +360,7 @@ typedef void (^MXOnResumeDone)(void);
             if (self.store.isPermanent && self.isEventStreamInitialised)
             {
                 // Mount data from the permanent store
-                NSLog(@"[MXSession] Loading room state events to build MXRoom objects...");
+                MXLogDebug(@"[MXSession] Loading room state events to build MXRoom objects...");
 
                 // Create myUser from the store
                 MXUser *myUser = [self.store userWithUserId:self->matrixRestClient.credentials.userId];
@@ -384,7 +384,7 @@ typedef void (^MXOnResumeDone)(void);
                     }
                 }
 
-                NSLog(@"[MXSession] Built %lu MXRoomSummaries in %.0fms", (unsigned long)self->roomsSummaries.allKeys.count, [[NSDate date] timeIntervalSinceDate:startDate2] * 1000);
+                MXLogDebug(@"[MXSession] Built %lu MXRoomSummaries in %.0fms", (unsigned long)self->roomsSummaries.allKeys.count, [[NSDate date] timeIntervalSinceDate:startDate2] * 1000);
 
                 // Create MXRooms from their states stored in the store
                 NSDate *startDate3 = [NSDate date];
@@ -393,16 +393,16 @@ typedef void (^MXOnResumeDone)(void);
                     [self loadRoom:roomId];
                 }
 
-                NSLog(@"[MXSession] Built %lu MXRooms in %.0fms", (unsigned long)self->rooms.count, [[NSDate date] timeIntervalSinceDate:startDate3] * 1000);
+                MXLogDebug(@"[MXSession] Built %lu MXRooms in %.0fms", (unsigned long)self->rooms.count, [[NSDate date] timeIntervalSinceDate:startDate3] * 1000);
                 
                 NSDate *startDate4 = [NSDate date];
                 [self loadRoomSummaryLastEvents:^{
-                    NSLog(@"[MXSession] Loaded %lu MXRoomSummaries last events in  in %.0fms", (unsigned long)self->roomsSummaries.count, [[NSDate date] timeIntervalSinceDate:startDate4] * 1000);
+                    MXLogDebug(@"[MXSession] Loaded %lu MXRoomSummaries last events in  in %.0fms", (unsigned long)self->roomsSummaries.count, [[NSDate date] timeIntervalSinceDate:startDate4] * 1000);
                     
                     taskProfile.units = self->rooms.count;
                     [MXSDKOptions.sharedInstance.profiler stopMeasuringTaskWithProfile:taskProfile];
                     
-                    NSLog(@"[MXSession] Total time to mount SDK data from MXStore: %.0fms", taskProfile.duration * 1000);
+                    MXLogDebug(@"[MXSession] Total time to mount SDK data from MXStore: %.0fms", taskProfile.duration * 1000);
                     
                     [self setState:MXSessionStateStoreDataReady];
                     
@@ -416,7 +416,7 @@ typedef void (^MXOnResumeDone)(void);
                 self->_myUser = [[MXMyUser alloc] initWithUserId:self->matrixRestClient.credentials.userId];
                 self->_myUser.mxSession = self;
                 
-                NSLog(@"[MXSession] Total time to mount SDK data from MXStore: %.0fms", [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
+                MXLogDebug(@"[MXSession] Total time to mount SDK data from MXStore: %.0fms", [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
                 
                 [self setState:MXSessionStateStoreDataReady];
                 
@@ -460,7 +460,7 @@ typedef void (^MXOnResumeDone)(void);
                 completion:(void (^)(void))completion
            storeCompletion:(void (^)(void))storeCompletion
 {
-    NSLog(@"[MXSession] handleSyncResponse: Received %tu joined rooms, %tu invited rooms, %tu left rooms, %tu toDevice events.", syncResponse.rooms.join.count, syncResponse.rooms.invite.count, syncResponse.rooms.leave.count, syncResponse.toDevice.events.count);
+    MXLogDebug(@"[MXSession] handleSyncResponse: Received %tu joined rooms, %tu invited rooms, %tu left rooms, %tu toDevice events.", syncResponse.rooms.join.count, syncResponse.rooms.invite.count, syncResponse.rooms.leave.count, syncResponse.toDevice.events.count);
     
     // Check whether this is the initial sync
     BOOL isInitialSync = !self.isEventStreamInitialised;
@@ -666,7 +666,7 @@ typedef void (^MXOnResumeDone)(void);
         }
 
         // Update live event stream token
-            NSLog(@"[MXSession] Next sync token: %@", syncResponse.nextBatch);
+            MXLogDebug(@"[MXSession] Next sync token: %@", syncResponse.nextBatch);
             self.store.eventStreamToken = syncResponse.nextBatch;
             
             if (completion)
@@ -692,7 +692,7 @@ typedef void (^MXOnResumeDone)(void);
 
 - (void)setIdentityServer:(NSString *)identityServer andAccessToken:(NSString *)accessToken
 {
-    NSLog(@"[MXSession] setIdentityServer: %@", identityServer);
+    MXLogDebug(@"[MXSession] setIdentityServer: %@", identityServer);
     
     matrixRestClient.identityServer = identityServer;
 
@@ -722,7 +722,7 @@ typedef void (^MXOnResumeDone)(void);
            onServerSyncDone:(void (^)(void))onServerSyncDone
                     failure:(void (^)(NSError *error))failure;
 {
-    NSLog(@"[MXSession] startWithSyncFilter: %@", syncFilter);
+    MXLogDebug(@"[MXSession] startWithSyncFilter: %@", syncFilter);
 
     if (syncFilter)
     {
@@ -736,7 +736,7 @@ typedef void (^MXOnResumeDone)(void);
         } failure:^(NSError *error) {
             MXStrongifyAndReturnIfNil(self);
 
-            NSLog(@"[MXSession] startWithSyncFilter: WARNING: Impossible to create the filter. Use no filter in /sync");
+            MXLogDebug(@"[MXSession] startWithSyncFilter: WARNING: Impossible to create the filter. Use no filter in /sync");
             [self startWithSyncFilterId:nil onServerSyncDone:onServerSyncDone failure:failure];
         }];
     }
@@ -781,12 +781,11 @@ typedef void (^MXOnResumeDone)(void);
     [self setState:MXSessionStateSyncInProgress];
 
     // Check update of the filter used for /sync requests
-    if (_store.syncFilterId != syncFilterId
-        && ![_store.syncFilterId isEqualToString:syncFilterId])
+    if (![_store.syncFilterId isEqualToString:syncFilterId])
     {
         if (_store.eventStreamToken)
         {
-            NSLog(@"[MXSesssion] startWithSyncFilterId: WARNING: Changing the sync filter while there is existing data in the store is not recommended");
+            MXLogDebug(@"[MXSesssion] startWithSyncFilterId: WARNING: Changing the sync filter while there is existing data in the store is not recommended");
         }
 
         // Store the passed filter id
@@ -802,7 +801,7 @@ typedef void (^MXOnResumeDone)(void);
 
             if (filter.room.state.lazyLoadMembers)
             {
-                NSLog(@"[MXSession] Set syncWithLazyLoadOfRoomMembers to YES");
+                MXLogDebug(@"[MXSession] Set syncWithLazyLoadOfRoomMembers to YES");
                 self->_syncWithLazyLoadOfRoomMembers = YES;
             }
         } failure:nil];
@@ -812,19 +811,19 @@ typedef void (^MXOnResumeDone)(void);
     if (_store.isPermanent && self.isEventStreamInitialised && 0 < _store.rooms.count)
     {
         // Resume the stream (presence will be retrieved during server sync)
-        NSLog(@"[MXSession] Resuming the events stream from %@...", self.store.eventStreamToken);
+        MXLogDebug(@"[MXSession] Resuming the events stream from %@...", self.store.eventStreamToken);
         NSDate *startDate2 = [NSDate date];
         [self resume:^{
-            NSLog(@"[MXSession] Events stream resumed in %.0fms", [[NSDate date] timeIntervalSinceDate:startDate2] * 1000);
+            MXLogDebug(@"[MXSession] Events stream resumed in %.0fms", [[NSDate date] timeIntervalSinceDate:startDate2] * 1000);
 
             onServerSyncDone();
         }];
 
         // Start crypto if enabled
         [self startCrypto:^{
-            NSLog(@"[MXSession] Crypto has been started");
+            MXLogDebug(@"[MXSession] Crypto has been started");
         }  failure:^(NSError *error) {
-            NSLog(@"[MXSession] Crypto failed to start. Error: %@", error);
+            MXLogDebug(@"[MXSession] Crypto failed to start. Error: %@", error);
         }];
     }
     else
@@ -847,7 +846,7 @@ typedef void (^MXOnResumeDone)(void);
             // Start crypto if enabled
             [self startCrypto:^{
 
-                NSLog(@"[MXSession] Do an initial /sync");
+                MXLogDebug(@"[MXSession] Do an initial /sync");
 
                 // Initial server sync
                 [self serverSyncWithServerTimeout:0 success:onServerSyncDone failure:^(NSError *error) {
@@ -859,7 +858,7 @@ typedef void (^MXOnResumeDone)(void);
 
             } failure:^(NSError *error) {
 
-                NSLog(@"[MXSession] Crypto failed to start. Error: %@", error);
+                MXLogDebug(@"[MXSession] Crypto failed to start. Error: %@", error);
                 
                 // Check whether the token is valid
                 if ([self isUnknownTokenError:error])
@@ -875,7 +874,7 @@ typedef void (^MXOnResumeDone)(void);
 
         } failure:^(NSError *error) {
             
-            NSLog(@"[MXSession] Get the user's profile information failed");
+            MXLogDebug(@"[MXSession] Get the user's profile information failed");
             
             // Check whether the token is valid
             if ([self isUnknownTokenError:error])
@@ -903,7 +902,7 @@ typedef void (^MXOnResumeDone)(void);
 
 - (void)pause
 {
-    NSLog(@"[MXSession] pause the event stream in state %tu", _state);
+    MXLogDebug(@"[MXSession] pause the event stream in state %tu", _state);
 
     if (_state == MXSessionStateRunning || _state == MXSessionStateBackgroundSyncInProgress || _state == MXSessionStatePauseRequested)
     {
@@ -911,7 +910,7 @@ typedef void (^MXOnResumeDone)(void);
         // background
         if (_preventPauseCount)
         {
-            NSLog(@"[MXSession pause] Prevent the session from being paused. preventPauseCount: %tu", _preventPauseCount);
+            MXLogDebug(@"[MXSession pause] Prevent the session from being paused. preventPauseCount: %tu", _preventPauseCount);
             
             id<MXBackgroundModeHandler> handler = [MXSDKOptions sharedInstance].backgroundModeHandler;
             
@@ -950,7 +949,7 @@ typedef void (^MXOnResumeDone)(void);
     }
     else
     {
-        NSLog(@"[MXSession] pause skipped because of wrong state of MXSession");
+        MXLogDebug(@"[MXSession] pause skipped because of wrong state of MXSession");
     }
 }
 
@@ -963,7 +962,7 @@ typedef void (^MXOnResumeDone)(void);
 
 - (void)_resume:(void (^)(void))resumeDone
 {
-    NSLog(@"[MXSession] _resume: resume the event stream from state %tu", _state);
+    MXLogDebug(@"[MXSession] _resume: resume the event stream from state %tu", _state);
     
     if (self.backgroundTask.isRunning)
     {
@@ -994,7 +993,7 @@ typedef void (^MXOnResumeDone)(void);
     
     if (!onResumeDone && resumeDone)
     {
-        NSLog(@"[MXSession] _resume: the event stream is already running. Nothing to resume");
+        MXLogDebug(@"[MXSession] _resume: the event stream is already running. Nothing to resume");
         resumeDone();
     }
 }
@@ -1012,14 +1011,14 @@ typedef void (^MXOnResumeDone)(void);
     {
         if (!ignoreSessionState && MXSessionStatePaused != _state)
         {
-            NSLog(@"[MXSession] background Sync cannot be done in the current state %tu", _state);
+            MXLogDebug(@"[MXSession] background Sync cannot be done in the current state %tu", _state);
             dispatch_async(dispatch_get_main_queue(), ^{
                 backgroundSyncfails(nil);
             });
         }
         else
         {
-            NSLog(@"[MXSession] start a background Sync");
+            MXLogDebug(@"[MXSession] start a background Sync");
             [self setState:MXSessionStateBackgroundSyncInProgress];
             
             // BackgroundSync from the latest known token
@@ -1031,7 +1030,7 @@ typedef void (^MXOnResumeDone)(void);
     }
     else
     {
-        NSLog(@"[MXSession] background Sync already ongoing");
+        MXLogDebug(@"[MXSession] background Sync already ongoing");
         dispatch_async(dispatch_get_main_queue(), ^{
             backgroundSyncfails(nil);
         });
@@ -1042,7 +1041,7 @@ typedef void (^MXOnResumeDone)(void);
 {
     if (eventStreamRequest)
     {
-        NSLog(@"[MXSession] Reconnect starts");
+        MXLogDebug(@"[MXSession] Reconnect starts");
         [eventStreamRequest cancel];
         eventStreamRequest = nil;
         
@@ -1054,7 +1053,7 @@ typedef void (^MXOnResumeDone)(void);
     }
     else
     {
-        NSLog(@"[MXSession] Reconnect fails.");
+        MXLogDebug(@"[MXSession] Reconnect fails.");
     }
     
     return NO;
@@ -1075,6 +1074,9 @@ typedef void (^MXOnResumeDone)(void);
     {
         [user removeAllListeners];
     }
+    
+    // Clean any cached initial sync response
+    [self.initialSyncResponseCache deleteData];
     
     // Flush the store
     if ([_store respondsToSelector:@selector(close)])
@@ -1192,17 +1194,17 @@ typedef void (^MXOnResumeDone)(void);
         MXError *mxError = [[MXError alloc] initWithNSError:error];
         if ([mxError.errcode isEqualToString:kMXErrCodeStringUnknownToken])
         {
-            NSLog(@"[MXSession] isUnknownTokenError: The access token is no more valid.");
+            MXLogDebug(@"[MXSession] isUnknownTokenError: The access token is no more valid.");
 
             if (mxError.httpResponse.statusCode == 401
                 && [mxError.userInfo[kMXErrorSoftLogoutKey] isEqual:@(YES)])
             {
-                NSLog(@"[MXSession] isUnknownTokenError: Go to MXSessionStateSoftLogout state.");
+                MXLogDebug(@"[MXSession] isUnknownTokenError: Go to MXSessionStateSoftLogout state.");
                 [self setState:MXSessionStateSoftLogout];
             }
             else
             {
-                NSLog(@"[MXSession] isUnknownTokenError: Go to MXSessionStateUnknownToken state.");
+                MXLogDebug(@"[MXSession] isUnknownTokenError: Go to MXSessionStateUnknownToken state.");
                 [self setState:MXSessionStateUnknownToken];
             }
 
@@ -1234,14 +1236,14 @@ typedef void (^MXOnResumeDone)(void);
 {
     _preventPauseCount = preventPauseCount;
 
-    NSLog(@"[MXSession] setPreventPauseCount: %tu. MXSession state: %tu", _preventPauseCount, _state);
+    MXLogDebug(@"[MXSession] setPreventPauseCount: %tu. MXSession state: %tu", _preventPauseCount, _state);
 
     if (_preventPauseCount == 0)
     {
         // The background task can be released
         if (self.backgroundTask.isRunning)
         {
-            NSLog(@"[MXSession pause] Stop background task %@", self.backgroundTask);
+            MXLogDebug(@"[MXSession pause] Stop background task %@", self.backgroundTask);
             [self.backgroundTask stop];
             self.backgroundTask = nil;
         }
@@ -1249,7 +1251,7 @@ typedef void (^MXOnResumeDone)(void);
         // And the session can be paused for real if it was not resumed before
         if (_state == MXSessionStatePauseRequested)
         {
-            NSLog(@"[MXSession] setPreventPauseCount: Actually pause the session");
+            MXLogDebug(@"[MXSession] setPreventPauseCount: Actually pause the session");
             [self pause];
         }
     }
@@ -1282,7 +1284,7 @@ typedef void (^MXOnResumeDone)(void);
         syncResponse = cachedResponse.syncResponse;
         useLiveResponse = NO;
         
-        NSLog(@"[MXSession] serverSync: Use cached initial sync response");
+        MXLogDebug(@"[MXSession] serverSync: Use cached initial sync response");
         
         dispatch_group_leave(initialSyncDispatchGroup);
     }
@@ -1305,7 +1307,7 @@ typedef void (^MXOnResumeDone)(void);
         // Determine if we are catching up
         _catchingUp = (0 == serverTimeout);
         
-        NSLog(@"[MXSession] Do a server sync%@ from token: %@", _catchingUp ? @" (catching up)" : @"", streamToken);
+        MXLogDebug(@"[MXSession] Do a server sync%@ from token: %@", _catchingUp ? @" (catching up)" : @"", streamToken);
         
         MXWeakify(self);
         eventStreamRequest = [matrixRestClient syncFromToken:streamToken serverTimeout:serverTimeout clientTimeout:clientTimeout setPresence:setPresence filter:self.syncFilterId success:^(MXSyncResponse *liveResponse) {
@@ -1318,7 +1320,7 @@ typedef void (^MXOnResumeDone)(void);
             }
             
             NSTimeInterval duration = [[NSDate date] timeIntervalSinceDate:startDate];
-            NSLog(@"[MXSession] Received sync response in %.0fms", duration * 1000);
+            MXLogDebug(@"[MXSession] Received sync response in %.0fms", duration * 1000);
             
             syncResponse = liveResponse;
             useLiveResponse = YES;
@@ -1358,7 +1360,7 @@ typedef void (^MXOnResumeDone)(void);
         {
             // We may have not received all to-device events in a single /sync response
             // Pursue /sync with short timeout
-            NSLog(@"[MXSession] Continue /sync with short timeout to get all to-device events (%@)", self.myUser.userId);
+            MXLogDebug(@"[MXSession] Continue /sync with short timeout to get all to-device events (%@)", self.myUser.userId);
             nextServerTimeout = 0;
         }
         
@@ -1382,7 +1384,7 @@ typedef void (^MXOnResumeDone)(void);
             // there is a pending backgroundSync
             if (self->onBackgroundSyncDone)
             {
-                NSLog(@"[MXSession] Events stream background Sync succeeded");
+                MXLogDebug(@"[MXSession] Events stream background Sync succeeded");
 
                 // Operations on session may occur during this block. For example, [MXSession close] may be triggered.
                 // We run a copy of the block to prevent app from crashing if the block is released by one of these operations.
@@ -1401,7 +1403,7 @@ typedef void (^MXOnResumeDone)(void);
                     }
                     else
                     {
-                        NSLog(@"[MXSession] go to paused ");
+                        MXLogDebug(@"[MXSession] go to paused ");
                         self->eventStreamRequest = nil;
                         [self setState:MXSessionStatePaused];
                         return;
@@ -1409,14 +1411,14 @@ typedef void (^MXOnResumeDone)(void);
                 }
                 else
                 {
-                    NSLog(@"[MXSession] resume after a background Sync");
+                    MXLogDebug(@"[MXSession] resume after a background Sync");
                 }
             }
 
             // If we are resuming inform the app that it received the last uptodate data
             if (self->onResumeDone)
             {
-                NSLog(@"[MXSession] Events stream resumed");
+                MXLogDebug(@"[MXSession] Events stream resumed");
 
                 // Operations on session may occur during this block. For example, [MXSession close] or [MXSession pause] may be triggered.
                 // We run a copy of the block to prevent app from crashing if the block is released by one of these operations.
@@ -1475,7 +1477,7 @@ typedef void (^MXOnResumeDone)(void);
     // Handle failure during catch up first
     if (self->onBackgroundSyncFail)
     {
-        NSLog(@"[MXSession] background Sync fails %@", error);
+        MXLogDebug(@"[MXSession] background Sync fails %@", error);
 
         // Operations on session may occur during this block. For example, [MXSession close] may be triggered.
         // We run a copy of the block to prevent app from crashing if the block is released by one of these operations.
@@ -1494,7 +1496,7 @@ typedef void (^MXOnResumeDone)(void);
             }
             else
             {
-                NSLog(@"[MXSession] go to paused ");
+                MXLogDebug(@"[MXSession] go to paused ");
                 self->eventStreamRequest = nil;
                 [self setState:MXSessionStatePaused];
                 return;
@@ -1502,7 +1504,7 @@ typedef void (^MXOnResumeDone)(void);
         }
         else
         {
-            NSLog(@"[MXSession] resume after a background Sync");
+            MXLogDebug(@"[MXSession] resume after a background Sync");
         }
     }
 
@@ -1520,12 +1522,12 @@ typedef void (^MXOnResumeDone)(void);
         if ([error.domain isEqualToString:NSURLErrorDomain]
             && code == kCFURLErrorCancelled)
         {
-            NSLog(@"[MXSession] The connection has been cancelled.");
+            MXLogDebug(@"[MXSession] The connection has been cancelled.");
         }
         else if ([error.domain isEqualToString:NSURLErrorDomain]
                  && code == kCFURLErrorTimedOut && serverTimeout == 0)
         {
-            NSLog(@"[MXSession] The connection has been timeout.");
+            MXLogDebug(@"[MXSession] The connection has been timeout.");
             // The reconnection attempt failed on timeout: there is no data to retrieve from server
             [self->eventStreamRequest cancel];
             self->eventStreamRequest = nil;
@@ -1554,7 +1556,7 @@ typedef void (^MXOnResumeDone)(void);
 
                     if (self->eventStreamRequest)
                     {
-                        NSLog(@"[MXSession] Retry resuming events stream after error %@", mxError.errcode);
+                        MXLogDebug(@"[MXSession] Retry resuming events stream after error %@", mxError.errcode);
                         [self serverSyncWithServerTimeout:0 success:success failure:failure clientTimeout:CLIENT_TIMEOUT_MS setPresence:nil];
                     }
                 });
@@ -1566,7 +1568,7 @@ typedef void (^MXOnResumeDone)(void);
 
                 // Check if it is a network connectivity issue
                 AFNetworkReachabilityManager *networkReachabilityManager = [AFNetworkReachabilityManager sharedManager];
-                NSLog(@"[MXSession] events stream broken. Network reachability: %d", networkReachabilityManager.isReachable);
+                MXLogDebug(@"[MXSession] events stream broken. Network reachability: %d", networkReachabilityManager.isReachable);
 
                 if (networkReachabilityManager.isReachable)
                 {
@@ -1579,7 +1581,7 @@ typedef void (^MXOnResumeDone)(void);
 
                         if (self->eventStreamRequest)
                         {
-                            NSLog(@"[MXSession] Retry resuming events stream");
+                            MXLogDebug(@"[MXSession] Retry resuming events stream");
                             [self setState:MXSessionStateSyncInProgress];
                             [self serverSyncWithServerTimeout:0 success:success failure:nil clientTimeout:CLIENT_TIMEOUT_MS setPresence:nil];
                         }
@@ -1595,7 +1597,7 @@ typedef void (^MXOnResumeDone)(void);
                         {
                             [[NSNotificationCenter defaultCenter] removeObserver:reachabilityObserver];
 
-                            NSLog(@"[MXSession] Retry resuming events stream");
+                            MXLogDebug(@"[MXSession] Retry resuming events stream");
                             [self setState:MXSessionStateSyncInProgress];
                             [self serverSyncWithServerTimeout:0 success:success failure:nil clientTimeout:CLIENT_TIMEOUT_MS setPresence:nil];
                         }
@@ -1707,7 +1709,7 @@ typedef void (^MXOnResumeDone)(void);
                 if (identityServer != self.identityService.identityServer
                     && ![identityServer isEqualToString:self.identityService.identityServer])
                 {
-                    NSLog(@"[MXSession] handleAccountData: Update identity server: %@ -> %@", self.identityService.identityServer, identityServer);
+                    MXLogDebug(@"[MXSession] handleAccountData: Update identity server: %@ -> %@", self.identityService.identityServer, identityServer);
 
                     // Use the IS from the account data
                     [self setIdentityServer:identityServer andAccessToken:nil];
@@ -1777,7 +1779,7 @@ typedef void (^MXOnResumeDone)(void);
             }
             else
             {
-                NSLog(@"[MXSession] handleToDeviceEvents: Warning: Unable to decrypt to-device event: %@\nError: %@", event.wireContent[@"body"], event.decryptionError);
+                MXLogDebug(@"[MXSession] handleToDeviceEvents: Warning: Unable to decrypt to-device event: %@\nError: %@", event.wireContent[@"body"], event.decryptionError);
             }
         }
         
@@ -1840,12 +1842,12 @@ typedef void (^MXOnResumeDone)(void);
     NSMutableArray<NSString *> *outdatedSyncResponseIds = [syncResponseStore.outdatedSyncResponseIds mutableCopy];
     NSArray<NSString *> *syncResponseIds = syncResponseStore.syncResponseIds;
 
-    NSLog(@"[MXSession] handleBackgroundSyncCacheIfRequired: state %tu. outdatedSyncResponseIds: %@. syncResponseIds: %@. syncResponseStoreSyncToken: %@",
+    MXLogDebug(@"[MXSession] handleBackgroundSyncCacheIfRequired: state %tu. outdatedSyncResponseIds: %@. syncResponseIds: %@. syncResponseStoreSyncToken: %@",
           _state, @(outdatedSyncResponseIds.count), @(syncResponseIds.count) , syncResponseStoreSyncToken);
     
     if (![syncResponseStoreSyncToken isEqualToString:eventStreamToken])
     {
-        NSLog(@"[MXSession] handleBackgroundSyncCacheIfRequired: ");
+        MXLogDebug(@"[MXSession] handleBackgroundSyncCacheIfRequired: ");
         [outdatedSyncResponseIds addObjectsFromArray:syncResponseIds];
         syncResponseIds = @[];
     }
@@ -1906,7 +1908,7 @@ typedef void (^MXOnResumeDone)(void);
 - (void)handleOutdatedSyncResponse:(MXSyncResponse *)syncResponse
                         completion:(void (^)(void))completion
 {
-    NSLog(@"[MXSession] handleOutdatedSyncResponse: %tu joined rooms, %tu invited rooms, %tu left rooms, %tu toDevice events.", syncResponse.rooms.join.count, syncResponse.rooms.invite.count, syncResponse.rooms.leave.count, syncResponse.toDevice.events.count);
+    MXLogDebug(@"[MXSession] handleOutdatedSyncResponse: %tu joined rooms, %tu invited rooms, %tu left rooms, %tu toDevice events.", syncResponse.rooms.join.count, syncResponse.rooms.invite.count, syncResponse.rooms.leave.count, syncResponse.toDevice.events.count);
     
     // Handle only to_device events. They are sent only once by the homeserver
     [self handleToDeviceEvents:syncResponse.toDevice.events onComplete:completion];
@@ -1924,7 +1926,7 @@ typedef void (^MXOnResumeDone)(void);
 
 - (void)enableCrypto:(BOOL)enableCrypto success:(void (^)(void))success failure:(void (^)(NSError *))failure
 {
-    NSLog(@"[MXSesion] enableCrypto: %@", @(enableCrypto));
+    MXLogDebug(@"[MXSesion] enableCrypto: %@", @(enableCrypto));
 
     if (enableCrypto && !_crypto)
     {
@@ -1936,7 +1938,7 @@ typedef void (^MXOnResumeDone)(void);
         }
         else
         {
-            NSLog(@"[MXSesion] enableCrypto: crypto module will be start later (MXSession.state: %@)", @(_state));
+            MXLogDebug(@"[MXSesion] enableCrypto: crypto module will be start later (MXSession.state: %@)", @(_state));
 
             if (success)
             {
@@ -2051,7 +2053,7 @@ typedef void (^MXOnResumeDone)(void);
             
             // TODO: Find a way to handle direct tag failure and report this error in room creation failure block.
             
-            NSLog(@"[MXSession] Failed to tag the room (%@) as a direct chat", response.roomId);
+            MXLogDebug(@"[MXSession] Failed to tag the room (%@) as a direct chat", response.roomId);
             
             if (success)
             {
@@ -2254,7 +2256,7 @@ typedef void (^MXOnResumeDone)(void);
 {
     if (!self.identityService)
     {
-        NSLog(@"[MXSession] Missing identity service");
+        MXLogDebug(@"[MXSession] Missing identity service");
         failure([NSError errorWithDomain:kMXNSErrorDomain code:0 userInfo:@{
                                                                             NSLocalizedDescriptionKey: @"Missing identity service"
                                                                             }]);
@@ -2579,7 +2581,7 @@ typedef void (^MXOnResumeDone)(void);
     }
     else
     {
-        NSLog(@"[MXSession] runOrQueueDirectRoomOperation: Queue operation %p", directRoomsOperationsQueue.lastObject);
+        MXLogDebug(@"[MXSession] runOrQueueDirectRoomOperation: Queue operation %p", directRoomsOperationsQueue.lastObject);
     }
 }
 
@@ -2594,7 +2596,7 @@ typedef void (^MXOnResumeDone)(void);
     // And run the next one if any
     if (directRoomsOperationsQueue.firstObject)
     {
-        NSLog(@"[MXSession] runOrQueueDirectRoomOperation: Execute queued operation %p", directRoomsOperationsQueue.firstObject);
+        MXLogDebug(@"[MXSession] runOrQueueDirectRoomOperation: Execute queued operation %p", directRoomsOperationsQueue.firstObject);
         directRoomsOperationsQueue.firstObject();
     }
 }
@@ -2712,7 +2714,7 @@ typedef void (^MXOnResumeDone)(void);
 
 - (void)preloadRoomsData:(NSArray<NSString*> *)roomIds onComplete:(dispatch_block_t)onComplete
 {
-    NSLog(@"[MXSession] preloadRooms: %@ rooms", @(roomIds.count));
+    MXLogDebug(@"[MXSession] preloadRooms: %@ rooms", @(roomIds.count));
 
     dispatch_group_t group = dispatch_group_create();
     for (NSString *roomId in roomIds)
@@ -2727,12 +2729,12 @@ typedef void (^MXOnResumeDone)(void);
         }
         else
         {
-            NSLog(@"[MXSession] preloadRoomsData: Unkown room id: %@", roomId);
+            MXLogDebug(@"[MXSession] preloadRoomsData: Unkown room id: %@", roomId);
         }
     }
 
     dispatch_group_notify(group, dispatch_get_main_queue(), ^{
-        NSLog(@"[MXSession] preloadRoomsForSyncResponse: DONE");
+        MXLogDebug(@"[MXSession] preloadRoomsForSyncResponse: DONE");
         onComplete();
     });
 }
@@ -2799,12 +2801,12 @@ typedef void (^MXOnResumeDone)(void);
 
 -(void)resetRoomsSummariesLastMessage
 {
-    NSLog(@"[MXSession] resetRoomsSummariesLastMessage");
+    MXLogDebug(@"[MXSession] resetRoomsSummariesLastMessage");
 
     for (MXRoomSummary *summary in self.roomsSummaries)
     {
         [summary resetLastMessage:nil failure:^(NSError *error) {
-            NSLog(@"[MXSession] Cannot reset last message for room %@", summary.roomId);
+            MXLogDebug(@"[MXSession] Cannot reset last message for room %@", summary.roomId);
         } commit:NO];
     }
     
@@ -2826,12 +2828,12 @@ typedef void (^MXOnResumeDone)(void);
     {
         if (!summary.lastMessageEventId)
         {
-            NSLog(@"[MXSession] fixRoomsSummariesLastMessage: Fixing last message for room %@", summary.roomId);
+            MXLogDebug(@"[MXSession] fixRoomsSummariesLastMessage: Fixing last message for room %@", summary.roomId);
             
             [summary resetLastMessageWithMaxServerPaginationCount:maxServerPaginationCount onComplete:^{
-                NSLog(@"[MXSession] fixRoomsSummariesLastMessage:Fixing last message operation for room %@ has complete. lastMessageEventId: %@", summary.roomId, summary.lastMessageEventId);
+                MXLogDebug(@"[MXSession] fixRoomsSummariesLastMessage:Fixing last message operation for room %@ has complete. lastMessageEventId: %@", summary.roomId, summary.lastMessageEventId);
             } failure:^(NSError *error) {
-                NSLog(@"[MXSession] fixRoomsSummariesLastMessage: Cannot fix last message for room %@ with maxServerPaginationCount: %@", summary.roomId, @(maxServerPaginationCount));
+                MXLogDebug(@"[MXSession] fixRoomsSummariesLastMessage: Cannot fix last message for room %@ with maxServerPaginationCount: %@", summary.roomId, @(maxServerPaginationCount));
             }
                                                            commit:NO];
         }
@@ -2854,7 +2856,7 @@ typedef void (^MXOnResumeDone)(void);
     }
     else
     {
-        NSLog(@"[MXSession] updateRoomSummaryWitRoomId:withMembershipState: Failed to find roomSummary with roomId: %@ roomId and update membership transition state: %ld", roomId, (long)membershipTransitionState);
+        MXLogDebug(@"[MXSession] updateRoomSummaryWitRoomId:withMembershipState: Failed to find roomSummary with roomId: %@ roomId and update membership transition state: %ld", roomId, (long)membershipTransitionState);
     }
 }
 
@@ -2874,7 +2876,7 @@ typedef void (^MXOnResumeDone)(void);
                               success:(void (^)(void))success
                               failure:(void (^)(NSError *error))failure
 {
-    NSLog(@"[MXSession] acceptGroupInvite %@", groupId);
+    MXLogDebug(@"[MXSession] acceptGroupInvite %@", groupId);
     
     MXWeakify(self);
     return [matrixRestClient acceptGroupInvite:groupId success:^{
@@ -2893,7 +2895,7 @@ typedef void (^MXOnResumeDone)(void);
                        success:(void (^)(void))success
                        failure:(void (^)(NSError *error))failure
 {
-    NSLog(@"[MXSession] leaveGroup %@", groupId);
+    MXLogDebug(@"[MXSession] leaveGroup %@", groupId);
     
     MXWeakify(self);
     return [matrixRestClient leaveGroup:groupId success:^{
@@ -2928,7 +2930,7 @@ typedef void (^MXOnResumeDone)(void);
         return nil;
     }
     
-    NSLog(@"[MXSession] updateGroupPublicity %@", group.groupId);
+    MXLogDebug(@"[MXSession] updateGroupPublicity %@", group.groupId);
     
     MXWeakify(self);
     return [matrixRestClient updateGroupPublicity:group.groupId isPublicised:isPublicised success:^(void) {
@@ -2989,7 +2991,7 @@ typedef void (^MXOnResumeDone)(void);
         return nil;
     }
     
-    NSLog(@"[MXSession] updateGroupProfile %@", group.groupId);
+    MXLogDebug(@"[MXSession] updateGroupProfile %@", group.groupId);
 
     MXWeakify(self);
     return [matrixRestClient getGroupProfile:group.groupId success:^(MXGroupProfile *groupProfile) {
@@ -3041,7 +3043,7 @@ typedef void (^MXOnResumeDone)(void);
         return nil;
     }
     
-    NSLog(@"[MXSession] updateGroupSummary %@", group.groupId);
+    MXLogDebug(@"[MXSession] updateGroupSummary %@", group.groupId);
 
     MXWeakify(self);
     return [matrixRestClient getGroupSummary:group.groupId success:^(MXGroupSummary *groupSummary) {
@@ -3093,7 +3095,7 @@ typedef void (^MXOnResumeDone)(void);
         return nil;
     }
     
-    NSLog(@"[MXSession] updateGroupUsers %@", group.groupId);
+    MXLogDebug(@"[MXSession] updateGroupUsers %@", group.groupId);
 
     MXWeakify(self);
     return [matrixRestClient getGroupUsers:group.groupId success:^(MXGroupUsers *groupUsers) {
@@ -3145,7 +3147,7 @@ typedef void (^MXOnResumeDone)(void);
         return nil;
     }
     
-    NSLog(@"[MXSession] updateGroupInvitedUsers %@", group.groupId);
+    MXLogDebug(@"[MXSession] updateGroupInvitedUsers %@", group.groupId);
 
     MXWeakify(self);
     return [matrixRestClient getGroupInvitedUsers:group.groupId success:^(MXGroupUsers *invitedUsers) {
@@ -3197,7 +3199,7 @@ typedef void (^MXOnResumeDone)(void);
         return nil;
     }
     
-    NSLog(@"[MXSession] updateGroupRooms %@", group.groupId);
+    MXLogDebug(@"[MXSession] updateGroupRooms %@", group.groupId);
 
     MXWeakify(self);
     return [matrixRestClient getGroupRooms:group.groupId success:^(MXGroupRooms *groupRooms) {
@@ -3240,7 +3242,7 @@ typedef void (^MXOnResumeDone)(void);
 
 - (MXGroup *)didJoinGroupWithId:(NSString *)groupId notify:(BOOL)notify
 {
-    NSLog(@"[MXSession] didJoinGroupWithId %@", groupId);
+    MXLogDebug(@"[MXSession] didJoinGroupWithId %@", groupId);
     
     MXGroup *group = [self groupWithGroupId:groupId];
     if (nil == group)
@@ -3255,7 +3257,7 @@ typedef void (^MXOnResumeDone)(void);
     
     // Update the group summary from server.
     [self updateGroupSummary:group success:nil failure:^(NSError *error) {
-        NSLog(@"[MXKSession] didJoinGroupWithId: group summary update failed %@", groupId);
+        MXLogDebug(@"[MXKSession] didJoinGroupWithId: group summary update failed %@", groupId);
     }];
     
     if (notify)
@@ -3273,7 +3275,7 @@ typedef void (^MXOnResumeDone)(void);
 
 - (MXGroup *)createGroupInviteWithId:(NSString *)groupId profile:(MXGroupSyncProfile*)profile andInviter:(NSString*)inviter notify:(BOOL)notify
 {
-    NSLog(@"[MXSession] createGroupInviteWithId %@", groupId);
+    MXLogDebug(@"[MXSession] createGroupInviteWithId %@", groupId);
     MXGroup *group = [[MXGroup alloc] initWithGroupId:groupId];
     
     MXGroupSummary *summary = [[MXGroupSummary alloc] init];
@@ -3292,7 +3294,7 @@ typedef void (^MXOnResumeDone)(void);
     
     // Retrieve the group summary from server.
     [self updateGroupSummary:group success:nil failure:^(NSError *error) {
-        NSLog(@"[MXKSession] createGroupInviteWithId: group summary update failed %@", group.groupId);
+        MXLogDebug(@"[MXKSession] createGroupInviteWithId: group summary update failed %@", group.groupId);
     }];
     
     if (notify)
@@ -3310,7 +3312,7 @@ typedef void (^MXOnResumeDone)(void);
 
 - (void)removeGroup:(NSString *)groupId
 {
-    NSLog(@"[MXSession] removeGroup %@", groupId);
+    MXLogDebug(@"[MXSession] removeGroup %@", groupId);
     // Clean the store
     [_store deleteGroup:groupId];
     
@@ -3404,7 +3406,7 @@ typedef void (^MXOnResumeDone)(void);
         [self->peekingRooms removeObject:peekingRoom];
         [peekingRoom close];
         
-        NSLog(@"[MXSession] The room is not peekable");
+        MXLogDebug(@"[MXSession] The room is not peekable");
 
         if (failure)
         {
@@ -3800,7 +3802,7 @@ typedef void (^MXOnResumeDone)(void);
             MXRoomTag *prevTag = roomsWithTag[prevIndex - 1].accountData.tags[tag];
             if (!prevTag.order)
             {
-                NSLog(@"[MXSession] computeTagOrderForRoom: Previous room in sublist has no ordering metadata. This should never happen.");
+                MXLogDebug(@"[MXSession] computeTagOrderForRoom: Previous room in sublist has no ordering metadata. This should never happen.");
             }
             else
             {
@@ -3816,7 +3818,7 @@ typedef void (^MXOnResumeDone)(void);
             MXRoomTag *nextTag = roomsWithTag[index ].accountData.tags[tag];
             if (!nextTag.order)
             {
-                NSLog(@"[MXSession] computeTagOrderForRoom: Next room in sublist has no ordering metadata. This should never happen.");
+                MXLogDebug(@"[MXSession] computeTagOrderForRoom: Next room in sublist has no ordering metadata. This should never happen.");
             }
             else
             {
@@ -3885,7 +3887,7 @@ typedef void (^MXOnResumeDone)(void);
         }
     }
 
-    NSLog(@"[MXSession] setAccountDataIdentityServer: %@", identityServer);
+    MXLogDebug(@"[MXSession] setAccountDataIdentityServer: %@", identityServer);
 
     MXHTTPOperation *operation;
     if (identityServer)
@@ -3907,7 +3909,7 @@ typedef void (^MXOnResumeDone)(void);
         } failure:^(NSError * _Nonnull error) {
             identityService = nil;
 
-            NSLog(@"[MXSession] setAccountDataIdentityServer: Invalid identity server. Error: %@", error);
+            MXLogDebug(@"[MXSession] setAccountDataIdentityServer: Invalid identity server. Error: %@", error);
 
             if (failure)
             {
@@ -3952,7 +3954,7 @@ typedef void (^MXOnResumeDone)(void);
 - (MXHTTPOperation *)refreshHomeserverWellknown:(void (^)(MXWellKnown *))success
                                         failure:(void (^)(NSError *))failure
 {
-    NSLog(@"[MXSession] refreshHomeserverWellknown");
+    MXLogDebug(@"[MXSession] refreshHomeserverWellknown");
     if (!autoDiscovery)
     {
         NSString *homeServer;
@@ -4096,7 +4098,7 @@ typedef void (^MXOnResumeDone)(void);
 - (void)startCrypto:(void (^)(void))success
             failure:(void (^)(NSError *error))failure
 {
-    NSLog(@"[MXSession] Start crypto");
+    MXLogDebug(@"[MXSession] Start crypto");
 
     if (_crypto)
     {
@@ -4104,7 +4106,7 @@ typedef void (^MXOnResumeDone)(void);
     }
     else
     {
-        NSLog(@"[MXSession] Start crypto -> No crypto");
+        MXLogDebug(@"[MXSession] Start crypto -> No crypto");
         success();
     }
 }

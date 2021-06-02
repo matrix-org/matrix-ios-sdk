@@ -66,7 +66,7 @@
                 
                 MXStrongifyAndReturnIfNil(self);
                 
-                NSLog(@"[MXBackgroundTask] Background task expired #%lu - %@ after %.0fms", (unsigned long)self.identifier, self.name, self.elapsedTime);
+                MXLogDebug(@"[MXBackgroundTask] Background task expired #%lu - %@ after %.0fms", (unsigned long)self.identifier, self.name, self.elapsedTime);
                 
                 //  call expiration handler immediately
                 if (self.expirationHandler)
@@ -81,7 +81,7 @@
             //  our assumption is wrong, OS declined it
             if (self.identifier == UIBackgroundTaskInvalid)
             {
-                NSLog(@"[MXBackgroundTask] Do not start background task - %@, as OS declined", self.name);
+                MXLogDebug(@"[MXBackgroundTask] Do not start background task - %@, as OS declined", self.name);
                 
                 //  call expiration handler immediately
                 if (self.expirationHandler)
@@ -91,11 +91,11 @@
                 return nil;
             }
             
-            NSLog(@"[MXBackgroundTask] Start background task #%lu - %@", (unsigned long)self.identifier, self.name);
+            MXLogDebug(@"[MXBackgroundTask] Start background task #%lu - %@", (unsigned long)self.identifier, self.name);
         }
         else
         {
-            NSLog(@"[MXBackgroundTask] Background task creation failed. UIApplication.shared is nil");
+            MXLogDebug(@"[MXBackgroundTask] Background task creation failed. UIApplication.shared is nil");
             
             //  we're probably in an app extension here.
             //  Do not call expiration handler as it'll cause some network requests to be cancelled,
@@ -134,7 +134,7 @@
         UIApplication *sharedApplication = [self sharedApplication];
         if (sharedApplication)
         {
-            NSLog(@"[MXBackgroundTask] Stop background task #%lu - %@ after %.0fms", (unsigned long)self.identifier, self.name, self.elapsedTime);
+            MXLogDebug(@"[MXBackgroundTask] Stop background task #%lu - %@ after %.0fms", (unsigned long)self.identifier, self.name, self.elapsedTime);
             
             [sharedApplication endBackgroundTask:self.identifier];
             self.identifier = UIBackgroundTaskInvalid;

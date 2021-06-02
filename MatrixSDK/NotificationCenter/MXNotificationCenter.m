@@ -119,7 +119,7 @@ NSString *const kMXNotificationCenterAllOtherRoomMessagesRuleID = @".m.rule.mess
         }
         
     } failure:^(NSError *error) {
-        NSLog(@"[MXNotificationCenter] Cannot retrieve push rules from the home server");
+        MXLogDebug(@"[MXNotificationCenter] Cannot retrieve push rules from the home server");
 
         if (failure)
         {
@@ -205,7 +205,7 @@ NSString *const kMXNotificationCenterAllOtherRoomMessagesRuleID = @".m.rule.mess
                             }
                             else
                             {
-                                NSLog(@"[MXNotificationCenter] Warning: There is no MXPushRuleConditionChecker to check condition of kind: %@", condition.kind);
+                                MXLogDebug(@"[MXNotificationCenter] Warning: There is no MXPushRuleConditionChecker to check condition of kind: %@", condition.kind);
                                 conditionsOk = NO;
                             }
                         }

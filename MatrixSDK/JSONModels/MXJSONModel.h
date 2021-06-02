@@ -16,6 +16,7 @@
 
 #import <Foundation/Foundation.h>
 
+#import "MXLog.h"
 
 /**
  A class that inherits from `MXJSONModel` represents the response to a request
@@ -154,6 +155,6 @@
  */
 #define MXJSONModelSetLogError(theClass, value) \
     { \
-        NSLog(@"[MXJSONModelSet] ERROR: Unexpected type for parsing at %@:%d. Expected: %@. Got: %@ (%@)", \
+        MXLogDebug(@"[MXJSONModelSet] ERROR: Unexpected type for parsing at %@:%d. Expected: %@. Got: %@ (%@)", \
             @(__FILE__).lastPathComponent, __LINE__, theClass, value, NSStringFromClass([value class])); \
     }

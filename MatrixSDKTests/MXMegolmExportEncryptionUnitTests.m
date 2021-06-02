@@ -19,6 +19,8 @@
 
 #import "MXMegolmExportEncryption.h"
 
+#import "MXLog.h"
+
 @interface MXMegolmExportEncryptionUnitTests : XCTestCase
 
 @end
@@ -69,7 +71,7 @@
         NSError *error;
         NSData *decrypted = [MXMegolmExportEncryption decryptMegolmKeyFile:[input dataUsingEncoding:NSUTF8StringEncoding] withPassword:password error:&error];
 
-        NSLog(@"testDecrypt test: %@", plain);
+        MXLogDebug(@"testDecrypt test: %@", plain);
         XCTAssertNil(error);
         XCTAssert(decrypted);
 

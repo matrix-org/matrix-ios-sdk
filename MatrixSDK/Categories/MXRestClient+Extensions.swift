@@ -46,7 +46,7 @@ public extension MXRestClient {
             }
         }
         
-        NSLog("[MXRestClient+Extensions] downloadKeysByChunk: \(users.count) users with chunkSize:\(chunkSize)")
+        MXLog.debug("[MXRestClient+Extensions] downloadKeysByChunk: \(users.count) users with chunkSize:\(chunkSize)")
         
         // An arbitrary MXHTTPOperation. It will not cancel requests
         // but it will avoid to call callbacks in case of a cancellation is requested
@@ -59,11 +59,9 @@ public extension MXRestClient {
             self.downloadKeys(forUsers: chunkedUsers, token: token) { response in
                 switch response {
                     case .success(let keysQueryResponse):
-                        NSLog("[MXRestClient+Extensions] downloadKeysByChunk: Got intermediate response. Got device keys for %@ users. Got cross-signing keys for %@ users",
-                              String(describing: keysQueryResponse.deviceKeys.userIds()?.count),
-                              String(describing: keysQueryResponse.crossSigningKeys.count))
+                        MXLog.debug("[MXRestClient+Extensions] downloadKeysByChunk: Got intermediate response. Got device keys for %@ users. Got cross-signing keys for %@ users \(String(describing: keysQueryResponse.deviceKeys.userIds()?.count)) \(String(describing: keysQueryResponse.crossSigningKeys.count))")
                     case .failure(let error):
-                        NSLog("[MXRestClient+Extensions] downloadKeysByChunk: Got intermediate error. Error: \(error)")
+                        MXLog.debug("[MXRestClient+Extensions] downloadKeysByChunk: Got intermediate error. Error: \(error)")
                 }
 
                 responses.append(response)
@@ -72,10 +70,10 @@ public extension MXRestClient {
         }
         
         group.notify(queue: self.completionQueue) {
-            NSLog("[MXRestClient+Extensions] downloadKeysByChunk: Got all responses")
+            MXLog.debug("[MXRestClient+Extensions] downloadKeysByChunk: Got all responses")
                 
             guard operation.isCancelled == false else {
-                NSLog("[MXRestClient+Extensions] downloadKeysByChunk: Request was cancelled")
+                MXLog.debug("[MXRestClient+Extensions] downloadKeysByChunk: Request was cancelled")
                 return
             }
             

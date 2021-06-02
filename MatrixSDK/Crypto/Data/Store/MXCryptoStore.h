@@ -56,11 +56,18 @@
 + (instancetype)createStoreWithCredentials:(MXCredentials*)credentials;
 
 /**
- Delete the crypto store for the passed credentials.
+ Delete the crypto store for the passed credentials. Implementation should also attempt to delete read-only store.
 
  @param credentials the credentials of the account.
  */
 + (void)deleteStoreWithCredentials:(MXCredentials*)credentials;
+
+/**
+ Delete the read-only crypto store for the passed credentials.
+
+ @param credentials the credentials of the account.
+ */
++ (void)deleteReadonlyStoreWithCredentials:(MXCredentials*)credentials;
 
 /**
  Create a crypto store for the passed credentials.
