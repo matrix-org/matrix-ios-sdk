@@ -58,18 +58,13 @@
         {
             [self.matrixStore replaceEvent:newEvent inRoom:roomId];
 
-            if (newEvent.isEncrypted && !newEvent.clearEvent)
-            {
-                [self.mxSession decryptEvent:newEvent inTimeline:nil];
-            }
-
             // TODO or not?
             //[self notifyEventEditsListenersOfRoom:roomId replaceEvent:replaceEvent];
         }
     }
     else
     {
-        NSLog(@"[MXAggregations] handleReference: Unknown event id: %@", relation.eventId);
+        MXLogDebug(@"[MXAggregations] handleReference: Unknown event id: %@", relation.eventId);
     }
 }
 

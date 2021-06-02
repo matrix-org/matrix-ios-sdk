@@ -98,7 +98,7 @@ NSString *const MXRecoveryServiceErrorDomain = @"org.matrix.sdk.recoveryService"
                                         success:(void (^)(void))success
                                         failure:(void (^)(NSError *error))failure
 {
-    NSLog(@"[MXRecoveryService] deleteRecovery: deleteServicesBackups: %@", @(deleteServicesBackups));
+    MXLogDebug(@"[MXRecoveryService] deleteRecovery: deleteServicesBackups: %@", @(deleteServicesBackups));
     
     if (deleteServicesBackups)
     {
@@ -121,12 +121,12 @@ NSString *const MXRecoveryServiceErrorDomain = @"org.matrix.sdk.recoveryService"
     {
         dispatch_group_enter(dispatchGroup);
         
-        NSLog(@"[MXRecoveryService] deleteRecovery: Remove secret %@", secretId);
+        MXLogDebug(@"[MXRecoveryService] deleteRecovery: Remove secret %@", secretId);
         
         [_secretStorage deleteSecretWithSecretId:secretId success:^{
             dispatch_group_leave(dispatchGroup);
         } failure:^(NSError * _Nonnull anError) {
-            NSLog(@"[MXRecoveryService] deleteRecovery: Failed to remove %@. Error: %@", secretId, anError);
+            MXLogDebug(@"[MXRecoveryService] deleteRecovery: Failed to remove %@. Error: %@", secretId, anError);
             
             error = anError;
             dispatch_group_leave(dispatchGroup);
@@ -135,7 +135,7 @@ NSString *const MXRecoveryServiceErrorDomain = @"org.matrix.sdk.recoveryService"
     
     dispatch_group_notify(dispatchGroup, dispatch_get_main_queue(), ^{
         
-        NSLog(@"[MXRecoveryService] deleteRecovery: Completed");
+        MXLogDebug(@"[MXRecoveryService] deleteRecovery: Completed");
         
         if (error)
         {
@@ -145,7 +145,7 @@ NSString *const MXRecoveryServiceErrorDomain = @"org.matrix.sdk.recoveryService"
         {
             // Delete the associated SSSS
             NSString *ssssKeyId = self.recoveryId;
-            NSLog(@"[MXRecoveryService] deleteRecovery: Delete SSSS %@", ssssKeyId);
+            MXLogDebug(@"[MXRecoveryService] deleteRecovery: Delete SSSS %@", ssssKeyId);
             
             if (ssssKeyId)
             {
@@ -162,7 +162,7 @@ NSString *const MXRecoveryServiceErrorDomain = @"org.matrix.sdk.recoveryService"
 - (void)deleteKeyBackupWithSuccess:(void (^)(void))success
                            failure:(void (^)(NSError *error))failure
 {
-    NSLog(@"[MXRecoveryService] deleteKeyBackup");
+    MXLogDebug(@"[MXRecoveryService] deleteKeyBackup");
     
     MXKeyBackup *keyBackup = self.crypto.backup;
     if (!keyBackup)
@@ -238,11 +238,11 @@ NSString *const MXRecoveryServiceErrorDomain = @"org.matrix.sdk.recoveryService"
                          success:(void (^)(MXSecretStorageKeyCreationInfo *keyCreationInfo))success
                          failure:(void (^)(NSError *error))failure
 {
-    NSLog(@"[MXRecoveryService] createRecovery: secrets: %@. createServicesBackups: %@", secrets, @(createServicesBackups));
+    MXLogDebug(@"[MXRecoveryService] createRecovery: secrets: %@. createServicesBackups: %@", secrets, @(createServicesBackups));
     
     if (self.hasRecovery)
     {
-        NSLog(@"[MXRecoveryService] createRecovery: Error: A recovery already exists.");
+        MXLogDebug(@"[MXRecoveryService] createRecovery: Error: A recovery already exists.");
         NSError *error = [NSError errorWithDomain:MXRecoveryServiceErrorDomain
                                              code:MXRecoveryServiceSSSSAlreadyExistsErrorCode
                                          userInfo:@{
@@ -271,11 +271,11 @@ NSString *const MXRecoveryServiceErrorDomain = @"org.matrix.sdk.recoveryService"
                          success:(void (^)(MXSecretStorageKeyCreationInfo *keyCreationInfo))success
                          failure:(void (^)(NSError *error))failure
 {
-    NSLog(@"[MXRecoveryService] createRecovery: secrets: %@. createServicesBackups: %@", secrets, @(createServicesBackups));
+    MXLogDebug(@"[MXRecoveryService] createRecovery: secrets: %@. createServicesBackups: %@", secrets, @(createServicesBackups));
     
     if (self.hasRecovery)
     {
-        NSLog(@"[MXRecoveryService] createRecovery: Error: A recovery already exists.");
+        MXLogDebug(@"[MXRecoveryService] createRecovery: Error: A recovery already exists.");
         NSError *error = [NSError errorWithDomain:MXRecoveryServiceErrorDomain
                                              code:MXRecoveryServiceSSSSAlreadyExistsErrorCode
                                          userInfo:@{
@@ -317,7 +317,7 @@ NSString *const MXRecoveryServiceErrorDomain = @"org.matrix.sdk.recoveryService"
         } failure:failure];
         
     } failure:^(NSError * _Nonnull error) {
-        NSLog(@"[MXRecoveryService] createRecovery: Failed to create SSSS. Error: %@", error);
+        MXLogDebug(@"[MXRecoveryService] createRecovery: Failed to create SSSS. Error: %@", error);
         failure(error);
     }];
 }
@@ -341,7 +341,7 @@ NSString *const MXRecoveryServiceErrorDomain = @"org.matrix.sdk.recoveryService"
         } failure:failure];
         
     } failure:^(NSError * _Nonnull error) {
-        NSLog(@"[MXRecoveryService] createRecovery: Failed to create SSSS. Error: %@", error);
+        MXLogDebug(@"[MXRecoveryService] createRecovery: Failed to create SSSS. Error: %@", error);
         failure(error);
     }];
 }
@@ -349,7 +349,7 @@ NSString *const MXRecoveryServiceErrorDomain = @"org.matrix.sdk.recoveryService"
 - (void)createKeyBackupWithSuccess:(void (^)(void))success
                            failure:(void (^)(NSError *error))failure
 {
-    NSLog(@"[MXRecoveryService] createKeyBackup");
+    MXLogDebug(@"[MXRecoveryService] createKeyBackup");
     
     MXKeyBackup *keyBackup = self.crypto.backup;
     if (!keyBackup)
@@ -365,12 +365,12 @@ NSString *const MXRecoveryServiceErrorDomain = @"org.matrix.sdk.recoveryService"
         {
             if ([self.cryptoStore secretWithSecretId:MXSecretId.keyBackup])
             {
-                NSLog(@"[MXRecoveryService] createKeyBackup: Reuse private key of existing one");
+                MXLogDebug(@"[MXRecoveryService] createKeyBackup: Reuse private key of existing one");
                 success();
             }
             else
             {
-                NSLog(@"[MXRecoveryService] createKeyBackup: Error: A key backup already exists");
+                MXLogDebug(@"[MXRecoveryService] createKeyBackup: Error: A key backup already exists");
                 NSError *error = [NSError errorWithDomain:MXRecoveryServiceErrorDomain
                                                      code:MXRecoveryServiceKeyBackupExistsButNoPrivateKeyErrorCode
                                                  userInfo:@{
@@ -401,13 +401,13 @@ NSString *const MXRecoveryServiceErrorDomain = @"org.matrix.sdk.recoveryService"
                          success:(void (^)(void))success
                          failure:(void (^)(NSError *error))failure
 {
-    NSLog(@"[MXRecoveryService] updateRecovery: secrets: %@", secrets);
+    MXLogDebug(@"[MXRecoveryService] updateRecovery: secrets: %@", secrets);
     
     NSString *ssssKeyId = self.recoveryId;
     if (!ssssKeyId)
     {
         // No recovery
-        NSLog(@"[MXRecoveryService] updateRecovery: Error: No existing SSSS");
+        MXLogDebug(@"[MXRecoveryService] updateRecovery: Error: No existing SSSS");
         NSError *error = [NSError errorWithDomain:MXRecoveryServiceErrorDomain
                                              code:MXRecoveryServiceNoSSSSErrorCode
                                          userInfo:@{
@@ -426,7 +426,7 @@ NSString *const MXRecoveryServiceErrorDomain = @"org.matrix.sdk.recoveryService"
     NSArray *secretsStoredLocally = self.secretsStoredLocally;
     NSArray<NSString*> *secretsToStore = [secretsStoredLocally mx_intersectArray:secrets];
     
-    NSLog(@"[MXRecoveryService] updateRecovery: Backup secrets: %@", secretsToStore);
+    MXLogDebug(@"[MXRecoveryService] updateRecovery: Backup secrets: %@", secretsToStore);
     
     // Build the key to encrypt secret
     NSDictionary<NSString*, NSData*> *keys = @{
@@ -446,7 +446,7 @@ NSString *const MXRecoveryServiceErrorDomain = @"org.matrix.sdk.recoveryService"
             [self.secretStorage storeSecret:secret withSecretId:secretId withSecretStorageKeys:keys success:^(NSString * _Nonnull secretId) {
                 dispatch_group_leave(dispatchGroup);
             } failure:^(NSError * _Nonnull anError) {
-                NSLog(@"[MXRecoveryService] updateRecovery: Failed to store %@. Error: %@", secretId, anError);
+                MXLogDebug(@"[MXRecoveryService] updateRecovery: Failed to store %@. Error: %@", secretId, anError);
                 
                 error = anError;
                 dispatch_group_leave(dispatchGroup);
@@ -456,7 +456,7 @@ NSString *const MXRecoveryServiceErrorDomain = @"org.matrix.sdk.recoveryService"
     
     dispatch_group_notify(dispatchGroup, dispatch_get_main_queue(), ^{
         
-        NSLog(@"[MXRecoveryService] updateRecovery: Completed");
+        MXLogDebug(@"[MXRecoveryService] updateRecovery: Completed");
         
         if (error)
         {
@@ -484,7 +484,7 @@ NSString *const MXRecoveryServiceErrorDomain = @"org.matrix.sdk.recoveryService"
         secrets = _supportedSecrets;
     }
     
-    NSLog(@"[MXRecoveryService] recoverSecrets: %@", secrets);
+    MXLogDebug(@"[MXRecoveryService] recoverSecrets: %@", secrets);
     
     NSMutableArray<NSString*> *updatedSecrets = [NSMutableArray array];
     NSMutableArray<NSString*> *invalidSecrets = [NSMutableArray array];
@@ -493,14 +493,14 @@ NSString *const MXRecoveryServiceErrorDomain = @"org.matrix.sdk.recoveryService"
     NSArray<NSString*> *secretsToRecover = [secretsStoredInRecovery mx_intersectArray:secrets];
     if (!secretsToRecover.count)
     {
-        NSLog(@"[MXRecoveryService] recoverSecrets: No secrets to recover. secretsStoredInRecovery: %@", secretsStoredInRecovery);
+        MXLogDebug(@"[MXRecoveryService] recoverSecrets: No secrets to recover. secretsStoredInRecovery: %@", secretsStoredInRecovery);
         
         // No recovery at all
         success([MXSecretRecoveryResult new]);
         return;
     }
     
-    NSLog(@"[MXRecoveryService] recoverSecrets: secretsToRecover: %@", secretsToRecover);
+    MXLogDebug(@"[MXRecoveryService] recoverSecrets: secretsToRecover: %@", secretsToRecover);
     
     NSString *secretStorageKeyId = self.recoveryId;
     
@@ -520,26 +520,26 @@ NSString *const MXRecoveryServiceErrorDomain = @"org.matrix.sdk.recoveryService"
             {
                 if (![secret isEqualToString:[self.cryptoStore secretWithSecretId:secretId]])
                 {
-                    NSLog(@"[MXRecoveryService] recoverSecrets: Recovered secret %@", secretId);
+                    MXLogDebug(@"[MXRecoveryService] recoverSecrets: Recovered secret %@", secretId);
                     
                     [updatedSecrets addObject:secretId];
                     [self.cryptoStore storeSecret:secret withSecretId:secretId];
                 }
                 else
                 {
-                    NSLog(@"[MXRecoveryService] recoverSecrets: Secret %@ was already known", secretId);
+                    MXLogDebug(@"[MXRecoveryService] recoverSecrets: Secret %@ was already known", secretId);
                 }
             }
             else
             {
-                NSLog(@"[MXRecoveryService] recoverSecrets: Secret %@ is invalid", secretId);
+                MXLogDebug(@"[MXRecoveryService] recoverSecrets: Secret %@ is invalid", secretId);
                 [invalidSecrets addObject:secretId];
             }
             
             dispatch_group_leave(dispatchGroup);
             
         } failure:^(NSError * _Nonnull anError) {
-            NSLog(@"[MXRecoveryService] recoverSecrets: Failed to restore %@. Error: %@", secretId, anError);
+            MXLogDebug(@"[MXRecoveryService] recoverSecrets: Failed to restore %@. Error: %@", secretId, anError);
             
             error = [self domainErrorFromError:anError];
             
@@ -551,7 +551,7 @@ NSString *const MXRecoveryServiceErrorDomain = @"org.matrix.sdk.recoveryService"
         
         if (error)
         {
-            NSLog(@"[MXRecoveryService] recoverSecrets: Completed with error.");
+            MXLogDebug(@"[MXRecoveryService] recoverSecrets: Completed with error.");
             failure(error);
         }
         else
@@ -561,7 +561,7 @@ NSString *const MXRecoveryServiceErrorDomain = @"org.matrix.sdk.recoveryService"
             recoveryResult.updatedSecrets = updatedSecrets;
             recoveryResult.invalidSecrets = invalidSecrets;
             
-            NSLog(@"[MXRecoveryService] recoverSecrets: Completed. secrets: %@. updatedSecrets: %@. invalidSecrets: %@", secretsToRecover, updatedSecrets, invalidSecrets);
+            MXLogDebug(@"[MXRecoveryService] recoverSecrets: Completed. secrets: %@. updatedSecrets: %@. invalidSecrets: %@", secretsToRecover, updatedSecrets, invalidSecrets);
             
             // Recover services if required
             if (recoverServices)
@@ -585,7 +585,7 @@ NSString *const MXRecoveryServiceErrorDomain = @"org.matrix.sdk.recoveryService"
                                      success:(void (^)(void))success
                                      failure:(void (^)(NSError *error))failure
 {
-    NSLog(@"[MXRecoveryService] startServicesAssociatedWithSecrets: %@", secrets);
+    MXLogDebug(@"[MXRecoveryService] startServicesAssociatedWithSecrets: %@", secrets);
     
     if (!secrets)
     {
@@ -596,7 +596,7 @@ NSString *const MXRecoveryServiceErrorDomain = @"org.matrix.sdk.recoveryService"
     NSArray *secretsStoredLocally = self.secretsStoredLocally;
     NSArray<NSString*> *servicesToRecover = [secretsStoredLocally mx_intersectArray:secrets];
     
-    NSLog(@"[MXRecoveryService] startServicesAssociatedWithSecrets: servicesToRecover: %@", servicesToRecover);
+    MXLogDebug(@"[MXRecoveryService] startServicesAssociatedWithSecrets: servicesToRecover: %@", servicesToRecover);
     
     
     dispatch_group_t dispatchGroup = dispatch_group_create();
@@ -614,7 +614,7 @@ NSString *const MXRecoveryServiceErrorDomain = @"org.matrix.sdk.recoveryService"
         [self recoverKeyBackupWithSuccess:^{
             dispatch_group_leave(dispatchGroup);
         } failure:^(NSError *anError) {
-            NSLog(@"[MXRecoveryService] startServicesAssociatedWithSecrets: Failed to restore key backup. Error: %@", anError);
+            MXLogDebug(@"[MXRecoveryService] startServicesAssociatedWithSecrets: Failed to restore key backup. Error: %@", anError);
             
             error = anError;
             dispatch_group_leave(dispatchGroup);
@@ -628,7 +628,7 @@ NSString *const MXRecoveryServiceErrorDomain = @"org.matrix.sdk.recoveryService"
         [self recoverCrossSigningWithSuccess:^{
             dispatch_group_leave(dispatchGroup);
         } failure:^(NSError *anError) {
-            NSLog(@"[MXRecoveryService] startServicesAssociatedWithSecrets: Failed to restore cross-signing. Error: %@", anError);
+            MXLogDebug(@"[MXRecoveryService] startServicesAssociatedWithSecrets: Failed to restore cross-signing. Error: %@", anError);
             
             error = anError;
             dispatch_group_leave(dispatchGroup);
@@ -639,12 +639,12 @@ NSString *const MXRecoveryServiceErrorDomain = @"org.matrix.sdk.recoveryService"
         
         if (error)
         {
-            NSLog(@"[MXRecoveryService] startServicesAssociatedWithSecrets: Completed with error.");
+            MXLogDebug(@"[MXRecoveryService] startServicesAssociatedWithSecrets: Completed with error.");
             failure(error);
         }
         else
         {
-            NSLog(@"[MXRecoveryService] startServicesAssociatedWithSecrets: Completed for secrets: %@", servicesToRecover);
+            MXLogDebug(@"[MXRecoveryService] startServicesAssociatedWithSecrets: Completed for secrets: %@", servicesToRecover);
             success();
         }
     });
@@ -654,7 +654,7 @@ NSString *const MXRecoveryServiceErrorDomain = @"org.matrix.sdk.recoveryService"
 - (void)recoverKeyBackupWithSuccess:(void (^)(void))success
                             failure:(void (^)(NSError *error))failure
 {
-    NSLog(@"[MXRecoveryService] recoverKeyBackup: %@", self.crypto.backup.keyBackupVersion.version);
+    MXLogDebug(@"[MXRecoveryService] recoverKeyBackup: %@", self.crypto.backup.keyBackupVersion.version);
     
     MXKeyBackupVersion *keyBackupVersion = self.crypto.backup.keyBackupVersion;
     NSString *secret = [self.crypto.store secretWithSecretId:MXSecretId.keyBackup];
@@ -665,30 +665,30 @@ NSString *const MXRecoveryServiceErrorDomain = @"org.matrix.sdk.recoveryService"
         // Restore the backup in background
         // It will take time
         [self.crypto.backup restoreUsingPrivateKeyKeyBackup:keyBackupVersion room:nil session:nil success:^(NSUInteger total, NSUInteger imported) {
-            NSLog(@"[MXRecoveryService] recoverKeyBackup: Backup is restored!");
+            MXLogDebug(@"[MXRecoveryService] recoverKeyBackup: Backup is restored!");
         } failure:^(NSError * _Nonnull error) {
-            NSLog(@"[MXRecoveryService] recoverKeyBackup: restoreUsingPrivateKeyKeyBackup failed: %@", error);
+            MXLogDebug(@"[MXRecoveryService] recoverKeyBackup: restoreUsingPrivateKeyKeyBackup failed: %@", error);
         }];
         
         // Check if the service really needs to be started
         if (self.crypto.backup.enabled)
         {
-            NSLog(@"[MXRecoveryService] recoverKeyBackup: Key backup is already running");
+            MXLogDebug(@"[MXRecoveryService] recoverKeyBackup: Key backup is already running");
             success();
             return;
         }
         
         // Trust the current backup to start backuping keys to it
         [self.crypto.backup trustKeyBackupVersion:keyBackupVersion trust:YES success:^{
-            NSLog(@"[MXRecoveryService] recoverKeyBackup: Current backup is now trusted");
+            MXLogDebug(@"[MXRecoveryService] recoverKeyBackup: Current backup is now trusted");
             success();
         } failure:^(NSError * _Nonnull error) {
-            NSLog(@"[MXRecoveryService] recoverKeyBackup: trustKeyBackupVersion failed: %@", error);
+            MXLogDebug(@"[MXRecoveryService] recoverKeyBackup: trustKeyBackupVersion failed: %@", error);
         }];
     }
     else
     {
-        NSLog(@"[MXRecoveryService] recoverKeyBackup: can't start backup");
+        MXLogDebug(@"[MXRecoveryService] recoverKeyBackup: can't start backup");
         success();
     }
 }
@@ -696,14 +696,14 @@ NSString *const MXRecoveryServiceErrorDomain = @"org.matrix.sdk.recoveryService"
 - (void)recoverCrossSigningWithSuccess:(void (^)(void))success
                                failure:(void (^)(NSError *error))failure
 {
-    NSLog(@"[MXRecoveryService] recoverCrossSigning");
+    MXLogDebug(@"[MXRecoveryService] recoverCrossSigning");
     
     [self.crypto.crossSigning refreshStateWithSuccess:^(BOOL stateUpdated) {
         
         // Check if the service really needs to be started
         if (self.crypto.crossSigning.canCrossSign)
         {
-            NSLog(@"[MXRecoveryService] recoverCrossSigning: Cross-signing is already up");
+            MXLogDebug(@"[MXRecoveryService] recoverCrossSigning: Cross-signing is already up");
             success();
             return;
         }
@@ -716,25 +716,25 @@ NSString *const MXRecoveryServiceErrorDomain = @"org.matrix.sdk.recoveryService"
                 
                 // And update the state
                 [self.crypto.crossSigning refreshStateWithSuccess:^(BOOL stateUpdated) {
-                    NSLog(@"[MXRecoveryService] recoverCrossSigning: Cross-signing is up. State: %@", @(self.crypto.crossSigning.state));
+                    MXLogDebug(@"[MXRecoveryService] recoverCrossSigning: Cross-signing is up. State: %@", @(self.crypto.crossSigning.state));
                     success();
                 } failure:^(NSError *error) {
-                    NSLog(@"[MXRecoveryService] recoverCrossSigning: refreshStateWithSuccess 2 failed: %@", error);
+                    MXLogDebug(@"[MXRecoveryService] recoverCrossSigning: refreshStateWithSuccess 2 failed: %@", error);
                     failure(error);
                 }];
                 
             } failure:^(NSError * _Nonnull error) {
-                NSLog(@"[MXRecoveryService] recoverCrossSigning: crossSignDeviceWithDeviceId failed: %@", error);
+                MXLogDebug(@"[MXRecoveryService] recoverCrossSigning: crossSignDeviceWithDeviceId failed: %@", error);
                 failure(error);
             }];
             
         } failure:^(NSError *error) {
-            NSLog(@"[MXRecoveryService] recoverCrossSigning: setUserVerification failed: %@", error);
+            MXLogDebug(@"[MXRecoveryService] recoverCrossSigning: setUserVerification failed: %@", error);
             failure(error);
         }];
         
     } failure:^(NSError * _Nonnull error) {
-        NSLog(@"[MXRecoveryService] recoverCrossSigning: refreshStateWithSuccess 1 failed: %@", error);
+        MXLogDebug(@"[MXRecoveryService] recoverCrossSigning: refreshStateWithSuccess 1 failed: %@", error);
         failure(error);
     }];
 }
@@ -824,7 +824,7 @@ NSString *const MXRecoveryServiceErrorDomain = @"org.matrix.sdk.recoveryService"
         }
         else
         {
-            NSLog(@"[MXRecoveryService] checkSecret: Backup is not enabled yet. Accept the secret by default");
+            MXLogDebug(@"[MXRecoveryService] checkSecret: Backup is not enabled yet. Accept the secret by default");
         }
     }
     else if ([secretId isEqualToString:MXSecretId.crossSigningMaster])
@@ -836,7 +836,7 @@ NSString *const MXRecoveryServiceErrorDomain = @"org.matrix.sdk.recoveryService"
         }
         else
         {
-            NSLog(@"[MXRecoveryService] checkSecret: Cross-signing is not enabled yet. Accept the secret by default");
+            MXLogDebug(@"[MXRecoveryService] checkSecret: Cross-signing is not enabled yet. Accept the secret by default");
         }
     }
     else if ([secretId isEqualToString:MXSecretId.crossSigningSelfSigning])
@@ -848,7 +848,7 @@ NSString *const MXRecoveryServiceErrorDomain = @"org.matrix.sdk.recoveryService"
         }
         else
         {
-            NSLog(@"[MXRecoveryService] checkSecret: Cross-signing is not enabled yet. Accept the secret by default");
+            MXLogDebug(@"[MXRecoveryService] checkSecret: Cross-signing is not enabled yet. Accept the secret by default");
         }
     }
     else if ([secretId isEqualToString:MXSecretId.crossSigningUserSigning])
@@ -860,11 +860,11 @@ NSString *const MXRecoveryServiceErrorDomain = @"org.matrix.sdk.recoveryService"
         }
         else
         {
-            NSLog(@"[MXRecoveryService] checkSecret: Cross-signing is not enabled yet. Accept the secret by default");
+            MXLogDebug(@"[MXRecoveryService] checkSecret: Cross-signing is not enabled yet. Accept the secret by default");
         }
     }
     
-    NSLog(@"[MXRecoveryService] checkSecret: Secret for %@ is %@", secretId, valid ? @"valid" :  @"invalid");
+    MXLogDebug(@"[MXRecoveryService] checkSecret: Secret for %@ is %@", secretId, valid ? @"valid" :  @"invalid");
 
     return valid;
 }

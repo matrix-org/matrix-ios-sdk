@@ -55,7 +55,7 @@ typedef void (^MXOnRoomEvent)(MXEvent *event, MXTimelineDirection direction, MXR
       with events on calls of [MXEventTimeline paginate] in backwards or forwards direction.
       Events are stored in a in-memory store (MXMemoryStore) (@TODO: To be confirmed once they will be implemented). So, they are not permanent.
  */
-@interface MXEventTimeline : NSObject
+@interface MXEventTimeline : NSObject <NSCopying>
 
 /**
  The id of this timeline.
@@ -100,7 +100,7 @@ typedef void (^MXOnRoomEvent)(MXEvent *event, MXTimelineDirection direction, MXR
  @param initialEventId the initial event for the timeline. A nil value will create a live timeline.
  @return a MXEventTimeline instance.
  */
-- (id)initWithRoom:(MXRoom*)room andInitialEventId:(NSString*)initialEventId;
+- (instancetype)initWithRoom:(MXRoom*)room andInitialEventId:(NSString*)initialEventId;
 
 /**
  Create a timeline instance for a room and force it to use the given MXStore to store events.
@@ -110,7 +110,7 @@ typedef void (^MXOnRoomEvent)(MXEvent *event, MXTimelineDirection direction, MXR
  @param store the store to use to store timeline events.
  @return a MXEventTimeline instance.
  */
-- (id)initWithRoom:(MXRoom*)room initialEventId:(NSString*)initialEventId andStore:(id<MXStore>)store;
+- (instancetype)initWithRoom:(MXRoom*)room initialEventId:(NSString*)initialEventId andStore:(id<MXStore>)store;
 
 /**
  Initialise the room evenTimeline state.
@@ -205,16 +205,18 @@ typedef void (^MXOnRoomEvent)(MXEvent *event, MXTimelineDirection direction, MXR
 /**
  For live timeline, update data according to the received /sync response.
 
- @param roomSync information to sync the room with the home server data
+ @param roomSync information to sync the room with the home server data.
+ @param onComplete the block called when the operation completes.
  */
-- (void)handleJoinedRoomSync:(MXRoomSync*)roomSync;
+- (void)handleJoinedRoomSync:(MXRoomSync*)roomSync onComplete:(void (^)(void))onComplete;
 
 /**
  For live timeline, update invited room state according to the received /sync response.
 
  @param invitedRoomSync information to update the room state.
+ @param onComplete the block called when the operation completes.
  */
-- (void)handleInvitedRoomSync:(MXInvitedRoomSync *)invitedRoomSync;
+- (void)handleInvitedRoomSync:(MXInvitedRoomSync *)invitedRoomSync onComplete:(void (^)(void))onComplete;
 
 /**
  For live timeline, enrich lazy loaded state events with more state events.

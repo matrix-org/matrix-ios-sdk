@@ -18,6 +18,8 @@
 
 #import <Realm/Realm.h>
 
+#import "MXLog.h"
+
 static NSString* const kRealmFileExtension = @"realm";
 
 @implementation MXRealmHelper
@@ -47,7 +49,7 @@ static NSString* const kRealmFileExtension = @"realm";
             
             if (error)
             {
-                NSLog(@"[MXRealmHelper] Fail to delete Realm file with URL %@ with error: %@", url, error);
+                MXLogDebug(@"[MXRealmHelper] Fail to delete Realm file with URL %@ with error: %@", url, error);
             }
         }
     }

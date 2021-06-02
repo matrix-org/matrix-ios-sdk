@@ -263,6 +263,42 @@
     [self checkRoomSummary:MXFileStore.class];
 }
 
+- (void)testMXFileStoreFilterId
+{
+    NSUInteger messagesLimit = 13;
+    [self doTestWithMXFileStoreAndMessagesLimit:messagesLimit readyToTest:^(MXRoom *room) {
+        MXFileStore *fileStore = mxSession.store;
+        
+        NSString *syncFilterId = fileStore.syncFilterId;
+        
+        XCTAssertNotNil(syncFilterId, @"Sync filter id must be stored");
+        
+        //  find filter by id in store
+        [fileStore filterWithFilterId:syncFilterId success:^(MXFilterJSONModel * _Nullable filter) {
+            
+            XCTAssertEqual(filter.room.timeline.limit, messagesLimit, @"Timeline limits should match for filter");
+            
+            //  find id back from filter
+            [fileStore filterIdForFilter:filter success:^(NSString * _Nullable filterId) {
+                
+                XCTAssertNotNil(filterId, @"Sync filter id must be found from the filter");
+                XCTAssertEqual(filterId, syncFilterId, @"Sync filter ids must match");
+                
+                [expectation fulfill];
+                
+            } failure:^(NSError * _Nullable error) {
+                XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                [expectation fulfill];
+            }];
+            
+        } failure:^(NSError * _Nullable error) {
+            XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+            [expectation fulfill];
+        }];
+        
+    }];
+}
+
 @end
 
 #pragma clang diagnostic pop

@@ -264,7 +264,7 @@
         
         if (error)
         {
-            NSLog(@"[MXRealmEventScanStore] Failed to open Realm on background worker: %@", error);
+            MXLogDebug(@"[MXRealmEventScanStore] Failed to open Realm on background worker: %@", error);
         }
         else if (change)
         {

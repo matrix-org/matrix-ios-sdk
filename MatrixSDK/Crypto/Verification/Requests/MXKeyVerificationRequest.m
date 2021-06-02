@@ -100,12 +100,12 @@ NSString * const MXKeyVerificationRequestDidChangeNotification = @"MXKeyVerifica
                     });
                 } failure:^(NSError * _Nonnull error) {
                     
-                    NSLog(@"[MXKeyVerificationRequest] acceptWithMethods fail to create qrCodeData.");
+                    MXLogDebug(@"[MXKeyVerificationRequest] acceptWithMethods fail to create qrCodeData.");
                     
                     [self cancelWithCancelCode:MXTransactionCancelCode.unexpectedMessage success:^{
                         
                     } failure:^(NSError * _Nonnull error) {
-                        NSLog(@"[MXKeyVerificationRequest] acceptWithMethods fail to cancel request");
+                        MXLogDebug(@"[MXKeyVerificationRequest] acceptWithMethods fail to cancel request");
                     }];
                     
                     dispatch_async(dispatch_get_main_queue(), ^{
@@ -189,7 +189,7 @@ NSString * const MXKeyVerificationRequestDidChangeNotification = @"MXKeyVerifica
             [self cancelWithCancelCode:MXTransactionCancelCode.unexpectedMessage success:^{
                 
             } failure:^(NSError * _Nonnull error) {
-                NSLog(@"[MXKeyVerificationRequest] handleReady fail to cancel request");
+                MXLogDebug(@"[MXKeyVerificationRequest] handleReady fail to cancel request");
             }];
         }];
     }

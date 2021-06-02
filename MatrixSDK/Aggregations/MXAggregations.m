@@ -158,15 +158,25 @@
             }
         }
         
+        NSMutableArray *eventsToDecrypt = [NSMutableArray array];
         for (MXEvent *event in allEvents)
         {
             if (event.isEncrypted && !event.clearEvent)
             {
-                [self.mxSession decryptEvent:event inTimeline:nil];
+                [eventsToDecrypt addObject:event];
             }
         }
         
-        success(paginatedResponse);
+        if (eventsToDecrypt.count)
+        {
+            [self.mxSession decryptEvents:eventsToDecrypt inTimeline:nil onComplete:^(NSArray<MXEvent *> *failedEvents) {
+                success(paginatedResponse);
+            }];
+        }
+        else
+        {
+            success(paginatedResponse);
+        }
     };
     
     MXEvent *event = [self.mxSession.store eventWithEventId:eventId inRoom:roomId];
