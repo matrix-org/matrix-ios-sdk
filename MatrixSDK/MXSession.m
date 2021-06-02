@@ -473,14 +473,26 @@ typedef void (^MXOnResumeDone)(void);
                             // Make sure the last message has been decrypted
                             // In case of an initial sync, we save decryptions to save time. Only unread messages are decrypted.
                             // We need to decrypt already read last message.
-                            if (isInitialSync
-                                && room.summary.lastMessageEvent.eventType == MXEventTypeRoomEncrypted)
+                            if (isInitialSync)
                             {
-                                [room.summary resetLastMessage:^{
-                                    dispatch_group_leave(dispatchGroup);
+                                [self eventWithEventId:room.summary.lastMessage.eventId
+                                                inRoom:room.roomId
+                                               success:^(MXEvent *event) {
+                                    if (event.eventType == MXEventTypeRoomEncrypted)
+                                    {
+                                        [room.summary resetLastMessage:^{
+                                            dispatch_group_leave(dispatchGroup);
+                                        } failure:^(NSError *error) {
+                                            dispatch_group_leave(dispatchGroup);
+                                        } commit:NO];
+                                    }
+                                    else
+                                    {
+                                        dispatch_group_leave(dispatchGroup);
+                                    }
                                 } failure:^(NSError *error) {
                                     dispatch_group_leave(dispatchGroup);
-                                } commit:NO];
+                                }];
                             }
                             else
                             {
@@ -3744,7 +3756,7 @@ typedef void (^MXOnResumeDone)(void);
     // In case of same order, order rooms by their last event
     if (NSOrderedSame == result)
     {
-        result = [room1.summary.lastMessageEvent compareOriginServerTs:room2.summary.lastMessageEvent];
+        result = [room1.summary.lastMessage compareOriginServerTs:room2.summary.lastMessage];
     }
 
     return result;
@@ -4185,10 +4197,16 @@ typedef void (^MXOnResumeDone)(void);
 
     // Check if this event can interest the room summary
     MXRoomSummary *summary = [self roomSummaryWithRoomId:event.roomId];
-    if (summary &&
-        summary.lastMessageEvent.ageLocalTs <= event.ageLocalTs)
+    if (summary)
     {
-        [summary resetLastMessage:nil failure:nil commit:YES];
+        [self eventWithEventId:summary.lastMessage.eventId
+                        inRoom:summary.roomId
+                       success:^(MXEvent *lastEvent) {
+            if (lastEvent.ageLocalTs <= event.ageLocalTs)
+            {
+                [summary resetLastMessage:nil failure:nil commit:YES];
+            }
+        } failure:nil];
     }
 }
 

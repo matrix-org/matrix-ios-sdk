@@ -43,7 +43,12 @@ NS_ASSUME_NONNULL_BEGIN
  When the last message is encrypted, its summary data (lastMessageString, lastMessageAttributedString,
  lastMessageOthers) is stored encrypted in the room summary cache.
  */
-@property (nonatomic, readonly) BOOL isEncrypted;
+@property (nonatomic, assign, readonly) BOOL isEncrypted;
+
+/**
+ Sender of the last message.
+ */
+@property (nonatomic, copy, readonly) NSString *sender;
 
 /**
  String representation of this last message.
@@ -57,6 +62,8 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, copy, nullable) NSMutableDictionary<NSString*, id<NSCoding>> *others;
 
 - (instancetype)initWithEvent:(MXEvent *)event;
+
+- (NSComparisonResult)compareOriginServerTs:(MXRoomLastMessage *)otherMessage;
 
 @end
 

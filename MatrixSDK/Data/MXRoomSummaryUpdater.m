@@ -116,7 +116,7 @@
         // Accept event related to profile change only if the flag is NO
         if (!_ignoreMemberProfileChanges || !event.isUserProfileChange)
         {
-            summary.lastMessageEvent = event;
+            [summary updateLastMessage:[[MXRoomLastMessage alloc] initWithEvent:event]];
             updated = YES;
         }
     }

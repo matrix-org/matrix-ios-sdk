@@ -23,6 +23,7 @@
 NSString *const kCodingKeyEventId = @"eventId";
 NSString *const kCodingKeyOriginServerTs = @"originServerTs";
 NSString *const kCodingKeyIsEncrypted = @"isEncrypted";
+NSString *const kCodingKeySender = @"sender";
 NSString *const kCodingKeyData = @"data";
 NSString *const kCodingKeyEncryptedData = @"encryptedData";
 NSString *const kCodingKeyText = @"text";
@@ -46,9 +47,24 @@ NSString *const kCodingKeyOthers = @"others";
         _eventId = event.eventId;
         _originServerTs = event.originServerTs;
         _isEncrypted = event.isEncrypted;
-        
+        _sender = event.sender;
+        _others = [NSMutableDictionary new];
     }
     return self;
+}
+
+- (NSComparisonResult)compareOriginServerTs:(MXRoomLastMessage *)otherMessage
+{
+    NSComparisonResult result = NSOrderedAscending;
+    if (otherMessage.originServerTs > _originServerTs)
+    {
+        result = NSOrderedDescending;
+    }
+    else if (otherMessage.originServerTs == _originServerTs)
+    {
+        result = NSOrderedSame;
+    }
+    return result;
 }
 
 - (NSString*)description
@@ -65,6 +81,7 @@ NSString *const kCodingKeyOthers = @"others";
         _eventId = [coder decodeObjectForKey:kCodingKeyEventId];
         _originServerTs = [coder decodeInt64ForKey:kCodingKeyOriginServerTs];
         _isEncrypted = [coder decodeBoolForKey:kCodingKeyIsEncrypted];
+        _sender = [coder decodeObjectForKey:kCodingKeySender];
 
         NSDictionary *lastMessageDictionary;
         if (_isEncrypted)
@@ -94,6 +111,7 @@ NSString *const kCodingKeyOthers = @"others";
     [coder encodeObject:_eventId forKey:kCodingKeyEventId];
     [coder encodeInt64:_originServerTs forKey:kCodingKeyOriginServerTs];
     [coder encodeBool:_isEncrypted forKey:kCodingKeyIsEncrypted];
+    [coder encodeObject:_sender forKey:kCodingKeySender];
     
     // Build last message sensitive data
     NSMutableDictionary *lastMessageDictionary = [NSMutableDictionary dictionary];

@@ -2339,12 +2339,15 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
     }
 
     // If required, update the last message
-    [self.summary loadLastEvent:^{
-        MXEvent *lastMessageEvent = self.summary.lastMessageEvent;
-        if (lastMessageEvent.sentState != MXEventSentStateSent)
+    [mxSession eventWithEventId:self.summary.lastMessage.eventId
+                         inRoom:_roomId
+                        success:^(MXEvent *event) {
+        if (event.sentState != MXEventSentStateSent)
         {
             [self.summary resetLastMessage:nil failure:nil commit:YES];
         }
+    } failure:^(NSError *error) {
+        
     }];
 }
 
@@ -3223,7 +3226,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
 
 - (NSComparisonResult)compareLastMessageEventOriginServerTs:(MXRoom *)otherRoom
 {
-    return [self.summary.lastMessageEvent compareOriginServerTs:otherRoom.summary.lastMessageEvent];
+    return [self.summary.lastMessage compareOriginServerTs:otherRoom.summary.lastMessage];
 }
 
 @end

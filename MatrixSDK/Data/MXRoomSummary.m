@@ -54,9 +54,6 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
 
 @interface MXRoomSummary ()
 {
-    // Cache for the last event to avoid to read it from the store everytime
-    MXEvent *lastMessageEvent;
-
     // Flag to avoid to notify several updates
     BOOL updatedWithStateEvents;
 
@@ -209,69 +206,9 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
 
 #pragma mark - Data related to the last message
 
--(void)loadLastEvent:(void (^)(void))onComplete
+- (void)updateLastMessage:(MXRoomLastMessage *)message
 {
-    // The storage of the event depends if it is a true matrix event or a local echo
-    if (![_lastMessage.eventId hasPrefix:kMXEventLocalEventIdPrefix])
-    {
-        lastMessageEvent = [store eventWithEventId:_lastMessage.eventId inRoom:_roomId];
-    }
-    else
-    {
-        for (MXEvent *event in [store outgoingMessagesInRoom:_roomId])
-        {
-            if ([event.eventId isEqualToString:_lastMessage.eventId])
-            {
-                lastMessageEvent = event;
-                break;
-            }
-        }
-    }
-    
-    if (!lastMessageEvent)
-    {
-        NSLog(@"[MXRoomSummary] loadLastEvent: Attempt to fetch event %@", _lastMessage.eventId);
-        MXWeakify(self);
-        [_mxSession eventWithEventId:_lastMessage.eventId inRoom:_roomId success:^(MXEvent *event) {
-            MXStrongifyAndReturnIfNil(self);
-            self.lastMessageEvent = event;
-            dispatch_async(dispatch_get_main_queue(), ^{
-                onComplete();
-            });
-        } failure:^(NSError *error) {
-            MXStrongifyAndReturnIfNil(self);
-            NSLog(@"[MXRoomSummary] loadLastEvent: Cannot fetch event %@, error: %@", self.lastMessage.eventId, error);
-        }];
-        return;
-    }
-    
-    [_mxSession decryptEvents:@[lastMessageEvent] inTimeline:nil onComplete:^(NSArray<MXEvent *> *failedEvents) {
-        if (failedEvents.count)
-        {
-            NSLog(@"[MXRoomSummary] loadLastEvent: Warning: Unable to decrypt event. Error: %@", self.lastMessageEvent.decryptionError);
-        }
-        dispatch_async(dispatch_get_main_queue(), ^{
-            onComplete();
-        });
-    }];
-}
-
-- (MXEvent *)lastMessageEvent
-{
-    return lastMessageEvent;
-}
-
-- (void)setLastMessageEvent:(MXEvent *)event
-{
-    lastMessageEvent = event;
-    if (event)
-    {
-        _lastMessage = [[MXRoomLastMessage alloc] initWithEvent:event];
-    }
-    else
-    {
-        _lastMessage = nil;
-    }
+    _lastMessage = message;
 }
 
 - (MXHTTPOperation *)resetLastMessage:(void (^)(void))onComplete failure:(void (^)(NSError *))failure commit:(BOOL)commit
@@ -281,7 +218,7 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
 
 - (MXHTTPOperation *)resetLastMessageWithMaxServerPaginationCount:(NSUInteger)maxServerPaginationCount onComplete:(void (^)(void))onComplete failure:(void (^)(NSError *))failure commit:(BOOL)commit
 {
-    self.lastMessageEvent = nil;
+    [self updateLastMessage:nil];
 
     return [self fetchLastMessageWithMaxServerPaginationCount:maxServerPaginationCount onComplete:^{
         if (onComplete)
@@ -464,8 +401,12 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
         // Update the last event if it has been edited
         if ([replaceEvent.relatesTo.eventId isEqualToString:self.lastMessage.eventId])
         {
-            MXEvent *editedEvent = [self.lastMessageEvent editedEventFromReplacementEvent:replaceEvent];
-            [self handleEvent:editedEvent];
+            [self.mxSession eventWithEventId:self.lastMessage.eventId
+                                      inRoom:self.roomId
+                                     success:^(MXEvent *event) {
+                MXEvent *editedEvent = [event editedEventFromReplacementEvent:replaceEvent];
+                [self handleEvent:editedEvent];
+            } failure:nil];
         }
     }];
 }

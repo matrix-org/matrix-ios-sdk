@@ -72,8 +72,7 @@ FOUNDATION_EXPORT NSUInteger const MXRoomSummaryPaginationChunkSize;
        Ex: the displayname of the room.
 
      * Last message data:
-       This is lastMessageEventId plus the string or/and attributed string computed for
-       this last message event.
+       This is lastMessage property.
 
      * Business logic data:
        This is data that is used internally by the sdk.
@@ -222,16 +221,9 @@ FOUNDATION_EXPORT NSUInteger const MXRoomSummaryPaginationChunkSize;
 @property (nonatomic, readonly) MXRoomLastMessage *lastMessage;
 
 /**
- The shortcut to the last message event.
+ Intenal SDK method to update the last message.
  */
-@property (nonatomic) MXEvent *lastMessageEvent;
-
-/**
- Intenal SDK method to load and decrypt the MXEvent of the last message.
- 
- @param onComplete the callback called once operation is done.
- */
--(void)loadLastEvent:(void (^)(void))onComplete;
+-(void)updateLastMessage:(MXRoomLastMessage *)message;
 
 /**
  Reset the last message from data in the store.
