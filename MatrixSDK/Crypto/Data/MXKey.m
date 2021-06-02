@@ -63,7 +63,7 @@ NSString *const kMXKeyEd25519Type = @"ed25519";
     }
     else
     {
-        NSLog(@"[MXKey] setKeyFullId: ERROR: cannot process keyFullId: %@", keyFullId);
+        MXLogDebug(@"[MXKey] setKeyFullId: ERROR: cannot process keyFullId: %@", keyFullId);
     }
 }
 

@@ -350,7 +350,7 @@ NSTimeInterval const kMXCallDirectRoomJoinTimeout = 30;
     }
     else
     {
-        NSLog(@"[MXCallManager] placeCallInRoom: ERROR: Cannot place call in %@. Members count: %tu", roomId, room.summary.membersCount.joined);
+        MXLogDebug(@"[MXCallManager] placeCallInRoom: ERROR: Cannot place call in %@. Members count: %tu", roomId, room.summary.membersCount.joined);
 
         if (failure)
         {
@@ -415,7 +415,7 @@ NSTimeInterval const kMXCallDirectRoomJoinTimeout = 30;
     [_mxSession.matrixRestClient turnServer:^(MXTurnServerResponse *turnServerResponse) {
         MXStrongifyAndReturnIfNil(self);
 
-        NSLog(@"[MXCallManager] refreshTURNServer: TTL:%tu URIs: %@", turnServerResponse.ttl, turnServerResponse.uris);
+        MXLogDebug(@"[MXCallManager] refreshTURNServer: TTL:%tu URIs: %@", turnServerResponse.ttl, turnServerResponse.uris);
 
         if (turnServerResponse.uris)
         {
@@ -432,15 +432,15 @@ NSTimeInterval const kMXCallDirectRoomJoinTimeout = 30;
         }
         else
         {
-            NSLog(@"No TURN server: using fallback STUN server: %@", self->_fallbackSTUNServer);
+            MXLogDebug(@"No TURN server: using fallback STUN server: %@", self->_fallbackSTUNServer);
             self.turnServers = nil;
         }
 
     } failure:^(NSError *error) {
         MXStrongifyAndReturnIfNil(self);
 
-        NSLog(@"[MXCallManager] refreshTURNServer: Failed to get TURN URIs.\n");
-        NSLog(@"Retry in 60s");
+        MXLogDebug(@"[MXCallManager] refreshTURNServer: Failed to get TURN URIs.\n");
+        MXLogDebug(@"Retry in 60s");
         self->refreshTURNServerTimer = [NSTimer timerWithTimeInterval:60 target:self selector:@selector(refreshTURNServer) userInfo:nil repeats:NO];
         [[NSRunLoop mainRunLoop] addTimer:self->refreshTURNServerTimer forMode:NSDefaultRunLoopMode];
     }];
@@ -710,14 +710,14 @@ NSTimeInterval const kMXCallDirectRoomJoinTimeout = 30;
                 {
                     //  auto-accept this invite from the virtual room, if a direct room with the native user found
                     [room join:^{
-                        NSLog(@"[MXCallManager] handleRoomMember: auto-joined on virtual room successfully.");
+                        MXLogDebug(@"[MXCallManager] handleRoomMember: auto-joined on virtual room successfully.");
                         
                         //  set account data on the room, if required
                         [self.mxSession.roomAccountDataUpdateDelegate updateAccountDataIfRequiredForRoom:room
                                                                                         withNativeRoomId:nativeRoom.roomId
                                                                                               completion:nil];
                     } failure:^(NSError *error) {
-                        NSLog(@"[MXCallManager] handleRoomMember: auto-join on virtual room failed with error: %@", error);
+                        MXLogDebug(@"[MXCallManager] handleRoomMember: auto-join on virtual room failed with error: %@", error);
                     }];
                 }
             } failure:nil];
@@ -956,7 +956,7 @@ NSTimeInterval const kMXCallDirectRoomJoinTimeout = 30;
                         
                         continueBlock(call);
                     } failure:^(NSError * _Nullable error) {
-                        NSLog(@"[MXCallManager] transferCall: couldn't call the target: %@", error);
+                        MXLogDebug(@"[MXCallManager] transferCall: couldn't call the target: %@", error);
                         if (failure)
                         {
                             failure(error);
@@ -1368,7 +1368,7 @@ NSString *const kMXCallManagerConferenceUserDomain  = @"matrix.org";
         self.virtualRoomsSupported = (sipNativeProtocol && sipVirtualProtocol);
         
     } failure:^(NSError *error) {
-        NSLog(@"Failed to check for third party protocols with error: %@", error);
+        MXLogDebug(@"Failed to check for third party protocols with error: %@", error);
         self.pstnProtocol = nil;
     }];
 }
@@ -1385,7 +1385,7 @@ NSString *const kMXCallManagerConferenceUserDomain  = @"matrix.org";
         
         MXThirdPartyUserInstance * user = [thirdpartyUsersResponse.users firstObject];
         
-        NSLog(@"Succeeded to look up the phone number: %@", user.userId);
+        MXLogDebug(@"Succeeded to look up the phone number: %@", user.userId);
         
         if (user)
         {
@@ -1402,7 +1402,7 @@ NSString *const kMXCallManagerConferenceUserDomain  = @"matrix.org";
             }
         }
     } failure:^(NSError *error) {
-        NSLog(@"Failed to look up the phone number with error: %@", error);
+        MXLogDebug(@"Failed to look up the phone number with error: %@", error);
         if (failure)
         {
             failure(error);
@@ -1432,7 +1432,7 @@ NSString *const kMXCallManagerConferenceUserDomain  = @"matrix.org";
             else
             {
                 //  no room found
-                NSLog(@"Failed to find a room for call with error: %@", error);
+                MXLogDebug(@"Failed to find a room for call with error: %@", error);
                 if (failure)
                 {
                     failure(error);
@@ -1468,7 +1468,7 @@ NSString *const kMXCallManagerConferenceUserDomain  = @"matrix.org";
         
         MXThirdPartyUserInstance * user = [thirdpartyUsersResponse.users firstObject];
         
-        NSLog(@"[MXCallManager] getVirtualUserFrom: Succeeded to look up the virtual user: %@", user.userId);
+        MXLogDebug(@"[MXCallManager] getVirtualUserFrom: Succeeded to look up the virtual user: %@", user.userId);
         
         if (user && user.userId.length > 0)
         {
@@ -1485,7 +1485,7 @@ NSString *const kMXCallManagerConferenceUserDomain  = @"matrix.org";
             }
         }
     } failure:^(NSError *error) {
-        NSLog(@"[MXCallManager] getVirtualUserFrom: Failed to look up the virtual user with error: %@", error);
+        MXLogDebug(@"[MXCallManager] getVirtualUserFrom: Failed to look up the virtual user with error: %@", error);
         if (failure)
         {
             failure(error);
@@ -1505,7 +1505,7 @@ NSString *const kMXCallManagerConferenceUserDomain  = @"matrix.org";
         
         MXThirdPartyUserInstance * user = [thirdpartyUsersResponse.users firstObject];
         
-        NSLog(@"[MXCallManager] getNativeUserFrom: Succeeded to look up the native user: %@", user.userId);
+        MXLogDebug(@"[MXCallManager] getNativeUserFrom: Succeeded to look up the native user: %@", user.userId);
         
         if (user && user.userId.length > 0)
         {
@@ -1522,7 +1522,7 @@ NSString *const kMXCallManagerConferenceUserDomain  = @"matrix.org";
             }
         }
     } failure:^(NSError *error) {
-        NSLog(@"[MXCallManager] getNativeUserFrom: Failed to look up the native user with error: %@", error);
+        MXLogDebug(@"[MXCallManager] getNativeUserFrom: Failed to look up the native user with error: %@", error);
         if (failure)
         {
             failure(error);

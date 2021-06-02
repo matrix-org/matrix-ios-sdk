@@ -113,7 +113,7 @@
 
         MXHTTPOperation *operation2 = [self ensureOutboundSession:devicesInRoom success:^(MXOutboundSessionInfo *session) {
 
-            NSLog(@"[MXMegolmEncryption] ensureSessionForUsers took %.0fms", [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
+            MXLogDebug(@"[MXMegolmEncryption] ensureSessionForUsers took %.0fms", [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
 
             if (success)
             {
@@ -191,7 +191,7 @@
                     || (!deviceInfo.trustLevel.isVerified && encryptToVerifiedDevicesOnly))
                 {
                     // Remove any blocked devices
-                    NSLog(@"[MXMegolmEncryption] getDevicesInRoom: blocked device: %@", deviceInfo);
+                    MXLogDebug(@"[MXMegolmEncryption] getDevicesInRoom: blocked device: %@", deviceInfo);
                     continue;
                 }
 
@@ -341,14 +341,14 @@
                                       }
                               };
 
-    NSLog(@"[MXMegolmEncryption] shareKey: with %tu users: %@", devicesByUser.count, devicesByUser);
+    MXLogDebug(@"[MXMegolmEncryption] shareKey: with %tu users: %@", devicesByUser.count, devicesByUser);
 
     MXHTTPOperation *operation;
     MXWeakify(self);
     operation = [crypto ensureOlmSessionsForDevices:devicesByUser force:NO success:^(MXUsersDevicesMap<MXOlmSessionResult *> *results) {
         MXStrongifyAndReturnIfNil(self);
 
-        NSLog(@"[MXMegolmEncryption] shareKey: ensureOlmSessionsForDevices result (users: %tu - devices: %tu): %@", results.map.count,  results.count, results);
+        MXLogDebug(@"[MXMegolmEncryption] shareKey: ensureOlmSessionsForDevices result (users: %tu - devices: %tu): %@", results.map.count,  results.count, results);
 
         MXUsersDevicesMap<NSDictionary*> *contentMap = [[MXUsersDevicesMap alloc] init];
         BOOL haveTargets = NO;
@@ -373,11 +373,11 @@
                     // much point in that really; it will mostly serve to clog
                     // up to_device inboxes.
                     
-                    NSLog(@"[MXMegolmEncryption] shareKey: Cannot share key with device %@:%@. No one time key", userId, deviceID);
+                    MXLogDebug(@"[MXMegolmEncryption] shareKey: Cannot share key with device %@:%@. No one time key", userId, deviceID);
                     continue;
                 }
 
-                NSLog(@"[MXMegolmEncryption] shareKey: Sharing keys with device %@:%@", userId, deviceID);
+                MXLogDebug(@"[MXMegolmEncryption] shareKey: Sharing keys with device %@:%@", userId, deviceID);
 
                 MXDeviceInfo *deviceInfo = sessionResult.device;
 
@@ -390,12 +390,12 @@
 
         if (haveTargets)
         {
-            //NSLog(@"[MXMegolmEncryption] shareKey. Actually share with %tu users and %tu devices: %@", contentMap.userIds.count, contentMap.count, contentMap);
-            NSLog(@"[MXMegolmEncryption] shareKey: Actually share with %tu users and %tu devices", contentMap.userIds.count, contentMap.count);
+            //MXLogDebug(@"[MXMegolmEncryption] shareKey. Actually share with %tu users and %tu devices: %@", contentMap.userIds.count, contentMap.count, contentMap);
+            MXLogDebug(@"[MXMegolmEncryption] shareKey: Actually share with %tu users and %tu devices", contentMap.userIds.count, contentMap.count);
 
             MXHTTPOperation *operation2 = [self->crypto.matrixRestClient sendToDevice:kMXEventTypeStringRoomEncrypted contentMap:contentMap txnId:nil success:^{
 
-                NSLog(@"[MXMegolmEncryption] shareKey: request succeeded");
+                MXLogDebug(@"[MXMegolmEncryption] shareKey: request succeeded");
 
                 // Add the devices we have shared with to session.sharedWithDevices.
                 //
@@ -434,7 +434,7 @@
 
     } failure:^(NSError *error) {
 
-        NSLog(@"[MXMegolmEncryption] shareKey: request failed. Error: %@", error);
+        MXLogDebug(@"[MXMegolmEncryption] shareKey: request failed. Error: %@", error);
         if (failure)
         {
             failure(error);
@@ -451,12 +451,12 @@
                        success:(void (^)(void))success
                        failure:(void (^)(NSError *error))failure
 {
-    NSLog(@"[MXMegolmEncryption] reshareKey: %@ to %@:%@", sessionId, userId, deviceId);
+    MXLogDebug(@"[MXMegolmEncryption] reshareKey: %@ to %@:%@", sessionId, userId, deviceId);
     
     MXDeviceInfo *deviceInfo = [crypto.store deviceWithDeviceId:deviceId forUser:userId];
     if (!deviceInfo)
     {
-        NSLog(@"[MXMegolmEncryption] reshareKey: ERROR: Unknown device");
+        MXLogDebug(@"[MXMegolmEncryption] reshareKey: ERROR: Unknown device");
         NSError *error = [NSError errorWithDomain:MXEncryptingErrorDomain
                                              code:MXEncryptingErrorUnknownDeviceCode
                                          userInfo:nil];
@@ -468,7 +468,7 @@
     NSNumber *chainIndex = [crypto.store messageIndexForSharedDeviceInRoomWithId:roomId sessionId:sessionId userId:userId deviceId:deviceId];
     if (!chainIndex)
     {
-        NSLog(@"[MXMegolmEncryption] reshareKey: ERROR: Never shared megolm key with this device");
+        MXLogDebug(@"[MXMegolmEncryption] reshareKey: ERROR: Never shared megolm key with this device");
         NSError *error = [NSError errorWithDomain:MXEncryptingErrorDomain
                                              code:MXEncryptingErrorReshareNotAllowedCode
                                          userInfo:nil];
@@ -503,7 +503,7 @@
                      
                      MXDeviceInfo *deviceInfo = olmSessionResult.device;
                      
-                     NSLog(@"[MXMegolmEncryption] reshareKey: sharing keys for session %@|%@:%@ with device %@:%@", senderKey, sessionId, chainIndex, userId, deviceId);
+                     MXLogDebug(@"[MXMegolmEncryption] reshareKey: sharing keys for session %@|%@:%@ with device %@:%@", senderKey, sessionId, chainIndex, userId, deviceId);
                      
                      NSDictionary *payload = [self->crypto buildMegolmKeyForwardingMessage:self->roomId senderKey:senderKey sessionId:sessionId chainIndex:chainIndex];
                     
@@ -541,7 +541,7 @@
             
             if (error)
             {
-                NSLog(@"[MXMegolmEncryption] processPendingEncryptionsInSession: failed to encrypt text: %@", error);
+                MXLogDebug(@"[MXMegolmEncryption] processPendingEncryptionsInSession: failed to encrypt text: %@", error);
             }
 
             queuedEncryption.success(@{

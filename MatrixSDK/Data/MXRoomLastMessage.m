@@ -173,7 +173,7 @@ NSString *const kCodingKeyOthers = @"others";
     }
     else if (status == errSecItemNotFound)
     {
-        NSLog(@"[MXRoomLastMessage] encryptionKey: Generate the key and store it to the keychain");
+        MXLogDebug(@"[MXRoomLastMessage] encryptionKey: Generate the key and store it to the keychain");
 
         // There is not yet a key in the keychain
         // Generate an AES key
@@ -192,17 +192,17 @@ NSString *const kCodingKeyOthers = @"others";
             {
                 // TODO: The iOS 10 simulator returns the -34018 (errSecMissingEntitlement) error.
                 // We need to fix it but there is no issue with the app on real device nor with iOS 9 simulator.
-                NSLog(@"[MXRoomLastMessage] encryptionKey: SecItemAdd failed. status: %i", (int)status);
+                MXLogDebug(@"[MXRoomLastMessage] encryptionKey: SecItemAdd failed. status: %i", (int)status);
             }
         }
         else
         {
-            NSLog(@"[MXRoomLastMessage] encryptionKey: Cannot generate key. retval: %i", retval);
+            MXLogDebug(@"[MXRoomLastMessage] encryptionKey: Cannot generate key. retval: %i", retval);
         }
     }
     else
     {
-        NSLog(@"[MXRoomLastMessage] encryptionKey: Keychain failed. OSStatus: %i", (int)status);
+        MXLogDebug(@"[MXRoomLastMessage] encryptionKey: Keychain failed. OSStatus: %i", (int)status);
     }
     
     if (foundKey)
@@ -246,12 +246,12 @@ NSString *const kCodingKeyOthers = @"others";
         }
         else
         {
-            NSLog(@"[MXRoomLastMessage] encrypt: CCCryptorUpdate failed. status: %i", status);
+            MXLogDebug(@"[MXRoomLastMessage] encrypt: CCCryptorUpdate failed. status: %i", status);
         }
     }
     else
     {
-        NSLog(@"[MXRoomLastMessage] encrypt: CCCryptorCreateWithMode failed. status: %i", status);
+        MXLogDebug(@"[MXRoomLastMessage] encrypt: CCCryptorCreateWithMode failed. status: %i", status);
     }
 
     return encryptedData;
@@ -290,12 +290,12 @@ NSString *const kCodingKeyOthers = @"others";
         }
         else
         {
-            NSLog(@"[MXRoomLastMessage] decrypt: CCCryptorUpdate failed. status: %i", status);
+            MXLogDebug(@"[MXRoomLastMessage] decrypt: CCCryptorUpdate failed. status: %i", status);
         }
     }
     else
     {
-        NSLog(@"[MXRoomLastMessage] decrypt: CCCryptorCreateWithMode failed. status: %i", status);
+        MXLogDebug(@"[MXRoomLastMessage] decrypt: CCCryptorCreateWithMode failed. status: %i", status);
     }
     
     return data;

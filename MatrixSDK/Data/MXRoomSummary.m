@@ -321,7 +321,7 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
         // If requested, get messages from the homeserver
         // Fetch them by batch of 50 messages
         NSUInteger paginationCount = MIN(maxServerPaginationCount, MXRoomSummaryPaginationChunkSize);
-        NSLog(@"[MXRoomSummary] fetchLastMessage: paginate %@ (%@) messages from the server in %@", @(paginationCount), @(maxServerPaginationCount), _roomId);
+        MXLogDebug(@"[MXRoomSummary] fetchLastMessage: paginate %@ (%@) messages from the server in %@", @(paginationCount), @(maxServerPaginationCount), _roomId);
         
         MXHTTPOperation *newOperation = [timeline paginate:paginationCount direction:MXTimelineDirectionBackwards onlyFromStore:NO complete:^{
             if (lastMessageUpdated)
@@ -332,13 +332,13 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
             }
             else if (maxServerPaginationCount > MXRoomSummaryPaginationChunkSize)
             {
-                NSLog(@"[MXRoomSummary] fetchLastMessage: Failed to find last message in %@. Paginate more...", self.roomId);
+                MXLogDebug(@"[MXRoomSummary] fetchLastMessage: Failed to find last message in %@. Paginate more...", self.roomId);
                 NSUInteger newMaxServerPaginationCount = maxServerPaginationCount - MXRoomSummaryPaginationChunkSize;
                 [self fetchLastMessageWithMaxServerPaginationCount:newMaxServerPaginationCount onComplete:onComplete failure:failure timeline:timeline operation:operation commit:commit];
             }
             else
             {
-                NSLog(@"[MXRoomSummary] fetchLastMessage: Failed to find last message in %@. Stop paginating.", self.roomId);
+                MXLogDebug(@"[MXRoomSummary] fetchLastMessage: Failed to find last message in %@. Stop paginating.", self.roomId);
                 onComplete();
             }
             
@@ -348,7 +348,7 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
     }
     else
     {
-        NSLog(@"[MXRoomSummary] fetchLastMessage: Failed to find last message in %@.", self.roomId);
+        MXLogDebug(@"[MXRoomSummary] fetchLastMessage: Failed to find last message in %@.", self.roomId);
         onComplete();
     }
     
@@ -384,7 +384,7 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
     MXRoom *room = notif.object;
     if (_mxSession == room.mxSession && [_roomId isEqualToString:room.roomId])
     {
-        NSLog(@"[MXRoomSummary] roomDidFlushData: %@", _roomId);
+        MXLogDebug(@"[MXRoomSummary] roomDidFlushData: %@", _roomId);
 
         [self resetRoomStateData];
     }
@@ -433,7 +433,7 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
             return;
         }
         
-        NSLog(@"[MXRoomSummary] enableTrustTracking: YES");
+        MXLogDebug(@"[MXRoomSummary] enableTrustTracking: YES");
         
         // Bootstrap trust computation
         [self registerTrustLevelDidChangeNotifications];
@@ -441,7 +441,7 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
     }
     else
     {
-        NSLog(@"[MXRoomSummary] enableTrustTracking: NO");
+        MXLogDebug(@"[MXRoomSummary] enableTrustTracking: NO");
         [self unregisterTrustLevelDidChangeNotifications];
         _trust = nil;
     }
@@ -525,7 +525,7 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
         }
         
     } failure:^(NSError *error) {
-        NSLog(@"[MXRoomSummary] trustLevelDidChangeRelatedToUserId fails to retrieve room members");
+        MXLogDebug(@"[MXRoomSummary] trustLevelDidChangeRelatedToUserId fails to retrieve room members");
     }];
 }
 
@@ -545,7 +545,7 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
         }
         
         // Skip this request. Wait for the current one to finish
-        NSLog(@"[MXRoomSummary] triggerComputeTrust: Skip it. A request is pending");
+        MXLogDebug(@"[MXRoomSummary] triggerComputeTrust: Skip it. A request is pending");
         return;
     }
     
@@ -578,7 +578,7 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
         [self save:YES];
         
     } failure:^(NSError *error) {
-        NSLog(@"[MXRoomSummary] computeTrust: fails to retrieve room members trusted progress");
+        MXLogDebug(@"[MXRoomSummary] computeTrust: fails to retrieve room members trusted progress");
     }];
 }
 

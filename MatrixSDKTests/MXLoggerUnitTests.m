@@ -18,6 +18,10 @@
 
 #import "MXLogger.h"
 
+#import "MXLog.h"
+
+#import "MatrixSDKSwiftHeader.h"
+
 @interface MXLoggerUnitTests : XCTestCase
 
 @end
@@ -26,21 +30,25 @@
 
 - (void)testMXLogger
 {
-    [MXLogger redirectNSLogToFiles:YES];
-
-    NSString *log = [NSString stringWithFormat:@"testLogFileContent: %@", [NSDate date]];
-    NSLog(@"%@", log);
-
-    [MXLogger redirectNSLogToFiles:NO];
-
+    MXLogConfiguration *configuration = [[MXLogConfiguration alloc] init];
+    configuration.redirectLogsToFiles = YES;
+    
+    [MXLog configure:configuration];
+    
+    NSString *log = @"Lorem ipsum dolor sit amet";
+    MXLogDebug(@"%@", log);
+    
+    configuration.redirectLogsToFiles = NO;
+    [MXLog configure:configuration];
+    
     NSArray *logFiles = [MXLogger logFiles];
     XCTAssertGreaterThanOrEqual(logFiles.count, 1);
-
+    
     // The last string in logFiles should be "console.log"
     NSString* logContent = [NSString stringWithContentsOfFile:logFiles[logFiles.count - 1]
-                                                  encoding:NSUTF8StringEncoding
-                                                     error:NULL];
-
+                                                     encoding:NSUTF8StringEncoding
+                                                        error:NULL];
+    
     if (0 == [logContent rangeOfString:log].length)
     {
         XCTFail(@"%@ does not contain %@\nIts content: %@", logFiles[logFiles.count - 1], log, logContent);
@@ -50,14 +58,14 @@
 - (void)testDeleteLogFiles
 {
     [MXLogger redirectNSLogToFiles:YES];
-
+    
     NSString *log = [NSString stringWithFormat:@"testLogFileContent: %@", [NSDate date]];
-    NSLog(@"%@", log);
-
+    MXLogDebug(@"%@", log);
+    
     [MXLogger redirectNSLogToFiles:NO];
-
+    
     [MXLogger deleteLogFiles];
-
+    
     NSArray *logFiles = [MXLogger logFiles];
     XCTAssertEqual(logFiles.count, 0, @"All log files must have been deleted. deleteLogFiles returned: %@", logFiles);
 }

@@ -53,7 +53,7 @@
 
     if (_mac.count == 0 || _keys.length == 0)
     {
-        NSLog(@"[MXKeyVerification] Invalid MXKeyVerificationMac: %@", self);
+        MXLogDebug(@"[MXKeyVerification] Invalid MXKeyVerificationMac: %@", self);
         isValid = NO;
     }
 

@@ -267,7 +267,7 @@ NSString * const kMXCallKitAdapterAudioSessionDidActive = @"kMXCallKitAdapterAud
     update.supportsHolding = supportsHolding;
     
     [self.provider reportCallWithUUID:callUUID updated:update];
-    NSLog(@"[MXCallKitAdapter] updateSupportsHoldingForCall, call(%@) updated to: %u", call.callId, supportsHolding);
+    MXLogDebug(@"[MXCallKitAdapter] updateSupportsHoldingForCall, call(%@) updated to: %u", call.callId, supportsHolding);
 }
 
 + (BOOL)callKitAvailable
@@ -286,7 +286,7 @@ NSString * const kMXCallKitAdapterAudioSessionDidActive = @"kMXCallKitAdapterAud
 
 - (void)providerDidReset:(CXProvider *)provider
 {
-    NSLog(@"Provider did reset");
+    MXLogDebug(@"Provider did reset");
 }
 
 - (void)provider:(CXProvider *)provider didActivateAudioSession:(AVAudioSession *)audioSession

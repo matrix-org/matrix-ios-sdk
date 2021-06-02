@@ -21,6 +21,8 @@
 #import <CommonCrypto/CommonCryptor.h>
 #import <CommonCrypto/CommonKeyDerivation.h>
 
+#import "MXLog.h"
+
 NSString *const MXMegolmExportEncryptionErrorDomain = @"org.matrix.sdk.megolm.export";
 
 NSString *const MXMegolmExportEncryptionHeaderLine = @"-----BEGIN MEGOLM SESSION DATA-----";
@@ -153,7 +155,7 @@ NSString *const MXMegolmExportEncryptionTrailerLine = @"-----END MEGOLM SESSION 
         }
     }
 
-    NSLog(@"[MXMegolmExportEncryption] decryptMegolmKeyFile: decrypted %tu bytes in %.0fms", data.length, [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
+    MXLogDebug(@"[MXMegolmExportEncryption] decryptMegolmKeyFile: decrypted %tu bytes in %.0fms", data.length, [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
 
     return result;
 }
@@ -260,7 +262,7 @@ NSString *const MXMegolmExportEncryptionTrailerLine = @"-----END MEGOLM SESSION 
 
             NSData *keyFile = [MXMegolmExportEncryption packMegolmKeyFile:result];
 
-            NSLog(@"[MXMegolmExportEncryption] encryptMegolmKeyFile: encrypted %tu bytes in %.0fms", data.length, [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
+            MXLogDebug(@"[MXMegolmExportEncryption] encryptMegolmKeyFile: encrypted %tu bytes in %.0fms", data.length, [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
 
             return keyFile;
         }
@@ -346,7 +348,7 @@ NSString *const MXMegolmExportEncryptionTrailerLine = @"-----END MEGOLM SESSION 
     *aesKey = [derivedKey subdataWithRange:NSMakeRange(0, 32)];
     *hmacKey = [derivedKey subdataWithRange:NSMakeRange(32, derivedKey.length - 32)];
 
-    NSLog(@"[MXMegolmExportEncryption] deriveKeys: %tu iterations took %.0fms", iterations, [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
+    MXLogDebug(@"[MXMegolmExportEncryption] deriveKeys: %tu iterations took %.0fms", iterations, [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
 
     return result;
 }
@@ -468,7 +470,7 @@ NSString *const MXMegolmExportEncryptionTrailerLine = @"-----END MEGOLM SESSION 
         [s appendFormat:@"%hhu, ", bytes[i]];
     }
 
-    NSLog(@"%tu bytes:\n%@", data.length, s);
+    MXLogDebug(@"%tu bytes:\n%@", data.length, s);
 }
 
 @end

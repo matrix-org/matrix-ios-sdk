@@ -40,6 +40,7 @@ FOUNDATION_EXPORT NSString *MatrixSDKVersion;
 #import "MXEventsByTypesEnumeratorOnArray.h"
 
 #import "MXLogger.h"
+#import "MXLog.h"
 
 #import "MXTools.h"
 #import "MXThrottler.h"
