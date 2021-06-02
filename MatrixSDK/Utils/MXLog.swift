@@ -34,9 +34,6 @@ import SwiftyBeaver
     
     /// the subname for log files. Files will be named as 'console-[subLogName].log'. `nil` by default
     @objc public var subLogName: String? = nil
-    
-    /// whether logging runs asyncronously. `true` by default.
-    @objc public var asynchronous: Bool = true
 }
 
 /// MXLog logging levels. Use .none to disable logging entirely.
@@ -138,7 +135,7 @@ private var logger: SwiftyBeaver.Type = {
         
         let consoleDestination = ConsoleDestination()
         consoleDestination.useNSLog = true
-        consoleDestination.asynchronously = configuration.asynchronous
+        consoleDestination.asynchronously = false
         consoleDestination.format = "$C $M"
         consoleDestination.levelColor.verbose = ""
         consoleDestination.levelColor.debug = ""
