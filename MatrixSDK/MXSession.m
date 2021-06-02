@@ -1075,6 +1075,9 @@ typedef void (^MXOnResumeDone)(void);
         [user removeAllListeners];
     }
     
+    // Clean any cached initial sync response
+    [self.initialSyncResponseCache deleteData];
+    
     // Flush the store
     if ([_store respondsToSelector:@selector(close)])
     {
