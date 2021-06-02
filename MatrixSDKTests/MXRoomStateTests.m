@@ -861,11 +861,19 @@
                         XCTAssert([alice.originUserId isEqualToString:bobRestClient.credentials.userId], @"Wrong inviter: %@", alice.originUserId);
 
                         // The last message should be an invite m.room.member
-                        MXEvent *lastMessage = newRoom.summary.lastMessageEvent;
-                        XCTAssertEqual(lastMessage.eventType, MXEventTypeRoomMember, @"The last message should be an invite m.room.member");
-                        XCTAssertLessThan([[NSDate date] timeIntervalSince1970] * 1000 - lastMessage.originServerTs, 3000);
+                        [mxSession eventWithEventId:newRoom.summary.lastMessage.eventId
+                                             inRoom:newRoom.roomId
+                                            success:^(MXEvent *lastMessage) {
+                            
+                            XCTAssertEqual(lastMessage.eventType, MXEventTypeRoomMember, @"The last message should be an invite m.room.member");
+                            XCTAssertLessThan([[NSDate date] timeIntervalSince1970] * 1000 - lastMessage.originServerTs, 3000);
 
-                        [expectation fulfill];
+                            [expectation fulfill];
+                            
+                        } failure:^(NSError *error) {
+                            XCTFail(@"The request should not fail - NSError: %@", error);
+                            [expectation fulfill];
+                        }];
 
                     } failure:^(NSError *error) {
                         XCTFail(@"The request should not fail - NSError: %@", error);
@@ -920,10 +928,20 @@
                                 // The last message should be an invite m.room.member
                                 dispatch_async(dispatch_get_main_queue(), ^{    // We could also wait for kMXRoomSummaryDidChangeNotification
 
-                                    MXEvent *lastMessage = newRoom.summary.lastMessageEvent;
-                                    XCTAssertNotNil(lastMessage);
-                                    XCTAssertEqual(lastMessage.eventType, MXEventTypeRoomMember, @"The last message should be an invite m.room.member");
-                                    XCTAssertLessThan([[NSDate date] timeIntervalSince1970] * 1000 - lastMessage.originServerTs, 3000);
+                                    [mxSession eventWithEventId:newRoom.summary.lastMessage.eventId
+                                                         inRoom:newRoom.roomId
+                                                        success:^(MXEvent *lastMessage) {
+                                        
+                                        XCTAssertNotNil(lastMessage);
+                                        XCTAssertEqual(lastMessage.eventType, MXEventTypeRoomMember, @"The last message should be an invite m.room.member");
+                                        XCTAssertLessThan([[NSDate date] timeIntervalSince1970] * 1000 - lastMessage.originServerTs, 3000);
+                                        
+                                        [expectation fulfill];
+                                        
+                                    } failure:^(NSError *error) {
+                                        XCTFail(@"The request should not fail - NSError: %@", error);
+                                        [expectation fulfill];
+                                    }];
 
                                 });
                                 
@@ -1003,11 +1021,21 @@
                         XCTAssertEqual(newRoom.summary.membership, MXMembershipJoin);
 
                         XCTAssertNotNil(newRoom.summary.lastMessage.eventId);
-                        XCTAssertNotNil(newRoom.summary.lastMessageEvent);
                         
-                        XCTAssertEqual(newRoom.summary.lastMessageEvent.eventType, MXEventTypeRoomMember, @"The last should be a m.room.member event indicating Alice joining the room");
-                        
-                        [expectation fulfill];
+                        [mxSession eventWithEventId:newRoom.summary.lastMessage.eventId
+                                             inRoom:newRoom.roomId
+                                            success:^(MXEvent *event) {
+                            
+                            XCTAssertNotNil(event);
+                            
+                            XCTAssertEqual(event.eventType, MXEventTypeRoomMember, @"The last should be a m.room.member event indicating Alice joining the room");
+                            
+                            [expectation fulfill];
+                            
+                        } failure:^(NSError *error) {
+                            XCTFail(@"The request should not fail - NSError: %@", error);
+                            [expectation fulfill];
+                        }];
                         
                     } failure:^(NSError *error) {
                         XCTFail(@"The request should not fail - NSError: %@", error);
@@ -1058,10 +1086,21 @@
                             XCTAssertEqualObjects(roomState.topic, @"We test room invitation here");
 
                             XCTAssertEqual(newRoom.summary.membership, MXMembershipJoin);
-                            XCTAssertNotNil(newRoom.summary.lastMessageEvent);
-                            XCTAssertEqual(newRoom.summary.lastMessageEvent.eventType, MXEventTypeRoomMember, @"The last should be a m.room.member event indicating Alice joining the room");
+                            XCTAssertNotNil(newRoom.summary.lastMessage);
+                            
+                            [mxSession eventWithEventId:newRoom.summary.lastMessage.eventId
+                                                 inRoom:newRoom.roomId
+                                                success:^(MXEvent *event) {
+                                
+                                XCTAssertEqual(event.eventType, MXEventTypeRoomMember, @"The last should be a m.room.member event indicating Alice joining the room");
 
-                            [expectation fulfill];
+                                [expectation fulfill];
+                                
+                            } failure:^(NSError *error) {
+                                XCTFail(@"The request should not fail - NSError: %@", error);
+                                [expectation fulfill];
+                            }];
+                            
                         }];
                         
                     } failure:^(NSError *error) {

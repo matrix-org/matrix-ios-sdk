@@ -650,88 +650,130 @@
 
 - (void)checkLastMessageAfterPaginate:(MXRoom*)room
 {
-    MXEvent *lastMessage = room.summary.lastMessageEvent;
-    XCTAssertEqual(lastMessage.eventType, MXEventTypeRoomMessage);
+    [room.mxSession eventWithEventId:room.summary.lastMessage.eventId
+                              inRoom:room.roomId
+                             success:^(MXEvent *lastMessage) {
+        
+        XCTAssertEqual(lastMessage.eventType, MXEventTypeRoomMessage);
 
-    [room liveTimeline:^(MXEventTimeline *liveTimeline) {
+        [room liveTimeline:^(MXEventTimeline *liveTimeline) {
 
-        [liveTimeline resetPagination];
-        MXEvent *lastMessage2 = room.summary.lastMessageEvent;
-        XCTAssertEqualObjects(lastMessage2.eventId, lastMessage.eventId,  @"The last message should stay the same");
+            [liveTimeline resetPagination];
+            XCTAssertEqualObjects(room.summary.lastMessage.eventId, lastMessage.eventId,  @"The last message should stay the same");
 
-        [liveTimeline paginate:100 direction:MXTimelineDirectionBackwards onlyFromStore:NO complete:^() {
+            [liveTimeline paginate:100 direction:MXTimelineDirectionBackwards onlyFromStore:NO complete:^() {
 
-            MXEvent *lastMessage3 = room.summary.lastMessageEvent;
-            XCTAssertEqualObjects(lastMessage3.eventId, lastMessage.eventId,  @"The last message should stay the same");
+                XCTAssertEqualObjects(room.summary.lastMessage.eventId, lastMessage.eventId,  @"The last message should stay the same");
 
-            [expectation fulfill];
+                [expectation fulfill];
 
-        } failure:^(NSError *error) {
-            XCTFail(@"The request should not fail - NSError: %@", error);
-            [expectation fulfill];
+            } failure:^(NSError *error) {
+                XCTFail(@"The request should not fail - NSError: %@", error);
+                [expectation fulfill];
+            }];
         }];
-    }];
-}
-
-- (void)checkLastMessageProfileChange:(MXRoom*)room
-{
-    MXEvent *lastMessage = room.summary.lastMessageEvent;
-    XCTAssertEqual(lastMessage.eventType, MXEventTypeRoomMessage);
-
-    [room liveTimeline:^(MXEventTimeline *liveTimeline) {
-        [liveTimeline listenToEvents:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
-
-            // The room summary is handled afterwards
-            if (!observer)
-            {
-                observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXRoomSummaryDidChangeNotification object:room.summary queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
-
-                    MXEvent *lastMessage2 = room.summary.lastMessageEvent;
-                    XCTAssertNotNil(lastMessage2);
-                    XCTAssertEqual(lastMessage2.eventType, MXEventTypeRoomMember);
-                    XCTAssertNotEqualObjects(lastMessage2.eventId, lastMessage.eventId);
-
-                    [expectation fulfill];
-                }];
-            }
-        }];
-    }];
-
-    [room.mxSession.myUser setDisplayName:@"Toto" success:nil failure:^(NSError *error) {
+        
+    } failure:^(NSError *error) {
         XCTFail(@"The request should not fail - NSError: %@", error);
         [expectation fulfill];
     }];
 }
 
-- (void)checkLastMessageIgnoreProfileChange:(MXRoom*)room
+- (void)checkLastMessageProfileChange:(MXRoom*)room
 {
-    MXEvent *lastMessage = room.summary.lastMessageEvent;
-    XCTAssertEqual(lastMessage.eventType, MXEventTypeRoomMessage);
+    [room.mxSession eventWithEventId:room.summary.lastMessage.eventId
+                              inRoom:room.roomId
+                             success:^(MXEvent *lastMessage) {
+        
+        XCTAssertNotNil(lastMessage);
+        XCTAssertEqual(lastMessage.eventType, MXEventTypeRoomMessage);
 
-    // Ignore profile change
-    MXRoomSummaryUpdater *updater = [MXRoomSummaryUpdater roomSummaryUpdaterForSession:room.mxSession];
-    updater.ignoreMemberProfileChanges = YES;
+        [room liveTimeline:^(MXEventTimeline *liveTimeline) {
+            [liveTimeline listenToEvents:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
 
-    [room liveTimeline:^(MXEventTimeline *liveTimeline) {
-        [liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMember] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
+                // The room summary is handled afterwards
+                if (!observer)
+                {
+                    observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXRoomSummaryDidChangeNotification object:room.summary queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
 
-            MXEvent *lastMessage2 = room.summary.lastMessageEvent;
-            XCTAssertNotNil(lastMessage2);
-            XCTAssertEqual(lastMessage2.eventType, MXEventTypeRoomMessage);
-            XCTAssertEqualObjects(lastMessage2.eventId, lastMessage.eventId);
+                        [room.mxSession eventWithEventId:room.summary.lastMessage.eventId
+                                                  inRoom:room.roomId
+                                                 success:^(MXEvent *lastMessage2) {
+                            
+                            XCTAssertNotNil(lastMessage2);
+                            XCTAssertEqual(lastMessage2.eventType, MXEventTypeRoomMember);
+                            XCTAssertNotEqualObjects(room.summary.lastMessage.eventId, lastMessage.eventId);
 
-            // The room.summary.lastMessageEvent must no be updated in this case
-            [[NSNotificationCenter defaultCenter] addObserverForName:kMXRoomSummaryDidChangeNotification object:room.summary queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
-
-                XCTFail(@"The room.summary.lastMessageEvent must no be updated in this case");
-
+                            [expectation fulfill];
+                            
+                        } failure:^(NSError *error) {
+                            XCTFail(@"The request should not fail - NSError: %@", error);
+                            [expectation fulfill];
+                        }];
+                        
+                    }];
+                }
             }];
+        }];
 
+        [room.mxSession.myUser setDisplayName:@"Toto" success:nil failure:^(NSError *error) {
+            XCTFail(@"The request should not fail - NSError: %@", error);
             [expectation fulfill];
         }];
+        
+    } failure:^(NSError *error) {
+        XCTFail(@"The request should not fail - NSError: %@", error);
+        [expectation fulfill];
     }];
+    
+}
 
-    [room.mxSession.myUser setDisplayName:@"Toto" success:nil failure:^(NSError *error) {
+- (void)checkLastMessageIgnoreProfileChange:(MXRoom*)room
+{
+    [room.mxSession eventWithEventId:room.summary.lastMessage.eventId
+                              inRoom:room.roomId
+                             success:^(MXEvent *lastMessage) {
+        
+        XCTAssertEqual(lastMessage.eventType, MXEventTypeRoomMessage);
+
+        // Ignore profile change
+        MXRoomSummaryUpdater *updater = [MXRoomSummaryUpdater roomSummaryUpdaterForSession:room.mxSession];
+        updater.ignoreMemberProfileChanges = YES;
+
+        [room liveTimeline:^(MXEventTimeline *liveTimeline) {
+            [liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMember] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
+
+                [room.mxSession eventWithEventId:room.summary.lastMessage.eventId
+                                          inRoom:room.roomId
+                                         success:^(MXEvent *lastMessage2) {
+                    
+                    XCTAssertNotNil(lastMessage2);
+                    XCTAssertEqual(lastMessage2.eventType, MXEventTypeRoomMessage);
+                    XCTAssertEqualObjects(lastMessage2.eventId, lastMessage.eventId);
+
+                    // The room.summary.lastMessageEvent must no be updated in this case
+                    [[NSNotificationCenter defaultCenter] addObserverForName:kMXRoomSummaryDidChangeNotification object:room.summary queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
+
+                        XCTFail(@"The room.summary.lastMessageEvent must no be updated in this case");
+
+                    }];
+
+                    [expectation fulfill];
+                    
+                } failure:^(NSError *error) {
+                    XCTFail(@"The request should not fail - NSError: %@", error);
+                    [expectation fulfill];
+                }];
+                
+            }];
+        }];
+
+        [room.mxSession.myUser setDisplayName:@"Toto" success:nil failure:^(NSError *error) {
+            XCTFail(@"The request should not fail - NSError: %@", error);
+            [expectation fulfill];
+        }];
+        
+    } failure:^(NSError *error) {
         XCTFail(@"The request should not fail - NSError: %@", error);
         [expectation fulfill];
     }];
@@ -1288,34 +1330,41 @@
             [mxSession start:^{
 
                 MXRoom *room = [mxSession roomWithRoomId:roomId];
+                
+                [room.mxSession eventWithEventId:room.summary.lastMessage.eventId
+                                          inRoom:room.roomId
+                                         success:^(MXEvent *event) {
+                    
+                    NSUInteger age = event.age;
+                    uint64_t ageLocalTs = event.ageLocalTs;
 
-                MXEvent *event = room.summary.lastMessageEvent;
+                    if ([store respondsToSelector:@selector(close)])
+                    {
+                        [store close];
+                    }
 
-                NSUInteger age = event.age;
-                uint64_t ageLocalTs = event.ageLocalTs;
+                    [store openWithCredentials:matrixSDKTestsData.bobCredentials onComplete:^{
 
-                if ([store respondsToSelector:@selector(close)])
-                {
-                    [store close];
-                }
+                        MXEvent *sameEvent = [store eventWithEventId:event.eventId inRoom:roomId];
+                        XCTAssertNotNil(sameEvent);
 
-                [store openWithCredentials:matrixSDKTestsData.bobCredentials onComplete:^{
+                        NSUInteger sameEventAge = sameEvent.age;
+                        uint64_t sameEventAgeLocalTs = sameEvent.ageLocalTs;
 
-                    MXEvent *sameEvent = [store eventWithEventId:event.eventId inRoom:roomId];
-                    XCTAssertNotNil(sameEvent);
+                        XCTAssertGreaterThan(sameEventAge, 0, @"MXEvent.age should strictly positive");
+                        XCTAssertLessThanOrEqual(age, sameEventAge, @"MXEvent.age should auto increase");
+                        XCTAssertLessThanOrEqual(sameEventAge - age, 1000, @"sameEventAge and age should be almost the same");
 
-                    NSUInteger sameEventAge = sameEvent.age;
-                    uint64_t sameEventAgeLocalTs = sameEvent.ageLocalTs;
+                        XCTAssertEqual(ageLocalTs, sameEventAgeLocalTs, @"MXEvent.ageLocalTs must still be the same");
 
-                    XCTAssertGreaterThan(sameEventAge, 0, @"MXEvent.age should strictly positive");
-                    XCTAssertLessThanOrEqual(age, sameEventAge, @"MXEvent.age should auto increase");
-                    XCTAssertLessThanOrEqual(sameEventAge - age, 1000, @"sameEventAge and age should be almost the same");
-
-                    XCTAssertEqual(ageLocalTs, sameEventAgeLocalTs, @"MXEvent.ageLocalTs must still be the same");
-
-                    [expectation fulfill];
+                        [expectation fulfill];
+                    } failure:^(NSError *error) {
+                        XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                        [expectation fulfill];
+                    }];
+                    
                 } failure:^(NSError *error) {
-                    XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                    XCTFail(@"The request should not fail - NSError: %@", error);
                     [expectation fulfill];
                 }];
 

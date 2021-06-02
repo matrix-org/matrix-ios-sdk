@@ -95,9 +95,10 @@ NSString *uisiString = @"The sender's device has not sent us the keys for this m
         MXRoomSummaryUpdater *updater = [MXRoomSummaryUpdater roomSummaryUpdaterForSession:session];
         updated = [updater session:session updateRoomSummary:summary withLastEvent:event eventState:eventState roomState:roomState];
 
+        summary.lastMessage.text = testDelegateLastMessageString;
+
         XCTAssert(updated);
         XCTAssertEqualObjects(summary.lastMessage.eventId, event.eventId);
-        XCTAssertEqual(summary.lastMessage.originServerTs, event.originServerTs);
 
         testDelegate = YES;
     }
@@ -116,7 +117,7 @@ NSString *uisiString = @"The sender's device has not sent us the keys for this m
         }
         else
         {
-            summary.lastMessageEvent = event;
+            [summary updateLastMessage:[[MXRoomLastMessage alloc] initWithEvent:event]];
             updated = YES;
         }
     }
@@ -135,12 +136,23 @@ NSString *uisiString = @"The sender's device has not sent us the keys for this m
         // Do a classic update
         MXRoomSummaryUpdater *updater = [MXRoomSummaryUpdater roomSummaryUpdaterForSession:session];
         updated = [updater session:session updateRoomSummary:summary withLastEvent:event eventState:eventState roomState:roomState];
+
+        summary.lastMessage.text = event.content[@"body"];
     }
     else if ([self.description containsString:@"testLateRoomKey"])
     {
         // Do a classic update
         MXRoomSummaryUpdater *updater = [MXRoomSummaryUpdater roomSummaryUpdaterForSession:session];
         updated = [updater session:session updateRoomSummary:summary withLastEvent:event eventState:eventState roomState:roomState];
+
+        if (event.eventType == MXEventTypeRoomEncrypted)
+        {
+            summary.lastMessage.text = uisiString;
+        }
+        else
+        {
+            summary.lastMessage.text = event.content[@"body"];
+        }
     }
     else
     {
@@ -186,25 +198,19 @@ NSString *uisiString = @"The sender's device has not sent us the keys for this m
         MXRoomSummary *summary = room.summary;
         mxSession.roomSummaryUpdateDelegate = self;
 
-        __block NSString *lastMessageEventId;
+        __block NSString *lastEventId;
 
-        self->observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXRoomSummaryDidChangeNotification object:summary queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
+        observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXRoomSummaryDidChangeNotification object:summary queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
 
-            XCTAssert(self->testDelegate);
-            XCTAssertEqualObjects(summary.lastMessage.eventId, lastMessageEventId);
-            
-            [summary loadLastEvent:^{
-                XCTAssertTrue(NSThread.isMainThread);
-                MXEvent *event = summary.lastMessageEvent;
-                
-                XCTAssertNotNil(event);
-                
-                [expectation fulfill];
-            }];
+            XCTAssert(testDelegate);
+            XCTAssertEqualObjects(summary.lastMessage.eventId, lastEventId);
+            XCTAssertEqualObjects(summary.lastMessage.text, testDelegateLastMessageString);
+
+            [expectation fulfill];
         }];
 
         [room sendTextMessage:@"new message" success:^(NSString *eventId) {
-            lastMessageEventId = eventId;
+            lastEventId = eventId;
         } failure:^(NSError *error) {
             XCTFail(@"Cannot set up intial test conditions - error: %@", error);
             [expectation fulfill];
@@ -220,12 +226,12 @@ NSString *uisiString = @"The sender's device has not sent us the keys for this m
         MXRoomSummary *summary = room.summary;
         mxSession.roomSummaryUpdateDelegate = self;
 
-        MXEvent *lastMessageEvent = summary.lastMessageEvent;
+        NSString *lastEventId = summary.lastMessage.eventId;
 
-        self->observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXRoomSummaryDidChangeNotification object:summary queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
+        observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXRoomSummaryDidChangeNotification object:summary queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
 
-            XCTAssert(self->testNoChangeDelegate);
-            XCTAssertEqualObjects(summary.lastMessageEvent.eventId, lastMessageEvent.eventId);
+            XCTAssert(testNoChangeDelegate);
+            XCTAssertEqualObjects(summary.lastMessage.eventId, lastEventId);
 
             [expectation fulfill];
         }];
@@ -260,22 +266,13 @@ NSString *uisiString = @"The sender's device has not sent us the keys for this m
                 MXRoomSummary *summary2 = [mxSession2 roomSummaryWithRoomId:roomId];
 
                 XCTAssert(summary2);
-                XCTAssertNil(summary2.lastMessage, @"We asked for loading 0 message. So, we cannot know the last message yet");
+                XCTAssertNil(summary2.lastMessage.eventId, @"We asked for loading 0 message. So, we cannot know the last message yet");
 
-                self->observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXRoomSummaryDidChangeNotification object:summary2 queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
+                observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXRoomSummaryDidChangeNotification object:summary2 queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
 
                     XCTAssert(summary2);
                     XCTAssert(summary2.lastMessage.eventId, @"We must have an event now");
-                    
-                    [summary2 loadLastEvent:^{
-                        XCTAssertNotNil(summary2.lastMessageEvent);
-                        XCTAssertFalse(summary2.lastMessageEvent.isEncrypted);
-                    }];
-
-                    MXEvent *event2 = summary2.lastMessageEvent;
-
-                    XCTAssert(event2);
-                    XCTAssertEqual(event2.eventType, MXEventTypeRoomMessage);
+                    XCTAssertFalse(summary.lastMessage.isEncrypted);
 
                     [expectation fulfill];
                 }];
@@ -331,7 +328,7 @@ NSString *uisiString = @"The sender's device has not sent us the keys for this m
                     MXRoomSummary *summary2 = [mxSession2 roomSummaryWithRoomId:roomId];
 
                     XCTAssert(summary2);
-                    XCTAssertNil(summary2.lastMessage, @"We asked for loading 0 message. So, we cannot know the last message yet");
+                    XCTAssertNil(summary2.lastMessage.eventId, @"We asked for loading 0 message. So, we cannot know the last message yet");
 
 
                     // Force the summary to fetch events from the homeserver to get the last one
@@ -350,10 +347,7 @@ NSString *uisiString = @"The sender's device has not sent us the keys for this m
                     self->observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXRoomSummaryDidChangeNotification object:summary2 queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
 
                         XCTAssert(summary2);
-                        XCTAssert(summary2.lastMessage, @"We must have an event now");
-
-                        MXEvent *event2 = summary2.lastMessageEvent;
-                        XCTAssert(event2);
+                        XCTAssert(summary2.lastMessage.eventId, @"We must have an event now");
 
                         XCTAssertNotEqual(urlSessionDataTask, operation.operation, @"operation should have mutated as several http requests are required");
                         
@@ -391,22 +385,19 @@ NSString *uisiString = @"The sender's device has not sent us the keys for this m
         [mxSession2 setStore:[[MXMemoryStore alloc] init] success:^{
 
             // Start a new session by loading no message
-            [mxSession2 startWithSyncFilter:[MXFilterJSONModel syncFilterWithMessageLimit:1] onServerSyncDone:^{
+            [mxSession2 startWithSyncFilter:[MXFilterJSONModel syncFilterWithMessageLimit:0] onServerSyncDone:^{
 
                 MXRoomSummary *summary2 = [mxSession2 roomSummaryWithRoomId:roomId];
 
                 XCTAssert(summary2);
-                XCTAssertNil(summary2.lastMessage, @"We asked for loading 0 message. So, we cannot know the last message yet");
+                XCTAssertNil(summary2.lastMessage.eventId, @"We asked for loading 0 message. So, we cannot know the last message yet");
 
                 self->observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXRoomSummaryDidChangeNotification object:summary2 queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
 
+                    [[NSNotificationCenter defaultCenter] removeObserver:self->observer];
+                    
                     XCTAssert(summary2);
                     XCTAssert(summary2.lastMessage.eventId, @"We must have an event now");
-
-                    MXEvent *event2 = summary2.lastMessageEvent;
-
-                    XCTAssert(event2);
-                    XCTAssertEqual(event2.eventType, MXEventTypeRoomMessage);
 
                     [expectation fulfill];
                 }];
@@ -433,7 +424,7 @@ NSString *uisiString = @"The sender's device has not sent us the keys for this m
 
         NSString *displayName = @"A room";
 
-        self->observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXRoomSummaryDidChangeNotification object:summary queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
+        observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXRoomSummaryDidChangeNotification object:summary queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
 
              XCTAssertEqualObjects(summary.displayname, displayName, @"Room summary must be updated");
 
@@ -486,7 +477,7 @@ NSString *uisiString = @"The sender's device has not sent us the keys for this m
         XCTAssertEqual(room.summary.membersCount.joined, 1);
         XCTAssertEqual(room.summary.membersCount.invited, 0);
 
-        [self->matrixSDKTestsData doMXSessionTestWithAlice:nil readyToTest:^(MXSession *aliceSession, XCTestExpectation *expectation2) {
+        [matrixSDKTestsData doMXSessionTestWithAlice:nil readyToTest:^(MXSession *aliceSession, XCTestExpectation *expectation2) {
 
             [room liveTimeline:^(MXEventTimeline *liveTimeline) {
                 [liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMember] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
@@ -550,15 +541,20 @@ NSString *uisiString = @"The sender's device has not sent us the keys for this m
 
         NSString *userDisplayName = @"NewBob";
 
-        self->observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXRoomSummaryDidChangeNotification object:summary queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
+        observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXRoomSummaryDidChangeNotification object:summary queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
 
-            MXEvent *event = summary.lastMessageEvent;
+            [mxSession eventWithEventId:summary.lastMessage.eventId inRoom:room.roomId success:^(MXEvent *event) {
+                
+                XCTAssert(event);
+                XCTAssertFalse(event.isLocalEvent);
+                XCTAssertEqual(event.eventType, MXEventTypeRoomMember);
 
-            XCTAssert(event);
-            XCTAssertFalse(event.isLocalEvent);
-            XCTAssertEqual(event.eventType, MXEventTypeRoomMember);
-
-            [expectation fulfill];
+                [expectation fulfill];
+                
+            } failure:^(NSError *error) {
+                XCTFail(@"Cannot set up initial test conditions - error: %@", error);
+                [expectation fulfill];
+            }];
         }];
 
         [mxSession.myUser setDisplayName:userDisplayName success:nil failure:^(NSError *error) {
@@ -580,7 +576,7 @@ NSString *uisiString = @"The sender's device has not sent us the keys for this m
 
         NSString *userDisplayName = @"NewBob";
 
-        self->observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXRoomSummaryDidChangeNotification object:summary queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
+        observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXRoomSummaryDidChangeNotification object:summary queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
 
             XCTFail(@"The last message should not change if ignoreMemberProfileChanges == YES");
             [expectation fulfill];
@@ -589,13 +585,18 @@ NSString *uisiString = @"The sender's device has not sent us the keys for this m
         // Wait to check that no notification happens
         dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 2 * NSEC_PER_SEC), dispatch_get_main_queue(), ^{
 
-            MXEvent *event = summary.lastMessageEvent;
+            [mxSession eventWithEventId:summary.lastMessage.eventId inRoom:room.roomId success:^(MXEvent *event) {
+                
+                XCTAssert(event);
+                XCTAssertFalse(event.isLocalEvent);
+                XCTAssertNotEqual(event.eventType, MXEventTypeRoomMember, @"The last message must not be the change of Bob's displayname");
 
-            XCTAssert(event);
-            XCTAssertFalse(event.isLocalEvent);
-            XCTAssertNotEqual(event.eventType, MXEventTypeRoomMember, @"The last message must not be the change of Bob's displayname");
-
-            [expectation fulfill];
+                [expectation fulfill];
+                
+            } failure:^(NSError *error) {
+                XCTFail(@"Cannot set up initial test conditions - error: %@", error);
+                [expectation fulfill];
+            }];
 
         });
 
@@ -613,58 +614,66 @@ NSString *uisiString = @"The sender's device has not sent us the keys for this m
 
         MXRoomSummary *summary = room.summary;
 
-        __block NSString *lastMessageEventId;
+        __block NSString *lastEventId;
         MXEvent *localEcho;
 
         __block NSUInteger notifCount = 0;
-        self->observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXRoomSummaryDidChangeNotification object:summary queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
+        observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXRoomSummaryDidChangeNotification object:summary queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
 
-            MXEvent *event = summary.lastMessageEvent;
-
-            switch (notifCount++)
-            {
-                case 0:
+            [mxSession eventWithEventId:summary.lastMessage.eventId inRoom:room.roomId success:^(MXEvent *event) {
+                
+                switch (notifCount++)
                 {
-                    // First notif is for the echo
-                    XCTAssert([summary.lastMessage.eventId hasPrefix:kMXEventLocalEventIdPrefix]);
+                    case 0:
+                    {
+                        // First notif is for the echo
+                        XCTAssert([summary.lastMessage.eventId hasPrefix:kMXEventLocalEventIdPrefix]);
 
-                    XCTAssert(event);
-                    XCTAssert(event.isLocalEvent);
-                    XCTAssertEqual(event.sentState, MXEventSentStateSending);
-                    break;
+                        XCTAssert(event);
+                        XCTAssert(event.isLocalEvent);
+                        XCTAssertEqual(event.sentState, MXEventSentStateSending);
+                        break;
+                    }
+
+                    case 1:
+                    {
+                        // 2nd notif must be an intermediate state where the event id
+                        // changes from a local event id to the final event id
+                        XCTAssert(event);
+                        XCTAssertFalse(event.isLocalEvent);
+                        XCTAssertEqual(event.sentState, MXEventSentStateSending);
+
+                        [expectation fulfill];
+
+                        break;
+                    }
+
+                    case 2:
+                    {
+                        // 3rd notif must be the event sent back by the hs
+                        XCTAssert(event);
+                        XCTAssertFalse(event.isLocalEvent);
+                        XCTAssertEqual(event.sentState, MXEventSentStateSent);
+
+                        XCTAssertEqualObjects(summary.lastMessage.eventId, lastEventId);
+
+                        [expectation fulfill];
+
+                        break;
+                    }
                 }
 
-                case 1:
-                {
-                    // 2nd notif must be an intermediate state where the event id
-                    // changes from a local event id to the final event id
-                    XCTAssert(event);
-                    XCTAssertFalse(event.isLocalEvent);
-                    XCTAssertEqual(event.sentState, MXEventSentStateSending);
-
-                    [expectation fulfill];
-
-                    break;
-                }
-
-                case 2:
-                {
-                    // 3rd notif must be the event sent back by the hs
-                    XCTAssert(event);
-                    XCTAssertFalse(event.isLocalEvent);
-                    XCTAssertEqual(event.sentState, MXEventSentStateSent);
-
-                    XCTAssertEqualObjects(summary.lastMessage.eventId, lastMessageEventId);
-
-                    [expectation fulfill];
-
-                    break;
-                }
-            }
+                [expectation fulfill];
+                
+            } failure:^(NSError *error) {
+                XCTFail(@"Cannot set up initial test conditions - error: %@", error);
+                [expectation fulfill];
+            }];
+            
         }];
 
         [room sendTextMessage:@"new message" formattedText:nil localEcho:&localEcho success:^(NSString *eventId) {
-            lastMessageEventId = eventId;
+            lastEventId = eventId;
         } failure:^(NSError *error) {
             XCTFail(@"Cannot set up intial test conditions - error: %@", error);
             [expectation fulfill];
@@ -683,35 +692,41 @@ NSString *uisiString = @"The sender's device has not sent us the keys for this m
         MXEvent *localEcho;
 
         __block NSUInteger notifCount = 0;
-        self->observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXRoomSummaryDidChangeNotification object:summary queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
+        observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXRoomSummaryDidChangeNotification object:summary queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
 
-            MXEvent *event = summary.lastMessageEvent;
-
-            switch (notifCount++)
-            {
-                case 0:
+            [mxSession eventWithEventId:summary.lastMessage.eventId inRoom:room.roomId success:^(MXEvent *event) {
+                
+                switch (notifCount++)
                 {
-                    // First notif is for the echo
-                    XCTAssert([summary.lastMessage.eventId hasPrefix:kMXEventLocalEventIdPrefix]);
+                    case 0:
+                    {
+                        // First notif is for the echo
+                        XCTAssert([summary.lastMessage.eventId hasPrefix:kMXEventLocalEventIdPrefix]);
 
-                    XCTAssert(event);
-                    XCTAssert(event.isLocalEvent);
-                    XCTAssertEqual(event.sentState, MXEventSentStateSending);
-                    break;
+                        XCTAssert(event);
+                        XCTAssert(event.isLocalEvent);
+                        XCTAssertEqual(event.sentState, MXEventSentStateSending);
+                        break;
+                    }
+
+                    case 1:
+                    {
+                        // 2nd notif must be the event failure notification
+                        XCTAssert(event);
+                        XCTAssert(event.isLocalEvent);
+                        XCTAssertEqual(event.sentState, MXEventSentStateFailed);
+
+                        [expectation fulfill];
+
+                        break;
+                    }
                 }
-
-                case 1:
-                {
-                    // 2nd notif must be the event failure notification
-                    XCTAssert(event);
-                    XCTAssert(event.isLocalEvent);
-                    XCTAssertEqual(event.sentState, MXEventSentStateFailed);
-
-                    [expectation fulfill];
-
-                    break;
-                }
-            }
+                
+            } failure:^(NSError *error) {
+                XCTFail(@"Cannot set up initial test conditions - error: %@", error);
+                [expectation fulfill];
+            }];
+            
         }];
 
         MXHTTPOperation *operation = [room sendTextMessage:@"new message" formattedText:nil localEcho:&localEcho success:^(NSString *eventId) {
@@ -780,12 +795,12 @@ NSString *uisiString = @"The sender's device has not sent us the keys for this m
         MXRoomSummary *summary = room.summary;
 
         __block NSString *newEventId;
-        NSString *lastMessageEventId = summary.lastMessage.eventId;
+        NSString *lastEventId = summary.lastMessage.eventId;
 
-        XCTAssert(lastMessageEventId);
+        XCTAssert(lastEventId);
 
         __block NSUInteger notifCount = 0;
-        self->observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXRoomSummaryDidChangeNotification object:summary queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
+        observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXRoomSummaryDidChangeNotification object:summary queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
 
             switch (notifCount++)
             {
@@ -809,7 +824,7 @@ NSString *uisiString = @"The sender's device has not sent us the keys for this m
 
                 case 4:
                 {
-                    XCTAssertEqualObjects(summary.lastMessage.eventId, lastMessageEventId, @"We must come back to the previous event");
+                    XCTAssertEqualObjects(summary.lastMessage.eventId, lastEventId, @"We must come back to the previous event");
 
                     [expectation fulfill];
                     break;
@@ -841,41 +856,47 @@ NSString *uisiString = @"The sender's device has not sent us the keys for this m
 
         MXRoomSummary *summary = room.summary;
 
-        NSString *lastMessageEventId = summary.lastMessage.eventId;
-        XCTAssert(lastMessageEventId);
+        NSString *lastEventId = summary.lastMessage.eventId;
+        XCTAssert(lastEventId);
 
         __block NSUInteger notifCount = 0;
         self->observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXRoomSummaryDidChangeNotification object:summary queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
 
-            switch (notifCount++)
-            {
-                case 0:
+            [mxSession eventWithEventId:summary.lastMessage.eventId
+                                 inRoom:room.roomId
+                                success:^(MXEvent *event) {
+                
+                switch (notifCount++)
                 {
-                    // This is the display name change
-                    XCTAssertEqual(summary.lastMessageEvent.eventType, MXEventTypeRoomMember);
+                    case 0:
+                    {
+                        // This is the display name change
+                        XCTAssertEqual(event.eventType, MXEventTypeRoomMember);
 
-                    // Redact its event
-                    [room redactEvent:summary.lastMessage.eventId reason:nil success:nil failure:^(NSError *error) {
-                        XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                        // Redact its event
+                        [room redactEvent:summary.lastMessage.eventId reason:nil success:nil failure:^(NSError *error) {
+                            XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                            [expectation fulfill];
+                        }];
+
+                        break;
+                    }
+
+                    case 2:
+                    {
+                        XCTAssertEqualObjects(summary.lastMessage.eventId, lastEventId, @"We must come back to the previous event");
+
                         [expectation fulfill];
-                    }];
+                        break;
+                    }
 
-                    break;
+                    default:
+                        break;
                 }
-
-                case 2:
-                {
-                    XCTAssertEqualObjects(summary.lastMessage.eventId, lastMessageEventId, @"We must come back to the previous event");
-
-                    [expectation fulfill];
-                    break;
-                }
-
-                default:
-                    break;
-            }
+                
+            } failure:nil];
+            
         }];
-
 
         [mxSession.myUser setDisplayName:@"NewBob" success:^{
 
@@ -905,62 +926,71 @@ NSString *uisiString = @"The sender's device has not sent us the keys for this m
         __block NSUInteger notifCount = 0;
         self->observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXRoomSummaryDidChangeNotification object:summary queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
 
-            switch (notifCount++)
-            {
-                case 0:
+            [mxSession eventWithEventId:summary.lastMessage.eventId
+                                 inRoom:room.roomId
+                                success:^(MXEvent *event) {
+                
+                switch (notifCount++)
                 {
-                    // This is the display name change
-                    XCTAssertEqual(summary.lastMessageEvent.eventType, MXEventTypeRoomMember);
+                    case 0:
+                    {
+                        // This is the display name change
+                        XCTAssertEqual(event.eventType, MXEventTypeRoomMember);
 
-                    // Redact its event
-                    [room redactEvent:summary.lastMessage.eventId reason:nil success:nil failure:^(NSError *error) {
-                        XCTFail(@"Cannot set up intial test conditions - error: %@", error);
-                        [expectation fulfill];
-                    }];
-
-                    break;
-                }
-
-                case 1:
-                {
-                    MXRestClient *bobRestClient = mxSession.matrixRestClient;
-                    [mxSession close];
-
-                    // Restarting the session with a new MXMemoryStore is equivalent to
-                    // clearing the cache of MXFileStore
-                    MXSession *mxSession2 = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
-                    [mxSession2 setStore:[[MXMemoryStore alloc] init] success:^{
-
-                        MXRoomSummaryUpdater *defaultUpdater = [MXRoomSummaryUpdater roomSummaryUpdaterForSession:mxSession2];
-                        defaultUpdater.ignoreRedactedEvent = YES;
-
-                        // Start a new session by loading no message
-                        [mxSession2 startWithSyncFilter:[MXFilterJSONModel syncFilterWithMessageLimit:10] onServerSyncDone:^{
-
-                            MXRoomSummary *summary2 = [mxSession2 roomSummaryWithRoomId:roomId];
-
-                            XCTAssert(summary2);
-                            XCTAssertEqualObjects(summary2.lastMessage.eventId, lastMessageEventId, @"We must come back to the previous event");
-
+                        // Redact its event
+                        [room redactEvent:summary.lastMessage.eventId reason:nil success:nil failure:^(NSError *error) {
+                            XCTFail(@"Cannot set up intial test conditions - error: %@", error);
                             [expectation fulfill];
+                        }];
 
+                        break;
+                    }
+
+                    case 1:
+                    {
+                        MXRestClient *bobRestClient = mxSession.matrixRestClient;
+                        [mxSession close];
+
+                        // Restarting the session with a new MXMemoryStore is equivalent to
+                        // clearing the cache of MXFileStore
+                        MXSession *mxSession2 = [[MXSession alloc] initWithMatrixRestClient:bobRestClient];
+                        [mxSession2 setStore:[[MXMemoryStore alloc] init] success:^{
+
+                            MXRoomSummaryUpdater *defaultUpdater = [MXRoomSummaryUpdater roomSummaryUpdaterForSession:mxSession2];
+                            defaultUpdater.ignoreRedactedEvent = YES;
+
+                            // Start a new session by loading no message
+                            [mxSession2 startWithSyncFilter:[MXFilterJSONModel syncFilterWithMessageLimit:10] onServerSyncDone:^{
+
+                                MXRoomSummary *summary2 = [mxSession2 roomSummaryWithRoomId:roomId];
+
+                                XCTAssert(summary2);
+                                XCTAssertEqualObjects(summary2.lastMessage.eventId, lastMessageEventId, @"We must come back to the previous event");
+
+                                [expectation fulfill];
+
+                            } failure:^(NSError *error) {
+                                XCTFail(@"Cannot set up intial test conditions - error: %@", error);
+                                [expectation fulfill];
+                            }];
                         } failure:^(NSError *error) {
                             XCTFail(@"Cannot set up intial test conditions - error: %@", error);
                             [expectation fulfill];
                         }];
-                    } failure:^(NSError *error) {
-                        XCTFail(@"Cannot set up intial test conditions - error: %@", error);
-                        [expectation fulfill];
-                    }];
 
-                    break;
+                        break;
+                    }
+
+                    default:
+                        break;
                 }
-
-                default:
-                    break;
-            }
+                
+            } failure:^(NSError *error) {
+                XCTFail(@"Cannot set up initial test conditions - error: %@", error);
+                [expectation fulfill];
+            }];
+            
         }];
-
 
         [mxSession.myUser setDisplayName:@"NewBob" success:nil failure:^(NSError *error) {
             XCTFail(@"Cannot set up intial test conditions - error: %@", error);
@@ -980,7 +1010,7 @@ NSString *uisiString = @"The sender's device has not sent us the keys for this m
 
         NSString *displayName = @"A room";
 
-        self->observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXRoomSummaryDidChangeNotification object:summary queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
+        observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXRoomSummaryDidChangeNotification object:summary queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
 
             [room state:^(MXRoomState *roomState) {
 
@@ -1018,65 +1048,74 @@ NSString *uisiString = @"The sender's device has not sent us the keys for this m
         __block NSString *lastMessageEventId;
         MXEvent *localEcho;
 
-        self->observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXRoomSummaryDidChangeNotification object:summary queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
+        observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXRoomSummaryDidChangeNotification object:summary queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
 
-            MXEvent *event = summary.lastMessageEvent;
+            [aliceSession eventWithEventId:summary.lastMessage.eventId
+                                    inRoom:room.roomId
+                                   success:^(MXEvent *event) {
 
-            XCTAssert(event);
-            XCTAssertFalse(event.isLocalEvent);
-            XCTAssertEqual(event.sentState, MXEventSentStateSent);
+                XCTAssert(event);
+                XCTAssertFalse(event.isLocalEvent);
+                XCTAssertEqual(event.sentState, MXEventSentStateSent);
 
-            XCTAssert(event.isEncrypted);
+                XCTAssert(event.isEncrypted);
 
-            XCTAssertEqualObjects(summary.lastMessage.eventId, lastMessageEventId);
-            XCTAssert(summary.lastMessageEvent.isEncrypted);
-            
-            XCTAssert(event.isEncrypted);
-            XCTAssert(summary.isEncrypted);
+                XCTAssertEqualObjects(summary.lastMessage.eventId, lastMessageEventId);
+                XCTAssertEqualObjects(summary.lastMessage.text, message);
+                XCTAssert(summary.lastMessage.isEncrypted);
 
-            // Use dispatch_async for not closing the session in the middle of stg
-            dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 0.1 * NSEC_PER_SEC), dispatch_get_main_queue(), ^{
+                XCTAssert(event.isEncrypted);
+                XCTAssert(summary.isEncrypted);
 
-                // Close the session
-                MXRestClient *aliceRestClient = aliceSession.matrixRestClient;
-                [aliceSession close];
+                // Use dispatch_async for not closing the session in the middle of stg
+                dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 0.1 * NSEC_PER_SEC), dispatch_get_main_queue(), ^{
 
-                // And check the store
-                id<MXStore> store = [[MXFileStore alloc] init];
-                [store openWithCredentials:aliceRestClient.credentials onComplete:^{
+                    // Close the session
+                    MXRestClient *aliceRestClient = aliceSession.matrixRestClient;
+                    [aliceSession close];
 
-                    // A hack to directly read the file built by MXFileStore
-                    NSString *roomSummaryFile = [store performSelector:@selector(summaryFileForRoom:forBackup:) withObject:roomId withObject:NSNull.null];
-                    XCTAssert(roomSummaryFile.length);
-                    XCTAssertGreaterThan(roomSummaryFile.length, 0);
-                    [store close];
+                    // And check the store
+                    id<MXStore> store = [[MXFileStore alloc] init];
+                    [store openWithCredentials:aliceRestClient.credentials onComplete:^{
 
-                    NSData *roomSummaryFileData = [[NSData alloc] initWithContentsOfFile:roomSummaryFile];
-                    XCTAssertGreaterThan(roomSummaryFileData.length, 0);
+                        // A hack to directly read the file built by MXFileStore
+                        NSString *roomSummaryFile = [store performSelector:@selector(summaryFileForRoom:forBackup:) withObject:roomId withObject:NSNull.null];
+                        XCTAssert(roomSummaryFile.length);
+                        XCTAssertGreaterThan(roomSummaryFile.length, 0);
+                        [store close];
 
-                    NSData *pattern = [lastMessageEventId dataUsingEncoding:NSUTF8StringEncoding];
-                    NSRange range = [roomSummaryFileData rangeOfData:pattern options:0 range:NSMakeRange(0, roomSummaryFileData.length)];
-                    XCTAssertNotEqual(range.location, NSNotFound, @"We must find the event id in this file. Else this test is not valid");
+                        NSData *roomSummaryFileData = [[NSData alloc] initWithContentsOfFile:roomSummaryFile];
+                        XCTAssertGreaterThan(roomSummaryFileData.length, 0);
 
-                    pattern = [message dataUsingEncoding:NSUTF8StringEncoding];
-                    range = [roomSummaryFileData rangeOfData:pattern options:0 range:NSMakeRange(0, roomSummaryFileData.length)];
-                    XCTAssertEqual(range.location, NSNotFound, @"We must not stored decrypted data");
+                        NSData *pattern = [lastMessageEventId dataUsingEncoding:NSUTF8StringEncoding];
+                        NSRange range = [roomSummaryFileData rangeOfData:pattern options:0 range:NSMakeRange(0, roomSummaryFileData.length)];
+                        XCTAssertNotEqual(range.location, NSNotFound, @"We must find the event id in this file. Else this test is not valid");
+
+                        pattern = [message dataUsingEncoding:NSUTF8StringEncoding];
+                        range = [roomSummaryFileData rangeOfData:pattern options:0 range:NSMakeRange(0, roomSummaryFileData.length)];
+                        XCTAssertEqual(range.location, NSNotFound, @"We must not stored decrypted data");
 
 
-                    // Then reopen a session on this store
-                    MXSession *aliceSession2 = [[MXSession alloc] initWithMatrixRestClient:aliceRestClient];
-                    [aliceSession2 setStore:[[MXFileStore alloc] init] success:^{
+                        // Then reopen a session on this store
+                        MXSession *aliceSession2 = [[MXSession alloc] initWithMatrixRestClient:aliceRestClient];
+                        [aliceSession2 setStore:[[MXFileStore alloc] init] success:^{
 
-                        [aliceSession2 start:^{
+                            [aliceSession2 start:^{
 
-                            MXRoomSummary *summary2 = [aliceSession2.store summaryOfRoom:roomId];
+                                MXRoomSummary *summary2 = [aliceSession2.store summaryOfRoom:roomId];
 
-                            XCTAssert(summary2.isEncrypted);
-                            XCTAssertEqualObjects(summary2.lastMessage.eventId, lastMessageEventId);
-                            
-                            [summary loadLastEvent:^{
-                                XCTAssert(summary.lastMessageEvent.isEncrypted);
-                                
+                                XCTAssert(summary2.isEncrypted);
+                                XCTAssertEqualObjects(summary2.lastMessage.eventId, lastMessageEventId);
+                                XCTAssert(summary.lastMessage.isEncrypted);
+                                XCTAssertEqualObjects(summary2.lastMessage.text, message, @"Once the session is started, the message should be decrypted (in memory)");
+
+                                XCTAssertNil(summary2.lastMessage.attributedText, @"We did not stored an attributed string");
+                                XCTAssertEqual(summary2.lastMessage.others.count, 0, @"We did not stored any others");
+
+                                [expectation fulfill];
+
+                            } failure:^(NSError *error) {
+                                XCTFail(@"Cannot set up intial test conditions - error: %@", error);
                                 [expectation fulfill];
                             }];
 
@@ -1084,17 +1123,17 @@ NSString *uisiString = @"The sender's device has not sent us the keys for this m
                             XCTFail(@"Cannot set up intial test conditions - error: %@", error);
                             [expectation fulfill];
                         }];
-
+                        
                     } failure:^(NSError *error) {
                         XCTFail(@"Cannot set up intial test conditions - error: %@", error);
                         [expectation fulfill];
                     }];
-                    
-                } failure:^(NSError *error) {
-                    XCTFail(@"Cannot set up intial test conditions - error: %@", error);
-                    [expectation fulfill];
-                }];
-            });
+                });
+                
+            } failure:^(NSError *error) {
+                XCTFail(@"Cannot set up initial test conditions - error: %@", error);
+                [expectation fulfill];
+            }];
         }];
 
         [room sendTextMessage:message formattedText:nil localEcho:&localEcho success:^(NSString *eventId) {
@@ -1121,41 +1160,55 @@ NSString *uisiString = @"The sender's device has not sent us the keys for this m
         __block NSString *lastMessageEventId;
         MXEvent *localEcho;
 
-        self->observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXRoomSummaryDidChangeNotification object:summary queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
+        observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXRoomSummaryDidChangeNotification object:summary queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
 
-            MXEvent *event = summary.lastMessageEvent;
+            [aliceSession eventWithEventId:summary.lastMessage.eventId
+                                    inRoom:room.roomId
+                                   success:^(MXEvent *event) {
 
-            XCTAssert(event);
-            XCTAssertEqualObjects(event.eventId, lastMessageEventId);
-            XCTAssert(event.clearEvent, @"The event must have been decrypted by MXRoomSummary.lastMessageEvent");
-            XCTAssertEqual(event.eventType, MXEventTypeRoomMessage);
-            XCTAssertEqualObjects(event.content[@"body"], message);
+                XCTAssert(event);
+                XCTAssertEqualObjects(event.eventId, lastMessageEventId);
+                XCTAssert(event.clearEvent, @"The event must have been decrypted by MXRoomSummary.lastMessageEvent");
+                XCTAssertEqual(event.eventType, MXEventTypeRoomMessage);
+                XCTAssertEqualObjects(event.content[@"body"], message);
 
-            // Use dispatch_async for not closing the session in the middle of stg
-            dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 0.1 * NSEC_PER_SEC), dispatch_get_main_queue(), ^{
+                // Use dispatch_async for not closing the session in the middle of stg
+                dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 0.1 * NSEC_PER_SEC), dispatch_get_main_queue(), ^{
 
-                // Close the session
-                MXRestClient *aliceRestClient = aliceSession.matrixRestClient;
-                [aliceSession close];
+                    // Close the session
+                    MXRestClient *aliceRestClient = aliceSession.matrixRestClient;
+                    [aliceSession close];
 
-                // Then reopen a session
-                MXSession *aliceSession2 = [[MXSession alloc] initWithMatrixRestClient:aliceRestClient];
-                [aliceSession2 setStore:[[MXFileStore alloc] init] success:^{
+                    // Then reopen a session
+                    MXSession *aliceSession2 = [[MXSession alloc] initWithMatrixRestClient:aliceRestClient];
+                    [aliceSession2 setStore:[[MXFileStore alloc] init] success:^{
 
-                    [aliceSession2 start:^{
+                        [aliceSession2 start:^{
 
-                        MXRoomSummary *summary2 = [aliceSession2 roomSummaryWithRoomId:roomId];
+                            MXRoomSummary *summary2 = [aliceSession2 roomSummaryWithRoomId:roomId];
 
-                        XCTAssert(summary2.isEncrypted);
-
-                        [summary2 loadLastEvent:^{
-                            MXEvent *event2 = summary2.lastMessageEvent;
-                            XCTAssert(event2);
-                            XCTAssertEqualObjects(event2.eventId, lastMessageEventId);
-                            XCTAssert(event2.clearEvent, @"The event must have been decrypted by MXRoomSummary.lastMessageEvent");
-                            XCTAssertEqual(event2.eventType, MXEventTypeRoomMessage);
-                            XCTAssertEqualObjects(event2.content[@"body"], message);
+                            XCTAssert(summary2.isEncrypted);
+                            XCTAssertEqualObjects(summary2.lastMessage.text, message, @"Once the session is started, the message should be decrypted (in memory)");
                             
+                            [aliceSession2 eventWithEventId:summary2.lastMessage.eventId
+                                                    inRoom:room.roomId
+                                                   success:^(MXEvent *event2) {
+                                
+                                XCTAssert(event2);
+                                XCTAssertEqualObjects(event2.eventId, lastMessageEventId);
+                                XCTAssert(event2.clearEvent, @"The event must have been decrypted by MXRoomSummary.lastMessageEvent");
+                                XCTAssertEqual(event2.eventType, MXEventTypeRoomMessage);
+                                XCTAssertEqualObjects(event2.content[@"body"], message);
+
+                                [expectation fulfill];
+                                
+                            } failure:^(NSError *error) {
+                                XCTFail(@"Cannot set up initial test conditions - error: %@", error);
+                                [expectation fulfill];
+                            }];
+
+                        } failure:^(NSError *error) {
+                            XCTFail(@"Cannot set up intial test conditions - error: %@", error);
                             [expectation fulfill];
                         }];
 
@@ -1163,12 +1216,13 @@ NSString *uisiString = @"The sender's device has not sent us the keys for this m
                         XCTFail(@"Cannot set up intial test conditions - error: %@", error);
                         [expectation fulfill];
                     }];
-
-                } failure:^(NSError *error) {
-                    XCTFail(@"Cannot set up intial test conditions - error: %@", error);
-                    [expectation fulfill];
-                }];
-            });
+                });
+                
+            } failure:^(NSError *error) {
+                XCTFail(@"Cannot set up initial test conditions - error: %@", error);
+                [expectation fulfill];
+            }];
+            
         }];
 
         [room sendTextMessage:message formattedText:nil localEcho:&localEcho success:^(NSString *eventId) {
@@ -1200,7 +1254,7 @@ NSString *uisiString = @"The sender's device has not sent us the keys for this m
         // Some hack to set up test conditions
         __block MXEvent *toDeviceEvent;
 
-        self->observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXSessionOnToDeviceEventNotification object:bobSession queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *notif) {
+        observer = [[NSNotificationCenter defaultCenter] addObserverForName:kMXSessionOnToDeviceEventNotification object:bobSession queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *notif) {
 
             toDeviceEvent = notif.userInfo[kMXSessionNotificationEventKey];
         }];
@@ -1232,40 +1286,50 @@ NSString *uisiString = @"The sender's device has not sent us the keys for this m
 
         id summaryObserver;
         summaryObserver = [[NSNotificationCenter defaultCenter] addObserverForName:kMXRoomSummaryDidChangeNotification object:roomSummaryFromBobPOV queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
-            switch (notifCount++)
-            {
-                case 0:
+            
+            [bobSession eventWithEventId:roomSummaryFromBobPOV.lastMessage.eventId
+                                  inRoom:roomSummaryFromBobPOV.roomId
+                                 success:^(MXEvent *event) {
+                
+                switch (notifCount++)
                 {
-                    XCTAssertEqualObjects(roomSummaryFromBobPOV.lastMessage.eventId, lastMessageEventId);
-//                    XCTAssertEqualObjects(roomSummaryFromBobPOV.lastMessageString, uisiString, @"Without the key, we have a UISI");
+                    case 0:
+                    {
+                        XCTAssertEqualObjects(roomSummaryFromBobPOV.lastMessage.eventId, lastMessageEventId);
+                        XCTAssertEqualObjects(roomSummaryFromBobPOV.lastMessage.text, uisiString, @"Without the key, we have a UISI");
 
-                    MXEvent *event = roomSummaryFromBobPOV.lastMessageEvent;
-                    XCTAssertNil(event.clearEvent);
-                    
-                    // Attempt a new decryption
-                    [bobSession decryptEvents:@[event] inTimeline:nil onComplete:^(NSArray<MXEvent *> *failedEvents) {
-                        // Reinject the m.room_key event. This mimics a room_key event that arrives after message events.
-                        [bobSession.crypto handleRoomKeyEvent:toDeviceEvent onComplete:^{}];
-                    }];
+                        XCTAssertNil(event.clearEvent);
+                        
+                        // Attempt a new decryption
+                        [bobSession decryptEvents:@[event] inTimeline:nil onComplete:^(NSArray<MXEvent *> *failedEvents) {
+                            // Reinject the m.room_key event. This mimics a room_key event that arrives after message events.
+                            [bobSession.crypto handleRoomKeyEvent:toDeviceEvent onComplete:^{}];
+                        }];
 
-                    break;
+                        break;
+                    }
+
+                    case 1:
+                    {
+                        // The last message must be decrypted now
+                        XCTAssertEqualObjects(roomSummaryFromBobPOV.lastMessage.eventId, lastMessageEventId);
+                        XCTAssertEqualObjects(roomSummaryFromBobPOV.lastMessage.text, messageFromAlice, @"The message must be now decrypted");
+
+                        XCTAssert(event.clearEvent);
+
+                        [expectation fulfill];
+                        break;
+                    }
+
+                    default:
+                        break;
                 }
-
-                case 1:
-                {
-                    // The last message must be decrypted now
-                    XCTAssertEqualObjects(roomSummaryFromBobPOV.lastMessage.eventId, lastMessageEventId);
-
-                    MXEvent *event = roomSummaryFromBobPOV.lastMessageEvent;
-                    XCTAssert(event.clearEvent);
-
-                    [expectation fulfill];
-                    break;
-                }
-
-                default:
-                    break;
-            }
+                
+            } failure:^(NSError *error) {
+                XCTFail(@"Cannot set up initial test conditions - error: %@", error);
+                [expectation fulfill];
+            }];
+            
         }];
 
         [roomFromAlicePOV sendTextMessage:messageFromAlice success:^(NSString *eventId) {
