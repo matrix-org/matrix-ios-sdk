@@ -66,7 +66,7 @@
     MXRoom *room = [self.mxSession roomWithRoomId:roomId];
     if (!room)
     {
-        NSLog(@"[MXAggregations] replaceTextMessageEvent: Error: Unknown room: %@", roomId);
+        MXLogDebug(@"[MXAggregations] replaceTextMessageEvent: Error: Unknown room: %@", roomId);
         failure(nil);
         return nil;
     }
@@ -75,7 +75,7 @@
     
     if (![self.editSupportedMessageTypes containsObject:messageType])
     {
-        NSLog(@"[MXAggregations] replaceTextMessageEvent: Error: Only message types %@ are supported", self.editSupportedMessageTypes);
+        MXLogDebug(@"[MXAggregations] replaceTextMessageEvent: Error: Only message types %@ are supported", self.editSupportedMessageTypes);
         failure(nil);
         return nil;
     }
@@ -96,7 +96,7 @@
         }
         else
         {
-            NSLog(@"[MXAggregations] replaceTextMessageEvent: Fail to parse reply event: %@", event.eventId);
+            MXLogDebug(@"[MXAggregations] replaceTextMessageEvent: Fail to parse reply event: %@", event.eventId);
             failure(nil);
             return nil;
         }
@@ -150,7 +150,7 @@
     if (event.isLocalEvent)
     {
         // Need to wait to get the final event id of the message being sent
-        NSLog(@"[MXAggregations] replaceTextMessageEvent: Event to edit is a local echo. Wait for the end of the sending");
+        MXLogDebug(@"[MXAggregations] replaceTextMessageEvent: Event to edit is a local echo. Wait for the end of the sending");
         operation = [MXHTTPOperation new];
 
         MXWeakify(self);
@@ -160,7 +160,7 @@
 
             if (event.sentState == MXEventSentStateSent)
             {
-                NSLog(@"[MXAggregations] replaceTextMessageEvent: Edit request can be done now");
+                MXLogDebug(@"[MXAggregations] replaceTextMessageEvent: Edit request can be done now");
 
                 [[NSNotificationCenter defaultCenter] removeObserver:observer];
                 observer = nil;
@@ -222,7 +222,7 @@
         if (![event.sender isEqualToString:replaceEvent.sender])
         {
             //  not coming from the original sender, ignore
-            NSLog(@"[MXAggregations] handleReplace: Edit event not coming from the original sender, ignoring.");
+            MXLogDebug(@"[MXAggregations] handleReplace: Edit event not coming from the original sender, ignoring.");
             return;
         }
         if (![event.unsignedData.relations.replace.eventId isEqualToString:replaceEvent.eventId])
@@ -238,7 +238,7 @@
     }
     else
     {
-        NSLog(@"[MXAggregations] handleReplace: Unknown event id: %@", replaceEvent.relatesTo.eventId);
+        MXLogDebug(@"[MXAggregations] handleReplace: Unknown event id: %@", replaceEvent.relatesTo.eventId);
     }
 }
 

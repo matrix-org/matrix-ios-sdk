@@ -49,7 +49,7 @@ public class MXSyncResponseStoreManager: NSObject {
             return nil
         }
         guard let syncResponse = try? syncResponseStore.syncResponse(withId: id) else {
-            NSLog("[MXSyncResponseStoreManager] firstSyncResponse: invalid id")
+            MXLog.debug("[MXSyncResponseStoreManager] firstSyncResponse: invalid id")
             return nil
         }
         return syncResponse
@@ -60,7 +60,7 @@ public class MXSyncResponseStoreManager: NSObject {
             return nil
         }
         guard let syncResponse = try? syncResponseStore.syncResponse(withId: id) else {
-            NSLog("[MXSyncResponseStoreManager] lastSyncResponse: invalid id")
+            MXLog.debug("[MXSyncResponseStoreManager] lastSyncResponse: invalid id")
             return nil
         }
         return syncResponse
@@ -72,7 +72,7 @@ public class MXSyncResponseStoreManager: NSObject {
             return
         }
         
-        NSLog("[MXSyncResponseStoreManager] markDataOutdated \(syncResponseIds.count) cached sync responses. The sync token was \(String(describing: syncToken()))")
+        MXLog.debug("[MXSyncResponseStoreManager] markDataOutdated \(syncResponseIds.count) cached sync responses. The sync token was \(String(describing: syncToken()))")
         syncResponseStore.markOutdated(syncResponseIds: syncResponseIds)
     }
     
@@ -90,7 +90,7 @@ public class MXSyncResponseStoreManager: NSObject {
             if  cachedSyncResponseSize < syncResponseCacheSizeLimit,
                 let cachedSyncResponse = try? syncResponseStore.syncResponse(withId: id) {
                 
-                NSLog("[MXSyncResponseStoreManager] updateStore: Merge new sync response to the previous one")
+                MXLog.debug("[MXSyncResponseStoreManager] updateStore: Merge new sync response to the previous one")
                 
                 //  handle new limited timelines
                 newSyncResponse.rooms?.join?.filter({ $1.timeline.limited == true }).forEach { (roomId, _) in
@@ -137,14 +137,14 @@ public class MXSyncResponseStoreManager: NSObject {
                 
             } else {
                 // Use a new chunk
-                NSLog("[MXSyncResponseStoreManager] updateStore: Create a new chunk to store the new sync response. Previous chunk size: \(cachedSyncResponseSize)")
+                MXLog.debug("[MXSyncResponseStoreManager] updateStore: Create a new chunk to store the new sync response. Previous chunk size: \(cachedSyncResponseSize)")
                 let cachedSyncResponse = MXCachedSyncResponse(syncToken: syncToken,
                                                               syncResponse: newSyncResponse)
                 _ = syncResponseStore.addSyncResponse(syncResponse: cachedSyncResponse)
             }
         } else {
             //  no current sync response, directly save the new one
-            NSLog("[MXSyncResponseStoreManager] updateStore: Start storing sync response")
+            MXLog.debug("[MXSyncResponseStoreManager] updateStore: Start storing sync response")
             let cachedSyncResponse = MXCachedSyncResponse(syncToken: syncToken,
                                                          syncResponse: newSyncResponse)
             _ = syncResponseStore.addSyncResponse(syncResponse: cachedSyncResponse)
@@ -185,7 +185,7 @@ public class MXSyncResponseStoreManager: NSObject {
             }
         }
         
-        NSLog("[MXSyncResponseStoreManager] event: Not found event \(eventId) in room \(roomId)")
+        MXLog.debug("[MXSyncResponseStoreManager] event: Not found event \(eventId) in room \(roomId)")
         return nil
     }
     
@@ -208,7 +208,7 @@ public class MXSyncResponseStoreManager: NSObject {
         let result = allEvents.first(where: { eventId == $0.eventId })
         result?.roomId = roomId
         
-        NSLog("[MXSyncResponseStoreManager] eventWithEventId: \(eventId) \(result == nil ? "not " : "" )found")
+        MXLog.debug("[MXSyncResponseStoreManager] eventWithEventId: \(eventId) \(result == nil ? "not " : "" )found")
         
         return result
     }
@@ -235,7 +235,7 @@ public class MXSyncResponseStoreManager: NSObject {
             }
         }
         
-        NSLog("[MXSyncResponseStoreManager] roomSummary: Not found for room \(roomId)")
+        MXLog.debug("[MXSyncResponseStoreManager] roomSummary: Not found for room \(roomId)")
         
         return nil
     }

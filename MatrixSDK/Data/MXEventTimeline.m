@@ -262,7 +262,7 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
         
         [self decryptEvents:eventsFromStore onComplete:^{
             
-            NSLog(@"[MXEventTimeline] paginateFromStore %tu messages in %@ (%tu are retrieved from the store)", numItems, self.state.roomId, eventsFromStore.count);
+            MXLogDebug(@"[MXEventTimeline] paginateFromStore %tu messages in %@ (%tu are retrieved from the store)", numItems, self.state.roomId, eventsFromStore.count);
 
             onComplete(eventsFromStore);
         }];
@@ -302,7 +302,7 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
             if (onlyFromStore && eventsFromStoreCount)
             {
                 dispatch_async(dispatch_get_main_queue(), ^{
-                    NSLog(@"[MXEventTimeline] paginate : is done from the store");
+                    MXLogDebug(@"[MXEventTimeline] paginate : is done from the store");
                     complete();
                 });
 
@@ -313,7 +313,7 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
             {
                 dispatch_async(dispatch_get_main_queue(), ^{
                     // Nothing more to do
-                    NSLog(@"[MXEventTimeline] paginate: is done");
+                    MXLogDebug(@"[MXEventTimeline] paginate: is done");
                     complete();
                 });
                 
@@ -326,7 +326,7 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
         {
             dispatch_async(dispatch_get_main_queue(), ^{
                 // Nothing more to do
-                NSLog(@"[MXEventTimeline] paginate: is done");
+                MXLogDebug(@"[MXEventTimeline] paginate: is done");
                 complete();
             });
 
@@ -350,20 +350,20 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
             paginationToken = self->forwardsPaginationToken;
         }
 
-        NSLog(@"[MXEventTimeline] paginate : request %tu messages from the server", remainingNumItems);
+        MXLogDebug(@"[MXEventTimeline] paginate : request %tu messages from the server", remainingNumItems);
 
         MXWeakify(self);
         MXHTTPOperation *operation2 = [self->room.mxSession.matrixRestClient messagesForRoom:self.state.roomId from:paginationToken direction:direction limit:remainingNumItems filter:self.roomEventFilter success:^(MXPaginationResponse *paginatedResponse) {
             MXStrongifyAndReturnIfNil(self);
 
-            NSLog(@"[MXEventTimeline] paginate : got %tu messages from the server", paginatedResponse.chunk.count);
+            MXLogDebug(@"[MXEventTimeline] paginate : got %tu messages from the server", paginatedResponse.chunk.count);
 
             // Check if the room has not been left while waiting for the response
             if ([self->room.mxSession hasRoomWithRoomId:self->room.roomId]
                 || [self->room.mxSession isPeekingInRoomWithRoomId:self->room.roomId])
             {
                 [self handlePaginationResponse:paginatedResponse direction:direction onComplete:^{
-                    NSLog(@"[MXEventTimeline] paginate: is done");
+                    MXLogDebug(@"[MXEventTimeline] paginate: is done");
                     
                     // Inform the method caller
                     complete();
@@ -371,7 +371,7 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
             }
             else
             {
-                NSLog(@"[MXEventTimeline] paginate: is done");
+                MXLogDebug(@"[MXEventTimeline] paginate: is done");
                 // Inform the method caller
                 complete();
             }
@@ -393,14 +393,14 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
                     self->hasReachedHomeServerForwardsPaginationEnd = YES;
                 }
 
-                NSLog(@"[MXEventTimeline] paginate: pagination end has been reached");
+                MXLogDebug(@"[MXEventTimeline] paginate: pagination end has been reached");
 
                 // Ignore the error
                 complete();
                 return;
             }
 
-            NSLog(@"[MXEventTimeline] paginate failed");
+            MXLogDebug(@"[MXEventTimeline] paginate failed");
             if (failure)
             {
                 failure(error);
@@ -436,7 +436,7 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
     if (room.summary.membership == MXMembershipInvite)
     {
         // Reset the storage of this room. An initial sync of the room will be done with the provided 'roomSync'.
-        NSLog(@"[MXEventTimeline] handleJoinedRoomSync: clean invited room from the store (%@).", self.state.roomId);
+        MXLogDebug(@"[MXEventTimeline] handleJoinedRoomSync: clean invited room from the store (%@).", self.state.roomId);
         [store deleteRoom:self.state.roomId];
     }
 
@@ -709,7 +709,7 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
 #pragma mark - Specific events Handling
 - (void)handleRedaction:(MXEvent*)redactionEvent
 {
-    NSLog(@"[MXEventTimeline] handleRedaction: handle an event redaction");
+    MXLogDebug(@"[MXEventTimeline] handleRedaction: handle an event redaction");
     
     // Check whether the redacted event is stored in room messages
     MXEvent *redactedEvent = [store eventWithEventId:redactionEvent.redacts inRoom:_state.roomId];
@@ -734,7 +734,7 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
             
             if ([stateEvent.eventId isEqualToString:redactionEvent.redacts])
             {
-                NSLog(@"[MXEventTimeline] handleRedaction: the current room state has been modified by the event redaction.");
+                MXLogDebug(@"[MXEventTimeline] handleRedaction: the current room state has been modified by the event redaction.");
                 
                 // Redact the stored event
                 redactedEvent = [stateEvent prune];
@@ -767,11 +767,11 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
     if (redactedEvent.isState)
     {
         // TODO
-        NSLog(@"[MXEventTimeline] handleRedaction: the redacted event is a former state event. TODO: prune prev_content of the current state event");
+        MXLogDebug(@"[MXEventTimeline] handleRedaction: the redacted event is a former state event. TODO: prune prev_content of the current state event");
     }
     else if (!redactedEvent)
     {
-        NSLog(@"[MXEventTimeline] handleRedaction: the redacted event is unknown. Fetch it from the homeserver");
+        MXLogDebug(@"[MXEventTimeline] handleRedaction: the redacted event is unknown. Fetch it from the homeserver");
 
         // Retrieve the event from the HS to check whether the redacted event is a state event or not
         MXWeakify(self);
@@ -781,11 +781,11 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
             if (event.isState)
             {
                 // TODO
-                NSLog(@"[MXEventTimeline] handleRedaction: the redacted event is a state event in the past. TODO: prune prev_content of the current state event");
+                MXLogDebug(@"[MXEventTimeline] handleRedaction: the redacted event is a state event in the past. TODO: prune prev_content of the current state event");
             }
             else
             {
-                NSLog(@"[MXEventTimeline] handleRedaction: the redacted event is a not state event -> job is done");
+                MXLogDebug(@"[MXEventTimeline] handleRedaction: the redacted event is a not state event -> job is done");
             }
 
             if (!self->httpOperation)
@@ -805,7 +805,7 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
 
             self->httpOperation = nil;
 
-            NSLog(@"[MXEventTimeline] handleRedaction: failed to retrieved the redacted event");
+            MXLogDebug(@"[MXEventTimeline] handleRedaction: failed to retrieved the redacted event");
         }];
     }
 }
@@ -850,7 +850,7 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
         {
             // If there is no lazy loading of room members, consider we have fetched
             // all of them
-            NSLog(@"[MXEventTimeline] handleStateEvents: syncWithLazyLoadOfRoomMembers disabled. Mark all room members loaded for room %@",  room.roomId);
+            MXLogDebug(@"[MXEventTimeline] handleStateEvents: syncWithLazyLoadOfRoomMembers disabled. Mark all room members loaded for room %@",  room.roomId);
             
             // XXX: Optimisation removed because of https://github.com/vector-im/element-ios/issues/3807
             // There can be a race on mxSession.syncWithLazyLoadOfRoomMembers. Its value may be not set yet.

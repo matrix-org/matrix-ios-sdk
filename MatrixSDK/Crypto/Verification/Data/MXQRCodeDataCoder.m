@@ -22,6 +22,8 @@
 
 #import "MXVerifyingAnotherUserQRCodeData.h"
 
+#import "MXLog.h"
+
 static NSString* const kQRCodeFormatPrefix = @"MATRIX";
 static NSUInteger const kQRCodeFormatVersion = 2;
 
@@ -60,7 +62,7 @@ static NSUInteger const kQRCodeFormatMinimumSharedSecretByteCount = 8;
     
     if (dataByteCount < kQRCodeFormatMinimumDataByteCount)
     {
-        NSLog(@"[MXQRCodeDataCoder] Data byte count is too short");
+        MXLogDebug(@"[MXQRCodeDataCoder] Data byte count is too short");
         return nil;
     }
     
@@ -78,7 +80,7 @@ static NSUInteger const kQRCodeFormatMinimumSharedSecretByteCount = 8;
     
     if (currenReadBytesCount < 0)
     {
-        NSLog(@"inputStream.streamError: %@", inputStream.streamError);
+        MXLogDebug(@"inputStream.streamError: %@", inputStream.streamError);
         return nil;
     }
     
@@ -88,7 +90,7 @@ static NSUInteger const kQRCodeFormatMinimumSharedSecretByteCount = 8;
     
     if (![self.prefixData isEqualToData:foundPrefixData])
     {
-        NSLog(@"[MXQRCodeDataCoder] decode: Invalid prefix");        
+        MXLogDebug(@"[MXQRCodeDataCoder] decode: Invalid prefix");        
         return nil;
     }
     
@@ -99,7 +101,7 @@ static NSUInteger const kQRCodeFormatMinimumSharedSecretByteCount = 8;
     
     if (currenReadBytesCount < 0)
     {
-        NSLog(@"[MXQRCodeDataCoder] Fail to parse QR code version with inputStream.streamError: %@", inputStream.streamError);
+        MXLogDebug(@"[MXQRCodeDataCoder] Fail to parse QR code version with inputStream.streamError: %@", inputStream.streamError);
         return nil;
     }
     
@@ -109,7 +111,7 @@ static NSUInteger const kQRCodeFormatMinimumSharedSecretByteCount = 8;
     
     if (version != self.supportedQRCodeVersion)
     {
-        NSLog(@"[MXQRCodeDataCoder] Unsupported QR code version: %@", @(version));
+        MXLogDebug(@"[MXQRCodeDataCoder] Unsupported QR code version: %@", @(version));
         return nil;
     }
     
@@ -120,7 +122,7 @@ static NSUInteger const kQRCodeFormatMinimumSharedSecretByteCount = 8;
     
     if (currenReadBytesCount < 0)
     {
-        NSLog(@"[MXQRCodeDataCoder] Fail to parse verification mode with inputStream.streamError: %@", inputStream.streamError);
+        MXLogDebug(@"[MXQRCodeDataCoder] Fail to parse verification mode with inputStream.streamError: %@", inputStream.streamError);
         return nil;
     }
     
@@ -135,7 +137,7 @@ static NSUInteger const kQRCodeFormatMinimumSharedSecretByteCount = 8;
     }
     else
     {
-        NSLog(@"[MXQRCodeDataCoder] Invalid verification mode %ld", (long)verificationModeRawValue);
+        MXLogDebug(@"[MXQRCodeDataCoder] Invalid verification mode %ld", (long)verificationModeRawValue);
         return nil;
     }
     
@@ -147,7 +149,7 @@ static NSUInteger const kQRCodeFormatMinimumSharedSecretByteCount = 8;
     
     if (currenReadBytesCount < 0)
     {
-        NSLog(@"[MXQRCodeDataCoder] Fail to parse transaction id length with inputStream.streamError: %@", inputStream.streamError);
+        MXLogDebug(@"[MXQRCodeDataCoder] Fail to parse transaction id length with inputStream.streamError: %@", inputStream.streamError);
         return nil;
     }
     
@@ -161,7 +163,7 @@ static NSUInteger const kQRCodeFormatMinimumSharedSecretByteCount = 8;
     
     if (transactionIdLength == 0)
     {
-        NSLog(@"[MXQRCodeDataCoder] Transaction id length is equal to zero");
+        MXLogDebug(@"[MXQRCodeDataCoder] Transaction id length is equal to zero");
         return nil;
     }
     
@@ -172,7 +174,7 @@ static NSUInteger const kQRCodeFormatMinimumSharedSecretByteCount = 8;
     
     if (currenReadBytesCount < 0)
     {
-        NSLog(@"[MXQRCodeDataCoder] Fail to parse transaction id length with inputStream.streamError: %@", inputStream.streamError);
+        MXLogDebug(@"[MXQRCodeDataCoder] Fail to parse transaction id length with inputStream.streamError: %@", inputStream.streamError);
         return nil;
     }
     
@@ -187,7 +189,7 @@ static NSUInteger const kQRCodeFormatMinimumSharedSecretByteCount = 8;
     
     if (currenReadBytesCount < 0)
     {
-        NSLog(@"[MXQRCodeDataCoder] Fail to parse first key inputStream.streamError: %@", inputStream.streamError);
+        MXLogDebug(@"[MXQRCodeDataCoder] Fail to parse first key inputStream.streamError: %@", inputStream.streamError);
         return nil;
     }
     
@@ -203,7 +205,7 @@ static NSUInteger const kQRCodeFormatMinimumSharedSecretByteCount = 8;
     
     if (currenReadBytesCount < 0)
     {
-        NSLog(@"[MXQRCodeDataCoder] Fail to parse second key inputStream.streamError: %@", inputStream.streamError);
+        MXLogDebug(@"[MXQRCodeDataCoder] Fail to parse second key inputStream.streamError: %@", inputStream.streamError);
         return nil;
     }
     
@@ -218,7 +220,7 @@ static NSUInteger const kQRCodeFormatMinimumSharedSecretByteCount = 8;
     // Shared secret should be 8 bytes length minimum
     if (remainingBytesCount < kQRCodeFormatMinimumSharedSecretByteCount)
     {
-        NSLog(@"[MXQRCodeDataCoder] Fail to parse shared secret");
+        MXLogDebug(@"[MXQRCodeDataCoder] Fail to parse shared secret");
         return nil;
     }
     

@@ -81,7 +81,7 @@ NSString *const MXCrossSigningToolsErrorDomain = @"org.matrix.sdk.crosssigning.t
 
     if (!signature)
     {
-        NSLog(@"[MXCrossSigningTools] pkVerifyObject. Error: Missing signature for %@:%@ in %@", userId, keyId, object[@"signatures"]);
+        MXLogDebug(@"[MXCrossSigningTools] pkVerifyObject. Error: Missing signature for %@:%@ in %@", userId, keyId, object[@"signatures"]);
         if (error)
         {
             *error = [NSError errorWithDomain:MXCrossSigningToolsErrorDomain

@@ -158,7 +158,7 @@ NSString * const kMXTestsAliceAvatarURL = @"mxc://matrix.org/kciiXusgZFKuNLIfLqm
         // Create a random room to use
         [bobRestClient createRoom:nil visibility:kMXRoomDirectoryVisibilityPrivate roomAlias:nil topic:nil success:^(MXCreateRoomResponse *response) {
 
-            NSLog(@"Created room %@ for %@", response.roomId, testCase.name);
+            MXLogDebug(@"Created room %@ for %@", response.roomId, testCase.name);
             
             readyToTest(bobRestClient, response.roomId, expectation);
             
@@ -176,7 +176,7 @@ NSString * const kMXTestsAliceAvatarURL = @"mxc://matrix.org/kciiXusgZFKuNLIfLqm
                             // Create a random room to use
                             [bobRestClient createRoom:nil visibility:kMXRoomDirectoryVisibilityPublic roomAlias:nil topic:nil success:^(MXCreateRoomResponse *response) {
 
-                                NSLog(@"Created public room %@ for %@", response.roomId, testCase.name);
+                                MXLogDebug(@"Created public room %@ for %@", response.roomId, testCase.name);
 
                                 readyToTest(bobRestClient, response.roomId, expectation);
                                 
@@ -231,7 +231,7 @@ NSString * const kMXTestsAliceAvatarURL = @"mxc://matrix.org/kciiXusgZFKuNLIfLqm
         // Create a random room to use
         [bobRestClient createRoom:nil visibility:kMXRoomDirectoryVisibilityPrivate roomAlias:nil topic:nil success:^(MXCreateRoomResponse *response) {
 
-            NSLog(@"Created room %@ for %@", response.roomId, testCase.name);
+            MXLogDebug(@"Created room %@ for %@", response.roomId, testCase.name);
 
             // Send the the message text in it
             [bobRestClient sendTextMessageToRoom:response.roomId text:newTextMessage success:^(NSString *eventId) {
@@ -294,7 +294,7 @@ NSString * const kMXTestsAliceAvatarURL = @"mxc://matrix.org/kciiXusgZFKuNLIfLqm
 
 - (void)for:(MXRestClient *)mxRestClient2 andRoom:(NSString*)roomId sendMessages:(NSUInteger)messagesCount testCase:(XCTestCase*)testCase success:(void (^)(void))success
 {
-    NSLog(@"sendMessages :%tu to %@", messagesCount, roomId);
+    MXLogDebug(@"sendMessages :%tu to %@", messagesCount, roomId);
     if (0 == messagesCount)
     {
         success();
@@ -326,7 +326,7 @@ NSString * const kMXTestsAliceAvatarURL = @"mxc://matrix.org/kciiXusgZFKuNLIfLqm
         // Create the room
         [mxRestClient2 createRoom:nil visibility:kMXRoomDirectoryVisibilityPrivate roomAlias:nil topic:nil success:^(MXCreateRoomResponse *response) {
 
-            NSLog(@"Created room %@ in createRooms", response.roomId);
+            MXLogDebug(@"Created room %@ in createRooms", response.roomId);
 
             // Fill it with messages
             [self for:mxRestClient2 andRoom:response.roomId sendMessages:messagesCount testCase:testCase success:^{

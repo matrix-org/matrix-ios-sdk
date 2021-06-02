@@ -736,7 +736,7 @@ NSString *uisiString = @"The sender's device has not sent us the keys for this m
         NSString *newRoomTopic = @"An interesting topic";
 
         // Required to make kMXSessionInvitedRoomsDidChangeNotification work
-        NSLog(@"%@", bobSession.invitedRooms);
+        MXLogDebug(@"%@", bobSession.invitedRooms);
 
         [[NSNotificationCenter defaultCenter] addObserverForName:kMXSessionInvitedRoomsDidChangeNotification object:bobSession queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
 

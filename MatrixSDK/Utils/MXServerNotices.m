@@ -181,7 +181,7 @@ NSUInteger const kMXServerNoticesMaxPinnedNoticesPerRoom = 2;
 
                 } failure:^(NSError *error) {
 
-                    NSLog(@"[MXServerNotices] Failed to get pinned event %@. Continue anyway", pinnedEventId);
+                    MXLogDebug(@"[MXServerNotices] Failed to get pinned event %@. Continue anyway", pinnedEventId);
                     dispatch_group_leave(group);
                 }];
             }
