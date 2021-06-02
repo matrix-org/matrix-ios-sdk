@@ -2835,7 +2835,7 @@ typedef void (^MXOnResumeDone)(void);
         if (!summary.lastMessage)
         {
             dispatch_group_enter(dispatchGroup);
-            NSLog(@"[MXSession] fixRoomsSummariesLastMessage: Fixing last message for room %@", summary.roomId);
+            MXLogDebug(@"[MXSession] fixRoomsSummariesLastMessage: Fixing last message for room %@", summary.roomId);
             
             [summary resetLastMessageWithMaxServerPaginationCount:maxServerPaginationCount onComplete:^{
                 MXLogDebug(@"[MXSession] fixRoomsSummariesLastMessage:Fixing last message operation for room %@ has complete. lastMessageEventId: %@", summary.roomId, summary.lastMessage.eventId);
