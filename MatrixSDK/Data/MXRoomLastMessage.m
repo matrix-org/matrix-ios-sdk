@@ -48,7 +48,6 @@ NSString *const kCodingKeyOthers = @"others";
         _originServerTs = event.originServerTs;
         _isEncrypted = event.isEncrypted;
         _sender = event.sender;
-        _others = [NSMutableDictionary new];
     }
     return self;
 }
