@@ -31,7 +31,7 @@ Changes to be released in next version
  * MXSession: [MXSession decryptEvent:inTimeline:] is deprecated, use [MXSession decryptEvents:inTimeline:onComplete:] instead.
  * MXCrypto: [MXCrypto decryptEvent:inTimeline:] is deprecated, use [MXCrypto decryptEvents:inTimeline:onComplete:] instead.
  * MXCrypto: [MXCrypto hasKeysToDecryptEvent:] is now asynchronous.
- * MXRoomSummary: lastMessageEventId, lastMessageOriginServerTs, isLastMessageEncrypted, lastMessageString, lastMessageAttributedString, lastMessageOthers properties removed (vector-im/element-ios/issues/4360).
+ * MXRoomSummary: `lastMessageEvent` property removed for performance reasons (vector-im/element-ios/issues/4360).
  * MXRoomSummary: All properties about lastMessage are moved into `lastMessage` property.
  * MXSession: Does not compute anymore last events for every room summaries by default. Use -[MXSession eventWithEventId:inRoom:success:failure:] method to load the last event for a room summary.
 
