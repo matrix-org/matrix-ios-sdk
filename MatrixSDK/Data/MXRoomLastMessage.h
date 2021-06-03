@@ -16,6 +16,11 @@
 
 #import <Foundation/Foundation.h>
 
+/**
+ Used to identify the type of data when requesting MXKeyProvider
+ */
+FOUNDATION_EXPORT NSString *const MXRoomLastMessageDataType;
+
 @class MXEvent;
 
 NS_ASSUME_NONNULL_BEGIN
