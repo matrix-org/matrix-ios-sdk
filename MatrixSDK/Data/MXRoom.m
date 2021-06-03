@@ -2346,9 +2346,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
         {
             [self.summary resetLastMessage:nil failure:nil commit:YES];
         }
-    } failure:^(NSError *error) {
-        
-    }];
+    } failure:nil];
 }
 
 - (void)removeOutgoingMessage:(NSString*)outgoingMessageEventId
